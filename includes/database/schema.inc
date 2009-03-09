@@ -1,5 +1,5 @@
 <?php
-// $Id: schema.inc,v 1.7 2009/01/08 09:52:11 dries Exp $
+// $Id: schema.inc,v 1.10 2009/01/26 14:08:40 dries Exp $
 
 /**
  * @file
@@ -75,7 +75,7 @@
  *
  *  - 'primary key': An array of one or more key column specifiers (see below)
  *    that form the primary key.
- *  - 'unique key': An associative array of unique keys ('keyname' =>
+ *  - 'unique keys': An associative array of unique keys ('keyname' =>
  *    specification). Each specification is an array of one or more
  *    key column specifiers (see below) that form a unique key on the table.
  *  - 'indexes':  An associative array of indexes ('indexame' =>
@@ -129,7 +129,7 @@ abstract class DatabaseSchema {
    *
    * The information_schema is a SQL standard that provides information about the
    * database server and the databases, schemas, tables, columns and users within
-   * it. This makes information_schema a useful tool to use across the drupal 
+   * it. This makes information_schema a useful tool to use across the drupal
    * database drivers and is used by a few different functions. The function below
    * describes the conditions to be meet when querying information_schema.tables
    * for drupal tables or information associated with drupal tables. Even though
@@ -157,16 +157,16 @@ abstract class DatabaseSchema {
       $schema = 'public';
     }
 
-    $condition = db_and()
-      ->condition('table_catalog', $info['default']['database'])
-      ->condition('table_schema', $schema)
-      ->condition('table_name', $table_name, $operator);
+    $condition = new DatabaseCondition('AND');
+    $condition->condition('table_catalog', $info['default']['database']);
+    $condition->condition('table_schema', $schema);
+    $condition->condition('table_name', $table_name, $operator);
     return $condition;
   }
 
   /**
    * Check if a table exists.
-   * 
+   *
    * @param $table
    *   The name of the table in drupal (no prefixing).
    * @return
@@ -176,7 +176,7 @@ abstract class DatabaseSchema {
     $condition = $this->buildTableNameCondition($this->connection->prefixTables('{' . $table . '}'));
     $condition->compile($this->connection);
     // Normally, we would heartily discourage the use of string
-    // concatination for conditionals like this however, we 
+    // concatination for conditionals like this however, we
     // couldn't use db_select() here because it would prefix
     // information_schema.tables and the query would fail.
     return db_query("SELECT table_name FROM information_schema.tables WHERE " . (string) $condition, $condition->arguments())->fetchField();
@@ -195,7 +195,7 @@ abstract class DatabaseSchema {
     $condition = $this->buildTableNameCondition($table_expression, 'LIKE');
     $condition->compile($this->connection);
     // Normally, we would heartily discourage the use of string
-    // concatination for conditionals like this however, we 
+    // concatination for conditionals like this however, we
     // couldn't use db_select() here because it would prefix
     // information_schema.tables and the query would fail.
     return db_query("SELECT table_name FROM information_schema.tables WHERE " . (string) $condition, $condition->arguments())->fetchAllKeyed(0, 0);
@@ -209,7 +209,7 @@ abstract class DatabaseSchema {
     $condition->condition('column_name', $column);
     $condition->compile($this->connection);
     // Normally, we would heartily discourage the use of string
-    // concatination for conditionals like this however, we 
+    // concatination for conditionals like this however, we
     // couldn't use db_select() here because it would prefix
     // information_schema.tables and the query would fail.
     return db_query("SELECT column_name FROM information_schema.columns WHERE " . (string) $condition, $condition->arguments())->fetchAllKeyed(0, 0);

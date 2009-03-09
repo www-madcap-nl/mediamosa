@@ -1,5 +1,5 @@
 <?php
-// $Id: system.admin.inc,v 1.116 2009/01/14 12:18:37 dries Exp $
+// $Id: system.admin.inc,v 1.125 2009/02/11 05:33:18 webchick Exp $
 
 /**
  * @file
@@ -133,51 +133,15 @@ function system_settings_overview() {
 }
 
 /**
- * Form builder; This function allows selection of the theme to show in administration sections.
- *
- * @ingroup forms
- * @see system_settings_form()
- */
-function system_admin_theme_settings() {
-  $themes = system_theme_data();
-
-  uasort($themes, 'system_sort_modules_by_info_name');
-
-  $options[0] = '<' . t('System default') . '>';
-  foreach ($themes as $theme) {
-    $options[$theme->name] = $theme->info['name'];
-  }
-
-  $form['admin_theme'] = array(
-    '#type' => 'select',
-    '#options' => $options,
-    '#title' => t('Administration theme'),
-    '#description' => t('Choose which theme the administration pages should display in. If you choose "System default" the administration pages will use the same theme as the rest of the site.'),
-    '#default_value' => '0',
-  );
-
-  $form['node_admin_theme'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Use administration theme for content editing'),
-    '#description' => t('Use the administration theme when editing existing posts or creating new ones.'),
-    '#default_value' => '0',
-  );
-
-  $form['#submit'][] = 'system_admin_theme_submit';
-  return system_settings_form($form, TRUE);
-}
-
-/**
  * Menu callback; displays a listing of all themes.
  *
  * @ingroup forms
  * @see system_themes_form_submit()
  */
 function system_themes_form() {
-
   drupal_clear_css_cache();
-  $themes = system_theme_data();
 
+  $themes = system_theme_data();
   uasort($themes, 'system_sort_modules_by_info_name');
 
   $status = array();
@@ -201,9 +165,9 @@ function system_themes_form() {
       '#type' => 'value',
       '#value' => $theme->info,
     );
-    $options[$theme->name] = '';
+    $options[$theme->name] = $theme->info['name'];
 
-    if (!empty($theme->status) || $theme->name == variable_get('admin_theme', '0')) {
+    if (!empty($theme->status) || $theme->name == variable_get('admin_theme', 0)) {
       $form[$theme->name]['operations'] = array('#markup' => l(t('configure'), 'admin/build/themes/settings/' . $theme->name) );
     }
     else {
@@ -226,16 +190,38 @@ function system_themes_form() {
 
   $form['status'] = array(
     '#type' => 'checkboxes',
-    '#options' => $options,
+    '#options' => array_fill_keys(array_keys($options), ''),
     '#default_value' => $status,
     '#incompatible_themes_core' => drupal_map_assoc($incompatible_core),
     '#incompatible_themes_php' => $incompatible_php,
   );
   $form['theme_default'] = array(
     '#type' => 'radios',
-    '#options' => $options,
+    '#options' => array_fill_keys(array_keys($options), ''),
     '#default_value' => variable_get('theme_default', 'garland'),
   );
+
+  // Administration theme settings.
+  $form['admin_theme'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Administration theme'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  $form['admin_theme']['admin_theme'] = array(
+    '#type' => 'select',
+    '#options' => array(0 => t('Default theme')) + $options,
+    '#title' => t('Administration theme'),
+    '#description' => t('Choose which theme the administration pages should display in. If you choose "Default theme" the administration pages will use the same theme as the rest of the site.'),
+    '#default_value' => variable_get('admin_theme', 0),
+  );
+  $form['admin_theme']['node_admin_theme'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Use administration theme for content editing'),
+    '#description' => t('Use the administration theme when editing existing posts or creating new ones.'),
+    '#default_value' => variable_get('node_admin_theme', '0'),
+  );
+
   $form['buttons']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save configuration'),
@@ -244,6 +230,7 @@ function system_themes_form() {
     '#type' => 'submit',
     '#value' => t('Reset to defaults'),
   );
+
   return $form;
 }
 
@@ -272,18 +259,31 @@ function system_themes_form_submit($form, &$form_state) {
         }
       }
     }
-    if (($admin_theme = variable_get('admin_theme', '0')) != '0' && $admin_theme != $form_state['values']['theme_default']) {
+    if ($form_state['values']['admin_theme'] && $form_state['values']['admin_theme'] != $form_state['values']['theme_default']) {
       drupal_set_message(t('Please note that the <a href="!admin_theme_page">administration theme</a> is still set to the %admin_theme theme; consequently, the theme on this page remains unchanged. All non-administrative sections of the site, however, will show the selected %selected_theme theme by default.', array(
         '!admin_theme_page' => url('admin/settings/admin'),
-        '%admin_theme' => $admin_theme,
+        '%admin_theme' => $form_state['values']['admin_theme'],
         '%selected_theme' => $form_state['values']['theme_default'],
       )));
     }
+    if ($form_state['values']['admin_theme'] && $form_state['values']['admin_theme'] != variable_get('admin_theme', 0)) {
+      // If we're changing themes, make sure the theme has its blocks initialized.
+      $result = db_result(db_query("SELECT COUNT(*) FROM {block} WHERE theme = '%s'", $form_state['values']['admin_theme']));
+      if (!$result) {
+        system_initialize_theme_blocks($form_state['values']['admin_theme']);
+      }
+    }
+
+    // Save the variables.
     variable_set('theme_default', $form_state['values']['theme_default']);
+    variable_set('admin_theme', $form_state['values']['admin_theme']);
+    variable_set('node_admin_theme', $form_state['values']['node_admin_theme']);
   }
   else {
     // Revert to defaults: only Garland is enabled.
     variable_del('theme_default');
+    variable_del('admin_theme');
+    variable_del('node_admin_theme');
     db_query("UPDATE {system} SET status = 1 WHERE type = 'theme' AND name = 'garland'");
     $new_theme_list = array('garland');
   }
@@ -574,7 +574,6 @@ function system_modules($form_state = array()) {
   registry_rebuild();
   drupal_theme_rebuild();
   node_types_rebuild();
-  menu_rebuild();
   cache_clear_all('schema', 'cache');
   // Get current list of modules.
   $files = module_rebuild_cache();
@@ -1225,9 +1224,25 @@ function system_site_information_settings() {
     '#field_prefix' => url(NULL, array('absolute' => TRUE)) . (variable_get('clean_url', 0) ? '' : '?q='),
     '#required' => TRUE,
   );
+  $form['site_403'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Default 403 (access denied) page'),
+    '#default_value' => '',
+    '#size' => 40,
+    '#description' => t('This page is displayed when the requested document is denied to the current user. If unsure, specify nothing.'),
+    '#field_prefix' => url(NULL, array('absolute' => TRUE)) . (variable_get('clean_url', 0) ? '' : '?q=')
+  );
+  $form['site_404'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Default 404 (not found) page'),
+    '#default_value' => '',
+    '#size' => 40,
+    '#description' => t('This page is displayed when no other content matches the requested document. If unsure, specify nothing.'),
+    '#field_prefix' => url(NULL, array('absolute' => TRUE)) . (variable_get('clean_url', 0) ? '' : '?q=')
+  );
   $form['#validate'][] = 'system_site_information_settings_validate';
 
-  return system_settings_form($form, TRUE);
+  return system_settings_form($form);
 }
 
 /**
@@ -1256,46 +1271,20 @@ function system_site_information_settings_validate($form, &$form_state) {
  * @ingroup forms
  * @see system_settings_form()
  */
-function system_error_reporting_settings() {
-
-  $form['site_403'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Default 403 (access denied) page'),
-    '#default_value' => '',
-    '#size' => 40,
-    '#description' => t('This page is displayed when the requested document is denied to the current user. If unsure, specify nothing.'),
-    '#field_prefix' => url(NULL, array('absolute' => TRUE)) . (variable_get('clean_url', 0) ? '' : '?q=')
-  );
-
-  $form['site_404'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Default 404 (not found) page'),
-    '#default_value' => '',
-    '#size' => 40,
-    '#description' => t('This page is displayed when no other content matches the requested document. If unsure, specify nothing.'),
-    '#field_prefix' => url(NULL, array('absolute' => TRUE)) . (variable_get('clean_url', 0) ? '' : '?q=')
-  );
-
+function system_logging_settings() {
   $form['error_level'] = array(
-    '#type' => 'select', '#title' => t('Error reporting'),
-    '#default_value' => 1,
-    '#options' => array(t('Write errors to the log'), t('Write errors to the log and to the screen')),
-    '#description' => t('Specify where Drupal, PHP and SQL errors are logged. While it is recommended that a site running in a production environment write errors to the log only, in a development or testing environment it may be helpful to write errors both to the log and to the screen.')
+    '#type' => 'radios',
+    '#title' => t('Error reporting'),
+    '#default_value' => 2,
+    '#options' => array(
+      0 => t('Site in production: do not display any errors.'),
+      1 => t('Site in development: display functional errors only.'),
+      2 => t('For developers: display all errors.'),
+    ),
+    '#description' => t('Display settings for error messages. Note that all error messages are always logged.'),
   );
 
-  return system_settings_form($form, TRUE);
-}
-
-/**
- * Menu callback; Menu page for the various logging options.
- */
-function system_logging_overview() {
-  $item = menu_get_item('admin/settings/logging');
-  $content = system_admin_menu_block($item);
-
-  $output = theme('admin_block_content', $content);
-
-  return $output;
+  return system_settings_form($form);
 }
 
 /**
@@ -1307,6 +1296,18 @@ function system_logging_overview() {
 function system_performance_settings() {
 
   $description = '<p>' . t("The normal cache mode is suitable for most sites and does not cause any side effects. The aggressive cache mode causes Drupal to skip the loading (boot) and unloading (exit) of enabled modules when serving a cached page. This results in an additional performance boost but can cause unwanted side effects.") . '</p>';
+
+  // Check if the "Who's online" block is enabled.
+  $online_block_enabled = db_select('block')
+    ->condition('module', 'user')
+    ->condition('delta', 'online')
+    ->condition('status', 1)
+    ->countQuery()
+    ->execute()
+    ->fetchField();
+  if ($online_block_enabled) {
+    $description .= '<p>' . t("When caching is enabled, anonymous user sessions are only saved to the database when needed, so the \"Who's online\" block does not display the number of anonymous users.") . '</p>';
+  }
 
   $problem_modules = array_unique(array_merge(module_implements('boot'), module_implements('exit')));
   sort($problem_modules);
@@ -1887,7 +1888,10 @@ function system_batch_page() {
   elseif (isset($output)) {
     // Force a page without blocks or messages to
     // display a list of collected messages later.
-    print theme('page', $output, FALSE, FALSE);
+    $page = drupal_get_page($output);
+    $page['#show_blocks'] = FALSE;
+    $page['#show_messages'] = FALSE;
+    return $page;
   }
 }
 
@@ -2045,7 +2049,7 @@ function theme_system_admin_by_module($menu_items) {
  *   An array of requirements.
  * @ingroup themeable
  */
-function theme_status_report(&$requirements) {
+function theme_status_report($requirements) {
   $i = 0;
   $output = '<table class="system-status-report">';
   foreach ($requirements as $requirement) {
@@ -2108,10 +2112,10 @@ function theme_system_modules_fieldset($form) {
     // Add the description, along with any modules it requires.
     $description .= drupal_render($module['description']);
     if ($module['#requires']) {
-     $description .= '<div class="admin-requirements">' . t('Requires: @module-list', array('@module-list' => implode(', ', $module['#requires']))) . '</div>';
+     $description .= '<div class="admin-requirements">' . t('Requires: !module-list', array('!module-list' => implode(', ', $module['#requires']))) . '</div>';
     }
     if ($module['#required_by']) {
-     $description .= '<div class="admin-requirements">' . t('Required by: @module-list', array('@module-list' => implode(', ', $module['#required_by']))) . '</div>';
+     $description .= '<div class="admin-requirements">' . t('Required by: !module-list', array('!module-list' => implode(', ', $module['#required_by']))) . '</div>';
     }
     $row[] = array('data' => $description, 'class' => 'description');
     $rows[] = $row;
@@ -2170,7 +2174,7 @@ function theme_system_modules_uninstall($form) {
   }
 
   $output  = theme('table', $header, $rows);
-  $output .= drupal_render($form);
+  $output .= drupal_render_children($form);
 
   return $output;
 }
@@ -2252,6 +2256,6 @@ function theme_system_themes_form($form) {
 
   $header = array(t('Screenshot'), t('Name'), t('Version'), t('Enabled'), t('Default'), t('Operations'));
   $output = theme('table', $header, $rows);
-  $output .= drupal_render($form);
+  $output .= drupal_render_children($form);
   return $output;
 }

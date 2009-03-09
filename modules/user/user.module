@@ -1,5 +1,5 @@
 <?php
-// $Id: user.module,v 1.954 2009/01/13 06:27:01 webchick Exp $
+// $Id: user.module,v 1.963 2009/02/09 07:36:15 webchick Exp $
 
 /**
  * @file
@@ -81,6 +81,32 @@ function user_theme() {
       'arguments' => array('signature' => NULL),
     ),
   );
+}
+
+/**
+ * Implementation of hook_fieldable_info().
+ */
+function user_fieldable_info() {
+  $return = array(
+    'user' => array(
+      'name' => t('User'),
+      'id key' => 'uid',
+    ),
+  );
+  return $return;
+}
+
+/**
+ * Implementation of hook_field_build_modes().
+ */
+function user_field_build_modes($obj_type) {
+  $modes = array();
+  if ($obj_type == 'user') {
+    $modes = array(
+      'full' => t('User account'),
+    );
+  }
+  return $modes;
 }
 
 function user_external_load($authname) {
@@ -186,6 +212,18 @@ function user_load($array = array()) {
     while ($role = db_fetch_object($result)) {
       $user->roles[$role->rid] = $role->name;
     }
+
+    // Attach fields.
+    // TODO D7 : not sure the 3rd param ($types) is needed.
+    field_attach_load('user', array($user->uid => $user));
+
+    if (!empty($user->picture) && ($file = file_load($user->picture))) {
+      $user->picture = $file;
+    }
+    else {
+      $user->picture = NULL;
+    }
+
     user_module_invoke('load', $array, $user);
   }
   else {
@@ -233,6 +271,18 @@ function user_save($account, $edit = array(), $category = 'account') {
     unset($edit['pass']);
   }
 
+  // Get the fields form so we can recognize the fields in the $edit
+  // form that should not go into the serialized data array.
+  $field_form = array();
+  $field_form_state = array();
+  $edit = (object) $edit;
+  field_attach_form('user', $edit, $field_form, $field_form_state);
+
+  // Presave fields.
+  field_attach_presave('user', $edit);
+
+  $edit = (array) $edit;
+
   if (is_object($account) && $account->uid) {
     user_module_invoke('update', $edit, $account, $category);
     $data = unserialize(db_result(db_query('SELECT data FROM {users} WHERE uid = %d', $account->uid)));
@@ -242,9 +292,10 @@ function user_save($account, $edit = array(), $category = 'account') {
       $edit['access'] = REQUEST_TIME;
     }
     foreach ($edit as $key => $value) {
-      // Fields that don't pertain to the users or user_roles
-      // automatically serialized into the users.data column.
-      if ($key != 'roles' && empty($user_fields[$key])) {
+      // Form fields that don't pertain to the users, user_roles, or
+      // Field API are automatically serialized into the users.data
+      // column.
+      if ($key != 'roles' && empty($user_fields[$key]) && empty($field_form[$key])) {
         if ($value === NULL) {
           unset($data[$key]);
         }
@@ -254,13 +305,43 @@ function user_save($account, $edit = array(), $category = 'account') {
       }
     }
 
+
+    // Process picture uploads.
+    if (!empty($edit['picture']->fid)) {
+      $picture = $edit['picture'];
+      // If the picture is a temporary file move it to its final location and
+      // make it permanent.
+      if (($picture->status & FILE_STATUS_PERMANENT) == 0) {
+        $info = image_get_info($picture->filepath);
+        $destination = file_create_path(variable_get('user_picture_path', 'pictures') . '/picture-' . $account->uid . '.' . $info['extension']);
+        if ($picture = file_move($picture, $destination, FILE_EXISTS_REPLACE)) {
+          $picture->status |= FILE_STATUS_PERMANENT;
+          $edit['picture'] = file_save($picture);
+        }
+      }
+    }
+    $edit['picture'] = empty($edit['picture']->fid) ? 0 : $edit['picture']->fid;
+
     $edit['data'] = $data;
     $edit['uid'] = $account->uid;
     // Save changes to the users table.
     $success = drupal_write_record('users', $edit, 'uid');
     if (!$success) {
-      // The query failed - better to abort the save than risk further data loss.
-      return FALSE;
+      // The query failed - better to abort the save than risk further
+      // data loss.
+
+      // TODO: Fields change: I think this is a bug.  If no columns in
+      // the users table are changed, drupal_write_record returns
+      // FALSE because rowCount() (rows changed) is 0.  However,
+      // non-users data may have been changed, e.g. fields.
+      // return FALSE;
+    }
+
+    // If the picture changed or was unset, remove the old one. This step needs
+    // to occur after updating the {users} record so that user_file_references()
+    // doesn't report it in use and block the deletion.
+    if (!empty($account->picture->fid) && ($edit['picture'] != $account->picture->fid)) {
+      file_delete($account->picture);
     }
 
     // Reload user roles if provided.
@@ -287,6 +368,10 @@ function user_save($account, $edit = array(), $category = 'account') {
         drupal_session_regenerate();
       }
     }
+
+    // Save Field data.
+    $obj = (object) $edit;
+    field_attach_update('user', $obj);
 
     // Refresh user object.
     $user = user_load(array('uid' => $account->uid));
@@ -321,13 +406,19 @@ function user_save($account, $edit = array(), $category = 'account') {
     // Build the initial user object.
     $user = user_load(array('uid' => $edit['uid']));
 
+    $obj = (object) $edit;
+    field_attach_insert('user', $obj);
+
     user_module_invoke('insert', $edit, $user, $category);
 
     // Note, we wait with saving the data column to prevent module-handled
     // fields from being saved there.
     $data = array();
     foreach ($edit as $key => $value) {
-      if (($key != 'roles') && (empty($user_fields[$key])) && ($value !== NULL)) {
+      // Form fields that don't pertain to the users, user_roles, or
+      // Field API are automatically serialized into the users.data
+      // column.
+      if (($key != 'roles') && (empty($user_fields[$key]) && empty($field_form[$key])) && ($value !== NULL)) {
         $data[$key] = $value;
       }
     }
@@ -405,23 +496,14 @@ function user_validate_picture(&$form, &$form_state) {
     'file_validate_image_resolution' => array(variable_get('user_picture_dimensions', '85x85')),
     'file_validate_size' => array(variable_get('user_picture_file_size', '30') * 1024),
   );
-  if ($file = file_save_upload('picture_upload', $validators)) {
-    // Remove the old picture.
-    if (isset($form_state['values']['_account']->picture) && file_exists($form_state['values']['_account']->picture)) {
-      file_unmanaged_delete($form_state['values']['_account']->picture);
-    }
 
-    // The image was saved using file_save_upload() and was added to the
-    // files table as a temporary file. We'll make a copy and let the garbage
-    // collector delete the original upload.
-    $info = image_get_info($file->filepath);
-    $destination = file_create_path(variable_get('user_picture_path', 'pictures') . '/picture-' . $form['#uid'] . '.' . $info['extension']);
-    if ($filepath = file_unmanaged_copy($file->filepath, $destination, FILE_EXISTS_REPLACE)) {
-      $form_state['values']['picture'] = $filepath;
-    }
-    else {
-      form_set_error('picture_upload', t("Failed to upload the picture image; the %directory directory doesn't exist or is not writable.", array('%directory' => variable_get('user_picture_path', 'pictures'))));
-    }
+  // Save the file as a temporary file.
+  $file = file_save_upload('picture_upload', $validators);
+  if ($file === FALSE) {
+    form_set_error('picture_upload', t("Failed to upload the picture image; the %directory directory doesn't exist or is not writable.", array('%directory' => variable_get('user_picture_path', 'pictures'))));
+  }
+  elseif ($file !== NULL) {
+    $form_state['values']['picture_upload'] = $file;
   }
 }
 
@@ -604,11 +686,34 @@ function user_perm() {
  *
  * Ensure that user pictures (avatars) are always downloadable.
  */
-function user_file_download($file) {
-  if (strpos($file, variable_get('user_picture_path', 'pictures') . '/picture-') === 0) {
-    $info = image_get_info(file_create_path($file));
+function user_file_download($filepath) {
+  if (strpos($filepath, variable_get('user_picture_path', 'pictures') . '/picture-') === 0) {
+    $info = image_get_info(file_create_path($filepath));
     return array('Content-type: ' . $info['mime_type']);
   }
+}
+
+/**
+ * Implementation of hook_file_references().
+ */
+function user_file_references($file) {
+  // Determine if the file is used by this module.
+  $count = db_query('SELECT COUNT(*) FROM {users} WHERE picture = :fid', array(':fid' => $file->fid))->fetchField();
+  if ($count) {
+    // Return the name of the module and how many references it has to the file.
+    return array('user' => $count);
+  }
+}
+
+/**
+ * Implementation of hook_file_delete().
+ */
+function user_file_delete($file) {
+  // Remove any references to the file.
+  db_update('users')
+    ->fields(array('picture' => 0))
+    ->condition('picture', $file->fid)
+    ->execute();
 }
 
 /**
@@ -648,8 +753,12 @@ function user_search($op = 'search', $keys = NULL, $skip_access_check = FALSE) {
  */
 function user_elements() {
   return array(
-    'user_profile_category' => array(),
-    'user_profile_item' => array(),
+    'user_profile_category' => array(
+      '#theme_wrapper' => 'user_profile_category'
+    ),
+    'user_profile_item' => array(
+      '#theme' => 'user_profile_item'
+    ),
   );
 }
 
@@ -658,7 +767,7 @@ function user_elements() {
  */
 function user_user_view(&$edit, &$account, $category = NULL) {
   $account->content['user_picture'] = array(
-    '#value' => theme('user_picture', $account),
+    '#markup' => theme('user_picture', $account),
     '#weight' => -10,
   );
   if (!isset($account->content['summary'])) {
@@ -688,7 +797,7 @@ function user_user_form(&$edit, &$account, $category = NULL) {
 }
 
 /**
- * Implementation of hook_user_validate.
+ * Implementation of hook_user_validate().
  */
 function user_user_validate(&$edit, &$account, $category = NULL) {
   if ($category == 'account') {
@@ -703,28 +812,38 @@ function user_user_validate(&$edit, &$account, $category = NULL) {
       }
     }
 
-    // Validate the e-mail address:
+    // Validate the e-mail address, and check if it is taken by an existing user.
     if ($error = user_validate_mail($edit['mail'])) {
       form_set_error('mail', $error);
     }
     elseif (db_result(db_query("SELECT COUNT(*) FROM {users} WHERE uid != %d AND LOWER(mail) = LOWER('%s')", $uid, $edit['mail'])) > 0) {
-      form_set_error('mail', t('The e-mail address %email is already registered. <a href="@password">Have you forgotten your password?</a>', array('%email' => $edit['mail'], '@password' => url('user/password'))));
+      // Format error message dependent on whether the user is logged in or not.
+      if ($GLOBALS['user']->uid) {
+        form_set_error('mail', t('The e-mail address %email is already taken.', array('%email' => $edit['mail'])));
+      }
+      else {
+        form_set_error('mail', t('The e-mail address %email is already registered. <a href="@password">Have you forgotten your password?</a>', array('%email' => $edit['mail'], '@password' => url('user/password'))));
+      }
     }
   }
 }
 
 /**
- * Implementation of hook_user_submit.
+ * Implementation of hook_user_submit().
  */
 function user_user_submit(&$edit, &$account, $category = NULL) {
   if ($category == 'account') {
-    // Delete picture if requested, and if no replacement picture was given.
-    if (!empty($edit['picture_delete'])) {
-      if ($account->picture && file_exists($account->picture)) {
-        file_unmanaged_delete($account->picture);
-      }
-      $edit['picture'] = '';
+    if (!empty($edit['picture_upload'])) {
+      $edit['picture'] = $edit['picture_upload'];
     }
+    // Delete picture if requested, and if no replacement picture was given.
+    elseif (!empty($edit['picture_delete'])) {
+      $edit['picture'] = NULL;
+    }
+    // Remove these values so they don't end up serialized in the data field.
+    $edit['picture_upload'] = NULL;
+    $edit['picture_delete'] = NULL;
+
     if (isset($edit['roles'])) {
       $edit['roles'] = array_filter($edit['roles']);
     }
@@ -734,7 +853,7 @@ function user_user_submit(&$edit, &$account, $category = NULL) {
 /**
  * Implementation of hook_user_categories.
  */
-function user_user_categories(&$edit, &$account, $category = NULL) {
+function user_user_categories($edit, $account, $category = NULL) {
     return array(array('name' => 'account', 'title' => t('Account settings'), 'weight' => 1));
 }
 
@@ -812,6 +931,7 @@ function user_block_configure($delta = '') {
       $period = drupal_map_assoc(array(30, 60, 120, 180, 300, 600, 900, 1800, 2700, 3600, 5400, 7200, 10800, 21600, 43200, 86400), 'format_interval');
       $form['user_block_seconds_online'] = array('#type' => 'select', '#title' => t('User activity'), '#default_value' => variable_get('user_block_seconds_online', 900), '#options' => $period, '#description' => t('A user is considered online for this long after they have last viewed a page.'));
       $form['user_block_max_list_count'] = array('#type' => 'select', '#title' => t('User list length'), '#default_value' => variable_get('user_block_max_list_count', 10), '#options' => drupal_map_assoc(array(0, 5, 10, 15, 20, 25, 30, 40, 50, 75, 100)), '#description' => t('Maximum number of currently online users to display.'));
+      $form['user_block_cache'] = array('#markup' => '<p>If page caching is disabled, the block shows the number of anonymous and authenticated users, respectively. If page caching is enabled, only the number of authenticated users is displayed.</p>');
       return $form;
   }
 }
@@ -877,15 +997,22 @@ function user_block_view($delta = '') {
 
         // Perform database queries to gather online user lists. We use s.timestamp
         // rather than u.access because it is much faster.
-        $anonymous_count = drupal_session_count($interval);
         $authenticated_count = db_query("SELECT COUNT(DISTINCT s.uid) FROM {sessions} s WHERE s.timestamp >= :timestamp AND s.uid > 0", array(':timestamp' => $interval))->fetchField();
 
-        // Format the output with proper grammar.
-        if ($anonymous_count == 1 && $authenticated_count == 1) {
-          $output = t('There is currently %members and %visitors online.', array('%members' => format_plural($authenticated_count, '1 user', '@count users'), '%visitors' => format_plural($anonymous_count, '1 guest', '@count guests')));
+        // When page caching is enabled, sessions are only created for
+        // anonymous users when needed.
+        if (variable_get('cache', CACHE_DISABLED) == CACHE_DISABLED) {
+          $anonymous_count = drupal_session_count($interval);
+          // Format the output with proper grammar.
+          if ($anonymous_count == 1 && $authenticated_count == 1) {
+            $output = t('There is currently %members and %visitors online.', array('%members' => format_plural($authenticated_count, '1 user', '@count users'), '%visitors' => format_plural($anonymous_count, '1 guest', '@count guests')));
+          }
+          else {
+            $output = t('There are currently %members and %visitors online.', array('%members' => format_plural($authenticated_count, '1 user', '@count users'), '%visitors' => format_plural($anonymous_count, '1 guest', '@count guests')));
+          }
         }
         else {
-          $output = t('There are currently %members and %visitors online.', array('%members' => format_plural($authenticated_count, '1 user', '@count users'), '%visitors' => format_plural($anonymous_count, '1 guest', '@count guests')));
+          $output = format_plural($authenticated_count, 'There is currently 1 user online.', 'There are currently @count users online.');
         }
 
         // Display a list of currently online users.
@@ -906,7 +1033,8 @@ function user_block_view($delta = '') {
  * Process variables for user-picture.tpl.php.
  *
  * The $variables array contains the following arguments:
- * - $account
+ * - $account: A user, node or comment object with 'name', 'uid' and 'picture'
+ *   fields.
  *
  * @see user-picture.tpl.php
  */
@@ -914,16 +1042,27 @@ function template_preprocess_user_picture(&$variables) {
   $variables['picture'] = '';
   if (variable_get('user_pictures', 0)) {
     $account = $variables['account'];
-    if (!empty($account->picture) && file_exists($account->picture)) {
-      $picture = file_create_url($account->picture);
+    if (!empty($account->picture)) {
+      // @TODO: Ideally this function would only be passed file objects, but
+      // since there's a lot of legacy code that JOINs the {users} table to
+      // {node} or {comments} and passes the results into this function if we
+      // a numeric value in the picture field we'll assume it's a file id
+      // and load it for them. Once we've got user_load_multiple() and
+      // comment_load_multiple() functions the user module will be able to load
+      // the picture files in mass during the object's load process.
+      if (is_numeric($account->picture)) {
+        $account->picture = file_load($account->picture);
+      }
+      if (!empty($account->picture->filepath)) {
+        $filepath = $account->picture->filepath;
+      }
     }
     elseif (variable_get('user_picture_default', '')) {
-      $picture = variable_get('user_picture_default', '');
+      $filepath = variable_get('user_picture_default', '');
     }
-
-    if (isset($picture)) {
+    if (isset($filepath)) {
       $alt = t("@user's picture", array('@user' => $account->name ? $account->name : variable_get('anonymous', t('Anonymous'))));
-      $variables['picture'] = theme('image', $picture, $alt, $alt, '', FALSE);
+      $variables['picture'] = theme('image', $filepath, $alt, $alt, '', FALSE);
       if (!empty($account->uid) && user_access('access user profiles')) {
         $attributes = array('attributes' => array('title' => t('View user profile.')), 'html' => TRUE);
         $variables['picture'] = l($variables['picture'], "user/$account->uid", $attributes);
@@ -1518,6 +1657,8 @@ function user_edit_form(&$form_state, $uid, $edit, $register = FALSE) {
   _user_password_dynamic_validation();
   $admin = user_access('administer users');
 
+  $form = array();
+
   // Account information:
   $form['account'] = array('#type' => 'fieldset',
     '#title' => t('Account information'),
@@ -1608,16 +1749,30 @@ function user_edit_form(&$form_state, $uid, $edit, $register = FALSE) {
 
   // Picture/avatar:
   if (variable_get('user_pictures', 0) && !$register) {
-    $form['picture'] = array('#type' => 'fieldset', '#title' => t('Picture'), '#weight' => 1);
-    $picture = theme('user_picture', (object)$edit);
-    if ($edit['picture']) {
-      $form['picture']['current_picture'] = array('#markup' => $picture);
-      $form['picture']['picture_delete'] = array('#type' => 'checkbox', '#title' => t('Delete picture'), '#description' => t('Check this box to delete your current picture.'));
-    }
-    else {
-      $form['picture']['picture_delete'] = array('#type' => 'hidden');
-    }
-    $form['picture']['picture_upload'] = array('#type' => 'file', '#title' => t('Upload picture'), '#size' => 48, '#description' => t('Your virtual face or picture. Maximum dimensions are %dimensions and the maximum size is %size kB.', array('%dimensions' => variable_get('user_picture_dimensions', '85x85'), '%size' => variable_get('user_picture_file_size', '30'))) . ' ' . variable_get('user_picture_guidelines', ''));
+    $form['picture'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Picture'),
+      '#weight' => 1,
+    );
+    $form['picture']['picture'] = array(
+      '#type' => 'value',
+      '#value' => $edit['picture'],
+    );
+    $form['picture']['picture_current'] = array(
+      '#markup' => theme('user_picture', (object)$edit),
+    );
+    $form['picture']['picture_delete'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Delete picture'),
+      '#access' => !empty($edit['picture']->fid),
+      '#description' => t('Check this box to delete your current picture.'),
+    );
+    $form['picture']['picture_upload'] = array(
+      '#type' => 'file',
+      '#title' => t('Upload picture'),
+      '#size' => 48,
+      '#description' => t('Your virtual face or picture. Maximum dimensions are %dimensions pixels and the maximum size is %size kB.', array('%dimensions' => variable_get('user_picture_dimensions', '85x85'), '%size' => variable_get('user_picture_file_size', '30'))) . ' ' . variable_get('user_picture_guidelines', ''),
+    );
     $form['#validate'][] = 'user_validate_picture';
   }
   $form['#uid'] = $uid;
@@ -1696,6 +1851,7 @@ function _user_cancel($edit, $account, $method) {
       }
       db_update('users')->fields(array('status' => 0))->condition('uid', $account->uid)->execute();
       drupal_set_message(t('%name has been disabled.', array('%name' => $account->name)));
+      watchdog('user', 'Blocked user: %name %email.', array('%name' => $account->name, '%email' => '<' . $account->mail . '>'), WATCHDOG_NOTICE);
       break;
 
     case 'user_cancel_reassign':
@@ -1708,8 +1864,7 @@ function _user_cancel($edit, $account, $method) {
       db_delete('users_roles')->condition('uid', $account->uid)->execute();
       db_delete('authmap')->condition('uid', $account->uid)->execute();
       drupal_set_message(t('%name has been deleted.', array('%name' => $account->name)));
-      $variables = array('%name' => $account->name, '%email' => '<' . $account->mail . '>');
-      watchdog('user', 'Deleted user: %name %email.', $variables, WATCHDOG_NOTICE);
+      watchdog('user', 'Deleted user: %name %email.', array('%name' => $account->name, '%email' => '<' . $account->mail . '>'), WATCHDOG_NOTICE);
       break;
   }
 
@@ -1739,7 +1894,15 @@ function _user_cancel($edit, $account, $method) {
  */
 function user_build_content(&$account) {
   $edit = NULL;
+  $account->content = array();
+
+  // Build fields content.
+  // TODO D7 : figure out where exactly this needs to go
+  // TODO D7 : $page / $teaser ??
+  $account->content += field_attach_view('user', $account);
+
   user_module_invoke('view', $edit, $account);
+
   // Allow modules to modify the fully-built profile.
   drupal_alter('profile', $account);
 

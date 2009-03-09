@@ -1,5 +1,5 @@
 <?php
-// $Id: system.api.php,v 1.12 2009/01/14 21:16:20 dries Exp $
+// $Id: system.api.php,v 1.18 2009/02/09 15:42:52 webchick Exp $
 
 /**
  * @file
@@ -177,6 +177,63 @@ function hook_footer($main = 0) {
 function hook_js_alter(&$javascript) {
   // Swap out jQuery to use an updated version of the library.
   $javascript['misc/jquery.js']['data'] = drupal_get_path('module', 'jquery_update') . '/jquery.js';
+}
+
+/**
+ * Perform alterations before a page is rendered.
+ *
+ * Use this hook when you want to add, remove, or alter elements at the page
+ * level. If you are making changes to entities such as forms, menus, or user
+ * profiles, use those objects' native alter hooks instead (hook_form_alter(),
+ * for example).
+ *
+ * The $page array contains top level elements for each block region:
+ * @code
+ *   $page['header']
+ *   $page['left']
+ *   $page['content']
+ *   $page['right']
+ *   $page['footer']
+ * @endcode
+ *
+ * The 'content' element contains the main content of the current page, and its
+ * structure will vary depending on what module is responsible for building the
+ * page. Some legacy modules may not return structured content at all: their
+ * pre-rendered markup will be located in $page['content']['main']['#markup'].
+ *
+ * Pages built by Drupal's core Node and Blog modules use a standard structure:
+ *
+ * @code
+ *   // Node body.
+ *   $page['content']['nodes'][$nid]['body']
+ *   // Array of links attached to the node (add comments, read more).
+ *   $page['content']['nodes'][$nid]['links']
+ *   // The node object itself.
+ *   $page['content']['nodes'][$nid]['#node']
+ *   // The results pager.
+ *   $page['content']['pager']
+ * @endcode
+ *
+ * Blocks may be referenced by their module/delta pair within a region:
+ * @code
+ *   // The login block in the left sidebar region.
+ *   $page['left']['user-login']['#block'];
+ * @endcode
+ *
+ * @param $page
+ *   Nested array of renderable elements that make up the page.
+ *
+ * @see drupal_render_page()
+ */
+function hook_page_alter($page) {
+  if (menu_get_object('node', 1)) {
+    // We are on a node detail page. Append a standard disclaimer to the
+    // content region.
+    $page['content']['disclaimer'] = array(
+      '#markup' => t('Acme, Inc. is not responsible for the contents of this sample code.'),
+      '#weight' => 25,
+    );
+  }
 }
 
 /**
@@ -1265,7 +1322,7 @@ function hook_requirements($phase) {
 
   // Report cron status
   if ($phase == 'runtime') {
-    $cron_last = variable_get('cron_last', NULL);
+    $cron_last = variable_get('cron_last');
 
     if (is_numeric($cron_last)) {
       $requirements['cron']['value'] = $t('Last run !time ago', array('!time' => format_interval(REQUEST_TIME - $cron_last)));
@@ -1382,14 +1439,14 @@ function hook_schema_alter(&$schema) {
  *
  * @see hook_query_TAG_alter()
  * @see node_query_node_access_alter()
- * 
+ *
  * @param $query
  *   A Query object describing the composite parts of a SQL query.
  * @return
  *   None.
  */
 function hook_query_alter(QueryAlterableInterface $query) {
-  
+
 }
 
 /**
@@ -1397,7 +1454,7 @@ function hook_query_alter(QueryAlterableInterface $query) {
  *
  * @see hook_query_alter()
  * @see node_query_node_access_alter()
- * 
+ *
  * @param $query
  *   An Query object describing the composite parts of a SQL query.
  * @return
@@ -1430,7 +1487,7 @@ function hook_query_TAG_alter(QueryAlterableInterface $query) {
       if (count($or->conditions())) {
         $query->condition($or);
       }
-      
+
       $query->condition("{$access_alias}.grant_$op", 1, '>=');
     }
   }
@@ -1445,7 +1502,8 @@ function hook_query_TAG_alter(QueryAlterableInterface $query) {
  * function needs to be updated to reflect the current version of the database
  * schema.
  *
- * See the Schema API documentation at http://drupal.org/node/146843
+ * See the Schema API documentation at
+ * @link http://drupal.org/node/146843 http://drupal.org/node/146843 @endlink
  * for details on hook_schema, where a database tables are defined.
  *
  * Note that since this function is called from a full bootstrap, all functions
@@ -1468,7 +1526,8 @@ function hook_install() {
  *
  * The database updates are numbered sequentially according to the version of Drupal you are compatible with.
  *
- * Schema updates should adhere to the Schema API: http://drupal.org/node/150215
+ * Schema updates should adhere to the Schema API:
+ * @link http://drupal.org/node/150215 http://drupal.org/node/150215 @endlink
  *
  * Database updates consist of 3 parts:
  * - 1 digit for Drupal core compatibility
@@ -1492,17 +1551,17 @@ function hook_install() {
  *     6.x-1.x branch only.
  *
  * A good rule of thumb is to remove updates older than two major releases of
- * Drupal.
+ * Drupal. See hook_update_last_removed() to notify Drupal about the removals.
  *
  * Never renumber update functions.
  *
  * Further information about releases and release numbers:
- * - http://drupal.org/handbook/version-info
- * - http://drupal.org/node/93999 (Overview of contributions branches and tags)
- * - http://drupal.org/handbook/cvs/releases
+ * - @link http://drupal.org/handbook/version-info http://drupal.org/handbook/version-info @endlink
+ * - @link http://drupal.org/node/93999 http://drupal.org/node/93999 @endlink (Overview of contributions branches and tags)
+ * - @link http://drupal.org/handbook/cvs/releases http://drupal.org/handbook/cvs/releases @endlink
  *
  * Implementations of this hook should be placed in a mymodule.install file in
- * the same directory at mymodule.module. Drupal core's updates are implemented
+ * the same directory as mymodule.module. Drupal core's updates are implemented
  * using the system module as a name and stored in database/updates.inc.
  *
  * @return An array with the results of the calls to update_sql(). An upate
@@ -1517,6 +1576,28 @@ function hook_update_N() {
   $ret = array();
   db_add_field($ret, 'mytable1', 'newcol', array('type' => 'int', 'not null' => TRUE));
   return $ret;
+}
+
+/**
+ * Return a number which is no longer available as hook_update_N().
+ *
+ * If you remove some update functions from your mymodule.install file, you
+ * should notify Drupal of those missing functions. This way, Drupal can
+ * ensure that no update is accidentally skipped.
+ *
+ * Implementations of this hook should be placed in a mymodule.install file in
+ * the same directory as mymodule.module.
+ *
+ * @return
+ *   An integer, corresponding to hook_update_N() which has been removed from
+ *   mymodule.install.
+ *
+ * @see hook_update_N()
+ */
+function hook_update_last_removed() {
+  // We've removed the 5.x-1.x version of mymodule, including database updates.
+  // The next update function is mymodule_update_5200().
+  return 5103;
 }
 
 /**

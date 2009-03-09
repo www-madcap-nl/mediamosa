@@ -1,5 +1,5 @@
 <?php
-// $Id: node.api.php,v 1.7 2009/01/04 16:19:39 dries Exp $
+// $Id: node.api.php,v 1.10 2009/01/28 07:34:30 webchick Exp $
 
 /**
  * @file
@@ -81,7 +81,7 @@ function hook_node_access_records($node) {
     return;
   }
 
-  // We only care about the node if it's been marked private. If not, it is
+  // We only care about the node if it has been marked private. If not, it is
   // treated just like any other node and we completely ignore it.
   if ($node->private) {
     $grants = array();
@@ -158,10 +158,10 @@ function hook_node_operations() {
  * Fiter, substitute or otherwise alter the $node's raw text.
  *
  * The $node->content array has been rendered, so the node body or
- * teaser is filtered and now contains HTML. This hook should only be 
- * used when text substitution, filtering, or other raw text operations 
+ * teaser is filtered and now contains HTML. This hook should only be
+ * used when text substitution, filtering, or other raw text operations
  * are necessary.
- * 
+ *
  * @param $node
  *   The node the action is being performed on.
  * @param $teaser
@@ -169,7 +169,7 @@ function hook_node_operations() {
  * @return
  *   None.
  */
-function hook_nodeapi_alter($node, $teaser, $page) {
+function hook_nodeapi_alter($node, $teaser) {
 }
 
 /**
@@ -281,9 +281,9 @@ function hook_nodeapi_prepare_translation($node) {
  * An RSS feed is being generated.
  *
  * The module can return properties to be added to the RSS item generated for
- * this node. See comment_nodeapi_rss_item() and upload_nodeapi_rss_item() for
- * examples. The $node passed can also be modified to add or remove contents to
- * the feed item.
+ * this node. This hook should only be used to add XML elements to the RSS
+ * feed item itself. See comment_nodeapi_rss_item() and upload_nodeapi_rss_item()
+ * for examples.
  *
  * @param $node
  *   The node the action is being performed on.
@@ -300,7 +300,7 @@ function hook_nodeapi_rss_item($node) {
 }
 
 /**
- * The node is being displayed as a search result. 
+ * The node is being displayed as a search result.
  *
  * If you want to display extra information with the result, return it.
  *
@@ -366,9 +366,9 @@ function hook_nodeapi_update_index($node) {
 }
 
 /**
- * The user has finished editing the node and is previewing or submitting it. 
+ * The user has finished editing the node and is previewing or submitting it.
  *
- * This hook can be used to check the node data. Errors should be set with 
+ * This hook can be used to check the node data. Errors should be set with
  * form_set_error().
  *
  * @param $node
@@ -387,10 +387,10 @@ function hook_nodeapi_validate($node, $form) {
 }
 
 /**
- * The node content is being assembled before rendering. 
+ * The node content is being assembled before rendering.
  *
- * The module may add elements $node->content prior to rendering. This hook 
- * will be called after hook_view(). The structure of $node->content is a renderable 
+ * The module may add elements $node->content prior to rendering. This hook
+ * will be called after hook_view(). The structure of $node->content is a renderable
  * array as expected by drupal_render().
  *
  * @param $node

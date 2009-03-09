@@ -1,5 +1,5 @@
 <?php
-// $Id: dblog.module,v 1.32 2009/01/08 08:42:12 webchick Exp $
+// $Id: dblog.module,v 1.35 2009/01/25 12:19:31 webchick Exp $
 
 /**
  * @file
@@ -48,6 +48,7 @@ function dblog_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('dblog_admin_settings'),
     'access arguments' => array('administer site configuration'),
+    'type' => MENU_LOCAL_TASK,
   );
   $items['admin/reports/dblog'] = array(
     'title' => 'Recent log entries',
@@ -103,7 +104,7 @@ function dblog_cron() {
 /**
  * Implementation of hook_user_cancel().
  */
-function dblog_user_cancel(&$edit, &$account, $method) {
+function dblog_user_cancel($edit, $account, $method) {
   switch ($method) {
     case 'user_cancel_reassign':
       db_update('watchdog')->fields(array('uid' => 0))->condition('uid', $account->uid)->execute();
@@ -132,7 +133,7 @@ function _dblog_get_message_types() {
  * Note some values may be truncated for database column size restrictions.
  */
 function dblog_watchdog(array $log_entry) {
-  Database::getConnection('default')->insert('watchdog')
+  Database::getConnection('default', 'default')->insert('watchdog')
     ->fields(array(
       'uid' => $log_entry['user']->uid,
       'type' => substr($log_entry['type'], 0, 64),

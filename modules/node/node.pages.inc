@@ -1,5 +1,5 @@
 <?php
-// $Id: node.pages.inc,v 1.48 2008/12/30 16:43:18 dries Exp $
+// $Id: node.pages.inc,v 1.55 2009/02/13 02:22:09 webchick Exp $
 
 /**
  * @file
@@ -11,7 +11,8 @@
  * Menu callback; presents the node editing form, or redirects to delete confirmation.
  */
 function node_page_edit($node) {
-  drupal_set_title($node->title);
+  $type_name = node_get_types('name', $node);
+  drupal_set_title(t('<em>Edit @type</em> @title', array('@type' => $type_name, '@title' => $node->title)), PASS_THROUGH);
   return drupal_get_form($node->type . '_node_form', $node);
 }
 
@@ -164,9 +165,9 @@ function node_form(&$form_state, $node) {
     );
     $form['revision_information']['log'] = array(
       '#type' => 'textarea',
-      '#title' => t('Log message'),
+      '#title' => t('Revision log message'),
       '#rows' => 2,
-      '#description' => t('An explanation of the additions or updates being made to help other authors understand your motivations.'),
+      '#description' => t('Provide an explanation of the changes you are making. This will help other authors understand your motivations.'),
     );
   }
 
@@ -258,6 +259,10 @@ function node_form(&$form_state, $node) {
   }
   $form['#validate'][] = 'node_form_validate';
   $form['#theme'] = array($node->type . '_node_form', 'node_form');
+
+  $form['#builder_function'] = 'node_form_submit_build_node';
+  field_attach_form('node', $node, $form, $form_state);
+
   return $form;
 }
 
@@ -297,7 +302,7 @@ function node_body_field(&$node, $label, $word_count) {
     '#default_value' => $include ? $node->body : ($node->teaser . $node->body),
     '#rows' => 20,
     '#required' => ($word_count > 0),
-    '#input_format' => isset($node->format) ? $node->format : FILTER_FORMAT_DEFAULT,
+    '#text_format' => isset($node->format) ? $node->format : FILTER_FORMAT_DEFAULT,
   );
 
   return $form;
@@ -331,7 +336,7 @@ function theme_node_form($form) {
   $output = "\n<div class=\"node-form\">\n";
 
   $output .= "  <div class=\"standard\">\n";
-  $output .= drupal_render($form);
+  $output .= drupal_render_children($form);
   $output .= "  </div>\n";
 
   $output .= "</div>\n";
@@ -415,12 +420,12 @@ function theme_node_preview($node) {
   if ($preview_trimmed_version) {
     drupal_set_message(t('The trimmed version of your post shows what your post looks like when promoted to the main page or when exported for syndication.<span class="no-js"> You can insert the delimiter "&lt;!--break--&gt;" (without the quotes) to fine-tune where your post gets split.</span>'));
     $output .= '<h3>' . t('Preview trimmed version') . '</h3>';
-    $output .= node_view(clone $node, 1, FALSE);
+    $output .= drupal_render(node_build(clone $node, TRUE));
     $output .= '<h3>' . t('Preview full version') . '</h3>';
-    $output .= node_view($node, 0, FALSE);
+    $output .= drupal_render(node_build($node, FALSE));
   }
   else {
-    $output .= node_view($node, 0, FALSE);
+    $output .= drupal_render(node_build($node, FALSE));
   }
   $output .= "</div>\n";
 
@@ -466,6 +471,9 @@ function node_form_submit_build_node($form, &$form_state) {
   unset($form_state['submit_handlers']);
   form_execute_handlers('submit', $form, $form_state);
   $node = node_submit($form_state['values']);
+
+  field_attach_submit('node', $node, $form, $form_state);
+
   $form_state['node'] = (array)$node;
   $form_state['rebuild'] = TRUE;
   return $node;

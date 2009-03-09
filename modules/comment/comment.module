@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.module,v 1.682 2009/01/14 21:48:24 dries Exp $
+// $Id: comment.module,v 1.692 2009/02/07 20:10:40 webchick Exp $
 
 /**
  * @file
@@ -117,9 +117,6 @@ function comment_theme() {
   return array(
     'comment_block' => array(
       'arguments' => array(),
-    ),
-    'comment_admin_overview' => array(
-      'arguments' => array('form' => NULL),
     ),
     'comment_preview' => array(
       'arguments' => array('comment' => NULL, 'node' => NULL, 'links' => array(), 'visible' => 1),
@@ -332,18 +329,15 @@ function comment_get_recent($number = 10) {
     // Step 2: From among the comments on the nodes selected in the first query,
     //         find the $number of most recent comments.
     // Using Query Builder here for the IN-Statement.
-    $result = db_select('comment', 'c')
-      ->fields('c', array('nid', 'subject', 'cid', 'timestamp') )
-      ->innerJoin('node', 'n', 'n.nid = c.nid')
-      ->condition('c.nid', $nids, 'IN')
-      ->condition('c.status', COMMENT_PUBLISHED)
-      ->condition('n.status', 1)
-      ->orderBy('c.cid', 'DESC')
-      ->range(0, $number)
-      ->execute();
-    foreach ($result as $comment) {
-     $comments[] = $comment;
-    }
+    $query = db_select('comment', 'c');
+    $query->fields('c', array('nid', 'subject', 'cid', 'timestamp'));
+    $query->innerJoin('node', 'n', 'n.nid = c.nid');
+    $query->condition('c.nid', $nids, 'IN');
+    $query->condition('c.status', COMMENT_PUBLISHED);
+    $query->condition('n.status', 1);
+    $query->orderBy('c.cid', 'DESC');
+    $query->range(0, $number);
+    $comments = $query->execute()->fetchAll();
   }
 
   return $comments;
@@ -484,7 +478,7 @@ function comment_nodeapi_view($node, $teaser) {
         }
       }
     }
-    
+
     if (isset($links['comment_forbidden'])) {
       $links['comment_forbidden']['html'] = TRUE;
     }
@@ -493,21 +487,22 @@ function comment_nodeapi_view($node, $teaser) {
       '#type' => 'node_links',
       '#value' => $links,
     );
-    
+
     // Append the list of comments to $node->content for node detail pages.
     if ($node->comment && (bool)menu_get_object() && $node->build_mode != NODE_BUILD_PREVIEW) {
       $node->content['comments'] = array(
         '#markup' => comment_render($node),
+        '#sorted' => TRUE,
       );
     }
   }
 }
 
 /**
- * Implementation of hook_form_alter().
+ * Implementation of hook_form_FORM_ID_alter().
  */
-function comment_form_alter(&$form, $form_state, $form_id) {
-  if ($form_id == 'node_type_form' && isset($form['identity']['type'])) {
+function comment_form_node_type_form_alter(&$form, $form_state) {
+  if (isset($form['identity']['type'])) {
     $form['comment'] = array(
       '#type' => 'fieldset',
       '#title' => t('Comment settings'),
@@ -571,7 +566,13 @@ function comment_form_alter(&$form, $form_state, $form_id) {
       '#options' => array(t('Display on separate page'), t('Display below post or comments')),
     );
   }
-  elseif (!empty($form['#node_edit_form'])) {
+}
+
+/**
+ * Implementation of hook_form_alter().
+ */
+function comment_form_alter(&$form, $form_state, $form_id) {
+  if (!empty($form['#node_edit_form'])) {
     $node = $form['#node'];
     $form['comment_settings'] = array(
       '#type' => 'fieldset',
@@ -699,7 +700,7 @@ function comment_nodeapi_rss_item($node) {
 /**
  * Implementation of hook_user_cancel().
  */
-function comment_user_cancel(&$edit, &$account, $method) {
+function comment_user_cancel($edit, $account, $method) {
   switch ($method) {
     case 'user_cancel_block_unpublish':
       db_update('comment')->fields(array('status' => 0))->condition('uid', $account->uid)->execute();
@@ -1074,10 +1075,12 @@ function comment_render($node, $cid = 0) {
         $output .= theme('comment_view', $comment, $node, $links);
       }
     }
-    // Only attempt to render comments if the node has been commented upon.
-    else {
+    // Only attempt to render comments if the node has visible comments.
+    // Unpublished comments are not included in $node->comment_count, so show
+    // comments unconditionally if the user is an administrator.
+    elseif ($node->comment_count || user_access('administer comments')) {
 
-      //TODO Convert to dynamic queries once the pager query is updated to the new DBTNG API.
+      // TODO: Convert to dynamic queries once the pager query is updated to the new DBTNG API.
 
       // Multiple comment view.
       $query_count = 'SELECT COUNT(*) FROM {comment} c WHERE c.nid = %d';
@@ -1518,7 +1521,7 @@ function comment_form(&$form_state, $edit, $title = NULL) {
     '#title' => t('Comment'),
     '#rows' => 15,
     '#default_value' => $default,
-    '#input_format' => isset($edit['format']) ? $edit['format'] : FILTER_FORMAT_DEFAULT,
+    '#text_format' => isset($edit['format']) ? $edit['format'] : FILTER_FORMAT_DEFAULT,
     '#required' => TRUE,
   );
 
@@ -1642,7 +1645,7 @@ function comment_form_add_preview($form, &$form_state) {
   }
   else {
     $suffix = empty($form['#suffix']) ? '' : $form['#suffix'];
-    $form['#suffix'] = $suffix . node_view($node);
+    $form['#suffix'] = $suffix . drupal_render(node_build($node));
     $edit['pid'] = 0;
   }
 
@@ -2137,7 +2140,7 @@ function comment_unpublish_by_keyword_action_form($context) {
   $form['keywords'] = array(
     '#title' => t('Keywords'),
     '#type' => 'textarea',
-    '#description' => t('The comment will be unpublished if it contains any of the character sequences above. Use a comma-separated list of character sequences. Example: funny, bungee jumping, "Company, Inc." . Character sequences are case-sensitive.'),
+    '#description' => t('The comment will be unpublished if it contains any of the phrases above. Use a case-sensitive, comma-separated list of phrases. Example: funny, bungee jumping, "Company, Inc."'),
     '#default_value' => isset($context['keywords']) ? drupal_implode_tags($context['keywords']) : '',
   );
 

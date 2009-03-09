@@ -1,5 +1,5 @@
 <?php
-// $Id: bootstrap.test,v 1.10 2009/01/14 12:15:38 dries Exp $
+// $Id: bootstrap.test,v 1.12 2009/01/31 16:50:57 webchick Exp $
 
 class BootstrapIPAddressTestCase extends DrupalWebTestCase {
 
@@ -71,20 +71,12 @@ class BootstrapIPAddressTestCase extends DrupalWebTestCase {
       ip_address(TRUE) == $this->cluster_ip,
       t('Cluster environment got cluster client IP')
     );
-    $_SERVER['HTTP_HOST'] = 'security/.drupal.org:80';
-    $this->assertFalse(drupal_valid_http_host(), t('HTTP_HOST with / is invalid'));
-    $_SERVER['HTTP_HOST'] = 'security\\.drupal.org:80';
-    $this->assertFalse(drupal_valid_http_host(), t('HTTP_HOST with \\ is invalid'));
-    $_SERVER['HTTP_HOST'] = 'security<.drupal.org:80';
-    $this->assertFalse(drupal_valid_http_host(), t('HTTP_HOST with &lt; is invalid'));
-    $_SERVER['HTTP_HOST'] = 'security..drupal.org:80';
-    $this->assertFalse(drupal_valid_http_host(), t('HTTP_HOST with .. is invalid'));
-    $_SERVER['HTTP_HOST'] = '[::1]:80'; // IPv6 loopback address
-    $this->assertTrue(drupal_valid_http_host(), t('HTTP_HOST containing IPv6 loopback is valid'));
-    $_SERVER['HTTP_HOST'] = '';
-    $this->assertTrue(drupal_valid_http_host(), t('Empty HTTP_HOST is valid'));
-    $_SERVER['HTTP_HOST'] = NULL;
-    $this->assertTrue(drupal_valid_http_host(), t('NULL HTTP_HOST is valid'));
+    $this->assertFalse(drupal_valid_http_host('security/.drupal.org:80'), t('HTTP_HOST with / is invalid'));
+    $this->assertFalse(drupal_valid_http_host('security\\.drupal.org:80'), t('HTTP_HOST with \\ is invalid'));
+    $this->assertFalse(drupal_valid_http_host('security<.drupal.org:80'), t('HTTP_HOST with &lt; is invalid'));
+    $this->assertFalse(drupal_valid_http_host('security..drupal.org:80'), t('HTTP_HOST with .. is invalid'));
+    // IPv6 loopback address
+    $this->assertTrue(drupal_valid_http_host('[::1]:80'), t('HTTP_HOST containing IPv6 loopback is valid'));
   }
 }
 
@@ -159,7 +151,7 @@ class BootstrapVariableTestCase extends DrupalWebTestCase {
     // Setting and retrieving values.
     $variable = $this->randomName();
     variable_set('simpletest_bootstrap_variable_test', $variable);
-    $this->assertIdentical($variable, variable_get('simpletest_bootstrap_variable_test', NULL), t('Setting and retrieving values'));
+    $this->assertIdentical($variable, variable_get('simpletest_bootstrap_variable_test'), t('Setting and retrieving values'));
 
     // Make sure the variable persists across multiple requests.
     $this->drupalGet('system-test/variable-get');
@@ -170,6 +162,17 @@ class BootstrapVariableTestCase extends DrupalWebTestCase {
     variable_del('simpletest_bootstrap_variable_test');
     $variable = variable_get('simpletest_bootstrap_variable_test', $default_value);
     $this->assertIdentical($variable, $default_value, t('Deleting variables'));
+  }
+
+  /**
+   * Makes sure that the default variable parameter is passed through okay.
+   */
+  function testVariableDefaults() {
+    // Tests passing nothing through to the default.
+    $this->assertIdentical(NULL, variable_get('simpletest_bootstrap_variable_test'), t('Variables are correctly defaulting to NULL.'));
+
+    // Tests passing 5 to the default parameter.
+    $this->assertIdentical(5, variable_get('simpletest_bootstrap_variable_test', 5), t('The default variable parameter is passed through correctly.'));
   }
 
 }

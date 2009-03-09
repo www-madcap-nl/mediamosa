@@ -1,5 +1,5 @@
 <?php
-// $Id: user.test,v 1.25 2009/01/08 08:42:13 webchick Exp $
+// $Id: user.test,v 1.28 2009/02/09 07:36:15 webchick Exp $
 
 class UserRegistrationTestCase extends DrupalWebTestCase {
   function getInfo() {
@@ -42,7 +42,7 @@ class UserRegistrationTestCase extends DrupalWebTestCase {
     $this->assertEqual($user->signature, '', t('Correct signature field.'));
     $this->assertTrue(($user->created > REQUEST_TIME - 20 ), t('Correct creation time.'));
     $this->assertEqual($user->status, variable_get('user_register', 1) == 1 ? 1 : 0, t('Correct status field.'));
-    $this->assertEqual($user->timezone, variable_get('date_default_timezone', NULL), t('Correct time zone field.'));
+    $this->assertEqual($user->timezone, variable_get('date_default_timezone'), t('Correct time zone field.'));
     $this->assertEqual($user->language, '', t('Correct language field.'));
     $this->assertEqual($user->picture, '', t('Correct picture field.'));
     $this->assertEqual($user->init, $mail, t('Correct init field.'));
@@ -418,7 +418,7 @@ class UserCancelTestCase extends DrupalWebTestCase {
 
     // Create a regular user.
     $account = $this->drupalCreateUser(array());
-    
+
     // Create administrative user.
     $admin_user = $this->drupalCreateUser(array('administer users'));
     $this->drupalLogin($admin_user);
@@ -547,7 +547,8 @@ class UserPictureTestCase extends DrupalWebTestCase {
         // user's profile page.
         $text = t('The image was resized to fit within the maximum allowed dimensions of %dimensions pixels.', array('%dimensions' => $test_dim));
         $this->assertRaw($text, t('Image was resized.'));
-        $this->assertRaw(file_create_url($pic_path), t("Image is displayed in user's profile page"));
+        $alt = t("@user's picture", array('@user' => $this->user->name));
+        $this->assertRaw(theme('image', $pic_path, $alt, $alt, '', FALSE), t("Image is displayed in user's edit page"));
 
         // Check if file is located in proper directory.
         $this->assertTrue(is_file($pic_path), t("File is located in proper directory"));
@@ -677,10 +678,11 @@ class UserPictureTestCase extends DrupalWebTestCase {
 
       $pic_path = $this->saveUserPicture($image);
 
-      // check if image is displayed in user's profile page
+      // Check if image is displayed in user's profile page.
+      $this->drupalGet('user');
       $this->assertRaw($pic_path, t("Image is displayed in user's profile page"));
 
-      // check if file is located in proper directory
+      // Check if file is located in proper directory.
       $this->assertTrue(is_file($pic_path), t('File is located in proper directory'));
     }
   }

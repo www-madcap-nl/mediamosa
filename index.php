@@ -1,5 +1,5 @@
 <?php
-// $Id: index.php,v 1.96 2008/09/20 20:22:23 webchick Exp $
+// $Id: index.php,v 1.98 2009/02/08 20:27:51 webchick Exp $
 
 /**
  * @file
@@ -15,13 +15,13 @@
 /**
  * Root directory of Drupal installation.
  */
-define('DRUPAL_ROOT', dirname(realpath(__FILE__)));
+define('DRUPAL_ROOT', getcwd());
 
 require_once DRUPAL_ROOT . '/includes/bootstrap.inc';
 drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
 $return = menu_execute_active_handler();
 
-// Menu status constants are integers; page content is a string.
+// Menu status constants are integers; page content is a string or array.
 if (is_int($return)) {
   switch ($return) {
     case MENU_NOT_FOUND:
@@ -36,8 +36,8 @@ if (is_int($return)) {
   }
 }
 elseif (isset($return)) {
-  // Print any value (including an empty string) except NULL or undefined:
-  print theme('page', $return);
+  // Print anything besides a menu constant, assuming it's not NULL or undefined.
+  print drupal_render_page($return);
 }
 
 drupal_page_footer();

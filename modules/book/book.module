@@ -1,5 +1,5 @@
 <?php
-// $Id: book.module,v 1.483 2008/12/29 16:03:56 dries Exp $
+// $Id: book.module,v 1.485 2009/01/26 14:08:42 dries Exp $
 
 /**
  * @file
@@ -61,11 +61,11 @@ function book_perm() {
 }
 
 /**
- * Inject links into $node as needed. 
+ * Inject links into $node as needed.
  */
 function book_nodeapi_view_link($node, $teaser, $page) {
   $links = array();
-  
+
   if (isset($node->book['depth'])) {
     if (!$teaser) {
       $child_type = variable_get('book_child_type', 'book');
@@ -749,7 +749,7 @@ function book_nodeapi_view($node, $teaser, $page) {
       }
     }
   }
-  
+
   book_nodeapi_view_link($node, $teaser, $page);
 }
 
@@ -998,7 +998,7 @@ function template_preprocess_book_export_html(&$variables) {
   $variables['title'] = check_plain($variables['title']);
   $variables['base_url'] = $base_url;
   $variables['language'] = $language;
-  $variables['language_rtl'] = defined('LANGUAGE_RTL') && $language->direction == LANGUAGE_RTL;
+  $variables['language_rtl'] = ($language->direction == LANGUAGE_RTL);
   $variables['head'] = drupal_get_html_head();
 }
 

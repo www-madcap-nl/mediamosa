@@ -1,5 +1,30 @@
 <?php
-// $Id: common.test,v 1.21 2009/01/11 08:39:08 dries Exp $
+// $Id: common.test,v 1.28 2009/02/13 04:43:00 webchick Exp $
+
+/**
+ * Tests for the l() function.
+ */
+class CommonLUnitTest extends DrupalWebTestCase {
+
+  function getInfo() {
+    return array(
+      'name' => t('Tests for the l() function'),
+      'description' => t('Confirm that url() works correctly with various input.'),
+      'group' => t('System'),
+    );
+  }
+
+  /**
+   * Confirm that invalid text given as $path is filtered.
+   */
+  function testLXSS() {
+    $text = $this->randomName();
+    $path = "<SCRIPT>alert('XSS')</SCRIPT>";
+    $link = l($text, $path);
+    $sanitized_path = check_url(url($path));
+    $this->assertTrue(strpos($link, $sanitized_path) != FALSE, t('XSS attack @path was filtered', array('@path' => $path)));
+  }
+}
 
 class CommonSizeTestCase extends DrupalWebTestCase {
   protected $exact_test_cases;
@@ -170,7 +195,7 @@ class CascadingStylesheetsTestCase extends DrupalWebTestCase {
   function setUp() {
     parent::setUp();
     // Reset drupal_add_css() before each test.
-    drupal_add_css(NULL, NULL, TRUE);
+    drupal_add_css(NULL, 'reset');
   }
 
   /**
@@ -187,6 +212,14 @@ class CascadingStylesheetsTestCase extends DrupalWebTestCase {
     $path = drupal_get_path('module', 'simpletest') . '/simpletest.css';
     $css = drupal_add_css($path);
     $this->assertEqual($css['all']['module'][$path], TRUE, t('Adding a CSS file caches it properly.'));
+  }
+
+  /**
+   * Makes sure that reseting the CSS empties the cache.
+   */
+  function testReset() {
+    drupal_add_css(NULL, 'reset');
+    $this->assertEqual(array(), drupal_add_css(), t('Resetting the CSS empties the cache.'));
   }
 
   /**
@@ -352,7 +385,7 @@ class JavaScriptTestCase extends DrupalWebTestCase {
     variable_set('preprocess_js', 0);
 
     // Reset drupal_add_js() before each test.
-    drupal_add_js(NULL, NULL, TRUE);
+    drupal_add_js(NULL, 'reset');
   }
 
   function tearDown() {
@@ -404,7 +437,7 @@ class JavaScriptTestCase extends DrupalWebTestCase {
    */
   function testReset() {
     drupal_add_js('misc/collapse.js');
-    drupal_add_js(NULL, NULL, TRUE);
+    drupal_add_js(NULL, 'reset');
     $this->assertEqual(array(), drupal_add_js(), t('Resetting the JavaScript correctly empties the cache.'));
   }
 
@@ -473,6 +506,71 @@ class JavaScriptTestCase extends DrupalWebTestCase {
 }
 
 /**
+ * Tests for drupal_render().
+ */
+class DrupalRenderUnitTestCase extends DrupalWebTestCase {
+  function getInfo() {
+    return array(
+      'name' => t('Drupal render'),
+      'description' => t('Performs unit tests on drupal_render().'),
+      'group' => t('System'),
+    );
+  }
+
+  /**
+   * Test sorting by weight.
+   */
+  function testDrupalRenderSorting() {
+    $first = $this->randomName();
+    $second = $this->randomName();
+    // Build an array with '#weight' set for each element.
+    $elements = array(
+      'second' => array(
+        '#weight' => 10,
+        '#markup' => $second,
+      ),
+      'first' => array(
+        '#weight' => 0,
+        '#markup' => $first,
+      ),
+    );
+    $output = drupal_render($elements);
+
+    // The lowest weight element should appear last in $output.
+    $this->assertTrue(strpos($output, $second) > strpos($output, $first), t('Elements were sorted correctly by weight.'));
+
+    // Confirm that the $elements array has '#sorted' set to TRUE.
+    $this->assertTrue($elements['#sorted'], t("'#sorted' => TRUE was added to the array"));
+
+    // Pass $elements through element_children() and ensure it remains
+    // sorted in the correct order. drupal_render() will return an empty string
+    // if used on the same array in the same request.
+    $children = element_children($elements);
+    $this->assertTrue(array_shift($children) == 'first', t('Child found in the correct order.'));
+    $this->assertTrue(array_shift($children) == 'second', t('Child found in the correct order.'));
+
+
+    // The same array structure again, but with #sorted set to TRUE.
+    $elements = array(
+      'second' => array(
+        '#weight' => 10,
+        '#markup' => $second,
+      ),
+      'first' => array(
+        '#weight' => 0,
+        '#markup' => $first,
+      ),
+      '#sorted' => TRUE,
+    );
+    $output = drupal_render($elements);
+
+    // The elements should appear in output in the same order as the array.
+    $this->assertTrue(strpos($output, $second) < strpos($output, $first), t('Elements were not sorted.'));
+  }
+}
+
+
+/**
  * Tests Drupal error and exception handlers.
  */
 class DrupalErrorHandlerUnitTest extends DrupalWebTestCase {
@@ -492,33 +590,95 @@ class DrupalErrorHandlerUnitTest extends DrupalWebTestCase {
    * Test the error handler.
    */
   function testErrorHandler() {
-    $this->drupalGet('system-test/generate-warnings');
+    $error_notice = array(
+      '%type' => 'Notice',
+      '%message' => 'Undefined variable: bananas',
+      '%function' => 'system_test_generate_warnings()',
+      '%line' => 184,
+      '%file' => realpath('modules/simpletest/tests/system_test.module'),
+    );
+    $error_warning = array(
+      '%type' => 'Warning',
+      '%message' => 'Division by zero',
+      '%function' => 'system_test_generate_warnings()',
+      '%line' => 186,
+      '%file' => realpath('modules/simpletest/tests/system_test.module'),
+    );
+    $error_user_notice = array(
+      '%type' => 'User notice',
+      '%message' => 'Drupal is awesome',
+      '%function' => 'system_test_generate_warnings()',
+      '%line' => 188,
+      '%file' => realpath('modules/simpletest/tests/system_test.module'),
+    );
 
-    $this->assertErrorMessage('Notice', 'system_test.module', 'system_test_generate_warnings() ', 'Undefined variable');
-    $this->assertErrorMessage('Warning', 'system_test.module', 'system_test_generate_warnings() ', 'Division by zero');
-    $this->assertErrorMessage('User notice', 'system_test.module', 'system_test_generate_warnings() ', 'Drupal is awesome');
+    // Set error reporting to collect notices.
+    variable_set('error_level', 2);
+    $this->drupalGet('system-test/generate-warnings');
+    $this->assertErrorMessage($error_notice);
+    $this->assertErrorMessage($error_warning);
+    $this->assertErrorMessage($error_user_notice);
+
+    // Set error reporting to not collect notices.
+    variable_set('error_level', 1);
+    $this->drupalGet('system-test/generate-warnings');
+    $this->assertNoErrorMessage($error_notice);
+    $this->assertErrorMessage($error_warning);
+    $this->assertErrorMessage($error_user_notice);
+
+    // Set error reporting to not show any errors.
+    variable_set('error_level', 0);
+    $this->drupalGet('system-test/generate-warnings');
+    $this->assertNoErrorMessage($error_notice);
+    $this->assertNoErrorMessage($error_warning);
+    $this->assertNoErrorMessage($error_user_notice);
   }
 
   /**
    * Test the exception handler.
    */
   function testExceptionHandler() {
+    $error_exception = array(
+      '%type' => 'Exception',
+      '%message' => 'Drupal is awesome',
+      '%function' => 'system_test_trigger_exception()',
+      '%line' => 197,
+      '%file' => realpath('modules/simpletest/tests/system_test.module'),
+    );
+    $error_pdo_exception = array(
+      '%type' => 'PDOException',
+      '%message' => 'SQLSTATE',
+      '%function' => 'system_test_trigger_pdo_exception()',
+      '%line' => 205,
+      '%file' => realpath('modules/simpletest/tests/system_test.module'),
+    );
+
     $this->drupalGet('system-test/trigger-exception');
-    $this->assertErrorMessage('Exception', 'system_test.module', 'system_test_trigger_exception()', 'Drupal is awesome');
+    $this->assertErrorMessage($error_exception);
 
     $this->drupalGet('system-test/trigger-pdo-exception');
-    // We only check for SQLSTATE because the exact error reported varies from database to database.
-    $this->assertErrorMessage('PDOException', 'system_test.module', 'system_test_trigger_pdo_exception()', 'SQLSTATE');
+    // We cannot use assertErrorMessage() since the extact error reported
+    // varies from database to database. Check for the error keyword 'SQLSTATE'.
+    $this->assertText($error_pdo_exception['%type'], t('Found %type in error page.', $error_pdo_exception));
+    $this->assertText($error_pdo_exception['%message'], t('Found %message in error page.', $error_pdo_exception));
+    $error_details = t('in %function (line %line of %file)', $error_pdo_exception);
+    $this->assertRaw($error_details, t("Found '!message' in error page.", array('!message' => $error_details)));
   }
 
   /**
-   * Helper function: assert that the logged message is correct.
+   * Helper function: assert that the error message is found.
    */
-  function assertErrorMessage($type, $file, $function, $message) {
-    $this->assertText($type, t("Found '%type' in error page.", array('%type' => $type)));
-    $this->assertText($file, t("Found '%file' in error page.", array('%file' => $file)));
-    $this->assertText($function, t("Found '%function' in error page.", array('%function' => $function)));
-    $this->assertText($message, t("Found '%message' in error page.", array('%message' => $message)));
+  function assertErrorMessage(array $error) {
+    $message = t('%type: %message in %function (line %line of %file).', $error);
+    $this->assertRaw($message, t('Error !message found.', array('!message' => $message)));
+  }
+
+  /**
+   * Helper function: assert that the error message is not found.
+   */
+  function assertNoErrorMessage(array $error) {
+    $message = t('%type: %message in %function (line %line of %file).', $error);
+    $this->assertNoRaw($message, t('Error !message not found.', array('!message' => $message)));
   }
 }
 
@@ -631,6 +791,52 @@ class ValidUrlTestCase extends DrupalWebTestCase {
 }
 
 /**
+ * Tests for CRUD API functions.
+ */
+class DrupalDataApiTest extends DrupalWebTestCase {
+  function getInfo() {
+    return array(
+      'name' => t('Data API functions'),
+      'description' => t('Tests the performance of CRUD APIs.'),
+      'group' => t('System'),
+    );
+  }
+
+  function setUp() {
+    parent::setUp('taxonomy');
+  }
+
+  /**
+   * Test the drupal_write_record() API function.
+   */
+  function testDrupalWriteRecord() {
+    // Insert an object record for a table with a single-field primary key.
+    $vocabulary = new StdClass();
+    $vocabulary->name = 'test';
+    $insert_result = drupal_write_record('taxonomy_vocabulary', $vocabulary);
+    $this->assertTrue($insert_result == SAVED_NEW, t('Correct value returned when a record is inserted with drupal_write_record() for a table with a single-field primary key.'));
+    $this->assertTrue(isset($vocabulary->vid), t('Primary key is set on record created with drupal_write_record().'));
+
+    // Update the initial record after changing a property.
+    $vocabulary->name = 'testing';
+    $update_result = drupal_write_record('taxonomy_vocabulary', $vocabulary, array('vid'));
+    $this->assertTrue($update_result == SAVED_UPDATED, t('Correct value returned when a record updated with drupal_write_record() for table with single-field primary key.'));
+
+    // Insert an object record for a table with a multi-field primary key.
+    $vocabulary_node_type = new StdClass();
+    $vocabulary_node_type->vid = $vocabulary->vid;
+    $vocabulary_node_type->type = 'page';
+    $insert_result = drupal_write_record('taxonomy_vocabulary_node_type', $vocabulary_node_type);
+    $this->assertTrue($insert_result == SAVED_NEW, t('Correct value returned when a record is inserted with drupal_write_record() for a table with a multi-field primary key.'));
+
+    // Update the record.
+    $update_result = drupal_write_record('taxonomy_vocabulary_node_type', $vocabulary_node_type, array('vid', 'type'));
+    $this->assertTrue($update_result == SAVED_UPDATED, t('Correct value returned when a record is updated with drupal_write_record() for a table with a multi-field primary key.'));
+  }
+
+}
+
+/**
  * Tests Simpletest error and exception collecter.
  */
 class DrupalErrorCollectionUnitTest extends DrupalWebTestCase {
@@ -701,3 +907,4 @@ class DrupalErrorCollectionUnitTest extends DrupalWebTestCase {
     }
   }
 }
+

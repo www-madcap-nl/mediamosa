@@ -1,5 +1,5 @@
 <?php
-// $Id: bootstrap.inc,v 1.264 2009/01/14 12:15:38 dries Exp $
+// $Id: bootstrap.inc,v 1.269 2009/01/31 16:50:56 webchick Exp $
 
 /**
  * @file
@@ -192,6 +192,16 @@ define('LANGUAGE_NEGOTIATION_PATH', 2);
  * if no language identified by domain.
  */
 define('LANGUAGE_NEGOTIATION_DOMAIN', 3);
+
+/**
+ * Language written left to right. Possible value of $language->direction.
+ */
+define('LANGUAGE_LTR', 0);
+
+/**
+ * Language written right to left. Possible value of $language->direction.
+ */
+define('LANGUAGE_RTL', 1);
 
 /**
  * For convenience, define a short form of the request time global.
@@ -392,16 +402,22 @@ function drupal_initialize_variables() {
   if (!isset($_SERVER['SERVER_PROTOCOL']) || ($_SERVER['SERVER_PROTOCOL'] != 'HTTP/1.0' && $_SERVER['SERVER_PROTOCOL'] != 'HTTP/1.1')) {
     $_SERVER['SERVER_PROTOCOL'] = 'HTTP/1.0';
   }
-  // Some pre-HTTP/1.1 clients will not send a Host header. Ensure the key is
-  // defined for E_ALL compliance.
-  if (!isset($_SERVER['HTTP_HOST'])) {
-    $_SERVER['HTTP_HOST'] = '';
-  }
 
-  if (!drupal_valid_http_host()) {
-    // HTTP_HOST is invalid, e.g. if containing slashes it may be an attack.
-    header($_SERVER['SERVER_PROTOCOL'] . ' 400 Bad Request');
-    exit;
+  if (isset($_SERVER['HTTP_HOST'])) {
+    // As HTTP_HOST is user input, ensure it only contains characters allowed
+    // in hostnames. See RFC 952 (and RFC 2181).
+    // $_SERVER['HTTP_HOST'] is lowercased here per specifications.
+    $_SERVER['HTTP_HOST'] = strtolower($_SERVER['HTTP_HOST']);
+    if (!drupal_valid_http_host($_SERVER['HTTP_HOST'])) {
+      // HTTP_HOST is invalid, e.g. if containing slashes it may be an attack.
+      header($_SERVER['SERVER_PROTOCOL'] . ' 400 Bad Request');
+      exit;
+    }
+  }
+  else {
+    // Some pre-HTTP/1.1 clients will not send a Host header. Ensure the key is
+    // defined for E_ALL compliance.
+    $_SERVER['HTTP_HOST'] = '';
   }
 
   // Enforce E_ALL, but allow users to set levels not part of E_ALL.
@@ -424,23 +440,13 @@ function drupal_initialize_variables() {
 }
 
 /**
- * Validate that $_SERVER['HTTP_HOST'] is safe.
- *
- * As $_SERVER['HTTP_HOST'] is user input, ensure it only contains characters
- * allowed in hostnames. See RFC 952 (and RFC 2181). $_SERVER['HTTP_HOST'] is
- * lowercased.
+ * Validate that a hostname (for example $_SERVER['HTTP_HOST']) is safe.
  *
  * @return
  *  TRUE if only containing valid characters, or FALSE otherwise.
  */
-function drupal_valid_http_host() {
-  if (isset($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST'] != '') {
-    $_SERVER['HTTP_HOST'] = strtolower($_SERVER['HTTP_HOST']);
-    return preg_match('/^\[?(?:[a-z0-9-:\]_]+\.?)+$/', $_SERVER['HTTP_HOST']);
-  }
-  else {
-    return TRUE;
-  }
+function drupal_valid_http_host($host) {
+  return preg_match('/^\[?(?:[a-zA-Z0-9-:\]_]+\.?)+$/', $host);
 }
 
 /**
@@ -625,7 +631,7 @@ function variable_init($conf = array()) {
  * @return
  *   The value of the variable.
  */
-function variable_get($name, $default) {
+function variable_get($name, $default = NULL) {
   global $conf;
 
   return isset($conf[$name]) ? $conf[$name] : $default;
@@ -671,23 +677,41 @@ function variable_del($name) {
 /**
  * Retrieve the current page from the cache.
  *
- * Note: we do not serve cached pages when status messages are waiting (from
- * a redirected form submission which was completed).
+ * Note: we do not serve cached pages to authenticated users, or to anonymous
+ * users when $_SESSION is non-empty. $_SESSION may contain status messages
+ * from a form submission, the contents of a shopping cart, or other user-
+ * specific content that should not be cached and displayed to other users.
+ *
+ * @param $retrieve
+ *   If TRUE, look up and return the current page in the cache, or start output
+ *   buffering if the conditions for caching are satisfied. If FALSE, only
+ *   return a boolean value indicating whether the current request may be
+ *   cached.
+ * @return
+ *   The cache object, if the page was found in the cache; TRUE if the page was
+ *   not found, but output buffering was started in order to possibly cache the
+ *   current request; FALSE if the page was not found, and the current request
+ *   may not be cached (e.g. because it belongs to an authenticated user). If
+ *   $retrieve is TRUE, only return either TRUE or FALSE.
  */
-function page_get_cache() {
+function page_get_cache($retrieve) {
   global $user, $base_root;
+  static $ob_started = FALSE;
 
-  $cache = NULL;
-
-  if (!$user->uid && ($_SERVER['REQUEST_METHOD'] == 'GET' || $_SERVER['REQUEST_METHOD'] == 'HEAD') && count(drupal_set_message()) == 0) {
+  if ($user->uid || ($_SERVER['REQUEST_METHOD'] != 'GET' && $_SERVER['REQUEST_METHOD'] != 'HEAD') || count(drupal_get_messages(NULL, FALSE))) {
+    return FALSE;
+  }
+  if ($retrieve) {
     $cache = cache_get($base_root . request_uri(), 'cache_page');
-
-    if (empty($cache)) {
+    if ($cache) {
+      return $cache;
+    }
+    else {
       ob_start();
+      $ob_started = TRUE;
     }
   }
-
-  return $cache;
+  return $ob_started;
 }
 
 /**
@@ -956,7 +980,7 @@ function watchdog($type, $message, $variables = array(), $severity = WATCHDOG_NO
 function drupal_set_message($message = NULL, $type = 'status', $repeat = TRUE) {
   if ($message) {
     if (!isset($_SESSION['messages'])) {
-      $_SESSION['messages'] = array();
+      drupal_set_session('messages', array());
     }
 
     if (!isset($_SESSION['messages'][$type])) {
@@ -1022,7 +1046,7 @@ function drupal_is_denied($ip) {
   // Because this function is called on every page request, we first check
   // for an array of IP addresses in settings.php before querying the
   // database.
-  $blocked_ips = variable_get('blocked_ips', NULL);
+  $blocked_ips = variable_get('blocked_ips');
   if (isset($blocked_ips) && is_array($blocked_ips)) {
     return in_array($ip, $blocked_ips);
   }
@@ -1093,7 +1117,7 @@ function drupal_get_bootstrap_phase() {
 }
 
 function _drupal_bootstrap($phase) {
-  global $conf;
+  global $conf, $user;
 
   switch ($phase) {
 
@@ -1139,7 +1163,16 @@ function _drupal_bootstrap($phase) {
     case DRUPAL_BOOTSTRAP_SESSION:
       require_once DRUPAL_ROOT . '/' . variable_get('session_inc', 'includes/session.inc');
       session_set_save_handler('_sess_open', '_sess_close', '_sess_read', '_sess_write', '_sess_destroy_sid', '_sess_gc');
-      session_start();
+      // If a session cookie exists, initialize the session. Otherwise the
+      // session is only started on demand in drupal_session_start(), making
+      // anonymous users not use a session cookie unless something is stored in
+      // $_SESSION. This allows HTTP proxies to cache anonymous pageviews.
+      if (isset($_COOKIE[session_name()])) {
+        drupal_session_start();
+      }
+      else {
+        $user = drupal_anonymous_user();
+      }
       break;
 
     case DRUPAL_BOOTSTRAP_VARIABLES:
@@ -1150,15 +1183,19 @@ function _drupal_bootstrap($phase) {
     case DRUPAL_BOOTSTRAP_LATE_PAGE_CACHE:
       $cache_mode = variable_get('cache', CACHE_DISABLED);
       // Get the page from the cache.
-      $cache = $cache_mode == CACHE_DISABLED ? '' : page_get_cache();
+      $cache = $cache_mode == CACHE_DISABLED ? FALSE : page_get_cache(TRUE);
       // If the skipping of the bootstrap hooks is not enforced, call hook_boot.
-      if (!$cache || $cache_mode != CACHE_AGGRESSIVE) {
+      if (!is_object($cache) || $cache_mode != CACHE_AGGRESSIVE) {
         // Load module handling.
         require_once DRUPAL_ROOT . '/includes/module.inc';
         module_invoke_all('boot');
       }
       // If there is a cached page, display it.
-      if ($cache) {
+      if (is_object($cache)) {
+        // Destroy empty anonymous sessions.
+        if (drupal_session_is_started() && empty($_SESSION)) {
+          session_destroy();
+        }
         drupal_page_cache_header($cache);
         // If the skipping of the bootstrap hooks is not enforced, call hook_exit.
         if ($cache_mode != CACHE_AGGRESSIVE) {
@@ -1169,6 +1206,13 @@ function _drupal_bootstrap($phase) {
       }
       // Prepare for non-cached page workflow.
       drupal_page_header();
+      // If the session has not already been started and output buffering is
+      // not enabled, the session must be started now before the HTTP headers
+      // are sent. If output buffering is enabled, the session may be started
+      // at any time using drupal_session_start().
+      if ($cache === FALSE) {
+        drupal_session_start();
+      }
       break;
 
     case DRUPAL_BOOTSTRAP_LANGUAGE:
@@ -1535,7 +1579,7 @@ function _registry_check_code($type, $name = NULL) {
   // This function may get called when the default database is not active, but
   // there is no reason we'd ever want to not use the default database for
   // this query.
-  $file = Database::getConnection('default')->query("SELECT filename FROM {registry} WHERE name = :name AND type = :type", array(
+  $file = Database::getConnection('default', 'default')->query("SELECT filename FROM {registry} WHERE name = :name AND type = :type", array(
       ':name' => $name,
       ':type' => $type,
     ))

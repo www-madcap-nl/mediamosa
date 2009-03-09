@@ -1,5 +1,5 @@
 <?php
-// $Id: common.inc,v 1.848 2009/01/14 21:13:41 dries Exp $
+// $Id: common.inc,v 1.867 2009/02/13 04:43:00 webchick Exp $
 
 /**
  * @file
@@ -301,8 +301,7 @@ function drupal_get_destination() {
  * Drupal will ensure that messages set by drupal_set_message() and other
  * session data are written to the database before the user is redirected.
  *
- * This function ends the request; use it rather than a print theme('page')
- * statement in your menu callback.
+ * This function ends the request; use it instead of a return in your menu callback.
  *
  * @param $path
  *   A Drupal path or a full URL.
@@ -339,9 +338,11 @@ function drupal_goto($path = '', $query = NULL, $fragment = NULL, $http_response
     module_invoke_all('exit', $url);
   }
 
-  // Even though session_write_close() is registered as a shutdown function, we
-  // need all session data written to the database before redirecting.
-  session_write_close();
+  if (drupal_session_is_started()) {
+    // Even though session_write_close() is registered as a shutdown function,
+    // we need all session data written to the database before redirecting.
+    session_write_close();
+  }
 
   header('Location: ' . $url, TRUE, $http_response_code);
 
@@ -377,19 +378,23 @@ function drupal_not_found() {
 
   $path = drupal_get_normal_path(variable_get('site_404', ''));
   if ($path && $path != $_GET['q']) {
-    // Set the active item in case there are tabs to display, or other
-    // dependencies on the path.
+    // Custom 404 handler. Set the active item in case there are tabs to
+    // display, or other dependencies on the path.
     menu_set_active_item($path);
     $return = menu_execute_active_handler($path);
   }
 
   if (empty($return) || $return == MENU_NOT_FOUND || $return == MENU_ACCESS_DENIED) {
+    // Standard 404 handler.
     drupal_set_title(t('Page not found'));
     $return = t('The requested page could not be found.');
   }
 
+  $page = drupal_get_page($return);
   // To conserve CPU and bandwidth, omit the blocks.
-  print theme('page', $return, FALSE);
+  $page['#show_blocks'] = FALSE;
+
+  print drupal_render_page($page);
 }
 
 /**
@@ -406,17 +411,19 @@ function drupal_access_denied() {
 
   $path = drupal_get_normal_path(variable_get('site_403', ''));
   if ($path && $path != $_GET['q']) {
-    // Set the active item in case there are tabs to display or other
-    // dependencies on the path.
+    // Custom 403 handler. Set the active item in case there are tabs to
+    // display or other dependencies on the path.
     menu_set_active_item($path);
     $return = menu_execute_active_handler($path);
   }
 
   if (empty($return) || $return == MENU_NOT_FOUND || $return == MENU_ACCESS_DENIED) {
+    // Standard 403 handler.
     drupal_set_title(t('Access denied'));
     $return = t('You are not authorized to access this page.');
   }
-  print theme('page', $return);
+
+  print drupal_render_page($return);
 }
 
 /**
@@ -795,8 +802,10 @@ function _drupal_log_error($error, $fatal = FALSE) {
     $number++;
   }
 
-  // Force display of error messages in update.php.
-  if (variable_get('error_level', 1) == 1 || (defined('MAINTENANCE_MODE') && MAINTENANCE_MODE == 'update')) {
+  // Force display of error messages in update.php or if the proper error
+  // reporting level is set.
+  $error_level = variable_get('error_level', 2);
+  if ($error_level == 2 || ($error_level == 1 && $error['%type'] != 'Notice') || (defined('MAINTENANCE_MODE') && MAINTENANCE_MODE == 'update')) {
     drupal_set_message(t('%type: %message in %function (line %line of %file).', $error), 'error');
   }
 
@@ -812,7 +821,10 @@ function _drupal_log_error($error, $fatal = FALSE) {
     drupal_set_header($_SERVER['SERVER_PROTOCOL'] . ' Service unavailable');
     drupal_set_title(t('Error'));
     if (!defined('MAINTENANCE_MODE') && drupal_get_bootstrap_phase() == DRUPAL_BOOTSTRAP_FULL) {
-      print theme('page', t('The website encountered an unexpected error. Please try again later.'), FALSE);
+      // To conserve CPU and bandwidth, omit the blocks.
+      $page = drupal_get_page(t('The website encountered an unexpected error. Please try again later.'));
+      $page['#show_blocks'] = FALSE;
+      print drupal_render_page($page);
     }
     else {
       print theme('maintenance_page', t('The website encountered an unexpected error. Please try again later.'), FALSE);
@@ -1799,6 +1811,8 @@ function drupal_attributes($attributes = array()) {
  *   an HTML string containing a link to the given path.
  */
 function l($text, $path, array $options = array()) {
+  global $language;
+
   // Merge in defaults.
   $options += array(
       'attributes' => array(),
@@ -1806,7 +1820,8 @@ function l($text, $path, array $options = array()) {
     );
 
   // Append active class.
-  if ($path == $_GET['q'] || ($path == '<front>' && drupal_is_front_page())) {
+  if (($path == $_GET['q'] || ($path == '<front>' && drupal_is_front_page())) &&
+      (empty($options['language']) || $options['language']->language == $language->language)) {
     if (isset($options['attributes']['class'])) {
       $options['attributes']['class'] .= ' active';
     }
@@ -1821,7 +1836,7 @@ function l($text, $path, array $options = array()) {
     $options['attributes']['title'] = strip_tags($options['attributes']['title']);
   }
 
-  return '<a href="' . check_url(url($path, $options)) . '"' . drupal_attributes($options['attributes']) . '>' . ($options['html'] ? $text : check_plain($text)) . '</a>';
+  return '<a href="' . url($path, $options) . '"' . drupal_attributes($options['attributes']) . '>' . ($options['html'] ? $text : check_plain($text)) . '</a>';
 }
 
 /**
@@ -1831,6 +1846,15 @@ function l($text, $path, array $options = array()) {
  * react to the closing of the page by calling hook_exit().
  */
 function drupal_page_footer() {
+  global $user;
+
+  // Destroy empty anonymous sessions if possible.
+  if (!headers_sent() && drupal_session_is_started() && empty($_SESSION) && !$user->uid) {
+    session_destroy();
+  }
+  elseif (!empty($_SESSION) && !drupal_session_is_started()) {
+    watchdog('session', '$_SESSION is non-empty yet no code has called drupal_session_start().', array(), WATCHDOG_NOTICE);
+  }
 
   if (variable_get('cache', CACHE_DISABLED) != CACHE_DISABLED) {
     page_set_cache();
@@ -1971,13 +1995,17 @@ function drupal_add_link($attributes) {
  *   file added to the list, if exists in the same directory. This CSS file
  *   should contain overrides for properties which should be reversed or
  *   otherwise different in a right-to-left display.
+ *
+ *   Note that if $options or $options['type'] is 'reset', then $path will be
+ *   ignored.
  * @param $options
  *   (optional) A string defining the type of CSS that is being added in the
  *   $path parameter ('module' or 'theme'), or an associative array of
  *   additional options, with the following keys:
  *     - 'type'
- *       The type of stylesheet that is being added. Types are: module or
- *       theme. Defaults to 'module'.
+ *       The type of stylesheet that is being added. Types are: 'module',
+ *       'theme', or 'reset'. Defaults to 'module'. If the type is 'reset',
+ *       then the CSS will be reset, ignoring $path and other $options.
  *     - 'media'
  *       The media type for the stylesheet, e.g., all, print, screen. Defaults
  *       to 'all'.
@@ -2004,32 +2032,31 @@ function drupal_add_link($attributes) {
  *
  *       Typical candidates for caching are for example styles for nodes across
  *       the site, or used in the theme.
- * @param $reset
- *   (optional) Resets the currently loaded cascading stylesheets.
  * @return
  *   An array of CSS files.
  */
-function drupal_add_css($path = NULL, $options = NULL, $reset = FALSE) {
+function drupal_add_css($path = NULL, $options = NULL) {
   static $css = array();
   global $language;
 
+  // Construct the options, taking the defaults into consideration.
+  if (isset($options)) {
+    if (!is_array($options)) {
+      $options = array('type' => $options);
+    }
+  }
+  else {
+    $options = array();
+  }
+
   // Request made to reset the CSS added so far.
-  if ($reset) {
-    $css = array();
+  if (isset($options['type']) && $options['type'] == 'reset') {
+    return $css = array();
   }
 
   // Create an array of CSS files for each media type first, since each type needs to be served
   // to the browser differently.
   if (isset($path)) {
-    // Construct the options, taking the defaults into consideration.
-    if (isset($options)) {
-      if (!is_array($options)) {
-        $options = array('type' => $options);
-      }
-    }
-    else {
-      $options = array();
-    }
     $options += array(
       'type' => 'module',
       'media' => 'all',
@@ -2045,7 +2072,7 @@ function drupal_add_css($path = NULL, $options = NULL, $reset = FALSE) {
     $css[$media][$type][$path] = $options['preprocess'];
 
     // If the current language is RTL, add the CSS file with RTL overrides.
-    if (defined('LANGUAGE_RTL') && $language->direction == LANGUAGE_RTL) {
+    if ($language->direction == LANGUAGE_RTL) {
       $rtl_path = str_replace('.css', '-rtl.css', $path);
       if (file_exists($rtl_path)) {
         $css[$media][$type][$rtl_path] = $options['preprocess'];
@@ -2331,6 +2358,8 @@ function drupal_clear_css_cache() {
  *       array is directly placed in Drupal.settings. All modules should wrap
  *       their actual configuration settings in another variable to prevent
  *       the pollution of the Drupal.settings namespace.
+ *   - 'reset': Anything in $data will be ignored and the JavaScript added so
+ *       far will be reset.
  * @param $options
  *   (optional) A string defining the type of JavaScript that is being added
  *   in the $data parameter ('file'/'setting'/'inline'), or an array which
@@ -2338,7 +2367,10 @@ function drupal_clear_css_cache() {
  *   always pass the string 'setting' only.
  *   - type
  *       The type of JavaScript that is to be added to the page. Allowed
- *       values are 'file', 'inline' or 'setting'. Defaults to 'file'.
+ *       values are 'file', 'inline', 'setting', or 'reset'. Defaults to
+ *       'file'. Note that if type is 'reset', then $data and all other
+ *       $options will be ignored and the JavaScript added so far will be
+ *       reset.
  *   - scope
  *       The location in which you want to place the script. Possible values
  *       are 'header' or 'footer'. If your theme implements different regions,
@@ -2371,13 +2403,11 @@ function drupal_clear_css_cache() {
  *   - preprocess
  *       Aggregate the JavaScript if the JavaScript optimization setting has
  *       been toggled in admin/settings/performance. Defaults to TRUE.
- * @param $reset
- *   (optional) Resets the currently loaded JavaScript.
  * @return
  *   The contructed array of JavaScript files.
  * @see drupal_get_js()
  */
-function drupal_add_js($data = NULL, $options = NULL, $reset = FALSE) {
+function drupal_add_js($data = NULL, $options = NULL) {
   static $javascript = array();
 
   // Construct the options, taking the defaults into consideration.
@@ -2391,13 +2421,13 @@ function drupal_add_js($data = NULL, $options = NULL, $reset = FALSE) {
   }
   $options += drupal_js_defaults($data);
 
+  if ($options['type'] == 'reset') {
+    // Request made to reset the JavaScript added so far
+    return $javascript = array();
+  }
+
   // Preprocess can only be set if caching is enabled.
   $options['preprocess'] = $options['cache'] ? $options['preprocess'] : FALSE;
-
-  // Request made to reset the JavaScript added so far.
-  if ($reset) {
-    $javascript = array();
-  }
 
   if (isset($data)) {
     // Add jquery.js and drupal.js, as well as the basePath setting, the
@@ -2971,26 +3001,24 @@ function _drupal_bootstrap_full() {
 function page_set_cache() {
   global $user, $base_root;
 
-  if (!$user->uid && ($_SERVER['REQUEST_METHOD'] == 'GET' || $_SERVER['REQUEST_METHOD'] == 'HEAD') && count(drupal_get_messages(NULL, FALSE)) == 0) {
-    // This will fail in some cases, see page_get_cache() for the explanation.
-    if ($data = ob_get_contents()) {
-      $cache = TRUE;
-      if (variable_get('page_compression', TRUE) && function_exists('gzencode')) {
-        // We do not store the data in case the zlib mode is deflate.
-        // This should be rarely happening.
-        if (zlib_get_coding_type() == 'deflate') {
-          $cache = FALSE;
-        }
-        elseif (zlib_get_coding_type() == FALSE) {
-          $data = gzencode($data, 9, FORCE_GZIP);
-        }
-        // The remaining case is 'gzip' which means the data is
-        // already compressed and nothing left to do but to store it.
+  if (page_get_cache(FALSE)) {
+    $cache = TRUE;
+    $data = ob_get_contents();
+    if (variable_get('page_compression', TRUE) && function_exists('gzencode')) {
+      // We do not store the data in case the zlib mode is deflate. This should
+      // be rarely happening.
+      if (zlib_get_coding_type() == 'deflate') {
+        $cache = FALSE;
       }
-      ob_end_flush();
-      if ($cache && $data) {
-        cache_set($base_root . request_uri(), $data, 'cache_page', CACHE_TEMPORARY, drupal_get_headers());
+      elseif (zlib_get_coding_type() == FALSE) {
+        $data = gzencode($data, 9, FORCE_GZIP);
       }
+      // The remaining case is 'gzip' which means the data is already
+      // compressed and nothing left to do but to store it.
+    }
+    ob_end_flush();
+    if ($cache && $data) {
+      cache_set($base_root . request_uri(), $data, 'cache_page', CACHE_TEMPORARY, drupal_get_headers());
     }
   }
 }
@@ -3175,11 +3203,83 @@ function drupal_alter($type, &$data) {
 }
 
 /**
+ * Retrieve a $page element that is ready for decorating.
+ *
+ * Used by menu callbacks in order to populate the page with content
+ * and behavior (e.g. #show_blocks).
+ *
+ * @param $content
+ *   A string or renderable array representing the body of the page.
+ * @return
+ *   A $page element that should be decorated and then passed to drupal_render_page().
+ *
+ * @see drupal_render_page().
+ */
+function drupal_get_page($content = NULL) {
+  // Initialize page array with defaults. @see hook_elements() - 'page' element.
+  $page = element_info('page');
+  $page['content'] = is_array($content) ? $content : array('main' => array('#markup' => $content));
+
+  return $page;
+}
+
+/**
+ * Renders the page, including all theming.
+ *
+ * @param $page
+ *   A string or array representing the content of a page. The array consists of
+ *   the following keys:
+ *   - #type: Value is always 'page'. This pushes the theming through page.tpl.php (required).
+ *   - content: A renderable array as built by the menu callback (required).
+ *   - #show_blocks: A marker which suppresses left/right regions if FALSE (optional).
+ *   - #show_messages: Suppress drupal_get_message() items. Used by Batch API (optional).
+ *
+ * @see hook_page_alter()
+ * @see drupal_get_page()
+ */
+function drupal_render_page($page) {
+  // Allow menu callbacks to return strings.
+  if (is_string($page)) {
+    $page = drupal_get_page($page);
+  }
+  // Modules alter the $page as needed. Blocks are populated into regions like
+  // 'left', 'footer', etc.
+  drupal_alter('page', $page);
+
+  return drupal_render($page);
+}
+
+/**
  * Renders HTML given a structured array tree.
  *
  * Recursively iterates over each of the array elements, generating HTML code.
+ *
+ * HTML generation is controlled by two properties containing theme functions, 
+ * #theme and #theme_wrapper.
+ *
+ * #theme is the theme function called first. If it is set and the element has any
+ * children, they have to be rendered there. For elements that are not allowed
+ * to have any children, e.g. buttons or textfields, it can be used to render
+ * the element itself. If #theme is not present and the element has children,
+ * they are rendered and concatenated into a string by drupal_render_children().
+ *
+ * The theme function in #theme_wrapper will be called after #theme has run. It
+ * can be used to add further markup around the rendered children, e.g. fieldsets
+ * add the required markup for a fieldset around their rendered child elements. 
+ * A wrapper theme function always has to include the element's #children property
+ * in its output, as this contains the rendered children. 
+ *
+ * For example, for the form element type, by default only the #theme_wrapper
+ * property is set, which adds the form markup around the rendered child elements
+ * of the form. This allows you to set the #theme property on a specific form to 
+ * a custom theme function, giving you complete control over the placement of the
+ * form's children while not at all having to deal with the form markup itself.
+ *
  * This function is usually called from within a another function, like
- * drupal_get_form() or node_view().
+ * drupal_get_form() or node_view(). Elements are sorted internally using
+ * uasort(). Since this is expensive, when passing already sorted elements to
+ * drupal_render(), for example from a database query, set
+ * $elements['#sorted'] = TRUE to avoid sorting them a second time.
  *
  * @param $elements
  *   The structured array describing the data to be rendered.
@@ -3187,16 +3287,29 @@ function drupal_alter($type, &$data) {
  *   The rendered HTML.
  */
 function drupal_render(&$elements) {
+  // Early-return nothing if user does not have access.
   if (!isset($elements) || (isset($elements['#access']) && !$elements['#access'])) {
-    return NULL;
+    return;
   }
 
-  // If the default values for this element haven't been loaded yet, populate
+  // Do not print elements twice.
+  if (isset($elements['#printed']) && $elements['#printed']) {
+    return;
+  }
+
+  // If the default values for this element have not been loaded yet, populate
   // them.
-  if (!isset($elements['#defaults_loaded']) || !$elements['#defaults_loaded']) {
-    if ((!empty($elements['#type'])) && ($info = _element_info($elements['#type']))) {
-      $elements += $info;
-    }
+  if (isset($elements['#type']) && empty($elements['#defaults_loaded'])) {
+    $elements += element_info($elements['#type']);
+  }
+  else {
+    $elements += element_basic_defaults();
+  }
+  
+  // If #markup is not empty and no theme function is set, use theme_markup.
+  // This allows to specify just #markup on an element without setting the #type.
+  if (!empty($elements['#markup']) && empty($elements['#theme'])) {
+    $elements['#theme'] = 'markup';
   }
 
   // Make any final changes to the element before it is rendered. This means
@@ -3210,70 +3323,66 @@ function drupal_render(&$elements) {
     }
   }
 
-  $content = '';
-  // Either the elements did not go through form_builder or one of the children
-  // has a #weight.
-  if (!isset($elements['#sorted'])) {
-    uasort($elements, "element_sort");
+  // Get the children of the element, sorted by weight.
+  $children = element_children($elements, TRUE);
+
+  $elements['#children'] = '';
+  // Call the element's #theme function if it is set. Then any children of the
+  // element have to be rendered there.
+  if (isset($elements['#theme'])) {
+    $elements['#children'] = theme($elements['#theme'], $elements);
   }
-  $elements += array('#title' => NULL, '#description' => NULL);
-  if (!isset($elements['#children'])) {
-    $children = element_children($elements);
-    // Render all the children that use a theme function.
-    if (isset($elements['#theme']) && empty($elements['#theme_used'])) {
-      $elements['#theme_used'] = TRUE;
+  // If #theme was not set and the element has children, render them now
+  // using drupal_render_children().
+  if ($elements['#children'] == '') {
+    $elements['#children'] = drupal_render_children($elements, $children);
+  }
 
-      $previous = array();
-      foreach (array('#type', '#prefix', '#suffix') as $key) {
-        $previous[$key] = isset($elements[$key]) ? $elements[$key] : NULL;
-      }
-      // If we rendered a single element, then we will skip the renderer.
-      if (empty($children)) {
-        $elements['#printed'] = TRUE;
-      }
-      else {
-        $elements['#markup'] = '';
-      }
+  // Let the theme function in #theme_wrapper add markup around the rendered
+  // children.
+  if (!empty($elements['#theme_wrapper'])) {
+    $elements['#children'] = theme($elements['#theme_wrapper'], $elements);
+  }
 
-      unset($elements['#type'], $elements['#prefix'], $elements['#suffix']);
-      $content = theme($elements['#theme'], $elements);
-
-      foreach (array('#type', '#prefix', '#suffix') as $key) {
-        $elements[$key] = isset($previous[$key]) ? $previous[$key] : NULL;
-      }
-    }
-    // Render each of the children using drupal_render and concatenate them.
-    if (!isset($content) || $content === '') {
-      foreach ($children as $key) {
-        $content .= drupal_render($elements[$key]);
+  // Filter the outputted content and make any last changes before the
+  // content is sent to the browser. The changes are made on $content
+  // which allows the output'ed text to be filtered.
+  if (isset($elements['#post_render'])) {
+    foreach ($elements['#post_render'] as $function) {
+      if (drupal_function_exists($function)) {
+        $elements['#children'] = $function($elements['#children'], $elements);
       }
     }
   }
-  if (isset($content) && $content !== '') {
-    $elements['#children'] = $content;
-  }
 
-  // Until now, we rendered the children, here we render the element itself
-  if (!isset($elements['#printed'])) {
-    $content = theme(!empty($elements['#type']) ? $elements['#type'] : 'markup', $elements);
-    $elements['#printed'] = TRUE;
-  }
+  $prefix = isset($elements['#prefix']) ? $elements['#prefix'] : '';
+  $suffix = isset($elements['#suffix']) ? $elements['#suffix'] : '';
 
-  if (isset($content) && $content !== '') {
-    // Filter the outputted content and make any last changes before the
-    // content is sent to the browser. The changes are made on $content
-    // which allows the output'ed text to be filtered.
-    if (isset($elements['#post_render'])) {
-      foreach ($elements['#post_render'] as $function) {
-        if (drupal_function_exists($function)) {
-          $content = $function($content, $elements);
-        }
-      }
-    }
-    $prefix = isset($elements['#prefix']) ? $elements['#prefix'] : '';
-    $suffix = isset($elements['#suffix']) ? $elements['#suffix'] : '';
-    return $prefix . $content . $suffix;
+  $elements['#printed'] = TRUE;
+  return $prefix . $elements['#children'] . $suffix;
+}
+
+/**
+ * Render children of an element and concatenate them.
+ *
+ * This renders all children of an element using drupal_render() and then
+ * joins them together into a single string.
+ *
+ * @param $element
+ *   The structured array whose children shall be rendered.
+ * @param $children_keys
+ *   If the keys of the element's children are already known, they can be passed
+ *   in to save another run of element_children().
+ */
+function drupal_render_children(&$element, $children_keys = NULL) {
+  if ($children_keys === NULL) {
+    $children_keys = element_children($element);
   }
+  $output = '';
+  foreach ($children_keys as $key) {
+    $output .= drupal_render($element[$key]);
+  }
+  return $output;
 }
 
 /**
@@ -3286,6 +3395,44 @@ function element_sort($a, $b) {
     return 0;
   }
   return ($a_weight < $b_weight) ? -1 : 1;
+}
+
+/**
+ * Retrieve the default properties for the defined element type.
+ */
+function element_info($type, $refresh = NULL) {
+  static $cache;
+
+  if (!isset($cache) || $refresh) {
+    $basic_defaults = element_basic_defaults();
+    $cache = array();
+    foreach (module_implements('elements') as $module) {
+      $elements = module_invoke($module, 'elements');
+      if (isset($elements) && is_array($elements)) {
+        $cache = array_merge_recursive($cache, $elements);
+      }
+    }
+    if (!empty($cache)) {
+      foreach ($cache as $element_type => $info) {
+        $cache[$element_type] = array_merge_recursive($basic_defaults, $info);
+        $cache[$element_type]['#type'] = $element_type;
+      }
+    }
+  }
+
+  return $cache[$type];
+}
+
+/**
+ * Retrieve the basic default properties that are common to all elements.
+ */
+function element_basic_defaults() {
+  return array(
+    '#description' => '',
+    '#title' => '',
+    '#attributes' => array(),
+    '#required' => FALSE,
+  );
 }
 
 /**
@@ -3322,10 +3469,44 @@ function element_child($key) {
 }
 
 /**
- * Get keys of a structured array tree element that are not properties (i.e., do not begin with '#').
+ * Return the children of an element, optionally sorted by weight.
+ *
+ * @param $elements
+ *   The element to be sorted.
+ * @param $sort
+ *   Boolean to indicate whether the children should be sorted by weight.
+ * @return
+ *   The array keys of the element's children.
  */
-function element_children($element) {
-  return array_filter(array_keys((array) $element), 'element_child');
+function element_children(&$elements, $sort = FALSE) {
+  // Do not attempt to sort elements which have already been sorted.
+  $sort = isset($elements['#sorted']) ? !$elements['#sorted'] : $sort;
+
+  // Filter out properties from the element, leaving only children.
+  $children = array();
+  $sortable = FALSE;
+  foreach ($elements as $key => $value) {
+    if ($key[0] !== '#') {
+      $children[$key] = $value;
+      if (is_array($value) && isset($value['#weight'])) {
+        $sortable = TRUE;
+      }
+    }
+  }
+  // Sort the children if necessary.
+  if ($sort && $sortable) {
+    uasort($children, 'element_sort');
+    // Put the sorted children back into $elements in the correct order, to
+    // preserve sorting if the same element is passed through
+    // element_children() twice.
+    foreach ($children as $key => $child) {
+      unset($elements[$key]);
+      $elements[$key] = $child;
+    }
+    $elements['#sorted'] = TRUE;
+  }
+
+  return array_keys($children);
 }
 
 /**
@@ -3338,7 +3519,7 @@ function drupal_common_theme() {
       'arguments' => array('text' => NULL)
     ),
     'page' => array(
-      'arguments' => array('content' => NULL, 'show_blocks' => TRUE, 'show_messages' => TRUE),
+      'arguments' => array('page' => NULL),
       'template' => 'page',
     ),
     'maintenance_page' => array(
@@ -3396,6 +3577,9 @@ function drupal_common_theme() {
     ),
     'item_list' => array(
       'arguments' => array('items' => array(), 'title' => NULL, 'type' => 'ul', 'attributes' => NULL),
+    ),
+    'list' => array(
+      'arguments' => array('elements' => NULL),
     ),
     'more_help_link' => array(
       'arguments' => array('url' => NULL),
@@ -3476,22 +3660,13 @@ function drupal_common_theme() {
     'radios' => array(
       'arguments' => array('element' => NULL),
     ),
-    'password_confirm' => array(
-      'arguments' => array('element' => NULL),
-    ),
     'date' => array(
-      'arguments' => array('element' => NULL),
-    ),
-    'item' => array(
       'arguments' => array('element' => NULL),
     ),
     'checkbox' => array(
       'arguments' => array('element' => NULL),
     ),
     'checkboxes' => array(
-      'arguments' => array('element' => NULL),
-    ),
-    'submit' => array(
       'arguments' => array('element' => NULL),
     ),
     'button' => array(
@@ -3501,9 +3676,6 @@ function drupal_common_theme() {
       'arguments' => array('element' => NULL),
     ),
     'hidden' => array(
-      'arguments' => array('element' => NULL),
-    ),
-    'token' => array(
       'arguments' => array('element' => NULL),
     ),
     'textfield' => array(
@@ -3524,8 +3696,11 @@ function drupal_common_theme() {
     'file' => array(
       'arguments' => array('element' => NULL),
     ),
+    'tableselect' => array(
+      'arguments' => array('element' => NULL),
+    ),
     'form_element' => array(
-      'arguments' => array('element' => NULL, 'value' => NULL),
+      'arguments' => array('element' => NULL),
     ),
   );
 }
@@ -3800,7 +3975,9 @@ function drupal_write_record($table, &$object, $primary_keys = array()) {
       $object->$serial = $last_insert_id;
     }
   }
-  else {
+  // If we have a single-field primary key but got no insert ID, the
+  // query failed.
+  elseif (count($primary_keys) == 1) {
     $return = FALSE;
   }
 
@@ -4022,7 +4199,7 @@ function drupal_flush_all_caches() {
   }
 
   drupal_theme_rebuild();
-  menu_rebuild();
+  // Rebuild content types, menu will be rebuilt as well.
   node_types_rebuild();
   // Don't clear cache_form - in-progress form submissions may break.
   // Ordered so clearing the page cache will always be the last action.

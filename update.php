@@ -1,10 +1,10 @@
 <?php
-// $Id: update.php,v 1.268 2008/12/20 18:24:32 dries Exp $
+// $Id: update.php,v 1.272 2009/02/08 20:27:51 webchick Exp $
 
 /**
  * Root directory of Drupal installation.
  */
-define('DRUPAL_ROOT', dirname(realpath(__FILE__)));
+define('DRUPAL_ROOT', getcwd());
 
 /**
  * @file
@@ -282,7 +282,7 @@ function update_script_selection_form() {
     );
     $form['submit'] = array(
       '#type' => 'submit',
-      '#value' => 'Apply pending updates',
+      '#value' => 'apply pending updates',
     );
   }
   return $form;
@@ -293,7 +293,7 @@ function update_batch() {
 
   // During the update, toggle site maintenance so that schema changes do not
   // affect visiting users.
-  $_SESSION['site_offline'] = variable_get('site_offline', FALSE);
+  drupal_set_session('site_offline', variable_get('site_offline', FALSE));
   if ($_SESSION['site_offline'] == FALSE) {
     variable_set('site_offline', TRUE);
   }
@@ -327,9 +327,9 @@ function update_finished($success, $results, $operations) {
   // clear the caches in case the data has been updated.
   drupal_flush_all_caches();
 
-  $_SESSION['update_results'] = $results;
-  $_SESSION['update_success'] = $success;
-  $_SESSION['updates_remaining'] = $operations;
+  drupal_set_session('update_results', $results);
+  drupal_set_session('update_success', $success);
+  drupal_set_session('updates_remaining', $operations);
 
   // Now that the update is done, we can disable site maintenance if it was
   // previously turned off.
@@ -341,7 +341,7 @@ function update_finished($success, $results, $operations) {
 
 function update_helpful_links() {
   // NOTE: we can't use l() here because the URL would point to 'update.php?q=admin'.
-  $links[] = '<a href="' . base_path() . '">Main page</a>';
+  $links[] = '<a href="' . base_path() . '">Front page</a>';
   $links[] = '<a href="' . base_path() . '?q=admin">Administration pages</a>';
   return $links;
 }
@@ -420,6 +420,7 @@ function update_info_page() {
 
   update_task_list('info');
   drupal_set_title('Drupal database update');
+  $token = drupal_get_token('update');
   $output = '<p>Use this utility to update your database whenever a new release of Drupal or a module is installed.</p><p>For more detailed information, see the <a href="http://drupal.org/node/258">Installation and upgrading handbook</a>. If you are unsure what these terms mean you should probably contact your hosting provider.</p>';
   $output .= "<ol>\n";
   $output .= "<li><strong>Back up your database</strong>. This process will change your database values and in case of emergency you may need to revert to a backup.</li>\n";
@@ -428,7 +429,7 @@ function update_info_page() {
   $output .= "<li>Install your new files in the appropriate location, as described in the handbook.</li>\n";
   $output .= "</ol>\n";
   $output .= "<p>When you have performed the steps above, you may proceed.</p>\n";
-  $output .= '<form method="post" action="update.php?op=selection"><input type="submit" value="Continue" /></form>';
+  $output .= '<form method="post" action="update.php?op=selection&token=' . $token . '"><input type="submit" value="Continue" /></form>';
   $output .= "\n";
   return $output;
 }
@@ -708,16 +709,21 @@ if (!empty($update_free_access) || $user->uid == 1) {
   $op = isset($_REQUEST['op']) ? $_REQUEST['op'] : '';
   switch ($op) {
     // update.php ops
-    case 'info':
-      $output = update_info_page();
-      break;
 
     case 'selection':
-      $output = update_selection_page();
-      break;
+      if (isset($_GET['token']) && $_GET['token'] == drupal_get_token('update')) {
+        $output = update_selection_page();
+        break;
+      }
 
-    case 'Apply pending updates':
-      update_batch();
+    case 'apply pending updates':
+      if (isset($_GET['token']) && $_GET['token'] == drupal_get_token('update')) {
+        update_batch();
+        break;
+      }
+
+    case 'info':
+      $output = update_info_page();
       break;
 
     case 'results':
