@@ -1,6 +1,15 @@
-; $Id: text.info,v 1.2 2009/02/05 03:42:57 webchick Exp $
+; $Id: text.info,v 1.5 2009/06/12 08:39:37 dries Exp $
 name = Text
 description = Defines simple text field types.
 package = Core - fields
+version = VERSION
 core = 7.x
-files[]=text.module
+files[] = text.module
+files[] = text.test
+required = TRUE
+; Information added by drupal.org packaging script on 2009-09-09
+version = "7.x-dev"
+core = "7.x"
+project = "drupal"
+datestamp = "1252498273"
+

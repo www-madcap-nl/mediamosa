@@ -1,5 +1,5 @@
 <?php
-// $Id: aggregator.fetcher.inc,v 1.4 2009/01/26 14:08:42 dries Exp $
+// $Id: aggregator.fetcher.inc,v 1.8 2009/08/24 00:14:19 webchick Exp $
 
 /**
  * @file
@@ -7,7 +7,7 @@
  */
 
 /**
- * Implementation of hook_aggregator_fetch_info().
+ * Implement hook_aggregator_fetch_info().
  */
 function aggregator_aggregator_fetch_info() {
   return array(
@@ -17,7 +17,7 @@ function aggregator_aggregator_fetch_info() {
 }
 
 /**
- * Implementation of hook_aggregator_fetch().
+ * Implement hook_aggregator_fetch().
  */
 function aggregator_aggregator_fetch($feed) {
   $feed->source_string = FALSE;
@@ -33,7 +33,6 @@ function aggregator_aggregator_fetch($feed) {
 
   // Request feed.
   $result = drupal_http_request($feed->url, array('headers' => $headers));
-
 
   // Process HTTP response code.
   switch ($result->code) {

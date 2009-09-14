@@ -1,9 +1,15 @@
 <?php
-// $Id: install.inc,v 1.1 2008/08/21 19:36:36 dries Exp $
+// $Id: install.inc,v 1.3 2009/07/27 19:42:56 dries Exp $
+
+/**
+ * @file
+ * Installation code for MySQL embedded database engine.
+ */
+
 
 // MySQL specific install functions
 
-class DatabaseInstaller_mysql extends DatabaseInstaller {
+class DatabaseTasks_mysql extends DatabaseTasks {
   protected $pdoDriver = 'mysql';
   public function name() {
     return 'MySQL';

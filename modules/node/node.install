@@ -1,8 +1,13 @@
 <?php
-// $Id: node.install,v 1.11 2009/01/21 16:58:42 dries Exp $
+// $Id: node.install,v 1.29 2009/08/31 16:24:15 dries Exp $
 
 /**
- * Implementation of hook_schema().
+ * @file
+ * Install, update and uninstall functions for the node module.
+ */
+
+/**
+ * Implement hook_schema().
  */
 function node_schema() {
   $schema['node'] = array(
@@ -67,19 +72,13 @@ function node_schema() {
         'default' => 0,
       ),
       'comment' => array(
-        'description' => 'Whether comments are allowed on this node: 0 = no, 1 = read only, 2 = read/write.',
+        'description' => 'Whether comments are allowed on this node: 0 = no, 1 = closed (read only), 2 = open (read/write).',
         'type' => 'int',
         'not null' => TRUE,
         'default' => 0,
       ),
       'promote' => array(
         'description' => 'Boolean indicating whether the node should be displayed on the front page.',
-        'type' => 'int',
-        'not null' => TRUE,
-        'default' => 0,
-      ),
-      'moderate' => array(
-        'description' => 'Previously, a boolean indicating whether the node was "in moderation"; mostly no longer used.',
         'type' => 'int',
         'not null' => TRUE,
         'default' => 0,
@@ -107,7 +106,6 @@ function node_schema() {
     'indexes' => array(
       'node_changed'        => array('changed'),
       'node_created'        => array('created'),
-      'node_moderate'       => array('moderate'),
       'node_frontpage'      => array('promote', 'status', 'sticky', 'created'),
       'node_status_type'    => array('status', 'type', 'nid'),
       'node_title_type'     => array('title', array('type', 4)),
@@ -118,6 +116,10 @@ function node_schema() {
     ),
     'unique keys' => array(
       'vid' => array('vid'),
+    ),
+    'foreign keys' => array(
+      'vid' => array('node_revision' => 'vid'),
+      'uid' => array('users' => 'uid'),
     ),
     'primary key' => array('nid'),
   );
@@ -172,42 +174,7 @@ function node_schema() {
       ),
     ),
     'primary key' => array('nid', 'gid', 'realm'),
-  );
-
-  $schema['node_counter'] = array(
-    'description' => 'Access statistics for {node}s.',
-    'fields' => array(
-      'nid' => array(
-        'description' => 'The {node}.nid for these statistics.',
-        'type' => 'int',
-        'not null' => TRUE,
-        'default' => 0,
-      ),
-      'totalcount' => array(
-        'description' => 'The total number of times the {node} has been viewed.',
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'default' => 0,
-        'size' => 'big',
-      ),
-      'daycount' => array(
-        'description' => 'The total number of times the {node} has been viewed today.',
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'default' => 0,
-        'size' => 'medium',
-      ),
-      'timestamp' => array(
-        'description' => 'The most recent time the {node} has been viewed.',
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'default' => 0,
-      ),
-    ),
-    'primary key' => array('nid'),
+    'foreign keys' => array('node' => 'nid'),
   );
 
   $schema['node_revision'] = array(
@@ -239,18 +206,6 @@ function node_schema() {
         'not null' => TRUE,
         'default' => '',
       ),
-      'body' => array(
-        'description' => 'The body of this version.',
-        'type' => 'text',
-        'not null' => TRUE,
-        'size' => 'big',
-      ),
-      'teaser' => array(
-        'description' => 'The teaser of this version.',
-        'type' => 'text',
-        'not null' => TRUE,
-        'size' => 'big',
-      ),
       'log' => array(
         'description' => 'The log entry explaining the changes in this version.',
         'type' => 'text',
@@ -263,8 +218,26 @@ function node_schema() {
         'not null' => TRUE,
         'default' => 0,
       ),
-      'format' => array(
-        'description' => "The text format used by this version's body.",
+      'status' => array(
+        'description' => 'Boolean indicating whether the node (at the time of this revision) is published (visible to non-administrators).',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 1,
+      ),
+      'comment' => array(
+        'description' => 'Whether comments are allowed on this node (at the time of this revision): 0 = no, 1 = closed (read only), 2 = open (read/write).',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'promote' => array(
+        'description' => 'Boolean indicating whether the node (at the time of this revision) should be displayed on the front page.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'sticky' => array(
+        'description' => 'Boolean indicating whether the node (at the time of this revision) should be displayed at the top of lists in which it appears.',
         'type' => 'int',
         'not null' => TRUE,
         'default' => 0,
@@ -275,6 +248,10 @@ function node_schema() {
       'uid' => array('uid'),
     ),
     'primary key' => array('vid'),
+    'foreign keys' => array(
+      'node' => 'nid',
+      'users' => 'uid'
+    ),
   );
 
   $schema['node_type'] = array(
@@ -326,7 +303,7 @@ function node_schema() {
         'default' => '',
       ),
       'has_body' => array(
-        'description' => 'Boolean indicating whether this type uses the {node_revision}.body field.',
+        'description' => 'Boolean indicating whether this type has the body field attached.',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
@@ -339,15 +316,8 @@ function node_schema() {
         'not null' => TRUE,
         'default' => '',
       ),
-      'min_word_count' => array(
-        'description' => 'The minimum number of words the body must contain.',
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'size' => 'small',
-      ),
       'custom' => array(
-        'description' => 'A boolean indicating whether this type is defined by a module (FALSE) or by a user via a module like the Content Construction Kit (TRUE).',
+        'description' => 'A boolean indicating whether this type is defined by a module (FALSE) or by a user via Add content type (TRUE).',
         'type' => 'int',
         'not null' => TRUE,
         'default' => 0,
@@ -382,7 +352,8 @@ function node_schema() {
 }
 
 /**
- * Drupal 6.x to 7.x updates
+ * @defgroup updates-6.x-to-7.x System updates from 6.x to 7.x
+ * @{
  */
 
 /**
@@ -417,5 +388,180 @@ function node_update_7002() {
 }
 
 /**
- * End of 6.x to 7.x updates
+ * Remove the node_counter if the statistics module is uninstalled.
+ */
+function node_update_7003() {
+  $ret = array();
+  if (drupal_get_installed_schema_version('statistics') == SCHEMA_UNINSTALLED) {
+    db_drop_table($ret, 'node_counter');
+  }
+  return $ret;
+}
+
+/**
+ * Extend the existing default preview and teaser settings to all node types.
+ */
+function node_update_7004() {
+  // Get original settings and all types.
+  $original_length = variable_get('teaser_length', 600);
+  $original_preview = variable_get('node_preview', 0);
+
+  // Map old preview setting to new values order.
+  $original_preview ? $original_preview = 2 : $original_preview = 1;
+  node_type_clear();
+  $type_list = node_type_get_types();
+
+  // Apply original settings to all types.
+  foreach ($type_list as $type => $object) {
+    variable_set('teaser_length_' . $type, $original_length);
+    variable_set('node_preview_' . $type, $original_preview);
+  }
+  // Delete old variable but leave 'teaser_length' for aggregator module upgrade.
+  variable_del('node_preview');
+
+  return array();
+}
+
+/**
+ * Add status/comment/promote and sticky columns to the {node_revision} table.
+ */
+function node_update_7005() {
+  $ret = array();
+  foreach(array('status', 'comment', 'promote', 'sticky') as $column) {
+    db_add_field($ret, 'node_revision', $column, array(
+      'type' => 'int',
+      'not null' => TRUE,
+      'default' => 0,
+    ));
+  }
+  return $ret;
+}
+
+/**
+ * Convert body and teaser from node properties to fields, and migrate status/comment/promote and sticky columns to the {node_revision} table.
+ */
+function node_update_7006(&$context) {
+  $ret = array('#finished' => 0);
+
+  // Get node type info for every invocation.
+  node_type_clear();
+  $node_types = node_type_get_types();
+
+  if (!isset($context['total'])) {
+    // Initial invocation.
+
+    // Re-save node types to create body field instances.
+    foreach ($node_types as $type => $info) {
+      if ($info->has_body) {
+        node_type_save($info);
+      }
+    }
+
+    // Initialize state for future calls.
+    $context['last'] = 0;
+    $context['count'] = 0;
+
+    $query = db_select('node', 'n');
+    $query->join('node_revision', 'nr', 'n.vid = nr.vid');
+    $context['total'] = $query->countQuery()->execute()->fetchField();
+  }
+  else {
+    // Subsequent invocations.
+
+    $found = FALSE;
+    if ($context['total']) {
+      // Operate on every revision of every node (whee!), in batches.
+      $batch_size = 50;
+      $query = db_select('node', 'n');
+      $nr = $query->innerJoin('node_revision', 'nr', 'n.vid = nr.vid');
+      $revisions = $query
+        ->fields('n', array('type', 'status', 'comment', 'promote', 'sticky'))
+        ->fields($nr)
+        ->condition('nr.vid', $context['last'], '>')
+        ->orderBy('nr.vid', 'ASC')
+        ->execute();
+
+      // Load each reversion of each node, set up 'body'
+      // appropriately, and save the node's field data.  Note that
+      // node_load() will not return the body or teaser values from
+      // {node_revision} because those columns have been removed from the
+      // schema structure in memory (but not yet from the database),
+      // so we get the values from the explicit query of the table
+      // instead.
+      foreach ($revisions as $revision) {
+        $found = TRUE;
+
+        if ($node_types[$revision->type]->has_body) {
+          $node = (object) array(
+            'nid' => $revision->nid,
+            'vid' => $revision->vid,
+            'type' => $revision->type,
+          );
+          if (!empty($revision->teaser) && $revision->teaser != text_summary($revision->body)) {
+            $node->body[FIELD_LANGUAGE_NONE][0]['summary'] = $revision->teaser;
+          }
+          // Do this after text_summary() above.
+          $break = '<!--break-->';
+          if (substr($revision->body, 0, strlen($break)) == $break) {
+            $revision->body = substr($revision->body, strlen($break));
+          }
+          $node->body[FIELD_LANGUAGE_NONE][0]['value'] = $revision->body;
+          $node->body[FIELD_LANGUAGE_NONE][0]['format'] = $revision->format;
+          // This is a core update and no contrib modules are enabled yet, so
+          // we can assume default field storage for a faster update.
+          field_sql_storage_field_storage_write('node', $node, FIELD_STORAGE_INSERT, array());
+        }
+
+        // Migrate the status columns to the {node_revision} table.
+        db_update('node_revision')
+          ->fields(array(
+            'vid' => $revision->vid,
+            'status' => $revision->status,
+            'comment' => $revision->comment,
+            'promote' => $revision->promote,
+            'sticky' => $revision->sticky,
+          ))
+          ->condition('vid', $revision->vid)
+          ->execute();
+
+        $context['last'] = $revision->vid;
+        $context['count'] += 1;
+
+        if (--$batch_size == 0) {
+          break;
+        }
+      }
+
+      $ret['#finished'] = min(0.99, $context['count'] / $context['total']);
+    }
+
+    if (!$found) {
+      // All nodes are processed.
+      $ret[] = array('success' => TRUE, 'query' => "{$context['total']} node body and teaser properties migrated to the 'body' field.");
+
+      // Remove the now-obsolete body info from node_revision.
+      db_drop_field($ret, 'node_revision', 'body');
+      db_drop_field($ret, 'node_revision', 'teaser');
+      db_drop_field($ret, 'node_revision', 'format');
+
+      // We're done.
+      $ret['#finished'] = 1;
+    }
+  }
+
+  return $ret;
+}
+
+/**
+ * Remove column min_word_count.
+ */
+function node_update_7007() {
+  $ret = array();
+  db_drop_field($ret, 'node_type', 'min_word_count');
+  return $ret;
+}
+
+/**
+ * @} End of "defgroup updates-6.x-to-7.x"
+ * The next series of updates should start at 8000.
  */

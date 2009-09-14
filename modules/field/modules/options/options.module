@@ -1,5 +1,5 @@
 <?php
-// $Id: options.module,v 1.3 2009/02/10 03:16:15 webchick Exp $
+// $Id: options.module,v 1.9 2009/08/27 00:33:51 webchick Exp $
 
 /**
  * @file
@@ -7,7 +7,7 @@
  */
 
 /**
- * Implementation of hook_theme().
+ * Implement hook_theme().
  */
 function options_theme() {
   return array(
@@ -27,7 +27,7 @@ function options_theme() {
 }
 
 /**
- * Implementation of hook_field_widget_info().
+ * Implement hook_field_widget_info().
  *
  * We need custom handling of multiple values because we need
  * to combine them into a options list rather than display
@@ -47,7 +47,6 @@ function options_field_widget_info() {
       'field types' => array('list', 'list_boolean', 'list_text', 'list_number'),
       'behaviors' => array(
         'multiple values' => FIELD_BEHAVIOR_CUSTOM,
-        'default value' => FIELD_BEHAVIOR_DEFAULT,
       ),
     ),
     'options_buttons' => array(
@@ -55,7 +54,6 @@ function options_field_widget_info() {
       'field types' => array('list', 'list_boolean', 'list_text', 'list_number'),
       'behaviors' => array(
         'multiple values' => FIELD_BEHAVIOR_CUSTOM,
-        'default value' => FIELD_BEHAVIOR_DEFAULT,
       ),
     ),
     'options_onoff' => array(
@@ -63,14 +61,13 @@ function options_field_widget_info() {
       'field types' => array('list_boolean'),
       'behaviors' => array(
         'multiple values' => FIELD_BEHAVIOR_CUSTOM,
-        'default value' => FIELD_BEHAVIOR_DEFAULT,
       ),
     ),
   );
 }
 
 /**
- * Implementation of FAPI hook_elements().
+ * Implement FAPI hook_elements().
  *
  * Any FAPI callbacks needed for individual widgets can be declared here,
  * and the element will be passed to those callbacks for processing.
@@ -83,30 +80,38 @@ function options_elements() {
     'options_select' => array(
       '#input' => TRUE,
       '#columns' => array('value'), '#delta' => 0,
-      '#process' => array('options_select_process'),
+      '#process' => array('options_select_elements_process'),
       ),
     'options_buttons' => array(
       '#input' => TRUE,
       '#columns' => array('value'), '#delta' => 0,
-      '#process' => array('options_buttons_process'),
+      '#process' => array('options_buttons_elements_process'),
       ),
     'options_onoff' => array(
       '#input' => TRUE,
       '#columns' => array('value'), '#delta' => 0,
-      '#process' => array('options_onoff_process'),
+      '#process' => array('options_onoff_elements_process'),
       ),
     );
 }
 
 /**
- * Implementation of hook_field_widget().
+ * Implement hook_field_widget().
  */
-function options_field_widget(&$form, &$form_state, $field, $instance, $items, $delta = NULL) {
+function options_field_widget(&$form, &$form_state, $field, $instance, $langcode, $items, $delta = NULL) {
   $element = array(
     '#type' => $instance['widget']['type'],
     '#default_value' => !empty($items) ? $items : array(),
   );
   return $element;
+}
+
+/**
+ * Implement hook_field_widget_error().
+ */
+function options_field_widget_error($element, $error) {
+  $field_key  = $element['#columns'][0];
+  form_error($element[$field_key], $error['message']);
 }
 
 /**
@@ -117,7 +122,7 @@ function options_field_widget(&$form, &$form_state, $field, $instance, $items, $
  *
  * The $field and $instance arrays are in $form['#fields'][$element['#field_name']].
  */
-function options_buttons_process($element, $edit, &$form_state, $form) {
+function options_buttons_elements_process($element, &$form_state, $form) {
   $field = $form['#fields'][$element['#field_name']]['field'];
   $instance = $form['#fields'][$element['#field_name']]['instance'];
   $field_key  = $element['#columns'][0];
@@ -174,7 +179,7 @@ function options_buttons_process($element, $edit, &$form_state, $form) {
  *
  * The $field and $instance arrays are in $form['#fields'][$element['#field_name']].
  */
-function options_select_process($element, $edit, &$form_state, $form) {
+function options_select_elements_process($element, &$form_state, $form) {
   $field = $form['#fields'][$element['#field_name']]['field'];
   $instance = $form['#fields'][$element['#field_name']]['instance'];
   $field_key  = $element['#columns'][0];
@@ -215,7 +220,7 @@ function options_select_process($element, $edit, &$form_state, $form) {
  * Build the form element. When creating a form using FAPI #process,
  * note that $element['#value'] is already set.
  */
-function options_onoff_process($element, $edit, &$form_state, $form) {
+function options_onoff_elements_process($element, &$form_state, $form) {
   $field = $form['#fields'][$element['#field_name']]['field'];
   $instance = $form['#fields'][$element['#field_name']]['instance'];
   $field_key  = $element['#columns'][0];

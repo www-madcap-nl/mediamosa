@@ -1,14 +1,14 @@
 <?php
-// $Id: translation.test,v 1.7 2008/12/30 16:43:19 dries Exp $
+// $Id: translation.test,v 1.17 2009/08/22 00:58:55 webchick Exp $
 
 class TranslationTestCase extends DrupalWebTestCase {
   protected $book;
 
-  function getInfo() {
+  public static function getInfo() {
     return array(
-      'name' => t('Translation functionality'),
-      'description' => t('Create a page with translation, modify the page outdating translation, and update translation.'),
-      'group' => t('Translation')
+      'name' => 'Translation functionality',
+      'description' => 'Create a page with translation, modify the page outdating translation, and update translation.',
+      'group' => 'Translation'
     );
   }
 
@@ -31,10 +31,10 @@ class TranslationTestCase extends DrupalWebTestCase {
     $this->addLanguage('es');
 
     // Set page content type to use multilingual support with translation.
-    $this->drupalGet('admin/build/node-type/page');
+    $this->drupalGet('admin/structure/node-type/page');
     $edit = array();
     $edit['language_content_type'] = 2;
-    $this->drupalPost('admin/build/node-type/page', $edit, t('Save content type'));
+    $this->drupalPost('admin/structure/node-type/page', $edit, t('Save content type'));
     $this->assertRaw(t('The content type %type has been updated.', array('%type' => 'Page')), t('Page content type has been updated.'));
 
     $this->drupalLogout();
@@ -50,9 +50,25 @@ class TranslationTestCase extends DrupalWebTestCase {
     $node_translation_body = $this->randomName();
     $node_translation = $this->createTranslation($node->nid, $node_translation_title, $node_translation_body, 'es');
 
+    // Attempt to submit a duplicate translation by visiting the node/add page
+    // with identical query string.
+    $languages = language_list();
+    $this->drupalGet('node/add/page', array('query' => array('translation' => $node->nid, 'language' => 'es')));
+    $this->assertRaw(t('A translation of %title in %language already exists', array('%title' => $node_title, '%language' => $languages['es']->name)), t('Message regarding attempted duplicate translation is displayed.'));
+
+    // Attempt a resubmission of the form - this emulates using the back button
+    // to return to the page then resubmitting the form without a refresh.
+    $edit = array();
+    $edit['title'] = $this->randomName();
+    $langcode = FIELD_LANGUAGE_NONE;
+    $edit["body[$langcode][0][value]"] = $this->randomName();
+    $this->drupalPost('node/add/page', $edit, t('Save'), array('query' => array('translation' => $node->nid, 'language' => 'es')));
+    $duplicate = $this->drupalGetNodeByTitle($edit['title']);
+    $this->assertEqual($duplicate->tnid, 0, t('The node does not have a tnid.'));
+
     // Update original and mark translation as outdated.
     $edit = array();
-    $edit['body'] = $this->randomName();
+    $edit["body[$langcode][0][value]"] = $this->randomName();
     $edit['translation[retranslate]'] = TRUE;
     $this->drupalPost('node/' . $node->nid . '/edit', $edit, t('Save'));
     $this->assertRaw(t('Page %title has been updated.', array('%title' => $node_title)), t('Original node updated.'));
@@ -63,7 +79,7 @@ class TranslationTestCase extends DrupalWebTestCase {
 
     // Update translation and mark as updated.
     $edit = array();
-    $edit['body'] = $this->randomName();
+    $edit["body[$langcode][0][value]"] = $this->randomName();
     $edit['translation[status]'] = FALSE;
     $this->drupalPost('node/' . $node_translation->nid . '/edit', $edit, t('Save'));
     $this->assertRaw(t('Page %title has been updated.', array('%title' => $node_translation_title)), t('Translated node updated.'));
@@ -77,15 +93,17 @@ class TranslationTestCase extends DrupalWebTestCase {
    */
   function addLanguage($language_code) {
     // Check to make sure that language has not already been installed.
-    $this->drupalGet('admin/settings/language');
+    $this->drupalGet('admin/config/regional/language');
 
     if (strpos($this->drupalGetContent(), 'enabled[' . $language_code . ']') === FALSE) {
       // Doesn't have language installed so add it.
       $edit = array();
       $edit['langcode'] = $language_code;
-      $this->drupalPost('admin/settings/language/add', $edit, t('Add language'));
+      $this->drupalPost('admin/config/regional/language/add', $edit, t('Add language'));
 
-      $languages = language_list('language', TRUE); // Make sure we're not using a stale list.
+      // Make sure we're not using a stale list.
+      drupal_static_reset('language_list');
+      $languages = language_list('language');
       $this->assertTrue(array_key_exists($language_code, $languages), t('Language was installed successfully.'));
 
       if (array_key_exists($language_code, $languages)) {
@@ -111,7 +129,8 @@ class TranslationTestCase extends DrupalWebTestCase {
   function createPage($title, $body, $language) {
     $edit = array();
     $edit['title'] = $title;
-    $edit['body'] = $body;
+    $langcode = FIELD_LANGUAGE_NONE;
+    $edit["body[$langcode][0][value]"] = $body;
     $edit['language'] = $language;
     $this->drupalPost('node/add/page', $edit, t('Save'));
     $this->assertRaw(t('Page %title has been created.', array('%title' => $edit['title'])), t('Page created.'));
@@ -136,7 +155,8 @@ class TranslationTestCase extends DrupalWebTestCase {
 
     $edit = array();
     $edit['title'] = $title;
-    $edit['body'] = $body;
+    $langcode = FIELD_LANGUAGE_NONE;
+    $edit["body[$langcode][0][value]"] = $body;
     $this->drupalPost(NULL, $edit, t('Save'));
     $this->assertRaw(t('Page %title has been created.', array('%title' => $edit['title'])), t('Translation created.'));
 

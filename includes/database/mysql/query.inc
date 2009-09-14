@@ -1,33 +1,37 @@
 <?php
-// $Id: query.inc,v 1.8 2008/12/26 14:23:38 dries Exp $
+// $Id: query.inc,v 1.13 2009/07/21 01:56:36 webchick Exp $
 
 /**
  * @ingroup database
  * @{
  */
 
+/**
+ * @file
+ * Query code for MySQL embedded database engine.
+ */
+
+
 class InsertQuery_mysql extends InsertQuery {
 
   public function execute() {
-
-    // Confirm that the user did not try to specify an identical
-    //  field and default field.
-    if (array_intersect($this->insertFields, $this->defaultFields)) {
-      throw new PDOException('You may not specify the same field to have a value and a schema-default value.');
-    }
-
-    if (count($this->insertFields) + count($this->defaultFields) == 0) {
+    if (!$this->preExecute()) {
       return NULL;
     }
 
-    $last_insert_id = 0;
-
-    $max_placeholder = 0;
-    $values = array();
-    foreach ($this->insertValues as $insert_values) {
-      foreach ($insert_values as $value) {
-        $values[':db_insert_placeholder_' . $max_placeholder++] = $value;
+    // If we're selecting from a SelectQuery, finish building the query and
+    // pass it back, as any remaining options are irrelevant.
+    if (empty($this->fromQuery)) {
+      $max_placeholder = 0;
+      $values = array();
+      foreach ($this->insertValues as $insert_values) {
+        foreach ($insert_values as $value) {
+          $values[':db_insert_placeholder_' . $max_placeholder++] = $value;
+        }
       }
+    }
+    else {
+      $values = $this->fromQuery->getArguments();
     }
 
     $last_insert_id = $this->connection->query((string)$this, $values, $this->queryOptions);
@@ -45,6 +49,12 @@ class InsertQuery_mysql extends InsertQuery {
     // Default fields are always placed first for consistency.
     $insert_fields = array_merge($this->defaultFields, $this->insertFields);
 
+    // If we're selecting from a SelectQuery, finish building the query and
+    // pass it back, as any remaining options are irrelevant.
+    if (!empty($this->fromQuery)) {
+      return "INSERT $delay INTO {" . $this->table . '} (' . implode(', ', $insert_fields) . ') ' . $this->fromQuery;
+    }
+
     $query = "INSERT $delay INTO {" . $this->table . '} (' . implode(', ', $insert_fields) . ') VALUES ';
 
     $max_placeholder = 0;
@@ -59,16 +69,16 @@ class InsertQuery_mysql extends InsertQuery {
 
         $new_placeholder = $max_placeholder + count($insert_values);
         for ($i = $max_placeholder; $i < $new_placeholder; ++$i) {
-          $placeholders[] = ':db_insert_placeholder_'. $i;
+          $placeholders[] = ':db_insert_placeholder_' . $i;
         }
         $max_placeholder = $new_placeholder;
-        $values[] = '('. implode(', ', $placeholders) .')';
+        $values[] = '(' . implode(', ', $placeholders) . ')';
       }
     }
     else {
       // If there are no values, then this is a default-only query. We still need to handle that.
       $placeholders = array_fill(0, count($this->defaultFields), 'default');
-      $values[] = '(' . implode(', ', $placeholders) .')';
+      $values[] = '(' . implode(', ', $placeholders) . ')';
     }
 
     $query .= implode(', ', $values);
@@ -141,6 +151,12 @@ class MergeQuery_mysql extends MergeQuery {
       foreach ($this->excludeFields as $exclude_field) {
         unset($update_fields[$exclude_field]);
       }
+    }
+
+    // If the merge query has no fields to update, add the first key as an
+    // update field so the query will not fail if a duplicate key is found.
+    if (!$update_fields && !$this->expressionFields) {
+      $update_fields = array_slice($this->keyFields, 0, 1, TRUE);
     }
 
     $insert_fields = $this->insertFields + $this->keyFields;

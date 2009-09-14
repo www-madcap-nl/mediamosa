@@ -1,14 +1,19 @@
 <?php
-// $Id: simpletest.install,v 1.15 2009/02/01 17:11:00 dries Exp $
+// $Id: simpletest.install,v 1.26 2009/08/17 19:14:41 webchick Exp $
 
 /**
- * Implementation of hook_install().
+ * @file
+ * Install, update and uninstall functions for the simpletest module.
+ */
+
+/**
+ * Implement hook_install().
  */
 function simpletest_install() {
   drupal_install_schema('simpletest');
   // Check for files directory.
-  $path = file_directory_path() . '/simpletest';
-  if (file_check_directory($path, FILE_CREATE_DIRECTORY)) {
+  $path = 'public://simpletest';
+  if (file_prepare_directory($path, FILE_CREATE_DIRECTORY)) {
     // Generate binary and text test files.
     $generated = FALSE;
     if (simpletest_get_file_count($path, 'binary') == 0) {
@@ -28,18 +33,23 @@ function simpletest_install() {
     }
 
     // Copy other test files for consistency.
-    $files = file_scan_directory($path, '/(html|image|javascript|php|sql)-.*/');
-    if (count($files) == 0) {
-      $original = drupal_get_path('module', 'simpletest') . '/files';
-      $files = file_scan_directory($original, '/(html|image|javascript|php|sql)-.*/');
+    $original = drupal_get_path('module', 'simpletest') . '/files';
+    $files = file_scan_directory($original, '/(html|image|javascript|php|sql)-.*/');
+
+    // If there are more files in SimpleTest's files directory than the site's
+    // files directory, restore all the files. This situation might occur when
+    // an errant test deletes one or more files from the site's files
+    // directory. It serves a convenience to developers so that they can get
+    // the test files back easily.
+    if (count($files) > count(file_scan_directory($path, '/(html|image|javascript|php|sql)-.*/'))) {
       foreach ($files as $file) {
-        file_unmanaged_copy($file->filename, $path . '/' . $file->basename);
+        file_unmanaged_copy($file->uri, $path, FILE_EXISTS_REPLACE);
       }
       $generated = TRUE;
     }
 
     if ($generated) {
-      drupal_set_message('Extra test files generated.');
+      drupal_set_message('Extra test files generated/copied.');
     }
   }
 }
@@ -66,7 +76,7 @@ function simpletest_generate_file($filename, $width, $lines, $type = 'binary-tex
         break;
     }
   }
-  $text = wordwrap($text, $width - 1, "\n", TRUE) ."\n"; // Add \n for symetrical file.
+  $text = wordwrap($text, $width - 1, "\n", TRUE) . "\n"; // Add \n for symetrical file.
 
   // Create filename.
   $path = file_directory_path() . '/simpletest/';
@@ -89,14 +99,27 @@ function simpletest_get_file_count($directory, $filename) {
 }
 
 /**
- * Implementation of hook_uninstall().
+ * Implement hook_uninstall().
  */
 function simpletest_uninstall() {
-  variable_del('simpletest_httpauth');
-  variable_del('simpletest_httpauth_username');
-  variable_del('simpletest_httpauth_pass');
-  variable_del('simpletest_devel');
+  simpletest_clean_environment();
+
+  // Remove settings variables.
+  variable_del('simpletest_username');
+  variable_del('simpletest_password');
+  variable_del('simpletest_clear_results');
+  variable_del('simpletest_verbose');
+
+  // Uninstall schema.
   drupal_uninstall_schema('simpletest');
+
+  // Remove generated files.
+  $path = file_directory_path() . '/simpletest';
+  $files = file_scan_directory($path, '/.*/');
+  foreach ($files as $file) {
+    file_unmanaged_delete($file->uri);
+  }
+  rmdir($path);
 }
 
 /**
@@ -107,6 +130,7 @@ function simpletest_requirements($phase) {
   $t = get_t();
 
   $has_curl = function_exists('curl_init');
+  $has_hash = function_exists('hash_hmac');
   $has_domdocument = class_exists('DOMDocument');
 
   $requirements['curl'] = array(
@@ -116,6 +140,14 @@ function simpletest_requirements($phase) {
   if (!$has_curl) {
     $requirements['curl']['severity'] = REQUIREMENT_ERROR;
     $requirements['curl']['description'] = $t('Simpletest could not be installed because the PHP <a href="@curl_url">cURL</a> library is not available.', array('@curl_url' => 'http://php.net/manual/en/curl.setup.php'));
+  }
+  $requirements['hash'] = array(
+    'title' => $t('hash'),
+    'value' => $has_hash ? $t('Enabled') : $t('Not found'),
+  );
+  if (!$has_hash) {
+    $requirements['hash']['severity'] = REQUIREMENT_ERROR;
+    $requirements['hash']['description'] = $t('Simpletest could not be installed because the PHP <a href="@hash_url">hash</a> extension is disabled.', array('@hash_url' => 'http://php.net/manual/en/book.hash.php'));
   }
 
   $requirements['php_domdocument'] = array(
@@ -205,6 +237,13 @@ function simpletest_schema() {
         'not null' => TRUE,
         'description' => 'Primary Key: Unique simpletest ID used to group test results together. Each time a set of tests
                             are run a new test ID is used.',
+      ),
+      'last_prefix' => array(
+        'type' => 'varchar',
+        'length' => 60,
+        'not null' => FALSE,
+        'default' => '',
+        'description' => 'The last database prefix used during testing.',
       ),
     ),
     'primary key' => array('test_id'),

@@ -1,12 +1,12 @@
 <?php
-// $Id: actions.test,v 1.2 2008/11/25 13:14:28 dries Exp $
+// $Id: actions.test,v 1.7 2009/09/01 16:50:12 webchick Exp $
 
 class ActionsConfigurationTestCase extends DrupalWebTestCase {
-  function getInfo() {
+  public static function getInfo() {
     return array(
-      'name' => t('Actions configuration'),
-      'description' => t('Tests complex actions configuration by adding, editing, and deleting a complex action.'),
-      'group' => t('System'),
+      'name' => 'Actions configuration',
+      'description' => 'Tests complex actions configuration by adding, editing, and deleting a complex action.',
+      'group' => 'Actions',
     );
   }
 
@@ -19,17 +19,17 @@ class ActionsConfigurationTestCase extends DrupalWebTestCase {
     $user = $this->drupalCreateUser(array('administer actions'));
     $this->drupalLogin($user);
 
-    // Make a POST request to admin/settings/actions/manage.
+    // Make a POST request to admin/config/system/actions/manage.
     $edit = array();
     $edit['action'] = md5('system_goto_action');
-    $this->drupalPost('admin/settings/actions/manage', $edit, t('Create'));
+    $this->drupalPost('admin/config/system/actions/manage', $edit, t('Create'));
 
     // Make a POST request to the individual action configuration page.
     $edit = array();
     $action_description = $this->randomName();
     $edit['actions_description'] = $action_description;
     $edit['url'] = 'admin';
-    $this->drupalPost('admin/settings/actions/configure/' . md5('system_goto_action'), $edit, t('Save'));
+    $this->drupalPost('admin/config/system/actions/configure/' . md5('system_goto_action'), $edit, t('Save'));
 
     // Make sure that the new complex action was saved properly.
     $this->assertText(t('The action has been successfully saved.'), t("Make sure we get a confirmation that we've successfully saved the complex action."));
@@ -41,7 +41,7 @@ class ActionsConfigurationTestCase extends DrupalWebTestCase {
     $new_action_description = $this->randomName();
     $edit['actions_description'] = $new_action_description;
     $edit['url'] = 'admin';
-    $this->drupalPost('admin/settings/actions/configure/1', $edit, t('Save'));
+    $this->drupalPost('admin/config/system/actions/configure/1', $edit, t('Save'));
 
     // Make sure that the action updated properly.
     $this->assertText(t('The action has been successfully saved.'), t("Make sure we get a confirmation that we've successfully updated the complex action."));
@@ -51,13 +51,75 @@ class ActionsConfigurationTestCase extends DrupalWebTestCase {
     // Make sure that deletions work properly.
     $this->clickLink(t('delete'));
     $edit = array();
-    $this->drupalPost('admin/settings/actions/delete/1', $edit, t('Delete'));
+    $this->drupalPost('admin/config/system/actions/delete/1', $edit, t('Delete'));
 
     // Make sure that the action was actually deleted.
     $this->assertRaw(t('Action %action was deleted', array('%action' => $new_action_description)), t('Make sure that we get a delete confirmation message.'));
-    $this->drupalGet('admin/settings/actions/manage');
+    $this->drupalGet('admin/config/system/actions/manage');
     $this->assertNoText($new_action_description, t("Make sure the action description does not appear on the overview page after we've deleted the action."));
-    $exists = db_result(db_query("SELECT aid FROM {actions} WHERE callback = 'drupal_goto_action'"));
+    $exists = db_query('SELECT aid FROM {actions} WHERE callback = :callback', array(':callback' => 'drupal_goto_action'))->fetchField();
     $this->assertFalse($exists, t('Make sure the action is gone from the database after being deleted.'));
+  }
+}
+
+/**
+ * Test actions executing in a potential loop, and make sure they abort properly.
+ */
+class ActionLoopTestCase extends DrupalWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'Actions executing in a potentially infinite loop',
+      'description' => 'Tests actions executing in a loop, and makes sure they abort properly.',
+      'group' => 'Actions',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('dblog', 'trigger', 'actions_loop_test');
+  }
+
+  /**
+   * Set up a loop with 10-50 recursions, and see if it aborts properly.
+   */
+  function testActionLoop() {
+    $user = $this->drupalCreateUser(array('administer actions'));
+    $this->drupalLogin($user);
+
+    $hash = md5('actions_loop_test_log');
+    $edit = array('aid' => $hash);
+    $this->drupalPost('admin/structure/trigger/actions_loop_test', $edit, t('Assign'));
+
+    // Delete any existing watchdog messages to clear the plethora of
+    // "Action added" messages from when Drupal was installed.
+    db_delete('watchdog')->execute();
+    $this->triggerActions();
+
+    // Clear the log again for another test, this time with a random maximum.
+    db_delete('watchdog')->execute();
+    variable_set('actions_max_stack', mt_rand(10, 50));
+    $this->triggerActions();
+  }
+
+  /**
+   * Create an infinite loop by causing a watchdog message to be set,
+   * which causes the actions to be triggered again, up to default of 35 times.
+   */
+  protected function triggerActions() {
+    $this->drupalGet('<front>', array('query' => array('trigger_actions_on_watchdog' => TRUE)));
+    $expected = array();
+    $expected[] = 'Triggering action loop';
+    for ($i = 1; $i <= variable_get('actions_max_stack', 35); $i++) {
+      $expected[] = "Test log #$i";
+    }
+    $expected[] = 'Stack overflow: too many calls to actions_do(). Aborting to prevent infinite recursion.';
+
+    $result = db_query("SELECT * FROM {watchdog} WHERE type = 'actions_loop_test' OR type = 'actions' ORDER BY timestamp");
+    $loop_started = FALSE;
+    while ($row = db_fetch_object($result)) {
+      
+      $expected_message = array_shift($expected);
+      $this->assertEqual($row->message, $expected_message, t('Expected message %expected, got %message.', array('%expected' => $expected_message, '%message' => $row->message)));
+    }
+    $this->assertTrue(empty($expected), t('All expected messages found.'));
   }
 }

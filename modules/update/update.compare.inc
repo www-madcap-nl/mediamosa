@@ -1,5 +1,5 @@
 <?php
-// $Id: update.compare.inc,v 1.15 2008/12/20 18:24:40 dries Exp $
+// $Id: update.compare.inc,v 1.29 2009/08/24 00:42:34 webchick Exp $
 
 /**
  * @file
@@ -16,21 +16,38 @@
  * that logic is only required when preparing the status report, not for
  * fetching the available release data.
  *
+ * This array is fairly expensive to construct, since it involves a lot of
+ * disk I/O, so we cache the results into the {cache_update} table using the
+ * 'update_project_projects' cache ID. However, since this is not the data
+ * about available updates fetched from the network, it is ok to invalidate it
+ * somewhat quickly. If we keep this data for very long, site administrators
+ * are more likely to see incorrect results if they upgrade to a newer version
+ * of a module or theme but do not visit certain pages that automatically
+ * clear this cache.
+ *
  * @see update_process_project_info()
  * @see update_calculate_project_data()
- *
+ * @see update_project_cache()
  */
 function update_get_projects() {
-  static $projects = array();
+  $projects = &drupal_static(__FUNCTION__, array());
   if (empty($projects)) {
     // Retrieve the projects from cache, if present.
     $projects = update_project_cache('update_project_projects');
     if (empty($projects)) {
       // Still empty, so we have to rebuild the cache.
-      _update_process_info_list($projects, module_rebuild_cache(), 'module');
-      _update_process_info_list($projects, system_theme_data(), 'theme');
-      // Set the projects array into the cache table.
-      cache_set('update_project_projects', $projects, 'cache_update', REQUEST_TIME + 3600);
+      $module_data = system_get_module_data();
+      $theme_data = system_get_theme_data();
+      _update_process_info_list($projects, $module_data, 'module', TRUE);
+      _update_process_info_list($projects, $theme_data, 'theme', TRUE);
+      if (variable_get('update_check_disabled', FALSE)) {
+        _update_process_info_list($projects, $module_data, 'module', FALSE);
+        _update_process_info_list($projects, $theme_data, 'theme', FALSE);
+      }
+      // Allow other modules to alter projects before fetching and comparing.
+      drupal_alter('update_projects', $projects);
+      // Cache the site's project data for at most 1 hour.
+      _update_cache_set('update_project_projects', $projects, REQUEST_TIME + 3600);
     }
   }
   return $projects;
@@ -38,16 +55,43 @@ function update_get_projects() {
 
 /**
  * Populate an array of project data.
+ *
+ * This iterates over a list of the installed modules or themes and groups
+ * them by project and status. A few parts of this function assume that
+ * enabled modules and themes are always processed first, and if disabled
+ * modules or themes are being processed (there is a setting to control if
+ * disabled code should be included in the Available updates report or not),
+ * those are only processed after $projects has been populated with
+ * information about the enabled code. 'Hidden' modules are always
+ * ignored. This function also records the latest change time on the .info
+ * files for each module or theme, which is important data which is used when
+ * deciding if the cached available update data should be invalidated.
+ *
+ * @param $projects
+ *   Reference to the array of project data of what's installed on this site.
+ * @param $list
+ *   Array of data to process to add the relevant info to the $projects array.
+ * @param $project_type
+ *   The kind of data in the list (can be 'module' or 'theme').
+ * @param $status
+ *   Boolean that controls what status (enabled or disabled) to process out of
+ *   the $list and add to the $projects array.
+ *
+ * @see update_get_projects()
  */
-function _update_process_info_list(&$projects, $list, $project_type) {
+function _update_process_info_list(&$projects, $list, $project_type, $status) {
   foreach ($list as $file) {
-    if (empty($file->status)) {
-      // Skip disabled modules or themes.
+    if ($file->status != $status) {
       continue;
     }
 
     // Skip if the .info file is broken.
     if (empty($file->info)) {
+      continue;
+    }
+
+    // Skip if it's a hidden module.
+    if (!empty($file->info['hidden'])) {
       continue;
     }
 
@@ -69,11 +113,26 @@ function _update_process_info_list(&$projects, $list, $project_type) {
     // which is left alone by tar and correctly set to the time the .info file
     // was unpacked.
     if (!isset($file->info['_info_file_ctime'])) {
-      $info_filename = dirname($file->filename) . '/' . $file->name . '.info';
+      $info_filename = dirname($file->uri) . '/' . $file->name . '.info';
       $file->info['_info_file_ctime'] = filectime($info_filename);
     }
 
     $project_name = $file->info['project'];
+
+    // Figure out what project type we're going to use to display this module
+    // or theme. If the project name is 'drupal', we don't want it to show up
+    // under the usual "Modules" section, we put it at a special "Drupal Core"
+    // section at the top of the report.
+    if ($project_name == 'drupal') {
+      $project_display_type = 'core';
+    }
+    else {
+      $project_display_type = $project_type;
+    }
+    if (empty($status)) {
+      // If we're processing disabled modules or themes, append a suffix.
+      $project_display_type .= '-disabled';
+    }
     if (!isset($projects[$project_name])) {
       // Only process this if we haven't done this project, since a single
       // project can have multiple modules or themes.
@@ -82,12 +141,25 @@ function _update_process_info_list(&$projects, $list, $project_type) {
         'info' => $file->info,
         'datestamp' => isset($file->info['datestamp']) ? $file->info['datestamp'] : 0,
         'includes' => array($file->name => $file->info['name']),
-        'project_type' => $project_name == 'drupal' ? 'core' : $project_type,
+        'project_type' => $project_display_type,
+        'project_status' => $status,
       );
     }
-    else {
+    elseif ($projects[$project_name]['project_type'] == $project_display_type) {
+      // Only add the file we're processing to the 'includes' array for this
+      // project if it is of the same type and status (which is encoded in the
+      // $project_display_type). This prevents listing all the disabled
+      // modules included with an enabled project if we happen to be checking
+      // for disabled modules, too.
       $projects[$project_name]['includes'][$file->name] = $file->info['name'];
       $projects[$project_name]['info']['_info_file_ctime'] = max($projects[$project_name]['info']['_info_file_ctime'], $file->info['_info_file_ctime']);
+    }
+    elseif (empty($status)) {
+      // If we have a project_name that matches, but the project_display_type
+      // does not, it means we're processing a disabled module or theme that
+      // belongs to a project that has some enabled code. In this case, we add
+      // the disabled thing into a separate array for separate display.
+      $projects[$project_name]['disabled'][$file->name] = $file->info['name'];
     }
   }
 }
@@ -106,7 +178,7 @@ function update_get_project_name($file) {
   elseif (isset($file->info['package']) && (strpos($file->info['package'], 'Core') !== FALSE)) {
     $project_name = 'drupal';
   }
-  elseif (in_array($file->name, array('bluemarine', 'chameleon', 'garland', 'marvin', 'minnelli', 'pushbutton'))) {
+  elseif (in_array($file->name, array('garland', 'minnelli', 'stark'))) {
     // Unfortunately, there's no way to tell if a theme is part of core,
     // so we must hard-code a list here.
     $project_name = 'drupal';
@@ -223,12 +295,23 @@ function update_process_project_info(&$projects) {
  * version (e.g. 5.x-1.5-beta1, 5.x-1.5-beta2, and 5.x-1.5). Development
  * snapshots for a given major version are always listed last.
  *
+ * The results of this function are expensive to compute, especially on sites
+ * with lots of modules or themes, since it involves a lot of comparisons and
+ * other operations. Therefore, we cache the results into the {cache_update}
+ * table using the 'update_project_data' cache ID. However, since this is not
+ * the data about available updates fetched from the network, it is ok to
+ * invalidate it somewhat quickly. If we keep this data for very long, site
+ * administrators are more likely to see incorrect results if they upgrade to
+ * a newer version of a module or theme but do not visit certain pages that
+ * automatically clear this cache.
+ *
  * @param $available
  *  Array of data about available project releases.
  *
  * @see update_get_available()
  * @see update_get_projects()
  * @see update_process_project_info()
+ * @see update_project_cache()
  */
 function update_calculate_project_data($available) {
   // Retrieve the projects from cache, if present.
@@ -253,7 +336,7 @@ function update_calculate_project_data($available) {
               $projects[$project]['extra'] = array();
             }
             $projects[$project]['extra'][] = array(
-              'class' => 'project-not-secure',
+              'class' => array('project-not-secure'),
               'label' => t('Project not secure'),
               'data' => t('This project has been labeled insecure by the Drupal security team, and is no longer available for download. Immediately disabling everything included by this project is strongly recommended!'),
             );
@@ -265,7 +348,7 @@ function update_calculate_project_data($available) {
               $projects[$project]['extra'] = array();
             }
             $projects[$project]['extra'][] = array(
-              'class' => 'project-revoked',
+              'class' => array('project-revoked'),
               'label' => t('Project revoked'),
               'data' => t('This project has been revoked, and is no longer available for download. Disabling everything included by this project is strongly recommended!'),
             );
@@ -276,11 +359,16 @@ function update_calculate_project_data($available) {
               $projects[$project]['extra'] = array();
             }
             $projects[$project]['extra'][] = array(
-              'class' => 'project-not-supported',
+              'class' => array('project-not-supported'),
               'label' => t('Project not supported'),
               'data' => t('This project is no longer supported, and is no longer available for download. Disabling everything included by this project is strongly recommended!'),
             );
             break;
+          case 'not-fetched':
+            $projects[$project]['status'] = UPDATE_NOT_FETCHED;
+            $projects[$project]['reason'] = t('Failed to fetch available update data');
+            break;
+
           default:
             // Assume anything else (e.g. 'published') is valid and we should
             // perform the rest of the logic in this function.
@@ -360,7 +448,7 @@ function update_calculate_project_data($available) {
               $projects[$project]['extra'] = array();
             }
             $projects[$project]['extra'][] = array(
-              'class' => 'release-revoked',
+              'class' => array('release-revoked'),
               'label' => t('Release revoked'),
               'data' => t('Your currently installed release has been revoked, and is no longer available for download. Disabling everything included in this release or upgrading is strongly recommended!'),
             );
@@ -372,7 +460,7 @@ function update_calculate_project_data($available) {
               $projects[$project]['extra'] = array();
             }
             $projects[$project]['extra'][] = array(
-              'class' => 'release-not-supported',
+              'class' => array('release-not-supported'),
               'label' => t('Release not supported'),
               'data' => t('Your currently installed release is now unsupported, and is no longer available for download. Disabling everything included in this release or upgrading is strongly recommended!'),
             );
@@ -382,8 +470,8 @@ function update_calculate_project_data($available) {
         // Otherwise, ignore unpublished, insecure, or unsupported releases.
         if ($release['status'] == 'unpublished' ||
             (isset($release['terms']['Release type']) &&
-             (in_array('Insecure', $release['terms']['Release type']) ||
-              in_array('Unsupported', $release['terms']['Release type'])))) {
+              (in_array('Insecure', $release['terms']['Release type']) ||
+                in_array('Unsupported', $release['terms']['Release type'])))) {
           continue;
         }
 
@@ -550,8 +638,8 @@ function update_calculate_project_data($available) {
   // projects or releases).
   drupal_alter('update_status', $projects);
 
-  // Set the projects array into the cache table.
-  cache_set('update_project_data', $projects, 'cache_update', REQUEST_TIME + 3600);
+  // Cache the site's update status for at most 1 hour.
+  _update_cache_set('update_project_data', $projects, REQUEST_TIME + 3600);
   return $projects;
 }
 
@@ -567,6 +655,13 @@ function update_calculate_project_data($available) {
  * administration pages, since we should always recompute the most current
  * values on any of those pages.
  *
+ * Note: while both of these arrays are expensive to compute (in terms of disk
+ * I/O and some fairly heavy CPU processing), neither of these is the actual
+ * data about available updates that we have to fetch over the network from
+ * updates.drupal.org. That information is stored with the
+ * 'update_available_releases' cache ID -- it needs to persist longer than 1
+ * hour and never get invalidated just by visiting a page on the site.
+ *
  * @param $cid
  *   The cache id of data to return from the cache. Valid options are
  *   'update_project_data' and 'update_project_projects'.
@@ -579,15 +674,15 @@ function update_calculate_project_data($available) {
 function update_project_cache($cid) {
   $projects = array();
 
-  // In some cases, we must clear the cache. Rather than do so on a time
-  // basis, we check for specific paths.
+  // On certain paths, we should clear the cache and recompute the projects or
+  // update status of the site to avoid presenting stale information.
   $q = $_GET['q'];
-  $paths = array('admin/build/modules', 'admin/build/themes', 'admin/reports', 'admin/reports/updates', 'admin/reports/status', 'admin/reports/updates/check');
+  $paths = array('admin/config/modules', 'admin/appearance', 'admin/reports', 'admin/reports/updates', 'admin/reports/status', 'admin/reports/updates/check');
   if (in_array($q, $paths)) {
-    cache_clear_all($cid, 'cache_update');
+    _update_cache_clear($cid);
   }
   else {
-    $cache = cache_get($cid, 'cache_update');
+    $cache = _update_cache_get($cid);
     if (!empty($cache->data) && $cache->expire > REQUEST_TIME) {
       $projects = $cache->data;
     }

@@ -1,5 +1,5 @@
 <?php
-// $Id: database.inc,v 1.19 2009/01/26 14:08:42 dries Exp $
+// $Id: database.inc,v 1.29 2009/08/24 18:22:54 dries Exp $
 
 /**
  * @file
@@ -26,6 +26,11 @@ class DatabaseConnection_pgsql extends DatabaseConnection {
       $connection_options['port'] = 5432;
     }
 
+    // PostgreSQL in trust mode doesn't require a password to be supplied.
+    if (empty($connection_options['password'])) {
+      $connection_options['password'] = null;
+    }
+
     $dsn = 'pgsql:host=' . $connection_options['host'] . ' dbname=' . $connection_options['database'] . ' port=' . $connection_options['port'];
     parent::__construct($dsn, $connection_options['username'], $connection_options['password'], array(
       // Convert numeric values to strings when fetching.
@@ -33,11 +38,25 @@ class DatabaseConnection_pgsql extends DatabaseConnection {
       // Force column names to lower case.
       PDO::ATTR_CASE => PDO::CASE_LOWER,
     ));
+
+    // Force PostgreSQL to use the UTF-8 character set by default.
+    $this->exec("SET NAMES 'UTF8'");
   }
 
   public function query($query, array $args = array(), $options = array()) {
 
     $options += $this->defaultOptions();
+
+    // The PDO PostgreSQL driver has a bug which 
+    // doesn't type cast booleans correctly when
+    // parameters are bound using associative 
+    // arrays. 
+    // See http://bugs.php.net/bug.php?id=48383
+    foreach ($args as &$value) {
+      if (is_bool($value)) {
+        $value = (int) $value;
+      }
+    }
 
     try {
       if ($query instanceof DatabaseStatementInterface) {
@@ -66,13 +85,15 @@ class DatabaseConnection_pgsql extends DatabaseConnection {
     catch (PDOException $e) {
       _db_check_install_needed();
       if ($options['throw_exception']) {
+        // Add additional debug information.
         if ($query instanceof DatabaseStatementInterface) {
-          $query_string = $stmt->getQueryString();
+          $e->query_string = $stmt->getQueryString();
         }
         else {
-          $query_string = $query;
+          $e->query_string = $query;
         }
-        throw new PDOException($query_string . " - \n" . print_r($args,1) . $e->getMessage());
+        $e->args = $args;
+        throw $e;
       }
       return NULL;
     }

@@ -1,23 +1,20 @@
-// $Id: comment.js,v 1.7 2008/10/29 10:01:27 dries Exp $
+// $Id: comment.js,v 1.12 2009/08/31 05:51:08 dries Exp $
+(function ($) {
 
 Drupal.behaviors.comment = {
-  attach: function(context) {
-    var parts = new Array("name", "homepage", "mail");
-    var cookie = '';
-    for (i=0;i<3;i++) {
-      cookie = Drupal.comment.getCookie('comment_info_' + parts[i]);
-      if (cookie != '') {
-        $("#comment-form input[name=" + parts[i] + "]:not(.comment-processed)", context)
-          .val(cookie)
-          .addClass('comment-processed');
+  attach: function (context, settings) {
+    $.each(['name', 'homepage', 'mail'], function () {
+      var cookie = Drupal.comment.getCookie('comment_info_' + this);
+      if (cookie) {
+        $('#comment-form input[name=' + this + ']', context).once('comment').val(cookie);
       }
-    }
+    });
   }
 };
 
 Drupal.comment = {};
 
-Drupal.comment.getCookie = function(name) {
+Drupal.comment.getCookie = function (name) {
   var search = name + '=';
   var returnValue = '';
 
@@ -35,3 +32,5 @@ Drupal.comment.getCookie = function(name) {
 
   return returnValue;
 };
+
+})(jQuery);

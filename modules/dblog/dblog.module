@@ -1,5 +1,5 @@
 <?php
-// $Id: dblog.module,v 1.35 2009/01/25 12:19:31 webchick Exp $
+// $Id: dblog.module,v 1.42 2009/08/29 03:36:27 webchick Exp $
 
 /**
  * @file
@@ -13,7 +13,7 @@
  */
 
 /**
- * Implementation of hook_help().
+ * Implement hook_help().
  */
 function dblog_help($path, $arg) {
   switch ($path) {
@@ -28,7 +28,7 @@ function dblog_help($path, $arg) {
 }
 
 /**
- * Implementation of hook_theme().
+ * Implement hook_theme().
  */
 function dblog_theme() {
   return array(
@@ -39,23 +39,16 @@ function dblog_theme() {
 }
 
 /**
- * Implementation of hook_menu().
+ * Implement hook_menu().
  */
 function dblog_menu() {
-  $items['admin/settings/logging/dblog'] = array(
-    'title' => 'Database logging',
-    'description' => 'Settings for logging to the Drupal database logs. This is the most common method for small to medium sites on shared hosting. The logs are viewable from the admin pages.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('dblog_admin_settings'),
-    'access arguments' => array('administer site configuration'),
-    'type' => MENU_LOCAL_TASK,
-  );
   $items['admin/reports/dblog'] = array(
     'title' => 'Recent log entries',
     'description' => 'View events that have recently been logged.',
     'page callback' => 'dblog_overview',
     'access arguments' => array('access site reports'),
     'weight' => -1,
+    'file' => 'dblog.admin.inc',
   );
   $items['admin/reports/page-not-found'] = array(
     'title' => "Top 'page not found' errors",
@@ -63,6 +56,7 @@ function dblog_menu() {
     'page callback' => 'dblog_top',
     'page arguments' => array('page not found'),
     'access arguments' => array('access site reports'),
+    'file' => 'dblog.admin.inc',
   );
   $items['admin/reports/access-denied'] = array(
     'title' => "Top 'access denied' errors",
@@ -70,6 +64,7 @@ function dblog_menu() {
     'page callback' => 'dblog_top',
     'page arguments' => array('access denied'),
     'access arguments' => array('access site reports'),
+    'file' => 'dblog.admin.inc',
   );
   $items['admin/reports/event/%'] = array(
     'title' => 'Details',
@@ -77,6 +72,7 @@ function dblog_menu() {
     'page arguments' => array(3),
     'access arguments' => array('access site reports'),
     'type' => MENU_CALLBACK,
+    'file' => 'dblog.admin.inc',
   );
   return $items;
 }
@@ -91,27 +87,36 @@ function dblog_init() {
 
 
 /**
- * Implementation of hook_cron().
+ * Implement hook_cron().
  *
  * Remove expired log messages and flood control events.
  */
 function dblog_cron() {
   // Cleanup the watchdog table
-  $max = db_result(db_query('SELECT MAX(wid) FROM {watchdog}'));
-  db_query('DELETE FROM {watchdog} WHERE wid <= %d', $max - variable_get('dblog_row_limit', 1000));
+  if (variable_get('dblog_row_limit', 1000) > 0) {
+    $max = db_query('SELECT MAX(wid) FROM {watchdog}')->fetchField();
+    db_delete('watchdog')
+      ->condition('wid', $max - variable_get('dblog_row_limit', 1000), '<=')
+      ->execute();
+  }
 }
 
 /**
- * Implementation of hook_user_cancel().
+ * Implement hook_user_cancel().
  */
 function dblog_user_cancel($edit, $account, $method) {
   switch ($method) {
     case 'user_cancel_reassign':
-      db_update('watchdog')->fields(array('uid' => 0))->condition('uid', $account->uid)->execute();
+      db_update('watchdog')
+        ->fields(array('uid' => 0))
+        ->condition('uid', $account->uid)
+        ->execute();
       break;
 
     case 'user_cancel_delete':
-      db_delete('watchdog')->condition('uid', $account->uid)->execute();
+      db_delete('watchdog')
+        ->condition('uid', $account->uid)
+        ->execute();
       break;
   }
 }
@@ -120,7 +125,7 @@ function _dblog_get_message_types() {
   $types = array();
 
   $result = db_query('SELECT DISTINCT(type) FROM {watchdog} ORDER BY type');
-  while ($object = db_fetch_object($result)) {
+  foreach ($result as $object) {
     $types[] = $object->type;
   }
 
@@ -128,7 +133,7 @@ function _dblog_get_message_types() {
 }
 
 /**
- * Implementation of hook_watchdog().
+ * Implement hook_watchdog().
  *
  * Note some values may be truncated for database column size restrictions.
  */
@@ -147,6 +152,20 @@ function dblog_watchdog(array $log_entry) {
       'timestamp' => $log_entry['timestamp'],
     ))
     ->execute();
+}
+
+/**
+ * Implement hook_form_FORM_ID_alter().
+ */
+function dblog_form_system_logging_settings_alter(&$form, $form_state) {
+  $form['dblog_row_limit'] = array(
+    '#type' => 'select',
+    '#title' => t('Database log entries to keep'),
+    '#default_value' => variable_get('dblog_row_limit', 1000),
+    '#options' => array(0 => t('All')) + drupal_map_assoc(array(100, 1000, 10000, 100000, 1000000)),
+    '#description' => t('The maximum number of entries to keep in the database log. Requires a <a href="@cron">cron maintenance task</a>.', array('@cron' => url('admin/reports/status')))
+  );
+  $form['buttons']['#weight'] = 1;
 }
 
 /**

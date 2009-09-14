@@ -1,8 +1,13 @@
 <?php
-// $Id: openid.install,v 1.4 2008/11/15 13:01:08 dries Exp $
+// $Id: openid.install,v 1.7 2009/08/29 21:07:43 dries Exp $
 
 /**
- * Implementation of hook_install().
+ * @file
+ * Install, update and uninstall functions for the openid module.
+ */
+
+/**
+ * Implement hook_install().
  */
 function openid_install() {
   // Create table.
@@ -10,7 +15,7 @@ function openid_install() {
 }
 
 /**
- * Implementation of hook_uninstall().
+ * Implement hook_uninstall().
  */
 function openid_uninstall() {
   // Remove table.
@@ -18,7 +23,7 @@ function openid_uninstall() {
 }
 
 /**
- * Implementation of hook_schema().
+ * Implement hook_schema().
  */
 function openid_schema() {
   $schema['openid_association'] = array(
@@ -67,4 +72,31 @@ function openid_schema() {
   );
 
   return $schema;
+}
+
+/**
+ * Implement hook_requirements().
+ */
+function openid_requirements($phase) {
+  $requirements = array();
+
+  if ($phase == 'runtime') {
+    // Check for the PHP BC Math library.
+    if (!function_exists('bcadd')) {
+      $requirements['bcmath'] = array(
+        'value' => t('Not installed'),
+        'severity' => REQUIREMENT_ERROR,
+        'description' => t('OpenID requires the BC Math library for PHP which is missing or outdated. Please check the <a href="@url">PHP BC Math Library documentation</a> for information on how to correct this.', array('@url' => 'http://www.php.net/manual/en/book.bc.php')),
+      );
+    }
+    else {
+      $requirements['bcmath'] = array(
+        'value' => t('Installed'),
+        'severity' => REQUIREMENT_OK,
+      );
+    }
+    $requirements['bcmath']['title'] = t('BC Match library');
+  }
+
+  return $requirements;
 }

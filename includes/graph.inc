@@ -1,5 +1,5 @@
 <?php
-// $Id: graph.inc,v 1.1 2009/01/14 12:18:37 dries Exp $
+// $Id: graph.inc,v 1.3 2009/07/28 19:06:15 dries Exp $
 
 /**
  * @file
@@ -14,7 +14,7 @@
  *   A three dimensional associated array, with the first keys being the names
  *   of the vertices, these can be strings or numbers. The second key is
  *   'edges' and the third one are again vertices, each such key representing
- *   an edge. Values of array elements do not matter.
+ *   an edge. Values of array elements are copied over.
  *
  *   Example:
  *   @code
@@ -108,7 +108,7 @@ function _drupal_depth_first_search(&$graph, &$state, $start, &$component = NULL
   if (isset($graph[$start]['edges'])) {
     foreach ($graph[$start]['edges'] as $end => $v) {
       // Mark that $start can reach $end.
-      $graph[$start]['paths'][$end] = TRUE;
+      $graph[$start]['paths'][$end] = $v;
 
       if (isset($graph[$end]['component']) && $component != $graph[$end]['component']) {
         // This vertex already has a component, use that from now on and
@@ -121,19 +121,23 @@ function _drupal_depth_first_search(&$graph, &$state, $start, &$component = NULL
         unset($state['components'][$component]);
         $component = $new_component;
       }
+      // Only visit existing vertices.
+      if (isset($graph[$end])) {
+        // Visit the connected vertex.
+        _drupal_depth_first_search($graph, $state, $end, $component);
 
-      // Visit the connected vertex.
-      _drupal_depth_first_search($graph, $state, $end, $component);
-
-      // All vertices reachable by $end are also reachable by $start.
-      $graph[$start]['paths'] += $graph[$end]['paths'];
+        // All vertices reachable by $end are also reachable by $start.
+        $graph[$start]['paths'] += $graph[$end]['paths'];
+      }
     }
   }
 
   // Now that any other subgraph has been explored, add $start to all reverse
   // paths.
   foreach ($graph[$start]['paths'] as $end => $v) {
-    $graph[$end]['reverse_paths'][$start] = TRUE;
+    if (isset($graph[$end])) {
+      $graph[$end]['reverse_paths'][$start] = $v;
+    }
   }
 
   // Record the order of the last visit. This is the reverse of the

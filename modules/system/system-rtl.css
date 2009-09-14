@@ -1,4 +1,4 @@
-/* $Id: system-rtl.css,v 1.14 2008/10/19 20:55:07 dries Exp $ */
+/* $Id: system-rtl.css,v 1.17 2009/08/24 03:11:34 webchick Exp $ */
 
 thead th {
   text-align: right;
@@ -66,11 +66,6 @@ html.js fieldset.collapsed legend a {
   background-position: 98% 50%;
 }
 
-div.teaser-button-wrapper {
-  float: left;
-  padding-right: 0;
-  padding-left: 5%;
-}
 .teaser-checkbox div.form-item {
   float: left;
   margin: 0 0 0 5%;
@@ -78,13 +73,13 @@ div.teaser-button-wrapper {
 .progress .percentage {
   float: left;
 }
-.progess-disabled {
+.progress-disabled {
   float: right;
 }
-.ahah-progress {
+.ajax-progress {
   float: right;
 }
-.ahah-progress .throbber {
+.ajax-progress .throbber {
   float: right;
 }
 input.password-field {

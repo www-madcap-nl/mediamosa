@@ -1,22 +1,23 @@
-// $Id: tableheader.js,v 1.20 2008/12/30 16:43:15 dries Exp $
+// $Id: tableheader.js,v 1.25 2009/08/31 05:51:08 dries Exp $
+(function ($) {
 
-Drupal.tableHeaderDoScroll = function() {
-  if (typeof(Drupal.tableHeaderOnScroll)=='function') {
+Drupal.tableHeaderDoScroll = function () {
+  if ($.isFunction(Drupal.tableHeaderOnScroll)) {
     Drupal.tableHeaderOnScroll();
   }
 };
 
 Drupal.behaviors.tableHeader = {
-  attach: function(context) {
+  attach: function (context, settings) {
     // This breaks in anything less than IE 7. Prevent it from running.
-    if (jQuery.browser.msie && parseInt(jQuery.browser.version, 10) < 7) {
+    if ($.browser.msie && parseInt($.browser.version) < 7) {
       return;
     }
 
     // Keep track of all cloned table headers.
     var headers = [];
 
-    $('table.sticky-enabled thead:not(.tableHeader-processed)', context).each(function () {
+    $('table.sticky-enabled thead', context).once('tableheader', function () {
       // Clone thead so it inherits original jQuery properties.
       var headerClone = $(this).clone(true).insertBefore(this.parentNode).wrap('<table class="sticky-header"></table>').parent().css({
         position: 'fixed',
@@ -33,7 +34,6 @@ Drupal.behaviors.tableHeader = {
       tracker(headerClone);
 
       $(table).addClass('sticky-table');
-      $(this).addClass('tableHeader-processed');
     });
 
     // Define the anchor holding var.
@@ -50,11 +50,11 @@ Drupal.behaviors.tableHeader = {
         e.vLength = e.table.clientHeight - 100;
         // Resize header and its cell widths.
         var parentCell = $('th', e.table);
-        $('th', e).each(function(index) {
+        $('th', e).each(function (index) {
           var cellWidth = parentCell.eq(index).css('width');
           // Exception for IE7.
           if (cellWidth == 'auto') {
-            cellWidth = parentCell.get(index).clientWidth +'px';
+            cellWidth = parentCell.get(index).clientWidth + 'px';
           }
           $(this).css('width', cellWidth);
         });
@@ -65,7 +65,7 @@ Drupal.behaviors.tableHeader = {
       var hScroll = document.documentElement.scrollLeft || document.body.scrollLeft;
       var vOffset = (document.documentElement.scrollTop || document.body.scrollTop) - e.vPosition;
       var visState = (vOffset > 0 && vOffset < e.vLength) ? 'visible' : 'hidden';
-      $(e).css({left: -hScroll + e.hPosition +'px', visibility: visState});
+      $(e).css({ left: -hScroll + e.hPosition + 'px', visibility: visState });
 
       // Check the previous anchor to see if we need to scroll to make room for the header.
       // Get the height of the header table and scroll up that amount.
@@ -80,14 +80,13 @@ Drupal.behaviors.tableHeader = {
 
     // Only attach to scrollbars once, even if Drupal.attachBehaviors is called
     //  multiple times.
-    if (!$('body').hasClass('tableHeader-processed')) {
-      $('body').addClass('tableHeader-processed');
+    $('body').once(function () {
       $(window).scroll(Drupal.tableHeaderDoScroll);
       $(document.documentElement).scroll(Drupal.tableHeaderDoScroll);
-    }
+    });
 
     // Track scrolling.
-    Drupal.tableHeaderOnScroll = function() {
+    Drupal.tableHeaderOnScroll = function () {
       $(headers).each(function () {
         tracker(this);
       });
@@ -113,3 +112,5 @@ Drupal.behaviors.tableHeader = {
     $(window).resize(resize);
   }
 };
+
+})(jQuery);

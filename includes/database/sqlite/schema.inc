@@ -1,5 +1,5 @@
 <?php
-// $Id: schema.inc,v 1.2 2008/11/23 21:01:03 webchick Exp $
+// $Id: schema.inc,v 1.9 2009/08/22 19:43:12 webchick Exp $
 
 /**
  * @file
@@ -15,6 +15,7 @@
 class DatabaseSchema_sqlite extends DatabaseSchema {
 
   public function tableExists($table) {
+    // Don't use {} around sqlite_master table.
     return (bool) $this->connection->query("SELECT name FROM sqlite_master WHERE type = 'table' AND name LIKE '{" . $table . "}'", array(), array())->fetchField();
   }
 
@@ -46,12 +47,12 @@ class DatabaseSchema_sqlite extends DatabaseSchema {
     $sql = array();
     if (!empty($schema['unique keys'])) {
       foreach ($schema['unique keys'] as $key => $fields) {
-        $sql[] = 'CREATE UNIQUE INDEX {' . $tablename . '}_' . $key . ' ON {' . $tablename . '} (' . $this->createKeySql($fields) . "); \n";
+        $sql[] = 'CREATE UNIQUE INDEX "{' . $tablename . '}_' . $key . '" ON {' . $tablename . '} (' . $this->createKeySql($fields) . "); \n";
       }
     }
     if (!empty($schema['indexes'])) {
       foreach ($schema['indexes'] as $index => $fields) {
-        $sql[] = 'CREATE INDEX {' . $tablename . '}_' . $index . ' ON {' . $tablename . '} (' . $this->createKeySql($fields) . "); \n";
+        $sql[] = 'CREATE INDEX "{' . $tablename . '}_' . $index . '" ON {' . $tablename . '} (' . $this->createKeySql($fields) . "); \n";
       }
     }
     return $sql;
@@ -66,7 +67,7 @@ class DatabaseSchema_sqlite extends DatabaseSchema {
     // Add the SQL statement for each field.
     foreach ($schema['fields'] as $name => $field) {
       if ($field['type'] == 'serial') {
-        if (isset($schema['primary key']) && ($key = array_search($name, $schema['primary key'])) !== false) {
+        if (isset($schema['primary key']) && ($key = array_search($name, $schema['primary key'])) !== FALSE) {
           unset($schema['primary key'][$key]);
         }
       }
@@ -138,7 +139,7 @@ class DatabaseSchema_sqlite extends DatabaseSchema {
     else {
       $sql = $name . " " . $spec['sqlite_type'];
 
-      if (isset($spec['length'])) {
+      if (in_array($spec['type'], array('varchar', 'char', 'text')) && isset($spec['length'])) {
         $sql .= '(' . $spec['length'] . ')';
       }
 
@@ -168,7 +169,8 @@ class DatabaseSchema_sqlite extends DatabaseSchema {
     // Put :normal last so it gets preserved by array_flip. This makes
     // it much easier for modules (such as schema.module) to map
     // database types back into schema types.
-    $map = array(
+    // $map does not use drupal_static as its value never changes.
+    static $map = array(
       'varchar:normal'  => 'VARCHAR',
 
       'text:tiny'       => 'TEXT',
@@ -199,6 +201,10 @@ class DatabaseSchema_sqlite extends DatabaseSchema {
 
       'blob:big'        => 'BLOB',
       'blob:normal'     => 'BLOB',
+
+      'date:normal'     => 'DATE',
+
+      'time:normal'   => 'TIME',
 
       'datetime:normal' => 'TIMESTAMP',
     );
@@ -293,7 +299,8 @@ class DatabaseSchema_sqlite extends DatabaseSchema {
    * @param $table
    *   Name of the table.
    * @return
-   *   An array representing the schema, @see drupal_get_schema.
+   *   An array representing the schema, from drupal_get_schema().
+   * @see drupal_get_schema()
    */
   protected function introspectSchema($table) {
     $mapped_fields = array_flip($this->getFieldTypeMap());
@@ -427,7 +434,10 @@ class DatabaseSchema_sqlite extends DatabaseSchema {
    */
   public function addIndex(&$ret, $table, $name, $fields) {
     $schema['indexes'][$name] = $fields;
-    $ret[] = update_sql($this->createIndexSql($table, $schema));
+    $statements = $this->createIndexSql($table, $schema);
+    foreach ($statements as $statement) {
+      $ret[] = update_sql($statement);
+    }
   }
 
   /**
@@ -458,8 +468,10 @@ class DatabaseSchema_sqlite extends DatabaseSchema {
    */
   public function addUniqueKey(&$ret, $table, $name, $fields) {
     $schema['unique keys'][$name] = $fields;
-    $ret[] = update_sql($this->createIndexSql($table, $schema));
-
+    $statements = $this->createIndexSql($table, $schema);
+    foreach ($statements as $statement) {
+      $ret[] = update_sql($statement);
+    }
   }
 
   /**
@@ -562,6 +574,7 @@ class DatabaseSchema_sqlite extends DatabaseSchema {
    *   Array, both the keys and the values are the matching tables.
    */
   public function findTables($table_expression) {
+    // Don't use {} around sqlite_master table.
     $result = db_query("SELECT name FROM sqlite_master WHERE name LIKE :table_name", array(
       ':table_name' => $table_expression,
     ));

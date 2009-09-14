@@ -1,0 +1,15 @@
+; $Id: expert.info,v 1.2 2009/08/21 07:50:08 webchick Exp $
+name = Drupal (minimal)
+description = Create a Drupal site with only required modules enabled.
+version = VERSION
+core = 7.x
+dependencies[] = block
+dependencies[] = dblog
+files[] = expert.profile
+
+; Information added by drupal.org packaging script on 2009-09-09
+version = "7.x-dev"
+core = "7.x"
+project = "drupal"
+datestamp = "1252498273"
+

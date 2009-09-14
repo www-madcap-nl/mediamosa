@@ -1,5 +1,5 @@
 <?php
-// $Id: xmlrpcs.inc,v 1.27 2008/05/06 12:18:45 dries Exp $
+// $Id: xmlrpcs.inc,v 1.31 2009/08/24 00:14:19 webchick Exp $
 
 /**
  * The main entry point for XML-RPC requests.
@@ -106,10 +106,8 @@ function xmlrpc_server_error($error, $message = FALSE) {
 
 function xmlrpc_server_output($xml) {
   $xml = '<?xml version="1.0"?>' . "\n" . $xml;
-  header('Connection: close');
-  header('Content-Length: ' . strlen($xml));
-  header('Content-Type: text/xml');
-  header('Date: ' . date('r'));
+  drupal_set_header('Content-Length', strlen($xml));
+  drupal_set_header('Content-Type', 'text/xml');
   echo $xml;
   exit;
 }
@@ -202,7 +200,7 @@ function xmlrpc_server_call($xmlrpc_server, $methodname, $args) {
     }
   }
 
-  if (!drupal_function_exists($method)) {
+  if (!function_exists($method)) {
     return xmlrpc_error(-32601, t('Server error. Requested function @method does not exist.', array("@method" => $method)));
   }
   // Call the mapped function

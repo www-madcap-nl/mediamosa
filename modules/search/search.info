@@ -1,4 +1,4 @@
-; $Id: search.info,v 1.8 2008/10/11 02:33:00 webchick Exp $
+; $Id: search.info,v 1.10 2009/08/29 10:46:41 dries Exp $
 name = Search
 description = Enables site-wide keyword searching.
 package = Core
@@ -8,3 +8,12 @@ files[] = search.module
 files[] = search.admin.inc
 files[] = search.pages.inc
 files[] = search.install
+files[] = search.test
+files[] = search.extender.inc
+
+; Information added by drupal.org packaging script on 2009-09-09
+version = "7.x-dev"
+core = "7.x"
+project = "drupal"
+datestamp = "1252498273"
+

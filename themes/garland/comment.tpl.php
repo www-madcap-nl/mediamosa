@@ -1,14 +1,13 @@
 <?php
-// $Id: comment.tpl.php,v 1.11 2008/04/14 17:48:46 dries Exp $
+// $Id: comment.tpl.php,v 1.15 2009/08/29 04:16:15 webchick Exp $
 ?>
-<div class="comment<?php print ($comment->new) ? ' comment-new' : ''; print ' ' . $status; print ' ' . $zebra; ?>">
+<div class="<?php print $classes . ' ' . $zebra; ?>">
 
-  <div class="clear-block">
-  <?php if ($submitted): ?>
-    <span class="submitted"><?php print $submitted; ?></span>
-  <?php endif; ?>
+  <div class="clearfix">
 
-  <?php if ($comment->new) : ?>
+    <span class="submitted"><?php print $date; ?> — <?php print $author; ?></span>
+
+  <?php if ($new) : ?>
     <span class="new"><?php print drupal_ucfirst($new) ?></span>
   <?php endif; ?>
 
@@ -17,9 +16,9 @@
     <h3><?php print $title ?></h3>
 
     <div class="content">
-      <?php print $content ?>
+      <?php hide($content['links']); print render($content); ?>
       <?php if ($signature): ?>
-      <div class="clear-block">
+      <div class="clearfix">
         <div>—</div>
         <?php print $signature ?>
       </div>
@@ -27,7 +26,5 @@
     </div>
   </div>
 
-  <?php if ($links): ?>
-    <div class="links"><?php print $links ?></div>
-  <?php endif; ?>
+  <?php print render($content['links']) ?>
 </div>

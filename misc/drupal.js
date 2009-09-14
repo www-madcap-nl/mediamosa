@@ -1,11 +1,18 @@
-// $Id: drupal.js,v 1.49 2009/01/06 13:16:09 dries Exp $
+// $Id: drupal.js,v 1.58 2009/08/31 05:51:07 dries Exp $
 
 var Drupal = Drupal || { 'settings': {}, 'behaviors': {}, 'locale': {} };
 
-/**
- * Set the variable that indicates if JavaScript behaviors should be applied.
- */
-Drupal.jsEnabled = document.getElementsByTagName && document.createElement && document.createTextNode && document.documentElement && document.getElementById;
+// Allow other JavaScript libraries to use $.
+jQuery.noConflict();
+
+// Indicate when other scripts use $ with out wrapping their code.
+if ($ === undefined) {
+  $ = function () {
+    alert('Please wrap your JavaScript code in (function ($) { ... })(jQuery); to be compatible. See http://docs.jquery.com/Using_jQuery_with_Other_Libraries.');
+  };
+}
+
+(function ($) {
 
 /**
  * Attach all registered behaviors to a page element.
@@ -15,10 +22,10 @@ Drupal.jsEnabled = document.getElementsByTagName && document.createElement && do
  * object using the method 'attach' and optionally also 'detach' as follows:
  * @code
  *    Drupal.behaviors.behaviorName = {
- *      attach: function(context) {
+ *      attach: function (context) {
  *        ...
  *      },
- *      detach: function(context) {
+ *      detach: function (context) {
  *        ...
  *      }
  *    };
@@ -30,21 +37,30 @@ Drupal.jsEnabled = document.getElementsByTagName && document.createElement && do
  * loaded, feeding in an element to be processed, in order to attach all
  * behaviors to the new content.
  *
- * Behaviors should use a class in the form behaviorName-processed to ensure
- * the behavior is attached only once to a given element. (Doing so enables
- * the reprocessing of given elements, which may be needed on occasion despite
- * the ability to limit behavior attachment to a particular element.)
+ * Behaviors should use
+ * @code
+ *   $(selector).once('behavior-name', function () {
+ *     ...
+ *   });
+ * @endcode
+ * to ensure the behavior is attached only once to a given element. (Doing so
+ * enables the reprocessing of given elements, which may be needed on occasion
+ * despite the ability to limit behavior attachment to a particular element.)
  *
  * @param context
  *   An element to attach behaviors to. If none is given, the document element
  *   is used.
+ * @param settings
+ *   An object containing settings for the current context. If none given, the
+ *   global Drupal.settings object is used.
  */
-Drupal.attachBehaviors = function(context) {
+Drupal.attachBehaviors = function (context, settings) {
   context = context || document;
+  settings = settings || Drupal.settings;
   // Execute all of them.
-  jQuery.each(Drupal.behaviors, function() {
-    if (jQuery.isFunction(this.attach)) {
-      this.attach(context);
+  $.each(Drupal.behaviors, function () {
+    if ($.isFunction(this.attach)) {
+      this.attach(context, settings);
     }
   });
 };
@@ -68,12 +84,13 @@ Drupal.attachBehaviors = function(context) {
  *
  * @see Drupal.attachBehaviors
  */
-Drupal.detachBehaviors = function(context) {
+Drupal.detachBehaviors = function (context, settings) {
   context = context || document;
+  settings = settings || Drupal.settings;
   // Execute all of them.
-  jQuery.each(Drupal.behaviors, function() {
-    if (jQuery.isFunction(this.detach)) {
-      this.detach(context);
+  $.each(Drupal.behaviors, function () {
+    if ($.isFunction(this.detach)) {
+      this.detach(context, settings);
     }
   });
 };
@@ -81,7 +98,7 @@ Drupal.detachBehaviors = function(context) {
 /**
  * Encode special characters in a plain-text string for display as HTML.
  */
-Drupal.checkPlain = function(str) {
+Drupal.checkPlain = function (str) {
   str = String(str);
   var replace = { '&': '&amp;', '"': '&quot;', '<': '&lt;', '>': '&gt;' };
   for (var character in replace) {
@@ -109,7 +126,7 @@ Drupal.checkPlain = function(str) {
  * @return
  *   The translated string.
  */
-Drupal.t = function(str, args) {
+Drupal.t = function (str, args) {
   // Fetch the localized version of the string.
   if (Drupal.locale.strings && Drupal.locale.strings[str]) {
     str = Drupal.locale.strings[str];
@@ -169,7 +186,7 @@ Drupal.t = function(str, args) {
  * @return
  *   A translated string.
  */
-Drupal.formatPlural = function(count, singular, plural, args) {
+Drupal.formatPlural = function (count, singular, plural, args) {
   var args = args || {};
   args['@count'] = count;
   // Determine the index of the plural form.
@@ -182,9 +199,9 @@ Drupal.formatPlural = function(count, singular, plural, args) {
     return Drupal.t(plural, args);
   }
   else {
-    args['@count['+ index +']'] = args['@count'];
+    args['@count[' + index + ']'] = args['@count'];
     delete args['@count'];
-    return Drupal.t(plural.replace('@count', '@count['+ index +']'));
+    return Drupal.t(plural.replace('@count', '@count[' + index + ']'));
   }
 };
 
@@ -207,7 +224,7 @@ Drupal.formatPlural = function(count, singular, plural, args) {
  *   Any data the theme function returns. This could be a plain HTML string,
  *   but also a complex object.
  */
-Drupal.theme = function(func) {
+Drupal.theme = function (func) {
   for (var i = 1, args = []; i < arguments.length; i++) {
     args.push(arguments[i]);
   }
@@ -233,15 +250,13 @@ Drupal.parseJson = function (data) {
  */
 Drupal.freezeHeight = function () {
   Drupal.unfreezeHeight();
-  var div = document.createElement('div');
-  $(div).css({
+  $('<div id="freeze-height"></div>').css({
     position: 'absolute',
     top: '0px',
     left: '0px',
     width: '1px',
     height: $('body').css('height')
-  }).attr('id', 'freeze-height');
-  $('body').append(div);
+  }).appendTo('body');
 };
 
 /**
@@ -252,10 +267,11 @@ Drupal.unfreezeHeight = function () {
 };
 
 /**
- * Wrapper to address the mod_rewrite url encoding bug
- * (equivalent of drupal_urlencode() in PHP).
+ * Wrapper around encodeURIComponent() which avoids Apache quirks (equivalent of
+ * drupal_encode_path() in PHP). This function should only be used on paths, not
+ * on query string arguments.
  */
-Drupal.encodeURIComponent = function (item, uri) {
+Drupal.encodePath = function (item, uri) {
   uri = uri || location.href;
   item = encodeURIComponent(item).replace(/%2F/g, '/');
   return (uri.indexOf('?q=') != -1) ? item : item.replace(/%26/g, '%2526').replace(/%23/g, '%2523').replace(/\/\//g, '/%252F');
@@ -265,7 +281,7 @@ Drupal.encodeURIComponent = function (item, uri) {
  * Get the text selection in a textarea.
  */
 Drupal.getSelection = function (element) {
-  if (typeof(element.selectionStart) != 'number' && document.selection) {
+  if (typeof element.selectionStart != 'number' && document.selection) {
     // The current selection.
     var range1 = document.selection.createRange();
     var range2 = range1.duplicate();
@@ -282,34 +298,33 @@ Drupal.getSelection = function (element) {
 };
 
 /**
- * Build an error message from ahah response.
+ * Build an error message from an AJAX response.
  */
-Drupal.ahahError = function(xmlhttp, uri) {
-  if (xmlhttp.status == 200) {
-    if (jQuery.trim(xmlhttp.responseText)) {
-      var message = Drupal.t("An error occurred. \n@uri\n@text", {'@uri': uri, '@text': xmlhttp.responseText });
+Drupal.ajaxError = function (xmlhttp, uri) {
+  if (xmlhttp.status == 200 || (xmlhttp.status == 500 && xmlhttp.statusText == 'Service unavailable (with message)')) {
+    if ($.trim(xmlhttp.responseText)) {
+      var message = Drupal.t("An error occurred. \nPath: @uri\nMessage: !text", { '@uri': uri, '!text': xmlhttp.responseText });
     }
     else {
-      var message = Drupal.t("An error occurred. \n@uri\n(no information available).", {'@uri': uri });
+      var message = Drupal.t("An error occurred. \nPath: @uri\n(no information available).", {'@uri': uri });
     }
   }
   else {
-    var message = Drupal.t("An HTTP error @status occurred. \n@uri", {'@uri': uri, '@status': xmlhttp.status });
+    var message = Drupal.t("An HTTP error @status occurred. \nPath: @uri", { '@uri': uri, '@status': xmlhttp.status });
   }
-  return message.replace(/\n/g, '<br />');;
-}
+  return message.replace(/\n/g, '<br />');
+};
 
-// Global Killswitch on the <html> element.
-if (Drupal.jsEnabled) {
-  // Global Killswitch on the <html> element.
-  $(document.documentElement).addClass('js');
-  // 'js enabled' cookie.
-  document.cookie = 'has_js=1; path=/';
-  // Attach all behaviors.
-  $(document).ready(function() {
-    Drupal.attachBehaviors(this);
-  });
-}
+// Class indicating that JS is enabled; used for styling purpose.
+$('html').addClass('js');
+
+// 'js enabled' cookie.
+document.cookie = 'has_js=1; path=/';
+
+// Attach all behaviors.
+$(function () {
+  Drupal.attachBehaviors(document, Drupal.settings);
+});
 
 /**
  * The default themes.
@@ -324,7 +339,9 @@ Drupal.theme.prototype = {
    * @return
    *   The formatted text (html).
    */
-  placeholder: function(str) {
+  placeholder: function (str) {
     return '<em>' + Drupal.checkPlain(str) + '</em>';
   }
 };
+
+})(jQuery);

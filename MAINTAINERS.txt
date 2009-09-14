@@ -1,10 +1,7 @@
-// $Id: MAINTAINERS.txt,v 1.29 2009/01/08 03:32:42 webchick Exp $
+// $Id: MAINTAINERS.txt,v 1.32 2009/08/25 10:58:31 dries Exp $
 
 List of maintainers
 --------------------------------------------------------------------------------
-
-BLOG API
-James Walker 'walkah' <http://drupal.org/user/1531>
 
 DATABASE SYSTEM
 Larry Garfield 'Crell' <http://drupal.org/user/26398>
@@ -52,7 +49,10 @@ Joon Park 'dvessel' <http://drupal.org/user/56782>
 
 UPDATE MODULE
 Derek Wright 'dww' <http://drupal.org/user/46549>
-Earl Miles 'merlinofchaos' <http://drupal.org/user/26979>
+
+USER EXPERIENCE AND USABILITY
+Roy Scholten 'yoroy' <http://drupal.org/user/41502>
+Bojhan Somers <http://drupal.org/user/87969>
 
 TRANSLATIONS COORDINATOR
 Gerhard Killesreiter 'killes' <http://drupal.org/user/83>

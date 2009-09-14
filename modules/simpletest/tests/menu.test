@@ -1,5 +1,5 @@
 <?php
-// $Id: menu.test,v 1.6 2009/02/05 01:05:17 webchick Exp $
+// $Id: menu.test,v 1.13 2009/07/14 20:53:16 webchick Exp $
 
 /**
  * @file
@@ -7,11 +7,11 @@
  */
 
 class MenuIncTestCase extends DrupalWebTestCase {
-  function getInfo() {
+  public static function getInfo() {
     return array(
-      'name' => t('Hook menu tests'),
-      'description' => t('Test menu hook functionality.'),
-      'group' => t('Menu'),
+      'name' => 'Hook menu tests',
+      'description' => 'Test menu hook functionality.',
+      'group' => 'Menu',
     );
   }
 
@@ -30,6 +30,52 @@ class MenuIncTestCase extends DrupalWebTestCase {
   }
 
   /**
+   * Tests for menu_link_maintain().
+   */
+  function testMenuLinkMaintain() {
+    $admin_user = $this->drupalCreateUser(array('administer site configuration'));
+    $this->drupalLogin($admin_user);
+
+    // Create three menu items.
+    menu_link_maintain('menu_test', 'insert', 'menu_test_maintain/1', 'Menu link #1');
+    menu_link_maintain('menu_test', 'insert', 'menu_test_maintain/1', 'Menu link #1-1');
+    menu_link_maintain('menu_test', 'insert', 'menu_test_maintain/2', 'Menu link #2');
+
+    // Move second link to the main-menu, to test caching later on.
+    db_update('menu_links')
+      ->fields(array('menu_name' => 'main-menu'))
+      ->condition('link_title', 'Menu link #1-1')
+      ->condition('customized', 0)
+      ->condition('module', 'menu_test')
+      ->execute();
+    menu_cache_clear('main-menu');
+
+    // Load front page.
+    $this->drupalGet('node');
+    $this->assertLink(t('Menu link #1'), 0, 'Found menu link #1');
+    $this->assertLink(t('Menu link #1-1'), 0, 'Found menu link #1-1');
+    $this->assertLink(t('Menu link #2'), 0, 'Found menu link #2');
+
+    // Rename all links for the given path.
+    menu_link_maintain('menu_test', 'update', 'menu_test_maintain/1', 'Menu link updated');
+    // Load a different page to be sure that we have up to date information.
+    $this->drupalGet('menu_test_maintain/1');
+    $this->assertLink(t('Menu link updated'), 0, t('Found updated menu link'));
+    $this->assertNoLink(t('Menu link #1'), 0, t('Not found menu link #1'));
+    $this->assertNoLink(t('Menu link #1'), 0, t('Not found menu link #1-1'));
+    $this->assertLink(t('Menu link #2'), 0, t('Found menu link #2'));
+
+    // Delete all links for the given path.
+    menu_link_maintain('menu_test', 'delete', 'menu_test_maintain/1', '');
+    // Load a different page to be sure that we have up to date information.
+    $this->drupalGet('menu_test_maintain/2');
+    $this->assertNoLink(t('Menu link updated'), 0, t('Not found deleted menu link'));
+    $this->assertNoLink(t('Menu link #1'), 0, t('Not found menu link #1'));
+    $this->assertNoLink(t('Menu link #1'), 0, t('Not found menu link #1-1'));
+    $this->assertLink(t('Menu link #2'), 0, t('Found menu link #2'));
+  }
+
+  /**
    * Tests for menu_name parameter for hook_menu().
    */
   function testMenuName() {
@@ -37,27 +83,59 @@ class MenuIncTestCase extends DrupalWebTestCase {
     $this->drupalLogin($admin_user);
 
     $sql = "SELECT menu_name FROM {menu_links} WHERE router_path = 'menu_name_test'";
-    $name = db_result(db_query($sql));
+    $name = db_query($sql)->fetchField();
     $this->assertEqual($name, 'original', t('Menu name is "original".'));
 
-    // Force a menu rebuild by going to the modules page.
-    $this->drupalGet('admin/build/modules', array('query' => array("hook_menu_name" => 'changed')));
+    // Change the menu_name parameter in menu_test.module, then force a menu
+    // rebuild.
+    menu_test_menu_name('changed');
+    menu_rebuild();
 
     $sql = "SELECT menu_name FROM {menu_links} WHERE router_path = 'menu_name_test'";
-    $name = db_result(db_query($sql));
+    $name = db_query($sql)->fetchField();
     $this->assertEqual($name, 'changed', t('Menu name was successfully changed after rebuild.'));
   }
+
+  /**
+   * Tests for menu hiearchy.
+   */
+  function testMenuHiearchy() {
+    $parent_link = db_query('SELECT * FROM {menu_links} WHERE link_path = :link_path', array(':link_path' => 'menu-test/hierarchy/parent'))->fetchAssoc();
+    $child_link = db_query('SELECT * FROM {menu_links} WHERE link_path = :link_path', array(':link_path' => 'menu-test/hierarchy/parent/child'))->fetchAssoc();
+    $unattached_child_link = db_query('SELECT * FROM {menu_links} WHERE link_path = :link_path', array(':link_path' => 'menu-test/hierarchy/parent/child2/child'))->fetchAssoc();
+
+    $this->assertEqual($child_link['plid'], $parent_link['mlid'], t('The parent of a directly attached child is correct.'));
+    $this->assertEqual($unattached_child_link['plid'], $parent_link['mlid'], t('The parent of a non-directly attached child is correct.'));
+  }
+
+  /**
+   * Test menu_set_item().
+   */
+  function testMenuSetItem() {
+    $item = menu_get_item('node');
+
+    $this->assertEqual($item['path'], 'node', t("Path from menu_get_item('node') is equal to 'node'"), 'menu');
+
+    // Modify the path for the item then save it.
+    $item['path'] = 'node_test';
+    $item['href'] = 'node_test';
+
+    menu_set_item('node', $item);
+    $compare_item = menu_get_item('node');
+    $this->assertEqual($compare_item, $item, t('Modified menu item is equal to newly retrieved menu item.'), 'menu');
+  }
+
 }
 
 /**
  * Tests rebuilding the menu by setting 'menu_rebuild_needed.'
  */
 class MenuRebuildTestCase extends DrupalWebTestCase {
-  function getInfo() {
+  public static function getInfo() {
     return array(
-      'name' => t('Menu rebuild test'),
-      'description' => t('Test rebuilding of menu.'),
-      'group' => t('Menu'),
+      'name' => 'Menu rebuild test',
+      'description' => 'Test rebuilding of menu.',
+      'group' => 'Menu',
     );
   }
 
@@ -66,14 +144,14 @@ class MenuRebuildTestCase extends DrupalWebTestCase {
    */
   function testMenuRebuildByVariable() {
     // Check if 'admin' path exists.
-    $admin_exists = db_result(db_query("SELECT path from {menu_router} WHERE path = 'admin'"));
+    $admin_exists = db_query('SELECT path from {menu_router} WHERE path = :path', array(':path' => 'admin'))->fetchField();
     $this->assertEqual($admin_exists, 'admin', t("The path 'admin/' exists prior to deleting."));
 
     // Delete the path item 'admin', and test that the path doesn't exist in the database.
     $delete = db_delete('menu_router')
       ->condition('path', 'admin')
       ->execute();
-    $admin_exists = db_result(db_query("SELECT path from {menu_router} WHERE path = 'admin'"));
+    $admin_exists = db_query('SELECT path from {menu_router} WHERE path = :path', array(':path' => 'admin'))->fetchField();
     $this->assertFalse($admin_exists, t("The path 'admin/' has been deleted and doesn't exist in the database."));
 
     // Now we enable the rebuild variable and trigger menu_execute_active_handler()
@@ -81,7 +159,7 @@ class MenuRebuildTestCase extends DrupalWebTestCase {
     variable_set('menu_rebuild_needed', TRUE);
     // menu_execute_active_handler() should trigger the rebuild.
     $this->drupalGet('<front>');
-    $admin_exists = db_result(db_query("SELECT path from {menu_router} WHERE path = 'admin'"));
+    $admin_exists = db_query('SELECT path from {menu_router} WHERE path = :path', array(':path' => 'admin'))->fetchField();
     $this->assertEqual($admin_exists, 'admin', t("The menu has been rebuilt, the path 'admin' now exists again."));
   }
 

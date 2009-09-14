@@ -1,5 +1,5 @@
 <?php
-// $Id: xmlrpc.inc,v 1.56 2009/01/14 21:13:41 dries Exp $
+// $Id: xmlrpc.inc,v 1.61 2009/08/24 00:14:19 webchick Exp $
 
 /**
  * @file
@@ -51,7 +51,7 @@ function xmlrpc_value($data, $type = FALSE) {
  * @see
  *   http://www.xmlrpc.com/spec#scalars
  */
-function xmlrpc_value_calculate_type(&$xmlrpc_value) {
+function xmlrpc_value_calculate_type($xmlrpc_value) {
   // http://www.php.net/gettype: Never use gettype() to test for a certain type [...] Instead, use the is_* functions.
   if (is_bool($xmlrpc_value->data)) {
     return 'boolean';
@@ -156,7 +156,7 @@ function xmlrpc_message($message) {
  * @return
  *   TRUE if parsing succeeded; FALSE otherwise
  */
-function xmlrpc_message_parse(&$xmlrpc_message) {
+function xmlrpc_message_parse($xmlrpc_message) {
   // First remove the XML declaration
   $xmlrpc_message->message = preg_replace('/<\?xml(.*)?\?' . '>/', '', $xmlrpc_message->message);
   if (trim($xmlrpc_message->message) == '') {
@@ -417,11 +417,26 @@ function xmlrpc_base64_get_xml($xmlrpc_base64) {
 }
 
 /**
- * Execute an XML remote procedural call. This is private function; call xmlrpc()
- * in common.inc instead of this function.
+ * Performs one or more XML-RPC request(s).
  *
+ * @param $url
+ *   An absolute URL of the XML-RPC endpoint.
+ *     Example:
+ *     http://www.example.com/xmlrpc.php
+ * @param ...
+ *   For one request:
+ *     The method name followed by a variable number of arguments to the method.
+ *   For multiple requests (system.multicall):
+ *     An array of call arrays. Each call array follows the pattern of the single
+ *     request: method name followed by the arguments to the method.
  * @return
- *   A $xmlrpc_message object if the call succeeded; FALSE if the call failed
+ *   For one request:
+ *     Either the return value of the method on success, or FALSE.
+ *     If FALSE is returned, see xmlrpc_errno() and xmlrpc_error_msg().
+ *   For multiple requests:
+ *     An array of results. Each result will either be the result
+ *     returned by the method called, or an xmlrpc_error object if the call
+ *     failed. See xmlrpc_error().
  */
 function _xmlrpc() {
   $args = func_get_args();

@@ -1,4 +1,4 @@
-; $Id: color.info,v 1.9 2008/10/11 02:32:40 webchick Exp $
+; $Id: color.info,v 1.10 2009/09/01 20:39:55 webchick Exp $
 
 name = Color
 description = Allows administrators to change the color scheme of compatible themes.
@@ -7,3 +7,11 @@ version = VERSION
 core = 7.x
 files[] = color.module
 files[] = color.install
+files[] = color.test
+
+; Information added by drupal.org packaging script on 2009-09-09
+version = "7.x-dev"
+core = "7.x"
+project = "drupal"
+datestamp = "1252498273"
+

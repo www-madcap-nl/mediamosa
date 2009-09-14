@@ -1,0 +1,15 @@
+; $Id: image_test.info,v 1.1 2009/03/09 11:44:54 dries Exp $
+name = "Image test"
+description = "Support module for image toolkit tests."
+package = Testing
+version = VERSION
+core = 7.x
+files[] = image_test.module
+hidden = TRUE
+
+; Information added by drupal.org packaging script on 2009-09-09
+version = "7.x-dev"
+core = "7.x"
+project = "drupal"
+datestamp = "1252498273"
+

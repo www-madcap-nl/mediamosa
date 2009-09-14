@@ -1,5 +1,5 @@
 <?php
-// $Id: tracker.pages.inc,v 1.14 2008/12/30 16:43:19 dries Exp $
+// $Id: tracker.pages.inc,v 1.25 2009/09/05 15:05:05 dries Exp $
 
 /**
  * @file
@@ -8,66 +8,84 @@
 
 
 /**
- * Menu callback. Prints a listing of active nodes on the site.
+ * Menu callback; prints a listing of active nodes on the site.
  */
 function tracker_page($account = NULL, $set_title = FALSE) {
-  // Add CSS
-  drupal_add_css(drupal_get_path('module', 'tracker') . '/tracker.css', array('preprocess' => FALSE));
-
   if ($account) {
+    $query = db_select('tracker_user', 't')->extend('PagerDefault');
+    $query->condition('t.uid', $account->uid);
+
     if ($set_title) {
       // When viewed from user/%user/track, display the name of the user
       // as page title -- the tab title remains Track so this needs to be done
       // here and not in the menu definition.
       drupal_set_title($account->name);
     }
-  // TODO: These queries are very expensive, see http://drupal.org/node/105639
-    $sql = 'SELECT DISTINCT(n.nid), n.title, n.type, n.changed, n.uid, u.name, GREATEST(n.changed, l.last_comment_timestamp) AS last_updated, l.comment_count FROM {node} n INNER JOIN {node_comment_statistics} l ON n.nid = l.nid INNER JOIN {users} u ON n.uid = u.uid LEFT JOIN {comment} c ON n.nid = c.nid AND (c.status = %d OR c.status IS NULL) WHERE n.status = 1 AND (n.uid = %d OR c.uid = %d) ORDER BY last_updated DESC';
-    $sql = db_rewrite_sql($sql);
-    $sql_count = 'SELECT COUNT(DISTINCT(n.nid)) FROM {node} n LEFT JOIN {comment} c ON n.nid = c.nid AND (c.status = %d OR c.status IS NULL) WHERE n.status = 1 AND (n.uid = %d OR c.uid = %d)';
-    $sql_count = db_rewrite_sql($sql_count);
-    $result = pager_query($sql, 25, 0, $sql_count, COMMENT_PUBLISHED, $account->uid, $account->uid);
   }
   else {
-    $sql = 'SELECT DISTINCT(n.nid), n.title, n.type, n.changed, n.uid, u.name, GREATEST(n.changed, l.last_comment_timestamp) AS last_updated, l.comment_count FROM {node} n INNER JOIN {users} u ON n.uid = u.uid INNER JOIN {node_comment_statistics} l ON n.nid = l.nid WHERE n.status = 1 ORDER BY last_updated DESC';
-    $sql = db_rewrite_sql($sql);
-    $sql_count = 'SELECT COUNT(n.nid) FROM {node} n WHERE n.status = 1';
-    $sql_count = db_rewrite_sql($sql_count);
-    $result = pager_query($sql, 25, 0, $sql_count);
+    $query = db_select('tracker_node', 't')->extend('PagerDefault');
   }
 
-  $rows = array();
-  while ($node = db_fetch_object($result)) {
-    // Determine the number of comments:
-    $comments = 0;
-    if ($node->comment_count) {
-      $comments = $node->comment_count;
+  // This array acts as a placeholder for the data selected later
+  // while keeping the correct order.
+  $nodes = $query
+    ->addTag('node_access')
+    ->fields('t', array('nid', 'changed'))
+    ->condition('t.published', 1)
+    ->orderBy('t.changed', 'DESC')
+    ->limit(25)
+    ->execute()
+    ->fetchAllAssoc('nid');
 
-      if ($new = comment_num_new($node->nid)) {
-        $comments .= '<br />';
-        $comments .= l(format_plural($new, '1 new', '@count new'), "node/$node->nid", array('query' => comment_new_page_count($node->comment_count, $new, $node), 'fragment' => 'new'));
-      }
+  if (!empty($nodes)) {
+    // Now, get the data and put into the placeholder array
+    $result = db_query('SELECT n.nid, n.title, n.type, n.changed, n.uid, u.name, l.comment_count FROM {node} n INNER JOIN {node_comment_statistics} l ON n.nid = l.nid INNER JOIN {users} u ON n.uid = u.uid WHERE n.nid IN (:nids)', array(':nids' => array_keys($nodes)));
+    foreach ($result as $node) {
+      $node->last_activity = $nodes[$node->nid]->changed;
+      $nodes[$node->nid] = $node;
     }
 
-    $rows[] = array(
-      check_plain(node_get_types('name', $node->type)),
-      l($node->title, "node/$node->nid") . ' ' . theme('mark', node_mark($node->nid, $node->changed)),
-      theme('username', $node),
-      array('class' => 'replies', 'data' => $comments),
-      t('!time ago', array('!time' => format_interval(REQUEST_TIME - $node->last_updated)))
-    );
-  }
+    // Finally display the data
+    $rows = array();
+    foreach ($nodes as $node) {
+      // Determine the number of comments:
+      $comments = 0;
+      if ($node->comment_count) {
+        $comments = $node->comment_count;
 
-  if (!$rows) {
+        if ($new = comment_num_new($node->nid)) {
+          $comments .= '<br />';
+          $comments .= l(format_plural($new, '1 new', '@count new'), 'node/'. $node->nid, array('fragment' => 'new'));
+        }
+      }
+
+      $rows[] = array(
+        check_plain(node_type_get_name($node->type)),
+        l($node->title, 'node/' . $node->nid) . ' ' . theme('mark', node_mark($node->nid, $node->changed)),
+        theme('username', $node),
+        array('class' => array('replies'), 'data' => $comments),
+        t('!time ago', array('!time' => format_interval(REQUEST_TIME - $node->last_activity)))
+      );
+    }
+  }
+  else {
     $rows[] = array(array('data' => t('No posts available.'), 'colspan' => '5'));
   }
 
-  $header = array(t('Type'), t('Post'), t('Author'), t('Replies'), t('Last updated'));
+  $page['tracker'] = array(
+    '#rows' => $rows,
+    '#header' => array(t('Type'), t('Post'), t('Author'), t('Replies'), t('Last updated')),
+    '#theme' => 'table',
+    '#attached' => array(
+      'css' => array(drupal_get_path('module', 'tracker') . '/tracker.css' => array('preprocess' => FALSE)),
+    ),
+  );
+  $page['pager'] = array(
+    '#theme' => 'pager',
+    '#quantity' => 25,
+    '#weight' => 10,
+  );
+  $page['#sorted'] = TRUE;
 
-  $output = '<div id="tracker">';
-  $output .= theme('table', $header, $rows);
-  $output .= theme('pager', NULL, 25, 0);
-  $output .= '</div>';
-
-  return $output;
+  return $page;
 }

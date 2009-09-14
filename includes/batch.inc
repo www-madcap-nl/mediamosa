@@ -1,5 +1,5 @@
 <?php
-// $Id: batch.inc,v 1.32 2009/01/26 14:08:40 dries Exp $
+// $Id: batch.inc,v 1.37 2009/08/26 15:00:17 dries Exp $
 
 
 /**
@@ -170,7 +170,7 @@ function _batch_progress_page_nojs() {
     // the error message.
     ob_start();
     $fallback = $current_set['error_message'] . '<br />' . $batch['error_message'];
-    $fallback = theme('maintenance_page', $fallback, FALSE, FALSE);
+    $fallback = theme('maintenance_page', $fallback, FALSE);
 
     // We strip the end of the page using a marker in the template, so any
     // additional HTML output by PHP shows up inside the page rather than below
@@ -190,7 +190,7 @@ function _batch_progress_page_nojs() {
   }
 
   $url = url($batch['url'], array('query' => array('id' => $batch['id'], 'op' => $new_op)));
-  drupal_set_html_head('<meta http-equiv="Refresh" content="0; URL=' . $url . '">');
+  drupal_add_html_head('<meta http-equiv="Refresh" content="0; URL=' . $url . '">');
 
   return theme('progress_bar', $percentage, $message);
 }
@@ -213,7 +213,7 @@ function _batch_process() {
   $set_changed = TRUE;
 
   // If this batch was marked for progressive execution (e.g. forms submitted by
-  // drupal_execute()), initialize a timer to determine whether we need to
+  // drupal_form_submit()), initialize a timer to determine whether we need to
   // proceed with the same batch phase when a processing time of 1 second has
   // been exceeded.
   if ($batch['progressive']) {
@@ -294,8 +294,9 @@ function _batch_process() {
       $progress_message = $old_set['progress_message'];
     }
 
-    $current    = $total - $remaining + $finished;
-    $percentage = $total ? floor($current / $total * 100) : 100;
+    $current = $total - $remaining + $finished;
+    $percentage = _batch_api_percentage($total, $current);
+
     $elapsed    = $current_set['elapsed'];
     // Estimate remaining with percentage in floating format.
     $estimate   = $elapsed * ($total - $current) / $current;
@@ -321,6 +322,34 @@ function _batch_process() {
     // If we are not in progressive mode, the entire batch has been processed.
     return _batch_finished();
   }
+}
+
+/**
+ * Helper function for _batch_process(): returns the formatted percentage.
+ *
+ * @param $total
+ *   The total number of operations.
+ * @param $current
+ *   The number of the current operation.
+ * @return
+ *   The properly formatted percentage, as a string. We output percentages
+ *   using the correct number of decimal places so that we never print "100%"
+ *   until we are finished, but we also never print more decimal places than
+ *   are meaningful.
+ */
+function _batch_api_percentage($total, $current) {
+  if (!$total || $total == $current) {
+    // If $total doesn't evaluate as true or is equal to the current set, then
+    // we're finished, and we can return "100".
+    $percentage = "100";
+  }
+  else {
+    // We add a new digit at 200, 2000, etc. (since, for example, 199/200
+    // would round up to 100% if we didn't).
+    $decimal_places = max(0, floor(log10($total / 2.0)) - 1);
+    $percentage = sprintf('%01.' . $decimal_places . 'f', round($current / $total * 100, $decimal_places));
+  }
+  return $percentage;
 }
 
 /**
@@ -387,6 +416,12 @@ function _batch_finished() {
   $_batch = $batch;
   $batch = NULL;
 
+  // Clean-up the session.
+  unset($_SESSION['batches'][$batch['id']]);
+  if (empty($_SESSION['batches'])) {
+    unset($_SESSION['batches']);
+  }
+
   // Redirect if needed.
   if ($_batch['progressive']) {
     // Revert the 'destination' that was saved in batch_process().
@@ -414,7 +449,7 @@ function _batch_finished() {
     // We get here if $form['#redirect'] was FALSE, or if the form is a
     // multi-step form. We save the final $form_state value to be retrieved
     // by drupal_get_form(), and redirect to the originating page.
-    drupal_set_session('batch_form_state', $_batch['form_state']);
+    $_SESSION['batch_form_state'] = $_batch['form_state'];
     drupal_goto($_batch['source_page']);
   }
 }

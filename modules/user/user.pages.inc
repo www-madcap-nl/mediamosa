@@ -1,5 +1,5 @@
 <?php
-// $Id: user.pages.inc,v 1.28 2009/02/03 17:30:13 dries Exp $
+// $Id: user.pages.inc,v 1.50 2009/08/31 18:18:44 webchick Exp $
 
 /**
  * @file
@@ -12,8 +12,8 @@
 function user_autocomplete($string = '') {
   $matches = array();
   if ($string) {
-    $result = db_query_range("SELECT name FROM {users} WHERE LOWER(name) LIKE LOWER(:name)", array(':name' => $string .'%'), 0, 10);
-    while ($user = db_fetch_object($result)) {
+    $result = db_query_range("SELECT name FROM {users} WHERE LOWER(name) LIKE LOWER(:name)", array(':name' => $string . '%'), 0, 10);
+    foreach ($result as $user) {
       $matches[$user->name] = check_plain($user->name);
     }
   }
@@ -44,10 +44,12 @@ function user_pass() {
 function user_pass_validate($form, &$form_state) {
   $name = trim($form_state['values']['name']);
   // Try to load by email.
-  $account = user_load(array('mail' => $name, 'status' => 1));
+  $users = user_load_multiple(array(), array('mail' => $name, 'status' => '1'));
+  $account = reset($users);
   if (!$account) {
     // No success, try to load by name.
-    $account = user_load(array('name' => $name, 'status' => 1));
+    $users = user_load_multiple(array(), array('name' => $name, 'status' => '1'));
+    $account = reset($users);
   }
   if (isset($account->uid)) {
     form_set_value(array('#parents' => array('account')), $account, $form_state);
@@ -76,9 +78,24 @@ function user_pass_submit($form, &$form_state) {
 function user_pass_reset(&$form_state, $uid, $timestamp, $hashed_pass, $action = NULL) {
   global $user;
 
-  // Check if the user is already logged in. The back button is often the culprit here.
+  // When processing the one-time login link, we have to make sure that a user
+  // isn't already logged in.
   if ($user->uid) {
-    drupal_set_message(t('You have already used this one-time login link. It is not necessary to use this link to login anymore. You are already logged in.'));
+    // The existing user is already logged in.
+    if ($user->uid == $uid) {
+      drupal_set_message(t('You are logged in as %user. <a href="!user_edit">Change your password.</a>', array('%user' => $user->name, '!user_edit' => url("user/$user->uid/edit"))));
+    }
+    // A different user is already logged in on the computer.
+    else {
+      $reset_link_account = user_load($uid);
+      if (!empty($reset_link_account)) {
+        drupal_set_message(t('Another user (%other_user) is already logged into the site on this computer, but you tried to use a one-time link for user %resetting_user. Please <a href="!logout">logout</a> and try using the link again.',
+          array('%other_user' => $user->name, '%resetting_user' => $reset_link_account->name, '!logout' => url('user/logout'))));
+      } else {
+        // Invalid one-time link specifies an unknown user.
+        drupal_set_message(t('The one-time login link you clicked is invalid.'));
+      }
+    }
     drupal_goto();
   }
   else {
@@ -86,21 +103,22 @@ function user_pass_reset(&$form_state, $uid, $timestamp, $hashed_pass, $action =
     $timeout = 86400;
     $current = REQUEST_TIME;
     // Some redundant checks for extra security ?
-    if ($timestamp < $current && $account = user_load(array('uid' => $uid, 'status' => 1)) ) {
+    $users = user_load_multiple(array($uid), array('status' => '1'));
+    if ($timestamp <= $current && $account = reset($users)) {
       // No time out for first time login.
       if ($account->login && $current - $timestamp > $timeout) {
         drupal_set_message(t('You have tried to use a one-time login link that has expired. Please request a new one using the form below.'));
         drupal_goto('user/password');
       }
-      elseif ($account->uid && $timestamp > $account->login && $timestamp < $current && $hashed_pass == user_pass_rehash($account->pass, $timestamp, $account->login)) {
+      elseif ($account->uid && $timestamp >= $account->login && $timestamp <= $current && $hashed_pass == user_pass_rehash($account->pass, $timestamp, $account->login)) {
         // First stage is a confirmation form, then login
         if ($action == 'login') {
           watchdog('user', 'User %name used one-time login link at time %timestamp.', array('%name' => $account->name, '%timestamp' => $timestamp));
           // Set the new user.
           $user = $account;
-          // user_authenticate_finalize() also updates the login timestamp of the
+          // user_login_finalize() also updates the login timestamp of the
           // user, which invalidates further use of the one-time login link.
-          user_authenticate_finalize($form_state['values']);
+          user_login_finalize();
           drupal_set_message(t('You have just used your one-time login link. It is no longer necessary to use this link to login. Please change your password.'));
           drupal_goto('user/' . $user->uid . '/edit');
         }
@@ -133,27 +151,45 @@ function user_logout() {
 
   watchdog('user', 'Session closed for %name.', array('%name' => $user->name));
 
-  // Destroy the current session:
-  session_destroy();
-  module_invoke_all('user_logout', NULL, $user);
+  module_invoke_all('user_logout', $user);
 
-  // Load the anonymous user
-  $user = drupal_anonymous_user();
+  // Destroy the current session, and reset $user to the anonymous user.
+  session_destroy();
 
   drupal_goto();
 }
 
 /**
  * Menu callback; Displays a user or user profile page.
+ *
+ * The $page['content'] array for user profile pages contains:
+ *
+ * - $page['content']['Profile Category']:
+ *   Profile categories keyed by their human-readable names.
+ * - $page['content']['Profile Category']['profile_machine_name']:
+ *   Profile fields keyed by their machine-readable names.
+ * - $page['content']['user_picture']:
+ *   User's rendered picture.
+ * - $page['content']['summary']:
+ *   Contains the default "History" profile data for a user.
+ * - $page['content']['#account']:
+ *   The user account of the profile being viewed.
+ *
+ * To theme user profiles, copy modules/user/user-profile.tpl.php
+ * to your theme directory, and edit it as instructed in that file's comments.
  */
 function user_view($account) {
   drupal_set_title($account->name);
   // Retrieve all profile fields and attach to $account->content.
   user_build_content($account);
 
-  // To theme user profiles, copy modules/user/user_profile.tpl.php
-  // to your theme directory, and edit it as instructed in that file's comments.
-  return theme('user_profile', $account);
+  $build = $account->content;
+  $build += array(
+    '#theme' => 'user_profile',
+    '#account' => $account,
+  );
+
+  return $build;
 }
 
 /**
@@ -162,21 +198,11 @@ function user_view($account) {
  * The $variables array contains the following arguments:
  * - $account
  *
- * @see user-picture.tpl.php
+ * @see user-profile.tpl.php
  */
 function template_preprocess_user_profile(&$variables) {
-  $variables['profile'] = array();
-  // Sort sections by weight
-  uasort($variables['account']->content, 'element_sort');
-  // Provide keyed variables so themers can print each section independently.
-  foreach (element_children($variables['account']->content) as $key) {
-    $variables['profile'][$key] = drupal_render($variables['account']->content[$key]);
-  }
-  // Collect all profiles to make it easier to print all items at once.
-  $variables['user_profile'] = implode($variables['profile']);
-
-  // Add $FIELD_NAME_rendered variables for fields.
-  $variables += field_attach_preprocess('user', $variables['account']);
+  $account = $variables['elements']['#account'];
+  $variables['user_profile'] = $account->content;
 }
 
 /**
@@ -214,11 +240,7 @@ function template_preprocess_user_profile_category(&$variables) {
 }
 
 /**
- * Form builder; Present the form to edit a given user or profile category.
- *
- * @ingroup forms
- * @see user_edit_validate()
- * @see user_edit_submit()
+ * Menu callback; Present the form to edit a given user or profile category.
  */
 function user_edit($account, $category = 'account') {
   drupal_set_title($account->name);
@@ -254,7 +276,6 @@ function user_profile_form($form_state, $account, $category = 'account') {
       '#submit' => array('user_edit_cancel_submit'),
     );
   }
-  $form['#attributes']['enctype'] = 'multipart/form-data';
 
   return $form;
 }
@@ -263,13 +284,12 @@ function user_profile_form($form_state, $account, $category = 'account') {
  * Validation function for the user account and profile editing form.
  */
 function user_profile_form_validate($form, &$form_state) {
-  // Validate field widgets.
-  $tmp_obj = (object) $form_state['values'];
-  field_attach_validate('user', $tmp_obj, $form, $form_state);
-
-  user_module_invoke('validate', $form_state['values'], $form_state['values']['_account'], $form_state['values']['_category']);
+  $edit = (object)$form_state['values'];
+  field_attach_form_validate('user', $edit, $form, $form_state);
+  $edit = (array)$edit;
+  user_module_invoke('validate', $edit, $form_state['values']['_account'], $form_state['values']['_category']);
   // Validate input to ensure that non-privileged users can't alter protected data.
-  if ((!user_access('administer users') && array_intersect(array_keys($form_state['values']), array('uid', 'init', 'session'))) || (!user_access('administer permissions') && isset($form_state['values']['roles']))) {
+  if ((!user_access('administer users') && array_intersect(array_keys($edit), array('uid', 'init', 'session'))) || (!user_access('administer permissions') && isset($form_state['values']['roles']))) {
     watchdog('security', 'Detected malicious attempt to alter protected user fields.', array(), WATCHDOG_WARNING);
     // set this to a value type field
     form_set_error('category', t('Detected malicious attempt to alter protected user fields.'));
@@ -284,9 +304,11 @@ function user_profile_form_submit($form, &$form_state) {
   $category = $form_state['values']['_category'];
   unset($form_state['values']['_account'], $form_state['values']['op'], $form_state['values']['submit'], $form_state['values']['cancel'], $form_state['values']['form_token'], $form_state['values']['form_id'], $form_state['values']['_category'], $form_state['values']['form_build_id']);
 
-  field_attach_submit('user', $account, $form, $form_state);
-  user_module_invoke('submit', $form_state['values'], $account, $category);
-  user_save($account, $form_state['values'], $category);
+  $edit = (object)$form_state['values'];
+  field_attach_submit('user', $edit, $form, $form_state);
+  $edit = (array)$edit;
+  user_module_invoke('submit', $edit, $account, $category);
+  user_save($account, $edit, $category);
 
   // Clear the page cache because pages can contain usernames and/or profile information:
   cache_clear_all();
@@ -400,7 +422,7 @@ function user_cancel_confirm_form_submit($form, &$form_state) {
     user_cancel($form_state['values'], $account->uid, $form_state['values']['user_cancel_method']);
 
     if (!isset($_REQUEST['destination'])) {
-      $form_state['redirect'] = 'admin/user/user';
+      $form_state['redirect'] = 'admin/people';
     }
   }
   else {
@@ -504,30 +526,6 @@ function user_cancel_confirm($account, $timestamp = 0, $hashed_pass = '') {
     }
   }
   drupal_access_denied();
-}
-
-function user_edit_validate($form, &$form_state) {
-  user_module_invoke('validate', $form_state['values'], $form_state['values']['_account'], $form_state['values']['_category']);
-  // Validate input to ensure that non-privileged users can't alter protected data.
-  if ((!user_access('administer users') && array_intersect(array_keys($form_state['values']), array('uid', 'init', 'session'))) || (!user_access('administer permissions') && isset($form_state['values']['roles']))) {
-    watchdog('security', 'Detected malicious attempt to alter protected user fields.', array(), WATCHDOG_WARNING);
-    // set this to a value type field
-    form_set_error('category', t('Detected malicious attempt to alter protected user fields.'));
-  }
-}
-
-function user_edit_submit($form, &$form_state) {
-  $account = $form_state['values']['_account'];
-  $category = $form_state['values']['_category'];
-  unset($form_state['values']['_account'], $form_state['values']['op'], $form_state['values']['submit'], $form_state['values']['cancel'], $form_state['values']['form_token'], $form_state['values']['form_id'], $form_state['values']['_category'], $form_state['values']['form_build_id']);
-  user_module_invoke('submit', $form_state['values'], $account, $category);
-  user_save($account, $form_state['values'], $category);
-
-  // Clear the page cache because pages can contain usernames and/or profile information:
-  cache_clear_all();
-
-  drupal_set_message(t('The changes have been saved.'));
-  return;
 }
 
 /**

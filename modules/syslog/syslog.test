@@ -1,12 +1,12 @@
 <?php
-// $Id: syslog.test,v 1.5 2008/11/25 13:14:28 dries Exp $
+// $Id: syslog.test,v 1.10 2009/08/27 07:18:06 dries Exp $
 
 class SyslogTestCase extends DrupalWebTestCase {
-  function getInfo() {
+  public static function getInfo() {
     return array(
-      'name' => t('Syslog functionality'),
-      'description' => t('Test syslog settings.'),
-      'group' => t('Syslog')
+      'name' => 'Syslog functionality',
+      'description' => 'Test syslog settings.',
+      'group' => 'Syslog'
     );
   }
 
@@ -22,20 +22,16 @@ class SyslogTestCase extends DrupalWebTestCase {
     $this->drupalLogin($admin_user);
 
     $edit = array();
-    // If we're on Windows, LOG_LOCAL6 will not be available.
+    // If we're on Windows, there is no configuration form.
     if (defined('LOG_LOCAL6')) {
-      $edit['syslog_facility'] = LOG_LOCAL6;
-    }
-    else {
-      $edit['syslog_facility'] = LOG_USER;
-    }
-    $this->drupalPost('admin/settings/logging/syslog', $edit, t('Save configuration'));
-    $this->assertText(t('The configuration options have been saved.'));
-
-    $this->drupalGet('admin/settings/logging/syslog');
-    if ($this->parse()) {
-      $field = $this->xpath('//option[@value="' . $edit['syslog_facility'] . '"]'); // Should be one field.
-      $this->assertTrue($field[0]['selected'] == 'selected', t('Facility value saved.'));
+      $this->drupalPost('admin/config/development/logging', array('syslog_facility' => LOG_LOCAL6), t('Save configuration'));
+      $this->assertText(t('The configuration options have been saved.'));
+  
+      $this->drupalGet('admin/config/development/logging');
+      if ($this->parse()) {
+        $field = $this->xpath('//option[@value="' . LOG_LOCAL6 . '"]'); // Should be one field.
+        $this->assertTrue($field[0]['selected'] == 'selected', t('Facility value saved.'));
+      }
     }
   }
 }

@@ -1,15 +1,24 @@
-; $Id: field.info,v 1.1 2009/02/03 17:30:11 dries Exp $
+; $Id: field.info,v 1.5 2009/08/22 00:58:52 webchick Exp $
 name = Field
 description = Field API to add fields to objects like nodes and users.
 package = Core - fields
+version = VERSION
 core = 7.x
 files[] = field.module
 files[] = field.install
 files[] = field.crud.inc
 files[] = field.info.inc
 files[] = field.default.inc
+files[] = field.multilingual.inc
 files[] = field.attach.inc
 files[] = field.form.inc
-files[] = field.autoload.inc
+files[] = field.test
 dependencies[] = field_sql_storage
 required = TRUE
+
+; Information added by drupal.org packaging script on 2009-09-09
+version = "7.x-dev"
+core = "7.x"
+project = "drupal"
+datestamp = "1252498273"
+

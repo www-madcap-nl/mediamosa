@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.admin.inc,v 1.13 2009/01/28 07:43:26 webchick Exp $
+// $Id: comment.admin.inc,v 1.31 2009/08/25 10:27:14 dries Exp $
 
 /**
  * @file
@@ -66,18 +66,30 @@ function comment_admin_overview($type = 'new', $arg) {
     'operations' => array('data' => t('Operations')),
   );
 
-  $result = pager_query('SELECT c.subject, c.nid, c.cid, c.comment, c.timestamp, c.status, c.name, c.homepage, u.name AS registered_name, u.uid, n.title as node_title FROM {comment} c INNER JOIN {users} u ON u.uid = c.uid INNER JOIN {node} n ON n.nid = c.nid WHERE c.status = %d' . tablesort_sql($header), 50, 0, NULL, $status);
+  $query = db_select('comment', 'c')->extend('PagerDefault')->extend('TableSort');
+  $query->join('users', 'u', 'u.uid = c.uid');
+  $query->join('node', 'n', 'n.nid = c.nid');
+  $query->addField('u', 'name', 'registered_name');
+  $query->addField('n', 'title', 'node_title');
+  $result = $query
+    ->fields('c', array('subject', 'nid', 'cid', 'comment', 'timestamp', 'status', 'name', 'homepage'))
+    ->fields('u', array('uid'))
+    ->condition('c.status', $status)
+    ->limit(50)
+    ->orderByHeader($header)
+    ->execute();
+
 
   // Build a table listing the appropriate comments.
   $options = array();
   $destination = drupal_get_destination();
 
-  while ($comment = db_fetch_object($result)) {
+  foreach ($result as $comment) {
     $options[$comment->cid] = array(
-      'subject' => l($comment->subject, 'node/' . $comment->nid, array('attributes' => array('title' => truncate_utf8($comment->comment, 128)), 'fragment' => 'comment-' . $comment->cid)),
+      'subject' => l($comment->subject, 'comment/' . $comment->cid, array('attributes' => array('title' => truncate_utf8($comment->comment, 128)), 'fragment' => 'comment-' . $comment->cid)),
       'author' => theme('username', $comment),
       'posted_in' => l($comment->node_title, 'node/' . $comment->nid),
-      'time' => format_date($comment->timestamp, 'small'),
+      'time' => format_date($comment->timestamp, 'short'),
       'operations' => l(t('edit'), 'comment/edit/' . $comment->cid, array('query' => $destination)),
     );
   }
@@ -89,9 +101,7 @@ function comment_admin_overview($type = 'new', $arg) {
     '#empty' => t('No comments available.'),
   );
 
-  $form['pager'] = array(
-    '#markup' => theme('pager', NULL, 50, 0)
-  );
+  $form['pager'] = array('#theme' => 'pager');
 
   return $form;
 }
@@ -128,7 +138,7 @@ function comment_admin_overview_submit($form, &$form_state) {
         $comment = comment_load($cid);
         _comment_update_node_statistics($comment->nid);
         // Allow modules to respond to the updating of a comment.
-        comment_invoke_comment($comment, $form_state['values']['operation']);
+        module_invoke_all('comment_' . $form_state['values']['operation'], $comment);
         // Add an entry to the watchdog log.
         watchdog('content', 'Comment: updated %subject.', array('%subject' => $comment->subject), WATCHDOG_NOTICE, l(t('view'), 'node/' . $comment->nid, array('fragment' => 'comment-' . $comment->cid)));
       }
@@ -150,7 +160,7 @@ function comment_admin_overview_submit($form, &$form_state) {
  * @see comment_multiple_delete_confirm_submit()
  */
 function comment_multiple_delete_confirm(&$form_state) {
-  $edit = $form_state['post'];
+  $edit = $form_state['input'];
 
   $form['comments'] = array(
     '#prefix' => '<ul>',
@@ -162,7 +172,7 @@ function comment_multiple_delete_confirm(&$form_state) {
   foreach (array_filter($edit['comments']) as $cid => $value) {
     $comment = comment_load($cid);
     if (is_object($comment) && is_numeric($comment->cid)) {
-      $subject = db_result(db_query('SELECT subject FROM {comment} WHERE cid = %d', $cid));
+      $subject = db_query('SELECT subject FROM {comment} WHERE cid = :cid', array(':cid' => $cid))->fetchField();
       $form['comments'][$cid] = array('#type' => 'hidden', '#value' => $cid, '#prefix' => '<li>', '#suffix' => check_plain($subject) . '</li>');
       $comment_counter++;
     }
@@ -186,14 +196,11 @@ function comment_multiple_delete_confirm(&$form_state) {
  */
 function comment_multiple_delete_confirm_submit($form, &$form_state) {
   if ($form_state['values']['confirm']) {
-    foreach ($form_state['values']['comments'] as $cid => $value) {
-      $comment = comment_load($cid);
-      // Perform the actual comment deletion.
-      _comment_delete_thread($comment);
-      _comment_update_node_statistics($comment->nid);
-    }
+    comment_delete_multiple(array_keys($form_state['values']['comments']));
     cache_clear_all();
-    drupal_set_message(t('The comments have been deleted.'));
+    $count = count($form_state['values']['comments']);
+    watchdog('content', 'Deleted @count comments.', array('@count' => $count));
+    drupal_set_message(t('Deleted @count comments.', array('@count' => $count)));
   }
   $form_state['redirect'] = 'admin/content/comment';
 }
@@ -204,8 +211,8 @@ function comment_multiple_delete_confirm_submit($form, &$form_state) {
  * @param $cid
  *   The comment to be deleted.
  */
-function comment_delete($cid = NULL) {
-  $comment = db_fetch_object(db_query('SELECT c.*, u.name AS registered_name, u.uid FROM {comment} c INNER JOIN {users} u ON u.uid = c.uid WHERE c.cid = %d', $cid));
+function comment_delete_page($cid = NULL) {
+  $comment = db_query('SELECT c.*, u.name AS registered_name, u.uid FROM {comment} c INNER JOIN {users} u ON u.uid = c.uid WHERE c.cid = :cid', array(':cid' => $cid))->fetch();
   $comment->name = $comment->uid ? $comment->registered_name : $comment->name;
   $output = '';
 
@@ -242,39 +249,13 @@ function comment_confirm_delete(&$form_state, $comment) {
  * Process comment_confirm_delete form submissions.
  */
 function comment_confirm_delete_submit($form, &$form_state) {
-  drupal_set_message(t('The comment and all its replies have been deleted.'));
   $comment = $form['#comment'];
   // Delete the comment and its replies.
-  _comment_delete_thread($comment);
-  _comment_update_node_statistics($comment->nid);
+  comment_delete($comment->cid);
+  drupal_set_message(t('The comment and all its replies have been deleted.'));
+  watchdog('content', t('Deleted comment @cid and its replies.', array('@cid' => $comment->cid)));
   // Clear the cache so an anonymous user sees that his comment was deleted.
   cache_clear_all();
 
   $form_state['redirect'] = "node/$comment->nid";
-}
-
-/**
- * Perform the actual deletion of a comment and all its replies.
- *
- * @param $comment
- *   An associative array describing the comment to be deleted.
- */
-function _comment_delete_thread($comment) {
-  if (!is_object($comment) || !is_numeric($comment->cid)) {
-    watchdog('content', 'Cannot delete non-existent comment.', array(), WATCHDOG_WARNING);
-
-    return;
-  }
-
-  // Delete the comment.
-  db_query('DELETE FROM {comment} WHERE cid = %d', $comment->cid);
-  watchdog('content', 'Comment: deleted %subject.', array('%subject' => $comment->subject));
-  comment_invoke_comment($comment, 'delete');
-
-  // Delete the comment's replies.
-  $result = db_query('SELECT c.*, u.name AS registered_name, u.uid FROM {comment} c INNER JOIN {users} u ON u.uid = c.uid WHERE pid = %d', $comment->cid);
-  while ($comment = db_fetch_object($result)) {
-    $comment->name = $comment->uid ? $comment->registered_name : $comment->name;
-    _comment_delete_thread($comment);
-  }
 }

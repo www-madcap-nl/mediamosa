@@ -1,5 +1,5 @@
 <?php
-// $Id: upload.module,v 1.227 2009/02/03 18:55:32 dries Exp $
+// $Id: upload.module,v 1.257 2009/09/05 15:05:05 dries Exp $
 
 /**
  * @file
@@ -8,7 +8,7 @@
  */
 
 /**
- * Implementation of hook_help().
+ * Implement hook_help().
  */
 function upload_help($path, $arg) {
   switch ($path) {
@@ -17,18 +17,18 @@ function upload_help($path, $arg) {
       $output .= '<p>' . t('Users with the upload files permission can upload attachments to posts. Uploads may be enabled for specific content types on the content types settings page. Each user role can be customized to limit or control the file size of uploads, or the maximum dimension of image files.') . '</p>';
       $output .= '<p>' . t('For more information, see the online handbook entry for <a href="@upload">Upload module</a>.', array('@upload' => 'http://drupal.org/handbook/modules/upload/')) . '</p>';
       return $output;
-    case 'admin/settings/upload':
-      return '<p>' . t('Users with the <a href="@permissions">upload files permission</a> can upload attachments. Users with the <a href="@permissions">view uploaded files permission</a> can view uploaded attachments. You can choose which post types can take attachments on the <a href="@types">content types settings</a> page.', array('@permissions' => url('admin/user/permissions'), '@types' => url('admin/settings/types'))) . '</p>';
+    case 'admin/config/media/uploads':
+      return '<p>' . t('Users with the <a href="@permissions">upload files permission</a> can upload attachments. Users with the <a href="@permissions">view uploaded files permission</a> can view uploaded attachments. You can choose which post types can take attachments on the <a href="@types">content types settings</a> page.', array('@permissions' => url('admin/config/people/permissions'), '@types' => url('admin/settings/types'))) . '</p>';
   }
 }
 
 /**
- * Implementation of hook_theme().
+ * Implement hook_theme().
  */
 function upload_theme() {
   return array(
     'upload_attachments' => array(
-      'arguments' => array('files' => NULL),
+      'arguments' => array('elements' => NULL),
     ),
     'upload_form_current' => array(
       'arguments' => array('form' => NULL),
@@ -40,9 +40,9 @@ function upload_theme() {
 }
 
 /**
- * Implementation of hook_perm().
+ * Implement hook_permission().
  */
-function upload_perm() {
+function upload_permission() {
   return array(
     'upload files' => array(
       'title' => t('Upload files'),
@@ -58,34 +58,33 @@ function upload_perm() {
 /**
  * Inject links into $node for attachments.
  */
-function upload_nodeapi_links($node, $teaser) {
+function upload_node_links($node, $build_mode) {
   $links = array();
 
   // Display a link with the number of attachments
-  if ($teaser && isset($node->files) && user_access('view uploaded files')) {
-    $num_files = 0;
-    foreach ($node->files as $file) {
-      if ($file->list) {
-        $num_files++;
-      }
+  $num_files = 0;
+  foreach ($node->files as $file) {
+    if ((object)$file->list) {
+      $num_files++;
     }
-    if ($num_files) {
-      $links['upload_attachments'] = array(
-        'title' => format_plural($num_files, '1 attachment', '@count attachments'),
-        'href' => "node/$node->nid",
-        'attributes' => array('title' => t('Read full article to view attachments.')),
-        'fragment' => 'attachments'
-      );
-      $node->content['links']['upload_attachments'] = array(
-        '#type' => 'node_links',
-        '#value' => $links,
-      );
-    }
+  }
+  if ($num_files) {
+    $links['upload_attachments'] = array(
+      'title' => format_plural($num_files, '1 attachment', '@count attachments'),
+      'href' => "node/$node->nid",
+      'attributes' => array('title' => t('Read full article to view attachments.')),
+      'fragment' => 'attachments'
+    );
+    $node->content['links']['upload_attachments'] = array(
+      '#theme' => 'links',
+      '#links' => $links,
+      '#attributes' => array('class' => array('links', 'inline')),
+    );
   }
 }
 
 /**
- * Implementation of hook_menu().
+ * Implement hook_menu().
  */
 function upload_menu() {
   $items['upload/js'] = array(
@@ -93,13 +92,14 @@ function upload_menu() {
     'access arguments' => array('upload files'),
     'type' => MENU_CALLBACK,
   );
-  $items['admin/settings/uploads'] = array(
+  $items['admin/config/media/uploads'] = array(
     'title' => 'File uploads',
     'description' => 'Control how files may be attached to content.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('upload_admin_settings'),
     'access arguments' => array('administer site configuration'),
     'type' => MENU_NORMAL_ITEM,
+    'file' => 'upload.admin.inc',
   );
   return $items;
 }
@@ -143,21 +143,20 @@ function _upload_file_limits($user) {
     'extensions' => $all_extensions,
     'file_size' => $file_limit,
     'user_size' => $user_limit,
-    'resolution' => variable_get('upload_max_resolution', 0),
+    'resolution' => variable_get('upload_max_resolution_x', 0) . 'x' . variable_get('upload_max_resolution_y', 0),
   );
 }
 
 /**
- * Implementation of hook_file_download().
+ * Implement hook_file_download().
  */
 function upload_file_download($filepath) {
-  $filepath = file_create_path($filepath);
-  $file = db_query("SELECT f.*, u.nid FROM {files} f INNER JOIN {upload} u ON f.fid = u.fid WHERE filepath = :path", array(':path' => $filepath))->fetchObject();
+  $file = db_query("SELECT f.*, u.nid FROM {file} f INNER JOIN {upload} u ON f.fid = u.fid WHERE uri = :path", array(':path' => $filepath))->fetchObject();
 
   if ($file && user_access('view uploaded files') && ($node = node_load($file->nid)) && node_access('view', $node)) {
     return array(
-      'Content-Type: ' . $file->filemime,
-      'Content-Length: ' . $file->filesize,
+      'Content-Type' => $file->filemime,
+      'Content-Length' => $file->filesize,
     );
   }
   else {
@@ -183,7 +182,7 @@ function upload_node_form_submit(&$form, &$form_state) {
   );
 
   // Save new file uploads.
-  if (user_access('upload files') && ($file = file_save_upload('upload', $validators, file_directory_path()))) {
+  if (user_access('upload files') && ($file = file_save_upload('upload', $validators, 'public://'))) {
     $file->list = variable_get('upload_list_default', 1);
     $file->description = $file->filename;
     $file->weight = 0;
@@ -231,27 +230,26 @@ function upload_form_alter(&$form, $form_state, $form_id) {
         '#title' => t('File attachments'),
         '#collapsible' => TRUE,
         '#collapsed' => empty($node->files),
+        '#group' => 'additional_settings',
+        '#attached' => array(
+          'js' => array(drupal_get_path('module', 'upload') . '/upload.js'),
+        ),
         '#description' => t('Changes made to the attachments are not permanent until you save this post. The first "listed" file will be included in RSS feeds.'),
-        '#prefix' => '<div class="attachments">',
-        '#suffix' => '</div>',
         '#weight' => 30,
       );
 
-      // Wrapper for fieldset contents (used by ahah.js).
-      $form['attachments']['wrapper'] = array(
-        '#prefix' => '<div id="attach-wrapper">',
-        '#suffix' => '</div>',
-      );
+      // Wrapper for fieldset contents (used by ajax.js).
+      $form['attachments']['wrapper'] = array();
 
       // Make sure necessary directories for upload.module exist and are
       // writable before displaying the attachment form.
       $path = file_directory_path();
-      $temp = file_directory_temp();
+      $temp = file_directory_path('temporary');
       // Note: pass by reference
-      if (!file_check_directory($path, FILE_CREATE_DIRECTORY) || !file_check_directory($temp, FILE_CREATE_DIRECTORY)) {
+      if (!file_prepare_directory($path, FILE_CREATE_DIRECTORY) || !file_prepare_directory($temp, FILE_CREATE_DIRECTORY)) {
         $form['attachments']['#description'] =  t('File attachments are disabled. The file directories have not been properly configured.');
         if (user_access('administer site configuration')) {
-          $form['attachments']['#description'] .= ' ' . t('Please visit the <a href="@admin-file-system">file system configuration page</a>.', array('@admin-file-system' => url('admin/settings/file-system')));
+          $form['attachments']['#description'] .= ' ' . t('Please visit the <a href="@admin-file-system">file system configuration page</a>.', array('@admin-file-system' => url('admin/config/media/file-system')));
         }
         else {
           $form['attachments']['#description'] .= ' ' . t('Please contact the site administrator.');
@@ -259,7 +257,6 @@ function upload_form_alter(&$form, $form_state, $form_id) {
       }
       else {
         $form['attachments']['wrapper'] += _upload_form($node);
-        $form['#attributes']['enctype'] = 'multipart/form-data';
       }
       $form['#submit'][] = 'upload_node_form_submit';
     }
@@ -267,7 +264,7 @@ function upload_form_alter(&$form, $form_state, $form_id) {
 }
 
 /**
- * Implementation of hook_file_load().
+ * Implement hook_file_load().
  */
 function upload_file_load($files) {
   // Add the upload specific data into the file object.
@@ -280,19 +277,19 @@ function upload_file_load($files) {
 }
 
 /**
- * Implementation of hook_file_references().
+ * Implement hook_file_references().
  */
 function upload_file_references($file) {
   // If upload.module is still using a file, do not let other modules delete it.
-  $count = db_query('SELECT COUNT(*) FROM {upload} WHERE fid = :fid', array(':fid' => $file->fid))->fetchField();
-  if ($count) {
+  $file_used = (bool) db_query_range('SELECT 1 FROM {upload} WHERE fid = :fid', array(':fid' => $file->fid), 0, 1)->fetchField();
+  if ($file_used) {
     // Return the name of the module and how many references it has to the file.
     return array('upload' => $count);
   }
 }
 
 /**
- * Implementation of hook_file_delete().
+ * Implement hook_file_delete().
  */
 function upload_file_delete($file) {
   // Delete all information associated with the file.
@@ -300,9 +297,9 @@ function upload_file_delete($file) {
 }
 
 /**
- * Implementation of hook_nodeapi_load().
+ * Implement hook_node_load().
  */
-function upload_nodeapi_load($nodes, $types) {
+function upload_node_load($nodes, $types) {
   // Collect all the revision ids for nodes with upload enabled.
   $node_vids = array();
   foreach ($nodes as $node) {
@@ -338,60 +335,86 @@ function upload_nodeapi_load($nodes, $types) {
 }
 
 /**
- * Implementation of hook_nodeapi_view().
+ * Implement hook_node_view().
  */
-function upload_nodeapi_view($node, $teaser, $page) {
-  if (isset($node->files) && user_access('view uploaded files')) {
-    // Add the attachments list to node body with a heavy
-    // weight to ensure they're below other elements
+function upload_node_view($node, $build_mode) {
+  if (!isset($node->files)) {
+    return;
+  }
+
+  if (user_access('view uploaded files') && $build_mode != 'rss') {
     if (count($node->files)) {
-      if (!$teaser && user_access('view uploaded files')) {
+      if ($build_mode == 'full') {
+        // Add the attachments list to node body with a heavy weight to ensure
+        // they're below other elements.
         $node->content['files'] = array(
-          '#markup' => theme('upload_attachments', $node->files),
+          '#files' => $node->files,
+          '#theme' => 'upload_attachments',
           '#weight' => 50,
         );
       }
+      else {
+        upload_node_links($node, $build_mode);
+      }
     }
+  }
 
-    upload_nodeapi_links($node, $teaser);
+  if ($build_mode == 'rss') {
+    // Add the first file as an enclosure to the RSS item. RSS allows only one
+    // enclosure per item. See: http://en.wikipedia.org/wiki/RSS_enclosure
+    foreach ($node->files as $file) {
+      if ($file->list) {
+        break;
+      }
+    }
+    if ($file->list) {
+      $node->rss_elements[] = array(
+        'key' => 'enclosure',
+        'attributes' => array(
+          'url' => file_create_url($file->uri),
+          'length' => $file->filesize,
+          'type' => $file->filemime
+        )
+      );
+    }
   }
 }
 
 /**
- * Implementation of hook_nodeapi_insert().
+ * Implement hook_node_insert().
  */
-function upload_nodeapi_insert($node) {
+function upload_node_insert($node) {
   if (user_access('upload files')) {
     upload_save($node);
   }
 }
 
 /**
- * Implementation of hook_nodeapi_update().
+ * Implement hook_node_update().
  */
-function upload_nodeapi_update($node) {
+function upload_node_update($node) {
   if (user_access('upload files')) {
     upload_save($node);
   }
 }
 
 /**
- * Implementation of hook_nodeapi_delete().
+ * Implement hook_node_delete().
  */
-function upload_nodeapi_delete($node) {
+function upload_node_delete($node) {
   db_delete('upload')->condition('nid', $node->nid)->execute();
   if (!is_array($node->files)) {
     return;
   }
-  foreach($node->files as $file) {
+  foreach ($node->files as $file) {
     file_delete($file);
   }
 }
 
 /**
- * Implementation of hook_nodeapi_delete_revision().
+ * Implement hook_node_delete_revision().
  */
-function upload_nodeapi_delete_revision($node) {
+function upload_node_delete_revision($node) {
   db_delete('upload')->condition('vid', $node->vid)->execute();
   if (!is_array($node->files)) {
     return;
@@ -402,39 +425,10 @@ function upload_nodeapi_delete_revision($node) {
 }
 
 /**
- * Implementation of hook_nodeapi_search_result().
+ * Implement hook_node_search_result().
  */
-function upload_nodeapi_search_result($node) {
+function upload_node_search_result($node) {
   return isset($node->files) && is_array($node->files) ? format_plural(count($node->files), '1 attachment', '@count attachments') : NULL;
-}
-
-/**
- * Implementation of hook_nodeapi_rss_item().
- */
-function upload_nodeapi_rss_item($node) {
-  if (is_array($node->files)) {
-    $files = array();
-    foreach ($node->files as $file) {
-      if ($file->list) {
-        $files[] = $file;
-      }
-    }
-    if (count($files) > 0) {
-      // RSS only allows one enclosure per item
-      $file = array_shift($files);
-      return array(
-        array(
-          'key' => 'enclosure',
-          'attributes' => array(
-            'url' => file_create_url($file->filepath),
-            'length' => $file->filesize,
-            'type' => $file->filemime
-          )
-        )
-      );
-    }
-  }
-  return array();
 }
 
 /**
@@ -442,19 +436,19 @@ function upload_nodeapi_rss_item($node) {
  *
  * @ingroup themeable
  */
-function theme_upload_attachments($files) {
+function theme_upload_attachments($elements) {
   $header = array(t('Attachment'), t('Size'));
   $rows = array();
-  foreach ($files as $file) {
+  foreach ($elements['#files'] as $file) {
     $file = (object)$file;
     if ($file->list && empty($file->remove)) {
-      $href = file_create_url($file->filepath);
+      $href = file_create_url($file->uri);
       $text = $file->description ? $file->description : $file->filename;
       $rows[] = array(l($text, $href), format_size($file->filesize));
     }
   }
   if (count($rows)) {
-    return theme('table', $header, $rows, array('id' => 'attachments'));
+    return theme('table', $header, $rows, array('class' => array('attachments')));
   }
 }
 
@@ -477,10 +471,10 @@ function upload_space_used($uid) {
  *   The amount of disk space used by uploaded files in bytes.
  */
 function upload_total_space_used() {
-  return db_query('SELECT SUM(f.filesize) FROM {files} f INNER JOIN {upload} u ON f.fid = u.fid')->fetchField();
+  return db_query('SELECT SUM(f.filesize) FROM {file} f INNER JOIN {upload} u ON f.fid = u.fid')->fetchField();
 }
 
-function upload_save(&$node) {
+function upload_save($node) {
   if (empty($node->files) || !is_array($node->files)) {
     return;
   }
@@ -539,6 +533,8 @@ function _upload_form($node) {
   $form = array(
     '#theme' => 'upload_form_new',
     '#cache' => TRUE,
+    '#prefix' => '<div id="attach-wrapper">',
+    '#suffix' => '</div>',
   );
 
   if (!empty($node->files) && is_array($node->files)) {
@@ -548,13 +544,13 @@ function _upload_form($node) {
       $file = (object)$file;
       $key = $file->fid;
 
-      $form['files'][$key]['description'] = array('#type' => 'textfield', '#default_value' => !empty($file->description) ? $file->description : $file->filename, '#maxlength' => 256, '#description' => '<small>' . file_create_url($file->filepath) . '</small>');
+      $form['files'][$key]['description'] = array('#type' => 'textfield', '#default_value' => !empty($file->description) ? $file->description : $file->filename, '#maxlength' => 256, '#description' => '<small>' . file_create_url($file->uri) . '</small>');
       $form['files'][$key]['size'] = array('#markup' => format_size($file->filesize));
       $form['files'][$key]['remove'] = array('#type' => 'checkbox', '#default_value' => !empty($file->remove));
       $form['files'][$key]['list'] = array('#type' => 'checkbox',  '#default_value' => $file->list);
       $form['files'][$key]['weight'] = array('#type' => 'weight', '#delta' => count($node->files), '#default_value' => $file->weight);
       $form['files'][$key]['filename'] = array('#type' => 'value',  '#value' => $file->filename);
-      $form['files'][$key]['filepath'] = array('#type' => 'value',  '#value' => $file->filepath);
+      $form['files'][$key]['uri'] = array('#type' => 'value',  '#value' => $file->uri);
       $form['files'][$key]['filemime'] = array('#type' => 'value',  '#value' => $file->filemime);
       $form['files'][$key]['filesize'] = array('#type' => 'value',  '#value' => $file->filesize);
       $form['files'][$key]['fid'] = array('#type' => 'value',  '#value' => $file->fid);
@@ -565,16 +561,16 @@ function _upload_form($node) {
   if (user_access('upload files')) {
     $limits = _upload_file_limits($user);
 
-    $limit_description = t('The maximum size of file uploads is %filesize. ', array('%filesize' => format_size($limits['file_size'])));
+    $limit_description = t('The maximum size of file uploads is %filesize.', array('%filesize' => format_size($limits['file_size']))) . ' ';
     if (!empty($limits['resolution'])) {
       if (image_get_toolkit()) {
-        $limit_description .= t('Images larger than %resolution will be resized. ', array('%resolution' => $limits['resolution']));
+        $limit_description .= t('Images larger than %resolution will be resized.', array('%resolution' => $limits['resolution'])) . ' ';
       }
       else {
-        $limit_description .= t('Images may not be larger than %resolution. ', array('%resolution' => $limits['resolution']));
+        $limit_description .= t('Images may not be larger than %resolution.', array('%resolution' => $limits['resolution'])) . ' ';
       }
     }
-    $limit_description .= t('Only files with the following extensions may be uploaded: %extensions. ', array('%extensions' => $limits['extensions']));
+    $limit_description .= t('Only files with the following extensions may be uploaded: %extensions.', array('%extensions' => $limits['extensions'])) . ' ';
 
     $form['new']['#weight'] = 10;
     $form['new']['upload'] = array(
@@ -587,7 +583,7 @@ function _upload_form($node) {
       '#type' => 'submit',
       '#value' => t('Attach'),
       '#name' => 'attach',
-      '#ahah' => array(
+      '#ajax' => array(
         'path' => 'upload/js',
         'wrapper' => 'attach-wrapper',
         'progress' => array('type' => 'bar', 'message' => t('Please wait...')),
@@ -610,7 +606,7 @@ function theme_upload_form_current($form) {
 
   foreach (element_children($form) as $key) {
     // Add class to group weight fields for drag and drop.
-    $form[$key]['weight']['#attributes']['class'] = 'upload-weight';
+    $form[$key]['weight']['#attributes']['class'] = array('upload-weight');
 
     $row = array('');
     $row[] = drupal_render($form[$key]['remove']);
@@ -618,7 +614,7 @@ function theme_upload_form_current($form) {
     $row[] = drupal_render($form[$key]['description']);
     $row[] = drupal_render($form[$key]['weight']);
     $row[] = drupal_render($form[$key]['size']);
-    $rows[] = array('data' => $row, 'class' => 'draggable');
+    $rows[] = array('data' => $row, 'class' => array('draggable'));
   }
   $output = theme('table', $header, $rows, array('id' => 'upload-attachments'));
   $output .= drupal_render_children($form);
@@ -689,19 +685,19 @@ function upload_js() {
 
   // Render the form for output.
   $form += array(
-    '#post' => $_POST,
-    '#programmed' => FALSE,
     '#tree' => FALSE,
     '#parents' => array(),
   );
   drupal_alter('form', $form, array(), 'upload_js');
-  $form_state = array('submitted' => FALSE);
+  $form_state = array('submitted' => FALSE, 'programmed' => FALSE);
   $form = form_builder('upload_js', $form, $form_state);
   $output = theme('status_messages') . drupal_render($form);
 
-  // We send the updated file attachments form.
-  // Don't call drupal_json(). ahah.js uses an iframe and
-  // the header output by drupal_json() causes problems in some browsers.
-  print drupal_to_js(array('status' => TRUE, 'data' => $output));
-  exit;
+  $commands = array();
+  $commands[] = ajax_command_replace(NULL, $output);
+
+  // AJAX uploads use an <iframe> and some browsers have problems with the
+  // 'text/javascript' Content-Type header with iframes. Passing FALSE to
+  // ajax_render() prevents the header from being sent.
+  ajax_render($commands, FALSE);
 }

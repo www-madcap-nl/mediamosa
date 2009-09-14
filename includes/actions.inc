@@ -1,5 +1,5 @@
 <?php
-// $Id: actions.inc,v 1.24 2008/12/20 05:20:20 dries Exp $
+// $Id: actions.inc,v 1.30 2009/09/01 16:50:11 webchick Exp $
 
 /**
  * @file
@@ -47,7 +47,7 @@ function actions_do($action_ids, $object = NULL, $context = NULL, $a1 = NULL, $a
   }
   $actions = array();
   $available_actions = actions_list();
-  $result = array();
+  $actions_result = array();
   if (is_array($action_ids)) {
     $conditions = array();
     foreach ($action_ids as $action_id) {
@@ -82,11 +82,11 @@ function actions_do($action_ids, $object = NULL, $context = NULL, $a1 = NULL, $a
       if (is_numeric($action_id)) {
         $function = $params['callback'];
         $context = array_merge($context, $params);
-        $result[$action_id] = $function($object, $context, $a1, $a2);
+        $actions_result[$action_id] = $function($object, $context, $a1, $a2);
       }
       // Singleton action; $action_id is the function name.
       else {
-        $result[$action_id] = $action_id($object, $context, $a1, $a2);
+        $actions_result[$action_id] = $action_id($object, $context, $a1, $a2);
       }
     }
   }
@@ -97,15 +97,15 @@ function actions_do($action_ids, $object = NULL, $context = NULL, $a1 = NULL, $a
       $action = db_query("SELECT callback, parameters FROM {actions} WHERE aid = :aid", array(':aid' => $action_ids))->fetchObject();
       $function = $action->callback;
       $context = array_merge($context, unserialize($action->parameters));
-      $result[$action_ids] = $function($object, $context, $a1, $a2);
+      $actions_result[$action_ids] = $function($object, $context, $a1, $a2);
     }
     // Singleton action; $action_ids is the function name.
     else {
-      $result[$action_ids] = $action_ids($object, $context, $a1, $a2);
+      $actions_result[$action_ids] = $action_ids($object, $context, $a1, $a2);
     }
   }
   $stack--;
-  return $result;
+  return $actions_result;
 }
 
 /**
@@ -119,7 +119,7 @@ function actions_do($action_ids, $object = NULL, $context = NULL, $a1 = NULL, $a
  *       'description' => t('Save node'),
  *       'configurable' => FALSE,
  *       'hooks' => array(
- *         'nodeapi' => array('delete', 'insert', 'update', 'view'),
+ *         'node' => array('delete', 'insert', 'update', 'view'),
  *         'comment' => array('delete', 'insert', 'update', 'view'),
  *       )
  *     )
@@ -147,7 +147,7 @@ function actions_do($action_ids, $object = NULL, $context = NULL, $a1 = NULL, $a
  *     'description' => t('Publish post'),
  *     'configurable' => FALSE,
  *     'hooks' => array(
- *       'nodeapi' => array('presave', 'insert', 'update', 'view'),
+ *       'node' => array('presave', 'insert', 'update', 'view'),
  *       'comment' => array('delete', 'insert', 'update', 'view'),
  *     ),
  *   );
@@ -169,7 +169,7 @@ function actions_list($reset = FALSE) {
  *
  * Compare with actions_list() which gathers actions by invoking
  * hook_action_info(). The two are synchronized by visiting
- * /admin/build/actions (when actions.module is enabled) which runs
+ * /admin/structure/actions (when actions.module is enabled) which runs
  * actions_synchronize().
  *
  * @return
@@ -285,18 +285,14 @@ function actions_synchronize($delete_orphans = FALSE) {
     $orphaned = array_keys($actions_in_db);
 
     if ($delete_orphans) {
-      $results = db_select('actions')
-        ->addField('actions', 'aid')
-        ->addField('actions', 'description')
-        ->condition('callback', $orphaned, 'IN')
-        ->execute();
-      foreach ($results as $action) {
+      $actions = db_query('SELECT aid, description FROM {actions} WHERE callback IN (:orphaned)', array(':orphaned' => $orphaned))->fetchAll();
+      foreach ($actions as $action) {
         actions_delete($action->aid);
         watchdog('actions', "Removed orphaned action '%action' from database.", array('%action' => filter_xss_admin($action->description)));
       }
     }
     else {
-      $link = l(t('Remove orphaned actions'), 'admin/settings/actions/orphan');
+      $link = l(t('Remove orphaned actions'), 'admin/config/system/actions/orphan');
       $count = count($actions_in_db);
       $orphans = implode(', ', $orphaned);
       watchdog('actions', format_plural($count, 'One orphaned action (%orphans) exists in the actions table. !link', '@count orphaned actions (%orphans) exist in the actions table. !link'), array('@count' => $count, '%orphans' => $orphans, '!link' => $link), WATCHDOG_WARNING);
@@ -309,6 +305,9 @@ function actions_synchronize($delete_orphans = FALSE) {
  *
  * @param $function
  *   The name of the function to be called when this action is performed.
+ * @param $type
+ *   The type of action, to describe grouping and/or context, e.g., 'node',
+ *   'user', 'comment', or 'system'.
  * @param $params
  *   An associative array with parameter names as keys and parameter values as
  *   values.

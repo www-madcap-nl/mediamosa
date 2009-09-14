@@ -1,5 +1,5 @@
 <?php
-// $Id: page.tpl.php,v 1.15 2009/01/22 12:52:50 dries Exp $
+// $Id: page.tpl.php,v 1.32 2009/08/31 19:50:18 webchick Exp $
 
 /**
  * @file
@@ -11,8 +11,10 @@
  * - $base_path: The base URL path of the Drupal installation. At the very
  *   least, this will always default to /.
  * - $css: An array of CSS files for the current page.
- * - $directory: The directory the theme is located in, e.g. themes/garland or
- *   themes/garland/minelli.
+ * - $directory: The directory the template is located in, e.g. modules/system
+ *   or themes/garland.
+ * - $classes_array: Array of html class attribute values. It is flattened
+ *   into a string within the variable $classes.
  * - $is_front: TRUE if the current page is the front page. Used to toggle the mission statement.
  * - $logged_in: TRUE if the user is registered and signed in.
  * - $is_admin: TRUE if the user has permission to access administration pages.
@@ -21,15 +23,34 @@
  * - $language: (object) The language the site is being displayed in.
  *   $language->language contains its textual representation.
  *   $language->dir contains the language direction. It will either be 'ltr' or 'rtl'.
+ * - $rdf_namespaces: All the RDF namespace prefixes used in the HTML document.
+ * - $grddl_profile: A GRDDL profile allowing agents to extract the RDF data.
  * - $head_title: A modified version of the page title, for use in the TITLE tag.
  * - $head: Markup for the HEAD section (including meta tags, keyword tags, and
  *   so on).
  * - $styles: Style tags necessary to import all CSS files for the page.
  * - $scripts: Script tags necessary to load the JavaScript files and settings
  *   for the page.
- * - $body_classes: A set of CSS classes for the BODY tag. This contains flags
- *   indicating the current layout (multiple columns, single column), the current
- *   path, whether the user is logged in, and so on.
+ * - $classes: String of classes that can be used to style contextually through
+ *   CSS. It should be placed within the <body> tag. When selecting through CSS
+ *   it's recommended that you use the body tag, e.g., "body.front". It can be
+ *   manipulated through the variable $classes_array from preprocess functions.
+ *   The default values can be one or more of the following:
+ *   - page: The current template type, i.e., "theming hook".
+ *   - front: Page is the home page.
+ *   - not-front: Page is not the home page.
+ *   - logged-in: The current viewer is logged in.
+ *   - not-logged-in: The current viewer is not logged in.
+ *   - page-[level 1 path]: The internal first level path. For example, viewing
+ *     example.com/user/2 would result in "page-user". Path aliases do not apply.
+ *   - node-type-[node type]: When viewing a single node, the type of that node.
+ *     For example, if the node is a "Blog entry" it would result in "node-type-blog".
+ *     Note that the machine name will often be in a short form of the human readable label.
+ *   The following only apply with the default 'sidebar_first' and 'sidebar_second' block regions:
+ *     - two-sidebars: When both sidebars have content.
+ *     - no-sidebars: When no sidebar content exists.
+ *     - one-sidebar and sidebar-first or sidebar-second: A combination of the two classes
+ *       when only one of the two sidebars have content.
  *
  * Site identity:
  * - $front_page: The URL of the front page. Use this instead of $base_path,
@@ -39,8 +60,6 @@
  *   in theme settings.
  * - $site_slogan: The slogan of the site, empty when display has been disabled
  *   in theme settings.
- * - $mission: The text of the site mission, empty when display has been disabled
- *   in theme settings.
  *
  * Navigation:
  * - $search_box: HTML to display the search box, empty if search has been disabled.
@@ -48,135 +67,141 @@
  *   site, if they have been configured.
  * - $secondary_menu (array): An array containing the Secondary menu links for
  *   the site, if they have been configured.
+ * - $breadcrumb: The breadcrumb trail for the current page.
+ * - $action_links: Actions local to the page, such as 'Add menu' on the menu
+ *   administration interface.
  *
  * Page content (in order of occurrence in the default page.tpl.php):
- * - $left: The HTML for the left sidebar.
- *
- * - $breadcrumb: The breadcrumb trail for the current page.
  * - $title: The page title, for use in the actual HTML content.
- * - $help: Dynamic help text, mostly for admin pages.
  * - $messages: HTML for status and error messages. Should be displayed prominently.
  * - $tabs: Tabs linking to any sub-pages beneath the current page (e.g., the view
  *   and edit tabs when displaying a node).
- *
- * - $content: The main content of the current Drupal page.
- *
- * - $right: The HTML for the right sidebar.
- *
- * Footer/closing data:
+ * - $help: Dynamic help text, mostly for admin pages.
+ * - $content: The main content of the current page.
  * - $feed_icons: A string of all feed icons for the current page.
- * - $footer_message: The footer message as defined in the admin settings.
+ * - $sidebar_first: Items for the first sidebar.
+ * - $sidebar_second: Items for the second sidebar.
+ * - $highlight: Items for the highlighted content region.
+ *
+ * Opening and closing data:
+ * - $page_top: Initial markup from any modules that have altered the
+ *   page. This variable should always be output first, before all other dynamic
+ *   content.
  * - $footer : The footer region.
- * - $closure: Final closing markup from any modules that have altered the page.
- *   This variable should always be output last, after all other dynamic content.
+ * - $page_bottom: Final closing markup from any modules that have altered the
+ *   page. This variable should always be output last, after all other dynamic
+ *   content.
  *
  * @see template_preprocess()
  * @see template_preprocess_page()
+ * @see template_process()
  */
 ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="<?php print $language->language ?>" lang="<?php print $language->language ?>" dir="<?php print $language->dir ?>">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML+RDFa 1.0//EN"
+  "http://www.w3.org/MarkUp/DTD/xhtml-rdfa-1.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="<?php print $language->language; ?>" dir="<?php print $language->dir; ?>"
+  <?php print $rdf_namespaces; ?>>
 
-<head>
+<head profile="<?php print $grddl_profile; ?>">
   <title><?php print $head_title; ?></title>
   <?php print $head; ?>
   <?php print $styles; ?>
   <?php print $scripts; ?>
 </head>
-<body class="<?php print $body_classes; ?>">
-  <div id="page">
-    <div id="header">
-      <div id="logo-title">
+<body class="<?php print $classes; ?>">
 
-        <?php if (!empty($logo)): ?>
-          <a href="<?php print $front_page; ?>" title="<?php print t('Home'); ?>" rel="home" id="logo">
-            <img src="<?php print $logo; ?>" alt="<?php print t('Home'); ?>" />
-          </a>
-        <?php endif; ?>
+  <?php print $page_top; ?>
 
+  <div id="page-wrapper"><div id="page">
+
+    <div id="header"><div class="section clearfix">
+
+      <?php if ($logo): ?>
+        <a href="<?php print $front_page; ?>" title="<?php print t('Home'); ?>" rel="home" id="logo">
+          <img src="<?php print $logo; ?>" alt="<?php print t('Home'); ?>" />
+        </a>
+      <?php endif; ?>
+
+      <?php if ($site_name || $site_slogan): ?>
         <div id="name-and-slogan">
-          <?php if (!empty($site_name)): ?>
-            <h1 id="site-name">
-              <a href="<?php print $front_page ?>" title="<?php print t('Home'); ?>" rel="home"><span><?php print $site_name; ?></span></a>
-            </h1>
+          <?php if ($site_name): ?>
+            <?php if ($title): ?>
+              <div id="site-name"><strong>
+                <a href="<?php print $front_page; ?>" title="<?php print t('Home'); ?>" rel="home"><span><?php print $site_name; ?></span></a>
+              </strong></div>
+            <?php else: /* Use h1 when the content title is empty */ ?>
+              <h1 id="site-name">
+                <a href="<?php print $front_page; ?>" title="<?php print t('Home'); ?>" rel="home"><span><?php print $site_name; ?></span></a>
+              </h1>
+            <?php endif; ?>
           <?php endif; ?>
 
-          <?php if (!empty($site_slogan)): ?>
+          <?php if ($site_slogan): ?>
             <div id="site-slogan"><?php print $site_slogan; ?></div>
           <?php endif; ?>
-        </div> <!-- /name-and-slogan -->
-      </div> <!-- /logo-title -->
+        </div> <!-- /#name-and-slogan -->
+      <?php endif; ?>
 
-      <?php if (!empty($search_box)): ?>
+      <?php if ($search_box): ?>
         <div id="search-box"><?php print $search_box; ?></div>
       <?php endif; ?>
 
-      <?php if (!empty($header)): ?>
-        <div id="header-region">
+      <?php if ($header): ?>
+        <div id="header-region" class="region">
           <?php print $header; ?>
         </div>
       <?php endif; ?>
 
-    </div> <!-- /header -->
+    </div></div> <!-- /.section, /#header -->
 
-    <div id="container" class="clear-block">
+    <?php if ($main_menu): ?>
+      <div id="navigation"><div class="section">
+        <?php print theme('links', $main_menu, array('id' => 'main-menu', 'class' => array('links', 'clearfix')), t('Main menu')); ?>
+      </div></div> <!-- /.section, /#navigation -->
+    <?php endif; ?>
 
-      <div id="navigation" class="menu <?php if (!empty($main_menu)) { print "withmain"; } if (!empty($secondary_menu)) { print " withsecondary"; } ?> ">
-        <?php if (!empty($main_menu)): ?>
-          <div id="main-menu" class="clear-block">
-            <?php print theme('links', $main_menu, array('class' => 'links main-menu')); ?>
-          </div>
-        <?php endif; ?>
+    <?php if ($breadcrumb): ?>
+      <div id="breadcrumb"><?php print $breadcrumb; ?></div>
+    <?php endif; ?>
 
-        <?php if (!empty($secondary_menu)): ?>
-          <div id="secondary-menu" class="clear-block">
-            <?php print theme('links', $secondary_menu, array('class' => 'links secondary-menu')); ?>
-          </div>
-        <?php endif; ?>
-      </div> <!-- /navigation -->
+    <?php print $messages; ?>
 
-      <?php if (!empty($left)): ?>
-        <div id="sidebar-left" class="column sidebar">
-          <?php print $left; ?>
-        </div> <!-- /sidebar-left -->
+    <div id="main-wrapper"><div id="main" class="clearfix">
+
+      <div id="content" class="column"><div class="section">
+        <?php if ($highlight): ?><div id="highlight"><?php print $highlight; ?></div><?php endif; ?>
+        <?php if ($title): ?><h1 class="title" id="page-title"><?php print $title; ?></h1><?php endif; ?>
+        <?php if ($tabs): ?><div class="tabs"><?php print $tabs; ?></div><?php endif; ?>
+        <?php print $help; ?>
+        <?php if ($action_links): ?><ul class="action-links"><?php print $action_links; ?></ul><?php endif; ?>
+        <div id="content-area" class="region">
+          <?php print $content; ?>
+        </div> <!-- /#content-area -->
+        <?php print $feed_icons; ?>
+      </div></div> <!-- /.section, /#content -->
+
+      <?php if ($sidebar_first): ?>
+        <div id="sidebar-first" class="column sidebar"><div class="section region">
+          <?php print $sidebar_first; ?>
+        </div></div> <!-- /.section, /#sidebar-first -->
       <?php endif; ?>
 
-      <div id="main" class="column"><div id="main-squeeze">
-        <?php if (!empty($breadcrumb)): ?><div id="breadcrumb"><?php print $breadcrumb; ?></div><?php endif; ?>
-        <?php if (!empty($mission)): ?><div id="mission"><?php print $mission; ?></div><?php endif; ?>
-
-        <div id="content">
-          <?php if (!empty($title)): ?><h1 class="title" id="page-title"><?php print $title; ?></h1><?php endif; ?>
-          <?php if (!empty($tabs)): ?><div class="tabs"><?php print $tabs; ?></div><?php endif; ?>
-          <?php if (!empty($messages)): print $messages; endif; ?>
-          <?php if (!empty($help)): print $help; endif; ?>
-          <div id="content-content" class="clear-block">
-            <?php print $content; ?>
-          </div> <!-- /content-content -->
-          <?php print $feed_icons; ?>
-        </div> <!-- /content -->
-
-      </div></div> <!-- /main-squeeze /main -->
-
-      <?php if (!empty($right)): ?>
-        <div id="sidebar-right" class="column sidebar">
-          <?php print $right; ?>
-        </div> <!-- /sidebar-right -->
+      <?php if ($sidebar_second): ?>
+        <div id="sidebar-second" class="column sidebar"><div class="section region">
+          <?php print $sidebar_second; ?>
+        </div></div> <!-- /.section, /#sidebar-second -->
       <?php endif; ?>
 
-    </div> <!-- /container -->
+    </div></div> <!-- /#main, /#main-wrapper -->
 
-    <div id="footer-wrapper">
-      <div id="footer">
-        <?php print $footer_message; ?>
-        <?php if (!empty($footer)): print $footer; endif; ?>
-      </div> <!-- /footer -->
-    </div> <!-- /footer-wrapper -->
+    <div id="footer"><div class="section">
+      <?php print theme('links', $secondary_menu, array('id' => 'secondary-menu', 'class' => array('links', 'clearfix')), t('Secondary menu')); ?>
+      <?php if ($footer): ?><div id="footer-region" class="region"><?php print $footer; ?></div><?php endif; ?>
+    </div></div> <!-- /.section, /#footer -->
 
-    <?php print $closure; ?>
+  </div></div> <!-- /#page, /#page-wrapper -->
 
-  </div> <!-- /page -->
+  <?php print $page_bottom; ?>
 
 </body>
 </html>

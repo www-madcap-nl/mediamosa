@@ -1,0 +1,856 @@
+<?php
+// $Id: image.module,v 1.16 2009/08/26 03:20:39 webchick Exp $
+
+/**
+ * @file
+ * Exposes global functionality for creating image styles.
+ */
+
+/**
+ * Implement of hook_help().
+ */
+function image_help($path, $arg) {
+  switch ($path) {
+    case 'admin/help#image':
+      $naming_approaches = array();
+      $naming_approaches[] =  t('Based on where it will be used: !name', array('!name' => '<code>profile-picture</code>'));
+      $naming_approaches[] =  t('Describing its appearance: !name', array('!name' => '<code>square-85x85</code>'));
+      $output = '';
+      $output .= '<p>' . t('The Image module provides functionality for displaying images on your site though <a href="!url">image styles</a>.', array('!url' => url('admin/config/media/image-styles'))) .'</p>';
+      $output .= '<h3>' . t('Image styles') . '</h3>';
+      $output .= '<p>' . t('Image <em>styles</em> allow your site to output an image in several different ways without affecting the original image. Any created images will automatically be refreshed if any changes are made to the image style.') .'</p>';
+      $output .= '<p>' . t('Every image style must have a name, which will be used in the URL of generated images. There are two common approaches to naming image styles:') . '</p>';
+      $output .= theme('item_list', $naming_approaches);
+      $output .= '<p>' . t('Both approaches are common and which you choose depends on how you use the image style.') . '</p>';
+      $output .= '<p>' . t('After creating an image style, <em>effects</em> may be added to the style. Image module comes with some basic effects such as <em>crop</em>, <em>scale</em>, <em>desaturate</em>, and <em>rotate</em>. In addition to the effects included with Image, other modules may provide additional effects. Multiple effects may be combined together, such as using the <em>crop and scale</em> effect and the <em>desaturate</em> effect, you could create square, grayscale thumbnails.');
+      return $output;
+    case 'admin/config/media/image-styles':
+      return '<p>' . t('Image styles commonly provide thumbnail sizes by scaling and cropping images, but can also add various effects before an image is displayed. When an image is displayed with a style, a new file is created and the original image is left unchanged.') . '</p>';
+    case 'admin/config/media/image-styles/edit/%/add/%':
+    case 'admin/config/media/image-styles/edit/%/effects/%':
+      $effect = ($arg[5] == 'add') ? image_effect_definition_load($arg[6]) : image_effect_load($arg[6]);
+      return isset($effect['help']) ? ('<p>' . $effect['help'] . '</p>') : NULL;
+  }
+}
+
+/**
+ * Implement hook_menu().
+ */
+function image_menu() {
+  $items = array();
+
+  $items['image/generate/%image_style'] = array(
+    'title' => 'Generate image style',
+    'page callback' => 'image_style_generate',
+    'page arguments' => array(2),
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+  $items['admin/config/media/image-styles'] = array(
+    'title' => 'Image styles',
+    'description' => 'Configure styles that can be used for resizing or adjusting images on display.',
+    'page callback' => 'image_style_list',
+    'access arguments' => array('administer image styles'),
+    'file' => 'image.admin.inc',
+  );
+  $items['admin/config/media/image-styles/list'] = array(
+    'title' => 'List',
+    'description' => 'List the current image styles on the site.',
+    'page callback' => 'image_style_list',
+    'access arguments' => array('administer image styles'),
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => 1,
+    'file' => 'image.admin.inc',
+  );
+  $items['admin/config/media/image-styles/add'] = array(
+    'title' => 'Add style',
+    'description' => 'Add a new image style.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('image_style_add_form'),
+    'access arguments' => array('administer image styles'),
+    'type' => MENU_LOCAL_ACTION,
+    'weight' => 2,
+    'file' => 'image.admin.inc',
+  );
+  $items['admin/config/media/image-styles/edit/%image_style'] = array(
+    'title' => 'Edit style',
+    'description' => 'Configure an image style.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('image_style_form', 5),
+    'access arguments' => array('administer image styles'),
+    'type' => MENU_CALLBACK,
+    'file' => 'image.admin.inc',
+  );
+  $items['admin/config/media/image-styles/delete/%image_style'] = array(
+    'title' => 'Delete style',
+    'description' => 'Delete an image style.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('image_style_delete_form', 5, TRUE),
+    'access arguments' => array('administer image styles'),
+    'type' => MENU_CALLBACK,
+    'file' => 'image.admin.inc',
+  );
+  $items['admin/config/media/image-styles/edit/%image_style/effects/%image_effect'] = array(
+    'title' => 'Edit image effect',
+    'description' => 'Edit an exiting effect within a style.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('image_effect_form', 5, 7),
+    'access arguments' => array('administer image styles'),
+    'type' => MENU_CALLBACK,
+    'file' => 'image.admin.inc',
+  );
+  $items['admin/config/media/image-styles/edit/%image_style/effects/%image_effect/delete'] = array(
+    'title' => 'Delete image effect',
+    'description' => 'Delete an exiting effect from a style.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('image_effect_delete_form', 5, 7),
+    'access arguments' => array('administer image styles'),
+    'type' => MENU_CALLBACK,
+    'file' => 'image.admin.inc',
+  );
+  $items['admin/config/media/image-styles/edit/%image_style/add/%image_effect_definition'] = array(
+    'title' => 'Add image effect',
+    'description' => 'Add a new effect to a style.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('image_effect_form', 5, 7),
+    'access arguments' => array('administer image styles'),
+    'type' => MENU_CALLBACK,
+    'file' => 'image.admin.inc',
+  );
+
+  return $items;
+}
+
+/**
+ * Implement hook_theme().
+ */
+function image_theme() {
+  return array(
+    'image_style' => array(
+      'arguments' => array(
+        'style' => NULL,
+        'path' => NULL,
+        'alt' => '',
+        'title' => '',
+        'attributes' => array(),
+        'getsize' => TRUE,
+      ),
+    ),
+    'image_style_list' => array(
+      'arguments' => array('styles' => NULL),
+    ),
+    'image_style_effects' => array(
+      'arguments' => array('form' => NULL),
+    ),
+    'image_style_preview' => array(
+      'arguments' => array('style' => NULL),
+    ),
+    'image_anchor' => array(
+      'arguments' => array('element' => NULL),
+    ),
+    'image_resize_summary' => array(
+      'arguments' => array('data' => NULL),
+    ),
+    'image_scale_summary' => array(
+      'arguments' => array('data' => NULL),
+    ),
+    'image_crop_summary' => array(
+      'arguments' => array('data' => NULL),
+    ),
+    'image_rotate_summary' => array(
+      'arguments' => array('data' => NULL),
+    ),
+  );
+}
+
+/**
+ * Implement hook_permission().
+ */
+function image_permission() {
+  return array(
+    'administer image styles' => array(
+      'title' => t('Administer image styles'),
+      'description' => t('Create and modify styles for generating image modifications such as thumbnails.'),
+    ),
+  );
+}
+
+/**
+ * Implement hook_flush_caches().
+ */
+function image_flush_caches() {
+  return array('cache_image');
+}
+
+/**
+ * Implement hook_file_download().
+ *
+ * Control the access to files underneath the styles directory.
+ */
+function image_file_download($filepath) {
+  if (strpos($filepath, 'styles/') === 0) {
+    $args = explode('/', $filepath);
+    // Discard the first part of the path (styles).
+    array_shift($args);
+    // Get the style name from the second part.
+    $style_name = array_shift($args);
+    // Then the remaining parts are the path to the image.
+    $original_path = implode('/', $args);
+
+    // Check that the file exists and is an image.
+    if ($info = image_get_info($filepath)) {
+      // Check the permissions of the original to grant access to this image.
+      $headers = module_invoke_all('file_download', $original_path);
+      if (!in_array(-1, $headers)) {
+        return array(
+          // Send headers describing the image's size, and MIME-type...
+          'Content-Type' => $info['mime_type'],
+          'Content-Length' => $info['file_size'],
+          // ...and allow the file to be cached for two weeks (matching the
+          // value we/ use for the mod_expires settings in .htaccess) and
+          // ensure that caching proxies do not share the image with other
+          // users.
+          'Expires' => gmdate(DATE_RFC1123, time() + 1209600),
+          'Cache-Control' => 'max-age=1209600, private, must-revalidate',
+        );
+      }
+    }
+    return -1;
+  }
+}
+
+/**
+ * Implement hook_file_move().
+ */
+function image_file_move($file, $source) {
+  // Delete any image derivatives at the original image path.
+  image_path_flush($file->uri);
+}
+
+/**
+ * Implement hook_file_delete().
+ */
+function image_file_delete($file) {
+  // Delete any image derivatives of this image.
+  image_path_flush($file->uri);
+}
+
+/**
+ * Clear cached versions of a specific file in all styles.
+ *
+ * @param $path
+ *   The Drupal file path to the original image.
+ */
+function image_path_flush($path) {
+  $styles = image_styles();
+  foreach ($styles as $style) {
+    $path = image_style_path($style['name'], $path);
+    if (file_exists($path)) {
+      file_unmanaged_delete($path);
+    }
+  }
+}
+
+/**
+ * Get an array of all styles and their settings.
+ *
+ * @return
+ *   An array of styles keyed by the image style ID (isid).
+ * @see image_style_load()
+ */
+function image_styles() {
+  $styles = &drupal_static(__FUNCTION__);
+
+  // Grab from cache or build the array.
+  if (!isset($styles)) {
+    if ($cache = cache_get('image_styles', 'cache')) {
+      $styles = $cache->data;
+    }
+    else {
+      $styles = array();
+      $result = db_select('image_styles', NULL, array('fetch' => PDO::FETCH_ASSOC))
+        ->fields('image_styles')
+        ->orderBy('name')
+        ->execute();
+      foreach ($result as $style) {
+        $styles[$style['name']] = $style;
+        $styles[$style['name']]['effects'] = image_style_effects($style);
+      }
+
+      cache_set('image_styles', $styles);
+    }
+  }
+
+  return $styles;
+}
+
+/**
+ * Load a style by style name or ID. May be used as a loader for menu items.
+ *
+ * @param $name
+ *   The name of the style.
+ * @param $isid
+ *   Optional. The numeric id of a style if the name is not known.
+ * @return
+ *   An image style array containing the following keys:
+ *   - "isid": The unique image style ID.
+ *   - "name": The unique image style name.
+ *   - "effects": An array of image effects within this image style.
+ *   If the image style name or ID is not valid, an empty array is returned.
+ * @see image_effect_load()
+ */
+function image_style_load($name = NULL, $isid = NULL) {
+  $styles = image_styles();
+
+  // If retrieving by name.
+  if (isset($name) && isset($styles[$name])) {
+    return $styles[$name];
+  }
+
+  // If retrieving by image style id.
+  if (isset($isid)) {
+    foreach ($styles as $name => $style) {
+      if ($style['isid'] == $isid) {
+        return $style;
+      }
+    }
+  }
+
+  // Otherwise the style was not found.
+  return FALSE;
+}
+
+/**
+ * Save an image style.
+ *
+ * @param style
+ *   An image style array.
+ * @return
+ *   An image style array. In the case of a new style, 'isid' will be populated.
+ */
+function image_style_save($style) {
+  if (isset($style['isid']) && is_numeric($style['isid'])) {
+    // Load the existing style to make sure we account for renamed styles.
+    $old_style = image_style_load(NULL, $style['isid']);
+    image_style_flush($old_style);
+    drupal_write_record('image_styles', $style, 'isid');
+    if ($old_style['name'] != $style['name']) {
+      $style['old_name'] = $old_style['name'];
+    }
+  }
+  else {
+    drupal_write_record('image_styles', $style);
+    $style['is_new'] = TRUE;
+  }
+
+  // Let other modules update as necessary on save.
+  module_invoke_all('image_style_save', $style);
+
+  // Clear all caches and flush.
+  image_style_flush($style);
+
+  return $style;
+}
+
+/**
+ * Delete an image style.
+ *
+ * @param $style
+ *   An image style array.
+ * @param $replacement_style_name
+ *   (optional) When deleting a style, specify a replacement style name so
+ *   that existing settings (if any) may be converted to a new style.
+ * @return
+ *   TRUE on success.
+ */
+function image_style_delete($style, $replacement_style_name = '') {
+  image_style_flush($style);
+
+  db_delete('image_effects')->condition('isid', $style['isid'])->execute();
+  db_delete('image_styles')->condition('isid', $style['isid'])->execute();
+
+  // Let other modules update as necessary on save.
+  $style['old_name'] = $style['name'];
+  $style['name'] = $replacement_style_name;
+  module_invoke_all('image_style_delete', $style);
+
+  return TRUE;
+}
+
+/**
+ * Load all the effects for an image style.
+ *
+ * @param $style
+ *   An image style array.
+ * @return
+ *   An array of image effects associated with specified image style in the
+ *   format array('isid' => array()), or an empty array if the specified style
+ *   has no effects.
+ */
+function image_style_effects($style) {
+  $effects = image_effects();
+  $style_effects = array();
+  foreach ($effects as $effect) {
+    if ($style['isid'] == $effect['isid']) {
+      $style_effects[$effect['ieid']] = $effect;
+    }
+  }
+
+  return $style_effects;
+}
+
+/**
+ * Get an array of image styles suitable for using as select list options.
+ *
+ * @param $include_empty
+ *   If TRUE a <none> option will be inserted in the options array.
+ * @return
+ *   Array of image styles both key and value are set to style name.
+ */
+function image_style_options($include_empty = TRUE) {
+  $styles = image_styles();
+  $options = array();
+  if ($include_empty && !empty($styles)) {
+    $options[''] = t('<none>');
+  }
+  $options = array_merge($options, drupal_map_assoc(array_keys($styles)));
+  if (empty($options)) {
+    $options[''] = t('No defined styles');
+  }
+  return $options;
+}
+
+/**
+ * Menu callback; Given a style and image path, generate a derivative.
+ *
+ * This menu callback is always served after checking a token to prevent
+ * generation of unnecessary images. After generating an image transfer it to
+ * the requesting agent via file_transfer().
+ */
+function image_style_generate() {
+  $args = func_get_args();
+  $style = array_shift($args);
+  $style_name = $style['name'];
+  $scheme = array_shift($args);
+  $path = implode('/', $args);
+
+  $path = $scheme . '://' . $path;
+  $path_md5 = md5($path);
+  $destination = image_style_path($style['name'], $path);
+
+  // Check that it's a defined style and that access was granted by
+  // image_style_url().
+  if (!$style || !cache_get('access:' . $style_name . ':' . $path_md5, 'cache_image')) {
+    drupal_access_denied();
+    exit();
+  }
+
+  // Don't start generating the image if the derivate already exists or if
+  // generation is in progress in another thread.
+  $lock_name = 'image_style_generate:' . $style_name . ':' . $path_md5;
+  if (!file_exists($destination)) {
+    $lock_acquired = lock_acquire($lock_name);
+    if (!$lock_acquired) {
+      // Tell client to retry again in 3 seconds. Currently no browsers are known
+      // to support Retry-After.
+      drupal_set_header('503 Service Unavailable');
+      drupal_set_header('Retry-After', 3);
+      print t('Image generation in progress, please try again shortly.');
+      exit();
+    }
+  }
+
+  // Try to generate the image, unless another thread just did it while we were
+  // acquiring the lock.
+  $success = file_exists($destination) || image_style_create_derivative($style, $path, $destination);
+
+  if ($lock_acquired) {
+    lock_release($lock_name);
+  }
+
+  if ($success) {
+    $image = image_load($destination);
+    file_transfer($image->source, array('Content-Type' => $image->info['mime_type'], 'Content-Length' => $image->info['file_size']));
+  }
+  else {
+    watchdog('image', 'Unable to generate the derived image located at %path.', $destination);
+    drupal_set_header('500 Internal Server Error');
+    print t('Error generating image.');
+    exit();
+  }
+}
+
+/**
+ * Create a new image based on an image style.
+ *
+ * @param $style
+ *   An image style array.
+ * @param $source
+ *   Path of the source file.
+ * @param $destination
+ *   Path or URI of the destination file.
+ * @return
+ *   TRUE if an image derivative is generated, FALSE if no image derivative
+ *   is generated. NULL if the derivative is being generated.
+ */
+function image_style_create_derivative($style, $source, $destination) {
+  // Get the folder for the final location of this style.
+  $directory = drupal_dirname($destination);
+
+  // Build the destination folder tree if it doesn't already exist.
+  if (!file_prepare_directory($directory, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
+    watchdog('image', 'Failed to create style directory: %directory', array('%directory' => $directory), WATCHDOG_ERROR);
+    return FALSE;
+  }
+
+  if (!$image = image_load($source)) {
+    return FALSE;
+  }
+
+  foreach ($style['effects'] as $effect) {
+    image_effect_apply($image, $effect);
+  }
+
+  if (!image_save($image, $destination)) {
+    if (file_exists($destination)) {
+      watchdog('image', 'Cached image file %destination already exists. There may be an issue with your rewrite configuration.', array('%destination' => $destination), WATCHDOG_ERROR);
+    }
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+/**
+ * Flush cached media for a style.
+ *
+ * @param $style
+ *   An image style array.
+ */
+function image_style_flush($style) {
+  $style_directory = drupal_realpath(variable_get('file_default_scheme', 'public') . '://styles/' . $style['name']);
+  if (is_dir($style_directory)) {
+    file_unmanaged_delete_recursive($style_directory);
+  }
+
+  // Let other modules update as necessary on flush.
+  module_invoke_all('image_style_flush', $style);
+
+  // Clear image style and effect caches.
+  cache_clear_all('image_styles', 'cache');
+  cache_clear_all('image_effects', 'cache');
+  drupal_static_reset('image_styles');
+  drupal_static_reset('image_effects');
+
+  // Clear page caches when flushing.
+  if (module_exists('block')) {
+    cache_clear_all('*', 'cache_block', TRUE);
+  }
+  cache_clear_all('*', 'cache_page', TRUE);
+}
+
+/**
+ * Return the URL for an image derivative given a style and image path.
+ *
+ * This function is the default image generation method. It returns a URL for
+ * an image that can be used in an <img> tag. When the browser requests the
+ * image at image/generate/[style_name]/[scheme]/[path] the image is generated
+ * if it does not already exist and then served to the browser. This allows
+ * each image to have its own PHP instance (and memory limit) for generation of
+ * the new image.
+ *
+ * @param $style_name
+ *   The name of the style to be used with this image.
+ * @param $path
+ *   The path to the image.
+ * @return
+ *   The absolute URL where a style image can be downloaded, suitable for use
+ *   in an <img> tag. Requesting the URL will cause the image to be created.
+ * @see image_style_generate()
+ */
+function image_style_url($style_name, $path) {
+  $destination = image_style_path($style_name, $path);
+
+  // If the image already exists use that rather than regenerating it.
+  if (file_exists($destination)) {
+    return file_create_url($destination);
+  }
+
+  // Disable page cache for this request. This prevents anonymous users from
+  // needlessly hitting the image generation URL when the image already exists.
+  drupal_page_is_cacheable(FALSE);
+
+  // Set a cache entry to grant access to this style/image path. This will be
+  // checked by image_style_generate().
+  cache_set('access:' . $style_name . ':' . md5($path), 1, 'cache_image', REQUEST_TIME + 600);
+
+  $scheme = file_uri_scheme($path);
+  $target = file_uri_target($path);
+
+  // Generate a callback path for the image.
+  $url = url('image/generate/' . $style_name . '/' . $scheme . '/' . $target, array('absolute' => TRUE));
+  return $url;
+}
+
+/**
+ * Return a relative path to an image when using a style.
+ *
+ * The path returned by this function may not exist. The default generation
+ * method only creates images when they are requested by a user's browser.
+ *
+ * @param $style_name
+ *   The name of the style to be used with this image.
+ * @param $path
+ *   The path to the image.
+ * @return
+ *   The path to an image style image relative to Drupal's root.
+ * @see image_style_url()
+ */
+function image_style_path($style_name, $path) {
+  if ($target = file_uri_target($path)) {
+    $path = $target;
+  }
+  return variable_get('file_default_scheme', 'public') . '://styles/' . $style_name . '/' . $path;
+}
+
+/**
+ * Pull in image effects exposed by modules implementing hook_image_effect_info().
+ *
+ * @return
+ *   An array of image effects to be used when transforming images.
+ * @see hook_image_effect_info()
+ * @see image_effect_definition_load()
+ */
+function image_effect_definitions() {
+  $effects = &drupal_static(__FUNCTION__);
+
+  if (!isset($effects)) {
+    if ($cache = cache_get('image_effects') && !empty($cache->data)) {
+      $effects = $cache->data;
+    }
+    else {
+      $effects = array();
+      include_once DRUPAL_ROOT . '/modules/image/image.effects.inc';
+      foreach (module_implements('image_effect_info') as $module) {
+        foreach (module_invoke($module, 'image_effect_info') as $name => $effect) {
+          // Ensure the current toolkit supports the effect.
+          $effect['module'] = $module;
+          $effect['name'] = $name;
+          $effect['data'] = isset($effect['data']) ? $effect['data'] : array();
+          $effects[$name] = $effect;
+        };
+      }
+      uasort($effects, '_image_effect_definitions_sort');
+      cache_set('image_effects', $effects);
+    }
+  }
+
+  return $effects;
+}
+
+/**
+ * Load the definition for an image effect.
+ *
+ * The effect definition is a set of core properties for an image effect, not
+ * containing any user-settings. The definition defines various functions to
+ * call when configuring or executing an image effect. This loader is mostly for
+ * internal use within image.module. Use image_effect_load() or
+ * image_style_load() to get image effects that contain configuration.
+ *
+ * @param $effect
+ *   The name of the effect definition to load.
+ * @return
+ *   An array containing the image effect definition with the following keys:
+ *   - "effect": The unique name for the effect being performed. Usually prefixed
+ *     with the name of the module providing the effect.
+ *   - "module": The module providing the effect.
+ *   - "help": A description of the effect.
+ *   - "function": The name of the function that will execute the effect.
+ *   - "form": i'm (optional) The name of a function to configure the effect.
+ *   - "summary": (optional) The name of a theme function that will display a
+ *     one-line summary of the effect. Does not include the "theme_" prefix.
+ */
+function image_effect_definition_load($effect) {
+  $definitions = image_effect_definitions();
+  return isset($definitions[$effect]) ? $definitions[$effect] : FALSE;
+}
+
+/**
+ * Load all image effects from the database.
+ *
+ * @return
+ *   An array of all image effects.
+ * @see image_effect_load()
+ */
+function image_effects() {
+  $effects = &drupal_static(__FUNCTION__);
+
+  if (!isset($effects)) {
+    $effects = array();
+
+    // Add database image effects.
+    $result = db_select('image_effects', NULL, array('fetch' => PDO::FETCH_ASSOC))
+      ->fields('image_effects')
+      ->orderBy('image_effects.weight', 'ASC')
+      ->execute();
+    foreach ($result as $effect) {
+      $effect['data'] = unserialize($effect['data']);
+      $definition = image_effect_definition_load($effect['name']);
+      // Do not load image effects whose definition cannot be found.
+      if ($definition) {
+        $effect = array_merge($definition, $effect);
+        $effects[$effect['ieid']] = $effect;
+      }
+    }
+  }
+
+  return $effects;
+}
+
+/**
+ * Load a single image effect.
+ *
+ * @param $ieid
+ *   The image effect ID.
+ * @return
+ *   An image effect array, consisting of the following keys:
+ *   - "ieid": The unique image effect ID.
+ *   - "isid": The unique image style ID that contains this image effect.
+ *   - "weight": The weight of this image effect within the image style.
+ *   - "name": The name of the effect definition that powers this image effect.
+ *   - "data": An array of configuration options for this image effect.
+ *   Besides these keys, the entirety of the image definition is merged into
+ *   the image effect array. Returns FALSE if the specified effect cannot be
+ *   found.
+ * @see image_style_load()
+ * @see image_effect_definition_load()
+ */
+function image_effect_load($ieid) {
+  $effects = image_effects();
+  return isset($effects[$ieid]) ? $effects[$ieid] : FALSE;
+}
+
+/**
+ * Save an image effect.
+ *
+ * @param $effect
+ *   An image effect array.
+ * @return
+ *   An image effect array. In the case of a new effect, 'ieid' will be set.
+ */
+function image_effect_save($effect) {
+  if (!empty($effect['ieid'])) {
+    drupal_write_record('image_effects', $effect, 'ieid');
+  }
+  else {
+    drupal_write_record('image_effects', $effect);
+  }
+  $style = image_style_load(NULL, $effect['isid']);
+  image_style_flush($style);
+  return $effect;
+}
+
+/**
+ * Delete an image effect.
+ *
+ * @param $effect
+ *   An image effect array.
+ */
+function image_effect_delete($effect) {
+  db_delete('image_effects')->condition('ieid', $effect['ieid'])->execute();
+  $style = image_style_load(NULL, $effect['isid']);
+  image_style_flush($style);
+}
+
+/**
+ * Given an image object and effect, perform the effect on the file.
+ *
+ * @param $image
+ *   An image object returned by image_load().
+ * @param $effect
+ *   An image effect array.
+ * @return
+ *   TRUE on success. FALSE if unable to perform the image effect on the image.
+ */
+function image_effect_apply($image, $effect) {
+  if (function_exists($effect['effect callback'])) {
+    return call_user_func($effect['effect callback'], $image, $effect['data']);
+  }
+  return FALSE;
+}
+
+/**
+ * Return a themed image using a specific image style.
+ *
+ * @param $style_name
+ *   The name of the style to be used to alter the original image.
+ * @param $path
+ *   The path of the image file relative to the Drupal files directory.
+ *   This function does not work with images outside the files directory nor
+ *   with remotely hosted images.
+ * @param $alt
+ *   The alternative text for text-based browsers.
+ * @param $title
+ *   The title text is displayed when the image is hovered in some popular
+ *   browsers.
+ * @param $attributes
+ *   Associative array of attributes to be placed in the img tag.
+ * @param $getsize
+ *   If set to TRUE, the image's dimension are fetched and added as
+ *   width/height attributes.
+ * @return
+ *   A string containing the image tag.
+ * @ingroup themeable
+ */
+function theme_image_style($style_name, $path, $alt = '', $title = '', $attributes = array(), $getsize = TRUE) {
+  // theme_image() can only honor the $getsize parameter with local file paths.
+  // The derivative image is not created until it has been requested so the file
+  // may not yet exist, in this case we just fallback to the URL.
+  $style_path = image_style_path($style_name, $path);
+  if (!file_exists($style_path)) {
+    $style_path = image_style_url($style_name, $path);
+  }
+  return theme('image', file_create_url($style_path), $alt, $title, $attributes, $getsize);
+}
+
+/**
+ * Accept a percentage and return it in pixels.
+ */
+function image_filter_percent($value, $current_pixels) {
+  if (strpos($value, '%') !== FALSE) {
+    $value = str_replace('%', '', $value) * 0.01 * $current_pixels;
+  }
+  return $value;
+}
+
+/**
+ * Accept a keyword (center, top, left, etc) and return it as a pixel offset.
+ *
+ * @param $value
+ * @param $current_pixels
+ * @param $new_pixels
+ */
+function image_filter_keyword($value, $current_pixels, $new_pixels) {
+  switch ($value) {
+    case 'top':
+    case 'left':
+      return 0;
+
+    case 'bottom':
+    case 'right':
+      return $current_pixels - $new_pixels;
+
+    case 'center':
+      return $current_pixels / 2 - $new_pixels / 2;
+  }
+  return $value;
+}
+
+/**
+ * Internal function for sorting image effect definitions through uasort().
+ *
+ * @see image_effect_definitions()
+ */
+function _image_effect_definitions_sort($a, $b) {
+  return strcasecmp($a['name'], $b['name']);
+}

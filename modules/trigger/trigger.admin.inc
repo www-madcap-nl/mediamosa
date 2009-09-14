@@ -1,5 +1,5 @@
 <?php
-// $Id: trigger.admin.inc,v 1.8 2009/02/03 18:55:32 dries Exp $
+// $Id: trigger.admin.inc,v 1.16 2009/09/01 16:50:12 webchick Exp $
 
 /**
  * @file
@@ -18,23 +18,22 @@ function trigger_assign($type = NULL) {
   // If no type is specified we default to node actions, since they
   // are the most common.
   if (!isset($type)) {
-    drupal_goto('admin/build/trigger/node');
-  }
-  if ($type == 'node') {
-    $type = 'nodeapi';
+    drupal_goto('admin/structure/trigger/node');
   }
 
-  $output = '';
+  $build = array();
   $hooks = module_invoke_all('hook_info');
-  foreach ($hooks as $module => $hook) {
-    if (isset($hook[$type])) {
-      foreach ($hook[$type] as $op => $description) {
-        $form_id = 'trigger_' . $type . '_' . $op . '_assign_form';
-        $output .= drupal_get_form($form_id, $type, $op, $description['runs when']);
+  foreach ($hooks as $module => $module_hooks) {
+    if ($module == $type) {
+      foreach ($module_hooks as $hook => $data) {
+        foreach ($data as $op => $description) {
+          $form_id = 'trigger_' . $hook . '_' . $op . '_assign_form';
+          $build[$form_id] = drupal_get_form($form_id, $hook, $op, $description['runs when']);
+        }
       }
     }
   }
-  return $output;
+  return $build;
 }
 
 /**
@@ -49,7 +48,7 @@ function trigger_assign($type = NULL) {
  */
 function trigger_unassign($form_state, $hook = NULL, $op = NULL, $aid = NULL) {
   if (!($hook && $op && $aid)) {
-    drupal_goto('admin/build/trigger/assign');
+    drupal_goto('admin/structure/trigger/assign');
   }
 
   $form['hook'] = array(
@@ -68,7 +67,7 @@ function trigger_unassign($form_state, $hook = NULL, $op = NULL, $aid = NULL) {
   $action = actions_function_lookup($aid);
   $actions = actions_get_all_actions();
 
-  $destination = 'admin/build/trigger/' . ($hook == 'nodeapi' ? 'node' : $hook);
+  $destination = 'admin/structure/trigger/' . ($hook == 'node' ? 'node' : $hook);
 
   return confirm_form($form,
     t('Are you sure you want to unassign the action %title?', array('%title' => $actions[$action]['description'])),
@@ -82,15 +81,19 @@ function trigger_unassign_submit($form, &$form_state) {
   $form_values = $form_state['values'];
   if ($form_values['confirm'] == 1) {
     $aid = actions_function_lookup($form_values['aid']);
-    db_query("DELETE FROM {trigger_assignments} WHERE hook = '%s' AND op = '%s' AND aid = '%s'", $form_values['hook'], $form_values['operation'], $aid);
+    db_delete('trigger_assignments')
+      ->condition('hook', $form_values['hook'])
+      ->condition('op', $form_values['operation'])
+      ->condition('aid', $aid)
+      ->execute();
     $actions = actions_get_all_actions();
     watchdog('actions', 'Action %action has been unassigned.',  array('%action' => check_plain($actions[$aid]['description'])));
     drupal_set_message(t('Action %action has been unassigned.', array('%action' => $actions[$aid]['description'])));
-    $hook = $form_values['hook'] == 'nodeapi' ? 'node' : $form_values['hook'];
-    $form_state['redirect'] = 'admin/build/trigger/' . $hook;
+    $hook = $form_values['hook'] == 'node' ? 'node' : $form_values['hook'];
+    $form_state['redirect'] = 'admin/structure/trigger/' . $hook;
   }
   else {
-    drupal_goto('admin/build/trigger');
+    drupal_goto('admin/structure/trigger');
   }
 }
 
@@ -100,7 +103,7 @@ function trigger_unassign_submit($form, &$form_state) {
  * @param $form_state
  *   Information about the current form.
  * @param $hook
- *   The name of the hook, e.g., 'nodeapi'.
+ *   The name of the hook, e.g., 'node'.
  * @param $op
  *   The name of the hook operation, e.g., 'insert'.
  * @param $description
@@ -151,7 +154,7 @@ function trigger_assign_form($form_state, $hook, $op, $description) {
   foreach ($actions as $aid => $description) {
     $form[$op]['assigned']['#value'][$aid] = array(
       'description' => $description,
-      'link' => l(t('unassign'), "admin/build/trigger/unassign/$hook/$op/" . md5($aid))
+      'link' => l(t('unassign'), "admin/structure/trigger/unassign/$hook/$op/" . md5($aid))
     );
   }
 
@@ -173,7 +176,7 @@ function trigger_assign_form($form_state, $hook, $op, $description) {
   }
   else {
     $form[$op]['none'] = array(
-      '#markup' => t('No available actions for this trigger.')
+      '#markup' => t('No actions available for this trigger. <a href="@link">Add action</a>.', array('@link' => url('admin/config/system/actions/manage')))
     );
   }
   return $form;
@@ -188,7 +191,12 @@ function trigger_assign_form_validate($form, $form_state) {
   $form_values = $form_state['values'];
   if (!empty($form_values['aid'])) {
     $aid = actions_function_lookup($form_values['aid']);
-    if (db_result(db_query("SELECT aid FROM {trigger_assignments} WHERE hook = '%s' AND op = '%s' AND aid = '%s'", $form_values['hook'], $form_values['operation'], $aid))) {
+    $aid_exists = db_query("SELECT aid FROM {trigger_assignments} WHERE hook = :hook AND op = :op AND aid = :aid", array(
+      ':hook' => $form_values['hook'],
+      ':op' => $form_values['operation'],
+      ':aid' => $aid,
+    ))->fetchField();
+    if ($aid_exists) {
       form_set_error($form_values['operation'], t('The action you chose is already assigned to that trigger.'));
     }
   }
@@ -202,18 +210,45 @@ function trigger_assign_form_submit($form, $form_state) {
 
   if (!empty($form_values['aid'])) {
     $aid = actions_function_lookup($form_values['aid']);
-    $weight = db_result(db_query("SELECT MAX(weight) FROM {trigger_assignments} WHERE hook = '%s' AND op = '%s'", $form_values['hook'], $form_values['operation']));
-    db_query("INSERT INTO {trigger_assignments} values ('%s', '%s', '%s', %d)", $form_values['hook'], $form_values['operation'], $aid, $weight + 1);
+    $weight = db_query("SELECT MAX(weight) FROM {trigger_assignments} WHERE hook = :hook AND op = :op", array(
+      ':hook' => $form_values['hook'],
+      ':op' => $form_values['operation'],
+    ))->fetchField();
+
+    db_insert('trigger_assignments')
+      ->fields(array(
+        'hook' => $form_values['hook'], 
+        'op' => $form_values['operation'], 
+        'aid' => $aid, 
+        'weight' => $weight + 1,
+      ))
+      ->execute();
     // If this action changes a node property, we need to save the node
     // so the change will persist.
     $actions = actions_list();
     if (isset($actions[$aid]['behavior']) && in_array('changes_node_property', $actions[$aid]['behavior']) && ($form_values['operation'] != 'presave')) {
       // Delete previous node_save_action if it exists, and re-add a new one at a higher weight.
-      $save_post_action_assigned = db_result(db_query("SELECT aid FROM {trigger_assignments} WHERE hook = '%s' AND op = '%s' AND aid = 'node_save_action'", $form_values['hook'], $form_values['operation']));
+      $save_post_action_assigned = db_query("SELECT aid FROM {trigger_assignments} WHERE hook = :hook AND op = :op AND aid = :aid", array(
+        ':hook' => $form_values['hook'],
+        ':op' => $form_values['operation'],
+        ':aid' => 'node_save_action',
+      ))->fetchField();
+
       if ($save_post_action_assigned) {
-        db_query("DELETE FROM {trigger_assignments} WHERE hook = '%s' AND op = '%s' AND aid = 'node_save_action'", $form_values['hook'], $form_values['operation']);
+        db_delete('trigger_assignments')
+          ->condition('hook', $form_values['hook'])
+          ->condition('op', $form_values['operation'])
+          ->condition('aid', 'node_save_action')
+          ->execute();
       }
-      db_query("INSERT INTO {trigger_assignments} VALUES ('%s', '%s', '%s', %d)", $form_values['hook'], $form_values['operation'], 'node_save_action', $weight + 2);
+      db_insert('trigger_assignments')
+        ->fields(array(
+          'hook' => $form_values['hook'], 
+          'op' => $form_values['operation'], 
+          'aid' => 'node_save_action', 
+          'weight' => $weight + 2,
+        ))
+        ->execute();
       if (!$save_post_action_assigned) {
         drupal_set_message(t('You have added an action that changes a the property of a post. A Save post action has been added so that the property change will be saved.'));
       }
@@ -263,7 +298,7 @@ function theme_trigger_display($element) {
  *   One of 'node', 'user', 'comment'.
  * @param $hook
  *   The name of the hook for which actions have been assigned,
- *   e.g. 'nodeapi'.
+ *   e.g. 'node'.
  * @param $op
  *   The hook operation for which the actions have been assigned,
  *   e.g., 'view'.
@@ -271,15 +306,17 @@ function theme_trigger_display($element) {
  *   An array of action descriptions keyed by action IDs.
  */
 function _trigger_get_hook_actions($hook, $op, $type = NULL) {
-  $actions = array();
   if ($type) {
-    $result = db_query("SELECT h.aid, a.description FROM {trigger_assignments} h LEFT JOIN {actions} a on a.aid = h.aid WHERE a.type = '%s' AND h.hook = '%s' AND h.op = '%s' ORDER BY h.weight", $type, $hook, $op);
+    return db_query("SELECT h.aid, a.description FROM {trigger_assignments} h LEFT JOIN {actions} a on a.aid = h.aid WHERE a.type = :type AND h.hook = :hook AND h.op = :op ORDER BY h.weight", array(
+      ':type' => $type,
+      ':hook' => $hook,
+      ':op' => $op,
+    ))->fetchAllKeyed();
   }
   else {
-    $result = db_query("SELECT h.aid, a.description FROM {trigger_assignments} h LEFT JOIN {actions} a on a.aid = h.aid WHERE h.hook = '%s' AND h.op = '%s' ORDER BY h.weight", $hook, $op);
+    return db_query("SELECT h.aid, a.description FROM {trigger_assignments} h LEFT JOIN {actions} a on a.aid = h.aid WHERE h.hook = :hook AND h.op = :op ORDER BY h.weight", array(
+      ':hook' => $hook,
+      ':op' => $op,
+    ))->fetchAllKeyed();
   }
-  while ($action = db_fetch_object($result)) {
-    $actions[$action->aid] = $action->description;
-  }
-  return $actions;
 }

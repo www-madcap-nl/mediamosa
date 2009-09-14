@@ -1,5 +1,5 @@
 <?php
-// $Id: blog.module,v 1.316 2008/12/31 12:02:21 dries Exp $
+// $Id: blog.module,v 1.335 2009/08/29 05:46:02 dries Exp $
 
 /**
  * @file
@@ -7,113 +7,86 @@
  */
 
 /**
- * Implementation of hook_node_info().
+ * Implement hook_node_info().
  */
 function blog_node_info() {
   return array(
     'blog' => array(
       'name' => t('Blog entry'),
       'base' => 'blog',
-      'description' => t('A <em>blog entry</em> is a single post to an online journal, or <em>blog</em>.'),
+      'description' => t('Use for multi-user blogs. Every user gets a personal blog.'),
     )
   );
 }
 
 /**
- * Implementation of hook_perm().
+ * Implement hook_user_view().
  */
-function blog_perm() {
-  return node_list_permissions('blog');
-}
-
-/**
- * Implementation of hook_access().
- */
-function blog_access($op, $node, $account) {
-  switch ($op) {
-    case 'create':
-      // Anonymous users cannot post even if they have the permission.
-      return user_access('create blog content', $account) && $account->uid;
-    case 'update':
-      return user_access('edit any blog content', $account) || (user_access('edit own blog content', $account) && ($node->uid == $account->uid));
-    case 'delete':
-      return user_access('delete any blog content', $account) || (user_access('delete own blog content', $account) && ($node->uid == $account->uid));
-  }
-}
-
-/**
- * Implementation of hook_user_view().
- */
-function blog_user_view(&$edit, &$user, $category) {
-  if (user_access('create blog content', $user)) {
-    $user->content['summary']['blog'] =  array(
+function blog_user_view($account) {
+  if (user_access('create blog content', $account)) {
+    $account->content['summary']['blog'] =  array(
       '#type' => 'user_profile_item',
       '#title' => t('Blog'),
-      '#markup' => l(t('View recent blog entries'), "blog/$user->uid", array('attributes' => array('title' => t("Read !username's latest blog entries.", array('!username' => $user->name))))),
-      '#attributes' => array('class' => 'blog'),
+      '#markup' => l(t('View recent blog entries'), "blog/$account->uid", array('attributes' => array('title' => t("Read !username's latest blog entries.", array('!username' => $account->name))))),
+      '#attributes' => array('class' => array('blog')),
     );
   }
 }
 
 /**
- * Implementation of hook_help().
+ * Implement hook_help().
  */
 function blog_help($path, $arg) {
   switch ($path) {
     case 'admin/help#blog':
       $output  = '<p>' . t('The blog module allows registered users to maintain an online journal, or <em>blog</em>. Blogs are made up of individual <em>blog entries</em>, and the blog entries are most often displayed in descending order by creation time.') . '</p>';
-      $output .= '<p>' . t('There is an (optional) <em>Blogs</em> menu item added to the Navigation menu, which displays all blogs available on your site, and a <em>My blog</em> item displaying the current user\'s blog entries. The <em>Blog entry</em> menu item under <em>Create content</em> allows new blog entries to be created.') . '</p>';
-      $output .= '<p>' . t('Each blog entry is displayed with an automatic link to other blogs created by the same user. By default, blog entries have comments enabled and are automatically promoted to the site front page. The blog module also creates a <em>Recent blog posts</em> block that may be enabled at the <a href="@blocks">blocks administration page</a>.', array('@blocks' => url('admin/build/block'))) . '</p>';
+      $output .= '<p>' . t("There is an (optional) <em>Blogs</em> menu item added to the Navigation menu, which displays all blogs available on your site, and a <em>My blog</em> item displaying the current user's blog entries. The <em>Blog entry</em> menu item under <em>Add new content</em> allows new blog entries to be created.") . '</p>';
+      $output .= '<p>' . t('Each blog entry is displayed with an automatic link to other blogs created by the same user. By default, blog entries have comments enabled and are automatically promoted to the site front page. The blog module also creates a <em>Recent blog posts</em> block that may be enabled at the <a href="@blocks">blocks administration page</a>.', array('@blocks' => url('admin/structure/block'))) . '</p>';
       $output .= '<p>' . t('For more information, see the online handbook entry for <a href="@blog">Blog module</a>.', array('@blog' => 'http://drupal.org/handbook/modules/blog/')) . '</p>';
       return $output;
   }
 }
 
 /**
- * Implementation of hook_form().
+ * Implement hook_form().
  */
 function blog_form($node, $form_state) {
-  global $nid;
-  $type = node_get_types('type', $node);
-
-  $form['title'] = array('#type' => 'textfield', '#title' => check_plain($type->title_label), '#required' => TRUE, '#default_value' => !empty($node->title) ? $node->title : NULL, '#weight' => -5);
-  $form['body_field'] = node_body_field($node, $type->body_label, $type->min_word_count);
-  return $form;
+  return node_content_form($node, $form_state);
 }
 
 /**
- * Implementation of hook_view().
+ * Implement hook_view().
  */
-function blog_view($node, $teaser) {
+function blog_view($node, $build_mode) {
   if ((bool)menu_get_object()) {
     // Breadcrumb navigation.
     drupal_set_breadcrumb(array(l(t('Home'), NULL), l(t('Blogs'), 'blog'), l(t("!name's blog", array('!name' => $node->name)), 'blog/' . $node->uid)));
   }
-
-  return node_prepare($node, $teaser);
+  return $node;
 }
 
 /**
- * Implementation of hook_nodeapi_view.
+ * Implement hook_node_view().
  */
-function blog_nodeapi_view($node, $teaser = FALSE) {
-  if ($node->type == 'blog') {
-    if (arg(0) != 'blog' || arg(1) != $node->uid) {
+function blog_node_view($node, $build_mode = 'full') {
+  if ($build_mode != 'rss') {
+    if ($node->type == 'blog' && arg(0) != 'blog' || arg(1) != $node->uid) {
       $links['blog_usernames_blog'] = array(
         'title' => t("!username's blog", array('!username' => $node->name)),
         'href' => "blog/$node->uid",
         'attributes' => array('title' => t("Read !username's latest blog entries.", array('!username' => $node->name))),
       );
       $node->content['links']['blog'] = array(
-        '#type' => 'node_links',
-        '#value' => $links,
+        '#theme' => 'links',
+        '#links' => $links,
+        '#attributes' => array('class' => array('links', 'inline')),
       );
     }
   }
 }
 
 /**
- * Implementation of hook_menu().
+ * Implement hook_menu().
  */
 function blog_menu() {
   $items['blog'] = array(
@@ -121,6 +94,7 @@ function blog_menu() {
     'page callback' => 'blog_page_last',
     'access arguments' => array('access content'),
     'type' => MENU_SUGGESTED_ITEM,
+    'file' => 'blog.pages.inc',
   );
   $items['blog/%user_uid_optional'] = array(
     'title' => 'My blog',
@@ -128,6 +102,7 @@ function blog_menu() {
     'page arguments' => array(1),
     'access callback' => 'blog_page_user_access',
     'access arguments' => array(1),
+    'file' => 'blog.pages.inc',
   );
   $items['blog/%user/feed'] = array(
     'title' => 'Blogs',
@@ -136,12 +111,14 @@ function blog_menu() {
     'access callback' => 'blog_page_user_access',
     'access arguments' => array(1),
     'type' => MENU_CALLBACK,
+    'file' => 'blog.pages.inc',
   );
   $items['blog/feed'] = array(
     'title' => 'Blogs',
     'page callback' => 'blog_feed_last',
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
+    'file' => 'blog.pages.inc',
   );
 
   return $items;
@@ -161,19 +138,27 @@ function blog_page_user_access($account) {
  * Helper function to determine if a user has blog posts already.
  */
 function _blog_post_exists($account) {
-  return (bool)db_result(db_query_range(db_rewrite_sql("SELECT 1 FROM {node} n WHERE n.type = 'blog' AND n.uid = %d AND n.status = 1"), $account->uid, 0, 1));
+  return (bool)db_select('node', 'n')
+    ->fields('n', array('nid'))
+    ->condition('type', 'blog')
+    ->condition('uid', $account->uid)
+    ->condition('status', 1)
+    ->range(0, 1)
+    ->addTag('node_access')
+    ->execute()
+    ->fetchField();
 }
 
 /**
- * Implementation of hook_block_list().
+ * Implement hook_block_info().
  */
-function blog_block_list() {
+function blog_block_info() {
   $block['recent']['info'] = t('Recent blog posts');
   return $block;
 }
 
 /**
- * Implementation of hook_block_view().
+ * Implement hook_block_view().
  *
  * Displays the most recent 10 blog titles.
  */
@@ -181,7 +166,15 @@ function blog_block_view($delta = '') {
   global $user;
 
   if (user_access('access content')) {
-    $result = db_query_range(db_rewrite_sql("SELECT n.nid, n.title, n.created FROM {node} n WHERE n.type = 'blog' AND n.status = 1 ORDER BY n.created DESC"), 0, 10);
+    $result = db_select('node', 'n')
+      ->fields('n', array('nid', 'title', 'created'))
+      ->condition('type', 'blog')
+      ->condition('status', 1)
+      ->orderBy('created', 'DESC')
+      ->range(0, 10)
+      ->addTag('node_access')
+      ->execute();
+
     if ($node_title_list = node_title_list($result)) {
       $block['content'] = $node_title_list;
       $block['content'] .= theme('more_link', url('blog'), t('Read the latest blog entries.'));

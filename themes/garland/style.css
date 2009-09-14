@@ -1,4 +1,4 @@
-/* $Id: style.css,v 1.47 2008/12/19 15:42:26 dries Exp $ */
+/* $Id: style.css,v 1.64 2009/08/31 17:40:03 webchick Exp $ */
 
 /**
  * Generic elements
@@ -55,6 +55,10 @@ h6 {
 
 quote, code, fieldset {
   margin: .5em 0;
+}
+
+code, pre, kbd {
+  font-size: 115%;
 }
 
 p {
@@ -145,7 +149,7 @@ ol.task-list li.active {
   margin-right: 1em; /* LTR */
 }
 
-fieldset ul.clear-block li {
+fieldset ul.clearfix li {
   margin: 0;
   padding: 0;
   background-image: none;
@@ -230,7 +234,7 @@ span.form-required {
   color: #ffae00;
 }
 
-span.submitted, .description {
+span.submitted, .description, .vertical-tab-button .summary {
   font-size: 0.92em;
   color: #898989;
 }
@@ -284,10 +288,6 @@ fieldset .form-button, fieldset .form-submit,
 .sidebar .form-button, .sidebar .form-submit,
 table .form-button, table .form-submit {
   margin: 0;
-}
-
-.box {
-  margin-bottom: 2.5em;
 }
 
 /**
@@ -367,7 +367,7 @@ table .form-button, table .form-submit {
 }
 
 #wrapper #container #header h1 img {
-  padding-top: 16px;
+  padding-top: 14px;
   padding-right: 20px; /* LTR */
   float: left; /* LTR */
 }
@@ -377,33 +377,33 @@ body.two-sidebars {
   min-width: 980px;
 }
 /* With 2 columns, require a minimum width of 800px. */
-body.sidebar-left, body.sidebar-right {
+body.sidebar-first, body.sidebar-second {
   min-width: 780px;
 }
 
 /* We must define 100% width to avoid the body being too narrow for near-empty pages */
 #wrapper #container #center {
-  float: left;
+  float: left; /* LTR */
   width: 100%;
 }
 
 /* So we move the #center container over the sidebars to compensate */
-body.sidebar-left #center {
-  margin-left: -210px;
+body.sidebar-first #center {
+  margin-left: -210px; /* LTR */
 }
-body.sidebar-right #center {
-  margin-right: -210px;
+body.sidebar-second #center {
+  margin-right: -210px; /* LTR */
 }
 body.two-sidebars #center {
   margin: 0 -210px;
 }
 
 /* And add blanks left and right for the sidebars to fill */
-body.sidebar-left #squeeze {
-  margin-left: 210px;
+body.sidebar-first #squeeze {
+  margin-left: 210px; /* LTR */
 }
-body.sidebar-right #squeeze {
-  margin-right: 210px;
+body.sidebar-second #squeeze {
+  margin-right: 210px; /* LTR */
 }
 body.two-sidebars #squeeze {
   margin: 0 210px;
@@ -413,7 +413,7 @@ body.two-sidebars #squeeze {
 #wrapper #container .sidebar {
   margin: 60px 0 5em;
   width: 210px;
-  float: left;
+  float: left; /* LTR */
   z-index: 2;
   position: relative;
 }
@@ -422,23 +422,23 @@ body.two-sidebars #squeeze {
   margin: 0 0 1.5em 0;
 }
 
-#sidebar-left .block {
-  padding: 0 15px 0 0px;
+#sidebar-first .block {
+  padding: 0 15px 0 0; /* LTR */
 }
 
-#sidebar-right .block {
-  padding: 0 0px 0 15px;
+#sidebar-second .block {
+  padding: 0 0 0 15px; /* LTR */
 }
 
 .block .content {
   margin: 0.5em 0;
 }
 
-#sidebar-left .block-region {
+#sidebar-first .block-region {
   margin: 0 15px 0 0px; /* LTR */
 }
 
-#sidebar-right .block-region {
+#sidebar-second .block-region {
   margin: 0 0px 0 15px; /* LTR */
 }
 
@@ -486,11 +486,11 @@ body.two-sidebars #squeeze {
   z-index: 3;
 }
 
-body.sidebar-left #footer {
+body.sidebar-first #footer {
   margin-left: -210px;
 }
 
-body.sidebar-right #footer {
+body.sidebar-second #footer {
   margin-right: -210px;
 }
 
@@ -520,7 +520,7 @@ body.two-sidebars #footer {
   color: #529ad6;
 }
 
-#mission {
+#highlight {
   padding: 1em;
   background-color: #fff;
   border: 1px solid #e0e5fb;
@@ -633,6 +633,7 @@ ul.secondary li a, ul.secondary li.active a, ul.secondary li a:hover, ul.seconda
   text-decoration: none;
   position: relative;
   top: -1px;
+  display: inline-block;
 }
 ul.primary li.active a, ul.primary li.active a:link, ul.primary li.active a:visited, ul.primary li a:hover,
 ul.secondary li.active a, ul.secondary li.active a:link, ul.secondary li.active a:visited, ul.secondary li a:hover {
@@ -649,7 +650,7 @@ ul.secondary li.active a {
  */
 .node {
   border-bottom: 1px solid #e9eff3;
-  margin: -1.5em -26px 1.5em;
+  margin: 0 -26px 1.5em;
   padding: 1.5em 26px;
 }
 
@@ -673,7 +674,8 @@ ul.links li, ul.inline li {
   padding-left: 1em;
 }
 
-.picture, .comment .submitted {
+.user-picture,
+.comment .submitted {
   float: right; /* LTR */
   clear: right; /* LTR */
   padding-left: 1em; /* LTR */
@@ -690,14 +692,14 @@ ul.links li, ul.inline li {
   float: right; /* LTR */
 }
 
-.preview .node, .preview .comment, .sticky {
+.preview .node, .preview .comment, .node-sticky {
   margin: 0;
   padding: 0.5em 0;
   border: 0;
   background: 0;
 }
 
-.sticky {
+.node-sticky {
   padding: 1em;
   background-color: #fff;
   border: 1px solid #e0e5fb;
@@ -708,7 +710,7 @@ ul.links li, ul.inline li {
   position: relative;
   top: -1px;
   border-bottom: 1px solid #e9eff3;
-  margin: -1.5em -25px 0;
+  margin: 1.5em -25px 0;
   padding: 0 25px;
 }
 
@@ -822,6 +824,16 @@ fieldset {
   background-position: 0 .75em;
   background-color: transparent;
 }
+*:first-child+html .text-format-wrapper .filter-wrapper {
+  padding: 1.5em 0 1.5em;
+  background-position: 0 0;
+}
+
+/* Keep the background position at 0 for filters and vertical tabs. */
+*:first-child+html fieldset.filter-wrapper,
+*:first-child+html fieldset.vertical-tabs-pane {
+  background-position: 0 0;
+}
 
 *:first-child+html fieldset > .description, *:first-child+html fieldset .fieldset-wrapper .description {
   padding-top: 1em;
@@ -847,8 +859,57 @@ html.js fieldset.collapsible legend a {
   background: url(images/menu-expanded.gif) no-repeat 0% 50%; /* LTR */
 }
 
+html.js fieldset.collapsible legend span.summary {
+  color: #898989;
+}
+
 html.js fieldset.collapsed legend a {
   background: url(images/menu-collapsed.gif) no-repeat 0% 50%; /* LTR */
+}
+
+/**
+ * Vertical tabs.
+ */
+div.vertical-tabs {
+  margin-right: 5%;
+  border-color: #d9eaf5;
+}
+
+div.vertical-tabs .vertical-tabs-panes fieldset.vertical-tabs-pane {
+  padding: 0.5em 1em;
+}
+
+div.vertical-tabs ul.vertical-tabs-list {
+  border-color: #d9eaf5;
+}
+
+div.vertical-tabs ul.vertical-tabs-list li {
+  background-color: #edf5fa;
+  border-color: #d9eaf5;
+}
+
+div.vertical-tabs ul.vertical-tabs-list li strong {
+  font-weight: normal;
+}
+
+div.vertical-tabs ul.vertical-tabs-list li.selected strong {
+  font-weight: bold;
+}
+
+div.vertical-tabs ul.vertical-tabs-list li.selected small {
+  color: #898989;
+}
+
+div.vertical-tabs ul.vertical-tabs-list li.selected {
+  background: #fff repeat-x 0 0;
+}
+
+div.vertical-tabs ul.vertical-tabs-list li.selected.first {
+  background-image: url(images/gradient-inner.png);
+}
+
+div.vertical-tabs ul.vertical-tabs-list li.selected a strong {
+  color: #494949;
 }
 
 /**

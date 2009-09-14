@@ -1,5 +1,5 @@
 <?php
-// $Id: database.inc,v 1.50 2009/01/25 12:19:31 webchick Exp $
+// $Id: database.inc,v 1.74 2009/08/24 18:22:54 dries Exp $
 
 /**
  * @file
@@ -184,16 +184,6 @@
 abstract class DatabaseConnection extends PDO {
 
   /**
-   * Reference to the last statement that was executed.
-   *
-   * We only need this for the legacy db_affected_rows() call, which will be removed.
-   *
-   * @var DatabaseStatementInterface
-   * @todo Remove this variable.
-   */
-  public $lastStatement;
-
-  /**
    * The database target this connection is for.
    *
    * We need this information for later auditing and logging.
@@ -235,7 +225,7 @@ abstract class DatabaseConnection extends PDO {
    *
    * @var boolean
    */
-  protected $willRollBack;
+  protected $willRollback;
 
   /**
    * The name of the Select class for this connection.
@@ -253,6 +243,13 @@ abstract class DatabaseConnection extends PDO {
    * @var string
    */
   protected $deleteClass = NULL;
+
+  /**
+   * The name of the Truncate class for this connection.
+   *
+   * @var string
+   */
+  protected $truncateClass = NULL;
 
   /**
    * The name of the Insert class for this connection.
@@ -444,7 +441,7 @@ abstract class DatabaseConnection extends PDO {
    * @return
    *   A PDO prepared statement ready for its execute() method.
    */
-  protected function prepareQuery($query, $cache = TRUE) {
+  public function prepareQuery($query, $cache = TRUE) {
     $query = $this->prefixTables($query);
     if (empty($this->preparedStatements[$query])) {
       // Call PDO::prepare.
@@ -516,7 +513,7 @@ abstract class DatabaseConnection extends PDO {
    *   A table prefix-parsed string for the sequence name.
    */
   public function makeSequenceName($table, $field) {
-    return $this->prefixTables('{'. $table .'}_'. $field .'_seq');
+    return $this->prefixTables('{' . $table . '}_' . $field . '_seq');
   }
 
   /**
@@ -588,13 +585,15 @@ abstract class DatabaseConnection extends PDO {
     catch (PDOException $e) {
       _db_check_install_needed();
       if ($options['throw_exception']) {
+        // Add additional debug information.
         if ($query instanceof DatabaseStatementInterface) {
-          $query_string = $stmt->getQueryString();
+          $e->query_string = $stmt->getQueryString();
         }
         else {
-          $query_string = $query;
+          $e->query_string = $query;
         }
-        throw new PDOException($query_string . " - \n" . print_r($args,1) . $e->getMessage());
+        $e->args = $args;
+        throw $e;
       }
       return NULL;
     }
@@ -763,6 +762,26 @@ abstract class DatabaseConnection extends PDO {
   }
 
   /**
+   * Prepare and return a TRUNCATE query object.
+   *
+   * @see TruncateQuery
+   * @param $options
+   *   An array of options on the query.
+   * @return
+   *   A new DeleteQuery object.
+   */
+  public function truncate($table, array $options = array()) {
+    if (empty($this->truncateClass)) {
+      $this->truncateClass = 'TruncateQuery_' . $this->driver();
+      if (!class_exists($this->truncateClass)) {
+        $this->truncateClass = 'TruncateQuery';
+      }
+    }
+    $class = $this->truncateClass;
+    return new $class($this, $table, $options);
+  }
+
+  /**
    * Returns a DatabaseSchema object for manipulating the schema of this database.
    *
    * This method will lazy-load the appropriate schema library file.
@@ -830,12 +849,12 @@ abstract class DatabaseConnection extends PDO {
    *
    * This method throws an exception if no transaction is active.
    */
-  public function rollBack() {
+  public function rollback() {
     if ($this->transactionLayers == 0) {
       throw new NoActiveTransactionException();
     }
 
-    $this->willRollBack = TRUE;
+    $this->willRollback = TRUE;
   }
 
   /**
@@ -848,12 +867,12 @@ abstract class DatabaseConnection extends PDO {
    * @return
    *   TRUE if the transaction will roll back, FALSE otherwise.
    */
-  public function willRollBack() {
+  public function willRollback() {
     if ($this->transactionLayers == 0) {
       throw new NoActiveTransactionException();
     }
 
-    return $this->willRollBack;
+    return $this->willRollback;
   }
 
   /**
@@ -872,7 +891,7 @@ abstract class DatabaseConnection extends PDO {
       }
 
       // Reset any scheduled rollback
-      $this->willRollBack = FALSE;
+      $this->willRollback = FALSE;
     }
   }
 
@@ -893,7 +912,7 @@ abstract class DatabaseConnection extends PDO {
     --$this->transactionLayers;
 
     if ($this->transactionLayers == 0 && $this->supportsTransactions()) {
-      if ($this->willRollBack) {
+      if ($this->willRollback) {
         parent::rollBack();
       }
       else {
@@ -1006,7 +1025,7 @@ abstract class DatabaseConnection extends PDO {
    * overridable lookup function. Database connections should define only
    * those operators they wish to be handled differently than the default.
    *
-   * @see DatabaseCondition::compile().
+   * @see DatabaseCondition::compile()
    * @param $operator
    *   The condition operator, such as "IN", "BETWEEN", etc. Case-sensitive.
    * @return
@@ -1328,9 +1347,10 @@ abstract class Database {
       }
 
       // We need to pass around the simpletest database prefix in the request
-      // and we put that in the user_agent header.
-      if (preg_match("/^simpletest\d+$/", $_SERVER['HTTP_USER_AGENT'])) {
-        $db_prefix .= $_SERVER['HTTP_USER_AGENT'];
+      // and we put that in the user_agent header. The header HMAC was already
+      // validated in bootstrap.inc.
+      if (isset($_SERVER['HTTP_USER_AGENT']) && preg_match("/^(simpletest\d+);/", $_SERVER['HTTP_USER_AGENT'], $matches)) {
+        $db_prefix .= $matches[1];
       }
       return $new_connection;
     }
@@ -1340,6 +1360,29 @@ abstract class Database {
       // passing on the exception otherwise.
       _db_check_install_needed();
       throw $e;
+    }
+  }
+
+  /**
+   * Closes a connection to the server specified by the given key and target.
+   *
+   * @param $target
+   *   The database target name.  Defaults to NULL meaning that all target
+   *   connections will be closed.
+   * @param $key
+   *   The database connection key. Defaults to NULL which means the active key.
+   */
+  public static function closeConnection($target = NULL, $key = NULL) {
+    // Gets the active conection by default.
+    if (!isset($key)) {
+      $key = self::$activeKey;
+    }
+    // To close the connection, we need to unset the static variable.
+    if (isset($target)) {
+      unset(self::$connections[$key][$target]);
+    }
+    else {
+      unset(self::$connections[$key]);
     }
   }
 
@@ -1394,6 +1437,19 @@ class ExplicitTransactionsNotSupportedException extends Exception { }
 class InvalidMergeQueryException extends Exception {}
 
 /**
+ * Exception thrown if an insert query specifies a field twice.
+ *
+ * It is not allowed to specify a field as default and insert field, this
+ * exception is thrown if that is the case.
+ */
+class FieldsOverlapException extends Exception {}
+
+/**
+ * Exception thrown if an insert query doesn't specify insert or default fields.
+ */
+class NoFieldsException extends Exception {}
+
+/**
  * A wrapper class for creating and managing database transactions.
  *
  * Not all databases or database configurations support transactions. For
@@ -1427,6 +1483,23 @@ class DatabaseTransaction {
 
   public function __destruct() {
     $this->connection->popTransaction();
+  }
+
+  /**
+   * Roll back the current transaction.
+   *
+   * This is just a wrapper method to rollback whatever transaction stack we
+   * are currently in, which is managed by the connection object itself.
+   */
+  public function rollback() {
+    $this->connection->rollback();
+  }
+
+  /**
+   * Determine if this transaction will roll back.
+   */
+  public function willRollback() {
+    return $this->connection->willRollback();
   }
 
 }
@@ -1463,7 +1536,7 @@ interface DatabaseStatementInterface extends Traversable {
    * @return
    *   TRUE on success, or FALSE on failure.
    */
-  public function execute($args, $options);
+  public function execute($args = array(), $options = array());
 
   /**
    * Get the query string of that statement.
@@ -1640,7 +1713,7 @@ class DatabaseStatementBase extends PDOStatement implements DatabaseStatementInt
     $this->setFetchMode(PDO::FETCH_OBJ);
   }
 
-  public function execute($args, $options) {
+  public function execute($args = array(), $options = array()) {
     if (isset($options['fetch'])) {
       if (is_string($options['fetch'])) {
         // Default to an object. Note: db fields will be added to the object
@@ -1652,7 +1725,6 @@ class DatabaseStatementBase extends PDOStatement implements DatabaseStatementInt
         $this->setFetchMode($options['fetch']);
       }
     }
-    $this->dbh->lastStatement = $this;
 
     $logger = $this->dbh->getLogger();
     if (!empty($logger)) {
@@ -1881,6 +1953,23 @@ function db_delete($table, array $options = array()) {
 }
 
 /**
+ * Returns a new TruncateQuery object for the active database.
+ *
+ * @param $table
+ *   The table from which to delete.
+ * @param $options
+ *   An array of options to control how the query operates.
+ * @return
+ *   A new TruncateQuery object for this connection.
+ */
+function db_truncate($table, array $options = array()) {
+  if (empty($options['target']) || $options['target'] == 'slave') {
+    $options['target'] = 'default';
+  }
+  return Database::getConnection($options['target'])->truncate($table, $options);
+}
+
+/**
  * Returns a new SelectQuery object for the active database.
  *
  * @param $table
@@ -1976,23 +2065,6 @@ function update_sql($sql) {
 }
 
 /**
- * Generate placeholders for an array of query arguments of a single type.
- *
- * Given a Schema API field type, return correct %-placeholders to
- * embed in a query
- *
- * @todo This may be possible to remove in favor of db_select().
- * @param $arguments
- *   An array with at least one element.
- * @param $type
- *   The Schema API type of a field (e.g. 'int', 'text', or 'varchar').
- */
-function db_placeholders($arguments, $type = 'int') {
-  $placeholder = db_type_placeholder($type);
-  return implode(',', array_fill(0, count($arguments), $placeholder));
-}
-
-/**
  * Wraps the given table.field entry with a DISTINCT(). The wrapper is added to
  * the SELECT list entry of the given query and the resulting query is returned.
  * This function only applies the wrapper if a DISTINCT doesn't already exist in
@@ -2020,6 +2092,20 @@ function db_distinct_field($table, $field, $query) {
  */
 function db_driver() {
   return Database::getConnection()->driver();
+}
+
+/**
+ * Closes the active database connection.
+ *
+ * @param $options
+ *   An array of options to control which connection is closed.  Only the
+ *   target key has any meaning in this case.
+ */
+function db_close(array $options = array()) {
+  if (empty($options['target'])) {
+    $options['target'] = NULL;
+  }
+  Database::closeConnection($options['target']);
 }
 
 /**
@@ -2089,50 +2175,6 @@ function db_find_tables($table_expression) {
   return Database::getConnection()->schema()->findTables($table_expression);
 }
 
-/**
- * Given a Schema API field type, return the correct %-placeholder.
- *
- * Embed the placeholder in a query to be passed to db_query and and pass as an
- * argument to db_query a value of the specified type.
- *
- * @todo Remove this after all queries are converted to type-agnostic form.
- * @param $type
- *   The Schema API type of a field.
- * @return
- *   The placeholder string to embed in a query for that type.
- */
-function db_type_placeholder($type) {
-  switch ($type) {
-    case 'varchar':
-    case 'char':
-    case 'text':
-    case 'datetime':
-      return '\'%s\'';
-
-    case 'numeric':
-      // Numeric values are arbitrary precision numbers. Syntactically, numerics
-      // should be specified directly in SQL. However, without single quotes
-      // the %s placeholder does not protect against non-numeric characters such
-      // as spaces which would expose us to SQL injection.
-      return '%n';
-
-    case 'serial':
-    case 'int':
-      return '%d';
-
-    case 'float':
-      return '%f';
-
-    case 'blob':
-      return '%b';
-  }
-
-  // There is no safe value to return here, so return something that
-  // will cause the query to fail.
-  return 'unsupported type ' . $type . 'for db_type_placeholder';
-}
-
-
 function _db_create_keys_sql($spec) {
   return Database::getConnection()->schema()->createKeysSql($spec);
 }
@@ -2191,8 +2233,9 @@ function db_drop_table(&$ret, $table) {
  *   table along with adding the field. The format is the same as a
  *   table specification but without the 'fields' element. If you are
  *   adding a type 'serial' field, you MUST specify at least one key
- *   or index including it in this array. @see db_change_field for more
+ *   or index including it in this array. See db_change_field() for more
  *   explanation why.
+ * @see db_change_field()
  */
 function db_add_field(&$ret, $table, $field, $spec, $keys_new = array()) {
   return Database::getConnection()->schema()->addField($ret, $table, $field, $spec, $keys_new);
@@ -2406,10 +2449,28 @@ function db_change_field(&$ret, $table, $field, $field_new, $spec, $keys_new = a
  */
 function _db_error_page($error = '') {
   global $db_type;
-  drupal_init_language();
+  drupal_language_initialize();
   drupal_maintenance_theme();
   drupal_set_header($_SERVER['SERVER_PROTOCOL'] . ' 503 Service Unavailable');
   drupal_set_title('Site offline');
+}
+
+ /**
+ * Helper function to get duration lag from variable
+ * and set the session variable that contains the lag.
+ */
+function db_ignore_slave() {
+  $connection_info = Database::getConnectionInfo();
+  // Only set ignore_slave_server if there are slave servers
+  // being used, which is assumed if there are more than one.
+  if (count($connection_info) > 1) {
+    // Five minutes is long enough to allow the slave to break and resume
+    // interrupted replication without causing problems on the Drupal site
+    // from the old data.
+    $duration = variable_get('maximum_replication_lag', 300);
+    // Set session variable with amount of time to delay before using slave.
+    $_SESSION['ignore_slave_server'] = REQUEST_TIME + $duration;
+  }
 }
 
 /**
@@ -2426,10 +2487,6 @@ function db_fetch_object(DatabaseStatementInterface $statement) {
   return $statement->fetch(PDO::FETCH_OBJ);
 }
 
-function db_fetch_array(DatabaseStatementInterface $statement) {
-  return $statement->fetch(PDO::FETCH_ASSOC);
-}
-
 function db_result(DatabaseStatementInterface $statement) {
   return $statement->fetchField();
 }
@@ -2441,7 +2498,7 @@ function db_result(DatabaseStatementInterface $statement) {
  */
 function _db_check_install_needed() {
   global $databases;
-  if (empty($databases) && !function_exists('install_main')) {
+  if (empty($databases) && !drupal_installation_attempted()) {
     include_once DRUPAL_ROOT . '/includes/install.inc';
     install_goto('install.php');
   }
@@ -2471,56 +2528,7 @@ function _db_query_process_args($query, $args, $options) {
     $args = array_values($args);  // The old system allowed named arrays, but PDO doesn't if you use ?.
   }
 
-  // A large number of queries pass FALSE or empty-string for
-  // int/float fields because the previous version of db_query()
-  // casted them to int/float, resulting in 0. MySQL PDO happily
-  // accepts these values as zero but PostgreSQL PDO does not, and I
-  // do not feel like tracking down and fixing every such query at
-  // this time.
-  if (preg_match_all('/%([dsfb])/', $old_query, $m) > 0) {
-    foreach ($m[1] as $idx => $char) {
-      switch ($char) {
-        case 'd':
-          $args[$idx] = (int) $args[$idx];
-          break;
-        case 'f':
-          $args[$idx] = (float) $args[$idx];
-          break;
-      }
-    }
-  }
-
   return array($query, $args, $options);
-}
-
-
-/**
- * Returns the last insert id.
- *
- * @todo Remove this function when all queries have been ported to db_insert().
- * @param $table
- *   The name of the table you inserted into.
- * @param $field
- *   The name of the autoincrement field.
- */
-function db_last_insert_id($table, $field) {
-  $sequence_name = Database::getConnection()->makeSequenceName($table, $field);
-  return Database::getConnection()->lastInsertId($sequence_name);
-}
-
-/**
- * Determine the number of rows changed by the preceding query.
- *
- * This may not work, actually, without some tricky temp code.
- *
- * @todo Remove this function when all queries have been ported to db_update().
- */
-function db_affected_rows() {
-  $statement = Database::getConnection()->lastStatement;
-  if (!$statement) {
-    return 0;
-  }
-  return $statement->rowCount();
 }
 
 /**
@@ -2616,7 +2624,7 @@ function db_rewrite_sql($query, $primary_table = 'n', $primary_field = 'nid',  $
     if ($where) {
       $n = strlen($matches[1]);
       $second_part = substr($query, $n);
-      $first_part = substr($matches[1], 0, $n - 5) ." $join WHERE $where AND ( ";
+      $first_part = substr($matches[1], 0, $n - 5) . " $join WHERE $where AND ( ";
       foreach (array('GROUP', 'ORDER', 'LIMIT') as $needle) {
         $pos = strrpos($second_part, $needle);
         if ($pos !== FALSE) {
@@ -2639,7 +2647,6 @@ function db_rewrite_sql($query, $primary_table = 'n', $primary_field = 'nid',  $
 
   return $query;
 }
-
 
 /**
  * @} End of "ingroup database-legacy".

@@ -1,4 +1,4 @@
-; $Id: comment.info,v 1.9 2008/10/11 02:32:41 webchick Exp $
+; $Id: comment.info,v 1.11 2009/08/19 20:19:36 dries Exp $
 
 name = Comment
 description = Allows users to comment on and discuss published content.
@@ -9,3 +9,12 @@ files[] = comment.module
 files[] = comment.admin.inc
 files[] = comment.pages.inc
 files[] = comment.install
+files[] = comment.test
+files[] = comment.tokens.inc
+
+; Information added by drupal.org packaging script on 2009-09-09
+version = "7.x-dev"
+core = "7.x"
+project = "drupal"
+datestamp = "1252498273"
+

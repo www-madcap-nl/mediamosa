@@ -1,14 +1,25 @@
 <?php
-// $Id: forum.install,v 1.26 2009/01/14 21:16:20 dries Exp $
+// $Id: forum.install,v 1.33 2009/08/20 14:58:30 dries Exp $
 
 /**
- * Implementation of hook_install().
+ * @file
+ * Install, update and uninstall functions for the forum module.
+ */
+
+/**
+ * Implement hook_install().
  */
 function forum_install() {
   // Create tables.
   drupal_install_schema('forum');
   // Set the weight of the forum.module to 1 so it is loaded after the taxonomy.module.
-  db_query("UPDATE {system} SET weight = 1 WHERE name = 'forum'");
+  db_update('system')
+    ->fields(array('weight' => 1))
+    ->condition('name', 'forum')
+    ->execute();
+  // Forum topics are published by default, but do not have any other default
+  // options set (for example, they are not promoted to the front page).
+  variable_set('node_options_forum', array('status'));
 }
 
 function forum_enable() {
@@ -40,7 +51,7 @@ function forum_enable() {
 }
 
 /**
- * Implementation of hook_uninstall().
+ * Implement hook_uninstall().
  */
 function forum_uninstall() {
   // Load the dependent Taxonomy module, in case it has been disabled.
@@ -50,7 +61,7 @@ function forum_uninstall() {
   $vid = variable_get('forum_nav_vocabulary', 0);
   taxonomy_vocabulary_delete($vid);
 
-  db_query('DROP TABLE {forum}');
+  drupal_uninstall_schema('forum');
   variable_del('forum_containers');
   variable_del('forum_nav_vocabulary');
   variable_del('forum_hot_topic');
@@ -58,10 +69,11 @@ function forum_uninstall() {
   variable_del('forum_order');
   variable_del('forum_block_num_active');
   variable_del('forum_block_num_new');
+  variable_del('node_options_forum');
 }
 
 /**
- * Implementation of hook_schema().
+ * Implement hook_schema().
  */
 function forum_schema() {
   $schema['forum'] = array(
@@ -90,41 +102,26 @@ function forum_schema() {
       ),
     ),
     'indexes' => array(
-      'nid' => array('nid'),
+      'forum_topic' => array('nid', 'tid'),
       'tid' => array('tid'),
     ),
     'primary key' => array('vid'),
+    'foreign keys' => array(
+      'nid' => array('node' => 'nid'),
+      'vid' => array('node' => 'vid'),
+    ),
   );
 
   return $schema;
 }
 
 /**
- * Create the forum vocabulary if does not exist. Assign the
- * vocabulary a low weight so it will appear first in forum topic
- * create and edit forms. Do not just call forum_enable() because in
- * future versions it might do something different.
+ * Add new index to forum table.
  */
-function forum_update_6000() {
+function forum_update_7000() {
   $ret = array();
-
-  $vid = variable_get('forum_nav_vocabulary', 0);
-  $vocabularies = taxonomy_get_vocabularies();
-  if (!isset($vocabularies[$vid])) {
-    $vocabulary = array(
-      'name' => t('Forums'),
-      'multiple' => 0,
-      'required' => 0,
-      'hierarchy' => 1,
-      'relations' => 0,
-      'module' => 'forum',
-      'weight' => -10,
-      'nodes' => array('forum' => 1),
-    );
-    taxonomy_save_vocabulary($vocabulary);
-
-    variable_set('forum_nav_vocabulary', $vocabulary['vid']);
-  }
+  db_drop_index($ret, 'forum', 'nid');
+  db_add_index($ret, 'forum', 'forum_topic', array('nid', 'tid'));
 
   return $ret;
 }

@@ -1,55 +1,52 @@
 <?php
-// $Id: query.inc,v 1.7 2008/12/20 18:24:34 dries Exp $
-
+// $Id: query.inc,v 1.15 2009/08/31 17:07:21 webchick Exp $
 
 /**
  * @ingroup database
  * @{
  */
 
+/**
+ * @file
+ * Query code for PostgreSQL embedded database engine.
+ */
+
+
 class InsertQuery_pgsql extends InsertQuery {
 
-  public function __construct($connection, $table, array $options = array()) {
-    parent::__construct($connection, $table, $options);
-    $this->queryOptions['return'] = Database::RETURN_NULL;
-  }
-
   public function execute() {
-
-    // Confirm that the user did not try to specify an identical
-    //  field and default field.
-    if (array_intersect($this->insertFields, $this->defaultFields)) {
-      throw new PDOException('You may not specify the same field to have a value and a schema-default value.');
-    }
-
-    if (count($this->insertFields) + count($this->defaultFields) == 0) {
+    if (!$this->preExecute()) {
       return NULL;
     }
 
-    $schema = drupal_get_schema($this->table);
-
     $stmt = $this->connection->prepareQuery((string)$this);
+
+    // Fetch the list of blobs and sequences used on that table.
+    $table_information = $this->connection->schema()->queryTableInformation($this->table);
 
     $max_placeholder = 0;
     $blobs = array();
-    $blob_cnt = 0;
+    $blob_count = 0;
     foreach ($this->insertValues as &$insert_values) {
       foreach ($this->insertFields as $idx => $field) {
-        switch ($schema['fields'][$field]['type']) {
-          case 'blob':
-            $blobs[$blob_cnt] = fopen('php://memory', 'a');
-            fwrite($blobs[$blob_cnt], $insert_values[$idx]);
-            rewind($blobs[$blob_cnt]);
+        if (isset($table_information->blob_fields[$field])) {
+          $blobs[$blob_count] = fopen('php://memory', 'a');
+          fwrite($blobs[$blob_count], $insert_values[$idx]);
+          rewind($blobs[$blob_count]);
 
-            $stmt->bindParam(':db_insert_placeholder_' . $max_placeholder++, $blobs[$blob_cnt], PDO::PARAM_LOB);
+          $stmt->bindParam(':db_insert_placeholder_' . $max_placeholder++, $blobs[$blob_count], PDO::PARAM_LOB);
 
-            ++$blob_cnt;
-
-            break;
-          default:
-            $stmt->bindParam(':db_insert_placeholder_'. $max_placeholder++, $insert_values[$idx]);
-            break;
+          // Pre-increment is faster in PHP than increment.
+          ++$blob_count;
         }
+        else {
+          $stmt->bindParam(':db_insert_placeholder_' . $max_placeholder++, $insert_values[$idx]);
+        }
+      }
+    }
+    if (!empty($this->fromQuery)) {
+      foreach ($this->fromQuery->getArguments() as $key => $value) {
+        $stmt->bindParam($key, $value);
       }
     }
 
@@ -58,9 +55,12 @@ class InsertQuery_pgsql extends InsertQuery {
     // the options array.
     $options = $this->queryOptions;
 
-    if ($schema['fields'][$schema['primary key'][0]]['type'] == 'serial') {
-      $options['sequence_name'] = $this->connection->makeSequenceName($this->table, $schema['primary key'][0]);
-      $options['return'] = Database::RETURN_INSERT_ID;
+    if (!empty($table_information->sequences)) {
+      $options['sequence_name'] = $table_information->sequences[0];
+    }
+    // If there are no sequences then we can't get a last insert id.
+    elseif ($options['return'] == Database::RETURN_INSERT_ID) {
+      $options['return'] = Database::RETURN_NULL;
     }
     $last_insert_id = $this->connection->query($stmt, array(), $options);
 
@@ -74,6 +74,12 @@ class InsertQuery_pgsql extends InsertQuery {
 
     // Default fields are always placed first for consistency.
     $insert_fields = array_merge($this->defaultFields, $this->insertFields);
+
+    // If we're selecting from a SelectQuery, finish building the query and
+    // pass it back, as any remaining options are irrelevant.
+    if (!empty($this->fromQuery)) {
+      return "INSERT INTO {" . $this->table . '} (' . implode(', ', $insert_fields) . ') ' . $this->fromQuery;
+    }
 
     $query = "INSERT INTO {" . $this->table . '} (' . implode(', ', $insert_fields) . ') VALUES ';
 
@@ -98,7 +104,7 @@ class InsertQuery_pgsql extends InsertQuery {
     else {
       // If there are no values, then this is a default-only query. We still need to handle that.
       $placeholders = array_fill(0, count($this->defaultFields), 'default');
-      $values[] = '(' . implode(', ', $placeholders) .')';
+      $values[] = '(' . implode(', ', $placeholders) . ')';
     }
 
     $query .= implode(', ', $values);
@@ -113,11 +119,12 @@ class UpdateQuery_pgsql extends UpdateQuery {
     $blobs = array();
     $blob_count = 0;
 
-    $schema = drupal_get_schema($this->table);
-
     // Because we filter $fields the same way here and in __toString(), the
     // placeholders will all match up properly.
     $stmt = $this->connection->prepareQuery((string)$this);
+
+    // Fetch the list of blobs and sequences used on that table.
+    $table_information = $this->connection->schema()->queryTableInformation($this->table);
 
     // Expressions take priority over literal fields, so we process those first
     // and remove any literal fields that conflict.
@@ -138,22 +145,20 @@ class UpdateQuery_pgsql extends UpdateQuery {
     foreach ($fields as $field => &$value) {
       $placeholder = ':db_update_placeholder_' . ($max_placeholder++);
 
-      switch ($schema['fields'][$field]['type']) {
-        case 'blob':
-          $blobs[$blob_count] = fopen('php://memory', 'a');
-          fwrite($blobs[$blob_count], $value);
-          rewind($blobs[$blob_count]);
-          $stmt->bindParam($placeholder, $blobs[$blob_count], PDO::PARAM_LOB);
-          ++$blob_count;
-          break;
-        default:
-          $stmt->bindParam($placeholder, $value);
-          break;
+      if (isset($table_information->blob_fields[$field])) {
+        $blobs[$blob_count] = fopen('php://memory', 'a');
+        fwrite($blobs[$blob_count], $value);
+        rewind($blobs[$blob_count]);
+        $stmt->bindParam($placeholder, $blobs[$blob_count], PDO::PARAM_LOB);
+        ++$blob_count;
+      }
+      else {
+        $stmt->bindParam($placeholder, $value);
       }
     }
 
     if (count($this->condition)) {
-      $this->condition->compile($this->connection);
+      $this->condition->compile($this->connection, $this);
 
       $arguments = $this->condition->arguments();
       foreach ($arguments as $placeholder => &$value) {
@@ -165,7 +170,6 @@ class UpdateQuery_pgsql extends UpdateQuery {
     $options['already_prepared'] = TRUE;
     $this->connection->query($stmt, $options);
 
-    //$stmt->execute(NULL, $this->queryOptions);
     return $stmt->rowCount();
   }
 }

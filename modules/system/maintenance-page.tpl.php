@@ -1,5 +1,5 @@
 <?php
-// $Id: maintenance-page.tpl.php,v 1.4 2008/10/13 12:31:43 dries Exp $
+// $Id: maintenance-page.tpl.php,v 1.8 2009/08/03 03:04:33 webchick Exp $
 
 /**
  * @file
@@ -23,7 +23,7 @@
   <?php print $scripts; ?>
   <script type="text/javascript"><?php /* Needed to avoid Flash of Unstyled Content in IE */ ?> </script>
 </head>
-<body class="<?php print $body_classes; ?>">
+<body class="<?php print $classes; ?>">
   <div id="page">
     <div id="header">
       <div id="logo-title">
@@ -55,12 +55,12 @@
 
     </div> <!-- /header -->
 
-    <div id="container" class="clear-block">
+    <div id="container" class="clearfix">
 
-      <?php if (!empty($left)): ?>
-        <div id="sidebar-left" class="column sidebar">
-          <?php print $left; ?>
-        </div> <!-- /sidebar-left -->
+      <?php if (!empty($sidebar_first)): ?>
+        <div id="sidebar-first" class="column sidebar">
+          <?php print $sidebar_first; ?>
+        </div> <!-- /sidebar-first -->
       <?php endif; ?>
 
       <div id="main" class="column"><div id="main-squeeze">
@@ -68,24 +68,23 @@
         <div id="content">
           <?php if (!empty($title)): ?><h1 class="title" id="page-title"><?php print $title; ?></h1><?php endif; ?>
           <?php if (!empty($messages)): print $messages; endif; ?>
-          <div id="content-content" class="clear-block">
+          <div id="content-content" class="clearfix">
             <?php print $content; ?>
           </div> <!-- /content-content -->
         </div> <!-- /content -->
 
       </div></div> <!-- /main-squeeze /main -->
 
-      <?php if (!empty($right)): ?>
-        <div id="sidebar-right" class="column sidebar">
-          <?php print $right; ?>
-        </div> <!-- /sidebar-right -->
+      <?php if (!empty($sidebar_second)): ?>
+        <div id="sidebar-second" class="column sidebar">
+          <?php print $sidebar_second; ?>
+        </div> <!-- /sidebar-second -->
       <?php endif; ?>
 
     </div> <!-- /container -->
 
     <div id="footer-wrapper">
       <div id="footer">
-        <?php print $footer_message; ?>
         <?php if (!empty($footer)): print $footer; endif; ?>
       </div> <!-- /footer -->
     </div> <!-- /footer-wrapper -->

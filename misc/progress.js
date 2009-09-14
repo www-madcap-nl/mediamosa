@@ -1,4 +1,5 @@
-// $Id: progress.js,v 1.21 2008/10/12 00:29:09 webchick Exp $
+// $Id: progress.js,v 1.25 2009/08/17 07:12:15 webchick Exp $
+(function ($) {
 
 /**
  * A progressbar object. Initialized with the given id. Must be inserted into
@@ -13,16 +14,14 @@
 Drupal.progressBar = function (id, updateCallback, method, errorCallback) {
   var pb = this;
   this.id = id;
-  this.method = method || "GET";
+  this.method = method || 'GET';
   this.updateCallback = updateCallback;
   this.errorCallback = errorCallback;
 
-  this.element = document.createElement('div');
-  this.element.id = id;
-  this.element.className = 'progress';
-  $(this.element).html('<div class="bar"><div class="filled"></div></div>'+
-                       '<div class="percentage"></div>'+
-                       '<div class="message">&nbsp;</div>');
+  this.element = $('<div class="progress"></div>').attr('id', id);
+  this.element.html('<div class="bar"><div class="filled"></div></div>' +
+                    '<div class="percentage"></div>' +
+                    '<div class="message">&nbsp;</div>');
 };
 
 /**
@@ -30,8 +29,8 @@ Drupal.progressBar = function (id, updateCallback, method, errorCallback) {
  */
 Drupal.progressBar.prototype.setProgress = function (percentage, message) {
   if (percentage >= 0 && percentage <= 100) {
-    $('div.filled', this.element).css('width', percentage +'%');
-    $('div.percentage', this.element).html(percentage +'%');
+    $('div.filled', this.element).css('width', percentage + '%');
+    $('div.percentage', this.element).html(percentage + '%');
   }
   $('div.message', this.element).html(message);
   if (this.updateCallback) {
@@ -82,10 +81,10 @@ Drupal.progressBar.prototype.sendPing = function () {
         // Update display.
         pb.setProgress(progress.percentage, progress.message);
         // Schedule next timer.
-        pb.timer = setTimeout(function() { pb.sendPing(); }, pb.delay);
+        pb.timer = setTimeout(function () { pb.sendPing(); }, pb.delay);
       },
       error: function (xmlhttp) {
-        pb.displayError(Drupal.ahahError(xmlhttp, pb.uri));
+        pb.displayError(Drupal.ajaxError(xmlhttp, pb.uri));
       }
     });
   }
@@ -95,13 +94,12 @@ Drupal.progressBar.prototype.sendPing = function () {
  * Display errors on the page.
  */
 Drupal.progressBar.prototype.displayError = function (string) {
-  var error = document.createElement('div');
-  error.className = 'error';
-  error.innerHTML = string;
-
+  var error = $('<div class="error"></div>').html(string);
   $(this.element).before(error).hide();
 
   if (this.errorCallback) {
     this.errorCallback(this);
   }
 };
+
+})(jQuery);

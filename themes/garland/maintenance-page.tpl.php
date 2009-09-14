@@ -1,5 +1,5 @@
 <?php
-// $Id: maintenance-page.tpl.php,v 1.7 2008/10/13 12:31:43 dries Exp $
+// $Id: maintenance-page.tpl.php,v 1.11 2009/08/03 03:04:34 webchick Exp $
 
 /**
  * @file
@@ -24,13 +24,13 @@
       <?php print garland_get_ie_styles(); ?>
     <![endif]-->
   </head>
-  <body class="<?php print $body_classes ?>">
+  <body class="<?php print $classes ?>">
 
 <!-- Layout -->
-  <div id="header-region" class="clear-block"><?php print $header; ?></div>
+  <div id="header-region" class="clearfix"><?php print $header; ?></div>
 
     <div id="wrapper">
-    <div id="container" class="clear-block">
+    <div id="container" class="clearfix">
 
       <div id="header">
         <div id="logo-floater">
@@ -61,10 +61,10 @@
 
       </div> <!-- /header -->
 
-      <?php if ($left): ?>
-        <div id="sidebar-left" class="sidebar">
+      <?php if ($sidebar_first): ?>
+        <div id="sidebar-first" class="sidebar">
           <?php if ($search_box): ?><div class="block block-theme"><?php print $search_box ?></div><?php endif; ?>
-          <?php print $left ?>
+          <?php print $sidebar_first ?>
         </div>
       <?php endif; ?>
 
@@ -72,15 +72,15 @@
           <?php if ($title): ?><h2><?php print $title ?></h2><?php endif; ?>
           <?php print $messages; ?>
           <?php print $help; ?>
-          <div class="clear-block">
+          <div class="clearfix">
             <?php print $content ?>
           </div>
-          <div id="footer"><?php print $footer_message . $footer ?></div>
+          <div id="footer"><?php print $footer ?></div>
       </div></div></div></div> <!-- /.left-corner, /.right-corner, /#squeeze, /#center -->
 
-      <?php if ($right): ?>
-        <div id="sidebar-right" class="sidebar">
-          <?php print $right ?>
+      <?php if ($sidebar_second): ?>
+        <div id="sidebar-second" class="sidebar">
+          <?php print $sidebar_second ?>
         </div>
       <?php endif; ?>
 

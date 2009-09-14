@@ -6,3 +6,10 @@ version = VERSION
 core = 7.x
 files[] = menu_test.module
 hidden = TRUE
+
+; Information added by drupal.org packaging script on 2009-09-09
+version = "7.x-dev"
+core = "7.x"
+project = "drupal"
+datestamp = "1252498273"
+

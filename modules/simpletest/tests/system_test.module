@@ -1,10 +1,16 @@
 <?php
-// $Id: system_test.module,v 1.8 2008/12/09 11:09:26 dries Exp $
+// $Id: system_test.module,v 1.15 2009/08/17 20:32:30 dries Exp $
 
 /**
- * Implementation of hook_menu().
+ * Implement hook_menu().
  */
 function system_test_menu() {
+  $items['system-test/sleep/%'] = array(
+    'page callback' => 'system_test_sleep',
+    'page arguments' => array(2),
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
   $items['system-test/auth'] = array(
     'page callback' => 'system_test_basic_auth_page',
     'access callback' => TRUE,
@@ -14,6 +20,11 @@ function system_test_menu() {
     'title' => 'Redirect',
     'page callback' => 'system_test_redirect',
     'page arguments' => array(2),
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
+  $items['system-test/set-header'] = array(
+    'page callback' => 'system_test_set_header',
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
   );
@@ -48,36 +59,25 @@ function system_test_menu() {
     'type' => MENU_CALLBACK,
   );
 
-  $items['system-test/generate-warnings'] = array(
-    'title' => 'Generate warnings',
-    'page callback' => 'system_test_generate_warnings',
+  $items['system-test/lock-acquire'] = array(
+    'title' => 'Lock acquire',
+    'page callback' => 'system_test_lock_acquire',
     'access callback' => TRUE,
     'type' => MENU_CALLBACK,
   );
 
-  $items['system-test/generate-warnings-with-report'] = array(
-    'title' => 'Generate warnings with Simpletest reporting',
-    'page callback' => 'system_test_generate_warnings',
-    'page arguments' => array(TRUE),
-    'access callback' => TRUE,
-    'type' => MENU_CALLBACK,
-  );
-
-  $items['system-test/trigger-exception'] = array(
-    'title' => 'Trigger an exception',
-    'page callback' => 'system_test_trigger_exception',
-    'access callback' => TRUE,
-    'type' => MENU_CALLBACK,
-  );
-
-  $items['system-test/trigger-pdo-exception'] = array(
-    'title' => 'Trigger a PDO exception',
-    'page callback' => 'system_test_trigger_pdo_exception',
+  $items['system-test/lock-exit'] = array(
+    'title' => 'Lock acquire then exit',
+    'page callback' => 'system_test_lock_exit',
     'access callback' => TRUE,
     'type' => MENU_CALLBACK,
   );
 
   return $items;
+}
+
+function system_test_sleep($seconds) {
+  sleep($seconds);
 }
 
 function system_test_basic_auth_page() {
@@ -93,6 +93,11 @@ function system_test_redirect($code) {
     exit;
   }
   return '';
+}
+
+function system_test_set_header() {
+  drupal_set_header($_GET['name'], $_GET['value']);
+  return t('The following header was set: %name: %value', array('%name' => $_GET['name'], '%value' => $_GET['value']));
 }
 
 function system_test_redirect_noscheme() {
@@ -115,7 +120,7 @@ function system_test_destination() {
 }
 
 /**
- * Implementation of hook_modules_installed().
+ * Implement hook_modules_installed().
  */
 function system_test_modules_installed($modules) {
   if (in_array('aggregator', $modules)) {
@@ -124,7 +129,7 @@ function system_test_modules_installed($modules) {
 }
 
 /**
- * Implementation of hook_modules_enabled().
+ * Implement hook_modules_enabled().
  */
 function system_test_modules_enabled($modules) {
   if (in_array('aggregator', $modules)) {
@@ -133,7 +138,7 @@ function system_test_modules_enabled($modules) {
 }
 
 /**
- * Implementation of hook_modules_disabled().
+ * Implement hook_modules_disabled().
  */
 function system_test_modules_disabled($modules) {
   if (in_array('aggregator', $modules)) {
@@ -142,7 +147,7 @@ function system_test_modules_disabled($modules) {
 }
 
 /**
- * Implementation of hook_modules_uninstalled().
+ * Implement hook_modules_uninstalled().
  */
 function system_test_modules_uninstalled($modules) {
   if (in_array('aggregator', $modules)) {
@@ -151,14 +156,14 @@ function system_test_modules_uninstalled($modules) {
 }
 
 /**
- * Implementation of hook_boot().
+ * Implement hook_boot().
  */
 function system_test_boot() {
   watchdog('system_test', 'hook_boot');
 }
 
 /**
- * Implementation of hook_init().
+ * Implement hook_init().
  */
 function system_test_init() {
   // Used by FrontPageTestCase to get the results of drupal_is_front_page().
@@ -168,39 +173,55 @@ function system_test_init() {
 }
 
 /**
- * Implementation of hook_exit().
+ * Implement hook_exit().
  */
 function system_test_exit() {
   watchdog('system_test', 'hook_exit');
 }
 
 /**
- * Menu callback; generate warnings to test the error handler.
+ * Implement hook_system_info_alter().
  */
-function system_test_generate_warnings($collect_errors = FALSE) {
-  // Tell Drupal error reporter to send errors to Simpletest or not.
-  define('SIMPLETEST_COLLECT_ERRORS', $collect_errors);
-  // This will generate a notice.
-  $monkey_love = $bananas;
-  // This will generate a warning.
-  $awesomely_big = 1/0;
-  // This will generate a user error.
-  trigger_error("Drupal is awesome", E_USER_NOTICE);
-  return "";
+function system_test_system_info_alter(&$info, $file) {
+  // We need a static otherwise the last test will fail to alter common_test.
+  static $test;
+  if (($dependencies = variable_get('dependencies', array())) || $test) {
+    if ($file->name == 'module_test') {
+      $info['hidden'] = FALSE;
+      $info['dependencies'][] = array_shift($dependencies);
+      variable_set('dependencies', $dependencies);
+      $test = TRUE;
+    }
+    if ($file->name == 'common_test') {
+      $info['hidden'] = FALSE;
+      $info['version'] = '7.x-2.4-beta3';
+    }
+  }
 }
 
 /**
- * Menu callback; trigger an exception to test the exception handler.
+ * Try to acquire a named lock and report the outcome.
  */
-function system_test_trigger_exception() {
-  define('SIMPLETEST_COLLECT_ERRORS', FALSE);
-  throw new Exception("Drupal is awesome");
+function system_test_lock_acquire() {
+  if (lock_acquire('system_test_lock_acquire')) {
+    lock_release('system_test_lock_acquire');
+    return 'TRUE: Lock successfully acquired in system_test_lock_acquire()';
+  }
+  else {
+    return 'FALSE: Lock not acquired in system_test_lock_acquire()';
+  }
 }
 
 /**
- * Menu callback; trigger an exception to test the exception handler.
+ * Try to acquire a specific lock, and then exit.
  */
-function system_test_trigger_pdo_exception() {
-  define('SIMPLETEST_COLLECT_ERRORS', FALSE);
-  db_query("SELECT * FROM bananas_are_awesome");
+function system_test_lock_exit() {
+  if (lock_acquire('system_test_lock_exit', 900)) {
+    echo 'TRUE: Lock successfully acquired in system_test_lock_exit()';
+    // The shut-down function should release the lock.
+    exit();
+  }
+  else {
+    return 'FALSE: Lock not acquired in system_test_lock_exit()';
+  }
 }

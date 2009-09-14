@@ -1,6 +1,15 @@
-; $Id: list.info,v 1.2 2009/02/05 03:42:57 webchick Exp $
+; $Id: list.info,v 1.4 2009/06/12 08:39:36 dries Exp $
 name = List
 description = Defines list field types. Use with Options to create selection lists.
 package = Core - fields
+version = VERSION
 core = 7.x
 files[]=list.module
+required = TRUE
+
+; Information added by drupal.org packaging script on 2009-09-09
+version = "7.x-dev"
+core = "7.x"
+project = "drupal"
+datestamp = "1252498273"
+

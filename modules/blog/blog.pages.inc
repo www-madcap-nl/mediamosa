@@ -1,5 +1,5 @@
 <?php
-// $Id: blog.pages.inc,v 1.15 2009/01/27 00:22:25 dries Exp $
+// $Id: blog.pages.inc,v 1.22 2009/08/10 22:39:24 webchick Exp $
 
 /**
  * @file
@@ -25,16 +25,28 @@ function blog_page_user($account) {
 
   $build['blog_actions'] = array(
     '#items' => $items,
-    '#theme' => 'list',
+    '#theme' => 'item_list',
     '#weight' => -1,
   );
 
-  $nids = pager_query(db_rewrite_sql("SELECT n.nid, n.sticky, n.created FROM {node} n WHERE n.type = 'blog' AND n.uid = %d AND n.status = 1 ORDER BY n.sticky DESC, n.created DESC"), variable_get('default_nodes_main', 10), 0, NULL, $account->uid)->fetchCol();
+  $query = db_select('node', 'n')->extend('PagerDefault');
+  $nids = $query
+    ->fields('n', array('nid', 'sticky', 'created'))
+    ->condition('type', 'blog')
+    ->condition('uid', $account->uid)
+    ->condition('status', 1)
+    ->orderBy('sticky', 'DESC')
+    ->orderBy('created', 'DESC')
+    ->limit(variable_get('default_nodes_main', 10))
+    ->addTag('node_access')
+    ->execute()
+    ->fetchCol();
+
   if (!empty($nids)) {
     $nodes = node_load_multiple($nids);
     $build += node_build_multiple($nodes);
     $build['pager'] = array(
-      '#markup' => theme('pager', NULL, variable_get('default_nodes_main', 10)),
+      '#theme' => 'pager',
       '#weight' => 5,
     );
   }
@@ -48,7 +60,7 @@ function blog_page_user($account) {
   }
   drupal_add_feed(url('blog/' . $account->uid . '/feed'), t('RSS - !title', array('!title' => $title)));
 
-  return drupal_get_page($build);
+  return $build;
 }
 
 /**
@@ -58,22 +70,32 @@ function blog_page_last() {
   global $user;
   $build = array();
 
-  if (user_access('edit own blog')) {
+  if (user_access('create blog content')) {
     $items[] = l(t('Create new blog entry.'), "node/add/blog");
     $build['blog_actions'] = array(
       '#items' => $items,
-      '#theme' => 'list',
+      '#theme' => 'item_list',
       '#weight' => -1,
     );
   }
 
-  $nids = pager_query(db_rewrite_sql("SELECT n.nid, n.sticky, n.created FROM {node} n WHERE n.type = 'blog' AND n.status = 1 ORDER BY n.sticky DESC, n.created DESC"), variable_get('default_nodes_main', 10))->fetchCol();
+  $query = db_select('node', 'n')->extend('PagerDefault');
+  $nids = $query
+    ->fields('n', array('nid', 'sticky', 'created'))
+    ->condition('type', 'blog')
+    ->condition('status', 1)
+    ->orderBy('sticky', 'DESC')
+    ->orderBy('created', 'DESC')
+    ->limit(variable_get('default_nodes_main', 10))
+    ->addTag('node_access')
+    ->execute()
+    ->fetchCol();
 
   if (!empty($nids)) {
     $nodes = node_load_multiple($nids);
     $build += node_build_multiple($nodes);
     $build['pager'] = array(
-      '#markup' => theme('pager', NULL, variable_get('default_nodes_main', 10)),
+      '#theme' => 'pager',
       '#weight' => 5,
     );
   }
@@ -82,35 +104,47 @@ function blog_page_last() {
   }
   drupal_add_feed(url('blog/feed'), t('RSS - blogs'));
 
-  return drupal_get_page($build);
+  return $build;
 }
 
 /**
  * Menu callback; displays an RSS feed containing recent blog entries of a given user.
  */
 function blog_feed_user($account) {
-  $result = db_query_range(db_rewrite_sql("SELECT n.nid, n.created FROM {node} n  WHERE n.type = 'blog' AND n.uid = %d AND n.status = 1 ORDER BY n.created DESC"), $account->uid, 0, variable_get('feed_default_items', 10));
-  $channel['title'] = $account->name . "'s blog";
+
+  $nids = db_select('node', 'n')
+    ->fields('n', array('nid', 'created'))
+    ->condition('type', 'blog')
+    ->condition('uid', $account->uid)
+    ->condition('status', 1)
+    ->orderBy('created', 'DESC')
+    ->range(0, variable_get('feed_default_items', 10))
+    ->addTag('node_access')
+    ->execute()
+    ->fetchCol();
+
+  $channel['title'] = t("!name's blog", array('!name' => $account->name));
   $channel['link'] = url('blog/' . $account->uid, array('absolute' => TRUE));
 
-  $items = array();
-  while ($row = db_fetch_object($result)) {
-    $items[] = $row->nid;
-  }
-  node_feed($items, $channel);
+  node_feed($nids, $channel);
 }
 
 /**
  * Menu callback; displays an RSS feed containing recent blog entries of all users.
  */
 function blog_feed_last() {
-  $result = db_query_range(db_rewrite_sql("SELECT n.nid, n.created FROM {node} n WHERE n.type = 'blog' AND n.status = 1 ORDER BY n.created DESC"), 0, variable_get('feed_default_items', 10));
-  $channel['title'] = variable_get('site_name', 'Drupal') . ' blogs';
+  $nids = db_select('node', 'n')
+    ->fields('n', array('nid', 'created'))
+    ->condition('type', 'blog')
+    ->condition('status', 1)
+    ->orderBy('created', 'DESC')
+    ->range(0, variable_get('feed_default_items', 10))
+    ->addTag('node_access')
+    ->execute()
+    ->fetchCol();
+
+  $channel['title'] = t('!site_name blogs', array('!site_name' => variable_get('site_name', 'Drupal')));
   $channel['link'] = url('blog', array('absolute' => TRUE));
 
-  $items = array();
-  while ($row = db_fetch_object($result)) {
-    $items[] = $row->nid;
-  }
-  node_feed($items, $channel);
+  node_feed($nids, $channel);
 }

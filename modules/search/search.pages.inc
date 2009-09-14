@@ -1,5 +1,5 @@
 <?php
-// $Id: search.pages.inc,v 1.5 2008/04/14 17:48:41 dries Exp $
+// $Id: search.pages.inc,v 1.11 2009/08/25 10:27:14 dries Exp $
 
 /**
  * @file
@@ -31,22 +31,34 @@ function search_view($type = 'node') {
       // Collect the search results:
       $results = search_data($keys, $type);
 
-      if ($results) {
-        $results = theme('box', t('Search results'), $results);
-      }
-      else {
-        $results = theme('box', t('Your search yielded no results'), search_help('search#noresults', drupal_help_arg()));
-      }
+      // Construct the search form.
+      $build['search_form'] = drupal_get_form('search_form', NULL, $keys, $type);
+      $build['search_results'] = array(
+        '#theme' => 'search_results_listing',
+        '#title' => empty($results) ? t('Your search yielded no results') : t('Search results'),
+        '#content' => empty($results) ? search_help('search#noresults', drupal_help_arg()) : $results,
+      );
+
+      return $build;
     }
-
-    // Construct the search form.
-    $output = drupal_get_form('search_form', NULL, $keys, $type);
-    $output .= $results;
-
-    return $output;
   }
 
   return drupal_get_form('search_form', NULL, empty($keys) ? '' : $keys, $type);
+}
+
+/**
+ * Theme the listing of search results
+ *
+ * @param $title
+ *   The subject of the listing.
+ * @param $content
+ *   The content of the listing.
+ * @return
+ *   A string containing the listing output.
+ */
+function theme_search_results_listing($title, $content) {
+  $output = '<h2 class="title">' . $title . '</h2><div>' . $content . '</div>';
+  return $output;
 }
 
 /**
@@ -63,7 +75,7 @@ function template_preprocess_search_results(&$variables) {
   foreach ($variables['results'] as $result) {
     $variables['search_results'] .= theme('search_result', $result, $variables['type']);
   }
-  $variables['pager'] = theme('pager', NULL, 10, 0);
+  $variables['pager'] = theme('pager', NULL);
   // Provide alternate search results template.
   $variables['template_files'][] = 'search-results-' . $variables['type'];
 }
@@ -90,7 +102,7 @@ function template_preprocess_search_result(&$variables) {
     $info['user'] = $result['user'];
   }
   if (!empty($result['date'])) {
-    $info['date'] = format_date($result['date'], 'small');
+    $info['date'] = format_date($result['date'], 'short');
   }
   if (isset($result['extra']) && is_array($result['extra'])) {
     $info = array_merge($info, $result['extra']);

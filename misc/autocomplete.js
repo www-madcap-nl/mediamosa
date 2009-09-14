@@ -1,12 +1,13 @@
-// $Id: autocomplete.js,v 1.25 2008/10/29 10:01:26 dries Exp $
+// $Id: autocomplete.js,v 1.34 2009/09/05 12:03:31 webchick Exp $
+(function ($) {
 
 /**
  * Attaches the autocomplete behavior to all required fields.
  */
 Drupal.behaviors.autocomplete = {
-  attach: function(context) {
+  attach: function (context, settings) {
     var acdb = [];
-    $('input.autocomplete:not(.autocomplete-processed)', context).each(function () {
+    $('input.autocomplete', context).once('autocomplete', function () {
       var uri = this.value;
       if (!acdb[uri]) {
         acdb[uri] = new Drupal.ACDB(uri);
@@ -15,7 +16,6 @@ Drupal.behaviors.autocomplete = {
         .attr('autocomplete', 'OFF')[0];
       $(input.form).submit(Drupal.autocompleteSubmit);
       new Drupal.jsAC(input, acdb[uri]);
-      $(this).addClass('autocomplete-processed');
     });
   }
 };
@@ -105,7 +105,7 @@ Drupal.jsAC.prototype.onkeyup = function (input, e) {
  * Puts the currently highlighted suggestion into the autocomplete field.
  */
 Drupal.jsAC.prototype.select = function (node) {
-  this.input.value = node.autocompleteValue;
+  this.input.value = $(node).data('autocompleteValue');
 };
 
 /**
@@ -157,13 +157,13 @@ Drupal.jsAC.prototype.unhighlight = function (node) {
 Drupal.jsAC.prototype.hidePopup = function (keycode) {
   // Select item if the right key or mousebutton was pressed.
   if (this.selected && ((keycode && keycode != 46 && keycode != 8 && keycode != 27) || !keycode)) {
-    this.input.value = this.selected.autocompleteValue;
+    this.input.value = $(this.selected).data('autocompleteValue');
   }
   // Hide popup.
   var popup = this.popup;
   if (popup) {
     this.popup = null;
-    $(popup).fadeOut('fast', function() { $(popup).remove(); });
+    $(popup).fadeOut('fast', function () { $(popup).remove(); });
   }
   this.selected = false;
 };
@@ -177,12 +177,11 @@ Drupal.jsAC.prototype.populatePopup = function () {
     $(this.popup).remove();
   }
   this.selected = false;
-  this.popup = document.createElement('div');
-  this.popup.id = 'autocomplete';
+  this.popup = $('<div id="autocomplete"></div>')[0];
   this.popup.owner = this;
   $(this.popup).css({
-    marginTop: this.input.offsetHeight +'px',
-    width: (this.input.offsetWidth - 4) +'px',
+    marginTop: this.input.offsetHeight + 'px',
+    width: (this.input.offsetWidth - 4) + 'px',
     display: 'none'
   });
   $(this.input).before(this.popup);
@@ -202,26 +201,25 @@ Drupal.jsAC.prototype.found = function (matches) {
   }
 
   // Prepare matches.
-  var ul = document.createElement('ul');
+  var ul = $('<ul></ul>');
   var ac = this;
   for (key in matches) {
-    var li = document.createElement('li');
-    $(li)
-      .html('<div>'+ matches[key] +'</div>')
+    $('<li></li>')
+      .html($('<div></div>').html(matches[key]))
       .mousedown(function () { ac.select(this); })
       .mouseover(function () { ac.highlight(this); })
-      .mouseout(function () { ac.unhighlight(this); });
-    li.autocompleteValue = key;
-    $(ul).append(li);
+      .mouseout(function () { ac.unhighlight(this); })
+      .data('autocompleteValue', key)
+      .appendTo(ul);
   }
 
   // Show popup with matches, if any.
   if (this.popup) {
-    if (ul.childNodes.length > 0) {
+    if (ul.children().size()) {
       $(this.popup).empty().append(ul).show();
     }
     else {
-      $(this.popup).css({visibility: 'hidden'});
+      $(this.popup).css({ visibility: 'hidden' });
       this.hidePopup();
     }
   }
@@ -256,6 +254,13 @@ Drupal.ACDB.prototype.search = function (searchString) {
   var db = this;
   this.searchString = searchString;
 
+  // See if this string needs to be searched for anyway.
+  searchString = searchString.replace(/^\s+|\s+$/, '');
+  if (searchString.length <= 0 ||
+    searchString.charAt(searchString.length - 1) == ',') {
+    return;
+  }
+
   // See if this key has been searched for before.
   if (this.cache[searchString]) {
     return this.owner.found(this.cache[searchString]);
@@ -265,16 +270,16 @@ Drupal.ACDB.prototype.search = function (searchString) {
   if (this.timer) {
     clearTimeout(this.timer);
   }
-  this.timer = setTimeout(function() {
+  this.timer = setTimeout(function () {
     db.owner.setStatus('begin');
 
     // Ajax GET request for autocompletion.
     $.ajax({
-      type: "GET",
-      url: db.uri +'/'+ Drupal.encodeURIComponent(searchString),
+      type: 'GET',
+      url: db.uri + '/' + Drupal.encodePath(searchString),
       dataType: 'json',
       success: function (matches) {
-        if (typeof matches['status'] == 'undefined' || matches['status'] != 0) {
+        if (typeof matches.status == 'undefined' || matches.status != 0) {
           db.cache[searchString] = matches;
           // Verify if these are still the matches the user wants to see.
           if (db.searchString == searchString) {
@@ -284,7 +289,7 @@ Drupal.ACDB.prototype.search = function (searchString) {
         }
       },
       error: function (xmlhttp) {
-        alert(Drupal.ahahError(xmlhttp, db.uri));
+        alert(Drupal.ajaxError(xmlhttp, db.uri));
       }
     });
   }, this.delay);
@@ -293,8 +298,10 @@ Drupal.ACDB.prototype.search = function (searchString) {
 /**
  * Cancels the current autocomplete request.
  */
-Drupal.ACDB.prototype.cancel = function() {
+Drupal.ACDB.prototype.cancel = function () {
   if (this.owner) this.owner.setStatus('cancel');
   if (this.timer) clearTimeout(this.timer);
   this.searchString = '';
 };
+
+})(jQuery);

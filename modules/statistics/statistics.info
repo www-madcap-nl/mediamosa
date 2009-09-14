@@ -1,4 +1,4 @@
-; $Id: statistics.info,v 1.8 2008/10/11 02:33:02 webchick Exp $
+; $Id: statistics.info,v 1.10 2009/08/19 20:19:36 dries Exp $
 name = Statistics
 description = Logs access statistics for your site.
 package = Core
@@ -8,3 +8,12 @@ files[] = statistics.module
 files[] = statistics.admin.inc
 files[] = statistics.pages.inc
 files[] = statistics.install
+files[] = statistics.test
+files[] = statistics.tokens.inc
+
+; Information added by drupal.org packaging script on 2009-09-09
+version = "7.x-dev"
+core = "7.x"
+project = "drupal"
+datestamp = "1252498273"
+

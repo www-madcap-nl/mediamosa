@@ -1,5 +1,5 @@
 <?php
-// $Id: number.module,v 1.3 2009/02/10 03:16:15 webchick Exp $
+// $Id: number.module,v 1.15 2009/08/27 00:33:51 webchick Exp $
 
 /**
  * @file
@@ -7,7 +7,7 @@
  */
 
 /**
- * Implementation of hook_theme().
+ * Implement hook_theme().
  */
 function number_theme() {
   return array(
@@ -19,7 +19,7 @@ function number_theme() {
 }
 
 /**
- * Implementation of hook_field_info().
+ * Implement hook_field_info().
  */
 function number_field_info() {
   return array(
@@ -48,10 +48,13 @@ function number_field_info() {
   );
 }
 
-function number_field_columns($field) {
+/**
+ * Implement hook_field_schema().
+ */
+function number_field_schema($field) {
   switch ($field['type']) {
     case 'number_integer' :
-      $colums = array(
+      $columns = array(
         'value' => array(
           'type' => 'int',
           'not null' => FALSE
@@ -60,7 +63,7 @@ function number_field_columns($field) {
       break;
 
     case 'number_float' :
-      $colums = array(
+      $columns = array(
         'value' => array(
           'type' => 'float',
           'not null' => FALSE
@@ -69,7 +72,7 @@ function number_field_columns($field) {
       break;
 
     case 'number_decimal' :
-      $colums = array(
+      $columns = array(
         'value' => array(
           'type' => 'numeric',
           'precision' => $field['settings']['precision'],
@@ -79,31 +82,115 @@ function number_field_columns($field) {
       );
       break;
   }
-  return $colums;
+  return array(
+    'columns' => $columns,
+  );
 }
 
 /**
- * Implementation of hook_field_validate().
+ * Implement hook_field_settings_form().
  */
-function number_field_validate($obj_type, $node, $field, $instance, &$items, $form) {
-  if (is_array($items)) {
-    foreach ($items as $delta => $item) {
-      $error_element = isset($item['_error_element']) ? $item['_error_element'] : '';
-      if (is_array($item) && isset($item['_error_element'])) unset($item['_error_element']);
-      if ($item['value'] != '') {
-        if (is_numeric($instance['settings']['min']) && $item['value'] < $instance['settings']['min']) {
-          form_set_error($error_element, t('%name: the value may be no smaller than %min.', array('%name' => t($instance['label']), '%min' => $instance['settings']['min'])));
-        }
-        if (is_numeric($instance['settings']['max']) && $item['value'] > $instance['settings']['max']) {
-          form_set_error($error_element, t('%name: the value may be no larger than %max.', array('%name' => t($instance['label']), '%max' => $instance['settings']['max'])));
-        }
+function number_field_settings_form($field, $instance) {
+  $settings = $field['settings'];
+  $form = array();
+
+  if ($field['type'] == 'number_decimal') {
+    $form['precision'] = array(
+      '#type' => 'select',
+      '#title' => t('Precision'),
+      '#options' => drupal_map_assoc(range(10, 32)),
+      '#default_value' => $settings['precision'],
+      '#description' => t('The total number of digits to store in the database, including those to the right of the decimal.'),
+    );
+    $form['scale'] = array(
+      '#type' => 'select',
+      '#title' => t('Scale'),
+      '#options' => drupal_map_assoc(range(0, 10)),
+      '#default_value' => $settings['scale'],
+      '#description' => t('The number of digits to the right of the decimal.'),
+    );
+    $form['decimal'] = array(
+      '#type' => 'select',
+      '#title' => t('Decimal marker'),
+      '#options' => array(
+        '.' => 'decimal point',
+        ',' => 'comma',
+        ' ' => 'space',
+      ),
+      '#default_value' => $settings['decimal'],
+      '#description' => t('The character users will input to mark the decimal point in forms.'),
+    );
+  }
+
+  return $form;
+}
+
+/**
+ * Implement hook_field_instance_settings_form().
+ */
+function number_field_instance_settings_form($field, $instance) {
+  $settings = $instance['settings'];
+
+  $form['min'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Minimum'),
+    '#default_value' => $settings['min'],
+    '#description' => t('The minimum value that should be allowed in this field. Leave blank for no minimum.'),
+    '#element_validate' => array('_element_validate_number'),
+  );
+  $form['max'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Maximum'),
+    '#default_value' => $settings['max'],
+    '#description' => t('The maximum value that should be allowed in this field. Leave blank for no maximum.'),
+    '#element_validate' => array('_element_validate_number'),
+  );
+  $form['prefix'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Prefix'),
+    '#default_value' => $settings['prefix'],
+    '#size' => 60,
+    '#description' => t("Define a string that should be prefixed to the value, like '$ ' or '&euro; '. Leave blank for none. Separate singular and plural values with a pipe ('pound|pounds')."),
+  );
+  $form['suffix'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Suffix'),
+    '#default_value' => $settings['suffix'],
+    '#size' => 60,
+    '#description' => t("Define a string that should suffixed to the value, like ' m', ' kb/s'. Leave blank for none. Separate singular and plural values with a pipe ('pound|pounds')."),
+  );
+
+  return $form;
+}
+
+/**
+ * Implement hook_field_validate().
+ *
+ * Possible error codes:
+ * - 'number_min': The value is smaller than the allowed minimum value.
+ * - 'number_max': The value is larger than the allowed maximum value.
+ */
+function number_field_validate($obj_type, $node, $field, $instance, $langcode, $items, &$errors) {
+  foreach ($items as $delta => $item) {
+    if ($item['value'] != '') {
+      if (is_numeric($instance['settings']['min']) && $item['value'] < $instance['settings']['min']) {
+        $errors[$field['field_name']][$langcode][$delta][] = array(
+          'error' => 'number_min',
+          'message' => t('%name: the value may be no smaller than %min.', array('%name' => t($instance['label']), '%min' => $instance['settings']['min'])),
+        );
+      }
+      if (is_numeric($instance['settings']['max']) && $item['value'] > $instance['settings']['max']) {
+        $errors[$field['field_name']][$langcode][$delta][] = array(
+          'error' => 'number_max',
+          'message' => t('%name: the value may be no larger than %max.', array('%name' => t($instance['label']), '%max' => $instance['settings']['max'])),
+        );
       }
     }
   }
 }
 
 /**
- * Implementation of hook_content_is_empty().
+ * Implement hook_content_is_empty().
  */
 function number_field_is_empty($item, $field) {
   if (empty($item['value']) && (string)$item['value'] !== '0') {
@@ -113,7 +200,7 @@ function number_field_is_empty($item, $field) {
 }
 
 /**
- * Implementation of hook_field_formatter_info().
+ * Implement hook_field_formatter_info().
  */
 function number_field_formatter_info() {
   return array(
@@ -126,9 +213,6 @@ function number_field_formatter_info() {
         'scale' => 0,
         'prefix_suffix' => TRUE,
       ),
-      'behaviors' => array(
-        'multiple values' => FIELD_BEHAVIOR_DEFAULT,
-      ),
     ),
     'number_decimal' => array(
       'label' => t('default'),
@@ -139,16 +223,10 @@ function number_field_formatter_info() {
         'scale' => 2,
         'prefix_suffix' => TRUE,
       ),
-      'behaviors' => array(
-        'multiple values' => FIELD_BEHAVIOR_DEFAULT,
-      ),
     ),
     'number_unformatted' => array(
       'label' => t('unformatted'),
       'field types' => array('number_integer', 'number_decimal', 'number_float'),
-      'behaviors' => array(
-        'multiple values' => FIELD_BEHAVIOR_DEFAULT,
-      ),
     ),
   );
 }
@@ -177,8 +255,8 @@ function theme_field_formatter_number($element) {
   $output = number_format($value, $settings['scale'], $settings['decimal_separator'], $settings['thousand_separator']);
 
   if ($settings['prefix_suffix']) {
-    $prefixes = isset($instance['settings']['prefix']) ? explode('|', check_plain($instance['settings']['prefix'])) : array(0 => '');
-    $suffixes = isset($instance['settings']['suffix']) ? explode('|', check_plain($instance['settings']['suffix'])) : array(0 => '');
+    $prefixes = isset($instance['settings']['prefix']) ? array_map('field_filter_xss', explode('|', $instance['settings']['prefix'])) : array('');
+    $suffixes = isset($instance['settings']['suffix']) ? array_map('field_filter_xss', explode('|', $instance['settings']['suffix'])) : array('');
     $prefix = (count($prefixes) > 1) ? format_plural($value, $prefixes[0], $prefixes[1]) : $prefixes[0];
     $suffix = (count($suffixes) > 1) ? format_plural($value, $suffixes[0], $suffixes[1]) : $suffixes[0];
     $output = $prefix . $output . $suffix;
@@ -188,7 +266,7 @@ function theme_field_formatter_number($element) {
 }
 
 /**
- * Implementation of hook_field_widget_info().
+ * Implement hook_field_widget_info().
  *
  * Here we indicate that the Field module will handle
  * multiple values for these widgets.
@@ -203,16 +281,12 @@ function number_field_widget_info() {
     'number' => array(
       'label' => t('Text field'),
       'field types' => array('number_integer', 'number_decimal', 'number_float'),
-      'behaviors' => array(
-        'multiple values' => FIELD_BEHAVIOR_DEFAULT,
-        'default value' => FIELD_BEHAVIOR_DEFAULT,
-      ),
     ),
   );
 }
 
 /**
- * Implementation of FAPI hook_elements().
+ * Implement FAPI hook_elements().
  *
  * Any FAPI callbacks needed for individual widgets can be declared here,
  * and the element will be passed to those callbacks for processing.
@@ -228,13 +302,13 @@ function number_elements() {
     'number' => array(
       '#input' => TRUE,
       '#columns' => array('value'), '#delta' => 0,
-      '#process' => array('number_process'),
+      '#process' => array('number_elements_process'),
     ),
   );
 }
 
 /**
- * Implementation of hook_field_widget().
+ * Implement hook_field_widget().
  *
  * Attach a single form element to the form. It will be built out and
  * validated in the callback(s) listed in hook_elements. We build it
@@ -256,18 +330,27 @@ function number_elements() {
  *   The field structure.
  * @param $instance
  *   the field instance array
+ * @param $langcode
+ *   The language associated to $items.
  * @param $delta
  *   the order of this item in the array of subelements (0, 1, 2, etc)
  *
  * @return
  *   the form item for a single element for this field
  */
-function number_field_widget(&$form, &$form_state, $field, $instance, $items, $delta = 0) {
+function number_field_widget(&$form, &$form_state, $field, $instance, $langcode, $items, $delta = 0) {
   $element = array(
     '#type' => $instance['widget']['type'],
     '#default_value' => isset($items[$delta]) ? $items[$delta] : NULL,
   );
   return $element;
+}
+
+/**
+ * Implement hook_field_widget_error().
+ */
+function number_field_widget_error($element, $error) {
+  form_error($element['value'], $error['message']);
 }
 
 /**
@@ -278,7 +361,7 @@ function number_field_widget(&$form, &$form_state, $field, $instance, $items, $d
  *
  * The $field and $instance arrays are in $form['#fields'][$element['#field_name']].
  */
-function number_process($element, $edit, $form_state, $form) {
+function number_elements_process($element, $form_state, $form) {
   $field_name = $element['#field_name'];
   $field = field_info_field($element['#field_name']);
   $instance = field_info_instance($element['#field_name'], $element['#bundle']);
@@ -296,7 +379,7 @@ function number_process($element, $edit, $form_state, $form) {
     // for some configurations where all characters won't fit in input field.
     '#size' => $field['type'] == 'number_decimal' ? $field['settings']['precision'] + 2 : 12,
     '#maxlength' => $field['type'] == 'number_decimal' ? $field['settings']['precision'] : 10,
-    '#attributes' => array('class' => 'number'),
+    '#attributes' => array('class' => array('number')),
     // The following values were set by the Field module and need
     // to be passed down to the nested element.
     '#title' => $element['#title'],
@@ -310,11 +393,11 @@ function number_process($element, $edit, $form_state, $form) {
 
   if (!empty($instance['settings']['prefix'])) {
     $prefixes = explode('|', $instance['settings']['prefix']);
-    $element[$field_key]['#field_prefix'] = array_pop($prefixes);
+    $element[$field_key]['#field_prefix'] = field_filter_xss(array_pop($prefixes));
   }
   if (!empty($instance['settings']['suffix'])) {
     $suffixes = explode('|', $instance['settings']['suffix']);
-    $element[$field_key]['#field_suffix'] = array_pop($suffixes);
+    $element[$field_key]['#field_suffix'] = field_filter_xss(array_pop($suffixes));
   }
 
   // Make sure we don't wipe out element validation added elsewhere.
@@ -332,12 +415,6 @@ function number_process($element, $edit, $form_state, $form) {
       $element['#element_validate'][] = 'number_decimal_validate';
       break;
   }
-
-  // Used so that hook_field('validate') knows where to flag an error.
-  $element['_error_element'] = array(
-    '#type' => 'value',
-    '#value' => implode('][', array_merge($element['#parents'], array($field_key))),
-  );
 
   return $element;
 }

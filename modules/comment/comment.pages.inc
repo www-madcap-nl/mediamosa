@@ -1,31 +1,10 @@
 <?php
-// $Id: comment.pages.inc,v 1.13 2009/01/31 16:19:29 webchick Exp $
+// $Id: comment.pages.inc,v 1.24 2009/08/01 05:58:18 dries Exp $
 
 /**
  * @file
  * User page callbacks for the comment module.
  */
-
-/**
- * Form builder; generate a comment editing form.
- *
- * @param $cid
- *   ID of the comment to be edited.
- * @ingroup forms
- */
-function comment_edit($cid) {
-  global $user;
-  $comment = db_query('SELECT c.*, u.uid, u.name AS registered_name, u.data FROM {comment} c INNER JOIN {users} u ON c.uid = u.uid WHERE c.cid = :cid', array(':cid'=>$cid) )->fetchObject();
-  $comment = drupal_unpack($comment);
-  $comment->name = $comment->uid ? $comment->registered_name : $comment->name;
-
-  if (comment_access('edit', $comment)) {
-    return comment_form_box((array)$comment);
-  }
-  else {
-    drupal_access_denied();
-  }
-}
 
 /**
  * This function is responsible for generating a comment reply form.
@@ -52,13 +31,13 @@ function comment_reply($node, $pid = NULL) {
   // Set the breadcrumb trail.
   drupal_set_breadcrumb(array(l(t('Home'), NULL), l($node->title, 'node/' . $node->nid)));
   $op = isset($_POST['op']) ? $_POST['op'] : '';
-  $output = '';
+  $build = array();
 
   if (user_access('access comments')) {
     // The user is previewing a comment prior to submitting it.
     if ($op == t('Preview')) {
       if (user_access('post comments')) {
-        $output .= comment_form_box(array('pid' => $pid, 'nid' => $node->nid), NULL);
+        $build['comment_form'] = drupal_get_form('comment_form', (object) array('pid' => $pid, 'nid' => $node->nid));
       }
       else {
         drupal_set_message(t('You are not authorized to post comments.'), 'error');
@@ -70,8 +49,9 @@ function comment_reply($node, $pid = NULL) {
       if ($pid) {
         // Load the comment whose cid = $pid
         $comment = db_query('SELECT c.*, u.uid, u.name AS registered_name, u.signature, u.picture, u.data FROM {comment} c INNER JOIN {users} u ON c.uid = u.uid WHERE c.cid = :cid AND c.status = :status', array(
-          ':cid'=>$pid,
-          ':status'=>COMMENT_PUBLISHED))->fetchObject();
+          ':cid' => $pid,
+          ':status' => COMMENT_PUBLISHED,
+        ))->fetchObject();
         if ( $comment ) {
           // If that comment exists, make sure that the current comment and the
           // parent comment both belong to the same parent node.
@@ -82,8 +62,10 @@ function comment_reply($node, $pid = NULL) {
           }
           // Display the parent comment
           $comment = drupal_unpack($comment);
+          $comment->node_type = 'comment_node_' . $node->type;
+          field_attach_load('comment', array($comment->cid => $comment));
           $comment->name = $comment->uid ? $comment->registered_name : $comment->name;
-          $output .= theme('comment_view', $comment, $node);
+          $build['comment_parent'] = comment_build($comment);
         }
         else {
           drupal_set_message(t('The comment you are replying to does not exist.'), 'error');
@@ -92,16 +74,17 @@ function comment_reply($node, $pid = NULL) {
       }
       // This is the case where the comment is in response to a node. Display the node.
       elseif (user_access('access content')) {
-        $output .= drupal_render(node_build($node));
+        $build['comment_node'] = node_build($node);
       }
 
       // Should we show the reply box?
-      if ($node->comment != COMMENT_NODE_READ_WRITE) {
+      if ($node->comment != COMMENT_NODE_OPEN) {
         drupal_set_message(t("This discussion is closed: you can't post new comments."), 'error');
         drupal_goto("node/$node->nid");
       }
       elseif (user_access('post comments')) {
-        $output .= comment_form_box(array('pid' => $pid, 'nid' => $node->nid), t('Reply'));
+        $edit = array('nid' => $node->nid, 'pid' => $pid);
+        $build['comment_form'] = drupal_get_form('comment_form', (object) $edit);
       }
       else {
         drupal_set_message(t('You are not authorized to post comments.'), 'error');
@@ -114,23 +97,23 @@ function comment_reply($node, $pid = NULL) {
     drupal_goto("node/$node->nid");
   }
 
-  return $output;
+  return $build;
 }
 
 /**
- * Publish specified comment.
+ * Menu callback; publish specified comment.
  *
  * @param $cid ID of comment to be published.
  */
 function comment_approve($cid) {
   // Load the comment whose cid = $cid
-  if ($comment = (array) comment_load($cid)) {
-    $comment['status'] = COMMENT_PUBLISHED;
-    $comment['comment_format'] = $comment['format'];
+  if ($comment = comment_load($cid)) {
+    $comment->status = COMMENT_PUBLISHED;
+    $comment->comment_format = $comment->format;
     comment_save($comment);
 
     drupal_set_message(t('Comment approved.'));
-    drupal_goto('node/' . $comment['nid']);
+    drupal_goto('node/' . $comment->nid);
   }
   else {
     drupal_set_message(t('The comment you are approving does not exist.'), 'error');

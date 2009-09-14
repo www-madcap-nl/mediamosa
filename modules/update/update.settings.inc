@@ -1,5 +1,5 @@
 <?php
-// $Id: update.settings.inc,v 1.5 2009/01/11 21:19:19 dries Exp $
+// $Id: update.settings.inc,v 1.8 2009/08/24 00:42:34 webchick Exp $
 
 /**
  * @file
@@ -34,13 +34,19 @@ function update_settings() {
 
   $form['update_notification_threshold'] = array(
     '#type' => 'radios',
-    '#title' => t('Notification threshold'),
+    '#title' => t('E-mail notification threshold'),
     '#default_value' => variable_get('update_notification_threshold', 'all'),
     '#options' => array(
       'all' => t('All newer versions'),
       'security' => t('Only security updates'),
     ),
-    '#description' => t('If there are updates available of Drupal core or any of your installed modules and themes, your site will print an error message on the <a href="@status_report">status report</a>, the <a href="@modules_page">modules page</a>, and the <a href="@themes_page">themes page</a>. You can choose to only see these error messages if a security update is available, or to be notified about any newer versions.', array('@status_report' => url('admin/reports/status'), '@modules_page' => url('admin/build/modules'), '@themes_page' => url('admin/build/themes')))
+    '#description' => t('You can choose to send e-mail only if a security update is available, or to be notified about all newer versions. If there are updates available of Drupal core or any of your installed modules and themes, your site will always print a message on the <a href="@status_report">status report</a> page, and will also display an error message on administration pages if there is a security update.', array('@status_report' => url('admin/reports/status')))
+  );
+
+  $form['update_check_disabled'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Check for updates of disabled modules and themes'),
+    '#default_value' => variable_get('update_check_disabled', FALSE),
   );
 
   $form = system_settings_form($form, FALSE);
@@ -87,22 +93,31 @@ function update_settings_validate($form, &$form_state) {
 
 /**
  * Submit handler for the settings tab.
+ *
+ * Also invalidates the cache of available updates if the "Check for updates
+ * of disabled modules and themes" setting is being changed. The available
+ * updates report need to refetch available update data after this setting
+ * changes or it would show misleading things (e.g. listing the disabled
+ * projects on the site with the "No available releases found" warning).
  */
 function update_settings_submit($form, $form_state) {
   $op = $form_state['values']['op'];
 
-  if ($op == t('Reset to defaults')) {
-    unset($form_state['notify_emails']);
+  if (empty($form_state['notify_emails'])) {
+    variable_del('update_notify_emails');
   }
   else {
-    if (empty($form_state['notify_emails'])) {
-      variable_del('update_notify_emails');
-    }
-    else {
-      variable_set('update_notify_emails', $form_state['notify_emails']);
-    }
-    unset($form_state['notify_emails']);
-    unset($form_state['values']['update_notify_emails']);
+    variable_set('update_notify_emails', $form_state['notify_emails']);
   }
+  unset($form_state['notify_emails']);
+  unset($form_state['values']['update_notify_emails']);
+
+  // See if the update_check_disabled setting is being changed, and if so,
+  // invalidate all cached update status data.
+  $check_disabled = variable_get('update_check_disabled', FALSE);
+  if ($form_state['values']['update_check_disabled'] != $check_disabled) {
+    _update_cache_clear();
+  }
+
   system_settings_form_submit($form, $form_state);
 }

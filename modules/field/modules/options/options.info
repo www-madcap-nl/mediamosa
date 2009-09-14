@@ -1,6 +1,15 @@
-; $Id: options.info,v 1.1 2009/02/03 17:30:11 dries Exp $
+; $Id: options.info,v 1.3 2009/06/12 08:39:36 dries Exp $
 name = Options
 description = Defines selection, check box and radio button widgets for text and numeric fields.
 package = Core - fields
+version = VERSION
 core = 7.x
 files[]=options.module
+required = TRUE
+
+; Information added by drupal.org packaging script on 2009-09-09
+version = "7.x-dev"
+core = "7.x"
+project = "drupal"
+datestamp = "1252498273"
+

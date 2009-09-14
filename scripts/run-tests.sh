@@ -1,5 +1,5 @@
 <?php
-// $Id: run-tests.sh,v 1.23 2009/02/01 16:42:26 dries Exp $
+// $Id: run-tests.sh,v 1.35 2009/08/17 19:14:41 webchick Exp $
 /**
  * @file
  * This script runs Drupal tests from command line.
@@ -12,15 +12,19 @@ define('SIMPLETEST_SCRIPT_COLOR_EXCEPTION', 33); // Brown.
 // Set defaults and get overrides.
 list($args, $count) = simpletest_script_parse_args();
 
-simpletest_script_init();
-
 if ($args['help'] || $count == 0) {
   simpletest_script_help();
   exit;
 }
 
 if ($args['execute-batch']) {
+  // Masquerade as Apache for running tests.
+  simpletest_script_init("Apache");
   simpletest_script_execute_batch();
+}
+else {
+  // Run administrative functions as CLI.
+  simpletest_script_init("PHP CLI");
 }
 
 // Bootstrap to perform initial validation or other operations.
@@ -44,8 +48,11 @@ if ($args['clean']) {
 }
 
 // Load SimpleTest files.
-$all_tests = simpletest_get_all_tests();
-$groups = simpletest_categorize_tests($all_tests);
+$groups = simpletest_test_get_all();
+$all_tests = array();
+foreach ($groups as $group => $tests) {
+  $all_tests = array_merge($all_tests, array_keys($tests));
+}
 $test_list = array();
 
 if ($args['list']) {
@@ -54,9 +61,8 @@ if ($args['list']) {
   echo   "-------------------------------\n\n";
   foreach ($groups as $group => $tests) {
     echo $group . "\n";
-    foreach ($tests as $class_name => $instance) {
-      $info = $instance->getInfo();
-      echo " - " . $info['name'] . ' (' . $class_name . ')' . "\n";
+    foreach ($tests as $class => $info) {
+      echo " - " . $info['name'] . ' (' . $class . ')' . "\n";
     }
   }
   exit;
@@ -64,10 +70,8 @@ if ($args['list']) {
 
 $test_list = simpletest_script_get_test_list();
 
-// If not in 'safe mode', increase the maximum execution time.
-if (!ini_get('safe_mode')) {
-  set_time_limit(0);
-}
+// Try to allocate unlimited time to run the tests.
+drupal_set_time_limit(0);
 
 simpletest_script_reporter_init();
 
@@ -77,14 +81,17 @@ $test_id = db_insert('simpletest_test_id')->useDefaults(array('test_id'))->execu
 // Execute tests.
 simpletest_script_command($args['concurrency'], $test_id, implode(",", $test_list));
 
+// Retrieve the last database prefix used for testing and the last test class
+// that was run from. Use the information to read the lgo file in case any
+// fatal errors caused the test to crash.
+list($last_prefix, $last_test_class) = simpletest_last_test_get($test_id);
+simpletest_log_read($test_id, $last_prefix, $last_test_class);
+
 // Display results before database is cleared.
 simpletest_script_reporter_display_results();
 
 // Cleanup our test results.
-db_delete("simpletest")
-  ->condition('test_id', $test_id)
-  ->execute();
-
+simpletest_clean_results_table($test_id);
 
 /**
  * Print help text.
@@ -134,7 +141,8 @@ All arguments are long options.
   <test1>[,<test2>[,<test3> ...]]
 
               One or more tests to be run. By default, these are interpreted
-              as the names of test groups as shown at ?q=admin/build/testing.
+              as the names of test groups as shown at 
+              ?q=admin/config/development/testing.
               These group names typically correspond to module names like "User"
               or "Profile" or "System", but there is also a group "XML-RPC".
               If --class is specified then these are interpreted as the names of
@@ -227,7 +235,7 @@ function simpletest_script_parse_args() {
 /**
  * Initialize script variables and perform general setup requirements.
  */
-function simpletest_script_init() {
+function simpletest_script_init($server_software) {
   global $args, $php;
 
   $host = 'localhost';
@@ -254,14 +262,14 @@ function simpletest_script_init() {
   // Get url from arguments.
   if (!empty($args['url'])) {
     $parsed_url = parse_url($args['url']);
-    $host = $parsed_url['host'];
+    $host = $parsed_url['host'] . (isset($parsed_url['port']) ? ':' . $parsed_url['port'] : '');
     $path = $parsed_url['path'];
   }
 
   $_SERVER['HTTP_HOST'] = $host;
   $_SERVER['REMOTE_ADDR'] = '127.0.0.1';
   $_SERVER['SERVER_ADDR'] = '127.0.0.1';
-  $_SERVER['SERVER_SOFTWARE'] = 'Apache';
+  $_SERVER['SERVER_SOFTWARE'] = $server_software;
   $_SERVER['SERVER_NAME'] = 'localhost';
   $_SERVER['REQUEST_URI'] = $path .'/';
   $_SERVER['REQUEST_METHOD'] = 'GET';
@@ -343,7 +351,6 @@ function simpletest_script_execute_batch() {
  * Run a single test (assume a Drupal bootstrapped environment).
  */
 function simpletest_script_run_one_test($test_id, $test_class) {
-  simpletest_get_all_tests();
   $test = new $test_class($test_id);
   $test->run();
   $info = $test->getInfo();
@@ -380,13 +387,13 @@ function simpletest_script_get_test_list() {
 
   $test_list = array();
   if ($args['all']) {
-    $test_list = array_keys($all_tests);
+    $test_list = $all_tests;
   }
   else {
     if ($args['class']) {
       // Check for valid class names.
       foreach ($args['test_names'] as $class_name) {
-        if (isset($all_tests[$class_name])) {
+        if (in_array($class_name, $all_tests)) {
           $test_list[] = $class_name;
         }
       }
@@ -394,11 +401,11 @@ function simpletest_script_get_test_list() {
     elseif ($args['file']) {
       $files = array();
       foreach ($args['test_names'] as $file) {
-        $files[realpath($file)] = 1;
+        $files[drupal_realpath($file)] = 1;
       }
 
       // Check for valid class names.
-      foreach ($all_tests as $class_name => $instance) {
+      foreach ($all_tests as $class_name) {
         $refclass = new ReflectionClass($class_name);
         $file = $refclass->getFileName();
         if (isset($files[$file])) {
@@ -410,7 +417,7 @@ function simpletest_script_get_test_list() {
       // Check for valid group names and get all valid classes in group.
       foreach ($args['test_names'] as $group_name) {
         if (isset($groups[$group_name])) {
-          foreach($groups[$group_name] as $class_name => $instance) {
+          foreach($groups[$group_name] as $class_name => $info) {
             $test_list[] = $class_name;
           }
         }
@@ -443,7 +450,7 @@ function simpletest_script_reporter_init() {
   else {
     echo "Tests to be run:\n";
     foreach ($test_list as $class_name) {
-      $info = $all_tests[$class_name]->getInfo();
+      $info = call_user_func(array($class_name, 'getInfo'));
       echo " - " . $info['name'] . ' (' . $class_name . ')' . "\n";
     }
     echo "\n";

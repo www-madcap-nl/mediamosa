@@ -1,5 +1,5 @@
 <?php
-// $Id: forum.test,v 1.15 2009/02/13 05:42:24 webchick Exp $
+// $Id: forum.test,v 1.29 2009/08/25 21:53:47 dries Exp $
 
 class ForumTestCase extends DrupalWebTestCase {
   protected $big_user;
@@ -11,11 +11,11 @@ class ForumTestCase extends DrupalWebTestCase {
   protected $root_forum;
   protected $nids;
 
-  function getInfo() {
+  public static function getInfo() {
     return array(
-      'name' => t('Forum functionality'),
-      'description' => t('Create, view, edit, delete, and change forum entries and verify its consistency in the database.'),
-      'group' => t('Forum'),
+      'name' => 'Forum functionality',
+      'description' => 'Create, view, edit, delete, and change forum entries and verify its consistency in the database.',
+      'group' => 'Forum',
     );
   }
 
@@ -76,24 +76,24 @@ class ForumTestCase extends DrupalWebTestCase {
 
     // Enable the active forum block.
     $edit = array();
-    $edit['forum_active[region]'] = 'right';
-    $this->drupalPost('admin/build/block', $edit, t('Save blocks'));
+    $edit['forum_active[region]'] = 'sidebar_second';
+    $this->drupalPost('admin/structure/block', $edit, t('Save blocks'));
     $this->assertResponse(200);
     $this->assertText(t('The block settings have been updated.'), t('[Active forum topics] Forum block was enabled'));
 
     // Enable the new forum block.
     $edit = array();
-    $edit['forum_new[region]'] = 'right';
-    $this->drupalPost('admin/build/block', $edit, t('Save blocks'));
+    $edit['forum_new[region]'] = 'sidebar_second';
+    $this->drupalPost('admin/structure/block', $edit, t('Save blocks'));
     $this->assertResponse(200);
     $this->assertText(t('The block settings have been updated.'), t('[New forum topics] Forum block was enabled'));
 
     // Retrieve forum menu id.
-    $mlid = db_result(db_query_range("SELECT mlid FROM {menu_links} WHERE link_path = 'forum' AND menu_name = 'navigation' AND module = 'system' ORDER BY mlid ASC", 0, 1));
+    $mlid = db_query_range("SELECT mlid FROM {menu_links} WHERE link_path = 'forum' AND menu_name = 'navigation' AND module = 'system' ORDER BY mlid ASC", 0, 1)->fetchField();
 
     // Add forum to navigation menu.
     $edit = array();
-    $this->drupalPost('admin/build/menu-customize/navigation', $edit, t('Save configuration'));
+    $this->drupalPost('admin/structure/menu-customize/navigation', $edit, t('Save configuration'));
     $this->assertResponse(200);
 
     // Edit forum taxonomy.
@@ -126,16 +126,18 @@ class ForumTestCase extends DrupalWebTestCase {
     $edit = array(
       'name' => $title,
       'description' => $description,
+      'machine_name' => drupal_strtolower($this->randomName()),
       'help' => '',
     );
 
     // Edit the vocabulary.
-    $this->drupalPost('admin/content/taxonomy/' . $vid, $edit, t('Save'));
+    $this->drupalPost('admin/structure/taxonomy/' . $vid, $edit, t('Save'));
     $this->assertResponse(200);
     $this->assertRaw(t('Updated vocabulary %name.', array('%name' => $title)), t('Vocabulary was edited'));
 
     // Grab the newly edited vocabulary.
-    $current_settings = taxonomy_vocabulary_load($vid, TRUE);
+    entity_get_controller('taxonomy_vocabulary')->resetCache();
+    $current_settings = taxonomy_vocabulary_load($vid);
 
     // Make sure we actually edited the vocabulary properly.
     $this->assertEqual($current_settings->name, $title, t('The name was updated'));
@@ -143,7 +145,8 @@ class ForumTestCase extends DrupalWebTestCase {
 
     // Restore the original vocabulary.
     taxonomy_vocabulary_save($original_settings);
-    $current_settings = taxonomy_vocabulary_load($vid, TRUE);
+    drupal_static_reset('taxonomy_vocabulary_load');
+    $current_settings = taxonomy_vocabulary_load($vid);
     $this->assertEqual($current_settings->name, $original_settings->name, 'The original vocabulary settings were restored');
   }
 
@@ -167,18 +170,18 @@ class ForumTestCase extends DrupalWebTestCase {
     );
 
     // Create forum.
-    $this->drupalPost('admin/build/forum/add/' . $type, $edit, t('Save'));
+    $this->drupalPost('admin/structure/forum/add/' . $type, $edit, t('Save'));
     $this->assertResponse(200);
     $type = ($type == 'container') ? 'forum container' : 'forum';
     $this->assertRaw(t('Created new @type %term.', array('%term' => $name, '@type' => t($type))), t(ucfirst($type) . ' was created'));
 
     // Verify forum.
-    $term = db_fetch_array(db_query("SELECT * FROM {taxonomy_term_data} t WHERE t.vid = %d AND t.name = '%s' AND t.description = '%s'", variable_get('forum_nav_vocabulary', ''), $name, $description));
+    $term = db_query("SELECT * FROM {taxonomy_term_data} t WHERE t.vid = :vid AND t.name = :name AND t.description = :desc", array(':vid' => variable_get('forum_nav_vocabulary', ''), ':name' => $name, ':desc' => $description))->fetchAssoc();
     $this->assertTrue(!empty($term), 'The ' . $type . ' exists in the database');
 
     // Verify forum hierarchy.
     $tid = $term['tid'];
-    $parent_tid = db_result(db_query("SELECT t.parent FROM {taxonomy_term_hierarchy} t WHERE t.tid = %d", $tid));
+    $parent_tid = db_query("SELECT t.parent FROM {taxonomy_term_hierarchy} t WHERE t.tid = :tid", array(':tid' => $tid))->fetchField();
     $this->assertTrue($parent == $parent_tid, 'The ' . $type . ' is linked to its container');
 
     return $term;
@@ -191,11 +194,11 @@ class ForumTestCase extends DrupalWebTestCase {
    */
   function deleteForum($tid) {
     // Delete the forum id.
-    $this->drupalPost('admin/build/forum/edit/forum/'. $tid, array(), t('Delete'));
+    $this->drupalPost('admin/structure/forum/edit/forum/' . $tid, array(), t('Delete'));
     $this->drupalPost(NULL, NULL, t('Delete'));
-    
+
     // Assert that the forum no longer exists.
-    $this->drupalGet('forum/'. $tid);
+    $this->drupalGet('forum/' . $tid);
     $this->assertRaw(t('No forums defined'), 'The forum was not found');
   }
 
@@ -229,9 +232,10 @@ class ForumTestCase extends DrupalWebTestCase {
     $body = $this->randomName(200);
     $tid = $forum['tid']; // Without this being set, post variable equals the first non-blank in select items list.
 
+    $langcode = FIELD_LANGUAGE_NONE;
     $edit = array(
       'title' => $title,
-      'body' => $body,
+      "body[$langcode][0][value]" => $body,
       'taxonomy[1]' => $tid
     );
 
@@ -255,7 +259,7 @@ class ForumTestCase extends DrupalWebTestCase {
 
     // Retrieve node object.
     $node = $this->drupalGetNodeByTitle($title);
-    $this->assertTrue($node != null, t('Node @title was loaded', array('@title' => $title)));
+    $this->assertTrue($node != NULL, t('Node @title was loaded', array('@title' => $title)));
 
     // View forum topic.
     $this->drupalGet('node/' . $node->nid);
@@ -283,9 +287,8 @@ class ForumTestCase extends DrupalWebTestCase {
     $this->drupalGet('admin/help/forum');
     $this->assertResponse($response2);
     if ($response2 == 200) {
-      $this->assertTitle(t('Forum | Drupal'), t('Forum help node was displayed'));
+      $this->assertTitle(t('Forum | Drupal'), t('Forum help title was displayed'));
       $this->assertText(t('Forum'), t('Forum help node was displayed'));
-      $this->assertText(t('Home ' . $crumb . ' Administer ' . $crumb . ' Help'), t('Breadcrumbs were displayed'));
     }
 
     // Verify the forum blocks were displayed.
@@ -313,21 +316,24 @@ class ForumTestCase extends DrupalWebTestCase {
     $this->assertResponse($response);
     if ($response == 200) {
       $this->assertTitle('Edit Forum topic ' . $node->title . ' | Drupal', t('Forum edit node was displayed'));
-      $this->assertText(t('Home ' . $crumb . ' @title', array('@title' => $node->title)), t('Breadcrumbs were displayed'));
     }
 
     if ($response == 200) {
       // Edit forum node (including moving it to another forum).
       $edit = array();
       $edit['title'] = 'node/' . $node->nid;
-      $edit['body'] = $this->randomName(256);
+      $langcode = FIELD_LANGUAGE_NONE;
+      $edit["body[$langcode][0][value]"] = $this->randomName(256);
       $edit['taxonomy[1]'] = $this->root_forum['tid']; // Assumes the topic is initially associated with $forum.
       $edit['shadow'] = TRUE;
       $this->drupalPost('node/' . $node->nid . '/edit', $edit, t('Save'));
       $this->assertRaw(t('Forum topic %title has been updated.', array('%title' => $edit['title'])), t('Forum node was edited'));
 
       // Verify topic was moved to a different forum.
-      $forum_tid = db_result(db_query("SELECT tid FROM {forum} WHERE nid = %d AND vid = %d", $node->nid, $node->vid));
+      $forum_tid = db_query("SELECT tid FROM {forum} WHERE nid = :nid AND vid = :vid", array(
+        ':nid' => $node->nid,
+        ':vid' => $node->vid,
+      ))->fetchField();
       $this->assertTrue($forum_tid == $this->root_forum['tid'], 'The forum topic is linked to a different forum');
 
       // Delete forum node.
@@ -348,7 +354,7 @@ class ForumTestCase extends DrupalWebTestCase {
     // View forum page.
     $this->drupalGet('forum/' . $forum['tid']);
     $this->assertResponse(200);
-    $this->assertTitle($forum['name'] . ' | Drupal', t('Forum node was displayed'));
+    $this->assertTitle($forum['name'] . ' | Drupal', t('Forum name was displayed'));
     if (isset($parent)) {
       $this->assertText(t('Home ' . $crumb . ' Forums ' . $crumb . ' @name', array('@name' => $parent['name'])), t('Breadcrumbs were displayed'));
     }

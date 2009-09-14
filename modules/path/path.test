@@ -1,12 +1,17 @@
 <?php
-// $Id: path.test,v 1.6 2009/01/09 07:44:00 dries Exp $
+// $Id: path.test,v 1.20 2009/08/28 14:40:12 webchick Exp $
+
+/**
+ * @file
+ * Tests for the path module
+ */
 
 class PathTestCase extends DrupalWebTestCase {
-  function getInfo() {
+  public static function getInfo() {
     return array(
-      'name' => t('Path alias functionality'),
-      'description' => t('Add, edit, delete, and change alias and verify its consistency in the database.'),
-      'group' => t('Path'),
+      'name' => 'Path alias functionality',
+      'description' => 'Add, edit, delete, and change alias and verify its consistency in the database.',
+      'group' => 'Path',
     );
   }
 
@@ -15,23 +20,49 @@ class PathTestCase extends DrupalWebTestCase {
    */
   function setUp() {
     parent::setUp('path');
-    // create and login user
-    $web_user = $this->drupalCreateUser(array('edit any page content', 'create page content', 'administer url aliases', 'create url aliases'));
+
+    // Create test user and login.
+    $web_user = $this->drupalCreateUser(array('create page content', 'edit own page content', 'administer url aliases', 'create url aliases'));
     $this->drupalLogin($web_user);
   }
 
   /**
-   * Test alias functionality through the admin interfaces.
+   * Test the path cache.
    */
-  function testAdminAlias() {
-    // create test node
+  function testPathCache() {
+    // Create test node.
     $node1 = $this->drupalCreateNode();
 
     // Create alias.
     $edit = array();
     $edit['src'] = 'node/' . $node1->nid;
     $edit['dst'] = $this->randomName(8);
-    $this->drupalPost('admin/build/path/add', $edit, t('Create new alias'));
+    $this->drupalPost('admin/config/search/path/add', $edit, t('Create new alias'));
+
+    // Visit the system path for the node and confirm a cache entry is
+    // created.
+    cache_clear_all('*', 'cache_path', TRUE);
+    $this->drupalGet($edit['src']);
+    $this->assertTrue(cache_get($edit['src'], 'cache_path'), t('Cache entry was created.'));
+
+    // Visit the alias for the node and confirm a cache entry is created.
+    cache_clear_all('*', 'cache_path', TRUE);
+    $this->drupalGet($edit['dst']);
+    $this->assertTrue(cache_get($edit['src'], 'cache_path'), t('Cache entry was created.'));
+  }
+
+  /**
+   * Test alias functionality through the admin interfaces.
+   */
+  function testAdminAlias() {
+    // Create test node.
+    $node1 = $this->drupalCreateNode();
+
+    // Create alias.
+    $edit = array();
+    $edit['src'] = 'node/' . $node1->nid;
+    $edit['dst'] = $this->randomName(8);
+    $this->drupalPost('admin/config/search/path/add', $edit, t('Create new alias'));
 
     // Confirm that the alias works.
     $this->drupalGet($edit['dst']);
@@ -42,7 +73,7 @@ class PathTestCase extends DrupalWebTestCase {
 
     $previous = $edit['dst'];
     $edit['dst'] = $this->randomName(8);
-    $this->drupalPost('admin/build/path/edit/' . $pid, $edit, t('Update alias'));
+    $this->drupalPost('admin/config/search/path/edit/' . $pid, $edit, t('Update alias'));
 
     // Confirm that the alias works.
     $this->drupalGet($edit['dst']);
@@ -59,13 +90,13 @@ class PathTestCase extends DrupalWebTestCase {
     // Set alias to second test node.
     $edit['src'] = 'node/' . $node2->nid;
     // leave $edit['dst'] the same
-    $this->drupalPost('admin/build/path/add', $edit, t('Create new alias'));
+    $this->drupalPost('admin/config/search/path/add', $edit, t('Create new alias'));
 
     // Confirm no duplicate was created.
     $this->assertRaw(t('The alias %alias is already in use in this language.', array('%alias' => $edit['dst'])), 'Attempt to move alias was rejected.');
 
     // Delete alias.
-    $this->drupalPost('admin/build/path/delete/' . $pid, array(), t('Confirm'));
+    $this->drupalPost('admin/config/search/path/delete/' . $pid, array(), t('Confirm'));
 
     // Confirm that the alias no longer works.
     $this->drupalGet($edit['dst']);
@@ -121,16 +152,16 @@ class PathTestCase extends DrupalWebTestCase {
   }
 
   function getPID($dst) {
-    return db_result(db_query("SELECT pid FROM {url_alias} WHERE dst = '%s'", $dst));
+    return db_query("SELECT pid FROM {url_alias} WHERE dst = :dst", array(':dst' => $dst))->fetchField();
   }
 }
 
 class PathLanguageTestCase extends DrupalWebTestCase {
-  function getInfo() {
+  public static function getInfo() {
     return array(
-      'name' => t('Path aliases with translated nodes'),
-      'description' => t('Confirm that paths work with translated nodes'),
-      'group' => t('Path'),
+      'name' => 'Path aliases with translated nodes',
+      'description' => 'Confirm that paths work with translated nodes',
+      'group' => 'Path',
     );
   }
 
@@ -148,13 +179,14 @@ class PathLanguageTestCase extends DrupalWebTestCase {
     $edit = array();
     $edit['langcode'] = 'fr';
 
-    $this->drupalPost('admin/settings/language/add', $edit, t('Add language'));
+    $this->drupalPost('admin/config/regional/language/add', $edit, t('Add language'));
+    drupal_static_reset('language_list');
 
     // Set language negotiation to "Path prefix with fallback".
     variable_set('language_negotiation', LANGUAGE_NEGOTIATION_PATH);
 
     // Force inclusion of language.inc.
-    drupal_init_language();
+    drupal_language_initialize();
   }
 
   /**
@@ -181,7 +213,8 @@ class PathLanguageTestCase extends DrupalWebTestCase {
     $this->clickLink(t('add translation'));
     $edit = array();
     $edit['title'] = $this->randomName();
-    $edit['body'] = $this->randomName();
+    $langcode = FIELD_LANGUAGE_NONE;
+    $edit["body[$langcode][0][value]"] = $this->randomName();
     $edit['path'] = $this->randomName();
     $this->drupalPost(NULL, $edit, t('Save'));
 

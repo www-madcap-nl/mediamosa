@@ -1,5 +1,5 @@
 <?php
-// $Id: taxonomy_test.module,v 1.3 2008/12/05 22:18:45 dries Exp $
+// $Id: taxonomy_test.module,v 1.6 2009/08/03 20:19:29 webchick Exp $
 
 /**
  * @file
@@ -7,76 +7,76 @@
  */
 
 /**
- * Implementation of hook_taxonomy_term_load().
+ * Implement hook_taxonomy_term_load().
  */
 function taxonomy_test_taxonomy_term_load(&$terms) {
   foreach ($terms as $term) {
-    $term->antonyms = taxonomy_test_get_antonyms($term->tid);
+    $antonym = taxonomy_test_get_antonym($term->tid);
+    if ($antonym) {
+      $term->antonym = $antonym;
+    }
   }
 }
 
 /**
- * Implementation of hook_taxonomy_term_insert().
+ * Implement hook_taxonomy_term_insert().
  */
 function taxonomy_test_taxonomy_term_insert($term) {
-  if (!empty($term->antonyms)) {
-    foreach (explode ("\n", str_replace("\r", '', $term->antonyms)) as $antonym) {
-      if ($antonym) {
-        db_insert('term_antonym')->fields(array('tid' => $term->tid, 'name' => rtrim($antonym)))->execute();
-      }
-    }
+  if (!empty($term->antonym)) {
+    db_insert('taxonomy_term_antonym')
+      ->fields(array(
+        'tid' => $term->tid,
+        'name' => trim($term->antonym)
+      ))
+      ->execute();
   }
 }
 
 /**
- * Implementation of hook_taxonomy_term_update().
+ * Implement hook_taxonomy_term_update().
  */
 function taxonomy_test_taxonomy_term_update($term) {
-  taxonomy_test_taxonomy_term_delete($term);
-  if (!empty($term->antonyms)) {
-    foreach (explode ("\n", str_replace("\r", '', $term->antonyms)) as $antonym) {
-      if ($antonym) {
-        db_insert('term_antonym')->fields(array('tid' => $term->tid, 'name' => rtrim($antonym)))->execute();
-      }
-    }
+  if (!empty($term->antonym)) {
+    db_merge('taxonomy_term_antonym')
+      ->key(array('tid' => $term->tid))
+      ->fields(array(
+        'name' => trim($term->antonym)
+      ))
+      ->execute();
   }
 }
 
 /**
- * Implementation of hook_taxonomy_term_delete().
+ * Implement hook_taxonomy_term_delete().
  */
 function taxonomy_test_taxonomy_term_delete($term) {
-  db_delete('term_antonym')->condition('tid', $term->tid)->execute();
+  db_delete('taxonomy_term_antonym')
+    ->condition('tid', $term->tid)
+    ->execute();
 }
 
 /**
- * Implementation of hook_form_alter().
+ * Implement hook_form_alter().
  */
 function taxonomy_test_form_alter(&$form, $form_state, $form_id) {
   if ($form_id == 'taxonomy_form_term') {
-    $antonyms = taxonomy_test_get_antonyms($form['#term']['tid']);
-    $form['advanced']['antonyms'] = array(
-      '#type' => 'textarea',
-      '#title' => t('Antonyms'),
-      '#default_value' => !empty($antonyms) ? implode("\n", $antonyms) : NULL,
-      '#description' => t('Antonyms of this term, one antonym per line.')
+    $antonym = taxonomy_test_get_antonym($form['#term']['tid']);
+    $form['advanced']['antonym'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Antonym'),
+      '#default_value' => !empty($antonym) ? $antonym : '',
+      '#description' => t('Antonym of this term.')
     );
   }
 }
 
 /**
- * Return an array of antonyms of the given term ID.
+ * Return the antonym of the given term ID.
  */
-function taxonomy_test_get_antonyms($tid) {
-  if ($tid) {
-    $antonyms = array();
-    $result = db_query('SELECT name FROM {term_antonym} WHERE tid = :tid', array(':tid' => $tid));
-    foreach($result as $antonym) {
-      $antonyms[] = $antonym->name;
-    }
-    return $antonyms;
-  }
-  else {
-    return FALSE;
-  }
+function taxonomy_test_get_antonym($tid) {
+  return db_select('taxonomy_term_antonym', 'ta')
+    ->fields('ta', array('name'))
+    ->condition('tid', $tid)
+    ->execute()
+    ->fetchField();
 }

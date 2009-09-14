@@ -1,5 +1,5 @@
 <?php
-// $Id: contact.admin.inc,v 1.7 2009/02/05 19:26:21 webchick Exp $
+// $Id: contact.admin.inc,v 1.14 2009/08/19 12:56:47 dries Exp $
 
 /**
  * @file
@@ -18,19 +18,19 @@ function contact_admin_categories() {
   $result = db_query('SELECT cid, category, recipients, selected FROM {contact} ORDER BY weight, category');
 
   // Loop through the categories and add them to the table.
-  while ($category = db_fetch_object($result)) {
+  foreach ($result as $record) {
     $rows[] = array(
-      $category->category,
-      $category->recipients,
-      ($category->selected ? t('Yes') : t('No')),
-      l(t('edit'), 'admin/build/contact/edit/' . $category->cid),
-      l(t('delete'), 'admin/build/contact/delete/' . $category->cid),
+      $record->category,
+      $record->recipients,
+      ($record->selected ? t('Yes') : t('No')),
+      l(t('edit'), 'admin/structure/contact/edit/' . $record->cid),
+      l(t('delete'), 'admin/structure/contact/delete/' . $record->cid),
     );
   }
 
   // If no categories were found, let the user know.
   if (empty($rows)) {
-    $rows[] = array(array('data' => t('No categories available.'), 'colspan' => 5));
+    $rows[] = array(array('data' => t('No categories available. <a href="@link">Add category</a>.', array('@link' => url('admin/structure/contact/add'))), 'colspan' => 5));
   }
 
   return theme('table', $header, $rows);
@@ -109,7 +109,9 @@ function contact_admin_edit_validate($form, &$form_state) {
 function contact_admin_edit_submit($form, &$form_state) {
   if ($form_state['values']['selected']) {
     // Unselect all other contact categories.
-    db_query('UPDATE {contact} SET selected = 0');
+    db_update('contact')
+      ->fields(array('selected' => '0'))
+      ->execute();
   }
   $recipients = explode(',', $form_state['values']['recipients']);
   foreach ($recipients as $key => $recipient) {
@@ -120,16 +122,16 @@ function contact_admin_edit_submit($form, &$form_state) {
   if (empty($form_state['values']['cid']) || $form_state['values']['contact_op'] == 'add') {
     drupal_write_record('contact', $form_state['values']);
     drupal_set_message(t('Category %category has been added.', array('%category' => $form_state['values']['category'])));
-    watchdog('mail', 'Contact form: category %category added.', array('%category' => $form_state['values']['category']), WATCHDOG_NOTICE, l(t('view'), 'admin/build/contact'));
+    watchdog('mail', 'Contact form: category %category added.', array('%category' => $form_state['values']['category']), WATCHDOG_NOTICE, l(t('view'), 'admin/structure/contact'));
 
   }
   else {
     drupal_write_record('contact', $form_state['values'], 'cid');
     drupal_set_message(t('Category %category has been updated.', array('%category' => $form_state['values']['category'])));
-    watchdog('mail', 'Contact form: category %category updated.', array('%category' => $form_state['values']['category']), WATCHDOG_NOTICE, l(t('view'), 'admin/build/contact'));
+    watchdog('mail', 'Contact form: category %category updated.', array('%category' => $form_state['values']['category']), WATCHDOG_NOTICE, l(t('view'), 'admin/structure/contact'));
   }
 
-  $form_state['redirect'] = 'admin/build/contact';
+  $form_state['redirect'] = 'admin/structure/contact';
   return;
 }
 
@@ -143,7 +145,7 @@ function contact_admin_delete(&$form_state, $contact) {
     '#value' => $contact,
   );
 
-  return confirm_form($form, t('Are you sure you want to delete %category?', array('%category' => $contact['category'])), 'admin/build/contact', t('This action cannot be undone.'), t('Delete'), t('Cancel'));
+  return confirm_form($form, t('Are you sure you want to delete %category?', array('%category' => $contact['category'])), 'admin/structure/contact', t('This action cannot be undone.'), t('Delete'), t('Cancel'));
 }
 
 /**
@@ -151,20 +153,17 @@ function contact_admin_delete(&$form_state, $contact) {
  */
 function contact_admin_delete_submit($form, &$form_state) {
   $contact = $form_state['values']['contact'];
-  db_query("DELETE FROM {contact} WHERE cid = %d", $contact['cid']);
+  db_delete('contact')
+    ->condition('cid', $contact['cid'])
+    ->execute();
   drupal_set_message(t('Category %category has been deleted.', array('%category' => $contact['category'])));
   watchdog('mail', 'Contact form: category %category deleted.', array('%category' => $contact['category']), WATCHDOG_NOTICE);
 
-  $form_state['redirect'] = 'admin/build/contact';
+  $form_state['redirect'] = 'admin/structure/contact';
   return;
 }
 
 function contact_admin_settings() {
-  $form['contact_form_information'] = array('#type' => 'textarea',
-    '#title' => t('Additional information'),
-    '#default_value' => t('You can leave a message using the contact form below.'),
-    '#description' => t('Information to show on the <a href="@form">contact page</a>. Can be anything from submission guidelines to your postal address or telephone number.', array('@form' => url('contact'))),
-  );
   $form['contact_hourly_threshold'] = array('#type' => 'select',
     '#title' => t('Hourly threshold'),
     '#options' => drupal_map_assoc(array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50)),
@@ -173,9 +172,8 @@ function contact_admin_settings() {
   );
   $form['contact_default_status'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Enable personal contact form by default'),
+    '#title' => t('Enable the personal contact form by default for new users'),
     '#default_value' => 1,
-    '#description' => t('Default status of the personal contact form for new users.'),
   );
   return system_settings_form($form, TRUE);
 }

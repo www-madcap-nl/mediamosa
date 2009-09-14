@@ -1,18 +1,18 @@
 <?php
-// $Id: taxonomy_test.install,v 1.5 2009/01/14 21:16:20 dries Exp $
+// $Id: taxonomy_test.install,v 1.8 2009/08/03 20:19:29 webchick Exp $
 
 /**
- * Implementation of hook_schema().
+ * @file
+ * Install, update and uninstall functions for the taxonomy_test module.
+ */
+
+/**
+ * Implement hook_schema().
  */
 function taxonomy_test_schema() {
-  $schema['term_antonym'] = array(
-    'description' => 'Stores term antonyms.',
+  $schema['taxonomy_term_antonym'] = array(
+    'description' => 'Stores term antonym.',
     'fields' => array(
-      'taid' => array(
-        'type' => 'serial',
-        'not null' => TRUE,
-        'description' => 'Primary Key: Unique term antonym ID.',
-      ),
       'tid' => array(
         'type' => 'int',
         'unsigned' => TRUE,
@@ -28,25 +28,21 @@ function taxonomy_test_schema() {
         'description' => 'The name of the antonym.',
       ),
     ),
-    'indexes' => array(
-      'tid' => array('tid'),
-      'name_tid' => array('name', 'tid'),
-    ),
-    'primary key' => array('taid'),
+    'primary key' => array('tid'),
   );
 
   return $schema;
 }
 
 /**
- * Implementation of hook_install().
+ * Implement hook_install().
  */
 function taxonomy_test_install() {
   drupal_install_schema('taxonomy_test');
 }
 
 /**
- * Implementation of hook_uninstall().
+ * Implement hook_uninstall().
  */
 function taxonomy_test_uninstall() {
   drupal_uninstall_schema('taxonomy_test');

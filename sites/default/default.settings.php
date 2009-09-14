@@ -1,5 +1,5 @@
 <?php
-// $Id: default.settings.php,v 1.18 2008/12/23 19:59:17 dries Exp $
+// $Id: default.settings.php,v 1.29 2009/08/22 20:10:38 dries Exp $
 
 /**
  * @file
@@ -46,7 +46,7 @@
 /**
  * Database settings:
  *
- * The $databases array specifies the database connection or 
+ * The $databases array specifies the database connection or
  * connections that Drupal may use.  Drupal is able to connect
  * to multiple databases, including multiple types of databases,
  * during the same request.
@@ -63,7 +63,7 @@
  *   'port' => 3306,
  * );
  *
- * The "driver" property indicates what Drupal database driver the 
+ * The "driver" property indicates what Drupal database driver the
  * connection should use.  This is usually the same as the name of the
  * database type, such as mysql or sqlite, but not always.  The other
  * properties will vary depending on the driver.  For SQLite, you must
@@ -80,7 +80,7 @@
  * A target database allows Drupal to try to send certain queries to a
  * different database if it can but fall back to the default connection if not.
  * That is useful for master/slave replication, as Drupal may try to connect
- * to a slave server when appropriate and if one is not available will simply 
+ * to a slave server when appropriate and if one is not available will simply
  * fall back to the single master server.
  *
  * The general format for the $databases array is as follows:
@@ -124,7 +124,7 @@
  *
  *   $db_prefix = array(
  *     'default'   => 'main_',
- *     'users'     => 'shared_',
+ *     'users'      => 'shared_',
  *     'sessions'  => 'shared_',
  *     'role'      => 'shared_',
  *     'authmap'   => 'shared_',
@@ -169,7 +169,7 @@ $update_free_access = FALSE;
  *
  * If you are experiencing issues with different site domains,
  * uncomment the Base URL statement below (remove the leading hash sign)
- * and fill in the URL to your Drupal installation.
+ * and fill in the absolute URL to your Drupal installation.
  *
  * You might also want to force users to use a given domain.
  * See the .htaccess file for more information.
@@ -194,7 +194,18 @@ $update_free_access = FALSE;
  * See drupal_initialize_variables() in includes/bootstrap.inc for required
  * runtime settings and the .htaccess file for non-runtime settings. Settings
  * defined there should not be duplicated here so as to avoid conflict issues.
- *
+ */
+
+/**
+ * Some distributions of Linux (most notably Debian) ship their PHP
+ * installations with garbage collection (gc) disabled. Since Drupal depends on
+ * PHP's garbage collection for clearing sessions, ensure that garbage
+ * collection occurs by using the most common settings.
+ */
+ini_set('session.gc_probability', 1);
+ini_set('session.gc_divisor', 100);
+
+/**
  * Set session lifetime (in seconds), i.e. the time from the user's last visit
  * to the active session may be deleted by the session garbage collector. When
  * a session is deleted, authenticated users are logged out, and the contents
@@ -232,13 +243,13 @@ ini_set('session.cookie_lifetime', 2000000);
  *
  * Remove the leading hash signs to enable.
  */
-# $conf = array(
+$conf = array(
 #   'site_name' => 'My Drupal site',
 #   'theme_default' => 'minnelli',
 #   'anonymous' => 'Visitor',
 /**
  * A custom theme can be set for the offline page. This applies when the site
- * is explicitly set to offline mode through the administration page or when
+ * is explicitly set to maintenance mode through the administration page or when
  * the database is inactive due to an error. It can be set through the
  * 'maintenance_theme' key. The template file should also be copied into the
  * theme. It is located inside 'modules/system/maintenance-page.tpl.php'.
@@ -273,7 +284,26 @@ ini_set('session.cookie_lifetime', 2000000);
  * your web server spoofing the X-Forwarded-For headers.
  */
 #   'reverse_proxy_addresses' => array('a.b.c.d', ...), // Leave the comma here.
-# );
+);
+
+/**
+ * Page caching:
+ *
+ * By default, Drupal sends a "Vary: Cookie" HTTP header for anonymous page
+ * views. This tells a HTTP proxy that it may return a page from its local
+ * cache without contacting the web server, if the user sends the same Cookie
+ * header as the user who originally requested the cached page. Without "Vary:
+ * Cookie", authenticated users would also be served the anonymous page from
+ * the cache. If the site has mostly anonymous users except a few known
+ * editors/administrators, the Vary header can be omitted. This allows for
+ * better caching in HTTP proxies (including reverse proxies), i.e. even if
+ * clients send different cookies, they still get content served from the cache
+ * if aggressive caching is enabled and the minimum cache time is non-zero.
+ * However, authenticated users should access the site directly (i.e. not use an
+ * HTTP proxy, and bypass the reverse proxy if one is used) in order to avoid
+ * getting cached pages from the proxy.
+ */
+# $conf['omit_vary_cookie'] = TRUE;
 
 /**
  * String overrides:
@@ -284,7 +314,7 @@ ini_set('session.cookie_lifetime', 2000000);
  *
  * Remove the leading hash signs to enable.
  */
-# $conf['locale_custom_strings_en'] = array(
+# $conf['locale_custom_strings_en'][''] = array(
 #   'forum'      => 'Discussion board',
 #   '@count min' => '@count minutes',
 # );

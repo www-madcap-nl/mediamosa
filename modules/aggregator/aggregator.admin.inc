@@ -1,5 +1,5 @@
 <?php
-// $Id: aggregator.admin.inc,v 1.24 2009/01/26 14:08:42 dries Exp $
+// $Id: aggregator.admin.inc,v 1.42 2009/08/24 17:11:41 webchick Exp $
 
 /**
  * @file
@@ -27,18 +27,24 @@ function aggregator_view() {
   $header = array(t('Title'), t('Items'), t('Last update'), t('Next update'), array('data' => t('Operations'), 'colspan' => '3'));
   $rows = array();
   foreach ($result as $feed) {
-    $rows[] = array(l($feed->title, "aggregator/sources/$feed->fid"), format_plural($feed->items, '1 item', '@count items'), ($feed->checked ? t('@time ago', array('@time' => format_interval(REQUEST_TIME - $feed->checked))) : t('never')), ($feed->checked ? t('%time left', array('%time' => format_interval($feed->checked + $feed->refresh - REQUEST_TIME))) : t('never')), l(t('edit'), "admin/content/aggregator/edit/feed/$feed->fid"), l(t('remove items'), "admin/content/aggregator/remove/$feed->fid"), l(t('update items'), "admin/content/aggregator/update/$feed->fid"));
+    $rows[] = array(l($feed->title, "aggregator/sources/$feed->fid"), format_plural($feed->items, '1 item', '@count items'), ($feed->checked ? t('@time ago', array('@time' => format_interval(REQUEST_TIME - $feed->checked))) : t('never')), ($feed->checked && $feed->refresh ? t('%time left', array('%time' => format_interval($feed->checked + $feed->refresh - REQUEST_TIME))) : t('never')), l(t('edit'), "admin/config/services/aggregator/edit/feed/$feed->fid"), l(t('remove items'), "admin/config/services/aggregator/remove/$feed->fid"), l(t('update items'), "admin/config/services/aggregator/update/$feed->fid"));
+  }
+  if (empty($rows)) {
+    $rows[] = array(array('data' => t('No feeds available. <a href="@link">Add feed</a>.', array('@link' => url('admin/content/aggregator/add/feed'))), 'colspan' => '5', 'class' => array('message')));
   }
   $output .= theme('table', $header, $rows);
 
-  $result = db_query('SELECT c.cid, c.title, count(ci.iid) as items FROM {aggregator_category} c LEFT JOIN {aggregator_category_item} ci ON c.cid = ci.cid GROUP BY c.cid, c.title ORDER BY title');
+  $result = db_query('SELECT c.cid, c.title, COUNT(ci.iid) as items FROM {aggregator_category} c LEFT JOIN {aggregator_category_item} ci ON c.cid = ci.cid GROUP BY c.cid, c.title ORDER BY title');
 
   $output .= '<h3>' . t('Category overview') . '</h3>';
 
   $header = array(t('Title'), t('Items'), t('Operations'));
   $rows = array();
   foreach ($result as $category) {
-    $rows[] = array(l($category->title, "aggregator/categories/$category->cid"), format_plural($category->items, '1 item', '@count items'), l(t('edit'), "admin/content/aggregator/edit/category/$category->cid"));
+    $rows[] = array(l($category->title, "aggregator/categories/$category->cid"), format_plural($category->items, '1 item', '@count items'), l(t('edit'), "admin/config/services/aggregator/edit/category/$category->cid"));
+  }
+  if (empty($rows)) {
+    $rows[] = array(array('data' => t('No categories available. <a href="@link">Add category</a>.', array('@link' => url('admin/config/services/aggregator/add/category'))), 'colspan' => '5', 'class' => array('message')));
   }
   $output .= theme('table', $header, $rows);
 
@@ -54,14 +60,7 @@ function aggregator_view() {
  */
 function aggregator_form_feed(&$form_state, stdClass $feed = NULL) {
   $period = drupal_map_assoc(array(900, 1800, 3600, 7200, 10800, 21600, 32400, 43200, 64800, 86400, 172800, 259200, 604800, 1209600, 2419200), 'format_interval');
-
-  if (!isset($feed)) {
-    $feed = new stdClass();
-  }
-
-  if (empty($feed->refresh)) {
-    $feed->refresh = 3600;
-  }
+  $period[AGGREGATOR_CLEAR_NEVER] = t('Never');
 
   $form['title'] = array('#type' => 'textfield',
     '#title' => t('Title'),
@@ -79,7 +78,7 @@ function aggregator_form_feed(&$form_state, stdClass $feed = NULL) {
   );
   $form['refresh'] = array('#type' => 'select',
     '#title' => t('Update interval'),
-    '#default_value' => isset($feed->refresh) ? $feed->refresh : 900,
+    '#default_value' => isset($feed->refresh) ? $feed->refresh : 3600,
     '#options' => $period,
     '#description' => t('The length of time between feed updates. Requires a correctly configured <a href="@cron">cron maintenance task</a>.', array('@cron' => url('admin/reports/status'))),
   );
@@ -87,7 +86,7 @@ function aggregator_form_feed(&$form_state, stdClass $feed = NULL) {
     '#title' => t('News items in block'),
     '#default_value' => isset($feed->block) ? $feed->block : 5,
     '#options' => drupal_map_assoc(array(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20)),
-    '#description' => t("Drupal can make a block with the most recent news items of this feed. You can <a href=\"@block-admin\">configure blocks</a> to be displayed in the sidebar of your page. This setting lets you configure the number of news items to show in this feed's block. If you choose '0' this feed's block will be disabled.", array('@block-admin' => url('admin/build/block'))),
+    '#description' => t("Drupal can make a block with the most recent news items of this feed. You can <a href=\"@block-admin\">configure blocks</a> to be displayed in the sidebar of your page. This setting lets you configure the number of news items to show in this feed's block. If you choose '0' this feed's block will be disabled.", array('@block-admin' => url('admin/structure/block'))),
   );
 
   // Handling of categories.
@@ -170,7 +169,7 @@ function aggregator_form_feed_submit($form, &$form_state) {
     if (isset($form_state['values']['title'])) {
       drupal_set_message(t('The feed %feed has been updated.', array('%feed' => $form_state['values']['title'])));
       if (arg(0) == 'admin') {
-        $form_state['redirect'] = 'admin/content/aggregator/';
+        $form_state['redirect'] = 'admin/config/services/aggregator/';
         return;
       }
       else {
@@ -182,7 +181,7 @@ function aggregator_form_feed_submit($form, &$form_state) {
       watchdog('aggregator', 'Feed %feed deleted.', array('%feed' => $title));
       drupal_set_message(t('The feed %feed has been deleted.', array('%feed' => $title)));
       if (arg(0) == 'admin') {
-        $form_state['redirect'] = 'admin/content/aggregator/';
+        $form_state['redirect'] = 'admin/config/services/aggregator/';
         return;
       }
       else {
@@ -192,7 +191,7 @@ function aggregator_form_feed_submit($form, &$form_state) {
     }
   }
   else {
-    watchdog('aggregator', 'Feed %feed added.', array('%feed' => $form_state['values']['title']), WATCHDOG_NOTICE, l(t('view'), 'admin/content/aggregator'));
+    watchdog('aggregator', 'Feed %feed added.', array('%feed' => $form_state['values']['title']), WATCHDOG_NOTICE, l(t('view'), 'admin/config/services/aggregator'));
     drupal_set_message(t('The feed %feed has been added.', array('%feed' => $form_state['values']['title'])));
   }
 }
@@ -206,7 +205,7 @@ function aggregator_admin_remove_feed($form_state, $feed) {
       ),
     ),
     t('Are you sure you want to remove all items from the feed %feed?', array('%feed' => $feed->title)),
-    'admin/content/aggregator',
+    'admin/config/services/aggregator',
     t('This action cannot be undone.'),
     t('Remove items'),
     t('Cancel')
@@ -221,7 +220,7 @@ function aggregator_admin_remove_feed($form_state, $feed) {
  */
 function aggregator_admin_remove_feed_submit($form, &$form_state) {
   aggregator_remove($form_state['values']['feed']);
-  $form_state['redirect'] = 'admin/content/aggregator';
+  $form_state['redirect'] = 'admin/config/services/aggregator';
 }
 
 /**
@@ -234,8 +233,6 @@ function aggregator_admin_remove_feed_submit($form, &$form_state) {
 function aggregator_form_opml(&$form_state) {
   $period = drupal_map_assoc(array(900, 1800, 3600, 7200, 10800, 21600, 32400, 43200, 64800, 86400, 172800, 259200, 604800, 1209600, 2419200), 'format_interval');
 
-  $form['#attributes'] = array('enctype' => "multipart/form-data");
-
   $form['upload'] = array(
     '#type' => 'file',
     '#title' => t('OPML File'),
@@ -244,6 +241,7 @@ function aggregator_form_opml(&$form_state) {
   $form['remote'] = array(
     '#type' => 'textfield',
     '#title' => t('OPML Remote URL'),
+    '#maxlength' => 1024,
     '#description' => t('Enter the URL of an OPML file. This file will be downloaded and processed only once on submission of the form.'),
   );
   $form['refresh'] = array(
@@ -257,7 +255,7 @@ function aggregator_form_opml(&$form_state) {
     '#title' => t('News items in block'),
     '#default_value' => 5,
     '#options' => drupal_map_assoc(array(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20)),
-    '#description' => t("Drupal can make a block with the most recent news items of a feed. You can <a href=\"@block-admin\">configure blocks</a> to be displayed in the sidebar of your page. This setting lets you configure the number of news items to show in a feed's block. If you choose '0' these feeds' blocks will be disabled.", array('@block-admin' => url('admin/build/block'))),
+    '#description' => t("Drupal can make a block with the most recent news items of a feed. You can <a href=\"@block-admin\">configure blocks</a> to be displayed in the sidebar of your page. This setting lets you configure the number of news items to show in a feed's block. If you choose '0' these feeds' blocks will be disabled.", array('@block-admin' => url('admin/structure/block'))),
   );
 
   // Handling of categories.
@@ -299,7 +297,7 @@ function aggregator_form_opml_validate($form, &$form_state) {
 function aggregator_form_opml_submit($form, &$form_state) {
   $data = '';
   if ($file = file_save_upload('upload')) {
-    $data = file_get_contents($file->filepath);
+    $data = file_get_contents($file->uri);
   }
   else {
     $response = drupal_http_request($form_state['values']['remote']);
@@ -338,10 +336,10 @@ function aggregator_form_opml_submit($form, &$form_state) {
 
     $form_state['values']['title'] = $feed['title'];
     $form_state['values']['url'] = $feed['url'];
-    drupal_execute('aggregator_form_feed', $form_state);
+    drupal_form_submit('aggregator_form_feed', $form_state);
   }
 
-  $form_state['redirect'] = 'admin/content/aggregator';
+  $form_state['redirect'] = 'admin/config/services/aggregator';
 }
 
 /**
@@ -384,7 +382,7 @@ function _aggregator_parse_opml($opml) {
  */
 function aggregator_admin_refresh_feed($feed) {
   aggregator_refresh($feed);
-  drupal_goto('admin/content/aggregator');
+  drupal_goto('admin/config/services/aggregator');
 }
 
 /**
@@ -393,7 +391,6 @@ function aggregator_admin_refresh_feed($feed) {
  * @ingroup forms
  */
 function aggregator_admin_form($form_state) {
-
   // Make sure configuration is sane.
   aggregator_sanitize_configuration();
 
@@ -465,7 +462,7 @@ function aggregator_admin_form($form_state) {
       '#default_value' => variable_get('aggregator_processors', array('aggregator')),
     );
   }
- if (count($basic_conf)) {
+  if (count($basic_conf)) {
     $form['basic_conf'] = array(
       '#type' => 'fieldset',
       '#title' => t('Basic configuration'),
@@ -554,7 +551,7 @@ function aggregator_form_category_submit($form, &$form_state) {
     if (isset($form_state['values']['title'])) {
       drupal_set_message(t('The category %category has been updated.', array('%category' => $form_state['values']['title'])));
       if (arg(0) == 'admin') {
-        $form_state['redirect'] = 'admin/content/aggregator/';
+        $form_state['redirect'] = 'admin/config/services/aggregator/';
         return;
       }
       else {
@@ -566,7 +563,7 @@ function aggregator_form_category_submit($form, &$form_state) {
       watchdog('aggregator', 'Category %category deleted.', array('%category' => $title));
       drupal_set_message(t('The category %category has been deleted.', array('%category' => $title)));
       if (arg(0) == 'admin') {
-        $form_state['redirect'] = 'admin/content/aggregator/';
+        $form_state['redirect'] = 'admin/config/services/aggregator/';
         return;
       }
       else {
@@ -576,7 +573,7 @@ function aggregator_form_category_submit($form, &$form_state) {
     }
   }
   else {
-    watchdog('aggregator', 'Category %category added.', array('%category' => $form_state['values']['title']), WATCHDOG_NOTICE, l(t('view'), 'admin/content/aggregator'));
+    watchdog('aggregator', 'Category %category added.', array('%category' => $form_state['values']['title']), WATCHDOG_NOTICE, l(t('view'), 'admin/config/services/aggregator'));
     drupal_set_message(t('The category %category has been added.', array('%category' => $form_state['values']['title'])));
   }
 }

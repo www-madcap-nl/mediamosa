@@ -1,5 +1,5 @@
 <?php
-// $Id: profile-listing.tpl.php,v 1.4 2008/10/13 12:31:42 dries Exp $
+// $Id: profile-listing.tpl.php,v 1.7 2009/08/06 05:05:59 webchick Exp $
 
 /**
  * @file
@@ -10,7 +10,8 @@
  *      where all the data is collected and printed out.
  *
  * Available variables:
- * - $picture: Image configured for the account linking to the users page.
+ * - $account: User's account object.
+ * - $user_picture: Image configured for the account linking to the users page.
  * - $name: User's account name linking to the users page.
  * - $profile: Keyed array of all profile fields that are set as visible
  *   in member list pages (configured by site administrators). It also needs
@@ -36,8 +37,8 @@
  * @see template_preprocess_profile_listing()
  */
 ?>
-<div class="profile clear-block">
-  <?php print $picture; ?>
+<div class="profile clearfix">
+  <?php print $user_picture; ?>
 
   <div class="name">
     <?php print $name; ?>

@@ -1,5 +1,5 @@
 <?php
-// $Id: bootstrap.inc,v 1.269 2009/01/31 16:50:56 webchick Exp $
+// $Id: bootstrap.inc,v 1.303 2009/09/05 13:05:30 dries Exp $
 
 /**
  * @file
@@ -26,13 +26,6 @@ define('CACHE_DISABLED', 0);
  * Indicates that page caching is enabled, using "normal" mode.
  */
 define('CACHE_NORMAL', 1);
-
-/**
- * Indicates that page caching is using "aggressive" mode. This bypasses
- * loading any modules for additional speed, which may break functionality in
- * modules that expect to be run on each page load.
- */
-define('CACHE_AGGRESSIVE', 2);
 
 /**
  * Log message severity -- Emergency: system is unusable.
@@ -104,10 +97,9 @@ define('WATCHDOG_DEBUG', 7);
 define('DRUPAL_BOOTSTRAP_CONFIGURATION', 0);
 
 /**
- * Second bootstrap phase: try to call a non-database cache
- * fetch routine.
+ * Second bootstrap phase: try to serve a cached page.
  */
-define('DRUPAL_BOOTSTRAP_EARLY_PAGE_CACHE', 1);
+define('DRUPAL_BOOTSTRAP_PAGE_CACHE', 1);
 
 /**
  * Third bootstrap phase: initialize database layer.
@@ -120,20 +112,19 @@ define('DRUPAL_BOOTSTRAP_DATABASE', 2);
 define('DRUPAL_BOOTSTRAP_ACCESS', 3);
 
 /**
- * Fifth bootstrap phase: initialize session handling.
+ * Fifth bootstrap phase: initialize the variable system.
  */
-define('DRUPAL_BOOTSTRAP_SESSION', 4);
+define('DRUPAL_BOOTSTRAP_VARIABLES', 4);
 
 /**
- * Sixth bootstrap phase: initialize the variable system.
+ * Sixth bootstrap phase: initialize session handling.
  */
-define('DRUPAL_BOOTSTRAP_VARIABLES', 5);
+define('DRUPAL_BOOTSTRAP_SESSION', 5);
 
 /**
- * Seventh bootstrap phase: load bootstrap.inc and module.inc, start
- * the variable system and try to serve a page from the cache.
+ * Seventh bootstrap phase: set up the page header.
  */
-define('DRUPAL_BOOTSTRAP_LATE_PAGE_CACHE', 6);
+define('DRUPAL_BOOTSTRAP_PAGE_HEADER', 6);
 
 /**
  * Eighth bootstrap phase: find out language of the page.
@@ -141,7 +132,7 @@ define('DRUPAL_BOOTSTRAP_LATE_PAGE_CACHE', 6);
 define('DRUPAL_BOOTSTRAP_LANGUAGE', 7);
 
 /**
- * Nineth bootstrap phase: set $_GET['q'] to Drupal path of request.
+ * Ninth bootstrap phase: set $_GET['q'] to Drupal path of request.
  */
 define('DRUPAL_BOOTSTRAP_PATH', 8);
 
@@ -162,9 +153,7 @@ define('DRUPAL_ANONYMOUS_RID', 1);
 define('DRUPAL_AUTHENTICATED_RID', 2);
 
 /**
- * The number of bytes in a kilobyte. The scientific standard for kilo is 1000,
- * but used commonly in the field of computers to represent 1024 bits. For more
- * information on the different standards please visit:
+ * The number of bytes in a kilobyte. For more information, visit
  * http://en.wikipedia.org/wiki/Kilobyte.
  */
 define('DRUPAL_KILOBYTE', 1024);
@@ -360,7 +349,7 @@ function timer_stop($name) {
  *   The path of the matching directory.
  */
 function conf_path($require_settings = TRUE, $reset = FALSE) {
-  static $conf = '';
+  $conf = &drupal_static(__FUNCTION__, '');
 
   if ($conf && !$reset) {
     return $conf;
@@ -393,9 +382,69 @@ function conf_path($require_settings = TRUE, $reset = FALSE) {
 }
 
 /**
- * Initialize variables needed for the rest of the execution.
+ * Set appropriate server variables needed for command line scripts to work.
+ *
+ * This function can be called by command line scripts before bootstrapping
+ * Drupal, to ensure that the page loads with the desired server parameters.
+ * This is because many parts of Drupal assume that they are running in a web
+ * browser and therefore use information from the global PHP $_SERVER variable
+ * that does not get set when Drupal is run from the command line.
+ *
+ * In many cases, the default way in which this function populates the $_SERVER
+ * variable is sufficient, and it can therefore be called without passing in
+ * any input. However, command line scripts running on a multisite installation
+ * (or on any installation that has settings.php stored somewhere other than
+ * the sites/default folder) need to pass in the URL of the site to allow
+ * Drupal to detect the correct location of the settings.php file. Passing in
+ * the 'url' parameter is also required for functions like request_uri() to
+ * return the expected values.
+ *
+ * Most other parameters do not need to be passed in, but may be necessary in
+ * some cases; for example, if Drupal's ip_address() function needs to return
+ * anything but the standard localhost value ('127.0.0.1'), the command line
+ * script should pass in the desired value via the 'REMOTE_ADDR' key.
+ *
+ * @param $variables
+ *   (optional) An associative array of variables within $_SERVER that should
+ *   be replaced. If the special element 'url' is provided in this array, it
+ *   will be used to populate some of the server defaults; it should be set to
+ *   the URL of the current page request, excluding any $_GET request but
+ *   including the script name (e.g., http://www.example.com/mysite/index.php).
+ *
+ * @see conf_path()
+ * @see request_uri()
+ * @see ip_address()
  */
-function drupal_initialize_variables() {
+function drupal_override_server_variables($variables = array()) {
+  // Set defaults based on the provided URL.
+  if (isset($variables['url'])) {
+    $url = parse_url($variables['url']);
+    unset($variables['url']);
+  }
+  else {
+    $url = array();
+  }
+  $url += array(
+    'path' => '',
+    'host' => 'localhost',
+  );
+  $defaults = array(
+    'HTTP_HOST' => $url['host'],
+    'SCRIPT_NAME' => $url['path'],
+    'REMOTE_ADDR' => '127.0.0.1',
+    'REQUEST_METHOD' => 'GET',
+    'SERVER_NAME' => NULL,
+    'SERVER_SOFTWARE' => 'PHP CLI',
+    'HTTP_USER_AGENT' => NULL,
+  );
+  // Replace elements of the $_SERVER array, as appropriate.
+  $_SERVER = $variables + $_SERVER + $defaults;
+}
+
+/**
+ * Initialize PHP environment.
+ */
+function drupal_environment_initialize() {
   if (!isset($_SERVER['HTTP_REFERER'])) {
     $_SERVER['HTTP_REFERER'] = '';
   }
@@ -433,10 +482,13 @@ function drupal_initialize_variables() {
   ini_set('magic_quotes_runtime', '0');
   // Use session cookies, not transparent sessions that puts the session id in
   // the query string.
+  ini_set('session.use_cookies', '1');
   ini_set('session.use_only_cookies', '1');
   ini_set('session.use_trans_sid', '0');
   // Don't send HTTP headers using PHP's session handler.
   ini_set('session.cache_limiter', 'none');
+  // Use httponly session cookies.
+  ini_set('session.cookie_httponly', '1');
 }
 
 /**
@@ -453,11 +505,11 @@ function drupal_valid_http_host($host) {
  * Loads the configuration and sets the base URL, cookie domain, and
  * session name correctly.
  */
-function conf_init() {
+function drupal_settings_initialize() {
   global $base_url, $base_path, $base_root;
 
   // Export the following settings.php variables to the global namespace
-  global $databases, $db_prefix, $cookie_domain, $conf, $installed_profile, $update_free_access;
+  global $databases, $db_prefix, $cookie_domain, $conf, $installed_profile, $update_free_access, $db_url, $is_https, $base_secure_url, $base_insecure_url;
   $conf = array();
 
   if (file_exists(DRUPAL_ROOT . '/' . conf_path() . '/settings.php')) {
@@ -467,6 +519,7 @@ function conf_init() {
   if (isset($base_url)) {
     // Parse fixed base URL from settings.php.
     $parts = parse_url($base_url);
+    $http_protocol = $parts['scheme'];
     if (!isset($parts['path'])) {
       $parts['path'] = '';
     }
@@ -476,9 +529,10 @@ function conf_init() {
   }
   else {
     // Create base URL
-    $base_root = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') ? 'https' : 'http';
+    $http_protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') ? 'https' : 'http';
+    $base_root = $http_protocol . '://' . $_SERVER['HTTP_HOST'];
 
-    $base_url = $base_root .= '://' . $_SERVER['HTTP_HOST'];
+    $base_url = $base_root;
 
     // $_SERVER['SCRIPT_NAME'] can, in contrast to $_SERVER['PHP_SELF'], not
     // be modified by a visitor.
@@ -491,6 +545,9 @@ function conf_init() {
       $base_path = '/';
     }
   }
+  $is_https = $http_protocol == 'https';
+  $base_secure_url = str_replace('http://', 'https://', $base_url);
+  $base_insecure_url = str_replace('https://', 'http://', $base_url);
 
   if ($cookie_domain) {
     // If the user specifies the cookie domain, also use it for session name.
@@ -505,15 +562,6 @@ function conf_init() {
       $cookie_domain = check_plain($_SERVER['HTTP_HOST']);
     }
   }
-  // To prevent session cookies from being hijacked, a user can configure the
-  // SSL version of their website to only transfer session cookies via SSL by
-  // using PHP's session.cookie_secure setting. The browser will then use two
-  // separate session cookies for the HTTPS and HTTP versions of the site. So we
-  // must use different session identifiers for HTTPS and HTTP to prevent a
-  // cookie collision.
-  if (ini_get('session.cookie_secure')) {
-    $session_name .= 'SSL';
-  }
   // Strip leading periods, www., and port numbers from cookie domain.
   $cookie_domain = ltrim($cookie_domain, '.');
   if (strpos($cookie_domain, 'www.') === 0) {
@@ -526,7 +574,17 @@ function conf_init() {
   if (count(explode('.', $cookie_domain)) > 2 && !is_numeric(str_replace('.', '', $cookie_domain))) {
     ini_set('session.cookie_domain', $cookie_domain);
   }
-  session_name('SESS' . md5($session_name));
+  // To prevent session cookies from being hijacked, a user can configure the
+  // SSL version of their website to only transfer session cookies via SSL by
+  // using PHP's session.cookie_secure setting. The browser will then use two
+  // separate session cookies for the HTTPS and HTTP versions of the site. So we
+  // must use different session identifiers for HTTPS and HTTP to prevent a
+  // cookie collision.
+  if ($is_https) {
+    ini_set('session.cookie_secure', TRUE);
+  }
+  $prefix = ini_get('session.cookie_secure') ? 'SSESS' : 'SESS';
+  session_name($prefix . md5($session_name));
 }
 
 /**
@@ -558,7 +616,7 @@ function conf_init() {
  *   The filename of the requested item.
  */
 function drupal_get_filename($type, $name, $filename = NULL) {
-  static $files = array();
+  $files = &drupal_static(__FUNCTION__, array());
 
   if (!isset($files[$type])) {
     $files[$type] = array();
@@ -574,20 +632,39 @@ function drupal_get_filename($type, $name, $filename = NULL) {
   // the database. This is required because this function is called both
   // before we have a database connection (i.e. during installation) and
   // when a database connection fails.
-  elseif (db_is_active() && (($file = db_query("SELECT filename FROM {system} WHERE name = :name AND type = :type", array(':name' => $name, ':type' => $type))->fetchField()) && file_exists($file))) {
-    $files[$type][$name] = $file;
-  }
   else {
-    // Fallback to searching the filesystem if the database connection is
-    // not established or the requested file is not found.
-    $config = conf_path();
-    $dir = (($type == 'theme_engine') ? 'themes/engines' : "${type}s");
-    $file = (($type == 'theme_engine') ? "$name.engine" : "$name.$type");
-
-    foreach (array("$config/$dir/$file", "$config/$dir/$name/$file", "$dir/$file", "$dir/$name/$file") as $file) {
+    try {
+      $file = db_query("SELECT filename FROM {system} WHERE name = :name AND type = :type", array(':name' => $name, ':type' => $type))->fetchField();
       if (file_exists($file)) {
         $files[$type][$name] = $file;
-        break;
+      }
+    }
+    catch (PDOException $e) {
+      // The database table may not exist because Drupal is not yet installed,
+      // or the database might be down. We have a fallback for this case so we
+      // hide the error completely.
+    }
+    // Fallback to searching the filesystem if the database could not find the
+    // file or the file returned by the database is not found.
+    if (!isset($files[$type][$name])) {
+      // We have a consistent directory naming: modules, themes...
+      $dir = $type . 's';
+      if ($type == 'theme_engine') {
+        $dir = 'themes/engines';
+        $mask = "/$name\.engine$/";
+      }
+      elseif ($type == 'theme') {
+        $mask = "/$name\.info$/";
+      }
+      else {
+        $mask = "/$name\.$type$/";
+      }
+
+      if (function_exists('drupal_system_listing')) {
+        $matches = drupal_system_listing($mask, $dir, 'name', 0);
+        if (!empty($matches[$name]->uri)) {
+          $files[$type][$name] = $matches[$name]->uri;
+        }
       }
     }
   }
@@ -604,7 +681,7 @@ function drupal_get_filename($type, $name, $filename = NULL) {
  * with variable_set() as well as those explicitly specified in the configuration
  * file.
  */
-function variable_init($conf = array()) {
+function variable_initialize($conf = array()) {
   // NOTE: caching the variables improves performance by 20% when serving cached pages.
   if ($cached = cache_get('variables', 'cache')) {
     $variables = $cached->data;
@@ -630,6 +707,8 @@ function variable_init($conf = array()) {
  *   The default value to use if this variable has never been set.
  * @return
  *   The value of the variable.
+ *
+ * @see variable_del(), variable_set()
  */
 function variable_get($name, $default = NULL) {
   global $conf;
@@ -645,6 +724,8 @@ function variable_get($name, $default = NULL) {
  * @param $value
  *   The value to set. This can be any PHP data type; these functions take care
  *   of serialization as necessary.
+ *
+ * @see variable_del(), variable_get()
  */
 function variable_set($name, $value) {
   global $conf;
@@ -661,6 +742,8 @@ function variable_set($name, $value) {
  *
  * @param $name
  *   The name of the variable to undefine.
+ *
+ * @see variable_get(), variable_set()
  */
 function variable_del($name) {
   global $conf;
@@ -673,7 +756,6 @@ function variable_del($name) {
   unset($conf[$name]);
 }
 
-
 /**
  * Retrieve the current page from the cache.
  *
@@ -682,36 +764,46 @@ function variable_del($name) {
  * from a form submission, the contents of a shopping cart, or other user-
  * specific content that should not be cached and displayed to other users.
  *
- * @param $retrieve
- *   If TRUE, look up and return the current page in the cache, or start output
- *   buffering if the conditions for caching are satisfied. If FALSE, only
- *   return a boolean value indicating whether the current request may be
- *   cached.
  * @return
- *   The cache object, if the page was found in the cache; TRUE if the page was
- *   not found, but output buffering was started in order to possibly cache the
- *   current request; FALSE if the page was not found, and the current request
- *   may not be cached (e.g. because it belongs to an authenticated user). If
- *   $retrieve is TRUE, only return either TRUE or FALSE.
+ *   The cache object, if the page was found in the cache, NULL otherwise.
  */
-function page_get_cache($retrieve) {
-  global $user, $base_root;
-  static $ob_started = FALSE;
+function drupal_page_get_cache() {
+  global $base_root;
 
-  if ($user->uid || ($_SERVER['REQUEST_METHOD'] != 'GET' && $_SERVER['REQUEST_METHOD'] != 'HEAD') || count(drupal_get_messages(NULL, FALSE))) {
-    return FALSE;
+  if (drupal_page_is_cacheable()) {
+    return cache_get($base_root . request_uri(), 'cache_page');
   }
-  if ($retrieve) {
-    $cache = cache_get($base_root . request_uri(), 'cache_page');
-    if ($cache) {
-      return $cache;
-    }
-    else {
-      ob_start();
-      $ob_started = TRUE;
-    }
+}
+
+/**
+ * Determine the cacheability of the current page.
+ *
+ * @param $allow_caching
+ *  Set to FALSE if you want to prevent this page to get cached.
+ * @return
+ *  TRUE if the current page can be cached, FALSE otherwise.
+ */
+function drupal_page_is_cacheable($allow_caching = NULL) {
+  $allow_caching_static = &drupal_static(__FUNCTION__, TRUE);
+  if (isset($allow_caching)) {
+    $allow_caching_static = $allow_caching;
   }
-  return $ob_started;
+
+  return $allow_caching_static && ($_SERVER['REQUEST_METHOD'] == 'GET' || $_SERVER['REQUEST_METHOD'] == 'HEAD')
+    && $_SERVER['SERVER_SOFTWARE'] !== 'PHP CLI';
+}
+
+/**
+ * Call all init or exit hooks without including all modules.
+ *
+ * @param $hook
+ *   The name of the bootstrap hook we wish to invoke.
+ */
+function bootstrap_invoke_all($hook) {
+  foreach (module_list(TRUE, TRUE) as $module) {
+    drupal_load('module', $module);
+    module_invoke($module, $hook);
+  }
 }
 
 /**
@@ -727,7 +819,7 @@ function page_get_cache($retrieve) {
  *   TRUE if the item is loaded or has already been loaded.
  */
 function drupal_load($type, $name) {
-  static $files = array();
+  $files = &drupal_static(__FUNCTION__, array());
 
   if (isset($files[$type][$name])) {
     return TRUE;
@@ -746,33 +838,211 @@ function drupal_load($type, $name) {
 }
 
 /**
+ * Set an HTTP response header for the current page.
+ *
+ * Note: When sending a Content-Type header, always include a 'charset' type,
+ * too. This is necessary to avoid security bugs (e.g. UTF-7 XSS).
+ *
+ * @param $name
+ *   The HTTP header name, or a status code followed by a reason phrase, e.g.
+ *   "404 Not Found".
+ * @param $value
+ *   The HTTP header value; if omitted, the specified header is unset.
+ * @param $append
+ *   Whether to append the value to an existing header or to replace it.
+ */
+function drupal_set_header($name = NULL, $value = NULL, $append = FALSE) {
+  // The headers as name/value pairs.
+  $headers = &drupal_static(__FUNCTION__, array());
+
+  if (!isset($name)) {
+    return $headers;
+  }
+
+  // Save status codes using the special key ":status".
+  if (preg_match('/^\d{3} /', $name)) {
+    $value = $name;
+    $name = $name_lower = ':status';
+  }
+  else {
+    $name_lower = strtolower($name);
+  }
+  _drupal_set_preferred_header_name($name);
+
+  if (!isset($value)) {
+    $headers[$name_lower] = FALSE;
+  }
+  elseif (isset($headers[$name_lower]) && $append) {
+    // Multiple headers with identical names may be combined using comma (RFC
+    // 2616, section 4.2).
+    $headers[$name_lower] .= ',' . $value;
+  }
+  else {
+    $headers[$name_lower] = $value;
+  }
+  drupal_send_headers(array($name => $headers[$name_lower]), TRUE);
+}
+
+/**
+ * Get the HTTP response headers for the current page.
+ *
+ * @param $name
+ *   An HTTP header name. If omitted, all headers are returned as name/value
+ *   pairs. If an array value is FALSE, the header has been unset.
+ * @return
+ *   A string containing the header value, or FALSE if the header has been set,
+ *   or NULL if the header has not been set.
+ */
+function drupal_get_header($name = NULL) {
+  $headers = drupal_set_header();
+  if (isset($name)) {
+    $name = strtolower($name);
+    return isset($headers[$name]) ? $headers[$name] : NULL;
+  }
+  else {
+    return $headers;
+  }
+}
+
+/**
+ * Header names are case-insensitive, but for maximum compatibility they should
+ * follow "common form" (see RFC 2617, section 4.2).
+ */
+function _drupal_set_preferred_header_name($name = NULL) {
+  static $header_names = array();
+
+  if (!isset($name)) {
+    return $header_names;
+  }
+  $header_names[strtolower($name)] = $name;
+}
+
+/**
+ * Send the HTTP response headers previously set using drupal_set_header().
+ * Add default headers, unless they have been replaced or unset using
+ * drupal_set_header().
+ *
+ * @param $default_headers
+ *   An array of headers as name/value pairs.
+ * @param $single
+ *   If TRUE and headers have already be sent, send only the specified header.
+ */
+function drupal_send_headers($default_headers = array(), $only_default = FALSE) {
+  $headers_sent = &drupal_static(__FUNCTION__, FALSE);
+  $headers = drupal_get_header();
+  if ($only_default && $headers_sent) {
+    $headers = array();
+  }
+  $headers_sent = TRUE;
+
+  $header_names = _drupal_set_preferred_header_name();
+  foreach ($default_headers as $name => $value) {
+    $name_lower = strtolower($name);
+    if (!isset($headers[$name_lower])) {
+      $headers[$name_lower] = $value;
+      $header_names[$name_lower] = $name;
+    }
+  }
+  foreach ($headers as $name_lower => $value) {
+    if ($name_lower == ':status') {
+      header($_SERVER['SERVER_PROTOCOL'] . ' ' . $value);
+    }
+    // Skip headers that have been unset.
+    elseif ($value) {
+      header($header_names[$name_lower] . ': ' . $value);
+    }
+  }
+}
+
+/**
  * Set HTTP headers in preparation for a page response.
  *
- * Authenticated users are always given a 'no-cache' header, and will
- * fetch a fresh page on every request. This prevents authenticated
- * users seeing locally cached pages that show them as logged out.
+ * Authenticated users are always given a 'no-cache' header, and will fetch a
+ * fresh page on every request. This prevents authenticated users from seeing
+ * locally cached pages.
  *
- * @see page_set_cache()
+ * Also give each page a unique ETag. This will force clients to include both
+ * an If-Modified-Since header and an If-None-Match header when doing
+ * conditional requests for the page (required by RFC 2616, section 13.3.4),
+ * making the validation more robust. This is a workaround for a bug in Mozilla
+ * Firefox that is triggered when Drupal's caching is enabled and the user
+ * accesses Drupal via an HTTP proxy (see
+ * https://bugzilla.mozilla.org/show_bug.cgi?id=269303): When an authenticated
+ * user requests a page, and then logs out and requests the same page again,
+ * Firefox may send a conditional request based on the page that was cached
+ * locally when the user was logged in. If this page did not have an ETag
+ * header, the request only contains an If-Modified-Since header. The date will
+ * be recent, because with authenticated users the Last-Modified header always
+ * refers to the time of the request. If the user accesses Drupal via a proxy
+ * server, and the proxy already has a cached copy of the anonymous page with an
+ * older Last-Modified date, the proxy may respond with 304 Not Modified, making
+ * the client think that the anonymous and authenticated pageviews are
+ * identical.
+ *
+ * @see drupal_page_set_cache()
  */
 function drupal_page_header() {
-  header("Expires: Sun, 19 Nov 1978 05:00:00 GMT");
-  header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");
-  header("Cache-Control: store, no-cache, must-revalidate");
-  header("Cache-Control: post-check=0, pre-check=0", FALSE);
+  $headers_sent = &drupal_static(__FUNCTION__, FALSE);
+  if ($headers_sent) {
+    return TRUE;
+  }
+  $headers_sent = TRUE;
+
+  $default_headers = array(
+    'Expires' => 'Sun, 19 Nov 1978 05:00:00 GMT',
+    'Last-Modified' => gmdate(DATE_RFC1123, REQUEST_TIME),
+    'Cache-Control' => 'no-cache, must-revalidate, post-check=0, pre-check=0',
+    'ETag' => '"' . REQUEST_TIME . '"',
+  );
+  drupal_send_headers($default_headers);
 }
 
 /**
  * Set HTTP headers in preparation for a cached page response.
  *
- * The general approach here is that anonymous users can keep a local
- * cache of the page, but must revalidate it on every request. Then,
- * they are given a '304 Not Modified' response as long as they stay
- * logged out and the page has not been modified.
+ * The headers allow as much as possible in proxies and browsers without any
+ * particular knowledge about the pages. Modules can override these headers
+ * using drupal_set_header().
  *
+ * If the request is conditional (using If-Modified-Since and If-None-Match),
+ * and the conditions match those currently in the cache, a 304 Not Modified
+ * response is sent.
  */
-function drupal_page_cache_header($cache) {
-  // Create entity tag based on cache update time.
-  $etag = '"' . md5($cache->created) . '"';
+function drupal_serve_page_from_cache(stdClass $cache) {
+  // Negotiate whether to use compression.
+  $page_compression = variable_get('page_compression', TRUE) && extension_loaded('zlib');
+  $return_compressed = $page_compression && isset($_SERVER['HTTP_ACCEPT_ENCODING']) && strpos($_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip') !== FALSE;
+
+  // Get headers set in hook_boot(). Keys are lower-case.
+  $hook_boot_headers = drupal_get_header();
+
+  // Headers generated in this function, that may be replaced or unset using
+  // drupal_set_headers(). Keys are mixed-case.
+  $default_headers = array();
+
+  foreach ($cache->headers as $name => $value) {
+    // In the case of a 304 response, certain headers must be sent, and the
+    // remaining may not (see RFC 2616, section 10.3.5). Do not override
+    // headers set in hook_boot().
+    $name_lower = strtolower($name);
+    if (in_array($name_lower, array('content-location', 'expires', 'cache-control', 'vary')) && !isset($hook_boot_headers[$name_lower])) {
+      drupal_set_header($name, $value);
+      unset($cache->headers[$name]);
+    }
+  }
+
+  // If a cache is served from a HTTP proxy without hitting the web server,
+  // the boot and exit hooks cannot be fired, so only allow caching in
+  // proxies if boot hooks are disabled. If the client send a session cookie,
+  // do not bother caching the page in a public proxy, because the cached copy
+  // will only be served to that particular user due to Vary: Cookie, unless
+  // the Vary header has been replaced or unset in hook_boot() (see below).
+  $max_age = !variable_get('page_cache_invoke_hooks', TRUE) && (!isset($_COOKIE[session_name()]) || isset($hook_boot_headers['vary'])) ? variable_get('cache_lifetime', 0) : 0;
+  $default_headers['Cache-Control'] = 'public, max-age=' . $max_age;
+
+  // Entity tag should change if the output changes.
+  $etag = '"' . $cache->created . '-' . intval($return_compressed) . '"';
+  header('Etag: ' . $etag);
 
   // See if the client has provided the required HTTP headers.
   $if_modified_since = isset($_SERVER['HTTP_IF_MODIFIED_SINCE']) ? strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) : FALSE;
@@ -782,39 +1052,56 @@ function drupal_page_cache_header($cache) {
       && $if_none_match == $etag // etag must match
       && $if_modified_since == $cache->created) {  // if-modified-since must match
     header($_SERVER['SERVER_PROTOCOL'] . ' 304 Not Modified');
-    // All 304 responses must send an etag if the 200 response for the same object contained an etag
-    header("Etag: $etag");
+    drupal_send_headers($default_headers);
     return;
   }
 
-  // Send appropriate response:
-  header("Last-Modified: " . gmdate(DATE_RFC1123, $cache->created));
-  header("ETag: $etag");
-
-  // The following headers force validation of cache:
-  header("Expires: Sun, 19 Nov 1978 05:00:00 GMT");
-  header("Cache-Control: must-revalidate");
-
-  if (variable_get('page_compression', TRUE)) {
-    // Determine if the browser accepts gzipped data.
-    if (@strpos($_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip') === FALSE && function_exists('gzencode')) {
-      // Strip the gzip header and run uncompress.
-      $cache->data = gzinflate(substr(substr($cache->data, 10), 0, -8));
-    }
-    elseif (function_exists('gzencode')) {
-      header('Content-Encoding: gzip');
-    }
+  // Send the remaining headers.
+  foreach ($cache->headers as $name => $value) {
+    drupal_set_header($name, $value);
   }
 
-  // Send the original request's headers. We send them one after
-  // another so PHP's header() function can deal with duplicate
-  // headers.
-  $headers = explode("\n", $cache->headers);
-  foreach ($headers as $header) {
-    header($header);
+  $default_headers['Last-Modified'] = gmdate(DATE_RFC1123, $cache->created);
+
+  // HTTP/1.0 proxies does not support the Vary header, so prevent any caching
+  // by sending an Expires date in the past. HTTP/1.1 clients ignores the
+  // Expires header if a Cache-Control: max-age= directive is specified (see RFC
+  // 2616, section 14.9.3).
+  $default_headers['Expires'] = 'Sun, 19 Nov 1978 05:00:00 GMT';
+
+  drupal_send_headers($default_headers);
+
+  // Allow HTTP proxies to cache pages for anonymous users without a session
+  // cookie. The Vary header is used to indicates the set of request-header
+  // fields that fully determines whether a cache is permitted to use the
+  // response to reply to a subsequent request for a given URL without
+  // revalidation. If a Vary header has been set in hook_boot(), it is assumed
+  // that the module knows how to cache the page.
+  if (!isset($hook_boot_headers['vary']) && !variable_get('omit_vary_cookie')) {
+    header('Vary: Cookie');
+  }
+
+  if ($page_compression) {
+    header('Vary: Accept-Encoding', FALSE);
+    // If page_compression is enabled, the cache contains gzipped data.
+    if ($return_compressed) {
+      header('Content-Encoding: gzip');
+    }
+    else {
+      // The client does not support compression, so unzip the data in the
+      // cache. Strip the gzip header and run uncompress.
+      $cache->data = gzinflate(substr(substr($cache->data, 10), 0, -8));
+    }
   }
 
   print $cache->data;
+}
+
+/**
+ * Define the critical hooks that force modules to always be loaded.
+ */
+function bootstrap_hooks() {
+  return array('boot', 'exit', 'watchdog');
 }
 
 /**
@@ -899,6 +1186,8 @@ function request_uri() {
       $uri = $_SERVER['SCRIPT_NAME'];
     }
   }
+  // Prevent multiple slashes to avoid cross site requests via the Form API.
+  $uri = '/' . ltrim($uri, '/');
 
   return $uri;
 }
@@ -909,15 +1198,17 @@ function request_uri() {
  * @param $type
  *   The category to which this message belongs.
  * @param $message
- *   The message to store in the log. See t() for documentation
- *   on how $message and $variables interact. Keep $message
- *   translatable by not concatenating dynamic values into it!
+ *   The message to store in the log. Keep $message translatable
+ *   by not concatenating dynamic values into it! Variables in the
+ *   message should be added by using placeholder strings alongside
+ *   the variables argument to declare the value of the placeholders.
+ *   See t() for documentation on how $message and $variables interact.
  * @param $variables
  *   Array of variables to replace in the message on display or
  *   NULL if message is already translated or not possible to
  *   translate.
  * @param $severity
- *   The severity of the message, as per RFC 3164
+ *   The severity of the message, as per RFC 3164.
  * @param $link
  *   A link to associate with the message.
  *
@@ -979,10 +1270,6 @@ function watchdog($type, $message, $variables = array(), $severity = WATCHDOG_NO
  */
 function drupal_set_message($message = NULL, $type = 'status', $repeat = TRUE) {
   if ($message) {
-    if (!isset($_SESSION['messages'])) {
-      drupal_set_session('messages', array());
-    }
-
     if (!isset($_SESSION['messages'][$type])) {
       $_SESSION['messages'][$type] = array();
     }
@@ -990,9 +1277,12 @@ function drupal_set_message($message = NULL, $type = 'status', $repeat = TRUE) {
     if ($repeat || !in_array($message, $_SESSION['messages'][$type])) {
       $_SESSION['messages'][$type][] = $message;
     }
+
+    // Mark this page has being not cacheable.
+    drupal_page_is_cacheable(FALSE);
   }
 
-  // messages not set when DB connection fails
+  // Messages not set when DB connection fails.
   return isset($_SESSION['messages']) ? $_SESSION['messages'] : NULL;
 }
 
@@ -1037,7 +1327,7 @@ function drupal_get_messages($type = NULL, $clear_queue = TRUE) {
  * to avoid querying the database at this critical stage of the bootstrap if
  * an administrative interface for IP address blocking is not required.
  *
- * @param $ip string
+ * @param $ip
  *   IP address to check.
  * @return bool
  *   TRUE if access is denied, FALSE if access is allowed.
@@ -1047,11 +1337,34 @@ function drupal_is_denied($ip) {
   // for an array of IP addresses in settings.php before querying the
   // database.
   $blocked_ips = variable_get('blocked_ips');
+  $denied = FALSE;
   if (isset($blocked_ips) && is_array($blocked_ips)) {
-    return in_array($ip, $blocked_ips);
+    $denied = in_array($ip, $blocked_ips);
   }
-  else {
-    return (bool)db_query("SELECT 1 FROM {blocked_ips} WHERE ip = :ip", array(':ip' => $ip))->fetchField();
+  // Only check if database.inc is loaded already. If
+  // $conf['page_cache_without_database'] = TRUE; is set in settings.php,
+  // then the database won't be loaded here so the IPs in the database
+  // won't be denied. However the user asked explicitly not to use the
+  // database and also in this case it's quite likely that the user relies
+  // on higher performance solutions like a firewall.
+  elseif (function_exists('db_is_active')) {
+    $denied = (bool)db_query("SELECT 1 FROM {blocked_ips} WHERE ip = :ip", array(':ip' => $ip))->fetchField();
+  }
+  return $denied;
+}
+
+/**
+ * Handle denied users.
+ *
+ * @param $ip
+ *   IP address to check. Prints a message and exits if access is denied.
+ */
+function drupal_block_denied($ip) {
+  // Deny access to blocked IP addresses - t() is not yet available.
+  if (drupal_is_denied($ip)) {
+    header($_SERVER['SERVER_PROTOCOL'] . ' 403 Forbidden');
+    print 'Sorry, ' . check_plain(ip_address()) . ' has been banned.';
+    exit();
   }
 }
 
@@ -1091,15 +1404,41 @@ function drupal_anonymous_user($session = '') {
  *     DRUPAL_BOOTSTRAP_LANGUAGE: identify the language used on the page.
  *     DRUPAL_BOOTSTRAP_PATH: set $_GET['q'] to Drupal path of request.
  *     DRUPAL_BOOTSTRAP_FULL: Drupal is fully loaded, validate and fix input data.
+ * @param $new_phase
+ *   A boolean, set to FALSE if calling drupal_bootstrap from inside a
+ *   function called from drupal_bootstrap (recursion).
  */
-function drupal_bootstrap($phase = NULL) {
-  static $phases = array(DRUPAL_BOOTSTRAP_CONFIGURATION, DRUPAL_BOOTSTRAP_EARLY_PAGE_CACHE, DRUPAL_BOOTSTRAP_DATABASE, DRUPAL_BOOTSTRAP_ACCESS, DRUPAL_BOOTSTRAP_SESSION, DRUPAL_BOOTSTRAP_VARIABLES, DRUPAL_BOOTSTRAP_LATE_PAGE_CACHE, DRUPAL_BOOTSTRAP_LANGUAGE, DRUPAL_BOOTSTRAP_PATH, DRUPAL_BOOTSTRAP_FULL), $completed_phase = -1;
+function drupal_bootstrap($phase = NULL, $new_phase = TRUE) {
+  $final_phase = &drupal_static(__FUNCTION__ . '_final_phase');
+  // When not recursing, store the phase name so it's not forgotten while
+  // recursing.
+  if ($new_phase) {
+    $final_phase = $phase;
+  }
+  $phases = &drupal_static(__FUNCTION__ . '_phases', array(
+    DRUPAL_BOOTSTRAP_CONFIGURATION,
+    DRUPAL_BOOTSTRAP_PAGE_CACHE,
+    DRUPAL_BOOTSTRAP_DATABASE,
+    DRUPAL_BOOTSTRAP_VARIABLES,
+    DRUPAL_BOOTSTRAP_SESSION,
+    DRUPAL_BOOTSTRAP_PAGE_HEADER,
+    DRUPAL_BOOTSTRAP_LANGUAGE,
+    DRUPAL_BOOTSTRAP_PATH,
+    DRUPAL_BOOTSTRAP_FULL,
+  ));
+  $completed_phase = &drupal_static(__FUNCTION__ . '_completed_phase', -1);
 
   if (isset($phase)) {
-    while ($phases && $phase > $completed_phase) {
+    // Call a phase if it has not been called before and is below the requested
+    // phase.
+    while ($phases && $phase > $completed_phase && $final_phase > $completed_phase) {
       $current_phase = array_shift($phases);
       _drupal_bootstrap($current_phase);
-      $completed_phase = $current_phase;
+      // This function is reentrant. Only update the completed phase when the
+      // current call actually resulted in a progress in the bootstrap process.
+      if ($current_phase > $completed_phase) {
+        $completed_phase = $current_phase;
+      }
     }
   }
   return $completed_phase;
@@ -1118,31 +1457,67 @@ function drupal_get_bootstrap_phase() {
 
 function _drupal_bootstrap($phase) {
   global $conf, $user;
+  static $cache;
 
   switch ($phase) {
 
     case DRUPAL_BOOTSTRAP_CONFIGURATION:
-      drupal_initialize_variables();
+      drupal_environment_initialize();
       // Start a page timer:
       timer_start('page');
-      // Initialize the configuration
-      conf_init();
+      // Initialize the configuration, including variables from settings.php.
+      drupal_settings_initialize();
       break;
 
-    case DRUPAL_BOOTSTRAP_EARLY_PAGE_CACHE:
+    case DRUPAL_BOOTSTRAP_PAGE_CACHE:
       // Allow specifying special cache handlers in settings.php, like
       // using memcached or files for storing cache information.
       require_once DRUPAL_ROOT . '/' . variable_get('cache_inc', 'includes/cache.inc');
-      // If the page_cache_fastpath is set to TRUE in settings.php and
-      // page_cache_fastpath (implemented in the special implementation of
-      // cache.inc) printed the page and indicated this with a returned TRUE
-      // then we are done.
-      if (variable_get('page_cache_fastpath', FALSE) && page_cache_fastpath()) {
-        exit;
+      // Check for a cache mode force from settings.php.
+      if (variable_get('page_cache_without_database')) {
+        $cache_mode = CACHE_NORMAL;
+      }
+      else {
+        drupal_bootstrap(DRUPAL_BOOTSTRAP_VARIABLES, FALSE);
+        $cache_mode = variable_get('cache');
+      }
+      drupal_block_denied(ip_address());
+      // If there is no session cookie and cache is enabled (or forced), try
+      // to serve a cached page.
+      if (!isset($_COOKIE[session_name()]) && $cache_mode == CACHE_NORMAL) {
+        // Make sure there is a user object because it's timestamp will be
+        // checked, hook_boot might check for anonymous user etc.
+        $user = drupal_anonymous_user();
+        // Get the page from the cache.
+        $cache = drupal_page_get_cache();
+        // If there is a cached page, display it.
+        if (is_object($cache)) {
+          // If the skipping of the bootstrap hooks is not enforced, call
+          // hook_boot.
+          if (variable_get('page_cache_invoke_hooks', TRUE)) {
+            bootstrap_invoke_all('boot');
+          }
+          header('X-Drupal-Cache: HIT');
+          drupal_serve_page_from_cache($cache);
+          // If the skipping of the bootstrap hooks is not enforced, call
+          // hook_exit.
+          if (variable_get('page_cache_invoke_hooks', TRUE)) {
+            bootstrap_invoke_all('exit');
+          }
+          // We are done.
+          exit;
+        }
       }
       break;
 
     case DRUPAL_BOOTSTRAP_DATABASE:
+      // The user agent header is used to pass a database prefix in the request when
+      // running tests. However, for security reasons, it is imperative that we
+      // validate we ourselves made the request.
+      if (isset($_SERVER['HTTP_USER_AGENT']) && (strpos($_SERVER['HTTP_USER_AGENT'], "simpletest") !== FALSE) && !drupal_valid_test_ua($_SERVER['HTTP_USER_AGENT'])) {
+        header($_SERVER['SERVER_PROTOCOL'] . ' 403 Forbidden');
+        exit;
+      }
       // Initialize the database system. Note that the connection
       // won't be initialized until it is actually requested.
       require_once DRUPAL_ROOT . '/includes/database/database.inc';
@@ -1151,78 +1526,43 @@ function _drupal_bootstrap($phase) {
       spl_autoload_register('drupal_autoload_interface');
       break;
 
-    case DRUPAL_BOOTSTRAP_ACCESS:
-      // Deny access to blocked IP addresses - t() is not yet available.
-      if (drupal_is_denied(ip_address())) {
-        header($_SERVER['SERVER_PROTOCOL'] . ' 403 Forbidden');
-        print 'Sorry, ' . check_plain(ip_address()) . ' has been banned.';
-        exit();
-      }
+    case DRUPAL_BOOTSTRAP_VARIABLES:
+      // Load variables from the database, but do not overwrite variables set in settings.php.
+      $conf = variable_initialize(isset($conf) ? $conf : array());
+      // Load bootstrap modules.
+      require_once DRUPAL_ROOT . '/includes/module.inc';
+      module_load_all(TRUE);
       break;
 
     case DRUPAL_BOOTSTRAP_SESSION:
       require_once DRUPAL_ROOT . '/' . variable_get('session_inc', 'includes/session.inc');
-      session_set_save_handler('_sess_open', '_sess_close', '_sess_read', '_sess_write', '_sess_destroy_sid', '_sess_gc');
-      // If a session cookie exists, initialize the session. Otherwise the
-      // session is only started on demand in drupal_session_start(), making
-      // anonymous users not use a session cookie unless something is stored in
-      // $_SESSION. This allows HTTP proxies to cache anonymous pageviews.
-      if (isset($_COOKIE[session_name()])) {
-        drupal_session_start();
-      }
-      else {
-        $user = drupal_anonymous_user();
-      }
+      drupal_session_initialize();
       break;
 
-    case DRUPAL_BOOTSTRAP_VARIABLES:
-      // Initialize configuration variables, using values from settings.php if available.
-      $conf = variable_init(isset($conf) ? $conf : array());
-      break;
+    case DRUPAL_BOOTSTRAP_PAGE_HEADER:
+      bootstrap_invoke_all('boot');
+      if (!$cache && drupal_page_is_cacheable()) {
+        header('X-Drupal-Cache: MISS');
+      }
 
-    case DRUPAL_BOOTSTRAP_LATE_PAGE_CACHE:
-      $cache_mode = variable_get('cache', CACHE_DISABLED);
-      // Get the page from the cache.
-      $cache = $cache_mode == CACHE_DISABLED ? FALSE : page_get_cache(TRUE);
-      // If the skipping of the bootstrap hooks is not enforced, call hook_boot.
-      if (!is_object($cache) || $cache_mode != CACHE_AGGRESSIVE) {
-        // Load module handling.
-        require_once DRUPAL_ROOT . '/includes/module.inc';
-        module_invoke_all('boot');
-      }
-      // If there is a cached page, display it.
-      if (is_object($cache)) {
-        // Destroy empty anonymous sessions.
-        if (drupal_session_is_started() && empty($_SESSION)) {
-          session_destroy();
-        }
-        drupal_page_cache_header($cache);
-        // If the skipping of the bootstrap hooks is not enforced, call hook_exit.
-        if ($cache_mode != CACHE_AGGRESSIVE) {
-          module_invoke_all('exit');
-        }
-        // We are done.
-        exit;
-      }
       // Prepare for non-cached page workflow.
-      drupal_page_header();
-      // If the session has not already been started and output buffering is
-      // not enabled, the session must be started now before the HTTP headers
-      // are sent. If output buffering is enabled, the session may be started
-      // at any time using drupal_session_start().
-      if ($cache === FALSE) {
-        drupal_session_start();
+      require_once DRUPAL_ROOT . '/' . variable_get('lock_inc', 'includes/lock.inc');
+      lock_initialize();
+
+      if ($_SERVER['SERVER_SOFTWARE'] !== 'PHP CLI') {
+        ob_start();
+        drupal_page_header();
       }
       break;
 
     case DRUPAL_BOOTSTRAP_LANGUAGE:
-      drupal_init_language();
+      drupal_language_initialize();
       break;
 
     case DRUPAL_BOOTSTRAP_PATH:
       require_once DRUPAL_ROOT . '/includes/path.inc';
       // Initialize $_GET['q'] prior to loading modules and invoking hook_init().
-      drupal_init_path();
+      drupal_path_initialize();
       break;
 
     case DRUPAL_BOOTSTRAP_FULL:
@@ -1233,10 +1573,47 @@ function _drupal_bootstrap($phase) {
 }
 
 /**
+ * Validate the HMAC and timestamp of a user agent header from simpletest.
+ */
+function drupal_valid_test_ua($user_agent) {
+  global $databases;
+
+  list($prefix, $time, $salt, $hmac) = explode(';', $user_agent);
+  $check_string =  $prefix . ';' . $time . ';' . $salt;
+  // We use the database credentials from settings.php to make the HMAC key, since
+  // the database is not yet initialized and we can't access any Drupal variables.
+  // The file properties add more entropy not easily accessible to others.
+  $filepath = DRUPAL_ROOT . '/includes/bootstrap.inc';
+  $key = sha1(serialize($databases) . filectime($filepath) . fileinode($filepath), TRUE);
+  // The HMAC must match.
+  return $hmac == base64_encode(hash_hmac('sha1', $check_string, $key, TRUE));
+}
+
+/**
+ * Generate a user agent string with a HMAC and timestamp for simpletest.
+ */
+function drupal_generate_test_ua($prefix) {
+  global $databases;
+  static $key;
+
+  if (!isset($key)) {
+    // We use the database credentials to make the HMAC key, since we
+    // check the HMAC before the database is initialized. filectime()
+    // and fileinode() are not easily determined from remote.
+    $filepath = DRUPAL_ROOT . '/includes/bootstrap.inc';
+    $key = sha1(serialize($databases) . filectime($filepath) . fileinode($filepath), TRUE);
+  }
+   // Generate a moderately secure HMAC based on the database credentials.
+   $salt = uniqid('', TRUE);
+   $check_string = $prefix . ';' . time() . ';' . $salt;
+   return  $check_string . ';' . base64_encode(hash_hmac('sha1', $check_string, $key, TRUE));
+}
+
+/**
  * Enables use of the theme system without requiring database access.
  *
  * Loads and initializes the theme system for site installs, updates and when
- * the site is in offline mode. This also applies when the database fails.
+ * the site is in maintenance mode. This also applies when the database fails.
  *
  * @see _drupal_maintenance_theme()
  */
@@ -1246,13 +1623,22 @@ function drupal_maintenance_theme() {
 }
 
 /**
+ * Return TRUE if a Drupal installation is currently being attempted.
+ */
+function drupal_installation_attempted() {
+  return defined('MAINTENANCE_MODE') && MAINTENANCE_MODE == 'install';
+}
+
+/**
  * Return the name of the localization function. Use in code that needs to
  * run both during installation and normal operation.
  */
 function get_t() {
   static $t;
-  if (is_null($t)) {
-    $t = function_exists('install_main') ? 'st' : 't';
+  // This is not converted to drupal_static because there is no point in
+  // resetting this as it can not change in the course of a request.
+  if (!isset($t)) {
+    $t = drupal_installation_attempted() ? 'st' : 't';
   }
   return $t;
 }
@@ -1260,7 +1646,7 @@ function get_t() {
 /**
  *  Choose a language for the current page, based on site and user preferences.
  */
-function drupal_init_language() {
+function drupal_language_initialize() {
   global $language, $user;
 
   // Ensure the language is correctly returned, even without multilanguage support.
@@ -1278,16 +1664,9 @@ function drupal_init_language() {
  * Get a list of languages set up indexed by the specified key
  *
  * @param $field The field to index the list with.
- * @param $reset Boolean to request a reset of the list.
  */
-function language_list($field = 'language', $reset = FALSE) {
-  static $languages = NULL;
-
-  // Reset language list
-  if ($reset) {
-    $languages = NULL;
-  }
-
+function language_list($field = 'language') {
+  $languages = &drupal_static(__FUNCTION__);
   // Init language list
   if (!isset($languages)) {
     if (variable_get('language_count', 1) > 1 || module_exists('locale')) {
@@ -1333,16 +1712,14 @@ function language_default($property = NULL) {
  * the proxy server, and not the client's. If Drupal is run in a cluster
  * we use the X-Cluster-Client-Ip header instead.
  *
- * @param $reset
- *   Reset the current IP address saved in static.
  * @return
  *   IP address of client machine, adjusted for reverse proxy and/or cluster
  *   environments.
  */
-function ip_address($reset = FALSE) {
-  static $ip_address = NULL;
+function ip_address() {
+  $ip_address = &drupal_static(__FUNCTION__);
 
-  if (!isset($ip_address) || $reset) {
+  if (!isset($ip_address)) {
     $ip_address = $_SERVER['REMOTE_ADDR'];
 
     if (variable_get('reverse_proxy', 0)) {
@@ -1351,10 +1728,11 @@ function ip_address($reset = FALSE) {
         // the XFF header if request really comes from one of them.
         $reverse_proxy_addresses = variable_get('reverse_proxy_addresses', array());
         if (!empty($reverse_proxy_addresses) && in_array($ip_address, $reverse_proxy_addresses, TRUE)) {
-          // If there are several arguments, we need to check the most
-          // recently added one, i.e. the last one.
+          // The "X-Forwarded-For" header is a comma+space separated list of IP addresses,
+          // the left-most being the farthest downstream client. If there is more than
+          // one proxy, we are interested in the most recent one (i.e. last one in the list).
           $ip_address_parts = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
-          $ip_address = array_pop($ip_address_parts);
+          $ip_address = trim(array_pop($ip_address_parts));
         }
       }
 
@@ -1400,7 +1778,7 @@ function drupal_get_schema($table = NULL, $rebuild = FALSE) {
       // Load the .install files to get hook_schema.
       // On some databases this function may be called before bootstrap has
       // been completed, so we force the functions we need to load just in case.
-      if (drupal_function_exists('module_load_all_includes')) {
+      if (function_exists('module_load_all_includes')) {
 
         // There is currently a bug in module_list() where it caches what it
         // was last called with, which is not always what you want.
@@ -1410,7 +1788,7 @@ function drupal_get_schema($table = NULL, $rebuild = FALSE) {
         // "prime" module_list() here to to values we want, specifically
         // "yes rebuild the list and don't limit to bootstrap".
         // TODO: Remove this call after http://drupal.org/node/222109 is fixed.
-        module_list(TRUE);
+        module_list(TRUE, FALSE);
         module_load_all_includes('install');
       }
 
@@ -1418,17 +1796,11 @@ function drupal_get_schema($table = NULL, $rebuild = FALSE) {
       // Invoke hook_schema for all modules.
       foreach (module_implements('schema') as $module) {
         $current = module_invoke($module, 'schema');
-        if (drupal_function_exists('_drupal_initialize_schema')) {
-          _drupal_initialize_schema($module, $current);
-        }
-
+        _drupal_schema_initialize($module, $current);
         $schema = array_merge($schema, $current);
       }
 
-      if (drupal_function_exists('drupal_alter')) {
-        drupal_alter('schema', $schema);
-      }
-
+      drupal_alter('schema', $schema);
       // If the schema is empty, avoid saving it: some database engines require
       // the schema to perform queries, and this could lead to infinite loops.
       if (!empty($schema) && (drupal_get_bootstrap_phase() == DRUPAL_BOOTSTRAP_FULL)) {
@@ -1459,46 +1831,10 @@ function drupal_get_schema($table = NULL, $rebuild = FALSE) {
  */
 
 /**
- * Confirm that a function is available.
- *
- * If the function is already available, this function does nothing.
- * If the function is not available, it tries to load the file where the
- * function lives. If the file is not available, it returns false, so that it
- * can be used as a drop-in replacement for function_exists().
- *
- * @param $function
- *   The name of the function to check or load.
- * @return
- *   TRUE if the function is now available, FALSE otherwise.
- */
-function drupal_function_exists($function) {
-  static $checked = array();
-
-  if (defined('MAINTENANCE_MODE')) {
-    return function_exists($function);
-  }
-
-  if (isset($checked[$function])) {
-    return $checked[$function];
-  }
-  $checked[$function] = FALSE;
-
-  if (function_exists($function)) {
-    $checked[$function] = TRUE;
-    return TRUE;
-  }
-
-  $checked[$function] = _registry_check_code('function', $function);
-
-  return $checked[$function];
-}
-
-/**
  * Confirm that an interface is available.
  *
- * This function parallels drupal_function_exists(), but is rarely
- * called directly. Instead, it is registered as an spl_autoload()
- * handler, and PHP calls it for us when necessary.
+ * This function is rarely called directly. Instead, it is registered as an
+ * spl_autoload()  handler, and PHP calls it for us when necessary.
  *
  * @param $interface
  *   The name of the interface to check or load.
@@ -1512,9 +1848,8 @@ function drupal_autoload_interface($interface) {
 /**
  * Confirm that a class is available.
  *
- * This function parallels drupal_function_exists(), but is rarely
- * called directly. Instead, it is registered as an spl_autoload()
- * handler, and PHP calls it for us when necessary.
+ * This function is rarely called directly. Instead, it is registered as an
+ * spl_autoload()  handler, and PHP calls it for us when necessary.
  *
  * @param $class
  *   The name of the class to check or load.
@@ -1604,8 +1939,8 @@ function _registry_check_code($type, $name = NULL) {
 /**
  * Rescan all enabled modules and rebuild the registry.
  *
- * Rescans all code in modules or includes directory, storing a mapping of
- * each function, file, and hook implementation in the database.
+ * Rescans all code in modules or includes directories, storing the location of
+ * each interface or class in the database.
  */
 function registry_rebuild() {
   require_once DRUPAL_ROOT . '/includes/registry.inc';
@@ -1615,3 +1950,55 @@ function registry_rebuild() {
 /**
  * @} End of "ingroup registry".
  */
+
+/**
+ * Central static variable storage.
+ *
+ * @param $name
+ *   Globally unique name for the variable. For a function with only one static,
+ *   variable, the function name (e.g. via the PHP magic __FUNCTION__ constant)
+ *   is recommended. For a function with multiple static variables add a
+ *   distinguishing suffix to the function name for each one.
+ * @param $default_value
+ *   Optional default value.
+ * @param $reset
+ *   TRUE to reset a specific named variable, or all variables if $name is NULL.
+ *   Resetting every variable should only be used, for example, for running
+ *   unit tests with a clean environment. Should be used only though via
+ *   function drupal_static_reset().
+ *
+ * @return
+ *   Returns a variable by reference if $reset is FALSE.
+ */
+function &drupal_static($name, $default_value = NULL, $reset = FALSE) {
+  static $data = array();
+
+  // Reset a single value, or all values.
+  if ($reset) {
+    if (isset($name)) {
+      unset($data[$name]);
+    }
+    else {
+      $data = array();
+    }
+    // We must return a reference to a variable.
+    $dummy = NULL;
+    return $dummy;
+  }
+
+  if (!isset($data[$name])) {
+    $data[$name] = $default_value;
+  }
+
+  return $data[$name];
+}
+
+/**
+ * Reset one or all centrally stored static variable(s).
+ *
+ * @param $name
+ *   Name of the static variable to reset. Omit to reset all variables.
+ */
+function drupal_static_reset($name = NULL) {
+  drupal_static($name, NULL, TRUE);
+}

@@ -1,25 +1,169 @@
 <?php
-// $Id: locale.test,v 1.17 2009/02/13 00:45:18 webchick Exp $
+// $Id: locale.test,v 1.40 2009/08/28 14:40:12 webchick Exp $
 
 /**
  * @file
  * Tests for Locale module.
- * 
+ *
  * The test file includes:
- *  - a functional test for the translation functionalities;
- *  - a functional test for the PO files import feature;
- *  - a functional test for the language switching feature
- *  - a couple of functional tests for the uninstall process.
+ *  - a functional test for the language configuration forms;
+ *  - functional tests for the translation functionalities, including searching;
+ *  - a functional test for the PO files import feature, including validation;
+ *  - functional tests for translations and templates export feature;
+ *  - functional tests for the uninstall process;
+ *  - a functional test for the language switching feature;
+ *  - a functional test for a user's ability to change their default language;
+ *  - a functional test for configuring a different path alias per language;
+ *  - a functional test for configuring a different path alias per language;
+ *  - a functional test for multilingual support by content type and on nodes.
  */
+
+
+/**
+ * Functional tests for the language configuration forms.
+ */
+class LocaleConfigurationTest extends DrupalWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'Language configuration',
+      'description' => 'Adds a new locale and tests changing its status and the default language.',
+      'group' => 'Locale',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('locale');
+  }
+
+  /**
+   * Functional tests for adding, editing and deleting languages.
+   */
+  function testLanguageConfiguration() {
+    global $base_url;
+
+    // User to add and remove language.
+    $admin_user = $this->drupalCreateUser(array('administer languages', 'access administration pages'));
+    $this->drupalLogin($admin_user);
+
+    // Add predefined language.
+    $edit = array(
+      'langcode' => 'fr',
+    );
+    $this->drupalPost('admin/config/regional/language/add', $edit, t('Add language'));
+    $this->assertText('fr', t('Language added successfully.'));
+    $this->assertEqual($this->getUrl(), url('admin/config/regional/language', array('absolute' => TRUE)), t('Correct page redirection.'));
+
+    // Add custom language.
+    // Code for the language.
+    $langcode = 'xx';
+    // The English name for the language.
+    $name = $this->randomName(16);
+    // The native name for the language.
+    $native = $this->randomName(16);
+    // The domain prefix.
+    $prefix = $langcode;
+    $edit = array(
+      'langcode' => $langcode,
+      'name' => $name,
+      'native' => $native,
+      'prefix' => $prefix,
+      'direction' => '0',
+    );
+    $this->drupalPost('admin/config/regional/language/add', $edit, t('Add custom language'));
+    $this->assertEqual($this->getUrl(), url('admin/config/regional/language', array('absolute' => TRUE)), t('Correct page redirection.'));
+    $this->assertText($langcode, t('Language code found.'));
+    $this->assertText($name, t('Name found.'));
+    $this->assertText($native, t('Native found.'));
+    $this->assertText($native, t('Test language added.'));
+
+    // Check if we can change the default language.
+    $path = 'admin/config/regional/language';
+    $this->drupalGet($path);
+    $this->assertFieldChecked('edit-site-default-en', t('English is the default language.'));
+    // Change the default language.
+    $edit = array(
+      'site_default' => $langcode,
+    );
+    $this->drupalPost($path, $edit, t('Save configuration'));
+    $this->assertNoFieldChecked('edit-site-default-en', t('Default language updated.'));
+    $this->assertEqual($this->getUrl(), url('admin/config/regional/language', array('absolute' => TRUE)), t('Correct page redirection.'));
+
+    // Ensure we can't delete the default language.
+    $path = 'admin/config/regional/language/delete/' . $langcode;
+    $this->drupalGet($path);
+    $this->assertEqual($this->getUrl(), url('admin/config/regional/language', array('absolute' => TRUE)), t('Correct page redirection.'));
+    $this->assertText(t('The default language cannot be deleted.'), t('Failed to delete the default language.'));
+
+    // Check if we can disable a language.
+    $edit = array(
+      'enabled[en]' => FALSE,
+    );
+    $this->drupalPost($path, $edit, t('Save configuration'));
+    $this->assertNoFieldChecked('edit-enabled-en', t('Language disabled.'));
+
+    // Set disabled language to be the default and ensure it is re-enabled.
+    $edit = array(
+      'site_default' => 'en',
+    );
+    $this->drupalPost($path, $edit, t('Save configuration'));
+    $this->assertFieldChecked('edit-enabled-en', t('Default language re-enabled.'));
+
+    // Ensure 'edit' link works.
+    $this->clickLink(t('edit'));
+    $this->assertTitle(t('Edit language | Drupal'), t('Page title is "Edit language".'));
+    // Edit a language.
+    $path = 'admin/config/regional/language/edit/' . $langcode;
+    $name = $this->randomName(16);
+    $edit = array(
+      'name' => $name,
+    );
+    $this->drupalPost($path, $edit, t('Save language'));
+    $this->assertRaw($name, t('The language has been updated.'));
+    $this->assertEqual($this->getUrl(), url('admin/config/regional/language', array('absolute' => TRUE)), t('Correct page redirection.'));
+
+    // Ensure 'delete' link works.
+    $path = 'admin/config/regional/language';
+    $this->drupalGet($path);
+    $this->clickLink(t('delete'));
+    $this->assertText(t('Are you sure you want to delete the language'), t('"delete" link is correct.'));
+    // Delete the language.
+    $path = 'admin/config/regional/language/delete/' . $langcode;
+    $this->drupalGet($path);
+    // First test the 'cancel' link.
+    $this->clickLink(t('Cancel'));
+    $this->assertEqual($this->getUrl(), url('admin/config/regional/language', array('absolute' => TRUE)), t('Correct page redirection.'));
+    $this->assertRaw($name, t('The language was not deleted.'));
+    // Delete the language for real. This a confirm form, we do not need any
+    // fields changed.
+    $this->drupalPost($path, array(), t('Delete'));
+    // We need raw here because %locale will add HTML.
+    $this->assertRaw(t('The language %locale has been removed.', array('%locale' => $name)), t('The test language has been removed.'));
+    $this->assertEqual($this->getUrl(), url('admin/config/regional/language', array('absolute' => TRUE)), t('Correct page redirection.'));
+    // Reload to remove $name.
+    $this->drupalGet($path);
+    $this->assertNoText($langcode, t('Language code not found.'));
+    $this->assertNoText($name, t('Name not found.'));
+    $this->assertNoText($native, t('Native not found.'));
+
+    // Ensure we can't delete the English language.
+    $path = 'admin/config/regional/language/delete/en';
+    $this->drupalGet($path);
+    $this->assertEqual($this->getUrl(), url('admin/config/regional/language', array('absolute' => TRUE)), t('Correct page redirection.'));
+    $this->assertText(t('The English language cannot be deleted.'), t('Failed to delete English language.'));
+
+    $this->drupalLogout();
+  }
+
+}
 
 /**
  * Functional test for string translation and validation.
  */
 class LocaleTranslationFunctionalTest extends DrupalWebTestCase {
-  function getInfo() {
+  public static function getInfo() {
     return array(
-      'name' => t('String translate and validate'),
-      'description' => t('Adds a new locale and translates its name. Checks the validation of translation strings.'),
+      'name' => 'String translate, search and validate',
+      'description' => 'Adds a new locale and translates its name. Checks the validation of translation strings and search results.',
       'group' => 'Locale',
     );
   }
@@ -39,20 +183,20 @@ class LocaleTranslationFunctionalTest extends DrupalWebTestCase {
     // User to translate and delete string.
     $translate_user = $this->drupalCreateUser(array('translate interface', 'access administration pages'));
     // Code for the language.
-    $langcode = str_replace('simpletest_', 'si-', $this->randomName(6));
+    $langcode = 'xx';
     // The English name for the language. This will be translated.
     $name = $this->randomName(16);
     // The native name for the language.
     $native = $this->randomName(16);
-    // The domain prefix. Not tested yet.
-    $prefix = strtolower(str_replace('si-', '', $langcode));
+    // The domain prefix.
+    $prefix = $langcode;
     // This is the language indicator on the translation search screen for
     // untranslated strings. Copied straight from locale.inc.
     $language_indicator = "<em class=\"locale-untranslated\">$langcode</em> ";
     // This will be the translation of $name.
     $translation = $this->randomName(16);
 
-    // Add language.
+    // Add custom language.
     $this->drupalLogin($admin_user);
     $edit = array(
       'langcode' => $langcode,
@@ -61,73 +205,99 @@ class LocaleTranslationFunctionalTest extends DrupalWebTestCase {
       'prefix' => $prefix,
       'direction' => '0',
     );
-    $this->drupalPost('admin/settings/language/add', $edit, t('Add custom language'));
+    $this->drupalPost('admin/config/regional/language/add', $edit, t('Add custom language'));
     // Add string.
-    t($name, array(), $langcode);
+    t($name, array(), array('langcode' => $langcode));
     // Reset locale cache.
-    locale(NULL, NULL, TRUE);
-    $this->assertText($langcode, 'Language code found');
-    $this->assertText($name, 'Name found');
-    $this->assertText($native, 'Native found');
+    locale(NULL, NULL, NULL, TRUE);
+    $this->assertText($langcode, t('Language code found.'));
+    $this->assertText($name, t('Name found.'));
+    $this->assertText($native, t('Native found.'));
     // No t() here, we do not want to add this string to the database and it's
     // surely not translated yet.
-    $this->assertText($native, 'Test language added');
+    $this->assertText($native, t('Test language added.'));
     $this->drupalLogout();
 
     // Search for the name and translate it.
     $this->drupalLogin($translate_user);
-    $search = array (
+    $search = array(
       'string' => $name,
       'language' => 'all',
       'translation' => 'all',
       'group' => 'all',
     );
-    $this->drupalPost('admin/build/translate/translate', $search, t('Filter'));
-    // assertText seems to remove the input field where $name always could be
+    $this->drupalPost('admin/config/regional/translate/translate', $search, t('Filter'));
+    // assertText() seems to remove the input field where $name always could be
     // found, so this is not a false assert. See how assertNoText succeeds
     // later.
-    $this->assertText($name, 'Search found the name');
-    $this->assertRaw($language_indicator, 'Name is untranslated');
-    // It's presumed that this is the only result. Given the random name, it's
-    // reasonable.
+    $this->assertText($name, t('Search found the name.'));
+    $this->assertRaw($language_indicator, t('Name is untranslated.'));
+    // Assume this is the only result, given the random name.
     $this->clickLink(t('edit'));
     // We save the lid from the path.
     $matches = array();
-    preg_match('!admin/build/translate/edit/(\d)+!', $this->getUrl(), $matches);
+    preg_match('!admin/config/regional/translate/edit/(\d)+!', $this->getUrl(), $matches);
     $lid = $matches[1];
     // No t() here, it's surely not translated yet.
-    $this->assertText($name, 'name found on edit screen');
-    $edit = array (
+    $this->assertText($name, t('name found on edit screen.'));
+    $edit = array(
       "translations[$langcode]" => $translation,
     );
     $this->drupalPost(NULL, $edit, t('Save translations'));
-    $this->assertText(t('The string has been saved.'), 'The string has been saved.');
-    $this->assertTrue($name != $translation && t($name, array(), $langcode) == $translation, 't() works');
-    $this->drupalPost('admin/build/translate/translate', $search, t('Filter'));
+    $this->assertText(t('The string has been saved.'), t('The string has been saved.'));
+    $this->assertEqual($this->getUrl(), url('admin/config/regional/translate/translate', array('absolute' => TRUE)), t('Correct page redirection.'));
+    $this->assertTrue($name != $translation && t($name, array(), array('langcode' => $langcode)) == $translation, t('t() works.'));
+    $this->drupalPost('admin/config/regional/translate/translate', $search, t('Filter'));
     // The indicator should not be here.
-    $this->assertNoRaw($language_indicator, 'String is translated');
+    $this->assertNoRaw($language_indicator, t('String is translated.'));
+
+    // Try to edit a non-existent string and ensure we're redirected correctly.
+    // Assuming we don't have 999,999 strings already.
+    $random_lid = 999999;
+    $this->drupalGet('admin/config/regional/translate/edit/' . $random_lid);
+    $this->assertText(t('String not found'), t('String not found.'));
+    $this->assertEqual($this->getUrl(), url('admin/config/regional/translate/translate', array('absolute' => TRUE)), t('Correct page redirection.'));
     $this->drupalLogout();
 
     // Delete the language.
     $this->drupalLogin($admin_user);
-    $path = 'admin/settings/language/delete/' . $langcode;
+    $path = 'admin/config/regional/language/delete/' . $langcode;
     // This a confirm form, we do not need any fields changed.
     $this->drupalPost($path, array(), t('Delete'));
     // We need raw here because %locale will add HTML.
-    $this->assertRaw(t('The language %locale has been removed.', array('%locale' => $name)), 'The test language has been removed.');
+    $this->assertRaw(t('The language %locale has been removed.', array('%locale' => $name)), t('The test language has been removed.'));
     // Reload to remove $name.
     $this->drupalGet($path);
-    $this->assertNoText($langcode, 'Language code not found');
-    $this->assertNoText($name, 'Name not found');
-    $this->assertNoText($native, 'Native not found');
+    $this->assertNoText($langcode, t('Language code not found.'));
+    $this->assertNoText($name, t('Name not found.'));
+    $this->assertNoText($native, t('Native not found.'));
     $this->drupalLogout();
 
-    // Delete the name string.
+    // Delete the string.
     $this->drupalLogin($translate_user);
-    $this->drupalPost('admin/build/translate/delete/' . $lid, array(), t('Delete'));
-    $this->assertText(t('The string has been removed.'), 'The string has been removed message.');
-    $this->drupalPost('admin/build/translate/translate', $search, t('Filter'));
-    $this->assertNoText($name, 'Search now can not find the name');
+    $search = array(
+      'string' => $name,
+      'language' => 'all',
+      'translation' => 'all',
+      'group' => 'all',
+    );
+    $this->drupalPost('admin/config/regional/translate/translate', $search, t('Filter'));
+    // Assume this is the only result, given the random name.
+    $this->clickLink(t('delete'));
+    $this->assertText(t('Are you sure you want to delete the string'), t('"delete" link is correct.'));
+    // Delete the string.
+    $path = 'admin/config/regional/translate/delete/' . $lid;
+    $this->drupalGet($path);
+    // First test the 'cancel' link.
+    $this->clickLink(t('Cancel'));
+    $this->assertEqual($this->getUrl(), url('admin/config/regional/translate/translate', array('absolute' => TRUE)), t('Correct page redirection.'));
+    $this->assertRaw($name, t('The string was not deleted.'));
+    // Delete the name string.
+    $this->drupalPost('admin/config/regional/translate/delete/' . $lid, array(), t('Delete'));
+    $this->assertText(t('The string has been removed.'), t('The string has been removed message.'));
+    $this->assertEqual($this->getUrl(), url('admin/config/regional/translate/translate', array('absolute' => TRUE)), t('Correct page redirection.'));
+    $this->drupalPost('admin/config/regional/translate/translate', $search, t('Filter'));
+    $this->assertNoText($name, t('Search now can not find the name.'));
   }
 
   /**
@@ -136,16 +306,16 @@ class LocaleTranslationFunctionalTest extends DrupalWebTestCase {
   function testStringValidation() {
     global $base_url;
 
-    // User to add  language and strings
+    // User to add language and strings.
     $admin_user = $this->drupalCreateUser(array('administer languages', 'access administration pages', 'translate interface'));
     $this->drupalLogin($admin_user);
-    $langcode = str_replace('simpletest_', 'si-', $this->randomName(6));
+    $langcode = 'xx';
     // The English name for the language. This will be translated.
     $name = $this->randomName(16);
     // The native name for the language.
     $native = $this->randomName(16);
-    // The domain prefix. Not tested yet.
-    $prefix = strtolower(str_replace('si-', '', $langcode));
+    // The domain prefix.
+    $prefix = $langcode;
     // This is the language indicator on the translation search screen for
     // untranslated strings. Copied straight from locale.inc.
     $language_indicator = "<em class=\"locale-untranslated\">$langcode</em> ";
@@ -159,31 +329,31 @@ class LocaleTranslationFunctionalTest extends DrupalWebTestCase {
     $key = $this->randomName(16);
     $bad_translations[$key] ="<BODY ONLOAD=alert('xss')>" . $key;
 
-    // Add language.
-    $edit = array (
+    // Add custom language.
+    $edit = array(
       'langcode' => $langcode,
       'name' => $name,
       'native' => $native,
       'prefix' => $prefix,
       'direction' => '0',
     );
-    $this->drupalPost('admin/settings/language/add', $edit, t('Add custom language'));
+    $this->drupalPost('admin/config/regional/language/add', $edit, t('Add custom language'));
     // Add string.
-    t($name, array(), $langcode);
+    t($name, array(), array('langcode' => $langcode));
     // Reset locale cache.
-    $search = array (
+    $search = array(
       'string' => $name,
       'language' => 'all',
       'translation' => 'all',
       'group' => 'all',
     );
-    $this->drupalPost('admin/build/translate/translate', $search, t('Filter'));
-    // Find the edit path
+    $this->drupalPost('admin/config/regional/translate/translate', $search, t('Filter'));
+    // Find the edit path.
     $content = $this->drupalGetContent();
-    $this->assertTrue(preg_match('@(admin/build/translate/edit/[0-9]+)@', $content, $matches), t('Found the edit path'));
+    $this->assertTrue(preg_match('@(admin/config/regional/translate/edit/[0-9]+)@', $content, $matches), t('Found the edit path.'));
     $path = $matches[0];
     foreach ($bad_translations as $key => $translation) {
-      $edit = array (
+      $edit = array(
         "translations[$langcode]" => $translation,
       );
       $this->drupalPost($path, $edit, t('Save translations'));
@@ -193,17 +363,171 @@ class LocaleTranslationFunctionalTest extends DrupalWebTestCase {
       $this->assertNoText(t('The string has been saved.'), t('The string was not saved.'));
     }
   }
+
+  /**
+   * Tests translation search form.
+   */
+  function testStringSearch() {
+    global $base_url;
+
+    // User to add and remove language.
+    $admin_user = $this->drupalCreateUser(array('administer languages', 'access administration pages'));
+    // User to translate and delete string.
+    $translate_user = $this->drupalCreateUser(array('translate interface', 'access administration pages'));
+
+    // Code for the language.
+    $langcode = 'xx';
+    // The English name for the language. This will be translated.
+    $name = $this->randomName(16);
+    // The native name for the language.
+    $native = $this->randomName(16);
+    // The domain prefix.
+    $prefix = $langcode;
+    // This is the language indicator on the translation search screen for
+    // untranslated strings. Copied straight from locale.inc.
+    $language_indicator = "<em class=\"locale-untranslated\">$langcode</em> ";
+    // This will be the translation of $name.
+    $translation = $this->randomName(16);
+
+    // Add custom language.
+    $this->drupalLogin($admin_user);
+    $edit = array(
+      'langcode' => $langcode,
+      'name' => $name,
+      'native' => $native,
+      'prefix' => $prefix,
+      'direction' => '0',
+    );
+    $this->drupalPost('admin/config/regional/language/add', $edit, t('Add custom language'));
+    // Add string.
+    t($name, array(), array('langcode' => $langcode));
+    // Reset locale cache.
+    locale(NULL, NULL, NULL, TRUE);
+    $this->drupalLogout();
+
+    // Search for the name.
+    $this->drupalLogin($translate_user);
+    $search = array(
+      'string' => $name,
+      'language' => 'all',
+      'translation' => 'all',
+      'group' => 'all',
+    );
+    $this->drupalPost('admin/config/regional/translate/translate', $search, t('Filter'));
+    // assertText() seems to remove the input field where $name always could be
+    // found, so this is not a false assert. See how assertNoText succeeds
+    // later.
+    $this->assertText($name, t('Search found the string.'));
+
+    // Ensure untranslated string doesn't appear if searching on 'only
+    // translated strings'.
+    $search = array(
+      'string' => $name,
+      'language' => 'all',
+      'translation' => 'translated',
+      'group' => 'all',
+    );
+    $this->drupalPost('admin/config/regional/translate/translate', $search, t('Filter'));
+    $this->assertText(t('No strings found for your search.'), t("Search didn't find the string."));
+
+    // Ensure untranslated string appears if searching on 'only untranslated
+    // strings'.
+    $search = array(
+      'string' => $name,
+      'language' => 'all',
+      'translation' => 'untranslated',
+      'group' => 'all',
+    );
+    $this->drupalPost('admin/config/regional/translate/translate', $search, t('Filter'));
+    $this->assertNoText(t('No strings found for your search.'), t('Search found the string.'));
+
+    // Add translation.
+    // Assume this is the only result, given the random name.
+    $this->clickLink(t('edit'));
+    // We save the lid from the path.
+    $matches = array();
+    preg_match('!admin/config/regional/translate/edit/(\d)+!', $this->getUrl(), $matches);
+    $lid = $matches[1];
+    $edit = array(
+      "translations[$langcode]" => $translation,
+    );
+    $this->drupalPost(NULL, $edit, t('Save translations'));
+
+    // Ensure translated string does appear if searching on 'only
+    // translated strings'.
+    $search = array(
+      'string' => $translation,
+      'language' => 'all',
+      'translation' => 'translated',
+      'group' => 'all',
+    );
+    $this->drupalPost('admin/config/regional/translate/translate', $search, t('Filter'));
+    $this->assertNoText(t('No strings found for your search.'), t('Search found the translation.'));
+
+    // Ensure translated source string doesn't appear if searching on 'only
+    // untranslated strings'.
+    $search = array(
+      'string' => $name,
+      'language' => 'all',
+      'translation' => 'untranslated',
+      'group' => 'all',
+    );
+    $this->drupalPost('admin/config/regional/translate/translate', $search, t('Filter'));
+    $this->assertText(t('No strings found for your search.'), t("Search didn't find the source string."));
+
+    // Ensure translated string doesn't appear if searching on 'only
+    // untranslated strings'.
+    $search = array(
+      'string' => $translation,
+      'language' => 'all',
+      'translation' => 'untranslated',
+      'group' => 'all',
+    );
+    $this->drupalPost('admin/config/regional/translate/translate', $search, t('Filter'));
+    $this->assertText(t('No strings found for your search.'), t("Search didn't find the translation."));
+
+    // Ensure translated string does appear if searching on the custom language.
+    $search = array(
+      'string' => $translation,
+      'language' => $langcode,
+      'translation' => 'all',
+      'group' => 'all',
+    );
+    $this->drupalPost('admin/config/regional/translate/translate', $search, t('Filter'));
+    $this->assertNoText(t('No strings found for your search.'), t('Search found the translation.'));
+
+    // Ensure translated string doesn't appear if searching on English.
+    $search = array(
+      'string' => $translation,
+      'language' => 'en',
+      'translation' => 'all',
+      'group' => 'all',
+    );
+    $this->drupalPost('admin/config/regional/translate/translate', $search, t('Filter'));
+    $this->assertText(t('No strings found for your search.'), t("Search didn't find the translation."));
+
+    // Search for a string that isn't in the system.
+    $unavailable_string = $this->randomName(16);
+    $search = array(
+      'string' => $unavailable_string,
+      'language' => 'all',
+      'translation' => 'all',
+      'group' => 'all',
+    );
+    $this->drupalPost('admin/config/regional/translate/translate', $search, t('Filter'));
+    $this->assertText(t('No strings found for your search.'), t("Search didn't find the invalid string."));
+  }
 }
 
 /**
  * Functional tests for the import of translation files.
  */
 class LocaleImportFunctionalTest extends DrupalWebTestCase {
-  function getInfo() {
+  public static function getInfo() {
     return array(
-      'name' => t('Translation import'),
-      'description' => t('Tests the importation of locale files.'),
-      'group' => t('Locale'),
+      'name' => 'Translation import',
+      'description' => 'Tests the importation of locale files.',
+      'group' => 'Locale',
     );
   }
 
@@ -224,44 +548,159 @@ class LocaleImportFunctionalTest extends DrupalWebTestCase {
    */
   function testStandalonePoFile() {
     // Try importing a .po file.
-    $name = tempnam(file_directory_temp(), "po_");
-    file_put_contents($name, $this->getPoFile());
-    $this->drupalPost('admin/build/translate/import', array(
+    $this->importPoFile($this->getPoFile(), array(
       'langcode' => 'fr',
-      'files[file]' => $name,
-    ), t('Import'));
-    unlink($name);
+    ));
 
-    // The importation should automatically create the corresponding language.
-    $this->assertRaw(t('The language %language has been created.', array('%language' => 'French')), t('The language has been automatically created'));
+    // The import should automatically create the corresponding language.
+    $this->assertRaw(t('The language %language has been created.', array('%language' => 'French')), t('The language has been automatically created.'));
 
-    // The importation should have create 7 strings.
-    $this->assertRaw(t('The translation was successfully imported. There are %number newly created translated strings, %update strings were updated and %delete strings were removed.', array('%number' => 7, '%update' => 0, '%delete' => 0)), t('The translation file was successfully imported'));
+    // The import should have created 7 strings.
+    $this->assertRaw(t('The translation was successfully imported. There are %number newly created translated strings, %update strings were updated and %delete strings were removed.', array('%number' => 7, '%update' => 0, '%delete' => 0)), t('The translation file was successfully imported.'));
+
+    // Ensure we were redirected correctly.
+    $this->assertEqual($this->getUrl(), url('admin/config/regional/translate', array('absolute' => TRUE)), t('Correct page redirection.'));
+
 
     // Try importing a .po file with invalid tags in the default text group.
-    $name = tempnam(file_directory_temp(), "po_");
-    file_put_contents($name, $this->getBadPoFile());
-    $this->drupalPost('admin/build/translate/import', array(
+    $this->importPoFile($this->getBadPoFile(), array(
       'langcode' => 'fr',
-      'files[file]' => $name,
-    ), t('Import'));
-    unlink($name);
-    // The importation should have created 1 string and rejected 2.
+    ));
+
+    // The import should have created 1 string and rejected 2.
     $this->assertRaw(t('The translation was successfully imported. There are %number newly created translated strings, %update strings were updated and %delete strings were removed.', array('%number' => 1, '%update' => 0, '%delete' => 0)), t('The translation file was successfully imported.'));
     $skip_message = format_plural(2, 'One translation string was skipped because it contains disallowed HTML.', '@count translation strings were skipped because they contain disallowed HTML.');
     $this->assertRaw($skip_message, t('Unsafe strings were skipped.'));
 
+
     // Try importing a .po file with invalid tags in a non default text group.
-    $name = tempnam(file_directory_temp(), "po_");
-    file_put_contents($name, $this->getBadPoFile());
-    $this->drupalPost('admin/build/translate/import', array(
+    $this->importPoFile($this->getBadPoFile(), array(
+      'langcode' => 'fr',
+      'group' => 'custom',
+    ));
+
+    // The import should have created 3 strings.
+    $this->assertRaw(t('The translation was successfully imported. There are %number newly created translated strings, %update strings were updated and %delete strings were removed.', array('%number' => 3, '%update' => 0, '%delete' => 0)), t('The translation file was successfully imported.'));
+
+
+    // Try importing a .po file which doesn't exist.
+    $name = $this->randomName(16);
+    $this->drupalPost('admin/config/regional/translate/import', array(
       'langcode' => 'fr',
       'files[file]' => $name,
       'group' => 'custom',
     ), t('Import'));
+    $this->assertEqual($this->getUrl(), url('admin/config/regional/translate/import', array('absolute' => TRUE)), t('Correct page redirection.'));
+    $this->assertText(t('File to import not found.'), t('File to import not found message.'));
+
+
+    // Try importing a .po file with overriding strings, and ensure existing
+    // strings are kept.
+    $this->importPoFile($this->getOverwritePoFile(), array(
+      'langcode' => 'fr',
+      'mode' => 1, // Existing strings are kept, only new strings are added.
+    ));
+
+    // The import should have created 1 string.
+    $this->assertRaw(t('The translation was successfully imported. There are %number newly created translated strings, %update strings were updated and %delete strings were removed.', array('%number' => 1, '%update' => 0, '%delete' => 0)), t('The translation file was successfully imported.'));
+    // Ensure string wasn't overwritten.
+    $search = array(
+      'string' => 'Montag',
+      'language' => 'fr',
+      'translation' => 'translated',
+      'group' => 'all',
+    );
+    $this->drupalPost('admin/config/regional/translate/translate', $search, t('Filter'));
+    $this->assertText(t('No strings found for your search.'), t('String not overwritten by imported string.'));
+
+
+    // Try importing a .po file with overriding strings, and ensure existing
+    // strings are overwritten.
+    $this->importPoFile($this->getOverwritePoFile(), array(
+      'langcode' => 'fr',
+      'mode' => 0, // Strings in the uploaded file replace existing ones, new ones are added.
+    ));
+
+    // The import should have updated 2 strings.
+    $this->assertRaw(t('The translation was successfully imported. There are %number newly created translated strings, %update strings were updated and %delete strings were removed.', array('%number' => 0, '%update' => 2, '%delete' => 0)), t('The translation file was successfully imported.'));
+    // Ensure string was overwritten.
+    $search = array(
+      'string' => 'Montag',
+      'language' => 'fr',
+      'translation' => 'translated',
+      'group' => 'all',
+    );
+    $this->drupalPost('admin/config/regional/translate/translate', $search, t('Filter'));
+    $this->assertNoText(t('No strings found for your search.'), t('String overwritten by imported string.'));
+  }
+
+  /**
+   * Test automatic importation of a module's translation files when a language
+   * is enabled.
+   */
+  function testAutomaticModuleTranslationImportLanguageEnable() {
+    // Code for the language - manually set to match the test translation file.
+    $langcode = 'xx';
+    // The English name for the language.
+    $name = $this->randomName(16);
+    // The native name for the language.
+    $native = $this->randomName(16);
+    // The domain prefix.
+    $prefix = $langcode;
+
+    // Create a custom language.
+    $edit = array(
+      'langcode' => $langcode,
+      'name' => $name,
+      'native' => $native,
+      'prefix' => $prefix,
+      'direction' => '0',
+    );
+    $this->drupalPost('admin/config/regional/language/add', $edit, t('Add custom language'));
+
+    // Ensure the translation file was automatically imported when language was
+    // added.
+    $this->assertText(t('One translation file imported for the enabled modules.'), t('Language file automatically imported.'));
+
+    // Ensure strings were successfully imported.
+    $search = array(
+      'string' => 'lundi',
+      'language' => $langcode,
+      'translation' => 'translated',
+      'group' => 'all',
+    );
+    $this->drupalPost('admin/config/regional/translate/translate', $search, t('Filter'));
+    $this->assertNoText(t('No strings found for your search.'), t('String successfully imported.'));
+  }
+
+  /**
+   * Test automatic importation of a module's translation files when a language
+   * is enabled.
+   */
+  function testLanguageContext() {
+    // Try importing a .po file.
+    $this->importPoFile($this->getPoFileWithContext(), array(
+      'langcode' => 'hr',
+    ));
+
+    $this->assertIdentical(t('May', array(), array('langcode' => 'hr', 'context' => 'Long month name')), 'Svibanj', t('Long month name context is working.'));
+    $this->assertIdentical(t('May', array(), array('langcode' => 'hr')), 'Svi.', t('Default context is working.'));
+  }
+
+  /**
+   * Helper function: import a standalone .po file in a given language.
+   *
+   * @param $contents
+   *   Contents of the .po file to import.
+   * @param $options
+   *   Additional options to pass to the translation import form.
+   */
+  function importPoFile($contents, array $options = array()) {
+    $name = tempnam(file_directory_path('temporary'), "po_");
+    file_put_contents($name, $contents);
+    $options['files[file]'] = $name;
+    $this->drupalPost('admin/config/regional/translate/import', $options, t('Import'));
     unlink($name);
-    // The importation should have created 3 strings.
-    $this->assertRaw(t('The translation was successfully imported. There are %number newly created translated strings, %update strings were updated and %delete strings were removed.', array('%number' => 3, '%update' => 0, '%delete' => 0)), t('The translation file was successfully imported.'));
   }
 
   /**
@@ -301,7 +740,7 @@ EOF;
   }
 
   /**
-   * Helper function that returns a proper .po file.
+   * Helper function that returns a bad .po file.
    */
   function getBadPoFile() {
     return <<< EOF
@@ -324,17 +763,147 @@ msgstr "supprimer<script>alert('xss');</script>"
 
 EOF;
   }
+
+  /**
+   * Helper function that returns a proper .po file, for testing overwriting
+   * existing translations.
+   */
+  function getOverwritePoFile() {
+    return <<< EOF
+msgid ""
+msgstr ""
+"Project-Id-Version: Drupal 6\\n"
+"MIME-Version: 1.0\\n"
+"Content-Type: text/plain; charset=UTF-8\\n"
+"Content-Transfer-Encoding: 8bit\\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\\n"
+
+msgid "Monday"
+msgstr "Montag"
+
+msgid "Day"
+msgstr "Jour"
+EOF;
+  }
+
+  /**
+   * Helper function that returns a .po file with context.
+   */
+  function getPoFileWithContext() {
+    // Croatian (code hr) is one the the languages that have a different
+    // form for the full name and the abbreviated name for the month May.
+    return <<< EOF
+msgid ""
+msgstr ""
+"Project-Id-Version: Drupal 6\\n"
+"MIME-Version: 1.0\\n"
+"Content-Type: text/plain; charset=UTF-8\\n"
+"Content-Transfer-Encoding: 8bit\\n"
+"Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\\n"
+
+msgctxt "Long month name"
+msgid "May"
+msgstr "Svibanj"
+
+msgid "May"
+msgstr "Svi."
+EOF;
+  }
+
+
+}
+
+/**
+ * Functional tests for the export of translation files.
+ */
+class LocaleExportFunctionalTest extends DrupalWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'Translation export',
+      'description' => 'Tests the exportation of locale files.',
+      'group' => 'Locale',
+    );
+  }
+
+  /**
+   * A user able to create languages and export translations.
+   */
+  protected $admin_user = NULL;
+
+  function setUp() {
+    parent::setUp('locale', 'locale_test');
+
+    $this->admin_user = $this->drupalCreateUser(array('administer languages', 'translate interface', 'access administration pages'));
+    $this->drupalLogin($this->admin_user);
+  }
+
+  /**
+   * Test exportation of translations.
+   */
+  function testExportTranslation() {
+    // First import some known translations.
+    // This will also automatically enable the 'fr' language.
+    $name = tempnam(file_directory_path('temporary'), "po_");
+    file_put_contents($name, $this->getPoFile());
+    $this->drupalPost('admin/config/regional/translate/import', array(
+      'langcode' => 'fr',
+      'files[file]' => $name,
+    ), t('Import'));
+    unlink($name);
+
+    // Get the French translations.
+    $this->drupalPost('admin/config/regional/translate/export', array(
+      'langcode' => 'fr',
+    ), t('Export'));
+
+    // Ensure we have a translation file.
+    $this->assertRaw('# French translation of Drupal', t('Exported French translation file.'));
+    // Ensure our imported translations exist in the file.
+    $this->assertRaw('msgstr "lundi"', t('French translations present in exported file.'));
+  }
+
+  /**
+   * Test exportation of translation template file.
+   */
+  function testExportTranslationTemplateFile() {
+    // Get the translation template file.
+    // There are two 'Export' buttons on this page, but it somehow works.  It'd
+    // be better if we could use the submit button id like documented but that
+    // doesn't work.
+    $this->drupalPost('admin/config/regional/translate/export', array(), t('Export'));
+    // Ensure we have a translation file.
+    $this->assertRaw('# LANGUAGE translation of PROJECT', t('Exported translation template file.'));
+  }
+
+  /**
+   * Helper function that returns a proper .po file.
+   */
+  function getPoFile() {
+    return <<< EOF
+msgid ""
+msgstr ""
+"Project-Id-Version: Drupal 6\\n"
+"MIME-Version: 1.0\\n"
+"Content-Type: text/plain; charset=UTF-8\\n"
+"Content-Transfer-Encoding: 8bit\\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\\n"
+
+msgid "Monday"
+msgstr "lundi"
+EOF;
+  }
+
 }
 
 /**
  * Locale uninstall with English UI functional test.
  */
 class LocaleUninstallFunctionalTest extends DrupalWebTestCase {
-  function getInfo() {
+  public static function getInfo() {
     return array(
-      'name' => t('Locale uninstall (EN)'),
-      'description' => t('Tests the uninstall process using the built-in UI language.'),
-      'group' => t('Locale'),
+      'name' => 'Locale uninstall (EN)',
+      'description' => 'Tests the uninstall process using the built-in UI language.',
+      'group' => 'Locale',
     );
   }
 
@@ -342,65 +911,68 @@ class LocaleUninstallFunctionalTest extends DrupalWebTestCase {
    * The default language set for the UI before uninstall.
    */
   protected $ui_language;
-  
+
   function setUp() {
     parent::setUp('locale');
     $this->ui_language = 'en';
   }
-  
+
   /**
    * Check if the values of the Locale variables are correct after uninstall.
    */
   function testUninstallProcess() {
     $locale_module = array('locale');
-    
+
     // Add a new language and optionally set it as default.
     require_once DRUPAL_ROOT . '/includes/locale.inc';
     locale_add_language('fr', 'French', 'Français', LANGUAGE_LTR, '', '', TRUE, $this->ui_language == 'fr');
-    
+
     // Check the UI language.
-    drupal_init_language();
+    drupal_language_initialize();
     global $language;
     $this->assertEqual($language->language, $this->ui_language, t('Current language: %lang', array('%lang' => $language->language)));
 
     // Change language negotiation options.
     variable_set('language_negotiation', LANGUAGE_NEGOTIATION_PATH_DEFAULT);
-    
+
     // Enable multilingual workflow option for articles.
     variable_set('language_content_type_article', 1);
-    
+
     // Change JavaScript translations directory.
     variable_set('locale_js_directory', 'js_translations');
-    
+
     // Build the JavaScript translation file for French.
     $user = $this->drupalCreateUser(array('translate interface', 'access administration pages'));
     $this->drupalLogin($user);
-    $this->drupalGet('admin/build/translate/translate');
-    $string = db_fetch_object(db_query('SELECT min(lid) AS lid FROM {locales_source} WHERE location LIKE \'%.js%\' AND textgroup = \'default\''));
+    $this->drupalGet('admin/config/regional/translate/translate');
+    $string = db_query('SELECT min(lid) AS lid FROM {locales_source} WHERE location LIKE :location AND textgroup = :textgroup', array(
+      ':location' => '%.js%',
+      ':textgroup' => 'default',
+    ))->fetchObject();
     $edit = array('translations[fr]' => 'french translation');
-    $this->drupalPost('admin/build/translate/edit/'. $string->lid, $edit, t('Save translations'));
+    $this->drupalPost('admin/config/regional/translate/edit/' . $string->lid, $edit, t('Save translations'));
     _locale_rebuild_js('fr');
-    $file = db_fetch_object(db_query('SELECT javascript FROM {languages} WHERE language = \'fr\''));
-    $js_file = file_create_path(variable_get('locale_js_directory', 'languages')) .'/fr_'. $file->javascript .'.js';
+    $file = db_query('SELECT javascript FROM {languages} WHERE language = :language', array(':language' => 'fr'))->fetchObject();
+    $js_file = 'public://' . variable_get('locale_js_directory', 'languages') . '/fr_' . $file->javascript . '.js';
     $this->assertTrue($result = file_exists($js_file), t('JavaScript file created: %file', array('%file' => $result ? $js_file : t('none'))));
-    
+
     // Disable string caching.
     variable_set('locale_cache_strings', 0);
-    
+
     // Uninstall Locale.
     module_disable($locale_module);
     drupal_uninstall_modules($locale_module);
-    
+
     // Visit the front page.
     $this->drupalGet('');
 
     // Check the init language logic.
-    drupal_init_language();
+    drupal_language_initialize();
     $this->assertEqual($language->language, 'en', t('Language after uninstall: %lang', array('%lang' => $language->language)));
-    
+
     // Check JavaScript files deletion.
     $this->assertTrue($result = !file_exists($js_file), t('JavaScript file deleted: %file', array('%file' => $result ? $js_file : t('found'))));
-    
+
     // Check language count.
     $language_count = variable_get('language_count', 1);
     $this->assertEqual($language_count, 1, t('Language count: %count', array('%count' => $language_count)));
@@ -416,34 +988,34 @@ class LocaleUninstallFunctionalTest extends DrupalWebTestCase {
     // Check multilingual workflow option for articles.
     $multilingual = variable_get('language_content_type_article', 0);
     $this->assertEqual($multilingual, 0, t('Multilingual workflow option: %status', array('%status' => t($multilingual ? 'enabled': 'disabled'))));
-    
+
     // Check JavaScript translations directory.
     $locale_js_directory = variable_get('locale_js_directory', 'languages');
     $this->assertEqual($locale_js_directory, 'languages', t('JavaScript translations directory: %dir', array('%dir' => $locale_js_directory)));
-    
+
     // Check string caching.
     $locale_cache_strings = variable_get('locale_cache_strings', 1);
-    $this->assertEqual($locale_cache_strings, 1, t('String caching: %status', array('%status' => t($locale_cache_strings ? 'enabled': 'disabled')))); 
+    $this->assertEqual($locale_cache_strings, 1, t('String caching: %status', array('%status' => t($locale_cache_strings ? 'enabled': 'disabled'))));
   }
 }
 
 /**
  * Locale uninstall with French UI functional test.
- * 
+ *
  * Because this class extends LocaleUninstallFunctionalTest, it doesn't require a new
  * test of its own. Rather, it switches the default UI language in setUp and then
  * runs the testUninstallProcess (which it inherits from LocaleUninstallFunctionalTest)
  * to test with this new language.
  */
 class LocaleUninstallFrenchFunctionalTest extends LocaleUninstallFunctionalTest {
-  function getInfo() {
+  public static function getInfo() {
     return array(
-      'name' => t('Locale uninstall (FR)'),
-      'description' => t('Tests the uninstall process using French as UI language.'),
-      'group' => t('Locale'),
+      'name' => 'Locale uninstall (FR)',
+      'description' => 'Tests the uninstall process using French as UI language.',
+      'group' => 'Locale',
     );
   }
-  
+
   function setUp() {
     parent::setUp();
     $this->ui_language = 'fr';
@@ -456,44 +1028,48 @@ class LocaleUninstallFrenchFunctionalTest extends LocaleUninstallFunctionalTest 
  */
 class LanguageSwitchingFunctionalTest extends DrupalWebTestCase {
 
-  function getInfo() {
+  public static function getInfo() {
     return array(
-      'name' => t('Language switching'),
-      'description' => t('Tests for the language switching feature.'),
-      'group' => t('Locale'),
+      'name' => 'Language switching',
+      'description' => 'Tests for the language switching feature.',
+      'group' => 'Locale',
     );
   }
 
   function setUp() {
     parent::setUp('locale');
 
-    // Create and login user
+    // Create and login user.
     $admin_user = $this->drupalCreateUser(array('administer blocks', 'administer languages', 'translate interface', 'access administration pages'));
     $this->drupalLogin($admin_user);
   }
 
+  /**
+   * Functional tests for the language switcher block.
+   */
   function testLanguageBlock() {
     // Enable the language switching block.
     $edit = array(
-      'locale_language-switcher[region]' => 'left',
+      'locale_language-switcher[region]' => 'sidebar_first',
     );
-    $this->drupalPost('admin/build/block', $edit, t('Save blocks'));
+    $this->drupalPost('admin/structure/block', $edit, t('Save blocks'));
 
     // Add language.
     $edit = array(
       'langcode' => 'fr',
     );
-    $this->drupalPost('admin/settings/language/add', $edit, t('Add language'));
+    $this->drupalPost('admin/config/regional/language/add', $edit, t('Add language'));
 
     // Set language negotiation.
     $edit = array(
       'language_negotiation' => LANGUAGE_NEGOTIATION_PATH_DEFAULT,
     );
-    $this->drupalPost('admin/settings/language/configure', $edit, t('Save settings'));
+    $this->drupalPost('admin/config/regional/language/configure', $edit, t('Save settings'));
+    $this->assertEqual($this->getUrl(), url('admin/config/regional/language', array('absolute' => TRUE)), t('Correct page redirection.'));
 
     // Assert that the language switching block is displayed on the frontpage.
     $this->drupalGet('');
-    $this->assertText(t('Languages'));
+    $this->assertText(t('Languages'), t('Language switcher block found.'));
 
     // Assert that only the current language is marked as active.
     list($language_switcher) = $this->xpath('//div[@id="block-locale-language-switcher"]');
@@ -522,7 +1098,506 @@ class LanguageSwitchingFunctionalTest extends DrupalWebTestCase {
         $anchors['inactive'][] = $language;
       }
     }
-    $this->assertIdentical($links, array('active' => array('en'), 'inactive' => array('fr')), t('Only the current language list item is marked as active on the language switcher block'));
-    $this->assertIdentical($anchors, array('active' => array('en'), 'inactive' => array('fr')), t('Only the current language anchor is marked as active on the language switcher block'));
+    $this->assertIdentical($links, array('active' => array('en'), 'inactive' => array('fr')), t('Only the current language list item is marked as active on the language switcher block.'));
+    $this->assertIdentical($anchors, array('active' => array('en'), 'inactive' => array('fr')), t('Only the current language anchor is marked as active on the language switcher block.'));
+  }
+}
+
+/**
+ * Functional tests for a user's ability to change their default language.
+ */
+class LocaleUserLanguageFunctionalTest extends DrupalWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'User language settings',
+      'description' => "Tests user's ability to change their default language.",
+      'group' => 'Locale',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('locale');
+  }
+
+  /**
+   * Test if user can change their default language.
+   */
+  function testUserLanguageConfiguration() {
+    global $base_url;
+
+    // User to add and remove language.
+    $admin_user = $this->drupalCreateUser(array('administer languages', 'access administration pages'));
+    // User to change their default language.
+    $web_user = $this->drupalCreateUser();
+
+    // Add custom language.
+    $this->drupalLogin($admin_user);
+    // Code for the language.
+    $langcode = 'xx';
+    // The English name for the language.
+    $name = $this->randomName(16);
+    // The native name for the language.
+    $native = $this->randomName(16);
+    // The domain prefix.
+    $prefix = 'xx';
+    $edit = array(
+      'langcode' => $langcode,
+      'name' => $name,
+      'native' => $native,
+      'prefix' => $prefix,
+      'direction' => '0',
+    );
+    $this->drupalPost('admin/config/regional/language/add', $edit, t('Add custom language'));
+
+    // Add custom language and disable it.
+    // Code for the language.
+    $langcode_disabled = 'xx-yy';
+    // The English name for the language. This will be translated.
+    $name_disabled = $this->randomName(16);
+    // The native name for the language.
+    $native_disabled = $this->randomName(16);
+    // The domain prefix.
+    $prefix_disabled = $langcode_disabled;
+    $edit = array(
+      'langcode' => $langcode_disabled,
+      'name' => $name_disabled,
+      'native' => $native_disabled,
+      'prefix' => $prefix_disabled,
+      'direction' => '0',
+    );
+    $this->drupalPost('admin/config/regional/language/add', $edit, t('Add custom language'));
+    // Disable the language.
+    $edit = array(
+      'enabled[' . $langcode_disabled . ']' => FALSE,
+    );
+    $this->drupalPost('admin/config/regional/language', $edit, t('Save configuration'));
+    $this->drupalLogout();
+
+    // Login as normal user and edit account settings.
+    $this->drupalLogin($web_user);
+    $path = 'user/' . $web_user->uid . '/edit';
+    $this->drupalGet($path);
+    // Ensure language settings fieldset is available.
+    $this->assertText(t('Language settings'), t('Language settings available.'));
+    // Ensure custom language is present.
+    $this->assertText($name, t('Language present on form.'));
+    // Ensure disabled language isn't present.
+    $this->assertNoText($name_disabled, t('Disabled language not present on form.'));
+    // Switch to our custom language.
+    $edit = array(
+      'language' => $langcode,
+    );
+    $this->drupalPost($path, $edit, t('Save'));
+    // Ensure form was submitted successfully.
+    $this->assertText(t('The changes have been saved.'), t('Changes were saved.'));
+    // Check if language was changed.
+    $elements = $this->xpath('//input[@id="edit-language-' . $langcode . '"]');
+    $this->assertTrue(isset($elements[0]) && !empty($elements[0]['checked']), t('Default language successfully updated.'));
+
+    $this->drupalLogout();
+  }
+}
+
+/**
+ * Functional tests for configuring a different path alias per language.
+ */
+class LocalePathFunctionalTest extends DrupalWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'Path language settings',
+      'description' => 'Checks you can configure a language for individual url aliases.',
+      'group' => 'Locale',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('locale', 'path');
+  }
+
+  /**
+   * Test if a language can be associated with a path alias.
+   */
+  function testPathLanguageConfiguration() {
+    global $base_url;
+
+    // User to add and remove language.
+    $admin_user = $this->drupalCreateUser(array('administer languages', 'create page content', 'administer url aliases', 'create url aliases', 'access administration pages'));
+
+    // Add custom language.
+    $this->drupalLogin($admin_user);
+    // Code for the language.
+    $langcode = 'xx';
+    // The English name for the language.
+    $name = $this->randomName(16);
+    // The native name for the language.
+    $native = $this->randomName(16);
+    // The domain prefix.
+    $prefix = $langcode;
+    $edit = array(
+      'langcode' => $langcode,
+      'name' => $name,
+      'native' => $native,
+      'prefix' => $prefix,
+      'direction' => '0',
+    );
+    $this->drupalPost('admin/config/regional/language/add', $edit, t('Add custom language'));
+
+    // Set language negotiation.
+    $edit = array(
+      'language_negotiation' => LANGUAGE_NEGOTIATION_PATH_DEFAULT,
+    );
+    $this->drupalPost('admin/config/regional/language/configure', $edit, t('Save settings'));
+
+    // Create a node.
+    $node = $this->drupalCreateNode(array('type' => 'page'));
+
+    // Create a path alias in default language (English).
+    $path = 'admin/config/search/path/add';
+    $english_path = $this->randomName(8);
+    $edit = array(
+      'src' => 'node/' . $node->nid,
+      'dst' => $english_path,
+      'language' => 'en',
+    );
+    $this->drupalPost($path, $edit, t('Create new alias'));
+
+    // Create a path alias in new custom language.
+    $custom_language_path = $this->randomName(8);
+    $edit = array(
+      'src' => 'node/' . $node->nid,
+      'dst' => $custom_language_path,
+      'language' => $langcode,
+    );
+    $this->drupalPost($path, $edit, t('Create new alias'));
+
+    // Confirm English language path alias works.
+    $this->drupalGet($english_path);
+    $this->assertText($node->title, t('English alias works.'));
+
+    // Confirm custom language path alias works.
+    $this->drupalGet($prefix . '/' . $custom_language_path);
+    $this->assertText($node->title, t('Custom language alias works.'));
+
+    $this->drupalLogout();
+  }
+}
+/**
+ * Functional tests for multilingual support on nodes.
+ */
+class LocaleContentFunctionalTest extends DrupalWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'Content language settings',
+      'description' => 'Checks you can enable multilingual support on content types and configure a language for a node.',
+      'group' => 'Locale',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('locale');
+  }
+
+  /**
+   * Test if a content type can be set to multilingual and language setting is
+   * present on node add and edit forms.
+   */
+  function testContentTypeLanguageConfiguration() {
+    global $base_url;
+
+    // User to add and remove language.
+    $admin_user = $this->drupalCreateUser(array('administer languages', 'administer content types', 'access administration pages'));
+    // User to create a node.
+    $web_user = $this->drupalCreateUser(array('create page content', 'edit any page content'));
+
+    // Add custom language.
+    $this->drupalLogin($admin_user);
+    // Code for the language.
+    $langcode = 'xx';
+    // The English name for the language.
+    $name = $this->randomName(16);
+    // The native name for the language.
+    $native = $this->randomName(16);
+    // The domain prefix.
+    $prefix = $langcode;
+    $edit = array(
+      'langcode' => $langcode,
+      'name' => $name,
+      'native' => $native,
+      'prefix' => $prefix,
+      'direction' => '0',
+    );
+    $this->drupalPost('admin/config/regional/language/add', $edit, t('Add custom language'));
+
+    // Add disabled custom language.
+    // Code for the language.
+    $langcode_disabled = 'xx-yy';
+    // The English name for the language.
+    $name_disabled = $this->randomName(16);
+    // The native name for the language.
+    $native_disabled = $this->randomName(16);
+    // The domain prefix.
+    $prefix_disabled = $langcode_disabled;
+    $edit = array(
+      'langcode' => $langcode_disabled,
+      'name' => $name_disabled,
+      'native' => $native_disabled,
+      'prefix' => $prefix_disabled,
+      'direction' => '0',
+    );
+    $this->drupalPost('admin/config/regional/language/add', $edit, t('Add custom language'));
+    // Disable second custom language.
+    $path = 'admin/config/regional/language';
+    $edit = array(
+      'enabled[' . $langcode_disabled . ']' => FALSE,
+    );
+    $this->drupalPost($path, $edit, t('Save configuration'));
+
+    // Set language negotiation.
+    $edit = array(
+      'language_negotiation' => LANGUAGE_NEGOTIATION_PATH_DEFAULT,
+    );
+    $this->drupalPost('admin/config/regional/language/configure', $edit, t('Save settings'));
+
+    // Set page content type to use multilingual support.
+    $this->drupalGet('admin/structure/node-type/page');
+    $this->assertText(t('Multilingual support'), t('Multilingual support fieldset present on content type configuration form.'));
+    $edit = array(
+      'language_content_type' => 1,
+    );
+    $this->drupalPost('admin/structure/node-type/page', $edit, t('Save content type'));
+    $this->assertRaw(t('The content type %type has been updated.', array('%type' => 'Page')), t('Page content type has been updated.'));
+    $this->drupalLogout();
+
+    // Verify language selection is not present on add article form.
+    $this->drupalLogin($web_user);
+    $this->drupalGet('node/add/article');
+    // Verify language select list is not present.
+    $this->assertNoRaw('<select name="language" class="form-select" id="edit-language" >', t('Language select not present on add article form.'));
+
+    // Verify language selection appears on add page form.
+    $this->drupalGet('node/add/page');
+    // Verify language select list is present.
+    $this->assertRaw('<select name="language" class="form-select" id="edit-language" >', t('Language select present on add page form.'));
+    // Ensure enabled language appears.
+    $this->assertText($name, t('Enabled language present.'));
+    // Ensure disabled language doesn't appear.
+    $this->assertNoText($name_disabled, t('Disabled language not present.'));
+
+    // Create page content.
+    $node_title = $this->randomName();
+    $node_body =  $this->randomName();
+    $edit = array(
+      'type' => 'page',
+      'title' => $node_title,
+      'body' => array(FIELD_LANGUAGE_NONE => array(array('value' => $node_body))),
+      'language' => $langcode,
+    );
+    $node = $this->drupalCreateNode($edit);
+    // Edit the page content and ensure correct language is selected.
+    $path = 'node/' . $node->nid . '/edit';
+    $this->drupalGet($path);
+    $this->assertRaw('<option value="' . $langcode . '" selected="selected">' .  $name . '</option>', t('Correct language selected.'));
+    // Ensure we can change the node language.
+    $edit = array(
+      'language' => 'en',
+    );
+    $this->drupalPost($path, $edit, t('Save'));
+    $this->assertRaw(t('Page %title has been updated.', array('%title' => $node_title)), t('Page updated.'));
+
+    $this->drupalLogout();
+  }
+}
+
+
+
+/**
+ * Test UI language negotiation
+ * 1. LANGUAGE_NEGOTIATION_PATH_DEFAULT
+ *    UI Language base on URL prefix, browser language preference has no
+ *    influence:
+ *      admin/config
+ *        UI in site default language
+ *      zh-hans/admin/config
+ *        UI in Chinese
+ *      blah-blah/admin/config
+ *        404
+ * 2. LANGUAGE_NEGOTIATION_PATH
+ *        admin/config
+ *          UI in user's browser language preference if the site has that
+ *          language enabled, if not, the default language
+ *        zh-hans/admin/config
+ *          UI in Chinese
+ *        blah-blah/admin/config
+ *          404
+ * 3. LANGUAGE_NEGOTIATION_DOMAIN
+ *        http://example.com/admin/config
+ *          UI language in site default
+ *        http://example.cn/admin/config
+ *          UI language in Chinese
+ */
+class UILanguageNegotiationTest extends DrupalWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'UI language negotiation',
+      'description' => 'Test UI language switching by url path prefix and domain.',
+      'group' => 'Locale',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('locale', 'locale_test');
+  }
+
+  /**
+   * Tests for language switching by URL path.
+   */
+  function testUILanguageNegotiation() {
+    $admin_user = $this->drupalCreateUser(array('administer languages', 'translate interface', 'access administration pages'));
+    $this->drupalLogin($admin_user);
+
+    // A few languages to switch to.
+    // This one is unknown, should get the default lang version.
+    $language_unknown = 'blah-blah';
+    // For testing browser lang preference.
+    $language_browser_fallback = 'vi';
+    // For testing path prefix.
+    $language = 'zh-hans';
+    // For setting browser language preference to 'vi'.
+    $http_header_browser_fallback = array("Accept-Language: $language_browser_fallback;q=1");
+    // For setting browser language preference to some unknown.
+    $http_header_blah = array("Accept-Language: blah;q=1");
+
+    // This domain should switch the UI to Chinese.
+    $language_domain = 'example.cn';
+
+    // Setup the site languages by installing two languages.
+    require_once('includes/locale.inc');
+    locale_add_language($language_browser_fallback);
+    locale_add_language($language);
+
+    // We will look for this string in the admin/config screen to see if the
+    // corresponding translated string is shown.
+    $default_string = 'Configure languages for content and the user interface';
+
+    // Set the default language in order for the translated string to be registered
+    // into database when seen by t(). Without doing this, our target string
+    // is for some reason not found when doing translate search. This might
+    // be some bug.
+    drupal_static_reset('language_list');
+    $languages = language_list('enabled');
+    variable_set('language_default', $languages[1]['vi']);
+    // First visit this page to make sure our target string is searchable.
+    $this->drupalGet('admin/config');
+    // Now the t()'ed string is in db so switch the language back to default.
+    variable_del('language_default');
+
+    // Translate the string.
+    $language_browser_fallback_string = "In $language_browser_fallback In $language_browser_fallback In $language_browser_fallback";
+    $language_string = "In $language In $language In $language";
+    // Do a translate search of our target string.
+    $edit = array( 'string' => $default_string);
+    $this->drupalPost('admin/config/regional/translate/translate', $edit, t('Filter'));
+    // Should find the string and now click edit to post translated string.
+    $this->clickLink('edit');
+    $edit = array(
+      "translations[$language_browser_fallback]" => $language_browser_fallback_string,
+      "translations[$language]" => $language_string,
+    );
+    $this->drupalPost(NULL, $edit, t('Save translations'));
+
+    $tests = array(
+      // Default, browser preference should have no influence.
+      array(
+        'language_negotiation' => LANGUAGE_NEGOTIATION_PATH_DEFAULT,
+        'path' => 'admin/config',
+        'expect' => $default_string,
+        'http_header' => $http_header_browser_fallback,
+        'message' => 'LANGUAGE_NEGOTIATION_PATH_DEFAULT: no language prefix, UI language is default and not the browser language preference setting is used.',
+      ),
+      // Language prefix.
+      array(
+        'language_negotiation' => LANGUAGE_NEGOTIATION_PATH_DEFAULT,
+        'path' => "$language/admin/config",
+        'expect' => $language_string,
+        'http_header' => $http_header_browser_fallback,
+        'message' => 'LANGUAGE_NEGOTIATION_PATH_DEFAULT: with language prefix, UI language is switched based on path prefix',
+      ),
+      // Default, go by browser preference.
+      array(
+        'language_negotiation' => LANGUAGE_NEGOTIATION_PATH,
+        'path' => 'admin/config',
+        'expect' => $language_browser_fallback_string,
+        'http_header' => $http_header_browser_fallback,
+        'message' => 'LANGUAGE_NEGOTIATION_PATH: no language prefix, UI language is determined by browser language preference',
+      ),
+      // Prefix, switch to the language.
+      array(
+        'language_negotiation' => LANGUAGE_NEGOTIATION_PATH,
+        'path' => "$language/admin/config",
+        'expect' => $language_string,
+        'http_header' => $http_header_browser_fallback,
+        'message' => 'LANGUAGE_NEGOTIATION_PATH: with langage prefix, UI language is based on path prefix',
+      ),
+      // Default, browser language preference is not one of site's lang.
+      array(
+        'language_negotiation' => LANGUAGE_NEGOTIATION_PATH,
+        'path' => 'admin/config',
+        'expect' => $default_string,
+        'http_header' => $http_header_blah,
+        'message' => 'LANGUAGE_NEGOTIATION_PATH: no language prefix and browser language preference set to unknown language should use default language',
+      ),
+    );
+
+    foreach ($tests as $test) {
+      $this->runTest($test);
+    }
+
+    // Unknown language prefix should return 404.
+    foreach(array(LANGUAGE_NEGOTIATION_PATH_DEFAULT, LANGUAGE_NEGOTIATION_PATH) as $negotiation) {
+      variable_set('language_negotiation', $negotiation);
+      $this->drupalGet("$language_unknown/admin/config", array(), $http_header_browser_fallback);
+      $this->assertResponse(404, "Unknown language path prefix should return 404, code = $negotiation");
+    }
+
+    // Setup for domain negotiation, first configure the language to have domain
+    // URL.
+    $edit = array('prefix' => '', 'domain' => "http://$language_domain");
+    $this->drupalPost("admin/config/regional/language/edit/$language", $edit, t('Save language'));
+    // Set the site to use domain language negotiation.
+    variable_set('language_negotiation', LANGUAGE_NEGOTIATION_DOMAIN);
+
+    $tests = array(
+      // Default domain, browser preference should have no influence.
+      array(
+        'path' => 'admin/config',
+        'expect' => $default_string,
+        'http_header' => $http_header_browser_fallback,
+        'message' => 'LANGUAGE_NEGOTIATION_DOMAIN: default domain should get default language',
+      ),
+      // Language domain specific URL, we set the $_SERVER['HTTP_HOST'] in
+      // locale_test.module hook_boot() to simulate this.
+      array(
+        'locale_test_domain' => $language_domain,
+        'path' => 'admin/config',
+        'expect' => $language_string,
+        'http_header' => $http_header_browser_fallback,
+        'message' => 'LANGUAGE_NEGOTIATION_DOMAIN: domain example.cn should switch to Chinese',
+      ),
+    );
+
+    foreach ($tests as $test) {
+      $this->runTest($test);
+    }
+  }
+
+  private function runTest($test) {
+    if (!empty($test['language_negotiation'])) {
+      variable_set('language_negotiation', $test['language_negotiation']);
+    }
+    if (!empty($test['locale_test_domain'])) {
+      variable_set('locale_test_domain', $test['locale_test_domain']);
+    }
+    $this->drupalGet($test['path'], array(), $test['http_header']);
+    $this->assertText($test['expect'], $test['message']);
   }
 }

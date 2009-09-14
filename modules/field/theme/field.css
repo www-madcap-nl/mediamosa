@@ -1,32 +1,38 @@
-/* $Id: field.css,v 1.2 2009/02/05 03:42:58 webchick Exp $ */
+/* $Id: field.css,v 1.6 2009/08/28 06:51:07 dries Exp $ */
 
-/* Node display */
-.field .field-label,
-.field .field-label-inline,
-.field .field-label-inline-first {
-  font-weight:bold;
+/* Field display */
+.field .field-label {
+  font-weight: bold;
 }
-.field .field-label-inline,
-.field .field-label-inline-first {
-  display:inline;
-}
-.field .field-label-inline {
-  visibility:hidden;
+.field-label-inline .field-label,
+.field-label-inline .field-items {
+  float:left;
 }
 
-.node-form .field-multiple-table td.field-multiple-drag {
-  width:30px;
-  padding-right:0;
+/* Form display */
+form .field-multiple-table {
+  margin: 0;
 }
-.node-form .field-multiple-table td.field-multiple-drag a.tabledrag-handle{
-  padding-right:.5em;
+form .field-multiple-table th.field-label {
+  padding-left: 0; /*LTR*/
+}
+form .field-multiple-table td.field-multiple-drag {
+  width: 30px;
+  padding-right: 0; /*LTR*/
+}
+form .field-multiple-table td.field-multiple-drag a.tabledrag-handle{
+  padding-right: .5em; /*LTR*/
 }
 
-.node-form .field-add-more .form-submit{
-  margin:0;
+form .field-add-more-submit {
+  margin: .5em 0 0;
 }
 
-.node-form .number {
-  display:inline;
-  width:auto;
+form .form-item .text {
+  display: inline;
+  width: auto;
+}
+form .form-item .number {
+  display: inline;
+  width: auto;
 }

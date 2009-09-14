@@ -1,5 +1,5 @@
 <?php
-// $Id: aggregator.pages.inc,v 1.24 2009/02/03 18:55:29 dries Exp $
+// $Id: aggregator.pages.inc,v 1.32 2009/08/24 17:11:42 webchick Exp $
 
 /**
  * @file
@@ -238,14 +238,12 @@ function aggregator_categorize_items_submit($form, &$form_state) {
 function theme_aggregator_categorize_items($form) {
   $output = drupal_render($form['feed_source']);
   $rows = array();
-  if ($form['items']) {
+  if (!empty($form['items'])) {
     foreach (element_children($form['items']) as $key) {
-      if (is_array($form['items'][$key])) {
-        $rows[] = array(
-          drupal_render($form['items'][$key]),
-          array('data' => drupal_render($form['categories'][$key]), 'class' => 'categorize-item'),
-        );
-      }
+      $rows[] = array(
+        drupal_render($form['items'][$key]),
+        array('data' => drupal_render($form['categories'][$key]), 'class' => array('categorize-item')),
+      );
     }
   }
   $output .= theme('table', array('', t('Categorize')), $rows);
@@ -261,7 +259,7 @@ function theme_aggregator_categorize_items($form) {
  * @see aggregator-wrapper.tpl.php
  */
 function template_preprocess_aggregator_wrapper(&$variables) {
-  $variables['pager'] = theme('pager', NULL, 20, 0);
+  $variables['pager'] = theme('pager', NULL);
 }
 
 /**
@@ -371,18 +369,18 @@ function aggregator_page_rss() {
  * @ingroup themeable
  */
 function theme_aggregator_page_rss($feeds, $category = NULL) {
-  drupal_set_header('Content-Type: application/rss+xml; charset=utf-8');
+  drupal_set_header('Content-Type', 'application/rss+xml; charset=utf-8');
 
   $items = '';
   $feed_length = variable_get('feed_item_length', 'teaser');
   foreach ($feeds as $feed) {
     switch ($feed_length) {
       case 'teaser':
-        $teaser = node_teaser($feed->description);
-        if ($teaser != $feed->description) {
-          $teaser .= '<p><a href="' . check_url($feed->link) . '">' . t('read more') . "</a></p>\n";
+        $summary = text_summary($feed->description, NULL, variable_get('aggregator_teaser_length', 600));
+        if ($summary != $feed->description) {
+          $summary .= '<p><a href="' . check_url($feed->link) . '">' . t('read more') . "</a></p>\n";
         }
-        $feed->description = $teaser;
+        $feed->description = $summary;
         break;
       case 'title':
         $feed->description = '';
@@ -431,7 +429,7 @@ function aggregator_page_opml($cid = NULL) {
  * @ingroup themeable
  */
 function theme_aggregator_page_opml($feeds) {
-  drupal_set_header('Content-Type: text/xml; charset=utf-8');
+  drupal_set_header('Content-Type', 'text/xml; charset=utf-8');
 
   $output  = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
   $output .= "<opml version=\"1.1\">\n";
@@ -501,6 +499,6 @@ function template_preprocess_aggregator_feed_source(&$variables) {
   }
 
   if (user_access('administer news feeds')) {
-    $variables['last_checked'] = l($variables['last_checked'], 'admin/content/aggregator');
+    $variables['last_checked'] = l($variables['last_checked'], 'admin/config/services/aggregator');
   }
 }

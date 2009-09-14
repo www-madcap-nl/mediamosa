@@ -1,5 +1,5 @@
 <?php
-// $Id: profile.admin.inc,v 1.21 2009/02/03 18:55:31 dries Exp $
+// $Id: profile.admin.inc,v 1.29 2009/08/22 14:34:21 webchick Exp $
 
 /**
  * @file
@@ -17,7 +17,7 @@ function profile_admin_overview() {
 
   $form = array();
   $categories = array();
-  while ($field = db_fetch_object($result)) {
+  foreach ($result as $field) {
     // Collect all category information
     $categories[] = $field->category;
 
@@ -27,8 +27,8 @@ function profile_admin_overview() {
     $form[$field->fid]['type'] = array('#markup' => $field->type);
     $form[$field->fid]['category'] = array('#type' => 'select', '#default_value' => $field->category, '#options' => array());
     $form[$field->fid]['weight'] = array('#type' => 'weight', '#default_value' => $field->weight);
-    $form[$field->fid]['edit'] = array('#markup' => l(t('edit'), "admin/user/profile/edit/$field->fid"));
-    $form[$field->fid]['delete'] = array('#markup' => l(t('delete'), "admin/user/profile/delete/$field->fid"));
+    $form[$field->fid]['edit'] = array('#markup' => l(t('edit'), "admin/config/people/profile/edit/$field->fid"));
+    $form[$field->fid]['delete'] = array('#markup' => l(t('delete'), "admin/config/people/profile/delete/$field->fid"));
   }
 
   // Add the category combo boxes
@@ -55,7 +55,7 @@ function profile_admin_overview() {
   $addnewfields = '<h2>' . t('Add new field') . '</h2>';
   $addnewfields .= '<ul>';
   foreach (_profile_field_types() as $key => $value) {
-    $addnewfields .= '<li>' . l($value, "admin/user/profile/add/$key") . '</li>';
+    $addnewfields .= '<li>' . l($value, "admin/config/people/profile/add/$key") . '</li>';
   }
   $addnewfields .= '</ul>';
   $form['addnewfields'] = array('#markup' => $addnewfields);
@@ -74,7 +74,13 @@ function profile_admin_overview_submit($form, &$form_state) {
       $weight = $form_state['values'][$fid]['weight'];
       $category = $form_state['values'][$fid]['category'];
       if ($weight != $form[$fid]['weight']['#default_value'] || $category != $form[$fid]['category']['#default_value']) {
-        db_query("UPDATE {profile_field} SET weight = %d, category = '%s' WHERE fid = %d", $weight, $category, $fid);
+        db_update('profile_field')
+          ->fields(array(
+            'weight' => $weight,
+            'category' => $category,
+          ))
+          ->condition('fid', $fid)
+          ->execute();
       }
     }
   }
@@ -110,9 +116,9 @@ function theme_profile_admin_overview($form) {
         // Category classes are given numeric IDs because there's no guarantee
         // class names won't contain invalid characters.
         $categories[$category] = $category_number;
-        $category_field['#attributes']['class'] = 'profile-category profile-category-' . $category_number;
-        $rows[] = array(array('data' => $category, 'colspan' => 7, 'class' => 'category'));
-        $rows[] = array('data' => array(array('data' => '<em>' . t('No fields in this category. If this category remains empty when saved, it will be removed.') . '</em>', 'colspan' => 7)), 'class' => 'category-' . $category_number . '-message category-message category-populated');
+        $category_field['#attributes']['class'] = array('profile-category', 'profile-category-' . $category_number);
+        $rows[] = array(array('data' => $category, 'colspan' => 7, 'class' => array('category')));
+        $rows[] = array('data' => array(array('data' => '<em>' . t('No fields in this category. If this category remains empty when saved, it will be removed.') . '</em>', 'colspan' => 7)), 'class' => array('category-' . $category_number . '-message', 'category-message', 'category-populated'));
 
         // Make it draggable only if there is more than one field
         if (isset($form['submit'])) {
@@ -123,8 +129,8 @@ function theme_profile_admin_overview($form) {
       }
 
       // Add special drag and drop classes that group fields together.
-      $field['weight']['#attributes']['class'] = 'profile-weight profile-weight-' . $categories[$category];
-      $field['category']['#attributes']['class'] = 'profile-category profile-category-' . $categories[$category];
+      $field['weight']['#attributes']['class'] = array('profile-weight', 'profile-weight-' . $categories[$category]);
+      $field['category']['#attributes']['class'] = array('profile-category', 'profile-category-' . $categories[$category]);
 
       // Add the row
       $row = array();
@@ -137,7 +143,7 @@ function theme_profile_admin_overview($form) {
       }
       $row[] = drupal_render($field['edit']);
       $row[] = drupal_render($field['delete']);
-      $rows[] = array('data' => $row, 'class' => 'draggable');
+      $rows[] = array('data' => $row, 'class' => array('draggable'));
     }
   }
   if (empty($rows)) {
@@ -165,11 +171,11 @@ function theme_profile_admin_overview($form) {
  * @see profile_field_form_submit()
  */
 function profile_field_form(&$form_state, $arg = NULL) {
-  if (arg(3) == 'edit') {
+  if (arg(4) == 'edit') {
     if (is_numeric($arg)) {
       $fid = $arg;
 
-      $edit = db_fetch_array(db_query('SELECT * FROM {profile_field} WHERE fid = %d', $fid));
+      $edit = db_query('SELECT * FROM {profile_field} WHERE fid = :fid', array('fid' => $fid))->fetchAssoc();
 
       if (!$edit) {
         drupal_not_found();
@@ -213,7 +219,7 @@ function profile_field_form(&$form_state, $arg = NULL) {
   $form['fields']['category'] = array('#type' => 'textfield',
     '#title' => t('Category'),
     '#default_value' => $edit['category'],
-    '#autocomplete_path' => 'admin/user/profile/autocomplete',
+    '#autocomplete_path' => 'admin/config/people/profile/autocomplete',
     '#description' => t('The category the new field should be part of. Categories are used to group fields logically. An example category is "Personal information".'),
     '#required' => TRUE,
   );
@@ -305,19 +311,27 @@ function profile_field_form_validate($form, &$form_state) {
   if (strtolower($form_state['values']['category']) == 'account') {
     form_set_error('category', t('The specified category name is reserved for use by Drupal.'));
   }
-  $args1 = array($form_state['values']['title'], $form_state['values']['category']);
-  $args2 = array($form_state['values']['name']);
-  $query_suffix = '';
+  $query = db_select('profile_field');
+  $query->fields('profile_field', array('fid'));
 
   if (isset($form_state['values']['fid'])) {
-    $args1[] = $args2[] = $form_state['values']['fid'];
-    $query_suffix = ' AND fid != %d';
+    $query->condition('fid', $form_state['values']['fid']);
   }
+  $query_name = clone $query;
 
-  if (db_result(db_query("SELECT fid FROM {profile_field} WHERE title = '%s' AND category = '%s'" . $query_suffix, $args1))) {
+  $title = $query
+    ->condition('title', $form_state['values']['title'])
+    ->condition('category', $form_state['values']['category'])
+    ->execute()
+    ->fetchField();
+  if ($title) {
     form_set_error('title', t('The specified title is already in use.'));
   }
-  if (db_result(db_query("SELECT fid FROM {profile_field} WHERE name = '%s'" . $query_suffix, $args2))) {
+  $name = $query_name
+    ->condition('name', $form_state['values']['name'])
+    ->execute()
+    ->fetchField();
+  if ($name) {
     form_set_error('name', t('The specified name is already in use.'));
   }
   if ($form_state['values']['visibility'] == PROFILE_HIDDEN) {
@@ -341,20 +355,25 @@ function profile_field_form_submit($form, &$form_state) {
     $form_state['values']['page'] = '';
   }
   if (!isset($form_state['values']['fid'])) {
-    db_query("INSERT INTO {profile_field} (title, name, explanation, category, type, weight, required, register, visibility, autocomplete, options, page) VALUES ('%s', '%s', '%s', '%s', '%s', %d, %d, %d, %d, %d, '%s', '%s')", $form_state['values']['title'], $form_state['values']['name'], $form_state['values']['explanation'], $form_state['values']['category'], $form_state['values']['type'], $form_state['values']['weight'], $form_state['values']['required'], $form_state['values']['register'], $form_state['values']['visibility'], $form_state['values']['autocomplete'], $form_state['values']['options'], $form_state['values']['page']);
-
+    // Remove all elements that are not profile_field columns.
+    $values = array_intersect_key($form_state['values'], array_flip(array('type', 'category', 'title', 'name', 'explanation', 'visibility', 'page', 'weight', 'autocomplete', 'required', 'register', 'options')));
+    db_insert('profile_field')
+      ->fields($values)
+      ->execute();
     drupal_set_message(t('The field has been created.'));
-    watchdog('profile', 'Profile field %field added under category %category.', array('%field' => $form_state['values']['title'], '%category' => $form_state['values']['category']), WATCHDOG_NOTICE, l(t('view'), 'admin/user/profile'));
+    watchdog('profile', 'Profile field %field added under category %category.', array('%field' => $form_state['values']['title'], '%category' => $form_state['values']['category']), WATCHDOG_NOTICE, l(t('view'), 'admin/config/people/profile'));
   }
   else {
-    db_query("UPDATE {profile_field} SET title = '%s', name = '%s', explanation = '%s', category = '%s', weight = %d, required = %d, register = %d, visibility = %d, autocomplete = %d, options = '%s', page = '%s' WHERE fid = %d", $form_state['values']['title'], $form_state['values']['name'], $form_state['values']['explanation'], $form_state['values']['category'], $form_state['values']['weight'], $form_state['values']['required'], $form_state['values']['register'], $form_state['values']['visibility'], $form_state['values']['autocomplete'], $form_state['values']['options'], $form_state['values']['page'], $form_state['values']['fid']);
-
+    db_update('profile_field')
+      ->fields($form_state['values'])
+      ->condition('fid', $form_state['values']['fid'])
+      ->exeucte();
     drupal_set_message(t('The field has been updated.'));
   }
   cache_clear_all();
   menu_rebuild();
 
-  $form_state['redirect'] = 'admin/user/profile';
+  $form_state['redirect'] = 'admin/config/people/profile';
   return;
 }
 
@@ -362,7 +381,7 @@ function profile_field_form_submit($form, &$form_state) {
  * Menu callback; deletes a field from all user profiles.
  */
 function profile_field_delete(&$form_state, $fid) {
-  $field = db_fetch_object(db_query("SELECT title FROM {profile_field} WHERE fid = %d", $fid));
+  $field = db_query("SELECT title FROM {profile_field} WHERE fid = :fid", array(':fid' => $fid))->fetchObject();
   if (!$field) {
     drupal_not_found();
     return;
@@ -371,8 +390,8 @@ function profile_field_delete(&$form_state, $fid) {
   $form['title'] = array('#type' => 'value', '#value' => $field->title);
 
   return confirm_form($form,
-    t('Are you sure you want to delete the field %field?', array('%field' => $field->title)), 'admin/user/profile',
-    t('This action cannot be undone. If users have entered values into this field in their profile, these entries will also be deleted. If you want to keep the user-entered data, instead of deleting the field you may wish to <a href="@edit-field">edit this field</a> and change it to a hidden profile field so that it may only be accessed by administrators.', array('@edit-field' => url('admin/user/profile/edit/' . $fid))),
+    t('Are you sure you want to delete the field %field?', array('%field' => $field->title)), 'admin/config/people/profile',
+    t('This action cannot be undone. If users have entered values into this field in their profile, these entries will also be deleted. If you want to keep the user-entered data, instead of deleting the field you may wish to <a href="@edit-field">edit this field</a> and change it to a hidden profile field so that it may only be accessed by administrators.', array('@edit-field' => url('admin/config/people/profile/edit/' . $fid))),
     t('Delete'), t('Cancel'));
 }
 
@@ -380,15 +399,19 @@ function profile_field_delete(&$form_state, $fid) {
  * Process a field delete form submission.
  */
 function profile_field_delete_submit($form, &$form_state) {
-  db_query('DELETE FROM {profile_field} WHERE fid = %d', $form_state['values']['fid']);
-  db_query('DELETE FROM {profile_value} WHERE fid = %d', $form_state['values']['fid']);
+  db_delete('profile_field')
+    ->condition('fid', $form_state['values']['fid'])
+    ->execute();
+  db_delete('profile_value')
+    ->condition('fid', $form_state['values']['fid'])
+    ->execute();
 
   cache_clear_all();
 
   drupal_set_message(t('The field %field has been deleted.', array('%field' => $form_state['values']['title'])));
-  watchdog('profile', 'Profile field %field deleted.', array('%field' => $form_state['values']['title']), WATCHDOG_NOTICE, l(t('view'), 'admin/user/profile'));
+  watchdog('profile', 'Profile field %field deleted.', array('%field' => $form_state['values']['title']), WATCHDOG_NOTICE, l(t('view'), 'admin/config/people/profile'));
 
-  $form_state['redirect'] = 'admin/user/profile';
+  $form_state['redirect'] = 'admin/config/people/profile';
   return;
 }
 
@@ -397,8 +420,8 @@ function profile_field_delete_submit($form, &$form_state) {
  */
 function profile_admin_settings_autocomplete($string) {
   $matches = array();
-  $result = db_query_range("SELECT category FROM {profile_field} WHERE LOWER(category) LIKE LOWER(:category)", array(':category' => $string .'%'), 0, 10);
-  while ($data = db_fetch_object($result)) {
+  $result = db_query_range("SELECT category FROM {profile_field} WHERE LOWER(category) LIKE LOWER(:category)", array(':category' => $string . '%'), 0, 10);
+  foreach ($result as $data) {
     $matches[$data->category] = check_plain($data->category);
   }
   drupal_json($matches);

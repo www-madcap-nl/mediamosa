@@ -1,8 +1,13 @@
 <?php
-// $Id: database_test.install,v 1.4 2008/12/23 07:48:24 dries Exp $
+// $Id: database_test.install,v 1.8 2009/05/27 18:34:00 dries Exp $
 
 /**
- * Implementation of hook_schema().
+ * @file
+ * Install, update and uninstall functions for the database_test module.
+ */
+
+/**
+ * Implement hook_schema().
  *
  * The database tests use the database API which depends on schema
  * information for certain operations on certain databases.
@@ -59,7 +64,7 @@ function database_test_schema() {
         'length' => 255,
         'not null' => TRUE,
         'default' => '',
-       ),
+      ),
       'age' => array(
         'description' => "The person's age",
         'type' => 'int',
@@ -104,7 +109,7 @@ function database_test_schema() {
         'description' => 'Simple unique ID.',
         'type' => 'serial',
         'not null' => TRUE,
-       ),
+      ),
       'blob1' => array(
         'description' => 'A dummy BLOB field.',
         'type' => 'blob',
@@ -166,18 +171,49 @@ function database_test_schema() {
     'primary key' => array('id'),
     );
 
+  $schema['test_null'] = array(
+    'description' => 'Basic test table for NULL value handling.',
+    'fields' => array(
+      'id' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'name' => array(
+        'description' => "A person's name.",
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+        'default' => '',
+      ),
+      'age' => array(
+        'description' => "The person's age.",
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+        'default' => 0),
+    ),
+    'primary key' => array('id'),
+    'unique keys' => array(
+      'name' => array('name')
+    ),
+    'indexes' => array(
+      'ages' => array('age'),
+    ),
+  );
+
   return $schema;
 }
 
 /**
- * Implementation of hook_install().
+ * Implement hook_install().
  */
 function database_test_install() {
   drupal_install_schema('database_test');
 }
 
 /**
- * Implementation of hook_uninstall().
+ * Implement hook_uninstall().
  */
 function database_test_uninstall() {
   drupal_uninstall_schema('database_test');

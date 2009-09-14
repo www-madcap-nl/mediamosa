@@ -1,5 +1,5 @@
 <?php
-// $Id: path.module,v 1.152 2008/12/09 11:30:24 dries Exp $
+// $Id: path.module,v 1.170 2009/09/05 15:05:03 dries Exp $
 
 /**
  * @file
@@ -7,7 +7,7 @@
  */
 
 /**
- * Implementation of hook_help().
+ * Implement hook_help().
  */
 function path_help($path, $arg) {
   switch ($path) {
@@ -18,50 +18,54 @@ function path_help($path, $arg) {
       $output .= '<li>' . t('%alias for the path %path', array('%alias' => 'store', '%path' => 'image/tid/16')) . '</li>';
       $output .= '<li>' . t('%alias for the path %path', array('%alias' => 'store/products/whirlygigs', '%path' => 'taxonomy/term/7+19+20+21')) . '</li>';
       $output .= '<li>' . t('%alias for the path %path', array('%alias' => 'contact', '%path' => 'node/3')) . '</li></ul>';
-      $output .= '<p>' . t('The path module enables appropriately permissioned users to specify an optional alias in all node input and editing forms, and provides an interface to view and edit all URL aliases. The two permissions related to URL aliasing are <em>administer url aliases</em> and <em>create url aliases</em>. ') . '</p>';
-      $output .= '<p>' . t('This module also provides user-defined mass URL aliasing capabilities, which is useful if you wish to uniformly use URLs different from the default. For example, you may want to have your URLs presented in a different language. Access to the Drupal source code on the web server is required to set up mass URL aliasing. ') . '</p>';
+      $output .= '<p>' . t('The path module enables appropriately permissioned users to specify an optional alias in all node input and editing forms, and provides an interface to view and edit all URL aliases. The two permissions related to URL aliasing are <em>administer url aliases</em> and <em>create url aliases</em>.') . ' </p>';
+      $output .= '<p>' . t('This module also provides user-defined mass URL aliasing capabilities, which is useful if you wish to uniformly use URLs different from the default. For example, you may want to have your URLs presented in a different language. Access to the Drupal source code on the web server is required to set up mass URL aliasing.') . ' </p>';
       $output .= '<p>' . t('For more information, see the online handbook entry for <a href="@path">Path module</a>.', array('@path' => 'http://drupal.org/handbook/modules/path/')) . '</p>';
       return $output;
-    case 'admin/build/path':
-      return '<p>' . t("Drupal provides complete control over URLs through aliasing, which is often used to make URLs more readable or easy to remember. For example, the alias 'about' may be mapped onto the post at the system path 'node/1', creating a more meaningful URL. Each system path can have multiple aliases.") . '</p>';
-    case 'admin/build/path/add':
+    case 'admin/config/search/path':
+      return '<p>' . t("An alias defines a different name for an existing URL path - for example, the alias 'about' for the URL path 'node/1'. A URL path can have multiple aliases.") . '</p>';
+    case 'admin/config/search/path/add':
       return '<p>' . t('Enter the path you wish to create the alias for, followed by the name of the new alias.') . '</p>';
   }
 }
 
 /**
- * Implementation of hook_menu().
+ * Implement hook_menu().
  */
 function path_menu() {
-  $items['admin/build/path'] = array(
+  $items['admin/config/search/path'] = array(
     'title' => 'URL aliases',
     'description' => "Change your site's URL paths by aliasing them.",
     'page callback' => 'path_admin_overview',
     'access arguments' => array('administer url aliases'),
+    'file' => 'path.admin.inc',
   );
-  $items['admin/build/path/edit'] = array(
+  $items['admin/config/search/path/edit'] = array(
     'title' => 'Edit alias',
     'page callback' => 'path_admin_edit',
     'access arguments' => array('administer url aliases'),
     'type' => MENU_CALLBACK,
+    'file' => 'path.admin.inc',
   );
-  $items['admin/build/path/delete'] = array(
+  $items['admin/config/search/path/delete'] = array(
     'title' => 'Delete alias',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('path_admin_delete_confirm'),
     'access arguments' => array('administer url aliases'),
     'type' => MENU_CALLBACK,
+    'file' => 'path.admin.inc',
   );
-  $items['admin/build/path/list'] = array(
+  $items['admin/config/search/path/list'] = array(
     'title' => 'List',
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => -10,
   );
-  $items['admin/build/path/add'] = array(
+  $items['admin/config/search/path/add'] = array(
     'title' => 'Add alias',
     'page callback' => 'path_admin_edit',
     'access arguments' => array('administer url aliases'),
-    'type' => MENU_LOCAL_TASK,
+    'type' => MENU_LOCAL_ACTION,
+    'file' => 'path.admin.inc',
   );
 
   return $items;
@@ -71,7 +75,9 @@ function path_menu() {
  * Post-confirmation; delete an URL alias.
  */
 function path_admin_delete($pid = 0) {
-  db_query('DELETE FROM {url_alias} WHERE pid = %d', $pid);
+  db_delete('url_alias')
+    ->condition('pid', $pid)
+    ->execute();
   drupal_set_message(t('The alias has been deleted.'));
 }
 
@@ -86,11 +92,19 @@ function path_set_alias($path = NULL, $alias = NULL, $pid = NULL, $language = ''
     // An existing alias.
     if (!$path || !$alias) {
       // Delete the alias based on pid.
-      db_query('DELETE FROM {url_alias} WHERE pid = %d', $pid);
+      db_delete('url_alias')
+        ->condition('pid', $pid)
+        ->execute();
     }
     else {
       // Update the existing alias.
-      db_query("UPDATE {url_alias} SET src = '%s', dst = '%s', language = '%s' WHERE pid = %d", $path, $alias, $language, $pid);
+      db_update('url_alias')
+        ->fields(array(
+          'src'      => $path,
+          'dst'      => $alias,
+          'language' => $language))
+        ->condition('pid', $pid)
+        ->execute();
     }
   }
   elseif ($path && $alias) {
@@ -98,34 +112,58 @@ function path_set_alias($path = NULL, $alias = NULL, $pid = NULL, $language = ''
     if ($alias == drupal_get_path_alias($path, $language)) {
       // There is already such an alias, neutral or in this language.
       // Update the alias based on alias; setting the language if not yet done.
-      db_query("UPDATE {url_alias} SET src = '%s', dst = '%s', language = '%s' WHERE dst = '%s'", $path, $alias, $language, $alias);
+      db_update('url_alias')
+        ->fields(array(
+          'src' => $path,
+          'dst' => $alias,
+          'language' => $language
+        ))
+        ->condition('dst', $alias)
+        ->execute();
     }
     else {
       // A new alias. Add it to the database.
-      db_query("INSERT INTO {url_alias} (src, dst, language) VALUES ('%s', '%s', '%s')", $path, $alias, $language);
+      db_insert('url_alias')
+        ->fields(array(
+          'src'     => $path,
+          'dst'      => $alias,
+          'language' => $language,
+        ))
+        ->execute();
     }
   }
   else {
     // Delete the alias.
     if ($alias) {
-      db_query("DELETE FROM {url_alias} WHERE dst = '%s'", $alias);
+      db_delete('url_alias')
+        ->condition('dst', $alias)
+        ->execute();
     }
     else {
-      db_query("DELETE FROM {url_alias} WHERE src = '%s'", $path);
+      db_delete('url_alias')
+        ->condition('src', $path)
+        ->execute();
     }
   }
   drupal_clear_path_cache();
 }
 
 /**
- * Implementation of hook_nodeapi_validate().
+ * Implement hook_node_validate().
  */
-function path_nodeapi_validate($node, $form) {
+function path_node_validate($node, $form) {
   if (user_access('create url aliases') || user_access('administer url aliases')) {
     if (isset($node->path)) {
       $language = isset($node->language) ? $node->language : '';
       $node->path = trim($node->path);
-      if (db_result(db_query("SELECT COUNT(dst) FROM {url_alias} WHERE dst = '%s' AND src != '%s' AND language = '%s'", $node->path, "node/$node->nid", $language))) {
+      $has_alias = db_query("SELECT COUNT(dst) FROM {url_alias} WHERE src <> :src AND dst = :dst AND language = :language", array(
+        ':src' => "node/$node->nid",
+        ':dst' => $node->path,
+        ':language' => $language,
+      ))
+      ->fetchField();
+
+      if ($has_alias) {
         form_set_error('path', t('The path is already in use.'));
       }
     }
@@ -133,9 +171,9 @@ function path_nodeapi_validate($node, $form) {
 }
 
 /**
- * Implementation of hook_nodeapi_load().
+ * Implement hook_node_load().
  */
-function path_nodeapi_load($nodes, $types) {
+function path_node_load($nodes, $types) {
   foreach ($nodes as $node) {
     $language = isset($node->language) ? $node->language : '';
     $path = 'node/' . $node->nid;
@@ -147,9 +185,9 @@ function path_nodeapi_load($nodes, $types) {
 }
 
 /**
- * Implementation of hook_nodeapi_insert().
+ * Implement hook_node_insert().
  */
-function path_nodeapi_insert($node) {
+function path_node_insert($node) {
   if (user_access('create url aliases') || user_access('administer url aliases')) {
     $language = isset($node->language) ? $node->language : '';
     // Don't try to insert if path is NULL. We may have already set
@@ -161,9 +199,9 @@ function path_nodeapi_insert($node) {
 }
 
 /**
- * Implementation of hook_nodeapi_update().
+ * Implement hook_node_update().
  */
-function path_nodeapi_update($node) {
+function path_node_update($node) {
   if (user_access('create url aliases') || user_access('administer url aliases')) {
     $language = isset($node->language) ? $node->language : '';
     path_set_alias('node/' . $node->nid, isset($node->path) ? $node->path : NULL, isset($node->pid) ? $node->pid : NULL, $language);
@@ -171,20 +209,21 @@ function path_nodeapi_update($node) {
 }
 
 /**
- * Implementation of hook_nodeapi_delete().
+ * Implement hook_node_delete().
  */
-function path_nodeapi_delete($node) {
-  if (user_access('create url aliases') || user_access('administer url aliases')) {
-    $language = isset($node->language) ? $node->language : '';
-    $path = 'node/' . $node->nid;
-    if (drupal_get_path_alias($path) != $path) {
-      path_set_alias($path);
-    }
-  }
+function path_node_delete($node) {
+  path_set_alias('node/' . $node->nid);
 }
 
 /**
- * Implementation of hook_form_alter().
+ * Implement hook_taxonomy_term_delete().
+ */
+function path_taxonomy_term_delete($term) {
+  path_set_alias('taxonomy/term/' . $term->tid);
+}
+
+/**
+ * Implement hook_form_alter().
  */
 function path_form_alter(&$form, $form_state, $form_id) {
   if (!empty($form['#node_edit_form'])) {
@@ -194,13 +233,18 @@ function path_form_alter(&$form, $form_state, $form_id) {
       '#title' => t('URL path settings'),
       '#collapsible' => TRUE,
       '#collapsed' => empty($path),
+      '#group' => 'additional_settings',
+      '#attached' => array(
+        'js' => array(drupal_get_path('module', 'path') . '/path.js'),
+      ),
       '#access' => user_access('create url aliases'),
       '#weight' => 30,
     );
     $form['path']['path'] = array(
       '#type' => 'textfield',
+      '#title' => t('URL alias'),
       '#default_value' => $path,
-      '#maxlength' => 128,
+      '#maxlength' => 255,
       '#collapsible' => TRUE,
       '#collapsed' => TRUE,
       '#description' => t('Optionally specify an alternative URL by which this node can be accessed. For example, type "about" when writing an about page. Use a relative path and don\'t add a trailing slash or the URL alias won\'t work.'),
@@ -208,16 +252,91 @@ function path_form_alter(&$form, $form_state, $form_id) {
     if ($path) {
       $form['path']['pid'] = array(
         '#type' => 'value',
-        '#value' => db_result(db_query("SELECT pid FROM {url_alias} WHERE dst = '%s' AND language = '%s'", $path, $form['#node']->language))
+        '#value' => db_query("SELECT pid FROM {url_alias} WHERE dst = :dst AND language = :language", array(
+          ':dst' => $path,
+          ':language' => $form['#node']->language
+        ))
+        ->fetchField(),
       );
     }
   }
 }
 
 /**
- * Implementation of hook_perm().
+ * Implement hook_form_FORM_ID_alter().
  */
-function path_perm() {
+function path_form_taxonomy_form_term_alter(&$form, $form_state) {
+  // Make sure this does not show up on the delete confirmation form.
+  if (empty($form_state['confirm_delete'])) {
+    // After a new term is added, populate the path field if it was set.
+    if (!empty($form['#term']['path'])) {
+      $path = $form['#term']['path'];
+    }
+    else {
+      $url = 'taxonomy/term/' . $form['#term']['tid'];
+      $alias = drupal_get_path_alias($url);
+
+      // Since drupal_get_path_alias() can return the default path, check if we really have an alias.
+      if ($alias != $url) {
+        $path = $alias;
+      }
+      else {
+        $path = NULL;
+      }
+    }
+    $form['#validate'][] = 'path_taxonomy_term_validate';
+    $form['#submit'][] = 'path_taxonomy_term_submit';
+    $form['identification']['path'] = array(
+      '#type' => 'textfield',
+      '#title' => t('URL alias'),
+      '#default_value' => $path,
+      '#maxlength' => 255,
+      '#weight' => 0,
+      '#access' => (user_access('create url aliases') || user_access('administer url aliases')),
+      '#description' => t("Optionally specify an alternative URL by which this term can be accessed. Use a relative path and don't add a trailing slash or the URL alias won't work."),
+    );
+    if ($path) {
+      // Populate with pid so we can update existing path entry instead of creating a new one.
+      $form['identification']['path']['pid'] = array(
+        '#type' => 'value',
+        '#access' => (user_access('create url aliases') || user_access('administer url aliases')),
+        '#value' => db_query("SELECT pid FROM {url_alias} WHERE dst = :dst", array(':dst' => $path))->fetchField(),
+      );
+    }
+  }
+}
+
+/**
+ * Path validation callback for taxonomy_form_term.
+ */
+function path_taxonomy_term_validate($form, &$form_state) {
+  $pid = db_query("SELECT pid FROM {url_alias} WHERE dst = :dst", array(':dst' => $form_state['values']['path']))->fetchField();
+  if ($pid) {
+    // If the pid matches the one in use for this term then we are fine.
+    if (isset($form_state['values']['pid']) && $pid == $form_state['values']['pid']) {
+      return;
+    }
+    form_set_error('path', 'The URL alias is already in use.');
+  }
+}
+
+/**
+ * Path submission callback for taxonomy_form_term.
+ */
+function path_taxonomy_term_submit($form, &$form_state) {
+  // Make sure this is not triggered on the delete confirmation form.
+  if (empty($form_state['confirm_delete'])) {
+    $url = 'taxonomy/term/' . $form_state['tid'];
+    $alias = isset($form_state['values']['path']) ? $form_state['values']['path'] : NULL;
+    $pid = isset($form_state['values']['pid']) ? $form_state['values']['pid'] : NULL;
+    path_set_alias($url, $alias, $pid);
+  }
+}
+
+/**
+ * Implement hook_permission().
+ */
+function path_permission() {
   return array(
     'administer url aliases' => array(
       'title' => t('Administer URL aliases'),
@@ -234,5 +353,5 @@ function path_perm() {
  * Fetch a specific URL alias from the database.
  */
 function path_load($pid) {
-  return db_fetch_array(db_query('SELECT * FROM {url_alias} WHERE pid = %d', $pid));
+  return db_query('SELECT * FROM {url_alias} WHERE pid = :pid', array(':pid' => $pid))->fetchAssoc();
 }
