@@ -1,5 +1,5 @@
 <?php
-// $Id: system.module,v 1.659 2009/01/14 21:13:41 dries Exp $
+// $Id: system.module,v 1.667 2009/02/11 05:33:18 webchick Exp $
 
 /**
  * @file
@@ -235,6 +235,20 @@ function system_elements() {
   $type['form'] = array(
     '#method' => 'post',
     '#action' => request_uri(),
+    '#theme_wrapper' => 'form',
+  );
+
+  $type['page'] = array(
+    '#show_messages' => TRUE,
+    '#show_blocks' => TRUE,
+    '#theme' => 'page',
+  );
+
+  $type['list'] = array(
+    '#title' => '',
+    '#list_type' => 'ul',
+    '#attributes' => array(),
+    '#items' => array(),
   );
 
   /**
@@ -246,6 +260,7 @@ function system_elements() {
     '#button_type' => 'submit',
     '#executes_submit_callback' => TRUE,
     '#process' => array('form_process_ahah'),
+    '#theme_wrapper' => 'button',
   );
 
   $type['button'] = array(
@@ -254,6 +269,7 @@ function system_elements() {
     '#button_type' => 'submit',
     '#executes_submit_callback' => FALSE,
     '#process' => array('form_process_ahah'),
+    '#theme_wrapper' => 'button',
   );
 
   $type['image_button'] = array(
@@ -264,6 +280,7 @@ function system_elements() {
     '#return_value' => TRUE,
     '#has_garbage_value' => TRUE,
     '#src' => NULL,
+    '#theme_wrapper' => 'image_button',
   );
 
   $type['textfield'] = array(
@@ -272,6 +289,8 @@ function system_elements() {
     '#maxlength' => 128,
     '#autocomplete_path' => FALSE,
     '#process' => array('form_process_input_format', 'form_process_ahah'),
+    '#theme' => 'textfield',
+    '#theme_wrapper' => 'form_element',
   );
 
   $type['password'] = array(
@@ -279,11 +298,14 @@ function system_elements() {
     '#size' => 60,
     '#maxlength' => 128,
     '#process' => array('form_process_ahah'),
+    '#theme' => 'password',
+    '#theme_wrapper' => 'form_element',
   );
 
   $type['password_confirm'] = array(
     '#input' => TRUE,
     '#process' => array('form_process_password_confirm'),
+    '#theme_wrapper' => 'form_element',
   );
 
   $type['textarea'] = array(
@@ -292,29 +314,41 @@ function system_elements() {
     '#rows' => 5,
     '#resizable' => TRUE,
     '#process' => array('form_process_input_format', 'form_process_ahah'),
+    '#theme' => 'textarea',
+    '#theme_wrapper' => 'form_element',
   );
 
   $type['radios'] = array(
     '#input' => TRUE,
     '#process' => array('form_process_radios'),
+    '#theme_wrapper' => 'radios',
+    '#pre_render' => array('form_pre_render_conditional_form_element'),
   );
 
   $type['radio'] = array(
     '#input' => TRUE,
     '#default_value' => NULL,
     '#process' => array('form_process_ahah'),
+    '#theme' => 'radio',
+    '#theme_wrapper' => 'form_element',
+    '#form_element_skip_title' => TRUE,
   );
 
   $type['checkboxes'] = array(
     '#input' => TRUE,
     '#tree' => TRUE,
     '#process' => array('form_process_checkboxes'),
+    '#theme_wrapper' => 'checkboxes',
+    '#pre_render' => array('form_pre_render_conditional_form_element'),
   );
 
   $type['checkbox'] = array(
     '#input' => TRUE,
     '#return_value' => 1,
     '#process' => array('form_process_ahah'),
+    '#theme' => 'checkbox',
+    '#theme_wrapper' => 'form_element',
+    '#form_element_skip_title' => TRUE,
   );
 
   $type['select'] = array(
@@ -322,6 +356,8 @@ function system_elements() {
     '#size' => 0,
     '#multiple' => FALSE,
     '#process' => array('form_process_ahah'),
+    '#theme' => 'select',
+    '#theme_wrapper' => 'form_element',
   );
 
   $type['weight'] = array(
@@ -335,24 +371,39 @@ function system_elements() {
     '#input' => TRUE,
     '#element_validate' => array('date_validate'),
     '#process' => array('form_process_date'),
+    '#theme' => 'date',
+    '#theme_wrapper' => 'form_element',
   );
 
   $type['file'] = array(
     '#input' => TRUE,
     '#size' => 60,
+    '#theme' => 'file',
+    '#theme_wrapper' => 'form_element',
   );
-
+  $type['tableselect'] = array(
+    '#input' => TRUE,
+    '#js_select' => TRUE,
+    '#multiple' => TRUE,
+    '#process' => array('form_process_tableselect'),
+    '#options' => array(),
+    '#empty' => '',
+    '#theme' => 'tableselect'
+  );
 
   /**
    * Form structure.
    */
   $type['item'] = array(
     '#markup' => '',
+    '#theme' => 'markup',
+    '#theme_wrapper' => 'form_element',
   );
 
   $type['hidden'] = array(
     '#input' => TRUE,
     '#process' => array('form_process_ahah'),
+    '#theme' => 'hidden',
   );
 
   $type['value'] = array(
@@ -360,8 +411,8 @@ function system_elements() {
   );
 
   $type['markup'] = array(
-    '#prefix' => '',
-    '#suffix' => '',
+    '#markup' => '',
+    '#theme' => 'markup',
   );
 
   $type['fieldset'] = array(
@@ -369,10 +420,12 @@ function system_elements() {
     '#collapsed' => FALSE,
     '#value' => NULL,
     '#process' => array('form_process_ahah'),
+    '#theme_wrapper' => 'fieldset',
   );
 
   $type['token'] = array(
     '#input' => TRUE,
+    '#theme' => array('hidden'),
   );
 
   return $type;
@@ -385,6 +438,12 @@ function system_menu() {
   $items['system/files'] = array(
     'title' => 'File download',
     'page callback' => 'file_download',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+  $items['system/ahah'] = array(
+    'title' => 'AHAH callback',
+    'page callback' => 'form_ahah_callback',
     'access callback' => TRUE,
     'type' => MENU_CALLBACK,
   );
@@ -445,26 +504,17 @@ function system_menu() {
     'page callback' => 'system_admin_menu_block_page',
     'access arguments' => array('access administration pages'),
   );
-  $items['admin/settings/admin'] = array(
-    'title' => 'Administration theme',
-    'description' => 'Settings for how your administrative pages should look.',
-    'position' => 'left',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('system_admin_theme_settings'),
-    'access arguments' => array('administer site configuration'),
-    'block callback' => 'system_admin_theme_settings',
-  );
   // Themes:
   $items['admin/build/themes'] = array(
     'title' => 'Themes',
     'description' => 'Change which theme your site uses or allows users to set.',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('system_themes_form', NULL),
+    'page arguments' => array('system_themes_form'),
     'access arguments' => array('administer site configuration'),
   );
   $items['admin/build/themes/select'] = array(
     'title' => 'List',
-    'description' => 'Select the default theme.',
+    'description' => 'Select the default theme for your site.',
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => -1,
   );
@@ -586,18 +636,18 @@ function system_menu() {
     'page arguments' => array('system_site_information_settings'),
     'access arguments' => array('administer site configuration'),
   );
-  $items['admin/settings/error-reporting'] = array(
-    'title' => 'Error reporting',
-    'description' => 'Control how Drupal deals with errors including 403/404 errors as well as PHP error reporting.',
+  $items['admin/settings/logging'] = array(
+    'title' => 'Logging, errors and alerts',
+    'description' => "Settings for logging and alerts modules. Various modules can route Drupal's system events to different destinations, such as syslog, database, email, etc.",
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('system_error_reporting_settings'),
+    'page arguments' => array('system_logging_settings'),
     'access arguments' => array('administer site configuration'),
   );
-  $items['admin/settings/logging'] = array(
-    'title' => 'Logging and alerts',
-    'description' => "Settings for logging and alerts modules. Various modules can route Drupal's system events to different destination, such as syslog, database, email, ...etc.",
-    'page callback' => 'system_logging_overview',
+  $items['admin/settings/logging/settings'] = array(
+    'title' => 'Settings',
     'access arguments' => array('administer site configuration'),
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => -1,
   );
   $items['admin/settings/performance'] = array(
     'title' => 'Performance',
@@ -723,7 +773,7 @@ function blocked_ip_load($iid) {
  * Menu item access callback - only admin or enabled themes can be accessed.
  */
 function _system_themes_access($theme) {
-  return user_access('administer site configuration') && ($theme->status || $theme->name == variable_get('admin_theme', '0'));
+  return user_access('administer site configuration') && ($theme->status || $theme->name == variable_get('admin_theme', 0));
 }
 
 /**
@@ -733,7 +783,7 @@ function system_init() {
   // Use the administrative theme if the user is looking at a page in the admin/* path.
   if (arg(0) == 'admin' || (variable_get('node_admin_theme', '0') && arg(0) == 'node' && (arg(1) == 'add' || arg(2) == 'edit'))) {
     global $custom_theme;
-    $custom_theme = variable_get('admin_theme', '0');
+    $custom_theme = variable_get('admin_theme', 0);
     drupal_add_css(drupal_get_path('module', 'system') . '/admin.css');
   }
 
@@ -920,19 +970,6 @@ function system_admin_menu_block($item) {
   }
   ksort($content);
   return $content;
-}
-
-/**
- * Process admin theme form submissions.
- */
-function system_admin_theme_submit($form, &$form_state) {
-  // If we're changing themes, make sure the theme has its blocks initialized.
-  if ($form_state['values']['admin_theme'] && $form_state['values']['admin_theme'] != variable_get('admin_theme', '0')) {
-    $result = db_result(db_query("SELECT COUNT(*) FROM {block} WHERE theme = '%s'", $form_state['values']['admin_theme']));
-    if (!$result) {
-      system_initialize_theme_blocks($form_state['values']['admin_theme']);
-    }
-  }
 }
 
 /**
@@ -1298,7 +1335,7 @@ function _system_settings_form_automatic_defaults($form) {
       $form[$key] = _system_settings_form_automatic_defaults($form[$key]);
     }
   }
-  
+
   return $form;
 }
 
@@ -1319,7 +1356,7 @@ function system_settings_form($form, $automatic_defaults = TRUE) {
   if ($automatic_defaults) {
     $form = _system_settings_form_automatic_defaults($form);
   }
-  
+
   if (!empty($_POST) && form_get_errors()) {
     drupal_set_message(t('The settings have not been saved because of the errors.'), 'error');
   }
@@ -1527,7 +1564,7 @@ function system_cron() {
     }
   }
 
-  $core = array('cache', 'cache_block', 'cache_filter', 'cache_page', 'cache_form', 'cache_menu');
+  $core = array('cache', 'cache_filter', 'cache_page', 'cache_form', 'cache_menu');
   $cache_tables = array_merge(module_invoke_all('flush_caches'), $core);
   foreach ($cache_tables as $table) {
     cache_clear_all(NULL, $table);

@@ -1,10 +1,10 @@
 <?php
-// $Id: install.php,v 1.148 2009/01/06 13:23:54 dries Exp $
+// $Id: install.php,v 1.154 2009/02/10 05:43:06 webchick Exp $
 
 /**
  * Root directory of Drupal installation.
  */
-define('DRUPAL_ROOT', dirname(realpath(__FILE__)));
+define('DRUPAL_ROOT', getcwd());
 
 require_once DRUPAL_ROOT . '/includes/install.inc';
 
@@ -50,6 +50,7 @@ function install_main() {
 
   // Load module basics (needed for hook invokes).
   include_once DRUPAL_ROOT . '/includes/module.inc';
+  include_once DRUPAL_ROOT . '/includes/session.inc';
   $module_list['system']['filename'] = 'modules/system/system.module';
   $module_list['filter']['filename'] = 'modules/filter/filter.module';
   module_list(TRUE, FALSE, $module_list);
@@ -234,23 +235,17 @@ function install_settings_form(&$form_state, $profile, $install_locale, $setting
       '#description' => '<p>' . st('To set up your @drupal database, enter the following information.', array('@drupal' => drupal_install_profile_name())) . '</p>',
     );
 
+    $form['basic_options']['driver'] = array(
+      '#type' => 'radios',
+      '#title' => st('Database type'),
+      '#required' => TRUE,
+      '#options' => $drivers,
+      '#default_value' => !empty($database['driver']) ? $database['driver'] : current(array_keys($drivers)),
+      '#description' => st('The type of database your @drupal data will be stored in.', array('@drupal' => drupal_install_profile_name())),
+    );
     if (count($drivers) == 1) {
-      $form['basic_options']['driver'] = array(
-        '#type' => 'hidden',
-        '#value' => current(array_keys($drivers)),
-      );
-      $database_description = st('The name of the %driver database your @drupal data will be stored in. It must exist on your server before @drupal can be installed.', array('%driver' => current($drivers), '@drupal' => drupal_install_profile_name()));
-    }
-    else  {
-      $form['basic_options']['driver'] = array(
-        '#type' => 'radios',
-        '#title' => st('Database type'),
-        '#required' => TRUE,
-        '#options' => $drivers,
-        '#default_value' => !empty($database['driver']) ? $database['driver'] : current(array_keys($drivers)),
-        '#description' => st('The type of database your @drupal data will be stored in.', array('@drupal' => drupal_install_profile_name())),
-      );
-      $database_description  = st('The name of the database your @drupal data will be stored in. It must exist on your server before @drupal can be installed.', array('@drupal' => drupal_install_profile_name()));
+      $form['basic_options']['driver']['#disabled'] = TRUE;
+      $form['basic_options']['driver']['#description'] .= ' ' . st('Your PHP configuration only supports the %driver database type so it has been automatically selected.', array('%driver' => current($drivers)));
     }
 
     // Database name
@@ -261,7 +256,7 @@ function install_settings_form(&$form_state, $profile, $install_locale, $setting
       '#size' => 45,
       '#maxlength' => 45,
       '#required' => TRUE,
-      '#description' => $database_description,
+      '#description' => st('The name of the database your @drupal data will be stored in. It must exist on your server before @drupal can be installed.', array('@drupal' => drupal_install_profile_name())),
     );
 
     // Database username
@@ -554,9 +549,11 @@ function install_select_locale($profilename) {
       }
     }
 
-    foreach ($locales as $locale) {
-      if ($_POST['locale'] == $locale->name) {
-        return $locale->name;
+    if (!empty($_POST['locale'])) {
+      foreach ($locales as $locale) {
+        if ($_POST['locale'] == $locale->name) {
+          return $locale->name;
+        }
       }
     }
 
@@ -628,7 +625,7 @@ function install_tasks($profile, $task) {
   drupal_install_init_database();
 
   drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
-  $_SESSION['messages'] = $messages;
+  drupal_set_session('messages', $messages);
 
   // URL used to direct page requests.
   $url = $base_url . '/install.php?locale=' . $install_locale . '&profile=' . $profile;
@@ -677,7 +674,7 @@ function install_tasks($profile, $task) {
     if (!empty($install_locale) && ($install_locale != 'en')) {
       include_once DRUPAL_ROOT . '/includes/locale.inc';
       // Enable installation language as default site language.
-      locale_add_language($install_locale, NULL, NULL, NULL, NULL, NULL, 1, TRUE);
+      locale_add_language($install_locale, NULL, NULL, NULL, '', NULL, 1, TRUE);
       // Collect files to import for this language.
       $batch = locale_batch_by_language($install_locale, '_install_locale_initial_batch_finished');
       if (!empty($batch)) {

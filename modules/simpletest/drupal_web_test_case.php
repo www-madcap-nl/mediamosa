@@ -1,5 +1,5 @@
 <?php
-// $Id: drupal_web_test_case.php,v 1.79 2009/01/06 12:44:20 dries Exp $
+// $Id: drupal_web_test_case.php,v 1.84 2009/02/13 00:39:01 webchick Exp $
 
 /**
  * Test case for typical Drupal tests.
@@ -819,7 +819,7 @@ class DrupalWebTestCase {
     $clean_url_original = variable_get('clean_url', 0);
 
     // Generate temporary prefixed database to ensure that tests have a clean starting point.
-    $db_prefix = Database::getActiveConnection()->prefixTables('{simpletest' . mt_rand(1000, 1000000) . '}');
+    $db_prefix = Database::getConnection()->prefixTables('{simpletest' . mt_rand(1000, 1000000) . '}');
 
     include_once DRUPAL_ROOT . '/includes/install.inc';
     drupal_install_system();
@@ -829,7 +829,7 @@ class DrupalWebTestCase {
     // Add the specified modules to the list of modules in the default profile.
     $args = func_get_args();
     $modules = array_unique(array_merge(drupal_get_profile_modules('default', 'en'), $args));
-    drupal_install_modules($modules);
+    drupal_install_modules($modules, TRUE);
 
     // Because the schema is static cached, we need to flush
     // it between each run. If we don't, then it will contain
@@ -902,7 +902,7 @@ class DrupalWebTestCase {
     global $db_prefix, $user;
     if (preg_match('/simpletest\d+/', $db_prefix)) {
       // Delete temporary files directory and reset files directory path.
-      simpletest_clean_temporary_directory(file_directory_path());
+      file_unmanaged_delete_recursive(file_directory_path());
       variable_set('file_directory_path', $this->originalFileDirectory);
 
       // Remove all prefixed tables (all the tables in the schema).
@@ -919,13 +919,17 @@ class DrupalWebTestCase {
       $user = $this->originalUser;
       drupal_save_session(TRUE);
 
-      // Ensure that the internal logged in variable is reset.
+      // Ensure that internal logged in variable and cURL options are reset.
       $this->isLoggedIn = FALSE;
+      $this->additionalCurlOptions = array();
 
       // Reload module list and implementations to ensure that test module hooks
       // aren't called after tests.
       module_list(TRUE);
       module_implements(MODULE_IMPLEMENTS_CLEAR_CACHE);
+
+      // Reset the Field API.
+      field_cache_clear();
 
       // Rebuild caches.
       $this->refreshVariables();
@@ -1995,4 +1999,58 @@ class DrupalWebTestCase {
     $match = is_array($code) ? in_array($curl_code, $code) : $curl_code == $code;
     return $this->assertTrue($match, $message ? $message : t('HTTP response expected !code, actual !curl_code', array('!code' => $code, '!curl_code' => $curl_code)), t('Browser'));
   }
+
+  /**
+   * TODO write documentation.
+   * @param $type
+   * @param $field_name
+   * @param $settings
+   * @return unknown_type
+   */
+  protected function drupalCreateField($type, $field_name = NULL, $settings = array()) {
+    if (!isset($field_name)) {
+      $field_name = strtolower($this->randomName());
+    }
+    $field_definition = array(
+      'field_name' => $field_name,
+      'type' => $type,
+    );
+    $field_definition += $settings;
+    field_create_field($field_definition);
+
+    $field = field_read_field($field_name);
+    $this->assertTrue($field, t('Created field @field_name of type @type.', array('@field_name' => $field_name, '@type' => $type)));
+
+    return $field;
+  }
+
+  /**
+   * TODO write documentation.
+   * @param $field_name
+   * @param $widget_type
+   * @param $display_type
+   * @param $bundle
+   * @return unknown_type
+   */
+  protected function drupalCreateFieldInstance($field_name, $widget_type, $formatter_type, $bundle) {
+    $instance_definition = array(
+      'field_name' => $field_name,
+      'bundle' => $bundle,
+      'widget' => array(
+        'type' => $widget_type,
+      ),
+      'display' => array(
+        'full' => array(
+          'type' => $formatter_type,
+        ),
+      ),
+    );
+    field_create_instance($instance_definition);
+
+    $instance = field_read_instance($field_name, $bundle);
+    $this->assertTrue($instance, t('Created instance of field @field_name on bundle @bundle.', array('@field_name' => $field_name, '@bundle' => $bundle)));
+
+    return $instance;
+  }
 }
+

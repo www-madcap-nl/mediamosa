@@ -1,5 +1,5 @@
 <?php
-// $Id: form.inc,v 1.312 2009/01/12 06:23:57 dries Exp $
+// $Id: form.inc,v 1.320 2009/02/03 18:55:29 dries Exp $
 
 /**
  * @defgroup forms Form builder functions
@@ -291,6 +291,10 @@ function form_set_cache($form_build_id, $form, $form_state) {
  */
 function drupal_execute($form_id, &$form_state) {
   $args = func_get_args();
+
+  // Make sure $form_state is passed around by reference.
+  $args[1] = &$form_state;
+
   $form = call_user_func_array('drupal_retrieve_form', $args);
   $form['#post'] = $form_state['values'];
   drupal_prepare_form($form_id, $form, $form_state);
@@ -508,7 +512,7 @@ function drupal_prepare_form($form_id, &$form, &$form_state) {
     $form['#id'] = form_clean_id($form_id);
   }
 
-  $form += _element_info('form');
+  $form += element_info('form');
   $form += array('#tree' => FALSE, '#parents' => array());
 
   if (!isset($form['#validate'])) {
@@ -857,7 +861,7 @@ function form_builder($form_id, $form, &$form_state) {
   $form['#processed'] = FALSE;
 
   // Use element defaults.
-  if ((!empty($form['#type'])) && ($info = _element_info($form['#type']))) {
+  if ((!empty($form['#type'])) && ($info = element_info($form['#type']))) {
     // Overlay $info onto $form, retaining preexisting keys in $form.
     $form += $info;
   }
@@ -1344,35 +1348,6 @@ function _form_set_value(&$form_values, $form_item, $parents, $value) {
   }
 }
 
-/**
- * Retrieve the default properties for the defined element type.
- */
-function _element_info($type, $refresh = NULL) {
-  static $cache;
-
-  $basic_defaults = array(
-    '#description' => NULL,
-    '#attributes' => array(),
-    '#required' => FALSE,
-  );
-  if (!isset($cache) || $refresh) {
-    $cache = array();
-    foreach (module_implements('elements') as $module) {
-      $elements = module_invoke($module, 'elements');
-      if (isset($elements) && is_array($elements)) {
-        $cache = array_merge_recursive($cache, $elements);
-      }
-    }
-    if (sizeof($cache)) {
-      foreach ($cache as $element_type => $info) {
-        $cache[$element_type] = array_merge_recursive($basic_defaults, $info);
-      }
-    }
-  }
-
-  return $cache[$type];
-}
-
 function form_options_flatten($array, $reset = TRUE) {
   static $return;
 
@@ -1415,7 +1390,7 @@ function theme_select($element) {
   $size = $element['#size'] ? ' size="' . $element['#size'] . '"' : '';
   _form_set_class($element, array('form-select'));
   $multiple = $element['#multiple'];
-  return theme('form_element', $element, '<select name="' . $element['#name'] . '' . ($multiple ? '[]' : '') . '"' . ($multiple ? ' multiple="multiple" ' : '') . drupal_attributes($element['#attributes']) . ' id="' . $element['#id'] . '" ' . $size . '>' . form_select_options($element) . '</select>');
+  return '<select name="' . $element['#name'] . '' . ($multiple ? '[]' : '') . '"' . ($multiple ? ' multiple="multiple" ' : '') . drupal_attributes($element['#attributes']) . ' id="' . $element['#id'] . '" ' . $size . '>' . form_select_options($element) . '</select>';
 }
 
 function form_select_options($element, $choices = NULL) {
@@ -1548,11 +1523,10 @@ function theme_radio($element) {
   $output .= (check_plain($element['#value']) == $element['#return_value']) ? ' checked="checked" ' : ' ';
   $output .= drupal_attributes($element['#attributes']) . ' />';
   if (!is_null($element['#title'])) {
-    $output = '<label class="option">' . $output . ' ' . $element['#title'] . '</label>';
+    $output = '<label class="option" for="' . $element['#id'] . '">' . $output . ' ' . $element['#title'] . '</label>';
   }
 
-  unset($element['#title']);
-  return theme('form_element', $element, $output);
+  return $output;
 }
 
 /**
@@ -1572,28 +1546,8 @@ function theme_radios($element) {
     $class .= ' ' . $element['#attributes']['class'];
   }
   $element['#children'] = '<div class="' . $class . '">' . (!empty($element['#children']) ? $element['#children'] : '') . '</div>';
-  if ($element['#title'] || $element['#description']) {
-    unset($element['#id']);
-    return theme('form_element', $element, $element['#children']);
-  }
-  else {
-    return $element['#children'];
-  }
-}
 
-/**
- * Format a password_confirm item.
- *
- * @param $element
- *   An associative array containing the properties of the element.
- *   Properties used: title, value, id, required, error.
- * @return
- *   A themed HTML string representing the form item.
- *
- * @ingroup themeable
- */
-function theme_password_confirm($element) {
-  return theme('form_element', $element, $element['#children']);
+  return $element['#children'];
 }
 
 /**
@@ -1661,7 +1615,7 @@ function password_confirm_validate($form, &$form_state) {
  * @ingroup themeable
  */
 function theme_date($element) {
-  return theme('form_element', $element, '<div class="container-inline">' . $element['#children'] . '</div>');
+  return '<div class="container-inline">' . drupal_render_children($element) . '</div>';
 }
 
 /**
@@ -1755,6 +1709,39 @@ function weight_value(&$form) {
 }
 
 /**
+ * Menu callback for AHAH callbacks through the #ahah['callback'] FAPI property.
+ */
+function form_ahah_callback() {
+  $form_state = array('storage' => NULL, 'submitted' => FALSE);
+  $form_build_id = $_POST['form_build_id'];
+
+  // Get the form from the cache.
+  $form = form_get_cache($form_build_id, $form_state);
+  $args = $form['#parameters'];
+  $form_id = array_shift($args);
+
+  // We will run some of the submit handlers so we need to disable redirecting.
+  $form['#redirect'] = FALSE;
+
+  // We need to process the form, prepare for that by setting a few internals
+  // variables.
+  $form['#post'] = $_POST;
+  $form['#programmed'] = FALSE;
+  $form_state['post'] = $_POST;
+
+  // Build, validate and if possible, submit the form.
+  drupal_process_form($form_id, $form, $form_state);
+
+  // This call recreates the form relying solely on the form_state that the
+  // drupal_process_form set up.
+  $form = drupal_rebuild_form($form_id, $form_state, $args, $form_build_id);
+
+  // Get the callback function from the clicked button.
+  $callback = $form_state['clicked_button']['#ahah']['callback'];
+  $callback($form, $form_state);
+}
+
+/**
  * Roll out a single radios element to a list of radios,
  * using the options array as index.
  */
@@ -1782,14 +1769,14 @@ function form_process_radios($element) {
 }
 
 /**
- * Add input format selector to text elements with the #input_format property.
+ * Add text format selector to text elements with the #text_format property.
  *
- * The #input_format property should be the ID of an input format, found in
+ * The #text_format property should be the ID of an text format, found in
  * {filter_format}.format, which gets passed to filter_form().
  *
- * If the property #input_format is set, the form element will be expanded into
+ * If the property #text_format is set, the form element will be expanded into
  * two separate form elements, one holding the content of the element, and the
- * other holding the input format selector. The original element is shifted into
+ * other holding the text format selector. The original element is shifted into
  * a child element, but is otherwise unaltered, so that the format selector is
  * at the same level as the text field which it affects.
  *
@@ -1799,7 +1786,7 @@ function form_process_radios($element) {
  *   $form['body'] = array(
  *     '#type' => 'textarea',
  *     '#title' => t('Body'),
- *     '#input_format' => isset($node->format) ? $node->format : FILTER_FORMAT_DEFAULT,
+ *     '#text_format' => isset($node->format) ? $node->format : FILTER_FORMAT_DEFAULT,
  *   );
  * @endcode
  *
@@ -1814,7 +1801,7 @@ function form_process_radios($element) {
  *       '#title' => t('Body'),
  *       '#parents' => array('body'),
  *     ),
- *     // 'format' holds the input format selector.
+ *     // 'format' holds the text format selector.
  *     'format' => array(
  *       '#parents' => array('body_format'),
  *       ...
@@ -1826,14 +1813,14 @@ function form_process_radios($element) {
  * @code
  *   // Original, unaltered form element value.
  *   $form_state['values']['body'] = 'Example content';
- *   // Chosen input format.
+ *   // Chosen text format.
  *   $form_state['values']['body_format'] = 1;
  * @endcode
  *
  * @see system_elements(), filter_form()
  */
 function form_process_input_format($element) {
-  if (isset($element['#input_format'])) {
+  if (isset($element['#text_format'])) {
     // Determine the form element parents and element name to use for the input
     // format widget. This simulates the 'element' and 'element_format' pair of
     // parents that filter_form() expects.
@@ -1844,11 +1831,13 @@ function form_process_input_format($element) {
     // We need to break references, otherwise form_builder recurses infinitely.
     $element['value'] = (array)$element;
     $element['#type'] = 'markup';
-    $element['format'] = filter_form($element['#input_format'], 1, $element_parents);
+    $element['#theme'] = NULL;
+    $element['#theme_wrapper'] = NULL;
+    $element['format'] = filter_form($element['#text_format'], 1, $element_parents);
 
-    // We need to clear the #input_format from the new child otherwise we
+    // We need to clear the #text_format from the new child otherwise we
     // would get into an infinite loop.
-    unset($element['value']['#input_format']);
+    unset($element['value']['#text_format']);
     $element['value']['#weight'] = 0;
   }
   return $element;
@@ -1871,7 +1860,7 @@ function form_process_input_format($element) {
 function form_process_ahah($element) {
   static $js_added = array();
   // Add a reasonable default event handler if none specified.
-  if (isset($element['#ahah']['path']) && !isset($element['#ahah']['event'])) {
+  if (isset($element['#ahah']) && !isset($element['#ahah']['event'])) {
     switch ($element['#type']) {
       case 'submit':
       case 'button':
@@ -1901,12 +1890,12 @@ function form_process_ahah($element) {
 
   // Adding the same javascript settings twice will cause a recursion error,
   // we avoid the problem by checking if the javascript has already been added.
-  if (isset($element['#ahah']['path']) && isset($element['#ahah']['event']) && !isset($js_added[$element['#id']])) {
+  if ((isset($element['#ahah']['callback']) || isset($element['#ahah']['path'])) && isset($element['#ahah']['event']) && !isset($js_added[$element['#id']])) {
     drupal_add_js('misc/jquery.form.js', array('weight' => JS_LIBRARY));
     drupal_add_js('misc/ahah.js');
 
     $ahah_binding = array(
-      'url'      => url($element['#ahah']['path']),
+      'url'      => isset($element['#ahah']['callback']) ? url('system/ahah') : url($element['#ahah']['path']),
       'event'    => $element['#ahah']['event'],
       'keypress' => empty($element['#ahah']['keypress']) ? NULL : $element['#ahah']['keypress'],
       'wrapper'  => empty($element['#ahah']['wrapper']) ? NULL : $element['#ahah']['wrapper'],
@@ -1940,21 +1929,6 @@ function form_process_ahah($element) {
 }
 
 /**
- * Format a form item.
- *
- * @param $element
- *   An associative array containing the properties of the element.
- *   Properties used:  title, value, description, required, error
- * @return
- *   A themed HTML string representing the form item.
- *
- * @ingroup themeable
- */
-function theme_item($element) {
-  return theme('form_element', $element, $element['#markup'] . (!empty($element['#children']) ? $element['#children'] : ''));
-}
-
-/**
  * Format a checkbox.
  *
  * @param $element
@@ -1976,11 +1950,10 @@ function theme_checkbox($element) {
   $checkbox .= drupal_attributes($element['#attributes']) . ' />';
 
   if (!is_null($element['#title'])) {
-    $checkbox = '<label class="option">' . $checkbox . ' ' . $element['#title'] . '</label>';
+    $checkbox = '<label class="option" for="' . $element['#id'] . '">' . $checkbox . ' ' . $element['#title'] . '</label>';
   }
 
-  unset($element['#title']);
-  return theme('form_element', $element, $checkbox);
+  return $checkbox;
 }
 
 /**
@@ -1999,13 +1972,21 @@ function theme_checkboxes($element) {
     $class .= ' ' . $element['#attributes']['class'];
   }
   $element['#children'] = '<div class="' . $class . '">' . (!empty($element['#children']) ? $element['#children'] : '') . '</div>';
+  
+  return $element['#children'];
+}
+
+/**
+ * Add form_element theming to an element if title or desription is set.
+ *
+ * This is used as a pre render function for checkboxes and radios.
+ */
+function form_pre_render_conditional_form_element($element) {
   if ($element['#title'] || $element['#description']) {
     unset($element['#id']);
-    return theme('form_element', $element, $element['#children']);
+    $element['#theme_wrapper'] = 'form_element';
   }
-  else {
-    return $element['#children'];
-  }
+  return $element;
 }
 
 function form_process_checkboxes($element) {
@@ -2028,6 +2009,117 @@ function form_process_checkboxes($element) {
         );
       }
     }
+  }
+  return $element;
+}
+
+/**
+ * Format a table with radio buttons or checkboxes.
+ *
+ * @param $element
+ *   An associative array containing the properties and children of the
+ *   tableselect element.
+ *   Properties used: header, options, empty, js_select.
+ *
+ * @return
+ *   A themed HTML string representing the table.
+ *
+ * @ingroup themeable
+ */
+function theme_tableselect($element) {
+  $rows = array();
+  if (!empty($element['#options'])) {
+    // Generate a table row for each selectable item in #options.
+    foreach ($element['#options'] as $key => $value) {
+      $row = array();
+
+      // Render the checkbox / radio element.
+      $row[] = drupal_render($element[$key]);
+
+      // As theme_table only maps header and row columns by order, create the
+      // correct order by iterating over the header fields.
+      foreach ($element['#header'] as $fieldname => $title) {
+        $row[] = $element['#options'][$key][$fieldname];
+      }
+      $rows[] = $row;
+    }
+    // Add an empty header or a "Select all" checkbox to provide room for the
+    // checkboxes/radios in the first table column.
+    $first_col = $element['#js_select'] ? array(theme('table_select_header_cell')) : array('');
+    $header = array_merge($first_col, $element['#header']);
+  }
+  else {
+    // If there are no selectable options, display the empty text over the
+    // entire width of the table.
+    $header = $element['#header'];
+    $rows[] = array(array('data' => $element['#empty'], 'colspan' => count($header)));
+  }
+  return theme('table', $header, $rows);
+}
+
+/**
+ * Create the correct amount of checkbox or radio elements to populate the table.
+ *
+ * @param $element
+ *   An associative array containing the properties and children of the
+ *   tableselect element.
+ *
+ * @return
+ *   The processed element.
+ */
+function form_process_tableselect($element) {
+
+  if ($element['#multiple']) {
+    $value = is_array($element['#value']) ? $element['#value'] : array();
+  }
+  else {
+    // Advanced selection behaviour make no sense for radios.
+    $element['#js_select'] = FALSE;
+  }
+
+  $element['#tree'] = TRUE;
+
+  if (count($element['#options']) > 0) {
+    if (!isset($element['#default_value']) || $element['#default_value'] === 0) {
+      $element['#default_value'] = array();
+    }
+
+    // Create a checkbox or radio for each item in #options in such a way that
+    // the value of the tableselect element behaves as if it had been of type
+    // checkboxes or radios.
+    foreach ($element['#options'] as $key => $choice) {
+      // Do not overwrite manually created children.
+      if (!isset($element[$key])) {
+        if ($element['#multiple']) {
+          $element[$key] = array(
+            '#type' => 'checkbox',
+            '#title' => '',
+            '#return_value' => $key,
+            '#default_value' => isset($value[$key]),
+            '#attributes' => $element['#attributes'],
+            '#ahah' => isset($element['#ahah']) ? $element['#ahah'] : NULL,
+          );
+        }
+        else {
+          // Generate the parents as the autogenerator does, so we will have a
+          // unique id for each radio button.
+          $parents_for_id = array_merge($element['#parents'], array($key));
+          $element[$key] = array(
+            '#type' => 'radio',
+            '#title' => '',
+            '#return_value' => $key,
+            '#default_value' => ($element['#default_value'] == $key) ? $key : NULL,
+            '#attributes' => $element['#attributes'],
+            '#parents' => $element['#parents'],
+            '#id' => form_clean_id('edit-' . implode('-', $parents_for_id)),
+            '#ahah' => isset($element['#ahah']) ? $element['#ahah'] : NULL,
+          );
+        }
+      }
+    }
+  }
+  else {
+    $element['#value'] = array();
   }
   return $element;
 }
@@ -2096,15 +2188,6 @@ function theme_hidden($element) {
 }
 
 /**
- * Format a form token.
- *
- * @ingroup themeable
- */
-function theme_token($element) {
-  return theme('hidden', $element);
-}
-
-/**
  * Format a textfield.
  *
  * @param $element
@@ -2138,8 +2221,7 @@ function theme_textfield($element) {
   if (isset($element['#field_suffix'])) {
     $output .= ' <span class="field-suffix">' . $element['#field_suffix'] . '</span>';
   }
-
-  return theme('form_element', $element, $output) . $extra;
+  return $output . $extra;
 }
 
 /**
@@ -2189,7 +2271,7 @@ function theme_textarea($element) {
   }
 
   _form_set_class($element, $class);
-  return theme('form_element', $element, '<textarea cols="' . $element['#cols'] . '" rows="' . $element['#rows'] . '" name="' . $element['#name'] . '" id="' . $element['#id'] . '" ' . drupal_attributes($element['#attributes']) . '>' . check_plain($element['#value']) . '</textarea>');
+  return '<textarea cols="' . $element['#cols'] . '" rows="' . $element['#rows'] . '" name="' . $element['#name'] . '" id="' . $element['#id'] . '" ' . drupal_attributes($element['#attributes']) . '>' . check_plain($element['#value']) . '</textarea>';
 }
 
 /**
@@ -2207,7 +2289,7 @@ function theme_textarea($element) {
  */
 
 function theme_markup($element) {
-  return (isset($element['#markup']) ? $element['#markup'] : '') . (isset($element['#children']) ? $element['#children'] : '');
+  return (!empty($element['#markup']) ? $element['#markup'] : '') . drupal_render_children($element);
 }
 
 /**
@@ -2227,7 +2309,7 @@ function theme_password($element) {
 
   _form_set_class($element, array('form-text'));
   $output = '<input type="password" name="' . $element['#name'] . '" id="' . $element['#id'] . '" ' . $maxlength . $size . drupal_attributes($element['#attributes']) . ' />';
-  return theme('form_element', $element, $output);
+  return $output;
 }
 
 /**
@@ -2240,7 +2322,7 @@ function form_process_weight($element) {
   $element['#options'] = $weights;
   $element['#type'] = 'select';
   $element['#is_weight'] = TRUE;
-  $element += _element_info('select');
+  $element += element_info('select');
   return $element;
 }
 
@@ -2267,7 +2349,7 @@ function form_process_weight($element) {
  */
 function theme_file($element) {
   _form_set_class($element, array('form-file'));
-  return theme('form_element', $element, '<input type="file" name="' . $element['#name'] . '"' . ($element['#attributes'] ? ' ' . drupal_attributes($element['#attributes']) : '') . ' id="' . $element['#id'] . '" size="' . $element['#size'] . "\" />\n");
+  return '<input type="file" name="' . $element['#name'] . '"' . ($element['#attributes'] ? ' ' . drupal_attributes($element['#attributes']) : '') . ' id="' . $element['#id'] . '" size="' . $element['#size'] . "\" />\n";
 }
 
 /**
@@ -2275,15 +2357,13 @@ function theme_file($element) {
  *
  * @param element
  *   An associative array containing the properties of the element.
- *   Properties used: title, description, id, required
- * @param $value
- *   The form element's data.
+ *   Properties used: title, description, id, required, children
  * @return
  *   A string representing the form element.
  *
  * @ingroup themeable
  */
-function theme_form_element($element, $value) {
+function theme_form_element($element) {
   // This is also used in the installer, pre-database setup.
   $t = get_t();
 
@@ -2294,7 +2374,7 @@ function theme_form_element($element, $value) {
   $output .= ">\n";
   $required = !empty($element['#required']) ? '<span class="form-required" title="' . $t('This field is required.') . '">*</span>' : '';
 
-  if (!empty($element['#title'])) {
+  if (!empty($element['#title']) && empty($element['#form_element_skip_title'])) {
     $title = $element['#title'];
     if (!empty($element['#id'])) {
       $output .= ' <label for="' . $element['#id'] . '">' . $t('!title: !required', array('!title' => filter_xss_admin($title), '!required' => $required)) . "</label>\n";
@@ -2304,7 +2384,7 @@ function theme_form_element($element, $value) {
     }
   }
 
-  $output .= " $value\n";
+  $output .= " " . $element['#children'] . "\n";
 
   if (!empty($element['#description'])) {
     $output .= ' <div class="description">' . $element['#description'] . "</div>\n";
@@ -2476,7 +2556,7 @@ function form_clean_id($id = NULL, $flush = FALSE) {
  *   foreach ($results as $result) {
  *     $items[] = t('Loaded node %title.', array('%title' => $result));
  *   }
- *   $_SESSION['my_batch_results'] = $items;
+ *   drupal_set_session('my_batch_results', $items);
  * }
  * @endcode
  */

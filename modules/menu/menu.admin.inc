@@ -1,5 +1,5 @@
 <?php
-// $Id: menu.admin.inc,v 1.36 2009/01/11 21:19:17 dries Exp $
+// $Id: menu.admin.inc,v 1.38 2009/02/03 18:55:30 dries Exp $
 
 /**
  * @file
@@ -216,7 +216,7 @@ function theme_menu_overview_form($form) {
   if ($rows) {
     $output .= theme('table', $header, $rows, array('id' => 'menu-overview'));
   }
-  $output .= drupal_render($form);
+  $output .= drupal_render_children($form);
   return $output;
 }
 
@@ -366,7 +366,7 @@ function menu_item_delete_submit($form, &$form_state) {
  * Process menu and menu item add/edit form submissions.
  */
 function menu_edit_item_submit($form, &$form_state) {
-  $item = $form_state['values']['menu'];
+  $item = &$form_state['values']['menu'];
 
   // The value of "hidden" is the opposite of the value
   // supplied by the "enabled" checkbox.

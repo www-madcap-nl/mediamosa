@@ -1,5 +1,5 @@
 <?php
-// $Id: block.module,v 1.318 2008/12/30 16:43:15 dries Exp $
+// $Id: block.module,v 1.322 2009/02/11 05:33:18 webchick Exp $
 
 /**
  * @file
@@ -176,7 +176,7 @@ function block_menu() {
  * Menu item access callback - only admin or enabled themes can be accessed.
  */
 function _block_themes_access($theme) {
-  return user_access('administer blocks') && ($theme->status || $theme->name == variable_get('admin_theme', '0'));
+  return user_access('administer blocks') && ($theme->status || $theme->name == variable_get('admin_theme', 0));
 }
 
 /**
@@ -223,6 +223,61 @@ function block_block_view($delta = 0, $edit = array()) {
   $block = db_fetch_object(db_query('SELECT body, format FROM {box} WHERE bid = %d', $delta));
   $data['content'] = check_markup($block->body, $block->format, '', FALSE);
   return $data;
+}
+
+/**
+ * Implementation of hook_page_alter().
+ *
+ * Render blocks into their regions.
+ */
+function block_page_alter($page) {
+  global $theme;
+
+  // The theme system might not yet be initialized. We need $theme.
+  init_theme();
+
+  // Populate all block regions
+  $regions = system_region_list($theme);
+
+  // Load all region content assigned via blocks.
+  foreach (array_keys($regions) as $region) {
+    // Prevent left and right regions from rendering blocks when 'show_blocks' == FALSE.
+    if ($page['#show_blocks'] || ($region != 'left' && $region != 'right')) {
+      // Assign blocks to region.
+      if ($blocks = block_get_blocks_by_region($region)) {
+        $page[$region]['blocks'] = $blocks;
+      }
+
+      // Append region description if we are rendering the block admin page.
+      $item = menu_get_item();
+      if ($item['path'] == 'admin/build/block') {
+        $description = '<div class="block-region">' . $regions[$region] . '</div>';
+        $page[$region]['blocks']['block_description'] = array('#markup' => $description);
+      }
+    }
+  }
+}
+
+/**
+ * Get a renderable array of a region containing all enabled blocks.
+ *
+ * @param $region
+ *   The requested region.
+ */
+function block_get_blocks_by_region($region) {
+  $weight = 0;
+  $build = array();
+  if ($list = block_list($region)) {
+    foreach ($list as $key => $block) {
+      $build[$key] = array(
+        '#theme' => 'block',
+        '#block' => $block,
+        '#weight' => ++$weight,
+      );
+    }
+    $build['#sorted'] = TRUE;
+  }
+  return $build;
 }
 
 /**
@@ -328,7 +383,7 @@ function block_box_form($edit = array()) {
     '#type' => 'textarea',
     '#title' => t('Block body'),
     '#default_value' => $edit['body'],
-    '#input_format' => isset($edit['format']) ? $edit['format'] : FILTER_FORMAT_DEFAULT,
+    '#text_format' => isset($edit['format']) ? $edit['format'] : FILTER_FORMAT_DEFAULT,
     '#rows' => 15,
     '#description' => t('The content of the block as shown to the user.'),
     '#weight' => -17,
@@ -568,4 +623,11 @@ function _block_get_cache_id($block) {
 
     return implode(':', $cid_parts);
   }
+}
+
+/**
+ * Implementation of hook_flush_caches().
+ */
+function block_flush_caches() {
+  return array('cache_block');
 }

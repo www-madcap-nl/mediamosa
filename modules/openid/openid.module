@@ -1,5 +1,5 @@
 <?php
-// $Id: openid.module,v 1.36 2009/01/14 21:13:41 dries Exp $
+// $Id: openid.module,v 1.40 2009/02/01 16:45:53 dries Exp $
 
 /**
  * @file
@@ -43,7 +43,7 @@ function openid_help($path, $arg) {
 
   case 'user/%/openid':
       $output = '<p>' . t('This site supports <a href="@openid-net">OpenID</a>, a secure way to log into many websites using a single username and password. OpenID can reduce the necessity of managing many usernames and passwords for many websites.', array('@openid-net' => url('http://openid.net'))) . '</p>';
-      $output .= '<p>' . t('To use OpenID you must first establish an identity on a public or private OpenID server. If you do not have an OpenID and would like one, look into one of the <a href="@openid-providers">free public providers</a>. You can find out more about OpenID at <a href="@openid-net">this website</a>.', array('@openid-providers' => url('http://openid.net/wiki/index.php/OpenIDServers'), '@openid-net' => url('http://openid.net'))) . '</p>';
+      $output .= '<p>' . t('To use OpenID you must first establish an identity on a public or private OpenID server. If you do not have an OpenID and would like one, look into one of the <a href="@openid-providers">free public providers</a>. You can find out more about OpenID at <a href="@openid-net">this website</a>.', array('@openid-providers' => url('http://openid.net/get/'), '@openid-net' => url('http://openid.net'))) . '</p>';
       $output .= '<p>' . t('If you already have an OpenID, enter the URL to your OpenID server below (e.g. myusername.openidprovider.com). Next time you login, you will be able to use this URL instead of a regular username and password. You can have multiple OpenID servers if you like; just keep adding them here.') . '</p>';
       return $output;
 
@@ -71,47 +71,62 @@ function openid_user_insert(&$edit, &$account, $category = NULL) {
 }
 
 /**
+ * Implementation of hook_form_FORM_ID_alter().
+ */
+function openid_form_user_login_block_alter(&$form, &$form_state) {
+  _openid_user_login_form_alter($form, $form_state);
+}
+
+/**
+ * Implementation of hook_form_FORM_ID_alter().
+ */
+function openid_form_user_login_alter(&$form, &$form_state) {
+  _openid_user_login_form_alter($form, $form_state);
+}
+
+function _openid_user_login_form_alter(&$form, &$form_state) {
+  drupal_add_css(drupal_get_path('module', 'openid') . '/openid.css');
+  drupal_add_js(drupal_get_path('module', 'openid') . '/openid.js');
+  if (!empty($form_state['post']['openid_identifier'])) {
+    $form['name']['#required'] = FALSE;
+    $form['pass']['#required'] = FALSE;
+    unset($form['#submit']);
+    $form['#validate'] = array('openid_login_validate');
+  }
+
+  $items = array();
+  $items[] = array(
+    'data' => l(t('Log in using OpenID'), '#'),
+    'class' => 'openid-link',
+  );
+  $items[] = array(
+    'data' => l(t('Cancel OpenID login'), '#'),
+    'class' => 'user-link',
+  );
+
+  $form['openid_links'] = array(
+    '#markup' => theme('item_list', $items),
+    '#weight' => 1,
+  );
+
+  $form['links']['#weight'] = 2;
+
+  $form['openid_identifier'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Log in using OpenID'),
+    '#size' => ($form_id == 'user_login') ? 58 : 13,
+    '#maxlength' => 255,
+    '#weight' => -1,
+    '#description' => l(t('What is OpenID?'), 'http://openid.net/', array('external' => TRUE)),
+  );
+  $form['openid.return_to'] = array('#type' => 'hidden', '#value' => url('openid/authenticate', array('absolute' => TRUE, 'query' => drupal_get_destination())));
+}
+
+/**
  * Implementation of hook_form_alter(). Adds OpenID login to the login forms.
  */
-function openid_form_alter(&$form, $form_state, $form_id) {
-  if ($form_id == 'user_login_block' || $form_id == 'user_login') {
-    drupal_add_css(drupal_get_path('module', 'openid') . '/openid.css');
-    drupal_add_js(drupal_get_path('module', 'openid') . '/openid.js');
-    if (!empty($form_state['post']['openid_identifier'])) {
-      $form['name']['#required'] = FALSE;
-      $form['pass']['#required'] = FALSE;
-      unset($form['#submit']);
-      $form['#validate'] = array('openid_login_validate');
-    }
-
-    $items = array();
-    $items[] = array(
-      'data' => l(t('Log in using OpenID'), '#'),
-      'class' => 'openid-link',
-    );
-    $items[] = array(
-      'data' => l(t('Cancel OpenID login'), '#'),
-      'class' => 'user-link',
-    );
-
-    $form['openid_links'] = array(
-      '#markup' => theme('item_list', $items),
-      '#weight' => 1,
-    );
-
-    $form['links']['#weight'] = 2;
-
-    $form['openid_identifier'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Log in using OpenID'),
-      '#size' => ($form_id == 'user_login') ? 58 : 13,
-      '#maxlength' => 255,
-      '#weight' => -1,
-      '#description' => l(t('What is OpenID?'), 'http://openid.net/', array('external' => TRUE)),
-    );
-    $form['openid.return_to'] = array('#type' => 'hidden', '#value' => url('openid/authenticate', array('absolute' => TRUE, 'query' => drupal_get_destination())));
-  }
-  elseif ($form_id == 'user_register' && isset($_SESSION['openid'])) {
+function openid_form_user_register_alter(&$form, &$form_state) {
+  if (isset($_SESSION['openid'])) {
     // We were unable to auto-register a new user. Prefill the registration
     // form with the values we have.
     $form['name']['#default_value'] = $_SESSION['openid']['values']['name'];
@@ -124,7 +139,6 @@ function openid_form_alter(&$form, $form_state, $form_id) {
     }
     $form['auth_openid'] = array('#type' => 'hidden', '#value' => $_SESSION['openid']['values']['auth_openid']);
   }
-  return $form;
 }
 
 /**
@@ -161,6 +175,9 @@ function openid_begin($claimed_id, $return_to = '', $form_values = array()) {
   }
 
   // Store discovered information in the users' session so we don't have to rediscover.
+  if (!isset($_SESSION['openid'])) {
+    drupal_set_session('openid', array());
+  }
   $_SESSION['openid']['service'] = $services[0];
   // Store the claimed id
   $_SESSION['openid']['claimed_id'] = $claimed_id;
@@ -268,8 +285,8 @@ function openid_discovery($claimed_id) {
   if (_openid_is_xri($claimed_id)) {
     $xrds_url = 'http://xri.net/' . $claimed_id;
   }
-  $url = @parse_url($xrds_url);
-  if ($url['scheme'] == 'http' || $url['scheme'] == 'https') {
+  $scheme = @parse_url($xrds_url, PHP_URL_SCHEME);
+  if ($scheme == 'http' || $scheme == 'https') {
     // For regular URLs, try Yadis resolution first, then HTML-based discovery
     $headers = array('Accept' => 'application/xrds+xml');
     $result = drupal_http_request($xrds_url, array('headers' => $headers));
@@ -408,6 +425,9 @@ function openid_authentication($response) {
       // We were unable to register a valid new user, redirect to standard
       // user/register and prefill with the values we received.
       drupal_set_message(t('OpenID registration failed for the reasons listed. You may register now, or if you already have an account you can <a href="@login">log in</a> now and add your OpenID under "My Account"', array('@login' => url('user/login'))), 'error');
+      if (!isset($_SESSION['openid'])) {
+        drupal_set_session('openid', array());
+      }
       $_SESSION['openid']['values'] = $form_state['values'];
       // We'll want to redirect back to the same place.
       $destination = drupal_get_destination();

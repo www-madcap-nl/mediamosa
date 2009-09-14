@@ -1,5 +1,36 @@
 <?php
-// $Id: comment.install,v 1.28 2008/12/03 16:32:21 dries Exp $
+// $Id: comment.install,v 1.30 2009/01/31 16:31:59 webchick Exp $
+
+/**
+ * Implementation of hook_install().
+ */
+function comment_install() {
+  // Create tables.
+  drupal_install_schema('comment');
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function comment_uninstall() {
+  // Remove tables.
+  drupal_uninstall_schema('comment');
+
+  // Remove variables.
+  variable_del('comment_block_count');
+  $node_types = array_keys(node_get_types());
+  foreach ($node_types as $node_type) {
+    variable_del('comment_' . $node_type);
+    variable_del('comment_anonymous_' . $node_type);
+    variable_del('comment_controls_' . $node_type);
+    variable_del('comment_default_mode_' . $node_type);
+    variable_del('comment_default_order_' . $node_type);
+    variable_del('comment_default_per_page_' . $node_type);
+    variable_del('comment_form_location_' . $node_type);
+    variable_del('comment_preview_' . $node_type);
+    variable_del('comment_subject_field_' . $node_type);
+  }
+}
 
 /**
  * Implementation of hook_enable().

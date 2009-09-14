@@ -1,11 +1,25 @@
 <?php
-// $Id: locale.test,v 1.13 2008/12/20 18:24:37 dries Exp $
+// $Id: locale.test,v 1.17 2009/02/13 00:45:18 webchick Exp $
 
-class LocaleTestCase extends DrupalWebTestCase {
+/**
+ * @file
+ * Tests for Locale module.
+ * 
+ * The test file includes:
+ *  - a functional test for the translation functionalities;
+ *  - a functional test for the PO files import feature;
+ *  - a functional test for the language switching feature
+ *  - a couple of functional tests for the uninstall process.
+ */
+
+/**
+ * Functional test for string translation and validation.
+ */
+class LocaleTranslationFunctionalTest extends DrupalWebTestCase {
   function getInfo() {
     return array(
       'name' => t('String translate and validate'),
-      'description' => 'Adds a new locale and translates its name. Checks the validation of translation strings.',
+      'description' => t('Adds a new locale and translates its name. Checks the validation of translation strings.'),
       'group' => 'Locale',
     );
   }
@@ -14,7 +28,10 @@ class LocaleTestCase extends DrupalWebTestCase {
     parent::setUp('locale');
   }
 
-  function testlocaleModuleTest() {
+  /**
+   * Adds a language and tests string translation by users with the appropriate permissions.
+   */
+  function testStringTranslation() {
     global $base_url;
 
     // User to add and remove language.
@@ -37,7 +54,7 @@ class LocaleTestCase extends DrupalWebTestCase {
 
     // Add language.
     $this->drupalLogin($admin_user);
-    $edit = array (
+    $edit = array(
       'langcode' => $langcode,
       'name' => $name,
       'native' => $native,
@@ -65,7 +82,7 @@ class LocaleTestCase extends DrupalWebTestCase {
       'translation' => 'all',
       'group' => 'all',
     );
-    $this->drupalPost('admin/build/translate/search', $search, t('Search'));
+    $this->drupalPost('admin/build/translate/translate', $search, t('Filter'));
     // assertText seems to remove the input field where $name always could be
     // found, so this is not a false assert. See how assertNoText succeeds
     // later.
@@ -75,7 +92,9 @@ class LocaleTestCase extends DrupalWebTestCase {
     // reasonable.
     $this->clickLink(t('edit'));
     // We save the lid from the path.
-    $lid = preg_replace('/\D/', '', substr($this->getUrl(), strlen($base_url)));
+    $matches = array();
+    preg_match('!admin/build/translate/edit/(\d)+!', $this->getUrl(), $matches);
+    $lid = $matches[1];
     // No t() here, it's surely not translated yet.
     $this->assertText($name, 'name found on edit screen');
     $edit = array (
@@ -84,7 +103,7 @@ class LocaleTestCase extends DrupalWebTestCase {
     $this->drupalPost(NULL, $edit, t('Save translations'));
     $this->assertText(t('The string has been saved.'), 'The string has been saved.');
     $this->assertTrue($name != $translation && t($name, array(), $langcode) == $translation, 't() works');
-    $this->drupalPost('admin/build/translate/search', $search, t('Search'));
+    $this->drupalPost('admin/build/translate/translate', $search, t('Filter'));
     // The indicator should not be here.
     $this->assertNoRaw($language_indicator, 'String is translated');
     $this->drupalLogout();
@@ -107,11 +126,14 @@ class LocaleTestCase extends DrupalWebTestCase {
     $this->drupalLogin($translate_user);
     $this->drupalPost('admin/build/translate/delete/' . $lid, array(), t('Delete'));
     $this->assertText(t('The string has been removed.'), 'The string has been removed message.');
-    $this->drupalPost('admin/build/translate/search', $search, t('Search'));
+    $this->drupalPost('admin/build/translate/translate', $search, t('Filter'));
     $this->assertNoText($name, 'Search now can not find the name');
   }
 
-  function testLocaleStringTest() {
+  /**
+   * Tests the validation of the translation input.
+   */
+  function testStringValidation() {
     global $base_url;
 
     // User to add  language and strings
@@ -155,7 +177,7 @@ class LocaleTestCase extends DrupalWebTestCase {
       'translation' => 'all',
       'group' => 'all',
     );
-    $this->drupalPost('admin/build/translate/search', $search, t('Search'));
+    $this->drupalPost('admin/build/translate/translate', $search, t('Filter'));
     // Find the edit path
     $content = $this->drupalGetContent();
     $this->assertTrue(preg_match('@(admin/build/translate/edit/[0-9]+)@', $content, $matches), t('Found the edit path'));
@@ -191,7 +213,7 @@ class LocaleImportFunctionalTest extends DrupalWebTestCase {
   protected $admin_user = NULL;
 
   function setUp() {
-    parent::setUp('locale');
+    parent::setUp('locale', 'locale_test');
 
     $this->admin_user = $this->drupalCreateUser(array('administer languages', 'translate interface', 'access administration pages'));
     $this->drupalLogin($this->admin_user);
@@ -216,7 +238,7 @@ class LocaleImportFunctionalTest extends DrupalWebTestCase {
     // The importation should have create 7 strings.
     $this->assertRaw(t('The translation was successfully imported. There are %number newly created translated strings, %update strings were updated and %delete strings were removed.', array('%number' => 7, '%update' => 0, '%delete' => 0)), t('The translation file was successfully imported'));
 
-    // Try importing a .po file with script.
+    // Try importing a .po file with invalid tags in the default text group.
     $name = tempnam(file_directory_temp(), "po_");
     file_put_contents($name, $this->getBadPoFile());
     $this->drupalPost('admin/build/translate/import', array(
@@ -229,6 +251,17 @@ class LocaleImportFunctionalTest extends DrupalWebTestCase {
     $skip_message = format_plural(2, 'One translation string was skipped because it contains disallowed HTML.', '@count translation strings were skipped because they contain disallowed HTML.');
     $this->assertRaw($skip_message, t('Unsafe strings were skipped.'));
 
+    // Try importing a .po file with invalid tags in a non default text group.
+    $name = tempnam(file_directory_temp(), "po_");
+    file_put_contents($name, $this->getBadPoFile());
+    $this->drupalPost('admin/build/translate/import', array(
+      'langcode' => 'fr',
+      'files[file]' => $name,
+      'group' => 'custom',
+    ), t('Import'));
+    unlink($name);
+    // The importation should have created 3 strings.
+    $this->assertRaw(t('The translation was successfully imported. There are %number newly created translated strings, %update strings were updated and %delete strings were removed.', array('%number' => 3, '%update' => 0, '%delete' => 0)), t('The translation file was successfully imported.'));
   }
 
   /**
@@ -290,5 +323,206 @@ msgid "delete"
 msgstr "supprimer<script>alert('xss');</script>"
 
 EOF;
+  }
+}
+
+/**
+ * Locale uninstall with English UI functional test.
+ */
+class LocaleUninstallFunctionalTest extends DrupalWebTestCase {
+  function getInfo() {
+    return array(
+      'name' => t('Locale uninstall (EN)'),
+      'description' => t('Tests the uninstall process using the built-in UI language.'),
+      'group' => t('Locale'),
+    );
+  }
+
+  /**
+   * The default language set for the UI before uninstall.
+   */
+  protected $ui_language;
+  
+  function setUp() {
+    parent::setUp('locale');
+    $this->ui_language = 'en';
+  }
+  
+  /**
+   * Check if the values of the Locale variables are correct after uninstall.
+   */
+  function testUninstallProcess() {
+    $locale_module = array('locale');
+    
+    // Add a new language and optionally set it as default.
+    require_once DRUPAL_ROOT . '/includes/locale.inc';
+    locale_add_language('fr', 'French', 'Français', LANGUAGE_LTR, '', '', TRUE, $this->ui_language == 'fr');
+    
+    // Check the UI language.
+    drupal_init_language();
+    global $language;
+    $this->assertEqual($language->language, $this->ui_language, t('Current language: %lang', array('%lang' => $language->language)));
+
+    // Change language negotiation options.
+    variable_set('language_negotiation', LANGUAGE_NEGOTIATION_PATH_DEFAULT);
+    
+    // Enable multilingual workflow option for articles.
+    variable_set('language_content_type_article', 1);
+    
+    // Change JavaScript translations directory.
+    variable_set('locale_js_directory', 'js_translations');
+    
+    // Build the JavaScript translation file for French.
+    $user = $this->drupalCreateUser(array('translate interface', 'access administration pages'));
+    $this->drupalLogin($user);
+    $this->drupalGet('admin/build/translate/translate');
+    $string = db_fetch_object(db_query('SELECT min(lid) AS lid FROM {locales_source} WHERE location LIKE \'%.js%\' AND textgroup = \'default\''));
+    $edit = array('translations[fr]' => 'french translation');
+    $this->drupalPost('admin/build/translate/edit/'. $string->lid, $edit, t('Save translations'));
+    _locale_rebuild_js('fr');
+    $file = db_fetch_object(db_query('SELECT javascript FROM {languages} WHERE language = \'fr\''));
+    $js_file = file_create_path(variable_get('locale_js_directory', 'languages')) .'/fr_'. $file->javascript .'.js';
+    $this->assertTrue($result = file_exists($js_file), t('JavaScript file created: %file', array('%file' => $result ? $js_file : t('none'))));
+    
+    // Disable string caching.
+    variable_set('locale_cache_strings', 0);
+    
+    // Uninstall Locale.
+    module_disable($locale_module);
+    drupal_uninstall_modules($locale_module);
+    
+    // Visit the front page.
+    $this->drupalGet('');
+
+    // Check the init language logic.
+    drupal_init_language();
+    $this->assertEqual($language->language, 'en', t('Language after uninstall: %lang', array('%lang' => $language->language)));
+    
+    // Check JavaScript files deletion.
+    $this->assertTrue($result = !file_exists($js_file), t('JavaScript file deleted: %file', array('%file' => $result ? $js_file : t('found'))));
+    
+    // Check language count.
+    $language_count = variable_get('language_count', 1);
+    $this->assertEqual($language_count, 1, t('Language count: %count', array('%count' => $language_count)));
+
+    // Check language negotiation.
+    $language_negotiation = variable_get('language_negotiation', LANGUAGE_NEGOTIATION_NONE) == LANGUAGE_NEGOTIATION_NONE;
+    $this->assertTrue($language_negotiation, t('Language negotiation: %setting', array('%setting' => t($language_negotiation ? 'none' : 'set'))));
+
+    // Check JavaScript parsed.
+    $javascript_parsed_count = count(variable_get('javascript_parsed', array()));
+    $this->assertEqual($javascript_parsed_count, 0, t('JavaScript parsed count: %count', array('%count' => $javascript_parsed_count)));
+
+    // Check multilingual workflow option for articles.
+    $multilingual = variable_get('language_content_type_article', 0);
+    $this->assertEqual($multilingual, 0, t('Multilingual workflow option: %status', array('%status' => t($multilingual ? 'enabled': 'disabled'))));
+    
+    // Check JavaScript translations directory.
+    $locale_js_directory = variable_get('locale_js_directory', 'languages');
+    $this->assertEqual($locale_js_directory, 'languages', t('JavaScript translations directory: %dir', array('%dir' => $locale_js_directory)));
+    
+    // Check string caching.
+    $locale_cache_strings = variable_get('locale_cache_strings', 1);
+    $this->assertEqual($locale_cache_strings, 1, t('String caching: %status', array('%status' => t($locale_cache_strings ? 'enabled': 'disabled')))); 
+  }
+}
+
+/**
+ * Locale uninstall with French UI functional test.
+ * 
+ * Because this class extends LocaleUninstallFunctionalTest, it doesn't require a new
+ * test of its own. Rather, it switches the default UI language in setUp and then
+ * runs the testUninstallProcess (which it inherits from LocaleUninstallFunctionalTest)
+ * to test with this new language.
+ */
+class LocaleUninstallFrenchFunctionalTest extends LocaleUninstallFunctionalTest {
+  function getInfo() {
+    return array(
+      'name' => t('Locale uninstall (FR)'),
+      'description' => t('Tests the uninstall process using French as UI language.'),
+      'group' => t('Locale'),
+    );
+  }
+  
+  function setUp() {
+    parent::setUp();
+    $this->ui_language = 'fr';
+  }
+}
+
+
+/**
+ * Functional tests for the language switching feature.
+ */
+class LanguageSwitchingFunctionalTest extends DrupalWebTestCase {
+
+  function getInfo() {
+    return array(
+      'name' => t('Language switching'),
+      'description' => t('Tests for the language switching feature.'),
+      'group' => t('Locale'),
+    );
+  }
+
+  function setUp() {
+    parent::setUp('locale');
+
+    // Create and login user
+    $admin_user = $this->drupalCreateUser(array('administer blocks', 'administer languages', 'translate interface', 'access administration pages'));
+    $this->drupalLogin($admin_user);
+  }
+
+  function testLanguageBlock() {
+    // Enable the language switching block.
+    $edit = array(
+      'locale_language-switcher[region]' => 'left',
+    );
+    $this->drupalPost('admin/build/block', $edit, t('Save blocks'));
+
+    // Add language.
+    $edit = array(
+      'langcode' => 'fr',
+    );
+    $this->drupalPost('admin/settings/language/add', $edit, t('Add language'));
+
+    // Set language negotiation.
+    $edit = array(
+      'language_negotiation' => LANGUAGE_NEGOTIATION_PATH_DEFAULT,
+    );
+    $this->drupalPost('admin/settings/language/configure', $edit, t('Save settings'));
+
+    // Assert that the language switching block is displayed on the frontpage.
+    $this->drupalGet('');
+    $this->assertText(t('Languages'));
+
+    // Assert that only the current language is marked as active.
+    list($language_switcher) = $this->xpath('//div[@id="block-locale-language-switcher"]');
+    $links = array(
+      'active' => array(),
+      'inactive' => array(),
+    );
+    $anchors = array(
+      'active' => array(),
+      'inactive' => array(),
+    );
+    foreach ($language_switcher->div->ul->li as $link) {
+      $classes = explode(" ", (string) $link['class']);
+      list($language) = array_intersect($classes, array('en', 'fr'));
+      if (in_array('active', $classes)) {
+        $links['active'][] = $language;
+      }
+      else {
+        $links['inactive'][] = $language;
+      }
+      $anchor_classes = explode(" ", (string) $link->a['class']);
+      if (in_array('active', $anchor_classes)) {
+        $anchors['active'][] = $language;
+      }
+      else {
+        $anchors['inactive'][] = $language;
+      }
+    }
+    $this->assertIdentical($links, array('active' => array('en'), 'inactive' => array('fr')), t('Only the current language list item is marked as active on the language switcher block'));
+    $this->assertIdentical($anchors, array('active' => array('en'), 'inactive' => array('fr')), t('Only the current language anchor is marked as active on the language switcher block'));
   }
 }

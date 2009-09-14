@@ -1,5 +1,5 @@
 <?php
-// $Id: color.module,v 1.51 2008/12/30 16:43:16 dries Exp $
+// $Id: color.module,v 1.55 2009/02/03 18:55:30 dries Exp $
 
 /**
  * Implementation of hook_help().
@@ -28,11 +28,10 @@ function color_theme() {
 }
 
 /**
- * Implementation of hook_form_alter().
+ * Implementation of hook_form_FORM_ID_alter().
  */
-function color_form_alter(&$form, $form_state, $form_id) {
-  // Insert the color changer into the theme settings page.
-  if ($form_id == 'system_theme_settings' && color_get_info(arg(4)) && function_exists('gd_info')) {
+function color_form_system_theme_settings_alter(&$form, &$form_state) {
+  if (color_get_info(arg(4)) && function_exists('gd_info')) {
     if (variable_get('file_downloads', FILE_DOWNLOADS_PUBLIC) != FILE_DOWNLOADS_PUBLIC) {
       // Disables the color changer when the private download method is used.
       // TODO: This should be solved in a different way. See issue #181003.
@@ -50,15 +49,32 @@ function color_form_alter(&$form, $form_state, $form_id) {
       $form['#submit'][] = 'color_scheme_form_submit';
     }
   }
+}
 
+/**
+ * Implementation of hook_form_FORM_ID_alter().
+ */
+function color_form_system_themes_alter(&$form, &$form_state) {
+  _color_theme_select_form_alter($form, $form_state);
+}
+
+/**
+ * Implementation of hook_form_FORM_ID_alter().
+ */
+function color_form_system_theme_select_form_alter(&$form, &$form_state) {
+  _color_theme_select_form_alter($form, $form_state);
+}
+
+/**
+ * Helper for hook_form_FORM_ID_alter() implementations.
+ */
+function _color_theme_select_form_alter(&$form, &$form_state) {
   // Use the generated screenshot in the theme list.
-  if ($form_id == 'system_theme_select_form' || $form_id == 'system_themes') {
-    $themes = list_themes();
-    foreach (element_children($form) as $theme) {
-      if ($screenshot = variable_get('color_' . $theme . '_screenshot', NULL)) {
-        if (isset($form[$theme]['screenshot'])) {
-          $form[$theme]['screenshot']['#markup'] = theme('image', $screenshot, '', '', array('class' => 'screenshot'), FALSE);
-        }
+  $themes = list_themes();
+  foreach (element_children($form) as $theme) {
+    if ($screenshot = variable_get('color_' . $theme . '_screenshot')) {
+      if (isset($form[$theme]['screenshot'])) {
+        $form[$theme]['screenshot']['#markup'] = theme('image', $screenshot, '', '', array('class' => 'screenshot'), FALSE);
       }
     }
   }
@@ -94,7 +110,7 @@ function _color_page_alter(&$vars) {
 
           // If the current language is RTL and the CSS file had an RTL variant,
           // pull out the non-colored and add rewritten RTL stylesheet.
-          if (defined('LANGUAGE_RTL') && $language->direction == LANGUAGE_RTL) {
+          if ($language->direction == LANGUAGE_RTL) {
             $rtl_old_path = str_replace('.css', '-rtl.css', $old_path);
             $rtl_color_path = str_replace('.css', '-rtl.css', $color_path);
             if (file_exists($rtl_color_path)) {
@@ -111,7 +127,7 @@ function _color_page_alter(&$vars) {
   }
 
   // Override logo.
-  $logo = variable_get('color_' . $theme_key . '_logo', NULL);
+  $logo = variable_get('color_' . $theme_key . '_logo');
   if ($logo && $vars['logo'] && preg_match('!' . $theme_key . '/logo.png$!', $vars['logo'])) {
     $vars['logo'] = base_path() . $logo;
   }
@@ -223,7 +239,7 @@ function theme_color_scheme_form($form) {
   }
   $output .= '</div>';
   // Preview
-  $output .= drupal_render($form);
+  $output .= drupal_render_children($form);
   $output .= '<h2>' . t('Preview') . '</h2>';
   $output .= '<div id="preview"><div id="text"><h2>Lorem ipsum dolor</h2><p>Sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud <a href="#">exercitation ullamco</a> laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p></div><div id="img" style="background-image: url(' . base_path() . $path . $info['preview_image'] . ')"></div></div>';
   // Close the wrapper div.

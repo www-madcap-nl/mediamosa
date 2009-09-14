@@ -1,5 +1,25 @@
 <?php
-// $Id: taxonomy.install,v 1.12 2009/01/14 21:16:20 dries Exp $
+// $Id: taxonomy.install,v 1.15 2009/01/31 16:22:50 webchick Exp $
+
+ /**
+ * Implementation of hook_install().
+ */
+function taxonomy_install() {
+  // Create tables.
+  drupal_install_schema('taxonomy');
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function taxonomy_uninstall() {
+  // Remove tables.
+  drupal_uninstall_schema('taxonomy');
+
+  // Remove variables.
+  variable_del('taxonomy_override_selector');
+  variable_del('taxonomy_terms_per_page_admin');
+}
 
 /**
  * Implementation of hook_schema().
@@ -296,6 +316,6 @@ function taxonomy_update_7001() {
   db_rename_table($ret, 'term_synonym', 'taxonomy_term_synonym');
   db_rename_table($ret, 'vocabulary', 'taxonomy_vocabulary');
   db_rename_table($ret, 'vocabulary_node_types', 'taxonomy_vocabulary_node_type');
-  
+
   return $ret;
 }
