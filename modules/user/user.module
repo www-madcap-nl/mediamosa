@@ -1,5 +1,5 @@
 <?php
-// $Id: user.module,v 1.1040 2009/09/09 11:27:00 dries Exp $
+// $Id: user.module,v 1.1050 2009/09/21 08:52:41 dries Exp $
 
 /**
  * @file
@@ -617,33 +617,26 @@ function user_password($length = 10) {
  *
  * @param $roles
  *   An array whose keys are the role IDs of interest, such as $user->roles.
- * @param $reset
- *   Optional parameter - if TRUE data in the static variable is rebuilt.
  *
  * @return
  *   An array indexed by role ID. Each value is an array whose keys are the
  *   permission strings for the given role ID.
  */
-function user_role_permissions($roles = array(), $reset = FALSE) {
-  static $stored_permissions = array();
-
-  if ($reset) {
-    // Clear the data cached in the static variable.
-    $stored_permissions = array();
-  }
+function user_role_permissions($roles = array()) {
+  $cache = &drupal_static(__FUNCTION__, array());
 
   $role_permissions = $fetch = array();
 
   if ($roles) {
     foreach ($roles as $rid => $name) {
-      if (isset($stored_permissions[$rid])) {
-        $role_permissions[$rid] = $stored_permissions[$rid];
+      if (isset($cache[$rid])) {
+        $role_permissions[$rid] = $cache[$rid];
       }
       else {
         // Add this rid to the list of those needing to be fetched.
         $fetch[] = $rid;
         // Prepare in case no permissions are returned.
-        $stored_permissions[$rid] = array();
+        $cache[$rid] = array();
       }
     }
 
@@ -653,11 +646,11 @@ function user_role_permissions($roles = array(), $reset = FALSE) {
       $result = db_query("SELECT rid, permission FROM {role_permission} WHERE rid IN (:fetch)", array(':fetch' => $fetch));
 
       foreach ($result as $row) {
-        $stored_permissions[$row->rid][$row->permission] = TRUE;
+        $cache[$row->rid][$row->permission] = TRUE;
       }
       foreach ($fetch as $rid) {
         // For every rid, we know we at least assigned an empty array.
-        $role_permissions[$rid] = $stored_permissions[$rid];
+        $role_permissions[$rid] = $cache[$rid];
       }
     }
   }
@@ -672,10 +665,6 @@ function user_role_permissions($roles = array(), $reset = FALSE) {
  *   The permission, such as "administer nodes", being checked for.
  * @param $account
  *   (optional) The account to check, if not given use currently logged in user.
- * @param $reset
- *   (optional) Resets the user's permissions cache, which will result in a
- *   recalculation of the user's permissions. This is necessary to support
- *   dynamically added user roles.
  *
  * @return
  *   Boolean TRUE if the current user has the requested permission.
@@ -684,13 +673,9 @@ function user_role_permissions($roles = array(), $reset = FALSE) {
  * way, we guarantee consistent behavior, and ensure that the superuser
  * can perform all actions.
  */
-function user_access($string, $account = NULL, $reset = FALSE) {
+function user_access($string, $account = NULL) {
   global $user;
-  static $perm = array();
-
-  if ($reset) {
-    $perm = array();
-  }
+  $perm = &drupal_static(__FUNCTION__, array());
 
   if (!isset($account)) {
     $account = $user;
@@ -704,7 +689,7 @@ function user_access($string, $account = NULL, $reset = FALSE) {
   // To reduce the number of SQL queries, we cache the user's permissions
   // in a static variable.
   if (!isset($perm[$account->uid])) {
-    $role_permissions = user_role_permissions($account->roles, $reset);
+    $role_permissions = user_role_permissions($account->roles);
 
     $perms = array();
     foreach ($role_permissions as $one_role) {
@@ -776,7 +761,7 @@ function user_file_download($filepath) {
  */
 function user_file_references($file) {
   // Determine if the file is used by this module.
-  $file_used = (bool) db_query_range('SELECT 1 FROM {users} WHERE picture = :fid', array(':fid' => $file->fid), 0, 1)->fetchField();
+  $file_used = (bool) db_query_range('SELECT 1 FROM {users} WHERE picture = :fid', 0, 1, array(':fid' => $file->fid))->fetchField();
   if ($file_used) {
     // Return the name of the module and how many references it has to the file.
     return array('user' => $count);
@@ -838,17 +823,16 @@ function user_search_execute($keys = NULL) {
 }
 
 /**
- * Implement hook_elements().
+ * Implement hook_element_info().
  */
-function user_elements() {
-  return array(
-    'user_profile_category' => array(
-      '#theme_wrappers' => array('user_profile_category')
-    ),
-    'user_profile_item' => array(
-      '#theme' => 'user_profile_item'
-    ),
+function user_element_info() {
+  $types['user_profile_category'] = array(
+    '#theme_wrappers' => array('user_profile_category'),
   );
+  $types['user_profile_item'] = array(
+    '#theme' => 'user_profile_item',
+  );
+  return $types;
 }
 
 /**
@@ -880,8 +864,9 @@ function user_user_view($account) {
  */
 function user_user_form(&$edit, $account, $category) {
   if ($category == 'account') {
+    $form = array();
     $form_state = array();
-    return user_edit_form($form_state, (isset($account->uid) ? $account->uid : FALSE), $edit);
+    return user_edit_form($form, $form_state, (isset($account->uid) ? $account->uid : FALSE), $edit);
   }
 }
 
@@ -896,7 +881,7 @@ function user_user_validate(&$edit, $account, $category) {
       if ($error = user_validate_name($edit['name'])) {
         form_set_error('name', $error);
       }
-      elseif ((bool) db_query_range("SELECT 1 FROM {users} WHERE uid <> :uid AND LOWER(name) = LOWER(:name)", array(':uid' => $uid, ':name' => $edit['name']), 0, 1)->fetchField()) {
+      elseif ((bool) db_query_range("SELECT 1 FROM {users} WHERE uid <> :uid AND LOWER(name) = LOWER(:name)", 0, 1, array(':uid' => $uid, ':name' => $edit['name']))->fetchField()) {
         form_set_error('name', t('The name %name is already taken.', array('%name' => $edit['name'])));
       }
     }
@@ -905,7 +890,7 @@ function user_user_validate(&$edit, $account, $category) {
     if ($error = user_validate_mail($edit['mail'])) {
       form_set_error('mail', $error);
     }
-    elseif ((bool) db_query_range("SELECT 1 FROM {users} WHERE uid <> :uid AND LOWER(mail) = LOWER(:mail)", array(':uid' => $uid, ':mail' => $edit['mail']), 0, 1)->fetchField()) {
+    elseif ((bool) db_query_range("SELECT 1 FROM {users} WHERE uid <> :uid AND LOWER(mail) = LOWER(:mail)", 0, 1, array(':uid' => $uid, ':mail' => $edit['mail']))->fetchField()) {
       // Format error message dependent on whether the user is logged in or not.
       if ($GLOBALS['user']->uid) {
         form_set_error('mail', t('The e-mail address %email is already taken.', array('%email' => $edit['mail'])));
@@ -959,13 +944,11 @@ function user_user_categories() {
   ));
 }
 
-function user_login_block() {
-  $form = array(
-    '#action' => url($_GET['q'], array('query' => drupal_get_destination())),
-    '#id' => 'user-login-form',
-    '#validate' => user_login_default_validators(),
-    '#submit' => array('user_login_submit'),
-  );
+function user_login_block($form) {
+  $form['#action'] = url($_GET['q'], array('query' => drupal_get_destination()));
+  $form['#id'] = 'user-login-form';
+  $form['#validate'] = user_login_default_validators();
+  $form['#submit'][] = 'user_login_submit';
   $form['name'] = array('#type' => 'textfield',
     '#title' => t('Username'),
     '#maxlength' => USERNAME_MAX_LENGTH,
@@ -1072,7 +1055,7 @@ function user_block_view($delta = '') {
     case 'new':
       if (user_access('access content')) {
         // Retrieve a list of new users who have subsequently accessed the site successfully.
-        $items = db_query_range('SELECT uid, name FROM {users} WHERE status <> 0 AND access <> 0 ORDER BY created DESC', array(), 0, variable_get('user_block_whois_new_count', 5))->fetchAll();
+        $items = db_query_range('SELECT uid, name FROM {users} WHERE status <> 0 AND access <> 0 ORDER BY created DESC', 0, variable_get('user_block_whois_new_count', 5))->fetchAll();
         $output = theme('user_list', $items);
 
         $block['subject'] = t('Who\'s new');
@@ -1108,7 +1091,7 @@ function user_block_view($delta = '') {
         // Display a list of currently online users.
         $max_users = variable_get('user_block_max_list_count', 10);
         if ($authenticated_count && $max_users) {
-          $items = db_query_range('SELECT u.uid, u.name, MAX(s.timestamp) AS max_timestamp FROM {users} u INNER JOIN {sessions} s ON u.uid = s.uid WHERE s.timestamp >= :interval AND s.uid > 0 GROUP BY u.uid, u.name ORDER BY max_timestamp DESC', array(':interval' => $interval), 0, $max_users)->fetchAll();
+          $items = db_query_range('SELECT u.uid, u.name, MAX(s.timestamp) AS max_timestamp FROM {users} u INNER JOIN {sessions} s ON u.uid = s.uid WHERE s.timestamp >= :interval AND s.uid > 0 GROUP BY u.uid, u.name ORDER BY max_timestamp DESC', 0, $max_users, array(':interval' => $interval))->fetchAll();
           $output .= theme('user_list', $items, t('Online users'));
         }
 
@@ -1372,7 +1355,7 @@ function user_menu() {
     'title' => 'My account',
     'title callback' => 'user_page_title',
     'title arguments' => array(1),
-    'page callback' => 'user_view',
+    'page callback' => 'user_build',
     'page arguments' => array(1),
     'access callback' => 'user_view_access',
     'access arguments' => array(1),
@@ -1503,12 +1486,9 @@ function user_uid_optional_to_arg($arg) {
 }
 
 /**
- * Menu item title callback - use the user name if it's not the current user.
+ * Menu item title callback - use the user name.
  */
 function user_page_title($account) {
-  if ($account->uid == $GLOBALS['user']->uid) {
-    return t('My account');
-  }
   return $account->name;
 }
 
@@ -1563,7 +1543,7 @@ function user_set_authmaps($account, $authmaps) {
  *
  * @ingroup forms
  */
-function user_login(&$form_state) {
+function user_login($form, &$form_state) {
   global $user;
 
   // If we are already logged on, go to the user page instead.
@@ -1830,11 +1810,9 @@ function user_pass_rehash($password, $timestamp, $login) {
   return md5($timestamp . $password . $login);
 }
 
-function user_edit_form(&$form_state, $uid, $edit, $register = FALSE) {
+function user_edit_form($form, &$form_state, $uid, $edit, $register = FALSE) {
   _user_password_dynamic_validation();
   $admin = user_access('administer users');
-
-  $form = array();
 
   // Account information:
   $form['account'] = array('#type' => 'fieldset',
@@ -2069,23 +2047,61 @@ function _user_cancel($edit, $account, $method) {
 }
 
 /**
- * Builds a structured array representing the profile content.
+ * Generate an array for rendering the given user.
+ *
+ * When viewing a user profile, the $page array contains:
+ *
+ * - $page['content']['Profile Category']:
+ *   Profile categories keyed by their human-readable names.
+ * - $page['content']['Profile Category']['profile_machine_name']:
+ *   Profile fields keyed by their machine-readable names.
+ * - $page['content']['user_picture']:
+ *   User's rendered picture.
+ * - $page['content']['summary']:
+ *   Contains the default "History" profile data for a user.
+ * - $page['content']['#account']:
+ *   The user account of the profile being viewed.
+ *
+ * To theme user profiles, copy modules/user/user-profile.tpl.php
+ * to your theme directory, and edit it as instructed in that file's comments. 
  *
  * @param $account
  *   A user object.
  *
  * @return
- *   A structured array containing the individual elements of the profile.
+ *   An array as expected by drupal_render().
+ */
+function user_build($account) {
+  // Retrieve all profile fields and attach to $account->content.
+  user_build_content($account);
+
+  $build = $account->content;
+  // We don't need duplicate rendering info in account->content.
+  unset($account->content);
+  
+  $build += array(
+    '#theme' => 'user_profile',
+    '#account' => $account,
+  );
+
+  return $build;
+}
+
+/**
+ * Builds a structured array representing the profile content.
+ *
+ * @param $account
+ *   A user object.
+ *
  */
 function user_build_content($account) {
   $account->content = array();
 
   // Build fields content.
-  // TODO D7 : figure out where exactly this needs to go
   $account->content += field_attach_view('user', $account);
 
+  // Populate $account->content with a render() array.
   module_invoke_all('user_view', $account);
-  return $account->content;
 }
 
 /**
@@ -2258,6 +2274,10 @@ function user_role_save($role) {
     module_invoke_all('user_role_insert', $role);
   }
 
+  // Clear the user access cache.
+  drupal_static_reset('user_access');
+  drupal_static_reset('user_role_permissions');
+
   return $status;
 }
 
@@ -2281,52 +2301,105 @@ function user_role_delete($role) {
     ->condition('rid', $role->rid)
     ->execute();
 
-  // Clear the user access cache.
-  user_access(NULL, NULL, TRUE);
-
   module_invoke_all('user_role_delete', $role);
+
+  // Clear the user access cache.
+  drupal_static_reset('user_access');
+  drupal_static_reset('user_role_permissions');
 }
 
 /**
- * Assign permissions to a user role.
+ * Change permissions for a user role.
  *
- * @param $role
- *   A string with the role name, or an integer with the role ID.
+ * This function may be used to grant and revoke multiple permissions at once.
+ * For example, when a form exposes checkboxes to configure permissions for a
+ * role, the submitted values may be directly passed on in a form submit
+ * handler.
+ *
+ * @param $rid
+ *   The ID of a user role to alter.
  * @param $permissions
- *   An array of permissions strings.
- * @param $merge
- *   A boolean indicating whether to add permissions or to merge
- *   with all existing permissions.
+ *   An array of permissions, where the key holds the permission name and the
+ *   value is an integer or boolean that determines whether to grant or revoke
+ *   the permission:
+ *   @code
+ *     array(
+ *       'administer nodes' => 0,
+ *       'access user profiles' => 1,
+ *     )
+ *   @endcode
+ *   Existing permissions are not changed, unless specified in $permissions.
+ *
+ * @see user_role_grant_permissions()
+ * @see user_role_revoke_permissions()
  */
-function user_role_set_permissions($role, array $permissions = array(), $merge = FALSE) {
-  $role = user_role_load($role);
-  if (!$merge) {
-    // Delete existing permissions for the role.
-    db_delete('role_permission')
-      ->condition('rid', $role->rid)
-      ->execute();
+function user_role_change_permissions($rid, array $permissions = array()) {
+  // Grant new permissions for the role.
+  $grant = array_filter($permissions);
+  if (!empty($grant)) {
+    user_role_grant_permissions($rid, array_keys($grant));
   }
+  // Revoke permissions for the role.
+  $revoke = array_diff_assoc($permissions, $grant);
+  if (!empty($revoke)) {
+    user_role_revoke_permissions($rid, array_keys($revoke));
+  }
+}
 
-  // Assign the new permissions for the role.
-  foreach ($permissions as $permission_string) {
+/**
+ * Grant permissions to a user role.
+ *
+ * @param $rid
+ *   The ID of a user role to alter.
+ * @param $permissions
+ *   A list of permission names to grant.
+ *
+ * @see user_role_change_permissions()
+ * @see user_role_revoke_permissions()
+ */
+function user_role_grant_permissions($rid, array $permissions = array()) {
+  // Grant new permissions for the role.
+  foreach ($permissions as $name) {
     db_merge('role_permission')
       ->key(array(
-        'rid' => $role->rid,
-        'permission' => $permission_string,
+        'rid' => $rid,
+        'permission' => $name,
       ))
       ->execute();
   }
 
   // Clear the user access cache.
-  user_access(NULL, NULL, TRUE);
+  drupal_static_reset('user_access');
+  drupal_static_reset('user_role_permissions');
+}
 
-  return TRUE;
+/**
+ * Revoke permissions from a user role.
+ *
+ * @param $rid
+ *   The ID of a user role to alter.
+ * @param $permissions
+ *   A list of permission names to revoke.
+ *
+ * @see user_role_change_permissions()
+ * @see user_role_grant_permissions()
+ */
+function user_role_revoke_permissions($rid, array $permissions = array()) {
+  // Revoke permissions for the role.
+  db_delete('role_permission')
+    ->condition('rid', $rid)
+    ->condition('permission', $permissions, 'IN')
+    ->execute();
+
+  // Clear the user access cache.
+  drupal_static_reset('user_access');
+  drupal_static_reset('user_role_permissions');
 }
 
 /**
  * Implement hook_user_operations().
  */
-function user_user_operations($form_state = array()) {
+function user_user_operations($form = array(), $form_state = array()) {
   $operations = array(
     'unblock' => array(
       'label' => t('Unblock the selected users'),
@@ -2450,7 +2523,7 @@ function user_multiple_role_edit($accounts, $operation, $rid) {
   }
 }
 
-function user_multiple_cancel_confirm(&$form_state) {
+function user_multiple_cancel_confirm($form, &$form_state) {
   $edit = $form_state['input'];
 
   $form['accounts'] = array('#prefix' => '<ul>', '#suffix' => '</ul>', '#tree' => TRUE);
@@ -2804,6 +2877,10 @@ function _user_password_dynamic_validation() {
         'sameAsUsername' => t('Make it different from your username'),
         'confirmSuccess' => t('yes'),
         'confirmFailure' => t('no'),
+        'weak'           => t('Weak'),
+        'fair'           => t('Fair'),
+        'good'           => t('Good'),
+        'strong'         => t('Strong'),
         'confirmTitle' => t('Passwords match:'),
         'username' => (isset($user->name) ? $user->name : ''))),
       'setting');
@@ -2852,45 +2929,15 @@ function user_image_style_save($style) {
 }
 
 /**
- * Implement hook_hook_info().
- */
-function user_hook_info() {
-  return array(
-    'user' => array(
-      'user' => array(
-        'insert' => array(
-          'runs when' => t('After a user account has been created'),
-        ),
-        'update' => array(
-          'runs when' => t("After a user's profile has been updated"),
-        ),
-        'delete' => array(
-          'runs when' => t('After a user has been deleted')
-        ),
-        'login' => array(
-          'runs when' => t('After a user has logged in')
-        ),
-        'logout' => array(
-          'runs when' => t('After a user has logged out')
-        ),
-        'view' => array(
-          'runs when' => t("When a user's profile is being viewed")
-        ),
-      ),
-    ),
-  );
-}
-
-/**
  * Implement hook_action_info().
  */
 function user_action_info() {
   return array(
     'user_block_user_action' => array(
-      'description' => t('Block current user'),
+      'label' => t('Block current user'),
       'type' => 'user',
       'configurable' => FALSE,
-      'hooks' => array(),
+      'triggers' => array(),
     ),
   );
 }
@@ -3016,7 +3063,7 @@ function user_register_submit($form, &$form_state) {
  * @see user_register_validate()
  * @see user_register_submit()
  */
-function user_register() {
+function user_register($form, &$form_state) {
   global $user;
 
   $admin = user_access('administer users');
@@ -3027,7 +3074,7 @@ function user_register() {
   }
 
   // Start with the default user edit fields.
-  $form = user_edit_form($form_state, NULL, NULL, TRUE);
+  $form = user_edit_form($form, $form_state, NULL, NULL, TRUE);
   if ($admin) {
     $form['account']['notify'] = array(
      '#type' => 'checkbox',
@@ -3035,7 +3082,7 @@ function user_register() {
     );
     // Redirect back to page which initiated the create request;
     // usually admin/people/create.
-    $form['destination'] = array('#type' => 'hidden', '#value' => $_GET['q']);
+    $form_state['redirect'] = $_GET['q'];
   }
 
   // Create a dummy variable for pass-by-reference parameters.
@@ -3116,4 +3163,12 @@ function user_modules_uninstalled($modules) {
       ->condition('permission', $permissions, 'IN')
       ->execute();
   }
+}
+
+/**
+ * Rewrite the destination to prevent redirecting to login page after login.
+ */
+function user_login_destination() {
+  $destination = drupal_get_destination();
+  return $destination == 'destination=user%2Flogin' ? 'destination=user' : $destination;
 }

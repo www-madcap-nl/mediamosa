@@ -1,5 +1,5 @@
 <?php
-// $Id: user.pages.inc,v 1.50 2009/08/31 18:18:44 webchick Exp $
+// $Id: user.pages.inc,v 1.55 2009/09/21 07:56:09 dries Exp $
 
 /**
  * @file
@@ -12,13 +12,13 @@
 function user_autocomplete($string = '') {
   $matches = array();
   if ($string) {
-    $result = db_query_range("SELECT name FROM {users} WHERE LOWER(name) LIKE LOWER(:name)", array(':name' => $string . '%'), 0, 10);
+    $result = db_query_range("SELECT name FROM {users} WHERE LOWER(name) LIKE LOWER(:name)", 0, 10, array(':name' => $string . '%'));
     foreach ($result as $user) {
       $matches[$user->name] = check_plain($user->name);
     }
   }
 
-  drupal_json($matches);
+  drupal_json_output($matches);
 }
 
 /**
@@ -75,7 +75,7 @@ function user_pass_submit($form, &$form_state) {
 /**
  * Menu callback; process one time login link and redirects to the user page on success.
  */
-function user_pass_reset(&$form_state, $uid, $timestamp, $hashed_pass, $action = NULL) {
+function user_pass_reset($form, &$form_state, $uid, $timestamp, $hashed_pass, $action = NULL) {
   global $user;
 
   // When processing the one-time login link, we have to make sure that a user
@@ -160,39 +160,6 @@ function user_logout() {
 }
 
 /**
- * Menu callback; Displays a user or user profile page.
- *
- * The $page['content'] array for user profile pages contains:
- *
- * - $page['content']['Profile Category']:
- *   Profile categories keyed by their human-readable names.
- * - $page['content']['Profile Category']['profile_machine_name']:
- *   Profile fields keyed by their machine-readable names.
- * - $page['content']['user_picture']:
- *   User's rendered picture.
- * - $page['content']['summary']:
- *   Contains the default "History" profile data for a user.
- * - $page['content']['#account']:
- *   The user account of the profile being viewed.
- *
- * To theme user profiles, copy modules/user/user-profile.tpl.php
- * to your theme directory, and edit it as instructed in that file's comments.
- */
-function user_view($account) {
-  drupal_set_title($account->name);
-  // Retrieve all profile fields and attach to $account->content.
-  user_build_content($account);
-
-  $build = $account->content;
-  $build += array(
-    '#theme' => 'user_profile',
-    '#account' => $account,
-  );
-
-  return $build;
-}
-
-/**
  * Process variables for user-profile.tpl.php.
  *
  * The $variables array contains the following arguments:
@@ -202,7 +169,10 @@ function user_view($account) {
  */
 function template_preprocess_user_profile(&$variables) {
   $account = $variables['elements']['#account'];
-  $variables['user_profile'] = $account->content;
+  // Helpful $user_profile variable for templates.
+  foreach (element_children($variables['elements']) as $key) {
+    $variables['user_profile'][$key] = $variables['elements'][$key];
+  }
 }
 
 /**
@@ -255,7 +225,7 @@ function user_edit($account, $category = 'account') {
  * @see user_profile_form_submit()
  * @see user_cancel_confirm_form_submit()
  */
-function user_profile_form($form_state, $account, $category = 'account') {
+function user_profile_form($form, $form_state, $account, $category = 'account') {
   global $user;
 
   $edit = (empty($form_state['values'])) ? (array)$account : $form_state['values'];
@@ -322,9 +292,9 @@ function user_profile_form_submit($form, &$form_state) {
  */
 function user_edit_cancel_submit($form, &$form_state) {
   $destination = '';
-  if (isset($_REQUEST['destination'])) {
+  if (isset($_GET['destination'])) {
     $destination = drupal_get_destination();
-    unset($_REQUEST['destination']);
+    unset($_GET['destination']);
   }
   // Note: We redirect from user/uid/edit to user/uid/cancel to make the tabs disappear.
   $form_state['redirect'] = array("user/" . $form_state['values']['_account']->uid . "/cancel", $destination);
@@ -336,7 +306,7 @@ function user_edit_cancel_submit($form, &$form_state) {
  * @ingroup forms
  * @see user_edit_cancel_submit()
  */
-function user_cancel_confirm_form(&$form_state, $account) {
+function user_cancel_confirm_form($form, &$form_state, $account) {
   global $user;
 
   $form['_account'] = array('#type' => 'value', '#value' => $account);
@@ -421,9 +391,7 @@ function user_cancel_confirm_form_submit($form, &$form_state) {
   if (user_access('administer users') && empty($form_state['values']['user_cancel_confirm']) && $account->uid != $user->uid) {
     user_cancel($form_state['values'], $account->uid, $form_state['values']['user_cancel_method']);
 
-    if (!isset($_REQUEST['destination'])) {
-      $form_state['redirect'] = 'admin/people';
-    }
+    $form_state['redirect'] = 'admin/people';
   }
   else {
     // Store cancelling method and whether to notify the user in $account for
@@ -437,9 +405,7 @@ function user_cancel_confirm_form_submit($form, &$form_state) {
     drupal_set_message(t('A confirmation request to cancel your account has been sent to your e-mail address.'));
     watchdog('user', 'Sent account cancellation request to %name %email.', array('%name' => $account->name, '%email' => '<' . $account->mail . '>'), WATCHDOG_NOTICE);
 
-    if (!isset($_REQUEST['destination'])) {
-      $form_state['redirect'] = "user/$account->uid";
-    }
+    $form_state['redirect'] = "user/$account->uid";
   }
 }
 
@@ -481,7 +447,6 @@ function user_cancel_methods() {
 
   // Turn all methods into real form elements.
   $default_method = variable_get('user_cancel_method', 'user_cancel_block');
-  $form = array();
   foreach ($methods as $name => $method) {
     $form[$name] = array(
       '#type' => 'radio',

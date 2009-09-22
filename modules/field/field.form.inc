@@ -1,5 +1,5 @@
 <?php
-// $Id: field.form.inc,v 1.23 2009/08/27 04:40:12 webchick Exp $
+// $Id: field.form.inc,v 1.25 2009/09/21 08:54:57 dries Exp $
 
 /**
  * @file
@@ -13,7 +13,7 @@ function field_default_form($obj_type, $object, $field, $instance, $langcode, $i
   // This could be called with no object, as when a UI module creates a
   // dummy form to set default values.
   if ($object) {
-    list($id, , ) = field_attach_extract_ids($obj_type, $object);
+    list($id, , ) = field_extract_ids($obj_type, $object);
   }
   $addition = array();
 
@@ -362,9 +362,5 @@ function field_add_more_js($form, $form_state) {
   $field_form[$langcode][$delta]['#prefix'] = '<div class="ajax-new-content">' . (isset($field_form[$langcode][$delta]['#prefix']) ? $field_form[$langcode][$delta]['#prefix'] : '');
   $field_form[$langcode][$delta]['#suffix'] = (isset($field_form[$langcode][$delta]['#suffix']) ? $field_form[$langcode][$delta]['#suffix'] : '') . '</div>';
 
-  $output = theme('status_messages') . drupal_render($field_form);
-
-  $commands = array();
-  $commands[] = ajax_command_replace(NULL, $output);
-  ajax_render($commands);
+  return drupal_render($field_form);
 }

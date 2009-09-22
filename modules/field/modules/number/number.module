@@ -1,5 +1,5 @@
 <?php
-// $Id: number.module,v 1.15 2009/08/27 00:33:51 webchick Exp $
+// $Id: number.module,v 1.18 2009/09/11 00:06:53 webchick Exp $
 
 /**
  * @file
@@ -12,10 +12,16 @@
 function number_theme() {
   return array(
     'number' => array('arguments' => array('element' => NULL)),
-    'field_formatter_number_integer' => array('arguments' => array('element' => NULL), 'function' => 'theme_field_formatter_number'),
-    'field_formatter_number_decimal' => array('arguments' => array('element' => NULL), 'function' => 'theme_field_formatter_number'),
-    'field_formatter_number_unformatted' => array('arguments' => array('element' => NULL)),
   );
+}
+
+/**
+ * Implement hook_theme_alter().
+ */
+function number_theme_registry_alter(&$theme_registry) {
+  // The number_integer and number_decimal formatters use the same function.
+  $theme_registry['field_formatter_number_integer']['function'] = 'theme_field_formatter_number';
+  $theme_registry['field_formatter_number_decimal']['function'] = 'theme_field_formatter_number';
 }
 
 /**
@@ -33,7 +39,7 @@ function number_field_info() {
     'number_decimal' => array(
       'label' => t('Decimal'),
       'description' => t('This field stores a number in the database in a fixed decimal format.'),
-      'settings' => array('precision' => 10, 'scale' => 2, 'decimal' => ' .'),
+      'settings' => array('precision' => 10, 'scale' => 2, 'decimal' => '.'),
       'instance_settings' => array('min' => '', 'max' => '', 'prefix' => '', 'suffix' => ''),
       'default_widget' => 'number',
       'default_formatter' => 'number_integer',
@@ -204,7 +210,7 @@ function number_field_is_empty($item, $field) {
  */
 function number_field_formatter_info() {
   return array(
-    'number_integer' => array(
+    'number_default' => array(
       'label' => t('default'),
       'field types' => array('number_integer'),
       'settings' =>  array(
@@ -286,32 +292,26 @@ function number_field_widget_info() {
 }
 
 /**
- * Implement FAPI hook_elements().
- *
- * Any FAPI callbacks needed for individual widgets can be declared here,
- * and the element will be passed to those callbacks for processing.
- *
- * Drupal will automatically theme the element using a theme with
- * the same name as the hook_elements key.
+ * Implement hook_element_info().
  *
  * Includes a regex to check for valid values as an additional parameter
  * the validator can use. The regex can be overridden if necessary.
  */
-function number_elements() {
-  return array(
-    'number' => array(
-      '#input' => TRUE,
-      '#columns' => array('value'), '#delta' => 0,
-      '#process' => array('number_elements_process'),
-    ),
+function number_element_info() {
+  $types['number'] = array(
+    '#input' => TRUE,
+    '#columns' => array('value'),
+    '#delta' => 0,
+    '#process' => array('number_elements_process'),
   );
+  return $types;
 }
 
 /**
  * Implement hook_field_widget().
  *
  * Attach a single form element to the form. It will be built out and
- * validated in the callback(s) listed in hook_elements. We build it
+ * validated in the callback(s) listed in hook_element_info(). We build it
  * out in the callbacks rather than here in hook_widget so it can be
  * plugged into any module that can provide it with valid
  * $field information.
@@ -480,7 +480,7 @@ function number_decimal_validate($element, &$form_state) {
       form_set_error($error_field, t('Only numbers and the decimal character (%decimal) are allowed in %field.', array('%decimal' => $field['settings']['decimal'], '%field' => t($instance['label']))));
     }
     else {
-      $value = str_replace($field['settings']['decimal'], ' .', $value);
+      $value = str_replace($field['settings']['decimal'], '.', $value);
       $value = round($value, $field['settings']['scale']);
       form_set_value($element[$field_key], $value, $form_state);
     }

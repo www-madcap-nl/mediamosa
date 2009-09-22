@@ -1,5 +1,5 @@
 <?php
-// $Id: profile.module,v 1.273 2009/08/31 17:06:09 dries Exp $
+// $Id: profile.module,v 1.275 2009/09/20 07:32:18 dries Exp $
 
 /**
  * @file
@@ -292,7 +292,7 @@ function profile_view_field($account, $field) {
   if (isset($account->{$field->name}) && $value = $account->{$field->name}) {
     switch ($field->type) {
       case 'textarea':
-        return check_markup($value);
+        return check_markup($value, filter_default_format($account));
       case 'textfield':
       case 'selection':
         return $browse ? l($value, 'profile/' . $field->name . '/' . $value) : check_plain($value);
@@ -510,10 +510,10 @@ function profile_category_access($account, $category) {
     return TRUE;
   }
   else {
-    $category_visible = (bool) db_query_range('SELECT 1 FROM {profile_field} WHERE category = :category AND visibility <> :visibility', array(
+    $category_visible = (bool) db_query_range('SELECT 1 FROM {profile_field} WHERE category = :category AND visibility <> :visibility', 0, 1, array(
       ':category' => $category,
       ':visibility' => PROFILE_HIDDEN
-    ), 0, 1)->fetchField();
+    ))->fetchField();
     return user_edit_access($account) && $category_visible;
   }
 }

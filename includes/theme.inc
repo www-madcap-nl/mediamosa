@@ -1,5 +1,5 @@
 <?php
-// $Id: theme.inc,v 1.519 2009/08/31 19:50:17 webchick Exp $
+// $Id: theme.inc,v 1.526 2009/09/21 06:36:54 dries Exp $
 
 /**
  * @file
@@ -1509,7 +1509,12 @@ function theme_image($path, $alt = '', $title = '', $attributes = array(), $gets
  */
 function theme_breadcrumb($breadcrumb) {
   if (!empty($breadcrumb)) {
-    return '<div class="breadcrumb">' . implode(' » ', $breadcrumb) . '</div>';
+    // Provide a navigational heading to give context for breadcrumb links to
+    // screen-reader users. Make the heading invisible with .element-invisible.
+    $output = '<h2 class="element-invisible">' . t('You are here') . '</h2>';
+
+    $output .= '<div class="breadcrumb">' . implode(' » ', $breadcrumb) . '</div>';
+    return $output;
   }
 }
 
@@ -1835,10 +1840,11 @@ function theme_more_help_link($url) {
  *   The url of the feed.
  * @param $title
  *   A descriptive title of the feed.
-  */
+ */
 function theme_feed_icon($url, $title) {
-  if ($image = theme('image', 'misc/feed.png', t('Subscribe to %feed-title', array('%feed-title' => $title)))) {
-    return '<a href="' . check_url($url) . '" class="feed-icon">' . $image . '</a>';
+  $text = t('Subscribe to @feed-title', array('@feed-title' => $title));
+  if ($image = theme('image', 'misc/feed.png', $text)) {
+    return '<a href="' . check_url($url) . '" title="' . $text . '" class="feed-icon">' . $image . '</a>';
   }
 }
 
@@ -1855,52 +1861,104 @@ function theme_more_link($url, $title) {
 }
 
 /**
- * Format a username.
+ * Preprocess variables for theme_username().
  *
- * @param $object
- *   The user object to format, usually returned from user_load().
- * @return
- *   A string containing an HTML link to the user's page if the passed object
- *   suggests that this is a site user. Otherwise, only the username is returned.
+ * Modules that make any changes to the $variables['object'] properties like
+ * 'name' or 'extra' must insure that the final string is safe to include
+ * directly in the ouput by using check_plain() or filter_xss().
+ *
+ * @see theme_username().
  */
-function theme_username($object) {
-
-  if ($object->uid && $object->name) {
-    // Shorten the name when it is too long or it will break many tables.
-    if (drupal_strlen($object->name) > 20) {
-      $name = drupal_substr($object->name, 0, 15) . '...';
-    }
-    else {
-      $name = $object->name;
-    }
-
-    if (user_access('access user profiles')) {
-      $output = l($name, 'user/' . $object->uid, array('attributes' => array('title' => t('View user profile.'))));
-    }
-    else {
-      $output = check_plain($name);
-    }
-  }
-  elseif ($object->name) {
-    // Sometimes modules display content composed by people who are
-    // not registered members of the site (e.g. mailing list or news
-    // aggregator modules). This clause enables modules to display
-    // the true author of the content.
-    if (!empty($object->homepage)) {
-      $output = l($object->name, $object->homepage, array('attributes' => array('rel' => 'nofollow')));
-    }
-    else {
-      $output = check_plain($object->name);
-    }
-
+function template_preprocess_username(&$variables) {
+  $account = $variables['object'];
+  // Create a new empty object to populate with standardized data.
+  $variables['object'] = new stdClass;
+  // Keep a reference to the original data.
+  $variables['object']->account = $account;
+  $variables['object']->extra = '';
+  if (empty($account->uid)) {
+    $variables['object']->uid = 0;
     if (theme_get_setting('toggle_comment_user_verification')) {
-      $output .= ' (' . t('not verified') . ')';
+      $variables['object']->extra = ' (' . t('not verified') . ')';
     }
   }
   else {
-    $output = check_plain(variable_get('anonymous', t('Anonymous')));
+    $variables['object']->uid = (int)$account->uid;
+  }
+  if (empty($account->name)) {
+    $variables['object']->name = variable_get('anonymous', t('Anonymous'));
+  }
+  else {
+    $variables['object']->name = $account->name;
   }
 
+  $variables['object']->profile_access = user_access('access user profiles');
+  $variables['object']->link_attributes = array();
+  // Populate link path and attributes if appropriate.
+  if ($variables['object']->uid && $variables['object']->profile_access) {
+    // We are linking to a local user.
+    $variables['object']->link_attributes = array('title' => t('View user profile.'));
+    $variables['object']->link_path = 'user/' . $variables['object']->uid;
+  }
+  elseif (!empty($account->homepage)) {
+    $variables['object']->link_attributes = array('rel' => 'nofollow');
+    $variables['object']->link_path = $account->homepage;
+    $variables['object']->homepage = $account->homepage;
+  }
+  // We do not want the l() function to check_plain() a second time.
+  $variables['object']->link_options['html'] = TRUE;
+  // Set a default class.
+  $variables['object']->attributes = array('class' => array('username'));
+  // Shorten the name when it is too long or it will break many tables.
+  if (drupal_strlen($variables['object']->name) > 20) {
+    $variables['object']->name = drupal_substr($variables['object']->name, 0, 15) . '...';
+  }
+  // Make sure name is safe for use in the theme function.
+  $variables['object']->name = check_plain($variables['object']->name);
+}
+
+/**
+ * Process variables for theme_username().
+ *
+ * @see theme_username().
+ */
+function template_process_username(&$variables) {
+  // Finalize the link_options array for passing to the l() function.
+  // This is done in the process phase so that attributes may be added by
+  // modules or the theme during the preprocess phase.
+  if (isset($variables['object']->link_path)) {
+    $variables['object']->link_options['attributes'] = $variables['object']->link_attributes + $variables['object']->attributes;
+  }
+}
+
+/**
+ * Format a username.
+ *
+ * @param $object
+ *   The user object to format, which has been processed to provide safe and
+ *   standarized elements. The object keys 'name', and 'extra' are safe strings
+ *   that can be used directly.
+ *
+ * @return
+ *   A string containing an HTML link to the user's page if the passed object
+ *   suggests that this is a site user. Otherwise, only the username is returned.
+ *
+ * @see template_preprocess_username()
+ * @see template_process_username()
+ */
+function theme_username($object) {
+  if (isset($object->link_path)) {
+    // We have a link path, so we should generate a link using l().
+    // Additional classes may be added as array elements like
+    // $object->link_options['attributes']['class'][] = 'myclass';
+    $output = l($object->name . $object->extra, $object->link_path, $object->link_options);
+  }
+  else {
+    // Modules may have added important attributes so they must be included
+    // in the output. Additional classes may be added as array elements like
+    // $object->attributes['class'][] = 'myclass';
+    $output = '<span' . drupal_attributes($object->attributes) . '>' . $object->name . $object->extra . '</span>';
+  }
   return $output;
 }
 
@@ -1989,6 +2047,10 @@ function template_preprocess(&$variables, $hook) {
   // Initialize html class attribute for the current hook.
   $variables['classes_array'] = array($hook);
 
+  // Initialize attributes for the top-level template entity and its title.
+  $variables['attributes_array'] = array();
+  $variables['title_attributes_array'] = array();
+
   // Set default variables that depend on the database.
   $variables['is_admin']            = FALSE;
   $variables['is_front']            = FALSE;
@@ -2013,6 +2075,90 @@ function template_preprocess(&$variables, $hook) {
 function template_process(&$variables, $hook) {
   // Flatten out classes.
   $variables['classes'] = implode(' ', $variables['classes_array']);
+
+  // Flatten out attributes and title_attributes.
+  $variables['attributes'] = drupal_attributes($variables['attributes_array']);
+  $variables['title_attributes'] = drupal_attributes($variables['title_attributes_array']);
+}
+
+/**
+ * Preprocess variables for html.tpl.php
+ *
+ * @see system_elements()
+ * @see html.tpl.php
+ */
+function template_preprocess_html(&$variables) {
+  // Compile a list of classes that are going to be applied to the body element.
+  // This allows advanced theming based on context (home page, node of certain type, etc.).
+  // Add a class that tells us whether we're on the front page or not.
+  $variables['classes_array'][] = $variables['is_front'] ? 'front' : 'not-front';
+  // Add a class that tells us whether the page is viewed by an authenticated user or not.
+  $variables['classes_array'][] = $variables['logged_in'] ? 'logged-in' : 'not-logged-in';
+
+  // Add information about the number of sidebars.
+  if (!empty($variables['page']['sidebar_first']) && !empty($variables['page']['sidebar_second'])) {
+    $variables['classes_array'][] = 'two-sidebars';
+  }
+  elseif (!empty($variables['page']['sidebar_first'])) {
+    $variables['classes_array'][] = 'one-sidebar sidebar-first';
+  }
+  elseif (!empty($variables['page']['sidebar_second'])) {
+    $variables['classes_array'][] = 'one-sidebar sidebar-second';
+  }
+  else {
+    $variables['classes_array'][] = 'no-sidebars';
+  }
+  
+  // Populate the body classes.
+  if ($suggestions = template_page_suggestions(arg(), 'page')) {
+    foreach ($suggestions as $suggestion) {
+      if ($suggestion != 'page-front') {
+        // Add current suggestion to page classes to make it possible to theme the page
+        // depending on the current page type (e.g. node, admin, user, etc.) as well as
+        // more specific data like node-12 or node-edit. To avoid illegal characters in
+        // the class, we're removing everything disallowed. We are not using 'a-z' as
+        //  that might leave in certain international characters (e.g. German umlauts).
+        $variables['classes_array'][] = preg_replace('![^abcdefghijklmnopqrstuvwxyz0-9-_]+!s', '', form_clean_id(drupal_strtolower($suggestion)));
+      }
+    }
+  }
+  
+  if ($node = menu_get_object()) {
+    $variables['classes_array'][] = 'node-type-' . form_clean_id($node->type);
+  }
+
+  // RDFa allows annotation of XHTML pages with RDF data, while GRDDL provides
+  // mechanisms for extraction of this RDF content via XSLT transformation
+  // using an associated GRDDL profile.
+  $variables['rdf_namespaces']    = drupal_get_rdf_namespaces();
+  $variables['grddl_profile']     = 'http://ns.inria.fr/grddl/rdfa/';
+  $variables['language']          = $GLOBALS['language'];
+  $variables['language']->dir     = $GLOBALS['language']->direction ? 'rtl' : 'ltr';
+
+
+  // Add favicon.
+  if (theme_get_setting('toggle_favicon')) {
+    $favicon = theme_get_setting('favicon');
+    $type = theme_get_setting('favicon_mimetype');
+    drupal_add_html_head('<link rel="shortcut icon" href="' . check_url($favicon) . '" type="' . check_plain($type) . '" />');
+  }
+
+  // Construct page title.
+  if (drupal_get_title()) {
+    $head_title = array(strip_tags(drupal_get_title()), variable_get('site_name', 'Drupal'));
+  }
+  else {
+    $head_title = array(variable_get('site_name', 'Drupal'));
+    if (variable_get('site_slogan', '')) {
+      $head_title[] = variable_get('site_slogan', '');
+    }
+  }
+  $variables['head_title'] = implode(' | ', $head_title);
+  
+  // Populate the page template suggestions.
+  if ($suggestions = template_page_suggestions(arg(), 'html')) {
+    $variables['template_files'] = $suggestions;
+  }
 }
 
 /**
@@ -2036,33 +2182,21 @@ function template_preprocess_page(&$variables) {
   // Move some variables to the top level for themer convenience and template cleanliness.
   $variables['show_messages'] = $variables['page']['#show_messages'];
 
-  // Add favicon.
-  if (theme_get_setting('toggle_favicon')) {
-    $favicon = theme_get_setting('favicon');
-    $type = theme_get_setting('favicon_mimetype');
-    drupal_add_html_head('<link rel="shortcut icon" href="' . check_url($favicon) . '" type="' . check_plain($type) . '" />');
-  }
-
   // Set up layout variable.
   $variables['layout'] = 'none';
   if (!empty($variables['page']['sidebar_first'])) {
     $variables['layout'] = 'first';
   }
+  else {
+    $variables['page']['sidebar_first'] = array();
+  }
   if (!empty($variables['page']['sidebar_second'])) {
     $variables['layout'] = ($variables['layout'] == 'first') ? 'both' : 'second';
   }
-
-  // Construct page title
-  if (drupal_get_title()) {
-    $head_title = array(strip_tags(drupal_get_title()), variable_get('site_name', 'Drupal'));
-  }
   else {
-    $head_title = array(variable_get('site_name', 'Drupal'));
-    if (variable_get('site_slogan', '')) {
-      $head_title[] = variable_get('site_slogan', '');
-    }
+    $variables['page']['sidebar_second'] = array();
   }
-  $variables['head_title']        = implode(' | ', $head_title);
+
   $variables['base_path']         = base_path();
   $variables['front_page']        = url();
   $variables['breadcrumb']        = theme('breadcrumb', drupal_get_breadcrumb());
@@ -2074,74 +2208,36 @@ function template_preprocess_page(&$variables) {
   $variables['main_menu']         = theme_get_setting('toggle_main_menu') ? menu_main_menu() : array();
   $variables['secondary_menu']    = theme_get_setting('toggle_secondary_menu') ? menu_secondary_menu() : array();
   $variables['action_links']      = menu_local_actions();
-  $variables['search_box']        = (theme_get_setting('toggle_search') ? drupal_render(drupal_get_form('search_theme_form')) : '');
   $variables['site_name']         = (theme_get_setting('toggle_name') ? filter_xss_admin(variable_get('site_name', 'Drupal')) : '');
   $variables['site_slogan']       = (theme_get_setting('toggle_slogan') ? filter_xss_admin(variable_get('site_slogan', '')) : '');
   $variables['tabs']              = theme('menu_local_tasks');
   $variables['title']             = drupal_get_title();
-  // RDFa allows annotation of XHTML pages with RDF data, while GRDDL provides
-  // mechanisms for extraction of this RDF content via XSLT transformation
-  // using an associated GRDDL profile.
-  $variables['rdf_namespaces']    = drupal_get_rdf_namespaces();
-  $variables['grddl_profile']     = 'http://ns.inria.fr/grddl/rdfa/';
 
   if ($node = menu_get_object()) {
     $variables['node'] = $node;
   }
 
-  // Compile a list of classes that are going to be applied to the body element.
-  // This allows advanced theming based on context (home page, node of certain type, etc.).
-  // Add a class that tells us whether we're on the front page or not.
-  $variables['classes_array'][] = $variables['is_front'] ? 'front' : 'not-front';
-  // Add a class that tells us whether the page is viewed by an authenticated user or not.
-  $variables['classes_array'][] = $variables['logged_in'] ? 'logged-in' : 'not-logged-in';
-
   // Populate the page template suggestions.
-  if ($suggestions = template_page_suggestions(arg())) {
+  if ($suggestions = template_page_suggestions(arg(), 'page')) {
     $variables['template_files'] = $suggestions;
-    foreach ($suggestions as $suggestion) {
-      if ($suggestion != 'page-front') {
-        // Add current suggestion to page classes to make it possible to theme the page
-        // depending on the current page type (e.g. node, admin, user, etc.) as well as
-        // more specific data like node-12 or node-edit. To avoid illegal characters in
-        // the class, we're removing everything disallowed. We are not using 'a-z' as
-        //  that might leave in certain international characters (e.g. German umlauts).
-        $variables['classes_array'][] = preg_replace('![^abcdefghijklmnopqrstuvwxyz0-9-_]+!s', '', form_clean_id(drupal_strtolower($suggestion)));
-      }
-    }
-  }
-
-  // If on an individual node page, add the node type to body classes.
-  if (isset($variables['node']) && $variables['node']->type) {
-    $variables['classes_array'][] = 'node-type-' . form_clean_id($variables['node']->type);
-  }
-  // Add information about the number of sidebars.
-  if ($variables['layout'] == 'both') {
-    $variables['classes_array'][] = 'two-sidebars';
-  }
-  elseif ($variables['layout'] == 'none') {
-    $variables['classes_array'][] = 'no-sidebars';
-  }
-  else {
-    $variables['classes_array'][] = 'one-sidebar sidebar-' . $variables['layout'];
   }
 }
 /**
- * Process variables for page.tpl.php
+ * Process variables for html.tpl.php
  *
  * Perform final addition and modification of variables before passing into
  * the template. To customize these variables, call drupal_render() on elements
  * in $variables['page'] during THEME_preprocess_page().
  *
- * @see template_preprocess_page()
- * @see page.tpl.php
+ * @see template_preprocess_html()
+ * @see html.tpl.php
  */
-function template_process_page(&$variables) {
-  // Render each region into top level variables.
-  foreach (system_region_list($GLOBALS['theme']) as $region_key => $region_name) {
-    $variables[$region_key] = drupal_render($variables['page'][$region_key]);
-  }
-  // Append javascript to $page_bottom
+function template_process_html(&$variables) {
+  // Render page_top and page_bottom into top level variables.
+  $variables['page_top'] = drupal_render($variables['page']['page_top']);
+  $variables['page_bottom'] = drupal_render($variables['page']['page_bottom']);
+  // Place the rendered HTML for the page body into a top level variable.
+  $variables['page']              = $variables['page']['#children'];
   $variables['page_bottom'] .= drupal_get_js('footer');
 
   $variables['head']    = drupal_get_html_head();
@@ -2159,7 +2255,7 @@ function template_process_page(&$variables) {
  * @return
  *   An array of suggested template files.
  */
-function template_page_suggestions($args) {
+function template_page_suggestions($args, $suggestion) {
 
   // Build a list of suggested template files and body classes in order of
   // specificity. One suggestion is made for every element of the current path,
@@ -2172,7 +2268,6 @@ function template_page_suggestions($args) {
   // page-node.tpl.php       page-node
   // page.tpl.php
 
-  $suggestion = 'page';
   $suggestions = array();
   foreach ($args as $arg) {
     // Remove slashes or null per SA-CORE-2009-003.
@@ -2188,7 +2283,7 @@ function template_page_suggestions($args) {
     }
   }
   if (drupal_is_front_page()) {
-    $suggestions[] = 'page-front';
+    $suggestions[] = $suggestion . '-front';
   }
 
   return $suggestions;
@@ -2261,7 +2356,6 @@ function template_preprocess_maintenance_page(&$variables) {
   $variables['messages']          = $variables['show_messages'] ? theme('status_messages') : '';
   $variables['main_menu']         = array();
   $variables['secondary_menu']    = array();
-  $variables['search_box']        = '';
   $variables['site_name']         = (theme_get_setting('toggle_name') ? variable_get('site_name', 'Drupal') : '');
   $variables['site_slogan']       = (theme_get_setting('toggle_slogan') ? variable_get('site_slogan', '') : '');
   $variables['css']               = drupal_add_css();

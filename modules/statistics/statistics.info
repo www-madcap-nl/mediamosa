@@ -11,9 +11,9 @@ files[] = statistics.install
 files[] = statistics.test
 files[] = statistics.tokens.inc
 
-; Information added by drupal.org packaging script on 2009-09-09
+; Information added by drupal.org packaging script on 2009-09-21
 version = "7.x-dev"
 core = "7.x"
 project = "drupal"
-datestamp = "1252498273"
+datestamp = "1253535013"
 

@@ -1,5 +1,5 @@
 <?php
-// $Id: field.test,v 1.47 2009/08/31 05:35:47 dries Exp $
+// $Id: field.test,v 1.51 2009/09/21 07:56:08 dries Exp $
 
 /**
  * @file
@@ -1036,7 +1036,7 @@ class FieldInfoTestCase extends FieldTestCase {
     // Simulate a stored field definition missing a field setting (e.g. a
     // third-party module adding a new field setting has been enabled, and
     // existing fields do not know the setting yet).
-    $data = db_result(db_query('SELECT data FROM {field_config} WHERE field_name = :field_name', array(':field_name' => $field_definition['field_name'])));
+    $data = db_query('SELECT data FROM {field_config} WHERE field_name = :field_name', array(':field_name' => $field_definition['field_name']))->fetchField();
     $data = unserialize($data);
     $data['settings'] = array();
     db_update('field_config')
@@ -1072,7 +1072,7 @@ class FieldInfoTestCase extends FieldTestCase {
     // Simulate a stored instance definition missing various settings (e.g. a
     // third-party module adding instance, widget or display settings has been
     // enabled, but existing instances do not know the new settings).
-    $data = db_result(db_query('SELECT data FROM {field_config_instance} WHERE field_name = :field_name AND bundle = :bundle', array(':field_name' => $instance_definition['field_name'], ':bundle' => $instance_definition['bundle'])));
+    $data = db_query('SELECT data FROM {field_config_instance} WHERE field_name = :field_name AND bundle = :bundle', array(':field_name' => $instance_definition['field_name'], ':bundle' => $instance_definition['bundle']))->fetchField();
     $data = unserialize($data);
     $data['settings'] = array();
     $data['widget']['settings'] = 'unavailable_widget';
@@ -1405,7 +1405,7 @@ class FieldFormTestCase extends FieldTestCase {
     $this->drupalPost(NULL, $edit, $submit);
     unset($this->additionalCurlOptions[CURLOPT_URL]);
 
-    // The response is drupal_json, so we need to undo some escaping.
+    // The response is drupal_json_output, so we need to undo some escaping.
     $commands = json_decode(str_replace(array('\x3c', '\x3e', '\x26'), array("<", ">", "&"), $this->drupalGetContent()));
 
     // The JSON response will be two AJAX commands. The first is a settings
@@ -1542,6 +1542,20 @@ class FieldCrudTestCase extends FieldTestCase {
     }
     catch (FieldException $e) {
       $this->pass(t('Cannot create a field with a name longer than 32 characters.'));
+    }
+
+    // Check that field name can not be an object key.
+    // "ftvid" is known as an object key from the "test_entity" type.
+    try {
+      $field_definition = array(
+        'type' => 'test_field',
+        'field_name' => 'ftvid',
+      );
+      $field = field_create_field($field_definition);
+      $this->fail(t('Cannot create a field bearing the name of an object key.'));
+    }
+    catch (FieldException $e) {
+      $this->pass(t('Cannot create a field bearing the name of an object key.'));
     }
   }
 
@@ -2135,7 +2149,7 @@ class FieldBulkDeleteTestCase extends FieldTestCase {
   function _generateStubObjects($obj_type, $objects, $field_name = NULL) {
     $stubs = array();
     foreach ($objects as $obj) {
-      $stub = field_attach_create_stub_object($obj_type, field_attach_extract_ids($obj_type, $obj));
+      $stub = field_create_stub_entity($obj_type, field_extract_ids($obj_type, $obj));
       if (isset($field_name)) {
         $stub->{$field_name} = $obj->{$field_name};
       }

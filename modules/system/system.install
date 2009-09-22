@@ -1,5 +1,5 @@
 <?php
-// $Id: system.install,v 1.384 2009/09/05 13:05:31 dries Exp $
+// $Id: system.install,v 1.389 2009/09/20 17:56:24 dries Exp $
 
 /**
  * @file
@@ -62,17 +62,6 @@ function system_requirements($phase) {
   if (version_compare(phpversion(), DRUPAL_MINIMUM_PHP) < 0) {
     $requirements['php']['description'] = $t('Your PHP installation is too old. Drupal requires at least PHP %version.', array('%version' => DRUPAL_MINIMUM_PHP));
     $requirements['php']['severity'] = REQUIREMENT_ERROR;
-  }
-
-  // Make sure the tokenizer extension is enabled, which is required by the code registry.
-  $requirements['php_tokenizer'] = array(
-    'title' => $t('PHP tokenizer'),
-    'value' => $t('Enabled'),
-  );
-  if (!function_exists('token_get_all')) {
-    $requirements['php_tokenizer']['value'] = $t('Not enabled');
-    $requirements['php_tokenizer']['description'] = $t('Drupal requires the <a href="@url">tokenizer extension</a> to be enabled.', array('@url' => 'http://php.net/tokenizer'));
-    $requirements['php_tokenizer']['severity'] = REQUIREMENT_ERROR;
   }
 
   // Test PHP register_globals setting.
@@ -338,6 +327,9 @@ function system_install() {
   $modules = array('system', 'filter', 'user', 'node');
   foreach ($modules as $module) {
     drupal_install_schema($module);
+    $versions = drupal_get_schema_versions($module);
+    $version = $versions ? max($versions) : SCHEMA_INSTALLED;
+    drupal_set_installed_schema_version($module, $version);
   }
 
   // Load system theme data appropriately.
@@ -347,17 +339,38 @@ function system_install() {
   // uid 2 which is not what we want. So we insert the first user here, the
   // anonymous user. uid is 1 here for now, but very soon it will be changed
   // to 0.
-  db_query("INSERT INTO {users} (name, mail) VALUES('%s', '%s')", '', '');
+  db_insert('users')
+    ->fields(array(
+      'name' => '',
+      'mail' => '',
+    ))
+    ->execute();
   // We need some placeholders here as name and mail are uniques and data is
   // presumed to be a serialized array. Install will change uid 1 immediately
   // anyways. So we insert the superuser here, the uid is 2 here for now, but
   // very soon it will be changed to 1.
-  db_query("INSERT INTO {users} (name, mail, created, status, data) VALUES('%s', '%s', %d, %d, '%s')", 'placeholder-for-uid-1', 'placeholder-for-uid-1', REQUEST_TIME, 1, serialize(array()));
+
+  db_insert('users')
+    ->fields(array(
+      'name' => 'placeholder-for-uid-1',
+      'mail' => 'placeholder-for-uid-1',
+      'created' => REQUEST_TIME,
+      'status' => 1,
+      'data' => serialize(array()),
+    ))
+    ->execute();
   // This sets the above two users uid 0 (anonymous). We avoid an explicit 0
   // otherwise MySQL might insert the next auto_increment value.
-  db_query("UPDATE {users} SET uid = uid - uid WHERE name = '%s'", '');
+  db_update('users')
+    ->expression('uid', 'uid - uid')
+    ->condition('name', '')
+    ->execute();
+
   // This sets uid 1 (superuser). We skip uid 2 but that's not a big problem.
-  db_query("UPDATE {users} SET uid = 1 WHERE name = '%s'", 'placeholder-for-uid-1');
+  db_update('users')
+    ->fields(array('uid' => 1))
+    ->condition('name', 'placeholder-for-uid-1')
+    ->execute();
 
   // Built-in roles.
   $rid_anonymous = db_insert('role')
@@ -385,7 +398,6 @@ function system_install() {
       ->execute();
   }
 
-
   variable_set('theme_default', 'garland');
 
   db_update('system')
@@ -409,15 +421,22 @@ function system_install() {
   $filtered_html_format = db_insert('filter_format')
     ->fields(array(
       'name' => 'Filtered HTML',
-      'roles' => ',' . DRUPAL_ANONYMOUS_RID . ',' . DRUPAL_AUTHENTICATED_RID . ',',
       'cache' => 1,
+      'weight' => 0,
     ))
     ->execute();
   $full_html_format = db_insert('filter_format')
     ->fields(array(
       'name' => 'Full HTML',
-      'roles' => '',
       'cache' => 1,
+      'weight' => 0,
+    ))
+    ->execute();
+  $plain_text_format = db_insert('filter_format')
+    ->fields(array(
+      'name' => 'Plain text',
+      'cache' => 1,
+      'weight' => 1,
     ))
     ->execute();
 
@@ -483,10 +502,27 @@ function system_install() {
       'weight' => 10,
       'status' => 1,
     ))
+  // Plain text:
+    // Escape all HTML.
+    ->values(array(
+      'format' => $plain_text_format,
+      'module' => 'filter',
+      'name' => 'filter_html_escape',
+      'weight' => 0,
+      'status' => 1,
+    ))
+    // Line break filter.
+    ->values(array(
+      'format' => $plain_text_format,
+      'module' => 'filter',
+      'name' => 'filter_autop',
+      'weight' => 1,
+      'status' => 1,
+    ))
     ->execute();
 
-  // Set the default input format to Filtered HTML.
-  variable_set('filter_default_format', $filtered_html_format);
+  // Set the fallback format to plain text.
+  variable_set('filter_fallback_format', $plain_text_format);
 
   $cron_key = md5(mt_rand());
 
@@ -550,8 +586,8 @@ function system_schema() {
         'not null' => TRUE,
         'size' => 'big',
       ),
-      'description' => array(
-        'description' => 'Description of the action.',
+      'label' => array(
+        'description' => 'Label of the action.',
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
@@ -2049,8 +2085,9 @@ function system_update_7021() {
   $ret[] = update_sql("UPDATE {block} SET region = 'sidebar_second' WHERE region = 'right'");
 
   // Migrate contact form information.
+  $default_format = variable_get('filter_default_format', 1);
   if ($contact_help = variable_get('contact_form_information', '')) {
-    $bid = db_insert('box')->fields(array('body' => $contact_help, 'info' => 'Contact page help', 'format' => FILTER_FORMAT_DEFAULT))->execute();
+    $bid = db_insert('box')->fields(array('body' => $contact_help, 'info' => 'Contact page help', 'format' => $default_format))->execute();
     foreach ($themes_with_blocks as $theme) {
       // Add contact help block for themes, which had blocks.
       $ret[] = update_sql("INSERT INTO {block} (module, delta, theme, status, weight, region, visibility, pages, cache) VALUES ('block', '" . $bid . "', '" . $theme . "', 1, 5, 'help', 1, 'contact', -1)");
@@ -2060,7 +2097,7 @@ function system_update_7021() {
 
   // Migrate user help setting.
   if ($user_help = variable_get('user_registration_help', '')) {
-    $bid = db_insert('box')->fields(array('body' => $user_help, 'info' => 'User registration guidelines', 'format' => FILTER_FORMAT_DEFAULT))->execute();
+    $bid = db_insert('box')->fields(array('body' => $user_help, 'info' => 'User registration guidelines', 'format' => $default_format))->execute();
     foreach ($themes_with_blocks as $theme) {
       // Add user registration help block for themes, which had blocks.
       $ret[] = update_sql("INSERT INTO {block} (module, delta, theme, status, weight, region, visibility, pages, cache) VALUES ('block', '" . $bid . "', '" . $theme . "', 1, 5, 'help', 1, 'user/register', -1)");
@@ -2070,7 +2107,7 @@ function system_update_7021() {
 
   // Migrate site mission setting.
   if ($mission = variable_get('site_mission')) {
-    $bid = db_insert('box')->fields(array('body' => $mission, 'info' => 'Site mission', 'format' => FILTER_FORMAT_DEFAULT))->execute();
+    $bid = db_insert('box')->fields(array('body' => $mission, 'info' => 'Site mission', 'format' => $default_format))->execute();
     foreach ($themes_with_blocks as $theme) {
       // Add mission block for themes, which had blocks.
       $ret[] = update_sql("INSERT INTO {block} (module, delta, theme, status, weight, region, visibility, pages, cache) VALUES ('block', '" . $bid . "', '" . $theme . "', 1, 0, 'highlight', 1, '<front>', -1)");
@@ -2082,7 +2119,7 @@ function system_update_7021() {
 
   // Migrate site footer message to a custom block.
   if ($footer_message = variable_get('site_footer', '')) {
-    $bid = db_insert('box')->fields(array('body' => $footer_message, 'info' => 'Footer message', 'format' => FILTER_FORMAT_DEFAULT))->execute();
+    $bid = db_insert('box')->fields(array('body' => $footer_message, 'info' => 'Footer message', 'format' => $default_format))->execute();
     foreach ($themes_with_blocks as $theme) {
       // Add site footer block for themes, which had blocks.
       // Set low weight, so the block comes early (it used to be
@@ -2465,6 +2502,15 @@ function system_update_7036() {
 function system_update_7037() {
   $ret = array();
   db_rename_table($ret, 'box', 'block_custom');
+  return $ret;
+}
+
+/**
+ * Rename action description to label.
+ */
+function system_update_7038() {
+  $ret = array();
+  db_change_field($ret, 'actions', 'description', 'label', array('type' => 'varchar', 'length' => 255, 'not null' => TRUE, 'default' => '0'));
   return $ret;
 }
 

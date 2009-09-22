@@ -1,5 +1,5 @@
 <?php
-// $Id: field_sql_storage.module,v 1.20 2009/08/31 22:57:54 dries Exp $
+// $Id: field_sql_storage.module,v 1.22 2009/09/10 22:31:58 webchick Exp $
 
 /**
  * @file
@@ -26,7 +26,7 @@ function field_sql_storage_help($path, $arg) {
  *   A string containing the generated name for the database table
  */
 function _field_sql_storage_tablename($field) {
-  return "field_data_{$field['field_name']}_{$field['id']}";
+  return "field_data_{$field['field_name']}" . ($field['deleted'] ? "_{$field['id']}" : '');
 }
 
 /**
@@ -38,7 +38,7 @@ function _field_sql_storage_tablename($field) {
  *   A string containing the generated name for the database table
  */
 function _field_sql_storage_revision_tablename($field) {
-  return "field_revision_{$field['field_name']}_{$field['id']}";
+  return "field_revision_{$field['field_name']}" . ($field['deleted'] ? "_{$field['id']}" : '');
 }
 
 /**
@@ -207,12 +207,24 @@ function field_sql_storage_field_storage_create_field($field) {
  * Implement hook_field_storage_delete_field().
  */
 function field_sql_storage_field_storage_delete_field($field_name) {
-  // Mark all data associated with the field for deletion.
   $field = field_info_field($field_name);
+
+  // Mark all data associated with the field for deletion.
+  $field['deleted'] = 0;
   $table = _field_sql_storage_tablename($field);
+  $revision_table = _field_sql_storage_revision_tablename($field);
   db_update($table)
     ->fields(array('deleted' => 1))
     ->execute();
+
+  // Move the table to a unique name while the table contents are being deleted.
+  $ret = array();
+  $field['deleted'] = 1;
+  $new_table = _field_sql_storage_tablename($field);
+  $revision_new_table = _field_sql_storage_revision_tablename($field);
+  db_rename_table($ret, $table, $new_table);
+  db_rename_table($ret, $revision_table, $revision_new_table);
+  drupal_get_schema(NULL, TRUE);
 }
 
 /**
@@ -226,7 +238,7 @@ function field_sql_storage_field_storage_load($obj_type, $objects, $age, $skip_f
   $field_ids = array();
   $delta_count = array();
   foreach ($objects as $obj) {
-    list($id, $vid, $bundle) = field_attach_extract_ids($obj_type, $obj);
+    list($id, $vid, $bundle) = field_extract_ids($obj_type, $obj);
 
     if ($options['deleted']) {
       $instances = field_read_instances(array('bundle' => $bundle), array('include_deleted' => $options['deleted']));
@@ -289,7 +301,7 @@ function field_sql_storage_field_storage_load($obj_type, $objects, $age, $skip_f
  * Implement hook_field_storage_write().
  */
 function field_sql_storage_field_storage_write($obj_type, $object, $op, $skip_fields) {
-  list($id, $vid, $bundle) = field_attach_extract_ids($obj_type, $object);
+  list($id, $vid, $bundle) = field_extract_ids($obj_type, $object);
   $etid = _field_sql_storage_etid($obj_type);
 
   $instances = field_info_instances($bundle);
@@ -387,7 +399,7 @@ function field_sql_storage_field_storage_write($obj_type, $object, $op, $skip_fi
  * This function deletes data for all fields for an object from the database.
  */
 function field_sql_storage_field_storage_delete($obj_type, $object) {
-  list($id, $vid, $bundle) = field_attach_extract_ids($obj_type, $object);
+  list($id, $vid, $bundle) = field_extract_ids($obj_type, $object);
   $etid = _field_sql_storage_etid($obj_type);
 
   $instances = field_info_instances($bundle);
@@ -404,7 +416,7 @@ function field_sql_storage_field_storage_delete($obj_type, $object) {
  * an object.
  */
 function field_sql_storage_field_storage_purge($obj_type, $object, $field, $instance) {
-  list($id, $vid, $bundle) = field_attach_extract_ids($obj_type, $object);
+  list($id, $vid, $bundle) = field_extract_ids($obj_type, $object);
   $etid = _field_sql_storage_etid($obj_type);
 
   $field = field_info_field_by_id($field['id']);
@@ -520,7 +532,7 @@ function field_sql_storage_field_storage_query($field_id, $conditions, $count, &
       $id = ($load_current || empty($entity_type['object keys']['revision'])) ? $row->entity_id : $row->revision_id;
 
       if (!isset($return[$row->type][$id])) {
-        $return[$row->type][$id] = field_attach_create_stub_object($row->type, array($row->entity_id, $row->revision_id, $row->bundle));
+        $return[$row->type][$id] = field_create_stub_entity($row->type, array($row->entity_id, $row->revision_id, $row->bundle));
         $obj_count++;
       }
     }
@@ -541,7 +553,7 @@ function field_sql_storage_field_storage_query($field_id, $conditions, $count, &
  * This function actually deletes the data from the database.
  */
 function field_sql_storage_field_storage_delete_revision($obj_type, $object) {
-  list($id, $vid, $bundle) = field_attach_extract_ids($obj_type, $object);
+  list($id, $vid, $bundle) = field_extract_ids($obj_type, $object);
   $etid = _field_sql_storage_etid($obj_type);
 
   if (isset($vid)) {

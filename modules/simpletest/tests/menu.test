@@ -1,5 +1,5 @@
 <?php
-// $Id: menu.test,v 1.13 2009/07/14 20:53:16 webchick Exp $
+// $Id: menu.test,v 1.16 2009/09/17 04:07:39 webchick Exp $
 
 /**
  * @file
@@ -76,6 +76,13 @@ class MenuIncTestCase extends DrupalWebTestCase {
   }
 
   /**
+   * Test menu_get_names().
+   */
+  function testMenuGetNames() {
+    $this->assertEqual(menu_get_names(), array('admin_shortcuts', 'main-menu', 'management', 'navigation', 'original', 'user-menu'), t('Expected menu names were returned.'));
+  }
+
+  /**
    * Tests for menu_name parameter for hook_menu().
    */
   function testMenuName() {
@@ -125,6 +132,21 @@ class MenuIncTestCase extends DrupalWebTestCase {
     $this->assertEqual($compare_item, $item, t('Modified menu item is equal to newly retrieved menu item.'), 'menu');
   }
 
+  /**
+   * Test menu maintainance hooks.
+   */
+  function testMenuItemHooks() {
+    // Create an item.
+    menu_link_maintain('menu_test', 'insert', 'menu_test_maintain/4', 'Menu link #4');
+    $this->assertEqual(menu_test_static_variable(), 'insert', t('hook_menu_link_insert() fired correctly'));
+    // Update the item.
+    menu_link_maintain('menu_test', 'update', 'menu_test_maintain/4', 'Menu link updated');
+    $this->assertEqual(menu_test_static_variable(), 'update', t('hook_menu_link_update() fired correctly'));
+    // Delete the item.
+    menu_link_maintain('menu_test', 'delete', 'menu_test_maintain/4', '');
+    $this->assertEqual(menu_test_static_variable(), 'delete', t('hook_menu_link_delete() fired correctly'));
+  }
+
 }
 
 /**
@@ -164,3 +186,59 @@ class MenuRebuildTestCase extends DrupalWebTestCase {
   }
 
 }
+
+/**
+ * Menu tree data related tests.
+ */
+class MenuTreeDataTestCase extends DrupalUnitTestCase {
+  /**
+   * Dummy link structure acceptable for menu_tree_data().
+   */
+  var $links = array(
+    1 => array('mlid' => 1, 'depth' => 1),
+    2 => array('mlid' => 2, 'depth' => 1),
+    3 => array('mlid' => 3, 'depth' => 2),
+    4 => array('mlid' => 4, 'depth' => 3),
+    5 => array('mlid' => 5, 'depth' => 1),
+  );
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Menu tree generation',
+      'description' => 'Tests recursive menu tree generation functions.',
+      'group' => 'Menu',
+    );
+  }
+
+  /**
+   * Validate the generation of a proper menu tree hierarchy.
+   */
+  function testMenuTreeData() {
+    $tree = menu_tree_data($this->links);
+
+    // Validate that parent items #1, #2, and #5 exist on the root level.
+    $this->assertSameLink($this->links[1], $tree[1]['link'], t('Parent item #1 exists.'));
+    $this->assertSameLink($this->links[2], $tree[2]['link'], t('Parent item #2 exists.'));
+    $this->assertSameLink($this->links[5], $tree[5]['link'], t('Parent item #5 exists.'));
+
+    // Validate that child item #4 exists at the correct location in the hierarchy.
+    $this->assertSameLink($this->links[4], $tree[2]['below'][3]['below'][4]['link'], t('Child item #4 exists in the hierarchy.'));
+  }
+
+  /**
+   * Check that two menu links are the same by comparing the mlid.
+   *
+   * @param $link1
+   *   A menu link item.
+   * @param $link2
+   *   A menu link item.
+   * @param $message
+   *   The message to display along with the assertion.
+   * @return
+   *   TRUE if the assertion succeeded, FALSE otherwise.
+   */
+  protected function assertSameLink($link1, $link2, $message = '') {
+    return $this->assert($link1['mlid'] == $link2['mlid'], $message ? $message : t('First link is identical to second link'));
+  }
+}
+

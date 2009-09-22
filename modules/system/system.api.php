@@ -1,5 +1,5 @@
 <?php
-// $Id: system.api.php,v 1.72 2009/09/05 13:05:31 dries Exp $
+// $Id: system.api.php,v 1.76 2009/09/19 11:07:36 dries Exp $
 
 /**
  * @file
@@ -138,53 +138,6 @@ function hook_cron() {
 }
 
 /**
- * Rewrite database queries, usually for access control.
- *
- * Add JOIN and WHERE statements to queries and decide whether the primary_field
- * shall be made DISTINCT. For node objects, primary field is always called nid.
- * For taxonomy terms, it is tid and for vocabularies it is vid. For comments,
- * it is cid. Primary table is the table where the primary object (node, file,
- * taxonomy_term_node etc.) is.
- *
- * You shall return an associative array. Possible keys are 'join', 'where' and
- * 'distinct'. The value of 'distinct' shall be 1 if you want that the
- * primary_field made DISTINCT.
- *
- * @param $query
- *   Query to be rewritten.
- * @param $primary_table
- *   Name or alias of the table which has the primary key field for this query.
- *   Typical table names would be: {block}, {comment}, {forum}, {node},
- *   {menu}, {taxonomy_term_data} or {taxonomy_vocabulary}. However, it is more common for
- *   $primary_table to contain the usual table alias: b, c, f, n, m, t or v.
- * @param $primary_field
- *   Name of the primary field.
- * @param $args
- *   Array of additional arguments.
- * @return
- *   An array of join statements, where statements, distinct decision.
- */
-function hook_db_rewrite_sql($query, $primary_table, $primary_field, $args) {
-  switch ($primary_field) {
-    case 'nid':
-      // this query deals with node objects
-      $return = array();
-      if ($primary_table != 'n') {
-        $return['join'] = "LEFT JOIN {node} n ON $primary_table.nid = n.nid";
-      }
-      $return['where'] = 'created >' . mktime(0, 0, 0, 1, 1, 2005);
-      return $return;
-      break;
-    case 'tid':
-      // this query deals with taxonomy objects
-      break;
-    case 'vid':
-      // this query deals with vocabulary objects
-      break;
-  }
-}
-
-/**
  * Allows modules to declare their own Forms API element types and specify their
  * default values.
  *
@@ -215,10 +168,15 @@ function hook_db_rewrite_sql($query, $primary_table, $primary_field, $args) {
  *  - "#pre_render": array of callback functions taking $element and $form_state.
  *  - "#post_render": array of callback functions taking $element and $form_state.
  *  - "#submit": array of callback functions taking $form and $form_state.
+ *
+ * @see hook_element_info_alter()
+ * @see system_element_info()
  */
-function hook_elements() {
-  $type['filter_format'] = array('#input' => TRUE);
-  return $type;
+function hook_element_info() {
+  $types['filter_format'] = array(
+    '#input' => TRUE,
+  );
+  return $types;
 }
 
 /**
@@ -228,9 +186,9 @@ function hook_elements() {
  * defined by a module.
  *
  * @param &$type
- *   All element type defaults as collected by hook_elements().
+ *   All element type defaults as collected by hook_element_info().
  *
- * @see hook_elements()
+ * @see hook_element_info()
  */
 function hook_element_info_alter(&$type) {
   // Decrease the default size of textfields.
@@ -1427,7 +1385,7 @@ function hook_file_move($file, $source) {
  */
 function hook_file_references($file) {
   // If upload.module is still using a file, do not let other modules delete it.
-  $file_used = (bool) db_query_range('SELECT 1 FROM {upload} WHERE fid = :fid', array(':fid' => $file->fid), 0, 1)->fetchField();
+  $file_used = (bool) db_query_range('SELECT 1 FROM {upload} WHERE fid = :fid', 0, 1, array(':fid' => $file->fid))->fetchField();
   if ($file_used) {
     // Return the name of the module and how many references it has to the file.
     return array('upload' => $count);
@@ -1792,7 +1750,10 @@ function hook_query_TAG_alter(QueryAlterableInterface $query) {
 }
 
 /**
- * Install the current version of the database schema, and any other setup tasks.
+ * Perform setup tasks when the module is installed.
+ *
+ * If the module implements hook_schema(), the database tables will
+ * be created before this hook is fired.
  *
  * The hook will be called the first time a module is installed, and the
  * module's schema version will be set to the module's greatest numbered update
@@ -1802,7 +1763,7 @@ function hook_query_TAG_alter(QueryAlterableInterface $query) {
  *
  * See the Schema API documentation at
  * @link http://drupal.org/node/146843 http://drupal.org/node/146843 @endlink
- * for details on hook_schema, where a database tables are defined.
+ * for details on hook_schema and how database tables are defined.
  *
  * Note that since this function is called from a full bootstrap, all functions
  * (including those in modules enabled by the current page request) are
@@ -1813,9 +1774,20 @@ function hook_query_TAG_alter(QueryAlterableInterface $query) {
  * be removed during uninstall should be removed with hook_uninstall().
  *
  * @see hook_uninstall()
+ * @see hook_schema()
  */
 function hook_install() {
-  drupal_install_schema('upload');
+  // Populate the default {node_access} record.
+  db_insert('node_access')
+    ->fields(array(
+      'nid' => 0,
+      'gid' => 0,
+      'realm' => 'all',
+      'grant_view' => 1,
+      'grant_update' => 0,
+      'grant_delete' => 0,
+    ))
+    ->execute();
 }
 
 /**
@@ -1944,15 +1916,19 @@ function hook_update_last_removed() {
  *
  * The information that the module should remove includes:
  * - variables that the module has set using variable_set() or system_settings_form()
- * - tables the module has created, using drupal_uninstall_schema()
  * - modifications to existing tables
  *
- * The module should not remove its entry from the {system} table.
+ * The module should not remove its entry from the {system} table. Database tables
+ * defined by hook_schema() will be removed automatically.
  *
- * The uninstall hook will fire when the module gets uninstalled.
+ * The uninstall hook will fire when the module gets uninstalled but before the
+ * module's database tables are removed, allowing your module to query its own
+ * tables during this routine.
+ *
+ * @see hook_install()
+ * @see hook_schema()
  */
 function hook_uninstall() {
-  drupal_uninstall_schema('upload');
   variable_del('upload_file_types');
 }
 
@@ -2232,6 +2208,90 @@ function hook_file_mimetype_mapping_alter(&$mapping) {
   $mapping['extensions']['info'] = 'example_info';
   // Override existing extension mapping for '.ogg' files.
   $mapping['extensions']['ogg'] = 189;
+}
+
+/**
+ * Declares information about actions.
+ *
+ * Any module can define actions, and then call actions_do() to make those
+ * actions happen in response to events. The trigger module provides a user
+ * interface for associating actions with module-defined triggers, and it makes
+ * sure the core triggers fire off actions when their events happen.
+ *
+ * An action consists of two or three parts:
+ * - an action definition (returned by this hook)
+ * - a function which performs the action (which by convention is named
+ *   MODULE_description-of-function_action)
+ * - an optional form definition function that defines a configuration form
+ *   (which has the name of the action function with '_form' appended to it.)
+ *
+ * The action function takes two to four arguments, which come from the input
+ * arguments to actions_do().
+ *
+ * @return
+ *   An associative array of action descriptions. The keys of the array
+ *   are the names of the action functions, and each corresponding value
+ *   is an associative array with the following key-value pairs:
+ *   - 'type': The type of object this action acts upon. Core actions have types
+ *     'node', 'user', 'comment', and 'system'.
+ *   - 'label': The human-readable name of the action, which should be passed
+ *     through the t() function for translation.
+ *   - 'configurable': If FALSE, then the action doesn't require any extra
+ *     configuration. If TRUE, then your module must define a form function with
+ *     the same name as the action function with '_form' appended (e.g., the
+ *     form for 'node_assign_owner_action' is 'node_assign_owner_action_form'.)
+ *     This function takes $context as its only parameter, and is paired with
+ *     the usual _submit function, and possibly a _validate function.
+ *   - 'triggers': An array of the events (that is, hooks) that can trigger this
+ *     action. For example: array('node_insert', 'user_update'). You can also
+ *     declare support for any trigger by returning array('any') for this value.
+ *   - 'behavior': (optional) machine-readable array of behaviors of this
+ *     action, used to signal additional actions that may need to be triggered.
+ *     Currently recognized behaviors by Trigger module:
+ *     - 'changes_node_property': If an action with this behavior is assigned to
+ *       a trigger other than 'node_presave', any node save actions also
+ *       assigned to this trigger are moved later in the list. If a node save
+ *       action is not present, one will be added.
+ */
+function hook_action_info() {
+  return array(
+    'comment_unpublish_action' => array(
+      'type' => 'comment',
+      'label' => t('Unpublish comment'),
+      'configurable' => FALSE,
+      'triggers' => array('comment_insert', 'comment_update'),
+    ),
+    'comment_unpublish_by_keyword_action' => array(
+      'type' => 'comment',
+      'label' => t('Unpublish comment containing keyword(s)'),
+      'configurable' => TRUE,
+      'triggers' => array('comment_insert', 'comment_update'),
+    ),
+  );
+}
+
+/**
+ * Executes code after an action is deleted.
+ *
+ * @param $aid
+ *   The action ID.
+ */
+function hook_actions_delete($aid) {
+  db_delete('actions_assignments')
+    ->condition('aid', $aid)
+    ->execute();
+}
+
+/**
+ * Alters the actions declared by another module.
+ *
+ * Called by actions_list() to allow modules to alter the return values from
+ * implementations of hook_action_info().
+ *
+ * @see trigger_example_action_info_alter().
+ */
+function hook_action_info_alter(&$actions) {
+  $actions['node_unpublish_action']['label'] = t('Unpublish and remove from public view.');
 }
 
 /**

@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.install,v 1.44 2009/08/09 02:46:27 webchick Exp $
+// $Id: comment.install,v 1.46 2009/09/18 00:04:22 webchick Exp $
 
 /**
  * @file
@@ -7,20 +7,9 @@
  */
 
 /**
- * Implement hook_install().
- */
-function comment_install() {
-  // Create tables.
-  drupal_install_schema('comment');
-}
-
-/**
  * Implement hook_uninstall().
  */
 function comment_uninstall() {
-  // Remove tables.
-  drupal_uninstall_schema('comment');
-
   // Remove variables.
   variable_del('comment_block_count');
   $node_types = array_keys(node_type_get_types());
@@ -54,21 +43,6 @@ function comment_enable() {
   db_insert('node_comment_statistics')
     ->from($query)
     ->execute();
-}
-
-/**
- * Changed node_comment_statistics to use node->changed to avoid future timestamps.
- */
-function comment_update_1() {
-  // Change any future last comment timestamps to current time.
-  db_query('UPDATE {node_comment_statistics} SET last_comment_timestamp = %d WHERE last_comment_timestamp > %d', REQUEST_TIME, REQUEST_TIME);
-
-  // Unstuck node indexing timestamp if needed.
-  if (($last = variable_get('node_cron_last', FALSE)) !== FALSE) {
-    variable_set('node_cron_last', min(REQUEST_TIME, $last));
-  }
-
-  return array();
 }
 
 /**

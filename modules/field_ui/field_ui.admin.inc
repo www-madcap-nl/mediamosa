@@ -1,5 +1,5 @@
 <?php
-// $Id: field_ui.admin.inc,v 1.12 2009/09/07 15:49:01 dries Exp $
+// $Id: field_ui.admin.inc,v 1.16 2009/09/21 06:44:13 dries Exp $
 
 /**
  * @file
@@ -65,8 +65,8 @@ function field_ui_inactive_message($bundle) {
  *
  * Allows fields and pseudo-fields to be re-ordered.
  */
-function field_ui_field_overview_form(&$form_state, $obj_type, $bundle) {
-  $bundle = field_attach_extract_bundle($obj_type, $bundle);
+function field_ui_field_overview_form($form, &$form_state, $obj_type, $bundle) {
+  $bundle = field_extract_bundle($obj_type, $bundle);
 
   field_ui_inactive_message($bundle);
   $admin_path = _field_ui_bundle_admin_path($bundle);
@@ -86,7 +86,7 @@ function field_ui_field_overview_form(&$form_state, $obj_type, $bundle) {
   // Store each default weight so that we can add the 'add new' rows after them.
   $weights = array();
 
-  $form = array(
+  $form += array(
     '#tree' => TRUE,
     '#bundle' => $bundle,
     '#fields' => array_keys($instances),
@@ -480,6 +480,7 @@ function field_ui_field_overview_form_submit($form, &$form_state) {
     $field = array(
       'field_name' => $values['field_name'],
       'type' => $values['type'],
+      'translatable' => TRUE,
     );
     $instance = array(
       'field_name' => $field['field_name'],
@@ -539,7 +540,7 @@ function field_ui_field_overview_form_submit($form, &$form_state) {
 
   if ($destinations) {
     $destinations[] = urldecode(substr(drupal_get_destination(), 12));
-    unset($_REQUEST['destination']);
+    unset($_GET['destination']);
     $form_state['redirect'] = field_ui_get_destinations($destinations);
   }
 }
@@ -550,8 +551,8 @@ function field_ui_field_overview_form_submit($form, &$form_state) {
  * This form includes form widgets to select which fields appear in teaser and
  * full build modes, and how the field labels should be rendered.
  */
-function field_ui_display_overview_form(&$form_state, $obj_type, $bundle, $build_modes_selector = 'basic') {
-  $bundle = field_attach_extract_bundle($obj_type, $bundle);
+function field_ui_display_overview_form($form, &$form_state, $obj_type, $bundle, $build_modes_selector = 'basic') {
+  $bundle = field_extract_bundle($obj_type, $bundle);
 
   field_ui_inactive_message($bundle);
   $admin_path = _field_ui_bundle_admin_path($bundle);
@@ -562,7 +563,7 @@ function field_ui_display_overview_form(&$form_state, $obj_type, $bundle, $build
   $field_types = field_info_field_types();
   $build_modes = field_ui_build_modes_tabs($entity, $build_modes_selector);
 
-  $form = array(
+  $form += array(
     '#tree' => TRUE,
     '#bundle' => $bundle,
     '#fields' => array_keys($instances),
@@ -790,8 +791,8 @@ function field_ui_field_has_data($field) {
 /**
  * Menu callback; presents the field settings edit page.
  */
-function field_ui_field_settings_form(&$form_state, $obj_type, $bundle, $instance) {
-  $bundle = field_attach_extract_bundle($obj_type, $bundle);
+function field_ui_field_settings_form($form, &$form_state, $obj_type, $bundle, $instance) {
+  $bundle = field_extract_bundle($obj_type, $bundle);
   $field = field_info_field($instance['field_name']);
 
   // When a field is first created, we have to get data from the db.
@@ -830,6 +831,15 @@ function field_ui_field_settings_form(&$form_state, $obj_type, $bundle, $instanc
   $form['field']['type'] = array('#type' => 'value', '#value' => $field['type']);
   $form['field']['module'] = array('#type' => 'value', '#value' => $field['module']);
   $form['field']['active'] = array('#type' => 'value', '#value' => $field['active']);
+
+  // Set translatability.
+  $form['field']['translatable'] = array(
+    '#type' => 'radios',
+    '#title' => t('Multilingual settings'),
+    '#options' => array(TRUE => t('Translatable field'), FALSE => t('Language neutral field')),
+    '#default_value' => $field['translatable'],
+    '#description' => t("Translatable fields can have a different value for each available language. An example of a translatable field is an article's <em>body</em>. Language neutral fields will retain the same value across all translations. An example of a language neutral field is a user profile's <em>first name</em>."),
+  ); 
 
   // Add settings provided by the field module.
   $form['field']['settings'] = array();
@@ -887,8 +897,8 @@ function field_ui_field_settings_form_submit($form, &$form_state) {
 /**
  * Menu callback; select a widget for the field.
  */
-function field_ui_widget_type_form(&$form_state, $obj_type, $bundle, $instance) {
-  $bundle = field_attach_extract_bundle($obj_type, $bundle);
+function field_ui_widget_type_form($form, &$form_state, $obj_type, $bundle, $instance) {
+  $bundle = field_extract_bundle($obj_type, $bundle);
   $field = field_read_field($instance['field_name']);
 
   $field_type = field_info_field_types($field['type']);
@@ -946,8 +956,8 @@ function field_ui_widget_type_form_submit($form, &$form_state) {
 /**
  * Menu callback; present a form for removing a field from a content type.
  */
-function field_ui_field_delete_form(&$form_state, $obj_type, $bundle, $instance) {
-  $bundle = field_attach_extract_bundle($obj_type, $bundle);
+function field_ui_field_delete_form($form, &$form_state, $obj_type, $bundle, $instance) {
+  $bundle = field_extract_bundle($obj_type, $bundle);
   $field = field_info_field($instance['field_name']);
   $admin_path = _field_ui_bundle_admin_path($bundle);
 
@@ -1000,8 +1010,8 @@ function field_ui_field_delete_form_submit($form, &$form_state) {
 /**
  * Menu callback; presents the field instance edit page.
  */
-function field_ui_field_edit_form(&$form_state, $obj_type, $bundle, $instance) {
-  $bundle = field_attach_extract_bundle($obj_type, $bundle);
+function field_ui_field_edit_form($form, &$form_state, $obj_type, $bundle, $instance) {
+  $bundle = field_extract_bundle($obj_type, $bundle);
 
   $field = field_info_field($instance['field_name']);
   $form['#field'] = $field;
