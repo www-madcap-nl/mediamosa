@@ -1,0 +1,239 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is a Full Featured, Webservice Oriented Media Management and
+ * Distribution platform (http://www.vpcore.nl)
+ *
+ * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * @file
+ * Our DB layer between MediaMosa and DB.
+ */
+
+class mediamosa_db {
+  // ------------------------------------------------------------------ Consts.
+  const LIMIT = 'limit';
+  const OFFSET = 'offset';
+  const LIMIT_MAX = 1000;
+  const ORDER_BY = 'order_by';
+  const ORDER_DIRECTION = 'order_direction';
+  const ORDER_DIRECTION_ASC = 'asc';
+  const ORDER_DIRECTION_DESC = 'desc';
+
+  // ------------------------------------------------------------------ Functions (static).
+  static public function db_delete($table, $options = NULL) {
+    $a_args = func_get_args(); // Must copy into $a_args, cant use it directly in call_user_func_array
+
+    if (mediamosa::is_db_logging()) {
+      $f_start_time = microtime(TRUE);
+      $result = call_user_func_array('db_delete', $a_args);
+      mediamosa::log_db(round(microtime(TRUE) - $f_start_time, 4), $result && isset($result->queryString) ? $result->queryString : $a_args[0]);
+      return $result;
+    }
+
+    return call_user_func_array('db_delete', $a_args);
+  }
+
+  /**
+   * Wrapper around query functions.
+   *
+   * @param string $func
+   *  String value of the db_query[_*] function.
+   * @param string $query
+   *  SQL query.
+   * @param array $a_args
+   *  The arguments for $query.
+   * @return result
+   *  DB result set.
+   */
+  static private function query($func = 'db_query', $a_args = array()) {
+
+    // Make sure {} are inside the query, this will prevent problems later.
+    if (stripos($a_args[0], 'FROM') !== FALSE && stripos($a_args[0], ' found_rows()') !== FALSE) {
+      if (strpos($a_args[0], '{') === FALSE || strpos($a_args[0], '}') === FALSE) {
+        error_log($a_args[0]);
+        throw new mediamosa_exception_program_error('Missing {} your query; @query.', array('@query' => $a_args[0]));
+      }
+    }
+
+    // Define '#vars' for inserting values that are not quoted in the result.
+    if (isset($a_args[1])) {
+      $a_extras = array();
+      foreach ($a_args[1] as $key => $value) {
+        if ($key{0} != '#') {
+          continue;
+        }
+
+        $a_extras[$key] = $value;
+      }
+
+      if (count($a_extras)) {
+        $a_args[0] = strtr($a_args[0], $a_extras);
+        foreach ($a_extras as $key => $value) {
+          unset($a_args[1][$key]);
+        }
+      }
+    }
+
+
+    // Loggin on.
+    if (mediamosa::is_db_logging()) {
+      $f_start_time = microtime(TRUE);
+    }
+
+    // Do the query.
+    $result = call_user_func_array($func, $a_args);
+
+    // Loggin on.
+    if (mediamosa::is_db_logging()) {
+      mediamosa::log_db(round(microtime(TRUE) - $f_start_time, 4), $result && isset($result->queryString) ? $result->queryString : $a_args[0]);
+    }
+
+    return $result;
+  }
+
+  static public function db_query_range($query, $args, $from = 0, $count = 0, $options = array()) {
+    $a_args = func_get_args();
+    return self::query('db_query_range', $a_args);
+  }
+
+  static public function db_query($query, $args = array(), $options = array()) {
+    $a_args = func_get_args();
+    return self::query('db_query', $a_args);
+  }
+
+  static public function db_query_temporary($query, $args, $options = array()) {
+    $a_args = func_get_args();
+    return self::query('db_query_temporary', $a_args);
+  }
+
+  static public function db_select($table, $alias = NULL, array $options = array()) {
+    $a_args = func_get_args(); // Must copy into $a_args, cant use it directly in call_user_func_array
+
+    if (mediamosa::is_db_logging()) {
+      $f_start_time = microtime(TRUE);
+      $result = call_user_func_array('db_select', $a_args);
+      mediamosa::log_db(round(microtime(TRUE) - $f_start_time, 4), $result && isset($result->queryString) ? $result->queryString : '-failure-');
+      return $result;
+    }
+
+    return call_user_func_array('db_select', $a_args);
+  }
+
+  static public function db_insert($table, array $options = array()) {
+    $a_args = func_get_args(); // Must copy into $a_args, cant use it directly in call_user_func_array
+
+    if (mediamosa::is_db_logging()) {
+      $f_start_time = microtime(TRUE);
+      $result = call_user_func_array('db_insert', $a_args);
+      mediamosa::log_db(round(microtime(TRUE) - $f_start_time, 4), $result && isset($result->queryString) ? $result->queryString : '-failure-');
+      return $result;
+    }
+
+    return call_user_func_array('db_insert', $a_args);
+  }
+
+  static public function db_last_insert_id($table, $field) {
+    $a_args = func_get_args(); // Must copy into $a_args, cant use it directly in call_user_func_array
+
+    if (mediamosa::is_db_logging()) {
+      $f_start_time = microtime(TRUE);
+      $result = call_user_func_array('db_last_insert_id', $a_args);
+      mediamosa::log_db(round(microtime(TRUE) - $f_start_time, 4), $result && isset($result->queryString) ? $result->queryString : '-failure-');
+      return $result;
+    }
+
+    return call_user_func_array('db_last_insert_id', $a_args);
+  }
+
+  static public function db_update($table, array $options = array()) {
+    $a_args = func_get_args(); // Must copy into $a_args, cant use it directly in call_user_func_array
+
+    if (mediamosa::is_db_logging()) {
+      $f_start_time = microtime(TRUE);
+      $result = call_user_func_array('db_update', $a_args);
+      mediamosa::log_db(round(microtime(TRUE) - $f_start_time, 4), $result && isset($result->queryString) ? $result->queryString : '-failure-');
+      return $result;
+    }
+
+    return call_user_func_array('db_update', $a_args);
+  }
+
+  static public function db_result(DatabaseStatementInterface $statement) {
+    $a_args = func_get_args(); // Must copy into $a_args, cant use it directly in call_user_func_array
+    return call_user_func_array('db_result', $a_args);
+  }
+
+  /**
+   * Escape the value for database
+   * 'db_escape_string' is removed from drupal 7, D7 uses prepare instead. For now
+   * we will use PDO::quote, although that doesn't escape as it should.
+   */
+  static public function escape_string($string) {
+    // Hmm well kinda hack here, but dont see any other way atm
+    // than calling the getconnection for PDO and using quote...
+    // But \' must be escaped as '' in the PDO layer, quote seems to
+    // make mistakes here by escaping with \'. Anyway, hotfix here. RBL.
+    return str_replace('\\\'', "''", mediamosa_unicode::substr(Database::getConnection()->quote($string), 1, -1)); // Remove the quotes, only escape.
+  }
+
+  /**
+   * Returns a valid escaped string when using like
+   *
+   * @param string $str_like
+   * @return string
+   */
+  static public function escape_string_like($string_like) {
+    return str_replace(array('%', '_'), array('\%', '\_'), self::escape_string($string_like));
+  }
+
+  /**
+   * Returns a valid escaped string when using like
+   *
+   * @param string $str_like
+   * @return string
+   */
+  static public function escape_string_fulltext($string_fulltext) {
+    return self::escape_string($string_fulltext);
+  }
+
+  /**
+   * Set current active database wrapper.
+   *
+   * @param name of database $key
+   * @return previous selected database.
+   */
+  function db_set_active($key = 'default') {
+    return db_set_active($key);
+  }
+  /**
+   * Get current active database wrapper.
+   *
+   * @return selected database.
+   */
+  function db_get_active() {
+    $current_key = db_set_active();
+    db_set_active($current_key);
+
+    return $current_key;
+  }
+}

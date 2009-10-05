@@ -1,0 +1,24 @@
+
+Contains reminders and notes collected during migration.
+
+Migration rules;
+
+- Watchdog
+  Convert any usage of watchdog to mediamosa::log() function.
+
+- DB Layer
+  db_query can be re-used, just remap the %s/%d operators to new parameter mapping.
+  You can no longer use db_fetch_object / db_fetch_array; 
+    use foreach
+      ->fetchObject()
+      ->fetchAssoc()
+
+
+
+Notes:
+- The 'version' field in error table has been dropped, was not used.
+
+
+
+@todo:
+Add rest call 'errorcodes' linked to vpx_shared_rest_errorcodes_get in old code.

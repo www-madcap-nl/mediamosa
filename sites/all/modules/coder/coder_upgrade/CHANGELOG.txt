@@ -1,0 +1,46 @@
+// $Id: CHANGELOG.txt,v 1.8 2009/08/24 16:25:21 solotandem Exp $
+
+coder_upgrade 7.x-1.x, 2009-xx-xx (development version)
+---------------------------------
+- Changes (2009-08-24):
+   * Change calls to file_check_directory to file_prepare_directory in light of core function rename.
+
+- Changes (2009-08-17):
+   * Group conversion routines by processing order (beginning, middle, or end).
+   * Separate middle conversion routines into two groups (regex and parser) to utilize the PGP API.
+   * Add handler specification (regex or parser) for the middle changes applied at the file level.
+   * Revise API documentation.
+   * Implement initial batch of conversion routines using the PGP API.
+
+- Changes (2009-08-04):
+   * Rename hook_perm and the permission.
+   * Revise API documentation.
+
+- Changes (2009-08-02):
+   * Create log file and patch files.
+   * Add links to log file and patch files in user interface.
+   * Revise help text.
+   * Revise api.php file.
+
+- Changes (2009-08-01):
+   * Revise user interface using new D7 form elements.
+   * Implement hook_upgrades.
+   * Revise help text.
+   * Change t() to st() in appropriate places of install file.
+   * Add api.php file.
+
+- Changes (2009-07-30):
+   * Apply D7 standards for naming forms and implement hook comments.
+   * Revise help text.
+
+- Changes (2009-07-07):
+   * Add module to coder project as coder_upgrade.
+   * Rename conversion directories to 'coder_upgrade/old' and '/new'.
+   * Change menu path to 'admin/development/coder/upgrade'.
+   * Change menu path to 'admin/settings/coder/upgrade'.
+   * Add directory called 'conversions' and move conversion .inc files there.
+   * Remove deadwood node type.
+   * Add upgrade path to .install file (require uninstall of Deadwood).
+   * Restructure process to always run all conversions.
+   * Revise help text.
+   * Add grammar parser (pgp) module as a dependency.

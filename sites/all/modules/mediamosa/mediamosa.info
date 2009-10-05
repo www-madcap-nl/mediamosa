@@ -1,0 +1,36 @@
+; $Id: $
+name = "MediaMosa 2 - Core"
+description = "Open source media management and distribution platform."
+package = "MediaMosa 2 - Core"
+version = "2.0.0.7:699fdf0d6628"
+core = 7.x
+
+; Dependencies (module names)
+; dependencies[] = 
+
+; Used files.
+
+; Core class.
+files[] = mediamosa.module
+files[] = mediamosa.version.inc
+files[] = mediamosa.inc
+files[] = mediamosa.install
+
+; Response class
+files[] = response/mediamosa.response.inc
+
+; Rest interface class
+files[] = rest/mediamosa.rest.inc
+files[] = rest/mediamosa.rest.call.inc
+
+; Library.
+files[] = lib/mediamosa.lib.db.inc
+files[] = lib/mediamosa.lib.exception.inc
+files[] = lib/mediamosa.lib.inc
+files[] = lib/mediamosa.lib.type.inc
+files[] = lib/mediamosa.lib.unicode.inc
+
+; Error code.
+files[] = error/mediamosa.error.db.inc
+files[] = error/mediamosa.error.inc
+files[] = error/mediamosa.error.install

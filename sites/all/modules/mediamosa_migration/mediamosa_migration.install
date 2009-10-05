@@ -1,0 +1,250 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is a Full Featured, Webservice Oriented Media Management and
+ * Distribution platform (http://www.vpcore.nl)
+ *
+ * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * @file
+ * Installer for migration.
+ */
+
+/**
+ * Use 'mig_memo' in database array in settings.php for source database.
+ * Use 'mig_memo_data' in database array in settings.php for source database.
+ */
+
+/*
+ * Example for settings.php.
+// Migration memo 1.0 databases;
+$databases['mig_memo']['default'] = array(
+  'driver' => 'mysql',
+  'database' => 'memo',
+  'username' => 'memo',
+  'password' => 'memo',
+  'host' => 'localhost'
+);
+$databases['mig_memo_data']['default'] = array(
+  'driver' => 'mysql',
+  'database' => 'memo_data',
+  'username' => 'memo',
+  'password' => 'memo',
+  'host' => 'localhost'
+);
+ */
+
+define('MIG_MEMO_DATA', 'mig_memo_data');
+define('MIG_MEMO', 'mig_memo');
+
+/**
+ * Get the database name of the mediamosa drupal database.
+ *
+ * @return string
+ */
+function _mediamosa_migration_get_memo_db() {
+  return 'memo';
+}
+
+/**
+ * Get the database name of the mediamosa data database.
+ *
+ * @return string
+ */
+function _mediamosa_migration_get_memo_data_db() {
+  return 'memo_data';
+}
+
+/**
+ * Implement hook_requirements().
+ */
+function mediamosa_migration_requirements($phase) {
+  $requirements = array();
+
+  // Ensure translations don't break at install time.
+  $t = get_t();
+
+  if ($phase != 'install') {
+    $requirements['mediamosa2'] = array(
+      'title' => $t('Migration Requirements'),
+      'severity' => REQUIREMENT_INFO
+    );
+  }
+  else {
+    // Allowed.
+    $requirements['mediamosa2'] = array(
+      'title' => $t('Migration Requirements'),
+      'description' => $t('Mediamosa 1.x installation found.'),
+      'severity' => REQUIREMENT_INFO,
+    );
+
+    // These tables are required on the destination database.
+    $a_table_names_dest_exists = array(
+      'mediamosa_error',
+    );
+    // These tables must be empty.
+    $a_table_names_dest_empty = array(
+      //'mediamosa_error',
+    );
+    // Must exists source drupal db.
+    $a_table_names_source_exists = array(
+      'error',
+    );
+    // Must exists source data db.
+    $a_table_names_source_exists_data = array(
+    );
+
+    $old_db = 'default';
+    try {
+      _mediamosa_migration_tables_exists($a_table_names_dest_exists);
+
+      // Select the old mediamosa database.
+      $old_db = db_set_active(MIG_MEMO_DATA);
+
+      // Data source.
+      _mediamosa_migration_tables_exists($a_table_names_source_exists_data, MIG_MEMO_DATA);
+
+      // Back to other.
+      db_set_active($old_db);
+
+      // Select the old mediamosa database.
+      $old_db = db_set_active(MIG_MEMO);
+      _mediamosa_migration_tables_exists($a_table_names_source_exists, MIG_MEMO);
+
+      // Back to other.
+      db_set_active($old_db);
+
+      // Make sure we start fresh.
+      _mediamosa_migration_empty_tables($a_table_names_dest_empty);
+
+    }
+    catch (Exception $e) {
+      // Back to default.
+      db_set_active($old_db);
+
+      // Log it.
+      watchdog('installation', 'Migration of mediamosa 1.x to 2.0 failed; @reason.', array('@reason' => $e->getMessage()));
+
+      $requirements['mediamosa2'] = array(
+        'title' => $t('Migration Requirements'),
+        'description' => $t('No (valid) mediamosa 1.x installation found, reason; @reason.', array('@reason' => $e->getMessage())),
+        'severity' => REQUIREMENT_ERROR,
+      );
+    }
+  }
+
+  return $requirements;
+}
+
+/**
+ * Implement hook_install().
+ */
+function mediamosa_migration_install() {
+  // Error table.
+  _mediamosa_migration_error();
+}
+
+/**
+ * Implement hook_install().
+ */
+function mediamosa_migration_uninstall() {
+
+}
+
+/**
+ * Check if a table exists in current database.
+ */
+function _mediamosa_db_table_exists($table_name, $key = 'default') {
+  $info = Database::getConnectionInfo($key);
+
+  $schema = $info['default']['database'];
+
+  $condition = new DatabaseCondition('AND');
+  $condition->condition('table_catalog', NULL, 'IS');
+  $condition->condition('table_schema', $schema);
+  $condition->condition('table_name', Database::getConnection('default', $key)->prefixTables('{' . $table_name . '}'));
+  $condition->compile(Database::getConnection($key), Database::getConnection('default', $key)->schema());
+
+  return db_query("SELECT table_name FROM information_schema.tables WHERE " . (string)$condition, $condition->arguments())->fetchField();
+}
+
+/**
+ * Loop through table names and check if they exists.
+ *
+ * @param array $a_table_names
+ */
+function _mediamosa_migration_tables_exists($a_table_names, $key = 'default') {
+  // Ensure translations don't break at install time.
+  $t = get_t();
+
+  foreach ($a_table_names as $table_name) {
+    if (!_mediamosa_db_table_exists($table_name, $key)) {
+      throw new Exception($t("The table '@table_name' does not exists.", array('@table_name' => $table_name)));
+    }
+  }
+}
+
+/**
+ * Loop through table names and check if they exists.
+ *
+ * @param array $a_table_names
+ */
+function _mediamosa_migration_empty_tables($a_table_names, $key = 'default') {
+  $old_db = db_set_active($key);
+
+  // Ensure translations don't break at install time.
+  $t = get_t();
+
+  try {
+    foreach ($a_table_names as $table_name) {
+      $count = db_query('SELECT COUNT(*) FROM ' . $table_name)->fetchField();
+
+      if ($count) {
+        throw new Exception($t("The table '@table_name' must be empty.", array('@table_name' => $table_name)));
+      }
+    }
+  }
+  catch(Exception $e) {
+    db_set_active($old_db);
+    throw $e;
+  }
+
+  db_set_active($old_db);
+}
+
+/**
+ * Migrate the error table.
+ */
+function _mediamosa_migration_error() {
+  // Get the database name.
+  $db_name = _mediamosa_migration_get_memo_db();
+
+  $current_ids = array_keys(db_query("SELECT code FROM {mediamosa_error}")->fetchAllAssoc('code'));
+
+  // Copy all to new table.
+  db_query(strtr("INSERT INTO {mediamosa_error} (name, code, message) (SELECT name, code, message FROM #db_name.error#whereORDER BY code ASC)",
+    array(
+      '#db_name' => $db_name,
+      '#where' => count($current_ids) ? ' WHERE code NOT IN(' . implode(',', $current_ids) . ') ' : ' ',
+    )
+  ));
+}

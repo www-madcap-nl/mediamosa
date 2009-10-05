@@ -1,0 +1,16 @@
+; $Id:  $
+name = "MediaMosa (Default installation)"
+description = "Default starting installation profile for MediaMosa (user/pass: admin/admin)."
+version = 2.0
+core = 7.x
+dependencies[] = block
+dependencies[] = comment
+dependencies[] = color
+dependencies[] = help
+dependencies[] = menu
+dependencies[] = dblog
+dependencies[] = toolbar
+dependencies[] = simpletest
+
+; Using _profile extension to prevent name collisions with core module.
+files[] = mediamosa_profile.profile
