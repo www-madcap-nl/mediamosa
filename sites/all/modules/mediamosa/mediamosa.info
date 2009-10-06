@@ -22,6 +22,7 @@ files[] = response/mediamosa.response.inc
 ; Rest interface class
 files[] = rest/mediamosa.rest.inc
 files[] = rest/mediamosa.rest.call.inc
+files[] = rest/mediamosa.rest.rest.inc
 
 ; Library.
 files[] = lib/mediamosa.lib.db.inc

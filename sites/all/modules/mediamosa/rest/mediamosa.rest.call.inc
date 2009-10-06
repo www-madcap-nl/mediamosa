@@ -70,7 +70,7 @@ abstract class mediamosa_rest_call {
   const OFFSET = 'offset';
 
   // VAR array names.
-  const VARS = 'a_vars';
+  const VARS = 'vars';
   const VARS_DESCRIPTION = 'description';
 
   const VAR_TYPE = 'type';
@@ -82,6 +82,7 @@ abstract class mediamosa_rest_call {
   const VAR_TRIM_VALUE = 'trim_value';     // default no.
   const VAR_DESCRIPTION = 'description';   // Description of the var (In English).
   const VAR_ALLOWED_VALUES = 'a_allowed_values'; // Optional array for checking against allowed values.
+  const VAR_IS_READ_ONLY = 'read_only'; // default no. Some vars may not be changed.
 
   // Values VAR_IS_REQUIRED
   const VAR_IS_REQUIRED_YES = 'YES';
@@ -94,6 +95,10 @@ abstract class mediamosa_rest_call {
   // Values TRIM_VALUE
   const VAR_TRIM_VALUE_YES = 'YES';
   const VAR_TRIM_VALUE_NO = 'NO';
+
+  // Values TRIM_VALUE
+  const VAR_IS_READ_ONLY_YES = 'YES';
+  const VAR_IS_READ_ONLY_NO = 'NO';
 
   // Param fields
   const PARAM_VALUE = 'value';
@@ -173,6 +178,7 @@ abstract class mediamosa_rest_call {
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_NO,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_DEFAULT_VALUE => $limit_max,
+      mediamosa_rest_call::VAR_IS_READ_ONLY => mediamosa_rest_call::VAR_IS_READ_ONLY_YES, // Once set, dont change.
     );
 
     $a_my_vars[mediamosa_rest_call::VARS][mediamosa_rest_call::OFFSET] = array(
@@ -180,7 +186,8 @@ abstract class mediamosa_rest_call {
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_NO,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_DEFAULT_VALUE => 0,
-    );
+      mediamosa_rest_call::VAR_IS_READ_ONLY => mediamosa_rest_call::VAR_IS_READ_ONLY_YES, // Once set, dont change.
+      );
 
     return $a_my_vars;
   }
@@ -206,6 +213,10 @@ abstract class mediamosa_rest_call {
    * @param string $value
    */
   public function set_param_value($param, $value) {
+    if ($this->a_rest_args[$param][self::VAR_IS_READ_ONLY] == self::VAR_IS_READ_ONLY_YES) {
+      throw new mediamosa_exception_program_error('Do not set param @param, its read only.', array('@param' => $param));
+    }
+
     $this->a_rest_args[$param][self::PARAM_VALUE] = $value;
   }
 
@@ -216,7 +227,7 @@ abstract class mediamosa_rest_call {
    * @return boolean
    */
   public function isset_param($param) {
-    return isset($this->a_rest_args[$param]) && $this->a_rest_args[$param][PARAM_ISSET];
+    return isset($this->a_rest_args[$param]) && $this->a_rest_args[$param][self::PARAM_ISSET];
   }
 
   // ------------------------------------------------------------------ Functions (protected).
@@ -231,7 +242,7 @@ abstract class mediamosa_rest_call {
     $this->a_rest_args = array();
     foreach ($this->{self::URI_PARAMS} as $key_uri => $value_uri) {
       if (!isset($a_var_setup[self::VARS][$key_uri]) && $this->m_check_for_unspecified) {
-        throw new mediamosa_exception_error(vp_error::ERRORCODE_REST_UNSPECIFIED_VARIABLE, array('@var' => $key_uri));
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_UNSPECIFIED_VARIABLE, array('@var' => $key_uri));
       }
 
       $this->a_rest_args[$key_uri][self::PARAM_VALUE] = $value_uri;
@@ -244,12 +255,12 @@ abstract class mediamosa_rest_call {
       }
 
       if (!isset($a_var_setup[self::VARS][$key_get]) && $this->m_check_for_unspecified) {
-        throw new mediamosa_exception_error(vp_error::ERRORCODE_REST_UNSPECIFIED_VARIABLE, array('@var' => $key_get));
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_UNSPECIFIED_VARIABLE, array('@var' => $key_get));
       }
 
       if (isset($this->a_rest_args[$key_get])) {
         if ($this->a_rest_args[$key_get][self::PARAM_VALUE] != $value_get) {
-          throw new mediamosa_exception_error(vp_error::ERRORCODE_REST_DIFF_VALUE_GET_POST_VAR, array('@var' => $key_get, '@value1' => $this->a_rest_args[$key_get][self::PARAM_VALUE], '@value2' => $value_get));
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_DIFF_VALUE_GET_POST_VAR, array('@var' => $key_get, '@value1' => $this->a_rest_args[$key_get][self::PARAM_VALUE], '@value2' => $value_get));
         }
 
         continue;
@@ -260,12 +271,12 @@ abstract class mediamosa_rest_call {
 
     foreach ($_POST as $key_post => $value_post) {
       if (!isset($a_var_setup[self::VARS][$key_post]) && $this->m_check_for_unspecified) {
-        throw new mediamosa_exception_error(vp_error::ERRORCODE_REST_UNSPECIFIED_VARIABLE, array('@var' => $key_post));
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_UNSPECIFIED_VARIABLE, array('@var' => $key_post));
       }
 
       if (isset($this->a_rest_args[$key_post])) {
         if ($this->a_rest_args[$key_post][self::PARAM_VALUE] != $value_post) {
-          throw new mediamosa_exception_error(vp_error::ERRORCODE_REST_DIFF_VALUE_GET_POST_VAR, array('@var' => $key_post, '@value1' => $this->a_rest_args[$key_post][self::PARAM_VALUE], '@value2' => $value_post));
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_DIFF_VALUE_GET_POST_VAR, array('@var' => $key_post, '@value1' => $this->a_rest_args[$key_post][self::PARAM_VALUE], '@value2' => $value_post));
         }
 
         continue;
@@ -308,6 +319,14 @@ abstract class mediamosa_rest_call {
       if (!isset($a_var[self::VAR_IS_REQUIRED])) {
         $a_var[self::VAR_IS_REQUIRED] = self::VAR_IS_REQUIRED_NO;
       }
+
+      // Set read only to no, if not set.
+      if (!isset($a_var[self::VAR_IS_READ_ONLY])) {
+        $a_var[self::VAR_IS_READ_ONLY] = self::VAR_IS_READ_ONLY_NO;
+      }
+
+      // Copy Read only status.
+      $this->a_rest_args[$param][self::VAR_IS_READ_ONLY] = $a_var[self::VAR_IS_READ_ONLY];
 
       // if param is specified with range and the param is provided during rest call or had defaulft value, then check range.
       $range_start = isset($a_var[self::VAR_RANGE_START]) && $this->isset_param($param) ? $a_var[self::VAR_RANGE_START] : NULL;
