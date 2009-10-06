@@ -24,27 +24,32 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
- /**
-  * @file
-  * Main core installer.
-  */
-
-// Include our main class.
-require_once 'mediamosa.inc';
-require_once 'error/mediamosa.error.install';
+/**
+ * @file
+ * The default simpletest class.
+ */
 
 /**
- * Implement hook_install().
+ * The basic lowest simpletest class.
  */
-function mediamosa_install() {
-  // Call our sub installer.
-  mediamosa_error_install();
+abstract class MediaMosaTestCase extends DrupalWebTestCase {
+  // ------------------------------------------------------------------ Functions (protected)
+
+  /**
+   * Implementation of setUp().
+   */
+  protected function setUp() {
+    // Call parent::setUp and preserve arguments.
+    $args = func_get_args();
+
+    // Create and setup the CORE module.
+    $args = array_unique(array_merge(array('mediamosa'), $args));
+    call_user_func_array(array($this, 'parent::setUp'), $args);
+  }
 }
 
 /**
- * Implement hook_install().
+ * Base unittest class for external REST call testing.
  */
-function mediamosa_uninstall() {
-  // Call our sub uninstaller.
-  mediamosa_error_uninstall();
+abstract class MediaMosaRestTestCase extends MediaMosaTestCase {
 }

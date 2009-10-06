@@ -24,27 +24,35 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
- /**
-  * @file
-  * Main core installer.
-  */
-
-// Include our main class.
-require_once 'mediamosa.inc';
-require_once 'error/mediamosa.error.install';
 
 /**
- * Implement hook_install().
+ * @file
+ * CQL enables developers to create SQL from a standard CQL query.
  */
-function mediamosa_install() {
-  // Call our sub installer.
-  mediamosa_error_install();
-}
+
+// CQL Settings
+define('MEDIAMOSA_CQL_MINIMUM_PHP_VERSION', '5.1.0');
 
 /**
- * Implement hook_install().
+ * Make sure we meet the requirements needed for our module
  */
-function mediamosa_uninstall() {
-  // Call our sub uninstaller.
-  mediamosa_error_uninstall();
+function mediamosa_cql_requirements($phase) {
+  // Ensure translations don't break at install time
+  $t = get_t();
+
+  $a_requirements = array();
+
+  if ($phase == 'runtime') {
+    // We require PHP 5 or higher
+    if (version_compare(phpversion(), MEDIAMOSA_CQL_MINIMUM_PHP_VERSION) < 0) {
+      $a_requirements['php'] = array(
+        'title' => $t('PHP'),
+        'value' => phpversion(),
+        'description' => $t('Your PHP installation does not meet the requirements for using the MediaMosa CQL module. MediaMosa CQL requires at least PHP %version.', array('%version' => MEDIAMOSA_CQL_MINIMUM_PHP_VERSION)),
+        'severity' => REQUIREMENT_ERROR
+      );
+    }
+  }
+
+  return $a_requirements;
 }

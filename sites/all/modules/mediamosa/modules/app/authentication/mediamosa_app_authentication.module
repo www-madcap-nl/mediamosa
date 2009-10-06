@@ -26,25 +26,6 @@
 
  /**
   * @file
-  * Main core installer.
+  * The APP authentication module.
   */
 
-// Include our main class.
-require_once 'mediamosa.inc';
-require_once 'error/mediamosa.error.install';
-
-/**
- * Implement hook_install().
- */
-function mediamosa_install() {
-  // Call our sub installer.
-  mediamosa_error_install();
-}
-
-/**
- * Implement hook_install().
- */
-function mediamosa_uninstall() {
-  // Call our sub uninstaller.
-  mediamosa_error_uninstall();
-}

@@ -10,4 +10,4 @@ core = 7.x
 dependencies[] = mediamosa
 
 ; Used files.
-files[] = mediamosa.error.module
+files[] = mediamosa_error.module

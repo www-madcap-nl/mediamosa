@@ -1,0 +1,19 @@
+; $Id $
+
+name = "MediaMosa 2 - Module - CQL"
+description = "The Contextual Query Language enables developers to create search queries using the CQL v1.2 standard."
+package = "MediaMosa 2 - Modules"
+version = "1.0.0"
+core = 7.x
+
+; Dependencies (module names)
+dependencies[] = mediamosa
+
+; Used files.
+files[] = mediamosa_cql.module
+files[] = mediamosa_cql_class.inc
+files[] = mediamosa_cql_context_class.inc
+files[] = mediamosa_cql_exceptions.inc
+files[] = mediamosa_cql_part_class.inc
+files[] = mediamosa_cql_part_group_class.inc
+files[] = mediamosa_cql_prefix_assignment_class.inc

@@ -6,7 +6,8 @@ version = "2.0.0.10:93ec8d5024b3"
 core = 7.x
 
 ; Dependencies (module names)
-; dependencies[] = 
+; YOU MUST HAVE VERY GOOD REASON TO GIVE A DEP. TO THE CORE MODULE.
+; dependencies[] = mediamosa_error
 
 ; Used files.
 
@@ -16,10 +17,10 @@ files[] = mediamosa.version.inc
 files[] = mediamosa.inc
 files[] = mediamosa.install
 
-; Response class
+; Response class.
 files[] = response/mediamosa.response.inc
 
-; Rest interface class
+; Rest interface class.
 files[] = rest/mediamosa.rest.inc
 files[] = rest/mediamosa.rest.call.inc
 files[] = rest/mediamosa.rest.rest.inc
@@ -31,7 +32,10 @@ files[] = lib/mediamosa.lib.inc
 files[] = lib/mediamosa.lib.type.inc
 files[] = lib/mediamosa.lib.unicode.inc
 
-; Error code.
+; Error.
 files[] = error/mediamosa.error.db.inc
 files[] = error/mediamosa.error.inc
 files[] = error/mediamosa.error.install
+
+; Simpletest class.
+files[] = simpletest/mediamosa.simpletest.inc
