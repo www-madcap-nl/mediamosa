@@ -26,32 +26,41 @@
 
  /**
   * @file
-  * Main core installer.
+  *
   */
 
-// Include our main class.
-require_once 'mediamosa.inc';
-require_once 'core/error/mediamosa.error.install';
-require_once 'core/app/mediamosa.app.install';
-
 /**
- * Implement hook_install().
+ * Root directory of Drupal installation.
  */
-function mediamosa_install() {
-  // Install the error db.
-  mediamosa_error_install();
+define('DRUPAL_ROOT', getcwd());
 
-  // Install the app db.
-  mediamosa_app_install();
+require_once DRUPAL_ROOT . '/includes/bootstrap.inc';
+drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
+
+// Fix it.
+registry_rebuild();
+menu_rebuild();
+
+
+$return = menu_execute_active_handler();
+
+// Menu status constants are integers; page content is a string or array.
+if (is_int($return)) {
+  switch ($return) {
+    case MENU_NOT_FOUND:
+      drupal_not_found();
+      break;
+    case MENU_ACCESS_DENIED:
+      drupal_access_denied();
+      break;
+    case MENU_SITE_OFFLINE:
+      drupal_site_offline();
+      break;
+  }
+}
+elseif (isset($return)) {
+  // Print anything besides a menu constant, assuming it's not NULL or undefined.
+  print drupal_render_page($return);
 }
 
-/**
- * Implement hook_install().
- */
-function mediamosa_uninstall() {
-  // Remove the error db.
-  mediamosa_error_uninstall();
-
-  // Install the error db.
-  mediamosa_error_install();
-}
+drupal_page_footer();

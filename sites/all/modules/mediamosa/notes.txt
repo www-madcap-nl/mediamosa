@@ -17,8 +17,10 @@ Migration rules;
 
 Notes:
 - The 'version' field in error table has been dropped, was not used.
-
-
+- The 'version' field in client_applications had been dropped, not used.
+- The 'stable_testing' field in client_applications had been dropped, not used.
+- The 'id' field in client_applications had been renamed to 'app_id'.
+- The 'ciad' field in client_applications has been renamed to 'id'.
 
 @todo:
-Add rest call 'errorcodes' linked to vpx_shared_rest_errorcodes_get in old code.
+Add rest call 'errorcodes' linked to vpx_shared_rest_error_codes_get in old code.

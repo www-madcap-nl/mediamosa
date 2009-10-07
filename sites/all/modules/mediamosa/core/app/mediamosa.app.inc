@@ -26,18 +26,8 @@
 
 /**
  * @file
- * Database class object.
+ * The MediaMosa App class.
  */
+class mediamosa_app {
 
-class mediamosa_error_db {
-  // ------------------------------------------------------------------ Consts.
-  // Table name;
-  const TABLE_NAME = 'mediamosa_error';
-
-  // Database fields;
-  const ID = 'error_id';
-  const NAME = 'name';
-  const NAME_LENGTH = 100;
-  const CODE = 'code';
-  const MESSAGE = 'message';
 }

@@ -24,34 +24,19 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
- /**
-  * @file
-  * Main core installer.
-  */
-
-// Include our main class.
-require_once 'mediamosa.inc';
-require_once 'core/error/mediamosa.error.install';
-require_once 'core/app/mediamosa.app.install';
-
 /**
- * Implement hook_install().
+ * @file
+ * Error database class object.
  */
-function mediamosa_install() {
-  // Install the error db.
-  mediamosa_error_install();
+class mediamosa_error_db {
+  // ------------------------------------------------------------------ Consts.
+  // Table name;
+  const TABLE_NAME = 'mediamosa_error';
 
-  // Install the app db.
-  mediamosa_app_install();
-}
-
-/**
- * Implement hook_install().
- */
-function mediamosa_uninstall() {
-  // Remove the error db.
-  mediamosa_error_uninstall();
-
-  // Install the error db.
-  mediamosa_error_install();
+  // Database fields;
+  const ID = 'error_id';
+  const NAME = 'name';
+  const NAME_LENGTH = 100;
+  const CODE = 'code';
+  const MESSAGE = 'message';
 }

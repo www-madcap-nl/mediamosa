@@ -33,9 +33,17 @@ files[] = lib/mediamosa.lib.type.inc
 files[] = lib/mediamosa.lib.unicode.inc
 
 ; Error.
-files[] = error/mediamosa.error.db.inc
-files[] = error/mediamosa.error.inc
-files[] = error/mediamosa.error.install
+files[] = core/error/mediamosa.error.db.inc
+files[] = core/error/mediamosa.error.inc
+files[] = core/error/mediamosa.error.install
+
+; App class.
+files[] = core/app/mediamosa.app.db.inc
+files[] = core/app/mediamosa.app.inc
+files[] = core/app/mediamosa.app.install
+
+; Authentication class.
+files[] = core/app/authentication/mediamosa.app.authentication.inc
 
 ; Simpletest class.
 files[] = simpletest/mediamosa.simpletest.inc

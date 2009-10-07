@@ -248,3 +248,15 @@ function _mediamosa_migration_error() {
     )
   ));
 }
+
+/**
+ * Migrate the client_applications table.
+ */
+function _mediamosa_migration_client_applications() {
+  // Get the database name.
+  $db_name = _mediamosa_migration_get_memo_db();
+
+  $current_app_ids = array_keys(db_query("SELECT code FROM {#db_name.}")->fetchAllAssoc('id'));
+
+
+}
