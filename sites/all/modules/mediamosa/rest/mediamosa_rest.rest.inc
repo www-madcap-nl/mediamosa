@@ -62,7 +62,6 @@ class mediamosa_rest_call_list extends mediamosa_rest_call {
   }
 }
 
-
 /**
  * URI: /rest/#$uri_id
  * Retrieve specific information about an REST call.

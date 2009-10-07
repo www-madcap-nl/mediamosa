@@ -29,8 +29,8 @@
  * Error installer.
  */
 
-require_once 'mediamosa.error.db.inc';
-require_once 'mediamosa.error.inc';
+require_once 'mediamosa_error_db.inc';
+require_once 'mediamosa_error.inc';
 
 /**
  * Implement hook_install().

@@ -31,8 +31,8 @@
 
 // Include our main class.
 require_once 'mediamosa.inc';
-require_once 'core/error/mediamosa.error.install';
-require_once 'core/app/mediamosa.app.install';
+require_once 'core/error/mediamosa_error.install';
+require_once 'core/app/mediamosa_app.install';
 
 /**
  * Implement hook_install().

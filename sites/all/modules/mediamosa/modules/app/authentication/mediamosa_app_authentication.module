@@ -1,0 +1,120 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is a Full Featured, Webservice Oriented Media Management and
+ * Distribution platform (http://www.vpcore.nl)
+ *
+ * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+ /**
+  * @file
+  * The APP authentication module.
+  */
+
+/**
+ * Implementation of hook_mediamosa_register_rest_call().
+ */
+function mediamosa_app_authentication_mediamosa_register_rest_call() {
+
+  $a_rest_calls['login'] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_eua_ident',
+    mediamosa_rest_call::METHOD => mediamosa_rest_call::METHOD_POST,
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Log onto MediaMosa and authenticate as user end application.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_app_authentication',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  return $a_rest_calls;
+}
+
+/**
+ * Implementation of hook_mediamosa_mediamosa_eua_authorized().
+ */
+function mediamosa_app_authentication_mediamosa_eua_authorized() {
+
+  // Get the mediamosa object.
+  $o_mediamosa = mediamosa::get();
+
+  // Get the request uri.
+  $a_args = $o_mediamosa->get_request_uri();
+
+  /**
+   * REST calls that start with 'internal' are only allowed from certain IP numbers.
+   */
+  if ($a_args[0] == 'internal') {
+    $a_ips = explode('|', mediamosa::variable_get('mediamosa_allowed_internal_ips', ''));
+
+    $ip_checked = FALSE;
+    foreach ($a_ips as $ip) {
+      if (mediamosa_unicode::strpos($_SERVER['REMOTE_ADDR'], $ip) === 0) { // if the remote IP address begins with $ip
+        $ip_checked = TRUE;
+        break;
+      }
+    }
+
+    // Is not called from any allowed IP number, access denied.
+    if (!$ip_checked) {
+      return FALSE;
+    }
+  }
+
+  // User already logged in?
+  if (isset($_SESSION['mediamosa_eua'])) {
+    $_GET['app_id'] = $_SESSION['mediamosa_eua']['app_id'];
+    return TRUE;
+  }
+
+  // REST urls that are always allowed.
+  $a_rules = array(
+    array( # /check_cookie/*
+      0 => 'check_cookie'),
+    array( # /login/*
+      0 => 'login'),
+    array( # /mediafile/upload
+      0 => 'mediafile',
+      1 => 'upload'),
+    array( # /video/$mediafile_id/upload - TODO: verwijder mij!!!
+      0 => 'video',
+      2 => 'upload'), // END TODO
+    array( # /internal/*
+      0 => 'internal'),
+    array( # /external/*
+      0 => 'external')
+  );
+
+  foreach ($a_rules as $a_rule) {
+    $match = 0;
+    foreach ($a_rule as $key => $value) {
+      if (isset($a_args[$key]) && $a_args[$key] == $value) {
+        $match++;
+      }
+    }
+
+    // If the number of matched items, match the
+    if ($match == count($a_rule)) {
+      return TRUE;
+    }
+  }
+
+  // Access denied.
+  return FALSE;
+}

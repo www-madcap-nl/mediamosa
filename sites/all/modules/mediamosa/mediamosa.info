@@ -7,7 +7,7 @@ core = 7.x
 
 ; Dependencies (module names)
 ; YOU MUST HAVE VERY GOOD REASON TO GIVE A DEP. TO THE CORE MODULE.
-; dependencies[] = mediamosa_error
+dependencies[] = mediamosa_app_authentication
 
 ; Used files.
 
@@ -18,12 +18,12 @@ files[] = mediamosa.inc
 files[] = mediamosa.install
 
 ; Response class.
-files[] = response/mediamosa.response.inc
+files[] = response/mediamosa_response.inc
 
 ; Rest interface class.
-files[] = rest/mediamosa.rest.inc
-files[] = rest/mediamosa.rest.call.inc
-files[] = rest/mediamosa.rest.rest.inc
+files[] = rest/mediamosa_rest_call.inc
+files[] = rest/mediamosa_rest.inc
+files[] = rest/mediamosa_rest.rest.inc
 
 ; Library.
 files[] = lib/mediamosa.lib.db.inc
@@ -33,17 +33,18 @@ files[] = lib/mediamosa.lib.type.inc
 files[] = lib/mediamosa.lib.unicode.inc
 
 ; Error.
-files[] = core/error/mediamosa.error.db.inc
-files[] = core/error/mediamosa.error.inc
-files[] = core/error/mediamosa.error.install
+files[] = core/error/mediamosa_error_db.inc
+files[] = core/error/mediamosa_error.inc
+files[] = core/error/mediamosa_error.install
 
 ; App class.
-files[] = core/app/mediamosa.app.db.inc
-files[] = core/app/mediamosa.app.inc
-files[] = core/app/mediamosa.app.install
+files[] = core/app/mediamosa_app_db.inc
+files[] = core/app/mediamosa_app.inc
+files[] = core/app/mediamosa_app.install
 
 ; Authentication class.
-files[] = core/app/authentication/mediamosa.app.authentication.inc
+files[] = core/app/authentication/mediamosa_app_authentication.inc
+files[] = core/app/authentication/mediamosa_app_authentication.rest.inc
 
 ; Simpletest class.
 files[] = simpletest/mediamosa.simpletest.inc

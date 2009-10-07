@@ -29,8 +29,8 @@
   * Installer for the App module.
   */
 
-require_once 'mediamosa.app.inc';
-require_once 'mediamosa.app.db.inc';
+require_once 'mediamosa_app.inc';
+require_once 'mediamosa_app_db.inc';
 
 /**
  * Implement hook_install().
@@ -78,14 +78,12 @@ function mediamosa_app_schema() {
         'size' => 'tiny',
         'not null' => TRUE,
         'default' => 0,
-        'disp-width' => '3',
       ),
       mediamosa_app_db::TRANSCODING_POSITION_TO => array(
         'description' => t('Ending range of allowed transcoding.'),
         'type' => 'int',
         'size' => 'tiny',
         'not null' => TRUE,
-        'disp-width' => '4',
       ),
       mediamosa_app_db::QUOTA => array(
         'description' => t('The total allowed quota in gigabytes.'),
@@ -209,6 +207,7 @@ function mediamosa_app_schema() {
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_app_db::ALWAYS_HINT_MP4_FALSE, mediamosa_app_db::ALWAYS_HINT_MP4_TRUE)) . "')",
         'default' => mediamosa_app_db::ALWAYS_HINT_MP4_TRUE,
+        'not null' => FALSE,
       ),
       mediamosa_app_db::ALWAYS_INSERT_MD => array(
         'description' => t('Always insert extra metadata flv files'),
@@ -216,6 +215,7 @@ function mediamosa_app_schema() {
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_app_db::ALWAYS_INSERT_MD_FALSE, mediamosa_app_db::ALWAYS_INSERT_MD_TRUE)) . "')",
         'default' => mediamosa_app_db::ALWAYS_INSERT_MD_TRUE,
+        'not null' => FALSE,
       ),
       mediamosa_app_db::IS_METADATA_PUBLIC => array(
         'description' => t('Is metadata of this client application public visible in OAI?'),
@@ -223,6 +223,7 @@ function mediamosa_app_schema() {
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_app_db::IS_METADATA_PUBLIC_FALSE, mediamosa_app_db::IS_METADATA_PUBLIC_TRUE)) . "')",
         'default' => mediamosa_app_db::IS_METADATA_PUBLIC_TRUE,
+        'not null' => FALSE,
       ),
       mediamosa_app_db::SHOW_EXTERNAL_ASSETS => array(
         'description' => t('Show external references in OAI (in field referenceId)?'),
@@ -230,12 +231,13 @@ function mediamosa_app_schema() {
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_app_db::SHOW_EXTERNAL_ASSETS_FALSE, mediamosa_app_db::SHOW_EXTERNAL_ASSETS_TRUE)) . "')",
         'default' => mediamosa_app_db::SHOW_EXTERNAL_ASSETS_TRUE,
+        'not null' => FALSE,
       ),
       mediamosa_app_db::TRANSCODING_MAX_SLOTS => array(
         'description' => t('Set the maximum number of transcoding jobs allowed for this application.'),
         'type' => 'int',
         'not null' => TRUE,
-        'disp-width' => '4',
+        'default' => 5,
       ),
       mediamosa_app_db::ALLOW_MASTERSLAVE => array(
         'description' => t('Control how other clientapplications can access this application.'),
@@ -243,6 +245,7 @@ function mediamosa_app_schema() {
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_app_db::ALLOW_MASTERSLAVE_FALSE, mediamosa_app_db::ALLOW_MASTERSLAVE_TRUE)) . "')",
         'default' => mediamosa_app_db::ALLOW_MASTERSLAVE_FALSE,
+        'not null' => FALSE,
       ),
     ),
 

@@ -159,8 +159,11 @@ function mediamosa_migration_requirements($phase) {
  * Implement hook_install().
  */
 function mediamosa_migration_install() {
-  // Error table.
+  // error -> mediamosa_error.
   _mediamosa_migration_error();
+
+  // client_applications -> mediamosa_app.
+  _mediamosa_migration_client_applications();
 }
 
 /**
@@ -256,7 +259,79 @@ function _mediamosa_migration_client_applications() {
   // Get the database name.
   $db_name = _mediamosa_migration_get_memo_db();
 
-  $current_app_ids = array_keys(db_query("SELECT code FROM {#db_name.}")->fetchAllAssoc('id'));
+  $current_app_ids = array_keys(db_query("SELECT * FROM {mediamosa_app}")->fetchAllAssoc('app_id'));
 
+  // Get the current apps.
+  $migrate_apps = db_query(strtr("SELECT * FROM {#db_name.client_applications} ORDER BY caid ASC", array('#db_name' => $db_name)))->fetchAllAssoc('id');
 
+  foreach ($migrate_apps as $app_id => $migrate_app) {
+    if (isset($current_app_ids[$app_id])) {
+      continue;
+    }
+
+    db_query("INSERT INTO {mediamosa_app} SET " .
+      implode(",",
+        array(
+          'name = :name',
+          'app_id = :app_id',
+          'transcoding_position_from = :transcoding_position_from',
+          'transcoding_position_to = :transcoding_position_to',
+          'quota = :quota',
+          'quota_used = :quota_used',
+          'shared_key = :shared_key',
+          'active = :active',
+          'description = :description',
+          'owner = :owner',
+          'technical_name = :technical_name',
+          'technical_phone = :technical_phone',
+          'technical_email = :technical_email',
+          'administrative_name = :administrative_name',
+          'administrative_phone = :administrative_phone',
+          'administrative_email = :administrative_email',
+          'play_proxy_url = :play_proxy_url',
+          'view_asset_url = :view_asset_url',
+          'preview_profile_id = :preview_profile_id',
+          'download_url = :download_url',
+          'stream_url = :stream_url',
+          'always_hint_mp4 = :always_hint_mp4',
+          'always_insert_md = :always_insert_md',
+          'is_metadata_public = :is_metadata_public',
+          'show_external_assets = :show_external_assets',
+          'active_version = :active_version',
+          'transcoding_max_slots = :transcoding_max_slots',
+          'allow_masterslave = :allow_masterslave',
+        )
+      ),
+      array(
+        'name' => $migrate_app->name,
+        'app_id' => $migrate_app->id,
+        'transcoding_position_from' => $migrate_app->transcoding_position_from,
+        'transcoding_position_to' => $migrate_app->transcoding_position_to,
+        'quota' => $migrate_app->quota,
+        'quota_used' => $migrate_app->quota_used,
+        'shared_key' => $migrate_app->shared_key,
+        'active' => $migrate_app->active ? 'TRUE' : 'FALSE',
+        'description' => $migrate_app->description,
+        'owner' => $migrate_app->owner,
+        'technical_name' => $migrate_app->technical_name,
+        'technical_phone' => $migrate_app->technical_phone,
+        'technical_email' => $migrate_app->technical_email,
+        'administrative_name' => $migrate_app->administrative_name,
+        'administrative_phone' => $migrate_app->administrative_phone,
+        'administrative_email' => $migrate_app->administrative_email,
+        'play_proxy_url' => $migrate_app->play_proxy_url,
+        'view_asset_url' => $migrate_app->view_asset_url,
+        'preview_profile_id' => $migrate_app->preview_profile_id,
+        'download_url' => $migrate_app->download_url,
+        'stream_url' => $migrate_app->stream_url,
+        'always_hint_mp4' => $migrate_app->always_hint_mp4,
+        'always_insert_md' => $migrate_app->always_insert_md,
+        'is_metadata_public' => $migrate_app->is_metadata_public,
+        'show_external_assets' => $migrate_app->show_external_assets,
+        'active_version' => $migrate_app->active_version,
+        'transcoding_max_slots' => (int)$migrate_app->transcoding_max_slots,
+        'allow_masterslave' => $migrate_app->allow_masterslave,
+      )
+    );
+  }
 }
