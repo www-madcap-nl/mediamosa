@@ -33,7 +33,7 @@
  * Defines for the groups.
  * MEDIAMOSA_TEST_GROUP_
  */
-define('MEDIAMOSA_TEST_GROUP_VP_CORE', 'VP Core');
+define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE', 'MediaMosa');
 /**
  * The basic lowest simpletest class.
  */

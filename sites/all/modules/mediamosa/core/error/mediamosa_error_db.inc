@@ -38,5 +38,7 @@ class mediamosa_error_db {
   const NAME = 'name';
   const NAME_LENGTH = 100;
   const CODE = 'code';
+  const CODE_RANGE_START = 1;
+  const CODE_RANGE_END = 9999;
   const MESSAGE = 'message';
 }

@@ -54,8 +54,16 @@ class mediamosa_type {
   const TYPE_XML_VALIDATED               = 'XML'; // XML with syntax validation via simplexml_load_string()
   const TYPE_EOR                         = 'EOR'; // Exclusive OR type (like 1 2 4 8, or 1|4 = 5), always UINT
 
+  const TYPE_ORDER_DIRECTION             = 'ORDER_DIRECTION';
+
   // Store NOW() time as date
   const FUNC_DATETIME_NOW                = 'NOW()';
+
+  // Default fixed values.
+  const ORDER_DIRECTION_ASC = 'asc';
+  const ORDER_DIRECTION_DESC = 'desc';
+
+
 
   // ------------------------------------------------------------------ Functions (statics)
   /**
@@ -201,11 +209,11 @@ class mediamosa_type {
 
       case self::TYPE_BOOL:
         if (!is_bool($mixed_param_value)) {
-          if (!in_array(strtolower($mixed_param_value), array('true', 'false'))) {
+          if (!in_array(mediamosa_unicode::strtolower($mixed_param_value), array('true', 'false'))) {
             throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
           }
 
-          $mixed_param_value = (strtolower($mixed_param_value) == 'true') ? true : false;
+          $mixed_param_value = (mediamosa_unicode::strtolower($mixed_param_value) == 'true') ? true : false;
         }
 
         $checked_param_value = (bool)$mixed_param_value;
@@ -217,8 +225,8 @@ class mediamosa_type {
         }
 
         // If we supply NOW(), we fill in the time as UTC.
-        if (strtoupper($mixed_param_value) == self::FUNC_DATETIME_NOW) {
-          $mixed_param_value = vp_core::utc_current_timestamp_now();
+        if (mediamosa_unicode::strtoupper($mixed_param_value) == self::FUNC_DATETIME_NOW) {
+          $mixed_param_value = mediamosa::utc_current_timestamp_now();
         }
 
         $iso8601 = '#^(\d{4}((-)?(0[1-9]|1[0-2])((-)?(0[1-9]|[1-2][0-9]|3[0-1])((T| )(24:00(:00(\.[0]+)?)?|(([0-1][0-9]|2[0-3])(:)[0-5][0-9])((:)[0-5][0-9](\.[\d]+)?)?)((\+|-)(14:00|(0[0-9]|1[0-3])(:)[0-5][0-9])|(|Z)))?)?)?)$#';
@@ -230,8 +238,16 @@ class mediamosa_type {
         $checked_param_value = date('Y-m-d H:i:s', strtotime($mixed_param_value));
         break;
 
+      case self::TYPE_ORDER_DIRECTION:
+        if (!in_array(mediamosa_unicode::strtolower($mixed_param_value), array(self::ORDER_DIRECTION_ASC, self::ORDER_DIRECTION_DESC))) {
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
+        }
+
+        $checked_param_value = mediamosa_unicode::strtolower($mixed_param_value);
+        break;
+
       default:
-        throw new vp_exception_program_error(strtr('Using unspecified type (@type) in type lib used for param @param.', array('@param' => $param, '@type' => $param_type)));
+        throw new mediamosa_exception_program_error(strtr('Using unspecified type (@type) in type lib used for param @param.', array('@param' => $param, '@type' => $param_type)));
     }
 
     if (is_bool($checked_param_value)) {
@@ -240,7 +256,7 @@ class mediamosa_type {
     }
 
     if (!is_string($checked_param_value) && !is_int($checked_param_value)) {
-        throw new vp_exception_program_error('Value type param @param (@type) is not integer or string value.', array('@param' => $param, '@type' => $param_type));
+        throw new mediamosa_exception_program_error('Value type param @param (@type) is not integer or string value.', array('@param' => $param, '@type' => $param_type));
     }
 
     // Check if value is allowed as value (if specified and if required var).
@@ -313,12 +329,12 @@ class mediamosa_type {
     }
 
     // To short?
-    if (!is_null($min_length) && vp_utf8::strlen($string_val) < $min_length) {
+    if (!is_null($min_length) && mediamosa_unicode::strlen($string_val) < $min_length) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_STRING_TO_SHORT, array('@param' => $param, '@min_value' => $min_length));
     }
 
     // To long?
-    if (!is_null($max_length) && vp_utf8::strlen($string_val) > $max_length) {
+    if (!is_null($max_length) && mediamosa_unicode::strlen($string_val) > $max_length) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_STRING_TO_LONG, array('@param' => $param, '@max_length' => $max_length));
     }
 

@@ -35,12 +35,13 @@ files[] = lib/mediamosa_unicode.inc
 ; Error.
 files[] = core/error/mediamosa_error_db.inc
 files[] = core/error/mediamosa_error.inc
-files[] = core/error/mediamosa_error.install
+files[] = core/error/mediamosa_error.install.inc
+files[] = core/error/mediamosa_error.rest.inc
 
 ; App class.
 files[] = core/app/mediamosa_app_db.inc
 files[] = core/app/mediamosa_app.inc
-files[] = core/app/mediamosa_app.install
+files[] = core/app/mediamosa_app.install.inc
 
 ; Authentication class.
 files[] = core/app/authentication/mediamosa_app_authentication.inc

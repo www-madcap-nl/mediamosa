@@ -65,9 +65,11 @@ abstract class mediamosa_rest_call {
 
   const DESCRIPTION = 'description';   // Description of the REST call (In English)
 
-  // Default var names.
+  // Default var names / values.
   const LIMIT = 'limit';
   const OFFSET = 'offset';
+  const ORDER_BY = 'order_by';
+  const ORDER_DIRECTION = 'order_direction';
 
   // VAR array names.
   const VARS = 'vars';
@@ -170,8 +172,9 @@ abstract class mediamosa_rest_call {
    * Enrich the VAR setup with the default LIMIT and OFFSET
    *
    * @param array $a_my_vars
+   *   Provide current array to merge.
    */
-  protected function set_var_setup_range($a_my_vars, $limit_max = mediamosa_db::LIMIT_MAX) {
+  protected function set_var_setup_range($a_my_vars = array(), $limit_max = mediamosa_db::LIMIT_MAX) {
 
     $a_my_vars[mediamosa_rest_call::VARS][mediamosa_rest_call::LIMIT] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_UINT,
@@ -187,6 +190,36 @@ abstract class mediamosa_rest_call {
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_DEFAULT_VALUE => 0,
       mediamosa_rest_call::VAR_IS_READ_ONLY => mediamosa_rest_call::VAR_IS_READ_ONLY_YES, // Once set, dont change.
+    );
+
+    return $a_my_vars;
+  }
+
+  /**
+   * Enrich the VAR setup with the default ORDER BY, ORDER_DIRECTION
+   *
+   * @param array $a_my_vars
+   *   Provide current array to merge.
+   */
+  protected function set_var_setup_order_by($a_my_vars = array(), $default_order_by = '', $a_allowed_values_order_by = array(), $default_order_direction = mediamosa_type::ORDER_DIRECTION_ASC) {
+
+    $a_my_vars[mediamosa_rest_call::VARS][mediamosa_rest_call::ORDER_BY] = array(
+      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_ALPHA_NUM,
+      mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_NO,
+      mediamosa_rest_call::VAR_DEFAULT_VALUE => $default_order_by,
+      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
+    );
+
+    // Add allowed values for order by.
+    if (count($a_allowed_values_order_by)) {
+      $a_my_vars[mediamosa_rest_call::VARS][mediamosa_rest_call::ORDER_BY][mediamosa_rest_call::VAR_ALLOWED_VALUES] = $a_allowed_values_order_by;
+    }
+
+    $a_my_vars[mediamosa_rest_call::VARS][mediamosa_rest_call::ORDER_DIRECTION] = array(
+      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_ORDER_DIRECTION,
+      mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_NO,
+      mediamosa_rest_call::VAR_DEFAULT_VALUE => $default_order_direction,
+      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       );
 
     return $a_my_vars;

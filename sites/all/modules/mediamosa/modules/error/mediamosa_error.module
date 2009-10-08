@@ -30,6 +30,34 @@
  */
 
 /**
+ * Implementation of hook_mediamosa_register_rest_call().
+ */
+function mediamosa_error_mediamosa_register_rest_call() {
+
+  $a_rest_calls['errorcodes'] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_error_list',
+    mediamosa_rest_call::METHOD => mediamosa_rest_call::METHOD_GET,
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Retrieve a listing of the errorcodes.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_error',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_4_0,
+  );
+
+  $a_rest_calls['errorcodes/#$code'] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_error_get',
+    mediamosa_rest_call::METHOD => mediamosa_rest_call::METHOD_GET,
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Retrieve a listing of the errorcodes.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_error',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_0_0
+  );
+
+  return $a_rest_calls;
+}
+
+
+
+/**
  * Implementation of hook_menu().
  */
 /*

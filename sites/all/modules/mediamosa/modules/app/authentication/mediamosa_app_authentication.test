@@ -35,7 +35,16 @@ class MediaMosaAppAuthenticationTestCase extends MediaMosaTestCase {
     return array(
       'name' => 'Challenge-reponse authentication',
       'description' => 'Challenge-reponse authentication for end user applications.',
-      'group' => MEDIAMOSA_TEST_GROUP_VP_CORE,
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE,
     );
   }
+
+  function setUp() {
+    parent::setUp('mediamosa_app_authentication', 'mediamosa');
+  }
+
+  function testAppAuthentication() {
+    $this->pass('weee');
+  }
+
 }

@@ -193,19 +193,43 @@ class mediamosa_error {
 
   // ------------------------------------------------------------------ Functions (static).
   /**
+   * Get the listing of the error code table.
+   *
+   * @return array
+   */
+  static public function error_code_list($order_by = mediamosa_error_db::CODE, $order_direction = mediamosa_type::ORDER_DIRECTION_ASC) {
+    static $a_codes;
+
+    if (!isset($a_codes[$order_by][$order_direction])) {
+      $a_codes[$order_by][$order_direction] = mediamosa_db::db_query(
+        "SELECT * FROM {#mediamosa_error} ORDER BY #order_by #order_direction",
+        array(
+          '#mediamosa_error' => mediamosa_error_db::TABLE_NAME,
+          '#order_by' => $order_by,
+          '#order_direction' => $order_direction,
+        )
+      )->fetchAllAssoc($order_by);
+    }
+
+    return $a_codes[$order_by][$order_direction];
+  }
+
+  /**
    * Find the error code.
    *
    * @param integer $code
    * @return array
    */
-  static public function error_code_find($code, $a_tags = array()) {
-    static $a_codes;
+  static public function error_code_find($code, $a_tags = array(), $fail = false) {
 
-    if (!isset($a_codes)) {
-      $a_codes = mediamosa_db::db_query("SELECT * FROM {#mediamosa_error}", array('#mediamosa_error' => mediamosa_error_db::TABLE_NAME))->fetchAllAssoc('code');
-    }
+    // Get the current listing.
+    $a_codes = self::error_code_list();
 
     if (!isset($a_codes[$code])) {
+      if ($fail) {
+        return FALSE;
+      }
+
       return array(
         mediamosa_error_db::MESSAGE => strtr('Server error; Unable to find error code: @code', array('@code' => $code)),
         mediamosa_error_db::CODE => self::HTTP_INTERNAL_SERVER_ERROR,
