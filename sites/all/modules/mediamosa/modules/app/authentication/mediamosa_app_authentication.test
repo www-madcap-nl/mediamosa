@@ -24,37 +24,18 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
-/**
- * @file
- * The default simpletest class.
- */
 
-/**
- * Defines for the groups.
- * MEDIAMOSA_TEST_GROUP_
- */
-define('MEDIAMOSA_TEST_GROUP_VP_CORE', 'VP Core');
-/**
- * The basic lowest simpletest class.
- */
-abstract class MediaMosaTestCase extends DrupalWebTestCase {
-  // ------------------------------------------------------------------ Functions (protected)
+ /**
+  * @file
+  * Unittests for authentication module.
+  */
+class MediaMosaAppAuthenticationTestCase extends MediaMosaTestCase {
 
-  /**
-   * Implementation of setUp().
-   */
-  protected function setUp() {
-    // Call parent::setUp and preserve arguments.
-    $args = func_get_args();
-
-    // Create and setup the CORE module.
-    $args = array_unique(array_merge(array('mediamosa'), $args));
-    call_user_func_array(array($this, 'parent::setUp'), $args);
+  public static function getInfo() {
+    return array(
+      'name' => 'Challenge-reponse authentication',
+      'description' => 'Challenge-reponse authentication for end user applications.',
+      'group' => MEDIAMOSA_TEST_GROUP_VP_CORE,
+    );
   }
-}
-
-/**
- * Base unittest class for external REST call testing.
- */
-abstract class MediaMosaRestTestCase extends MediaMosaTestCase {
 }

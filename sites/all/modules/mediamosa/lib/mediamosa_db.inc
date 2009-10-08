@@ -26,7 +26,7 @@
 
 /**
  * @file
- * Our DB layer between MediaMosa and DB.
+ * Our DB layer between MediaMosa and Drupal DB.
  */
 
 class mediamosa_db {

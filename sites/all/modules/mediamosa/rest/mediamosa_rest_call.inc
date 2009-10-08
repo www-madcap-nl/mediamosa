@@ -46,10 +46,10 @@ abstract class mediamosa_rest_call {
   const RESPONSE_TYPE_PLAIN = 'text/plain';
 
   const METHOD = 'method';
-  const METHOD_GET = 'method';
-  const METHOD_POST = 'method';
-  const METHOD_PUT = 'method';
-  const METHOD_DELETE = 'method';
+  const METHOD_GET = 'GET';
+  const METHOD_POST = 'POST';
+  const METHOD_PUT = 'PUT';
+  const METHOD_DELETE = 'DELETE';
 
   const CLASS_NAME = 'class_name';
 

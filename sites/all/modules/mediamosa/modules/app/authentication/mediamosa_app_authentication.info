@@ -11,3 +11,4 @@ core = 7.x
 
 ; Used files.
 files[] = mediamosa_app_authentication.module
+files[] = mediamosa_app_authentication.test

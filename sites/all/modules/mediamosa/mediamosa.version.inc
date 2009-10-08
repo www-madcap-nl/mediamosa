@@ -56,7 +56,7 @@ class mediamosa_version {
    * Return the array of an version.
    *
    * @param string $version
-   * @return arrayex
+   * @return array
    */
   static public function get_version($version) {
     list($major, $minor, $release) = preg_split("/[.:]+/", $version, 3);

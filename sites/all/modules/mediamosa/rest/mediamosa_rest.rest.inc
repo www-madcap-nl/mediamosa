@@ -98,7 +98,10 @@ class mediamosa_rest_call_get extends mediamosa_rest_call {
     $o_rest_call->m_check_for_unspecified = FALSE;
 
     // Get the var setup for this call.
-    $a_calls[$uri_id] = $o_rest_call->get_var_setup();
+    $a_var_setup = $o_rest_call->get_var_setup();
+
+    // Now include the variables of this REST call.
+    $a_calls[$uri_id][mediamosa_rest_call::VARS] = $a_var_setup[mediamosa_rest_call::VARS];
 
     // Add it to the XML output.
     $o_mediamosa->add_item($a_calls[$uri_id]);
