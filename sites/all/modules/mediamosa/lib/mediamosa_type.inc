@@ -55,6 +55,7 @@ class mediamosa_type {
   const TYPE_EOR                         = 'EOR'; // Exclusive OR type (like 1 2 4 8, or 1|4 = 5), always UINT
 
   const TYPE_ORDER_DIRECTION             = 'ORDER_DIRECTION';
+  const TYPE_LIMIT                       = 'LIMIT';
 
   // Store NOW() time as date
   const FUNC_DATETIME_NOW                = 'NOW()';
@@ -129,6 +130,12 @@ class mediamosa_type {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
         }
         break;
+
+      case self::TYPE_LIMIT:
+        $range_start = 0;
+        if ($range_end < 1) {
+          $range_end = mediamosa_db::LIMIT_MAX;
+        }
 
       case self::TYPE_UINT:
       case self::TYPE_EOR:

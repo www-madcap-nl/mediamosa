@@ -38,6 +38,12 @@ files[] = core/error/mediamosa_error.inc
 files[] = core/error/mediamosa_error.install.inc
 files[] = core/error/mediamosa_error.rest.inc
 
+; Asset.
+files[] = core/asset/mediamosa_asset_db.inc
+files[] = core/asset/mediamosa_asset.inc
+files[] = core/asset/mediamosa_asset.install.inc
+files[] = core/asset/mediamosa_asset.rest.inc
+
 ; App class.
 files[] = core/app/mediamosa_app_db.inc
 files[] = core/app/mediamosa_app.inc

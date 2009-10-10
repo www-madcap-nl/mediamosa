@@ -39,6 +39,9 @@ class mediamosa_db {
   const ORDER_DIRECTION_ASC = 'asc';
   const ORDER_DIRECTION_DESC = 'desc';
 
+  // The varchar length of the used HASH ids.
+  const HASH_ID_LENGTH = 32;
+
   // ------------------------------------------------------------------ Functions (static).
   static public function db_delete($table, $options = NULL) {
     $a_args = func_get_args(); // Must copy into $a_args, cant use it directly in call_user_func_array

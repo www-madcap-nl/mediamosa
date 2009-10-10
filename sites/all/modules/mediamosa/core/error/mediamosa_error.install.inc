@@ -131,6 +131,11 @@ function mediamosa_error_install() {
     ('ERRORCODE_METADATA_DEFINITION_ALREADY_EXISTS', " . mediamosa_error::ERRORCODE_METADATA_DEFINITION_ALREADY_EXISTS . ", 'MediaMosa - Metadata definition already exists.'),
     ('ERRORCODE_ACTION_AND_REPLACE', " . mediamosa_error::ERRORCODE_ACTION_AND_REPLACE . ", 'Action and Replace vars can not both be set.'),
     ('ERRORCODE_METADATA_DEFINITION_CANNOT_START_WITH_A_NUMBER', " . mediamosa_error::ERRORCODE_METADATA_DEFINITION_CANNOT_START_WITH_A_NUMBER . ", 'Metadata definition may not start with a number.'),
+    ('ERRORCODE_VALIDATE_INT_TO_SMALL', " . mediamosa_error::ERRORCODE_VALIDATE_INT_TO_SMALL . ", 'The value of @param is to low, must be at least @min_value.'),
+    ('ERRORCODE_VALIDATE_INT_TO_BIG', " . mediamosa_error::ERRORCODE_VALIDATE_INT_TO_BIG . ", 'The value of @param is to high, can not be bigger than @max_value.'),
+    ('ERRORCODE_VALIDATE_STRING_TO_SHORT', " . mediamosa_error::ERRORCODE_VALIDATE_STRING_TO_SHORT . ", 'The length of @param is to short, must be at least @min_length characters long.'),
+    ('ERRORCODE_VALIDATE_STRING_TO_LONG', " . mediamosa_error::ERRORCODE_VALIDATE_STRING_TO_LONG . ", 'The length of @param is to long, can not be longer than @max_length characters.'),
+    ('ERRORCODE_VALIDATE_VALUE_NOT_ALLOWED', " . mediamosa_error::ERRORCODE_VALIDATE_VALUE_NOT_ALLOWED . ", 'The value of @param (@type) is not allowed, allowed values are \\'@allowed_values\\'.'),
 
     ('ERRORCODE_RETRIEVING_JOBLIST', " . mediamosa_error::ERRORCODE_RETRIEVING_JOBLIST . ", 'MediaMosa - error retrieving joblist from the database'),
     ('ERRORCODE_RETRIEVING_JOBSTATUS', " . mediamosa_error::ERRORCODE_RETRIEVING_JOBSTATUS . ", 'MediaMosa - error retrieving jobstatus from the database'),

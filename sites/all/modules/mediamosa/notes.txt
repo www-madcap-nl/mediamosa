@@ -21,10 +21,9 @@ Notes:
 - The 'stable_testing' field in client_applications had been dropped, not used.
 - The 'id' field in client_applications had been renamed to 'app_id'.
 - The 'ciad' field in client_applications has been renamed to 'id'.
+- The 'testtag' has been removed from the job table.
+- The 'testtag' had been removed from the asset table.
 
 Variables;
 - The 'vpx_allowed_internal_ips' is renamed into 'mediomosa_allowed_internal_ips'.
 
-
-@todo:
-Add rest call 'errorcodes' linked to vpx_shared_rest_error_codes_get in old code.

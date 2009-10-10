@@ -68,6 +68,8 @@ class mediamosa_rest_call_error_list extends mediamosa_rest_call {
     $code = $this->get_param_value(mediamosa_error_db::CODE);
     $order_by = $this->get_param_value(self::ORDER_BY);
     $order_direction = $this->get_param_value(self::ORDER_DIRECTION);
+    $limit = $this->get_param_value(self::LIMIT);
+    $offset = $this->get_param_value(self::OFFSET);
 
     if ($code) {
       $a_code = mediamosa_error::error_code_find($code, array(), TRUE);
@@ -82,11 +84,19 @@ class mediamosa_rest_call_error_list extends mediamosa_rest_call {
     }
 
     foreach ($a_codes as $o_code) {
+      if ($offset-- > 0) {
+        continue;
+      }
+
       $o_mediamosa->add_item(array(
         mediamosa_error_db::NAME => $o_code->{mediamosa_error_db::NAME},
         mediamosa_error_db::CODE => $o_code->{mediamosa_error_db::CODE},
         mediamosa_error_db::MESSAGE => $o_code->{mediamosa_error_db::MESSAGE},
       ));
+
+      if (!--$limit) {
+        break;
+      }
     }
   }
 }

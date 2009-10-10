@@ -24,34 +24,8 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
- /**
-  * @file
-  * Main core installer.
-  */
-
-// Include our main class.
-require_once 'mediamosa.inc';
-require_once 'core/error/mediamosa_error.install.inc';
-require_once 'core/app/mediamosa_app.install.inc';
-
 /**
- * Implement hook_install().
+ * @file
+ * The helper functions of asset module.
  */
-function mediamosa_install() {
-  // Install the error db.
-  mediamosa_error_install();
 
-  // Install the app db.
-  mediamosa_app_install();
-}
-
-/**
- * Implement hook_install().
- */
-function mediamosa_uninstall() {
-  // Remove the error db.
-  mediamosa_error_uninstall();
-
-  // Install the app db.
-  mediamosa_app_uninstall();
-}

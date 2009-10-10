@@ -177,7 +177,7 @@ abstract class mediamosa_rest_call {
   protected function set_var_setup_range($a_my_vars = array(), $limit_max = mediamosa_db::LIMIT_MAX) {
 
     $a_my_vars[mediamosa_rest_call::VARS][mediamosa_rest_call::LIMIT] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_UINT,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_LIMIT,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_NO,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_DEFAULT_VALUE => $limit_max,

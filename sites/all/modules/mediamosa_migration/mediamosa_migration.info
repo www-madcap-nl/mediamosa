@@ -10,5 +10,5 @@ dependencies[] = mediamosa
 
 ; Used files.
 
-; Migraion files.
+; Migration files.
 files[] = mediamosa_migration.install
