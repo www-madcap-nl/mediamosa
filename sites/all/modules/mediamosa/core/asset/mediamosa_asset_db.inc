@@ -79,4 +79,6 @@ class mediamosa_asset_db {
   const IS_PROTECTED = 'is_protected';
   const IS_PROTECTED_TRUE = 'TRUE';
   const IS_PROTECTED_FALSE = 'FALSE';
+  const IS_PROTECTED_USER_USERGROUP = 'USER_USERGROUP';
+  const IS_PROTECTED_DOMAIN_REALM = 'DOMAIN_REALM';
 }

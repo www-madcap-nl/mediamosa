@@ -41,7 +41,7 @@ function mediamosa_asset_install() {
 }
 
 /**
- * Implement hook_install().
+ * Implement hook_uninstall().
  */
 function mediamosa_asset_uninstall() {
   // Drop our table(s).
@@ -174,19 +174,35 @@ function mediamosa_asset_schema() {
         'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_db::IS_EXTERNAL_FALSE, mediamosa_asset_db::IS_EXTERNAL_TRUE)) . "')",
         'default' => mediamosa_asset_db::IS_EXTERNAL_FALSE,
       ),
-
-
-  `viewed` int(11) NOT NULL default '0',
-  `played` int(11) NOT NULL default '0',
-  `is_empty_asset` enum('TRUE','FALSE') default 'TRUE',
-  `is_protected` enum('TRUE','USER_USERGROUP','DOMAIN_REALM','FALSE') NOT NULL default 'FALSE',
-
-      mediamosa_asset_db::MESSAGE => array(
-        'type' => 'text',
+      mediamosa_asset_db::IS_EMPTY_ASSET => array(
+        'description' => t('True if the asset has media.'),
+        'type' => "enum('" . implode("','", array(mediamosa_asset_db::IS_EMPTY_ASSET_FALSE, mediamosa_asset_db::IS_EMPTY_ASSET_TRUE)) . "')",
         'not null' => TRUE,
-        'description' => t('The message to display.'),
+        'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_db::IS_EMPTY_ASSET_FALSE, mediamosa_asset_db::IS_EMPTY_ASSET_TRUE)) . "')",
+        'default' => mediamosa_asset_db::IS_EMPTY_ASSET_TRUE,
       ),
-    ),
+      mediamosa_asset_db::VIEWED => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => t('Number of times the asset was viewed.'),
+      ),
+      mediamosa_asset_db::PLAYED => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => t('Number of times the asset was played.'),
+      ),
+      mediamosa_asset_db::IS_PROTECTED => array(
+        'description' => t('Set kind of protection on the asset.'),
+        'type' => "enum('" . implode("','", array(mediamosa_asset_db::IS_PROTECTED_FALSE, mediamosa_asset_db::IS_PROTECTED_USER_USERGROUP, mediamosa_asset_db::IS_PROTECTED_DOMAIN_REALM, mediamosa_asset_db::IS_PROTECTED_TRUE)) . "')",
+        'not null' => TRUE,
+        'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_db::IS_PROTECTED_FALSE, mediamosa_asset_db::IS_PROTECTED_USER_USERGROUP, mediamosa_asset_db::IS_PROTECTED_DOMAIN_REALM, mediamosa_asset_db::IS_PROTECTED_TRUE)) . "')",
+        'default' => mediamosa_asset_db::IS_PROTECTED_FALSE,
+      ),
+    ), 
     'primary key' => array(mediamosa_asset_db::ID),
     'unique keys' => array(
       mediamosa_asset_db::NAME => array(mediamosa_asset_db::NAME),
