@@ -31,6 +31,7 @@
 
 require_once 'mediamosa_asset.inc';
 require_once 'mediamosa_asset_db.inc';
+require_once 'media/mediamosa_asset_media.install.inc';
 
 /**
  * Implement hook_install().
@@ -41,12 +42,18 @@ function mediamosa_asset_install() {
 
   // Our fix for foreign keys.
   mediamosa_db::db_install_schema_foreign_keys(mediamosa_asset_db::TABLE_NAME);
+
+  // Call installer asset_media.
+  mediamosa_asset_media_install();
 }
 
 /**
  * Implement hook_uninstall().
  */
 function mediamosa_asset_uninstall() {
+  // Call uninstaller asset_media.
+  mediamosa_asset_media_uninstall();
+
   // Drop our table(s).
   mediamosa::drupal_uninstall_schema(mediamosa_asset_db::TABLE_NAME);
 }
@@ -115,12 +122,12 @@ function mediamosa_asset_schema() {
         'default' => NULL,
         'description' => t('The end time in an range of time to restrict.'),
       ),
-      mediamosa_asset_db::LOCKED => array(
+      mediamosa_asset_db::IS_LOCKED => array(
         'description' => t('The asset can be locked or unlocked.'),
-        'type' => "enum('" . implode("','", array(mediamosa_asset_db::LOCKED_FALSE, mediamosa_asset_db::LOCKED_TRUE)) . "')",
+        'type' => "enum('" . implode("','", array(mediamosa_asset_db::IS_LOCKED_FALSE, mediamosa_asset_db::IS_LOCKED_TRUE)) . "')",
         'not null' => TRUE,
-        'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_db::LOCKED_FALSE, mediamosa_asset_db::LOCKED_TRUE)) . "')",
-        'default' => mediamosa_asset_db::LOCKED_FALSE,
+        'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_db::IS_LOCKED_FALSE, mediamosa_asset_db::IS_LOCKED_TRUE)) . "')",
+        'default' => mediamosa_asset_db::IS_LOCKED_FALSE,
       ),
       mediamosa_asset_db::REFERENCE_ID => array(
         'type' => 'varchar',
@@ -156,7 +163,7 @@ function mediamosa_asset_schema() {
       ),
       mediamosa_asset_db::CREATED => array(
         'type' => 'datetime',
-        'default' => NULL,
+        'not null' => TRUE,
         'description' => t('The date and time when asset was created.'),
       ),
       mediamosa_asset_db::CHANGED => array(

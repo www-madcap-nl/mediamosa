@@ -101,9 +101,9 @@ function mediamosa_migration_requirements($phase) {
     $a_table_names_dest_exists = array(
       'mediamosa_error',
     );
-    // These tables must be empty.
+    // These tables (dest) must be empty.
     $a_table_names_dest_empty = array(
-      //'mediamosa_error',
+      'mediamosa_asset',
     );
     // Must exists source drupal db.
     $a_table_names_source_exists = array(
@@ -164,10 +164,16 @@ function mediamosa_migration_install() {
 
   // client_applications -> mediamosa_app.
   _mediamosa_migration_client_applications();
+
+  // asset -> mediamosa_asset.
+  _mediamosa_migration_asset();
+
+  // mediafile -> mediamosa_asset_media.
+  _mediamosa_migration_media();
 }
 
 /**
- * Implement hook_install().
+ * Implement hook_uninstall().
  */
 function mediamosa_migration_uninstall() {
 
@@ -259,13 +265,14 @@ function _mediamosa_migration_client_applications() {
   // Get the database name.
   $db_name = _mediamosa_migration_get_memo_db();
 
+  // Get current app_ids so we dont insert more than once.
   $current_app_ids = array_keys(db_query("SELECT * FROM {mediamosa_app}")->fetchAllAssoc('app_id'));
 
   // Get the current apps.
   $migrate_apps = db_query(strtr("SELECT * FROM {#db_name.client_applications} ORDER BY caid ASC", array('#db_name' => $db_name)))->fetchAllAssoc('id');
 
   foreach ($migrate_apps as $app_id => $migrate_app) {
-    if (isset($current_app_ids[$app_id])) {
+    if (in_array($app_id, $current_app_ids)) {
       continue;
     }
 
@@ -335,3 +342,133 @@ function _mediamosa_migration_client_applications() {
     );
   }
 }
+
+/**
+ * Migrate the asset table.
+ */
+function _mediamosa_migration_asset() {
+  // Get the database name.
+  $db_name = _mediamosa_migration_get_memo_data_db();
+
+  // The mediamosa_asset table should be empty (its checked as requirement).
+  db_query(strtr(
+    "INSERT INTO {mediamosa_asset}
+      (
+        asset_id,
+        parent_id,
+        app_id,
+        provider_id,
+        owner_id,
+        group_id,
+        videotimestamp,
+        videotimestampmodified,
+        play_restriction_start,
+        play_restriction_end,
+        is_locked,
+        reference_id,
+        is_private,
+        mediafile_duration,
+        mediafile_container_type,
+        has_streamable_mediafiles,
+        created,
+        changed,
+        is_unappropiate,
+        is_external,
+        is_empty_asset,
+        viewed,
+        played,
+        is_protected
+      ) (SELECT
+        asset_id,
+        parent_id,
+        app_id,
+        provider_id,
+        owner_id,
+        group_id,
+        videotimestamp,
+        videotimestampmodified,
+        play_restriction_start,
+        play_restriction_end,
+        locked,
+        reference_id,
+        isprivate,
+        mediafile_duration,
+        mediafile_container_type,
+        has_streamable_mediafiles,
+        created,
+        changed,
+        is_unappropiate,
+        is_external,
+        is_empty_asset,
+        viewed,
+        played,
+        is_protected
+      FROM #db_name.asset ORDER BY parent_id, asset_id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+}
+
+/**
+ * Migrate the mediadfile table.
+ *//*
+function _mediamosa_migration_media() {
+  // Get the database name.
+  $db_name = _mediamosa_migration_get_memo_data_db();
+
+  // The mediamosa_asset_media table should be empty (its checked as requirement).
+  db_query(strtr(
+    "INSERT INTO {mediamosa_asset_media}
+      (
+        mediafile_id,
+        asset_id,
+        asset_id_root,
+        media_is_source,
+        app_id,
+        owner_id,
+        group_id,
+        is_original_file,
+        is_downloadable,
+        is_streamable,
+        filename,
+        uri,
+        sannas_mount_point,
+        transcode_profile_id,
+        tool,
+        command,
+        file_extension,
+        is_protected,
+        created,
+        changed,
+        transcode_inherits_acl,
+        type
+      ) (SELECT
+        mediafile_id,
+        asset_id,
+        asset_id_root,
+        mediafile_source,
+        app_id,
+        owner_id,
+        group_id,
+        is_original_file,
+        is_downloadable,
+        is_streamable,
+        filename,
+        uri,
+        sannas_mount_point,
+        transcode_profile_id,
+        tool,
+        command,
+        file_extension,
+        is_protected,
+        created,
+        changed,
+        transcode_inherits_acl,
+        type
+      FROM #db_name.mediafile ORDER BY asset_id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+}*/
