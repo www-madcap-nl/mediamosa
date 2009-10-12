@@ -29,10 +29,12 @@
   * Main core installer.
   */
 
-// Include our main class.
+// Include the class we need. During install nothing can be autoloaded (yet).
 require_once 'mediamosa.inc';
+require_once 'lib/mediamosa_db.inc';
 require_once 'core/error/mediamosa_error.install.inc';
 require_once 'core/app/mediamosa_app.install.inc';
+require_once 'core/asset/mediamosa_asset.install.inc';
 
 /**
  * Implement hook_install().
@@ -43,15 +45,22 @@ function mediamosa_install() {
 
   // Install the app db.
   mediamosa_app_install();
+
+  // Install the asset db.
+  mediamosa_asset_install();
+
 }
 
 /**
- * Implement hook_install().
+ * Implement hook_unstall().
  */
 function mediamosa_uninstall() {
   // Remove the error db.
   mediamosa_error_uninstall();
 
-  // Install the app db.
+  // Remove the app db.
   mediamosa_app_uninstall();
+
+  // Remove the app db.
+  mediamosa_asset_uninstall();
 }

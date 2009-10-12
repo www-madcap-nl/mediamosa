@@ -189,7 +189,7 @@ class mediamosa_db {
   /**
    * Escape the value for database
    * 'db_escape_string' is removed from drupal 7, D7 uses prepare instead. For now
-   * we will use PDO::quote, although that doesn't escape as it should.
+   * we will use PDO::quote.
    */
   static public function escape_string($string) {
     // Hmm well kinda hack here, but dont see any other way atm
@@ -210,7 +210,7 @@ class mediamosa_db {
   }
 
   /**
-   * Returns a valid escaped string when using like
+   * Returns a valid escaped string when for fulltext.
    *
    * @param string $str_like
    * @return string
@@ -225,7 +225,7 @@ class mediamosa_db {
    * @param name of database $key
    * @return previous selected database.
    */
-  function db_set_active($key = 'default') {
+  static public function db_set_active($key = 'default') {
     return db_set_active($key);
   }
   /**
@@ -233,10 +233,47 @@ class mediamosa_db {
    *
    * @return selected database.
    */
-  function db_get_active() {
+  static public function db_get_active() {
     $current_key = db_set_active();
     db_set_active($current_key);
 
     return $current_key;
+  }
+
+  /**
+   * Install the foreign keys.
+   * Drupal 7 at this time only describes how it wants to implement foreign keys in
+   * their schema layer. For now we will add foreign keys ourselfs after creation of
+   * the table.
+   *
+   * @param array $schema
+   */
+  static public function db_install_schema_foreign_keys($module_name) {
+    $a_schema = drupal_get_schema_unprocessed($module_name);
+    _drupal_schema_initialize($module_name, $a_schema);
+
+    if (!isset($a_schema[$module_name]) || !isset($a_schema[$module_name]['foreign keys'])) {
+      return;
+    }
+
+    foreach ($a_schema[$module_name]['foreign keys'] AS $column => $a_foreign_key) {
+      foreach ($a_foreign_key as $foreign_table_name => $foreign_column) {
+        try {
+          db_query(
+            strtr("ALTER TABLE #table_name ADD CONSTRAINT `fk_#table_name_#column` FOREIGN KEY (`#column`) REFERENCES `#foreign_table_name` (`#foreign_column`)",
+            array(
+              '#table_name' => $module_name,
+              '#column' => $column,
+              '#foreign_table_name' => $foreign_table_name,
+              '#foreign_column' => $foreign_column,
+            ))
+          );
+        }
+        catch(PDOException $e) {
+          assert($e);
+          // Ignore.
+        }
+      }
+    }
   }
 }
