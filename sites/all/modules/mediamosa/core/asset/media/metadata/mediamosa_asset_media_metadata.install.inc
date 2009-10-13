@@ -38,9 +38,6 @@ require_once 'mediamosa_asset_media_metadata_db.inc';
 function mediamosa_asset_media_metadata_install() {
   // Create our table(s).
   mediamosa::drupal_install_schema(mediamosa_asset_media_metadata_db::TABLE_NAME);
-
-  // Our fix for foreign keys.
-  mediamosa_db::db_install_schema_foreign_keys(mediamosa_asset_media_metadata_db::TABLE_NAME);
 }
 
 /**
@@ -141,6 +138,7 @@ function mediamosa_asset_media_metadata_schema() {
         'length' => mediamosa_asset_media_metadata_db::MIME_TYPE_LENGTH,
         'description' => t('The mime type of the object.'),
         'not null' => TRUE,
+        'default' => 'application/octet-stream',
       ),
       mediamosa_asset_media_metadata_db::CREATED => array(
         'type' => 'datetime',
@@ -174,6 +172,7 @@ function mediamosa_asset_media_metadata_schema() {
       mediamosa_asset_media_metadata_db::STILL_ORDER => array(
         'type' => 'int',
         'description' => t('The order between stills.'),
+        'default' => 0,
       ),
       mediamosa_asset_media_metadata_db::STILL_TYPE => array(
         'description' => t('The type of the still.'),

@@ -249,8 +249,8 @@ function mediamosa_error_schema() {
     ),
     'primary key' => array(mediamosa_error_db::ID),
     'unique keys' => array(
-      mediamosa_error_db::NAME => array(mediamosa_error_db::NAME),
-      mediamosa_error_db::CODE => array(mediamosa_error_db::CODE),
+      'uni_' . mediamosa_error_db::NAME => array(mediamosa_error_db::NAME),
+      'uni_' . mediamosa_error_db::CODE => array(mediamosa_error_db::CODE),
     ),
   );
 

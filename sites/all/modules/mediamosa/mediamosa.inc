@@ -326,7 +326,12 @@ class mediamosa {
    * Wrapper around drupal_install_schema()
    */
   static public function drupal_install_schema($module) {
-    return drupal_install_schema($module);
+    $ret = drupal_install_schema($module);
+
+    // Drupal 7 does not create foreign keys yet, so we will.
+    mediamosa_db::db_install_schema_foreign_keys($module);
+
+    return $ret;
   }
 
   /**

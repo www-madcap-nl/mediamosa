@@ -141,13 +141,17 @@ function mediamosa_migration_requirements($phase) {
       // Make sure we start fresh.
       _mediamosa_migration_empty_tables($a_table_names_dest_empty);
 
+      // Make sure these class can be found.
+      if (!class_exists('mediamosa_asset_metadata_db')) {
+        throw new Exception('Could not find class mediamosa_asset_metadata_db, make sure mediamosa 2 core is installed.');
+      }
     }
     catch (Exception $e) {
       // Back to default.
       db_set_active($old_db);
 
       // Log it.
-      watchdog('installation', 'Migration of mediamosa 1.x to 2.0 failed; @reason.', array('@reason' => $e->getMessage()));
+      watchdog('installation', 'Requirement for migration of mediamosa 1.x to 2.0 not met; @reason.', array('@reason' => $e->getMessage()));
 
       $requirements['mediamosa2'] = array(
         'title' => $t('Migration Requirements'),
@@ -178,6 +182,15 @@ function mediamosa_migration_install() {
 
   // mediafile_metadata -> mediamosa_asset_media_metadata.
   _mediamosa_migration_media_metadata();
+
+  // assetprop_group -> mediamosa_asset_metadata_property_group.
+  _mediamosa_migration_asset_metadata_property_group();
+
+  // assetprop_definition -> mediamosa_asset_metadata_property.
+  _mediamosa_migration_asset_metadata_property();
+
+  // asset_property -> mediamosa_asset_metadata.
+  _mediamosa_migration_asset_metadata();
 }
 
 /**
@@ -595,6 +608,165 @@ function _mediamosa_migration_media_metadata() {
 
   // Now make sure changed is not empty.
   db_query("UPDATE mediamosa_asset_media_metadata SET changed = NOW() WHERE changed = '0000-00-00 00:00:00'");
+
+  // Back to old session mode.
+  db_query(strtr("SET SESSION sql_mode = '#old_mode'", array('#old_mode' => $old_mode)));
+}
+
+/**
+ * Migrate the asset metadata property group table.
+ */
+function _mediamosa_migration_asset_metadata_property_group() {
+  // Get the database name.
+  $db_name = _mediamosa_migration_get_memo_data_db();
+
+  // Get the current mode, which might be empty;
+  $old_mode = db_query('SELECT @@SESSION.sql_mode')->fetchField();
+
+  // Turn off problems with empty dates.
+  db_query("SET SESSION sql_mode = 'ALLOW_INVALID_DATES'");
+
+  // The mediamosa_asset_media table should be empty (its checked as requirement).
+  db_query(strtr(
+    "INSERT INTO {mediamosa_asset_metadata_property_group}
+      (
+        propgroup_id,
+        name,
+        created,
+        changed
+      ) (SELECT
+        propgroup_id,
+        name,
+        created,
+        changed
+        FROM #db_name.assetprop_group ORDER BY propgroup_id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE mediamosa_asset_metadata_property_group SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE mediamosa_asset_metadata_property_group SET created = NOW() WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE mediamosa_asset_metadata_property_group SET changed = NOW() WHERE changed = '0000-00-00 00:00:00'");
+
+  // Back to old session mode.
+  db_query(strtr("SET SESSION sql_mode = '#old_mode'", array('#old_mode' => $old_mode)));
+}
+
+/**
+ * Migrate the asset metadata property table.
+ */
+function _mediamosa_migration_asset_metadata_property() {
+  // Get the database name.
+  $db_name = _mediamosa_migration_get_memo_data_db();
+
+  // Get the current mode, which might be empty;
+  $old_mode = db_query('SELECT @@SESSION.sql_mode')->fetchField();
+
+  // Turn off problems with empty dates.
+  db_query("SET SESSION sql_mode = 'ALLOW_INVALID_DATES'");
+
+  // The mediamosa_asset_media table should be empty (its checked as requirement).
+  db_query(strtr(
+    "INSERT INTO {mediamosa_asset_metadata_property}
+      (
+        prop_id,
+        propgroup_id,
+        app_id,
+        name,
+        type,
+        min_occurences,
+        max_occurences,
+        created,
+        changed
+      ) (SELECT
+        prop_id,
+        propgroup_id,
+        app_id,
+        name,
+        type,
+        min_occurences,
+        max_occurences,
+        created,
+        changed
+        FROM #db_name.assetprop_definition ORDER BY prop_id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE mediamosa_asset_metadata_property SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE mediamosa_asset_metadata_property SET created = NOW() WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE mediamosa_asset_metadata_property SET changed = NOW() WHERE changed = '0000-00-00 00:00:00'");
+
+  // Back to old session mode.
+  db_query(strtr("SET SESSION sql_mode = '#old_mode'", array('#old_mode' => $old_mode)));
+}
+
+/**
+ * Migrate the asset metadata table.
+ */
+function _mediamosa_migration_asset_metadata() {
+  // Get the database name.
+  $db_name = _mediamosa_migration_get_memo_data_db();
+
+  // Get the current mode, which might be empty;
+  $old_mode = db_query('SELECT @@SESSION.sql_mode')->fetchField();
+
+  // Turn off problems with empty dates.
+  db_query("SET SESSION sql_mode = 'ALLOW_INVALID_DATES'");
+
+  // The mediamosa_asset_media table should be empty (its checked as requirement).
+  db_query(strtr(
+    "INSERT INTO {mediamosa_asset_metadata}
+      (
+        metadata_id,
+        asset_id,
+        prop_id,
+        val_char,
+        val_char_lft,
+        val_char_rght,
+        val_datetime,
+        val_int,
+        created,
+        changed
+      ) (SELECT
+        apd.id,
+        apd.asset_id,
+        apd.prop_id,
+        vap.val_char,
+        left(vap.val_char, #lenlft),
+        reverse(left(vap.val_char, #lenrght)),
+        apd.val_datetime,
+        apd.val_int,
+        apd.created,
+        apd.changed
+        FROM #db_name.asset_property AS apd JOIN #db_name.v_asset_property AS vap USING(id) ORDER BY id ASC)",
+    array(
+      '#db_name' => $db_name,
+      '#lenlft' => mediamosa_asset_metadata_db::VAL_CHAR_LFT_LENGTH,
+      '#lenrght' => mediamosa_asset_metadata_db::VAL_CHAR_RGHT_LENGTH,
+    ))
+  );
+
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE mediamosa_asset_metadata_property SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE mediamosa_asset_metadata_property SET created = NOW() WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE mediamosa_asset_metadata_property SET changed = NOW() WHERE changed = '0000-00-00 00:00:00'");
 
   // Back to old session mode.
   db_query(strtr("SET SESSION sql_mode = '#old_mode'", array('#old_mode' => $old_mode)));

@@ -40,9 +40,6 @@ function mediamosa_asset_media_install() {
   // Create our table(s).
   mediamosa::drupal_install_schema(mediamosa_asset_media_db::TABLE_NAME);
 
-  // Our fix for foreign keys.
-  mediamosa_db::db_install_schema_foreign_keys(mediamosa_asset_media_db::TABLE_NAME);
-
   // Call the asset media metadata installer.
   mediamosa_asset_media_metadata_install();
 }

@@ -56,6 +56,24 @@ files[] = core/asset/media/metadata/mediamosa_asset_media_metadata.inc
 files[] = core/asset/media/metadata/mediamosa_asset_media_metadata.install.inc
 files[] = core/asset/media/metadata/mediamosa_asset_media_metadata.rest.inc
 
+; Asset Metadata.
+files[] = core/asset/metadata/mediamosa_asset_metadata_db.inc
+files[] = core/asset/metadata/mediamosa_asset_metadata.inc
+files[] = core/asset/metadata/mediamosa_asset_metadata.install.inc
+files[] = core/asset/metadata/mediamosa_asset_metadata.rest.inc
+
+; Asset Metadata Property.
+files[] = core/asset/metadata/property/mediamosa_asset_metadata_property_db.inc
+files[] = core/asset/metadata/property/mediamosa_asset_metadata_property.inc
+files[] = core/asset/metadata/property/mediamosa_asset_metadata_property.install.inc
+files[] = core/asset/metadata/property/mediamosa_asset_metadata_property.rest.inc
+
+; Asset Metadata Property Group.
+files[] = core/asset/metadata/property/group/mediamosa_asset_metadata_property_group_db.inc
+files[] = core/asset/metadata/property/group/mediamosa_asset_metadata_property_group.inc
+files[] = core/asset/metadata/property/group/mediamosa_asset_metadata_property_group.install.inc
+files[] = core/asset/metadata/property/group/mediamosa_asset_metadata_property_group.rest.inc
+
 ; App class.
 files[] = core/app/mediamosa_app_db.inc
 files[] = core/app/mediamosa_app.inc

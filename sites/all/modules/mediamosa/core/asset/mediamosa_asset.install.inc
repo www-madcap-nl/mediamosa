@@ -32,6 +32,7 @@
 require_once 'mediamosa_asset.inc';
 require_once 'mediamosa_asset_db.inc';
 require_once 'media/mediamosa_asset_media.install.inc';
+require_once 'metadata/mediamosa_asset_metadata.install.inc';
 
 /**
  * Implement hook_install().
@@ -40,17 +41,20 @@ function mediamosa_asset_install() {
   // Create our table(s).
   mediamosa::drupal_install_schema(mediamosa_asset_db::TABLE_NAME);
 
-  // Our fix for foreign keys.
-  mediamosa_db::db_install_schema_foreign_keys(mediamosa_asset_db::TABLE_NAME);
-
   // Call installer asset_media.
   mediamosa_asset_media_install();
+
+  // Call installer asset_metadata.
+  mediamosa_asset_metadata_install();
 }
 
 /**
  * Implement hook_uninstall().
  */
 function mediamosa_asset_uninstall() {
+  // Call uninstaller asset_metadata.
+  mediamosa_asset_metadata_uninstall();
+
   // Call uninstaller asset_media.
   mediamosa_asset_media_uninstall();
 
