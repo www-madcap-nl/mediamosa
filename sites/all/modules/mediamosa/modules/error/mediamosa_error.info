@@ -11,3 +11,4 @@ dependencies[] = mediamosa
 
 ; Used files.
 files[] = mediamosa_error.module
+files[] = mediamosa_error.rest.inc
