@@ -26,6 +26,6 @@
 
  /**
   * @file
-  * The Asset media REST calls.
+  * The Asset media metadata REST calls.
   */
 

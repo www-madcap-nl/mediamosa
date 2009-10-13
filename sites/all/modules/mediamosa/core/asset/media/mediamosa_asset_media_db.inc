@@ -35,7 +35,7 @@ class mediamosa_asset_media_db {
   const TABLE_NAME = 'mediamosa_asset_media';
 
   // Database fields;
-  const ID = 'mediafile_id';
+  const ID = 'media_id';
   const ASSET_ID = 'asset_id';
   const ASSET_ID_ROOT = 'asset_id_root';
   const MEDIA_ID_SOURCE = 'media_is_source';

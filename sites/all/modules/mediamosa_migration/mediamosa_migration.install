@@ -100,10 +100,13 @@ function mediamosa_migration_requirements($phase) {
     // These tables are required on the destination database.
     $a_table_names_dest_exists = array(
       'mediamosa_error',
+      'mediamosa_asset',
+      'mediamosa_asset_media',
     );
     // These tables (dest) must be empty.
     $a_table_names_dest_empty = array(
       'mediamosa_asset',
+      'mediamosa_asset_media',
     );
     // Must exists source drupal db.
     $a_table_names_source_exists = array(
@@ -111,6 +114,8 @@ function mediamosa_migration_requirements($phase) {
     );
     // Must exists source data db.
     $a_table_names_source_exists_data = array(
+      'asset',
+      'mediafile',
     );
 
     $old_db = 'default';
@@ -170,6 +175,9 @@ function mediamosa_migration_install() {
 
   // mediafile -> mediamosa_asset_media.
   _mediamosa_migration_media();
+
+  // mediafile_metadata -> mediamosa_asset_media_metadata.
+  _mediamosa_migration_media_metadata();
 }
 
 /**
@@ -369,7 +377,6 @@ function _mediamosa_migration_asset() {
         is_private,
         mediafile_duration,
         mediafile_container_type,
-        has_streamable_mediafiles,
         created,
         changed,
         is_unappropiate,
@@ -394,7 +401,6 @@ function _mediamosa_migration_asset() {
         isprivate,
         mediafile_duration,
         mediafile_container_type,
-        has_streamable_mediafiles,
         created,
         changed,
         is_unappropiate,
@@ -411,17 +417,29 @@ function _mediamosa_migration_asset() {
 }
 
 /**
- * Migrate the mediadfile table.
- *//*
+ * Migrate the mediafile table.
+ */
 function _mediamosa_migration_media() {
   // Get the database name.
   $db_name = _mediamosa_migration_get_memo_data_db();
+
+  // Remove foreign key on asset_media_metadata table.
+  db_query('ALTER TABLE mediamosa_asset_media_metadata DROP FOREIGN KEY fk_mediamosa_asset_media_metadata_media_id');
+
+  // Remove the primary key so insert will go fine.
+  db_query('ALTER TABLE mediamosa_asset_media DROP PRIMARY KEY');
+
+  // Get the current mode, which might be empty;
+  $old_mode = db_query('SELECT @@SESSION.sql_mode')->fetchField();
+
+  // Turn off problems with empty dates.
+  db_query("SET SESSION sql_mode = 'ALLOW_INVALID_DATES'");
 
   // The mediamosa_asset_media table should be empty (its checked as requirement).
   db_query(strtr(
     "INSERT INTO {mediamosa_asset_media}
       (
-        mediafile_id,
+        media_id,
         asset_id,
         asset_id_root,
         media_is_source,
@@ -471,4 +489,113 @@ function _mediamosa_migration_media() {
       '#db_name' => $db_name
     ))
   );
-}*/
+
+  // Now give every still in our database a new hash ID.
+  // Im actually adding one char to the ID.
+  db_query("UPDATE mediamosa_asset_media SET media_id = CONCAT(media_id, '0') WHERE type = 'STILL'");
+
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE mediamosa_asset_media SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE mediamosa_asset_media SET created = NOW() WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE mediamosa_asset_media SET changed = NOW() WHERE changed = '0000-00-00 00:00:00'");
+
+  // Back to old session mode.
+  db_query(strtr("SET SESSION sql_mode = '#old_mode'", array('#old_mode' => $old_mode)));
+
+  // Add back the primary key.
+  db_query('ALTER TABLE mediamosa_asset_media ADD PRIMARY KEY(media_id)');
+
+  // Add the foreign key on asset_media_metadata table.
+  db_query('ALTER TABLE mediamosa_asset_media_metadata ADD CONSTRAINT fk_mediamosa_asset_media_metadata_media_id FOREIGN KEY (media_id) REFERENCES mediamosa_asset_media (media_id)');
+}
+
+/**
+ * Migrate the mediafile metadata table.
+ */
+function _mediamosa_migration_media_metadata() {
+  // Get the database name.
+  $db_name = _mediamosa_migration_get_memo_data_db();
+
+  // Get the current mode, which might be empty;
+  $old_mode = db_query('SELECT @@SESSION.sql_mode')->fetchField();
+
+  // Turn off problems with empty dates.
+  db_query("SET SESSION sql_mode = 'ALLOW_INVALID_DATES'");
+
+  // The mediamosa_asset_media table should be empty (its checked as requirement).
+  db_query(strtr(
+    "INSERT INTO {mediamosa_asset_media_metadata}
+      (
+        metadata_id,
+        media_id,
+        video_codec,
+        colorspace,
+        width,
+        height,
+        fps,
+        audio_codec,
+        sample_rate,
+        channels,
+        file_duration,
+        container_type,
+        bitrate,
+        bpp,
+        filesize,
+        mime_type,
+        created,
+        changed,
+        is_hinted,
+        is_inserted_md,
+        still_time_code,
+        still_order,
+        still_type,
+        still_format,
+        still_default
+      ) (SELECT
+        md.metadata_id,
+        md.mediafile_id,
+        md.video_codec,
+        md.colorspace,
+        md.width,
+        md.height,
+        md.fps,
+        md.audio_codec,
+        md.sample_rate,
+        md.channels,
+        md.file_duration,
+        md.container_type,
+        md.bitrate,
+        md.bpp,
+        md.filesize,
+        md.mime_type,
+        md.created,
+        md.changed,
+        md.is_hinted,
+        md.is_inserted_md,
+        md.still_time_code,
+        md.still_order,
+        md.still_type,
+        md.still_format,
+        md.still_default
+        FROM #db_name.mediafile_metadata AS md JOIN #db_name.mediafile USING(mediafile_id) GROUP BY md.metadata_id ORDER BY md.metadata_id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE mediamosa_asset_media_metadata SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE mediamosa_asset_media_metadata SET created = NOW() WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE mediamosa_asset_media_metadata SET changed = NOW() WHERE changed = '0000-00-00 00:00:00'");
+
+  // Back to old session mode.
+  db_query(strtr("SET SESSION sql_mode = '#old_mode'", array('#old_mode' => $old_mode)));
+}

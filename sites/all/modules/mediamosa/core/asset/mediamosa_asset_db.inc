@@ -60,9 +60,6 @@ class mediamosa_asset_db {
   const MEDIAFILE_DURATION_LENGTH = 10;
   const MEDIAFILE_CONTAINER_TYPE = 'mediafile_container_type';
   const MEDIAFILE_CONTAINER_TYPE_LENGTH = 50;
-  const HAS_STREAMABLE_MEDIAFILES = 'has_streamable_mediafiles';
-  const HAS_STREAMABLE_MEDIAFILES_TRUE = 'TRUE';
-  const HAS_STREAMABLE_MEDIAFILES_FALSE = 'FALSE';
   const CREATED = 'created';
   const CHANGED = 'changed';
   const IS_UNAPPROPIATE = 'is_unappropiate';

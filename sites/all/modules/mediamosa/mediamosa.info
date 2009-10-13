@@ -50,6 +50,12 @@ files[] = core/asset/media/mediamosa_asset_media.inc
 files[] = core/asset/media/mediamosa_asset_media.install.inc
 files[] = core/asset/media/mediamosa_asset_media.rest.inc
 
+; Asset Media Metadata.
+files[] = core/asset/media/metadata/mediamosa_asset_media_metadata_db.inc
+files[] = core/asset/media/metadata/mediamosa_asset_media_metadata.inc
+files[] = core/asset/media/metadata/mediamosa_asset_media_metadata.install.inc
+files[] = core/asset/media/metadata/mediamosa_asset_media_metadata.rest.inc
+
 ; App class.
 files[] = core/app/mediamosa_app_db.inc
 files[] = core/app/mediamosa_app.inc
