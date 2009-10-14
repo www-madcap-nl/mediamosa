@@ -68,20 +68,45 @@ class mediamosa_db {
    * @return result
    *  DB result set.
    */
-  static private function query($func = 'db_query', $a_args = array()) {
+  static private function query($func = 'db_query', array $a_args = array()) {
+
+    // Because the order can change of the a_args per func, lets create pointers to them.
+    switch ($func) {
+      case 'db_query_range':
+       // By default, specify we want array's and not objects.
+        $a_args += array(4 =>
+          array(
+            'fetch' => PDO::FETCH_ASSOC,
+          ),
+        );
+        $query = &$a_args[0]; // The Query
+        $args = &$a_args[3];  // The Arguments.
+        break;
+
+      default:
+        // By default, specify we want array's and not objects.
+        $a_args += array(2 =>
+          array(
+            'fetch' => PDO::FETCH_ASSOC,
+          ),
+        );
+        $query = &$a_args[0]; // The Query.
+        $args = &$a_args[1];  // The Arguments.
+        break;
+    }
 
     // Make sure {} are inside the query, this will prevent problems later.
-    if (stripos($a_args[0], 'FROM') !== FALSE && stripos($a_args[0], ' found_rows()') !== FALSE) {
-      if (strpos($a_args[0], '{') === FALSE || strpos($a_args[0], '}') === FALSE) {
-        error_log($a_args[0]);
-        throw new mediamosa_exception_program_error('Missing {} your query; @query.', array('@query' => $a_args[0]));
+    if (stripos($query, 'FROM') !== FALSE && stripos($query, ' found_rows()') !== FALSE) {
+      if (strpos($query, '{') === FALSE || strpos($query, '}') === FALSE) {
+        error_log($query);
+        throw new mediamosa_exception_program_error('Missing {} your query; @query.', array('@query' => $query));
       }
     }
 
     // Define '#vars' for inserting values that are not quoted in the result.
-    if (isset($a_args[1])) {
+    if (isset($args)) {
       $a_extras = array();
-      foreach ($a_args[1] as $key => $value) {
+      foreach ($args as $key => $value) {
         if ($key{0} != '#') {
           continue;
         }
@@ -90,13 +115,12 @@ class mediamosa_db {
       }
 
       if (count($a_extras)) {
-        $a_args[0] = strtr($a_args[0], $a_extras);
+        $query = strtr($query, $a_extras);
         foreach ($a_extras as $key => $value) {
-          unset($a_args[1][$key]);
+          unset($args[$key]);
         }
       }
     }
-
 
     // Loggin on.
     if (mediamosa::is_db_logging()) {
@@ -108,29 +132,36 @@ class mediamosa_db {
 
     // Loggin on.
     if (mediamosa::is_db_logging()) {
-      mediamosa::log_db(round(microtime(TRUE) - $f_start_time, 4), $result && isset($result->queryString) ? $result->queryString : $a_args[0]);
+      mediamosa::log_db(round(microtime(TRUE) - $f_start_time, 4), $result && isset($result->queryString) ? $result->queryString : $query);
     }
 
     return $result;
   }
 
-  static public function db_query_range($query, $args, $from = 0, $count = 0, $options = array()) {
+  static public function db_query_range($query, $from, $count, array $args = array(), array $options = array()) {
     $a_args = func_get_args();
     return self::query('db_query_range', $a_args);
   }
 
   static public function db_query($query, $args = array(), $options = array()) {
     $a_args = func_get_args();
-    return self::query('db_query', $a_args);
+        return self::query('db_query', $a_args);
   }
 
-  static public function db_query_temporary($query, $args, $options = array()) {
+  static public function db_query_temporary($query, array $args = array(), array $options = array()) {
     $a_args = func_get_args();
     return self::query('db_query_temporary', $a_args);
   }
 
   static public function db_select($table, $alias = NULL, array $options = array()) {
     $a_args = func_get_args(); // Must copy into $a_args, cant use it directly in call_user_func_array
+
+    // Lets return array's by default and not objects.
+    $a_args += array(2 =>
+      array(
+        'fetch' => PDO::FETCH_ASSOC,
+      ),
+    );
 
     if (mediamosa::is_db_logging()) {
       $f_start_time = microtime(TRUE);
@@ -180,12 +211,13 @@ class mediamosa_db {
 
     return call_user_func_array('db_update', $a_args);
   }
-
+/*
+ * Removed from drupal 7, dont use.
   static public function db_result(DatabaseStatementInterface $statement) {
     $a_args = func_get_args(); // Must copy into $a_args, cant use it directly in call_user_func_array
     return call_user_func_array('db_result', $a_args);
   }
-
+*/
   /**
    * Escape the value for database
    * 'db_escape_string' is removed from drupal 7, D7 uses prepare instead. For now

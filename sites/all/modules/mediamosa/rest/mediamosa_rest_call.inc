@@ -65,6 +65,12 @@ abstract class mediamosa_rest_call {
 
   const DESCRIPTION = 'description';   // Description of the REST call (In English)
 
+  /**
+   * 'alias_for' contains the URI of the REST call that also runs on this rest URI.
+   * Any settings in this array is instead used of the original.
+   */
+  const ALIAS_FOR = 'alias_for';
+
   // Default var names / values.
   const LIMIT = 'limit';
   const OFFSET = 'offset';

@@ -26,38 +26,8 @@
 
  /**
   * @file
-  * The Asset Metadata Property REST calls.
+  * The function used for asset media metadata.
   */
+class mediamosa_asset_metadata {
 
-/**
- * URI: /metadata_tag (1.x)
- * Get a listing of the current asset media metadata defin
- */
-class mediamosa_rest_call_asset_metadata_property_list extends mediamosa_rest_call {
-
-  public function get_var_setup() {
-    $a_my_vars = array(
-      mediamosa_rest_call::VARS => array(),
-    );
-
-    // Enrich with default REST vars limit / offset.
-    $a_my_vars = self::set_var_setup_range($a_my_vars);
-
-    // Enrich with required REST vars.
-    return self::get_var_setup_default($a_my_vars);
-  }
-
-  public function do_call() {
-    $o_mediamosa = mediamosa::get();
-
-    $limit = $this->get_param_value(mediamosa_rest_call::LIMIT);
-    $offset = $this->get_param_value(mediamosa_rest_call::OFFSET);
-
-    // Get all rest calls.
-    $a_properties = mediamosa_asset_metadata_property::get_property_list($offset, $limit);
-
-    foreach ($a_properties as $a_property) {
-      $o_mediamosa->add_item($a_property);
-    }
-  }
 }

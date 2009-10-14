@@ -20,9 +20,11 @@ files[] = media/mediamosa_asset_media.rest.inc
 files[] = media/metadata/mediamosa_asset_media_metadata.rest.inc
 
 ; Metadata
+files[] = metadata/mediamosa_asset_metadata.inc
 files[] = metadata/mediamosa_asset_metadata.rest.inc
 
 ; Metadata Property
+files[] = metadata/property/mediamosa_asset_metadata_property.inc
 files[] = metadata/property/mediamosa_asset_metadata_property.rest.inc
 
 ; Metadata Property Group

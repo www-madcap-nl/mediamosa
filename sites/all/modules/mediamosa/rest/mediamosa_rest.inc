@@ -128,6 +128,11 @@ class mediamosa_rest {
   static public function get_rest_calls($limit = 0, $offset = 0, $key = mediamosa_rest_call::URI) {
     // Find all REST calls of enabled modules.
     $a_rest_calls = module_invoke_all('mediamosa_register_rest_call');
+
+    // Sort on URI.
+    ksort($a_rest_calls);
+
+    // Start with an empty result.
     $a_result = array();
 
     $pos = 1;
@@ -135,6 +140,14 @@ class mediamosa_rest {
       if ($offset && $offset--) {
         $pos++;
         continue;
+      }
+
+      // Check for the ALIAS_FOR.
+      if (isset($a_rest_call[mediamosa_rest_call::ALIAS_FOR])) {
+        assert(isset($a_rest_calls[$a_rest_call[mediamosa_rest_call::ALIAS_FOR]]));
+
+        // Now add the stuff we are missing.
+        $a_rest_call += $a_rest_calls[$a_rest_call[mediamosa_rest_call::ALIAS_FOR]];
       }
 
       if (!isset($a_rest_call[mediamosa_rest_call::METHOD])) {
@@ -149,6 +162,11 @@ class mediamosa_rest {
 
       $a_rest_call[mediamosa_rest_call::URI] = $uri;
       $a_rest_call[mediamosa_rest_call::ID] = $pos++;
+
+      // Sort on Property.
+      ksort($a_rest_call);
+
+      // Copy into result.
       $a_result[$a_rest_call[$key]] = $a_rest_call;
       if ($limit && !--$limit) {
         break;
