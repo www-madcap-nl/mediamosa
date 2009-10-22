@@ -130,7 +130,7 @@ function mediamosa_error_install() {
     ('ERRORCODE_CQL_ERROR', " . mediamosa_error::ERRORCODE_CQL_ERROR . ", 'MediaMosa - CQL returned an error; @error.'),
     ('ERRORCODE_METADATA_DEFINITION_ALREADY_EXISTS', " . mediamosa_error::ERRORCODE_METADATA_DEFINITION_ALREADY_EXISTS . ", 'MediaMosa - Metadata definition already exists.'),
     ('ERRORCODE_ACTION_AND_REPLACE', " . mediamosa_error::ERRORCODE_ACTION_AND_REPLACE . ", 'Action and Replace vars can not both be set.'),
-    ('ERRORCODE_METADATA_DEFINITION_CANNOT_START_WITH_A_NUMBER', " . mediamosa_error::ERRORCODE_METADATA_DEFINITION_CANNOT_START_WITH_A_NUMBER . ", 'Metadata definition may not start with a number.'),
+    ('ERRORCODE_VALUE_MUST_START_WITH_ALPHABETIC_CHAR', " . mediamosa_error::ERRORCODE_VALUE_MUST_START_WITH_ALPHABETIC_CHAR . ", 'The parameter @param (@type) first character must be an alphabetic character.'),
     ('ERRORCODE_VALIDATE_INT_TO_SMALL', " . mediamosa_error::ERRORCODE_VALIDATE_INT_TO_SMALL . ", 'The value of @param is to low, must be at least @min_value.'),
     ('ERRORCODE_VALIDATE_INT_TO_BIG', " . mediamosa_error::ERRORCODE_VALIDATE_INT_TO_BIG . ", 'The value of @param is to high, can not be bigger than @max_value.'),
     ('ERRORCODE_VALIDATE_STRING_TO_SHORT', " . mediamosa_error::ERRORCODE_VALIDATE_STRING_TO_SHORT . ", 'The length of @param is to short, must be at least @min_length characters long.'),

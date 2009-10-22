@@ -28,7 +28,6 @@
  * @file
  * The mediamosa_response class is used to output the response in XML or Plain format.
  */
-
 class mediamosa_response extends mediamosa {
 
   // ------------------------------------------------------------------ Consts
@@ -39,6 +38,7 @@ class mediamosa_response extends mediamosa {
   // ------------------------------------------------------------------ Members
   // The stored response.
   private $a_response = array();
+  private $response_success = FALSE;
 
   // The rest class object.
   private $o_mediamosa_rest = NULL;
@@ -163,6 +163,9 @@ class mediamosa_response extends mediamosa {
       'items' => array()
     );
 
+    // Reset setting.
+    $this->response_success = FALSE;
+
     if ($errors) {
       $this->a_response['errors'] = $errors;
     }
@@ -211,6 +214,15 @@ class mediamosa_response extends mediamosa {
     $this->a_response['header']['request_result'] = $request_result;
     $this->a_response['header']['request_result_id'] = $request_result_id;
     $this->a_response['header']['request_result_description'] = $request_result_description !== FALSE ? $request_result_description : mediamosa_error::error_code_find_description($request_result_id);
+  }
+
+  /**
+   * Set when the rest call was successful, but doesn't have any data.
+   *
+   */
+  public function set_result_okay() {
+    self::set_result(self::SUCCESS, mediamosa_error::ERRORCODE_OKAY);
+    $this->response_success = TRUE;
   }
 
   /**
@@ -303,14 +315,14 @@ class mediamosa_response extends mediamosa {
     $this->a_response['header']['item_offset'] = $this->item_offset;
     $this->a_response['header']['item_count'] = $this->item_count;
 
-    if (!$this->item_count && $this->a_response['header']['request_result_id'] == mediamosa_error::ERRORCODE_OKAY) {
+    if (!$this->item_count && $this->a_response['header']['request_result_id'] == mediamosa_error::ERRORCODE_OKAY && !$this->response_success) {
       self::set_result(self::SUCCESS, mediamosa_error::ERRORCODE_EMPTY_RESULT);
     }
 
-    // Sort the header
+    // Sort the header.
     ksort($this->a_response['header']);
 
-    // Log the rest call
+    // Log the rest call.
     $this->log_restcall();
 
     // Create the SimpleXML element.

@@ -79,8 +79,8 @@ function mediamosa_asset_metadata_property_group_schema() {
       ),
     ),
     'primary key' => array(mediamosa_asset_metadata_property_group_db::ID),
-    'indexes' => array(
-      'idx_propgroupid_name' => array(mediamosa_asset_metadata_property_group_db::ID, mediamosa_asset_metadata_property_group_db::NAME),
+    'unique keys' => array(
+      'uni_propgroupname' => array(mediamosa_asset_metadata_property_group_db::NAME),
     ),
   );
 

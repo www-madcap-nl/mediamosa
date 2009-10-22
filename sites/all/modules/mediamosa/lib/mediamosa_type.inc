@@ -43,6 +43,7 @@ class mediamosa_type {
 
   const TYPE_ALPHA_NUM                   = 'ALPHA_NUM'; // [A-Za-z0-9]
   const TYPE_ALPHA_NUM_UNDERSCORE        = 'ALPHA_NUM_UNDERSCORE'; // [A-Za-z0-9_]
+  const TYPE_ALPHA_NUM_UNDERSCORE_TAG    = 'ALPHA_NUM_UNDERSCORE_TAG'; // same as ALPHA_NUM_UNDERSCORE, but does not allow the first char to be non alpha.
   const TYPE_STRING                      = 'STRING';
   const TYPE_STRING_CQL                  = 'STRING_CQL';
   const TYPE_DATETIME                    = 'DATETIME';
@@ -179,6 +180,11 @@ class mediamosa_type {
 
         $checked_param_value = (string)$mixed_param_value;
         break;
+
+      case self::TYPE_ALPHA_NUM_UNDERSCORE_TAG:
+        if ($mixed_param_value != '' && !ctype_alpha(mediamosa_unicode::substr($mixed_param_value, 0, 1))) {
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALUE_MUST_START_WITH_ALPHABETIC_CHAR, array('@param' => $param, '@type' => $param_type));
+        }
 
       case self::TYPE_ALPHA_NUM_UNDERSCORE:
         if (!ctype_alnum(str_replace('_', '', $mixed_param_value)) && $mixed_param_value != '') {

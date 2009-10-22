@@ -72,6 +72,7 @@ abstract class mediamosa_rest_call {
   const ALIAS_FOR = 'alias_for';
 
   // Default var names / values.
+  const APP_ID = 'app_id';
   const LIMIT = 'limit';
   const OFFSET = 'offset';
   const ORDER_BY = 'order_by';
@@ -169,7 +170,12 @@ abstract class mediamosa_rest_call {
    * Get the default vars we always expect in every rest call
    */
   protected function get_var_setup_default($a_my_vars) {
-//    $a_my_vars['vars'][vp_db::APP_ID] = array(vp_rest_db::VAR_TYPE => vp_type::TYPE_APP_ID, vp_rest_db::VAR_IS_ARRAY => vp_rest_db::VAR_IS_ARRAY_NO, vp_rest_db::VAR_IS_REQUIRED => vp_rest_db::VAR_IS_REQUIRED_YES);
+    $a_my_vars[mediamosa_rest_call::VARS][mediamosa_rest_call::APP_ID] = array(
+      self::VAR_TYPE => mediamosa_type::TYPE_APP_ID,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+      self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+      self::VAR_DESCRIPTION => mediamosa::t('The application ID.'),
+    );
 
     return $a_my_vars;
   }
@@ -182,20 +188,22 @@ abstract class mediamosa_rest_call {
    */
   protected function set_var_setup_range($a_my_vars = array(), $limit_max = mediamosa_db::LIMIT_MAX) {
 
-    $a_my_vars[mediamosa_rest_call::VARS][mediamosa_rest_call::LIMIT] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_LIMIT,
-      mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_NO,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
-      mediamosa_rest_call::VAR_DEFAULT_VALUE => $limit_max,
-      mediamosa_rest_call::VAR_IS_READ_ONLY => mediamosa_rest_call::VAR_IS_READ_ONLY_YES, // Once set, dont change.
+    $a_my_vars[self::VARS][self::LIMIT] = array(
+      self::VAR_TYPE => mediamosa_type::TYPE_LIMIT,
+      self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_NO,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+      self::VAR_DEFAULT_VALUE => $limit_max,
+      self::VAR_IS_READ_ONLY => self::VAR_IS_READ_ONLY_YES, // Once set, dont change.
+      self::VAR_DESCRIPTION => mediamosa::t('Limit of the items of the result set.'),
     );
 
-    $a_my_vars[mediamosa_rest_call::VARS][mediamosa_rest_call::OFFSET] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_UINT,
-      mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_NO,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
-      mediamosa_rest_call::VAR_DEFAULT_VALUE => 0,
-      mediamosa_rest_call::VAR_IS_READ_ONLY => mediamosa_rest_call::VAR_IS_READ_ONLY_YES, // Once set, dont change.
+    $a_my_vars[self::VARS][self::OFFSET] = array(
+      self::VAR_TYPE => mediamosa_type::TYPE_UINT,
+      self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_NO,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+      self::VAR_DEFAULT_VALUE => 0,
+      self::VAR_IS_READ_ONLY => self::VAR_IS_READ_ONLY_YES, // Once set, dont change.
+      self::VAR_DESCRIPTION => mediamosa::t('The starting row position in the result set.'),
     );
 
     return $a_my_vars;
@@ -206,27 +214,40 @@ abstract class mediamosa_rest_call {
    *
    * @param array $a_my_vars
    *   Provide current array to merge.
+   * @param string $default_order_by
+   *  Default field to order on.
+   * @param array $a_allowed_values_order_by
+   *  array containing allowed values.
+   * @param string $default_order_direction
+   *  ASC (default) / DESC direction.
+   * @return array
+   *  Returns the altered $a_my_vars.
    */
   protected function set_var_setup_order_by($a_my_vars = array(), $default_order_by = '', $a_allowed_values_order_by = array(), $default_order_direction = mediamosa_type::ORDER_DIRECTION_ASC) {
 
-    $a_my_vars[mediamosa_rest_call::VARS][mediamosa_rest_call::ORDER_BY] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_ALPHA_NUM,
-      mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_NO,
-      mediamosa_rest_call::VAR_DEFAULT_VALUE => $default_order_by,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
+    // Either must be set.
+    assert(in_array($default_order_direction, array(mediamosa_type::ORDER_DIRECTION_ASC, mediamosa_type::ORDER_DIRECTION_DESC)));
+
+    $a_my_vars[self::VARS][self::ORDER_BY] = array(
+      self::VAR_TYPE => mediamosa_type::TYPE_ALPHA_NUM,
+      self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_NO,
+      self::VAR_DEFAULT_VALUE => $default_order_by,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+      self::VAR_DESCRIPTION => mediamosa::t('On what column the result set should be ordered.'),
     );
 
     // Add allowed values for order by.
     if (count($a_allowed_values_order_by)) {
-      $a_my_vars[mediamosa_rest_call::VARS][mediamosa_rest_call::ORDER_BY][mediamosa_rest_call::VAR_ALLOWED_VALUES] = $a_allowed_values_order_by;
+      $a_my_vars[self::VARS][self::ORDER_BY][self::VAR_ALLOWED_VALUES] = $a_allowed_values_order_by;
     }
 
-    $a_my_vars[mediamosa_rest_call::VARS][mediamosa_rest_call::ORDER_DIRECTION] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_ORDER_DIRECTION,
-      mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_NO,
-      mediamosa_rest_call::VAR_DEFAULT_VALUE => $default_order_direction,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
-      );
+    $a_my_vars[self::VARS][self::ORDER_DIRECTION] = array(
+      self::VAR_TYPE => mediamosa_type::TYPE_ORDER_DIRECTION,
+      self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_NO,
+      self::VAR_DEFAULT_VALUE => $default_order_direction,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+      self::VAR_DESCRIPTION => mediamosa::t('The direction of the result set.'),
+    );
 
     return $a_my_vars;
   }
@@ -326,6 +347,9 @@ abstract class mediamosa_rest_call {
 
     // All args are now known. Now walk through the setup and check the formats and contents.
     foreach ($a_var_setup[self::VARS] as $param => $a_var) {
+
+      // Lets assert when we forget the description.
+      assert(isset($a_var[self::VAR_DESCRIPTION]));
 
       // Make sure its set, even when empty.
       $this->a_rest_args[$param][self::PARAM_ISSET] = isset($this->a_rest_args[$param]);

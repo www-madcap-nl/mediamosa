@@ -319,4 +319,90 @@ class mediamosa_db {
       }
     }
   }
+
+  /**
+   * Returns the number of rows.
+   *
+   * @param string $table_name
+   *  The table name.
+   * @param array $a_columns_and
+   *  column => value.
+   * @return integer
+   *    returns number of rows.
+   */
+  static public function db_count_rows($table_name, $a_columns_and = array()) {
+
+    // Create select object.
+    $query = self::db_select($table_name);
+    foreach($a_columns_and as $column => $value) {
+      $query->condition($column, $value);
+    }
+
+    return $query->countQuery()->execute()->fetchField();
+  }
+
+  /**
+   * Will throw exception if no rows where found.
+   *
+   * @param string $table_name
+   *  The table name.
+   * @param array $a_columns_and
+   *  column => value.
+   *
+   */
+  function db_must_exists($table_name, $a_columns_and = array()) {
+
+    if (self::db_count_rows($table_name, $a_columns_and)) {
+      return; // exists
+    }
+
+    //
+    switch ($table_name) {
+      case mediamosa_asset_db::TABLE_NAME:
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_ASSET_NOT_FOUND, array("@asset_id" => $a_columns_and[mediamosa_asset_db::ID]));
+      case mediamosa_asset_media_db::TABLE_NAME:
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MEDIAFILE_NOT_FOUND, array("@mediafile_id" => $a_columns_and[mediamosa_asset_media_db::ID]));
+/*
+      case 'collection':
+        throw new vpx_exception_error(ERRORCODE_COLLECTION_NOT_FOUND, array("@coll_id" => $a_columns_and['coll_id']));
+      case 'aut_group':
+        throw new vpx_exception_error(ERRORCODE_AUT_GROUP_NOT_FOUND, array("@group" => $a_columns_and['aut_group_name']));
+      case 'ftp_batch':
+        throw new vpx_exception_error(ERRORCODE_FTP_BATCH_NOT_FOUND, array("@batch_id" => $a_columns_and['batch_id']));
+      case 'job':
+        throw new vpx_exception_error_job_not_found(array("@job_id" => $a_columns_and['job_id']));
+      case 'ftpuser':
+        throw new vpx_exception_error(ERRORCODE_FTP_UNKNOWN_USER);
+      case 'quota_user':
+        throw new vpx_exception_error(ERRORCODE_USERMAN_INVALID_USER, array("@user_id" => $a_columns_and["name"]));
+      case 'quota_group':
+        throw new vpx_exception_error(ERRORCODE_USERMAN_INVALID_GROUP, array("@group_id" => $a_columns_and["group_id"]));
+*/
+    }
+
+    assert(0);
+    throw new mediamosa_exception_error(ERRORCODE_UNEXPECTED_ERROR);
+  }
+
+  /**
+   * Will throw exception if no rows where found.
+   *
+   * @param string $table_name
+   *  The table name.
+   * @param array $a_columns_and
+   *  column => value.
+   * @return boolean
+   *  Return true or false on exists one or more row match.
+   */
+  function db_exists($table_name, $a_columns_and = array()) {
+    try {
+      self::db_must_exists($table_name, $a_columns_and);
+    }
+    catch (mediamosa_exception $e) {
+      assert($e);
+      return FALSE;
+    }
+
+    return TRUE;
+  }
 }

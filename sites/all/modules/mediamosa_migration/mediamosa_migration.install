@@ -631,7 +631,7 @@ function _mediamosa_migration_asset_metadata_property_group() {
     "INSERT INTO {mediamosa_asset_metadata_property_group}
       (
         propgroup_id,
-        name,
+        propgroup_name,
         created,
         changed
       ) (SELECT
@@ -678,7 +678,7 @@ function _mediamosa_migration_asset_metadata_property() {
         prop_id,
         propgroup_id,
         app_id,
-        name,
+        prop_name,
         type,
         min_occurences,
         max_occurences,

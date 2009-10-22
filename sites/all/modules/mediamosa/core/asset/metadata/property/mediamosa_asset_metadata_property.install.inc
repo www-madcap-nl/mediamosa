@@ -118,8 +118,8 @@ function mediamosa_asset_metadata_property_schema() {
       ),
     ),
     'primary key' => array(mediamosa_asset_metadata_property_db::ID),
-    'indexes' => array(
-      'idx_' . mediamosa_asset_metadata_property_db::PROPGROUP_ID => array(mediamosa_asset_metadata_property_db::PROPGROUP_ID),
+    'unique keys' => array(
+      'uni_' . mediamosa_asset_metadata_property_db::PROPGROUP_ID => array(mediamosa_asset_metadata_property_db::PROPGROUP_ID, mediamosa_asset_metadata_property_db::NAME),
     ),
     'foreign keys' => array(
       mediamosa_asset_metadata_property_db::PROPGROUP_ID => array(mediamosa_asset_metadata_property_group_db::TABLE_NAME => mediamosa_asset_metadata_property_group_db::ID),
