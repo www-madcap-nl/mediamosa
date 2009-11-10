@@ -36,7 +36,7 @@ class mediamosa_asset_media_metadata_db {
 
   // Database fields;
   const ID = 'metadata_id';
-  const MEDIA_ID = 'media_id';
+  const MEDIA_ID = 'media_id'; // 1.x name: mediafile_id.
   const VIDEO_CODEC = 'video_codec';
   const VIDEO_CODEC_LENGTH = 50;
   const COLORSPACE = 'colorspace';

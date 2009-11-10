@@ -31,7 +31,9 @@
 
 /**
  * URI: /metadata_tag (1.x)
- * Get a listing of the current asset media metadata defin
+ * Get a listing of the current asset media metadata define
+ *
+ * 1.x REST: media_management_metadata_definition_get
  */
 class mediamosa_rest_call_asset_metadata_property_list extends mediamosa_rest_call {
 
@@ -126,6 +128,9 @@ class mediamosa_rest_call_asset_metadata_property_list extends mediamosa_rest_ca
 /**
  * URI: /metadata_tag/create (1.x)
  * Create a asset metadata property.
+ *
+ * 1.x REST: media_management_metadata_definition_create
+ *
  */
 class mediamosa_rest_call_asset_metadata_property_create extends mediamosa_rest_call {
 
@@ -184,6 +189,8 @@ class mediamosa_rest_call_asset_metadata_property_create extends mediamosa_rest_
 /**
  * URI: /metadata_tag/delete (1.x)
  * Delete a asset metadata property.
+ *
+ * 1.x REST: media_management_metadata_definition_delete
  */
 class mediamosa_rest_call_asset_metadata_property_delete extends mediamosa_rest_call {
 

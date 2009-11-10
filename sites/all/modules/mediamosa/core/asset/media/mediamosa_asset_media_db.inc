@@ -32,13 +32,15 @@
 class mediamosa_asset_media_db {
   // ------------------------------------------------------------------ Consts.
   // Table name;
-  const TABLE_NAME = 'mediamosa_asset_media';
+  const TABLE_NAME = 'mediamosa_asset_media'; // 1.x name mediafile
 
   // Database fields;
-  const ID = 'media_id';
+  const ID = 'media_id'; // 1.x name: mediafile_id.
   const ASSET_ID = 'asset_id';
   const ASSET_ID_ROOT = 'asset_id_root';
-  const MEDIA_ID_SOURCE = 'media_is_source';
+  const MEDIA_ID_SOURCE = 'media_id_source'; // 1.x name: mediafile_source.
+  const TAG = 'tag';
+  const TAG_LENGTH = 32;
   const APP_ID = 'app_id';
   const OWNER_ID = 'owner_id';
   const OWNER_ID_LENGTH = 255;
@@ -53,6 +55,9 @@ class mediamosa_asset_media_db {
   const IS_STREAMABLE = 'is_streamable';
   const IS_STREAMABLE_TRUE = 'TRUE';
   const IS_STREAMABLE_FALSE = 'FALSE';
+  const IS_STILL = 'is_still';
+  const IS_STILL_TRUE = 'TRUE';
+  const IS_STILL_FALSE = 'FALSE';
   const FILENAME = 'filename';
   const FILENAME_LENGTH = 255;
   const URI = 'uri';
@@ -75,9 +80,4 @@ class mediamosa_asset_media_db {
   const TRANSCODE_INHERITS_ACL = 'transcode_inherits_acl';
   const TRANSCODE_INHERITS_ACL_TRUE = 'TRUE';
   const TRANSCODE_INHERITS_ACL_FALSE = 'FALSE';
-  const TYPE = 'type';
-  const TYPE_VIDEO = 'VIDEO';
-  const TYPE_AUDIO = 'AUDIO';
-  const TYPE_STILL = 'STILL';
-  const TYPE_WATERMARK = 'WATERMARK';
 }

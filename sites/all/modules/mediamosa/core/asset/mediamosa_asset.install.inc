@@ -146,15 +146,15 @@ function mediamosa_asset_schema() {
         'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_db::IS_PRIVATE_FALSE, mediamosa_asset_db::IS_PRIVATE_TRUE)) . "')",
         'default' => mediamosa_asset_db::IS_PRIVATE_FALSE,
       ),
-      mediamosa_asset_db::MEDIAFILE_DURATION => array(
+      mediamosa_asset_db::MEDIA_DURATION => array(
         'type' => 'varchar',
-        'length' => mediamosa_asset_db::MEDIAFILE_DURATION_LENGTH,
+        'length' => mediamosa_asset_db::MEDIA_DURATION_LENGTH,
         'default' => NULL,
         'description' => t('The mediafile duration length.'),
       ),
-      mediamosa_asset_db::MEDIAFILE_CONTAINER_TYPE => array(
+      mediamosa_asset_db::MEDIA_CONTAINER_TYPE => array(
         'type' => 'varchar',
-        'length' => mediamosa_asset_db::MEDIAFILE_CONTAINER_TYPE_LENGTH,
+        'length' => mediamosa_asset_db::MEDIA_CONTAINER_TYPE_LENGTH,
         'default' => NULL,
         'description' => t('The container type length.'),
       ),

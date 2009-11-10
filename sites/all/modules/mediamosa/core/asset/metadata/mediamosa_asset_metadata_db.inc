@@ -39,9 +39,9 @@ class mediamosa_asset_metadata_db {
   const ASSET_ID = 'asset_id';
   const PROP_ID = 'prop_id';
   const VAL_CHAR = 'val_char';
-  const VAL_CHAR_LFT = 'val_char_lft';
+  const VAL_CHAR_LFT = 'val_char_lft'; // new.
   const VAL_CHAR_LFT_LENGTH = 50;
-  const VAL_CHAR_RGHT = 'val_char_rght';
+  const VAL_CHAR_RGHT = 'val_char_rght'; // new.
   const VAL_CHAR_RGHT_LENGTH = 50;
   const VAL_DATETIME = 'val_datetime';
   const VAL_INT = 'val_int';

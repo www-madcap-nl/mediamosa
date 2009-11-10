@@ -32,7 +32,7 @@
 class mediamosa_asset_metadata_property {
 
   // ------------------------------------------------------------------ Functions (public).
-  // 1.x name: media_management_metadata_definition_get.
+  // 1.x name: media_management_metadata_definition_get (REST).
   function property_list($a_app_ids, $include_default_definitions, $name, $offset = 0, $limit = mediamosa_db::LIMIT_MAX, $order_by = '', $order_direction = mediamosa_type::ORDER_DIRECTION_ASC) {
 
     // Build the select object.
@@ -86,18 +86,18 @@ class mediamosa_asset_metadata_property {
    * @return
    *  The new prop_id.
    */
-  // 1.x name: media_management_metadata_definition_create.
+  // 1.x name: media_management_metadata_definition_create (REST).
   function property_create($mixed_app_ids, $name, $type, $min_occurences = 0, $max_occurences = 0) {
 
     // First app_id is always the app of the eua.
     $app_id = is_array($mixed_app_ids) ? reset($mixed_app_ids) : $mixed_app_ids;
 
     // Get the propgroups.
-    $a_propgroup = mediamosa_asset_metadata_property_group::property_group_get_row_with_appid($app_id);
+    $a_propgroup = mediamosa_asset_metadata_property_group::get_row_with_appid($app_id);
 
     // If its not exists, then create.
     if ($a_propgroup == FALSE) {
-      $propgroup_id = mediamosa_asset_metadata_property_group::property_group_create_with_appid($app_id);
+      $propgroup_id = mediamosa_asset_metadata_property_group::create_with_appid($app_id);
     }
     else {
       $propgroup_id = $a_propgroup[mediamosa_asset_metadata_property_group_db::ID];
@@ -148,12 +148,13 @@ class mediamosa_asset_metadata_property {
    * @param string $name
    * @param string $delete
    */
+  // 1.x name: media_management_metadata_definition_delete (REST).
   function property_delete($mixed_app_ids, $name, $delete) {
 
     // First app_id is always the app of the eua.
     $app_id = is_array($mixed_app_ids) ? reset($mixed_app_ids) : $mixed_app_ids;
 
-    $a_propgroup = mediamosa_asset_metadata_property_group::property_group_get_row_with_appid($app_id);
+    $a_propgroup = mediamosa_asset_metadata_property_groupget_row_with_appid($app_id);
     if (!$a_propgroup) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INVALID_METADATA_DEFINITION);
     }

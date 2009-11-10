@@ -32,7 +32,7 @@
 class mediamosa_asset_db {
   // ------------------------------------------------------------------ Consts.
   // Table name;
-  const TABLE_NAME = 'mediamosa_asset';
+  const TABLE_NAME = 'mediamosa_asset'; // 1.x name asset.
 
   // Database fields;
   const ID = 'asset_id';
@@ -53,13 +53,13 @@ class mediamosa_asset_db {
   const IS_LOCKED_FALSE = 'FALSE';
   const REFERENCE_ID = 'reference_id';
   const REFERENCE_ID_LENGTH = 255;
-  const IS_PRIVATE = 'is_private';
+  const IS_PRIVATE = 'is_private'; // 1.x name: isprivate.
   const IS_PRIVATE_TRUE = 'TRUE';
   const IS_PRIVATE_FALSE = 'FALSE';
-  const MEDIAFILE_DURATION = 'mediafile_duration';
-  const MEDIAFILE_DURATION_LENGTH = 10;
-  const MEDIAFILE_CONTAINER_TYPE = 'mediafile_container_type';
-  const MEDIAFILE_CONTAINER_TYPE_LENGTH = 50;
+  const MEDIA_DURATION = 'media_duration'; // 1.x name: mediafile_duration.
+  const MEDIA_DURATION_LENGTH = 10;
+  const MEDIA_CONTAINER_TYPE = 'media_container_type'; // 1.x name: mediafile_container_type.
+  const MEDIA_CONTAINER_TYPE_LENGTH = 50;
   const CREATED = 'created';
   const CHANGED = 'changed';
   const IS_UNAPPROPIATE = 'is_unappropiate';
