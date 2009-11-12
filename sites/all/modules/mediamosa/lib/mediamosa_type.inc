@@ -108,10 +108,6 @@ class mediamosa_type {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_REQUIRED_PARAMETER, array('@param' => $param, '@type' => $param_type));
     }
 
-
-    // Set to null so we know its been set, if not, it will throw exception.
-    $checked_param_value = NULL;
-
     switch ($param_type) {
       case self::TYPE_APP_ID:
         if ( (!is_int($mixed_param_value) && !ctype_digit($mixed_param_value)) || $mixed_param_value < 1 || $mixed_param_value > 9999) {
@@ -208,6 +204,7 @@ class mediamosa_type {
             }
           }
           catch (Exception $e) {
+            assert($e);
             throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
           }
         }
@@ -268,7 +265,7 @@ class mediamosa_type {
       return $checked_param_value;
     }
 
-    if (!is_string($checked_param_value) && !is_int($checked_param_value)) {
+    if (!isset($checked_param_value) || (!is_string($checked_param_value) && !is_int($checked_param_value))) {
         throw new mediamosa_exception_program_error('Value type param @param (@type) is not integer or string value.', array('@param' => $param, '@type' => $param_type));
     }
 

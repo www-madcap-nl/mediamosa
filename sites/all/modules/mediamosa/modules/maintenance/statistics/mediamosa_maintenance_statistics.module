@@ -1,0 +1,117 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is a Full Featured, Webservice Oriented Media Management and
+ * Distribution platform (http://www.vpcore.nl)
+ *
+ * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * Implementation of hook_menu()
+ */
+function vpx_san_nas_menu() {
+  $items = array();
+
+  $items['vpx/san_nas'] = array(
+    'title' => t('VPX SAN / NAS'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('vpx_san_nas_form'),
+    'access arguments' => array('view sannas'),
+  );
+
+  return $items;
+}
+
+
+/**
+ * Implementatie van hook_perm()
+ */
+function vpx_san_nas_perm() {
+  return array('view sannas', 'administer sannas');
+}
+
+
+/**
+ * Implementation of hook_form() *
+ */
+function vpx_san_nas_form(&$form_state=null) {
+  $form = array();
+
+  $san_nas = db_fetch_array(db_query("SELECT current_mount_point, current_mount_point_windows FROM {san_nas_settings} LIMIT 1"));
+
+  $form['general'] = array(
+    '#type' => 'fieldset',
+    '#collapsible' => FALSE,
+    '#collapsed' => FALSE,
+    '#title' => t('VPX SAN/NAS mount points'),
+    '#description' => t('Mount points on SAN/NAS.')
+  );
+
+  $form['general']['current_mount_point'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Linux mount point'),
+    '#description' => t('Current Linux mount point.'),
+    '#required' => TRUE,
+    '#default_value' => $san_nas['current_mount_point'],
+  );
+  $form['general']['current_mount_point_windows'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Windows mount point'),
+    '#description' => t('Current Windows mount point (use UNC path).'),
+    '#required' => TRUE,
+    '#default_value' => $san_nas['current_mount_point_windows'],
+  );
+
+  $form['submit'] = array('#type' => 'submit', '#value' => t('Save'));
+
+  return $form;
+}
+
+
+function vpx_san_nas_view() {
+  $content = t("VPX SAN / NAS");
+  return $content;
+}
+
+
+/**
+ * Implementatie van hook_submit()
+ */
+function vpx_san_nas_form_submit(&$form_state, $form) {
+
+  if (!user_access('administer sannas')) {
+    drupal_set_message('You have no "administer sannas" rights.', 'error');
+    drupal_goto($_SERVER['HTTP_REFERER']);
+  }
+
+  // maak een kortere alias
+  $fv =& $form['values'];
+
+  if ($fv['submit'] == t('Save')) {
+    db_query(
+      "UPDATE {san_nas_settings} SET current_mount_point = '%s', current_mount_point_windows = '%s'",
+      $fv['current_mount_point'],
+      $fv['current_mount_point_windows']
+    );
+  }
+
+  drupal_set_message(t("Mount points saved succesfully!"));
+}

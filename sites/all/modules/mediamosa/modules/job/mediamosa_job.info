@@ -1,0 +1,23 @@
+; $Id $
+
+name = "Jobs"
+description = "The jobs module handles, executes and manages queing of jobs."
+package = "MediaMosa 2 - Modules"
+version = "2.0.0"
+core = 7.x
+
+; Dependencies (module names)
+dependencies[] = mediamosa
+
+; Used files.
+files[] = mediamosa_job.module
+files[] = mediamosa_job.rest.inc
+
+; Job Handler.
+files[] = handler/mediamosa_job_handler.rest.inc
+
+; Job Schedular.
+files[] = schedular/mediamosa_job_schedular.rest.inc
+
+; Job Server.
+files[] = server/mediamosa_job_server.rest.inc

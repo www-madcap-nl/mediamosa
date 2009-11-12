@@ -27,3 +27,19 @@ Notes:
 Variables;
 - The 'vpx_allowed_internal_ips' is renamed into 'mediomosa_allowed_internal_ips'.
 
+// Not converted (yet);
+alter -> sites/all/modules/mediamosa/modules/maintenance/alter [mediamosa_maintenance.alter]
+vpx_history -> sites/all/modules/mediamosa/modules/history [mediamosa_history] (need rewrite)
+ftp_users -> sites/all/modules/mediamosa/modules/ftp/user [mediamosa_ftp.user]
+integrity_check -> sites/all/modules/mediamosa/modules/maintenance/integrity_check [mediamosa_maintenance.integrity_check]
+
+
+Modules;
+
+vpx_statistics -> sites/all/modules/mediamosa/modules/maintenance/statistics [mediamosa_maintenance.statistics]
+vpx_stats -> merge with sites/all/modules/mediamosa/modules/maintenance/statistics [mediamosa_maintenance.statistics]
+vpx_upload -> sites/all/modules/mediamosa/modules/asset/media/upload [mediamosa_asset.media.upload]
+vpx_webservice_management -> sites/all/modules/mediamosa/modules/maintenance/webservice [mediamosa_maintenance.webservice)
+
+Onduidelijk (is geshared uit PA)
+vpx_beheer_mm/pa -> sites/all/modules/mediamosa/modules/asset of collections [verdeeld naar modules]

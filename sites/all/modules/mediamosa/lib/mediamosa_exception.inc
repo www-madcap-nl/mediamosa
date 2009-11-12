@@ -57,6 +57,7 @@ class mediamosa_exception extends Exception {
         $backtrace = $this->getTrace();
       }
       catch (Exception $e) {
+        assert($e);
         $backtrace = FALSE;
       }
 

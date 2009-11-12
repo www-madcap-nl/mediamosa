@@ -78,8 +78,6 @@ class mediamosa_response extends mediamosa {
    */
   public function process_rest() {
 
-    $a_rest_call = FALSE;
-
     try {
       // Set the response handler.
       set_error_handler(array($this, 'mediamosa_error_handler_response'), E_ALL);
@@ -96,7 +94,7 @@ class mediamosa_response extends mediamosa {
       $a_rest_call = $this->o_mediamosa_rest->process_call();
 
       // If we return FALSE, try to let Drupal handle the output.
-      if ($a_rest_call == FALSE) {
+      if (!$a_rest_call) {
         return;
       }
     }
@@ -113,7 +111,8 @@ class mediamosa_response extends mediamosa {
       $this->set_result(self::ERROR, $e->getCode(), $e->getMessage());
     }
 
-    if (!$a_rest_call || !isset($a_rest_call[mediamosa_rest_call::RESPONSE_TYPE])) {
+    // Make sure response type is set.
+    if (!isset($a_rest_call) || !$a_rest_call || !isset($a_rest_call[mediamosa_rest_call::RESPONSE_TYPE])) {
       $a_rest_call[mediamosa_rest_call::RESPONSE_TYPE] = mediamosa_rest_call::RESPONSE_TYPE_XML;
     }
 
@@ -135,7 +134,7 @@ class mediamosa_response extends mediamosa {
     }
 
     // Stop and output our content.
-    // Might run any added exit functions (drupal).
+    // Might run any added exit functions (drupal or otherwise).
     exit($output);
   }
 
@@ -387,7 +386,7 @@ class mediamosa_response extends mediamosa {
    */
   function generate_plain_xml_add_child($item, $key, $mixed_value, $max_depth = 99) {
     if (!--$max_depth) {
-      return;
+      return NULL;
     }
 
     if (!is_array($mixed_value)) {
@@ -400,7 +399,7 @@ class mediamosa_response extends mediamosa {
         $item->addChild($key, htmlspecialchars($value));
       }
 
-      return;
+      return NULL;
     }
 
     if ($first_key{0} == '#') {
@@ -416,7 +415,7 @@ class mediamosa_response extends mediamosa {
         }
       }
 
-      return;
+      return NULL;
     }
 
     $item_child = $item->addChild($key);

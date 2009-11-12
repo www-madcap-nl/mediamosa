@@ -1,6 +1,6 @@
 ; $Id $
 
-name = "MediaMosa 2 - Module - Error handling"
+name = "Error handling"
 description = "The error module handles all maintenance and usage for error messaging for MediaMosa."
 package = "MediaMosa 2 - Modules"
 version = "2.0.0"

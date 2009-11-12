@@ -17,6 +17,18 @@ files[] = mediamosa.version.inc
 files[] = mediamosa.inc
 files[] = mediamosa.install
 
+; Error. (1st for dependency).
+files[] = core/error/mediamosa_error_db.inc
+files[] = core/error/mediamosa_error.inc
+files[] = core/error/mediamosa_error.install.inc
+
+; Library. (2nd for dependency).
+files[] = lib/mediamosa_db.inc
+files[] = lib/mediamosa_exception.inc
+files[] = lib/mediamosa_lib.inc
+files[] = lib/mediamosa_type.inc
+files[] = lib/mediamosa_unicode.inc
+
 ; Response class.
 files[] = response/mediamosa_response.inc
 
@@ -25,17 +37,16 @@ files[] = rest/mediamosa_rest_call.inc
 files[] = rest/mediamosa_rest.inc
 files[] = rest/mediamosa_rest.rest.inc
 
-; Library.
-files[] = lib/mediamosa_db.inc
-files[] = lib/mediamosa_exception.inc
-files[] = lib/mediamosa_lib.inc
-files[] = lib/mediamosa_type.inc
-files[] = lib/mediamosa_unicode.inc
+; ACL.
+files[] = core/acl/mediamosa_acl.inc
 
-; Error.
-files[] = core/error/mediamosa_error_db.inc
-files[] = core/error/mediamosa_error.inc
-files[] = core/error/mediamosa_error.install.inc
+; App class.
+files[] = core/app/mediamosa_app_db.inc
+files[] = core/app/mediamosa_app.inc
+files[] = core/app/mediamosa_app.install.inc
+
+; App Authentication class.
+files[] = core/app/authentication/mediamosa_app_authentication.inc
 
 ; Asset.
 files[] = core/asset/mediamosa_asset_db.inc
@@ -67,13 +78,23 @@ files[] = core/asset/metadata/property/group/mediamosa_asset_metadata_property_g
 files[] = core/asset/metadata/property/group/mediamosa_asset_metadata_property_group.inc
 files[] = core/asset/metadata/property/group/mediamosa_asset_metadata_property_group.install.inc
 
-; App class.
-files[] = core/app/mediamosa_app_db.inc
-files[] = core/app/mediamosa_app.inc
-files[] = core/app/mediamosa_app.install.inc
+; FTP Batch.
+files[] = core/ftp_batch/mediamosa_ftp_batch.inc
 
-; Authentication class.
-files[] = core/app/authentication/mediamosa_app_authentication.inc
+; Job.
+files[] = core/job/mediamosa_job.inc
 
-; Simpletest class.
+; Job Handler.
+files[] = core/job/handler/mediamosa_job_handler.inc
+
+; Job Schedular.
+files[] = core/job/schedular/mediamosa_job_schedular.inc
+
+; Job Server.
+files[] = core/job/server/mediamosa_job_server.inc
+
+; Simpletest Slass.
 files[] = simpletest/mediamosa.simpletest.inc
+
+; User.
+files[] = core/user/mediamosa_user.inc

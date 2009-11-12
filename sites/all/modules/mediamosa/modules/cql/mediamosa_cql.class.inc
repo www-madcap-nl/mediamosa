@@ -130,6 +130,7 @@ abstract class mediamosa_cql {
       // no error when we catch this here
     }
     catch (mediamosa_cql_exception_eo_scope $e) {
+      assert($e);
       throw new mediamosa_cql_exception_eo_scope_unmatched();
     }
   }
@@ -584,6 +585,7 @@ abstract class mediamosa_cql {
         }
         catch (mediamosa_cql_exception_eos $e) {
           // this was expected here and ok
+          assert($e);
         }
       }
       elseif ($this->mediamosa_cql_context_is_boolean($str_1)) {
@@ -607,6 +609,7 @@ abstract class mediamosa_cql {
     }
     catch (mediamosa_cql_exception_eos $e) {
       // unexpected!
+      assert($e);
       throw new mediamosa_cql_exception_unexpected_eos();
     }
 
@@ -628,6 +631,7 @@ abstract class mediamosa_cql {
     }
     catch (cql_exception_eos $e) {
       // ignore
+      assert($e);
     }
 
     return FALSE;
@@ -663,6 +667,7 @@ abstract class mediamosa_cql {
     }
     catch (mediamosa_cql_exception_eos $e) {
       // ignore
+      assert($e);
     }
   }
 
@@ -829,6 +834,9 @@ class mediamosa_cql_sortby {
   }
 
   final public function mediamosa_cql_sub_sortby_parse($o_obj, $function_name, $a_prefix_assignments = array(), $array_settings = array()) {
+    assert($array_settings);
+    assert($a_prefix_assignments);
+
     $a_results = array();
 
     // Walk through my sortby's

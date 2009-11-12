@@ -43,7 +43,7 @@ class mediamosa_db {
   const HASH_ID_LENGTH = 32;
 
   // ------------------------------------------------------------------ Functions (static).
-  static public function db_delete($table, $options = NULL) {
+  static public function db_delete(/*$table, $options = NULL*/) {
     $a_args = func_get_args(); // Must copy into $a_args, cant use it directly in call_user_func_array
 
     if (mediamosa::is_db_logging()) {
@@ -138,22 +138,22 @@ class mediamosa_db {
     return $result;
   }
 
-  static public function db_query_range($query, $from, $count, array $args = array(), array $options = array()) {
+  static public function db_query_range(/*$query, $from, $count, array $args = array(), array $options = array()*/) {
     $a_args = func_get_args();
     return self::query('db_query_range', $a_args);
   }
 
-  static public function db_query($query, $args = array(), $options = array()) {
+  static public function db_query(/*$query, $args = array(), $options = array()*/) {
     $a_args = func_get_args();
         return self::query('db_query', $a_args);
   }
 
-  static public function db_query_temporary($query, array $args = array(), array $options = array()) {
+  static public function db_query_temporary(/*$query, array $args = array(), array $options = array()*/) {
     $a_args = func_get_args();
     return self::query('db_query_temporary', $a_args);
   }
 
-  static public function db_select($table, $alias = NULL, array $options = array()) {
+  static public function db_select(/*$table, $alias = NULL, array $options = array()*/) {
     $a_args = func_get_args(); // Must copy into $a_args, cant use it directly in call_user_func_array
 
     // Lets return array's by default and not objects.
@@ -173,7 +173,7 @@ class mediamosa_db {
     return call_user_func_array('db_select', $a_args);
   }
 
-  static public function db_insert($table, array $options = array()) {
+  static public function db_insert(/*$table, array $options = array()*/) {
     $a_args = func_get_args(); // Must copy into $a_args, cant use it directly in call_user_func_array
 
     if (mediamosa::is_db_logging()) {
@@ -186,7 +186,7 @@ class mediamosa_db {
     return call_user_func_array('db_insert', $a_args);
   }
 
-  static public function db_last_insert_id($table, $field) {
+  static public function db_last_insert_id(/*$table, $field*/) {
     $a_args = func_get_args(); // Must copy into $a_args, cant use it directly in call_user_func_array
 
     if (mediamosa::is_db_logging()) {
@@ -199,7 +199,7 @@ class mediamosa_db {
     return call_user_func_array('db_last_insert_id', $a_args);
   }
 
-  static public function db_update($table, array $options = array()) {
+  static public function db_update(/*$table, array $options = array()*/) {
     $a_args = func_get_args(); // Must copy into $a_args, cant use it directly in call_user_func_array
 
     if (mediamosa::is_db_logging()) {

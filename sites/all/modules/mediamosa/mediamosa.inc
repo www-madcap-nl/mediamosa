@@ -106,6 +106,9 @@ class mediamosa {
    * @return boolean
    */
   static public function mediamosa_error_handler($error_level, $message, $filename, $line, $context, $caller = NULL) {
+    assert(isset($context));
+    assert(isset($line));
+    assert(isset($filename));
 
     if ($error_level & error_reporting()) {
       // All these constants are documented at http://php.net/manual/en/errorfunc.constants.php

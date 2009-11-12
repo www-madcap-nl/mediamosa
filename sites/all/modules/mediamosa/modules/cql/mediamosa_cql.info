@@ -1,6 +1,6 @@
 ; $Id $
 
-name = "MediaMosa 2 - Module - CQL"
+name = "CQL"
 description = "The Contextual Query Language enables developers to create search queries using the CQL v1.2 standard."
 package = "MediaMosa 2 - Modules"
 version = "2.0.0"
