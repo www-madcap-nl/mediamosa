@@ -29,3 +29,85 @@
   * The maintenance module.
   */
 
+/**
+ * Implementation of hook_permission()
+ */
+function mediamosa_maintenance_permission() {
+  return array(
+    'administer mediamosa configuration' => array(
+      'title' => t('MediaMosa Configuration administer permissions'),
+      'description' => t('Manage the whole configuration of MediaMosa to be edited by an MediaMosa right.')
+    )
+  );
+}
+
+/**
+ * Implement hook_menu().
+ */
+function mediamosa_maintenance_menu() {
+  $items = array();
+
+  // Configuration.
+  $items['admin/config/mediamosa'] = array(
+    'title' => 'MediaMosa',
+    'description' => 'MediaMosa Configuration.',
+    'position' => 'left',
+    'weight' => 10,
+    'page callback' => 'mediamosa_maintenance_menu_block_page',
+    'access arguments' => array('administer mediamosa configuration'),
+    //'file' => '/modules/system/system.admin.inc',
+  );
+
+  $items['admin/config/mediamosa/configuration'] = array(
+    'title' => 'Configuration',
+    'description' => t('The configuration of MediaMosa settings. You might have to enable maintenance modules for more options.'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mediamosa_maintenance_configuration'),
+    'access arguments' => array('administer mediamosa configuration'),
+  );
+
+  return $items;
+}
+
+/**
+ * Block code copied from drupal system.inc.
+ *
+ * @return
+ *   The output HTML.
+ */
+function mediamosa_maintenance_menu_block_page() {
+  $item = menu_get_item();
+  $content = system_admin_menu_block($item);
+
+  if ($content) {
+    $output = theme('admin_block_content', $content);
+  }
+  else {
+    $output = t('You do not have any administrative items.');
+  }
+
+  return $output;
+}
+
+/**
+ * Our Maintenance settings form.
+ *
+ * @return array
+ */
+function mediamosa_maintenance_configuration() {
+
+  // Build the settings form and enrich it with our settings collect hook.
+  return system_settings_form(module_invoke_all('mediamosa_configuration_collect'), FALSE);
+}
+
+/**
+ * Implementation of hook_submit.
+ *
+ * @param array $form
+ * @param array $form_state
+ */
+function mediamosa_maintenance_configuration_submit($form, $form_state) {
+
+  // Now call our submit hooks.
+  module_invoke_all('mediamosa_configuration_submit', $form, $form_state);
+}

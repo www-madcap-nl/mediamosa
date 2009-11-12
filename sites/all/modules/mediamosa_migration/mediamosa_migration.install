@@ -181,6 +181,9 @@ function mediamosa_migration_install() {
   // client_applications -> mediamosa_app.
   _mediamosa_migration_client_applications();
 
+  // San nas settings.
+  _mediamosa_migration_sannas();
+
   // asset -> mediamosa_asset.
   _mediamosa_migration_asset();
 
@@ -322,7 +325,7 @@ function _mediamosa_migration_client_applications() {
   $current_app_ids = array_keys(db_query("SELECT * FROM {mediamosa_app}")->fetchAllAssoc('app_id'));
 
   // Get the current apps.
-  $migrate_apps = db_query(strtr("SELECT * FROM {#db_name.client_applications} ORDER BY caid ASC", array('#db_name' => $db_name)))->fetchAllAssoc('id');
+  $migrate_apps = db_query(strtr("SELECT * FROM #db_name.{client_applications} ORDER BY caid ASC", array('#db_name' => $db_name)))->fetchAllAssoc('id');
 
   foreach ($migrate_apps as $app_id => $migrate_app) {
     if (in_array($app_id, $current_app_ids)) {
@@ -869,4 +872,27 @@ function _mediamosa_migration_asset_metadata() {
 
   // Back to old session mode.
   db_query(strtr("SET SESSION sql_mode = '#old_mode'", array('#old_mode' => $old_mode)));
+}
+
+/**
+ * Migrate san nas settings.
+ */
+function _mediamosa_migration_sannas() {
+
+  // Get the database name.
+  $db_name = _mediamosa_migration_get_memo_db();
+
+  $a_san_nas = db_query(
+    strtr(
+      'SELECT current_mount_point, current_mount_point_windows FROM #db_name.{san_nas_settings} LIMIT 1',
+      array(
+      '#db_name' => $db_name
+      )
+    )
+  )->fetchAssoc();
+
+  if ($a_san_nas) {
+    mediamosa_san_nas::linux_set($a_san_nas['current_mount_point']);
+    mediamosa_san_nas::windows_set($a_san_nas['current_mount_point_windows']);
+  }
 }

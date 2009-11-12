@@ -93,8 +93,11 @@ files[] = core/job/schedular/mediamosa_job_schedular.inc
 ; Job Server.
 files[] = core/job/server/mediamosa_job_server.inc
 
-; Simpletest Slass.
-files[] = simpletest/mediamosa.simpletest.inc
+; San nas.
+files[] = core/maintenance/san_nas/mediamosa_san_nas.inc
 
 ; User.
 files[] = core/user/mediamosa_user.inc
+
+; Simpletest Slass.
+files[] = simpletest/mediamosa.simpletest.inc

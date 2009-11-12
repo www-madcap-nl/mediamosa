@@ -30,33 +30,78 @@
  */
 
 /**
- * Implementation of hook_menu()
+ * Implementation of hook_permissions()
  */
+function mediamosa_maintenance_san_nas_permission() {
+  return array('view mediamosa configuration sannas', 'administer mediamosa configuration sannas');
+}
+
+/**
+ * Implementation of the hook_mediamosa_settings_collect()
+ */
+function mediamosa_maintenance_san_nas_mediamosa_configuration_collect() {
+  $form['settings_sannas'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('SAN NAS settings'),
+    '#collapsible' => TRUE,
+  );
+
+  $form['settings_sannas']['mediamosa_current_mount_point'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Linux mount point'),
+    '#description' => t('Current Linux mount point.'),
+    '#required' => TRUE,
+    '#default_value' => mediamosa_san_nas::linux_get(),
+  );
+
+  $form['settings_sannas']['mediamosa_current_mount_point_windows'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Windows mount point'),
+    '#description' => t('Current Windows mount point (use UNC path).'),
+    '#required' => TRUE,
+    '#default_value' => mediamosa_san_nas::windows_get(),
+  );
+
+  return $form;
+}
+
+/**
+ * Implementation of the hook_mediamosa_settings_submit()
+ *
+ * @param array $form
+ * @param array $form_state
+ */
+function mediamosa_maintenance_san_nas_mediamosa_configuration_submit($form, $form_state) {
+  assert(isset($form));
+  assert(isset($form_state['values']['mediamosa_current_mount_point']));
+  assert(isset($form_state['values']['mediamosa_current_mount_point_windows']));
+
+  // Set the variables.
+  mediamosa_san_nas::linux_set($form_state['values']['mediamosa_current_mount_point']);
+  mediamosa_san_nas::linux_set($form_state['values']['mediamosa_current_mount_point_windows']);
+}
+
+/**
+ * Implementation of hook_menu()
+ *
 function mediamosa_maintenance_san_nas_menu() {
   $items = array();
 
-  $items['vpx/san_nas'] = array(
-    'title' => t('VPX SAN / NAS'),
+  $items['mediamosa/san_nas'] = array(
+    'title' => t('MediaMosa SAN / NAS'),
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mediamosa_maintenance_san_nas_form'),
-    'access arguments' => array('view sannas'),
+    'access arguments' => array('view mediamosa sannas'),
   );
 
   return $items;
 }
 
 
-/**
- * Implementation of hook_permissions()
- */
-function mediamosa_maintenance_san_nas_permissions() {
-  return array('view mediamosa sannas', 'administer mediamosa sannas');
-}
-
 
 /**
  * Implementation of hook_form()
- */
+ *
 function mediamosa_maintenance_san_nas_form($node, $form_state) {
   assert($node);
   assert($form_state);
@@ -98,21 +143,21 @@ function mediamosa_maintenance_san_nas_form($node, $form_state) {
 
 /**
  * Implementation of hook_view()
- */
+ *
 function mediamosa_maintenance_san_nas_view() {
-  $content = t("VPX SAN / NAS");
+  $content = t("MediaMosa SAN / NAS");
   return $content;
 }
 
 /**
  * Implementation of hook_submit()
- */
+ *
 function mediamosa_maintenance_san_nas_form_submit(&$form_state, $form) {
   assert($form_state);
 
   if (!user_access('administer sannas')) {
     drupal_set_message('You have no "administer mediamosa sannas" rights.', 'error');
-    drupal_goto($_SERVER['HTTP_REFERER']);// hhmmmmm ?
+    return;
   }
 
   if ($form['values']['submit'] == t('Save')) {
@@ -127,3 +172,4 @@ function mediamosa_maintenance_san_nas_form_submit(&$form_state, $form) {
 
   drupal_set_message(t("Mount points saved."));
 }
+*/

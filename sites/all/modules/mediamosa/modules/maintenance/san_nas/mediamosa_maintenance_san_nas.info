@@ -8,6 +8,7 @@ core = 7.x
 
 ; Dependencies (module names)
 dependencies[] = mediamosa
+dependencies[] = mediamosa_maintenance
 
 ; Used files.
 files[] = mediamosa_maintenance_san_nas.module
