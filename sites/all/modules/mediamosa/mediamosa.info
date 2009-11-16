@@ -2,7 +2,7 @@
 name = "MediaMosa 2 - Core"
 description = "Open source media management and distribution platform."
 package = "MediaMosa 2 - Core"
-version = "2.0.0.35:095d7e225b6a"
+version = "2.0.0.39:40cc65faee50"
 core = 7.x
 
 ; Dependencies (module names)
