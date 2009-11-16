@@ -26,9 +26,9 @@
 
  /**
   * @file
-  * Common function class for mediamosa_asset_media
+  * Common function class for mediamosa_asset_medium
   */
 
-class mediamosa_asset_media {
+class mediamosa_asset_medium {
 
 }

@@ -101,12 +101,12 @@ function mediamosa_migration_requirements($phase) {
     $a_table_names_dest_exists = array(
       'mediamosa_error',
       'mediamosa_asset',
-      'mediamosa_asset_media',
+      'mediamosa_asset_medium',
     );
     // These tables (dest) must be empty.
     $a_table_names_dest_empty = array(
       'mediamosa_asset',
-      'mediamosa_asset_media',
+      'mediamosa_asset_medium',
     );
     // Must exists source drupal db.
     $a_table_names_source_exists = array(
@@ -187,11 +187,11 @@ function mediamosa_migration_install() {
   // asset -> mediamosa_asset.
   _mediamosa_migration_asset();
 
-  // mediafile -> mediamosa_asset_media.
-  _mediamosa_migration_media();
+  // mediafile -> mediamosa_asset_medium.
+  _mediamosa_migration_medium();
 
-  // mediafile_metadata -> mediamosa_asset_media_metadata.
-  _mediamosa_migration_media_metadata();
+  // mediafile_metadata -> mediamosa_asset_medium_metadata.
+  _mediamosa_migration_medium_metadata();
 
   // assetprop_group -> mediamosa_asset_metadata_property_group.
   _mediamosa_migration_asset_metadata_property_group();
@@ -496,15 +496,15 @@ function _mediamosa_migration_asset() {
 /**
  * Migrate the mediafile table.
  */
-function _mediamosa_migration_media() {
+function _mediamosa_migration_medium() {
   // Get the database name.
   $db_name = _mediamosa_migration_get_memo_data_db();
 
-  // Remove foreign key on asset_media_metadata table.
-  db_query('ALTER TABLE mediamosa_asset_media_metadata DROP FOREIGN KEY fk_mediamosa_asset_media_metadata_media_id');
+  // Remove foreign key on asset_medium_metadata table.
+  db_query('ALTER TABLE mediamosa_asset_medium_metadata DROP FOREIGN KEY fk_mediamosa_asset_medium_metadata_medium_id');
 
   // Remove the primary key so insert will go fine.
-  db_query('ALTER TABLE mediamosa_asset_media DROP PRIMARY KEY');
+  db_query('ALTER TABLE mediamosa_asset_medium DROP PRIMARY KEY');
 
   // Get the current mode, which might be empty;
   $old_mode = db_query('SELECT @@SESSION.sql_mode')->fetchField();
@@ -512,23 +512,23 @@ function _mediamosa_migration_media() {
   // Turn off problems with empty dates.
   db_query("SET SESSION sql_mode = 'ALLOW_INVALID_DATES'");
 
-  // The mediamosa_asset_media table should be empty (its checked as requirement).
+  // The mediamosa_asset_medium table should be empty (its checked as requirement).
   /**
    * Copy from 1.x to 2.x
    * Columns dropped;
    * testtag
    * has_streamable_mediafiles
    * Columns renamed;
-   * mediafile_id = media_id
-   * mediafile_source = media_id_source
+   * mediafile_id = medium_id
+   * mediafile_source = medium_id_source
    */
   db_query(strtr(
-    "INSERT INTO {mediamosa_asset_media}
+    "INSERT INTO {mediamosa_asset_medium}
       (
-        media_id,
+        medium_id,
         asset_id,
         asset_id_root,
-        media_id_source,
+        medium_id_source,
         tag,
         app_id,
         owner_id,
@@ -579,28 +579,28 @@ function _mediamosa_migration_media() {
   );
 
   // Now copy all changed dates to overwrite empty created dates.
-  db_query("UPDATE mediamosa_asset_media SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+  db_query("UPDATE mediamosa_asset_medium SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
 
   // Now make sure created is not empty.
-  db_query("UPDATE mediamosa_asset_media SET created = NOW() WHERE created = '0000-00-00 00:00:00'");
+  db_query("UPDATE mediamosa_asset_medium SET created = NOW() WHERE created = '0000-00-00 00:00:00'");
 
   // Now make sure changed is not empty.
-  db_query("UPDATE mediamosa_asset_media SET changed = NOW() WHERE changed = '0000-00-00 00:00:00'");
+  db_query("UPDATE mediamosa_asset_medium SET changed = NOW() WHERE changed = '0000-00-00 00:00:00'");
 
   // Back to old session mode.
   db_query(strtr("SET SESSION sql_mode = '#old_mode'", array('#old_mode' => $old_mode)));
 
   // Add back the primary key.
-  db_query('ALTER TABLE mediamosa_asset_media ADD PRIMARY KEY(media_id)');
+  db_query('ALTER TABLE mediamosa_asset_medium ADD PRIMARY KEY(medium_id)');
 
-  // Add the foreign key on asset_media_metadata table.
-  db_query('ALTER TABLE mediamosa_asset_media_metadata ADD CONSTRAINT fk_mediamosa_asset_media_metadata_media_id FOREIGN KEY (media_id) REFERENCES mediamosa_asset_media (media_id)');
+  // Add the foreign key on asset_medium_metadata table.
+  db_query('ALTER TABLE mediamosa_asset_medium_metadata ADD CONSTRAINT fk_mediamosa_asset_medium_metadata_medium_id FOREIGN KEY (medium_id) REFERENCES mediamosa_asset_medium (medium_id)');
 }
 
 /**
  * Migrate the mediafile metadata table.
  */
-function _mediamosa_migration_media_metadata() {
+function _mediamosa_migration_medium_metadata() {
   // Get the database name.
   $db_name = _mediamosa_migration_get_memo_data_db();
 
@@ -610,19 +610,19 @@ function _mediamosa_migration_media_metadata() {
   // Turn off problems with empty dates.
   db_query("SET SESSION sql_mode = 'ALLOW_INVALID_DATES'");
 
-  // The mediamosa_asset_media table should be empty (its checked as requirement).
+  // The mediamosa_asset_medium table should be empty (its checked as requirement).
   /**
    * Copy from 1.x to 2.x
    * Columns dropped;
    * -
    * Columns renamed;
-   * mediafile_id = media_id
+   * mediafile_id = medium_id
    */
   db_query(strtr(
-    "INSERT INTO {mediamosa_asset_media_metadata}
+    "INSERT INTO {mediamosa_asset_medium_metadata}
       (
         metadata_id,
-        media_id,
+        medium_id,
         video_codec,
         colorspace,
         width,
@@ -679,13 +679,13 @@ function _mediamosa_migration_media_metadata() {
   );
 
   // Now copy all changed dates to overwrite empty created dates.
-  db_query("UPDATE {mediamosa_asset_media_metadata} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+  db_query("UPDATE {mediamosa_asset_medium_metadata} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
 
   // Now make sure created is not empty.
-  db_query("UPDATE {mediamosa_asset_media_metadata} SET created = NOW() WHERE created = '0000-00-00 00:00:00'");
+  db_query("UPDATE {mediamosa_asset_medium_metadata} SET created = NOW() WHERE created = '0000-00-00 00:00:00'");
 
   // Now make sure changed is not empty.
-  db_query("UPDATE {mediamosa_asset_media_metadata} SET changed = NOW() WHERE changed = '0000-00-00 00:00:00'");
+  db_query("UPDATE {mediamosa_asset_medium_metadata} SET changed = NOW() WHERE changed = '0000-00-00 00:00:00'");
 
   // Back to old session mode.
   db_query(strtr("SET SESSION sql_mode = '#old_mode'", array('#old_mode' => $old_mode)));
@@ -704,7 +704,7 @@ function _mediamosa_migration_asset_metadata_property_group() {
   // Turn off problems with empty dates.
   db_query("SET SESSION sql_mode = 'ALLOW_INVALID_DATES'");
 
-  // The mediamosa_asset_media table should be empty (its checked as requirement).
+  // The mediamosa_asset_medium table should be empty (its checked as requirement).
   /**
    * Copy from 1.x to 2.x
    * Columns dropped;
@@ -756,7 +756,7 @@ function _mediamosa_migration_asset_metadata_property() {
   // Turn off problems with empty dates.
   db_query("SET SESSION sql_mode = 'ALLOW_INVALID_DATES'");
 
-  // The mediamosa_asset_media table should be empty (its checked as requirement).
+  // The mediamosa_asset_medium table should be empty (its checked as requirement).
   /**
    * Copy from 1.x to 2.x
    * Columns dropped;
@@ -818,7 +818,7 @@ function _mediamosa_migration_asset_metadata() {
   // Turn off problems with empty dates.
   db_query("SET SESSION sql_mode = 'ALLOW_INVALID_DATES'");
 
-  // The mediamosa_asset_media table should be empty (its checked as requirement).
+  // The mediamosa_asset_medium table should be empty (its checked as requirement).
   /**
    * Copy from 1.x to 2.x
    * Columns dropped;

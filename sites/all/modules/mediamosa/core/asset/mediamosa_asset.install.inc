@@ -31,7 +31,7 @@
 
 require_once 'mediamosa_asset.inc';
 require_once 'mediamosa_asset_db.inc';
-require_once 'media/mediamosa_asset_media.install.inc';
+require_once 'medium/mediamosa_asset_medium.install.inc';
 require_once 'metadata/mediamosa_asset_metadata.install.inc';
 
 /**
@@ -41,8 +41,8 @@ function mediamosa_asset_install() {
   // Create our table(s).
   mediamosa::drupal_install_schema(mediamosa_asset_db::TABLE_NAME);
 
-  // Call installer asset_media.
-  mediamosa_asset_media_install();
+  // Call installer asset_medium.
+  mediamosa_asset_medium_install();
 
   // Call installer asset_metadata.
   mediamosa_asset_metadata_install();
@@ -55,8 +55,8 @@ function mediamosa_asset_uninstall() {
   // Call uninstaller asset_metadata.
   mediamosa_asset_metadata_uninstall();
 
-  // Call uninstaller asset_media.
-  mediamosa_asset_media_uninstall();
+  // Call uninstaller asset_medium.
+  mediamosa_asset_medium_uninstall();
 
   // Drop our table(s).
   mediamosa::drupal_uninstall_schema(mediamosa_asset_db::TABLE_NAME);

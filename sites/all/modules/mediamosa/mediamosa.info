@@ -37,8 +37,11 @@ files[] = rest/mediamosa_rest_call.inc
 files[] = rest/mediamosa_rest.inc
 files[] = rest/mediamosa_rest.rest.inc
 
-; ACL.
-files[] = core/acl/mediamosa_acl.inc
+; AUT.
+files[] = core/aut/mediamosa_aut_db.inc
+files[] = core/aut/mediamosa_aut_query.inc
+files[] = core/aut/mediamosa_aut.inc
+files[] = core/aut/mediamosa_aut.install.inc
 
 ; App class.
 files[] = core/app/mediamosa_app_db.inc
@@ -53,15 +56,15 @@ files[] = core/asset/mediamosa_asset_db.inc
 files[] = core/asset/mediamosa_asset.inc
 files[] = core/asset/mediamosa_asset.install.inc
 
-; Asset Media.
-files[] = core/asset/media/mediamosa_asset_media_db.inc
-files[] = core/asset/media/mediamosa_asset_media.inc
-files[] = core/asset/media/mediamosa_asset_media.install.inc
+; Asset Medium.
+files[] = core/asset/medium/mediamosa_asset_medium_db.inc
+files[] = core/asset/medium/mediamosa_asset_medium.inc
+files[] = core/asset/medium/mediamosa_asset_medium.install.inc
 
-; Asset Media Metadata.
-files[] = core/asset/media/metadata/mediamosa_asset_media_metadata_db.inc
-files[] = core/asset/media/metadata/mediamosa_asset_media_metadata.inc
-files[] = core/asset/media/metadata/mediamosa_asset_media_metadata.install.inc
+; Asset Medium Metadata.
+files[] = core/asset/medium/metadata/mediamosa_asset_medium_metadata_db.inc
+files[] = core/asset/medium/metadata/mediamosa_asset_medium_metadata.inc
+files[] = core/asset/medium/metadata/mediamosa_asset_medium_metadata.install.inc
 
 ; Asset Metadata.
 files[] = core/asset/metadata/mediamosa_asset_metadata_db.inc

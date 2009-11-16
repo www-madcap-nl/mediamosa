@@ -66,7 +66,7 @@ class mediamosa_db {
    * @param array $a_args
    *  The arguments for $query.
    * @return result
-   *  DB result set.
+   *  DB result set object.
    */
   static private function query($func = 'db_query', array $a_args = array()) {
 
@@ -138,21 +138,45 @@ class mediamosa_db {
     return $result;
   }
 
+  /**
+   * Same as db_query, except for adding an range for query.
+   *
+   * @return DB result
+   *  DB result set object.
+   */
   static public function db_query_range(/*$query, $from, $count, array $args = array(), array $options = array()*/) {
     $a_args = func_get_args();
     return self::query('db_query_range', $a_args);
   }
 
+  /**
+   * Execute DB query.
+   *
+   * @return DB result
+   *  DB result set object.
+   */
   static public function db_query(/*$query, $args = array(), $options = array()*/) {
     $a_args = func_get_args();
-        return self::query('db_query', $a_args);
+    return self::query('db_query', $a_args);
   }
 
+  /**
+   * Execute DB query in an temporary table.
+   *
+   * @return DB result
+   *  DB result set object.
+   */
   static public function db_query_temporary(/*$query, array $args = array(), array $options = array()*/) {
     $a_args = func_get_args();
     return self::query('db_query_temporary', $a_args);
   }
 
+  /**
+   * Create an db_select object.
+   *
+   * @return object
+   *  DB Select object.
+   */
   static public function db_select(/*$table, $alias = NULL, array $options = array()*/) {
     $a_args = func_get_args(); // Must copy into $a_args, cant use it directly in call_user_func_array
 
@@ -173,6 +197,12 @@ class mediamosa_db {
     return call_user_func_array('db_select', $a_args);
   }
 
+  /**
+   * Create an db_insert object.
+   *
+   * @return object
+   *  DB Insert object.
+   */
   static public function db_insert(/*$table, array $options = array()*/) {
     $a_args = func_get_args(); // Must copy into $a_args, cant use it directly in call_user_func_array
 
@@ -186,19 +216,12 @@ class mediamosa_db {
     return call_user_func_array('db_insert', $a_args);
   }
 
-  static public function db_last_insert_id(/*$table, $field*/) {
-    $a_args = func_get_args(); // Must copy into $a_args, cant use it directly in call_user_func_array
-
-    if (mediamosa::is_db_logging()) {
-      $f_start_time = microtime(TRUE);
-      $result = call_user_func_array('db_last_insert_id', $a_args);
-      mediamosa::log_db(round(microtime(TRUE) - $f_start_time, 4), $result && isset($result->queryString) ? $result->queryString : '-failure-');
-      return $result;
-    }
-
-    return call_user_func_array('db_last_insert_id', $a_args);
-  }
-
+  /**
+   * Create an db_update object.
+   *
+   * @return object
+   *  DB Update object.
+   */
   static public function db_update(/*$table, array $options = array()*/) {
     $a_args = func_get_args(); // Must copy into $a_args, cant use it directly in call_user_func_array
 
@@ -211,13 +234,7 @@ class mediamosa_db {
 
     return call_user_func_array('db_update', $a_args);
   }
-/*
- * Removed from drupal 7, dont use.
-  static public function db_result(DatabaseStatementInterface $statement) {
-    $a_args = func_get_args(); // Must copy into $a_args, cant use it directly in call_user_func_array
-    return call_user_func_array('db_result', $a_args);
-  }
-*/
+
   /**
    * Escape the value for database
    * 'db_escape_string' is removed from drupal 7, D7 uses prepare instead. For now
@@ -350,7 +367,7 @@ class mediamosa_db {
    *  column => value.
    *
    */
-  function db_must_exists($table_name, $a_columns_and = array()) {
+  static function db_must_exists($table_name, $a_columns_and = array()) {
 
     if (self::db_count_rows($table_name, $a_columns_and)) {
       return; // exists
@@ -360,7 +377,7 @@ class mediamosa_db {
     switch ($table_name) {
       case mediamosa_asset_db::TABLE_NAME:
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_ASSET_NOT_FOUND, array("@asset_id" => $a_columns_and[mediamosa_asset_db::ID]));
-      case mediamosa_asset_media_db::TABLE_NAME:
+      case mediamosa_asset_medium_db::TABLE_NAME:
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MEDIAFILE_NOT_FOUND, array("@mediafile_id" => $a_columns_and[mediamosa_asset_media_db::ID]));
 /*
       case 'collection':
@@ -394,7 +411,7 @@ class mediamosa_db {
    * @return boolean
    *  Return true or false on exists one or more row match.
    */
-  function db_exists($table_name, $a_columns_and = array()) {
+  static function db_exists($table_name, $a_columns_and = array()) {
     try {
       self::db_must_exists($table_name, $a_columns_and);
     }
