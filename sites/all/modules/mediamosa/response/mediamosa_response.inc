@@ -217,7 +217,6 @@ class mediamosa_response extends mediamosa {
 
   /**
    * Set when the rest call was successful, but doesn't have any data.
-   *
    */
   public function set_result_okay() {
     self::set_result(self::SUCCESS, mediamosa_error::ERRORCODE_OKAY);

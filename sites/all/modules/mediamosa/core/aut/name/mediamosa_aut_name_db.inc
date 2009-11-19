@@ -26,37 +26,27 @@
 
  /**
   * @file
-  * Default collection include file.
+  *
   */
 
-/**
- * Core Mediamosa core library.
- */
-class mediamosa_lib {
-  /**
-   * Converts a string boolean ('TRUE', 'true', 'FALSE', 'false')
-   * to a normal boolean value TRUE/FALSE
-   *
-   * @param string $str
-   * @return boolean
-   */
-  function boolstr2bool($str) {
-    if (is_bool($str)) {
-      return $str;
-    }
-    $str = trim(mediamosa_unicode::strtolower($str));
-    assert($str == 'true' || $str == 'false' || $str == '');
+class mediamosa_aut_name_db {
+  // ------------------------------------------------------------------ Consts.
+  // Table name;
+  const TABLE_NAME = 'mediamosa_aut_name'; // 1.x aut_name table.
 
-    return $str == 'true';
-  }
+  // Primary KEY
+  const ID = 'aut_name_id';
 
-  /**
-   * Converts a boolean to a string variant  ('TRUE', 'FALSE')
-   *
-   * @param boolean $boolean
-   * @return string
-   */
-  function bool2boolstr($boolean) {
-    return $boolean ? 'TRUE' : 'FALSE';
-  }
+  // Database fields;
+  const APP_ID = 'app_id';
+  const AUT_GROUP_ID = 'aut_group_id';
+  const AUT_NAME = 'aut_name';
+  const AUT_NAME_LENGTH = 255;
+  const AUT_PREFIX = 'aut_prefix';
+  const AUT_PREFIX_LENGTH = 128;
+  const AUT_TYPE = 'aut_type';
+  const AUT_TYPE_DOMAIN = 'DOMAIN';
+  const AUT_TYPE_REALM = 'REALM';
+  const AUT_TYPE_USER = 'USER';
+  const AUT_TYPE_USER_GROUP = 'USER_GROUP';
 }

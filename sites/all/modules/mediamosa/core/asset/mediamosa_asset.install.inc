@@ -168,12 +168,12 @@ function mediamosa_asset_schema() {
         'default' => NULL,
         'description' => t('The date and time when asset was changed last.'),
       ),
-      mediamosa_asset_db::IS_UNAPPROPIATE => array(
+      mediamosa_asset_db::IS_UNAPPROPRIATE => array(
         'description' => t('If the asset has unappropieate contents.'),
-        'type' => "enum('" . implode("','", array(mediamosa_asset_db::IS_UNAPPROPIATE_FALSE, mediamosa_asset_db::IS_UNAPPROPIATE_TRUE)) . "')",
+        'type' => "enum('" . implode("','", array(mediamosa_asset_db::IS_UNAPPROPRIATE_FALSE, mediamosa_asset_db::IS_UNAPPROPRIATE_TRUE)) . "')",
         'not null' => TRUE,
-        'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_db::IS_UNAPPROPIATE_FALSE, mediamosa_asset_db::IS_UNAPPROPIATE_TRUE)) . "')",
-        'default' => mediamosa_asset_db::IS_UNAPPROPIATE_FALSE,
+        'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_db::IS_UNAPPROPRIATE_FALSE, mediamosa_asset_db::IS_UNAPPROPRIATE_TRUE)) . "')",
+        'default' => mediamosa_asset_db::IS_UNAPPROPRIATE_FALSE,
       ),
       mediamosa_asset_db::IS_EXTERNAL => array(
         'description' => t('If the asset has external contents.'),
@@ -224,13 +224,13 @@ function mediamosa_asset_schema() {
         mediamosa_asset_db::APP_ID,
         mediamosa_asset_db::PARENT_ID,
         mediamosa_asset_db::IS_PRIVATE,
-        mediamosa_asset_db::IS_UNAPPROPIATE,
+        mediamosa_asset_db::IS_UNAPPROPRIATE,
       ),
       'idx_asset_app_parent_priv_unapp_emptyasset_owner' => array(
         mediamosa_asset_db::APP_ID,
         mediamosa_asset_db::PARENT_ID,
         mediamosa_asset_db::IS_PRIVATE,
-        mediamosa_asset_db::IS_UNAPPROPIATE,
+        mediamosa_asset_db::IS_UNAPPROPRIATE,
         mediamosa_asset_db::IS_EMPTY_ASSET,
         mediamosa_asset_db::OWNER_ID,
       ),

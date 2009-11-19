@@ -77,6 +77,7 @@ abstract class mediamosa_rest_call {
   const OFFSET = 'offset';
   const ORDER_BY = 'order_by';
   const ORDER_DIRECTION = 'order_direction';
+  const IS_APP_ADMIN = 'is_app_admin';
 
   // VAR array names.
   const VARS = 'vars';
@@ -175,6 +176,15 @@ abstract class mediamosa_rest_call {
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
       self::VAR_DESCRIPTION => mediamosa::t('The application ID.'),
+    );
+
+    // Optional.
+    // @todo: only in some case, like internals?
+    $a_my_vars[mediamosa_rest_call::VARS][mediamosa_rest_call::IS_APP_ADMIN] = array(
+      self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+      self::VAR_DESCRIPTION => mediamosa::t('A boolean to indicate override by global APP admin. Is ignored by most REST calls.'),
+      self::VAR_DEFAULT_VALUE => 'FALSE',
     );
 
     return $a_my_vars;
@@ -290,6 +300,40 @@ abstract class mediamosa_rest_call {
     return isset($this->a_rest_args[$param]) && $this->a_rest_args[$param][self::PARAM_ISSET];
   }
 
+  /**
+   * Returns the app_ids param value (always array)
+   */
+  public function get_param_value_app() {
+    return $this->get_param_value(self::APP_ID);
+  }
+
+  /**
+   * Returns the offset param value.
+   */
+  public function get_param_value_offset() {
+    return $this->get_param_value(self::OFFSET);
+  }
+
+  /**
+   * Returns the offset param value.
+   */
+  public function get_param_value_limit() {
+    return $this->get_param_value(self::LIMIT);
+  }
+
+  /**
+   * Returns the order_by param value.
+   */
+  public function get_param_value_order_by() {
+    return $this->get_param_value(self::ORDER_BY);
+  }
+
+  /**
+   * Returns the order_direction param value.
+   */
+  public function get_param_value_order_direction() {
+    return $this->get_param_value(self::ORDER_DIRECTION);
+  }
   // ------------------------------------------------------------------ Functions (protected).
   /**
    * Process the supplied parameters and type validation.

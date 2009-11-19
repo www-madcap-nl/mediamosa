@@ -26,37 +26,23 @@
 
  /**
   * @file
-  * Default collection include file.
+  *
   */
 
-/**
- * Core Mediamosa core library.
- */
-class mediamosa_lib {
-  /**
-   * Converts a string boolean ('TRUE', 'true', 'FALSE', 'false')
-   * to a normal boolean value TRUE/FALSE
-   *
-   * @param string $str
-   * @return boolean
-   */
-  function boolstr2bool($str) {
-    if (is_bool($str)) {
-      return $str;
-    }
-    $str = trim(mediamosa_unicode::strtolower($str));
-    assert($str == 'true' || $str == 'false' || $str == '');
+class mediamosa_aut_app_master_slave_db {
+  // ------------------------------------------------------------------ Consts.
+  // Table name;
+  const TABLE_NAME = 'mediamosa_aut_app_master_slave'; // 1.x aut_app_master_slave table.
 
-    return $str == 'true';
-  }
+  // Database fields;
+  const AUT_OBJECT_ID = 'aut_object_id';
+  const AUT_OBJECT_ID_LENGTH = 32;
+  const AUT_OBJECT_TYPE = 'aut_object_type';
+  // The object types;
+  const AUT_OBJECT_TYPE_MEDIUM = 'MEDIUM';// 1.x MEDIAFILE
+  const AUT_OBJECT_TYPE_ASSET = 'ASSET';
+  const AUT_OBJECT_TYPE_COLLECTION = 'COLLECTION';
 
-  /**
-   * Converts a boolean to a string variant  ('TRUE', 'FALSE')
-   *
-   * @param boolean $boolean
-   * @return string
-   */
-  function bool2boolstr($boolean) {
-    return $boolean ? 'TRUE' : 'FALSE';
-  }
+  const APP_ID_SLAVE = 'app_id_slave'; // 1.x app_slave_id
+  const APP_ID_MASTER = 'app_id_master'; // 1.x app_maser_id
 }

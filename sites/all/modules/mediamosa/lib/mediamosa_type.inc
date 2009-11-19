@@ -54,6 +54,15 @@ class mediamosa_type {
   const TYPE_XML                         = 'STRING';
   const TYPE_XML_VALIDATED               = 'XML'; // XML with syntax validation via simplexml_load_string()
   const TYPE_EOR                         = 'EOR'; // Exclusive OR type (like 1 2 4 8, or 1|4 = 5), always UINT
+  const TYPE_URI                         = 'URI'; // URI type checked with parse_uri().
+  const TYPE_AUT_GROUP_TYPE              = 'AUT_GROUP_TYPE';
+  const TYPE_DELETE                      = 'DELETE';
+  const TYPE_USER_ID                     = 'USER_ID';
+  const TYPE_GROUP_ID                    = 'GROUP_ID';
+  const TYPE_ASSET_ID                    = 'ASSET_ID';
+  const TYPE_COLLECTION_ID               = 'COLLECTION_ID';
+  const TYPE_DOMAIN                      = 'DOMAIN';
+  const TYPE_REALM                       = 'REALM';
 
   const TYPE_ORDER_DIRECTION             = 'ORDER_DIRECTION';
   const TYPE_LIMIT                       = 'LIMIT';
@@ -190,6 +199,10 @@ class mediamosa_type {
         $checked_param_value = (string)$mixed_param_value;
         break;
 
+      case self::TYPE_USER_ID:
+      case self::TYPE_GROUP_ID:
+      case self::TYPE_ASSET_ID:
+      case self::TYPE_COLLECTION_ID:
       case self::TYPE_STRING_CQL:
       case self::TYPE_STRING:
         $checked_param_value = (string)$mixed_param_value;
@@ -255,6 +268,65 @@ class mediamosa_type {
 
         $checked_param_value = mediamosa_unicode::strtolower($mixed_param_value);
         break;
+
+      case self::TYPE_URI:
+        if (parse_url($mixed_param_value) === FALSE) {
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
+        }
+
+        $checked_param_value = (string)$mixed_param_value;
+        break;
+
+      case self::TYPE_AUT_GROUP_TYPE:
+        $mixed_param_value = mediamosa_unicode::strtoupper($mixed_param_value);
+
+        if (!in_array($mixed_param_value, array(mediamosa_aut_group_db::AUT_GROUP_TYPE_DOMAIN, mediamosa_aut_group_db::AUT_GROUP_TYPE_REALM))) {
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
+        }
+
+        $checked_param_value = (string)$mixed_param_value;
+        break;
+
+      case self::TYPE_DELETE:
+        if (!in_array($mixed_param_value, array('cascade'))) {
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
+        }
+
+        $checked_param_value = (string)$mixed_param_value;
+        break;
+
+      case VPX_TYPE_DOMAIN:
+        if (!mediamosa_aut::valid_domain($mixed_param_value)) {
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
+        }
+
+        $checked_param_value = (string)$mixed_param_value;
+        break;
+
+      case VPX_TYPE_REALM:
+        if (!mediamosa_aut::valid_realm($mixed_param_value)) {
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
+        }
+
+        $checked_param_value = (string)$mixed_param_value;
+        break;
+
+      case self::TYPE_REALM:
+        if (!mediamosa_aut::is_group_realm($mixed_param_value)) {
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
+        }
+
+        $checked_param_value = (string)$mixed_param_value;
+        break;
+
+      case self::TYPE_DOMAIN:
+        if (!mediamosa_aut::is_group_domain($mixed_param_value)) {
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
+        }
+
+        $checked_param_value = (string)$mixed_param_value;
+        break;
+
 
       default:
         throw new mediamosa_exception_program_error(strtr('Using unspecified type (@type) in type lib used for param @param.', array('@param' => $param, '@type' => $param_type)));

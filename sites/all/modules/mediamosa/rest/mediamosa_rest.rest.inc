@@ -56,8 +56,10 @@ class mediamosa_rest_call_list extends mediamosa_rest_call {
     // Get all rest calls.
     $a_calls = mediamosa_rest::get_rest_calls($limit, $offset);
 
-    foreach ($a_calls as $a_call) {
-      $o_mediamosa->add_item($a_call);
+    foreach ($a_calls as $a_call_2) { // Method
+      foreach ($a_call_2 as $a_call) { // Uri
+        $o_mediamosa->add_item($a_call);
+      }
     }
   }
 }
@@ -72,6 +74,7 @@ class mediamosa_rest_call_get extends mediamosa_rest_call {
     $a_my_vars[mediamosa_rest_call::VARS][mediamosa_rest_call::ID] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_SERIAL,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
+      mediamosa_rest_call::VAR_DESCRIPTION => mediamosa::t('The numeric ID of the REST call.'),
     );
 
     // Enrich with required REST vars.
@@ -81,10 +84,11 @@ class mediamosa_rest_call_get extends mediamosa_rest_call {
   public function do_call() {
     $o_mediamosa = mediamosa::get();
 
+    // Get URI
     $uri_id = $this->get_param_value(mediamosa_rest_call::ID);
 
     // Get all rest calls.
-    $a_calls = mediamosa_rest::get_rest_calls(0, 0, mediamosa_rest_call::ID);
+    $a_calls = mediamosa_rest::get_rest_calls(0, 0, mediamosa_rest_call::ID, NULL);
 
     if (!isset($a_calls[$uri_id])) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_NOT_FOUND, array('@uri_id' => $uri_id));

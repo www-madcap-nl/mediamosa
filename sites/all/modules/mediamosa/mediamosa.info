@@ -23,6 +23,7 @@ files[] = core/error/mediamosa_error.inc
 files[] = core/error/mediamosa_error.install.inc
 
 ; Library. (2nd for dependency).
+files[] = lib/mediamosa_db_query.inc
 files[] = lib/mediamosa_db.inc
 files[] = lib/mediamosa_exception.inc
 files[] = lib/mediamosa_lib.inc
@@ -37,11 +38,21 @@ files[] = rest/mediamosa_rest_call.inc
 files[] = rest/mediamosa_rest.inc
 files[] = rest/mediamosa_rest.rest.inc
 
-; AUT.
-files[] = core/aut/mediamosa_aut_db.inc
-files[] = core/aut/mediamosa_aut_query.inc
+; Aut class.
 files[] = core/aut/mediamosa_aut.inc
 files[] = core/aut/mediamosa_aut.install.inc
+files[] = core/aut/app_master_slave/mediamosa_aut_app_master_slave_db.inc
+files[] = core/aut/app_master_slave/mediamosa_aut_app_master_slave.inc
+files[] = core/aut/app_master_slave/mediamosa_aut_app_master_slave.install.inc
+files[] = core/aut/group/mediamosa_aut_group_db.inc
+files[] = core/aut/group/mediamosa_aut_group.inc
+files[] = core/aut/group/mediamosa_aut_group.install.inc
+files[] = core/aut/name/mediamosa_aut_name_db.inc
+files[] = core/aut/name/mediamosa_aut_name.inc
+files[] = core/aut/name/mediamosa_aut_name.install.inc
+files[] = core/aut/object/mediamosa_aut_object_db.inc
+files[] = core/aut/object/mediamosa_aut_object.inc
+files[] = core/aut/object/mediamosa_aut_object.install.inc
 
 ; App class.
 files[] = core/app/mediamosa_app_db.inc
@@ -80,6 +91,11 @@ files[] = core/asset/metadata/property/mediamosa_asset_metadata_property.install
 files[] = core/asset/metadata/property/group/mediamosa_asset_metadata_property_group_db.inc
 files[] = core/asset/metadata/property/group/mediamosa_asset_metadata_property_group.inc
 files[] = core/asset/metadata/property/group/mediamosa_asset_metadata_property_group.install.inc
+
+; Collection.
+files[] = core/collection/mediamosa_collection_db.inc
+files[] = core/collection/mediamosa_collection.inc
+files[] = core/collection/mediamosa_collection.install.inc
 
 ; FTP Batch.
 files[] = core/ftp_batch/mediamosa_ftp_batch.inc

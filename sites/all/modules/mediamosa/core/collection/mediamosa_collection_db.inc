@@ -29,53 +29,40 @@
   * The database class of the asset module.
   */
 
-class mediamosa_asset_db {
+class mediamosa_collection_db {
   // ------------------------------------------------------------------ Consts.
   // Table name;
-  const TABLE_NAME = 'mediamosa_asset'; // 1.x name asset.
+  const TABLE_NAME = 'mediamosa_collection'; // 1.x name collection.
 
   // Database fields;
-  const ID = 'asset_id';
-  const PARENT_ID = 'parent_id';
+  const ID = 'coll_id';
   const APP_ID = 'app_id';
-  const PROVIDER_ID = 'provider_id';
-  const PROVIDER_ID_LENGTH = 255;
+  const TITLE = 'title';
+  const TITLE_LENGTH = 255;
+  const DESCRIPTION = 'description';
+  const DESCRIPTION_LENGTH = 1000;
   const OWNER_ID = 'owner_id';
   const OWNER_ID_LENGTH = 255;
   const GROUP_ID = 'group_id';
   const GROUP_ID_LENGTH = 255;
-  const VIDEOTIMESTAMP = 'videotimestamp';
-  const VIDEOTIMESTAMPMODIFIED = 'videotimestampmodified';
-  const PLAY_RESTRICTION_START = 'play_restriction_start';
-  const PLAY_RESTRICTION_END = 'play_restriction_end';
-  const IS_LOCKED = 'is_locked';
-  const IS_LOCKED_TRUE = 'TRUE';
-  const IS_LOCKED_FALSE = 'FALSE';
-  const REFERENCE_ID = 'reference_id';
-  const REFERENCE_ID_LENGTH = 255;
   const IS_PRIVATE = 'is_private'; // 1.x name: isprivate.
   const IS_PRIVATE_TRUE = 'TRUE';
   const IS_PRIVATE_FALSE = 'FALSE';
-  const MEDIA_DURATION = 'media_duration'; // 1.x name: mediafile_duration.
-  const MEDIA_DURATION_LENGTH = 10;
-  const MEDIA_CONTAINER_TYPE = 'media_container_type'; // 1.x name: mediafile_container_type.
-  const MEDIA_CONTAINER_TYPE_LENGTH = 50;
+  const _PRIVATE = 'private';
+  const PRIVATE_TRUE = 'TRUE';
+  const PRIVATE_FALSE = 'FALSE';
+  const _PUBLIC = 'public';
+  const PUBLIC_TRUE = 'TRUE';
+  const PUBLIC_FALSE = 'FALSE';
+  const CATEGORY = 'category';
+  const CATEGORY_TRUE = 'TRUE';
+  const CATEGORY_FALSE = 'FALSE';
   const CREATED = 'created';
   const CHANGED = 'changed';
+  const PUBLIC_ASSIGN = 'public_assign';
+  const PUBLIC_ASSIGN_TRUE = 'TRUE';
+  const PUBLIC_ASSIGN_FALSE = 'FALSE';
   const IS_UNAPPROPRIATE = 'is_unappropriate';
   const IS_UNAPPROPRIATE_TRUE = 'TRUE';
   const IS_UNAPPROPRIATE_FALSE = 'FALSE';
-  const IS_EXTERNAL = 'is_external';
-  const IS_EXTERNAL_TRUE = 'TRUE';
-  const IS_EXTERNAL_FALSE = 'FALSE';
-  const VIEWED = 'viewed';
-  const PLAYED = 'played';
-  const IS_EMPTY_ASSET = 'is_empty_asset';
-  const IS_EMPTY_ASSET_TRUE = 'TRUE';
-  const IS_EMPTY_ASSET_FALSE = 'FALSE';
-  const IS_PROTECTED = 'is_protected';
-  const IS_PROTECTED_TRUE = 'TRUE';
-  const IS_PROTECTED_FALSE = 'FALSE';
-  const IS_PROTECTED_USER_USERGROUP = 'USER_USERGROUP';
-  const IS_PROTECTED_DOMAIN_REALM = 'DOMAIN_REALM';
 }

@@ -65,7 +65,7 @@ class mediamosa_rest {
     $a_rest_call_return = FALSE;
 
     // Now find a match.
-    foreach ($a_rest_calls as $uri => $a_rest_call) {
+    foreach ($a_rest_calls[$request_method] as $uri => $a_rest_call) {
       $a_uri_parts = ($uri != '' ? explode('/', $uri) : array());
 
       if (count($a_request_uri) != count($a_uri_parts)) {
@@ -125,7 +125,7 @@ class mediamosa_rest {
     return $a_rest_call_return;
   }
   // ------------------------------------------------------------------ Functions (Public)
-  static public function get_rest_calls($limit = 0, $offset = 0, $key = mediamosa_rest_call::URI) {
+  static public function get_rest_calls($limit = 0, $offset = 0, $key = mediamosa_rest_call::METHOD, $key2 = mediamosa_rest_call::URI) {
     // Find all REST calls of enabled modules.
     $a_rest_calls = module_invoke_all('mediamosa_register_rest_call');
 
@@ -136,40 +136,48 @@ class mediamosa_rest {
     $a_result = array();
 
     $pos = 1;
-    foreach ($a_rest_calls as $uri => $a_rest_call) {
-      if ($offset && $offset--) {
-        $pos++;
-        continue;
-      }
+    foreach ($a_rest_calls as $uri => $a_rest_call_2) {
+      foreach ($a_rest_call_2 as $method => $a_rest_call) {
+        if ($offset && $offset--) {
+          $pos++;
+          continue;
+        }
 
-      // Check for the ALIAS_FOR.
-      if (isset($a_rest_call[mediamosa_rest_call::ALIAS_FOR])) {
-        assert(isset($a_rest_calls[$a_rest_call[mediamosa_rest_call::ALIAS_FOR]]));
+        // Check for the ALIAS_FOR.
+        if (isset($a_rest_call[mediamosa_rest_call::ALIAS_FOR])) {
+          assert(isset($a_rest_calls[$a_rest_call[mediamosa_rest_call::ALIAS_FOR]]));
 
-        // Now add the stuff we are missing.
-        $a_rest_call += $a_rest_calls[$a_rest_call[mediamosa_rest_call::ALIAS_FOR]];
-      }
+          // Now add the stuff we are missing.
+          $a_rest_call += $a_rest_calls[$a_rest_call[mediamosa_rest_call::ALIAS_FOR]];
+        }
 
-      if (!isset($a_rest_call[mediamosa_rest_call::METHOD])) {
-        $a_rest_call[mediamosa_rest_call::METHOD] = mediamosa_rest_call::METHOD_GET;
-      }
-      if (!isset($a_rest_call[mediamosa_rest_call::STATUS])) {
-        $a_rest_call[mediamosa_rest_call::STATUS] = mediamosa_rest_call::STATUS_ACTIVE;
-      }
-      if (!isset($a_rest_call[mediamosa_rest_call::RESPONSE_TYPE])) {
-        $a_rest_call[mediamosa_rest_call::RESPONSE_TYPE] = mediamosa_rest_call::RESPONSE_TYPE_XML;
-      }
+        $a_rest_call[mediamosa_rest_call::METHOD] = $method;
 
-      $a_rest_call[mediamosa_rest_call::URI] = $uri;
-      $a_rest_call[mediamosa_rest_call::ID] = $pos++;
+        if (!isset($a_rest_call[mediamosa_rest_call::STATUS])) {
+          $a_rest_call[mediamosa_rest_call::STATUS] = mediamosa_rest_call::STATUS_ACTIVE;
+        }
+        if (!isset($a_rest_call[mediamosa_rest_call::RESPONSE_TYPE])) {
+          $a_rest_call[mediamosa_rest_call::RESPONSE_TYPE] = mediamosa_rest_call::RESPONSE_TYPE_XML;
+        }
 
-      // Sort on Property.
-      ksort($a_rest_call);
+        $a_rest_call[mediamosa_rest_call::URI] = $uri;
+        $a_rest_call[mediamosa_rest_call::ID] = $pos++;
 
-      // Copy into result.
-      $a_result[$a_rest_call[$key]] = $a_rest_call;
-      if ($limit && !--$limit) {
-        break;
+        // Sort on Property.
+        ksort($a_rest_call);
+
+        // Copy into result.
+        if (isset($key2)) {
+          $a_result[$a_rest_call[$key]][$a_rest_call[$key2]] = $a_rest_call;
+        }
+        else {
+          assert(!isset($a_result[$a_rest_call[$key]]));
+          $a_result[$a_rest_call[$key]] = $a_rest_call;
+        }
+
+        if ($limit && !--$limit) {
+          break;
+        }
       }
     }
 

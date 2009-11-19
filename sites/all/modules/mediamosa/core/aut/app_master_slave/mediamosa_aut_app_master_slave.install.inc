@@ -1,0 +1,93 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is a Full Featured, Webservice Oriented Media Management and
+ * Distribution platform (http://www.vpcore.nl)
+ *
+ * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+ /**
+  * @file
+  * Installer for mediamosa_aut_app_master_slave.
+  */
+
+require_once 'mediamosa_aut_app_master_slave_db.inc';
+
+/**
+ * Our sub install.
+ */
+function mediamosa_aut_app_master_slave_install() {
+// Create our table.
+  mediamosa::drupal_install_schema('mediamosa_aut_app_master_slave');
+}
+
+/**
+ * Our sub uninstall.
+ */
+function mediamosa_aut_app_master_slave_uninstall() {
+// Create our table.
+  mediamosa::drupal_uninstall_schema('mediamosa_aut_app_master_slave');
+}
+
+/**
+ * Implement hook_schema().
+ */
+function mediamosa_aut_app_master_slave_schema() {
+  $a_schema[mediamosa_aut_app_master_slave_db::TABLE_NAME] = array(
+    'description' => t('This table stores master/slave links to media.'),
+    'fields' => array(
+      mediamosa_aut_app_master_slave_db::AUT_OBJECT_ID => array(
+        'type' => 'varchar',
+        'length' => mediamosa_aut_app_master_slave_db::AUT_OBJECT_ID_LENGTH,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => t('The object ID, links to mediamosa_asset_medium, mediamosa_asset or mediamosa_colletion.'),
+      ),
+      mediamosa_aut_app_master_slave_db::AUT_OBJECT_TYPE => array(
+        'type' => "enum('" . implode("','", array(mediamosa_aut_app_master_slave_db::AUT_OBJECT_TYPE_MEDIUM, mediamosa_aut_app_master_slave_db::AUT_OBJECT_TYPE_ASSET, mediamosa_aut_app_master_slave_db::AUT_OBJECT_TYPE_COLLECTION)) . "')",
+        'not null' => FALSE,
+        'mysql_type' => "enum('" . implode("','", array(mediamosa_aut_app_master_slave_db::AUT_OBJECT_TYPE_MEDIUM, mediamosa_aut_app_master_slave_db::AUT_OBJECT_TYPE_ASSET, mediamosa_aut_app_master_slave_db::AUT_OBJECT_TYPE_COLLECTION)) . "')",
+        'default' => mediamosa_aut_app_master_slave_db::AUT_OBJECT_TYPE_MEDIUM,
+        'description' => t('The type of object, links to mediamosa_asset_medium, mediamosa_asset or mediamosa_colletion.'),
+      ),
+      mediamosa_aut_app_master_slave_db::APP_ID_SLAVE => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => t('The slave application ID.'),
+      ),
+      mediamosa_aut_app_master_slave_db::APP_ID_MASTER => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => t('The master application ID.'),
+      ),
+    ),
+    'unique keys' => array(
+      'uni_objtype_objid_masterapp_slaveapp' => array(mediamosa_aut_app_master_slave_db::AUT_OBJECT_TYPE, mediamosa_aut_app_master_slave_db::AUT_OBJECT_ID, mediamosa_aut_app_master_slave_db::APP_ID_MASTER, mediamosa_aut_app_master_slave_db::APP_ID_SLAVE),
+    ),
+    'indexes' => array(
+      'idx_masterapp_slaveapp' => array(mediamosa_aut_app_master_slave_db::AUT_OBJECT_TYPE, mediamosa_aut_app_master_slave_db::APP_ID_MASTER, mediamosa_aut_app_master_slave_db::APP_ID_SLAVE),
+    ),
+  );
+
+  return $a_schema;
+}

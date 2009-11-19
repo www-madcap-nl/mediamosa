@@ -78,7 +78,7 @@ function mediamosa_maintenance_san_nas_mediamosa_configuration_submit($form, $fo
 
   // Set the variables.
   mediamosa_san_nas::linux_set($form_state['values']['mediamosa_current_mount_point']);
-  mediamosa_san_nas::linux_set($form_state['values']['mediamosa_current_mount_point_windows']);
+  mediamosa_san_nas::windows_set($form_state['values']['mediamosa_current_mount_point_windows']);
 }
 
 /**

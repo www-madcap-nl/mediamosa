@@ -26,37 +26,23 @@
 
  /**
   * @file
-  * Default collection include file.
+  *
   */
 
-/**
- * Core Mediamosa core library.
- */
-class mediamosa_lib {
-  /**
-   * Converts a string boolean ('TRUE', 'true', 'FALSE', 'false')
-   * to a normal boolean value TRUE/FALSE
-   *
-   * @param string $str
-   * @return boolean
-   */
-  function boolstr2bool($str) {
-    if (is_bool($str)) {
-      return $str;
-    }
-    $str = trim(mediamosa_unicode::strtolower($str));
-    assert($str == 'true' || $str == 'false' || $str == '');
+class mediamosa_aut_group_db {
+  // ------------------------------------------------------------------ Consts.
+  // Table name;
+  const TABLE_NAME = 'mediamosa_aut_group'; // 1.x aut_group table.
 
-    return $str == 'true';
-  }
+  // Primary KEY
+  const ID = 'aut_group_id';
 
-  /**
-   * Converts a boolean to a string variant  ('TRUE', 'FALSE')
-   *
-   * @param boolean $boolean
-   * @return string
-   */
-  function bool2boolstr($boolean) {
-    return $boolean ? 'TRUE' : 'FALSE';
-  }
+  // Database fields;
+  const APP_ID = 'app_id';
+  const AUT_GROUP_NAME = 'aut_group_name';
+  const AUT_GROUP_NAME_LENGTH = 128;
+  const AUT_GROUP_TYPE = 'aut_group_type';
+  const AUT_GROUP_TYPE_REALM = 'REALM';
+  const AUT_GROUP_TYPE_DOMAIN = 'DOMAIN';
+
 }

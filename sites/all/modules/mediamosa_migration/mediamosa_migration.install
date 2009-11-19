@@ -102,11 +102,26 @@ function mediamosa_migration_requirements($phase) {
       'mediamosa_error',
       'mediamosa_asset',
       'mediamosa_asset_medium',
+      'mediamosa_asset_medium_metadata',
+      'mediamosa_asset_metadata',
+      'mediamosa_asset_metadata_property',
+      'mediamosa_asset_metadata_property_group',
+      'mediamosa_aut_app_master_slave',
+      'mediamosa_aut_group',
+      'mediamosa_aut_name',
+      'mediamosa_aut_object',
+      'mediamosa_app',
+      'mediamosa_collection',
     );
     // These tables (dest) must be empty.
     $a_table_names_dest_empty = array(
       'mediamosa_asset',
       'mediamosa_asset_medium',
+      'mediamosa_aut_app_master_slave',
+      'mediamosa_aut_group',
+      'mediamosa_aut_name',
+      'mediamosa_aut_object',
+      'mediamosa_collection',
     );
     // Must exists source drupal db.
     $a_table_names_source_exists = array(
@@ -120,6 +135,11 @@ function mediamosa_migration_requirements($phase) {
       'asset_property',
       'assetprop_definition',
       'assetprop_group',
+      'aut_name',
+      'aut_group',
+      'aut_object',
+      'aut_app_master_slave',
+      'collection'
     );
 
     $old_db = 'default';
@@ -201,6 +221,12 @@ function mediamosa_migration_install() {
 
   // asset_property -> mediamosa_asset_metadata.
   _mediamosa_migration_asset_metadata();
+
+  // collection -> mediamosa_collection.
+  _mediamosa_migration_collection();
+
+  // aut_* -> mediamosa_aut_*
+  _mediamosa_migration_aut();
 }
 
 /**
@@ -452,7 +478,7 @@ function _mediamosa_migration_asset() {
         media_container_type,
         created,
         changed,
-        is_unappropiate,
+        is_unappropriate,
         is_external,
         is_empty_asset,
         viewed,
@@ -875,6 +901,146 @@ function _mediamosa_migration_asset_metadata() {
 }
 
 /**
+ * Migrate the asset metadata table.
+ */
+function _mediamosa_migration_aut() {
+  // Get the database name.
+  $db_name = _mediamosa_migration_get_memo_data_db();
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   * Columns new;
+   * -
+   */
+  db_query(strtr(
+    'INSERT INTO {mediamosa_aut_name}
+      (
+        aut_name_id,
+        app_id,
+        aut_group_id,
+        aut_name,
+        aut_prefix,
+        aut_type
+      ) (SELECT
+        aut_name_id,
+        app_id,
+        aut_group_id,
+        aut_name,
+        aut_prefix,
+        aut_type
+        FROM #db_name.{aut_name} ORDER BY aut_name_id ASC)',
+    array(
+      '#db_name' => $db_name,
+    ))
+  );
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   * Columns new;
+   * -
+   */
+  db_query(strtr(
+    'INSERT INTO {mediamosa_aut_group}
+      (
+        aut_group_id,
+        app_id,
+        aut_group_name,
+        aut_group_type
+      ) (SELECT
+        aut_group_id,
+        app_id,
+        aut_group_name,
+        aut_group_type
+        FROM #db_name.{aut_group} ORDER BY aut_group_id ASC)',
+    array(
+      '#db_name' => $db_name,
+    ))
+  );
+
+  // Add mediafile to enum so can migrate.
+  db_query("ALTER TABLE {mediamosa_aut_object} CHANGE COLUMN `aut_object_type` `aut_object_type` enum('MEDIAFILE', 'MEDIUM', 'ASSET','COLLECTION') default NULL COMMENT 'The type of object, links to mediamosa_asset_medium, mediamosa_asset or mediamosa_colletion.'");
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   * Columns new;
+   * -
+   */
+  db_query(strtr(
+    'INSERT INTO {mediamosa_aut_object}
+      (
+        aut_object_id,
+        aut_object_type,
+        aut_id,
+        aut_type
+      ) (SELECT
+        aut_object_id,
+        aut_object_type,
+        aut_id,
+        aut_type
+        FROM #db_name.{aut_object} ORDER BY aut_object_id ASC)',
+    array(
+      '#db_name' => $db_name,
+    ))
+  );
+
+  // Now copy all mediafile types to medium types.
+  db_query("UPDATE {mediamosa_aut_object} SET aut_object_type = 'MEDIUM' WHERE aut_object_type = 'MEDIAFILE'");
+
+  // Now remove 'mediafile' from the Enum.
+  db_query("ALTER TABLE {mediamosa_aut_object} CHANGE COLUMN `aut_object_type` `aut_object_type` enum('MEDIUM', 'ASSET','COLLECTION') default 'MEDIUM' COMMENT 'The type of object, links to mediamosa_asset_medium, mediamosa_asset or mediamosa_colletion.'");
+
+
+  // Add mediafile to enum so can migrate.
+  db_query("ALTER TABLE {mediamosa_aut_app_master_slave} CHANGE COLUMN `aut_object_type` `aut_object_type` enum('MEDIAFILE', 'MEDIUM', 'ASSET','COLLECTION') default 'MEDIUM' COMMENT 'The type of object, links to mediamosa_asset_medium, mediamosa_asset or mediamosa_colletion.'");
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * aut_id_slave -> aut_slave_id
+   * aut_id_master -> aut_master_id
+   * Columns new;
+   * -
+   */
+  db_query(strtr(
+    'INSERT INTO {mediamosa_aut_app_master_slave}
+      (
+        aut_object_id,
+        aut_object_type,
+        app_id_slave,
+        app_id_master
+      ) (SELECT
+        aut_object_id,
+        aut_object_type,
+        app_slave_id,
+        app_master_id
+        FROM #db_name.{aut_app_master_slave} ORDER BY aut_object_id ASC)',
+    array(
+      '#db_name' => $db_name,
+    ))
+  );
+
+  // Now copy all mediafile types to medium types.
+  db_query("UPDATE {mediamosa_aut_app_master_slave} SET aut_object_type = 'MEDIUM' WHERE aut_object_type = 'MEDIAFILE'");
+
+  // Now remove 'mediafile' from the Enum.
+  db_query("ALTER TABLE {mediamosa_aut_app_master_slave} CHANGE COLUMN `aut_object_type` `aut_object_type` enum('MEDIUM', 'ASSET','COLLECTION') default 'MEDIUM' COMMENT 'The type of object, links to mediamosa_asset_medium, mediamosa_asset or mediamosa_colletion.'");
+}
+
+/**
  * Migrate san nas settings.
  */
 function _mediamosa_migration_sannas() {
@@ -896,3 +1062,67 @@ function _mediamosa_migration_sannas() {
     mediamosa_san_nas::windows_set($a_san_nas['current_mount_point_windows']);
   }
 }
+
+/**
+ * Migrate collection table..
+ */
+function _mediamosa_migration_collection() {
+  // Get the database name.
+  $db_name = _mediamosa_migration_get_memo_data_db();
+
+  // Get the current mode, which might be empty;
+  $old_mode = db_query('SELECT @@SESSION.sql_mode')->fetchField();
+
+  // Turn off problems with empty dates.
+  db_query("SET SESSION sql_mode = 'ALLOW_INVALID_DATES'");
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * testtag
+   * has_streamable_mediafiles
+   * Columns renamed;
+   * isprivate = is_private
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_collection}
+      (
+        coll_id,
+        title,
+        description,
+        app_id,
+        owner_id,
+        group_id,
+        is_private,
+        private,
+        public,
+        category,
+        created,
+        changed,
+        public_assign,
+        is_unappropriate
+      ) (SELECT
+        coll_id,
+        title,
+        description,
+        app_id,
+        owner_id,
+        group_id,
+        isprivate,
+        private,
+        public,
+        category,
+        created,
+        changed,
+        public_assign,
+        is_unappropriate
+      FROM #db_name.collection ORDER BY created ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+  // Back to old session mode.
+  db_query(strtr("SET SESSION sql_mode = '#old_mode'", array('#old_mode' => $old_mode)));
+}
+

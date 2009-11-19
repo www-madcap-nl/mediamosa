@@ -64,7 +64,7 @@ class mediamosa_rest_call_error_list extends mediamosa_rest_call {
   public function do_call() {
     $o_mediamosa = mediamosa::get();
 
-    // Get the dbus line.
+    // Get the variables.
     $code = $this->get_param_value(mediamosa_error_db::CODE);
     $order_by = $this->get_param_value(self::ORDER_BY);
     $order_direction = $this->get_param_value(self::ORDER_DIRECTION);

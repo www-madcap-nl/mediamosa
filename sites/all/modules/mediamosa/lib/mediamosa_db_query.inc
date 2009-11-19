@@ -129,6 +129,16 @@ class mediamosa_db_query {
   }
 
   /**
+   * When using SQL_CALC_FOUND_ROWS, use this function
+   * to retrieve the value.
+   *
+   * @return unknown
+   */
+  static public function found_rows() {
+    return mediamosa_db::db_query("SELECT found_rows()")->fetchField();
+  }
+
+/**
    * Create the query part from the a_join array.
    *
    * @param array $a_joins
@@ -228,10 +238,10 @@ class mediamosa_db_query {
     }
 
     if (isset($a_query[self::LIMIT])) {
-      $a_db_query[] = sprintf("\nLIMIT %d", db_escape_string($a_query[self::LIMIT]));
+      $a_db_query[] = sprintf("\nLIMIT %d", mediamosa_db::escape_string($a_query[self::LIMIT]));
 
       if (isset($a_query[self::OFFSET]) && $a_query[self::OFFSET] > 0) {
-        $a_db_query[] = sprintf("\nOFFSET %d", db_escape_string($a_query[self::OFFSET]));
+        $a_db_query[] = sprintf("\nOFFSET %d", mediamosa_db::escape_string($a_query[self::OFFSET]));
       }
     }
 
@@ -290,11 +300,12 @@ class mediamosa_db_query {
    * @return string
    */
   static public function query_value($s_value, $is_insert = FALSE) {
-    return (is_null($s_value) ? ($is_insert ? ' = NULL' : ' IS NULL') : " = '" . self::query_escape($s_value) . "'");
+    return (is_null($s_value) ? ($is_insert ? ' = NULL' : ' IS NULL') : " = '" . mediamosa_db::escape_string($s_value) . "'");
   }
 
   /**
-   * Returns a valid string that been escaped
+   * Returns a valid string that been escaped.
+   * Do not use, use mediamosa_db::escape_string instead(!).
    *
    * @param string $str_like
    */
@@ -304,6 +315,7 @@ class mediamosa_db_query {
 
   /**
    * Returns a valid escaped string when using like
+   * Do not use, use mediamosa_db::escape_string_like instead(!).
    *
    * @param string $str_like
    * @return string

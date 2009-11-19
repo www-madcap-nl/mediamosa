@@ -26,37 +26,15 @@
 
  /**
   * @file
-  * Default collection include file.
+  *
   */
 
 /**
- * Core Mediamosa core library.
+ * Implementation of hook_mediamosa_register_rest_call().
  */
-class mediamosa_lib {
-  /**
-   * Converts a string boolean ('TRUE', 'true', 'FALSE', 'false')
-   * to a normal boolean value TRUE/FALSE
-   *
-   * @param string $str
-   * @return boolean
-   */
-  function boolstr2bool($str) {
-    if (is_bool($str)) {
-      return $str;
-    }
-    $str = trim(mediamosa_unicode::strtolower($str));
-    assert($str == 'true' || $str == 'false' || $str == '');
+function mediamosa_collection_mediamosa_register_rest_call() {
 
-    return $str == 'true';
-  }
+  $a_rest_calls = array();
 
-  /**
-   * Converts a boolean to a string variant  ('TRUE', 'FALSE')
-   *
-   * @param boolean $boolean
-   * @return string
-   */
-  function bool2boolstr($boolean) {
-    return $boolean ? 'TRUE' : 'FALSE';
-  }
+  return $a_rest_calls;
 }

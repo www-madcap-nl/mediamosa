@@ -24,39 +24,8 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
- /**
-  * @file
-  * Default collection include file.
-  */
-
 /**
- * Core Mediamosa core library.
+ * @file
+ * The helper functions of collection module.
  */
-class mediamosa_lib {
-  /**
-   * Converts a string boolean ('TRUE', 'true', 'FALSE', 'false')
-   * to a normal boolean value TRUE/FALSE
-   *
-   * @param string $str
-   * @return boolean
-   */
-  function boolstr2bool($str) {
-    if (is_bool($str)) {
-      return $str;
-    }
-    $str = trim(mediamosa_unicode::strtolower($str));
-    assert($str == 'true' || $str == 'false' || $str == '');
 
-    return $str == 'true';
-  }
-
-  /**
-   * Converts a boolean to a string variant  ('TRUE', 'FALSE')
-   *
-   * @param boolean $boolean
-   * @return string
-   */
-  function bool2boolstr($boolean) {
-    return $boolean ? 'TRUE' : 'FALSE';
-  }
-}

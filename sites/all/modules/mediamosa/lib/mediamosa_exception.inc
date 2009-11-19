@@ -109,28 +109,13 @@ class mediamosa_exception_error extends mediamosa_exception {
 }
 
 /**
- * Thrown when access was denied, like not being owner.
- */
-/*
-class mediamosa_exception_error_access_denied extends mediamosa_exception_error {
-  public function __construct($a_tags = array()) {
-    parent::__construct(vp_error::ERRORCODE_NOT_AUTHORIZED, $a_tags);
-  }
-}
-*/
-/**
- * Low severity exception (is not logged).
- */
-/*
-class mediamosa_exception_error_low extends mediamosa_exception_error {
-  public function __construct($mediamosa_errorcode, $a_tags = array()) {
-    parent::__construct($mediamosa_errorcode, $a_tags, VP_EXCEPTION_SEVERITY_LOW);
-  }
-}
-*/
-/**
  * Exceptions extended on mediamosa_exception.
  */
+class mediamosa_exception_error_unexpected_error extends mediamosa_exception_program_error {
+  public function __construct() {
+    parent::__construct('Unexpected error!');
+  }
+}
 
 class mediamosa_exception_program_error extends mediamosa_exception {
   public function __construct($msg, $a_tags = array()) {
@@ -140,15 +125,161 @@ class mediamosa_exception_program_error extends mediamosa_exception {
 }
 
 /**
- * Exceptions extended on mediamosa_exception.
+ * Thrown when order by parameter is not allowed
  */
-/*
-class mediamosa_exception_empty_result extends mediamosa_exception_error {
-  public function __construct() {
-    parent::__construct(vp_error::ERRORCODE_EMPTY_RESULT);
+class mediamosa_exception_error_sort_field_error extends mediamosa_exception_error {
+  public function __construct($a_tags = array()) {
+    assert(isset($a_tags["@field"]));
+    parent::__construct(mediamosa_error::ERRORCODE_SORT_FIELD_ERROR, $a_tags);
   }
 }
-*/
+
+class mediamosa_exception_error_invalid_timestamp extends mediamosa_exception_error {
+  public function __construct($a_tags = array()) {
+    assert(isset($a_tags["@name"]));
+    parent::__construct(mediamosa_error::ERRORCODE_INVALID_TIMESTAMP, $a_tags);
+  }
+}
+
+class mediamosa_exception_error_missing_timestamp extends mediamosa_exception_error {
+  public function __construct($a_tags = array()) {
+    assert(isset($a_tags["@name"]));
+    parent::__construct(mediamosa_error::ERRORCODE_MISSING_TIMESTAMP, $a_tags);
+  }
+}
+
+// When access has been denied
+class mediamosa_exception_error_access_denied extends mediamosa_exception_error {
+  public function __construct($a_tags = array()) {
+    parent::__construct(mediamosa_error::ERRORCODE_NOT_AUTHORIZED, $a_tags);
+  }
+}
+
+// When ega authentaction failed
+class mediamosa_exception_error_authentication_failure extends mediamosa_exception_error {
+  public function __construct($a_tags = array()) {
+    parent::__construct(mediamosa_error::ERRORCODE_ACCESS_DENIED, $a_tags);
+  }
+}
+
+class mediamosa_exception_error_empty_result extends mediamosa_exception_error {
+  public function __construct($a_tags = array()) {
+    parent::__construct(mediamosa_error::ERRORCODE_EMPTY_RESULT, $a_tags);
+  }
+}
+
+class mediamosa_exception_error_aut_group_already_exists extends mediamosa_exception_error {
+  public function __construct($a_tags = array()) {
+    assert(isset($a_tags["@group"]));
+//    assert(isset($a_tags["@group_type"])); not required at this time
+    parent::__construct(mediamosa_error::ERRORCODE_AUT_GROUP_ALREADY_EXISTS, $a_tags);
+  }
+}
+
+class mediamosa_exception_error_aut_group_not_found extends mediamosa_exception_error {
+  public function __construct($a_tags = array()) {
+    assert(isset($a_tags["@group"]));
+    parent::__construct(mediamosa_error::ERRORCODE_AUT_GROUP_NOT_FOUND, $a_tags);
+  }
+}
+
+class mediamosa_exception_error_aut_name_not_found extends mediamosa_exception_error {
+  public function __construct($a_tags = array()) {
+    assert(isset($a_tags["@hostname"]));
+    parent::__construct(mediamosa_error::ERRORCODE_AUT_NAME_NOT_FOUND, $a_tags);
+  }
+}
+
+class mediamosa_exception_error_group_not_empty extends mediamosa_exception_error {
+  public function __construct($a_tags = array()) {
+    assert(isset($a_tags["@group"]));
+    parent::__construct(mediamosa_error::ERRORCODE_GROUP_NOT_EMPTY, $a_tags);
+  }
+}
+
+class mediamosa_exception_error_invalid_data_parameter extends mediamosa_exception_error {
+  public function __construct($a_tags = array()) {
+    assert(isset($a_tags["@parameter"]));
+    assert(isset($a_tags["@data"]));
+    parent::__construct(mediamosa_error::ERRORCODE_INVALID_DATA_PARAMETER, $a_tags);
+  }
+}
+
+class mediamosa_exception_error_job_could_not_be_removed extends mediamosa_exception_error {
+  public function __construct($a_tags = array()) {
+    assert(isset($a_tags["@job_id"]));
+    parent::__construct(mediamosa_error::ERRORCODE_JOB_COULD_NOT_BE_REMOVED, $a_tags, VPX_EXCEPTION_HIGH);
+  }
+}
+
+class mediamosa_exception_error_job_not_found extends mediamosa_exception_error {
+  public function __construct($a_tags = array()) {
+    assert(isset($a_tags["@job_id"]));
+    parent::__construct(mediamosa_error::ERRORCODE_JOB_NOT_FOUND, $a_tags);
+  }
+}
+
+class mediamosa_exception_error_userman_invalid_user extends mediamosa_exception_error {
+  public function __construct($a_tags = array()) {
+    assert(isset($a_tags["@user_id"]));
+    parent::__construct(mediamosa_error::ERRORCODE_USERMAN_INVALID_USER, $a_tags);
+  }
+}
+
+class mediamosa_exception_error_cant_retype_group_must_be_empty extends mediamosa_exception_error {
+  public function __construct($a_tags = array()) {
+    assert(isset($a_tags["@group"]));
+    parent::__construct(mediamosa_error::ERRORCODE_CANT_RETYPE_GROUP_MUST_BE_EMPTY, $a_tags);
+  }
+}
+
+class mediamosa_exception_error_query_error extends mediamosa_exception_error {
+  public function __construct($a_tags = array()) {
+    parent::__construct(mediamosa_error::ERRORCODE_QUERY_ERROR, $a_tags, VPX_EXCEPTION_SEVERITY_HIGH);
+  }
+}
+
+class mediamosa_exception_error_job_mediafile_not_found extends mediamosa_exception_error {
+  public function __construct($a_tags = array()) {
+    assert(isset($a_tags["@mediafile_id"]));
+    parent::__construct(mediamosa_error::ERRORCODE_JOB_MEDIAFILE_NOT_FOUND, $a_tags);
+  }
+}
+
+class mediamosa_exception_error_webservice_disabled extends mediamosa_exception_error {
+  public function __construct($a_tags = array()) {
+    parent::__construct(mediamosa_error::ERRORCODE_WEBSERVICE_DISABLED, $a_tags);
+  }
+}
+
+class mediamosa_exception_error_rest_call_is_disabled extends mediamosa_exception_error {
+  public function __construct($a_tags = array()) {
+    assert(isset($a_tags["@uri"]));
+    parent::__construct(mediamosa_error::ERRORCODE_REST_CALL_IS_DISABLED, $a_tags);
+  }
+}
+// Throw when CQL is combined with normal search/order by parameters
+class mediamosa_exception_error_cql_exclusive extends mediamosa_exception_error {
+  public function __construct() {
+    parent::__construct(mediamosa_error::ERRORCODE_CQL_EXCLUSIVE);
+  }
+}
+
+// Throw when CQL is combined with normal search/order by parameters
+class mediamosa_exception_error_cql_error extends mediamosa_exception_error {
+  public function __construct($a_tags = array()) {
+    assert(isset($a_tags["@error"]));
+    parent::__construct(mediamosa_error::ERRORCODE_CQL_ERROR, $a_tags);
+  }
+}
+
+// Throw when master/slave access is disabled for this app.
+class mediamosa_exception_error_masterslave_disallowed extends mediamosa_exception_error {
+  public function __construct($a_tags = array()) {
+    assert(isset($a_tags["@aut_id"]));
+    parent::__construct(mediamosa_error::ERRORCODE_MASTERSLAVE_DISALLOWED, $a_tags);
+  }
+}
 
 /**
  * Exceptions extended on mediamosa_exception_program_error.

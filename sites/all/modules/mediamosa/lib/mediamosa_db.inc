@@ -29,6 +29,7 @@
  * Our DB layer between MediaMosa and Drupal DB.
  */
 
+
 class mediamosa_db {
   // ------------------------------------------------------------------ Consts.
   const LIMIT = 'limit';
@@ -74,25 +75,26 @@ class mediamosa_db {
     switch ($func) {
       case 'db_query_range':
        // By default, specify we want array's and not objects.
-        $a_args += array(4 =>
-          array(
-            'fetch' => PDO::FETCH_ASSOC,
-          ),
+        $a_args[4] += array(
+          'fetch' => PDO::FETCH_ASSOC,
         );
         $query = &$a_args[0]; // The Query
         $args = &$a_args[3];  // The Arguments.
         break;
 
-      default:
+      case 'db_query_temporary':
+      case 'db_query':
         // By default, specify we want array's and not objects.
-        $a_args += array(2 =>
-          array(
-            'fetch' => PDO::FETCH_ASSOC,
-          ),
+        $a_args[2] += array(
+          'fetch' => PDO::FETCH_ASSOC,
         );
+
         $query = &$a_args[0]; // The Query.
         $args = &$a_args[1];  // The Arguments.
         break;
+
+      default:
+        throw new mediamosa_exception_program_error('not expected.');
     }
 
     // Make sure {} are inside the query, this will prevent problems later.
@@ -157,6 +159,74 @@ class mediamosa_db {
    */
   static public function db_query(/*$query, $args = array(), $options = array()*/) {
     $a_args = func_get_args();
+
+    /**
+     * Start Query hack fix for old 6.x drupal queries.
+     */
+    if (isset($a_args[1]) && !is_array($a_args[1])) {
+      $query = &$a_args[0]; // The Query.
+      $a_args_2 = array();
+
+      $y = 1;
+      for ($x = 0; $x < strlen($query); $x++) {
+        if ($query{$x} != '%' || $x + 1 == strlen($query)) {
+          continue;
+        }
+
+        // We only replace the specifiers which are not escaped and in our array.
+        $char = $query{++$x};
+        if (in_array($char, array('n', 'd', 'f', 'b', 's'))) {
+          $query = substr($query, 0, $x - 1) . '#mediamosa_var_' . $y. substr($query, $x + 1);
+
+          $prefix = '#';
+
+          // If we had '%s', then this has become '#mediamosa_var_x', now replace that.
+          if ( ($x - 2) >= 0 && substr($query, $x - 2, strlen("'#mediamosa_var_" . $y . "'")) == "'#mediamosa_var_" . $y . "'") {
+            $query = substr($query, 0, $x - 2) . ':mediamosa_var_' . $y . substr($query, $x + strlen("#mediamosa_var_" . $y));
+            $prefix = ':';
+          }
+
+          // lets skip the inserted stuff a bit.
+          $x += strlen('#mediamosa_var_' . $y) - 2;
+
+          switch ($char) {
+            case 'd':
+              $a_args_2[$prefix . 'mediamosa_var_' . $y] = (int)$a_args[$y];
+              break;
+            case 'f':
+              $a_args_2[$prefix . 'mediamosa_var_' . $y] = (float)$a_args[$y];
+              break;
+            default:
+              $a_args_2[$prefix . 'mediamosa_var_' . $y] = (string)$a_args[$y];
+              break;
+          }
+
+          // Remove the numbered index version.
+          unset($a_args[$y++]);
+        }
+      }
+
+      // Copy the new array into args[1]
+      $a_args[1] = $a_args_2;
+    }
+    /**
+     * End Query hack fix for old 6.x drupal queries.
+     */
+
+    if (!isset($a_args[1])) {
+      $a_args[1] = array();
+    }
+    if (!isset($a_args[2])) {
+      $a_args[2] = array();
+    }
+
+    // Lets make sure we return the inserted ID with insert into!
+    if (strtoupper(substr($a_args[0], 0, strlen('INSERT INTO '))) == 'INSERT INTO ') {
+      $a_args[2] += array(
+        'return' => Database::RETURN_INSERT_ID,
+      );
+    }
+
     return self::query('db_query', $a_args);
   }
 
@@ -194,6 +264,7 @@ class mediamosa_db {
       return $result;
     }
 
+    // Call db_select function and attach ouy select extender.
     return call_user_func_array('db_select', $a_args);
   }
 
@@ -379,11 +450,11 @@ class mediamosa_db {
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_ASSET_NOT_FOUND, array("@asset_id" => $a_columns_and[mediamosa_asset_db::ID]));
       case mediamosa_asset_medium_db::TABLE_NAME:
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MEDIAFILE_NOT_FOUND, array("@mediafile_id" => $a_columns_and[mediamosa_asset_media_db::ID]));
+      case mediamosa_aut_group_db::TABLE_NAME:
+        throw new vpx_exception_error(ERRORCODE_AUT_GROUP_NOT_FOUND, array("@group" => $a_columns_and[mediamosa_aut_group_db::AUT_GROUP_NAME]));
 /*
       case 'collection':
         throw new vpx_exception_error(ERRORCODE_COLLECTION_NOT_FOUND, array("@coll_id" => $a_columns_and['coll_id']));
-      case 'aut_group':
-        throw new vpx_exception_error(ERRORCODE_AUT_GROUP_NOT_FOUND, array("@group" => $a_columns_and['aut_group_name']));
       case 'ftp_batch':
         throw new vpx_exception_error(ERRORCODE_FTP_BATCH_NOT_FOUND, array("@batch_id" => $a_columns_and['batch_id']));
       case 'job':
