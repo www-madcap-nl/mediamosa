@@ -24,3 +24,19 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
+/**
+ * @file
+ * DB Class for mediamosa_server_streaming_container module.
+ */
+
+class mediamosa_server_streaming_container_db {
+  // ------------------------------------------------------------------ Consts.
+  // Table name;
+  const TABLE_NAME = 'mediamosa_server_streaming_container'; // 1.x name streaming_server_container.
+
+  // Database fields;
+  const ID = 'streaming_server_container_id';
+  const STREAMING_SERVER_ID = 'streaming_server_id';
+  const CONTAINER = 'container';
+  const CONTAINER_LENGTH = 255;
+}

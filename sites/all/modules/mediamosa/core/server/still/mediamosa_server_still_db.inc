@@ -24,3 +24,21 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
+/**
+ * @file
+ * DB Class for mediamosa_server_still module.
+ */
+class mediamosa_server_still_db {
+  // ------------------------------------------------------------------ Consts.
+  // Table name;
+  const TABLE_NAME = 'mediamosa_server_still'; // 1.x name still_server.
+
+  // Database fields;
+  const ID = 'server_server_id';
+  const VERSION = 'version';
+  const DESCRIPTION = 'description';
+  const DESCRIPTION_LENGTH = 255;
+  const URI = 'uri';
+  const URI_LENGTH = 255;
+  const ACTIVE = 'active';
+}

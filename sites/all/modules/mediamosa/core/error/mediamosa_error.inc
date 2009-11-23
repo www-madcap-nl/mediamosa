@@ -208,7 +208,7 @@ class mediamosa_error {
    * @return array
    */
   static public function error_code_list($order_by = mediamosa_error_db::CODE, $order_direction = mediamosa_type::ORDER_DIRECTION_ASC) {
-    static $a_codes;
+    static $a_codes = NULL;
 
     if (!isset($a_codes[$order_by][$order_direction])) {
       $a_codes[$order_by][$order_direction] = mediamosa_db::db_query(

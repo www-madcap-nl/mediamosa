@@ -101,7 +101,7 @@ class mediamosa_aut_name {
     switch ($aut_type) {
       case mediamosa_aut::AUT_NAME_TYPE_APP: // no longer in the aut_name table
         assert(0);
-        throw new vpx_exception_error_unexpected_error();
+        throw new mediamosa_exception_error_unexpected_error();
       case VPX_ACL_AUT_NAME_TYPE_DOMAIN:
       case VPX_ACL_AUT_NAME_TYPE_USER:
       case VPX_ACL_AUT_NAME_TYPE_USER_GROUP:
@@ -123,7 +123,7 @@ class mediamosa_aut_name {
         }
         break;
       default:
-        throw new vpx_exception_error_unexpected_error();
+        throw new mediamosa_exception_error_unexpected_error();
     }
 
     // Get the row (if exists).

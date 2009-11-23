@@ -71,6 +71,8 @@ class mediamosa_rest_call_list extends mediamosa_rest_call {
 class mediamosa_rest_call_get extends mediamosa_rest_call {
 
   public function get_var_setup() {
+    $a_my_vars = array();
+
     $a_my_vars[mediamosa_rest_call::VARS][mediamosa_rest_call::ID] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_SERIAL,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,

@@ -24,3 +24,19 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
+/**
+ * @file
+ * DB Class for mediamosa_server_transcoding_tool module.
+ */
+
+class mediamosa_server_transcoding_tool_db {
+  // ------------------------------------------------------------------ Consts.
+  // Table name;
+  const TABLE_NAME = 'mediamosa_server_transcoding_tool'; // 1.x name streaming_server_container.
+
+  // Database fields;
+  const ID = 'transcoding_server_tool_id';
+  const STREAMING_SERVER_ID = 'transcoding_server_id';
+  const TOOL = 'tool';
+  const TOOL_LENGTH = 255;
+}

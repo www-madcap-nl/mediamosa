@@ -154,7 +154,7 @@ class mediamosa_asset_metadata_property {
     // First app_id is always the app of the eua.
     $app_id = is_array($mixed_app_ids) ? reset($mixed_app_ids) : $mixed_app_ids;
 
-    $a_propgroup = mediamosa_asset_metadata_property_groupget_row_with_appid($app_id);
+    $a_propgroup = mediamosa_asset_metadata_property_group::get_row_with_appid($app_id);
     if (!$a_propgroup) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INVALID_METADATA_DEFINITION);
     }

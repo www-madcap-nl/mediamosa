@@ -84,7 +84,7 @@ class mediamosa {
    *  The core object.
    */
   static public function get() {
-    static $o_mediamosa_response;
+    static $o_mediamosa_response = NULL;
 
     if (!isset($o_mediamosa_response)) {
       class_exists('mediamosa_response', TRUE);
@@ -240,10 +240,10 @@ class mediamosa {
    * @param $no_reset Boolean to control wheter the timestamp is re-created or the static is used (if set).
    * @return timestamp
    */
-  static public function utc_current_timestamp_now($no_reset = TRUE) {
-    static $utc_timestamp;
+  static public function utc_current_timestamp_now($reset = FALSE) {
+    static $utc_timestamp = NULL;
 
-    if (isset($utc_timestamp) && $no_reset) {
+    if (isset($utc_timestamp) && !$reset) {
       return $utc_timestamp;
     }
 

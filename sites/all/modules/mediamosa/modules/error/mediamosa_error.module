@@ -33,6 +33,7 @@
  * Implementation of hook_mediamosa_register_rest_call().
  */
 function mediamosa_error_mediamosa_register_rest_call() {
+  $a_rest_calls = array();
 
   $a_rest_calls['errorcodes'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_error_list',
@@ -52,8 +53,6 @@ function mediamosa_error_mediamosa_register_rest_call() {
 
   return $a_rest_calls;
 }
-
-
 
 /**
  * Implementation of hook_menu().

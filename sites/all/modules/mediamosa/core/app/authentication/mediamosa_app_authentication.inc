@@ -102,7 +102,7 @@ class mediamosa_app_authentication {
 
     switch ($command) {
       case 'AUTH':
-        if (!is_app_active($param)) {
+        if (!mediamosa_app_authentication::is_app_active($param)) {
           session_destroy();
           return "ERROR invalid account";
         }
@@ -191,7 +191,7 @@ class mediamosa_app_authentication {
           return 'ERROR database error';
         }
 
-        $eua = get_app($_SESSION['mediamosa_dbus']['username']);
+        $eua = mediamosa_app_authentication::get_app($_SESSION['mediamosa_dbus']['username']);
         if ($eua === FALSE) {
           unset($_SESSION['mediamosa_dbus']);
           $_SESSION['mediamosa_dbus']['mechanism'] = FALSE;

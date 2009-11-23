@@ -24,3 +24,22 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
+/**
+ * @file
+ * DB Class for mediamosa_server_download module.
+ */
+
+class mediamosa_server_download_db {
+  // ------------------------------------------------------------------ Consts.
+  // Table name;
+  const TABLE_NAME = 'mediamosa_server_download'; // 1.x name download_server.
+
+  // Database fields;
+  const ID = 'download_server_id';
+  const VERSION = 'version';
+  const DESCRIPTION = 'description';
+  const DESCRIPTION_LENGTH = 255;
+  const URI = 'uri';
+  const URI_LENGTH = 255;
+  const ACTIVE = 'active';
+}

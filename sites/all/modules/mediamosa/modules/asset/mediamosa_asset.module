@@ -33,6 +33,7 @@
  * Implementation of hook_mediamosa_register_rest_call().
  */
 function mediamosa_asset_mediamosa_register_rest_call() {
+  $a_rest_calls = array();
 
   // Get Asset Media Metadata (1.x:  media_management_metadata_definition_get)
   $a_rest_calls['metadata_tag'][mediamosa_rest_call::METHOD_GET] = array(

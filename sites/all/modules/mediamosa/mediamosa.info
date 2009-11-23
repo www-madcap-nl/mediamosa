@@ -115,6 +115,37 @@ files[] = core/job/server/mediamosa_job_server.inc
 ; San nas.
 files[] = core/maintenance/san_nas/mediamosa_san_nas.inc
 
+; Server.
+files[] = core/server/mediamosa_server.install.inc
+
+; Server Download.
+files[] = core/server/download/mediamosa_server_download_db.inc
+files[] = core/server/download/mediamosa_server_download.install.inc
+
+; Server Still.
+files[] = core/server/still/mediamosa_server_still_db.inc
+files[] = core/server/still/mediamosa_server_still.install.inc
+
+; Server Streaming.
+files[] = core/server/streaming/mediamosa_server_streaming_db.inc
+files[] = core/server/streaming/mediamosa_server_streaming.install.inc
+
+; Server Streaming Container.
+files[] = core/server/streaming/container/mediamosa_server_streaming_container_db.inc
+files[] = core/server/streaming/container/mediamosa_server_streaming_container.install.inc
+
+; Server Transcoding.
+files[] = core/server/transcoding/mediamosa_server_transcoding_db.inc
+files[] = core/server/transcoding/mediamosa_server_transcoding.install.inc
+
+; Server Transcoding Tool.
+files[] = core/server/transcoding/tool/mediamosa_server_transcoding_tool_db.inc
+files[] = core/server/transcoding/tool/mediamosa_server_transcoding_tool.install.inc
+
+; Server upload.
+files[] = core/server/upload/mediamosa_server_upload_db.inc
+files[] = core/server/upload/mediamosa_server_upload.install.inc
+
 ; User.
 files[] = core/user/mediamosa_user.inc
 

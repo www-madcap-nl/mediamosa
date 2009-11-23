@@ -73,6 +73,7 @@ class mediamosa_aut_group {
    */
   static function get_list($a_app_ids, $offset, $limit) {
 
+    $a_query = array();
     $a_query[mediamosa_db_query::A_SELECT_EXPR][] = mediamosa_aut_group_db::AUT_GROUP_NAME;
     $a_query[mediamosa_db_query::A_SELECT_EXPR][] = mediamosa_aut_group_db::AUT_GROUP_TYPE;
     $a_query[mediamosa_db_query::A_FROM][] = '{' . mediamosa_aut_group_db::TABLE_NAME . '}';
@@ -103,6 +104,8 @@ class mediamosa_aut_group {
    * @param string $group_name
    */
   static function get_by_group_name($a_app_ids, $group_name) {
+    $a_query = array();
+
     $a_query[mediamosa_db_query::A_SELECT_EXPR][] = mediamosa_aut_group_db::AUT_GROUP_NAME;
     $a_query[mediamosa_db_query::A_SELECT_EXPR][] = mediamosa_aut_group_db::AUT_GROUP_TYPE;
     $a_query[mediamosa_db_query::A_SELECT_EXPR][] = mediamosa_aut_group_db::ID;
@@ -132,6 +135,8 @@ class mediamosa_aut_group {
    * @return db result
    */
   static function get_hostnames_by_group_name($a_app_ids, $group_name, $offset, $limit) {
+    $a_query = array();
+
     $a_query[mediamosa_db_query::A_SELECT_EXPR][] = "{aut_name}.aut_name";
     $a_query[mediamosa_db_query::A_FROM][] = "{aut_name}";
 
@@ -147,10 +152,10 @@ class mediamosa_aut_group {
     $a_query[mediamosa_db_query::LIMIT] = $limit;
     $a_query[mediamosa_db_query::OFFSET] = $offset;
 
-    $s_query = mediamosa_db_query::query_select($a_query, array(mediamosa_db_query::SQL_CALC_FOUND_ROWS => TRUE));
+    $query = mediamosa_db_query::query_select($a_query, array(mediamosa_db_query::SQL_CALC_FOUND_ROWS => TRUE));
 
     // Do the query.
-    $result = mediamosa_db_query::query($s_query);
+    $result = mediamosa_db_query::query($query);
 
     // Set the found_rows on the object.
     $result->found_rows = mediamosa_db_query::found_rows();
@@ -170,7 +175,7 @@ class mediamosa_aut_group {
     // Lets make sure its not an array here.
     assert(!is_array($app_id));
 
-    $a_group = get_by_group_name($app_id, $group_name);
+    $a_group = mediamosa_aut_group::get_by_group_name($app_id, $group_name);
     if (!$a_group) {
       throw new mediamosa_exception_error_aut_group_not_found(array('@group' => $group_name));
     }
@@ -262,13 +267,14 @@ class mediamosa_aut_group {
     // Lets make sure its not an array here.
     assert(!is_array($app_id));
 
-    $a_group = get_by_group_name($app_id, $group_name);
+    $a_group = mediamosa_aut_group::get_by_group_name($app_id, $group_name);
     if (!$a_group) {
       throw new mediamosa_exception_error_aut_group_not_found(array('@group' => $group_name));
     }
 
     $aut_group_id = $a_group[mediamosa_aut_group_db::ID];
 
+    $a_result = array();
     foreach ($a_host_names as $aut_name) {
       $aut_name = trim($aut_name);
 
@@ -277,22 +283,24 @@ class mediamosa_aut_group {
       try {
         mediamosa_aut_name::delete($app_id, $aut_type, $aut_name, $aut_group_id);
 
-        $o_rest_reponse->add_item(array(
+        $a_result[] = array(
           'hostname' => $aut_name,
           'result' => mediamosa_response::SUCCESS,
           'result_id' => mediamosa_error::ERRORCODE_OKAY,
           'result_description' => '',
-        ));
+        );
       }
       catch (mediamosa_exception_error $e) {
         $a_error = $e->mediamosa_exception_error_array_get();
-        $o_rest_reponse->add_item(array(
+        $a_result[] = array(
           'hostname' => $aut_name,
           'result' => mediamosa_response::ERROR,
           'result_id' => $a_error[mediamosa_error_db::CODE],
           'result_description' => $a_error[mediamosa_error_db::MESSAGE],
-        ));
+        );
       }
     }
+
+    return $a_result;
   }
 }

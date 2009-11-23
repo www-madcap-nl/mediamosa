@@ -230,7 +230,7 @@ abstract class mediamosa_cql {
    */
   private function mediamosa_cql_skip_ws($str_cql, &$i_pos) {
     if (mediamosa_unicode::strlen($str_cql) <= $i_pos) {
-      throw new cql_exception_eos(); // end of string
+      throw new mediamosa_cql_exception_eos(); // end of string
     }
 
     $is_quoted = FALSE;
@@ -438,11 +438,11 @@ abstract class mediamosa_cql {
           // Get the next part
           $str_4 = $this->mediamosa_cql_next($str_cql, $i_pos);
 
-          $o_prefix_assignment = new mediamosa_cql_prefix_assignment($str_2, cql_trim_quotes($str_4));
+          $o_prefix_assignment = new mediamosa_cql_prefix_assignment($str_2, $this->mediamosa_cql_trim_quotes($str_4));
           $o_cql_part->mediamosa_cql_part_prefix_assignment_add($o_prefix_assignment);
         }
         else {
-          $o_prefix_assignment = new mediamosa_cql_prefix_assignment('', cql_trim_quotes($str_2));
+          $o_prefix_assignment = new mediamosa_cql_prefix_assignment('', $this->mediamosa_cql_trim_quotes($str_2));
           $o_cql_part->mediamosa_cql_part_prefix_assignment_add($o_prefix_assignment);
         }
 
@@ -533,7 +533,7 @@ abstract class mediamosa_cql {
         }
 
         // Search term (required)
-        $o_cql_part->mediamosa_cql_part_search_term_set(new cql_part_search_term($str_1));
+        $o_cql_part->mediamosa_cql_part_search_term_set(new mediamosa_cql_part_search_term($str_1));
       }
 
       if (mediamosa_unicode::strtolower($str_1) != 'sortby') {

@@ -37,6 +37,7 @@ require_once 'core/aut/mediamosa_aut.install.inc';
 require_once 'core/app/mediamosa_app.install.inc';
 require_once 'core/asset/mediamosa_asset.install.inc';
 require_once 'core/collection/mediamosa_collection.install.inc';
+require_once 'core/server/mediamosa_server.install.inc';
 
 /**
  * Implement hook_install().
@@ -47,6 +48,9 @@ function mediamosa_install() {
 
   // Install the app db.
   mediamosa_app_install();
+
+  // Install the server db.
+  mediamosa_server_install();
 
   // Install the asset db.
   mediamosa_asset_install();
@@ -70,6 +74,9 @@ function mediamosa_uninstall() {
 
   // Remove the app db.
   mediamosa_asset_uninstall();
+
+  // Remove the server db.
+  mediamosa_server_install();
 
   // Remove the app db.
   mediamosa_app_uninstall();

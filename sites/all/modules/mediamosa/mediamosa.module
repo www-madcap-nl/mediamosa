@@ -51,6 +51,8 @@ function mediamosa_init() {
  */
 function mediamosa_mediamosa_register_rest_call() {
 
+  $a_rest_calls = array();
+
   $a_rest_calls['rest'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_list',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,

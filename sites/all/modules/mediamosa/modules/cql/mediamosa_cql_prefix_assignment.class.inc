@@ -77,7 +77,7 @@ class mediamosa_cql_prefix_assignment {
    */
   final public function mediamosa_cql_prefix_assignment_indentifier_set($str_indentifier) {
     if ($str_indentifier == '') {
-      throw new mediamosa_mediamosa_cql_exception_string_is_empty();
+      throw new mediamosa_cql_exception_string_is_empty();
     }
 
     $this->m_str_indentifier = $str_indentifier;

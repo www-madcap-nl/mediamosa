@@ -451,7 +451,7 @@ class mediamosa_db {
       case mediamosa_asset_medium_db::TABLE_NAME:
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MEDIAFILE_NOT_FOUND, array("@mediafile_id" => $a_columns_and[mediamosa_asset_media_db::ID]));
       case mediamosa_aut_group_db::TABLE_NAME:
-        throw new vpx_exception_error(ERRORCODE_AUT_GROUP_NOT_FOUND, array("@group" => $a_columns_and[mediamosa_aut_group_db::AUT_GROUP_NAME]));
+        throw new mediamosa_exception_error(ERRORCODE_AUT_GROUP_NOT_FOUND, array("@group" => $a_columns_and[mediamosa_aut_group_db::AUT_GROUP_NAME]));
 /*
       case 'collection':
         throw new vpx_exception_error(ERRORCODE_COLLECTION_NOT_FOUND, array("@coll_id" => $a_columns_and['coll_id']));

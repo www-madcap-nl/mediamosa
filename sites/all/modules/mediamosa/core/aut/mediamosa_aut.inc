@@ -93,6 +93,8 @@ class mediamosa_aut {
    * @param array $aut_realm
    */
   static public function build_access($mixed_app_id, $aut_user_id = NULL, $a_aut_group_id = NULL, $aut_domain = NULL, $aut_realm = NULL, $a_slaves = NULL) {
+    $a_query = array();
+
     $a_query[mediamosa_db_query::A_SELECT_EXPR][] = '{mediamosa_aut_name}.aut_name_id';
     $a_query[mediamosa_db_query::A_SELECT_EXPR][] = '{mediamosa_aut_name}.aut_group_id';
     $a_query[mediamosa_db_query::A_SELECT_EXPR][] = '{mediamosa_aut_name}.aut_type';
@@ -1459,7 +1461,7 @@ class mediamosa_aut {
         $a_query[mediamosa_db_query::A_FROM][] = "{mediamosa_asset} AS a";
 
         // Build the access where
-        build_access_where($a_query, $aut_type, $object_id, $app_id, $aut_user_id, $a_aut_group_id, $s_aut_domain, $s_aut_realm, NULL, $is_app_admin);
+        mediamosa_aut::build_access_where($a_query, $aut_type, $object_id, $app_id, $aut_user_id, $a_aut_group_id, $s_aut_domain, $s_aut_realm, NULL, $is_app_admin);
 
         $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset'][] = sprintf("a.asset_id ='%s'", $asset_id);
         $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset'][] = "(a.parent_id IS NOT NULL OR a.parent_id IS NULL)";
@@ -1483,7 +1485,7 @@ class mediamosa_aut {
         break;
 
       default:
-        throw new vpx_exception_error_unexpected_error();
+        throw new mediamosa_exception_error_unexpected_error();
     }
   }
 

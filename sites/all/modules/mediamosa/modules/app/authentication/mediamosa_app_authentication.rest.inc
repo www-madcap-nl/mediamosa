@@ -40,6 +40,8 @@ class mediamosa_rest_call_eua_ident extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Functions (public).
   public function get_var_setup() {
+    $a_my_vars = array();
+
     $a_my_vars[mediamosa_rest_call::VARS][mediamosa_rest_call_eua_ident::DBUS] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_STRING,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,

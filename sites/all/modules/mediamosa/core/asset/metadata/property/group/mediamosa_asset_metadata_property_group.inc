@@ -97,6 +97,6 @@ class mediamosa_asset_metadata_property_group {
    */
   function property_group_create_with_appid($app_id) {
     assert(is_int($app_id));
-    return property_group_create(self::APP_PREFIX . $app_id);
+    return mediamosa_asset_metadata_property_group::property_group_create(self::APP_PREFIX . $app_id);
   }
 }
