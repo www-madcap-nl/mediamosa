@@ -72,28 +72,26 @@ function mediamosa_server_streaming_container_uninstall() {
 function mediamosa_server_streaming_container_schema() {
 
   $a_schema[mediamosa_server_streaming_container_db::TABLE_NAME] = array(
-    'description' => t('TODO: please describe this table!'),
+    'description' => t('The streaming server container table.'),
     'fields' => array(
-      'streaming_server_container_id' => array(
-        'description' => t('TODO: please describe this field!'),
+      mediamosa_server_streaming_container_db::ID => array(
+        'description' => t('Primary key.'),
         'type' => 'serial',
         'not null' => TRUE,
-        'disp-width' => '11',
       ),
-      'streaming_server_id' => array(
-        'description' => t('TODO: please describe this field!'),
+      mediamosa_server_streaming_container_db::STREAMING_SERVER_ID => array(
+        'description' => t('The parent server ID.'),
         'type' => 'int',
         'not null' => TRUE,
-        'disp-width' => '11',
       ),
-      'container' => array(
-        'description' => t('TODO: please describe this field!'),
+      mediamosa_server_streaming_container_db::CONTAINER => array(
+        'description' => t('The container.'),
         'type' => 'varchar',
-        'length' => '255',
+        'length' => mediamosa_server_streaming_container_db::CONTAINER_LENGTH,
         'not null' => TRUE,
       ),
     ),
-    'primary key' => array('streaming_server_container_id'),
+    'primary key' => array(mediamosa_server_streaming_container_db::ID),
   );
 
   return $a_schema;

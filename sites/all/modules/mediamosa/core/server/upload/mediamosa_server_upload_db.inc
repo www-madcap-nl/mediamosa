@@ -42,6 +42,6 @@ class mediamosa_server_upload_db {
   const URI = 'uri';
   const URI_LENGTH = 255;
   const STATUS = 'status';
-  const URI_UPLOADPROGRESS = 'uri';
+  const URI_UPLOADPROGRESS = 'uri_uploadprogress';
   const URI_UPLOADPROGRESS_LENGTH = 255;
 }

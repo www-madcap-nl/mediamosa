@@ -68,49 +68,44 @@ function mediamosa_server_upload_uninstall() {
 function mediamosa_server_upload_schema() {
 
   $a_schema[mediamosa_server_upload_db::TABLE_NAME] = array(
-    'description' => t('TODO: please describe this table!'),
+    'description' => t('The upload server table.'),
     'fields' => array(
-      'upload_server_id' => array(
-        'description' => t('TODO: please describe this field!'),
+      mediamosa_server_upload_db::ID => array(
+        'description' => t('The primary key.'),
         'type' => 'serial',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'disp-width' => '11',
       ),
-      'version' => array(
-        'description' => t('TODO: please describe this field!'),
+      mediamosa_server_upload_db::VERSION => array(
+        'description' => t('The version of the server.'),
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'disp-width' => '11',
       ),
-      'description' => array(
-        'description' => t('TODO: please describe this field!'),
+      mediamosa_server_upload_db::DESCRIPTION => array(
+        'description' => t('The description of the server.'),
         'type' => 'varchar',
-        'length' => '255',
-        'not null' => TRUE,
+        'length' => mediamosa_server_upload_db::DESCRIPTION_LENGTH,
       ),
-      'uri' => array(
-        'description' => t('TODO: please describe this field!'),
+      mediamosa_server_upload_db::URI => array(
+        'description' => t('The URI of the server.'),
         'type' => 'varchar',
-        'length' => '255',
-        'not null' => TRUE,
+        'length' => mediamosa_server_upload_db::URI_LENGTH,
       ),
-      'status' => array(
-        'description' => t('TODO: please describe this field!'),
+      mediamosa_server_upload_db::STATUS => array(
+        'description' => t('The status of the server.'),
         'type' => 'int',
         'size' => 'tiny',
         'not null' => TRUE,
-        'disp-width' => '1',
       ),
-      'uri_uploadprogress' => array(
-        'description' => t('TODO: please describe this field!'),
+      mediamosa_server_upload_db::URI_UPLOADPROGRESS => array(
+        'description' => t('Default of the URI uploadprogress trigger page.'),
         'type' => 'varchar',
-        'length' => '255',
+        'length' => mediamosa_server_upload_db::URI_UPLOADPROGRESS_LENGTH,
         'not null' => TRUE,
       ),
     ),
-    'primary key' => array('upload_server_id'),
+    'primary key' => array(mediamosa_server_upload_db::ID),
   );
 
   return $a_schema;

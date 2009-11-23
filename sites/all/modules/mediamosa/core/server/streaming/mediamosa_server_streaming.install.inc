@@ -108,56 +108,50 @@ function mediamosa_server_streaming_uninstall() {
 function mediamosa_server_streaming_schema() {
 
   $a_schema[mediamosa_server_streaming_db::TABLE_NAME] = array(
-    'description' => t('TODO: please describe this table!'),
+    'description' => t('The streaming server table.'),
     'fields' => array(
-      'streaming_server_id' => array(
-        'description' => t('TODO: please describe this field!'),
+      mediamosa_server_streaming_db::ID => array(
+        'description' => t('Primary key.'),
         'type' => 'serial',
         'not null' => TRUE,
-        'disp-width' => '11',
       ),
-      'version' => array(
-        'description' => t('TODO: please describe this field!'),
+      mediamosa_server_streaming_db::VERSION => array(
+        'description' => t('Version of the server.'),
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'disp-width' => '11',
       ),
-      'description' => array(
-        'description' => t('TODO: please describe this field!'),
+      mediamosa_server_streaming_db::DESCRIPTION => array(
+        'description' => t('Description of the server.'),
         'type' => 'varchar',
         'length' => '255',
         'not null' => TRUE,
       ),
-      'uri' => array(
-        'description' => t('TODO: please describe this field!'),
+      mediamosa_server_streaming_db::URI => array(
+        'description' => t('The URI of the server.'),
         'type' => 'varchar',
-        'length' => '255',
+        'length' => mediamosa_server_streaming_db::URI_LENGTH,
         'not null' => TRUE,
       ),
-      'active' => array(
-        'description' => t('TODO: please describe this field!'),
+      mediamosa_server_streaming_db::ACTIVE => array(
+        'description' => t('Active setting.'),
         'type' => 'int',
         'size' => 'tiny',
         'not null' => TRUE,
-        'disp-width' => '4',
       ),
-      'containers' => array(
-        'description' => t('TODO: please describe this field!'),
+      mediamosa_server_streaming_db::CONTAINERS => array(
+        'description' => t('Containers of the server.'),
         'type' => 'varchar',
-        'length' => '255',
+        'length' => mediamosa_server_streaming_db::CONTAINERS_LENGTH,
         'not null' => TRUE,
       ),
-      'objectcode' => array(
-        'description' => t('TODO: please describe this field!'),
+      mediamosa_server_streaming_db::OBJECTCODE => array(
+        'description' => t('The objectcode to use in HTML.'),
         'type' => 'text',
         'not null' => FALSE,
       ),
     ),
-    'primary key' => array('streaming_server_id'),
-    'indexes' => array(
-      'name' => array('description'),
-    ),
+    'primary key' => array(mediamosa_server_streaming_db::ID),
   );
 
   return $a_schema;

@@ -112,6 +112,13 @@ function mediamosa_migration_requirements($phase) {
       'mediamosa_aut_object',
       'mediamosa_app',
       'mediamosa_collection',
+      'mediamosa_server_download',
+      'mediamosa_server_still',
+      'mediamosa_server_streaming',
+      'mediamosa_server_streaming_container',
+      'mediamosa_server_transcoding',
+      'mediamosa_server_transcoding_tool',
+      'mediamosa_server_upload',
     );
     // These tables (dest) must be empty.
     $a_table_names_dest_empty = array(
@@ -126,6 +133,14 @@ function mediamosa_migration_requirements($phase) {
     // Must exists source drupal db.
     $a_table_names_source_exists = array(
       'error',
+      'download_server',
+      'still_server',
+      'streaming_server',
+      'streaming_server_container',
+      'transcoding_server',
+      'transcoding_server_tool',
+      'upload_server',
+
     );
     // Must exists source data db.
     $a_table_names_source_exists_data = array(
@@ -227,6 +242,9 @@ function mediamosa_migration_install() {
 
   // aut_* -> mediamosa_aut_*
   _mediamosa_migration_aut();
+
+  // *_server -> mediamosa_server_*
+  _mediamosa_migration_server();
 }
 
 /**
@@ -1126,3 +1144,220 @@ function _mediamosa_migration_collection() {
   db_query(strtr("SET SESSION sql_mode = '#old_mode'", array('#old_mode' => $old_mode)));
 }
 
+/**
+ * Migrate collection table..
+ */
+function _mediamosa_migration_server() {
+  // Get the database name.
+  $db_name = _mediamosa_migration_get_memo_db();
+
+  // Clean the tables.
+  $a_to_truncate = array(
+    'mediamosa_server_download',
+    'mediamosa_server_still',
+    'mediamosa_server_streaming',
+    'mediamosa_server_streaming_container',
+    'mediamosa_server_transcoding',
+    'mediamosa_server_transcoding_tool',
+    'mediamosa_server_upload',
+  );
+
+  foreach ($a_to_truncate as $table_name) {
+    db_truncate($table_name)->execute();
+  }
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_server_download}
+      (
+        download_server_id,
+        version,
+        description,
+        uri,
+        active
+      ) (SELECT
+        download_server_id,
+        version,
+        description,
+        uri,
+        active
+      FROM #db_name.download_server ORDER BY download_server_id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_server_still}
+      (
+        still_server_id,
+        version,
+        description,
+        uri,
+        active
+      ) (SELECT
+        still_server_id,
+        version,
+        description,
+        uri,
+        active
+      FROM #db_name.still_server ORDER BY still_server_id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_server_streaming}
+      (
+        streaming_server_id,
+        version,
+        description,
+        uri,
+        active,
+        containers,
+        objectcode
+      ) (SELECT
+        streaming_server_id,
+        version,
+        description,
+        uri,
+        active,
+        containers,
+        objectcode
+      FROM #db_name.streaming_server ORDER BY streaming_server_id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_server_streaming_container}
+      (
+        streaming_server_container_id,
+        streaming_server_id,
+        container
+      ) (SELECT
+        streaming_server_container_id,
+        streaming_server_id,
+        container
+      FROM #db_name.streaming_server_container ORDER BY streaming_server_container_id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_server_transcoding}
+      (
+        transcoding_server_id,
+        version,
+        description,
+        servername,
+        ip_address,
+        slots,
+        is_test_server,
+        status,
+        tools
+      ) (SELECT
+        transcoding_server_id,
+        version,
+        description,
+        servername,
+        ip_address,
+        slots,
+        is_test_server,
+        status,
+        tools
+      FROM #db_name.transcoding_server ORDER BY transcoding_server_id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_server_transcoding_tool}
+      (
+        transcoding_server_tool_id,
+        transcoding_server_id,
+        tool
+      ) (SELECT
+        transcoding_server_tool_id,
+        transcoding_server_id,
+        tool
+      FROM #db_name.transcoding_server_tool ORDER BY transcoding_server_tool_id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_server_upload}
+      (
+        upload_server_id,
+        version,
+        description,
+        uri,
+        status,
+        uri_uploadprogress
+      ) (SELECT
+        upload_server_id,
+        version,
+        description,
+        uri,
+        status,
+        uri_uploadprogress
+      FROM #db_name.upload_server ORDER BY upload_server_id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+}

@@ -79,30 +79,28 @@ function mediamosa_server_transcoding_tool_uninstall() {
 function mediamosa_server_transcoding_tool_schema() {
 
   $a_schema[mediamosa_server_transcoding_tool_db::TABLE_NAME] = array(
-    'description' => t('TODO: please describe this table!'),
+    'description' => t('Contains the tools for transcoding subtable.'),
     'fields' => array(
-      'transcoding_server_tool_id' => array(
-        'description' => t('TODO: please describe this field!'),
+      mediamosa_server_transcoding_tool_db::ID => array(
+        'description' => t('Primary key.'),
         'type' => 'serial',
         'not null' => TRUE,
-        'disp-width' => '11',
       ),
-      'transcoding_server_id' => array(
-        'description' => t('TODO: please describe this field!'),
+      mediamosa_server_transcoding_tool_db::TRANSCODING_SERVER_ID => array(
+        'description' => t('The parent transcoding server ID.'),
         'type' => 'int',
         'not null' => TRUE,
-        'disp-width' => '11',
       ),
-      'tool' => array(
-        'description' => t('TODO: please describe this field!'),
+      mediamosa_server_transcoding_tool_db::TOOL => array(
+        'description' => t('The tool used for transcoding.'),
         'type' => 'varchar',
-        'length' => '255',
+        'length' => mediamosa_server_transcoding_tool_db::TOOL_LENGTH,
         'not null' => TRUE,
       ),
     ),
-    'primary key' => array('transcoding_server_tool_id'),
+    'primary key' => array(mediamosa_server_transcoding_tool_db::ID),
     'indexes' => array(
-      'idx_tool_serverid' => array('tool', 'transcoding_server_id'),
+      'idx_tool_serverid' => array(mediamosa_server_transcoding_tool_db::TOOL, mediamosa_server_transcoding_tool_db::TRANSCODING_SERVER_ID),
     ),
   );
 

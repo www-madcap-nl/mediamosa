@@ -72,71 +72,64 @@ function mediamosa_server_transcoding_uninstall() {
 function mediamosa_server_transcoding_schema() {
 
   $a_schema[mediamosa_server_transcoding_db::TABLE_NAME] = array(
-    'description' => t('TODO: please describe this table!'),
+    'description' => t('The transcoding server information.'),
     'fields' => array(
-      'transcoding_server_id' => array(
-        'description' => t('TODO: please describe this field!'),
+      mediamosa_server_transcoding_db::ID => array(
+        'description' => t('Primary key.'),
         'type' => 'serial',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'disp-width' => '11',
       ),
-      'version' => array(
-        'description' => t('TODO: please describe this field!'),
+      mediamosa_server_transcoding_db::VERSION => array(
+        'description' => t('Version of the server.'),
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'disp-width' => '11',
       ),
-      'description' => array(
-        'description' => t('TODO: please describe this field!'),
+      mediamosa_server_transcoding_db::DESCRIPTION => array(
+        'description' => t('Description of the server.'),
         'type' => 'varchar',
-        'length' => '255',
+        'length' => mediamosa_server_transcoding_db::DESCRIPTION_LENGTH,
         'not null' => TRUE,
       ),
-      'servername' => array(
-        'description' => t('TODO: please describe this field!'),
+      mediamosa_server_transcoding_db::SERVERNAME => array(
+        'description' => t('Servername of the server.'),
         'type' => 'varchar',
-        'length' => '255',
+        'length' => mediamosa_server_transcoding_db::SERVERNAME_LENGTH,
         'not null' => TRUE,
       ),
-      'ip_address' => array(
-        'description' => t('TODO: please describe this field!'),
+      mediamosa_server_transcoding_db::IP_ADDRESS => array(
+        'description' => t('IP address of the server.'),
         'type' => 'varchar',
-        'length' => '15',
+        'length' => mediamosa_server_transcoding_db::IP_ADDRESS_LENGTH,
         'not null' => TRUE,
       ),
-      'slots' => array(
-        'description' => t('TODO: please describe this field!'),
+      mediamosa_server_transcoding_db::SLOTS => array(
+        'description' => t('Number of slots available.'),
         'type' => 'int',
         'size' => 'tiny',
         'not null' => TRUE,
-        'disp-width' => '1',
       ),
-      'is_test_server' => array(
+      mediamosa_server_transcoding_db::IS_TEST_SERVER => array(
         'description' => t('Is test server switch.'),
         'type' => "enum('" . implode("','", array(mediamosa_server_transcoding_db::IS_TEST_SERVER_FALSE, mediamosa_server_transcoding_db::IS_TEST_SERVER_TRUE)) . "')",
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_server_transcoding_db::IS_TEST_SERVER_FALSE, mediamosa_server_transcoding_db::IS_TEST_SERVER_TRUE)) . "')",
       ),
-      'status' => array(
-        'description' => t('TODO: please describe this field!'),
+      mediamosa_server_transcoding_db::STATUS => array(
+        'description' => t('Status of the server.'),
         'type' => "enum('" . implode("','", array(mediamosa_server_transcoding_db::STATUS_ON, mediamosa_server_transcoding_db::STATUS_OFF, mediamosa_server_transcoding_db::STATUS_CLOSE)) . "')",
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_server_transcoding_db::STATUS_ON, mediamosa_server_transcoding_db::STATUS_OFF, mediamosa_server_transcoding_db::STATUS_CLOSE)) . "')",
       ),
-
-      'tools' => array(
-        'description' => t('TODO: please describe this field!'),
+      mediamosa_server_transcoding_db::TOOLS => array(
+        'description' => t('The tools.'),
         'type' => 'varchar',
-        'length' => '255',
+        'length' => mediamosa_server_transcoding_db::TOOLS_LENGTH,
         'not null' => TRUE,
       ),
     ),
-    'primary key' => array('transcoding_server_id'),
-    'indexes' => array(
-      'name' => array('description'),
-    ),
+    'primary key' => array(mediamosa_server_transcoding_db::ID),
   );
   return $a_schema;
 }

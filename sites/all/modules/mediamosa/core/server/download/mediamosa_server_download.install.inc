@@ -42,7 +42,7 @@ function mediamosa_server_download_install() {
   // Insert default.
   db_query(
     strtr(
-      "INSERT INTO {#mediamosa_server_download} VALUES (1, 2, 'download server devel', ':uri', 1)",
+      "INSERT INTO {#mediamosa_server_download} VALUES (1, 2, 'download server devel', :uri, 1)",
       array(
         '#mediamosa_server_download' => mediamosa_server_download_db::TABLE_NAME,
       )
@@ -69,40 +69,37 @@ function mediamosa_server_download_schema() {
   $a_schema[mediamosa_server_download_db::TABLE_NAME] = array(
     'description' => t('The download server table contains settings for the download servers.'),
     'fields' => array(
-      'download_server_id' => array(
+      mediamosa_server_download_db::ID => array(
         'description' => t('Primary ID.'),
         'type' => 'serial',
         'not null' => TRUE,
       ),
-      'version' => array(
+      mediamosa_server_download_db::VERSION => array(
         'description' => t('Version of the server.'),
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
-      'description' => array(
+      mediamosa_server_download_db::DESCRIPTION => array(
         'description' => t('The description.'),
         'type' => 'varchar',
-        'length' => '255',
+        'length' => mediamosa_server_download_db::DESCRIPTION_LENGTH,
         'not null' => TRUE,
       ),
-      'uri' => array(
+      mediamosa_server_download_db::URI => array(
         'description' => t('URI of the download server.'),
         'type' => 'varchar',
-        'length' => '255',
+        'length' => mediamosa_server_download_db::URI_LENGTH,
         'not null' => TRUE,
       ),
-      'active' => array(
+      mediamosa_server_download_db::ACTIVE => array(
         'description' => t('Active setting.'),
         'type' => 'int',
         'size' => 'tiny',
         'not null' => TRUE,
       ),
     ),
-    'primary key' => array('download_server_id'),
-    'indexes' => array(
-      'name' => array('description'),
-    ),
+    'primary key' => array(mediamosa_server_download_db::ID),
   );
 
   return $a_schema;

@@ -67,43 +67,40 @@ function mediamosa_server_still_uninstall() {
 function mediamosa_server_still_schema() {
 
   $a_schema[mediamosa_server_still_db::TABLE_NAME] = array(
-    'description' => t('TODO: please describe this table!'),
+    'description' => t('The still server table.'),
     'fields' => array(
-      'still_server_id' => array(
-        'description' => t('TODO: please describe this field!'),
+      mediamosa_server_still_db::ID => array(
+        'description' => t('The primary ID.'),
         'type' => 'serial',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'disp-width' => '11',
       ),
-      'version' => array(
-        'description' => t('TODO: please describe this field!'),
+      mediamosa_server_still_db::VERSION => array(
+        'description' => t('Version of server'),
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'disp-width' => '11',
       ),
-      'description' => array(
-        'description' => t('TODO: please describe this field!'),
+      mediamosa_server_still_db::DESCRIPTION => array(
+        'description' => t('The description of the server.'),
         'type' => 'varchar',
-        'length' => '255',
+        'length' => mediamosa_server_still_db::DESCRIPTION_LENGTH,
         'not null' => TRUE,
       ),
-      'uri' => array(
-        'description' => t('TODO: please describe this field!'),
+      mediamosa_server_still_db::URI => array(
+        'description' => t('The URI of the still server.'),
         'type' => 'varchar',
-        'length' => '255',
+        'length' => mediamosa_server_still_db::URI_LENGTH,
         'not null' => TRUE,
       ),
-      'active' => array(
-        'description' => t('TODO: please describe this field!'),
+      mediamosa_server_still_db::ACTIVE => array(
+        'description' => t('Active setting.'),
         'type' => 'int',
         'size' => 'tiny',
         'not null' => TRUE,
-        'disp-width' => '1',
       ),
     ),
-    'primary key' => array('still_server_id'),
+    'primary key' => array(mediamosa_server_still_db::ID),
   );
 
   return $a_schema;

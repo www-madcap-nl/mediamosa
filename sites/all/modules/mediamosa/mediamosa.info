@@ -128,6 +128,7 @@ files[] = core/server/still/mediamosa_server_still.install.inc
 
 ; Server Streaming.
 files[] = core/server/streaming/mediamosa_server_streaming_db.inc
+files[] = core/server/streaming/mediamosa_server_streaming.inc
 files[] = core/server/streaming/mediamosa_server_streaming.install.inc
 
 ; Server Streaming Container.

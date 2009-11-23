@@ -34,7 +34,7 @@ class mediamosa_server_still_db {
   const TABLE_NAME = 'mediamosa_server_still'; // 1.x name still_server.
 
   // Database fields;
-  const ID = 'server_server_id';
+  const ID = 'still_server_id';
   const VERSION = 'version';
   const DESCRIPTION = 'description';
   const DESCRIPTION_LENGTH = 255;
