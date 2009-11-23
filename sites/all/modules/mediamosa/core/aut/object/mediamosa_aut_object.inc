@@ -40,7 +40,7 @@ class mediamosa_aut_object {
    */
   static public function join_aut_object_get($aut_type) {
     switch ($aut_type) {
-      case mediamosa_aut::AUT_TYPE_MEDIUM:
+      case mediamosa_aut::AUT_TYPE_MEDIAFILE:
         $on = 'mf.mediafile_id';
         break;
       case mediamosa_aut::AUT_TYPE_COLLECTION:

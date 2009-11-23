@@ -93,7 +93,7 @@ function mediamosa_aut_mediamosa_register_rest_call() {
   );
 
   $a_rest_calls['mediafile/$mediafile_id/acl'][mediamosa_rest_call::METHOD_POST] = array(
-    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_aut_medium_set_rights',
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_aut_mediafile_set_rights',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::DESCRIPTION => 'Set rights on a mediafile.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_aut',
@@ -101,7 +101,7 @@ function mediamosa_aut_mediamosa_register_rest_call() {
   );
 
   $a_rest_calls['mediafile/$mediafile_id/acl/delete'][mediamosa_rest_call::METHOD_POST] = array(
-    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_aut_medium_delete_rights',
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_aut_mediafile_delete_rights',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::DESCRIPTION => 'Remove rights on a mediafile.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_aut',
@@ -109,7 +109,7 @@ function mediamosa_aut_mediamosa_register_rest_call() {
   );
 
   $a_rest_calls['mediafile/$mediafile_id/acl'][mediamosa_rest_call::METHOD_GET] = array(
-    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_aut_medium_get_rights',
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_aut_mediafile_get_rights',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::DESCRIPTION => 'Get rights on a mediafile.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_aut',

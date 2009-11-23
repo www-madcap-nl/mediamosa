@@ -26,19 +26,19 @@
 
  /**
   * @file
-  * The database class of the asset_medium module.
+  * The database class of the asset_mediafile module.
   */
 
-class mediamosa_asset_medium_db {
+class mediamosa_asset_mediafile_db {
   // ------------------------------------------------------------------ Consts.
   // Table name;
-  const TABLE_NAME = 'mediamosa_asset_medium'; // 1.x name mediafile
+  const TABLE_NAME = 'mediamosa_asset_mediafile'; // 1.x name mediafile
 
   // Database fields;
-  const ID = 'medium_id'; // 1.x name: mediafile_id.
+  const ID = 'mediafile_id'; // 1.x name: mediafile_id.
   const ASSET_ID = 'asset_id';
   const ASSET_ID_ROOT = 'asset_id_root';
-  const MEDIUM_ID_SOURCE = 'medium_id_source'; // 1.x name: mediafile_source.
+  const MEDIAFILE_ID_SOURCE = 'mediafile_id_source'; // 1.x name: mediafile_source.
   const TAG = 'tag';
   const TAG_LENGTH = 32;
   const APP_ID = 'app_id';

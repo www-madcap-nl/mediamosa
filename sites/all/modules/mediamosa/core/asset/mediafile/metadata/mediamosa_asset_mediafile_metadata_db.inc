@@ -26,17 +26,17 @@
 
 /**
   * @file
-  * The database class of the asset_medium metadata module.
+  * The database class of the asset_mediafile metadata module.
   */
 
-class mediamosa_asset_medium_metadata_db {
+class mediamosa_asset_mediafile_metadata_db {
   // ------------------------------------------------------------------ Consts.
   // Table name;
-  const TABLE_NAME = 'mediamosa_asset_medium_metadata';
+  const TABLE_NAME = 'mediamosa_asset_mediafile_metadata';
 
   // Database fields;
   const ID = 'metadata_id';
-  const MEDIUM_ID = 'medium_id'; // 1.x name: mediafile_id.
+  const MEDIAFILE_ID = 'mediafile_id'; // 1.x name: mediafile_id.
   const VIDEO_CODEC = 'video_codec';
   const VIDEO_CODEC_LENGTH = 50;
   const COLORSPACE = 'colorspace';

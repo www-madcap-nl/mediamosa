@@ -448,7 +448,7 @@ class mediamosa_db {
     switch ($table_name) {
       case mediamosa_asset_db::TABLE_NAME:
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_ASSET_NOT_FOUND, array("@asset_id" => $a_columns_and[mediamosa_asset_db::ID]));
-      case mediamosa_asset_medium_db::TABLE_NAME:
+      case mediamosa_asset_mediafile_db::TABLE_NAME:
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MEDIAFILE_NOT_FOUND, array("@mediafile_id" => $a_columns_and[mediamosa_asset_media_db::ID]));
       case mediamosa_aut_group_db::TABLE_NAME:
         throw new mediamosa_exception_error(ERRORCODE_AUT_GROUP_NOT_FOUND, array("@group" => $a_columns_and[mediamosa_aut_group_db::AUT_GROUP_NAME]));

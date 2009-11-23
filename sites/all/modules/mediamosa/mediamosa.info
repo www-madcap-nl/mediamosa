@@ -67,15 +67,15 @@ files[] = core/asset/mediamosa_asset_db.inc
 files[] = core/asset/mediamosa_asset.inc
 files[] = core/asset/mediamosa_asset.install.inc
 
-; Asset Medium.
-files[] = core/asset/medium/mediamosa_asset_medium_db.inc
-files[] = core/asset/medium/mediamosa_asset_medium.inc
-files[] = core/asset/medium/mediamosa_asset_medium.install.inc
+; Asset Mediafile.
+files[] = core/asset/mediafile/mediamosa_asset_mediafile_db.inc
+files[] = core/asset/mediafile/mediamosa_asset_mediafile.inc
+files[] = core/asset/mediafile/mediamosa_asset_mediafile.install.inc
 
-; Asset Medium Metadata.
-files[] = core/asset/medium/metadata/mediamosa_asset_medium_metadata_db.inc
-files[] = core/asset/medium/metadata/mediamosa_asset_medium_metadata.inc
-files[] = core/asset/medium/metadata/mediamosa_asset_medium_metadata.install.inc
+; Asset Mediafile Metadata.
+files[] = core/asset/mediafile/metadata/mediamosa_asset_mediafile_metadata_db.inc
+files[] = core/asset/mediafile/metadata/mediamosa_asset_mediafile_metadata.inc
+files[] = core/asset/mediafile/metadata/mediamosa_asset_mediafile_metadata.install.inc
 
 ; Asset Metadata.
 files[] = core/asset/metadata/mediamosa_asset_metadata_db.inc

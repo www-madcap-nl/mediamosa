@@ -38,7 +38,7 @@ class mediamosa_aut_app_master_slave {
    */
   static public function join_aut_app_master_slave_get($aut_type) {
     switch ($aut_type) {
-      case mediamosa_aut::AUT_TYPE_MEDIUM:
+      case mediamosa_aut::AUT_TYPE_MEDIAFILE:
         $on = 'mf.mediafile_id';
         break;
       case mediamosa_aut::AUT_TYPE_COLLECTION:

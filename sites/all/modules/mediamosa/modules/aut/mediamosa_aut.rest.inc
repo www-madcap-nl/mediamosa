@@ -448,7 +448,7 @@ class mediamosa_rest_call_aut_group_delete extends mediamosa_rest_call {
  * URI: /mediafile/$mediafile_id/acl
  * Method: POST
  */
-class mediamosa_rest_call_aut_medium_set_rights extends mediamosa_rest_call {
+class mediamosa_rest_call_aut_mediafile_set_rights extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Functions (public).
   public function get_var_setup() {
@@ -530,7 +530,7 @@ class mediamosa_rest_call_aut_medium_set_rights extends mediamosa_rest_call {
     $app_id = reset($a_app_ids);
 
     // Make sure the media file exists.
-    mediamosa_db::db_must_exists(mediamosa_asset_medium_db::TABLE_NAME, array('app_id' => $app_id, 'medium_id' => $mediafile_id));
+    mediamosa_db::db_must_exists(mediamosa_asset_mediafile_db::TABLE_NAME, array('app_id' => $app_id, 'mediafile_id' => $mediafile_id));
 
     $a_app_ids = $this->get_param_value('aut_app');
     $a_aut_user_ids = $this->get_param_value('aut_user');
@@ -540,14 +540,14 @@ class mediamosa_rest_call_aut_medium_set_rights extends mediamosa_rest_call {
     $b_replace = $this->get_param_value('replace');
 
     // Get the media file
-    $a_medium = mediamosa_db::db_query(
-      "SELECT * FROM {#mediamosa_asset_medium} WHERE #app_id = :app_id AND #medium_id = :medium_id",
+    $a_mediafile = mediamosa_db::db_query(
+      "SELECT * FROM {#mediamosa_asset_mediafile} WHERE #app_id = :app_id AND #mediafile_id = :mediafile_id",
       array(
-        '#mediamosa_asset_medium' => mediamosa_asset_medium_db::TABLE_NAME,
-        '#app_id' => mediamosa_asset_medium_db::APP_ID,
-        '#medium_id' => mediamosa_asset_medium_db::ID,
+        '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
+        '#app_id' => mediamosa_asset_mediafile_db::APP_ID,
+        '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
         ':app_id' => $app_id,
-        ':medium_id' => $mediafile_id
+        ':mediafile_id' => $mediafile_id
       )
     );
 
@@ -572,7 +572,7 @@ class mediamosa_rest_call_aut_medium_set_rights extends mediamosa_rest_call {
     }
 
     // Set access rights
-    $a_result_rights_set = mediamosa_aut::rights_set($app_id, $user_id, mediamosa_aut::AUT_TYPE_MEDIUM, $a_medium, $a_app_ids, $a_aut_user_ids, $a_aut_group_ids, $a_aut_domains, $a_aut_realms, $b_replace);
+    $a_result_rights_set = mediamosa_aut::rights_set($app_id, $user_id, mediamosa_aut::AUT_TYPE_MEDIAFILE, $a_mediafile, $a_app_ids, $a_aut_user_ids, $a_aut_group_ids, $a_aut_domains, $a_aut_realms, $b_replace);
 
     $a_types = array(
       mediamosa_aut::AUT_NAME_TYPE_APP => "aut_app",
@@ -617,7 +617,7 @@ class mediamosa_rest_call_aut_medium_set_rights extends mediamosa_rest_call {
  * URI: /mediafile/$mediafile_id/acl/delete
  * Method: POST
  */
-class mediamosa_rest_call_aut_medium_delete_rights extends mediamosa_rest_call {
+class mediamosa_rest_call_aut_mediafile_delete_rights extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Functions (public).
   public function get_var_setup() {
@@ -649,21 +649,21 @@ class mediamosa_rest_call_aut_medium_delete_rights extends mediamosa_rest_call {
     $app_id = reset($a_app_ids);
 
     // Make sure the media file exists.
-    mediamosa_db::db_must_exists(mediamosa_asset_medium_db::TABLE_NAME, array('app_id' => $app_id, 'medium_id' => $mediafile_id));
+    mediamosa_db::db_must_exists(mediamosa_asset_mediafile_db::TABLE_NAME, array('app_id' => $app_id, 'mediafile_id' => $mediafile_id));
 
     // Get the media file
-    $a_medium = mediamosa_db::db_query(
-      "SELECT * FROM {#mediamosa_asset_medium} WHERE #app_id = :app_id AND #medium_id = :medium_id",
+    $a_mediafile = mediamosa_db::db_query(
+      "SELECT * FROM {#mediamosa_asset_mediafile} WHERE #app_id = :app_id AND #mediafile_id = :mediafile_id",
       array(
-        '#mediamosa_asset_medium' => mediamosa_asset_medium_db::TABLE_NAME,
-        '#app_id' => mediamosa_asset_medium_db::APP_ID,
-        '#medium_id' => mediamosa_asset_medium_db::ID,
+        '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
+        '#app_id' => mediamosa_asset_mediafile_db::APP_ID,
+        '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
         ':app_id' => $app_id,
-        ':medium_id' => $mediafile_id
+        ':mediafile_id' => $mediafile_id
       )
     );
 
-    mediamosa_aut::rights_clear($app_id, $user_id, mediamosa_aut::AUT_TYPE_MEDIUM, $a_medium);
+    mediamosa_aut::rights_clear($app_id, $user_id, mediamosa_aut::AUT_TYPE_MEDIAFILE, $a_mediafile);
 
     // All ok.
     $o_mediamosa->set_result_okay();
@@ -674,7 +674,7 @@ class mediamosa_rest_call_aut_medium_delete_rights extends mediamosa_rest_call {
  * URI: /mediafile/$mediafile_id/acl
  * Method: GET
  */
-class mediamosa_rest_call_aut_medium_get_rights extends mediamosa_rest_call {
+class mediamosa_rest_call_aut_mediafile_get_rights extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Functions (public).
   public function get_var_setup() {
@@ -709,21 +709,21 @@ class mediamosa_rest_call_aut_medium_get_rights extends mediamosa_rest_call {
     // Make sure the media file exists.
     // Removed the app_id so the mediafile can be accessed by other app.
     // vpx_acl_rights_get() will check if its in the right app or you have access through slave.
-    mediamosa_db::db_must_exists(mediamosa_asset_medium_db::TABLE_NAME, array(mediamosa_asset_medium_db::ID => $mediafile_id));
+    mediamosa_db::db_must_exists(mediamosa_asset_mediafile_db::TABLE_NAME, array(mediamosa_asset_mediafile_db::ID => $mediafile_id));
 
     // Get the media file
     // Removed the app_id so the mediafile can be accessed by other app.
     // vpx_acl_rights_get() will check if its in the right app or you have access through slave.
-    $a_medium = mediamosa_db::db_query(
-      "SELECT * FROM {#mediamosa_asset_medium} WHERE #medium_id = :medium_id",
+    $a_mediafile = mediamosa_db::db_query(
+      "SELECT * FROM {#mediamosa_asset_mediafile} WHERE #mediafile_id = :mediafile_id",
       array(
-        '#mediamosa_asset_medium' => mediamosa_asset_medium_db::TABLE_NAME,
-        '#medium_id' => mediamosa_asset_medium_db::ID,
-        ':medium_id' => $mediafile_id
+        '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
+        '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
+        ':mediafile_id' => $mediafile_id
       )
     );
 
-    $a_rights = mediamosa_aut::rights_get($app_id, $user_id, mediamosa_aut::AUT_TYPE_MEDIUM, $a_medium, $is_app_admin);
+    $a_rights = mediamosa_aut::rights_get($app_id, $user_id, mediamosa_aut::AUT_TYPE_MEDIAFILE, $a_mediafile, $is_app_admin);
 
     foreach ($a_rights[mediamosa_aut::OBJ_LINK_TYPE_NAME] as $a_right) {
       $a_right['type'] = ($a_right['type'] == 'aut_user_group' ? 'aut_group' : $a_right['type']);
@@ -1019,7 +1019,7 @@ class mediamosa_rest_call_aut_asset_get_rights extends mediamosa_rest_call {
       )
     );
 
-    $a_rights = mediamosa_aut::rights_get($app_id, $user_id, mediamosa_aut::AUT_TYPE_MEDIUM, $a_asset, $is_app_admin);
+    $a_rights = mediamosa_aut::rights_get($app_id, $user_id, mediamosa_aut::AUT_TYPE_MEDIAFILE, $a_asset, $is_app_admin);
 
     foreach ($a_rights[mediamosa_aut::OBJ_LINK_TYPE_NAME] as $a_right) {
       $a_right['type'] = ($a_right['type'] == 'aut_user_group' ? 'aut_group' : $a_right['type']);

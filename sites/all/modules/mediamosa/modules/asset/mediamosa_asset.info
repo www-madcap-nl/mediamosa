@@ -1,7 +1,7 @@
 ; $Id $
 
 name = "Asset"
-description = "The asset module contains all submodules for asset like medium, metadata, access layer etc."
+description = "The asset module contains all submodules for asset like mediafile, metadata, access layer etc."
 package = "MediaMosa 2 - Modules"
 version = "2.0.0"
 core = 7.x
@@ -14,13 +14,13 @@ files[] = mediamosa_asset.module
 files[] = mediamosa_asset.rest.inc
 
 ; Media.
-files[] = medium/mediamosa_asset_medium.rest.inc
+files[] = mediafile/mediamosa_asset_mediafile.rest.inc
 
-; Medium Metadata.
-files[] = medium/metadata/mediamosa_asset_medium_metadata.rest.inc
+; Mediafile Metadata.
+files[] = mediafile/metadata/mediamosa_asset_mediafile_metadata.rest.inc
 
-; Medium Play Proxy.
-files[] = medium/play_proxy/mediamosa_asset_medium_play_proxy.rest.inc
+; Mediafile Play Proxy.
+files[] = mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.rest.inc
 
 ; Metadata.
 files[] = metadata/mediamosa_asset_metadata.rest.inc

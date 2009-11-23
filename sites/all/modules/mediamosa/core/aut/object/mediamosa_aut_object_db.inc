@@ -39,7 +39,7 @@ class mediamosa_aut_object_db {
   const AUT_OBJECT_ID_LENGTH = 32;
   const AUT_OBJECT_TYPE = 'aut_object_type';
   // The object types;
-  const AUT_OBJECT_TYPE_MEDIUM = 'MEDIUM';// 1.x MEDIAFILE
+  const AUT_OBJECT_TYPE_MEDIAFILE = 'MEDIAFILE';// 1.x MEDIAFILE
   const AUT_OBJECT_TYPE_ASSET = 'ASSET';
   const AUT_OBJECT_TYPE_COLLECTION = 'COLLECTION';
 
