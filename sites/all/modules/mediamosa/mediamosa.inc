@@ -70,7 +70,7 @@ class mediamosa {
 
   // Drupal usage for getting the current URI.
   public function get_request_uri() {
-    return implode('/', arg());
+    return trim(substr(implode('/', arg()), strlen(MEDIAMOSA_MENU_PATH)), '/');
   }
 
   // ------------------------------------------------------------------ Functions (protected).
@@ -169,7 +169,7 @@ class mediamosa {
   static public function exit_404($message) {
     drupal_maintenance_theme();
     drupal_set_header($_SERVER['SERVER_PROTOCOL'] . ' 404 Page not found');
-    drupal_set_title(t('Site offline'));
+    drupal_set_title(t('Page not found'));
     print theme('maintenance_page', filter_xss_admin($message));
     drupal_page_footer();
     exit;
