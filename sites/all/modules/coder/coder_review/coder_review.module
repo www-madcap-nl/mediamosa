@@ -29,7 +29,7 @@ define('SEVERITY_NORMAL', 5);
 define('SEVERITY_CRITICAL', 9);
 
 /**
- * Implementation of hook_help().
+ * Implements hook_help().
  */
 function coder_review_help($page, $arg) {
   switch ($page) {
@@ -49,7 +49,7 @@ function _coder_review_reviews() {
 }
 
 /**
- * Implementation of hook_reviews().
+ * Implements hook_reviews().
  */
 function coder_review_reviews() {
   global $_coder_reviews;
@@ -71,7 +71,7 @@ function coder_review_reviews() {
 }
 
 /**
- * Implementation of hook_permission().
+ * Implements hook_permission().
  */
 function coder_review_permission() {
   return array(
@@ -87,7 +87,7 @@ function coder_review_permission() {
 }
 
 /**
- * Implementation of hook_menu().
+ * Implements hook_menu().
  */
 function coder_review_menu() {
   $items['admin/config/development/coder/review'] = array(
@@ -148,7 +148,7 @@ function coder_review_menu() {
 }
 
 /**
- * Implementation of hook_menu_alter().
+ * Implements hook_menu_alter().
  */
 function coder_review_menu_alter(&$callbacks) {
   $callbacks['admin/config/development/coder']['page callback'] = 'coder_review_page';
@@ -157,7 +157,7 @@ function coder_review_menu_alter(&$callbacks) {
 }
 
 /**
- * Implementation of hook_form_alter().
+ * Implements hook_form_alter().
  *
  * Modify the module display view by adding a Coder Review link to every
  * module description.
@@ -546,7 +546,7 @@ function theme_coder_review_table_cols($form) {
 }
 
 /**
- * Implementation of settings page.
+ * Implements settings page.
  */
 function coder_review_admin_settings($form, &$form_state) {
   $settings = _coder_review_get_default_settings();
@@ -598,7 +598,7 @@ function _coder_review_settings_array(&$form_state, $type) {
 }
 
 /**
- * Implementation of code review page.
+ * Implements code review page.
  */
 function coder_review_page($type = '') {
   $output  = '<div class="coder-disclaimer">' . coder_review_help('coder#disclaimer', array()) . '</div>';
@@ -673,7 +673,7 @@ function _coder_review_get_default_settings($arg = 'default') {
 }
 
 /**
- * Implementation of hook_submit().
+ * Implements hook_submit().
  */
 function coder_review_page_form_submit($form, &$form_state) {
   $form_state['storage'] = $form_state['values'];
@@ -699,7 +699,7 @@ function _coder_review_get_reviews_extensions($defaults, $reviews) {
 }
 
 /**
- * Implementation of hook_form().
+ * Implements hook_form().
  *
  * Implements coder_review's main form, in which a user can select reviews and
  * modules/themes to run them on.
@@ -1867,7 +1867,7 @@ function _coder_review_is_drupal_core($module) {
 }
 
 /**
- * Implementation of hook_simpletest().
+ * Implements hook_simpletest().
  */
 function coder_review_simpletest() {
   return array_keys(file_scan_directory(drupal_get_path('module', 'coder_review') . '/tests', '/\.test/'));
@@ -1876,7 +1876,7 @@ function coder_review_simpletest() {
 // Theming functions
 
 /**
- * Implementation of hook_theme().
+ * Implements hook_theme().
  */
 function coder_review_theme() {
   return array(

@@ -51,7 +51,7 @@ class mediamosa_version {
   const BUILD = 'build';
   const CHANGESET = 'changeset';
 
-  // ------------------------------------------------------------------ Functions (static).
+  // ------------------------------------------------------------------ Static Function..
   /**
    * Return the array of an version.
    *

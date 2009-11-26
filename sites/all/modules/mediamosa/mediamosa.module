@@ -30,8 +30,8 @@
   */
 
 /**
-* Implementation of hook_init().
-*/
+ * Implements hook_init().
+ */
 function mediamosa_init() {
   try {
 
@@ -47,7 +47,7 @@ function mediamosa_init() {
 }
 
 /**
- * Implementation of hook_mediamosa_register_rest_call().
+ * Implements hook_mediamosa_register_rest_call().
  */
 function mediamosa_mediamosa_register_rest_call() {
 

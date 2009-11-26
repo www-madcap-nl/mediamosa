@@ -52,7 +52,7 @@ class mediamosa_db_query {
   const OFFSET = 'offset';
   const ALLOW_DISTINCT = 'allow_distinct';
 
-  // ------------------------------------------------------------------ Functions (static).
+  // ------------------------------------------------------------------ Static Function.
   /**
    * Create the WHERE syntax
    *
@@ -351,7 +351,7 @@ class mediamosa_db_query {
     }
 
     $url = parse_url($url);
-    return substr(urldecode($url['path']), 1);
+    return mediamosa_unicode::substr(urldecode($url['path']), 1);
   }
 }
 

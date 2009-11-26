@@ -56,10 +56,10 @@ class mediamosa_asset_db {
   const IS_PRIVATE = 'is_private'; // 1.x name: isprivate.
   const IS_PRIVATE_TRUE = 'TRUE';
   const IS_PRIVATE_FALSE = 'FALSE';
-  const MEDIA_DURATION = 'media_duration'; // 1.x name: mediafile_duration.
-  const MEDIA_DURATION_LENGTH = 10;
-  const MEDIA_CONTAINER_TYPE = 'media_container_type'; // 1.x name: mediafile_container_type.
-  const MEDIA_CONTAINER_TYPE_LENGTH = 50;
+  const MEDIAFILE_DURATION = 'mediafile_duration';
+  const MEDIAFILE_DURATION_LENGTH = 10;
+  const MEDIAFILE_CONTAINER_TYPE = 'mediafile_container_type';
+  const MEDIAFILE_CONTAINER_TYPE_LENGTH = 50;
   const CREATED = 'created';
   const CHANGED = 'changed';
   const IS_UNAPPROPRIATE = 'is_unappropriate';

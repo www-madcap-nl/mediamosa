@@ -1,31 +1,5 @@
 <?php
 
-class mediamosa_asset {
-
-  static public function _media_management_is_streamable($container_type) {
-    static $a_streamable_container_types = array();
-
-    if (!isset($a_streamable_container_types[$container_type])) {
-      db_query("SELECT COUNT(*) aantal ".
-        "FROM {mediamosa_streaming_server} ss ".
-        "LEFT JOIN {streaming_server_container} ssc ON ss.streaming_server_id = ssc.streaming_server_id ".
-        "WHERE ssc.container = '%s' AND ss.active = 1");
-
-
-
-
-      $sql = sprintf(
-        "", $container_type);
-      $a_streamable_container_types[$container_type] = (db_result(db_query($sql)) > 0) ? TRUE : FALSE;
-    }
-
-    return ($a_streamable_container_types[$container_type]);
-  }
-
-
-
-}
-
 
 
 
@@ -36,58 +10,7 @@ class mediamosa_asset {
 // @todo: Marker start media_managment.module
 
 
-function media_management_check_existence($a_args) {
-  $a_parameters = array(
-    'table' => array(
-      'value' => vpx_get_parameter_2($a_args['get'], 'table'),
-      'type' => 'alphanum',
-      'required' => TRUE,
-    ),
-    'cell' => array(
-      'value' => vpx_get_parameter_2($a_args['get'], 'cell'),
-      'type' => 'alphanum',
-      'required' => TRUE,
-    ),
-    'id' => array(
-      'value' => vpx_get_parameter_2($a_args['get'], 'id'),
-      'type' => 'skip',
-      'required' => TRUE,
-    ),
-  );
 
-// valideer alle parameters op aanwezigheid en type
-  $result = vpx_validate($a_parameters);
-  if (vpx_check_result_for_error($result)) {
-    return new rest_response($result);
-  }
-
-  if (vpx_count_rows($a_parameters['table']['value'], array($a_parameters['cell']['value'], $a_parameters['id']['value']))) {
-    return new rest_response(vpx_return_error(ERRORCODE_OKAY));
-  }
-  else {
-    switch ($a_parameters['table']['value']) {
-      case "mediafile": return new rest_response(vpx_return_error(ERRORCODE_MEDIAFILE_NOT_FOUND, array('@mediafile_id' => $a_parameters['id']['value']))); break;
-      case "asset": return new rest_response(vpx_return_error(ERRORCODE_ASSET_NOT_FOUND, array('@asset_id' => $a_parameters['id']['value']))); break;
-      default: return new rest_response(vpx_return_error(ERRORCODE_EMPTY_RESULT));
-    }
-  }
-}
-
-function _media_management_process_asset_output($a_input, $a_metadata_definitions_full) {
-  foreach ($a_metadata_definitions_full as $key => $value) {
-    $a_input[$value["propgroup_name"]][$key] = NULL;
-  }
-
-  unset(
-    $a_input['testtag'],
-    $a_input['parent_id'],
-    $a_input['asset_property_value'],
-    $a_input['asset_property_name'],
-    $a_input['asset_property_group_name']
-  );
-
-  return $a_input;
-}
 
 function _media_management_process_mediafile_output($o_rest_reponse, $app_id) {
   $prefix = "mediafile_metadata_";
@@ -130,41 +53,12 @@ function _media_management_process_mediafile_output($o_rest_reponse, $app_id) {
     $o_rest_reponse->response['items'][$i]['ega_download_url'] = ($app_info['download_url'] && $is_downloadable) ? preg_replace($patterns, $replacements, $app_info['download_url']) : "";
 
     // Show stream_url only if streamable.
-    if (_media_management_is_streamable($o_rest_reponse->response['items'][$i]['mediafile_metadata_container_type'])) {
+    if (mediamosa_server_streaming::is_streamable($o_rest_reponse->response['items'][$i]['mediafile_metadata_container_type'])) {
       $o_rest_reponse->response['items'][$i]['ega_play_url'] = preg_replace($patterns, $replacements, $app_info['play_proxy_url']);
 
       $params = array_merge($_POST, $_GET);
       if ($params['is_oai'] == TRUE) {
         // Stream URL(s) for OAI
-/*
-        // Old behaviour
-        $p_app_id = $o_rest_reponse->response['items'][$i]['app_id'];
-        $all = FALSE;
-        if ($p_app_id == $params['app_id']) {
-          $all = TRUE;
-        }
-        elseif (is_array($params['app_id']) && $params['app_id'] != array()) {
-          $all = in_array($p_app_id, $params['app_id']);
-        }
-        if ($all) {
-          // All
-          $o_rest_reponse->response['items'][$i]['ega_stream_url'][] = ($app_info['stream_url']) ? preg_replace($patterns, $replacements, $app_info['stream_url']) : "";
-          db_set_active('data');
-          $rs = db_query("SELECT app_master_id FROM {aut_app_master_slave} WHERE aut_object_id = '%s' AND aut_object_type = '%s' AND app_slave_id = %d", $o_rest_reponse->response['items'][$i]['mediafile_id'], 'MEDIAFILE', $p_app_id);
-          db_set_active();
-          while ($rso = db_fetch_object($rs)) {
-            $o_rest_reponse->response['items'][$i]['ega_stream_url'][] = preg_replace($patterns, $replacements, db_result(db_query_range("SELECT stream_url FROM {client_applications} WHERE id = %d", $rso->app_master_id, 0, 1)));
-          }
-        }
-        elseif (is_numeric($p_app_id)) {
-          db_set_active('data');
-          $app_master_id = db_result(db_query_range("SELECT app_master_id FROM {aut_app_master_slave} WHERE aut_object_id = '%s' AND aut_object_type = '%s' AND app_slave_id = %d", $o_rest_reponse->response['items'][$i]['mediafile_id'], 'MEDIAFILE', $p_app_id, 0, 1));
-          db_set_active();
-          if ($app_master_id && is_numeric($app_master_id)) {
-            $o_rest_reponse->response['items'][$i]['ega_stream_url'][] = preg_replace($patterns, $replacements, db_result(db_query_range("SELECT stream_url FROM {client_applications} WHERE id = %d", $app_master_id, 0, 1)));
-          }
-        }
- */
         $p_app_id = $o_rest_reponse->response['items'][$i]['app_id'];
         // All
         if ($p_app_id == $params['app_id'] || (is_array($params['app_id']) && $params['app_id'] != array() && in_array($p_app_id, $params['app_id']))) {
@@ -208,82 +102,6 @@ function _media_management_process_mediafile_output($o_rest_reponse, $app_id) {
 }
 
 
-function _media_management_delete_collection($s_coll_id) {
-  db_set_active('data');
-
-  // verwijder de collection uit alle collecties
-  $b_result =  db_query("DELETE FROM {collection} WHERE coll_id = '%s'", $s_coll_id);
-
-  db_set_active();
-  return $b_result;
-}
-
-function _media_management_delete_asset_collection_relation($s_asset_id = FALSE, $s_coll_id = FALSE) {
-  $a_where = array();
-
-  if ($s_coll_id !== FALSE) {
-    $a_where[] = sprintf("coll_id='%s'", $s_coll_id);
-  }
-  if ($s_asset_id !== FALSE) {
-    $a_where[] = sprintf("asset_id='%s'", $s_asset_id);
-  }
-
-  if (count($a_where) === 0) {
-    return FALSE;
-  }
-
-  db_set_active('data');
-  $result = db_query("DELETE FROM {asset_collection} WHERE ". implode(" AND ", $a_where));
-  db_set_active();
-
-  return $result;
-}
-
-function _media_management_delete_asset($s_asset_id) {
-  // selecteer de 'data' databse
-  db_set_active('data');
-
-  // verwijder de asset uit alle collecties
-  $b_db_asset_collection = db_query("DELETE FROM {asset_collection} WHERE asset_id = '%s'", $s_asset_id);
-
-  // verwijder alle asset metadata
-  $rs = db_query("SELECT id FROM {asset_property} WHERE asset_id = '%s'", $s_asset_id);
-  while ($rso = db_fetch_object($rs)) {
-    db_query("DELETE FROM {large_asset_property} WHERE aprop_id = %d", $rso->id);
-  }
-  $b_db_asset_property = db_query("DELETE FROM {asset_property} WHERE asset_id = '%s'", $s_asset_id);
-
-  // verwijder de asset supplement(s)
-  $b_db_asset_property = db_query("DELETE FROM {asset_supplement} WHERE asset_id = '%s'", $s_asset_id);
-
-  // verwijder de stills
-  $b_db_still = _media_management_delete_still($s_asset_id);
-
-  // verwijder de asset uit stats
-  db_set_active('data'); // _media_management_delete_still() zet de database weer op default
-  $b_stats = db_query("DELETE FROM {statistics_stream_request} WHERE asset_id = '%s'", $s_asset_id);
-
-  // verwijder alle sub assets
-  // First: store the deleted assets for oai
-  $rs = db_query("SELECT asset_id, app_id FROM {asset} WHERE parent_id = '%s'", $s_asset_id);
-  while ($rso = db_fetch_object($rs)) {
-    db_query("REPLACE LOW_PRIORITY {asset_delete} (asset_id, app_id, videotimestampmodified) VALUES ('%s', %d, NOW())", $rso->asset_id, $rso->app_id);
-  }
-  $b_db_asset_parent = db_query("DELETE FROM {asset} WHERE parent_id = '%s'", $s_asset_id);
-
-  // verwijder de asset
-  // First: store the deleted asset for oai
-  $rs = db_query("SELECT asset_id, app_id FROM {asset} WHERE asset_id = '%s'", $s_asset_id);
-  while ($rso = db_fetch_object($rs)) {
-    db_query("REPLACE LOW_PRIORITY {asset_delete} (asset_id, app_id, videotimestampmodified) VALUES ('%s', %d, NOW())", $rso->asset_id, $rso->app_id);
-  }
-  $b_db_asset = db_query("DELETE FROM {asset} WHERE asset_id = '%s'", $s_asset_id);
-
-  // schakel terug naar de default database
-  db_set_active();
-
-  return ($b_stats && $b_db_asset_collection && $b_db_asset_property && $b_db_asset_parent && $b_db_asset && $b_db_still);
-}
 
 function _media_management_delete_still($asset_id, $mediafile_id = NULL, $still_id = NULL) {
 // haal de still gegeven(s) op en verwijder deze van disk.
@@ -385,48 +203,6 @@ function _media_management_delete_still($asset_id, $mediafile_id = NULL, $still_
 }
 
 
-function _media_management_delete_mediafile($a_mediafiles) {
-  if (!is_array($a_mediafiles)) {
-    $a_mediafiles = array($a_mediafiles);
-  }
-
-  // ruim de eventuele mediafile_metadata eerst op
-  db_set_active('data');
-  $b_db_mediafile_metadata = db_query("DELETE FROM {mediafile_metadata} WHERE mediafile_id IN ('". implode("', '", $a_mediafiles) ."')");
-  db_set_active();
-
-  // verwijder alle mediafiles van SAN/NAS
-  foreach ($a_mediafiles as $s_mediafile_id) {
-    db_set_active('data');
-    $mediafile = db_fetch_array(db_query("SELECT app_id, sannas_mount_point FROM {mediafile} WHERE mediafile_id='%s'", $s_mediafile_id));
-    db_set_active();
-
-    $file = $mediafile['sannas_mount_point'] ."/". DATA_LOCATION ."/". $s_mediafile_id{0} ."/". $s_mediafile_id;
-
-    // fysiek verwijderen
-    @unlink($file);
-  }
-
-  // verwijder de mediafile info
-  db_set_active('data');
-  $b_db_mediafile = db_query("DELETE FROM {mediafile} WHERE mediafile_id IN ('". implode("', '", $a_mediafiles) ."')");
-  db_set_active();
-
-  // update de asset info
-  _media_management_update_asset_info($s_mediafile_id);
-
-  return ($b_db_mediafile_metadata && $b_db_mediafile);
-}
-
-function media_management_get_current_mount_point($a_args) {
-  $rest_response = new rest_response(vpx_return_error(ERRORCODE_OKAY));
-
-  db_set_active();
-  $current_mount_point = db_result(db_query("SELECT current_mount_point FROM {san_nas_settings}"));
-  $rest_response->add_item(array("current_mount_point" => $current_mount_point));
-
-  return $rest_response;
-}
 
 function _media_management_return_collection_list($a_ids) {
   $query = sprintf(
@@ -453,105 +229,6 @@ function _media_management_return_collection_list($a_ids) {
   return $o_rest_reponse;
 }
 
-function _media_management_return_mediafile_list($a_ids, $app_id, $show_stills = TRUE) {
-  db_set_active('data');
-  $a_keys = db_fetch_array(db_query("SELECT * FROM mediafile_metadata LIMIT 1"));
-  db_set_active();
-
-  $o_rest_reponse = new rest_response(vpx_return_error(ERRORCODE_OKAY));
-
-  // als nog geen metadata (bv na migratie)
-  if (!isset($a_ids[0]) || ($a_ids[0] == NULL)) {
-    return $o_rest_reponse;
-  }
-
-  unset($a_keys["mediafile_id"], $a_keys["metadata_id"]); // geef deze niet weer in de metadata
-  if (is_array($a_keys)) {
-    $a_keys = array_keys($a_keys);
-  }
-  $s_metadata_select = "";
-
-  if (is_array($a_keys)) {
-    foreach ($a_keys as $item) {
-      $s_metadata_select .= "mm." . $item . " AS mediafile_metadata_" . $item . ", ";
-    }
-  }
-
-  $query = sprintf(
-    "SELECT %s m.*, a.parent_id ".
-    "FROM {mediafile} m ".
-    "LEFT JOIN {mediafile_metadata} mm ON m.mediafile_id = mm.mediafile_id ".
-    "LEFT JOIN {asset} a ON m.asset_id = a.asset_id ".
-    "WHERE m.mediafile_id IN ('%s')",
-    $s_metadata_select,
-    implode("', '", $a_ids)
-  );
-
-  db_set_active('data');
-  $result = db_query($query);
-  db_set_active();
-
-  $a_items_pre_sort = array();
-  $video_id = array();
-  $origin = array();
-  while ($array = db_fetch_array($result)) {
-    unset($array['testtag']);
-    unset($array['asset_id_root']);
-    unset($array['mediafile_metadata_still_time_code']);
-    unset($array['mediafile_metadata_still_order']);
-    unset($array['mediafile_metadata_still_format']);
-    unset($array['mediafile_metadata_still_type']);
-    unset($array['mediafile_metadata_still_default']);
-    $a_items_pre_sort[$array['mediafile_id']] = $array;
-    //$video_id[$array['asset_id']] = $array['asset_id'];
-    $video_id[] = $array['mediafile_id'];
-    $origin[$array['asset_id']] = $array['mediafile_id'];
-  }
-  if ($video_id && $video_id != array() && $show_stills) {
-    db_set_active('data');
-    $rs = db_query(sprintf("
-      SELECT *
-      FROM {mediafile} AS m
-      LEFT JOIN {mediafile_metadata} AS mm USING(mediafile_id)
-      WHERE m.mediafile_source IN ('%s') AND m.is_still = 'TRUE'
-      ORDER BY mm.still_order",
-      implode("', '", $video_id)));
-    db_set_active();
-    $i = 0;
-    while ($rsa = db_fetch_array($rs)) {
-      $s_ticket = vpx_create_hash($rsa['mediafile_id'] . mt_rand(0, 99999), microtime());
-
-      $result = _play_proxy_create_ticket(
-        $s_ticket,
-        NULL,
-        RESPONSE_TYPE_STILL,
-        $app_id,
-        $rsa['owner_id'],
-        $rsa['mediafile_id']
-      );
-
-      if ($result !== FALSE) {
-        $a_asset_info = array();
-        $a_mediafile_info = array();
-        $a_asset_metadata = array();
-        $a_parameters['response']['value'] = RESPONSE_TYPE_STILL;
-        $response = _play_proxy_create_response($a_parameters, array(), array(), array(), $s_ticket, $app_id);
-        $rsa['still_ticket'] = $response['output'];
-      }
-
-      $a_items_pre_sort[$rsa['mediafile_source']]['still']['#'. $i++] = $rsa;
-    }
-  }
-
-  foreach ($a_ids as $s_id) {
-    if (isset($a_items_pre_sort[$s_id])) {
-      $o_rest_reponse->add_item($a_items_pre_sort[$s_id]);
-    }
-  }
-
-  return _media_management_process_mediafile_output($o_rest_reponse, $app_id);
-}
-
 function _media_management_create_asset_response($a_items, $a_metadata_definitions_full, $a_ids = array(), $mixed_app_id, $user_id, $show_stills = TRUE) {
   $colls = array();
 
@@ -568,7 +245,7 @@ function _media_management_create_asset_response($a_items, $a_metadata_definitio
     if (!isset($a_items_pre_sort[$a_asset['asset_id']])) {
       $asset_id = $a_asset['asset_id'];
 
-      $a_items_pre_sort[$asset_id] = _media_management_process_asset_output($a_asset, $a_metadata_definitions_full);
+      $a_items_pre_sort[$asset_id] = mediamosa_asset_mediafile_metadata::process_asset_output($a_asset, $a_metadata_definitions_full);
 
       if ($a_items['app_info'][$a_asset['app_id']]['play_proxy_url'] && isset($a_items['mediafile_preview'][$asset_id])) {
         $a_patterns = array(
@@ -653,291 +330,21 @@ function _media_management_create_asset_response($a_items, $a_metadata_definitio
   return $o_rest_reponse;
 }
 
-/**
- * Get definitions from the asset_property_definitions array
- * Extended so all can go into one query
- *
- * @param array/string $mixed_propgroup_name
- * @return array
- */
-function _media_management_get_metadata_definitions($mixed_propgroup_name = 'dublin_core') {
-
-  $a_where = array();
-  if (is_array($mixed_propgroup_name)) {
-    foreach ($mixed_propgroup_name as $s_propgroup_name) {
-      $a_where[] = sprintf("apg.name='%s'", db_escape_string($s_propgroup_name));
-    }
-  }
-  else {
-    $a_where[] = sprintf("apg.name='%s'", db_escape_string($mixed_propgroup_name));
-  }
-
-  db_set_active('data');
-  $result = db_query("
-    SELECT apg.propgroup_id, apg.name AS propgroup_name, apd.type AS propdef_type, apd.prop_id AS propdef_id, apd.name AS propdef_name
-    FROM {assetprop_group} apg
-    INNER JOIN {assetprop_definition} apd ON apd.propgroup_id = apg.propgroup_id
-    WHERE " . implode(" OR ", $a_where));
-  db_set_active();
-
-  $a_output = array();
-  while ($array = db_fetch_array($result)) {
-    $a_output[$array['propdef_name']] = $array;
-  }
-
-  return $a_output;
-}
-
-/**
- * Get all definitions, plus our own based on the app_id
- *
- */
-function _media_management_get_metadata_definitions_full($mixed_app_id = FALSE, $a_definitions_full = array('dublin_core', 'qualified_dublin_core', 'czp')) {
-
-  if ($mixed_app_id !== FALSE) {
-    if (is_array($mixed_app_id)) {
-      foreach ($mixed_app_id as $app_id) {
-        $a_definitions_full[] = sprintf('app_%d', $app_id);
-      }
-    }
-    else {
-      $a_definitions_full[] = sprintf('app_%d', $mixed_app_id);
-    }
-  }
-
-  return _media_management_get_metadata_definitions($a_definitions_full);
-}
-
-function media_management_change_ownership($a_args) {
-  $a_parameters = array(
-    'app_id' => array(
-      'value' => vpx_get_parameter_2($a_args['get'], 'app_id'),
-      'type' => 'int',
-      'required' => TRUE,
-    ),
-    'old_group_id' => array(
-      'value' => vpx_get_parameter_2($a_args['get'], 'old_group_id'),
-      'type' => 'alphanum',
-    ),
-    'new_group_id' => array(
-      'value' => vpx_get_parameter_2($a_args['get'], 'new_group_id'),
-      'type' => 'alphanum',
-    ),
-    'old_owner_id' => array(
-      'value' => vpx_get_parameter_2($a_args['get'], 'old_owner_id'),
-      'type' => TYPE_USER_ID,
-    ),
-    'new_owner_id' => array(
-      'value' => vpx_get_parameter_2($a_args['get'], 'new_owner_id'),
-      'type' => TYPE_USER_ID,
-    ),
-/**
- * Omdat het als 'te gevaarlijk' wordt beschouwd, tijdelijk 'new_app_id' uitgezet... (#774)
- *
- * Ook unit test 210 is aangepast op regel 28
- */
-    'new_app_id' => array(
-      'value' => NULL, // vpx_get_parameter_2($a_args['get'], 'new_app_id'),
-      'type' => 'int',
-    ),
-  );
-  $a_parameters['old_app_id'] = array(
-    'value' => $a_parameters['app_id']['value'],
-    'type' => 'int',
-    'required' => TRUE
-  );
-
-// valideer alle parameters op aanwezigheid en type
-  $result = vpx_validate($a_parameters);
-  if (vpx_check_result_for_error($result)) {
-    return new rest_response($result);
-  }
-
-// controleer of de nieuwe app_id bestaat (indien gezet)
-  if (!is_null($a_parameters['new_app_id']['value'])) {
-    if (db_result(db_query("SELECT COUNT(id) FROM {client_applications} WHERE id = %d AND active = 1", $a_parameters['new_app_id']['value'])) != 1) {
-      return new rest_response(vpx_return_error(ERRORCODE_INVALID_APP_ID));
-    }
-  }
-
-// er moet in ieder geval 1 item gewijzigd worden en 1 voorwaarde opgegeven worden
-  $b_old = $b_new = FALSE;
-  foreach (array('owner_id', 'group_id', 'app_id') as $subject) {
-    if (!is_null($a_parameters['old_'. $subject]['value'])) {
-      $b_old = TRUE;
-    }
-    if (!is_null($a_parameters['new_'. $subject]['value'])) {
-      $b_new = TRUE;
-    }
-  }
-  if (!$b_old || !$b_new) {
-    return new rest_response(vpx_return_error(ERRORCODE_CHANGE_OWNERSHIP_MISSING_PARAMETERS));
-  }
-
-// verplaats de items naar de nieuwe eigenaren
-  $o_rest_response = new rest_response(vpx_return_error(ERRORCODE_OKAY));
-  foreach (array('mediafile', 'asset', 'collection') as $table) {
-    $a_update = $a_where = array();
-    foreach (array('owner_id', 'group_id', 'app_id') as $subject) {
-      if (!is_null($a_parameters['old_'. $subject]['value'])) {
-        $a_where[] = sprintf("%s = '%s'", $subject, $a_parameters['old_'. $subject]['value']);
-      }
-      if (!is_null($a_parameters['new_'. $subject]['value'])) {
-        $a_update[] = sprintf("%s = '%s'", $subject, db_escape_string($a_parameters['new_'. $subject]['value']));
-      }
-    }
-    $query = sprintf(
-      "UPDATE {%s} SET ". implode(", ", $a_update) ." WHERE ". implode(" AND ", $a_where),
-      $table
-    );
-    db_set_active('data');
-    db_query($query);
-    $o_rest_response->add_item(array($table => db_affected_rows()));
-    db_set_active();
-  }
-  return $o_rest_response;
-}
 
 
-/**
- * Controleer of er lopende jobs zijn voor een asset.
- * Als alle jobs gestopt zijn / of nog niet begonnen, verwijder die jobs dan.
- *
- * Code is verbeterd en verplaatst naar vpx_jobs.
- *
- */
-function _media_management_delete_jobs($asset_id) {
 
-  return _vpx_jobs_cancel_job_by_asset($asset_id);
-}
 
-/**
- * Helper functie voor het tellen van assets/collections/mediafiles
- */
-function _media_management_count_items($subject, $a_args) {
-  $rest_response = new rest_response(vpx_return_error(ERRORCODE_OKAY));
-  $a_parameters = array(
-    'app_id' => array(
-      'value' => vpx_get_parameter_2($a_args['get'], 'app_id'),
-      'type' => 'int',
-      'required' => TRUE,
-    ),
-    'owner_id' => array(
-      'value' => vpx_get_parameter_2($a_args['get'], 'owner_id'),
-      'type' => TYPE_USER_ID,
-    ),
-    'group_id' => array(
-      'value' => vpx_get_parameter_2($a_args['get'], 'group_id'),
-      'type' => TYPE_GROUP_ID,
-    ),
-  );
 
-// valideer alle parameters op aanwezigheid en type
-  $result = vpx_validate($a_parameters);
-  if (vpx_check_result_for_error($result)) {
-    return new rest_response($result);
-  }
 
-// stel de where samen
-  $where = array(sprintf("app_id = %d", $a_parameters['app_id']['value']));
 
-// voeg de owner_id toe (indien gezet)
-  if (!is_null($a_parameters['owner_id']['value'])) {
-    $where[] = sprintf("owner_id = '%s'", db_escape_string($a_parameters['owner_id']['value']));
-  }
 
-// voeg de group_id toe (indien gezet)
-  if (!is_null($a_parameters['group_id']['value'])) {
-    $where[] = sprintf("group_id = '%s'", db_escape_string($a_parameters['group_id']['value']));
-  }
 
-// query de database
-  db_set_active('data');
-  $count = (int)db_result(db_query(
-    "SELECT COUNT(*) FROM {%s} WHERE ". implode(" AND ", $where),
-    $subject
-  ));
-  db_set_active();
 
-// zet de count in de header
-  $rest_response->item_total_count = $count;
 
-// retourneer het resultaat
-  return $rest_response;
-}
 
-function _media_management_favorites_count($a_parameters) {
-
-  $a_where = array();
-  $a_where[] = sprintf("fav_type='%s'", $a_parameters['parameters']['fav_type']['value']);
-  $a_where[] = sprintf("fav_id='%s'", $a_parameters['parameters']['fav_id']['value']);
-
-  // query de database
-  db_set_active('data');
-  $count = (int)db_result(db_query("SELECT COUNT(*) FROM {user_favorites} WHERE ". implode(" AND ", $a_where)));
-  db_set_active();
-
-  $o_result = new rest_response(vpx_return_error(ERRORCODE_OKAY));
-  $o_result->item_total_count = $count; // zelfs al zijn er geen links, we geven altijd het aantal terug.
-
-  return $o_result;
-}
 
 // @todo: marker start media_management_still.inc
 
-/**
- * Deze functie creert een still in de database
- */
-
-function media_management_create_still($asset_id, $parent_id, $still_id, $app_id, $owner_id, $group_id, $order, $default = 'FALSE', $still_parameters = NULL, $sec = 0, $mediafile_source = '', $tag = '') {
-
-  $filename = $still_id;
-  $destination = vpx_get_san_nas_base_path() . DS . STILL_LOCATION . DS . $filename{0} . DS . $filename;
-  // Still size
-  $size = getimagesize($destination);
-  $width = $size[0];
-  $height = $size[1];
-  // File type
-  $file_type = '';
-  $pos = strrpos($size['mime'], '/');
-  if ($pos !== FALSE) {
-    $file_type = substr($size['mime'], $pos+1);
-  }
-  $filesize = filesize($destination);
-
-  if ($default) {
-    // Clear the earlier default mark on the video (media) file
-    db_set_active('data');
-    db_query("
-      UPDATE {mediafile_metadata} AS mm
-      INNER JOIN {mediafile} AS m USING(mediafile_id)
-      SET mm.still_default = 'FALSE'
-      WHERE m.mediafile_source = '%s' AND m.is_still = 'TRUE'
-      ", $mediafile_source);
-    db_set_active();
-/*
-    // Clear the earlier default mark on the asset
-    db_set_active('data');
-    db_query("
-      UPDATE {mediafile_metadata} AS mm
-      INNER JOIN {mediafile} AS m USING(mediafile_id)
-      SET mm.still_default = 'FALSE'
-      WHERE m.asset_id_root = '%s' AND m.is_still = 'TRUE'
-      ", $parent_id);
-    db_set_active();
- */
-  }
-
-  // voeg de still toe aan de database
-  db_set_active('data');
-  $result = db_query("INSERT INTO {mediafile} (mediafile_id, asset_id, app_id, owner_id, group_id, sannas_mount_point, file_extension, created, changed, asset_id_root, is_still, mediafile_source, tag) VALUES ('%s', '%s', %d, '%s', '%s', '%s', '%s', NOW(), NOW(), '%s', '%s', '%s', '%s')",
-    $still_id, $asset_id, $app_id, $owner_id, $group_id, SAN_NAS_BASE_PATH, $file_type, $parent_id, 'TRUE', $mediafile_source, $tag);
-  $result = db_query("INSERT INTO {mediafile_metadata} (mediafile_id, width, height, container_type, filesize, mime_type, created, changed, still_time_code, still_order, still_format, still_type, still_default) VALUES ('%s', %d, %d, '%s', %d, '%s', %s, %s, '%s', %d, '%s', '%s', '%s')",
-    $still_id, $width, $height, '', $filesize, $size['mime'], 'NOW()', 'NOW()', $sec, $order, $file_type, $still_parameters['still_type'], ($default ? 'TRUE' : 'FALSE'));
-  db_set_active();
-
-  return $result;
-}
 
 /**
  * Met deze functie worden alle aanwezige stills voor een asset verwijderd.
@@ -1247,29 +654,13 @@ function media_management_set_still_order($a_args) {
     return $e->vpx_exception_rest_response();
   }
 
-  // verwijder de still
-  if (($error = _media_management_set_still_order($asset_id, $mediafile_id, $still_id, $order)) === TRUE) {
-    return new rest_response(vpx_return_error(ERRORCODE_OKAY));
-  }
-  else {
-    return $error;
-  }
+  // Set Still order.
+  mediamosa_asset_mediafile_still::set_still_order($asset_id, $mediafile_id, $still_id, $order);
+
+  return new rest_response(vpx_return_error(ERRORCODE_OKAY));
 }
 
-function _media_management_set_still_order($asset_id, $mediafile_id, $still_id, $order) {
-  watchdog("server", sprintf("Still order: asset_id = %s; mediafile_id = %s; still_id = %s; order = %s;", $asset_id, $mediafile_id, $still_id, $order));
 
-  db_set_active('data');
-  db_query("
-    UPDATE {mediafile_metadata} AS mm
-    INNER JOIN {mediafile} AS m USING(mediafile_id)
-    SET mm.still_order = %d
-    WHERE mm.mediafile_id = '%s' && m.asset_id_root = '%s' AND m.is_still = 'TRUE'
-    ", $order, $still_id, $asset_id);
-  db_set_active();
-
-  return TRUE;
-}
 
 // @todo: marker start media_mangement_seach
 // array name for search in where
@@ -1585,7 +976,7 @@ function _media_management_search_asset($a_funcparam, $a_metadata_definitions_fu
 
         $a_where_inner = array();
         foreach ($a_searches as $a_search) {
-          $a_where_inner[] = _media_management_search_get_part_where($a_search, $s_tablename_alias_full);
+          $a_where_inner[] = mediamosa_asset_metadata::search_get_part_where($a_search, $s_tablename_alias_full);
         }
 
         $a_where_tmp[] = sprintf("(%s)", implode(" OR ", $a_where_inner));
@@ -1594,7 +985,7 @@ function _media_management_search_asset($a_funcparam, $a_metadata_definitions_fu
       }
       elseif ($a_search['s_table'] == 'mediafile') {
         foreach ($a_searches as $a_search) {
-          $a_where_tmp[] = _media_management_search_get_part_where($a_search, $s_tablename_alias_full);
+          $a_where_tmp[] = mediamosa_asset_metadata::search_get_part_where($a_search, $s_tablename_alias_full);
         }
 
         // Need this one...
@@ -1602,7 +993,7 @@ function _media_management_search_asset($a_funcparam, $a_metadata_definitions_fu
       }
       elseif ($a_search['s_table'] == 'mediafile_metadata') {
         foreach ($a_searches as $a_search) {
-          $a_where_tmp[] = _media_management_search_get_part_where($a_search, $s_tablename_alias_full);
+          $a_where_tmp[] = mediamosa_asset_metadata::search_get_part_where($a_search, $s_tablename_alias_full);
         }
 
         // Need this one too...
@@ -1613,7 +1004,7 @@ function _media_management_search_asset($a_funcparam, $a_metadata_definitions_fu
       }
       else {
         foreach ($a_searches as $a_search) {
-          $a_where_tmp[] = _media_management_search_get_part_where($a_search, $s_tablename_alias_full);
+          $a_where_tmp[] = mediamosa_asset_metadata::search_get_part_where($a_search, $s_tablename_alias_full);
         }
       }
 
@@ -1904,43 +1295,6 @@ DROP TABLE assets_all;
   return $o_rest_response;
 }
 
-/**
- * Build the expression for SQL
- *
- * @param array $a_search
- * @param string $s_tablename_alias_full
- * @return string
- */
-function _media_management_search_get_part_where($a_search, $s_tablename_alias_full) {
-
-  if (!is_array($a_search['s_value']) && $a_search['s_value'] == "") {
-    return sprintf("(%s = '' || %s IS NULL)", $s_tablename_alias_full, $s_tablename_alias_full);
-  }
-
-  switch ($a_search['s_type']) {
-    case VPX_MATCH_TYPE_BOOLEAN:
-      $a_search['s_value'] = (drupal_strtolower($a_search['s_value']) == "true" ? "TRUE" : "FALSE");
-    case VPX_MATCH_TYPE_EXACT:
-      return sprintf("(%s = '%s')", $s_tablename_alias_full, vpx_db_query_escape($a_search['s_value']));
-
-    case VPX_MATCH_TYPE_CONTAINS:
-      return sprintf("(%s LIKE '%%%s%%')", $s_tablename_alias_full, vpx_db_query_escape_like($a_search['s_value']));
-
-    case VPX_MATCH_TYPE_BEGIN:
-      return sprintf("(%s LIKE '%s%%')", $s_tablename_alias_full, vpx_db_query_escape_like($a_search['s_value']));
-
-    case VPX_MATCH_TYPE_PERIOD:
-      assert(isset($a_search['s_value'][VPX_MATCH_TYPE_PERIOD_FROM]) && isset($a_search['s_value'][VPX_MATCH_TYPE_PERIOD_TO]));
-      return sprintf("(%s >= '%s' AND %s < '%s')", $s_tablename_alias_full, vpx_db_query_escape($a_search['s_value'][VPX_MATCH_TYPE_PERIOD_FROM]['s_value']), $s_tablename_alias_full, vpx_db_query_escape($a_search['s_value'][VPX_MATCH_TYPE_PERIOD_TO]['s_value']));
-
-    case VPX_MATCH_TYPE_RANGE:
-      assert(isset($a_search['s_value'][VPX_MATCH_TYPE_RANGE_FROM]) && isset($a_search['s_value'][VPX_MATCH_TYPE_RANGE_TO]));
-      return sprintf("(%s >= %d AND %s < %d)", $s_tablename_alias_full, vpx_db_query_escape($a_search['s_value'][VPX_MATCH_TYPE_RANGE_FROM]['s_value']), $s_tablename_alias_full, vpx_db_query_escape($a_search['s_value'][VPX_MATCH_TYPE_RANGE_TO]['s_value']));
-  }
-
-  // We should not get here...
-  throw new vpx_exception_error_unexpected_error();
-}
 
 /**
  * Simple test if column is certain table
@@ -2282,38 +1636,7 @@ function media_management_get_asset_mediafiles($a_args) {
 }
 
 
-/**
- * This function retrieves all info about the given mediafile id
- *
- * @param string $app_id
- * @param string $asset_id
- * @return: array
- */
-function media_management_get_mediafile($a_args) {
 
-  try {
-    vpx_funcparam_add_uri($a_funcparam, $a_args, 'mediafile_id', VPX_TYPE_ALPHANUM);
-    vpx_funcparam_add_array($a_funcparam, $a_args, 'app_id', VPX_TYPE_INT, TRUE);
-    vpx_funcparam_add($a_funcparam, $a_args, 'show_stills', VPX_TYPE_BOOL, FALSE, 'TRUE');
-
-    $mediafile_id = vpx_funcparam_get_value($a_funcparam, 'mediafile_id', "");
-    $app_id = vpx_funcparam_get_value($a_funcparam, 'app_id');
-    $show_stills = drupal_strtoupper(vpx_funcparam_get_value($a_funcparam, 'show_stills')) == 'TRUE';
-
-    vpx_shared_must_exist("mediafile", array("mediafile_id" => $mediafile_id));
-
-    // ACL check
-    vpx_acl_read_single_object(VPX_ACL_AUT_TYPE_MEDIAFILE, $mediafile_id, $app_id);
-
-    $mediafiles = array($mediafile_id);
-
-    // get the media file
-    return _media_management_return_mediafile_list($mediafiles, $app_id, $show_stills);
-  }
-  catch (vpx_exception $e) {
-    return $e->vpx_exception_rest_response();
-  }
-}
 
 function media_management_delete_mediafile($a_args) {
 
@@ -2373,9 +1696,7 @@ function media_management_delete_mediafile($a_args) {
     }
 
     if ($b_delete_asset) {
-      if (!_media_management_delete_asset($a_asset['asset_id'])) {
-        throw new vpx_exception_error_unexpected_error();
-      }
+      mediamosa_asset::delete($a_asset['asset_id']);
     }
 
     // update de timestamps van de asset
@@ -2591,7 +1912,7 @@ function media_management_create_mediafile($a_args) {
   db_set_active();
 
   // Set the external
-  _media_management_update_is_external($a_parameters['mediafile_id']['value']);
+  mediamosa_asset::update_asset_info_is_external($a_parameters['mediafile_id']['value']);
 
   // retourneer de gegenereerde mediafile_id
   $rest_response = new rest_response(vpx_return_error(ERRORCODE_OKAY));
@@ -2749,36 +2070,6 @@ function media_management_internal_update_mediafile($a_args) {
   return media_management_update_mediafile(array_merge($a_args, $a_internal));
 }
 
-function media_management_is_playable($mediafile_id) {
-  // Check if the file can be transcoded, might be type 'application/x-empty'
-  db_set_active("data");
-  $is_unplayable = db_result(db_query("SELECT COUNT(*) FROM {mediafile_metadata} WHERE mediafile_id = '%s' AND mime_type = '%s'",
-    $mediafile_id,
-    VPX_MIME_TYPE_APPLICATION_X_EMPTY
-  ));
-  db_set_active();
-
-  return ($is_unplayable ? "This mediafile has an empty filesize." : NULL);
-}
-
-function media_management_is_transcodable($mediafile_id) {
-  // Check if the file can be played, might be type 'application/x-empty'
-  db_set_active("data");
-  $is_untranscodeable = db_result(db_query("SELECT COUNT(*) FROM {mediafile_metadata} WHERE mediafile_id = '%s' AND mime_type = '%s'",
-    $mediafile_id,
-    VPX_MIME_TYPE_APPLICATION_X_EMPTY
-  ));
-  db_set_active();
-
-  return ($is_untranscodeable ? "This mediafile has an empty filesize." : NULL);
-}
-
-/**
- * count mediafiles
- */
-function media_management_mediafile_count($a_args) {
-  return _media_management_count_items('mediafile', $a_args);
-}
 
 /**
  * Delete watermark image
@@ -3410,7 +2701,7 @@ function media_management_delete_collection($a_args) {
         $o_rest_response->set_result(vpx_return_error(ERRORCODE_COLLECTION_NOT_EMPTY, array("@asset_count" => $i_asset_count)));
       }
       else {
-        if (!_media_management_delete_collection($a_parameters['coll_id']['value'])) {
+        if (!mediamosa_collection::delete($a_parameters['coll_id']['value'])) {
           $o_rest_response->set_result(vpx_return_error(UNKNOWN_ERROR));
         }
       }
@@ -3419,7 +2710,7 @@ function media_management_delete_collection($a_args) {
   }
 // indien de collection leeg is
   else {
-    if (_media_management_delete_collection($a_parameters['coll_id']['value'])) {
+    if (mediamosa_collection::delete($a_parameters['coll_id']['value'])) {
       return new rest_response(vpx_return_error(ERRORCODE_OKAY));
     }
     else {
@@ -3522,7 +2813,7 @@ function media_management_delete_collection_relation($a_args) {
     }
 
   // delete de asset_collection relatie
-    if (!_media_management_delete_asset_collection_relation($asset_id, $a_parameters['coll_id']['value'])) {
+    if (!mediamosa_asset_collection::delete($asset_id, $a_parameters['coll_id']['value'])) {
       return new rest_response(vpx_return_error(ERRORCODE_UNEXPECTED_ERROR)); // unknown error
     }
   }
@@ -3676,13 +2967,6 @@ function media_management_create_collection_relation($a_args) {
 
 
 /**
- * count collections
- */
-function media_management_collection_count($a_args) {
-  return _media_management_count_items('collection', $a_args);
-}
-
-/**
  * Delete an asset from all of collection relation
  */
 function media_management_delete_asset_from_all_collections($a_args) {
@@ -3761,7 +3045,7 @@ function media_management_delete_asset_from_all_collections($a_args) {
     }
 
     // Delete de asset_collection relation
-    if (!_media_management_delete_asset_collection_relation($asset_id, $rsa['coll_id'])) {
+    if (!mediamosa_asset_collection::delete($asset_id, $rsa['coll_id'])) {
       return new rest_response(vpx_return_error(ERRORCODE_UNEXPECTED_ERROR)); // unknown error
     }
 
@@ -3867,7 +3151,7 @@ function media_management_get_asset_search($a_args, $b_fav_user_id_required = FA
     $cql = vpx_funcparam_get_value($a_funcparam, 'cql');
 
     // Voeg toe met de definities van assets
-    $a_metadata_definitions_full = _media_management_get_metadata_definitions_full($app_id);
+    $a_metadata_definitions_full = mediamosa_asset_metadata_property::get_metadata_properties_full($app_id);
 
     foreach ($a_metadata_definitions_full as $s_key => $a_metadata) {
       $array = array(
@@ -3976,7 +3260,7 @@ function media_management_get_asset($a_args) {
     // Check inappropriate flag
     _media_management_is_inappropriate($asset_id, $app_id, $aut_user_id, $is_app_admin);
 
-    $a_metadata_definitions_full = _media_management_get_metadata_definitions_full($app_id);
+    $a_metadata_definitions_full = mediamosa_asset_metadata_property::get_metadata_properties_full($app_id);
 
     $results = media_management_asset_collect(
       array($asset_id),
@@ -4069,7 +3353,7 @@ function media_management_get_asset_1_6_0($a_args) {
 
     if (vpx_shared_boolstr2bool(vpx_funcparam_get_value($a_funcparam, 'show_deleted', 'false'))) {
       if (vpx_shared_must_exist("asset_delete", array("asset_id" => $asset_id)) !== FALSE) {
-        $a_metadata_definitions_full = _media_management_get_metadata_definitions_full($app_id);
+        $a_metadata_definitions_full = mediamosa_asset_metadata_property::get_metadata_properties_full($app_id);
 
         $a_app_ids = $app_id;
         if (!is_array($a_app_ids)) {
@@ -4099,7 +3383,7 @@ function media_management_get_asset_1_6_0($a_args) {
     // Check inappropriate flag
     _media_management_is_inappropriate($asset_id, $app_id, $aut_user_id, $is_app_admin);
 
-    $a_metadata_definitions_full = _media_management_get_metadata_definitions_full($app_id);
+    $a_metadata_definitions_full = mediamosa_asset_metadata_property::get_metadata_properties_full($app_id);
 
     $results = media_management_asset_collect(
       array($asset_id),
@@ -4156,73 +3440,7 @@ function _mediafile_management_asset_played($asset_id) {
 }
 
 
-function _media_management_update_asset_info($mediafile_id) {
-  db_set_active('data');
 
-// zoek de bijbehorende asset_id op
-  $asset_id_root = db_result(db_query(
-    "SELECT asset_id_root FROM {mediafile} WHERE mediafile_id = '%s'",
-    $mediafile_id
-  ));
-
-// zoek de lengte van de eerste originele mediafile op
-  $mediafile_info = db_fetch_array(db_query(
-    "SELECT mm.file_duration, mm.container_type FROM {mediafile} AS m ".
-    "JOIN {mediafile_metadata} AS mm ON m.mediafile_id = mm.mediafile_id AND m.is_original_file = 'TRUE' ".
-    "WHERE m.asset_id_root = '%s' LIMIT 1",
-    $asset_id_root
-  ));
-
-  // zet de lengte van de eerste originele mediafile in de parent_asset
-  if ($mediafile_info && $mediafile_info['file_duration'] !== NULL) {
-    db_query(
-      "UPDATE {asset} SET mediafile_duration = '%s', mediafile_container_type = '%s' WHERE asset_id = '%s'",
-      $mediafile_info['file_duration'],
-      $mediafile_info['container_type'],
-      $asset_id_root
-    );
-  }
-
-  db_set_active();
-
-  // Set the external
-  _media_management_update_is_external($mediafile_id, $asset_id_root);
-}
-
-function _media_management_update_is_external($mediafile_id, $asset_id_root = NULL) {
-  db_set_active('data');
-
-// zoek de bijbehorende asset_id op
-  if (!isset($asset_id_root)) {
-    $asset_id_root = db_result(db_query(
-      "SELECT asset_id_root FROM {mediafile} WHERE mediafile_id = '%s'",
-      $mediafile_id
-    ));
-  }
-
-  if ($asset_id_root !== FALSE) {
-    $dbrow = db_fetch_array(
-      db_query(
-        "SELECT uri, filename FROM {mediafile} WHERE is_original_file = 'TRUE' AND asset_id_root = '%s' LIMIT 1",
-        $asset_id_root
-      ));
-
-    if ($dbrow) {
-      $uri = $dbrow['uri'];
-      $filename = $dbrow['filename'];
-
-      // Set is_external && is_empty_asset
-      db_query(
-        "UPDATE {asset} SET is_external = '%s', is_empty_asset = '%s' WHERE asset_id = '%s'",
-        trim($uri) != '' ? 'TRUE' : 'FALSE',
-        trim($uri) != '' || trim($filename) != '' ? 'FALSE' : 'TRUE',
-        $asset_id_root
-      );
-    }
-  }
-
-  db_set_active();
-}
 
 
 function query_die($query, $die = TRUE) {
@@ -4373,17 +3591,14 @@ function media_management_delete_asset($a_args) {
         watchdog('mediafile_delete', implode(" ", $a_child_mediafiles), array(), WATCHDOG_ALERT);
         return new rest_response(vpx_return_error(ERRORCODE_UNEXPECTED_ERROR)); // unknown error
       }
-      if (!_media_management_delete_asset($a_parameters['asset_id']['value'])) {
-        watchdog('asset_delete', $a_parameters['asset_id']['value'], array(), WATCHDOG_ALERT);
-        return new rest_response(vpx_return_error(ERRORCODE_UNEXPECTED_ERROR)); // unknown error
-      }
+
+      // Delete the asset.
+      mediamosa_asset::delete($a_parameters['asset_id']['value']);
     }
   }
 // indien de asset 'leeg' is
   else {
-    if (!_media_management_delete_asset($a_parameters['asset_id']['value'])) {
-      return new rest_response(vpx_return_error(ERRORCODE_UNEXPECTED_ERROR)); // unknown error
-    }
+    mediamosa_asset::delete($a_parameters['asset_id']['value']);
   }
 
   return new rest_response(vpx_return_error(ERRORCODE_OKAY));
@@ -4570,18 +3785,10 @@ function media_management_cron() {
   db_set_active("data");
   if (($resource = db_query("select asset_id, unix_timestamp(created) as created from {asset} a where (select count(*) from mediafile where asset_id=a.asset_id)=0 and (select count(*) from asset where parent_id=a.asset_id)=0 and now()>date_add(created, interval %d second)", ASSET_GARBAGE_COLLECTOR_ASSET_TIMEOUT)) != FALSE) {
     while (($data = db_fetch_array($resource)) != FALSE) {
-      _media_management_delete_asset($data["asset_id"]);
+      mediamosa_asset::delete($data["asset_id"]);
     }
   }
   db_set_active();
-}
-
-
-/**
- * count assets
- */
-function media_management_asset_count($a_args) {
-  return _media_management_count_items('asset', $a_args);
 }
 
 
@@ -4917,14 +4124,14 @@ function media_management_create_metadata($a_args) {
       vpx_acl_owner_check($app_id, $user_id, $asset_app_id, $asset_owner, $is_app_admin);
 
       // Get full definitions
-      $a_metadata_definitions_full = _media_management_get_metadata_definitions_full($app_id);
+      $a_metadata_definitions_full = mediamosa_asset_metadata_property::get_metadata_properties_full($app_id);
     }
     else {
       // Check if there is a master / slave record on the asset / mediafile we are trying to add metadata to
       vpx_acl_read_single_object(VPX_ACL_AUT_TYPE_ASSET, $asset_id, $app_id);
 
       // Only allow own definitions, not dc, qdc etc
-      $a_metadata_definitions_full = _media_management_get_metadata_definitions_full($app_id, array());
+      $a_metadata_definitions_full = mediamosa_asset_metadata_property::get_metadata_properties_full($app_id, array());
     }
 
     // Collect the prop_ids of the allowed properties that we may alter/create

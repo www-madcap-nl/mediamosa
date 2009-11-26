@@ -43,8 +43,8 @@ class mediamosa_db {
   // The varchar length of the used HASH ids.
   const HASH_ID_LENGTH = 32;
 
-  // ------------------------------------------------------------------ Functions (static).
-  static public function db_delete(/*$table, $options = NULL*/) {
+  // ------------------------------------------------------------------ Static Function.
+  static public function db_delete(/* $table, $options = NULL*/) {
     $a_args = func_get_args(); // Must copy into $a_args, cant use it directly in call_user_func_array
 
     if (mediamosa::is_db_logging()) {
@@ -146,7 +146,7 @@ class mediamosa_db {
    * @return DB result
    *  DB result set object.
    */
-  static public function db_query_range(/*$query, $from, $count, array $args = array(), array $options = array()*/) {
+  static public function db_query_range(/* $query, $from, $count, array $args = array(), array $options = array()*/) {
     $a_args = func_get_args();
     return self::query('db_query_range', $a_args);
   }
@@ -157,7 +157,7 @@ class mediamosa_db {
    * @return DB result
    *  DB result set object.
    */
-  static public function db_query(/*$query, $args = array(), $options = array()*/) {
+  static public function db_query(/* $query, $args = array(), $options = array()*/) {
     $a_args = func_get_args();
 
     /**
@@ -168,26 +168,26 @@ class mediamosa_db {
       $a_args_2 = array();
 
       $y = 1;
-      for ($x = 0; $x < strlen($query); $x++) {
-        if ($query{$x} != '%' || $x + 1 == strlen($query)) {
+      for ($x = 0; $x < mediamosa_unicode::strlen($query); $x++) {
+        if ($query{$x} != '%' || $x + 1 == mediamosa_unicode::strlen($query)) {
           continue;
         }
 
         // We only replace the specifiers which are not escaped and in our array.
         $char = $query{++$x};
         if (in_array($char, array('n', 'd', 'f', 'b', 's'))) {
-          $query = substr($query, 0, $x - 1) . '#mediamosa_var_' . $y. substr($query, $x + 1);
+          $query = mediamosa_unicode::substr($query, 0, $x - 1) . '#mediamosa_var_' . $y . mediamosa_unicode::substr($query, $x + 1);
 
           $prefix = '#';
 
           // If we had '%s', then this has become '#mediamosa_var_x', now replace that.
-          if ( ($x - 2) >= 0 && substr($query, $x - 2, strlen("'#mediamosa_var_" . $y . "'")) == "'#mediamosa_var_" . $y . "'") {
-            $query = substr($query, 0, $x - 2) . ':mediamosa_var_' . $y . substr($query, $x + strlen("#mediamosa_var_" . $y));
+          if ( ($x - 2) >= 0 && mediamosa_unicode::substr($query, $x - 2, mediamosa_unicode::strlen("'#mediamosa_var_" . $y . "'")) == "'#mediamosa_var_" . $y . "'") {
+            $query = mediamosa_unicode::substr($query, 0, $x - 2) . ':mediamosa_var_' . $y . mediamosa_unicode::substr($query, $x + mediamosa_unicode::strlen("#mediamosa_var_" . $y));
             $prefix = ':';
           }
 
           // lets skip the inserted stuff a bit.
-          $x += strlen('#mediamosa_var_' . $y) - 2;
+          $x += mediamosa_unicode::strlen('#mediamosa_var_' . $y) - 2;
 
           switch ($char) {
             case 'd':
@@ -221,7 +221,7 @@ class mediamosa_db {
     }
 
     // Lets make sure we return the inserted ID with insert into!
-    if (strtoupper(substr($a_args[0], 0, strlen('INSERT INTO '))) == 'INSERT INTO ') {
+    if (mediamosa_unicode::strtoupper(mediamosa_unicode::substr($a_args[0], 0, mediamosa_unicode::strlen('INSERT INTO '))) == 'INSERT INTO ') {
       $a_args[2] += array(
         'return' => Database::RETURN_INSERT_ID,
       );
@@ -236,7 +236,7 @@ class mediamosa_db {
    * @return DB result
    *  DB result set object.
    */
-  static public function db_query_temporary(/*$query, array $args = array(), array $options = array()*/) {
+  static public function db_query_temporary(/* $query, array $args = array(), array $options = array()*/) {
     $a_args = func_get_args();
     return self::query('db_query_temporary', $a_args);
   }
@@ -247,7 +247,7 @@ class mediamosa_db {
    * @return object
    *  DB Select object.
    */
-  static public function db_select(/*$table, $alias = NULL, array $options = array()*/) {
+  static public function db_select(/* $table, $alias = NULL, array $options = array()*/) {
     $a_args = func_get_args(); // Must copy into $a_args, cant use it directly in call_user_func_array
 
     // Lets return array's by default and not objects.
@@ -274,7 +274,7 @@ class mediamosa_db {
    * @return object
    *  DB Insert object.
    */
-  static public function db_insert(/*$table, array $options = array()*/) {
+  static public function db_insert(/* $table, array $options = array()*/) {
     $a_args = func_get_args(); // Must copy into $a_args, cant use it directly in call_user_func_array
 
     if (mediamosa::is_db_logging()) {
@@ -293,7 +293,7 @@ class mediamosa_db {
    * @return object
    *  DB Update object.
    */
-  static public function db_update(/*$table, array $options = array()*/) {
+  static public function db_update(/* $table, array $options = array()*/) {
     $a_args = func_get_args(); // Must copy into $a_args, cant use it directly in call_user_func_array
 
     if (mediamosa::is_db_logging()) {
@@ -390,7 +390,7 @@ class mediamosa_db {
         try {
           db_query($query);
         }
-        catch(PDOException $e) {
+        catch (PDOException $e) {
           assert($e);
           assert(0);// so we know.
           mediamosa::log(
@@ -422,7 +422,7 @@ class mediamosa_db {
 
     // Create select object.
     $query = self::db_select($table_name);
-    foreach($a_columns_and as $column => $value) {
+    foreach ($a_columns_and as $column => $value) {
       $query->condition($column, $value);
     }
 
@@ -465,7 +465,7 @@ class mediamosa_db {
         throw new vpx_exception_error(ERRORCODE_USERMAN_INVALID_USER, array("@user_id" => $a_columns_and["name"]));
       case 'quota_group':
         throw new vpx_exception_error(ERRORCODE_USERMAN_INVALID_GROUP, array("@group_id" => $a_columns_and["group_id"]));
-*/
+ */
     }
 
     assert(0);
@@ -492,5 +492,79 @@ class mediamosa_db {
     }
 
     return TRUE;
+  }
+
+  /**
+   * Count rows depending on the app, owner and group.
+   *
+   * @param string $table
+   * @param integer $app_id
+   * @param string $owner_id
+   * @param string $group_id
+   * @return integer
+   */
+  static public function db_count_items($table, $app_id, $owner_id, $group_id) {
+
+    // Create select query.
+    $query = mediamosa_db::db_select($table);
+    $query->condition('app_id', $app_id);
+    if ($owner_id != '') {
+      $query->condition('owner_id', $owner_id);
+    }
+    if ($group_id != '') {
+      $query->condition('group_id', $group_id);
+    }
+
+    // return count.
+    return $query->countQuery()->execute()->fetchField();
+  }
+
+  /**
+   * Return the column names from an table.
+   *
+   * @return array
+   *  Array containing columns.
+   */
+  static public function db_get_columns($table) {
+    // Use db_query directly here.
+    return db_query("SELECT COLUMN_NAME FROM information_schema.columns WHERE TABLE_NAME = :table", array(':table' => $table))->fetchCol();
+  }
+
+  /**
+   * Generate a new unique ID.
+   *
+   * @param integer $app_id
+   * @param string $user_id
+   * @return unknown
+   */
+  static public function uuid($app_id) {
+    $hash = sha1(rand() . ':' . $app_id . ':' . uniqid('', TRUE) . ':' . microtime());
+
+    // Now convert 16 -> 31 based.
+    $hash_31 = base_convert($hash, 16, 31); // 0-9 a-u
+
+    // Simple conf. table.
+    $a_conf_31 = array(
+      '0' => 0, '1' => 1, '2' => 2, '3' => 3, '4' => 4,  '5' => 5, '6' => 6, '7' => 7, '8' => 8, '9' => 9,
+      'a' => 10, 'b' => 11, 'c' => 12, 'd' => 13, 'e' => 14,  'f' => 15, 'g' => 16, 'h' => 17, 'i' => 18, 'j' => 19,
+      'k' => 20, 'l' => 21, 'm' => 22, 'n' => 23, 'o' => 24,  'p' => 25, 'q' => 26, 'r' => 27, 's' => 28, 't' => 29,
+      'u' => 30
+    );
+
+    // Conf to
+    $conf_31_to_62 = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+
+    $hash_62 = '';
+    for ($x = (strlen($hash_31) - 1); $x >= 0; $x -= 2) {
+      $lo = $a_conf_31[$hash_31{$x}];
+      $hi = ($x - 1) >= 0 ? $a_conf_31[$hash_31{$x - 1}] + 1 : 0; // Hi + 1 so range is 1 - 31, lo will be 0 - 30.
+      $hash_62 = substr($conf_31_to_62, $hi + $lo, 1) . $hash_62;
+    }
+
+    // Mediamosa doesn't like ID starting with numbers, so lets attach the 1st one with alpha.
+    $hash_62 = $conf_31_to_62{rand(10, 61)} . $hash_62;
+
+    // Max strlen 32, although I doubt will see 32+ length.
+    return substr($hash_62, 0, HASH_ID_LENGTH);
   }
 }

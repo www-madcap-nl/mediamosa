@@ -171,9 +171,9 @@ class mediamosa_cql_part extends mediamosa_cql_part_group {
    */
   final public function mediamosa_cql_part_verify_index(cql_context $o_cql_context, $i_pos) {
     if ($o_cql_context->mediamosa_cql_context_index2column($this) === FALSE) {
-     $o_cql_part_index = $this->mediamosa_cql_part_index_get();
-     $str_index = $o_cql_part_index->mediamosa_cql_part_str_get();
-     throw new mediamosa_cql_exception_syntax_error(sprintf('unknown index; %s', $str_index), $i_pos - mediamosa_unicode::strlen($str_index));
+      $o_cql_part_index = $this->mediamosa_cql_part_index_get();
+      $str_index = $o_cql_part_index->mediamosa_cql_part_str_get();
+      throw new mediamosa_cql_exception_syntax_error(sprintf('unknown index; %s', $str_index), $i_pos - mediamosa_unicode::strlen($str_index));
     }
   }
 

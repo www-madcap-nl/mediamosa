@@ -31,9 +31,9 @@
 
 class mediamosa_asset_metadata_property {
 
-  // ------------------------------------------------------------------ Functions (public).
-  // 1.x name: media_management_metadata_definition_get (REST).
-  function property_list($a_app_ids, $include_default_definitions, $name, $offset = 0, $limit = mediamosa_db::LIMIT_MAX, $order_by = '', $order_direction = mediamosa_type::ORDER_DIRECTION_ASC) {
+  // ------------------------------------------------------------------ Static Function.
+    // 1.x name: media_management_metadata_definition_get (REST).
+  static public function property_list($a_app_ids, $include_default_definitions, $name, $offset = 0, $limit = mediamosa_db::LIMIT_MAX, $order_by = '', $order_direction = mediamosa_type::ORDER_DIRECTION_ASC) {
 
     // Build the select object.
     $query = mediamosa_db::db_select(mediamosa_asset_metadata_property_db::TABLE_NAME, 'amp');
@@ -87,7 +87,7 @@ class mediamosa_asset_metadata_property {
    *  The new prop_id.
    */
   // 1.x name: media_management_metadata_definition_create (REST).
-  function property_create($mixed_app_ids, $name, $type, $min_occurences = 0, $max_occurences = 0) {
+  static public function property_create($mixed_app_ids, $name, $type, $min_occurences = 0, $max_occurences = 0) {
 
     // First app_id is always the app of the eua.
     $app_id = is_array($mixed_app_ids) ? reset($mixed_app_ids) : $mixed_app_ids;
@@ -149,7 +149,7 @@ class mediamosa_asset_metadata_property {
    * @param string $delete
    */
   // 1.x name: media_management_metadata_definition_delete (REST).
-  function property_delete($mixed_app_ids, $name, $delete) {
+  static public function property_delete($mixed_app_ids, $name, $delete) {
 
     // First app_id is always the app of the eua.
     $app_id = is_array($mixed_app_ids) ? reset($mixed_app_ids) : $mixed_app_ids;
@@ -196,7 +196,7 @@ class mediamosa_asset_metadata_property {
    * @param integer $prop_id
    * @return array
    */
-  function property_get_row($prop_id) {
+  static public function property_get_row($prop_id) {
     return mediamosa_db::db_select(mediamosa_asset_metadata_property_db::TABLE_NAME)
       ->condition(mediamosa_asset_metadata_property_db::ID, $prop_id, '=')
       ->execute()->fetchAssoc();
@@ -211,10 +211,81 @@ class mediamosa_asset_metadata_property {
    *  The ID of the propertygroup.
    * @return array
    */
-  function property_get_row_with_name($name, $propgroup_id) {
+  static public function property_get_row_with_name($name, $propgroup_id) {
     return mediamosa_db::db_select(mediamosa_asset_metadata_property_db::TABLE_NAME)
       ->condition(mediamosa_asset_metadata_property_db::PROPGROUP_ID, $propgroup_id, '=')
       ->condition(mediamosa_asset_metadata_property_db::NAME, $name, '=')
       ->execute()->fetchAssoc();
+  }
+
+
+  /**
+   * Get definitions from the asset_property_definitions array
+   *
+   * @param array/string $mixed_propgroup_name
+   * @return array
+   */
+  static public function get_metadata_properties($mixed_propgroup_name = array('dublin_core')) {
+
+    // Make sure its an array.
+    $a_propgroup_name = is_array($mixed_propgroup_name) ? $mixed_propgroup_name : array($mixed_propgroup_name);
+
+    // Build the select query object.
+    $query = mediamosa_db::db_select(mediamosa_asset_metadata_property_group_db::TABLE_NAME, 'ampg');
+
+    // Add an join.
+    $query->innerjoin(
+      mediamosa_asset_metadata_property_db::TABLE_NAME,
+      'amp',
+      strtr(
+        'ampg.#ampg_propgroup_id = amp.#amp_propgroup_id',
+        array(
+          '#ampg_propgroup_id' => mediamosa_asset_metadata_property_group_db::ID,
+          '#amp_propgroup_id' => mediamosa_asset_metadata_property_db::PROPGROUP_ID,
+        )
+      )
+    );
+
+    // Fields to select.
+    $query->addField('ampg', mediamosa_asset_metadata_property_group_db::ID);
+    $query->addField('ampg', mediamosa_asset_metadata_property_group_db::NAME, 'propgroup_name');
+    $query->addField('amp', mediamosa_asset_metadata_property_db::TYPE, 'propdef_type');
+    $query->addField('amp', mediamosa_asset_metadata_property_db::ID, 'propdef_id');
+    $query->addField('amp', mediamosa_asset_metadata_property_db::NAME, 'propdef_name');
+
+    // Now where to search.
+    $query->condition(mediamosa_asset_metadata_property_group_db::NAME, $a_propgroup_name, 'IN');
+
+    // Execute.
+    $result = $query->execute();
+
+    // Build output.
+    $a_output = array();
+    foreach ($result as $a_row) {
+      $a_output[$a_row['propdef_name']] = $a_row;
+    }
+
+    // Return our result.
+    return $a_output;
+  }
+
+  /**
+   * Get all metadata properties, plus our own based on the app_id
+   *
+   * @param mixed $mixed_app_id
+   * @param array $a_definitions_full
+   * @return array
+   */
+  static public function get_metadata_properties_full($mixed_app_id = FALSE, $a_definitions_full = array('dublin_core', 'qualified_dublin_core', 'czp')) {
+
+    if ($mixed_app_id) {
+      $a_app_ids = is_array($mixed_app_id) ? $mixed_app_id : array($mixed_app_id);
+
+      foreach ($a_app_ids as $app_id) {
+        $a_definitions_full[] = sprintf('app_%d', $app_id);
+      }
+    }
+
+    return mediamosa_asset_metadata_property::get_metadata_properties($a_definitions_full);
   }
 }

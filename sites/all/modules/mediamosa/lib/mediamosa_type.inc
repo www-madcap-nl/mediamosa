@@ -31,7 +31,7 @@
 
 class mediamosa_type {
 
-  // ------------------------------------------------------------------ Consts
+  // ------------------------------------------------------------------ Consts.
   // Do not make the ID value longer than 32 characters.
   //    12345678901234567890123456789012    12345678901234567890123456789012
   const TYPE_APP_ID                      = 'APP_ID'; // 1 - 9999
@@ -60,6 +60,7 @@ class mediamosa_type {
   const TYPE_USER_ID                     = 'USER_ID';
   const TYPE_GROUP_ID                    = 'GROUP_ID';
   const TYPE_ASSET_ID                    = 'ASSET_ID';
+  const TYPE_MEDIAFILE_ID                = 'MEDIAFILE_ID';
   const TYPE_COLLECTION_ID               = 'COLLECTION_ID';
   const TYPE_DOMAIN                      = 'DOMAIN';
   const TYPE_REALM                       = 'REALM';
@@ -76,7 +77,7 @@ class mediamosa_type {
 
 
 
-  // ------------------------------------------------------------------ Functions (statics)
+  // ------------------------------------------------------------------ Static Functions.
   /**
    * Check the input based on type.
    * Will throw exception if not met with conditions.
@@ -104,7 +105,7 @@ class mediamosa_type {
       }
 
       foreach ($mixed_param_value as $key => $value) {
-        $mixed_param_value[$key] = self::check($param, $param_type, $value, $is_required, $range_start, $range_end, $allowed_values, false);
+        $mixed_param_value[$key] = self::check($param, $param_type, $value, $is_required, $range_start, $range_end, $allowed_values, FALSE);
       }
 
       return $mixed_param_value; // done.
@@ -169,6 +170,9 @@ class mediamosa_type {
         $checked_param_value = (string)$mixed_param_value;
         break;
 
+      case self::TYPE_ASSET_ID:
+      case self::TYPE_MEDIAFILE_ID:
+      case self::TYPE_COLLECTION_ID:
       case self::TYPE_ALPHA_NUM:
         if (!ctype_alnum($mixed_param_value) && $mixed_param_value != '') {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
@@ -201,8 +205,6 @@ class mediamosa_type {
 
       case self::TYPE_USER_ID:
       case self::TYPE_GROUP_ID:
-      case self::TYPE_ASSET_ID:
-      case self::TYPE_COLLECTION_ID:
       case self::TYPE_STRING_CQL:
       case self::TYPE_STRING:
         $checked_param_value = (string)$mixed_param_value;
@@ -212,7 +214,7 @@ class mediamosa_type {
         // Validate xml if value is required or not empty.
         if ($is_required || $mixed_param_value != '') {
           try {
-            if(!simplexml_load_string($mixed_param_value)) {
+            if (!simplexml_load_string($mixed_param_value)) {
               throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
             }
           }
@@ -236,7 +238,7 @@ class mediamosa_type {
             throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
           }
 
-          $mixed_param_value = (mediamosa_unicode::strtolower($mixed_param_value) == 'true') ? true : false;
+          $mixed_param_value = (mediamosa_unicode::strtolower($mixed_param_value) == 'true') ? TRUE : FALSE;
         }
 
         $checked_param_value = (bool)$mixed_param_value;
@@ -249,7 +251,7 @@ class mediamosa_type {
 
         // If we supply NOW(), we fill in the time as UTC.
         if (mediamosa_unicode::strtoupper($mixed_param_value) == self::FUNC_DATETIME_NOW) {
-          $mixed_param_value = mediamosa::utc_current_timestamp_now();
+          $mixed_param_value = mediamosa::db_current_timestamp_now();
         }
 
         $iso8601 = '#^(\d{4}((-)?(0[1-9]|1[0-2])((-)?(0[1-9]|[1-2][0-9]|3[0-1])((T| )(24:00(:00(\.[0]+)?)?|(([0-1][0-9]|2[0-3])(:)[0-5][0-9])((:)[0-5][0-9](\.[\d]+)?)?)((\+|-)(14:00|(0[0-9]|1[0-3])(:)[0-5][0-9])|(|Z)))?)?)?)$#';
@@ -343,7 +345,7 @@ class mediamosa_type {
 
     // Check if value is allowed as value (if specified and if required var).
     if ($is_required && isset($allowed_values) && !in_array($checked_param_value, $allowed_values)) {
-       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_VALUE_NOT_ALLOWED, array('@param' => $param, '@type' => $param_type, '@allowed_values' => implode("', '", $allowed_values)));
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_VALUE_NOT_ALLOWED, array('@param' => $param, '@type' => $param_type, '@allowed_values' => implode("', '", $allowed_values)));
     }
 
     // Now do a range check.

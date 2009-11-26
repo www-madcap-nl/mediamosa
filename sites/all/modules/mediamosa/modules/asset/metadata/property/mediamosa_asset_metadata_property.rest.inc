@@ -37,12 +37,14 @@
  */
 class mediamosa_rest_call_asset_metadata_property_list extends mediamosa_rest_call {
 
+  // ------------------------------------------------------------------ Consts.
   // Switch if we need to get all the default definitions that are 'global' over all apps.
   const INCLUDE_DEFAULT_DEFINITIONS = 'include_default_definitions';
 
   // Search on specific name.
   const NAME = 'name';
 
+  // ------------------------------------------------------------------ Public Functions.
   public function get_var_setup() {
     $a_my_vars = array(
       self::VARS => array(

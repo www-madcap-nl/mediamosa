@@ -51,7 +51,7 @@ class mediamosa {
     $this->prechecks();
   }
 
-  // ------------------------------------------------------------------ Functions (public).
+  // ------------------------------------------------------------------ Public Functions.
   /**
    * Do basic checks on settings
    * will throw mediamosa_exception when checks are not met.
@@ -73,10 +73,10 @@ class mediamosa {
     return implode('/', arg());
   }
 
-  // ------------------------------------------------------------------ Functions (protected).
+  // ------------------------------------------------------------------ Protected Functions.
 
-  // ------------------------------------------------------------------ Functions (static).
-  /**
+  // ------------------------------------------------------------------ Static Functions.
+    /**
    * Retrieve the main response object.
    * Must overridden in any child class.
    *
@@ -237,10 +237,12 @@ class mediamosa {
   /**
    * Return the current time UTC and in SQL datetime format (YYYY-MM-DD HH:MM:SS)
    *
+   * made private: use db_current_timestamp_now() instead (!).
+   *
    * @param $no_reset Boolean to control wheter the timestamp is re-created or the static is used (if set).
    * @return timestamp
    */
-  static public function utc_current_timestamp_now($reset = FALSE) {
+  static private function utc_current_timestamp_now($reset = FALSE) {
     static $utc_timestamp = NULL;
 
     if (isset($utc_timestamp) && !$reset) {
@@ -250,6 +252,27 @@ class mediamosa {
     $utc_timestamp = gmdate('Y-m-d H:i:s');
     return $utc_timestamp;
   }
+
+  /**
+   * Return the current time and in SQL datetime format (YYYY-MM-DD HH:MM:SS)
+   *
+   * Use this function for storing new time into database.
+   *
+   *
+   * @param $no_reset Boolean to control wheter the timestamp is re-created or the static is used (if set).
+   * @return timestamp
+   */
+  static public function db_current_timestamp_now($reset = FALSE) {
+    static $now_timestamp = NULL;
+
+    if (isset($now_timestamp) && !$reset) {
+      return $now_timestamp;
+    }
+
+    $now_timestamp = date('Y-m-d H:i:s');
+    return $now_timestamp;
+  }
+
 
   // Return the request_uri var.
   static public function request_uri() {

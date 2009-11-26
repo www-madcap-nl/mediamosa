@@ -41,7 +41,7 @@ abstract class MediaMosaTestCase extends DrupalWebTestCase {
   // ------------------------------------------------------------------ Functions (protected)
 
   /**
-   * Implementation of setUp().
+   * Implements setUp().
    */
   protected function setUp() {
     // Call parent::setUp and preserve arguments.

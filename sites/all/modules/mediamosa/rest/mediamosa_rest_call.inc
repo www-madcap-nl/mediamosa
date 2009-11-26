@@ -63,7 +63,12 @@ abstract class mediamosa_rest_call {
   const VERSION = 'version';
   const VERSION_MAX_LEN = 12;
 
-  const DESCRIPTION = 'description';   // Description of the REST call (In English)
+  // Access to the REST call.
+  const ACCESS_INTERNAL = 'access_internal'; // default TRUE. By default all REST calls can be access through internal method.
+  const ACCESS_EXTERNAL = 'access_external'; // default FALSE. By default all REST calls can not be access 'free'.
+  const ACCESS_APP_AUTH = 'app_auth'; // default TRUE. By default all REST calls can be access through APP authentication.
+
+  const DESCRIPTION = 'description';   // Description of the REST call (In English, required).
 
   /**
    * 'alias_for' contains the URI of the REST call that also runs on this rest URI.
@@ -128,6 +133,11 @@ abstract class mediamosa_rest_call {
     $this->{self::STATUS} = $a_rest_call[self::STATUS];
     $this->{self::VERSION} = $a_rest_call[self::VERSION];
     $this->{self::DESCRIPTION} = $a_rest_call[self::DESCRIPTION];
+
+    // Access.
+    $this->{self::ACCESS_INTERNAL} = $a_rest_call[self::ACCESS_INTERNAL];
+    $this->{self::ACCESS_EXTERNAL} = $a_rest_call[self::ACCESS_EXTERNAL];
+    $this->{self::ACCESS_APP_AUTH} = $a_rest_call[self::ACCESS_APP_AUTH];
 
     // Other.
     $this->{self::URI_PARAMS} = isset($a_rest_call[self::URI_PARAMS]) ? $a_rest_call[self::URI_PARAMS] : array();
@@ -403,7 +413,7 @@ abstract class mediamosa_rest_call {
         // Defaults.
         if (isset($a_var[self::VAR_DEFAULT_VALUE])) {
           $this->a_rest_args[$param][self::PARAM_VALUE] = $a_var[self::VAR_DEFAULT_VALUE];
-          $this->a_rest_args[$param][self::PARAM_ISSET] = true; // set with default
+          $this->a_rest_args[$param][self::PARAM_ISSET] = TRUE; // set with default
         }
       }
 

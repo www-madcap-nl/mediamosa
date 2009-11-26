@@ -30,7 +30,7 @@
   */
 
 /**
- * Implementation of hook_permission()
+ * Implements hook_permission()
  */
 function mediamosa_maintenance_permission() {
   return array(
@@ -60,7 +60,7 @@ function mediamosa_maintenance_menu() {
 
   $items['admin/config/mediamosa/configuration'] = array(
     'title' => 'Configuration',
-    'description' => t('The configuration of MediaMosa settings. You might have to enable maintenance modules for more options.'),
+    'description' => 'The configuration of MediaMosa settings. You might have to enable maintenance modules for more options.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mediamosa_maintenance_configuration'),
     'access arguments' => array('administer mediamosa configuration'),
@@ -101,7 +101,7 @@ function mediamosa_maintenance_configuration() {
 }
 
 /**
- * Implementation of hook_submit.
+ * Implements hook_submit.
  *
  * @param array $form
  * @param array $form_state

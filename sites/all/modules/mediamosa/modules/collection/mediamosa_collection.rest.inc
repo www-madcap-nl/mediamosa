@@ -28,3 +28,54 @@
   * @file
   * The Collection REST calls.
   */
+
+/**
+ * URI: /collection/count
+ * Method: GET
+ */
+class mediamosa_rest_call_count_collection extends mediamosa_rest_call {
+  // ------------------------------------------------------------------ Consts.
+  // Rest vars;
+  const GROUP_ID = 'group_id';
+  const OWNER_ID = 'owner_id';
+
+  // ------------------------------------------------------------------ Public Functions.
+  public function get_var_setup() {
+    $a_my_vars = array();
+
+    $a_my_vars = array(
+      self::VARS => array(
+        self::GROUP_ID => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
+          self::DESCRIPTION => 'The group ID to match.',
+          self::VAR_TRIM_VALUE => self::VAR_TRIM_VALUE_YES,
+        ),
+        self::OWNER_ID => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::DESCRIPTION => 'The owner ID to match.',
+          self::VAR_TRIM_VALUE => self::VAR_TRIM_VALUE_YES,
+        ),
+      )
+    );
+
+    // Enrich with required REST vars.
+    return self::get_var_setup_default($a_my_vars);
+  }
+
+  public function do_call() {
+    $o_mediamosa = mediamosa::get();
+
+    $a_app_ids = $this->get_param_value(self::APP_ID);
+
+    // Get the 1st app.
+    $app_id = reset($a_app_ids);
+
+    $group_id = $this->get_param_value(self::GROUP_ID);
+    $owner_id = $this->get_param_value(self::OWNER_ID);
+
+    $o_mediamosa->set_result_okay();
+
+    // Set the total count.
+    $o_mediamosa->item_total_count = mediamosa_db::db_count_items(mediamosa_collection_db::TABLE_NAME, $app_id, $owner_id, $group_id);
+  }
+}

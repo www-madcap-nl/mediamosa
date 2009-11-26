@@ -16,7 +16,7 @@ define('DEVEL_ERROR_HANDLER_BACKTRACE', 2);
 define('DEVEL_MIN_TEXTAREA', 50);
 
 /**
- * Implementation of hook_help().
+ * Implements hook_help().
  */
 function devel_help($section) {
   switch ($section) {
@@ -238,7 +238,7 @@ function devel_menu_need_destination() {
 }
 
 /**
- * An implementation of hook_menu_link_alter(). Flag this link as needing alter at display time.
+ * An Implements hook_menu_link_alter(). Flag this link as needing alter at display time.
  * This is more robust that setting alter in hook_menu(). See devel_translated_menu_link_alter().
  *
  **/
@@ -249,7 +249,7 @@ function devel_menu_link_alter(&$item) {
 }
 
 /**
- * An implementation of hook_translated_menu_item_alter(). Append dynamic
+ * An Implements hook_translated_menu_item_alter(). Append dynamic
  * querystring 'destination' to several of our own menu items.
  *
  **/
@@ -288,7 +288,7 @@ function devel_devel_themer_toggle() {
 }
 
 /**
- * Implementation of hook_theme()
+ * Implements hook_theme()
  */
 function devel_theme() { // &$cache, $type, $theme, $path
   return array(
@@ -360,7 +360,7 @@ EOT;
 }
 
 /**
- * Implementation of hook_init().
+ * Implements hook_init().
  */
 function devel_init() {
   if (!devel_silent()) {
@@ -456,7 +456,7 @@ function devel_silent() {
 }
 
 /**
- * Implementation of hook_boot(). Runs even for cached pages.
+ * Implements hook_boot(). Runs even for cached pages.
  */
 function devel_boot() {
   if (!devel_silent()) {
@@ -561,7 +561,7 @@ function devel_block_info() {
 }
 
 /**
- * Implementation of hook_block_configure().
+ * Implements hook_block_configure().
  */
 function devel_block_configure($delta) {
   if ($delta == 'switch_user') {
@@ -717,7 +717,7 @@ function devel_switch_user_form_submit($form, &$form_state) {
 
 /**
  * TODO: I switched params as per http://drupal.org/node/144132#form-alter but needs work still
- * Implementation of hook_form_alter().
+ * Implements hook_form_alter().
  */
 function devel_form_alter(&$form, $form_state, $form_id, $key_in = NULL) {
   if (user_access('access devel information') && variable_get('devel_form_weights', 0)) {
@@ -745,7 +745,7 @@ function devel_form_alter(&$form, $form_state, $form_id, $key_in = NULL) {
   }
 }
 
-// An implementation of hook_exit().
+// An Implements hook_exit().
 function devel_exit($destination = NULL) {
   global $user;
 

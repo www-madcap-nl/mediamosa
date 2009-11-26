@@ -30,7 +30,7 @@
   */
 
 class mediamosa_server_streaming {
-  // ------------------------------------------------------------------ Functions (static).
+  // ------------------------------------------------------------------ Static Function.
   static public function is_streamable($container_type) {
     static $a_streamable_container_types = array();
 

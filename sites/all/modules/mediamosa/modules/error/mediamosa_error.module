@@ -30,7 +30,7 @@
  */
 
 /**
- * Implementation of hook_mediamosa_register_rest_call().
+ * Implements hook_mediamosa_register_rest_call().
  */
 function mediamosa_error_mediamosa_register_rest_call() {
   $a_rest_calls = array();
@@ -55,7 +55,7 @@ function mediamosa_error_mediamosa_register_rest_call() {
 }
 
 /**
- * Implementation of hook_menu().
+ * Implements hook_menu().
  */
 /*
 function mediamosa_error_menu() {
@@ -97,7 +97,7 @@ function mediamosa_error_menu() {
 }
 */
 /**
- * Implementation of hook_perm().
+ * Implements hook_perm().
  */
 /*
 function mediamosa_error_perm() {

@@ -201,7 +201,7 @@ class mediamosa_error {
   const ERRORCODE_USERMAN_USER_EXISTS = 1904;
   const ERRORCODE_IS_UNAPPROPRIATE = 1905;
 
-  // ------------------------------------------------------------------ Functions (static).
+  // ------------------------------------------------------------------ Static Function.
   /**
    * Get the listing of the error code table.
    *
@@ -230,7 +230,7 @@ class mediamosa_error {
    * @param integer $code
    * @return array
    */
-  static public function error_code_find($code, $a_tags = array(), $fail = false) {
+  static public function error_code_find($code, $a_tags = array(), $fail = FALSE) {
 
     // Get the current listing.
     $a_codes = self::error_code_list();

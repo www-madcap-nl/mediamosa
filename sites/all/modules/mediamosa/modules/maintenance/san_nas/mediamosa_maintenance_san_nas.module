@@ -30,14 +30,14 @@
  */
 
 /**
- * Implementation of hook_permissions()
+ * Implements hook_permissions()
  */
 function mediamosa_maintenance_san_nas_permission() {
   return array('view mediamosa configuration sannas', 'administer mediamosa configuration sannas');
 }
 
 /**
- * Implementation of the hook_mediamosa_settings_collect()
+ * Implements the hook_mediamosa_settings_collect()
  */
 function mediamosa_maintenance_san_nas_mediamosa_configuration_collect() {
   $form['settings_sannas'] = array(
@@ -66,7 +66,7 @@ function mediamosa_maintenance_san_nas_mediamosa_configuration_collect() {
 }
 
 /**
- * Implementation of the hook_mediamosa_settings_submit()
+ * Implements the hook_mediamosa_settings_submit()
  *
  * @param array $form
  * @param array $form_state
@@ -77,12 +77,29 @@ function mediamosa_maintenance_san_nas_mediamosa_configuration_submit($form, $fo
   assert(isset($form_state['values']['mediamosa_current_mount_point_windows']));
 
   // Set the variables.
-  mediamosa_san_nas::linux_set($form_state['values']['mediamosa_current_mount_point']);
-  mediamosa_san_nas::windows_set($form_state['values']['mediamosa_current_mount_point_windows']);
+  mediamosa_maintenance_san_nas::linux_set($form_state['values']['mediamosa_current_mount_point']);
+  mediamosa_maintenance_san_nas::windows_set($form_state['values']['mediamosa_current_mount_point_windows']);
 }
 
 /**
- * Implementation of hook_menu()
+ * Implements hook_mediamosa_register_rest_call().
+ */
+function mediamosa_maintenance_san_nas_mediamosa_register_rest_call() {
+  $a_rest_calls = array();
+
+  // Get the linux mount point (1.x:  media_management_get_current_mount_point)
+  $a_rest_calls['get_current_mount_point'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_get_current_mount_point',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Retrieve the (linux) mountpoint.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_maintenance_san_nas',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+    mediamosa_rest_call::ACCESS_APP_AUTH => FALSE, // no access for APPs.
+  );
+}
+
+/**
+ * Implements hook_menu()
  *
 function mediamosa_maintenance_san_nas_menu() {
   $items = array();
@@ -100,7 +117,7 @@ function mediamosa_maintenance_san_nas_menu() {
 
 
 /**
- * Implementation of hook_form()
+ * Implements hook_form()
  *
 function mediamosa_maintenance_san_nas_form($node, $form_state) {
   assert($node);
@@ -142,7 +159,7 @@ function mediamosa_maintenance_san_nas_form($node, $form_state) {
 }
 
 /**
- * Implementation of hook_view()
+ * Implements hook_view()
  *
 function mediamosa_maintenance_san_nas_view() {
   $content = t("MediaMosa SAN / NAS");
@@ -150,7 +167,7 @@ function mediamosa_maintenance_san_nas_view() {
 }
 
 /**
- * Implementation of hook_submit()
+ * Implements hook_submit()
  *
 function mediamosa_maintenance_san_nas_form_submit(&$form_state, $form) {
   assert($form_state);

@@ -30,7 +30,7 @@
   */
 
 class mediamosa_aut_name {
-  // ------------------------------------------------------------------ Functions (static).
+  // ------------------------------------------------------------------ Static Function.
   /**
    * Get the aut name entry
    *
@@ -40,7 +40,7 @@ class mediamosa_aut_name {
    * @param integer $aut_group_id
    * @return array
    */
-  static public function get($app_id, $aut_type, $aut_name, $aut_group_id/*can be NULL, do not use 0*/) {
+  static public function get($app_id, $aut_type, $aut_name, $aut_group_id/* can be NULL, do not use 0*/) {
 
     $query = mediamosa_db::db_select(mediamosa_aut_name_db::TABLE_NAME, 'an');
     $query->condition(mediamosa_aut_name_db::APP_ID, $app_id);
@@ -63,7 +63,7 @@ class mediamosa_aut_name {
    * @param string $aut_name
    * @param integer $aut_group_id
    */
-  static public function delete($app_id, $aut_type, $aut_name, $aut_group_id/*can be NULL, do not use 0*/) {
+  static public function delete($app_id, $aut_type, $aut_name, $aut_group_id/* can be NULL, do not use 0*/) {
     $a_aut_name = self::get($app_id, $aut_type, $aut_name, $aut_group_id);
     if (!$a_aut_name) {
       throw new mediamosa_exception_error_aut_name_not_found(array('@hostname' => $aut_name));
@@ -109,7 +109,7 @@ class mediamosa_aut_name {
         $s_prefix = NULL;
         break;
       case VPX_ACL_AUT_NAME_TYPE_REALM:
-        if (substr($s_name, '@') === FALSE) {
+        if (mediamosa_unicode::substr($s_name, '@') === FALSE) {
           $s_suffix = '@' . $s_name;
           $s_prefix = NULL;
         }

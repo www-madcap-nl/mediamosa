@@ -7,7 +7,7 @@
  */
 
 /**
- * Implementation of hook_reviews().
+ * Implements hook_reviews().
  */
 function coder_review_7x_reviews() {
   $argex = '(((&?\$?)[a-zA-Z_]+((\([^)]*\))|\[[^\]]*\])?)|[0-9]+(\.[0-9]*)?|\'\'|"")';

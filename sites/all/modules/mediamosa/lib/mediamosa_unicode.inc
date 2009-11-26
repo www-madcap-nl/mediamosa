@@ -49,7 +49,7 @@ class mediamosa_unicode {
     $ascii = iconv('UTF-8', 'ASCII//TRANSLIT', (string)$str);
     setlocale(LC_ALL, $old_locale); // Back to orginal.
 
-    for ($pos = 0; $pos < strlen($ascii); $pos++) {
+    for ($pos = 0; $pos < self::strlen($ascii); $pos++) {
       $result .= $ascii[$pos] == '?' ? mb_substr($str, $pos, 1) : $ascii[$pos];
     }
 

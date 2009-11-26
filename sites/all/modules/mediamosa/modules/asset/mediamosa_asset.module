@@ -30,7 +30,7 @@
   */
 
 /**
- * Implementation of hook_mediamosa_register_rest_call().
+ * Implements hook_mediamosa_register_rest_call().
  */
 function mediamosa_asset_mediamosa_register_rest_call() {
   $a_rest_calls = array();
@@ -61,6 +61,43 @@ function mediamosa_asset_mediamosa_register_rest_call() {
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_metadata_property',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
+
+  // Change owner ship/group on asset/mediafile/collections. (1.x:  media_management_change_ownership)
+  $a_rest_calls['change_ownership'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_change_ownership',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Change the ownership, app and/or group of assets, mediafiles and collections.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_maintenance_asset',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Count number of asset based on owner/app/group (1.x:  media_management_asset_count)
+  $a_rest_calls['asset/count'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_count_asset',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Return the number of asset based on app_id, owner_id and group_id.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_maintenance_asset',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Count number of mediafiles based on owner/app/group (1.x: media_management_mediafile_count)
+  $a_rest_calls['mediafile/count'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_count_asset_mediafile',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Return the number of mediafile based on app_id, owner_id and group_id.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_maintenance_asset_mediafile',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+    // Count number of mediafiles based on owner/app/group (1.x: media_management_mediafile_count)
+  $a_rest_calls['mediafile/$mediafile'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_get_mediafile',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Return information about a mediafile.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_maintenance_asset_mediafile',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
 /*
  * Here for testing purpose.
   // Alias for metadata_tag.

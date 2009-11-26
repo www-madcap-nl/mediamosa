@@ -125,14 +125,14 @@ function mediamosa_asset_mediafile_schema() {
         'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_db::IS_DOWNLOADABLE_FALSE, mediamosa_asset_mediafile_db::IS_DOWNLOADABLE_TRUE)) . "')",
         'default' => mediamosa_asset_mediafile_db::IS_DOWNLOADABLE_FALSE,
       ),
-      mediamosa_asset_mediafile_db::IS_STREAMABLE=> array(
+      mediamosa_asset_mediafile_db::IS_STREAMABLE => array(
         'description' => t('The media can be streamed.'),
         'type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_db::IS_STREAMABLE_FALSE, mediamosa_asset_mediafile_db::IS_STREAMABLE_TRUE)) . "')",
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_db::IS_STREAMABLE_FALSE, mediamosa_asset_mediafile_db::IS_STREAMABLE_TRUE)) . "')",
         'default' => mediamosa_asset_mediafile_db::IS_STREAMABLE_FALSE,
       ),
-      mediamosa_asset_mediafile_db::IS_STILL=> array(
+      mediamosa_asset_mediafile_db::IS_STILL => array(
         'description' => t('The media is an still.'),
         'type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_db::IS_STILL_FALSE, mediamosa_asset_mediafile_db::IS_STILL_TRUE)) . "')",
         'not null' => TRUE,
@@ -186,12 +186,12 @@ function mediamosa_asset_mediafile_schema() {
         'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_db::IS_PROTECTED_FALSE, mediamosa_asset_mediafile_db::IS_PROTECTED_USER_USERGROUP, mediamosa_asset_mediafile_db::IS_PROTECTED_DOMAIN_REALM, mediamosa_asset_mediafile_db::IS_PROTECTED_TRUE)) . "')",
         'default' => mediamosa_asset_mediafile_db::IS_PROTECTED_FALSE,
       ),
-      mediamosa_asset_db::CREATED => array(
+      mediamosa_asset_mediafile_db::CREATED => array(
         'type' => 'datetime',
         'not null' => TRUE,
         'description' => t('The date and time when media was created.'),
       ),
-      mediamosa_asset_db::CHANGED => array(
+      mediamosa_asset_mediafile_db::CHANGED => array(
         'type' => 'datetime',
         'default' => NULL,
         'description' => t('The date and time when media was changed last.'),

@@ -72,7 +72,7 @@ class mediamosa_response extends mediamosa {
     $this->reset();
   }
 
-  // ------------------------------------------------------------------ Functions (public)
+  // ------------------------------------------------------------------ Public Functions
   /**
    * Process possible rest call.
    */
@@ -463,7 +463,7 @@ class mediamosa_response extends mediamosa {
       // We treat recoverable errors as fatal.
       $params = array('@type' => isset($a_types[$error_level]) ? $a_types[$error_level] : 'Unknown error',
         '@message' => $message,
-        '@function'=> $caller['function'],
+        '@function' => $caller['function'],
         '@file' => $caller['file'],
         '@line' => $caller['line']);
 
@@ -475,7 +475,7 @@ class mediamosa_response extends mediamosa {
     return parent::mediamosa_error_handler($error_level, $message, $filename, $line, $context, $caller);
   }
 
-  // ------------------------------------------------------------------ Functions (static).
+  // ------------------------------------------------------------------ Static Function.
   /**
    * Return the current used HTTP method.
    *

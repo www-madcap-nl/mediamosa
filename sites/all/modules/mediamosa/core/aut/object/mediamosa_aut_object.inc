@@ -30,7 +30,7 @@
   */
 
 class mediamosa_aut_object {
-  // ------------------------------------------------------------------ Functions (static).
+  // ------------------------------------------------------------------ Static Function.
   /**
    * Returns the join for joining with aut_object table
    *

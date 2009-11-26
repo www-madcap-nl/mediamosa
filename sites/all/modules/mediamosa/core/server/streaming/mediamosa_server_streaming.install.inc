@@ -32,7 +32,7 @@
 require_once('container/mediamosa_server_streaming_container.install.inc');
 require_once('mediamosa_server_streaming_db.inc');
 /**
- * Implementation of hook_install().
+ * Implements hook_install().
  */
 function mediamosa_server_streaming_install() {
 
@@ -91,7 +91,7 @@ function mediamosa_server_streaming_install() {
 }
 
 /**
- * Implementation of hook_uninstall().
+ * Implements hook_uninstall().
  */
 function mediamosa_server_streaming_uninstall() {
 
@@ -103,7 +103,7 @@ function mediamosa_server_streaming_uninstall() {
 }
 
 /**
- * Implementation of hook_schema().
+ * Implements hook_schema().
  */
 function mediamosa_server_streaming_schema() {
 

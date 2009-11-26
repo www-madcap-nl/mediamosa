@@ -2,7 +2,7 @@
 // $Id: devel.install,v 1.35 2009/08/14 11:23:47 catch Exp $
 
 /**
- * Implementation of hook_install()
+ * Implements hook_install()
  */
 function devel_install() {
   // New module weights in core: put devel as the very last in the chain.
@@ -41,7 +41,7 @@ function devel_install() {
 }
 
  /**
- * Implementation of hook_uninstall().
+ * Implements hook_uninstall().
  */
 function devel_uninstall() {
   variable_del('dev_query');
@@ -60,7 +60,7 @@ function devel_uninstall() {
 }
 
 /**
- * Implementation of hook_disable().
+ * Implements hook_disable().
  */
 function devel_disable() {
   // Query logging should probably not be set if devel.module is disabled.

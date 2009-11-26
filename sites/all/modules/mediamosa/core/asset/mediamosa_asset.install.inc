@@ -33,6 +33,8 @@ require_once 'mediamosa_asset.inc';
 require_once 'mediamosa_asset_db.inc';
 require_once 'mediafile/mediamosa_asset_mediafile.install.inc';
 require_once 'metadata/mediamosa_asset_metadata.install.inc';
+require_once 'collection/mediamosa_asset_collection.install.inc';
+require_once 'delete/mediamosa_asset_delete.install.inc';
 
 /**
  * Implement hook_install().
@@ -46,12 +48,24 @@ function mediamosa_asset_install() {
 
   // Call installer asset_metadata.
   mediamosa_asset_metadata_install();
+
+  // Call installer asset_collection.
+  mediamosa_asset_collection_install();
+
+  // Call installer asset_delete.
+  mediamosa_asset_delete_install();
 }
 
 /**
  * Implement hook_uninstall().
  */
 function mediamosa_asset_uninstall() {
+  // Call uninstaller asset_delete.
+  mediamosa_asset_delete_install();
+
+  // Call uninstaller asset_collection.
+  mediamosa_asset_collection_uninstall();
+
   // Call uninstaller asset_metadata.
   mediamosa_asset_metadata_uninstall();
 
@@ -146,15 +160,15 @@ function mediamosa_asset_schema() {
         'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_db::IS_PRIVATE_FALSE, mediamosa_asset_db::IS_PRIVATE_TRUE)) . "')",
         'default' => mediamosa_asset_db::IS_PRIVATE_FALSE,
       ),
-      mediamosa_asset_db::MEDIA_DURATION => array(
+      mediamosa_asset_db::MEDIAFILE_DURATION => array(
         'type' => 'varchar',
-        'length' => mediamosa_asset_db::MEDIA_DURATION_LENGTH,
+        'length' => mediamosa_asset_db::MEDIAFILE_DURATION_LENGTH,
         'default' => NULL,
         'description' => t('The mediafile duration length.'),
       ),
-      mediamosa_asset_db::MEDIA_CONTAINER_TYPE => array(
+      mediamosa_asset_db::MEDIAFILE_CONTAINER_TYPE => array(
         'type' => 'varchar',
-        'length' => mediamosa_asset_db::MEDIA_CONTAINER_TYPE_LENGTH,
+        'length' => mediamosa_asset_db::MEDIAFILE_CONTAINER_TYPE_LENGTH,
         'default' => NULL,
         'description' => t('The container type length.'),
       ),

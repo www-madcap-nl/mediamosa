@@ -30,7 +30,7 @@
   */
 
 class mediamosa_aut_group {
-  // ------------------------------------------------------------------ Functions (static).
+  // ------------------------------------------------------------------ Static Function.
   static public function create($app_id, $group_name, $aut_type) {
 
     // Trim it
@@ -115,7 +115,7 @@ class mediamosa_aut_group {
     $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['group_type'][mediamosa_db_query::WHERE_OR][] = mediamosa_aut_group_db::AUT_GROUP_TYPE . ' IS NOT NULL';// trick to keep the index in order
     $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['group_type'][mediamosa_db_query::WHERE_OR][] = mediamosa_aut_group_db::AUT_GROUP_TYPE . ' IS NULL';
 
-    $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = mediamosa_aut_group_db::AUT_GROUP_NAME . " = '" . mediamosa_db::escape_string($group_name). "'";
+    $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = mediamosa_aut_group_db::AUT_GROUP_NAME . " = '" . mediamosa_db::escape_string($group_name) . "'";
 
     $s_query = mediamosa_db_query::select($a_query);
 

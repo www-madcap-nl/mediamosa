@@ -33,6 +33,12 @@
  * Core Mediamosa core library.
  */
 class mediamosa_lib {
+
+  // ------------------------------------------------------------------ Consts.
+  const MIME_TYPE_APPLICATION_X_EMPTY = 'application/x-empty';
+
+
+  // ------------------------------------------------------------------ Static Functions.
   /**
    * Converts a string boolean ('TRUE', 'true', 'FALSE', 'false')
    * to a normal boolean value TRUE/FALSE
@@ -40,7 +46,7 @@ class mediamosa_lib {
    * @param string $str
    * @return boolean
    */
-  function boolstr2bool($str) {
+  static public function boolstr2bool($str) {
     if (is_bool($str)) {
       return $str;
     }
@@ -56,7 +62,7 @@ class mediamosa_lib {
    * @param boolean $boolean
    * @return string
    */
-  function bool2boolstr($boolean) {
+  static public function bool2boolstr($boolean) {
     return $boolean ? 'TRUE' : 'FALSE';
   }
 }

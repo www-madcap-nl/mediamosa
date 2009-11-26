@@ -28,3 +28,38 @@
   * @file
   * Metadata functions.
   */
+class mediamosa_asset_mediafile_metadata {
+
+  // ------------------------------------------------------------------ Static Function.
+  /**
+   * Test if mediafile can be played.
+   * Will throw an exception when failure.
+   *
+   * @param string $mediafile_id
+   */
+  function is_playable($mediafile_id) { // media_management_is_playable.
+    $query = mediamosa_db::db_select(mediamosa_asset_mediafile_metadata_db::TABLE_NAME);
+    $query->condition(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID, $mediafile_id);
+    $a_mediafile = $query->execute()->fetchAssoc();
+
+    if ($a_mediafile[mediamosa_asset_mediafile_metadata_db::MIME_TYPE] == mediamosa_lib::MIME_TYPE_APPLICATION_X_EMPTY) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CANT_PLAY_MEDIAFILE, array('@mediafile_id' => $mediafile_id, '@reason' => 'this mediafile has an empty filesize.'));
+    }
+  }
+
+  /**
+   * Test if mediafile can be transcoded.
+   * Will throw an exception when failure.
+   *
+   * @param string $mediafile_id
+   */
+  function is_transcodable($mediafile_id) { // media_management_is_transcodable.
+    $query = mediamosa_db::db_select(mediamosa_asset_mediafile_metadata_db::TABLE_NAME);
+    $query->condition(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID, $mediafile_id);
+    $a_mediafile = $query->execute()->fetchAssoc();
+
+    if ($a_mediafile[mediamosa_asset_mediafile_metadata_db::MIME_TYPE] == mediamosa_lib::MIME_TYPE_APPLICATION_X_EMPTY) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CANT_TRANSCODE_MEDIAFILE, array('@mediafile_id' => $mediafile_id, '@reason' => 'this mediafile has an empty filesize.'));
+    }
+  }
+}

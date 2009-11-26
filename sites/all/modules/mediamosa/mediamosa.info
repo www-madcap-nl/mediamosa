@@ -16,6 +16,7 @@ files[] = mediamosa.module
 files[] = mediamosa.version.inc
 files[] = mediamosa.inc
 files[] = mediamosa.install
+files[] = mediamosa.settings.inc
 
 ; Error. (1st for dependency).
 files[] = core/error/mediamosa_error_db.inc
@@ -97,6 +98,11 @@ files[] = core/collection/mediamosa_collection_db.inc
 files[] = core/collection/mediamosa_collection.inc
 files[] = core/collection/mediamosa_collection.install.inc
 
+; Asset Collection.
+files[] = core/asset/collection/mediamosa_asset_collection_db.inc
+files[] = core/asset/collection/mediamosa_asset_collection.inc
+files[] = core/asset/collection/mediamosa_asset_collection.install.inc
+
 ; FTP Batch.
 files[] = core/ftp_batch/mediamosa_ftp_batch.inc
 
@@ -113,7 +119,7 @@ files[] = core/job/schedular/mediamosa_job_schedular.inc
 files[] = core/job/server/mediamosa_job_server.inc
 
 ; San nas.
-files[] = core/maintenance/san_nas/mediamosa_san_nas.inc
+files[] = core/maintenance/san_nas/mediamosa_maintenance_san_nas.inc
 
 ; Server.
 files[] = core/server/mediamosa_server.install.inc
@@ -147,8 +153,25 @@ files[] = core/server/transcoding/tool/mediamosa_server_transcoding_tool.install
 files[] = core/server/upload/mediamosa_server_upload_db.inc
 files[] = core/server/upload/mediamosa_server_upload.install.inc
 
+; Ticket.
+files[] = core/ticket/mediamosa_ticket_db.inc
+files[] = core/ticket/mediamosa_ticket.inc
+files[] = core/ticket/mediamosa_ticket.install.inc
+
 ; User.
+files[] = core/user/mediamosa_user_db.inc
 files[] = core/user/mediamosa_user.inc
+files[] = core/user/mediamosa_user.install.inc
+
+; User Group.
+files[] = core/user/group/mediamosa_user_group_db.inc
+files[] = core/user/group/mediamosa_user_group.inc
+files[] = core/user/group/mediamosa_user_group.install.inc
+
+; User Favorite.
+files[] = core/user/favorite/mediamosa_user_favorite_db.inc
+files[] = core/user/favorite/mediamosa_user_favorite.inc
+files[] = core/user/favorite/mediamosa_user_favorite.install.inc
 
 ; Simpletest Slass.
 files[] = simpletest/mediamosa.simpletest.inc

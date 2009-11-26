@@ -49,7 +49,7 @@ function mediamosa_app_uninstall() {
 }
 
 /**
- * Implementation of hook_schema().
+ * Implements hook_schema().
  * @return array
  */
 function mediamosa_app_schema() {

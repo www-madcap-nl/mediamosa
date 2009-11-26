@@ -29,3 +29,16 @@
  * The helper functions of collection module.
  */
 
+class mediamosa_collection {
+  /**
+   * Remove collection.
+   *
+   * @param string $coll_id
+   * @return boolean
+   */
+  static public function delete($coll_id) {
+    $query = mediamosa_db::db_delete(mediamosa_collection_db::TABLE_NAME);
+    $query->condition(mediamosa_collection_db::ID, $coll_id);
+    return $query->execute() ? TRUE : FALSE;
+  }
+}

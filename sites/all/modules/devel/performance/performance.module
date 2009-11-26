@@ -556,7 +556,7 @@ function performance_clear_apc_confirm_submit($form_id, &$form) {
 }
 
 /**
- * Implementation of hook_nagios_info()
+ * Implements hook_nagios_info()
  */
 function performance_nagios_info() {
   return array(
@@ -566,7 +566,7 @@ function performance_nagios_info() {
 }
 
 /**
- * Implementation of hook_nagios()
+ * Implements hook_nagios()
  */
 function performance_nagios() {
   $info = performance_nagios_info();

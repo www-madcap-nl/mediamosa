@@ -29,4 +29,5 @@
  * The MediaMosa App class.
  */
 class mediamosa_app {
+  // ------------------------------------------------------------------ Static Function.
 }

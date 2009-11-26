@@ -23,10 +23,8 @@
  * with this program; if not, you can find it at:
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
- 
+
  /**
   * @file
-  * 
+  * The job module.
   */
-
- 

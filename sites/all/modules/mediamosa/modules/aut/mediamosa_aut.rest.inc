@@ -351,7 +351,7 @@ class mediamosa_rest_call_aut_group_update extends mediamosa_rest_call {
       $a_aut_group = mediamosa_db::db_query("SELECT * FROM {mediamosa_aut_group} WHERE aut_group_name = '%s'", $group_name)->fetchAssoc();
       assert($a_aut_group);
 
-      if (strtoupper($a_aut_group['aut_group_type']) != strtoupper($new_group_type)) {
+      if (mediamosa_unicode::strtoupper($a_aut_group['aut_group_type']) != mediamosa_unicode::strtoupper($new_group_type)) {
         // If we change group type, then the group must be empty.
         if (mediamosa_db::db_count_rows('mediamosa_aut_name', array('aut_group_id' => $a_aut_group['aut_group_id']))) {
           throw new mediamosa_exception_error_cant_retype_group_must_be_empty(array('@group' => $group_name));
@@ -1435,4 +1435,4 @@ function vpx_acl_rest_owner_check($a_args) { // TODO: werkt nu alleen voor media
 
     return $o_mediamosa;
   }
-*/
+ */

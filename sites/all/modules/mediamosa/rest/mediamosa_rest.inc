@@ -49,7 +49,7 @@ class mediamosa_rest {
     }
   }
 
-  // ------------------------------------------------------------------ Static Functions
+  // ------------------------------------------------------------------ Static Function.
   static function get_uri_definition($s_request_uri, $request_method = FALSE) {
 
     if (!$request_method) {
@@ -114,12 +114,32 @@ class mediamosa_rest {
       if (!isset($a_rest_call_return[mediamosa_rest_call::METHOD])) {
         $a_rest_call_return[mediamosa_rest_call::METHOD] = mediamosa_rest_call::METHOD_GET;
       }
+
       if (!isset($a_rest_call_return[mediamosa_rest_call::STATUS])) {
         $a_rest_call_return[mediamosa_rest_call::STATUS] = mediamosa_rest_call::STATUS_ACTIVE;
       }
+
       if (!isset($a_rest_call_return[mediamosa_rest_call::RESPONSE_TYPE])) {
         $a_rest_call_return[mediamosa_rest_call::RESPONSE_TYPE] = mediamosa_rest_call::RESPONSE_TYPE_XML;
       }
+
+      // By default we allow all REST calls to be accessed through internals, unless specified as FALSE.
+      if (!isset($a_rest_call_return[mediamosa_rest_call::ACCESS_INTERNAL])) {
+        $a_rest_call_return[mediamosa_rest_call::ACCESS_INTERNAL] = TRUE;
+      }
+      assert(is_bool($a_rest_call_return[mediamosa_rest_call::ACCESS_INTERNAL]));
+
+      // By default we allow all REST calls to be denied accessed through externals, unless specified as TRUE.
+      if (!isset($a_rest_call_return[mediamosa_rest_call::ACCESS_EXTERNAL])) {
+        $a_rest_call_return[mediamosa_rest_call::ACCESS_EXTERNAL] = FALSE;
+      }
+      assert(is_bool($a_rest_call_return[mediamosa_rest_call::ACCESS_EXTERNAL]));
+
+      // By default we allow all REST calls to be accessed through APP Authentication, unless specified as FALSE.
+      if (!isset($a_rest_call_return[mediamosa_rest_call::ACCESS_APP_AUTH])) {
+        $a_rest_call_return[mediamosa_rest_call::ACCESS_APP_AUTH] = TRUE;
+      }
+      assert(is_bool($a_rest_call_return[mediamosa_rest_call::ACCESS_APP_AUTH]));
     }
 
     return $a_rest_call_return;
@@ -233,7 +253,7 @@ class mediamosa_rest {
     // If not logged in, allow /user/login/* url to show the login form
     if ($this->is_interface()) {
       $path_login = user_is_logged_in() ? '/user/logout' : '/user/login';
-      return (mediamosa_unicode::substr($_SERVER['REQUEST_URI'], 0, mediamosa_unicode::strlen($path_login)) == $path_login);
+      return (mediamosa_unicode::substr(mediamosa::request_uri(), 0, mediamosa_unicode::strlen($path_login)) == $path_login);
     }
 
     return FALSE;

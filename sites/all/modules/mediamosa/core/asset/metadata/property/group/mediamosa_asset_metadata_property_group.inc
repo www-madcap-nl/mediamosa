@@ -81,8 +81,8 @@ class mediamosa_asset_metadata_property_group {
   function property_group_create($name) {
     return db_insert(mediamosa_asset_metadata_property_group_db::TABLE_NAME)
       ->fields(array(
-         mediamosa_asset_metadata_property_group_db::NAME => $name,
-         mediamosa_asset_metadata_property_group_db::CREATED => mediamosa::utc_current_timestamp_now(),
+        mediamosa_asset_metadata_property_group_db::NAME => $name,
+        mediamosa_asset_metadata_property_group_db::CREATED => mediamosa::db_current_timestamp_now(),
       ))
       ->execute();
   }

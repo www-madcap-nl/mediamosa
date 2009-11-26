@@ -36,7 +36,7 @@ require_once 'transcoding/mediamosa_server_transcoding.install.inc';
 require_once 'upload/mediamosa_server_upload.install.inc';
 
 /**
- * Implementation of hook_install().
+ * Implements hook_install().
  */
 function mediamosa_server_install() {
 
@@ -59,7 +59,7 @@ function mediamosa_server_install() {
 }
 
 /**
- * Implementation of hook_uninstall().
+ * Implements hook_uninstall().
  */
 function mediamosa_server_uninstall() {
 

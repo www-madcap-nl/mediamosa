@@ -16,7 +16,7 @@ function devel_node_access_perm() {
 }
 
 /**
- * Implementation of hook_help().
+ * Implements hook_help().
  */
 function devel_node_access_help($path, $arg) {
   switch ($path) {
@@ -502,7 +502,7 @@ function devel_node_access_block_view($delta) {
 }
 
 /**
- * Implementation of hook_node_access_explain().
+ * Implements hook_node_access_explain().
  */
 function devel_node_access_node_access_explain($row) {
   if ($row->gid == 0 && $row->realm == 'all') {
@@ -522,7 +522,7 @@ function devel_node_access_node_access_explain($row) {
 }
 
 /**
- * Implementation of hook_theme().
+ * Implements hook_theme().
  */
 function devel_node_access_theme() {
   return array(

@@ -1,0 +1,117 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is a Full Featured, Webservice Oriented Media Management and
+ * Distribution platform (http://www.vpcore.nl)
+ *
+ * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+ /**
+  * @file
+  * The ticket DB class.
+  */
+
+require_once 'mediamosa_ticket.inc';
+require_once 'mediamosa_ticket_db.inc';
+
+/**
+ * Implement hook_install().
+ */
+function mediamosa_ticket_install() {
+  // Create our table(s).
+  mediamosa::drupal_install_schema(mediamosa_ticket_db::TABLE_NAME);
+}
+
+/**
+ * Implement hook_uninstall().
+ */
+function mediamosa_ticket_uninstall() {
+  // Drop our table(s).
+  mediamosa::drupal_uninstall_schema(mediamosa_ticket_db::TABLE_NAME);
+}
+
+/**
+ * Implement hook_schema().
+ */
+function mediamosa_ticket_schema() {
+
+  $a_schema[mediamosa_ticket_db::TABLE_NAME] = array(
+  'description' => t('The ticket table enables temporary events for allowing user actions.'),
+    'fields' => array(
+      mediamosa_ticket_db::ID => array(
+        'type' => 'varchar',
+        'length' => mediamosa_db::HASH_ID_LENGTH,
+        'not null' => TRUE,
+        'description' => t('Primary Key: Unique ID.'),
+      ),
+      mediamosa_ticket_db::TICKET_TYPE => array(
+        'description' => t('The ticket type.'),
+        'type' => "enum('" . implode("','", array(mediamosa_ticket_db::TICKET_TYPE_PLAY, mediamosa_ticket_db::TICKET_TYPE_DOWNLOAD, mediamosa_ticket_db::TICKET_TYPE_STILL, mediamosa_ticket_db::TICKET_TYPE_UPLOAD)) . "')",
+        'not null' => TRUE,
+        'mysql_type' => "enum('" . implode("','", array(mediamosa_ticket_db::TICKET_TYPE_PLAY, mediamosa_ticket_db::TICKET_TYPE_DOWNLOAD, mediamosa_ticket_db::TICKET_TYPE_STILL, mediamosa_ticket_db::TICKET_TYPE_UPLOAD)) . "')",
+        'default' => mediamosa_ticket_db::TICKET_TYPE_PLAY,
+      ),
+      mediamosa_ticket_db::ISSUED => array(
+        'type' => 'datetime',
+        'not null' => TRUE,
+        'description' => t('The date and time when media was issued.'),
+      ),
+      mediamosa_ticket_db::APP_ID => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => t('The application ID of the asset.'),
+      ),
+      mediamosa_ticket_db::OWNER_ID => array(
+        'type' => 'varchar',
+        'length' => mediamosa_ticket_db::OWNER_ID_LENGTH,
+        'default' => NULL,
+        'description' => t('The owner ID.'),
+      ),
+      mediamosa_ticket_db::GROUP_ID => array(
+        'type' => 'varchar',
+        'length' => mediamosa_ticket_db::GROUP_ID_LENGTH,
+        'default' => NULL,
+        'description' => t('The group ID.'),
+      ),
+      mediamosa_ticket_db::MEDIAFILE_ID => array(
+        'type' => 'varchar',
+        'length' => mediamosa_db::HASH_ID_LENGTH,
+        'not null' => TRUE,
+        'description' => t('The mediafile ID.'),
+      ),
+      mediamosa_ticket_db::CREATED => array(
+        'type' => 'datetime',
+        'not null' => TRUE,
+        'description' => t('The date and time when media was created.'),
+      ),
+      mediamosa_ticket_db::CHANGED => array(
+        'type' => 'datetime',
+        'default' => NULL,
+        'description' => t('The date and time when media was changed last.'),
+      ),
+    ),
+    'primary key' => array(mediamosa_ticket_db::ID),
+  );
+
+  return $a_schema;
+}
+

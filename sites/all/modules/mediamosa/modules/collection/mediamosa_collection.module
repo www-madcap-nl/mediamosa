@@ -30,11 +30,20 @@
   */
 
 /**
- * Implementation of hook_mediamosa_register_rest_call().
+ * Implements hook_mediamosa_register_rest_call().
  */
 function mediamosa_collection_mediamosa_register_rest_call() {
 
   $a_rest_calls = array();
+
+  // Count number of collections based on owner/app/group (1.x: media_management_collection_count)
+  $a_rest_calls['asset/count'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_count_asset',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Return the number of collections based on app_id, owner_id and group_id.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_maintenance_collection',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
 
   return $a_rest_calls;
 }

@@ -24,45 +24,25 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
-/**
- * @file
- * Common function for sannas.
- */
-
-class mediamosa_san_nas {
-  /**
-   * Get the sannas setting for linux.
-   *
-   * @return string
-   */
-  static function linux_get() {
-    return mediamosa::variable_get('mediamosa_current_mount_point', '');
-  }
+ /**
+  * @file
+  * The user favorite module.
+  */
+class user_favorite {
 
   /**
-   * Get the sannas setting for windows.
+   * Return the number of rows found.
    *
-   * @return string
+   * @param string $fav_type
+   * @param string $fav_id
+   * @return integer
    */
-  static function windows_get() {
-    return mediamosa::variable_get('mediamosa_current_mount_point_windows', '');
-  }
+  static public function count_items($fav_type, $fav_id) {
 
-  /**
-   * Set the sannas setting for linux.
-   *
-   * @param string $value
-   */
-  static function linux_set($value) {
-    mediamosa::variable_set('mediamosa_current_mount_point', $value);
-  }
-
-  /**
-   * Set the sannas setting for windows.
-   *
-   * @param string $value
-   */
-  static function windows_set($value) {
-    mediamosa::variable_set('mediamosa_current_mount_point_windows', $value);
+    // Return the number of found rows.
+    $query = db_select(mediamosa_user_favorite_db::TABLE_NAME);
+    $query->condition(mediamosa_user_favorite_db::FAV_TYPE, $fav_type);
+    $query->condition(mediamosa_user_favorite_db::FAV_ID, $fav_id);
+    return $query->countQuery()->execute()->fetchField();
   }
 }

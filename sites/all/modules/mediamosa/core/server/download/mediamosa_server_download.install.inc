@@ -32,7 +32,7 @@
 require_once 'mediamosa_server_download_db.inc';
 
 /**
- * Implementation of hook_install().
+ * Implements hook_install().
  */
 function mediamosa_server_download_install() {
 
@@ -54,7 +54,7 @@ function mediamosa_server_download_install() {
 }
 
 /**
- * Implementation of hook_uninstall().
+ * Implements hook_uninstall().
  */
 function mediamosa_server_download_uninstall() {
 
@@ -63,7 +63,7 @@ function mediamosa_server_download_uninstall() {
 }
 
 /**
- * Implementation of hook_schema().
+ * Implements hook_schema().
  */
 function mediamosa_server_download_schema() {
   $a_schema[mediamosa_server_download_db::TABLE_NAME] = array(

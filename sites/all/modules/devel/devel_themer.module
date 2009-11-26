@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Implementation of hook_menu().
+ * Implements hook_menu().
  */
 function devel_themer_menu() {
   $items = array();
@@ -131,7 +131,7 @@ function devel_themer_shutdown() {
 }
 
 /**
- * An implementation of hook_theme_registry_alter()
+ * An Implements hook_theme_registry_alter()
  * Iterate over theme registry, injecting our catch function into every theme call, including template calls.
  * The catch function logs theme calls and performs divine nastiness.
  *
@@ -381,7 +381,7 @@ function devel_themer_theme_twin() {
       $reflect = new ReflectionFunction($info['devel_function_intercept']);
       $params = $reflect->getParameters();
       for ($i=0; $i < count($args); $i++) {
-        // The implementation of the theme function may recieve less parameters than were passed to it.
+        // The Implements the theme function may recieve less parameters than were passed to it.
         if ($i < count($params)) {
           $meta['variables'][$params[$i]->getName()] = $args[$i];
         }

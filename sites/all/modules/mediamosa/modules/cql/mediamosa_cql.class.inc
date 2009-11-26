@@ -303,9 +303,9 @@ abstract class mediamosa_cql {
         $this->mediamosa_cql_skip_ws($str_cql, $i_pos);
       }
 
-      $b_include_end_keys_alhpa = false;
+      $b_include_end_keys_alhpa = FALSE;
       if (in_array($str_result, $a_symbol_end_keys)) {
-        $b_include_end_keys_alhpa = true;
+        $b_include_end_keys_alhpa = TRUE;
       }
 
       // Now get the next part until any of the end chars or eos
@@ -459,7 +459,7 @@ abstract class mediamosa_cql {
       if ($str_1 == '(') {
 
         try {
-          while(1) {
+          while (1) {
             $this->mediamosa_cql_next_part($str_cql, $i_pos, $o_cql_part);
           }
         }
@@ -694,7 +694,7 @@ abstract class mediamosa_cql {
 
   final function mediamosa_cql_is_charstring_1($str) {
     if ($str == '') {
-      return false;
+      return FALSE;
     }
 
     $a_invalidchars = array('(', ')', '=', '<', '>', '"', '/', ' ');
@@ -705,10 +705,11 @@ abstract class mediamosa_cql {
       }
 
       if (in_array(mediamosa_unicode::substr($str, $x, 1), $a_invalidchars)) {
-        return false;
+        return FALSE;
       }
     }
-    return true;
+
+    return TRUE;
   }
 
   final private function mediamosa_cql_is_charstring_2($str) {
@@ -737,7 +738,7 @@ abstract class mediamosa_cql {
    */
   protected function mediamosa_cql_parseresult_2_sql($a_results, $a_booleans = array('OR', 'AND')) {
     $a_return = array();
-    $do_boolean = false;
+    $do_boolean = FALSE;
 
     foreach ($a_results as $mixed_result) {
       if (is_array($mixed_result)) {
@@ -748,7 +749,7 @@ abstract class mediamosa_cql {
         return '';
       }
 
-      $do_boolean = false;
+      $do_boolean = FALSE;
       if ($mixed_result != '') {
         $a_return[] = $mixed_result;
         $do_boolean = !in_array($mixed_result, $a_booleans);
@@ -764,7 +765,7 @@ abstract class mediamosa_cql {
         while (mediamosa_unicode::strlen($str_pop) >= mediamosa_unicode::strlen($str_bool)) {
           if (mediamosa_unicode::substr($str_pop, -mediamosa_unicode::strlen($str_bool)) == $str_bool) {
             $str_pop = mediamosa_unicode::substr($str_pop, 0, mediamosa_unicode::strlen($str_pop) - mediamosa_unicode::strlen($str_bool));
-           }
+          }
           else {
             break;
           }
@@ -809,7 +810,7 @@ abstract class mediamosa_cql_modifiers {
    * @return boolean
    */
   public function mediamosa_cql_modifier_has() {
-     return (count($this->m_a_str_modifiers) ? TRUE : FALSE);
+    return (count($this->m_a_str_modifiers) ? TRUE : FALSE);
   }
 
   /**

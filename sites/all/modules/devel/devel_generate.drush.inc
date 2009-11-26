@@ -7,7 +7,7 @@
  */
 
 /**
- * Implementation of hook_drush_help().
+ * Implements hook_drush_help().
  */
 function devel_generate_drush_help($section) {
   switch ($section) {
@@ -21,7 +21,7 @@ function devel_generate_drush_help($section) {
 }
 
 /**
- * Implementation of hook_drush_command().
+ * Implements hook_drush_command().
  */
 function devel_generate_drush_command() {
   $items['generate users'] = array(

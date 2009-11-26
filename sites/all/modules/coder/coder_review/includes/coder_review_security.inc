@@ -9,7 +9,7 @@
  */
 
 /**
- * Implementation of hook_reviews().
+ * Implements hook_reviews().
  */
 function coder_review_security_reviews() {
   $table = '\{[A-Za-z_]+\}'; // table-regex
