@@ -28,21 +28,59 @@
   * @file
   * Core - Open source media management and distribution platform.
   */
+define('MEDIAMOSA_PERM_REST_ACCESS', 'mediamosa_perm_rest_access');
+define('MEDIAMOSA_MENU_PATH', 'mediamosa');
 
 /**
- * Implements hook_init().
+ * Implement hook_menu().
  */
-function mediamosa_init() {
+function mediamosa_menu() {
+  $items = array();
+
+  $items[MEDIAMOSA_MENU_PATH] = array(
+    'type' => MENU_CALLBACK,
+    'page callback' => 'mediamosa',
+    'access arguments' => array(MEDIAMOSA_PERM_REST_ACCESS),
+  );
+
+  return $items;
+}
+
+/**
+ * Implement hook_permission().
+ */
+function mediamosa_permission() {
+  return array(
+    MEDIAMOSA_PERM_REST_ACCESS =>  array(
+      'title' => t('Access rest calls'),
+      'description' => t('Users with this permission may access the MediaMosa restcalls.'),
+    ),
+  );
+}
+
+/**
+ * The MediaMosa REST menu callback.
+ */
+function mediamosa() {
   try {
 
     // Create and get the core object.
     $o_mediamosa = mediamosa::get();
 
     // Now call the rest process function to process possible rest call.
-    $o_mediamosa->process_rest();
+    $output = $o_mediamosa->process_rest();
   }
   catch (Exception $e) {
     mediamosa::exit_503(mediamosa::t('Unhandled exception;') . ' ' . $e->getMessage());
+  }
+
+  // Process the restcall's output
+  if (is_null($output)) {
+    mediamosa::exit_404(mediamosa::t('The requested MediaMosa REST call cannot be found.'));
+  }
+  else {
+    header($output['header']);
+    echo $output['content'];
   }
 }
 

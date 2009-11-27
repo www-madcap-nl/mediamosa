@@ -119,13 +119,13 @@ class mediamosa_response extends mediamosa {
     try {
       switch ($a_rest_call[mediamosa_rest_call::RESPONSE_TYPE]) {
         case mediamosa_rest_call::RESPONSE_TYPE_PLAIN:
-          header('Content-Type: text/plain; charset=utf-8');
-          $output = $this->generate_plain_text();
+          $output['header'] = 'Content-Type: text/plain; charset=utf-8';
+          $output['content'] = $this->generate_plain_text();
           break;
         case mediamosa_rest_call::RESPONSE_TYPE_XML:
         default:
-          header('Content-Type: text/xml; charset=utf-8');
-          $output = $this->generate_xml();
+          $output['header'] = 'Content-Type: text/xml; charset=utf-8';
+          $output['content'] = $this->generate_xml();
           break;
       }
     }
@@ -133,9 +133,8 @@ class mediamosa_response extends mediamosa {
       $this->set_result(self::ERROR, $e->getCode(), $e->getMessage());
     }
 
-    // Stop and output our content.
-    // Might run any added exit functions (drupal or otherwise).
-    exit($output);
+    // Return our content.
+    return (isset($output)) ? $output : NULL;
   }
 
   /**
