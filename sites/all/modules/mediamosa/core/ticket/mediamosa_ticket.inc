@@ -125,7 +125,7 @@ class mediamosa_ticket {
       $ticket_target = DOWNLOAD_TICKET_TARGET ."/". $a_mediafile_ext['mediafile_id']{0} ."/". $a_mediafile_ext['mediafile_id'];
       $ticket_path = SAN_NAS_BASE_PATH ."/". DOWNLOAD_TICKET_LOCATION ."/". $ticket;
       if (!mkdir($ticket_path)) {
-        return vpx_return_error(ERRORCODE_DIR_NOT_WRITABLE, array("@location" => $ticket_path));
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_DIR_NOT_WRITABLE, array('@location' => $ticket_path));
       }
       if (empty($a_mediafile_ext['filename'])) {
         $a_mediafile_ext['filename'] = UNKNOWN_FILENAME;
@@ -162,7 +162,7 @@ class mediamosa_ticket {
   }
 
   if (!is_writeable($ticket_path)) {
-    return vpx_return_error(ERRORCODE_DIR_NOT_WRITABLE, array("@location" => $ticket_path));
+    throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_DIR_NOT_WRITABLE, array('@location' => $ticket_path));
   }
 
 // maak de ticket aan in de database
@@ -183,7 +183,7 @@ class mediamosa_ticket {
   $rpath = SAN_NAS_BASE_PATH ."/". substr($ticket_target, 3);
   if (!is_dir($rpath)) {
     if (file_exists($ticket_symlink) || !symlink($ticket_target, $ticket_symlink)) {
-      return vpx_return_error(ERRORCODE_UNABLE_TO_CREATE_SYMLINK, array("@location" => $ticket_target));
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_UNABLE_TO_CREATE_SYMLINK, array('@location' => $ticket_target));
     }
   }
 

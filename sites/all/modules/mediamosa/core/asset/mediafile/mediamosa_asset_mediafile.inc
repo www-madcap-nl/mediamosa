@@ -145,7 +145,7 @@ class mediamosa_asset_mediafile {
           $a_row[mediamosa_asset_mediafile_db::ID]
         );
 
-        $response = mediamosa_asset_mediafile_play_proxy::create_response_still($s_ticket, $app_id);
+        $response = mediamosa_asset_mediafile_play_proxy::create_response_still($ticket, $app_id);
         $a_row['still_ticket'] = $response['output'];
 
         // Add still to mediafile.

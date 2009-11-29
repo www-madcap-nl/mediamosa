@@ -153,7 +153,7 @@ class mediamosa_asset {
     $query->range(0, 1);
     $mediafile_info = $query->execute()->fetchAssoc();
 
-    // zet de lengte van de eerste originele mediafile in de parent_asset
+    // Set the length of the 1st original mediafile in the parent asset.
     if ($mediafile_info && $mediafile_info['file_duration'] !== NULL) {
       mediamosa_db::db_query(
         "UPDATE {#mediamosa_asset} SET #mediafile_duration = :mediafile_duration, #mediafile_container_type = :mediafile_container_type WHERE #asset_id = :asset_id",

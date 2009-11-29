@@ -37,6 +37,4 @@ class mediamosa_settings {
   const SAN_NAS_DATA_FOLDER = 'data';
   const SAN_NAS_STILLS_FOLDER = 'stills';
   const SAN_NAS_TRANCODE_FOLDER = 'transcode';
-
-
 }
