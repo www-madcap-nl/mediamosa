@@ -62,7 +62,7 @@ function mediamosa_configuration_menu() {
     'title' => 'Configuration',
     'description' => 'The configuration of MediaMosa settings. You might have to enable maintenance modules for more options.',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('_mediamosa_configuration'),
+    'page arguments' => array('mediamosa_configuration'),
     'access arguments' => array('administer mediamosa configuration'),
   );
 
