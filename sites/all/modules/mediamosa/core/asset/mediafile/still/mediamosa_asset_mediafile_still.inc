@@ -52,7 +52,7 @@ class mediamosa_asset_mediafile_still {
   function create($asset_id, $asset_parent_id, $still_id, $app_id, $owner_id, $group_id, $order, $still_default = TRUE, $a_still_parameters = NULL, $sec = 0, $mediafile_id_source = '', $tag = '') {
 
     // Get path to still.
-    $still_filename = mediamosa_maintenance_san_nas::mediafile_still_filename_get($still_id);
+    $still_filename = mediamosa_configuration_storage::mediafile_still_filename_get($still_id);
 
     // Check if still exists.
     if (!file_exists($still_filename)) {
@@ -105,7 +105,7 @@ class mediamosa_asset_mediafile_still {
         mediamosa_asset_mediafile_db::APP_ID => $app_id,
         mediamosa_asset_mediafile_db::OWNER_ID => $owner_id,
         mediamosa_asset_mediafile_db::GROUP_ID => $group_id,
-        mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT => mediamosa_maintenance_san_nas::base_path_get(),
+        mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT => mediamosa_configuration_storage::base_path_get(),
         mediamosa_asset_mediafile_db::FILE_EXTENSION => $file_extension,
         mediamosa_asset_mediafile_db::CREATED => mediamosa::db_current_timestamp_now(),
         mediamosa_asset_mediafile_db::CHANGED => mediamosa::db_current_timestamp_now(),
@@ -251,7 +251,7 @@ class mediamosa_asset_mediafile_still {
    */
   static public function check($still_id) {
     // controleer of de still op het filesystem staat
-    $filename = mediamosa_maintenance_san_nas::mediafile_still_filename_get($still_id);
+    $filename = mediamosa_configuration_storage::mediafile_still_filename_get($still_id);
     if (!file_exists($filename)) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_FILE_NOT_FOUND, array('@filename' => $filename));
     }

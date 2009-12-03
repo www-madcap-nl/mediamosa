@@ -31,6 +31,32 @@
 define('MEDIAMOSA_PERM_REST_ACCESS', 'mediamosa_perm_rest_access');
 define('MEDIAMOSA_MENU_PATH', 'mediamosa');
 
+require_once 'mediamosa.settings.inc';
+
+/**
+ * Implement hook_requirements().
+ */
+function mediamosa_requirements($phase) {
+  // Ensure translations don't break at install time
+  $t = get_t();
+
+  $a_requirements = array();
+
+  if ($phase == 'runtime') {
+    // We require PHP 5 or higher
+    if (version_compare(phpversion(), mediamosa_settings::MINIMUM_PHP_VERSION) < 0) {
+      $a_requirements['php'] = array(
+        'title' => $t('PHP'),
+        'value' => phpversion(),
+        'description' => $t('Your PHP installation does not meet the requirements for using the MediaMosa module. MediaMosa requires at least PHP %version.', array('%version' => mediamosa_settings::MINIMUM_PHP_VERSION)),
+        'severity' => REQUIREMENT_ERROR
+      );
+    }
+  }
+
+  return $a_requirements;
+}
+
 /**
  * Implement hook_menu().
  */

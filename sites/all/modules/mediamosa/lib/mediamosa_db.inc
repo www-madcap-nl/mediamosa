@@ -34,7 +34,6 @@ class mediamosa_db {
   // ------------------------------------------------------------------ Consts.
   const LIMIT = 'limit';
   const OFFSET = 'offset';
-  const LIMIT_MAX = 1000;
   const ORDER_BY = 'order_by';
   const ORDER_DIRECTION = 'order_direction';
   const ORDER_DIRECTION_ASC = 'asc';
@@ -55,6 +54,13 @@ class mediamosa_db {
     }
 
     return call_user_func_array('db_delete', $a_args);
+  }
+
+  /**
+   * Return the number of found rows during SQL_CALC_FOUND_ROWS (mysql).
+   */
+  static public function db_found_rows() {
+    return mediamosa_db::db_query('SELECT found_rows()')->fetchField();
   }
 
   /**
@@ -311,12 +317,22 @@ class mediamosa_db {
    * 'db_escape_string' is removed from drupal 7, D7 uses prepare instead. For now
    * we will use PDO::quote.
    */
-  static public function escape_string($string) {
+  static public function escape_string($string, $glue = ',') {
     // Hmm well kinda hack here, but dont see any other way atm
     // than calling the getconnection for PDO and using quote...
     // But \' must be escaped as '' in the PDO layer, quote seems to
     // make mistakes here by escaping with \'. Anyway, hotfix here. RBL.
-    return str_replace('\\\'', "''", mediamosa_unicode::substr(Database::getConnection()->quote($string), 1, -1)); // Remove the quotes, only escape.
+    if (is_array($string)) {
+      $a_str = array();
+      foreach ($string as $str) {
+        $a_str[] = self::escape_string($str);
+      }
+
+      return implode($glue, $a_str);
+    }
+
+    // Call PDO quote, and replace \' to ''. Also removes the quotes around the value.
+    return str_replace('\\\'', "''", mediamosa_unicode::substr(Database::getConnection()->quote($string), 1, -1));
   }
 
   /**
@@ -419,9 +435,8 @@ class mediamosa_db {
    *    returns number of rows.
    */
   static public function db_count_rows($table_name, $a_columns_and = array()) {
-
     // Create select object.
-    $query = self::db_select($table_name);
+    $query = self::db_select($table_name, 'c');
     foreach ($a_columns_and as $column => $value) {
       $query->condition($column, $value);
     }
@@ -444,19 +459,18 @@ class mediamosa_db {
       return; // exists
     }
 
-    //
     switch ($table_name) {
       case mediamosa_asset_db::TABLE_NAME:
-        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_ASSET_NOT_FOUND, array("@asset_id" => $a_columns_and[mediamosa_asset_db::ID]));
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_ASSET_NOT_FOUND, array('@asset_id' => $a_columns_and[mediamosa_asset_db::ID]));
       case mediamosa_asset_mediafile_db::TABLE_NAME:
-        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MEDIAFILE_NOT_FOUND, array("@mediafile_id" => $a_columns_and[mediamosa_asset_media_db::ID]));
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MEDIAFILE_NOT_FOUND, array('@mediafile_id' => $a_columns_and[mediamosa_asset_mediafile_db::ID]));
       case mediamosa_aut_group_db::TABLE_NAME:
-        throw new mediamosa_exception_error(ERRORCODE_AUT_GROUP_NOT_FOUND, array("@group" => $a_columns_and[mediamosa_aut_group_db::AUT_GROUP_NAME]));
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_AUT_GROUP_NOT_FOUND, array('@group' => $a_columns_and[mediamosa_aut_group_db::AUT_GROUP_NAME]));
+      case mediamosa_ftp_batch_db::TABLE_NAME:
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_FTP_BATCH_NOT_FOUND, array('@batch_id' => $a_columns_and['batch_id']));
 /*
       case 'collection':
         throw new vpx_exception_error(ERRORCODE_COLLECTION_NOT_FOUND, array("@coll_id" => $a_columns_and['coll_id']));
-      case 'ftp_batch':
-        throw new vpx_exception_error(ERRORCODE_FTP_BATCH_NOT_FOUND, array("@batch_id" => $a_columns_and['batch_id']));
       case 'job':
         throw new vpx_exception_error_job_not_found(array("@job_id" => $a_columns_and['job_id']));
       case 'ftpuser':

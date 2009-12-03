@@ -41,10 +41,10 @@ class mediamosa_rest_call_aut_group_list extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Functions (public).
   public function get_var_setup() {
     // Enrich with limit and offset vars.
-    $a_my_vars = $this->set_var_setup_range();
+    $a_var_setup = $this->get_var_setup_range();
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_my_vars);
+    return self::get_var_setup_default($a_var_setup);
   }
 
   public function do_call() {
@@ -76,15 +76,15 @@ class mediamosa_rest_call_aut_group_get extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Functions (public).
   public function get_var_setup() {
-    $a_my_vars = array();
+    $a_var_setup = array();
 
-    $a_my_vars[mediamosa_rest_call::VARS]['groupname'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS]['groupname'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_STRING,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_my_vars);
+    return self::get_var_setup_default($a_var_setup);
   }
 
   public function do_call() {
@@ -113,15 +113,15 @@ class mediamosa_rest_call_aut_group_get_hostnames extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Functions (public).
   public function get_var_setup() {
-    $a_my_vars = array();
+    $a_var_setup = array();
 
-    $a_my_vars[mediamosa_rest_call::VARS]['groupname'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS]['groupname'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_STRING,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_my_vars);
+    return self::get_var_setup_default($a_var_setup);
   }
 
   public function do_call() {
@@ -157,20 +157,20 @@ class mediamosa_rest_call_aut_group_create_hostnames extends mediamosa_rest_call
 
   // ------------------------------------------------------------------ Functions (public).
   public function get_var_setup() {
-    $a_my_vars = array();
+    $a_var_setup = array();
 
-    $a_my_vars[mediamosa_rest_call::VARS]['groupname'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS]['groupname'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_STRING,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
     );
-    $a_my_vars[mediamosa_rest_call::VARS]['hostname'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS]['hostname'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_STRING,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_my_vars);
+    return self::get_var_setup_default($a_var_setup);
   }
 
   public function do_call() {
@@ -201,20 +201,20 @@ class mediamosa_rest_call_aut_group_delete_hostnames extends mediamosa_rest_call
 
   // ------------------------------------------------------------------ Functions (public).
   public function get_var_setup() {
-    $a_my_vars = array();
+    $a_var_setup = array();
 
-    $a_my_vars[mediamosa_rest_call::VARS]['groupname'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS]['groupname'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_STRING,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
     );
-    $a_my_vars[mediamosa_rest_call::VARS]['hostname'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS]['hostname'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_STRING,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_my_vars);
+    return self::get_var_setup_default($a_var_setup);
   }
 
   public function do_call() {
@@ -244,19 +244,19 @@ class mediamosa_rest_call_aut_group_create extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Functions (public).
   public function get_var_setup() {
-    $a_my_vars = array();
+    $a_var_setup = array();
 
-    $a_my_vars[mediamosa_rest_call::VARS]['groupname'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS]['groupname'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_STRING,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
     );
-    $a_my_vars[mediamosa_rest_call::VARS]['group_type'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS]['group_type'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_AUT_GROUP_TYPE,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_my_vars);
+    return self::get_var_setup_default($a_var_setup);
   }
 
   public function do_call() {
@@ -299,24 +299,24 @@ class mediamosa_rest_call_aut_group_update extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Functions (public).
   public function get_var_setup() {
-    $a_my_vars = array();
+    $a_var_setup = array();
 
-    $a_my_vars[mediamosa_rest_call::VARS]['groupname'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS]['groupname'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_STRING,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
     );
-    $a_my_vars[mediamosa_rest_call::VARS]['group_type'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS]['group_type'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_AUT_GROUP_TYPE,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
     );
-    $a_my_vars[mediamosa_rest_call::VARS]['new_groupname'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS]['new_groupname'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_STRING,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_my_vars);
+    return self::get_var_setup_default($a_var_setup);
   }
 
   public function do_call() {
@@ -378,20 +378,20 @@ class mediamosa_rest_call_aut_group_delete extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Functions (public).
   public function get_var_setup() {
-    $a_my_vars = array();
+    $a_var_setup = array();
 
-    $a_my_vars[mediamosa_rest_call::VARS]['groupname'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS]['groupname'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_STRING,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
     );
 
-    $a_my_vars[mediamosa_rest_call::VARS]['delete'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS]['delete'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_DELETE,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_my_vars);
+    return self::get_var_setup_default($a_var_setup);
   }
 
   public function do_call() {
@@ -452,70 +452,70 @@ class mediamosa_rest_call_aut_mediafile_set_rights extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Functions (public).
   public function get_var_setup() {
-    $a_my_vars = array();
+    $a_var_setup = array();
 
-    $a_my_vars[mediamosa_rest_call::VARS]['mediafile_id'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS]['mediafile_id'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_INT,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
     );
 
-    $a_my_vars[mediamosa_rest_call::VARS]['user_id'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS]['user_id'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
     );
 
-    $a_my_vars[mediamosa_rest_call::VARS]['replace'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS]['replace'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_BOOL,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_DEFAULT_VALUE => 'TRUE',
     );
 
-    $a_my_vars[mediamosa_rest_call::VARS]['aut_app'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS]['aut_app'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_INT,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
     );
 
-    $a_my_vars[mediamosa_rest_call::VARS]['aut_user'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS]['aut_user'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
     );
 
-    $a_my_vars[mediamosa_rest_call::VARS]['aut_group'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS]['aut_group'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
     );
 
-    $a_my_vars[mediamosa_rest_call::VARS]['aut_domain'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS]['aut_domain'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_DOMAIN,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
     );
 
-    $a_my_vars[mediamosa_rest_call::VARS]['aut_realm'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS]['aut_realm'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_REALM,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
     );
 
     // alias.
-    $a_my_vars[mediamosa_rest_call::VARS]['aut_user_id'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS]['aut_user_id'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
     );
 
     // alias.
-    $a_my_vars[mediamosa_rest_call::VARS]['aut_group_id'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS]['aut_group_id'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_my_vars);
+    return self::get_var_setup_default($a_var_setup);
   }
 
   public function do_call() {
@@ -621,20 +621,20 @@ class mediamosa_rest_call_aut_mediafile_delete_rights extends mediamosa_rest_cal
 
   // ------------------------------------------------------------------ Functions (public).
   public function get_var_setup() {
-    $a_my_vars = array();
+    $a_var_setup = array();
 
-    $a_my_vars[mediamosa_rest_call::VARS]['mediafile_id'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS]['mediafile_id'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_INT,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
     );
 
-    $a_my_vars[mediamosa_rest_call::VARS]['user_id'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS]['user_id'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_my_vars);
+    return self::get_var_setup_default($a_var_setup);
   }
 
   public function do_call() {
@@ -678,20 +678,20 @@ class mediamosa_rest_call_aut_mediafile_get_rights extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Functions (public).
   public function get_var_setup() {
-    $a_my_vars = array();
+    $a_var_setup = array();
 
-    $a_my_vars[mediamosa_rest_call::VARS]['mediafile_id'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS]['mediafile_id'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_INT,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
     );
 
-    $a_my_vars[mediamosa_rest_call::VARS]['user_id'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS]['user_id'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_my_vars);
+    return self::get_var_setup_default($a_var_setup);
   }
 
   public function do_call() {
@@ -748,70 +748,70 @@ class mediamosa_rest_call_aut_asset_set_rights extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Functions (public).
   public function get_var_setup() {
-    $a_my_vars = array();
+    $a_var_setup = array();
 
-    $a_my_vars[mediamosa_rest_call::VARS]['asset_id'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS]['asset_id'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
     );
 
-    $a_my_vars[mediamosa_rest_call::VARS]['user_id'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS]['user_id'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
     );
 
-    $a_my_vars[mediamosa_rest_call::VARS]['replace'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS]['replace'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_BOOL,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_DEFAULT_VALUE => 'TRUE',
     );
 
-    $a_my_vars[mediamosa_rest_call::VARS]['aut_app'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS]['aut_app'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_INT,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
     );
 
-    $a_my_vars[mediamosa_rest_call::VARS]['aut_user'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS]['aut_user'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
     );
 
-    $a_my_vars[mediamosa_rest_call::VARS]['aut_group'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS]['aut_group'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
     );
 
-    $a_my_vars[mediamosa_rest_call::VARS]['aut_domain'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS]['aut_domain'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_DOMAIN,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
     );
 
-    $a_my_vars[mediamosa_rest_call::VARS]['aut_realm'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS]['aut_realm'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_REALM,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
     );
 
     // alias.
-    $a_my_vars[mediamosa_rest_call::VARS]['aut_user_id'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS]['aut_user_id'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
     );
 
     // alias.
-    $a_my_vars[mediamosa_rest_call::VARS]['aut_group_id'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS]['aut_group_id'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_my_vars);
+    return self::get_var_setup_default($a_var_setup);
   }
 
   public function do_call() {
@@ -916,20 +916,20 @@ class mediamosa_rest_call_aut_asset_delete_rights extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Functions (public).
   public function get_var_setup() {
-    $a_my_vars = array();
+    $a_var_setup = array();
 
-    $a_my_vars[mediamosa_rest_call::VARS]['asset_id'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS]['asset_id'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
     );
 
-    $a_my_vars[mediamosa_rest_call::VARS]['user_id'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS]['user_id'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_my_vars);
+    return self::get_var_setup_default($a_var_setup);
   }
 
   public function do_call() {
@@ -974,20 +974,20 @@ class mediamosa_rest_call_aut_asset_get_rights extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Functions (public).
   public function get_var_setup() {
-    $a_my_vars = array();
+    $a_var_setup = array();
 
-    $a_my_vars[mediamosa_rest_call::VARS]['asset_id'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS]['asset_id'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
     );
 
-    $a_my_vars[mediamosa_rest_call::VARS]['user_id'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS]['user_id'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_my_vars);
+    return self::get_var_setup_default($a_var_setup);
   }
 
   public function do_call() {
@@ -1044,20 +1044,20 @@ class mediamosa_rest_call_aut_collection_delete_rights extends mediamosa_rest_ca
 
   // ------------------------------------------------------------------ Functions (public).
   public function get_var_setup() {
-    $a_my_vars = array();
+    $a_var_setup = array();
 
-    $a_my_vars[mediamosa_rest_call::VARS]['coll_id'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS]['coll_id'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_COLLECTION_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
     );
 
-    $a_my_vars[mediamosa_rest_call::VARS]['user_id'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS]['user_id'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_my_vars);
+    return self::get_var_setup_default($a_var_setup);
   }
 
   public function do_call() {
@@ -1102,20 +1102,20 @@ class mediamosa_rest_call_aut_collection_get_rights extends mediamosa_rest_call 
 
   // ------------------------------------------------------------------ Functions (public).
   public function get_var_setup() {
-    $a_my_vars = array();
+    $a_var_setup = array();
 
-    $a_my_vars[mediamosa_rest_call::VARS]['coll_id'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS]['coll_id'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_COLLECTION_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
     );
 
-    $a_my_vars[mediamosa_rest_call::VARS]['user_id'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS]['user_id'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_my_vars);
+    return self::get_var_setup_default($a_var_setup);
   }
 
   public function do_call() {
@@ -1173,26 +1173,26 @@ class mediamosa_rest_call_aut_collection_set_rights extends mediamosa_rest_call 
 
   // ------------------------------------------------------------------ Functions (public).
   public function get_var_setup() {
-    $a_my_vars = array();
+    $a_var_setup = array();
 
-    $a_my_vars[mediamosa_rest_call::VARS]['coll_id'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS]['coll_id'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_COLLECTION_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
     );
 
-    $a_my_vars[mediamosa_rest_call::VARS]['user_id'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS]['user_id'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
     );
 
-    $a_my_vars[mediamosa_rest_call::VARS]['replace'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS]['replace'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_BOOL,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_DEFAULT_VALUE => 'TRUE',
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_my_vars);
+    return self::get_var_setup_default($a_var_setup);
   }
 
   public function do_call() {

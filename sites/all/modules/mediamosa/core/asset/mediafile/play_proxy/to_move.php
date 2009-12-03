@@ -130,14 +130,6 @@ function _play_proxy_play_ticket_location($app_id) {
   return SAN_NAS_BASE_PATH ."/". PLAY_TICKET_LOCATION ."/". $app_id ;
 }
 
-/**
- * Return file location of asx file
- *
- * @return string path to ticket location
- */
-function _play_proxy_asx_file_location($s_ticket) {
-  return SAN_NAS_BASE_PATH . "/" . STILL_TICKET_LOCATION . '/' . $s_ticket . '.asx';
-}
 
 
 

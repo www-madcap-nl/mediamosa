@@ -153,6 +153,7 @@
  */
 $db_prefix = '';
 
+$databases = array();
 $databases['default']['default'] = array(
   'driver' => 'mysql',
   'database' => 'mediamosa2',

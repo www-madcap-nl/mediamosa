@@ -40,6 +40,7 @@ require_once 'core/collection/mediamosa_collection.install.inc';
 require_once 'core/server/mediamosa_server.install.inc';
 require_once 'core/ticket/mediamosa_ticket.install.inc';
 require_once 'core/user/mediamosa_user.install.inc';
+require_once 'core/ftp_batch/mediamosa_ftp_batch.install.inc';
 
 /**
  * Implement hook_install().
@@ -68,12 +69,18 @@ function mediamosa_install() {
 
   // Call installer ticket.
   mediamosa_ticket_install();
+
+  // Call installer ftp_batch.
+  mediamosa_ftp_batch_install();
 }
 
 /**
  * Implement hook_unstall().
  */
 function mediamosa_uninstall() {
+  // Remove ftp_batch.
+  mediamosa_ftp_batch_uninstall();
+
   // Call uninstaller ticket.
   mediamosa_ticket_install();
 

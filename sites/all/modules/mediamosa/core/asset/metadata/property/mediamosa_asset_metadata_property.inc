@@ -33,7 +33,7 @@ class mediamosa_asset_metadata_property {
 
   // ------------------------------------------------------------------ Static Function.
     // 1.x name: media_management_metadata_definition_get (REST).
-  static public function property_list($a_app_ids, $include_default_definitions, $name, $offset = 0, $limit = mediamosa_db::LIMIT_MAX, $order_by = '', $order_direction = mediamosa_type::ORDER_DIRECTION_ASC) {
+  static public function property_list($a_app_ids, $include_default_definitions, $name, $offset = 0, $limit = mediamosa_settings::LIMIT_MAX, $order_by = '', $order_direction = mediamosa_type::ORDER_DIRECTION_ASC) {
 
     // Build the select object.
     $query = mediamosa_db::db_select(mediamosa_asset_metadata_property_db::TABLE_NAME, 'amp');
@@ -218,7 +218,6 @@ class mediamosa_asset_metadata_property {
       ->execute()->fetchAssoc();
   }
 
-
   /**
    * Get definitions from the asset_property_definitions array
    *
@@ -271,6 +270,7 @@ class mediamosa_asset_metadata_property {
 
   /**
    * Get all metadata properties, plus our own based on the app_id
+   * 1.x _media_management_get_metadata_definitions_full
    *
    * @param mixed $mixed_app_id
    * @param array $a_definitions_full

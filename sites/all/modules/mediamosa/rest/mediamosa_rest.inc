@@ -103,49 +103,79 @@ class mediamosa_rest {
 
     // If we return the found REST call, then make sure all defaults are set.
     if ($a_rest_call_return !== FALSE) {
-      // Make sure all are valid values.
-      assert(in_array($a_rest_call_return[mediamosa_rest_call::METHOD], array(mediamosa_rest_call::METHOD_GET, mediamosa_rest_call::METHOD_DELETE, mediamosa_rest_call::METHOD_POST, mediamosa_rest_call::METHOD_PUT)));
-      assert(in_array($a_rest_call_return[mediamosa_rest_call::STATUS], array(mediamosa_rest_call::STATUS_ACTIVE, mediamosa_rest_call::STATUS_DEPRECATED, mediamosa_rest_call::METHOD_POST, mediamosa_rest_call::STATUS_DISABLED)));
-      assert(isset($a_rest_call_return[mediamosa_rest_call::CLASS_NAME]));
-      assert(isset($a_rest_call_return[mediamosa_rest_call::MODULE_NAME]));
-      assert(isset($a_rest_call_return[mediamosa_rest_call::VERSION]));
-
-      // Default values.
-      if (!isset($a_rest_call_return[mediamosa_rest_call::METHOD])) {
-        $a_rest_call_return[mediamosa_rest_call::METHOD] = mediamosa_rest_call::METHOD_GET;
-      }
-
-      if (!isset($a_rest_call_return[mediamosa_rest_call::STATUS])) {
-        $a_rest_call_return[mediamosa_rest_call::STATUS] = mediamosa_rest_call::STATUS_ACTIVE;
-      }
-
-      if (!isset($a_rest_call_return[mediamosa_rest_call::RESPONSE_TYPE])) {
-        $a_rest_call_return[mediamosa_rest_call::RESPONSE_TYPE] = mediamosa_rest_call::RESPONSE_TYPE_XML;
-      }
-
-      // By default we allow all REST calls to be accessed through internals, unless specified as FALSE.
-      if (!isset($a_rest_call_return[mediamosa_rest_call::ACCESS_INTERNAL])) {
-        $a_rest_call_return[mediamosa_rest_call::ACCESS_INTERNAL] = TRUE;
-      }
-      assert(is_bool($a_rest_call_return[mediamosa_rest_call::ACCESS_INTERNAL]));
-
-      // By default we allow all REST calls to be denied accessed through externals, unless specified as TRUE.
-      if (!isset($a_rest_call_return[mediamosa_rest_call::ACCESS_EXTERNAL])) {
-        $a_rest_call_return[mediamosa_rest_call::ACCESS_EXTERNAL] = FALSE;
-      }
-      assert(is_bool($a_rest_call_return[mediamosa_rest_call::ACCESS_EXTERNAL]));
-
-      // By default we allow all REST calls to be accessed through APP Authentication, unless specified as FALSE.
-      if (!isset($a_rest_call_return[mediamosa_rest_call::ACCESS_APP_AUTH])) {
-        $a_rest_call_return[mediamosa_rest_call::ACCESS_APP_AUTH] = TRUE;
-      }
-      assert(is_bool($a_rest_call_return[mediamosa_rest_call::ACCESS_APP_AUTH]));
+    	$a_rest_call_return = self::set_default_rest_call($a_rest_call_return);
     }
 
     return $a_rest_call_return;
   }
+
+  /**
+   * Setup default and test parameters in REST array.
+   *
+   * @param array $a_rest_call
+   */
+  static public function set_default_rest_call(array $a_rest_call, $xml_output = false) {
+    // Make sure all are valid values.
+    assert(in_array($a_rest_call[mediamosa_rest_call::METHOD], array(mediamosa_rest_call::METHOD_GET, mediamosa_rest_call::METHOD_DELETE, mediamosa_rest_call::METHOD_POST, mediamosa_rest_call::METHOD_PUT)));
+    assert(in_array($a_rest_call[mediamosa_rest_call::STATUS], array(mediamosa_rest_call::STATUS_ACTIVE, mediamosa_rest_call::STATUS_DEPRECATED, mediamosa_rest_call::METHOD_POST, mediamosa_rest_call::STATUS_DISABLED)));
+    assert(isset($a_rest_call[mediamosa_rest_call::CLASS_NAME]));
+    assert(isset($a_rest_call[mediamosa_rest_call::MODULE_NAME]));
+    assert(isset($a_rest_call[mediamosa_rest_call::VERSION]));
+
+    // Default values.
+    if (!isset($a_rest_call[mediamosa_rest_call::METHOD])) {
+      $a_rest_call[mediamosa_rest_call::METHOD] = mediamosa_rest_call::METHOD_GET;
+    }
+
+    if (!isset($a_rest_call[mediamosa_rest_call::STATUS])) {
+      $a_rest_call[mediamosa_rest_call::STATUS] = mediamosa_rest_call::STATUS_ACTIVE;
+    }
+
+    if (!isset($a_rest_call[mediamosa_rest_call::RESPONSE_TYPE])) {
+      $a_rest_call[mediamosa_rest_call::RESPONSE_TYPE] = mediamosa_rest_call::RESPONSE_TYPE_XML;
+    }
+
+    // By default we allow all REST calls to be accessed through internals, unless specified as FALSE.
+    if ($xml_output) {
+      $a_rest_call[mediamosa_rest_call::ACCESS_INTERNAL] = !isset($a_rest_call[mediamosa_rest_call::ACCESS_INTERNAL]) ? 'TRUE' : mediamosa_lib::bool2boolstr(!isset($a_rest_call[mediamosa_rest_call::ACCESS_INTERNAL]));
+    }
+    else {
+    	if (!isset($a_rest_call[mediamosa_rest_call::ACCESS_INTERNAL])) {
+        $a_rest_call[mediamosa_rest_call::ACCESS_INTERNAL] = TRUE;
+    	}
+
+    	assert(is_bool($a_rest_call[mediamosa_rest_call::ACCESS_INTERNAL]));
+    }
+
+    // By default we allow all REST calls to be denied accessed through externals, unless specified as TRUE.
+    if ($xml_output) {
+      $a_rest_call[mediamosa_rest_call::ACCESS_EXTERNAL] = !isset($a_rest_call[mediamosa_rest_call::ACCESS_EXTERNAL]) ? 'FALSE' : mediamosa_lib::bool2boolstr(!isset($a_rest_call[mediamosa_rest_call::ACCESS_EXTERNAL]));
+    }
+    else {
+      if (!isset($a_rest_call[mediamosa_rest_call::ACCESS_EXTERNAL])) {
+        $a_rest_call[mediamosa_rest_call::ACCESS_EXTERNAL] = FALSE;
+      }
+
+      assert(is_bool($a_rest_call[mediamosa_rest_call::ACCESS_EXTERNAL]));
+    }
+
+    // By default we allow all REST calls to be accessed through APP Authentication, unless specified as FALSE.
+    if ($xml_output) {
+      $a_rest_call[mediamosa_rest_call::AUTHENTICATION_APP] = !isset($a_rest_call[mediamosa_rest_call::AUTHENTICATION_APP]) ? 'TRUE' : mediamosa_lib::bool2boolstr(!isset($a_rest_call[mediamosa_rest_call::AUTHENTICATION_APP]));
+    }
+    else {
+      if (!isset($a_rest_call[mediamosa_rest_call::AUTHENTICATION_APP])) {
+        $a_rest_call[mediamosa_rest_call::AUTHENTICATION_APP] = TRUE;
+      }
+
+      assert(is_bool($a_rest_call[mediamosa_rest_call::AUTHENTICATION_APP]));
+    }
+
+    return $a_rest_call;
+  }
+
   // ------------------------------------------------------------------ Functions (Public)
-  static public function get_rest_calls($limit = 0, $offset = 0, $key = mediamosa_rest_call::METHOD, $key2 = mediamosa_rest_call::URI) {
+  static public function get_rest_calls($limit = 0, $offset = 0, $xml_output = false, $key = mediamosa_rest_call::METHOD, $key2 = mediamosa_rest_call::URI) {
     // Find all REST calls of enabled modules.
     $a_rest_calls = module_invoke_all('mediamosa_register_rest_call');
 
@@ -171,14 +201,11 @@ class mediamosa_rest {
           $a_rest_call += $a_rest_calls[$a_rest_call[mediamosa_rest_call::ALIAS_FOR]];
         }
 
+        // Set method.
         $a_rest_call[mediamosa_rest_call::METHOD] = $method;
 
-        if (!isset($a_rest_call[mediamosa_rest_call::STATUS])) {
-          $a_rest_call[mediamosa_rest_call::STATUS] = mediamosa_rest_call::STATUS_ACTIVE;
-        }
-        if (!isset($a_rest_call[mediamosa_rest_call::RESPONSE_TYPE])) {
-          $a_rest_call[mediamosa_rest_call::RESPONSE_TYPE] = mediamosa_rest_call::RESPONSE_TYPE_XML;
-        }
+        // Setup default.
+        $a_rest_call = self::set_default_rest_call($a_rest_call, $xml_output);
 
         $a_rest_call[mediamosa_rest_call::URI] = $uri;
         $a_rest_call[mediamosa_rest_call::ID] = $pos++;

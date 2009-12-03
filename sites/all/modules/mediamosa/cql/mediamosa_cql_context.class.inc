@@ -38,7 +38,7 @@ abstract class mediamosa_cql_context extends mediamosa_cql {
   // You must define these when extending with this class
   abstract protected function mediamosa_cql_context_prefix_assignment_get();
   abstract protected function mediamosa_cql_context_is_named_comparitor($str);
-  abstract public function mediamosa_cql_context_index2column(cql_part $o_cql_part);
+  abstract public function mediamosa_cql_context_index2column(mediamosa_cql_part $o_cql_part);
 
   // Store the last exception here.
   private $m_last_exception = FALSE;

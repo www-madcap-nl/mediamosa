@@ -48,7 +48,7 @@ class mediamosa_ticket {
    * @return string
    */
   static public function play_ticket_target_get() {
-    return '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . mediamosa_maintenance_san_nas::data_location_get();
+    return '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::data_location_get();
   }
 
   /**
@@ -58,7 +58,7 @@ class mediamosa_ticket {
    * @return string
    */
   static public function download_ticket_target_get() {
-    return '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . mediamosa_maintenance_san_nas::data_location_get();
+    return '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::data_location_get();
   }
 
   /**
@@ -68,7 +68,7 @@ class mediamosa_ticket {
    * @return string
    */
   static public function still_ticket_target_get() {
-    return '..' . DIRECTORY_SEPARATOR . mediamosa_maintenance_san_nas::still_location_get();
+    return '..' . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::still_location_get();
   }
 
   // ------------------------------------------------------------------ Static Functions.
@@ -105,18 +105,18 @@ class mediamosa_ticket {
     }
     else {
       // Check if the mediafile exists.
-      $filename = mediamosa_maintenance_san_nas::mediafile_filename_get($a_mediafile_ext);
+      $filename = mediamosa_configuration_storage::mediafile_filename_get($a_mediafile_ext);
       if (!file_exists($filename)) {
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_FILE_NOT_FOUND, array('@filename' => $filename));
       }
     }
-
+// @todo:
     // Based on type, set the parameters.
   switch ($response_type) {
     case mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL:
       $ticket_type = self::TICKET_TYPE_STILL;
-      $ticket_target = STILL_TICKET_TARGET ."/". $still_id{0} ."/". $still_id;
-      $ticket_path = SAN_NAS_BASE_PATH ."/". STILL_TICKET_LOCATION;
+      $ticket_target = self::still_ticket_target_get() . DIRECTORY_SEPARATOR . $still_id{0} . DIRECTORY_SEPARATOR . $still_id;
+      $ticket_path = SAN_NAS_BASE_PATH . DIRECTORY_SEPARATOR . mediamosa_settings::STILL_TICKET_LOCATION;
       $ticket_symlink = $ticket_path ."/". $ticket;
       break;
 
@@ -165,10 +165,9 @@ class mediamosa_ticket {
     throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_DIR_NOT_WRITABLE, array('@location' => $ticket_path));
   }
 
-// maak de ticket aan in de database
-  db_set_active('data');
+  // Create ticket.
   db_query(
-    "INSERT INTO {ticket} (ticket_id, ticket_type, issued, app_id, user_id, mediafile_id) VALUES ('%s', '%s', NOW(), %d, '%s', '%s')",
+    "INSERT INTO {mediamosa_ticket} (ticket_id, ticket_type, issued, app_id, user_id, mediafile_id) VALUES ('%s', '%s', NOW(), %d, '%s', '%s')",
     $ticket,
     $ticket_type,
     $app_id,
@@ -177,7 +176,6 @@ class mediamosa_ticket {
       (isset($a_mediafile_ext['mediafile_id']) ? $a_mediafile_ext['mediafile_id'] : '')
     )
   );
-  db_set_active();
 
 // maak de ticket/symlink aan
   $rpath = SAN_NAS_BASE_PATH ."/". substr($ticket_target, 3);

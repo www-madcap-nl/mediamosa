@@ -68,7 +68,7 @@ class mediamosa_cql_part_group {
         $a_results[] = $str_result;
       }
 
-      $a_parse_tmp = $o_cql_part->cql_part_parse($o_obj, $function_name, $a_result_parse, $a_prefix_assignments, $array_settings);
+      $a_parse_tmp = $o_cql_part->mediamosa_cql_part_parse($o_obj, $function_name, $a_result_parse, $a_prefix_assignments, $array_settings);
       if (count($a_parse_tmp)) {
         $a_results[] = $a_parse_tmp;
       }

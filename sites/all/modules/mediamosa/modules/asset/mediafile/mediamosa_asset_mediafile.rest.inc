@@ -41,9 +41,9 @@ class mediamosa_rest_call_count_asset_mediafile extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Public Functions.
   public function get_var_setup() {
-    $a_my_vars = array();
+    $a_var_setup = array();
 
-    $a_my_vars = array(
+    $a_var_setup = array(
       self::VARS => array(
         self::GROUP_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
@@ -59,7 +59,7 @@ class mediamosa_rest_call_count_asset_mediafile extends mediamosa_rest_call {
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_my_vars);
+    return self::get_var_setup_default($a_var_setup);
   }
 
   public function do_call() {
@@ -94,9 +94,9 @@ class mediamosa_rest_call_get_mediafile extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Public Functions.
   public function get_var_setup() {
-    $a_my_vars = array();
+    $a_var_setup = array();
 
-    $a_my_vars = array(
+    $a_var_setup = array(
       self::VARS => array(
         self::MEDIAFILE_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_MEDIAFILE_ID,
@@ -112,7 +112,7 @@ class mediamosa_rest_call_get_mediafile extends mediamosa_rest_call {
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_my_vars);
+    return self::get_var_setup_default($a_var_setup);
   }
 
   public function do_call() {
@@ -132,40 +132,9 @@ class mediamosa_rest_call_get_mediafile extends mediamosa_rest_call {
     // Must have access.
     mediamosa_aut::read_single_object(mediamosa_aut::AUT_TYPE_MEDIAFILE, $mediafile_id, $app_id);
 
-    // @todo: ....
-    throw new mediamosa_exception_program_error('ooops');
+    // Now enrich response with mediafile data.
+    mediamosa_asset_mediafile::enrich_response_mediafile($o_mediamosa, array($mediafile_id), $a_app_ids, FALSE, $show_stills);
+
+    // Done.
   }
 }
-
-/**
- * This function retrieves all info about the given mediafile id
- *
- * @param string $app_id
- * @param string $asset_id
- * @return: array
- */
-/*
-function media_management_get_mediafile($a_args) {
-
-  try {
-    vpx_funcparam_add($a_funcparam, $a_args, 'show_stills', VPX_TYPE_BOOL, FALSE, 'TRUE');
-
-    $mediafile_id = vpx_funcparam_get_value($a_funcparam, 'mediafile_id', "");
-    $app_id = vpx_funcparam_get_value($a_funcparam, 'app_id');
-    $show_stills = drupal_strtoupper(vpx_funcparam_get_value($a_funcparam, 'show_stills')) == 'TRUE';
-
-    vpx_shared_must_exist("mediafile", array("mediafile_id" => $mediafile_id));
-
-    // ACL check
-    vpx_acl_read_single_object(VPX_ACL_AUT_TYPE_MEDIAFILE, $mediafile_id, $app_id);
-
-    $mediafiles = array($mediafile_id);
-
-    // get the media file
-    return _media_management_return_mediafile_list($mediafiles, $app_id, $show_stills);
-  }
-  catch (vpx_exception $e) {
-    return $e->vpx_exception_rest_response();
-  }
-}
-*/

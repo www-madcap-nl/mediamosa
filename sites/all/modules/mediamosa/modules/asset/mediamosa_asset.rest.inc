@@ -45,43 +45,43 @@ class mediamosa_rest_call_change_ownership extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Public Functions.
   public function get_var_setup() {
-    $a_my_vars = array();
+    $a_var_setup = array();
 
-    $a_my_vars = array(
+    $a_var_setup = array(
       self::VARS => array(
         self::OLD_GROUP_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
-          self::DESCRIPTION => 'The current group ID to replace.',
+          self::VAR_DESCRIPTION => 'The current group ID to replace.',
           self::VAR_TRIM_VALUE => self::VAR_TRIM_VALUE_YES,
         ),
         self::NEW_GROUP_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
-          self::DESCRIPTION => 'The new group ID to replace with.',
+          self::VAR_DESCRIPTION => 'The new group ID to replace with.',
           self::VAR_TRIM_VALUE => self::VAR_TRIM_VALUE_YES,
         ),
         self::OLD_OWNER_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
-          self::DESCRIPTION => 'The current owner to replace.',
+          self::VAR_DESCRIPTION => 'The current owner to replace.',
           self::VAR_TRIM_VALUE => self::VAR_TRIM_VALUE_YES,
         ),
         self::NEW_OWNER_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
-          self::DESCRIPTION => 'The new owner to replace with.',
+          self::VAR_DESCRIPTION => 'The new owner to replace with.',
           self::VAR_TRIM_VALUE => self::VAR_TRIM_VALUE_YES,
         ),
         self::OLD_APP_ID => array( // Unused.
           self::VAR_TYPE => mediamosa_type::TYPE_APP_ID,
-          self::DESCRIPTION => 'The current app to replace.',
+          self::VAR_DESCRIPTION => 'The current app to replace.',
         ),
         self::NEW_APP_ID => array( // Unused.
           self::VAR_TYPE => mediamosa_type::TYPE_APP_ID,
-          self::DESCRIPTION => 'The new app to replace with.',
+          self::VAR_DESCRIPTION => 'The new app to replace with.',
         ),
       ),
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_my_vars);
+    return self::get_var_setup_default($a_var_setup);
   }
 
   public function do_call() {
@@ -170,25 +170,25 @@ class mediamosa_rest_call_count_asset extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Public Functions.
   public function get_var_setup() {
-    $a_my_vars = array();
+    $a_var_setup = array();
 
-    $a_my_vars = array(
+    $a_var_setup = array(
       self::VARS => array(
         self::GROUP_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
-          self::DESCRIPTION => 'The group ID to match.',
+          self::VAR_DESCRIPTION => 'The group ID to match.',
           self::VAR_TRIM_VALUE => self::VAR_TRIM_VALUE_YES,
         ),
         self::OWNER_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
-          self::DESCRIPTION => 'The owner ID to match.',
+          self::VAR_DESCRIPTION => 'The owner ID to match.',
           self::VAR_TRIM_VALUE => self::VAR_TRIM_VALUE_YES,
         ),
       )
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_my_vars);
+    return self::get_var_setup_default($a_var_setup);
   }
 
   public function do_call() {
@@ -208,3 +208,359 @@ class mediamosa_rest_call_count_asset extends mediamosa_rest_call {
     $o_mediamosa->item_total_count = mediamosa_db::db_count_items(mediamosa_asset_db::TABLE_NAME, $app_id, $owner_id, $group_id);
   }
 }
+
+
+/**
+ * URI: /asset
+ * Method: GET
+ */
+class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
+  // ------------------------------------------------------------------ Consts.
+  // Rest vars;
+  const RETURN_ASSET_IDS = 'return_asset_ids';
+  const USER_ID = 'user_id';
+  const AUT_USER_ID = 'aut_user_id'; // Alias for user_id.
+  const FAV_USER_ID = 'fav_user_id';
+  const OPERATOR = 'operator';
+  const HIDE_EMPTY_ASSETS = 'hide_empty_assets';
+  const COLL_ID = 'coll_id';
+  const GRANTED = 'granted';
+  const IS_PUBLIC_LIST = 'is_public_list';
+  const AUT_GROUP_ID = 'aut_group_id';
+  const AUT_DOMAIN = 'aut_domain';
+  const AUT_REALM = 'aut_realm';
+  const BATCH_ID = 'batch_id';
+  const CQL = 'cql';
+  const SHOW_DELETED = 'show_deleted';
+
+  // ------------------------------------------------------------------ Public Functions.
+  static public function get_search_params() {
+    return array(
+      'asset_id' => mediamosa_type::TYPE_SEARCH_STRING,
+      'owner_id' => mediamosa_type::TYPE_SEARCH_STRING,
+      'group_id' => mediamosa_type::TYPE_SEARCH_STRING,
+      'provider_id' => mediamosa_type::TYPE_SEARCH_STRING,
+      'reference_id' => mediamosa_type::TYPE_SEARCH_STRING,
+      'videotimestamp' => mediamosa_type::TYPE_SEARCH_DATETIME,
+      'videotimestampmodified' => mediamosa_type::TYPE_SEARCH_DATETIME,
+      'mediafile_duration' => mediamosa_type::TYPE_SEARCH_STRING,
+      'mediafile_container_type' => mediamosa_type::TYPE_SEARCH_STRING,
+      'changed' => mediamosa_type::TYPE_SEARCH_DATETIME,
+      'app_id_search' => mediamosa_type::TYPE_SEARCH_INT,
+      'mime_type' => mediamosa_type::TYPE_SEARCH_STRING,
+      'filename' => mediamosa_type::TYPE_SEARCH_STRING,
+      'numofviews' => mediamosa_type::TYPE_SEARCH_INT,
+      'numofplays' => mediamosa_type::TYPE_SEARCH_INT,
+    );
+  }
+
+  public function get_var_setup() {
+    $a_var_setup = array();
+
+    $a_var_setup = array(
+      self::VARS => array(
+        self::RETURN_ASSET_IDS => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_DESCRIPTION => 'Return only the found asset ids.',
+          self::VAR_DEFAULT_VALUE => 'FALSE',
+        ),
+        self::FAV_USER_ID => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_DESCRIPTION => 'Search within the favorites of this supplied user ID.',
+        ),
+        self::HIDE_EMPTY_ASSETS => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_DESCRIPTION => 'Do not include assets that do not have mediafiles.',
+          self::VAR_DEFAULT_VALUE => 'FALSE',
+        ),
+        self::COLL_ID => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_COLLECTION_ID,
+          self::VAR_DESCRIPTION => 'Search within these collections.',
+          self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+        ),
+        self::GRANTED => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_DESCRIPTION => 'Include a flag on each asset to indicate access. When providing with TRUE, the result will include assets where no access is available.',
+          self::VAR_DEFAULT_VALUE => 'TRUE',
+        ),
+        self::IS_PUBLIC_LIST => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_DESCRIPTION => 'Include or hide private assets in result. TRUE: exclude private assets, FALSE: include private assets.',
+          self::VAR_DEFAULT_VALUE => 'FALSE',
+        ),
+        self::IS_APP_ADMIN => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_DESCRIPTION => 'Allows seeing unapporpiate assets.',
+          self::VAR_DEFAULT_VALUE => 'FALSE',
+        ),
+        self::USER_ID => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_DESCRIPTION => 'Alias for aut_user_id parameter, is chosen above aut_user_id.',
+        ),
+        self::AUT_USER_ID => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_DESCRIPTION => 'Authentication parameter.',
+        ),
+        self::AUT_GROUP_ID => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
+          self::VAR_DESCRIPTION => 'Authentication parameter.',
+          self::VAR_DEFAULT_VALUE => 'FALSE',
+        ),
+        self::AUT_GROUP_ID => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
+          self::VAR_DESCRIPTION => 'Authentication parameter.',
+          self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+        ),
+        self::AUT_DOMAIN => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_DOMAIN,
+          self::VAR_DESCRIPTION => 'Authentication parameter.',
+        ),
+        self::AUT_REALM=> array(
+          self::VAR_TYPE => mediamosa_type::TYPE_REALM,
+          self::VAR_DESCRIPTION => 'Authentication parameter.',
+        ),
+        self::BATCH_ID => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_BATCH_ID,
+          self::VAR_DESCRIPTION => 'Search within batch.',
+        ),
+        self::CQL => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_CQL_ASSET,
+          self::VAR_DESCRIPTION => 'The CQL search string, used for extended and complex search options.',
+        ),
+        self::SHOW_DELETED => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_DESCRIPTION => 'Included deleted assets for OAI. The deleted assets are not complete assets, these assets are empty and are only an indication that they are deleted.',
+          self::VAR_DEFAULT_VALUE => 'FALSE',
+        ),
+
+        // Old fasion search params.
+        self::OPERATOR => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_OPERATOR,
+          self::VAR_DESCRIPTION => 'For non-CQL search only; provide either OR or AND for search parameters..',
+          self::VAR_DEFAULT_VALUE => 'and',
+        )
+      )
+    );
+
+    // Include limit, offset vars.
+    $a_var_setup = self::get_var_setup_range($a_var_setup);
+
+    // Include order by.
+    $a_var_setup = self::get_var_setup_order_by($a_var_setup);
+
+    // Include default.
+    $a_var_setup = self::get_var_setup_default($a_var_setup);
+
+    // Process what we have.
+    $a_var_setup = parent::process_rest_args($a_var_setup);
+
+    // If we return only asset ids, then we differ from limit_max.
+    $return_asset_ids = $this->get_param_value(self::RETURN_ASSET_IDS);
+
+    // Not validated, so do it now.
+    $return_asset_ids = mediamosa_type::check(self::RETURN_ASSET_IDS, mediamosa_type::TYPE_BOOL, $return_asset_ids, FALSE);
+
+    if ($return_asset_ids) {
+      $a_var_setup = self::get_var_setup_range($a_var_setup, mediamosa_settings::LIMIT_MAX_IDS_ONLY);
+    }
+
+    // Remember, might not be validated.
+    $a_app_ids = $this->get_param_value_app();
+
+    // So check it now.
+    $a_app_ids = mediamosa_type::check(self::APP_ID, mediamosa_type::TYPE_APP_ID, $a_app_ids, TRUE);
+
+    // Now include metadata search stuff.
+    $a_var_setup = mediamosa_core_cql::get_var_setup_search($a_app_ids, $a_var_setup, self::get_search_params());
+
+    return $a_var_setup;
+  }
+
+  // Override for limit max.
+  protected function process_rest_args($a_var_setup) {
+    // Process input.
+  	$a_var_setup = parent::process_rest_args($a_var_setup);
+
+    // If user_id is set, override aut_user_id, dont care if aut_user_id is set.
+    $user_id = $this->get_param_value(self::USER_ID);
+
+    // Not validated, so do it now.
+    $user_id = mediamosa_type::check(self::USER_ID, mediamosa_type::TYPE_USER_ID, $user_id, FALSE);
+
+    if ($user_id != '') {
+      $this->set_param_value(self::AUT_USER_ID, $user_id);
+    }
+
+    // Return the var_setup.
+    return $a_var_setup;
+  }
+
+  // Override for checking CQL string.
+  protected function validate_rest_args($a_var_setup) {
+
+  	// Validate first.
+  	parent::validate_rest_args($a_var_setup);
+
+    $cql = $this->get_param_value(self::CQL);
+  	$a_app_ids = $this->get_param_value(self::APP_ID);
+    $error_text = '';
+
+    if ($cql != '' && !mediamosa_core_cql::verify_asset($cql, $a_app_ids, $error_text)) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CQL_ERROR, array('@error' => $error_text));
+    }
+  }
+
+  public function do_call() {
+    $o_mediamosa = mediamosa::get();
+
+    $a_app_ids = $this->get_param_value(self::APP_ID);
+
+    // Now convert the old search parameters to CQL.
+    $a_var_setup = mediamosa_core_cql::get_var_setup_search($a_app_ids, array(), self::get_search_params());
+
+    $a_cql = array();
+    $a_translate_to = array();
+    foreach ($a_var_setup[mediamosa_rest_call::VARS] as $param => $a_param) {
+    	if ($a_param[mediamosa_rest_call::VAR_TYPE] == mediamosa_type::TYPE_SEARCH_MATCH) {
+    		continue;
+    	}
+
+    	// When provided, then convert.
+    	if (self::isset_param($param)) {
+        $a_value = self::get_param_value($param);
+        $match = self::get_param_value($param . '_match');
+
+        $a_cql[] = mediamosa_asset_search::convert_searchparam_to_cql($param, $match, $a_value, $a_param[mediamosa_rest_call::PARAM_TYPE], $a_translate_to);
+    	}
+    }
+
+    if (count($a_cql)) {
+      if (self::isset_param(self::CQL)) {
+        throw new mediamosa_exception_error_cql_exclusive();
+      }
+
+      // Get the glue operator.
+      $operator = self::get_param_value(self::OPERATOR);
+
+      $cql = implode(' ' . mediamosa_unicode::strtoupper($operator) . ' ', $a_cql);
+    }
+    else {
+    	$cql = self::get_param_value(self::CQL);
+    }
+
+    // Now search.
+    mediamosa_asset_search::asset_search(
+      $o_mediamosa,
+      $a_app_ids,
+      $cql
+    );
+    // @todo;
+    //_vpx_statistics_log_search_query($a_args, $app_id);
+  }
+}
+
+/**
+
+function media_management_get_asset_search($a_args, $b_fav_user_id_required = FALSE) {
+  $a_funcparam = array(
+    'a_sort' => array(
+      'asset_id' => array('table' => 'asset', 'column' => 'asset_id', 'type' => VPX_TYPE_ALPHANUM),
+      'owner_id' => array('table' => 'asset', 'column' => 'owner_id', 'type' => VPX_TYPE_ALPHANUM),
+      'group_id' => array('table' => 'asset', 'column' => 'group_id', 'type' => VPX_TYPE_STRING),
+      'provider_id' => array('table' => 'asset', 'column' => 'provider_id', 'type' => VPX_TYPE_ALPHANUM),
+      'reference_id' => array('table' => 'asset', 'column' => 'reference_id', 'type' => VPX_TYPE_ALPHANUM),
+      'videotimestamp' => array('table' => 'asset', 'column' => 'videotimestamp', 'type' => VPX_TYPE_TIMESTAMP),
+      'videotimestampmodified' => array('table' => 'asset', 'column' => 'videotimestampmodified', 'type' => VPX_TYPE_TIMESTAMP),
+      'mediafile_duration' => array('table' => 'asset', 'column' => 'mediafile_duration', 'type' => VPX_TYPE_ALPHANUM),
+      'mediafile_container_type' => array('table' => 'asset', 'column' => 'mediafile_container_type', 'type' => VPX_TYPE_ALPHANUM),
+      'changed' => array('table' => 'asset', 'column' => 'changed', 'type' => VPX_TYPE_TIMESTAMP),
+      'app_id_search' => array('table' => 'asset', 'column' => 'app_id', 'type' => VPX_TYPE_INT),
+      'app_id' => array('table' => 'asset', 'column' => 'app_id', 'type' => VPX_TYPE_INT),
+      'mime_type' => array('table' => 'mediafile_metadata', 'column' => 'mime_type', 'type' => VPX_TYPE_STRING),
+      'filename' => array('table' => 'mediafile', 'column' => 'filename', 'type' => VPX_TYPE_STRING),
+      'numofviews' => array('table' => 'asset', 'column' => 'viewed', 'type' => VPX_TYPE_INT_RANGE),
+      'numofplays' => array('table' => 'asset', 'column' => 'played', 'type' => VPX_TYPE_INT_RANGE),
+      ),
+  );
+  vpx_funcparam_add($a_funcparam, $a_args, 'show_stills', VPX_TYPE_BOOL, FALSE, 'TRUE');
+
+  $a_funcparam['a_search'] = $a_funcparam['a_sort']; // gebruik dezelfde parameters voor search & sort
+  unset($a_funcparam['a_search']['mediafile_duration']); // op deze na
+  unset($a_funcparam['a_search']['app_id']); // op deze na
+  unset($a_funcparam['a_sort']['app_id_search']); // op deze na
+  unset($a_funcparam['a_sort']['mime_type']); // op deze na
+  unset($a_funcparam['a_sort']['filename']); // op deze na
+
+  try {
+
+    // Alleen asset_ids terug geven...
+
+
+
+
+
+
+
+
+
+
+
+
+    // Voeg toe met de definities van assets
+    $a_metadata_definitions_full = mediamosa_asset_metadata_property::get_metadata_properties_full($app_id);
+
+    foreach ($a_metadata_definitions_full as $s_key => $a_metadata) {
+      $array = array(
+        'table' => 'asset_property',
+        'prop_id' => $a_metadata['propdef_id'],
+        'type' => $a_metadata['propdef_type'],
+        'column' => $a_metadata['propdef_name'],
+      );
+
+      $a_funcparam['a_search'][$s_key] = $array;
+      $a_funcparam['a_sort'][$s_key] = $array;
+    }
+
+// [name]_match=[contains|exact|begin|period]
+// [name]=value or YYYY-MM-DD HH:MM:SS|YYYY-MM-DD HH:MM:SS
+
+    // Nu de zoek parameters (default)
+    foreach ($a_funcparam['a_search'] as $s_key => $a_search) {
+      if (!vpx_isset_parameter($a_args, $s_key)) {
+        continue;
+      }
+
+      // if CQL is set, you specify any search or order parameter
+      if ($cql != '') {
+        throw new vpx_exception_error_cql_exclusive();
+      }
+
+      // Voeg de zoek parameter toe
+      vpx_funcparam_search_add($a_funcparam, $a_args, $s_key);
+    }
+
+    if (vpx_funcparam_isset($a_funcparam, 'order_by')) {
+      $order_by = vpx_funcparam_get_value($a_funcparam, 'order_by', "");
+      if ($order_by != "") {
+        // if CQL is set, you specify any search or order parameter
+        if ($cql != '') {
+          throw new vpx_exception_error_cql_exclusive();
+        }
+
+        if (array_search($order_by, array_keys($a_funcparam['a_sort'])) === FALSE) {
+          throw new vpx_exception_error_sort_field_error(array('@field' => $order_by));
+        }
+      }
+    }
+
+
+    return _media_management_search_asset($a_funcparam, $a_metadata_definitions_full);
+  }
+  catch (vpx_exception $e) {
+    return $e->vpx_exception_rest_response();
+  }
+}
+
+
+}
+*/

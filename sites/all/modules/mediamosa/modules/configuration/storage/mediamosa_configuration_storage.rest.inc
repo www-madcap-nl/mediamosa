@@ -24,35 +24,31 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
+ /**
+  * @file
+  * REST functions for SAN NAS
+  */
 
 /**
- * @file
- * CQL enables developers to create SQL from a standard CQL query.
+ * URI: /get_current_mount_point
+ * Method: GET
  */
+class mediamosa_rest_call_get_current_mount_point extends mediamosa_rest_call {
 
-// CQL Settings
-define('MEDIAMOSA_CQL_MINIMUM_PHP_VERSION', '5.1.0');
+  // ------------------------------------------------------------------ Functions (public).
+  public function get_var_setup() {
+    $a_var_setup = array();
 
-/**
- * Make sure we meet the requirements needed for our module
- */
-function mediamosa_cql_requirements($phase) {
-  // Ensure translations don't break at install time
-  $t = get_t();
-
-  $a_requirements = array();
-
-  if ($phase == 'runtime') {
-    // We require PHP 5 or higher
-    if (version_compare(phpversion(), MEDIAMOSA_CQL_MINIMUM_PHP_VERSION) < 0) {
-      $a_requirements['php'] = array(
-        'title' => $t('PHP'),
-        'value' => phpversion(),
-        'description' => $t('Your PHP installation does not meet the requirements for using the MediaMosa CQL module. MediaMosa CQL requires at least PHP %version.', array('%version' => MEDIAMOSA_CQL_MINIMUM_PHP_VERSION)),
-        'severity' => REQUIREMENT_ERROR
-      );
-    }
+    // Enrich with required REST vars.
+    return self::get_var_setup_default($a_var_setup);
   }
 
-  return $a_requirements;
+  public function do_call() {
+    $o_mediamosa = mediamosa::get();
+
+    // Get the linux mount point.
+    $current_mount_point = mediamosa_configuration_storage::linux_get();
+
+    $o_mediamosa->add_item(array('current_mount_point' => $current_mount_point));
+  }
 }

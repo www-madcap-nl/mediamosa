@@ -120,6 +120,7 @@ function mediamosa_migration_requirements($phase) {
       'mediamosa_server_transcoding_tool',
       'mediamosa_server_upload',
       'mediamosa_ticket',
+      'mediamosa_ftp_batch',
     );
     // These tables (dest) must be empty.
     $a_table_names_dest_empty = array(
@@ -131,6 +132,7 @@ function mediamosa_migration_requirements($phase) {
       'mediamosa_aut_object',
       'mediamosa_collection',
       'mediamosa_ticket',
+      'mediamosa_ftp_batch',
     );
     // Must exists source drupal db.
     $a_table_names_source_exists = array(
@@ -142,7 +144,6 @@ function mediamosa_migration_requirements($phase) {
       'transcoding_server',
       'transcoding_server_tool',
       'upload_server',
-
     );
     // Must exists source data db.
     $a_table_names_source_exists_data = array(
@@ -158,6 +159,9 @@ function mediamosa_migration_requirements($phase) {
       'aut_app_master_slave',
       'collection',
       'ticket',
+      'quota_user',
+      'quota_group',
+      'ftp_batch',
     );
 
     $old_db = 'default';
@@ -254,6 +258,12 @@ function mediamosa_migration_install() {
 
   // ticket -> mediamosa_ticket.
   _mediamosa_migration_ticket();
+
+  // User / Group tables.
+  _mediamosa_migration_user();
+
+  // ftp_batch -> mediamosa_ftp_batch.
+  _mediamosa_migration_ftp_batch();
 }
 
 /**
@@ -1066,8 +1076,8 @@ function _mediamosa_migration_sannas() {
   )->fetchAssoc();
 
   if ($a_san_nas) {
-    mediamosa_maintenance_san_nas::linux_set($a_san_nas['current_mount_point']);
-    mediamosa_maintenance_san_nas::windows_set($a_san_nas['current_mount_point_windows']);
+    mediamosa_configuration_storage::linux_set($a_san_nas['current_mount_point']);
+    mediamosa_configuration_storage::windows_set($a_san_nas['current_mount_point_windows']);
   }
 }
 
@@ -1466,7 +1476,7 @@ function _mediamosa_migration_user() {
         app_id,
         fav_type,
         fav_id
-      FROM #db_name.user_favorites ORDER BY created ASC)",
+      FROM #db_name.user_favorites ORDER BY name ASC)",
     array(
       '#db_name' => $db_name
     ))
@@ -1474,7 +1484,7 @@ function _mediamosa_migration_user() {
 }
 
 /**
- * Migrate user/group table..
+ * Migrate ticket table..
  */
 function _mediamosa_migration_ticket() {
   // Get the database name.
@@ -1510,6 +1520,72 @@ function _mediamosa_migration_ticket() {
         created,
         changed
       FROM #db_name.ticket ORDER BY ticket_id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+}
+
+/**
+ * Migrate ftp_batch table..
+ */
+function _mediamosa_migration_ftp_batch() {
+  // Get the database name.
+  $db_name = _mediamosa_migration_get_memo_data_db();
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_ftp_batch}
+      (
+        batch_id,
+        app_id,
+        owner_id,
+        group_id,
+        vuf,
+        started,
+        finished,
+        email_address,
+        email_contents
+      ) (SELECT
+        batch_id,
+        app_id,
+        owner_id,
+        group_id,
+        vuf,
+        started,
+        finished,
+        email_address,
+        email_contents
+      FROM #db_name.ftp_batch ORDER BY batch_id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_ftp_batch_asset}
+      (
+        id,
+        asset_id,
+        batch_id
+      ) (SELECT
+        id,
+        asset_id,
+        batch_id
+      FROM #db_name.ftp_batch_asset ORDER BY id ASC)",
     array(
       '#db_name' => $db_name
     ))

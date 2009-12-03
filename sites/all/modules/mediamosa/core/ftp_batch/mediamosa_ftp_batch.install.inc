@@ -1,0 +1,119 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is a Full Featured, Webservice Oriented Media Management and
+ * Distribution platform (http://www.vpcore.nl)
+ *
+ * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+ /**
+  * @file
+  *
+  */
+
+require_once 'mediamosa_ftp_batch_db.inc';
+require_once 'asset/mediamosa_ftp_batch_asset.install.inc';
+
+/**
+ * Implement hook_ininstall.
+ */
+function mediamosa_ftp_batch_install() {
+// Create our table.
+  mediamosa::drupal_install_schema(mediamosa_ftp_batch_db::TABLE_NAME);
+
+  // Create our child table.
+  mediamosa_ftp_batch_asset_install();
+}
+
+/**
+ * Implement hook_uninstall.
+ */
+function mediamosa_ftp_batch_uninstall() {
+  // Uninstall our child table.
+  mediamosa_ftp_batch_asset_uninstall();
+
+  // Uninstall our table.
+  mediamosa::drupal_uninstall_schema(mediamosa_ftp_batch_db::TABLE_NAME);
+}
+
+/**
+ * Implement hook_schema().
+ */
+function mediamosa_ftp_batch_schema() {
+  $a_schema[mediamosa_ftp_batch_db::TABLE_NAME] = array(
+    'description' => t('This FTP Batch table.'),
+    'fields' => array(
+      mediamosa_ftp_batch_db::ID => array(
+        'type' => 'serial',
+        'not null' => TRUE,
+        'description' => t('Primary key.'),
+      ),
+      mediamosa_ftp_batch_db::APP_ID => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => t('The application ID.'),
+      ),
+      mediamosa_ftp_batch_db::OWNER_ID => array(
+        'description' => t('The owner of the batch.'),
+        'type' => 'varchar',
+        'length' => mediamosa_ftp_batch_db::OWNER_ID_LENGTH,
+        'not null' => FALSE,
+      ),
+      mediamosa_ftp_batch_db::GROUP_ID => array(
+        'description' => t('The group owner of the batch.'),
+        'type' => 'varchar',
+        'length' => mediamosa_ftp_batch_db::GROUP_ID_LENGTH,
+        'not null' => FALSE,
+      ),
+      mediamosa_ftp_batch_db::VUF => array(
+        'description' => t('The VUF file location.'),
+        'type' => 'varchar',
+        'length' => mediamosa_ftp_batch_db::VUF_LENGTH,
+        'not null' => TRUE,
+      ),
+      mediamosa_ftp_batch_db::STARTED => array(
+        'type' => 'datetime',
+        'not null' => FALSE,
+        'description' => t('The started datatime of batch.'),
+      ),
+      mediamosa_ftp_batch_db::FINISHED => array(
+        'type' => 'datetime',
+        'not null' => FALSE,
+        'description' => t('The finished datatime of batch.'),
+      ),
+      mediamosa_ftp_batch_db::EMAIL_ADDRESS => array(
+        'description' => t('The email address of creator.'),
+        'type' => 'varchar',
+        'length' => mediamosa_ftp_batch_db::EMAIL_ADDRESS_LENGTH,
+        'not null' => FALSE,
+      ),
+      mediamosa_ftp_batch_db::EMAIL_CONTENTS => array(
+        'description' => t('The email address of creator.'),
+        'type' => 'text',
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array(mediamosa_ftp_batch_db::ID),
+  );
+
+  return $a_schema;
+}

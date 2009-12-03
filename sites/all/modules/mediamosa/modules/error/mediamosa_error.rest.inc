@@ -38,11 +38,11 @@ class mediamosa_rest_call_error_list extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Functions (public).
   public function get_var_setup() {
     // Enrich with limit and offset vars.
-    $a_my_vars = $this->set_var_setup_range();
+    $a_var_setup = $this->get_var_setup_range();
 
     // Enrich with Order by and Order direction vars.
-    $a_my_vars = $this->set_var_setup_order_by(
-      $a_my_vars,
+    $a_var_setup = $this->get_var_setup_order_by(
+      $a_var_setup,
       mediamosa_error_db::CODE,
       array(
         mediamosa_error_db::CODE,
@@ -51,7 +51,7 @@ class mediamosa_rest_call_error_list extends mediamosa_rest_call {
     );
 
     // My vars for this REST call.
-    $a_my_vars[mediamosa_rest_call::VARS][mediamosa_error_db::CODE] = array(
+    $a_var_setup[mediamosa_rest_call::VARS][mediamosa_error_db::CODE] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_UINT,
       mediamosa_rest_call::VAR_RANGE_START => mediamosa_error_db::CODE_RANGE_START,
       mediamosa_rest_call::VAR_RANGE_END => mediamosa_error_db::CODE_RANGE_END,
@@ -59,7 +59,7 @@ class mediamosa_rest_call_error_list extends mediamosa_rest_call {
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_my_vars);
+    return self::get_var_setup_default($a_var_setup);
   }
 
   public function do_call() {
@@ -110,17 +110,17 @@ class mediamosa_rest_call_error_get extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Functions (public).
   public function get_var_setup() {
-    $a_my_vars = array();
+    $a_var_setup = array();
 
     // My vars for this REST call.
-    $a_my_vars[mediamosa_rest_call::VARS][mediamosa_error_db::CODE] = array(
+    $a_var_setup[mediamosa_rest_call::VARS][mediamosa_error_db::CODE] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_UINT,
       mediamosa_rest_call::VAR_RANGE_START => mediamosa_error_db::CODE_RANGE_START,
       mediamosa_rest_call::VAR_RANGE_END => mediamosa_error_db::CODE_RANGE_END,
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_my_vars);
+    return self::get_var_setup_default($a_var_setup);
   }
 
   public function do_call() {

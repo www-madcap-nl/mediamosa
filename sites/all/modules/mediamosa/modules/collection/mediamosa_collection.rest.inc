@@ -41,9 +41,9 @@ class mediamosa_rest_call_count_collection extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Public Functions.
   public function get_var_setup() {
-    $a_my_vars = array();
+    $a_var_setup = array();
 
-    $a_my_vars = array(
+    $a_var_setup = array(
       self::VARS => array(
         self::GROUP_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
@@ -59,7 +59,7 @@ class mediamosa_rest_call_count_collection extends mediamosa_rest_call {
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_my_vars);
+    return self::get_var_setup_default($a_var_setup);
   }
 
   public function do_call() {

@@ -79,13 +79,13 @@
 /**
  * Key defines for the context array
  */
-define('CQL_CONTEXT_KEY_INDEXES', 'indexes');// CQL index
-define('CQL_CONTEXT_KEY_COLUMNS', 'columns');// SQL column
-define('CQL_CONTEXT_KEY_INDEX_REFERENCES', 'index_references'); // List of index => index, multiple indexes can be references
-define('CQL_CONTEXT_KEY_DEFAULT_RELATION', 'default_relation');// required
-define('CQL_CONTEXT_KEY_DEFAULT_SEARCH_TERMS', 'default_search_terms');// required
+define('MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES', 'indexes');// CQL index
+define('MEDIAMOSA_CQL_CONTEXT_KEY_COLUMNS', 'columns');// SQL column
+define('MEDIAMOSA_CQL_CONTEXT_KEY_INDEX_REFERENCES', 'index_references'); // List of index => index, multiple indexes can be references
+define('MEDIAMOSA_CQL_CONTEXT_KEY_DEFAULT_RELATION', 'default_relation');// required
+define('MEDIAMOSA_CQL_CONTEXT_KEY_DEFAULT_SEARCH_TERMS', 'default_search_terms');// required
 
-define('CQL_BOOLEAN_OR', 'OR');
-define('CQL_BOOLEAN_AND', 'AND');
-define('CQL_BOOLEAN_NOT', 'NOT');
-define('CQL_BOOLEAN_PROX', 'PROX');
+define('MEDIAMOSA_CQL_BOOLEAN_OR', 'OR');
+define('MEDIAMOSA_CQL_BOOLEAN_AND', 'AND');
+define('MEDIAMOSA_CQL_BOOLEAN_NOT', 'NOT');
+define('MEDIAMOSA_CQL_BOOLEAN_PROX', 'PROX');

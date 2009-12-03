@@ -36,15 +36,15 @@
 class mediamosa_rest_call_list extends mediamosa_rest_call {
 
   public function get_var_setup() {
-    $a_my_vars = array(
+    $a_var_setup = array(
       mediamosa_rest_call::VARS => array(),
     );
 
     // Enrich with default REST vars limit / offset.
-    $a_my_vars = self::set_var_setup_range($a_my_vars);
+    $a_var_setup = self::get_var_setup_range($a_var_setup);
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_my_vars);
+    return self::get_var_setup_default($a_var_setup);
   }
 
   public function do_call() {
@@ -54,7 +54,7 @@ class mediamosa_rest_call_list extends mediamosa_rest_call {
     $offset = $this->get_param_value(mediamosa_rest_call::OFFSET);
 
     // Get all rest calls.
-    $a_calls = mediamosa_rest::get_rest_calls($limit, $offset);
+    $a_calls = mediamosa_rest::get_rest_calls($limit, $offset, TRUE);
 
     foreach ($a_calls as $a_call_2) { // Method
       foreach ($a_call_2 as $a_call) { // Uri
@@ -71,16 +71,16 @@ class mediamosa_rest_call_list extends mediamosa_rest_call {
 class mediamosa_rest_call_get extends mediamosa_rest_call {
 
   public function get_var_setup() {
-    $a_my_vars = array();
+    $a_var_setup = array();
 
-    $a_my_vars[mediamosa_rest_call::VARS][mediamosa_rest_call::ID] = array(
+    $a_var_setup[mediamosa_rest_call::VARS][mediamosa_rest_call::ID] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_SERIAL,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => mediamosa::t('The numeric ID of the REST call.'),
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_my_vars);
+    return self::get_var_setup_default($a_var_setup);
   }
 
   public function do_call() {
@@ -90,7 +90,7 @@ class mediamosa_rest_call_get extends mediamosa_rest_call {
     $uri_id = $this->get_param_value(mediamosa_rest_call::ID);
 
     // Get all rest calls.
-    $a_calls = mediamosa_rest::get_rest_calls(0, 0, mediamosa_rest_call::ID, NULL);
+    $a_calls = mediamosa_rest::get_rest_calls(0, 0, TRUE, mediamosa_rest_call::ID, NULL);
 
     if (!isset($a_calls[$uri_id])) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_NOT_FOUND, array('@uri_id' => $uri_id));

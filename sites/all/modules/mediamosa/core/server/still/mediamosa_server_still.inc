@@ -24,47 +24,40 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
-/**
- * @file
- * The MediaMosa App class.
- */
-class mediamosa_app {
+ /**
+  * @file
+  * The functions class of server_still module.
+  */
+
+class mediamosa_server_still {
   // ------------------------------------------------------------------ Static Function.
   /**
-   * Get the app using the app_id.
-   *
-   * @param string $name
-   * @return array
+   * Get the default still server.
    */
-  static public function get_by_appid($app_id) {
-    return mediamosa_db::db_query(
-      'SELECT * FROM {#table_name} WHERE #app_id = :app_id',
-      array(
-        '#app_id' => mediamosa_app_db::APP_ID,
-        '#table_name' => mediamosa_app_db::TABLE_NAME,
-        ':app_id' => $app_id,
-      )
-    )->fetchAssoc();
+  static public function get() {
+  	static $a_server = NULL;
+
+  	if (isset($a_server)) {
+  		return $a_server;
+  	}
+
+  	$a_server = mediamosa_db::db_query(
+  	 'SELECT * FROM {#mediamosa_server_still} WHERE #active = 1 LIMIT 1',
+  	 array(
+  	   '#mediamosa_server_still' => mediamosa_server_still_db::TABLE_NAME,
+       '#active' => mediamosa_server_still_db::ACTIVE,
+  	 )
+  	)->fetchAssoc();
+
+    return $a_server;
   }
 
   /**
-   * Get the app using the app_id.
-   *
-   * @param string $name
-   * @return array
+   * Get the URI of the default still server.
    */
-  static public function get_by_appids(array $a_app_id, array $a_fields = array()) {
-    $query = mediamosa_db::db_select(mediamosa_app_db::TABLE_NAME, 'app');
+  static public function get_uri() {
+    $a_server = self::get();
 
-    if (count($a_fields)) {
-      foreach ($a_fields as $key => $field) {
-    	  $query->addField('app', $field, (is_numeric($key) ? $field : $key));
-      }
-    }
-    else {
-      $query->fields();
-    }
-    $query->condition(mediamosa_app_db::APP_ID, $a_app_id, 'IN');
-    return $query->execute();
+    return $a_server[mediamosa_server_still_db::URI];
   }
 }

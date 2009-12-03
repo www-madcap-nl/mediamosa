@@ -59,14 +59,14 @@ function mediamosa_aut_object_schema() {
         'length' => mediamosa_aut_object_db::AUT_OBJECT_ID_LENGTH,
         'not null' => TRUE,
         'default' => '',
-        'description' => t('The object ID, links to mediamosa_asset_mediafile, mediamosa_asset or mediamosa_colletion.'),
+        'description' => t('The object ID, links to mediamosa_asset_mediafile, mediamosa_asset or mediamosa_collection.'),
       ),
       mediamosa_aut_object_db::AUT_OBJECT_TYPE => array(
         'type' => "enum('" . implode("','", array(mediamosa_aut_object_db::AUT_OBJECT_TYPE_MEDIAFILE, mediamosa_aut_object_db::AUT_OBJECT_TYPE_ASSET, mediamosa_aut_object_db::AUT_OBJECT_TYPE_COLLECTION)) . "')",
         'not null' => FALSE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_aut_object_db::AUT_OBJECT_TYPE_MEDIAFILE, mediamosa_aut_object_db::AUT_OBJECT_TYPE_ASSET, mediamosa_aut_object_db::AUT_OBJECT_TYPE_COLLECTION)) . "')",
         'default' => mediamosa_aut_object_db::AUT_OBJECT_TYPE_MEDIAFILE,
-        'description' => t('The type of object, links to mediamosa_asset_mediafile, mediamosa_asset or mediamosa_colletion.'),
+        'description' => t('The type of object, links to mediamosa_asset_mediafile, mediamosa_asset or mediamosa_collection.'),
       ),
       mediamosa_aut_object_db::AUT_ID => array(
         'type' => 'int',

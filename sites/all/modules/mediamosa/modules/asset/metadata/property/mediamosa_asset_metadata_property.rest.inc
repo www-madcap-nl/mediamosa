@@ -46,7 +46,7 @@ class mediamosa_rest_call_asset_metadata_property_list extends mediamosa_rest_ca
 
   // ------------------------------------------------------------------ Public Functions.
   public function get_var_setup() {
-    $a_my_vars = array(
+    $a_var_setup = array(
       self::VARS => array(
         self::INCLUDE_DEFAULT_DEFINITIONS => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
@@ -61,11 +61,11 @@ class mediamosa_rest_call_asset_metadata_property_list extends mediamosa_rest_ca
     );
 
     // Enrich with default REST vars limit / offset.
-    $a_my_vars = self::set_var_setup_range($a_my_vars);
+    $a_var_setup = self::get_var_setup_range($a_var_setup);
 
     // Add order by stuff.
-    $a_my_vars = self::set_var_setup_order_by(
-      $a_my_vars,
+    $a_var_setup = self::get_var_setup_order_by(
+      $a_var_setup,
       '', // No default.
       array(
         mediamosa_asset_metadata_property_db::ID,
@@ -78,7 +78,7 @@ class mediamosa_rest_call_asset_metadata_property_list extends mediamosa_rest_ca
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_my_vars);
+    return self::get_var_setup_default($a_var_setup);
   }
 
   public function do_call() {
@@ -143,7 +143,7 @@ class mediamosa_rest_call_asset_metadata_property_create extends mediamosa_rest_
   const TYPE = 'type';
 
   public function get_var_setup() {
-    $a_my_vars = array(
+    $a_var_setup = array(
       mediamosa_rest_call::VARS => array(
         self::NAME => array(
           self::VAR_TYPE => mediamosa_type::TYPE_ALPHA_NUM_UNDERSCORE_TAG,
@@ -161,7 +161,7 @@ class mediamosa_rest_call_asset_metadata_property_create extends mediamosa_rest_
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_my_vars);
+    return self::get_var_setup_default($a_var_setup);
   }
 
   public function do_call() {
@@ -203,7 +203,7 @@ class mediamosa_rest_call_asset_metadata_property_delete extends mediamosa_rest_
   const DELETE = 'delete';
 
   public function get_var_setup() {
-    $a_my_vars = array(
+    $a_var_setup = array(
       mediamosa_rest_call::VARS => array(
         self::NAME => array(
           self::VAR_TYPE => mediamosa_type::TYPE_ALPHA_NUM_UNDERSCORE,
@@ -220,7 +220,7 @@ class mediamosa_rest_call_asset_metadata_property_delete extends mediamosa_rest_
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_my_vars);
+    return self::get_var_setup_default($a_var_setup);
   }
 
   public function do_call() {

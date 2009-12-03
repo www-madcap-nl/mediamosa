@@ -31,7 +31,7 @@
 /* Data locations
  */
 
-class mediamosa_maintenance_san_nas {
+class mediamosa_configuration_storage {
 
   // ------------------------------------------------------------------ Static Function.
   /**
@@ -90,12 +90,24 @@ class mediamosa_maintenance_san_nas {
     return self::data_location_get() . DIRECTORY_SEPARATOR . mediamosa_settings::SAN_NAS_STILLS_FOLDER;
   }
 
+	/**
+	 * Return file location of asx file.
+	 * The ASX file is stored in still directory?
+	 *
+	 * @return string
+	 *  path to ticket location
+	 */
+	function asx_file_location($ticket) {
+	  return self::still_location_get() . DIRECTORY_SEPARATOR . $ticket . '.asx';
+	}
+
+
   /**
    * Return the base path based on OS.
    *
    * @return string
    */
-  static public function base_path_get() { // vpx_get_san_nas_base_path
+  static public function base_path_get() { // vpx_get_san_nas_base_path mount_point_get
     if (substr(PHP_OS, 0, 3) == "WIN") {
       return self::windows_get();
     }

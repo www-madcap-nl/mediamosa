@@ -26,26 +26,17 @@
 
  /**
   * @file
-  * Global settings file. (1.x replacement for shared_defines).
+  *
   */
 
-class mediamosa_settings {
-
+class mediamosa_ftp_batch_asset_db {
   // ------------------------------------------------------------------ Consts.
-  const MINIMUM_PHP_VERSION = '5.1.0';
+  // Table name;
+  const TABLE_NAME = 'mediamosa_ftp_batch_asset';
 
-  // Path / SAN NAS Settings.
-  const SAN_NAS_DATA_FOLDER = 'data';
-  const SAN_NAS_STILLS_FOLDER = 'stills';
-  const SAN_NAS_TRANCODE_FOLDER = 'transcode';
-
-  // Ticket locations.
-  const PLAY_TICKET_LOCATION = 'links';
-  const DOWNLOAD_TICKET_LOCATION = 'download_links';
-  const STILL_TICKET_LOCATION = 'still_links';
-
-  // Max Limits.
-  const LIMIT_DEFAULT = 10; // We return 10 items by default.
-  const LIMIT_MAX = 200;
-  const LIMIT_MAX_IDS_ONLY = 5000; // In case we only return IDs instead of complete array's
+  // Database fields;
+  const ID = 'id';
+  const BATCH_ID = 'batch_id';
+  const ASSET_ID = 'asset_id';
+  const ASSET_ID_LENGTH = mediamosa_db::HASH_ID_LENGTH;
 }

@@ -170,6 +170,7 @@ function mediamosa_error_install() {
     'ERRORCODE_JOB_CREATE_NOT_ALLOWED' => 'MediaMosa - creation of job is not allowed',
     'ERRORCODE_UPLOAD_ALREADY_EXISTS' => 'MediaMosa - a upload is already active for this asset_id',
     'ERRORCODE_STILL_NOT_FOUND' => 'MM - could not find still for asset_id=@asset_id.',
+    'ERRORCODE_SERVER_STILL_NOT_FOUND' => 'MediaMosa - No default still server found.',
 
     'ERRORCODE_RETRIEVING_SERVERLIST' => 'JH - error retrieving serverlist',
     'ERRORCODE_RETRIEVING_AVAILABLE_SERVERLIST' => 'JH - error retrieving server-job-list',

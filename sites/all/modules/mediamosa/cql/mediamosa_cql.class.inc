@@ -76,6 +76,8 @@
  * Main CQL class
  */
 
+require_once 'mediamosa_cql.inc';
+
 /**
  * Settings and defines
  */
@@ -123,7 +125,7 @@ abstract class mediamosa_cql {
 
     try {
       while (1) {
-        $this->mediamosa_cql_next_part($str_cql, $i_pos, $this->m_o_mediamosa_cql_part_group);
+        $this->mediamosa_cql_next_part($str_cql, $i_pos, $this->m_o_cql_part_group);
       }
     }
     catch (mediamosa_cql_exception_eos $e) {
@@ -181,7 +183,7 @@ abstract class mediamosa_cql {
    * @return boolean
    */
   protected function mediamosa_cql_verify($str_cql) {
-    cql::mediamosa_cql_parse($str_cql, array(MEDIAMOSA_CQL_KEY_SETTING_VERIFY => TRUE));
+    mediamosa_cql::mediamosa_cql_parse($str_cql, array(MEDIAMOSA_CQL_KEY_SETTING_VERIFY => TRUE));
   }
 
   /**
@@ -235,7 +237,7 @@ abstract class mediamosa_cql {
 
     $is_quoted = FALSE;
     while (mediamosa_unicode::substr($str_cql, $i_pos, 1) == ' ') {
-      $is_quoted = $this->cql_next_pos($str_cql, $i_pos, $is_quoted);
+      $is_quoted = $this->mediamosa_cql_next_pos($str_cql, $i_pos, $is_quoted);
     }
 
     return $is_quoted;
@@ -413,29 +415,29 @@ abstract class mediamosa_cql {
    */
   private function mediamosa_cql_next_part($str_cql, &$i_pos, &$o_cql_part_group) {
 
-    // Get the first item from current pos
+    // Get the first item from current pos.
     $str_1 = $this->mediamosa_cql_next($str_cql, $i_pos);
 
-    // Create a new cql part object
-    $o_cql_part = new mediamosa_cql_part($o_cql_part_group, $this->cql_context_prefix_assignment_get());
+    // Create a new cql part object.
+    $o_cql_part = new mediamosa_cql_part($o_cql_part_group, $this->mediamosa_cql_context_prefix_assignment_get());
 
     try {
       // Prefix assignment?
       while (mediamosa_unicode::substr($str_1, 0, 1) == '>') {
 
-        // Get the next part
+        // Get the next part.
         $str_2 = $this->mediamosa_cql_next($str_cql, $i_pos);
 
-        // Check if the next char is a '='
+        // Check if the next char is a '='.
         if ($this->mediamosa_cql_next_is($str_cql, $i_pos, '=')) {
-          // Get the next part
+          // Get the next part.
           $str_3 = $this->mediamosa_cql_next($str_cql, $i_pos);
 
           if ($str_3 != '=') {
             throw new mediamosa_cql_exception_expecting_char('=', $i_pos);
           }
 
-          // Get the next part
+          // Get the next part.
           $str_4 = $this->mediamosa_cql_next($str_cql, $i_pos);
 
           $o_prefix_assignment = new mediamosa_cql_prefix_assignment($str_2, $this->mediamosa_cql_trim_quotes($str_4));
@@ -542,7 +544,7 @@ abstract class mediamosa_cql {
           $str_1 = $this->mediamosa_cql_next($str_cql, $i_pos);
         }
         catch (mediamosa_cql_exception_eos $e) {
-          // we are done, nothing left and we may end here too
+          // we are done, nothing left and we may end here too.
           $o_cql_part_group->mediamosa_cql_part_add($o_cql_part);
           return;
         }
@@ -629,7 +631,7 @@ abstract class mediamosa_cql {
       $this->mediamosa_cql_skip_ws($str_cql, $i_pos);
       return (mediamosa_unicode::substr($str_cql, $i_pos, 1) == $char ? TRUE : FALSE);
     }
-    catch (cql_exception_eos $e) {
+    catch (mediamosa_cql_exception_eos $e) {
       // ignore
       assert($e);
     }

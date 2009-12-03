@@ -2,7 +2,7 @@
 
 name = "Servers"
 description = "The mediamosa server settings."
-package = "MediaMosa 2 - Modules - Maintenance"
+package = "MediaMosa 2 - Modules - Configuration"
 version = "2.0.0"
 core = 7.x
 
@@ -10,4 +10,4 @@ core = 7.x
 dependencies[] = mediamosa
 
 ; Used files.
-files[] = mediamosa_maintenance_server.module
+files[] = mediamosa_configuration_server.module

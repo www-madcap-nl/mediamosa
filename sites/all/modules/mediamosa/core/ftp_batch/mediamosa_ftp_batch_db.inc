@@ -26,29 +26,25 @@
 
  /**
   * @file
-  * REST functions for SAN NAS
+  *
   */
+class mediamosa_ftp_batch_db {
+  // ------------------------------------------------------------------ Consts.
+  // Table name;
+  const TABLE_NAME = 'mediamosa_ftp_batch';
 
-/**
- * URI: /get_current_mount_point
- * Method: GET
- */
-class mediamosa_rest_call_get_current_mount_point extends mediamosa_rest_call {
-
-  // ------------------------------------------------------------------ Functions (public).
-  public function get_var_setup() {
-    $a_my_vars = array();
-
-    // Enrich with required REST vars.
-    return self::get_var_setup_default($a_my_vars);
-  }
-
-  public function do_call() {
-    $o_mediamosa = mediamosa::get();
-
-    // Get the linux mount point.
-    $current_mount_point = mediamosa_maintenance_san_nas::linux_get();
-
-    $o_mediamosa->add_item(array('current_mount_point' => $current_mount_point));
-  }
+  // Database fields;
+  const ID = 'batch_id';
+  const APP_ID = 'app_id';
+  const OWNER_ID = 'owner_id';
+  const OWNER_ID_LENGTH = 255;
+  const GROUP_ID = 'group_id';
+  const GROUP_ID_LENGTH = 255;
+  const VUF = 'vuf';
+  const VUF_LENGTH = 1024;
+  const STARTED = 'started';
+  const FINISHED = 'finished';
+  const EMAIL_ADDRESS = 'email_address';
+  const EMAIL_ADDRESS_LENGTH = 1024;
+  const EMAIL_CONTENTS = 'email_contents';
 }

@@ -54,7 +54,7 @@ class mediamosa_cql_part extends mediamosa_cql_part_group {
    */
   final public function __construct($o_cql_part_parent, $o_prefix_assignment) {
     $this->m_cql_part_parent = $o_cql_part_parent;
-    $this->cql_part_prefix_assignment_add($o_prefix_assignment);
+    $this->mediamosa_cql_part_prefix_assignment_add($o_prefix_assignment);
   }
 
   /**
@@ -169,7 +169,7 @@ class mediamosa_cql_part extends mediamosa_cql_part_group {
    * @param cql_context $o_cql_context
    * @param integer $i_pos
    */
-  final public function mediamosa_cql_part_verify_index(cql_context $o_cql_context, $i_pos) {
+  final public function mediamosa_cql_part_verify_index(mediamosa_cql_context $o_cql_context, $i_pos) {
     if ($o_cql_context->mediamosa_cql_context_index2column($this) === FALSE) {
       $o_cql_part_index = $this->mediamosa_cql_part_index_get();
       $str_index = $o_cql_part_index->mediamosa_cql_part_str_get();
@@ -276,7 +276,7 @@ class mediamosa_cql_part_search_term {
    * @return boolean
    */
   final public function mediamosa_cql_contains_wildcards($str = FALSE) {
-    $str = ($str === FALSE ? $this->cql_part_str_get() : $str);
+    $str = ($str === FALSE ? $this->mediamosa_cql_part_str_get() : $str);
     $str = str_replace(array('\\', '\*', '\?'), array(''), $str);
     return (mb_strpos($str, '?') === FALSE && mb_strpos($str, '*') === FALSE ? FALSE : TRUE);
   }
@@ -291,7 +291,7 @@ class mediamosa_cql_part_boolean extends mediamosa_cql_modifiers {
   private $m_type = FALSE;
 
   final public function __construct($str_boolean) {
-    $a_booleans = array('or' => CQL_BOOLEAN_OR, 'and' => CQL_BOOLEAN_AND, 'not' => CQL_BOOLEAN_NOT, 'prox' => CQL_BOOLEAN_PROX);
+    $a_booleans = array('or' => MEDIAMOSA_CQL_BOOLEAN_OR, 'and' => MEDIAMOSA_CQL_BOOLEAN_AND, 'not' => MEDIAMOSA_CQL_BOOLEAN_NOT, 'prox' => MEDIAMOSA_CQL_BOOLEAN_PROX);
 
     assert(isset($a_booleans[mediamosa_unicode::strtolower($str_boolean)]));
     if (!isset($a_booleans[mediamosa_unicode::strtolower($str_boolean)])) {
@@ -311,7 +311,7 @@ class mediamosa_cql_part_boolean extends mediamosa_cql_modifiers {
    * @return type
    */
   final public function mediamosa_cql_part_str_get() {
-    $a_booleans = array(CQL_BOOLEAN_OR => 'OR', CQL_BOOLEAN_AND => 'AND', CQL_BOOLEAN_NOT => 'NOT', CQL_BOOLEAN_PROX => 'PROX');
+    $a_booleans = array(MEDIAMOSA_CQL_BOOLEAN_OR => 'OR', MEDIAMOSA_CQL_BOOLEAN_AND => 'AND', MEDIAMOSA_CQL_BOOLEAN_NOT => 'NOT', MEDIAMOSA_CQL_BOOLEAN_PROX => 'PROX');
     return $a_booleans[$this->m_type];
   }
 

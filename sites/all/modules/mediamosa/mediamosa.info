@@ -31,6 +31,14 @@ files[] = lib/mediamosa_lib.inc
 files[] = lib/mediamosa_type.inc
 files[] = lib/mediamosa_unicode.inc
 
+; CQL.
+files[] = cql/mediamosa_cql.class.inc
+files[] = cql/mediamosa_cql_context.class.inc
+files[] = cql/mediamosa_cql_exceptions.inc
+files[] = cql/mediamosa_cql_part.class.inc
+files[] = cql/mediamosa_cql_part_group.class.inc
+files[] = cql/mediamosa_cql_prefix_assignment.class.inc
+
 ; Response class.
 files[] = response/mediamosa_response.inc
 
@@ -63,9 +71,13 @@ files[] = core/app/mediamosa_app.install.inc
 ; App Authentication class.
 files[] = core/app/authentication/mediamosa_app_authentication.inc
 
+; CQL.
+files[] = core/cql/mediamosa_core_cql.inc
+
 ; Asset.
 files[] = core/asset/mediamosa_asset_db.inc
 files[] = core/asset/mediamosa_asset.inc
+files[] = core/asset/mediamosa_asset_search.inc
 files[] = core/asset/mediamosa_asset.install.inc
 
 ; Asset Mediafile.
@@ -93,6 +105,9 @@ files[] = core/asset/metadata/property/group/mediamosa_asset_metadata_property_g
 files[] = core/asset/metadata/property/group/mediamosa_asset_metadata_property_group.inc
 files[] = core/asset/metadata/property/group/mediamosa_asset_metadata_property_group.install.inc
 
+; Asset Playproxy.
+files[] = core/asset/mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.inc
+
 ; Collection.
 files[] = core/collection/mediamosa_collection_db.inc
 files[] = core/collection/mediamosa_collection.inc
@@ -104,7 +119,9 @@ files[] = core/asset/collection/mediamosa_asset_collection.inc
 files[] = core/asset/collection/mediamosa_asset_collection.install.inc
 
 ; FTP Batch.
+files[] = core/ftp_batch/mediamosa_ftp_batch_db.inc
 files[] = core/ftp_batch/mediamosa_ftp_batch.inc
+files[] = core/ftp_batch/mediamosa_ftp_batch.install.inc
 
 ; Job.
 files[] = core/job/mediamosa_job.inc
@@ -118,8 +135,8 @@ files[] = core/job/schedular/mediamosa_job_schedular.inc
 ; Job Server.
 files[] = core/job/server/mediamosa_job_server.inc
 
-; San nas.
-files[] = core/maintenance/san_nas/mediamosa_maintenance_san_nas.inc
+; Storage.
+files[] = core/configuration/storage/mediamosa_configuration_storage.inc
 
 ; Server.
 files[] = core/server/mediamosa_server.install.inc
@@ -130,6 +147,7 @@ files[] = core/server/download/mediamosa_server_download.install.inc
 
 ; Server Still.
 files[] = core/server/still/mediamosa_server_still_db.inc
+files[] = core/server/still/mediamosa_server_still.inc
 files[] = core/server/still/mediamosa_server_still.install.inc
 
 ; Server Streaming.
