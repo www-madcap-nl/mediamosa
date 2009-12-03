@@ -31,6 +31,9 @@
 
 class mediamosa_asset_mediafile {
 
+  // ------------------------------------------------------------------ Consts.
+	const UNKNOWN_FILENAME = 'Filename_not_set';
+
   // ------------------------------------------------------------------ Static Functions.
   /**
    * Remove one or more mediafiles.

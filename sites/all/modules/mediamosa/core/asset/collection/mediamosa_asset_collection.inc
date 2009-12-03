@@ -43,7 +43,7 @@ class mediamosa_asset_collection {
    *  In combination with asset_id, only one link might be deleted.
    * @return boolean
    */
-  function delete($asset_id = FALSE, $coll_id = FALSE) {
+  static public function delete($asset_id = FALSE, $coll_id = FALSE) {
 
     if (!$asset_id && !$coll_id) {
       // if none is provided, none will be deleted.
@@ -63,4 +63,36 @@ class mediamosa_asset_collection {
 
     return $query->execute() ? TRUE : FALSE;
   }
+
+  /**
+   * Get collections based on given asset_ids.
+   *
+   * @param array $a_asset_ids
+   * @param array $a_fields
+   *  [alias] => field
+   */
+  static public function get_by_asset_ids(array $a_asset_ids, array $a_fields = array()) {
+
+  	if (empty($a_asset_ids)) {
+  	  return array();
+  	}
+
+  	$query = mediamosa_db::db_select(mediamosa_asset_collection_db::TABLE_NAME, 'ac');
+  	$query->leftjoin(mediamosa_collection_db::TABLE_NAME, 'c', 'ac.asset_id = c.asset_id');
+    if (count($a_fields)) {
+      foreach ($a_fields as $key => $field) {
+        $query->addField('c', $field, (is_numeric($key) ? $field : $key));
+      }
+    }
+    else {
+      $query->fields();
+    }
+    $query->condition(mediamosa_asset_collection_db::ASSET_ID, $a_asset_ids, 'IN');
+    return $query->execute();
+  }
 }
+/*
+ *       $result = db_query("SELECT c.coll_id, c.title FROM {asset_collection} ac
+        LEFT JOIN {collection} c USING(coll_id)
+        WHERE ac.asset_id = '%s'", $a_asset['asset_id']);
+*/

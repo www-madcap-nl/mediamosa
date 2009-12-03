@@ -232,6 +232,8 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
   const BATCH_ID = 'batch_id';
   const CQL = 'cql';
   const SHOW_DELETED = 'show_deleted';
+  const SHOW_STILLS = 'show_stills';
+  const SHOW_COLLECTIONS = 'show_collections';
 
   // ------------------------------------------------------------------ Public Functions.
   static public function get_search_params() {
@@ -329,7 +331,17 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
         ),
         self::SHOW_DELETED => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
-          self::VAR_DESCRIPTION => 'Included deleted assets for OAI. The deleted assets are not complete assets, these assets are empty and are only an indication that they are deleted.',
+          self::VAR_DESCRIPTION => 'Include deleted assets for OAI. The deleted assets are not complete assets, these assets are empty and are only an indication that they are deleted.',
+          self::VAR_DEFAULT_VALUE => 'FALSE',
+        ),
+        self::SHOW_STILLS => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_DESCRIPTION => 'Include stills in output.',
+          self::VAR_DEFAULT_VALUE => 'FALSE',
+        ),
+        self::SHOW_COLLECTIONS => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_DESCRIPTION => 'Include collection information of each assets, when available.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
 
@@ -418,6 +430,10 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
     // Now convert the old search parameters to CQL.
     $a_var_setup = mediamosa_core_cql::get_var_setup_search($a_app_ids, array(), self::get_search_params());
 
+    // Non CQL parameters.
+    $order_by = $this->get_param_value(self::ORDER_BY);
+    $order_direction = $this->get_param_value(self::ORDER_DIRECTION);
+
     $a_cql = array();
     $a_translate_to = array();
     foreach ($a_var_setup[mediamosa_rest_call::VARS] as $param => $a_param) {
@@ -435,6 +451,7 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
     }
 
     if (count($a_cql)) {
+
       if (self::isset_param(self::CQL)) {
         throw new mediamosa_exception_error_cql_exclusive();
       }
@@ -443,6 +460,19 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
       $operator = self::get_param_value(self::OPERATOR);
 
       $cql = implode(' ' . mediamosa_unicode::strtoupper($operator) . ' ', $a_cql);
+
+      if ($order_by != '') {
+      	$cql .= ' ' . 'sortby ' . $order_by;
+      }
+    }
+    elseif ($this->isset_param(self::ORDER_BY)) {
+    	print '<pre>Debug in ' . __FILE__ . ', line ' . __LINE__ . "\n";
+    	print htmlspecialchars(print_r($this->a_rest_args, TRUE));
+    	print '</pre>';
+    	exit;
+      if (self::isset_param(self::CQL)) {
+        throw new mediamosa_exception_error_cql_exclusive();
+      }
     }
     else {
     	$cql = self::get_param_value(self::CQL);
@@ -452,7 +482,24 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
     mediamosa_asset_search::asset_search(
       $o_mediamosa,
       $a_app_ids,
-      $cql
+      $cql,
+      $this->get_param_value(self::AUT_USER_ID),
+      $this->get_param_value(self::AUT_GROUP_ID),
+      $this->get_param_value(self::AUT_DOMAIN),
+      $this->get_param_value(self::AUT_REALM),
+      $this->get_param_value(self::BATCH_ID),
+      $this->get_param_value(self::COLL_ID),
+      $this->get_param_value(self::FAV_USER_ID),
+      $this->get_param_value(self::GRANTED),
+      $this->get_param_value(self::IS_PUBLIC_LIST),
+      $this->get_param_value(self::IS_APP_ADMIN),
+      $this->get_param_value(self::HIDE_EMPTY_ASSETS),
+      $this->get_param_value(self::SHOW_DELETED),
+      $this->get_param_value(self::RETURN_ASSET_IDS),
+      $this->get_param_value(self::SHOW_STILLS),
+      $this->get_param_value(self::SHOW_COLLECTIONS),
+      $this->get_param_value(self::LIMIT),
+      $this->get_param_value(self::OFFSET)
     );
     // @todo;
     //_vpx_statistics_log_search_query($a_args, $app_id);

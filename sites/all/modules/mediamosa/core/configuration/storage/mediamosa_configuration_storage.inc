@@ -90,6 +90,17 @@ class mediamosa_configuration_storage {
     return self::data_location_get() . DIRECTORY_SEPARATOR . mediamosa_settings::SAN_NAS_STILLS_FOLDER;
   }
 
+  /**
+	 * Return the default path for the ticket.
+	 * Based on the 1.x function _play_proxy_play_ticket_location.
+	 *
+	 * @return string
+	 */
+	static public function ticket_location_get($app_id) {
+	  return self::data_location_get() . DIRECTORY_SEPARATOR . mediamosa_settings::PLAY_TICKET_LOCATION . DIRECTORY_SEPARATOR . $app_id;
+	}
+
+
 	/**
 	 * Return file location of asx file.
 	 * The ASX file is stored in still directory?
@@ -103,11 +114,11 @@ class mediamosa_configuration_storage {
 
 
   /**
-   * Return the base path based on OS.
+   * Return the moint point path based on OS.
    *
    * @return string
    */
-  static public function base_path_get() { // vpx_get_san_nas_base_path mount_point_get
+  static public function mount_point_get() { // vpx_get_san_nas_base_path
     if (substr(PHP_OS, 0, 3) == "WIN") {
       return self::windows_get();
     }
@@ -116,19 +127,28 @@ class mediamosa_configuration_storage {
     return self::linux_get();
   }
 
+  /**
+   * Map the object ID to store file into location and
+   * filename. Format: ID{0}/ID
+   *
+   * @param string $id
+   */
+  static public function objectid_to_location($id) {
+  	return $id{0} . DIRECTORY_SEPARATOR . $id;
+  }
 
   /**
-   * Get the Mediafile SAN/NAS path.
+   * Get the Mediafile mountpath path.
    *
    * @param array $a_mediafile
    *  The mediafile array.
    */
   static public function mediafile_filename_get($a_mediafile) {
     if (!isset($a_mediafile[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT]) || empty($a_mediafile[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT])) {
-      $a_mediafile[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT] = self::base_path_get();
+      $a_mediafile[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT] = self::mount_point_get();
     }
 
-    return $a_mediafile[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT] . DIRECTORY_SEPARATOR . self::data_location_get() . DIRECTORY_SEPARATOR . $a_mediafile[mediamosa_asset_mediafile_db::ID]{0} . DIRECTORY_SEPARATOR . $a_mediafile[mediamosa_asset_mediafile_db::ID];
+    return $a_mediafile[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT] . DIRECTORY_SEPARATOR . self::data_location_get() . DIRECTORY_SEPARATOR . self::objectid_to_location($a_mediafile[mediamosa_asset_mediafile_db::ID]);
   }
 
   /**
@@ -137,6 +157,6 @@ class mediamosa_configuration_storage {
    *  The mediafile ID.
    */
   static public function mediafile_still_filename_get($mediafile_id) {
-    return self::base_path_get() . DIRECTORY_SEPARATOR . self::still_location_get() . DIRECTORY_SEPARATOR . $mediafile_id{0} . DIRECTORY_SEPARATOR . $mediafile_id;
+    return self::mount_point_get() . DIRECTORY_SEPARATOR . self::still_location_get() . DIRECTORY_SEPARATOR . self::objectid_to_location($mediafile_id);
   }
 }

@@ -121,15 +121,6 @@ function play_proxy_ticket_cleanup() {
   exec('find '. $s_still_ticket_path .'/. -maxdepth 1 -mindepth 1 -name "????????????????????????.asx" ! -type l -mmin +'. (int)(STILL_TICKET_EXPIRATION / 60) .' -delete');
 }
 
-/**
- * Return the default path for the ticket
- *
- * @return unknown
- */
-function _play_proxy_play_ticket_location($app_id) {
-  return SAN_NAS_BASE_PATH ."/". PLAY_TICKET_LOCATION ."/". $app_id ;
-}
-
 
 
 

@@ -37,7 +37,6 @@ class mediamosa_lib {
   // ------------------------------------------------------------------ Consts.
   const MIME_TYPE_APPLICATION_X_EMPTY = 'application/x-empty';
 
-
   // ------------------------------------------------------------------ Static Functions.
   /**
    * Converts a string boolean ('TRUE', 'true', 'FALSE', 'false')

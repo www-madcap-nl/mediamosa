@@ -31,7 +31,7 @@
 abstract class mediamosa_rest_call {
   // ------------------------------------------------------------------ Members.
   // Original REST call arguments.
-  private $a_rest_args = array();
+  public $a_rest_args = array();
 
   // Check if there are unspecified arguments and throw exception when we have unspecified arguments.
   protected $m_check_for_unspecified = FALSE;
@@ -122,7 +122,7 @@ abstract class mediamosa_rest_call {
   const PARAM_VALIDATED = 'validated';
   const PARAM_RANGE_START = 'range_start';
   const PARAM_RANGE_END = 'range_end';
-  const PARAM_IS_READ_ONLY = 'ready_only';
+  const PARAM_IS_READ_ONLY = 'read_only';
   const PARAM_IS_REQUIRED = 'is_required';
   const PARAM_ALLOWED_VALUES = 'a_allowed_values';
 
@@ -439,7 +439,7 @@ abstract class mediamosa_rest_call {
         // Defaults.
         if (isset($a_var[self::VAR_DEFAULT_VALUE])) {
           $this->a_rest_args[$param][self::PARAM_VALUE] = $a_var[self::VAR_DEFAULT_VALUE];
-          $this->a_rest_args[$param][self::PARAM_ISSET] = TRUE; // set with default
+          $this->a_rest_args[$param][self::PARAM_ISSET] = !empty($a_var[self::VAR_DEFAULT_VALUE]); // set with default
         }
       }
 

@@ -105,7 +105,7 @@ class mediamosa_asset_mediafile_still {
         mediamosa_asset_mediafile_db::APP_ID => $app_id,
         mediamosa_asset_mediafile_db::OWNER_ID => $owner_id,
         mediamosa_asset_mediafile_db::GROUP_ID => $group_id,
-        mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT => mediamosa_configuration_storage::base_path_get(),
+        mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT => mediamosa_configuration_storage::mount_point_get(),
         mediamosa_asset_mediafile_db::FILE_EXTENSION => $file_extension,
         mediamosa_asset_mediafile_db::CREATED => mediamosa::db_current_timestamp_now(),
         mediamosa_asset_mediafile_db::CHANGED => mediamosa::db_current_timestamp_now(),

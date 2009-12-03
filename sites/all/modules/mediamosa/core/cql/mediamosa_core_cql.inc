@@ -31,12 +31,15 @@
 
 define('MEDIAMOSA_CQL_CONTEXT_KEY_USE_HAVING', 'use_having');
 define('MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN', 'column');
-define('MEDIAMOSA_CQL_CONTEXT_KEY_TABLE', 'table');
+define('MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT', 'table_for_sort');
+define('MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS', 'table_alias');
+define('MEDIAMOSA_CQL_CONTEXT_KEY_PROP_ID', 'prop_id');
 define('MEDIAMOSA_CQL_CONTEXT_KEY_TYPE', 'type');
 define('MEDIAMOSA_CQL_CONTEXT_KEY_JOIN', 'join');
 define('MEDIAMOSA_CQL_CONTEXT_KEY_PREFIX', 'prefix');
 define('MEDIAMOSA_CQL_CONTEXT_KEY_SUFFIX', 'suffix');
 define('MEDIAMOSA_CQL_CONTEXT_KEY_NULL', 'null');// Indicate that value null is possible on this field
+define('MEDIAMOSA_CQL_CONTEXT_KEY_DIRECTION', 'direction');
 
 
 class mediamosa_core_cql {
@@ -352,7 +355,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
     $a_result_cql2sql['a_order_by'] = array();
 
     if ($o_sortby) {
-      $a_result_cql2sql['a_order_by'] = $o_sortby->cql_sub_sortby_parse($this, 'mediamosa_core_cql_hook_cql2sql_orderby');
+      $a_result_cql2sql['a_order_by'] = $o_sortby->mediamosa_cql_sub_sortby_parse($this, 'mediamosa_core_cql_hook_cql2sql_orderby');
     }
 
     return $a_result_cql2sql;
@@ -483,7 +486,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
       return '';
     }
 
-    $str_table_column = ($a_index2column[MEDIAMOSA_CQL_CONTEXT_KEY_TABLE] != '' ? $a_index2column[MEDIAMOSA_CQL_CONTEXT_KEY_TABLE] . '.' : '') . $a_index2column[MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN];
+    $str_table_column = ($a_index2column[MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS] != '' ? $a_index2column[MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS] . '.' : '') . $a_index2column[MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN];
 
     if (isset($a_index2column[MEDIAMOSA_CQL_CONTEXT_KEY_JOIN])) {
       $a_result['a_joins'][$str_index] = $a_index2column[MEDIAMOSA_CQL_CONTEXT_KEY_JOIN];
@@ -798,7 +801,23 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
       }
     }
 
-    return array(MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => $o_cql_sub_sortby->mediamosa_cql_sort_by_get(), 'direction' => $str_direction);
+    // Get the order by column.
+    $order_by = $o_cql_sub_sortby->mediamosa_cql_sort_by_get();
+
+    // Translate to cql column.
+    $a_index = $this->mediamosa_core_cql_context_index2column($order_by);
+
+    // Test we can sort on this column.
+    if (!isset($a_index[MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT])) {
+      throw new mediamosa_exception_error_sort_field_error(array('@field' => $order_by));
+    }
+
+    return array(
+      MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => $a_index['column'] == 'val_char' ? 'val_char_lft' : $a_index['column'],
+      MEDIAMOSA_CQL_CONTEXT_KEY_DIRECTION => $str_direction,
+      MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => $a_index[MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT],
+      MEDIAMOSA_CQL_CONTEXT_KEY_PROP_ID => isset($a_index[MEDIAMOSA_CQL_CONTEXT_KEY_PROP_ID]) ? $a_index[MEDIAMOSA_CQL_CONTEXT_KEY_PROP_ID] : 0,
+    );
   }
 }
 /**
@@ -806,6 +825,75 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
  *
  */
 class mediamosa_asset_cql_context extends mediamosa_core_cql_context {
+
+  /**
+   * returns the array containing mapping voor cql2sql
+   *
+   * @return array
+   */
+  protected function mediamosa_core_cql_context_array_get() {
+    static $a_mediamosa_context = NULL;
+
+    if (!isset($a_mediamosa_context)) {
+      $a_mediamosa_context = $this->m_a_mediamosa_context;
+
+      $a_defs = mediamosa_asset_metadata_property::get_metadata_properties_full($this->m_a_app_ids);
+
+      foreach ($a_defs as $name => $a_def) {
+        switch ($a_def['propgroup_name']) {
+          case 'qualified_dublin_core':
+            $context_set = 'mediamosa:qdc';
+            break;
+          case 'dublin_core':
+            $context_set = 'mediamosa:dc';
+            break;
+          case 'czp':
+            $context_set = 'mediamosa:czp';
+            break;
+          case 'acl':
+          case 'aut':
+            $context_set = 'mediamosa:aut';
+            break;
+          default:
+            $context_set = 'mediamosa:' . $a_def[propgroup_name];
+            break;
+        }
+
+        switch ($a_def['propdef_type']) {
+          case mediamosa_asset_metadata_property_db::TYPE_INT:
+            $column = 'val_int';
+            $type = mediamosa_type::TYPE_INT;
+            $table = mediamosa_asset_metadata_db::TABLE_NAME;
+            break;
+          case mediamosa_asset_metadata_property_db::TYPE_DATETIME:
+            $column = 'val_datetime';
+            $type = mediamosa_type::TYPE_DATETIME;
+            $table = mediamosa_asset_metadata_db::TABLE_NAME;
+            break;
+          default:
+            assert(0);
+          case mediamosa_asset_metadata_property_db::TYPE_CHAR:
+            $column = 'val_char';
+            $type = mediamosa_type::TYPE_STRING;
+            $table = mediamosa_asset_metadata_db::TABLE_NAME;
+            break;
+        }
+
+        $a_mediamosa_context[MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES]['mediamosa'][MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES][$context_set][MEDIAMOSA_CQL_CONTEXT_KEY_COLUMNS][$name] = array(
+          MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => $column,
+          MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'mediamosa_asset_metadata_' . $name,
+          MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => $table,
+          MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => $type,
+          MEDIAMOSA_CQL_CONTEXT_KEY_PROP_ID => $a_def['propdef_id'],
+          MEDIAMOSA_CQL_CONTEXT_KEY_JOIN => sprintf('LEFT JOIN mediamosa_asset_metadata AS mediamosa_asset_metadata_%s ON mediamosa_asset_metadata_%s.prop_id = %d AND mediamosa_asset_metadata_%s.asset_id = a.asset_id', $name, $name, $a_def['propdef_id'], $name),
+//          MEDIAMOSA_CQL_CONTEXT_KEY_PREFIX => sprintf('(v_asset_property_%s.prop_id = %d AND ', $name, $a_def['propdef_id']),
+//          MEDIAMOSA_CQL_CONTEXT_KEY_SUFFIX => ')',
+        );
+      }
+    }
+
+    return $a_mediamosa_context;
+  }
 
   // The CQL_CONTEXT_KEY_* keys are default and must be used,
   // however all other keys are open for own class specification.
@@ -837,86 +925,102 @@ class mediamosa_asset_cql_context extends mediamosa_core_cql_context {
             MEDIAMOSA_CQL_CONTEXT_KEY_COLUMNS=> array(
               'asset_id' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'asset_id',
-                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE => 'a',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_asset_db::TABLE_NAME,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'a',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_STRING,
               ),
               'group_id' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'group_id',
-                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE => 'a',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_asset_db::TABLE_NAME,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'a',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_STRING,
               ),
               'owner_id' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'owner_id',
-                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE => 'a',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_asset_db::TABLE_NAME,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'a',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_STRING,
               ),
               'provider_id' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'provider_id',
-                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE => 'a',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_asset_db::TABLE_NAME,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'a',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_STRING,
               ),
               'reference_id' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'reference_id',
-                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE => 'a',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_asset_db::TABLE_NAME,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'a',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_STRING,
               ),
               'mediafile_duration' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'mediafile_duration',
-                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE => 'a',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_asset_db::TABLE_NAME,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'a',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_STRING,
               ),
               'mediafile_container_type' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'mediafile_container_type',
-                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE => 'a',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_asset_db::TABLE_NAME,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'a',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_STRING,
               ),
               'videotimestamp' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'videotimestamp',
-                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE => 'a',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_asset_db::TABLE_NAME,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'a',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_DATETIME,
               ),
               'videotimestampmodified' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'videotimestampmodified',
-                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE => 'a',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_asset_db::TABLE_NAME,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'a',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_DATETIME,
               ),
               'mime_type' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'mime_type',
-                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE => 'mm_mime_type',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_asset_mediafile_metadata_db::TABLE_NAME,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'mm_mime_type',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_STRING,
                 MEDIAMOSA_CQL_CONTEXT_KEY_JOIN => 'MEDIAFILE_METADATA_MIMETYPE',// Trick to include the join of this table.
               ),
               'filename' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'filename',
-                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE => 'mf',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_asset_mediafile_db::TABLE_NAME,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'mf',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_STRING,
                 MEDIAMOSA_CQL_CONTEXT_KEY_JOIN => 'MEDIAFILE_FILENAME',// Trick to include the join of this table.
               ),
               'mediafile_id' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'mediafile_id',
-                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE => 'mf',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_asset_mediafile_db::TABLE_NAME,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'mf',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_STRING,
                 MEDIAMOSA_CQL_CONTEXT_KEY_JOIN => 'MEDIAFILE_FILENAME',// Trick to include the join of this table.
               ),
               'numofviews' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'viewed',
-                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE => 'a',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_asset_db::TABLE_NAME,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'a',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_INT,
               ),
               'is_unappropriate' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'is_unappropriate',
-                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE => 'a',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_asset_db::TABLE_NAME,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'a',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_STRING,
               ),
               'uri' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'uri',
-                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE => 'mf',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_asset_mediafile_db::TABLE_NAME,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'mf',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_STRING,
                 MEDIAMOSA_CQL_CONTEXT_KEY_JOIN => 'MEDIAFILE_FILENAME',// Trick to include the join of this table.
               ),
               'numofplays' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'played',
-                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE => 'a',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_asset_db::TABLE_NAME,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'a',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_INT,
               ),
 
@@ -926,47 +1030,47 @@ class mediamosa_asset_cql_context extends mediamosa_core_cql_context {
             MEDIAMOSA_CQL_CONTEXT_KEY_COLUMNS=> array(
               'aut_app' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'app_master_id',
-                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE => 'aut_ms',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'aut_ms',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_INT,
                 MEDIAMOSA_CQL_CONTEXT_KEY_JOIN => 'AUT_APP_MASTER_SLAVE',// Trick to include the join of this table.
               ),
               'is_protected' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'is_protected',
-                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE => 'mf',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'mf',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_BOOL,
                 MEDIAMOSA_CQL_CONTEXT_KEY_JOIN => 'MEDIAFILE_FILENAME',// Trick to include the join of this table.
               ),
               'aut_user' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'aut_name',
-                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE => 'aut_u',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'aut_u',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_STRING,
                 MEDIAMOSA_CQL_CONTEXT_KEY_JOIN => 'AUT_NAME_USER',// Trick to include the join of this table.
                 MEDIAMOSA_CQL_CONTEXT_KEY_NULL => TRUE,
               ),
               'aut_group' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'aut_name',
-                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE => 'aut_ug',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'aut_ug',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_STRING,
                 MEDIAMOSA_CQL_CONTEXT_KEY_JOIN => 'AUT_NAME_USER_GROUP',// Trick to include the join of this table.
                 MEDIAMOSA_CQL_CONTEXT_KEY_NULL => TRUE,
               ),
               'aut_domain' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'aut_name',
-                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE => 'aut_gd',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'aut_gd',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_DOMAIN,
                 MEDIAMOSA_CQL_CONTEXT_KEY_JOIN => 'AUT_GROUP_DOMAIN',// Trick to include the join of this table.
                 MEDIAMOSA_CQL_CONTEXT_KEY_NULL => TRUE,
               ),
               'aut_realm' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'aut_name',
-                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE => 'aut_gr',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'aut_gr',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_REALM,
                 MEDIAMOSA_CQL_CONTEXT_KEY_JOIN => 'AUT_GROUP_REALM',// Trick to include the join of this table.
                 MEDIAMOSA_CQL_CONTEXT_KEY_NULL => TRUE,
               ),
               'aut_realm_prefix' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'aut_prefix',
-                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE => 'aut_gr',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'aut_gr',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_STRING,
                 MEDIAMOSA_CQL_CONTEXT_KEY_JOIN => 'AUT_GROUP_REALM',// Trick to include the join of this table.
                 MEDIAMOSA_CQL_CONTEXT_KEY_NULL => TRUE,
@@ -977,70 +1081,6 @@ class mediamosa_asset_cql_context extends mediamosa_core_cql_context {
       ),
     ),
   );
-
-  /**
-   * returns the array containing mapping voor cql2sql
-   *
-   * @return array
-   */
-  protected function mediamosa_core_cql_context_array_get() {
-    static $a_mediamosa_context = NULL;
-
-    if (!isset($a_mediamosa_context)) {
-      $a_mediamosa_context = $this->m_a_mediamosa_context;
-
-      $a_defs = mediamosa_asset_metadata_property::get_metadata_properties_full($this->m_a_app_ids);
-
-      foreach ($a_defs as $name => $a_def) {
-        switch ($a_def['propgroup_name']) {
-          case 'qualified_dublin_core':
-            $context_set = 'mediamosa:qdc';
-            break;
-          case 'dublin_core':
-            $context_set = 'mediamosa:dc';
-            break;
-          case 'czp':
-            $context_set = 'mediamosa:czp';
-            break;
-          case 'acl':
-          case 'aut':
-          	$context_set = 'mediamosa:aut';
-            break;
-          default:
-            $context_set = 'mediamosa:' . $a_def[propgroup_name];
-            break;
-        }
-
-        switch ($a_def['propdef_type']) {
-          case mediamosa_asset_metadata_property_db::TYPE_INT:
-            $column = 'val_int';
-            $type = mediamosa_type::TYPE_INT;
-            break;
-          case mediamosa_asset_metadata_property_db::TYPE_DATETIME:
-            $column = 'val_datetime';
-            $type = mediamosa_type::TYPE_DATETIME;
-            break;
-          default:
-            assert(0);
-          case mediamosa_asset_metadata_property_db::TYPE_CHAR:
-            $column = 'val_char';
-            $type = mediamosa_type::TYPE_STRING;
-            break;
-        }
-
-        $a_mediamosa_context[MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES]['mediamosa'][MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES][$context_set][MEDIAMOSA_CQL_CONTEXT_KEY_COLUMNS][$name] = array(
-          MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => $column,
-          MEDIAMOSA_CQL_CONTEXT_KEY_TABLE => 'mediamosa_asset_metadata_' . $name,
-          MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => $type,
-          MEDIAMOSA_CQL_CONTEXT_KEY_JOIN => sprintf('LEFT JOIN mediamosa_asset_metadata AS mediamosa_asset_metadata_%s ON mediamosa_asset_metadata_%s.prop_id = %d AND mediamosa_asset_metadata_%s.asset_id = a.asset_id', $name, $name, $a_def['propdef_id'], $name),
-//          MEDIAMOSA_CQL_CONTEXT_KEY_PREFIX => sprintf('(v_asset_property_%s.prop_id = %d AND ', $name, $a_def['propdef_id']),
-//          MEDIAMOSA_CQL_CONTEXT_KEY_SUFFIX => ')',
-        );
-      }
-    }
-
-    return $a_mediamosa_context;
-  }
 }
 
 /**
@@ -1068,68 +1108,81 @@ class mediamosa_collection_cql_context extends mediamosa_core_cql_context {
             CQL_CONTEXT_KEY_COLUMNS=> array(
               'title' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'title',
-                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE => 'c',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'c',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_collection_db::TABLE_NAME,
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_STRING,
               ),
               'description' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'description',
-                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE => 'c',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'c',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_collection_db::TABLE_NAME,
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_STRING,
               ),
               'owner_id' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'owner_id',
-                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE => 'c',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'c',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_collection_db::TABLE_NAME,
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_STRING,
               ),
               'group_id' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'group_id',
-                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE => 'c',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'c',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_collection_db::TABLE_NAME,
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_STRING,
               ),
               'created' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'created',
-                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE => 'c',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'c',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_collection_db::TABLE_NAME,
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => VPX_TYPE_TIMESTAMP,
               ),
               'changed' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'changed',
-                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE => 'c',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'c',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_collection_db::TABLE_NAME,
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => VPX_TYPE_TIMESTAMP,
               ),
               'private' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'private',
-                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE => 'c',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'c',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_collection_db::TABLE_NAME,
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_BOOL,
               ),
               'is_unappropriate' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'is_unappropriate',
-                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE => 'c',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'c',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_collection_db::TABLE_NAME,
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_BOOL,
               ),
               'public' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'public',
-                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE => 'c',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'c',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_collection_db::TABLE_NAME,
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_BOOL,
               ),
               'category' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'category',
-                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE => 'c',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'c',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_collection_db::TABLE_NAME,
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_STRING,
               ),
               'numofvideos' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'numofvideos',
-                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE => '',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => '',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => FALSE,
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_INT,
                 MEDIAMOSA_CQL_CONTEXT_KEY_USE_HAVING => TRUE,// use having instead of where
               ),
               'app_id_search' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'app_id_search',
-                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE => 'c',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'c',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_collection_db::TABLE_NAME,
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_INT,
               ),
               'app_id' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'app_id',
-                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE => 'c',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'c',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_collection_db::TABLE_NAME,
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_INT,
               ),
             ),

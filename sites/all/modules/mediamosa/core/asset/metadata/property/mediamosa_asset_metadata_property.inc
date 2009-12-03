@@ -76,7 +76,7 @@ class mediamosa_asset_metadata_property {
    * Create property.
    *
    * @param array/integer $mixed_app_ids
-   *  Eua Id.
+   *  Application ID.
    * @param string $name
    *  Name of the property.
    * @param string $type
@@ -224,10 +224,16 @@ class mediamosa_asset_metadata_property {
    * @param array/string $mixed_propgroup_name
    * @return array
    */
-  static public function get_metadata_properties($mixed_propgroup_name = array('dublin_core')) {
+  static public function get_metadata_properties(array $a_propgroup_name = array('dublin_core')) {
 
-    // Make sure its an array.
-    $a_propgroup_name = is_array($mixed_propgroup_name) ? $mixed_propgroup_name : array($mixed_propgroup_name);
+  	// Caching.
+  	static $a_metadata_properties = array();
+
+  	// Check if its in our cache.
+  	$key = serialize($a_propgroup_name);
+  	if (isset($a_metadata_properties[$key])) {
+  		return $a_metadata_properties[$key];
+  	}
 
     // Build the select query object.
     $query = mediamosa_db::db_select(mediamosa_asset_metadata_property_group_db::TABLE_NAME, 'ampg');
@@ -259,13 +265,13 @@ class mediamosa_asset_metadata_property {
     $result = $query->execute();
 
     // Build output.
-    $a_output = array();
+    $a_metadata_properties[$key] = array();
     foreach ($result as $a_row) {
-      $a_output[$a_row['propdef_name']] = $a_row;
+      $a_metadata_properties[$key][$a_row['propdef_name']] = $a_row;
     }
 
     // Return our result.
-    return $a_output;
+    return $a_metadata_properties[$key];
   }
 
   /**
@@ -276,7 +282,7 @@ class mediamosa_asset_metadata_property {
    * @param array $a_definitions_full
    * @return array
    */
-  static public function get_metadata_properties_full($mixed_app_id = FALSE, $a_definitions_full = array('dublin_core', 'qualified_dublin_core', 'czp')) {
+  static public function get_metadata_properties_full($mixed_app_id = FALSE, array $a_definitions_full = array('dublin_core', 'qualified_dublin_core', 'czp')) {
 
     if ($mixed_app_id) {
       $a_app_ids = is_array($mixed_app_id) ? $mixed_app_id : array($mixed_app_id);

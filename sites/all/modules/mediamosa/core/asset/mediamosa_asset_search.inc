@@ -100,17 +100,11 @@ class mediamosa_asset_search {
     return (count($a_or) > 1 ? '(' : '') . implode(' OR ', $a_or) . (count($a_or) > 1 ? ')' : '');
   }
 
-
-  /**
-   * Search the assets with given parameters.
-   *
-   * @param unknown_type $a_funcparam
-   * @param unknown_type $a_metadata_definitions_full
-   */
   /**
    * Search for assets with given parameters.
+   * 1.x _media_management_search_asset
    *
-   * @param object $o_mediamosa
+   * @param mediamosa_response $o_mediamosa
    *  Mediamosa response object.
    * @param array $a_app_ids
    *  Application IDs.
@@ -135,22 +129,31 @@ class mediamosa_asset_search {
    *  on. The granted parameter with the asset indicates if we have
    *  access.
    * @param boolean $is_public_list
+   *  Used to include or exclude unappropriate assets.
    * @param boolean $is_app_admin
+   *  Used for unappropriate.
    * @param boolean $hide_empty_assets
+   *  Don't include empty assets.
    * @param boolean $show_deleted
+   *  Include deleted.
    * @param boolean $return_asset_ids
+   *  Return asset_ids only.
+   * @param boolean $show_stills
+   *  Include stills.
+   * @param boolean $show_collections
+   *  Include collections.
    * @param integer $limit
    * @param integer $offset
    * @param string $order_by (CQL?)
    * @param string $order_direction (CQL?)
    */
   static public function asset_search(
-    $o_mediamosa,
+    mediamosa_response $o_mediamosa,
     array $a_app_ids,
     $cql = '',
 
     $aut_user_id = '',
-    $a_aut_group_id = array(),
+    array $a_aut_group_id = array(),
     $aut_domain = '',
     $aut_realm = '',
 
@@ -165,6 +168,8 @@ class mediamosa_asset_search {
     $hide_empty_assets = false,
     $show_deleted = false,
     $return_asset_ids = false,
+    $show_stills = false,
+    $show_collections = false,
 
     $limit = 10,
     $offset = 0
@@ -330,10 +335,38 @@ class mediamosa_asset_search {
 	    }
 
 	    $a_order_by = reset($a_result_cql2sql['a_order_by']);
-	    $order_by = $a_order_by['column'];
-	    $order_direction = $a_order_by['direction'];
+	    $order_by = $a_order_by[MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN];
+	    $order_direction = $a_order_by[MEDIAMOSA_CQL_CONTEXT_KEY_DIRECTION];
+	    $order_table = $a_order_by[MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT];
+	    $order_prop_id = $a_order_by[MEDIAMOSA_CQL_CONTEXT_KEY_PROP_ID];
 	  }
-	/*
+
+
+    if ($order_by != '') {
+      if ($order_prop_id) {
+        $join = strtr(
+          'JOIN {#table} AS sort ON sort.asset_id = a.asset_id AND sort.prop_id = #prop_id',
+          array(
+            '#table' => $order_table,
+            '#prop_id' => intval($order_prop_id),
+          )
+        );
+      }
+      else {
+        $join = strtr(
+      	 'JOIN {#table} AS sort ON sort.asset_id = a.asset_id',
+          array(
+            '#table' => $order_table,
+          )
+        );
+      }
+
+      // 000_ will make me top join.
+      $a_query[mediamosa_db_query::A_JOIN]['000_sort'] = $join;
+      sort($a_query[mediamosa_db_query::A_JOIN]);
+      $a_query[mediamosa_db_query::A_ORDER_BY][] = 'sort.' . $order_by . ' ' . $order_direction;
+    }
+	  /*
 	 * @todo:
 	  if ($order_by != '') {
 	    $a_query[mediamosa_db_query::A_ORDER_BY][] = _media_management_search_asset_get_join_name_for_sort($a_funcparam, $order_by) .' '. mediamosa_db::escape_string($order_direction);
@@ -447,9 +480,9 @@ class mediamosa_asset_search {
 	    // Get the number of found rows.
 	    $i_found_rows = mediamosa_db::db_found_rows();
 
-	    $a_ids = array();
+	    $a_asset_ids = array();
 	    foreach ($db_result as $a_row) {
-	      $a_ids[] = $a_row[mediamosa_asset_db::ID];
+	      $a_asset_ids[] = $a_row[mediamosa_asset_db::ID];
 	    }
 	  }
 	  else {
@@ -524,9 +557,9 @@ class mediamosa_asset_search {
 
 		    // Harvesting the data
 		    $result = mediamosa_db::db_query('SELECT DISTINCT a.asset_id FROM {assets_all} AS a'. ($d_ordby ? ' ORDER BY '. $d_ordby : '') . ($d_limit ? ($d_offset ? ' LIMIT '. $d_offset .','. $d_limit : ' LIMIT '. $d_limit) : ''));
-		    $a_ids = array();
+		    $a_asset_ids = array();
 		    foreach ($result as $a_row) {
-		      $a_ids[] = $a_row[mediamosa_asset_db::ID];
+		      $a_asset_ids[] = $a_row[mediamosa_asset_db::ID];
 		    }
 
 		    // How much assets we have globally
@@ -595,7 +628,7 @@ class mediamosa_asset_search {
 	    else {
 	      // offset is inside the 1st query
 	      $a_query_2[mediamosa_db_query::OFFSET] = 0;
-	      $a_query_2[mediamosa_db_query::LIMIT] = max(($a_query[mediamosa_db_query::LIMIT] - count($a_ids)), 1); // make sure its at least 1
+	      $a_query_2[mediamosa_db_query::LIMIT] = max(($a_query[mediamosa_db_query::LIMIT] - count($a_asset_ids)), 1); // make sure its at least 1
 	    }
 
 	    // Create the query
@@ -616,29 +649,26 @@ class mediamosa_asset_search {
 	    // Count the total of the NULL query
 	    $i_found_rows += db_result($db_result_rows);
 
-	    while (count($a_ids) < $a_query[mediamosa_db_query::LIMIT] && ($a_row = db_fetch_array($db_result))) {
-	      $a_ids[] = $a_row['asset_id'];
+	    while (count($a_asset_ids) < $a_query[mediamosa_db_query::LIMIT] && ($a_row = db_fetch_array($db_result))) {
+	      $a_asset_ids[] = $a_row['asset_id'];
 	    }
 	  }
 */
 	  // Just return.
-	  if (!count($a_ids)) {
+	  if (!count($a_asset_ids)) {
 	  	return;
 	  }
 
-	   $o_mediamosa->item_total_count = $i_found_rows;
+    $o_mediamosa->item_total_count = $i_found_rows;
+    $o_mediamosa->item_offset = $offset;
 
-	   $o_mediamosa->item_offset = $offset;
-	  if ($return_asset_ids) {
-
-	    foreach ($a_ids as $asset_id) {
+    if ($return_asset_ids) {
+	    foreach ($a_asset_ids as $asset_id) {
 	      $o_mediamosa->add_item(array('asset_id' => $asset_id));
 	    }
 	  }
 	  else {
-	  //$o_rest_response = media_management_asset_collect($a_ids, $a_metadata_definitions_full, $a_app_ids, $aut_user_id, $granted, $a_aut_group_id, $aut_domain, $aut_realm, $is_app_admin, $show_stills);
-	  //$o_rest_response->item_total_count = $i_found_rows;
-	  //$o_rest_response->item_offset = vpx_funcparam_get_value($a_funcparam, 'offset', 0);
+	  	mediamosa_asset::asset_collect($o_mediamosa, $a_asset_ids, $a_app_ids, $aut_user_id, $granted, $a_aut_group_id, $aut_domain, $aut_realm, $is_app_admin, $show_stills, $show_collections);
 	  }
   }
 }

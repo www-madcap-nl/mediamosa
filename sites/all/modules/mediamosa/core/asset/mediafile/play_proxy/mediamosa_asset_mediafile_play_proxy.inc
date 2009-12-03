@@ -57,8 +57,6 @@ class mediamosa_asset_mediafile_play_proxy {
   const CONTAINER_TYPE_FLV = 'flv';
   const CONTAINER_TYPE_OGG = 'ogg';
 
-  const UNKNOWN_FILENAME = 'Filename_not_set';
-
   // ------------------------------------------------------------------ Static Functions.
   /**
    * Get the uri of the correct media server.
@@ -432,11 +430,11 @@ class mediamosa_asset_mediafile_play_proxy {
         }
 
         if (!@is_null($a_mediafile_ext['uri'])) {
-          throw new mediamosa_exception_error(mediamosa_error::STREAM_DOWNLOAD_NOT_ALLOWED);
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STREAM_DOWNLOAD_NOT_ALLOWED);
         }
 
         if ($a_mediafile_ext['filename'] == '') {
-          $a_mediafile_ext['filename'] = self::UNKNOWN_FILENAME;
+          $a_mediafile_ext['filename'] = mediamosa_asset_mediafile::UNKNOWN_FILENAME;
         }
 
         $output = $streaming_server_uri . '/' . $a_mediafile_ext['filename'];

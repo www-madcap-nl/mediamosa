@@ -230,50 +230,78 @@ class mediamosa_asset {
   }
 
   // media_management_asset_collect
+  /**
+   * Collect the asset information.
+   *
+   * @param object $o_mediafile
+   *  Response object.
+   * @param array $a_asset_ids
+   *  Array asset_ids.
+   * @param array $a_app_ids
+   *  Application app ids.
+   * @param string $user_id
+   *  The aut_user ID.
+   * @param boolean $granted
+   *  Show or hide accessable assets.
+   * @param array $a_aut_group_id
+   *  Group ID authentication.
+   * @param string $aut_domain
+   *  Domain authentication.
+   * @param string $aut_realm
+   *  Realm authentication.
+   * @param boolean $is_app_admin
+   *  Used for including unappropriate assets.
+   * @param $show_stills
+   *  Include stills.
+   * @param $show_collections
+   *  Include collection information.
+   */
   static public function asset_collect(
-	  mediamosa_response $o_mediafile,
-	  array $a_asset_ids,
-	  array $a_app_ids,
-	  $user_id,
-	  $granted,
-	  array $a_aut_group_id,
-	  $s_aut_domain,
-	  $s_aut_realm,
-	  $is_app_admin = FALSE,
-	  $show_stills = TRUE,
-	  $show_collections = FALSE
-	) {
+    mediamosa_response $o_mediamosa,
+    array $a_asset_ids,
+    array $a_app_ids,
+    $aut_user_id,
+    $granted,
+    array $a_aut_group_id,
+    $aut_domain,
+    $aut_realm,
+    $is_app_admin = FALSE,
+    $show_stills = TRUE,
+    $show_collections = FALSE
+  ) {
 
-	  $a_prop_ids = array();
-	  $a_metadata_definitions_full = mediamosa_asset_metadata_property::get_metadata_properties_full($a_app_ids);
-	  foreach ($a_metadata_definitions_full as $metadata_definitions_full) {
-	    $a_prop_ids[] = $metadata_definitions_full['propdef_id'];
-	  }
+    $a_prop_ids = array();
+    $a_metadata_definitions_full = mediamosa_asset_metadata_property::get_metadata_properties_full($a_app_ids);
+    foreach ($a_metadata_definitions_full as $metadata_definitions_full) {
+      $a_prop_ids[] = $metadata_definitions_full['propdef_id'];
+    }
 
-	  $s_ids = implode("','", $a_asset_ids);
+    $s_ids = implode("','", $a_asset_ids);
 
-	  $a_query = array();
-	  $a_query[mediamosa_db_query::A_SELECT_EXPR][] = "a.*";
-	  $a_query[mediamosa_db_query::A_SELECT_EXPR][] = "ap.val_char AS asset_property_value";
-	  $a_query[mediamosa_db_query::A_SELECT_EXPR][] = "apd.name AS asset_property_name";
-	  $a_query[mediamosa_db_query::A_SELECT_EXPR][] = "apg.name AS asset_property_group_name";
+    $a_query = array();
+    $a_query[mediamosa_db_query::A_SELECT_EXPR][] = "a.*";
+    $a_query[mediamosa_db_query::A_SELECT_EXPR][] = "ap.val_char AS asset_property_value";
+    $a_query[mediamosa_db_query::A_SELECT_EXPR][] = "apd.prop_name AS asset_property_name";
+    $a_query[mediamosa_db_query::A_SELECT_EXPR][] = "apg.propgroup_name AS asset_property_group_name";
 
-	  // Main select on asset table.
-	  $a_query[mediamosa_db_query::A_FROM][] = "{mediamosa_asset} AS a";
+    // Main select on asset table.
+    $a_query[mediamosa_db_query::A_FROM][] = "{mediamosa_asset} AS a";
 
-	  // Joins.
-	  $a_query[mediamosa_db_query::A_JOIN]['ap'] = "LEFT JOIN {mediamosa_asset_metadata} AS ap ON ap.asset_id = a.asset_id";
-	  $a_query[mediamosa_db_query::A_JOIN]['apd'] = "LEFT JOIN {mediamosa_asset_metadata_property} AS apd ON ap.prop_id = apd.prop_id";
-	  $a_query[mediamosa_db_query::A_JOIN]['apg'] = "LEFT JOIN {mediamosa_asset_metadata_property_group} AS apg ON apd.propgroup_id = apg.propgroup_id";
+    // Joins.
+    $a_query[mediamosa_db_query::A_JOIN]['ap'] = "LEFT JOIN {mediamosa_asset_metadata} AS ap ON ap.asset_id = a.asset_id";
+    $a_query[mediamosa_db_query::A_JOIN]['apd'] = "LEFT JOIN {mediamosa_asset_metadata_property} AS apd ON ap.prop_id = apd.prop_id";
+    $a_query[mediamosa_db_query::A_JOIN]['apg'] = "LEFT JOIN {mediamosa_asset_metadata_property_group} AS apg ON apd.propgroup_id = apg.propgroup_id";
 
-	  $a_query[mediamosa_db_query::A_WHERE][VPX_DB_WHERE_AND]['ap'][mediamosa_db_query::WHERE_OR]['prop_id'][] = sprintf('apd.prop_id IN(%s)', implode(',', $a_prop_ids));
-	  $a_query[mediamosa_db_query::A_WHERE][VPX_DB_WHERE_AND]['ap'][mediamosa_db_query::WHERE_OR]['prop_id'][] = "apd.prop_id IS NULL"; // in case it doesn't have properties
-	  $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['a'][] = sprintf("a.asset_id IN ('%s')", $s_ids);
+    $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['ap'][mediamosa_db_query::WHERE_OR]['prop_id'][] = sprintf('apd.prop_id IN(%s)', implode(',', $a_prop_ids));
+    $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['ap'][mediamosa_db_query::WHERE_OR]['prop_id'][] = "apd.prop_id IS NULL"; // in case it doesn't have properties
+    $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['a'][] = sprintf("a.asset_id IN ('%s')", $s_ids);
 
-    $a_query[mediamosa_db_query::A_ORDER_BY][] = "ap.id ASC";
+    $a_query[mediamosa_db_query::A_ORDER_BY][] = "ap.prop_id ASC";
 
-	  // Do the query
-	  $s_query = mediamosa_db_query::query_select($a_query);
+    // Build the query
+    $s_query = mediamosa_db_query::query_select($a_query);
+
+    // Do the query.
     $result = mediamosa_db::db_query($s_query);
 
     $a_items = array();
@@ -291,11 +319,11 @@ class mediamosa_asset {
       $a_items['assets'][] = $a_row;
     }
 
-	  $result = mediamosa_db::db_query(sprintf("SELECT * FROM {mediamosa_asset_delete} WHERE asset_id IN ('%s')", $s_ids));
-	  foreach ($result as $a_row) {
-	    $a_row['status'] = 'deleted';
-	    $a_items['assets'][] = $a_row;
-	  }
+    $result = mediamosa_db::db_query(sprintf("SELECT * FROM {mediamosa_asset_delete} WHERE asset_id IN ('%s')", $s_ids));
+    foreach ($result as $a_row) {
+      $a_row['status'] = 'deleted';
+      $a_items['assets'][] = $a_row;
+    }
 
     $result = mediamosa_app::get_by_appids($a_app_ids,
       array(
@@ -312,38 +340,38 @@ class mediamosa_asset {
 
     // Get all favorites.
     $a_items['user_favorites'] = array();
-    if ($user_id != '') {
-	    $a_query = array();
-	    $a_query[mediamosa_db_query::A_SELECT_EXPR][] = "fav_id";
-	    $a_query[mediamosa_db_query::A_FROM][] = "{mediamosa_user_favorite}";
-	    $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = sprintf("name = '%s'", mediamosa_db::escape_string($user_id));
-	    $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = sprintf("app_id IN(%s)", implode(',', $a_app_ids));
-	    $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = sprintf("fav_type = '%s'", mediamosa_user_favorite_db::FAV_TYPE_ASSET);
-	    $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = sprintf("fav_id IN ('%s')", $s_ids);
-	    $s_query = mediamosa_db_query::query_select($a_query);
-	    $result = mediamosa_db::db_query($s_query);
+    if ($aut_user_id != '') {
+      $a_query = array();
+      $a_query[mediamosa_db_query::A_SELECT_EXPR][] = "fav_id";
+      $a_query[mediamosa_db_query::A_FROM][] = "{mediamosa_user_favorite}";
+      $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = sprintf("name = '%s'", mediamosa_db::escape_string($aut_user_id));
+      $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = sprintf("app_id IN(%s)", implode(',', $a_app_ids));
+      $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = sprintf("fav_type = '%s'", mediamosa_user_favorite_db::FAV_TYPE_ASSET);
+      $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = sprintf("fav_id IN ('%s')", $s_ids);
+      $s_query = mediamosa_db_query::query_select($a_query);
+      $result = mediamosa_db::db_query($s_query);
 
-	    foreach ($result as $a_row) {
-	      $a_items['user_favorites'][] = $a_row[mediamosa_user_favorite_db::FAV_ID];
-	    }
-	  }
+      foreach ($result as $a_row) {
+        $a_items['user_favorites'][] = $a_row[mediamosa_user_favorite_db::FAV_ID];
+      }
+    }
 
     // Get all preview mediafiles.
-	  $a_query = array();
-	  $a_query[mediamosa_db_query::A_SELECT_EXPR][] = "m.mediafile_id";
-	  $a_query[mediamosa_db_query::A_SELECT_EXPR][] = "m.filename AS mediafile_filename";
-	  $a_query[mediamosa_db_query::A_SELECT_EXPR][] = "IFNULL(a.parent_id, a.asset_id) AS asset_id";
-	  $a_query[mediamosa_db_query::A_FROM][] = "{mediamosa_asset_mediafile} AS m";
-	  $a_query[mediamosa_db_query::A_JOIN]['asset'] = "JOIN {mediamosa_asset} AS a USING(asset_id)";
-	  if (isset($a_items['app_info'])) {
-	    foreach ($a_items['app_info'] as $key => $value) {
-	      $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['profile'][mediamosa_db_query::WHERE_OR][] = sprintf("(m.transcode_profile_id = %d AND m.app_id = %d)", $a_items['app_info'][$key]['preview_profile_id'], $key);
-	    }
-	  }
+    $a_query = array();
+    $a_query[mediamosa_db_query::A_SELECT_EXPR][] = 'm.mediafile_id';
+    $a_query[mediamosa_db_query::A_SELECT_EXPR][] = 'm.filename AS mediafile_filename';
+    $a_query[mediamosa_db_query::A_SELECT_EXPR][] = 'IFNULL(a.parent_id, a.asset_id) AS asset_id';
+    $a_query[mediamosa_db_query::A_FROM][] = '{mediamosa_asset_mediafile} AS m';
+    $a_query[mediamosa_db_query::A_JOIN]['asset'] = 'JOIN {mediamosa_asset} AS a USING(asset_id)';
+    if (isset($a_items['app_info'])) {
+      foreach ($a_items['app_info'] as $key => $value) {
+        $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['profile'][mediamosa_db_query::WHERE_OR][] = sprintf("(m.transcode_profile_id = %d AND m.app_id = %d)", $a_items['app_info'][$key]['preview_profile_id'], $key);
+      }
+    }
 
-	  $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = sprintf("a.app_id IN(%s)", implode(",", $a_app_ids));
-	  $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset'][mediamosa_db_query::WHERE_OR][] = sprintf("a.asset_id IN('%s')", $s_ids);
-	  $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset'][mediamosa_db_query::WHERE_OR][] = sprintf("a.parent_id IN('%s')", $s_ids);
+    $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = sprintf("a.app_id IN(%s)", implode(",", $a_app_ids));
+    $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset'][mediamosa_db_query::WHERE_OR][] = sprintf("a.asset_id IN('%s')", $s_ids);
+    $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset'][mediamosa_db_query::WHERE_OR][] = sprintf("a.parent_id IN('%s')", $s_ids);
 
     $s_query = mediamosa_db_query::query_select($a_query);
     $result = mediamosa_db::db_query($s_query);
@@ -351,132 +379,139 @@ class mediamosa_asset {
       $a_items['mediafile_preview'][$a_row['asset_id']] = $a_row;
     }
 
-	  // If granted is TRUE, we check access, but allow assets in our result even when we dont have access.
-	  // If FALSE, we expect search only to supply the assets where we have access on.
-	  $a_items['granted'] = array(); // must exist, else granted flag is not included on the non-granted
+    // If granted is TRUE, we check access, but allow assets in our result even when we dont have access.
+    // If FALSE, we expect search only to supply the assets where we have access on.
+    $a_items['granted'] = array(); // must exist, else granted flag is not included on the non-granted
 
     if ($granted) {
-      $a_asset_ids_access = mediamosa_aut::access_check_media($a_asset_ids, $a_app_ids, $user_id, $a_aut_group_id, $s_aut_domain, $s_aut_realm, $is_app_admin);
+      $a_asset_ids_access = mediamosa_aut::access_check_media($a_asset_ids, $a_app_ids, $aut_user_id, $a_aut_group_id, $aut_domain, $aut_realm, $is_app_admin);
 
-	    foreach ($a_asset_ids_access as $asset_id) {
-	      $a_items['granted'][$asset_id] = $asset_id;
-	    }
-	  }
-	  else {
-	    // Expect we have access on all...
-	    foreach ($a_items['assets'] as $a_row) {
-	      $a_items['granted'][$a_row['asset_id']] = $a_row['asset_id'];
-	    }
-	  }
+      foreach ($a_asset_ids_access as $asset_id) {
+        $a_items['granted'][$asset_id] = $asset_id;
+      }
+    }
+    else {
+      // Expect we have access on all...
+      foreach ($a_items['assets'] as $a_row) {
+        $a_items['granted'][$a_row['asset_id']] = $a_row['asset_id'];
+      }
+    }
 
-	  mediamosa_asset::enrich_response_asset($o_mediafile, $a_items, $a_asset_ids, $a_app_ids, $user_id, $show_stills, $show_collections);
+    mediamosa_asset::enrich_response_asset($o_mediamosa, $a_items, $a_asset_ids, $a_app_ids, $aut_user_id, $show_stills, $show_collections);
   }
 
   /**
+   * Enrich the response object with asset information.
    *
-   * @param mediamosa_response $o_mediafile
+   * @param mediamosa_response $o_mediamosa
    * @param array $a_items
    * @param array $a_asset_ids
    * @param array $a_app_ids
-   * @param string $user_id
+   * @param string $aut_user_id
    * @param boolean $show_stills
    * @param boolean $show_collections
    *  Include collections (was hack on _GET)
    */
-  static public function enrich_response_asset(mediamosa_response $o_mediafile, array $a_items, array $a_asset_ids, array $a_app_ids, $user_id, $show_stills = TRUE, $show_collections = FALSE) {
-	  $colls = array();
+  static public function enrich_response_asset(mediamosa_response $o_mediamosa, array $a_items, array $a_asset_ids, array $a_app_ids, $aut_user_id, $show_stills = TRUE, $show_collections = FALSE) {
+    $a_collections = array();
 
-	  $s_current_asset = FALSE;
-	  $a_items_pre_sort = array();
+    $s_current_asset = FALSE;
+    $a_items_pre_sort = array();
 
-	  // Need the first one.
-	  $app_id = reset($a_app_ids);
+    // Need the first one.
+    $app_id = reset($a_app_ids);
 
-	  // Get the metadata definitions.
-	  $a_metadata_definitions_full = mediamosa_asset_metadata_property::get_metadata_properties_full($a_app_ids);
+    // Get the metadata definitions.
+    $a_metadata_definitions_full = mediamosa_asset_metadata_property::get_metadata_properties_full($a_app_ids);
 
-	  foreach ($a_items['assets'] as $a_asset) {
-	    if (!isset($a_items_pre_sort[$a_asset['asset_id']])) {
-	      $asset_id = $a_asset['asset_id'];
-
-	      $a_items_pre_sort[$asset_id] = mediamosa_asset::process_asset_output($a_asset, $a_metadata_definitions_full);
-
-	      if ($a_items['app_info'][$a_asset['app_id']]['play_proxy_url'] && isset($a_items['mediafile_preview'][$asset_id])) {
-	        $a_patterns = array(
-	          '/{asset_id}/i',
-	          '/{preview_profile_id}/i',
-	          '/{mediafile_id}/i',
-	          '/{mediafile_filename}/i',
-	        );
-
-	        $a_replacements = array(
-	          $asset_id,
-	          $a_items['app_info'][$a_asset['app_id']]['preview_profile_id'],
-	          $a_items['mediafile_preview'][$asset_id]['mediafile_id'],
-	          $a_items['mediafile_preview'][$asset_id]['mediafile_filename'],
-	        );
-
-	        $a_items_pre_sort[$asset_id]['ega_play_url'] = preg_replace($a_patterns, $a_replacements, $a_items['app_info'][$a_asset['app_id']]['play_proxy_url']);
-	      }
-	      else {
-	        $a_items_pre_sort[$asset_id]['ega_view_url'] = preg_replace('/{asset_id}/i', $asset_id, $a_items['app_info'][$a_asset['app_id']]['view_asset_url']);
-	      }
-
-	      // voeg is_favorite toe
-	      if (!isset($a_items['user_favorites'])) {
-	        $a_items['user_favorites'] = array();
-	      }
-	      $a_items_pre_sort[$asset_id]['is_favorite'] = (array_search($asset_id, $a_items['user_favorites']) !== FALSE) ? 'TRUE' : 'FALSE';
-
-	      // voeg granted toe
-	      if (!isset($a_items['granted'])) {
-	        $a_items['granted'] = array();
-	      }
-	      $a_items_pre_sort[$asset_id]['granted'] = (array_search($asset_id, $a_items['granted']) !== FALSE) ? 'TRUE' : 'FALSE';
-
-	      // voeg de still toe: ticket
-	      $a_items_pre_sort[$asset_id]['vpx_still_url'] = "";
-	      $a_items_pre_sort[$asset_id]['ega_still_url'] = "";
-
-	      if ($show_stills) {
-	        $ticket = mediamosa_db::uuid($app_id);
-	        $a_mediafile_ext['asset_id'] = $asset_id;
-	        $result = mediamosa_ticket::create($ticket, $a_mediafile_ext, mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL, $app_id, $user_id, $a_items['stills'][$asset_id]);
-
-	        // voeg de still toe: still zelf
-	        if ($result !== FALSE) {
-	          $response = mediamosa_asset_mediafile_play_proxy::create_response_still($ticket, $app_id);
-	          $a_items_pre_sort[$asset_id]['vpx_still_url'] = $response['output'];
-	          $a_items_pre_sort[$asset_id]['ega_still_url'] = str_replace('{asset_id}', $a_asset['asset_id'], $a_items['app_info'][$a_asset['app_id']]['still_url']);
-	        }
-	      }
-	    }
-
-	    if ($a_asset['asset_property_group_name']) {
-	      $a_items_pre_sort[$a_asset['asset_id']][$a_asset['asset_property_group_name']][$a_asset['asset_property_name']][] = $a_asset['asset_property_value'];
-	    }
-/*
-    if ($show_collections && !isset($colls[$a_asset['asset_id']])) {
-      // toevoegen van collection informatie:
-      db_set_active('data');
-      $result = db_query("SELECT c.coll_id, c.title FROM {asset_collection} ac
-        LEFT JOIN {collection} c USING(coll_id)
-        WHERE ac.asset_id = '%s'", $a_asset['asset_id']);
-
-      while ($rs = db_fetch_object($result)) {
-        $a_items_pre_sort[$a_asset['asset_id']]['collection_'.$rs->coll_id] = $rs->title;
+    // Need to get collections?
+    if ($show_collections) {
+      // Get all collection information in one go.
+      $a_asset_ids = array();
+      foreach ($a_items['assets'] as $a_asset) {
+        $a_asset_ids[] = $a_asset['asset_id'];
       }
-      db_set_active();
-      $colls[$a_asset['asset_id']] = TRUE;
-    }
-*/
-    }
-/*
-  foreach ($a_asset_ids as $s_id) {
-    $o_rest_reponse->add_item($a_items_pre_sort[$s_id]);
-  }
 
-  // retourneer de rest_response
-  return $o_rest_reponse;*/
+      $result = mediamosa_asset_collection::get_by_asset_ids(
+        $a_asset_ids,
+        array(
+          mediamosa_asset_collection_db::ASSET_ID => 'ca.' . mediamosa_asset_collection_db::ASSET_ID,
+          mediamosa_collection_db::ID => 'c.' . mediamosa_collection_db::ID,
+          mediamosa_collection_db::TITLE => 'c.' . mediamosa_collection_db::TITLE
+        )
+      );
+
+      // Now store it in the cache.
+      foreach ($result as $a_collection) {
+        $a_collections[$a_collection[mediamosa_asset_collection_db::ASSET_ID]][$a_collection[mediamosa_asset_collection_db::COLL_ID]] = $a_collection;
+      }
+    }
+
+    foreach ($a_items['assets'] as $id => $a_asset) {
+
+    	// Now only stuff that may be set once per asset.
+    	if (!isset($a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]])) {
+        $a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]] = mediamosa_asset::process_asset_output($a_asset, $a_metadata_definitions_full);
+
+        if ($a_items['app_info'][$a_asset['app_id']]['play_proxy_url'] && isset($a_items['mediafile_preview'][$a_asset[mediamosa_asset_db::ID]])) {
+          $a_patterns = array(
+            '/{asset_id}/i',
+            '/{preview_profile_id}/i',
+            '/{mediafile_id}/i',
+            '/{mediafile_filename}/i',
+          );
+
+          $a_replacements = array(
+            $a_asset[mediamosa_asset_db::ID],
+            $a_items['app_info'][$a_asset['app_id']]['preview_profile_id'],
+            $a_items['mediafile_preview'][$a_asset[mediamosa_asset_db::ID]]['mediafile_id'],
+            $a_items['mediafile_preview'][$a_asset[mediamosa_asset_db::ID]]['mediafile_filename'],
+          );
+
+          $a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]]['ega_play_url'] = preg_replace($a_patterns, $a_replacements, $a_items['app_info'][$a_asset['app_id']]['play_proxy_url']);
+        }
+        else {
+          $a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]]['ega_view_url'] = preg_replace('/{asset_id}/i', $a_asset[mediamosa_asset_db::ID], $a_items['app_info'][$a_asset['app_id']]['view_asset_url']);
+        }
+
+        // Include the user favorites (if any).
+        $a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]]['is_favorite'] = isset($a_items['user_favorites']) && array_search($a_asset[mediamosa_asset_db::ID], $a_items['user_favorites']) !== FALSE ? 'TRUE' : 'FALSE';
+
+        // Insert granted.
+        $a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]]['granted'] = isset($a_items['granted']) && array_search($a_asset[mediamosa_asset_db::ID], $a_items['granted']) !== FALSE ? 'TRUE' : 'FALSE';
+
+        // Add ticket.
+        $a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]]['vpx_still_url'] = "";
+        $a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]]['ega_still_url'] = "";
+
+        if ($show_stills) {
+          $ticket = mediamosa_db::uuid($app_id);
+          $a_mediafile_ext['asset_id'] = $a_asset[mediamosa_asset_db::ID];
+          $result = mediamosa_ticket::create($ticket, $a_mediafile_ext, mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL, $app_id, $aut_user_id, $a_items['stills'][$a_asset[mediamosa_asset_db::ID]]);
+
+          // Create still response.
+          if ($result !== FALSE) {
+            $response = mediamosa_asset_mediafile_play_proxy::create_response_still($ticket, $app_id);
+            $a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]]['vpx_still_url'] = $response['output'];
+            $a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]]['ega_still_url'] = str_replace('{asset_id}', $a_asset[mediamosa_asset_db::ID], $a_items['app_info'][$a_asset['app_id']]['still_url']);
+          }
+        }
+      }
+
+      // Now stuff that can be set more than once (f.e. metadata).
+      if (!empty($a_asset['asset_property_group_name'])) {
+        $a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]][$a_asset['asset_property_group_name']][$a_asset['asset_property_name']][] = $a_asset['asset_property_value'];
+      }
+        // Add collection data.
+      if ($show_collections && isset($a_collections[$a_asset[mediamosa_asset_db::ID]])) {
+        foreach ($a_collections[$a_asset[mediamosa_asset_db::ID]] as $coll_id => $a_coll) {
+          $a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]]['collection_' . $coll_id] = $a_coll[mediamosa_collection_db::TITLE];
+        }
+      }
+    }
+
+    foreach ($a_asset_ids as $s_id) {
+      $o_mediamosa->add_item($a_items_pre_sort[$s_id]);
+    }
   }
 }

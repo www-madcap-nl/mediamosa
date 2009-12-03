@@ -826,8 +826,7 @@ abstract class mediamosa_cql_modifiers {
 }
 
 /**
- * Class sortby handles the sorting parameters in the cql string
- *
+ * Class sortby handles the sorting parameters in the cql string.
  */
 class mediamosa_cql_sortby {
   private $m_a_sub_sortby = array();
@@ -836,10 +835,7 @@ class mediamosa_cql_sortby {
     $this->m_a_sub_sortby[] = $str;
   }
 
-  final public function mediamosa_cql_sub_sortby_parse($o_obj, $function_name, $a_prefix_assignments = array(), $array_settings = array()) {
-    assert($array_settings);
-    assert($a_prefix_assignments);
-
+  final public function mediamosa_cql_sub_sortby_parse($o_obj, $function_name, array $a_prefix_assignments = array(), array $array_settings = array()) {
     $a_results = array();
 
     // Walk through my sortby's

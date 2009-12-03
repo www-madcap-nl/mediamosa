@@ -235,12 +235,14 @@ function mediamosa_asset_schema() {
       'idx_' . mediamosa_asset_db::CHANGED => array(mediamosa_asset_db::CHANGED),
       'idx_' . mediamosa_asset_db::IS_PROTECTED => array(mediamosa_asset_db::IS_PROTECTED),
       'idx_asset_app_parent_priv_unapp_viewed' => array(
+        mediamosa_asset_db::ID,
         mediamosa_asset_db::APP_ID,
         mediamosa_asset_db::PARENT_ID,
         mediamosa_asset_db::IS_PRIVATE,
         mediamosa_asset_db::IS_UNAPPROPRIATE,
       ),
       'idx_asset_app_parent_priv_unapp_emptyasset_owner' => array(
+        mediamosa_asset_db::ID,
         mediamosa_asset_db::APP_ID,
         mediamosa_asset_db::PARENT_ID,
         mediamosa_asset_db::IS_PRIVATE,
