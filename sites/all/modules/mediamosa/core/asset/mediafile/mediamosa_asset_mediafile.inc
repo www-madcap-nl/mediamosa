@@ -32,7 +32,7 @@
 class mediamosa_asset_mediafile {
 
   // ------------------------------------------------------------------ Consts.
-	const UNKNOWN_FILENAME = 'Filename_not_set';
+  const UNKNOWN_FILENAME = 'Filename_not_set';
 
   // ------------------------------------------------------------------ Static Functions.
   /**
@@ -72,6 +72,8 @@ class mediamosa_asset_mediafile {
   /**
    * Enrich the response with mediafile data. 1.x _media_management_return_mediafile_list()
    * Merged with 1.x _media_management_process_mediafile_output.
+   * FIXME: Uses response object, better to return array and let REST call fill response object.
+   *        Noway to reuse this code without response object.
    *
    * @param object $o_mediamosa
    *  The mediamosa response object.
@@ -153,9 +155,9 @@ class mediamosa_asset_mediafile {
       $i = 0;
       foreach ($result as $a_row) {
         // Create unique ID.
-      	$ticket = mediamosa_db::uuid($app_id);
+        $ticket = mediamosa_db::uuid($app_id);
 
-      	// Create ticket.
+        // Create ticket.
         mediamosa_ticket::create(
           $ticket,
           NULL,
@@ -196,11 +198,11 @@ class mediamosa_asset_mediafile {
 
       // If its a child, then unparent it.
       if (isset($a_items[$mediafile_id][mediamosa_asset_db::PARENT_ID])) {
-      	// Copy parent to main asset_id.
-      	$a_items[$mediafile_id][mediamosa_asset_db::ID] = $a_items[$mediafile_id][mediamosa_asset_db::PARENT_ID];
+        // Copy parent to main asset_id.
+        $a_items[$mediafile_id][mediamosa_asset_db::ID] = $a_items[$mediafile_id][mediamosa_asset_db::PARENT_ID];
 
-      	// Unset the parent value.
-      	unset($a_items[$mediafile_id][mediamosa_asset_db::PARENT_ID]);
+        // Unset the parent value.
+        unset($a_items[$mediafile_id][mediamosa_asset_db::PARENT_ID]);
       }
 
       // Test for downloadable.
@@ -219,8 +221,8 @@ class mediamosa_asset_mediafile {
       // If downloadable and application has its download URL set, then include it in our output.
       if ($is_downloadable && !empty($a_app[mediamosa_app_db::DOWNLOAD_URL])) {
 
-	      // Set EGA download url.
-	      $a_items[$mediafile_id]['ega_download_url'] = preg_replace($a_patterns, $a_replacements, $a_app[mediamosa_app_db::DOWNLOAD_URL]);
+        // Set EGA download url.
+        $a_items[$mediafile_id]['ega_download_url'] = preg_replace($a_patterns, $a_replacements, $a_app[mediamosa_app_db::DOWNLOAD_URL]);
       }
 
       // Default empty.
@@ -232,7 +234,7 @@ class mediamosa_asset_mediafile {
 
         // Output extra?
         if ($is_oai) {
-        	// Stream URL(s) for OAI.
+          // Stream URL(s) for OAI.
           $mediafile_app_id = $a_items[$mediafile_id][mediamosa_asset_mediafile_db::APP_ID];
 
           // Check if mediafile APP ID is in the requested app_ids.
@@ -245,11 +247,11 @@ class mediamosa_asset_mediafile {
 
           foreach ($a_app_id_master as $app_id_master) {
             if (in_array($app_id_master, $a_app_ids)) {
-            	// Get the master app.
-            	$a_app_tmp = mediamosa_app::get_by_appid($app_id_master);
+              // Get the master app.
+              $a_app_tmp = mediamosa_app::get_by_appid($app_id_master);
 
-            	// Set the ega_stream_url of the master.
-            	$a_items[$mediafile_id]['ega_stream_url'][] = preg_replace($a_patterns, $a_replacements, $a_app_tmp[mediamosa_app_db::STREAM_URL]);
+              // Set the ega_stream_url of the master.
+              $a_items[$mediafile_id]['ega_stream_url'][] = preg_replace($a_patterns, $a_replacements, $a_app_tmp[mediamosa_app_db::STREAM_URL]);
             }
           }
         }
@@ -258,20 +260,20 @@ class mediamosa_asset_mediafile {
         }
       }
 
-	    // Remove the prefix from the metadata and move into the metadata array of the asset.
-	    foreach ($a_items[$mediafile_id] as $key => $value) {
-	      if (mediamosa_unicode::strpos($key, $prefix) === 0) { // is het een metadata tag?
-	        $new_key = mediamosa_unicode::substr($key, mediamosa_unicode::strlen($prefix));
-	        $a_items[$mediafile_id]['metadata'][$new_key] = $a_items[$mediafile_id][$key];
-	        unset($a_items[$mediafile_id][$key]);
-	      }
-	    }
+      // Remove the prefix from the metadata and move into the metadata array of the asset.
+      foreach ($a_items[$mediafile_id] as $key => $value) {
+        if (mediamosa_unicode::strpos($key, $prefix) === 0) { // is het een metadata tag?
+          $new_key = mediamosa_unicode::substr($key, mediamosa_unicode::strlen($prefix));
+          $a_items[$mediafile_id]['metadata'][$new_key] = $a_items[$mediafile_id][$key];
+          unset($a_items[$mediafile_id][$key]);
+        }
+      }
 
-	    // Unset these;
-	    unset($a_items[$mediafile_id][mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT]);
+      // Unset these;
+      unset($a_items[$mediafile_id][mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT]);
 
-	    // Add to result.
-	    $o_mediamosa->add_item($a_items[$mediafile_id]);
+      // Add to result.
+      $o_mediamosa->add_item($a_items[$mediafile_id]);
     }
   }
 }

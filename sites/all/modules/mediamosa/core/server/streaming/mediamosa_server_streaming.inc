@@ -58,6 +58,7 @@ class mediamosa_server_streaming {
 
   /**
    * Find the streaming server based on container and codec)
+   *
    * @param string $container_type
    *  Container type like mp4;mpg etc.
    * @param string $video_codec
@@ -72,7 +73,7 @@ class mediamosa_server_streaming {
 
   	// Choose a random available streaming server.
     // try to match container:codec first.
-    $a_servers[$container_type .':'. $video_codec] = mediamosa_db::db_query(
+    $a_servers[$container_type . ':' . $video_codec] = mediamosa_db::db_query(
       "SELECT mss.* FROM {#mediamosa_server_streaming} AS mss WHERE
       JOIN {#mediamosa_server_streaming_container} AS mssc USING(#streaming_server_id)
       WHERE mssc.#container = :container AND mss.#active = 1 ORDER BY rand() LIMIT 1",
@@ -113,6 +114,7 @@ class mediamosa_server_streaming {
 
   /**
    * Find the object code based on container and video_codec (optional).
+   *
    * @param string $container_type
    *  Container type like mp4;mpg etc.
    * @param string $video_codec
@@ -131,6 +133,7 @@ class mediamosa_server_streaming {
 
   /**
    * Find the uri based on container and video_codec (optional).
+   *
    * @param string $container_type
    *  Container type like mp4;mpg etc.
    * @param string $video_codec

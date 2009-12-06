@@ -209,7 +209,6 @@ class mediamosa_rest_call_count_asset extends mediamosa_rest_call {
   }
 }
 
-
 /**
  * URI: /asset
  * Method: GET
@@ -292,7 +291,7 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
         ),
         self::IS_APP_ADMIN => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
-          self::VAR_DESCRIPTION => 'Allows seeing unapporpiate assets.',
+          self::VAR_DESCRIPTION => 'Allows seeing unappropriate assets.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
         self::USER_ID => array(
@@ -369,9 +368,6 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
     // If we return only asset ids, then we differ from limit_max.
     $return_asset_ids = $this->get_param_value(self::RETURN_ASSET_IDS);
 
-    // Not validated, so do it now.
-    $return_asset_ids = mediamosa_type::check(self::RETURN_ASSET_IDS, mediamosa_type::TYPE_BOOL, $return_asset_ids, FALSE);
-
     if ($return_asset_ids) {
       $a_var_setup = self::get_var_setup_range($a_var_setup, mediamosa_settings::LIMIT_MAX_IDS_ONLY);
     }
@@ -379,25 +375,19 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
     // Remember, might not be validated.
     $a_app_ids = $this->get_param_value_app();
 
-    // So check it now.
-    $a_app_ids = mediamosa_type::check(self::APP_ID, mediamosa_type::TYPE_APP_ID, $a_app_ids, TRUE);
-
     // Now include metadata search stuff.
-    $a_var_setup = mediamosa_core_cql::get_var_setup_search($a_app_ids, $a_var_setup, self::get_search_params());
+    $a_var_setup = mediamosa_core_cql::get_var_setup_search_asset($a_app_ids, $a_var_setup, self::get_search_params());
 
     return $a_var_setup;
   }
 
-  // Override for limit max.
-  protected function process_rest_args($a_var_setup) {
+  // Fix for alias of user_id / aut_user_id.
+  protected function process_rest_args(array $a_var_setup) {
     // Process input.
-  	$a_var_setup = parent::process_rest_args($a_var_setup);
+    $a_var_setup = parent::process_rest_args($a_var_setup);
 
     // If user_id is set, override aut_user_id, dont care if aut_user_id is set.
     $user_id = $this->get_param_value(self::USER_ID);
-
-    // Not validated, so do it now.
-    $user_id = mediamosa_type::check(self::USER_ID, mediamosa_type::TYPE_USER_ID, $user_id, FALSE);
 
     if ($user_id != '') {
       $this->set_param_value(self::AUT_USER_ID, $user_id);
@@ -408,13 +398,13 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
   }
 
   // Override for checking CQL string.
-  protected function validate_rest_args($a_var_setup) {
+  protected function validate_rest_args(array $a_var_setup) {
 
-  	// Validate first.
-  	parent::validate_rest_args($a_var_setup);
+    // Validate first.
+    parent::validate_rest_args($a_var_setup);
 
     $cql = $this->get_param_value(self::CQL);
-  	$a_app_ids = $this->get_param_value(self::APP_ID);
+    $a_app_ids = $this->get_param_value(self::APP_ID);
     $error_text = '';
 
     if ($cql != '' && !mediamosa_core_cql::verify_asset($cql, $a_app_ids, $error_text)) {
@@ -428,7 +418,7 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
     $a_app_ids = $this->get_param_value(self::APP_ID);
 
     // Now convert the old search parameters to CQL.
-    $a_var_setup = mediamosa_core_cql::get_var_setup_search($a_app_ids, array(), self::get_search_params());
+    $a_var_setup = mediamosa_core_cql::get_var_setup_search_asset($a_app_ids, array(), self::get_search_params());
 
     // Non CQL parameters.
     $order_by = $this->get_param_value(self::ORDER_BY);
@@ -437,22 +427,24 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
     $a_cql = array();
     $a_translate_to = array();
     foreach ($a_var_setup[mediamosa_rest_call::VARS] as $param => $a_param) {
-    	if ($a_param[mediamosa_rest_call::VAR_TYPE] == mediamosa_type::TYPE_SEARCH_MATCH) {
-    		continue;
-    	}
+      if ($a_param[mediamosa_rest_call::VAR_TYPE] == mediamosa_type::TYPE_SEARCH_MATCH) {
+        continue;
+      }
 
-    	// When provided, then convert.
-    	if (self::isset_param($param)) {
+      // When provided, then convert.
+      if (!self::empty_param($param)) {
         $a_value = self::get_param_value($param);
         $match = self::get_param_value($param . '_match');
 
-        $a_cql[] = mediamosa_asset_search::convert_searchparam_to_cql($param, $match, $a_value, $a_param[mediamosa_rest_call::PARAM_TYPE], $a_translate_to);
-    	}
+        $a_cql[] = mediamosa_core_cql::convert_searchparam_to_cql($param, $match, $a_value, $a_param[mediamosa_rest_call::PARAM_TYPE], $a_translate_to);
+      }
     }
 
+    $cql = '';
     if (count($a_cql)) {
 
-      if (self::isset_param(self::CQL)) {
+      // CQL must not be set.
+      if (!self::empty_param(self::CQL)) {
         throw new mediamosa_exception_error_cql_exclusive();
       }
 
@@ -460,22 +452,19 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
       $operator = self::get_param_value(self::OPERATOR);
 
       $cql = implode(' ' . mediamosa_unicode::strtoupper($operator) . ' ', $a_cql);
-
-      if ($order_by != '') {
-      	$cql .= ' ' . 'sortby ' . $order_by;
-      }
     }
-    elseif ($this->isset_param(self::ORDER_BY)) {
-    	print '<pre>Debug in ' . __FILE__ . ', line ' . __LINE__ . "\n";
-    	print htmlspecialchars(print_r($this->a_rest_args, TRUE));
-    	print '</pre>';
-    	exit;
-      if (self::isset_param(self::CQL)) {
+
+    // Add possible order by to the CQL.
+    if ($order_by != '') {
+      if (!self::empty_param(self::CQL)) {
         throw new mediamosa_exception_error_cql_exclusive();
       }
+
+      $cql .= ($cql == '' ? ' ' : '') . 'sortby ' . $order_by;
     }
     else {
-    	$cql = self::get_param_value(self::CQL);
+      // Now normal search params, then take CQL (if any).
+      $cql = self::get_param_value(self::CQL);
     }
 
     // Now search.
@@ -498,116 +487,10 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
       $this->get_param_value(self::RETURN_ASSET_IDS),
       $this->get_param_value(self::SHOW_STILLS),
       $this->get_param_value(self::SHOW_COLLECTIONS),
-      $this->get_param_value(self::LIMIT),
-      $this->get_param_value(self::OFFSET)
+      $this->get_param_value_limit(),
+      $this->get_param_value_offset()
     );
     // @todo;
     //_vpx_statistics_log_search_query($a_args, $app_id);
   }
 }
-
-/**
-
-function media_management_get_asset_search($a_args, $b_fav_user_id_required = FALSE) {
-  $a_funcparam = array(
-    'a_sort' => array(
-      'asset_id' => array('table' => 'asset', 'column' => 'asset_id', 'type' => VPX_TYPE_ALPHANUM),
-      'owner_id' => array('table' => 'asset', 'column' => 'owner_id', 'type' => VPX_TYPE_ALPHANUM),
-      'group_id' => array('table' => 'asset', 'column' => 'group_id', 'type' => VPX_TYPE_STRING),
-      'provider_id' => array('table' => 'asset', 'column' => 'provider_id', 'type' => VPX_TYPE_ALPHANUM),
-      'reference_id' => array('table' => 'asset', 'column' => 'reference_id', 'type' => VPX_TYPE_ALPHANUM),
-      'videotimestamp' => array('table' => 'asset', 'column' => 'videotimestamp', 'type' => VPX_TYPE_TIMESTAMP),
-      'videotimestampmodified' => array('table' => 'asset', 'column' => 'videotimestampmodified', 'type' => VPX_TYPE_TIMESTAMP),
-      'mediafile_duration' => array('table' => 'asset', 'column' => 'mediafile_duration', 'type' => VPX_TYPE_ALPHANUM),
-      'mediafile_container_type' => array('table' => 'asset', 'column' => 'mediafile_container_type', 'type' => VPX_TYPE_ALPHANUM),
-      'changed' => array('table' => 'asset', 'column' => 'changed', 'type' => VPX_TYPE_TIMESTAMP),
-      'app_id_search' => array('table' => 'asset', 'column' => 'app_id', 'type' => VPX_TYPE_INT),
-      'app_id' => array('table' => 'asset', 'column' => 'app_id', 'type' => VPX_TYPE_INT),
-      'mime_type' => array('table' => 'mediafile_metadata', 'column' => 'mime_type', 'type' => VPX_TYPE_STRING),
-      'filename' => array('table' => 'mediafile', 'column' => 'filename', 'type' => VPX_TYPE_STRING),
-      'numofviews' => array('table' => 'asset', 'column' => 'viewed', 'type' => VPX_TYPE_INT_RANGE),
-      'numofplays' => array('table' => 'asset', 'column' => 'played', 'type' => VPX_TYPE_INT_RANGE),
-      ),
-  );
-  vpx_funcparam_add($a_funcparam, $a_args, 'show_stills', VPX_TYPE_BOOL, FALSE, 'TRUE');
-
-  $a_funcparam['a_search'] = $a_funcparam['a_sort']; // gebruik dezelfde parameters voor search & sort
-  unset($a_funcparam['a_search']['mediafile_duration']); // op deze na
-  unset($a_funcparam['a_search']['app_id']); // op deze na
-  unset($a_funcparam['a_sort']['app_id_search']); // op deze na
-  unset($a_funcparam['a_sort']['mime_type']); // op deze na
-  unset($a_funcparam['a_sort']['filename']); // op deze na
-
-  try {
-
-    // Alleen asset_ids terug geven...
-
-
-
-
-
-
-
-
-
-
-
-
-    // Voeg toe met de definities van assets
-    $a_metadata_definitions_full = mediamosa_asset_metadata_property::get_metadata_properties_full($app_id);
-
-    foreach ($a_metadata_definitions_full as $s_key => $a_metadata) {
-      $array = array(
-        'table' => 'asset_property',
-        'prop_id' => $a_metadata['propdef_id'],
-        'type' => $a_metadata['propdef_type'],
-        'column' => $a_metadata['propdef_name'],
-      );
-
-      $a_funcparam['a_search'][$s_key] = $array;
-      $a_funcparam['a_sort'][$s_key] = $array;
-    }
-
-// [name]_match=[contains|exact|begin|period]
-// [name]=value or YYYY-MM-DD HH:MM:SS|YYYY-MM-DD HH:MM:SS
-
-    // Nu de zoek parameters (default)
-    foreach ($a_funcparam['a_search'] as $s_key => $a_search) {
-      if (!vpx_isset_parameter($a_args, $s_key)) {
-        continue;
-      }
-
-      // if CQL is set, you specify any search or order parameter
-      if ($cql != '') {
-        throw new vpx_exception_error_cql_exclusive();
-      }
-
-      // Voeg de zoek parameter toe
-      vpx_funcparam_search_add($a_funcparam, $a_args, $s_key);
-    }
-
-    if (vpx_funcparam_isset($a_funcparam, 'order_by')) {
-      $order_by = vpx_funcparam_get_value($a_funcparam, 'order_by', "");
-      if ($order_by != "") {
-        // if CQL is set, you specify any search or order parameter
-        if ($cql != '') {
-          throw new vpx_exception_error_cql_exclusive();
-        }
-
-        if (array_search($order_by, array_keys($a_funcparam['a_sort'])) === FALSE) {
-          throw new vpx_exception_error_sort_field_error(array('@field' => $order_by));
-        }
-      }
-    }
-
-
-    return _media_management_search_asset($a_funcparam, $a_metadata_definitions_full);
-  }
-  catch (vpx_exception $e) {
-    return $e->vpx_exception_rest_response();
-  }
-}
-
-
-}
-*/

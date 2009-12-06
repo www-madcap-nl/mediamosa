@@ -966,6 +966,7 @@ class mediamosa_aut {
 
   /**
    * Creates the sql to include in your sql call on object to test access
+   * 1.x: vpx_acl_build_access_where
    *
    * @param string $aut_type
    *  AUT_TYPE_* ID

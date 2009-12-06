@@ -24,22 +24,11 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
-/**
- * @file
- * The helper functions of collection module.
- */
+ /**
+  * @file
+  * functions for the webservice module.
+  */
 
-class mediamosa_collection {
-  // ------------------------------------------------------------------ Static Functions.
-  /**
-   * Remove collection.
-   *
-   * @param string $coll_id
-   * @return boolean
-   */
-  static public function delete($coll_id) {
-    $query = mediamosa_db::db_delete(mediamosa_collection_db::TABLE_NAME);
-    $query->condition(mediamosa_collection_db::ID, $coll_id);
-    return $query->execute() ? TRUE : FALSE;
-  }
+class mediamosa_webservice {
+
 }

@@ -65,6 +65,7 @@ function mediamosa_error_install() {
     'ERRORCODE_REST_UNSPECIFIED_VARIABLE' => 'The var \'@var\' is not allowed in this REST call, remove it from your request.',
     'ERRORCODE_REST_DIFF_VALUE_GET_POST_VAR' => '@var is specified more than once (GET / POST / URI), but has different values (value 1; @value1 / value 2; @value2).',
     'ERRORCODE_REST_NOT_FOUND' => 'The REST call with uri_id @uri_id was not found.',
+    'ERRORCODE_DIR_UNABLE_TO_CREATE' => 'Unable to create directory \'@location\', reason: @reason.',
 
     'ERRORCODE_ASSET_NOT_FOUND' => 'MM - asset_id=@asset_id was not found in the database',
     'ERRORCODE_MEDIAFILE_NOT_FOUND' => 'MM - mediafile_id=@mediafile_id was not found in the database',

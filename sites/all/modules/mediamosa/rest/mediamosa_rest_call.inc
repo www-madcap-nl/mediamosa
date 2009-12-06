@@ -118,7 +118,7 @@ abstract class mediamosa_rest_call {
   // Param fields
   const PARAM_VALUE = 'value';
   const PARAM_TYPE = 'type';
-  const PARAM_ISSET = 'isset';
+  const PARAM_ISSET_DEFAULT = 'isset_default'; // Value isset, but was set with default value.
   const PARAM_VALIDATED = 'validated';
   const PARAM_RANGE_START = 'range_start';
   const PARAM_RANGE_END = 'range_end';
@@ -191,7 +191,7 @@ abstract class mediamosa_rest_call {
   /**
    * Get the default vars we always expect in every rest call
    */
-  protected function get_var_setup_default($a_var_setup) {
+  protected function get_var_setup_default(array $a_var_setup) {
     $a_var_setup[mediamosa_rest_call::VARS][mediamosa_rest_call::APP_ID] = array(
       self::VAR_TYPE => mediamosa_type::TYPE_APP_ID,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
@@ -217,7 +217,7 @@ abstract class mediamosa_rest_call {
    * @param array $a_var_setup
    *   Provide current array to merge.
    */
-  protected function get_var_setup_range($a_var_setup = array(), $limit_max = mediamosa_settings::LIMIT_MAX, $limit_default = mediamosa_settings::LIMIT_DEFAULT) {
+  protected function get_var_setup_range(array $a_var_setup = array(), $limit_max = mediamosa_settings::LIMIT_MAX, $limit_default = mediamosa_settings::LIMIT_DEFAULT) {
 
     $a_var_setup[self::VARS][self::LIMIT] = array(
       self::VAR_TYPE => mediamosa_type::TYPE_LIMIT,
@@ -258,7 +258,7 @@ abstract class mediamosa_rest_call {
    * @return array
    *  Returns the altered $a_var_setup.
    */
-  protected function get_var_setup_order_by($a_var_setup = array(), $default_order_by = '', $a_allowed_values_order_by = array(), $default_order_direction = mediamosa_type::ORDER_DIRECTION_ASC) {
+  protected function get_var_setup_order_by(array $a_var_setup = array(), $default_order_by = '', array $a_allowed_values_order_by = array(), $default_order_direction = mediamosa_type::ORDER_DIRECTION_ASC) {
 
     // Either must be set.
     assert(in_array($default_order_direction, array(mediamosa_type::ORDER_DIRECTION_ASC, mediamosa_type::ORDER_DIRECTION_DESC)));
@@ -312,7 +312,7 @@ abstract class mediamosa_rest_call {
    * Use only internally, expected to be correct value, not value checked.
    *
    * @param string $param
-   * @param string $value
+   * @param mixed $value
    */
   public function set_param_value($param, $value) {
   	if ($this->a_rest_args[$param][self::PARAM_IS_READ_ONLY] == self::VAR_IS_READ_ONLY_YES) {
@@ -326,17 +326,50 @@ abstract class mediamosa_rest_call {
   }
 
   /**
-   * Will return TRUE if the param was set during call using GET / POST.
+   * Will return TRUE if the param is set.
    *
    * @param string $param
    * @return boolean
    */
   public function isset_param($param) {
-    return isset($this->a_rest_args[$param]) && $this->a_rest_args[$param][self::PARAM_ISSET];
+    return isset($this->a_rest_args[$param]);
   }
 
   /**
-   * Returns the app_ids param value (always array)
+   * Will return TRUE if the param was set by default and not by input.
+   *
+   * @param string $param
+   * @return boolean
+   */
+  public function isset_default_param($param) {
+    return isset($this->a_rest_args[$param]) && $this->a_rest_args[$param][self::PARAM_ISSET_DEFAULT];
+  }
+
+  /**
+   * Will return TRUE if the param is empty.
+   *
+   * @param string $param
+   * @return boolean
+   */
+  public function empty_param($param) {
+    if (!self::isset_param($param)) {
+      return TRUE; // Not set, is empty.
+    }
+
+    if (is_string($this->a_rest_args[$param])) {
+      return trim($this->a_rest_args[$param]) == '';
+    }
+
+    if (is_int($this->a_rest_args[$param])) {
+      return $this->a_rest_args[$param] == 0;
+    }
+
+    // Default empty behavour.
+    return empty($this->a_rest_args[$param]);
+  }
+
+  /**
+   * Returns the app_ids param value (always array).
    */
   public function get_param_value_app() {
     return $this->get_param_value(self::APP_ID);
@@ -431,15 +464,17 @@ abstract class mediamosa_rest_call {
       // Lets assert when we forget the description.
       assert(isset($a_var[self::VAR_DESCRIPTION]));
 
+      // Set by default off.
+      $this->a_rest_args[$param][self::PARAM_ISSET_DEFAULT] = FALSE; // Set by default
+
       // Make sure its set, even when empty.
-      $this->a_rest_args[$param][self::PARAM_ISSET] = isset($this->a_rest_args[$param]);
-      if (!$this->a_rest_args[$param][self::PARAM_ISSET]) {
-        $this->a_rest_args[$param][self::PARAM_VALUE] = ''; // Indicate is was not set
+      if (!isset($this->a_rest_args[$param])) {
+        $this->a_rest_args[$param][self::PARAM_VALUE] = ''; // Default empty.
 
         // Defaults.
         if (isset($a_var[self::VAR_DEFAULT_VALUE])) {
           $this->a_rest_args[$param][self::PARAM_VALUE] = $a_var[self::VAR_DEFAULT_VALUE];
-          $this->a_rest_args[$param][self::PARAM_ISSET] = !empty($a_var[self::VAR_DEFAULT_VALUE]); // set with default
+          $this->a_rest_args[$param][self::PARAM_ISSET_DEFAULT] = TRUE; // Set by default
         }
       }
 

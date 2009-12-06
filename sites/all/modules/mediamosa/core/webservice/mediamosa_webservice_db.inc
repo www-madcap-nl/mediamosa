@@ -25,21 +25,23 @@
  */
 
 /**
- * @file
- * The helper functions of collection module.
- */
+  * @file
+  * The DB class of webservice module.
+  * previously known as webservice_management in 1.x
+  */
+class mediamosa_webservice_db {
+  // ------------------------------------------------------------------ Consts.
+  // Table name;
+  const TABLE_NAME = 'mediamosa_webservice';
 
-class mediamosa_collection {
-  // ------------------------------------------------------------------ Static Functions.
-  /**
-   * Remove collection.
-   *
-   * @param string $coll_id
-   * @return boolean
-   */
-  static public function delete($coll_id) {
-    $query = mediamosa_db::db_delete(mediamosa_collection_db::TABLE_NAME);
-    $query->condition(mediamosa_collection_db::ID, $coll_id);
-    return $query->execute() ? TRUE : FALSE;
-  }
+  // Database fields;
+  const ID = 'webservice_id'; // 1.x webservice_management_id
+  const VERSION = 'version';
+  const HANDLE = 'handle';
+  const HANDLE_LENGTH = 50;
+  const DESCRIPTION = 'description';
+  const DESCRIPTION_LENGTH = 255;
+  const STATUS = 'status';
+  const STATUS_TRUE = 'TRUE';
+  const STATUS_FALSE = 'FALSE';
 }

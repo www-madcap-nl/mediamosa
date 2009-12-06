@@ -167,6 +167,8 @@ class mediamosa_db {
     $a_args = func_get_args();
 
     /**
+     * FIXME
+     * Remove code once we migrated all old db_query sprintf queries.
      * Start Query hack fix for old 6.x drupal queries.
      */
     if (isset($a_args[1]) && !is_array($a_args[1])) {
@@ -317,14 +319,14 @@ class mediamosa_db {
    * 'db_escape_string' is removed from drupal 7, D7 uses prepare instead. For now
    * we will use PDO::quote.
    */
-  static public function escape_string($string, $glue = ',') {
+  static public function escape_string($mixed_string, $glue = ',') {
     // Hmm well kinda hack here, but dont see any other way atm
     // than calling the getconnection for PDO and using quote...
     // But \' must be escaped as '' in the PDO layer, quote seems to
     // make mistakes here by escaping with \'. Anyway, hotfix here. RBL.
-    if (is_array($string)) {
+    if (is_array($mixed_string)) {
       $a_str = array();
-      foreach ($string as $str) {
+      foreach ($mixed_string as $str) {
         $a_str[] = self::escape_string($str);
       }
 
@@ -332,7 +334,7 @@ class mediamosa_db {
     }
 
     // Call PDO quote, and replace \' to ''. Also removes the quotes around the value.
-    return str_replace('\\\'', "''", mediamosa_unicode::substr(Database::getConnection()->quote($string), 1, -1));
+    return str_replace('\\\'', "''", mediamosa_unicode::substr(Database::getConnection()->quote($mixed_string), 1, -1));
   }
 
   /**
@@ -358,8 +360,10 @@ class mediamosa_db {
   /**
    * Set current active database wrapper.
    *
-   * @param name of database $key
-   * @return previous selected database.
+   * @param string $key
+   *  DB name.
+   * @return string
+   *  previous selected database.
    */
   static public function db_set_active($key = 'default') {
     return db_set_active($key);
@@ -367,7 +371,8 @@ class mediamosa_db {
   /**
    * Get current active database wrapper.
    *
-   * @return selected database.
+   * @return string
+   *  selected database.
    */
   static public function db_get_active() {
     $current_key = db_set_active();
@@ -434,7 +439,7 @@ class mediamosa_db {
    * @return integer
    *    returns number of rows.
    */
-  static public function db_count_rows($table_name, $a_columns_and = array()) {
+  static public function db_count_rows($table_name, array $a_columns_and = array()) {
     // Create select object.
     $query = self::db_select($table_name, 'c');
     foreach ($a_columns_and as $column => $value) {
@@ -453,7 +458,7 @@ class mediamosa_db {
    *  column => value.
    *
    */
-  static function db_must_exists($table_name, $a_columns_and = array()) {
+  static function db_must_exists($table_name, array $a_columns_and = array()) {
 
     if (self::db_count_rows($table_name, $a_columns_and)) {
       return; // exists
@@ -496,7 +501,7 @@ class mediamosa_db {
    * @return boolean
    *  Return true or false on exists one or more row match.
    */
-  static function db_exists($table_name, $a_columns_and = array()) {
+  static function db_exists($table_name, array $a_columns_and = array()) {
     try {
       self::db_must_exists($table_name, $a_columns_and);
     }
@@ -517,10 +522,10 @@ class mediamosa_db {
    * @param string $group_id
    * @return integer
    */
-  static public function db_count_items($table, $app_id, $owner_id, $group_id) {
+  static public function db_count_items($table_name, $app_id, $owner_id, $group_id) {
 
     // Create select query.
-    $query = mediamosa_db::db_select($table);
+    $query = mediamosa_db::db_select($table_name);
     $query->condition('app_id', $app_id);
     if ($owner_id != '') {
       $query->condition('owner_id', $owner_id);
@@ -539,17 +544,18 @@ class mediamosa_db {
    * @return array
    *  Array containing columns.
    */
-  static public function db_get_columns($table) {
+  static public function db_get_columns($table_name) {
     // Use db_query directly here.
-    return db_query("SELECT COLUMN_NAME FROM information_schema.columns WHERE TABLE_NAME = :table", array(':table' => $table))->fetchCol();
+    return db_query("SELECT COLUMN_NAME FROM information_schema.columns WHERE TABLE_NAME = :table", array(':table' => $table_name))->fetchCol();
   }
 
   /**
    * Generate a new unique ID.
    *
-   * @param integer $app_id
-   * @param string $user_id
-   * @return unknown
+   * @param int $app_id
+   *  Application ID, to add a bit more to the randomness.
+   * @return string
+   *  The unique ID.
    */
   static public function uuid($app_id) {
     $hash = sha1(rand() . ':' . $app_id . ':' . uniqid('', TRUE) . ':' . microtime());

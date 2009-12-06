@@ -90,9 +90,20 @@ class mediamosa_asset_collection {
     $query->condition(mediamosa_asset_collection_db::ASSET_ID, $a_asset_ids, 'IN');
     return $query->execute();
   }
+
+  /**
+   * Get collections based on given collection ids.
+   * 1.x: _media_management_return_collection_list
+   *
+   * 2.x: no longer return response object.
+   *
+   * @param array $a_ids
+   *  The collection ids.
+   */
+  function get_by_ids(array $a_coll_ids) {
+    // Build query.
+    $query = mediamosa_db::db_select(mediamosa_collection_db::TABLE_NAME);
+    $query->condition(mediamosa_collection_db::ID, $a_coll_ids, 'IN');
+    return $query->execute();
+  }
 }
-/*
- *       $result = db_query("SELECT c.coll_id, c.title FROM {asset_collection} ac
-        LEFT JOIN {collection} c USING(coll_id)
-        WHERE ac.asset_id = '%s'", $a_asset['asset_id']);
-*/

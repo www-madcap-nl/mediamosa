@@ -71,6 +71,17 @@ files[] = core/app/mediamosa_app.install.inc
 ; App Authentication class.
 files[] = core/app/authentication/mediamosa_app_authentication.inc
 
+; Webservice class.
+files[] = core/webservice/mediamosa_webservice_db.inc
+files[] = core/webservice/mediamosa_webservice.inc
+files[] = core/webservice/mediamosa_webservice.install.inc
+
+; Webservice App class.
+files[] = core/webservice/app/mediamosa_webservice_app_db.inc
+files[] = core/webservice/app/mediamosa_webservice_app.inc
+files[] = core/webservice/app/mediamosa_webservice_app.install.inc
+
+
 ; CQL.
 files[] = core/cql/mediamosa_core_cql.inc
 
@@ -110,6 +121,7 @@ files[] = core/asset/mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.i
 
 ; Collection.
 files[] = core/collection/mediamosa_collection_db.inc
+files[] = core/collection/mediamosa_collection_search.inc
 files[] = core/collection/mediamosa_collection.inc
 files[] = core/collection/mediamosa_collection.install.inc
 

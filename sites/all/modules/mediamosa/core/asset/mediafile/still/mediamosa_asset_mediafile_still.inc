@@ -256,4 +256,219 @@ class mediamosa_asset_mediafile_still {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_FILE_NOT_FOUND, array('@filename' => $filename));
     }
   }
+
+  /**
+   * Delete a still from database and file.
+   * 1.x _media_management_delete_still
+   *
+   * @param $asset_id
+   *  The asset_id. (will remove all stills from this asset_id).
+   * @param $mediafile_id
+   *  Remove specific from Mediafile parent.
+   * @param $still_id
+   *  Remove specific still.
+   */
+  function delete($asset_id, $mediafile_id = NULL, $still_id = NULL) {
+
+    // Can not be set both.
+    assert(isset($still_id) && isset($mediafile_id));
+
+    // Get the mediafile stills we need to remove.
+    if ($still_id) {
+      // Get specific still.
+      $result = mediamosa_db::db_query(
+        'SELECT #mediafile_id AS still_id, #app_id, #sannas_mount_point, #mediafile_id_source FROM {#mediamosa_asset_mediafile} WHERE #mediafile_id = :mediafile_id AND #is_still = :is_still_true AND #asset_id_root = :asset_id_root',
+        array(
+          '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
+          '#app_id' => mediamosa_asset_mediafile_db::APP_ID,
+          '#sannas_mount_point' => mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT,
+          '#mediafile_id_source' => mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE,
+          '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
+          ':mediafile_id' => $still_id,
+          '#is_still' => mediamosa_asset_mediafile_db::IS_STILL,
+          ':is_still_true' => mediamosa_asset_mediafile_db::IS_STILL_TRUE,
+          '#asset_id_root' => mediamosa_asset_mediafile_db::ASSET_ID_ROOT,
+          ':asset_id_root' => $asset_id,
+        )
+      );
+    }
+    elseif ($mediafile_id) {
+      // Get all stills of mediafile.
+      $result = mediamosa_db::db_query(
+        'SELECT s.#mediafile_id AS still_id, s.#app_id, s.#sannas_mount_point, s.#mediafile_id_source FROM {mediafile} AS s
+         INNER JOIN {#mediamosa_asset_mediafile} AS m ON m.#asset_id = s.#asset_id
+         WHERE m.#mediafile_id = :mediafile_id AND m.#asset_id_root = :asset_id_root AND s.#asset_id_root = :asset_id_root AND s.#mediafile_id_source = :mediafile_id_source AND s.#is_still = :is_still_true',
+        array(
+          '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
+          '#app_id' => mediamosa_asset_mediafile_db::APP_ID,
+          '#sannas_mount_point' => mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT,
+          '#mediafile_id_source' => mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE,
+          '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
+          'mediafile_id' => $mediafile_id,
+          '#asset_id_root' => mediamosa_asset_mediafile_db::ASSET_ID_ROOT,
+          ':asset_id_root' => $asset_id,
+          ':mediafile_id_source' => $mediafile_id,
+          '#is_still' => mediamosa_asset_mediafile_db::IS_STILL,
+          ':is_still_true' => mediamosa_asset_mediafile_db::IS_STILL_TRUE,
+        )
+      );
+    }
+    else {
+      // Get all stills from asset.
+      $result = mediamosa::db_query(
+        'SELECT #mediafile_id AS still_id, #app_id, #sannas_mount_point, #mediafile_id_source FROM {#mediamosa_asset_mediafile} WHERE #asset_id_root = :asset_id_root AND #is_still = :is_still_true',
+        array(
+          '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
+          '#app_id' => mediamosa_asset_mediafile_db::APP_ID,
+          '#sannas_mount_point' => mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT,
+          '#mediafile_id_source' => mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE,
+          '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
+          '#asset_id_root' => mediamosa_asset_mediafile_db::ASSET_ID_ROOT,
+          ':asset_id_root' => $asset_id,
+          '#is_still' => mediamosa_asset_mediafile_db::IS_STILL,
+          ':is_still_true' => mediamosa_asset_mediafile_db::IS_STILL_TRUE,
+        )
+      );
+    }
+
+    // Collect the mediafiles we need to delete.
+    $a_mediafile_ids = array();
+    foreach ($result as $a_row) {
+      // Build the path and filename of the still.
+      $still_filename = mediamosa_configuration_storage::mediafile_still_filename_get($a_row['still_id'], $a_row[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT]);
+      mediamosa::log('Deleting still: @location', array('@location' => $still_filename));
+
+      // Remove the file.
+      mediamosa_io::unlink($still_filename);
+
+      // Collect the mediafile id of the still.
+      $a_mediafile_ids[] = $a_row['still_id'];
+
+      if (!isset($mediafile_id)) {
+        $mediafile_id = $a_row[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE];
+      }
+    }
+
+    // Remove the stills from the database.
+    if (!empty($a_mediafile_ids)) {
+      // Remove our metadata.
+      $query = mediamosa_db::db_delete(mediamosa_asset_mediafile_metadata_db::TABLE_NAME);
+      $query->condition(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID, $a_mediafile_ids, 'IN');
+      $query->execute();
+
+      // Remove the mediafiles.
+      $query = mediamosa_db::db_delete(mediamosa_asset_mediafile_db::TABLE_NAME);
+      $query->condition(mediamosa_asset_mediafile_db::ID, $a_mediafile_ids, 'IN');
+      $query->execute();
+    }
+
+    // Happens when there where no stills to delete. (check added 2.x)
+    if (!isset($mediafile_id)) {
+      return;
+    }
+
+    // Is there a default still ?
+    $mediafile_id_default = mediamosa_db::db_query_range(
+      'SELECT mf.#mediafile_id FROM {#mediamosa_asset_mediafile_metadata} AS mfmd
+       INNER JOIN {#mediamosa_asset_mediafile} AS mf ON mf.#mediafile_id = mfmd.#mediafile_id
+       WHERE mfmd.#still_default = :still_default_true AND mf.#asset_id_root = :asset_id_root AND mf.#is_still = :is_still_true AND mf.#mediafile_id_source = :mediafile_id_source',
+      0,
+      1,
+      array(
+        '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
+        '#mediamosa_asset_mediafile_metadata' => mediamosa_asset_mediafile_metadata_db::TABLE_NAME,
+        '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
+        '#asset_id_root' => mediamosa_asset_mediafile_db::ASSET_ID_ROOT,
+        ':asset_id_root' => $asset_id,
+        '#still_default' => mediamosa_asset_mediafile_metadata_db::STILL_DEFAULT,
+        ':still_default_true' => mediamosa_asset_mediafile_metadata_db::STILL_DEFAULT_TRUE,
+        '#is_still' => mediamosa_asset_mediafile_db::IS_STILL,
+        ':is_still_true' => mediamosa_asset_mediafile_db::IS_STILL_TRUE,
+        '#mediafile_id_source' => mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE,
+        ':mediafile_id_source' => $mediafile_id,
+      )
+    )->fetchField();
+
+    // No default, create one.
+    if (!$mediafile_id_default) {
+      $mediafile_id_default = mediamosa_db::db_query_range(
+        'SELECT mf.#mediafile_id FROM {#mediamosa_asset_mediafile_metadata} AS mfmd
+         INNER JOIN {#mediamosa_asset_mediafile} AS mf ON mf.#mediafile_id = mfmd.#mediafile_id
+         WHERE mF.#asset_id_root = :asset_id_root AND mf.#is_still = :is_still_true AND mf.#mediafile_id_source = :mediafile_id_source
+         ORDER BY mfmd.#still_order ASC',
+        0,
+        1,
+        array(
+          '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
+          '#mediamosa_asset_mediafile_metadata' => mediamosa_asset_mediafile_metadata_db::TABLE_NAME,
+          '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
+          '#asset_id_root' => mediamosa_asset_mediafile_db::ASSET_ID_ROOT,
+          ':asset_id_root' => $asset_id,
+          '#is_still' => mediamosa_asset_mediafile_db::IS_STILL,
+          ':is_still_true' => mediamosa_asset_mediafile_db::IS_STILL_TRUE,
+          '#mediafile_id_source' => mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE,
+          ':mediafile_id_source' => $mediafile_id,
+          '#still_order' => mediamosa_asset_mediafile_metadata_db::STILL_ORDER,
+        )
+      )->fetchField();
+
+      if ($mediafile_id_default) {
+        // Found new default? Then set it as default.
+        mediamosa_db::db_query(
+          'UPDATE {#mediamosa_asset_mediafile_metadata} SET #still_default = #still_default_true WHERE #mediafile_id = :mediafile_id',
+          array(
+            '#mediamosa_asset_mediafile_metadata' => mediamosa_asset_mediafile_metadata_db::TABLE_NAME,
+            '#still_default' => mediamosa_asset_mediafile_metadata_db::STILL_DEFAULT,
+            ':still_default_true' => mediamosa_asset_mediafile_metadata_db::STILL_DEFAULT_TRUE,
+            '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
+            ':mediafile_id' => $mediafile_id_default
+          )
+        );
+      }
+    }
+  }
+
+  /**
+   * Set the default still.
+   * 1.x: _media_management_set_still_default
+   * FIXME: the mediafile id unused.
+   * 2.x: no longer returns TRUE by default.
+   *
+   * @param string $asset_id
+   *  The asset ID.
+   * @param string $mediafile_id (unused!)
+   *  The mediafile ID.
+   * @param string $still_id
+   *  The still ID.
+   */
+  function set_still_default($asset_id, $mediafile_id, $still_id) {
+    mediamosa::log(
+      'Setting default still: asset_id = @asset_id; mediafile_id = @mediafile_id; still_id = @still_id',
+      array(
+        '@asset_id' => $asset_id,
+        '@mediafile_id' => $mediafile_id,
+        '@still_id' => $still_id,
+      )
+    );
+
+    mediamosa_db::db_query(
+      'UPDATE {#mediamosa_asset_mediafile_metadata} AS mfmd
+       INNER JOIN {#mediamosa_asset_mediafile} AS mf ON mf.#mediafile_id = mfmd.#mediafile_id
+       SET mfmd.#still_default = IF(mfmd.#mediafile_id = :mediafile_id, #still_default_true, #still_default_false)
+       WHERE mf.#asset_id_root = :asset_id_root AND m.#is_still = #is_still_true',
+      array(
+        '#mediamosa_asset_mediafile_metadata' => mediamosa_asset_mediafile_metadata_db::TABLE_NAME,
+        '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
+        '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
+        ':mediafile_id' => $still_id,
+        '#still_default' => mediamosa_asset_mediafile_metadata_db::STILL_DEFAULT,
+        '#still_default_true' => mediamosa_asset_mediafile_metadata_db::STILL_DEFAULT_TRUE,
+        '#still_default_false' => mediamosa_asset_mediafile_metadata_db::STILL_DEFAULT_FALSE,
+        '#asset_id_root' => mediamosa_asset_mediafile_db::ASSET_ID_ROOT,
+        ':asset_id_root' => $asset_id,
+        '#is_still' => mediamosa_asset_mediafile_db::IS_STILL,
+        ':is_still_true' => mediamosa_asset_mediafile_db::IS_STILL_TRUE,
+      )
+    );
+  }
 }

@@ -46,6 +46,7 @@ class mediamosa_asset_metadata {
   // ------------------------------------------------------------------ Static Function.
   /**
    * Build the expression for SQL
+   * FIXME seems to be no longer used(!)
    *
    * @param array $a_search
    * @param string $s_tablename_alias_full

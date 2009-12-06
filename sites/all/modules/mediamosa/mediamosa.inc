@@ -45,6 +45,9 @@ class mediamosa {
   static private $a_num_of_slow_queries = array();
   static private $a_total_query_time = array();
 
+  // Stores last error that went through error_handler.
+  static private $a_last_php_error = NULL;
+
   // ------------------------------------------------------------------ Constructor.
   function __construct() {
     // Checks before we do anything.
@@ -110,8 +113,9 @@ class mediamosa {
     assert(isset($line));
     assert(isset($filename));
 
-    if ($error_level & error_reporting()) {
-      // All these constants are documented at http://php.net/manual/en/errorfunc.constants.php
+    if ($error_level) {
+
+      // These constants are documented at http://php.net/manual/en/errorfunc.constants.php.
       $types = array(
         E_ERROR => 'Error',
         E_WARNING => 'Warning',
@@ -131,18 +135,50 @@ class mediamosa {
       // If the backtrace was provided, then use it.
       $caller = isset($caller) ? $caller : _drupal_get_last_caller(debug_backtrace());
 
-      // Unlike drupal, we don't treat recoverable errors as fatal.
-      _drupal_log_error(array(
-        '%type' => isset($types[$error_level]) ? $types[$error_level] : 'Unknown error',
-        '%message' => $message,
-        '%function' => $caller['function'],
-        '%file' => $caller['file'],
-        '%line' => $caller['line'],
-      ), FALSE);
+      // Always set the last error.
+      self::$a_last_php_error = array(
+        'type' => isset($types[$error_level]) ? $types[$error_level] : 'Unknown error',
+        'message' => $message,
+        'function' => $caller['function'],
+        'file' => $caller['file'],
+        'line' => $caller['line']
+      );
+
+      // Only log if error_reporting returns TRUE.
+      if (error_reporting()) {
+        // Unlike drupal, we don't treat recoverable errors as fatal, preventing Drupal to display error page.
+        _drupal_log_error(array(
+          '%type' => isset($types[$error_level]) ? $types[$error_level] : 'Unknown error',
+          '%message' => $message,
+          '%function' => $caller['function'],
+          '%file' => $caller['file'],
+          '%line' => $caller['line'],
+        ), FALSE);
+      }
     }
 
-    // Lets return TRUE.
+    // Lets return TRUE as error handled.
     return TRUE;
+  }
+
+  /**
+   * Returns the last php error that was handled by our error handler.
+   */
+  static public function last_php_error() {
+
+    // If no last error, then return FALSE.
+    return !isset(self::$a_last_php_error) ? FALSE : self::$a_last_php_error;
+  }
+
+  /**
+   * Returns message from the last_php_error.
+   * Currently just returns 'message' value, but might return more in future.
+   * Intended for usage inside exception messages, like 'reason' for failure.
+   */
+  static public function last_php_error_message() {
+
+    // If no last error, then return 'unknown' text.
+    return isset(self::$a_last_php_error) ? self::$a_last_php_error['message'] : 'unknown';
   }
 
   /**

@@ -36,6 +36,7 @@ class mediamosa_app_db {
   // Database fields;
   const ID = 'id';  // 1.x - caid
   const NAME = 'name';
+  const NAME_LENGTH = 30;
   const APP_ID = 'app_id'; // 1.x id
   const TRANSCODING_POSITION_FROM = 'transcoding_position_from';
   const TRANSCODING_POSITION_TO = 'transcoding_position_to';
@@ -66,21 +67,21 @@ class mediamosa_app_db {
   const OWNER = 'owner';
   const OWNER_LENGTH = 50;
   const TECHNICAL_NAME = 'technical_name';
-  const TECHNICAL_NAME_100 = 100;
+  const TECHNICAL_NAME_LENGTH = 100;
   const TECHNICAL_PHONE = 'technical_phone';
-  const TECHNICAL_PHONE_40 = 40;
+  const TECHNICAL_PHONE_LENGTH = 40;
   const TECHNICAL_EMAIL = 'technical_email';
-  const TECHNICAL_EMAIL_50 = 50;
+  const TECHNICAL_EMAIL_LENGTH = 50;
   const ADMINISTRATIVE_NAME = 'administrative_name';
-  const ADMINISTRATIVE_NAME_100 = 100;
+  const ADMINISTRATIVE_NAME_LENGTH = 100;
   const ADMINISTRATIVE_PHONE = 'administrative_phone';
-  const ADMINISTRATIVE_PHONE_40 = 40;
+  const ADMINISTRATIVE_PHONE_LENGTH = 40;
   const ADMINISTRATIVE_EMAIL = 'administrative_email';
-  const ADMINISTRATIVE_EMAIL_50 = 50;
+  const ADMINISTRATIVE_EMAIL_LENGTH = 50;
   const PLAY_PROXY_URL = 'play_proxy_url';
-  const PLAY_PROXY_URL_255 = 255;
+  const PLAY_PROXY_URL_LENGTH = 255;
   const VIEW_ASSET_URL = 'view_asset_url';
-  const VIEW_ASSET_URL_255 = 255;
+  const VIEW_ASSET_URL_LENGTH = 255;
   const PREVIEW_PROFILE_ID = 'preview_profile_id';
   const DOWNLOAD_URL = 'download_url';
   const DOWNLOAD_URL_LENGTH = 255;

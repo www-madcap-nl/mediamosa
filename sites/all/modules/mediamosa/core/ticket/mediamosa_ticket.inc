@@ -74,6 +74,7 @@ class mediamosa_ticket {
   // ------------------------------------------------------------------ Static Functions.
   /**
    * Create ticket.
+   * 1.x: _play_proxy_create_ticket
    *
    * @param string $ticket
    *  A unique ID (HASH).
@@ -125,9 +126,6 @@ class mediamosa_ticket {
 	      $ticket_target = self::download_ticket_target_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::objectid_to_location($a_mediafile_ext[mediamosa_asset_mediafile_db::ID]);
 	      $ticket_path = mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_settings::DOWNLOAD_TICKET_LOCATION . DIRECTORY_SEPARATOR . $ticket;
 
-	      // Create directory.
-	      mediamosa_io::mkdir($ticket_path);
-
 	      // Set default filename.
 	      if (empty($a_mediafile_ext['filename'])) {
 	        $a_mediafile_ext['filename'] = mediamosa_asset_mediafile::UNKNOWN_FILENAME;
@@ -155,17 +153,19 @@ class mediamosa_ticket {
 	          break;
 	      }
 
-	      // Create directory.
-	      mediamosa_io::mkdir($ticket_path);
-
 	      $ticket_symlink = $ticket_path . DIRECTORY_SEPARATOR . $ticket;
 	      break;
 	  }
 
+	  // Create directory.
+    mediamosa_io::mkdir($ticket_path, TRUE);
+
+	  // Make sure the location of the ticket is a directory.
 	  if (!is_dir($ticket_path)) {
 	    throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_DIR_NOT_FOUND, array('@location' => $ticket_path));
 	  }
 
+	  // Must be able to write there.
 	  if (!is_writeable($ticket_path)) {
 	    throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_DIR_NOT_WRITABLE, array('@location' => $ticket_path));
 	  }

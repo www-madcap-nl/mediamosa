@@ -64,7 +64,7 @@ function mediamosa_app_schema() {
       mediamosa_app_db::NAME => array(
         'description' => t('The name of the client.'),
         'type' => 'varchar',
-        'length' => '30',
+        'length' => mediamosa_app_db::NAME_LENGTH,
         'not null' => TRUE,
       ),
       mediamosa_app_db::APP_ID => array(
@@ -89,7 +89,6 @@ function mediamosa_app_schema() {
         'description' => t('The total allowed quota in gigabytes.'),
         'type' => 'int',
         'not null' => TRUE,
-        'disp-width' => '10',
       ),
       mediamosa_app_db::QUOTA_USED => array(
         'description' => t('The current usage in gigabytes.'),
@@ -97,7 +96,6 @@ function mediamosa_app_schema() {
         'unsigned' => TRUE,
         'size' => 'big',
         'not null' => TRUE,
-        'disp-width' => '20',
       ),
       mediamosa_app_db::SHARED_KEY => array(
         'description' => t('The key to identify the client.'),
@@ -133,49 +131,49 @@ function mediamosa_app_schema() {
       mediamosa_app_db::TECHNICAL_NAME => array(
         'description' => t('Technical name of the client contact person.'),
         'type' => 'varchar',
-        'length' => mediamosa_app_db::TECHNICAL_NAME_100,
+        'length' => mediamosa_app_db::TECHNICAL_NAME_LENGTH,
         'not null' => FALSE,
       ),
       mediamosa_app_db::TECHNICAL_PHONE => array(
         'description' => t('Technical phone of the client contact person.'),
         'type' => 'varchar',
-        'length' => mediamosa_app_db::TECHNICAL_PHONE_40,
+        'length' => mediamosa_app_db::TECHNICAL_PHONE_LENGTH,
         'not null' => FALSE,
       ),
       mediamosa_app_db::TECHNICAL_EMAIL => array(
         'description' => t('Technical email address of the client contact person.'),
         'type' => 'varchar',
-        'length' => mediamosa_app_db::TECHNICAL_EMAIL_50,
+        'length' => mediamosa_app_db::TECHNICAL_EMAIL_LENGTH,
         'not null' => FALSE,
       ),
       mediamosa_app_db::ADMINISTRATIVE_NAME => array(
         'description' => t('Administrative name of the client contact person.'),
         'type' => 'varchar',
-        'length' => mediamosa_app_db::ADMINISTRATIVE_NAME_100,
+        'length' => mediamosa_app_db::ADMINISTRATIVE_NAME_LENGTH,
         'not null' => FALSE,
       ),
       mediamosa_app_db::ADMINISTRATIVE_PHONE => array(
         'description' => t('Administrative phone of the client contact person.'),
         'type' => 'varchar',
-        'length' => mediamosa_app_db::ADMINISTRATIVE_PHONE_40,
+        'length' => mediamosa_app_db::ADMINISTRATIVE_PHONE_LENGTH,
         'not null' => FALSE,
       ),
       mediamosa_app_db::ADMINISTRATIVE_EMAIL => array(
         'description' => t('Administrative email of the client contact person.'),
         'type' => 'varchar',
-        'length' => mediamosa_app_db::ADMINISTRATIVE_EMAIL_50,
+        'length' => mediamosa_app_db::ADMINISTRATIVE_EMAIL_LENGTH,
         'not null' => FALSE,
       ),
       mediamosa_app_db::PLAY_PROXY_URL => array(
         'description' => t('The URL to use for playing mediafiles.'),
         'type' => 'varchar',
-        'length' => mediamosa_app_db::PLAY_PROXY_URL_255,
+        'length' => mediamosa_app_db::PLAY_PROXY_URL_LENGTH,
         'not null' => FALSE,
       ),
       mediamosa_app_db::VIEW_ASSET_URL => array(
         'description' => t('The URL to view the mediafiles.'),
         'type' => 'varchar',
-        'length' => mediamosa_app_db::VIEW_ASSET_URL_255,
+        'length' => mediamosa_app_db::VIEW_ASSET_URL_LENGTH,
         'not null' => FALSE,
       ),
       mediamosa_app_db::PREVIEW_PROFILE_ID => array(

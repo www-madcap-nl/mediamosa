@@ -44,7 +44,89 @@ define('MEDIAMOSA_CQL_CONTEXT_KEY_DIRECTION', 'direction');
 
 class mediamosa_core_cql {
   // ------------------------------------------------------------------ Static Functions.
-	/**
+  /**
+   * Convert old 1.x search param to cql.
+   *
+   * @param string $name
+   *  Name of variable.
+   * @param string $match
+   *  Match type.
+   * @param array $a_value
+   *  Value to compare.
+   * @param unknown_type $type
+   *  Type of param.
+   * @param array $a_translate_to
+   *  Extra array to translate name.
+   */
+
+  static public function convert_searchparam_to_cql($name, $match, array $a_value, $type, array $a_translate_to = array()) {
+    $a_or = array();
+
+    if (isset($a_translate_to[$name])) {
+     $name = $a_translate_to[$name];
+    }
+
+    $a_or = array();
+
+    switch ($type) {
+      case mediamosa_type::TYPE_SEARCH_STRING:
+        switch ($match) {
+          case 'exact':
+            foreach ($a_value as $value) {
+              $a_or[] = $name . ' == "^' . addslashes($value) . '^"';
+            }
+            break;
+
+          case 'begin':
+            foreach ($a_value as $value) {
+              $a_or[] = $name . ' == "^' . addslashes($value) . '"';
+            }
+            break;
+
+          case 'contains':
+            foreach ($a_value as $value) {
+              $a_or[] = $name . ' = "' . addslashes($value) . '"';
+            }
+            break;
+        }
+        break;
+
+      case mediamosa_type::TYPE_SEARCH_INT:
+        foreach ($a_value as $value) {
+          $a_or[] = $name . ' == ' . intval($value);
+        }
+        break;
+
+      case mediamosa_type::TYPE_SEARCH_BOOL:
+        foreach ($a_value as $value) {
+          $a_or[] = $name . ' == "^' . addslashes($value) . '^"';
+        }
+        break;
+
+      case mediamosa_type::TYPE_SEARCH_DATETIME:
+        foreach ($a_value as $value) {
+          if (strpos($value, '|') === FALSE) {
+            $value = mediamosa_type::cast_timestamp($value, $name, mediamosa_type::TYPE_SEARCH_DATETIME);
+            $a_or[] = $name . ' == "' . addslashes($value) . '"';
+          }
+          else {
+           list($v1, $v2) = explode('|', $value, 2);
+           $v1 = mediamosa_type::cast_timestamp($v1, $name, mediamosa_type::TYPE_SEARCH_DATETIME);
+           $v2 = mediamosa_type::cast_timestamp($v2, $name, mediamosa_type::TYPE_SEARCH_DATETIME);
+           $a_or[] = $name . ' within "' . addslashes($v1) . ' ' . addslashes($v2) . '"';
+          }
+        }
+        break;
+
+      default:
+        assert(0);
+        break;
+    }
+
+    return (count($a_or) > 1 ? '(' : '') . implode(' OR ', $a_or) . (count($a_or) > 1 ? ')' : '');
+  }
+
+  /**
 	 * Start parsing the CQL for asset search.
 	 *
 	 * @param string $str_cql
@@ -108,10 +190,13 @@ class mediamosa_core_cql {
   }
 
   /**
-   * Fill the a_var_setup with allowed parameters for search.
+   * Add search parameters to var setup based on old param conf.
+
    * @param array $a_var_setup
+   * @param array $a_search
    */
-  static public function get_var_setup_search($a_app_ids, $a_var_setup, $a_search) {
+  static public function get_var_setup_search(array $a_var_setup, array $a_search) {
+
     foreach ($a_search as $param => $type) {
       $a_var_setup[mediamosa_rest_call::VARS][$param] = array(
         mediamosa_rest_call::VAR_TYPE => $type,
@@ -126,6 +211,18 @@ class mediamosa_core_cql {
         mediamosa_rest_call::VAR_ALLOWED_VALUES => array('contains', 'exact', 'begin'),
       );
     }
+
+    return $a_var_setup;
+  }
+
+  /**
+   * Fill the a_var_setup with allowed parameters for search.
+   * @param array $a_var_setup
+   */
+  static public function get_var_setup_search_asset(array $a_app_ids, array $a_var_setup, array $a_search) {
+
+    // Enrich with normal search.
+    $a_var_setup = self::get_var_setup_search($a_var_setup, $a_search);
 
     // Now add custom allowed metadata and own.
     $a_metadata_properties = mediamosa_asset_metadata_property::get_metadata_properties_full($a_app_ids);
@@ -327,6 +424,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
 
     // Get the keywords fron CQL and put them in a seperate array
     $_keywords = $this->search_keywords;
+    $keywords = array();
     foreach ($_keywords as $key => $value) {
       $keywords[] = $_keywords[$key]->mediamosa_cql_part_str_get();
     }

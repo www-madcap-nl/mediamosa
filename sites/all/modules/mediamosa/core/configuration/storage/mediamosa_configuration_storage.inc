@@ -140,6 +140,8 @@ class mediamosa_configuration_storage {
   /**
    * Get the Mediafile mountpath path.
    *
+   * FIXME: Try to match the input like mediafile_still_filename_get()
+   *
    * @param array $a_mediafile
    *  The mediafile array.
    */
@@ -156,7 +158,7 @@ class mediamosa_configuration_storage {
    * @param string $mediafile_id
    *  The mediafile ID.
    */
-  static public function mediafile_still_filename_get($mediafile_id) {
-    return self::mount_point_get() . DIRECTORY_SEPARATOR . self::still_location_get() . DIRECTORY_SEPARATOR . self::objectid_to_location($mediafile_id);
+  static public function mediafile_still_filename_get($mediafile_id, $mount_point = '') {
+    return empty($mount_point) ? self::mount_point_get() : '' . DIRECTORY_SEPARATOR . self::still_location_get() . DIRECTORY_SEPARATOR . self::objectid_to_location($mediafile_id);
   }
 }

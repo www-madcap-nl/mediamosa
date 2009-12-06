@@ -78,6 +78,7 @@ class mediamosa_type {
   const TYPE_SEARCH_STRING               = 'SEARCH_STRING';
   const TYPE_SEARCH_INT                  = 'SEARCH_INT';
   const TYPE_SEARCH_DATETIME             = 'SEARCH_DATETIME';
+  const TYPE_SEARCH_BOOL                 = 'SEARCH_BOOL';
 
   // Contains, match, exact.
   const TYPE_SEARCH_MATCH                = 'SEARCH_MATCH';
@@ -223,7 +224,6 @@ class mediamosa_type {
 
       case self::TYPE_CQL_ASSET:
       case self::TYPE_CQL_COLLECTION:
-      case self::TYPE_SEARCH_MATCH:
       case self::TYPE_STRING:
         $checked_param_value = (string)$mixed_param_value;
         break;
@@ -245,9 +245,11 @@ class mediamosa_type {
         $checked_param_value = (string)$mixed_param_value;
         break;
 
+      case self::TYPE_SEARCH_MATCH:
       case self::TYPE_SEARCH_STRING:
       case self::TYPE_SEARCH_INT:
       case self::TYPE_SEARCH_DATETIME:
+      case self::TYPE_SEARCH_BOOL:
         $checked_param_value = (string)$mixed_param_value;
         break;
 

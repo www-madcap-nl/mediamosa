@@ -264,6 +264,9 @@ function mediamosa_migration_install() {
 
   // ftp_batch -> mediamosa_ftp_batch.
   _mediamosa_migration_ftp_batch();
+
+  // webservice_management(_capp) -> mediamosa_webservice(_app)
+  _mediamosa_migration_webservice();
 }
 
 /**
@@ -1586,6 +1589,81 @@ function _mediamosa_migration_ftp_batch() {
         asset_id,
         batch_id
       FROM #db_name.ftp_batch_asset ORDER BY id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+}
+
+/**
+ * Migrate webservice table..
+ */
+function _mediamosa_migration_webservice() {
+  // Get the database name.
+  $db_name = _mediamosa_migration_get_memo_db();
+
+    // Clean the tables.
+    $a_to_truncate = array(
+      'mediamosa_webservice',
+      'mediamosa_webservice_app',
+    );
+
+    foreach ($a_to_truncate as $table_name) {
+      db_truncate($table_name)->execute();
+    }
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_webservice}
+      (
+        webservice_id,
+        version,
+        handle,
+        description,
+        status
+      ) (SELECT
+        webservice_management_id,
+        version,
+        handle,
+        description,
+        status
+      FROM #db_name.webservice_management ORDER BY webservice_management_id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+  /**
+   * Copy from 1.x to 2.x
+   *
+   * Will only copy which have a handle in mediamosa_webservice and valid app_id linked to mediamosa_app.
+   *
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * wmcaid - webservice_app_id
+   * webservice_management_handle - webservice_handle
+   * caid - app_id
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_webservice_app}
+      (
+        webservice_app_id,
+        webservice_handle,
+        app_id,
+        status
+      ) (SELECT
+        wa.wmcaid,
+        wa.webservice_management_handle,
+        wa.caid,
+        wa.status
+      FROM #db_name.webservice_management_capp AS wa JOIN {mediamosa_webservice} AS w ON w.handle = wa.webservice_management_handle JOIN mediamosa_app AS app ON app.app_id = wa.caid ORDER BY wa.wmcaid ASC)",
     array(
       '#db_name' => $db_name
     ))

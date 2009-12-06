@@ -33,6 +33,7 @@
 require_once 'mediamosa.inc';
 require_once 'lib/mediamosa_db.inc';
 require_once 'core/error/mediamosa_error.install.inc';
+require_once 'core/app/mediamosa_app.install.inc';
 require_once 'core/aut/mediamosa_aut.install.inc';
 require_once 'core/app/mediamosa_app.install.inc';
 require_once 'core/asset/mediamosa_asset.install.inc';
@@ -41,6 +42,7 @@ require_once 'core/server/mediamosa_server.install.inc';
 require_once 'core/ticket/mediamosa_ticket.install.inc';
 require_once 'core/user/mediamosa_user.install.inc';
 require_once 'core/ftp_batch/mediamosa_ftp_batch.install.inc';
+require_once 'core/webservice/mediamosa_webservice.install.inc';
 
 /**
  * Implement hook_install().
@@ -51,6 +53,9 @@ function mediamosa_install() {
 
   // Install the app db.
   mediamosa_app_install();
+
+  // Install webservice db.
+  mediamosa_webservice_install();
 
   // Install the server db.
   mediamosa_server_install();
@@ -98,6 +103,9 @@ function mediamosa_uninstall() {
 
   // Remove the server db.
   mediamosa_server_uninstall();
+
+  // Remove the webservice db.
+  mediamosa_webservice_uninstall();
 
   // Remove the app db.
   mediamosa_app_uninstall();
