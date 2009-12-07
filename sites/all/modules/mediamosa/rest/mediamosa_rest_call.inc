@@ -356,16 +356,16 @@ abstract class mediamosa_rest_call {
       return TRUE; // Not set, is empty.
     }
 
-    if (is_string($this->a_rest_args[$param])) {
-      return trim($this->a_rest_args[$param]) == '';
+    if (is_string($this->a_rest_args[$param][self::PARAM_VALUE])) {
+      return trim($this->a_rest_args[$param][self::PARAM_VALUE]) == '';
     }
 
-    if (is_int($this->a_rest_args[$param])) {
-      return $this->a_rest_args[$param] == 0;
+    if (is_int($this->a_rest_args[$param][self::PARAM_VALUE])) {
+      return $this->a_rest_args[$param][self::PARAM_VALUE] == 0;
     }
 
     // Default empty behavour.
-    return empty($this->a_rest_args[$param]);
+    return empty($this->a_rest_args[$param][self::PARAM_VALUE]);
   }
 
   /**
@@ -468,7 +468,7 @@ abstract class mediamosa_rest_call {
       $this->a_rest_args[$param][self::PARAM_ISSET_DEFAULT] = FALSE; // Set by default
 
       // Make sure its set, even when empty.
-      if (!isset($this->a_rest_args[$param])) {
+      if (!isset($this->a_rest_args[$param][self::PARAM_VALUE])) {
         $this->a_rest_args[$param][self::PARAM_VALUE] = ''; // Default empty.
 
         // Defaults.
@@ -488,7 +488,7 @@ abstract class mediamosa_rest_call {
         }
       }
       elseif (!is_array($this->a_rest_args[$param][self::PARAM_VALUE])) {
-        $this->a_rest_args[$param][self::PARAM_VALUE] = ($this->a_rest_args[$param][self::PARAM_ISSET] ? array($this->a_rest_args[$param][self::PARAM_VALUE]): array());
+        $this->a_rest_args[$param][self::PARAM_VALUE] = $this->a_rest_args[$param][self::PARAM_VALUE] == '' ? array() : array($this->a_rest_args[$param][self::PARAM_VALUE]);
       }
 
       // Check if we need to trim it.

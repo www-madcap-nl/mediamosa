@@ -435,7 +435,6 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
       if (!self::empty_param($param)) {
         $a_value = self::get_param_value($param);
         $match = self::get_param_value($param . '_match');
-
         $a_cql[] = mediamosa_core_cql::convert_searchparam_to_cql($param, $match, $a_value, $a_param[mediamosa_rest_call::PARAM_TYPE], $a_translate_to);
       }
     }

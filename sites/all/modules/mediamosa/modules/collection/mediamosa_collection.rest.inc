@@ -100,6 +100,7 @@ class mediamosa_rest_call_collection_search extends mediamosa_rest_call {
   const AUT_USER_ID = 'aut_user_id';
   const IS_PUBLIC_LIST = 'is_public_list';
   const NUMOFVIDEOS = 'numofvideos';
+  const OPERATOR = 'operator';
 
   // ------------------------------------------------------------------ Public Functions.
   static public function get_search_params() {

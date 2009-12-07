@@ -91,8 +91,6 @@ class mediamosa_type {
   const ORDER_DIRECTION_ASC = 'asc';
   const ORDER_DIRECTION_DESC = 'desc';
 
-
-
   // ------------------------------------------------------------------ Static Functions.
   /**
    * Check the input based on type.
@@ -410,11 +408,12 @@ class mediamosa_type {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
     }
 
-    $a_value[1] = isset($a_value[1]) ? $a_value[1] : 1;// MM
-    $a_value[2] = isset($a_value[2]) ? $a_value[2] : 1;// DD
-    $a_value[3] = isset($a_value[3]) ? $a_value[3] : 0;// HH
-    $a_value[4] = isset($a_value[4]) ? $a_value[4] : 0;// MM
-    $a_value[5] = isset($a_value[5]) ? $a_value[5] : 0;// SS
+    $a_value[0] = (int)$a_value[0];
+    $a_value[1] = isset($a_value[1]) && $a_value[1] > 0 ? (int)$a_value[1] : 1;// MM
+    $a_value[2] = isset($a_value[2]) && $a_value[2] > 0 ? (int)$a_value[2] : 1;// DD
+    $a_value[3] = isset($a_value[3]) ? (int)$a_value[3] : 0;// HH
+    $a_value[4] = isset($a_value[4]) ? (int)$a_value[4] : 0;// MM
+    $a_value[5] = isset($a_value[5]) ? (int)$a_value[5] : 0;// SS
 
     if (!checkdate($a_value[1], $a_value[2], $a_value[0])) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));

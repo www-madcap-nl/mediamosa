@@ -50,6 +50,7 @@ class mediamosa_webservice_app {
          WHERE wa.#webservice_handle = :handle AND ap.#app_id = :app_id AND wa.:status = :status_true AND w.:status = :status_true',
         array(
           ':status' => mediamosa_webservice_app_db::STATUS,
+          ':status_true' => mediamosa_webservice_app_db::STATUS_TRUE,
           '#mediamosa_webservice_app' => mediamosa_webservice_app_db::TABLE_NAME,
           '#mediamosa_webservice' => mediamosa_webservice_db::TABLE_NAME,
           '#handle' => mediamosa_webservice_db::HANDLE,
@@ -65,10 +66,10 @@ class mediamosa_webservice_app {
       $result = mediamosa_db::db_query(
         'SELECT 1 FROM {#mediamosa_webservice} WHERE #handle = :handle AND #status = :status_true',
         array(
-          '#status' => mediamosa_webservice_db::STATUS,
           '#mediamosa_webservice' => mediamosa_webservice_db::TABLE_NAME,
           '#handle' => mediamosa_webservice_db::HANDLE,
           ':handle' => $handle,
+          '#status' => mediamosa_webservice_db::STATUS,
           ':status_true' => mediamosa_webservice_db::STATUS_TRUE
         )
       )->fetchField();
