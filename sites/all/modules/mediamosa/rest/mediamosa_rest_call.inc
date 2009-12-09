@@ -238,7 +238,6 @@ abstract class mediamosa_rest_call {
       self::VAR_IS_READ_ONLY => self::VAR_IS_READ_ONLY_YES, // Once set, dont change.
       self::VAR_DESCRIPTION => mediamosa::t('The starting items position in the result set.'),
       self::VAR_RANGE_START => 0,
-      self::VAR_RANGE_END => $limit_max,
     );
 
     return $a_var_setup;
