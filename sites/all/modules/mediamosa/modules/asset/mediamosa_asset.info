@@ -22,6 +22,9 @@ files[] = mediafile/metadata/mediamosa_asset_mediafile_metadata.rest.inc
 ; Mediafile Play Proxy.
 files[] = mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.rest.inc
 
+; Mediafile Still.
+files[] = mediafile/still/mediamosa_asset_mediafile_still.rest.inc
+
 ; Metadata.
 files[] = metadata/mediamosa_asset_metadata.rest.inc
 

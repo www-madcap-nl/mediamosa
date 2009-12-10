@@ -29,7 +29,11 @@
   * Webservices management per app.
   */
 class mediamosa_webservice_app {
-  /**
+  // ------------------------------------------------------------------ Consts.
+  const HANDLE_MEDIA_MANAGEMENT = 'media_management';
+
+	// ------------------------------------------------------------------ Static Functions.
+	/**
    * Check active status of an webservice.
    *
    * 1.x: vpx_shared_webservice_is_active
@@ -40,14 +44,14 @@ class mediamosa_webservice_app {
    *  Application ID.
    * @return bool
    */
-  static public function webservice_is_active($handle, $app_id = 0) {
-    if ($app_id) {
+  static public function webservice_is_active($handle, array $a_app_ids = array()) {
+    if (!empty($a_app_ids)) {
       $result = mediamosa_db::db_query(
         'SELECT 1
          FROM {#mediamosa_webservice_app} AS wa
          INNER JOIN {#mediamosa_webservice} AS w ON w.#handle = wa.#webservice_handle
          INNER JOIN {#mediamosa_app} AS app ON ap.#app_id = wa.#app_id
-         WHERE wa.#webservice_handle = :handle AND ap.#app_id = :app_id AND wa.:status = :status_true AND w.:status = :status_true',
+         WHERE wa.#webservice_handle = :handle AND ap.#app_id IN (:app_id) AND wa.:status = :status_true AND w.:status = :status_true',
         array(
           ':status' => mediamosa_webservice_app_db::STATUS,
           ':status_true' => mediamosa_webservice_app_db::STATUS_TRUE,
@@ -58,7 +62,7 @@ class mediamosa_webservice_app {
           '#mediamosa_app' => mediamosa_app_db::TABLE_NAME,
           '#app_id' => mediamosa_app_db::APP_ID,
           ':handle' => $handle,
-          ':app_id' => $app_id
+          ':app_id' => $a_app_ids
         )
       )->fetchField();
     }
@@ -86,8 +90,8 @@ class mediamosa_webservice_app {
    * @param integer $app_id
    *  Application ID.
    */
-  static public function webservice_must_be_active($handle, $app_id = 0) {
-    if (!self::webservice_is_active($handle, $app_id)) {
+  static public function webservice_must_be_active($handle, array $a_app_ids = array()) {
+    if (!self::webservice_is_active($handle, $a_app_ids)) {
       throw new mediamosa_exception_error_webservice_disabled();
     }
   }

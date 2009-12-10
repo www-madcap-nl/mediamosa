@@ -28,7 +28,7 @@
   * @file
   * The user favorite module.
   */
-class user_favorite {
+class mediamosa_user_favorite {
 
   /**
    * Return the number of rows found.

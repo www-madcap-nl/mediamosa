@@ -75,7 +75,7 @@ function mediamosa_error_install() {
     'ERRORCODE_EMPTY_RESULT' => 'The query returned an empty result set (i.e. zero rows).',
     'ERRORCODE_COLLECTION_NOT_FOUND' => 'MM - coll_id=@coll_id was not found in the database',
     'ERRORCODE_COLLECTION_ASSET_RELATION_ALREADY_EXISTS' =>  'MM - the asset is already present in the collection',
-    'ERRORCODE_COLLECTION_ASSET_RELATION_NOT_FOUND' => 'MM - the asset/collection relation was not found in the database',
+    'ERRORCODE_COLLECTION_ASSET_RELATION_NOT_FOUND' => 'MM - the asset (ID: @asset_id) /collection (ID: @coll_id) relation was not found in the database',
     'ERRORCODE_ASSET_NOT_EMPTY' => 'MM - there are still @mediafile_count mediafile(s) present in this asset.',
     'ERRORCODE_COLLECTION_NOT_EMPTY' => 'MM - there are still @asset_count asset(s) present in this collection.',
     'ERRORCODE_ASSET_SUPPLEMENT_NOT_FOUND' => 'MM - Supplement @supplement_id not found.',
@@ -135,6 +135,7 @@ function mediamosa_error_install() {
     'ERRORCODE_VALIDATE_STRING_TO_SHORT' => 'The length of @param is to short, must be at least @min_length characters long.',
     'ERRORCODE_VALIDATE_STRING_TO_LONG' => 'The length of @param is to long, can not be longer than @max_length characters.',
     'ERRORCODE_VALIDATE_VALUE_NOT_ALLOWED' => 'The value of @param (@type) is not allowed, allowed values are \'@allowed_values\'.',
+    'ERRORCODE_INTERNAL_ONLY' => 'You can not set REST parameter @param (@type), these used by internal REST calls.',
 
     'ERRORCODE_RETRIEVING_JOBLIST' => 'MediaMosa - error retrieving joblist from the database',
     'ERRORCODE_RETRIEVING_JOBSTATUS' => 'MediaMosa - error retrieving jobstatus from the database',

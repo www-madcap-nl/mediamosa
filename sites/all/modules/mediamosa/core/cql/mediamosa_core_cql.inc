@@ -953,7 +953,7 @@ class mediamosa_asset_cql_context extends mediamosa_core_cql_context {
             $context_set = 'mediamosa:aut';
             break;
           default:
-            $context_set = 'mediamosa:' . $a_def[propgroup_name];
+            $context_set = 'mediamosa:' . $a_def['propgroup_name'];
             break;
         }
 
@@ -1038,6 +1038,13 @@ class mediamosa_asset_cql_context extends mediamosa_core_cql_context {
                 MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_asset_db::TABLE_NAME,
                 MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'a',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_STRING,
+              ),
+              'batch_id' => array(
+                MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'batch_id',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_ftp_batch_db::TABLE_NAME,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'ba',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_STRING,
+                MEDIAMOSA_CQL_CONTEXT_KEY_JOIN => 'FTP_BATCH',
               ),
               'provider_id' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'provider_id',
@@ -1191,19 +1198,19 @@ class mediamosa_collection_cql_context extends mediamosa_core_cql_context {
   // however all other keys are open for own class specification.
   private $m_a_mediamosa_context = array(
 
-    CQL_CONTEXT_KEY_DEFAULT_RELATION => '=',
-    CQL_CONTEXT_KEY_DEFAULT_SEARCH_TERMS => array('mediamosa.title'),
+    MEDIAMOSA_CQL_CONTEXT_KEY_DEFAULT_RELATION => '=',
+    MEDIAMOSA_CQL_CONTEXT_KEY_DEFAULT_SEARCH_TERMS => array('mediamosa.title'),
 
-    CQL_CONTEXT_KEY_INDEX_REFERENCES => array(
+    MEDIAMOSA_CQL_CONTEXT_KEY_INDEX_REFERENCES => array(
      'vpx' => 'mediamosa', // Reference (1.x)
      'vpx:collection' => 'mediamosa:collection', // Reference (1.x)
     ),
 
-    CQL_CONTEXT_KEY_INDEXES => array(
+    MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES => array(
       'mediamosa' => array(
-        CQL_CONTEXT_KEY_INDEXES => array(
+        MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES => array(
           'mediamosa:collection' => array(
-            CQL_CONTEXT_KEY_COLUMNS=> array(
+            MEDIAMOSA_CQL_CONTEXT_KEY_COLUMNS=> array(
               'title' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'title',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'c',
@@ -1232,13 +1239,13 @@ class mediamosa_collection_cql_context extends mediamosa_core_cql_context {
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'created',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'c',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_collection_db::TABLE_NAME,
-                MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => VPX_TYPE_TIMESTAMP,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_DATETIME,
               ),
               'changed' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'changed',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'c',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_collection_db::TABLE_NAME,
-                MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => VPX_TYPE_TIMESTAMP,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_DATETIME,
               ),
               'private' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'private',

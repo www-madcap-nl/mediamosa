@@ -70,21 +70,22 @@ class mediamosa_asset_mediafile {
   }
 
   /**
-   * Enrich the response with mediafile data. 1.x _media_management_return_mediafile_list()
+   * Enrich the response with mediafile data.
+   *
+   * 1.x _media_management_return_mediafile_list()
+   *
    * Merged with 1.x _media_management_process_mediafile_output.
    * FIXME: Uses response object, better to return array and let REST call fill response object.
    *        Noway to reuse this code without response object.
    *
-   * @param object $o_mediamosa
-   *  The mediamosa response object.
    * @param array $a_mediafile_ids
    * @param array $mixed_app_id
    *  Either array or integer application ID.
    * @param boolean $is_oai
-   *  Include extended EGA Play Urls.
+   *  Include extended EGA Play Urls. (WAS hack is_oai on _POST/_GET (!))
    * @param boolean $show_stills
    */
-  static public function enrich_response_mediafile($o_mediamosa, array $a_mediafile_ids, $mixed_app_id, $is_oai, $show_stills = TRUE) {
+  static public function enrich_response_mediafile(array $a_mediafile_ids, $mixed_app_id, $is_oai, $show_stills = TRUE) {
 
     // Can be empty or null.
     if (empty($a_mediafile_ids) || is_null(reset($a_mediafile_ids))) {
@@ -186,6 +187,11 @@ class mediamosa_asset_mediafile {
       '/{mediafile_filename}/i',
     );
 
+    // Result array.
+    $a_items_result = array();
+
+    $i = 1;
+
     // Now add to result array.
     // Must be in the same order as $a_mediafile_ids.
     foreach ($a_mediafile_ids as $mediafile_id) {
@@ -273,7 +279,54 @@ class mediamosa_asset_mediafile {
       unset($a_items[$mediafile_id][mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT]);
 
       // Add to result.
-      $o_mediamosa->add_item($a_items[$mediafile_id]);
+      $a_items_result['mediafile']['#' . serialize(array('id' => $i++))] = $a_items[$mediafile_id];
     }
+
+    return $a_items_result;
+  }
+
+  /**
+   * Search for mediafiles.
+   * Normally called _media_management_return_mediafile_list (enrich_response_mediafile) at the end.
+   *
+   * 1.x _media_management_search_mediafiles
+   *
+   * @param string $asset_id
+   * @param string $tag
+   * @param boolean $is_still
+   */
+  static public function mediafiles_search($asset_id, $tag = NULL, $is_still = FALSE) {
+
+  	assert($asset_id !== FALSE);
+
+	    // Asset must exist.
+    mediamosa_db::db_must_exists(
+      mediamosa_asset_db::TABLE_NAME,
+      array(
+        mediamosa_asset_db::ID => $asset_id
+      )
+    );
+
+    $a_query = array();
+	  $a_query[mediamosa_db_query::A_SELECT_EXPR][] = "mf.mediafile_id";
+	  $a_query[mediamosa_db_query::A_FROM][] = "{mediamosa_asset} AS a";
+
+	  $a_query[mediamosa_db_query::ALLOW_DISTINCT] = FALSE;
+
+	  // No left join here, only include assets that have mediafiles
+	  $a_query[mediamosa_db_query::A_JOIN]["mediafile"][] = "JOIN {mediamosa_asset_mediafile} AS mf ON a.asset_id = mf.asset_id_root";
+
+	  $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset'][] = sprintf("(a.asset_id = '%s' OR a.parent_id = '%s')", mediamosa_db::escape_string($asset_id), mediamosa_db::escape_string($asset_id));
+	  $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset'][] = sprintf("mf.is_still = '%s'", $is_still ? mediamosa_asset_mediafile_db::IS_STILL_TRUE :  mediamosa_asset_mediafile_db::IS_STILL_FALSE);
+
+	  if ($tag) {
+	    $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['tag'] = sprintf("mf.tag = '%s'", mediamosa_db::escape_string($tag));
+	  }
+
+	  // Create the query
+	  $query = mediamosa_db_query::query_select($a_query);
+
+	  // Do the query and return found mediafiles as an array with mediafile_ids.
+	  return mediamosa_db::db_query($query)->fetchCol();
   }
 }

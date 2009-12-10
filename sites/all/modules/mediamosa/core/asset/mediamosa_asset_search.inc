@@ -84,6 +84,8 @@ class mediamosa_asset_search {
    *  Include stills.
    * @param boolean $show_collections
    *  Include collections.
+   * @param bool $calculate_total_count
+   *  Calculate all found rows.
    * @param integer $limit
    *  Maximum number of results.
    * @param integer $offset
@@ -92,17 +94,17 @@ class mediamosa_asset_search {
   static public function asset_search(
     mediamosa_response $o_mediamosa,
     array $a_app_ids,
-    $cql = '',
+    $cql = NULL,
 
-    $aut_user_id = '',
+    $aut_user_id = NULL,
     array $a_aut_group_id = array(),
-    $aut_domain = '',
-    $aut_realm = '',
+    $aut_domain = NULL,
+    $aut_realm = NULL,
 
     $batch_id = 0,
     $coll_id = 0,
 
-    $fav_user_id = '',
+    $fav_user_id = NULL,
 
     $granted = FALSE,
     $is_public_list = FALSE,
@@ -112,6 +114,7 @@ class mediamosa_asset_search {
     $return_asset_ids = FALSE,
     $show_stills = FALSE,
     $show_collections = FALSE,
+    $calculate_total_count = TRUE,
 
     $limit = 10,
     $offset = 0) {
@@ -167,7 +170,7 @@ class mediamosa_asset_search {
       $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset']['access'][mediamosa_db_query::WHERE_AND][] = 'a.is_empty_asset IS NOT NULL'; // Never NULL, will always match index
     }
 
-    if ($cql != '') {
+    if ($cql) {
       // Create the seach CQL.
       $a_result_cql2sql = mediamosa_core_cql::parse_asset($cql, $a_app_ids);
 
@@ -186,24 +189,31 @@ class mediamosa_asset_search {
         if ($key) {
           unset($a_result_cql2sql['a_joins'][$key]);
 
-          $a_query[mediamosa_db_query::A_JOIN]['mediafile'] = "LEFT JOIN {mediafile} AS mf ON a.asset_id=mf.asset_id_root AND mf.is_still = 'FALSE'";
-          $a_query[mediamosa_db_query::A_JOIN]['mediafile_metadata']['mm_mime_type'] = sprintf('LEFT JOIN {mediafile_metadata} AS mm_mime_type ON mf.mediafile_id=mm_mime_type.mediafile_id');
+          $a_query[mediamosa_db_query::A_JOIN]['mediafile'] = "LEFT JOIN {mediamosa_asset_mediafile} AS mf ON a.asset_id=mf.asset_id_root AND mf.is_still = 'FALSE'";
+          $a_query[mediamosa_db_query::A_JOIN]['mediafile_metadata']['mm_mime_type'] = sprintf('LEFT JOIN {mediamosa_asset_mediafile_metadata} AS mm_mime_type ON mf.mediafile_id=mm_mime_type.mediafile_id');
+        }
+
+        $key = array_search('FTP_BATCH', $a_result_cql2sql['a_joins']);
+        if ($key) {
+          unset($a_result_cql2sql['a_joins'][$key]);
+
+          $a_query[mediamosa_db_query::A_JOIN]['ftp_batch_asset'] = 'JOIN {mediamosa_ftp_batch_asset} AS ba ON ba.asset_id = a.asset_id';
         }
 
         $key = array_search('MEDIAFILE_FILENAME', $a_result_cql2sql['a_joins']);
         if ($key) {
           unset($a_result_cql2sql['a_joins'][$key]);
 
-          $a_query[mediamosa_db_query::A_JOIN]['mediafile'] = "LEFT JOIN {mediafile} AS mf ON a.asset_id=mf.asset_id_root AND mf.is_still = 'FALSE'";
+          $a_query[mediamosa_db_query::A_JOIN]['mediafile'] = "LEFT JOIN {mediamosa_asset_mediafile} AS mf ON a.asset_id=mf.asset_id_root AND mf.is_still = 'FALSE'";
         }
 
         $key = array_search('AUT_NAME_USER', $a_result_cql2sql['a_joins']);
         if ($key) {
           unset($a_result_cql2sql['a_joins'][$key]);
 
-          $a_query[mediamosa_db_query::A_JOIN]['mediafile'] = "LEFT JOIN {mediafile} AS mf ON a.asset_id=mf.asset_id_root AND mf.is_still = 'FALSE'";
+          $a_query[mediamosa_db_query::A_JOIN]['mediafile'] = "LEFT JOIN {mediamosa_asset_mediafile} AS mf ON a.asset_id=mf.asset_id_root AND mf.is_still = 'FALSE'";
           $a_query[mediamosa_db_query::A_JOIN]['aut_object'] = mediamosa_aut_object::join_aut_object_get(mediamosa_aut::AUT_TYPE_MEDIAFILE);
-          $a_query[mediamosa_db_query::A_JOIN]['aut_name_user'] = sprintf("LEFT JOIN {aut_name} AS aut_u ON aut_u.app_id IN (%s) AND aut_u.aut_type = 'USER' AND aut_u.aut_name_id=aut_obj.aut_id", implode(',', $a_app_ids));
+          $a_query[mediamosa_db_query::A_JOIN]['aut_name_user'] = sprintf("LEFT JOIN {mediamosa_aut_name} AS aut_u ON aut_u.app_id IN (%s) AND aut_u.aut_type = 'USER' AND aut_u.aut_name_id=aut_obj.aut_id", implode(',', $a_app_ids));
           $do_master_slave = TRUE;
           unset($a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset']['access']);
         }
@@ -212,9 +222,9 @@ class mediamosa_asset_search {
         if ($key) {
           unset($a_result_cql2sql['a_joins'][$key]);
 
-          $a_query[mediamosa_db_query::A_JOIN]['mediafile'] = "LEFT JOIN {mediafile} AS mf ON a.asset_id=mf.asset_id_root AND mf.is_still = 'FALSE'";
+          $a_query[mediamosa_db_query::A_JOIN]['mediafile'] = "LEFT JOIN {mediamosa_mediafile} AS mf ON a.asset_id=mf.asset_id_root AND mf.is_still = 'FALSE'";
           $a_query[mediamosa_db_query::A_JOIN]['aut_object'] = mediamosa_aut_object::join_aut_object_get(mediamosa_aut::AUT_TYPE_MEDIAFILE);
-          $a_query[mediamosa_db_query::A_JOIN]['aut_name_group'] = sprintf("LEFT JOIN {aut_name} AS aut_ug ON aut_ug.app_id IN (%s) AND aut_ug.aut_type = 'USER_GROUP' AND aut_ug.aut_name_id=aut_obj.aut_id", implode(',', $a_app_ids));
+          $a_query[mediamosa_db_query::A_JOIN]['aut_name_group'] = sprintf("LEFT JOIN {mediamosa_aut_name} AS aut_ug ON aut_ug.app_id IN (%s) AND aut_ug.aut_type = 'USER_GROUP' AND aut_ug.aut_name_id=aut_obj.aut_id", implode(',', $a_app_ids));
           $do_master_slave = TRUE;
           unset($a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset']['access']);
         }
@@ -223,9 +233,9 @@ class mediamosa_asset_search {
         if ($key) {
           unset($a_result_cql2sql['a_joins'][$key]);
 
-          $a_query[mediamosa_db_query::A_JOIN]['mediafile'] = "LEFT JOIN {mediafile} AS mf ON a.asset_id=mf.asset_id_root AND mf.is_still = 'FALSE'";
+          $a_query[mediamosa_db_query::A_JOIN]['mediafile'] = "LEFT JOIN {mediamosa_mediafile} AS mf ON a.asset_id=mf.asset_id_root AND mf.is_still = 'FALSE'";
           $a_query[mediamosa_db_query::A_JOIN]['aut_object'] = mediamosa_aut_object::join_aut_object_get(mediamosa_aut::AUT_TYPE_MEDIAFILE);
-          $a_query[mediamosa_db_query::A_JOIN]['aut_group_domain'] = sprintf("LEFT JOIN {aut_name} AS aut_gd ON aut_gd.app_id IN (%s) AND aut_gd.aut_type = 'DOMAIN' AND aut_gd.aut_name_id=aut_obj.aut_id", implode(',', $a_app_ids));
+          $a_query[mediamosa_db_query::A_JOIN]['aut_group_domain'] = sprintf("LEFT JOIN {mediamosa_aut_name} AS aut_gd ON aut_gd.app_id IN (%s) AND aut_gd.aut_type = 'DOMAIN' AND aut_gd.aut_name_id=aut_obj.aut_id", implode(',', $a_app_ids));
           $do_master_slave = TRUE;
           unset($a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset']['access']);
         }
@@ -238,9 +248,9 @@ class mediamosa_asset_search {
           }
           while ($key !== FALSE);
 
-          $a_query[mediamosa_db_query::A_JOIN]['mediafile'] = "LEFT JOIN {mediafile} AS mf ON a.asset_id=mf.asset_id_root AND mf.is_still = 'FALSE'";
+          $a_query[mediamosa_db_query::A_JOIN]['mediafile'] = "LEFT JOIN {mediamosa_mediafile} AS mf ON a.asset_id=mf.asset_id_root AND mf.is_still = 'FALSE'";
           $a_query[mediamosa_db_query::A_JOIN]['aut_object'] = mediamosa_aut_object::join_aut_object_get(mediamosa_aut::AUT_TYPE_MEDIAFILE);
-          $a_query[mediamosa_db_query::A_JOIN]['aut_group_realm'] = sprintf("LEFT JOIN {aut_name} AS aut_gr ON aut_gr.app_id IN (%s) AND aut_gr.aut_type = 'REALM' AND aut_gr.aut_name_id=aut_obj.aut_id", implode(',', $a_app_ids));
+          $a_query[mediamosa_db_query::A_JOIN]['aut_group_realm'] = sprintf("LEFT JOIN {mediamosa_aut_name} AS aut_gr ON aut_gr.app_id IN (%s) AND aut_gr.aut_type = 'REALM' AND aut_gr.aut_name_id=aut_obj.aut_id", implode(',', $a_app_ids));
           $do_master_slave = TRUE;
           unset($a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset']['access']);
         }
@@ -253,8 +263,8 @@ class mediamosa_asset_search {
           }
           while ($key !== FALSE);
 
-          $a_query[mediamosa_db_query::A_JOIN]['mediafile'] = "LEFT JOIN {mediafile} AS mf ON a.asset_id=mf.asset_id_root AND mf.is_still = 'FALSE'";
-          $a_query[mediamosa_db_query::A_JOIN]['aut_app_master_slave_2'] = sprintf("JOIN {aut_app_master_slave} AS aut_ms ON aut_ms.aut_object_type = 'MEDIAFILE' AND aut_ms.aut_object_id=mf.mediafile_id AND aut_ms.app_id_slave IN (%s)", implode(',', $a_app_ids));
+          $a_query[mediamosa_db_query::A_JOIN]['mediafile'] = "LEFT JOIN {mediamosa_asset_mediafile} AS mf ON a.asset_id=mf.asset_id_root AND mf.is_still = 'FALSE'";
+          $a_query[mediamosa_db_query::A_JOIN]['aut_app_master_slave_2'] = sprintf("JOIN {mediamosa_aut_app_master_slave} AS aut_ms ON aut_ms.aut_object_type = 'MEDIAFILE' AND aut_ms.aut_object_id=mf.mediafile_id AND aut_ms.app_id_slave IN (%s)", implode(',', $a_app_ids));
           $do_master_slave = TRUE;
           unset($a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset']['access']);
           unset($a_query[mediamosa_db_query::A_JOIN]['aut_app_master_slave']);
@@ -309,8 +319,7 @@ class mediamosa_asset_search {
       }
 
       // 000_ will make me top join.
-      $a_query[mediamosa_db_query::A_JOIN]['000_sort'] = $join;
-      ksort($a_query[mediamosa_db_query::A_JOIN]);
+      $a_query[mediamosa_db_query::A_JOIN] = array_merge(array('sort' => $join), (isset($a_query[mediamosa_db_query::A_JOIN]) ? $a_query[mediamosa_db_query::A_JOIN] : array()));
       $a_query[mediamosa_db_query::A_ORDER_BY][] = 'sort.' . $order_by . ' ' . $order_direction;
     }
 
@@ -379,9 +388,7 @@ class mediamosa_asset_search {
     if (!$show_deleted || $coll_id) {
       // Normal behaviour
       // Do the query
-
-      // FIXME: remove hack (skipping SQL_CALC_FOUND_ROWS at less than 7 rows).
-      $query = mediamosa_db_query::query_select($a_query, array(mediamosa_db_QUERY::SQL_CALC_FOUND_ROWS => ($a_query[mediamosa_db_query::LIMIT] < 7 ? FALSE : TRUE)));
+      $query = mediamosa_db_query::query_select($a_query, array(mediamosa_db_QUERY::SQL_CALC_FOUND_ROWS => $calculate_total_count));
 
       global $db_url;
       /*
@@ -484,7 +491,7 @@ class mediamosa_asset_search {
         }
 
         // How much assets we have globally
-        $i_found_rows = db_query('SELECT COUNT(*) FROM {assets_all}')->fetchField();
+        $i_found_rows = $calculate_total_count ? db_query('SELECT COUNT(*) FROM {assets_all}')->fetchField() : count($a_asset_ids);
 
         // Drop temporary table
         db_query('DROP TABLE {assets_all}');
@@ -533,8 +540,7 @@ class mediamosa_asset_search {
       }
 
       // 000_ will make me top join.
-      $a_query_null[mediamosa_db_query::A_JOIN]['000_sort'] = $join;
-      ksort($a_query_null[mediamosa_db_query::A_JOIN]);
+      $a_query_null[mediamosa_db_query::A_JOIN] = array('sort' => $join) + (isset($a_query_null[mediamosa_db_query::A_JOIN]) ? $a_query_null[mediamosa_db_query::A_JOIN] : array());
 
       // Set where we sort on.
       $a_query_null[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][self::ORDER_BY] = 'sort.' . $order_by . ' IS NULL';
@@ -553,8 +559,7 @@ class mediamosa_asset_search {
       }
 
       // Create the query.
-      $query = mediamosa_db_query::query_select($a_query_null, array(mediamosa_db_query::SQL_CALC_FOUND_ROWS => TRUE));
-
+      $query = mediamosa_db_query::query_select($a_query_null, array(mediamosa_db_query::SQL_CALC_FOUND_ROWS => $calculate_total_count));
       /*
        * @todo: fix hack here.
        *
@@ -595,7 +600,11 @@ class mediamosa_asset_search {
       }
     }
     else {
-      mediamosa_asset::asset_collect($o_mediamosa, $a_asset_ids, $a_app_ids, $aut_user_id, $granted, $a_aut_group_id, $aut_domain, $aut_realm, $is_app_admin, $show_stills, $show_collections);
+      $a_items = mediamosa_asset::asset_collect($a_asset_ids, $a_app_ids, $aut_user_id, $granted, $a_aut_group_id, $aut_domain, $aut_realm, $is_app_admin, $show_stills, $show_collections);
+
+      foreach ($a_items as $a_item) {
+        $o_mediamosa->add_item($a_item);
+      }
     }
   }
 }

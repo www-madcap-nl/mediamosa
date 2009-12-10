@@ -32,28 +32,46 @@
 class mediamosa_collection_search {
 
   // ------------------------------------------------------------------ Static Functions.
-    /**
-   * Helper function
-   * @param unknown_type $column_name
+  /**
+   * Search on collections and return the found collections.
+   *
+   * 1.x: _media_management_search_collection
+   *
+   * @param array $a_app_id
+   *  The application IDs.
+   * @param string $cql
+   *  The search CQL string.
+   * @param string $asset_id
+   *  Search on this asset.
+   * @param string $fav_user_id
+   *  Search on favorites.
+   * @param string $aut_user_id
+   *  Search for current user.
+   * @param bool $is_app_admin
+   *  For searching unappropriate assets.
+   * @param bool $is_public_list
+   *  including/excluding private assets.
+   * @param bool $calculate_total_count
+   *  Calculate all found rows.
+   * @param int $limit
+   *  Max limit rows in result.
+   * @param int $offset
+   *  Offset row number with result set.
    */
-  static public function collection_get_join_name($column_name) {
-    return 'c.' . $column_name;
-  }
-
-  // _media_management_search_collection
-
   static public function collection_search(
     array $a_app_id,
-    string $cql = '',
-    string $asset_id = '',
-    string $fav_user_id = '',
-    string $aut_user_id = '',
+    $cql = NULL,
+    $asset_id = NULL,
+    $fav_user_id = NULL,
+    $aut_user_id = NULL,
 
-    bool $is_app_admin = FALSE,
-    bool $is_public_list = FALSE,
+    $is_app_admin = FALSE,
+    $is_public_list = FALSE,
 
-    int $limit = 10,
-    int $offset = 0) {
+    $calculate_total_count = TRUE,
+
+    $limit = 10,
+    $offset = 0) {
 
     $a_query = array();
     $a_query[mediamosa_db_query::A_SELECT_EXPR][] = 'c.*';
@@ -70,7 +88,7 @@ class mediamosa_collection_search {
     $a_slaves = mediamosa_aut_app_master_slave::slave_get($a_app_id, mediamosa_aut::AUT_TYPE_COLLECTION);
 
     // Include possible asset restriction.
-    if ($asset_id != '') {
+    if ($asset_id) {
       // Check if asset exists.
       mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
 
@@ -98,11 +116,11 @@ class mediamosa_collection_search {
     // Access selection is done here;
     mediamosa_aut::build_access_where($a_query, mediamosa_aut::AUT_TYPE_COLLECTION, NULL, $a_app_id, $aut_user_id, NULL, NULL, NULL, NULL, $is_app_admin);
 
-    if ($cql != '') {
+    if ($cql) {
       $a_result_cql2sql = mediamosa_core_cql::parse_collection($cql, $a_app_id);
 
       if (isset($a_result_cql2sql['str_where']) && $a_result_cql2sql['str_where'] != "") {
-        $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][VPX_QUERY_DIM_NAME_SEARCH] = $a_result_cql2sql['str_where'];
+        $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['cql'] = $a_result_cql2sql['str_where'];
       }
 
       if (isset($a_result_cql2sql['str_having']) && $a_result_cql2sql['str_having'] != "") {
@@ -129,8 +147,8 @@ class mediamosa_collection_search {
         $a_query[mediamosa_db_query::A_ORDER_BY][] = 'numofvideos '. mediamosa_db::escape_string($order_direction);
       }
       else {
-        $a_query[mediamosa_db_query::A_ORDER_BY][] = 'ISNULL(' . mediamosa_collection::collection_get_join_name($order_by) . ') ' . mediamosa_db::escape_string($order_direction);
-        $a_query[mediamosa_db_query::A_ORDER_BY][] = mediamosa_collection::collection_get_join_name($order_by) . ' ' . mediamosa_db::escape_string($order_direction);
+        $a_query[mediamosa_db_query::A_ORDER_BY][] = 'ISNULL(c.' . $order_by . ') ' . mediamosa_db::escape_string($order_direction);
+        $a_query[mediamosa_db_query::A_ORDER_BY][] = 'c.' . $order_by . ' ' . mediamosa_db::escape_string($order_direction);
       }
     }
 
@@ -145,10 +163,10 @@ class mediamosa_collection_search {
     $a_query[mediamosa_db_query::OFFSET] = $offset;
 
     // Build the query.
-    $query = mediamosa_db::db_query_select($a_query, array(SQL_CALC_FOUND_ROWS => TRUE));
+    $query = mediamosa_db_query::query_select($a_query, array(mediamosa_db_query::SQL_CALC_FOUND_ROWS => $calculate_total_count));
 
     // Do the query.
-    $result = mediamosa_db::db_query();
+    $result = mediamosa_db::db_query($query);
 
     // Set the found_rows on the object.
     $result->found_rows = mediamosa_db_query::found_rows();

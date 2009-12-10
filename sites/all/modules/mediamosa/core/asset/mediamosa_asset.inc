@@ -55,17 +55,91 @@ class mediamosa_asset {
   }
 
   /**
+   * Get the asset.
+   *
+   * @param string $asset_id
+   */
+  static public function get($asset_id) {
+
+    $query = mediamosa_db::db_select(mediamosa_asset_db::TABLE_NAME, 'a');
+    $query->fields('a');
+    $query->condition('a.' . mediamosa_asset_db::ID, $asset_id);
+    return $query->execute()->fetchAssoc();
+  }
+
+  /**
+   * Get multiple assets within an array, with key
+   * as asset_id.
+   *
+   * @param array $a_asset_ids
+   */
+  static public function getAllAssoc(array $a_asset_ids) {
+
+    $query = mediamosa_db::db_select(mediamosa_asset_db::ID, 'a');
+    $query->fields();
+    $query->condition('a.' . mediamosa_asset_db::ID, $a_asset_ids, 'IN');
+    return $query->execute()->fetchAllAssoc(mediamosa_asset_db::ID);
+  }
+
+  /**
+   * Delete jobs attached to asset.
+   *
+   * @param string $asset_id
+   */
+	static public function delete_jobs($asset_id) {
+//@todo:
+	  return _vpx_jobs_cancel_job_by_asset($asset_id);
+	}
+
+	/**
    * Remove asset from database.
    *
    * @param string $asset_id
+   *  The asset to delete.
+   * @param bool $cascade
+   *  Cascade mode will allow deletion of mediafiles. If FALSE and mediafiles (not counting
+   *  stills) are present, then deletion will fail.
    *
    * Note: does not return boolean, will throw exception when failure.
    *
    * Big change from 1.x; it will now remove mediafiles.
    */
-  static public function delete($asset_id) {
+  static public function delete($asset_id, $cascade = TRUE) {
 
     // @todo: start of transaction?
+
+  	// Find all my asset children.
+    $a_asset_ids = mediamosa_db::db_query(
+      'SELECT #asset_id FROM {#mediamosa_asset} WHERE #parent_id = :asset_id',
+      array(
+        '#asset_id' => mediamosa_asset_db::ID,
+        '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
+        '#parent_id' => mediamosa_asset_db::PARENT_ID,
+        ':asset_id' => $asset_id,
+      )
+    )->fetchCol();
+
+    // Add me (last).
+    $a_asset_ids[] = $asset_id;
+
+    // Find all mediafiles (except stills, they dont count for cascade mode.).
+    $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
+    $query->addField('mf', mediamosa_asset_mediafile_db::ID);
+    $query->condition('mf' . mediamosa_asset_mediafile_db::ASSET_ID, $a_asset_ids, 'IN');
+    $query->condition('mf' . mediamosa_asset_mediafile_db::IS_STILL, mediamosa_asset_mediafile_db::IS_STILL_FALSE);
+    $mediafile_ids = $query->execute()->fetchCol();
+
+    // Any mediafiles left and casade off?
+    if (count($mediafile_ids) && !$cascade) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_ASSET_NOT_EMPTY, array('@mediafile_count' => count($mediafile_ids)));
+    }
+
+    // Remove all jobs.
+    foreach ($a_asset_ids as $asset_id) {
+      if (!mediamosa_asset::delete_jobs($asset_id)) {
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_JOBS_COULD_NOT_BE_STOPPED);
+      }
+    }
 
     // Remove the asset from each collection.
     mediamosa_asset_collection::delete($asset_id);
@@ -75,10 +149,14 @@ class mediamosa_asset {
     $query->condition(mediamosa_asset_metadata_db::ASSET_ID, $asset_id);
     $query->execute();
 
-    // Remove our stills.
+    // Find all mediafiles.
+    $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
+    $query->addField('mf', mediamosa_asset_mediafile_db::ID);
+    $query->condition(mediamosa_asset_mediafile_db::ASSET_ID_ROOT, $asset_id);
+    $a_mediafile_ids = $query->execute()->fetchCol();
 
     // Delete the mediafiles.
-    mediamosa_asset_mediafile::delete($asset_id);
+    mediamosa_asset_mediafile::delete($a_mediafile_ids);
 
     // @todo: stats
     //mediamosa_statistics::delete_by_asset_id($asset_id)
@@ -122,6 +200,7 @@ class mediamosa_asset {
       )
     );
 
+    // Now delete the asset.
     $query = mediamosa_db::db_delete(mediamosa_asset_db::TABLE_NAME);
     $query->condition(mediamosa_asset_db::ID, $asset_id);
     $query->execute();
@@ -233,8 +312,6 @@ class mediamosa_asset {
   /**
    * Collect the asset information.
    *
-   * @param object $o_mediafile
-   *  Response object.
    * @param array $a_asset_ids
    *  Array asset_ids.
    * @param array $a_app_ids
@@ -257,7 +334,6 @@ class mediamosa_asset {
    *  Include collection information.
    */
   static public function asset_collect(
-    mediamosa_response $o_mediamosa,
     array $a_asset_ids,
     array $a_app_ids,
     $aut_user_id,
@@ -269,7 +345,6 @@ class mediamosa_asset {
     $show_stills = TRUE,
     $show_collections = FALSE
   ) {
-
     $a_prop_ids = array();
     $a_metadata_definitions_full = mediamosa_asset_metadata_property::get_metadata_properties_full($a_app_ids);
     foreach ($a_metadata_definitions_full as $metadata_definitions_full) {
@@ -397,7 +472,7 @@ class mediamosa_asset {
       }
     }
 
-    mediamosa_asset::enrich_response_asset($o_mediamosa, $a_items, $a_asset_ids, $a_app_ids, $aut_user_id, $show_stills, $show_collections);
+    return mediamosa_asset::enrich_response_asset($a_items, $a_asset_ids, $a_app_ids, $aut_user_id, $show_stills, $show_collections);
   }
 
   /**
@@ -412,7 +487,7 @@ class mediamosa_asset {
    * @param boolean $show_collections
    *  Include collections (was hack on _GET)
    */
-  static public function enrich_response_asset(mediamosa_response $o_mediamosa, array $a_items, array $a_asset_ids, array $a_app_ids, $aut_user_id, $show_stills = TRUE, $show_collections = FALSE) {
+  static public function enrich_response_asset(array $a_items, array $a_asset_ids, array $a_app_ids, $aut_user_id, $show_stills = TRUE, $show_collections = FALSE) {
     $a_collections = array();
 
     $s_current_asset = FALSE;
@@ -502,7 +577,8 @@ class mediamosa_asset {
       if (!empty($a_asset['asset_property_group_name'])) {
         $a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]][$a_asset['asset_property_group_name']][$a_asset['asset_property_name']][] = $a_asset['asset_property_value'];
       }
-        // Add collection data.
+
+      // Add collection data.
       if ($show_collections && isset($a_collections[$a_asset[mediamosa_asset_db::ID]])) {
         foreach ($a_collections[$a_asset[mediamosa_asset_db::ID]] as $coll_id => $a_coll) {
           $a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]]['collection_' . $coll_id] = $a_coll[mediamosa_collection_db::TITLE];
@@ -510,8 +586,127 @@ class mediamosa_asset {
       }
     }
 
+    $a_items = array();
     foreach ($a_asset_ids as $s_id) {
-      $o_mediamosa->add_item($a_items_pre_sort[$s_id]);
+      $a_items[] = $a_items_pre_sort[$s_id];
+    }
+
+    return $a_items;
+  }
+
+  /**
+   * Update the dates for asset.
+   *
+   * 1.x: _media_management_update_asset_timestamps
+   *
+   * @param string $asset_id
+   *
+   */
+  static public function update_asset_timestamps($asset_id) {
+    $real_asset_id = mediamosa_db::db_query(
+      'SELECT #parent_id FROM {#mediamosa_asset} WHERE #asset_id = :asset_id AND NOT #parent_id IS NULL',
+      array(
+        '#parent_id' => mediamosa_asset_db::PARENT_ID,
+        '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
+        '#asset_id' => mediamosa_asset_db::ID,
+        ':asset_id' => $asset_id,
+      )
+    );
+
+    if ($real_asset_id !== FALSE) {
+	    $asset_id = $real_asset_id;
+	  }
+
+	  // Get the NOW date.
+	  $db_now = mediamosa::db_current_timestamp_now();
+
+	  // Update videotimestamp.
+	  mediamosa_db::db_query(
+	    'UPDATE {#mediamosa_asset} SET #videotimestamp = :now WHERE #asset_id = :asset_id AND #videotimestamp IS NULL',
+	    array(
+	      '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
+	      '#videotimestamp' => mediamosa_asset_db::VIDEOTIMESTAMP,
+	      '#asset_id' => mediamosa_asset_db::ID,
+	      ':asset_id' => $asset_id
+	    )
+	  );
+
+	  // Update videotimestampmodified.
+    mediamosa_db::db_query(
+      'UPDATE {#mediamosa_asset} SET #videotimestampmodified = :now WHERE #asset_id = :asset_id',
+      array(
+        '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
+        '#videotimestampmodified' => mediamosa_asset_db::VIDEOTIMESTAMPMODIFIED,
+        '#asset_id' => mediamosa_asset_db::ID,
+        ':asset_id' => $asset_id
+      )
+    );
+  }
+
+  /**
+   * Increase viewed.
+   *
+   * 1.x: _mediafile_management_asset_viewed
+   *
+   * @param $asset_id
+   */
+  static public function asset_viewed($asset_id) {
+	  mediamosa_db::db_query(
+	    'UPDATE {#mediamosa_asset} SET #viewed = #viewed + 1 WHERE #asset_id = :asset_id',
+	    array(
+	      '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
+	      '#viewed' => mediamosa_asset_db::VIEWED,
+	      '#asset_id' => mediamosa_asset_db::ID,
+	      ':asset_id' => $asset_id
+	    )
+	  );
+	}
+
+	/**
+	 * Increase played.
+	 *
+	 * 1.x: _mediafile_management_asset_played
+	 *
+	 * @param $asset_id
+	 */
+	static public function asset_played($asset_id) {
+    mediamosa_db::db_query(
+      'UPDATE {#mediamosa_asset} SET #played = #played + 1 WHERE #asset_id = :asset_id',
+      array(
+        '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
+        '#played' => mediamosa_asset_db::PLAYED,
+        '#asset_id' => mediamosa_asset_db::ID,
+        ':asset_id' => $asset_id
+      )
+    );
+	}
+
+	/**
+	 * Test access for unappropriate.
+	 *
+	 * @param string $asset_id
+	 * @param array $app_id
+	 * @param string $user_id
+	 * @param bool $is_app_admin
+	 */
+	function is_unappropriate($asset_id, array $a_app_ids, $user_id, $is_app_admin = FALSE) {
+
+		$a_asset = self::get($asset_id);
+    if (!$a_asset) {
+    	throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_ASSET_NOT_FOUND, array('@asset_id' => $asset_id));
+    }
+
+    // If its not unapp. then leave.
+    if ($a_asset[mediamosa_asset_db::IS_UNAPPROPRIATE] != mediamosa_asset_db::IS_UNAPPROPRIATE_TRUE) {
+    	return;
+    }
+
+    // Must be owner or admin.
+    try {
+      mediamosa_aut::owner_check(reset($a_app_ids), $user_id, $a_asset[mediamosa_asset_db::APP_ID], $a_asset[mediamosa_asset_db::OWNER_ID], $is_app_admin);
+    }
+    catch (mediamosa_exception_error_access_denied $e) {
+      throw new mediamosa_exception_error(mediamosa_db::ERRORCODE_IS_UNAPPROPRIATE);
     }
   }
 }

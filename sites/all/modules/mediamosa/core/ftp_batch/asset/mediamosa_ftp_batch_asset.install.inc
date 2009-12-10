@@ -75,6 +75,7 @@ function mediamosa_ftp_batch_asset_schema() {
     'primary key' => array(mediamosa_ftp_batch_asset_db::ID),
     'indexes' => array(
       'idx_' . mediamosa_ftp_batch_asset_db::BATCH_ID => array(mediamosa_ftp_batch_asset_db::BATCH_ID),
+      'idx_' . mediamosa_ftp_batch_asset_db::ASSET_ID => array(mediamosa_ftp_batch_asset_db::ASSET_ID),
     )
   );
 

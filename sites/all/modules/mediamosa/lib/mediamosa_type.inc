@@ -60,10 +60,12 @@ class mediamosa_type {
   const TYPE_GROUP_ID                    = 'GROUP_ID';
   const TYPE_ASSET_ID                    = 'ASSET_ID';
   const TYPE_MEDIAFILE_ID                = 'MEDIAFILE_ID';
+  const TYPE_STILL_ID                    = 'MEDIAFILE_ID';
   const TYPE_COLLECTION_ID               = 'COLLECTION_ID';
   const TYPE_BATCH_ID                    = 'BATCH_ID';
   const TYPE_DOMAIN                      = 'DOMAIN';
   const TYPE_REALM                       = 'REALM';
+  const TYPE_FILENAME                    = 'FILENAME';
 
   const TYPE_SEARCH_ASSET                = 'ASSET';
   const TYPE_SEARCH_COLLECTION           = 'COLLECTION';
@@ -127,9 +129,14 @@ class mediamosa_type {
 
     // @TODO add range for integers
 
-    // When required and empty string, then in any type its an error
-    if ($is_required && trim($mixed_param_value) == '') {
+    // When required and isnull/empty string, then in any type its an error
+    if ($is_required && (is_null($mixed_param_value) || trim($mixed_param_value) == '')) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_REQUIRED_PARAMETER, array('@param' => $param, '@type' => $param_type));
+    }
+
+    // If NULL, then value is not set.
+    if (is_null($mixed_param_value)) {
+    	return NULL;
     }
 
     switch ($param_type) {
@@ -356,6 +363,13 @@ class mediamosa_type {
         $checked_param_value = (string)$mixed_param_value;
       	break;
 
+      case self::TYPE_FILENAME:
+      	if (strpos($mixed_param_value, "/") !== FALSE) {
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
+       	}
+
+       	$checked_param_value = (string)$mixed_param_value;
+        break;
 
       default:
         throw new mediamosa_exception_program_error(strtr('Using unspecified type (@type) in type lib used for param @param.', array('@param' => $param, '@type' => $param_type)));

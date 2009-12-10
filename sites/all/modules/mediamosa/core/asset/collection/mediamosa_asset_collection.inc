@@ -50,7 +50,7 @@ class mediamosa_asset_collection {
       return FALSE;
     }
 
-    // Do the the delete.
+    // Do the delete.
     $query = mediamosa_db::db_delete(mediamosa_asset_collection_db::TABLE_NAME);
 
     if ($asset_id) {
@@ -68,7 +68,7 @@ class mediamosa_asset_collection {
    * Get collections based on given asset_ids.
    *
    * @param array $a_asset_ids
-   * @param array $a_fields
+   * @param array $a_fields (collection fields)
    *  [alias] => field
    */
   static public function get_by_asset_ids(array $a_asset_ids, array $a_fields = array()) {
@@ -103,6 +103,7 @@ class mediamosa_asset_collection {
   function get_by_ids(array $a_coll_ids) {
     // Build query.
     $query = mediamosa_db::db_select(mediamosa_collection_db::TABLE_NAME);
+    $query->fields();
     $query->condition(mediamosa_collection_db::ID, $a_coll_ids, 'IN');
     return $query->execute();
   }

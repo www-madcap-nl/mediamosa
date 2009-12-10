@@ -443,7 +443,12 @@ class mediamosa_db {
     // Create select object.
     $query = self::db_select($table_name, 'c');
     foreach ($a_columns_and as $column => $value) {
-      $query->condition($column, $value);
+      if (is_null($value)) {
+        $query->isNull($column);
+      }
+      else {
+        $query->condition($column, $value);
+      }
     }
 
     return $query->countQuery()->execute()->fetchField();
@@ -458,10 +463,15 @@ class mediamosa_db {
    *  column => value.
    *
    */
-  static function db_must_exists($table_name, array $a_columns_and = array()) {
+  static function db_must_exists($table_name, array $a_columns_and = array(), $errorcode = NULL, array $a_errorcode_args = array()) {
 
     if (self::db_count_rows($table_name, $a_columns_and)) {
       return; // exists
+    }
+
+    // Custom error supplied?
+    if ($errorcode) {
+      throw new mediamosa_exception_error($errorcode, $a_errorcode_args);
     }
 
     switch ($table_name) {
@@ -473,17 +483,19 @@ class mediamosa_db {
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_AUT_GROUP_NOT_FOUND, array('@group' => $a_columns_and[mediamosa_aut_group_db::AUT_GROUP_NAME]));
       case mediamosa_ftp_batch_db::TABLE_NAME:
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_FTP_BATCH_NOT_FOUND, array('@batch_id' => $a_columns_and['batch_id']));
+      case mediamosa_collection_db::TABLE_NAME:
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_COLLECTION_NOT_FOUND, array('@coll_id' => $a_columns_and['coll_id']));
+      case mediamosa_asset_collection_db::TABLE_NAME:
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_COLLECTION_ASSET_RELATION_NOT_FOUND, array('@coll_id' => $a_columns_and[mediamosa_asset_collection_db::COLL_ID], '@asset_id' => $a_columns_and[mediamosa_asset_collection_db::ASSET_ID]));
 /*
-      case 'collection':
-        throw new vpx_exception_error(ERRORCODE_COLLECTION_NOT_FOUND, array("@coll_id" => $a_columns_and['coll_id']));
       case 'job':
-        throw new vpx_exception_error_job_not_found(array("@job_id" => $a_columns_and['job_id']));
+        throw new vpx_exception_error_job_not_found(array('@job_id' => $a_columns_and['job_id']));
       case 'ftpuser':
         throw new vpx_exception_error(ERRORCODE_FTP_UNKNOWN_USER);
       case 'quota_user':
-        throw new vpx_exception_error(ERRORCODE_USERMAN_INVALID_USER, array("@user_id" => $a_columns_and["name"]));
+        throw new vpx_exception_error(ERRORCODE_USERMAN_INVALID_USER, array('@user_id' => $a_columns_and['name']));
       case 'quota_group':
-        throw new vpx_exception_error(ERRORCODE_USERMAN_INVALID_GROUP, array("@group_id" => $a_columns_and["group_id"]));
+        throw new vpx_exception_error(ERRORCODE_USERMAN_INVALID_GROUP, array('@group_id' => $a_columns_and['group_id']));
  */
     }
 
@@ -546,7 +558,7 @@ class mediamosa_db {
    */
   static public function db_get_columns($table_name) {
     // Use db_query directly here.
-    return db_query("SELECT COLUMN_NAME FROM information_schema.columns WHERE TABLE_NAME = :table", array(':table' => $table_name))->fetchCol();
+    return db_query('SELECT COLUMN_NAME FROM information_schema.columns WHERE TABLE_NAME = :table', array(':table' => $table_name))->fetchCol();
   }
 
   /**

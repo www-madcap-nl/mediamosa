@@ -42,4 +42,31 @@ class mediamosa_collection {
     $query->condition(mediamosa_collection_db::ID, $coll_id);
     return $query->execute() ? TRUE : FALSE;
   }
+
+  /**
+   * Get multiple collections within an array, with key
+   * as coll_id.
+   *
+   * @param array $a_coll_ids
+   */
+  static public function getAllAssoc(array $a_coll_ids) {
+
+  	$query = mediamosa_db::db_select(mediamosa_collection_db::ID, 'c');
+  	$query->fields();
+  	$query->condition('c.' . mediamosa_collection_db::ID, $a_coll_ids, 'IN');
+  	return $query->execute()->fetchAllAssoc(mediamosa_collection_db::ID);
+  }
+
+  /**
+   * Get the collection.
+   *
+   * @param string $coll_id
+   */
+  static public function get($coll_id) {
+
+    $query = mediamosa_db::db_select(mediamosa_collection_db::ID, 'c');
+    $query->fields();
+    $query->condition('c.' . mediamosa_collection_db::ID, $coll_id);
+    return $query->execute()->fetchAssoc();
+  }
 }

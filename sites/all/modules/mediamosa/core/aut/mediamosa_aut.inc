@@ -364,8 +364,9 @@ class mediamosa_aut {
    * Internal function to check autorisation
    * based on ownership.
    */
-  static public function owner_check($app_id, $s_user_id, $object_app_id, $s_user_id_owner, $is_app_admin = FALSE) {
+  static public function owner_check($app_id, $user_id, $object_app_id, $user_id_owner, $is_app_admin = FALSE) {
     assert(is_bool($is_app_admin));
+    assert(!is_array($app_id));
 
     // we do not allow inter ega changes
     if ($app_id != $object_app_id) {
@@ -378,7 +379,7 @@ class mediamosa_aut {
     }
 
     // basic check op owner rights : an owner has full access, the rest has none.
-    if ($s_user_id != $s_user_id_owner) {
+    if ($user_id != $user_id_owner) {
       throw new mediamosa_exception_error_access_denied(array("@reason" => "user not allowed"));
     }
   }
@@ -391,18 +392,18 @@ class mediamosa_aut {
    *  The ID of the object to check.
    * @param integer $app_id
    *  App ID of user.
-   * @param string $s_user_id
+   * @param string $user_id
    *  User to check.
    * @param integer $object_app_id
    *  App ID of the object.
-   * @param string $s_user_id_owner
+   * @param string $user_id_owner
    *  User of the object.
    * @param boolean $is_app_admin
    *  TRUE or FALSE.
    */
-  static public function owner_check_ext($aut_type, $object_id, $app_id, $s_user_id, $object_app_id, $s_user_id_owner, $is_app_admin = FALSE) {
+  static public function owner_check_ext($aut_type, $object_id, $app_id, $user_id, $object_app_id, $user_id_owner, $is_app_admin = FALSE) {
     try {
-      mediamosa_aut::owner_check($app_id, $s_user_id, $object_app_id, $s_user_id_owner, $is_app_admin);
+      mediamosa_aut::owner_check($app_id, $user_id, $object_app_id, $user_id_owner, $is_app_admin);
     }
     catch (mediamosa_exception_error_access_denied $e) {
       // Not owner allowed or not same app (or both).
@@ -420,13 +421,13 @@ class mediamosa_aut {
   }
 
   // Extension for collection, check if assign is allowed.
-  static public function owner_check_collection_assign($app_id, $s_user_id, $dbrow_asset, $dbrow_collection, $is_app_admin = FALSE) {
+  static public function owner_check_collection_assign($app_id, $user_id, $dbrow_asset, $dbrow_collection, $is_app_admin = FALSE) {
     // If the collection has public assign rights, then allow it
     if (mediamosa_lib::boolstr2bool($dbrow_collection['public_assign'])) {
 
       // moet owner van de asset zijn....
       try {
-        mediamosa_aut::owner_check($app_id, $s_user_id, $dbrow_asset['app_id'], $dbrow_asset['owner_id'], $is_app_admin);
+        mediamosa_aut::owner_check($app_id, $user_id, $dbrow_asset['app_id'], $dbrow_asset['owner_id'], $is_app_admin);
         return; // We got access.
       }
       catch (mediamosa_exception_error_access_denied $e) {
@@ -435,7 +436,7 @@ class mediamosa_aut {
       }
     }
 
-    mediamosa_aut::owner_check($app_id, $s_user_id, $dbrow_collection['app_id'], $dbrow_collection['owner_id'], $is_app_admin);
+    mediamosa_aut::owner_check($app_id, $user_id, $dbrow_collection['app_id'], $dbrow_collection['owner_id'], $is_app_admin);
   }
 
   /**
@@ -462,7 +463,7 @@ class mediamosa_aut {
    * Sets rights on the object
    *
    * @param integer $app_id
-   * @param string $s_user_id
+   * @param string $user_id
    * @param string $aut_type
    * @param array $a_object
    *  Make sure its an object that is within the same app_id as the user
@@ -477,7 +478,7 @@ class mediamosa_aut {
    * @param array $is_app_admin
    *  For future expansion
    */
-  static public function rights_set($app_id, $s_user_id, $aut_type, $a_object, $a_app_ids, $a_aut_user_ids, $a_aut_group_ids, $a_aut_domains, $a_aut_realms, $b_replace = TRUE, $a_rights = array(VPX_ACL_RIGHT_ACCESS), $is_app_admin = FALSE) {
+  static public function rights_set($app_id, $user_id, $aut_type, $a_object, $a_app_ids, $a_aut_user_ids, $a_aut_group_ids, $a_aut_domains, $a_aut_realms, $b_replace = TRUE, $a_rights = array(VPX_ACL_RIGHT_ACCESS), $is_app_admin = FALSE) {
     assert(count($a_rights));
     assert($aut_type == mediamosa_aut::AUT_TYPE_MEDIAFILE || $aut_type == mediamosa_aut::AUT_TYPE_ASSET || $aut_type == mediamosa_aut::AUT_TYPE_COLLECTION); // media files for now
 
@@ -489,20 +490,20 @@ class mediamosa_aut {
 
     switch ($aut_type) {
       case mediamosa_aut::AUT_TYPE_MEDIAFILE:
-        $s_owner_id = $a_object['owner_id'];
-        $s_object_app_id = $a_object['app_id'];
+        $owner_id = $a_object['owner_id'];
+        $object_app_id = $a_object['app_id'];
         $aut_object_id = $a_object['mediafile_id'];
         break;
 
       case mediamosa_aut::AUT_TYPE_ASSET:
-        $s_owner_id = $a_object['owner_id'];
-        $s_object_app_id = $a_object['app_id'];
+        $owner_id = $a_object['owner_id'];
+        $object_app_id = $a_object['app_id'];
         $aut_object_id = $a_object['asset_id'];
         break;
 
       case mediamosa_aut::AUT_TYPE_COLLECTION:
-        $s_owner_id = $a_object['owner_id'];
-        $s_object_app_id = $a_object['app_id'];
+        $owner_id = $a_object['owner_id'];
+        $object_app_id = $a_object['app_id'];
         $aut_object_id = $a_object['coll_id'];
         break;
 
@@ -511,11 +512,11 @@ class mediamosa_aut {
     }
 
     // Only owners (with the same app_id) can change access (for now)
-    mediamosa_aut::owner_check($app_id, $s_user_id, $s_object_app_id, $s_owner_id, $is_app_admin);
+    mediamosa_aut::owner_check($app_id, $user_id, $object_app_id, $owner_id, $is_app_admin);
 
     // Eerst all oude links weggooien
     if ($b_replace) {
-      mediamosa_aut::rights_clear($app_id, $s_user_id, $aut_type, $a_object, $is_app_admin);
+      mediamosa_aut::rights_clear($app_id, $user_id, $aut_type, $a_object, $is_app_admin);
     }
 
     $rights_set = $rights_set_user_usergroup = $rights_set_domain_realm = FALSE;
@@ -725,28 +726,28 @@ class mediamosa_aut {
    * Remove rights from object.
    *
    * @param integer $app_id
-   * @param string $s_user_id
+   * @param string $user_id
    * @param string $aut_type
    * @param array $a_object
    * @param boolean $is_app_admin
    */
-  static public function rights_clear($app_id, $s_user_id, $aut_type, $a_object, $is_app_admin = FALSE) {
+  static public function rights_clear($app_id, $user_id, $aut_type, $a_object, $is_app_admin = FALSE) {
     switch ($aut_type) {
       case mediamosa_aut::AUT_TYPE_MEDIAFILE:
-        $s_owner_id = $a_object["owner_id"];
-        $s_object_app_id = $a_object["app_id"];
+        $owner_id = $a_object["owner_id"];
+        $object_app_id = $a_object["app_id"];
         $aut_object_id = $a_object["mediafile_id"];
         break;
 
       case mediamosa_aut::AUT_TYPE_ASSET:
-        $s_owner_id = $a_object["owner_id"];
-        $s_object_app_id = $a_object["app_id"];
+        $owner_id = $a_object["owner_id"];
+        $object_app_id = $a_object["app_id"];
         $aut_object_id = $a_object["asset_id"];
         break;
 
       case mediamosa_aut::AUT_TYPE_COLLECTION:
-        $s_owner_id = $a_object["owner_id"];
-        $s_object_app_id = $a_object["app_id"];
+        $owner_id = $a_object["owner_id"];
+        $object_app_id = $a_object["app_id"];
         $aut_object_id = $a_object["coll_id"];
         break;
 
@@ -755,7 +756,7 @@ class mediamosa_aut {
     }
 
     // Only owners (with the same app_id) can change access (for now)
-    mediamosa_aut::owner_check($app_id, $s_user_id, $s_object_app_id, $s_owner_id, $is_app_admin);
+    mediamosa_aut::owner_check($app_id, $user_id, $object_app_id, $owner_id, $is_app_admin);
 
     switch ($aut_type) {
       case mediamosa_aut::AUT_TYPE_MEDIAFILE:
@@ -789,29 +790,29 @@ class mediamosa_aut {
    * On media it will allow slaves to get rights of object when not owner.
    *
    * @param integer $app_id
-   * @param string $s_user_id
+   * @param string $user_id
    * @param string $aut_type
    * @param array $a_object
    * @param boolean $is_app_admin
    * @return array
    */
-  static public function rights_get($app_id, $s_user_id, $aut_type, $a_object, $is_app_admin = FALSE) {
+  static public function rights_get($app_id, $user_id, $aut_type, $a_object, $is_app_admin = FALSE) {
     switch ($aut_type) {
       case mediamosa_aut::AUT_TYPE_MEDIAFILE:
-        $s_owner_id = $a_object['owner_id'];
-        $s_object_app_id = $a_object['app_id'];
+        $owner_id = $a_object['owner_id'];
+        $object_app_id = $a_object['app_id'];
         $aut_object_id = $a_object['mediafile_id'];
         break;
 
       case mediamosa_aut::AUT_TYPE_ASSET:
-        $s_owner_id = $a_object['owner_id'];
-        $s_object_app_id = $a_object['app_id'];
+        $owner_id = $a_object['owner_id'];
+        $object_app_id = $a_object['app_id'];
         $aut_object_id = $a_object['asset_id'];
         break;
 
       case mediamosa_aut::AUT_TYPE_COLLECTION:
-        $s_owner_id = $a_object['owner_id'];
-        $s_object_app_id = $a_object['app_id'];
+        $owner_id = $a_object['owner_id'];
+        $object_app_id = $a_object['app_id'];
         $aut_object_id = $a_object['coll_id'];
         break;
 
@@ -822,12 +823,12 @@ class mediamosa_aut {
     switch ($aut_type) {
       case mediamosa_aut::AUT_TYPE_MEDIAFILE:
         // Need to be either owner + same app or slave of object.
-        mediamosa_aut::owner_check_ext($aut_type, $aut_object_id, $app_id, $s_user_id, $s_object_app_id, $s_owner_id, $is_app_admin);
+        mediamosa_aut::owner_check_ext($aut_type, $aut_object_id, $app_id, $user_id, $object_app_id, $owner_id, $is_app_admin);
         break;
 
       default:
         // Only owners (with the same app_id) can get access (for now)
-        mediamosa_aut::owner_check($app_id, $s_user_id, $s_object_app_id, $s_owner_id, $is_app_admin);
+        mediamosa_aut::owner_check($app_id, $user_id, $object_app_id, $owner_id, $is_app_admin);
         break;
     }
 
@@ -859,29 +860,29 @@ class mediamosa_aut {
     // Note / todo ;
     // does the owner of the mediafile have the right to see other slave rights from other master app (not his app)?
     // For now we only allow rights that owner might have set (he cant set or remove app slave rights if he/she does not have the same master app
-    $db_result_master_slave = mediamosa_db::db_query("SELECT * FROM {mediamosa_aut_app_master_slave} WHERE aut_object_type = '%s' AND aut_object_id = '%s' AND app_id_master > 0 AND app_id_slave = %d", $aut_type, $aut_object_id, $s_object_app_id);
+    $db_result_master_slave = mediamosa_db::db_query("SELECT * FROM {mediamosa_aut_app_master_slave} WHERE aut_object_type = '%s' AND aut_object_id = '%s' AND app_id_master > 0 AND app_id_slave = %d", $aut_type, $aut_object_id, $object_app_id);
 
     if ($db_result_name) {
       foreach ($db_result_name as $a_row) {
-        $name = $a_row["aut_name"];
-        if ($a_row["aut_type"] == mediamosa_aut::AUT_NAME_TYPE_REALM)  {
-          $name = $a_row["aut_prefix"] . $a_row["aut_name"];
+        $name = $a_row['aut_name'];
+        if ($a_row['aut_type'] == mediamosa_aut::AUT_NAME_TYPE_REALM)  {
+          $name = $a_row['aut_prefix'] . $a_row['aut_name'];
         }
 
-        $a_result[mediamosa_aut_object_db::AUT_TYPE_NAME][] = array("type" => "aut_" . mediamosa_unicode::strtolower($a_row["aut_type"]), "name" => $name);
+        $a_result[mediamosa_aut_object_db::AUT_TYPE_NAME][] = array('type' => 'aut_' . mediamosa_unicode::strtolower($a_row['aut_type']), 'name' => $name);
       }
     }
 
     if ($db_result_group) {
       foreach ($db_result_group as $a_row) {
-        $a_result[mediamosa_aut_object_db::AUT_TYPE_GROUP][] = array("type" => "aut_" . mediamosa_unicode::strtolower($a_row["aut_group_type"]), "name" => $a_row["aut_group_name"]);
+        $a_result[mediamosa_aut_object_db::AUT_TYPE_GROUP][] = array('type' => 'aut_' . mediamosa_unicode::strtolower($a_row['aut_group_type']), 'name' => $a_row['aut_group_name']);
       }
     }
 
     // Master / slave
     // Master is de share, zodat master onze object mag zien
     foreach ($db_result_master_slave as $a_master_slave) {
-      $a_result[mediamosa_aut::AUT_NAME_TYPE_APP][] = array("type" => "aut_app", "app_id_slave" => $a_master_slave["app_id_slave"], "app_id_master" => $a_master_slave['app_id_master']);
+      $a_result[mediamosa_aut::AUT_NAME_TYPE_APP][] = array('type' => 'aut_app', 'app_id_slave' => $a_master_slave['app_id_slave'], 'app_id_master' => $a_master_slave['app_id_master']);
     }
 
     return $a_result;
@@ -1497,10 +1498,7 @@ class mediamosa_aut {
   /**
    * Check if the object has a valid slave record when it's a foreign object
    */
-  static public function read_single_object($type, $id, $app_ids) {
-    if (!is_array($app_ids)) {
-      $app_ids = array($app_ids);
-    }
+  static public function read_single_object($type, $id, array $a_app_ids) {
 
     switch ($type) {
       case mediamosa_aut::AUT_TYPE_ASSET:
@@ -1508,7 +1506,7 @@ class mediamosa_aut {
         // Basic app_id check
         $asset_id_app_id = mediamosa_db::db_query("SELECT app_id FROM {mediamosa_asset} WHERE asset_id = '%s'", $id)->fetchField();
 
-        if (in_array($asset_id_app_id, $app_ids)) {
+        if (in_array($asset_id_app_id, $a_app_ids)) {
           break;
         }
 
@@ -1521,7 +1519,7 @@ class mediamosa_aut {
             AND ms.aut_object_id = m.mediafile_id
             AND (ms.app_id_master IN (%s) OR ms.app_id_slave IN (%s))
           WHERE a.asset_id = '%s'",
-          implode(",", $app_ids), implode(",", $app_ids),
+          implode(",", $a_app_ids), implode(",", $a_app_ids),
           $id
         );
 
@@ -1534,7 +1532,7 @@ class mediamosa_aut {
         // Basic app_id check
         $mediafile_id_app_id = mediamosa_db::db_query("SELECT app_id FROM {mediamosa_asset_mediafile} WHERE mediafile_id = '%s'", $id)->fetchField();
 
-        if (in_array($mediafile_id_app_id, $app_ids)) {
+        if (in_array($mediafile_id_app_id, $a_app_ids)) {
           break;
         }
 
@@ -1543,7 +1541,7 @@ class mediamosa_aut {
           "SELECT 1 FROM {mediamosa_asset_mediafile} AS m
           JOIN {mediamosa_aut_app_master_slave} AS ms ON ms.aut_object_type = 'MEDIAFILE' AND ms.aut_object_id = m.mediafile_id AND ms.app_id_master IN (%s)
           WHERE m.mediafile_id = '%s'",
-          implode(",", $app_ids),
+          implode(",", $a_app_ids),
           $id
         );
 

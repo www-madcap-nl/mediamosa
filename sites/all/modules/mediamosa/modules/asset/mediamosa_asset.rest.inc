@@ -87,7 +87,7 @@ class mediamosa_rest_call_change_ownership extends mediamosa_rest_call {
   public function do_call() {
     $o_mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value(self::APP_ID);
+    $a_app_ids = $this->get_param_value_app();;
 
     /*
      * Because its to dangerous, new_app_id/old_app_id has been turned off (#774).
@@ -194,7 +194,7 @@ class mediamosa_rest_call_count_asset extends mediamosa_rest_call {
   public function do_call() {
     $o_mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value(self::APP_ID);
+    $a_app_ids = $this->get_param_value_app();;
 
     // Get the 1st app.
     $app_id = reset($a_app_ids);
@@ -217,22 +217,23 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
   // Rest vars;
   const RETURN_ASSET_IDS = 'return_asset_ids';
+  const FAV_USER_ID = 'fav_user_id';
   const USER_ID = 'user_id';
   const AUT_USER_ID = 'aut_user_id'; // Alias for user_id.
-  const FAV_USER_ID = 'fav_user_id';
-  const OPERATOR = 'operator';
-  const HIDE_EMPTY_ASSETS = 'hide_empty_assets';
-  const COLL_ID = 'coll_id';
-  const GRANTED = 'granted';
-  const IS_PUBLIC_LIST = 'is_public_list';
   const AUT_GROUP_ID = 'aut_group_id';
   const AUT_DOMAIN = 'aut_domain';
   const AUT_REALM = 'aut_realm';
+  const GRANTED = 'granted';
+  const OPERATOR = 'operator';
+  const HIDE_EMPTY_ASSETS = 'hide_empty_assets';
+  const COLL_ID = 'coll_id';
+  const IS_PUBLIC_LIST = 'is_public_list';
   const BATCH_ID = 'batch_id';
   const CQL = 'cql';
   const SHOW_DELETED = 'show_deleted';
   const SHOW_STILLS = 'show_stills';
   const SHOW_COLLECTIONS = 'show_collections';
+  const CALCULATE_TOTAL_COUNT = 'calculate_total_count';
 
   // ------------------------------------------------------------------ Public Functions.
   static public function get_search_params() {
@@ -305,12 +306,8 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
         self::AUT_GROUP_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'Authentication parameter.',
-          self::VAR_DEFAULT_VALUE => 'FALSE',
-        ),
-        self::AUT_GROUP_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
-          self::VAR_DESCRIPTION => 'Authentication parameter.',
           self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+          self::VAR_DEFAULT_VALUE => array()
         ),
         self::AUT_DOMAIN => array(
           self::VAR_TYPE => mediamosa_type::TYPE_DOMAIN,
@@ -342,6 +339,11 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Include collection information of each assets, when available.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
+        ),
+        self::CALCULATE_TOTAL_COUNT => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_DESCRIPTION => "Calculate the number of rows in the complete scope of the search. Performance wise to use this parameter with value 'FALSE' if you don't need to know the total number of rows in your scope result.",
+          self::VAR_DEFAULT_VALUE => 'TRUE',
         ),
 
         // Old fasion search params.
@@ -404,7 +406,7 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
     parent::validate_rest_args($a_var_setup);
 
     $cql = $this->get_param_value(self::CQL);
-    $a_app_ids = $this->get_param_value(self::APP_ID);
+    $a_app_ids = $this->get_param_value_app();;
     $error_text = '';
 
     if ($cql != '' && !mediamosa_core_cql::verify_asset($cql, $a_app_ids, $error_text)) {
@@ -415,7 +417,7 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
   public function do_call() {
     $o_mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value(self::APP_ID);
+    $a_app_ids = $this->get_param_value_app();;
 
     // Now convert the old search parameters to CQL.
     $a_var_setup = mediamosa_core_cql::get_var_setup_search_asset($a_app_ids, array(), self::get_search_params());
@@ -486,10 +488,303 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
       $this->get_param_value(self::RETURN_ASSET_IDS),
       $this->get_param_value(self::SHOW_STILLS),
       $this->get_param_value(self::SHOW_COLLECTIONS),
+      $this->get_param_value(self::CALCULATE_TOTAL_COUNT),
       $this->get_param_value_limit(),
       $this->get_param_value_offset()
     );
     // @todo;
     //_vpx_statistics_log_search_query($a_args, $app_id);
+  }
+}
+
+/**
+ * URI: /asset/$asset_id/favorites/count
+ *      /asset/$asset_id/count_favorites (deprecated)
+ * Method: GET
+ *
+ * 1.x: media_management_favorites_count_asset
+ */
+class mediamosa_rest_call_asset_favorites_count extends mediamosa_rest_call {
+  // ------------------------------------------------------------------ Consts.
+  // Rest vars;
+  const ASSET_ID = 'asset_id';
+  const FAV_TYPE= 'fav_type';
+
+  // ------------------------------------------------------------------ Functions.
+  public function get_var_setup() {
+    $a_var_setup = array();
+
+    $a_var_setup = array(
+      self::VARS => array(
+        self::ASSET_ID => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
+          self::VAR_DESCRIPTION => 'The asset ID to find its favorites.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+        ),
+      ),
+    );
+  }
+
+  public function do_call() {
+    $o_mediamosa = mediamosa::get();
+
+    $asset_id = $this->get_param_value(self::ASSET_ID);
+
+    // FIXME:
+    // Any app can get any count from any asset....
+
+    // Set total count.
+    $o_mediamosa->item_total_count = mediamosa_user_favorite::count_items(mediamosa_user_favorite_db::FAV_TYPE_ASSET, $asset_id);
+
+    $o_mediamosa->set_result_okay();
+  }
+}
+
+/**
+ * URI: /asset/$asset_id/favorites/count
+ *      /asset/$asset_id/count_favorites (deprecated)
+ * Method: POST
+ *
+ * 1.x: media_management_delete_asset
+ */
+class mediamosa_rest_call_asset_delete extends mediamosa_rest_call {
+  // ------------------------------------------------------------------ Consts.
+  // Rest vars;
+  const ASSET_ID = 'asset_id';
+  const USER_ID = 'user_id';
+
+  // ------------------------------------------------------------------ Functions.
+  public function get_var_setup() {
+    $a_var_setup = array();
+
+    $a_var_setup = array(
+      self::VARS => array(
+        self::ASSET_ID => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
+          self::VAR_DESCRIPTION => 'The asset ID to delete.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+        ),
+        self::USER_ID => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_DESCRIPTION => 'User ID, must be owner to delete asset.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+        ),
+        self::DELETE => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_DESCRIPTION => 'Delete mode.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+          self::VAR_ALLOWED_VALUES => array('', 'cascade'),
+        ),
+      ),
+    );
+  }
+
+  public function do_call() {
+    $o_mediamosa = mediamosa::get();
+
+    $asset_id = $this->get_param_value(self::ASSET_ID);
+
+    $a_app_ids = $this->get_param_value_app();;
+    $app_id = reset($a_app_ids);
+    $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
+
+    $asset_id = $this->get_param_value(self::ASSET_ID);
+    $user_id = $this->get_param_value(self::USER_ID);
+    $delete = $this->get_param_value(self::DELETE);
+
+    // Test webservice.
+    mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $a_app_ids);
+
+    // Asset must exist to be deleted.
+    mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
+
+    // Get asset.
+    $a_asset = mediamosa_db::db_query(
+      'SELECT #app_id, #owner_id FROM {#mediamosa_asset} WHERE #asset_id  = :asset_id',
+      array(
+        '#app_id' => mediamosa_asset_db::APP_ID,
+        '#owner_id' => mediamosa_asset_db::OWNER_ID,
+        '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
+        '#asset_id' => mediamosa_asset_db::ID,
+        ':asset_id' => $asset_id,
+      )
+    )->fetchAssoc();
+
+    // Must be owner / app_admin to delete.
+    mediamosa_aut::owner_check($app_id, $user_id, $a_asset[mediamosa_asset_db::APP_ID], $a_asset[mediamosa_asset_db::OWNER_ID], $is_app_admin);
+
+	  // Delete the asset (and all other stuff related).
+    mediamosa_asset::delete($asset_id, $delete == 'delete');
+
+    // All ok.
+    $o_mediamosa->set_result_okay();
+  }
+}
+
+
+/**
+ * URI: /asset/$asset_id
+ * Method: GET
+ *
+ * 1.x: media_management_get_asset
+ */
+class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
+  // ------------------------------------------------------------------ Consts.
+  // Rest vars;
+  const ASSET_ID = 'asset_id';
+  const USER_ID = 'user_id';
+  const AUT_USER_ID = 'aut_user_id'; // Alias for user_id.
+  const AUT_GROUP_ID = 'aut_group_id';
+  const AUT_DOMAIN = 'aut_domain';
+  const AUT_REALM = 'aut_realm';
+  const SHOW_STILLS = 'show_stills';
+  const SHOW_COLLECTIONS = 'show_collections';
+  const TAG = 'tag';
+  const IS_OAI = 'is_oai';
+
+  // ------------------------------------------------------------------ Functions.
+  public function get_var_setup() {
+    $a_var_setup = array();
+
+    $a_var_setup = array(
+      self::VARS => array(
+        self::ASSET_ID => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
+          self::VAR_DESCRIPTION => 'The asset ID to delete.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+        ),
+        self::TAG => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_DESCRIPTION => 'Include tag to search on mediafiles of the specified asset.',
+          self::VAR_RANGE_END => mediamosa_asset_mediafile_db::TAG_LENGTH,
+        ),
+        self::USER_ID => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_DESCRIPTION => 'Alias for aut_user_id parameter, is chosen above aut_user_id.',
+        ),
+        self::AUT_USER_ID => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_DESCRIPTION => 'Authentication parameter.',
+        ),
+        self::AUT_GROUP_ID => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
+          self::VAR_DESCRIPTION => 'Authentication parameter.',
+          self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+          self::VAR_DEFAULT_VALUE => array(), // NULL is bad when not provided.
+        ),
+        self::AUT_DOMAIN => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_DOMAIN,
+          self::VAR_DESCRIPTION => 'Authentication parameter.',
+        ),
+        self::AUT_REALM=> array(
+          self::VAR_TYPE => mediamosa_type::TYPE_REALM,
+          self::VAR_DESCRIPTION => 'Authentication parameter.',
+        ),
+        self::SHOW_STILLS => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_DESCRIPTION => 'Include stills in output.',
+          self::VAR_DEFAULT_VALUE => 'FALSE',
+        ),
+        self::SHOW_COLLECTIONS => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_DESCRIPTION => 'Include collection information of each assets, when available.',
+          self::VAR_DEFAULT_VALUE => 'FALSE',
+        ),
+        self::IS_OAI => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_DESCRIPTION => 'Generate additonal asset data for OAI output.',
+          self::VAR_DEFAULT_VALUE => 'FALSE',
+        ),
+      )
+    );
+
+    // Include default.
+    return self::get_var_setup_default($a_var_setup);
+  }
+
+  public function do_call() {
+    $o_mediamosa = mediamosa::get();
+
+    $a_app_ids = $this->get_param_value_app();;
+    $app_id = reset($a_app_ids);
+    $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
+
+    $asset_id = $this->get_param_value(self::ASSET_ID);
+
+    if ($this->isset_param(self::USER_ID)) {
+    	$this->set_param_value(self::AUT_USER_ID, $this->get_param_value(self::USER_ID));
+    }
+
+    $aut_user_id = $this->get_param_value(self::AUT_USER_ID);
+    $a_aut_group_id = $this->get_param_value(self::AUT_GROUP_ID);
+    $aut_domain = $this->get_param_value(self::AUT_DOMAIN);
+    $aut_realm = $this->get_param_value(self::AUT_REALM);
+    $tag = $this->get_param_value(self::TAG);
+    $is_oai = $this->get_param_value(self::IS_OAI);
+
+    $show_stills = $this->get_param_value(self::SHOW_STILLS);
+    $show_collections = $this->get_param_value(self::SHOW_COLLECTIONS);
+
+    // Hotfix, we dont provide this, we always return the asset, so always supply the granted flag
+    $granted = TRUE;
+
+    // Asset must exist.
+    mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id, mediamosa_asset_db::PARENT_ID => NULL));
+
+    // ACL check.
+    mediamosa_aut::read_single_object(mediamosa_aut::AUT_TYPE_ASSET, $asset_id, $a_app_ids);
+
+    // Check un/inappropriate flag.
+    mediamosa_asset::is_unappropriate($asset_id, $a_app_ids, $aut_user_id, $is_app_admin);
+
+    // Collect
+    $a_items = mediamosa_asset::asset_collect(
+      array($asset_id),
+      $a_app_ids,
+      $aut_user_id,
+      $granted,
+      $a_aut_group_id,
+	    $aut_domain,
+	    $aut_realm,
+      $is_app_admin,
+      $this->get_param_value(self::SHOW_STILLS),
+      $this->get_param_value(self::SHOW_COLLECTIONS)
+    );
+
+    // Add mediafiles.
+    $a_mediafile_ids = mediamosa_asset_mediafile::mediafiles_search($asset_id, $tag);
+
+    // Now enrich the output.
+    $a_items[0]['mediafiles'] = mediamosa_asset_mediafile::enrich_response_mediafile($a_mediafile_ids, $a_app_ids, $is_oai, $show_stills);
+
+    // Add to response.
+    foreach ($a_items as $a_item) {
+    	$o_mediamosa->add_item($a_item);
+    }
+
+    // Increase viewed.
+    mediamosa_asset::asset_viewed($asset_id);
+/*
+    // toevoegen van mediafile informatie:
+    $res = _media_management_search_mediafiles($a_funcparam);
+    if ($res) {
+      foreach ($res->response['items'] as $r_key => $r_value) {
+        $results->response['items']['1']['mediafiles']['mediafile_'.$r_key] = $r_value;
+      }
+    }
+/*
+    if (isset($a_args['show_collections']) && $a_args['show_collections'] == 'TRUE') {
+      // toevoegen van collection informatie:
+      db_set_active('data');
+      $result = db_query("SELECT c.coll_id, c.title FROM {asset_collection} ac
+        LEFT JOIN {collection} c USING(coll_id)
+        WHERE ac.asset_id = '%s'", $asset_id);
+
+      while ($rs = db_fetch_object($result)) {
+        $results->response['items']['collection']['#' . serialize( array('id' => $rs->coll_id))] = $rs->title;
+      }
+      db_set_active();
+    }
+*/
   }
 }

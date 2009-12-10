@@ -65,7 +65,7 @@ function mediamosa_menu() {
 
   $items[MEDIAMOSA_MENU_PATH] = array(
     'type' => MENU_CALLBACK,
-    'page callback' => 'mediamosa',
+    'page callback' => '_mediamosa',
     'access arguments' => array(MEDIAMOSA_PERM_REST_ACCESS),
   );
 
@@ -87,27 +87,15 @@ function mediamosa_permission() {
 /**
  * The MediaMosa REST menu callback.
  */
-function mediamosa() {
-  try {
+function _mediamosa() {
+  // Create and get the core object.
+  $o_mediamosa = mediamosa::get();
 
-    // Create and get the core object.
-    $o_mediamosa = mediamosa::get();
+  // Now call the rest process function to process possible rest call.
+  $o_mediamosa->process_rest();
 
-    // Now call the rest process function to process possible rest call.
-    $output = $o_mediamosa->process_rest();
-  }
-  catch (Exception $e) {
-    mediamosa::exit_503(mediamosa::t('Unhandled exception;') . ' ' . $e->getMessage());
-  }
-
-  // Process the restcall's output
-  if (is_null($output)) {
-    mediamosa::exit_404(mediamosa::t('The requested MediaMosa REST call cannot be found.'));
-  }
-  else {
-    header($output['header']);
-    echo $output['content'];
-  }
+  // If our the URL didn't match, then at this point we return MENU_NOT_FOUND for drupal.
+  return MENU_NOT_FOUND;
 }
 
 /**

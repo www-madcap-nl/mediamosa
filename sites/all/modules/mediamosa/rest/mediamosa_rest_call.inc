@@ -31,10 +31,10 @@
 abstract class mediamosa_rest_call {
   // ------------------------------------------------------------------ Members.
   // Original REST call arguments.
-  public $a_rest_args = array();
+  private $a_rest_args = array();
 
   // Check if there are unspecified arguments and throw exception when we have unspecified arguments.
-  protected $m_check_for_unspecified = FALSE;
+  protected $check_for_unspecified = FALSE;
 
   // ------------------------------------------------------------------ Constants.
   const ID = 'uri_id';
@@ -64,9 +64,14 @@ abstract class mediamosa_rest_call {
   const VERSION_MAX_LEN = 12;
 
   // Access to the REST call.
-  const ACCESS_INTERNAL = 'access_internal'; // default TRUE. By default all REST calls can be access through internal method.
-  const ACCESS_EXTERNAL = 'access_external'; // default FALSE. By default all REST calls can not be access 'free'.
-  const AUTHENTICATION_APP = 'authentication_application'; // default TRUE. By default all REST calls can be access through APP authentication.
+  const ACCESS = 'access';      // Value OR'd;
+  const ACCESS_INTERNAL = 1;    // Access to REST call when internally accessed.
+  const ACCESS_INTERNAL_ONLY = 1;    // Access to REST call internally only..
+  const ACCESS_EXTERNAL = 2;    // Access to REST call when externally accessed.
+  const ACCESS_EXTERNAL_ONLY = 2;    // Access to REST call externally only.
+  const ACCESS_AUTHENTICATED = 4; // Access to REST call when authenticated (true came back in the auth hook).
+  const ACCESS_AUTHENTICATED_ONLY = 4; // Access to REST call when authenticated only.
+  const ACCESS_DEFAULT = 5;     // Access default allowes external and authenticated access.
 
   const DESCRIPTION = 'description';   // Description of the REST call (In English, required).
 
@@ -98,6 +103,7 @@ abstract class mediamosa_rest_call {
   const VAR_DESCRIPTION = 'description';   // Description of the var (In English).
   const VAR_ALLOWED_VALUES = 'a_allowed_values'; // Optional array for checking against allowed values.
   const VAR_IS_READ_ONLY = 'read_only'; // default no. Some vars may not be changed.
+  const VAR_IS_INTERNAL_ONLY = 'internal_only'; // If true, then this variable is only accepted by internals.
 
   // Values VAR_IS_REQUIRED
   const VAR_IS_REQUIRED_YES = 'YES';
@@ -111,9 +117,13 @@ abstract class mediamosa_rest_call {
   const VAR_TRIM_VALUE_YES = 'YES';
   const VAR_TRIM_VALUE_NO = 'NO';
 
-  // Values TRIM_VALUE
+  // Values VAR_IS_READ_ONLY
   const VAR_IS_READ_ONLY_YES = 'YES';
   const VAR_IS_READ_ONLY_NO = 'NO';
+
+    // Values VAR_IS_INTERNAL_ONLY
+  const VAR_IS_INTERNAL_ONLY_YES = 'YES';
+  const VAR_IS_INTERNAL_ONLY_NO = 'NO';
 
   // Param fields
   const PARAM_VALUE = 'value';
@@ -142,9 +152,7 @@ abstract class mediamosa_rest_call {
     $this->{self::DESCRIPTION} = $a_rest_call[self::DESCRIPTION];
 
     // Access.
-    $this->{self::ACCESS_INTERNAL} = $a_rest_call[self::ACCESS_INTERNAL];
-    $this->{self::ACCESS_EXTERNAL} = $a_rest_call[self::ACCESS_EXTERNAL];
-    $this->{self::AUTHENTICATION_APP} = $a_rest_call[self::AUTHENTICATION_APP];
+    $this->{self::ACCESS} = $a_rest_call[self::ACCESS];
 
     // Other.
     $this->{self::URI_PARAMS} = isset($a_rest_call[self::URI_PARAMS]) ? $a_rest_call[self::URI_PARAMS] : array();
@@ -175,7 +183,7 @@ abstract class mediamosa_rest_call {
     assert($a_var_setup);
 
     // @todo: make this an setting per webservice or else we are not 1.x compatible. Default should be FALSE.
-    $this->m_check_for_unspecified = TRUE;
+    $this->check_for_unspecified = TRUE;
 
     // Check rest args.
     $a_var_setup = $this->process_rest_args($a_var_setup);
@@ -203,7 +211,7 @@ abstract class mediamosa_rest_call {
     // @todo: only in some case, like internals?
     $a_var_setup[mediamosa_rest_call::VARS][mediamosa_rest_call::IS_APP_ADMIN] = array(
       self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
-      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
       self::VAR_DESCRIPTION => mediamosa::t('A boolean to indicate override by global APP admin. Is ignored by most REST calls.'),
       self::VAR_DEFAULT_VALUE => 'FALSE',
     );
@@ -237,11 +245,25 @@ abstract class mediamosa_rest_call {
       self::VAR_DEFAULT_VALUE => 0,
       self::VAR_IS_READ_ONLY => self::VAR_IS_READ_ONLY_YES, // Once set, dont change.
       self::VAR_DESCRIPTION => mediamosa::t('The starting items position in the result set.'),
-      self::VAR_RANGE_START => 0,
-      self::VAR_RANGE_END => $limit_max,
     );
 
     return $a_var_setup;
+  }
+
+  /**
+   * Gives true back if call is internal call.
+   * @todo: actualy return true when internal.
+   */
+  protected function call_is_internal() {
+  	return FALSE;
+  }
+
+  /**
+   * Gives true back if call is internal call.
+   * @todo: actualy return true when external.
+   */
+  protected function call_is_external() {
+    return FALSE;
   }
 
   /**
@@ -294,13 +316,13 @@ abstract class mediamosa_rest_call {
    * @return mixed
    */
   public function get_param_value($param) {
-  	if (!isset($this->a_rest_args[$param])) {
+    if (!isset($this->a_rest_args[$param])) {
       throw new mediamosa_exception_program_error('Calling get_param with non-existing param (@param), should not happen; define it in allowed vars for your rest call class "@restcall"', array('@param' => $param, '@restcall' => $this->{self::CLASS_NAME}));
     }
 
     if (!$this->a_rest_args[$param][self::PARAM_VALIDATED]) {
       $a_param = $this->a_rest_args[$param];
-    	$this->a_rest_args[$param][self::PARAM_VALUE] = mediamosa_type::check($param, $a_param[self::PARAM_TYPE], $a_param[self::PARAM_VALUE], $a_param[self::PARAM_IS_REQUIRED] == self::VAR_IS_REQUIRED_YES, $a_param[self::PARAM_RANGE_START], $a_param[self::PARAM_RANGE_END], isset($a_param[self::PARAM_ALLOWED_VALUES]) && count($a_param[self::PARAM_ALLOWED_VALUES]) ? $a_param[self::PARAM_ALLOWED_VALUES] : NULL);
+      $this->a_rest_args[$param][self::PARAM_VALUE] = mediamosa_type::check($param, $a_param[self::PARAM_TYPE], $a_param[self::PARAM_VALUE], $a_param[self::PARAM_IS_REQUIRED] == self::VAR_IS_REQUIRED_YES, $a_param[self::PARAM_RANGE_START], $a_param[self::PARAM_RANGE_END], isset($a_param[self::PARAM_ALLOWED_VALUES]) && count($a_param[self::PARAM_ALLOWED_VALUES]) ? $a_param[self::PARAM_ALLOWED_VALUES] : NULL);
       $this->a_rest_args[$param][self::PARAM_VALIDATED] = TRUE;
     }
 
@@ -315,7 +337,7 @@ abstract class mediamosa_rest_call {
    * @param mixed $value
    */
   public function set_param_value($param, $value) {
-  	if ($this->a_rest_args[$param][self::PARAM_IS_READ_ONLY] == self::VAR_IS_READ_ONLY_YES) {
+    if ($this->a_rest_args[$param][self::PARAM_IS_READ_ONLY] == self::VAR_IS_READ_ONLY_YES) {
       throw new mediamosa_exception_program_error('Do not set param @param, its read only.', array('@param' => $param));
     }
 
@@ -326,13 +348,22 @@ abstract class mediamosa_rest_call {
   }
 
   /**
+   * Unset param from var listing.
+   *
+   * @param string $param
+   */
+  public function unset_param($param) {
+    $this->set_param_value($param, NULL);
+  }
+
+  /**
    * Will return TRUE if the param is set.
    *
    * @param string $param
    * @return boolean
    */
   public function isset_param($param) {
-    return isset($this->a_rest_args[$param]);
+    return isset($this->a_rest_args[$param]) && isset($this->a_rest_args[$param][self::PARAM_VALUE]);
   }
 
   /**
@@ -413,7 +444,7 @@ abstract class mediamosa_rest_call {
     // Clear it.
     $this->a_rest_args = array();
     foreach ($this->{self::URI_PARAMS} as $key_uri => $value_uri) {
-      if (!isset($a_var_setup[self::VARS][$key_uri]) && $this->m_check_for_unspecified) {
+      if (!isset($a_var_setup[self::VARS][$key_uri]) && $this->check_for_unspecified) {
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_UNSPECIFIED_VARIABLE, array('@var' => $key_uri));
       }
 
@@ -426,7 +457,7 @@ abstract class mediamosa_rest_call {
         continue; // Ignore the q variable.
       }
 
-      if (!isset($a_var_setup[self::VARS][$key_get]) && $this->m_check_for_unspecified) {
+      if (!isset($a_var_setup[self::VARS][$key_get]) && $this->check_for_unspecified) {
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_UNSPECIFIED_VARIABLE, array('@var' => $key_get));
       }
 
@@ -443,7 +474,7 @@ abstract class mediamosa_rest_call {
 
     // Now do the same to _POST.
     foreach ($_POST as $key_post => $value_post) {
-      if (!isset($a_var_setup[self::VARS][$key_post]) && $this->m_check_for_unspecified) {
+      if (!isset($a_var_setup[self::VARS][$key_post]) && $this->check_for_unspecified) {
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_UNSPECIFIED_VARIABLE, array('@var' => $key_post));
       }
 
@@ -467,9 +498,22 @@ abstract class mediamosa_rest_call {
       // Set by default off.
       $this->a_rest_args[$param][self::PARAM_ISSET_DEFAULT] = FALSE; // Set by default
 
+      // If variable is internal value only, then we set the value to default or NULL. Put it on READ ONLY.
+      // If REST has tried set then we throw exception.
+      if (isset($a_var[self::VAR_IS_INTERNAL_ONLY]) && $a_var[self::VAR_IS_INTERNAL_ONLY] == self::VAR_IS_INTERNAL_ONLY_YES  && !$this->call_is_internal()) {
+        if (isset($this->a_rest_args[$param][self::PARAM_VALUE])) {
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INTERNAL_ONLY, array('@param' => $param, '@type' => $this->a_rest_args[$param][self::PARAM_TYPE]));
+        }
+
+      	unset($this->a_rest_args[$param][self::PARAM_VALUE]);
+        if (!isset($a_var[self::VAR_IS_READ_ONLY])) {
+          $a_var[self::VAR_IS_READ_ONLY] = self::VAR_IS_READ_ONLY_YES;
+        }
+      }
+
       // Make sure its set, even when empty.
       if (!isset($this->a_rest_args[$param][self::PARAM_VALUE])) {
-        $this->a_rest_args[$param][self::PARAM_VALUE] = ''; // Default empty.
+        $this->a_rest_args[$param][self::PARAM_VALUE] = NULL; // Default NULL.
 
         // Defaults.
         if (isset($a_var[self::VAR_DEFAULT_VALUE])) {
@@ -482,13 +526,15 @@ abstract class mediamosa_rest_call {
       $this->a_rest_args[$param][self::PARAM_VALIDATED] = FALSE;
 
       // array check.
-      if (!isset($a_var[self::VAR_IS_ARRAY]) || $a_var[self::VAR_IS_ARRAY] == self::VAR_IS_ARRAY_NO) {
-        if (is_array($this->a_rest_args[$param][self::PARAM_VALUE])) {
-          $this->a_rest_args[$param][self::PARAM_VALUE] = reset($this->a_rest_args[$param][self::PARAM_VALUE]);
+      if (isset($this->a_rest_args[$param][self::PARAM_VALUE])) {
+        if (!isset($a_var[self::VAR_IS_ARRAY]) || $a_var[self::VAR_IS_ARRAY] == self::VAR_IS_ARRAY_NO) {
+          if (is_array($this->a_rest_args[$param][self::PARAM_VALUE])) {
+            $this->a_rest_args[$param][self::PARAM_VALUE] = reset($this->a_rest_args[$param][self::PARAM_VALUE]);
+          }
         }
-      }
-      elseif (!is_array($this->a_rest_args[$param][self::PARAM_VALUE])) {
-        $this->a_rest_args[$param][self::PARAM_VALUE] = $this->a_rest_args[$param][self::PARAM_VALUE] == '' ? array() : array($this->a_rest_args[$param][self::PARAM_VALUE]);
+        elseif (!is_array($this->a_rest_args[$param][self::PARAM_VALUE])) {
+          $this->a_rest_args[$param][self::PARAM_VALUE] = $this->a_rest_args[$param][self::PARAM_VALUE] == '' ? array() : array($this->a_rest_args[$param][self::PARAM_VALUE]);
+        }
       }
 
       // Check if we need to trim it.

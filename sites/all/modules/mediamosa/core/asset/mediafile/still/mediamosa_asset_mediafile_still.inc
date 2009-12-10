@@ -49,7 +49,7 @@ class mediamosa_asset_mediafile_still {
    * @param string $mediafile_id_source
    * @param string $tag
    */
-  function create($asset_id, $asset_parent_id, $still_id, $app_id, $owner_id, $group_id, $order, $still_default = TRUE, $a_still_parameters = NULL, $sec = 0, $mediafile_id_source = '', $tag = '') {
+  static public function create($asset_id, $asset_parent_id, $still_id, $app_id, $owner_id, $group_id, $order, $still_default = TRUE, $a_still_parameters = NULL, $sec = 0, $mediafile_id_source = '', $tag = '') {
 
     // Get path to still.
     $still_filename = mediamosa_configuration_storage::mediafile_still_filename_get($still_id);
@@ -159,10 +159,10 @@ class mediamosa_asset_mediafile_still {
     );
 
     mediamosa_db::db_query(
-      "UPDATE {#mediamosa_asset_mediafile_metadata} AS mm
-      INNER JOIN {#mediamosa_asset_mediafile} AS m USING(#mediafile_id)
-      SET mm.#still_order = :still_order
-      WHERE mm.#mediafile_id = :mediafile_id AND m.#asset_id_root = :asset_id_root AND m.#is_still = :is_still_true",
+      "UPDATE {#mediamosa_asset_mediafile_metadata} AS mfmd
+       INNER JOIN {#mediamosa_asset_mediafile} AS m ON m.#mediafile_id = mfdm.mediafile_id
+       SET mfmd.#still_order = :still_order
+       WHERE mfmd.#mediafile_id = :mediafile_id AND m.#asset_id_root = :asset_id_root AND m.#is_still = :is_still_true",
       array(
         '#mediamosa_asset_mediafile_metadata' => mediamosa_asset_mediafile_metadata_db::TABLE_NAME,
         '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
@@ -268,13 +268,13 @@ class mediamosa_asset_mediafile_still {
    * @param $still_id
    *  Remove specific still.
    */
-  function delete($asset_id, $mediafile_id = NULL, $still_id = NULL) {
+  static public function delete($asset_id, $mediafile_id = '', $still_id = '') {
 
     // Can not be set both.
-    assert(isset($still_id) && isset($mediafile_id));
+    assert($still_id != '' && $mediafile_id != '');
 
     // Get the mediafile stills we need to remove.
-    if ($still_id) {
+    if ($still_id != '') {
       // Get specific still.
       $result = mediamosa_db::db_query(
         'SELECT #mediafile_id AS still_id, #app_id, #sannas_mount_point, #mediafile_id_source FROM {#mediamosa_asset_mediafile} WHERE #mediafile_id = :mediafile_id AND #is_still = :is_still_true AND #asset_id_root = :asset_id_root',
@@ -292,7 +292,7 @@ class mediamosa_asset_mediafile_still {
         )
       );
     }
-    elseif ($mediafile_id) {
+    elseif ($mediafile_id != '') {
       // Get all stills of mediafile.
       $result = mediamosa_db::db_query(
         'SELECT s.#mediafile_id AS still_id, s.#app_id, s.#sannas_mount_point, s.#mediafile_id_source FROM {mediafile} AS s
@@ -344,7 +344,7 @@ class mediamosa_asset_mediafile_still {
       // Collect the mediafile id of the still.
       $a_mediafile_ids[] = $a_row['still_id'];
 
-      if (!isset($mediafile_id)) {
+      if ($mediafile_id == '') {
         $mediafile_id = $a_row[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE];
       }
     }
@@ -441,7 +441,7 @@ class mediamosa_asset_mediafile_still {
    * @param string $still_id
    *  The still ID.
    */
-  function set_still_default($asset_id, $mediafile_id, $still_id) {
+  static public function set_still_default($asset_id, $mediafile_id, $still_id) {
     mediamosa::log(
       'Setting default still: asset_id = @asset_id; mediafile_id = @mediafile_id; still_id = @still_id',
       array(

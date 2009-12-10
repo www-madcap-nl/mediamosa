@@ -90,13 +90,21 @@ class mediamosa_response extends mediamosa {
         return;// At this point we are at interface mode.
       }
 
-      // Process rest call.
-      $a_rest_call = $this->o_mediamosa_rest->process_call();
+      // Find the rest call.
+      $a_rest_call = $this->o_mediamosa_rest->match_call();
 
-      // If we return FALSE, try to let Drupal handle the output.
+      // If we return here, try to let Drupal handle the output.
       if (!$a_rest_call) {
         return;
       }
+
+      // Make sure response type is set.
+	    if (!isset($a_rest_call[mediamosa_rest_call::RESPONSE_TYPE])) {
+	      $a_rest_call[mediamosa_rest_call::RESPONSE_TYPE] = mediamosa_rest_call::RESPONSE_TYPE_XML;
+	    }
+
+	    // Now execute the call.
+	    $this->o_mediamosa_rest->process_call($a_rest_call);
     }
     catch (mediamosa_exception_no_rest_interface $e) {
       mediamosa::exit_503(mediamosa::t('No MediaMosa REST interface available...'));
@@ -111,21 +119,16 @@ class mediamosa_response extends mediamosa {
       $this->set_result(self::ERROR, $e->getCode(), $e->getMessage());
     }
 
-    // Make sure response type is set.
-    if (!isset($a_rest_call) || !$a_rest_call || !isset($a_rest_call[mediamosa_rest_call::RESPONSE_TYPE])) {
-      $a_rest_call[mediamosa_rest_call::RESPONSE_TYPE] = mediamosa_rest_call::RESPONSE_TYPE_XML;
-    }
-
     try {
       switch ($a_rest_call[mediamosa_rest_call::RESPONSE_TYPE]) {
         case mediamosa_rest_call::RESPONSE_TYPE_PLAIN:
-          $output['header'] = 'Content-Type: text/plain; charset=utf-8';
-          $output['content'] = $this->generate_plain_text();
+          header('Content-Type: text/plain; charset=utf-8');
+          $output = $this->generate_plain_text();
           break;
         case mediamosa_rest_call::RESPONSE_TYPE_XML:
         default:
-          $output['header'] = 'Content-Type: text/xml; charset=utf-8';
-          $output['content'] = $this->generate_xml();
+          header('Content-Type: text/xml; charset=utf-8');
+          $output = $this->generate_xml();
           break;
       }
     }
@@ -133,8 +136,9 @@ class mediamosa_response extends mediamosa {
       $this->set_result(self::ERROR, $e->getCode(), $e->getMessage());
     }
 
-    // Return our content.
-    return (isset($output)) ? $output : NULL;
+    // Stop and output our content.
+    // Might run any added exit functions (drupal).
+    exit($output);
   }
 
   /**

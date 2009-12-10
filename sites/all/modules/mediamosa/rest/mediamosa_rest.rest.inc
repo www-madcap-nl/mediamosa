@@ -54,7 +54,7 @@ class mediamosa_rest_call_list extends mediamosa_rest_call {
     $offset = $this->get_param_value(mediamosa_rest_call::OFFSET);
 
     // Get all rest calls.
-    $a_calls = mediamosa_rest::get_rest_calls($limit, $offset, TRUE);
+    $a_calls = mediamosa_rest::get_rest_calls($limit, $offset);
 
     foreach ($a_calls as $a_call_2) { // Method
       foreach ($a_call_2 as $a_call) { // Uri
@@ -90,7 +90,7 @@ class mediamosa_rest_call_get extends mediamosa_rest_call {
     $uri_id = $this->get_param_value(mediamosa_rest_call::ID);
 
     // Get all rest calls.
-    $a_calls = mediamosa_rest::get_rest_calls(0, 0, TRUE, mediamosa_rest_call::ID, NULL);
+    $a_calls = mediamosa_rest::get_rest_calls(0, 0, mediamosa_rest_call::ID, NULL);
 
     if (!isset($a_calls[$uri_id])) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_NOT_FOUND, array('@uri_id' => $uri_id));
@@ -101,7 +101,7 @@ class mediamosa_rest_call_get extends mediamosa_rest_call {
 
     // Turn off so we can call the get_var_setup without problems.
     // Although get_var_setup should not test variables.
-    $o_rest_call->m_check_for_unspecified = FALSE;
+    $o_rest_call->check_for_unspecified = FALSE;
 
     // Get the var setup for this call.
     $a_var_setup = $o_rest_call->get_var_setup();
