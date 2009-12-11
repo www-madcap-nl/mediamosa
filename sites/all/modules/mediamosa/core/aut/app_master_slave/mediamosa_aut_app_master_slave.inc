@@ -52,13 +52,12 @@ class mediamosa_aut_app_master_slave {
         assert(0);
         return '';
     }
-
     return strtr(
-      "LEFT JOIN {#aut_app_master_slave} AS aut_ms ON aut_ms.aut_object_type='%s' AND %s = aut_ms.aut_object_id",
+      "LEFT JOIN {#aut_app_master_slave} AS aut_ms ON aut_ms.aut_object_type = '@aut_object_type' AND @on = aut_ms.aut_object_id",
       array(
         '#aut_app_master_slave' => mediamosa_aut_app_master_slave_db::TABLE_NAME,
-        '#aut_object_type' => $aut_type,
-        '#on' => $on
+        '@aut_object_type' => $aut_type,
+        '@on' => $on
       )
     );
   }
