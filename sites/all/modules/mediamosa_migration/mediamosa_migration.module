@@ -29,3 +29,4 @@
  * Migration of 1.x to 2.x
  */
 
+define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_MIGRATION', 'MediaMosa Migration');

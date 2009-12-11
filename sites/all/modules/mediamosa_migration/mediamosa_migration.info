@@ -12,3 +12,4 @@ dependencies[] = mediamosa
 
 ; Migration files.
 files[] = mediamosa_migration.install
+files[] = mediamosa_migration.test
