@@ -202,7 +202,7 @@ function mediamosa_browse_collection_form() {
     $header = array(
       array('field' => 'title', 'data' => t('Title')),
       array('field' => 'app_id', 'data' => t('App ID')),
-      array('field' => 'videotimestampmodified', 'data' => t('Last modified')),
+      array('field' => 'changed', 'data' => t('Last modified')),
     );
     $_SESSION[MEDIAMOSA_BROWSE_COLLECTIONS_SESSION]['tablesort'] = (isset($_GET['order'])) ? tablesort_init($header) : FALSE;
 
@@ -240,11 +240,11 @@ function mediamosa_browse_collection_form() {
 
     $rows = array();
     foreach ($result->xpath('//items/item') as $collection) {
-      $title = (isset($collection->dublin_core->title) && trim((string)$collection->dublin_core->title) != '') ? $collection->dublin_core->title : t('<title not set>');
+      $title = (isset($collection->title) && trim((string)$collection->title) != '') ? $collection->title : t('<title not set>');
       $rows[] = array(
-        l($title, 'mm_browse_collection/'. $collection->collection_id),
+        l($title, 'mm_browse_asset', array('query' => array('coll_id' => $collection->coll_id))),
         $collection->app_id,
-        $collection->videotimestampmodified,
+        $collection->changed,
       );
     }
 
@@ -282,8 +282,4 @@ function mediamosa_browse_collection_form_submit($form, $form_state) {
     'filters' => $filters,
     'app_id' => $form_state['values']['app_id'],
   );
-
-  if ($form_state['values']['coll_id'] != '') {
-    $_SESSION[MEDIAMOSA_BROWSE_COLLECTIONS_SESSION]['coll_id'] = $form_state['values']['coll_id'];
-  }
 }
