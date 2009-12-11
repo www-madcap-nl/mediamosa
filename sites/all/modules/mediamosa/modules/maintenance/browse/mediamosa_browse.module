@@ -62,6 +62,7 @@ function mediamosa_browse_menu() {
   );
   $items['mm_browse_asset/%'] = array(
     'title' => 'MediaMosa asset details',
+    'type' => MENU_CALLBACK,
     'page callback' => 'mediamosa_browse_asset_details',
     'page arguments' => array(1),
     'access arguments' => array(MEDIAMOSA_BROWSE_PERM_BROWSE_ASSETS),
