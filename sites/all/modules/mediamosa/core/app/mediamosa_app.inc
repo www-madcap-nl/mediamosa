@@ -58,13 +58,37 @@ class mediamosa_app {
 
     if (count($a_fields)) {
       foreach ($a_fields as $key => $field) {
-    	  $query->addField('app', $field, (is_numeric($key) ? $field : $key));
+        $query->addField('app', $field, (is_numeric($key) ? $field : $key));
       }
     }
     else {
       $query->fields();
     }
     $query->condition(mediamosa_app_db::APP_ID, $a_app_id, 'IN');
+    return $query->execute();
+  }
+
+  /**
+   * Get all apps.
+   *
+   * @return array
+   */
+  static public function get_all_apps(array $a_fields = array(), $order_by = FALSE, $order_direction = 'ASC') {
+    $query = mediamosa_db::db_select(mediamosa_app_db::TABLE_NAME, 'app');
+
+    if (count($a_fields)) {
+      foreach ($a_fields as $key => $field) {
+        $query->addField('app', $field, (is_numeric($key) ? $field : $key));
+      }
+    }
+    else {
+      $query->fields('app', array(mediamosa_app_db::APP_ID, mediamosa_app_db::NAME));
+    }
+
+    // Order the results
+    if ($order_by !== FALSE) {
+      $query->orderBy($order_by, $order_direction);
+    }
     return $query->execute();
   }
 }
