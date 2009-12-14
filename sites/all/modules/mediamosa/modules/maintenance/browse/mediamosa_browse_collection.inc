@@ -29,15 +29,6 @@
   */
 
 /**
- * Single collection details.
- */
-function mediamosa_browse_collection_details($collection_id) {
-  $result = _mediamosa_restcall('GET', '/collection/'. $collection_id, array());
-  var_dump($result);
-  return 'test';
-}
-
-/**
  * Helper function for the collection filter form
  */
 function _mediamosa_browse_collection_list_filter() {

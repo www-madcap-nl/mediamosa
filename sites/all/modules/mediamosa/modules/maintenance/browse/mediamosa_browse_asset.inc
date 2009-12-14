@@ -37,6 +37,20 @@ function mediamosa_browse_asset_details($asset_id) {
   return '@TODO!';
 }
 
+function _mediamosa_browse_asset_get_all_collections($app_id) {
+  $app_ids = explode(' ', $app_id);
+
+  $result = _mediamosa_restcall('GET', '/collection', array('app_id' => $app_ids));
+
+  $collections = array();
+  foreach ($result->xpath('//items/item') as $collection) {
+    $title = trim((string)$collection->title);
+    $collections[(string)$collection->coll_id] = ($title != '') ? $title : t('<title not set>');
+  }
+
+  return $collections;
+}
+
 /**
  * Helper function for the asset filter form
  */
@@ -156,7 +170,6 @@ function _mediamosa_browse_asset_get_cql_from_session() {
   return $data;
 }
 
-
 /**
  * The browse form which also contains a list of browsable assets.
  */
@@ -186,12 +199,19 @@ function mediamosa_browse_asset_form() {
     '#default_value' => $app_id,
   );
 
-  $all_collections = array(0 => '@todo');
+  $all_collections_raw = _mediamosa_browse_asset_get_all_collections($app_id);
+  if (count($all_collections_raw)) {
+    $all_collections = array_merge(array(0 => ''), $all_collections_raw);
+  }
+  else {
+    $all_collections = array(0 => t('No collections found...'));
+  }
+  $coll_id = (isset($_SESSION[MEDIAMOSA_BROWSE_ASSETS_SESSION]['coll_id'])) ? $_SESSION[MEDIAMOSA_BROWSE_ASSETS_SESSION]['coll_id'] : 0;
   $form['coll_id'] = array(
     '#type' => 'select',
     '#options' => $all_collections,
     '#title' => t('Collection'),
-    '#disabled' => TRUE,
+    '#default_value' => $coll_id,
   );
 
   // Get the current filter count
@@ -351,7 +371,7 @@ function mediamosa_browse_asset_form_submit($form, $form_state) {
     'app_id' => $form_state['values']['app_id'],
   );
 
-  if ($form_state['values']['coll_id'] != '') {
+  if ($form_state['values']['coll_id'] != 0) {
     $_SESSION[MEDIAMOSA_BROWSE_ASSETS_SESSION]['coll_id'] = $form_state['values']['coll_id'];
   }
 }
