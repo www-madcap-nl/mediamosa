@@ -1,0 +1,904 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is a Full Featured, Webservice Oriented Media Management and
+ * Distribution platform (http://www.vpcore.nl)
+ *
+ * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * @file
+ *
+ */
+
+function vpx_upload_create_ticket($a_args) {
+  $a_parameters = array(
+    'app_id' => array(
+      'value' => vpx_get_parameter_2($a_args['get'], 'app_id'),
+      'type' => 'int',
+      'required' => TRUE
+    ),
+    'user_id' => array(
+      'value' => vpx_get_parameter_2($a_args['get'], 'user_id'),
+      'type' => TYPE_USER_ID,
+      'required' => TRUE
+    ),
+    'group_id' => array(
+      'value' => vpx_get_parameter_2($a_args['get'], 'group_id', FALSE),
+      'type' => TYPE_GROUP_ID,
+    ),
+    'mediafile_id' => array(
+      'value' => vpx_get_parameter_2($a_args['uri'], 'mediafile_id'),
+      'type' => 'alphanum',
+      'required' => TRUE
+    ),
+  );
+
+  // Validate all of the parameters
+  $result = vpx_validate($a_parameters);
+  if (vpx_check_result_for_error($result)) {
+    return new rest_response($result);
+  }
+
+  // Check if the mediafile exists
+  if (vpx_count_rows("mediafile", array("mediafile_id", $a_parameters['mediafile_id']['value'])) == 0) {
+    return new rest_response(vpx_return_error(ERRORCODE_MEDIAFILE_NOT_FOUND));
+  }
+
+  // Check the target mediafile is transcoded or not (is_original_file must be TRUE)
+  //if (vpx_count_rows("mediafile", array("mediafile_id", $a_parameters['mediafile_id']['value'], "is_original_file", "TRUE")) != 1) {
+    // It is not a good behaviour till we may create ticket for still upload too
+    //return new rest_response(vpx_return_error(ERRORCODE_UPLOAD_TARGET_IS_NOT_AN_ORIGINAL_FILE));
+  //}
+
+  db_set_active('data');
+  $mf_app_id = db_result(db_query("SELECT app_id FROM {mediafile} where mediafile_id  = '%s' ", $a_parameters['mediafile_id']['value']));
+  $mf_owner  = db_result(db_query("SELECT owner_id FROM {mediafile} where mediafile_id  = '%s' ", $a_parameters['mediafile_id']['value']));
+  db_set_active();
+
+  // doe een ACL check
+  try {
+    vpx_acl_owner_check($a_parameters['app_id']['value'], $a_parameters['user_id']['value'], $mf_app_id, $mf_owner);
+  }
+  catch (vpx_exception_error_access_denied $e) {
+    return $e->vpx_exception_rest_response();
+  }
+
+// controleer of de user niet boven quota zit
+  $result = _user_management_check_user_quota($a_parameters['app_id']['value'], $a_parameters['user_id']['value'], $a_parameters['group_id']['value']);
+  if (vpx_check_result_for_error($result)) {
+    return new rest_response(vpx_return_error(ERRORCODE_NOT_ENOUGH_FREE_QUOTA));
+  }
+
+// maak een upload ticket aan in de ticket tabel
+  $s_ticket = vpx_create_hash($a_parameters['app_id']['value'], $a_parameters['user_id']['value']);
+  db_set_active('data');
+  db_query(
+    "INSERT INTO {ticket} (ticket_id, ticket_type, issued, app_id, user_id, group_id, mediafile_id) VALUES ('%s', '%s', NOW(), %d, '%s', '%s', '%s')",
+    $s_ticket,
+    TICKET_TYPE_UPLOAD,
+    $a_parameters['app_id']['value'],
+    $a_parameters['user_id']['value'],
+    $a_parameters['group_id']['value'],
+    $a_parameters['mediafile_id']['value']
+  );
+  db_set_active();
+
+  // zoek een active upload server en stel de action samen
+  $dbrow_server = db_fetch_array(db_query("SELECT uri, uri_uploadprogress FROM {upload_server} WHERE status = 1 ORDER BY RAND() LIMIT 1"));
+
+  $upload_uri = $dbrow_server['uri'];
+  $upload_action = str_replace("{TICKET}", $s_ticket, $upload_uri);
+  $upload_uri_uploadprogress = $dbrow_server['uri_uploadprogress'];
+
+  // geeft de ticket en action terug aan de ega
+  $rest_response = new rest_response(vpx_return_error(ERRORCODE_OKAY));
+  $rest_response->add_item(array(
+    //'upload_ticket' => $s_ticket, //(removed because already in the action URI.
+    'action' => $upload_action,
+    'uploadprogress_url' => $upload_uri_uploadprogress,
+  ));
+  return $rest_response;
+}
+
+
+function vpx_upload_cron() {
+  $i_upload_expire_timestamp = time() - UPLOAD_TICKET_EXPIRATION;
+  db_set_active('data');
+  db_query(
+    "DELETE FROM {ticket} WHERE ticket_type = '%s' AND issued <= FROM_UNIXTIME(%d)",
+    TICKET_TYPE_UPLOAD,
+    $i_upload_expire_timestamp
+  );
+  db_set_active();
+}
+
+
+function _vpx_upload_handle_file_put($destination, $job_id) {
+// indien de mediafile al bestaat, hernoem de nieuwe dan naar mediafile_id
+  if (file_exists($destination)) {
+    $destination_filename_after_upload = $destination;
+    $destination .= '.upload_temp';
+  }
+
+  // Zet de upload job op 'INPROGRESS'
+  $a_args = array(
+    'uri' => array(
+      'job_id' => $job_id,
+    ),
+    'post' => array(
+      'status' => JOBSTATUS_INPROGRESS,
+    )
+  );
+  vpx_jobs_set_job_status($a_args);
+
+  // Open the new file
+  $destination_file = @fopen($destination, 'w');
+  if (!$destination_file) {
+    throw new vpx_exception(0, "Unable to write to '". $destination ."'.", VPX_EXCEPTION_SEVERITY_HIGH);
+  }
+
+  // Open the stream
+  $stream = fopen('php://input', 'r');
+  if ($stream === FALSE) {
+    throw new vpx_exception(0, 'Unable to open stream', VPX_EXCEPTION_SEVERITY_HIGH);
+  }
+
+  $b_continue = TRUE;
+
+  $i_byte_count = 0;
+  $last_update = $i_timestamp = time();
+  while (($kb = fread($stream, CHUNK_SIZE)) && $b_continue) {
+    $b_continue = (@fwrite($destination_file, $kb, CHUNK_SIZE));
+    $i_byte_count += CHUNK_SIZE;
+
+    if ($last_update != time() && ((time() - $i_timestamp) % UPLOAD_PROGRESS_INTERVAL) == 0) {
+      $a_args = array('uri' => array('job_id' => $job_id), 'post' => array('uploaded_file_size' => $i_byte_count));
+      $last_update = time();
+      vpx_jobs_set_upload_progress($a_args);
+    }
+
+    if (!$b_continue) {
+      return FALSE;
+    }
+    header('HTTP/1.1 201 Created');
+  }
+
+  // Sluit de streams en files netjes af
+  fclose($destination_file);
+  fclose($stream);
+
+  // indien de mediafile al bestond, hernoem de nieuwe dan naar mediafile_id
+  if (isset($destination_filename_after_upload)) {
+    rename($destination, $destination_filename_after_upload);
+  }
+
+  return TRUE;
+}
+
+
+function vpx_upload_handle_file_put_app($a_args) {
+  $result = vpx_upload_create_ticket($a_args);
+  if (vpx_check_result_for_error($result)) {
+    return $result;
+  }
+
+  $offset = strpos($result->response['items'][1]['action'], 'upload_ticket');
+  $upload_ticket = substr($result->response['items'][1]['action'], $offset + 14);
+
+  $a_args['get']['upload_ticket'] = $upload_ticket; //$result->response['items'][1]['upload_ticket'];
+  return vpx_upload_handle_file_put($a_args);
+}
+
+
+function vpx_upload_handle_file_put($a_args) {
+  $a_args['internal']['put'] = 'TRUE';
+  return vpx_upload_handle_file($a_args);
+}
+
+
+function vpx_upload_handle_file($a_args) {
+  if ($a_args['get']['still_upload'] == 'TRUE' || $a_args['get']['type'] == 'still') {
+    if (!$a_args['get']['mediafile_id']) {
+      $a_args['get']['mediafile_id'] = $a_args['uri']['mediafile_id'];
+    }
+    return vpx_upload_handle_still($a_args);
+  }
+
+  $a_parameters = array(
+    'upload_ticket' => array(
+      'value' => vpx_get_parameter_2($a_args['get'], 'upload_ticket'),
+      'type' => VPX_TYPE_ALPHANUM,
+      'required' => TRUE
+    ),
+    'redirect_uri' => array(
+      'value' => vpx_get_parameter_2($a_args['post'], 'redirect_uri'),
+      'type' => 'skip',
+    ),
+    'transcode' => array(
+      'value' => vpx_get_parameter_2($a_args['get'], 'transcode', array()),
+      'type' => 'skip',
+    ),
+    'transcode_inherits_acl' => array(
+      'value' => vpx_get_parameter_2($a_args['post'], 'transcode_inherits_acl', 'FALSE'),
+      'type' => VPX_TYPE_BOOL,
+    ),
+    // Stills
+    'create_still' => array(
+      'value' => vpx_get_parameter_2($a_args['post'], 'create_still', 'FALSE'),
+      'type' => VPX_TYPE_BOOL,
+    ),
+    'still_type' => array(
+      'value' => vpx_get_parameter_2($a_args['post'], 'still_type', NULL),
+      'type' => VPX_TYPE_ALPHA,
+    ),
+    'still_per_mediafile' => array(
+      'value' => vpx_get_parameter_2($a_args['post'], 'still_per_mediafile', NULL),
+      'type' => VPX_TYPE_INT,
+    ),
+    'still_every_second' => array(
+      'value' => vpx_get_parameter_2($a_args['post'], 'still_every_second', NULL),
+      'type' => VPX_TYPE_INT,
+    ),
+    'start_frame' => array(
+      'value' => vpx_get_parameter_2($a_args['post'], 'start_frame', NULL),
+      'type' => VPX_TYPE_INT,
+    ),
+    'end_frame' => array(
+      'value' => vpx_get_parameter_2($a_args['post'], 'end_frame', NULL),
+      'type' => VPX_TYPE_INT,
+    ),
+    'size' => array(
+      'value' => vpx_get_parameter_2($a_args['post'], 'size', NULL),
+      'type' => VPX_TYPE_IGNORE,
+    ),
+    'h_padding' => array(
+      'value' => vpx_get_parameter_2($a_args['post'], 'h_padding', NULL),
+      'type' => VPX_TYPE_INT,
+    ),
+    'v_padding' => array(
+      'value' => vpx_get_parameter_2($a_args['post'], 'v_padding', NULL),
+      'type' => VPX_TYPE_INT,
+    ),
+    // Still parameters for backward compatibility
+    'frametime' => array(
+      'value' => vpx_get_parameter_2($a_args['post'], 'frametime', NULL),
+      'type' => VPX_TYPE_INT,
+    ),
+    'width' => array(
+      'value' => vpx_get_parameter_2($a_args['post'], 'width', NULL),
+      'type' => VPX_TYPE_INT,
+    ),
+    'height' => array(
+      'value' => vpx_get_parameter_2($a_args['post'], 'height', NULL),
+      'type' => VPX_TYPE_INT,
+    ),
+    // End stills
+    'retranscode' => array(
+      'value' => vpx_get_parameter_2($a_args['post'], 'retranscode', 'FALSE'),
+      'type' => VPX_TYPE_BOOL,
+    ),
+    'put' => array(
+      'value' => vpx_get_parameter_2($a_args['internal'], 'put', 'FALSE'),
+      'type' => VPX_TYPE_BOOL,
+    ),
+    'filename' => array(
+      'value' => vpx_get_parameter_2($a_args['get'], 'filename'),
+      'type' => 'skip',
+    ),
+    'completed_url' => array(
+      'value' => vpx_get_parameter_2($a_args['post'], 'completed_url'),
+      'type' => VPX_TYPE_URL,
+    ),
+    'completed_transcoding_url' => array(
+      'value' => vpx_get_parameter_2($a_args['post'], 'completed_transcoding_url'),
+      'type' => VPX_TYPE_URL,
+    ),
+    'tag' => array(
+      'value' => vpx_get_parameter_2($a_args['post'], 'tag'),
+      'type' => VPX_TYPE_STRING,
+    ),
+  );
+
+// PUT of POST?
+  $put_upload = vpx_shared_boolstr2bool($a_parameters['put']['value']);
+  $a_parameters['filename']['required'] = $put_upload;
+
+// valideer alle parameters op aanwezigheid en type
+  $result = vpx_validate($a_parameters);
+  if (vpx_check_result_for_error($result)) {
+    return new rest_response($result);
+  }
+
+// haal de upload ticket op uit de ticket tabel
+  db_set_active('data');
+  $i_upload_expire_timestamp = time() - UPLOAD_TICKET_EXPIRATION;
+  $a_ticket = db_fetch_array(db_query(
+    "SELECT * FROM {ticket} WHERE ticket_id = '%s' AND issued > FROM_UNIXTIME(%d)",
+    $a_parameters['upload_ticket']['value'],
+    $i_upload_expire_timestamp
+  ));
+  db_set_active();
+  if (!is_array($a_ticket)) {
+    if (!is_null($a_parameters['redirect_uri']['value'])) {
+      header(sprintf('Location: %s', $a_parameters['redirect_uri']['value']));
+      exit();
+    }
+    return new rest_response(vpx_return_error(ERRORCODE_INVALID_UPLOAD_TICKET));
+  }
+
+// indien er maar 1 transcode opgegeven is, maak er dan toch een array van
+  if (!is_array($a_parameters['transcode']['value']) && !is_null($a_parameters['transcode']['value'])) {
+    $a_parameters['transcode']['value'] = array($a_parameters['transcode']['value']);
+  }
+
+// verwijder de ticket
+  db_set_active('data');
+  db_query("DELETE FROM {ticket} WHERE ticket_id = '%s'", $a_parameters['upload_ticket']['value']);
+  db_set_active();
+
+// controleer of de user niet boven quota zit
+  $result = _user_management_check_user_quota($a_ticket['app_id'], $a_ticket['user_id'], $a_ticket['group_id']);
+  if (vpx_check_result_for_error($result)) {
+    return new rest_response(vpx_return_error(ERRORCODE_NOT_ENOUGH_FREE_QUOTA));
+  }
+
+  // Check is the mediafile exsits
+  if (vpx_count_rows("mediafile", array("mediafile_id", $a_ticket['mediafile_id'])) == 0) {
+    if (!is_null($a_parameters['redirect_uri']['value'])) {
+      header(sprintf('Location: %s', $a_parameters['redirect_uri']['value']));
+      exit();
+    }
+    return new rest_response(vpx_return_error(ERRORCODE_MEDIAFILE_NOT_FOUND, array("@mediafile_id" => $a_ticket['mediafile_id'])));
+  }
+
+  // Check the target mediafile is transcoded or not (is_original_file must be TRUE)
+  if (vpx_count_rows("mediafile", array("mediafile_id", $a_ticket['mediafile_id'], "is_original_file", "TRUE")) != 1) {
+    return new rest_response(vpx_return_error(ERRORCODE_UPLOAD_TARGET_IS_NOT_AN_ORIGINAL_FILE));
+  }
+
+// controleer of de upload webservice niet uitgeschakeld is
+  if (!vpx_shared_webservice_is_active('media_upload', $a_ticket['app_id'])) {
+    if (!is_null($a_parameters['redirect_uri']['value'])) {
+      header(sprintf('Location: %s', $a_parameters['redirect_uri']['value']));
+      exit();
+    }
+    return new rest_response(vpx_return_error(ERRORCODE_WEBSERVICE_DISABLED));
+  }
+
+// maak een upload job aan
+  $a_args = array(
+    'get' => array(
+      'user_id' => $a_ticket['user_id'],
+      'app_id' => $a_ticket['app_id'],
+      'mediafile_id' => $a_ticket['mediafile_id']
+    ),
+    'post' => array(
+      'job_type' => JOBTYPE_UPLOAD,
+      'file_size' => ($put_upload) ? $_SERVER['CONTENT_LENGTH'] : $_FILES['file']['size'],
+      'create_still' => $a_parameters['create_still']['value'],
+      'retranscode' => $a_parameters['retranscode']['value'],
+      'still_type' => $a_parameters['still_type']['value'],
+      'still_per_mediafile' => $a_parameters['still_per_mediafile']['value'],
+      'still_every_second' => $a_parameters['still_every_second']['value'],
+      'start_frame' => $a_parameters['start_frame']['value'],
+      'end_frame' => $a_parameters['end_frame']['value'],
+      'size' => $a_parameters['size']['value'],
+      'h_padding' => $a_parameters['h_padding']['value'],
+      'v_padding' => $a_parameters['v_padding']['value'],
+      'tag' => $a_parameters['tag']['value'],
+      'frametime' => $a_parameters['frametime']['value'],
+      'width' => $a_parameters['width']['value'],
+      'height' => $a_parameters['height']['value'],
+    ),
+  );
+  //watchdog('server', 'vpx_upload $a_args: '. print_r($a_args, TRUE));
+  //watchdog('server', 'vpx_upload $a_parameters: '. print_r($a_parameters, TRUE));
+  $result = vpx_jobscheduler_create_new_job($a_args);
+  $job_id = $result->response['items'][1]['job_id'];
+
+// sla het bestand op
+  $destination = SAN_NAS_BASE_PATH .'/'. DATA_LOCATION .'/'. $a_ticket['mediafile_id'][0] .'/'. $a_ticket['mediafile_id'];
+
+  if ($put_upload) { // PUT upload
+    $success = _vpx_upload_handle_file_put($destination, $job_id);
+  }
+  else { // POST upload
+    $success = (isset($_FILES['file']) && move_uploaded_file($_FILES['file']['tmp_name'], $destination));
+  }
+
+  // Trigger URI on external server with success or failure
+  $completed_url = $a_parameters['completed_url']['value'];
+
+  // Build the completed_url
+  if (!empty($completed_url)) {
+    $a_query = array();
+
+    $pos = strpos($completed_url, '?');// Lets see if there is a http query
+    if ($pos !== FALSE) {
+      if (strlen($completed_url) > $pos + 1) {
+        parse_str(substr($completed_url, $pos+1), $a_query);
+      }
+
+      $completed_url = substr($completed_url, 0, $pos);
+    }
+
+    $a_query['upload_ticket'] = $a_parameters['upload_ticket']['value'];
+    $a_query['status_code'] = $success ? ERRORCODE_OKAY : ERRORCODE_CANNOT_COPY_MEDIAFILE;
+
+    $completed_url .= '?' . http_build_query($a_query, '', '&');
+  }
+
+  if (!$success) { // mislukte upload: zet de upload job op 'failed'
+     $a_args = array(
+      'uri' => array(
+        'job_id' => $job_id,
+      ),
+      'post' => array(
+        'status' => JOBSTATUS_FAILED,
+      )
+    );
+    vpx_jobs_set_job_status($a_args);
+
+    // We call compeleted url when the job status has been updated
+    if (!empty($completed_url)) {
+      // If it fails, we dont care...
+      watchdog('completed_url', $completed_url);
+      exec('wget -O - -q -t 1 ' . escapeshellcmd($completed_url . ' >/dev/null 2>/dev/null &'));
+    }
+
+    if (!is_null($a_parameters['redirect_uri']['value'])) {
+      header(sprintf('Location: %s', $a_parameters['redirect_uri']['value']));
+      exit();
+    }
+    return new rest_response(vpx_return_error(ERRORCODE_CANNOT_COPY_MEDIAFILE));
+  }
+
+// update de mediafile in de database
+  $a_args = array(
+    'get' => array(
+      'user_id' => $a_ticket['user_id'],
+      'app_id' => $a_ticket['app_id'],
+    ),
+    'uri' => array(
+      'mediafile_id' => $a_ticket['mediafile_id']
+    ),
+    'post' => array(
+      'sannas_mount_point' => SAN_NAS_BASE_PATH,
+      'is_downloadable' => 'FALSE',
+      'filename' => ($put_upload) ? $a_parameters['filename']['value'] : $_FILES['file']['name'],
+      'is_original_file' => 'TRUE',
+      'transcode_inherits_acl' => $a_parameters['transcode_inherits_acl']['value'],
+      'tag' => $a_parameters['tag']['value'],
+    ),
+  );
+  media_management_internal_update_mediafile($a_args);
+
+// zet de upload job op 100%
+  $a_args = array(
+    'uri' => array(
+      'job_id' => $job_id
+    ),
+    'post' => array(
+      'uploaded_file_size' => ($put_upload) ? $_SERVER['CONTENT_LENGTH'] : $_FILES['file']['size'],
+      'create_still' => $a_parameters['create_still']['value'],
+      'still_type' => $a_parameters['still_type']['value'],
+      'still_per_mediafile' => $a_parameters['still_per_mediafile']['value'],
+      'still_every_second' => $a_parameters['still_every_second']['value'],
+      'start_frame' => $a_parameters['start_frame']['value'],
+      'end_frame' => $a_parameters['end_frame']['value'],
+      'size' => $a_parameters['size']['value'],
+      'h_padding' => $a_parameters['h_padding']['value'],
+      'v_padding' => $a_parameters['v_padding']['value'],
+      'tag' => $a_parameters['tag']['value'],
+      'frametime' => $a_parameters['frametime']['value'],
+      'width' => $a_parameters['width']['value'],
+      'height' => $a_parameters['height']['value'],
+    )
+  );
+  vpx_jobs_set_upload_progress($a_args);
+
+  // We call compeleted url when the job status has been updated
+  if (!empty($completed_url)) {
+    // If it fails, we dont care...
+    watchdog('completed_url', $completed_url);
+    exec('wget -O - -q -t 1 ' . escapeshellcmd($completed_url . ' >/dev/null 2>/dev/null &'));
+  }
+
+// controleer de input en maak eventueel de transcode job(s) aan
+  if (is_array($a_parameters['transcode']['value'])) {
+    foreach ($a_parameters['transcode']['value'] as $transcode_profile) {
+      $a_transcode_profile = array(
+        'transcode_profile' => array(
+          'value' => $transcode_profile,
+          'type' => 'int'
+        )
+      );
+
+      // controleer de transcode op validiteit
+      $result = vpx_validate($a_transcode_profile);
+      if (vpx_check_result_for_error($result)) {
+        if (!is_null($a_parameters['redirect_uri']['value'])) {
+          header(sprintf('Location: %s', $a_parameters['redirect_uri']['value']));
+          exit();
+        }
+        return new rest_response($result);
+      }
+
+      // maak de transcode job aan
+      $a_args = array(
+        'get' => array(
+          'app_id' => $a_ticket['app_id'],
+          'user_id' => $a_ticket['user_id'],
+          'group_id' => $a_ticket['group_id'],
+          'mediafile_id' => $a_ticket['mediafile_id'],
+        ),
+        'post' => array(
+          'job_type' => JOBTYPE_TRANSCODE,
+          'profile_id' => $transcode_profile,
+          'completed_transcoding_url' => $a_parameters['completed_transcoding_url']['value'],
+        ),
+      );
+      $result = vpx_jobscheduler_create_new_job($a_args);
+      if (vpx_check_result_for_error($result)) {
+        if (!is_null($a_parameters['redirect_uri']['value'])) {
+          header(sprintf('Location: %s', $a_parameters['redirect_uri']['value']));
+          exit();
+        }
+        return $result;
+      }
+    }
+  }
+  if (!is_null($a_parameters['redirect_uri']['value'])) {
+    header(sprintf('Location: %s', $a_parameters['redirect_uri']['value']));
+    exit();
+  }
+  return new rest_response(vpx_return_error(ERRORCODE_OKAY));
+}
+
+function vpx_upload_uploadprogress_get($a_args) {
+
+  // Get the id of the upload (is not ticket)
+  vpx_funcparam_add($a_funcparam, $a_args, 'id', VPX_TYPE_ALPHANUM);
+
+  // Get id
+  $id = vpx_funcparam_get_value($a_funcparam, 'id');
+
+  // Create output
+  $o_response = new rest_response();
+
+  // Add it
+  $o_response->add_item(json_encode(vpx_upload_uploadprogress($id)));
+
+  return $o_response;
+}
+
+function vpx_upload_uploadprogress($id) {
+
+  if (!function_exists('apc_fetch')) {
+    return array(
+      'message' => 'Uploading (No Progress Information Available)',
+      'percentage' => -1,
+      'status' => 1,
+    );
+  }
+
+  $a_status = apc_fetch('upload_' . $id);
+
+  if (!$a_status['total']) {
+    return array(
+      'status' => 1,
+      'percentage' => -1,
+      'message' => 'Uploading',
+    );
+  }
+
+  $a_status['status'] = 1;
+  $a_status['percentage'] = round($a_status['current'] / $a_status['total'] * 100, 0);
+  $a_status['message'] = "--:-- left (at --/sec)";
+
+  $a_status['speed_average'] = 0;
+  $a_status['est_sec'] = 0;
+
+  $a_status['elapsed'] = time() - $a_status['start_time'];
+
+  if ($a_status['elapsed'] > 0) {
+    $a_status['speed_average'] = $a_status['current'] / $a_status['elapsed'];
+
+    if ($a_status['speed_average'] > 0) {
+      $a_status['est_sec'] = ($a_status['total'] - $a_status['current']) / $a_status['speed_average'];
+      $a_status['message'] = sprintf("%02d:%02d left (at %s/sec)", $a_status['est_sec'] / 60, $a_status['est_sec'] % 60, format_size($a_status['speed_average']));
+    }
+  }
+
+  return $a_status;
+}
+
+/**
+ * Still upload as an image
+ */
+function vpx_upload_handle_still($a_args) {
+  $a_parameters = array(
+    'asset_id' => array(
+      'value' => vpx_get_parameter_2($a_args['uri'], 'asset_id'),
+      'type' => 'alphanum',
+    ),
+    'upload_ticket' => array(
+      'value' => vpx_get_parameter_2($a_args['get'], 'upload_ticket'),
+      'type' => VPX_TYPE_ALPHANUM,
+      'required' => TRUE
+    ),
+    'redirect_uri' => array(
+      'value' => vpx_get_parameter_2($a_args['post'], 'redirect_uri'),
+      'type' => 'skip',
+    ),
+    'put' => array(
+      'value' => vpx_get_parameter_2($a_args['internal'], 'put', 'FALSE'),
+      'type' => VPX_TYPE_BOOL,
+    ),
+    'filename' => array(
+      'value' => vpx_get_parameter_2($a_args['get'], 'filename'),
+      'type' => 'skip',
+    ),
+    'mediafile_id' => array(
+      'value' => vpx_get_parameter_2($a_args['get'], 'mediafile_id'),
+      'type' => 'alphanum',
+      'required' => TRUE
+    ),
+    'order' => array(
+      'value' => vpx_get_parameter_2($a_args['get'], 'order'),
+      'type' => 'skip',
+    ),
+    'default' => array(
+      'value' => vpx_get_parameter_2($a_args['get'], 'default'),
+      'type' => 'skip',
+    ),
+    'tag' => array(
+      'value' => vpx_get_parameter_2($a_args['get'], 'tag'),
+      'type' => VPX_TYPE_STRING,
+    ),
+  );
+
+  // Validate all parameters
+  $result = vpx_validate($a_parameters);
+  if (vpx_check_result_for_error($result)) {
+    return new rest_response($result);
+  }
+
+  // PUT or POST?
+  $put_upload = vpx_shared_boolstr2bool($a_parameters['put']['value']);
+  $a_parameters['filename']['required'] = $put_upload;
+
+  // Check ticket
+  db_set_active('data');
+  $i_upload_expire_timestamp = time() - UPLOAD_TICKET_EXPIRATION;
+  $a_ticket = db_fetch_array(db_query(
+    "SELECT * FROM {ticket} WHERE ticket_id = '%s' AND issued > FROM_UNIXTIME(%d)",
+    $a_parameters['upload_ticket']['value'],
+    $i_upload_expire_timestamp
+  ));
+  db_set_active();
+  if (!is_array($a_ticket)) {
+    if (!is_null($a_parameters['redirect_uri']['value'])) {
+      header(sprintf('Location: %s', $a_parameters['redirect_uri']['value']));
+      exit();
+    }
+    return new rest_response(vpx_return_error(ERRORCODE_INVALID_UPLOAD_TICKET));
+  }
+
+  // Delete ticket
+  db_set_active('data');
+  db_query("DELETE FROM {ticket} WHERE ticket_id = '%s'", $a_parameters['upload_ticket']['value']);
+  db_set_active();
+
+  // Check user quota
+  $result = _user_management_check_user_quota($a_ticket['app_id'], $a_ticket['user_id'], $a_ticket['group_id']);
+  if (vpx_check_result_for_error($result)) {
+    return new rest_response(vpx_return_error(ERRORCODE_NOT_ENOUGH_FREE_QUOTA));
+  }
+
+  // Check mediafile
+  if ($a_parameters['asset_id']['value']) {
+    $mcnt = vpx_count_rows("mediafile", array("mediafile_id", $a_ticket['mediafile_id'], "asset_id_root", $a_parameters['asset_id']['value']));
+  }
+  else {
+    $mcnt = vpx_count_rows("mediafile", array("mediafile_id", $a_ticket['mediafile_id']));
+  }
+  if (!$mcnt) {
+    if (!is_null($a_parameters['redirect_uri']['value'])) {
+      header(sprintf('Location: %s', $a_parameters['redirect_uri']['value']));
+      exit();
+    }
+    return new rest_response(vpx_return_error(ERRORCODE_MEDIAFILE_NOT_FOUND, array("@mediafile_id" => $a_ticket['mediafile_id'])));
+  }
+
+  // Is webservice active?
+  if (!vpx_shared_webservice_is_active('media_upload', $a_ticket['app_id'])) {
+    if (!is_null($a_parameters['redirect_uri']['value'])) {
+      header(sprintf('Location: %s', $a_parameters['redirect_uri']['value']));
+      exit();
+    }
+    return new rest_response(vpx_return_error(ERRORCODE_WEBSERVICE_DISABLED));
+  }
+
+  // Create hash
+  $still_id = vpx_create_hash($a_ticket['app_id'], $a_ticket['user_id']);
+
+  // Destination
+  $destination = SAN_NAS_BASE_PATH .'/'. STILL_LOCATION .'/'. $still_id[0] .'/'. $still_id;
+
+  if ($put_upload) {
+
+    //
+    // PUT upload
+    //
+
+    $success = TRUE;
+
+    // if media file already exists, rename the new one
+    if (file_exists($destination)) {
+      $destination_filename_after_upload = $destination;
+      $destination .= '.upload_temp';
+    }
+
+    // Open the new file
+    $destination_file = @fopen($destination, 'w');
+    if (!$destination_file) {
+      throw new vpx_exception(0, "Unable to write to '". $destination ."'.", VPX_EXCEPTION_SEVERITY_HIGH);
+    }
+
+    // Open the stream
+    $stream = fopen('php://input', 'r');
+    if ($stream === FALSE) {
+      throw new vpx_exception(0, 'Unable to open stream', VPX_EXCEPTION_SEVERITY_HIGH);
+    }
+
+    $b_continue = TRUE;
+
+    $i_byte_count = 0;
+    $last_update = $i_timestamp = time();
+    while (($kb = fread($stream, CHUNK_SIZE)) && $b_continue) {
+      $b_continue = (@fwrite($destination_file, $kb, CHUNK_SIZE));
+      $i_byte_count += CHUNK_SIZE;
+      if ($b_continue) {
+        $b_continue = ($i_byte_count < VPX_STILL_FILE_MAXIMUM);
+      }
+
+      if (!$b_continue) {
+        $success = FALSE;
+        break;
+      }
+      header('HTTP/1.1 201 Created');
+    }
+
+    // Close the stream and the file
+    @fclose($destination_file);
+    @fclose($stream);
+
+    if (!$b_continue) {
+      @unlink($destination_file);
+    }
+
+    // If the mediafile is exists, then rename the new one
+    if ($success && isset($destination_filename_after_upload)) {
+      rename($destination, $destination_filename_after_upload);
+    }
+
+    //
+    // PUT upload - end
+    //
+
+  }
+  else { // POST upload
+    // Move file to the appropriate place
+    $success = (isset($_FILES['file']) && $_FILES['file']['size'] < VPX_STILL_FILE_MAXIMUM && move_uploaded_file($_FILES['file']['tmp_name'], $destination));
+  }
+
+  if (!$success) {
+    // Upload failed
+    if (!is_null($a_parameters['redirect_uri']['value'])) {
+      header(sprintf('Location: %s', $a_parameters['redirect_uri']['value']));
+      exit();
+    }
+    if ($put_upload) {
+      if ($i_byte_count >= VPX_STILL_FILE_MAXIMUM) {
+        return new rest_response(vpx_return_error(ERRORCODE_IMAGE_FILE_TOO_BIG, array("@filesize" => VPX_STILL_FILE_MAXIMUM)));
+      }
+    }
+    else {
+      if ($_FILES['file']['size'] >= VPX_STILL_FILE_MAXIMUM) {
+        return new rest_response(vpx_return_error(ERRORCODE_IMAGE_FILE_TOO_BIG, array("@filesize" => VPX_STILL_FILE_MAXIMUM)));
+      }
+    }
+    return new rest_response(vpx_return_error(ERRORCODE_CANNOT_COPY_MEDIAFILE));
+  }
+
+  watchdog('server', t('Still as picture is uploaded. Path: @path', array('@path' => $destination)));
+
+  // Video details
+  db_set_active('data');
+  $video = db_fetch_array(db_query_range("SELECT * FROM {mediafile} WHERE mediafile_id = '%s'", $a_ticket['mediafile_id'], 0, 1));
+  db_set_active();
+  // Still size
+  $size = getimagesize($destination);
+  $width = $size[0];
+  $height = $size[1];
+  // File type
+  $file_type = '';
+  $pos = strrpos($size['mime'], '/');
+  if ($pos !== FALSE) {
+    $file_type = substr($size['mime'], $pos+1);
+  }
+  $filesize = filesize($destination);
+  // Default
+  $default = ( isset($a_parameters['default']['value']) && $a_parameters['default']['value'] == 1 ? 'TRUE' : 'FALSE' );
+  // Order
+  $order = ( is_numeric($a_parameters['order']['value']) ? $a_parameters['order']['value'] : 0 );
+  $tag = $a_parameters['tag']['value'];
+  $filename = ($put_upload ? $a_parameters['filename']['value'] : $_FILES['file']['name']);
+
+  // Insert still into mediafile / mediafile_metadata
+  db_set_active('data');
+  if ($default == 'TRUE') {
+    // Clear the earlier default mark on the video (media) file
+    db_query("
+      UPDATE {mediafile_metadata} AS mm
+      INNER JOIN {mediafile} AS m USING(mediafile_id)
+      SET mm.still_default = 'FALSE'
+      WHERE m.mediafile_source = '%s' AND m.is_still = 'TRUE'", $video['mediafile_id']);
+/*
+    // Clear the earlier default mark on the asset
+    db_query("
+      UPDATE {mediafile_metadata} AS mm
+      INNER JOIN {mediafile} AS m USING(mediafile_id)
+      SET mm.still_default = 'FALSE'
+      WHERE m.asset_id_root = '%s' AND m.is_still = 'TRUE'", $video['asset_id_root']);
+ */
+  }
+  db_query("INSERT INTO {mediafile}
+    (mediafile_id, asset_id, app_id, owner_id, group_id, is_original_file, is_downloadable, filename, uri, sannas_mount_point, transcode_profile_id, tool, command, file_extension, testtag, is_protected, created, changed, asset_id_root, transcode_inherits_acl, is_still, mediafile_source, tag)
+    VALUES ('%s', '%s', %d, '%s', '%s', 'FALSE', 'FALSE', '%s', NULL, '%s', NULL, NULL, NULL, '%s', 'FALSE', 'FALSE', NOW(), NOW(), '%s', 'FALSE', 'TRUE', '%s', '%s')",
+    $still_id, $video['asset_id'], $a_ticket['app_id'], $a_ticket['user_id'], $a_ticket['group_id'], $filename, SAN_NAS_BASE_PATH, $file_type, $video['asset_id_root'], $video['mediafile_id'], $tag);
+  db_query("INSERT INTO {mediafile_metadata}
+    (metadata_id, mediafile_id, video_codec, colorspace, width, height, fps, audio_codec, sample_rate, channels, file_duration, container_type, bitrate, bpp, filesize, mime_type, created, changed, is_hinted, is_inserted_md, still_time_code, still_order, still_format, still_type, still_default)
+    VALUES (NULL, '%s', NULL, NULL, %d, %d, NULL, NULL, NULL, NULL, NULL, '', NULL, '', %d, '%s', NOW(), NOW(), 'FALSE', 'FALSE', NULL, %d, '%s', 'PICTURE', '%s')",
+    $still_id, $width, $height, $filesize, $size['mime'], $order, $file_type, $default);
+  db_set_active();
+
+  if (!is_null($a_parameters['redirect_uri']['value'])) {
+    header(sprintf('Location: %s', $a_parameters['redirect_uri']['value']));
+    exit();
+  }
+  // Return the generated still_id
+  $rest_response = new rest_response(vpx_return_error(ERRORCODE_OKAY));
+  $rest_response->add_item(array(
+    "still_id" => $still_id,
+  ));
+  return $rest_response;
+}
+
+/**
+ * Upload watermark image
+ * Not yet implemented
+ */
+function vpx_upload_handle_watermark() {
+  return new rest_response(vpx_return_error(ERRORCODE_OKAY));
+}
