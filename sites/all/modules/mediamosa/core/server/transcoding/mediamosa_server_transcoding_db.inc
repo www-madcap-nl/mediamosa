@@ -54,3 +54,36 @@ class mediamosa_server_transcoding_db {
   const TOOLS = 'tools';
   const TOOLS_LENGTH = 255;
 }
+
+class mediamosa_server_transcoding_profile_db {
+  // ------------------------------------------------------------------ Consts.
+  // Table name;
+  const TABLE_NAME = 'mediamosa_server_transcoding_profile';
+
+  // Database fields;
+  const APP_ID = 'app_id';
+  const VERSION = 'version';
+  const IS_DEFAULT_PROFILE = 'is_default_profile';
+  const TOOL = 'tool';
+  const FILE_EXTENSION = 'file_extension';
+  const OPTIONS = 'options';
+}
+
+class mediamosa_server_transcoding_profile_mapping_db {
+  // ------------------------------------------------------------------ Consts.
+  // Table name;
+  const TABLE_NAME = 'mediamosa_server_transcoding_profile_mapping';
+
+  // Database fields;
+  const ID = 'tmid';
+  const TOOL = mediamosa_server_transcoding_profile_db::TOOL;
+  const TITLE = 'field_title';
+  const TYPE = 'field_type';
+  const DESCRIPTION = 'field_description';
+  const TOOL_PARAMETER = 'tool_parameter';
+  const MIN_VALUE = 'min_value';
+  const MAX_VALUE = 'max_value';
+  const ALLOWED_VALUE = 'allowed_value';
+  const DEFAULT_VALUE = 'default_value';
+  const REQUIRED = 'required';
+}
