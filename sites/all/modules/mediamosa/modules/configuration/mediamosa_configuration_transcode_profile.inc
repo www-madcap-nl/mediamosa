@@ -175,15 +175,22 @@ function mediamosa_transcode_profile_update($node) {
     }
   }
 
-  db_update(mediamosa_server_transcoding_profile_db::TABLE_NAME)
+  // Delete the old revision
+  db_delete(mediamosa_server_transcoding_profile_db::TABLE_NAME)
+    ->condition('vid', $node->vid)
+    ->execute();
+
+  // Insert the new revision
+  db_insert(mediamosa_server_transcoding_profile_db::TABLE_NAME)
     ->fields(array(
+      'nid' => $node->nid,
+      'vid' => $node->vid,
       mediamosa_server_transcoding_profile_db::APP_ID => $node->app_id,
       mediamosa_server_transcoding_profile_db::IS_DEFAULT_PROFILE => $node->is_default_profile,
       mediamosa_server_transcoding_profile_db::TOOL => $node->tool,
       mediamosa_server_transcoding_profile_db::FILE_EXTENSION => $node->file_extension,
       mediamosa_server_transcoding_profile_db::OPTIONS => serialize($options),
     ))
-    ->condition('nid', $node->nid)
     ->execute();
 }
 

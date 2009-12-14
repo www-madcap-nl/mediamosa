@@ -150,11 +150,18 @@ function mediamosa_node_info() {
  * Implementation of hook_load().
  */
 function mediamosa_transcode_profile_load(&$nodes) {
+  // Gather all vids
+  $vids = array();
+  foreach ($nodes as $node) {
+    $vids[] = $node->vid;
+  }
+
+  // Gather all additional node properties
   $result = mediamosa_db::db_query(
-    'SELECT * FROM {#table_name} WHERE nid IN (:nids)',
+    'SELECT * FROM {#table_name} WHERE vid IN (:vids)',
     array(
       '#table_name' => mediamosa_server_transcoding_profile_db::TABLE_NAME,
-      ':nids' => array_keys($nodes),
+      ':vids' => $vids,
     )
   );
   foreach ($result as $record) {
