@@ -46,7 +46,6 @@ function mediamosa_transcode_profile_view($node, $build_mode = 'full') {
   $all_options = mediamosa_server_transcoding::get_transcode_tool_mappings($node->tool);
   foreach ($node->options as $key => $value) {
     $rows[] = array($all_options[$key]['field_title'], check_plain($value));
-    //var_dump($all_options[$key]);
   }
 
   // Add timestamps
