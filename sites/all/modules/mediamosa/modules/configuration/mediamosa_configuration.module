@@ -29,6 +29,7 @@
   * The maintenance module.
   */
 require_once('mediamosa_configuration_transcode_profile.inc');
+require_once('mediamosa_configuration_server.inc');
 
 /**
  * Implements hook_permission()

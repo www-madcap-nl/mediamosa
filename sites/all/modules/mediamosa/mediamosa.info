@@ -152,6 +152,7 @@ files[] = core/configuration/storage/mediamosa_configuration_storage.inc
 
 ; Server.
 files[] = core/server/mediamosa_server.install.inc
+files[] = core/server/mediamosa_server_db.inc
 
 ; Server Download.
 files[] = core/server/download/mediamosa_server_download_db.inc
