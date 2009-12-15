@@ -35,9 +35,24 @@
 function mediamosa_server_view($node, $build_mode = 'full') {
   // Default parameters
   $rows = array(
-    array(t('Title'), $node->title),
+    array(t('Title'), check_plain($node->title)),
     array(t('Status'), ($node->server_status) ? t('On') : t('Off')),
+    array(t('Server type'), $node->server_type),
   );
+
+  foreach (array(
+    'uri' => t('URI'),
+    'uri_upload_progress' => t('URI upload progress'),
+    'containers' => t('Containers'),
+    'server_name' => t('Server name'),
+    'ip_address' => t('IP Address'),
+    'slots' => t('Slots'),
+    'tools' => t('Tools'),
+  ) as $key => $title) {
+    if (!is_null($node->{$key})) {
+      $rows[] = array($title, check_plain($node->{$key}));
+    }
+  }
 
   // Add timestamps
   $rows[] = array(t('Created'), format_date($node->created, 'short'));

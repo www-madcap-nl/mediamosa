@@ -35,7 +35,7 @@
 function mediamosa_transcode_profile_view($node, $build_mode = 'full') {
   // Default parameters
   $rows = array(
-    array(t('Title'), $node->title),
+    array(t('Title'), check_plain($node->title)),
     array(t('App ID'), $node->app_id),
     array(t('Tool'), $node->tool),
     array(t('File extension'), $node->file_extension),
@@ -112,7 +112,6 @@ function mediamosa_transcode_profile_form($node, $form_state) {
     '#type' => 'select',
     '#default_value' => $node->tool,
     '#options' => array('ffmpeg' => t('FFMpeg'), 'windows' => t('Windows')),
-    '#required' => TRUE,
     '#disabled' => (isset($node->nid)),
     '#description' => t('The encoding tool used to perform the transcoding. Currently there are 2 options available: FFMpeg and Windows (used for WMV).'),
   );
