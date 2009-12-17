@@ -51,10 +51,10 @@ class mediamosa_collection {
    */
   static public function getAllAssoc(array $a_coll_ids) {
 
-  	$query = mediamosa_db::db_select(mediamosa_collection_db::ID, 'c');
-  	$query->fields();
-  	$query->condition('c.' . mediamosa_collection_db::ID, $a_coll_ids, 'IN');
-  	return $query->execute()->fetchAllAssoc(mediamosa_collection_db::ID);
+    $query = mediamosa_db::db_select(mediamosa_collection_db::ID, 'c');
+    $query->fields('c');
+    $query->condition('c.' . mediamosa_collection_db::ID, $a_coll_ids, 'IN');
+    return $query->execute()->fetchAllAssoc(mediamosa_collection_db::ID);
   }
 
   /**
@@ -65,7 +65,7 @@ class mediamosa_collection {
   static public function get($coll_id) {
 
     $query = mediamosa_db::db_select(mediamosa_collection_db::ID, 'c');
-    $query->fields();
+    $query->fields('c');
     $query->condition('c.' . mediamosa_collection_db::ID, $coll_id);
     return $query->execute()->fetchAssoc();
   }

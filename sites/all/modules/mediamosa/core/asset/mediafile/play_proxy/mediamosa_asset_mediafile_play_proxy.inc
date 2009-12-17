@@ -34,7 +34,7 @@ class mediamosa_asset_mediafile_play_proxy {
   /*
    * Response types
    */
-  const RESPONSE_TYPE_URI = 'plain';
+  const RESPONSE_TYPE_URI = 'plain';// FIXME why do we call uri plain? Either call it uri or plain.
   const RESPONSE_TYPE_STILL = 'still';
   const RESPONSE_TYPE_METAFILE = 'metafile';
   const RESPONSE_TYPE_OBJECT = 'object';
@@ -230,15 +230,15 @@ class mediamosa_asset_mediafile_play_proxy {
   /**
    * Wrapper for 1.x to 2.x.
    * @param array $a_parameters
-   * @param array $a_asset_info
+   * @param array $a_asset_info (used for the metadata)
    * @param array $a_mediafile_ext
-   * @param array $a_asset_metadata
+   * @param array $a_asset_metadata (not used)
    * @param string $ticket
    * @param integer $app_id
    * @param string $mediafile_group_id
    * @param array $a_stills
    */
-  static public function create_response_1x_to_2x($a_parameters, $a_asset_info, $a_mediafile_ext, $a_asset_metadata, $ticket, $app_id, $mediafile_group_id = '', $a_stills = array()) {
+  static public function create_response_1x_to_2x($a_parameters, $a_asset_info, $a_mediafile_ext, $a_asset_metadata/*unused*/, $ticket, $app_id, $mediafile_group_id = '', $a_stills = array()) {
     return self::create_response(
       $a_parameters['response']['value'],
       $app_id,
@@ -251,7 +251,6 @@ class mediamosa_asset_mediafile_play_proxy {
       isset($a_parameters['is_app_admin']['value']) ? mediamosa_lib::boolstr2bool($a_parameters['is_app_admin']['value']) : FALSE,
       $a_asset_info,
       $a_mediafile_ext,
-      $a_asset_metadata,
       $mediafile_group_id,
       $a_stills
     );
@@ -260,6 +259,8 @@ class mediamosa_asset_mediafile_play_proxy {
   /**
    * Create response for mediafile.
    * 1.x params; $a_parameters, $a_asset_info, $a_mediafile_ext, $a_asset_metadata, $ticket, $app_id, $mediafile_group_id = '', $a_stills = array()) {
+   *
+   * 1.x: _play_proxy_create_response
    *
    * @param string $response_type
    *  See RESPONSE_TYPE_*.
@@ -279,12 +280,10 @@ class mediamosa_asset_mediafile_play_proxy {
    *  Duration param in HTML object.
    * @param boolean $is_app_admin
    *  Super admin.
-   * @param array $a_asset_info
-   *  Asset array.
+   * @param array $a_asset_metadata
+   *  Collection of the metadata of the asset, use metadata_get function.
    * @param array $a_mediafile_ext
    *  Mediafile array.
-   * @param array $a_asset_metadata
-   *  Asset metadata.
    * @param string $mediafile_group_id
    *  Group ID mediafile.
    * @param $a_stills
@@ -300,15 +299,14 @@ class mediamosa_asset_mediafile_play_proxy {
     $start = NULL,
     $duration = NULL,
     $is_app_admin = FALSE,
-    $a_asset_info = array(),
-    $a_mediafile_ext = array(),
     $a_asset_metadata = array(),
+    $a_mediafile_ext = array(),
     $mediafile_group_id = '',
     $a_stills = array()
   ) {
 
-  	// Not an array here.
-  	assert(!is_array($app_id));
+    // Not an array here.
+    assert(!is_array($app_id));
 
     // Expecting array here, even when empty.
     assert(is_array($a_stills));
@@ -367,10 +365,10 @@ class mediamosa_asset_mediafile_play_proxy {
             $content_type = "audio/mpeg";
             $output = "<asx version=\"3.0\">\n\t<entry>\n";
             $a_subjects = array('TITLE' => 'title', 'COPYRIGHT' => 'rights', 'ABSTRACT' => 'description', 'AUTHOR' => 'creator');
-            if (isset($a_asset_info['dublin_core'])) {
+            if (isset($a_asset_metadata['dublin_core'])) {
               foreach ($a_subjects as $tag => $subject) {
-                if (is_array($a_asset_info['dublin_core'][$subject]) && count($a_asset_info['dublin_core'][$subject])) {
-                  $output .= "\t\t<" . $tag .'>'. implode(' ', $a_asset_info['dublin_core'][$subject]) .'</'. $tag. ">\n";
+                if (is_array($a_asset_metadata['dublin_core'][$subject]) && count($a_asset_metadata['dublin_core'][$subject])) {
+                  $output .= "\t\t<" . $tag .'>'. implode(' ', $a_asset_metadata['dublin_core'][$subject]) .'</'. $tag. ">\n";
                 }
               }
             }
@@ -384,10 +382,10 @@ class mediamosa_asset_mediafile_play_proxy {
             $content_type = "video/x-ms-asf";
             $output = "<asx version=\"3.0\">\n\t<entry>\n";
             $a_subjects = array('TITLE' => 'title', 'COPYRIGHT' => 'rights', 'ABSTRACT' => 'description', 'AUTHOR' => 'creator');
-            if (isset($a_asset_info['dublin_core'])) {
+            if (isset($a_asset_metadata['dublin_core'])) {
               foreach ($a_subjects as $tag => $subject) {
-                if (is_array($a_asset_info['dublin_core'][$subject]) && count($a_asset_info['dublin_core'][$subject])) {
-                  $output .= "\t\t<" . $tag .'>'. implode(' ', $a_asset_info['dublin_core'][$subject]) .'</'. $tag. ">\n";
+                if (is_array($a_asset_metadata['dublin_core'][$subject]) && count($a_asset_metadata['dublin_core'][$subject])) {
+                  $output .= "\t\t<" . $tag .'>'. implode(' ', $a_asset_metadata['dublin_core'][$subject]) .'</'. $tag. ">\n";
                 }
               }
             }
@@ -586,6 +584,83 @@ class mediamosa_asset_mediafile_play_proxy {
       $a_result['stills']['#'. $i] = $value;
       $i++;
     }
+
     return $a_result;
+  }
+
+  /**
+   * Return a matching mediafile based on the asset_id and a profile_id.
+   *
+   * 1.x: _play_proxy_get_mediafile_id_on_profile
+   *
+   * @param $asset_id
+   * @param $profile_id
+   * @param $original_mediafile_id
+   */
+  static public function get_mediafile_id_on_profile($asset_id, $profile_id, $original_mediafile_id = NULL) {
+    if (!isset($original_mediafile_id)) {
+      return mediamosa_db::db_query_range(
+        'SELECT #mediafile_id FROM {#mediamosa_asset_mediafile}
+         WHERE
+         #asset_id_root = :asset_id_root AND
+         #transcode_profile_id = :transcode_profile_id AND
+         #is_still = :is_still_false',
+        0,
+        1,
+        array(
+          '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
+          '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
+          '#asset_id_root' => mediamosa_asset_mediafile_db::ASSET_ID_ROOT,
+          ':asset_id_root' => $asset_id,
+          '#transcode_profile_id' => mediamosa_asset_mediafile_db::TRANSCODE_PROFILE_ID,
+          ':transcode_profile_id' => $profile_id,
+          '#is_still' => mediamosa_asset_mediafile_db::IS_STILL,
+          ':is_still_false' => mediamosa_asset_mediafile_db::IS_STILL_FALSE,
+        )
+      )->fetchField();
+    }
+
+    return mediamosa_db::db_query_range(
+      'SELECT m.#mediafile_id FROM {#mediamosa_asset_mediafile} AS m
+       INNER JOIN {#mediamosa_asset_mediafile} AS orig USING(#asset_id)
+       WHERE
+        m.#asset_id_root = :asset_id_root AND
+        m.#transcode_profile_id = :transcode_profile_id AND
+        m.#is_still = :is_still_false AND
+        orig.#is_original_file = #is_original_file_true AND
+        orig.#is_still = :is_still_false AND
+        orig.#asset_id_root = :asset_id_root AND
+        orig.#mediafile_id = :mediafile_id',
+      0,
+      1,
+      array(
+        '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
+        '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
+        '#asset_id_root' => mediamosa_asset_mediafile_db::ASSET_ID_ROOT,
+        ':asset_id_root' => $asset_id,
+        '#transcode_profile_id' => mediamosa_asset_mediafile_db::TRANSCODE_PROFILE_ID,
+        ':transcode_profile_id' => $profile_id,
+        '#is_still' => mediamosa_asset_mediafile_db::IS_STILL,
+        ':is_still_false' => mediamosa_asset_mediafile_db::IS_STILL_FALSE,
+        '#is_original_file' => mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE,
+        ':is_original_file_true' => mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_TRUE,
+        ':mediafile_id' => $original_mediafile_id,
+      )
+    )->fetchField();
+  }
+
+  /**
+   * Check if the time has been restricted.
+   *
+   * @param string $time_restriction_start
+   * @param string $time_restriction_end
+   */
+  function check_time_restrictions($time_restriction_start, $time_restriction_end) {
+    if (time() < $time_restriction_start) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_TIME_RESTRICTION_START, array('@date' => date("Y-m-d G:i:s", $time_restriction_start), '@timestamp' => $time_restriction_start));
+    }
+    if (time() > $time_restriction_end) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_TIME_RESTRICTION_END, array('@date' => date("Y-m-d G:i:s", $time_restriction_end), '@timestamp' => $time_restriction_end));
+    }
   }
 }

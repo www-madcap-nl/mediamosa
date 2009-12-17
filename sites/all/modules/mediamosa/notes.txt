@@ -29,6 +29,8 @@ Notes:
 - The 'ciad' field in client_applications has been renamed to 'id'.
 - The 'testtag' has been removed from the job table.
 - The 'testtag' had been removed from the asset table.
+- asset/delete call now returns failures per failed asset and their cause.
+- Rewrote the HASH creation routines.
 
 Variables;
 - The 'vpx_allowed_internal_ips' is renamed into 'mediomosa_allowed_internal_ips'.

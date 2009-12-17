@@ -30,27 +30,25 @@
   */
 
 /**
- * URI: /metadata_tag (1.x)
+ * URI: /metadata_tag
  * Get a listing of the current asset media metadata define
  *
- * 1.x REST: media_management_metadata_definition_get
+ * 1.x: media_management_metadata_definition_get
  */
 class mediamosa_rest_call_asset_metadata_property_list extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Consts.
-  // Switch if we need to get all the default definitions that are 'global' over all apps.
-  const INCLUDE_DEFAULT_DEFINITIONS = 'include_default_definitions';
+  // REST vars.
+  const INCLUDE_DEFAULT_DEFINITIONS = 'include_default_definitions'; // Switch if we need to get all the default definitions that are 'global' over all apps.
+  const NAME = 'name';  // Search on specific name.
 
-  // Search on specific name.
-  const NAME = 'name';
-
-  // ------------------------------------------------------------------ Public Functions.
+  // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
     $a_var_setup = array(
       self::VARS => array(
         self::INCLUDE_DEFAULT_DEFINITIONS => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
-          self::VAR_DEFAULT_VALUE => 'true',
+          self::VAR_DEFAULT_VALUE => 'TRUE',
           self::DESCRIPTION => "Switch if we need to get all the default definitions that are 'global' over all apps.",
         ),
         self::NAME => array(
@@ -81,6 +79,7 @@ class mediamosa_rest_call_asset_metadata_property_list extends mediamosa_rest_ca
     return self::get_var_setup_default($a_var_setup);
   }
 
+  // ------------------------------------------------------------------ Do Call.
   public function do_call() {
     $o_mediamosa = mediamosa::get();
 
@@ -128,20 +127,19 @@ class mediamosa_rest_call_asset_metadata_property_list extends mediamosa_rest_ca
 
 
 /**
- * URI: /metadata_tag/create (1.x)
+ * URI: /metadata_tag/create
  * Create a asset metadata property.
  *
- * 1.x REST: media_management_metadata_definition_create
+ * 1.x: media_management_metadata_definition_create
  *
  */
 class mediamosa_rest_call_asset_metadata_property_create extends mediamosa_rest_call {
 
-  // Enter property name.
-  const NAME = 'name';
-
-  // Type.
-  const TYPE = 'type';
-
+  // ------------------------------------------------------------------ Consts.
+  // Rest vars;
+  const NAME = 'name'; // Property name.
+  const TYPE = 'type'; // Property type.
+  // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
     $a_var_setup = array(
       mediamosa_rest_call::VARS => array(
@@ -155,7 +153,7 @@ class mediamosa_rest_call_asset_metadata_property_create extends mediamosa_rest_
           self::VAR_TYPE => mediamosa_type::TYPE_STRING,
           self::VAR_ALLOWED_VALUES => array('datetime', 'int', 'char'),
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
-          self::DESCRIPTION => "The type of data to be stored, can either be 'datetime' (an iso-8601 standard date), 'int' (numbers), char (text).",
+          self::DESCRIPTION => "The type of data to be stored, can either be 'datetime' (iso-8601 standard date), 'int' (numbers), char (text).",
         ),
       ),
     );
@@ -164,6 +162,7 @@ class mediamosa_rest_call_asset_metadata_property_create extends mediamosa_rest_
     return self::get_var_setup_default($a_var_setup);
   }
 
+  // ------------------------------------------------------------------ Do Call.
   public function do_call() {
     $o_mediamosa = mediamosa::get();
 
@@ -189,19 +188,19 @@ class mediamosa_rest_call_asset_metadata_property_create extends mediamosa_rest_
 }
 
 /**
- * URI: /metadata_tag/delete (1.x)
+ * URI: /metadata_tag/delete
  * Delete a asset metadata property.
  *
- * 1.x REST: media_management_metadata_definition_delete
+ * 1.x: media_management_metadata_definition_delete
  */
 class mediamosa_rest_call_asset_metadata_property_delete extends mediamosa_rest_call {
 
-  // Enter property name.
-  const NAME = 'name';
-
-  // Delete.
+  // ------------------------------------------------------------------ Consts.
+  // Rest vars;
+  const NAME = 'name'; // Enter property name.
   const DELETE = 'delete';
 
+  // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
     $a_var_setup = array(
       mediamosa_rest_call::VARS => array(
@@ -223,6 +222,7 @@ class mediamosa_rest_call_asset_metadata_property_delete extends mediamosa_rest_
     return self::get_var_setup_default($a_var_setup);
   }
 
+  // ------------------------------------------------------------------ Do Call.
   public function do_call() {
     $o_mediamosa = mediamosa::get();
 
@@ -240,5 +240,69 @@ class mediamosa_rest_call_asset_metadata_property_delete extends mediamosa_rest_
 
     // If we get here, it was successful. We have no output, but we are ok.
     $o_mediamosa->set_result_okay();
+  }
+}
+
+/**
+ * URI: /tagcount
+ *
+ * Count the tags per tag per prop_id.
+ *
+ * FIXME: Why this weird rest call? ITS DB HEAVY. Maybe do group by on val_char_lft.
+ *
+ * 1.x: media_management_asset_tagcount
+ */
+class mediamosa_rest_call_asset_metadata_property_tagcount extends mediamosa_rest_call {
+
+  // ------------------------------------------------------------------ Consts.
+  // Rest vars;
+  const PROP_ID = 'prop_id';
+
+  // ------------------------------------------------------------------ Get Var Setup.
+  public function get_var_setup() {
+    $a_var_setup = array(
+      mediamosa_rest_call::VARS => array(
+        self::PROP_ID => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+          self::DESCRIPTION => 'The prop ID of which the count must be calculated..',
+        ),
+      ),
+    );
+
+    // Include the limit, offset.
+    $a_var_setup = self::get_var_setup_range($a_var_setup);
+
+    // Enrich with required REST vars.
+    return self::get_var_setup_default($a_var_setup);
+  }
+
+  // ------------------------------------------------------------------ Do Call.
+  public function do_call() {
+    $o_mediamosa = mediamosa::get();
+
+    // The app_id(s).
+    $a_app_ids = $this->get_param_value(self::APP_ID);
+
+    // The App ID.
+    $app_id = reset($a_app_ids);
+
+    // Range.
+    $limit = $this->get_param_value_limit();
+    $offset = $this->get_param_value_offset();
+
+    // Prop ID.
+    $prop_id = $this->get_param_value(self::PROP_ID);
+
+    // Get the count.
+    $result = mediamosa_asset_metadata::tagcount($app_id, $prop_id, $offset, $limit);
+
+    // Set the result.
+    $a_item = array();
+    foreach ($result as $a_row) {
+      $a_item['count'] = $a_row['tagcount'];
+      $a_item['tag'] = $a_row[mediamosa_asset_metadata_db::VAL_CHAR];
+      $o_mediamosa->add_item($a_item);
+    }
   }
 }

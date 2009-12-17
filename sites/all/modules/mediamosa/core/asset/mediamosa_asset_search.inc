@@ -142,22 +142,22 @@ class mediamosa_asset_search {
     // Is outside the ACL check, else we would have problems with 'granted'.
     if (!$is_app_admin) {
       if ($is_public_list && $aut_user_id) {
-        $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset']['access'][mediamosa_db_query::WHERE_AND][] = sprintf("(a.is_private = 'FALSE' AND (a.is_unappropriate = 'FALSE' OR a.owner_id = '%s'))", mediamosa_db::escape_string($aut_user_id));
+        $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset']['access'][mediamosa_db_query::WHERE_AND][] = sprintf("(a.isprivate = 'FALSE' AND (a.is_unappropriate = 'FALSE' OR a.owner_id = '%s'))", mediamosa_db::escape_string($aut_user_id));
       }
       elseif ($is_public_list) {
-        $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset']['access'][mediamosa_db_query::WHERE_AND][] = "(a.is_private = 'FALSE' AND a.is_unappropriate = 'FALSE')"; // Must both be FALSE
+        $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset']['access'][mediamosa_db_query::WHERE_AND][] = "(a.isprivate = 'FALSE' AND a.is_unappropriate = 'FALSE')"; // Must both be FALSE
       }
       elseif ($aut_user_id) { // if provided, then we only have access to unappropate when owner.
-        $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset']['access'][mediamosa_db_query::WHERE_AND][] = sprintf("(a.is_private = 'FALSE' OR a.is_private = 'TRUE') AND (a.is_unappropriate = 'FALSE' OR a.owner_id = '%s')", mediamosa_db::escape_string($aut_user_id));
+        $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset']['access'][mediamosa_db_query::WHERE_AND][] = sprintf("(a.isprivate = 'FALSE' OR a.isprivate = 'TRUE') AND (a.is_unappropriate = 'FALSE' OR a.owner_id = '%s')", mediamosa_db::escape_string($aut_user_id));
       }
       else {
         // No public list, no aut_user_id
-        $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset']['access'][mediamosa_db_query::WHERE_AND][] = "((a.is_private = 'FALSE' OR a.is_private = 'TRUE') AND a.is_unappropriate = 'FALSE')"; // Ignore isprivate, is_unappropriate must be TRUE
+        $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset']['access'][mediamosa_db_query::WHERE_AND][] = "((a.isprivate = 'FALSE' OR a.isprivate = 'TRUE') AND a.is_unappropriate = 'FALSE')"; // Ignore isprivate, is_unappropriate must be TRUE
       }
     }
     else {
       // just to match index for speed
-      $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset']['access'][mediamosa_db_query::WHERE_AND][] = "(a.is_private = 'FALSE' OR a.is_unappropriate = 'FALSE' OR a.is_unappropriate = 'TRUE')";// only 3, will match always
+      $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset']['access'][mediamosa_db_query::WHERE_AND][] = "(a.isprivate = 'FALSE' OR a.is_unappropriate = 'FALSE' OR a.is_unappropriate = 'TRUE')";// only 3, will match always
     }
 
     // Switch to hide assets that have no mediafiles
@@ -424,7 +424,7 @@ class mediamosa_asset_search {
 //INSERT INTO assets_all SELECT DISTINCT a.asset_id, a.videotimestampmodified FROM asset AS a LEFT JOIN mediafile AS mf ON a.asset_id=mf.asset_id_root
 //WHERE a.app_id IN(14) AND
 //a.parent_id IS NULL AND
-//(((a.is_private = 'FALSE' OR a.is_private = 'TRUE') AND a.is_unappropriate = 'FALSE') AND
+//(((a.isprivate = 'FALSE' OR a.isprivate = 'TRUE') AND a.is_unappropriate = 'FALSE') AND
 //a.is_empty_asset IS NOT NULL) AND
 //((a.videotimestampmodified >= '2009-06-12 00:00:00' AND a.videotimestampmodified < '2009-08-15 00:00:00')) AND
 //(mf.asset_id IS NULL OR (mf.is_original_file='TRUE' AND

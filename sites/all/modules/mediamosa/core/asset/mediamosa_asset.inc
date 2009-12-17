@@ -59,11 +59,14 @@ class mediamosa_asset {
    *
    * @param string $asset_id
    */
-  static public function get($asset_id) {
+  static public function get($asset_id, $app_id = NULL) {
 
     $query = mediamosa_db::db_select(mediamosa_asset_db::TABLE_NAME, 'a');
     $query->fields('a');
     $query->condition('a.' . mediamosa_asset_db::ID, $asset_id);
+    if (isset($app_id)) {
+      $query->condition('a.' . mediamosa_asset_db::APP_ID, $app_id);
+    }
     return $query->execute()->fetchAssoc();
   }
 
@@ -76,7 +79,7 @@ class mediamosa_asset {
   static public function getAllAssoc(array $a_asset_ids) {
 
     $query = mediamosa_db::db_select(mediamosa_asset_db::ID, 'a');
-    $query->fields();
+    $query->fields('a');
     $query->condition('a.' . mediamosa_asset_db::ID, $a_asset_ids, 'IN');
     return $query->execute()->fetchAllAssoc(mediamosa_asset_db::ID);
   }
@@ -86,12 +89,12 @@ class mediamosa_asset {
    *
    * @param string $asset_id
    */
-	static public function delete_jobs($asset_id) {
+  static public function delete_jobs($asset_id) {
 //@todo:
-	  return _vpx_jobs_cancel_job_by_asset($asset_id);
-	}
+    return _vpx_jobs_cancel_job_by_asset($asset_id);
+  }
 
-	/**
+  /**
    * Remove asset from database.
    *
    * @param string $asset_id
@@ -108,7 +111,7 @@ class mediamosa_asset {
 
     // @todo: start of transaction?
 
-  	// Find all my asset children.
+    // Find all my asset children.
     $a_asset_ids = mediamosa_db::db_query(
       'SELECT #asset_id FROM {#mediamosa_asset} WHERE #parent_id = :asset_id',
       array(
@@ -308,9 +311,10 @@ class mediamosa_asset {
     }
   }
 
-  // media_management_asset_collect
   /**
    * Collect the asset information.
+   *
+   * 1.x: media_management_asset_collect
    *
    * @param array $a_asset_ids
    *  Array asset_ids.
@@ -439,7 +443,8 @@ class mediamosa_asset {
     $a_query[mediamosa_db_query::A_FROM][] = '{mediamosa_asset_mediafile} AS m';
     $a_query[mediamosa_db_query::A_JOIN]['asset'] = 'JOIN {mediamosa_asset} AS a USING(asset_id)';
     if (isset($a_items['app_info'])) {
-      foreach ($a_items['app_info'] as $key => $value) {
+      $a_keys = array_keys($a_items['app_info']);
+      foreach ($a_keys as $key) {
         $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['profile'][mediamosa_db_query::WHERE_OR][] = sprintf("(m.transcode_profile_id = %d AND m.app_id = %d)", $a_items['app_info'][$key]['preview_profile_id'], $key);
       }
     }
@@ -478,7 +483,6 @@ class mediamosa_asset {
   /**
    * Enrich the response object with asset information.
    *
-   * @param mediamosa_response $o_mediamosa
    * @param array $a_items
    * @param array $a_asset_ids
    * @param array $a_app_ids
@@ -490,7 +494,6 @@ class mediamosa_asset {
   static public function enrich_response_asset(array $a_items, array $a_asset_ids, array $a_app_ids, $aut_user_id, $show_stills = TRUE, $show_collections = FALSE) {
     $a_collections = array();
 
-    $s_current_asset = FALSE;
     $a_items_pre_sort = array();
 
     // Need the first one.
@@ -522,10 +525,10 @@ class mediamosa_asset {
       }
     }
 
-    foreach ($a_items['assets'] as $id => $a_asset) {
+    foreach ($a_items['assets'] as $a_asset) {
 
-    	// Now only stuff that may be set once per asset.
-    	if (!isset($a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]])) {
+      // Now only stuff that may be set once per asset.
+      if (!isset($a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]])) {
         $a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]] = mediamosa_asset::process_asset_output($a_asset, $a_metadata_definitions_full);
 
         if ($a_items['app_info'][$a_asset['app_id']]['play_proxy_url'] && isset($a_items['mediafile_preview'][$a_asset[mediamosa_asset_db::ID]])) {
@@ -562,14 +565,12 @@ class mediamosa_asset {
         if ($show_stills) {
           $ticket = mediamosa_db::uuid($app_id);
           $a_mediafile_ext['asset_id'] = $a_asset[mediamosa_asset_db::ID];
-          $result = mediamosa_ticket::create($ticket, $a_mediafile_ext, mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL, $app_id, $aut_user_id, $a_items['stills'][$a_asset[mediamosa_asset_db::ID]]);
+          mediamosa_ticket::create($ticket, $a_mediafile_ext, mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL, $app_id, $aut_user_id, $a_items['stills'][$a_asset[mediamosa_asset_db::ID]]);
 
           // Create still response.
-          if ($result !== FALSE) {
-            $response = mediamosa_asset_mediafile_play_proxy::create_response_still($ticket, $app_id);
-            $a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]]['vpx_still_url'] = $response['output'];
-            $a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]]['ega_still_url'] = str_replace('{asset_id}', $a_asset[mediamosa_asset_db::ID], $a_items['app_info'][$a_asset['app_id']]['still_url']);
-          }
+          $response = mediamosa_asset_mediafile_play_proxy::create_response_still($ticket, $app_id);
+          $a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]]['vpx_still_url'] = $response['output'];
+          $a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]]['ega_still_url'] = str_replace('{asset_id}', $a_asset[mediamosa_asset_db::ID], $a_items['app_info'][$a_asset['app_id']]['still_url']);
         }
       }
 
@@ -614,31 +615,33 @@ class mediamosa_asset {
     );
 
     if ($real_asset_id !== FALSE) {
-	    $asset_id = $real_asset_id;
-	  }
+      $asset_id = $real_asset_id;
+    }
 
-	  // Get the NOW date.
-	  $db_now = mediamosa::db_current_timestamp_now();
+    // Get the NOW date.
+    $now = mediamosa::db_current_timestamp_now();
 
-	  // Update videotimestamp.
-	  mediamosa_db::db_query(
-	    'UPDATE {#mediamosa_asset} SET #videotimestamp = :now WHERE #asset_id = :asset_id AND #videotimestamp IS NULL',
-	    array(
-	      '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
-	      '#videotimestamp' => mediamosa_asset_db::VIDEOTIMESTAMP,
-	      '#asset_id' => mediamosa_asset_db::ID,
-	      ':asset_id' => $asset_id
-	    )
-	  );
+    // Update videotimestamp.
+    mediamosa_db::db_query(
+      'UPDATE {#mediamosa_asset} SET #videotimestamp = :now WHERE #asset_id = :asset_id AND #videotimestamp IS NULL',
+      array(
+        '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
+        '#videotimestamp' => mediamosa_asset_db::VIDEOTIMESTAMP,
+        '#asset_id' => mediamosa_asset_db::ID,
+        ':asset_id' => $asset_id,
+        ':now' => $now,
+      )
+    );
 
-	  // Update videotimestampmodified.
+    // Update videotimestampmodified.
     mediamosa_db::db_query(
       'UPDATE {#mediamosa_asset} SET #videotimestampmodified = :now WHERE #asset_id = :asset_id',
       array(
         '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
         '#videotimestampmodified' => mediamosa_asset_db::VIDEOTIMESTAMPMODIFIED,
         '#asset_id' => mediamosa_asset_db::ID,
-        ':asset_id' => $asset_id
+        ':asset_id' => $asset_id,
+        ':now' => $now,
       )
     );
   }
@@ -651,25 +654,25 @@ class mediamosa_asset {
    * @param $asset_id
    */
   static public function asset_viewed($asset_id) {
-	  mediamosa_db::db_query(
-	    'UPDATE {#mediamosa_asset} SET #viewed = #viewed + 1 WHERE #asset_id = :asset_id',
-	    array(
-	      '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
-	      '#viewed' => mediamosa_asset_db::VIEWED,
-	      '#asset_id' => mediamosa_asset_db::ID,
-	      ':asset_id' => $asset_id
-	    )
-	  );
-	}
+    mediamosa_db::db_query(
+      'UPDATE {#mediamosa_asset} SET #viewed = #viewed + 1 WHERE #asset_id = :asset_id',
+      array(
+        '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
+        '#viewed' => mediamosa_asset_db::VIEWED,
+        '#asset_id' => mediamosa_asset_db::ID,
+        ':asset_id' => $asset_id
+      )
+    );
+  }
 
-	/**
-	 * Increase played.
-	 *
-	 * 1.x: _mediafile_management_asset_played
-	 *
-	 * @param $asset_id
-	 */
-	static public function asset_played($asset_id) {
+  /**
+   * Increase played.
+   *
+   * 1.x: _mediafile_management_asset_played
+   *
+   * @param $asset_id
+   */
+  static public function asset_played($asset_id) {
     mediamosa_db::db_query(
       'UPDATE {#mediamosa_asset} SET #played = #played + 1 WHERE #asset_id = :asset_id',
       array(
@@ -679,26 +682,26 @@ class mediamosa_asset {
         ':asset_id' => $asset_id
       )
     );
-	}
+  }
 
-	/**
-	 * Test access for unappropriate.
-	 *
-	 * @param string $asset_id
-	 * @param array $app_id
-	 * @param string $user_id
-	 * @param bool $is_app_admin
-	 */
-	function is_unappropriate($asset_id, array $a_app_ids, $user_id, $is_app_admin = FALSE) {
+  /**
+   * Test access for unappropriate.
+   *
+   * @param string $asset_id
+   * @param array $app_id
+   * @param string $user_id
+   * @param bool $is_app_admin
+   */
+  static public function is_unappropriate($asset_id, array $a_app_ids, $user_id, $is_app_admin = FALSE) {
 
-		$a_asset = self::get($asset_id);
+    $a_asset = self::get($asset_id);
     if (!$a_asset) {
-    	throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_ASSET_NOT_FOUND, array('@asset_id' => $asset_id));
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_ASSET_NOT_FOUND, array('@asset_id' => $asset_id));
     }
 
     // If its not unapp. then leave.
     if ($a_asset[mediamosa_asset_db::IS_UNAPPROPRIATE] != mediamosa_asset_db::IS_UNAPPROPRIATE_TRUE) {
-    	return;
+      return;
     }
 
     // Must be owner or admin.
@@ -706,7 +709,129 @@ class mediamosa_asset {
       mediamosa_aut::owner_check(reset($a_app_ids), $user_id, $a_asset[mediamosa_asset_db::APP_ID], $a_asset[mediamosa_asset_db::OWNER_ID], $is_app_admin);
     }
     catch (mediamosa_exception_error_access_denied $e) {
+      assert($e);
       throw new mediamosa_exception_error(mediamosa_db::ERRORCODE_IS_UNAPPROPRIATE);
     }
+  }
+
+  /**
+   * @param $app_id
+   *  The Application ID.
+   * @param $owner_id
+   *  The owner ID.
+   * @param $group_id
+   *  The group ID.
+   * @param $reference_id
+   *  The reference ID.
+   * @param $provider_id
+   *  The provider ID
+   * @param $parent_id (depricated)
+   *  The parent ID.
+   */
+  static public function create($app_id, $owner_id, $group_id = NULL, $reference_id = NULL, $provider_id = NULL, $parent_id = NULL) {
+
+    // maak een uniek asset_id aan
+    $asset_id = mediamosa_db::uuid($app_id);
+
+    $a_fields = array(
+      mediamosa_asset_db::ID => $app_id,
+      mediamosa_asset_db::OWNER_ID => $owner_id,
+    );
+
+    if ($group_id) {
+      $a_fields[mediamosa_asset_db::GROUP_ID] = $group_id;
+    }
+    if ($reference_id) {
+      $a_fields[mediamosa_asset_db::REFERENCE_ID] = $reference_id;
+    }
+    if ($provider_id) {
+      $a_fields[mediamosa_asset_db::PROVIDER_ID] = $provider_id;
+    }
+    if ($parent_id) {
+      $a_fields[mediamosa_asset_db::PARENT_ID] = $parent_id;
+    }
+
+    // Insert it.
+    mediamosa_db::db_insert(mediamosa_asset_db::TABLE_NAME)
+      ->fields($a_fields)
+      ->execute();
+
+    // Return our ID.
+    return $asset_id;
+  }
+
+  /**
+   * Update a asset.
+   *
+   * @param string $app_id
+   *  The application ID.
+   * @param string $user_id
+   *  The user id of current user.
+   * @param bool $is_app_admin
+   *  Is application admin.
+   * @param string $asset_id
+   *  The asset ID.
+   * @param string $owner_id
+   *  The new owner ID.
+   * @param string $group_id
+   *  The new group ID.
+   * @param string $play_restriction_start
+   *  Start range restriction.
+   * @param string $play_restriction_end
+   *  End range restriction.
+   * @param bool $isprivate
+   *  Is private flag.
+   * @param bool $is_unappropriate
+   *  Is unappropriate flag.
+   */
+  static public function update($app_id, $user_id, $is_app_admin, $asset_id, $owner_id = NULL, $group_id = NULL, $play_restriction_start = NULL, $play_restriction_end = NULL, $isprivate = NULL, $is_unappropriate = NULL) {
+
+    // Asset must exist.
+    mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id, mediamosa_asset_db::PARENT_ID => NULL));
+
+    // Get the asset.
+    $a_asset = mediamosa_asset::get($asset_id);
+
+    // Must be owner.
+    mediamosa_aut::owner_check($app_id, $user_id, $a_asset[mediamosa_asset_db::APP_ID], $a_asset[mediamosa_asset_db::OWNER_ID], $is_app_admin);
+
+    // If not null, then check if this is the ega admin...
+    if (!is_null($is_unappropriate)) {
+      mediamosa_aut::app_admin_check($app_id, $a_asset[mediamosa_asset_db::APP_ID], $is_app_admin);
+    }
+
+    $a_fields = array();
+    if (!is_null($play_restriction_start)) {
+      $a_fields[mediamosa_asset_db::PLAY_RESTRICTION_START] = $play_restriction_start;
+    }
+    if (!is_null($play_restriction_end)) {
+      $a_fields[mediamosa_asset_db::PLAY_RESTRICTION_END] = $play_restriction_end;
+    }
+    if (!is_null($isprivate)) {
+      $a_fields[mediamosa_asset_db::ISPRIVATE] = $isprivate;
+    }
+    if (!is_null($is_unappropriate)) {
+      $a_fields[mediamosa_asset_db::IS_UNAPPROPRIATE] = $is_unappropriate;
+    }
+
+    if ($is_app_admin) {
+      if (!is_null($owner_id)) {
+        $a_fields[mediamosa_asset_db::OWNER_ID] = $owner_id;
+      }
+      if (!is_null($group_id)) {
+        $a_fields[mediamosa_asset_db::GROUP_ID] = $group_id;
+      }
+    }
+
+    // retourneer een foutmelding als er geen wijzigingen gestuurd zijn
+    if (!count($a_fields)) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_NO_CHANGES);
+    }
+
+    // Update the asset.
+    mediamosa_db::db_update(mediamosa_asset_db::TABLE_NAME)
+      ->fields($a_fields)
+      ->condition(mediamosa_asset_db::ID, $asset_id)
+      ->execute();
   }
 }

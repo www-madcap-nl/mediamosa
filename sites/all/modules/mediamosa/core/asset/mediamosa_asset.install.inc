@@ -31,10 +31,11 @@
 
 require_once 'mediamosa_asset.inc';
 require_once 'mediamosa_asset_db.inc';
-require_once 'mediafile/mediamosa_asset_mediafile.install.inc';
-require_once 'metadata/mediamosa_asset_metadata.install.inc';
 require_once 'collection/mediamosa_asset_collection.install.inc';
 require_once 'delete/mediamosa_asset_delete.install.inc';
+require_once 'mediafile/mediamosa_asset_mediafile.install.inc';
+require_once 'metadata/mediamosa_asset_metadata.install.inc';
+require_once 'supplement/mediamosa_asset_supplement.install.inc';
 
 /**
  * Implement hook_install().
@@ -54,14 +55,20 @@ function mediamosa_asset_install() {
 
   // Call installer asset_delete.
   mediamosa_asset_delete_install();
+
+  // Call installer asset_supplement.
+  mediamosa_asset_supplement_install();
 }
 
 /**
  * Implement hook_uninstall().
  */
 function mediamosa_asset_uninstall() {
+  // Call uninstaller asset_supplement.
+  mediamosa_asset_supplement_uninstall();
+
   // Call uninstaller asset_delete.
-  mediamosa_asset_delete_install();
+  mediamosa_asset_delete_uninstall();
 
   // Call uninstaller asset_collection.
   mediamosa_asset_collection_uninstall();
@@ -153,12 +160,12 @@ function mediamosa_asset_schema() {
         'default' => NULL,
         'description' => t('The reference ID.'),
       ),
-      mediamosa_asset_db::IS_PRIVATE => array(
+      mediamosa_asset_db::ISPRIVATE => array(
         'description' => t('The asset is private.'),
-        'type' => "enum('" . implode("','", array(mediamosa_asset_db::IS_PRIVATE_FALSE, mediamosa_asset_db::IS_PRIVATE_TRUE)) . "')",
+        'type' => "enum('" . implode("','", array(mediamosa_asset_db::ISPRIVATE_FALSE, mediamosa_asset_db::ISPRIVATE_TRUE)) . "')",
         'not null' => TRUE,
-        'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_db::IS_PRIVATE_FALSE, mediamosa_asset_db::IS_PRIVATE_TRUE)) . "')",
-        'default' => mediamosa_asset_db::IS_PRIVATE_FALSE,
+        'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_db::ISPRIVATE_FALSE, mediamosa_asset_db::ISPRIVATE_TRUE)) . "')",
+        'default' => mediamosa_asset_db::ISPRIVATE_FALSE,
       ),
       mediamosa_asset_db::MEDIAFILE_DURATION => array(
         'type' => 'varchar',
@@ -237,7 +244,7 @@ function mediamosa_asset_schema() {
       'idx_app_parent_priv_unapp_emptyasset_owner' => array(
         mediamosa_asset_db::APP_ID,
         mediamosa_asset_db::PARENT_ID,
-        mediamosa_asset_db::IS_PRIVATE,
+        mediamosa_asset_db::ISPRIVATE,
         mediamosa_asset_db::IS_UNAPPROPRIATE,
         mediamosa_asset_db::IS_EMPTY_ASSET,
         mediamosa_asset_db::OWNER_ID,

@@ -382,6 +382,13 @@ class mediamosa_db {
   }
 
   /**
+   * Switch to ftp database.
+   */
+  static public function db_set_active_ftp() {
+    return self::db_set_active('ftp');
+  }
+
+  /**
    * Install the foreign keys.
    * Drupal 7 at this time only describes how it wants to implement foreign keys in
    * their schema layer. For now we will add foreign keys ourselfs after creation of
@@ -487,11 +494,13 @@ class mediamosa_db {
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_COLLECTION_NOT_FOUND, array('@coll_id' => $a_columns_and['coll_id']));
       case mediamosa_asset_collection_db::TABLE_NAME:
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_COLLECTION_ASSET_RELATION_NOT_FOUND, array('@coll_id' => $a_columns_and[mediamosa_asset_collection_db::COLL_ID], '@asset_id' => $a_columns_and[mediamosa_asset_collection_db::ASSET_ID]));
+      case mediamosa_asset_supplement_db::TABLE_NAME:
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_ASSET_SUPPLEMENT_NOT_FOUND, array('@supplement_id' => $a_columns_and[mediamosa_asset_supplement_db::ID]));
+      case mediamosa_ftp_user_db::TABLE_NAME:
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_FTP_UNKNOWN_USER);
 /*
       case 'job':
         throw new vpx_exception_error_job_not_found(array('@job_id' => $a_columns_and['job_id']));
-      case 'ftpuser':
-        throw new vpx_exception_error(ERRORCODE_FTP_UNKNOWN_USER);
       case 'quota_user':
         throw new vpx_exception_error(ERRORCODE_USERMAN_INVALID_USER, array('@user_id' => $a_columns_and['name']));
       case 'quota_group':

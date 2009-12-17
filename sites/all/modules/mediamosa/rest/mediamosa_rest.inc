@@ -106,7 +106,7 @@ class mediamosa_rest {
     }
 
     if (!$a_rest_call_return) {
-    	return FALSE; // Not found.
+      return FALSE; // Not found.
     }
 
     // Return found REST call and set all its defaults.
@@ -244,8 +244,8 @@ class mediamosa_rest {
     // Process the REST call.
     $o_rest_call->process_call();
 
-  	// If offset was specified, then include it in the header.
-    if ($o_rest_call->isset_param(mediamosa_rest_call::OFFSET)) {
+    // If offset was specified, then include it in the header.
+    if ($o_rest_call->isset_given_param(mediamosa_rest_call::OFFSET)) {
       $o_mediamosa->item_offset = $o_rest_call->get_param_value(mediamosa_rest_call::OFFSET);
     }
   }

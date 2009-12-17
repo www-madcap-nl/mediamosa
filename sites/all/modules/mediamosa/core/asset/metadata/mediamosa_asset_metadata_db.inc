@@ -35,7 +35,7 @@ class mediamosa_asset_metadata_db {
   const TABLE_NAME = 'mediamosa_asset_metadata';
 
   // Database fields;
-  const ID = 'metadata_id';
+  const ID = 'metadata_id'; // 1.x: id
   const ASSET_ID = 'asset_id';
   const PROP_ID = 'prop_id';
   const VAL_CHAR = 'val_char';

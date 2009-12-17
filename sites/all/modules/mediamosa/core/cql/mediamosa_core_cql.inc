@@ -127,12 +127,12 @@ class mediamosa_core_cql {
   }
 
   /**
-	 * Start parsing the CQL for asset search.
-	 *
-	 * @param string $str_cql
-	 * @param array $a_app_ids
-	 */
-	static public function parse_asset($str_cql, array $a_app_ids) {
+   * Start parsing the CQL for asset search.
+   *
+   * @param string $str_cql
+   * @param array $a_app_ids
+   */
+  static public function parse_asset($str_cql, array $a_app_ids) {
 
     // Create the CQL object.
     $mediamosa_cql = new mediamosa_asset_cql_context($a_app_ids);
@@ -401,7 +401,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
    */
   private function mediamosa_save_search($keywords) {
     // @todo:
-  	//_vpx_statistics_log_cql_search_query($keywords, $this->m_a_app_ids);
+    //_vpx_statistics_log_cql_search_query($keywords, $this->m_a_app_ids);
   }
 
   /**

@@ -47,5 +47,8 @@ class mediamosa_settings {
   // Max Limits.
   const LIMIT_DEFAULT = 10; // We return 10 items by default.
   const LIMIT_MAX = 200;
-  const LIMIT_MAX_IDS_ONLY = 5000; // In case we only return IDs instead of complete array's
+  const LIMIT_MAX_IDS_ONLY = 5000; // In case we only return IDs instead of complete array's.
+
+  // Max. supplements per asset.
+  const MAX_SUPPLEMENT_PER_ASSET = 16;
 }

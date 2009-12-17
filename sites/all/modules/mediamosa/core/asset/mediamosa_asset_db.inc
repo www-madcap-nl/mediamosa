@@ -53,9 +53,9 @@ class mediamosa_asset_db {
   const IS_LOCKED_FALSE = 'FALSE';
   const REFERENCE_ID = 'reference_id';
   const REFERENCE_ID_LENGTH = 255;
-  const IS_PRIVATE = 'is_private'; // 1.x name: isprivate.
-  const IS_PRIVATE_TRUE = 'TRUE';
-  const IS_PRIVATE_FALSE = 'FALSE';
+  const ISPRIVATE = 'isprivate';
+  const ISPRIVATE_TRUE = 'TRUE';
+  const ISPRIVATE_FALSE = 'FALSE';
   const MEDIAFILE_DURATION = 'mediafile_duration';
   const MEDIAFILE_DURATION_LENGTH = 10;
   const MEDIAFILE_CONTAINER_TYPE = 'mediafile_container_type';

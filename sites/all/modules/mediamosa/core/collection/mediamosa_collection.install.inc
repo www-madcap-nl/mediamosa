@@ -92,12 +92,12 @@ function mediamosa_collection_schema() {
         'default' => NULL,
         'description' => t('The group ID.'),
       ),
-      mediamosa_collection_db::IS_PRIVATE => array(
+      mediamosa_collection_db::ISPRIVATE => array(
         'description' => t('The collection is private.'),
-        'type' => "enum('" . implode("','", array(mediamosa_collection_db::IS_PRIVATE_FALSE, mediamosa_collection_db::IS_PRIVATE_TRUE)) . "')",
+        'type' => "enum('" . implode("','", array(mediamosa_collection_db::ISPRIVATE_FALSE, mediamosa_collection_db::ISPRIVATE_TRUE)) . "')",
         'not null' => TRUE,
-        'mysql_type' => "enum('" . implode("','", array(mediamosa_collection_db::IS_PRIVATE_FALSE, mediamosa_collection_db::IS_PRIVATE_TRUE)) . "')",
-        'default' => mediamosa_collection_db::IS_PRIVATE_FALSE,
+        'mysql_type' => "enum('" . implode("','", array(mediamosa_collection_db::ISPRIVATE_FALSE, mediamosa_collection_db::ISPRIVATE_TRUE)) . "')",
+        'default' => mediamosa_collection_db::ISPRIVATE_FALSE,
       ),
       mediamosa_collection_db::_PRIVATE => array(
         'description' => t('The collection is private.'),

@@ -121,6 +121,7 @@ function mediamosa_migration_requirements($phase) {
       'mediamosa_server_upload',
       'mediamosa_ticket',
       'mediamosa_ftp_batch',
+      'mediamosa_ftp_batch_asset'
     );
     // These tables (dest) must be empty.
     $a_table_names_dest_empty = array(
@@ -133,6 +134,7 @@ function mediamosa_migration_requirements($phase) {
       'mediamosa_collection',
       'mediamosa_ticket',
       'mediamosa_ftp_batch',
+      'mediamosa_ftp_batch_asset',
     );
     // Must exists source drupal db.
     $a_table_names_source_exists = array(
@@ -162,6 +164,7 @@ function mediamosa_migration_requirements($phase) {
       'quota_user',
       'quota_group',
       'ftp_batch',
+      'ftp_batch_asset',
     );
 
     $old_db = 'default';
@@ -228,6 +231,9 @@ function mediamosa_migration_install() {
 
   // asset -> mediamosa_asset.
   _mediamosa_migration_asset();
+
+  // asset_supplement -> mediamosa_asset_supplement.
+  _mediamosa_migration_asset_supplement();
 
   // mediafile -> mediamosa_asset_mediafile.
   _mediamosa_migration_mediafile();
@@ -494,7 +500,6 @@ function _mediamosa_migration_asset() {
    * testtag
    * has_streamable_mediafiles
    * Columns renamed;
-   * isprivate = is_private
    * mediafile_duration = media_duration
    * mediafile_container_type = media_container_type
    */
@@ -513,7 +518,7 @@ function _mediamosa_migration_asset() {
         play_restriction_end,
         is_locked,
         reference_id,
-        is_private,
+        isprivate,
         mediafile_duration,
         mediafile_container_type,
         created,
@@ -890,6 +895,7 @@ function _mediamosa_migration_asset_metadata() {
    * Columns dropped;
    * -
    * Columns renamed;
+   * id -> metadata_id
    * -
    * Columns new;
    * val_char_lft
@@ -1103,7 +1109,6 @@ function _mediamosa_migration_collection() {
    * testtag
    * has_streamable_mediafiles
    * Columns renamed;
-   * isprivate = is_private
    */
   db_query(strtr(
     "INSERT INTO {mediamosa_collection}
@@ -1114,7 +1119,7 @@ function _mediamosa_migration_collection() {
         app_id,
         owner_id,
         group_id,
-        is_private,
+        isprivate,
         private,
         public,
         category,
@@ -1574,6 +1579,7 @@ function _mediamosa_migration_ftp_batch() {
   /**
    * Copy from 1.x to 2.x
    * Columns dropped;
+   * id (autoinc not needed in a link table)
    * -
    * Columns renamed;
    * -
@@ -1581,14 +1587,12 @@ function _mediamosa_migration_ftp_batch() {
   db_query(strtr(
     "INSERT INTO {mediamosa_ftp_batch_asset}
       (
-        id,
         asset_id,
         batch_id
       ) (SELECT
-        id,
         asset_id,
         batch_id
-      FROM #db_name.ftp_batch_asset ORDER BY id ASC)",
+      FROM #db_name.ftp_batch_asset GROUP BY batch_id, asset_id ORDER BY id ASC)",
     array(
       '#db_name' => $db_name
     ))
@@ -1668,4 +1672,56 @@ function _mediamosa_migration_webservice() {
       '#db_name' => $db_name
     ))
   );
+}
+
+/**
+ * Migrate asset supplement table..
+ */
+function _mediamosa_migration_asset_supplement() {
+  // Get the database name.
+  $db_name = _mediamosa_migration_get_memo_data_db();
+
+  // Get the current mode, which might be empty;
+  $old_mode = db_query('SELECT @@SESSION.sql_mode')->fetchField();
+
+  // Turn off problems with empty dates.
+  db_query("SET SESSION sql_mode = 'ALLOW_INVALID_DATES'");
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_asset_supplement}
+      (
+        supplement_id,
+        asset_id,
+        supplement,
+        tag,
+        oai_prefix,
+        oai_namespaceuri,
+        oai_schemalocation,
+        created,
+        changed
+      ) (SELECT
+        supplement_id,
+        asset_id,
+        supplement,
+        tag,
+        oai_prefix,
+        oai_namespaceuri,
+        oai_schemalocation,
+        created,
+        changed
+      FROM #db_name.asset_supplement ORDER BY created ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+  // Back to old session mode.
+  db_query(strtr("SET SESSION sql_mode = '#old_mode'", array('#old_mode' => $old_mode)));
 }

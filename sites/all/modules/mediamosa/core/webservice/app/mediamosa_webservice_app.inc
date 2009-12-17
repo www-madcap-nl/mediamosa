@@ -31,9 +31,10 @@
 class mediamosa_webservice_app {
   // ------------------------------------------------------------------ Consts.
   const HANDLE_MEDIA_MANAGEMENT = 'media_management';
+  const HANDLE_BATCH_UPLOAD = 'batch_upload';
 
-	// ------------------------------------------------------------------ Static Functions.
-	/**
+  // ------------------------------------------------------------------ Static Functions.
+  /**
    * Check active status of an webservice.
    *
    * 1.x: vpx_shared_webservice_is_active

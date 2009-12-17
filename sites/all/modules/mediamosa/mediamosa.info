@@ -119,6 +119,11 @@ files[] = core/asset/metadata/property/group/mediamosa_asset_metadata_property_g
 ; Asset Playproxy.
 files[] = core/asset/mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.inc
 
+; Asset Supplement.
+files[] = core/asset/supplement/mediamosa_asset_supplement_db.inc
+files[] = core/asset/supplement/mediamosa_asset_supplement.inc
+files[] = core/asset/supplement/mediamosa_asset_supplement.install.inc
+
 ; Collection.
 files[] = core/collection/mediamosa_collection_db.inc
 files[] = core/collection/mediamosa_collection_search.inc
@@ -134,6 +139,14 @@ files[] = core/asset/collection/mediamosa_asset_collection.install.inc
 files[] = core/ftp_batch/mediamosa_ftp_batch_db.inc
 files[] = core/ftp_batch/mediamosa_ftp_batch.inc
 files[] = core/ftp_batch/mediamosa_ftp_batch.install.inc
+
+; FTP Batch Asset.
+files[] = core/ftp_batch/asset/mediamosa_ftp_batch_asset_db.inc
+files[] = core/ftp_batch/asset/mediamosa_ftp_batch_asset.inc
+files[] = core/ftp_batch/asset/mediamosa_ftp_batch_asset.install.inc
+
+; FTP User.
+files[] = core/ftp_user/mediamosa_ftp_user_db.inc
 
 ; Job.
 files[] = core/job/mediamosa_job.inc

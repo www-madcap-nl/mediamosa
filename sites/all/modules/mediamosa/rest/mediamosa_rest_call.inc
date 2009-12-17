@@ -105,6 +105,10 @@ abstract class mediamosa_rest_call {
   const VAR_IS_READ_ONLY = 'read_only'; // default no. Some vars may not be changed.
   const VAR_IS_INTERNAL_ONLY = 'internal_only'; // If true, then this variable is only accepted by internals.
 
+  const VAR_IS_HIDDEN = 'hidden'; // Hide var for outside world.
+  const VAR_IS_HIDDEN_YES = 'yes';
+  const VAR_IS_HIDDEN_NO = 'no';
+
   // Values VAR_IS_REQUIRED
   const VAR_IS_REQUIRED_YES = 'YES';
   const VAR_IS_REQUIRED_NO = 'NO';
@@ -128,6 +132,7 @@ abstract class mediamosa_rest_call {
   // Param fields
   const PARAM_VALUE = 'value';
   const PARAM_TYPE = 'type';
+  const PARAM_ISSET_GIVEN = 'isgiven'; // Value was set by GET/POST/URI
   const PARAM_ISSET_DEFAULT = 'isset_default'; // Value isset, but was set with default value.
   const PARAM_VALIDATED = 'validated';
   const PARAM_RANGE_START = 'range_start';
@@ -255,7 +260,7 @@ abstract class mediamosa_rest_call {
    * @todo: actualy return true when internal.
    */
   protected function call_is_internal() {
-  	return FALSE;
+    return FALSE;
   }
 
   /**
@@ -341,10 +346,15 @@ abstract class mediamosa_rest_call {
       throw new mediamosa_exception_program_error('Do not set param @param, its read only.', array('@param' => $param));
     }
 
+    // Set value.
     $this->a_rest_args[$param][self::PARAM_VALUE] = $value;
 
     // Expected to ok, we cant validate anyway.
     $this->a_rest_args[$param][self::PARAM_VALIDATED] = TRUE;
+
+    // Ok not set by default or URI/POST/GET.
+    $this->a_rest_args[$param][self::PARAM_ISSET_DEFAULT] = FALSE;
+    $this->a_rest_args[$param][self::PARAM_ISSET_GIVEN] = FALSE;
   }
 
   /**
@@ -357,13 +367,24 @@ abstract class mediamosa_rest_call {
   }
 
   /**
-   * Will return TRUE if the param is set.
+   * Will return TRUE if the param is set (by any means set)
    *
    * @param string $param
    * @return boolean
    */
   public function isset_param($param) {
     return isset($this->a_rest_args[$param]) && isset($this->a_rest_args[$param][self::PARAM_VALUE]);
+  }
+
+  /**
+   * Will return TRUE if the param was set by POST/GET/URI.
+   * If the param is set any other way (like default value or set_param), it will return FALSE.
+   *
+   * @param string $param
+   * @return boolean
+   */
+  public function isset_given_param($param) {
+    return isset($this->a_rest_args[$param]) && $this->a_rest_args[$param][self::PARAM_ISSET_GIVEN];
   }
 
   /**
@@ -435,7 +456,7 @@ abstract class mediamosa_rest_call {
   }
   // ------------------------------------------------------------------ Functions (protected).
   /**
-   * Process the supplied parameters and type validation.
+   * Process the supplied parameters.
    *
    * @param array $a_var_setup
    */
@@ -451,11 +472,13 @@ abstract class mediamosa_rest_call {
       $this->a_rest_args[$key_uri][self::PARAM_VALUE] = $value_uri;
     }
 
+
     // Fill the $a_rest_args array with rest input.
     foreach ($_GET as $key_get => $value_get) {
       if ($key_get == 'q') {
         continue; // Ignore the q variable.
       }
+      // Set by default off.
 
       if (!isset($a_var_setup[self::VARS][$key_get]) && $this->check_for_unspecified) {
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_UNSPECIFIED_VARIABLE, array('@var' => $key_get));
@@ -505,7 +528,7 @@ abstract class mediamosa_rest_call {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INTERNAL_ONLY, array('@param' => $param, '@type' => $this->a_rest_args[$param][self::PARAM_TYPE]));
         }
 
-      	unset($this->a_rest_args[$param][self::PARAM_VALUE]);
+        unset($this->a_rest_args[$param][self::PARAM_VALUE]);
         if (!isset($a_var[self::VAR_IS_READ_ONLY])) {
           $a_var[self::VAR_IS_READ_ONLY] = self::VAR_IS_READ_ONLY_YES;
         }
@@ -514,12 +537,16 @@ abstract class mediamosa_rest_call {
       // Make sure its set, even when empty.
       if (!isset($this->a_rest_args[$param][self::PARAM_VALUE])) {
         $this->a_rest_args[$param][self::PARAM_VALUE] = NULL; // Default NULL.
+        $this->a_rest_args[$param][self::PARAM_ISSET_GIVEN] = FALSE;
 
         // Defaults.
         if (isset($a_var[self::VAR_DEFAULT_VALUE])) {
           $this->a_rest_args[$param][self::PARAM_VALUE] = $a_var[self::VAR_DEFAULT_VALUE];
-          $this->a_rest_args[$param][self::PARAM_ISSET_DEFAULT] = TRUE; // Set by default
+          $this->a_rest_args[$param][self::PARAM_ISSET_DEFAULT] = TRUE; // Set by default.
         }
+      }
+      else {
+        $this->a_rest_args[$param][self::PARAM_ISSET_GIVEN] = TRUE; // Was found in GET/POST/URI.
       }
 
       // Set not validated so we can validate when we need it.

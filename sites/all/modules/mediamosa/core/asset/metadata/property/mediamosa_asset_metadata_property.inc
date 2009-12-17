@@ -75,6 +75,8 @@ class mediamosa_asset_metadata_property {
   /**
    * Create property.
    *
+   * 1.x: media_management_metadata_definition_create (REST).
+   *
    * @param array/integer $mixed_app_ids
    *  Application ID.
    * @param string $name
@@ -86,7 +88,6 @@ class mediamosa_asset_metadata_property {
    * @return
    *  The new prop_id.
    */
-  // 1.x name: media_management_metadata_definition_create (REST).
   static public function property_create($mixed_app_ids, $name, $type, $min_occurences = 0, $max_occurences = 0) {
 
     // First app_id is always the app of the eua.
@@ -221,19 +222,19 @@ class mediamosa_asset_metadata_property {
   /**
    * Get definitions from the asset_property_definitions array
    *
-   * @param array/string $mixed_propgroup_name
+   * @param array $a_propgroup_name
    * @return array
    */
   static public function get_metadata_properties(array $a_propgroup_name = array('dublin_core')) {
 
-  	// Caching.
-  	static $a_metadata_properties = array();
+    // Caching.
+    static $a_metadata_properties = array();
 
-  	// Check if its in our cache.
-  	$key = serialize($a_propgroup_name);
-  	if (isset($a_metadata_properties[$key])) {
-  		return $a_metadata_properties[$key];
-  	}
+    // Check if its in our cache.
+    $key = serialize($a_propgroup_name);
+    if (isset($a_metadata_properties[$key])) {
+      return $a_metadata_properties[$key];
+    }
 
     // Build the select query object.
     $query = mediamosa_db::db_select(mediamosa_asset_metadata_property_group_db::TABLE_NAME, 'ampg');
@@ -276,6 +277,7 @@ class mediamosa_asset_metadata_property {
 
   /**
    * Get all metadata properties, plus our own based on the app_id
+   *
    * 1.x _media_management_get_metadata_definitions_full
    *
    * @param mixed $mixed_app_id

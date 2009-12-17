@@ -35,19 +35,19 @@ class mediamosa_server_still {
    * Get the default still server.
    */
   static public function get() {
-  	static $a_server = NULL;
+    static $a_server = NULL;
 
-  	if (isset($a_server)) {
-  		return $a_server;
-  	}
+    if (isset($a_server)) {
+      return $a_server;
+    }
 
-  	$a_server = mediamosa_db::db_query(
-  	 'SELECT * FROM {#mediamosa_server_still} WHERE #active = 1 LIMIT 1',
-  	 array(
-  	   '#mediamosa_server_still' => mediamosa_server_still_db::TABLE_NAME,
+    $a_server = mediamosa_db::db_query(
+     'SELECT * FROM {#mediamosa_server_still} WHERE #active = 1 LIMIT 1',
+     array(
+       '#mediamosa_server_still' => mediamosa_server_still_db::TABLE_NAME,
        '#active' => mediamosa_server_still_db::ACTIVE,
-  	 )
-  	)->fetchAssoc();
+     )
+    )->fetchAssoc();
 
     return $a_server;
   }

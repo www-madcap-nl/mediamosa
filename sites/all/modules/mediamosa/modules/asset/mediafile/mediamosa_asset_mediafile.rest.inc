@@ -32,6 +32,9 @@
 /**
  * URI: /mediafile/count
  * Method: GET
+ *
+ * 1.x: media_management_mediafile_count.
+ *
  */
 class mediamosa_rest_call_count_asset_mediafile extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
@@ -39,7 +42,7 @@ class mediamosa_rest_call_count_asset_mediafile extends mediamosa_rest_call {
   const GROUP_ID = 'group_id';
   const OWNER_ID = 'owner_id';
 
-  // ------------------------------------------------------------------ Public Functions.
+  // ------------------------------------------------------------------ Var Setup.
   public function get_var_setup() {
     $a_var_setup = array();
 
@@ -62,6 +65,7 @@ class mediamosa_rest_call_count_asset_mediafile extends mediamosa_rest_call {
     return self::get_var_setup_default($a_var_setup);
   }
 
+  // ------------------------------------------------------------------ Do Call.
   public function do_call() {
     $o_mediamosa = mediamosa::get();
 
@@ -684,7 +688,7 @@ class mediamosa_rest_call_update_mediafile extends mediamosa_rest_call {
     );
 
     // Either uri or file type.
-    $type = $this->isset_param(self::URI) ? 'uri' :'file';
+    $type = $this->isset_given_param(self::URI) ? 'uri' : 'file';
 
     // Can't change the type.
     if ( ($a_mediafile[mediamosa_asset_mediafile_db::URI] && $type == 'file') || ($a_mediafile[mediamosa_asset_mediafile_db::FILENAME] && $type == 'uri') ) {
@@ -710,9 +714,8 @@ class mediamosa_rest_call_update_mediafile extends mediamosa_rest_call {
 
     $a_fields = array();
     foreach ($a_params as $param) {
-      if (!$this->isset_param($param) || $this->isset_default_param($param)) {
-        // If its not set, skip it.
-      	// If it was set with default value, then don't use it for update.
+      if (!$this->isset_given_param($param)) {
+        // If its not supplied, skip it.
         continue;
       }
 

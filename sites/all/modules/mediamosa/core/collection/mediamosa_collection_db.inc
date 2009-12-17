@@ -45,9 +45,9 @@ class mediamosa_collection_db {
   const OWNER_ID_LENGTH = 255;
   const GROUP_ID = 'group_id';
   const GROUP_ID_LENGTH = 255;
-  const IS_PRIVATE = 'is_private'; // 1.x name: isprivate.
-  const IS_PRIVATE_TRUE = 'TRUE';
-  const IS_PRIVATE_FALSE = 'FALSE';
+  const ISPRIVATE = 'isprivate';
+  const ISPRIVATE_TRUE = 'TRUE';
+  const ISPRIVATE_FALSE = 'FALSE';
   const _PRIVATE = 'private';
   const PRIVATE_TRUE = 'TRUE';
   const PRIVATE_FALSE = 'FALSE';

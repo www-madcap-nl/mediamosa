@@ -36,6 +36,22 @@ class mediamosa_asset_mediafile {
 
   // ------------------------------------------------------------------ Static Functions.
   /**
+   * Get the mediafile.
+   *
+   * @param string $mediafile_id
+   */
+  static public function get($mediafile_id, $app_id = NULL) {
+
+    $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
+    $query->fields('mf');
+    $query->condition('mf.' . mediamosa_asset_mediafile_db::ID, $mediafile_id);
+    if (isset($app_id)) {
+      $query->condition('mf.' . mediamosa_asset_mediafile_db::APP_ID, $app_id);
+    }
+    return $query->execute()->fetchAssoc();
+  }
+
+  /**
    * Remove one or more mediafiles.
    *
    * @param mixed $mediafile_id
@@ -297,9 +313,9 @@ class mediamosa_asset_mediafile {
    */
   static public function mediafiles_search($asset_id, $tag = NULL, $is_still = FALSE) {
 
-  	assert($asset_id !== FALSE);
+    assert($asset_id !== FALSE);
 
-	    // Asset must exist.
+      // Asset must exist.
     mediamosa_db::db_must_exists(
       mediamosa_asset_db::TABLE_NAME,
       array(
@@ -307,26 +323,27 @@ class mediamosa_asset_mediafile {
       )
     );
 
+    // FIXME write me to normal db_query.
     $a_query = array();
-	  $a_query[mediamosa_db_query::A_SELECT_EXPR][] = "mf.mediafile_id";
-	  $a_query[mediamosa_db_query::A_FROM][] = "{mediamosa_asset} AS a";
+    $a_query[mediamosa_db_query::A_SELECT_EXPR][] = "mf.mediafile_id";
+    $a_query[mediamosa_db_query::A_FROM][] = "{mediamosa_asset} AS a";
 
-	  $a_query[mediamosa_db_query::ALLOW_DISTINCT] = FALSE;
+    $a_query[mediamosa_db_query::ALLOW_DISTINCT] = FALSE;
 
-	  // No left join here, only include assets that have mediafiles
-	  $a_query[mediamosa_db_query::A_JOIN]["mediafile"][] = "JOIN {mediamosa_asset_mediafile} AS mf ON a.asset_id = mf.asset_id_root";
+    // No left join here, only include assets that have mediafiles
+    $a_query[mediamosa_db_query::A_JOIN]["mediafile"][] = "JOIN {mediamosa_asset_mediafile} AS mf ON a.asset_id = mf.asset_id_root";
 
-	  $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset'][] = sprintf("(a.asset_id = '%s' OR a.parent_id = '%s')", mediamosa_db::escape_string($asset_id), mediamosa_db::escape_string($asset_id));
-	  $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset'][] = sprintf("mf.is_still = '%s'", $is_still ? mediamosa_asset_mediafile_db::IS_STILL_TRUE :  mediamosa_asset_mediafile_db::IS_STILL_FALSE);
+    $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset'][] = sprintf("(a.asset_id = '%s' OR a.parent_id = '%s')", mediamosa_db::escape_string($asset_id), mediamosa_db::escape_string($asset_id));
+    $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset'][] = sprintf("mf.is_still = '%s'", $is_still ? mediamosa_asset_mediafile_db::IS_STILL_TRUE :  mediamosa_asset_mediafile_db::IS_STILL_FALSE);
 
-	  if ($tag) {
-	    $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['tag'] = sprintf("mf.tag = '%s'", mediamosa_db::escape_string($tag));
-	  }
+    if ($tag) {
+      $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['tag'] = sprintf("mf.tag = '%s'", mediamosa_db::escape_string($tag));
+    }
 
-	  // Create the query
-	  $query = mediamosa_db_query::query_select($a_query);
+    // Create the query
+    $query = mediamosa_db_query::query_select($a_query);
 
-	  // Do the query and return found mediafiles as an array with mediafile_ids.
-	  return mediamosa_db::db_query($query)->fetchCol();
+    // Do the query and return found mediafiles as an array with mediafile_ids.
+    return mediamosa_db::db_query($query)->fetchCol();
   }
 }

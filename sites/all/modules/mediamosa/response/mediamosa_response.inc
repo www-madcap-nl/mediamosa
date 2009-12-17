@@ -99,12 +99,12 @@ class mediamosa_response extends mediamosa {
       }
 
       // Make sure response type is set.
-	    if (!isset($a_rest_call[mediamosa_rest_call::RESPONSE_TYPE])) {
-	      $a_rest_call[mediamosa_rest_call::RESPONSE_TYPE] = mediamosa_rest_call::RESPONSE_TYPE_XML;
-	    }
+      if (!isset($a_rest_call[mediamosa_rest_call::RESPONSE_TYPE])) {
+        $a_rest_call[mediamosa_rest_call::RESPONSE_TYPE] = mediamosa_rest_call::RESPONSE_TYPE_XML;
+      }
 
-	    // Now execute the call.
-	    $this->o_mediamosa_rest->process_call($a_rest_call);
+      // Now execute the call.
+      $this->o_mediamosa_rest->process_call($a_rest_call);
     }
     catch (mediamosa_exception_no_rest_interface $e) {
       mediamosa::exit_503(mediamosa::t('No MediaMosa REST interface available...'));

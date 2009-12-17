@@ -37,7 +37,7 @@
  */
 class mediamosa_rest_call_delete_stills extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
-	// Rest vars;
+  // Rest vars;
   const ASSET_ID = 'asset_id';
   const USER_ID = 'user_id';
   const MEDIAFILE_ID = 'mediafile_id';
@@ -50,24 +50,24 @@ class mediamosa_rest_call_delete_stills extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::ASSET_ID => array(
-	        self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
-	        self::VAR_DESCRIPTION => 'Delete still only from this asset.',
+          self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
+          self::VAR_DESCRIPTION => 'Delete still only from this asset.',
           self::VAR_IS_REQUIRED => TRUE,
-	      ),
-	      self::USER_ID => array(
-	        self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
-	        self::VAR_DESCRIPTION => 'Owner of the stills.',
-	        self::VAR_IS_REQUIRED => TRUE,
-	      ),
-	      self::MEDIAFILE_ID => array(
-	        self::VAR_TYPE => mediamosa_type::TYPE_MEDIAFILE_ID,
-	        self::VAR_DESCRIPTION => 'The delete stills from this mediafile ID.',
-	      ),
-	      self::STILL_ID => array(
-	        self::VAR_TYPE => mediamosa_type::TYPE_STILL_ID,
-	        self::VAR_DESCRIPTION => 'Delete this specific still.',
-	      ),
-	    ),
+        ),
+        self::USER_ID => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_DESCRIPTION => 'Owner of the stills.',
+          self::VAR_IS_REQUIRED => TRUE,
+        ),
+        self::MEDIAFILE_ID => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_MEDIAFILE_ID,
+          self::VAR_DESCRIPTION => 'The delete stills from this mediafile ID.',
+        ),
+        self::STILL_ID => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_STILL_ID,
+          self::VAR_DESCRIPTION => 'Delete this specific still.',
+        ),
+      ),
     );
 
     return self::get_var_setup_default($a_var_setup);;
@@ -126,8 +126,8 @@ class mediamosa_rest_call_delete_stills extends mediamosa_rest_call {
     // Default all ok.
     $o_mediamosa->set_result_okay();
 
-	  // Remove still.
-	  mediamosa_asset_mediafile_still::delete($asset_id, $mediafile_id, $still_id);
+    // Remove still.
+    mediamosa_asset_mediafile_still::delete($asset_id, $mediafile_id, $still_id);
   }
 }
 

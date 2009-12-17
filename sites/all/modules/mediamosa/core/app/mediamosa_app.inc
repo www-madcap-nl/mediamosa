@@ -58,7 +58,7 @@ class mediamosa_app {
 
     if (count($a_fields)) {
       foreach ($a_fields as $key => $field) {
-    	  $query->addField('app', $field, (is_numeric($key) ? $field : $key));
+        $query->addField('app', $field, (is_numeric($key) ? $field : $key));
       }
     }
     else {

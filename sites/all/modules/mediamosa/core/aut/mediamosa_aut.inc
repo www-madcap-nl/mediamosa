@@ -256,6 +256,9 @@ class mediamosa_aut {
     // Execute the query.
     $db_result = mediamosa_db::db_query($s_query);
 
+    // Our result array.
+    $a_result = array();
+
     // Create empty result for each app.
     foreach ($mixed_app_id as $app_id) {
       $a_result[$app_id] = array('a_name' => array(), 'a_group' => array());
@@ -355,7 +358,7 @@ class mediamosa_aut {
       }
     }
 
-    return (count($a_result) ? $a_result : array());
+    return $a_result;
   }
 
   /**
@@ -421,22 +424,39 @@ class mediamosa_aut {
   }
 
   // Extension for collection, check if assign is allowed.
-  static public function owner_check_collection_assign($app_id, $user_id, $dbrow_asset, $dbrow_collection, $is_app_admin = FALSE) {
-    // If the collection has public assign rights, then allow it
-    if (mediamosa_lib::boolstr2bool($dbrow_collection['public_assign'])) {
+  /**
+   * Extended owner check when creating link between asset and collection.
+   *
+   * You must be either owner of asset OR collection to create link.   *
+   *
+   * @param integer $app_id
+   *  The application ID.
+   * @param string $user_id
+   *  The user ID.
+   * @param array $a_asset
+   *  The asset.
+   * @param array $a_collection
+   *  The collection.
+   * @param bool $is_app_admin
+   *  Global switch for app_admin.
+   */
 
-      // moet owner van de asset zijn....
+  static public function owner_check_collection_assign($app_id, $user_id, $a_asset, $a_collection, $is_app_admin = FALSE) {
+    // If the collection has public assign rights, then allow it
+    if ($a_collection[mediamosa_collection_db::PUBLIC_ASSIGN] == mediamosa_collection_db::PUBLIC_ASSIGN_TRUE) {
+
+      // Must be owner.
       try {
-        mediamosa_aut::owner_check($app_id, $user_id, $dbrow_asset['app_id'], $dbrow_asset['owner_id'], $is_app_admin);
-        return; // We got access.
+        mediamosa_aut::owner_check($app_id, $user_id, $a_asset[mediamosa_asset_db::APP_ID], $a_asset[mediamosa_asset_db::OWNER_ID], $is_app_admin);
+        return; // We got access, no need to check collection ownership.
       }
       catch (mediamosa_exception_error_access_denied $e) {
-        // Ignore.
+        // Ignore, check ownership collection now.
         assert($e);
       }
     }
 
-    mediamosa_aut::owner_check($app_id, $user_id, $dbrow_collection['app_id'], $dbrow_collection['owner_id'], $is_app_admin);
+    mediamosa_aut::owner_check($app_id, $user_id, $a_collection[mediamosa_collection_db::APP_ID], $a_collection[mediamosa_collection_db::OWNER_ID], $is_app_admin);
   }
 
   /**
@@ -454,7 +474,7 @@ class mediamosa_aut {
     }
 
     // App admin of current app_id ?
-    if (!is_bool($is_app_admin) || !$is_app_admin) {
+    if (!$is_app_admin) {
       throw new mediamosa_exception_error_access_denied(array("@reason" => "you must be app admin"));
     }
   }

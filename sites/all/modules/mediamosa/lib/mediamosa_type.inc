@@ -51,11 +51,13 @@ class mediamosa_type {
   const TYPE_BOOL                        = 'BOOL';
   const TYPE_MIMETYPE                    = 'MIMETYPE';
   const TYPE_XML                         = 'STRING';
-  const TYPE_XML_VALIDATED               = 'XML'; // XML with syntax validation via simplexml_load_string()
+  const TYPE_XML_VALIDATED               = 'XML'; // XML with syntax validation via simplexml_load_string(). Expects proper XML declaration.
+  const TYPE_XML_OAI                     = 'XML_OAI'; // XML with syntax validation via DOM Document. Expects no XML declaration.
   const TYPE_EOR                         = 'EOR'; // Exclusive OR type (like 1 2 4 8, or 1|4 = 5), always UINT
   const TYPE_URI                         = 'URI'; // URI type checked with parse_uri().
   const TYPE_AUT_GROUP_TYPE              = 'AUT_GROUP_TYPE';
   const TYPE_DELETE                      = 'DELETE';
+
   const TYPE_USER_ID                     = 'USER_ID';
   const TYPE_GROUP_ID                    = 'GROUP_ID';
   const TYPE_ASSET_ID                    = 'ASSET_ID';
@@ -63,9 +65,12 @@ class mediamosa_type {
   const TYPE_STILL_ID                    = 'MEDIAFILE_ID';
   const TYPE_COLLECTION_ID               = 'COLLECTION_ID';
   const TYPE_BATCH_ID                    = 'BATCH_ID';
+  const TYPE_SUPPLEMENT_ID               = 'SUPPLEMENT_ID';
+
   const TYPE_DOMAIN                      = 'DOMAIN';
   const TYPE_REALM                       = 'REALM';
   const TYPE_FILENAME                    = 'FILENAME';
+  const TYPE_LANGUAGE_CODE               = 'LANGUAGE_CODE';
 
   const TYPE_SEARCH_ASSET                = 'ASSET';
   const TYPE_SEARCH_COLLECTION           = 'COLLECTION';
@@ -113,6 +118,11 @@ class mediamosa_type {
    */
   static public function check($param, $param_type, $mixed_param_value, $is_required, $range_start = NULL, $range_end = NULL, $allowed_values = NULL, $toplevel = TRUE) {
 
+    // If NULL, then value is not set.
+    if (is_null($mixed_param_value)) {
+      return NULL;
+    }
+
     if (is_array($mixed_param_value)) {
       // If the top array is empty and required, then throw an error.
       // Any child array is allowed to be empty.
@@ -127,19 +137,24 @@ class mediamosa_type {
       return $mixed_param_value; // done.
     }
 
-    // @TODO add range for integers
-
     // When required and isnull/empty string, then in any type its an error
     if ($is_required && (is_null($mixed_param_value) || trim($mixed_param_value) == '')) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_REQUIRED_PARAMETER, array('@param' => $param, '@type' => $param_type));
     }
 
-    // If NULL, then value is not set.
-    if (is_null($mixed_param_value)) {
-    	return NULL;
-    }
-
     switch ($param_type) {
+      case self::TYPE_LANGUAGE_CODE:
+        // ISO 639-1.
+        $a_language_codes = explode(',', 'aa,ab,ae,af,ak,am,an,ar,as,av,ay,az,ba,be,bg,bh,bi,bm,bn,bo,br,bs,ca,ce,ch,co,cr,cs,cu,cv,cy,da,de,dv,dz,ee,el,en,eo,es,et,eu,fa,ff,fi,fj,fo,fr,fy,ga,gd,gl,gn,gu,gv,ha,he,hi,ho,hr,ht,hu,hy,hz,ia,id,ie,ig,ii,ik,io,is,it,iu,ja,jv,ka,kg,ki,kj,kk,kl,km,kn,ko,kr,ks,ku,kv,kw,ky,la,lb,lg,li,ln,lo,lt,lu,lv,mg,mh,mi,mk,ml,mn,mo,mr,ms,mt,my,na,nb,nd,ne,ng,nl,nn,no,nr,nv,ny,oc,oj,om,or,os,pa,pi,pl,ps,pt,qu,rm,rn,ro,ru,rw,ry,sa,sc,sd,se,sg,sh,si,sk,sl,sm,sn,so,sq,sr,ss,st,su,sv,sw,ta,te,tg,th,ti,tk,tl,tn,to,tr,ts,tt,tw,ty,ug,uk,ur,uz,ve,vi,vo,wa,wo,xh,yi,yo,za,zh,zu');
+
+        if (!in_array(mediamosa_unicode::strtolower($mixed_param_value), $a_language_codes)) {
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
+        }
+
+        // To lower.
+        $checked_param_value = (string)mediamosa_unicode::strtolower($mixed_param_value);
+        break;
+
       case self::TYPE_APP_ID:
         if ( (!is_int($mixed_param_value) && !ctype_digit($mixed_param_value)) || $mixed_param_value < 1 || $mixed_param_value > 9999) {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INVALID_APP_ID, array('@app_id' => $mixed_param_value));
@@ -191,6 +206,7 @@ class mediamosa_type {
         $checked_param_value = (string)$mixed_param_value;
         break;
 
+      case self::TYPE_SUPPLEMENT_ID:
       case self::TYPE_USER_ID:
       case self::TYPE_GROUP_ID:
       case self::TYPE_ASSET_ID:
@@ -230,6 +246,16 @@ class mediamosa_type {
       case self::TYPE_CQL_ASSET:
       case self::TYPE_CQL_COLLECTION:
       case self::TYPE_STRING:
+        $checked_param_value = (string)$mixed_param_value;
+        break;
+
+      case self::TYPE_XML_OAI:
+        // FIXME: dont like the 1.x way we prefix the XML declaration to the XML... XML declaration is required in XML....
+        $o_dom_document = new DOMDocument();
+        if (!$o_dom_document->loadXML('<?xml version="1.0"?>' . $mixed_param_value)) {
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
+        }
+
         $checked_param_value = (string)$mixed_param_value;
         break;
 
@@ -361,14 +387,14 @@ class mediamosa_type {
         }
 
         $checked_param_value = (string)$mixed_param_value;
-      	break;
+        break;
 
       case self::TYPE_FILENAME:
-      	if (strpos($mixed_param_value, "/") !== FALSE) {
+        if (strpos($mixed_param_value, "/") !== FALSE) {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
-       	}
+         }
 
-       	$checked_param_value = (string)$mixed_param_value;
+         $checked_param_value = (string)$mixed_param_value;
         break;
 
       default:
@@ -416,7 +442,7 @@ class mediamosa_type {
     //  throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
     //}
 
-  	$a_value = split("[-: ]", $mixed_param_value);
+    $a_value = split("[-: ]", $mixed_param_value);
 
     if (!count($a_value) || count($a_value) > 6) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));

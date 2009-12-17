@@ -87,13 +87,13 @@ class mediamosa_aut_app_master_slave {
       mediamosa_db::db_query(
         'INSERT INTO {#mediamosa_aut_app_master_slave} SET #aut_object_type= :aut_object_type, #aut_object_id = :aut_object_id, #app_id_master = :app_id_master, #app_id_slave = :app_id_slave',
         array(
-	        '#aut_app_master_slave' => mediamosa_aut_app_master_slave_db::TABLE_NAME,
-	        '#aut_object_type' => mediamosa_aut_app_master_slave_db::AUT_OBJECT_TYPE,
-	        ':aut_object_type' => $aut_object_type,
-	        '#aut_object_id' => mediamosa_aut_app_master_slave_db::AUT_OBJECT_ID,
-	        ':aut_object_id' => $aut_object_id,
-	        '#app_id_master' => mediamosa_aut_app_master_slave_db::APP_ID_MASTER,
-	        ':app_id_master' => $app_id_master,
+          '#aut_app_master_slave' => mediamosa_aut_app_master_slave_db::TABLE_NAME,
+          '#aut_object_type' => mediamosa_aut_app_master_slave_db::AUT_OBJECT_TYPE,
+          ':aut_object_type' => $aut_object_type,
+          '#aut_object_id' => mediamosa_aut_app_master_slave_db::AUT_OBJECT_ID,
+          ':aut_object_id' => $aut_object_id,
+          '#app_id_master' => mediamosa_aut_app_master_slave_db::APP_ID_MASTER,
+          ':app_id_master' => $app_id_master,
           '#app_id_slave' => mediamosa_aut_app_master_slave_db::APP_ID_SLAVE,
           ':app_id_slave' => $app_id_slave
         )
@@ -150,11 +150,11 @@ class mediamosa_aut_app_master_slave {
    */
   static public function master_get($app_id_slave, $aut_object_type, $aut_object_id) {
 
-  	static $a_app_id_masters = array();
+    static $a_app_id_masters = array();
 
-  	if (isset($a_app_id_masters[$app_id_slave][$aut_object_type][$aut_object_id])) {
-  		return $a_app_id_masters[$app_id_slave][$aut_object_type][$aut_object_id];
-  	}
+    if (isset($a_app_id_masters[$app_id_slave][$aut_object_type][$aut_object_id])) {
+      return $a_app_id_masters[$app_id_slave][$aut_object_type][$aut_object_id];
+    }
 
     $result = mediamosa_db::db_query(
       'SELECT #app_master_id FROM {#aut_app_master_slave} WHERE #aut_object_type = :aut_object_type AND #aut_object_id = :aut_object_id AND #app_id_master > 0 AND #app_id_slave = :app_id_slave',

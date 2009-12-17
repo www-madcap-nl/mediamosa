@@ -32,6 +32,19 @@ class mediamosa_asset_mediafile_metadata {
 
   // ------------------------------------------------------------------ Static Function.
   /**
+   * Get the mediafile metadata.
+   *
+   * @param string $mediafile_id
+   */
+  static public function get_with_mediafileid($mediafile_id) {
+
+    $query = mediamosa_db::db_select(mediamosa_asset_mediafile_metadata_db::TABLE_NAME, 'mfm');
+    $query->fields('mfm');
+    $query->condition('mfm.' . mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID, $mediafile_id);
+    return $query->execute()->fetchAssoc();
+  }
+
+  /**
    * Test if mediafile can be played.
    * Will throw an exception when failure.
    *

@@ -28,25 +28,25 @@
  * cql               ::= cqlQuery ['sortby' sortSpec]
  * cqlQuery          ::= prefixAssignment cqlQuery | scopedClause
  * prefixAssignment  ::= '>' prefix '=' uri | '>' uri
- * scopedClause  	   ::= scopedClause booleanGroup searchClause | searchClause
- * booleanGroup  	   ::= boolean [modifierList]
+ * scopedClause       ::= scopedClause booleanGroup searchClause | searchClause
+ * booleanGroup       ::= boolean [modifierList]
  * boolean           ::= 'and' | 'or' | 'not' | 'prox'
- * searchClause   	 ::= '(' cqlQuery ')' | index relation searchTerm | searchTerm
+ * searchClause      ::= '(' cqlQuery ')' | index relation searchTerm | searchTerm
  * relation          ::= comparitor [modifierList]
- * comparitor     	 ::= comparitorSymbol | namedComparitor
+ * comparitor        ::= comparitorSymbol | namedComparitor
  * comparitorSymbol  ::= '=' | '>' | '<' | '>=' | '<=' | '<>' | '=='
  * namedComparitor   ::= identifier
  * modifierList      ::= modifierList modifier | modifier
  * modifier          ::= '/' modifierName [comparitorSymbol modifierValue]
- * sortSpec  	       ::= sortSpec singleSpec | singleSpec
- * singleSpec  	     ::= index [modifierList]
+ * sortSpec           ::= sortSpec singleSpec | singleSpec
+ * singleSpec         ::= index [modifierList]
  * refix, uri,
  * modifierName,
  * modifierValue,
  * searchTerm, index ::= term
  * term              ::= identifier | 'and' | 'or' | 'not' | 'prox' | 'sortby'
  * identifier        ::= charString1 | charString2
- * charString1  	    := Any sequence of characters that does not include any of the following:
+ * charString1        := Any sequence of characters that does not include any of the following:
  *                       whitespace
  *                       ( (open parenthesis)
  *                       ) (close parenthesis)

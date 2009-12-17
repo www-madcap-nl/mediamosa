@@ -54,11 +54,6 @@ function mediamosa_ftp_batch_asset_schema() {
   $a_schema[mediamosa_ftp_batch_asset_db::TABLE_NAME] = array(
     'description' => t('This FTP Batch asset link table.'),
     'fields' => array(
-      mediamosa_ftp_batch_asset_db::ID => array(
-        'type' => 'serial',
-        'not null' => TRUE,
-        'description' => t('Primary key.'),
-      ),
       mediamosa_ftp_batch_asset_db::ASSET_ID => array(
         'type' => 'varchar',
         'length' => mediamosa_db::HASH_ID_LENGTH,
@@ -72,9 +67,8 @@ function mediamosa_ftp_batch_asset_schema() {
         'description' => t('The batch ID that links to mediamosa_ftp_batch table.'),
       ),
     ),
-    'primary key' => array(mediamosa_ftp_batch_asset_db::ID),
+    'primary key' => array(mediamosa_ftp_batch_asset_db::BATCH_ID, mediamosa_ftp_batch_asset_db::ASSET_ID),
     'indexes' => array(
-      'idx_' . mediamosa_ftp_batch_asset_db::BATCH_ID => array(mediamosa_ftp_batch_asset_db::BATCH_ID),
       'idx_' . mediamosa_ftp_batch_asset_db::ASSET_ID => array(mediamosa_ftp_batch_asset_db::ASSET_ID),
     )
   );

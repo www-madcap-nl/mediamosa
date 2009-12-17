@@ -161,6 +161,13 @@ $databases['default']['default'] = array(
   'password' => 'memo',
   'host' => 'localhost'
 );
+$databases['ftp']['default'] = array(
+  'driver' => 'mysql',
+  'database' => 'vpx_ftp',
+  'username' => 'ftp',
+  'password' => 'vpx',
+  'host' => 'localhost'
+);
 
 // Migration memo 1.0 databases;
 $databases['mig_memo']['default'] = array(

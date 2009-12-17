@@ -337,7 +337,7 @@ class mediamosa_rest_call_aut_group_update extends mediamosa_rest_call {
     $a_set = array();
 
     // If we rename, then the renamed group must not exist
-    if ($this->isset_param('new_groupname') && $new_group_name != '') {
+    if ($this->isset_given_param('new_groupname') && $new_group_name != '') {
       if (mediamosa_db::db_exists(mediamosa_aut_group_db::TABLE_NAME, array(mediamosa_aut_group_db::APP_ID => $app_id, mediamosa_aut_group_db::AUT_GROUP_NAME => $new_group_name))) {
         throw new mediamosa_exception_error_aut_group_already_exists(array('@group' => $new_group_name));
       }
@@ -346,7 +346,7 @@ class mediamosa_rest_call_aut_group_update extends mediamosa_rest_call {
     }
 
     // Change of type.
-    if ($this->isset_param('group_type') && $new_group_type != '') {
+    if ($this->isset_given_param('group_type') && $new_group_type != '') {
 
       $a_aut_group = mediamosa_db::db_query("SELECT * FROM {mediamosa_aut_group} WHERE aut_group_name = '%s'", $group_name)->fetchAssoc();
       assert($a_aut_group);

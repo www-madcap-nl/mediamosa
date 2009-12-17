@@ -68,10 +68,10 @@ class mediamosa_server_streaming {
     static $a_servers = array();
 
     if (isset($a_servers[$container_type . ':' . $video_codec])) {
-    	return $a_servers[$container_type . ':' . $video_codec];
+      return $a_servers[$container_type . ':' . $video_codec];
     }
 
-  	// Choose a random available streaming server.
+    // Choose a random available streaming server.
     // try to match container:codec first.
     $a_servers[$container_type . ':' . $video_codec] = mediamosa_db::db_query(
       "SELECT mss.* FROM {#mediamosa_server_streaming} AS mss WHERE
@@ -122,13 +122,13 @@ class mediamosa_server_streaming {
    */
   static public function get_objectcode($container_type, $video_codec) {
 
-  	$a_server = self::get($container_type, $video_codec);
+    $a_server = self::get($container_type, $video_codec);
 
-  	if ($a_server) {
-  		return $a_server[mediamosa_server_streaming_db::OBJECTCODE];
-  	}
+    if ($a_server) {
+      return $a_server[mediamosa_server_streaming_db::OBJECTCODE];
+    }
 
-  	return FALSE;
+    return FALSE;
   }
 
   /**

@@ -132,7 +132,8 @@ class mediamosa_db_query {
    * When using SQL_CALC_FOUND_ROWS, use this function
    * to retrieve the value.
    *
-   * @return unknown
+   * @return integer
+   *  number of rows
    */
   static public function found_rows() {
     return mediamosa_db::db_query("SELECT found_rows()")->fetchField();

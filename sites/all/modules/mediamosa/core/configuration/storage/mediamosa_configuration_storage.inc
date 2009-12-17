@@ -91,26 +91,26 @@ class mediamosa_configuration_storage {
   }
 
   /**
-	 * Return the default path for the ticket.
-	 * Based on the 1.x function _play_proxy_play_ticket_location.
-	 *
-	 * @return string
-	 */
-	static public function ticket_location_get($app_id) {
-	  return self::data_location_get() . DIRECTORY_SEPARATOR . mediamosa_settings::PLAY_TICKET_LOCATION . DIRECTORY_SEPARATOR . $app_id;
-	}
+   * Return the default path for the ticket.
+   * Based on the 1.x function _play_proxy_play_ticket_location.
+   *
+   * @return string
+   */
+  static public function ticket_location_get($app_id) {
+    return self::data_location_get() . DIRECTORY_SEPARATOR . mediamosa_settings::PLAY_TICKET_LOCATION . DIRECTORY_SEPARATOR . $app_id;
+  }
 
 
-	/**
-	 * Return file location of asx file.
-	 * The ASX file is stored in still directory?
-	 *
-	 * @return string
-	 *  path to ticket location
-	 */
-	function asx_file_location($ticket) {
-	  return self::still_location_get() . DIRECTORY_SEPARATOR . $ticket . '.asx';
-	}
+  /**
+   * Return file location of asx file.
+   * The ASX file is stored in still directory?
+   *
+   * @return string
+   *  path to ticket location
+   */
+  function asx_file_location($ticket) {
+    return self::still_location_get() . DIRECTORY_SEPARATOR . $ticket . '.asx';
+  }
 
 
   /**
@@ -134,7 +134,7 @@ class mediamosa_configuration_storage {
    * @param string $id
    */
   static public function objectid_to_location($id) {
-  	return $id{0} . DIRECTORY_SEPARATOR . $id;
+    return $id{0} . DIRECTORY_SEPARATOR . $id;
   }
 
   /**

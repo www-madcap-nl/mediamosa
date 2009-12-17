@@ -118,6 +118,7 @@ class mediamosa_rest_call_collection_search extends mediamosa_rest_call {
     );
   }
 
+  // ------------------------------------------------------------------ Var Setup.
   public function get_var_setup() {
     $a_var_setup = array();
 
@@ -203,6 +204,7 @@ class mediamosa_rest_call_collection_search extends mediamosa_rest_call {
     return $a_var_setup;
   }
 
+  // ------------------------------------------------------------------ OVerride Process Rest Args.
   // Fix for alias of user_id / aut_user_id.
   protected function process_rest_args(array $a_var_setup) {
     // Process input.
@@ -219,6 +221,7 @@ class mediamosa_rest_call_collection_search extends mediamosa_rest_call {
     return $a_var_setup;
   }
 
+  // ------------------------------------------------------------------ OVerride Validate Rest Args.
   // Override for checking CQL string.
   protected function validate_rest_args(array $a_var_setup) {
 
@@ -234,6 +237,7 @@ class mediamosa_rest_call_collection_search extends mediamosa_rest_call {
     }
   }
 
+  // ------------------------------------------------------------------ Do Call.
   public function do_call() {
     $o_mediamosa = mediamosa::get();
 
@@ -334,7 +338,7 @@ class mediamosa_rest_call_collection_favorites_count extends mediamosa_rest_call
   const COLL_ID = 'coll_id';
   const FAV_TYPE= 'fav_type';
 
-  // ------------------------------------------------------------------ Functions (public).
+  // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
     $a_var_setup = array();
 
@@ -349,6 +353,7 @@ class mediamosa_rest_call_collection_favorites_count extends mediamosa_rest_call
     );
   }
 
+  // ------------------------------------------------------------------ Do Call.
   public function do_call() {
     $o_mediamosa = mediamosa::get();
 
@@ -376,7 +381,7 @@ class mediamosa_rest_call_collection_get extends mediamosa_rest_call {
   const COLL_ID = 'coll_id';
   const USER_ID = 'user_id';
 
-  // ------------------------------------------------------------------ Functions (public).
+  // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
     $a_var_setup = array();
 
@@ -395,6 +400,7 @@ class mediamosa_rest_call_collection_get extends mediamosa_rest_call {
     );
   }
 
+  // ------------------------------------------------------------------ Do Call.
   public function do_call() {
     $o_mediamosa = mediamosa::get();
 
@@ -458,11 +464,11 @@ class mediamosa_rest_call_collection_create extends mediamosa_rest_call {
   const PUBLIC_ = 'public';
   const CATEGORY = 'category';
   const ISPRIVATE = 'isprivate';
-  const IS_PRIVATE = 'is_private';
+  const ISPRIVATE = 'isprivate';
   const PUBLIC_ASSIGN = 'public_assign';
   const IS_UNAPPROPRIATE = 'is_unappropriate';
 
-  // ------------------------------------------------------------------ Functions (public).
+  // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
     $a_var_setup = array();
 
@@ -491,10 +497,6 @@ class mediamosa_rest_call_collection_create extends mediamosa_rest_call {
         ),
         self::ISPRIVATE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
-          self::VAR_DESCRIPTION => 'The is private on/off switch (depricated, use is_private).',
-        ),
-        self::IS_PRIVATE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'The is private on/off switch.',
         ),
         self::PUBLIC_ASSIGN => array(
@@ -509,6 +511,7 @@ class mediamosa_rest_call_collection_create extends mediamosa_rest_call {
     );
   }
 
+  // ------------------------------------------------------------------ Do Call.
   public function do_call() {
     $o_mediamosa = mediamosa::get();
 
@@ -519,14 +522,12 @@ class mediamosa_rest_call_collection_create extends mediamosa_rest_call {
     if (!$is_app_admin) {
       $this->unset_param(self::IS_UNAPPROPRIATE);
     }
+
     // Test webservice.
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $a_app_ids);
 
     // Create unique ID.
     $coll_id = mediamosa_db::uuid($app_id);
-
-    // Fix rename isprivate to is_private flag.
-    $this->set_param_value(mediamosa_collection_db::IS_PRIVATE, $this->get_param_value(self::ISPRIVATE));
 
     $a_params = array(
       mediamosa_collection_db::APP_ID,
@@ -535,7 +536,7 @@ class mediamosa_rest_call_collection_create extends mediamosa_rest_call {
       mediamosa_collection_db::_PRIVATE,
       mediamosa_collection_db::_PUBLIC,
       mediamosa_collection_db::CATEGORY,
-      mediamosa_collection_db::IS_PRIVATE, // renamed.
+      mediamosa_collection_db::ISPRIVATE,
       mediamosa_collection_db::PUBLIC_ASSIGN,
       mediamosa_collection_db::IS_UNAPPROPRIATE,
     );
@@ -543,9 +544,8 @@ class mediamosa_rest_call_collection_create extends mediamosa_rest_call {
     $a_fields = array(mediamosa_collection_db::ID => $coll_id);
     $query = mediamosa_db::db_insert(mediamosa_collection_db::TABLE_NAME);
     foreach ($a_params as $old_param => $param) {
-      if (!$this->isset_param($param) || $this->isset_default_param($param)) {
+      if (!$this->isset_given_param($param)) {
         // If its not set, skip it.
-        // If it was set with default value, then don't use it for update.
         continue;
       }
 
@@ -578,7 +578,6 @@ class mediamosa_rest_call_collection_update extends mediamosa_rest_call {
   const PUBLIC_ = 'public';
   const CATEGORY = 'category';
   const ISPRIVATE = 'isprivate';
-  const IS_PRIVATE = 'is_private';
   const PUBLIC_ASSIGN = 'public_assign';
   const IS_UNAPPROPRIATE = 'is_unappropriate';
   const TITLE = 'title';
@@ -631,10 +630,6 @@ class mediamosa_rest_call_collection_update extends mediamosa_rest_call {
           self::VAR_DESCRIPTION => 'The category on/off switch.',
         ),
         self::ISPRIVATE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
-          self::VAR_DESCRIPTION => 'The is private on/off switch (depricated, use is_private).',
-        ),
-        self::IS_PRIVATE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'The is private on/off switch.',
         ),
@@ -693,7 +688,7 @@ class mediamosa_rest_call_collection_update extends mediamosa_rest_call {
       mediamosa_collection_db::_PRIVATE,
       mediamosa_collection_db::_PRIVATE,
       mediamosa_collection_db::CATEGORY,
-      mediamosa_collection_db::IS_PRIVATE,
+      mediamosa_collection_db::ISPRIVATE,
       mediamosa_collection_db::PUBLIC_ASSIGN,
       mediamosa_collection_db::IS_UNAPPROPRIATE, // Only app_admin.
       mediamosa_collection_db::OWNER_ID, // Only app_admin.
@@ -705,7 +700,7 @@ class mediamosa_rest_call_collection_update extends mediamosa_rest_call {
 
     $a_fields = array();
     foreach ($a_params as $param) {
-      if (!$this->isset_param($param) || $this->isset_default_param($param)) {
+      if (!$this->isset_given_param($param)) {
         // If its not set, skip it.
         // If it was set with default value, then don't use it for update.
         continue;
@@ -922,11 +917,11 @@ class mediamosa_rest_call_collection_delete_relation extends mediamosa_rest_call
     // Now go through each asset.
     foreach ($a_asset_ids as $asset_id) {
 
-    	if (!isset($a_assets[$asset_id])) {
+      if (!isset($a_assets[$asset_id])) {
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_ASSET_NOT_FOUND, array('@asset_id' => $asset_id));
-    	}
+      }
 
-    	// Test link of collection to asset.
+      // Test link of collection to asset.
       mediamosa_db::db_must_exists(
         mediamosa_asset_collection_db::TABLE_NAME,
         array(
