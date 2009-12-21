@@ -51,4 +51,11 @@ class mediamosa_server_db {
   const TOOLS_LENGTH = 255;
   const URI_UPLOAD_PROGRESS = 'uri_upload_progress';
   const URI_UPLOAD_PROGRESS_LENGTH = 255;
+
+  // Server types
+  const SERVER_TYPE_DOWNLOAD = 'download';
+  const SERVER_TYPE_STILL = 'still';
+  const SERVER_TYPE_STREAMING = 'streaming';
+  const SERVER_TYPE_TRANSCODE = 'transcode';
+  const SERVER_TYPE_UPLOAD = 'upload';
 }

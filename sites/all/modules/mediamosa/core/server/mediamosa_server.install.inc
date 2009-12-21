@@ -53,6 +53,14 @@ function mediamosa_server_uninstall() {
  * Implements hook_schema().
  */
 function mediamosa_server_schema() {
+  $types = array(
+    mediamosa_server_db::SERVER_TYPE_DOWNLOAD,
+    mediamosa_server_db::SERVER_TYPE_STILL,
+    mediamosa_server_db::SERVER_TYPE_STREAMING,
+    mediamosa_server_db::SERVER_TYPE_TRANSCODE,
+    mediamosa_server_db::SERVER_TYPE_UPLOAD,
+  );
+
   $a_schema[mediamosa_server_db::TABLE_NAME] = array(
     'description' => t('The download server table contains settings for the download servers.'),
     'fields' => array(
@@ -76,7 +84,9 @@ function mediamosa_server_schema() {
       ),
       mediamosa_server_db::SERVER_TYPE => array(
         'description' => t('The server type.'),
-        // @TODO: enum???
+        'type' => 'enum(' . implode(',', $types) . ')',
+        'mysql_type' => 'enum(' . implode(',', $types) . ')',
+        'not null' => TRUE,
       ),
       mediamosa_server_db::URI => array(
         'description' => t('The optional URI of the server.'),
