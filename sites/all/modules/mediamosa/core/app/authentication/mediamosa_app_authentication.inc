@@ -32,9 +32,9 @@
 class mediamosa_app_authentication {
   // ------------------------------------------------------------------ Consts.
   // End User Application authentication settings
-  const EUA_AUTH_CONTEXT = 'vpx';
-  const EUA_AUTH_SECRET_PHRASE = '41d0c72bd73afaa2c207064d81d5a3d9';
-  const EUA_AUTH_SERVER_GUID = 'server_guid';
+  const APP_AUTH_CONTEXT = 'vpx';
+  const APP_AUTH_SECRET_PHRASE = '41d0c72bd73afaa2c207064d81d5a3d9';
+  const APP_AUTH_SERVER_GUID = 'server_guid';
 
   // ------------------------------------------------------------------ Functions (static).
   /**
@@ -45,12 +45,13 @@ class mediamosa_app_authentication {
    */
   function get_shared_key($name) {
     return mediamosa_db::db_query(
-      "SELECT #shared_key FROM {#table_name} WHERE #name = :name AND #active = 1",
+      "SELECT #shared_key FROM {#table_name} WHERE #name = :name AND #active = 'TRUE'",
       array(
-        '#shared_key' => mediamosa_app_db::NAME,
+        '#shared_key' => mediamosa_app_db::SHARED_KEY,
         '#table_name' => mediamosa_app_db::TABLE_NAME,
         '#name' => mediamosa_app_db::NAME,
         ':name' => $name,
+        '#active' => mediamosa_app_db::ACTIVE,
       )
     )->fetchField();
   }
@@ -62,15 +63,16 @@ class mediamosa_app_authentication {
    * @return boolean
    */
   function is_app_active($name) {
-    return mediamosa_db::db_query(
-      "SELECT #active FROM {#table_name} WHERE #name = :name AND #active = 1",
+    $query = mediamosa_db::db_query(
+      "SELECT #active FROM {#table} WHERE #name = :name",
       array(
-        '#shared_key' => mediamosa_app_db::NAME,
-        '#table_name' => mediamosa_app_db::TABLE_NAME,
+        '#active' => mediamosa_app_db::ACTIVE,
+        '#table' => mediamosa_app_db::TABLE_NAME,
         '#name' => mediamosa_app_db::NAME,
         ':name' => $name,
       )
-    )->fetchField() == 'TRUE' ? TRUE : FALSE;
+    )->fetchAssoc();
+    return $query[mediamosa_app_db::ACTIVE] == 'TRUE';
   }
 
 
@@ -81,7 +83,7 @@ class mediamosa_app_authentication {
    * @return array
    */
   function get_app($name) {
-    return mediamosa_db::db_query(
+    $query = mediamosa_db::db_query(
       "SELECT * FROM {#table_name} WHERE #name = :name",
       array(
         '#name' => mediamosa_app_db::NAME,
@@ -89,141 +91,79 @@ class mediamosa_app_authentication {
         ':name' => $name,
       )
     )->fetchAssoc();
+    return $query;
   }
 
   /**
    * A (cookie) ID authentication method.
    *
-   * @param string $command
-   * @param string $param
-   * @return boolean / string
+   * @param string $op
+   * @param string $param1
+   * @param string $param2
+   * @return string
    */
-  function dbus_cookie_sha1($command, $param) {
+  function dbus_cookie_sha1($op, $param1, $param2) {
 
-    switch ($command) {
+    switch ($op) {
       case 'AUTH':
-        if (!mediamosa_app_authentication::is_app_active($param)) {
-          session_destroy();
-          return "ERROR invalid account";
+        if (!mediamosa_app_authentication::is_app_active($param2)) {
+          return 'ERROR invalid account';
         }
 
-        $_SESSION['mediamosa_dbus']['username'] = $param;
+        drupal_session_regenerate();
+        $_SESSION['mediamosa_dbus']['username'] = $param2;
         $_SESSION['mediamosa_dbus']['cookie_id'] = 0;
-        $_SESSION['mediamosa_dbus']['challenge'] = md5(microtime() . self::EUA_AUTH_SECRET_PHRASE);
+        $_SESSION['mediamosa_dbus']['challenge'] = md5(microtime() . self::APP_AUTH_SECRET_PHRASE);
+
         return
-          'DATA '. self::EUA_AUTH_CONTEXT . ' ' .
+          'DATA '. self::APP_AUTH_CONTEXT . ' ' .
           $_SESSION['mediamosa_dbus']['cookie_id'] . ' ' .
           $_SESSION['mediamosa_dbus']['challenge'];
 
       case 'DATA':
-        $cookie = self::get_shared_key($_SESSION['mediamosa_dbus']['username']);
+        $shared_key = self::get_shared_key($_SESSION['mediamosa_dbus']['username']);
+        if ($param2 == sha1($_SESSION['mediamosa_dbus']['challenge'] .':'. $param1 .':'. $shared_key)) {
+          return 'OK '. self::APP_AUTH_SERVER_GUID;
+        }
+        else {
+          session_destroy();
+          return 'ERROR: authentication failure';
+        }
 
-        list($random, $response) = explode(' ', $param);
-        return $response == sha1($_SESSION['mediamosa_dbus']['challenge'] .':'. $random .':'. $cookie);
+      default:
+        session_destroy();
+        return 'ERROR syntax error';
     }
-
-    return 'ERROR syntax error';
   }
 
   /**
    * Process the incoming DBUS line.
    *
-   * @param string $line
+   * @param string $dbus_data
    * @return string
    */
-  function eua_dbus_protocol($line) {
-    // Initialize identification.
-    $auth_methods = array(
-      'DBUS_COOKIE_SHA1' => 'dbus_cookie_sha1'
-    );
+  function app_dbus_protocol($dbus_data) {
+    $a_dbus_data = explode(' ', $dbus_data, 3);
+    list($op, $param1, $param2) = $a_dbus_data;
 
-    // Make sure session is clean.
-    if (!isset($_SESSION['mediamosa_dbus'])) {
-      $_SESSION['mediamosa_dbus'] = array(
-        'mechanism'  => FALSE,
-        'challenge'  => FALSE,
-        'username'   => FALSE
-      );
-    }
-
-    // Parse and handle command.
-    list($command, $param) = explode(' ', trim($line), 2);
-
-    switch ($command) {
+    switch ($op) {
       case 'AUTH':
-        if ($param == '') {
-          return 'REJECTED ' . implode(' ', array_keys($auth_methods));
-        }
-
-        list($mechanism, $init) = explode(' ', $param, 2);
-        if (!isset($auth_methods[$mechanism])) {
-          return 'ERROR unknown mechanism';
-        }
-
-        // Will assert if not exists.
-        assert(method_exists($this, $auth_methods[$mechanism]));
-
-        $_SESSION['mediamosa_dbus']['mechanism'] = $auth_methods[$mechanism];
-        $_SESSION['mediamosa_dbus']['username'] = FALSE;
-        $_SESSION['mediamosa_dbus']['challenge'] = FALSE;
-        $param = $init;
+        $_SESSION['mediamosa_dbus']['method'] = $param1;
+        return self::$_SESSION['mediamosa_dbus']['method']($op, $param1, $param2);
+        break;
 
       case 'DATA':
-        // Test if we already been identified.
-        if (isset($_SESSION['mediamosa_eua']) && $_SESSION['mediamosa_eua']) {
-          return 'ERROR already identified';
-        }
-
-        // Check if chosen mechanism is available.
-        if ($_SESSION['mediamosa_dbus']['mechanism'] == FALSE) {
-          return 'ERROR mechanism not specified';
-        }
-
-        // Call the chosen method.
-        $result = call_user_func(
-          array('mediamosa_app_authentication', $_SESSION['mediamosa_dbus']['mechanism']),
-          array($command, $param)
-        );
-
-        // All ok?
-        if ($result === FALSE) {
+        if (!isset($_SESSION['mediamosa_dbus']['method'])) {
           unset($_SESSION['mediamosa_dbus']);
-          return 'ERROR database error';
+          return 'ERROR: no method specified';
         }
 
-        $eua = mediamosa_app_authentication::get_app($_SESSION['mediamosa_dbus']['username']);
-        if ($eua === FALSE) {
-          unset($_SESSION['mediamosa_dbus']);
-          $_SESSION['mediamosa_dbus']['mechanism'] = FALSE;
-          $_SESSION['mediamosa_dbus']['challenge'] = FALSE;
-          $result = 'REJECTED';
-          return 'ERROR unknown error';
-        }
-
-        // Set the identification in session.
-        $_SESSION['mediamosa_eua'] = array(
-          'app_id' =>  $eua[mediamosa_app_db::app_id],
-          'name' => $eua[mediamosa_app_db::name]
-        );
-
-        return 'OK ' . self::EUA_AUTH_SERVER_GUID;
-
-      case 'BEGIN':
-        if ($_SESSION['mediamosa_eua'] == FALSE) {
-          return 'ERROR not identified';
-        }
-
-        return mediamosa_response::SUCCESS;
-
-      case 'CANCEL':
-        unset($_SESSION['mediamosa_dbus']);
-        unset($_SESSION['mediamosa_eua']);
-        return 'REJECTED';
-
-      case 'ERROR':
+        self::$_SESSION['mediamosa_dbus']['method']($op, $param1, $param2);
         break;
-    }
 
-    return 'ERROR unknown error';
+      default:
+        unset($_SESSION['mediamosa_dbus']);
+        return 'ERROR: unknown command';
+    }
   }
 }

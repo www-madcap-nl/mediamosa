@@ -64,7 +64,7 @@ function mediamosa_app_schema() {
       mediamosa_app_db::NAME => array(
         'description' => t('The name of the client.'),
         'type' => 'varchar',
-        'length' => mediamosa_app_db::NAME_LENGTH,
+        'length' => '30',
         'not null' => TRUE,
       ),
       mediamosa_app_db::APP_ID => array(
@@ -84,11 +84,14 @@ function mediamosa_app_schema() {
         'type' => 'int',
         'size' => 'tiny',
         'not null' => TRUE,
+        'default' => 0,
       ),
       mediamosa_app_db::QUOTA => array(
         'description' => t('The total allowed quota in gigabytes.'),
         'type' => 'int',
         'not null' => TRUE,
+        'disp-width' => '10',
+        'default' => 0,
       ),
       mediamosa_app_db::QUOTA_USED => array(
         'description' => t('The current usage in gigabytes.'),
@@ -96,6 +99,8 @@ function mediamosa_app_schema() {
         'unsigned' => TRUE,
         'size' => 'big',
         'not null' => TRUE,
+        'disp-width' => '20',
+        'default' => 0,
       ),
       mediamosa_app_db::SHARED_KEY => array(
         'description' => t('The key to identify the client.'),
@@ -115,6 +120,7 @@ function mediamosa_app_schema() {
         'type' => 'varchar',
         'length' => mediamosa_app_db::ACTIVE_VERSION_LENGTH,
         'not null' => TRUE,
+        'default' => 0, // @TODO: which version???
       ),
       mediamosa_app_db::DESCRIPTION => array(
         'description' => t('The description of the client.'),
