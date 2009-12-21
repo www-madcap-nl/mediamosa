@@ -305,6 +305,7 @@ class mediamosa {
       return $now_timestamp;
     }
 
+    // FIXME consider using db_query to get the current time from the database.
     $now_timestamp = date('Y-m-d H:i:s');
     return $now_timestamp;
   }

@@ -219,7 +219,7 @@ class mediamosa_asset_collection {
     mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
 
     // Return the number of found rows.
-    $query = db_select(mediamosa_asset_collection_db::TABLE_NAME);
+    $query = mediamosa_db::db_select(mediamosa_asset_collection_db::TABLE_NAME);
     $query->condition(mediamosa_asset_collection_db::ID, $asset_id);
     return $query->countQuery()->execute()->fetchField();
   }

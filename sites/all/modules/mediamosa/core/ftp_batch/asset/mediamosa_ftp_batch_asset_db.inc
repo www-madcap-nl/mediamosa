@@ -38,5 +38,4 @@ class mediamosa_ftp_batch_asset_db {
   //const ID = 'id'; // dropped with 2.0, link tables dont use autoinc.
   const BATCH_ID = 'batch_id';
   const ASSET_ID = 'asset_id';
-  const ASSET_ID_LENGTH = mediamosa_db::HASH_ID_LENGTH;
 }

@@ -144,16 +144,20 @@ class mediamosa_aut_name {
       return $aut_id;
     }
 
-    $query = mediamosa_db::db_insert(mediamosa_aut_name_db::TABLE_NAME);
-    $query->fields(array(
+    $a_fields = array(
       mediamosa_aut_name_db::APP_ID => $aut_id,
       mediamosa_aut_name_db::AUT_TYPE => $aut_type,
       mediamosa_aut_name_db::AUT_GROUP_ID => $aut_group_id,
       mediamosa_aut_name_db::AUT_NAME => $s_suffix,
       mediamosa_aut_name_db::AUT_PREFIX => $s_prefix
-    ));
+    );
 
-    // return the last inserted id
-    return $query->execute();
+    // Add created value.
+    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+
+    // Insert it.
+    return mediamosa_db::db_insert(mediamosa_aut_name_db::TABLE_NAME)
+      ->fields($a_fields)
+      ->execute();
   }
 }

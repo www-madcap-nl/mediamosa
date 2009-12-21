@@ -1,0 +1,235 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is a Full Featured, Webservice Oriented Media Management and
+ * Distribution platform (http://www.vpcore.nl)
+ *
+ * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+ /**
+  * @file
+  * transcode_profile module.
+  */
+
+class mediamosa_transcode_profile {
+
+  /**
+   * Get the default transcode profile.
+   */
+  static public function get_default($app_id) {
+    return mediamosa_db::db_select(mediamosa_transcode_profile_db::TABLE_NAME, 'tp')
+      ->fields('tp')
+      ->condition(mediamosa_transcode_profile_db::APP_ID, array(0, $app_id), 'IN')
+      ->condition(mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE, mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE_TRUE)
+      ->range(0, 1)
+      ->execute()
+      ->fetchAssoc();
+  }
+
+  /**
+   * Get listing transcode profiles for app.
+   *
+   * @param integer $app_id
+   *  Application ID.
+   */
+  static public function search($app_id) {
+
+    return mediamosa_db::db_select(mediamosa_transcode_profile_db::TABLE_NAME, 'tp')
+      ->fields('tp')
+      ->condition(mediamosa_transcode_profile_db::APP_ID, array(0, $app_id), 'IN')
+      ->execute();
+  }
+
+  /**
+   * Get transcode profile for app.
+   *
+   * @param integer $app_id
+   *  Application ID.
+   */
+  static public function get($app_id, $profile_id) {
+
+    return mediamosa_db::db_select(mediamosa_transcode_profile_db::TABLE_NAME, 'tp')
+      ->fields('tp')
+      ->condition(mediamosa_transcode_profile_db::ID, $profile_id)
+      ->condition(mediamosa_transcode_profile_db::APP_ID, array(0, $app_id), 'IN')
+      ->execute()
+      ->fetchAssoc();
+  }
+
+  /**
+   * Get transcode profile for app by name.
+   *
+   * @param integer $app_id
+   *  Application ID.
+   */
+  static public function get_by_name($app_id, $profile_name) {
+
+    return mediamosa_db::db_select(mediamosa_transcode_profile_db::TABLE_NAME, 'tp')
+      ->fields('tp')
+      ->condition(mediamosa_transcode_profile_db::APP_ID, array(0, $app_id), 'IN')
+      ->condition(mediamosa_transcode_profile_db::PROFILE, $profile_name)
+      ->execute()
+      ->fetchAssoc();
+  }
+
+  /**
+   * Will test if transcode profile exits, will throw when fail.
+   *
+   * @param integer profile_id
+   */
+  static public function must_exists($app_id, $profile_id) {
+    return mediamosa_db::db_must_exists(mediamosa_transcode_profile_db::TABLE_NAME, array(mediamosa_transcode_profile_db::APP_ID => $app_id, mediamosa_transcode_profile_db::ID => $profile_id));
+  }
+
+  /**
+   * Create a transcode profile.
+   *
+   * @param integer $app_id
+   *  The application ID.
+   * @param string $name
+   *  The name of the profile.
+   * @param integer $version
+   *  Version number.
+   * @param bool $default
+   *  Is default.
+   * @param string $tool
+   *  Tool used.
+   * @param string $file_extension
+   *  Extension.
+   * @param string $command
+   *  Command.
+   */
+  static public function create($app_id, $name, $version, $default, $tool, $file_extension, $command) {
+
+    // Make sure name is not taken.
+    if (mediamosa_transcode_profile::get_by_name($app_id, $name)) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_TRANSCODE_PROFILE_EXISTS, array('@profile_name' => $name));
+    }
+
+    // When setting default, make sure no other default is set.
+    if ($default) {
+      $a_fields = array(
+        mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE => mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE_FALSE
+      );
+
+      // Add changed value.
+      $a_fields = mediamosa_db::db_update_enrich($a_fields);
+
+      mediamosa_db::db_update(mediamosa_transcode_profile_db::TABLE_NAME)
+        ->fields($a_fields)
+        ->condition(mediamosa_transcode_profile_db::APP_ID, $app_id)
+        ->execute();
+    }
+
+    $a_fields = array(
+      mediamosa_transcode_profile_db::APP_ID => $app_id,
+      mediamosa_transcode_profile_db::NAME => $name,
+      mediamosa_transcode_profile_db::VERSION => $version,
+      mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE => $default ? mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE_TRUE : mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE_FALSE,
+      mediamosa_transcode_profile_db::TOOL => $tool,
+      mediamosa_transcode_profile_db::FILE_EXTENSION => $file_extension,
+      mediamosa_transcode_profile_db::COMMAND => $command,
+    );
+
+    // Add created value.
+    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+
+    return mediamosa_db::db_insert(mediamosa_transcode_profile_db::TABLE_NAME)
+      ->fields($a_fields)
+      ->execute();
+  }
+
+  /**
+   * Update a transcode profile.
+   * FIXME: 2.x port: updating the app_id ?
+   *
+   * @param integer $app_id
+   *  The application ID.
+   * @param integer $profile_id
+   *  The ID of profile to update.
+   * @param string $name
+   *  The name of the profile.
+   * @param integer $version
+   *  Version number.
+   * @param bool $default
+   *  Is default.
+   * @param string $tool
+   *  Tool used.
+   * @param string $file_extension
+   *  Extension.
+   * @param string $command
+   *  Command.
+   */
+  static public function update($app_id, $profile_id, $name, $version, $default, $tool, $file_extension, $command) {
+
+    // Must exists.
+    mediamosa_transcode_profile::must_exists($app_id, $name);
+
+    // When setting default, make sure no other default is set.
+    if ($default) {
+      $a_fields = array(
+        mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE => mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE_FALSE
+      );
+
+      // Add changed value.
+      $a_fields = mediamosa_db::db_update_enrich($a_fields);
+
+      // Update.
+      mediamosa_db::db_update(mediamosa_transcode_profile_db::TABLE_NAME)
+        ->fields($a_fields)
+        ->condition(mediamosa_transcode_profile_db::APP_ID, $app_id)
+        ->execute();
+    }
+
+    $a_fields = array(
+      mediamosa_transcode_profile_db::APP_ID => $app_id,
+      mediamosa_transcode_profile_db::NAME => $name,
+      mediamosa_transcode_profile_db::VERSION => $version,
+      mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE => $default ? mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE_TRUE : mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE_FALSE,
+      mediamosa_transcode_profile_db::TOOL => $tool,
+      mediamosa_transcode_profile_db::FILE_EXTENSION => $file_extension,
+      mediamosa_transcode_profile_db::COMMAND => $command,
+    );
+
+    // Add changed value.
+    $a_fields = mediamosa_db::db_update_enrich($a_fields);
+
+    return mediamosa_db::db_update(mediamosa_transcode_profile_db::TABLE_NAME)
+      ->fields($a_fields)
+      ->condition(mediamosa_transcode_profile_db::ID, $profile_id)
+      ->execute();
+  }
+
+  /**
+   * Delete a transcode profile.
+   *
+   * @param integer $app_id
+   *  Application ID.
+   * @param integer $profile_id
+   *  The ID of the profile to delete.
+   */
+  static public function delete($app_id, $profile_id) {
+    mediamosa_db::db_delete(mediamosa_transcode_profile_db::TABLE_NAME)
+      ->condition(mediamosa_transcode_profile_db::ID, $profile_id)
+      ->condition(mediamosa_transcode_profile_db::APP_ID, $app_id)
+      ->execute();
+  }
+}

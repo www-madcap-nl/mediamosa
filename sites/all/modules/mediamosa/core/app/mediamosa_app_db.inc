@@ -34,10 +34,10 @@ class mediamosa_app_db {
   const TABLE_NAME = 'mediamosa_app';
 
   // Database fields;
-  const ID = 'id';  // 1.x - caid
+  const ID = 'id';  // 1.x - caid (autoinc, this is not the APP ID that is used) FIXME: should be dropped and app_id made primary here.
   const NAME = 'name';
   const NAME_LENGTH = 30;
-  const APP_ID = 'app_id'; // 1.x id
+  const APP_ID = 'app_id'; // 1.x id (this is the APP_ID)
   const TRANSCODING_POSITION_FROM = 'transcoding_position_from';
   const TRANSCODING_POSITION_TO = 'transcoding_position_to';
   const QUOTA = 'quota';

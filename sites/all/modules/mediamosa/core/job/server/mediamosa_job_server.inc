@@ -28,3 +28,23 @@
   * @file
   * The job server module.
   */
+
+
+class mediamosa_job_server {
+
+  /**
+   * Retrieve a listing of the jobs.
+   *
+   * 1.x: vpx_jobserver_get_jobs_status (not exact port(!)).
+   *
+   */
+  static public function search() {
+
+    return mediamosa_db::db_select(mediamosa_job_server_db::TABLE_NAME, 'js')
+      ->fields('js')
+      ->fields('jsa')
+      ->leftJoin(mediamosa_job_server_analyse_db::TABLE_NAME, 'jsa', strtr('js.#jobserver_job_id = jsa.#jobserver_job_id', array('#jobserver_job_id' => mediamosa_job_server_db::ID)))
+      ->condition(mediamosa_job_server_db::INSTALL_ID, MEDIAMOSA_INSTALL_ID)
+      ->execute();
+  }
+}

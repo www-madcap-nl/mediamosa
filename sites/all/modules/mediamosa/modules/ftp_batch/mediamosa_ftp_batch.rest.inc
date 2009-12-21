@@ -280,7 +280,7 @@ class mediamosa_rest_call_ftp_batch_update extends mediamosa_rest_call {
     mediamosa_db::db_must_exists(mediamosa_ftp_batch_db::TABLE_NAME, array(mediamosa_ftp_batch_db::APP_ID => $app_id, mediamosa_ftp_batch_db::ID => $batch_id));
 
     // Update FTP batch.
-    mediamosa_ftp_batch::update($app_id, $batch_id, $owner_id, $vuf, $started, $finished, $email_address, $email_contents);
+    mediamosa_ftp_batch::update($app_id, $batch_id, $owner_id, $group_id, $vuf, $started, $finished, $email_address, $email_contents);
 
     // Set Ok.
     $o_mediamosa->set_result_okay();

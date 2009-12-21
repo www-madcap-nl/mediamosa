@@ -72,8 +72,33 @@ class mediamosa_ticket {
   }
 
   // ------------------------------------------------------------------ Static Functions.
+  static public function create($app_id, $ticket_type, $owner_id, $mediafile_id, $ticket_id = NULL, $group_id = NULL, $issued = NULL) {
+    if (!isset($ticket_id)) {
+      $ticket_id = mediamosa_db::uuid($app_id);
+    }
+
+    $a_fields = array(
+      mediamosa_ticket_db::APP_ID => $app_id,
+      mediamosa_ticket_db::TICKET_TYPE => $ticket_type,
+      mediamosa_ticket_db::OWNER_ID => $owner_id,
+      mediamosa_ticket_db::MEDIAFILE_ID => $mediafile_id,
+      mediamosa_ticket_db::ISSUED => (isset($issued) ? $issued : mediamosa::db_current_timestamp_now()),
+    );
+
+    if (isset($group_id)) {
+      $a_fields[mediamosa_ticket_db::GROUP_ID] = $group_id;
+    }
+
+    db_insert(mediamosa_ticket_db::TABLE_NAME)
+      ->fields($a_fields)
+      ->execute();
+
+    // Return the ticket ID.
+    return $ticket_id;
+  }
+
   /**
-   * Create ticket.
+   * Create ticket for play-proxy usage.
    * 1.x: _play_proxy_create_ticket
    *
    * @param string $ticket
@@ -89,7 +114,7 @@ class mediamosa_ticket {
    * @param string $still_id
    *  Optional still_id.
    */
-  static public function create($ticket, $a_mediafile_ext, $response_type = mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_URI, $app_id, $user_id, $still_id = FALSE) {
+  static public function create_play_proxy($ticket_id, $a_mediafile_ext, $response_type = mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_URI, $app_id, $user_id, $still_id = FALSE) {
 
     if ($response_type == mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL) {
       // Find default or at least one still.
@@ -118,13 +143,13 @@ class mediamosa_ticket {
         $ticket_type = self::TICKET_TYPE_STILL;
         $ticket_target = self::still_ticket_target_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::objectid_to_location($still_id);
         $ticket_path = mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_settings::STILL_TICKET_LOCATION;
-        $ticket_symlink = $ticket_path . DIRECTORY_SEPARATOR . $ticket;
+        $ticket_symlink = $ticket_path . DIRECTORY_SEPARATOR . $ticket_id;
         break;
 
       case mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_DOWNLOAD:
         $ticket_type = self::TICKET_TYPE_DOWNLOAD;
         $ticket_target = self::download_ticket_target_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::objectid_to_location($a_mediafile_ext[mediamosa_asset_mediafile_db::ID]);
-        $ticket_path = mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_settings::DOWNLOAD_TICKET_LOCATION . DIRECTORY_SEPARATOR . $ticket;
+        $ticket_path = mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_settings::DOWNLOAD_TICKET_LOCATION . DIRECTORY_SEPARATOR . $ticket_id;
 
         // Set default filename.
         if (empty($a_mediafile_ext['filename'])) {
@@ -140,20 +165,20 @@ class mediamosa_ticket {
         $ticket_path = mediamosa_configuration_storage::ticket_location_get($app_id);
         switch ($a_mediafile_ext['metadata']['container_type']) {
           case CONTAINER_TYPE_FLV:
-            $ticket .= '.flv';
+            $ticket_id .= '.flv';
             break;
           case CONTAINER_TYPE_MP4:
-            $ticket .= '.mp4';
+            $ticket_id .= '.mp4';
             break;
           case CONTAINER_TYPE_MP3:
-            $ticket .= '.mp3';
+            $ticket_id .= '.mp3';
             break;
           case CONTAINER_TYPE_OGG:
-            $ticket .= '.ogg';
+            $ticket_id .= '.ogg';
             break;
         }
 
-        $ticket_symlink = $ticket_path . DIRECTORY_SEPARATOR . $ticket;
+        $ticket_symlink = $ticket_path . DIRECTORY_SEPARATOR . $ticket_id;
         break;
     }
 
@@ -170,25 +195,13 @@ class mediamosa_ticket {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_DIR_NOT_WRITABLE, array('@location' => $ticket_path));
     }
 
-    // Insert Ticket.
-    mediamosa_db::db_query(
-      'INSERT INTO {#mediamosa_ticket} #ticket_id = :ticket_id, #ticket_type = :ticket_type, #issued = :issued, #app_id = :app_id, #user_id = :user_id, #mediafile_id = :mediafile_id',
-      array(
-        '#mediamosa_ticket' => mediamosa_ticket_db::TABLE_NAME,
-        '#ticket_id' => mediamosa_ticket_db::ID,
-        ':ticket_id' => $ticket,
-        '#ticket_type' => mediamosa_ticket_db::TICKET_TYPE,
-        ':ticket_type' => $ticket_type,
-        '#app_id' => mediamosa_ticket_db::APP_ID,
-        ':app_id' => $app_id,
-        '#user_id' => mediamosa_ticket_db::OWNER_ID,
-        ':user_id' => $user_id,
-        '#mediafile_id' => mediamosa_ticket_db::MEDIAFILE_ID,
-        ':mediafile_id' => ($response_type == mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL && $still_id ? $still_id : isset($a_mediafile_ext['mediafile_id']) ? $a_mediafile_ext['mediafile_id'] : '')
-      )
-    );
+    // Get the mediafile for ticket.
+    $mediafile_id = ($response_type == mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL && $still_id ? $still_id : isset($a_mediafile_ext['mediafile_id']) ? $a_mediafile_ext['mediafile_id'] : '');
 
-    // Create the ticket.
+    // Insert Ticket.
+    self::create($app_id, $ticket_type, $user_id, $mediafile_id, $ticket_id);
+
+    // Create the symlink ticket.
     $ticket_target_tmp = mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_unicode::substr($ticket_target, 3);
     if (!is_dir($ticket_target_tmp)) {
       if (file_exists($ticket_symlink) || !symlink($ticket_target, $ticket_symlink)) {
@@ -197,6 +210,6 @@ class mediamosa_ticket {
     }
 
     // Return the ticket, we might have changed it.
-    return $ticket;
+    return $ticket_id;
   }
 }

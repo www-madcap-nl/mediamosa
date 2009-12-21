@@ -52,6 +52,19 @@ class mediamosa_asset_mediafile {
   }
 
   /**
+   * Will test if mediafile exits, will throw when fail.
+   *
+   * @param string $mediafile_id
+   */
+  static public function must_exists($mediafile_id, $app_id = NULL) {
+    if (isset($app_id)) {
+      return mediamosa_db::db_must_exists(mediamosa_asset_mediafile_db::TABLE_NAME, array(mediamosa_asset_mediafile_db::APP_ID => $app_id, mediamosa_asset_mediafile_db::ID => $mediafile_id));
+    }
+
+    return mediamosa_db::db_must_exists(mediamosa_asset_mediafile_db::TABLE_NAME, array(mediamosa_asset_mediafile_db::ID => $mediafile_id));
+  }
+
+  /**
    * Remove one or more mediafiles.
    *
    * @param mixed $mediafile_id
@@ -65,7 +78,7 @@ class mediamosa_asset_mediafile {
     $query->execute();
 
     // Delete from SAN/NAS.
-    $query = db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
+    $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
     $query->fields('mf', array(mediamosa_asset_mediafile_db::APP_ID, mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT));
     $query->condition(mediamosa_asset_mediafile_db::ID, $a_mediafile_ids, 'IN');
 
@@ -175,7 +188,7 @@ class mediamosa_asset_mediafile {
         $ticket = mediamosa_db::uuid($app_id);
 
         // Create ticket.
-        mediamosa_ticket::create(
+        mediamosa_ticket::create_play_proxy(
           $ticket,
           NULL,
           mediamosa_ticket::RESPONSE_TYPE_STILL,
@@ -346,4 +359,46 @@ class mediamosa_asset_mediafile {
     // Do the query and return found mediafiles as an array with mediafile_ids.
     return mediamosa_db::db_query($query)->fetchCol();
   }
+
+  /**
+   * Analyse the mediafile and store it into the database metadata of mediafile.
+   *
+   * 1.x: vpx_jobs_get_analysis_upload
+   *
+   * @param $app_id
+   * @param $mediafile_id
+   */
+  static public function analyse($app_id, $mediafile_id) {
+
+    $a_mediamosa_app = mediamosa_app::get_by_appid($app_id);
+
+/*
+
+  // Remove old metadata
+  db_set_active("data");
+  db_query("DELETE FROM {mediafile_metadata} WHERE mediafile_id = '%s'", $mediafile_id);
+  db_set_active();
+
+  $a_options = array();
+
+  if (strcasecmp($dbrow['always_hint_mp4'], 'true') == 0) {
+    $a_options[] =  VPX_ANALYSE_FILE_ALWAYS_HINT_MP4_OPTION;
+  }
+
+  if (strcasecmp($dbrow['always_insert_md'], 'true') == 0) {
+    $a_options[] =  VPX_ANALYSE_FILE_ALWAYS_INSERT_MD_OPTION;
+  }
+
+  $execution_string = sprintf("%s %s %s", VPX_ANALYSE_FILE, SAN_NAS_BASE_PATH . DS . DATA_LOCATION, $mediafile_id);
+  $execution_string .= (count($a_options) ? ' ' . implode(' ', $a_options) : '');
+
+  watchdog('server', 'Analyse string: '. print_r($execution_string, TRUE));
+  $a_output = array();
+  $s_output = exec($execution_string . " 2>&1", $a_output);
+
+  return $a_output;*/
+}
+
+
+
 }

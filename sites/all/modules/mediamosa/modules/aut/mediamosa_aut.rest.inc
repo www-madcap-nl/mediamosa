@@ -530,7 +530,7 @@ class mediamosa_rest_call_aut_mediafile_set_rights extends mediamosa_rest_call {
     $app_id = reset($a_app_ids);
 
     // Make sure the media file exists.
-    mediamosa_db::db_must_exists(mediamosa_asset_mediafile_db::TABLE_NAME, array('app_id' => $app_id, 'mediafile_id' => $mediafile_id));
+    mediamosa_asset_mediafile::must_exists($mediafile_id, $app_id);
 
     $a_app_ids = $this->get_param_value('aut_app');
     $a_aut_user_ids = $this->get_param_value('aut_user');
@@ -649,7 +649,7 @@ class mediamosa_rest_call_aut_mediafile_delete_rights extends mediamosa_rest_cal
     $app_id = reset($a_app_ids);
 
     // Make sure the media file exists.
-    mediamosa_db::db_must_exists(mediamosa_asset_mediafile_db::TABLE_NAME, array('app_id' => $app_id, 'mediafile_id' => $mediafile_id));
+    mediamosa_asset_mediafile::must_exists($mediafile_id, $app_id);
 
     // Get the media file
     $a_mediafile = mediamosa_db::db_query(

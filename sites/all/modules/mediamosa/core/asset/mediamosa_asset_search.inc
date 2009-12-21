@@ -289,7 +289,7 @@ class mediamosa_asset_search {
     }
 
     // Process possible order by.
-    if ($order_by != '') {
+    if (isset($order_by) && $order_by != '') {
       /**
        * 1.x to 2.x changes.
        *
@@ -298,7 +298,7 @@ class mediamosa_asset_search {
        * Changes to the metadata creation should no longer allow creation of empty metadata.
        * Checked against production server, only 1 string was found 'empty' and will not be
        * migrated during the 1.7 to 2.0 script.
-       * This makes the ordering a lot faster because we no longer need a WHERE entry.
+       * This makes the ordering a bit faster because we no longer need a WHERE entry.
        */
       if ($order_prop_id) {
         $join = strtr(
@@ -362,7 +362,7 @@ class mediamosa_asset_search {
 
     // When fav_user_id provided, we search for this user as owner.
     if ($fav_user_id != '') {
-      $a_query[mediamosa_db_query::A_JOIN]['user_favorites']['user_fav'] = "LEFT JOIN {mediamosa_user_favorites} AS user_fav ON user_fav.fav_type='" . mediamosa_user_favorite_db::FAV_TYPE_ASSET . "' AND user_fav.fav_id = a.asset_id\n";
+      $a_query[mediamosa_db_query::A_JOIN]['user_favorites']['user_fav'] = "LEFT JOIN {mediamosa_user_favorite} AS user_fav ON user_fav.fav_type='" . mediamosa_user_favorite_db::FAV_TYPE_ASSET . "' AND user_fav.fav_id = a.asset_id\n";
 
       $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['user_fav'][] = sprintf("user_fav.name = '%s'", mediamosa_db::escape_string($fav_user_id));
       $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['user_fav'][] = sprintf("user_fav.app_id IN('%s')", mediamosa_db::escape_string($a_app_ids, "','"));
@@ -491,7 +491,7 @@ class mediamosa_asset_search {
         }
 
         // How much assets we have globally
-        $i_found_rows = $calculate_total_count ? db_query('SELECT COUNT(*) FROM {assets_all}')->fetchField() : count($a_asset_ids);
+        $i_found_rows = $calculate_total_count ? mediamosa_db::db_query('SELECT COUNT(*) FROM {assets_all}')->fetchField() : count($a_asset_ids);
 
         // Drop temporary table
         db_query('DROP TABLE {assets_all}');
@@ -503,10 +503,7 @@ class mediamosa_asset_search {
     // Now create the query that will include all other results that are not included here
     // but only when a order by was present
 
-    /**
-     * @todo: fix hack here. ($a_query[mediamosa_db_query::LIMIT] > 6)
-     */
-    if ($order_by != '' && $a_query[mediamosa_db_query::LIMIT] > 6) {
+    if (isset($order_by) && $order_by != '') {
 
       // The first part of the query got all assets that had values on its order by column. For example,
       // Not every asset has a title, so the assets without title will not be included in the 1st query.

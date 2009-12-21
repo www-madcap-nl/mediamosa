@@ -336,10 +336,13 @@ class mediamosa_rest_call_ftp_user_update extends mediamosa_rest_call {
       if ($active) {
         $a_fields['active'] = $active ? 1 : 0;
       }
+
       if ($password) {
-        $password = "{md5}". base64_encode(md5($password, TRUE));
-        $a_fields['passwd'] = $password;
+        $a_fields['passwd'] = '{md5}' . base64_encode(md5($password, TRUE));
       }
+
+      // Add changed field.
+      $a_fields = mediamosa_db::db_update_enrich($a_fields);
 
       $query->fields($a_fields);
       $query->execute();
@@ -493,11 +496,9 @@ class mediamosa_rest_call_ftp_user_update_password extends mediamosa_rest_call {
       $query->condition('eua_id', $app_id);
 
       $a_fields = array(
-        'modified' => mediamosa::db_current_timestamp_now()
+        'modified' => mediamosa::db_current_timestamp_now(),
+        'passwd' => '{md5}' . base64_encode(md5($password, TRUE)),
       );
-
-      $password = "{md5}". base64_encode(md5($password, TRUE));
-      $a_fields['passwd'] = $password;
 
       $query->fields($a_fields);
       $query->execute();

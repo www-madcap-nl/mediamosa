@@ -13,4 +13,3 @@ core = 7.x
 files[] = mediamosa_app_authentication.module
 files[] = mediamosa_app_authentication.test
 files[] = mediamosa_app_authentication.rest.inc
-s

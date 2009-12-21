@@ -84,10 +84,13 @@ function mediamosa_migration_requirements($phase) {
   $t = get_t();
 
   if ($phase != 'install') {
+    return array();
+    /*
     $requirements['mediamosa2'] = array(
-      'title' => $t('Migration Requirements'),
+      'title' => $t('Mediamosa 1.7 to 2.x migration Requirements'),
       'severity' => REQUIREMENT_INFO
     );
+*/
   }
   else {
     // Allowed.
@@ -135,6 +138,8 @@ function mediamosa_migration_requirements($phase) {
       'mediamosa_ticket',
       'mediamosa_ftp_batch',
       'mediamosa_ftp_batch_asset',
+      'mediamosa_transcode_profile',
+      'mediamosa_transcode_mapping',
     );
     // Must exists source drupal db.
     $a_table_names_source_exists = array(
@@ -146,6 +151,8 @@ function mediamosa_migration_requirements($phase) {
       'transcoding_server',
       'transcoding_server_tool',
       'upload_server',
+      'transcode_profile',
+      'transcode_mapping',
     );
     // Must exists source data db.
     $a_table_names_source_exists_data = array(
@@ -165,6 +172,10 @@ function mediamosa_migration_requirements($phase) {
       'quota_group',
       'ftp_batch',
       'ftp_batch_asset',
+      'job',
+      'still_job',
+      'transcode_job',
+      'upload_job',
     );
 
     $old_db = 'default';
@@ -273,6 +284,15 @@ function mediamosa_migration_install() {
 
   // webservice_management(_capp) -> mediamosa_webservice(_app)
   _mediamosa_migration_webservice();
+
+  // *_job -> mediamosa_job_*
+  _mediamosa_migration_job();
+
+  // transcode_* -> mediamosa_transcode_*.
+  _mediamosa_migration_transcode();
+
+  // *_job_server -> mediamosa_job_server
+  _mediamosa_migration_jobserver_all(); // @todo
 }
 
 /**
@@ -1717,6 +1737,494 @@ function _mediamosa_migration_asset_supplement() {
         created,
         changed
       FROM #db_name.asset_supplement ORDER BY created ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+  // Back to old session mode.
+  db_query(strtr("SET SESSION sql_mode = '#old_mode'", array('#old_mode' => $old_mode)));
+}
+
+/**
+ * Migrate job tables.
+ */
+function _mediamosa_migration_job() {
+  // Get the database name.
+  $db_name = _mediamosa_migration_get_memo_data_db();
+
+  // Get the current mode, which might be empty;
+  $old_mode = db_query('SELECT @@SESSION.sql_mode')->fetchField();
+
+  // Turn off problems with empty dates.
+  db_query("SET SESSION sql_mode = 'ALLOW_INVALID_DATES'");
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * testtag
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_job}
+      (
+        job_id,
+        asset_id,
+        mediafile_id,
+        owner,
+        app_id,
+        status,
+        progress,
+        priority,
+        job_type,
+        started,
+        finished,
+        error_description,
+        created,
+        changed,
+        create_still,
+        still_parameters
+      ) (SELECT
+        job_id,
+        asset_id,
+        mediafile_id,
+        owner,
+        app_id,
+        status,
+        progress,
+        priority,
+        job_type,
+        started,
+        finished,
+        error_description,
+        created,
+        changed,
+        create_still,
+        still_parameters
+      FROM #db_name.job ORDER BY job_id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_job_still}
+      (
+        still_job_id,
+        job_id,
+        size,
+        frametime,
+        h_padding,
+        v_padding,
+        blackstill_check,
+        still_parameters,
+        created,
+        changed
+      ) (SELECT
+        still_job_id,
+        job_id,
+        size,
+        frametime,
+        h_padding,
+        v_padding,
+        blackstill_check,
+        still_parameters,
+        created,
+        changed
+    FROM #db_name.still_job ORDER BY job_id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_job_transcode}
+      (
+        transcode_job_id ,
+        job_id,
+        transcode_profile_id,
+        tool,
+        command,
+        completed_transcoding_url,
+        file_extension,
+        created,
+        changed
+      ) (SELECT
+        transcode_job_id ,
+        job_id,
+        transcode_profile_id,
+        tool,
+        command,
+        completed_transcoding_url,
+        file_extension,
+        created,
+        changed
+    FROM #db_name.transcode_job ORDER BY job_id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_job_upload}
+      (
+        upload_job_id,
+        job_id,
+        file_size,
+        uploaded_file_size,
+        retranscode,
+        create_still,
+        created,
+        changed
+      ) (SELECT
+        upload_job_id,
+        job_id,
+        file_size,
+        uploaded_file_size,
+        retranscode,
+        create_still,
+        created,
+        changed
+    FROM #db_name.upload_job ORDER BY job_id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+  // Back to old session mode.
+  db_query(strtr("SET SESSION sql_mode = '#old_mode'", array('#old_mode' => $old_mode)));
+}
+
+
+/**
+ * Migrate jobserver tables.
+ */
+function _mediamosa_migration_jobserver_all() {
+
+  global $databases;
+  if (!isset($databases['jobserver']) && !isset($databases['jobserver']['default']) && !isset($databases['jobserver']['default']['mediamosa_jobserver_dbs'])) {
+    return;
+  }
+
+  foreach ($databases['jobserver']['default']['mediamosa_jobserver_dbs'] as $from_dbname => $to_dbname) {
+    if (is_numeric($from_dbname)) {
+      assert(0); // missing key.
+      continue;
+    }
+
+    //_mediamosa_migration_jobserver($from_dbname, $to_dbname);
+  }
+}
+
+function _mediamosa_migration_jobserver($from_dbname, $to_dbname) {
+
+  // Get the current mode, which might be empty;
+  $old_mode = db_query('SELECT @@SESSION.sql_mode')->fetchField();
+
+  // Turn off problems with empty dates.
+  db_query("SET SESSION sql_mode = 'ALLOW_INVALID_DATES'");
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * testtag
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO from_dbname.{mediamosa_job_server}
+      (
+        jobserver_job_id,
+        job_id,
+        status,
+        progress,
+        job_type,
+        progress_id,
+        mediafile_src,
+        mediafile_dest,
+        started,
+        finished,
+        error_description,
+        created,
+        changed
+      ) (SELECT
+        jobserver_job_id,
+        job_id,
+        status,
+        progress,
+        job_type,
+        progress_id,
+        mediafile_src,
+        mediafile_dest,
+        started,
+        finished,
+        error_description,
+        created,
+        changed
+    FROM #to_dbname.{jobserver_job} ORDER BY jobserver_job_id ASC)",
+    array(
+      '#from_dbname' => $from_dbname,
+      '#to_dbname' => $to_dbname,
+    ))
+  );
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * testtag
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO from_dbname.{mediamosa_job_server}
+      (
+        jobserver_job_id,
+        job_id,
+        status,
+        progress,
+        job_type,
+        progress_id,
+        mediafile_src,
+        mediafile_dest,
+        started,
+        finished,
+        error_description,
+        created,
+        changed
+      ) (SELECT
+        jobserver_job_id,
+        job_id,
+        status,
+        progress,
+        job_type,
+        progress_id,
+        mediafile_src,
+        mediafile_dest,
+        started,
+        finished,
+        error_description,
+        created,
+        changed
+    FROM #to_dbname.{jobserver_job} ORDER BY jobserver_job_id ASC)",
+    array(
+      '#from_dbname' => $from_dbname,
+      '#to_dbname' => $to_dbname,
+    ))
+  );
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO from_dbname.{mediamosa_job_server_analyse}
+      (
+        jobserver_job_id,
+        analyse_result,
+        created,
+        changed
+      ) (SELECT
+        jobserver_job_id,
+        analyse_result,
+        created,
+        changed
+    FROM #to_dbname.{jobserver_analyse_job} ORDER BY jobserver_job_id ASC)",
+    array(
+      '#from_dbname' => $from_dbname,
+      '#to_dbname' => $to_dbname,
+    ))
+  );
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO from_dbname.{mediamosa_job_server_still}
+      (
+        jobserver_job_id,
+        frametime,
+        size,
+        h_padding,
+        v_padding,
+        created,
+        changed,
+        blackstill_check,
+        still_parameters
+      ) (SELECT
+        jobserver_job_id,
+        frametime,
+        size,
+        h_padding,
+        v_padding,
+        created,
+        changed,
+        blackstill_check,
+        still_parameters
+    FROM #to_dbname.{jobserver_still_job} ORDER BY jobserver_job_id ASC)",
+    array(
+      '#from_dbname' => $from_dbname,
+      '#to_dbname' => $to_dbname,
+    ))
+  );
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO from_dbname.{mediamosa_job_server_transcode}
+      (
+        jobserver_job_id,
+        frametime,
+        size,
+        h_padding,
+        v_padding,
+        created,
+        changed,
+        blackstill_check,
+        still_parameters
+      ) (SELECT
+        jobserver_job_id,
+        frametime,
+        size,
+        h_padding,
+        v_padding,
+        created,
+        changed,
+        blackstill_check,
+        still_parameters
+    FROM #to_dbname.{jobserver_transcode_job} ORDER BY jobserver_job_id ASC)",
+    array(
+      '#from_dbname' => $from_dbname,
+      '#to_dbname' => $to_dbname,
+    ))
+  );
+
+  // Back to old session mode.
+  db_query(strtr("SET SESSION sql_mode = '#old_mode'", array('#old_mode' => $old_mode)));
+}
+
+/**
+ * Migrate transcode_* tables.
+ */
+function _mediamosa_migration_transcode() {
+
+  // Get the database name.
+  $db_name = _mediamosa_migration_get_memo_db();
+
+  // Get the current mode, which might be empty;
+  $old_mode = db_query('SELECT @@SESSION.sql_mode')->fetchField();
+
+  // Turn off problems with empty dates.
+  db_query("SET SESSION sql_mode = 'ALLOW_INVALID_DATES'");
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * testtag
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_transcode_profile}
+      (
+        transcode_profile_id,
+        version,
+        profile,
+        is_default_profile,
+        tool,
+        file_extension,
+        command,
+        created,
+        changed,
+        app_id
+      ) (SELECT
+        transcode_profile_id,
+        version,
+        profile,
+        is_default_profile,
+        tool,
+        file_extension,
+        command,
+        created,
+        changed,
+        app_id
+    FROM #db_name.transcode_profile ORDER BY transcode_profile_id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_transcode_mapping}
+      (
+        transcode_mapping_id,
+        tool,
+        nice_parameter,
+        tool_parameter,
+        min_value,
+        max_value,
+        allowed_value,
+        default_value,
+        required,
+        created,
+        changed
+      ) (SELECT
+        transcode_mapping_id,
+        tool,
+        nice_parameter,
+        tool_parameter,
+        min_value,
+        max_value,
+        allowed_value,
+        default_value,
+        required,
+        created,
+        changed
+    FROM #db_name.transcode_mapping ORDER BY transcode_mapping_id ASC)",
     array(
       '#db_name' => $db_name
     ))

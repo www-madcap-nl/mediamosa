@@ -709,27 +709,57 @@ class mediamosa_aut {
       switch ($aut_type) {
         case mediamosa_aut::AUT_TYPE_MEDIAFILE:
           if (!$rights_set_domain_realm && $rights_set_user_usergroup) {
-            mediamosa_db::db_query("UPDATE {mediamosa_asset_mediafile} SET is_protected = '%s' WHERE mediafile_id = '%s' ", mediamosa_aut::MEDIAFILE_IS_PROTECTED_USER_USERGROUP, $aut_object_id);
+            $a_fields = array(
+              mediamosa_asset_mediafile_db::IS_PROTECTED => mediamosa_aut::MEDIAFILE_IS_PROTECTED_USER_USERGROUP,
+            );
           }
           elseif ($rights_set_domain_realm && !$rights_set_user_usergroup) {
-            mediamosa_db::db_query("UPDATE {mediamosa_asset_mediafile} SET is_protected='%s' WHERE mediafile_id='%s' ", mediamosa_aut::MEDIAFILE_IS_PROTECTED_DOMAIN_REALM, $aut_object_id);
+            $a_fields = array(
+              mediamosa_asset_mediafile_db::IS_PROTECTED => mediamosa_aut::MEDIAFILE_IS_PROTECTED_DOMAIN_REALM,
+            );
           }
           else {
-            mediamosa_db::db_query("UPDATE {mediamosa_asset_mediafile} SET is_protected='TRUE' WHERE mediafile_id='%s' ", $aut_object_id);
+            $a_fields = array(
+              mediamosa_asset_mediafile_db::IS_PROTECTED => mediamosa_aut::MEDIAFILE_IS_PROTECTED_TRUE,
+            );
           }
+
+          // Add changed value.
+          $a_fields = mediamosa_db::db_update_enrich($a_fields);
+
+          // Update it.
+          mediamosa_db::db_update(mediamosa_asset_mediafile_db::TABLE_NAME)
+            ->fields($a_fields)
+            ->condition(mediamosa_asset_mediafile_db::ID, $aut_object_id)
+            ->execute();
           break;
 
         case mediamosa_aut::AUT_TYPE_ASSET:
           if (!$rights_set_domain_realm && $rights_set_user_usergroup) {
-            mediamosa_db::db_query("UPDATE {mediamosa_asset} SET is_protected='%s' WHERE asset_id='%s' ", mediamosa_aut::MEDIAFILE_IS_PROTECTED_USER_USERGROUP, $aut_object_id);
+            $a_fields = array(
+              mediamosa_asset_db::IS_PROTECTED => mediamosa_aut::MEDIAFILE_IS_PROTECTED_USER_USERGROUP,
+            );
           }
           elseif ($rights_set_domain_realm && !$rights_set_user_usergroup) {
-            mediamosa_db::db_query("UPDATE {mediamosa_asset} SET is_protected='%s' WHERE asset_id='%s' ", mediamosa_aut::MEDIAFILE_IS_PROTECTED_DOMAIN_REALM, $aut_object_id);
+            $a_fields = array(
+              mediamosa_asset_db::IS_PROTECTED => mediamosa_aut::MEDIAFILE_IS_PROTECTED_DOMAIN_REALM,
+            );
           }
           else {
-            mediamosa_db::db_query("UPDATE {mediamosa_asset} SET is_protected='TRUE' WHERE asset_id='%s' ", $aut_object_id);
+            $a_fields = array(
+              mediamosa_asset_db::IS_PROTECTED => mediamosa_aut::MEDIAFILE_IS_PROTECTED_TRUE,
+            );
           }
-          break; // nothing yet
+
+          // Add changed value.
+          $a_fields = mediamosa_db::db_update_enrich($a_fields);
+
+          // Update it.
+          mediamosa_db::db_update(mediamosa_asset_db::TABLE_NAME)
+            ->fields($a_fields)
+            ->condition(mediamosa_asset_db::ID, $aut_object_id)
+            ->execute();
+          break;
 
         case mediamosa_aut::AUT_TYPE_COLLECTION:
           break; // nothing yet
@@ -780,11 +810,33 @@ class mediamosa_aut {
 
     switch ($aut_type) {
       case mediamosa_aut::AUT_TYPE_MEDIAFILE:
-        db_query("UPDATE {mediamosa_asset_mediafile} SET is_protected='FALSE' WHERE mediafile_id='%s' ", $aut_object_id);
+        $a_fields = array(
+          mediamosa_asset_mediafile_db::IS_PROTECTED => mediamosa_asset_mediafile_db::IS_PROTECTED_FALSE,
+        );
+
+        // Add changed value.
+        $a_fields = mediamosa_db::db_update_enrich($a_fields);
+
+        // Update it.
+        mediamosa_db::db_update(mediamosa_asset_mediafile_db::TABLE_NAME)
+          ->fields($a_fields)
+          ->condition(mediamosa_asset_mediafile_db::ID, $aut_object_id)
+          ->execute();
         break;
 
       case mediamosa_aut::AUT_TYPE_ASSET:
-        db_query("UPDATE {mediamosa_asset} SET is_protected='FALSE' WHERE asset_id='%s' ", $aut_object_id);
+        $a_fields = array(
+          mediamosa_asset_db::IS_PROTECTED => mediamosa_asset_db::IS_PROTECTED_FALSE,
+        );
+
+        // Add changed value.
+        $a_fields = mediamosa_db::db_update_enrich($a_fields);
+
+        // Update it.
+        mediamosa_db::db_update(mediamosa_asset_db::TABLE_NAME)
+          ->fields($a_fields)
+          ->condition(mediamosa_asset_db::ID, $aut_object_id)
+          ->execute();
         break;
 
       case mediamosa_aut::AUT_TYPE_COLLECTION:
@@ -797,7 +849,7 @@ class mediamosa_aut {
     // Verwijder de links tussen object en de aut_name/aut_group tabel
     // Hierdoor verwijder je alle rechten.
     // Verwijder ook alle master / slave links
-    mediamosa_db::db_query("DELETE FROM {aut_object} WHERE aut_object_type = '%s' AND aut_object_id = '%s'", $aut_type, $aut_object_id);
+    mediamosa_db::db_query("DELETE FROM {mediamosa_aut_object} WHERE aut_object_type = '%s' AND aut_object_id = '%s'", $aut_type, $aut_object_id);
 
     // Verwijder master / slave link, alleen orginele app_id kan deze verwijderen
     // Wij zijn altijd slave en slaves kunnen zich slave maken of verwijderen (moet owner zijn van object)
@@ -931,13 +983,13 @@ class mediamosa_aut {
   static public function replace_obj_to_obj($aut_type_source, $aut_id_source, $aut_type_dest, $aut_id_dest) {
 
     // We replace, so remove any existing rights 1st.
-    mediamosa_db::db_query("DELETE FROM {aut_object} WHERE aut_object_type='%s' AND aut_object_id='%s'", $aut_type_dest, $aut_id_dest);
+    mediamosa_db::db_query("DELETE FROM {mediamosa_aut_object} WHERE aut_object_type='%s' AND aut_object_id='%s'", $aut_type_dest, $aut_id_dest);
     mediamosa_db::db_query("DELETE FROM {mediamosa_aut_app_master_slave} WHERE aut_object_type='%s' AND aut_object_id='%s'", $aut_type_dest, $aut_id_dest);
 
     // Copy normal ACL rights
-    $db_result = mediamosa_db::db_query("SELECT aut_type, aut_id FROM {aut_object} WHERE aut_object_type = '%s' AND aut_object_id = '%s'", $aut_type_source, $aut_id_source);
+    $db_result = mediamosa_db::db_query("SELECT aut_type, aut_id FROM {mediamosa_aut_object} WHERE aut_object_type = '%s' AND aut_object_id = '%s'", $aut_type_source, $aut_id_source);
     foreach ($db_result as $dbrow) {
-      mediamosa_db::db_query("INSERT INTO {aut_object} SET aut_object_id = '%s', aut_type = '%s', aut_id = %d, aut_object_type = '%s'", $aut_id_dest, $dbrow['aut_type'], $dbrow['aut_id'], $aut_type_dest);
+      mediamosa_db::db_query("INSERT INTO {mediamosa_aut_object} SET aut_object_id = '%s', aut_type = '%s', aut_id = %d, aut_object_type = '%s'", $aut_id_dest, $dbrow['aut_type'], $dbrow['aut_id'], $aut_type_dest);
     }
 
     // Copy master/slave settings

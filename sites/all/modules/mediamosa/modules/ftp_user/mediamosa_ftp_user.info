@@ -1,7 +1,7 @@
 ; $Id $
 
 name = "FTP User"
-description = "The FTP user allows applications to manage FTP users.."
+description = "The FTP user allows applications to manage FTP users."
 package = "MediaMosa 2 - Modules"
 version = "2.0.0"
 core = 7.x

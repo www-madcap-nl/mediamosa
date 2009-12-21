@@ -189,6 +189,42 @@ function mediamosa_asset_mediamosa_register_rest_call() {
     mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY,
   );
 
+  // Create ticket for upload.
+  $a_rest_calls['mediafile/$mediafile_id/uploadticket/create'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_mediafile_uploadticket_create',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Create a ticket for upload.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_upload',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Create ticket for upload.
+  $a_rest_calls['mediafile/$mediafile_id/upload_ticket'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_mediafile_uploadticket_create',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
+    mediamosa_rest_call::DESCRIPTION => 'Create a ticket for upload.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_upload',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Create ticket for upload.
+  $a_rest_calls['mediafile/$mediafile_id/uploadticket/create'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_mediafile_uploadticket_create',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Create a ticket for upload.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_upload',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Create ticket for upload.
+  $a_rest_calls['mediafile/$mediafile_id/upload_ticket'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_mediafile_uploadticket_create',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
+    mediamosa_rest_call::DESCRIPTION => 'Create a ticket for upload.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_upload',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
   // Get favorites count of asset.
   $a_rest_calls['asset/$asset_id/favorites/count'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_favorites_count',
@@ -414,8 +450,6 @@ function mediamosa_asset_mediamosa_register_rest_call() {
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_play_proxy',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
-
-
 /*
  * Here for testing purpose.
   // Alias for metadata_tag.

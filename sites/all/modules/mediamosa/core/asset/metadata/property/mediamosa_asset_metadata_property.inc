@@ -129,16 +129,21 @@ class mediamosa_asset_metadata_property {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_METADATA_DEFINITION_ALREADY_EXISTS);
     }
 
+    $a_fields = array(
+      mediamosa_asset_metadata_property_db::NAME => $name,
+      mediamosa_asset_metadata_property_db::TYPE => mediamosa_unicode::strtoupper($type),
+      mediamosa_asset_metadata_property_db::PROPGROUP_ID => $propgroup_id,
+      mediamosa_asset_metadata_property_db::APP_ID => $app_id,
+      mediamosa_asset_metadata_property_db::MAX_OCCURENCES => $max_occurences,
+      mediamosa_asset_metadata_property_db::MIN_OCCURENCES => $min_occurences,
+    );
+
+    // Add created value.
+    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+
     // Insert it.
     return mediamosa_db::db_insert(mediamosa_asset_metadata_property_db::TABLE_NAME)
-      ->fields(array(
-        mediamosa_asset_metadata_property_db::NAME => $name,
-        mediamosa_asset_metadata_property_db::TYPE => mediamosa_unicode::strtoupper($type),
-        mediamosa_asset_metadata_property_db::PROPGROUP_ID => $propgroup_id,
-        mediamosa_asset_metadata_property_db::APP_ID => $app_id,
-        mediamosa_asset_metadata_property_db::MAX_OCCURENCES => $max_occurences,
-        mediamosa_asset_metadata_property_db::MIN_OCCURENCES => $min_occurences,
-      ))
+      ->fields($a_fields)
       ->execute();
   }
 

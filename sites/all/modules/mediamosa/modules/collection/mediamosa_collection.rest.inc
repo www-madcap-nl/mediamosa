@@ -464,7 +464,6 @@ class mediamosa_rest_call_collection_create extends mediamosa_rest_call {
   const PUBLIC_ = 'public';
   const CATEGORY = 'category';
   const ISPRIVATE = 'isprivate';
-  const ISPRIVATE = 'isprivate';
   const PUBLIC_ASSIGN = 'public_assign';
   const IS_UNAPPROPRIATE = 'is_unappropriate';
 
@@ -551,6 +550,9 @@ class mediamosa_rest_call_collection_create extends mediamosa_rest_call {
 
       $a_fields[$param] = $this->get_param_value($param);
     }
+
+    // Add created value.
+    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
 
     // Add the fields to the query.
     $query->fields($a_fields);
@@ -712,6 +714,9 @@ class mediamosa_rest_call_collection_update extends mediamosa_rest_call {
     if (empty($a_fields)) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_NO_CHANGES);
     }
+
+    // Add changed field.
+    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
 
     // Add the fields to the query.
     $query->fields($a_fields);

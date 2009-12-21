@@ -107,29 +107,30 @@ class mediamosa_ftp_batch {
    */
   static public function create($app_id, $owner_id, $group_id) {
 
-    return mediamosa_db::db_query(
-      'INSERT INTO {#mediamosa_ftp_batch} SET #app_id = :app_id , #owner_id = :owner_id, #group_id = :group_id',
-      array(
-        '#mediamosa_ftp_batch' => mediamosa_ftp_batch_db::TABLE_NAME,
-        '#app_id' => mediamosa_ftp_batch_db::APP_ID,
-        ':app_id' => $app_id,
-        '#owner_id' => mediamosa_ftp_batch_db::OWNER_ID,
-        ':owner_id' => $owner_id,
-        '#group_id' => mediamosa_ftp_batch_db::GROUP_ID,
-        ':group_id' => $group_id
-      )
+    $a_fields = array(
+      mediamosa_ftp_batch_db::APP_ID => $app_id,
+      mediamosa_ftp_batch_db::OWNER_ID => $owner_id,
+      mediamosa_ftp_batch_db::GROUP_ID => $group_id,
     );
+
+    // No created/changed fields.
+
+    return mediamosa_db::db_insert(mediamosa_ftp_batch_db::TABLE_NAME)
+      ->fields($a_fields)
+      ->execute();
   }
 
   /**
    * Update the ftp batch
    *
    * @param $app_id
-   *  The application ID.
+   *  The application ID. (unused, future)
    * @param $batch_id
    *  The batch ID.
    * @param $owner_id
    *  The owner ID.
+   * @param $group_id
+   *  The group ID.
    * @param $vuf
    *  VUF value.
    * @param $started
@@ -140,37 +141,24 @@ class mediamosa_ftp_batch {
    *  Email address.
    * @param $email_contents
    */
-  static public function update($app_id, $batch_id, $owner_id, $vuf, $started, $finished, $email_address, $email_contents) {
+  static public function update($app_id, $batch_id, $owner_id, $group_id, $vuf, $started, $finished, $email_address, $email_contents) {
 
-    // Update.
-    mediamosa_db::db_query(
-      'UPDATE {#mediamosa_ftp_batch} SET
-        #owner_id = :owner_id,
-        #group_id = :group_id,
-        #vuf = :vuf,
-        #started = :started,
-        #finished = :finished,
-        #email_address = :email_address,
-        #email_contents = :email_contents
-        WHERE #batch_id = :batch_id',
-      array(
-        '#mediamosa_ftp_batch' => mediamosa_ftp_batch_db::TABLE_NAME,
-        '#owner_id' => mediamosa_ftp_batch_db::OWNER_ID,
-        ':owner_id' => $owner_id,
-        '#vuf' => mediamosa_ftp_batch_db::VUF,
-        ':vuf' => $vuf,
-        '#started' => mediamosa_ftp_batch_db::STARTED,
-        ':started' => $started,
-        '#finished' => mediamosa_ftp_batch_db::FINISHED,
-        ':finished' => $finished,
-        '#email_address' => mediamosa_ftp_batch_db::EMAIL_ADDRESS,
-        ':email_address' => $email_address,
-        '#email_contents' => mediamosa_ftp_batch_db::EMAIL_CONTENTS,
-        ':email_contents' => $email_contents,
-        '#batch_id' => mediamosa_ftp_batch_db::ID,
-        ':batch_id' => $batch_id
-      )
+    $a_fields = array(
+      mediamosa_ftp_batch_db::OWNER_ID => $owner_id,
+      mediamosa_ftp_batch_db::GROUP_ID => $group_id,
+      mediamosa_ftp_batch_db::VUF => $vuf,
+      mediamosa_ftp_batch_db::STARTED => $started,
+      mediamosa_ftp_batch_db::FINISHED => $finished,
+      mediamosa_ftp_batch_db::EMAIL_ADDRESS => $email_address,
+      mediamosa_ftp_batch_db::EMAIL_CONTENTS => $email_contents,
     );
+
+    // No changed/created fields.
+
+    mediamosa_db::db_update(mediamosa_ftp_batch_db::TABLE_NAME)
+      ->fields($a_fields)
+      ->condition(mediamosa_ftp_batch_db::ID, $batch_id)
+      ->execute();
   }
 
   /**

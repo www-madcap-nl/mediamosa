@@ -79,11 +79,16 @@ class mediamosa_asset_metadata_property_group {
    *  The new ID of the object.
    */
   function property_group_create($name) {
-    return db_insert(mediamosa_asset_metadata_property_group_db::TABLE_NAME)
-      ->fields(array(
-        mediamosa_asset_metadata_property_group_db::NAME => $name,
-        mediamosa_asset_metadata_property_group_db::CREATED => mediamosa::db_current_timestamp_now(),
-      ))
+    $a_fields = array(
+      mediamosa_asset_metadata_property_group_db::NAME => $name,
+    );
+
+    // Add created value.
+    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+
+    // Insert it.
+    return mediamosa_db::db_insert(mediamosa_asset_metadata_property_group_db::TABLE_NAME)
+      ->fields($a_fields)
       ->execute();
   }
 

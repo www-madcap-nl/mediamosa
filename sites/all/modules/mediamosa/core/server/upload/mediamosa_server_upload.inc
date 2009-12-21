@@ -24,8 +24,23 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
- /**
-  * @file
-  * transcoding_profile module.
-  */
+/**
+ * @file
+ * Upload server functions.
+ */
 
+class mediamosa_server_upload {
+
+  // ------------------------------------------------------------------ Consts.
+  static public function get_random() {
+    return mediamosa_db::db_query_range(
+      'SELECT * FROM {#mediamosa_server_upload} WHERE #status = 1 ORDER BY RAND()',
+      0,
+      1,
+      array(
+        '#mediamosa_server_upload' => mediamosa_server_upload_db::TABLE_NAME,
+        '#status' => mediamosa_server_upload_db::STATUS,
+      )
+    )->fetchAssoc();
+  }
+}

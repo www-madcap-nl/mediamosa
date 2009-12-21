@@ -93,10 +93,7 @@ class mediamosa_rest_call_asset_metadata_create extends mediamosa_rest_call {
     $user_id = $this->get_param_value(self::USER_ID);
 
     // Asset must exist.
-    mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
-
-    // Get the asset.
-    $a_asset = mediamosa_asset::get($asset_id);
+    $a_asset = mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
 
     // If the app match, we check ownership or else a master slave record must exist
     if ($app_id == $a_asset[mediamosa_asset_db::APP_ID]) {

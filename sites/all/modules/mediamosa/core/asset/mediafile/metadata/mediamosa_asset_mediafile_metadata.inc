@@ -50,7 +50,7 @@ class mediamosa_asset_mediafile_metadata {
    *
    * @param string $mediafile_id
    */
-  function is_playable($mediafile_id) { // media_management_is_playable.
+  static public function is_playable($mediafile_id) { // media_management_is_playable.
     $query = mediamosa_db::db_select(mediamosa_asset_mediafile_metadata_db::TABLE_NAME);
     $query->condition(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID, $mediafile_id);
     $a_mediafile = $query->execute()->fetchAssoc();
@@ -66,7 +66,7 @@ class mediamosa_asset_mediafile_metadata {
    *
    * @param string $mediafile_id
    */
-  function is_transcodable($mediafile_id) { // media_management_is_transcodable.
+  static public function is_transcodable($mediafile_id) { // media_management_is_transcodable.
     $query = mediamosa_db::db_select(mediamosa_asset_mediafile_metadata_db::TABLE_NAME);
     $query->condition(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID, $mediafile_id);
     $a_mediafile = $query->execute()->fetchAssoc();
@@ -75,4 +75,77 @@ class mediamosa_asset_mediafile_metadata {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CANT_TRANSCODE_MEDIAFILE, array('@mediafile_id' => $mediafile_id, '@reason' => 'this mediafile has an empty filesize.'));
     }
   }
+
+  static public function store_analyse($mediafile_id, $a_analyse) {
+
+  }
+
+  /**
+ * Verwerk de informatie in de database die terugkomt van een analysejob
+ */
+function _vpx_jobhandler_update_analyse_job_info_to_mediafile($job_id, $analyse_result) {
+  // verwerk de analyse gegevens naar een named array
+  $parameters = _vpx_jobhandler_parse_metadata($analyse_result);
+
+  // haal de mediafile_id op
+  db_set_active("data");
+  $db_result = db_query("SELECT mediafile_id, create_still, still_parameters, owner, app_id FROM {job} WHERE job_id = %s", $job_id);
+  $dbrow_job = db_fetch_array($db_result);
+  assert($dbrow_job["app_id"]);
+  db_set_active();
+
+  // bepaal de bestandsgrootte
+  $filesize = filesize(SAN_NAS_BASE_PATH . DS . DATA_LOCATION . DS . $dbrow_job["mediafile_id"]{0} . DS . $dbrow_job["mediafile_id"]);
+
+  // voeg een record toe aan de mediafile metadata tabel.
+  db_set_active("data");
+  $query_result = db_query(
+    "INSERT INTO {mediafile_metadata}
+    (mediafile_id, video_codec, colorspace, width, height, fps,
+     audio_codec, sample_rate, channels, file_duration,
+     container_type, bitrate, bpp, filesize, mime_type, is_hinted, is_inserted_md)
+    VALUES
+    ('%s', '%s', '%s',
+      %d, %d, '%s',
+     '%s', %d,
+     '%s', '%s',
+     '%s', %d,
+     '%s', %d, '%s', '%s', '%s')",
+      $dbrow_job["mediafile_id"], $parameters["video_codec"], $parameters["colorspace"],
+      $parameters["width"], $parameters["height"], $parameters["fps"],
+      $parameters["audio_codec"], $parameters["sample_rate"],
+      $parameters["channels"], $parameters["file_duration"],
+      $parameters["container_type"], $parameters["bitrate"],
+      $parameters["bpp"], $filesize, $parameters["mime_type"], (strcasecmp($parameters["is_hinted"], 'yes') == 0 ? 'TRUE' : 'FALSE'), (strcasecmp($parameters["is_inserted_md"], 'yes') == 0 ? 'TRUE' : 'FALSE'));
+  db_set_active();
+
+  // Set the ffmpeg log
+  db_set_active("data");
+  db_query("UPDATE {job} SET error_description='%s' WHERE job_id = %d", $parameters['ffmpeg_output'], $job_id);
+  db_set_active();
+
+  // Update the asset data
+  _media_management_update_asset_info($dbrow_job["mediafile_id"]); // werk 'length' bij
+
+  if ($dbrow_job["create_still"] == 'TRUE') {
+    // If we need to create a still after analyse job, then we must....
+
+    $a_args = array();
+    $a_args['uri'] = array();
+    $a_args['uri']['mediafile_id'] = $dbrow_job["mediafile_id"];
+    $a_args['get'] = array();
+    $a_args['get']['user_id'] = $dbrow_job["owner"];
+    $a_args['get']['app_id'] = $dbrow_job["app_id"];
+    $a_args['get']['test_tag'] = $dbrow_job["test_tag"];
+    if ($dbrow_job["still_parameters"]) {
+      $a_args['post'] = unserialize($dbrow_job["still_parameters"]);
+    }
+
+    vpx_jobscheduler_create_new_still_job($a_args);
+  }
+}
+
+
+
+
 }

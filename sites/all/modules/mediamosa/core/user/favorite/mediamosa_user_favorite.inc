@@ -30,6 +30,7 @@
   */
 class mediamosa_user_favorite {
 
+  // ------------------------------------------------------------------ Functions static.
   /**
    * Return the number of rows found.
    *
@@ -40,9 +41,105 @@ class mediamosa_user_favorite {
   static public function count_items($fav_type, $fav_id) {
 
     // Return the number of found rows.
-    $query = db_select(mediamosa_user_favorite_db::TABLE_NAME);
+    $query = mediamosa_db::db_select(mediamosa_user_favorite_db::TABLE_NAME);
     $query->condition(mediamosa_user_favorite_db::FAV_TYPE, $fav_type);
     $query->condition(mediamosa_user_favorite_db::FAV_ID, $fav_id);
     return $query->countQuery()->execute()->fetchField();
+  }
+
+  /**
+   * Get a fav. relation.
+   *
+   * @param integer $app_id
+   *  Application ID.
+   * @param string $user_id
+   *  User ID.
+   * @param string $fav_type
+   *  Favorite type.
+   * @param integer $fav_id
+   *  ID asset / collection.
+   */
+  static public function get($app_id, $user_id, $fav_type, $fav_id) {
+    return mediamosa_db::db_select(mediamosa_user_favorite_db::TABLE_NAME, 'uf')
+      ->fields('uf')
+      ->condition(mediamosa_user_favorite_db::NAME, $user_id)
+      ->condition(mediamosa_user_favorite_db::APP_ID, $app_id)
+      ->condition(mediamosa_user_favorite_db::FAV_TYPE, $fav_type)
+      ->condition(mediamosa_user_favorite_db::FAV_ID, $fav_id)
+      ->execute()
+      ->fetchAssoc();
+  }
+
+  /**
+   * Delete a fav. relation.
+   *
+   * @param integer $app_id
+   *  Application ID.
+   * @param string $user_id
+   *  User ID.
+   * @param string $fav_type
+   *  Favorite type.
+   * @param integer $fav_id
+   *  ID asset / collection.
+   */
+  static public function delete($app_id, $user_id, $fav_type, $fav_id) {
+    return mediamosa_db::db_delete(mediamosa_user_favorite_db::TABLE_NAME, 'uf')
+      ->condition(mediamosa_user_favorite_db::NAME, $user_id)
+      ->condition(mediamosa_user_favorite_db::APP_ID, $app_id)
+      ->condition(mediamosa_user_favorite_db::FAV_TYPE, $fav_type)
+      ->condition(mediamosa_user_favorite_db::FAV_ID, $fav_id)
+      ->execute();
+  }
+
+  /**
+   * Create a fav. relation.
+   *
+   * @param integer $app_id
+   *  Application ID.
+   * @param string $user_id
+   *  User ID.
+   * @param string $fav_type
+   *  Favorite type.
+   * @param integer $fav_id
+   *  ID asset / collection.
+   */
+  static public function create($app_id, $user_id, $fav_type, $fav_id) {
+
+    switch ($fav_type) {
+      case mediamosa_user_favorite_db::FAV_TYPE_ASSET:
+        // Must exist.
+        mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $fav_id, mediamosa_asset_db::PARENT_ID => NULL));
+        break;
+
+      case mediamosa_user_favorite_db::FAV_TYPE_COLLECTION:
+        // Must exist.
+        mediamosa_db::db_must_exists(mediamosa_collection_db::TABLE_NAME, array(mediamosa_collection_db::ID => $fav_id));
+        break;
+
+      default:
+        // Any other type is not allowed
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INVALID_FAV_TYPE, array('@type' => $fav_type, '@valid_types' => implode(', ', array(mediamosa_user_favorite_db::FAV_TYPE_ASSET, mediamosa_user_favorite_db::FAV_TYPE_COLLECTION))));
+    }
+
+    // Get possible link.
+    $a_fav_relation = mediamosa_user_favorite::get($app_id, $user_id, $fav_type, $fav_id);
+
+    if (!$a_fav_relation) {
+      // Set these fields.
+      $a_fields = array(
+        mediamosa_user_favorite_db::NAME => $user_id,
+        mediamosa_user_favorite_db::APP_ID => $app_id,
+        mediamosa_user_favorite_db::FAV_TYPE => $fav_type,
+        mediamosa_user_favorite_db::FAV_ID => $fav_id,
+      );
+
+      // Add created value.
+      $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+
+      // FIXME not master-master save.
+      mediamosa_db::db_insert(mediamosa_user_favorite_db::TABLE_NAME)
+        ->fields($a_fields)
+        ->execute();
+    }
   }
 }

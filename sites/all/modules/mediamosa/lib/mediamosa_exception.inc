@@ -208,28 +208,28 @@ class mediamosa_exception_error_invalid_data_parameter extends mediamosa_excepti
 
 class mediamosa_exception_error_job_could_not_be_removed extends mediamosa_exception_error {
   public function __construct($a_tags = array()) {
-    assert(isset($a_tags["@job_id"]));
+    assert(isset($a_tags['@job_id']));
     parent::__construct(mediamosa_error::ERRORCODE_JOB_COULD_NOT_BE_REMOVED, $a_tags, VPX_EXCEPTION_HIGH);
   }
 }
 
 class mediamosa_exception_error_job_not_found extends mediamosa_exception_error {
   public function __construct($a_tags = array()) {
-    assert(isset($a_tags["@job_id"]));
+    assert(isset($a_tags['@job_id']));
     parent::__construct(mediamosa_error::ERRORCODE_JOB_NOT_FOUND, $a_tags);
   }
 }
 
 class mediamosa_exception_error_userman_invalid_user extends mediamosa_exception_error {
   public function __construct($a_tags = array()) {
-    assert(isset($a_tags["@user_id"]));
+    assert(isset($a_tags['@user_id']));
     parent::__construct(mediamosa_error::ERRORCODE_USERMAN_INVALID_USER, $a_tags);
   }
 }
 
 class mediamosa_exception_error_cant_retype_group_must_be_empty extends mediamosa_exception_error {
   public function __construct($a_tags = array()) {
-    assert(isset($a_tags["@group"]));
+    assert(isset($a_tags['@group']));
     parent::__construct(mediamosa_error::ERRORCODE_CANT_RETYPE_GROUP_MUST_BE_EMPTY, $a_tags);
   }
 }
@@ -242,7 +242,7 @@ class mediamosa_exception_error_query_error extends mediamosa_exception_error {
 
 class mediamosa_exception_error_job_mediafile_not_found extends mediamosa_exception_error {
   public function __construct($a_tags = array()) {
-    assert(isset($a_tags["@mediafile_id"]));
+    assert(isset($a_tags['@mediafile_id']));
     parent::__construct(mediamosa_error::ERRORCODE_JOB_MEDIAFILE_NOT_FOUND, $a_tags);
   }
 }
@@ -255,7 +255,7 @@ class mediamosa_exception_error_webservice_disabled extends mediamosa_exception_
 
 class mediamosa_exception_error_rest_call_is_disabled extends mediamosa_exception_error {
   public function __construct($a_tags = array()) {
-    assert(isset($a_tags["@uri"]));
+    assert(isset($a_tags['@uri']));
     parent::__construct(mediamosa_error::ERRORCODE_REST_CALL_IS_DISABLED, $a_tags);
   }
 }
@@ -269,7 +269,7 @@ class mediamosa_exception_error_cql_exclusive extends mediamosa_exception_error 
 // Throw when CQL is combined with normal search/order by parameters
 class mediamosa_exception_error_cql_error extends mediamosa_exception_error {
   public function __construct($a_tags = array()) {
-    assert(isset($a_tags["@error"]));
+    assert(isset($a_tags['@error']));
     parent::__construct(mediamosa_error::ERRORCODE_CQL_ERROR, $a_tags);
   }
 }
@@ -277,7 +277,7 @@ class mediamosa_exception_error_cql_error extends mediamosa_exception_error {
 // Throw when master/slave access is disabled for this app.
 class mediamosa_exception_error_masterslave_disallowed extends mediamosa_exception_error {
   public function __construct($a_tags = array()) {
-    assert(isset($a_tags["@aut_id"]));
+    assert(isset($a_tags['@aut_id']));
     parent::__construct(mediamosa_error::ERRORCODE_MASTERSLAVE_DISALLOWED, $a_tags);
   }
 }

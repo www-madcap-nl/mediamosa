@@ -76,12 +76,12 @@ class mediamosa_asset_mediafile_still {
     $file_size = filesize($still_filename);
 
     if ($still_default) {
-      // Clear the earlier default mark on the video (media) file
+      // Clear the earlier default mark on the video (media) file.
       mediamosa_db::db_query(
-        "UPDATE {#mediamosa_asset_mediafile_metadata} AS mm
-        INNER JOIN {#mediamosa_asset_mediafile} AS m USING(#mediafile_id)
-        SET mm.#still_default = :still_default_false
-        WHERE m.#mediafile_id_source = :mediafile_id_source AND m.#is_still = :is_still_true",
+        'UPDATE {#mediamosa_asset_mediafile_metadata} AS mm
+         INNER JOIN {#mediamosa_asset_mediafile} AS m USING(#mediafile_id)
+         SET mm.#still_default = :still_default_false
+         WHERE m.#mediafile_id_source = :mediafile_id_source AND m.#is_still = :is_still_true',
         array(
           '#mediamosa_asset_mediafile_metadata' => mediamosa_asset_mediafile_metadata_db::TABLE_NAME,
           '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
@@ -97,9 +97,7 @@ class mediamosa_asset_mediafile_still {
     }
 
     // Insert into Mediafile.
-    $query = db_insert(mediamosa_asset_mediafile_db::TABLE_NAME);
-    $query->fields(
-      array(
+    $a_fields = array(
         mediamosa_asset_mediafile_db::ID => $still_id,
         mediamosa_asset_mediafile_db::ASSET_ID => $asset_id,
         mediamosa_asset_mediafile_db::APP_ID => $app_id,
@@ -107,36 +105,42 @@ class mediamosa_asset_mediafile_still {
         mediamosa_asset_mediafile_db::GROUP_ID => $group_id,
         mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT => mediamosa_configuration_storage::mount_point_get(),
         mediamosa_asset_mediafile_db::FILE_EXTENSION => $file_extension,
-        mediamosa_asset_mediafile_db::CREATED => mediamosa::db_current_timestamp_now(),
-        mediamosa_asset_mediafile_db::CHANGED => mediamosa::db_current_timestamp_now(),
         mediamosa_asset_mediafile_db::ASSET_ID_ROOT => $asset_parent_id,
         mediamosa_asset_mediafile_db::IS_STILL => mediamosa_asset_mediafile_db::IS_STILL_TRUE,
         mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE => $mediafile_id_source,
         mediamosa_asset_mediafile_db::TAG => $tag
-      )
     );
-    $query->execute();
 
-    // Insert mediafile metadata.
-    $query = db_insert(mediamosa_asset_mediafile_metadata_db::TABLE_NAME);
-    $query->fields(
-      array(
-        mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID => $still_id,
-        mediamosa_asset_mediafile_metadata_db::WIDTH => $width,
-        mediamosa_asset_mediafile_metadata_db::HEIGHT => $height,
-        mediamosa_asset_mediafile_metadata_db::CONTAINER_TYPE => '',
-        mediamosa_asset_mediafile_metadata_db::FILESIZE => $file_size,
-        mediamosa_asset_mediafile_metadata_db::MIME_TYPE => $mime_type,
-        mediamosa_asset_mediafile_metadata_db::CREATED => mediamosa::db_current_timestamp_now(),
-        mediamosa_asset_mediafile_metadata_db::CHANGED => mediamosa::db_current_timestamp_now(),
-        mediamosa_asset_mediafile_metadata_db::STILL_TIME_CODE => $sec,
-        mediamosa_asset_mediafile_metadata_db::STILL_ORDER => $order,
-        mediamosa_asset_mediafile_metadata_db::STILL_FORMAT => $file_extension,
-        mediamosa_asset_mediafile_metadata_db::STILL_TYPE =>  $a_still_parameters['still_type'],
-        mediamosa_asset_mediafile_metadata_db::STILL_DEFAULT => $still_default ? mediamosa_asset_mediafile_metadata_db::STILL_DEFAULT_TRUE : mediamosa_asset_mediafile_metadata_db::STILL_DEFAULT_FALSE,
-      )
+    // Add created value.
+    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+
+    // Insert it.
+    mediamosa_db::db_insert(mediamosa_asset_mediafile_db::TABLE_NAME)
+      ->fields($a_fields)
+      ->execute();
+
+    // Insert into Mediafile.
+    $a_fields = array(
+      mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID => $still_id,
+      mediamosa_asset_mediafile_metadata_db::WIDTH => $width,
+      mediamosa_asset_mediafile_metadata_db::HEIGHT => $height,
+      mediamosa_asset_mediafile_metadata_db::CONTAINER_TYPE => '',
+      mediamosa_asset_mediafile_metadata_db::FILESIZE => $file_size,
+      mediamosa_asset_mediafile_metadata_db::MIME_TYPE => $mime_type,
+      mediamosa_asset_mediafile_metadata_db::STILL_TIME_CODE => $sec,
+      mediamosa_asset_mediafile_metadata_db::STILL_ORDER => $order,
+      mediamosa_asset_mediafile_metadata_db::STILL_FORMAT => $file_extension,
+      mediamosa_asset_mediafile_metadata_db::STILL_TYPE =>  $a_still_parameters['still_type'],
+      mediamosa_asset_mediafile_metadata_db::STILL_DEFAULT => $still_default ? mediamosa_asset_mediafile_metadata_db::STILL_DEFAULT_TRUE : mediamosa_asset_mediafile_metadata_db::STILL_DEFAULT_FALSE,
     );
-    $query->execute();
+
+    // Add created value.
+    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+
+    // Insert in metadata.
+    mediamosa_db::db_insert(mediamosa_asset_mediafile_metadata_db::TABLE_NAME)
+      ->fields($a_fields)
+      ->execute();
   }
 
   /**

@@ -137,23 +137,26 @@ class mediamosa_rest_call_change_ownership extends mediamosa_rest_call {
       }
 
       // Changes.
-      $a_set = array();
+      $a_fields = array();
       if ($new_owner_id != '') {
-        $a_set['owner_id'] = $new_owner_id;
+        $a_fields['owner_id'] = $new_owner_id;
       }
 
       if ($new_group_id != '') {
-        $a_set['group_id'] = $new_group_id;
+        $a_fields['group_id'] = $new_group_id;
       }
 
       if ($new_app_id) {
-        $a_set['app_id'] = $new_app_id;
+        $a_fields['app_id'] = $new_app_id;
       }
 
-      assert(count($a_set));
+      assert(count($a_fields));
+
+      // Add changed field.
+      $a_fields = mediamosa_db::db_update_enrich($a_fields);
 
       // Add sets.
-      $query->fields($a_set);
+      $query->fields($a_fields);
 
       // Add affected rows to output.
       $o_mediamosa->add_item(array($table => $query->execute()));
@@ -382,7 +385,6 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
       $a_var_setup = self::get_var_setup_range($a_var_setup, mediamosa_settings::LIMIT_MAX_IDS_ONLY);
     }
 
-    // Remember, might not be validated.
     $a_app_ids = $this->get_param_value_app();
 
     // Now include metadata search stuff.

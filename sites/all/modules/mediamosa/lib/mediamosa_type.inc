@@ -118,11 +118,7 @@ class mediamosa_type {
    */
   static public function check($param, $param_type, $mixed_param_value, $is_required, $range_start = NULL, $range_end = NULL, $allowed_values = NULL, $toplevel = TRUE) {
 
-    // If NULL, then value is not set.
-    if (is_null($mixed_param_value)) {
-      return NULL;
-    }
-
+    // If its an array, then walk through the array and check item for item by recalling ourselfs.
     if (is_array($mixed_param_value)) {
       // If the top array is empty and required, then throw an error.
       // Any child array is allowed to be empty.
@@ -142,6 +138,12 @@ class mediamosa_type {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_REQUIRED_PARAMETER, array('@param' => $param, '@type' => $param_type));
     }
 
+    // If NULL, then value is not set.
+    if (is_null($mixed_param_value)) {
+      return NULL;
+    }
+
+    // Now based on type, check contents when needed.
     switch ($param_type) {
       case self::TYPE_LANGUAGE_CODE:
         // ISO 639-1.
@@ -206,6 +208,12 @@ class mediamosa_type {
         $checked_param_value = (string)$mixed_param_value;
         break;
 
+      case self::TYPE_ALPHA_NUM:
+        if (!ctype_alnum($mixed_param_value) && $mixed_param_value != '') {
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
+        }
+
+      // FIXME: Mediamosa 1.x doesnt check the input here...
       case self::TYPE_SUPPLEMENT_ID:
       case self::TYPE_USER_ID:
       case self::TYPE_GROUP_ID:
@@ -213,11 +221,6 @@ class mediamosa_type {
       case self::TYPE_MEDIAFILE_ID:
       case self::TYPE_COLLECTION_ID:
       case self::TYPE_BATCH_ID:
-      case self::TYPE_ALPHA_NUM:
-        if (!ctype_alnum($mixed_param_value) && $mixed_param_value != '') {
-          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
-        }
-
         $checked_param_value = (string)$mixed_param_value;
         break;
 

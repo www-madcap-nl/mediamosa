@@ -1,6 +1,9 @@
 
 Contains reminders and notes collected during migration.
 
+You can delete a default transcode profile and end up with no default transcode profile...
+You can't delete a global transcode profile because app_id can't be 0 and no check for is_app_admin.
+
 Migration rules;
 
 - Watchdog
@@ -20,7 +23,6 @@ X-Mediamosa-Internal-Pass: <password>
 in header.
 
 
-
 Notes:
 - The 'version' field in error table has been dropped, was not used.
 - The 'version' field in client_applications had been dropped, not used.
@@ -38,7 +40,6 @@ Variables;
 // Not converted (yet);
 alter -> sites/all/modules/mediamosa/modules/maintenance/alter [mediamosa_maintenance.alter]
 vpx_history -> sites/all/modules/mediamosa/modules/history [mediamosa_history] (need rewrite)
-ftp_users -> sites/all/modules/mediamosa/modules/ftp/user [mediamosa_ftp.user]
 integrity_check -> sites/all/modules/mediamosa/modules/maintenance/integrity_check [mediamosa_maintenance.integrity_check]
 
 

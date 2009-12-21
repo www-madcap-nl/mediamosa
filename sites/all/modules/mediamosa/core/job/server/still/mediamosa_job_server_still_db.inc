@@ -24,8 +24,26 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
- /**
-  * @file
-  * transcoding_profile module.
-  */
+/**
+ * @file
+ * Server job still table.
+ */
+class mediamosa_job_server_still_db {
+  // ------------------------------------------------------------------ Consts.
+  // Table name;
+  const TABLE_NAME = 'mediamosa_job_server_still'; // 1.x name jobserver_still_job.
 
+  // Database fields;
+  const ID = 'jobserver_job_id';
+  const SIZE = 'size';
+  const SIZE_LENGTH = 10;
+  const FRAMETIME = 'frametime';
+  const H_PADDING = 'h_padding';
+  const V_PADDING = 'v_padding';
+  const BLACKSTILL_CHECK = 'blackstill_check';
+  const BLACKSTILL_CHECK_TRUE = 'TRUE';
+  const BLACKSTILL_CHECK_FALSE = 'FALSE';
+  const STILL_PARAMETERS = 'still_parameters';
+  const CREATED = 'created';
+  const CHANGED = 'changed';
+}

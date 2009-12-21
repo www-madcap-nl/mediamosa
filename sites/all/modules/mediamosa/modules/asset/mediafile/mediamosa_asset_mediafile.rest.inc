@@ -129,7 +129,7 @@ class mediamosa_rest_call_get_mediafile extends mediamosa_rest_call {
     $show_stills = $this->get_param_value(self::SHOW_STILLS);
 
     // Must exists.
-    mediamosa_db::db_must_exists(mediamosa_asset_mediafile_db::TABLE_NAME, array(mediamosa_asset_mediafile_db::ID => $mediafile_id));
+    mediamosa_asset_mediafile::must_exists($mediafile_id);
 
     // Must have access.
     mediamosa_aut::read_single_object(mediamosa_aut::AUT_TYPE_MEDIAFILE, $mediafile_id, $app_id);
@@ -260,10 +260,7 @@ class mediamosa_rest_call_delete_mediafiles extends mediamosa_rest_call {
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $a_app_ids);
 
     // Must exists.
-    mediamosa_db::db_must_exists(mediamosa_asset_mediafile_db::TABLE_NAME, array(mediamosa_asset_mediafile_db::ID => $mediafile_id));
-
-    // Get the mediafile.
-    $a_mediafile = mediamosa_aut::get_data_from_mediafile($mediafile_id);
+    $a_mediafile = mediamosa_asset_mediafile::must_exists($mediafile_id);
 
     // Does the user has access?
     mediamosa_aut::owner_check(
@@ -662,22 +659,12 @@ class mediamosa_rest_call_update_mediafile extends mediamosa_rest_call {
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $a_app_ids);
 
     // Mediafile must exists.
-    mediamosa_db::db_must_exists(mediamosa_asset_mediafile_db::TABLE, array(mediamosa_asset_mediafile_db::ID => $mediafile_id));
+    $a_mediafile = mediamosa_asset_mediafile::must_exists($mediafile_id);
 
     // Cant mix input of uri/filename/is_downloadable.
     if ($this->isset_param(self::URI) && ($this->isset_param(self::FILENAME) || $this->isset_param(self::IS_DOWNLOADABLE))) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MIX_OF_URI_AND_FILE);
     }
-
-    // Get the mediafile.
-    $a_mediafile = mediamosa_db::db_query(
-      'SELECT * FROM {#mediamosa_asset_mediafile} WHERE #mediafile_id = :mediafile_id',
-      array(
-        '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
-        '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
-        ':mediafile_id' => $mediafile_id
-      )
-    );
 
     // Does the user has access?
     mediamosa_aut::owner_check(
@@ -725,6 +712,9 @@ class mediamosa_rest_call_update_mediafile extends mediamosa_rest_call {
     if (empty($a_fields)) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_NO_CHANGES);
     }
+
+    // Add changed field.
+    $a_fields = mediamosa_db::db_update_enrich($a_fields);
 
     // Add the fields to the query.
     $query->fields($a_fields);

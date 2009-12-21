@@ -81,7 +81,6 @@ files[] = core/webservice/app/mediamosa_webservice_app_db.inc
 files[] = core/webservice/app/mediamosa_webservice_app.inc
 files[] = core/webservice/app/mediamosa_webservice_app.install.inc
 
-
 ; CQL.
 files[] = core/cql/mediamosa_core_cql.inc
 
@@ -101,6 +100,15 @@ files[] = core/asset/mediafile/metadata/mediamosa_asset_mediafile_metadata_db.in
 files[] = core/asset/mediafile/metadata/mediamosa_asset_mediafile_metadata.inc
 files[] = core/asset/mediafile/metadata/mediamosa_asset_mediafile_metadata.install.inc
 
+; Asset Mediafile Playproxy.
+files[] = core/asset/mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.inc
+
+; Asset Mediafile Still.
+files[] = core/asset/mediafile/still/mediamosa_asset_mediafile_still.inc
+
+; Asset Mediafile Upload.
+files[] = core/asset/mediafile/upload/mediamosa_asset_mediafile_upload.inc
+
 ; Asset Metadata.
 files[] = core/asset/metadata/mediamosa_asset_metadata_db.inc
 files[] = core/asset/metadata/mediamosa_asset_metadata.inc
@@ -115,9 +123,6 @@ files[] = core/asset/metadata/property/mediamosa_asset_metadata_property.install
 files[] = core/asset/metadata/property/group/mediamosa_asset_metadata_property_group_db.inc
 files[] = core/asset/metadata/property/group/mediamosa_asset_metadata_property_group.inc
 files[] = core/asset/metadata/property/group/mediamosa_asset_metadata_property_group.install.inc
-
-; Asset Playproxy.
-files[] = core/asset/mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.inc
 
 ; Asset Supplement.
 files[] = core/asset/supplement/mediamosa_asset_supplement_db.inc
@@ -149,7 +154,9 @@ files[] = core/ftp_batch/asset/mediamosa_ftp_batch_asset.install.inc
 files[] = core/ftp_user/mediamosa_ftp_user_db.inc
 
 ; Job.
+files[] = core/job/mediamosa_job_db.inc
 files[] = core/job/mediamosa_job.inc
+files[] = core/job/mediamosa_job.install.inc
 
 ; Job Handler.
 files[] = core/job/handler/mediamosa_job_handler.inc
@@ -158,7 +165,36 @@ files[] = core/job/handler/mediamosa_job_handler.inc
 files[] = core/job/schedular/mediamosa_job_schedular.inc
 
 ; Job Server.
+files[] = core/job/server/mediamosa_job_server_db.inc
 files[] = core/job/server/mediamosa_job_server.inc
+files[] = core/job/server/mediamosa_job_server.install.inc
+
+; Job Server Analyse.
+files[] = core/job/server/analyse/mediamosa_job_server_analyse_db.inc
+files[] = core/job/server/analyse/mediamosa_job_server_analyse.install.inc
+
+; Job Server Still.
+files[] = core/job/server/still/mediamosa_job_server_still_db.inc
+files[] = core/job/server/still/mediamosa_job_server_still.install.inc
+
+; Job Server Transcode.
+files[] = core/job/server/transcode/mediamosa_job_server_transcode_db.inc
+files[] = core/job/server/transcode/mediamosa_job_server_transcode.install.inc
+
+; Job Still.
+files[] = core/job/still/mediamosa_job_still_db.inc
+files[] = core/job/still/mediamosa_job_still.inc
+files[] = core/job/still/mediamosa_job_still.install.inc
+
+; Job Transcode.
+files[] = core/job/transcode/mediamosa_job_transcode_db.inc
+files[] = core/job/transcode/mediamosa_job_transcode.inc
+files[] = core/job/transcode/mediamosa_job_transcode.install.inc
+
+; Job Upload.
+files[] = core/job/upload/mediamosa_job_upload_db.inc
+files[] = core/job/upload/mediamosa_job_upload.inc
+files[] = core/job/upload/mediamosa_job_upload.install.inc
 
 ; Storage.
 files[] = core/configuration/storage/mediamosa_configuration_storage.inc
@@ -200,6 +236,15 @@ files[] = core/server/upload/mediamosa_server_upload.install.inc
 files[] = core/ticket/mediamosa_ticket_db.inc
 files[] = core/ticket/mediamosa_ticket.inc
 files[] = core/ticket/mediamosa_ticket.install.inc
+
+; Transcode.
+;files[] = core/transcode/mediamosa_transcode.install.inc
+;files[] = core/transcode/profile/mediamosa_transcode_profile_db.inc
+;files[] = core/transcode/profile/mediamosa_transcode_profile.inc
+;files[] = core/transcode/profile/mediamosa_transcode_profile.install.inc
+;files[] = core/transcode/mapping/mediamosa_transcode_mapping_db.inc
+;files[] = core/transcode/mapping/mediamosa_transcode_mapping.inc
+;files[] = core/transcode/mapping/mediamosa_transcode_mapping.install.inc
 
 ; User.
 files[] = core/user/mediamosa_user_db.inc

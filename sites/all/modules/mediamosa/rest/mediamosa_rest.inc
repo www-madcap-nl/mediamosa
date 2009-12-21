@@ -88,7 +88,8 @@ class mediamosa_rest {
           $a_rest_call[mediamosa_rest_call::URI_PARAMS][mediamosa_unicode::substr($s_uri_part, 2)] = $a_request_uri[$pos];
         }
         elseif (mediamosa_unicode::substr($s_uri_part, 0, 1) == '$') {
-          $a_regex[] = "[A-Za-z0-9:-]*";
+          //$a_regex[] = "[A-Za-z0-9:-]*"; OMP restricts any other than these
+          $a_regex[] = "[^\\/]*"; // Mediamosa is completly lose, any char EXCEPT /.
           $a_rest_call[mediamosa_rest_call::URI_PARAMS][mediamosa_unicode::substr($s_uri_part, 1)] = $a_request_uri[$pos];
         }
         else {
@@ -146,6 +147,18 @@ class mediamosa_rest {
   }
 
   // ------------------------------------------------------------------ Functions (Public)
+  /**
+   * Get a list of REST calls registered with our drupal hook.
+   *
+   * @param integer $limit
+   *  Maximum of items in result.
+   * @param integer $offset
+   *  Offset in items list.
+   * @param string $key
+   *  Key name used in result array dimension 1.
+   * @param string $key2
+   *  Key name used in result array dimension 2.
+   */
   static public function get_rest_calls($limit = 0, $offset = 0, $key = mediamosa_rest_call::METHOD, $key2 = mediamosa_rest_call::URI) {
     // Find all REST calls of enabled modules.
     $a_rest_calls = module_invoke_all('mediamosa_register_rest_call');
@@ -212,6 +225,7 @@ class mediamosa_rest {
     // Translate the URI to possible REST call.
     $a_rest_call = self::get_uri_definition($o_mediamosa->get_request_uri());
 
+    // If FALSE, then the URI didn't match with a REST call.
     if ($a_rest_call == FALSE) {
       if (self::is_interface()) {
         return FALSE;
@@ -233,13 +247,22 @@ class mediamosa_rest {
 
   /**
    * Dispatch the REST request execution.
+   *
+   * @param array $a_rest_call
+   *  Array containing the data needed to run the REST call.
    */
-  final public function process_call($a_rest_call) {
+  final public function process_call(array $a_rest_call) {
     // Get the mediamosa object.
     $o_mediamosa = mediamosa::get();
 
+
     // Create class from it.
     $o_rest_call = new $a_rest_call[mediamosa_rest_call::CLASS_NAME]($a_rest_call);
+
+    // Check if override for class selection is here.
+    if (method_exists($o_rest_call, 'get_object_rest_call')) {
+      $o_rest_call = $o_rest_call->get_object_rest_call($a_rest_call);
+    }
 
     // Process the REST call.
     $o_rest_call->process_call();

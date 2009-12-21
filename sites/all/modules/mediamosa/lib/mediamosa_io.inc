@@ -71,4 +71,18 @@ class mediamosa_io {
       // ignore. Is handled by our error handler and is logged.
     }
   }
+
+  /**
+   * Clears file status cache.
+   */
+  static public function clearstatcache() {
+    clearstatcache();
+  }
+
+  /**
+   * Gets file size.
+   */
+  static public function filesize($filename) {
+    return filesize($filename);
+  }
 }

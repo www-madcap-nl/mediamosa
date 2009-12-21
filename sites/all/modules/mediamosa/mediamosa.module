@@ -52,6 +52,18 @@ function mediamosa_requirements($phase) {
         'severity' => REQUIREMENT_ERROR
       );
     }
+/*
+    // Make sure the ID is set and not to long.
+    if (drupal_strlen(constant(MEDIAMOSA_INSTALL_ID)) == 0 || drupal_strlen(constant(MEDIAMOSA_INSTALL_ID)) > mediamosa_job_server_db::INSTALL_ID_LENGTH) {
+      $a_requirements['php'] = array(
+        'title' => $t('PHP'),
+        'value' => phpversion(),
+        'description' => $t('The define MEDIAMOSA_INSTALL_ID is either not set or is too long, make sure its set and not longer than %length characters.', array('%length' => mediamosa_job_server_db::INSTALL_ID_LENGTH)),
+        'severity' => REQUIREMENT_ERROR
+      );
+    }
+*/
+
   }
 
   return $a_requirements;

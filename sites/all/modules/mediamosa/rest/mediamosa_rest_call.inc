@@ -34,7 +34,7 @@ abstract class mediamosa_rest_call {
   private $a_rest_args = array();
 
   // Check if there are unspecified arguments and throw exception when we have unspecified arguments.
-  protected $check_for_unspecified = FALSE;
+  protected $check_for_unspecified = FALSE; // Keep on FALSE so get_var_setup() will not fail if it calls process_vars()
 
   // ------------------------------------------------------------------ Constants.
   const ID = 'uri_id';
@@ -44,6 +44,7 @@ abstract class mediamosa_rest_call {
   const RESPONSE_TYPE = 'response_type';
   const RESPONSE_TYPE_XML = 'text/xml';
   const RESPONSE_TYPE_PLAIN = 'text/plain';
+  const RESPONSE_TYPE_MEDIAMOSA = 'application/mediamosa';
 
   const METHOD = 'method';
   const METHOD_GET = 'GET';
@@ -188,7 +189,7 @@ abstract class mediamosa_rest_call {
     assert($a_var_setup);
 
     // @todo: make this an setting per webservice or else we are not 1.x compatible. Default should be FALSE.
-    $this->check_for_unspecified = TRUE;
+    $this->check_for_unspecified = FALSE;// turned off for now
 
     // Check rest args.
     $a_var_setup = $this->process_rest_args($a_var_setup);
@@ -454,6 +455,17 @@ abstract class mediamosa_rest_call {
   public function get_param_value_order_direction() {
     return $this->get_param_value(self::ORDER_DIRECTION);
   }
+
+  /**
+   * Return from $_GET / $_POST the value, if found.
+   * Use this function if you need to go before the REST call process_rest_args.
+   *
+   * @param string $param
+   */
+  static public function get_param_value_global($param) {
+    return isset($_GET[$param]) ? $_GET[$param] : (isset($_POST[$param]) ? $_POST[$param] : NULL);
+  }
+
   // ------------------------------------------------------------------ Functions (protected).
   /**
    * Process the supplied parameters.
@@ -605,8 +617,12 @@ abstract class mediamosa_rest_call {
    * @param array $a_var_setup
    */
   protected function validate_rest_args(array $a_var_setup) {
-
     foreach ($this->a_rest_args as $param => $a_param) {
+      if (!isset($a_param[self::PARAM_TYPE])) {
+        unset($this->a_rest_args[$param]); // set but not in var_set_up, unset.
+        continue;
+      }
+
       $this->a_rest_args[$param][self::PARAM_VALUE] = mediamosa_type::check($param, $a_param[self::PARAM_TYPE], $this->a_rest_args[$param][self::PARAM_VALUE], $this->a_rest_args[$param][self::PARAM_IS_REQUIRED] == self::VAR_IS_REQUIRED_YES, $this->a_rest_args[$param][self::PARAM_RANGE_START], $this->a_rest_args[$param][self::PARAM_RANGE_END], isset($this->a_rest_args[$param][self::PARAM_ALLOWED_VALUES]) && count($this->a_rest_args[$param][self::PARAM_ALLOWED_VALUES]) ? $this->a_rest_args[$param][self::PARAM_ALLOWED_VALUES] : NULL);
       $this->a_rest_args[$param][self::PARAM_VALIDATED] = TRUE;
     }

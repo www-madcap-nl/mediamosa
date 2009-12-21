@@ -37,14 +37,11 @@ class mediamosa_app {
    * @return array
    */
   static public function get_by_appid($app_id) {
-    return mediamosa_db::db_query(
-      'SELECT * FROM {#table_name} WHERE #app_id = :app_id',
-      array(
-        '#app_id' => mediamosa_app_db::APP_ID,
-        '#table_name' => mediamosa_app_db::TABLE_NAME,
-        ':app_id' => $app_id,
-      )
-    )->fetchAssoc();
+    return mediamosa_db::db_select(mediamosa_app_db::TABLE_NAME, 'app')
+      ->fields('app')
+      ->condition(mediamosa_app_db::APP_ID, $app_id)
+      ->execute()
+      ->fetchAssoc();
   }
 
   /**

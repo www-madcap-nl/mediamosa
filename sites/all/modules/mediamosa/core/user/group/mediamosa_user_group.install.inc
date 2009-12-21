@@ -63,7 +63,7 @@ function mediamosa_user_group_schema() {
         'not null' => TRUE,
         'description' => t('The application ID of the user.'),
       ),
-      mediamosa_user_group_db::GROUP_ID => array(
+      mediamosa_user_group_db::ID => array(
         'type' => 'varchar',
         'length' => mediamosa_user_group_db::GROUP_ID_LENGTH,
         'not null' => TRUE,
@@ -86,7 +86,7 @@ function mediamosa_user_group_schema() {
         'description' => t('The date and time when user was changed last.'),
       ),
     ),
-    'primary key' => array(mediamosa_user_group_db::GROUP_ID, mediamosa_user_group_db::APP_ID),
+    'primary key' => array(mediamosa_user_group_db::ID, mediamosa_user_group_db::APP_ID),
   );
 
   return $a_schema;

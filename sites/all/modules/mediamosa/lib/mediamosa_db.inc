@@ -42,6 +42,15 @@ class mediamosa_db {
   // The varchar length of the used HASH ids.
   const HASH_ID_LENGTH = 32;
 
+  // Default names for changed and created columns.
+  const CHANGED = 'changed';
+  const CREATED = 'created';
+
+  // This is the function we use to get the current time in the database.
+  // In this case its the local time of the server. We might choose to use
+  // UTC_TIMESTAMP instead.
+  const CURRENT_TIMESTAMP = 'CURRENT_TIMESTAMP';
+
   // ------------------------------------------------------------------ Static Function.
   static public function db_delete(/* $table, $options = NULL*/) {
     $a_args = func_get_args(); // Must copy into $a_args, cant use it directly in call_user_func_array
@@ -296,6 +305,20 @@ class mediamosa_db {
   }
 
   /**
+   * Enrich the created fields.
+   * Only when table has an 'changed' field(!).
+   *
+   * @param array $a_fields
+   * @return array
+   *
+   */
+  static public function db_insert_enrich(array $a_fields) {
+    $a_fields[mediamosa_db::CREATED] = mediamosa::db_current_timestamp_now();
+    $a_fields[mediamosa_db::CHANGED] = mediamosa::db_current_timestamp_now();
+    return $a_fields;
+  }
+
+  /**
    * Create an db_update object.
    *
    * @return object
@@ -315,6 +338,19 @@ class mediamosa_db {
   }
 
   /**
+   * Enrich the updated fields.
+   * Only when table has an 'changed' field(!).
+   *
+   * @param array $a_fields
+   * @return array
+   *
+   */
+  static public function db_update_enrich(array $a_fields) {
+    $a_fields[mediamosa_db::CHANGED] = mediamosa::db_current_timestamp_now();
+    return $a_fields;
+  }
+
+  /**
    * Escape the value for database
    * 'db_escape_string' is removed from drupal 7, D7 uses prepare instead. For now
    * we will use PDO::quote.
@@ -323,7 +359,7 @@ class mediamosa_db {
     // Hmm well kinda hack here, but dont see any other way atm
     // than calling the getconnection for PDO and using quote...
     // But \' must be escaped as '' in the PDO layer, quote seems to
-    // make mistakes here by escaping with \'. Anyway, hotfix here. RBL.
+    // make mistakes here by escaping with \' while SQL advices ''. Anyway, hotfix here. RBL.
     if (is_array($mixed_string)) {
       $a_str = array();
       foreach ($mixed_string as $str) {
@@ -334,7 +370,26 @@ class mediamosa_db {
     }
 
     // Call PDO quote, and replace \' to ''. Also removes the quotes around the value.
-    return str_replace('\\\'', "''", mediamosa_unicode::substr(Database::getConnection()->quote($mixed_string), 1, -1));
+    return is_int($mixed_string) ? mediamosa_unicode::substr(Database::getConnection()->quote($mixed_string), 1, -1) : str_replace('\\\'', "''", mediamosa_unicode::substr(Database::getConnection()->quote($mixed_string), 1, -1));
+  }
+
+  /**
+   * Escape the value for database
+   * 'db_escape_string' is removed from drupal 7, D7 uses prepare instead. For now
+   * we will use PDO::quote.
+   * Will return string 'quoted' like PDO.
+   */
+  static public function escape_string_quoted($string, $glue = ',') {
+    // Assert when array is given here.
+    assert(!is_array($string));
+
+    // Integers don't need quotes.
+    if (is_int($string)) {
+      return self::escape_string($string);
+    }
+
+    // Call PDO quote.
+    return str_replace('\\\'', "''", Database::getConnection()->quote($string));
   }
 
   /**
@@ -386,6 +441,13 @@ class mediamosa_db {
    */
   static public function db_set_active_ftp() {
     return self::db_set_active('ftp');
+  }
+
+  /**
+   * Switch to jobserver database.
+   */
+  static public function db_set_active_jobserver() {
+    return self::db_set_active('jobserver');
   }
 
   /**
@@ -462,6 +524,32 @@ class mediamosa_db {
   }
 
   /**
+   * Returns the first row found.
+   *
+   * @param string $table_name
+   *  The table name.
+   * @param array $a_columns_and
+   *  column => value.
+   * @return integer
+   *    returns number of rows.
+   */
+  static public function db_get_assoc($table_name, array $a_columns_and = array()) {
+    // Create select object.
+    $query = self::db_select($table_name, 'row');
+    $query->fields('row');
+    foreach ($a_columns_and as $column => $value) {
+      if (is_null($value)) {
+        $query->isNull($column);
+      }
+      else {
+        $query->condition($column, $value);
+      }
+    }
+
+    return $query->range(0, 1)->execute()->fetchAssoc();
+  }
+
+  /**
    * Will throw exception if no rows where found.
    *
    * @param string $table_name
@@ -472,8 +560,9 @@ class mediamosa_db {
    */
   static function db_must_exists($table_name, array $a_columns_and = array(), $errorcode = NULL, array $a_errorcode_args = array()) {
 
-    if (self::db_count_rows($table_name, $a_columns_and)) {
-      return; // exists
+    $a_row = self::db_get_assoc($table_name, $a_columns_and);
+    if ($a_row) {
+      return $a_row; // exists
     }
 
     // Custom error supplied?
@@ -498,14 +587,14 @@ class mediamosa_db {
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_ASSET_SUPPLEMENT_NOT_FOUND, array('@supplement_id' => $a_columns_and[mediamosa_asset_supplement_db::ID]));
       case mediamosa_ftp_user_db::TABLE_NAME:
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_FTP_UNKNOWN_USER);
-/*
-      case 'job':
-        throw new vpx_exception_error_job_not_found(array('@job_id' => $a_columns_and['job_id']));
-      case 'quota_user':
-        throw new vpx_exception_error(ERRORCODE_USERMAN_INVALID_USER, array('@user_id' => $a_columns_and['name']));
-      case 'quota_group':
-        throw new vpx_exception_error(ERRORCODE_USERMAN_INVALID_GROUP, array('@group_id' => $a_columns_and['group_id']));
- */
+      case mediamosa_user_db::TABLE_NAME:
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_USERMAN_INVALID_USER, array('@user_id' => $a_columns_and['name']));
+      case mediamosa_user_group_db::TABLE_NAME:
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_USERMAN_INVALID_GROUP, array('@group_id' => $a_columns_and['group_id']));
+      case mediamosa_job_db::TABLE_NAME:
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_JOB_NOT_FOUND, array('@job_id' => $a_columns_and['job_id']));
+      case mediamosa_transcode_profile_db::TABLE_NAME:
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_TRANSCODE_PROFILE_NOT_FOUND, array('@profile_id' => $a_columns_and[mediamosa_transcode_profile_db::ID]));
     }
 
     assert(0);

@@ -35,9 +35,10 @@ class mediamosa_user_group_db {
   const TABLE_NAME = 'mediamosa_user_group'; // 1.x name quota_user.
 
   // Database fields;
+  const ID = 'group_id';
+  const ID_LENGTH = 255;
+  const GROUP_ID_LENGTH = 255; // same as ID_LENGTH
   const APP_ID = 'app_id';
-  const GROUP_ID = 'group_id';
-  const GROUP_ID_LENGTH = 255;
   const QUOTUM = 'quotum';
   const CREATED = 'created';
   const CHANGED = 'changed';

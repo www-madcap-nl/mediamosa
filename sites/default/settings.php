@@ -161,6 +161,7 @@ $databases['default']['default'] = array(
   'password' => 'memo',
   'host' => 'localhost'
 );
+
 $databases['ftp']['default'] = array(
   'driver' => 'mysql',
   'database' => 'vpx_ftp',
@@ -182,6 +183,27 @@ $databases['mig_memo_data']['default'] = array(
   'database' => 'memo_data',
   'username' => 'memo',
   'password' => 'memo',
+  'host' => 'localhost'
+);
+$databases['mig_memo_jobserver']['default'] = array(
+  'driver' => 'mysql',
+  'database' => 'vpx_jobserver',
+  'username' => 'vpx',
+  'password' => 'vpx',
+  'host' => 'localhost'
+);
+$databases['mig_memo_jobserver_lin2']['default'] = array(
+  'driver' => 'mysql',
+  'database' => 'vpx_jobserver_lin2',
+  'username' => 'vpx',
+  'password' => 'vpx',
+  'host' => 'localhost'
+);
+$databases['mig_memo_jobserver_win']['default'] = array(
+  'driver' => 'mysql',
+  'database' => 'vpx_jobserver_win',
+  'username' => 'vpx',
+  'password' => 'vpx',
   'host' => 'localhost'
 );
 
@@ -379,3 +401,10 @@ $conf = array()#   'site_name' => 'My Drupal site',
 # $conf['blocked_ips'] = array(
 #   'a.b.c.d',
 # );
+
+/**
+ * The MEDIAMOSA_SERVER_ID defines the default install ID
+ * for multiple installations of jobserver. You can leave it
+ * on 'default' if you only have one jobserver.
+ */
+define('MEDIAMOSA_SERVER_ID', 'default');

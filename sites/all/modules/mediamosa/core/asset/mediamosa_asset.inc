@@ -148,7 +148,7 @@ class mediamosa_asset {
     mediamosa_asset_collection::delete($asset_id);
 
     // Remove all metadata of the asset.
-    $query = db_delete(mediamosa_asset_metadata_db::TABLE_NAME);
+    $query = mediamosa_db::db_delete(mediamosa_asset_metadata_db::TABLE_NAME);
     $query->condition(mediamosa_asset_metadata_db::ASSET_ID, $asset_id);
     $query->execute();
 
@@ -228,7 +228,7 @@ class mediamosa_asset {
     )->fetchField();
 
     // Find the length of the first mediafile.
-    $query = db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
+    $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
     $query->fields('mfm', array(mediamosa_asset_mediafile_metadata_db::FILE_DURATION, mediamosa_asset_mediafile_metadata_db::CONTAINER_TYPE));
     $query->join(mediamosa_asset_mediafile_metadata_db::TABLE_NAME, 'mfm', "mf.mediafile_id = mfm.mediafile_id AND mf.is_original_file = 'TRUE'");
     $query->condition('mf.' . mediamosa_asset_mediafile_db::ASSET_ID_ROOT, $asset_id_root);
@@ -565,7 +565,7 @@ class mediamosa_asset {
         if ($show_stills) {
           $ticket = mediamosa_db::uuid($app_id);
           $a_mediafile_ext['asset_id'] = $a_asset[mediamosa_asset_db::ID];
-          mediamosa_ticket::create($ticket, $a_mediafile_ext, mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL, $app_id, $aut_user_id, $a_items['stills'][$a_asset[mediamosa_asset_db::ID]]);
+          mediamosa_ticket::create_play_proxy($ticket, $a_mediafile_ext, mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL, $app_id, $aut_user_id, $a_items['stills'][$a_asset[mediamosa_asset_db::ID]]);
 
           // Create still response.
           $response = mediamosa_asset_mediafile_play_proxy::create_response_still($ticket, $app_id);
@@ -751,6 +751,9 @@ class mediamosa_asset {
       $a_fields[mediamosa_asset_db::PARENT_ID] = $parent_id;
     }
 
+    // Add created value.
+    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+
     // Insert it.
     mediamosa_db::db_insert(mediamosa_asset_db::TABLE_NAME)
       ->fields($a_fields)
@@ -827,6 +830,9 @@ class mediamosa_asset {
     if (!count($a_fields)) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_NO_CHANGES);
     }
+
+    // Add changed value.
+    $a_fields = mediamosa_db::db_update_enrich($a_fields);
 
     // Update the asset.
     mediamosa_db::db_update(mediamosa_asset_db::TABLE_NAME)

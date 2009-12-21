@@ -29,6 +29,13 @@
   * Global settings file. (1.x replacement for shared_defines).
   */
 
+/**
+ * The mediamosa INSTALL ID is used for multiple installations of the jobserver.
+ */
+if (is_null(@constant('MEDIAMOSA_INSTALL_ID'))) {
+  define('MEDIAMOSA_INSTALL_ID', 'default'); // Not longer than 10 chars.
+}
+
 class mediamosa_settings {
 
   // ------------------------------------------------------------------ Consts.

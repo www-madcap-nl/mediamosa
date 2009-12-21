@@ -188,9 +188,10 @@ class mediamosa_asset_metadata {
         $a_values = array(
           mediamosa_asset_metadata_db::ASSET_ID => $asset_id,
           mediamosa_asset_metadata_db::PROP_ID => $prop_id,
-          mediamosa_asset_metadata_db::CREATED => mediamosa::db_current_timestamp_now(),
-          mediamosa_asset_metadata_db::CHANGED => mediamosa::db_current_timestamp_now(),
         );
+
+        // Add created value.
+        $a_fields = mediamosa_db::db_insert_enrich($a_fields);
 
         // Change from 1.x, we don't store all values in every val_[char/int/datetime] type. No more int value also in val_char etc.
         switch ($a_definition['propdef_type']) {

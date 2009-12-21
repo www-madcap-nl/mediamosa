@@ -291,7 +291,7 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
 
     // Create ticket.
     if (!isset($a_mediafile_ext[mediamosa_asset_mediafile_db::URI])) {
-      $ticket = mediamosa_ticket::create($ticket, $a_mediafile_ext, $response_type, $app_id, $user_id, $still_id);
+      $ticket = mediamosa_ticket::create_play_proxy($ticket, $a_mediafile_ext, $response_type, $app_id, $user_id, $still_id);
     }
 
     // If response type is still, we get all information of all stills with all details.
@@ -421,7 +421,7 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
 
           // make a play or download symlink.
           if (!isset($a_mediafile_ext[mediamosa_asset_mediafile_db::URI])) {
-            $ticket = mediamosa_ticket::create($ticket, $a_mediafile_ext, $response_type, $app_id, $user_id, $t_stills['still_id']);
+            $ticket = mediamosa_ticket::create_play_proxy($ticket, $a_mediafile_ext, $response_type, $app_id, $user_id, $t_stills['still_id']);
           }
 
           $t_stills['ticket'] = $ticket;

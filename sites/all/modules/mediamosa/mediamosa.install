@@ -38,17 +38,20 @@ require_once 'core/aut/mediamosa_aut.install.inc';
 require_once 'core/app/mediamosa_app.install.inc';
 require_once 'core/asset/mediamosa_asset.install.inc';
 require_once 'core/collection/mediamosa_collection.install.inc';
+require_once 'core/ftp_batch/mediamosa_ftp_batch.install.inc';
+require_once 'core/job/mediamosa_job.install.inc';
 require_once 'core/server/mediamosa_server.install.inc';
 require_once 'core/ticket/mediamosa_ticket.install.inc';
+require_once 'core/transcode/mediamosa_transcode.install.inc';
 require_once 'core/user/mediamosa_user.install.inc';
-require_once 'core/ftp_batch/mediamosa_ftp_batch.install.inc';
 require_once 'core/webservice/mediamosa_webservice.install.inc';
 
 /**
  * Implement hook_install().
  */
 function mediamosa_install() {
-  // Install the error db.
+
+   // Install the error db.
   mediamosa_error_install();
 
   // Install the app db.
@@ -77,12 +80,24 @@ function mediamosa_install() {
 
   // Call installer ftp_batch.
   mediamosa_ftp_batch_install();
+
+  // Call installer Job.
+  mediamosa_job_install();
+
+  // Call installer Transcode.
+  mediamosa_transcode_install();
 }
 
 /**
  * Implement hook_unstall().
  */
 function mediamosa_uninstall() {
+  // Remove Transcode Profile.
+  mediamosa_transcode_profile_uninstall();
+
+  // Remove Job.
+  mediamosa_job_uninstall();
+
   // Remove ftp_batch.
   mediamosa_ftp_batch_uninstall();
 
