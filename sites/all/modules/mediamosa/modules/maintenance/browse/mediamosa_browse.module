@@ -37,7 +37,6 @@ define('MEDIAMOSA_BROWSE_ASSETS_SESSION', 'mediamosa_browse_assets_session');
 define('MEDIAMOSA_BROWSE_COLLECTIONS_SESSION', 'mediamosa_browse_collections_session');
 
 // Required files.
-require_once 'mediamosa_browse.module';
 require_once 'mediamosa_browse.inc';
 require_once 'mediamosa_browse_asset.inc';
 require_once 'mediamosa_browse_collection.inc';

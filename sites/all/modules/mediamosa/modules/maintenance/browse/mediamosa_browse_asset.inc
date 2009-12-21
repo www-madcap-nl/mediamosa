@@ -33,7 +33,7 @@
  */
 function mediamosa_browse_asset_details($asset_id) {
   $result = _mediamosa_restcall('GET', '/asset/'. $asset_id, array('is_app_admin' => 'true'));
-  var_dump($result);
+ // var_dump($result);
   return '@TODO!';
 }
 

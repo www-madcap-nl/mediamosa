@@ -59,7 +59,7 @@ class mediamosa_app {
       }
     }
     else {
-      $query->fields();
+      $query->fields('app');
     }
     $query->condition(mediamosa_app_db::APP_ID, $a_app_id, 'IN');
     return $query->execute();

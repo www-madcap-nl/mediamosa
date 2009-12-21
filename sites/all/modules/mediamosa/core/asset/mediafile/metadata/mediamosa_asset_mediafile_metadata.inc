@@ -83,6 +83,7 @@ class mediamosa_asset_mediafile_metadata {
   /**
  * Verwerk de informatie in de database die terugkomt van een analysejob
  */
+  /*
 function _vpx_jobhandler_update_analyse_job_info_to_mediafile($job_id, $analyse_result) {
   // verwerk de analyse gegevens naar een named array
   $parameters = _vpx_jobhandler_parse_metadata($analyse_result);
@@ -144,7 +145,7 @@ function _vpx_jobhandler_update_analyse_job_info_to_mediafile($job_id, $analyse_
     vpx_jobscheduler_create_new_still_job($a_args);
   }
 }
-
+*/
 
 
 
