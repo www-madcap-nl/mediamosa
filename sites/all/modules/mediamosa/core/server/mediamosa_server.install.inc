@@ -89,7 +89,6 @@ function mediamosa_server_schema() {
         'not null' => TRUE,
         'default' => mediamosa_server_db::STATE_NEW,
       ),
-      ),
       mediamosa_server_db::URI => array(
         'description' => t('The optional URI of the server.'),
         'type' => 'varchar',
