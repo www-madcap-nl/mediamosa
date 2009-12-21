@@ -33,12 +33,6 @@ define('MEDIAMOSA_MENU_PATH', 'mediamosa');
 define('MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE', 'mediamosa_transcode_profile');
 define('MEDIAMOSA_NODE_TYPE_SERVER', 'mediamosa_server');
 
-define('MEDIAMOSA_SERVER_TYPE_DOWNLOAD', 'download');
-define('MEDIAMOSA_SERVER_TYPE_STILL', 'still');
-define('MEDIAMOSA_SERVER_TYPE_STREAMING', 'streaming');
-define('MEDIAMOSA_SERVER_TYPE_TRANSCODE', 'transcode');
-define('MEDIAMOSA_SERVER_TYPE_UPLOAD', 'upload');
-
 require_once 'mediamosa.settings.inc';
 
 /**
