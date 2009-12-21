@@ -30,6 +30,11 @@
  */
 
 require_once 'mediamosa_server_db.inc';
+require_once 'download/mediamosa_server_download.install.inc';
+require_once 'still/mediamosa_server_still.install.inc';
+require_once 'streaming/mediamosa_server_streaming.install.inc';
+require_once 'transcoding/mediamosa_server_transcoding.install.inc';
+require_once 'upload/mediamosa_server_upload.install.inc';
 
 /**
  * Implements hook_install().
@@ -38,12 +43,25 @@ function mediamosa_server_install() {
 
   // Server node extensions.
   drupal_install_schema(mediamosa_server_db::TABLE_NAME);
+
+  // Install our children.
+  mediamosa_server_download_install();
+  mediamosa_server_still_install();
+  mediamosa_server_streaming_install();
+  mediamosa_server_transcoding_install();
+  mediamosa_server_upload_install();
 }
 
 /**
  * Implements hook_uninstall().
  */
 function mediamosa_server_uninstall() {
+  // Unstall our children.
+  mediamosa_server_download_uninstall();
+  mediamosa_server_still_uninstall();
+  mediamosa_server_streaming_uninstall();
+  mediamosa_server_transcoding_uninstall();
+  mediamosa_server_upload_uninstall();
 
   // Server node extensions.
   drupal_uninstall_schema(mediamosa_server_db::TABLE_NAME);
@@ -53,7 +71,7 @@ function mediamosa_server_uninstall() {
  * Implements hook_schema().
  */
 function mediamosa_server_schema() {
-  $types = array(
+  $a_types = array(
     mediamosa_server_db::SERVER_TYPE_DOWNLOAD,
     mediamosa_server_db::SERVER_TYPE_STILL,
     mediamosa_server_db::SERVER_TYPE_STREAMING,
@@ -84,8 +102,8 @@ function mediamosa_server_schema() {
       ),
       mediamosa_server_db::SERVER_TYPE => array(
         'description' => t('The server type.'),
-        'type' => 'enum(' . implode(',', $types) . ')',
-        'mysql_type' => 'enum(' . implode(',', $types) . ')',
+        'type' => "enum('" . implode("','", $a_types) . "')",
+        'mysql_type' => "enum('" . implode("','", $a_types) . "')",
         'not null' => TRUE,
       ),
       mediamosa_server_db::URI => array(

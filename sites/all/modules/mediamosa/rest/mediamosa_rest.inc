@@ -255,6 +255,9 @@ class mediamosa_rest {
     // Get the mediamosa object.
     $o_mediamosa = mediamosa::get();
 
+    if (!class_exists($a_rest_call[mediamosa_rest_call::CLASS_NAME], TRUE)) {
+      throw new mediamosa_exception_program_error(strtr('Class #class was not found!', array('#class' => $a_rest_call[mediamosa_rest_call::CLASS_NAME])));
+    }
 
     // Create class from it.
     $o_rest_call = new $a_rest_call[mediamosa_rest_call::CLASS_NAME]($a_rest_call);

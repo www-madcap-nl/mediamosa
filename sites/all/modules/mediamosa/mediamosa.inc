@@ -259,6 +259,20 @@ class mediamosa {
   }
 
   /**
+   * Returns TRUE or FALSE if we are inside a sandbox.
+   */
+  static public function in_simpletest_sandbox() {
+    global $db_prefix;
+
+    // If we are running an unit test, then enable REST calls.
+    if (preg_match('/simpletest\d+/', $db_prefix)) {
+      return TRUE;
+    }
+
+    return FALSE;
+  }
+
+  /**
    * Autoload class.
    *
    * @param string $class

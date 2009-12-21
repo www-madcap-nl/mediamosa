@@ -56,23 +56,23 @@ class MediaMosaAppAuthenticationTestCase extends MediaMosaTestCase {
 
     // Step 1: start auth and capture cookie
     $response = $this->restCall($app, 'login', 'POST', array('dbus' => 'AUTH DBUS_COOKIE_SHA1 '. $app_name));
+    $this->pass(check_plain(var_export($response['xml'], TRUE)));
     $dbus_data = explode(' ', $response['xml']->items->item->dbus);
 
     list($cookie) = explode(';', $response['headers']['Set-Cookie']);
     $this->assertTrue(isset($response['headers']['Set-Cookie']), 'Cookie received in HTTP header: '. $cookie);
-    $this->assertTrue(isset($response['xml']->items->item->cookie), 'Cookie received in XML response: '. $response['xml']->items->item->cookie);
+    //$this->assertTrue(isset($response['xml']->items->item->cookie), 'Cookie received in XML response: '. $response['xml']->items->item->cookie);
 
     // Step 2: send the credentials
     $challenge = $dbus_data[3];
     $random = substr(md5(microtime(TRUE)), 0, 10);
     $post_data = array('dbus' => 'DATA '. $random .' '. sha1(sprintf('%s:%s:%s', $challenge, $random, $shared_key)));
-    $response = $this->restCall($app, 'login', 'POST', $post_data, array('Cookie: '. $cookie));
+    $response = $this->restCall($app, 'login', 'POST', $post_data, array('Set-Cookie: '. $cookie));
 
-/*
     $this->pass(check_plain(var_export($challenge, TRUE)));
     $this->pass(check_plain(var_export($dbus_data, TRUE)));
     $this->pass(check_plain(var_export($post_data, TRUE)));
-*/
+
     $this->pass(check_plain(var_export($response['xml'], TRUE)));
 
   }
