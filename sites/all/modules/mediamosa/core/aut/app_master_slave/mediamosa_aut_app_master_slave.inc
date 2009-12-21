@@ -52,7 +52,6 @@ class mediamosa_aut_app_master_slave {
         assert(0);
         return '';
     }
-
     return strtr(
       "LEFT JOIN {#aut_app_master_slave} AS aut_ms ON aut_ms.aut_object_type = '@aut_object_type' AND @on = aut_ms.aut_object_id",
       array(

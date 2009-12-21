@@ -26,7 +26,29 @@
 
 /**
  * @file
- * Migration of 1.x to 2.x
+ * DB Class for mediamosa_server_upload module.
  */
 
-define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_MIGRATION', 'MediaMosa Migration');
+class mediamosa_server_db {
+  // ------------------------------------------------------------------ Consts.
+  // Table name;
+  const TABLE_NAME = 'mediamosa_server';
+
+  // Database fields;
+  const SERVER_STATUS = 'server_status';
+  const SERVER_TYPE = 'server_type';
+  const URI = 'uri';
+  const URI_LENGTH = 255;
+  const CONTAINERS = 'containers';
+  const CONTAINERS_LENGTH = 255;
+  const OBJECT_CODE = 'object_code';
+  const SERVER_NAME = 'server_name';
+  const SERVER_NAME_LENGTH = 255;
+  const IP_ADDRESS = 'ip_address';
+  const IP_ADDRESS_LENGTH = 15;
+  const SLOTS = 'slots';
+  const TOOLS = 'tools';
+  const TOOLS_LENGTH = 255;
+  const URI_UPLOAD_PROGRESS = 'uri_upload_progress';
+  const URI_UPLOAD_PROGRESS_LENGTH = 255;
+}
