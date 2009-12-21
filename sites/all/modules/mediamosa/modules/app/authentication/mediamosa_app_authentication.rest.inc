@@ -42,14 +42,16 @@ class mediamosa_rest_call_app_ident extends mediamosa_rest_call {
   public function get_var_setup() {
     $a_var_setup = array();
 
-    $a_var_setup[mediamosa_rest_call::VARS][mediamosa_rest_call_app_ident::DBUS] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_STRING,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => '@todo: add a description',
+    $a_var_setup[mediamosa_rest_call::VARS] = array(
+      self::DBUS => array(
+        mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_STRING,
+        mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
+        mediamosa_rest_call::VAR_DESCRIPTION => 'The DBUS login value.',
+      )
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($a_var_setup, FALSE);
   }
 
   public function do_call() {

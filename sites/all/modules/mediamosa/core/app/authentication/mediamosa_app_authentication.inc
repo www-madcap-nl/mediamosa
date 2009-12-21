@@ -45,12 +45,14 @@ class mediamosa_app_authentication {
    */
   function get_shared_key($name) {
     return mediamosa_db::db_query(
-      "SELECT #shared_key FROM {#table_name} WHERE #name = :name AND #active = 1",
+      "SELECT #shared_key FROM {#table_name} WHERE #name = :name AND #active = :active_true",
       array(
-        '#shared_key' => mediamosa_app_db::NAME,
+        '#shared_key' => mediamosa_app_db::SHARED_KEY,
         '#table_name' => mediamosa_app_db::TABLE_NAME,
         '#name' => mediamosa_app_db::NAME,
         ':name' => $name,
+        '#active' => mediamosa_app_db::ACTIVE,
+        ':active_true' => mediamosa_app_db::ACTIVE_TRUE,
       )
     )->fetchField();
   }
@@ -63,14 +65,14 @@ class mediamosa_app_authentication {
    */
   function is_app_active($name) {
     return mediamosa_db::db_query(
-      "SELECT #active FROM {#table_name} WHERE #name = :name AND #active = 1",
+      "SELECT #active FROM {#table_name} WHERE #name = :name",
       array(
-        '#shared_key' => mediamosa_app_db::NAME,
         '#table_name' => mediamosa_app_db::TABLE_NAME,
         '#name' => mediamosa_app_db::NAME,
         ':name' => $name,
+        '#active' => mediamosa_app_db::ACTIVE,
       )
-    )->fetchField() == 'TRUE' ? TRUE : FALSE;
+    )->fetchField() == mediamosa_app_db::ACTIVE_TRUE ? TRUE : FALSE;
   }
 
 
@@ -117,7 +119,6 @@ class mediamosa_app_authentication {
 
       case 'DATA':
         $cookie = self::get_shared_key($_SESSION['mediamosa_dbus']['username']);
-
         list($random, $response) = explode(' ', $param);
         return $response == sha1($_SESSION['mediamosa_dbus']['challenge'] .':'. $random .':'. $cookie);
     }
@@ -131,7 +132,7 @@ class mediamosa_app_authentication {
    * @param string $line
    * @return string
    */
-  function eua_dbus_protocol($line) {
+  function app_dbus_protocol($line) {
     // Initialize identification.
     $auth_methods = array(
       'DBUS_COOKIE_SHA1' => 'dbus_cookie_sha1'
@@ -142,8 +143,12 @@ class mediamosa_app_authentication {
       $_SESSION['mediamosa_dbus'] = array(
         'mechanism'  => FALSE,
         'challenge'  => FALSE,
-        'username'   => FALSE
+        'username'   => 'peop'
       );
+    }
+
+    if (strpos($line, ' ') === FALSE) {
+      return 'ERROR unknown error';
     }
 
     // Parse and handle command.
@@ -161,7 +166,7 @@ class mediamosa_app_authentication {
         }
 
         // Will assert if not exists.
-        assert(method_exists($this, $auth_methods[$mechanism]));
+        assert(method_exists('mediamosa_app_authentication', $auth_methods[$mechanism]));
 
         $_SESSION['mediamosa_dbus']['mechanism'] = $auth_methods[$mechanism];
         $_SESSION['mediamosa_dbus']['username'] = FALSE;
@@ -180,30 +185,32 @@ class mediamosa_app_authentication {
         }
 
         // Call the chosen method.
-        $result = call_user_func(
+        $result = call_user_func_array(
           array('mediamosa_app_authentication', $_SESSION['mediamosa_dbus']['mechanism']),
           array($command, $param)
         );
 
+        if (!is_bool($result)) {
+          return $result;
+        }
+
+        if (!$result) {
+          $_SESSION['mediamosa_dbus']['mechanism'] = FALSE;
+          $_SESSION['mediamosa_dbus']['challenge'] = FALSE;
+          return 'REJECTED';
+        }
+
+        $a_app = mediamosa_app_authentication::get_app($_SESSION['mediamosa_dbus']['username']);
         // All ok?
-        if ($result === FALSE) {
+        if (!$a_app) {
           unset($_SESSION['mediamosa_dbus']);
           return 'ERROR database error';
         }
 
-        $eua = mediamosa_app_authentication::get_app($_SESSION['mediamosa_dbus']['username']);
-        if ($eua === FALSE) {
-          unset($_SESSION['mediamosa_dbus']);
-          $_SESSION['mediamosa_dbus']['mechanism'] = FALSE;
-          $_SESSION['mediamosa_dbus']['challenge'] = FALSE;
-          $result = 'REJECTED';
-          return 'ERROR unknown error';
-        }
-
         // Set the identification in session.
         $_SESSION['mediamosa_eua'] = array(
-          'app_id' =>  $eua[mediamosa_app_db::app_id],
-          'name' => $eua[mediamosa_app_db::name]
+          'app_id' =>  $a_app[mediamosa_app_db::APP_ID],
+          'name' => $a_app[mediamosa_app_db::NAME]
         );
 
         return 'OK ' . self::EUA_AUTH_SERVER_GUID;

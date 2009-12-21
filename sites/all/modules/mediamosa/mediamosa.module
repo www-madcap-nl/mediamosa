@@ -29,7 +29,7 @@
   * Core - Open source media management and distribution platform.
   */
 define('MEDIAMOSA_PERM_REST_ACCESS', 'mediamosa_perm_rest_access');
-define('MEDIAMOSA_MENU_PATH', 'mediamosa');
+define('MEDIAMOSA_MENU_PATH', '');// was mediamosa for menu hook.
 define('MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE', 'mediamosa_transcode_profile');
 define('MEDIAMOSA_NODE_TYPE_SERVER', 'mediamosa_server');
 
@@ -74,6 +74,7 @@ function mediamosa_requirements($phase) {
 /**
  * Implement hook_menu().
  */
+/*
 function mediamosa_menu() {
   $items = array();
 
@@ -85,7 +86,7 @@ function mediamosa_menu() {
 
   return $items;
 }
-
+*/
 /**
  * Implement hook_permission().
  */
@@ -96,6 +97,14 @@ function mediamosa_permission() {
       'description' => t('Users with this permission may access the MediaMosa restcalls.'),
     ),
   );
+}
+
+function mediamosa_init() {
+  // Create and get the core object.
+  $o_mediamosa = mediamosa::get();
+
+  // Now call the rest process function to process possible rest call.
+  $o_mediamosa->process_rest();
 }
 
 /**

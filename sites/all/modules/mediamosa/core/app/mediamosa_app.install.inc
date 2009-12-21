@@ -84,6 +84,7 @@ function mediamosa_app_schema() {
         'type' => 'int',
         'size' => 'tiny',
         'not null' => TRUE,
+        'default' => 0,
       ),
       mediamosa_app_db::QUOTA => array(
         'description' => t('The total allowed quota in gigabytes.'),

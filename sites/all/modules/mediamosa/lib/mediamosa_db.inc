@@ -466,9 +466,14 @@ class mediamosa_db {
       return;
     }
 
+    if (mediamosa::in_simpletest_sandbox()) {
+      // fixme
+      return;
+    }
+
     foreach ($a_schema[$module_name]['foreign keys'] AS $column => $a_foreign_key) {
       foreach ($a_foreign_key as $foreign_table_name => $foreign_column) {
-        $query = strtr("ALTER TABLE #table_name ADD CONSTRAINT `fk_#table_name_#column` FOREIGN KEY (`#column`) REFERENCES `#foreign_table_name` (`#foreign_column`)",
+        $query = strtr("ALTER TABLE {#table_name} ADD CONSTRAINT `fk_#table_name_#column` FOREIGN KEY (`#column`) REFERENCES `{#foreign_table_name}` (`#foreign_column`)",
           array(
             '#table_name' => $module_name,
             '#column' => $column,
@@ -482,13 +487,15 @@ class mediamosa_db {
         }
         catch (PDOException $e) {
           assert($e);
+
           assert(0);// so we know.
           mediamosa::log(
-            "Failed to create foreign key 'fk_#table_name_#column' on table '#table_name', query; '#query'.",
+            "Failed to create foreign key 'fk_#table_name_#column' on table '#table_name', query; '#query', message: #message.",
             array(
               '#table_name' => $module_name,
               '#column' => $column,
               '#query' => $query,
+              '#message' => $e->getMessage(),
             )
           );
         }

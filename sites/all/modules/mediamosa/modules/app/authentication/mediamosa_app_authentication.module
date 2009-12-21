@@ -63,7 +63,7 @@ function mediamosa_app_authentication_mediamosa_app_authorized() {
   $o_mediamosa = mediamosa::get();
 
   // Get the request uri.
-  $a_args = $o_mediamosa->get_request_uri();
+  $a_args = arg(); // $o_mediamosa->get_request_uri();
 
   /**
    * REST calls that start with 'internal' are only allowed from certain IP numbers.

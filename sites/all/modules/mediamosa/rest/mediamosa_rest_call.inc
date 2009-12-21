@@ -177,6 +177,8 @@ abstract class mediamosa_rest_call {
    * Dispatch the rest call processing.
    */
   public function process_call() {
+    global $user;
+
     // Make sure its not disabled.
     if ($this->{self::STATUS} == self::STATUS_DISABLED) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_CALL_IS_DISABLED, array('@uri' => $this->{self::URI}));
@@ -190,6 +192,31 @@ abstract class mediamosa_rest_call {
 
     // @todo: make this an setting per webservice or else we are not 1.x compatible. Default should be FALSE.
     $this->check_for_unspecified = FALSE;// turned off for now
+
+    // Enable sessions.
+    if (!drupal_session_started()) {
+      drupal_session_start();
+    }
+    elseif (mediamosa::in_simpletest_sandbox()) {
+      session_regenerate_id(FALSE);
+    }
+
+    // @todo move into function.
+    // Check user id login
+    if ($user->uid == 0) {
+      $a_results = module_invoke_all('mediamosa_app_authorized');
+      $loggedin = FALSE;
+      foreach ($a_results as $result) {
+        if ($result === TRUE) {
+          $loggedin = TRUE;
+          break;
+        }
+      }
+
+      if (!$loggedin) {
+        throw new mediamosa_exception_error_authentication_failure();
+      }
+    }
 
     // Check rest args.
     $a_var_setup = $this->process_rest_args($a_var_setup);
@@ -205,10 +232,10 @@ abstract class mediamosa_rest_call {
   /**
    * Get the default vars we always expect in every rest call
    */
-  protected function get_var_setup_default(array $a_var_setup) {
+  protected function get_var_setup_default(array $a_var_setup, $app_id_required = TRUE) {
     $a_var_setup[mediamosa_rest_call::VARS][mediamosa_rest_call::APP_ID] = array(
       self::VAR_TYPE => mediamosa_type::TYPE_APP_ID,
-      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+      self::VAR_IS_REQUIRED => $app_id_required ? self::VAR_IS_REQUIRED_YES : self::VAR_IS_REQUIRED_NO,
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
       self::VAR_DESCRIPTION => mediamosa::t('The application ID.'),
     );
