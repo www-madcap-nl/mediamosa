@@ -1,0 +1,88 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is a Full Featured, Webservice Oriented Media Management and
+ * Distribution platform (http://www.vpcore.nl)
+ *
+ * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+ /**
+  * @file
+  */
+
+// Permissions
+define('MEDIAMOSA_BROWSE_PERM_BROWSE_ASSETS', 'mediamosa_browse_perm_browse_assets');
+define('MEDIAMOSA_BROWSE_PERM_BROWSE_COLLECTIONS', 'mediamosa_browse_perm_browse_collections');
+
+// SESSIONs
+define('MEDIAMOSA_BROWSE_ASSETS_SESSION', 'mediamosa_browse_assets_session');
+define('MEDIAMOSA_BROWSE_COLLECTIONS_SESSION', 'mediamosa_browse_collections_session');
+
+// Required files.
+require_once 'mediamosa_browse.module';
+require_once 'mediamosa_browse.inc';
+require_once 'mediamosa_browse_asset.inc';
+require_once 'mediamosa_browse_collection.inc';
+
+/**
+ * Implementation of hook_menu().
+ */
+function mediamosa_browse_menu() {
+  $items = array();
+
+  $items['mm_browse_asset'] = array(
+    'title' => 'MediaMosa asset browser',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mediamosa_browse_asset_form'),
+    'access arguments' => array(MEDIAMOSA_BROWSE_PERM_BROWSE_ASSETS),
+  );
+  $items['mm_browse_collection'] = array(
+    'title' => 'MediaMosa collection browser',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mediamosa_browse_collection_form'),
+    'access arguments' => array(MEDIAMOSA_BROWSE_PERM_BROWSE_COLLECTIONS),
+  );
+  $items['mm_browse_asset/%'] = array(
+    'title' => 'MediaMosa asset details',
+    'type' => MENU_CALLBACK,
+    'page callback' => 'mediamosa_browse_asset_details',
+    'page arguments' => array(1),
+    'access arguments' => array(MEDIAMOSA_BROWSE_PERM_BROWSE_ASSETS),
+  );
+
+  return $items;
+}
+
+/**
+ * Implement hook_permission().
+ */
+function mediamosa_browse_permission() {
+  return array(
+    MEDIAMOSA_BROWSE_PERM_BROWSE_ASSETS =>  array(
+      'title' => t('Browse assets'),
+      'description' => t('Users with this permission may browse through the assets.'),
+    ),
+    MEDIAMOSA_BROWSE_PERM_BROWSE_COLLECTIONS =>  array(
+      'title' => t('Browse collections'),
+      'description' => t('Users with this permission may browse through the collections.'),
+    ),
+  );
+}

@@ -201,6 +201,7 @@ files[] = core/configuration/storage/mediamosa_configuration_storage.inc
 
 ; Server.
 files[] = core/server/mediamosa_server.install.inc
+files[] = core/server/mediamosa_server_db.inc
 
 ; Server Download.
 files[] = core/server/download/mediamosa_server_download_db.inc
@@ -223,6 +224,7 @@ files[] = core/server/streaming/container/mediamosa_server_streaming_container.i
 ; Server Transcoding.
 files[] = core/server/transcoding/mediamosa_server_transcoding_db.inc
 files[] = core/server/transcoding/mediamosa_server_transcoding.install.inc
+files[] = core/server/transcoding/mediamosa_server_transcoding.inc
 
 ; Server Transcoding Tool.
 files[] = core/server/transcoding/tool/mediamosa_server_transcoding_tool_db.inc

@@ -30,6 +30,8 @@
   */
 define('MEDIAMOSA_PERM_REST_ACCESS', 'mediamosa_perm_rest_access');
 define('MEDIAMOSA_MENU_PATH', 'mediamosa');
+define('MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE', 'mediamosa_transcode_profile');
+define('MEDIAMOSA_NODE_TYPE_SERVER', 'mediamosa_server');
 
 require_once 'mediamosa.settings.inc';
 
@@ -134,4 +136,79 @@ function mediamosa_mediamosa_register_rest_call() {
   );
 
   return $a_rest_calls;
+}
+
+/**
+ * Implementation of hook_node_info().
+ */
+function mediamosa_node_info() {
+  return array(
+    MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE => array(
+      'name' => t('MediaMosa transcode profile'),
+      'base' => MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE,
+      'has_body' => FALSE,
+      'description' => t('@todo'),
+    ),
+    MEDIAMOSA_NODE_TYPE_SERVER => array(
+      'name' => t('MediaMosa server'),
+      'base' => MEDIAMOSA_NODE_TYPE_SERVER,
+      'has_body' => FALSE,
+      'description' => t('@todo'),
+    ),
+  );
+}
+
+/**
+ * Implementation of hook_load().
+ */
+function mediamosa_transcode_profile_load(&$nodes) {
+  // Gather all vids
+  $vids = array();
+  foreach ($nodes as $node) {
+    $vids[] = $node->vid;
+  }
+
+  // Gather all additional node properties
+  $result = mediamosa_db::db_query(
+    'SELECT * FROM {#table_name} WHERE vid IN (:vids)',
+    array(
+      '#table_name' => mediamosa_server_transcoding_profile_db::TABLE_NAME,
+      ':vids' => $vids,
+    )
+  );
+  foreach ($result as $record) {
+    foreach ($record as $key => $value) {
+      if ($key == 'options') {
+        $value = unserialize($value);
+      }
+      $nodes[$record['nid']]->$key = $value;
+    }
+  }
+  return $nodes;
+}
+
+/**
+ * Implementation of hook_load().
+ */
+function mediamosa_server_load(&$nodes) {
+  // Gather all vids
+  $vids = array();
+  foreach ($nodes as $node) {
+    $vids[] = $node->vid;
+  }
+
+  // Gather all additional node properties
+  $result = mediamosa_db::db_query(
+    'SELECT * FROM {#table_name} WHERE vid IN (:vids)',
+    array(
+      '#table_name' => mediamosa_server_db::TABLE_NAME,
+      ':vids' => $vids,
+    )
+  );
+  foreach ($result as $record) {
+    foreach ($record as $key => $value) {
+      $nodes[$record['nid']]->$key = $value;
+    }
+  }
+  return $nodes;
 }

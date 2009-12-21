@@ -51,10 +51,90 @@ abstract class MediaMosaTestCase extends DrupalWebTestCase {
     $args = array_unique(array_merge(array('mediamosa'), $args));
     call_user_func_array(array($this, 'parent::setUp'), $args);
   }
-}
 
-/**
- * Base unittest class for external REST call testing.
- */
-abstract class MediaMosaRestTestCase extends MediaMosaTestCase {
+  protected function restCall($app, $path, $request_method = 'POST', $parameters = array(), $headers = array()) {
+    // Add MediaMosa menu path prefix
+    $path = MEDIAMOSA_MENU_PATH . '/' . $path;
+
+    // Add default parameters
+    $parameters += array(
+      'app_id' => $app[mediamosa_app_db::APP_ID],
+    );
+
+    // Prepare the CURL options
+    $curl_opts = array(
+      CURLOPT_NOBODY => FALSE,
+      CURLOPT_HTTPHEADER => $headers,
+      CURLOPT_HEADER => TRUE,
+    );
+    if (strcasecmp($request_method, 'GET') == 0) {
+      $curl_opts += array(
+        CURLOPT_HTTPGET => TRUE,
+        CURLOPT_URL => url($path, array('absolute' => TRUE, 'query' => $parameters)),
+      );
+    }
+    else {
+      $curl_opts += array(
+        CURLOPT_POST => TRUE,
+        CURLOPT_URL => url($path, array('absolute' => TRUE)),
+        CURLOPT_POSTFIELDS => http_build_query($parameters),
+      );
+    }
+$this->pass($this->session_id);
+    // Perform the CURL request
+    $result = $this->curlExec($curl_opts);
+
+    // Parse the headers and get the body
+    $lines = explode("\n", $result);
+    $line_count = count($lines);
+
+    // Unset the HTTP header line
+    unset($lines[0]);
+
+    // Iterate until an empty row is found
+    for ($i = 1; $i < $line_count; $i++) {
+      if (trim($lines[$i]) != '') {
+        list($key, $value) = explode(':', $lines[$i], 2);
+        $out['headers'][trim($key)] = trim($value);
+        unset($lines[$i]);
+      }
+      else {
+        $out['body'] = trim(implode("\n", $lines));
+        break;
+      }
+    }
+
+    // Create a SimpleXMLElement from the restcall's output
+    try {
+      $out['xml'] = new SimpleXMLElement($out['body']);
+    }
+    catch (Exception $e) {
+      $this->assert(FALSE, $e->getMessage());
+      return;
+    }
+
+    // Look for a request_result_id
+    $this->assertTrue(isset($out['xml']->header->request_result_id), $request_method .' request to: "'. $path .'". Result id: ' . $out['xml']->header->request_result_id .'<hr />');
+
+    // Return the request data
+    return $out;
+  }
+
+  protected function createApp($attributes = array()) {
+    // Merge in the default attributes
+    $attributes += array(
+      'app_id' => rand(1, 1000),
+      'shared_key' => user_password(),
+      'name' => $this->randomName(),
+      'active' => 'TRUE',
+    );
+
+    // Insert the app into the database
+    $query = mediamosa_db::db_insert(mediamosa_app_db::TABLE_NAME)->fields($attributes)->execute();
+
+    // Log the creation in the resutls
+    $this->assert(TRUE, t('App created with id %app_id, name %name and shared key %pass', array('%app_id' => $attributes['app_id'], '%name' => $attributes['name'], '%pass' => $attributes['shared_key'])));
+
+    return $attributes;
+  }
 }
