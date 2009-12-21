@@ -33,7 +33,7 @@
  * URI: /login
  * Login onto MediaMosa.
  */
-class mediamosa_rest_call_eua_ident extends mediamosa_rest_call {
+class mediamosa_rest_call_app_ident extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Consts.
   const DBUS = 'dbus';
@@ -42,9 +42,10 @@ class mediamosa_rest_call_eua_ident extends mediamosa_rest_call {
   public function get_var_setup() {
     $a_var_setup = array();
 
-    $a_var_setup[mediamosa_rest_call::VARS][mediamosa_rest_call_eua_ident::DBUS] = array(
+    $a_var_setup[mediamosa_rest_call::VARS][mediamosa_rest_call_app_ident::DBUS] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_STRING,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
+      mediamosa_rest_call::VAR_DESCRIPTION => '@todo: add a description',
     );
 
     // Enrich with required REST vars.
@@ -55,18 +56,18 @@ class mediamosa_rest_call_eua_ident extends mediamosa_rest_call {
     $o_mediamosa = mediamosa::get();
 
     // Get the dbus line.
-    $dbus = $this->get_param_value(mediamosa_rest_call_eua_ident::DBUS);
+    $dbus = $this->get_param_value(mediamosa_rest_call_app_ident::DBUS);
 
     // Login.
-    $result = mediamosa_app_authentication::eua_dbus_protocol($dbus);
+    $result = mediamosa_app_authentication::app_dbus_protocol($dbus);
 
-    if (mediamosa_unicode::substr($result, 0, 5) != "ERROR") {
+    if (mediamosa_unicode::substr($result, 0, 5) != 'ERROR') {
       $o_mediamosa->set_result(mediamosa_response::SUCCESS, mediamosa_error::ERRORCODE_OKAY, 'DBUS authentication protocol');
     }
     else {
       $o_mediamosa->set_result(mediamosa_response::ERROR, mediamosa_error::ERRORCODE_DBUS_PROTOCOL_ERROR, 'DBUS ' . $result);
     }
 
-    $o_mediamosa->add_item(array("dbus" => $result));
+    $o_mediamosa->add_item(array('dbus' => $result));
   }
 }
