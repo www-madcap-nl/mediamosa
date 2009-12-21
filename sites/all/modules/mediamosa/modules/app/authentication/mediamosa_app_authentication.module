@@ -30,13 +30,21 @@
   */
 
 /**
- * Implements hook_mediamosa_register_rest_call().
+ * Implementation of hook_mediamosa_register_rest_call().
  */
 function mediamosa_app_authentication_mediamosa_register_rest_call() {
   $a_rest_calls = array();
 
   $a_rest_calls['login'][mediamosa_rest_call::METHOD_POST] = array(
-    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_eua_ident',
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_app_ident',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Log onto MediaMosa and authenticate as user end application.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_app_authentication',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  $a_rest_calls['login'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_app_ident',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::DESCRIPTION => 'Log onto MediaMosa and authenticate as user end application.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_app_authentication',
@@ -47,9 +55,9 @@ function mediamosa_app_authentication_mediamosa_register_rest_call() {
 }
 
 /**
- * Implements hook_mediamosa_mediamosa_eua_authorized().
+ * Implementation of hook_mediamosa_mediamosa_app_authorized().
  */
-function mediamosa_app_authentication_mediamosa_eua_authorized() {
+function mediamosa_app_authentication_mediamosa_app_authorized() {
 
   // Get the mediamosa object.
   $o_mediamosa = mediamosa::get();
@@ -78,8 +86,8 @@ function mediamosa_app_authentication_mediamosa_eua_authorized() {
   }
 
   // User already logged in?
-  if (isset($_SESSION['mediamosa_eua'])) {
-    $_GET['app_id'] = $_SESSION['mediamosa_eua']['app_id'];
+  if (isset($_SESSION['mediamosa_app'])) {
+    $_GET['app_id'] = $_SESSION['mediamosa_app']['app_id'];
     return TRUE;
   }
 

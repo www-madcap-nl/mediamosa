@@ -92,11 +92,11 @@ function mediamosa_server_form($node, $form_state) {
       '#type' => 'select',
       '#title' => t('Server type'),
       '#options' => array(
-        MEDIAMOSA_SERVER_TYPE_DOWNLOAD => t('Download server'),
-        MEDIAMOSA_SERVER_TYPE_STILL => t('Still server'),
-        MEDIAMOSA_SERVER_TYPE_STREAMING => t('Streaming server'),
-        MEDIAMOSA_SERVER_TYPE_TRANSCODE => t('Transcode server'),
-        MEDIAMOSA_SERVER_TYPE_UPLOAD => t('upload server'),
+        mediamosa_server_db::SERVER_TYPE_DOWNLOAD => t('Download server'),
+        mediamosa_server_db::SERVER_TYPE_STILL => t('Still server'),
+        mediamosa_server_db::SERVER_TYPE_STREAMING => t('Streaming server'),
+        mediamosa_server_db::SERVER_TYPE_TRANSCODE => t('Transcode server'),
+        mediamosa_server_db::SERVER_TYPE_UPLOAD => t('upload server'),
       ),
       '#description' => t('The server type cannot be changed once the server is created.'),
     );
@@ -258,20 +258,20 @@ function mediamosa_server_delete($node) {
 function _mediamosa_server_get_server_options($server_type) {
   $form_elements = array();
   switch ($server_type) {
-    case MEDIAMOSA_SERVER_TYPE_STILL:
-    case MEDIAMOSA_SERVER_TYPE_DOWNLOAD:
+    case mediamosa_server_db::SERVER_TYPE_STILL:
+    case mediamosa_server_db::SERVER_TYPE_DOWNLOAD:
       $form_elements = array('uri');
       break;
 
-    case MEDIAMOSA_SERVER_TYPE_STREAMING:
+    case mediamosa_server_db::SERVER_TYPE_STREAMING:
       $form_elements = array('uri', 'containers', 'object_code');
       break;
 
-    case MEDIAMOSA_SERVER_TYPE_TRANSCODE:
+    case mediamosa_server_db::SERVER_TYPE_TRANSCODE:
       $form_elements = array('server_name', 'ip_address', 'slots', 'tools');
       break;
 
-    case MEDIAMOSA_SERVER_TYPE_UPLOAD:
+    case mediamosa_server_db::SERVER_TYPE_UPLOAD:
       $form_elements = array('uri', 'uri_upload_progress');
       break;
   }
