@@ -35,6 +35,7 @@ class mediamosa_server_db {
   const TABLE_NAME = 'mediamosa_server';
 
   // Database fields;
+  const ID = 'server_id';
   const SERVER_STATUS = 'server_status';
   const SERVER_TYPE = 'server_type';
   const URI = 'uri';

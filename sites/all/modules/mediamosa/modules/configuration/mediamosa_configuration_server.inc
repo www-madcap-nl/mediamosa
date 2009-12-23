@@ -237,6 +237,7 @@ function mediamosa_server_insert($node) {
     ->fields(array(
       'nid' => $node->nid,
       'vid' => $node->vid,
+      mediamosa_server_db::SERVER_ID => $node->nid,
       mediamosa_server_db::SERVER_TYPE => $node->server_type,
       mediamosa_server_db::SERVER_STATUS => 0, // 'Off' by default
     ))
