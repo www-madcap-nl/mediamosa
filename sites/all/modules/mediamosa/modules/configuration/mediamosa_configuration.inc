@@ -116,3 +116,79 @@ function mediamosa_configuration_transcode_profile_view($profile_id) {
 
   return $output;
 }
+
+function mediamosa_configuration_app_list() {
+  require_once('sites/all/modules/mediamosa/core/transcode/profile/mediamosa_transcode_profile_db.inc');
+
+  // Our header defenition
+/*
+  $client_header = array(
+    array('data' => t('App ID'), 'field' => 'id', 'sort' => 'asc'),
+    array('data' => t('Name'), 'field' => 'name'),
+    array('data' => t('Quota'), 'field' => 'quota'),
+    array('data' => t('Offline webservices'), 'field' => ''),
+    array('data' => t('Owner'), 'field' => 'owner'),
+    array('data' => t('Active')),
+    array('data' => t('Contacts')),
+  );
+*/
+  $header = array(t('Application ID'), t('Name'), t('Quota'), t('Offline webservices'), t('Owner'), t('Active'), t('Contacts'));
+
+  $query = mediamosa_db::db_select(mediamosa_app_db::TABLE_NAME, 'a')->extend('PagerDefault'); // ->extend('TableSort');
+  $result = $query
+    ->fields('a')
+    ->limit(10)
+    ->execute();
+
+  $rows = array();
+  foreach ($result as $row) {
+    $rows[] = array(
+      $row[mediamosa_app_db::APP_ID],
+      $row[mediamosa_app_db::NAME],
+      $row[mediamosa_app_db::QUOTA],
+      '', // @TODO: offline webservices
+      $row[mediamosa_app_db::OWNER],
+      $row[mediamosa_app_db::ACTIVE],
+      l(t('View'), 'mm_app/'. $row[mediamosa_app_db::APP_ID] .'/contacts'),
+    );
+  }
+
+  $content = theme('table', $header, $rows);
+  $content .= theme('pager');
+
+  return $content;
+}
+
+function mediamosa_configuration_app_contacts($app_id) {
+  $response = t('Technical and administrative contact for a client application.');
+
+  $query = mediamosa_db::db_select(mediamosa_app_db::TABLE_NAME, 'a')->extend('PagerDefault'); // ->extend('TableSort');
+  $result = $query
+    ->fields('a')
+    ->condition('a.app_id', $app_id)
+    ->limit(10)
+    ->execute();
+
+  $rows = array();
+  foreach ($result as $row) {
+    $rows[] = array(
+      $row[mediamosa_app_db::APP_ID],
+      $row[mediamosa_app_db::TECHNICAL_NAME],
+      $row[mediamosa_app_db::TECHNICAL_PHONE],
+      $row[mediamosa_app_db::TECHNICAL_EMAIL],
+      t('Technical'),
+    );
+    $rows[] = array(
+      $row[mediamosa_app_db::APP_ID],
+      $row[mediamosa_app_db::ADMINISTRATIVE_NAME],
+      $row[mediamosa_app_db::ADMINISTRATIVE_PHONE],
+      $row[mediamosa_app_db::ADMINISTRATIVE_EMAIL],
+      t('Administrative'),
+    );
+  }
+
+  $response .= theme('table', array(t('Application ID'), t('Name'), t('Phone'), t('E-mail'), t('Type')), $rows);
+  $response .= l(t('Return'), 'mm_app');
+  $response .= theme('pager');
+  return $response;
+}

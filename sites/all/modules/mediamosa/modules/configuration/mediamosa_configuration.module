@@ -91,6 +91,19 @@ function mediamosa_configuration_menu() {
     'access arguments' => array('administer mediamosa configuration'),
   );
 
+  $items['mm_app'] = array(
+    'title' => 'Client applications',
+    'page callback' => 'mediamosa_configuration_app_list',
+    'access arguments' => array('administer mediamosa configuration'),
+  );
+  $items['mm_app/%/contacts'] = array(
+    'title' => 'Client application contacts',
+    'type' => MENU_CALLBACK,
+    'page callback' => 'mediamosa_configuration_app_contacts',
+    'page arguments' => array(1),
+    'access arguments' => array('administer mediamosa configuration'),
+  );
+
   return $items;
 }
 
