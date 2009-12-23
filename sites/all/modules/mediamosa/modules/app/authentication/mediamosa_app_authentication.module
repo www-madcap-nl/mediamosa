@@ -65,26 +65,6 @@ function mediamosa_app_authentication_mediamosa_app_authorized() {
   // Get the request uri.
   $a_args = arg(); // $o_mediamosa->get_request_uri();
 
-  /**
-   * REST calls that start with 'internal' are only allowed from certain IP numbers.
-   */
-  if ($a_args[0] == 'internal') {
-    $a_ips = explode('|', mediamosa::variable_get('mediamosa_allowed_internal_ips', ''));
-
-    $ip_checked = FALSE;
-    foreach ($a_ips as $ip) {
-      if (mediamosa_unicode::strpos($_SERVER['REMOTE_ADDR'], $ip) === 0) { // if the remote IP address begins with $ip
-        $ip_checked = TRUE;
-        break;
-      }
-    }
-
-    // Is not called from any allowed IP number, access denied.
-    if (!$ip_checked) {
-      return FALSE;
-    }
-  }
-
   // User already logged in?
   if (isset($_SESSION['mediamosa_app'])) {
     $_GET['app_id'] = $_SESSION['mediamosa_app']['app_id'];

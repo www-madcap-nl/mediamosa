@@ -459,7 +459,6 @@ class mediamosa {
    * good protection.
    */
   static public function get_internal_password() {
-
     $passwrd = self::variable_get('mediamosa_internal_password', NULL);
 
     if (isset($passwrd)) {
@@ -467,7 +466,7 @@ class mediamosa {
     }
 
     // Create new one.
-    $passwrd = drupal_random_bytes(10);
+    $passwrd = md5(drupal_random_bytes(64));
 
     // Store it.
     variable_set('mediamosa_internal_password', $passwrd);
@@ -476,4 +475,3 @@ class mediamosa {
     return $passwrd;
   }
 }
-
