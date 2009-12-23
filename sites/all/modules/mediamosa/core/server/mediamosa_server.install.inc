@@ -82,6 +82,12 @@ function mediamosa_server_schema() {
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
+      mediamosa_server_db::VERSION => array(
+        'description' => t('The version number.'),
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+      ),
       mediamosa_server_db::SERVER_STATUS => array(
         'description' => t('The server status.'),
         'type' => 'int',
