@@ -410,5 +410,5 @@ $conf = array()#   'site_name' => 'My Drupal site',
 define('MEDIAMOSA_SERVER_ID', 'default');
 
 define('MEDIAMOSA_REST_HOST', 'localhost');
-define('MEDIAMOSA_BUILD_URL', 'vpx/');
+define('MEDIAMOSA_BUILD_URL', 'mediamosa/');
 define('MEDIAMOSA_URL', 'http://' . MEDIAMOSA_REST_HOST . '/' . MEDIAMOSA_BUILD_URL);

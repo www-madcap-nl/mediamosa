@@ -112,6 +112,9 @@ class mediamosa_settings {
   const JOB_JOB_TIMEOUT = 10800;
   const JOB_TRANSCODE_TIMEOUT = 7200;
 
+  // Header item used in internal calls.
+  const X_MEDIAMOSA_INTERNAL_PASS = 'X-Mediamosa-Internal-Pass';
+
   // ------------------------------------------------------------------ Functions.
   /**
    * returns the path where the lua scripts are.

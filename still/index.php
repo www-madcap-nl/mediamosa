@@ -11,7 +11,7 @@
 require_once("../download/settings.php");
 
 // vraag de san/nas mountpoint op
-if (($response = @file_get_contents(VPX_REST_SERVER ."/internal/get_current_mount_point")) === false) {
+if (($response = @file_get_contents(MEDIAMOSA_URL . 'internal/get_current_mount_point')) === false) {
   die("Unable to connect to VPX");
 }
 if (preg_match("@<current_mount_point>.*</current_mount_point>@", $response, $matches) !== 1) {

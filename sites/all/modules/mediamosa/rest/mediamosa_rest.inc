@@ -50,17 +50,34 @@ class mediamosa_rest {
   }
 
   // ------------------------------------------------------------------ Static Function.
-  static function get_uri_definition($s_request_uri, $request_method = FALSE) {
+  /**
+   * Match the current URL to REST call, and return the REST call object.
+   *
+   * @param string $request_uri
+   *  The request URL.
+   * @param string $request_method
+   *  The method.
+   */
+  static public function get_uri_definition($request_uri, $request_method = FALSE) {
 
     if (!$request_method) {
       $request_method = mediamosa_response::get_method();
     }
 
+    // Make copy.
+    $request_uri_cpy = $request_uri;
+
     // Find all REST calls of enabled modules.
     $a_rest_calls = self::get_rest_calls();
 
     // Split the current request URI.
-    $a_request_uri = explode('/', $s_request_uri);
+    $a_request_uri = explode('/', $request_uri);
+
+    // Check if URL internal / external.
+    if ($a_request_uri[0] == 'internal' || $a_request_uri[0] == 'external') {
+      unset($a_request_uri[0]);
+      $request_uri = implode('/', $a_request_uri);
+    }
 
     $a_rest_call_return = FALSE;
 
@@ -82,24 +99,24 @@ class mediamosa_rest {
 
       // Build the REGEX so we can see if it matches.
       $a_regex = array();
-      foreach ($a_uri_parts as $pos => $s_uri_part) {
-        if (mediamosa_unicode::substr($s_uri_part, 0, 2) == '#$') {
+      foreach ($a_uri_parts as $pos => $uri_part) {
+        if (mediamosa_unicode::substr($uri_part, 0, 2) == '#$') {
           $a_regex[] = "[0-9]*(:[a-zA-Z]+)?";
-          $a_rest_call[mediamosa_rest_call::URI_PARAMS][mediamosa_unicode::substr($s_uri_part, 2)] = $a_request_uri[$pos];
+          $a_rest_call[mediamosa_rest_call::URI_PARAMS][mediamosa_unicode::substr($uri_part, 2)] = $a_request_uri[$pos];
         }
-        elseif (mediamosa_unicode::substr($s_uri_part, 0, 1) == '$') {
+        elseif (mediamosa_unicode::substr($uri_part, 0, 1) == '$') {
           //$a_regex[] = "[A-Za-z0-9:-]*"; OMP restricts any other than these
           $a_regex[] = "[^\\/]*"; // Mediamosa is completly lose, any char EXCEPT /.
-          $a_rest_call[mediamosa_rest_call::URI_PARAMS][mediamosa_unicode::substr($s_uri_part, 1)] = $a_request_uri[$pos];
+          $a_rest_call[mediamosa_rest_call::URI_PARAMS][mediamosa_unicode::substr($uri_part, 1)] = $a_request_uri[$pos];
         }
         else {
-          $a_regex[] = $s_uri_part;
+          $a_regex[] = $uri_part;
         }
       }
 
       // Does it match with our REGEX?
       $s_regex = '@^' . implode('/', $a_regex) . '$@';
-      if (preg_match($s_regex, $s_request_uri)) {
+      if (preg_match($s_regex, $request_uri)) {
         $a_rest_call[mediamosa_rest_call::URI] = $uri;
         $a_rest_call_return = $a_rest_call;
         break;
@@ -109,6 +126,9 @@ class mediamosa_rest {
     if (!$a_rest_call_return) {
       return FALSE; // Not found.
     }
+
+    // Store the original.
+    $a_rest_call_return[mediamosa_rest_call::URI_REQUEST] = $request_uri_cpy;
 
     // Return found REST call and set all its defaults.
     return self::set_default_rest_call($a_rest_call_return);
@@ -141,7 +161,9 @@ class mediamosa_rest {
     }
 
     // Access to REST call.
-    $a_rest_call[mediamosa_rest_call::ACCESS] = !isset($a_rest_call[mediamosa_rest_call::ACCESS_INTERNAL]) ? 'TRUE' : mediamosa_lib::bool2boolstr(!isset($a_rest_call[mediamosa_rest_call::ACCESS_INTERNAL]));
+    if (!isset($a_rest_call[mediamosa_rest_call::ACCESS])) {
+      $a_rest_call[mediamosa_rest_call::ACCESS] = mediamosa_rest_call::ACCESS_DEFAULT;
+    }
 
     return $a_rest_call;
   }
@@ -216,7 +238,7 @@ class mediamosa_rest {
   }
 
   /**
-   * Create the REST class.
+   * Match the incoming URL with a REST call and return match REST object.
    */
   final public function match_call() {
     // Get the mediamosa object.

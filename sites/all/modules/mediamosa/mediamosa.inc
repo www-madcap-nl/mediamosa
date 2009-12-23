@@ -299,7 +299,7 @@ class mediamosa {
       return $utc_timestamp;
     }
 
-    $utc_timestamp = gmdate('Y-m-d H:i:s');
+    $utc_timestamp = mediamosa_db::db_query('SELECT UTC_TIMESTAMP')->fetchField();
     return $utc_timestamp;
   }
 
@@ -319,8 +319,7 @@ class mediamosa {
       return $now_timestamp;
     }
 
-    // FIXME consider using db_query to get the current time from the database.
-    $now_timestamp = date('Y-m-d H:i:s');
+    $now_timestamp = mediamosa_db::db_query('SELECT #CURRENT_TIMESTAMP', array('#CURRENT_TIMESTAMP' => mediamosa_db::CURRENT_TIMESTAMP))->fetchField();
     return $now_timestamp;
   }
 
@@ -451,6 +450,30 @@ class mediamosa {
    */
   static public function is_db_logging() {
     return self::$is_db_logging;
+  }
+
+  /**
+   * Internals are considered safe when they match our password
+   * stored in a variable. Although its not impossible to intercept
+   * the password from a internal REST call, we still consider this
+   * good protection.
+   */
+  static public function get_internal_password() {
+
+    $passwrd = self::variable_get('mediamosa_internal_password', NULL);
+
+    if (isset($passwrd)) {
+      return $passwrd;
+    }
+
+    // Create new one.
+    $passwrd = drupal_random_bytes(10);
+
+    // Store it.
+    variable_set('mediamosa_internal_password', $passwrd);
+
+    // Return the new passwrd.
+    return $passwrd;
   }
 }
 

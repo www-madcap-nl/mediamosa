@@ -55,6 +55,9 @@ class mediamosa_http {
       $a_options['data'] = $data;
     }
 
+    // Include the internal password so we gain access.
+    $a_options['headers'][mediamosa_settings::X_MEDIAMOSA_INTERNAL_PASS] = mediamosa::get_internal_password();
+
     // Do the request.
     return self::drupal_http_request($url, $a_options);
   }
@@ -254,7 +257,13 @@ class mediamosa_http {
     $result->headers = array();
 
     // Parse the response headers.
-    while ($line = trim(array_shift($response))) {
+    while (TRUE) {
+      $line = trim(array_shift($response));
+
+      if (!$line) {
+        break;
+      }
+
       list($header, $value) = explode(':', $line, 2);
       if (isset($result->headers[$header]) && $header == 'Set-Cookie') {
         // RFC 2109: the Set-Cookie response header comprises the token Set-

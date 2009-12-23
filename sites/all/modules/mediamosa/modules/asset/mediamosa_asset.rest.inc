@@ -749,7 +749,7 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
     mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id, mediamosa_asset_db::PARENT_ID => NULL));
 
     // ACL check.
-    mediamosa_aut::read_single_object(mediamosa_aut::AUT_TYPE_ASSET, $asset_id, $a_app_ids);
+  //  mediamosa_aut::read_single_object(mediamosa_aut::AUT_TYPE_ASSET, $asset_id, $a_app_ids);
 
     // Check un/inappropriate flag.
     mediamosa_asset::is_unappropriate($asset_id, $a_app_ids, $aut_user_id, $is_app_admin);

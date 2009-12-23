@@ -159,7 +159,7 @@ class mediamosa_type {
         break;
 
       case self::TYPE_APP_ID:
-        if ( (!is_int($mixed_param_value) && !ctype_digit($mixed_param_value)) || $mixed_param_value < 1 || $mixed_param_value > 9999) {
+        if ( (!is_int($mixed_param_value) && !ctype_digit($mixed_param_value))) {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INVALID_APP_ID, array('@app_id' => $mixed_param_value));
         }
 
