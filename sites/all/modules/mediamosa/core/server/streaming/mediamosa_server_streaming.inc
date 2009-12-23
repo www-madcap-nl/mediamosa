@@ -36,17 +36,18 @@ class mediamosa_server_streaming {
 
     if (!isset($a_streamable_container_types[$container_type])) {
       $is_streamable = mediamosa_db::db_query(
-        "SELECT COUNT(ss.#streaming_server_id) AS total
+        "SELECT COUNT(ss.#server_id) AS total
          FROM {#mediamosa_streaming_server} AS ss
-         JOIN {#mediamosa_streaming_server_container} AS ssc ON ss.#streaming_server_id = ssc.#streaming_server_id
+         JOIN {#mediamosa_streaming_server_container} AS ssc ON ss.#server_id = ssc.#streaming_server_id
          WHERE ssc.#container = :container AND ss.#active = 1 AND ss.#server_type = :server_type",
         array(
-          '#streaming_server_id' => mediamosa_server_db::ID,
+          '#server_id' => mediamosa_server_db::ID,
+          '#streaming_server_id' => mediamosa_server_streaming_container_db::STREAMING_SERVER_ID,
           '#mediamosa_streaming_server' => mediamosa_server_db::TABLE_NAME,
           '#mediamosa_streaming_server_container' => mediamosa_server_streaming_container_db::TABLE_NAME,
           '#container' => mediamosa_server_streaming_container_db::CONTAINER,
           ':container' => $container_type,
-          '#active' => mediamosa_server_db::ACTIVE,
+          '#active' => mediamosa_server_db::SERVER_STATUS,
           '#server_type' => mediamosa_server_db::SERVER_TYPE,
           ':server_type' => mediamosa_server_db::SERVER_TYPE_STREAMING,
         )
