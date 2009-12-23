@@ -44,3 +44,75 @@ function mediamosa_configuration_watchdog() {
 
   return $content;
 }
+
+function mediamosa_configuration_transcode_profile_list() {
+  require_once('sites/all/modules/mediamosa/core/transcode/profile/mediamosa_transcode_profile_db.inc');
+
+  // Our header defenition
+/*
+  $header = array(
+    array('data' => t('Profile'), 'field' => 'tp.'. mediamosa_transcode_profile_db::PROFILE),
+    array('data' => t('IsDefault'), 'field' => 'tp.'. mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE),
+    array('data' => t('Tool'), 'field' => 'tp.'. mediamosa_transcode_profile_db::TOOL),
+    t('App ID'),
+  );
+*/
+  $header = array(t('Profile'), t('IsDefault'), t('Tool'), t('App ID'));
+
+  $query = mediamosa_db::db_select(mediamosa_transcode_profile_db::TABLE_NAME, 'tp')->extend('PagerDefault'); // ->extend('TableSort');
+  $result = $query
+    ->fields('tp')
+    ->limit(10)
+    ->execute();
+
+  $rows = array();
+  foreach ($result as $row) {
+    $row = (object)$row;
+    $owner = ($row->app_id == 0) ? t('Unknown') : $row->app_id;
+    $rows[] = array(
+      'title' => array('data' => l($row->profile, 'mm_transcode_profile/'. $row->transcode_profile_id), 'field' => $row->profile),
+      'description' => $row->is_default_profile,
+      'tool' => $row->tool,
+      'owner' => $owner,
+    );
+  }
+
+  $content = theme('table', $header, $rows);
+  $content .= theme('pager');
+
+  return $content;
+}
+
+/**
+ * Simple profile view table
+ */
+function mediamosa_configuration_transcode_profile_view($profile_id) {
+  require_once('sites/all/modules/mediamosa/core/transcode/profile/mediamosa_transcode_profile_db.inc');
+
+  $profile = mediamosa_db::db_query(
+    "SELECT * FROM {#transcode_profile} WHERE #transcode_profile_id = :transcode_profile_id",
+    array(
+      '#transcode_profile' => mediamosa_transcode_profile_db::TABLE_NAME,
+      '#transcode_profile_id' => mediamosa_transcode_profile_db::ID,
+      ':transcode_profile_id' => $profile_id,
+    ))
+    ->fetchObject();
+
+  drupal_set_title($profile->profile);
+
+  $rows = array(
+    array(t('Profile name'), $profile->profile),
+    array(t('Profile id'), $profile->transcode_profile_id),
+    array(t('Default profile'), $profile->is_default_profile),
+    array(t('Tool'), $profile->tool),
+    array(t('File extension'), $profile->file_extension),
+    array(t('Command'), $profile->command),
+    array(t('Created'), format_date(strtotime($profile->created), 'small')),
+    array(t('Changed'), format_date(strtotime($profile->changed), 'small')),
+  );
+
+  $output = theme('table', array(), $rows);
+  $output .= l(t('Return'), 'mm_transcode_profile');
+
+  return $output;
+}
