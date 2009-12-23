@@ -1,0 +1,12 @@
+#
+# Apache/PHP/Drupal settings:
+#
+
+# Various rewrite rules.
+<IfModule mod_rewrite.c>
+  RewriteEngine on
+  RewriteRule index.php - [L]
+  RewriteRule ^(.*) index.php?param=$1 [L]
+</IfModule>
+
+# $Id: .htaccess,v 1.90.2.3 2008/12/10 20:04:08 goba Exp $

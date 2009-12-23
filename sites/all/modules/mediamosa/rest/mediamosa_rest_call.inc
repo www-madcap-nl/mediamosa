@@ -36,15 +36,19 @@ abstract class mediamosa_rest_call {
   // Check if there are unspecified arguments and throw exception when we have unspecified arguments.
   protected $check_for_unspecified = FALSE; // Keep on FALSE so get_var_setup() will not fail if it calls process_vars()
 
+  private $is_internal = FALSE;
+  private $is_external = FALSE;
+
   // ------------------------------------------------------------------ Constants.
   const ID = 'uri_id';
   const URI = 'uri';
   const URI_PARAMS = 'uri_params';
+  const URI_REQUEST = 'uri_request'; // Original URI.
 
   const RESPONSE_TYPE = 'response_type';
   const RESPONSE_TYPE_XML = 'text/xml';
   const RESPONSE_TYPE_PLAIN = 'text/plain';
-  const RESPONSE_TYPE_MEDIAMOSA = 'application/mediamosa';
+  //const RESPONSE_TYPE_MEDIAMOSA = 'application/mediamosa'; // future.
 
   const METHOD = 'method';
   const METHOD_GET = 'GET';
@@ -126,7 +130,7 @@ abstract class mediamosa_rest_call {
   const VAR_IS_READ_ONLY_YES = 'YES';
   const VAR_IS_READ_ONLY_NO = 'NO';
 
-    // Values VAR_IS_INTERNAL_ONLY
+  // Values VAR_IS_INTERNAL_ONLY
   const VAR_IS_INTERNAL_ONLY_YES = 'YES';
   const VAR_IS_INTERNAL_ONLY_NO = 'NO';
 
@@ -150,6 +154,7 @@ abstract class mediamosa_rest_call {
   function __construct($a_rest_call) {
     // Copy us.
     $this->{self::URI} = $a_rest_call[self::URI];
+    $this->{self::URI_REQUEST} = explode('/', $a_rest_call[self::URI_REQUEST]);
     $this->{self::RESPONSE_TYPE} = $a_rest_call[self::RESPONSE_TYPE];
     $this->{self::METHOD} = $a_rest_call[self::METHOD];
     $this->{self::CLASS_NAME} = $a_rest_call[self::CLASS_NAME];
@@ -182,13 +187,32 @@ abstract class mediamosa_rest_call {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_CALL_IS_DISABLED, array('@uri' => $this->{self::URI}));
     }
 
+    // Check if we are internal and allowed.
+    if ($this->is_internal()) {
+      if (!($this->{self::ACCESS} & self::ACCESS_INTERNAL)) {
+        throw new mediamosa_exception_error_authentication_failure();
+      }
+
+      // Match password in HTTP header, must match.
+
+    }
+
+
+    // Check if we are external and allowed.
+    if (!($this->{self::ACCESS} & self::ACCESS_EXTERNAL) && $this->is_external()) {
+      throw new mediamosa_exception_error_authentication_failure();
+    }
+
+    // Do login / authorization.
+    $this->do_login();
+
     // Get the var setup.
     $a_var_setup = $this->get_var_setup();
 
     // Assert when failed.
     assert($a_var_setup);
 
-    // @todo: make this an setting per webservice or else we are not 1.x compatible. Default should be FALSE.
+    // @todo: make this an setting per app or else we are not 1.x compatible. Default should be FALSE.
     $this->check_for_unspecified = FALSE;// turned off for now
 
     // Check rest args.
@@ -203,18 +227,49 @@ abstract class mediamosa_rest_call {
   }
 
   /**
+   * Do authorize app.
+   */
+  private function do_login() {
+    global $user;
+
+    // Enable sessions.
+    if (!drupal_session_started()) {
+      drupal_session_start();
+    }
+    elseif (mediamosa::in_simpletest_sandbox()) {
+      session_regenerate_id(FALSE);
+    }
+
+    // Check user id login
+    if ($user->uid == 0) {
+      $a_results = module_invoke_all('mediamosa_app_authorized');
+      $loggedin = FALSE;
+      foreach ($a_results as $result) {
+        if ($result === TRUE) {
+          $loggedin = TRUE;
+          break;
+        }
+      }
+
+      if (!$loggedin) {
+        throw new mediamosa_exception_error_authentication_failure();
+      }
+    }
+  }
+
+  /**
    * Get the default vars we always expect in every rest call
    */
-  protected function get_var_setup_default(array $a_var_setup) {
+  protected function get_var_setup_default(array $a_var_setup, $app_id_required = TRUE) {
     $a_var_setup[mediamosa_rest_call::VARS][mediamosa_rest_call::APP_ID] = array(
       self::VAR_TYPE => mediamosa_type::TYPE_APP_ID,
-      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+      self::VAR_IS_REQUIRED => ($app_id_required ? ($this->is_internal() ? self::VAR_IS_REQUIRED_NO : self::VAR_IS_REQUIRED_YES) : self::VAR_IS_REQUIRED_NO),
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+      self::VAR_DEFAULT_VALUE => 0,
       self::VAR_DESCRIPTION => mediamosa::t('The application ID.'),
     );
 
     // Optional.
-    // @todo: only in some case, like internals?
     $a_var_setup[mediamosa_rest_call::VARS][mediamosa_rest_call::IS_APP_ADMIN] = array(
       self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
@@ -258,18 +313,16 @@ abstract class mediamosa_rest_call {
 
   /**
    * Gives true back if call is internal call.
-   * @todo: actualy return true when internal.
    */
-  protected function call_is_internal() {
-    return FALSE;
+  protected function is_internal() {
+    return count($this->{self::URI_REQUEST}) && $this->{self::URI_REQUEST}[0] == 'internal';
   }
 
   /**
    * Gives true back if call is internal call.
-   * @todo: actualy return true when external.
    */
-  protected function call_is_external() {
-    return FALSE;
+  protected function is_external() {
+    return count($this->{self::URI_REQUEST}) && $this->{self::URI_REQUEST}[0] == 'external';
   }
 
   /**
@@ -535,7 +588,7 @@ abstract class mediamosa_rest_call {
 
       // If variable is internal value only, then we set the value to default or NULL. Put it on READ ONLY.
       // If REST has tried set then we throw exception.
-      if (isset($a_var[self::VAR_IS_INTERNAL_ONLY]) && $a_var[self::VAR_IS_INTERNAL_ONLY] == self::VAR_IS_INTERNAL_ONLY_YES  && !$this->call_is_internal()) {
+      if (isset($a_var[self::VAR_IS_INTERNAL_ONLY]) && $a_var[self::VAR_IS_INTERNAL_ONLY] == self::VAR_IS_INTERNAL_ONLY_YES  && !$this->is_internal()) {
         if (isset($this->a_rest_args[$param][self::PARAM_VALUE])) {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INTERNAL_ONLY, array('@param' => $param, '@type' => $this->a_rest_args[$param][self::PARAM_TYPE]));
         }

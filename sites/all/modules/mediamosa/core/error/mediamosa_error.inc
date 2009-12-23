@@ -261,8 +261,8 @@ class mediamosa_error {
    * @param integer $code
    * @return array
    */
-  static public function error_code_find_description($code) {
-    $a_code = self::error_code_find($code);
+  static public function error_code_find_description($code, $a_tags = array()) {
+    $a_code = self::error_code_find($code, $a_tags);
 
     return ($a_code ? $a_code[mediamosa_error_db::MESSAGE] : 'Description not available.');
   }

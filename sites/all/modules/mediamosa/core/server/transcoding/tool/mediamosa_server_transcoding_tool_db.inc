@@ -32,7 +32,7 @@
 class mediamosa_server_transcoding_tool_db {
   // ------------------------------------------------------------------ Consts.
   // Table name;
-  const TABLE_NAME = 'mediamosa_server_transcoding_tool'; // 1.x name streaming_server_container.
+  const TABLE_NAME = 'mediamosa_server_transcoding_tool'; // 1.x name transcoding_server_tool.
 
   // Database fields;
   const ID = 'transcoding_server_tool_id';

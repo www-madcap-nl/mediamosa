@@ -36,6 +36,35 @@ require_once 'mediamosa_transcode_profile_db.inc';
 function mediamosa_transcode_profile_install() {
   // Create our table(s).
   mediamosa::drupal_install_schema(mediamosa_transcode_profile_db::TABLE_NAME);
+
+  $a_default_profiles = array(
+    array('standaard flash' ,'FALSE', 'ffmpeg', 'flv', 'videobitrate:500000;size:320x200;audiobitrate:64000;audiosamplingrate:22050;maintain_aspect_ratio:yes'),
+    array('qcif flash', 'TRUE', 'ffmpeg', 'flv', 'videobitrate:200000;size:176x144;audiosamplingrate:22050;maintain_aspect_ratio:yes'),
+    array('standaard wmv', 'FALSE', 'windows', 'wmv', ''),
+    array('standaard mp4', 'FALSE', 'ffmpeg', 'mp4', ''),
+    array('FLASH 800x600', 'FALSE', 'ffmpeg', 'flv', 'size:800x600;audiobitrate:128000;audiosamplingrate:22050'),
+    array('h.264 flash', 'FALSE', 'ffmpeg', 'flv', 'videobitrate:800000;size:640x480;videocodec:libx264;audiocodec:libmp3lame;audiobitrate:256000;audiosamplingrate:44100;maintain_aspect_ratio:yes'),
+  );
+
+  foreach ($a_default_profiles as $a_default_profile) {
+    $a_fields = array(
+      mediamosa_transcode_profile_db::VERSION => 0,
+      mediamosa_transcode_profile_db::PROFILE => $a_default_profile[0],
+      mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE => $a_default_profile[1],
+      mediamosa_transcode_profile_db::TOOL => $a_default_profile[2],
+      mediamosa_transcode_profile_db::FILE_EXTENSION => $a_default_profile[3],
+      mediamosa_transcode_profile_db::COMMAND => $a_default_profile[4],
+      mediamosa_transcode_profile_db::APP_ID => 0,
+    );
+
+    // Add changed/created.
+    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+
+    // Insert it.
+    mediamosa_db::db_insert(mediamosa_transcode_profile_db::TABLE_NAME)
+      ->fields($a_fields)
+      ->execute();
+  }
 }
 
 /**

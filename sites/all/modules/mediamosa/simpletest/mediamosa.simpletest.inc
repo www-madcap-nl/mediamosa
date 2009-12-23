@@ -48,13 +48,14 @@ abstract class MediaMosaTestCase extends DrupalWebTestCase {
     $args = func_get_args();
 
     // Create and setup the CORE module.
-    $args = array_unique(array_merge(array('mediamosa'), $args));
+    $args = array_unique(array_merge(array('mediamosa_app', 'mediamosa'), $args));
+    $this->pass(var_export($args, TRUE));
     call_user_func_array(array($this, 'parent::setUp'), $args);
   }
 
   protected function restCall($app, $path, $request_method = 'POST', $parameters = array(), $headers = array()) {
     // Add MediaMosa menu path prefix
-    $path = MEDIAMOSA_MENU_PATH . '/' . $path;
+    //$path = /*MEDIAMOSA_MENU_PATH . '/'*/ $path;
 
     // Add default parameters
     $parameters += array(
@@ -80,7 +81,9 @@ abstract class MediaMosaTestCase extends DrupalWebTestCase {
         CURLOPT_POSTFIELDS => http_build_query($parameters),
       );
     }
-$this->pass($this->session_id);
+
+    $this->pass($this->session_id);
+
     // Perform the CURL request
     $result = $this->curlExec($curl_opts);
 
@@ -92,6 +95,7 @@ $this->pass($this->session_id);
     unset($lines[0]);
 
     // Iterate until an empty row is found
+    $out = array();
     for ($i = 1; $i < $line_count; $i++) {
       if (trim($lines[$i]) != '') {
         list($key, $value) = explode(':', $lines[$i], 2);
@@ -123,10 +127,14 @@ $this->pass($this->session_id);
   protected function createApp($attributes = array()) {
     // Merge in the default attributes
     $attributes += array(
-      'app_id' => rand(1, 1000),
-      'shared_key' => user_password(),
-      'name' => $this->randomName(),
-      'active' => 'TRUE',
+      mediamosa_app_db::APP_ID => rand(1, 1000),
+      mediamosa_app_db::SHARED_KEY => user_password(),
+      mediamosa_app_db::NAME => $this->randomName(),
+      mediamosa_app_db::ACTIVE => 'TRUE',
+      mediamosa_app_db::TRANSCODING_POSITION_TO => 0,
+      mediamosa_app_db::QUOTA => 0,
+      mediamosa_app_db::QUOTA_USED => 0,
+      mediamosa_app_db::ACTIVE_VERSION => '',
     );
 
     // Insert the app into the database

@@ -91,7 +91,7 @@ class mediamosa_asset {
    */
   static public function delete_jobs($asset_id) {
 //@todo:
-    return _vpx_jobs_cancel_job_by_asset($asset_id);
+    return self::delete_job_by_asset($asset_id);
   }
 
   /**
@@ -524,14 +524,12 @@ class mediamosa_asset {
         $a_collections[$a_collection[mediamosa_asset_collection_db::ASSET_ID]][$a_collection[mediamosa_asset_collection_db::COLL_ID]] = $a_collection;
       }
     }
-
     foreach ($a_items['assets'] as $a_asset) {
-
       // Now only stuff that may be set once per asset.
       if (!isset($a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]])) {
         $a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]] = mediamosa_asset::process_asset_output($a_asset, $a_metadata_definitions_full);
 
-        if ($a_items['app_info'][$a_asset['app_id']]['play_proxy_url'] && isset($a_items['mediafile_preview'][$a_asset[mediamosa_asset_db::ID]])) {
+        if (isset($a_items['app_info'][$a_asset['app_id']]['play_proxy_url']) && isset($a_items['mediafile_preview'][$a_asset[mediamosa_asset_db::ID]])) {
           $a_patterns = array(
             '/{asset_id}/i',
             '/{preview_profile_id}/i',
@@ -546,10 +544,10 @@ class mediamosa_asset {
             $a_items['mediafile_preview'][$a_asset[mediamosa_asset_db::ID]]['mediafile_filename'],
           );
 
-          $a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]]['ega_play_url'] = preg_replace($a_patterns, $a_replacements, $a_items['app_info'][$a_asset['app_id']]['play_proxy_url']);
+          $a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]]['ega_play_url'] = isset($a_items['app_info'][$a_asset[mediamosa_asset_db::APP_ID]]) ? preg_replace($a_patterns, $a_replacements, $a_items['app_info'][$a_asset[mediamosa_asset_db::APP_ID]]['play_proxy_url']) : '';
         }
         else {
-          $a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]]['ega_view_url'] = preg_replace('/{asset_id}/i', $a_asset[mediamosa_asset_db::ID], $a_items['app_info'][$a_asset['app_id']]['view_asset_url']);
+          $a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]]['ega_view_url'] = isset($a_items['app_info'][$a_asset[mediamosa_asset_db::APP_ID]]) ? preg_replace('/{asset_id}/i', $a_asset[mediamosa_asset_db::ID], $a_items['app_info'][$a_asset[mediamosa_asset_db::APP_ID]]['view_asset_url']) : '';
         }
 
         // Include the user favorites (if any).

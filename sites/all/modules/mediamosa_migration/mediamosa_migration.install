@@ -138,8 +138,6 @@ function mediamosa_migration_requirements($phase) {
       'mediamosa_ticket',
       'mediamosa_ftp_batch',
       'mediamosa_ftp_batch_asset',
-      'mediamosa_transcode_profile',
-      'mediamosa_transcode_mapping',
     );
     // Must exists source drupal db.
     $a_table_names_source_exists = array(
@@ -766,7 +764,7 @@ function _mediamosa_migration_mediafile_metadata() {
         mfd.still_type,
         mfd.still_format,
         mfd.still_default
-        FROM #db_name.{mediafile_metadata} AS mfd JOIN #db_name.{mediafile} AS mf USING(mediafile_id) GROUP BY mfd.metadata_id ORDER BY mfd.metadata_id ASC)",
+        FROM #db_name.{mediafile_metadata} AS mfd JOIN #db_name.{mediafile} AS mf USING(mediafile_id) ORDER BY mfd.metadata_id ASC)",
     array(
       '#db_name' => $db_name
     ))
@@ -2156,6 +2154,9 @@ function _mediamosa_migration_transcode() {
   // Turn off problems with empty dates.
   db_query("SET SESSION sql_mode = 'ALLOW_INVALID_DATES'");
 
+  // Empty first.
+  db_truncate('mediamosa_transcode_profile')->execute();
+
   /**
    * Copy from 1.x to 2.x
    * Columns dropped;
@@ -2193,6 +2194,9 @@ function _mediamosa_migration_transcode() {
       '#db_name' => $db_name
     ))
   );
+
+  // Empty first.
+  db_truncate('mediamosa_transcode_mapping')->execute();
 
   /**
    * Copy from 1.x to 2.x

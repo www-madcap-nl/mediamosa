@@ -99,6 +99,22 @@ class mediamosa_asset_mediafile {
   }
 
   /**
+   * Delete unofficial mediafiles.
+   *
+   * @param string $asset_id
+   */
+  static public function delete_transcoded_unoriginal_mediafiles($asset_id) {
+    $result = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf')
+      ->addField('mf', mediamosa_asset_mediafile_db::ID)
+      ->condition(mediamosa_asset_mediafile_db::ASSET_ID, $asset_id)
+      ->condition(mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE, mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_FALSE)
+      ->execute()->fetchCol();
+
+    // Delete mediafiles.
+    self::delete($result);
+  }
+
+  /**
    * Enrich the response with mediafile data.
    *
    * 1.x _media_management_return_mediafile_list()
@@ -361,6 +377,22 @@ class mediamosa_asset_mediafile {
   }
 
   /**
+   * Get all transcoded mediafiles of given asset ID.
+   *
+   * @param $asset_id
+   */
+  static public function get_all_transcoded($asset_id) {
+    // FIXME: just wondering if it must be asset_root_id here.
+    return mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME)
+      ->condition(mediamosa_asset_mediafile_db::ASSET_ID, $asset_id)
+      ->condition(mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE, mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_FALSE)
+      ->isNotNull(mediamosa_asset_mediafile_db::TOOL)
+      ->isNotNull(mediamosa_asset_mediafile_db::COMMAND)
+      ->isNotNull(mediamosa_asset_mediafile_db::FILE_EXTENSION)
+      ->execute();
+  }
+
+  /**
    * Analyse the mediafile and store it into the database metadata of mediafile.
    *
    * 1.x: vpx_jobs_get_analysis_upload
@@ -370,35 +402,46 @@ class mediamosa_asset_mediafile {
    */
   static public function analyse($app_id, $mediafile_id) {
 
+    // Remove all metadata.
+    // FIXME: why now? (also done when we insert it)
+    mediamosa_asset_mediafile_metadata::delete_by_mediafileid($mediafile_id);
+
+    // Get the app.
     $a_mediamosa_app = mediamosa_app::get_by_appid($app_id);
 
-/*
+    $a_options = array();
 
-  // Remove old metadata
-  db_set_active("data");
-  db_query("DELETE FROM {mediafile_metadata} WHERE mediafile_id = '%s'", $mediafile_id);
-  db_set_active();
+    if ($a_mediamosa_app[mediamosa_app_db::ALWAYS_HINT_MP4] == mediamosa_app_db::ALWAYS_HINT_MP4_TRUE) {
+      $a_options[] =  mediamosa_settings::ANALYSE_FILE_ALWAYS_HINT_MP4_OPTION;
+    }
 
-  $a_options = array();
+    if ($a_mediamosa_app[mediamosa_app_db::ALWAYS_INSERT_MD] == mediamosa_app_db::ALWAYS_INSERT_MD_TRUE) {
+      $a_options[] =  mediamosa_settings::ANALYSE_FILE_ALWAYS_INSERT_MD_OPTION;
+    }
 
-  if (strcasecmp($dbrow['always_hint_mp4'], 'true') == 0) {
-    $a_options[] =  VPX_ANALYSE_FILE_ALWAYS_HINT_MP4_OPTION;
+    $execution_string = sprintf('%s %s %s',
+      mediamosa_settings::analyse_file(),
+      mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::data_location_get(),
+      $mediafile_id
+    );
+
+    $execution_string .= (count($a_options) ? ' ' . implode(' ', $a_options) : '');
+
+    mediamosa::log('Analyse string: '. print_r($execution_string, TRUE));
+
+    $a_output = array();
+    exec($execution_string . " 2>&1", $a_output);
+
+    return $a_output;
   }
 
-  if (strcasecmp($dbrow['always_insert_md'], 'true') == 0) {
-    $a_options[] =  VPX_ANALYSE_FILE_ALWAYS_INSERT_MD_OPTION;
+  /**
+   * Returns TRUE/FALSE if the mediafile is an original.
+   *
+   * @param array $a_mediafile
+   */
+  static public function is_original($a_mediafile) {
+    // FIXME: will need to convert into mediafile_id_source.
+    return ($a_mediafile[mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE] == mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_TRUE);
   }
-
-  $execution_string = sprintf("%s %s %s", VPX_ANALYSE_FILE, SAN_NAS_BASE_PATH . DS . DATA_LOCATION, $mediafile_id);
-  $execution_string .= (count($a_options) ? ' ' . implode(' ', $a_options) : '');
-
-  watchdog('server', 'Analyse string: '. print_r($execution_string, TRUE));
-  $a_output = array();
-  $s_output = exec($execution_string . " 2>&1", $a_output);
-
-  return $a_output;*/
-}
-
-
-
 }

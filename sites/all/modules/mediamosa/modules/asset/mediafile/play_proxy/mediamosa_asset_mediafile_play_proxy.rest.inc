@@ -201,7 +201,7 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
       $this->set_param_value(self::AUT_REALM, $this->get_param_value(self::REALM));
     }
     // FIXME: hack
-    if ($this->call_is_internal()) {
+    if ($this->is_internal()) {
       $this->set_param_value(self::RESPONSE, mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL);
     }
 

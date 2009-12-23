@@ -1,13 +1,4 @@
 <?php
-
-
-
-
-
-
-
-
-
 // @todo: marker start media_management_still.inc
 
 
@@ -36,50 +27,6 @@ function media_management_get_still_for_mediafile($a_args) {
 function media_management_get_still($a_args) {
   return play_proxy_request(array_merge($a_args, array("internal" => TRUE)));
 }
-
-
-
-
-
-// @todo: marker start media_mangement_seach
-
-
-
-// @todo: marker start media_management_mediafile
-
-
-
-
-
-// @todo: marker for media_management_favorites
-
-/**
- * @file
- *
- * Media Management favorites include
- */
-
-
-
-// @todo: marker start media_management_collection
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// @todo: marker start media_management_asset
-
-
-
 
 /**
  * This function retrieves all info about the given asset id (Version 1.5.0)
@@ -192,14 +139,6 @@ function media_management_get_asset_1_6_0($a_args) {
 
 
 
-
-
-
-
-
-
-
-
 /* Cron function to delete empty assets
  */
 function media_management_cron() {
@@ -217,10 +156,3 @@ function media_management_cron() {
   }
   db_set_active();
 }
-
-
-
-
-
-
-

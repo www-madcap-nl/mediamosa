@@ -64,7 +64,7 @@ function mediamosa_app_schema() {
       mediamosa_app_db::NAME => array(
         'description' => t('The name of the client.'),
         'type' => 'varchar',
-        'length' => '30',
+        'length' => mediamosa_app_db::NAME_LENGTH,
         'not null' => TRUE,
       ),
       mediamosa_app_db::APP_ID => array(
@@ -90,7 +90,6 @@ function mediamosa_app_schema() {
         'description' => t('The total allowed quota in gigabytes.'),
         'type' => 'int',
         'not null' => TRUE,
-        'disp-width' => '10',
         'default' => 0,
       ),
       mediamosa_app_db::QUOTA_USED => array(
@@ -99,7 +98,6 @@ function mediamosa_app_schema() {
         'unsigned' => TRUE,
         'size' => 'big',
         'not null' => TRUE,
-        'disp-width' => '20',
         'default' => 0,
       ),
       mediamosa_app_db::SHARED_KEY => array(
@@ -252,10 +250,9 @@ function mediamosa_app_schema() {
         'not null' => FALSE,
       ),
     ),
-
     'primary key' => array(mediamosa_app_db::ID),
     'unique keys' => array(
-      'idx_app_id' => array(mediamosa_app_db::APP_ID)
+      'uni_appid' => array(mediamosa_app_db::APP_ID)
     ),
   );
 

@@ -408,3 +408,7 @@ $conf = array()#   'site_name' => 'My Drupal site',
  * on 'default' if you only have one jobserver.
  */
 define('MEDIAMOSA_SERVER_ID', 'default');
+
+define('MEDIAMOSA_REST_HOST', 'localhost');
+define('MEDIAMOSA_BUILD_URL', 'mediamosa/');
+define('MEDIAMOSA_URL', 'http://' . MEDIAMOSA_REST_HOST . '/' . MEDIAMOSA_BUILD_URL);

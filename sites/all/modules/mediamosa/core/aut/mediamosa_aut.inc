@@ -106,7 +106,7 @@ class mediamosa_aut {
     }
 
     // Prevent mysql choosing the uni index above the needed index.
-    $a_query[mediamosa_db_query::A_FROM][] = '{mediamosa_aut_name} FORCE INDEX (idx_type_groupid_name_prefix)';
+    $a_query[mediamosa_db_query::A_FROM][] = '{mediamosa_aut_name}';
 
     assert(is_array($a_aut_group_id) || is_null($a_aut_group_id));
 

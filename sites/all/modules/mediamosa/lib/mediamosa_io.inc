@@ -67,7 +67,7 @@ class mediamosa_io {
    *  The file to delete.
    */
   static public function unlink($filename) {
-    if (!unlink($filename)) {
+    if (!@unlink($filename)) {
       // ignore. Is handled by our error handler and is logged.
     }
   }
@@ -84,5 +84,16 @@ class mediamosa_io {
    */
   static public function filesize($filename) {
     return filesize($filename);
+  }
+
+  /**
+   * Return the filename without extension.
+   *
+   * @param string $filename
+   */
+  static public function get_base_filename($filename) {
+    $last_dot = strripos($filename, '.'); // 0-index
+
+    return $last_dot === FALSE ? $filename : mediamosa_unicode::substr($filename, 0, $last_dot);
   }
 }

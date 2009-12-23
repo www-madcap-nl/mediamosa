@@ -115,7 +115,7 @@ class mediamosa_rest_call_transcode_profile_get extends mediamosa_rest_call {
     $profile_id = $this->get_param_value(self::PROFILE_ID);
 
     // Get the listing.
-    $a_profile = mediamosa_transcode_profile::get($app_id);
+    $a_profile = mediamosa_transcode_profile::get($profile_id, $app_id);
 
     // Add when found.
     if ($a_profile) {

@@ -259,6 +259,20 @@ class mediamosa {
   }
 
   /**
+   * Returns TRUE or FALSE if we are inside a sandbox.
+   */
+  static public function in_simpletest_sandbox() {
+    global $db_prefix;
+
+    // If we are running an unit test, then enable REST calls.
+    if (preg_match('/simpletest\d+/', $db_prefix)) {
+      return TRUE;
+    }
+
+    return FALSE;
+  }
+
+  /**
    * Autoload class.
    *
    * @param string $class
@@ -285,7 +299,7 @@ class mediamosa {
       return $utc_timestamp;
     }
 
-    $utc_timestamp = gmdate('Y-m-d H:i:s');
+    $utc_timestamp = mediamosa_db::db_query('SELECT UTC_TIMESTAMP')->fetchField();
     return $utc_timestamp;
   }
 
@@ -305,8 +319,7 @@ class mediamosa {
       return $now_timestamp;
     }
 
-    // FIXME consider using db_query to get the current time from the database.
-    $now_timestamp = date('Y-m-d H:i:s');
+    $now_timestamp = mediamosa_db::db_query('SELECT #CURRENT_TIMESTAMP', array('#CURRENT_TIMESTAMP' => mediamosa_db::CURRENT_TIMESTAMP))->fetchField();
     return $now_timestamp;
   }
 
@@ -327,7 +340,7 @@ class mediamosa {
   /**
    * Our wrapper around the drupal watchdog.
    */
-  static public function log($message, $variables = array(), $severity = WATCHDOG_NOTICE, $type = NULL) {
+  static public function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE, $type = NULL) {
     static $logging = FALSE;
 
     // Prevent loops when we are calling ourselfs because of errors.
@@ -437,6 +450,30 @@ class mediamosa {
    */
   static public function is_db_logging() {
     return self::$is_db_logging;
+  }
+
+  /**
+   * Internals are considered safe when they match our password
+   * stored in a variable. Although its not impossible to intercept
+   * the password from a internal REST call, we still consider this
+   * good protection.
+   */
+  static public function get_internal_password() {
+
+    $passwrd = self::variable_get('mediamosa_internal_password', NULL);
+
+    if (isset($passwrd)) {
+      return $passwrd;
+    }
+
+    // Create new one.
+    $passwrd = drupal_random_bytes(10);
+
+    // Store it.
+    variable_set('mediamosa_internal_password', $passwrd);
+
+    // Return the new passwrd.
+    return $passwrd;
   }
 }
 

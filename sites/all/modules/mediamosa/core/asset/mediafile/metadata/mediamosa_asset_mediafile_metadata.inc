@@ -36,10 +36,10 @@ class mediamosa_asset_mediafile_metadata {
    *
    * @param string $mediafile_id
    */
-  static public function get_with_mediafileid($mediafile_id) {
+  static public function get_with_mediafileid($mediafile_id, array $a_fields = array()) {
 
     $query = mediamosa_db::db_select(mediamosa_asset_mediafile_metadata_db::TABLE_NAME, 'mfm');
-    $query->fields('mfm');
+    $query->fields('mfm', $a_fields);
     $query->condition('mfm.' . mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID, $mediafile_id);
     return $query->execute()->fetchAssoc();
   }
@@ -76,76 +76,149 @@ class mediamosa_asset_mediafile_metadata {
     }
   }
 
-  static public function store_analyse($mediafile_id, $a_analyse) {
+  /**
+   * Delete all metadata properties of mediafile.
+   *
+   * @param string $mediafile_id
+   */
+  static public function delete_by_mediafileid($mediafile_id) {
 
+    return mediamosa_db::db_delete(mediamosa_asset_mediafile_metadata_db::TABLE_NAME)
+      ->condition(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID, $mediafile_id)
+      ->execute();
   }
 
   /**
- * Verwerk de informatie in de database die terugkomt van een analysejob
- */
-function _vpx_jobhandler_update_analyse_job_info_to_mediafile($job_id, $analyse_result) {
-  // verwerk de analyse gegevens naar een named array
-  $parameters = _vpx_jobhandler_parse_metadata($analyse_result);
-
-  // haal de mediafile_id op
-  db_set_active("data");
-  $db_result = db_query("SELECT mediafile_id, create_still, still_parameters, owner, app_id FROM {job} WHERE job_id = %s", $job_id);
-  $dbrow_job = db_fetch_array($db_result);
-  assert($dbrow_job["app_id"]);
-  db_set_active();
-
-  // bepaal de bestandsgrootte
-  $filesize = filesize(SAN_NAS_BASE_PATH . DS . DATA_LOCATION . DS . $dbrow_job["mediafile_id"]{0} . DS . $dbrow_job["mediafile_id"]);
-
-  // voeg een record toe aan de mediafile metadata tabel.
-  db_set_active("data");
-  $query_result = db_query(
-    "INSERT INTO {mediafile_metadata}
-    (mediafile_id, video_codec, colorspace, width, height, fps,
-     audio_codec, sample_rate, channels, file_duration,
-     container_type, bitrate, bpp, filesize, mime_type, is_hinted, is_inserted_md)
-    VALUES
-    ('%s', '%s', '%s',
-      %d, %d, '%s',
-     '%s', %d,
-     '%s', '%s',
-     '%s', %d,
-     '%s', %d, '%s', '%s', '%s')",
-      $dbrow_job["mediafile_id"], $parameters["video_codec"], $parameters["colorspace"],
-      $parameters["width"], $parameters["height"], $parameters["fps"],
-      $parameters["audio_codec"], $parameters["sample_rate"],
-      $parameters["channels"], $parameters["file_duration"],
-      $parameters["container_type"], $parameters["bitrate"],
-      $parameters["bpp"], $filesize, $parameters["mime_type"], (strcasecmp($parameters["is_hinted"], 'yes') == 0 ? 'TRUE' : 'FALSE'), (strcasecmp($parameters["is_inserted_md"], 'yes') == 0 ? 'TRUE' : 'FALSE'));
-  db_set_active();
-
-  // Set the ffmpeg log
-  db_set_active("data");
-  db_query("UPDATE {job} SET error_description='%s' WHERE job_id = %d", $parameters['ffmpeg_output'], $job_id);
-  db_set_active();
-
-  // Update the asset data
-  _media_management_update_asset_info($dbrow_job["mediafile_id"]); // werk 'length' bij
-
-  if ($dbrow_job["create_still"] == 'TRUE') {
-    // If we need to create a still after analyse job, then we must....
-
-    $a_args = array();
-    $a_args['uri'] = array();
-    $a_args['uri']['mediafile_id'] = $dbrow_job["mediafile_id"];
-    $a_args['get'] = array();
-    $a_args['get']['user_id'] = $dbrow_job["owner"];
-    $a_args['get']['app_id'] = $dbrow_job["app_id"];
-    $a_args['get']['test_tag'] = $dbrow_job["test_tag"];
-    if ($dbrow_job["still_parameters"]) {
-      $a_args['post'] = unserialize($dbrow_job["still_parameters"]);
+   * Calculate the bits per plane.
+   *
+   * 1.x: _vpx_jobhandler_calculate_bpp
+   *
+   * @param $width
+   * @param $height
+   * @param $fps
+   * @param $bitrate
+   */
+  function calculate_bpp($width, $height, $fps, $bitrate) {
+    $result = '';
+    if ($width != '' && $height != '' && $fps != '' && $bitrate != '') {
+      $result = round((($bitrate * 1000) / ($fps * $width * $height)), 2);
     }
 
-    vpx_jobscheduler_create_new_still_job($a_args);
+    return $result;
   }
-}
 
 
+  /**
+   * Parse the returned string from analyse.
+   *
+   * 1.x: _vpx_jobhandler_parse_metadata
+   *
+   * @param string $analyse_result
+   */
+  static public function parse_metadata($analyse_result) {
 
+    $a_metadata = mediamosa_lib::create_named_array($analyse_result, '\n', ': ');
 
+    // MIME-type
+    $a_fields[mediamosa_asset_mediafile_metadata_db::MIME_TYPE] = isset($a_metadata['MIME-type']) ? $a_metadata['MIME-type'] : '';
+
+    // Video-codec
+    $a_fields[mediamosa_asset_mediafile_metadata_db::VIDEO_CODEC] = isset($a_metadata['Video-codec']) ? $a_metadata['Video-codec'] : '';
+
+    // Video-colorspace
+    $a_fields[mediamosa_asset_mediafile_metadata_db::COLORSPACE] = isset($a_metadata['Video-colorspace']) ? $a_metadata['Video-colorspace'] : '';
+
+    // Video-size
+    list($width, $height) = isset($a_metadata['Video-size']) ? explode('x', $a_metadata['Video-size']) : array(0, 0);
+    $a_fields[mediamosa_asset_mediafile_metadata_db::WIDTH] = $width;
+    $a_fields[mediamosa_asset_mediafile_metadata_db::HEIGHT] = $height;
+
+    // Video-framespersecond
+    $a_fields[mediamosa_asset_mediafile_metadata_db::FPS] = isset($a_metadata['Video-framespersecond']) ? $a_metadata['Video-framespersecond'] : '';
+
+    // Audio-codec
+    $a_fields[mediamosa_asset_mediafile_metadata_db::AUDIO_CODEC] = isset($a_metadata['Audio-codec']) ? $a_metadata['Audio-codec'] : '';
+
+    // Audio-frequency
+    $a_fields[mediamosa_asset_mediafile_metadata_db::SAMPLE_RATE] = isset($a_metadata['Audio-frequency']) ? $a_metadata['Audio-frequency'] : '';
+
+    // Audio-channels
+    $a_fields[mediamosa_asset_mediafile_metadata_db::CHANNELS] = isset($a_metadata['Audio-channels']) ? $a_metadata['Audio-channels'] : '';
+
+    // file-duration
+    $a_fields[mediamosa_asset_mediafile_metadata_db::FILE_DURATION] = isset($a_metadata['File-duration']) ? $a_metadata['File-duration'] : '';
+
+    // container
+    $a_fields[mediamosa_asset_mediafile_metadata_db::CONTAINER_TYPE] = isset($a_metadata['File-type']) ? $a_metadata['File-type'] : '';
+
+    // file-bitrate
+    $a_fields[mediamosa_asset_mediafile_metadata_db::BITRATE] = isset($a_metadata['File-bitrate']) ? $a_metadata['File-bitrate'] : '';
+
+    // bpp
+    $a_fields[mediamosa_asset_mediafile_metadata_db::BPP] = self::calculate_bpp($width, $height, $a_fields[mediamosa_asset_mediafile_metadata_db::FPS], $a_fields[mediamosa_asset_mediafile_metadata_db::BITRATE]);
+
+    // is hinted
+    $a_fields[mediamosa_asset_mediafile_metadata_db::IS_HINTED] = isset($a_metadata['Is-hinted']) ? $a_metadata['Is-hinted'] : 'no';
+    $a_fields[mediamosa_asset_mediafile_metadata_db::IS_HINTED] = strcasecmp($a_fields[mediamosa_asset_mediafile_metadata_db::IS_HINTED], 'yes') == 0 ? 'TRUE' : 'FALSE';
+
+    // has inserted extra metadata
+    $a_fields[mediamosa_asset_mediafile_metadata_db::IS_INSERTED_MD] = isset($a_metadata['Is-inserted-md']) ? $a_metadata['Is-inserted-md'] : 'no';
+    $a_fields[mediamosa_asset_mediafile_metadata_db::IS_INSERTED_MD] = strcasecmp($a_fields[mediamosa_asset_mediafile_metadata_db::IS_INSERTED_MD], 'yes') == 0 ? 'TRUE' : 'FALSE';
+
+    // The output of ffmpeg
+    $a_fields['ffmpeg_output'] = isset($a_metadata['ffmpeg-output']) ? implode('\n', explode('}-{', $a_metadata['ffmpeg-output'])) : '';
+
+    // Done.
+    return $a_fields;
+  }
+
+  /**
+   * Store the analyse result in the mediafile metadata.
+   *
+   * 1.x: _vpx_jobhandler_update_analyse_job_info_to_mediafile
+   *
+   * @param $job_id
+   * @param $analyse_result
+   */
+  static public function store_analyse($job_id, $analyse_result) {
+
+    // Get the job.
+    $a_job = mediamosa_job::get($job_id);
+
+    // Get the filesize.
+    $filesize = mediamosa_io::filesize(mediamosa_configuration_storage::mediafile_id_filename_get($a_job[mediamosa_job_db::MEDIAFILE_ID]));
+
+    // Parse the analyse result.
+    $a_fields = self::parse_metadata($analyse_result);
+
+    // Remove any metadata first.
+    mediamosa_asset_mediafile_metadata::delete_by_mediafileid($a_job[mediamosa_job_db::MEDIAFILE_ID]);
+
+    // No changed/created in metadata.
+
+    // Add these.
+    $a_fields[mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID] = $a_job[mediamosa_job_db::MEDIAFILE_ID];
+    $a_fields[mediamosa_asset_mediafile_metadata_db::FILESIZE] = $filesize;
+
+    // Copy and remove.
+    $ffmpeg_output = $a_fields['ffmpeg_output'];
+    unset($a_fields['ffmpeg_output']);
+
+    // Insert it.
+    mediamosa_db::db_insert(mediamosa_asset_mediafile_metadata_db::TABLE_NAME)
+      ->fields($a_fields)
+      ->execute();
+
+    // Store in error description.
+    mediamosa_job::store_error_description($ffmpeg_output);
+
+    // Normalize to asset.
+    mediamosa_asset::update_asset_info($a_job[mediamosa_job_db::MEDIAFILE_ID]);
+
+    if ($a_job[mediamosa_job_db::CREATE_STILL] == $a_job[mediamosa_job_db::CREATE_STILL_TRUE]) {
+      $a_still_parameters = empty($a_job[mediamosa_job_db::STILL_PARAMETERS]) ? array() : unserialize($a_job[mediamosa_job_db::STILL_PARAMETERS]);
+
+      mediamosa_job::create_job_still($a_job[mediamosa_job_db::APP_ID], $a_job[mediamosa_job_db::OWNER_ID], FALSE, $a_job[mediamosa_job_db::MEDIAFILE_ID], $a_still_parameters);
+    }
+  }
 }

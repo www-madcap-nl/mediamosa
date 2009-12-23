@@ -2,7 +2,7 @@
 name = "MediaMosa 2 - Core"
 description = "Open source media management and distribution platform."
 package = "MediaMosa 2 - Core"
-version = "2.0.0.65:1595a185a10c"
+version = "2.0.0.104:2ca22552fea8"
 core = 7.x
 
 ; Dependencies (module names)
@@ -30,6 +30,7 @@ files[] = lib/mediamosa_exception.inc
 files[] = lib/mediamosa_lib.inc
 files[] = lib/mediamosa_type.inc
 files[] = lib/mediamosa_unicode.inc
+files[] = lib/mediamosa_http.inc
 
 ; CQL.
 files[] = cql/mediamosa_cql.class.inc
@@ -175,10 +176,12 @@ files[] = core/job/server/analyse/mediamosa_job_server_analyse.install.inc
 
 ; Job Server Still.
 files[] = core/job/server/still/mediamosa_job_server_still_db.inc
+files[] = core/job/server/still/mediamosa_job_server_still.inc
 files[] = core/job/server/still/mediamosa_job_server_still.install.inc
 
 ; Job Server Transcode.
 files[] = core/job/server/transcode/mediamosa_job_server_transcode_db.inc
+files[] = core/job/server/transcode/mediamosa_job_server_transcode.inc
 files[] = core/job/server/transcode/mediamosa_job_server_transcode.install.inc
 
 ; Job Still.
@@ -223,8 +226,8 @@ files[] = core/server/streaming/container/mediamosa_server_streaming_container.i
 
 ; Server Transcoding.
 files[] = core/server/transcoding/mediamosa_server_transcoding_db.inc
-files[] = core/server/transcoding/mediamosa_server_transcoding.install.inc
 files[] = core/server/transcoding/mediamosa_server_transcoding.inc
+files[] = core/server/transcoding/mediamosa_server_transcoding.install.inc
 
 ; Server Transcoding Tool.
 files[] = core/server/transcoding/tool/mediamosa_server_transcoding_tool_db.inc

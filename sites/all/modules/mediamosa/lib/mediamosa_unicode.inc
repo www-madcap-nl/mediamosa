@@ -37,20 +37,20 @@ class mediamosa_unicode {
    * Šíleně žluťoučký will translate to Silene zlutoucky
    * While it will leave untranslatable utf8 chars as original.
    *
-   * @param string $str
+   * @param string $string
    */
-  static public function clear($str) {
+  static public function clear($string) {
     $result = '';
 
     // Set local to utf8, but make sure we switch back to original, no idea
     // what effect this might have.
     $old_locale = setlocale(LC_ALL, 0);
     setlocale(LC_ALL, array('en_GB.utf8', 'en_US.utf8'));
-    $ascii = iconv('UTF-8', 'ASCII//TRANSLIT', (string)$str);
+    $ascii = iconv('UTF-8', 'ASCII//TRANSLIT', (string)$string);
     setlocale(LC_ALL, $old_locale); // Back to orginal.
 
     for ($pos = 0; $pos < self::strlen($ascii); $pos++) {
-      $result .= $ascii[$pos] == '?' ? mb_substr($str, $pos, 1) : $ascii[$pos];
+      $result .= $ascii[$pos] == '?' ? mb_substr($string, $pos, 1) : $ascii[$pos];
     }
 
     return $result;
@@ -59,61 +59,69 @@ class mediamosa_unicode {
   /**
    * Returns the correct size of an string
    */
-  static public function strlen($str) {
-    return mb_strlen($str);
+  static public function strlen($string) {
+    return mb_strlen($string);
   }
 
   /**
    * UTF8 version of substr
    * Using drupal function
    */
-  static public function substr($str, $start, $length = NULL) {
-    return is_null($length) ? mb_substr($str, $start) : mb_substr($str, $start, $length);
+  static public function substr($string, $start, $length = NULL) {
+    return is_null($length) ? mb_substr($string, $start) : mb_substr($string, $start, $length);
   }
 
   /**
+   * Reverse the contents of the string.
    * mb_strrev doesn't exist, so need to make one.
+   *
+   * @param string $string
    */
-  static public function strrev($str) {
-    $str_rev = '';
-    for ($pos = mb_strlen($str); $pos >= 0; $pos--) {
-      $str_rev .= mb_substr($str, $pos, 1);
+  static public function strrev($string) {
+    $string_rev = '';
+    for ($pos = mb_strlen($string); $pos >= 0; $pos--) {
+      $string_rev .= mb_substr($string, $pos, 1);
     }
 
-    return $str_rev;
+    return $string_rev;
   }
 
   /**
    * To lower case
    */
-  static public function strtolower($str) {
-    return mb_strtolower($str);
+  static public function strtolower($string) {
+    return mb_strtolower($string);
   }
 
   /**
    * To upper case
    */
-  static public function strtoupper($str) {
-    return mb_strtoupper($str);
+  static public function strtoupper($string) {
+    return mb_strtoupper($string);
   }
 
   /**
    * Returns pos of found needle
    */
-  static public function strpos($str, $needle, $offset = 0) {
-    return mb_strpos($str, $needle, $offset);
+  static public function strpos($string, $needle, $offset = 0) {
+    return mb_strpos($string, $needle, $offset);
   }
 
   /**
    * Returns pos of found needle
    */
-  static public function stripos($str, $needle, $offset = 0) {
-    return mb_strpos(self::strtolower($str), self::strtolower($needle), $offset);
+  static public function stripos($string, $needle, $offset = 0) {
+    return mb_strpos(self::strtolower($string), self::strtolower($needle), $offset);
   }
 
-  static public function printable($str) {
-    for ($pos = 0; $pos < mb_strlen($str); $pos++) {
-      if (in_array(mb_substr($str, $pos, 1), array("\n", "\t", "\0", "\r"))) {
+  /**
+   * A simple test if the text is printable without control chars like LF or EOL chars.
+   *
+   * @param string $string
+   */
+  static public function printable($string) {
+    for ($pos = 0; $pos < mb_strlen($string); $pos++) {
+      if (in_array(mb_substr($string, $pos, 1), array("\n", "\t", "\0", "\r"))) {
         return FALSE;
       }
     }

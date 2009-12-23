@@ -35,11 +35,67 @@ class mediamosa_job_still {
    * @param integer $job_id
    *  The job ID.
    */
-  static public function get($job_id) {
+  static public function get($job_id, $a_fields = array()) {
     return mediamosa_db::db_select(mediamosa_job_still_db::TABLE_NAME, 'js')
-      ->fields('js')
+      ->fields('js', $a_fields)
       ->condition(mediamosa_job_db::ID, $job_id)
       ->execute()
       ->fetchAssoc();
+  }
+
+  /**
+   * Create new still job.
+   *
+   * 1.x: _vpx_jobs_create_new_job_still
+   *
+   * @param integer $job_id
+   * @param array $a_still_parameters
+   */
+  static public function create($job_id, array $a_still_parameters) {
+
+    $a_still_parameters += array(
+      mediamosa_asset_mediafile_metadata_db::STILL_TYPE => NULL,
+      'still_per_mediafile' => NULL,
+      'still_every_second' => NULL,
+      'start_frame' => NULL,
+      'end_frame' => NULL,
+      mediamosa_job_still_db::SIZE => mediamosa_settings::STILL_DEFAULT_SIZE,
+      mediamosa_job_still_db::H_PADDING => NULL,
+      mediamosa_job_still_db::V_PADDING => NULL,
+      mediamosa_job_still_db::FRAMETIME => mediamosa_settings::STILL_DEFAULT_FRAME_TIME,
+    );
+
+    switch ($a_still_parameters[mediamosa_asset_mediafile_metadata_db::STILL_TYPE]) {
+      case mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NORMAL:
+      case mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SECONDS:
+      case mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SCENE:
+        $blackstill_check = FALSE;
+        break;
+
+      default:
+        $blackstill_check = TRUE;
+        break;
+    }
+
+    // We need to unset these. (these were not copied?).
+    unset($a_still_parameters[mediamosa_asset_mediafile_metadata_db::WIDTH]);
+    unset($a_still_parameters[mediamosa_asset_mediafile_metadata_db::HEIGHT]);
+
+    // Insert values.
+    $a_fields = array(
+      mediamosa_job_still_db::JOB_ID => $job_id,
+      mediamosa_job_still_db::FRAMETIME => $a_still_parameters[mediamosa_job_still_db::FRAMETIME],
+      mediamosa_job_still_db::SIZE => $a_still_parameters[mediamosa_job_still_db::SIZE],
+      mediamosa_job_still_db::H_PADDING => $a_still_parameters[mediamosa_job_still_db::H_PADDING],
+      mediamosa_job_still_db::V_PADDING => $a_still_parameters[mediamosa_job_still_db::V_PADDING],
+      mediamosa_job_still_db::BLACKSTILL_CHECK => $a_still_parameters[mediamosa_job_still_db::BLACKSTILL_CHECK],
+      mediamosa_job_still_db::STILL_PARAMETERS => serialize($a_still_parameters),
+    );
+
+    // Enrich with created/changed.
+    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+
+    // Insert it.
+    return mediamosa_db::db_insert(mediamosa_job_still_db::TABLE_NAME);
   }
 }

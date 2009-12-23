@@ -36,6 +36,53 @@ require_once 'mediamosa_transcode_mapping_db.inc';
 function mediamosa_transcode_mapping_install() {
   // Create our table(s).
   mediamosa::drupal_install_schema(mediamosa_transcode_mapping_db::TABLE_NAME);
+
+  $a_default_mappings = array(
+    array('ffmpeg', 'videobitrate', '-b', 128000, 800000, NULL, '200000', 'FALSE'),
+    array('ffmpeg', 'fps', '-r', 10, 30, NULL, '25', 'FALSE'),
+    array('ffmpeg', 'size', '-s', NULL, NULL, '128x96;176x144;352x288;704x576;160x120;320x240;640x480;800x600;1024x768;1600x1200;2048x1536;1280x1024;2560x2048;5120x4096;852x480;1366x768;1600x1024;1920x1200;2560x1600;3200x2048;3840x2400;6400x4096;7680x4800;320x200;640x350;852x480;1280x720;1920x1080;480x270;480x360', '320x240', 'FALSE'),
+    array('ffmpeg', 'internal_file_extension', '', NULL, NULL, 'flv;wmv;mp4;avi;ogg', NULL, 'FALSE'),
+    array('ffmpeg', 'qmax', '-qmax', 1, 31, NULL, NULL, 'FALSE'),
+    array('ffmpeg', 'videocodec', '-vcodec', NULL, NULL, 'flv;wmv;mpeg4;libx264;rawvideo;libtheora', NULL, 'FALSE'),
+    array('ffmpeg', 'audiocodec', '-acodec', NULL, NULL, 'libmp3lame;wma;pcm_s16le;libfaac;libvorbis', NULL, 'FALSE'),
+    array('ffmpeg', 'audiobitrate', '-ab', NULL, NULL, '40000;64000;128000;192000;256000;512000', '64000', 'FALSE'),
+    array('ffmpeg', 'audiosamplingrate', '-ar', NULL, NULL, '22050;44100', '44100', 'FALSE'),
+    array('ffmpeg', 'audiochannels', '-ac', 0, 2, NULL, '1', 'FALSE'),
+    array('ffmpeg', 'duration', '-t', 0, NULL, NULL, NULL, 'FALSE'),
+    array('ffmpeg', 'startposition', '-ss', 0, NULL, NULL, NULL, 'FALSE'),
+    array('ffmpeg', 'internal_previous_job', '', NULL, NULL, NULL, NULL, 'FALSE'),
+    array('windows', 'internal_file_extension', '', NULL, NULL, 'wmv', NULL, 'FALSE'),
+    array('windows', 'fps', '-v_framerate', 10, 30, NULL, '25', 'FALSE'),
+    array('windows', 'internal_previous_job', '', NULL, NULL, NULL, NULL, 'FALSE'),
+    array('windows', 'videobitrate', '-v_bitrate', 128, 1024, NULL, NULL, 'FALSE'),
+    array('windows', 'width', '-v_width', 128, 7680, NULL, NULL, 'FALSE'),
+    array('windows', 'height', '-v_height', 96, 4800, NULL, NULL, 'FALSE'),
+    array('windows', 'videocodec', '-v_codec', NULL, NULL, 'flv;wmv;mpeg4;libx264;rawvideo', NULL, 'FALSE'),
+    array('windows', 'audiocodec', '-a_codec', NULL, NULL, 'mp3;wma;pcm_s16le;libfaac', NULL, 'FALSE'),
+    array('windows', 'audiosetting', '-a_setting', NULL, NULL, '40_22_1;40_22_2;40_44_1;40_44_2;64_22_1;64_22_2;64_44_1;64_44_2;128_22_1;128_22_2;128_44_1;128_44_2;192_22_1;192_22_2;192_44_1;192_44_2;256_22_1;256_22_2;256_44_1;256_44_2', NULL, 'FALSE'),
+    array('ffmpeg', 'maintain_aspect_ratio', '', NULL, NULL, 'yes;no', 'yes', 'FALSE')
+  );
+
+  foreach ($a_default_mappings as $a_default_mapping) {
+    $a_fields = array(
+      mediamosa_transcode_mapping_db::TOOL => $a_default_mapping[0],
+      mediamosa_transcode_mapping_db::NICE_PARAMETER => $a_default_mapping[1],
+      mediamosa_transcode_mapping_db::TOOL_PARAMETER => $a_default_mapping[2],
+      mediamosa_transcode_mapping_db::MIN_VALUE => $a_default_mapping[3],
+      mediamosa_transcode_mapping_db::MAX_VALUE => $a_default_mapping[4],
+      mediamosa_transcode_mapping_db::ALLOWED_VALUE => $a_default_mapping[5],
+      mediamosa_transcode_mapping_db::DEFAULT_VALUE => $a_default_mapping[6],
+      mediamosa_transcode_mapping_db::REQUIRED => $a_default_mapping[7],
+    );
+
+    // Add changed/created.
+    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+
+    // Insert it.
+    mediamosa_db::db_insert(mediamosa_transcode_mapping_db::TABLE_NAME)
+      ->fields($a_fields)
+      ->execute();
+  }
 }
 
 /**
@@ -114,11 +161,11 @@ function mediamosa_transcode_mapping_schema() {
     ),
     'primary key' => array(mediamosa_transcode_mapping_db::ID),
     'unique keys' => array(
-      'uni_tool_niceparam' => array(mediamosa_transcode_mapping_db::TOOL, mediamosa_transcode_mapping_db::NICE_PARAMETER),
+      'uni_niceparam_tool' => array(mediamosa_transcode_mapping_db::NICE_PARAMETER, mediamosa_transcode_mapping_db::TOOL),
     ),
     'indexes' => array(
-      'idx_niceparam' => array(mediamosa_transcode_mapping_db::NICE_PARAMETER),
-    ),
+      'idx_tool' => array(mediamosa_transcode_mapping_db::TOOL),
+    )
   );
 
   return $a_schema;
