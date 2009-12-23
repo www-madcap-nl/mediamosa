@@ -192,3 +192,31 @@ function mediamosa_configuration_app_contacts($app_id) {
   $response .= theme('pager');
   return $response;
 }
+
+
+/**
+ * Lijst van alle webservices die kunnen worden in en uitgeschakeld
+ */
+function mediamosa_configuration_webservice() {
+
+  $query = mediamosa_db::db_select(mediamosa_webservice_db::TABLE_NAME, 'w');
+  $result = $query
+    ->fields('w')
+    ->orderBy('w.'. mediamosa_webservice_db::ID, 'ASC')
+    ->execute();
+
+  $rows = array();
+  foreach ($result as $row) {
+    $rows[] = array(
+      $row[mediamosa_webservice_db::ID],
+      $row[mediamosa_webservice_db::HANDLE],
+      $row[mediamosa_webservice_db::DESCRIPTION],
+      $row[mediamosa_webservice_db::STATUS] === "TRUE" ? "on" : "off",
+    );
+  }
+
+  $content = t('List of all webservices and global availibity of services. Disabled webservices are unavailable for all client applications. Note: see client application settings for availability of a webservice for the specific client application.');
+  $content .= theme('table', array(t('ID'), t('Handle'), t('Description'), t('Status')), $rows);
+
+  return $content;
+}

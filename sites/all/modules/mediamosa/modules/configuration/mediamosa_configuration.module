@@ -91,6 +91,12 @@ function mediamosa_configuration_menu() {
     'access arguments' => array('administer mediamosa configuration'),
   );
 
+  $items['mm_webservice'] = array(
+    'title' => 'Webservice management',
+    'page callback' => 'mediamosa_configuration_webservice',
+    'access arguments' => array('administer mediamosa configuration'),
+  );
+
   $items['mm_app'] = array(
     'title' => 'Client applications',
     'page callback' => 'mediamosa_configuration_app_list',
