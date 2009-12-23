@@ -115,6 +115,7 @@ function mediamosa_browse_collection_form() {
   $all_apps += $all_apps_raw;
 
   $app_id = (isset($_SESSION[MEDIAMOSA_BROWSE_COLLECTIONS_SESSION]['app_id'])) ? $_SESSION[MEDIAMOSA_BROWSE_COLLECTIONS_SESSION]['app_id'] : reset(array_keys($all_apps));
+  $_SESSION[MEDIAMOSA_BROWSE_COLLECTIONS_SESSION]['app_id'] = $app_id;
   $form['app_id'] = array(
     '#type' => 'select',
     '#options' => $all_apps,
