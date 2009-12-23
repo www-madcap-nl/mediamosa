@@ -34,12 +34,14 @@ class mediamosa_server_upload {
   // ------------------------------------------------------------------ Consts.
   static public function get_random() {
     return mediamosa_db::db_query_range(
-      'SELECT * FROM {#mediamosa_server_upload} WHERE #status = 1 ORDER BY RAND()',
+      'SELECT * FROM {#mediamosa_server_upload} WHERE #status = 1 AND #server_type = :server_type ORDER BY RAND()',
       0,
       1,
       array(
-        '#mediamosa_server_upload' => mediamosa_server_upload_db::TABLE_NAME,
-        '#status' => mediamosa_server_upload_db::STATUS,
+        '#mediamosa_server_upload' => mediamosa_server_db::TABLE_NAME,
+        '#status' => mediamosa_server_db::STATUS,
+        '#server_type' => mediamosa_server_db::SERVER_TYPE,
+        ':server_type' => mediamosa_server_db::SERVER_TYPE_UPLOAD,
       )
     )->fetchAssoc();
   }

@@ -35,6 +35,7 @@ class mediamosa_server_db {
   const TABLE_NAME = 'mediamosa_server';
 
   // Database fields;
+  const ID = 'server_id';
   const SERVER_STATUS = 'server_status';
   const SERVER_TYPE = 'server_type';
   const URI = 'uri';
@@ -51,6 +52,7 @@ class mediamosa_server_db {
   const TOOLS_LENGTH = 255;
   const URI_UPLOAD_PROGRESS = 'uri_upload_progress';
   const URI_UPLOAD_PROGRESS_LENGTH = 255;
+  const VERSION = 'version';
 
   // Server types
   const SERVER_TYPE_DOWNLOAD = 'download';

@@ -216,6 +216,7 @@ function mediamosa_server_update($node) {
     ->fields(array(
       'nid' => $node->nid,
       'vid' => $node->vid,
+      mediamosa_server_db::ID => $node->nid,
       mediamosa_server_db::SERVER_STATUS => $node->server_status,
       mediamosa_server_db::URI => (isset($node->uri)) ? $node->uri : NULL,
       mediamosa_server_db::CONTAINERS => (isset($node->containers)) ? $node->containers : NULL,
@@ -237,8 +238,18 @@ function mediamosa_server_insert($node) {
     ->fields(array(
       'nid' => $node->nid,
       'vid' => $node->vid,
+      mediamosa_server_db::ID => (isset($node->{mediamosa_server_db::ID})) ? $node->{mediamosa_server_db::ID} : $node->nid,
       mediamosa_server_db::SERVER_TYPE => $node->server_type,
-      mediamosa_server_db::SERVER_STATUS => 0, // 'Off' by default
+      mediamosa_server_db::SERVER_STATUS => (isset($node->{mediamosa_server_db::SERVER_STATUS})) ? $node->{mediamosa_server_db::SERVER_STATUS} : 0, // 'Off' by default
+      mediamosa_server_db::VERSION => (isset($node->{mediamosa_server_db::VERSION})) ? $node->{mediamosa_server_db::VERSION} : NULL,
+      mediamosa_server_db::URI => (isset($node->uri)) ? $node->uri : NULL,
+      mediamosa_server_db::CONTAINERS => (isset($node->containers)) ? $node->containers : NULL,
+      mediamosa_server_db::OBJECT_CODE => (isset($node->object_code)) ? $node->object_code : NULL,
+      mediamosa_server_db::SERVER_NAME => (isset($node->server_name)) ? $node->server_name : NULL,
+      mediamosa_server_db::IP_ADDRESS => (isset($node->ip_address)) ? $node->ip_address : NULL,
+      mediamosa_server_db::SLOTS => (isset($node->slots)) ? $node->slots : NULL,
+      mediamosa_server_db::TOOLS => (isset($node->tools)) ? $node->tools : NULL,
+      mediamosa_server_db::URI_UPLOAD_PROGRESS => (isset($node->uri_upload_progress)) ? $node->uri_upload_progress : NULL,
     ))
     ->execute();
 }

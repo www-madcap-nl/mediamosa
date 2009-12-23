@@ -70,21 +70,25 @@ class mediamosa_asset_mediafile_play_proxy {
     switch ($response_type) {
       case self::RESPONSE_TYPE_STILL:
         return mediamosa_db::db_query(
-          "SELECT #uri FROM {#mediamosa_server_still} WHERE #active = 1 ORDER BY rand() LIMIT 1",
+          "SELECT #uri FROM {#mediamosa_server_still} WHERE #active = 1 AND #server_type = :server_type ORDER BY rand() LIMIT 1",
           array(
-            '#uri' => mediamosa_server_still_db::URI,
-            '#mediamosa_server_still' => mediamosa_server_still_db::TABLE_NAME,
-            '#active' => mediamosa_server_still_db::ACTIVE,
+            '#uri' => mediamosa_server_db::URI,
+            '#mediamosa_server_still' => mediamosa_server_db::TABLE_NAME,
+            '#active' => mediamosa_server_db::ACTIVE,
+            '#server_type' => mediamosa_server_db::SERVER_TYPE,
+            ':server_type' => mediamosa_server_db::SERVER_TYPE_STILL,
           )
         )->fetchField();
 
       case RESPONSE_TYPE_DOWNLOAD:
         return mediamosa_db::db_query(
-          "SELECT #uri FROM {#mediamosa_download_still} WHERE #active = 1 ORDER BY rand() LIMIT 1",
+          "SELECT #uri FROM {#mediamosa_download_still} WHERE #active = 1 AND #server_type = :server_type ORDER BY rand() LIMIT 1",
           array(
-            '#uri' => mediamosa_server_download_db::URI,
-            '#mediamosa_download_still' => mediamosa_server_download_db::TABLE_NAME,
-            '#active' => mediamosa_server_download_db::ACTIVE,
+            '#uri' => mediamosa_server_db::URI,
+            '#mediamosa_download_still' => mediamosa_server_db::TABLE_NAME,
+            '#active' => mediamosa_server_db::ACTIVE,
+            '#server_type' => mediamosa_server_db::SERVER_TYPE,
+            ':server_type' => mediamosa_server_db::SERVER_TYPE_DOWNLOAD,
           )
         )->fetchField();
     }

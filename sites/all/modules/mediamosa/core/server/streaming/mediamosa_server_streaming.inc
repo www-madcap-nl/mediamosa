@@ -39,14 +39,16 @@ class mediamosa_server_streaming {
         "SELECT COUNT(ss.#streaming_server_id) AS total
          FROM {#mediamosa_streaming_server} AS ss
          JOIN {#mediamosa_streaming_server_container} AS ssc ON ss.#streaming_server_id = ssc.#streaming_server_id
-         WHERE ssc.#container = :container AND ss.#active = 1",
+         WHERE ssc.#container = :container AND ss.#active = 1 AND ss.#server_type = :server_type",
         array(
-          '#streaming_server_id' => mediamosa_server_streaming_db::ID,
-          '#mediamosa_streaming_server' => mediamosa_server_streaming_db::TABLE_NAME,
+          '#streaming_server_id' => mediamosa_server_db::ID,
+          '#mediamosa_streaming_server' => mediamosa_server_db::TABLE_NAME,
           '#mediamosa_streaming_server_container' => mediamosa_server_streaming_container_db::TABLE_NAME,
           '#container' => mediamosa_server_streaming_container_db::CONTAINER,
           ':container' => $container_type,
-          '#active' => mediamosa_server_streaming_db::ACTIVE,
+          '#active' => mediamosa_server_db::ACTIVE,
+          '#server_type' => mediamosa_server_db::SERVER_TYPE,
+          ':server_type' => mediamosa_server_db::SERVER_TYPE_STREAMING,
         )
       )->fetchField();
 
@@ -76,14 +78,16 @@ class mediamosa_server_streaming {
     $a_servers[$container_type . ':' . $video_codec] = mediamosa_db::db_query(
       "SELECT mss.* FROM {#mediamosa_server_streaming} AS mss WHERE
       JOIN {#mediamosa_server_streaming_container} AS mssc USING(#streaming_server_id)
-      WHERE mssc.#container = :container AND mss.#active = 1 ORDER BY rand() LIMIT 1",
+      WHERE mssc.#container = :container AND mss.#active = 1 AND #server_type = :server_type ORDER BY rand() LIMIT 1",
       array(
-        '#mediamosa_server_streaming' => mediamosa_server_streaming_db::TABLE_NAME,
+        '#mediamosa_server_streaming' => mediamosa_server_db::TABLE_NAME,
         '#mediamosa_server_streaming_container' => mediamosa_server_streaming_container_db::TABLE_NAME,
-        '#streaming_server_id' => mediamosa_server_streaming_db::ID,
+        '#streaming_server_id' => mediamosa_server_db::ID,
         '#container' => mediamosa_server_streaming_container_db::CONTAINER,
         ':container' => $container_type .':'. $video_codec,
-        '#active' => mediamosa_server_streaming_db::ACTIVE,
+        '#active' => mediamosa_server_db::ACTIVE,
+        '#server_type' => mediamosa_server_db::SERVER_TYPE,
+        ':server_type' => mediamosa_server_db::SERVER_TYPE_STREAMING,
       )
     )->fetchAssoc();
 
@@ -98,14 +102,16 @@ class mediamosa_server_streaming {
     $a_servers[$container_type] = mediamosa_db::db_query(
       "SELECT mss.* FROM {#mediamosa_server_streaming} AS mss WHERE
       JOIN {#mediamosa_server_streaming_container} AS mssc USING(#streaming_server_id)
-      WHERE mssc.#container = :container AND mss.#active = 1 ORDER BY rand() LIMIT 1",
+      WHERE mssc.#container = :container AND mss.#active = 1 AND mss.#server_type = :server_type ORDER BY rand() LIMIT 1",
       array(
-        '#mediamosa_server_streaming' => mediamosa_server_streaming_db::TABLE_NAME,
+        '#mediamosa_server_streaming' => mediamosa_server_db::TABLE_NAME,
         '#mediamosa_server_streaming_container' => mediamosa_server_streaming_container_db::TABLE_NAME,
-        '#streaming_server_id' => mediamosa_server_streaming_db::ID,
+        '#streaming_server_id' => mediamosa_server_db::ID,
         '#container' => mediamosa_server_streaming_container_db::CONTAINER,
         ':container' => $container_type,
-        '#active' => mediamosa_server_streaming_db::ACTIVE,
+        '#active' => mediamosa_server_db::ACTIVE,
+        '#server_type' => mediamosa_server_db::SERVER_TYPE,
+        ':server_type' => mediamosa_server_db::SERVER_TYPE_STREAMING,
       )
     )->fetchAssoc();
 
@@ -125,7 +131,7 @@ class mediamosa_server_streaming {
     $a_server = self::get($container_type, $video_codec);
 
     if ($a_server) {
-      return $a_server[mediamosa_server_streaming_db::OBJECTCODE];
+      return $a_server[mediamosa_server_db::OBJECT_CODE];
     }
 
     return FALSE;
@@ -144,7 +150,7 @@ class mediamosa_server_streaming {
     $a_server = self::get($container_type, $video_codec);
 
     if ($a_server) {
-      return $a_server[mediamosa_server_streaming_db::URI];
+      return $a_server[mediamosa_server_db::URI];
     }
 
     return FALSE;
