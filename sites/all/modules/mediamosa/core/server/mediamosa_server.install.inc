@@ -76,6 +76,12 @@ function mediamosa_server_schema() {
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
+      mediamosa_server_db::ID => array(
+        'description' => t('The vpx 1.x server id.'),
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
       mediamosa_server_db::SERVER_STATUS => array(
         'description' => t('The server status.'),
         'type' => 'int',
@@ -126,6 +132,12 @@ function mediamosa_server_schema() {
         'description' => t('The optional tools this server serves.'),
         'type' => 'varchar',
         'length' => mediamosa_server_db::TOOLS_LENGTH,
+        'not null' => FALSE,
+      ),
+      mediamosa_server_db::URI_UPLOAD_PROGRESS => array(
+        'description' => t('The optional uri of the upload progress.'),
+        'type' => 'varchar',
+        'length' => mediamosa_server_db::URI_UPLOAD_PROGRESS_LENGTH,
         'not null' => FALSE,
       ),
     ),

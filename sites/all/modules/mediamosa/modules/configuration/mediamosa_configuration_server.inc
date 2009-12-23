@@ -216,6 +216,7 @@ function mediamosa_server_update($node) {
     ->fields(array(
       'nid' => $node->nid,
       'vid' => $node->vid,
+      mediamosa_server_db::ID => $node->nid,
       mediamosa_server_db::SERVER_STATUS => $node->server_status,
       mediamosa_server_db::URI => (isset($node->uri)) ? $node->uri : NULL,
       mediamosa_server_db::CONTAINERS => (isset($node->containers)) ? $node->containers : NULL,
@@ -237,7 +238,7 @@ function mediamosa_server_insert($node) {
     ->fields(array(
       'nid' => $node->nid,
       'vid' => $node->vid,
-      mediamosa_server_db::SERVER_ID => $node->nid,
+      mediamosa_server_db::ID => $node->nid,
       mediamosa_server_db::SERVER_TYPE => $node->server_type,
       mediamosa_server_db::SERVER_STATUS => 0, // 'Off' by default
     ))
