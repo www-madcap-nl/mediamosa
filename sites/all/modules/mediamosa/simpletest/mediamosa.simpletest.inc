@@ -95,6 +95,7 @@ abstract class MediaMosaTestCase extends DrupalWebTestCase {
     unset($lines[0]);
 
     // Iterate until an empty row is found
+    $out = array();
     for ($i = 1; $i < $line_count; $i++) {
       if (trim($lines[$i]) != '') {
         list($key, $value) = explode(':', $lines[$i], 2);

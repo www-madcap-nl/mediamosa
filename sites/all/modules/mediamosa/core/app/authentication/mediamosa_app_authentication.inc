@@ -32,9 +32,9 @@
 class mediamosa_app_authentication {
   // ------------------------------------------------------------------ Consts.
   // End User Application authentication settings
-  const EUA_AUTH_CONTEXT = 'vpx';
-  const EUA_AUTH_SECRET_PHRASE = '41d0c72bd73afaa2c207064d81d5a3d9';
-  const EUA_AUTH_SERVER_GUID = 'server_guid';
+  const APP_AUTH_CONTEXT = 'vpx';
+  const APP_AUTH_SECRET_PHRASE = '41d0c72bd73afaa2c207064d81d5a3d9';
+  const APP_AUTH_SERVER_GUID = 'server_guid';
 
   // ------------------------------------------------------------------ Functions (static).
   /**
@@ -111,9 +111,9 @@ class mediamosa_app_authentication {
 
         $_SESSION['mediamosa_dbus']['username'] = $param;
         $_SESSION['mediamosa_dbus']['cookie_id'] = 0;
-        $_SESSION['mediamosa_dbus']['challenge'] = md5(microtime() . self::EUA_AUTH_SECRET_PHRASE);
+        $_SESSION['mediamosa_dbus']['challenge'] = md5(microtime() . self::APP_AUTH_SECRET_PHRASE);
         return
-          'DATA '. self::EUA_AUTH_CONTEXT . ' ' .
+          'DATA '. self::APP_AUTH_CONTEXT . ' ' .
           $_SESSION['mediamosa_dbus']['cookie_id'] . ' ' .
           $_SESSION['mediamosa_dbus']['challenge'];
 
@@ -143,7 +143,7 @@ class mediamosa_app_authentication {
       $_SESSION['mediamosa_dbus'] = array(
         'mechanism'  => FALSE,
         'challenge'  => FALSE,
-        'username'   => 'peop'
+        'username'   => ''
       );
     }
 
@@ -175,7 +175,7 @@ class mediamosa_app_authentication {
 
       case 'DATA':
         // Test if we already been identified.
-        if (isset($_SESSION['mediamosa_eua']) && $_SESSION['mediamosa_eua']) {
+        if (isset($_SESSION['mediamosa_app']) && $_SESSION['mediamosa_app']) {
           return 'ERROR already identified';
         }
 
@@ -208,15 +208,15 @@ class mediamosa_app_authentication {
         }
 
         // Set the identification in session.
-        $_SESSION['mediamosa_eua'] = array(
+        $_SESSION['mediamosa_app'] = array(
           'app_id' =>  $a_app[mediamosa_app_db::APP_ID],
           'name' => $a_app[mediamosa_app_db::NAME]
         );
 
-        return 'OK ' . self::EUA_AUTH_SERVER_GUID;
+        return 'OK ' . self::APP_AUTH_SERVER_GUID;
 
       case 'BEGIN':
-        if ($_SESSION['mediamosa_eua'] == FALSE) {
+        if ($_SESSION['mediamosa_app'] == FALSE) {
           return 'ERROR not identified';
         }
 
@@ -224,7 +224,7 @@ class mediamosa_app_authentication {
 
       case 'CANCEL':
         unset($_SESSION['mediamosa_dbus']);
-        unset($_SESSION['mediamosa_eua']);
+        unset($_SESSION['mediamosa_app']);
         return 'REJECTED';
 
       case 'ERROR':

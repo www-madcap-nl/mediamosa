@@ -91,7 +91,7 @@ class mediamosa_asset {
    */
   static public function delete_jobs($asset_id) {
 //@todo:
-    return _vpx_jobs_cancel_job_by_asset($asset_id);
+    return self::delete_job_by_asset($asset_id);
   }
 
   /**

@@ -132,10 +132,10 @@ class mediamosa_rest_call_get_mediafile extends mediamosa_rest_call {
     mediamosa_asset_mediafile::must_exists($mediafile_id);
 
     // Must have access.
-    mediamosa_aut::read_single_object(mediamosa_aut::AUT_TYPE_MEDIAFILE, $mediafile_id, $app_id);
+    mediamosa_aut::read_single_object(mediamosa_aut::AUT_TYPE_MEDIAFILE, $mediafile_id, $a_app_ids);
 
     // Now enrich response with mediafile data.
-    mediamosa_asset_mediafile::enrich_response_mediafile($o_mediamosa, array($mediafile_id), $a_app_ids, FALSE, $show_stills);
+    mediamosa_asset_mediafile::enrich_response_mediafile(array($mediafile_id), $a_app_ids, FALSE, $show_stills);
 
     // Done.
   }
@@ -200,7 +200,7 @@ class mediamosa_rest_call_get_asset_mediafiles extends mediamosa_rest_call {
     $a_mediafile_ids = mediamosa_asset_mediafile::mediafiles_search($asset_id, $tag, $is_still);
 
     // Create output.
-    mediamosa_asset_mediafile::enrich_response_mediafile($o_mediamosa, $a_mediafile_ids, $a_app_ids, $is_oai);
+    mediamosa_asset_mediafile::enrich_response_mediafile($a_mediafile_ids, $a_app_ids, $is_oai);
   }
 }
 

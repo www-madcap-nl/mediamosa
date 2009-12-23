@@ -178,27 +178,17 @@ abstract class mediamosa_rest_call {
    */
   public function process_call() {
     global $user;
-
-    // Make sure its not disabled.
-    if ($this->{self::STATUS} == self::STATUS_DISABLED) {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_CALL_IS_DISABLED, array('@uri' => $this->{self::URI}));
-    }
-
-    // Get the var setup.
-    $a_var_setup = $this->get_var_setup();
-
-    // Assert when failed.
-    assert($a_var_setup);
-
-    // @todo: make this an setting per webservice or else we are not 1.x compatible. Default should be FALSE.
-    $this->check_for_unspecified = FALSE;// turned off for now
-
     // Enable sessions.
     if (!drupal_session_started()) {
       drupal_session_start();
     }
     elseif (mediamosa::in_simpletest_sandbox()) {
       session_regenerate_id(FALSE);
+    }
+
+    // Make sure its not disabled.
+    if ($this->{self::STATUS} == self::STATUS_DISABLED) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_CALL_IS_DISABLED, array('@uri' => $this->{self::URI}));
     }
 
     // @todo move into function.
@@ -217,6 +207,15 @@ abstract class mediamosa_rest_call {
         throw new mediamosa_exception_error_authentication_failure();
       }
     }
+
+    // Get the var setup.
+    $a_var_setup = $this->get_var_setup();
+
+    // Assert when failed.
+    assert($a_var_setup);
+
+    // @todo: make this an setting per webservice or else we are not 1.x compatible. Default should be FALSE.
+    $this->check_for_unspecified = FALSE;// turned off for now
 
     // Check rest args.
     $a_var_setup = $this->process_rest_args($a_var_setup);

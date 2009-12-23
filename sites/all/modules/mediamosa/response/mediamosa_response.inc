@@ -78,6 +78,8 @@ class mediamosa_response extends mediamosa {
    */
   public function process_rest() {
 
+    $response_type = mediamosa_rest_call::RESPONSE_TYPE_XML;
+
     try {
       // Set the response handler.
       set_error_handler(array($this, 'mediamosa_error_handler_response'), E_ALL);
@@ -97,6 +99,9 @@ class mediamosa_response extends mediamosa {
       if (!$a_rest_call) {
         return;
       }
+
+      // Save it.
+      $response_type = $a_rest_call[mediamosa_rest_call::RESPONSE_TYPE];
 
       // Make sure response type is set.
       if (!isset($a_rest_call[mediamosa_rest_call::RESPONSE_TYPE])) {
@@ -120,7 +125,7 @@ class mediamosa_response extends mediamosa {
     }
 
     try {
-      switch ($a_rest_call[mediamosa_rest_call::RESPONSE_TYPE]) {
+      switch ($response_type) {
         case mediamosa_rest_call::RESPONSE_TYPE_PLAIN:
           header('Content-Type: text/plain; charset=utf-8');
           $output = $this->generate_plain_text();

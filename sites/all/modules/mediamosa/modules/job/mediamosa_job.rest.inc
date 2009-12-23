@@ -376,7 +376,7 @@ class mediamosa_rest_call_job_set_upload_progress extends mediamosa_rest_call {
       ->execute();
 
     // Get progress
-    $progress = mediamosa_db_query(
+    $progress = mediamosa_db::db_query(
       'SELECT uploaded_file_size / file_size FROM {#mediamosa_job_upload} WHERE #job_id = :job_id',
       array(
         '#mediamosa_job_upload' => mediamosa_job_upload_db::TABLE_NAME,
