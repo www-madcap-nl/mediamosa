@@ -33,8 +33,66 @@
  */
 function mediamosa_browse_asset_details($asset_id) {
   $result = _mediamosa_restcall('GET', '/asset/'. $asset_id, array('is_app_admin' => 'true'));
-  var_dump($result);
-  return '@TODO!';
+  $output = '';
+
+  $asset = $result->items->item;
+
+  // Asset attributes
+  $rows = array();
+  foreach ((array)$asset as $key => $value) {
+    if (in_array($key, array('@attributes', 'czp', 'dublin_core', 'qualified_dublin_core'))) {
+      continue;
+    }
+    if (trim($value) != '') {
+      $value = (valid_url($value, TRUE)) ? l($value, $value) : check_plain($value);
+      $rows[] = array(_mediamosa_browse_clean_string($key), $value);
+    }
+  }
+
+  // Add the table to the output
+  $output .= t('<h3>Asset attributes</h3>');
+  $output .= theme('table', array(), $rows);
+
+  // Metadata
+  foreach (array(
+    'czp' => t('<h3>CZP Metadata</h3>'),
+    'dublin_core' => t('<h3>Dublin Core Metadata</h3>'),
+    'qualified_dublin_core' => t('<h3>Qualified Dublin Core Metadata</h3>'),
+  ) as $subject => $title) {
+    // Construct the table rows
+    $rows = array();
+    foreach ((array)$asset->{$subject} as $key => $value) {
+      if (trim($value) != '') {
+        $value = (valid_url($value, TRUE)) ? l($value, $value) : check_plain($value);
+        $rows[] = array(_mediamosa_browse_clean_string($key), $value);
+      }
+    }
+
+    // Add the table to the output
+    $output .= $title;
+    $output .= theme('table', array(), $rows);
+  }
+
+  // Mediafiles
+  foreach ($asset->xpath('mediafiles/mediafile') as $mediafile) {
+    // Construct the table rows
+    $rows = array();
+    foreach ((array)$mediafile as $key => $value) {
+      if (in_array($key, array('@attributes'))) {
+        continue;
+      }
+      if (trim($value) != '') {
+        $value = (valid_url($value, TRUE)) ? l($value, $value) : check_plain($value);
+        $rows[] = array(_mediamosa_browse_clean_string($key), $value);
+      }
+    }
+
+    // Add the table to the output
+    $output .= t('<h3>Mediafile: @mediafile_id</h3>', array('@mediafile_id' => $mediafile->mediafile_id));
+    $output .= theme('table', array(), $rows);
+  }
+
+  return $output;
 }
 
 function _mediamosa_browse_asset_get_all_collections($app_id) {

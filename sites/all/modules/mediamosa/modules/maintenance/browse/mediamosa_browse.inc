@@ -83,3 +83,7 @@ function _mediamosa_browse_pager($page, $item_count_total, $item_limit, $element
   }
   return theme('pager', array('quantity' => 10));
 }
+
+function _mediamosa_browse_clean_string($string) {
+  return drupal_ucfirst(str_replace('_', ' ', $string));
+}
