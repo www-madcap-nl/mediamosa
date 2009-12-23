@@ -341,7 +341,7 @@ class mediamosa {
   /**
    * Our wrapper around the drupal watchdog.
    */
-  static public function log($message, $variables = array(), $severity = WATCHDOG_NOTICE, $type = NULL) {
+  static public function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE, $type = NULL) {
     static $logging = FALSE;
 
     // Prevent loops when we are calling ourselfs because of errors.

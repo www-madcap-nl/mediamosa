@@ -31,6 +31,7 @@
 
 class mediamosa_transcode_mapping {
 
+  // ------------------------------------------------------------------ Static Functions.
   /**
    * Get transcode mapping listing.
    */
@@ -38,5 +39,72 @@ class mediamosa_transcode_mapping {
     return mediamosa_db::db_select(mediamosa_transcode_mapping_db::TABLE_NAME, 'tm')
       ->fields('tm')
       ->execute();
+  }
+
+  /**
+   * Get a specific tool parameter.
+   *
+   * @param $tool
+   * @param $nice_parameter
+   */
+  static public function get_by_tool($tool, $nice_parameter = NULL) {
+
+    $query = mediamosa_db::db_select(mediamosa_transcode_mapping_db::TABLE_NAME, 'tm')->fields('tm');
+
+    if ($nice_parameter) {
+      $query->condition(mediamosa_transcode_mapping_db::NICE_PARAMETER, $nice_parameter);
+    }
+
+    return $query->condition(mediamosa_transcode_mapping_db::TOOL, $tool)
+      ->execute()
+      ->fetchAssoc();
+  }
+
+  /**
+   * Check value against tools parameter settings.
+   *
+   * @param string $tool
+   *  Tool used.
+   * @param string $nice_parameter
+   *  The param to check.
+   * @param mixed $value
+   *  The value to check.
+   */
+  static public function check_mapping($tool, $nice_parameter, $value) {
+
+    // Get the mapping param.
+    $a_transcode_mapping = self::get_by_tool($tool, $nice_parameter);
+
+    if (!$a_transcode_mapping) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_JOB_TRANSCODE_PARAMETER_NOT_FOUND, array('@key' => $nice_parameter));
+    }
+
+    // Check if value is in range and right type.
+    if (!is_null($a_transcode_mapping[mediamosa_transcode_mapping_db::MIN_VALUE]) || !is_null($a_transcode_mapping[mediamosa_transcode_mapping_db::MAX_VALUE])) {
+      try {
+        mediamosa_type::check('nice_parameter', mediamosa_type::TYPE_FLOAT, $value);
+      }
+      catch (mediamosa_exception_error $e) {
+        throw new mediamosa_exception(mediamosa_error::ERRORCODE_JOB_TRANSCODE_PARAMETER_NOT_FLOAT, array('@key' => $nice_parameter, '@value' => $value));
+      }
+
+      if (!is_null($a_transcode_mapping[mediamosa_transcode_mapping_db::MIN_VALUE])) {
+        if ($a_transcode_mapping[mediamosa_transcode_mapping_db::MIN_VALUE] > $value) {
+          throw new mediamosa_exception(mediamosa_error::ERRORCODE_JOB_TRANSCODE_PARAMETER_NOT_FLOAT, array('@key' => $nice_parameter, '@min_value' => $a_transcode_mapping[mediamosa_transcode_mapping_db::MIN_VALUE], '@value' => $value));
+        }
+
+        if ($a_transcode_mapping[mediamosa_transcode_mapping_db::MAX_VALUE] < $value) {
+          throw new mediamosa_exception(mediamosa_error::ERRORCODE_JOB_TRANSCODE_PARAMETER_NOT_FLOAT, array('@key' => $nice_parameter, '@max_value' => $a_transcode_mapping[mediamosa_transcode_mapping_db::MAX_VALUE], '@value' => $value));
+        }
+      }
+    }
+
+    // If allowed values is set, then make sure its one of them.
+    if (!empty($a_transcode_mapping[mediamosa_transcode_mapping_db::ALLOWED_VALUE])) {
+      $a_allowed_values = explode(';', mediamosa_transcode_mapping_db::ALLOWED_VALUE);
+      if (!in_array($value, $a_allowed_values)) {
+        return new mediamosa_exception(mediamosa_error::ERRORCODE_JOB_TRANSCODE_PARAMETER_WRONG_VALUE, array('@key' => $nice_parameter, '@value' => $value));
+      }
+    }
   }
 }

@@ -194,6 +194,10 @@ function mediamosa_asset_mediafile_metadata_schema() {
       ),
     ),
     'primary key' => array(mediamosa_asset_mediafile_metadata_db::ID),
+    // @todo:
+    //'unique keys' => array(
+    //  'uni_mediafileid' => array(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID)
+    //),
     'indexes' => array(
       'idx_mediafileid_mimetype' => array(
         mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID,

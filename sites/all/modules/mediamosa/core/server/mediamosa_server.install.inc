@@ -31,6 +31,7 @@
 
 require_once 'mediamosa_server_db.inc';
 require_once 'download/mediamosa_server_download.install.inc';
+require_once 'job/mediamosa_server_job.install.inc';
 require_once 'still/mediamosa_server_still.install.inc';
 require_once 'streaming/mediamosa_server_streaming.install.inc';
 require_once 'transcoding/mediamosa_server_transcoding.install.inc';
@@ -50,6 +51,7 @@ function mediamosa_server_install() {
   mediamosa_server_streaming_install();
   mediamosa_server_transcoding_install();
   mediamosa_server_upload_install();
+  mediamosa_server_job_install();
 }
 
 /**
@@ -57,6 +59,7 @@ function mediamosa_server_install() {
  */
 function mediamosa_server_uninstall() {
   // Unstall our children.
+  mediamosa_server_job_uninstall();
   mediamosa_server_download_uninstall();
   mediamosa_server_still_uninstall();
   mediamosa_server_streaming_uninstall();

@@ -43,13 +43,39 @@ class mediamosa_job_transcode {
       ->fetchAssoc();
   }
 
-  // 1.x: _vpx_jobs_create_new_job_transcode
-  static public function create($app_id, $job_id, $mediafile_id, $file_extension, $command, $completed_transcoding_url, $tool = '', $profile_id = '') {
+
+  /**
+   * Add new transcode job.
+   *
+   * Based on the selected tool, file_extension and possible extra parameters.
+   *
+   * When the tool is windows, a extra job is created for transcoding to
+   * raw format.
+   *
+   * 1.x: _vpx_jobs_create_new_job_transcode
+   *
+   * @param integer $app_id
+   *  The application ID.
+   * @param integer $job_id
+   *  The job ID.
+   * @param string $file_extension
+   *  File extension of the file to transcode.
+   * @param string $command
+   *  Set of commands.
+   * @param string $tool
+   *  Name of tool to use.
+   * @param integer $profile_id
+   *  Profile to use.
+   * @param string $completed_transcoding_url
+   *  Triggered when transcoding is complete.
+   * @param string $mediafile_id
+   *  The mediafile ID.
+   */
+  static public function create($app_id, $job_id, $file_extension, $command, $tool = '', $profile_id = '', $completed_transcoding_url = '', $mediafile_id = NULL) {
 
     // Get the default transcode profile settings when not supplied.
-    if ($profile_id == '' && $tool == '') {
+    if (empty($profile_id) && $tool == '') {
       $a_transcode_profile = mediamosa_transcode_profile::get_default($app_id);
-
       if (!$a_transcode_profile) {
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_NO_DEFAULT_TRANSCODE_PROFILE);
       }
@@ -59,112 +85,85 @@ class mediamosa_job_transcode {
       $file_extension = $a_transcode_profile[mediamosa_transcode_profile_db::FILE_EXTENSION];
       $command = $a_transcode_profile[mediamosa_transcode_profile_db::COMMAND];
     }
+    elseif (!empty($profile_id)) {
+      // FIXME: should we add app_id here?
+      $a_transcode_profile = mediamosa_transcode_profile::get($profile_id);
+
+      if (!$a_transcode_profile) {
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_NO_DEFAULT_TRANSCODE_PROFILE);
+      }
+
+      $tool = $a_transcode_profile[mediamosa_transcode_profile_db::TOOL];
+      $file_extension = $a_transcode_profile[mediamosa_transcode_profile_db::FILE_EXTENSION];
+      $command = $a_transcode_profile[mediamosa_transcode_profile_db::COMMAND];
+    }
     else {
       $profile_id = NULL;
     }
 
-  }
-
-
-}
-
-
-/**
- * Functie voor het toevoegen van een nieuwe transcode job aan de database
- * Op basis van de opgegeven parameters worden de tool, file_extension en
- * extra parameters bepaald (default profiel, gekozen profiel of zelf
- * meegegeven.
- * Als de gegevens incompleet zijn, of wanneer de parameters niet kloppen
- * wordt een foutmelding teruggegeven. Anders okay
- *
- * Wanneer er een windows wordt aangemaakt moet eerst een job worden
- * aangemaakt om een transcoding naar een raw formaat te maken.
- */
-
-
-/*
-
-
-  }
-  else if (($a_parameters['profile_id']['value'] != "")) {
-    $profile_id = $a_parameters['profile_id']['value'];
-    db_set_active();
-    $db_result = db_query("
-        SELECT tool, file_extension, command
-        FROM {transcode_profile}
-        WHERE transcode_profile_id = %d", $profile_id);
-    if ($db_result_row = db_fetch_object($db_result)) {
-      $tool = $db_result_row->tool;
-      $file_extension = $db_result_row->file_extension;
-      $command = $db_result_row->command;
+    // Both settings are required.
+    if ($tool == '' || $file_extension == '') {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_NO_TRANSCODE_PARAMETERS);
     }
-    else {
-      // de transcode profile is niet gevonden in de database
-      return new rest_response(vpx_return_error(ERRORCODE_UNKNOWN_TRANSCODE_PROFILE));
+
+    // Check if fileextension is ok.
+    try {
+      mediamosa_transcode_profile::check_command_parameters($tool, 'internal_file_extension:'. $file_extension);
     }
-  }
-  else {
-    $profile_id = -1;
-    $tool = $a_parameters['tool']['value'];
-    $file_extension = $a_parameters['file_extension']['value'];
-    $command = $a_parameters['command']['value'];
-  }
+    catch (mediamosa_exception_error $e) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_JOB_TRANSCODE_PARAMETER_COMBINATION, array('@tool' => $tool, '@file_extension' => $file_extension));
+    }
 
-  // zowel de tool als de file_extensie zijn verplichte velden.
-  if (($tool == "") || ($file_extension == "")) {
-    return new rest_response(vpx_return_error(ERRORCODE_NO_TRANSCODE_PARAMETERS));
-  }
+    // Check if given parameter is ok for tool.
+    mediamosa_transcode_profile::check_command_parameters($tool, $command);
 
-  // controleer of de opgegeven fileextensie wel is toegestaan voor deze tool
-  if ($errorcommand = _vpx_jobs_check_command_parameters($tool, "internal_file_extension:". $file_extension)) {
-    return new rest_response(vpx_return_error(ERRORCODE_JOB_TRANSCODE_PARAMETER_COMBINATION, array("@tool" => $tool, "@file_extension" => $file_extension)));
-  }
+    // Build the completed_transcoding_url.
+    if (!empty($completed_transcoding_url)) {
+      $a_query = array();
 
-  // controleer of de opgegeven parameters toegestaan zijn voor de tool
-  if ($errorcommand = _vpx_jobs_check_command_parameters($tool, $command)) {
-    return $errorcommand;
-  }
+      // Lets see if there is a http query.
+      $pos = mediamosa_unicode::strpos($completed_transcoding_url, '?');
+      if ($pos !== FALSE) {
+        if (mediamosa_unicode::strlen($completed_transcoding_url) > $pos + 1) {
+          parse_str(substr($completed_transcoding_url, $pos + 1), $a_query);
+        }
 
-  if ($profile_id == -1) {
-    $profile_id = "NULL";
-  }
-
-  // Build the completed_transcoding_url
-  $completed_transcoding_url = $a_parameters['completed_transcoding_url']['value'];
-  if (!empty($completed_transcoding_url)) {
-    $a_query = array();
-    $pos = strpos($completed_transcoding_url, '?');// Lets see if there is a http query
-    if ($pos !== FALSE) {
-      if (strlen($completed_transcoding_url) > $pos + 1) {
-        parse_str(substr($completed_transcoding_url, $pos+1), $a_query);
+        // Remove the query string.
+        $completed_transcoding_url = substr($completed_transcoding_url, 0, $pos);
       }
-      $completed_transcoding_url = substr($completed_transcoding_url, 0, $pos);
+
+      // Now add our parameters.
+      $a_query['job_id'] = $job_id;
+      $a_query['mediafile_id'] = $mediafile_id;
+
+      // The status code will be filled later
+      $a_query['status_code'] = '';
+
+      // Build the query again.
+      $completed_transcoding_url .= '?' . http_build_query($a_query, '', '&');
     }
 
-    $a_query['job_id'] = $a_parameters['job_id']['value'];
-    $a_query['mediafile_id'] = $a_parameters['mediafile_id']['value'];
-    // The status code will be filled later
-    $a_query['status_code'] = '';
+    // Now create the transcode job.
+    $a_fields = array(
+      mediamosa_job_transcode_db::JOB_ID => $job_id,
+      mediamosa_job_transcode_db::TRANSCODE_PROFILE_ID => $profile_id,
+      mediamosa_job_transcode_db::TOOL => $tool,
+      mediamosa_job_transcode_db::FILE_EXTENSION => $file_extension,
+      mediamosa_job_transcode_db::COMMAND => $command,
+      mediamosa_job_transcode_db::COMPLETED_TRANSCODING_URL => $completed_transcoding_url,
+    );
 
-    $completed_transcoding_url .= '?' . http_build_query($a_query, '', '&');
+    // Add changed/created values.
+    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+
+    // Insert it.
+    db_insert(mediamosa_job_transcode_db::TABLE_NAME)
+      ->fields($a_fields)
+      ->execute();
+
+    // See if the tool is windows. If so, we need to create a raw job.
+    if ($tool == mediamosa_job::JOBWINDOWS_TOOL) {
+      mediamosa_job::create_raw($job_id);
+    }
   }
-
-  // voeg een record toe aan de trancode_job tabel
-  db_set_active("data");
-  $db_result = db_query("
-    INSERT INTO {transcode_job}
-    (job_id, transcode_profile_id, tool, file_extension, command, completed_transcoding_url) VALUES
-    (%d, %s, '%s', '%s', '%s', '%s')",
-    $a_parameters['job_id']['value'], $profile_id, $tool, $file_extension, $command, $completed_transcoding_url);
-  db_set_active();
-
-  // detecteer of een job eigenlijk naar een windows server moet
-  // als dat zo is dan moet er eerst op een linux server een job worden
-  // aangemaakt voor een vertaling naar xxx.raw
-  if ($tool == JOBWINDOWS_TOOL) {
-    _vpx_jobs_create_raw_job($job_id, $a_parameters['testtag']['value']);
-  }
-
-  return new rest_response(vpx_return_error(ERRORCODE_OKAY));
-} // end of _vpx_jobs_create_new_job_transcode
-*/
+}

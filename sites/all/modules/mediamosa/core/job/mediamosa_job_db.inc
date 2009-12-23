@@ -49,6 +49,7 @@ class mediamosa_job_db {
   const JOB_STATUS_FINISHED = 'FINISHED';
   const JOB_STATUS_FAILED = 'FAILED';
   const JOB_STATUS_CANCELLED = 'CANCELLED';
+  const JOB_STATUS_CANCELLING = 'CANCELING';// Future exp; THIS IS NOT YET ADDED TO THE ENUM IN DB 'job' table.
   const PROGRESS = 'progress';
   const PROGRESS_LENGTH = 5;
   const PRIORITY = 'priority';

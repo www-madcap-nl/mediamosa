@@ -403,6 +403,11 @@ $conf = array(
 /**
  * The MEDIAMOSA_SERVER_ID defines the default install ID
  * for multiple installations of jobserver. You can leave it
- * on 'default' if you only have one jobserver.
+ * on 'default' if you only have one jobserver. Best to keep
+ * 'default' for main installation.
  */
 define('MEDIAMOSA_SERVER_ID', 'default');
+
+define('MEDIAMOSA_REST_HOST', 'localhost');
+define('MEDIAMOSA_BUILD_URL', 'mediamosa/');
+define('MEDIAMOSA_URL', 'http://' . MEDIAMOSA_REST_HOST . '/' . MEDIAMOSA_BUILD_URL);

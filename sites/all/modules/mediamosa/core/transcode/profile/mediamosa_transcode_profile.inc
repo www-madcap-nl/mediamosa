@@ -32,7 +32,32 @@
 class mediamosa_transcode_profile {
 
   /**
+   * Get transcode profile for app.
+   *
+   * @param integer $transcode_profile_id
+   *  Profile to get.
+   * @param integer $app_id
+   *  Application ID.
+   */
+  static public function get($transcode_profile_id, $app_id = NULL) {
+    $query = mediamosa_db::db_select(mediamosa_transcode_profile_db::TABLE_NAME, 'tp')
+      ->fields('tp')
+      ->condition(mediamosa_transcode_profile_db::ID, $transcode_profile_id);
+
+    if (isset($app_id)) {
+      $query->condition(mediamosa_transcode_profile_db::APP_ID, array(0, $app_id), 'IN');
+    }
+
+    // Do the query.
+    return $query->execute()->fetchAssoc();
+  }
+
+  /**
    * Get the default transcode profile.
+   *
+   * @param integer $app_id
+   *  Application ID.
+   *
    */
   static public function get_default($app_id) {
     return mediamosa_db::db_select(mediamosa_transcode_profile_db::TABLE_NAME, 'tp')
@@ -56,22 +81,6 @@ class mediamosa_transcode_profile {
       ->fields('tp')
       ->condition(mediamosa_transcode_profile_db::APP_ID, array(0, $app_id), 'IN')
       ->execute();
-  }
-
-  /**
-   * Get transcode profile for app.
-   *
-   * @param integer $app_id
-   *  Application ID.
-   */
-  static public function get($app_id, $profile_id) {
-
-    return mediamosa_db::db_select(mediamosa_transcode_profile_db::TABLE_NAME, 'tp')
-      ->fields('tp')
-      ->condition(mediamosa_transcode_profile_db::ID, $profile_id)
-      ->condition(mediamosa_transcode_profile_db::APP_ID, array(0, $app_id), 'IN')
-      ->execute()
-      ->fetchAssoc();
   }
 
   /**
@@ -231,5 +240,26 @@ class mediamosa_transcode_profile {
       ->condition(mediamosa_transcode_profile_db::ID, $profile_id)
       ->condition(mediamosa_transcode_profile_db::APP_ID, $app_id)
       ->execute();
+  }
+
+  /**
+   * Go through the paramters and check input.
+   *
+   * 1.x: _vpx_jobs_check_command_parameters
+   *
+   * @param string $tool
+   *  Tool to check.
+   * @param string $command
+   *  Command to check.
+   */
+  static public function check_command_parameters($tool, $command) {
+
+    // Split the command into an array.
+    $a_parameters = mediamosa_lib::create_named_array($command, ';', ':');
+
+    // Check the values of the mapping.
+    foreach ($a_parameters as $nice_parameter => $value) {
+      mediamosa_transcode_mapping::check_mapping($tool, $nice_parameter, $value);
+    }
   }
 }

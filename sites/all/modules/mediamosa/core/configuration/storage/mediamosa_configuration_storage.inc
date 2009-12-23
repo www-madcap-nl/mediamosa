@@ -77,7 +77,7 @@ class mediamosa_configuration_storage {
    * @return string
    */
   static public function data_location_get() {
-    return mediamosa_settings::SAN_NAS_DATA_LOCATION;
+    return mediamosa_settings::SAN_NAS_DATA_FOLDER;
   }
 
   /**
@@ -91,6 +91,13 @@ class mediamosa_configuration_storage {
   }
 
   /**
+   * Return the tmp transcode folder.
+   */
+  static public function transcode_tmp_location_get() {
+    return self::data_location_get() . DIRECTORY_SEPARATOR . mediamosa_settings::SAN_NAS_TRANSCODE_FOLDER;
+  }
+
+  /**
    * Return the default path for the ticket.
    * Based on the 1.x function _play_proxy_play_ticket_location.
    *
@@ -100,6 +107,15 @@ class mediamosa_configuration_storage {
     return self::data_location_get() . DIRECTORY_SEPARATOR . mediamosa_settings::PLAY_TICKET_LOCATION . DIRECTORY_SEPARATOR . $app_id;
   }
 
+  /**
+   * Returns the full path and filename of the status file of
+   * given filename.
+   *
+   * @param string $filename
+   */
+  static public function status_file_location_get($filename) {
+    return mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::transcode_tmp_location_get() . DIRECTORY_SEPARATOR . $filename . '.status';
+  }
 
   /**
    * Return file location of asx file.
@@ -140,10 +156,8 @@ class mediamosa_configuration_storage {
   /**
    * Get the Mediafile mountpath path.
    *
-   * FIXME: Try to match the input like mediafile_still_filename_get()
-   *
    * @param array $a_mediafile
-   *  The mediafile array.
+   *  The mediafile array or simular, must contain at least 'mediafile_id'.
    */
   static public function mediafile_filename_get($a_mediafile) {
     if (!isset($a_mediafile[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT]) || empty($a_mediafile[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT])) {
@@ -151,6 +165,16 @@ class mediamosa_configuration_storage {
     }
 
     return $a_mediafile[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT] . DIRECTORY_SEPARATOR . self::data_location_get() . DIRECTORY_SEPARATOR . self::objectid_to_location($a_mediafile[mediamosa_asset_mediafile_db::ID]);
+  }
+
+  /**
+   * Get the Mediafile mountpath path.
+   *
+   * @param string $mediafile_id
+   *  The mediafile_id.
+   */
+  static public function mediafile_id_filename_get($mediafile_id) {
+    return self::mount_point_get() . DIRECTORY_SEPARATOR . self::data_location_get() . DIRECTORY_SEPARATOR . self::objectid_to_location($mediafile_id);
   }
 
   /**

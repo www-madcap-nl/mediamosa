@@ -44,7 +44,7 @@ abstract class mediamosa_rest_call {
   const RESPONSE_TYPE = 'response_type';
   const RESPONSE_TYPE_XML = 'text/xml';
   const RESPONSE_TYPE_PLAIN = 'text/plain';
-  const RESPONSE_TYPE_MEDIAMOSA = 'application/mediamosa';
+  //const RESPONSE_TYPE_MEDIAMOSA = 'application/mediamosa'; // future.
 
   const METHOD = 'method';
   const METHOD_GET = 'GET';

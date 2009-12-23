@@ -36,9 +36,9 @@ class mediamosa_app {
    * @param string $name
    * @return array
    */
-  static public function get_by_appid($app_id) {
+  static public function get_by_appid($app_id, $a_fields = array()) {
     return mediamosa_db::db_select(mediamosa_app_db::TABLE_NAME, 'app')
-      ->fields('app')
+      ->fields('app', $a_fields)
       ->condition(mediamosa_app_db::APP_ID, $app_id)
       ->execute()
       ->fetchAssoc();

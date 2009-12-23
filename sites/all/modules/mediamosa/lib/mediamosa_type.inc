@@ -37,6 +37,7 @@ class mediamosa_type {
   const TYPE_APP_ID                      = 'APP_ID'; // 1 - 9999
   const TYPE_INT                         = 'INT';
   const TYPE_UINT                        = 'UINT';
+  const TYPE_FLOAT                       = 'FLOAT';
   const TYPE_SERIAL                      = 'SERIAL'; // Like autoinc. in db
   const TYPE_ALPHA                       = 'ALPHA'; // [A-Za-z]
   const TYPE_PRINTABLE                   = 'STRING_PRINTABLE';// only printable chars
@@ -116,7 +117,7 @@ class mediamosa_type {
    *  Internal boolean for array loops, leave as is
    * @return new param value
    */
-  static public function check($param, $param_type, $mixed_param_value, $is_required, $range_start = NULL, $range_end = NULL, $allowed_values = NULL, $toplevel = TRUE) {
+  static public function check($param, $param_type, $mixed_param_value, $is_required = FALSE, $range_start = NULL, $range_end = NULL, $allowed_values = NULL, $toplevel = TRUE) {
 
     // If its an array, then walk through the array and check item for item by recalling ourselfs.
     if (is_array($mixed_param_value)) {
@@ -277,6 +278,14 @@ class mediamosa_type {
         }
 
         $checked_param_value = (string)$mixed_param_value;
+        break;
+
+      case self::TYPE_FLOAT:
+        if (!is_numeric($mixed_param_value) || (!is_int($mixed_param_value) && !is_float($mixed_param_value))) {
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
+        }
+
+        $checked_param_value = floatval($mixed_param_value);
         break;
 
       case self::TYPE_SEARCH_MATCH:

@@ -250,10 +250,9 @@ function mediamosa_app_schema() {
         'not null' => FALSE,
       ),
     ),
-
     'primary key' => array(mediamosa_app_db::ID),
     'unique keys' => array(
-      'idx_app_id' => array(mediamosa_app_db::APP_ID)
+      'uni_appid' => array(mediamosa_app_db::APP_ID)
     ),
   );
 
