@@ -28,6 +28,7 @@
   * @file
   * The maintenance module.
   */
+require_once('mediamosa_configuration.inc');
 require_once('mediamosa_configuration_transcode_profile.inc');
 require_once('mediamosa_configuration_server.inc');
 
@@ -65,6 +66,13 @@ function mediamosa_configuration_menu() {
     'description' => 'The configuration of MediaMosa settings. You might have to enable maintenance modules for more options.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mediamosa_configuration'),
+    'access arguments' => array('administer mediamosa configuration'),
+  );
+
+  $items['mm_watchdog'] = array(
+    'title' => 'Log entries',
+    'description' => 'List of the 50 most recent log entries.',
+    'page callback' => 'mediamosa_configuration_watchdog',
     'access arguments' => array('administer mediamosa configuration'),
   );
 
