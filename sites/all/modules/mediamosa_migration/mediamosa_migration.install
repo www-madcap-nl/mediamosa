@@ -293,6 +293,9 @@ function mediamosa_migration_install() {
 
   // *_job_server -> mediamosa_job_server
   _mediamosa_migration_jobserver_all(); // @todo
+
+  // create server nodes
+  _mediamosa_migration_create_server_nodes();
 }
 
 /**
@@ -2232,4 +2235,59 @@ function _mediamosa_migration_transcode() {
 
   // Back to old session mode.
   db_query(strtr("SET SESSION sql_mode = '#old_mode'", array('#old_mode' => $old_mode)));
+}
+
+function _mediamosa_migration_create_server_nodes() {
+  $tables = array(
+    mediamosa_server_db::SERVER_TYPE_DOWNLOAD => mediamosa_server_download_db::TABLE_NAME,
+    mediamosa_server_db::SERVER_TYPE_STILL => mediamosa_server_still_db::TABLE_NAME,
+    mediamosa_server_db::SERVER_TYPE_STREAMING => mediamosa_server_streaming_db::TABLE_NAME,
+    mediamosa_server_db::SERVER_TYPE_TRANSCODE => mediamosa_server_transcoding_db::TABLE_NAME,
+    mediamosa_server_db::SERVER_TYPE_UPLOAD => mediamosa_server_upload_db::TABLE_NAME,
+  );
+
+  foreach ($tables as $type => $table) {
+    $result = mediamosa_db::db_query(
+      'SELECT * FROM {#table_name}',
+      array(
+        '#table_name' => $table,
+      )
+    );
+    foreach ($result as $row) {
+      $node = new stdClass();
+      $node->uid = 1; // Admin
+      $node->status = 1; // Published
+      $node->type = MEDIAMOSA_NODE_TYPE_SERVER;
+
+      // Find server_id
+      $server_id = 0;
+      foreach ($row as $key => $value) {
+        if (preg_match('/_server_id$/', $key)) {
+          $server_id = $value;
+          break;
+        }
+      }
+
+      $status = (isset($row['active'])) ? $row['active'] : (isset($row['status']) ? $row['status'] : 1);
+      if (!is_numeric($status)) {
+        $status = (strtoupper($status) == 'ON') ? 1 : 0;
+      }
+
+      $node->title = $row['description'];
+      $node->{mediamosa_server_db::SERVER_TYPE} = $type;
+      $node->{mediamosa_server_db::ID} = $server_id;
+      $node->{mediamosa_server_db::VERSION} = $row['version'];
+      $node->{mediamosa_server_db::SERVER_STATUS} = $status;
+      $node->{mediamosa_server_db::URI} = (isset($row['uri'])) ? $row['uri'] : NULL;
+      $node->{mediamosa_server_db::CONTAINERS} = (isset($row['containers'])) ? $row['containers'] : NULL;
+      $node->{mediamosa_server_db::OBJECT_CODE} = (isset($row['objectcode'])) ? $row['objectcode'] : NULL;
+      $node->{mediamosa_server_db::SERVER_NAME} = (isset($row['servername'])) ? $row['servername'] : NULL;
+      $node->{mediamosa_server_db::IP_ADDRESS} = (isset($row['ip_address'])) ? $row['ip_address'] : NULL;
+      $node->{mediamosa_server_db::SLOTS} = (isset($row['slots'])) ? $row['slots'] : NULL;
+      $node->{mediamosa_server_db::TOOLS} = (isset($row['tools'])) ? $row['tools'] : NULL;
+      $node->{mediamosa_server_db::URI_UPLOAD_PROGRESS} = (isset($row['uri_uploadprogress'])) ? $row['uri_uploadprogress'] : NULL;
+
+      $node = node_save($node);
+    }
+  }
 }
