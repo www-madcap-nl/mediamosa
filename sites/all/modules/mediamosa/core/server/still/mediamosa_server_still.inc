@@ -42,11 +42,13 @@ class mediamosa_server_still {
     }
 
     $a_server = mediamosa_db::db_query(
-     'SELECT * FROM {#mediamosa_server_still} WHERE #active = 1 LIMIT 1',
-     array(
-       '#mediamosa_server_still' => mediamosa_server_still_db::TABLE_NAME,
-       '#active' => mediamosa_server_still_db::ACTIVE,
-     )
+      "SELECT * FROM {#mediamosa_server_still} WHERE #active = 1 AND #server_type = :server_type LIMIT 1",
+      array(
+        '#mediamosa_server_still' => mediamosa_server_db::TABLE_NAME,
+        '#active' => mediamosa_server_db::ACTIVE,
+        '#server_type' => mediamosa_server_db::SERVER_TYPE,
+        ':server_type' => mediamosa_server_db::SERVER_TYPE_STILL,
+      )
     )->fetchAssoc();
 
     return $a_server;
@@ -58,6 +60,6 @@ class mediamosa_server_still {
   static public function get_uri() {
     $a_server = self::get();
 
-    return $a_server[mediamosa_server_still_db::URI];
+    return $a_server[mediamosa_server_db::URI];
   }
 }
