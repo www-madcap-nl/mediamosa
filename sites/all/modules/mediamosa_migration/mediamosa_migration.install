@@ -2251,10 +2251,14 @@ function _mediamosa_migration_create_server_nodes() {
   );
 
   foreach ($tables as $type => $table) {
-    $result = mediamosa_db::db_query(
-      'SELECT * FROM {#table_name}',
+    $result = db_query(
+      strtr('SELECT * FROM {#table_name}',
       array(
         '#table_name' => $table,
+      )),
+      array(),
+      array(
+        'fetch' => PDO::FETCH_ASSOC,
       )
     );
     foreach ($result as $row) {

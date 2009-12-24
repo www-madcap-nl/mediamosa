@@ -61,7 +61,7 @@ function mediamosa_transcode_profile_install() {
     $a_fields = mediamosa_db::db_insert_enrich($a_fields);
 
     // Insert it.
-    mediamosa_db::db_insert(mediamosa_transcode_profile_db::TABLE_NAME)
+    db_insert(mediamosa_transcode_profile_db::TABLE_NAME)
       ->fields($a_fields)
       ->execute();
   }

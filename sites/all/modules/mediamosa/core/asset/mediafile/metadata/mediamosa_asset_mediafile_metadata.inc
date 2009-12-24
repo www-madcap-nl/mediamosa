@@ -51,8 +51,9 @@ class mediamosa_asset_mediafile_metadata {
    * @param string $mediafile_id
    */
   static public function is_playable($mediafile_id) { // media_management_is_playable.
-    $query = mediamosa_db::db_select(mediamosa_asset_mediafile_metadata_db::TABLE_NAME);
-    $query->condition(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID, $mediafile_id);
+    $query = mediamosa_db::db_select(mediamosa_asset_mediafile_metadata_db::TABLE_NAME, 'mfmd')
+      ->fields('mfmd')
+      ->condition(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID, $mediafile_id);
     $a_mediafile = $query->execute()->fetchAssoc();
 
     if ($a_mediafile[mediamosa_asset_mediafile_metadata_db::MIME_TYPE] == mediamosa_lib::MIME_TYPE_APPLICATION_X_EMPTY) {

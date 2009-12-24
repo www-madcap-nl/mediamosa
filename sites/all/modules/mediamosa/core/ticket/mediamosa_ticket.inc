@@ -77,7 +77,9 @@ class mediamosa_ticket {
       $ticket_id = mediamosa_db::uuid($app_id);
     }
 
+    // Fields to insert.
     $a_fields = array(
+      mediamosa_ticket_db::ID => $ticket_id,
       mediamosa_ticket_db::APP_ID => $app_id,
       mediamosa_ticket_db::TICKET_TYPE => $ticket_type,
       mediamosa_ticket_db::OWNER_ID => $owner_id,
@@ -89,7 +91,11 @@ class mediamosa_ticket {
       $a_fields[mediamosa_ticket_db::GROUP_ID] = $group_id;
     }
 
-    db_insert(mediamosa_ticket_db::TABLE_NAME)
+    // Add changed/created values.
+    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+
+    // Insert.
+    mediamosa_db::db_insert(mediamosa_ticket_db::TABLE_NAME)
       ->fields($a_fields)
       ->execute();
 
@@ -164,16 +170,16 @@ class mediamosa_ticket {
         $ticket_target = self::play_ticket_target_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::objectid_to_location($a_mediafile_ext['mediafile_id']);
         $ticket_path = mediamosa_configuration_storage::ticket_location_get($app_id);
         switch ($a_mediafile_ext['metadata']['container_type']) {
-          case CONTAINER_TYPE_FLV:
+          case mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_FLV:
             $ticket_id .= '.flv';
             break;
-          case CONTAINER_TYPE_MP4:
+          case mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_MP4:
             $ticket_id .= '.mp4';
             break;
-          case CONTAINER_TYPE_MP3:
+          case mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_MP3:
             $ticket_id .= '.mp3';
             break;
-          case CONTAINER_TYPE_OGG:
+          case mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_OGG:
             $ticket_id .= '.ogg';
             break;
         }

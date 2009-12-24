@@ -319,7 +319,9 @@ class mediamosa {
       return $now_timestamp;
     }
 
-    $now_timestamp = mediamosa_db::db_query('SELECT #CURRENT_TIMESTAMP', array('#CURRENT_TIMESTAMP' => mediamosa_db::CURRENT_TIMESTAMP))->fetchField();
+    // Lets not break installer, dont use mediamosa_db here.
+    $now_timestamp = db_query(strtr('SELECT #CURRENT_TIMESTAMP', array('#CURRENT_TIMESTAMP' => mediamosa_db::CURRENT_TIMESTAMP)))->fetchField();
+
     return $now_timestamp;
   }
 

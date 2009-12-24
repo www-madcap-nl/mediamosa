@@ -42,7 +42,7 @@ class mediamosa_io {
    * @param int $mode
    *  Default mode value for created directory, defaults to mode 0777.
    */
-  static public function mkdir($pathname, $recursive = FALSE, $mode = 777) {
+  static public function mkdir($pathname, $recursive = FALSE, $mode = 0777) {
 
     // Already exists? Then don't try to create.
     if (file_exists($pathname) && is_dir($pathname)) {

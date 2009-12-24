@@ -37,13 +37,13 @@ class mediamosa_server_streaming {
     if (!isset($a_streamable_container_types[$container_type])) {
       $is_streamable = mediamosa_db::db_query(
         "SELECT COUNT(ss.#server_id) AS total
-         FROM {#mediamosa_streaming_server} AS ss
+         FROM {#mediamosa_server} AS ss
          JOIN {#mediamosa_streaming_server_container} AS ssc ON ss.#server_id = ssc.#streaming_server_id
          WHERE ssc.#container = :container AND ss.#active = 1 AND ss.#server_type = :server_type",
         array(
           '#server_id' => mediamosa_server_db::ID,
           '#streaming_server_id' => mediamosa_server_streaming_container_db::STREAMING_SERVER_ID,
-          '#mediamosa_streaming_server' => mediamosa_server_db::TABLE_NAME,
+          '#mediamosa_server' => mediamosa_server_db::TABLE_NAME,
           '#mediamosa_streaming_server_container' => mediamosa_server_streaming_container_db::TABLE_NAME,
           '#container' => mediamosa_server_streaming_container_db::CONTAINER,
           ':container' => $container_type,
@@ -70,23 +70,24 @@ class mediamosa_server_streaming {
   static public function get($container_type, $video_codec) {
     static $a_servers = array();
 
-    if (isset($a_servers[$container_type . ':' . $video_codec])) {
+    if (isset($a_servers[$container_type . ':' . $video_codec]) && $a_servers[$container_type . ':' . $video_codec]) {
       return $a_servers[$container_type . ':' . $video_codec];
     }
 
     // Choose a random available streaming server.
     // try to match container:codec first.
     $a_servers[$container_type . ':' . $video_codec] = mediamosa_db::db_query(
-      "SELECT mss.* FROM {#mediamosa_server_streaming} AS mss WHERE
-      JOIN {#mediamosa_server_streaming_container} AS mssc USING(#streaming_server_id)
-      WHERE mssc.#container = :container AND mss.#active = 1 AND #server_type = :server_type ORDER BY rand() LIMIT 1",
+      "SELECT mss.* FROM {#mediamosa_server} AS mss
+      JOIN {#mediamosa_server_streaming_container} AS mssc ON mssc.#streaming_server_id = mss.#server_id
+      WHERE mssc.#container = :container AND mss.#server_type = :server_type AND mss.#server_status = 1 ORDER BY rand() LIMIT 1",
       array(
-        '#mediamosa_server_streaming' => mediamosa_server_db::TABLE_NAME,
+        '#mediamosa_server' => mediamosa_server_db::TABLE_NAME,
         '#mediamosa_server_streaming_container' => mediamosa_server_streaming_container_db::TABLE_NAME,
-        '#streaming_server_id' => mediamosa_server_db::ID,
+        '#server_id' => mediamosa_server_db::ID,
+        '#streaming_server_id' => mediamosa_server_streaming_container_db::STREAMING_SERVER_ID,
         '#container' => mediamosa_server_streaming_container_db::CONTAINER,
-        ':container' => $container_type .':'. $video_codec,
-        '#active' => mediamosa_server_db::ACTIVE,
+        ':container' => $container_type . ':' . $video_codec,
+        '#server_status' => mediamosa_server_db::SERVER_STATUS,
         '#server_type' => mediamosa_server_db::SERVER_TYPE,
         ':server_type' => mediamosa_server_db::SERVER_TYPE_STREAMING,
       )
@@ -96,21 +97,22 @@ class mediamosa_server_streaming {
       return $a_servers[$container_type .':'. $video_codec];
     }
 
-    if (isset($a_servers[$container_type])) {
+    if (isset($a_servers[$container_type]) && $a_servers[$container_type]) {
       return $a_servers[$container_type];
     }
 
     $a_servers[$container_type] = mediamosa_db::db_query(
-      "SELECT mss.* FROM {#mediamosa_server_streaming} AS mss WHERE
-      JOIN {#mediamosa_server_streaming_container} AS mssc USING(#streaming_server_id)
-      WHERE mssc.#container = :container AND mss.#active = 1 AND mss.#server_type = :server_type ORDER BY rand() LIMIT 1",
+      "SELECT mss.* FROM {#mediamosa_server} AS mss
+      JOIN {#mediamosa_server_streaming_container} AS mssc ON mssc.#streaming_server_id = mss.#server_id
+      WHERE mssc.#container = :container AND mss.#server_type = :server_type AND mss.#server_status = 1 ORDER BY rand() LIMIT 1",
       array(
-        '#mediamosa_server_streaming' => mediamosa_server_db::TABLE_NAME,
+        '#mediamosa_server' => mediamosa_server_db::TABLE_NAME,
         '#mediamosa_server_streaming_container' => mediamosa_server_streaming_container_db::TABLE_NAME,
-        '#streaming_server_id' => mediamosa_server_db::ID,
+        '#server_id' => mediamosa_server_db::ID,
+        '#streaming_server_id' => mediamosa_server_streaming_container_db::STREAMING_SERVER_ID,
         '#container' => mediamosa_server_streaming_container_db::CONTAINER,
         ':container' => $container_type,
-        '#active' => mediamosa_server_db::ACTIVE,
+        '#server_status' => mediamosa_server_db::SERVER_STATUS,
         '#server_type' => mediamosa_server_db::SERVER_TYPE,
         ':server_type' => mediamosa_server_db::SERVER_TYPE_STREAMING,
       )

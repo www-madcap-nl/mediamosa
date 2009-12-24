@@ -179,12 +179,6 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
     return self::get_var_setup_default($a_var_setup);
   }
 
-  // ------------------------------------------------------------------ Override Process Rest Args.
-  protected function process_rest_args(array $a_var_setup) {
-    // Process once.
-    parent::process_rest_args($a_var_setup);
-  }
-
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
     $o_mediamosa = mediamosa::get();

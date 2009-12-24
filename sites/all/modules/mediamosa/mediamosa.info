@@ -27,10 +27,12 @@ files[] = core/error/mediamosa_error.install.inc
 files[] = lib/mediamosa_db_query.inc
 files[] = lib/mediamosa_db.inc
 files[] = lib/mediamosa_exception.inc
+files[] = lib/mediamosa_gd.inc
+files[] = lib/mediamosa_http.inc
+files[] = lib/mediamosa_io.inc
 files[] = lib/mediamosa_lib.inc
 files[] = lib/mediamosa_type.inc
 files[] = lib/mediamosa_unicode.inc
-files[] = lib/mediamosa_http.inc
 
 ; CQL.
 files[] = cql/mediamosa_cql.class.inc

@@ -37,7 +37,7 @@ require_once 'mediamosa_server_transcoding_tool_db.inc';
 function mediamosa_server_transcoding_tool_install() {
 
   // Download server.
-  drupal_install_schema(mediamosa_server_transcoding_tool_db::TABLE_NAME);
+  mediamosa::drupal_install_schema(mediamosa_server_transcoding_tool_db::TABLE_NAME);
 
   db_query(
     strtr(
@@ -70,7 +70,7 @@ function mediamosa_server_transcoding_tool_install() {
 function mediamosa_server_transcoding_tool_uninstall() {
 
   // Download server.
-  drupal_uninstall_schema(mediamosa_server_transcoding_tool_db::TABLE_NAME);
+  mediamosa::drupal_uninstall_schema(mediamosa_server_transcoding_tool_db::TABLE_NAME);
 }
 
 /**

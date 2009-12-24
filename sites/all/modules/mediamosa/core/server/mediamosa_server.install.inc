@@ -43,7 +43,7 @@ require_once 'upload/mediamosa_server_upload.install.inc';
 function mediamosa_server_install() {
 
   // Server node extensions.
-  drupal_install_schema(mediamosa_server_db::TABLE_NAME);
+  mediamosa::drupal_install_schema(mediamosa_server_db::TABLE_NAME);
 
   // Install our children.
   mediamosa_server_download_install();
@@ -67,7 +67,7 @@ function mediamosa_server_uninstall() {
   mediamosa_server_upload_uninstall();
 
   // Server node extensions.
-  drupal_uninstall_schema(mediamosa_server_db::TABLE_NAME);
+  mediamosa::drupal_uninstall_schema(mediamosa_server_db::TABLE_NAME);
 }
 
 /**
@@ -169,6 +169,9 @@ function mediamosa_server_schema() {
       ),
     ),
     'primary key' => array('nid', 'vid'),
+    'indexes' => array(
+      'idx_serverid_servertype_serverstatus' => array(mediamosa_server_db::ID, mediamosa_server_db::SERVER_TYPE, mediamosa_server_db::SERVER_STATUS),
+    )
   );
 
   return $a_schema;

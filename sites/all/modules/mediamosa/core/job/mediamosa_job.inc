@@ -189,7 +189,7 @@ class mediamosa_job {
     $a_fields = mediamosa_db::db_insert_enrich($a_fields);
 
     // Insert it.
-    $job_id_raw = db_insert(mediamosa_job_db::TABLE_NAME)
+    $job_id_raw = mediamosa_db::db_insert(mediamosa_job_db::TABLE_NAME)
       ->fields($a_fields)
       ->exectute();
 

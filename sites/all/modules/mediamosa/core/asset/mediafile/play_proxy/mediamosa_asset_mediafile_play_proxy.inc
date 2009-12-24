@@ -70,23 +70,23 @@ class mediamosa_asset_mediafile_play_proxy {
     switch ($response_type) {
       case self::RESPONSE_TYPE_STILL:
         return mediamosa_db::db_query(
-          "SELECT #uri FROM {#mediamosa_server_still} WHERE #active = 1 AND #server_type = :server_type ORDER BY rand() LIMIT 1",
+          "SELECT #uri FROM {#mediamosa_server} WHERE #server_status = 1 AND #server_type = :server_type ORDER BY rand() LIMIT 1",
           array(
             '#uri' => mediamosa_server_db::URI,
-            '#mediamosa_server_still' => mediamosa_server_db::TABLE_NAME,
-            '#active' => mediamosa_server_db::ACTIVE,
+            '#mediamosa_server' => mediamosa_server_db::TABLE_NAME,
+            '#server_status' => mediamosa_server_db::SERVER_STATUS,
             '#server_type' => mediamosa_server_db::SERVER_TYPE,
             ':server_type' => mediamosa_server_db::SERVER_TYPE_STILL,
           )
         )->fetchField();
 
-      case RESPONSE_TYPE_DOWNLOAD:
+      case self::RESPONSE_TYPE_DOWNLOAD:
         return mediamosa_db::db_query(
-          "SELECT #uri FROM {#mediamosa_download_still} WHERE #active = 1 AND #server_type = :server_type ORDER BY rand() LIMIT 1",
+          "SELECT #uri FROM {#mediamosa_server} WHERE #server_status = 1 AND #server_type = :server_type ORDER BY rand() LIMIT 1",
           array(
             '#uri' => mediamosa_server_db::URI,
-            '#mediamosa_download_still' => mediamosa_server_db::TABLE_NAME,
-            '#active' => mediamosa_server_db::ACTIVE,
+            '#mediamosa_server' => mediamosa_server_db::TABLE_NAME,
+            '#server_status' => mediamosa_server_db::SERVER_STATUS,
             '#server_type' => mediamosa_server_db::SERVER_TYPE,
             ':server_type' => mediamosa_server_db::SERVER_TYPE_DOWNLOAD,
           )
@@ -316,7 +316,7 @@ class mediamosa_asset_mediafile_play_proxy {
     assert(is_array($a_stills));
 
     $content_type = "";
-    if (isset($a_mediafile_ext['uri'])) {
+    if (isset($a_mediafile_ext['uri']) && trim($a_mediafile_ext['uri']) != '') {
       $streaming_server_uri = $a_mediafile_ext['uri'];
 
       if (trim($streaming_server_uri) == '') { // No streaming profile found
@@ -324,16 +324,13 @@ class mediamosa_asset_mediafile_play_proxy {
       }
     }
     else {
-      $streaming_server_uri = self::get_media_server(self::RESPONSE_TYPE_STILL);
+      $streaming_server_uri = self::get_media_server($response_type, $a_mediafile_ext);
     }
 
     // Replace {TICKET} with app_id / ticket.
-    if ($streaming_server_uri != self::RESPONSE_TYPE_STILL) {
+    if ($response_type != self::RESPONSE_TYPE_STILL) {
       $streaming_server_ticket_uri = str_replace(self::PARAM_URI_TICKET, $app_id . '/' . $ticket, $streaming_server_uri);
     }
-
-    // For some reason the old code thinks this can be non-array or NULL, lets log this and solve it.
-    assert(is_array($a_stills));
 
     // Uri voor niet-tickets (still, download etc).
     foreach ($a_stills as $key => $value) {
@@ -412,7 +409,7 @@ class mediamosa_asset_mediafile_play_proxy {
         }
         break;
 
-      case RESPONSE_TYPE_URI:
+      case self::RESPONSE_TYPE_URI:
         switch ($a_mediafile_ext['metadata']['container_type']) {
           case self::CONTAINER_TYPE_FLV:
             $output = str_replace(self::PARAM_URI_SCRIPT, 'StroboScope.php?file=', $streaming_server_ticket_uri);
@@ -424,7 +421,7 @@ class mediamosa_asset_mediafile_play_proxy {
         }
         break;
 
-      case RESPONSE_TYPE_DOWNLOAD:
+      case self::RESPONSE_TYPE_DOWNLOAD:
         if (!$is_app_admin) {
           if (isset($a_mediafile_ext['is_downloadable']) && !mediamosa_lib::boolstr2bool($a_mediafile_ext['is_downloadable'])) {
             throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MEDIAFILE_DOWNLOAD_DISABLED);
@@ -442,10 +439,9 @@ class mediamosa_asset_mediafile_play_proxy {
         $output = $streaming_server_uri . '/' . $a_mediafile_ext['filename'];
         break;
 
-      case RESPONSE_TYPE_OBJECT:
-
+      case self::RESPONSE_TYPE_OBJECT:
         // Get the Object code.
-        $object_code = mediamosa_server_streaming::get_objectcode($a_mediafile_ext['metadata']['container_type'], $a_mediafile_ext['metadata']['video_codec']);
+        $output = mediamosa_server_streaming::get_objectcode($a_mediafile_ext['metadata']['container_type'], $a_mediafile_ext['metadata']['video_codec']);
 
         $a_variables = array(
           'WIDTH' => !$width ? '' : $width,
@@ -568,7 +564,7 @@ class mediamosa_asset_mediafile_play_proxy {
         }
         break;
 
-      case RESPONSE_TYPE_STILL:
+      case self::RESPONSE_TYPE_STILL:
         $output = $streaming_server_uri;
         break;
     }

@@ -154,7 +154,7 @@ abstract class mediamosa_rest_call {
   function __construct($a_rest_call) {
     // Copy us.
     $this->{self::URI} = $a_rest_call[self::URI];
-    $this->{self::URI_REQUEST} = explode('/', $a_rest_call[self::URI_REQUEST]);
+    $this->{self::URI_REQUEST} = explode('/', (isset($a_rest_call[self::URI_REQUEST]) ? $a_rest_call[self::URI_REQUEST] : $a_rest_call[self::URI]));
     $this->{self::RESPONSE_TYPE} = $a_rest_call[self::RESPONSE_TYPE];
     $this->{self::METHOD} = $a_rest_call[self::METHOD];
     $this->{self::CLASS_NAME} = $a_rest_call[self::CLASS_NAME];

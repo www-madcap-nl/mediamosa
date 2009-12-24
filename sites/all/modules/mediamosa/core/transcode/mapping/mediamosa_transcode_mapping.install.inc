@@ -79,7 +79,7 @@ function mediamosa_transcode_mapping_install() {
     $a_fields = mediamosa_db::db_insert_enrich($a_fields);
 
     // Insert it.
-    mediamosa_db::db_insert(mediamosa_transcode_mapping_db::TABLE_NAME)
+    db_insert(mediamosa_transcode_mapping_db::TABLE_NAME)
       ->fields($a_fields)
       ->execute();
   }

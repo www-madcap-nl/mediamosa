@@ -37,7 +37,7 @@ include 'mediamosa_server_streaming_container_db.inc';
 function mediamosa_server_streaming_container_install() {
 
   // Download server.
-  drupal_install_schema(mediamosa_server_streaming_container_db::TABLE_NAME);
+  mediamosa::drupal_install_schema(mediamosa_server_streaming_container_db::TABLE_NAME);
 
   db_query(
     strtr(
@@ -63,7 +63,7 @@ function mediamosa_server_streaming_container_install() {
 function mediamosa_server_streaming_container_uninstall() {
 
   // Download server.
-  drupal_uninstall_schema(mediamosa_server_streaming_container_db::TABLE_NAME);
+  mediamosa::drupal_uninstall_schema(mediamosa_server_streaming_container_db::TABLE_NAME);
 }
 
 /**

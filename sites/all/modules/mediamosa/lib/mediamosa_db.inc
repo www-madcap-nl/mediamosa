@@ -702,6 +702,6 @@ class mediamosa_db {
     $hash_62 = $conf_31_to_62{rand(10, 61)} . $hash_62;
 
     // Max strlen 32, although I doubt will see 32+ length.
-    return substr($hash_62, 0, HASH_ID_LENGTH);
+    return substr($hash_62, 0, self::HASH_ID_LENGTH);
   }
 }

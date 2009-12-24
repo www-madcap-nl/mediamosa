@@ -157,7 +157,7 @@ class mediamosa_job_transcode {
     $a_fields = mediamosa_db::db_insert_enrich($a_fields);
 
     // Insert it.
-    db_insert(mediamosa_job_transcode_db::TABLE_NAME)
+    mediamosa_db::db_insert(mediamosa_job_transcode_db::TABLE_NAME)
       ->fields($a_fields)
       ->execute();
 

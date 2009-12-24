@@ -37,7 +37,7 @@ require_once 'mediamosa_server_streaming_db.inc';
 function mediamosa_server_streaming_install() {
 
   // Download server.
-  drupal_install_schema(mediamosa_server_streaming_db::TABLE_NAME);
+  mediamosa::drupal_install_schema(mediamosa_server_streaming_db::TABLE_NAME);
 
   // Our child.
   mediamosa_server_streaming_container_install();
@@ -99,7 +99,7 @@ function mediamosa_server_streaming_uninstall() {
   mediamosa_server_streaming_container_uninstall();
 
   // Download server.
-  drupal_uninstall_schema(mediamosa_server_streaming_db::TABLE_NAME);
+  mediamosa::drupal_uninstall_schema(mediamosa_server_streaming_db::TABLE_NAME);
 }
 
 /**

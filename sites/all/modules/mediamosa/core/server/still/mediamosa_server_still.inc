@@ -42,10 +42,10 @@ class mediamosa_server_still {
     }
 
     $a_server = mediamosa_db::db_query(
-      "SELECT * FROM {#mediamosa_server_still} WHERE #active = 1 AND #server_type = :server_type LIMIT 1",
+      "SELECT * FROM {#mediamosa_server} WHERE #server_status = 1 AND #server_type = :server_type LIMIT 1",
       array(
-        '#mediamosa_server_still' => mediamosa_server_db::TABLE_NAME,
-        '#active' => mediamosa_server_db::ACTIVE,
+        '#mediamosa_server' => mediamosa_server_db::TABLE_NAME,
+        '#server_status' => mediamosa_server_db::SERVER_STATUS,
         '#server_type' => mediamosa_server_db::SERVER_TYPE,
         ':server_type' => mediamosa_server_db::SERVER_TYPE_STILL,
       )

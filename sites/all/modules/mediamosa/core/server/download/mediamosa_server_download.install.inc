@@ -37,7 +37,7 @@ require_once 'mediamosa_server_download_db.inc';
 function mediamosa_server_download_install() {
 
   // Download server.
-  drupal_install_schema(mediamosa_server_download_db::TABLE_NAME);
+  mediamosa::drupal_install_schema(mediamosa_server_download_db::TABLE_NAME);
 
   // Insert default.
   db_query(
@@ -59,7 +59,7 @@ function mediamosa_server_download_install() {
 function mediamosa_server_download_uninstall() {
 
   // Download server.
-  drupal_uninstall_schema(mediamosa_server_download_db::TABLE_NAME);
+  mediamosa::drupal_uninstall_schema(mediamosa_server_download_db::TABLE_NAME);
 }
 
 /**
