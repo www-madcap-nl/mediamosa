@@ -695,13 +695,21 @@ class mediamosa_db {
     for ($x = (strlen($hash_31) - 1); $x >= 0; $x -= 2) {
       $lo = $a_conf_31[$hash_31{$x}];
       $hi = ($x - 1) >= 0 ? $a_conf_31[$hash_31{$x - 1}] + 1 : 0; // Hi + 1 so range is 1 - 31, lo will be 0 - 30.
-      $hash_62 = substr($conf_31_to_62, $hi + $lo, 1) . $hash_62;
+      $hash_62 = mediamosa_unicode::substr($conf_31_to_62, $hi + $lo, 1) . $hash_62;
     }
 
     // Mediamosa doesn't like ID starting with numbers, so lets attach the 1st one with alpha.
     $hash_62 = $conf_31_to_62{rand(10, 61)} . $hash_62;
 
-    // Max strlen 32, although I doubt will see 32+ length.
-    return substr($hash_62, 0, self::HASH_ID_LENGTH);
+    // Max length 24.
+    $uuid = mediamosa_unicode::substr($hash_62, 0, mediamosa_settings::UUID_LENGTH);
+
+    // Lets make sure its has the length of mediamosa_settings::UUID_LENGTH.
+    for ($x = mediamosa_unicode::strlen($uuid); mediamosa_unicode::strlen($uuid) < mediamosa_settings::UUID_LENGTH; $x++) {
+      $uuid .= $conf_31_to_62{rand(0, 61)};
+    }
+
+    // Return the new ID.
+    return $uuid;
   }
 }

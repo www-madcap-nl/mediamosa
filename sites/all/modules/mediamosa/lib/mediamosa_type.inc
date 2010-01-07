@@ -55,7 +55,9 @@ class mediamosa_type {
   const TYPE_XML_VALIDATED               = 'XML'; // XML with syntax validation via simplexml_load_string(). Expects proper XML declaration.
   const TYPE_XML_OAI                     = 'XML_OAI'; // XML with syntax validation via DOM Document. Expects no XML declaration.
   const TYPE_EOR                         = 'EOR'; // Exclusive OR type (like 1 2 4 8, or 1|4 = 5), always UINT
-  const TYPE_URI                         = 'URI'; // URI type checked with parse_uri().
+  const TYPE_URI                         = 'URI'; // URI type
+  const TYPE_URL                         = 'URL'; // URL type (checked with simple parse_url)
+  const TYPE_URL_URI                     = 'URL'; // URL / URI type (checked with simple parse_url)
   const TYPE_AUT_GROUP_TYPE              = 'AUT_GROUP_TYPE';
   const TYPE_DELETE                      = 'DELETE';
 
@@ -67,6 +69,7 @@ class mediamosa_type {
   const TYPE_COLLECTION_ID               = 'COLLECTION_ID';
   const TYPE_BATCH_ID                    = 'BATCH_ID';
   const TYPE_SUPPLEMENT_ID               = 'SUPPLEMENT_ID';
+  const TYPE_TICKET_ID                   = 'TICKET_ID';
 
   const TYPE_DOMAIN                      = 'DOMAIN';
   const TYPE_REALM                       = 'REALM';
@@ -91,6 +94,9 @@ class mediamosa_type {
   // Contains, match, exact.
   const TYPE_SEARCH_MATCH                = 'SEARCH_MATCH';
 
+  // Job types.
+  const TYPE_JOB                         = 'JOB_TYPE';
+  const TYPE_COMMAND                     = 'COMMAND';
 
   // Store NOW() time as date
   const FUNC_DATETIME_NOW                = 'NOW()';
@@ -177,6 +183,22 @@ class mediamosa_type {
         }
         break;
 
+      case self::TYPE_JOB:
+        $a_job_types = array(
+          mediamosa_job_db::JOB_TYPE_ANALYSE,
+          mediamosa_job_db::JOB_TYPE_DELETE_MEDIAFILE,
+          mediamosa_job_db::JOB_TYPE_STILL,
+          mediamosa_job_db::JOB_TYPE_TRANSCODE,
+          mediamosa_job_db::JOB_TYPE_UPLOAD
+        );
+
+        if (!in_array(mediamosa_unicode::strtolower($mixed_param_value), $a_job_types)) {
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_UNKNOWN_JOB_TYPE);
+        }
+
+        $checked_param_value = (string)mediamosa_unicode::strtoupper($mixed_param_value);
+        break;
+
       case self::TYPE_LIMIT:
         $range_start = 0;
         if ($range_end < 1) {
@@ -202,6 +224,14 @@ class mediamosa_type {
         $checked_param_value = (int)$mixed_param_value;
         break;
 
+      case self::TYPE_COMMAND:
+        if (!preg_match("/^(([a-zA-Z]+:[a-zA-Z0-9]+){0,1}|[a-zA-Z]+:[a-zA-Z0-9.]+(;[a-zA-Z]+:[a-zA-Z0-9.]+)*)$/", $mixed_param_value)) {
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
+        }
+
+        $checked_param_value = (string)$mixed_param_value;
+        break;
+
       case self::TYPE_ALPHA:
         if (!ctype_alpha($mixed_param_value) && $mixed_param_value != '') {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
@@ -222,6 +252,7 @@ class mediamosa_type {
       case self::TYPE_MEDIAFILE_ID:
       case self::TYPE_COLLECTION_ID:
       case self::TYPE_BATCH_ID:
+      case self::TYPE_TICKET_ID:
         $checked_param_value = (string)$mixed_param_value;
         break;
 
@@ -335,13 +366,25 @@ class mediamosa_type {
         $checked_param_value = mediamosa_unicode::strtolower($mixed_param_value);
         break;
 
+
       case self::TYPE_URI:
+        // @todo: no check for URI type.
+        $checked_param_value = (string)$mixed_param_value;
+        break;
+
+      case self::TYPE_URL:
         if (parse_url($mixed_param_value) === FALSE) {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
         }
 
         $checked_param_value = (string)$mixed_param_value;
         break;
+
+      case self::TYPE_URL_URI:
+        // FIXME: need some checker here.
+        $checked_param_value = (string)$mixed_param_value;
+        break;
+
 
       case self::TYPE_AUT_GROUP_TYPE:
         $mixed_param_value = mediamosa_unicode::strtoupper($mixed_param_value);
@@ -431,13 +474,6 @@ class mediamosa_type {
     return is_string($checked_param_value) ? self::string_range($param, $checked_param_value, $range_start, $range_end) : self::int_range($param, $checked_param_value, $range_start, $range_end);
   }
 
-
-/**
- * Returns a valid timestamp or throws error when timestamp was invalid or unable to convert
- *
- * @param string $s_value
- * @param string $s_key (wanneer fout melding)
- */
   /**
    * Returns a valid timestamp or throws error when timestamp was invalid or unable to convert
    *

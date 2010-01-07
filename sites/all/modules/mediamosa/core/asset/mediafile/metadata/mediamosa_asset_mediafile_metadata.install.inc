@@ -194,11 +194,11 @@ function mediamosa_asset_mediafile_metadata_schema() {
       ),
     ),
     'primary key' => array(mediamosa_asset_mediafile_metadata_db::ID),
-    // @todo:
-    //'unique keys' => array(
-    //  'uni_mediafileid' => array(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID)
-    //),
+    'unique keys' => array(
+      'uni_mediafileid' => array(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID)
+    ),
     'indexes' => array(
+      // Do not change the name of this index, its used in 1.7 -> 2.0 migration.
       'idx_mediafileid_mimetype' => array(
         mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID,
         mediamosa_asset_mediafile_metadata_db::MIME_TYPE,

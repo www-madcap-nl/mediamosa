@@ -32,6 +32,17 @@
 class mediamosa_io {
 
   /**
+   * Log for mediamosa_io.
+   *
+   * @param string $message
+   * @param array $variables
+   * @param string $severity
+   */
+  static public function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
+    mediamosa::log($message, $variables, $severity, 'mediamosa_io');
+  }
+
+  /**
    * Attempts to create the directory specified by pathname.
    * Fails with exception.
    *
@@ -67,8 +78,13 @@ class mediamosa_io {
    *  The file to delete.
    */
   static public function unlink($filename) {
-    if (!@unlink($filename)) {
-      // ignore. Is handled by our error handler and is logged.
+    if (!file_exists($filename)) {
+      self::log("Unable to remove file '@filename', file was not found.", array('@filename' => $filename));
+      return;
+    }
+
+    if (@unlink($filename)) {
+      self::log("Successfully removed file '@filename'.", array('@filename' => $filename));
     }
   }
 
@@ -95,5 +111,65 @@ class mediamosa_io {
     $last_dot = strripos($filename, '.'); // 0-index
 
     return $last_dot === FALSE ? $filename : mediamosa_unicode::substr($filename, 0, $last_dot);
+  }
+
+  /**
+   * Move one file to other file (rename).
+   *
+   * @param string $old_name
+   * @param string $new_name
+   *
+   * @return bool
+   */
+  static public function rename($old_name, $new_name) {
+
+    $success = FALSE;
+    $message = 'cause unknown';
+    try {
+      $success = rename($old_name, $new_name);
+    }
+    catch (Exception $e) {
+      $message = $e->getMessage();
+    }
+
+    if (!$success) {
+      self::log("Renaming file '@old_name' to '@new_name' failed, @message.", array('@old_name' => $old_name, '@new_name' => $new_name, '@message' => $message));
+    }
+    else {
+      self::log("Successfully renamed file '@old_name' to '@new_name'.", array('@old_name' => $old_name, '@new_name' => $new_name));
+    }
+
+    return $success;
+  }
+
+  /**
+   * Execute an external program
+   *
+   * @param $str
+   */
+  static public function exec($command, array &$output = NULL, &$return_var = NULL) {
+    self::log("Executing command '@command'.", array('@command' => $command));
+    return exec($command, $output, $return_val);
+  }
+
+  /**
+   * Test if file is a symbolic link.
+   *
+   * @param string $filename
+   */
+  static public function is_link($filename) {
+    return is_link($filename);
+  }
+
+  /**
+   * Create a symbolic link.
+   *
+   * @param string $target
+   *  Target file.
+   * @param string $link
+   *  Link to file to create.
+   */
+  static public function symlink($target, $link) {
+    return symlink($target, $link);
   }
 }

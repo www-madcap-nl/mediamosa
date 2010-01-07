@@ -41,6 +41,9 @@ class mediamosa_settings {
   // ------------------------------------------------------------------ Consts.
   const MINIMUM_PHP_VERSION = '5.1.0';
 
+  // Length of the unique ID generator, is always this length.
+  const UUID_LENGTH = 24;
+
   // URL to asset.
   const URL_ASSET = 'vpx/vpx_beheer_mm/asset/@asset_id';
 
@@ -53,6 +56,12 @@ class mediamosa_settings {
   const PLAY_TICKET_LOCATION = 'links';
   const DOWNLOAD_TICKET_LOCATION = 'download_links';
   const STILL_TICKET_LOCATION = 'still_links';
+
+  // Expiration settings, in seconds.
+  const TICKET_EXPIRATION_PLAY = 600; // 10 minutes
+  const TICKET_EXPIRATION_DOWNLOAD = 600; // 10 minutes
+  const TICKET_EXPIRATION_STILL = 3600; // 60 minutes
+  const TICKET_EXPIRATION_UPLOAD = 86400; // 24 hours
 
   // Max Limits.
   const LIMIT_DEFAULT = 10; // We return 10 items by default.

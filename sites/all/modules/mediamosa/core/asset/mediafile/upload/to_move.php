@@ -31,16 +31,6 @@
 
 
 
-function vpx_upload_cron() {
-  $i_upload_expire_timestamp = time() - UPLOAD_TICKET_EXPIRATION;
-  db_set_active('data');
-  db_query(
-    "DELETE FROM {ticket} WHERE ticket_type = '%s' AND issued <= FROM_UNIXTIME(%d)",
-    TICKET_TYPE_UPLOAD,
-    $i_upload_expire_timestamp
-  );
-  db_set_active();
-}
 
 
 

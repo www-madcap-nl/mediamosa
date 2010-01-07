@@ -34,6 +34,34 @@ function _mediamosa_restcall($method, $uri, $data = array(), $report_errors = TR
     'app_id' => 1,
   );
 
+  /*
+  // Prepare the uri
+  $uri = url( $uri, array('absolute' => TRUE));
+  if ($method == 'GET') {
+    $uri .= '?' . http_build_query($data);
+  }
+
+  $a_headers = array('Host' => 'appv2.acceptatie.vpcore.snkn.nl');
+
+  // Use the current session ID in the request
+  foreach ($_COOKIE as $key => $value) {
+    if (strpos($key, 'SESS') === 0) {
+      $a_headers['Cookie'] = $key . '=' . $value;
+      break;
+    }
+  }
+
+  // Perform the actual request
+  $result = mediamosa_http::drupal_http_request(
+    'http://10.252.0.171/' . $uri,
+    array(
+      'method' => $method,
+      'data' => http_build_query($data),
+      'headers' => $a_headers,
+    )
+  );
+ */
+
   // Prepare the uri
   $uri = url(MEDIAMOSA_MENU_PATH . $uri, array('absolute' => TRUE));
   if ($method == 'GET') {
@@ -49,7 +77,7 @@ function _mediamosa_restcall($method, $uri, $data = array(), $report_errors = TR
   }
 
   // Perform the actual request
-  $result = drupal_http_request(
+  $result = mediamosa_http::drupal_http_request(
     $uri,
     array(
       'method' => $method,
@@ -57,6 +85,7 @@ function _mediamosa_restcall($method, $uri, $data = array(), $report_errors = TR
       'headers' => $cookie,
     )
   );
+
   try {
     $xml = new SimpleXMLElement($result->data);
     if ($report_errors && $xml->header->request_result != 'success') {

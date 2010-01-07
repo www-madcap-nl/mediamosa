@@ -702,6 +702,9 @@ function _mediamosa_migration_mediafile_metadata() {
   // Turn off problems with empty dates.
   db_query("SET SESSION sql_mode = 'ALLOW_INVALID_DATES'");
 
+  // Remove the unique index on mediafile_id.
+  db_query("ALTER TABLE {mediamosa_asset_mediafile_metadata} DROP INDEX uni_mediafileid");
+
   // The mediamosa_asset_mediafile table should be empty (its checked as requirement).
   /**
    * Copy from 1.x to 2.x
@@ -778,6 +781,26 @@ function _mediamosa_migration_mediafile_metadata() {
 
   // Now make sure changed is not empty.
   db_query("UPDATE {mediamosa_asset_mediafile_metadata} SET changed = NOW() WHERE changed = '0000-00-00 00:00:00'");
+
+  // Now remove the double metadata.
+
+  // Select
+  $tmp_table_name = db_query_temporary("SELECT COUNT(*) AS total, MIN(metadata_id) AS metadata_id FROM {mediamosa_asset_mediafile_metadata} GROUP BY mediafile_id HAVING total > 1");
+  $row_count = db_query("SELECT COUNT(metadata_id) FROM " . $tmp_table_name)->fetchField();
+
+  // Might deadlock, so lets protect.
+  $max = 100;
+  while ($row_count && --$max) {
+    // Delete the doubles we found.
+    db_query("DELETE FROM {mediamosa_asset_mediafile_metadata} WHERE metadata_id IN (SELECT metadata_id FROM " . $tmp_table_name . ")");
+
+    // Now query again, because there can be more than 2, 3, 4, etc rows of each double.
+    $tmp_table_name = db_query_temporary("SELECT COUNT(*) AS total, MIN(metadata_id) AS metadata_id FROM {mediamosa_asset_mediafile_metadata} GROUP BY mediafile_id HAVING total > 1");
+    $row_count = db_query("SELECT COUNT(metadata_id) FROM " . $tmp_table_name)->fetchField();
+  }
+
+  // Remove the unique index on mediafile_id.
+  db_query("ALTER TABLE {mediamosa_asset_mediafile_metadata} ADD UNIQUE KEY `uni_mediafileid` (`mediafile_id`)");
 
   // Back to old session mode.
   db_query(strtr("SET SESSION sql_mode = '#old_mode'", array('#old_mode' => $old_mode)));

@@ -115,6 +115,151 @@ class mediamosa_rest_call_asset_mediafile_uploadticket_create extends mediamosa_
   }
 }
 
+/**
+ * URI: /mediafile/upload
+ *
+ * Method: POST
+ *
+ * 1.x: vpx_upload_handle_file
+ */
+class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
 
+  // ------------------------------------------------------------------ Consts.
+  // Rest vars;
+  const UPLOAD_TICKET = 'upload_ticket';
+  const REDIRECT_URI = 'redirect_uri';
+  const TRANSCODE = 'transcode';
+  const TRANSCODE_INHERITS_ACL = 'transcode_inherits_acl';
+  const CREATE_STILL = 'create_still';
+  const STILL_TYPE = 'still_type';
+  const STILL_PER_MEDIAFILE = 'still_per_mediafile';
+  const STILL_EVERY_SECOND = 'still_every_second';
+  const START_FRAME = 'start_frame';
+  const END_FRAME = 'end_frame';
+  const SIZE = 'size';
+  const H_PADDING = 'h_padding';
+  const V_PADDING = 'v_padding';
+  const TAG = 'tag';
+  const FRAMETIME = 'frametime';
+  const WIDTH = 'width';
+  const HEIGHT ='height';
+  const RETRANSCODE = 'retranscode';
+  const FILENAME = 'filename';
+  const COMPLETED_URL = 'completed_url';
+  const COMPLETED_TRANSCODING_URL = 'completed_transcoding_url';
 
+  // ------------------------------------------------------------------ Get Var Setup.
+  public function get_var_setup() {
+    $a_var_setup = array();
+
+    $a_var_setup = array(
+      self::VARS => array(
+        self::UPLOAD_TICKET => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_TICKET_ID,
+          self::VAR_DESCRIPTION => 'The ID that has been given to enable the upload.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+          self::VAR_RANGE_END => mediamosa_db::HASH_ID_LENGTH,
+        ),
+        self::REDIRECT_URI => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_URL_URI,
+          self::VAR_DESCRIPTION => 'The URL to redirect when upload has been successful.',
+        ),
+        self::TRANSCODE => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_DESCRIPTION => 'If one (or more) transcode profiles is in this parameter than the media file will be transcoded after the upload.',
+          self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+        ),
+        self::TRANSCODE_INHERITS_ACL => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_DESCRIPTION => "If 'true'; All the acl media rights will be copied to the new transcoded media file.",
+          self::VAR_DEFAULT_VALUE => 'FALSE',
+        ),
+        self::CREATE_STILL => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_DESCRIPTION => "Specify 'true', if you want a still is generated after the upload and analysis\n\nSee: Still creation parameters (POST) on /mediafile/{mediafile_id}/still/create [POST].",
+          self::VAR_DEFAULT_VALUE => 'FALSE',
+        ),
+        self::STILL_TYPE => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_DESCRIPTION => 'The still type.',
+        ),
+        self::STILL_PER_MEDIAFILE => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_DESCRIPTION => 'Stills per mediafile.',
+        ),
+        self::STILL_EVERY_SECOND => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_DESCRIPTION => 'Stills every second.',
+        ),
+        self::START_FRAME => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_DESCRIPTION => 'Still start frame.',
+        ),
+        self::END_FRAME => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_DESCRIPTION => 'Still end frame.',
+        ),
+        self::SIZE => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_DESCRIPTION => 'Size of the still.',
+        ),
+        self::H_PADDING => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_DESCRIPTION => 'Still horizontal padding.',
+        ),
+        self::V_PADDING => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_DESCRIPTION => 'Still vertical padding.',
+        ),
+        self::TAG => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_DESCRIPTION => 'Still tag.',
+        ),
+        self::FRAMETIME => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_DESCRIPTION => 'Still frametime.',
+        ),
+        self::WIDTH => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_DESCRIPTION => 'Still width.',
+        ),
+        self::HEIGHT => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_DESCRIPTION => 'Still height.',
+        ),
+        self::RETRANSCODE => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_DESCRIPTION => "if 'retranscode' is not put, all existing transcodes of the original media file will be lost. If 'retranscode' is 'true', then new transcode jobs will be created, which replace the existing transcodes..",
+          self::VAR_DEFAULT_VALUE => 'FALSE',
+        ),
+        self::FILENAME => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_DESCRIPTION => 'The filename of the media file.',
+        ),
+        self::COMPLETED_URL => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_URL,
+          self::VAR_DESCRIPTION => "This URL gives opportunity to the APP builder for a status raport; \nupload_ticket\nstatus_code\n\nThe upload_ticket is used to identify the upload. The status_code is a Mediamosa code.\nThe type is URL and not URI, because this parameter http:// or https://.",
+        ),
+        self::COMPLETED_TRANSCODING_URL => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_URL,
+          self::VAR_DESCRIPTION => "This URL is called after the status of transcoding job changed.",
+        ),
+      )
+    );
+
+    // Enrich with required REST vars.
+    return self::get_var_setup_default($a_var_setup);
+  }
+
+  // ------------------------------------------------------------------ Do Call.
+  public function do_call() {
+    $o_mediamosa = mediamosa::get();
+
+    $a_app_ids = $this->get_param_value_app();
+    $app_id = reset($a_app_ids);
+
+    // Get params.
+  }
+
+}
 

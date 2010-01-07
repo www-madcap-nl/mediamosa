@@ -15,7 +15,9 @@
   other CMS's possible.
 
 
+dubble entries(!)
 
+select *, count(*) as total from aut_object group by `aut_object_type`,`aut_object_id`,`aut_type`,`aut_id` having total > 1;
 
 
 
@@ -42,6 +44,8 @@ Random password generatie met installer;
 X-Mediamosa-Internal-Pass: <password>
 in header.
 
+
+See mediamosa_rest_call_create_mediafile (!) (!) depending now on asset parent_id removal(!)
 
 Notes:
 - The 'version' field in error table has been dropped, was not used.

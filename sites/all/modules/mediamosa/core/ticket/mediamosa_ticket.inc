@@ -40,9 +40,20 @@ class mediamosa_ticket {
   const TICKET_TYPE_STILL = 'STILL';
   const TICKET_TYPE_UPLOAD = 'UPLOAD';
 
-  // ------------------------------------------------------------------ Consts.
+  // ------------------------------------------------------------------ Static Functions.
   /**
-   * Return the path for the play ticket.
+   * Log for job_server.
+   *
+   * @param string $message
+   * @param array $variables
+   * @param string $severity
+   */
+  static public function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
+    mediamosa::log($message, $variables, $severity, 'ticket');
+  }
+
+  /**
+   * Return the path for the play target, not where the ticket symlink is made(!).
    * This path is relative, not based on absolute, this is by design.
    *
    * @return string
@@ -52,7 +63,7 @@ class mediamosa_ticket {
   }
 
   /**
-   * Return the path for the download ticket.
+   * Return the path for the download target, not where the ticket symlink is made(!).
    * This path is relative, not based on absolute, this is by design.
    *
    * @return string
@@ -62,7 +73,7 @@ class mediamosa_ticket {
   }
 
   /**
-   * Return the path for the still ticket.
+   * Return the path for the still target, not where the ticket symlink is made(!).
    * This path is relative, not based on absolute, this is by design.
    *
    * @return string
@@ -168,7 +179,9 @@ class mediamosa_ticket {
       default:
         $ticket_type = self::TICKET_TYPE_PLAY;
         $ticket_target = self::play_ticket_target_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::objectid_to_location($a_mediafile_ext['mediafile_id']);
-        $ticket_path = mediamosa_configuration_storage::ticket_location_get($app_id);
+        $ticket_path = mediamosa_configuration_storage::ticket_play_location_get($app_id);
+
+        // Now based on certain extensions, attach the fileext. to the filename.
         switch ($a_mediafile_ext['metadata']['container_type']) {
           case mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_FLV:
             $ticket_id .= '.flv';
@@ -210,12 +223,151 @@ class mediamosa_ticket {
     // Create the symlink ticket.
     $ticket_target_tmp = mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_unicode::substr($ticket_target, 3);
     if (!is_dir($ticket_target_tmp)) {
-      if (file_exists($ticket_symlink) || !symlink($ticket_target, $ticket_symlink)) {
+      if (file_exists($ticket_symlink)) {
+       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_UNABLE_TO_CREATE_SYMLINK, array('@location' => $ticket_target . ' (link already exists)'));
+      }
+      elseif (!mediamosa_io::symlink($ticket_target, $ticket_symlink)) {
        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_UNABLE_TO_CREATE_SYMLINK, array('@location' => $ticket_target));
       }
     }
 
     // Return the ticket, we might have changed it.
     return $ticket_id;
+  }
+
+  /**
+   * Run at fixed intervals.
+   *
+   * 1.x: play_proxy_ticket_cleanup
+   */
+  static public function ticket_cleanup() {
+
+    if (!mediamosa_configuration_storage::is_mount_setup()) {
+      self::log('Can not run clean up expired tickets; mount point not setup, need to specify the linux or windows mount point in mediamosa configuration.');
+      return;
+    }
+
+    // Get the current time.
+    $db_time_now = mediamosa::db_current_timestamp_now();
+
+    // Retrieve location of the play tickets.
+    $ticket_play_location = mediamosa_configuration_storage::ticket_play_location_get();
+
+    // Clean up the play tickets.
+    mediamosa_io::exec(
+      strtr(
+        'find @ticket_play_location/. -maxdepth 2 -mindepth 1 -name "@wildmatch" -type l -mmin +@ticket_expiration -delete',
+        array(
+          '@ticket_still_location' => $ticket_play_location,
+          '@wildmatch' => str_repeat('?', mediamosa_settings::UUID_LENGTH),
+          '@ticket_expiration' => (int)(mediamosa_settings::TICKET_EXPIRATION_PLAY / 60),
+        )
+      )
+    );
+
+    // Clean up the tickets with extensions
+    mediamosa_io::exec(
+      strtr(
+        'find @ticket_play_location/. -maxdepth 2 -mindepth 1 -name "@wildmatch.*" -type l -mmin +@ticket_expiration -delete',
+        array(
+          '@ticket_still_location' => $ticket_play_location,
+          '@wildmatch' => str_repeat('?', mediamosa_settings::UUID_LENGTH),
+          '@ticket_expiration' => (int)(mediamosa_settings::TICKET_EXPIRATION_PLAY / 60),
+        )
+      )
+    );
+
+    // Now remove play tickets from the database.
+    $result = db_query(
+      'DELETE FROM {#mediamosa_ticket} WHERE #ticket_type = :ticket_type AND #issued <= DATE_SUB(:now, INTERVAL #expire_play SECOND)',
+      array(
+        '#mediamosa_ticket' => mediamosa_ticket_db::TABLE_NAME,
+        '#ticket_type' => mediamosa_ticket_db::TICKET_TYPE,
+        ':ticket_type' => mediamosa_ticket_db::TICKET_TYPE_PLAY,
+        '#issued' => mediamosa_ticket_db::ISSUED,
+        ':now' => $db_time_now,
+        '#expire_play' => mediamosa_settings::TICKET_EXPIRATION_PLAY,
+      )
+    );
+
+    // Set the download location.
+    $ticket_download_location = mediamosa_configuration_storage::ticket_download_location_get();
+
+    // Clean up the download directories.
+    mediamosa_io::exec(
+      strtr(
+        'find @ticket_download_location/. -maxdepth 2 -mindepth 2 -type l -mmin +@ticket_expiration -delete',
+        array(
+          '@ticket_download_location' => $ticket_download_location,
+          '@wildmatch' => str_repeat('?', mediamosa_settings::UUID_LENGTH),
+          '@ticket_expiration' => (int)(mediamosa_settings::DOWNLOAD_TICKET_LOCATION / 60),
+        )
+      )
+    );
+
+    // Clean up the download directories.
+    mediamosa_io::exec(
+      strtr(
+        'find @ticket_download_location/. -maxdepth 1 -mindepth 1 -name "@wildmatch" -type d -mmin +@ticket_expiration -delete',
+        array(
+          '@ticket_download_location' => $ticket_download_location,
+          '@wildmatch' => str_repeat('?', mediamosa_settings::UUID_LENGTH),
+          '@ticket_expiration' => (int)(mediamosa_settings::DOWNLOAD_TICKET_LOCATION / 60),
+        )
+      )
+    );
+
+    // Set the still location.
+    $ticket_still_location = mediamosa_configuration_storage::ticket_still_location_get();
+
+    // Clean up the stills.
+    mediamosa_io::exec(
+      strtr(
+        'find @ticket_still_location/. -maxdepth 1 -mindepth 1 ! -name "*.asx" -name "@wildmatch" -type l -mmin +@ticket_expiration -delete',
+        array(
+          '@ticket_still_location' => $ticket_still_location,
+          '@wildmatch' => str_repeat('?', mediamosa_settings::UUID_LENGTH),
+          '@ticket_expiration' => (int)(mediamosa_settings::STILL_TICKET_EXPIRATION / 60),
+        )
+      )
+    );
+
+    // Clean up the asx files (these are in the still dir because of the downloadable state of that dir).
+    mediamosa_io::exec(
+      strtr(
+        'find @ticket_still_location/. -maxdepth 1 -mindepth 1 -name "@wildmatch.asx" ! -type l -mmin +@ticket_expiration -delete',
+        array(
+          '@ticket_still_location' => $ticket_still_location,
+          '@wildmatch' => str_repeat('?', mediamosa_settings::UUID_LENGTH),
+          '@ticket_expiration' => (int)(mediamosa_settings::STILL_TICKET_EXPIRATION / 60),
+        )
+      )
+    );
+
+    // Now remove still from the database.
+    $result = db_query(
+      'DELETE FROM {#mediamosa_ticket} WHERE #ticket_type = :ticket_type AND #issued <= DATE_SUB(:now, INTERVAL #expire_play SECOND)',
+      array(
+        '#mediamosa_ticket' => mediamosa_ticket_db::TABLE_NAME,
+        '#ticket_type' => mediamosa_ticket_db::TICKET_TYPE,
+        ':ticket_type' => mediamosa_ticket_db::TICKET_TYPE_STILL,
+        '#issued' => mediamosa_ticket_db::ISSUED,
+        ':now' => $db_time_now,
+        '#expire_play' => mediamosa_settings::TICKET_EXPIRATION_STILL,
+      )
+    );
+
+    // Now remove expired upload tickets from the database.
+    $result = db_query(
+      'DELETE FROM {#mediamosa_ticket} WHERE #ticket_type = :ticket_type AND #issued <= DATE_SUB(:now, INTERVAL #expire_play SECOND)',
+      array(
+        '#mediamosa_ticket' => mediamosa_ticket_db::TABLE_NAME,
+        '#ticket_type' => mediamosa_ticket_db::TICKET_TYPE,
+        ':ticket_type' => mediamosa_ticket_db::TICKET_TYPE_UPLOAD,
+        '#issued' => mediamosa_ticket_db::ISSUED,
+        ':now' => $db_time_now,
+        '#expire_play' => mediamosa_settings::TICKET_EXPIRATION_UPLOAD,
+      )
+    );
   }
 }

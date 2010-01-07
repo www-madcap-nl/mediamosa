@@ -110,6 +110,9 @@ function mediamosa_ticket_schema() {
       ),
     ),
     'primary key' => array(mediamosa_ticket_db::ID),
+    'indexes' => array(
+      'idx_type_issued' => array(mediamosa_ticket_db::TICKET_TYPE, mediamosa_ticket_db::ISSUED),
+    ),
   );
 
   return $a_schema;

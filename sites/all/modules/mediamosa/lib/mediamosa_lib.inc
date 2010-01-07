@@ -95,5 +95,32 @@ class mediamosa_lib {
     return $a_result;
   }
 
+  /*
+   * Convert an iso8601 date string (YYYY-MM-DD HH:MM:SS) to
+   * number of seconds since 01-01-1970.
+   *
+   */
+  static public function iso8601date_to_unix($iso8601_date_str) {
+    $a_value = split("[-: ]", $iso8601_date_str);
+    $a_value[0] = (int)$a_value[0];
+    $a_value[1] = isset($a_value[1]) && $a_value[1] > 0 ? (int)$a_value[1] : 1;// MM
+    $a_value[2] = isset($a_value[2]) && $a_value[2] > 0 ? (int)$a_value[2] : 1;// DD
+    $a_value[3] = isset($a_value[3]) ? (int)$a_value[3] : 0;// HH
+    $a_value[4] = isset($a_value[4]) ? (int)$a_value[4] : 0;// MM
+    $a_value[5] = isset($a_value[5]) ? (int)$a_value[5] : 0;// SS
 
+    // Get current timezone
+    $tz = date_default_timezone_get();
+
+    // Set to GMT/UTC so we can convert without timezone problems
+    date_default_timezone_set('UTC');
+
+    // Convert to integer
+    $time = gmmktime($a_value[3], $a_value[4], $a_value[5], $a_value[1], $a_value[2], $a_value[0]);
+
+    // Back to original timezone, so we dont screw with other time functions
+    date_default_timezone_set($tz);
+
+    return $time;
+  }
 }

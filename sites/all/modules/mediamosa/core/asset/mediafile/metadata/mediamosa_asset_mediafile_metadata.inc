@@ -219,7 +219,7 @@ class mediamosa_asset_mediafile_metadata {
     if ($a_job[mediamosa_job_db::CREATE_STILL] == $a_job[mediamosa_job_db::CREATE_STILL_TRUE]) {
       $a_still_parameters = empty($a_job[mediamosa_job_db::STILL_PARAMETERS]) ? array() : unserialize($a_job[mediamosa_job_db::STILL_PARAMETERS]);
 
-      mediamosa_job::create_job_still($a_job[mediamosa_job_db::APP_ID], $a_job[mediamosa_job_db::OWNER_ID], FALSE, $a_job[mediamosa_job_db::MEDIAFILE_ID], $a_still_parameters);
+      mediamosa_job::create_job_still($a_job[mediamosa_job_db::APP_ID], $a_job[mediamosa_job_db::OWNER_ID], FALSE, $a_job[mediamosa_job_db::MEDIAFILE_ID], FALSE, $a_still_parameters);
     }
   }
 }

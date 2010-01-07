@@ -326,7 +326,7 @@ class mediamosa_rest_call_create_mediafile extends mediamosa_rest_call {
   const MEDIAFILE_ID = 'mediafile_id';
   const GROUP_ID = 'group_id';
   const USER_ID = 'user_id';
-  const DELETE = 'delete';
+  const URI = 'uri';
   const IS_DOWNLOADABLE = 'is_downloadable';
   const MOUNT_POINT = 'sannas_mount_point';
   const IS_ORIGINAL_FILE = 'is_original_file';

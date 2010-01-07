@@ -91,6 +91,9 @@ class mediamosa_job_upload {
       mediamosa_job_upload_db::CREATE_STILL => $create_still ? mediamosa_job_upload_db::CREATE_STILL_TRUE : mediamosa_job_upload_db::CREATE_STILL_FALSE,
     );
 
+    // Add created value.
+    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+
     // Insert it.
     $job_id_upload = mediamosa_db::db_insert(mediamosa_job_upload_db::TABLE_NAME)
       ->fields($a_fields)

@@ -109,6 +109,7 @@ abstract class mediamosa_rest_call {
   const VAR_ALLOWED_VALUES = 'a_allowed_values'; // Optional array for checking against allowed values.
   const VAR_IS_READ_ONLY = 'read_only'; // default no. Some vars may not be changed.
   const VAR_IS_INTERNAL_ONLY = 'internal_only'; // If true, then this variable is only accepted by internals.
+  const VAR_OVERRIDE_VALUE = 'override_value'; // Set this to override any value given from URI/GET/POST.
 
   const VAR_IS_HIDDEN = 'hidden'; // Hide var for outside world.
   const VAR_IS_HIDDEN_YES = 'yes';
@@ -400,7 +401,7 @@ abstract class mediamosa_rest_call {
    * @param mixed $value
    */
   public function set_param_value($param, $value) {
-    if ($this->a_rest_args[$param][self::PARAM_IS_READ_ONLY] == self::VAR_IS_READ_ONLY_YES) {
+    if (isset($this->a_rest_args[$param]) && $this->a_rest_args[$param][self::PARAM_IS_READ_ONLY] == self::VAR_IS_READ_ONLY_YES) {
       throw new mediamosa_exception_program_error('Do not set param @param, its read only.', array('@param' => $param));
     }
 
@@ -646,6 +647,12 @@ abstract class mediamosa_rest_call {
       // Set read only to no, if not set.
       if (!isset($a_var[self::VAR_IS_READ_ONLY])) {
         $a_var[self::VAR_IS_READ_ONLY] = self::VAR_IS_READ_ONLY_NO;
+      }
+
+      // If override is set, override the GET/POST/URI input.
+      if (isset($a_var[self::VAR_OVERRIDE_VALUE])) {
+        $this->a_rest_args[$param][self::PARAM_VALUE] = $a_var[self::VAR_OVERRIDE_VALUE];
+        $this->a_rest_args[$param][self::PARAM_ISSET_GIVEN] = TRUE; // lets simulate input from GET/POST/URI.
       }
 
       // Copy Read only status.

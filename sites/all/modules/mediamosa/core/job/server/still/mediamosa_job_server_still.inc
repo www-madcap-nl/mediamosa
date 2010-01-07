@@ -159,27 +159,27 @@ class mediamosa_job_server_still {
    *
    * 1.x: _vpx_jobserver_still_validate
    *
-   * @param integer $jobserver_id
-   * @param string $mediafile_src
+   * @param integer $job_id
+   * @param string $mediafile_id_src
    *
    * @return mixed
    *  FALSE when there are no stills or the name of the still
    */
-  static public function still_validate($jobserver_id, $mediafile_src) {
+  static public function still_validate($job_id, $mediafile_id_src) {
     // Retrieve the job settings
     $result_row = mediamosa_db::db_query(
       'SELECT * FROM {#mediamosa_job_server_still} AS jsj
        LEFT JOIN {#mediamosa_job_server} AS jj ON jj.jobserver_job_id = jsj.jobserver_job_id
-       WHERE jj.job_id = :jobserver_id',
+       WHERE jj.job_id = :job_id',
       array(
         '#mediamosa_job_server_still' => mediamosa_job_server_still_db::TABLE_NAME,
         '#mediamosa_job_server' => mediamosa_job_server_db::TABLE_NAME,
-        ':jobserver_id' => $jobserver_id
+        ':job_id' => $job_id
       )
     )->fetchAssoc();
 
     if (!$result_row) {
-      return $mediafile_src;
+      return $mediafile_id_src;
     }
 
     $execution_string = "";
@@ -189,20 +189,19 @@ class mediamosa_job_server_still {
     $v_padding = $result_row[mediamosa_job_server_still_db::V_PADDING];
     $blackstill_check = $result_row[mediamosa_job_server_still_db::BLACKSTILL_CHECK];
 
-    if ($blackstill_check == 'FALSE') {
-      return $mediafile_src;
+    if ($blackstill_check == mediamosa_job_server_still_db::BLACKSTILL_CHECK_FALSE) {
+      return $mediafile_id_src;
     }
 
-    // FIXME: job_id = $jobserver_id ?????
     $file_duration = mediamosa_db::db_query(
       'SELECT file_duration FROM {#mediamosa_asset_mediafile_metadata} m
        LEFT JOIN {#mediamosa_job} j ON m.mediafile_id = j.mediafile_id
-       WHERE job_id = :jobserver_id
+       WHERE job_id = :job_id
        LIMIT 1',
       array(
         '#mediamosa_asset_mediafile_metadata' => mediamosa_asset_mediafile_metadata_db::TABLE_NAME,
         '#mediamosa_job' => mediamosa_job_db::TABLE_NAME,
-        ':jobserver_id' => $jobserver_id,
+        ':job_id' => $job_id,
       )
     )->fetchfield();
 
@@ -211,7 +210,7 @@ class mediamosa_job_server_still {
     $seconds += $duration_array[1] * 60;
     $seconds += $duration_array[2];
 
-    $base_filename = mediamosa_io::get_base_filename($mediafile_src);
+    $base_filename = mediamosa_io::get_base_filename($mediafile_id_src);
     $base_path = mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::transcode_tmp_location_get() . DIRECTORY_SEPARATOR . $base_filename;
 
     // Create our extra stills

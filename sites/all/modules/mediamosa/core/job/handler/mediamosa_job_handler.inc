@@ -456,7 +456,7 @@ class mediamosa_job_handler {
     $a_asset = mediamosa_asset::get($asset_id);
     $parent_id = ($a_asset[mediamosa_asset_db::PARENT_ID] ? $a_asset[mediamosa_asset_db::PARENT_ID] : $asset_id);
 
-    self::log("Start aanmaken DB still, e.g. @filename, job: @job_id", array('@filename' => $filenames[0], '@job_id' => $job_id));
+    self::log("Start creation DB still, e.g. @filename, job: @job_id", array('@filename' => $filenames[0], '@job_id' => $job_id));
 
     // Remove old stills
     // We have multiple stills now, so we don't delete the old ones
@@ -574,7 +574,7 @@ class mediamosa_job_handler {
           continue;
         }
 
-        if (self::is_valid_job($job_info[mediamosa_job_db::ID], $job_info[mediamosa_job_db::JOB_TYPE], $job_info[mediamosa_job_db::MEDIAFILE_ID])) {
+        if (mediamosa_job::is_valid_job($job_info[mediamosa_job_db::ID], $job_info[mediamosa_job_db::JOB_TYPE], $job_info[mediamosa_job_db::MEDIAFILE_ID])) {
           self::start_server_job($job_info[mediamosa_job_db::ID],
                                  $job_info[mediamosa_job_db::JOB_TYPE],
                                  $result_row['server_id'],//alias

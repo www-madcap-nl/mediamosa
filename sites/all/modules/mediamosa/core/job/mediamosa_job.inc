@@ -86,8 +86,6 @@ class mediamosa_job {
       ->condition(mediamosa_job_db::ID, $job_id);
   }
 
-
-
   /**
    * Get all information of this job in the database.
    *
@@ -112,9 +110,11 @@ class mediamosa_job {
       case mediamosa_job_db::JOB_TYPE_STILL:
         $a_job_child = mediamosa_job_still::get($job_id);
         break;
+
       case mediamosa_job_db::JOB_TYPE_TRANSCODE:
         $a_job_child = mediamosa_job_transcode::get($job_id);
         break;
+
       case mediamosa_job_db::JOB_TYPE_UPLOAD:
         $a_job_child = mediamosa_job_upload::get($job_id);
         break;
@@ -270,7 +270,7 @@ class mediamosa_job {
   static public function create_job_still($app_id, $user_id, $is_app_admin, $mediafile_id, array $a_still_parameters = array()) {
 
     // Create job.
-    $job_id = self::create(mediamosa_job_db::JOB_TYPE_STILL, $app_id, $user_id, $is_app_admin, $mediafile_id);
+    $job_id = self::create(mediamosa_job_db::JOB_TYPE_STILL, $app_id, $user_id, $is_app_admin, $mediafile_id, FALSE, $a_still_parameters);
 
     // Create sub still job.
     mediamosa_job_still::create($job_id, $a_still_parameters);
@@ -293,7 +293,7 @@ class mediamosa_job {
   static public function create_job_upload($app_id, $user_id, $group_id, $is_app_admin, $mediafile_id, $file_size, $retranscode, $create_still) {
 
     // Create job.
-    $job_id = self::create(mediamosa_job_db::JOB_TYPE_STILL, $app_id, $user_id, $is_app_admin, $mediafile_id);
+    $job_id = self::create(mediamosa_job_db::JOB_TYPE_UPLOAD, $app_id, $user_id, $is_app_admin, $mediafile_id, $create_still);
 
     // Create sub upload job.
     mediamosa_job_upload::create($app_id, $job_id, $user_id, $group_id, $mediafile_id, $file_size, $retranscode, $create_still);
@@ -782,14 +782,9 @@ class mediamosa_job {
   }
 
   /**
-   * Verwijderen van een job
-   * Een job kan alleen verwijderd worden wanneer de status WAITING,
-   * FINISHED of FAILED is, en deze niet is toegewezen aan een server.
-   *
-   * De job wordt ook uit alle hulptabellen verwijderd.
-   */
-  /**
    * Cancel job.
+   * Can only be removed if status is WAITING, FINISHED or FAILED and
+   * not assigned to server.
    *
    * 1.x: _vpx_jobs_cancel_job
    *
@@ -802,19 +797,21 @@ class mediamosa_job {
     // Check if can be removed.
     $a_row_job = mediamosa_db::db_query(
       'SELECT * FROM {#mediamosa_job} WHERE
-       job_id = :job_id AND
-       status IN (:JOBSTATUS_WAITING, :JOBSTATUS_FINISHED, :JOBSTATUS_FAILED) AND
-       job_id NOT IN (SELECT job_id FROM #mediamosa_server_job)',
+       #job_id = :job_id AND
+       #status IN (:JOBSTATUS_WAITING, :JOBSTATUS_FINISHED, :JOBSTATUS_FAILED) AND
+       #job_id NOT IN (SELECT #job_id FROM #mediamosa_server_job)',
       array(
         '#mediamosa_job' => mediamosa_job_db::TABLE_NAME,
         '#mediamosa_server_job' => mediamosa_server_job_db::TABLE_NAME,
         ':JOBSTATUS_WAITING' => mediamosa_job_db::JOB_STATUS_WAITING,
         ':JOBSTATUS_FINISHED' => mediamosa_job_db::JOB_STATUS_FINISHED,
         ':JOBSTATUS_FAILED' => mediamosa_job_db::JOB_STATUS_FAILED,
+        '#job_id' => mediamosa_job_db::ID,
+        '#status' => mediamosa_job_db::JOB_STATUS,
       )
     )->fetchAssoc();
 
-    if ($a_row_job === FALSE) {
+    if ($a_row_job == FALSE) {
       throw new mediamosa_exception_error_job_could_not_be_removed(array('@job_id' => $job_id));
     }
 

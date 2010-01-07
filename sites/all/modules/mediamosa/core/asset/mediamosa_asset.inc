@@ -838,4 +838,15 @@ class mediamosa_asset {
       ->condition(mediamosa_asset_db::ID, $asset_id)
       ->execute();
   }
+
+  /**
+   * Given asset must exist.
+   *
+   * @param $asset_id
+   */
+  static public function must_exists($asset_id, $do_parent = FALSE) {
+      // Asset must exist to be deleted.
+    return mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
+  }
+
 }

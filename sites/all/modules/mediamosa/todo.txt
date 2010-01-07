@@ -1,21 +1,14 @@
 
    move upload
-   move jobserver/jobhandler/etc
    move still / download scripts from root.
-   move LHA scripts
    move stats
 
    playproxy rcon
    support REST versions.
-   support REST internals / externals.
    parent_id migration.
    parent_id out of code creation mediafile.
    Drupal 7 migration last version.
-   created / changed date update code trigger replacers.
    Fix is_app_admin voor internals.
    Fix VAR_IS_HIDDEN.
    FIX forgotten owner_id/user_id/asset_id and other fix length field using the max_length in var setup.
-   FIX webservice; when not found then enabled by default (is now off when not found).
-   FIX uuid() to give back max 24 instead of 32?
    Do; strict setting per app for strict mode (like allow non-specified params in GET/POST)
-   Fix created/changed columns

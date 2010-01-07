@@ -1,6 +1,7 @@
 <?php
 // $Id$
 
+
 /**
  * MediaMosa is a Full Featured, Webservice Oriented Media Management and
  * Distribution platform (http://www.vpcore.nl)
@@ -53,6 +54,13 @@ class mediamosa_configuration_storage {
   }
 
   /**
+   * Return TRUE when mount point has been specified.
+   */
+  static public function is_mount_setup() {
+    return mediamosa_configuration_storage::mount_point_get() != '';
+  }
+
+  /**
    * Set the sannas setting for linux.
    *
    * @param string $value
@@ -98,13 +106,36 @@ class mediamosa_configuration_storage {
   }
 
   /**
-   * Return the default path for the ticket.
+   * Return the default path for the play ticket.
    * Based on the 1.x function _play_proxy_play_ticket_location.
    *
    * @return string
    */
-  static public function ticket_location_get($app_id) {
-    return self::mount_point_get() . DIRECTORY_SEPARATOR . self::data_location_get() . DIRECTORY_SEPARATOR . mediamosa_settings::PLAY_TICKET_LOCATION . DIRECTORY_SEPARATOR . $app_id;
+  static public function ticket_play_location_get($app_id = -1) {
+    if ($app_id >= 0) {
+      return self::mount_point_get() . DIRECTORY_SEPARATOR . self::data_location_get() . DIRECTORY_SEPARATOR . mediamosa_settings::PLAY_TICKET_LOCATION . DIRECTORY_SEPARATOR . $app_id;
+    }
+
+    return self::mount_point_get() . DIRECTORY_SEPARATOR . self::data_location_get() . DIRECTORY_SEPARATOR . mediamosa_settings::PLAY_TICKET_LOCATION;
+  }
+
+  /**
+   * Return the default path for the download ticket.
+   * Download dir same as play dir.
+   *
+   * @return string
+   */
+  static public function ticket_download_location_get($app_id = -1) {
+    return self::ticket_play_location_get($app_id);
+  }
+
+  /**
+   * Return the default path for the ticket stills.
+   *
+   * @return string
+   */
+  static public function ticket_still_location_get() {
+    return self::mount_point_get() . DIRECTORY_SEPARATOR . self::data_location_get() . DIRECTORY_SEPARATOR . mediamosa_settings::STILL_TICKET_LOCATION . DIRECTORY_SEPARATOR;
   }
 
   /**
@@ -114,12 +145,32 @@ class mediamosa_configuration_storage {
    * @param string $filename
    */
   static public function status_file_location_get($filename) {
-    return mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::transcode_tmp_location_get() . DIRECTORY_SEPARATOR . $filename . '.status';
+    return self::transcode_file_location_get($filename) . '.status';
+  }
+
+  /**
+   * Returns the full path and filename of the transcode file of
+   * given filename.
+   *
+   * @param string $filename
+   */
+  static public function transcode_file_location_get($filename) {
+    return mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::transcode_tmp_location_get() . DIRECTORY_SEPARATOR . $filename;
+  }
+
+  /**
+   * Returns the full path and filename of the scene file of
+   * given job.
+   *
+   * @param integer $job_id
+   */
+  static public function still_scene_file_location_get($job_id) {
+    return mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::transcode_tmp_location_get() . DIRECTORY_SEPARATOR . $job_id . '_scene.txt';
   }
 
   /**
    * Return file location of asx file.
-   * The ASX file is stored in still directory?
+   * The ASX file is stored in still directory, true, must be downloadable.
    *
    * @return string
    *  path to ticket location
@@ -127,7 +178,6 @@ class mediamosa_configuration_storage {
   function asx_file_location($ticket) {
     return self::still_location_get() . DIRECTORY_SEPARATOR . $ticket . '.asx';
   }
-
 
   /**
    * Return the moint point path based on OS.
@@ -160,7 +210,7 @@ class mediamosa_configuration_storage {
    *  The mediafile array or simular, must contain at least 'mediafile_id'.
    */
   static public function mediafile_filename_get($a_mediafile) {
-    if (!isset($a_mediafile[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT]) || empty($a_mediafile[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT])) {
+    if (! isset($a_mediafile[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT]) || empty($a_mediafile[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT])) {
       $a_mediafile[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT] = self::mount_point_get();
     }
 

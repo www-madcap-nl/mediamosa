@@ -181,6 +181,9 @@ function mediamosa_job_server_schema() {
       ),
     ),
     'primary key' => array(mediamosa_job_server_db::ID, mediamosa_job_server_db::INSTALL_ID),
+    'indexes' => array(
+      'idx_install_status' => array(mediamosa_job_server_db::INSTALL_ID, mediamosa_job_server_db::JOB_STATUS),
+    )
   );
 
   return $a_schema;

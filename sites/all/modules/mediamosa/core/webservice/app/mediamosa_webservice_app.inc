@@ -32,6 +32,7 @@ class mediamosa_webservice_app {
   // ------------------------------------------------------------------ Consts.
   const HANDLE_MEDIA_MANAGEMENT = 'media_management';
   const HANDLE_BATCH_UPLOAD = 'batch_upload';
+  const HANDLE_JOBS = 'jobs';
 
   // ------------------------------------------------------------------ Static Functions.
   /**
@@ -48,14 +49,14 @@ class mediamosa_webservice_app {
   static public function webservice_is_active($handle, array $a_app_ids = array()) {
     if (!empty($a_app_ids)) {
       $result = mediamosa_db::db_query(
-        'SELECT 1
+        'SELECT wa.#wa_status AS wa_status, w.#w_status AS w_status
          FROM {#mediamosa_webservice_app} AS wa
          INNER JOIN {#mediamosa_webservice} AS w ON w.#handle = wa.#webservice_handle
          INNER JOIN {#mediamosa_app} AS app ON ap.#app_id = wa.#app_id
-         WHERE wa.#webservice_handle = :handle AND ap.#app_id IN (:app_id) AND wa.:status = :status_true AND w.:status = :status_true',
+         WHERE wa.#webservice_handle = :handle AND ap.#app_id IN (:app_id)',
         array(
-          ':status' => mediamosa_webservice_app_db::STATUS,
-          ':status_true' => mediamosa_webservice_app_db::STATUS_TRUE,
+          '#wa_status' => mediamosa_webservice_app_db::STATUS,
+          '#w_status' => mediamosa_webservice_db::STATUS,
           '#mediamosa_webservice_app' => mediamosa_webservice_app_db::TABLE_NAME,
           '#mediamosa_webservice' => mediamosa_webservice_db::TABLE_NAME,
           '#handle' => mediamosa_webservice_db::HANDLE,
@@ -65,22 +66,32 @@ class mediamosa_webservice_app {
           ':handle' => $handle,
           ':app_id' => $a_app_ids
         )
-      )->fetchField();
-    }
-    else {
-      $result = mediamosa_db::db_query(
-        'SELECT 1 FROM {#mediamosa_webservice} WHERE #handle = :handle AND #status = :status_true',
-        array(
-          '#mediamosa_webservice' => mediamosa_webservice_db::TABLE_NAME,
-          '#handle' => mediamosa_webservice_db::HANDLE,
-          ':handle' => $handle,
-          '#status' => mediamosa_webservice_db::STATUS,
-          ':status_true' => mediamosa_webservice_db::STATUS_TRUE
-        )
-      )->fetchField();
+      )->fetchAssoc();
+
+      if (!$result) {
+        return TRUE; // Not found then ON.
+      }
+
+      // Return only false when webservice is specified as OFF.
+      return ($result['wa_status'] == mediamosa_webservice_app_db::STATUS_TRUE && $result['w_status'] == mediamosa_webservice_db::STATUS_TRUE) ? TRUE : FALSE;
     }
 
-    return $result > 0 ? TRUE : FALSE;
+    $result = mediamosa_db::db_query(
+      'SELECT #status FROM {#mediamosa_webservice} WHERE #handle = :handle',
+      array(
+        '#mediamosa_webservice' => mediamosa_webservice_db::TABLE_NAME,
+        '#handle' => mediamosa_webservice_db::HANDLE,
+        ':handle' => $handle,
+        '#status' => mediamosa_webservice_db::STATUS,
+      )
+    )->fetchField();
+
+    if (!$result) {
+      return TRUE; // Not found then ON.
+    }
+
+    // If specified ON, return TRUE.
+    return $result == mediamosa_webservice_db::STATUS_TRUE ? TRUE : FALSE;
   }
 
   /**
