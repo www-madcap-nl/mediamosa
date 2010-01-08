@@ -73,8 +73,14 @@ function mediamosa_asset_delete_schema() {
         'default' => NULL,
         'description' => t('The modified time and date of the asset.'),
       ),
+      mediamosa_asset_delete_db::COLL_ID => array(
+        'type' => 'varchar',
+        'length' => mediamosa_db::HASH_ID_LENGTH,
+        'not null' => FALSE,
+        'description' => t('Link to collection table.'),
+      ),
     ),
-    'primary key' => array(mediamosa_asset_delete_db::ID),
+    'primary key' => array(mediamosa_asset_delete_db::ID, mediamosa_asset_delete_db::COLL_ID),
     'indexes' => array(
       'fk_app_videotimestamp' => array(mediamosa_asset_delete_db::APP_ID, mediamosa_asset_delete_db::VIDEOTIMESTAMPMODIFIED),
     ),

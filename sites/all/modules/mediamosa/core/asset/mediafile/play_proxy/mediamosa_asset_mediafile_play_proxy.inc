@@ -359,7 +359,7 @@ class mediamosa_asset_mediafile_play_proxy {
             $output = '<?xml version="1.0"?>' . "\n";
             $output .= '<?quicktime type="application/x-quicktime-media-link"?>' . "\n";
             $output .= sprintf("<embed autoplay=\"%s\" src=\"%s\" />\n", $autostart ? 'true' : 'false', $streaming_server_ticket_uri);
-            $content_type = 'application/x-quicktime-media-link';
+            $content_type = 'application/x-quicktimeplayer';
             break;
 
           case self::CONTAINER_TYPE_MP3:
