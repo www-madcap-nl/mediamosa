@@ -38,4 +38,5 @@ class mediamosa_asset_delete_db {
   const ID = 'asset_id';
   const APP_ID = 'app_id';
   const VIDEOTIMESTAMPMODIFIED = 'videotimestampmodified';
+  const COLL_ID = 'coll_id';
 }

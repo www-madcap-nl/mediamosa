@@ -187,7 +187,7 @@ class mediamosa_transcode_profile {
    * @param string $command
    *  Command.
    */
-  static public function update($app_id, $profile_id, $name, $version, $default, $tool, $file_extension, $command) {
+  static public function update($app_id, $profile_id, $name = NULL, $version = NULL, $default = 'FALSE', $tool = NULL, $file_extension = NULL, $command = NULL) {
 
     // Must exists.
     mediamosa_transcode_profile::must_exists($app_id, $name);
@@ -208,15 +208,29 @@ class mediamosa_transcode_profile {
         ->execute();
     }
 
+    // Required parameters
     $a_fields = array(
       mediamosa_transcode_profile_db::APP_ID => $app_id,
-      mediamosa_transcode_profile_db::NAME => $name,
-      mediamosa_transcode_profile_db::VERSION => $version,
-      mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE => $default ? mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE_TRUE : mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE_FALSE,
-      mediamosa_transcode_profile_db::TOOL => $tool,
-      mediamosa_transcode_profile_db::FILE_EXTENSION => $file_extension,
-      mediamosa_transcode_profile_db::COMMAND => $command,
     );
+    // Optional parameters
+    if (!is_null($name)) {
+      $a_fields[mediamosa_transcode_profile_db::NAME] = $name;
+    }
+    if (!is_null($version)) {
+      $a_fields[mediamosa_transcode_profile_db::VERSION] = $version;
+    }
+    $a_fields[mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE] = $default ?
+      mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE_TRUE :
+      mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE_FALSE;
+    if (!is_null($tool)) {
+      $a_fields[mediamosa_transcode_profile_db::TOOL] = $tool;
+    }
+    if (!is_null($file_extension)) {
+      $a_fields[mediamosa_transcode_profile_db::FILE_EXTENSION] = $file_extension;
+    }
+    if (!is_null($command)) {
+      $a_fields[mediamosa_transcode_profile_db::COMMAND] = $command;
+    }
 
     // Add changed value.
     $a_fields = mediamosa_db::db_update_enrich($a_fields);

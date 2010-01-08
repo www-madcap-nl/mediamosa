@@ -206,7 +206,7 @@ abstract class mediamosa_cql {
     if (mediamosa_unicode::substr($str_cql, $i_pos, 1) == '\\') {
 
       if (!$is_quoted) {
-        throw new mediamosa_cql_exception_syntax_error('character \ can only be used inside "quoted" strings');
+        throw new mediamosa_cql_exception_syntax_error('character \ can only be used inside "quoted" strings', $i_pos);
       }
 
       $i_pos++;

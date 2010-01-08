@@ -296,8 +296,22 @@ class mediamosa_aut {
     // Make them unique.
     array_unique($a_groups);
 
-    // We must include slaved groups too.
-    if (isset($a_slaves) && count($a_groups)) {
+    /**
+     * The main app_id has domains / realms. These might also be on the other apps (a_slaves).
+     *
+     * f.e.
+     * academia5.group has foo.nl domain in app 3.
+     * academia5.group has surfnet.nl domain in app 5.
+     * The app3 is mastered to app5 (mediafile = app3) and Im app5 with domain 'surfnet.nl'
+     * I may have access to mf (app 3) if my group app5 academia5.group (because of surfnet.nl) also is on app3.
+     * If surfnet.nl is under academia5.group app3 and not under academia5.group app5 (my app), then I dont have access.
+     *
+     */
+    if (isset($a_slaves) && count($a_slaves) && count($a_groups)) {
+      /**
+       * $a_slaves - contains all app_ids that are master-slaved to me.
+       * $a_groups - contains all group ids of all the groups of all apps based on my aut settings.
+       */
 
       // Collect all names.
       $query = mediamosa_db::db_select(mediamosa_aut_group_db::TABLE_NAME, 'ag');
@@ -308,6 +322,9 @@ class mediamosa_aut {
       ));
       $query->condition(mediamosa_aut_group_db::ID, $a_groups, 'IN');
 
+      /*
+       * Now with all group names + types, find the groups of the other apps.
+       */
       foreach ($query->execute() as $a_group) {
         $query = mediamosa_db::db_select(mediamosa_aut_group_db::TABLE_NAME, 'ag');
         $query->addField('ag', array(
@@ -317,7 +334,9 @@ class mediamosa_aut {
         $query->condition(mediamosa_aut_group_db::AUT_GROUP_NAME, $a_group['aut_group_name']);
         $query->condition(mediamosa_aut_group_db::AUT_GROUP_TYPE, $a_group['aut_group_type']);
 
+        // Loop through the results of muy group name + type search, so we find the groups of all apps.
         foreach ($query->execute() as $a_group_2) {
+          // If app of found group is not one of my slaves, then I cant use it.
           if (!isset($a_slaves[$a_group_2['app_id']])) {
             continue;
           }

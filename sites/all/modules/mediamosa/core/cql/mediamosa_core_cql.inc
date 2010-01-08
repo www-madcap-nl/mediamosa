@@ -348,7 +348,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
    * '\_' = '_' = '\_'
    * '\'' = ''' = '\''
    * '\"' = '"' = '\"'
-   * '\' + any char = any char
+   * '\' + any other char = any other char
    * '*' = '%' = '%'
    * '?' = '_' = '_'
    * '%' = '\%' = '\%'
@@ -356,19 +356,21 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
    * any char = any char
    */
   public function mediamosa_cql_context_sql_escape_like($str) {
-    $str = (string)$str;// Fix when passing integer
+    $str = (string)$str;// Fix when passing integer.
 
     $a_result = array();
     for ($x = 0; $x < mediamosa_unicode::strlen($str); $x++) {
       $char = mediamosa_unicode::substr($str, $x, 1);
+
+      // Is next char escaped?
       if ($char == '\\' && ($x + 1) < mediamosa_unicode::strlen($str)) {
-        $x++;
+        $char = drupal_substr($str, ++$x, 1);
+
         switch ($char) {
           case '\\':
           case '%':
           case '_':
           case '\'':
-          case '"':
             $a_result[] = '\\' . $char;
             break;
           default:
@@ -377,6 +379,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
         }
       }
       else {
+        // Not escaped.
         $a_result[] = str_replace(array('*', '?'), array('%', '_'), mediamosa_db::escape_string_like($char));
       }
     }
