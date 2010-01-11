@@ -596,7 +596,7 @@ class mediamosa_asset {
         else {
           foreach ($a_app_ids as $a_app_id) {
             if ($a_items['app_info'][$a_app_id]['view_asset_url']) {
-              $a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]['ega_view_url'][] = preg_replace('/{asset_id}/i', $a_asset[mediamosa_asset_db::ID], $a_items['app_info'][$a_app_id]['view_asset_url']);
+              $a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]]['ega_view_url'][] = preg_replace('/{asset_id}/i', $a_asset[mediamosa_asset_db::ID], $a_items['app_info'][$a_app_id]['view_asset_url']);
             }
           }
         }

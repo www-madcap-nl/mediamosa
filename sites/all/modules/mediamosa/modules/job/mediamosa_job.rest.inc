@@ -418,7 +418,9 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
   const STILL_PER_MEDIAFILE = 'still_per_mediafile';
   const STILL_EVERY_SECOND = 'still_every_second';
   const START_FRAME = 'start_frame';
+  const START_TIME = 'start_time';
   const END_FRAME = 'end_frame';
+  const END_TIME = 'end_time';
   const SIZE = 'size';
   const H_PADDING = 'h_padding';
   const V_PADDING = 'v_padding';
@@ -481,9 +483,17 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
           self::VAR_DESCRIPTION => 'Still start frame.',
         ),
+        self::START_TIME => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_DESCRIPTION => 'Still start time.',
+        ),
         self::END_FRAME => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
           self::VAR_DESCRIPTION => 'Still end frame.',
+        ),
+        self::END_TIME => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_DESCRIPTION => 'Still end time.',
         ),
         self::SIZE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_STRING,
@@ -697,7 +707,7 @@ class mediamosa_rest_call_job_user_search extends mediamosa_rest_call {
     $user_id = $this->get_param_value(self::USER_ID);
 
     // Get the jobs from the user.
-    $result = mediamosa_job::get_job_list($app_id, $user_id);
+    $result = mediamosa_job::get_job_list($app_id, $user_id, $is_app_admin);
 
     foreach ($result as $a_row) {
       $started_unix = isset($a_row[mediamosa_job_db::STARTED]) ? mediamosa_lib::iso8601date_to_unix($a_row[mediamosa_job_db::STARTED]) : '';
@@ -772,7 +782,7 @@ class mediamosa_rest_call_job_asset_search extends mediamosa_rest_call {
     mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
 
     // Get the jobs from the user.
-    $result = mediamosa_job::get_job_list($app_id, $user_id, FALSE, $asset_id);
+    $result = mediamosa_job::get_job_list($app_id, $user_id, $is_app_admin, FALSE, $asset_id);
 
     foreach ($result as $a_row) {
       $started_unix = isset($a_row[mediamosa_job_db::STARTED]) ? mediamosa_lib::iso8601date_to_unix($a_row[mediamosa_job_db::STARTED]) : '';
@@ -847,7 +857,7 @@ class mediamosa_rest_call_job_mediafile_search extends mediamosa_rest_call {
     mediamosa_asset_mediafile::must_exists($mediafile_id);
 
     // Get the jobs from the user.
-    $result = mediamosa_job::get_job_list($app_id, $user_id, FALSE, FALSE, $mediafile_id);
+    $result = mediamosa_job::get_job_list($app_id, $user_id, $is_app_admin, FALSE, FALSE, $mediafile_id);
 
     // Build result.
     foreach ($result as $a_row) {
@@ -926,7 +936,7 @@ class mediamosa_rest_call_job_search extends mediamosa_rest_call {
     mediamosa_job::must_exists($job_id);
 
     // Get the jobs from the user.
-    $result = mediamosa_job::get_job_list($app_id, $user_id, $job_id);
+    $result = mediamosa_job::get_job_list($app_id, $user_id, $is_app_admin, $job_id);
 
     // Build result.
     foreach ($result as $a_row) {
@@ -1046,6 +1056,7 @@ class mediamosa_rest_call_job_create_still extends mediamosa_rest_call_job_creat
     if ($this->isset_given_param(self::STILL_TYPE) || $this->get_param_value(self::STILL_TYPE) == 'NONE') {
 
       $start_frame = $this->get_param_value(self::START_FRAME);
+      $end_frame = $this->get_param_value(self::END_FRAME);
       $frametime = $this->get_param_value(self::FRAMETIME);
       if (!$start_frame && $frametime) {
         $this->set_param_value(self::START_FRAME, $frametime);
@@ -1054,6 +1065,16 @@ class mediamosa_rest_call_job_create_still extends mediamosa_rest_call_job_creat
       $size = $this->get_param_value(self::SIZE);
       $width = $this->get_param_value(self::WIDTH);
       $height = $this->get_param_value(self::HEIGHT);
+
+      if (!$start_frame) {
+        $start_frame = $this->set_param_value(self::START_TIME);
+      }
+      if (!$end_frame) {
+        $end_frame = $this->set_param_value(self::END_TIME);
+      }
+      if (!$a_args['post']['end_frame']) {
+        $a_args['post']['end_frame'] = $a_args['post']['end_time'];
+      }
 
       if (empty($size) && $width && $height) {
         $this->set_param_value(self::SIZE, $width . 'x' . $height);

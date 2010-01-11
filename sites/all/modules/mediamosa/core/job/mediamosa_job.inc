@@ -634,13 +634,16 @@ class mediamosa_job {
    *
    * @param $a_parameters
    */
-  static public function get_job_list($app_id, $user_id , $job_id = '', $asset_id = '', $mediafile_id = '') {
+  static public function get_job_list($app_id, $user_id, $is_app_admin, $job_id = '', $asset_id = '', $mediafile_id = '') {
 
     $query = mediamosa_db::db_select(mediamosa_job_db::TABLE_NAME, 'j')
       ->fields('j')
-      ->join(mediamosa_asset_db::TABLE_NAME, 'a', 'a.asset_id = j.asset_id')
-      ->condition(mediamosa_job_db::APP_ID, $app_id)
-      ->condition(mediamosa_job_db::OWNER_ID, $user_id);
+      ->join(mediamosa_asset_db::TABLE_NAME, 'a', 'a.asset_id = j.asset_id');
+
+    if (!$is_app_admin) {
+      $query->condition('j.' . mediamosa_job_db::APP_ID, $app_id);
+      $query->condition('j.' . mediamosa_job_db::OWNER_ID, $user_id);
+    }
 
     if (!empty($job_id)) {
       $query->condition('j.' . mediamosa_job_db::ID, $job_id);
