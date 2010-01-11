@@ -617,12 +617,10 @@ class mediamosa_rest_call_update_mediafile extends mediamosa_rest_call {
         self::IS_DOWNLOADABLE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Mediafile can be downloaded.',
-          self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
         self::TRANSCODE_INHERITS_ACL => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Any transcodes will inherit ACL settings.',
-          self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
         self::TAG => array(
           self::VAR_TYPE => mediamosa_type::TYPE_STRING,
@@ -632,12 +630,6 @@ class mediamosa_rest_call_update_mediafile extends mediamosa_rest_call {
           self::VAR_TYPE => mediamosa_type::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The location path of the file.',
           self::VAR_IS_INTERNAL_ONLY => self::VAR_IS_INTERNAL_ONLY_YES,
-        ),
-        self::IS_ORIGINAL_FILE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
-          self::VAR_DESCRIPTION => 'Mark mediafile as original.',
-          self::VAR_IS_INTERNAL_ONLY => self::VAR_IS_INTERNAL_ONLY_YES,
-          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES
         ),
       )
     );
@@ -658,69 +650,36 @@ class mediamosa_rest_call_update_mediafile extends mediamosa_rest_call {
     // Must be enabled.
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $a_app_ids);
 
-    // Mediafile must exists.
-    $a_mediafile = mediamosa_asset_mediafile::must_exists($mediafile_id);
-
-    // Cant mix input of uri/filename/is_downloadable.
-    if ($this->isset_param(self::URI) && ($this->isset_param(self::FILENAME) || $this->isset_param(self::IS_DOWNLOADABLE))) {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MIX_OF_URI_AND_FILE);
-    }
-
-    // Does the user has access?
-    mediamosa_aut::owner_check(
-      $app_id,
-      $user_id,
-      $a_mediafile[mediamosa_asset_mediafile_db::APP_ID],
-      $a_mediafile[mediamosa_asset_mediafile_db::OWNER_ID]
-    );
-
-    // Either uri or file type.
-    $type = $this->isset_given_param(self::URI) ? 'uri' : 'file';
-
-    // Can't change the type.
-    if ( ($a_mediafile[mediamosa_asset_mediafile_db::URI] && $type == 'file') || ($a_mediafile[mediamosa_asset_mediafile_db::FILENAME] && $type == 'uri') ) {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CHANGE_URI_AND_FILE);
-    }
-
-    // update de timestamps van de asset
-    mediamosa_asset::update_asset_timestamps($a_mediafile[mediamosa_asset_mediafile_db::ASSET_ID]);
-
     // Fields allowed to update.
     $a_params = array(
-      mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT,
-      mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE,
-      mediamosa_asset_mediafile_db::FILENAME,
-      mediamosa_asset_mediafile_db::URI,
-      mediamosa_asset_mediafile_db::IS_DOWNLOADABLE,
-      mediamosa_asset_mediafile_db::TRANSCODE_INHERITS_ACL,
-      mediamosa_asset_mediafile_db::TAG
+      mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT => array(),
+      mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE => array(FALSE => mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_FALSE, TRUE => mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_TRUE),
+      mediamosa_asset_mediafile_db::FILENAME => array(),
+      mediamosa_asset_mediafile_db::URI => array(),
+      mediamosa_asset_mediafile_db::IS_DOWNLOADABLE => array(FALSE => mediamosa_asset_mediafile_db::IS_DOWNLOADABLE_FALSE, TRUE => mediamosa_asset_mediafile_db::IS_DOWNLOADABLE_TRUE),
+      mediamosa_asset_mediafile_db::TRANSCODE_INHERITS_ACL => array(FALSE => mediamosa_asset_mediafile_db::TRANSCODE_INHERITS_ACL_FALSE, TRUE => mediamosa_asset_mediafile_db::TRANSCODE_INHERITS_ACL_TRUE),
+      mediamosa_asset_mediafile_db::TAG => array(),
     );
 
-    // Build the query.
-    $query = mediamosa_db::db_update(mediamosa_asset_mediafile_db::TABLE_NAME);
-
     $a_fields = array();
-    foreach ($a_params as $param) {
+    foreach ($a_params as $param => $a_values) {
       if (!$this->isset_given_param($param)) {
         // If its not supplied, skip it.
         continue;
       }
 
-      $a_fields[$param] = $this->get_param_value($param);
+      // Get value.
+      $value = $this->get_param_value($param);
+      if (!empty($a_values)) {
+        assert(isset($a_values[$value]));
+        $value = $a_values[$value];
+      }
+
+      $a_fields[$param] = $value;
     }
 
-    if (empty($a_fields)) {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_NO_CHANGES);
-    }
-
-    // Add changed field.
-    $a_fields = mediamosa_db::db_update_enrich($a_fields);
-
-    // Add the fields to the query.
-    $query->fields($a_fields);
-    // Add conditions.
-    $query->condition(mediamosa_asset_mediafile_db::ID, $mediafile_id);
-    $query->execute();
+    // Update the mediafile.
+    mediamosa_asset_mediafile::update($app_id, $mediafile_id, $user_id, $a_fields);
 
     // Set all OK.
     $o_mediamosa->set_result_okay();

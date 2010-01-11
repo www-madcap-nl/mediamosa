@@ -33,6 +33,7 @@ class mediamosa_webservice_app {
   const HANDLE_MEDIA_MANAGEMENT = 'media_management';
   const HANDLE_BATCH_UPLOAD = 'batch_upload';
   const HANDLE_JOBS = 'jobs';
+  const HANDLE_MEDIA_UPLOAD = 'media_upload';
 
   // ------------------------------------------------------------------ Static Functions.
   /**

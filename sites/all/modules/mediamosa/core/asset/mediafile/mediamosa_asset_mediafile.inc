@@ -84,7 +84,7 @@ class mediamosa_asset_mediafile {
 
     // Now delete the file of each found mediafile.
     foreach ($query->execute() as $a_mediafile) {
-      @unlink(mediamosa_configuration_storage::mediafile_filename_get($a_mediafile));
+      mediamosa_io::unlink(mediamosa_configuration_storage::mediafile_filename_get($a_mediafile));
     }
 
     // Delete mediafile from DB.
@@ -114,7 +114,7 @@ class mediamosa_asset_mediafile {
     self::delete($result);
   }
 
-  /**
+  /**MEDIAFILE_ID_SOURCE
    * Enrich the response with mediafile data.
    *
    * 1.x _media_management_return_mediafile_list()
@@ -144,6 +144,7 @@ class mediamosa_asset_mediafile {
     // Prefix for metadata in array.
     $prefix = 'mediafile_metadata_';
 
+    // Get the columns from the schema.
     $a_columns = mediamosa_db::db_get_columns(mediamosa_asset_mediafile_metadata_db::TABLE_NAME);
 
     $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
@@ -440,8 +441,53 @@ class mediamosa_asset_mediafile {
    *
    * @param array $a_mediafile
    */
-  static public function is_original($a_mediafile) {
+  static public function is_original($a_asset_mediafile) {
     // FIXME: will need to convert into mediafile_id_source.
-    return ($a_mediafile[mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE] == mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_TRUE);
+    return ($a_asset_mediafile[mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE] == mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_TRUE);
+  }
+
+
+  /**
+   * Update the mediafile.
+   *
+   * @param integer $app_id
+   * @param string $mediafile_id
+   * @param string $user_id
+   * @param string $type
+   * @param array $a_fields
+   */
+  static public function update($app_id, $mediafile_id, $user_id, array $a_fields) {
+    // Cant mix input of uri/filename/is_downloadable.
+    if (isset($a_fields[mediamosa_asset_mediafile_db::URI]) && (isset($a_fields[mediamosa_asset_mediafile_db::FILENAME]) || isset($a_fields[mediamosa_asset_mediafile_db::IS_DOWNLOADABLE]))) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MIX_OF_URI_AND_FILE);
+    }
+
+    // Mediafile must exists.
+    $a_mediafile = mediamosa_asset_mediafile::must_exists($mediafile_id);
+
+    // Does the user has access?
+    mediamosa_aut::owner_check(
+      $app_id,
+      $user_id,
+      $a_mediafile[mediamosa_asset_mediafile_db::APP_ID],
+      $a_mediafile[mediamosa_asset_mediafile_db::OWNER_ID]
+    );
+
+    // Can't change the type.
+    if (!empty($a_mediafile[mediamosa_asset_mediafile_db::URI]) && ( isset($a_fields[mediamosa_asset_mediafile_db::FILENAME]) || isset($a_fields[mediamosa_asset_mediafile_db::IS_DOWNLOADABLE]) ) || (!empty($a_mediafile[mediamosa_asset_mediafile_db::FILENAME]) && isset($a_fields[mediamosa_asset_mediafile_db::URI])) ) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CHANGE_URI_AND_FILE);
+    }
+
+    // Update the timestamps of the asset
+    mediamosa_asset::update_asset_timestamps($a_mediafile[mediamosa_asset_mediafile_db::ASSET_ID]);
+
+    // Add changed field.
+    $a_fields = mediamosa_db::db_update_enrich($a_fields);
+
+    // Build the query.
+    mediamosa_db::db_update(mediamosa_asset_mediafile_db::TABLE_NAME)
+      ->fields($a_fields)
+      ->condition(mediamosa_asset_mediafile_db::ID, $mediafile_id)
+      ->execute();
   }
 }

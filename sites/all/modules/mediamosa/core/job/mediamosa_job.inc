@@ -226,7 +226,12 @@ class mediamosa_job {
       $counter++;
 
       // Create new job.
-      mediamosa_job::create_job_transcode($app_id, $user_id, FALSE, $mediafile_id, $a_mediafile[mediamosa_asset_mediafile_db::FILE_EXTENSION], $a_mediafile[mediamosa_asset_mediafile_db::COMMAND], $a_mediafile[mediamosa_asset_mediafile_db::TOOL]);
+      try {
+        mediamosa_job::create_job_transcode($app_id, $user_id, '', FALSE, $mediafile_id, FALSE, array(), $a_mediafile[mediamosa_asset_mediafile_db::FILE_EXTENSION], $a_mediafile[mediamosa_asset_mediafile_db::COMMAND], $a_mediafile[mediamosa_asset_mediafile_db::TOOL]);
+      }
+      catch (mediamosa_exception $e) {
+        // ignore..
+      }
     }
 
     return $counter;
@@ -247,10 +252,16 @@ class mediamosa_job {
    * @param string $completed_transcoding_url
    * @param string $mediafile_id
    */
-  static public function create_job_transcode($app_id, $user_id, $is_app_admin, $mediafile_id, $file_extension, $command, $tool = '', $profile_id = '', $completed_transcoding_url = '', $priority = NULL) {
+  static public function create_job_transcode($app_id, $user_id, $group_id, $is_app_admin, $mediafile_id, $create_still, $a_still_parameters, $file_extension, $command, $tool = '', $profile_id = '', $completed_transcoding_url = '', $priority = NULL) {
+
+    // Must have user_quota.
+    mediamosa_user::must_have_user_quota($app_id, $user_id, $group_id);
+
+    // Must be transcodable.
+    mediamosa_asset_mediafile_metadata::is_transcodable($mediafile_id);
 
     // Create job.
-    $job_id = self::create(mediamosa_job_db::JOB_TYPE_TRANSCODE, $app_id, $user_id, $is_app_admin, $mediafile_id, FALSE, array(), $priority);
+    $job_id = self::create(mediamosa_job_db::JOB_TYPE_TRANSCODE, $app_id, $user_id, $is_app_admin, $mediafile_id, $create_still, $a_still_parameters, $priority);
 
     // Create sub transcode job.
     mediamosa_job_transcode::create($app_id, $job_id, $file_extension, $command, $tool, $profile_id, $completed_transcoding_url, $mediafile_id);
@@ -290,33 +301,20 @@ class mediamosa_job {
    * @param bool $retranscode
    * @param bool $create_still
    */
-  static public function create_job_upload($app_id, $user_id, $group_id, $is_app_admin, $mediafile_id, $file_size, $retranscode, $create_still) {
+  static public function create_job_upload($app_id, $user_id, $group_id, $is_app_admin, $mediafile_id, $file_size, $retranscode, $create_still, $a_still_parameters) {
+
+    // Enough quota?
+    mediamosa_user::must_have_user_quota($app_id, $user_id, $group_id);
 
     // Create job.
-    $job_id = self::create(mediamosa_job_db::JOB_TYPE_UPLOAD, $app_id, $user_id, $is_app_admin, $mediafile_id, $create_still);
+    $job_id = self::create(mediamosa_job_db::JOB_TYPE_UPLOAD, $app_id, $user_id, $is_app_admin, $mediafile_id, $create_still, $a_still_parameters);
 
     // Create sub upload job.
     mediamosa_job_upload::create($app_id, $job_id, $user_id, $group_id, $mediafile_id, $file_size, $retranscode, $create_still);
 
+    // Return the new job_id.
     return $job_id;
   }
-
-  /**
-   *   $still_parameters = array(
-    'still_type' => $a_parameters['still_type']['value'],
-    'still_per_mediafile' => $a_parameters['still_per_mediafile']['value'],
-    'still_every_second' => $a_parameters['still_every_second']['value'],
-    'start_frame' => $a_parameters['start_frame']['value'],
-    'end_frame' => $a_parameters['end_frame']['value'],
-    'size' => $a_parameters['size']['value'],
-    'h_padding' => $a_parameters['h_padding']['value'],
-    'v_padding' => $a_parameters['v_padding']['value'],
-    'tag' => $a_parameters['tag']['value'],
-    'frametime' => $a_parameters['frametime']['value'],
-    'width' => $a_parameters['width']['value'],
-    'height' => $a_parameters['height']['value'],
-  );
-   */
 
   /**
    * Create a job.
@@ -561,7 +559,7 @@ class mediamosa_job {
    * @param string $status
    * @param string $error_description
    */
-  static public function update_status(array $a_job_ext, $progress, $status, $error_description = '') {
+  static public function update_status(array $a_job_ext, $status, $progress = '', $error_description = '') {
 
     /**
      * If JOB is upload and we are setting the status on FINISHED, then start analyse job.
@@ -577,7 +575,7 @@ class mediamosa_job {
     $a_fields = array();
 
     // Set progress.
-    if ($progress) {
+    if ($progress != '') {
       if ($a_job_ext[mediamosa_job_db::PROGRESS] != $progress) {
         $a_fields[mediamosa_job_db::PROGRESS] = $progress;
       }
@@ -592,13 +590,12 @@ class mediamosa_job {
     }
 
     // Start value.
-    if ($a_job_ext[mediamosa_job_db::STARTED] &&
-        ($status != mediamosa_job_db::JOB_STATUS_WAITING)) {
+    if ($a_job_ext[mediamosa_job_db::STARTED] == '' && $status != mediamosa_job_db::JOB_STATUS_WAITING) {
       $a_fields[mediamosa_job_db::STARTED] = mediamosa::db_current_timestamp_now();
     }
 
     // Finished value.
-    if ($a_job_ext[mediamosa_job_db::FINISHED] &&
+    if ($a_job_ext[mediamosa_job_db::FINISHED] == '' &&
         (($status == mediamosa_job_db::JOB_STATUS_FAILED) ||
          ($status == mediamosa_job_db::JOB_STATUS_FINISHED) )) {
       $a_fields[mediamosa_job_db::FINISHED] = mediamosa::db_current_timestamp_now();
@@ -837,5 +834,53 @@ class mediamosa_job {
     if (!self::delete_job($job_id)) {
       throw new mediamosa_exception_error_job_could_not_be_removed(array('@job_id' => $job_id));
     }
+  }
+
+  static public function update_progress_upload($job_id, $uploaded_file_size) {
+
+      // Get complete job.
+    $a_job_ext = mediamosa_job::get_job_ext($job_id);
+
+    if (!$uploaded_file_size  && $a_job_ext[mediamosa_job_db::JOB_TYPE] == mediamosa_job_db::JOB_TYPE_UPLOAD) {
+      // If the filesize is 0, then we are done...
+      if (!$a_job_ext[mediamosa_job_upload_db::FILE_SIZE]) {
+
+        // Update the job.
+        mediamosa_job::update_status($a_job_ext, mediamosa_job_db::JOB_STATUS_INPROGRESS, '1.000');
+        return; // done
+      }
+    }
+
+    // Set uploaded size.
+    $a_fields = array(
+      mediamosa_job_upload_db::UPLOADED_FILE_SIZE => $uploaded_file_size,
+    );
+
+    // Set fields.
+    $a_fields = mediamosa_db::db_update_enrich($a_fields);
+
+    // Update.
+    mediamosa_db::db_update(mediamosa_job_upload_db::TABLE_NAME)
+      ->fields($a_fields)
+      ->condition(mediamosa_job_upload_db::JOB_ID, $job_id)
+      ->execute();
+
+    // Get progress
+    $progress = mediamosa_db::db_query(
+      'SELECT uploaded_file_size / file_size FROM {#mediamosa_job_upload} WHERE #job_id = :job_id',
+      array(
+        '#mediamosa_job_upload' => mediamosa_job_upload_db::TABLE_NAME,
+        '#job_id' => mediamosa_job_upload_db::JOB_ID,
+        ':job_id' => $job_id,
+      )
+    )->execute()->fetchField();
+
+    // 1.xxx
+    $progress = number_format(floatval($progress), 3, '.', '');
+
+    // FIXME: all rest calls with vpx_jobs_set_job_status are broken, still params not used~!
+
+    // Update the job.
+    mediamosa_job::update_status($a_job_ext, mediamosa_job_db::JOB_STATUS_INPROGRESS, $progress);
   }
 }

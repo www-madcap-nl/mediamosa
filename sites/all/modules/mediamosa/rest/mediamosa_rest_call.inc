@@ -524,6 +524,43 @@ abstract class mediamosa_rest_call {
     return isset($_GET[$param]) ? $_GET[$param] : (isset($_POST[$param]) ? $_POST[$param] : NULL);
   }
 
+  /**
+   * Return the method used on this REST call.
+   * @NOTE: This means you can not hack the METHOD here, it depends on
+   *        the assumsion the HTTP_METHOD does match the method specified
+   *        in the REST description array.
+   */
+  static public function get_method() {
+    return $this->{self::METHOD};
+  }
+
+  /**
+   * Returns TRUE / FALSE if method used is POST.
+   */
+  static public function is_method_post() {
+    return self::get_method() == self::METHOD_POST;
+  }
+
+  /**
+   * Returns TRUE / FALSE if method used is GET.
+   */
+  static public function is_method_get() {
+    return self::get_method() == self::METHOD_GET;
+  }
+
+  /**
+   * Returns TRUE / FALSE if method used is DELETE.
+   */
+  static public function is_method_delete() {
+    return self::get_method() == self::METHOD_DELETE;
+  }
+
+  /**
+   * Returns TRUE / FALSE if method used is PUT.
+   */
+  static public function is_method_put() {
+    return self::get_method() == self::METHOD_PUT;
+  }
   // ------------------------------------------------------------------ Functions (protected).
   /**
    * Process the supplied parameters.
