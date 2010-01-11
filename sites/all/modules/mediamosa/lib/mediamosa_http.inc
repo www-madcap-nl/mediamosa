@@ -63,6 +63,26 @@ class mediamosa_http {
   }
 
   /**
+   * Do a proxy call.
+   *
+   * @param string $url
+   * @param string $curlproxy_http Proxy address
+   */
+  static public function do_proxy_call($url, $curlproxy_http) {
+    $curl_handle = curl_init($url);
+    curl_setopt($curl_handle, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($curl_handle, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_0);
+    // De acceptatie en productieomgeving moeten een verzoek doen via een proxy:
+    // voor zx: http://10.252.0.10:3128
+    if ($curlproxy_http) {
+      curl_setopt($curl_handle, CURLOPT_PROXYTYPE, CURLPROXY_HTTP);
+      curl_setopt($curl_handle, CURLOPT_PROXY, $curlproxy_http);
+    }
+    $result = curl_exec($curl_handle);
+    curl_close($curl_handle);
+  }
+
+  /**
    * Perform an HTTP request.
    *
    * Copy of the Drupal HTTP Request.

@@ -495,7 +495,16 @@ class mediamosa_job {
     if (!empty($a_job_transcode[mediamosa_job_transcode_db::COMPLETED_TRANSCODING_URL])) {
       $completed_transcoding_url = $a_job_transcode[mediamosa_job_transcode_db::COMPLETED_TRANSCODING_URL];
       mediamosa::log($completed_transcoding_url . $new_status, array(), WATCHDOG_NOTICE, 'completed_transcoding_url');
-      exec('wget -O - -q -t 1 ' . escapeshellcmd($completed_transcoding_url . $new_status .' >/dev/null 2>/dev/null &'));
+
+      $curlproxy_http = mediamosa::variable_get('mediamosa_curlproxy_http', '');
+      if ($curlproxy_http) {
+        mediamosa_http::do_proxy_call($completed_transcoding_url . $new_status, $curlproxy_http);
+      }
+      else {
+        $options = array();
+        mediamosa_http::drupal_http_request($completed_transcoding_url . $new_status, $options);
+      }
+
     }
   }
 
