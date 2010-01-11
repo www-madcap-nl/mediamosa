@@ -684,7 +684,7 @@ class mediamosa_job_server {
 
       // Security check and base values
       if (!is_numeric($frametime) || $frametime < $start_frame || $frametime > $end_frame) {
-        $frametime = $start_frame + ($end_frame - $start_frame)/3;
+        $frametime = $start_frame + ($end_frame - $start_frame) / 3;
       }
       $duration = 1;
       $framerate = 1;

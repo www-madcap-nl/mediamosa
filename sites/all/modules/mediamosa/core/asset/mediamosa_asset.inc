@@ -210,6 +210,7 @@ class mediamosa_asset {
         ':asset_id' => $asset_id
       )
     );
+
     // Foreach my collection.
     $is_coll = FALSE;
     foreach ($result as $collection_id) {
