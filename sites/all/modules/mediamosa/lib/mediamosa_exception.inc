@@ -82,12 +82,36 @@ class mediamosa_exception extends Exception {
   }
 }
 
+/**
+ * Thrown when REST interface is not on.
+ */
 class mediamosa_exception_no_rest_interface extends mediamosa_exception {
-
   public function __construct() {
     parent::__construct(0, t('No REST interface available... Please enable ENABLE_* settings in your Apache 2 ini file.'));
   }
 }
+
+/**
+ * Throw for override of output. Will log error and redirect to URI/URL and
+ * will exit() at end. Will not generate output.
+ */
+class mediamosa_exception_redirect_and_exit extends mediamosa_exception {
+  private $redirect_uri;
+
+  public function __construct($redirect_uri, $i_errorcode, $msg = '', $severity = self::MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL) {
+    $this->redirect_uri = $redirect_uri;
+
+    parent::__construct($i_errorcode, $msg, $severity);
+  }
+
+  /**
+   * Return redirect url.
+   */
+  public function get_redirect_uri() {
+    return $this->redirect_uri;
+  }
+}
+
 
 /**
  * Wrapper class for vp_error

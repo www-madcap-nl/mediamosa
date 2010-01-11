@@ -156,9 +156,9 @@ $db_prefix = '';
 $databases = array();
 $databases['default']['default'] = array(
   'driver' => 'mysql',
-  'database' => 'mediamosa2_new',
-  'username' => 'forgacs',
-  'password' => '',
+  'database' => 'mediamosa2',
+  'username' => 'memo',
+  'password' => 'memo',
   'host' => 'localhost'
 );
 
@@ -173,37 +173,37 @@ $databases['ftp']['default'] = array(
 // Migration memo 1.0 databases;
 $databases['mig_memo']['default'] = array(
   'driver' => 'mysql',
-  'database' => 'vpx_mig',
-  'username' => 'forgacs',
-  'password' => '',
+  'database' => 'memo',
+  'username' => 'memo',
+  'password' => 'memo',
   'host' => 'localhost'
 );
 $databases['mig_memo_data']['default'] = array(
   'driver' => 'mysql',
-  'database' => 'vpx_data_mig',
-  'username' => 'forgacs',
-  'password' => '',
+  'database' => 'memo_data',
+  'username' => 'memo',
+  'password' => 'memo',
   'host' => 'localhost'
 );
 $databases['mig_memo_jobserver']['default'] = array(
   'driver' => 'mysql',
-  'database' => 'vpx_jobserver_mig',
-  'username' => 'forgacs',
-  'password' => '',
+  'database' => 'vpx_jobserver',
+  'username' => 'vpx',
+  'password' => 'vpx',
   'host' => 'localhost'
 );
 $databases['mig_memo_jobserver_lin2']['default'] = array(
   'driver' => 'mysql',
-  'database' => 'vpx_jobserver_lin2_mig',
-  'username' => 'forgacs',
-  'password' => '',
+  'database' => 'vpx_jobserver_lin2',
+  'username' => 'vpx',
+  'password' => 'vpx',
   'host' => 'localhost'
 );
 $databases['mig_memo_jobserver_win']['default'] = array(
   'driver' => 'mysql',
-  'database' => 'vpx_jobserver_win_mig',
-  'username' => 'forgacs',
-  'password' => '',
+  'database' => 'vpx_jobserver_win',
+  'username' => 'vpx',
+  'password' => 'vpx',
   'host' => 'localhost'
 );
 

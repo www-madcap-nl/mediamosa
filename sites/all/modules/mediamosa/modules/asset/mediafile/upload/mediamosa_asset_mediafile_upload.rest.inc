@@ -90,17 +90,8 @@ class mediamosa_rest_call_asset_mediafile_uploadticket_create extends mediamosa_
     $user_id = $this->get_param_value(self::USER_ID);
     $group_id = $this->get_param_value(self::GROUP_ID);
 
-    // Mediafile must exist.
-    $a_mediafile = mediamosa_asset_mediafile::must_exists($mediafile_id);
-
-    // Must be owner.
-    mediamosa_aut::owner_check($app_id, $user_id, $a_mediafile[mediamosa_asset_mediafile_db::APP_ID], $a_mediafile[mediamosa_asset_mediafile_db::OWNER_ID]);
-
-    // Check quota.
-    mediamosa_user::must_have_user_quota($app_id, $user_id, $group_id);
-
-    // Create upload ticket.
-    $ticket_id = mediamosa_ticket::create($app_id, mediamosa_ticket::TICKET_TYPE_UPLOAD, $user_id, $mediafile_id, NULL, $group_id);
+    // Create.
+    $ticket_id = mediamosa_ticket::create_for_upload($app_id, $mediafile_id, $user_id, $group_id);
 
     // Get serverupload.
     $a_server_upload = mediamosa_server_upload::get_random();
@@ -234,7 +225,7 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
         ),
         self::FILENAME => array(
           self::VAR_TYPE => mediamosa_type::TYPE_STRING,
-          self::VAR_DESCRIPTION => 'The filename of the media file.',
+          self::VAR_DESCRIPTION => 'The filename of the media file (PUT method only, ignored otherwise).',
         ),
         self::COMPLETED_URL => array(
           self::VAR_TYPE => mediamosa_type::TYPE_URL,
@@ -257,9 +248,107 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
 
     $a_app_ids = $this->get_param_value_app();
     $app_id = reset($a_app_ids);
+    $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
 
     // Get params.
-  }
+    $ticket_id = $this->get_param_value(self::UPLOAD_TICKET);
+    $create_still = $this->get_param_value(self::CREATE_STILL);
+    $a_still_parameters = array(
+      'still_type' => $this->get_param_value(self::STILL_TYPE),
+      'still_per_mediafile' => $this->get_param_value(self::STILL_PER_MEDIAFILE),
+      'still_every_second' => $this->get_param_value(self::STILL_EVERY_SECOND),
+      'start_frame' => $this->get_param_value(self::START_FRAME),
+      'end_frame' => $this->get_param_value(self::END_FRAME),
+      'size' => $this->get_param_value(self::SIZE),
+      'h_padding' => $this->get_param_value(self::H_PADDING),
+      'v_padding' => $this->get_param_value(self::V_PADDING),
+      'tag' => $this->get_param_value(self::TAG),
+      'frametime' => $this->get_param_value(self::FRAMETIME),
+      'width' => $this->get_param_value(self::WIDTH),
+      'height' => $this->get_param_value(self::HEIGHT),
+    );
+    $completed_url = $this->get_param_value(self::COMPLETED_URL);
+    $completed_transcoding_url = $this->get_param_value(self::get_param_value(self::COMPLETED_TRANSCODING_URL));
+    $transcode_inherits_acl = $this->get_param_value(self::TRANSCODE_INHERITS_ACL);
+    $tag = $this->get_param_value(self::TAG);
+    $a_trancode_profiles = $this->get_param_value(self::TRANSCODE);
+    $retranscode = $this->get_param_value(self::RETRANSCODE);
 
+    $filename_put = NULL;
+
+    if ($this->is_method_put()) {
+      $filename_put = $this->get_param_value(self::FILENAME); // With PUT only.
+    }
+
+    try {
+      mediamosa_asset_mediafile_upload::handle_upload($app_id, $is_app_admin, $ticket_id, $this->is_method_put(), $a_trancode_profiles, $retranscode, $transcode_inherits_acl, $tag, $create_still, $a_still_parameters, $completed_url, $completed_transcoding_url, $filename_put);
+    }
+    catch (Exception $e) {
+
+      if ($this->isset_param(self::REDIRECT_URI)) {
+        // Any errors need to be redirected.
+        throw new mediamosa_exception_redirect_and_exit($this->get_param_value(self::REDIRECT_URI), $e->getCode(), $e->getMessage());
+      }
+
+      // Lets create error output then.
+      throw $e;
+    }
+
+    // Redirect when needed.
+    if ($this->isset_param(self::REDIRECT_URI)) {
+      throw new mediamosa_exception_redirect_and_exit($this->get_param_value(self::REDIRECT_URI), mediamosa_error::ERRORCODE_OKAY);
+    }
+
+    // Set ok.
+    $o_mediamosa->set_result_okay();
+  }
 }
 
+/**
+ * URI: /mediafile/upload
+ *
+ * Method: POST
+ *
+ * 1.x: vpx_upload_handle_file_put_app
+ */
+class mediamosa_rest_call_asset_mediafile_upload_app extends mediamosa_rest_call_asset_mediafile_upload {
+
+  // ------------------------------------------------------------------ Get Var Setup.
+  public function get_var_setup() {
+
+    // Call parent.
+    $a_var_setup = parent::get_var_setup();
+
+    // Not required.
+    $a_var_setup[self::VARS][self::UPLOAD_TICKET][self::VAR_IS_REQUIRED] = self::VAR_IS_REQUIRED_NO;
+
+    // Add user_id.
+    $a_var_setup[self::VARS][self::USER_ID] = array(
+      self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+      self::VAR_DESCRIPTION => 'User id, determined to check whether the applicant has the rights and quotas to upload the mediafile.',
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+      self::VAR_RANGE_END => mediamosa_user_db::NAME_LENGTH,
+    );
+
+    return $a_var_setup;
+  }
+
+  // ------------------------------------------------------------------ Process Rest Args.
+  protected function process_rest_args(array $a_var_setup) {
+
+    $a_var_setup = parent::process_rest_args($a_var_setup);
+
+    $a_app_ids = $this->get_param_value(self::APP_ID);
+
+    // Get the 1st app.
+    $app_id = reset($a_app_ids);
+
+    $mediafile_id = $this->get_param_value(self::MEDIAFILE_ID);
+    $user_id = $this->get_param_value(self::USER_ID);
+
+    // Create ticket.
+    $ticket_id = mediamosa_ticket::create_for_upload($app_id, $mediafile_id, $user_id);
+
+    return $a_var_setup;
+  }
+}

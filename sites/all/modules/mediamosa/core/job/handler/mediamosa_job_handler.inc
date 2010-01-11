@@ -278,8 +278,8 @@ class mediamosa_job_handler {
     $a_job_ext = mediamosa_job::get_job_ext($job_id);
     if (!$a_job_ext) {
       // FIXME: better throw exception?
-      $command = "";
-      $owner = "";
+      $command = '';
+      $owner = '';
       $app_id = 0;
       self::log('A wmv job (@job_id) without transcode_job!', array('@job_id' => $job_id), WATCHDOG_EMERG);
     }
@@ -290,7 +290,7 @@ class mediamosa_job_handler {
     }
 
     // Create job.
-    mediamosa_job::create_job_transcode($app_id, $owner, FALSE, $mediafile_id, 'wmv', $command, mediamosa_job::JOBWINDOWS_TOOL, '', '', -1);
+    mediamosa_job::create_job_transcode($app_id, $owner, '', FALSE, $mediafile_id, FALSE, array(), 'wmv', $command, mediamosa_job::JOBWINDOWS_TOOL, '', '', -1);
   }
 
   /**
@@ -818,7 +818,7 @@ class mediamosa_job_handler {
   static public function fetch_single_available_job($server_id) {
     $a_result = array();
 
-    $result = db_query(
+    $result = mediamosa_db::db_query(
       'SELECT job_id, job_type, asset_id, mediafile_id, status, progress FROM {#mediamosa_job} AS j1 WHERE
             j1.status = :status
           AND
@@ -1251,11 +1251,11 @@ class mediamosa_job_handler {
       mediamosa_asset_mediafile::delete($mediafile_id);
 
       // Update status.
-      mediamosa_job::update_status($a_job_ext, '1.000', mediamosa_job_db::JOB_STATUS_FINISHED);
+      mediamosa_job::update_status($a_job_ext, mediamosa_job_db::JOB_STATUS_FINISHED, '1.000');
     }
     catch (Exception $e) {
       // update with error.
-      mediamosa_job::update_status($a_job_ext, '1.000', mediamosa_job_db::JOB_STATUS_FAILED, $e->getMessage());
+      mediamosa_job::update_status($a_job_ext, mediamosa_job_db::JOB_STATUS_FAILED, '1.000', $e->getMessage());
     }
   }
 
@@ -1307,7 +1307,7 @@ class mediamosa_job_handler {
   static public function check_upload_timeout() {
 
     // Upload jobs in progress and waiting which have no activity.
-    db_query(
+    mediamosa_db::db_query(
        'UPDATE {#mediamosa_job} SET status = :JOBSTATUS_FAILED, FINISHED = NOW(), error_description = :error_description
         WHERE status in (:JOBSTATUS_INPROGRESS, :JOBSTATUS_WAITING) AND job_id IN
         (SELECT job_id FROM {#mediamosa_job_upload} WHERE NOW()-changed > #JOB_UPLOAD_TIMEOUT)',
@@ -1322,7 +1322,7 @@ class mediamosa_job_handler {
         )
     );
     // Jobs with no activity for 3 hours.
-    db_query(
+    mediamosa_db::db_query(
        'UPDATE {#mediamosa_job} SET status = :JOBSTATUS_FAILED, FINISHED = NOW(),
         error_description = :error_description
         WHERE status = :JOBSTATUS_INPROGRESS AND NOW() - changed > #JOB_JOB_TIMEOUT',
@@ -1344,7 +1344,7 @@ class mediamosa_job_handler {
    */
   static public function check_server_on_status_close() {
 
-    db_query(
+    mediamosa_db::db_query(
        'UPDATE {#mediamosa_server_transcoding}
         SET status = :status_off WHERE
         status = :status_close AND transcoding_server_id NOT IN

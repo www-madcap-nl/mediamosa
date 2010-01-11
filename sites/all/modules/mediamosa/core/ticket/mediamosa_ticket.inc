@@ -42,7 +42,7 @@ class mediamosa_ticket {
 
   // ------------------------------------------------------------------ Static Functions.
   /**
-   * Log for job_server.
+   * Log for ticket.
    *
    * @param string $message
    * @param array $variables
@@ -83,6 +83,39 @@ class mediamosa_ticket {
   }
 
   // ------------------------------------------------------------------ Static Functions.
+  /**
+   * Create ticket for upload.
+   *
+   * @param integer $app_id
+   * @param string $mediafile_id
+   * @param string $user_id
+   * @param string $group_id
+   */
+  static public function create_for_upload($app_id, $mediafile_id, $user_id, $group_id = '') {
+    // Mediafile must exist.
+    $a_mediafile = mediamosa_asset_mediafile::must_exists($mediafile_id);
+
+    // Must be owner.
+    mediamosa_aut::owner_check($app_id, $user_id, $a_mediafile[mediamosa_asset_mediafile_db::APP_ID], $a_mediafile[mediamosa_asset_mediafile_db::OWNER_ID]);
+
+    // Check quota.
+    mediamosa_user::must_have_user_quota($app_id, $user_id, $group_id);
+
+    // Create upload ticket.
+    return mediamosa_ticket::create($app_id, mediamosa_ticket::TICKET_TYPE_UPLOAD, $user_id, $mediafile_id, NULL, $group_id);
+  }
+
+  /**
+   * Create ticket.
+   *
+   * @param integer $app_id
+   * @param string $ticket_type
+   * @param string $owner_id
+   * @param string $mediafile_id
+   * @param string $ticket_id
+   * @param string $group_id
+   * @param datetime $issued
+   */
   static public function create($app_id, $ticket_type, $owner_id, $mediafile_id, $ticket_id = NULL, $group_id = NULL, $issued = NULL) {
     if (!isset($ticket_id)) {
       $ticket_id = mediamosa_db::uuid($app_id);
@@ -278,7 +311,7 @@ class mediamosa_ticket {
     );
 
     // Now remove play tickets from the database.
-    $result = db_query(
+    $result = mediamosa_db::db_query(
       'DELETE FROM {#mediamosa_ticket} WHERE #ticket_type = :ticket_type AND #issued <= DATE_SUB(:now, INTERVAL #expire_play SECOND)',
       array(
         '#mediamosa_ticket' => mediamosa_ticket_db::TABLE_NAME,
@@ -345,7 +378,7 @@ class mediamosa_ticket {
     );
 
     // Now remove still from the database.
-    $result = db_query(
+    $result = mediamosa_db::db_query(
       'DELETE FROM {#mediamosa_ticket} WHERE #ticket_type = :ticket_type AND #issued <= DATE_SUB(:now, INTERVAL #expire_play SECOND)',
       array(
         '#mediamosa_ticket' => mediamosa_ticket_db::TABLE_NAME,
@@ -358,7 +391,7 @@ class mediamosa_ticket {
     );
 
     // Now remove expired upload tickets from the database.
-    $result = db_query(
+    $result = mediamosa_db::db_query(
       'DELETE FROM {#mediamosa_ticket} WHERE #ticket_type = :ticket_type AND #issued <= DATE_SUB(:now, INTERVAL #expire_play SECOND)',
       array(
         '#mediamosa_ticket' => mediamosa_ticket_db::TABLE_NAME,
@@ -369,5 +402,59 @@ class mediamosa_ticket {
         '#expire_play' => mediamosa_settings::TICKET_EXPIRATION_UPLOAD,
       )
     );
+  }
+
+  /**
+   * Get the uploadticket, but make sure its not timed-out.
+   *
+   * @param $ticket_id
+   *  The ticket ID to get.
+   * @param string $ticket_type
+   *  Matching ticket type.
+   */
+  static public function get_valid($app_id, $ticket_id, $ticket_type) {
+
+    // Get the current time.
+    $db_time_now = mediamosa::db_current_timestamp_now();
+
+    // Do the query.
+    return mediamosa_db::db_query(
+      'SELECT * FROM {#mediamosa_ticket} WHERE #ticket_id = :ticket_id AND #app_id = :app_id AND #ticket_type = :ticket_type AND #issued > DATE_SUB(:now, INTERVAL #expire_play SECOND)',
+      array(
+        '#mediamosa_ticket' => mediamosa_ticket_db::TABLE_NAME,
+        '#ticket_id' => mediamosa_ticket_db::TICKET_ID,
+        ':ticket_id' => $ticket_id,
+        '#app_id' => mediamosa_ticket_db::APP_ID,
+        ':app_id' => $app_id,
+        '#ticket_type' => mediamosa_ticket_db::TICKET_TYPE,
+        ':ticket_type' => $ticket_type,
+        '#issued' => mediamosa_ticket_db::ISSUED,
+        ':now' => $db_time_now,
+        '#expire_play' => mediamosa_settings::TICKET_EXPIRATION_UPLOAD,
+      )
+    )->fetchAssoc();
+  }
+
+  /**
+   * Wrapper for upload type.
+   *
+   * @param string $ticket_id
+   */
+  static public function get_valid_upload($app_id, $ticket_id) {
+    return self::get_valid($app_id, $ticket_id, mediamosa_ticket_db::TICKET_TYPE_UPLOAD);
+  }
+
+  /**
+   * Remove the ticket.
+   * No check is made on ownership or app_id.
+   *
+   * @param $ticket_id
+   */
+  static public function delete($ticket_id) {
+
+    // Delete it.
+    mediamosa_db::db_delete(mediamosa_ticket_db::TABLE_NAME)
+      ->condition(mediamosa_ticket_db::ID, $ticket_id)
+      ->exectute();
   }
 }

@@ -657,12 +657,13 @@ class mediamosa_db {
 
   /**
    * Return the column names from an table.
+   * NOTE: might not work on all databases, mysql only for now.
    *
    * @return array
    *  Array containing columns.
    */
   static public function db_get_columns($table_name) {
-    // Use db_query directly here.
+    // Use db_query directly here, not mediamosa_db version.
     return db_query('SELECT COLUMN_NAME FROM information_schema.columns WHERE TABLE_NAME = :table', array(':table' => $table_name))->fetchCol();
   }
 
@@ -704,7 +705,7 @@ class mediamosa_db {
     // Max length 24.
     $uuid = mediamosa_unicode::substr($hash_62, 0, mediamosa_settings::UUID_LENGTH);
 
-    // Lets make sure its has the length of mediamosa_settings::UUID_LENGTH.
+    // Lets make sure its not shorter than the length of mediamosa_settings::UUID_LENGTH.
     for ($x = mediamosa_unicode::strlen($uuid); mediamosa_unicode::strlen($uuid) < mediamosa_settings::UUID_LENGTH; $x++) {
       $uuid .= $conf_31_to_62{rand(0, 61)};
     }

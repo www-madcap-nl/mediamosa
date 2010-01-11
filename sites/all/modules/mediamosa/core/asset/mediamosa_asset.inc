@@ -130,11 +130,11 @@ class mediamosa_asset {
     $query->addField('mf', mediamosa_asset_mediafile_db::ID);
     $query->condition('mf' . mediamosa_asset_mediafile_db::ASSET_ID, $a_asset_ids, 'IN');
     $query->condition('mf' . mediamosa_asset_mediafile_db::IS_STILL, mediamosa_asset_mediafile_db::IS_STILL_FALSE);
-    $mediafile_ids = $query->execute()->fetchCol();
+    $a_mediafile_ids = $query->execute()->fetchCol();
 
     // Any mediafiles left and casade off?
-    if (count($mediafile_ids) && !$cascade) {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_ASSET_NOT_EMPTY, array('@mediafile_count' => count($mediafile_ids)));
+    if (count($a_mediafile_ids) && !$cascade) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_ASSET_NOT_EMPTY, array('@mediafile_count' => count($a_mediafile_ids)));
     }
 
     // Remove all jobs.
@@ -144,20 +144,18 @@ class mediamosa_asset {
       }
     }
 
-
     // Check the temporary wmv files
     $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
     $query->addField('mf', mediamosa_asset_mediafile_db::ID);
     $query->condition('mf' . mediamosa_asset_mediafile_db::ASSET_ID, $a_asset_ids, 'IN');
     $query->condition('mf' . mediamosa_asset_mediafile_db::IS_STILL, mediamosa_asset_mediafile_db::IS_STILL_FALSE);
-    $query->condition('mf' . mediamosa_asset_mediafile_db::ID, '"%.avi"', 'LIKE');
-    $mediafile_ids = $query->execute()->fetchCol();
-    if (count($mediafile_ids)) {
+    $query->condition('mf' . mediamosa_asset_mediafile_db::ID, '%.avi', 'LIKE');
+    $a_mediafile_ids = $query->execute()->fetchCol();
+    if (count($a_mediafile_ids)) {
       // Delete the temporary wmv files
-      mediamosa_asset_mediafile::delete($mediafile_ids);
+      mediamosa_asset_mediafile::delete($a_mediafile_ids);
     }
-    unset($mediafile_ids);
-
+    unset($a_mediafile_ids);
 
     // Remove all metadata of the asset.
     $query = mediamosa_db::db_delete(mediamosa_asset_metadata_db::TABLE_NAME);
@@ -212,13 +210,14 @@ class mediamosa_asset {
         ':asset_id' => $asset_id
       )
     );
+
     // Foreach my collection.
     $is_coll = FALSE;
     foreach ($result as $collection_id) {
       $is_coll = TRUE;
       // Create entry in the mediamosa_asset_delete table.
       mediamosa_db::db_query(
-        "REPLACE LOW_PRIORITY {#mediamosa_asset_delete} (#asset_id, #app_id, #videotimestampmodified, #coll_id) VALUES (:asset_id, :app_id, NOW(), :coll_id)",
+        "REPLACE LOW_PRIORITY {#mediamosa_asset_delete} (#asset_id, #app_id, #videotimestampmodified, #coll_id) VALUES (:asset_id, :app_id, :now, :coll_id)",
         array(
           '#mediamosa_asset_delete' => mediamosa_asset_delete_db::TABLE_NAME,
           '#asset_id' => mediamosa_asset_delete_db::ID,
@@ -227,14 +226,15 @@ class mediamosa_asset {
           '#coll_id' => mediamosa_asset_delete_db::COLL_ID,
           ':asset_id' => $asset_id,
           ':app_id' => $app_id,
-          ':coll_id' => $collection_id
+          ':coll_id' => $collection_id,
+          ':now' => mediamosa::db_current_timestamp_now(),
         )
       );
     }
     if (!$is_coll) {
       // Create entry in the mediamosa_asset_delete table.
       mediamosa_db::db_query(
-        "REPLACE LOW_PRIORITY {#mediamosa_asset_delete} (#asset_id, #app_id, #videotimestampmodified, #coll_id) VALUES (:asset_id, :app_id, NOW(), NULL)",
+        "REPLACE LOW_PRIORITY {#mediamosa_asset_delete} (#asset_id, #app_id, #videotimestampmodified, #coll_id) VALUES (:asset_id, :app_id, :now, NULL)",
         array(
           '#mediamosa_asset_delete' => mediamosa_asset_delete_db::TABLE_NAME,
           '#asset_id' => mediamosa_asset_delete_db::ID,
@@ -242,7 +242,8 @@ class mediamosa_asset {
           '#videotimestampmodified' => mediamosa_asset_delete_db::VIDEOTIMESTAMPMODIFIED,
           '#coll_id' => mediamosa_asset_delete_db::COLL_ID,
           ':asset_id' => $asset_id,
-          ':app_id' => $app_id
+          ':app_id' => $app_id,
+          ':now' => mediamosa::db_current_timestamp_now(),
         )
       );
     }
@@ -905,6 +906,7 @@ class mediamosa_asset {
           ->fields($a_fields)
           ->condition(mediamosa_asset_mediafile_db::ASSET_ID_ROOT, $asset_id)
           ->execute();
+
         if (!is_null($owner_id)) {
           // Change the job table
           $a_fields = array();
@@ -913,11 +915,9 @@ class mediamosa_asset {
             ->fields($a_fields)
             ->condition(mediamosa_job_db::ASSET_ID, $asset_id)
             ->execute();
-
         }
       }
     }
-
   }
 
   /**

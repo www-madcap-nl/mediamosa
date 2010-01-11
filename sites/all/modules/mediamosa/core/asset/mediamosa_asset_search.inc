@@ -493,8 +493,8 @@ class mediamosa_asset_search {
         // How much assets we have globally
         $i_found_rows = $calculate_total_count ? mediamosa_db::db_query('SELECT COUNT(*) FROM {assets_all}')->fetchField() : count($a_asset_ids);
 
-        // Drop temporary table
-        db_query('DROP TABLE {assets_all}');
+        // Drop temporary table (no need to drop temp, this is done by mysql when session closes).
+        //mediamosa_db::db_query('DROP TABLE {assets_all}');
 
         // Restore.
         $a_query = $tmp_a_query;

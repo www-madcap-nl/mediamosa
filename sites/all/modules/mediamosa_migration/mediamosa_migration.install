@@ -294,6 +294,13 @@ function mediamosa_migration_install() {
 
   // create server nodes
   _mediamosa_migration_create_server_nodes();
+
+  // <Migrate this setting.
+  $curlproxy_http = variable_get('vpx_curlproxy_http', '');
+  if ($curlproxy_http != '') {
+    variable_set('mediamosa_curlproxy_http', $curlproxy_http);
+  }
+
 }
 
 /**

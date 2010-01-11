@@ -114,6 +114,13 @@ class mediamosa_response extends mediamosa {
     catch (mediamosa_exception_no_rest_interface $e) {
       mediamosa::exit_503(mediamosa::t('No MediaMosa REST interface available...'));
     }
+    catch (mediamosa_exception_redirect_and_exit $e) {
+      // Redirect to URI.
+      header('Location: ' . $e->get_redirect_uri());
+
+      // We redirect and exit.
+      exit();
+    }
     catch (mediamosa_exception_error $e) {
       $e->mediamosa_exception_rest_response($this);
     }

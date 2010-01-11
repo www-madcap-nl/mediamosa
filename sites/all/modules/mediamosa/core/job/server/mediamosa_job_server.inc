@@ -638,77 +638,58 @@ class mediamosa_job_server {
       }
 
       // Data check
-      switch (drupal_strtoupper($still_parameters['still_type'])) {
+
+      // Set to null so we know we have set it.
+      $error_description = NULL;
+
+      switch (mediamosa_unicode::strtoupper($still_parameters['still_type'])) {
         case 'NORMAL':
           if (!is_numeric($still_parameters['still_per_mediafile']) || $still_parameters['still_per_mediafile'] < 1) {
             $still_parameters['still_type'] = 'NONE';
-            $error_description = "Still_per_mediafile parameter is missing. Still creation fall back to still_type = 'NONE'"; 
-            self::log($error_description); 
-            mediamosa_db::db_query(
-              'UPDATE {#mediamosa_job_server}
-               SET #error_description = :error_description
-               WHERE #jobserver_job_id = :jobserver_job_id',
-              array(
-                '#mediamosa_job_server' => mediamosa_job_server_db::TABLE_NAME,
-                '#error_description' => mediamosa_job_server_db::ERROR_DESCRIPTION,
-                '#jobserver_job_id' => mediamosa_job_server_db::ID,
-                ':error_description' => $error_description,
-                ':jobserver_job_id' => $jobserver_job_id,
-              )
-            );
+            $error_description = "Still_per_mediafile parameter is missing. Still creation fall back to still_type = 'NONE'";
           }
           break;
         case 'SECOND':
           if (!is_numeric($still_parameters['still_every_second']) || $still_parameters['still_every_second'] < 0) {
             $still_parameters['still_type'] = 'NONE';
-            $error_description = "Still_every_second parameter is missing. Still creation fall back to still_type = 'NONE'"; 
-            self::log($error_description); 
-            mediamosa_db::db_query(
-              'UPDATE {#mediamosa_job_server}
-               SET #error_description = :error_description
-               WHERE #jobserver_job_id = :jobserver_job_id',
-              array(
-                '#mediamosa_job_server' => mediamosa_job_server_db::TABLE_NAME,
-                '#error_description' => mediamosa_job_server_db::ERROR_DESCRIPTION,
-                '#jobserver_job_id' => mediamosa_job_server_db::ID,
-                ':error_description' => $error_description,
-                ':jobserver_job_id' => $jobserver_job_id,
-              )
-            );
+            $error_description = "Still_every_second parameter is missing. Still creation fall back to still_type = 'NONE'";
           }
           break;
         case 'SCENE':
           if (!$fps || !is_numeric($fps)) {
-            // An error, falls back to the original behaviour
             $still_parameters['still_type'] = 'NONE';
-            $error_description = "Fps parameter in not numeric. Still creation fall back to still_type = 'NONE'"; 
-            self::log($error_description); 
-            mediamosa_db::db_query(
-              'UPDATE {#mediamosa_job_server}
-               SET #error_description = :error_description
-               WHERE #jobserver_job_id = :jobserver_job_id',
-              array(
-                '#mediamosa_job_server' => mediamosa_job_server_db::TABLE_NAME,
-                '#error_description' => mediamosa_job_server_db::ERROR_DESCRIPTION,
-                '#jobserver_job_id' => mediamosa_job_server_db::ID,
-                ':error_description' => $error_description,
-                ':jobserver_job_id' => $jobserver_job_id,
-              )
-            );
+            $error_description = "Fps parameter in not numeric. Still creation fall back to still_type = 'NONE'";
           }
           break;
         default:
           break;
       }
 
+      // Store error_description.
+      if (isset($error_description)) {
+        self::log($error_description);
+        mediamosa_db::db_query(
+          'UPDATE {#mediamosa_job_server}
+           SET #error_description = :error_description
+           WHERE #jobserver_job_id = :jobserver_job_id',
+          array(
+            '#mediamosa_job_server' => mediamosa_job_server_db::TABLE_NAME,
+            '#error_description' => mediamosa_job_server_db::ERROR_DESCRIPTION,
+            '#jobserver_job_id' => mediamosa_job_server_db::ID,
+            ':error_description' => $error_description,
+            ':jobserver_job_id' => $jobserver_job_id,
+          )
+        );
+      }
+
       // Security check and base values
       if (!is_numeric($frametime) || $frametime < $start_frame || $frametime > $end_frame) {
-        $frametime = $start_frame + ($end_frame - $start_frame)/3;
+        $frametime = $start_frame + ($end_frame - $start_frame) / 3;
       }
       $duration = 1;
       $framerate = 1;
 
-      switch (drupal_strtoupper($still_parameters['still_type'])) {
+      switch (mediamosa_unicode::strtoupper($still_parameters['still_type'])) {
         case 'NORMAL':
           $still_per_mediafile = $still_parameters['still_per_mediafile'];
           $frametime = $start_frame;
@@ -870,7 +851,7 @@ class mediamosa_job_server {
             if ($fh) {
               foreach ($scenes as $scene) {
                 fwrite($fh, $scene ."\n");
-                
+
               }
               fclose($fh);
 
@@ -883,7 +864,7 @@ class mediamosa_job_server {
               mediamosa_io::exec($order, $details);
               //self::log('Details: '. print_r($details, TRUE));
 
-              unlink($my_file);
+              mediamosa_io::unlink($my_file);
             }
 
             // Clean up III.

@@ -201,7 +201,7 @@ function mediamosa_asset_mediafile_schema() {
         'type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_db::TRANSCODE_INHERITS_ACL_FALSE, mediamosa_asset_mediafile_db::TRANSCODE_INHERITS_ACL_TRUE)) . "')",
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_db::TRANSCODE_INHERITS_ACL_FALSE, mediamosa_asset_mediafile_db::TRANSCODE_INHERITS_ACL_TRUE)) . "')",
-        'default' => mediamosa_asset_mediafile_db::TRANSCODE_INHERITS_ACL_FALSE,
+        'default' => mediamosa_asset_mediafile_db::TRANSCODE_INHERITS_ACL_TRUE,
       ),
     ),
     'primary key' => array(mediamosa_asset_mediafile_db::ID),

@@ -124,6 +124,10 @@ class mediamosa_settings {
   // Header item used in internal calls.
   const X_MEDIAMOSA_INTERNAL_PASS = 'X-Mediamosa-Internal-Pass';
 
+  // Upload Settings.
+  const UPLOAD_PUT_CHUNK_SIZE = 4096;
+  const UPLOAD_PROGRESS_INTERVAL = 5;
+
   // ------------------------------------------------------------------ Functions.
   /**
    * returns the path where the lua scripts are.
