@@ -407,6 +407,10 @@ class mediamosa_rest_call_create_mediafile extends mediamosa_rest_call {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MIX_OF_URI_AND_FILE);
     }
 
+    if ($this->isset_param(self::URI)) {
+      $this->unset_param(self::SANNAS_MOUNT_POINT);
+    }
+
     // Set mediafile ID to something if not present.
     if (!$this->isset_param(self::MEDIAFILE_ID)) {
       $this->set_param_value(self::MEDIAFILE_ID, mediamosa_db::uuid($app_id));

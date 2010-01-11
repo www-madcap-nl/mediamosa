@@ -638,31 +638,58 @@ class mediamosa_job_server {
       }
 
       // Data check
-      switch ($still_parameters['still_type']) {
+
+      // Set to null so we know we have set it.
+      $error_description = NULL;
+
+      switch (mediamosa_unicode::strtoupper($still_parameters['still_type'])) {
         case 'NORMAL':
           if (!is_numeric($still_parameters['still_per_mediafile']) || $still_parameters['still_per_mediafile'] < 1) {
             $still_parameters['still_type'] = 'NONE';
+            $error_description = "Still_per_mediafile parameter is missing. Still creation fall back to still_type = 'NONE'";
           }
           break;
         case 'SECOND':
           if (!is_numeric($still_parameters['still_every_second']) || $still_parameters['still_every_second'] < 0) {
             $still_parameters['still_type'] = 'NONE';
+            $error_description = "Still_every_second parameter is missing. Still creation fall back to still_type = 'NONE'";
           }
           break;
         case 'SCENE':
           if (!$fps || !is_numeric($fps)) {
-            // An error, falls back to the original behaviour
             $still_parameters['still_type'] = 'NONE';
+            $error_description = "Fps parameter in not numeric. Still creation fall back to still_type = 'NONE'";
           }
           break;
         default:
           break;
       }
 
-      $frametime = $start_frame;
+      // Store error_description.
+      if (isset($error_description)) {
+        self::log($error_description);
+        mediamosa_db::db_query(
+          'UPDATE {#mediamosa_job_server}
+           SET #error_description = :error_description
+           WHERE #jobserver_job_id = :jobserver_job_id',
+          array(
+            '#mediamosa_job_server' => mediamosa_job_server_db::TABLE_NAME,
+            '#error_description' => mediamosa_job_server_db::ERROR_DESCRIPTION,
+            '#jobserver_job_id' => mediamosa_job_server_db::ID,
+            ':error_description' => $error_description,
+            ':jobserver_job_id' => $jobserver_job_id,
+          )
+        );
+      }
+
+      // Security check and base values
+      if (!is_numeric($frametime) || $frametime < $start_frame || $frametime > $end_frame) {
+        $frametime = $start_frame + ($end_frame - $start_frame)/3;
+      }
       $duration = 1;
       $framerate = 1;
-      switch ($still_parameters['still_type']) {
+
+      switch (mediamosa_unicode::strtoupper($still_parameters['still_type'])) {
         case 'NORMAL':
           $still_per_mediafile = $still_parameters['still_per_mediafile'];
           $frametime = $start_frame;
@@ -698,9 +725,9 @@ class mediamosa_job_server {
           }
           break;
         case 'SCENE':
-          watchdog('server', 'Scene detection starts');
+          self::log('Scene detection starts');
           $destination_path = mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . DATA_LOCATION . DIRECTORY_SEPARATOR . 'transcode' . DIRECTORY_SEPARATOR;
-          //watchdog('server', sprintf('Scene: destination path = %s', $destination_path));
+          //self::log(sprintf('Scene: destination path = %s', $destination_path));
           $input = mediamosa_configuration_storage::mediafile_id_filename_get($mediafile_id);
 
           // Clean up I.
@@ -711,69 +738,69 @@ class mediamosa_job_server {
   /*
   // Old code
           $order = sprintf('ffmpeg -i %s -r 25 -an -vcodec mjpeg %s', $input, $destination_path . $mediafile_id .'_scene.avi');
-          //watchdog('server', $order);
+          //self::log($order);
           exec($order);
   */
 
   // Hot fix
           $order = sprintf('ffmpeg -i %s %s', $input, $destination_path . $mediafile_id .'_scene.wmv');
-          //watchdog('server', $order);
+          //self::log($order);
           exec($order);
 
           $order = sprintf('ffmpeg -i %s -r 25 -an -vcodec mjpeg %s', $destination_path . $mediafile_id . '_scene.wmv', $destination_path . $mediafile_id .'_scene.avi');
-          //watchdog('server', $order);
+          //self::log($order);
           mediamosa_io::exec($order);
 
           mediamosa_io::unlink($destination_path . $mediafile_id . '_scene.wmv');
 
   // Hot fix - end
 
-          $order = sprintf('lav2yuv -S %s %s', $destination_path . $mediafile_id .'_list.el', $destination_path . $mediafile_id .'_scene.avi');
-          watchdog('server', $order);
+          $order = sprintf('lav2yuv -T 1 -S %s %s', $destination_path . $mediafile_id .'_list.el', $destination_path . $mediafile_id .'_scene.avi');
+          self::log($order);
           mediamosa_io::exec($order);
 
           $output = NULL;
           $order = sprintf('cat %s', $destination_path . $mediafile_id .'_list.el');
-          //watchdog('server', $order);
+          //self::log($order);
           mediamosa_io::exec($order, $output);
-          //watchdog('server', sprintf('output = %s', print_r($output, TRUE)));
+          //self::log(sprintf('output = %s', print_r($output, TRUE)));
 
           // Clean up II.
-          mediamosa_io::unlink($destination_path . $mediafile_id .'_scene.avi');
           mediamosa_io::unlink($destination_path . $mediafile_id .'_list.el');
 
           // Analyze
           if ($output && is_array($output) && $output != array()) {
-            //watchdog('server', sprintf('Output is array with data'));
+            //self::log(sprintf('Output is array with data'));
 
             // tbr & map from the best stream
             $map = NULL;
             $tbr = NULL;
             $kbs = NULL;
             $order = sprintf('ffmpeg -i %s 2>&1', $input);
-            //watchdog('server', $order);
+            //self::log($order);
             $details = array();
             mediamosa_io::exec($order, $details);
-            //watchdog('server', 'Details: '. print_r($details, TRUE));
+            //self::log('Details: '. print_r($details, TRUE));
             foreach($details as $line) {
               if (stripos($line, ' Stream ') !== FALSE && stripos($line, ' Video: ') !== FALSE) {
-                //FIXME DO NOT USE EREG, IT WILL DEPRECRATED IN PHP.
-                //ereg:This function has been DEPRECATED as of PHP 5.3.0 and REMOVED as of PHP 6.0.0. Relying on this feature is highly discouraged.
-                if (ereg('Stream #[0-9]*\.([0-9]*)', $line, $reg_map) && ereg(' ([0-9]*) kb/s', $line, $reg_kbs)) {
+                if (preg_match('/Stream #[0-9]*\.([0-9]*)/', $line, $reg_map) && preg_match('/ ([0-9]*) kb\/s/', $line, $reg_kbs)) {
                   if (!$map || !$kbs || $kbs < $reg_kbs[1]) {
                     $map = $reg_map[1];
                     $kbs = $reg_kbs[1];
                   }
-                  if (ereg(' ([0-9]*) tb', $line, $regs)) {
+                  if (preg_match('/ ([0-9]*(\.[0-9]*)+) tb/', $line, $regs)) {
                     $tbr = $regs[1];
                   }
                 }
-                elseif (!$map && ereg(' ([0-9]*) tb', $line, $regs)) {
+                elseif (!$map && preg_match('/ ([0-9]*(\.[0-9]*)+) tb/', $line, $regs)) {
                   $tbr = $regs[1];
+                  if (preg_match('/Stream #[0-9]*\.([0-9]*)/', $line, $reg_map)) {
+                    $map = $reg_map[1];
+                  }
                 }
               }
             }
-            //watchdog('server', 'tbr: '. print_r($tbr, TRUE) .', map: '. print_r($map, TRUE) .', kbs: '. print_r($kbs, TRUE));
+            //self::log('tbr: '. print_r($tbr, TRUE) .', map: '. print_r($map, TRUE) .', kbs: '. print_r($kbs, TRUE));
             if (!$tbr) {
               // This is the base value
               $tbr = 25;
@@ -785,31 +812,25 @@ class mediamosa_job_server {
               $i = 1;
               $scenes = array();
               foreach ($output as $line) {
-                //watchdog('server', sprintf('Line: %s', print_r($line, TRUE)));
+                //self::log(sprintf('Line: %s', print_r($line, TRUE)));
                 $line_args = explode(' ', $line);
-                //watchdog('server', sprintf('Line args: %s', print_r($line_args, TRUE)));
+                //self::log(sprintf('Line args: %s', print_r($line_args, TRUE)));
                 if ($line_args && is_array($line_args) && $line_args != array()) {
-                  //watchdog('server', sprintf('Line args is array with data'));
+                  //self::log(sprintf('Line args is array with data'));
                   if (isset($line_args[0]) && isset($line_args[1]) && isset($line_args[2]) && !isset($line_args[3]) && is_numeric($line_args[0]) && is_numeric($line_args[1]) && is_numeric($line_args[2])) {
-                    //watchdog('server', sprintf('Line args has 3 numbers'));
+                    //self::log(sprintf('Line args has 3 numbers'));
                     // $line_args[1] + num = a little bit after the change
                     $change_frame = $line_args[1] + mediamosa_settings::STILL_SCENE_AFTER;
-                    //watchdog('server', 'change_frame: '. print_r($change_frame, TRUE) .', start_frame: '. print_r($start_frame, TRUE) .', end_frame: '. print_r($end_frame, TRUE));
+                    //self::log('change_frame: '. print_r($change_frame, TRUE) .', start_frame: '. print_r($start_frame, TRUE) .', fps = '. $fps .', end_frame: '. print_r($end_frame, TRUE));
                     if ($change_frame >= ($start_frame*$fps) && $change_frame <= ($end_frame*$fps)) {
                       // $scene_frame + num = minimal distance with two changes
+                      //self::log('scene_frame: '. print_r($scene_frame, TRUE));
                       if (!$scene_frame || $scene_frame + mediamosa_settings::STILL_SCENE_DISTANCE < $change_frame) {
                         $scene_frame = $change_frame;
-                        //watchdog('server', sprintf('New scene frame: %s', $scene_frame));
-                        $scene_sec = (int)($scene_frame/$tbr);
-
-                        // VPX_STILL_SCENE_STRING = ffmpeg -i %s -s %s -padtop %d -padbottom %d -padleft %d -padright %d -an -deinterlace -y -ss %d -t 1 -r 1 %s -f image2 %s
-                        $order = sprintf(mediamosa_settings::STILL_SCENE_STRING, $input, $size, $h_padding, $h_padding, $v_padding, $v_padding, $scene_sec, ($map ? '-map 0.'. $map : ''), $destination_path . $mediafile_id . sprintf(mediamosa_settings::STILL_EXTENSION, $i) .".jpeg");
-                        //watchdog('server', $order);
-                        mediamosa_io::exec($order);
-                        //watchdog('server', 'Details: '. print_r($details, TRUE));
-
+                        //self::log(sprintf('New scene frame: %s', $scene_frame));
+                        // The avi has 25 frame/sec
+                        $scene_sec = (int)($scene_frame/25);
                         $scenes[] = $scene_sec;
-
                         $i++;
                         if ($i > mediamosa_settings::STILL_MAXIMUM) {
                           // Emergency break
@@ -825,6 +846,31 @@ class mediamosa_job_server {
 
           // Save the sec data (see: vpx_jobhandler.module)
           if (is_array($scenes) && $scenes != array()) {
+            $my_file = $destination_path . $job_id .'_ffmpeg_scene.txt';
+            $fh = fopen($my_file, 'w') or $fh = NULL;
+            if ($fh) {
+              foreach ($scenes as $scene) {
+                fwrite($fh, $scene ."\n");
+
+              }
+              fclose($fh);
+
+              // This version is creating stills for the original video
+              $order = sprintf(mediamosa_settings::STILL_SCENE_STRING, $input, $size, $h_padding, $h_padding, $v_padding, $v_padding, $my_file, ($map ? '-map 0.'. $map : ''), $destination_path . $mediafile_id . mediamosa_settings::STILL_EXTENSION .".jpeg");
+
+              // This version is creating stills for the analysed file
+              //$order = sprintf(mediamosa_settings::STILL_SCENE_STRING, $destination_path . $mediafile_id .'_scene.avi', $size, $h_padding, $h_padding, $v_padding, $v_padding, $my_file, '', $destination_path . $mediafile_id . mediamosa_settings::STILL_EXTENSION .".jpeg");
+              self::log($order);
+              mediamosa_io::exec($order, $details);
+              //self::log('Details: '. print_r($details, TRUE));
+
+              mediamosa_io::unlink($my_file);
+            }
+
+            // Clean up III.
+            mediamosa_io::unlink($destination_path . $mediafile_id .'_scene.avi');
+
+            // It has to be the last, because it triggers the further processes
             $my_file = $destination_path . $job_id .'_scene.txt';
             $fh = fopen($my_file, 'w') or $fh = NULL;
             if ($fh) {
@@ -837,6 +883,9 @@ class mediamosa_job_server {
             // Do nothing after this
             return 'echo "Scene stills are rock"';
           }
+
+          // Clean up IV.
+          mediamosa_io::unlink($destination_path . $mediafile_id .'_scene.avi');
 
           // We reached this point, so something went wrong in the creation of scene stills.
           // So we are creating still type NONE (original behaviour).
@@ -999,7 +1048,7 @@ class mediamosa_job_server {
       ->condition(mediamosa_job_server_db::JOB_ID, $job_id)
       ->execute();
 
-    self::log('Job finished: Still saved as e.g.: ' . mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . STILL_LOCATION . DIRECTORY_SEPARATOR . $filename{0} . DIRECTORY_SEPARATOR . $filename, NULL);
+    self::log('Job finished: Multiple stills saved as e.g.: ' . mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . STILL_LOCATION . DIRECTORY_SEPARATOR . $filename{0} . DIRECTORY_SEPARATOR . $filename, NULL);
 
     return mediamosa_job_server_db::JOB_STATUS_FINISHED;
   }

@@ -88,7 +88,7 @@ class mediamosa_settings {
   // Scene still: The still is THIS number of frames after the detected still change
   const STILL_SCENE_AFTER = 5;
   // Scene still: Minimal distance between two stills in frames
-  const STILL_SCENE_DISTANCE = 250;
+  const STILL_SCENE_DISTANCE = 25;
 
   // Time in seconds at which a still is made in a movie, if the movie is shorter
   // than 10 seconds, half the movie length is used.
@@ -110,7 +110,7 @@ class mediamosa_settings {
   const STILL_RESAMPLE_HEIGHT = 150;
 
   const STILL_STRING = "' -s %s -padtop %d -padbottom %d -padleft %d -padright %d -an -deinterlace -y -ss %s -t %s -r %s -vcodec mjpeg -f image2'";
-  const STILL_SCENE_STRING = 'ffmpeg -i %s -s %s -padtop %d -padbottom %d -padleft %d -padright %d -an -deinterlace -y -ss %d -t 1 -r 1 %s -f image2 %s';
+  const STILL_SCENE_STRING = 'ffmpeg -i %s -s %s -padtop %d -padbottom %d -padleft %d -padright %d -an -deinterlace -y -scene %s %s -r 1 -f image2 %s';
 
   // Analyse settings.
   const ANALYSE_FILE_ALWAYS_HINT_MP4_OPTION = '--always_hint_mp4';

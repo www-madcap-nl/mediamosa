@@ -44,7 +44,7 @@ if (!is_dir($ticket)) {
 
 // controleer de file
 $filename = $matches[2];
-$file = $ticket . '/' . urlencode($filename);
+$file = $ticket . '/' . urldecode($filename);
 if (!file_exists($file)) {
   die("File not found");
 }
@@ -57,7 +57,7 @@ header("Cache-Control: private, false");
 header("Content-Description: Download");
 header("Content-Type: application/force-download"); // alternatief: application/octet-stream
 header("Content-Length: ". filesize($file));
-header("Content-Disposition: attachment; filename=\"". urlencode($filename) . "\""); // force a save dialog.
+header("Content-Disposition: attachment; filename=\"". $filename . "\""); // force a save dialog.
 header("Content-Transfer-Encoding: binary");
 
 // stream de file en verscheur de ticket op het filesystem

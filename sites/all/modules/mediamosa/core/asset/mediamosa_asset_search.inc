@@ -385,7 +385,7 @@ class mediamosa_asset_search {
     }
 
     // Deleted assets
-    if (!$show_deleted || $coll_id) {
+    if (!$show_deleted) {
       // Normal behaviour
       // Do the query
       $query = mediamosa_db_query::query_select($a_query, array(mediamosa_db_QUERY::SQL_CALC_FOUND_ROWS => $calculate_total_count));
@@ -446,7 +446,7 @@ class mediamosa_asset_search {
       $d_limit = $a_query[mediamosa_db_query::LIMIT];
       $d_offset = $a_query[mediamosa_db_query::OFFSET];
       $d_search = isset($a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][self::SEARCH]) ? $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][self::SEARCH] : FALSE;
-      $d_where = sprintf('a.app_id IN(%s)', implode(',', $a_app_ids_tmp)) . ($d_search ? ' AND '. $d_search : '');
+      $d_where = sprintf('a.app_id IN(%s)', implode(',', $a_app_ids_tmp)) . ($d_search ? ' AND '. $d_search : '') . ($coll_id ? ' AND (a.coll_id = "'. implode('" OR a.coll_id = "', $coll_id) .'")' : '');
 
       global $db_url;
       /*

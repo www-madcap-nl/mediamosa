@@ -238,6 +238,7 @@ class mediamosa_rest_call_transcode_profile_update extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
   // Rest vars;
   const PROFILE_ID = 'profile_id';
+  const REPLACE_ = 'replace';
   const NAME = 'name';
   const TOOL = 'tool';
   const DEFAULT_ = 'default';
@@ -256,16 +257,19 @@ class mediamosa_rest_call_transcode_profile_update extends mediamosa_rest_call {
           self::VAR_DESCRIPTION => 'The ID of the profile to update.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
+        self::REPLACE_ => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_DESCRIPTION => 'Is replace.',
+          self::VAR_DEFAULT_VALUE => 'FALSE',
+        ),
         self::NAME => array(
           self::VAR_TYPE => mediamosa_type::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The name of the profile.',
-          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::VAR_RANGE_END => mediamosa_transcode_profile_db::PROFILE_LENGTH,
         ),
         self::TOOL => array(
           self::VAR_TYPE => mediamosa_type::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The tool used for the profile.',
-          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::VAR_RANGE_END => mediamosa_transcode_profile_db::TOOL_LENGTH,
         ),
         self::DEFAULT_ => array(
@@ -280,13 +284,11 @@ class mediamosa_rest_call_transcode_profile_update extends mediamosa_rest_call {
         self::FILE_EXTENSION => array(
           self::VAR_TYPE => mediamosa_type::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The file extension.',
-          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::VAR_RANGE_END => mediamosa_transcode_profile_db::FILE_EXTENSION_LENGTH,
         ),
         self::COMMAND => array(
           self::VAR_TYPE => mediamosa_type::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The command.',
-          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::VAR_RANGE_END => mediamosa_transcode_profile_db::COMMAND_LENGTH,
         ),
       )
@@ -294,6 +296,26 @@ class mediamosa_rest_call_transcode_profile_update extends mediamosa_rest_call {
 
     // Enrich with required REST vars.
     return self::get_var_setup_default($a_var_setup);
+  }
+
+  /**
+   * Process the supplied parameters.
+   *
+   * @param array $a_var_setup
+   */
+  protected function process_rest_args(array $a_var_setup) {
+    $a_var_setup = parent::process_rest_args($a_var_setup);
+    $replace = $this->get_param_value(self::REPLACE_);
+
+    if ($replace) {
+      $a_var_setup[self::VARS][self::NAME][self::VAR_IS_REQUIRED] = self::VAR_IS_REQUIRED_YES;
+      $a_var_setup[self::VARS][self::TOOL][self::VAR_IS_REQUIRED] = self::VAR_IS_REQUIRED_YES;
+      $a_var_setup[self::VARS][self::VERSION][self::VAR_IS_REQUIRED] = self::VAR_IS_REQUIRED_YES;
+      $a_var_setup[self::VARS][self::FILE_EXTENSION][self::VAR_IS_REQUIRED] = self::VAR_IS_REQUIRED_YES;
+      $a_var_setup[self::VARS][self::COMMAND][self::VAR_IS_REQUIRED] = self::VAR_IS_REQUIRED_YES;
+    }
+
+    return $a_var_setup;
   }
 
   // ------------------------------------------------------------------ Do Call.

@@ -63,6 +63,35 @@ class mediamosa_http {
   }
 
   /**
+   * Do a head call.
+   * Triggers the URL without getting or waiting for the output.
+   *
+   * @param string $url
+   */
+  static public function do_head_call($url) {
+
+    // Get the proxy url.
+    $curlproxy_http = mediamosa::variable_get('mediamosa_curlproxy_http', '');
+
+    // Init curl.
+    $curl_handle = curl_init($url);
+    curl_setopt($curl_handle, CURLOPT_RETURNTRANSFER, TRUE);
+    curl_setopt($curl_handle, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_0);
+
+    // Do a HEAD call here.
+    curl_setopt($curl_handle, CURLOPT_NOBODY, TRUE);
+
+    // Check for possible proxy setting, if set, use it.
+    if ($curlproxy_http) {
+      curl_setopt($curl_handle, CURLOPT_PROXYTYPE, CURLPROXY_HTTP);
+      curl_setopt($curl_handle, CURLOPT_PROXY, $curlproxy_http);
+    }
+
+    $result = curl_exec($curl_handle);
+    curl_close($curl_handle);
+  }
+
+  /**
    * Perform an HTTP request.
    *
    * Copy of the Drupal HTTP Request.

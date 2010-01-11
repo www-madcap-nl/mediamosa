@@ -71,6 +71,8 @@ function mediamosa_configuration_storage_mediamosa_configuration_collect() {
  * @param array $form
  * @param array $form_state
  */
+/*
+// TODO: This hook doesn't work still the varibles are saved
 function mediamosa_configuration_storage_mediamosa_configuration_submit($form, $form_state) {
   assert(isset($form));
   assert(isset($form_state['values']['mediamosa_current_mount_point']));
@@ -80,6 +82,7 @@ function mediamosa_configuration_storage_mediamosa_configuration_submit($form, $
   mediamosa_configuration_storage::linux_set($form_state['values']['mediamosa_current_mount_point']);
   mediamosa_configuration_storage::windows_set($form_state['values']['mediamosa_current_mount_point_windows']);
 }
+*/
 
 /**
  * Implements hook_mediamosa_register_rest_call().

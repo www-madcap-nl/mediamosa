@@ -675,7 +675,7 @@ function vpx_statistics_get_used_diskspace($a_args, $is_internal = FALSE) {
 
     $a_query[VPX_DB_QUERY_A_WHERE][VPX_DB_WHERE_AND][] = sprintf("type = '%s'", db_escape_string($type));
 
-    $a_query[VPX_DB_QUERY_A_WHERE][VPX_DB_WHERE_AND][] = sprintf("timestamp BETWEEN '%04d-%02d-01' AND '%04d-%02d-01'", $year, $month, $year, $month + 1);
+    $a_query[VPX_DB_QUERY_A_WHERE][VPX_DB_WHERE_AND][] = sprintf("timestamp BETWEEN '%04d-%02d-01' AND '%04d-%02d-01'", $year, $month, ($month == 12 ? $year + 1 : $year), ($month == 12 ? 1 : $month + 1));
 
     // Allowed Order By List
     $a_order_by = array(

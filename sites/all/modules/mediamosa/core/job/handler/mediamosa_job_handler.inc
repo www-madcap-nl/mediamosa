@@ -111,7 +111,12 @@ class mediamosa_job_handler {
       return;
     }
 
-    $response_data = new SimpleXMLElement($response->data);
+    try {
+      $response_data = new SimpleXMLElement($response->data);
+    }
+    catch (Exception $e) {
+      self::log('Parse XML: @msg (@resp)', array('@msg' => $e->getMessage(), '@resp' => print_r($response->data, TRUE)), WATCHDOG_ERROR);
+    }
 
     // stel de update query samen.
     for ($i = 0; $i < $response_data->header->item_count; $i++) {
@@ -456,7 +461,7 @@ class mediamosa_job_handler {
     $a_asset = mediamosa_asset::get($asset_id);
     $parent_id = ($a_asset[mediamosa_asset_db::PARENT_ID] ? $a_asset[mediamosa_asset_db::PARENT_ID] : $asset_id);
 
-    self::log("Start creation DB still, e.g. @filename, job: @job_id", array('@filename' => $filenames[0], '@job_id' => $job_id));
+    self::log("Start creation DB multiple still, e.g. @filename, job: @job_id", array('@filename' => $filenames[0], '@job_id' => $job_id));
 
     // Remove old stills
     // We have multiple stills now, so we don't delete the old ones
@@ -674,7 +679,12 @@ class mediamosa_job_handler {
     $response = mediamosa_http::do_internal_call($ip_address, $rest_url, '', mediamosa_http::METHOD_POST);
 
     if ($response->code == "201" || $response->code == "200") {
-      $response_data = new SimpleXMLElement($response->data);
+      try {
+        $response_data = new SimpleXMLElement($response->data);
+      }
+      catch (Exception $e) {
+        self::log('Parse XML: @msg (@resp)', array('@msg' => $e->getMessage(), '@resp' => print_r($response->data, TRUE)), WATCHDOG_ERROR);
+      }
       return $response_data->header->request_result_id;
     }
 
@@ -709,7 +719,12 @@ class mediamosa_job_handler {
     $response = mediamosa_http::do_internal_call($ip_address, $rest_url, '', mediamosa_http::METHOD_POST);
 
     if ($response->code == "201" || $response->code == "200") {
-      $response_data = new SimpleXMLElement($response->data);
+      try {
+        $response_data = new SimpleXMLElement($response->data);
+      }
+      catch (Exception $e) {
+        self::log('Parse XML: @msg (@resp)', array('@msg' => $e->getMessage(), '@resp' => print_r($response->data, TRUE)), WATCHDOG_ERROR);
+      }
       return $response_data->header->request_result_id;
     }
 
@@ -775,7 +790,12 @@ class mediamosa_job_handler {
     );
 
     if ($response->code == "201" || $response->code == "200") {
-      $response_data = new SimpleXMLElement($response->data);
+      try {
+        $response_data = new SimpleXMLElement($response->data);
+      }
+      catch (Exception $e) {
+        self::log('Parse XML: @msg (@resp)', array('@msg' => $e->getMessage(), '@resp' => print_r($response->data, TRUE)), WATCHDOG_ERROR);
+      }
       return $response_data->header->request_result_id;
     }
 
