@@ -82,3 +82,55 @@ Post 2.0 release:
 * drop mediamosa_server(download|streaming|still|upload|transcoding) tabellen
 * pas migratie script aan naar aanmaken server nodes
 * verwijder oude db classes
+
+Backports:
+not ported yet - 4446: trac_tickets_204.inc
+not ported yet - 4447: trac_tickets_227.inc, trac_tickets_2.inc
+ported - 4458: transcoding_profile.module
+ported - 4459: vpx_jobs.module
+ported - 4461: vpx_jobs.module
+ported - 4462: vpx_jobhandler.module, vpx_jobs.module, vpx_jobscheduler.module, vpx_jobserver.module
+ported - 4463: vpx_jobs.module, vpx_jobscheduler.module
+ported - 4465: vpx_jobserver.module
+ported - 4466: transcoding_profile.module
+partly ported (tests are missing) - 4468: vpx_jobhandler.module, trac_tickets_250.inc, trac_tickets_261.inc, trac_tickets_29.inc, trac_tickets_504.inc, trac_tickets_661.inc, trac_tickets_85.inc
+not ported yet - 4469: trac_tickets_504.inc
+not ported yet - 4470: trac_tickets_250.inc, trac_tickets_661.inc
+versioning - 4472
+versioning - 4474
+ported - 4475: media_management.module
+ported (vpx_beheer.module is missing?) - 4487: mediamosa.profile, media_management.module, media_management_search.inc, vpx_beheer.install, vpx_beheer.module
+ported - 4500: media_management_asset.inc, vpx_beheer.install
+ported - 4501: vpx_jobhandler.module,
+ported - 4502: vpx_jobhandler.module,
+ported - 4503: media_management_asset.inc
+ported - 4505: media_management_mediafile.inc
+ported - 4507: download/index.php
+ported - 4509: media_management_search.inc
+ported - 4510: cql_class.inc
+ported - 4512: vpx_jobserver.module
+ported - 4514: vpx_jobserver.module, vpx_shared_defines.php, patches/ffmpeg.diff
+ported - 4515: vpx_jobserver.module
+ported - 4516: vpx_jobserver.module
+it will have never been ported - 4517: integrity_check.info, integrity_check.module, integrity_check.php, vpx_beheer.install, vpx_shared_defines.php
+partly ported - 4519: vpx_acl_access.inc
+ported - 4520: play_proxy.module
+it will have never been ported - 4521: integrity_check.php
+not ported yet - 4522: trac_tickets_250.inc, trac_tickets_661.inc
+it will have never been ported - 4523: debian/changelog, debian/files
+ported - 4524: media_management.module
+not ported yet - 4525: trac_tickets_504.inc, trac_tickets_661.inc
+it will have never been ported - 4531: vpx_shared_defines.php
+ported - 4533: media_management.module
+ported - 4535: lua/vpx-analyse, lua/vpx-transcode
+ported - 4537: media_management.module
+it will have never been ported - 4538: debian/changelog, debian/files
+ported - 4539: lua/vpx-analyse
+ported - 4540: lua/vpx-analyse
+ported - 4546: vpx_jobs.module
+partly ported - 4547: vpx_cql.inc, trac_tickets.test, trac_tickets_809.inc
+ported - 4548: media_management.module
+it will have never been ported - 4553: Module update
+it will have never been ported - 4554: Drupal update
+ported - 4555: vpx_statistics.module
+it will have never been ported - 4556: Module update
