@@ -216,8 +216,6 @@ class mediamosa_rest_call_job_analyse_mediafile extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
-
     $a_app_ids = $this->get_param_value_app();
     $app_id = reset($a_app_ids);
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
@@ -539,10 +537,6 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
 
     if ($a_mediafile[mediamosa_asset_mediafile_db::URI] == '' || is_null($a_mediafile[mediamosa_asset_mediafile_db::URI])) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CHANGE_URI_AND_FILE, array('@mediafile_id' => $mediafile_id));
-    }
-
-    if ($job_type == mediamosa_job_db::JOB_TYPE_TRANSCODE) {
-
     }
 
     switch ($job_type) {

@@ -174,6 +174,40 @@ class mediamosa_asset_mediafile_metadata {
   }
 
   /**
+   * Fill the mediafile metadata.
+   *
+   * @param $still_id
+   * @param $width
+   * @param $height
+   * @param $filesize
+   * @param $mime
+   * @param $file_type
+   */
+  static public function create_metadata_still_default($still_id, $width, $height, $filesize, $mime, $file_type) {
+    // Create mediafile metadata.
+    $a_fields = array(
+      mediamosa_asset_mediafile_metadata_db::ID => $still_id,
+      mediamosa_asset_mediafile_metadata_db::WIDTH => $width,
+      mediamosa_asset_mediafile_metadata_db::HEIGHT => $height,
+      mediamosa_asset_mediafile_metadata_db::BPP => '',
+      mediamosa_asset_mediafile_metadata_db::FILESIZE => $filesize,
+      mediamosa_asset_mediafile_metadata_db::MIME_TYPE => $mime,
+      mediamosa_asset_mediafile_metadata_db::STILL_ORDER => 0,
+      mediamosa_asset_mediafile_metadata_db::STILL_FORMAT => $file_type,
+      mediamosa_asset_mediafile_metadata_db::STILL_TYPE => STILL_TYPE_NONE,
+      mediamosa_asset_mediafile_metadata_db::STILL_DEFAULT => STILL_DEFAULT_FALSE,
+    );
+
+    // Add created value.
+    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+
+    // Insert it.
+    return mediamosa_db::db_insert(mediamosa_asset_mediafile_metadata_db::TABLE_NAME)
+      ->fields($a_fields)
+      ->execute();
+  }
+
+  /**
    * Store the analyse result in the mediafile metadata.
    *
    * 1.x: _vpx_jobhandler_update_analyse_job_info_to_mediafile
