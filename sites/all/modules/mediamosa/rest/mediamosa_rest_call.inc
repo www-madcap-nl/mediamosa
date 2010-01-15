@@ -76,7 +76,8 @@ abstract class mediamosa_rest_call {
   const ACCESS_EXTERNAL_ONLY = 2;    // Access to REST call externally only.
   const ACCESS_AUTHENTICATED = 4; // Access to REST call when authenticated (true came back in the auth hook).
   const ACCESS_AUTHENTICATED_ONLY = 4; // Access to REST call when authenticated only.
-  const ACCESS_DEFAULT = 5;     // Access default allowes external and authenticated access.
+  const ACCESS_DEFAULT = 5;     // Access default allowes internals and authenticated access.
+                                // External access needs to be specified.
 
   const DESCRIPTION = 'description';   // Description of the REST call (In English, required).
 

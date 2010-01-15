@@ -38,23 +38,6 @@ function mediamosa_server_streaming_container_install() {
 
   // Download server.
   mediamosa::drupal_install_schema(mediamosa_server_streaming_container_db::TABLE_NAME);
-
-  db_query(
-    strtr(
-      "INSERT INTO {#mediamosa_server_streaming_container} VALUES
-      (143, 2, 'flv'),
-      (144, 2, 'mp3'),
-      (145, 3, 'mpeg'),
-      (146, 3, 'mov;mp4;m4a;3gp;3g2;mj2'),
-      (162, 1, 'asf'),
-      (181, 5, 'sita'),
-      (182, 5, 'duobak'),
-      (183, 5, 'brabantia')",
-      array(
-        '#mediamosa_server_streaming_container' => mediamosa_server_streaming_container_db::TABLE_NAME
-      )
-    )
-  );
 }
 
 /**
@@ -79,8 +62,8 @@ function mediamosa_server_streaming_container_schema() {
         'type' => 'serial',
         'not null' => TRUE,
       ),
-      mediamosa_server_streaming_container_db::STREAMING_SERVER_ID => array(
-        'description' => t('The parent server ID.'),
+      mediamosa_server_streaming_container_db::NID => array(
+        'description' => t('The parent server node ID.'),
         'type' => 'int',
         'not null' => TRUE,
       ),

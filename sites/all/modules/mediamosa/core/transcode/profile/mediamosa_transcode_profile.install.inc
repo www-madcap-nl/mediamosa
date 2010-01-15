@@ -37,6 +37,20 @@ function mediamosa_transcode_profile_install() {
   // Create our table(s).
   mediamosa::drupal_install_schema(mediamosa_transcode_profile_db::TABLE_NAME);
 
+  // Create our node type.
+  $transcode_profile_node_type = array(
+    'type' => mediamosa_node::MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE,
+    'name' => t('MediaMosa transcode profile'),
+    'base' => mediamosa_node::MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE,
+    'description' => t('The transcode profile contains information about the codec type and settings for a video transcoding.'),
+    'custom' => 1,
+    'modified' => 1,
+    'locked' => 0,
+  );
+
+  $transcode_profile_node_type = node_type_set_defaults($transcode_profile_node_type);
+  node_type_save($transcode_profile_node_type);
+
   $a_default_profiles = array(
     array('standaard flash' ,'FALSE', 'ffmpeg', 'flv', 'videobitrate:500000;size:320x200;audiobitrate:64000;audiosamplingrate:22050;maintain_aspect_ratio:yes'),
     array('qcif flash', 'TRUE', 'ffmpeg', 'flv', 'videobitrate:200000;size:176x144;audiosamplingrate:22050;maintain_aspect_ratio:yes'),
@@ -47,23 +61,21 @@ function mediamosa_transcode_profile_install() {
   );
 
   foreach ($a_default_profiles as $a_default_profile) {
-    $a_fields = array(
-      mediamosa_transcode_profile_db::VERSION => 0,
-      mediamosa_transcode_profile_db::PROFILE => $a_default_profile[0],
-      mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE => $a_default_profile[1],
-      mediamosa_transcode_profile_db::TOOL => $a_default_profile[2],
-      mediamosa_transcode_profile_db::FILE_EXTENSION => $a_default_profile[3],
-      mediamosa_transcode_profile_db::COMMAND => $a_default_profile[4],
-      mediamosa_transcode_profile_db::APP_ID => 0,
-    );
+    $node = new stdClass();
+    $node->uid = 1; // Admin
+    $node->status = 1; // Published
+    $node->type = mediamosa_node::MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE;
 
-    // Add changed/created.
-    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+    $node->title = $a_default_profile[0];
+    $node->{mediamosa_transcode_profile_db::APP_ID} = 0;
+    $node->{mediamosa_transcode_profile_db::VERSION} = 0;
+    $node->{mediamosa_transcode_profile_db::PROFILE} = $a_default_profile[0];
+    $node->{mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE} = $a_default_profile[1];
+    $node->{mediamosa_transcode_profile_db::TOOL} = $a_default_profile[2];
+    $node->{mediamosa_transcode_profile_db::FILE_EXTENSION} = $a_default_profile[3];
+    $node->{mediamosa_transcode_profile_db::COMMAND} = $a_default_profile[4];
 
-    // Insert it.
-    db_insert(mediamosa_transcode_profile_db::TABLE_NAME)
-      ->fields($a_fields)
-      ->execute();
+    $node = node_save($node);
   }
 }
 
@@ -72,7 +84,7 @@ function mediamosa_transcode_profile_install() {
  */
 function mediamosa_transcode_profile_uninstall() {
   // Drop our table(s).
-  mediamosa::drupal_uninstall_schemainstall_schema(mediamosa_transcode_profile_db::TABLE_NAME);
+  mediamosa::drupal_uninstall_schema(mediamosa_transcode_profile_db::TABLE_NAME);
 }
 
 /**
@@ -83,6 +95,18 @@ function mediamosa_transcode_profile_schema() {
   $a_schema[mediamosa_transcode_profile_db::TABLE_NAME] = array(
   'description' => t('The transcode profile table.'),
     'fields' => array(
+      mediamosa_server_db::NID => array(
+        'description' => t('The Drupal node id.'),
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      mediamosa_server_db::VID => array(
+        'description' => t('The Drupal node revision id.'),
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
       mediamosa_transcode_profile_db::ID => array(
         'type' => 'serial',
         'unsigned' => TRUE,

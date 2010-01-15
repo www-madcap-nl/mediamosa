@@ -152,64 +152,6 @@
  */
 $db_prefix = '';
 
-$databases = array();
-$databases['default']['default'] = array(
-  'driver' => 'mysql',
-  'database' => 'mediamosa2',
-  'username' => 'memo',
-  'password' => 'memo',
-  'host' => 'localhost'
-);
-
-$databases['ftp']['default'] = array(
-  'driver' => 'mysql',
-  'database' => 'vpx_ftp',
-  'username' => 'ftp',
-  'password' => 'vpx',
-  'host' => 'localhost'
-);
-
-// Migration memo 1.0 databases;
-$databases['mig_memo']['default'] = array(
-  'driver' => 'mysql',
-  'database' => 'memo',
-  'username' => 'memo',
-  'password' => 'memo',
-  'host' => 'localhost'
-);
-$databases['mig_memo_data']['default'] = array(
-  'driver' => 'mysql',
-  'database' => 'memo_data',
-  'username' => 'memo',
-  'password' => 'memo',
-  'host' => 'localhost'
-);
-$databases['mig_memo_jobserver']['default'] = array(
-  'driver' => 'mysql',
-  'database' => 'vpx_jobserver',
-  'username' => 'vpx',
-  'password' => 'vpx',
-  'host' => 'localhost'
-);
-$databases['mig_memo_jobserver_lin2']['default'] = array(
-  'driver' => 'mysql',
-  'database' => 'vpx_jobserver_lin2',
-  'username' => 'vpx',
-  'password' => 'vpx',
-  'host' => 'localhost'
-);
-$databases['mig_memo_jobserver_win']['default'] = array(
-  'driver' => 'mysql',
-  'database' => 'vpx_jobserver_win',
-  'username' => 'vpx',
-  'password' => 'vpx',
-  'host' => 'localhost'
-);
-
-if (file_exists('sites/default/settings_local_install.php')) {
-  include_once 'sites/default/settings_local_install.php';
-}
-
 /**
  * Access control for update.php script
  *
@@ -242,6 +184,7 @@ $update_free_access = FALSE;
  * for you.
  */
 # $base_url = 'http://www.example.com';  // NO trailing slash!
+
 
 /**
  * PHP settings:
@@ -288,6 +231,7 @@ ini_set('session.cookie_lifetime', 2000000);
  */
 # $cookie_domain = 'example.com';
 
+
 /**
  * Variable overrides:
  *
@@ -301,8 +245,7 @@ ini_set('session.cookie_lifetime', 2000000);
  *
  * Remove the leading hash signs to enable.
  */
-$conf = array(
-#   'site_name' => 'My Drupal site',
+$conf = array()#   'site_name' => 'My Drupal site',
 #   'theme_default' => 'minnelli',
 #   'anonymous' => 'Visitor',
 /**
@@ -342,7 +285,7 @@ $conf = array(
  * your web server spoofing the X-Forwarded-For headers.
  */
 #   'reverse_proxy_addresses' => array('a.b.c.d', ...), // Leave the comma here.
-);
+;
 
 /**
  * Page caching:
@@ -400,14 +343,6 @@ $conf = array(
 #   'a.b.c.d',
 # );
 
-/**
- * The MEDIAMOSA_SERVER_ID defines the default install ID
- * for multiple installations of jobserver. You can leave it
- * on 'default' if you only have one jobserver. Best to keep
- * 'default' for main installation.
- */
-define('MEDIAMOSA_SERVER_ID', 'default');
-
-define('MEDIAMOSA_REST_HOST', 'localhost');
-define('MEDIAMOSA_BUILD_URL', 'mediamosa/');
-define('MEDIAMOSA_URL', 'http://' . MEDIAMOSA_REST_HOST . '/' . MEDIAMOSA_BUILD_URL);
+if (file_exists(getcwd() . '/sites/settings.mediamosa.php')) {
+  include_once getcwd() . '/sites/settings.mediamosa.php';
+}

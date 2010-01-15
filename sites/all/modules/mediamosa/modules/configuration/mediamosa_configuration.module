@@ -29,8 +29,6 @@
   * The maintenance module.
   */
 require_once('mediamosa_configuration.inc');
-require_once('mediamosa_configuration_transcode_profile.inc');
-require_once('mediamosa_configuration_server.inc');
 
 /**
  * Implements hook_permission()
@@ -38,8 +36,8 @@ require_once('mediamosa_configuration_server.inc');
 function mediamosa_configuration_permission() {
   return array(
     'administer mediamosa configuration' => array(
-      'title' => t('MediaMosa Configuration administer permissions'),
-      'description' => t('Manage the whole configuration of MediaMosa to be edited by an MediaMosa right.')
+      'title' => t('MediaMosa configuration administer permissions'),
+      'description' => t('Manage the configuration of MediaMosa to be edited.')
     )
   );
 }
@@ -51,17 +49,26 @@ function mediamosa_configuration_menu() {
   $items = array();
 
   // Configuration.
-  $items['admin/config/mediamosa'] = array(
+  /*
+  $items['admin/mediamosa'] = array(
     'title' => 'MediaMosa',
     'description' => 'MediaMosa Configuration.',
-    'position' => 'left',
-    'weight' => 10,
+   // 'position' => 'left',
+   // 'weight' => 10,
     'page callback' => 'mediamosa_configuration_menu_block_page',
     'access arguments' => array('administer mediamosa configuration'),
     //'file' => '/modules/system/system.admin.inc',
   );
-
-  $items['admin/config/mediamosa/configuration'] = array(
+/*
+  $items['admin/mediamosa/configuration'] = array(
+    'title' => 'Configuration',
+    'description' => 'The configuration of MediaMosa settings. You might have to enable maintenance modules for more options.',
+   // 'page callback' => 'drupal_get_form',
+   // 'page arguments' => array('mediamosa_configuration'),
+    'access arguments' => array('administer mediamosa configuration'),
+  );
+*/
+  $items['admin/mediamosa/configuration/settings'] = array(
     'title' => 'Configuration',
     'description' => 'The configuration of MediaMosa settings. You might have to enable maintenance modules for more options.',
     'page callback' => 'drupal_get_form',
@@ -69,21 +76,14 @@ function mediamosa_configuration_menu() {
     'access arguments' => array('administer mediamosa configuration'),
   );
 
-  $items['mm_watchdog'] = array(
-    'title' => 'Log entries',
-    'description' => 'List of the 50 most recent log entries.',
-    'page callback' => 'mediamosa_configuration_watchdog',
-    'access arguments' => array('administer mediamosa configuration'),
-  );
-
-  $items['mm_transcode_profile'] = array(
+  $items['admin/mediamosa/configuration/transcode_profile'] = array(
     'title' => 'Transcode profiles',
-    'description' => 'Transcoding profiles are used by the transcoding software of VP-X. When a user transcodes a mediafile, the given profile parameters are used to convert the file. These profiles are available to all applications, and only 1 of them is the default.',
+    'description' => 'Transcoding profiles are used by the transcoding software. When a user transcodes a mediafile, the given profile parameters are used to convert the file. These profiles are available to all applications, and only 1 of them is the default.',
     'page callback' => 'mediamosa_configuration_transcode_profile_list',
     'access arguments' => array('administer mediamosa configuration'),
   );
 
-  $items['mm_transcode_profile/%'] = array(
+  $items['admin/mediamosa/configuration/transcode_profile/%'] = array(
     'type' => MENU_CALLBACK,
     'title' => 'Transcode profile details',
     'page callback' => 'mediamosa_configuration_transcode_profile_view',
@@ -91,25 +91,43 @@ function mediamosa_configuration_menu() {
     'access arguments' => array('administer mediamosa configuration'),
   );
 
-  $items['mm_webservice'] = array(
+  $items['admin/mediamosa/configuration/webservice'] = array(
     'title' => 'Webservice management',
+    'description' => 'List of all webservices and global availibity of services.',
     'page callback' => 'mediamosa_configuration_webservice',
     'access arguments' => array('administer mediamosa configuration'),
   );
 
-  $items['mm_app'] = array(
+  $items['admin/mediamosa/configuration/app'] = array(
     'title' => 'Client applications',
+    'description' => 'List all MediaMosa end-user-applications..',
     'page callback' => 'mediamosa_configuration_app_list',
     'access arguments' => array('administer mediamosa configuration'),
   );
-  $items['mm_app/%/contacts'] = array(
+
+  $items['admin/mediamosa/configuration/app/%/contacts'] = array(
     'title' => 'Client application contacts',
     'type' => MENU_CALLBACK,
     'page callback' => 'mediamosa_configuration_app_contacts',
     'page arguments' => array(1),
     'access arguments' => array('administer mediamosa configuration'),
   );
+/*
+  $items['admin/mediamosa/reports'] = array(
+    'title' => 'Reports',
+    'description' => 'View logs and other reports.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mediamosa_configuration'),
+    'access arguments' => array('administer mediamosa configuration'),
+  );
 
+  $items['admin/mediamosa/reports/watchdog'] = array(
+    'title' => 'Log entries',
+    'description' => 'List of the 50 most recent log entries.',
+    'page callback' => 'mediamosa_configuration_watchdog',
+    'access arguments' => array('administer mediamosa configuration'),
+  );
+*/
   return $items;
 }
 
@@ -151,7 +169,7 @@ function mediamosa_configuration() {
  * @param array $form_state
  */
 function mediamosa_configuration_submit($form, $form_state) {
-
+exit('gaa');
   // Now call our submit hooks.
   module_invoke_all('mediamosa_configuration_submit', $form, $form_state);
 }

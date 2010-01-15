@@ -149,7 +149,7 @@ class mediamosa_job_server {
       mediamosa_job_server_db::JOB_TYPE => $job_type,
       mediamosa_job_server_db::JOB_STATUS => mediamosa_job_server_db::JOB_STATUS_WAITING,
       mediamosa_job_server_db::MEDIAFILE_ID_SRC => $mediafile_id_src,
-      mediamosa_job_server_db::INSTALL_ID => MEDIAMOSA_INSTALL_ID,
+      mediamosa_job_server_db::INSTALL_ID => mediamosa::variable_get('mediamosa_installation_id', 'default'),
     );
 
     // Enrich with created time.
@@ -177,7 +177,7 @@ class mediamosa_job_server {
     // Retrieve all jobs of this server.
     $result = mediamosa_db::db_select(mediamosa_job_server_db::TABLE_NAME, 'js')
       ->fields('js')
-      ->condition(mediamosa_job_server_db::INSTALL_ID, MEDIAMOSA_INSTALL_ID)
+      ->condition(mediamosa_job_server_db::INSTALL_ID, mediamosa::variable_get('mediamosa_installation_id', 'default'))
       ->condition(mediamosa_job_server_db::JOB_STATUS, array(mediamosa_job_server_db::JOB_STATUS_FINISHED, mediamosa_job_server_db::JOB_STATUS_FAILED, mediamosa_job_server_db::JOB_STATUS_CANCELLED), 'NOT IN')
       ->orderBy(mediamosa_job_server_db::ID, 'ASC')
       ->execute();
@@ -393,7 +393,7 @@ class mediamosa_job_server {
       ->fields('js')
       ->fields('jsa')
       ->leftJoin(mediamosa_job_server_analyse_db::TABLE_NAME, 'jsa', strtr('js.#jobserver_job_id = jsa.#jobserver_job_id', array('#jobserver_job_id' => mediamosa_job_server_db::ID)))
-      ->condition(mediamosa_job_server_db::INSTALL_ID, MEDIAMOSA_INSTALL_ID)
+      ->condition(mediamosa_job_server_db::INSTALL_ID, mediamosa::variable_get('mediamosa_installation_id', 'default'))
       ->execute();
   }
 
@@ -407,7 +407,7 @@ class mediamosa_job_server {
     return mediamosa_db::db_select(mediamosa_job_server_db::TABLE_NAME, 'js')
       ->fields('js')
       ->condition(mediamosa_job_server_db::ID, $job_id)
-      ->condition(mediamosa_job_server_db::INSTALL_ID, MEDIAMOSA_INSTALL_ID)
+      ->condition(mediamosa_job_server_db::INSTALL_ID, mediamosa::variable_get('mediamosa_installation_id', 'default'))
       ->execute()
       ->fetchAssoc();
   }
@@ -1147,7 +1147,7 @@ class mediamosa_job_server {
       // Update.
       mediamosa_db::db_update(mediamosa_job_server_db::TABLE_NAME)
         ->fields($a_fields)
-        ->condition(mediamosa_job_server_db::INSTALL_ID, MEDIAMOSA_INSTALL_ID)
+        ->condition(mediamosa_job_server_db::INSTALL_ID, mediamosa::variable_get('mediamosa_installation_id', 'default'))
         ->condition(mediamosa_job_server_db::JOB_ID, $job_id)
         ->execute();
 

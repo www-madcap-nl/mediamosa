@@ -28,12 +28,13 @@
   * @file
   * Core - Open source media management and distribution platform.
   */
-define('MEDIAMOSA_PERM_REST_ACCESS', 'mediamosa_perm_rest_access');
 define('MEDIAMOSA_MENU_PATH', '');// was mediamosa for menu hook.
-define('MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE', 'mediamosa_transcode_profile');
-define('MEDIAMOSA_NODE_TYPE_SERVER', 'mediamosa_server');
 
+// Default settings.
 require_once 'mediamosa.settings.inc';
+
+// Node types hook include.
+require_once 'core/node/mediamosa_node.inc';
 
 /**
  * Implement hook_requirements().
@@ -54,18 +55,18 @@ function mediamosa_requirements($phase) {
         'severity' => REQUIREMENT_ERROR
       );
     }
-/*
-    // Make sure the ID is set and not to long.
-    if (drupal_strlen(constant(MEDIAMOSA_INSTALL_ID)) == 0 || drupal_strlen(constant(MEDIAMOSA_INSTALL_ID)) > mediamosa_job_server_db::INSTALL_ID_LENGTH) {
-      $a_requirements['php'] = array(
-        'title' => $t('PHP'),
-        'value' => phpversion(),
-        'description' => $t('The define MEDIAMOSA_INSTALL_ID is either not set or is too long, make sure its set and not longer than %length characters.', array('%length' => mediamosa_job_server_db::INSTALL_ID_LENGTH)),
+
+    // Make sure the mediamosa_server_id is set and not to long.
+    $mediamosa_installation_id = mediamosa::variable_get('mediamosa_installation_id');
+
+    if (!isset($mediamosa_installation_id) || drupal_strlen($mediamosa_installation_id) == 0 || drupal_strlen($mediamosa_installation_id) > mediamosa_job_server_db::INSTALL_ID_LENGTH) {
+      $a_requirements['mediamosa'] = array(
+        'title' => $t("Mediamosa installation ID ('mediamosa_installation_id')"),
+        'value' => isset($mediamosa_installation_id) ? $mediamosa_installation_id : 'Not defined',
+        'description' => $t("The configuration setting in settings.php 'mediamosa_installation_id' is either not set or is too long, make sure its set and not longer than %length characters.", array('%length' => mediamosa_job_server_db::INSTALL_ID_LENGTH)),
         'severity' => REQUIREMENT_ERROR
       );
     }
-*/
-
   }
 
   return $a_requirements;
@@ -74,30 +75,54 @@ function mediamosa_requirements($phase) {
 /**
  * Implement hook_menu().
  */
-/*
+
 function mediamosa_menu() {
   $items = array();
-
+/*
   $items[MEDIAMOSA_MENU_PATH] = array(
     'type' => MENU_CALLBACK,
     'page callback' => '_mediamosa',
-    'access arguments' => array(MEDIAMOSA_PERM_REST_ACCESS),
+    'access arguments' => array(mediamosa_settings::MEDIAMOSA_PERM_REST_ACCESS),
   );
+*/
+  // Menu items that are basically just menu blocks.
+  $items['admin/mediamosa'] = array(
+    'title' => 'MediaMosa 2',
+    'description' => 'Configurate and view MediaMosa settings and pages.',
+    'position' => 'left',
+    'weight' => -20,
+    'page callback' => 'mediamosa_main_admin_page',
+    'access arguments' => array(mediamosa_settings::MEDIAMOSA_PERM_ADMINISTRATION_ACCESS),
+    'file' => 'mediamosa.admin.inc',
+  );
+/*
+  $items['admin/structure'] = array(
+    'title' => 'Structure',
+    'description' => 'Control how your site looks and feels.',
+    'position' => 'right',
+    'weight' => -8,
+    'page callback' => 'system_admin_menu_block_page',
+    'access arguments' => array('access administration pages'),
+    'file' => 'system.admin.inc',
+  );
+  */
 
   return $items;
 }
-*/
+
 /**
  * Implement hook_permission().
+ * (future expansion when drupal users are used instead of apps).
  */
 function mediamosa_permission() {
   return array(
-    MEDIAMOSA_PERM_REST_ACCESS =>  array(
+    mediamosa_settings::MEDIAMOSA_PERM_REST_ACCESS =>  array(
       'title' => t('Access rest calls'),
       'description' => t('Users with this permission may access the MediaMosa restcalls.'),
     ),
   );
 }
+
 
 function mediamosa_init() {
   // Create and get the core object.
@@ -148,76 +173,13 @@ function mediamosa_mediamosa_register_rest_call() {
 }
 
 /**
- * Implementation of hook_node_info().
+ * Implement hook_help().
  */
-function mediamosa_node_info() {
-  return array(
-    MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE => array(
-      'name' => t('MediaMosa transcode profile'),
-      'base' => MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE,
-      'has_body' => FALSE,
-      'description' => t('@todo'),
-    ),
-    MEDIAMOSA_NODE_TYPE_SERVER => array(
-      'name' => t('MediaMosa server'),
-      'base' => MEDIAMOSA_NODE_TYPE_SERVER,
-      'has_body' => FALSE,
-      'description' => t('@todo'),
-    ),
-  );
-}
+function mediamosa_help($path, $arg) {
+  global $base_url;
 
-/**
- * Implementation of hook_load().
- */
-function mediamosa_transcode_profile_load(&$nodes) {
-  // Gather all vids
-  $vids = array();
-  foreach ($nodes as $node) {
-    $vids[] = $node->vid;
+  switch ($path) {
+    case 'admin/mediamosa':
+      return '<p>' . t('This page shows you the mediamosa home page.') . '</p>';
   }
-
-  // Gather all additional node properties
-  $result = mediamosa_db::db_query(
-    'SELECT * FROM {#table_name} WHERE vid IN (:vids)',
-    array(
-      '#table_name' => mediamosa_server_transcoding_profile_db::TABLE_NAME,
-      ':vids' => $vids,
-    )
-  );
-  foreach ($result as $record) {
-    foreach ($record as $key => $value) {
-      if ($key == 'options') {
-        $value = unserialize($value);
-      }
-      $nodes[$record['nid']]->$key = $value;
-    }
-  }
-  return $nodes;
-}
-
-/**
- * Implementation of hook_load().
- */
-function mediamosa_server_load(&$nodes) {
-  // Gather all vids
-  $vids = array();
-  foreach ($nodes as $node) {
-    $vids[] = $node->vid;
-  }
-
-  // Gather all additional node properties
-  $result = mediamosa_db::db_query(
-    'SELECT * FROM {#table_name} WHERE vid IN (:vids)',
-    array(
-      '#table_name' => mediamosa_server_db::TABLE_NAME,
-      ':vids' => $vids,
-    )
-  );
-  foreach ($result as $record) {
-    foreach ($record as $key => $value) {
-      $nodes[$record['nid']]->$key = $value;
-    }
-  }
-  return $nodes;
 }

@@ -494,8 +494,8 @@ class mediamosa_job {
       $completed_transcoding_url = $a_job_transcode[mediamosa_job_transcode_db::COMPLETED_TRANSCODING_URL];
       mediamosa::log($completed_transcoding_url . $new_status, array(), WATCHDOG_NOTICE, 'completed_transcoding_url');
 
-      // Do the call.
-      mediamosa_http::do_proxy_call($completed_transcoding_url . $new_status);
+      // Do the call (through proxy).
+      mediamosa_http::do_head_call($completed_transcoding_url . $new_status, array('use_curlproxy' => TRUE));
     }
   }
 

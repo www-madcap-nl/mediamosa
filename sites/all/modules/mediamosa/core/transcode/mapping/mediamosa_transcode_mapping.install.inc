@@ -63,6 +63,7 @@ function mediamosa_transcode_mapping_install() {
     array('ffmpeg', 'maintain_aspect_ratio', '', NULL, NULL, 'yes;no', 'yes', 'FALSE')
   );
 
+  // Insert default mappings as nodes.
   foreach ($a_default_mappings as $a_default_mapping) {
     $a_fields = array(
       mediamosa_transcode_mapping_db::TOOL => $a_default_mapping[0],
@@ -90,7 +91,7 @@ function mediamosa_transcode_mapping_install() {
  */
 function mediamosa_transcode_mapping_uninstall() {
   // Drop our table(s).
-  mediamosa::drupal_uninstall_schemainstall_schema(mediamosa_transcode_mapping_db::TABLE_NAME);
+  mediamosa::drupal_uninstall_schema(mediamosa_transcode_mapping_db::TABLE_NAME);
 }
 
 /**

@@ -33,7 +33,7 @@ function mediamosa_configuration_watchdog() {
   $content = t('List of the 50 most recent log entries.');
 
   $levels = watchdog_severity_levels();
-  $types = array('job', 'jobhandler', 'jobserver', 'page not found', 'server');
+  $types = array('job', 'job_handler', 'job_server', 'page not found', 'server');
   $result = db_query("SELECT * FROM {watchdog} WHERE type IN ('". implode("', '", $types) ."') ORDER BY timestamp DESC LIMIT 50");
 
   $rows = array(); // fix notice

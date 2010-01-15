@@ -56,13 +56,13 @@ function mediamosa_user_install() {
 function mediamosa_user_uninstall() {
 
   // Uninstaller user favorite.
-  mediamosa_user_favorite_install();
+  mediamosa_user_favorite_uninstall();
 
   // Uninstaller user group.
   mediamosa_user_group_uninstall();
 
   // Remove our table(s).
-  mediamosa::drupal_install_schema(mediamosa_user_db::TABLE_NAME);
+  mediamosa::drupal_uninstall_schema(mediamosa_user_db::TABLE_NAME);
 }
 /**
  * Implements hook_schema().

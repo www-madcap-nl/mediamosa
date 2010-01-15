@@ -31,7 +31,7 @@
 /**
  * Single asset details.
  */
-function mediamosa_browse_asset_details($asset_id) {
+function mediamosa_maintenance_browse_asset_details($asset_id) {
   $result = _mediamosa_restcall('GET', '/asset/'. $asset_id, array('is_app_admin' => 'true'));
 
   $output = '';
@@ -46,7 +46,7 @@ function mediamosa_browse_asset_details($asset_id) {
     }
     if (trim($value) != '') {
       $value = (valid_url($value, TRUE)) ? l($value, $value) : check_plain($value);
-      $rows[] = array(_mediamosa_browse_clean_string($key), $value);
+      $rows[] = array(_mediamosa_maintenance_browse_clean_string($key), $value);
     }
   }
 
@@ -65,7 +65,7 @@ function mediamosa_browse_asset_details($asset_id) {
     foreach ((array)$asset->{$subject} as $key => $value) {
       if (trim($value) != '') {
         $value = (valid_url($value, TRUE)) ? l($value, $value) : check_plain($value);
-        $rows[] = array(_mediamosa_browse_clean_string($key), $value);
+        $rows[] = array(_mediamosa_maintenance_browse_clean_string($key), $value);
       }
     }
 
@@ -84,7 +84,7 @@ function mediamosa_browse_asset_details($asset_id) {
       }
       if (trim($value) != '') {
         $value = (valid_url($value, TRUE)) ? l($value, $value) : check_plain($value);
-        $rows[] = array(_mediamosa_browse_clean_string($key), $value);
+        $rows[] = array(_mediamosa_maintenance_browse_clean_string($key), $value);
       }
     }
 
@@ -96,7 +96,7 @@ function mediamosa_browse_asset_details($asset_id) {
   return $output;
 }
 
-function _mediamosa_browse_asset_get_all_collections($app_id) {
+function _mediamosa_maintenance_browse_asset_get_all_collections($app_id) {
   $app_ids = explode(' ', $app_id);
 
   $result = _mediamosa_restcall('GET', '/collection', array('app_id' => $app_ids));
@@ -113,7 +113,7 @@ function _mediamosa_browse_asset_get_all_collections($app_id) {
 /**
  * Helper function for the asset filter form
  */
-function _mediamosa_browse_asset_list_filter() {
+function _mediamosa_maintenance_browse_asset_list_filter() {
   $search_terms = array(
     'asset_info' => array(
       'asset_id' => t('Asset id'),
@@ -177,11 +177,11 @@ function _mediamosa_browse_asset_list_filter() {
   return $search;
 }
 
-function _mediamosa_browse_asset_get_cql_from_session() {
+function _mediamosa_maintenance_browse_asset_get_cql_from_session() {
   $filters = $data = array();
 
   // Iterate all items stored in the form submit function
-  foreach ($_SESSION[MEDIAMOSA_BROWSE_ASSETS_SESSION] as $key => $filter) {
+  foreach ($_SESSION[MEDIAMOSA_MAINTENACE_BROWSE_ASSETS_SESSION] as $key => $filter) {
     switch ($key) {
       case 'app_id':
         $filters['app_id'] = explode(' ', $filter);
@@ -220,9 +220,9 @@ function _mediamosa_browse_asset_get_cql_from_session() {
   $data['cql'] = '('. implode(" AND ", $cql) .')';
 
   // Add the optional sort order
-  if ($_SESSION[MEDIAMOSA_BROWSE_ASSETS_SESSION]['tablesort']) {
-    $sortby = $_SESSION[MEDIAMOSA_BROWSE_ASSETS_SESSION]['tablesort']['sql'];
-    $sortorder = ($_SESSION[MEDIAMOSA_BROWSE_ASSETS_SESSION]['tablesort']['sort'] == 'desc') ? 'descending' : 'ascending';
+  if ($_SESSION[MEDIAMOSA_MAINTENACE_BROWSE_ASSETS_SESSION]['tablesort']) {
+    $sortby = $_SESSION[MEDIAMOSA_MAINTENACE_BROWSE_ASSETS_SESSION]['tablesort']['sql'];
+    $sortorder = ($_SESSION[MEDIAMOSA_MAINTENACE_BROWSE_ASSETS_SESSION]['tablesort']['sort'] == 'desc') ? 'descending' : 'ascending';
     $data['cql'] .= 'sortBy '. $sortby .'/'. $sortorder;
   }
 
@@ -232,9 +232,9 @@ function _mediamosa_browse_asset_get_cql_from_session() {
 /**
  * The browse form which also contains a list of browsable assets.
  */
-function mediamosa_browse_asset_form() {
+function mediamosa_maintenance_browse_asset_form() {
   if (isset($_GET['coll_id'])) {
-    $_SESSION[MEDIAMOSA_BROWSE_ASSETS_SESSION] = array('coll_id' => check_plain($_GET['coll_id']));
+    $_SESSION[MEDIAMOSA_MAINTENACE_BROWSE_ASSETS_SESSION] = array('coll_id' => check_plain($_GET['coll_id']));
   }
 
   // Gather and prepare some variables.
@@ -243,15 +243,15 @@ function mediamosa_browse_asset_form() {
   $page = isset($_GET['page']) ? (int)$_GET['page'] : 0;
   $offset = $page * $item_limit;
 
-  // Gather all apps
+  // Gather all apps.
   foreach (mediamosa_app::get_all_apps(array(mediamosa_app_db::APP_ID, mediamosa_app_db::NAME), mediamosa_app_db::NAME, 'ASC') as $app) {
     $all_apps_raw[$app[mediamosa_app_db::APP_ID]] = $app[mediamosa_app_db::NAME];
   }
   $all_apps = array(implode(' ', array_keys($all_apps_raw)) => t('<All applications>'));
   $all_apps += $all_apps_raw;
 
-  $app_id = (isset($_SESSION[MEDIAMOSA_BROWSE_ASSETS_SESSION]['app_id'])) ? $_SESSION[MEDIAMOSA_BROWSE_ASSETS_SESSION]['app_id'] : reset(array_keys($all_apps));
-  $_SESSION[MEDIAMOSA_BROWSE_COLLECTIONS_SESSION]['app_id'] = $app_id;
+  $app_id = (isset($_SESSION[MEDIAMOSA_MAINTENACE_BROWSE_ASSETS_SESSION]['app_id'])) ? $_SESSION[MEDIAMOSA_MAINTENACE_BROWSE_ASSETS_SESSION]['app_id'] : reset(array_keys($all_apps));
+  $_SESSION[MEDIAMOSA_MAINTENACE_BROWSE_COLLECTIONS_SESSION]['app_id'] = $app_id;
   $form['app_id'] = array(
     '#type' => 'select',
     '#options' => $all_apps,
@@ -259,14 +259,16 @@ function mediamosa_browse_asset_form() {
     '#default_value' => $app_id,
   );
 
-  $all_collections_raw = _mediamosa_browse_asset_get_all_collections($app_id);
+  $all_collections_raw = _mediamosa_maintenance_browse_asset_get_all_collections($app_id);
+
   if (count($all_collections_raw)) {
     $all_collections = array_merge(array(0 => ''), $all_collections_raw);
   }
   else {
     $all_collections = array(0 => t('No collections found...'));
   }
-  $coll_id = (isset($_SESSION[MEDIAMOSA_BROWSE_ASSETS_SESSION]['coll_id'])) ? $_SESSION[MEDIAMOSA_BROWSE_ASSETS_SESSION]['coll_id'] : 0;
+
+  $coll_id = (isset($_SESSION[MEDIAMOSA_MAINTENACE_BROWSE_ASSETS_SESSION]['coll_id'])) ? $_SESSION[MEDIAMOSA_MAINTENACE_BROWSE_ASSETS_SESSION]['coll_id'] : 0;
   $form['coll_id'] = array(
     '#type' => 'select',
     '#options' => $all_collections,
@@ -275,19 +277,19 @@ function mediamosa_browse_asset_form() {
   );
 
   // Get the current filter count
-  $filter_count = (isset($_SESSION[MEDIAMOSA_BROWSE_ASSETS_SESSION]['filters'])) ? count($_SESSION[MEDIAMOSA_BROWSE_ASSETS_SESSION]['filters']) : 0;
+  $filter_count = (isset($_SESSION[MEDIAMOSA_MAINTENACE_BROWSE_ASSETS_SESSION]['filters'])) ? count($_SESSION[MEDIAMOSA_MAINTENACE_BROWSE_ASSETS_SESSION]['filters']) : 0;
 
   // Add one empty filter item
   $filter_count++;
 
   // Get the maximum number of filters
-  $filter_max = variable_get('mediamosa_browse_filter_max', 25);
+  $filter_max = variable_get('mediamosa_maintenance_browse_filter_max', 25);
 
   // Load and set all javascript related items
-  drupal_add_js(drupal_get_path('module', 'mediamosa_browse') .'/mediamosa_browse.js');
+  drupal_add_js(drupal_get_path('module', 'mediamosa_maintenance_browse') . '/mediamosa_maintenancebrowse.js');
   drupal_add_js(
     array(
-      'mediamosa_browse' => array(
+      'mediamosa_maintenance_browse' => array(
         'filter_count' => $filter_count,
         'filter_max' => $filter_max,
       ),
@@ -295,7 +297,7 @@ function mediamosa_browse_asset_form() {
     'setting'
   );
 
-  $filter_types = _mediamosa_browse_asset_list_filter();
+  $filter_types = _mediamosa_maintenance_browse_asset_list_filter();
   for ($i = 1; $i <= $filter_max; $i++) {
     $display = ($i <= $filter_count) ? '' : 'none';
     $extra_class = '';
@@ -320,8 +322,8 @@ function mediamosa_browse_asset_form() {
     );
 
     // Restore submitted values
-    if (isset($_SESSION[MEDIAMOSA_BROWSE_ASSETS_SESSION]['filters'][($i - 1)])) {
-      $info = $_SESSION[MEDIAMOSA_BROWSE_ASSETS_SESSION]['filters'][($i - 1)];
+    if (isset($_SESSION[MEDIAMOSA_MAINTENACE_BROWSE_ASSETS_SESSION]['filters'][($i - 1)])) {
+      $info = $_SESSION[MEDIAMOSA_MAINTENACE_BROWSE_ASSETS_SESSION]['filters'][($i - 1)];
       $form['filter_type_'. $i]['#default_value'] = reset(array_keys($info));
       $form['filter_value_'. $i]['#default_value'] = reset(array_values($info));
     }
@@ -339,7 +341,7 @@ function mediamosa_browse_asset_form() {
     '#suffix' => '<a href="#" id="edit-clear">Clear form</a>',
   );
 
-  // Only show results on GET requests to prevent Drupal from fetching the results on form validation
+  // Only show results on GET requests to prevent Drupal from fetching the results on form validation.
   if ($_SERVER['REQUEST_METHOD'] != 'POST') {
 
     $header = array(
@@ -347,10 +349,10 @@ function mediamosa_browse_asset_form() {
       array('field' => 'app_id', 'data' => t('App ID')),
       array('field' => 'videotimestampmodified', 'data' => t('Last modified')),
     );
-    $_SESSION[MEDIAMOSA_BROWSE_ASSETS_SESSION]['tablesort'] = (isset($_GET['order'])) ? tablesort_init($header) : FALSE;
+    $_SESSION[MEDIAMOSA_MAINTENACE_BROWSE_ASSETS_SESSION]['tablesort'] = (isset($_GET['order'])) ? tablesort_init($header) : FALSE;
 
     // Fetch the assets
-    $cql_data = _mediamosa_browse_asset_get_cql_from_session();
+    $cql_data = _mediamosa_maintenance_browse_asset_get_cql_from_session();
     $data = array(
       'limit' => $item_limit,
       'offset' => $offset,
@@ -364,11 +366,11 @@ function mediamosa_browse_asset_form() {
 
     $result = _mediamosa_restcall('GET', '/asset', $data);
 
-    // Extract the item count
+    // Extract the item count.
     $item_count = (int)$result->header->item_count;
     $item_count_total = (int)$result->header->item_count_total;
 
-    // Return the form if no assets were found
+    // Return the form if no assets were found.
     if ($item_count_total == 0) {
       $form['results'] = array(
         '#markup' => '<p>'. t('No assets found...') .'</p>',
@@ -390,14 +392,14 @@ function mediamosa_browse_asset_form() {
     foreach ($result->xpath('//items/item') as $asset) {
       $title = (isset($asset->dublin_core->title) && trim((string)$asset->dublin_core->title) != '') ? $asset->dublin_core->title : t('<title not set>');
       $rows[] = array(
-        l($title, 'mm_browse_asset/'. $asset->asset_id),
+        l($title, 'mediamosa/browse/asset/'. $asset->asset_id),
         $asset->app_id,
         $asset->videotimestampmodified,
       );
     }
 
     $form['pager_top'] = array(
-      '#markup' => _mediamosa_browse_pager($page, $item_count_total, $item_limit),
+      '#markup' => _mediamosa_maintenance_browse_pager($page, $item_count_total, $item_limit),
     );
 
     $form['results'] = array(
@@ -405,7 +407,7 @@ function mediamosa_browse_asset_form() {
     );
 
     $form['pager_bottom'] = array(
-      '#markup' => _mediamosa_browse_pager($page, $item_count_total, $item_limit),
+      '#markup' => _mediamosa_maintenance_browse_pager($page, $item_count_total, $item_limit),
     );
   }
 
@@ -415,7 +417,7 @@ function mediamosa_browse_asset_form() {
 /**
  * The browse filter form submit function.
  */
-function mediamosa_browse_asset_form_submit($form, $form_state) {
+function mediamosa_maintenance_browse_asset_form_submit($form, $form_state) {
   $filters = array();
   foreach ($form_state['values'] as $key => $value) {
     if (strpos($key, 'filter_type_') === 0 && !is_numeric($value)) {
@@ -426,12 +428,12 @@ function mediamosa_browse_asset_form_submit($form, $form_state) {
     }
   }
 
-  $_SESSION[MEDIAMOSA_BROWSE_ASSETS_SESSION] = array(
+  $_SESSION[MEDIAMOSA_MAINTENACE_BROWSE_ASSETS_SESSION] = array(
     'filters' => $filters,
     'app_id' => $form_state['values']['app_id'],
   );
 
   if ($form_state['values']['coll_id'] != 0) {
-    $_SESSION[MEDIAMOSA_BROWSE_ASSETS_SESSION]['coll_id'] = $form_state['values']['coll_id'];
+    $_SESSION[MEDIAMOSA_MAINTENACE_BROWSE_ASSETS_SESSION]['coll_id'] = $form_state['values']['coll_id'];
   }
 }

@@ -30,13 +30,6 @@
  */
 
 /**
- * Implements hook_permissions()
- */
-function mediamosa_configuration_storage_permission() {
-  return array('view mediamosa configuration storage', 'administer mediamosa configuration storage');
-}
-
-/**
  * Implements the hook_mediamosa_settings_collect()
  */
 function mediamosa_configuration_storage_mediamosa_configuration_collect() {

@@ -38,30 +38,6 @@ function mediamosa_server_transcoding_tool_install() {
 
   // Download server.
   mediamosa::drupal_install_schema(mediamosa_server_transcoding_tool_db::TABLE_NAME);
-
-  db_query(
-    strtr(
-      "INSERT INTO {#mediamosa_server_transcoding_tool} VALUES
-      (171, 7, '5'),
-      (170, 6, '6'),
-      (199, 1, 'ANALYSE'),
-      (160, 2, 'ANALYSE'),
-      (168, 5, 'ANALYSE'),
-      (200, 1, 'ffmpeg'),
-      (158, 2, 'ffmpeg'),
-      (167, 5, 'ffmpeg'),
-      (201, 1, 'STILL'),
-      (161, 2, 'STILL'),
-      (169, 5, 'STILL'),
-      (205, 8, 'test'),
-      (206, 8, 'test2'),
-      (207, 8, 'tet'),
-      (166, 3, 'windows')",
-      array(
-        '#mediamosa_server_transcoding_tool' => mediamosa_server_transcoding_tool_db::TABLE_NAME
-      )
-    )
-  );
 }
 
 /**
@@ -86,8 +62,8 @@ function mediamosa_server_transcoding_tool_schema() {
         'type' => 'serial',
         'not null' => TRUE,
       ),
-      mediamosa_server_transcoding_tool_db::TRANSCODING_SERVER_ID => array(
-        'description' => t('The parent transcoding server ID.'),
+      mediamosa_server_transcoding_tool_db::NID => array(
+        'description' => t('The parent transcoding server node ID.'),
         'type' => 'int',
         'not null' => TRUE,
       ),
@@ -100,7 +76,7 @@ function mediamosa_server_transcoding_tool_schema() {
     ),
     'primary key' => array(mediamosa_server_transcoding_tool_db::ID),
     'indexes' => array(
-      'idx_tool_serverid' => array(mediamosa_server_transcoding_tool_db::TOOL, mediamosa_server_transcoding_tool_db::TRANSCODING_SERVER_ID),
+      'idx_tool_serverid' => array(mediamosa_server_transcoding_tool_db::TOOL, mediamosa_server_transcoding_tool_db::NID),
     ),
   );
 

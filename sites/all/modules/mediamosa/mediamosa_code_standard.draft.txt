@@ -42,11 +42,10 @@ Draft for starting code standard for Mediamosa 2.x and higher.
      mediamosa_collection_asset AS ca
     etc.
   * Stop using db_set_active(), all is in drupal database. Better use an installation in a installation (prefix).
-  * All tables must start with mediamosa_
+  * All tables must start with 'mediamosa_'
   * Think about indexes on your tables, do not over do it. To many indexes will kill performance.
   * Stop using object() instead of assoc() related functions, prefer rows over objects. Remember that the mediamosa_db will always
-    return rows. This choice is based on 1.x code base. This does not mean there are no objects in mediamosa.
-
+    return rows. This choice is based on 1.x code base. This does not mean there are no objects in mediamosa. 
 
 - Set up folders Mediamosa map;
   * Core modules are not drupal modules and are not considered as drupal modules.

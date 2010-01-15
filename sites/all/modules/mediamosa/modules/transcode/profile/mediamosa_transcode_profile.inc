@@ -26,7 +26,7 @@
 
  /**
   * @file
-  * The maintenance module.
+  * Mediamosa transcode profile function.
   */
 
 /**
@@ -63,7 +63,7 @@ function mediamosa_transcode_profile_view($node, $build_mode = 'full') {
  * Implementation of hook_form().
  */
 function mediamosa_transcode_profile_form($node, $form_state) {
-  // If we're inserting a new nod, set some defaults:
+  // If we're inserting a new node, set some defaults:
   if (!isset($node->nid)) {
     $node->app_id = 0;
     $node->tool = 'ffmpeg';
@@ -87,7 +87,7 @@ function mediamosa_transcode_profile_form($node, $form_state) {
   $form['required']['app_id'] = array(
     '#title' => t('Application'),
     '#type' => 'select',
-    '#default_value' => $node->{mediamosa_server_transcoding_profile_db::APP_ID},
+    '#default_value' => $node->{mediamosa_transcode_profile_db::APP_ID},
     '#required' => TRUE,
     '#options' => $all_apps,
     '#description' => t('The application that owns this profile.'),
@@ -152,67 +152,4 @@ function mediamosa_transcode_profile_form($node, $form_state) {
   }
 
   return $form;
-}
-
-/**
- * Implementation of hook_update().
- */
-function mediamosa_transcode_profile_update($node) {
-  $options = array();
-  foreach ($node as $key => $value) {
-    if (strpos($key, 'options_') === 0) {
-
-      // Get the tmid and strip the value
-      $tmid = substr($key, strlen('options_'));
-      $value = trim($value);
-
-      // Gather all set options
-      if ($value != '') {
-        $options[$tmid] = $value;
-      }
-    }
-  }
-
-  // Delete the old revision
-  db_delete(mediamosa_server_transcoding_profile_db::TABLE_NAME)
-    ->condition('vid', $node->vid)
-    ->execute();
-
-  // Insert the new revision
-  db_insert(mediamosa_server_transcoding_profile_db::TABLE_NAME)
-    ->fields(array(
-      'nid' => $node->nid,
-      'vid' => $node->vid,
-      mediamosa_server_transcoding_profile_db::APP_ID => $node->app_id,
-      mediamosa_server_transcoding_profile_db::IS_DEFAULT_PROFILE => $node->is_default_profile,
-      mediamosa_server_transcoding_profile_db::TOOL => $node->tool,
-      mediamosa_server_transcoding_profile_db::FILE_EXTENSION => $node->file_extension,
-      mediamosa_server_transcoding_profile_db::OPTIONS => serialize($options),
-    ))
-    ->execute();
-}
-
-/**
- * Implementation of hook_insert().
- */
-function mediamosa_transcode_profile_insert($node) {
-  db_insert(mediamosa_server_transcoding_profile_db::TABLE_NAME)
-    ->fields(array(
-      'nid' => $node->nid,
-      'vid' => $node->vid,
-      mediamosa_server_transcoding_profile_db::APP_ID => $node->app_id,
-      mediamosa_server_transcoding_profile_db::IS_DEFAULT_PROFILE => $node->is_default_profile,
-      mediamosa_server_transcoding_profile_db::TOOL => $node->tool,
-      mediamosa_server_transcoding_profile_db::FILE_EXTENSION => $node->file_extension,
-    ))
-    ->execute();
-}
-
-/**
- * Implementation of hook_delete().
- */
-function mediamosa_transcode_profile_delete($node) {
-  db_delete(mediamosa_server_transcoding_profile_db::TABLE_NAME)
-    ->condition('nid', $node->nid)
-    ->execute();
 }

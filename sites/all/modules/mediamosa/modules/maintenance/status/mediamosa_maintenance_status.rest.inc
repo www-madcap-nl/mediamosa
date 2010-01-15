@@ -24,25 +24,29 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
+ /**
+  * @file
+  * REST calls for status page.
+  */
+
 /**
- * @file
- * DB Class for mediamosa_server_streaming module.
+ * URI: /get_current_mount_point
+ * Method: GET
  */
+class mediamosa_rest_call_execute_default_tests extends mediamosa_rest_call {
 
-class mediamosa_server_streaming_db {
-  // ------------------------------------------------------------------ Consts.
-  // Table name;
-  const TABLE_NAME = 'mediamosa_server_streaming'; // 1.x name streaming_server.
+  // ------------------------------------------------------------------ Functions (public).
+  public function get_var_setup() {
+    $a_var_setup = array();
 
-  // Database fields;
-  const ID = 'streaming_server_id';
-  const VERSION = 'version';
-  const DESCRIPTION = 'description';
-  const DESCRIPTION_LENGTH = 255;
-  const URI = 'uri';
-  const URI_LENGTH = 255;
-  const ACTIVE = 'active';
-  const CONTAINERS = 'containers';
-  const CONTAINERS_LENGTH = 255;
-  const OBJECTCODE = 'objectcode';
+    // Enrich with required REST vars.
+    return self::get_var_setup_default($a_var_setup);
+  }
+
+  public function do_call() {
+    $o_mediamosa = mediamosa::get();
+
+    // Run them...
+    mediamosa_maintenance_status::run_simple_tests();
+  }
 }

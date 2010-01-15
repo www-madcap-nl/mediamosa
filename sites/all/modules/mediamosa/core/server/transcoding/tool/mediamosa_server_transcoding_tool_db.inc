@@ -36,7 +36,7 @@ class mediamosa_server_transcoding_tool_db {
 
   // Database fields;
   const ID = 'transcoding_server_tool_id';
-  const TRANSCODING_SERVER_ID = 'transcoding_server_id';
+  const NID = 'nid';
   const TOOL = 'tool';
   const TOOL_LENGTH = 255;
 }

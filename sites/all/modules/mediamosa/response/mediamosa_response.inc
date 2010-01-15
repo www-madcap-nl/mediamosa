@@ -78,6 +78,11 @@ class mediamosa_response extends mediamosa {
    */
   public function process_rest() {
 
+    // If REST interface is disabled, the don't bother.
+    if (!mediamosa::is_app_enabled()) {
+      return;
+    }
+
     $response_type = mediamosa_rest_call::RESPONSE_TYPE_XML;
 
     try {
@@ -87,17 +92,17 @@ class mediamosa_response extends mediamosa {
       // Create the REST interface class.
       $this->o_mediamosa_rest = new mediamosa_rest();
 
-      // Check if the REST interface is enabled.
-      if (!$this->o_mediamosa_rest->is_restcalls() || $this->o_mediamosa_rest->show_drupal_login()) {
-        return;// At this point we are at interface mode.
-      }
-
       // Find the rest call.
       $a_rest_call = $this->o_mediamosa_rest->match_call();
 
       // If we return here, try to let Drupal handle the output.
       if (!$a_rest_call) {
         return;
+      }
+
+      // Check if the REST and Admin interface are enabled and if we conflict with admin /user/login or /user/logout.
+      if (mediamosa::show_drupal_login()) {
+        return;// At this point we override for interface mode.
       }
 
       // Save it.

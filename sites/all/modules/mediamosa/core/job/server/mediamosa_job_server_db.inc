@@ -37,7 +37,7 @@ class mediamosa_job_server_db {
   // Database fields;
   const ID = 'jobserver_job_id';
   const INSTALL_ID = 'install_id'; // 2.0 new
-  const INSTALL_ID_LENGTH = 10;
+  const INSTALL_ID_LENGTH = 16;
   const JOB_ID = 'job_id';
   const JOB_STATUS = 'status';
   const JOB_STATUS_WAITING = 'WAITING';

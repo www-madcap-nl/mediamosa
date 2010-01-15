@@ -38,13 +38,14 @@ class mediamosa_http {
    *
    * @param string $ip_address
    * @param string $rest_url
+   * @param array $data
+   * @param $method
    */
   static public function do_internal_call($ip_address, $rest_url, $data = NULL, $method = self::METHOD_GET) {
     $url = strtr(
-      'http://@ipaddress/@build_url/internal/@rest_url',
+      'http://@ipaddress/internal/@rest_url',
       array(
         '@ipaddress' => $ip_address,
-        '@build_url' => MEDIAMOSA_BUILD_URL,
         '@rest_url' =>  $rest_url
       )
     );
@@ -67,14 +68,41 @@ class mediamosa_http {
    * Triggers the URL without getting or waiting for the output.
    *
    * @param string $url
+   * @param $data
+   * @param $method
+   *  Method to use (POST, GET).
+   * @param array $a_options
+   *  Extra options;
+   *   - header:
+   *     name => value pair for http header.
+   *   - use_curlproxy
+   *     set to TRUE to enable call through curlproxy (if specified).
    */
-  static public function do_head_call($url) {
+  static public function do_head_call($url, array $a_options = array()) {
+    // Set defaults.
+    $a_options += array(
+      'use_curlproxy' => FALSE,
+      'header' => array(),
+    );
 
-    // Get the proxy url.
-    $curlproxy_http = mediamosa::variable_get('mediamosa_curlproxy_http', '');
+    $curlproxy_http = NULL;
+    if ($a_options['use_curlproxy']) {
+      // Get the proxy url.
+      $curlproxy_http = mediamosa::variable_get('mediamosa_curlproxy_http');
+    }
 
     // Init curl.
     $curl_handle = curl_init($url);
+
+    $curl_options = array();
+    foreach ($a_options['header'] as $name => $value) {
+      $curl_options[CURLOPT_HTTPHEADER][] = $name . ': ' . $value;
+    }
+
+    if (!empty($curl_options)) {
+      curl_setopt_array($this->curlHandle, $curl_options);
+    }
+
     curl_setopt($curl_handle, CURLOPT_RETURNTRANSFER, TRUE);
     curl_setopt($curl_handle, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_0);
 

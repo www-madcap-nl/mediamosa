@@ -94,7 +94,7 @@ class mediamosa_rest_call_asset_mediafile_uploadticket_create extends mediamosa_
     $ticket_id = mediamosa_ticket::create_for_upload($app_id, $mediafile_id, $user_id, $group_id);
 
     // Get serverupload.
-    $a_server_upload = mediamosa_server_upload::get_random();
+    $a_server_upload = mediamosa_server::get_random_upload();
 
     // Set response.
     $o_mediamosa->add_item(

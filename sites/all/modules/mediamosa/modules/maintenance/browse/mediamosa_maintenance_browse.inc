@@ -103,7 +103,7 @@ function _mediamosa_restcall($method, $uri, $data = array(), $report_errors = TR
 /**
  * This function returns a themed pager
  */
-function _mediamosa_browse_pager($page, $item_count_total, $item_limit, $element = 0) {
+function _mediamosa_maintenance_browse_pager($page, $item_count_total, $item_limit, $element = 0) {
   global $pager_page_array, $pager_total, $pager_total_items;
   $pager_page_array = array($element => $page);
   $pager_total_items[$element] = $item_count_total; // aantal items
@@ -113,6 +113,6 @@ function _mediamosa_browse_pager($page, $item_count_total, $item_limit, $element
   return theme('pager', array('quantity' => 10));
 }
 
-function _mediamosa_browse_clean_string($string) {
+function _mediamosa_maintenance_browse_clean_string($string) {
   return drupal_ucfirst(str_replace('_', ' ', $string));
 }

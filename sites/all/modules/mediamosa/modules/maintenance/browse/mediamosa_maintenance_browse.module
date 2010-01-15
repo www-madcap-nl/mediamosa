@@ -28,43 +28,43 @@
   * @file
   */
 
-// Permissions
-define('MEDIAMOSA_BROWSE_PERM_BROWSE_ASSETS', 'mediamosa_browse_perm_browse_assets');
-define('MEDIAMOSA_BROWSE_PERM_BROWSE_COLLECTIONS', 'mediamosa_browse_perm_browse_collections');
+// Permissions.
+define('MEDIAMOSA_MAINTENACE_BROWSE_PERM_BROWSE_ASSETS', 'view mediamosa maintenance browse assets');
+define('MEDIAMOSA_MAINTENACE_BROWSE_PERM_BROWSE_COLLECTIONS', 'view mediamosa maintenance browse collections');
 
-// SESSIONs
-define('MEDIAMOSA_BROWSE_ASSETS_SESSION', 'mediamosa_browse_assets_session');
-define('MEDIAMOSA_BROWSE_COLLECTIONS_SESSION', 'mediamosa_browse_collections_session');
+// SESSIONs.
+define('MEDIAMOSA_MAINTENACE_BROWSE_ASSETS_SESSION', 'mediamosa_maintenance_browse_assets_session');
+define('MEDIAMOSA_MAINTENACE_BROWSE_COLLECTIONS_SESSION', 'mediamosa_maintenance_browse_collections_session');
 
 // Required files.
-require_once 'mediamosa_browse.inc';
-require_once 'mediamosa_browse_asset.inc';
-require_once 'mediamosa_browse_collection.inc';
+require_once 'mediamosa_maintenance_browse.inc';
+require_once 'mediamosa_maintenance_browse_asset.inc';
+require_once 'mediamosa_maintenance_browse_collection.inc';
 
 /**
  * Implementation of hook_menu().
  */
-function mediamosa_browse_menu() {
+function mediamosa_maintenance_browse_menu() {
   $items = array();
 
-  $items['mm_browse_asset'] = array(
+  $items['mediamosa/browse/asset'] = array(
     'title' => 'MediaMosa asset browser',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('mediamosa_browse_asset_form'),
-    'access arguments' => array(MEDIAMOSA_BROWSE_PERM_BROWSE_ASSETS),
+    'page arguments' => array('mediamosa_maintenance_browse_asset_form'),
+    'access arguments' => array(MEDIAMOSA_MAINTENACE_BROWSE_PERM_BROWSE_ASSETS),
   );
-  $items['mm_browse_collection'] = array(
+  $items['mediamosa/browse/collection'] = array(
     'title' => 'MediaMosa collection browser',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('mediamosa_browse_collection_form'),
-    'access arguments' => array(MEDIAMOSA_BROWSE_PERM_BROWSE_COLLECTIONS),
+    'page arguments' => array('mediamosa_maintenance_browse_collection_form'),
+    'access arguments' => array(MEDIAMOSA_MAINTENACE_BROWSE_PERM_BROWSE_COLLECTIONS),
   );
-  $items['mm_browse_asset/%'] = array(
+  $items['mediamosa/browse/asset/%'] = array(
     'title' => 'MediaMosa asset details',
     'type' => MENU_CALLBACK,
-    'page callback' => 'mediamosa_browse_asset_details',
+    'page callback' => 'mediamosa_maintenance_browse_asset_details',
     'page arguments' => array(1),
-    'access arguments' => array(MEDIAMOSA_BROWSE_PERM_BROWSE_ASSETS),
+    'access arguments' => array(MEDIAMOSA_MAINTENACE_BROWSE_PERM_BROWSE_ASSETS),
   );
 
   return $items;
@@ -73,13 +73,13 @@ function mediamosa_browse_menu() {
 /**
  * Implement hook_permission().
  */
-function mediamosa_browse_permission() {
+function mediamosa_maintenance_browse_permission() {
   return array(
-    MEDIAMOSA_BROWSE_PERM_BROWSE_ASSETS =>  array(
+    MEDIAMOSA_MAINTENACE_BROWSE_PERM_BROWSE_ASSETS =>  array(
       'title' => t('Browse assets'),
       'description' => t('Users with this permission may browse through the assets.'),
     ),
-    MEDIAMOSA_BROWSE_PERM_BROWSE_COLLECTIONS =>  array(
+    MEDIAMOSA_MAINTENACE_BROWSE_PERM_BROWSE_COLLECTIONS =>  array(
       'title' => t('Browse collections'),
       'description' => t('Users with this permission may browse through the collections.'),
     ),

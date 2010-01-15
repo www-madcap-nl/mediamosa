@@ -33,23 +33,11 @@
 class mediamosa_rest {
   // ------------------------------------------------------------------ Consts
 
-
-  // ------------------------------------------------------------------ Members
-  private $enable_interface = FALSE;
-  private $enable_restcalls = FALSE;
-  private $enable_restcalls_upload = FALSE;
-
   // ------------------------------------------------------------------ Constructor
   function __construct() {
-    $this->set_interface();
-    $this->set_restcalls();
-
-    if (!$this->is_interface() && !$this->is_restcalls()) {
-      throw new mediamosa_exception_no_rest_interface();
-    }
   }
 
-  // ------------------------------------------------------------------ Static Function.
+  // ------------------------------------------------------------------ Static Functions.
   /**
    * Match the current URL to REST call, and return the REST call object.
    *
@@ -81,6 +69,11 @@ class mediamosa_rest {
 
     $a_rest_call_return = FALSE;
 
+    // No Rest calls for this method?
+    if (!isset($a_rest_calls[$request_method])) {
+      return FALSE;
+    }
+
     // Now find a match.
     foreach ($a_rest_calls[$request_method] as $uri => $a_rest_call) {
       $a_uri_parts = ($uri != '' ? explode('/', $uri) : array());
@@ -105,7 +98,6 @@ class mediamosa_rest {
           $a_rest_call[mediamosa_rest_call::URI_PARAMS][mediamosa_unicode::substr($uri_part, 2)] = $a_request_uri[$pos];
         }
         elseif (mediamosa_unicode::substr($uri_part, 0, 1) == '$') {
-          //$a_regex[] = "[A-Za-z0-9:-]*"; OMP restricts any other than these
           $a_regex[] = "[^\\/]*"; // Mediamosa is completly lose, any char EXCEPT /.
           $a_rest_call[mediamosa_rest_call::URI_PARAMS][mediamosa_unicode::substr($uri_part, 1)] = $a_request_uri[$pos];
         }
@@ -168,7 +160,7 @@ class mediamosa_rest {
     return $a_rest_call;
   }
 
-  // ------------------------------------------------------------------ Functions (Public)
+  // ------------------------------------------------------------------ Public Functions.
   /**
    * Get a list of REST calls registered with our drupal hook.
    *
@@ -249,7 +241,7 @@ class mediamosa_rest {
 
     // If FALSE, then the URI didn't match with a REST call.
     if ($a_rest_call == FALSE) {
-      if (self::is_interface()) {
+      if (mediamosa::is_admin_enabled()) {
         return FALSE;
       }
 
@@ -274,6 +266,11 @@ class mediamosa_rest {
    *  Array containing the data needed to run the REST call.
    */
   final public function process_call(array $a_rest_call) {
+    // Make sure the app/rest interface is enabled.
+    if (!mediamosa::is_app_enabled()) {
+      throw new mediamosa_exception_no_rest_interface();
+    }
+
     // Get the mediamosa object.
     $o_mediamosa = mediamosa::get();
 
@@ -297,61 +294,4 @@ class mediamosa_rest {
       $o_mediamosa->item_offset = $o_rest_call->get_param_value(mediamosa_rest_call::OFFSET);
     }
   }
-
-  /**
-   * Bypass Drupal 'user/' path collisions.
-   *
-   * @return boolean
-   */
-  public function show_drupal_login() {
-    // Check if interface is enabled, if so, check if we are logged in.
-    // If not logged in, allow /user/login/* url to show the login form
-    if ($this->is_interface()) {
-      $path_login = user_is_logged_in() ? '/user/logout' : '/user/login';
-      return (mediamosa_unicode::substr(mediamosa::request_uri(), 0, mediamosa_unicode::strlen($path_login)) == $path_login);
-    }
-
-    return FALSE;
-  }
-
-  /**
-   * Is the Drupal Interface enabled?
-   * @return bool
-   */
-  public function is_interface() {
-    return $this->enable_interface;
-  }
-
-  /**
-   * Is the REST Interface enabled?
-   *
-   * @return bool
-   */
-  public function is_restcalls() {
-    return $this->enable_restcalls;
-  }
-
-  /**
-   * Decide weither the Drupal interface is active or not.
-   */
-  public function set_interface() {
-    $this->enable_interface = getenv('ENABLE_INTERFACE') !== FALSE ? getenv('ENABLE_INTERFACE') == 'YES' : TRUE;
-  }
-
-  /**
-   * Decide weither the REST interface is active or not.
-   */
-  public function set_restcalls() {
-    global $db_prefix;
-
-    $is_cli = php_sapi_name() == 'cli' ? FALSE : TRUE;
-    $this->enable_restcalls = getenv('ENABLE_RESTCALLS') !== FALSE ? getenv('ENABLE_RESTCALLS') == 'YES' || getenv('ENABLE_RESTCALLS') == 'UPLOAD' : $is_cli;
-    $this->enable_restcalls_upload = getenv('ENABLE_RESTCALLS') !== FALSE ? getenv('ENABLE_RESTCALLS') == 'UPLOAD' : $is_cli;
-
-    // If we are running an unit test, then enable REST calls.
-    if (preg_match('/simpletest\d+/', $db_prefix)) {
-      $this->enable_restcalls = TRUE; // Override during unit tests
-    }
-  }
-  // ------------------------------------------------------------------ Functions (Private)
 }

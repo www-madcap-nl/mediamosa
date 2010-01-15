@@ -31,7 +31,7 @@
 /**
  * Helper function for the collection filter form
  */
-function _mediamosa_browse_collection_list_filter() {
+function _mediamosa_maintenance_browse_collection_list_filter() {
   $search_terms = array(
     0 => '',
     'title' => t('Title'),
@@ -46,11 +46,11 @@ function _mediamosa_browse_collection_list_filter() {
   return $search_terms;
 }
 
-function _mediamosa_browse_collection_get_cql_from_session() {
+function _mediamosa_maintenance_browse_collection_get_cql_from_session() {
   $filters = $data = array();
 
   // Iterate all items stored in the form submit function
-  foreach ($_SESSION[MEDIAMOSA_BROWSE_COLLECTIONS_SESSION] as $key => $filter) {
+  foreach ($_SESSION[MEDIAMOSA_MAINTENACE_BROWSE_COLLECTIONS_SESSION] as $key => $filter) {
     switch ($key) {
       case 'app_id':
         $filters['app_id'] = explode(' ', $filter);
@@ -87,9 +87,9 @@ function _mediamosa_browse_collection_get_cql_from_session() {
   $data['cql'] = '('. implode(" AND ", $cql) .')';
 
   // Add the optional sort order
-  if ($_SESSION[MEDIAMOSA_BROWSE_COLLECTIONS_SESSION]['tablesort']) {
-    $sortby = $_SESSION[MEDIAMOSA_BROWSE_COLLECTIONS_SESSION]['tablesort']['sql'];
-    $sortorder = ($_SESSION[MEDIAMOSA_BROWSE_COLLECTIONS_SESSION]['tablesort']['sort'] == 'desc') ? 'descending' : 'ascending';
+  if ($_SESSION[MEDIAMOSA_MAINTENACE_BROWSE_COLLECTIONS_SESSION]['tablesort']) {
+    $sortby = $_SESSION[MEDIAMOSA_MAINTENACE_BROWSE_COLLECTIONS_SESSION]['tablesort']['sql'];
+    $sortorder = ($_SESSION[MEDIAMOSA_MAINTENACE_BROWSE_COLLECTIONS_SESSION]['tablesort']['sort'] == 'desc') ? 'descending' : 'ascending';
     $data['cql'] .= 'sortBy '. $sortby .'/'. $sortorder;
   }
 
@@ -100,7 +100,7 @@ function _mediamosa_browse_collection_get_cql_from_session() {
 /**
  * The browse form which also contains a list of browsable collections.
  */
-function mediamosa_browse_collection_form() {
+function mediamosa_maintenance_browse_collection_form() {
   // Gather and prepare some variables.
   $form = array();
   $item_limit = 50;
@@ -114,8 +114,8 @@ function mediamosa_browse_collection_form() {
   $all_apps = array(implode(' ', array_keys($all_apps_raw)) => t('<All applications>'));
   $all_apps += $all_apps_raw;
 
-  $app_id = (isset($_SESSION[MEDIAMOSA_BROWSE_COLLECTIONS_SESSION]['app_id'])) ? $_SESSION[MEDIAMOSA_BROWSE_COLLECTIONS_SESSION]['app_id'] : reset(array_keys($all_apps));
-  $_SESSION[MEDIAMOSA_BROWSE_COLLECTIONS_SESSION]['app_id'] = $app_id;
+  $app_id = (isset($_SESSION[MEDIAMOSA_MAINTENACE_BROWSE_COLLECTIONS_SESSION]['app_id'])) ? $_SESSION[MEDIAMOSA_MAINTENACE_BROWSE_COLLECTIONS_SESSION]['app_id'] : reset(array_keys($all_apps));
+  $_SESSION[MEDIAMOSA_MAINTENACE_BROWSE_COLLECTIONS_SESSION]['app_id'] = $app_id;
   $form['app_id'] = array(
     '#type' => 'select',
     '#options' => $all_apps,
@@ -124,19 +124,19 @@ function mediamosa_browse_collection_form() {
   );
 
   // Get the current filter count
-  $filter_count = (isset($_SESSION[MEDIAMOSA_BROWSE_COLLECTIONS_SESSION]['filters'])) ? count($_SESSION[MEDIAMOSA_BROWSE_COLLECTIONS_SESSION]['filters']) : 0;
+  $filter_count = (isset($_SESSION[MEDIAMOSA_MAINTENACE_BROWSE_COLLECTIONS_SESSION]['filters'])) ? count($_SESSION[MEDIAMOSA_MAINTENACE_BROWSE_COLLECTIONS_SESSION]['filters']) : 0;
 
   // Add one empty filter item
   $filter_count++;
 
   // Get the maximum number of filters
-  $filter_max = variable_get('mediamosa_browse_filter_max', 25);
+  $filter_max = variable_get('mediamosa_maintenance_browse_filter_max', 25);
 
   // Load and set all javascript related items
-  drupal_add_js(drupal_get_path('module', 'mediamosa_browse') .'/mediamosa_browse.js');
+  drupal_add_js(drupal_get_path('module', 'mediamosa_maintenance_browse') .'/mediamosa_maintenance_browse.js');
   drupal_add_js(
     array(
-      'mediamosa_browse' => array(
+      'mediamosa_maintenance_browse' => array(
         'filter_count' => $filter_count,
         'filter_max' => $filter_max,
       ),
@@ -144,7 +144,7 @@ function mediamosa_browse_collection_form() {
     'setting'
   );
 
-  $filter_types = _mediamosa_browse_collection_list_filter();
+  $filter_types = _mediamosa_maintenance_browse_collection_list_filter();
   for ($i = 1; $i <= $filter_max; $i++) {
     $display = ($i <= $filter_count) ? '' : 'none';
     $extra_class = '';
@@ -169,8 +169,8 @@ function mediamosa_browse_collection_form() {
     );
 
     // Restore submitted values
-    if (isset($_SESSION[MEDIAMOSA_BROWSE_COLLECTIONS_SESSION]['filters'][($i - 1)])) {
-      $info = $_SESSION[MEDIAMOSA_BROWSE_COLLECTIONS_SESSION]['filters'][($i - 1)];
+    if (isset($_SESSION[MEDIAMOSA_MAINTENACE_BROWSE_COLLECTIONS_SESSION]['filters'][($i - 1)])) {
+      $info = $_SESSION[MEDIAMOSA_MAINTENACE_BROWSE_COLLECTIONS_SESSION]['filters'][($i - 1)];
       $form['filter_type_'. $i]['#default_value'] = reset(array_keys($info));
       $form['filter_value_'. $i]['#default_value'] = reset(array_values($info));
     }
@@ -196,10 +196,10 @@ function mediamosa_browse_collection_form() {
       array('field' => 'app_id', 'data' => t('App ID')),
       array('field' => 'changed', 'data' => t('Last modified')),
     );
-    $_SESSION[MEDIAMOSA_BROWSE_COLLECTIONS_SESSION]['tablesort'] = (isset($_GET['order'])) ? tablesort_init($header) : FALSE;
+    $_SESSION[MEDIAMOSA_MAINTENACE_BROWSE_COLLECTIONS_SESSION]['tablesort'] = (isset($_GET['order'])) ? tablesort_init($header) : FALSE;
 
     // Fetch the collections
-    $cql_data = _mediamosa_browse_collection_get_cql_from_session();
+    $cql_data = _mediamosa_maintenance_browse_collection_get_cql_from_session();
     $data = array(
       'limit' => $item_limit,
       'offset' => $offset,
@@ -234,14 +234,14 @@ function mediamosa_browse_collection_form() {
     foreach ($result->xpath('//items/item') as $collection) {
       $title = (isset($collection->title) && trim((string)$collection->title) != '') ? $collection->title : t('<title not set>');
       $rows[] = array(
-        l($title, 'mm_browse_asset', array('query' => array('coll_id' => $collection->coll_id))),
+        l($title, 'mediamosa/browse/asset', array('query' => array('coll_id' => $collection->coll_id))),
         $collection->app_id,
         $collection->changed,
       );
     }
 
     $form['pager_top'] = array(
-      '#markup' => _mediamosa_browse_pager($page, $item_count_total, $item_limit),
+      '#markup' => _mediamosa_maintenance_browse_pager($page, $item_count_total, $item_limit),
     );
 
     $form['results'] = array(
@@ -249,7 +249,7 @@ function mediamosa_browse_collection_form() {
     );
 
     $form['pager_bottom'] = array(
-      '#markup' => _mediamosa_browse_pager($page, $item_count_total, $item_limit),
+      '#markup' => _mediamosa_maintenance_browse_pager($page, $item_count_total, $item_limit),
     );
   }
 
@@ -259,7 +259,7 @@ function mediamosa_browse_collection_form() {
 /**
  * The browse filter form submit function.
  */
-function mediamosa_browse_collection_form_submit($form, $form_state) {
+function mediamosa_maintenance_browse_collection_form_submit($form, $form_state) {
   $filters = array();
   foreach ($form_state['values'] as $key => $value) {
     if (strpos($key, 'filter_type_') === 0 && !is_numeric($value)) {
@@ -270,7 +270,7 @@ function mediamosa_browse_collection_form_submit($form, $form_state) {
     }
   }
 
-  $_SESSION[MEDIAMOSA_BROWSE_COLLECTIONS_SESSION] = array(
+  $_SESSION[MEDIAMOSA_MAINTENACE_BROWSE_COLLECTIONS_SESSION] = array(
     'filters' => $filters,
     'app_id' => $form_state['values']['app_id'],
   );

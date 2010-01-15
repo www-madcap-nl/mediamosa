@@ -49,36 +49,47 @@ abstract class MediaMosaTestCase extends DrupalWebTestCase {
 
     // Create and setup the CORE module.
     $args = array_unique(array_merge(array('mediamosa_app', 'mediamosa'), $args));
-    $this->pass(var_export($args, TRUE));
     call_user_func_array(array($this, 'parent::setUp'), $args);
   }
 
-  protected function restCall($app, $path, $request_method = 'POST', $parameters = array(), $headers = array()) {
+  /**
+   * Do a REST call inside the sandbox.
+   *
+   * @param array $a_app
+   *  The app used during the call.
+   * @param string $uri
+   *  The uri of the REST call.
+   * @param string $request_method
+   *  POST / GET / PUT / DELETE.
+   * @param array $parameters
+   * @param unknown_type $headers
+   */
+  protected function restCall(array $a_app, $uri, $request_method = 'POST', array $a_parameters = array(), array $a_headers = array()) {
     // Add MediaMosa menu path prefix
-    //$path = /*MEDIAMOSA_MENU_PATH . '/'*/ $path;
+    //$uri = /*MEDIAMOSA_MENU_PATH . '/'*/ $uri;
 
     // Add default parameters
-    $parameters += array(
-      'app_id' => $app[mediamosa_app_db::APP_ID],
+    $a_parameters += array(
+      'app_id' => $a_app[mediamosa_app_db::APP_ID],
     );
 
     // Prepare the CURL options
     $curl_opts = array(
       CURLOPT_NOBODY => FALSE,
-      CURLOPT_HTTPHEADER => $headers,
+      CURLOPT_HTTPHEADER => $a_headers,
       CURLOPT_HEADER => TRUE,
     );
     if (strcasecmp($request_method, 'GET') == 0) {
       $curl_opts += array(
         CURLOPT_HTTPGET => TRUE,
-        CURLOPT_URL => url($path, array('absolute' => TRUE, 'query' => $parameters)),
+        CURLOPT_URL => url($uri, array('absolute' => TRUE, 'query' => $a_parameters)),
       );
     }
     else {
       $curl_opts += array(
         CURLOPT_POST => TRUE,
-        CURLOPT_URL => url($path, array('absolute' => TRUE)),
-        CURLOPT_POSTFIELDS => http_build_query($parameters),
+        CURLOPT_URL => url($uri, array('absolute' => TRUE)),
+        CURLOPT_POSTFIELDS => http_build_query($a_parameters),
       );
     }
 
@@ -118,15 +129,20 @@ abstract class MediaMosaTestCase extends DrupalWebTestCase {
     }
 
     // Look for a request_result_id
-    $this->assertTrue(isset($out['xml']->header->request_result_id), $request_method .' request to: "'. $path .'". Result id: ' . $out['xml']->header->request_result_id .'<hr />');
+    $this->assertTrue(isset($out['xml']->header->request_result_id), $request_method .' request to: "'. $uri .'". Result id: ' . $out['xml']->header->request_result_id .'<hr />');
 
     // Return the request data
     return $out;
   }
 
-  protected function createApp($attributes = array()) {
-    // Merge in the default attributes
-    $attributes += array(
+  /**
+   * Create a random app or specified one.
+   * @param array $a_attributes
+   *  Basic app parameters like the DB version (mediamosa_app_db).
+   */
+  protected function createApp($a_attributes = array()) {
+    // Merge in the default attributes.
+    $a_attributes += array(
       mediamosa_app_db::APP_ID => rand(1, 1000),
       mediamosa_app_db::SHARED_KEY => user_password(),
       mediamosa_app_db::NAME => $this->randomName(),
@@ -138,11 +154,11 @@ abstract class MediaMosaTestCase extends DrupalWebTestCase {
     );
 
     // Insert the app into the database
-    $query = mediamosa_db::db_insert(mediamosa_app_db::TABLE_NAME)->fields($attributes)->execute();
+    $query = mediamosa_db::db_insert(mediamosa_app_db::TABLE_NAME)->fields($a_attributes)->execute();
 
     // Log the creation in the resutls
-    $this->assert(TRUE, t('App created with id %app_id, name %name and shared key %pass', array('%app_id' => $attributes['app_id'], '%name' => $attributes['name'], '%pass' => $attributes['shared_key'])));
+    $this->assert(TRUE, t('App created with id %app_id, name %name and shared key %pass', array('%app_id' => $a_attributes['app_id'], '%name' => $a_attributes['name'], '%pass' => $a_attributes['shared_key'])));
 
-    return $attributes;
+    return $a_attributes;
   }
 }

@@ -24,32 +24,65 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
- /**
-  * @file
-  * The server streamer class.
-  */
+/**
+ * @file
+ * Upload server functions.
+ */
 
-class mediamosa_server_streaming {
-  // ------------------------------------------------------------------ Static Function.
+class mediamosa_server {
+
+  // ------------------------------------------------------------------ Consts.
+  /**
+   * Get random upload server.
+   */
+  static public function get_random_upload() {
+    return mediamosa_db::db_query_range(
+      'SELECT * FROM {#mediamosa_server} WHERE #server_type = :server_type AND #status = :status_on ORDER BY RAND()',
+      0,
+      1,
+      array(
+        '#mediamosa_server' => mediamosa_server_db::TABLE_NAME,
+        '#status' => mediamosa_server_db::SERVER_STATUS,
+        ':status_on' => mediamosa_server_db::SERVER_STATUS_ON,
+        '#server_type' => mediamosa_server_db::SERVER_TYPE,
+        ':server_type' => mediamosa_server_db::SERVER_TYPE_UPLOAD,
+      )
+    )->fetchAssoc();
+  }
+
+  /**
+   * Get all enabled transcoding servers (either ON or CLOSE).
+   */
+  static public function get_enabled_transcode() {
+    return mediamosa_db::db_select(mediamosa_server_db::TABLE_NAME, 'ms')
+      ->fields('ms')
+      ->condition(mediamosa_server_db::STATUS, mediamosa_server_db::SERVER_STATUS_OFF, '!=')
+      ->execute();
+  }
+
+  /**
+   * Return streamable servers.
+   *
+   * @param $container_type
+   */
   static public function is_streamable($container_type) {
     static $a_streamable_container_types = array();
 
     if (!isset($a_streamable_container_types[$container_type])) {
       $is_streamable = mediamosa_db::db_query(
-        "SELECT COUNT(ss.#server_id) AS total
-         FROM {#mediamosa_server} AS ss
-         JOIN {#mediamosa_streaming_server_container} AS ssc ON ss.#server_id = ssc.#streaming_server_id
-         WHERE ssc.#container = :container AND ss.#active = 1 AND ss.#server_type = :server_type",
+        "SELECT COUNT(ms.#nid) AS total FROM {#mediamosa_server} AS ms
+         JOIN {#mediamosa_streaming_server_container} AS mssc ON ms.#nid = mssc.#nid
+         WHERE mssc.#container = :container AND ms.#server_type = :server_type AND ms.#server_status = :server_status_on",
         array(
-          '#server_id' => mediamosa_server_db::ID,
-          '#streaming_server_id' => mediamosa_server_streaming_container_db::STREAMING_SERVER_ID,
+          '#nid' => mediamosa_server_db::NID,
           '#mediamosa_server' => mediamosa_server_db::TABLE_NAME,
           '#mediamosa_streaming_server_container' => mediamosa_server_streaming_container_db::TABLE_NAME,
           '#container' => mediamosa_server_streaming_container_db::CONTAINER,
           ':container' => $container_type,
-          '#active' => mediamosa_server_db::SERVER_STATUS,
           '#server_type' => mediamosa_server_db::SERVER_TYPE,
           ':server_type' => mediamosa_server_db::SERVER_TYPE_STREAMING,
+          '#server_status' => mediamosa_server_db::SERVER_STATUS,
+          ':server_status_on' => mediamosa_server_db::SERVER_STATUS_ON,
         )
       )->fetchField();
 
@@ -67,7 +100,7 @@ class mediamosa_server_streaming {
    * @param string $video_codec
    *  Codec.
    */
-  static public function get($container_type, $video_codec) {
+  static public function get_streaming($container_type, $video_codec) {
     static $a_servers = array();
 
     if (isset($a_servers[$container_type . ':' . $video_codec]) && $a_servers[$container_type . ':' . $video_codec]) {
@@ -78,18 +111,18 @@ class mediamosa_server_streaming {
     // try to match container:codec first.
     $a_servers[$container_type . ':' . $video_codec] = mediamosa_db::db_query(
       "SELECT mss.* FROM {#mediamosa_server} AS mss
-      JOIN {#mediamosa_server_streaming_container} AS mssc ON mssc.#streaming_server_id = mss.#server_id
-      WHERE mssc.#container = :container AND mss.#server_type = :server_type AND mss.#server_status = 1 ORDER BY rand() LIMIT 1",
+      JOIN {#mediamosa_server_streaming_container} AS mssc ON mssc.#nid = mss.#nid
+      WHERE mssc.#container = :container AND mss.#server_type = :server_type AND mss.#server_status = :server_status_on ORDER BY rand() LIMIT 1",
       array(
         '#mediamosa_server' => mediamosa_server_db::TABLE_NAME,
         '#mediamosa_server_streaming_container' => mediamosa_server_streaming_container_db::TABLE_NAME,
-        '#server_id' => mediamosa_server_db::ID,
-        '#streaming_server_id' => mediamosa_server_streaming_container_db::STREAMING_SERVER_ID,
+        '#nid' => mediamosa_server_db::NID,
         '#container' => mediamosa_server_streaming_container_db::CONTAINER,
         ':container' => $container_type . ':' . $video_codec,
-        '#server_status' => mediamosa_server_db::SERVER_STATUS,
         '#server_type' => mediamosa_server_db::SERVER_TYPE,
         ':server_type' => mediamosa_server_db::SERVER_TYPE_STREAMING,
+        '#server_status' => mediamosa_server_db::SERVER_STATUS,
+        ':server_status_on' => mediamosa_server_db::SERVER_STATUS_ON,
       )
     )->fetchAssoc();
 
@@ -103,16 +136,16 @@ class mediamosa_server_streaming {
 
     $a_servers[$container_type] = mediamosa_db::db_query(
       "SELECT mss.* FROM {#mediamosa_server} AS mss
-      JOIN {#mediamosa_server_streaming_container} AS mssc ON mssc.#streaming_server_id = mss.#server_id
-      WHERE mssc.#container = :container AND mss.#server_type = :server_type AND mss.#server_status = 1 ORDER BY rand() LIMIT 1",
+      JOIN {#mediamosa_server_streaming_container} AS mssc ON mssc.#nid = mss.#nid
+      WHERE mssc.#container = :container AND mss.#server_type = :server_type AND mss.#server_status = :server_status_on ORDER BY rand() LIMIT 1",
       array(
         '#mediamosa_server' => mediamosa_server_db::TABLE_NAME,
         '#mediamosa_server_streaming_container' => mediamosa_server_streaming_container_db::TABLE_NAME,
-        '#server_id' => mediamosa_server_db::ID,
-        '#streaming_server_id' => mediamosa_server_streaming_container_db::STREAMING_SERVER_ID,
+        '#nid' => mediamosa_server_db::NID,
         '#container' => mediamosa_server_streaming_container_db::CONTAINER,
         ':container' => $container_type,
         '#server_status' => mediamosa_server_db::SERVER_STATUS,
+        ':server_status_on' => mediamosa_server_db::SERVER_STATUS_ON,
         '#server_type' => mediamosa_server_db::SERVER_TYPE,
         ':server_type' => mediamosa_server_db::SERVER_TYPE_STREAMING,
       )
@@ -129,9 +162,9 @@ class mediamosa_server_streaming {
    * @param string $video_codec
    *  Codec.
    */
-  static public function get_objectcode($container_type, $video_codec) {
+  static public function get_objectcode_streaming($container_type, $video_codec) {
 
-    $a_server = self::get($container_type, $video_codec);
+    $a_server = self::get_streaming($container_type, $video_codec);
 
     if ($a_server) {
       return $a_server[mediamosa_server_db::OBJECT_CODE];
@@ -148,14 +181,47 @@ class mediamosa_server_streaming {
    * @param string $video_codec
    *  Codec.
    */
-  static public function get_uri($container_type, $video_codec) {
+  static public function get_uri_streaming($container_type, $video_codec) {
 
-    $a_server = self::get($container_type, $video_codec);
+    $a_server = self::get_streaming($container_type, $video_codec);
 
     if ($a_server) {
       return $a_server[mediamosa_server_db::URI];
     }
 
     return FALSE;
+  }
+
+  /**
+   * Get the default still server.
+   */
+  static public function get_still() {
+    static $a_server = NULL;
+
+    if (isset($a_server)) {
+      return $a_server;
+    }
+
+    $a_server = mediamosa_db::db_query(
+      'SELECT * FROM {#mediamosa_server} WHERE #server_type = :server_type AND #server_status = :server_status_on LIMIT 1',
+      array(
+        '#mediamosa_server' => mediamosa_server_db::TABLE_NAME,
+        '#server_type' => mediamosa_server_db::SERVER_TYPE,
+        ':server_type' => mediamosa_server_db::SERVER_TYPE_STILL,
+        '#server_status' => mediamosa_server_db::SERVER_STATUS,
+        ':server_status_on' => mediamosa_server_db::SERVER_STATUS_ON,
+      )
+    )->fetchAssoc();
+
+    return $a_server;
+  }
+
+  /**
+   * Get the URI of the default still server.
+   */
+  static public function get_uri_still() {
+    $a_server = self::get_still();
+
+    return $a_server[mediamosa_server_db::URI];
   }
 }

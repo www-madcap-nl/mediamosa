@@ -2,18 +2,15 @@
 
 name = "Asset and collection browser"
 description = "Use this module to be able to browse through all assets and collections present on this server"name = "MediaMosa Asset Browser"
-package = "MediaMosa 2 - Modules"
+package = "MediaMosa 2 - Maintenance"
 version = "2.0.0"
 core = 7.x
 
 ; Used files.
-files[] = mediamosa_browse.module
+files[] = mediamosa_maintenance_browse.module
 
-; Dependencies (module names)
+; Dependencies
 dependencies[] = mediamosa
 dependencies[] = mediamosa_app
 dependencies[] = mediamosa_asset
 dependencies[] = mediamosa_collection
-
-; Used files.
-files[] = mediamosa_browse.module

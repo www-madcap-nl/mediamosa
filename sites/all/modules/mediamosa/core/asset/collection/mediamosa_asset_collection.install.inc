@@ -45,7 +45,7 @@ function mediamosa_asset_collection_install() {
  */
 function mediamosa_asset_collection_uninstall() {
   // Drop our table(s).
-  mediamosa::drupal_install_schema(mediamosa_asset_collection_db::TABLE_NAME);
+  mediamosa::drupal_uninstall_schema(mediamosa_asset_collection_db::TABLE_NAME);
 }
 
 /**

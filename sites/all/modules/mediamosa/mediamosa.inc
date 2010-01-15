@@ -182,6 +182,55 @@ class mediamosa {
   }
 
   /**
+   * Is the Drupal Interface enabled?
+   * @return bool
+   */
+  static public function is_admin_enabled() {
+    return mediamosa::variable_get('mediamosa_admin', FALSE);
+  }
+
+  /**
+   * Is the APP REST Interface enabled?
+   *
+   * @return bool
+   */
+  static public function is_app_enabled() {
+    global $db_prefix;
+
+    // If we are running an unit test, then we are enabled.
+    if (preg_match('/simpletest\d+/', $db_prefix)) {
+      return TRUE;
+    }
+
+    return (mediamosa::variable_get('mediamosa_app', FALSE) || mediamosa::variable_get('mediamosa_app_upload', FALSE));
+  }
+
+  /**
+   * Is the APP REST Interface enabled?
+   *
+   * @return bool
+   */
+  static public function is_app_upload_enabled() {
+    return mediamosa::variable_get('mediamosa_app_upload', FALSE);
+  }
+
+  /**
+   * Bypass Drupal 'user/' path collisions.
+   *
+   * @return boolean
+   */
+  static public function show_drupal_login() {
+    // Check if interface is enabled, if so, check if we are logged in.
+    // If not logged in, allow /user/login/* url to show the login form
+    if (mediamosa::is_admin_enabled()) {
+      $path_login = user_is_logged_in() ? '/user/logout' : '/user/login';
+      return (mediamosa_unicode::substr(mediamosa::request_uri(), 0, mediamosa_unicode::strlen($path_login)) == $path_login);
+    }
+
+    return FALSE;
+  }
+
+  /**
    * Exit the page with an 503 error.
    *
    * @param string $message
@@ -292,7 +341,7 @@ class mediamosa {
    * @param $no_reset Boolean to control wheter the timestamp is re-created or the static is used (if set).
    * @return timestamp
    */
-  static private function utc_current_timestamp_now($reset = FALSE) {
+  static public function utc_current_timestamp_now($reset = FALSE) {
     static $utc_timestamp = NULL;
 
     if (isset($utc_timestamp) && !$reset) {

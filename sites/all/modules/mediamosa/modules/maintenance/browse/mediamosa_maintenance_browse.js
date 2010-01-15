@@ -3,12 +3,12 @@
 Drupal.behaviors.initMediamosaBrowse = {
   attach: function (context) {
     $('#edit-add-filter-row').click(function () {
-      Drupal.settings.mediamosa_browse.filter_count++;
-      if (Drupal.settings.mediamosa_browse.filter_count < Drupal.settings.mediamosa_browse.filter_max) {
-        $('#mediamosa-browse-asset-filter-' + (Drupal.settings.mediamosa_browse.filter_count + 1)).slideDown(250);
-        $('#mediamosa-browse-collection-filter-' + (Drupal.settings.mediamosa_browse.filter_count + 1)).slideDown(250);
+      Drupal.settings.mediamosa_maintenance_browse.filter_count++;
+      if (Drupal.settings.mediamosa_maintenance_browse.filter_count < Drupal.settings.mediamosa_maintenance_browse.filter_max) {
+        $('#mediamosa-browse-asset-filter-' + (Drupal.settings.mediamosa_maintenance_browse.filter_count + 1)).slideDown(250);
+        $('#mediamosa-browse-collection-filter-' + (Drupal.settings.mediamosa_maintenance_browse.filter_count + 1)).slideDown(250);
       }
-      if ((Drupal.settings.mediamosa_browse.filter_count + 1) == Drupal.settings.mediamosa_browse.filter_max) {
+      if ((Drupal.settings.mediamosa_maintenance_browse.filter_count + 1) == Drupal.settings.mediamosa_maintenance_browse.filter_max) {
         $('#edit-add-filter-row').attr('disabled', 'disabled');
       }
       return false;
@@ -26,7 +26,7 @@ Drupal.behaviors.initMediamosaBrowse = {
       $('#edit-add-filter-row').removeAttr('disabled');
 
       // Reset the filter count
-      Drupal.settings.mediamosa_browse.filter_count = 0;
+      Drupal.settings.mediamosa_maintenance_browse.filter_count = 0;
       return false;
     });
   }

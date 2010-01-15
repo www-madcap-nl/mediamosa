@@ -29,6 +29,9 @@
   * Main core installer.
   */
 
+// Node types.
+require_once 'core/node/mediamosa_node.inc';
+
 // Include the class we need. During install nothing can be autoloaded (yet).
 require_once 'mediamosa.inc';
 require_once 'lib/mediamosa_db.inc';
@@ -99,13 +102,13 @@ function mediamosa_uninstall() {
   mediamosa_job_uninstall();
 
   // Remove Transcode Profile.
-  mediamosa_transcode_profile_uninstall();
+  mediamosa_transcode_uninstall();
 
   // Remove ftp_batch.
   mediamosa_ftp_batch_uninstall();
 
   // Call uninstaller ticket.
-  mediamosa_ticket_install();
+  mediamosa_ticket_uninstall();
 
   // Uninstall the user dbs.
   mediamosa_user_uninstall();

@@ -24,7 +24,6 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
-
  /**
   * @file
   * Unittests for authentication module.
@@ -40,10 +39,10 @@ class MediaMosaAppAuthenticationTestCase extends MediaMosaTestCase {
   }
 
   function setUp() {
-    parent::setUp('mediamosa_app_authentication', 'mediamosa');
+    parent::setUp('mediamosa_app_authentication');
 
     // Create and login user
-    $rest_user = $this->drupalCreateUser(array(MEDIAMOSA_PERM_REST_ACCESS));
+    $rest_user = $this->drupalCreateUser(array(mediamosa_settings::MEDIAMOSA_PERM_REST_ACCESS));
     $this->drupalLogin($rest_user);
   }
 

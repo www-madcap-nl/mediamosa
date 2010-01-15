@@ -28,24 +28,22 @@
   * @file
   * Global settings file. (1.x replacement for shared_defines).
   */
-
-/**
- * The mediamosa INSTALL ID is used for multiple installations of the jobserver.
- */
-if (is_null(@constant('MEDIAMOSA_INSTALL_ID'))) {
-  define('MEDIAMOSA_INSTALL_ID', 'default'); // Not longer than 10 chars.
-}
-
 class mediamosa_settings {
 
   // ------------------------------------------------------------------ Consts.
   const MINIMUM_PHP_VERSION = '5.1.0';
 
+  // Default permissions.
+  const MEDIAMOSA_PERM_ADMINISTER = 'administer mediamosa'; // All rights
+  const MEDIAMOSA_PERM_VIEW = 'view mediamosa'; // View rights
+  const MEDIAMOSA_PERM_REST_ACCESS = 'access mediamosa rest';
+  const MEDIAMOSA_PERM_ADMINISTRATION_ACCESS = 'access mediamosa';
+
   // Length of the unique ID generator, is always this length.
   const UUID_LENGTH = 24;
 
   // URL to asset.
-  const URL_ASSET = 'vpx/vpx_beheer_mm/asset/@asset_id';
+  const URL_ASSET = 'mediamosa/browse/asset/@asset_id';
 
   // Path / SAN NAS Settings.
   const SAN_NAS_DATA_FOLDER = 'data';

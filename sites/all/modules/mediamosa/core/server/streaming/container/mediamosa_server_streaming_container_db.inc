@@ -36,7 +36,7 @@ class mediamosa_server_streaming_container_db {
 
   // Database fields;
   const ID = 'streaming_server_container_id';
-  const STREAMING_SERVER_ID = 'streaming_server_id';
+  const NID = 'nid';
   const CONTAINER = 'container';
   const CONTAINER_LENGTH = 255;
 }

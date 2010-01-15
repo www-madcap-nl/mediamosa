@@ -281,7 +281,7 @@ class mediamosa_asset_mediafile {
       $a_items[$mediafile_id]['ega_stream_url'] = '';
 
       // Stream URL, only if streamable.
-      if (mediamosa_server_streaming::is_streamable($a_items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata_db::CONTAINER_TYPE])) {
+      if (mediamosa_server::is_streamable($a_items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata_db::CONTAINER_TYPE])) {
         $a_items[$mediafile_id]['ega_play_url'] = preg_replace($a_patterns, $a_replacements, $a_app[mediamosa_app_db::PLAY_PROXY_URL]);
 
         // Output extra?
