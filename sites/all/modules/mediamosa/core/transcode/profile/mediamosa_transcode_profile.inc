@@ -100,6 +100,27 @@ class mediamosa_transcode_profile {
   }
 
   /**
+   * Retrieve the transcode profiles based on tool.
+   * @param $tool
+   */
+  static public function get_by_tool($app_id, $tool) {
+
+    $query = mediamosa_db::db_select(mediamosa_transcode_mapping_db::TABLE_NAME, 'mtm')
+      ->fields('mtm')
+      ->condition(mediamosa_transcode_mapping_db::TOOL, $tool);
+
+    // If no App ids are given, then return all.
+    if (!empty($app_id)) {
+      $query->condition(mediamosa_transcode_profile_db::APP_ID, array(0, $app_id), 'IN');
+    }
+
+    // Return the result.
+    return $query->execute();
+  }
+
+
+
+  /**
    * Will test if transcode profile exits, will throw when fail.
    *
    * @param integer profile_id

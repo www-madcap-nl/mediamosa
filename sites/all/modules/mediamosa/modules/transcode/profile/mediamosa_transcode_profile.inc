@@ -43,7 +43,7 @@ function mediamosa_transcode_profile_view($node, $build_mode = 'full') {
   );
 
   // Optional parameters
-  $all_options = mediamosa_server_transcoding::get_transcode_tool_mappings($node->tool);
+  $all_options = mediamosa_transcode_profile::get_by_tool(NULL, $node->tool);
   foreach ($node->options as $key => $value) {
     $rows[] = array($all_options[$key]['field_title'], check_plain($value));
   }
@@ -124,7 +124,7 @@ function mediamosa_transcode_profile_form($node, $form_state) {
   );
 
   if (isset($node->nid)) {
-    $options = mediamosa_server_transcoding::get_transcode_tool_mappings($node->tool);
+    $options = mediamosa_transcode_profile::get_by_tool(NULL, $node->tool);
 
     $form['tool_options'] = array(
       '#type' => 'fieldset',

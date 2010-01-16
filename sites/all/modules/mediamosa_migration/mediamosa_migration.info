@@ -1,7 +1,7 @@
 ; $Id: $
 name = "Database migration 1.7.x to 2.0"
 description = "Migration module for database migration from 1.7 to 2.0."
-package = "MediaMosa 2 - Core"
+package = "MediaMosa 2 - Misc"
 version = "1.0.0"
 core = 7.x
 

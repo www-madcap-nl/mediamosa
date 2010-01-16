@@ -243,7 +243,7 @@ class mediamosa_ticket {
     }
 
     // Must be able to write there.
-    if (!is_writeable($ticket_path)) {
+    if (!mediamosa_io::is_writable($ticket_path)) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_DIR_NOT_WRITABLE, array('@location' => $ticket_path));
     }
 

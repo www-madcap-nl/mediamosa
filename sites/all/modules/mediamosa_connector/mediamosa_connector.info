@@ -1,14 +1,15 @@
 ; $Id: $
 name = "MediaMosa 2 - connector"
 description = "The MediaMosa 2 connector enables Drupal modules to communicate with the MediaMosa REST interface."
-package = "MediaMosa 2 - Externals"
-version = "1.0.0"
+package = "MediaMosa 2 - Misc"
+version = "2.0.0"
 core = 7.x
 
 ; Dependencies (module names)
+dependencies[] = mediamosa
 
 ; Used files.
 
 ; Migration files.
 files[] = mediamosa_connector.module
-files[] = mediamosa_migration.class.inc
+files[] = mediamosa_connector.class.inc

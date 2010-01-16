@@ -36,9 +36,9 @@
 function mediamosa_connector_menu() {
   $items = array();
 
-  $items['admin/mediamosa/mediamosa_connector'] = array(
+  $items['admin/mediamosa/connector'] = array(
     'title' => t('MediaMosa connector settings'),
-    'description' => t('Username, password and URL settings to connect to MediaMosa 2'),
+    'description' => t('The MediaMosa connector enables other modules to connect on the MediaMosa REST interface. The configuration needs username, password and URL to connect to MediaMosa 2. You need to create or have a MediaMosa application login.'),
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mediamosa_connector_settings'),
     'access arguments' => array('administer mediamosa connector settings'),
@@ -101,7 +101,6 @@ function mediamosa_connector_block($op = 'list', $delta = 0, $edit = array()) {
  * Implement hook_settings().
  */
 function mediamosa_connector_settings() {
-  $max_result_set = 200;
 
   $form = array();
 
@@ -109,25 +108,28 @@ function mediamosa_connector_settings() {
     '#type' => 'fieldset',
     '#title' => t('Connection settings to MediaMosa 2 REST interface'),
     '#collapsible' => TRUE,
+    '#weight' => -5,
   );
-
+  $form['connection']['mediamosa_connector_url'] = array(
+    '#type' => 'textfield',
+    '#title' => t('URL'),
+    '#description' => t('Enter the URL of the interface you want to connect to.'),
+    '#required' => TRUE,
+    '#default_value' => '',
+  );
   $form['connection']['mediamosa_connector_username'] = array(
     '#type' => 'textfield',
     '#title' => t('Username'),
     '#description' => t('Enter the MediaMosa 2 user name that needs to connect.'),
     '#required' => TRUE,
+    '#default_value' => '',
   );
   $form['connection']['mediamosa_connector_password'] = array(
     '#type' => 'textfield',
     '#title' => t('Password'),
     '#description' => t('Password might be required to login.'),
     '#required' => FALSE,
-  );
-  $form['connection']['mediamosa_connector_uri'] = array(
-    '#type' => 'textfield',
-    '#title' => t('URL'),
-    '#description' => t('Enter the URL of the interface you want to connect to.'),
-    '#required' => TRUE,
+    '#default_value' => '',
   );
 
   /*
@@ -146,22 +148,25 @@ function mediamosa_connector_settings() {
     );
   }*/
 
+  $form['connection']['check_connection'] = array(
+    '#type' => 'submit',
+    '#value' => t('Check connection'),
+    '#submit' => array('mediamosa_connector_check_connection_submit'),
+    '#weight' => 1,
+  );
+
   $form['other'] = array(
     '#type' => 'fieldset',
     '#title' => t('Other settings'),
     '#collapsible' => TRUE,
-  );
-  $form['other']['mediamosa_connector_item_limit'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Maximum result set'),
-    '#description' => t('Maximum: @max', array('@max' => mediamosa_connector::MAX_RESULT_SET)),
-    '#maxlength' => 3,
-    '#size' => 3,
+    '#weight' => 0,
+
   );
   $form['other']['mediamosa_connector_debug'] = array(
     '#type' => 'checkbox',
     '#title' => t('Verbose MediaMosa request information'),
-    '#description' => t('Enable to include extra request information.'),
+    '#description' => t('Enable to view debug request information. This information is show in a drupal block. You must enable this block to view the debug contents.'),
+    '#default_value' => FALSE,
   );
   /*
   $form['other']['mediamosa_connector_menu_prefix'] = array(
@@ -172,37 +177,39 @@ function mediamosa_connector_settings() {
   );
 */
 
-  //$form['#submit'] = array('mediamosa_connector_settings_submit');
+  $form['#submit'] = array('mediamosa_connector_settings_submit');
+  $form = system_settings_form($form);
 
-  return system_settings_form($form);
+ // $form['buttons']['submit'] = array($form['buttons']['submit'], array('#type' => 'submit', '#value' => t('Check connection') ));
+  return $form;
 }
 
-/**
- * Our Maintenance settings form.
- *
- * @return array
- */
-function mediamosa_configuration() {
+function mediamosa_connector_check_connection_submit() {
+  // Create the mediamosa connector.
+  $o_connector = new mediamosa_connector();
 
-  // Build the settings form and enrich it with our settings collect hook.
-  return system_settings_form(module_invoke_all('mediamosa_configuration_collect'), FALSE);
+  // Do request will trigger login.
+  $response = $o_connector->request('asset?limit=1');
+
+  if ($response !== FALSE) {
+    drupal_set_message(t('Login test successful.'));
+  }
+  else {
+    drupal_set_message(t('Login test failed, please check your input.'), 'error');
+  }
 }
-
-
 
 /**
  * MediaMosa connector handler
  */
 function mediamosa_connector_settings_submit(&$form_state , $form) {
-  /*
-  foreach (array('mediamosa_connector_username', 'mediamosa_connector_password', 'mediamosa_connector_uri', 'mediamosa_connector_item_limit') as $subject) {
-    variable_set($subject, $form['values'][$subject]);
-  }
-  foreach (array('mediamosa_connector_debug', 'mediamosa_connector_masquerade_owner') as $subject) {
-    variable_set($subject, isset($form['values'][$subject]));
-  }
-  variable_set('mediamosa_connector_cookie', NULL);
 
+  // Remove so we re-login.
+  variable_del('mediamosa_connector_cookie');
+
+
+
+/*
   $vpx = new mediamosa_connector();
   $result = $vpx->request('GET', '/asset?limit=1');
   //var_dump($result, $vpx);

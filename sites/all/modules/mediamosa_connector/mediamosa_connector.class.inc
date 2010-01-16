@@ -36,107 +36,238 @@
 class mediamosa_connector {
 
   // ------------------------------------------------------------------ Consts.
+  // Maximum of items in result.
   const MAX_RESULT_SET = 200;
 
-/*
-  private $mediamosa_uri;
-  private $cookie = FALSE;
-  private $log = array();
-  private $rest;
+  // Maximum of entries in our log, lets not overflow memory.
+  // Log will store the last # of requests and will drop the first.
+  const MAX_LOG_ENTRIES = 250;
+
+  // ------------------------------------------------------------------ Members.
+  // The URL to connect to.
+  private $url;
+
+  // The cookie for the MediaMosa session.
+  private $cookie;
+
+  // The user to use.
   private $user_id;
+
+  // The group, optional.
   private $group_id;
   private $is_app_admin;
+  private $log = array();
 
-  public function __construct($user_id = FALSE, $group_id = FALSE, $is_app_admin = NULL) {
-    $this->rest = variable_get('mediamosa_use_rest_interface', TRUE);
-    $this->set_user($user_id, $group_id, $is_app_admin);
-    if ($this->rest) {
-      $this->mediamosa_uri = variable_get('mediamosa_connector_uri', NULL);
-      $this->cookie = variable_get('mediamosa_connector_cookie', NULL);
-    }
+  // ------------------------------------------------------------------ Constructor.
+  public function __construct() {
+    $this->url = variable_get('mediamosa_connector_url', NULL);
+    $this->cookie = variable_get('mediamosa_connector_cookie', NULL);
   }
 
-  private function _login() {
+  // ------------------------------------------------------------------ Public Functions.
+  /**
+   * @param string $uri
+   *  The REST uri.
+   * @param array $options
+   *   (optional) An array which can have one or more of following keys:
+   *   - headers
+   *       An array containing request headers to send as name/value pairs.
+   *   - method
+   *       A string containing the request method. Defaults to 'GET'.
+   *   - data
+   *       A string containing the request body.
+   *       Or
+   *       A array as name => value.
+   *   - max_redirects
+   *       An integer representing how many times a redirect may be followed.
+   *       Defaults to 1.
+   *   - timeout
+   *       A float representing the maximum number of seconds the function call
+   *       may take. The default is 60 seconds. If a timeout occurs, the error
+   *       code is set to the HTTP_REQUEST_TIMEOUT constant.
+   *
+   */
+  public function request($uri, array $options = array()) {
+
+    // If cookie not set, then login first.
+    if (!isset($this->cookie)) {
+      if (!self::do_login()) {
+        return FALSE;
+      }
+    }
+
+    // Try the request.
+    $response = self::do_request($uri, $options);
+
+    // If we return anything else but 1601, then return result. 1601 = failure login, cookie expired etc.
+    if ($response->xml->header->request_result_id != 1601) {
+      return $response;
+    }
+
+    // Login again.
+    if (!self::do_login()) {
+      return FALSE;
+    }
+
+    // Try the request again.
+    $response = self::do_request($uri, $options);
+
+    // Check again.
+    if ($response->xml->header->request_result_id != 1601) {
+      return $response;
+    }
+
+    return FALSE;
+  }
+
+  // ------------------------------------------------------------------ Private Functions.
+  private function do_login() {
+    // Remove cookie.
+    $this->cookie = NULL;
+    variable_del('mediamosa_connector_cookie');
+
     // get the authentication credentials
     $username = variable_get('mediamosa_connector_username', NULL);
     $password = variable_get('mediamosa_connector_password', NULL);
 
-    // step 1: request the challenge
-    $response = $this->_request('POST', '/login', array('dbus' => 'AUTH DBUS_COOKIE_SHA1 '. $username));
+    // Step 1: request the challenge
+    $data = array('dbus' => 'AUTH DBUS_COOKIE_SHA1 '. $username);
+    $method = 'POST';
+    $response = $this->do_request('login', array('method' => $method, 'data' => $data));
 
-    // parse the response
-    // @todo This function should not expect the vpx cookie to be the first value.
+    if (!$response || !$response->xml) {
+      return FALSE;
+    }
+
+    // Check if we got DATA response.
+    if (drupal_substr($response->xml->items->item->dbus, 0, 5) != 'DATA ') {
+      return FALSE;
+    }
+
+    // Parse the response.
     list($this->cookie) = explode(";", $response->headers['Set-Cookie']);
     variable_set('mediamosa_connector_cookie', $this->cookie);
-    preg_match('@<dbus>DATA vpx 0 (.*)</dbus>@', $response->data, $matches);
-    $challenge = $matches[1];
 
-    // step 2: send credentials
+    // Set DBUS data.
+    $dbus_data = explode(' ', $response->xml->items->item->dbus);
+
+    // Step 2: Do challenge.
+    $challenge = $dbus_data[3];
+    $random = substr(md5(microtime(TRUE)), 0, 10);
     $challenge_response = sha1(sprintf('%s:%s:%s', $challenge, $random, $password));
-    $response = $this->_request('POST', '/login', array('dbus' => sprintf('DATA %s %s', $random, $challenge_response)));
+    $data = array('dbus' => sprintf('DATA %s %s', $random, $challenge_response));
+    $method = 'POST';
+    $response = $this->do_request('login', array('method' => $method, 'data' => $data));
+    if (!$response || !$response->xml) {
+      return FALSE;
+    }
 
-    // parse the response
-    preg_match('@<dbus>(.*)</dbus>@', $response->data, $matches);
-    $result = $matches[1];
-
-    // return TRUE or FALSE
-    return (substr($result, 0, 2) === 'OK');
+    // Lets check if its ok.
+    return drupal_substr($response->xml->items->item->dbus, 0, 2) == 'OK';
   }
 
-  private function _request($method, $uri, $data = NULL) {
-    $data_log = '';
-
-    // build the HTTP header
-    $headers = array();
-    if (!is_null($this->cookie)) {
-      $headers['Cookie'] = $this->cookie;
-    }
-    if (strcasecmp($method, 'POST') === 0) {
-      $headers['Content-Type'] = 'application/x-www-form-urlencoded';
-    }
-    if (!is_null($data)) {
-      if (is_array($data)) {
-        $data_log = '('. count($data) .')';
-        $data = http_build_query($data, '', '&');
-      }
-      else {
-        $data_log = '(custom query)';
-      }
-    }
-
-    $start = microtime(TRUE);
-    $response = drupal_http_request(
-      $this->mediamosa_uri . $uri, // url
-      $headers, // headers
-      $method, // method
-      $data, // data
-      0 // retry
+  /**
+   * @param string $uri
+   *  The REST uri.
+   * @param array $options
+   *   (optional) An array which can have one or more of following keys:
+   *   - headers
+   *       An array containing request headers to send as name/value pairs.
+   *   - method
+   *       A string containing the request method. Defaults to 'GET'.
+   *   - data
+   *       A string containing the request body.
+   *       Or
+   *       A array as name => value.
+   *   - max_redirects
+   *       An integer representing how many times a redirect may be followed.
+   *       Defaults to 1.
+   *   - timeout
+   *       A float representing the maximum number of seconds the function call
+   *       may take. The default is 60 seconds. If a timeout occurs, the error
+   *       code is set to the HTTP_REQUEST_TIMEOUT constant.
+   */
+  private function do_request($uri, array $options = array()) {
+    // Merge the default options.
+    $options += array(
+      'headers' => array(),
+      'method' => 'GET',
+      'data' => NULL,
+      'max_redirects' => 1, // REST call should not redirect more than 1.
+      'timeout' => 60,
     );
 
-    // log the request
-    $this->log[] = array('method' => $method . $data_log, 'uri' => $this->mediamosa_uri . $uri, 'response_time' => round(microtime(TRUE) - $start, 3));
-    if (variable_get('mediamosa_connector_debug', FALSE)) {
+    // Set cookie.
+    if (isset($this->cookie)) {
+      $options['headers']['Cookie'] = $this->cookie;
+    }
+
+    if ($options['method'] == 'POST') {
+      $options['headers']['Content-Type'] = 'application/x-www-form-urlencoded';
+    }
+
+    $data_log = '';
+    if (isset($options['data'])) {
+      if (is_array($options['data'])) {
+        $data_log = ' ('. count($options['data']) .')';
+        $options['data'] = http_build_query($options['data'], '', '&');
+      }
+      else {
+        $data_log = ' ('. count(explode('&', $options['data'])) .')';
+      }
+    }
+
+    $url = $this->url;
+    $url .= (drupal_substr($url, -1, 1) == '/' ? '' : '/'); // Make sure it ends with '/'.
+    $url .= $uri;
+
+    $start = microtime(TRUE);
+    $response = mediamosa_http::drupal_http_request($url, $options);
+    $end = microtime(TRUE);
+
+    // If the log size overflows our buffer, lose the first.
+    if (count($this->log) > self::MAX_LOG_ENTRIES) {
+      array_shift($this->log);
+    }
+
+    // Log the request.
+    $this->log[] = array(
+      'method' => $options['method'] . $data_log,
+      'url' => $url,
+      'response_time' => round($end - $start, 3)
+    );
+
+    if (variable_get('mediamosa_connector_debug')) {
       $_SESSION['mediamosa_connector_debug_info'] = $this->log;
     }
 
-    // check the result for success (200 == OK)
-    if ((int)$response->code !== 200) {
+    // Must be HTTP 200 response.
+    if ((int)$response->code != 200) {
       return FALSE;
     }
+
+    // Set to empty.
+    $response->xml = NULL;
+
+    // If we detect xml output, fill the xml member.
+    if (strpos($response->headers['Content-Type'], 'text/xml') !== FALSE || drupal_substr($response->data, 0, strlen('<?xml')) == '<?xml') {
+      try {
+        $response->xml = new SimpleXMLElement($response->data);
+      }
+      catch (Exception $e) {
+      }
+    }
+
+    // Return result.
     return $response;
   }
 
-  public function set_user($user_id = FALSE, $group_id = FALSE, $is_app_admin = NULL) {
-    global $user;
-    if (!isset($user->profile_group_id) && function_exists('profile_load_profile')) {
-      profile_load_profile($user);
-    }
-    $username = (isset($user->name)) ? $user->name : variable_get('anonymous', 'Anonymous');
-    $this->user_id = ($user_id !== FALSE) ? $user_id : $username;
-    $this->group_id = ($group_id !== FALSE) ? $group_id : $user->profile->group_id;
-    $this->is_app_admin = ($is_app_admin !== NULL) ? $is_app_admin : user_access('wle administrator');
-    $this->masquerade_owner = variable_get('mediamosa_connector_masquerade_owner', FALSE);
-  }
+/*
+  private $log = array();
+
+
+
+
 
   private function add_user_info($uri, &$data = NULL) {
     $uri .= (strpos($uri, '?') !== FALSE) ? '&' : '?';

@@ -26,27 +26,22 @@
 
  /**
   * @file
-  * REST calls for status page.
+  * The configuration module helper functions.
   */
 
-/**
- * URI: /get_current_mount_point
- * Method: GET
- */
-class mediamosa_rest_call_execute_default_tests extends mediamosa_rest_call {
+function mediamosa_configuration_watchdog() {
+  $content = t('List of the 50 most recent log entries.');
 
-  // ------------------------------------------------------------------ Functions (public).
-  public function get_var_setup() {
-    $a_var_setup = array();
+  $levels = watchdog_severity_levels();
+  $types = array('job', 'job_handler', 'job_server', 'page not found', 'server');
+  $result = db_query("SELECT * FROM {watchdog} WHERE type IN ('". implode("', '", $types) ."') ORDER BY timestamp DESC LIMIT 50");
 
-    // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+  $rows = array();
+  foreach ($result as $row) {
+    $rows[] = array($row->type, nl2br($row->message), $levels[$row->severity], format_date($row->timestamp, 'small'));
   }
 
-  public function do_call() {
-    $o_mediamosa = mediamosa::get();
+  $content .= theme('table', array(t('Type'), t('Message'), t('Severity'), t('Date')), $rows);
 
-    // Run them.
-    mediamosa_maintenance_status::run_simple_tests();
-  }
+  return $content;
 }

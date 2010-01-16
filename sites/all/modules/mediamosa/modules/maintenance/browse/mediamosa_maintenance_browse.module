@@ -29,8 +29,8 @@
   */
 
 // Permissions.
-define('MEDIAMOSA_MAINTENACE_BROWSE_PERM_BROWSE_ASSETS', 'view mediamosa maintenance browse assets');
-define('MEDIAMOSA_MAINTENACE_BROWSE_PERM_BROWSE_COLLECTIONS', 'view mediamosa maintenance browse collections');
+define('MEDIAMOSA_MAINTENACE_BROWSE_PERM_BROWSE_ASSETS', 'mediamosa maintenance browse assets');
+define('MEDIAMOSA_MAINTENACE_BROWSE_PERM_BROWSE_COLLECTIONS', 'mediamosa maintenance browse collections');
 
 // SESSIONs.
 define('MEDIAMOSA_MAINTENACE_BROWSE_ASSETS_SESSION', 'mediamosa_maintenance_browse_assets_session');
@@ -47,26 +47,40 @@ require_once 'mediamosa_maintenance_browse_collection.inc';
 function mediamosa_maintenance_browse_menu() {
   $items = array();
 
-  $items['mediamosa/browse/asset'] = array(
+
+  /*
+  $items['admin/mediamosa/browse'] = array(
+    'title' => 'Browse MediaMosa Contents',
+    'description' => 'View assets and collections currently in our database.',
+    'page callback' => 'mediamosa_admin_menu_block_page',
+    'access arguments' => array('mediamosa maintenance browse'),
+    //'file' => 'mediamosa.admin.inc',
+  );
+
+  $items['admin/mediamosa/browse/asset'] = array(
     'title' => 'MediaMosa asset browser',
+    'description' => 'View assets currently in our database.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mediamosa_maintenance_browse_asset_form'),
     'access arguments' => array(MEDIAMOSA_MAINTENACE_BROWSE_PERM_BROWSE_ASSETS),
   );
-  $items['mediamosa/browse/collection'] = array(
+
+  $items['admin/mediamosa/browse/collection'] = array(
     'title' => 'MediaMosa collection browser',
+    'description' => 'View collections currently in our database.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mediamosa_maintenance_browse_collection_form'),
     'access arguments' => array(MEDIAMOSA_MAINTENACE_BROWSE_PERM_BROWSE_COLLECTIONS),
   );
-  $items['mediamosa/browse/asset/%'] = array(
+
+  $items['admin/mediamosa/admin/browse/asset/%'] = array(
     'title' => 'MediaMosa asset details',
     'type' => MENU_CALLBACK,
     'page callback' => 'mediamosa_maintenance_browse_asset_details',
     'page arguments' => array(1),
     'access arguments' => array(MEDIAMOSA_MAINTENACE_BROWSE_PERM_BROWSE_ASSETS),
   );
-
+*/
   return $items;
 }
 

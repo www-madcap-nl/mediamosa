@@ -288,7 +288,6 @@ class mediamosa {
     foreach ($args as $key => $value) {
       switch ($key[0]) {
         case '@':
-        case '%':
         default:
           $args[$key] = check_plain($value);
           break;
@@ -525,4 +524,12 @@ class mediamosa {
     // Return the new passwrd.
     return $passwrd;
   }
+
+  /**
+   * Test if we are running on windows.
+   */
+  static public function is_windows_platform() {
+    return (mediamosa_unicode::substr(PHP_OS, 0, 3) == "WIN");
+  }
+
 }

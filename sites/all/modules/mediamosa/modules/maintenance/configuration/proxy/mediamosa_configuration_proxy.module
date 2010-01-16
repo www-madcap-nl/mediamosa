@@ -42,9 +42,9 @@ function mediamosa_configuration_proxy_mediamosa_configuration_collect() {
   $form['settings_proxy']['mediamosa_curlproxy_http'] = array(
     '#type' => 'textfield',
     '#title' => t('Proxy Url'),
-    '#description' => t('Current proxy url.'),
+    '#description' => t('The proxy url is used when HTTP requests can not be reached directly because of firewalls or other reasons. These requests are f.e. requests to signal upload completion or when a job has been finished. Leave empty if servers can access outside webservers without problems.'),
     '#required' => FALSE,
-    '#default_value' => mediamosa::variable_get('mediamosa_curlproxy_http', ''),
+    '#default_value' => '',// Set empty, so its filled.
   );
 
   return $form;

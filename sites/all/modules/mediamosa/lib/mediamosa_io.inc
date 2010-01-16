@@ -172,4 +172,23 @@ class mediamosa_io {
   static public function symlink($target, $link) {
     return symlink($target, $link);
   }
+
+  /**
+   * Tells whether a file exists and is readable.
+   *
+   * @param string $filename
+   */
+  static public function is_readable($filename) {
+    return is_readable($filename);
+  }
+
+
+  /**
+   * Tells whether the filename is writable.
+   *
+   * @param string $filename
+   */
+  static public function is_writable($filename) {
+    return is_writable($filename);
+  }
 }

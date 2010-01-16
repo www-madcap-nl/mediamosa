@@ -33,11 +33,10 @@ class mediamosa_settings {
   // ------------------------------------------------------------------ Consts.
   const MINIMUM_PHP_VERSION = '5.1.0';
 
-  // Default permissions.
-  const MEDIAMOSA_PERM_ADMINISTER = 'administer mediamosa'; // All rights
-  const MEDIAMOSA_PERM_VIEW = 'view mediamosa'; // View rights
-  const MEDIAMOSA_PERM_REST_ACCESS = 'access mediamosa rest';
-  const MEDIAMOSA_PERM_ADMINISTRATION_ACCESS = 'access mediamosa';
+  // Maintenance/config page access
+  const MEDIAMOSA_PERM_ACCESS_ADMINISTRATION = 'access mediamosa';
+  const MEDIAMOSA_PERM_ADMINISTER = 'administer mediamosa';
+
 
   // Length of the unique ID generator, is always this length.
   const UUID_LENGTH = 24;

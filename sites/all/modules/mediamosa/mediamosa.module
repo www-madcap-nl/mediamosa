@@ -46,6 +46,7 @@ function mediamosa_requirements($phase) {
   $a_requirements = array();
 
   if ($phase == 'runtime') {
+
     // We require PHP 5 or higher
     if (version_compare(phpversion(), mediamosa_settings::MINIMUM_PHP_VERSION) < 0) {
       $a_requirements['php'] = array(
@@ -61,7 +62,7 @@ function mediamosa_requirements($phase) {
 
     if (!isset($mediamosa_installation_id) || drupal_strlen($mediamosa_installation_id) == 0 || drupal_strlen($mediamosa_installation_id) > mediamosa_job_server_db::INSTALL_ID_LENGTH) {
       $a_requirements['mediamosa'] = array(
-        'title' => $t("Mediamosa installation ID ('mediamosa_installation_id')"),
+        'title' => $t("MediaMosa installation ID ('mediamosa_installation_id')"),
         'value' => isset($mediamosa_installation_id) ? $mediamosa_installation_id : 'Not defined',
         'description' => $t("The configuration setting in settings.php 'mediamosa_installation_id' is either not set or is too long, make sure its set and not longer than %length characters.", array('%length' => mediamosa_job_server_db::INSTALL_ID_LENGTH)),
         'severity' => REQUIREMENT_ERROR
@@ -73,52 +74,13 @@ function mediamosa_requirements($phase) {
 }
 
 /**
- * Implement hook_menu().
- */
-
-function mediamosa_menu() {
-  $items = array();
-/*
-  $items[MEDIAMOSA_MENU_PATH] = array(
-    'type' => MENU_CALLBACK,
-    'page callback' => '_mediamosa',
-    'access arguments' => array(mediamosa_settings::MEDIAMOSA_PERM_REST_ACCESS),
-  );
-*/
-  // Menu items that are basically just menu blocks.
-  $items['admin/mediamosa'] = array(
-    'title' => 'MediaMosa 2',
-    'description' => 'Configurate and view MediaMosa settings and pages.',
-    'position' => 'left',
-    'weight' => -20,
-    'page callback' => 'mediamosa_main_admin_page',
-    'access arguments' => array(mediamosa_settings::MEDIAMOSA_PERM_ADMINISTRATION_ACCESS),
-    'file' => 'mediamosa.admin.inc',
-  );
-/*
-  $items['admin/structure'] = array(
-    'title' => 'Structure',
-    'description' => 'Control how your site looks and feels.',
-    'position' => 'right',
-    'weight' => -8,
-    'page callback' => 'system_admin_menu_block_page',
-    'access arguments' => array('access administration pages'),
-    'file' => 'system.admin.inc',
-  );
-  */
-
-  return $items;
-}
-
-/**
  * Implement hook_permission().
- * (future expansion when drupal users are used instead of apps).
  */
 function mediamosa_permission() {
   return array(
-    mediamosa_settings::MEDIAMOSA_PERM_REST_ACCESS =>  array(
-      'title' => t('Access rest calls'),
-      'description' => t('Users with this permission may access the MediaMosa restcalls.'),
+    mediamosa_settings::MEDIAMOSA_PERM_ACCESS_ADMINISTRATION =>  array(
+      'title' => t('Access MediaMosa Administration'),
+      'description' => t('View the MediaMosa configuration, maintenance and other pages.'),
     ),
   );
 }

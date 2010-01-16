@@ -185,12 +185,7 @@ class mediamosa_configuration_storage {
    * @return string
    */
   static public function mount_point_get() { // vpx_get_san_nas_base_path
-    if (substr(PHP_OS, 0, 3) == "WIN") {
-      return self::windows_get();
-    }
-
-    // By default we return linux path.
-    return self::linux_get();
+    return mediamosa::is_windows_platform() ? self::windows_get() : self::linux_get();
   }
 
   /**
