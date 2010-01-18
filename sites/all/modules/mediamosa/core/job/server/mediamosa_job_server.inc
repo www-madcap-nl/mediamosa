@@ -44,6 +44,57 @@ class mediamosa_job_server {
   }
 
   /**
+   * Triggert every minute.
+   *
+   * Will timeout on itself after 2 minutes.
+   *
+   */
+  static public function run_parse_queue() {
+    $run_last = variable_get('mediamosa_jobserver_cron_last', NULL);
+
+    // may run? (0 - 60 seconds)
+    if (round(REQUEST_TIME - $run_last) < 60) {
+      return; // Still running.
+    }
+
+    // Run.
+    self::parse_queue();
+  }
+  /**
+   * Parse the queue jobs.
+   *
+   * This function is the engine of the job server. Should be called at
+   * regular intervals.
+   *
+   * 1. Get a list of all jobs that are not finished, failed or canceled.
+   * 2. For all jobs with status WAITING, the job is started.
+   * 3. For all running jobs de status is updated.
+   *
+   * 1.x: vpx_jobserver_parse_queue.
+   */
+  static public function parse_queue() {
+    // Retrieve all jobs of this server.
+    $result = mediamosa_db::db_select(mediamosa_job_server_db::TABLE_NAME, 'js')
+      ->fields('js')
+      ->condition(mediamosa_job_server_db::INSTALL_ID, mediamosa::variable_get('mediamosa_installation_id', 'default'))
+      ->condition(mediamosa_job_server_db::JOB_STATUS, array(mediamosa_job_server_db::JOB_STATUS_FINISHED, mediamosa_job_server_db::JOB_STATUS_FAILED, mediamosa_job_server_db::JOB_STATUS_CANCELLED), 'NOT IN')
+      ->orderBy(mediamosa_job_server_db::ID, 'ASC')
+      ->execute();
+
+    foreach ($result as $a_job_server_job) {
+      if ($a_job_server_job[mediamosa_job_server_db::JOB_STATUS] == mediamosa_job_server_db::JOB_STATUS_WAITING) {
+        // New job, start it.
+        self::waiting_job_start($a_job_server_job);
+      }
+      else {
+        // Running job, update it.
+        self::running_job_update($a_job_server_job);
+      }
+    }
+  }
+
+
+  /**
    * Create analyse server job.
    *
    * @param $job_id
@@ -159,39 +210,6 @@ class mediamosa_job_server {
     return mediamosa_db::db_insert(mediamosa_job_server_db::TABLE_NAME)
       ->fields($a_fields)
       ->execute();
-  }
-
-  /**
-   * Parse the queue jobs.
-   *
-   * This function is the engine of the job server. Should be called at
-   * regular intervals.
-   *
-   * 1. Get a list of all jobs that are not finished, failed or canceled.
-   * 2. For all jobs with status WAITING, the job is started.
-   * 3. For all running jobs de status is updated.
-   *
-   * 1.x: vpx_jobserver_parse_queue.
-   */
-  static public function parse_queue() {
-    // Retrieve all jobs of this server.
-    $result = mediamosa_db::db_select(mediamosa_job_server_db::TABLE_NAME, 'js')
-      ->fields('js')
-      ->condition(mediamosa_job_server_db::INSTALL_ID, mediamosa::variable_get('mediamosa_installation_id', 'default'))
-      ->condition(mediamosa_job_server_db::JOB_STATUS, array(mediamosa_job_server_db::JOB_STATUS_FINISHED, mediamosa_job_server_db::JOB_STATUS_FAILED, mediamosa_job_server_db::JOB_STATUS_CANCELLED), 'NOT IN')
-      ->orderBy(mediamosa_job_server_db::ID, 'ASC')
-      ->execute();
-
-    foreach ($result as $a_job_server_job) {
-      if ($a_job_server_job[mediamosa_job_server_db::JOB_STATUS] == mediamosa_job_server_db::JOB_STATUS_WAITING) {
-        // New job, start it.
-        self::waiting_job_start($a_job_server_job);
-      }
-      else {
-        // Running job, update it.
-        self::running_job_update($a_job_server_job);
-      }
-    }
   }
 
   /**

@@ -1075,3 +1075,53 @@ class mediamosa_rest_call_job_cancel extends mediamosa_rest_call {
     mediamosa_job::cancel_job($app_id, $job_id, $user_id);
   }
 }
+
+/**
+ * URI: /cron/jobschedular
+ * Method: GET
+ */
+class mediamosa_rest_call_cron_jobschedular extends mediamosa_rest_call {
+
+  // ------------------------------------------------------------------ Functions (public).
+  public function get_var_setup() {
+    $a_var_setup = array();
+
+    // Enrich with required REST vars.
+    return self::get_var_setup_default($a_var_setup);
+  }
+
+  public function do_call() {
+    $o_mediamosa = mediamosa::get();
+
+    // Run them.
+    mediamosa_job_schedular::run_parse_queue();
+
+    // Set ok.
+    $o_mediamosa->set_result_okay();
+  }
+}
+
+/**
+ * URI: /cron/jobserver
+ * Method: GET
+ */
+class mediamosa_rest_call_cron_jobserver extends mediamosa_rest_call {
+
+  // ------------------------------------------------------------------ Functions (public).
+  public function get_var_setup() {
+    $a_var_setup = array();
+
+    // Enrich with required REST vars.
+    return self::get_var_setup_default($a_var_setup);
+  }
+
+  public function do_call() {
+    $o_mediamosa = mediamosa::get();
+
+    // Run them.
+    mediamosa_job_server::run_parse_queue();
+
+    // Set ok.
+    $o_mediamosa->set_result_okay();
+  }
+}

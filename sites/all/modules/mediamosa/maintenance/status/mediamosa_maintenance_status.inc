@@ -58,6 +58,7 @@
       'MediaMosaAppAuthenticationTestCase',
       'MediaMosaConfigurationStorageTestCase',
       'MediaMosaAssetMediafileDownloadTestCase',
+      'MediaMosaAssetMediafileStillDownloadTestCase',
     );
   }
 
@@ -105,9 +106,9 @@
    * Run the tests one by one.
    */
   static public function run_simple_tests() {
-    if (!self::may_run()) {
-      //self::log('Already running, skipping');
-      return; // Prevent us running twice.
+    // Prevent us running twice and make sure we are enabled.
+    if (!self::may_run() || !mediamosa_maintenance_status::is_enabled()) {
+      return;
     }
 
     // Set time when we started, so we aren't twice.
@@ -149,16 +150,6 @@
     // Store the unrun stuff in our static.
     self::test_results($a_test_results);
 
-    // If we are disabled, then store the results and exit.
-    if (!mediamosa_maintenance_status::is_enabled()) {
-      // Set end point run of runned tests.
-      $a_test_results['#ended_at'] = mediamosa::utc_current_timestamp_now(TRUE);
-
-      // Now store we have in variable.
-      mediamosa::variable_set('mediamosa_test_results', $a_test_results);
-      return; // not enabled.
-    }
-
     // Set the shutdown function so we can see tests that still where not completed.
     register_shutdown_function('mediamosa_maintenance_status::shutdown');
 
@@ -181,7 +172,6 @@
 
       // Store in static.
       self::test_results($a_test_results);
-      mediamosa::variable_set('mediamosa_test_results', $a_test_results);
     }
 
     // Set end point run of all tests.
@@ -207,6 +197,9 @@
     if (isset($a_test_results['#ended_at'])) {
       return; // no need.
     }
+
+    // Log it.
+    self::log('run_simple_tests() overrun.', array(), WATCHDOG_EMERG);
 
     // Set end point run of runned tests.
     $a_test_results['#ended_at'] = mediamosa::utc_current_timestamp_now(TRUE);

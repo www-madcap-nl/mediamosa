@@ -296,7 +296,7 @@ class mediamosa_ticket {
       strtr(
         'find @ticket_play_location/. -maxdepth 2 -mindepth 1 -name "@wildmatch" -type l -mmin +@ticket_expiration -delete',
         array(
-          '@ticket_still_location' => $ticket_play_location,
+          '@ticket_play_location' => $ticket_play_location,
           '@wildmatch' => str_repeat('?', mediamosa_settings::UUID_LENGTH),
           '@ticket_expiration' => (int)(mediamosa_settings::TICKET_EXPIRATION_PLAY / 60),
         )
@@ -308,7 +308,7 @@ class mediamosa_ticket {
       strtr(
         'find @ticket_play_location/. -maxdepth 2 -mindepth 1 -name "@wildmatch.*" -type l -mmin +@ticket_expiration -delete',
         array(
-          '@ticket_still_location' => $ticket_play_location,
+          '@ticket_play_location' => $ticket_play_location,
           '@wildmatch' => str_repeat('?', mediamosa_settings::UUID_LENGTH),
           '@ticket_expiration' => (int)(mediamosa_settings::TICKET_EXPIRATION_PLAY / 60),
         )
@@ -338,7 +338,7 @@ class mediamosa_ticket {
         array(
           '@ticket_download_location' => $ticket_download_location,
           '@wildmatch' => str_repeat('?', mediamosa_settings::UUID_LENGTH),
-          '@ticket_expiration' => (int)(mediamosa_settings::DOWNLOAD_TICKET_LOCATION / 60),
+          '@ticket_expiration' => (int)(mediamosa_settings::TICKET_EXPIRATION_DOWNLOAD / 60),
         )
       )
     );
@@ -350,7 +350,7 @@ class mediamosa_ticket {
         array(
           '@ticket_download_location' => $ticket_download_location,
           '@wildmatch' => str_repeat('?', mediamosa_settings::UUID_LENGTH),
-          '@ticket_expiration' => (int)(mediamosa_settings::DOWNLOAD_TICKET_LOCATION / 60),
+          '@ticket_expiration' => (int)(mediamosa_settings::TICKET_EXPIRATION_DOWNLOAD / 60),
         )
       )
     );
@@ -365,7 +365,7 @@ class mediamosa_ticket {
         array(
           '@ticket_still_location' => $ticket_still_location,
           '@wildmatch' => str_repeat('?', mediamosa_settings::UUID_LENGTH),
-          '@ticket_expiration' => (int)(mediamosa_settings::STILL_TICKET_EXPIRATION / 60),
+          '@ticket_expiration' => (int)(mediamosa_settings::TICKET_EXPIRATION_STILL / 60),
         )
       )
     );
@@ -377,7 +377,7 @@ class mediamosa_ticket {
         array(
           '@ticket_still_location' => $ticket_still_location,
           '@wildmatch' => str_repeat('?', mediamosa_settings::UUID_LENGTH),
-          '@ticket_expiration' => (int)(mediamosa_settings::STILL_TICKET_EXPIRATION / 60),
+          '@ticket_expiration' => (int)(mediamosa_settings::TICKET_EXPIRATION_STILL / 60),
         )
       )
     );

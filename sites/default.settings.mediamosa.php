@@ -96,13 +96,3 @@ $conf['mediamosa_job_processor'] = TRUE;
  * MediaMosa background monitor.
  */
 $conf['mediamosa_monitor'] = TRUE;
-
-/**
- * Set home page to our interface. If you need the front page of drupal
- * then change the setting to 'node'.
- */
-$conf['site_frontpage'] = 'admin/mediamosa';
-
-//define('MEDIAMOSA_REST_HOST', 'localhost');
-//define('MEDIAMOSA_BUILD_URL', '');
-//define('MEDIAMOSA_URL', 'http://' . MEDIAMOSA_REST_HOST . '/' . MEDIAMOSA_BUILD_URL);

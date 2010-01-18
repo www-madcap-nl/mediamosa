@@ -239,17 +239,18 @@ class mediamosa_type {
         $checked_param_value = (string)$mixed_param_value;
         break;
 
-      case self::TYPE_ALPHA_NUM:
-        if (!ctype_alnum($mixed_param_value) && $mixed_param_value != '') {
-          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
-        }
-
       // Check ticket id for download/still downloads.
       case self::TYPE_TICKET_ID:
         if (preg_match("@^([a-zA-Z0-9]+)$@", $mixed_param_value, $matches) !== 1) {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
         }
+        $checked_param_value = (string)$mixed_param_value;
+        break;
 
+      case self::TYPE_ALPHA_NUM:
+        if (!ctype_alnum($mixed_param_value) && $mixed_param_value != '') {
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
+        }
       // FIXME: Mediamosa 1.x doesnt check the input here...
       case self::TYPE_SUPPLEMENT_ID:
       case self::TYPE_USER_ID:

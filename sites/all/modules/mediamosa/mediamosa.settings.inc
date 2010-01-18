@@ -124,6 +124,14 @@ class mediamosa_settings {
   const UPLOAD_PUT_CHUNK_SIZE = 4096;
   const UPLOAD_PROGRESS_INTERVAL = 5;
 
+  // Asset garbage collector
+  const ASSET_GARBAGE_COLLECTOR_CRON_INTERVAL = 86400; // 24 hours
+  const ASSET_GARBAGE_COLLECTOR_ASSET_TIMEOUT = 1209600; // 2 weeks
+
+  // Cron timeout for ticket cleanup.
+  const TICKET_CRON_INTERVAL = 600; // 10 minutes.
+
+
   // ------------------------------------------------------------------ Functions.
   /**
    * returns the path where the lua scripts are.

@@ -107,12 +107,14 @@ function _mediamosa_maintenance_status() {
   foreach ($a_status['a_tests'] as $name => $a_test) {
     $class = 'simpletest-pass';
 
-    if (!isset($a_test['results'])) {
+    if (!isset($a_test['results']) || empty($a_test['results'])) {
       $a_test['results'] = array(
         '#fail' => 0,
         '#exception' => 0,
         '#pass' => 0,
       );
+
+      $a_test['ended'] = $a_test['started'] = 0;
     }
 
     if ($a_test['results']['#fail'] > 0 || $a_test['results']['#exception'] > 0 || $a_test['results']['#pass'] == 0) {

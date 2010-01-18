@@ -19,6 +19,8 @@ dubble entries(!)
 
 select *, count(*) as total from aut_object group by `aut_object_type`,`aut_object_id`,`aut_type`,`aut_id` having total > 1;
 
+update mediamosa_server set uri = 'http://download.mediamosa2.local/still/{TICKET}' where uri = 'http://xienix/still/{TICKET}';
+update mediamosa_server set uri = 'http://download.mediamosa2.local/download/{TICKET}' where uri = 'http://xienix/download/{TICKET}';
 
 
 Contains reminders and notes collected during migration.

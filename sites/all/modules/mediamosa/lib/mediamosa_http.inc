@@ -43,9 +43,9 @@ class mediamosa_http {
    */
   static public function do_internal_call($ip_address, $rest_url, $data = NULL, $method = self::METHOD_GET) {
     $url = strtr(
-      'http://@ipaddress/internal/@rest_url',
+      'http://@hostname/internal/@rest_url',
       array(
-        '@ipaddress' => $ip_address,
+        '@hostname' => $ip_address,
         '@rest_url' =>  $rest_url
       )
     );
@@ -77,18 +77,27 @@ class mediamosa_http {
    *     name => value pair for http header.
    *   - use_curlproxy
    *     set to TRUE to enable call through curlproxy (if specified).
+   *   - do_internal
+   *     Add the internal pass to the header. Remember to add /internal yourself to the url.
    */
   static public function do_head_call($url, array $a_options = array()) {
     // Set defaults.
     $a_options += array(
       'use_curlproxy' => FALSE,
       'headers' => array(),
+      'do_internal' => FALSE,
     );
 
     $curlproxy_http = NULL;
     if ($a_options['use_curlproxy']) {
       // Get the proxy url.
       $curlproxy_http = mediamosa::variable_get('mediamosa_curlproxy_http');
+    }
+
+    //
+    if ($a_options['do_internal']) {
+      // Include the internal password so we gain access.
+      $a_options['headers'][mediamosa_settings::X_MEDIAMOSA_INTERNAL_PASS] = mediamosa::get_internal_password();
     }
 
     // Init curl.

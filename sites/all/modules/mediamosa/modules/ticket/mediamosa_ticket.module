@@ -26,18 +26,21 @@
 
  /**
   * @file
-  *
+  * The ticket module.
   */
 
+ /*
+  * Implements hook_cron.
+  */
+function mediamosa_ticket_cron() {
+  $run_last = variable_get('mediamosa_ticket_cron_last', NULL);
 
+  // may run?
+  if (round(REQUEST_TIME - $run_last) >= mediamosa_settings::TICKET_CRON_INTERVAL) {
+    // For the next time...
+    variable_set('mediamosa_ticket_cron_last', REQUEST_TIME);
 
-
-
-
-
-
-
-
-
-
-
+    // Play proxy ticket cleanup.
+    mediamosa_ticket::ticket_cleanup();
+  }
+}

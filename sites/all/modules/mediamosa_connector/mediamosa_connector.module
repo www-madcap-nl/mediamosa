@@ -189,10 +189,19 @@ function mediamosa_connector_check_connection_submit() {
   $o_connector = new mediamosa_connector();
 
   // Do request will trigger login.
-  $response = $o_connector->request('asset?limit=1');
+  $response = $o_connector->request_internal('rest');
 
   if ($response !== FALSE) {
-    drupal_set_message(t('Login test successful.'));
+    drupal_set_message(t('Internal call test successful.'));
+
+    // Do request will trigger login.
+    $response = $o_connector->request('rest');
+    if ($response !== FALSE) {
+      drupal_set_message(t('Internal call test successful.'));
+    }
+    else {
+      drupal_set_message(t('Login test sucess.'));
+    }
   }
   else {
     drupal_set_message(t('Login test failed, please check your input.'), 'error');

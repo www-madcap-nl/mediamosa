@@ -81,7 +81,6 @@ class mediamosa_io {
    */
   static public function unlink($filename) {
     if (!file_exists($filename)) {
-      self::log("Unable to remove file '@filename', file was not found.", array('@filename' => $filename));
       return TRUE;
     }
 

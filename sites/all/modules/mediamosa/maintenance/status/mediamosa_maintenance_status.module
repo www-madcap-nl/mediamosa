@@ -26,17 +26,24 @@
 
  /**
   * @file
-  * The mediamosa status module.
-  */
+  * De status module.
+  * */
 
 /**
  * Trigger status page.
  */
 function mediamosa_maintenance_status_cron() {
   // Just trigger, it has his own protection on overrun.
-  $o_connector = new mediamosa_connector();
+  $hostname = variable_get('mediamosa_cron_uri_app', 'localhost');
+  $use_localhost = variable_get('mediamosa_cron_uri_app_local', FALSE);
 
-  $response = $o_connector->request_internal_head('execute_default_tests?app_id=1');
+  $a_options = array('do_internal' => TRUE, 'method' => 'HEAD');
+  if ($use_localhost) {
+    $a_options['headers']['Host'] = $hostname;
+    $hostname = 'localhost';
+  }
+
+  mediamosa_http::do_head_call('http://' . $hostname  . '/internal/cron/maintenance_status', $a_options);
 }
 
 /**
@@ -46,8 +53,8 @@ function mediamosa_maintenance_status_mediamosa_register_rest_call() {
 
   $a_rest_calls = array();
 
-  $a_rest_calls['execute_default_tests'][mediamosa_rest_call::METHOD_GET] = array(
-    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_execute_default_tests',
+  $a_rest_calls['cron/maintenance_status'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_maintenance_status',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::DESCRIPTION => 'Execute the current default unit tests.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa',

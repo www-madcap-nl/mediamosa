@@ -42,6 +42,60 @@ class mediamosa_job_schedular {
   }
 
   /**
+   * Triggert every minute.
+   *
+   * Will timeout on itself after 2 minutes.
+   *
+   */
+  static public function run_parse_queue() {
+    $run_last = variable_get('mediamosa_jobschedular_cron_last', NULL);
+
+    // may run? (0 - 60 seconds)
+    if (round(REQUEST_TIME - $run_last) < 60) {
+      return; // Still running.
+    }
+
+    // A period of 60 to 120 seconds we wait till its killed (or done running).
+    $run_last = variable_get('mediamosa_jobstatus_cron_running', NULL);
+    if (round(REQUEST_TIME - $run_last) < 120) {
+      self::log('run_parse_queue() in safety timeout zone.');
+      return; // In timeout zone.
+    }
+
+    // If we get here then we can go.
+    variable_set('mediamosa_jobschedular_cron_last', REQUEST_TIME);
+
+    // We set this to NULL when we are done.
+    variable_set('mediamosa_jobschedular_cron_running', REQUEST_TIME);
+
+    // Set max run time on 120 sec.
+    set_time_limit(120);
+
+    for ($x = 0; $x < 6; $x++) {
+      $start_at = microtime(TRUE);
+
+      try {
+        // Parse queue.
+        self::parse_queue();
+      }
+      catch (mediamosa_exception $e) {
+        // ignore, its logged
+      }
+      // Now take the time it took, and subtrac that from 10.
+      $time_to_sleep = 10 - round(microtime(TRUE) - $start_at);
+      self::log('time to sleep' . $time_to_sleep);
+      if ($time_to_sleep > 0) {
+        sleep($time_to_sleep);
+      }
+
+      // And repeat for 6 times = 1 minute = 1 cron run.
+    }
+
+    // Done.
+    variable_set('mediamosa_jobschedular_cron_running', NULL);
+  }
+
+  /**
    * This function is the heart of the handler system. It must be
    * called at regular intervals, like every 1 minute.
    * It will cleanup, run and update jobs.
@@ -98,12 +152,10 @@ class mediamosa_job_schedular {
    * @param $ip_address
    */
   static public function update_server_job_status($ip_address) {
-    // stel de url en query samen
-    $rest_url = sprintf('http://%s/%s/internal/server/joblist', $ip_address, VPX_BUILD_URL);
-
     // Get response.
-    $response = mediamosa_http::do_internal_call($ip_address, $rest_url);
-    if ($response->code != "200") {
+    $response = mediamosa_http::do_internal_call($ip_address, 'server/joblist');
+    if ($response->code != '200') {
+      self::log('Call to server/joblist did not return a 200 result');
       return;
     }
 

@@ -93,7 +93,7 @@ class mediamosa_configuration_storage {
    * @return string
    */
   static public function still_filename_get($still_id) {
-    return self::mount_point_get() . DIRECTORY_SEPARATOR . self::still_location_get() . DIRECTORY_SEPARATOR . objectid_to_location($still_id);
+    return self::mount_point_get() . DIRECTORY_SEPARATOR . self::still_location_get() . DIRECTORY_SEPARATOR . self::objectid_to_location($still_id);
   }
 
   /**
@@ -236,6 +236,6 @@ class mediamosa_configuration_storage {
    *  The mediafile ID.
    */
   static public function mediafile_still_filename_get($mediafile_id, $mount_point = '') {
-    return empty($mount_point) ? self::mount_point_get() : '' . DIRECTORY_SEPARATOR . self::still_location_get() . DIRECTORY_SEPARATOR . self::objectid_to_location($mediafile_id);
+    return (empty($mount_point) ? self::mount_point_get() : $mount_point) . DIRECTORY_SEPARATOR . self::still_location_get() . DIRECTORY_SEPARATOR . self::objectid_to_location($mediafile_id);
   }
 }

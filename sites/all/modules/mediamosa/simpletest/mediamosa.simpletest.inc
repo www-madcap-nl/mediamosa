@@ -302,6 +302,15 @@ abstract class MediaMosaTestCase extends DrupalWebTestCase {
   }
 
   /**
+   * Return the path+filename to the test image (jpeg).
+   */
+  protected function getTestImage_NotBlackJpg() {
+    $filename = drupal_get_path('module', 'mediamosa') ."/lib/testfiles/notblack-001.jpeg";
+    $this->pass(t('Got test video @video.', array('@video' => $filename)));
+    return $filename;
+  }
+
+  /**
    * Create a random app or specified one.
    * @param array $a_attributes
    *  Basic app parameters like the DB version (mediamosa_app_db).

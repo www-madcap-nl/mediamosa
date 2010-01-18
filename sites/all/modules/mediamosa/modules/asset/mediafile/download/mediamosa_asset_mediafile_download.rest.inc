@@ -94,7 +94,6 @@ class mediamosa_rest_call_download_mediafile extends mediamosa_rest_call {
     // stream de file en verscheur de ticket op het filesystem
     if (@readfile($file) !== false) {
       mediamosa_io::unlink($file);
-      @rmdir($path);
     }
 
     // Set the result, reponse object will know what to do.

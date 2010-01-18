@@ -51,11 +51,23 @@ class MediaMosaAssetMediafileStillDownloadTestCase extends MediaMosaTestCase {
 
   function setUp() {
 
+    // Get the current mediamosa server content.
+    $a_servers = mediamosa_server::search();
+
     parent::setUp('mediamosa_asset');
 
     // Create and login user
     $rest_user = $this->drupalCreateUser(array('administer mediamosa'));
     $this->drupalLogin($rest_user);
+
+    // Truncate current and insert new.
+    db_truncate(mediamosa_server_db::TABLE_NAME)->execute();
+
+    foreach ($a_servers as $a_server) {
+      db_insert(mediamosa_server_db::TABLE_NAME)
+        ->fields($a_server)
+        ->execute();
+    }
   }
 
   function testStillDownload() {
@@ -64,50 +76,49 @@ class MediaMosaAssetMediafileStillDownloadTestCase extends MediaMosaTestCase {
     $app_id = $a_app[mediamosa_app_db::APP_ID];
     $ticket_id = mediamosa_db::uuid(1);
     $uuid = mediamosa_db::uuid(1);
-    $filename = "plus'q uote";
+    $filename = 'testimage.jpg';
 
     $a_mediafile_ext = array(
       mediamosa_asset_mediafile_db::ID => $uuid,
       mediamosa_asset_mediafile_db::FILENAME => $filename,
     );
 
-    $test_video = $this->getTestVideo();
-    $target = mediamosa_configuration_storage::mediafile_id_filename_get($uuid);
+    $test_image = $this->getTestImage_NotBlackJpg();
+    $target = mediamosa_configuration_storage::mediafile_still_filename_get($uuid);
 
     // Create the directory.
     $this->mkdir(dirname($target));
 
-    // Copy the test video
-    $this->copy($test_video, $target);
+    // Copy the test image.
+    $this->copy($test_image, $target);
+
 
     // Create ticket.
-    $ticket_id = mediamosa_ticket::create_play_proxy($ticket_id, $a_mediafile_ext, mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL, $app_id, 'dummy');
+    $ticket_id = mediamosa_ticket::create_play_proxy($ticket_id, $a_mediafile_ext, mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL, $app_id, 'dummy', $uuid);
 
-    $a_download_servers = mediamosa_server::get_enabled_download();
-    $this->assertTrue(!empty($a_download_servers), t('@num enabled download server found.', array('@num' => $a_download_servers->rowCount())));
+    $ticket_path = mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_settings::STILL_TICKET_LOCATION;
+    $ticket_symlink = $ticket_path . DIRECTORY_SEPARATOR . $ticket_id;
 
-    foreach ($a_download_servers as $a_downloadserver) {
-      $url = str_replace("{TICKET}", $ticket_id . '/' . urlencode($filename), $a_downloadserver[mediamosa_server_db::URI]);
+    $a_still_servers = mediamosa_server::get_enabled_still();
+    $this->assertTrue(!empty($a_still_servers), t('@num enabled still server(s) found.', array('@num' => $a_still_servers->rowCount())));
+
+    foreach ($a_still_servers as $a_stillserver) {
+      $url = str_replace("{TICKET}", $ticket_id, $a_stillserver[mediamosa_server_db::URI]);
 
       // Get the file.
       $result = mediamosa_http::drupal_http_request($url);
 
       // Check response.
       $this->assertTrue(
-        $result->code != 404,
-        t("Download the test video from '@url' (code = @code)", array('@url' => $url, '@code' => $result->code))
+        $result->code == 200,
+        t("Download the test image from '@url' (code = @code)", array('@url' => $url, '@code' => $result->code))
       );
-
-      if ($result->code != 404) {
-        break;
-      }
     }
 
     // Remove link ($ticket).
-  //  $this->unlink($symlink_itself);
+    $this->unlink($ticket_symlink);
 
     // Remove the test video.
-   // $this->unlink($target);
-
+    $this->unlink($target);
   }
 }

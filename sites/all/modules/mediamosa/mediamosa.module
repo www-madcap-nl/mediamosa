@@ -135,6 +135,34 @@ function mediamosa_mediamosa_register_rest_call() {
 }
 
 /**
+ * Implements the hook_mediamosa_settings_collect()
+ */
+function mediamosa_mediamosa_configuration_collect() {
+  $form['settings_cron'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('MediaMosa Status Page'),
+    '#collapsible' => TRUE,
+  );
+
+  $form['settings_cron']['mediamosa_cron_uri_app'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Hostname REST'),
+    '#description' => t('The hostname or IP Address of the server to apply the call for CRON and other internal global REST calls. This must be a MediaMosa REST interface and open from this server, f.e. \'app.mediamosa2.local\'. <em>Do NOT use http:// or other schema.</em>'),
+    '#required' => TRUE,
+    '#default_value' => 'localhost',
+  );
+
+  $form['settings_cron']['mediamosa_cron_uri_app_local'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Use localhost with hostname.'),
+    '#description' => t('Enable to use localhost and provide the call with the hostname. This option is useful when your server does not allow to call the host directy on localhost by hostname. Enabled will call localhost with the hostname in the HTTP header, allowing the call to go directly to localhost instead of going outside and back in.'),
+    '#default_value' => '',
+  );
+
+  return $form;
+}
+
+/**
  * Implement hook_help().
  */
 function mediamosa_help($path, $arg) {
@@ -142,6 +170,6 @@ function mediamosa_help($path, $arg) {
 
   switch ($path) {
     case 'admin/mediamosa':
-      return '<p>' . t('This page shows you the mediamosa home page.') . '</p>';
+      return '<p>' . t('Mediamosa 2 status page show results of basic unit tests that are run at fixed intervals. All tests must be green.') . '</p>';
   }
 }

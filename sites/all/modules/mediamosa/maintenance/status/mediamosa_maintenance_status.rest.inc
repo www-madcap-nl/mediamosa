@@ -30,10 +30,10 @@
   */
 
 /**
- * URI: /get_current_mount_point
+ * URI: /cron/maintenance_status
  * Method: GET
  */
-class mediamosa_rest_call_execute_default_tests extends mediamosa_rest_call {
+class mediamosa_rest_call_maintenance_status extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Functions (public).
   public function get_var_setup() {

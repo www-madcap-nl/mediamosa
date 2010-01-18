@@ -930,4 +930,27 @@ class mediamosa_asset {
     return mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
   }
 
+  /**
+   * Clean up assets which have no mediafiles and no children assets.
+   */
+  static public function do_garbage_cleanup() {
+    $result = mediamosa_db::db_query(
+      'SELECT #asset_id FROM {#mediamosa_asset} AS a WHERE
+        (SELECT COUNT(*) FROM {#mediamosa_asset_mediafile} AS am WHERE am.#asset_id = a.#asset_id) = 0 AND
+        (SELECT COUNT(*) FROM {#mediamosa_asset} AS a2 WHERE a2.#parent_id = a.#asset_id) = 0 AND
+        now() > date_add(a.#created, interval #timeout second)',
+      array(
+        '#timeout' => mediamosa_settings::ASSET_GARBAGE_COLLECTOR_ASSET_TIMEOUT,
+        '#asset_id' => mediamosa_asset_db::ID,
+        '#parent_id' => mediamosa_asset_db::PARENT_ID,
+        '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
+        '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
+        '#created' => mediamosa_asset_db::CREATED,
+      )
+    );
+
+    foreach ($result as $row) {
+      mediamosa_asset::delete($row["asset_id"]);
+    }
+  }
 }

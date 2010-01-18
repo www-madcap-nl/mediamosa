@@ -29,6 +29,22 @@
   *
   */
 
+ /*
+  * Implements hook_cron.
+  */
+function mediamosa_asset_cron() {
+  $run_last = variable_get('mediamosa_asset_cron_last', NULL);
+
+  // may run?
+  if (round(REQUEST_TIME - $run_last) >= mediamosa_settings::ASSET_GARBAGE_COLLECTOR_CRON_INTERVAL) {
+    // For the next time...
+    variable_set('mediamosa_asset_cron_last', REQUEST_TIME);
+
+    // Do garbage cleanup.
+    mediamosa_asset::do_garbage_cleanup();
+  }
+}
+
 /**
  * Implements hook_mediamosa_register_rest_call().
  */
@@ -499,6 +515,20 @@ function mediamosa_asset_mediamosa_register_rest_call() {
   // Allowed on POST as well.
   $a_rest_calls['download/$ticket_id/$filename'][mediamosa_rest_call::METHOD_POST] = $a_rest_calls['download/$ticket_id/$filename'][mediamosa_rest_call::METHOD_GET];
 
+  // Still.
+  $a_rest_calls['still/$ticket_id'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_download_mediafile_still',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Enables viewing of stills using the ticket system.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediamosa_still_download',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_0_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_EXTERNAL_ONLY,
+    mediamosa_rest_call::RESPONSE_TYPE => mediamosa_rest_call::RESPONSE_TYPE_DOWNLOAD,
+    mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
+  );
+
+  // Allowed on POST as well.
+  $a_rest_calls['still/$ticket_id'][mediamosa_rest_call::METHOD_POST] = $a_rest_calls['still/$ticket_id'][mediamosa_rest_call::METHOD_GET];
 /*
  * Here for testing purpose.
   // Alias for metadata_tag.

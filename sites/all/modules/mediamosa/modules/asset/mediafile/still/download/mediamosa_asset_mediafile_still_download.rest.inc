@@ -39,7 +39,6 @@ class mediamosa_rest_call_download_mediafile_still extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
   // Rest vars;
   const TICKET_ID = 'ticket_id';
-  const FILENAME = 'filename';
 
     // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
@@ -65,30 +64,20 @@ class mediamosa_rest_call_download_mediafile_still extends mediamosa_rest_call {
 
     // Get the ticket ID.
     $ticket_id = $this->get_param_value(self::TICKET_ID);
-    $filename = $this->get_param_value(self::FILENAME);
 
     // Get filename.
-    $file = mediamosa_configuration_storage::mediafile_still_filename_get($ticket_id);
+    $file = mediamosa_configuration_storage::ticket_still_location_get() . $ticket_id;
 
     if (!file_exists($file)) {
       throw new mediamosa_exception(0, 'Invalid still ticket');
     }
 
     // Set headers.
-    header("Pragma: public");
-    header("Expires: 0");
-    header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
-    header("Cache-Control: private, false");
-    header("Content-Description: Download");
-    header("Content-Type: application/force-download"); // alternatief: application/octet-stream
-    header("Content-Length: ". filesize($file));
-    header("Content-Disposition: attachment; filename=\"". rawurlencode($filename) . "\""); // force a save dialog.
-    header("Content-Transfer-Encoding: binary");
+    header('Content-Type: image/jpeg');
 
-    // stream de file en verscheur de ticket op het filesystem
+    // Download the image and delete the ticket.
     if (@readfile($file) !== false) {
       mediamosa_io::unlink($file);
-      @rmdir(dirname($file));
     }
 
     // Set the result, reponse object will know what to do.

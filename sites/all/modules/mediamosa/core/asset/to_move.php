@@ -1,31 +1,5 @@
 <?php
 
-/* Cron function to delete empty assets
- */
-function media_management_cron() {
-  if (($run = variable_get("asset_garbage_collector_run", 0)) < ASSET_GARBAGE_COLLECTOR_CRON_INTERVAL) {
-    variable_set("asset_garbage_collector_run", $run + 1);
-    return;
-  }
-  variable_set("asset_garbage_collector_run", 0);
-
-  db_set_active("data");
-  if (($resource = db_query("select asset_id, unix_timestamp(created) as created from {asset} a where (select count(*) from mediafile where asset_id=a.asset_id)=0 and (select count(*) from asset where parent_id=a.asset_id)=0 and now()>date_add(created, interval %d second)", ASSET_GARBAGE_COLLECTOR_ASSET_TIMEOUT)) != FALSE) {
-    while (($data = db_fetch_array($resource)) != FALSE) {
-      mediamosa_asset::delete($data["asset_id"]);
-    }
-  }
-  db_set_active();
-}
-
-
-function play_proxy_cron() {
-  play_proxy_ticket_cleanup();
-}
-
-
-
-
 /**
  * Met deze functie worden alle aanwezige stills voor een asset verwijderd.
  */

@@ -73,6 +73,17 @@ class mediamosa_server {
   }
 
   /**
+   * Get all enabled still servers.
+   */
+  static public function get_enabled_still() {
+    return mediamosa_db::db_select(mediamosa_server_db::TABLE_NAME, 'ms')
+      ->fields('ms')
+      ->condition(mediamosa_server_db::SERVER_TYPE, mediamosa_server_db::SERVER_TYPE_STILL, '=')
+      ->condition(mediamosa_server_db::SERVER_STATUS, mediamosa_server_db::SERVER_STATUS_ON, '=')
+      ->execute();
+  }
+
+  /**
    * Return streamable servers.
    *
    * @param $container_type
@@ -236,4 +247,14 @@ class mediamosa_server {
 
     return $a_server[mediamosa_server_db::URI];
   }
+
+  /**
+   * Basic search, for now return all.
+   */
+  static public function search() {
+    return mediamosa_db::db_select(mediamosa_server_db::TABLE_NAME, 'ms')
+      ->fields('ms')
+      ->execute();
+  }
+
 }
