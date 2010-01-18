@@ -88,6 +88,15 @@ class mediamosa_configuration_storage {
   }
 
   /**
+   * Return the still file name location.
+   *
+   * @return string
+   */
+  static public function still_filename_get($still_id) {
+    return self::mount_point_get() . DIRECTORY_SEPARATOR . self::still_location_get() . DIRECTORY_SEPARATOR . objectid_to_location($still_id);
+  }
+
+  /**
    * Return the still data location folder.
    * Based on the 1.x define STILL_LOCATION.
    *

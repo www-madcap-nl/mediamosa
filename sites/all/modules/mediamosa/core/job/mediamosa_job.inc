@@ -335,6 +335,37 @@ class mediamosa_job {
     // Owner check.
     mediamosa_aut::owner_check($app_id, $user_id, $a_mediafile[mediamosa_asset_mediafile_db::APP_ID], $a_mediafile[mediamosa_asset_mediafile_db::OWNER_ID], $is_app_admin);
 
+    // Re-analysing still.
+    if ($job_type == mediamosa_job_db::JOB_TYPE_ANALYSE && $a_mediafile[mediamosa_asset_mediafile_db::IS_STILL] == mediamosa_asset_mediafile_db::IS_STILL_TRUE) {
+      // Get the metadata.
+      $a_mediafile_metadata = mediamosa_asset_mediafile_metadata::get_with_mediafileid($mediafile_id);
+
+      if (!$a_mediafile_metadata) {
+        $still_id = $a_mediafile['mediafile_id'];
+
+        // Destination.
+        $destination = mediamosa_configuration_storage::still_filename_get($still_id);
+        
+        // Still size.
+        $size = getimagesize($destination);
+        $width = $size[0];
+        $height = $size[1];
+
+        // File type.
+        $file_type = '';
+        $pos = strrpos($size['mime'], '/');
+        if ($pos !== FALSE) {
+          $file_type = substr($size['mime'], $pos+1);
+        }
+        $filesize = filesize($destination);
+
+        mediamosa_asset_mediafile_metadata::create_metadata_still_default($still_id, $width, $height, $filesize, $size['mime'], $file_type);
+      }
+
+      return 0;
+    }
+
+
     // Get the asset ID.
     $asset_id = $a_mediafile[mediamosa_asset_mediafile_db::ASSET_ID];
 
@@ -451,7 +482,7 @@ class mediamosa_job {
    * @param integer $app_id
    */
   static public function create_analyse_job($owner, $asset_id, $mediafile_id, $app_id) {
-    mediamosa::log('Start analyse job: mediafileid = @mediafile_id', $mediafile_id, array('@mediafile_id' => $mediafile_id), WATCHDOG_NOTICE, 'jobhandler');
+    mediamosa::log('Start analyse job: mediafileid = @mediafile_id', $mediafile_id, array('@mediafile_id' => $mediafile_id), WATCHDOG_NOTICE, 'job_handler');
 
     $a_fields = array(
       mediamosa_job_db::ASSET_ID => $asset_id,
