@@ -376,11 +376,3 @@ function vpx_upload_handle_still($a_args) {
   ));
   return $rest_response;
 }
-
-/**
- * Upload watermark image
- * Not yet implemented
- */
-function vpx_upload_handle_watermark() {
-  return new rest_response(vpx_return_error(ERRORCODE_OKAY));
-}

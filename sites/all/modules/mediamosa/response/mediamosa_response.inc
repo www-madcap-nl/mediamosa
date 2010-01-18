@@ -142,6 +142,17 @@ class mediamosa_response extends mediamosa {
           header('Content-Type: text/plain; charset=utf-8');
           $output = $this->generate_plain_text();
           break;
+        case mediamosa_rest_call::RESPONSE_TYPE_DOWNLOAD:
+        case mediamosa_rest_call::RESPONSE_TYPE_STILL:
+
+          if ($this->a_response['header']['request_result'] == self::ERROR) {
+            header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
+            $output = $this->a_response['header']['request_result_description'];
+          }
+          else {
+            $output = '';
+          }
+          break;
         case mediamosa_rest_call::RESPONSE_TYPE_XML:
         default:
           header('Content-Type: text/xml; charset=utf-8');

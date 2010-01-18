@@ -36,9 +36,6 @@ abstract class mediamosa_rest_call {
   // Check if there are unspecified arguments and throw exception when we have unspecified arguments.
   protected $check_for_unspecified = FALSE; // Keep on FALSE so get_var_setup() will not fail if it calls process_vars()
 
-  private $is_internal = FALSE;
-  private $is_external = FALSE;
-
   // ------------------------------------------------------------------ Constants.
   const ID = 'uri_id';
   const URI = 'uri';
@@ -48,6 +45,13 @@ abstract class mediamosa_rest_call {
   const RESPONSE_TYPE = 'response_type';
   const RESPONSE_TYPE_XML = 'text/xml';
   const RESPONSE_TYPE_PLAIN = 'text/plain';
+
+  // Download files.
+  const RESPONSE_TYPE_DOWNLOAD = 'application/force-download';
+
+  // Download stills.
+  const RESPONSE_TYPE_STILL = 'image/jpeg';
+
   //const RESPONSE_TYPE_MEDIAMOSA = 'application/mediamosa'; // future.
 
   const METHOD = 'method';
@@ -55,6 +59,7 @@ abstract class mediamosa_rest_call {
   const METHOD_POST = 'POST';
   const METHOD_PUT = 'PUT';
   const METHOD_DELETE = 'DELETE';
+  const METHOD_HEAD = 'HEAD'; // Can only do GET calls.
 
   const CLASS_NAME = 'class_name';
 
@@ -80,6 +85,8 @@ abstract class mediamosa_rest_call {
                                 // External access needs to be specified.
 
   const DESCRIPTION = 'description';   // Description of the REST call (In English, required).
+
+  const BEHAVE_AS_EXTERNAL = 'behave_as_external'; // Set to true if you want this rest call to behave like external without /external.
 
   /**
    * 'alias_for' contains the URI of the REST call that also runs on this rest URI.
@@ -163,6 +170,7 @@ abstract class mediamosa_rest_call {
     $this->{self::STATUS} = $a_rest_call[self::STATUS];
     $this->{self::VERSION} = $a_rest_call[self::VERSION];
     $this->{self::DESCRIPTION} = $a_rest_call[self::DESCRIPTION];
+    $this->{self::BEHAVE_AS_EXTERNAL} = $a_rest_call[self::BEHAVE_AS_EXTERNAL];
 
     // Access.
     $this->{self::ACCESS} = $a_rest_call[self::ACCESS];
@@ -200,6 +208,7 @@ abstract class mediamosa_rest_call {
 
       // Match password in HTTP header, must match.
       if (!isset($_SERVER[$internal_pass]) || $_SERVER[$internal_pass] != mediamosa::get_internal_password()) {
+        mediamosa::log(var_export($_SERVER, TRUE));
         throw new mediamosa_exception_error_authentication_failure();
       }
     }
@@ -209,8 +218,10 @@ abstract class mediamosa_rest_call {
       throw new mediamosa_exception_error_authentication_failure();
     }
 
-    // Do login / authorization.
-    $this->do_login();
+    // Do login / authorization, unless the call is an external.
+    if (!($this->is_external() && ($this->{self::ACCESS} & self::ACCESS_EXTERNAL))) {
+      $this->do_login();
+    }
 
     // Get the var setup.
     $a_var_setup = $this->get_var_setup();
@@ -328,7 +339,7 @@ abstract class mediamosa_rest_call {
    * Gives true back if call is internal call.
    */
   protected function is_external() {
-    return count($this->{self::URI_REQUEST}) && $this->{self::URI_REQUEST}[0] == 'external';
+    return ((count($this->{self::URI_REQUEST}) && $this->{self::URI_REQUEST}[0] == 'external') || $this->{self::BEHAVE_AS_EXTERNAL});
   }
 
   /**

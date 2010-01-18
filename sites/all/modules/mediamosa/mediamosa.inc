@@ -197,16 +197,29 @@ class mediamosa {
   static public function is_app_enabled() {
     global $db_prefix;
 
-    // If we are running an unit test, then we are enabled.
+    // If we are running an unit test, then we are enabled unless disable_app is specified.
     if (preg_match('/simpletest\d+/', $db_prefix)) {
-      return TRUE;
+      // The name of the http var.
+      $disable_app = 'HTTP_' . mediamosa_unicode::strtoupper(str_replace('-', '_', mediamosa_settings::X_MEDIAMOSA_DISABLE_APP));
+
+      // Based if this is present, we always are APP on simpletest mode.
+      return isset($_SERVER[$disable_app]) ? FALSE : TRUE;
     }
 
-    return (mediamosa::variable_get('mediamosa_app', FALSE) || mediamosa::variable_get('mediamosa_app_upload', FALSE));
+    return (mediamosa::variable_get('mediamosa_app', FALSE) || self::is_app_upload_enabled() || self::is_app_download_enabled());
   }
 
   /**
-   * Is the APP REST Interface enabled?
+   * Is the APP upload REST Interface enabled?
+   *
+   * @return bool
+   */
+  static public function is_app_download_enabled() {
+    return mediamosa::variable_get('mediamosa_app_download', FALSE);
+  }
+
+  /**
+   * Is the APP download REST Interface enabled?
    *
    * @return bool
    */
@@ -329,8 +342,13 @@ class mediamosa {
    *  TRUE / FALSE.
    */
   static public function autoload_class($class) {
-    return spl_autoload($class);
-  }
+    //try {
+      return TRUE; // class_exists($class, TRUE);
+   // }
+  //  catch (Exception $e) {
+  //    return FALSE;
+  //  }
+   }
 
   /**
    * Return the current time UTC and in SQL datetime format (YYYY-MM-DD HH:MM:SS)

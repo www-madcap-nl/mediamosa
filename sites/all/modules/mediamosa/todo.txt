@@ -1,4 +1,9 @@
 
+  Settings upload / app / download in REST regels.
+
+
+
+
    move upload
    move still / download scripts from root.
    move stats

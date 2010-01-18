@@ -82,7 +82,7 @@ class mediamosa_http {
     // Set defaults.
     $a_options += array(
       'use_curlproxy' => FALSE,
-      'header' => array(),
+      'headers' => array(),
     );
 
     $curlproxy_http = NULL;
@@ -95,12 +95,12 @@ class mediamosa_http {
     $curl_handle = curl_init($url);
 
     $curl_options = array();
-    foreach ($a_options['header'] as $name => $value) {
+    foreach ($a_options['headers'] as $name => $value) {
       $curl_options[CURLOPT_HTTPHEADER][] = $name . ': ' . $value;
     }
 
     if (!empty($curl_options)) {
-      curl_setopt_array($this->curlHandle, $curl_options);
+      curl_setopt_array($curl_handle, $curl_options);
     }
 
     curl_setopt($curl_handle, CURLOPT_RETURNTRANSFER, TRUE);
@@ -116,6 +116,7 @@ class mediamosa_http {
     }
 
     $result = curl_exec($curl_handle);
+
     curl_close($curl_handle);
   }
 
@@ -172,7 +173,7 @@ class mediamosa_http {
    *   - data
    *       A string containing the response body that was received.
    */
-  function drupal_http_request($url, array $options = array()) {
+  static public function drupal_http_request($url, array $options = array()) {
     global $db_prefix;
 
     $result = new stdClass();

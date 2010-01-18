@@ -78,9 +78,9 @@ function mediamosa_requirements($phase) {
  */
 function mediamosa_permission() {
   return array(
-    mediamosa_settings::MEDIAMOSA_PERM_ACCESS_ADMINISTRATION =>  array(
-      'title' => t('Access MediaMosa Administration'),
-      'description' => t('View the MediaMosa configuration, maintenance and other pages.'),
+    'administer mediamosa' =>  array(
+      'title' => t('Administer MediaMosa'),
+      'description' => t('Administer rights Mediamosa.'),
     ),
   );
 }

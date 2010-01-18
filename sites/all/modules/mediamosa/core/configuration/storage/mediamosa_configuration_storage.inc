@@ -31,7 +31,6 @@
  */
 /* Data locations
  */
-
 class mediamosa_configuration_storage {
 
   // ------------------------------------------------------------------ Static Function.
@@ -113,10 +112,10 @@ class mediamosa_configuration_storage {
    */
   static public function ticket_play_location_get($app_id = -1) {
     if ($app_id >= 0) {
-      return self::mount_point_get() . DIRECTORY_SEPARATOR . self::data_location_get() . DIRECTORY_SEPARATOR . mediamosa_settings::PLAY_TICKET_LOCATION . DIRECTORY_SEPARATOR . $app_id;
+      return self::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_settings::PLAY_TICKET_LOCATION . DIRECTORY_SEPARATOR . $app_id;
     }
 
-    return self::mount_point_get() . DIRECTORY_SEPARATOR . self::data_location_get() . DIRECTORY_SEPARATOR . mediamosa_settings::PLAY_TICKET_LOCATION;
+    return self::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_settings::PLAY_TICKET_LOCATION;
   }
 
   /**
@@ -126,7 +125,7 @@ class mediamosa_configuration_storage {
    * @return string
    */
   static public function ticket_download_location_get($app_id = -1) {
-    return self::ticket_play_location_get($app_id);
+    return self::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_settings::DOWNLOAD_TICKET_LOCATION . DIRECTORY_SEPARATOR;
   }
 
   /**
@@ -135,7 +134,7 @@ class mediamosa_configuration_storage {
    * @return string
    */
   static public function ticket_still_location_get() {
-    return self::mount_point_get() . DIRECTORY_SEPARATOR . self::data_location_get() . DIRECTORY_SEPARATOR . mediamosa_settings::STILL_TICKET_LOCATION . DIRECTORY_SEPARATOR;
+    return self::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_settings::STILL_TICKET_LOCATION . DIRECTORY_SEPARATOR;
   }
 
   /**

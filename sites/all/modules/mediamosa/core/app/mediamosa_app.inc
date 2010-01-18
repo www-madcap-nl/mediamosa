@@ -86,6 +86,7 @@ class mediamosa_app {
     if ($order_by !== FALSE) {
       $query->orderBy($order_by, $order_direction);
     }
+
     return $query->execute();
   }
 }

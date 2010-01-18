@@ -33,16 +33,11 @@ class mediamosa_settings {
   // ------------------------------------------------------------------ Consts.
   const MINIMUM_PHP_VERSION = '5.1.0';
 
-  // Maintenance/config page access
-  const MEDIAMOSA_PERM_ACCESS_ADMINISTRATION = 'access mediamosa';
-  const MEDIAMOSA_PERM_ADMINISTER = 'administer mediamosa';
-
-
   // Length of the unique ID generator, is always this length.
   const UUID_LENGTH = 24;
 
   // URL to asset.
-  const URL_ASSET = 'mediamosa/browse/asset/@asset_id';
+  const URL_ASSET = 'admin/mediamosa/browse/asset/@asset_id';
 
   // Path / SAN NAS Settings.
   const SAN_NAS_DATA_FOLDER = 'data';
@@ -120,6 +115,10 @@ class mediamosa_settings {
 
   // Header item used in internal calls.
   const X_MEDIAMOSA_INTERNAL_PASS = 'X-Mediamosa-Internal-Pass';
+  // Header item during rest call and simpletest. When running in simpletest we can force
+  // to disable App on any interface. If not added to header, all REST calls are considered
+  // on a REST (app) interface.
+  const X_MEDIAMOSA_DISABLE_APP = 'X-Mediamosa-Disable-App';
 
   // Upload Settings.
   const UPLOAD_PUT_CHUNK_SIZE = 4096;

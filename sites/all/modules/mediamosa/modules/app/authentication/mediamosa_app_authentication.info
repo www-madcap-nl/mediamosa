@@ -1,6 +1,6 @@
 ; $Id $
 
-name = "Application Authentication"
+name = "Application authentication"
 description = "The authentication module handles application authentication."
 package = "MediaMosa 2 - Modules"
 version = "2.0.0"

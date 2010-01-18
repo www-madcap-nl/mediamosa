@@ -164,7 +164,12 @@ class mediamosa_ticket {
    * @param string $still_id
    *  Optional still_id.
    */
-  static public function create_play_proxy($ticket_id, $a_mediafile_ext, $response_type = mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_URI, $app_id, $user_id, $still_id = FALSE) {
+  static public function create_play_proxy($ticket_id, $a_mediafile_ext, $response_type, $app_id, $user_id, $still_id = FALSE) {
+
+    // Not set? Set default.
+    if (!isset($response_type)) {
+      $response_type = mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_URI;
+    }
 
     if ($response_type == mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL) {
       // Find default or at least one still.

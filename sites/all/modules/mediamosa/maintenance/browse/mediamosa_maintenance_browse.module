@@ -28,10 +28,6 @@
   * @file
   */
 
-// Permissions.
-define('MEDIAMOSA_MAINTENACE_BROWSE_PERM_BROWSE_ASSETS', 'mediamosa maintenance browse assets');
-define('MEDIAMOSA_MAINTENACE_BROWSE_PERM_BROWSE_COLLECTIONS', 'mediamosa maintenance browse collections');
-
 // SESSIONs.
 define('MEDIAMOSA_MAINTENACE_BROWSE_ASSETS_SESSION', 'mediamosa_maintenance_browse_assets_session');
 define('MEDIAMOSA_MAINTENACE_BROWSE_COLLECTIONS_SESSION', 'mediamosa_maintenance_browse_collections_session');
@@ -42,27 +38,33 @@ require_once 'mediamosa_maintenance_browse_asset.inc';
 require_once 'mediamosa_maintenance_browse_collection.inc';
 
 /**
+ * Implement hook_permission().
+ */
+function mediamosa_maintenance_browse_permission() {
+  return array(
+    'access mediamosa assets' =>  array(
+      'title' => t('Browse assets'),
+      'description' => t('Users with this permission may browse through the assets.'),
+    ),
+    'access mediamosa collections' =>  array(
+      'title' => t('Browse collections'),
+      'description' => t('Users with this permission may browse through the collections.'),
+    ),
+  );
+}
+
+/**
  * Implementation of hook_menu().
  */
 function mediamosa_maintenance_browse_menu() {
   $items = array();
-
-
-  /*
-  $items['admin/mediamosa/browse'] = array(
-    'title' => 'Browse MediaMosa Contents',
-    'description' => 'View assets and collections currently in our database.',
-    'page callback' => 'mediamosa_admin_menu_block_page',
-    'access arguments' => array('mediamosa maintenance browse'),
-    //'file' => 'mediamosa.admin.inc',
-  );
 
   $items['admin/mediamosa/browse/asset'] = array(
     'title' => 'MediaMosa asset browser',
     'description' => 'View assets currently in our database.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mediamosa_maintenance_browse_asset_form'),
-    'access arguments' => array(MEDIAMOSA_MAINTENACE_BROWSE_PERM_BROWSE_ASSETS),
+    'access arguments' => array('access mediamosa assets'),
   );
 
   $items['admin/mediamosa/browse/collection'] = array(
@@ -70,32 +72,16 @@ function mediamosa_maintenance_browse_menu() {
     'description' => 'View collections currently in our database.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mediamosa_maintenance_browse_collection_form'),
-    'access arguments' => array(MEDIAMOSA_MAINTENACE_BROWSE_PERM_BROWSE_COLLECTIONS),
+    'access arguments' => array('access mediamosa collections'),
   );
 
-  $items['admin/mediamosa/admin/browse/asset/%'] = array(
+  $items['admin/mediamosa/browse/asset/%'] = array(
     'title' => 'MediaMosa asset details',
     'type' => MENU_CALLBACK,
     'page callback' => 'mediamosa_maintenance_browse_asset_details',
-    'page arguments' => array(1),
-    'access arguments' => array(MEDIAMOSA_MAINTENACE_BROWSE_PERM_BROWSE_ASSETS),
+    'page arguments' => array(4),
+    'access arguments' => array('access mediamosa assets'),
   );
-*/
-  return $items;
-}
 
-/**
- * Implement hook_permission().
- */
-function mediamosa_maintenance_browse_permission() {
-  return array(
-    MEDIAMOSA_MAINTENACE_BROWSE_PERM_BROWSE_ASSETS =>  array(
-      'title' => t('Browse assets'),
-      'description' => t('Users with this permission may browse through the assets.'),
-    ),
-    MEDIAMOSA_MAINTENACE_BROWSE_PERM_BROWSE_COLLECTIONS =>  array(
-      'title' => t('Browse collections'),
-      'description' => t('Users with this permission may browse through the collections.'),
-    ),
-  );
+  return $items;
 }

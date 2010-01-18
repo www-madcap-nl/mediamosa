@@ -86,7 +86,7 @@ class mediamosa_rest_call_get extends mediamosa_rest_call {
   public function do_call() {
     $o_mediamosa = mediamosa::get();
 
-    // Get URI
+    // Get URI.
     $uri_id = $this->get_param_value(mediamosa_rest_call::ID);
 
     // Get all rest calls.

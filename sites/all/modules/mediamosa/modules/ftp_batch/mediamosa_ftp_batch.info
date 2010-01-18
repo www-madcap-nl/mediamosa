@@ -1,6 +1,6 @@
 ; $Id $
 
-name = "FTP Batch"
+name = "FTP batch"
 description = "The FTP batch allows process of multiple uploads using FTP."
 package = "MediaMosa 2 - Modules"
 version = "2.0.0"

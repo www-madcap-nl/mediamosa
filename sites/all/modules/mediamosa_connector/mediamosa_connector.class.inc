@@ -89,6 +89,11 @@ class mediamosa_connector {
    */
   public function request($uri, array $options = array()) {
 
+    if (empty($this->url)) {
+      watchdog('mediamosa connector', 'Unable to do request, connector not setup.');
+      return;
+    }
+
     // If cookie not set, then login first.
     if (!isset($this->cookie)) {
       if (!self::do_login()) {
@@ -120,6 +125,78 @@ class mediamosa_connector {
     return FALSE;
   }
 
+  /**
+   * @param string $uri
+   *  The REST uri.
+   * @param array $options
+   *   (optional) An array which can have one or more of following keys:
+   *   - headers
+   *       An array containing request headers to send as name/value pairs.
+   *   - method
+   *       A string containing the request method. Defaults to 'GET'.
+   *   - data
+   *       A string containing the request body.
+   *       Or
+   *       A array as name => value.
+   *   - max_redirects
+   *       An integer representing how many times a redirect may be followed.
+   *       Defaults to 1.
+   *   - timeout
+   *       A float representing the maximum number of seconds the function call
+   *       may take. The default is 60 seconds. If a timeout occurs, the error
+   *       code is set to the HTTP_REQUEST_TIMEOUT constant.
+   *
+   */
+  public function request_internal($uri, array $options = array()) {
+    if (empty($this->url)) {
+      watchdog('mediamosa connector', 'Unable to do internal call, connector not setup.');
+      return;
+    }
+
+    // Try the request.
+    return self::do_request('internal/' . $uri, $options);
+  }
+
+  /**
+   * @param string $uri
+   *  The REST uri.
+   * @param array $options
+   *   (optional) An array which can have one or more of following keys:
+   *   - headers
+   *       An array containing request headers to send as name/value pairs.
+   *   - method
+   *       A string containing the request method. Defaults to 'GET'.
+   *   - data
+   *       A string containing the request body.
+   *       Or
+   *       A array as name => value.
+   *   - max_redirects
+   *       An integer representing how many times a redirect may be followed.
+   *       Defaults to 1.
+   *   - timeout
+   *       A float representing the maximum number of seconds the function call
+   *       may take. The default is 60 seconds. If a timeout occurs, the error
+   *       code is set to the HTTP_REQUEST_TIMEOUT constant.
+   *
+   */
+  public function request_internal_head($uri, array $options = array()) {
+
+    if (empty($this->url)) {
+      watchdog('mediamosa connector', 'Unable to do internal head call, connector not setup.');
+      return;
+    }
+
+    // Add password.
+    $options['headers'][mediamosa_settings::X_MEDIAMOSA_INTERNAL_PASS] = mediamosa::get_internal_password();
+
+    $url = $this->url;
+    $url .= (drupal_substr($url, -1, 1) == '/' ? '' : '/'); // Make sure it ends with '/'.
+    $url .= 'internal/' . $uri;
+
+    // Trigger.
+    mediamosa_http::do_head_call($url, $options);
+   }
+
   // ------------------------------------------------------------------ Private Functions.
   private function do_login() {
     // Remove cookie.
@@ -134,6 +211,11 @@ class mediamosa_connector {
     $data = array('dbus' => 'AUTH DBUS_COOKIE_SHA1 '. $username);
     $method = 'POST';
     $response = $this->do_request('login', array('method' => $method, 'data' => $data));
+
+    if ($response->xml->header->request_result_id == 404) {
+      drupal_set_message(t('Enable the Application Authentication module, unable to login. '), 'error');
+      return FALSE;
+    }
 
     if (!$response || !$response->xml) {
       return FALSE;
@@ -197,9 +279,37 @@ class mediamosa_connector {
       'timeout' => 60,
     );
 
+    // If the URI starts with internal, we do an iternal call.
+    $is_internal = substr($uri, 0, strlen('internal/')) == 'internal/';
+
     // Set cookie.
-    if (isset($this->cookie)) {
+    if (isset($this->cookie) && !$is_internal) {
       $options['headers']['Cookie'] = $this->cookie;
+    }
+
+    // If we are internal calling, then we need to add the internal password so we have always access.
+    if ($is_internal) {
+      $options['headers'][mediamosa_settings::X_MEDIAMOSA_INTERNAL_PASS] = mediamosa::get_internal_password();
+/*
+      if ($options['method'] == 'GET') {
+        $pos = mediamosa_unicode::strpos($uri, '?');
+        if ($pos !== FALSE) {
+          $query_string = substr($uri, $pos+1);
+          $a_
+        }
+      }
+      else {
+        // If app_id is not provided, then we get all app_ids and add them to the request. Then we are
+        // sure we have access to all apps. Remember that the first app_id in the list is mostly used.
+        if (!isset($options['data']['app_id'])) {
+          $options['data']['app_id'] = mediamosa_app::get_all_apps(array(mediamosa_app_db::APP_ID), mediamosa_app_db::APP_ID, 'ASC')->fetchCol();
+        }
+
+        // We are always is_app_admin, unless already specified.
+        if (!isset($options['data']['is_app_admin'])) {
+          $options['data']['is_app_admin'] = 'true';
+        }
+      }*/
     }
 
     if ($options['method'] == 'POST') {

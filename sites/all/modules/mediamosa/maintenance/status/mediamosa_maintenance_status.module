@@ -29,31 +29,14 @@
   * The mediamosa status module.
   */
 
-// Permissions.
-define('MEDIAMOSA_PERM_VIEW_STATUS', mediamosa_settings::MEDIAMOSA_PERM_VIEW . ' status');
-
-/**
- * Implementation of hook_menu().
- */
-function mediamosa_maintenance_status_menu() {
-  $items = array();
-
-  $items['admin/mediamosa/status'] = array(
-    'title' => 'MediaMosa status page',
-    'page callback' => '_mediamosa_maintenance_status',
-    'type' => MENU_CALLBACK,
-    'access arguments' => array(MEDIAMOSA_PERM_VIEW_STATUS),
-  );
-
-  return $items;
-}
-
 /**
  * Trigger status page.
  */
 function mediamosa_maintenance_status_cron() {
   // Just trigger, it has his own protection on overrun.
- // mediamosa_http::do_head_call('http://localhost/');
+  $o_connector = new mediamosa_connector();
+
+  $response = $o_connector->request_internal_head('execute_default_tests?app_id=1');
 }
 
 /**
@@ -64,19 +47,13 @@ function mediamosa_maintenance_status_mediamosa_register_rest_call() {
   $a_rest_calls = array();
 
   $a_rest_calls['execute_default_tests'][mediamosa_rest_call::METHOD_GET] = array(
-    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_list',
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_execute_default_tests',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::DESCRIPTION => 'Retrieve the listing of the current registered MediaMosa REST calls.',
+    mediamosa_rest_call::DESCRIPTION => 'Execute the current default unit tests.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_0_0,
     mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY,
   );
 
   return $a_rest_calls;
-}
-
-
-
-function _mediamosa_maintenance_status() {
-
 }

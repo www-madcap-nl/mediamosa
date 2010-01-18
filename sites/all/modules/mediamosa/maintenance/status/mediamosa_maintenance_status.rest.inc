@@ -48,5 +48,8 @@ class mediamosa_rest_call_execute_default_tests extends mediamosa_rest_call {
 
     // Run them.
     mediamosa_maintenance_status::run_simple_tests();
+
+    // Set ok.
+    $o_mediamosa->set_result_okay();
   }
 }

@@ -36,7 +36,7 @@
 function mediamosa_connector_menu() {
   $items = array();
 
-  $items['admin/mediamosa/connector'] = array(
+  $items['admin/mediamosa/config/connector'] = array(
     'title' => t('MediaMosa connector settings'),
     'description' => t('The MediaMosa connector enables other modules to connect on the MediaMosa REST interface. The configuration needs username, password and URL to connect to MediaMosa 2. You need to create or have a MediaMosa application login.'),
     'page callback' => 'drupal_get_form',
@@ -206,17 +206,4 @@ function mediamosa_connector_settings_submit(&$form_state , $form) {
 
   // Remove so we re-login.
   variable_del('mediamosa_connector_cookie');
-
-
-
-/*
-  $vpx = new mediamosa_connector();
-  $result = $vpx->request('GET', '/asset?limit=1');
-  //var_dump($result, $vpx);
-  if ($result !== FALSE) {
-    drupal_set_message(t('Login test successful!'));
-  }
-  else {
-    drupal_set_message(t('Login test failed!'), 'error');
-  }*/
 }

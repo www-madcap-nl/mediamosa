@@ -1,6 +1,6 @@
 ; $Id $
 
-name = "Webservice Managment"
+name = "Webservice managment"
 description = "The webservice module enables parts of the mediamosa core on global or application level."
 package = "MediaMosa 2 - Modules"
 version = "2.0.0"

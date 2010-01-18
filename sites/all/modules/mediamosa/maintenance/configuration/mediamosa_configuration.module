@@ -31,14 +31,14 @@
 require_once('mediamosa_configuration.inc');
 
 /**
- * Implements hook_permission()
+ * Implement hook_permission().
  */
 function mediamosa_configuration_permission() {
   return array(
-    'administer mediamosa configuration' => array(
-      'title' => t('MediaMosa configuration administer permissions'),
-      'description' => t('Manage the configuration of MediaMosa to be edited.')
-    )
+    'administer mediamosa config global' =>  array(
+      'title' => t('Adminster configuration global settings.'),
+      'description' => t('Give administer rights for editing MediaMosa 2 global configuration settings.'),
+    ),
   );
 }
 
@@ -49,31 +49,12 @@ function mediamosa_configuration_menu() {
   $items = array();
 
   // Configuration.
-  /*
-  $items['admin/mediamosa'] = array(
-    'title' => 'MediaMosa',
-    'description' => 'MediaMosa Configuration.',
-   // 'position' => 'left',
-   // 'weight' => 10,
-    'page callback' => 'mediamosa_configuration_menu_block_page',
-    'access arguments' => array('administer mediamosa configuration'),
-    //'file' => '/modules/system/system.admin.inc',
-  );
-/*
-  $items['admin/mediamosa/configuration'] = array(
+  $items['admin/mediamosa/config/global'] = array(
     'title' => 'Configuration',
-    'description' => 'The configuration of MediaMosa settings. You might have to enable maintenance modules for more options.',
-   // 'page callback' => 'drupal_get_form',
-   // 'page arguments' => array('mediamosa_configuration'),
-    'access arguments' => array('administer mediamosa configuration'),
-  );
-*/
-  $items['admin/mediamosa/configuration'] = array(
-    'title' => 'Configuration',
-    'description' => 'The configuration of MediaMosa settings. You might have to enable maintenance modules for more options.',
+    'description' => 'The configuration of global MediaMosa settings.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mediamosa_configuration'),
-    'access arguments' => array('administer mediamosa configuration'),
+    'access arguments' => array('administer mediamosa config global'),
   );
 
 /*

@@ -63,30 +63,22 @@ exit('mediamosa_admin_menu_block_page');
 /**
  * Menu callback; Provide the administration overview page.
  */
-function mediamosa_maintenance_admin_page($arg = NULL) {
-
-  // If we received an argument, they probably meant some other page.
-  // Let's 404 them since the menu system cannot be told we do not
-  // accept arguments.
-  if (isset($arg) && substr($arg, 0, 3) != 'by-') {
-    return drupal_not_found();
-  }
+function mediamosa_maintenance_admin_page($path) {
 
   // Check for status report errors.
  // if (system_status(TRUE) && user_access('administer site configuration')) {
   //  drupal_set_message(t('One or more problems were detected with your Drupal installation. Check the <a href="@status">status report</a> for more information.', array('@status' => url('admin/reports/status'))), 'error');
   //}
   $blocks = array();
-  $admin = db_query("SELECT menu_name, mlid FROM {menu_links} WHERE link_path = 'admin/mediamosa' AND module = 'system'")->fetchAssoc();
-  print '<pre>Debug in ' . __FILE__ . ', line ' . __LINE__ . "\n"; // @todo remove me.
-  print htmlspecialchars(print_r($admin, TRUE));
-  print '</pre>';
+  $admin = db_query("SELECT menu_name, mlid FROM {menu_links} WHERE link_path = 'admin/mediamosa' AND module = 'system'", array(':path' => $path))->fetchAssoc();
+
   if ($admin) {
+    $admin['path'] = $path . '%';
     $result = db_query("
       SELECT m.*, ml.*
       FROM {menu_links} ml
       INNER JOIN {menu_router} m ON ml.router_path = m.path
-      WHERE ml.link_path != 'admin/help' AND menu_name = :menu_name AND ml.plid = :mlid AND hidden = 0", $admin, array('fetch' => PDO::FETCH_ASSOC));
+      WHERE ml.link_path != 'admin/help' AND ml.link_path LIKE :path AND menu_name = :menu_name AND ml.plid = :mlid AND hidden = 0", $admin, array('fetch' => PDO::FETCH_ASSOC));
 
     foreach ($result as $item) {
       _menu_link_translate($item);
@@ -106,10 +98,8 @@ function mediamosa_maintenance_admin_page($arg = NULL) {
         $block['content'] .= $function();
       }
       $content = system_admin_menu_block($item);
-      print '<pre>Debug in ' . __FILE__ . ', line ' . __LINE__ . "\n"; // @todo remove me.
-      print htmlspecialchars(print_r($item['path'], TRUE));
-      print '</pre>';
-      if ((isset($item['page_callback']) && !in_array($item['page_callback'], array('mediamosa_admin_menu_block_page'))) || count($content)) {
+
+      if ((isset($item['page_callback']) && !in_array($item['page_callback'], array('mediamosa_maintenance_admin_page'))) || count($content)) {
         // Only show blocks for items which are not containers, or those which
         // are containers and do have items we can show.
         $block['show'] = TRUE;

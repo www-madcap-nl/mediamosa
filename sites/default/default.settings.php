@@ -343,6 +343,7 @@ $conf = array()#   'site_name' => 'My Drupal site',
 #   'a.b.c.d',
 # );
 
+// Include our global settings.
 if (file_exists(getcwd() . '/sites/settings.mediamosa.php')) {
   include_once getcwd() . '/sites/settings.mediamosa.php';
 }

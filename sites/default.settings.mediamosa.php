@@ -36,7 +36,7 @@ $databases['mig_memo_data']['default'] = array(
  * The 'mediamosa_installation_id' defines the default install ID
  * for multiple installations of mediamosa. If you use 2 or more
  * www installations of mediamosa for the same database, then
- * specifiy a server ID here. Max length is 16 chars. The 
+ * specifiy a server ID here. Max length is 16 chars. The
  * server ID can be anything
  */
 $conf['mediamosa_installation_id'] = 'default';
@@ -50,14 +50,25 @@ $conf['mediamosa_installation_id'] = 'default';
 $conf['mediamosa_app'] = FALSE;
 
 /**
- * Default setting, TRUE / FALSE for enabling / disabling the 
+ * Default setting, TRUE / FALSE for enabling / disabling the
  * APP REST upload interface. The upload setting allows REST call
  * relating to uploading files, it will not allow other REST calls
- * unless 'mediamosa_app' is TRUE also. To setup this interface 
+ * unless 'mediamosa_app' is TRUE also. To setup this interface
  * as an upload interface, put 'mediamosa_app' to FALSE and set
  * 'mediamosa_app_upload' to TRUE.
  */
 $conf['mediamosa_app_upload'] = FALSE;
+
+/**
+ * Default setting, TRUE / FALSE for enabling / disabling the
+ * APP REST download interface. The download setting allows you
+ * to download mediafile using tickets. For now its used to download
+ * files and still images.
+ * Warning: If your download servers point to the admin, then make sure
+ * sure you allow this setting on the admin, else your MediaMosa status page
+ * will show failures.
+ */
+$conf['mediamosa_app_download'] = TRUE;
 
 /**
  * Default setting, TRUE / FALSE for enabling / disabling the
@@ -75,7 +86,7 @@ $conf['mediamosa_job_schedular'] = TRUE;
 
 /**
  * Default setting, TRUE / FALSE for enabling / disabling the
- * processing of the jobs. You can specifiy unlimited amount of 
+ * processing of the jobs. You can specifiy unlimited amount of
  * installation for job processing.
  */
 $conf['mediamosa_job_processor'] = TRUE;
@@ -85,6 +96,12 @@ $conf['mediamosa_job_processor'] = TRUE;
  * MediaMosa background monitor.
  */
 $conf['mediamosa_monitor'] = TRUE;
+
+/**
+ * Set home page to our interface. If you need the front page of drupal
+ * then change the setting to 'node'.
+ */
+$conf['site_frontpage'] = 'admin/mediamosa';
 
 //define('MEDIAMOSA_REST_HOST', 'localhost');
 //define('MEDIAMOSA_BUILD_URL', '');

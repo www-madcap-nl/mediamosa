@@ -72,6 +72,7 @@ function mediamosa_app_authentication_mediamosa_app_authorized() {
   }
 
   // REST urls that are always allowed.
+  // FIXME: these rules must be moved to REST layer, some must be defined in the REST call define.
   $a_rules = array(
     array( # /check_cookie/*
       0 => 'check_cookie'),

@@ -32,15 +32,15 @@
  * Single asset details.
  */
 function mediamosa_maintenance_browse_asset_details($asset_id) {
-  $result = _mediamosa_restcall('GET', '/asset/'. $asset_id, array('is_app_admin' => 'true'));
+  $response = _mediamosa_restcall('asset/' . $asset_id, 'GET', array('is_app_admin' => 'true'));
 
   $output = '';
 
-  $asset = $result->items->item;
+  $asset = (array)$response->xml->items->item;
 
   // Asset attributes
   $rows = array();
-  foreach ((array)$asset as $key => $value) {
+  foreach ($asset as $key => $value) {
     if (in_array($key, array('@attributes', 'czp', 'dublin_core', 'qualified_dublin_core'))) {
       continue;
     }
@@ -62,7 +62,7 @@ function mediamosa_maintenance_browse_asset_details($asset_id) {
   ) as $subject => $title) {
     // Construct the table rows
     $rows = array();
-    foreach ((array)$asset->{$subject} as $key => $value) {
+    foreach ($asset[$subject] as $key => $value) {
       if (trim($value) != '') {
         $value = (valid_url($value, TRUE)) ? l($value, $value) : check_plain($value);
         $rows[] = array(_mediamosa_maintenance_browse_clean_string($key), $value);
@@ -75,7 +75,7 @@ function mediamosa_maintenance_browse_asset_details($asset_id) {
   }
 
   // Mediafiles
-  foreach ($asset->xpath('mediafiles/mediafile') as $mediafile) {
+  foreach ($response->xml->items->item->xpath('mediafiles/mediafile') as $mediafile) {
     // Construct the table rows
     $rows = array();
     foreach ((array)$mediafile as $key => $value) {
@@ -99,10 +99,10 @@ function mediamosa_maintenance_browse_asset_details($asset_id) {
 function _mediamosa_maintenance_browse_asset_get_all_collections($app_id) {
   $app_ids = explode(' ', $app_id);
 
-  $result = _mediamosa_restcall('GET', '/collection', array('app_id' => $app_ids));
+  $response = _mediamosa_restcall('collection', 'GET', array('app_id' => $app_ids));
 
   $collections = array();
-  foreach ($result->xpath('//items/item') as $collection) {
+  foreach ($response->xml->xpath('//items/item') as $collection) {
     $title = trim((string)$collection->title);
     $collections[(string)$collection->coll_id] = ($title != '') ? $title : t('<title not set>');
   }
@@ -244,6 +244,7 @@ function mediamosa_maintenance_browse_asset_form() {
   $offset = $page * $item_limit;
 
   // Gather all apps.
+  $all_apps_raw = array();
   foreach (mediamosa_app::get_all_apps(array(mediamosa_app_db::APP_ID, mediamosa_app_db::NAME), mediamosa_app_db::NAME, 'ASC') as $app) {
     $all_apps_raw[$app[mediamosa_app_db::APP_ID]] = $app[mediamosa_app_db::NAME];
   }
@@ -364,11 +365,11 @@ function mediamosa_maintenance_browse_asset_form() {
       $data['app_id'] = $cql_data['app_ids'];
     }
 
-    $result = _mediamosa_restcall('GET', '/asset', $data);
+    $response = _mediamosa_restcall('asset', 'GET', $data);
 
     // Extract the item count.
-    $item_count = (int)$result->header->item_count;
-    $item_count_total = (int)$result->header->item_count_total;
+    $item_count = (int)$response->xml->header->item_count;
+    $item_count_total = (int)$response->xml->header->item_count_total;
 
     // Return the form if no assets were found.
     if ($item_count_total == 0) {
@@ -389,10 +390,10 @@ function mediamosa_maintenance_browse_asset_form() {
     )));
 
     $rows = array();
-    foreach ($result->xpath('//items/item') as $asset) {
+    foreach ($response->xml->xpath('//items/item') as $asset) {
       $title = (isset($asset->dublin_core->title) && trim((string)$asset->dublin_core->title) != '') ? $asset->dublin_core->title : t('<title not set>');
       $rows[] = array(
-        l($title, 'mediamosa/browse/asset/'. $asset->asset_id),
+        l($title, 'admin/mediamosa/browse/asset/'. $asset->asset_id),
         $asset->app_id,
         $asset->videotimestampmodified,
       );

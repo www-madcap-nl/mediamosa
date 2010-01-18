@@ -48,6 +48,20 @@
   }
 
   /**
+   * Return a array with the class of the tests
+   * we wish to run. If modules are not enabled and
+   * there for their class is not loaded, we will need
+   * to report this.
+   */
+  static public function get_default_tests() {
+    return array(
+      'MediaMosaAppAuthenticationTestCase',
+      'MediaMosaConfigurationStorageTestCase',
+      'MediaMosaAssetMediafileDownloadTestCase',
+    );
+  }
+
+  /**
    * Return the enabled switch if we monitor mediamosa.
    */
   static public function is_enabled() {
@@ -69,19 +83,7 @@
     $run_last = variable_get('mediamosa_maintenance_status_cron_last', NULL);
 
     // may run?
-    return (REQUEST_TIME - $run_last > self::get_interval());
-  }
-
-  /**
-   * Return a array with the class of the tests
-   * we wish to run. If modules are not enabled and
-   * there for their class is not loaded, we will need
-   * to report this.
-   */
-  static public function get_default_tests() {
-    return array(
-      'MediaMosaAppAuthenticationTestCase',
-    );
+    return (round(REQUEST_TIME - $run_last) >= self::get_interval());
   }
 
   /**
@@ -104,18 +106,19 @@
    */
   static public function run_simple_tests() {
     if (!self::may_run()) {
+      //self::log('Already running, skipping');
       return; // Prevent us running twice.
     }
 
     // Set time when we started, so we aren't twice.
-    mediamosa::variable_get('mediamosa_maintenance_status_cron_last', REQUEST_TIME);
+    mediamosa::variable_set('mediamosa_maintenance_status_cron_last', REQUEST_TIME);
 
     // Because we don't know how long these tests run, we will set the time-out
     // of the script to the length of the interval of the cron.
     set_time_limit(self::get_interval() - 1);
 
     // Where to store the results.
-    $a_test_results = array();
+    $a_test_results = array('a_tests' => array());
 
     // Create the tests first so we can store the names etc.
     $a_tests = array();
@@ -133,10 +136,10 @@
         ->execute();
 
       // Create.
-      $test[$class_name] = new $class_name($test_id);
+      $a_tests[$class_name] = new $class_name($test_id);
 
       // Add to run list and result.
-      $a_test_results[$class_name] = array('info' => $test[$class_name]->info(), 'runphase' => self::RUNPHASE_WAITING, 'results' => array());
+      $a_test_results['a_tests'][$class_name] = array('info' => $a_tests[$class_name]->getInfo(), 'runphase' => self::RUNPHASE_WAITING, 'results' => array());
     }
 
     // Set start point run of all tests.
@@ -160,8 +163,8 @@
     register_shutdown_function('mediamosa_maintenance_status::shutdown');
 
     // Now loop through the tests and store the results.
-    foreach ($a_test_results as $class_name => $simpletest_class) {
-      $a_test_results[$class_name]['runphase'] = self::RUNPHASE_STARTED;
+    foreach ($a_tests as $class_name => $simpletest_class) {
+      $a_test_results['a_tests'][$class_name]['runphase'] = self::RUNPHASE_STARTED;
 
       // Ok Run.
       $start = microtime(TRUE);
@@ -169,12 +172,12 @@
       $end = microtime(TRUE);
 
       // Store results.
-      $a_test_results[$class_name]['results'] = $simpletest_class->results();
-      $a_test_results[$class_name]['started'] = $start;
-      $a_test_results[$class_name]['ended'] = $end;
+      $a_test_results['a_tests'][$class_name]['results'] = $simpletest_class->results;
+      $a_test_results['a_tests'][$class_name]['started'] = $start;
+      $a_test_results['a_tests'][$class_name]['ended'] = $end;
 
       // Set to completed.
-      $a_test_results[$class_name]['runphase'] = self::RUNPHASE_COMPLETED;
+      $a_test_results['a_tests'][$class_name]['runphase'] = self::RUNPHASE_COMPLETED;
 
       // Store in static.
       self::test_results($a_test_results);

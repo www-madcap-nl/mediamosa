@@ -42,7 +42,7 @@ class MediaMosaAppAuthenticationTestCase extends MediaMosaTestCase {
     parent::setUp('mediamosa_app_authentication');
 
     // Create and login user
-    $rest_user = $this->drupalCreateUser(array(mediamosa_settings::MEDIAMOSA_PERM_REST_ACCESS));
+    $rest_user = $this->drupalCreateUser(array('administer mediamosa'));
     $this->drupalLogin($rest_user);
   }
 
@@ -107,6 +107,5 @@ class MediaMosaAppAuthenticationTestCase extends MediaMosaTestCase {
     $this->pass(check_plain(var_export($post_data, TRUE)));
 
     $this->pass(check_plain(var_export($response['xml'], TRUE)));
-
   }
 }

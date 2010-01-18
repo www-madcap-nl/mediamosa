@@ -175,7 +175,7 @@ class mediamosa_asset_mediafile_upload {
 
   /**
    * trigger tid itl.
-   * @param unknown_type $completed_url
+   * @param URL $completed_url
    */
   static function trigger_completion_url($completed_url) {
     // We call compeleted url when the job status has been updated.
@@ -183,8 +183,8 @@ class mediamosa_asset_mediafile_upload {
       // If it fails, we dont care...
       self::log('Completed URL @completed_url', array('@completed_url' => $completed_url));
 
-      // FIXME: rewrite to HEAD call mediamosa_http.
-      mediamosa_io::exec('wget -O - -q -t 1 ' . escapeshellcmd($completed_url . ' >/dev/null 2>/dev/null &'));
+      // Do call.
+      mediamosa_http::do_head_call($completed_url, array('use_curlproxy' => TRUE));
     }
   }
 

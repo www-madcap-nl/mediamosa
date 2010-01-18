@@ -50,6 +50,11 @@ class mediamosa_rest {
 
     if (!$request_method) {
       $request_method = mediamosa_response::get_method();
+
+      // If its a HEAD call, switch method to GET.
+      if ($request_method == mediamosa_rest_call::METHOD_HEAD) {
+        $request_method = mediamosa_rest_call::METHOD_GET;
+      }
     }
 
     // Make copy.
@@ -150,6 +155,10 @@ class mediamosa_rest {
 
     if (!isset($a_rest_call[mediamosa_rest_call::RESPONSE_TYPE])) {
       $a_rest_call[mediamosa_rest_call::RESPONSE_TYPE] = mediamosa_rest_call::RESPONSE_TYPE_XML;
+    }
+
+    if (!isset($a_rest_call[mediamosa_rest_call::BEHAVE_AS_EXTERNAL])) {
+      $a_rest_call[mediamosa_rest_call::BEHAVE_AS_EXTERNAL] = FALSE;
     }
 
     // Access to REST call.

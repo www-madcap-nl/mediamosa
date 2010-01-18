@@ -44,12 +44,102 @@ abstract class MediaMosaTestCase extends DrupalWebTestCase {
    * Implements setUp().
    */
   protected function setUp() {
+    $a_vars_to_copy = array('mediamosa_current_mount_point');
+    $a_values = array();
+
+    // Store certain vars.
+    foreach ($a_vars_to_copy as $var_to_copy) {
+      $a_values[$var_to_copy] = mediamosa::variable_get($var_to_copy);
+    }
+
     // Call parent::setUp and preserve arguments.
     $args = func_get_args();
 
     // Create and setup the CORE module.
     $args = array_unique(array_merge(array('mediamosa_app', 'mediamosa'), $args));
     call_user_func_array(array($this, 'parent::setUp'), $args);
+
+    // Now set it so its in the sandbox.
+    foreach ($a_values as $name => $value) {
+      // Skip NULL.
+      if (!is_null($value)) {
+        mediamosa::variable_set($name, $value);
+      }
+    }
+  }
+
+  /**
+   * Implements tearDown().
+   * Because drupal doesn't tear down our tables, we have to do it.
+   * FIXME: seems to drop mediamosa_app but skips the rest... might
+   *        be fixed in future versions.
+   */
+  protected function tearDown() {
+    global $db_prefix;
+
+    // keep it.
+    $old_prefix = $db_prefix;
+
+    // Done, call parent.
+    parent::tearDown();
+
+    // Save change.
+    $new_prefix = $db_prefix;
+    $db_prefix = $old_prefix;
+
+    $prefix = Database::getConnection()->prefixTables('{mediamosa_}') . '%';
+
+    // Get tables that match our pattern.
+    $tables = db_find_tables($prefix);
+
+    $matches = $ret = array();
+    foreach ($tables as $table) {
+      // Make sure we drop correct; tables MUST start with simpletest.
+      if (preg_match('/simpletest\d+mediamosa.*/', $table, $matches)) {
+        list($tmp, $name) = explode('mediamosa_', $table, 2);
+
+        try {
+          db_drop_table($ret, 'mediamosa_' . $name);
+        }
+        catch (PDOException $e) {
+          // ignore.
+        }
+      }
+    }
+
+    // Restore.
+    $db_prefix = $new_prefix;
+  }
+
+  /**
+   * Override drupalGet so we can override the request on the drupal interface.
+   *
+   * @param $path
+   * @param $options
+   * @param $headers
+   */
+  protected function drupalGet($path, array $options = array(), array $headers = array()) {
+
+    // Just let them know we need the Drupal part.
+    $headers[] = mediamosa_settings::X_MEDIAMOSA_DISABLE_APP . ': True';
+
+    return parent::drupalGet($path, $options, $headers);
+  }
+
+  /**
+   * Override drupalPost
+   *
+   * @param string $path
+   * @param string $edit
+   * @param string $submit
+   * @param array $options
+   * @param array $headers
+   */
+  protected function drupalPost($path, $edit, $submit, array $options = array(), array $headers = array()) {
+    // Just let them know we need the Drupal part.
+    $headers[] = mediamosa_settings::X_MEDIAMOSA_DISABLE_APP . ': True';
+
+    return parent::drupalPost($path, $edit, $submit, $options, $headers);
   }
 
   /**
@@ -136,13 +226,89 @@ abstract class MediaMosaTestCase extends DrupalWebTestCase {
   }
 
   /**
+   * IO Stuff.
+   */
+  protected function copy($source, $dest) {
+    $this->assertTrue(
+      file_exists($source),
+      t("Copy: Source file '@source' exists.", array('@source' => $source))
+    );
+
+    // Copy the test video
+    $this->assertTrue(
+      mediamosa_io::copy($source, $dest) != FALSE,
+      t("Copy: Copied from '@source' to target '@target'", array('@source' => $source, '@target' => $dest))
+    );
+
+    $this->assertTrue(
+      file_exists($dest),
+      t("Copy: New file '@target' exists.", array('@target' => $dest))
+    );
+  }
+
+  /**
+   * Create symlink.
+   *
+   * @param string $source
+   * @param string $dest
+   */
+  protected function symlink($source, $dest) {
+    // Copy the test video
+    $this->assertTrue(
+      mediamosa_io::symlink($source, $dest) != FALSE,
+      t("Symlink: Created symlink from '@source' to target '@target'", array('@source' => $source, '@target' => $dest))
+    );
+
+    $this->assertTrue(
+      file_exists($dest),
+      t("Symlink: New file '@target' exists.", array('@target' => $dest))
+    );
+  }
+
+  /**
+   * Remove file.
+   *
+   * @param string $dest
+   */
+  protected function unlink($dest) {
+    $this->assertTrue(
+      mediamosa_io::unlink($dest) !== FALSE,
+      t("Unlink: Removing file '@target'", array('@target' => $dest))
+    );
+
+    $this->assertTrue(
+      file_exists($dest) == FALSE,
+      t("Unlink: File '@target' is removed.", array('@target' => $dest))
+    );
+  }
+
+  /**
+   * Create folder.
+   *
+   * @param string $location
+   */
+  protected function mkdir($location) {
+    // Create the directory first.
+    $this->assertTrue(mediamosa_io::mkdir($location), t('Check if @location can be created by Mediamosa', array('@location' => $location)));
+  }
+
+  /**
+   * Return the path+filename to the test video.
+   */
+  protected function getTestVideo() {
+    $filename = drupal_get_path('module', 'mediamosa') ."/lib/testfiles/test_video.wmv";
+    $this->pass(t('Got test video @video.', array('@video' => $filename)));
+    return $filename;
+  }
+
+  /**
    * Create a random app or specified one.
    * @param array $a_attributes
    *  Basic app parameters like the DB version (mediamosa_app_db).
    */
-  protected function createApp($a_attributes = array()) {
+  protected function createApp($a_fields = array()) {
     // Merge in the default attributes.
-    $a_attributes += array(
+    $a_fields += array(
       mediamosa_app_db::APP_ID => rand(1, 1000),
       mediamosa_app_db::SHARED_KEY => user_password(),
       mediamosa_app_db::NAME => $this->randomName(),
@@ -154,11 +320,37 @@ abstract class MediaMosaTestCase extends DrupalWebTestCase {
     );
 
     // Insert the app into the database
-    $query = mediamosa_db::db_insert(mediamosa_app_db::TABLE_NAME)->fields($a_attributes)->execute();
+    $query = mediamosa_db::db_insert(mediamosa_app_db::TABLE_NAME)->fields($a_fields)->execute();
 
     // Log the creation in the resutls
-    $this->assert(TRUE, t('App created with id %app_id, name %name and shared key %pass', array('%app_id' => $a_attributes['app_id'], '%name' => $a_attributes['name'], '%pass' => $a_attributes['shared_key'])));
+    $this->assert(TRUE, t('App created with id %app_id, name %name and shared key %pass', array('%app_id' => $a_fields['app_id'], '%name' => $a_fields['name'], '%pass' => $a_fields['shared_key'])));
 
-    return $a_attributes;
+    return $a_fields;
+  }
+
+  /**
+   * Create a download server.
+   */
+  protected function createDownloadServer() {
+    $node = new stdClass();
+    $node->uid = 1; // Admin
+    $node->status = 1; // Published
+    $node->type = mediamosa_node::MEDIAMOSA_NODE_TYPE_SERVER;
+
+    $node->title = 'http://localhost/download/{TICKET}';
+    $node->{mediamosa_server_db::VERSION} = 0;
+    $node->{mediamosa_server_db::SERVER_STATUS} = mediamosa_server_db::SERVER_STATUS_ON;
+    $node->{mediamosa_server_db::SERVER_TYPE} = mediamosa_server_db::SERVER_TYPE_DOWNLOAD;
+    $node->{mediamosa_server_db::URI} = 'http://localhost/download/{TICKET}';
+    $node->{mediamosa_server_db::CONTAINERS} = NULL;
+    $node->{mediamosa_server_db::OBJECT_CODE} = NULL;
+    $node->{mediamosa_server_db::SERVER_NAME} = NULL;
+    $node->{mediamosa_server_db::IP_ADDRESS} = NULL;
+    $node->{mediamosa_server_db::SLOTS} = NULL;
+    $node->{mediamosa_server_db::TOOLS} = NULL;
+    $node->{mediamosa_server_db::URI_UPLOAD_PROGRESS} = NULL;
+
+    node_save(@$node);
+    $this->pass(t('Created node Downloadserver with node ID @nid', array('@nid' => $node->nid)));
   }
 }

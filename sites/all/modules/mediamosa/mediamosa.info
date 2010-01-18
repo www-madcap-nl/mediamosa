@@ -7,7 +7,7 @@ core = 7.x
 
 ; Dependencies (module names)
 ; YOU MUST HAVE VERY GOOD REASON TO GIVE A DEP. TO THE CORE MODULE.
-; dependencies[] = mediamosa_app_authentication
+dependencies[] = simpletest
 
 ; Used files.
 

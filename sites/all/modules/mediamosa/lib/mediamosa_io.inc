@@ -57,7 +57,7 @@ class mediamosa_io {
 
     // Already exists? Then don't try to create.
     if (file_exists($pathname) && is_dir($pathname)) {
-      return;
+      return TRUE; // Return TRUE for unit test.
     }
 
     if (!mkdir($pathname, $mode, $recursive)) {
@@ -69,6 +69,8 @@ class mediamosa_io {
         )
       );
     }
+
+    return TRUE;
   }
 
   /**
@@ -80,12 +82,10 @@ class mediamosa_io {
   static public function unlink($filename) {
     if (!file_exists($filename)) {
       self::log("Unable to remove file '@filename', file was not found.", array('@filename' => $filename));
-      return;
+      return TRUE;
     }
 
-    if (@unlink($filename)) {
-      self::log("Successfully removed file '@filename'.", array('@filename' => $filename));
-    }
+    return @unlink($filename);
   }
 
   /**
@@ -190,5 +190,34 @@ class mediamosa_io {
    */
   static public function is_writable($filename) {
     return is_writable($filename);
+  }
+
+  /**
+   * Sets access and modification time of file.
+   *
+   * @param string $filename
+   *  The name of the file being touched.
+   * @param integer $time
+   *  The touch time. If time  is not supplied, the current system time is used.
+   * @param integer $atime
+   *  If present, the access time of the given filename is set to the value of atime.
+   *  Otherwise, it is set to time.
+   */
+  static public function touch($filename, $time = NULL, $atime = NULL) {
+    if(!isset($time)) {
+      $time = time();
+    }
+
+    return @touch($filename, $time, $atime);
+  }
+
+  /**
+   * Makes a copy of the file source to dest.
+   *
+   * @param string $source
+   * @param string $dest
+   */
+  static public function copy($source, $dest) {
+    return @copy($source, $dest);
   }
 }

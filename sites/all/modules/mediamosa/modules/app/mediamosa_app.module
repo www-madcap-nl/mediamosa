@@ -53,22 +53,34 @@ function mediamosa_app_mediamosa_register_rest_call() {
 function mediamosa_app_menu() {
   $items = array();
 
-  $items['admin/mediamosa/app'] = array(
+  $items['admin/mediamosa/config/app'] = array(
     'title' => 'Client applications',
     'description' => 'List all MediaMosa End User Applications.',
     'page callback' => '_mediamosa_app_list',
-    'access arguments' => array('administer mediamosa configuration'),
+    'access arguments' => array('access mediamosa'),
   );
 
-  $items['admin/mediamosa/app/%/contacts'] = array(
+  $items['admin/mediamosa/config/app/%/contacts'] = array(
     'title' => 'Client application contacts',
     'type' => MENU_CALLBACK,
     'page callback' => '_mediamosa_app_contacts',
     'page arguments' => array(1),
-    'access arguments' => array('administer mediamosa configuration'),
+    'access arguments' => array('administer mediamosa config app'),
   );
 
   return $items;
+}
+
+/**
+ * Implement hook_permission().
+ */
+function mediamosa_app_permission() {
+  return array(
+    'administer mediamosa config app' =>  array(
+      'title' => t('Adminster MediaMosa applications.'),
+      'description' => t('Give administer rights for editing MediaMosa 2 applications.'),
+    ),
+  );
 }
 
 /**
@@ -93,13 +105,12 @@ function _mediamosa_app_list() {
       '', // @TODO: offline webservices
       $row[mediamosa_app_db::OWNER],
       $row[mediamosa_app_db::ACTIVE],
-      l(t('View'), 'admin/mediamosa/app/'. $row[mediamosa_app_db::APP_ID] .'/contacts'),
+      l(t('View'), 'admin/mediamosa/app/'. $row[mediamosa_app_db::APP_ID] . '/contacts'),
     );
   }
 
   $output = theme('table', $header, $rows);
   $output .= theme('pager');
-  $output .= theme('breadcrumb', drupal_get_breadcrumb());
 
   return $output;
 }
@@ -138,7 +149,6 @@ function _mediamosa_app_contacts($app_id) {
   }
 
   $output = theme('table', array(t('Application ID'), t('Name'), t('Phone'), t('E-mail'), t('Type')), $rows);
-  $output .= theme('breadcrumb', drupal_get_breadcrumb());
   //$output .= l(t('Return to MediaMosa 2 Application Listing'), 'admin/mediamosa/app');
   $output .= theme('pager');
 
