@@ -1,5 +1,5 @@
 <?php
-// $Id: statistics.install,v 1.22 2009/09/10 06:38:19 dries Exp $
+// $Id: statistics.install,v 1.25 2009/12/04 16:49:47 dries Exp $
 
 /**
  * @file
@@ -7,7 +7,7 @@
  */
 
 /**
- * Implement hook_uninstall().
+ * Implements hook_uninstall().
  */
 function statistics_uninstall() {
   // Remove variables.
@@ -21,7 +21,7 @@ function statistics_uninstall() {
 }
 
 /**
- * Implement hook_schema().
+ * Implements hook_schema().
  */
 function statistics_schema() {
   $schema['accesslog'] = array(
@@ -134,18 +134,27 @@ function statistics_schema() {
 }
 
 /**
- * @defgroup updates-6.x-to-7.x System updates from 6.x to 7.x
+ * @defgroup updates-6.x-extra Extra statistics updates for 6.x
  * @{
  */
 
 /**
  * Allow longer referrers.
  */
-function statistics_update_7000() {
-  $ret = array();
-  db_change_field($ret, 'accesslog', 'url', 'url', array('type' => 'text', 'not null' => FALSE));
-  return $ret;
+function statistics_update_6000() {
+  db_change_field('accesslog', 'url', 'url', array('type' => 'text', 'not null' => FALSE));
 }
+
+/**
+ * @} End of "defgroup updates-6.x-extra"
+ * The next series of updates should start at 7000.
+ */
+
+
+/**
+ * @defgroup updates-6.x-to-7.x statistics updates from 6.x to 7.x
+ * @{
+ */
 
 /**
  * @} End of "defgroup updates-6.x-to-7.x"

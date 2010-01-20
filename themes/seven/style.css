@@ -1,4 +1,4 @@
-/* $Id: style.css,v 1.18 2009/09/11 13:48:44 dries Exp $ */
+/* $Id: style.css,v 1.43 2010/01/14 03:25:43 webchick Exp $ */
 
 /**
  * Generic elements
@@ -22,32 +22,186 @@ a:hover {
 }
 
 hr {
-  display: none;
+  margin: 0;
+  padding: 0;
+  border: none;
+  height: 1px;
+  background: #CCCCCC;
 }
 
 legend {
   font-weight: bold;
 }
 
-#block-system-main h1,
-#block-system-main h2,
-#block-system-main h3,
-#block-system-main h4,
-#block-system-main h5,
-#block-system-main h6 {
-  font-size: 15px;
+h1, h2, h3, h4, h5, h6 {
   font-weight: bold;
-  margin:  10px 0;
+  margin: 10px 0;
 }
 
-#block-system-main dl {
+h1 {
+  font-size: 150%;
+}
+
+h2 {
+  font-size: 140%;
+}
+
+h3 {
+  font-size: 130%;
+}
+
+h4 {
+  font-size: 120%;
+}
+
+h5 {
+  font-size: 110%;
+}
+
+h6 {
+  font-size: 105%;
+}
+
+p {
+  margin: 1em 0;
+}
+
+dl {
   margin: 0 0 20px;
 }
 
-#block-system-main dl dd,
-#block-system-main dl dl {
+dl dd,
+dl dl {
   margin-left: 20px;
   margin-bottom: 10px;
+}
+
+blockquote {
+  margin: 1em 40px;
+}
+
+address {
+  font-style: italic;
+}
+
+u, ins {
+  text-decoration: underline;
+}
+
+s, strike, del {
+  text-decoration: line-through;
+}
+
+big {
+  font-size: larger;
+}
+
+small {
+  font-size: smaller;
+}
+
+sub {
+  vertical-align: sub;
+  font-size: smaller;
+  line-height: normal;
+}
+
+sup {
+  vertical-align: super;
+  font-size: smaller;
+  line-height: normal;
+}
+
+nobr {
+  white-space: nowrap;
+}
+
+abbr, acronym {
+  border-bottom: dotted 1px;
+}
+
+ul, .block ul, .item-list ul, .item-list ul {
+  list-style-type: disc;
+  list-style-image: none;
+  margin: 0.25em 0 0.25em 1.5em;
+}
+
+.item-list ul li, li.leaf, ul.menu li {
+  list-style-type: disc;
+  list-style-image: none;
+}
+
+ul.menu li {
+  margin: 0;
+}
+
+ol {
+  list-style-type: decimal;
+  margin: 0.25em 0 0.25em 2em;
+}
+
+.item-list ul li.collapsed, ul.menu li.collapsed {
+  list-style-image:url(../../misc/menu-collapsed.png);
+  list-style-type:disc;
+}
+
+.item-list ul li.expanded, ul.menu li.expanded {
+  list-style-image:url(../../misc/menu-expanded.png);
+  list-style-type:circle;
+}
+
+quote, code {
+  margin: .5em 0;
+}
+
+code, pre, kbd {
+  font-size: 1.25em;
+}
+
+/**
+ * Skip link.
+ */
+#skip-link {
+  margin-top: 0;
+  position: absolute;
+  left: 50%;
+  margin-left: -5.25em;
+  width: auto;
+  z-index: 50;
+}
+
+#skip-link a,
+#skip-link a:link,
+#skip-link a:visited {
+  position: absolute;
+  display: block;
+  top: auto;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  -moz-border-radius-bottomleft: 10px;
+  -moz-border-radius-bottomright: 10px;
+  -moz-border-radius-topleft: 0;
+  -moz-border-radius-topright: 0;
+  -webkit-border-top-left-radius: 0;
+  -webkit-border-top-right-radius: 0;
+  -webkit-border-bottom-left-radius: 10px;
+  -webkit-border-bottom-right-radius: 10px;
+  border-radius:0 0 10px 10px;
+  background: #444;
+  color: #fff;
+  font-size: 0.94em;
+  text-decoration: none;
+}
+
+#skip-link a:hover,
+#skip-link a:active,
+#skip-link a:focus {
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  padding: 1px 10px 2px 10px;
 }
 
 /**
@@ -55,7 +209,7 @@ legend {
  */
 #branding {
   overflow: hidden;
-  padding: 20px 40px 0 40px;
+  padding: 20px 20px 0 20px;
   position: relative;
   background-color: #e0e0d8;
 }
@@ -111,29 +265,33 @@ legend {
 }
 
 /**
- * Console.
+ * Messages.
  */
-#console div.messages {
+div.messages {
   padding: 9px;
-  margin: 1em 0;
+  margin: 0.5em 0 0;
   color: #036;
   background: #bdf;
   border: 1px solid #ace;
 }
 
-#console div.warning {
+div.warning {
   color: #840;
   background: #fe6;
   border-color: #ed5;
 }
 
-#console div.error {
+div.error {
   color: #fff;
   background: #e63;
   border-color: #d52;
 }
 
-#console div.status {
+div.error p.error {
+  color: #333;
+}
+
+div.status {
   color: #360;
   background: #cf8;
   border-color: #be7;
@@ -149,6 +307,7 @@ legend {
 
 #branding h1.page-title {
   color: #000;
+  margin: 0;
   padding-bottom: 10px;
   font-size: 18px;
   font-weight: normal;
@@ -158,9 +317,8 @@ legend {
 /**
  * Console.
  */
-#page .console {
-  border-top: 1px solid #ccc;
-  padding: 9px 0 10px;
+#console {
+  margin: 9px 0 10px;
 }
 
 /**
@@ -254,31 +412,18 @@ ul.secondary li.active a.active {
  * Page layout.
  */
 #page {
-  padding-bottom: 40px;
+  padding: 20px 0 40px 0;
   margin-right: 40px;
   margin-left: 40px;
-  position: relative;
-}
-
-#block-system-main {
-  padding: 20px 0;
   background: #fff;
+  position: relative;
   color: #333;
 }
 
-#block-system-main ul.menu li,
-#block-system-main ul.menu li a,
-#secondary-links ul.links li,
-#secondary-links ul.links li a {
-  float: left;
-}
-
-#block-system-main ul.menu li,
 #secondary-links ul.links li {
   padding: 0 10px 10px 0;
 }
 
-#block-system-main ul.menu li a,
 #secondary-links ul.links li a {
   font-size: 9px;
   line-height: 10px;
@@ -297,13 +442,13 @@ ul.secondary li.active a.active {
   background: #999;
 }
 
-#block-system-main ul.menu li a {
-  background: #f8f8f8;
-  color: #05a;
+ul.links li,
+ul.inline li {
+  padding-right: 1em;
 }
 
-#block-system-main ul.menu li a:hover {
-  background: #eee;
+ul.inline li {
+  display: inline;
 }
 
 #secondary-links ul.links li.active-trail a,
@@ -311,8 +456,8 @@ ul.secondary li.active a.active {
   background: #333;
 }
 
-#block-system-main ul.node-type-list li,
-#block-system-main ul.admin-list li {
+ul.node-type-list li,
+ul.admin-list li {
   position: relative;
   padding-left: 30px;
   padding-top: 9px;
@@ -324,23 +469,49 @@ ul.secondary li.active a.active {
   list-style-image: none;
 }
 
-#block-system-main ul.admin-list.compact {
+.admin-panel .item-list ul,
+ul.admin-list {
+  margin: 0;
+  padding: 0;
+}
+
+.admin-panel .item-list ul,
+ul.admin-list.compact {
   margin-bottom: 8px;
 }
 
-#block-system-main ul.admin-list.compact li {
-  border: 0;
+.admin-panel .item-list li,
+ul.admin-list.compact li {
+  border: none;
   background: none;
-  margin-bottom: 2px;
-  padding-top: 2px;
+  margin: 0.25em 0 0.25em 1.5em;
+  padding: 0;
+  list-style-type: disc;
 }
 
-#block-system-main ul.admin-list li:last-child {
+ul.admin-list li:last-child {
   border-bottom: none;
 }
 
-#block-system-main ul.node-type-list .label {
+ul.node-type-list .label {
   font-size: 15px;
+}
+
+ul.node-type-list li a, ul.admin-list li a {
+  margin-left: -30px;
+  padding: 0px 0 4px 30px;
+  min-height: 0;
+}
+
+ul.admin-list.compact li a {
+  margin-left: 0;
+  padding: 0;
+}
+
+ul.node-type-list li div.description a, ul.admin-list li div.description a {
+  margin-left: 0px;
+  padding: 0px;
+  min-height: inherit;
 }
 
 /**
@@ -351,14 +522,13 @@ table {
   font-size: 12px;
   margin: 0 0 10px;
   border: 1px solid #bebfb9;
-  border-top: 0;
 }
 
 table.system-status-report th,
 table td,
 table th {
   vertical-align: middle;
-  padding: 8px 5px 8px 10px;
+  padding: 8px 10px;
 }
 
 table.system-status-report th {
@@ -397,10 +567,10 @@ table th {
   text-transform: uppercase;
   background: #e1e2dc;
   font-weight: normal;
-  border-width: 0 1px 1px 1px;
+  border-width: 1px;
   border-style: solid;
   border-color: #bebfb9;
-  padding: 3px 3px 3px 10px;
+  padding: 3px 10px;
 }
 
 table th.active {
@@ -409,11 +579,13 @@ table th.active {
 
 table th a {
   display: block;
+  position: relative;
 }
 
 table th.active img {
-  float: right;
-  margin-top: 3px;
+  position: absolute;
+  top: 3px;
+  right: 3px;
 }
 
 table td.active {
@@ -479,7 +651,7 @@ html.js fieldset.collapsible .fieldset-wrapper {
 }
 
 div.form-item {
-  padding: 9px;
+  padding: 9px 0;
   margin: 0 0 10px;
 }
 
@@ -520,7 +692,7 @@ div.form-item label.option input {
 .filter-wrapper {
   border-top: 0;
   width: 95%;
-  padding: 10px 2px 10px 2px;
+  padding: 10px 2px;
 }
 
 .filter-wrapper > div {
@@ -544,14 +716,19 @@ div.form-item div.description {
   color: #666;
 }
 
+ul.tips li {
+  margin: 0.25em 0 0.25em 1.5em;
+}
+
 body div.form-type-radio div.description, body div.form-type-checkbox div.description {
   margin-left: 1.5em;
 }
 
 /* Buttons */
-input.form-submit {
+input.form-submit, a.button {
   cursor: pointer;
   padding: 4px 17px;
+  margin-bottom: 1em;
   color: #5a5a5a;
   text-align: center;
   font-weight: normal;
@@ -564,6 +741,11 @@ input.form-submit {
   -moz-border-radius: 20px;
   -webkit-border-radius: 15px;
   font-size: 1.1em;
+}
+
+a.button:link, a.button:visited, a.button:hover, a.button:active {
+  text-decoration: none;
+  color: #5a5a5a;
 }
 
 div.node-form input#edit-submit,
@@ -608,6 +790,11 @@ select.form-select:focus {
   border-color: #ace;
 }
 
+.resizable-textarea .grippie {
+  width: 100%; 
+  padding: 0 2px;
+}
+
 html.js input.form-autocomplete {
   background-position: 100% 4px;
 }
@@ -618,6 +805,8 @@ html.js input.throbbing {
 
 ul.action-links {
   margin: 1em 0;
+  padding: 0 20px 0 20px;
+  list-style-type: none;
   overflow: hidden;
 }
 
@@ -634,7 +823,7 @@ ul.action-links a {
 
 /* Exceptions */
 #diff-inline-form select,
-#block-system-main div.filter-options select {
+div.filter-options select {
   padding: 0;
 }
 
@@ -660,7 +849,7 @@ div.admin-panel {
   border: 1px solid #ccc;
 }
 
-#block-system-main div.admin-panel h3 {
+div.admin-panel h3 {
   font-size: 12px;
   text-transform: uppercase;
   margin: 0;
@@ -671,14 +860,30 @@ div.admin-panel {
   display: block;
 }
 
+/* admin/appearance */
+#system-themes-page h2 {
+  font-weight: normal;
+  text-transform: uppercase;
+}
+.theme-selector h3 {
+  font-weight: normal;
+}
+.theme-default h3 {
+  font-weight: bold;
+}
+.system-themes-list-enabled .theme-selector h3 {
+  margin-top: 0;
+}
+
 /* admin/content and admin/people */
-#block-system-main dl.multiselect,
-#block-system-main dl.multiselect dt,
-#block-system-main dl.multiselect dd {
+dl.multiselect,
+dl.multiselect dt,
+dl.multiselect dd {
   margin: 0 10px 0 0;
 }
 
-#block-system-main dl.multiselect select {
+dl.multiselect select,
+dl.multiselect dd select {
   font-size: 12px;
   background: #fff;
   border: 1px solid #ccc;
@@ -715,23 +920,104 @@ div.admin-options div.form-item {
   border: none;
 }
 
-/* Overlay theming */
-body.overlay {
-  background: #fff;
+/* Maintenance theming */
+body.in-maintenance #sidebar-first {
+  float: left;
+  width: 200px;
+}
+body.in-maintenance #content {
+  float: right;
+  width: 550px;
+  padding-right: 20px;
+}
+body.in-maintenance #page {
+  overflow: auto;
+  width: 770px;
+  margin: 0 auto;
+  padding-top: 2em;
+}
+body.in-maintenance #branding h1 {
+  width: 770px;
+  margin: 0 auto;
+  float: none;
 }
 
-body.overlay #branding,
-body.overlay #page-title,
-body.overlay #page #left,
-body.overlay #page #footer {
+body.in-maintenance .form-radios .form-type-radio {
+  padding: 2px 0;
+}
+
+body.in-maintenance div.form-item:after {
+  content: "";
+  display: none;
+  clear: none;
+}
+
+body.in-maintenance .form-submit {
+  display: block;
+}
+
+body.in-maintenance #logo {
+  margin-bottom: 1.5em;
+}
+
+ol.task-list {
+  margin-left: 0; /* LTR */
+  list-style-type: none;
+  list-style-image: none;
+}
+ol.task-list li {
+  padding: 0.5em 1em 0.5em 20px; /* LTR */
+  color: #adadad;
+}
+ol.task-list li.active {
+  background: transparent url(images/task-item.png) no-repeat 3px 50%; /* LTR */
+  padding: 0.5em 1em 0.5em 20px; /* LTR */
+  color: #000;
+}
+ol.task-list li.done {
+  color: #393;
+  background: transparent url(images/task-check.png) no-repeat 0px 50%; /* LTR */
+  color: green;
+}
+
+/* Overlay theming */
+.overlay #branding {
+  background-color: #fff;
+  padding-top: 15px;
+}
+.overlay .primary,
+.overlay #branding h1.page-title,
+.overlay #left,
+.overlay #footer {
   display: none;
 }
-
-body.overlay #page {
+.overlay #page {
   margin: 0;
+  padding: 0 20px;
+}
+.overlay #branding div.breadcrumb {
+  float: left;
+  position: relative;
+  z-index: 10;
+}
+.overlay ul.secondary {
+  background: transparent none;
+  margin: -2.4em 0 0.5em 0;
+  padding: 3px 10px;
+}
+.overlay #content {
   padding: 0;
 }
 
-body.overlay #block-system-main {
-  padding: 20px;
+/* Shortcut theming */
+div.add-or-remove-shortcuts {
+  float: left;
+  padding-top: 6px;
+  padding-left: 6px;
+}
+
+/* Dashboard */
+#dashboard div.block h2 {
+  margin: 0;
+  font-size: 1em;
 }

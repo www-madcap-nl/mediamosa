@@ -7,9 +7,8 @@ core = 7.x
 files[]=number.module
 required = TRUE
 
-; Information added by drupal.org packaging script on 2009-09-21
-version = "7.x-dev"
-core = "7.x"
+; Information added by drupal.org packaging script on 2010-01-15
+version = "7.0-alpha1"
 project = "drupal"
-datestamp = "1253535013"
+datestamp = "1263566707"
 

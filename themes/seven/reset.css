@@ -1,7 +1,7 @@
-/* $Id: reset.css,v 1.1 2009/07/31 19:35:57 dries Exp $ */
+/* $Id: reset.css,v 1.4 2009/11/17 02:50:41 webchick Exp $ */
 
 /**
- * Reset CSS styles. 
+ * Reset CSS styles.
  *
  * Based on Eric Meyer's "Reset CSS 1.0" tool from
  * http://meyerweb.com/eric/tools/css/reset
@@ -124,13 +124,10 @@ tr.even .form-item,
 .item-list .pager li,
 .pager-current,
 .tips,
-dl.multiselect dd.b,
-dl.multiselect dd.b .form-item,
-dl.multiselect dd.b select,
-dl.multiselect dd.a,
-dl.multiselect dd.a .form-item,
-dl.multiselect dt,
 dl.multiselect dd,
+dl.multiselect dd .form-item,
+dl.multiselect dd select,
+dl.multiselect dt,
 dl.multiselect .form-item,
 ul.primary,
 ul.primary li,
@@ -150,7 +147,6 @@ ul.secondary a.active,
   vertical-align: baseline;
   background: transparent;
   line-height: inherit;
-  text-align: left;
 }
 
 
@@ -185,8 +181,8 @@ q:before, q:after {
 }
 
 /* Remember to highlight inserts somehow! */
-ins { 
-  text-decoration: none; 
+ins {
+  text-decoration: none;
 }
 del {
   text-decoration: line-through;
@@ -207,8 +203,8 @@ table {
 input,
 select,
 textarea,
-body { 
-  font: 13px/20px "Helvetica Neue", Helvetica, Arial, sans-serif; 
+body {
+  font: 13px/20px "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 /**

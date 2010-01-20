@@ -1,19 +1,21 @@
 <?php
-// $Id: node.tpl.php,v 1.16 2009/09/11 06:48:03 dries Exp $
+// $Id: node.tpl.php,v 1.21 2010/01/04 03:57:19 webchick Exp $
 ?>
 <div id="node-<?php print $node->nid; ?>" class="<?php print $classes; ?>"<?php print $attributes; ?>>
 
   <?php print $user_picture; ?>
 
+  <?php print render($title_prefix); ?>
   <?php if (!$page): ?>
-    <h2<?php print $title_attributes; ?>><a href="<?php print $node_url; ?>"><?php print $title; ?></a></h2>
+    <h2<?php print $title_attributes; ?>><a href="<?php print $node_url; ?>"><?php print $node_title; ?></a></h2>
   <?php endif; ?>
+  <?php print render($title_suffix); ?>
 
   <?php if ($display_submitted): ?>
     <span class="submitted"><?php print $date; ?> — <?php print $name; ?></span>
   <?php endif; ?>
 
-  <div class="content clearfix">
+  <div class="content clearfix"<?php print $content_attributes; ?>>
     <?php
       // We hide the comments and links now so that we can render them later.
       hide($content['comments']);

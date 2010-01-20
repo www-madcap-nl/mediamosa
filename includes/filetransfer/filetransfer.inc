@@ -1,5 +1,5 @@
 <?php
-// $Id: filetransfer.inc,v 1.4 2009/08/28 07:51:55 dries Exp $
+// $Id: filetransfer.inc,v 1.7 2009/12/04 16:31:04 dries Exp $
 
 /*
  * Base FileTransfer class.
@@ -27,10 +27,11 @@ abstract class FileTransfer {
   abstract static function factory($jail, $settings);
 
   /**
-   * Implementation of the magic __get() method. If the connection isn't set to
-   * anything, this will call the connect() method and set it to and return the
-   * result; afterwards, the connection will be returned directly without using
-   * this method.
+   * Implementation of the magic __get() method.
+   *
+   * If the connection isn't set to anything, this will call the connect() method
+   * and set it to and return the result; afterwards, the connection will be
+   * returned directly without using this method.
    */
   function __get($name) {
     if ($name == 'connection') {
@@ -72,13 +73,14 @@ abstract class FileTransfer {
    * @param bool $recursive
    */
   public final function chmod($path, $mode, $recursive = FALSE) {
+    if (!in_array('FileTransferChmodInterface', class_implements(get_class($this)))) {
+      throw new FileTransferException('Unable to change file permissions');
+    }
     $path = $this->sanitizePath($path);
     $path = $this->fixRemotePath($path);
     $this->checkPath($path);
     $this->chmodJailed($path, $mode, $recursive);
   }
-
-  protected abstract function chmodJailed($path, $mode, $recursive);
 
   /**
    * Creates a directory.
@@ -155,7 +157,7 @@ abstract class FileTransfer {
    * @param $path
    * @param $strip_chroot
    *
-   * @return string;
+   * @return string
    */
   protected final function fixRemotePath($path, $strip_chroot = TRUE) {
     $path = $this->sanitizePath($path);
@@ -172,7 +174,7 @@ abstract class FileTransfer {
   * Changes backslahes to slashes, also removes a trailing slash.
   *
   * @param string $path
-  * @return string;
+  * @return string
   */
   function sanitizePath($path) {
     $path = str_replace('\\', '/', $path); // Windows path sanitiation.
@@ -263,10 +265,13 @@ abstract class FileTransfer {
   abstract public function isFile($path);
 
   /**
-   * Gets the chroot property for this connection.  It does this by moving up
-   * the tree until it finds itself.  If successful, it will return a chroot.
+   * Return the chroot property for this connection.
    *
-   * @return string chroot
+   * It does this by moving up the tree until it finds itself. If successful,
+   * it will return the chroot, otherwise FALSE.
+   *
+   * @return
+   *   The chroot path for this connection or FALSE.
    */
   function findChroot() {
     // If the file exists as is, there is no chroot.
@@ -311,4 +316,23 @@ class FileTransferException extends Exception {
     parent::__construct($message, $code);
     $this->arguments = $arguments;
   }
+}
+
+
+/**
+ * A FileTransfer Class implementing this interface can be used to chmod files.
+ */
+interface FileTransferChmodInterface {
+
+  /**
+   * Changes the permissions of the file / directory specified in $path
+   *
+   * @param string $path
+   *   Path to change permissions of.
+   * @param long $mode
+   *   @see http://php.net/chmod
+   * @param boolean $recursive
+   *   Pass TRUE to recursively chmod the entire directory specified in $path.
+   */
+  function chmodJailed($path, $mode, $recursive);
 }

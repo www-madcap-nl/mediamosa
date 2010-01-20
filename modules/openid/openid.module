@@ -1,5 +1,5 @@
 <?php
-// $Id: openid.module,v 1.60 2009/09/21 06:44:14 dries Exp $
+// $Id: openid.module,v 1.70 2010/01/11 16:25:16 webchick Exp $
 
 /**
  * @file
@@ -7,7 +7,7 @@
  */
 
 /**
- * Implement hook_menu().
+ * Implements hook_menu().
  */
 function openid_menu() {
   $items['openid/authenticate'] = array(
@@ -39,48 +39,51 @@ function openid_menu() {
 }
 
 /**
- * Implement hook_help().
+ * Implements hook_help().
  */
 function openid_help($path, $arg) {
   switch ($path) {
     case 'user/%/openid':
-      $output = '<p>' . t('This site supports <a href="@openid-net">OpenID</a>, a secure way to log into many websites using a single username and password. OpenID can reduce the necessity of managing many usernames and passwords for many websites.', array('@openid-net' => 'http://openid.net')) . '</p>';
+      $output = '<p>' . t('This site supports <a href="@openid-net">OpenID</a>, a secure way to log in to many websites using a single username and password. OpenID can reduce the necessity of managing many usernames and passwords for many websites.', array('@openid-net' => 'http://openid.net')) . '</p>';
       $output .= '<p>' . t('To use OpenID you must first establish an identity on a public or private OpenID server. If you do not have an OpenID and would like one, look into one of the <a href="@openid-providers">free public providers</a>. You can find out more about OpenID at <a href="@openid-net">this website</a>.', array('@openid-providers' => 'http://openid.net/get/', '@openid-net' => 'http://openid.net')) . '</p>';
-      $output .= '<p>' . t('If you already have an OpenID, enter the URL to your OpenID server below (e.g. myusername.openidprovider.com). Next time you login, you will be able to use this URL instead of a regular username and password. You can have multiple OpenID servers if you like; just keep adding them here.') . '</p>';
+      $output .= '<p>' . t('If you already have an OpenID, enter the URL to your OpenID server below (e.g. myusername.openidprovider.com). Next time you log in, you will be able to use this URL instead of a regular username and password. You can have multiple OpenID servers if you like; just keep adding them here.') . '</p>';
       return $output;
-
     case 'admin/help#openid':
-      $output = '<p>' . t('OpenID is a secure method for logging into many websites with a single username and password. It does not require special software, and it does not share passwords with any site to which it is associated; including your site.') . '</p>';
-      $output .= '<p>' . t('Users can create accounts using their OpenID, assign one or more OpenIDs to an existing account, and log in using an OpenID. This lowers the barrier to registration, which is good for the site, and offers convenience and security to the users. OpenID is not a trust system, so email verification is still necessary. The benefit stems from the fact that users can have a single password that they can use on many websites. This means they can easily update their single password from a centralized location, rather than having to change dozens of passwords individually.') . '</p>';
-      $output .= '<p>' . t('The basic concept is as follows: A user has an account on an OpenID server. This account provides them with a unique URL (such as myusername.openidprovider.com). When the user comes to your site, they are presented with the option of entering this URL. Your site then communicates with the OpenID server, asking it to verify the identity of the user. If the user is logged into their OpenID server, the server communicates back to your site, verifying the user. If they are not logged in, the OpenID server will ask the user for their password. At no point does your site record, or need to record the user\'s password.') . '</p>';
-      $output .= '<p>' . t('More information on OpenID is available at <a href="@openid-net">OpenID.net</a>.', array('@openid-net' => 'http://openid.net')) . '</p>';
-      $output .= '<p>' . t('For more information, see the online handbook entry for <a href="@handbook">OpenID module</a>.', array('@handbook' => 'http://drupal.org/handbook/modules/openid')) . '</p>';
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('The OpenID module allows users to log in using the OpenID single sign on service. <a href="@openid-net">OpenID</a> is a secure method for logging into many websites with a single username and password. It does not require special software, and it does not share passwords with any site to which it is associated, including the site being logged into. The main benefit to users is that they can have a single password that they can use on many websites. This means they can easily update their single password from a centralized location, rather than having to change dozens of passwords individually. For more information, see the online handbook entry for <a href="@handbook">OpenID module</a>.', array('@openid-net' => 'http://openid.net', '@handbook' => 'http://drupal.org/handbook/modules/openid')) . '</p>';
+      $output .= '<h3>' . t('Uses') . '</h3>';
+      $output .= '<dl>';
+      $output .= '<dt>' . t('Logging in with OpenID') . '</dt>';
+      $output .= '<dd>' . t("To log in using OpenID, a user must already have an OpenID account. Users can then create site accounts using their OpenID, assign one or more OpenIDs to an existing account, and log in using an OpenID. This lowers the barrier to registration, which helps increase the user base, and offers convenience and security to the users. Because OpenID cannot guarantee a user is legitimate, email verification is still necessary. When logging in, users are presented with the option of entering their OpenID URL, which will look like <em>myusername.openidprovider.com</em>. The site then communicates with the OpenID server, asking it to verify the identity of the user. If the user is logged into their OpenID server, the server communicates back to your site, verifying the user. If they are not logged in, the OpenID server will ask the user for their password. At no point does the site being logged into record the user's OpenID password.") . '</dd>';
+      $output .= '</dl>';
       return $output;
   }
 }
 
 /**
- * Implement hook_user_insert().
+ * Implements hook_user_insert().
  */
 function openid_user_insert(&$edit, $account, $category) {
   if (isset($_SESSION['openid']['values'])) {
-    // The user has registered after trying to login via OpenID.
+    // The user has registered after trying to log in via OpenID.
     if (variable_get('user_email_verification', TRUE)) {
-      drupal_set_message(t('Once you have verified your email address, you may log in via OpenID.'));
+      drupal_set_message(t('Once you have verified your e-mail address, you may log in via OpenID.'));
     }
+    user_set_authmaps($account, array('authname_openid' => $_SESSION['openid']['values']['response']['openid.claimed_id']));
     unset($_SESSION['openid']);
   }
 }
 
 /**
- * Implement hook_form_FORM_ID_alter().
+ * Implements hook_form_FORM_ID_alter().
  */
 function openid_form_user_login_block_alter(&$form, &$form_state) {
   _openid_user_login_form_alter($form, $form_state);
 }
 
 /**
- * Implement hook_form_FORM_ID_alter().
+ * Implements hook_form_FORM_ID_alter().
  */
 function openid_form_user_login_alter(&$form, &$form_state) {
   _openid_user_login_form_alter($form, $form_state);
@@ -107,7 +110,7 @@ function _openid_user_login_form_alter(&$form, &$form_state) {
   );
 
   $form['openid_links'] = array(
-    '#markup' => theme('item_list', $items),
+    '#markup' => theme('item_list', array('items' => $items)),
     '#weight' => 1,
   );
 
@@ -125,21 +128,29 @@ function _openid_user_login_form_alter(&$form, &$form_state) {
 }
 
 /**
- * Implement hook_form_alter(). Adds OpenID login to the login forms.
+ * Implements hook_form_alter().
+ *
+ * Adds OpenID login to the login forms.
  */
-function openid_form_user_register_alter(&$form, &$form_state) {
+function openid_form_user_register_form_alter(&$form, &$form_state) {
   if (isset($_SESSION['openid']['values'])) {
     // We were unable to auto-register a new user. Prefill the registration
     // form with the values we have.
-    $form['name']['#default_value'] = $_SESSION['openid']['values']['name'];
-    $form['mail']['#default_value'] = $_SESSION['openid']['values']['mail'];
+    $form['account']['name']['#default_value'] = $_SESSION['openid']['values']['name'];
+    $form['account']['mail']['#default_value'] = $_SESSION['openid']['values']['mail'];
+
     // If user_email_verification is off, hide the password field and just fill
     // with random password to avoid confusion.
     if (!variable_get('user_email_verification', TRUE)) {
       $form['pass']['#type'] = 'hidden';
       $form['pass']['#value'] = user_password();
     }
-    $form['auth_openid'] = array('#type' => 'hidden', '#value' => $_SESSION['openid']['values']['auth_openid']);
+    $form['openid_display'] = array(
+      '#type' => 'item',
+      '#title' => t('Your OpenID'),
+      '#description' => t('This OpenID will be attached to your account after registration.'),
+      '#markup' => check_plain($_SESSION['openid']['values']['response']['openid.claimed_id']),
+    );
   }
 }
 
@@ -172,7 +183,7 @@ function openid_begin($claimed_id, $return_to = '', $form_values = array()) {
 
   $services = openid_discovery($claimed_id);
   if (count($services) == 0) {
-    form_set_error('openid_identifier', t('Sorry, that is not a valid OpenID. Please ensure you have spelled your ID correctly.'));
+    form_set_error('openid_identifier', t('Sorry, that is not a valid OpenID. Ensure you have spelled your ID correctly.'));
     return;
   }
 
@@ -428,29 +439,44 @@ function openid_authentication($response) {
   }
   elseif (variable_get('user_register', 1)) {
     // Register new user
-    $form_state['args'] = array();
+    $form_state['build_info']['args'] = array();
     $form_state['redirect'] = NULL;
-    $form_state['values']['name'] = (empty($response['openid.sreg.nickname'])) ? $identity : $response['openid.sreg.nickname'];
-    $form_state['values']['mail'] = (empty($response['openid.sreg.email'])) ? '' : $response['openid.sreg.email'];
+    $form_state['values']['name'] = !empty($response['openid.sreg.nickname']) ? $response['openid.sreg.nickname'] : '';
+    $form_state['values']['mail'] = !empty($response['openid.sreg.email']) ? $response['openid.sreg.email'] : '';
     $form_state['values']['pass']  = user_password();
     $form_state['values']['status'] = variable_get('user_register', 1) == 1;
     $form_state['values']['response'] = $response;
-    $form = drupal_retrieve_form('user_register', $form_state);
-    drupal_prepare_form('user_register', $form, $form_state);
-    drupal_validate_form('user_register', $form, $form_state);
-    if (form_get_errors()) {
+
+    if (empty($response['openid.sreg.email']) && empty($response['openid.sreg.nickname'])) {
+      drupal_set_message(t('Complete the registration by filling out the form below. If you already have an account, you can <a href="@login">log in</a> now and add your OpenID under "My account".', array('@login' => url('user/login'))), 'warning');
+      $success = FALSE;
+    }
+    else {
+      $form = drupal_retrieve_form('user_register_form', $form_state);
+      drupal_prepare_form('user_register_form', $form, $form_state);
+      drupal_validate_form('user_register_form', $form, $form_state);
+      $success = !form_get_errors();
+      if (!$success) {
+        drupal_set_message(t('Account registration using the information provided by your OpenID provider failed due to the reasons listed below. Complete the registration by filling out the form below. If you already have an account, you can <a href="@login">log in</a> now and add your OpenID under "My account".', array('@login' => url('user/login'))), 'warning');
+        // Append form validation errors below the above warning.
+        $messages = drupal_get_messages('error');
+        foreach ($messages['error'] as $message) {
+          drupal_set_message( $message, 'error');
+        }
+      }
+    }
+    if (!$success) {
       // We were unable to register a valid new user, redirect to standard
       // user/register and prefill with the values we received.
-      drupal_set_message(t('OpenID registration failed for the reasons listed. You may register now, or if you already have an account you can <a href="@login">log in</a> now and add your OpenID under "My Account"', array('@login' => url('user/login'))), 'error');
       $_SESSION['openid']['values'] = $form_state['values'];
       // We'll want to redirect back to the same place.
       $destination = drupal_get_destination();
       unset($_GET['destination']);
-      drupal_goto('user/register', $destination);
+      drupal_goto('user/register', array('query' => $destination));
     }
     else {
       unset($form_state['values']['response']);
-      $account = user_save('', $form_state['values']);
+      $account = user_save(drupal_anonymous_user(), $form_state['values']);
       // Terminate if an error occurred during user_save().
       if (!$account) {
         drupal_set_message(t("Error saving user account."), 'error');

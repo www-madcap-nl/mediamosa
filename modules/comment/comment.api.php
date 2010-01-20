@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.api.php,v 1.11 2009/08/17 13:10:45 webchick Exp $
+// $Id: comment.api.php,v 1.15 2009/12/26 16:50:08 dries Exp $
 
 /**
  * @file
@@ -69,7 +69,35 @@ function hook_comment_load($comments) {
  */
 function hook_comment_view($comment) {
   // how old is the comment
-  $comment->time_ago = time() - $comment->timestamp;
+  $comment->time_ago = time() - $comment->changed;
+}
+
+/**
+ * The comment was built; the module may modify the structured content.
+ *
+ * This hook is called after the content has been assembled in a structured array
+ * and may be used for doing processing which requires that the complete comment
+ * content structure has been built.
+ *
+ * If the module wishes to act on the rendered HTML of the comment rather than the
+ * structured content array, it may use this hook to add a #post_render callback.
+ * Alternatively, it could also implement hook_preprocess_comment(). See
+ * drupal_render() and theme() documentation respectively for details.
+ *
+ * @param $build
+ *   A renderable array representing the comment.
+ *
+ * @see comment_view()
+ */
+function hook_comment_view_alter($build) {
+  // Check for the existence of a field added by another module.
+  if ($build['#view_mode'] == 'full' && isset($build['an_additional_field'])) {
+    // Change its weight.
+    $build['an_additional_field']['#weight'] = -10;
+  }
+
+  // Add a #post_render callback to act on the rendered HTML of the comment.
+  $build['#post_render'][] = 'my_module_comment_post_render';
 }
 
 /**

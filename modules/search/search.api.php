@@ -1,5 +1,5 @@
 <?php
-// $Id: search.api.php,v 1.16 2009/09/18 00:12:47 webchick Exp $
+// $Id: search.api.php,v 1.22 2010/01/09 21:54:01 webchick Exp $
 
 /**
  * @file
@@ -24,6 +24,9 @@
  * You will need to merge any custom search values into the search keys
  * using a key:value syntax. This allows all search queries to have a clean
  * and permanent URL. See node_form_search_form_alter() for an example.
+ *
+ * You can also alter the display of your module's search results
+ * by implementing hook_search_page().
  *
  * The example given here is for node.module, which uses the indexed search
  * capabilities. To do this, node module also implements hook_update_index()
@@ -153,8 +156,8 @@ function hook_search_execute($keys = NULL) {
   // Insert special keywords.
   $query->setOption('type', 'n.type');
   $query->setOption('language', 'n.language');
-  if ($query->setOption('term', 'tn.nid')) {
-    $query->join('taxonomy_term_node', 'tn', 'n.vid = tn.vid');
+  if ($query->setOption('term', 'ti.tid')) {
+    $query->join('taxonomy_index', 'ti', 'n.nid = ti.nid');
   }
   // Only continue if the first pass query matches.
   if (!$query->executeFirstPass()) {
@@ -192,7 +195,7 @@ function hook_search_execute($keys = NULL) {
       'link' => url('node/' . $item->sid, array('absolute' => TRUE)),
       'type' => check_plain(node_type_get_name($node)),
       'title' => $node->title,
-      'user' => theme('username', $node),
+      'user' => theme('username', array('account' => $node)),
       'date' => $node->changed,
       'node' => $node,
       'extra' => $extra,
@@ -201,6 +204,39 @@ function hook_search_execute($keys = NULL) {
     );
   }
   return $results;
+}
+
+/** 
+ * Override the rendering of search results.
+ *
+ * A module that implements hook_search() to define a type of search
+ * may implement this hook in order to override the default theming of
+ * its search results, which is otherwise themed using
+ * theme('search_results').
+ *
+ * Note that by default, theme('search_results') and
+ * theme('search_result') work together to create a definition
+ * list. So your hook_search_page() implementation should probably do
+ * this as well.
+ *
+ * @see search-result.tpl.php, search-results.tpl.php
+ *
+ * @param $results
+ *   An array of search results.
+ * @return
+ *   An HTML string containing the formatted search results, with
+ *   a pager included.
+ */
+function hook_search_page($results) {
+  $output = '<dl class="search-results">';
+
+  foreach ($results as $entry) {
+    $output .= theme('search_result', $entry, $type);
+  }
+  $output .= '</dl>';
+  $output .= theme('pager', NULL);
+
+  return $output;
 }
 
 /**

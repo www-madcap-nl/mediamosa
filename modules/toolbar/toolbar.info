@@ -1,16 +1,13 @@
-; $Id: toolbar.info,v 1.2 2009/07/06 13:54:21 dries Exp $
+; $Id: toolbar.info,v 1.4 2009/12/04 16:02:42 dries Exp $
 name = Toolbar
-description = Toolbar exposing the top level administration menu items
+description = Provides a toolbar that shows the top-level administration menu items and links from other modules.
 core = 7.x
 package = Core
 version = VERSION
-files[] = toolbar.install
 files[] = toolbar.module
-dependencies[] = menu
 
-; Information added by drupal.org packaging script on 2009-09-21
-version = "7.x-dev"
-core = "7.x"
+; Information added by drupal.org packaging script on 2010-01-15
+version = "7.0-alpha1"
 project = "drupal"
-datestamp = "1253535013"
+datestamp = "1263566707"
 

@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.tpl.php,v 1.12 2009/09/11 06:48:02 dries Exp $
+// $Id: comment.tpl.php,v 1.18 2010/01/07 05:23:51 webchick Exp $
 
 /**
  * @file
@@ -11,8 +11,14 @@
  *   print a subset such as render($content['field_example']). Use
  *   hide($content['field_example']) to temporarily suppress the printing of a
  *   given element.
- * - $date: Date and time of posting.
+ * - $created: Formatted date and time for when the comment was created.
+ *   Preprocess functions can reformat it by calling format_date() with the
+ *   desired parameters on the $comment->created variable.
+ * - $changed: Formatted date and time for when the comment was last changed.
+ *   Preprocess functions can reformat it by calling format_date() with the
+ *   desired parameters on the $comment->changed variable.
  * - $new: New comment marker.
+ * - $permalink: Comment permalink.
  * - $picture: Authors picture.
  * - $signature: Authors signature.
  * - $status: Comment status. Possible values are:
@@ -29,6 +35,12 @@
  *   - comment-unpublished: An unpublished comment visible only to administrators.
  *   - comment-by-viewer: Comment by the user currently viewing the page.
  *   - comment-new: New comment since last the visit.
+ * - $title_prefix (array): An array containing additional output populated by
+ *   modules, intended to be displayed in front of the main title tag that
+ *   appears in the template.
+ * - $title_suffix (array): An array containing additional output populated by
+ *   modules, intended to be displayed after the main title tag that appears in
+ *   the template.
  *
  * These two variables are provided for context:
  * - $comment: Full comment object.
@@ -51,16 +63,19 @@
     <span class="new"><?php print $new ?></span>
   <?php endif; ?>
 
+  <?php print render($title_prefix); ?>
   <h3<?php print $title_attributes; ?>><?php print $title ?></h3>
+  <?php print render($title_suffix); ?>
 
   <div class="submitted">
+    <?php print $permalink; ?>
     <?php
-      print t('Submitted by !username on @datetime.',
-        array('!username' => $author, '@datetime' => $date));
+      print t('Submitted by !username on !datetime.',
+        array('!username' => $author, '!datetime' => $created));
     ?>
   </div>
 
-  <div class="content">
+  <div class="content"<?php print $content_attributes; ?>>
     <?php
       // We hide the comments and links now so that we can render them later.
       hide($content['links']);

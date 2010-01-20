@@ -1,5 +1,5 @@
 <?php
-// $Id: session.inc,v 1.71 2009/09/05 13:05:30 dries Exp $
+// $Id: session.inc,v 1.76 2010/01/14 02:05:34 webchick Exp $
 
 /**
  * @file
@@ -151,12 +151,19 @@ function _drupal_session_write($sid, $value) {
     'session' => $value,
     'timestamp' => REQUEST_TIME,
   );
-  $insecure_session_name = substr(session_name(), 1);
-  if ($is_https && isset($_COOKIE[$insecure_session_name])) {
-    $fields['sid'] = $_COOKIE[$insecure_session_name];
+  $key = array('sid' => $sid);
+  if ($is_https) {
+    $key['ssid'] = $sid;
+    $insecure_session_name = substr(session_name(), 1);
+    // The "secure pages" setting allows a site to simultaneously use both
+    // secure and insecure session cookies. If enabled, use the insecure session
+    // identifier as the sid.
+    if (variable_get('https', FALSE) && isset($_COOKIE[$insecure_session_name])) {
+      $key['sid'] = $_COOKIE[$insecure_session_name];
+    }
   }
   db_merge('sessions')
-    ->key(array($is_https ? 'ssid' : 'sid' => $sid))
+    ->key($key)
     ->fields($fields)
     ->execute();
 
@@ -204,9 +211,12 @@ function drupal_session_initialize() {
 
 /**
  * Forcefully start a session, preserving already set session data.
+ *
+ * @ingroup php_wrappers
  */
 function drupal_session_start() {
-  if (!drupal_session_started()) {
+  // Command line clients do not support cookies nor sessions.
+  if (!drupal_session_started() && !drupal_is_cli()) {
     // Save current session data before starting it, as PHP will destroy it.
     $session_data = isset($_SESSION) ? $_SESSION : NULL;
 
@@ -264,6 +274,8 @@ function drupal_session_started($set = NULL) {
 
 /**
  * Called when an anonymous user becomes authenticated or vice-versa.
+ *
+ * @ingroup php_wrappers
  */
 function drupal_session_regenerate() {
   global $user, $is_https;
@@ -299,35 +311,11 @@ function drupal_session_regenerate() {
 }
 
 /**
- * Counts how many users are active on the site.
- *
- * Counts how many users have sessions which have been active since the
- * specified time. Can count either anonymous sessions or
- * authenticated sessions.
- *
- * @param int $timestamp.
- *   A Unix timestamp. Users who have been active since this time will be
- *   counted. The default is 0, which counts all existing sessions.
- * @param boolean $anonymous
- *   TRUE counts only anonymous users.
- *   FALSE counts only authenticated users.
- * @return int
- *   The number of users with sessions.
- */
-function drupal_session_count($timestamp = 0, $anonymous = TRUE) {
-  $query = db_select('sessions');
-  $query->addExpression('COUNT(sid)', 'count');
-  $query->condition('timestamp', $timestamp, '>=');
-  $query->condition('uid', 0, $anonymous ? '=' : '>');
-  return $query->execute()->fetchField();
-}
-
-/**
  * Session handler assigned by session_set_save_handler().
  *
  * Cleanup a specific session.
  *
- * @param string $sid
+ * @param $sid
  *   Session ID.
  */
 function _drupal_session_destroy($sid) {
@@ -369,7 +357,7 @@ function _drupal_session_delete_cookie($name, $force_insecure = FALSE) {
 /**
  * End a specific user's session(s).
  *
- * @param string $uid
+ * @param $uid
  *   User ID.
  */
 function drupal_session_destroy_uid($uid) {
@@ -383,7 +371,7 @@ function drupal_session_destroy_uid($uid) {
  *
  * Cleanup stalled sessions.
  *
- * @param int $lifetime
+ * @param $lifetime
  *   The value of session.gc_maxlifetime, passed by PHP.
  *   Sessions not updated for more than $lifetime seconds will be removed.
  */

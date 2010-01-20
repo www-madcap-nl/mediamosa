@@ -1,4 +1,4 @@
-// $Id: system.js,v 1.35 2009/09/09 21:53:15 dries Exp $
+// $Id: system.js,v 1.39 2010/01/04 16:08:52 webchick Exp $
 (function ($) {
 
 /**
@@ -17,7 +17,7 @@ Drupal.hideEmailAdministratorCheckbox = function () {
   // Toggle the display as necessary when the checkbox is clicked.
   $('#edit-update-status-module-1').change( function () {
     $('.form-item-update-status-module-2').toggle();
-  })
+  });
 };
 
 /**
@@ -97,35 +97,20 @@ Drupal.behaviors.copyFieldValue = {
  */
 Drupal.behaviors.dateTime = {
   attach: function (context, settings) {
-    // Show/hide custom format depending on the select's value.
-    $('select.date-format', context).once('date-time').change(function () {
-      $(this).parents('div.date-container').children('div.custom-container')[$(this).val() == 'custom' ? 'show' : 'hide']();
-    });
+    for (var value in settings.dateTime) {
+      var settings = settings.dateTime[value];
+      var source = '#edit-' + value;
+      var suffix = source + '-suffix';
 
-    // Attach keyup handler to custom format inputs.
-    $('input.custom-format', context).once('date-time').keyup(function () {
-      var input = $(this);
-      var url = settings.dateTime.lookup + (settings.dateTime.lookup.match(/\?q=/) ? '&format=' : '?format=') + encodeURIComponent(input.val());
-      $.getJSON(url, function (data) {
-        $('div.description span', input.parent()).html(data);
+      // Attach keyup handler to custom format inputs.
+      $('input' + source, context).once('date-time').keyup(function () {
+        var input = $(this);
+        var url = settings.lookup + (settings.lookup.match(/\?q=/) ? '&format=' : '?format=') + encodeURIComponent(input.val());
+        $.getJSON(url, function (data) {
+          $(suffix).empty().append(' ' + settings.text + ': <em>' + data + '</em>');
+        });
       });
-    });
-
-    // Trigger the event handler to show the form input if necessary.
-    $('select.date-format', context).trigger('change');
-  }
-};
-
-/**
- * Show/hide settings for user configurable time zones depending on whether
- * users are able to set their own time zones or not.
- */
-Drupal.behaviors.userTimeZones = {
-  attach: function (context, settings) {
-    $('#empty-timezone-message-wrapper .description').hide();
-    $('#edit-configurable-timezones', context).change(function () {
-      $('#empty-timezone-message-wrapper').toggle();
-    });
+    }
   }
 };
 
@@ -226,4 +211,3 @@ Drupal.behaviors.machineReadableValue = {
 };
 
 })(jQuery);
-

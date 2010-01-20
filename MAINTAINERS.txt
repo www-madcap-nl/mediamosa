@@ -1,7 +1,10 @@
-// $Id: MAINTAINERS.txt,v 1.32 2009/08/25 10:58:31 dries Exp $
+// $Id: MAINTAINERS.txt,v 1.38 2010/01/10 02:57:06 webchick Exp $
 
 List of maintainers
 --------------------------------------------------------------------------------
+
+CONTACT MODULE
+Dave Reid 'davereid' <http://drupal.org/user/53892>
 
 DATABASE SYSTEM
 Larry Garfield 'Crell' <http://drupal.org/user/26398>
@@ -21,8 +24,15 @@ Larry Garfield 'Crell' <http://drupal.org/user/26398>
 DOCUMENTATION COORDINATOR
 Addison Berry 'add1sun' <http://drupal.org/user/65088>
 
+FIELD SYSTEM
+Barry Jaspan 'bjaspan' <http://drupal.org/user/46413>
+Yves Chedemois 'yched' <http://drupal.org/user/39567>
+
 FILE MANAGEMENT SYSTEM
 Andrew Morton 'drewish' <http://drupal.org/user/34869>
+
+FILTER SYSTEM
+Daniel F. Kudwien 'sun' <http://drupal.org/user/54136>
 
 FORM SYSTEM
 Károly Négyesi 'chx' <http://drupal.org/user/9446>
@@ -36,8 +46,15 @@ Khalid Baheyeldin 'kbahey' <http://drupal.org/user/4063>
 MENU SYSTEM
 Peter Wolanin <http://drupal.org/user/49851>
 
+PATH SYSTEM
+Dave Reid 'davereid' <http://drupal.org/user/53892>
+
 SECURITY COORDINATOR
 Heine Deelstra 'heine' <http://drupal.org/user/17943>
+
+TAXONOMY MODULE
+Nathaniel Catchpole 'catch' <http://drupal.org/user/35733>
+Benjamin Doherty 'bangpound' <http://drupal.org/user/100456>
 
 TESTING SUBSYSTEM
 Károly Négyesi 'chx' <http://drupal.org/user/9446>
@@ -49,6 +66,7 @@ Joon Park 'dvessel' <http://drupal.org/user/56782>
 
 UPDATE MODULE
 Derek Wright 'dww' <http://drupal.org/user/46549>
+Dave Reid 'davereid' <http://drupal.org/user/53892>
 
 USER EXPERIENCE AND USABILITY
 Roy Scholten 'yoroy' <http://drupal.org/user/41502>

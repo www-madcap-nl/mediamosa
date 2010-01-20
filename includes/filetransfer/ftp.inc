@@ -1,47 +1,83 @@
 <?php
-// $Id: ftp.inc,v 1.6 2009/08/28 07:51:55 dries Exp $
+// $Id: ftp.inc,v 1.12 2010/01/11 16:25:16 webchick Exp $
+
+/**
+ * Base class for FTP implementations.
+ */
+abstract class FileTransferFTP extends FileTransfer {
+
+  public function __construct($jail, $username, $password, $hostname, $port) {
+    $this->username = $username;
+    $this->password = $password;
+    $this->hostname = $hostname;
+    $this->port = $port;
+    parent::__construct($jail);
+  }
+
+  /**
+   * Return an object which can implement the FTP protocol.
+   *
+   * @param string $jail
+   * @param array $settings
+   * @return FileTransferFTP
+   *   The appropriate FileTransferFTP subclass based on the available
+   *   options.  If the FTP PHP extension is available, use it.  Otherwise, we
+   *   try to use the FTP file stream support.
+   */
+  static function factory($jail, $settings) {
+    $settings['hostname'] = empty($settings['hostname']) ? 'localhost' : $settings['hostname'];
+    $settings['port'] = empty($settings['port']) ? 21 : $settings['port'];
+
+    if (function_exists('ftp_connect')) {
+      $class = 'FileTransferFTPExtension';
+    }
+    elseif (ini_get('allow_url_fopen')) {
+      $class = 'FileTransferFTPWrapper';
+    }
+    else {
+      throw new FileTransferException('No FTP backend available.');
+    }
+
+    return new $class($jail, $settings['username'], $settings['password'], $settings['hostname'], $settings['port']);
+  }
+}
 
 /**
  * Connection class using the FTP URL wrapper.
  */
-class FileTransferFTPWrapper extends FileTransfer {
+class FileTransferFTPWrapper extends FileTransferFTP {
+
   function connect() {
     $this->connection = 'ftp://' . urlencode($this->username) . ':' . urlencode($this->password) . '@' . $this->hostname . ':' . $this->port . '/';
     if (!is_dir($this->connection)) {
       throw new FileTransferException('FTP Connection failed.');
     }
   }
-  
-  static function factory($jail, $settings) {
-    $settings['hostname'] = empty($settings['hostname']) ? 'localhost' : $settings['hostname'];
-    $settings['port'] = empty($settings['port']) ? 21 : $settings['port'];
-    return new FileTransferFTPWrapper($jail, $settings['username'], $settings['password'], $settings['hostname'], $settings['port']);
-  }
 
   function createDirectoryJailed($directory) {
-    if (!@drupal_mkdir($directory)) {
+    if (!@drupal_mkdir($this->connection . $directory)) {
       $exception = new FileTransferException('Cannot create directory @directory.', NULL, array('@directory' => $directory));
       throw $exception;
     }
   }
 
   function removeDirectoryJailed($directory) {
-    if (is_dir($directory)) {
-      $dh = opendir($directory);
+    if (is_dir($this->connection . $directory)) {
+      $dh = opendir($this->connection . $directory);
       while (($resource = readdir($dh)) !== FALSE) {
         if ($resource == '.' || $resource == '..') {
           continue;
         }
         $full_path = $directory . DIRECTORY_SEPARATOR . $resource;
-        if (is_file($full_path)) {
+        if (is_file($this->connection . $full_path)) {
           $this->removeFile($full_path);
         }
-        elseif (is_dir($full_path)) {
+        elseif (is_dir($this->connection . $full_path)) {
           $this->removeDirectory($full_path . '/');
         }
       }
       closedir($dh);
-      if (!rmdir($directory)) {
+      if (!rmdir($this->connection . $directory)) {
         $exception = new FileTransferException('Cannot remove @directory.', NULL, array('@directory' => $directory));
         throw $exception;
       }
@@ -68,59 +104,19 @@ class FileTransferFTPWrapper extends FileTransfer {
     // This is stupid, but is_file and file_exists don't work! always return true.
     return @fopen($this->connection . '/' . $path,'r');
   }
-
-  /**
-   * This is impossible with the stream wrapper,
-   * So we cheat and use the other implementation
-   *
-   * @staticvar FileTransferFTPExtension $ftp_ext_file_transfer
-   * @param string $path
-   * @param long $mode
-   * @param bool $recursive
-   */
-  function chmodJailed($path, $mode, $recursive) {
-    static $ftp_ext_file_transfer;
-
-    if (!$ftp_ext_file_transfer) {
-      $ftp_ext_file_transfer = new FileTransferFTPExtension($this->jail, $this->username, $this->password, $this->hostname, $this->port);
-    }
-    $ftp_ext_file_transfer->chmodJailed($path, $mode, $recursive);
-  }
-
 }
 
-class FileTransferFTPExtension extends FileTransfer {
-
-  public function __construct($jail, $username, $password, $hostname, $port) {
-    $this->username = $username;
-    $this->password = $password;
-    $this->hostname = $hostname;
-    $this->port = $port;
-    parent::__construct($jail);
-  }
+class FileTransferFTPExtension extends FileTransferFTP implements FileTransferChmodInterface {
 
   public function connect() {
     $this->connection = ftp_connect($this->hostname, $this->port);
 
     if (!$this->connection) {
-      throw new FileTransferException("Cannot connect to FTP Server, please check settings");
+      throw new FileTransferException("Cannot connect to FTP Server, check settings");
     }
     if (!ftp_login($this->connection, $this->username, $this->password)) {
-      throw new FileTransferException("Cannot login to FTP server, please check username and password");
+      throw new FileTransferException("Cannot log in to FTP server. Check username and password");
     }
-  }
-
-  /**
-   * Returns a copy of itself using common defaults.
-   *
-   * @param string $jail
-   * @param array $settings
-   * @return FileTransferFTPExtension
-   */
-  static function factory($jail, $settings) {
-    $settings['hostname'] = empty($settings['hostname']) ? 'localhost' : $settings['hostname'];
-    $settings['port'] = empty($settings['port']) ? 21 : $settings['port'];
-    return new FileTransferFTPExtension($jail, $settings['username'], $settings['password'], $settings['hostname'], $settings['port']);
   }
 
   protected function copyFileJailed($source, $destination) {

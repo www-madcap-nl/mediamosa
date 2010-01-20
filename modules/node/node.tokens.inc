@@ -1,5 +1,5 @@
 <?php
-// $Id: node.tokens.inc,v 1.2 2009/08/23 13:02:38 dries Exp $
+// $Id: node.tokens.inc,v 1.11 2010/01/14 05:53:55 webchick Exp $
 
 /**
  * @file
@@ -9,19 +9,19 @@
 
 
 /**
- * Implement hook_token_info().
+ * Implements hook_token_info().
  */
 function node_token_info() {
   $type = array(
     'name' => t('Nodes'),
-    'description' => t('Tokens related to individual nodes.'),
+    'description' => t('Tokens related to individual content items, or "nodes".'),
     'needs-data' => 'node',
   );
 
   // Core tokens for nodes.
   $node['nid'] = array(
-    'name' => t("Node ID"),
-    'description' => t("The unique ID of the node."),
+    'name' => t("Content ID"),
+    'description' => t('The unique ID of the content item, or "node".'),
   );
   $node['vid'] = array(
     'name' => t("Revision ID"),
@@ -92,13 +92,13 @@ function node_token_info() {
 }
 
 /**
- * Implement hook_tokens().
+ * Implements hook_tokens().
  */
 function node_tokens($type, $tokens, array $data = array(), array $options = array()) {
   $url_options = array('absolute' => TRUE);
   if (isset($options['language'])) {
-    $url_options['language'] = $language;
-    $language_code = $language->language;
+    $url_options['language'] = $options['language'];
+    $language_code = $options['language']->language;
   }
   else {
     $language_code = NULL;
@@ -139,13 +139,13 @@ function node_tokens($type, $tokens, array $data = array(), array $options = arr
 
         case 'body':
           if (!empty($node->body)) {
-            $replacements[$original] = $sanitize ? $node->body[0]['safe'] : $node->body[0]['value'];
+            $replacements[$original] = $sanitize ? $node->body[LANGUAGE_NONE][0]['safe'] : $node->body[LANGUAGE_NONE][0]['value'];
           }
           break;
 
         case 'summary':
           if (!empty($node->body)) {
-            $replacements[$original] = $sanitize ? $node->body[0]['safe_summary'] : $node->body[0]['summary'];
+            $replacements[$original] = $sanitize ? $node->body[LANGUAGE_NONE][0]['safe_summary'] : $node->body[LANGUAGE_NONE][0]['summary'];
           }
           break;
 
@@ -154,7 +154,7 @@ function node_tokens($type, $tokens, array $data = array(), array $options = arr
           break;
 
         case 'type-name':
-          $type_name = node_get_types('name', $node->type);
+          $type_name = node_type_get_name($node);
           $replacements[$original] = $sanitize ? check_plain($type_name) : $type_name;
           break;
 
@@ -163,11 +163,11 @@ function node_tokens($type, $tokens, array $data = array(), array $options = arr
           break;
 
         case 'url':
-          $replacements[$original] = url('node/' . $node->nid, array('absolute' => TRUE));
+          $replacements[$original] = url('node/' . $node->nid, $url_options);
           break;
 
         case 'edit-url':
-          $replacements[$original] = url('node/' . $node->nid . '/edit', array('absolute' => TRUE));
+          $replacements[$original] = url('node/' . $node->nid . '/edit', $url_options);
           break;
 
         // Default values for the chained tokens handled below.

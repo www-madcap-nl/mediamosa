@@ -1,4 +1,4 @@
-/* $Id: style.css,v 1.64 2009/08/31 17:40:03 webchick Exp $ */
+/* $Id: style.css,v 1.72 2009/12/02 07:28:22 webchick Exp $ */
 
 /**
  * Generic elements
@@ -32,7 +32,7 @@ h1 {
   font-size: 170%;
 }
 
-h2 {
+h2, #center h1 {
   font-size: 160%;
   line-height: 130%;
 }
@@ -218,7 +218,7 @@ tr.even td.active {
   background-color: #e6f1f7;
 }
 
-td.region, td.module, td.container, td.category {
+td.region-title, td.module, td.container, td.category {
   border-top: 1.5em solid #fff;
   border-bottom: 1px solid #b4d7f0;
   background-color: #d4e7f3;
@@ -226,7 +226,7 @@ td.region, td.module, td.container, td.category {
   font-weight: bold;
 }
 
-tr:first-child td.region, tr:first-child td.module, tr:first-child td.container, tr:first-child td.category {
+tr:first-child td.region-title, tr:first-child td.module, tr:first-child td.container, tr:first-child td.category {
   border-top-width: 0;
 }
 
@@ -291,19 +291,44 @@ table .form-button, table .form-submit {
 }
 
 /**
+ * Skip link
+ */
+#skip-link a:link, #skip-link a:visited {
+  font-weight: bold; 
+  background: #fff; 
+  padding: 0px 5px;
+  text-decoration: none;
+  font-size: 80%;
+  text-align: right;
+  top: -99em;
+  left: auto;
+  position: absolute;
+}
+
+#skip-link a:hover, #skip-link a:focus, #skip-link a:active  {
+  height: auto;
+  width: auto;
+  overflow: visible;
+  top:0;
+  left:0;
+  position: fixed;
+  z-index: 1000;
+}
+
+/**
  * Layout
  */
-#header-region {
+.region-header {
   min-height: 1em;
   background: #d2e6f3 url(images/bg-navigation.png) repeat-x 50% 100%;
 }
 
-#header-region .block {
+.region-header .block {
   display: block;
   margin: 0 1em;
 }
 
-#header-region .block-region {
+.region-header .block-region {
   display: block;
   margin: 0 0.5em 1em;
   padding: 0.5em;
@@ -311,7 +336,7 @@ table .form-button, table .form-submit {
   top: 0.5em;
 }
 
-#header-region * {
+.region-header * {
   display: inline;
   line-height: 1.5em;
   margin-top: 0;
@@ -319,19 +344,19 @@ table .form-button, table .form-submit {
 }
 
 /* Prevent the previous directive from showing the content of script elements in Mozilla browsers. */
-#header-region script {
+.region-header script {
   display: none;
 }
 
-#header-region p, #header-region img {
+.region-header p, .region-header img {
   margin-top: 0.5em;
 }
 
-#header-region h2 {
+.region-header h2 {
   margin: 0 1em 0 0; /* LTR */
 }
 
-#header-region h3, #header-region label, #header-region li {
+.region-header h3, .region-header label, .region-header li {
   margin: 0 1em;
   padding: 0;
   background: none;
@@ -341,9 +366,24 @@ table .form-button, table .form-submit {
   background: #edf5fa url(images/body.png) repeat-x 50% 0;
 }
 
+/* Set container widths when we are using the "fixed width" option. */
 #wrapper #container {
+  width: 560px;
   margin: 0 auto;
   padding: 0 20px;
+}
+
+body.one-sidebar #wrapper #container {
+  width: 770px;
+}
+
+body.two-sidebars #wrapper #container {
+  width: 980px;
+}
+
+/* Unset container width when we are using the "fluid width" option. */
+body.fluid-width #wrapper #container {
+  width: auto;
   max-width: 1270px;
 }
 
@@ -355,18 +395,18 @@ table .form-button, table .form-submit {
   position: absolute;
 }
 
-#wrapper #container #header h1, #wrapper #container #header h1 a:link, #wrapper #container #header h1 a:visited {
+#branding, #branding a:link, #branding a:visited {
   line-height: 120px;
   position: relative;
   z-index: 2;
   white-space: nowrap;
 }
 
-#wrapper #container #header h1 span {
+#branding span {
   font-weight: bold;
 }
 
-#wrapper #container #header h1 img {
+#branding img {
   padding-top: 14px;
   padding-right: 20px; /* LTR */
   float: left; /* LTR */
@@ -471,7 +511,7 @@ body.two-sidebars #squeeze {
   min-height: 400px;
 }
 
-#wrapper #container #footer {
+#wrapper #container .region-footer {
   float: none;
   clear: both;
   text-align: center;
@@ -486,29 +526,36 @@ body.two-sidebars #squeeze {
   z-index: 3;
 }
 
-body.sidebar-first #footer {
+body.sidebar-first .region-footer {
   margin-left: -210px;
 }
 
-body.sidebar-second #footer {
+body.sidebar-second .region-footer {
   margin-right: -210px;
 }
 
-body.two-sidebars #footer {
+body.two-sidebars .region-footer {
   margin: 0 -210px;
 }
 
 /**
  * Header
  */
-#wrapper #container #header h1, #wrapper #container #header h1 a:link, #wrapper #container #header h1 a:visited {
+div#branding {
+  font-family: Helvetica,Arial,sans-serif;
+}
+
+div#branding strong {
+   font-weight: normal;
+}
+
+#branding, #branding a:link, #branding a:visited {
   color: #fff;
-  font-weight: normal;
   text-shadow: #1659ac 0px 1px 3px;
   font-size: 1.5em;
 }
 
-#wrapper #container #header h1 a:hover {
+#branding a:hover {
   text-decoration: none;
 }
 
@@ -525,6 +572,16 @@ body.two-sidebars #footer {
   background-color: #fff;
   border: 1px solid #e0e5fb;
   margin-bottom: 2em;
+}
+
+/* Don't display any header elements when within the overlay, and adjust the
+   page height accordingly. */
+body.overlay #header * {
+  display: none;
+}
+
+body.overlay {
+  margin-top: -80px;
 }
 
 /**
@@ -617,7 +674,7 @@ ul.secondary {
   margin: -0.2em -26px 1em;
   padding: 0 26px 0.6em;
 }
-h2.with-tabs {
+h1.with-tabs {
   float: left; /* LTR */
   margin: 0 2em 0 0; /* LTR */
   padding: 0;
@@ -650,8 +707,8 @@ ul.secondary li.active a {
  */
 .node {
   border-bottom: 1px solid #e9eff3;
-  margin: 0 -26px 1.5em;
-  padding: 1.5em 26px;
+  margin: 0 -16px 1.5em;
+  padding: 1.5em 16px;
 }
 
 ul.links li, ul.inline li {
@@ -1030,6 +1087,13 @@ tr.taxonomy-term-divider-top {
 
 tr.taxonomy-term-divider-bottom {
   border-top: 1px dotted #CCC;
+}
+
+.theme-selector h3 {
+  margin: 10px 0;
+}
+.theme-selector .operations li {
+  list-style-image: none;
 }
 
 /**

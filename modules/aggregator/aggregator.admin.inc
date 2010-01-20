@@ -1,5 +1,5 @@
 <?php
-// $Id: aggregator.admin.inc,v 1.43 2009/09/18 00:12:45 webchick Exp $
+// $Id: aggregator.admin.inc,v 1.49 2010/01/09 23:03:21 webchick Exp $
 
 /**
  * @file
@@ -29,10 +29,7 @@ function aggregator_view() {
   foreach ($result as $feed) {
     $rows[] = array(l($feed->title, "aggregator/sources/$feed->fid"), format_plural($feed->items, '1 item', '@count items'), ($feed->checked ? t('@time ago', array('@time' => format_interval(REQUEST_TIME - $feed->checked))) : t('never')), ($feed->checked && $feed->refresh ? t('%time left', array('%time' => format_interval($feed->checked + $feed->refresh - REQUEST_TIME))) : t('never')), l(t('edit'), "admin/config/services/aggregator/edit/feed/$feed->fid"), l(t('remove items'), "admin/config/services/aggregator/remove/$feed->fid"), l(t('update items'), "admin/config/services/aggregator/update/$feed->fid"));
   }
-  if (empty($rows)) {
-    $rows[] = array(array('data' => t('No feeds available. <a href="@link">Add feed</a>.', array('@link' => url('admin/content/aggregator/add/feed'))), 'colspan' => '5', 'class' => array('message')));
-  }
-  $output .= theme('table', $header, $rows);
+  $output .= theme('table', array('header' => $header, 'rows' => $rows, 'empty' => t('No feeds available. <a href="@link">Add feed</a>.', array('@link' => url('admin/config/services/aggregator/add/feed')))));
 
   $result = db_query('SELECT c.cid, c.title, COUNT(ci.iid) as items FROM {aggregator_category} c LEFT JOIN {aggregator_category_item} ci ON c.cid = ci.cid GROUP BY c.cid, c.title ORDER BY title');
 
@@ -43,10 +40,7 @@ function aggregator_view() {
   foreach ($result as $category) {
     $rows[] = array(l($category->title, "aggregator/categories/$category->cid"), format_plural($category->items, '1 item', '@count items'), l(t('edit'), "admin/config/services/aggregator/edit/category/$category->cid"));
   }
-  if (empty($rows)) {
-    $rows[] = array(array('data' => t('No categories available. <a href="@link">Add category</a>.', array('@link' => url('admin/config/services/aggregator/add/category'))), 'colspan' => '5', 'class' => array('message')));
-  }
-  $output .= theme('table', $header, $rows);
+  $output .= theme('table', array('header' => $header, 'rows' => $rows, 'empty' => t('No categories available. <a href="@link">Add category</a>.', array('@link' => url('admin/config/services/aggregator/add/category')))));
 
   return $output;
 }
@@ -133,7 +127,7 @@ function aggregator_form_feed_validate($form, &$form_state) {
   if ($form_state['values']['op'] == t('Save')) {
     // Ensure URL is valid.
     if (!valid_url($form_state['values']['url'], TRUE)) {
-      form_set_error('url', t('The URL %url is invalid. Please enter a fully-qualified URL, such as http://www.example.com/feed.xml.', array('%url' => $form_state['values']['url'])));
+      form_set_error('url', t('The URL %url is invalid. Enter a fully-qualified URL, such as http://www.example.com/feed.xml.', array('%url' => $form_state['values']['url'])));
     }
     // Check for duplicate titles.
     if (isset($form_state['values']['fid'])) {
@@ -144,10 +138,10 @@ function aggregator_form_feed_validate($form, &$form_state) {
     }
     foreach ($result as $feed) {
       if (strcasecmp($feed->title, $form_state['values']['title']) == 0) {
-        form_set_error('title', t('A feed named %feed already exists. Please enter a unique title.', array('%feed' => $form_state['values']['title'])));
+        form_set_error('title', t('A feed named %feed already exists. Enter a unique title.', array('%feed' => $form_state['values']['title'])));
       }
       if (strcasecmp($feed->url, $form_state['values']['url']) == 0) {
-        form_set_error('url', t('A feed with this URL %url already exists. Please enter a unique URL.', array('%url' => $form_state['values']['url'])));
+        form_set_error('url', t('A feed with this URL %url already exists. Enter a unique URL.', array('%url' => $form_state['values']['url'])));
       }
     }
   }
@@ -476,7 +470,8 @@ function aggregator_admin_form($form, $form_state) {
   // Implementing modules will expect an array at $form['modules'].
   $form['modules'] = array();
 
-  $form['submit'] = array(
+  $form['actions'] = array('#type' => 'container', '#attributes' => array('class' => array('form-actions')));
+  $form['actions']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save configuration'),
   );
@@ -530,7 +525,7 @@ function aggregator_form_category_validate($form, &$form_state) {
       $category = db_query("SELECT cid FROM {aggregator_category} WHERE title = :title", array(':title' => $form_state['values']['title']))->fetchObject();
     }
     if ($category) {
-      form_set_error('title', t('A category named %category already exists. Please enter a unique title.', array('%category' => $form_state['values']['title'])));
+      form_set_error('title', t('A category named %category already exists. Enter a unique title.', array('%category' => $form_state['values']['title'])));
     }
   }
 }

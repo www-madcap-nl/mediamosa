@@ -1,5 +1,5 @@
 <?php
-// $Id: template.php,v 1.31 2009/09/15 17:10:39 webchick Exp $
+// $Id: template.php,v 1.36 2010/01/08 07:36:53 webchick Exp $
 
 /**
  * Return a themed breadcrumb trail.
@@ -8,7 +8,9 @@
  *   An array containing the breadcrumb links.
  * @return a string containing the breadcrumb output.
  */
-function garland_breadcrumb($breadcrumb) {
+function garland_breadcrumb($variables) {
+  $breadcrumb = $variables['breadcrumb'];
+
   if (!empty($breadcrumb)) {
     // Provide a navigational heading to give context for breadcrumb links to
     // screen-reader users. Make the heading invisible with .element-invisible.
@@ -16,6 +18,26 @@ function garland_breadcrumb($breadcrumb) {
 
     $output .= '<div class="breadcrumb">' . implode(' › ', $breadcrumb) . '</div>';
     return $output;
+  }
+}
+
+/**
+ * Override or insert variables into the maintenance page template.
+ */
+function garland_preprocess_maintenance_page(&$vars) {
+  // Toggle fixed or fluid width.
+  if (theme_get_setting('garland_width') == 'fluid') {
+    $vars['classes_array'][] = 'fluid-width';
+  }
+}
+
+/**
+ * Override or insert variables into the html template.
+ */
+function garland_preprocess_html(&$vars) {
+  // Toggle fixed or fluid width.
+  if (theme_get_setting('garland_width') == 'fluid') {
+    $vars['classes_array'][] = 'fluid-width';
   }
 }
 
@@ -36,37 +58,39 @@ function garland_process_html(&$vars) {
 function garland_preprocess_page(&$vars) {
   $vars['tabs2'] = menu_secondary_local_tasks();
   if (isset($vars['main_menu'])) {
-    $vars['primary_nav'] = theme('links', $vars['main_menu'],
-      array(
+    $vars['primary_nav'] = theme('links__system_main_menu', array(
+      'links' => $vars['main_menu'],
+      'attributes' => array(
         'class' => array('links', 'main-menu'),
       ),
-      array(
+      'heading' => array(
         'text' => t('Main menu'),
         'level' => 'h2',
         'class' => array('element-invisible'),
       )
-    );
+    ));
   }
   else {
     $vars['primary_nav'] = FALSE;
   }
   if (isset($vars['secondary_menu'])) {
-    $vars['secondary_nav'] = theme('links', $vars['secondary_menu'],
-      array(
+    $vars['secondary_nav'] = theme('links__system_secondary_menu', array(
+      'links' => $vars['secondary_menu'],
+      'attributes' => array(
         'class' => array('links', 'secondary-menu'),
       ),
-      array(
+      'heading' => array(
         'text' => t('Secondary menu'),
         'level' => 'h2',
         'class' => array('element-invisible'),
       )
-    );
+    ));
   }
   else {
     $vars['secondary_nav'] = FALSE;
   }
 
-  // Prepare header
+  // Prepare header.
   $site_fields = array();
   if (!empty($vars['site_name'])) {
     $site_fields[] = check_plain($vars['site_name']);
@@ -79,7 +103,11 @@ function garland_preprocess_page(&$vars) {
     $site_fields[0] = '<span>' . $site_fields[0] . '</span>';
   }
   $vars['site_html'] = implode(' ', $site_fields);
-
+  
+  // Set a variable for the site name title and logo alt attributes text.
+  $slogan_text = filter_xss_admin(variable_get('site_slogan', ''));
+  $site_name_text = filter_xss_admin(variable_get('site_name', 'Drupal'));
+  $vars['site_name_and_slogan'] = $site_name_text . ' ' . $slogan_text;
 }
 
 /**
@@ -89,6 +117,15 @@ function garland_process_page(&$vars) {
   // Hook into color.module
   if (module_exists('color')) {
     _color_page_alter($vars);
+  }
+}
+
+/**
+ * Override or insert variables into the region template.
+ */
+function garland_preprocess_region(&$vars) {
+  if ($vars['region'] == 'header') {
+    $vars['classes_array'][] = 'clearfix';
   }
 }
 

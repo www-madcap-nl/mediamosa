@@ -1,9 +1,28 @@
 <?php
-// $Id: actions.inc,v 1.32 2009/09/20 07:47:44 dries Exp $
+// $Id: actions.inc,v 1.34 2009/10/18 06:56:23 webchick Exp $
 
 /**
  * @file
  * This is the actions engine for executing stored actions.
+ */
+
+/**
+ * @defgroup actions Actions
+ * @{
+ * Functions that perform an action on a certain system object.
+ *
+ * All modules should declare their action functions to be in this group and
+ * each action function should reference its configuration form, validate, and
+ * submit functions using \@see. Conversely, form, validate, and submit
+ * functions should reference the action function using \@see. For examples of
+ * this see comment_unpublish_by_keyword_action(), which has the following in
+ * its doxygen documentation:
+ *
+ * \@ingroup actions
+ * \@see comment_unpublish_by_keyword_action_form().
+ * \@see comment_unpublish_by_keyword_action_submit().
+ *
+ * @} End of "defgroup actions".
  */
 
 /**
@@ -305,7 +324,7 @@ function actions_save($function, $type, $params, $label, $aid = NULL) {
   // aid is the callback for singleton actions so we need to keep a separate
   // table for numeric aids.
   if (!$aid) {
-    $aid = db_insert('actions_aid')->useDefaults(array('aid'))->execute();
+    $aid = db_next_id();
   }
 
   db_merge('actions')

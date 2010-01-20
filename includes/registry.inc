@@ -1,5 +1,5 @@
 <?php
-// $Id: registry.inc,v 1.24 2009/08/24 00:14:18 webchick Exp $
+// $Id: registry.inc,v 1.27 2009/12/28 10:48:51 dries Exp $
 
 /**
  * @file
@@ -17,9 +17,9 @@
  */
 
 /**
- * @see registry_rebuild.
+ * @see registry_update().
  */
-function _registry_rebuild() {
+function _registry_update() {
 
   // The registry serves as a central autoloader for all classes, including
   // the database query builders. However, the registry rebuild process
@@ -35,11 +35,12 @@ function _registry_rebuild() {
   require_once DRUPAL_ROOT . '/includes/database/' . $driver . '/query.inc';
 
   // Get current list of modules and their files.
-  $modules = system_get_module_data();
+  $modules = db_query("SELECT * FROM {system} WHERE type = 'module'")->fetchAll();
   // Get the list of files we are going to parse.
   $files = array();
   foreach ($modules as &$module) {
-    $dir = dirname($module->uri);
+    $module->info = unserialize($module->info);
+    $dir = dirname($module->filename);
 
     // Store the module directory for use in hook_registry_files_alter().
     $module->dir = $dir;
@@ -83,7 +84,7 @@ function _registry_rebuild() {
 
   $unchanged_resources = array();
   $lookup_cache = array();
-  if ($cache = cache_get('lookup_cache', 'cache_registry')) {
+  if ($cache = cache_get('lookup_cache', 'cache_bootstrap')) {
     $lookup_cache = $cache->data;
   }
   foreach ($lookup_cache as $key => $file) {
@@ -96,12 +97,10 @@ function _registry_rebuild() {
   module_implements('', FALSE, TRUE);
   _registry_check_code(REGISTRY_RESET_LOOKUP_CACHE);
 
-  cache_clear_all('*', 'cache_registry', TRUE);
-
   // We have some unchanged resources, warm up the cache - no need to pay
   // for looking them up again.
   if (count($unchanged_resources) > 0) {
-    cache_set('lookup_cache', $unchanged_resources, 'cache_registry');
+    cache_set('lookup_cache', $unchanged_resources, 'cache_bootstrap');
   }
 }
 

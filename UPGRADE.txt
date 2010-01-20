@@ -1,4 +1,4 @@
-// $Id: UPGRADE.txt,v 1.16 2009/09/14 07:33:55 dries Exp $
+// $Id: UPGRADE.txt,v 1.18 2009/11/26 16:59:59 webchick Exp $
 
 UPGRADING
 ---------
@@ -35,19 +35,20 @@ Let's begin!
 
     More information on multisite configuration is located in INSTALL.txt.
 
-2.  If possible, log on as the user with user ID 1, which is the first account
-    created - also known as the site maintenance account. Only this account will
-    be able to automatically access update.php in step #10. There are special
-    instructions in step #10 if you are unable to log on as user ID 1. Do not
-    close your browser until the final step is complete.
+2.  If possible, log on either as a user with the "Administer software updates"
+    permission or as the user with user ID 1, which is the first account
+    created (also known as the site maintenance account). Only these accounts
+    will be able to automatically access update.php in step #10. There are
+    special instructions in step #10 if you are unable to log on as one of
+    these users. Do not close your browser until the final step is complete.
 
 3.  Place the site in "Offline" mode, to let the database updates run without
     interruption and avoid displaying errors to end users of the site. This
     option is at http://www.example.com/?q=admin/config/development/maintenance
     (replace www.example.com with your installation's domain name and path).
 
-4.  If using a custom or contributed theme, switch
-    to a core theme, such as Garland or Bluemarine.
+4.  If using a custom or contributed theme, switch to a core theme (either
+    Garland or Stark).
 
 5.  Disable all custom and contributed modules.
 
@@ -90,10 +91,9 @@ Let's begin!
 12. Re-enable custom and contributed modules and re-run update.php
     to update custom and contributed database tables.
 
-13. Return the site to its original theme (if you switched to a core
-    theme like Garland or Bluemarine in step #4). If your site uses a
-    custom or contributed theme, make sure it is compatible with your
-    version of Drupal.
+13. Return the site to its original theme (if you switched to a core theme in
+    step #4). If your site uses a custom or contributed theme, make sure it is
+    compatible with your version of Drupal.
 
       - For contributed themes, check http://drupal.org/project/themes
         for the version of a theme matching your version of Drupal.

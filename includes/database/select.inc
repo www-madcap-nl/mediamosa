@@ -1,5 +1,5 @@
 <?php
-// $Id: select.inc,v 1.24 2009/09/18 00:04:21 webchick Exp $
+// $Id: select.inc,v 1.31 2009/12/13 18:06:48 webchick Exp $
 
 /**
  * @ingroup database
@@ -26,7 +26,7 @@ interface QueryExtendableInterface {
    *   against the current database connection to allow driver-specific subclasses
    *   as well, using the same logic as the query objects themselves.  For example,
    *   PagerDefault_mysql is the MySQL-specific override for PagerDefault.
-   * @return
+   * @return QueryExtendableInterface
    *   The extender object, which now contains a reference to this object.
    */
   public function extend($extender_name);
@@ -149,7 +149,7 @@ interface SelectQueryInterface extends QueryConditionInterface, QueryAlterableIn
    *
    * @param $distinct
    *   TRUE to flag this query DISTINCT, FALSE to disable it.
-   * @return
+   * @return SelectQueryInterface
    *   The called object.
    */
   public function distinct($distinct = TRUE);
@@ -191,7 +191,7 @@ interface SelectQueryInterface extends QueryConditionInterface, QueryAlterableIn
    *   An indexed array of fields present in the specified table that should be
    *   included in this query. If not specified, $table_alias.* will be generated
    *   without any aliases.
-   * @return
+   * @return SelectQueryInterface
    *   The called object.
    */
   public function fields($table_alias, array $fields = array());
@@ -342,7 +342,7 @@ interface SelectQueryInterface extends QueryConditionInterface, QueryAlterableIn
    *   The field on which to order.
    * @param $direction
    *   The direction to sort. Legal values are "ASC" and "DESC".
-   * @return
+   * @return SelectQueryInterface
    *   The called object.
    */
   public function orderBy($field, $direction = 'ASC');
@@ -364,7 +364,7 @@ interface SelectQueryInterface extends QueryConditionInterface, QueryAlterableIn
    *
    * for an example of such an alternate sorting mechanism.
    *
-   * @return
+   * @return SelectQueryInterface
    *   The called object
    */
   public function orderRandom();
@@ -380,7 +380,7 @@ interface SelectQueryInterface extends QueryConditionInterface, QueryAlterableIn
    *   range directives that are set.
    * @param $limit
    *   The number of records to return from the result set.
-   * @return
+   * @return SelectQueryInterface
    *   The called object.
    */
   public function range($start = NULL, $length = NULL);
@@ -405,7 +405,7 @@ interface SelectQueryInterface extends QueryConditionInterface, QueryAlterableIn
    * @param $type
    *   The type of UNION to add to the query. Defaults to plain
    *   UNION.
-   * @return
+   * @return SelectQueryInterface
    *   The called object.
    */
   public function union(SelectQueryInterface $query, $type = '');
@@ -415,7 +415,7 @@ interface SelectQueryInterface extends QueryConditionInterface, QueryAlterableIn
    *
    * @param $field
    *   The field on which to group. This should be the field as aliased.
-   * @return
+   * @return SelectQueryInterface
    *   The called object.
    */
   public function groupBy($field);
@@ -423,13 +423,16 @@ interface SelectQueryInterface extends QueryConditionInterface, QueryAlterableIn
   /**
    * Get the equivalent COUNT query of this query as a new query object.
    *
-   * @return
+   * @return SelectQueryInterface
    *   A new SelectQuery object with no fields or expressions besides COUNT(*).
    */
   public function countQuery();
 
   /**
    * Indicates if preExecute() has already been called on that object.
+   *
+   * @return
+   *   TRUE is this query has already been prepared, FALSE otherwise.
    */
   public function isPrepared();
 
@@ -902,7 +905,7 @@ class SelectQuery extends Query implements SelectQueryInterface {
 
   /* Implementations of QueryConditionInterface for the WHERE clause. */
 
-  public function condition($field, $value = NULL, $operator = '=') {
+  public function condition($field, $value = NULL, $operator = NULL) {
     if (!isset($num_args)) {
       $num_args = func_num_args();
     }
@@ -1065,8 +1068,8 @@ class SelectQuery extends Query implements SelectQueryInterface {
     }
 
     // Modules may alter all queries or only those having a particular tag.
-    drupal_alter('query', $query);
     if (isset($this->alterTags)) {
+      drupal_alter('query', $query);
       foreach ($this->alterTags as $tag => $value) {
         drupal_alter("query_$tag", $query);
       }
@@ -1082,10 +1085,6 @@ class SelectQuery extends Query implements SelectQueryInterface {
     }
 
     $args = $this->getArguments();
-
-    if (!empty($this->range)) {
-      return $this->connection->queryRange((string)$this, $this->range['start'], $this->range['length'], $args, $this->queryOptions);
-    }
     return $this->connection->query((string)$this, $args, $this->queryOptions);
   }
 
@@ -1228,7 +1227,7 @@ class SelectQuery extends Query implements SelectQueryInterface {
       case '':
         $type = 'UNION';
         break;
-      
+
       case 'ALL':
         $type = 'UNION ALL';
       default:
@@ -1285,6 +1284,11 @@ class SelectQuery extends Query implements SelectQueryInterface {
 
     // FIELDS and EXPRESSIONS
     $fields = array();
+    foreach ($this->tables as $alias => $table) {
+      if (!empty($table['all_fields'])) {
+        $fields[] = $alias . '.*';
+      }
+    }
     foreach ($this->fields as $alias => $field) {
       // Always use the AS keyword for field aliases, as some
       // databases require it (e.g., PostgreSQL).
@@ -1292,11 +1296,6 @@ class SelectQuery extends Query implements SelectQueryInterface {
     }
     foreach ($this->expressions as $alias => $expression) {
       $fields[] = $expression['expression'] . ' AS ' . $expression['alias'];
-    }
-    foreach ($this->tables as $alias => $table) {
-      if (!empty($table['all_fields'])) {
-        $fields[] = $alias . '.*';
-      }
     }
     $query .= implode(', ', $fields);
 
@@ -1355,7 +1354,14 @@ class SelectQuery extends Query implements SelectQueryInterface {
       $query .= implode(', ', $fields);
     }
 
-    // RANGE is database specific, so we can't do it here.
+    // RANGE
+    // There is no universal SQL standard for handling range or limit clauses.
+    // Fortunately, all core-supported databases use the same range syntax.
+    // Databases that need a different syntax can override this method and
+    // do whatever alternate logic they need to.
+    if (!empty($this->range)) {
+      $query .= "\nLIMIT " . $this->range['length'] . " OFFSET " . $this->range['start'];
+    }
 
     // UNION is a little odd, as the select queries to combine are passed into
     // this query, but syntactically they all end up on the same level.

@@ -1,5 +1,5 @@
 <?php
-// $Id: simpletest.test,v 1.31 2009/09/01 17:40:27 webchick Exp $
+// $Id: simpletest.test,v 1.37 2009/12/24 08:03:53 dries Exp $
 
 class SimpleTestFunctionalTest extends DrupalWebTestCase {
   /**
@@ -270,6 +270,43 @@ class SimpleTestFunctionalTest extends DrupalWebTestCase {
   }
 }
 
+/**
+ * Test internal testing framework URL handling.
+ */
+class SimpleTestURLTestCase extends DrupalWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'SimpleTest URL handling',
+      'description' => 'Test the URL handling in the testing framework.',
+      'group' => 'SimpleTest',
+    );
+  }
+
+  /**
+   * Test DrupalWebTestCase::getAbsoluteUrl().
+   */
+  function testGetAbsoluteUrl() {
+    // Testbed runs with Clean URLs disabled, so disable it here.
+    variable_set('clean_url', 0);
+    $url = 'user/login';
+
+    $this->drupalGet($url);
+    $absolute = url($url, array('absolute' => TRUE));
+    $this->assertEqual($absolute, $this->url, t('Passed and requested URL are equal.'));
+    $this->assertEqual($this->url, $this->getAbsoluteUrl($this->url), t('Requested and returned absolute URL are equal.'));
+
+    $this->drupalPost(NULL, array(), t('Log in'));
+    $this->assertEqual($absolute, $this->url, t('Passed and requested URL are equal.'));
+    $this->assertEqual($this->url, $this->getAbsoluteUrl($this->url), t('Requested and returned absolute URL are equal.'));
+
+    $this->clickLink('Create new account');
+    $url = 'user/register';
+    $absolute = url($url, array('absolute' => TRUE));
+    $this->assertEqual($absolute, $this->url, t('Passed and requested URL are equal.'));
+    $this->assertEqual($this->url, $this->getAbsoluteUrl($this->url), t('Requested and returned absolute URL are equal.'));
+  }
+}
+
 class SimpleTestMailCaptureTestCase extends DrupalWebTestCase {
   /**
    * Implement getInfo().
@@ -302,7 +339,7 @@ class SimpleTestMailCaptureTestCase extends DrupalWebTestCase {
     $this->assertEqual(count($captured_emails), 0, t('The captured e-mails queue is empty.'), t('E-mail'));
 
     // Send the e-mail.
-    $response = drupal_mail_sending_system('simpletest', 'drupal_mail_test')->mail($message);
+    $response = drupal_mail_system('simpletest', 'drupal_mail_test')->mail($message);
 
     // Ensure that there is one e-mail in the captured e-mails array.
     $captured_emails = $this->drupalGetMails();
@@ -323,7 +360,7 @@ class SimpleTestMailCaptureTestCase extends DrupalWebTestCase {
         'to' => $this->randomName(32) . '@example.com',
         'body' => $this->randomString(512),
       );
-      drupal_mail_sending_system('drupal_mail_test', $index)->mail($message);
+      drupal_mail_system('drupal_mail_test', $index)->mail($message);
     }
 
     // There should now be 6 e-mails captured.
@@ -340,8 +377,30 @@ class SimpleTestMailCaptureTestCase extends DrupalWebTestCase {
 
     // Send the last e-mail again, so we can confirm that the drupalGetMails-filter
     // correctly returns all e-mails with a given property/value.
-    drupal_mail_sending_system('drupal_mail_test', $index)->mail($message);
+    drupal_mail_system('drupal_mail_test', $index)->mail($message);
     $captured_emails = $this->drupalGetMails(array('id' => 'drupal_mail_test_4'));
     $this->assertEqual(count($captured_emails), 2, t('All e-mails with the same id are returned when filtering by id.'), t('E-mail'));
   }
 }
+
+/**
+ * Test required modules for tests.
+ */
+class SimpleTestMissingDependentModuleUnitTest extends DrupalUnitTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'Testing dependent module test',
+      'description' => 'This test should not load since it requires a module that is not found.',
+      'group' => 'SimpleTest',
+      'dependencies' => array('simpletest_missing_module'),
+    );
+  }
+
+  /**
+   * Ensure that this test will not be loaded despite its dependency.
+   */
+  function testFail() {
+    $this->fail(t('Running test with missing required module.'));
+  }
+}
+

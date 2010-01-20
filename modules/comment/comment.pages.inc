@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.pages.inc,v 1.25 2009/09/11 13:37:52 webchick Exp $
+// $Id: comment.pages.inc,v 1.35 2010/01/09 21:54:00 webchick Exp $
 
 /**
  * @file
@@ -65,7 +65,7 @@ function comment_reply($node, $pid = NULL) {
           $comment->node_type = 'comment_node_' . $node->type;
           field_attach_load('comment', array($comment->cid => $comment));
           $comment->name = $comment->uid ? $comment->registered_name : $comment->name;
-          $build['comment_parent'] = comment_build($comment, $node);
+          $build['comment_parent'] = comment_view($comment, $node);
         }
         else {
           drupal_set_message(t('The comment you are replying to does not exist.'), 'error');
@@ -74,7 +74,7 @@ function comment_reply($node, $pid = NULL) {
       }
       // This is the case where the comment is in response to a node. Display the node.
       elseif (user_access('access content')) {
-        $build['comment_node'] = node_build($node);
+        $build['comment_node'] = node_view($node);
       }
 
       // Should we show the reply box?
@@ -103,20 +103,13 @@ function comment_reply($node, $pid = NULL) {
 /**
  * Menu callback; publish specified comment.
  *
- * @param $cid ID of comment to be published.
+ * @param $comment
+ *   A comment object.
  */
-function comment_approve($cid) {
-  // Load the comment whose cid = $cid
-  if ($comment = comment_load($cid)) {
-    $comment->status = COMMENT_PUBLISHED;
-    $comment->comment_format = $comment->format;
-    comment_save($comment);
+function comment_approve($comment) {
+  $comment->status = COMMENT_PUBLISHED;
+  comment_save($comment);
 
-    drupal_set_message(t('Comment approved.'));
-    drupal_goto('node/' . $comment->nid);
-  }
-  else {
-    drupal_set_message(t('The comment you are approving does not exist.'), 'error');
-    drupal_goto();
-  }
+  drupal_set_message(t('Comment approved.'));
+  drupal_goto('node/' . $comment->nid);
 }

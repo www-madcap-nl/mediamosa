@@ -1,5 +1,5 @@
 <?php
-// $Id: field.tpl.php,v 1.6 2009/09/11 06:48:03 dries Exp $
+// $Id: field.tpl.php,v 1.10 2009/12/26 16:50:08 dries Exp $
 
 /**
  * @file field.tpl.php
@@ -13,6 +13,7 @@
  *   CSS. It can be manipulated through the variable $classes_array from
  *   preprocess functions. The default values can be one or more of the
  *   following:
+ *   - field: The current template type, i.e., "theming hook".
  *   - field-name-[field_name]: The current field name. For example, if the
  *     field name is "field_description" it would result in
  *     "field-name-field-description".
@@ -23,8 +24,7 @@
  *
  * Other variables:
  * - $object: The object to which the field is attached.
- * - $field: The field array.
- * - $build_mode: Build mode, e.g. 'full', 'teaser'...
+ * - $view_mode: View mode, e.g. 'full', 'teaser'...
  * - $field_name: The field name.
  * - $field_type: The field type.
  * - $field_name_css: The css-compatible field name.
@@ -38,15 +38,13 @@
  * @see template_preprocess_field()
  */
 ?>
-<?php if ($items) : ?>
-  <div class="field <?php print $classes; ?> clearfix"<?php print $attributes; ?>>
-    <?php if (!$label_hidden) : ?>
-      <div class="field-label"<?php print $title_attributes; ?>><?php print $label ?>:&nbsp;</div>
-    <?php endif; ?>
-    <div class="field-items">
-      <?php foreach ($items as $delta => $item) : ?>
-        <div class="field-item <?php print $delta % 2 ? 'odd' : 'even'; ?>"<?php print $item_attributes[$delta]; ?>><?php print render($item); ?></div>
-      <?php endforeach; ?>
-    </div>
+<div class="<?php print $classes; ?> clearfix"<?php print $attributes; ?>>
+  <?php if (!$label_hidden) : ?>
+    <div class="field-label"<?php print $title_attributes; ?>><?php print $label ?>:&nbsp;</div>
+  <?php endif; ?>
+  <div class="field-items"<?php print $content_attributes; ?>>
+    <?php foreach ($items as $delta => $item) : ?>
+      <div class="field-item <?php print $delta % 2 ? 'odd' : 'even'; ?>"<?php print $item_attributes[$delta]; ?>><?php print render($item); ?></div>
+    <?php endforeach; ?>
   </div>
-<?php endif; ?>
+</div>

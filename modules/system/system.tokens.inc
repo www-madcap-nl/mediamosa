@@ -1,5 +1,5 @@
 <?php
-// $Id: system.tokens.inc,v 1.2 2009/08/25 10:27:15 dries Exp $
+// $Id: system.tokens.inc,v 1.7 2010/01/09 21:54:01 webchick Exp $
 
 /**
  * @file
@@ -10,7 +10,7 @@
  */
 
 /**
- * Implement hook_token_info().
+ * Implements hook_token_info().
  */
 function system_token_info() {
   $types['site'] = array(
@@ -48,6 +48,10 @@ function system_token_info() {
     'name' => t("URL"),
     'description' => t("The URL of the site's front page."),
   );
+  $site['url-brief'] = array(
+    'name' => t("URL (brief)"),
+    'description' => t("The URL of the site's front page without the protocol."),
+  );  
   $site['login-url'] = array(
     'name' => t("Login page"),
     'description' => t("The URL of the site's login page."),
@@ -144,7 +148,7 @@ function system_token_info() {
 }
 
 /**
- * Implement hook_tokens().
+ * Implements hook_tokens().
  */
 function system_tokens($type, $tokens, array $data = array(), array $options = array()) {
   $url_options = array('absolute' => TRUE);
@@ -179,6 +183,10 @@ function system_tokens($type, $tokens, array $data = array(), array $options = a
 
         case 'url':
           $replacements[$original] = url('<front>', $url_options);
+          break;
+
+        case 'url-brief':
+          $replacements[$original] = preg_replace('!^https?://!', '', url('<front>', $url_options)); 
           break;
 
         case 'login-url':

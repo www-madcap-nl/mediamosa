@@ -1,5 +1,5 @@
 <?php
-// $Id: node.tpl.php,v 1.22 2009/09/11 06:48:03 dries Exp $
+// $Id: node.tpl.php,v 1.31 2010/01/04 03:57:19 webchick Exp $
 
 /**
  * @file
@@ -12,8 +12,8 @@
  *   hide($content['field_example']) to temporarily suppress the printing of a
  *   given element.
  * - $user_picture: The node author's picture from user-picture.tpl.php.
- * - $date: Formatted creation date (use $created to reformat with
- *   format_date()).
+ * - $date: Formatted creation date. Preprocess functions can reformat it by
+ *   calling format_date() with the desired parameters on the $created variable.
  * - $name: Themed username of node author output from theme_username().
  * - $node_url: Direct url of the current node.
  * - $terms: the themed list of taxonomy term links output from theme_links().
@@ -31,6 +31,12 @@
  *   - node-promoted: Nodes promoted to the front page.
  *   - node-sticky: Nodes ordered above other non-sticky nodes in teaser listings.
  *   - node-unpublished: Unpublished nodes visible only to administrators.
+ * - $title_prefix (array): An array containing additional output populated by
+ *   modules, intended to be displayed in front of the main title tag that
+ *   appears in the template.
+ * - $title_suffix (array): An array containing additional output populated by
+ *   modules, intended to be displayed after the main title tag that appears in
+ *   the template.
  *
  * Other variables:
  * - $node: Full node object. Contains data that may not be safe.
@@ -45,8 +51,8 @@
  * - $id: Position of the node. Increments each time it's output.
  *
  * Node status variables:
- * - $build_mode: Build mode, e.g. 'full', 'teaser'...
- * - $teaser: Flag for the teaser state (shortcut for $build_mode == 'teaser').
+ * - $view_mode: View mode, e.g. 'full', 'teaser'...
+ * - $teaser: Flag for the teaser state (shortcut for $view_mode == 'teaser').
  * - $page: Flag for the full page state.
  * - $promote: Flag for front page promotion state.
  * - $sticky: Flags for sticky post setting.
@@ -74,17 +80,19 @@
 
   <?php print $user_picture; ?>
 
+  <?php print render($title_prefix); ?>
   <?php if (!$page): ?>
-    <h2<?php print $title_attributes; ?>><a href="<?php print $node_url; ?>"><?php print $title; ?></a></h2>
+    <h2<?php print $title_attributes; ?>><a href="<?php print $node_url; ?>"><?php print $node_title; ?></a></h2>
   <?php endif; ?>
+  <?php print render($title_suffix); ?>
 
   <?php if ($display_submitted || !empty($content['links']['terms'])): ?>
     <div class="meta">
       <?php if ($display_submitted): ?>
         <span class="submitted">
           <?php
-            print t('Submitted by !username on @datetime',
-              array('!username' => $name, '@datetime' => $date));
+            print t('Submitted by !username on !datetime',
+              array('!username' => $name, '!datetime' => $date));
           ?>
         </span>
       <?php endif; ?>
@@ -95,7 +103,7 @@
     </div>
   <?php endif; ?>
 
-  <div class="content">
+  <div class="content"<?php print $content_attributes; ?>>
     <?php
       // We hide the comments and links now so that we can render them later.
       hide($content['comments']);

@@ -1,5 +1,5 @@
 <?php
-// $Id: block.install,v 1.32 2009/09/10 06:38:17 dries Exp $
+// $Id: block.install,v 1.36 2009/12/08 06:52:37 webchick Exp $
 
 /**
  * @file
@@ -7,7 +7,7 @@
  */
 
 /**
- * Implement hook_schema().
+ * Implements hook_schema().
  */
 function block_schema() {
   $schema['block'] = array(
@@ -85,6 +85,7 @@ function block_schema() {
         'not null' => TRUE,
         'default' => '',
         'description' => 'Custom title for the block. (Empty string will use block default title, <none> will remove the title, text will cause block to use specified title.)',
+        'translatable' => TRUE,
       ),
       'cache' => array(
         'type' => 'int',
@@ -173,6 +174,7 @@ function block_schema() {
         'not null' => FALSE,
         'size' => 'big',
         'description' => 'Block contents.',
+        'translatable' => TRUE,
       ),
       'info' => array(
         'type' => 'varchar',
@@ -202,7 +204,7 @@ function block_schema() {
 }
 
 /**
- * Implement hook_install().
+ * Implements hook_install().
  */
 function block_install() {
 
@@ -223,9 +225,10 @@ function block_install() {
  * so before block module runs, there will not be much to alter.
  */
 function block_update_7000() {
-  $ret = array();
-  $ret[] = update_sql("UPDATE {system} SET weight = -5 WHERE name = 'block'");
-  return $ret;
+  db_update('system')
+    ->fields(array('weight' => '-5'))
+    ->condition('name', 'block')
+    ->execute();
 }
 
 
@@ -233,8 +236,6 @@ function block_update_7000() {
  * Add the block_node_type table.
  */
 function block_update_7001() {
-  $ret = array();
-
   $schema['block_node_type'] = array(
     'description' => 'Sets up display criteria for blocks based on content types',
     'fields' => array(
@@ -263,6 +264,5 @@ function block_update_7001() {
     ),
   );
 
-  db_create_table($ret, 'block_node_type', $schema['block_node_type']);
-  return $ret;
+  db_create_table('block_node_type', $schema['block_node_type']);
 }

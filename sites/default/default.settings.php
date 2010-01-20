@@ -1,5 +1,5 @@
 <?php
-// $Id: default.settings.php,v 1.31 2009/09/14 19:03:04 dries Exp $
+// $Id: default.settings.php,v 1.39 2010/01/14 18:45:17 dries Exp $
 
 /**
  * @file
@@ -67,8 +67,9 @@
  * connection should use.  This is usually the same as the name of the
  * database type, such as mysql or sqlite, but not always.  The other
  * properties will vary depending on the driver.  For SQLite, you must
- * specify a database.  For most other drivers, you must specify a username,
- * password, host, and database name.
+ * specify a database file name in a directory that is writable by the 
+ * webserver.  For most other drivers, you must specify a 
+ * username, password, host, and database name.
  *
  * Some database engines support transactions.  In order to enable
  * transaction support for a given database, set the 'transactions' key
@@ -147,7 +148,7 @@
  *   );
  *   $databases['default']['default'] = array(
  *     'driver' => 'sqlite',
- *     'database' => 'databasefilename',
+ *     'database' => '/path/to/databasefilename',
  *   );
  */
 $databases = array();
@@ -157,13 +158,33 @@ $db_prefix = '';
  * Access control for update.php script
  *
  * If you are updating your Drupal installation using the update.php script but
- * are not logged in using the site maintenance account (the account that was
+ * are not logged in using either an account with the "Administer software
+ * updates" permission or the site maintenance account (the account that was
  * created during installation), you will need to modify the access check
  * statement below. Change the FALSE to a TRUE to disable the access check.
  * After finishing the upgrade, be sure to open this file again and change the
  * TRUE back to a FALSE!
  */
 $update_free_access = FALSE;
+
+/**
+ * Salt for one-time login links and cancel links, form tokens, etc.
+ *
+ * This variable will be set to a random value by the installer. All one-time
+ * login links will be invalidated if the value is changed.  Note that this
+ * variable must have the same value on every web server.  If this variable is
+ * empty, a hash of the serialized database credentials will be used as a
+ * fallback salt.
+ *
+ * For enhanced security, you may set this variable to a value using the
+ * contents of a file outside your docroot that is never saved together
+ * with any backups of your Drupal files and database.
+ *
+ * Example:
+ *   $drupal_hash_salt = file_get_contents('/home/example/salt.txt');
+ *   
+ */
+$drupal_hash_salt = '';
 
 /**
  * Base URL (optional).
@@ -242,12 +263,16 @@ ini_set('session.cookie_lifetime', 2000000);
  * these variable overrides will not be modifiable from the Drupal
  * administration interface.
  *
+ * The following overrides are examples:
+ * - site_name: Defines the site's name.
+ * - theme_default: Defines the default theme for this site.
+ * - anonymous: Defines the human-readable name of anonymous users.
  * Remove the leading hash signs to enable.
  */
-$conf = array(
-#   'site_name' => 'My Drupal site',
-#   'theme_default' => 'minnelli',
-#   'anonymous' => 'Visitor',
+# $conf['site_name'] = 'My Drupal site';
+# $conf['theme_default'] = 'garland';
+# $conf['anonymous'] = 'Visitor';
+
 /**
  * A custom theme can be set for the offline page. This applies when the site
  * is explicitly set to maintenance mode through the administration page or when
@@ -256,7 +281,8 @@ $conf = array(
  * theme. It is located inside 'modules/system/maintenance-page.tpl.php'.
  * Note: This setting does not apply to installation and update pages.
  */
-#   'maintenance_theme' => 'minnelli', // Leave the comma here.
+# $conf['maintenance_theme'] = 'garland';
+
 /**
  * reverse_proxy accepts a boolean value.
  *
@@ -273,7 +299,8 @@ $conf = array(
  * about this setting, do not have a reverse proxy, or Drupal operates in
  * a shared hosting environment, this setting should remain commented out.
  */
-#   'reverse_proxy' => TRUE, // Leave the comma here.
+# $conf['reverse_proxy'] = TRUE;
+
 /**
  * reverse_proxy accepts an array of IP addresses.
  *
@@ -284,8 +311,7 @@ $conf = array(
  * reverse proxies. Otherwise, the client could directly connect to
  * your web server spoofing the X-Forwarded-For headers.
  */
-#   'reverse_proxy_addresses' => array('a.b.c.d', ...), // Leave the comma here.
-);
+# $conf['reverse_proxy_addresses'] = array('a.b.c.d', ...);
 
 /**
  * Page caching:
@@ -342,3 +368,19 @@ $conf = array(
 # $conf['blocked_ips'] = array(
 #   'a.b.c.d',
 # );
+
+/**
+ * Authorized file system operations:
+ *
+ * The Update manager module included with Drupal provides a mechanism for
+ * site administrators to securely install missing updates for the site
+ * directly through the web user interface by providing either SSH or FTP
+ * credentials. This allows the site to update the new files as the user who
+ * owns all the Drupal files, instead of as the user the webserver is running
+ * as. However, some sites might wish to disable this functionality, and only
+ * update the code directly via SSH or FTP themselves. This setting completely
+ * disables all functionality related to these authorized file operations.
+ *
+ * Remove the leading hash signs to disable.
+ */
+# $conf['allow_authorize_operations'] = FALSE;

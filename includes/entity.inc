@@ -1,5 +1,5 @@
 <?php
-// $Id: entity.inc,v 1.1 2009/08/25 21:53:47 dries Exp $
+// $Id: entity.inc,v 1.4 2009/12/08 06:33:11 webchick Exp $
 
 /**
  * Interface for entity controller classes.
@@ -68,7 +68,7 @@ class DrupalDefaultEntityController implements DrupalEntityControllerInterface {
     $this->idKey = $this->entityInfo['object keys']['id'];
 
     // Check if the entity type supports revisions.
-    if (isset($this->entityInfo['object keys']['revision'])) {
+    if (!empty($this->entityInfo['object keys']['revision'])) {
       $this->revisionKey = $this->entityInfo['object keys']['revision'];
       $this->revisionTable = $this->entityInfo['revision table'];
     }
@@ -99,7 +99,6 @@ class DrupalDefaultEntityController implements DrupalEntityControllerInterface {
     else {
       $this->revisionId = FALSE;
     }
-
 
     // Create a new variable which is either a prepared version of the $ids
     // array for later comparison with the entity cache, or FALSE if no $ids
@@ -141,16 +140,17 @@ class DrupalDefaultEntityController implements DrupalEntityControllerInterface {
       if (!empty($queried_entities) && !$this->revisionId) {
         $this->cacheSet($queried_entities);
       }
-      // Ensure that the returned array is ordered the same as the original
-      // $ids array if this was passed in and remove any invalid ids.
-      if ($passed_ids) {
-        // Remove any invalid ids from the array.
-        $passed_ids = array_intersect_key($passed_ids, $entities);
-        foreach ($entities as $entity) {
-          $passed_ids[$entity->{$this->idKey}] = $entity;
-        }
-        $entities = $passed_ids;
+    }
+
+    // Ensure that the returned array is ordered the same as the original
+    // $ids array if this was passed in and remove any invalid ids.
+    if ($passed_ids) {
+      // Remove any invalid ids from the array.
+      $passed_ids = array_intersect_key($passed_ids, $entities);
+      foreach ($entities as $entity) {
+        $passed_ids[$entity->{$this->idKey}] = $entity;
       }
+      $entities = $passed_ids;
     }
 
     return $entities;
@@ -223,8 +223,9 @@ class DrupalDefaultEntityController implements DrupalEntityControllerInterface {
   /**
    * Attach data to entities upon loading.
    *
-   * This will attach fields, if the entity is fieldable. It also calls
-   * hook_TYPE_load() on the loaded entities. For example
+   * This will attach fields, if the entity is fieldable. It calls
+   * hook_entity_load() for modules which need to add data to all entities.
+   * It also calls hook_TYPE_load() on the loaded entities. For example
    * hook_node_load() or hook_user_load(). If your hook_TYPE_load()
    * expects special parameters apart from the queried entities, you can set
    * $this->hookLoadArguments prior to calling the method.
@@ -241,6 +242,11 @@ class DrupalDefaultEntityController implements DrupalEntityControllerInterface {
       }
     }
 
+    // Call hook_entity_load().
+    foreach (module_implements('entity_load') as $module) {
+      $function = $module . '_entity_load';
+      $function($queried_entities, $this->entityType);
+    }
     // Call hook_TYPE_load(). The first argument for hook_TYPE_load() are
     // always the queried entities, followed by additional arguments set in
     // $this->hookLoadArguments.

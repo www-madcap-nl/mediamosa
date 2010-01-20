@@ -1,5 +1,5 @@
 <?php
-// $Id: user.test,v 1.62 2009/09/19 10:54:35 dries Exp $
+// $Id: user.test,v 1.77 2010/01/14 19:21:55 dries Exp $
 
 class UserRegistrationTestCase extends DrupalWebTestCase {
   public static function getInfo() {
@@ -9,16 +9,16 @@ class UserRegistrationTestCase extends DrupalWebTestCase {
       'group' => 'User'
     );
   }
-  
+
   function testRegistrationWithEmailVerification() {
     // Require e-mail verification.
     variable_set('user_email_verification', TRUE);
-    
+
     // Set registration to administrator only.
     variable_set('user_register', 0);
     $this->drupalGet('user/register');
     $this->assertResponse(403, t('Registration page is inaccessible when only administrators can create accounts.'));
-    
+
     // Allow registration by site visitors without administrator approval.
     variable_set('user_register', 1);
     $edit = array();
@@ -26,29 +26,31 @@ class UserRegistrationTestCase extends DrupalWebTestCase {
     $edit['mail'] = $mail = $edit['name'] . '@example.com';
     $this->drupalPost('user/register', $edit, t('Create new account'));
     $this->assertText(t('Your password and further instructions have been sent to your e-mail address.'), t('User registered successfully.'));
-    $new_user = reset(user_load_multiple(array(), array('name' => $name, 'mail' => $mail)));
+    $accounts = user_load_multiple(array(), array('name' => $name, 'mail' => $mail));
+    $new_user = reset($accounts);
     $this->assertTrue($new_user->status, t('New account is active after registration.'));
-    
+
     // Allow registration by site visitors, but require administrator approval.
     variable_set('user_register', 2);
     $edit = array();
     $edit['name'] = $name = $this->randomName();
     $edit['mail'] = $mail = $edit['name'] . '@example.com';
     $this->drupalPost('user/register', $edit, t('Create new account'));
-    $new_user = reset(user_load_multiple(array(), array('name' => $name, 'mail' => $mail)));
+    $accounts = user_load_multiple(array(), array('name' => $name, 'mail' => $mail));
+    $new_user = reset($accounts);
     $this->assertFalse($new_user->status, t('New account is blocked until approved by an administrator.'));
   }
-  
+
   function testRegistrationWithoutEmailVerification() {
     // Don't require e-mail verification.
     variable_set('user_email_verification', FALSE);
-    
+
     // Allow registration by site visitors without administrator approval.
     variable_set('user_register', 1);
     $edit = array();
     $edit['name'] = $name = $this->randomName();
     $edit['mail'] = $mail = $edit['name'] . '@example.com';
-    
+
     // Try entering a mismatching password.
     $edit['pass[pass1]'] = '99999.0';
     $edit['pass[pass2]'] = '99999';
@@ -59,10 +61,11 @@ class UserRegistrationTestCase extends DrupalWebTestCase {
     $edit['pass[pass1]'] = $new_pass = $this->randomName();
     $edit['pass[pass2]'] = $new_pass;
     $this->drupalPost('user/register', $edit, t('Create new account'));
-    $new_user = reset(user_load_multiple(array(), array('name' => $name, 'mail' => $mail)));
+    $accounts = user_load_multiple(array(), array('name' => $name, 'mail' => $mail));
+    $new_user = reset($accounts);
     $this->assertText(t('Registration successful. You are now logged in.'), t('Users are logged in after registering.'));
     $this->drupalLogout();
-    
+
     // Allow registration by site visitors, but require administrator approval.
     variable_set('user_register', 2);
     $edit = array();
@@ -72,7 +75,7 @@ class UserRegistrationTestCase extends DrupalWebTestCase {
     $edit['pass[pass2]'] = $pass;
     $this->drupalPost('user/register', $edit, t('Create new account'));
     $this->assertText(t('Thank you for applying for an account. Your account is currently pending approval by the site administrator.'), t('Users are notified of pending approval'));
-    
+
     // Try to login before administrator approval.
     $auth = array(
       'name' => $name,
@@ -82,7 +85,8 @@ class UserRegistrationTestCase extends DrupalWebTestCase {
     $this->assertText(t('The username @name has not been activated or is blocked.', array('@name' => $name)), t('User cannot login yet.'));
 
     // Activate the new account.
-    $new_user = reset(user_load_multiple(array(), array('name' => $name, 'mail' => $mail)));
+    $accounts = user_load_multiple(array(), array('name' => $name, 'mail' => $mail));
+    $new_user = reset($accounts);
     $admin_user = $this->drupalCreateUser(array('administer users'));
     $this->drupalLogin($admin_user);
     $edit = array(
@@ -90,7 +94,7 @@ class UserRegistrationTestCase extends DrupalWebTestCase {
     );
     $this->drupalPost('user/' . $new_user->uid . '/edit', $edit, t('Save'));
     $this->drupalLogout();
-    
+
     // Login after administrator approval.
     $this->drupalPost('user/login', $auth, t('Log in'));
     $this->assertText(t('Member for'), t('User can log in after administrator approval.'));
@@ -99,23 +103,29 @@ class UserRegistrationTestCase extends DrupalWebTestCase {
   function testRegistrationDefaultValues() {
     // Allow registration by site visitors without administrator approval.
     variable_set('user_register', 1);
-    
+
     // Don't require e-mail verification.
     variable_set('user_email_verification', FALSE);
-    
+
     // Set the default timezone to Brussels.
     variable_set('configurable_timezones', 1);
     variable_set('date_default_timezone', 'Europe/Brussels');
-    
+
+    // Check that the account information fieldset's options are not displayed
+    // is a fieldset if there is not more than one fieldset in the form.
+    $this->drupalGet('user/register');
+    $this->assertNoRaw('<fieldset id="edit-account"><legend>Account information</legend>', t('Account settings fieldset was hidden.'));
+
     $edit = array();
     $edit['name'] = $name = $this->randomName();
     $edit['mail'] = $mail = $edit['name'] . '@example.com';
     $edit['pass[pass1]'] = $new_pass = $this->randomName();
     $edit['pass[pass2]'] = $new_pass;
-    $this->drupalPost('user/register', $edit, t('Create new account'));
-    
+    $this->drupalPost(NULL, $edit, t('Create new account'));
+
     // Check user fields.
-    $new_user = reset(user_load_multiple(array(), array('name' => $name, 'mail' => $mail)));
+    $accounts = user_load_multiple(array(), array('name' => $name, 'mail' => $mail));
+    $new_user = reset($accounts);
     $this->assertEqual($new_user->name, $name, t('Username matches.'));
     $this->assertEqual($new_user->mail, $mail, t('E-mail address matches.'));
     $this->assertEqual($new_user->theme, '', t('Correct theme field.'));
@@ -126,6 +136,14 @@ class UserRegistrationTestCase extends DrupalWebTestCase {
     $this->assertEqual($new_user->language, '', t('Correct language field.'));
     $this->assertEqual($new_user->picture, '', t('Correct picture field.'));
     $this->assertEqual($new_user->init, $mail, t('Correct init field.'));
+
+    // Make the user timezone configurable, which will create a second fieldset
+    // on the registration page and cause the account information elements to
+    // be put in a fieldset.
+    variable_set('user_default_timezone', DRUPAL_USER_TIMEZONE_SELECT);
+    $this->drupalLogout();
+    $this->drupalGet('user/register');
+    $this->assertRaw('<fieldset id="edit-account"><legend>Account information</legend>', t('Account settings fieldset was not hidden.'));
   }
 }
 
@@ -284,11 +302,11 @@ class UserLoginTestCase extends DrupalWebTestCase {
     $this->drupalPost('user', $edit, t('Log in'));
     if (isset($flood_trigger)) {
       if ($flood_trigger == 'user') {
-        $this->assertRaw(format_plural(variable_get('user_failed_login_user_limit', 5), 'Sorry, there has been more than one failed login attempt for this account. It is temporarily blocked. Please try again later, or <a href="@url">request a new password</a>.', 'Sorry, there have been more than @count failed login attempts for this account. It is temporarily blocked. Please try again later, or <a href="@url">request a new password</a>.', array('@url' => url('user/password'))));
+        $this->assertRaw(format_plural(variable_get('user_failed_login_user_limit', 5), 'Sorry, there has been more than one failed login attempt for this account. It is temporarily blocked. Try again later or <a href="@url">request a new password</a>.', 'Sorry, there have been more than @count failed login attempts for this account. It is temporarily blocked. Try again later or <a href="@url">request a new password</a>.', array('@url' => url('user/password'))));
       }
       else {
         // No uid, so the limit is IP-based.
-        $this->assertRaw(t('Sorry, too many failed login attempts from your IP address. This IP address is temporarily blocked. Please try again later, or <a href="@url">request a new password</a>.', array('@url' => url('user/password'))));
+        $this->assertRaw(t('Sorry, too many failed login attempts from your IP address. This IP address is temporarily blocked. Try again later or <a href="@url">request a new password</a>.', array('@url' => url('user/password'))));
       }
     }
     else {
@@ -297,6 +315,9 @@ class UserLoginTestCase extends DrupalWebTestCase {
   }
 }
 
+/**
+ * Test cancelling a user.
+ */
 class UserCancelTestCase extends DrupalWebTestCase {
   public static function getInfo() {
     return array(
@@ -304,6 +325,10 @@ class UserCancelTestCase extends DrupalWebTestCase {
       'description' => 'Ensure that account cancellation methods work as expected.',
       'group' => 'User',
     );
+  }
+
+  function setUp() {
+    parent::setUp('comment');
   }
 
   /**
@@ -335,6 +360,44 @@ class UserCancelTestCase extends DrupalWebTestCase {
     // Confirm user's content has not been altered.
     $test_node = node_load($node->nid, NULL, TRUE);
     $this->assertTrue(($test_node->uid == $account->uid && $test_node->status == 1), t('Node of the user has not been altered.'));
+  }
+
+  /**
+   * Tests that user account for uid 1 cannot be cancelled.
+   *
+   * This should never be possible, or the site owner would become unable to
+   * administer the site.
+   */
+  function testUserCancelUid1() {
+    // Update uid 1's name and password to we know it.
+    $password = user_password();
+    require_once DRUPAL_ROOT . '/' . variable_get('password_inc', 'includes/password.inc');
+    $account = array(
+      'name' => 'user1',
+      'pass' => user_hash_password(trim($password)),
+    );
+    // We cannot use user_save() here or the password would be hashed again.
+    db_update('users')
+      ->fields($account)
+      ->condition('uid', 1)
+      ->execute();
+
+    // Reload and log in uid 1.
+    $user1 = user_load(1, TRUE);
+    $user1->pass_raw = $password;
+
+    // Try to cancel uid 1's account with a different user.
+    $this->admin_user = $this->drupalCreateUser(array('administer users'));
+    $this->drupalLogin($this->admin_user);
+    $edit = array(
+      'operation' => 'cancel',
+      'accounts[1]' => TRUE,
+    );
+    $this->drupalPost('admin/people', $edit, t('Update'));
+
+    // Verify that uid 1's account was not cancelled.
+    $user1 = user_load(1, TRUE);
+    $this->assertEqual($user1->status, 1, t('User #1 still exists and is not blocked.'));
   }
 
   /**
@@ -371,7 +434,8 @@ class UserCancelTestCase extends DrupalWebTestCase {
     $bogus_timestamp = $timestamp - 86400 - 60;
     $this->drupalGet("user/$account->uid/cancel/confirm/$bogus_timestamp/" . user_pass_rehash($account->pass, $bogus_timestamp, $account->login));
     $this->assertText(t('You have tried to use an account cancellation link that has expired. Please request a new one using the form below.'), t('Expired cancel account request rejected.'));
-    $this->assertTrue(reset(user_load_multiple(array($account->uid), array('status' => 1))), t('User account was not canceled.'));
+    $accounts = user_load_multiple(array($account->uid), array('status' => 1));
+    $this->assertTrue(reset($accounts), t('User account was not canceled.'));
 
     // Confirm user's content has not been altered.
     $test_node = node_load($node->nid, NULL, TRUE);
@@ -515,7 +579,7 @@ class UserCancelTestCase extends DrupalWebTestCase {
     variable_set('user_cancel_method', 'user_cancel_delete');
 
     // Create a user.
-    $account = $this->drupalCreateUser(array('cancel account'));
+    $account = $this->drupalCreateUser(array('cancel account', 'post comments', 'post comments without approval'));
     $this->drupalLogin($account);
     // Load real user object.
     $account = user_load($account->uid, TRUE);
@@ -524,9 +588,17 @@ class UserCancelTestCase extends DrupalWebTestCase {
     $node = $this->drupalCreateNode(array('uid' => $account->uid));
 
     // Create comment.
-    module_load_include('test', 'comment');
-    $comment = CommentHelperCase::postComment($node, '', $this->randomName(32), FALSE, TRUE);
-    $this->assertTrue(comment_load($comment->id), t('Comment found.'));
+    $langcode = LANGUAGE_NONE;
+    $edit = array();
+    $edit['subject'] = $this->randomName(8);
+    $edit['comment_body[' . $langcode . '][0][value]'] = $this->randomName(16);
+
+    $this->drupalPost('comment/reply/' . $node->nid, $edit, t('Preview'));
+    $this->drupalPost(NULL, array(), t('Save'));
+    $this->assertText(t('Your comment has been posted.'));
+    $comments = comment_load_multiple(array(), array('subject' => $edit['subject']));
+    $comment = reset($comments);
+    $this->assertTrue($comment->cid, t('Comment found.'));
 
     // Create a node with two revisions, the initial one belonging to the
     // cancelling user.
@@ -556,7 +628,7 @@ class UserCancelTestCase extends DrupalWebTestCase {
     $this->assertFalse(node_load($node->nid, NULL, TRUE), t('Node of the user has been deleted.'));
     $this->assertFalse(node_load($node->nid, $revision, TRUE), t('Node revision of the user has been deleted.'));
     $this->assertTrue(node_load($revision_node->nid, NULL, TRUE), t("Current revision of the user's node was not deleted."));
-    $this->assertFalse(comment_load($comment->id), t('Comment of the user has been deleted.'));
+    $this->assertFalse(comment_load($comment->cid), t('Comment of the user has been deleted.'));
 
     // Confirm that user is logged out.
     $this->assertNoText($account->name, t('Logged out.'));
@@ -613,6 +685,8 @@ class UserCancelTestCase extends DrupalWebTestCase {
       $edit['accounts[' . $uid . ']'] = TRUE;
     }
     $edit['accounts[' . $admin_user->uid . ']'] = TRUE;
+    // Also try to cancel uid 1.
+    $edit['accounts[1]'] = TRUE;
     $this->drupalPost('admin/people', $edit, t('Update'));
     $this->assertText(t('Are you sure you want to cancel these user accounts?'), t('Confirmation form to cancel accounts displayed.'));
     $this->assertText(t('When cancelling these accounts'), t('Allows to select account cancellation method.'));
@@ -632,6 +706,10 @@ class UserCancelTestCase extends DrupalWebTestCase {
     $this->assertText(t('A confirmation request to cancel your account has been sent to your e-mail address.'), t('Account cancellation request mailed message displayed.'));
     $admin_user = user_load($admin_user->uid);
     $this->assertTrue($admin_user->status == 1, t('Administrative user is found in the database and enabled.'));
+
+    // Verify that uid 1's account was not cancelled.
+    $user1 = user_load(1, TRUE);
+    $this->assertEqual($user1->status, 1, t('User #1 still exists and is not blocked.'));
   }
 }
 
@@ -701,7 +779,7 @@ class UserPictureTestCase extends DrupalWebTestCase {
         // user's profile page.
         $text = t('The image was resized to fit within the maximum allowed dimensions of %dimensions pixels.', array('%dimensions' => $test_dim));
         $this->assertRaw($text, t('Image was resized.'));
-        $alt = t("@user's picture", array('@user' => $this->user->name));
+        $alt = t("@user's picture", array('@user' => format_username($this->user)));
         $style = variable_get('user_picture_style', '');
         $this->assertRaw(image_style_url($style, $pic_path), t("Image is displayed in user's edit page"));
 
@@ -725,7 +803,8 @@ class UserPictureTestCase extends DrupalWebTestCase {
 
         // Images are sorted first by size then by name. We need an image
         // bigger than 1 KB so we'll grab the last one.
-        $image = end($this->drupalGetTestFiles('image'));
+        $files = $this->drupalGetTestFiles('image');
+        $image = end($files);
         $info = image_get_info($image->uri);
 
         // Set new variables: valid dimensions, invalid filesize.
@@ -872,7 +951,7 @@ class UserPermissionsTestCase extends DrupalWebTestCase {
   function setUp() {
     parent::setUp();
 
-    $this->admin_user = $this->drupalCreateUser(array('administer permissions', 'access user profiles', 'administer site configuration', 'administer users'));
+    $this->admin_user = $this->drupalCreateUser(array('administer permissions', 'access user profiles', 'administer site configuration', 'administer modules', 'administer users'));
 
     // Find the new role ID - it must be the maximum.
     $all_rids = array_keys($this->admin_user->roles);
@@ -925,7 +1004,7 @@ class UserPermissionsTestCase extends DrupalWebTestCase {
     // permission is assigned by default.
     $edit = array();
     $edit['modules[Core][aggregator][enable]'] = TRUE;
-    $this->drupalPost('admin/config/modules', $edit, t('Save configuration'));
+    $this->drupalPost('admin/modules', $edit, t('Save configuration'));
     $this->assertTrue(user_access('administer news feeds', $this->admin_user), t('The permission was automatically assigned to the administrator role'));
   }
 
@@ -982,9 +1061,12 @@ class UserAdminTestCase extends DrupalWebTestCase {
     $this->assertText($user_c->name, t('Found user C on admin users page'));
     $this->assertText($admin_user->name, t('Found Admin user on admin users page'));
 
+    // Test for existence of edit link in table.
+    $link = l(t('edit'), "user/$user_a->uid/edit", array('query' => array('destination' => 'admin/people')));
+    $this->assertRaw($link, t('Found user A edit link on admin users page'));
+
     // Filter the users by permission 'administer taxonomy'.
     $edit = array();
-    $edit['filter'] = 'permission';
     $edit['permission'] = 'administer taxonomy';
     $this->drupalPost('admin/people', $edit, t('Filter'));
 
@@ -1169,7 +1251,7 @@ class UserBlocksUnitTests extends DrupalWebTestCase {
     // Test block output.
     $block = user_block_view('online');
     $this->drupalSetContent($block['content']);
-    $this->assertRaw(t('%members and %visitors', array('%members' => '2 users', '%visitors' => '2 guests')), t('Correct number of online users (2 users and 2 guests).'));
+    $this->assertRaw(t('2 users'), t('Correct number of online users (2 users).'));
     $this->assertText($user1->name, t('Active user 1 found in online list.'));
     $this->assertText($user2->name, t('Active user 2 found in online list.'));
     $this->assertNoText($user3->name, t("Inactive user not found in online list."));
@@ -1224,7 +1306,7 @@ class UserSaveTestCase extends DrupalWebTestCase {
       'pass' => user_password(),
       'status' => 1,
     );
-    $user_by_return = user_save('', $user);
+    $user_by_return = user_save(drupal_anonymous_user(), $user);
     $this->assertTrue($user_by_return, t('Loading user by return of user_save().'));
 
     // Test if created user exists.

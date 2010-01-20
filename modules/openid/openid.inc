@@ -1,5 +1,5 @@
 <?php
-// $Id: openid.inc,v 1.20 2009/09/18 00:12:47 webchick Exp $
+// $Id: openid.inc,v 1.22 2009/11/24 05:20:48 dries Exp $
 
 /**
  * @file
@@ -62,10 +62,7 @@ function openid_redirect_http($url, $message) {
   $sep = (strpos($url, '?') === FALSE) ? '?' : '&';
   header('Location: ' . $url . $sep . implode('&', $query), TRUE, 302);
 
-  // Commit session data before redirecting.
-  drupal_session_commit();
-
-  exit;
+  drupal_exit();
 }
 
 /**
@@ -78,10 +75,7 @@ function openid_redirect($url, $message) {
   $output .= "</body></html>\n";
   print $output;
 
-  // Commit session data before redirecting.
-  drupal_session_commit();
-
-  exit;
+  drupal_exit();
 }
 
 function openid_redirect_form($form, &$form_state, $url, $message) {
@@ -149,6 +143,9 @@ function _openid_normalize_url($url) {
   if (stristr($url, '://') === FALSE) {
     $normalized_url = 'http://' . $url;
   }
+
+  // Strip the fragment and fragment delimiter if present.
+  $normalized_url = strtok($normalized_url, '#');
 
   if (substr_count($normalized_url, '/') < 3) {
     $normalized_url .= '/';
