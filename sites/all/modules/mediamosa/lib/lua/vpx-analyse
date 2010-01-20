@@ -69,12 +69,13 @@ local ln_duration = space * "Duration" * COLON *
 -- Stream #0.0: Audio: 0x0162, 48000 Hz, 5.1, 254 kb/s
 -- Stream #0.1(eng): Audio: mp4a / 0x6134706D, 24000 Hz, stereo
 -- Stream #0.1[0x103](???): Audio: ac3, 48000 Hz, stereo, 448 kb/s
+-- Stream #0.0: Audio: 0x0162, 48000 Hz, 5.1, s16, 384 kb/s
 -- captures: stream, codecs, frequency, channels, sample_format, bitrate
 local ln_audio = space * "Stream #" * float * language^-1 * COLON *
   "Audio" * COLON *
   codecs * COMMA *
   number * "Hz" * COMMA *
-  (number * space)^-1 * channels *
+  (((number * space)^-1 * channels) + lpeg.C(digits^1 * "." * digits^1)) *
   ((COMMA * word) + lpeg.Cc("unknown")) *
   (COMMA * number * "kb/s")^-1
 
