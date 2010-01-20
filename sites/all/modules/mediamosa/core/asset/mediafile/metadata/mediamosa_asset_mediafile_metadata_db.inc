@@ -51,7 +51,7 @@ class mediamosa_asset_mediafile_metadata_db {
   const CHANNELS = 'channels';
   const CHANNELS_LENGTH = 10;
   const FILE_DURATION = 'file_duration';
-  const FILE_DURATION_LENGTH = 10;
+  const FILE_DURATION_LENGTH = 11;
   const CONTAINER_TYPE = 'container_type';
   const CONTAINER_TYPE_LENGTH = 50;
   const BITRATE = 'bitrate';

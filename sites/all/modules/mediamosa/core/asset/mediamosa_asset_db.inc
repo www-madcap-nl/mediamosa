@@ -57,7 +57,7 @@ class mediamosa_asset_db {
   const ISPRIVATE_TRUE = 'TRUE';
   const ISPRIVATE_FALSE = 'FALSE';
   const MEDIAFILE_DURATION = 'mediafile_duration';
-  const MEDIAFILE_DURATION_LENGTH = 10;
+  const MEDIAFILE_DURATION_LENGTH = 11;
   const MEDIAFILE_CONTAINER_TYPE = 'mediafile_container_type';
   const MEDIAFILE_CONTAINER_TYPE_LENGTH = 50;
   const CREATED = 'created';

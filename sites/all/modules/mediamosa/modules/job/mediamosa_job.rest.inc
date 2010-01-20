@@ -207,6 +207,11 @@ class mediamosa_rest_call_job_analyse_mediafile extends mediamosa_rest_call {
           self::VAR_DESCRIPTION => 'The user ID.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
+        self::NO_HINT => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_DESCRIPTION => 'No hinting.',
+          self::VAR_DEFAULT_VALUE => 'FALSE',
+        ),
       )
     );
 
@@ -223,9 +228,10 @@ class mediamosa_rest_call_job_analyse_mediafile extends mediamosa_rest_call {
     // Get params.
     $mediafile_id = $this->get_param_value(self::MEDIAFILE_ID);
     $user_id = $this->get_param_value(self::USER_ID);
+    $no_hint = $this->get_param_value(self::NO_HINT);
 
     // Create it.
-    mediamosa_job::create(mediamosa_job_db::JOB_TYPE_ANALYSE, $app_id, $user_id, $is_app_admin, $mediafile_id);
+    mediamosa_job::create(mediamosa_job_db::JOB_TYPE_ANALYSE, $app_id, $user_id, $is_app_admin, $mediafile_id, FALSE, array(), NULL, $no_hint);
   }
 }
 
