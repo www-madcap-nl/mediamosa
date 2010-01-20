@@ -57,8 +57,12 @@ class mediamosa_job_server {
       return; // Still running.
     }
 
+    self::log('Start parse queue job server');
+
     // Run.
     self::parse_queue();
+
+    self::log('Ending parse queue job server');
   }
   /**
    * Parse the queue jobs.
@@ -406,13 +410,12 @@ class mediamosa_job_server {
    *
    */
   static public function search() {
-
-    return mediamosa_db::db_select(mediamosa_job_server_db::TABLE_NAME, 'js')
-      ->fields('js')
-      ->fields('jsa')
-      ->leftJoin(mediamosa_job_server_analyse_db::TABLE_NAME, 'jsa', strtr('js.#jobserver_job_id = jsa.#jobserver_job_id', array('#jobserver_job_id' => mediamosa_job_server_db::ID)))
-      ->condition(mediamosa_job_server_db::INSTALL_ID, mediamosa::variable_get('mediamosa_installation_id', 'default'))
-      ->execute();
+    $query = mediamosa_db::db_select(mediamosa_job_server_db::TABLE_NAME, 'js');
+    $query->leftJoin(mediamosa_job_server_analyse_db::TABLE_NAME, 'jsa', 'js.jobserver_job_id = jsa.jobserver_job_id');
+    $query->fields('js');
+    $query->fields('jsa');
+    $query->condition(mediamosa_job_server_db::INSTALL_ID, mediamosa::variable_get('mediamosa_installation_id', 'default'));
+    return $query->execute();
   }
 
   /**

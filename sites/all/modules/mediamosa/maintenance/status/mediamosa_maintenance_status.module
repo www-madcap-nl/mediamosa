@@ -33,6 +33,10 @@
  * Trigger status page.
  */
 function mediamosa_maintenance_status_cron() {
+
+  $start = time();
+  mediamosa::log('mediamosa_maintenance_status_cron started.');
+
   // Just trigger, it has his own protection on overrun.
   $hostname = variable_get('mediamosa_cron_uri_app', 'localhost');
   $use_localhost = variable_get('mediamosa_cron_uri_app_local', FALSE);
@@ -44,6 +48,9 @@ function mediamosa_maintenance_status_cron() {
   }
 
   mediamosa_http::do_head_call('http://' . $hostname  . '/internal/cron/maintenance_status', $a_options);
+
+  // Log it.
+  mediamosa::log('mediamosa_maintenance_status_cron ended: @secs', array('@sec' => time() - $start));
 }
 
 /**

@@ -1556,6 +1556,16 @@ function _mediamosa_migration_asset_supplement() {
  * Migrate job tables.
  */
 function _mediamosa_migration_job() {
+
+
+  /**
+   * Migration turned off, so we have clean database.
+   */
+  return;
+
+
+
+
   // Get the database name.
   $db_name = _mediamosa_migration_get_memo_data_db();
 
@@ -2154,14 +2164,13 @@ function _mediamosa_migration_create_server_nodes() {
       //$node->{mediamosa_server_db::ID} = $server_id;
       $node->{mediamosa_server_db::VERSION} = $row['version'];
       $node->{mediamosa_server_db::SERVER_STATUS} = $status;
-      $node->{mediamosa_server_db::URI} = (isset($row['uri'])) ? $row['uri'] : NULL;
-      $node->{mediamosa_server_db::CONTAINERS} = (isset($row['containers'])) ? $row['containers'] : NULL;
-      $node->{mediamosa_server_db::OBJECT_CODE} = (isset($row['objectcode'])) ? $row['objectcode'] : NULL;
-      $node->{mediamosa_server_db::SERVER_NAME} = (isset($row['servername'])) ? $row['servername'] : NULL;
-      $node->{mediamosa_server_db::IP_ADDRESS} = (isset($row['ip_address'])) ? $row['ip_address'] : NULL;
-      $node->{mediamosa_server_db::SLOTS} = (isset($row['slots'])) ? $row['slots'] : NULL;
-      $node->{mediamosa_server_db::TOOLS} = (isset($row['tools'])) ? $row['tools'] : NULL;
-      $node->{mediamosa_server_db::URI_UPLOAD_PROGRESS} = (isset($row['uri_uploadprogress'])) ? $row['uri_uploadprogress'] : NULL;
+      $node->{mediamosa_server_db::URI} = (isset($row['uri']) ? $row['uri'] : (isset($row['ip_address']) ? $row['ip_address'] : NULL));
+      $node->{mediamosa_server_db::CONTAINERS} = (isset($row['containers']) ? $row['containers'] : NULL);
+      $node->{mediamosa_server_db::OBJECT_CODE} = (isset($row['objectcode']) ? $row['objectcode'] : NULL);
+      $node->{mediamosa_server_db::SERVER_NAME} = (isset($row['servername']) ? $row['servername'] : NULL);
+      $node->{mediamosa_server_db::SLOTS} = (isset($row['slots']) ? $row['slots'] : NULL);
+      $node->{mediamosa_server_db::TOOLS} = (isset($row['tools']) ? $row['tools'] : NULL);
+      $node->{mediamosa_server_db::URI_UPLOAD_PROGRESS} = (isset($row['uri_uploadprogress']) ? $row['uri_uploadprogress'] : NULL);
 
       switch ($type) {
         case mediamosa_server_db::SERVER_TYPE_TRANSCODE:

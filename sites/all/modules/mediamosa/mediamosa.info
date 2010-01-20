@@ -2,7 +2,7 @@
 name = "MediaMosa 2"
 description = "Open source media management and distribution platform."
 package = "MediaMosa 2 - Core"
-version = "2.0.0.155:37e4e77047d3"
+version = "2.0.1.155:37e4e77047d3"
 core = 7.x
 
 ; Dependencies (module names)
@@ -208,6 +208,11 @@ files[] = core/configuration/storage/mediamosa_configuration_storage.inc
 files[] = core/server/mediamosa_server.install.inc
 files[] = core/server/mediamosa_server.inc
 files[] = core/server/mediamosa_server_db.inc
+
+; Server Job.
+files[] = core/server/job/mediamosa_server_job_db.inc
+files[] = core/server/job/mediamosa_server_job.inc
+files[] = core/server/job/mediamosa_server_job.install.inc
 
 ; Server Streaming.
 files[] = core/server/streaming/mediamosa_server_streaming.install.inc

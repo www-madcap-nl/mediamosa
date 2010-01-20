@@ -354,7 +354,6 @@ abstract class MediaMosaTestCase extends DrupalWebTestCase {
     $node->{mediamosa_server_db::CONTAINERS} = NULL;
     $node->{mediamosa_server_db::OBJECT_CODE} = NULL;
     $node->{mediamosa_server_db::SERVER_NAME} = NULL;
-    $node->{mediamosa_server_db::IP_ADDRESS} = NULL;
     $node->{mediamosa_server_db::SLOTS} = NULL;
     $node->{mediamosa_server_db::TOOLS} = NULL;
     $node->{mediamosa_server_db::URI_UPLOAD_PROGRESS} = NULL;

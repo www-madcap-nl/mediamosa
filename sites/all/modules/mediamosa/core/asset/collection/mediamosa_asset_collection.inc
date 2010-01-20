@@ -128,7 +128,7 @@ class mediamosa_asset_collection {
     }
 
     $query = mediamosa_db::db_select(mediamosa_asset_collection_db::TABLE_NAME, 'ac');
-    $query->leftjoin(mediamosa_collection_db::TABLE_NAME, 'c', 'ac.asset_id = c.asset_id');
+    $query->leftJoin(mediamosa_collection_db::TABLE_NAME, 'c', 'ac.asset_id = c.asset_id');
     if (count($a_fields)) {
       foreach ($a_fields as $key => $field) {
         $query->addField('c', $field, (is_numeric($key) ? $field : $key));

@@ -334,8 +334,8 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
       }
 
       $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'm');
-      $query->innerJoin(mediamosa_asset_mediafile_metadata_db::TABLE_NAME, 'mm', strtr('mm.#mediafile_id = m.#mediafile_id', array('#mediafile_id' => mediamosa_asset_mediafile_db::ID)));
-      $query->innerJoin(
+      $query->join(mediamosa_asset_mediafile_metadata_db::TABLE_NAME, 'mm', strtr('mm.#mediafile_id = m.#mediafile_id', array('#mediafile_id' => mediamosa_asset_mediafile_db::ID)));
+      $query->join(
         mediamosa_asset_mediafile_metadata_db::TABLE_NAME,
         'v',
         strtr(

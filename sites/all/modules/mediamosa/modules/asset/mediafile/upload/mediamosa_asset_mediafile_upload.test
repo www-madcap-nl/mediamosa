@@ -26,27 +26,44 @@
 
  /**
   * @file
-  * The ticket module.
+  * Upload test of files (videos / stills).
   */
 
- /*
-  * Implements hook_cron.
+/**
+  * @file
+  * Unittests for upload.
   */
-function mediamosa_ticket_cron() {
-  $start = time();
-  mediamosa::log('mediamosa_ticket_cron started.');
+class MediaMosaAssetMediafileUploadTestCase extends MediaMosaTestCase {
 
-  $run_last = variable_get('mediamosa_ticket_cron_last', NULL);
-
-  // may run?
-  if (round(REQUEST_TIME - $run_last) >= mediamosa_settings::TICKET_CRON_INTERVAL) {
-    // For the next time...
-    variable_set('mediamosa_ticket_cron_last', REQUEST_TIME);
-
-    // Play proxy ticket cleanup.
-    mediamosa_ticket::ticket_cleanup();
+  public static function getInfo() {
+    return array(
+      'name' => 'Upload Mediafile test',
+      'description' => 'Test uploading of files (videos, stills).',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE,
+    );
   }
 
-  // Log it.
-  mediamosa::log('mediamosa_ticket_cron ended: @secs', array('@sec' => time() - $start));
+  function setUp() {
+    // Get the current mediamosa server content.
+    $a_servers = mediamosa_server::search();
+
+    parent::setUp('mediamosa_asset');
+
+    // Create and login user
+    $rest_user = $this->drupalCreateUser(array('administer mediamosa'));
+    $this->drupalLogin($rest_user);
+
+    // Truncate current and insert new.
+    db_truncate(mediamosa_server_db::TABLE_NAME)->execute();
+
+    // Copy the current servers to sandbox.
+    foreach ($a_servers as $a_server) {
+      db_insert(mediamosa_server_db::TABLE_NAME)
+        ->fields($a_server)
+        ->execute();
+    }
+  }
+
+  function testTicket504() {
+  }
 }

@@ -507,11 +507,11 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
     if ($o_cql_part_search_term === FALSE) {
 
       if ($o_cql_part_boolean) {
-        if (!$is_append && $o_cql_part_boolean->mediamosa_cql_part_type_get() == CQL_BOOLEAN_NOT) {
+        if (!$is_append && $o_cql_part_boolean->mediamosa_cql_part_type_get() == MEDIAMOSA_CQL_BOOLEAN_NOT) {
           return $o_cql_part_boolean->mediamosa_cql_part_str_get();
         }
 
-        if ($is_append && $o_cql_part_boolean->mediamosa_cql_part_type_get() != CQL_BOOLEAN_NOT) {
+        if ($is_append && $o_cql_part_boolean->mediamosa_cql_part_type_get() != MEDIAMOSA_CQL_BOOLEAN_NOT) {
           return $o_cql_part_boolean->mediamosa_cql_part_str_get();
         }
       }

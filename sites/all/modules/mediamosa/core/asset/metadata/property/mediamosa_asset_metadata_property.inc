@@ -245,7 +245,7 @@ class mediamosa_asset_metadata_property {
     $query = mediamosa_db::db_select(mediamosa_asset_metadata_property_group_db::TABLE_NAME, 'ampg');
 
     // Add an join.
-    $query->innerjoin(
+    $query->join(
       mediamosa_asset_metadata_property_db::TABLE_NAME,
       'amp',
       strtr(

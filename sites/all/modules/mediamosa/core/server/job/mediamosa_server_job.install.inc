@@ -58,7 +58,7 @@ function mediamosa_server_job_schema() {
         'type' => 'int',
         'not null' => TRUE,
         'unsigned' => TRUE,
-        'description' => t('The server ID.'),
+        'description' => t('The server ID points to mediamosa_server nid field.'),
       ),
       mediamosa_server_job_db::JOB_ID => array(
         'type' => 'int',

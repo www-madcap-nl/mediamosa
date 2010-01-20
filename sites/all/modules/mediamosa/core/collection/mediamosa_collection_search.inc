@@ -116,6 +116,7 @@ class mediamosa_collection_search {
     // Access selection is done here;
     mediamosa_aut::build_access_where($a_query, mediamosa_aut::AUT_TYPE_COLLECTION, NULL, $a_app_id, $aut_user_id, NULL, NULL, NULL, NULL, $is_app_admin);
 
+    $order_by = '';
     if ($cql) {
       $a_result_cql2sql = mediamosa_core_cql::parse_collection($cql, $a_app_id);
 

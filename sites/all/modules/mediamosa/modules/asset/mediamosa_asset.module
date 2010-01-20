@@ -33,6 +33,9 @@
   * Implements hook_cron.
   */
 function mediamosa_asset_cron() {
+  $start = time();
+  mediamosa::log('mediamosa_asset_cron started.');
+
   $run_last = variable_get('mediamosa_asset_cron_last', NULL);
 
   // may run?
@@ -43,6 +46,9 @@ function mediamosa_asset_cron() {
     // Do garbage cleanup.
     mediamosa_asset::do_garbage_cleanup();
   }
+
+  // Log it.
+  mediamosa::log('mediamosa_asset_cron ended: @secs', array('@sec' => time() - $start));
 }
 
 /**

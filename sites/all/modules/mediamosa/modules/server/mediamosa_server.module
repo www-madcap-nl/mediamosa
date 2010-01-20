@@ -45,7 +45,6 @@ function mediamosa_server_view($node, $build_mode = 'full') {
     'uri_upload_progress' => t('URI upload progress'),
     'containers' => t('Containers'),
     'server_name' => t('Server name'),
-    'ip_address' => t('IP Address'),
     'slots' => t('Slots'),
     'tools' => t('Tools'),
   ) as $key => $title) {
@@ -148,16 +147,6 @@ function mediamosa_server_form($node, $form_state) {
         '#maxlength' => mediamosa_server_db::SERVER_NAME_LENGTH,
       );
     }
-    if (in_array('ip_address', $options)) {
-      $form['fieldset']['ip_address'] = array(
-        '#type' => 'textfield',
-        '#title' => t('IP address'),
-        '#description' => t('IP address of server.'),
-        '#default_value' => $node->ip_address,
-        '#required' => TRUE,
-        '#maxlength' => mediamosa_server_db::IP_ADDRESS_LENGTH,
-      );
-    }
     if (in_array('slots', $options)) {
       $form['fieldset']['slots'] = array(
         '#type' => 'select',
@@ -218,7 +207,7 @@ function _mediamosa_server_get_server_options($server_type) {
       break;
 
     case mediamosa_server_db::SERVER_TYPE_TRANSCODE:
-      $form_elements = array('server_name', 'ip_address', 'slots', 'tools');
+      $form_elements = array('server_name', 'uri', 'slots', 'tools');
       break;
 
     case mediamosa_server_db::SERVER_TYPE_UPLOAD:

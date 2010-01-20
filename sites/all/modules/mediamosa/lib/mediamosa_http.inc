@@ -36,16 +36,16 @@ class mediamosa_http {
   /**
    * Do a internal REST call.
    *
-   * @param string $ip_address
+   * @param string $uri
    * @param string $rest_url
    * @param array $data
    * @param $method
    */
-  static public function do_internal_call($ip_address, $rest_url, $data = NULL, $method = self::METHOD_GET) {
+  static public function do_internal_call($uri, $rest_url, $data = NULL, $method = self::METHOD_GET) {
     $url = strtr(
       'http://@hostname/internal/@rest_url',
       array(
-        '@hostname' => $ip_address,
+        '@hostname' => $uri,
         '@rest_url' =>  $rest_url
       )
     );
@@ -108,15 +108,18 @@ class mediamosa_http {
       $curl_options[CURLOPT_HTTPHEADER][] = $name . ': ' . $value;
     }
 
+    curl_setopt($curl_handle, CURLOPT_TIMEOUT, 1);
+    curl_setopt($curl_handle, CURLOPT_CONNECTTIMEOUT, 1);
+
     if (!empty($curl_options)) {
       curl_setopt_array($curl_handle, $curl_options);
     }
 
-    curl_setopt($curl_handle, CURLOPT_RETURNTRANSFER, TRUE);
+    curl_setopt($curl_handle, CURLOPT_RETURNTRANSFER, FALSE);
     curl_setopt($curl_handle, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_0);
 
     // Do a HEAD call here.
-    curl_setopt($curl_handle, CURLOPT_NOBODY, TRUE);
+    //curl_setopt($curl_handle, CURLOPT_NOBODY, TRUE);
 
     // Check for possible proxy setting, if set, use it.
     if ($curlproxy_http) {
@@ -124,8 +127,7 @@ class mediamosa_http {
       curl_setopt($curl_handle, CURLOPT_PROXY, $curlproxy_http);
     }
 
-    $result = curl_exec($curl_handle);
-
+    curl_exec($curl_handle);
     curl_close($curl_handle);
   }
 

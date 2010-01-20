@@ -90,8 +90,7 @@ class mediamosa_asset {
    * @param string $asset_id
    */
   static public function delete_jobs($asset_id) {
-//@todo:
-    return self::delete_job_by_asset($asset_id);
+    return mediamosa_job::delete_job_by_asset($asset_id);
   }
 
   /**
@@ -128,8 +127,8 @@ class mediamosa_asset {
     // Find all mediafiles (except stills, they dont count for cascade mode.).
     $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
     $query->addField('mf', mediamosa_asset_mediafile_db::ID);
-    $query->condition('mf' . mediamosa_asset_mediafile_db::ASSET_ID, $a_asset_ids, 'IN');
-    $query->condition('mf' . mediamosa_asset_mediafile_db::IS_STILL, mediamosa_asset_mediafile_db::IS_STILL_FALSE);
+    $query->condition(mediamosa_asset_mediafile_db::ASSET_ID, $a_asset_ids, 'IN');
+    $query->condition(mediamosa_asset_mediafile_db::IS_STILL, mediamosa_asset_mediafile_db::IS_STILL_FALSE);
     $a_mediafile_ids = $query->execute()->fetchCol();
 
     // Any mediafiles left and casade off?
@@ -147,9 +146,9 @@ class mediamosa_asset {
     // Check the temporary wmv files
     $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
     $query->addField('mf', mediamosa_asset_mediafile_db::ID);
-    $query->condition('mf' . mediamosa_asset_mediafile_db::ASSET_ID, $a_asset_ids, 'IN');
-    $query->condition('mf' . mediamosa_asset_mediafile_db::IS_STILL, mediamosa_asset_mediafile_db::IS_STILL_FALSE);
-    $query->condition('mf' . mediamosa_asset_mediafile_db::ID, '%.avi', 'LIKE');
+    $query->condition(mediamosa_asset_mediafile_db::ASSET_ID, $a_asset_ids, 'IN');
+    $query->condition(mediamosa_asset_mediafile_db::IS_STILL, mediamosa_asset_mediafile_db::IS_STILL_FALSE);
+    $query->condition(mediamosa_asset_mediafile_db::ID, '%.avi', 'LIKE');
     $a_mediafile_ids = $query->execute()->fetchCol();
     if (count($a_mediafile_ids)) {
       // Delete the temporary wmv files

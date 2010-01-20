@@ -345,7 +345,7 @@ class mediamosa_job {
 
         // Destination.
         $destination = mediamosa_configuration_storage::still_filename_get($still_id);
-        
+
         // Still size.
         $size = getimagesize($destination);
         $width = $size[0];
@@ -666,9 +666,9 @@ class mediamosa_job {
    */
   static public function get_job_list($app_id, $user_id, $is_app_admin, $job_id = '', $asset_id = '', $mediafile_id = '') {
 
-    $query = mediamosa_db::db_select(mediamosa_job_db::TABLE_NAME, 'j')
-      ->fields('j')
-      ->join(mediamosa_asset_db::TABLE_NAME, 'a', 'a.asset_id = j.asset_id');
+    $query = mediamosa_db::db_select(mediamosa_job_db::TABLE_NAME, 'j');
+    $query->fields('j');
+    $query->join(mediamosa_asset_db::TABLE_NAME, 'a', 'a.asset_id = j.asset_id');
 
     if (!$is_app_admin) {
       $query->condition('j.' . mediamosa_job_db::APP_ID, $app_id);

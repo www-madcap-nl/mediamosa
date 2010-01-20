@@ -144,6 +144,9 @@ class mediamosa {
         'line' => $caller['line']
       );
 
+      // Log to file, just to be sure if watchdog should fail.
+      mediamosa::error_log($message . ' (function: )' . $caller['function'], $caller['file'], $caller['line']);
+
       // Only log if error_reporting returns TRUE.
       if (error_reporting()) {
         // Unlike drupal, we don't treat recoverable errors as fatal, preventing Drupal to display error page.
@@ -550,4 +553,10 @@ class mediamosa {
     return (mediamosa_unicode::substr(PHP_OS, 0, 3) == "WIN");
   }
 
+  /**
+   * Log without logging to the database, go to php.log instead.
+   */
+  static public function error_log($message, $filename = NULL, $line = NULL) {
+    error_log(strtr('In @filename at line @line; @message.', array('@filename' => ($filename ? $filename : 'unknown'), '@line' => (isset($line) ? $line : 'unknown'), '@message' => $message)));
+  }
 }

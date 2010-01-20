@@ -40,26 +40,6 @@
  *   The output HTML.
  */
 
-class mediamosa_maintenance {
-
-  function mediamosa_admin_menu_block_page() {
-    exit('mediamosa_admin_menu_block_page::');
-  }
-
-}
-
-function mediamosa_admin_menu_block_page() {
-exit('mediamosa_admin_menu_block_page');
-  $content = system_admin_menu_block(menu_get_item());
-  if ($content) {
-    $output = theme('admin_block_content', $content);
-  }
-  else {
-    $output = t('You do not have any administrative items.');
-  }
-  return $output;
-}
-
 /**
  * Menu callback; Provide the administration overview page.
  */

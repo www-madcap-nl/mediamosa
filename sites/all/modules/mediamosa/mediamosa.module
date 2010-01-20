@@ -140,7 +140,7 @@ function mediamosa_mediamosa_register_rest_call() {
 function mediamosa_mediamosa_configuration_collect() {
   $form['settings_cron'] = array(
     '#type' => 'fieldset',
-    '#title' => t('MediaMosa Status Page'),
+    '#title' => t('MediaMosa internal REST call'),
     '#collapsible' => TRUE,
   );
 

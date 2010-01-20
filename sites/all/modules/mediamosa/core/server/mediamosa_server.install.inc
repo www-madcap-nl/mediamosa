@@ -91,13 +91,12 @@ function mediamosa_server_install() {
     $node->{mediamosa_server_db::CONTAINERS} = $a_default_server[5];
     $node->{mediamosa_server_db::OBJECT_CODE} = $a_default_server[6];
     $node->{mediamosa_server_db::SERVER_NAME} = $a_default_server[7];
-    $node->{mediamosa_server_db::IP_ADDRESS} = $a_default_server[8];
-    $node->{mediamosa_server_db::SLOTS} = (int)$a_default_server[9];
-    $node->{mediamosa_server_db::TOOLS} = $a_default_server[10];
-    $node->{mediamosa_server_db::URI_UPLOAD_PROGRESS} = $a_default_server[11];
+    $node->{mediamosa_server_db::SLOTS} = (int)$a_default_server[8];
+    $node->{mediamosa_server_db::TOOLS} = $a_default_server[9];
+    $node->{mediamosa_server_db::URI_UPLOAD_PROGRESS} = $a_default_server[10];
 
     if ($a_default_server[3] == 'transcode') {
-      $a_tools = explode('|', $a_default_server[10]);
+      $a_tools = explode('|', $a_default_server[9]);
       foreach ($a_tools as $tool) {
         $node->{mediamosa_server_transcoding_tool_db::TABLE_NAME}[] = array(mediamosa_server_transcoding_tool_db::TOOL => $tool);
       }
@@ -204,12 +203,6 @@ function mediamosa_server_schema() {
         'description' => t('The optional name of the server.'),
         'type' => 'varchar',
         'length' => mediamosa_server_db::SERVER_NAME_LENGTH,
-        'not null' => FALSE,
-      ),
-      mediamosa_server_db::IP_ADDRESS => array(
-        'description' => t('The optional ip address of the server.'),
-        'type' => 'varchar',
-        'length' => mediamosa_server_db::IP_ADDRESS_LENGTH,
         'not null' => FALSE,
       ),
       mediamosa_server_db::SLOTS => array(

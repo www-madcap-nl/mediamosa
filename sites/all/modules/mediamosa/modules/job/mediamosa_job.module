@@ -33,6 +33,10 @@
  * Trigger status page.
  */
 function mediamosa_job_cron() {
+
+  $start = time();
+  mediamosa::log('mediamosa_job_cron started.');
+
   // Just trigger, it has his own protection on overrun.
   $hostname = variable_get('mediamosa_cron_uri_app', 'localhost');
   $use_localhost = variable_get('mediamosa_cron_uri_app_local', FALSE);
@@ -45,8 +49,12 @@ function mediamosa_job_cron() {
 
   // Jobserver.
   mediamosa_http::do_head_call('http://' . $hostname  . '/internal/cron/jobserver', $a_options);
+
   // Jobschedular.
   mediamosa_http::do_head_call('http://' . $hostname  . '/internal/cron/jobschedular', $a_options);
+
+  // Log it.
+  mediamosa::log('mediamosa_job_cron ended: @secs', array('@sec' => time() - $start));
 }
 
 /**

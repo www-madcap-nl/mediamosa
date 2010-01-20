@@ -127,12 +127,15 @@ class mediamosa_response extends mediamosa {
       exit();
     }
     catch (mediamosa_exception_error $e) {
+      mediamosa::error_log('mediamosa_exception_error caught; ' . $e->getMessage(), $e->getFile(), $e->getLine());
       $e->mediamosa_exception_rest_response($this);
     }
     catch (PDOException $e) {
+      mediamosa::error_log('PDOException caught; ' . $e->getMessage() . ', trace; ' . $e->getTraceAsString(), $e->getFile(), $e->getLine());
       $this->set_result(self::ERROR, mediamosa_error::HTTP_INTERNAL_SERVER_ERROR, $e->getMessage());
     }
     catch (Exception $e) {
+      mediamosa::error_log('Exception caught; ' . $e->getMessage() . ', trace; ' . $e->getTraceAsString(), $e->getFile(), $e->getLine());
       $this->set_result(self::ERROR, $e->getCode(), $e->getMessage());
     }
 
@@ -161,6 +164,7 @@ class mediamosa_response extends mediamosa {
       }
     }
     catch (Exception $e) {
+      mediamosa::error_log('Critical exception caught during output; ' . $e->getMessage());
       $this->set_result(self::ERROR, $e->getCode(), $e->getMessage());
     }
 
