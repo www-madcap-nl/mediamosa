@@ -115,7 +115,7 @@ class mediamosa_db {
     // Make sure {} are inside the query, this will prevent problems later.
     if (stripos($query, 'FROM') !== FALSE && stripos($query, ' found_rows()') !== FALSE) {
       if (strpos($query, '{') === FALSE || strpos($query, '}') === FALSE) {
-        error_log($query);
+        mediamosa_debug::error_log($query);
         throw new mediamosa_exception_program_error('Missing {} your query; @query.', array('@query' => $query));
       }
     }
@@ -642,7 +642,8 @@ class mediamosa_db {
   static public function db_count_items($table_name, $app_id, $owner_id, $group_id) {
 
     // Create select query.
-    $query = mediamosa_db::db_select($table_name);
+    $query = mediamosa_db::db_select($table_name, 'tbl');
+    $query->fields('tbl', array('app_id'));
     $query->condition('app_id', $app_id);
     if ($owner_id != '') {
       $query->condition('owner_id', $owner_id);

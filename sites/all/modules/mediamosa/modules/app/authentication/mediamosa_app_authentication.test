@@ -94,6 +94,7 @@ class MediaMosaAppAuthenticationTestCase extends MediaMosaTestCase {
     list($cookie) = explode(';', $response['headers']['Set-Cookie']);
     $this->assertTrue(isset($response['headers']['Set-Cookie']), 'Cookie received in HTTP header: '. $cookie);
 
+
     // Step 2: send the credentials
     $challenge = $dbus_data[3];
     $random = substr(md5(microtime(TRUE)), 0, 10);

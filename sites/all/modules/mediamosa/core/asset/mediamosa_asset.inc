@@ -168,7 +168,9 @@ class mediamosa_asset {
     $a_mediafile_ids = $query->execute()->fetchCol();
 
     // Delete the mediafiles.
-    mediamosa_asset_mediafile::delete($a_mediafile_ids);
+    if (count($a_mediafile_ids)) {
+      mediamosa_asset_mediafile::delete($a_mediafile_ids);
+    }
 
     // @todo: stats
     //mediamosa_statistics::delete_by_asset_id($asset_id)
@@ -233,7 +235,7 @@ class mediamosa_asset {
     if (!$is_coll) {
       // Create entry in the mediamosa_asset_delete table.
       mediamosa_db::db_query(
-        "REPLACE LOW_PRIORITY {#mediamosa_asset_delete} (#asset_id, #app_id, #videotimestampmodified, #coll_id) VALUES (:asset_id, :app_id, :now, NULL)",
+        "REPLACE LOW_PRIORITY {#mediamosa_asset_delete} (#asset_id, #app_id, #videotimestampmodified, #coll_id) VALUES (:asset_id, :app_id, :now, '')",
         array(
           '#mediamosa_asset_delete' => mediamosa_asset_delete_db::TABLE_NAME,
           '#asset_id' => mediamosa_asset_delete_db::ID,
@@ -783,7 +785,8 @@ class mediamosa_asset {
     $asset_id = mediamosa_db::uuid($app_id);
 
     $a_fields = array(
-      mediamosa_asset_db::ID => $app_id,
+      mediamosa_asset_db::ID => $asset_id,
+      mediamosa_asset_db::APP_ID => $app_id,
       mediamosa_asset_db::OWNER_ID => $owner_id,
     );
 
@@ -925,7 +928,7 @@ class mediamosa_asset {
    * @param $asset_id
    */
   static public function must_exists($asset_id, $do_parent = FALSE) {
-      // Asset must exist to be deleted.
+    // Asset must exist to be deleted.
     return mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
   }
 

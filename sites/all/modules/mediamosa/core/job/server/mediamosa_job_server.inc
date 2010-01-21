@@ -44,6 +44,26 @@ class mediamosa_job_server {
   }
 
   /**
+   * Log debug for job_server.
+   *
+   * @param string $message
+   * @param array $variables
+   */
+  static public function log_debug($message, array $variables = array()) {
+    mediamosa_debug::log_debug($message, $variables, 'job_server');
+  }
+
+  /**
+   * Log debug for job_server.
+   *
+   * @param string $message
+   * @param array $variables
+   */
+  static public function log_debug_high($message, array $variables = array()) {
+    mediamosa_debug::log_debug_high($message, $variables, 'job_server');
+  }
+
+  /**
    * Triggert every minute.
    *
    * Will timeout on itself after 2 minutes.
@@ -57,12 +77,14 @@ class mediamosa_job_server {
       return; // Still running.
     }
 
-    self::log('Start parse queue job server');
+    // Log it.
+    self::log_debug('Start parse queue job server');
 
     // Run.
     self::parse_queue();
 
-    self::log('Ending parse queue job server');
+    // Log it.
+    self::log_debug('Ending parse queue job server');
   }
   /**
    * Parse the queue jobs.

@@ -36,6 +36,7 @@ function mediamosa_configuration_storage_mediamosa_configuration_collect() {
   $form['settings_mountpount'] = array(
     '#type' => 'fieldset',
     '#title' => t('Mount point / storage settings'),
+    '#description' => t('Set the current mount point for storage point of your files. The Windows and Linux moint point must point to the same directory, they must share the same files. Although the windows mount point is not always required, only if you intend to support windows specific codex for transcoding on windows servers. You can enter \\\\ for windows mountpoint as default if you aren\'t using a windows server for transcoding.'),
     '#collapsible' => TRUE,
   );
 
@@ -50,7 +51,7 @@ function mediamosa_configuration_storage_mediamosa_configuration_collect() {
   $form['settings_mountpount']['mediamosa_current_mount_point_windows'] = array(
     '#type' => 'textfield',
     '#title' => t('Windows mount point'),
-    '#description' => t('Current Windows mount point (use UNC path).'),
+    '#description' => t('Current Windows mount point (use UNC path like \\\\server\\share\\file_path).'),
     '#required' => TRUE,
     '#default_value' => '',
   );
@@ -60,24 +61,14 @@ function mediamosa_configuration_storage_mediamosa_configuration_collect() {
 
 /**
  * Implements the hook_mediamosa_settings_submit()
- *
- * @param array $form
- * @param array $form_state
  */
 function mediamosa_configuration_storage_mediamosa_configuration_submit($form, $form_state) {
-  assert(isset($form));
-  assert(isset($form_state['values']['mediamosa_current_mount_point']));
-  assert(isset($form_state['values']['mediamosa_current_mount_point_windows']));
 
   if (mediamosa_configuration_storage::is_mount_setup()) {
     if (!mediamosa_io::is_writable(mediamosa_configuration_storage::mount_point_get())) {
       drupal_set_message(t('<em>Warning, your !os MediaMosa moint point is not writable.</em>', array('!os' => mediamosa::is_windows_platform() ? 'Windows' : 'Linux')), 'warning');
     }
   }
-
-  // Set the variables.
-  //mediamosa_configuration_storage::linux_set($form_state['values']['mediamosa_current_mount_point']);
-  //mediamosa_configuration_storage::windows_set($form_state['values']['mediamosa_current_mount_point_windows']);
 }
 
 /**

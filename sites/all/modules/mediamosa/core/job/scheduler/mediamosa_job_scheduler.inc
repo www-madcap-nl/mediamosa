@@ -28,7 +28,7 @@
   * @file
   * The job handler server.
   */
-class mediamosa_job_schedular {
+class mediamosa_job_scheduler {
 
   /**
    * Log message.
@@ -38,9 +38,30 @@ class mediamosa_job_schedular {
    * @param string $severity
    */
   static public function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
-    mediamosa::log($message, $variables, $severity, 'job_schedular');
+    mediamosa::log($message, $variables, $severity, 'job_scheduler');
   }
 
+  /**
+   * Log message (low prio, is only logged when mediamosa_debug is lvl 5 or higher).
+   *
+   * @param string $message
+   * @param array $variables
+   * @param string $severity
+   */
+  static public function log_debug($message, array $variables = array()) {
+    mediamosa_debug::log_debug($message, $variables, 'job_scheduler');
+  }
+
+  /**
+   * Log message (High prio, is only logged when mediamosa_debug is lvl 10 or higher).
+   *
+   * @param string $message
+   * @param array $variables
+   * @param string $severity
+   */
+  static public function log_debug_high($message, array $variables = array()) {
+    mediamosa_debug::log_debug_high($message, $variables, 'job_scheduler');
+  }
   /**
    * Triggert every minute.
    *
@@ -48,7 +69,7 @@ class mediamosa_job_schedular {
    *
    */
   static public function run_parse_queue() {
-    $run_last = variable_get('mediamosa_jobschedular_cron_last', NULL);
+    $run_last = variable_get('mediamosa_jobscheduler_cron_last', NULL);
 
     // may run? (0 - 60 seconds)
     if (round(REQUEST_TIME - $run_last) < 60) {
@@ -63,10 +84,10 @@ class mediamosa_job_schedular {
     }
 
     // If we get here then we can go.
-    variable_set('mediamosa_jobschedular_cron_last', REQUEST_TIME);
+    variable_set('mediamosa_jobscheduler_cron_last', REQUEST_TIME);
 
     // We set this to NULL when we are done.
-    variable_set('mediamosa_jobschedular_cron_running', REQUEST_TIME);
+    variable_set('mediamosa_jobscheduler_cron_running', REQUEST_TIME);
 
     // Set max run time on 120 sec.
     set_time_limit(120);
@@ -83,7 +104,7 @@ class mediamosa_job_schedular {
       }
       // Now take the time it took, and subtrac that from 10.
       $time_to_sleep = 10 - round(microtime(TRUE) - $start_at);
-      self::log('time to sleep' . $time_to_sleep);
+      self::log_debug_high('run_parse_queue: Time to sleep @time', array('@time' => $time_to_sleep));
       if ($time_to_sleep > 0) {
         sleep($time_to_sleep);
       }
@@ -92,7 +113,7 @@ class mediamosa_job_schedular {
     }
 
     // Done.
-    variable_set('mediamosa_jobschedular_cron_running', NULL);
+    variable_set('mediamosa_jobscheduler_cron_running', NULL);
   }
 
   /**
@@ -105,7 +126,8 @@ class mediamosa_job_schedular {
    */
   static public function parse_queue() {
 
-    self::log('Start parse queue job schedular');
+    // Log start point.
+    self::log_debug('Start parse queue job scheduler');
 
     /**
      * Get all servers for their status and process the result.
@@ -132,7 +154,8 @@ class mediamosa_job_schedular {
      */
     self::check_server_on_status_close();
 
-    self::log('Ending parse queue job schedular');
+    // Log end point.
+    self::log_debug('Ending parse queue job scheduler');
   }
 
   /**

@@ -108,6 +108,7 @@ class mediamosa_http {
       $curl_options[CURLOPT_HTTPHEADER][] = $name . ': ' . $value;
     }
 
+    // FIXME: need to find out other way to trigger URL.
     curl_setopt($curl_handle, CURLOPT_TIMEOUT, 1);
     curl_setopt($curl_handle, CURLOPT_CONNECTTIMEOUT, 1);
 
@@ -115,7 +116,7 @@ class mediamosa_http {
       curl_setopt_array($curl_handle, $curl_options);
     }
 
-    curl_setopt($curl_handle, CURLOPT_RETURNTRANSFER, FALSE);
+    curl_setopt($curl_handle, CURLOPT_RETURNTRANSFER, TRUE);
     curl_setopt($curl_handle, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_0);
 
     // Do a HEAD call here.

@@ -49,7 +49,7 @@ Draft for starting code standard for Mediamosa 2.x and higher.
 
 - Set up folders Mediamosa map;
   * Core modules are not drupal modules and are not considered as drupal modules.
-  * Core is one drupal module and should not have dependencies.
+  * Core is one drupal module and should not have dependencies (exception is simpletest).
   * The folder 'modules' in the mediamosa folder contains all modules that are part of the mediamosa and lay on top
     of the core. These are drupal modules and may not contain core logic.
   * The folder 'core' in the mediamosa folder contains all core code divided by folders per section. Each section can

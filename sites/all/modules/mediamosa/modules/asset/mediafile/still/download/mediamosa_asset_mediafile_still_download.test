@@ -92,7 +92,6 @@ class MediaMosaAssetMediafileStillDownloadTestCase extends MediaMosaTestCase {
     // Copy the test image.
     $this->copy($test_image, $target);
 
-
     // Create ticket.
     $ticket_id = mediamosa_ticket::create_play_proxy($ticket_id, $a_mediafile_ext, mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL, $app_id, 'dummy', $uuid);
 

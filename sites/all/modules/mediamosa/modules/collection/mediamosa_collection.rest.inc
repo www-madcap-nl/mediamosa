@@ -508,6 +508,9 @@ class mediamosa_rest_call_collection_create extends mediamosa_rest_call {
         ),
       ),
     );
+
+    // Enrich with required REST vars.
+    return self::get_var_setup_default($a_var_setup);
   }
 
   // ------------------------------------------------------------------ Do Call.

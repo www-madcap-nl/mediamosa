@@ -64,7 +64,7 @@ function mediamosa_app_menu() {
     'title' => 'Client application contacts',
     'type' => MENU_CALLBACK,
     'page callback' => '_mediamosa_app_contacts',
-    'page arguments' => array(1),
+    'page arguments' => array(4),
     'access arguments' => array('administer mediamosa config app'),
   );
 

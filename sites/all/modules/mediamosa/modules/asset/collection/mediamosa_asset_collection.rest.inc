@@ -45,7 +45,7 @@ class mediamosa_rest_call_asset_collection_create extends mediamosa_rest_call {
   const USER_ID = 'user_id';
 
   // ------------------------------------------------------------------ Get Var Setup.
-public function get_var_setup() {
+  public function get_var_setup() {
     $a_var_setup = array();
 
     $a_var_setup = array(

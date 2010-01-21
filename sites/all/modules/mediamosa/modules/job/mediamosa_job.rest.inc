@@ -1077,10 +1077,10 @@ class mediamosa_rest_call_job_cancel extends mediamosa_rest_call {
 }
 
 /**
- * URI: /cron/jobschedular
+ * URI: /cron/jobscheduler
  * Method: GET
  */
-class mediamosa_rest_call_cron_jobschedular extends mediamosa_rest_call {
+class mediamosa_rest_call_cron_jobscheduler extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Functions (public).
   public function get_var_setup() {
@@ -1094,7 +1094,7 @@ class mediamosa_rest_call_cron_jobschedular extends mediamosa_rest_call {
     $o_mediamosa = mediamosa::get();
 
     // Run them.
-    mediamosa_job_schedular::run_parse_queue();
+    mediamosa_job_scheduler::run_parse_queue();
 
     // Set ok.
     $o_mediamosa->set_result_okay();

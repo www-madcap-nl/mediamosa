@@ -50,7 +50,8 @@ class mediamosa_job_upload {
       mediamosa_job_db::JOB_STATUS_CANCELLING
     );
 
-    return mediamosa_db::db_select(mediamosa_job_db::TABLE_NAME)
+    return mediamosa_db::db_select(mediamosa_job_db::TABLE_NAME, 'mj')
+      ->fields('mj', array(mediamosa_job_db::ID))
       ->condition(mediamosa_job_db::JOB_TYPE, mediamosa_job_db::JOB_TYPE_UPLOAD)
       ->condition(mediamosa_job_db::MEDIAFILE_ID, $mediafile_id)
       ->condition(mediamosa_job_db::ID, $job_id, '<>')

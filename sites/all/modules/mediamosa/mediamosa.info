@@ -26,6 +26,7 @@ files[] = core/error/mediamosa_error.install.inc
 ; Library. (2nd for dependency).
 files[] = lib/mediamosa_db_query.inc
 files[] = lib/mediamosa_db.inc
+files[] = lib/mediamosa_debug.inc
 files[] = lib/mediamosa_exception.inc
 files[] = lib/mediamosa_gd.inc
 files[] = lib/mediamosa_http.inc
@@ -92,6 +93,11 @@ files[] = core/asset/mediamosa_asset_db.inc
 files[] = core/asset/mediamosa_asset.inc
 files[] = core/asset/mediamosa_asset_search.inc
 files[] = core/asset/mediamosa_asset.install.inc
+
+; Asset Delete.
+files[] = core/asset/delete/mediamosa_asset_delete_db.inc
+files[] = core/asset/delete/mediamosa_asset_delete.inc
+files[] = core/asset/delete/mediamosa_asset_delete.install.inc
 
 ; Asset Mediafile.
 files[] = core/asset/mediafile/mediamosa_asset_mediafile_db.inc
@@ -161,8 +167,8 @@ files[] = core/job/mediamosa_job_db.inc
 files[] = core/job/mediamosa_job.inc
 files[] = core/job/mediamosa_job.install.inc
 
-; Job Schedular.
-files[] = core/job/schedular/mediamosa_job_schedular.inc
+; Job Scheduler.
+files[] = core/job/scheduler/mediamosa_job_scheduler.inc
 
 ; Job Server.
 files[] = core/job/server/mediamosa_job_server_db.inc

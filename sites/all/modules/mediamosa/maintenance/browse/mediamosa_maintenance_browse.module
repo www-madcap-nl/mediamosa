@@ -32,10 +32,11 @@
 define('MEDIAMOSA_MAINTENACE_BROWSE_ASSETS_SESSION', 'mediamosa_maintenance_browse_assets_session');
 define('MEDIAMOSA_MAINTENACE_BROWSE_COLLECTIONS_SESSION', 'mediamosa_maintenance_browse_collections_session');
 
-// Required files.
-require_once 'mediamosa_maintenance_browse.inc';
-require_once 'mediamosa_maintenance_browse_asset.inc';
-require_once 'mediamosa_maintenance_browse_collection.inc';
+// Include my files.
+module_load_include('inc', 'mediamosa_maintenance_browse', 'mediamosa_maintenance_browse');
+module_load_include('inc', 'mediamosa_maintenance_browse', 'mediamosa_maintenance_browse_asset');
+module_load_include('inc', 'mediamosa_maintenance_browse', 'mediamosa_maintenance_browse_collection');
+module_load_include('inc', 'mediamosa_maintenance_browse', 'mediamosa_maintenance_browse_restcalls');
 
 /**
  * Implement hook_permission().
@@ -60,7 +61,7 @@ function mediamosa_maintenance_browse_menu() {
   $items = array();
 
   $items['admin/mediamosa/browse/asset'] = array(
-    'title' => 'MediaMosa asset browser',
+    'title' => 'Asset browser',
     'description' => 'View assets currently in our database.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mediamosa_maintenance_browse_asset_form'),
@@ -68,7 +69,7 @@ function mediamosa_maintenance_browse_menu() {
   );
 
   $items['admin/mediamosa/browse/collection'] = array(
-    'title' => 'MediaMosa collection browser',
+    'title' => 'Collection browser',
     'description' => 'View collections currently in our database.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mediamosa_maintenance_browse_collection_form'),
@@ -76,11 +77,27 @@ function mediamosa_maintenance_browse_menu() {
   );
 
   $items['admin/mediamosa/browse/asset/%'] = array(
-    'title' => 'MediaMosa asset details',
+    'title' => 'Asset details',
     'type' => MENU_CALLBACK,
     'page callback' => 'mediamosa_maintenance_browse_asset_details',
     'page arguments' => array(4),
     'access arguments' => array('access mediamosa assets'),
+  );
+
+  $items['admin/mediamosa/browse/restcall'] = array(
+    'title' => 'Rest calls browser',
+    'description' => 'View and browse through the REST calls of MediaMosa.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mediamosa_maintenance_browse_restcall_form'),
+    'access arguments' => array('access mediamosa restcalls'),
+  );
+
+  $items['admin/mediamosa/browse/restcall/%/%'] = array(
+    'title' => 'Detail rest calls',
+    'description' => 'View the details of a REST call.',
+    'page callback' => 'mediamosa_maintenance_browse_restcall_details',
+    'page arguments' => array(4, 5),
+    'access arguments' => array('access mediamosa restcalls'),
   );
 
   return $items;

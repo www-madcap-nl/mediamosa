@@ -393,7 +393,7 @@ function mediamosa_maintenance_browse_asset_form() {
     foreach ($response->xml->xpath('//items/item') as $asset) {
       $title = (isset($asset->dublin_core->title) && trim((string)$asset->dublin_core->title) != '') ? $asset->dublin_core->title : t('<title not set>');
       $rows[] = array(
-        l($title, 'admin/mediamosa/browse/asset/'. $asset->asset_id),
+        l($title, 'admin/mediamosa/browse/asset/' . $asset->asset_id),
         $asset->app_id,
         $asset->videotimestampmodified,
       );

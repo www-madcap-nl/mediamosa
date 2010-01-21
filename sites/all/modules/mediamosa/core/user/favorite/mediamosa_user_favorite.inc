@@ -41,7 +41,8 @@ class mediamosa_user_favorite {
   static public function count_items($fav_type, $fav_id) {
 
     // Return the number of found rows.
-    $query = mediamosa_db::db_select(mediamosa_user_favorite_db::TABLE_NAME);
+    $query = mediamosa_db::db_select(mediamosa_user_favorite_db::TABLE_NAME, 'muf');
+    $query->fields('muf', array(mediamosa_user_favorite_db::FAV_ID));
     $query->condition(mediamosa_user_favorite_db::FAV_TYPE, $fav_type);
     $query->condition(mediamosa_user_favorite_db::FAV_ID, $fav_id);
     return $query->countQuery()->execute()->fetchField();

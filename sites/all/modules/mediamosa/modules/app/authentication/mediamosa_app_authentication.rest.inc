@@ -73,3 +73,30 @@ class mediamosa_rest_call_app_ident extends mediamosa_rest_call {
     $o_mediamosa->add_item(array('dbus' => $result));
   }
 }
+
+/**
+ * URI: /login
+ * Login onto MediaMosa.
+ */
+class mediamosa_rest_call_check_cookie extends mediamosa_rest_call {
+
+  // ------------------------------------------------------------------ Consts.
+
+  // ------------------------------------------------------------------ Functions (public).
+  public function get_var_setup() {
+    $a_var_setup = array();
+
+    // Enrich with required REST vars.
+    return self::get_var_setup_default($a_var_setup, FALSE);
+  }
+
+  public function do_call() {
+    $o_mediamosa = mediamosa::get();
+
+    // Output cookie.
+    $o_mediamosa->add_item($_COOKIE);
+
+    // Ok.
+    $o_mediamosa->set_result_okay();
+  }
+}

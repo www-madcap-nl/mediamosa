@@ -83,6 +83,7 @@ abstract class mediamosa_rest_call {
   const ACCESS_AUTHENTICATED_ONLY = 4; // Access to REST call when authenticated only.
   const ACCESS_DEFAULT = 5;     // Access default allowes internals and authenticated access.
                                 // External access needs to be specified.
+  const ACCESS_FOR_EXTERNAL = 6; // Default for external calls.
 
   const DESCRIPTION = 'description';   // Description of the REST call (In English, required).
 
@@ -187,7 +188,6 @@ abstract class mediamosa_rest_call {
   abstract function do_call();
 
   // ------------------------------------------------------------------ Functions (public).
-
   /**
    * Dispatch the rest call processing.
    */
@@ -208,19 +208,18 @@ abstract class mediamosa_rest_call {
 
       // Match password in HTTP header, must match.
       if (!isset($_SERVER[$internal_pass]) || $_SERVER[$internal_pass] != mediamosa::get_internal_password()) {
-        mediamosa::log(var_export($_SERVER, TRUE));
         throw new mediamosa_exception_error_authentication_failure();
       }
     }
 
     // Check if we are external and allowed.
-    if (!($this->{self::ACCESS} & self::ACCESS_EXTERNAL) && $this->is_external()) {
+    if ($this->is_external() && !($this->{self::ACCESS} & self::ACCESS_EXTERNAL)) {
       throw new mediamosa_exception_error_authentication_failure();
     }
 
     // Do login / authorization, unless the call is an external.
-    if (!($this->is_external() && ($this->{self::ACCESS} & self::ACCESS_EXTERNAL))) {
-      $this->do_login();
+    if (!$this->is_internal() && (!($this->is_external() && ($this->{self::ACCESS} & self::ACCESS_EXTERNAL)))) {
+      $this->do_app_authorized();
     }
 
     // Get the var setup.
@@ -239,6 +238,21 @@ abstract class mediamosa_rest_call {
     // Validate reg args.
     $this->validate_rest_args($a_var_setup);
 
+    $params = array();
+    foreach ($this->a_rest_args as $param => $a_rest_arg) {
+      $params[] = $param . '=' . print_r($this->a_rest_args[$param][self::PARAM_VALUE], TRUE);
+    }
+
+    // Processing URL, Method.
+    mediamosa_debug::log_debug_high("REST call; @uri [@method], Class: @class, params: @params.",
+      array(
+        '@uri' => $this->{self::URI},
+        '@method' => $this->{self::METHOD},
+        '@class' => $this->{self::CLASS_NAME},
+        '@params' => var_export($params, TRUE),
+      )
+    );
+
     // Call the function.
     $this->do_call();
   }
@@ -246,31 +260,19 @@ abstract class mediamosa_rest_call {
   /**
    * Do authorize app.
    */
-  private function do_login() {
-    global $user;
-
-    // Enable sessions.
-    if (!drupal_session_started()) {
-      drupal_session_start();
-    }
-    elseif (mediamosa::in_simpletest_sandbox()) {
-      session_regenerate_id(FALSE);
-    }
-
-    // Check user id login
-    if ($user->uid == 0) {
-      $a_results = module_invoke_all('mediamosa_app_authorized');
-      $loggedin = FALSE;
-      foreach ($a_results as $result) {
-        if ($result === TRUE) {
-          $loggedin = TRUE;
-          break;
-        }
+  private function do_app_authorized() {
+    // Run the app_authorized hook. One TRUE is authorized.
+    $a_results = module_invoke_all('mediamosa_app_authorized');
+    $authorized = FALSE;
+    foreach ($a_results as $result) {
+      if ($result === TRUE) {
+        $authorized = TRUE;
+        break;
       }
+    }
 
-      if (!$loggedin) {
-        throw new mediamosa_exception_error_authentication_failure();
-      }
+    if (!$authorized) {
+      throw new mediamosa_exception_error_authentication_failure();
     }
   }
 
@@ -383,6 +385,14 @@ abstract class mediamosa_rest_call {
     );
 
     return $a_var_setup;
+  }
+
+  /**
+   * Turn on or off the check for unspecified.
+   * @param $bool
+   */
+  public function set_check_for_unspecified($bool) {
+    $this->check_for_unspecified = $bool;
   }
 
   /**
@@ -643,14 +653,11 @@ abstract class mediamosa_rest_call {
       // If variable is internal value only, then we set the value to default or NULL. Put it on READ ONLY.
       // If REST has tried set then we throw exception.
       if (isset($a_var[self::VAR_IS_INTERNAL_ONLY]) && $a_var[self::VAR_IS_INTERNAL_ONLY] == self::VAR_IS_INTERNAL_ONLY_YES  && !$this->is_internal()) {
-        if (isset($this->a_rest_args[$param][self::PARAM_VALUE])) {
+        if (isset($this->a_rest_args[$param][self::PARAM_VALUE]) && !self::is_internal()) {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INTERNAL_ONLY, array('@param' => $param, '@type' => $this->a_rest_args[$param][self::PARAM_TYPE]));
         }
 
         unset($this->a_rest_args[$param][self::PARAM_VALUE]);
-        if (!isset($a_var[self::VAR_IS_READ_ONLY])) {
-          $a_var[self::VAR_IS_READ_ONLY] = self::VAR_IS_READ_ONLY_YES;
-        }
       }
 
       // Make sure its set, even when empty.

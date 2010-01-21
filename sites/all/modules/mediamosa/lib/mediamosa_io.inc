@@ -38,8 +38,8 @@ class mediamosa_io {
    * @param array $variables
    * @param string $severity
    */
-  static public function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
-    mediamosa::log($message, $variables, $severity, 'mediamosa_io');
+  static public function log($message, array $variables = array()) {
+    mediamosa_debug::log_debug($message, $variables, 'mediamosa_io');
   }
 
   /**
@@ -60,7 +60,7 @@ class mediamosa_io {
       return TRUE; // Return TRUE for unit test.
     }
 
-    if (!mkdir($pathname, $mode, $recursive)) {
+    if (!drupal_mkdir($pathname, $mode, $recursive)) {
       throw new mediamosa_exception_error(
         mediamosa_error::ERRORCODE_DIR_UNABLE_TO_CREATE,
         array(
@@ -93,7 +93,6 @@ class mediamosa_io {
   static public function clearstatcache() {
     clearstatcache();
   }
-
   /**
    * Gets file size.
    */
@@ -121,7 +120,6 @@ class mediamosa_io {
    * @return bool
    */
   static public function rename($old_name, $new_name) {
-
     $success = FALSE;
     $message = 'cause unknown';
     try {

@@ -66,10 +66,15 @@ function _mediamosa_restcall($uri, $method = 'GET', array $data = array()) {
  */
 function _mediamosa_maintenance_browse_pager($page, $item_count_total, $item_limit, $element = 0) {
   global $pager_page_array, $pager_total, $pager_total_items;
+
   $pager_page_array = array($element => $page);
-  $pager_total_items[$element] = $item_count_total; // aantal items
+
+  // Total items.
+  $pager_total_items[$element] = $item_count_total;
+
   if (!is_array($element)) {
-    $pager_total[$element] = ceil($item_count_total / $item_limit); // aantal weer te geven page links
+    // Number of pagelinks.
+    $pager_total[$element] = ceil($item_count_total / $item_limit);
   }
   return theme('pager', array('quantity' => 10));
 }

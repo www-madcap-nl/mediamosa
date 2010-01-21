@@ -81,6 +81,7 @@ class mediamosa_rest_call_aut_group_get extends mediamosa_rest_call {
     $a_var_setup[mediamosa_rest_call::VARS]['groupname'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_STRING,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
+      mediamosa_rest_call::VAR_DESCRIPTION => 'The group name to retrieve',
     );
 
     // Enrich with required REST vars.
@@ -626,11 +627,13 @@ class mediamosa_rest_call_aut_mediafile_delete_rights extends mediamosa_rest_cal
     $a_var_setup[mediamosa_rest_call::VARS]['mediafile_id'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_INT,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
+      mediamosa_rest_call::VAR_DESCRIPTION => 'The mediafile ID where from to remove the ACL rights',
     );
 
     $a_var_setup[mediamosa_rest_call::VARS]['user_id'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
+      mediamosa_rest_call::VAR_DESCRIPTION => 'The owner of the mediafile.',
     );
 
     // Enrich with required REST vars.
@@ -921,11 +924,13 @@ class mediamosa_rest_call_aut_asset_delete_rights extends mediamosa_rest_call {
     $a_var_setup[mediamosa_rest_call::VARS]['asset_id'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
+      mediamosa_rest_call::VAR_DESCRIPTION => 'The asset ID where from to remove the ACL rights',
     );
 
     $a_var_setup[mediamosa_rest_call::VARS]['user_id'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
+      mediamosa_rest_call::VAR_DESCRIPTION => 'The owner of the asset for access.',
     );
 
     // Enrich with required REST vars.

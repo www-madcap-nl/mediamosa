@@ -536,6 +536,8 @@ class mediamosa_rest_call_asset_favorites_count extends mediamosa_rest_call {
         ),
       ),
     );
+
+    return self::get_var_setup_default($a_var_setup);
   }
 
   // ------------------------------------------------------------------ Do Call.
@@ -566,6 +568,7 @@ class mediamosa_rest_call_asset_delete extends mediamosa_rest_call {
   // Rest vars;
   const ASSET_ID = 'asset_id';
   const USER_ID = 'user_id';
+  const DELETE = 'delete';
 
   // ------------------------------------------------------------------ Functions.
   public function get_var_setup() {
@@ -591,6 +594,8 @@ class mediamosa_rest_call_asset_delete extends mediamosa_rest_call {
         ),
       ),
     );
+
+    return self::get_var_setup_default($a_var_setup);
   }
 
   public function do_call() {
@@ -905,7 +910,7 @@ class mediamosa_rest_call_asset_create extends mediamosa_rest_call {
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::GROUP_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
+          self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'The user group ID.',
         ),
         self::REFERENCE_ID => array(

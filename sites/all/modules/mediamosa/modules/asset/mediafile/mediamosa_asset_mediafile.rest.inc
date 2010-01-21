@@ -312,7 +312,6 @@ class mediamosa_rest_call_delete_mediafiles extends mediamosa_rest_call {
   }
 }
 
-
 /**
  * URI: /asset/$asset_id/mediafile/create
  * Method: POST
@@ -339,7 +338,7 @@ class mediamosa_rest_call_create_mediafile extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::ASSET_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID_ID,
+          self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
           self::VAR_DESCRIPTION => 'The ID of the parent asset.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
@@ -364,7 +363,7 @@ class mediamosa_rest_call_create_mediafile extends mediamosa_rest_call {
         self::IS_ORIGINAL_FILE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Mark mediafile as original.',
-          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES
+          self::VAR_DEFAULT_VALUE => 'TRUE',
         ),
         self::FILENAME => array(
           self::VAR_TYPE => mediamosa_type::TYPE_FILENAME,
@@ -423,7 +422,7 @@ class mediamosa_rest_call_create_mediafile extends mediamosa_rest_call {
            mediamosa_asset_db::ID => $asset_id,
            mediamosa_asset_db::PARENT_ID => NULL
          ),
-         mediamosa_error_db::ERRORCODE_ASSET_NOT_FOUND,
+         mediamosa_error::ERRORCODE_ASSET_NOT_FOUND,
          array(
            '@asset_id' => $asset_id,
          )

@@ -35,7 +35,7 @@
 function mediamosa_job_cron() {
 
   $start = time();
-  mediamosa::log('mediamosa_job_cron started.');
+  mediamosa_debug::log_debug('mediamosa_job_cron started.', array(), 'job_cron');
 
   // Just trigger, it has his own protection on overrun.
   $hostname = variable_get('mediamosa_cron_uri_app', 'localhost');
@@ -50,11 +50,11 @@ function mediamosa_job_cron() {
   // Jobserver.
   mediamosa_http::do_head_call('http://' . $hostname  . '/internal/cron/jobserver', $a_options);
 
-  // Jobschedular.
-  mediamosa_http::do_head_call('http://' . $hostname  . '/internal/cron/jobschedular', $a_options);
+  // Jobscheduler.
+  mediamosa_http::do_head_call('http://' . $hostname  . '/internal/cron/jobscheduler', $a_options);
 
   // Log it.
-  mediamosa::log('mediamosa_job_cron ended: @secs', array('@sec' => time() - $start));
+  mediamosa_debug::log_debug('mediamosa_job_cron ended: @secs', array('@sec' => time() - $start), 'job_cron');
 }
 
 /**
@@ -214,11 +214,11 @@ function mediamosa_job_mediamosa_register_rest_call() {
     mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY,
   );
 
-  $a_rest_calls['cron/jobschedular'][mediamosa_rest_call::METHOD_GET] = array(
-    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_cron_jobschedular',
+  $a_rest_calls['cron/jobscheduler'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_cron_jobscheduler',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::DESCRIPTION => 'Run the cron cycle for jobschedular.',
-    mediamosa_rest_call::MODULE_NAME => 'mediamosa_job_schedular',
+    mediamosa_rest_call::DESCRIPTION => 'Run the cron cycle for jobscheduler.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_job_scheduler',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_0_0,
     mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY,
   );

@@ -161,7 +161,7 @@
       $start = microtime(TRUE);
       $simpletest_class->run();
       $end = microtime(TRUE);
-
+error_log(var_export($simpletest_class, TRUE));
       // Store results.
       $a_test_results['a_tests'][$class_name]['results'] = $simpletest_class->results;
       $a_test_results['a_tests'][$class_name]['started'] = $start;

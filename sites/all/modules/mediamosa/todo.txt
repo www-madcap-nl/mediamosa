@@ -18,6 +18,10 @@
    FIX forgotten owner_id/user_id/asset_id and other fix length field using the max_length in var setup.
    Do; strict setting per app for strict mode (like allow non-specified params in GET/POST)
 
+   2.0;
+   memcache in standard setup.
+
    2.1;
    Uninstall node tables. (nodes are not thrown away).
+   File.inc mappen -> mediamosa_io (NCRV)
    

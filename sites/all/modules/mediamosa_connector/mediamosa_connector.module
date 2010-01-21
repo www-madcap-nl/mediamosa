@@ -148,12 +148,14 @@ function mediamosa_connector_settings() {
     );
   }*/
 
-  $form['connection']['check_connection'] = array(
-    '#type' => 'submit',
-    '#value' => t('Check connection'),
-    '#submit' => array('mediamosa_connector_check_connection_submit'),
-    '#weight' => 1,
-  );
+  if (variable_get('mediamosa_connector_url', '') != '' && variable_get('mediamosa_connector_username', '') != '') {
+    $form['connection']['check_connection'] = array(
+      '#type' => 'submit',
+      '#value' => t('Check connection'),
+      '#submit' => array('mediamosa_connector_check_connection_submit'),
+      '#weight' => 1,
+    );
+  }
 
   $form['other'] = array(
     '#type' => 'fieldset',
@@ -197,7 +199,7 @@ function mediamosa_connector_check_connection_submit() {
     // Do request will trigger login.
     $response = $o_connector->request('rest');
     if ($response !== FALSE) {
-      drupal_set_message(t('Internal call test successful.'));
+      drupal_set_message(t('Normal call test successful.'));
     }
     else {
       drupal_set_message(t('Login test sucess.'));

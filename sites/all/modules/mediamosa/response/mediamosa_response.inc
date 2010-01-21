@@ -105,6 +105,14 @@ class mediamosa_response extends mediamosa {
         return;// At this point we override for interface mode.
       }
 
+      // Enable sessions.
+      if (!drupal_session_started()) {
+        drupal_session_start();
+      }
+      elseif (mediamosa::in_simpletest_sandbox()) {
+        session_regenerate_id(FALSE);
+      }
+
       // Save it.
       $response_type = $a_rest_call[mediamosa_rest_call::RESPONSE_TYPE];
 
@@ -127,15 +135,15 @@ class mediamosa_response extends mediamosa {
       exit();
     }
     catch (mediamosa_exception_error $e) {
-      mediamosa::error_log('mediamosa_exception_error caught; ' . $e->getMessage(), $e->getFile(), $e->getLine());
+      mediamosa_debug::error_log('mediamosa_exception_error caught; ' . $e->getMessage(), $e->getFile(), $e->getLine());
       $e->mediamosa_exception_rest_response($this);
     }
     catch (PDOException $e) {
-      mediamosa::error_log('PDOException caught; ' . $e->getMessage() . ', trace; ' . $e->getTraceAsString(), $e->getFile(), $e->getLine());
+      mediamosa_debug::error_log('PDOException caught; ' . $e->getMessage() . ', trace; ' . $e->getTraceAsString(), $e->getFile(), $e->getLine());
       $this->set_result(self::ERROR, mediamosa_error::HTTP_INTERNAL_SERVER_ERROR, $e->getMessage());
     }
     catch (Exception $e) {
-      mediamosa::error_log('Exception caught; ' . $e->getMessage() . ', trace; ' . $e->getTraceAsString(), $e->getFile(), $e->getLine());
+      mediamosa_debug::error_log('Exception caught; ' . $e->getMessage() . ', trace; ' . $e->getTraceAsString(), $e->getFile(), $e->getLine());
       $this->set_result(self::ERROR, $e->getCode(), $e->getMessage());
     }
 
@@ -164,7 +172,7 @@ class mediamosa_response extends mediamosa {
       }
     }
     catch (Exception $e) {
-      mediamosa::error_log('Critical exception caught during output; ' . $e->getMessage());
+      mediamosa_debug::error_log('Critical exception caught during output; ' . $e->getMessage());
       $this->set_result(self::ERROR, $e->getCode(), $e->getMessage());
     }
 

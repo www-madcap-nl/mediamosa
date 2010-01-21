@@ -52,9 +52,9 @@ class mediamosa_webservice_app {
       $result = mediamosa_db::db_query(
         'SELECT wa.#wa_status AS wa_status, w.#w_status AS w_status
          FROM {#mediamosa_webservice_app} AS wa
-         INNER JOIN {#mediamosa_webservice} AS w ON w.#handle = wa.#webservice_handle
-         INNER JOIN {#mediamosa_app} AS app ON ap.#app_id = wa.#app_id
-         WHERE wa.#webservice_handle = :handle AND ap.#app_id IN (:app_id)',
+         JOIN {#mediamosa_webservice} AS w ON w.#handle = wa.#webservice_handle
+         JOIN {#mediamosa_app} AS ma ON ma.#app_id = wa.#app_id
+         WHERE wa.#webservice_handle = :handle AND ma.#app_id IN (:app_id)',
         array(
           '#wa_status' => mediamosa_webservice_app_db::STATUS,
           '#w_status' => mediamosa_webservice_db::STATUS,

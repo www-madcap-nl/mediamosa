@@ -748,7 +748,10 @@ class mediamosa_job {
     );
 
     // See if delete has worked.
-    $num_rows = mediamosa_db::db_select(mediamosa_job_db::TABLE_NAME)->condition(mediamosa_job_db::ID, $job_id)->countQuery()->execute()->fetchField();
+    $num_rows = mediamosa_db::db_select(mediamosa_job_db::TABLE_NAME, 'mj')
+      ->fields('mj', array(mediamosa_job_db::ID))
+      ->condition(mediamosa_job_db::ID, $job_id)
+      ->countQuery()->execute()->fetchField();
 
     return ($num_rows ? FALSE : TRUE);
   }
@@ -809,7 +812,10 @@ class mediamosa_job {
     );
 
     // See if delete has worked.
-    $num_rows = mediamosa_db::db_select(mediamosa_job_db::TABLE_NAME)->condition(mediamosa_job_db::ASSET_ID, $asset_id)->countQuery()->execute()->fetchField();
+    $num_rows = mediamosa_db::db_select(mediamosa_job_db::TABLE_NAME, 'mj')
+      ->fields('mj', array(mediamosa_job_db::ASSET_ID))
+      ->condition(mediamosa_job_db::ASSET_ID, $asset_id)
+      ->countQuery()->execute()->fetchField();
 
     return ($num_rows ? FALSE : TRUE);
   }
@@ -857,7 +863,8 @@ class mediamosa_job {
     // If we try to delete a analyse job, then make sure its has a metadata row.
     if ($job_type == mediamosa_job_db::JOB_TYPE_ANALYSE && $job_status == mediamosa_job_db::JOB_STATUS_WAITING) {
 
-      $num_rows = mediamosa_db::db_select(mediamosa_asset_mediafile_metadata_db::TABLE_NAME)
+      $num_rows = mediamosa_db::db_select(mediamosa_asset_mediafile_metadata_db::TABLE_NAME, 'mamm')
+        ->fields('mamm', array(mediamosa_asset_mediafile_metadata_db::ID))
         ->condition(mediamosa_asset_mediafile_metadata_db::ID, $a_row_job['mediafile_id'])
         ->countQuery()->execute()->fetchField();
 

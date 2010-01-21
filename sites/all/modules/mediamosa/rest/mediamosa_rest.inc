@@ -63,6 +63,10 @@ class mediamosa_rest {
     // Find all REST calls of enabled modules.
     $a_rest_calls = self::get_rest_calls();
 
+    foreach ($a_rest_calls as $method => $a_restcall) {
+      krsort($a_rest_calls[$method]);
+    }
+
     // Split the current request URI.
     $a_request_uri = explode('/', $request_uri);
 

@@ -70,12 +70,18 @@ class mediamosa_asset_mediafile {
    * @param mixed $mediafile_id
    */
   static public function delete($mixed_mediafile_id) {
-    $a_mediafile_ids = is_array($mixed_mediafile_id) ? $mixed_mediafile_id : array($mixed_mediafile_id);
+    $a_mediafile_ids = is_array($mixed_mediafile_id) ? $mixed_mediafile_id : (empty($mixed_mediafile_id) ? array() : array($mixed_mediafile_id));
+
+    // must have something.
+    assert(count($a_mediafile_ids));
+    if (!count($a_mediafile_ids)) {
+      return;
+    }
 
     // Delete mediafile metadata first.
-    $query = mediamosa_db::db_delete(mediamosa_asset_mediafile_metadata_db::TABLE_NAME);
-    $query->condition(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID, $a_mediafile_ids, 'IN');
-    $query->execute();
+    mediamosa_db::db_delete(mediamosa_asset_mediafile_metadata_db::TABLE_NAME)
+      ->condition(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID, $a_mediafile_ids, 'IN')
+      ->execute();
 
     // Delete from SAN/NAS.
     $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');

@@ -112,10 +112,16 @@ function mediamosa_configuration() {
 }
 
 /**
+ * Implements hook_validate.
+ */
+function mediamosa_configuration_validate($form, &$form_state) {
+
+  // Now call our (optional) submit hooks, remember that variables are saved automaticly.
+  module_invoke_all('mediamosa_configuration_validate', $form, $form_state);
+}
+
+/**
  * Implements hook_submit.
- *
- * @param array $form
- * @param array $form_state
  */
 function mediamosa_configuration_submit($form, $form_state) {
 
