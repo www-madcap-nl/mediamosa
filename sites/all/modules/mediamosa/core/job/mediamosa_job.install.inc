@@ -158,6 +158,13 @@ function mediamosa_job_schema() {
         'mysql_type' => "enum('" . implode("','", array(mediamosa_job_db::CREATE_STILL_FALSE, mediamosa_job_db::CREATE_STILL_TRUE)) . "')",
         'default' => mediamosa_job_db::CREATE_STILL_FALSE,
       ),
+      mediamosa_job_db::NO_HINT => array(
+        'description' => t('Not hinting.'),
+        'type' => "enum('" . implode("','", array(mediamosa_job_db::NO_HINT_FALSE, mediamosa_job_db::NO_HINT_TRUE)) . "')",
+        'not null' => TRUE,
+        'mysql_type' => "enum('" . implode("','", array(mediamosa_job_db::NO_HINT_FALSE, mediamosa_job_db::NO_HINT_TRUE)) . "')",
+        'default' => mediamosa_job_db::NO_HINT_FALSE,
+      ),
       mediamosa_job_db::STILL_PARAMETERS => array(
         'type' => 'text',
         'size' => 'normal',
