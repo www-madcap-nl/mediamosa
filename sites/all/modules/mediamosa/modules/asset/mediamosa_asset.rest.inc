@@ -704,7 +704,7 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
         self::SHOW_STILLS => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Include stills in output.',
-          self::VAR_DEFAULT_VALUE => 'FALSE',
+          self::VAR_DEFAULT_VALUE => 'TRUE',
         ),
         self::SHOW_COLLECTIONS => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,

@@ -215,7 +215,7 @@ class mediamosa_asset_mediafile {
         mediamosa_ticket::create_play_proxy(
           $ticket,
           NULL,
-          mediamosa_ticket::RESPONSE_TYPE_STILL,
+          mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL,
           $app_id,
           $a_row[mediamosa_asset_mediafile_db::OWNER_ID],
           $a_row[mediamosa_asset_mediafile_db::ID]
