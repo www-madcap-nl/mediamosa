@@ -33,8 +33,11 @@
   * @file
   * Unittests for upload.
   */
-class MediaMosaAssetMediafileUploadTestCase extends MediaMosaTestCase {
+class MediaMosaAssetMediafileUploadTestCaseEga extends MediaMosaTestCaseEga {
 
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
   public static function getInfo() {
     return array(
       'name' => 'Upload Mediafile test',
@@ -43,27 +46,53 @@ class MediaMosaAssetMediafileUploadTestCase extends MediaMosaTestCase {
     );
   }
 
-  function setUp() {
-    // Get the current mediamosa server content.
-    $a_servers = mediamosa_server::search();
-
-    parent::setUp('mediamosa_asset');
-
-    // Create and login user
-    $rest_user = $this->drupalCreateUser(array('administer mediamosa'));
-    $this->drupalLogin($rest_user);
-
-    // Truncate current and insert new.
-    db_truncate(mediamosa_server_db::TABLE_NAME)->execute();
-
-    // Copy the current servers to sandbox.
-    foreach ($a_servers as $a_server) {
-      db_insert(mediamosa_server_db::TABLE_NAME)
-        ->fields($a_server)
-        ->execute();
-    }
-  }
-
+  // ------------------------------------------------------------------ Tests.
   function testTicket504() {
+
+    // Create an asset.
+    $asset_id = $this->createAsset();
+
+    // Create mediafile.
+    $mediafile_id = $this->createMediafile($asset_id);
+
+    // Create upload ticket.
+    $a_uploadticket = $this->createMediafileUploadTicket($mediafile_id);
+
+    $result = mediamosa_db::db_query('SELECT * FROM {mediamosa_ticket}');
+    foreach ($result as $row) {
+      $this->var_export($row);
+    }
+
+    // Check ticket link etc.
+    $this->assertTrue(!empty($a_uploadticket['action']), 'action set');
+    $this->assertTrue(!empty($a_uploadticket['uploadprogress_url']), 'uploadprogress_url set');
+
+    // Get link to upload file.
+    $filename = self::getTestVideo();
+
+    // URL.
+    $action = $a_uploadticket['action'];
+
+    // File.
+    $a_post['file'] = '@' . $filename;
+
+    // No headers.
+    $headers = array();
+
+    // Upload the test file.
+    $out = $this->curlExec(array(CURLOPT_URL => $action, CURLOPT_POST => TRUE, CURLOPT_POSTFIELDS => $a_post, CURLOPT_HTTPHEADER => $headers));
+
+    // Replace original page output with new output from redirected page(s).
+    $new = $this->checkForMetaRefresh();
+    if ($new) {
+      $out = $new;
+    }
+
+    // Verbose our upload.
+    $this->verbose('POST request to: ' . $action .
+                   '<hr />Ending URL: ' . $this->getUrl() .
+                   '<hr />Fields: ' . highlight_string('<?php ' . var_export($a_post, TRUE), TRUE) .
+                   '<hr />' . $out);
+
   }
 }

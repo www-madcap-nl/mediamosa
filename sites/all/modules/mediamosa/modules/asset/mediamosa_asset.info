@@ -34,6 +34,7 @@ files[] = mediafile/still/download/mediamosa_asset_mediafile_still_download.test
 
 ; Mediafile Upload.
 files[] = mediafile/upload/mediamosa_asset_mediafile_upload.rest.inc
+files[] = mediafile/upload/mediamosa_asset_mediafile_upload.test
 
 ; Mediafile Download.
 files[] = mediafile/download/mediamosa_asset_mediafile_download.rest.inc

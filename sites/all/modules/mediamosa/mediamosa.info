@@ -265,3 +265,4 @@ files[] = core/user/favorite/mediamosa_user_favorite.install.inc
 
 ; Simpletest Slass.
 files[] = simpletest/mediamosa.simpletest.inc
+files[] = simpletest/mediamosa.simpletest.ega.inc

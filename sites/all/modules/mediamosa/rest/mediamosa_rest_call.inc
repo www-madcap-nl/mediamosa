@@ -399,9 +399,14 @@ abstract class mediamosa_rest_call {
    * Retrieve the value of a supplied parameter.
    *
    * @param string $param
+   * @param bool $translate_bool
+   *  Translate the bool to string variant.
+   * @param array $a_translate_bool
+   *  Array containing mapping to TRUE / FALSE string values.
+   *  default: array(FALSE => 'FALSE', TRUE => 'TRUE')
    * @return mixed
    */
-  public function get_param_value($param) {
+  public function get_param_value($param, $translate_bool = FALSE, array $a_translate_bool = array(FALSE => 'FALSE', TRUE => 'TRUE')) {
     if (!isset($this->a_rest_args[$param])) {
       throw new mediamosa_exception_program_error('Calling get_param with non-existing param (@param), should not happen; define it in allowed vars for your rest call class "@restcall"', array('@param' => $param, '@restcall' => $this->{self::CLASS_NAME}));
     }
@@ -412,7 +417,7 @@ abstract class mediamosa_rest_call {
       $this->a_rest_args[$param][self::PARAM_VALIDATED] = TRUE;
     }
 
-    return $this->a_rest_args[$param][self::PARAM_VALUE];
+    return ($translate_bool && is_bool($this->a_rest_args[$param][self::PARAM_VALUE])) ? $a_translate_bool[$this->a_rest_args[$param][self::PARAM_VALUE]] : $this->a_rest_args[$param][self::PARAM_VALUE];
   }
 
   /**
@@ -552,36 +557,36 @@ abstract class mediamosa_rest_call {
    *        the assumsion the HTTP_METHOD does match the method specified
    *        in the REST description array.
    */
-  static public function get_method() {
+  public function get_method() {
     return $this->{self::METHOD};
   }
 
   /**
    * Returns TRUE / FALSE if method used is POST.
    */
-  static public function is_method_post() {
-    return self::get_method() == self::METHOD_POST;
+  public function is_method_post() {
+    return $this->get_method() == self::METHOD_POST;
   }
 
   /**
    * Returns TRUE / FALSE if method used is GET.
    */
-  static public function is_method_get() {
-    return self::get_method() == self::METHOD_GET;
+  public function is_method_get() {
+    return $this->get_method() == self::METHOD_GET;
   }
 
   /**
    * Returns TRUE / FALSE if method used is DELETE.
    */
-  static public function is_method_delete() {
-    return self::get_method() == self::METHOD_DELETE;
+  public function is_method_delete() {
+    return $this->get_method() == self::METHOD_DELETE;
   }
 
   /**
    * Returns TRUE / FALSE if method used is PUT.
    */
-  static public function is_method_put() {
-    return self::get_method() == self::METHOD_PUT;
+  public function is_method_put() {
+    return $this->get_method() == self::METHOD_PUT;
   }
   // ------------------------------------------------------------------ Functions (protected).
   /**
@@ -652,9 +657,9 @@ abstract class mediamosa_rest_call {
 
       // If variable is internal value only, then we set the value to default or NULL. Put it on READ ONLY.
       // If REST has tried set then we throw exception.
-      if (isset($a_var[self::VAR_IS_INTERNAL_ONLY]) && $a_var[self::VAR_IS_INTERNAL_ONLY] == self::VAR_IS_INTERNAL_ONLY_YES  && !$this->is_internal()) {
+      if (isset($a_var[self::VAR_IS_INTERNAL_ONLY]) && $a_var[self::VAR_IS_INTERNAL_ONLY] == self::VAR_IS_INTERNAL_ONLY_YES && !$this->is_internal()) {
         if (isset($this->a_rest_args[$param][self::PARAM_VALUE]) && !self::is_internal()) {
-          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INTERNAL_ONLY, array('@param' => $param, '@type' => $this->a_rest_args[$param][self::PARAM_TYPE]));
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INTERNAL_ONLY, array('@param' => $param, '@type' => $a_var[self::PARAM_TYPE]));
         }
 
         unset($this->a_rest_args[$param][self::PARAM_VALUE]);

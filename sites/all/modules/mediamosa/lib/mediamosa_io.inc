@@ -53,7 +53,7 @@ class mediamosa_io {
    * @param int $mode
    *  Default mode value for created directory, defaults to mode 0777.
    */
-  static public function mkdir($pathname, $recursive = FALSE, $mode = 0777) {
+  static public function mkdir($pathname, $recursive = TRUE, $mode = 0777) {
 
     // Already exists? Then don't try to create.
     if (file_exists($pathname) && is_dir($pathname)) {
@@ -110,6 +110,16 @@ class mediamosa_io {
 
     return $last_dot === FALSE ? $filename : mediamosa_unicode::substr($filename, 0, $last_dot);
   }
+
+  /**
+   * Returns directory name component of path.
+   *
+   * @param string $path
+   */
+  static public function dirname($path) {
+    return dirname($path);
+  }
+
 
   /**
    * Move one file to other file (rename).

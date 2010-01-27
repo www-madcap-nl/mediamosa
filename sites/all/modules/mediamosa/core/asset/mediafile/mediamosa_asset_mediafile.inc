@@ -28,7 +28,6 @@
   * @file
   * Common function class for mediamosa_asset_mediafile
   */
-
 class mediamosa_asset_mediafile {
 
   // ------------------------------------------------------------------ Consts.
@@ -110,17 +109,19 @@ class mediamosa_asset_mediafile {
    * @param string $asset_id
    */
   static public function delete_transcoded_unoriginal_mediafiles($asset_id) {
-    $result = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf')
-      ->addField('mf', mediamosa_asset_mediafile_db::ID)
-      ->condition(mediamosa_asset_mediafile_db::ASSET_ID, $asset_id)
-      ->condition(mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE, mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_FALSE)
-      ->execute()->fetchCol();
+    $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
+    $query->addField('mf', mediamosa_asset_mediafile_db::ID);
+    $query->condition(mediamosa_asset_mediafile_db::ASSET_ID, $asset_id);
+    $query->condition(mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE, mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_FALSE);
+    $result = $query->execute()->fetchCol();
 
     // Delete mediafiles.
-    self::delete($result);
+    if (!empty($result)) {
+      self::delete($result);
+    }
   }
 
-  /**MEDIAFILE_ID_SOURCE
+  /**
    * Enrich the response with mediafile data.
    *
    * 1.x _media_management_return_mediafile_list()
@@ -495,5 +496,52 @@ class mediamosa_asset_mediafile {
       ->fields($a_fields)
       ->condition(mediamosa_asset_mediafile_db::ID, $mediafile_id)
       ->execute();
+  }
+
+  /**
+   * Create the mediafile.
+   *
+   * @param string $mediafile_id
+   *  Provide the new mediafile_id.
+   * @param integer $app_id
+   * @param string $asset_id
+   *  Parent asset.
+   * @param string $user_id
+   *  The new owner.
+   * @param array $a_fields
+   *  Optional fields. See mediamosa_asset_mediafile_db.
+   */
+  static public function create($mediafile_id, $app_id, $asset_id, $user_id, array $a_fields = array()) {
+    // Is original with mediafile_id_source combo.
+    assert(
+      (
+        isset($a_fields[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE]) && $a_fields[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE] != ''
+        &&
+        $a_fields[mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE] == mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_FALSE
+      )
+      ||
+      (
+        (!isset($a_fields[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE]) || $a_fields[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE] == '')
+        &&
+        $a_fields[mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE] == mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_TRUE
+      )
+    );
+
+    $a_fields[mediamosa_asset_mediafile_db::ID] = $mediafile_id;
+    $a_fields[mediamosa_asset_mediafile_db::APP_ID] = $app_id;
+    $a_fields[mediamosa_asset_mediafile_db::ASSET_ID] = $asset_id;
+    $a_fields[mediamosa_asset_mediafile_db::ASSET_ID_ROOT] = $asset_id; // depricated, set to own asset.
+    $a_fields[mediamosa_asset_mediafile_db::OWNER_ID] = $user_id;
+
+    // Enrich for created/changed.
+    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+
+    // Insert it.
+    mediamosa_db::db_insert(mediamosa_asset_mediafile_db::TABLE_NAME)
+      ->fields($a_fields)
+      ->execute();
+
+    // Return the mediafile ID.
+    return $mediafile_id;
   }
 }

@@ -243,6 +243,9 @@ function mediamosa_migration_install() {
   // mediafile -> mediamosa_asset_mediafile.
   _mediamosa_migration_mediafile();
 
+  // Fix the parent_id problem (After mediafile mig.)
+  _mediamosa_migration_kill_child_assets();
+
   // mediafile_metadata -> mediamosa_asset_mediafile_metadata.
   _mediamosa_migration_mediafile_metadata();
 
@@ -285,7 +288,7 @@ function mediamosa_migration_install() {
   // *_job_server -> mediamosa_job_server
   _mediamosa_migration_jobserver_all(); // @todo
 
-  // create server nodes
+  // create server nodes.
   _mediamosa_migration_create_server_nodes();
 
   // <Migrate this setting.
@@ -2156,7 +2159,7 @@ function _mediamosa_migration_create_server_nodes() {
         $status = $row['active'] ? 'ON' : 'OFF';
       }
       elseif (isset($row['status'])) {
-        $status = (empty($row['status']) ? 'OFF' : $row['status']);
+        $status = (empty($row['status']) ? 'OFF' : is_numeric($row['status']) ? 'ON' : $row['status']);
       }
 
       $node->title = $row['description'];
@@ -2191,5 +2194,54 @@ function _mediamosa_migration_create_server_nodes() {
 
       node_save($node);
     }
+  }
+}
+
+/**
+ * Migrate childs asset mediafiles to the root.
+ * Remove childs assets.
+ */
+function _mediamosa_migration_kill_child_assets() {
+
+  // Lets increase to 10 minutes, although db time isn't counted.
+  set_time_limit(600);
+
+  // First fix the mediamosa_source_id to point to its original.
+
+  // Get all orginals that are have URI on empty.
+  $count = db_query("SELECT COUNT(mediafile_ID) FROM {mediamosa_asset_mediafile} WHERE (uri = '' OR uri IS NULL) AND is_original_file = 'TRUE' AND is_still = 'FALSE'")->fetchField();
+
+  $per = 1000;
+  for ($x = 0; $x < $count; $x += $per) {
+    // Get per 1000 the original IDs.
+    $a_mediafile_originals = db_query_range("SELECT mediafile_id, asset_id FROM {mediamosa_asset_mediafile} WHERE (uri = '' OR uri IS NULL) AND is_original_file = 'TRUE' AND is_still = 'FALSE' GROUP BY asset_id ORDER BY created ASC, mediafile_id ASC", $x, $per)->fetchAllKeyed();
+
+    // Now loop through the originals and set the mediafile_source_id to the original.
+    foreach ($a_mediafile_originals as $mediafile_id => $asset_id) {
+      db_query("UPDATE {mediamosa_asset_mediafile} SET mediafile_id_source = :mediafile_id_source WHERE asset_id = :asset_id AND (URI = '' OR URI IS NULL) AND is_original_file = 'FALSE' AND mediafile_id_source IS NULL", array(':mediafile_id_source' => $mediafile_id, ':asset_id' => $asset_id));
+    }
+
+    // Clear mem.
+    unset($a_mediafile_originals);
+  }
+
+  // Second move all child mediafile under the root.
+  db_query("UPDATE {mediamosa_asset_mediafile} SET asset_id = asset_id_root");
+
+  // Get all orginals that are have URI on empty.
+  $count = db_query("SELECT COUNT(mediafile_ID) FROM {mediamosa_asset_mediafile} WHERE (uri = '' OR uri IS NULL) AND is_original_file = 'TRUE' AND is_still = 'FALSE'")->fetchField();
+
+  $per = 1000;
+  for ($x = 0; $x < $count; $x += $per) {
+    // Get per 1000 the original IDs.
+    $a_mediafile_originals = db_query_range("SELECT mediafile_id, asset_id FROM {mediamosa_asset_mediafile} WHERE (uri = '' OR uri IS NULL) AND is_original_file = 'TRUE' AND is_still = 'FALSE' GROUP BY asset_id ORDER BY created ASC, mediafile_id ASC", $x, $per)->fetchAllKeyed();
+
+    // Now loop through the originals and set the mediafile_source_id to the original.
+    foreach ($a_mediafile_originals as $mediafile_id => $asset_id) {
+      db_query("UPDATE {mediamosa_asset_mediafile} SET mediafile_id_source = :mediafile_id_source WHERE asset_id = :asset_id AND (URI = '' OR URI IS NULL) AND is_original_file = 'FALSE' AND mediafile_id_source IS NULL", array(':mediafile_id_source' => $mediafile_id, ':asset_id' => $asset_id));
+    }
+
+    // Clear mem.
+    unset($a_mediafile_originals);
   }
 }

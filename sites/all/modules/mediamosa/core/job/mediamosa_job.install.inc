@@ -126,6 +126,7 @@ function mediamosa_job_schema() {
         'length' => mediamosa_job_db::PROGRESS_LENGTH,
         'not null' => TRUE,
         'description' => t('The progress of the job from 0.000 to 1.000.'),
+        'default' => '0.000',
       ),
       mediamosa_job_db::PRIORITY => array(
         'type' => 'int',
@@ -143,7 +144,7 @@ function mediamosa_job_schema() {
       ),
       mediamosa_job_db::STARTED => array(
         'type' => 'datetime',
-        'not null' => TRUE,
+        'default' => NULL,
         'description' => t('The date and time when job was started.'),
       ),
       mediamosa_job_db::FINISHED => array(

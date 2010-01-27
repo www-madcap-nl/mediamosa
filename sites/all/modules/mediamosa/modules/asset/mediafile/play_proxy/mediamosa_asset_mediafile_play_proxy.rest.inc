@@ -348,33 +348,32 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
           )
         )
       );
-      $query
-        ->addField('m', mediamosa_asset_mediafile_db::ID, 'still_id')
-        ->addField('v', mediamosa_asset_mediafile_db::ID, 'mediafile_id')
-        ->addField('m', mediamosa_asset_mediafile_db::ASSET_ID_ROOT, 'asset_id')
-        ->addField('m', mediamosa_asset_mediafile_db::ASSET_ID, 'orderasset_id')
-        ->fields('m',
-          array(
-            mediamosa_asset_mediafile_db::APP_ID,
-            mediamosa_asset_mediafile_db::OWNER_ID,
-            mediamosa_asset_mediafile_db::FILENAME,
-            mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE,
-            mediamosa_asset_mediafile_db::TAG,
-          )
+      $query->addField('m', mediamosa_asset_mediafile_db::ID, 'still_id');
+      $query->addField('v', mediamosa_asset_mediafile_db::ID, 'mediafile_id');
+      $query->addField('m', mediamosa_asset_mediafile_db::ASSET_ID_ROOT, 'asset_id');
+      $query->addField('m', mediamosa_asset_mediafile_db::ASSET_ID, 'orderasset_id');
+      $query->fields('m',
+        array(
+          mediamosa_asset_mediafile_db::APP_ID,
+          mediamosa_asset_mediafile_db::OWNER_ID,
+          mediamosa_asset_mediafile_db::FILENAME,
+          mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE,
+          mediamosa_asset_mediafile_db::TAG,
         )
-        ->fields('mm',
-          array(
-            mediamosa_asset_mediafile_metadata_db::WIDTH,
-            mediamosa_asset_mediafile_metadata_db::HEIGHT,
-            mediamosa_asset_mediafile_metadata_db::FILESIZE,
-            mediamosa_asset_mediafile_metadata_db::MIME_TYPE,
-            mediamosa_asset_mediafile_metadata_db::STILL_TIME_CODE,
-            mediamosa_asset_mediafile_metadata_db::STILL_ORDER,
-            mediamosa_asset_mediafile_metadata_db::STILL_FORMAT,
-            mediamosa_asset_mediafile_metadata_db::STILL_TYPE,
-            mediamosa_asset_mediafile_metadata_db::STILL_DEFAULT
-          )
-        );
+      );
+      $query->fields('mm',
+        array(
+          mediamosa_asset_mediafile_metadata_db::WIDTH,
+          mediamosa_asset_mediafile_metadata_db::HEIGHT,
+          mediamosa_asset_mediafile_metadata_db::FILESIZE,
+          mediamosa_asset_mediafile_metadata_db::MIME_TYPE,
+          mediamosa_asset_mediafile_metadata_db::STILL_TIME_CODE,
+          mediamosa_asset_mediafile_metadata_db::STILL_ORDER,
+          mediamosa_asset_mediafile_metadata_db::STILL_FORMAT,
+          mediamosa_asset_mediafile_metadata_db::STILL_TYPE,
+          mediamosa_asset_mediafile_metadata_db::STILL_DEFAULT
+        )
+      );
       $query->condition('m.' . mediamosa_asset_mediafile_db::ASSET_ID_ROOT, $asset_id);
       $query->condition('m.' . mediamosa_asset_mediafile_db::IS_STILL, mediamosa_asset_mediafile_db::IS_STILL_TRUE);
       $query->condition('m.' . mediamosa_asset_mediafile_db::APP_ID, $app_id);

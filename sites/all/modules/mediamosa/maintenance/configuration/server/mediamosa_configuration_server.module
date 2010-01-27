@@ -23,3 +23,49 @@
  * with this program; if not, you can find it at:
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
+
+/**
+ * Implements the hook_mediamosa_configuration_collect()
+ */
+function mediamosa_configuration_server_mediamosa_configuration_collect() {
+
+  // Get servers.
+  $a_servers = mediamosa_server::get_enabled_transcode();
+  $a_options = array();
+
+  foreach ($a_servers as $a_server) {
+    if (empty($a_server[mediamosa_server_db::SERVER_NAME])) {
+      $a_server[mediamosa_server_db::SERVER_NAME] = $a_server[mediamosa_server_db::URI];
+    }
+
+    $a_options[$a_server[mediamosa_server_db::URI]] = $a_server[mediamosa_server_db::SERVER_NAME];
+  }
+
+  $mediamosa_jobscheduler_uri = variable_get('mediamosa_jobscheduler_uri', NULL);
+  if (isset($mediamosa_jobscheduler_uri) && !isset($a_options[$mediamosa_jobscheduler_uri]) && !empty($mediamosa_jobscheduler_uri)) {
+    $a_options[$mediamosa_jobscheduler_uri] = t('Current server (not enabled)');
+  }
+
+  $form['settings_server'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Server settings'),
+    '#collapsible' => TRUE,
+  );
+
+  if (count($a_options)) {
+    $form['settings_server']['mediamosa_jobscheduler_uri'] = array(
+      '#type' => 'select',
+      '#title' => t('Jobscheduler server'),
+      '#description' => t('Select from one of the (enabled) transcode servers the server that handles the main job scheduler CRON.'),
+      '#required' => TRUE,
+      '#options' => $a_options,
+      '#default_value' => '',// Set empty, so its filled.
+    );
+  }
+  else {
+    $form['settings_server']['mediamosa_jobscheduler_markup'] = array(
+      '#markup' => t('No enabled jobscheduler servers found')
+    );
+  }
+  return $form;
+}

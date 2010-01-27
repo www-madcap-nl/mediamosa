@@ -327,8 +327,9 @@ class mediamosa_rest_call_create_mediafile extends mediamosa_rest_call {
   const USER_ID = 'user_id';
   const URI = 'uri';
   const IS_DOWNLOADABLE = 'is_downloadable';
-  const MOUNT_POINT = 'sannas_mount_point';
+  const SANNAS_MOUNT_POINT = 'sannas_mount_point';
   const IS_ORIGINAL_FILE = 'is_original_file';
+  const MEDIAFILE_ID_SOURCE = 'mediafile_id_source';
   const FILENAME = 'filename';
 
   // ------------------------------------------------------------------ Public Functions.
@@ -364,13 +365,21 @@ class mediamosa_rest_call_create_mediafile extends mediamosa_rest_call {
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Mark mediafile as original.',
           self::VAR_DEFAULT_VALUE => 'TRUE',
+          self::VAR_IS_INTERNAL_ONLY => self::VAR_IS_INTERNAL_ONLY_YES,
+        ),
+        self::MEDIAFILE_ID_SOURCE => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_MEDIAFILE_ID,
+          self::VAR_DESCRIPTION => 'The ID of the mediafile of the original.',
+          self::VAR_DEFAULT_VALUE => 'TRUE',
+          self::VAR_IS_INTERNAL_ONLY => self::VAR_IS_INTERNAL_ONLY_YES,
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::FILENAME => array(
           self::VAR_TYPE => mediamosa_type::TYPE_FILENAME,
           self::VAR_DESCRIPTION => 'Filename of the mediafile, can not be combined with URI.',
           self::VAR_IS_INTERNAL_ONLY => self::VAR_IS_INTERNAL_ONLY_YES,
         ),
-        self::MOUNT_POINT => array(
+        self::SANNAS_MOUNT_POINT => array(
           self::VAR_TYPE => mediamosa_type::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The location path of the file.',
           self::VAR_IS_INTERNAL_ONLY => self::VAR_IS_INTERNAL_ONLY_YES,
@@ -402,176 +411,57 @@ class mediamosa_rest_call_create_mediafile extends mediamosa_rest_call {
     // Must be enabled.
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $a_app_ids);
 
+    // Make sure we dont mix URI and Filename.
     if ($this->isset_param(self::URI) && ($this->isset_param(self::FILENAME) || $this->isset_param(self::IS_DOWNLOADABLE))) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MIX_OF_URI_AND_FILE);
     }
 
+    // URI set? Unset the mount point.
     if ($this->isset_param(self::URI)) {
       $this->unset_param(self::SANNAS_MOUNT_POINT);
     }
 
     // Set mediafile ID to something if not present.
-    if (!$this->isset_param(self::MEDIAFILE_ID)) {
+    if ($this->empty_param(self::MEDIAFILE_ID)) {
       $this->set_param_value(self::MEDIAFILE_ID, mediamosa_db::uuid($app_id));
     }
 
-    if ($is_original_file) {
-      mediamosa_db::db_must_exists(
-         mediamosa_asset_db::TABLE_NAME,
-         array(
-           mediamosa_asset_db::ID => $asset_id,
-           mediamosa_asset_db::PARENT_ID => NULL
-         ),
-         mediamosa_error::ERRORCODE_ASSET_NOT_FOUND,
-         array(
-           '@asset_id' => $asset_id,
-         )
-      );
-    }
-    else {
-      mediamosa_db::db_must_exists(
-         mediamosa_asset_db::TABLE_NAME,
-         array(
-           mediamosa_asset_db::ID => $asset_id,
-         ),
-         mediamosa_error_db::ERRORCODE_ASSET_NOT_FOUND,
-         array(
-           '@asset_id' => $asset_id,
-         )
-      );
-    }
+    // Must exists.
+    $a_asset = mediamosa_asset::must_exists($asset_id);
 
-    $a_asset = mediamosa_db::db_query(
-      'SELECT #app_id, #owner_id, #parent_id FROM {#mediamosa_asset} WHERE #asset_id = :asset_id',
-      array(
-        '#app_id' => mediamosa_asset_db::APP_ID,
-        '#owner_id' => mediamosa_asset_db::OWNER_ID,
-        '#parent_id' => mediamosa_asset_db::PARENT_ID,
-        '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
-        '#asset_id' => mediamosa_asset_db::ID,
-        ':asset_id' => $asset_id
-      )
-    )->fetchAssoc();
+    // Check owner of parent asset, need ownership.
+    mediamosa_aut::owner_check($app_id, $user_id, $a_asset[mediamosa_asset_db::APP_ID], $a_asset[mediamosa_asset_db::OWNER_ID], $is_app_admin);
 
-    $owner_id  = $a_asset[mediamosa_asset_db::OWNER_ID];
-    $asset_app_id = $a_asset[mediamosa_asset_db::APP_ID];
-    $asset_id_root = is_null($a_asset[mediamosa_asset_db::PARENT_ID]) ? $asset_id : $a_asset[mediamosa_asset_db::PARENT_ID];
+    // Want to copy these fields to new mediafile.
+    $a_params = array(
+      self::GROUP_ID => mediamosa_asset_mediafile_db::GROUP_ID,
+      self::IS_DOWNLOADABLE => mediamosa_asset_mediafile_db::IS_DOWNLOADABLE,
+      self::IS_ORIGINAL_FILE => mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE,
+      self::SANNAS_MOUNT_POINT => mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT,
+      self::FILENAME => mediamosa_asset_mediafile_db::FILENAME,
+      self::URI => mediamosa_asset_mediafile_db::URI,
+    );
 
-    // Make sure we test owner on the asset root.
-    if ($asset_id_root != $asset_id) {
-      $a_asset = mediamosa_db::db_query(
-        'SELECT #app_id, #owner_id FROM {#mediamosa_asset} WHERE #asset_id = :asset_id',
-        array(
-          '#app_id' => mediamosa_asset_db::APP_ID,
-          '#owner_id' => mediamosa_asset_db::OWNER_ID,
-          '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
-          '#asset_id' => mediamosa_asset_db::ID,
-          ':asset_id' => $asset_id_root
-        )
-      )->fetchAssoc();
+    // Fields to insert.
+    $a_fields = array();
 
-      $owner_id  = $a_asset[mediamosa_asset_db::OWNER_ID];
-      $asset_app_id = $a_asset[mediamosa_asset_db::APP_ID];
-    }
-
-    // Check owner, need ownership.
-    mediamosa_aut::owner_check($app_id, $user_id, $asset_app_id, $owner_id, $is_app_admin);
-
-    // @todo: Make design choice on parent assets.
-
-/*
-    // See where mediafile needs to be created.
-    if ($is_original_file) {
-      // Original file, so lets create new sub-asset.
-
-    // Indien er al een sub-asset bestaat, maak dan een nieuwe aan.
-    if (vpx_count_rows("asset", array("parent_id", $a_parameters['asset_id']['value']))) {
-      // opgegeven asset is reeds een 'parent asset'
-      $a_args = array(
-        'internal' => array(
-          'parent_id' => $a_parameters['asset_id']['value']
-        ),
-        'get' => array(
-          'app_id' => $a_parameters['app_id']['value'],
-          'user_id' => $a_parameters['user_id']['value'],
-          'group_id' => $a_parameters['group_id']['value'],
-        ),
-      );
-      $result = media_management_create_asset($a_args);
-      $a_parameters['asset_id']['value'] = $result->response['items'][1]['asset_id'];
-    }
-    elseif (vpx_count_rows("mediafile", array("asset_id", $a_parameters['asset_id']['value'], "is_still", 'FALSE'))) {
-
-      // er bestaat al een mediafile onder de asset. deze moet verplaatst worden naar een niewe 'sub asset'
-      for ($i = 0; $i < 2; $i++) { // maak 2 nieuwe sub assets aan
-        $a_args = array(
-          'internal' => array(
-            'parent_id' => $a_parameters['asset_id']['value']
-          ),
-          'get' => array(
-            'app_id' => $a_parameters['app_id']['value'],
-            'user_id' => $a_parameters['user_id']['value'],
-            'group_id' => $a_parameters['group_id']['value'],
-          ),
-        );
-        $result = media_management_create_asset($a_args);
-        $a_sub_asset[$i] = $result->response['items'][1]['asset_id'];
-      }
-
-      // verplaats de bestaande mediafile naar een nieuwe asset_id
-      db_set_active('data');
-      db_query("UPDATE {mediafile} SET asset_id = '%s' WHERE asset_id = '%s'", $a_sub_asset[0], $a_parameters['asset_id']['value']);
-      db_set_active();
-
-      // maak een nieuwe mediafile aan op de volgende asset_id
-      $a_parameters['asset_id']['value'] = $a_sub_asset[1];
-    }
-  }
-  // Niet orginele file mag alleen onder een hoofdasset worden geplaatst
-  elseif (vpx_count_rows("asset", array("parent_id", $a_parameters['asset_id']['value']))) {
-    return new rest_response(vpx_return_error(ERRORCODE_UNEXPECTED_ERROR));
-  }
-
-  // stel de query samen
-  $a_set = array();
-  foreach (
-    array(
-      'asset_id' => 'asset_id',
-      'app_id' => 'app_id',
-      'group_id' => 'group_id',
-      'owner_id' => 'user_id',
-      'is_downloadable' => 'is_downloadable',
-      'is_original_file' => 'is_original_file',
-      'sannas_mount_point' => 'sannas_mount_point',
-      'mediafile_id' => 'mediafile_id',
-      'filename' => 'filename',
-      'uri' => 'uri') as $column => $param_name) {
-
-    if (isset($a_parameters[$param_name]['value'])) {
-      if (!is_null($a_parameters[$param_name]['value'])) {
-        $a_set[] = sprintf("%s='%s'", $column, db_escape_string($a_parameters[$param_name]['value']));
+    // Now create the data to insert.
+    foreach ($a_params as $param => $field_name) {
+      if ($this->isset_param($param)) {
+        $a_fields[$field_name] = $this->get_param_value($param, TRUE);
       }
     }
-  }
-  assert(!empty($a_set));
-  // Add the root asset_id, even if asset_id already points to the root.
-  $a_set[] = sprintf("asset_id_root='%s'", db_escape_string($asset_id_root));
-  $query = "INSERT INTO {mediafile} SET ". implode(", ", $a_set);
 
-  // voer het unieke id in de database in
-  db_set_active('data');
-  db_query($query);
-  db_set_active();
+    // Get mediafile ID.
+    $mediafile_id = $this->get_param_value(self::MEDIAFILE_ID);
 
-  // Set the external
-  mediamosa_asset::update_asset_info_is_external($a_parameters['mediafile_id']['value']);
+    // Insert the mediafile.
+    $mediafile_id = mediamosa_asset_mediafile::create($mediafile_id, $app_id, $asset_id, $user_id, $a_fields);
 
-  // retourneer de gegenereerde mediafile_id
-  $rest_response = new rest_response(vpx_return_error(ERRORCODE_OKAY));
-  $rest_response->add_item(array(
-    "mediafile_id" => $a_parameters['mediafile_id']['value'],
-  ));
-  return $rest_response;*/
+    // Ok add to output.
+    $o_mediamosa->add_item(array('mediafile_id' => $mediafile_id));
+
+    // Done.
   }
 }
 
@@ -591,6 +481,7 @@ class mediamosa_rest_call_update_mediafile extends mediamosa_rest_call {
   const IS_ORIGINAL_FILE = 'is_original_file';
   const FILENAME = 'filename';
   const TRANSCODE_INHERITS_ACL = 'transcode_inherits_acl';
+  const MEDIAFILE_ID_SOURCE = 'mediafile_id_source';
   const TAG = 'tag';
 
   // ------------------------------------------------------------------ Public Functions.

@@ -96,6 +96,10 @@ class mediamosa_rest_call_asset_mediafile_uploadticket_create extends mediamosa_
     // Get serverupload.
     $a_server_upload = mediamosa_server::get_random_upload();
 
+    if (!$a_server_upload) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_SERVER_UPLOAD_NOT_FOUND);
+    }
+
     // Set response.
     $o_mediamosa->add_item(
       array(
@@ -159,6 +163,7 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
           self::VAR_DESCRIPTION => 'If one (or more) transcode profiles is in this parameter than the media file will be transcoded after the upload.',
           self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+          self::VAR_DEFAULT_VALUE => array(),
         ),
         self::TRANSCODE_INHERITS_ACL => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
@@ -239,16 +244,12 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($a_var_setup, FALSE);
   }
 
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
     $o_mediamosa = mediamosa::get();
-
-    $a_app_ids = $this->get_param_value_app();
-    $app_id = reset($a_app_ids);
-    $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
 
     // Get params.
     $ticket_id = $this->get_param_value(self::UPLOAD_TICKET);
@@ -268,7 +269,7 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
       'height' => $this->get_param_value(self::HEIGHT),
     );
     $completed_url = $this->get_param_value(self::COMPLETED_URL);
-    $completed_transcoding_url = $this->get_param_value(self::get_param_value(self::COMPLETED_TRANSCODING_URL));
+    $completed_transcoding_url = $this->get_param_value(self::COMPLETED_TRANSCODING_URL);
     $transcode_inherits_acl = $this->get_param_value(self::TRANSCODE_INHERITS_ACL);
     $tag = $this->get_param_value(self::TAG);
     $a_trancode_profiles = $this->get_param_value(self::TRANSCODE);
@@ -281,7 +282,7 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
     }
 
     try {
-      mediamosa_asset_mediafile_upload::handle_upload($app_id, $is_app_admin, $ticket_id, $this->is_method_put(), $a_trancode_profiles, $retranscode, $transcode_inherits_acl, $tag, $create_still, $a_still_parameters, $completed_url, $completed_transcoding_url, $filename_put);
+      mediamosa_asset_mediafile_upload::handle_upload($ticket_id, $this->is_method_put(), $a_trancode_profiles, $retranscode, $transcode_inherits_acl, $tag, $create_still, $a_still_parameters, $completed_url, $completed_transcoding_url, $filename_put);
     }
     catch (Exception $e) {
 

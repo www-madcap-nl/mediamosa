@@ -34,10 +34,16 @@
  * MEDIAMOSA_TEST_GROUP_
  */
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE', 'MediaMosa');
+
 /**
  * The basic lowest simpletest class.
  */
-abstract class MediaMosaTestCase extends DrupalWebTestCase {
+class MediaMosaTestCase extends DrupalWebTestCase {
+  // ------------------------------------------------------------------ Functions (protected)
+  // Default old user/group.
+  const SIMPLETEST_USER_ID = 'Simpletest user id';
+  const SIMPLETEST_GROUP_ID = 'Simpletest test group';
+
   // ------------------------------------------------------------------ Functions (protected)
 
   /**
@@ -59,13 +65,17 @@ abstract class MediaMosaTestCase extends DrupalWebTestCase {
     $args = array_unique(array_merge(array('mediamosa_app', 'mediamosa'), $args));
     call_user_func_array(array($this, 'parent::setUp'), $args);
 
-    // Now set it so its in the sandbox.
+    // Now set it, so its in the sandbox.
     foreach ($a_values as $name => $value) {
       // Skip NULL.
       if (!is_null($value)) {
         mediamosa::variable_set($name, $value);
       }
     }
+
+    // Set our selfs global (for logger).
+    global $mediamosa_simpletest;
+    $mediamosa_simpletest = &$this;
   }
 
   /**
@@ -80,29 +90,32 @@ abstract class MediaMosaTestCase extends DrupalWebTestCase {
     // keep it.
     $old_prefix = $db_prefix;
 
-    // Done, call parent.
+    // Call parent.
     parent::tearDown();
 
-    // Save change.
+    // Save change (db_prefix is changed by parent::teardown).
     $new_prefix = $db_prefix;
     $db_prefix = $old_prefix;
 
-    $prefix = Database::getConnection()->prefixTables('{mediamosa_}') . '%';
+    if (preg_match('/simpletest\d+/', $db_prefix)) {
 
-    // Get tables that match our pattern.
-    $tables = db_find_tables($prefix);
+      $prefix = Database::getConnection()->prefixTables('{mediamosa_}') . '%';
 
-    $matches = $ret = array();
-    foreach ($tables as $table) {
-      // Make sure we drop correct; tables MUST start with simpletest.
-      if (preg_match('/simpletest\d+mediamosa.*/', $table, $matches)) {
-        list($tmp, $name) = explode('mediamosa_', $table, 2);
+      // Get tables that match our pattern.
+      $tables = db_find_tables($prefix);
 
-        try {
-          db_drop_table($ret, 'mediamosa_' . $name);
-        }
-        catch (PDOException $e) {
-          // ignore.
+      $matches = $ret = array();
+      foreach ($tables as $table) {
+        // Make sure we drop correct; tables MUST start with simpletest.
+        if (preg_match('/simpletest\d+mediamosa.*/', $table, $matches)) {
+          list($tmp, $name) = explode('mediamosa_', $table, 2);
+
+          try {
+            db_drop_table($ret, 'mediamosa_' . $name);
+          }
+          catch (PDOException $e) {
+            // ignore.
+          }
         }
       }
     }
@@ -110,6 +123,16 @@ abstract class MediaMosaTestCase extends DrupalWebTestCase {
     // Restore.
     $db_prefix = $new_prefix;
   }
+
+  /**
+   * Pretty export of var_export.
+   *
+   * @param mixed $data
+   */
+  protected function var_export($data, $group = 'Other') {
+    $this->pass(highlight_string('<?php ' . var_export($data, TRUE), TRUE));
+  }
+
 
   /**
    * Override drupalGet so we can override the request on the drupal interface.
@@ -146,24 +169,21 @@ abstract class MediaMosaTestCase extends DrupalWebTestCase {
    * Do a REST call inside the sandbox.
    *
    * @param array $a_app
-   *  The app used during the call.
+   *  The app_id used during the call, this can be more than one.
    * @param string $uri
    *  The uri of the REST call.
    * @param string $request_method
    *  POST / GET / PUT / DELETE.
-   * @param array $parameters
-   * @param unknown_type $headers
+   * @param array $a_parameters
+   *  name => value
+   * @param array $a_headers
+   *  Name: value
    */
-  protected function restCall(array $a_app, $uri, $request_method = 'POST', array $a_parameters = array(), array $a_headers = array()) {
+  protected function restCall($uri, $request_method = 'POST', array $a_parameters = array(), array $a_headers = array()) {
     // Add MediaMosa menu path prefix
     //$uri = /*MEDIAMOSA_MENU_PATH . '/'*/ $uri;
 
-    // Add default parameters
-    $a_parameters += array(
-      'app_id' => $a_app[mediamosa_app_db::APP_ID],
-    );
-
-    // Prepare the CURL options
+    // Prepare the CURL options.
     $curl_opts = array(
       CURLOPT_NOBODY => FALSE,
       CURLOPT_HTTPHEADER => $a_headers,
@@ -185,17 +205,17 @@ abstract class MediaMosaTestCase extends DrupalWebTestCase {
 
     $this->pass($this->session_id);
 
-    // Perform the CURL request
+    // Perform the CURL request.
     $result = $this->curlExec($curl_opts);
 
-    // Parse the headers and get the body
+    // Parse the headers and get the body.
     $lines = explode("\n", $result);
     $line_count = count($lines);
 
-    // Unset the HTTP header line
+    // Unset the HTTP header line.
     unset($lines[0]);
 
-    // Iterate until an empty row is found
+    // Iterate until an empty row is found.
     $out = array();
     for ($i = 1; $i < $line_count; $i++) {
       if (trim($lines[$i]) != '') {
@@ -209,7 +229,7 @@ abstract class MediaMosaTestCase extends DrupalWebTestCase {
       }
     }
 
-    // Create a SimpleXMLElement from the restcall's output
+    // Create a SimpleXMLElement from the restcall's output.
     try {
       $out['xml'] = new SimpleXMLElement($out['body']);
     }
@@ -218,11 +238,32 @@ abstract class MediaMosaTestCase extends DrupalWebTestCase {
       return;
     }
 
-    // Look for a request_result_id
-    $this->assertTrue(isset($out['xml']->header->request_result_id), $request_method .' request to: "'. $uri .'". Result id: ' . $out['xml']->header->request_result_id .'<hr />');
+    // Look for a request_result_id.
+    $this->assertTrue(isset($out['xml']->header->request_result_id), $request_method . ' request to: "' . $uri . '". Result id: ' . $out['xml']->header->request_result_id . ', ' . $out['xml']->header->request_result_description . '<hr />');
 
-    // Return the request data
+    // Return the request data.
     return $out;
+  }
+
+  /**
+   * Wrapper for POST restCall
+   */
+  protected function restCallPost($uri, array $a_parameters = array(), array $a_headers = array()) {
+    return $this->restCall($uri, 'POST', $a_parameters, $a_headers);
+  }
+
+  /**
+   * Wrapper for GET restCall
+   */
+  protected function restCallGet($uri, array $a_parameters = array(), array $a_headers = array()) {
+    return $this->restCall($uri, 'GET', $a_parameters, $a_headers);
+  }
+
+  /**
+   * Wrapper for PUT restCall
+   */
+  protected function restCallPut($uri, array $a_parameters = array(), array $a_headers = array()) {
+    return $this->restCall($uri, 'PUT', $a_parameters, $a_headers);
   }
 
   /**
@@ -296,7 +337,7 @@ abstract class MediaMosaTestCase extends DrupalWebTestCase {
    * Return the path+filename to the test video.
    */
   protected function getTestVideo() {
-    $filename = drupal_get_path('module', 'mediamosa') ."/lib/testfiles/test_video.wmv";
+    $filename = drupal_get_path('module', 'mediamosa') . '/lib/testfiles/test_video.wmv';
     $this->pass(t('Got test video @video.', array('@video' => $filename)));
     return $filename;
   }
@@ -305,7 +346,7 @@ abstract class MediaMosaTestCase extends DrupalWebTestCase {
    * Return the path+filename to the test image (jpeg).
    */
   protected function getTestImage_NotBlackJpg() {
-    $filename = drupal_get_path('module', 'mediamosa') ."/lib/testfiles/notblack-001.jpeg";
+    $filename = drupal_get_path('module', 'mediamosa') . '/lib/testfiles/notblack-001.jpeg';
     $this->pass(t('Got test video @video.', array('@video' => $filename)));
     return $filename;
   }
@@ -328,11 +369,11 @@ abstract class MediaMosaTestCase extends DrupalWebTestCase {
       mediamosa_app_db::ACTIVE_VERSION => '',
     );
 
-    // Insert the app into the database
-    $query = mediamosa_db::db_insert(mediamosa_app_db::TABLE_NAME)->fields($a_fields)->execute();
+    // Insert the app into the database.
+    $a_fields[mediamosa_app_db::ID] = mediamosa_db::db_insert(mediamosa_app_db::TABLE_NAME)->fields($a_fields)->execute();
 
-    // Log the creation in the resutls
-    $this->assert(TRUE, t('App created with id %app_id, name %name and shared key %pass', array('%app_id' => $a_fields['app_id'], '%name' => $a_fields['name'], '%pass' => $a_fields['shared_key'])));
+    // Log the creation in the resutls.
+    $this->assert(TRUE, t("App created with unique ID; '%id',  app_id; '%app_id', name; '%name' and shared key; '%shared_key'.", array('%id' => $a_fields[mediamosa_app_db::ID], '%app_id' => $a_fields[mediamosa_app_db::APP_ID], '%name' => $a_fields[mediamosa_app_db::NAME], '%shared_key' => $a_fields[mediamosa_app_db::SHARED_KEY])));
 
     return $a_fields;
   }
@@ -342,8 +383,8 @@ abstract class MediaMosaTestCase extends DrupalWebTestCase {
    */
   protected function createDownloadServer() {
     $node = new stdClass();
-    $node->uid = 1; // Admin
-    $node->status = 1; // Published
+    $node->uid = 1; // Admin.
+    $node->status = 1; // Published.
     $node->type = mediamosa_node::MEDIAMOSA_NODE_TYPE_SERVER;
 
     $node->title = 'http://localhost/download/{TICKET}';

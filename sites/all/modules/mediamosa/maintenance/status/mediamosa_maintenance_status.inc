@@ -63,13 +63,6 @@
   }
 
   /**
-   * Return the enabled switch if we monitor mediamosa.
-   */
-  static public function is_enabled() {
-    return mediamosa::variable_get('mediamosa_monitor', FALSE);
-  }
-
-  /**
    * returns the interval for cron in seconds.
    * defaults to 600 (10 minutes).
    */
@@ -107,7 +100,7 @@
    */
   static public function run_simple_tests() {
     // Prevent us running twice and make sure we are enabled.
-    if (!self::may_run() || !mediamosa_maintenance_status::is_enabled()) {
+    if (!self::may_run()) {
       return;
     }
 

@@ -340,7 +340,7 @@ class mediamosa_type {
 
       case self::TYPE_BOOL:
         if (!is_bool($mixed_param_value)) {
-          if (!in_array(mediamosa_unicode::strtolower($mixed_param_value), array('true', 'false'))) {
+          if (!in_array(mediamosa_unicode::strtolower($mixed_param_value), array('true', 'false', ''))) {
             throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
           }
 

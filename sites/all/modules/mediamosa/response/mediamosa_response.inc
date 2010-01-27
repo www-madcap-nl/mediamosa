@@ -113,13 +113,13 @@ class mediamosa_response extends mediamosa {
         session_regenerate_id(FALSE);
       }
 
-      // Save it.
-      $response_type = $a_rest_call[mediamosa_rest_call::RESPONSE_TYPE];
-
       // Make sure response type is set.
       if (!isset($a_rest_call[mediamosa_rest_call::RESPONSE_TYPE])) {
         $a_rest_call[mediamosa_rest_call::RESPONSE_TYPE] = mediamosa_rest_call::RESPONSE_TYPE_XML;
       }
+
+      // Save it.
+      $response_type = $a_rest_call[mediamosa_rest_call::RESPONSE_TYPE];
 
       // Now execute the call.
       $this->o_mediamosa_rest->process_call($a_rest_call);
