@@ -416,14 +416,6 @@ class mediamosa {
 
       // We'll use the drupal watchdog.
       watchdog('Mediamosa' . (!isset($type) ? '' : ' - ' . $type), $message, $variables, $severity);
-
-      // In simpletest? Then find the simpletest object and use it to output.
-      if (self::in_simpletest_sandbox()) {
-        global $mediamosa_simpletest;
-        if (isset($mediamosa_simpletest) && !$mediamosa_simpletest) {
-          $mediamosa_simpletest->pass('MediaMosa log: ' . strtr($message, $variables));
-        }
-      }
     }
 
     $logging = FALSE;

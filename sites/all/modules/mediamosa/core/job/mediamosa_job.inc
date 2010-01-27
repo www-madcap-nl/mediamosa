@@ -66,6 +66,19 @@ class mediamosa_job {
   }
 
   /**
+   * Get the job from the main job table.
+   * @param integer $mediafile_id
+   *  The mediafile ID.
+   */
+  static public function get_by_mediafileid($mediafile_id, array $a_fields = array()) {
+    return mediamosa_db::db_select(mediamosa_job_db::TABLE_NAME, 'j')
+      ->fields('j', $a_fields)
+      ->condition(mediamosa_job_db::MEDIAFILE_ID, $mediafile_id)
+      ->execute()
+      ->fetchAssoc();
+  }
+
+  /**
    * Store the error description.
    *
    * @param integer $job_id
@@ -416,7 +429,8 @@ class mediamosa_job {
 
     if ($uploaded_filesize != $a_job_ext_upload[mediamosa_job_upload_db::FILE_SIZE]) {
       // Job failed.
-      // @todo
+      // Change status to failed.
+      mediamosa_job::update_status($a_job_ext_upload, mediamosa_job_db::JOB_STATUS_FAILED, '1.000');
       return;
     }
 
@@ -451,7 +465,7 @@ class mediamosa_job {
       // Add changed.
       $a_fields = mediamosa_db::db_update_enrich($a_fields);
 
-      $affected_rows = mediamosa_db::db_update(mediamosa_asset_mediafile_metadata_db::TABLE_NAME)
+      mediamosa_db::db_update(mediamosa_asset_mediafile_metadata_db::TABLE_NAME)
         ->fields($a_fields)
         ->condition(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID, $a_job_ext_upload[mediamosa_job_db::MEDIAFILE_ID])
         ->execute();
@@ -473,10 +487,10 @@ class mediamosa_job {
     }
 
     // Analyse the mediafile.
-    $analyse_result = mediamosa_asset_mediafile::analyse($a_job_ext_upload[mediamosa_job_db::APP_ID], $a_job_ext_upload[mediamosa_job_db::MEDIAFILE_ID]);
+    $a_analyse_result = mediamosa_asset_mediafile::analyse($a_job_ext_upload[mediamosa_job_db::APP_ID], $a_job_ext_upload[mediamosa_job_db::MEDIAFILE_ID]);
 
     // Store it.
-    mediamosa_asset_mediafile_metadata::store_analyse($a_job_ext_upload[mediamosa_job_db::ID], $analyse_result);
+    mediamosa_asset_mediafile_metadata::store_analyse($a_job_ext_upload[mediamosa_job_db::ID], $a_analyse_result);
   }
 
   /**

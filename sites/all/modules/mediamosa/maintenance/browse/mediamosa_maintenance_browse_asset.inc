@@ -34,6 +34,10 @@
 function mediamosa_maintenance_browse_asset_details($asset_id) {
   $response = _mediamosa_restcall('asset/' . $asset_id, 'GET', array('is_app_admin' => 'true'));
 
+  if (!$response) {
+    return '';
+  }
+
   $output = '';
 
   $asset = (array)$response->xml->items->item;
@@ -100,6 +104,10 @@ function _mediamosa_maintenance_browse_asset_get_all_collections($app_id) {
   $app_ids = explode(' ', $app_id);
 
   $response = _mediamosa_restcall('collection', 'GET', array('app_id' => $app_ids));
+
+  if (!$response) {
+    return array();
+  }
 
   $collections = array();
   foreach ($response->xml->xpath('//items/item') as $collection) {
@@ -367,12 +375,14 @@ function mediamosa_maintenance_browse_asset_form() {
 
     $response = _mediamosa_restcall('asset', 'GET', $data);
 
-    // Extract the item count.
-    $item_count = (int)$response->xml->header->item_count;
-    $item_count_total = (int)$response->xml->header->item_count_total;
+    if ($response) {
+      // Extract the item count.
+      $item_count = (int)$response->xml->header->item_count;
+      $item_count_total = (int)$response->xml->header->item_count_total;
+    }
 
     // Return the form if no assets were found.
-    if ($item_count_total == 0) {
+    if (!$response || !$item_count_total) {
       $form['results'] = array(
         '#markup' => '<p>'. t('No assets found...') .'</p>',
       );

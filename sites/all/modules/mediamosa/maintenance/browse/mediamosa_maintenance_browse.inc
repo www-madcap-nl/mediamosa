@@ -46,7 +46,7 @@ function _mediamosa_restcall($uri, $method = 'GET', array $data = array()) {
   $o_connector = new mediamosa_connector();
 
   // Do request will trigger login.
-  $o_response = $o_connector->request($uri, $options);
+  $o_response = $o_connector->request_internal($uri, $options);
 
   if (!$o_response) {
     drupal_set_message('Unable to execute REST call, check MediaMosa connector settings.', 'error');

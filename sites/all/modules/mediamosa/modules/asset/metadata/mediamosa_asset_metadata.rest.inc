@@ -77,6 +77,8 @@ class mediamosa_rest_call_asset_metadata_create extends mediamosa_rest_call {
         ),
       ),
     );
+
+    return $a_var_setup;
   }
 
   // ------------------------------------------------------------------ Override process_rest_args.
@@ -85,7 +87,7 @@ class mediamosa_rest_call_asset_metadata_create extends mediamosa_rest_call {
     $a_var_setup = parent::process_rest_args($a_var_setup);
 
     // Now we can add the metadata definition input to our var setup.
-    $a_app_ids = $this->get_param_value_app();;
+    $a_app_ids = $this->get_param_value_app();
     $app_id = reset($a_app_ids);
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
 

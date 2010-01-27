@@ -664,7 +664,7 @@ class mediamosa_asset {
         '#asset_id' => mediamosa_asset_db::ID,
         ':asset_id' => $asset_id,
       )
-    );
+    )->fetchField();
 
     if ($real_asset_id !== FALSE) {
       $asset_id = $real_asset_id;

@@ -108,7 +108,6 @@ class mediamosa_asset_mediafile_metadata {
     return $result;
   }
 
-
   /**
    * Parse the returned string from analyse.
    *
@@ -118,29 +117,26 @@ class mediamosa_asset_mediafile_metadata {
    */
   static public function parse_metadata($analyse_result) {
 
-    mediamosa::log_export($analyse_result);
-    exit;
+    $a_metadata = mediamosa_lib::create_named_array($analyse_result, "\n", ': ');
 
-    $a_metadata = mediamosa_lib::create_named_array($analyse_result, '\n', ': ');
-
-    // MIME-type
+    // MIME-type.
     $a_fields[mediamosa_asset_mediafile_metadata_db::MIME_TYPE] = isset($a_metadata['MIME-type']) ? $a_metadata['MIME-type'] : '';
 
-    // Video-codec
+    // Video-codec.
     $a_fields[mediamosa_asset_mediafile_metadata_db::VIDEO_CODEC] = isset($a_metadata['Video-codec']) ? $a_metadata['Video-codec'] : '';
 
-    // Video-colorspace
+    // Video-colorspace.
     $a_fields[mediamosa_asset_mediafile_metadata_db::COLORSPACE] = isset($a_metadata['Video-colorspace']) ? $a_metadata['Video-colorspace'] : '';
 
-    // Video-size
+    // Video-size.
     list($width, $height) = isset($a_metadata['Video-size']) ? explode('x', $a_metadata['Video-size']) : array(0, 0);
     $a_fields[mediamosa_asset_mediafile_metadata_db::WIDTH] = $width;
     $a_fields[mediamosa_asset_mediafile_metadata_db::HEIGHT] = $height;
 
-    // Video-framespersecond
+    // Video-framespersecond.
     $a_fields[mediamosa_asset_mediafile_metadata_db::FPS] = isset($a_metadata['Video-framespersecond']) ? $a_metadata['Video-framespersecond'] : '';
 
-    // Audio-codec
+    // Audio-codec.
     $a_fields[mediamosa_asset_mediafile_metadata_db::AUDIO_CODEC] = isset($a_metadata['Audio-codec']) ? $a_metadata['Audio-codec'] : '';
 
     // Audio-frequency.
@@ -165,11 +161,11 @@ class mediamosa_asset_mediafile_metadata {
     $a_fields[mediamosa_asset_mediafile_metadata_db::IS_HINTED] = isset($a_metadata['Is-hinted']) ? $a_metadata['Is-hinted'] : 'no';
     $a_fields[mediamosa_asset_mediafile_metadata_db::IS_HINTED] = strcasecmp($a_fields[mediamosa_asset_mediafile_metadata_db::IS_HINTED], 'yes') == 0 ? 'TRUE' : 'FALSE';
 
-    // has inserted extra metadata
+    // has inserted extra metadata.
     $a_fields[mediamosa_asset_mediafile_metadata_db::IS_INSERTED_MD] = isset($a_metadata['Is-inserted-md']) ? $a_metadata['Is-inserted-md'] : 'no';
     $a_fields[mediamosa_asset_mediafile_metadata_db::IS_INSERTED_MD] = strcasecmp($a_fields[mediamosa_asset_mediafile_metadata_db::IS_INSERTED_MD], 'yes') == 0 ? 'TRUE' : 'FALSE';
 
-    // The output of ffmpeg
+    // The output of ffmpeg.
     $a_fields['ffmpeg_output'] = isset($a_metadata['ffmpeg-output']) ? implode('\n', explode('}-{', $a_metadata['ffmpeg-output'])) : '';
 
     // Done.
@@ -218,7 +214,7 @@ class mediamosa_asset_mediafile_metadata {
    * @param $job_id
    * @param $analyse_result
    */
-  static public function store_analyse($job_id, $analyse_result) {
+  static public function store_analyse($job_id, $a_analyse_result) {
 
     // Get the job.
     $a_job = mediamosa_job::get($job_id);
@@ -227,7 +223,7 @@ class mediamosa_asset_mediafile_metadata {
     $filesize = mediamosa_io::filesize(mediamosa_configuration_storage::mediafile_id_filename_get($a_job[mediamosa_job_db::MEDIAFILE_ID]));
 
     // Parse the analyse result.
-    $a_fields = self::parse_metadata($analyse_result);
+    $a_fields = self::parse_metadata(implode("\n", $a_analyse_result));
 
     // Remove any metadata first.
     mediamosa_asset_mediafile_metadata::delete_by_mediafileid($a_job[mediamosa_job_db::MEDIAFILE_ID]);
@@ -251,12 +247,12 @@ class mediamosa_asset_mediafile_metadata {
       ->execute();
 
     // Store in error description.
-    mediamosa_job::store_error_description($ffmpeg_output);
+    mediamosa_job::store_error_description($job_id, $ffmpeg_output);
 
     // Normalize to asset.
     mediamosa_asset::update_asset_info($a_job[mediamosa_job_db::MEDIAFILE_ID]);
 
-    if ($a_job[mediamosa_job_db::CREATE_STILL] == $a_job[mediamosa_job_db::CREATE_STILL_TRUE]) {
+    if ($a_job[mediamosa_job_db::CREATE_STILL] == mediamosa_job_db::CREATE_STILL_TRUE) {
       $a_still_parameters = empty($a_job[mediamosa_job_db::STILL_PARAMETERS]) ? array() : unserialize($a_job[mediamosa_job_db::STILL_PARAMETERS]);
 
       mediamosa_job::create_job_still($a_job[mediamosa_job_db::APP_ID], $a_job[mediamosa_job_db::OWNER_ID], FALSE, $a_job[mediamosa_job_db::MEDIAFILE_ID], FALSE, $a_still_parameters);
