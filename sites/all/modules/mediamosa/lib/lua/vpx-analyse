@@ -172,7 +172,7 @@ function mime_type(filename)
             type, subtype = "video", "x-msvideo"
           elseif filetype == "Macromedia Flash Video" then
             type, subtype = "video", "x-flv"
-          elseif filetype == "video/mp4" then 
+          elseif filetype == "video/mp4" then
             type, subtype = "video", "mp4"
           end
         end
@@ -229,7 +229,7 @@ function find_best_streams(source_path, hash)
       ]]
       log_out("audio: detected stream: %s", stream)
       if codecs == nil then
-        add_error("The audio input stream uses an unknown codec")
+        --add_error("The audio input stream uses an unknown codec")
         codecs = {}
       end
       if audio_max_bitrate_stream == nil then
@@ -386,7 +386,7 @@ function analyse(source_path, hash, always_hint_mp4, always_insert_md)
       local stream, codecs, hertz, channels, sample_format, bitrate = lpeg.match(ln_audio, line)
       if stream == audio_stream then
         if codecs == nil then
-          add_error("The audio input stream uses an unknown codec")
+          --add_error("The audio input stream uses an unknown codec")
           codecs = {}
         else
           add_property("X-Audio-stream", line)
