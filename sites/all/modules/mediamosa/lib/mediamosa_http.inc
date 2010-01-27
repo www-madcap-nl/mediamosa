@@ -68,9 +68,6 @@ class mediamosa_http {
    * Triggers the URL without getting or waiting for the output.
    *
    * @param string $url
-   * @param $data
-   * @param $method
-   *  Method to use (POST, GET).
    * @param array $a_options
    *  Extra options;
    *   - header:
@@ -85,7 +82,7 @@ class mediamosa_http {
     $a_options += array(
       'use_curlproxy' => FALSE,
       'headers' => array(),
-      'do_internal' => FALSE,
+      'do_internal' => FALSE
     );
 
     $curlproxy_http = NULL;
@@ -130,6 +127,17 @@ class mediamosa_http {
 
     curl_exec($curl_handle);
     curl_close($curl_handle);
+  }
+
+  /**
+   * Wrapper for internal HEAD calls.
+   *
+   * @param $url
+   * @param $a_options
+   */
+  static public function do_head_call_internal($url, array $a_options = array()) {
+    $a_options['do_internal'] = true;
+    return self::do_head_call($url, $a_options);
   }
 
   /**
@@ -420,5 +428,18 @@ class mediamosa_http {
     }
 
     return $result;
+  }
+
+  /**
+   * Port uri to url.
+   * Simplefix, do think it will fix all possible problems.
+   */
+  static public function uri2url($uri) {
+    $uri = trim($uri);
+    if (substr($uri, 0, strlen('http://')) != 'http://') {
+      $uri = 'http://' . trim($uri, "/ \n\r\t\0");
+    }
+
+    return $uri;
   }
 }

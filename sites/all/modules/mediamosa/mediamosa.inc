@@ -329,11 +329,7 @@ class mediamosa {
     global $db_prefix;
 
     // If we are running an unit test, then enable REST calls.
-    if (preg_match('/simpletest\d+/', $db_prefix)) {
-      return TRUE;
-    }
-
-    return FALSE;
+    return (preg_match('/simpletest\d+/', $db_prefix) ? TRUE : FALSE);
   }
 
   /**
@@ -420,11 +416,29 @@ class mediamosa {
 
       // We'll use the drupal watchdog.
       watchdog('Mediamosa' . (!isset($type) ? '' : ' - ' . $type), $message, $variables, $severity);
+
+      // In simpletest? Then find the simpletest object and use it to output.
+      if (self::in_simpletest_sandbox()) {
+        global $mediamosa_simpletest;
+        if (isset($mediamosa_simpletest) && !$mediamosa_simpletest) {
+          $mediamosa_simpletest->pass('MediaMosa log: ' . strtr($message, $variables));
+        }
+      }
     }
 
     $logging = FALSE;
   }
 
+  /**
+   * Gives pretty log entries.
+   *
+   * @param any $data
+   * @param string $severity
+   * @param string $type
+   */
+  static public function log_export($data, $severity = WATCHDOG_NOTICE, $type = NULL) {
+    self::log(highlight_string('<?php ' . var_export($data, TRUE), TRUE), array(), $severity, $type);
+  }
   /**
    * Log an DB Query timing.
    *

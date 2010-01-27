@@ -64,18 +64,22 @@ class mediamosa_job_server {
   }
 
   /**
-   * Triggert every minute.
+   * Trigger every minute.
    *
    * Will timeout on itself after 2 minutes.
    *
    */
   static public function run_parse_queue() {
-    $run_last = variable_get('mediamosa_jobserver_cron_last', NULL);
+    $server_id = mediamosa_settings::get_server_id();
+
+    $run_last = variable_get('mediamosa_jobserver_cron_last_' . $server_id, NULL);
 
     // may run? (0 - 60 seconds)
     if (round(REQUEST_TIME - $run_last) < 60) {
       return; // Still running.
     }
+
+    variable_set('mediamosa_jobserver_cron_last_' . $server_id, REQUEST_TIME);
 
     // Log it.
     self::log_debug('Start parse queue job server');
@@ -570,6 +574,8 @@ class mediamosa_job_server {
         $a_options[] =  mediamosa_settings::ANALYSE_FILE_ALWAYS_INSERT_MD_OPTION;
       }
     }
+
+    assert(file_exists(mediamosa_settings::analyse_file()));
 
     $execution_string = sprintf('%s %s %s',
       mediamosa_settings::analyse_file(),

@@ -118,6 +118,9 @@ class mediamosa_asset_mediafile_metadata {
    */
   static public function parse_metadata($analyse_result) {
 
+    mediamosa::log_export($analyse_result);
+    exit;
+
     $a_metadata = mediamosa_lib::create_named_array($analyse_result, '\n', ': ');
 
     // MIME-type
@@ -140,25 +143,25 @@ class mediamosa_asset_mediafile_metadata {
     // Audio-codec
     $a_fields[mediamosa_asset_mediafile_metadata_db::AUDIO_CODEC] = isset($a_metadata['Audio-codec']) ? $a_metadata['Audio-codec'] : '';
 
-    // Audio-frequency
+    // Audio-frequency.
     $a_fields[mediamosa_asset_mediafile_metadata_db::SAMPLE_RATE] = isset($a_metadata['Audio-frequency']) ? $a_metadata['Audio-frequency'] : '';
 
-    // Audio-channels
+    // Audio-channels.
     $a_fields[mediamosa_asset_mediafile_metadata_db::CHANNELS] = isset($a_metadata['Audio-channels']) ? $a_metadata['Audio-channels'] : '';
 
-    // file-duration
+    // file-duration.
     $a_fields[mediamosa_asset_mediafile_metadata_db::FILE_DURATION] = isset($a_metadata['File-duration']) ? $a_metadata['File-duration'] : '';
 
-    // container
+    // container.
     $a_fields[mediamosa_asset_mediafile_metadata_db::CONTAINER_TYPE] = isset($a_metadata['File-type']) ? $a_metadata['File-type'] : '';
 
-    // file-bitrate
+    // file-bitrate.
     $a_fields[mediamosa_asset_mediafile_metadata_db::BITRATE] = isset($a_metadata['File-bitrate']) ? $a_metadata['File-bitrate'] : '';
 
-    // bpp
+    // bpp.
     $a_fields[mediamosa_asset_mediafile_metadata_db::BPP] = self::calculate_bpp($width, $height, $a_fields[mediamosa_asset_mediafile_metadata_db::FPS], $a_fields[mediamosa_asset_mediafile_metadata_db::BITRATE]);
 
-    // is hinted
+    // is hinted.
     $a_fields[mediamosa_asset_mediafile_metadata_db::IS_HINTED] = isset($a_metadata['Is-hinted']) ? $a_metadata['Is-hinted'] : 'no';
     $a_fields[mediamosa_asset_mediafile_metadata_db::IS_HINTED] = strcasecmp($a_fields[mediamosa_asset_mediafile_metadata_db::IS_HINTED], 'yes') == 0 ? 'TRUE' : 'FALSE';
 
@@ -238,6 +241,9 @@ class mediamosa_asset_mediafile_metadata {
     // Copy and remove.
     $ffmpeg_output = $a_fields['ffmpeg_output'];
     unset($a_fields['ffmpeg_output']);
+
+    // Enrich with created/changed.
+    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
 
     // Insert it.
     mediamosa_db::db_insert(mediamosa_asset_mediafile_metadata_db::TABLE_NAME)

@@ -30,28 +30,52 @@
  */
 
 /**
- * Trigger status page.
+ * Trigger the server REST CRONs based on the server settings.
+ *
  */
 function mediamosa_job_cron() {
 
   $start = time();
   mediamosa_debug::log_debug('mediamosa_job_cron started.', array(), 'job_cron');
 
-  // Just trigger, it has his own protection on overrun.
-  $hostname = variable_get('mediamosa_cron_uri_app', 'localhost');
-  $use_localhost = variable_get('mediamosa_cron_uri_app_local', FALSE);
+  // Get all enabled transcode servers (ON / CLOSE).
+  $a_servers = mediamosa_server::get_enabled_transcode();
+  $a_triggered = array();
+  foreach ($a_servers as $a_server) {
 
-  $a_options = array('do_internal' => TRUE, 'method' => 'HEAD');
-  if ($use_localhost) {
-    $a_options['headers']['Host'] = $hostname;
-    $hostname = 'localhost';
+    // Get URL.
+    $url = mediamosa_http::uri2url($a_server[mediamosa_server_db::URI]) . '/internal/cron/jobserver';
+
+    // Prevent multiple triggers if url is on more than one server.
+    if (in_array($url, $a_triggered)) {
+      continue;
+    }
+
+    // Mark triggered.
+    $a_triggered[] = $url;
+
+    // Log it.
+    mediamosa_debug::log_debug('Triggering job server @ @uri', array('@uri' => $url));
+
+    // Trigger.
+    mediamosa_http::do_head_call_internal($url);
   }
 
-  // Jobserver.
-  mediamosa_http::do_head_call('http://' . $hostname  . '/internal/cron/jobserver', $a_options);
+  // Now trigger the jobschedular.
+  $mediamosa_jobscheduler_uri = variable_get('mediamosa_jobscheduler_uri', NULL);
 
-  // Jobscheduler.
-  mediamosa_http::do_head_call('http://' . $hostname  . '/internal/cron/jobscheduler', $a_options);
+  if (isset($mediamosa_jobscheduler_uri)) {
+    $url = mediamosa_http::uri2url($mediamosa_jobscheduler_uri) . '/internal/cron/jobscheduler';
+
+    // Log it.
+    mediamosa_debug::log_debug('Triggering job scheduler @ @uri', array('@uri' => $url));
+
+    // Trigger.
+    mediamosa_http::do_head_call_internal($url);
+  }
+  else {
+    mediamosa::log('Jobschedular URL not set, please setup jobschedular server in the @link.', array('@link' => l('Mediamosa configuratiob', '/admin/mediamosa/config/global')), 'job_cron');
+  }
 
   // Log it.
   mediamosa_debug::log_debug('mediamosa_job_cron ended: @secs', array('@sec' => time() - $start), 'job_cron');

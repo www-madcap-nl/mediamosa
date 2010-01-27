@@ -134,12 +134,21 @@ class mediamosa_settings {
 
   // ------------------------------------------------------------------ Functions.
   /**
+   * Return the unique server ID.
+   */
+  static public function get_server_id() {
+    global $conf;
+
+    return $conf['mediamosa_installation_id'];
+  }
+
+  /**
    * returns the path where the lua scripts are.
    */
   static public function lua_base_get() {
     // LUA_BASE.
     $path = DRUPAL_ROOT . '/' . drupal_get_path('module', 'mediamosa');
-    return $path . '/lib/';
+    return $path . '/lib/lua/';
   }
 
   /**

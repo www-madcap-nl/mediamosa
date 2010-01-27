@@ -50,7 +50,6 @@ class MediaMosaAssetMediafileStillDownloadTestCase extends MediaMosaTestCase {
   }
 
   function setUp() {
-
     // Get the current mediamosa server content.
     $a_servers = mediamosa_server::search();
 
@@ -63,6 +62,7 @@ class MediaMosaAssetMediafileStillDownloadTestCase extends MediaMosaTestCase {
     // Truncate current and insert new.
     db_truncate(mediamosa_server_db::TABLE_NAME)->execute();
 
+    // Copy the current servers to sandbox.
     foreach ($a_servers as $a_server) {
       db_insert(mediamosa_server_db::TABLE_NAME)
         ->fields($a_server)

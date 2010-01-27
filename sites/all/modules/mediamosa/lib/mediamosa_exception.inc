@@ -52,23 +52,16 @@ class mediamosa_exception extends Exception {
       if ($severity >= MEDIAMOSA_EXCEPTION_SEVERITY_HIGH) {
         $log_serverity = WATCHDOG_CRITICAL;
       }
-/*
-      try {
-        $backtrace = $this->getTrace();
-        $backtrace = var_export(array_slice($backtrace, 0, 3), TRUE);
-      }
-      catch (Exception $e) {
-        assert($e);
-        $backtrace = FALSE;
-      }
-*/
+
+      $backtrace = $this->getTraceAsString();
+
       mediamosa::log(
         '@message (Exception thrown on line @line, in @file)<br />Partial backtrace: <pre>@backtrace</pre>',
         array(
           '@message' => $msg,
           '@line' => $this->getLine(),
           '@file' => $this->getFile(),
-     //     '@backtrace' => $backtrace === FALSE ? 'not available' : $backtrace,
+          '@backtrace' => $backtrace === FALSE ? 'not available' : $backtrace,
         ),
         $log_serverity
       );

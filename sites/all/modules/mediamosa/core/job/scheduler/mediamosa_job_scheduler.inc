@@ -63,7 +63,7 @@ class mediamosa_job_scheduler {
     mediamosa_debug::log_debug_high($message, $variables, 'job_scheduler');
   }
   /**
-   * Triggert every minute.
+   * Trigger every minute.
    *
    * Will timeout on itself after 2 minutes.
    *

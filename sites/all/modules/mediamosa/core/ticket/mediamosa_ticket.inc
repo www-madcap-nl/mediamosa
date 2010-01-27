@@ -417,20 +417,18 @@ class mediamosa_ticket {
    * @param string $ticket_type
    *  Matching ticket type.
    */
-  static public function get_valid($app_id, $ticket_id, $ticket_type) {
+  static public function get_valid($ticket_id, $ticket_type) {
 
     // Get the current time.
     $db_time_now = mediamosa::db_current_timestamp_now();
 
     // Do the query.
     return mediamosa_db::db_query(
-      'SELECT * FROM {#mediamosa_ticket} WHERE #ticket_id = :ticket_id AND #app_id = :app_id AND #ticket_type = :ticket_type AND #issued > DATE_SUB(:now, INTERVAL #expire_play SECOND)',
+      'SELECT * FROM {#mediamosa_ticket} WHERE #ticket_id = :ticket_id AND #ticket_type = :ticket_type AND #issued > DATE_SUB(:now, INTERVAL #expire_play SECOND)',
       array(
         '#mediamosa_ticket' => mediamosa_ticket_db::TABLE_NAME,
-        '#ticket_id' => mediamosa_ticket_db::TICKET_ID,
+        '#ticket_id' => mediamosa_ticket_db::ID,
         ':ticket_id' => $ticket_id,
-        '#app_id' => mediamosa_ticket_db::APP_ID,
-        ':app_id' => $app_id,
         '#ticket_type' => mediamosa_ticket_db::TICKET_TYPE,
         ':ticket_type' => $ticket_type,
         '#issued' => mediamosa_ticket_db::ISSUED,
@@ -445,8 +443,8 @@ class mediamosa_ticket {
    *
    * @param string $ticket_id
    */
-  static public function get_valid_upload($app_id, $ticket_id) {
-    return self::get_valid($app_id, $ticket_id, mediamosa_ticket_db::TICKET_TYPE_UPLOAD);
+  static public function get_valid_upload($ticket_id) {
+    return self::get_valid($ticket_id, mediamosa_ticket_db::TICKET_TYPE_UPLOAD);
   }
 
   /**
@@ -460,6 +458,6 @@ class mediamosa_ticket {
     // Delete it.
     mediamosa_db::db_delete(mediamosa_ticket_db::TABLE_NAME)
       ->condition(mediamosa_ticket_db::ID, $ticket_id)
-      ->exectute();
+      ->execute();
   }
 }

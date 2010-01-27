@@ -191,7 +191,7 @@ class mediamosa_job {
     // Insert it.
     $job_id_raw = mediamosa_db::db_insert(mediamosa_job_db::TABLE_NAME)
       ->fields($a_fields)
-      ->exectute();
+      ->execute();
 
     // Create a new transcode job.
     mediamosa_job_transcode::create(
@@ -365,7 +365,6 @@ class mediamosa_job {
       return 0;
     }
 
-
     // Get the asset ID.
     $asset_id = $a_mediafile[mediamosa_asset_mediafile_db::ASSET_ID];
 
@@ -376,9 +375,10 @@ class mediamosa_job {
       mediamosa_job_db::OWNER_ID => $user_id,
       mediamosa_job_db::APP_ID => $app_id,
       mediamosa_job_db::JOB_TYPE => $job_type,
-      mediamosa_job_db::CREATE_STILL => $create_still,
+      mediamosa_job_db::CREATE_STILL => $create_still ? mediamosa_job_db::CREATE_STILL_TRUE : mediamosa_job_db::CREATE_STILL_FALSE,
       mediamosa_job_db::STILL_PARAMETERS => serialize($a_still_parameters),
       mediamosa_job_db::NO_HINT => $no_hint,
+      mediamosa_job_db::PROGRESS => '0.000',
     );
 
     if (isset($priority)) {
@@ -415,7 +415,7 @@ class mediamosa_job {
     $uploaded_filesize = mediamosa_io::filesize($uploaded_filename);
 
     if ($uploaded_filesize != $a_job_ext_upload[mediamosa_job_upload_db::FILE_SIZE]) {
-      // Job failed
+      // Job failed.
       // @todo
       return;
     }
@@ -439,19 +439,25 @@ class mediamosa_job {
       mediamosa_asset_mediafile::delete_transcoded_unoriginal_mediafiles($a_job_ext_upload[mediamosa_job_db::ASSET_ID]);
     }
 
-    $a_fields = array(
-      mediamosa_asset_mediafile_metadata_db::FILESIZE => $uploaded_filesize,
-    );
+    // Lets try to get it so we know we either UPDATE or INSERT.
+    $a_mediafile_metadata = mediamosa_asset_mediafile_metadata::get_with_mediafileid($a_job_ext_upload[mediamosa_job_db::MEDIAFILE_ID]);
 
-    // Add changed.
-    $a_fields = mediamosa_db::db_update_enrich($a_fields);
+    // Exists, so we UPDATE.
+    if (!empty($a_mediafile_metadata)) {
+      $a_fields = array(
+        mediamosa_asset_mediafile_metadata_db::FILESIZE => $uploaded_filesize,
+      );
 
-    $affected_rows = mediamosa_db::db_update(mediamosa_asset_mediafile_metadata_db::TABLE_NAME)
-      ->fields($a_fields)
-      ->condition(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID, $a_job_ext_upload[mediamosa_job_db::MEDIAFILE_ID])
-      ->execute();
+      // Add changed.
+      $a_fields = mediamosa_db::db_update_enrich($a_fields);
 
-    if (!$affected_rows) {
+      $affected_rows = mediamosa_db::db_update(mediamosa_asset_mediafile_metadata_db::TABLE_NAME)
+        ->fields($a_fields)
+        ->condition(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID, $a_job_ext_upload[mediamosa_job_db::MEDIAFILE_ID])
+        ->execute();
+    }
+    else {
+      // INSERT.
       $a_fields = array(
         mediamosa_asset_mediafile_metadata_db::FILESIZE => $uploaded_filesize,
         mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID => $a_job_ext_upload[mediamosa_job_db::MEDIAFILE_ID],
@@ -463,7 +469,6 @@ class mediamosa_job {
       // Insert it anyway.
       mediamosa_db::db_insert(mediamosa_asset_mediafile_metadata_db::TABLE_NAME)
         ->fields($a_fields)
-        ->condition(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID, $a_job_ext_upload[mediamosa_job_db::MEDIAFILE_ID])
         ->execute();
     }
 
@@ -911,15 +916,17 @@ class mediamosa_job {
 
     // Get progress
     $progress = mediamosa_db::db_query(
-      'SELECT uploaded_file_size / file_size FROM {#mediamosa_job_upload} WHERE #job_id = :job_id',
+      'SELECT #uploaded_file_size / #file_size FROM {#mediamosa_job_upload} WHERE #job_id = :job_id',
       array(
+        '#uploaded_file_size' => mediamosa_job_upload_db::UPLOADED_FILE_SIZE,
+        '#file_size' => mediamosa_job_upload_db::FILE_SIZE,
         '#mediamosa_job_upload' => mediamosa_job_upload_db::TABLE_NAME,
         '#job_id' => mediamosa_job_upload_db::JOB_ID,
         ':job_id' => $job_id,
       )
-    )->execute()->fetchField();
+    )->fetchField();
 
-    // 1.xxx
+    // 1.xxx.
     $progress = number_format(floatval($progress), 3, '.', '');
 
     // FIXME: all rest calls with vpx_jobs_set_job_status are broken, still params not used~!

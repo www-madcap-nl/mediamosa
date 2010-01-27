@@ -392,7 +392,7 @@ class mediamosa_aut {
 
     // we do not allow inter ega changes
     if ($app_id != $object_app_id) {
-      throw new mediamosa_exception_error_access_denied(array("@reason" => "application not allowed"));
+      throw new mediamosa_exception_error_access_denied(array('@reason' => 'application not allowed'));
     }
 
     // Ega admin of current app_id ?
@@ -402,7 +402,7 @@ class mediamosa_aut {
 
     // basic check op owner rights : an owner has full access, the rest has none.
     if ($user_id != $user_id_owner) {
-      throw new mediamosa_exception_error_access_denied(array("@reason" => "user not allowed"));
+      throw new mediamosa_exception_error_access_denied(array('@reason' => 'user not allowed'));
     }
   }
 

@@ -2,7 +2,7 @@
 name = "MediaMosa 2"
 description = "Open source media management and distribution platform."
 package = "MediaMosa 2 - Core"
-version = "2.0.1.158:da97b4e2c82c"
+version = "2.0.1.160:cf8691f2fde1"
 core = 7.x
 
 ; Dependencies (module names)
@@ -265,3 +265,4 @@ files[] = core/user/favorite/mediamosa_user_favorite.install.inc
 
 ; Simpletest Slass.
 files[] = simpletest/mediamosa.simpletest.inc
+files[] = simpletest/mediamosa.simpletest.ega.inc

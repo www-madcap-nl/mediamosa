@@ -161,8 +161,10 @@ class mediamosa_user {
         '#quotum' => mediamosa_user_group_db::QUOTUM,
         '#group_id' => mediamosa_user_group_db::ID,
         ':group_id' => $group_id,
-        '#app_id' => mediamosa_app_db::ID,
+        '#app_id' => mediamosa_app_db::APP_ID,
         ':app_id' => $app_id,
+        '#name' => mediamosa_user_db::NAME,
+        ':user_id' => $user_id,
       )
     )->fetchAssoc();
   }
@@ -180,7 +182,7 @@ class mediamosa_user {
    */
   function get_diskspace($subject, $id, $app_id) {
     $mbytes = mediamosa_db::db_query(
-      'SELECT SUM(mfmd.#filesize) / 1048576 FROM {#mediamosa_asset_mediafile} mf
+      'SELECT SUM(mfmd.#filesize) / 1048576 FROM {#mediamosa_asset_mediafile} AS mf
        JOIN {#mediamosa_asset_mediafile_metadata} AS mfmd ON mfmd.#mediafile_id = mf.#mediafile_id
        WHERE mf.#subject_id = :id AND mf.#app_id = :app_id',
        array(
@@ -189,7 +191,7 @@ class mediamosa_user {
         '#filesize' => mediamosa_asset_mediafile_metadata_db::FILESIZE,
         '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
         '#app_id' => mediamosa_asset_mediafile_db::APP_ID,
-        '#subject_id' => $subject,
+        '#subject_id' => $subject . '_id',
         ':id' => $id,
         ':app_id' => $app_id
        )
@@ -218,19 +220,25 @@ class mediamosa_user {
     // Quota is reported in MB.
     $a_quota = self::get_quota($app_id, $user_id, $group_id);
 
-    foreach (array('app' => $app_id, 'group' => $group_id, 'owner' => $user_id) as $subject => $var) {
-      if ($var != '' && !is_null($var)) {
-        // Get the diskspace used of subject.
-        $a_diskspace_used = self::get_diskspace($subject, $var, $app_id);
+    if (!empty($a_quota)) {
+      foreach (array('app' => $app_id, 'group' => $group_id, 'owner' => $user_id) as $subject => $var) {
+        if ($var != '' && !is_null($var)) {
+          // Get the diskspace used of subject.
+          $a_diskspace_used = self::get_diskspace($subject, $var, $app_id);
 
-        $a_quota[$subject . '_used_mb'] = $a_diskspace_used['diskspace_used_mb'];
-        $a_quota[$subject . '_free_mb'] = $a_quota[$subject . '_quota_mb'] - $a_diskspace_used['diskspace_used_mb'];
+          $a_quota[$subject . '_used_mb'] = $a_diskspace_used['diskspace_used_mb'];
+          $a_quota[$subject . '_free_mb'] = $a_quota[$subject . '_quota_mb'] - $a_diskspace_used['diskspace_used_mb'];
 
-        // Unlimited quota ?
-        if ($a_quota[$subject .'_quota_mb'] != 0) {
-          !isset($a_quota['quota_available_mb']) ? $a_quota['quota_available_mb'] = $a_quota[$subject . '_free_mb'] : $a_quota['quota_available_mb'] = min($a_quota['quota_available_mb'], $a_quota[$subject . '_free_mb']);
+          // Unlimited quota ?
+          if ($a_quota[$subject . '_quota_mb'] != 0) {
+            !isset($a_quota['quota_available_mb']) ? $a_quota['quota_available_mb'] = $a_quota[$subject . '_free_mb'] : $a_quota['quota_available_mb'] = min($a_quota['quota_available_mb'], $a_quota[$subject . '_free_mb']);
+          }
         }
       }
+    }
+
+    if (!isset($a_quota['quota_available_mb'])) {
+      $a_quota['quota_available_mb'] = 0;
     }
 
     if ($return_free) {

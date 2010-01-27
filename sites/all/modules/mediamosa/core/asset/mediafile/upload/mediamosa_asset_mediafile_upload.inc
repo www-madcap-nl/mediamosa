@@ -31,6 +31,7 @@
 
 class mediamosa_asset_mediafile_upload {
 
+  // ------------------------------------------------------------------ Static Functions.
   /**
    * Log for asset_mediafile_uplaod.
    *
@@ -50,14 +51,20 @@ class mediamosa_asset_mediafile_upload {
    * 1.x: vpx_upload_handle_file
    *
    */
-  static public function handle_upload($app_id, $is_app_admin, $ticket_id, $is_method_put, array $a_trancode_profiles, $retranscode, $transcode_inherits_acl, $tag, $create_still, $a_still_parameters, $completed_url, $completed_transcoding_url, $filename_put) {
+  static public function handle_upload($ticket_id, $is_method_put, array $a_trancode_profiles, $retranscode, $transcode_inherits_acl, $tag, $create_still, $a_still_parameters, $completed_url, $completed_transcoding_url, $filename_put) {
+
+    // Set to false.
+    $is_app_admin = false;
 
     // Get the ticket.
-    $a_ticket = mediamosa_ticket::get_valid($app_id, $ticket_id);
+    $a_ticket = mediamosa_ticket::get_valid_upload($ticket_id);
 
     if (empty($a_ticket)) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INVALID_UPLOAD_TICKET);
     }
+
+    // Get the app id from the ticket.
+    $app_id = $a_ticket[mediamosa_ticket_db::APP_ID];
 
     // Remove ticket.
     mediamosa_ticket::delete($ticket_id);
@@ -85,6 +92,9 @@ class mediamosa_asset_mediafile_upload {
 
     // Build the filename.
     $filename = mediamosa_configuration_storage::mediafile_id_filename_get($a_ticket[mediamosa_ticket_db::MEDIAFILE_ID]);
+
+    // Create possible missing directories.
+    mediamosa_io::mkdir(mediamosa_io::dirname($filename));
 
     if ($is_method_put) {
       // PUT.
@@ -143,7 +153,7 @@ class mediamosa_asset_mediafile_upload {
     );
 
     // Update mediafile.
-    mediamosa_asset_mediafile::update($app_id, $a_ticket[mediamosa_ticket_db::MEDIAFILE_ID], $a_ticket[mediamosa_ticket_db::OWNER_ID], 'file', $a_fields);
+    mediamosa_asset_mediafile::update($app_id, $a_ticket[mediamosa_ticket_db::MEDIAFILE_ID], $a_ticket[mediamosa_ticket_db::OWNER_ID], $a_fields);
 
     // Update the job.
     mediamosa_job::update_progress_upload($job_id, $file_size);

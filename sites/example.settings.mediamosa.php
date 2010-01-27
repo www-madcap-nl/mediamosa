@@ -8,14 +8,6 @@ $databases['default']['default'] = array(
   'host' => 'localhost'
 );
 
-$databases['ftp']['default'] = array(
-  'driver' => 'mysql',
-  'database' => 'vpx_ftp',
-  'username' => 'ftp',
-  'password' => 'vpx',
-  'host' => 'localhost'
-);
-
 // Migration memo 1.0 databases;
 $databases['mig_memo']['default'] = array(
   'driver' => 'mysql',
@@ -73,26 +65,8 @@ $conf['mediamosa_app_download'] = TRUE;
 /**
  * Default setting, TRUE / FALSE for enabling / disabling the
  * CMS admin interface. You can turn on the admin with app interface
- * but remember that some url like /user conflicts between the CMS and
- * app interface.
+ * but remember that some url like /user conflicts with the drupal
+ * /user and the /user mediamosa.
  */
 $conf['mediamosa_admin'] = TRUE;
 
-/**
- * Default setting, TRUE / FALSE for enabling / disabling the
- * scheduling of the jobs. Only one installation should be enabled.
- */
-$conf['mediamosa_job_schedular'] = TRUE;
-
-/**
- * Default setting, TRUE / FALSE for enabling / disabling the
- * processing of the jobs. You can specifiy unlimited amount of
- * installation for job processing.
- */
-$conf['mediamosa_job_processor'] = TRUE;
-
-/**
- * Default setting, TRUE / FALSE for enabling / disabling the
- * MediaMosa background monitor.
- */
-$conf['mediamosa_monitor'] = TRUE;
