@@ -253,7 +253,7 @@ class mediamosa_ticket {
     }
 
     // Get the mediafile for ticket.
-    $mediafile_id = ($response_type == mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL && $still_id ? $still_id : isset($a_mediafile_ext['mediafile_id']) ? $a_mediafile_ext['mediafile_id'] : '');
+    $mediafile_id = ($response_type == mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL && $still_id ? $still_id : (isset($a_mediafile_ext['mediafile_id']) ? $a_mediafile_ext['mediafile_id'] : ''));
 
     // Insert Ticket.
     self::create($app_id, $ticket_type, $user_id, $mediafile_id, $ticket_id);

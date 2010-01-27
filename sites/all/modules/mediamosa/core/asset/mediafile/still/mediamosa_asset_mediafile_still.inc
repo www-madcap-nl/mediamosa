@@ -210,7 +210,7 @@ class mediamosa_asset_mediafile_still {
         ':still_default_true' => mediamosa_asset_mediafile_metadata_db::STILL_DEFAULT_TRUE,
         '#metadata_id' => mediamosa_asset_mediafile_metadata_db::ID
       )
-    )->execute()->fetchField();
+    )->fetchField();
 
     // Not found? Try any.
     if (!$still_id) {
@@ -233,7 +233,7 @@ class mediamosa_asset_mediafile_still {
           ':still_default_true' => mediamosa_asset_mediafile_metadata_db::STILL_DEFAULT_TRUE,
           '#metadata_id' => mediamosa_asset_mediafile_metadata_db::ID
         )
-      )->execute()->fetchField();
+      )->fetchField();
     }
 
     // controleer of de still in de database staat

@@ -70,7 +70,7 @@ class mediamosa_asset_mediafile_play_proxy {
     switch ($response_type) {
       case self::RESPONSE_TYPE_STILL:
         return mediamosa_db::db_query(
-          "SELECT #uri FROM {#mediamosa_server} WHERE #server_status = 1 AND #server_type = :server_type ORDER BY rand() LIMIT 1",
+          "SELECT #uri FROM {#mediamosa_server} WHERE #server_status = 'ON' AND #server_type = :server_type ORDER BY rand() LIMIT 1",
           array(
             '#uri' => mediamosa_server_db::URI,
             '#mediamosa_server' => mediamosa_server_db::TABLE_NAME,
@@ -82,7 +82,7 @@ class mediamosa_asset_mediafile_play_proxy {
 
       case self::RESPONSE_TYPE_DOWNLOAD:
         return mediamosa_db::db_query(
-          "SELECT #uri FROM {#mediamosa_server} WHERE #server_status = 1 AND #server_type = :server_type ORDER BY rand() LIMIT 1",
+          "SELECT #uri FROM {#mediamosa_server} WHERE #server_status = 'ON' AND #server_type = :server_type ORDER BY rand() LIMIT 1",
           array(
             '#uri' => mediamosa_server_db::URI,
             '#mediamosa_server' => mediamosa_server_db::TABLE_NAME,
@@ -228,7 +228,7 @@ class mediamosa_asset_mediafile_play_proxy {
    * @param integer $app_id
    */
   static public function create_response_still($ticket, $app_id) {
-    return self::create_response(self::RESPONSE_TYPE_STILL, $ticket, $app_id);
+    return self::create_response(self::RESPONSE_TYPE_STILL, $app_id, $ticket);
   }
 
   /**
