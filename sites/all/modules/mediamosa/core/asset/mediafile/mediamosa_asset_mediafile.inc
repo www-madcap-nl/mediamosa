@@ -435,10 +435,8 @@ class mediamosa_asset_mediafile {
 
     $execution_string .= (count($a_options) ? ' ' . implode(' ', $a_options) : '');
 
-    mediamosa::log('Analyse string: '. print_r($execution_string, TRUE));
-
     $a_output = array();
-    exec($execution_string . " 2>&1", $a_output);
+    mediamosa_io::exec($execution_string . " 2>&1", $a_output);
 
     return $a_output;
   }

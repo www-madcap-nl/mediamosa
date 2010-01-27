@@ -118,7 +118,7 @@ class mediamosa_asset_metadata {
         '#app_id' => mediamosa_asset_db::APP_ID,
         ':app_id' => $app_id,
       )
-    )->execute();
+    );
   }
 
   /**

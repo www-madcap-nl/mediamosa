@@ -413,7 +413,7 @@ abstract class mediamosa_rest_call {
 
     if (!$this->a_rest_args[$param][self::PARAM_VALIDATED]) {
       $a_param = $this->a_rest_args[$param];
-      $this->a_rest_args[$param][self::PARAM_VALUE] = mediamosa_type::check($param, $a_param[self::PARAM_TYPE], $a_param[self::PARAM_VALUE], $a_param[self::PARAM_IS_REQUIRED] == self::VAR_IS_REQUIRED_YES, $a_param[self::PARAM_RANGE_START], $a_param[self::PARAM_RANGE_END], isset($a_param[self::PARAM_ALLOWED_VALUES]) && count($a_param[self::PARAM_ALLOWED_VALUES]) ? $a_param[self::PARAM_ALLOWED_VALUES] : NULL);
+      $this->a_rest_args[$param][self::PARAM_VALUE] = mediamosa_type::check($param, $a_param[self::PARAM_TYPE], $a_param[self::PARAM_VALUE], $a_param[self::PARAM_IS_REQUIRED] == self::VAR_IS_REQUIRED_YES, isset($a_param[self::PARAM_RANGE_START]) ? $a_param[self::PARAM_RANGE_START] : NULL, isset($a_param[self::PARAM_RANGE_END]) ? $a_param[self::PARAM_RANGE_END] : NULL, isset($a_param[self::PARAM_ALLOWED_VALUES]) && count($a_param[self::PARAM_ALLOWED_VALUES]) ? $a_param[self::PARAM_ALLOWED_VALUES] : NULL);
       $this->a_rest_args[$param][self::PARAM_VALIDATED] = TRUE;
     }
 

@@ -72,10 +72,6 @@ class MediaMosaTestCase extends DrupalWebTestCase {
         mediamosa::variable_set($name, $value);
       }
     }
-
-    // Set our selfs global (for logger).
-    global $mediamosa_simpletest;
-    $mediamosa_simpletest = &$this;
   }
 
   /**
@@ -86,6 +82,13 @@ class MediaMosaTestCase extends DrupalWebTestCase {
    */
   protected function tearDown() {
     global $db_prefix;
+
+    // Dump the log.
+    $a_logs = db_query('SELECT * FROM {watchdog}');
+    $this->pass('Dumping contents of watchdog', 'watchdog dump');
+    foreach ($a_logs as $o_log) {
+      $this->pass(strtr($o_log->message, unserialize($o_log->variables)), 'watchdog dump');
+    }
 
     // keep it.
     $old_prefix = $db_prefix;
@@ -130,7 +133,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
    * @param mixed $data
    */
   protected function var_export($data, $group = 'Other') {
-    $this->pass(highlight_string('<?php ' . var_export($data, TRUE), TRUE));
+    $this->pass(highlight_string('<?php ' . var_export($data, TRUE), TRUE), $group);
   }
 
 

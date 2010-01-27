@@ -132,7 +132,7 @@ class mediamosa_asset_mediafile_upload {
       // Get complete job.
       $a_job_ext = mediamosa_job::get_job_ext($job_id);
 
-      // Change status to inprogress.
+      // Change status to failed.
       mediamosa_job::update_status($a_job_ext, mediamosa_job_db::JOB_STATUS_FAILED, '1.000');
 
       // Trigger URL.

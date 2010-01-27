@@ -119,7 +119,6 @@ class mediamosa_db {
     // Make sure {} are inside the query, this will prevent problems later.
     if (stripos($query, 'FROM') !== FALSE && stripos($query, ' found_rows()') !== FALSE) {
       if (strpos($query, '{') === FALSE || strpos($query, '}') === FALSE) {
-        mediamosa_debug::error_log($query);
         throw new mediamosa_exception_program_error('Missing {} your query; @query.', array('@query' => $query));
       }
     }

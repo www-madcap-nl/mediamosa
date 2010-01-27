@@ -88,8 +88,10 @@ class mediamosa_lib {
 
     $a_pairs = explode($pair_seperator, $string);
     foreach ($a_pairs as $pair) {
-      list($name, $value) = explode($name_value_seperator, $pair, 2);
-      $a_result[$name] = $value;
+      if (mediamosa_unicode::strpos($pair, $name_value_seperator) !== FALSE) {
+        list($name, $value) = explode($name_value_seperator, $pair, 2);
+        $a_result[$name] = $value;
+      }
     }
 
     return $a_result;

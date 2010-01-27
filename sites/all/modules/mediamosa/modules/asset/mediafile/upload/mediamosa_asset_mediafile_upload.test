@@ -60,7 +60,7 @@ class MediaMosaAssetMediafileUploadTestCaseEga extends MediaMosaTestCaseEga {
 
     $result = mediamosa_db::db_query('SELECT * FROM {mediamosa_ticket}');
     foreach ($result as $row) {
-      $this->var_export($row);
+      $this->var_export($row, 'Dump Ticket');
     }
 
     // Check ticket link etc.
@@ -88,11 +88,27 @@ class MediaMosaAssetMediafileUploadTestCaseEga extends MediaMosaTestCaseEga {
       $out = $new;
     }
 
-    // Verbose our upload.
-    $this->verbose('POST request to: ' . $action .
-                   '<hr />Ending URL: ' . $this->getUrl() .
-                   '<hr />Fields: ' . highlight_string('<?php ' . var_export($a_post, TRUE), TRUE) .
-                   '<hr />' . $out);
+    // Our upload.
+    $this->pass('POST request to: ' . $action .
+                '<hr />Ending URL: ' . $this->getUrl() .
+                '<hr />Fields: ' . highlight_string('<?php ' . var_export($a_post, TRUE), TRUE) .
+                '<hr />' . $out);
 
+    list($response, $data) = explode("\r\n\r\n", $out, 2);
+    $response = preg_split("/\r\n|\n|\r/", $response);
+
+    // Parse the response status line.
+    list($protocol, $code, $status_message) = explode(' ', trim(array_shift($response)), 3);
+
+    // Check 200 resonse.
+    $this->assertTrue($code == 200, 'Upload HTML response 200.');
+
+    // Get the upload job.
+    $a_job = mediamosa_job::get_by_mediafileid($mediafile_id);
+    $this->var_export($a_job, 'Dump Job');
+
+    // Other.
+    $a_job_upload = mediamosa_job_upload::get($a_job[mediamosa_job_db::ID]);
+    $this->var_export($a_job_upload, 'Dump Job Upload');
   }
 }
