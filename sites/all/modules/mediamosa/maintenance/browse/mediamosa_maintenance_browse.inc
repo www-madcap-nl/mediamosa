@@ -34,7 +34,7 @@
  * @param string $method
  *  The Method (POST/GET/PUT).
  * @param array $data
- *  Array name => value.
+ *  Array name => value. (POST / PUT Only)
  */
 function _mediamosa_restcall($uri, $method = 'GET', array $data = array()) {
   $options = array(

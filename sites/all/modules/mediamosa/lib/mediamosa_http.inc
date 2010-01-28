@@ -224,6 +224,10 @@ class mediamosa_http {
       'timeout' => 30,
     );
 
+    // Mediamosa specific;
+    // Data in option array should not be set with GET.
+    assert($options['method'] != 'GET' || ($options['method'] == 'GET' && (!isset($options['data']) || !mediamosa_unicode::strlen($options['data']) ) ));
+
     switch ($uri['scheme']) {
       case 'http':
         $port = isset($uri['port']) ? $uri['port'] : 80;
@@ -305,7 +309,6 @@ class mediamosa_http {
     }
     $request .= "\r\n" . $options['data'];
     $result->request = $request;
-
     fwrite($fp, $request);
 
     // Fetch response.

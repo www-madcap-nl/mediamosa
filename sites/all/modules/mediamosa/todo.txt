@@ -24,4 +24,9 @@
    Uninstall node tables. (nodes are not thrown away).
    File.inc mappen -> mediamosa_io (NCRV)
    Check all variables of REST update <-> create.
+   Removed the slave fix from asset search.
    
+   
+   2.2
+   Create a cron that runs all unittests each day.
+   Create a cron that cleans up all unittest garbage each day.

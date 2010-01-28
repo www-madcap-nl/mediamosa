@@ -166,8 +166,17 @@ class mediamosa_type {
 
       case self::TYPE_APP_ID:
         if ( (!is_int($mixed_param_value) && !ctype_digit($mixed_param_value))) {
+          mediamosa::log_export($checked_param_value, WATCHDOG_DEBUG,'debug');
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INVALID_APP_ID, array('@app_id' => $mixed_param_value));
         }
+
+        $checked_param_value = (int)$mixed_param_value;
+
+        // If required, then value must be > 0, if not required, then we allow >= 0.
+        if ($checked_param_value < 0) { // unsigned only
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
+        }
+        break;
 
       case self::TYPE_SERIAL:
         // Same as UINT, but when required the value must be > 0. When not required, the value must be >= 0.

@@ -502,7 +502,7 @@ class mediamosa_rest_call_update_mediafile extends mediamosa_rest_call {
         ),
         self::FILENAME => array(
           self::VAR_TYPE => mediamosa_type::TYPE_FILENAME,
-          self::VAR_DESCRIPTION => 'Mark mediafile as original.',
+          self::VAR_DESCRIPTION => 'Change the filename of the file.',
         ),
         self::URI => array(
           self::VAR_TYPE => mediamosa_type::TYPE_URI,

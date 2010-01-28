@@ -2,7 +2,7 @@
 
 2.0 main changes;
 
-- Made unicode UTF compatible.
+- Made unicode UTF8 compatible.
 - New REST interface build on throw and catch exception technology.
 - Complete rewrite of all database queries to match Drupal 7 new DB layer.
 - REST calls are now iterated by drupal hook making new external REST modules 

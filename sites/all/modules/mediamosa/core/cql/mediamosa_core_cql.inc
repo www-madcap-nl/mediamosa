@@ -1131,7 +1131,25 @@ class mediamosa_asset_cql_context extends mediamosa_core_cql_context {
                 MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'a',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_INT,
               ),
-
+              'app_id' => array(
+                MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'app_id',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_asset_db::TABLE_NAME,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'a',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_INT,
+              ),
+              mediamosa_asset_db::IS_EMPTY_ASSET => array(
+                MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => mediamosa_asset_db::IS_EMPTY_ASSET,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_asset_db::TABLE_NAME,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'a',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_STRING,
+              ),
+              mediamosa_asset_collection_db::COLL_ID => array(
+                MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => mediamosa_asset_collection_db::COLL_ID,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_asset_mediafile_db::TABLE_NAME,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'asset_coll',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_STRING,
+                MEDIAMOSA_CQL_CONTEXT_KEY_JOIN => 'ASSET_COLLECTION',// Trick to include the join of this table.
+              ),
             ),
           ),
           'mediamosa:aut' => array(

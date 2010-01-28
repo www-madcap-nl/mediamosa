@@ -216,10 +216,18 @@ abstract class mediamosa_rest_call {
     if ($this->is_external() && !($this->{self::ACCESS} & self::ACCESS_EXTERNAL)) {
       throw new mediamosa_exception_error_authentication_failure();
     }
+    // Check if we are internal and allowed.
+    elseif ($this->is_internal() && !($this->{self::ACCESS} & self::ACCESS_INTERNAL)) {
+      throw new mediamosa_exception_error_authentication_failure();
+    }
 
     // Do login / authorization, unless the call is an external.
-    if (!$this->is_internal() && (!($this->is_external() && ($this->{self::ACCESS} & self::ACCESS_EXTERNAL)))) {
-      $this->do_app_authorized();
+    $this->do_app_authorized();
+
+    // If we are internal and no app_id is set, we have access to all.
+    // Just to be sure the first app_id is 0, so single app_id code will return empty.
+    if ($this->is_internal() && !isset($_GET['app_id'])) {
+      $_GET['app_id'] = array(0) + array(mediamosa_app::get_all_apps(array(mediamosa_app_db::APP_ID), mediamosa_app_db::APP_ID));
     }
 
     // Get the var setup.
@@ -269,6 +277,11 @@ abstract class mediamosa_rest_call {
         $authorized = TRUE;
         break;
       }
+    }
+
+    // If we are internal or external, we dont care.
+    if ($this->is_internal() || $this->is_external()) {
+      return;
     }
 
     if (!$authorized) {

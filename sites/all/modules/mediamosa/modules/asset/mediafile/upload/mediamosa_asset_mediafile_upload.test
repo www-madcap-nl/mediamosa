@@ -110,5 +110,17 @@ class MediaMosaAssetMediafileUploadTestCaseEga extends MediaMosaTestCaseEga {
     // Other.
     $a_job_upload = mediamosa_job_upload::get($a_job[mediamosa_job_db::ID]);
     $this->var_export($a_job_upload, 'Dump Job Upload');
+
+    // Get the mediafile.
+    $a_mediafile = mediamosa_asset_mediafile::get($mediafile_id);
+
+    // Check if the file has been uploaded.
+    $this->assertTrue(file_exists(mediamosa_configuration_storage::mediafile_filename_get($a_mediafile)), 'File has been uploaded.');
+
+    // Delete uploaded file by deleting the mediafile.
+    mediamosa_asset_mediafile::delete($mediafile_id);
+
+    // Check if the file has been deleted.
+    $this->assertFalse(file_exists(mediamosa_configuration_storage::mediafile_filename_get($a_mediafile)), 'File has been deleted.');
   }
 }

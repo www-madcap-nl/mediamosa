@@ -415,7 +415,7 @@ class mediamosa {
       $logging = TRUE;
 
       // We'll use the drupal watchdog.
-      watchdog('Mediamosa' . (!isset($type) ? '' : ' - ' . $type), $message, $variables, $severity);
+      watchdog('MediaMosa' . (!isset($type) ? '' : ' - ' . $type), $message, $variables, $severity);
     }
 
     $logging = FALSE;
@@ -429,7 +429,7 @@ class mediamosa {
    * @param string $type
    */
   static public function log_export($data, $severity = WATCHDOG_NOTICE, $type = NULL) {
-    self::log(highlight_string('<?php ' . var_export($data, TRUE), TRUE), array(), $severity, $type);
+    self::log(highlight_string(var_export($data, TRUE), TRUE), array(), $severity, $type);
   }
   /**
    * Log an DB Query timing.

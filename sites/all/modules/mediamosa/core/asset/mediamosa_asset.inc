@@ -420,7 +420,10 @@ class mediamosa_asset {
     $a_query[mediamosa_db_query::A_JOIN]['apd'] = "LEFT JOIN {mediamosa_asset_metadata_property} AS apd ON ap.prop_id = apd.prop_id";
     $a_query[mediamosa_db_query::A_JOIN]['apg'] = "LEFT JOIN {mediamosa_asset_metadata_property_group} AS apg ON apd.propgroup_id = apg.propgroup_id";
 
-    $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['ap'][mediamosa_db_query::WHERE_OR]['prop_id'][] = sprintf('apd.prop_id IN(%s)', implode(',', $a_prop_ids));
+    if (count($a_prop_ids)) {
+      $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['ap'][mediamosa_db_query::WHERE_OR]['prop_id'][] = sprintf('apd.prop_id IN(%s)', implode(',', $a_prop_ids));
+    }
+
     $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['ap'][mediamosa_db_query::WHERE_OR]['prop_id'][] = "apd.prop_id IS NULL"; // in case it doesn't have properties
     $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['a'][] = sprintf("a.asset_id IN ('%s')", $s_ids);
 
@@ -597,7 +600,7 @@ class mediamosa_asset {
         }
         else {
           foreach ($a_app_ids as $a_app_id) {
-            if ($a_items['app_info'][$a_app_id]['view_asset_url']) {
+            if (isset($a_items['app_info'][$a_app_id]) && $a_items['app_info'][$a_app_id]['view_asset_url']) {
               $a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]]['ega_view_url'][] = preg_replace('/{asset_id}/i', $a_asset[mediamosa_asset_db::ID], $a_items['app_info'][$a_app_id]['view_asset_url']);
             }
           }

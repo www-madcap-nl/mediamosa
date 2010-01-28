@@ -74,6 +74,7 @@ class mediamosa_rest {
     if ($a_request_uri[0] == 'internal' || $a_request_uri[0] == 'external') {
       unset($a_request_uri[0]);
       $request_uri = implode('/', $a_request_uri);
+      $a_request_uri = explode('/', $request_uri);
     }
 
     $a_rest_call_return = FALSE;

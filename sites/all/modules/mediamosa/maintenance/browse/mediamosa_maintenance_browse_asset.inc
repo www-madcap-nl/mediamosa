@@ -66,10 +66,12 @@ function mediamosa_maintenance_browse_asset_details($asset_id) {
   ) as $subject => $title) {
     // Construct the table rows
     $rows = array();
-    foreach ($asset[$subject] as $key => $value) {
-      if (trim($value) != '') {
-        $value = (valid_url($value, TRUE)) ? l($value, $value) : check_plain($value);
-        $rows[] = array(_mediamosa_maintenance_browse_clean_string($key), $value);
+    if (isset($asset[$subject])) {
+      foreach ($asset[$subject] as $key => $value) {
+        if (trim($value) != '') {
+          $value = (valid_url($value, TRUE)) ? l($value, $value) : check_plain($value);
+          $rows[] = array(_mediamosa_maintenance_browse_clean_string($key), $value);
+        }
       }
     }
 
@@ -295,7 +297,7 @@ function mediamosa_maintenance_browse_asset_form() {
   $filter_max = variable_get('mediamosa_maintenance_browse_filter_max', 25);
 
   // Load and set all javascript related items
-  drupal_add_js(drupal_get_path('module', 'mediamosa_maintenance_browse') . '/mediamosa_maintenancebrowse.js');
+  drupal_add_js(drupal_get_path('module', 'mediamosa_maintenance_browse') . '/mediamosa_maintenance_browse.js');
   drupal_add_js(
     array(
       'mediamosa_maintenance_browse' => array(

@@ -84,7 +84,7 @@ class mediamosa_asset_mediafile {
 
     // Delete from SAN/NAS.
     $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
-    $query->fields('mf', array(mediamosa_asset_mediafile_db::APP_ID, mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT));
+    $query->fields('mf', array(mediamosa_asset_mediafile_db::APP_ID, mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT, mediamosa_asset_mediafile_db::ID));
     $query->condition(mediamosa_asset_mediafile_db::ID, $a_mediafile_ids, 'IN');
 
     // Now delete the file of each found mediafile.

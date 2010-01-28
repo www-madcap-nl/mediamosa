@@ -100,10 +100,15 @@
    * Run the tests one by one.
    */
   static public function run_simple_tests() {
+    mediamosa_debug::log_debug('run_simple_tests() started.');
+
     // Prevent us running twice and make sure we are enabled.
     if (!self::may_run()) {
+      mediamosa_debug::log_debug('run_simple_tests() not yet.');
       return;
     }
+
+    mediamosa_debug::log_debug('run_simple_tests() running.');
 
     // Set time when we started, so we aren't twice.
     mediamosa::variable_set('mediamosa_maintenance_status_cron_last', REQUEST_TIME);
@@ -179,6 +184,7 @@
     mediamosa::variable_set('mediamosa_test_results', $a_test_results);
 
     // Done.
+    mediamosa_debug::log_debug('run_simple_tests() ended.');
   }
 
   /**

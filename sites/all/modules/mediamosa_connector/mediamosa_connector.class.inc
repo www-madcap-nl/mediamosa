@@ -138,6 +138,7 @@ class mediamosa_connector {
    *       A string containing the request body.
    *       Or
    *       A array as name => value.
+   *       Note: only for POST and PUT calls.
    *   - max_redirects
    *       An integer representing how many times a redirect may be followed.
    *       Defaults to 1.
@@ -261,6 +262,7 @@ class mediamosa_connector {
    *       A string containing the request body.
    *       Or
    *       A array as name => value.
+   *       Note: The request body is only used on POST and PUT calls.
    *   - max_redirects
    *       An integer representing how many times a redirect may be followed.
    *       Defaults to 1.
@@ -290,30 +292,6 @@ class mediamosa_connector {
     // If we are internal calling, then we need to add the internal password so we have always access.
     if ($is_internal) {
       $options['headers'][mediamosa_settings::X_MEDIAMOSA_INTERNAL_PASS] = mediamosa::get_internal_password();
-/*
-      if ($options['method'] == 'GET') {
-        $pos = mediamosa_unicode::strpos($uri, '?');
-        if ($pos !== FALSE) {
-          $query_string = substr($uri, $pos+1);
-          $a_
-        }
-      }
-      else {
-        // If app_id is not provided, then we get all app_ids and add them to the request. Then we are
-        // sure we have access to all apps. Remember that the first app_id in the list is mostly used.
-        if (!isset($options['data']['app_id'])) {
-          $options['data']['app_id'] = mediamosa_app::get_all_apps(array(mediamosa_app_db::APP_ID), mediamosa_app_db::APP_ID, 'ASC')->fetchCol();
-        }
-
-        // We are always is_app_admin, unless already specified.
-        if (!isset($options['data']['is_app_admin'])) {
-          $options['data']['is_app_admin'] = 'true';
-        }
-      }*/
-    }
-
-    if ($options['method'] == 'POST') {
-      $options['headers']['Content-Type'] = 'application/x-www-form-urlencoded';
     }
 
     $data_log = '';
@@ -329,6 +307,40 @@ class mediamosa_connector {
 
     $url = $this->url;
     $url .= (drupal_substr($url, -1, 1) == '/' ? '' : '/'); // Make sure it ends with '/'.
+
+    switch ($options['method']) {
+      case 'GET':
+        // Method GET does not allow data body, put the urlencode after the uri.
+        $query_string_pos = strpos($uri, '?');
+        $query_string = array();
+        if ($query_string_pos !== FALSE) {
+          $query_string[] = substr($uri, $query_string_pos + 1);
+
+          // Strip it.
+          $uri = substr($uri, 0, $query_string_pos);
+        }
+
+        // If data is set, then add it to the query string.
+        if (isset($options['data']) && $options['data'] != '') {
+          $query_string[] = $options['data'];
+        }
+
+        // Quick fix for now.
+        unset($options['data']);
+
+        // Now add to uri (if any).
+        if (count($query_string)) {
+          $uri .= '?' . implode('&', $query_string);
+        }
+        break;
+
+      case 'POST':
+        // POST needs data as www-form-urlencoded.
+        $options['headers']['Content-Type'] = 'application/x-www-form-urlencoded';
+        break;
+    }
+
+    // Add clean uri.
     $url .= $uri;
 
     $start = microtime(TRUE);

@@ -14,9 +14,9 @@ Steps for changelog and commits;
   - [other changes other tickets]
 
 
-3. Do one ticket per commit. If for some reason you have multiple changes on multiple tickets then
-   checkin on specific files per commit (use hg ci [files]). Its not allowed to commit multiple tickets in
-   on commit.
+3. Do one ticket per commit. If for some reason you have multiple changes on 
+   multiple tickets then checkin on specific files per commit (use hg ci 
+   [files]). Its not allowed to commit multiple tickets in one commit.
    
    Commit example;
   - Added coll_id search to CQL. (See MediaMosa ticket #24).
@@ -26,10 +26,45 @@ Steps for changelog and commits;
 5. Put status on ready for review. 
 
 
-
- 
-
-
-
-
 START CHANGELOG:
+
+Mediamosa 2.1.0
+---------------
+- Added support CQL for is_empty_asset (See MediaMosa ticket #180).
+
+Mediamosa 2.0.1
+---------------
+- Added coll_id search to CQL. (See MediaMosa ticket #).
+- Added app_id search to CQL. (See MediaMosa ticket #).
+
+Mediamosa 2.0.0
+---------------
+- Port to drupal 7.
+- Complete redesign and renaming of v1.x source code. All code has been moved 
+  into (static) classes to support auto loading of classes in Drupal 7.
+- New REST interface, class based.
+- All medimosa code now support throw and catching of exceptions at high level, 
+  enabling better error handling.
+- Rewrite of all 1361 SQL queries into new PDO class support of Drupal 7. 
+  Mediamosa now has own new DB layer between Drupal and Mediamosa code for 
+  future expansion.
+- REST calls are now moved from core code into drupal modules, also REST calls 
+  no longer contain core code and only call core functions, seprating core code 
+  from REST interface.
+- Mediamosa 1 multiple database design combined and migrated to new single 
+  Drupal database called mediamosa2. No longer required to switch databases in 
+  code.
+- Jobserver database(s) design moved into single main mediamosa2 database. No 
+  more multiple database required for multiple jobserver installations.
+- Internal REST calls IP white listing removed, replaced with internal 
+  authentication. Removed settings for old white listing from maintenance.
+- New REST calls for browsing in the REST calls and retrieving specific 
+  information about a single REST parameters and documentation. URL; /rest and 
+  rest/[rest_id].
+- Usage of new Drupal 7 Simpletest library; unittests are now sandboxed from 
+  normal database.
+- Internal calls now have access to all apps when app_id was not provided.
+- GET / POST / URI variables now share the same scope.
+- Redesign of the SAN/NAS globals/paths into static class 'storage'.
+
+

@@ -250,9 +250,8 @@ function mediamosa_migration_install() {
   _mediamosa_migration_mediafile_metadata();
 
   // assetprop_group -> mediamosa_asset_metadata_property_group.
-  _mediamosa_migration_asset_metadata_property_group();
-
   // assetprop_definition -> mediamosa_asset_metadata_property.
+  _mediamosa_migration_asset_metadata_property_group();
   _mediamosa_migration_asset_metadata_property();
 
   // asset_property -> mediamosa_asset_metadata.
@@ -822,6 +821,10 @@ function _mediamosa_migration_asset_metadata_property_group() {
   // Turn off problems with empty dates.
   db_query("SET SESSION sql_mode = 'ALLOW_INVALID_DATES'");
 
+  // Must be empty.
+  db_truncate('mediamosa_asset_metadata_property')->execute();
+  db_truncate('mediamosa_asset_metadata_property_group')->execute();
+
   // The mediamosa_asset_mediafile table should be empty (its checked as requirement).
   /**
    * Copy from 1.x to 2.x
@@ -874,7 +877,9 @@ function _mediamosa_migration_asset_metadata_property() {
   // Turn off problems with empty dates.
   db_query("SET SESSION sql_mode = 'ALLOW_INVALID_DATES'");
 
-  // The mediamosa_asset_mediafile table should be empty (its checked as requirement).
+  // Must be empty.
+  db_truncate('mediamosa_asset_metadata_property')->execute();
+
   /**
    * Copy from 1.x to 2.x
    * Columns dropped;

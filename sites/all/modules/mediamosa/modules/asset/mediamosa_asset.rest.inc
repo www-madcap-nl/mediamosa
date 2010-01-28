@@ -727,7 +727,7 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
   public function do_call() {
     $o_mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value_app();;
+    $a_app_ids = $this->get_param_value_app();
     $app_id = reset($a_app_ids);
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
 
@@ -759,7 +759,7 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
     // Check un/inappropriate flag.
     mediamosa_asset::is_unappropriate($asset_id, $a_app_ids, $aut_user_id, $is_app_admin);
 
-    // Collect
+    // Collect.
     $a_items = mediamosa_asset::asset_collect(
       array($asset_id),
       $a_app_ids,
@@ -923,7 +923,7 @@ class mediamosa_rest_call_asset_create extends mediamosa_rest_call {
         ),
         self::PARENT_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_ALPHA_NUM,
-          self::VAR_DESCRIPTION => 'The parent ID (depricated).',
+          self::VAR_DESCRIPTION => 'The parent ID. Is depricated, do not supply, value will be ignored.',
           self::VAR_IS_INTERNAL_ONLY => self::VAR_IS_INTERNAL_ONLY_YES,
         ),
       )
@@ -945,7 +945,8 @@ class mediamosa_rest_call_asset_create extends mediamosa_rest_call {
     $group_id = $this->get_param_value(self::GROUP_ID);
     $reference_id = $this->get_param_value(self::REFERENCE_ID);
     $provider_id = $this->get_param_value(self::PROVIDER_ID);
-    $parent_id = $this->get_param_value(self::PARENT_ID);
+    assert($this->get_param_value(self::PARENT_ID) == NULL); // Not allowed anymore.
+    $parent_id = NULL; // $this->get_param_value(self::PARENT_ID);
 
     // Test webservice.
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $a_app_ids);
