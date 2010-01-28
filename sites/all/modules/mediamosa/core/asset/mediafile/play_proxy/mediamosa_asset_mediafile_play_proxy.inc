@@ -449,7 +449,7 @@ class mediamosa_asset_mediafile_play_proxy {
           'HEIGHT_PLUS_20' => $height > 0 ? $height + 20 : '',
           'MEDIAFILE_ID' => $a_mediafile_ext['mediafile_id'],
           'TICKET_URI' => $streaming_server_ticket_uri,
-          'STILL_URI' => $a_asset_metadata['vpx_still_url'],
+          'STILL_URI' => isset($a_asset_metadata['vpx_still_url']) ? $a_asset_metadata['vpx_still_url'] : '',
           'AUTOPLAY' => $autostart ? 'true' : 'false',
           'AUTOPLAY_NUM' => $autostart ? '1' : '0',
           'AUTOPLAY_TEXT' => $autostart ? 'autoplay' : '',
