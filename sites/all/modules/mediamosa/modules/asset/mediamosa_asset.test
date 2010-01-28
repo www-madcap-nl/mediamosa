@@ -26,6 +26,46 @@
 
  /**
   * @file
-  *
+  * Asset tests.
   */
 
+/**
+  * @file
+  * Unittests for assets.
+  */
+class MediaMosaAssetTestCaseEga extends MediaMosaTestCaseEga {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'Asset test',
+      'description' => 'Testing the asset calls.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE,
+    );
+  }
+
+  // ------------------------------------------------------------------ Tests.
+
+  /*
+   * Testing is_empty_asset issues
+   */
+  function testAssetIsEmptyAsset() {
+
+    // Create an asset.
+    $asset_id = $this->createAsset();
+
+    // Create mediafile.
+    $mediafile_id = $this->createMediafile($asset_id);
+
+    // Create uploadticket
+    $mediafile_id = $this->createMediafileUploadTicket($mediafile_id);
+
+    // Get the asset
+    $asset = $this->getAsset($asset_id);
+
+    //TODO: Finish
+
+  }
+}
