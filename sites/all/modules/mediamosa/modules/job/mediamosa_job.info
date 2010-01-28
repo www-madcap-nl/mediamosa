@@ -12,6 +12,7 @@ dependencies[] = mediamosa
 ; Used files.
 files[] = mediamosa_job.module
 files[] = mediamosa_job.rest.inc
+files[] = mediamosa_job.test
 
 ; Job Server.
 files[] = server/mediamosa_job_server.rest.inc

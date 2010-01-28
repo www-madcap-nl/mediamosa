@@ -2,8 +2,8 @@
 // $Id$
 
 /**
- * MediaMosa is a Full Featured, Webservice Oriented Media Management and
- * Distribution platform (http://www.vpcore.nl)
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
+ * Distribution platform (http://mediamosa.org)
  *
  * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
@@ -70,7 +70,7 @@ class mediamosa_asset_mediafile_play_proxy {
     switch ($response_type) {
       case self::RESPONSE_TYPE_STILL:
         return mediamosa_db::db_query(
-          "SELECT #uri FROM {#mediamosa_server} WHERE #server_status = 1 AND #server_type = :server_type ORDER BY rand() LIMIT 1",
+          "SELECT #uri FROM {#mediamosa_server} WHERE #server_status = 'ON' AND #server_type = :server_type ORDER BY rand() LIMIT 1",
           array(
             '#uri' => mediamosa_server_db::URI,
             '#mediamosa_server' => mediamosa_server_db::TABLE_NAME,
@@ -82,7 +82,7 @@ class mediamosa_asset_mediafile_play_proxy {
 
       case self::RESPONSE_TYPE_DOWNLOAD:
         return mediamosa_db::db_query(
-          "SELECT #uri FROM {#mediamosa_server} WHERE #server_status = 1 AND #server_type = :server_type ORDER BY rand() LIMIT 1",
+          "SELECT #uri FROM {#mediamosa_server} WHERE #server_status = 'ON' AND #server_type = :server_type ORDER BY rand() LIMIT 1",
           array(
             '#uri' => mediamosa_server_db::URI,
             '#mediamosa_server' => mediamosa_server_db::TABLE_NAME,
@@ -228,7 +228,7 @@ class mediamosa_asset_mediafile_play_proxy {
    * @param integer $app_id
    */
   static public function create_response_still($ticket, $app_id) {
-    return self::create_response(self::RESPONSE_TYPE_STILL, $ticket, $app_id);
+    return self::create_response(self::RESPONSE_TYPE_STILL, $app_id, $ticket);
   }
 
   /**
@@ -449,6 +449,7 @@ class mediamosa_asset_mediafile_play_proxy {
           'HEIGHT_PLUS_20' => $height > 0 ? $height + 20 : '',
           'MEDIAFILE_ID' => $a_mediafile_ext['mediafile_id'],
           'TICKET_URI' => $streaming_server_ticket_uri,
+          'STILL_URI' => isset($a_asset_metadata['vpx_still_url']) ? $a_asset_metadata['vpx_still_url'] : '',
           'AUTOPLAY' => $autostart ? 'true' : 'false',
           'AUTOPLAY_NUM' => $autostart ? '1' : '0',
           'AUTOPLAY_TEXT' => $autostart ? 'autoplay' : '',

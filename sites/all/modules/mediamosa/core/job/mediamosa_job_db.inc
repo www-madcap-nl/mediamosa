@@ -2,8 +2,8 @@
 // $Id$
 
 /**
- * MediaMosa is a Full Featured, Webservice Oriented Media Management and
- * Distribution platform (http://www.vpcore.nl)
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
+ * Distribution platform (http://mediamosa.org)
  *
  * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
@@ -68,4 +68,7 @@ class mediamosa_job_db {
   const CREATE_STILL_TRUE = 'TRUE';
   const CREATE_STILL_FALSE = 'FALSE';
   const STILL_PARAMETERS = 'still_parameters';
+  const NO_HINT = 'create_still';
+  const NO_HINT_TRUE = 'TRUE';
+  const NO_HINT_FALSE = 'FALSE';
 }

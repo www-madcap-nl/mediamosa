@@ -2,8 +2,8 @@
 // $Id$
 
 /**
- * MediaMosa is a Full Featured, Webservice Oriented Media Management and
- * Distribution platform (http://www.vpcore.nl)
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
+ * Distribution platform (http://mediamosa.org)
  *
  * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
@@ -130,7 +130,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   }
 
 
-    /**
+  /**
    * Create an mediafile (using /mediafile/create).
    *
    * @param string $asset_id
@@ -190,4 +190,70 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     // Return data.
     return array('action' => $response['xml']->items->item[0]->action, 'uploadprogress_url' => $response['xml']->items->item[0]->uploadprogress_url);
   }
+
+  /**
+   * Update mediafile (using /mediafile/{id}).
+   *
+   * @param string $mediafile_id
+   * @param string $user_id
+   * @param array $a_parameters
+   */
+  protected function updateMediafile($mediafile_id, $user_id = self::SIMPLETEST_USER_ID, array $a_parameters = array()) {
+    // Parameters asset.
+    $a_parameters += array(
+      mediamosa_rest_call_create_mediafile::IS_APP_ADMIN => 'false',
+      mediamosa_rest_call_create_mediafile::IS_DOWNLOADABLE => 'false',
+    );
+
+    // Required.
+    $a_parameters[mediamosa_rest_call_create_mediafile::MEDIAFILE_ID] = $mediafile_id;
+    $a_parameters[mediamosa_rest_call_create_mediafile::USER_ID] = $user_id;
+
+    // Do not set the app ID, handle by us.
+    $this->assertFalse(isset($a_parameters[mediamosa_rest_call_asset_create::APP_ID]));
+
+    $uri = strtr('mediafile/@mediafile_id', array('@mediafile_id' => $mediafile_id));
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $a_parameters);
+
+    $this->pass(strtr("Update mediafile with ID '@id'.", array('@id' => $mediafile_id)));
+
+    // Return.
+    return;
+  }
+
+  /**
+   * Get an asset.
+   *
+   * @param string $asset_id
+   * @param string $user_id
+   * @param array $a_parameters
+   */
+  protected function getAsset($asset_id, $user_id = self::SIMPLETEST_USER_ID, array $a_parameters = array()) {
+    // Parameters asset.
+    $a_parameters += array(
+      mediamosa_rest_call_asset_create::IS_APP_ADMIN => 'false',
+      mediamosa_rest_call_asset_create::GROUP_ID => '',
+    );
+
+    // Required.
+    $a_parameters[mediamosa_rest_call_asset_create::USER_ID] = $user_id;
+
+    // Do not set the app ID, handle by us.
+    $this->assertFalse(isset($a_parameters[mediamosa_rest_call_asset_create::APP_ID]));
+
+    $uri = strtr('asset/@asset_id', array('@asset_id' => $asset_id));
+
+    // Do Post call.
+    $response = $this->restCallGet($uri, $a_parameters);
+
+    $this->pass(strtr("Gets the asset: @asset_id'.", array('@asset_id' => $asset_id)));
+
+    $this->var_export($response);
+
+    // Return data.
+    return $response;
+  }
+
 }

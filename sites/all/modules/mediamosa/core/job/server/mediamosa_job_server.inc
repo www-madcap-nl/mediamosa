@@ -2,8 +2,8 @@
 // $Id$
 
 /**
- * MediaMosa is a Full Featured, Webservice Oriented Media Management and
- * Distribution platform (http://www.vpcore.nl)
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
+ * Distribution platform (http://mediamosa.org)
  *
  * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
@@ -271,11 +271,14 @@ class mediamosa_job_server {
     self::set_job_status($job_id, mediamosa_job_server_db::JOB_STATUS_INPROGRESS, '0.000');
 
     // Check if source mediafile exists.
+    // but first do a clear cache.
+    clearstatcache();
     $filename = mediamosa_configuration_storage::mediafile_id_filename_get($mediafile_id_src);
     if (!file_exists($filename)) {
       $link_asset = self::get_asset_link($job_id);
-      self::log("File '@file' not found,<br /><br/>@link", array('@file' => $filename, '@link' => $link_asset));
+      self::log("s: $job_id File '@file' not found,<br /><br/>@link", array('@file' => $filename, '@link' => $link_asset));
       self::set_job_status($job_id, mediamosa_job_server_db::JOB_STATUS_FAILED, '1.000', 'File not found (@file)', array('@file' => $filename));
+      self::log("s: $job_id, memory_get_peak_usage = " . memory_get_peak_usage() . " memory_usage: " . memory_get_usage());
       return;
     }
 
@@ -555,18 +558,21 @@ class mediamosa_job_server {
     // Get the job.
     $a_app = mediamosa_job::get($job_id, array(mediamosa_job_db::APP_ID));
     $app_id = $a_app[mediamosa_app_db::APP_ID];
+    $no_hint = $a_app[mediamosa_app_db::NO_HINT];
 
     // Get the app.
     $a_mediamosa_app = mediamosa_app::get_by_appid($app_id, array(mediamosa_app_db::ALWAYS_HINT_MP4, mediamosa_app_db::ALWAYS_INSERT_MD));
 
     $a_options = array();
 
-    if ($a_mediamosa_app[mediamosa_app_db::ALWAYS_HINT_MP4] == mediamosa_app_db::ALWAYS_HINT_MP4_TRUE) {
-      $a_options[] =  mediamosa_settings::ANALYSE_FILE_ALWAYS_HINT_MP4_OPTION;
-    }
+    if (!$no_hint) {
+      if ($a_mediamosa_app[mediamosa_app_db::ALWAYS_HINT_MP4] == mediamosa_app_db::ALWAYS_HINT_MP4_TRUE) {
+        $a_options[] =  mediamosa_settings::ANALYSE_FILE_ALWAYS_HINT_MP4_OPTION;
+      }
 
-    if ($a_mediamosa_app[mediamosa_app_db::ALWAYS_INSERT_MD] == mediamosa_app_db::ALWAYS_INSERT_MD_TRUE) {
-      $a_options[] =  mediamosa_settings::ANALYSE_FILE_ALWAYS_INSERT_MD_OPTION;
+      if ($a_mediamosa_app[mediamosa_app_db::ALWAYS_INSERT_MD] == mediamosa_app_db::ALWAYS_INSERT_MD_TRUE) {
+        $a_options[] =  mediamosa_settings::ANALYSE_FILE_ALWAYS_INSERT_MD_OPTION;
+      }
     }
 
     assert(file_exists(mediamosa_settings::analyse_file()));

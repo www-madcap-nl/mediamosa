@@ -2,8 +2,8 @@
 // $Id$
 
 /**
- * MediaMosa is a Full Featured, Webservice Oriented Media Management and
- * Distribution platform (http://www.vpcore.nl)
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
+ * Distribution platform (http://mediamosa.org)
  *
  * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
@@ -281,6 +281,7 @@ class mediamosa_asset {
     $query->fields('mfm', array(mediamosa_asset_mediafile_metadata_db::FILE_DURATION, mediamosa_asset_mediafile_metadata_db::CONTAINER_TYPE));
     $query->join(mediamosa_asset_mediafile_metadata_db::TABLE_NAME, 'mfm', "mf.mediafile_id = mfm.mediafile_id AND mf.is_original_file = 'TRUE'");
     $query->condition('mf.' . mediamosa_asset_mediafile_db::ASSET_ID_ROOT, $asset_id_root);
+    $query->orderBy('mf.changed');
     $query->range(0, 1);
     $mediafile_info = $query->execute()->fetchAssoc();
 
@@ -619,7 +620,7 @@ class mediamosa_asset {
         if ($show_stills) {
           $ticket = mediamosa_db::uuid($app_id);
           $a_mediafile_ext['asset_id'] = $a_asset[mediamosa_asset_db::ID];
-          mediamosa_ticket::create_play_proxy($ticket, $a_mediafile_ext, mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL, $app_id, $aut_user_id, $a_items['stills'][$a_asset[mediamosa_asset_db::ID]]);
+          mediamosa_ticket::create_play_proxy($ticket, $a_mediafile_ext, mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL, $app_id, $aut_user_id, isset($a_items['stills'][$a_asset[mediamosa_asset_db::ID]]) ? $a_items['stills'][$a_asset[mediamosa_asset_db::ID]] : NULL);
 
           // Create still response.
           $response = mediamosa_asset_mediafile_play_proxy::create_response_still($ticket, $app_id);

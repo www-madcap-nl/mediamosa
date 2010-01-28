@@ -2,8 +2,8 @@
 // $Id$
 
 /**
- * MediaMosa is a Full Featured, Webservice Oriented Media Management and
- * Distribution platform (http://www.vpcore.nl)
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
+ * Distribution platform (http://mediamosa.org)
  *
  * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
@@ -53,8 +53,8 @@ $databases['mig_memo_data']['default'] = array(
 );
  */
 
-define('MIG_MEMO_DATA', 'mig_memo_data');
 define('MIG_MEMO', 'mig_memo');
+define('MIG_MEMO_DATA', 'mig_memo_data');
 
 /**
  * Get the database name of the mediamosa drupal database.
@@ -62,7 +62,8 @@ define('MIG_MEMO', 'mig_memo');
  * @return string
  */
 function _mediamosa_migration_get_memo_db() {
-  return 'memo';
+  global $databases;
+  return $databases[MIG_MEMO]['default']['database'];
 }
 
 /**
@@ -71,7 +72,8 @@ function _mediamosa_migration_get_memo_db() {
  * @return string
  */
 function _mediamosa_migration_get_memo_data_db() {
-  return 'memo_data';
+  global $databases;
+  return $databases[MIG_MEMO_DATA]['default']['database'];
 }
 
 /**

@@ -2,8 +2,8 @@
 // $Id$
 
 /**
- * MediaMosa is a Full Featured, Webservice Oriented Media Management and
- * Distribution platform (http://www.vpcore.nl)
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
+ * Distribution platform (http://mediamosa.org)
  *
  * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
@@ -158,6 +158,13 @@ function mediamosa_job_schema() {
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_job_db::CREATE_STILL_FALSE, mediamosa_job_db::CREATE_STILL_TRUE)) . "')",
         'default' => mediamosa_job_db::CREATE_STILL_FALSE,
+      ),
+      mediamosa_job_db::NO_HINT => array(
+        'description' => t('Not hinting.'),
+        'type' => "enum('" . implode("','", array(mediamosa_job_db::NO_HINT_FALSE, mediamosa_job_db::NO_HINT_TRUE)) . "')",
+        'not null' => TRUE,
+        'mysql_type' => "enum('" . implode("','", array(mediamosa_job_db::NO_HINT_FALSE, mediamosa_job_db::NO_HINT_TRUE)) . "')",
+        'default' => mediamosa_job_db::NO_HINT_FALSE,
       ),
       mediamosa_job_db::STILL_PARAMETERS => array(
         'type' => 'text',

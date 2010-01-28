@@ -2,8 +2,8 @@
 // $Id$
 
 /**
- * MediaMosa is a Full Featured, Webservice Oriented Media Management and
- * Distribution platform (http://www.vpcore.nl)
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
+ * Distribution platform (http://mediamosa.org)
  *
  * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
@@ -229,16 +229,15 @@ class mediamosa_asset_mediafile_still {
           ':asset_id_root' => $asset_id,
           '#is_still' => mediamosa_asset_mediafile_db::IS_STILL,
           ':is_still_true' => mediamosa_asset_mediafile_db::IS_STILL_TRUE,
-          '#still_default' => mediamosa_asset_mediafile_metadata_db::STILL_DEFAULT,
-          ':still_default_true' => mediamosa_asset_mediafile_metadata_db::STILL_DEFAULT_TRUE,
           '#metadata_id' => mediamosa_asset_mediafile_metadata_db::ID
         )
       )->fetchField();
     }
 
-    // controleer of de still in de database staat
+    // Check if the still id is in the database
     if (!$still_id) {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STILL_NOT_FOUND, array('@asset_id' => $asset_id));
+      // There isn't any still
+      return;
     }
 
     // Check if the still is ok.

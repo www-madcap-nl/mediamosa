@@ -2,8 +2,8 @@
 // $Id$
 
 /**
- * MediaMosa is a Full Featured, Webservice Oriented Media Management and
- * Distribution platform (http://www.vpcore.nl)
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
+ * Distribution platform (http://mediamosa.org)
  *
  * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
@@ -47,19 +47,74 @@ function mediamosa_server_install() {
   mediamosa_server_transcoding_install();
 
   $a_default_servers = array(
-    array(1,0,'ON',"streaming","rtsp://wms.example.org/tickets/{TICKET}","avi","{IF_EXTERNAL}\n<asx version=\"3.0\">\n<entry>\n<ref href=\"{TICKET_URI}\" />\n{IF_START}\n<starttime value=\"{START_TIME}\" />\n{/IF_START}\n{IF_DURATION}\n<duration value=\"{DURATION_TIME}\" />\n{/IF_DURATION}\n</entry>\n</asx>\n{/IF_EXTERNAL}\n<object id='{MEDIAFILE_ID}' classid='CLSID:22D6F312-B0F6-11D0-94AB-0080C74C7E95' standby='Loading Media Player components...' type='application/x-oleobject' width='{WIDTH}' height='{HEIGHT}'>\n<param name='filename' value='{WMA_TICKET_URI}' />\n<param name='autostart' value='{AUTOSTART}' />\n<embed type='application/x-mplayer2' src='{WMA_TICKET_URI}' autostart='{AUTOPLAY_NUM}' name='{MEDIAFILE_ID}' width='{WIDTH}' height='{HEIGHT}'/>\n</embed>\n</object>",'','','','',''),
-    array(2,0,'ON',"streaming","http://flash.streaming.example.org/StroboScopeLoader.php?movieName={TICKET}","flv|mp3","<script type='text/javascript' src='http://example.org/swfobject.js'></script>\n<div id='mediaspace'>This div will be replaced</div>\n<script type='text/javascript'>\nvar s1 = new SWFObject('http://example.org/player.swf','ply','{WIDTH}','{HEIGHT}','9');\ns1.addParam('allowfullscreen','true');\ns1.addParam('allowscriptaccess','always');\ns1.addParam('wmode','opaque');\ns1.addParam('flashvars','streamer={TICKET_URI}&stretching=exactfit&autostart={AUTOPLAY}');\ns1.write('mediaspace');\n</script>",'','','','',''),
-    array(3,0,'ON',"streaming","rtsp://mpeg4.streaming.example.org/vpx-test/{TICKET}","mov;mp4;m4a;3gp;3g2;mj2","<script type='text/javascript' src='http://example.org/swfobject.js'></script>\n<div id='mediaspace'>This div will be replaced</div>\n<script type='text/javascript'>\nvar s1 = new SWFObject('http://example.org/player.swf','ply','{WIDTH}','{HEIGHT}','9');\ns1.addParam('allowfullscreen','true');\ns1.addParam('allowscriptaccess','always');\ns1.addParam('wmode','opaque');\ns1.addParam('flashvars','streamer={TICKET_URI}&autostart={AUTOPLAY}');\ns1.addVariable('type', 'mp4');\ns1.write('mediaspace');\n</script>",'','','','',''),
-    array(5,0,'ON',"streaming","rtmp://example.org:554/simplevideostreaming/&file=vpx-acc/nibg_test1.mp4&f={TICKET}","mov;mp4;m4a;3gp;3g2;mj2","<object id='{MEDIAFILE_ID}' classid='CLSID:02Bf25D5-8C17-4B23-BC80-D3488ABDDC6B' standby='Loading Quicktime Player components...' width='{WIDTH}' height='{HEIGHT}'>\n{IF_START}\n<param name='starttime' value=\"{START_TIME}\" />\n{/IF_START}\n{IF_DURATION}\n<param name='endtime' value=\"{END_TIME}\" />\n{/IF_DURATION}\n<param name='src' value='{TICKET_URI}' />\n<param name='autoplay' value='{AUTOPLAY}' />\n<embed type='video/quicktime' src='{TICKET_URI}' name='{MEDIAFILE_ID}' width='{WIDTH}' height='{HEIGHT}' autoplay='{AUTOPLAY}'/>\n</object>",'','','','',''),
-    array(6,0,'ON',"streaming","rtmp://example.org:554/simplevideostreaming/&file=vpx-acc/test_flv.flv&f={TICKET}","flv","<object id='{MEDIAFILE_ID}' classid='CLSID:D27CDB6E-AE6D-11CF-96B8-444553540000' standby='Loading Flash Player components...' codebase='http://fpdownload.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=7,0,0,0' width='{WIDTH}' height='{HEIGHT}'>\n<param name='movie' value='{TICKET_URI}&movieWidth={WIDTH}&movieHeight={HEIGHT}&autoStart={AUTOPLAY}' />\n<param name='quality' value='high' />\n<param name='settings' value='hide' />\n<embed type='application/x-shockwave-flash' pluginspace='http://www.macromedia.com/go/getflashplayer' src='{TICKET_URI}&movieWidth={WIDTH}&movieHeight={HEIGHT}&autoStart={AUTOPLAY}' name='{MEDIAFILE_ID}' quality='high' settings='hide' width='{WIDTH}' height='{HEIGHT}' />\n</object>",'','','','',''),
-    array(7,0,'ON',"streaming","rtmp://example.org:554/simplevideostreaming/&file=vpx-acc/sound.mp3&f={TICKET}","mp3","<script type='text/javascript' src='http://example.org/swfobject.js'></script>\n<div id='mediaspace'>This div will be replaced</div>\n<script type='text/javascript'>\nvar s1 = new SWFObject('http://example.org/player.swf','ply','200','20','9');\ns1.addParam('allowfullscreen','true');\ns1.addParam('allowscriptaccess','always');\ns1.addParam('wmode','opaque');\ns1.addParam('flashvars','type=rtmp&streamer={TICKET_URI}&autostart={AUTOPLAY}');\ns1.write('mediaspace');\n</script>",'','','','',''),
-    array(8,0,'ON',"streaming","http://flash.streaming.example.org/StroboScopeLoader.php?movieName={TICKET}","mp3","<script type='text/javascript' src='http://example.org/swfobject.js'></script>\n<div id='mediaspace'>This div will be replaced</div>\n<script type='text/javascript'>\nvar s1 = new SWFObject('http://example.org/player.swf','ply','{WIDTH}','{HEIGHT}','9');\ns1.addParam('allowfullscreen','true');\ns1.addParam('allowscriptaccess','always');\ns1.addParam('wmode','opaque');\ns1.addParam('flashvars','streamer={TICKET_URI}&autostart={AUTOPLAY}');\ns1.addVariable('type', 'mp4');\ns1.write('mediaspace')\n</script>",'','','','',''),
-    array(9,0,'ON',"streaming","rtsp://wms.acceptatie.streaming.example.org/vpx-test/{TICKET}","asf|asx","{IF_EXTERNAL}\n<asx version=\"3.0\">\n<entry>\n<ref href=\"{TICKET_URI}\" />\n<starttime value=\"{START_TIME}\" />\n<duration value=\"{DURATION_TIME}\" />\n</entry>\n</asx>\n{/IF_EXTERNAL}\n<object id='{MEDIAFILE_ID}' classid='CLSID:22D6F312-B0F6-11D0-94AB-0080C74C7E95' standby='Loading Media Player components...' type='application/x-oleobject' width='{WIDTH}' height='{HEIGHT}'>\n<param name='filename' value='{WMA_TICKET_URI}' />\n<param name='autostart' value='{AUTOPLAY}' />\n<embed type='application/x-mplayer2' src='{WMA_TICKET_URI}' autostart='{AUTOPLAY_NUM}' name='{MEDIAFILE_ID}' width='{WIDTH}' height='{HEIGHT}'/>\n</embed>\n</object>",'','','','',''),
-    array(10,0,'ON',"streaming","rtsp://mpeg4.streaming.example.org/vpx-test/{TICKET}","flv","<script type='text/javascript' src='http://example.org/swfobject.js'></script>\n<div id='mediaspace'>This div will be replaced</div>\n<script type='text/javascript'>\nvar s1 = new SWFObject('http://example.org/player.swf','ply','{WIDTH}','{HEIGHT}','9');\ns1.addParam('allowfullscreen','true');\ns1.addParam('allowscriptaccess','always');\ns1.addParam('wmode','opaque');\ns1.addParam('flashvars','streamer={TICKET_URI}&autostart={AUTOPLAY}');\ns1.addVariable('type', 'mp4');\ns1.write('mediaspace');\n</script>",'','','','',''),
+    array(1,0,'ON',"streaming","http://localhost/ticket/{TICKET}",
+      "asf",
+      "{IF_EXTERNAL}
+<asx version='3.0'>
+<entry>
+<ref href='{TICKET_URI}' />
+{IF_START}
+<starttime value='{START_TIME}' />
+{/IF_START}
+{IF_DURATION}
+<duration value='{DURATION_TIME}' />
+{/IF_DURATION}
+</entry>
+</asx>
+{/IF_EXTERNAL}
+<object id='{MEDIAFILE_ID}' classid='CLSID:22D6F312-B0F6-11D0-94AB-0080C74C7E95' standby='Loading Media Player components...' type='application/x-oleobject' width='{WIDTH}' height='{HEIGHT}'>
+<param name='filename' value='{WMA_TICKET_URI}' />
+<param name='autostart' value='{AUTOPLAY}' />
+<embed type='application/x-mplayer2' src='{WMA_TICKET_URI}' autostart='{AUTOPLAY_NUM}' name='{MEDIAFILE_ID}' width='{WIDTH}' height='{HEIGHT}'/>
+</embed>
+</object>"
+      ,'','','','',''),
+    array(2,0,'ON',"streaming","http://localhost/ticket/{TICKET}",
+      "flv",
+      "<script type='text/javascript' src='http://145.97.38.12/swfobject.js'></script>
+<div id='mediaspace'>This div will be replaced</div>
+<script type='text/javascript'>
+var s1 = new SWFObject('http://145.97.38.12/player.swf','ply','{WIDTH}','{HEIGHT}','9');
+s1.addParam('allowfullscreen','true');
+s1.addParam('allowscriptaccess','always');
+s1.addParam('wmode','opaque');
+s1.addParam('flashvars','streamer={TICKET_URI}&autostart={AUTOPLAY}{IF_START}&start={START_TIME_SECONDS}{/IF_START}{IF_DURATION}&duration={START_PLUS_DURATION_TIME_SECONDS}{/IF_DURATION}');
+s1.addVariable('type', 'mp4');
+s1.write('mediaspace');
+</script>"
+      ,'','','','',''),
+    array(3,0,'ON',"streaming","http://localhost/ticket/{TICKET}",
+      "mov;mp4;m4a;3gp;3g2;mj2i:h264",
+      "<script type='text/javascript' src='http://145.97.38.29/swfobject.js'></script>
+<div id='mediaspace'>This div will be replaced</div>
+<script type='text/javascript'>
+var s1 = new SWFObject('http://145.97.38.12/player.swf','ply','{WIDTH}','{HEIGHT_PLUS_20}','9');
+s1.addParam('allowfullscreen','true');
+s1.addParam('allowscriptaccess','always');
+s1.addParam('wmode','opaque');
+s1.addParam('flashvars','streamer={TICKET_URI}&autostart={AUTOPLAY}{IF_START}&start={START_TIME_SECONDS}{/IF_START}{IF_DURATION}&duration={START_PLUS_DURATION_TIME_SECONDS}{/IF_DURATION}');
+s1.addVariable('type', 'mp4');
+s1.write('mediaspace');
+</script>"
+      ,'','','','',''),
+    array(4,0,'ON',"streaming","http://localhost/ticket/{TICKET}",
+      "mpeg|mov;mp4;m4a;3gp;3g2;mj2",
+      "<object id='{MEDIAFILE_ID}' classid='CLSID:02Bf25D5-8C17-4B23-BC80-D3488ABDDC6B' standby='Loading Quicktime Player components...' width='{WIDTH}' height='{HEIGHT}'>
+{IF_START}
+<param name='starttime' value='{START_TIME}' />
+{/IF_START}
+{IF_DURATION}
+<param name='endtime' value='{END_TIME}' />
+{/IF_DURATION}
+<param name='src' value='{TICKET_URI}' />
+<param name='autoplay' value='{AUTOPLAY}' />
+<embed type='video/quicktime' src='{TICKET_URI}' name='{MEDIAFILE_ID}' width='{WIDTH}' height='{HEIGHT}' autoplay='{AUTOPLAY}' {IF_START}starttime='{START_TIME}'{/IF_START} {IF_DURATION}endtime='{END_TIME}'{/IF_DURATION}/>
+</object>"
+      ,'','','','',''),
     array(11,2,'ON',"download","http://localhost/download/{TICKET}",'','','','','','',''),
     array(12,0,'OFF',"still","http://localhost/still/{TICKET}",'','','','','','',''),
-    array(13,0,'ON',"transcode",'','','',"localhost","127.0.0.1",2,"ANALYSE|ffmpeg|STILL",''),
-    array(14,0,'ON',"upload","http://example.org/vpx/mediafile/upload?upload_ticket={TICKET}",'','','','','','',"http://example.org/mediafile/uploadprogress"),
+    array(13,0,'ON',"transcode",'','','',"localhost","127.0.0.1",10,"ANALYSE|ffmpeg|STILL",''),
+    array(14,0,'ON',"upload","http://localhost/mediafile/upload?upload_ticket={TICKET}",'','','','','','',"http://example.org/mediafile/uploadprogress"),
   );
 
 

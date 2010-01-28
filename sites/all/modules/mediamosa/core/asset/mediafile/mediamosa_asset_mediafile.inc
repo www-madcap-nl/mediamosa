@@ -2,8 +2,8 @@
 // $Id$
 
 /**
- * MediaMosa is a Full Featured, Webservice Oriented Media Management and
- * Distribution platform (http://www.vpcore.nl)
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
+ * Distribution platform (http://mediamosa.org)
  *
  * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
@@ -215,7 +215,7 @@ class mediamosa_asset_mediafile {
         mediamosa_ticket::create_play_proxy(
           $ticket,
           NULL,
-          mediamosa_ticket::RESPONSE_TYPE_STILL,
+          mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL,
           $app_id,
           $a_row[mediamosa_asset_mediafile_db::OWNER_ID],
           $a_row[mediamosa_asset_mediafile_db::ID]
