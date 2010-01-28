@@ -1,0 +1,35 @@
+// $Id: 
+
+Steps for changelog and commits;
+
+1. Save all work and test before commit.
+2. Add changes to the changelog, copy change to use in commit.
+
+  Example;
+  
+  Mediamosa 2.0.1
+  ---------------
+  - Added coll_id search to CQL. (See MediaMosa ticket #24).
+  - Added app_id search to CQL. (See MediaMosa ticket #24).
+  - [other changes other tickets]
+
+
+3. Do one ticket per commit. If for some reason you have multiple changes on multiple tickets then
+   checkin on specific files per commit (use hg ci [files]). Its not allowed to commit multiple tickets in
+   on commit.
+   
+   Commit example;
+  - Added coll_id search to CQL. (See MediaMosa ticket #24).
+  - Added app_id search to CQL. (See MediaMosa ticket #24).
+  
+4. Reassign to TPL (robert).
+5. Put status on ready for review. 
+
+
+
+ 
+
+
+
+
+START CHANGELOG:
