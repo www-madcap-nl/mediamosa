@@ -494,6 +494,9 @@ class mediamosa_asset_mediafile {
       ->fields($a_fields)
       ->condition(mediamosa_asset_mediafile_db::ID, $mediafile_id)
       ->execute();
+
+    // Update is_external and is_empty_asset fields
+    mediamosa_asset::update_asset_info_is_external($mediafile_id);
   }
 
   /**
@@ -538,6 +541,9 @@ class mediamosa_asset_mediafile {
     mediamosa_db::db_insert(mediamosa_asset_mediafile_db::TABLE_NAME)
       ->fields($a_fields)
       ->execute();
+
+    // Update is_external and is_empty_asset fields
+    mediamosa_asset::update_asset_info_is_external($mediafile_id);
 
     // Return the mediafile ID.
     return $mediafile_id;

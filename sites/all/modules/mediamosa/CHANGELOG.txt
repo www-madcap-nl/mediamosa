@@ -7,7 +7,7 @@ Steps for changelog and commits;
 
   Example;
   
-  Mediamosa 2.0.1
+  Mediamosa 2.1.0
   ---------------
   - Added coll_id search to CQL. (See MediaMosa ticket #24).
   - Added app_id search to CQL. (See MediaMosa ticket #24).
@@ -15,10 +15,9 @@ Steps for changelog and commits;
 
 
 3. Do one ticket per commit. If for some reason you have multiple changes on multiple tickets then
-   checkin on specific files per commit (use hg ci [files]). Its not allowed to commit multiple tickets in
-   on commit.
-   
-   Commit example;
+  checkin on specific files per commit (use hg ci [files]). Its not allowed to commit multiple tickets in one commit.
+
+  Commit example;
   - Added coll_id search to CQL. (See MediaMosa ticket #24).
   - Added app_id search to CQL. (See MediaMosa ticket #24).
   
@@ -33,3 +32,7 @@ Steps for changelog and commits;
 
 
 START CHANGELOG:
+
+  Mediamosa 2.1.0
+  ---------------
+  - <is_empty_asset> = true, while there is a valid, usable mediafile (See MediaMosa ticket #165).
