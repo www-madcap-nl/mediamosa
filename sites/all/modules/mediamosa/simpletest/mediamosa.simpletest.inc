@@ -405,4 +405,71 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     node_save(@$node);
     $this->pass(t('Created node Downloadserver with node ID @nid', array('@nid' => $node->nid)));
   }
+
+  /**
+   * Create a job.
+   */
+  protected function createJob($a_fields = array()) {
+    $a_fields += array(
+      mediamosa_job_db::APP_ID => rand(1, 1000),
+      mediamosa_job_db::ASSET_ID => mediamosa_db::uuid(rand(1, 1000)),
+      mediamosa_job_db::MEDIAFILE_ID => mediamosa_db::uuid(rand(1, 1000)),
+      mediamosa_job_db::OWNER_ID => mediamosa_db::uuid(rand(1, 1000)),
+      mediamosa_job_db::JOB_STATUS => mediamosa_job_db::JOB_STATUS_INPROGRESS,
+      mediamosa_job_db::PROGRESS => '',
+      mediamosa_job_db::PRIORITY => 0,
+      mediamosa_job_db::JOB_TYPE => mediamosa_job_db::JOB_TYPE_UPLOAD,
+      mediamosa_job_db::STARTED => mediamosa::db_current_timestamp_now(),
+      mediamosa_job_db::FINISHED => mediamosa::db_current_timestamp_now(),
+      mediamosa_job_db::ERROR_DESCRIPTION => '',
+      mediamosa_job_db::CREATE_STILL => mediamosa_job_db::CREATE_STILL_FALSE,
+      mediamosa_job_db::NO_HINT => mediamosa_job_db::NO_HINT_FALSE,
+    );
+    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+
+    // Insert the job into the database.
+    $a_fields[mediamosa_job_db::ID] = mediamosa_db::db_insert(mediamosa_job_db::TABLE_NAME)->fields($a_fields)->execute();
+    return $a_fields[mediamosa_job_db::ID];
+  }
+
+  /**
+   * Create an upload job.
+   */
+  protected function createUploadJob($job_id, $a_fields = array()) {
+    $a_fields[mediamosa_job_upload_db::JOB_ID] = $job_id;
+
+    $a_fields += array(
+      mediamosa_job_upload_db::FILE_SIZE => 0,
+      mediamosa_job_upload_db::UPLOADED_FILE_SIZE => 0,
+      mediamosa_job_upload_db::RETRANSCODE => mediamosa_job_upload_db::RETRANSCODE_FALSE,
+      mediamosa_job_upload_db::CREATE_STILL => mediamosa_job_upload_db::CREATE_STILL_FALSE,
+    );
+
+    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+
+    // Insert the upload job into the database.
+    $a_fields[mediamosa_job_upload_db::ID] = mediamosa_db::db_insert(mediamosa_job_upload_db::TABLE_NAME)->fields($a_fields)->execute();
+    return $a_fields[mediamosa_job_upload_db::ID];
+  }
+
+  /**
+   * Create a transcode job.
+   */
+  protected function createTranscodeJob($job_id, $a_fields = array()) {
+    $a_fields[mediamosa_job_transcode_db::JOB_ID] = $job_id;
+
+    $a_fields += array(
+      mediamosa_job_transcode_db::TRANSCODE_PROFILE_ID => 1,
+      mediamosa_job_transcode_db::TOOL => '',
+      mediamosa_job_transcode_db::COMMAND => '',
+      mediamosa_job_transcode_db::FILE_EXTENSION => '',
+      mediamosa_job_transcode_db::COMPLETED_TRANSCODING_URL => '',
+    );
+
+    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+
+    $a_fields[mediamosa_job_transcode_db::ID] = mediamosa_db::db_insert(mediamosa_job_transcode_db::TABLE_NAME)->fields($a_fields)->execute();
+    return $a_fields[mediamosa_job_transcode_db::ID];
+  }
+
 }
