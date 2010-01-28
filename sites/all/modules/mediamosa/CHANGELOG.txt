@@ -35,4 +35,6 @@ START CHANGELOG:
 
   Mediamosa 2.1.0
   ---------------
+  - Banner text was updated (See MediaMosa ticket #222).
+  - Clean up cancelled upload and transcode jobs test (See MediaMosa ticket #112).
   - <is_empty_asset> = true, while there is a valid, usable mediafile (See MediaMosa ticket #165).
