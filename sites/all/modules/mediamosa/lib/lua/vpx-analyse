@@ -69,12 +69,13 @@ local ln_duration = space * "Duration" * COLON *
 -- Stream #0.0: Audio: 0x0162, 48000 Hz, 5.1, 254 kb/s
 -- Stream #0.1(eng): Audio: mp4a / 0x6134706D, 24000 Hz, stereo
 -- Stream #0.1[0x103](???): Audio: ac3, 48000 Hz, stereo, 448 kb/s
+-- Stream #0.0: Audio: 0x0162, 48000 Hz, 5.1, s16, 384 kb/s
 -- captures: stream, codecs, frequency, channels, sample_format, bitrate
 local ln_audio = space * "Stream #" * float * language^-1 * COLON *
   "Audio" * COLON *
   codecs * COMMA *
   number * "Hz" * COMMA *
-  (number * space)^-1 * channels *
+  (((number * space)^-1 * channels) + lpeg.C(digits^1 * "." * digits^1)) *
   ((COMMA * word) + lpeg.Cc("unknown")) *
   (COMMA * number * "kb/s")^-1
 
@@ -171,6 +172,8 @@ function mime_type(filename)
             type, subtype = "video", "x-msvideo"
           elseif filetype == "Macromedia Flash Video" then
             type, subtype = "video", "x-flv"
+          elseif filetype == "video/mp4" then
+            type, subtype = "video", "mp4"
           end
         end
         return type, subtype
@@ -226,7 +229,7 @@ function find_best_streams(source_path, hash)
       ]]
       log_out("audio: detected stream: %s", stream)
       if codecs == nil then
-        add_error("The audio input stream uses an unknown codec")
+        --add_error("The audio input stream uses an unknown codec")
         codecs = {}
       end
       if audio_max_bitrate_stream == nil then
@@ -257,7 +260,7 @@ function find_best_streams(source_path, hash)
         video_max_bitrate = tonumber(bitrate)
         video_max_bitrate_stream = stream
         video_max_bitrate_size = size
-      elseif tonumber(bitrate) > video_max_bitrate then
+      elseif bitrate ~= "unknown" and video_max_bitrate ~= nil and tonumber(bitrate) > video_max_bitrate then
         log_out("video: better stream found %s @ %s kbps", stream, bitrate)
         video_max_bitrate = tonumber(bitrate)
         video_max_bitrate_stream = stream
@@ -295,8 +298,12 @@ function check_size(filename)
   local info = f:read("*a") -- read output of command
   f:close()
   i, j = string.find(info, "%d+ ")
-  local k = string.sub(info, i, j-1)
-  return k
+  if i ~= nil and j ~= nil then
+    local k = string.sub(info, i, j-1)
+    return k
+  else
+    return nil
+  end
 end
 
 function analyse(source_path, hash, always_hint_mp4, always_insert_md)
@@ -336,9 +343,16 @@ function analyse(source_path, hash, always_hint_mp4, always_insert_md)
   local fd = io.popen(command, "r")
   local line = fd:read("*l")
   local file_is_hinted = false
+  local flv_is_hinted = false
 
   while line do
     log[#log+1] = line
+
+    local iimd = lpeg.match(space * "metadatacreator : Yet Another Metadata Injector for FLV", line)
+    if iimd then
+      add_property("Is-inserted-md", "yes")
+      flv_is_hinted = true
+    end
 
     -- parse file type properties
     local input, filetypes = lpeg.match(ln_input, line)
@@ -372,7 +386,7 @@ function analyse(source_path, hash, always_hint_mp4, always_insert_md)
       local stream, codecs, hertz, channels, sample_format, bitrate = lpeg.match(ln_audio, line)
       if stream == audio_stream then
         if codecs == nil then
-          add_error("The audio input stream uses an unknown codec")
+          --add_error("The audio input stream uses an unknown codec")
           codecs = {}
         else
           add_property("X-Audio-stream", line)
@@ -447,7 +461,7 @@ function analyse(source_path, hash, always_hint_mp4, always_insert_md)
     -- test filesizes
     local file_orig = check_size(filename)
     local file_hinted = check_size(filename..".mpg")
-    if tonumber(file_hinted) > tonumber(file_orig)  then
+    if file_hinted ~= nil and tonumber(file_hinted) > tonumber(file_orig)  then
       os.execute(string.format("mv %s.mpg %s", filename, filename))
       os.execute(string.format("chmod 644 %s", filename))
       add_property("Is-hinted", "yes")
@@ -457,24 +471,25 @@ function analyse(source_path, hash, always_hint_mp4, always_insert_md)
     os.execute("cd ..")
   end
 
-  if is_flv_target and always_insert_md then
+  if is_flv_target and always_insert_md and flv_is_hinted == false then
     os.execute(string.format("cd %s", source_path))
     local ftmp = io.open(string.format("%s.tmp", filename), "r")
     if ftmp ~= nil then
       io.close(ftmp)
       os.execute(string.format("rm %s.tmp", filename))
     end
-    os.execute(string.format("yamdi -i %s -o %s.tmp &>/dev/null",
-                             filename, filename))
+    os.execute(string.format("yamdi -i %s -o %s.tmp &>/dev/null", filename, filename))
 
-    -- if the dest. file does not exists, then the original file was already metadata inserted
-    ftmp = io.open(string.format("%s.tmp", filename), "r")
-    if ftmp ~= nil then
-      io.close(ftmp) 
+    io.flush()
+    -- test filesizes
+    local file_orig = check_size(filename)
+    local file_hinted = check_size(filename..".tmp")
+    if file_hinted ~= nil and tonumber(file_hinted) > tonumber(file_orig)  then
       os.execute(string.format("mv %s.tmp %s &>/dev/null", filename, filename))
+      add_property("Is-inserted-md", "yes")
+    else
+      os.execute(string.format("rm %s.tmp", filename))
     end
-
-    add_property("Is-inserted-md", "yes")
   end
 end
 

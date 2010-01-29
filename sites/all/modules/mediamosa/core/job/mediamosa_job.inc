@@ -2,8 +2,8 @@
 // $Id$
 
 /**
- * MediaMosa is a Full Featured, Webservice Oriented Media Management and
- * Distribution platform (http://www.vpcore.nl)
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
+ * Distribution platform (http://mediamosa.org)
  *
  * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
@@ -340,7 +340,7 @@ class mediamosa_job {
    * @param bool $create_still
    * @param array $a_still_parameters
    */
-  static public function create($job_type, $app_id, $user_id, $is_app_admin, $mediafile_id, $create_still = FALSE, $a_still_parameters = array(), $priority = NULL) {
+  static public function create($job_type, $app_id, $user_id, $is_app_admin, $mediafile_id, $create_still = FALSE, $a_still_parameters = array(), $priority = NULL, $no_hint = FALSE) {
 
     // Get the mediafile.
     $a_mediafile = mediamosa_asset_mediafile::must_exists($mediafile_id);
@@ -390,6 +390,7 @@ class mediamosa_job {
       mediamosa_job_db::JOB_TYPE => $job_type,
       mediamosa_job_db::CREATE_STILL => $create_still ? mediamosa_job_db::CREATE_STILL_TRUE : mediamosa_job_db::CREATE_STILL_FALSE,
       mediamosa_job_db::STILL_PARAMETERS => serialize($a_still_parameters),
+      mediamosa_job_db::NO_HINT => $no_hint ? mediamosa_job_db::NO_HINT_TRUE : mediamosa_job_db::NO_HINT_FALSE,
       mediamosa_job_db::PROGRESS => '0.000',
     );
 

@@ -7,7 +7,7 @@ Steps for changelog and commits;
 
   Example;
   
-  Mediamosa 2.0.1
+  Mediamosa 2.1.0
   ---------------
   - Added coll_id search to CQL. (See MediaMosa ticket #24).
   - Added app_id search to CQL. (See MediaMosa ticket #24).
@@ -31,6 +31,9 @@ START CHANGELOG:
 Mediamosa 2.1.0
 ---------------
 - Added support CQL for is_empty_asset (See MediaMosa ticket #180).
+- Banner text was updated (See MediaMosa ticket #222).
+- Clean up cancelled upload and transcode jobs test (See MediaMosa ticket #112).
+- <is_empty_asset> = true, while there is a valid, usable mediafile (See MediaMosa ticket #165 and #167).
 
 Mediamosa 2.0.1
 ---------------
@@ -66,5 +69,3 @@ Mediamosa 2.0.0
 - Internal calls now have access to all apps when app_id was not provided.
 - GET / POST / URI variables now share the same scope.
 - Redesign of the SAN/NAS globals/paths into static class 'storage'.
-
-

@@ -2,8 +2,8 @@
 // $Id$
 
 /**
- * MediaMosa is a Full Featured, Webservice Oriented Media Management and
- * Distribution platform (http://www.vpcore.nl)
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
+ * Distribution platform (http://mediamosa.org)
  *
  * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
@@ -281,6 +281,7 @@ class mediamosa_asset {
     $query->fields('mfm', array(mediamosa_asset_mediafile_metadata_db::FILE_DURATION, mediamosa_asset_mediafile_metadata_db::CONTAINER_TYPE));
     $query->join(mediamosa_asset_mediafile_metadata_db::TABLE_NAME, 'mfm', "mf.mediafile_id = mfm.mediafile_id AND mf.is_original_file = 'TRUE'");
     $query->condition('mf.' . mediamosa_asset_mediafile_db::ASSET_ID_ROOT, $asset_id_root);
+    $query->orderBy('mf.changed');
     $query->range(0, 1);
     $mediafile_info = $query->execute()->fetchAssoc();
 
@@ -302,6 +303,69 @@ class mediamosa_asset {
 
     // Set the external.
     mediamosa_asset::update_asset_info_is_external($mediafile_id, $asset_id_root);
+    // Set the empty asset.
+    mediamosa_asset::update_asset_info_is_empty_asset($mediafile_id, $asset_id_root);
+
+  }
+
+  /**
+   * Update the normalized field in asset for is_empty_asset flag.
+   *
+   * @param string $mediafile_id
+   * @param string $asset_id_root
+   */
+  static public function update_asset_info_is_empty_asset($mediafile_id, $asset_id_root = NULL) {
+    // Search the asset_id_root.
+    if (!isset($asset_id_root)) {
+      // Find top asset.
+      $asset_id_root = mediamosa_db::db_query(
+        "SELECT #asset_id_root FROM {#mediamosa_asset_mediafile} WHERE #mediafile_id = :mediafile_id",
+        array(
+          '#asset_id_root' => mediamosa_asset_mediafile_db::ASSET_ID_ROOT,
+          '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
+          '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
+          ':mediafile_id' => $mediafile_id,
+        )
+      )->fetchField();
+    }
+
+    $a_mediafile = mediamosa_db::db_query_range(
+      "SELECT m.#uri, m.#filename FROM {#mediamosa_asset_mediafile} AS m
+       LEFT JOIN {#mediamosa_asset_mediafile_metadata} AS mm USING (#mediafile_id)
+       WHERE m.#is_original_file = :is_original_file_true AND m.#asset_id_root = :asset_id_root AND
+             (m.#uri IS NOT NULL OR m.#filename IS NOT NULL OR m.#is_downloadable = :is_downloadable_true OR mm.#filesize > 0)",
+      0, // From.
+      1, // Count.
+      array(
+        '#uri' => mediamosa_asset_mediafile_db::URI,
+        '#filename' => mediamosa_asset_mediafile_db::FILENAME,
+        '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
+        '#mediamosa_asset_mediafile_metadata' => mediamosa_asset_mediafile_metadata_db::TABLE_NAME,
+        '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
+        '#is_original_file' => mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE,
+        ':is_original_file_true' => mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_TRUE,
+        '#asset_id_root' => mediamosa_asset_mediafile_db::ASSET_ID_ROOT,
+        ':asset_id_root' => $asset_id_root,
+        '#uri' => mediamosa_asset_mediafile_db::URI,
+        '#filename' => mediamosa_asset_mediafile_db::FILENAME,
+        '#is_downloadable' => mediamosa_asset_mediafile_db::IS_DOWNLOADABLE,
+        ':is_downloadable_true' => mediamosa_asset_mediafile_db::IS_DOWNLOADABLE_TRUE,
+        '#filesize' => mediamosa_asset_mediafile_metadata_db::FILESIZE,
+      )
+    )->fetchAssoc();
+
+    // Set is_empty_asset.
+    mediamosa_db::db_query(
+      "UPDATE {#mediamosa_asset} SET #is_empty_asset = :is_empty_asset WHERE #asset_id = :asset_id",
+      array(
+        '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
+        '#is_empty_asset' => mediamosa_asset_db::IS_EMPTY_ASSET,
+        ':is_empty_asset' => $a_mediafile ? mediamosa_asset_db::IS_EMPTY_ASSET_FALSE : mediamosa_asset_db::IS_EMPTY_ASSET_TRUE,
+        '#asset_id' => mediamosa_asset_db::ID,
+        ':asset_id' => $asset_id_root,
+      )
+    );
+
   }
 
   /**
@@ -311,7 +375,7 @@ class mediamosa_asset {
    * @param string $asset_id_root
    */
   static public function update_asset_info_is_external($mediafile_id, $asset_id_root = NULL) {
-  // zoek de bijbehorende asset_id op
+    // Search the asset_id_root.
     if (!isset($asset_id_root)) {
       // Find top asset.
       $asset_id_root = mediamosa_db::db_query(
@@ -344,15 +408,13 @@ class mediamosa_asset {
       $uri = $a_mediafile[mediamosa_asset_mediafile_db::URI];
       $filename = $a_mediafile[mediamosa_asset_mediafile_db::FILENAME];
 
-      // Set is_external && is_empty_asset
+      // Set is_external.
       mediamosa_db::db_query(
-        "UPDATE {#mediamosa_asset} SET #is_external = :is_external, #is_empty_asset = :is_empty_asset WHERE #asset_id = :asset_id",
+        "UPDATE {#mediamosa_asset} SET #is_external = :is_external WHERE #asset_id = :asset_id",
         array(
           '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
           '#is_external' => mediamosa_asset_db::IS_EXTERNAL,
           ':is_external' => trim($uri) != '' ? mediamosa_asset_db::IS_EXTERNAL_TRUE : mediamosa_asset_db::IS_EXTERNAL_FALSE,
-          '#is_empty_asset' => mediamosa_asset_db::IS_EMPTY_ASSET,
-          ':is_empty_asset' => trim($uri) != '' || trim($filename) != '' ? mediamosa_asset_db::IS_EMPTY_ASSET_TRUE : mediamosa_asset_db::IS_EMPTY_ASSET_FALSE,
           '#asset_id' => mediamosa_asset_db::ID,
           ':asset_id' => $asset_id_root,
         )
@@ -619,7 +681,7 @@ class mediamosa_asset {
         if ($show_stills) {
           $ticket = mediamosa_db::uuid($app_id);
           $a_mediafile_ext['asset_id'] = $a_asset[mediamosa_asset_db::ID];
-          mediamosa_ticket::create_play_proxy($ticket, $a_mediafile_ext, mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL, $app_id, $aut_user_id, $a_items['stills'][$a_asset[mediamosa_asset_db::ID]]);
+          mediamosa_ticket::create_play_proxy($ticket, $a_mediafile_ext, mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL, $app_id, $aut_user_id, isset($a_items['stills'][$a_asset[mediamosa_asset_db::ID]]) ? $a_items['stills'][$a_asset[mediamosa_asset_db::ID]] : NULL);
 
           // Create still response.
           $response = mediamosa_asset_mediafile_play_proxy::create_response_still($ticket, $app_id);

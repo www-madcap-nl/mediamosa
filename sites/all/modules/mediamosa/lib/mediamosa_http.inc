@@ -2,8 +2,8 @@
 // $Id$
 
 /**
- * MediaMosa is a Full Featured, Webservice Oriented Media Management and
- * Distribution platform (http://www.vpcore.nl)
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
+ * Distribution platform (http://mediamosa.org)
  *
  * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
@@ -235,7 +235,7 @@ class mediamosa_http {
       $a_url['host'] = 'localhost';
     }
 
-    $a_url['path'] = ($a_url['path'] != '' ? $a_url['path'] . '/' : '') . $uri;
+    $a_url['path'] = ($a_url['path'] != '' ? $a_url['path'] . '/' : '') . trim($uri, '/');
     $url = mediamosa_http::build_url($a_url);
     mediamosa_http::do_head_call_internal($url, $a_options);
 
