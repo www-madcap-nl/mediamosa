@@ -49,7 +49,7 @@ class MediaMosaAssetTestCaseEga extends MediaMosaTestCaseEga {
   // ------------------------------------------------------------------ Tests.
 
   /*
-   * Testing is_empty_asset issues
+   * Testing is_empty_asset issues, see: ticket 165
    */
   function testAssetIsEmptyAsset() {
 
@@ -60,12 +60,48 @@ class MediaMosaAssetTestCaseEga extends MediaMosaTestCaseEga {
     $mediafile_id = $this->createMediafile($asset_id);
 
     // Create uploadticket
-    $mediafile_id = $this->createMediafileUploadTicket($mediafile_id);
+    $ticket = $this->createMediafileUploadTicket($mediafile_id);
+
+    // Update mediafile
+    $a_parameters = array(
+      mediamosa_rest_call_create_mediafile::URI => 'http://empty.asset.demo',
+    );
+    $this->updateMediafile($mediafile_id, self::SIMPLETEST_USER_ID, $a_parameters);
 
     // Get the asset
     $asset = $this->getAsset($asset_id);
 
-    //TODO: Finish
+    // Check is_empty_asset field is FALSE
+    // TODO
 
   }
+
+  /*
+   * Testing is_empty_asset issue, see: ticket 167
+   */
+  function testAssetIsEmptyAsset2() {
+
+    // Create an asset.
+    $asset_id = $this->createAsset();
+
+    // Create mediafile.
+    $mediafile_id_empty = $this->createMediafile($asset_id);
+
+    // Create uploadticket
+    $ticket = $this->createMediafileUploadTicket($mediafile_id);
+
+    // Create an another mediafile with an URI.
+    $a_parameters = array(
+      mediamosa_rest_call_create_mediafile::URI => 'http://empty.asset.demo',
+    );
+    $mediafile_id_with_uri = $this->createMediafile($asset_id, self::SIMPLETEST_USER_ID, $a_parameters);
+
+    // Get the asset
+    $asset = $this->getAsset($asset_id);
+
+    // Check is_empty_asset field is FALSE
+    // TODO
+
+  }
+
 }
