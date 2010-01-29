@@ -34,17 +34,17 @@ require_once 'container/mediamosa_server_streaming_container.install.inc';
 /**
  * Implements hook_install().
  */
-function mediamosa_server_streaming_install() {
+function _mediamosa_server_streaming_install() {
 
   // Our child.
-  mediamosa_server_streaming_container_install();
+  _mediamosa_server_streaming_container_install();
 }
 
 /**
  * Implements hook_uninstall().
  */
-function mediamosa_server_streaming_uninstall() {
+function _mediamosa_server_streaming_uninstall() {
 
   // Our child.
-  mediamosa_server_streaming_container_uninstall();
+  _mediamosa_server_streaming_container_uninstall();
 }

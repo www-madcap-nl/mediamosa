@@ -37,34 +37,34 @@ require_once 'app_master_slave/mediamosa_aut_app_master_slave.install.inc';
 /**
  * Implement hook_install().
  */
-function mediamosa_aut_install() {
+function _mediamosa_aut_install() {
 
   // Install mediamosa_aut_name.
-  mediamosa_aut_name_install();
+  _mediamosa_aut_name_install();
 
   // Install mediamosa_aut_group.
-  mediamosa_aut_group_install();
+  _mediamosa_aut_group_install();
 
   // Install mediamosa_aut_object.
-  mediamosa_aut_object_install();
+  _mediamosa_aut_object_install();
 
   // Install mediamosa_aut_app_master_slave.
-  mediamosa_aut_app_master_slave_install();
+  _mediamosa_aut_app_master_slave_install();
 }
 
 /**
  * Implement hook_uninstall().
  */
-function mediamosa_aut_uninstall() {
+function _mediamosa_aut_uninstall() {
   // Install mediamosa_aut_app_master_slave.
-  mediamosa_aut_app_master_slave_uninstall();
+  _mediamosa_aut_app_master_slave_uninstall();
 
   // Install mediamosa_aut_object.
-  mediamosa_aut_object_uninstall();
+  _mediamosa_aut_object_uninstall();
 
   // Install mediamosa_aut_group.
-  mediamosa_aut_group_uninstall();
+  _mediamosa_aut_group_uninstall();
 
   // Install mediamosa_aut_name.
-  mediamosa_aut_name_uninstall();
+  _mediamosa_aut_name_uninstall();
 }

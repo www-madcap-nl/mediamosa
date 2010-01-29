@@ -34,17 +34,17 @@ require_once 'tool/mediamosa_server_transcoding_tool.install.inc';
 /**
  * Implements hook_install().
  */
-function mediamosa_server_transcoding_install() {
+function _mediamosa_server_transcoding_install() {
 
   // Our child.
-  mediamosa_server_transcoding_tool_install();
+  _mediamosa_server_transcoding_tool_install();
 }
 
 /**
  * Implements hook_uninstall().
  */
-function mediamosa_server_transcoding_uninstall() {
+function _mediamosa_server_transcoding_uninstall() {
 
   // Our child.
-  mediamosa_server_transcoding_tool_uninstall();
+  _mediamosa_server_transcoding_tool_uninstall();
 }

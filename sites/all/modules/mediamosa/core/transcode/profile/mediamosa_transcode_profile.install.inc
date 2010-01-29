@@ -33,7 +33,7 @@ require_once 'mediamosa_transcode_profile_db.inc';
 /**
  * Implement hook_install().
  */
-function mediamosa_transcode_profile_install() {
+function _mediamosa_transcode_profile_install() {
   // Create our table(s).
   mediamosa::drupal_install_schema(mediamosa_transcode_profile_db::TABLE_NAME);
 
@@ -82,7 +82,7 @@ function mediamosa_transcode_profile_install() {
 /**
  * Implement hook_uninstall().
  */
-function mediamosa_transcode_profile_uninstall() {
+function _mediamosa_transcode_profile_uninstall() {
   // Drop our table(s).
   mediamosa::drupal_uninstall_schema(mediamosa_transcode_profile_db::TABLE_NAME);
 }

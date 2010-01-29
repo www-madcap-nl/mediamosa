@@ -37,14 +37,14 @@ require_once 'transcoding/mediamosa_server_transcoding.install.inc';
 /**
  * Implements hook_install().
  */
-function mediamosa_server_install() {
+function _mediamosa_server_install() {
 
   // Server node extensions.
   mediamosa::drupal_install_schema(mediamosa_server_db::TABLE_NAME);
 
   // Children.
-  mediamosa_server_streaming_install();
-  mediamosa_server_transcoding_install();
+  _mediamosa_server_streaming_install();
+  _mediamosa_server_transcoding_install();
 
   $a_default_servers = array(
     array(1,0,'ON',"streaming","http://localhost/ticket/{TICKET}",
@@ -168,19 +168,19 @@ s1.write('mediaspace');
   }
 
   // Server job table is a link table between mediamosa_job and mediamosa_jobserver_job and our server.
-  mediamosa_server_job_install();
+  _mediamosa_server_job_install();
 }
 
 /**
  * Implements hook_uninstall().
  */
-function mediamosa_server_uninstall() {
+function _mediamosa_server_uninstall() {
   // Server job uninstall.
-  mediamosa_server_job_uninstall();
+  _mediamosa_server_job_uninstall();
 
     // Unstall our children..
-  mediamosa_server_streaming_uninstall();
-  mediamosa_server_transcoding_uninstall();
+  _mediamosa_server_streaming_uninstall();
+  _mediamosa_server_transcoding_uninstall();
 
   // Server node extensions.
   mediamosa::drupal_uninstall_schema(mediamosa_server_db::TABLE_NAME);

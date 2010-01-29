@@ -33,7 +33,7 @@ require_once 'mediamosa_transcode_mapping_db.inc';
 /**
  * Implement hook_install().
  */
-function mediamosa_transcode_mapping_install() {
+function _mediamosa_transcode_mapping_install() {
   // Create our table(s).
   mediamosa::drupal_install_schema(mediamosa_transcode_mapping_db::TABLE_NAME);
 
@@ -89,7 +89,7 @@ function mediamosa_transcode_mapping_install() {
 /**
  * Implement hook_uninstall().
  */
-function mediamosa_transcode_mapping_uninstall() {
+function _mediamosa_transcode_mapping_uninstall() {
   // Drop our table(s).
   mediamosa::drupal_uninstall_schema(mediamosa_transcode_mapping_db::TABLE_NAME);
 }

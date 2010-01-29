@@ -74,7 +74,7 @@ function mediamosa_job_cron() {
     mediamosa_http::do_head_call_internal($url);
   }
   else {
-    mediamosa::log('Jobschedular URL not set, please setup jobschedular server in the @link.', array('@link' => l('Mediamosa configuratiob', '/admin/mediamosa/config/global')), 'job_cron');
+    mediamosa::log('Jobschedular URL not set, please setup jobschedular server in the @link.', array('@link' => l('Mediamosa configuration', '/admin/mediamosa/config/global')), WATCHDOG_ALERT, 'job_cron');
   }
 
   // Log it.

@@ -33,7 +33,7 @@ require_once 'mediamosa_asset_supplement_db.inc';
 /**
  * Implement hook_install().
  */
-function mediamosa_asset_supplement_install() {
+function _mediamosa_asset_supplement_install() {
   // Create our table(s).
   mediamosa::drupal_install_schema(mediamosa_asset_supplement_db::TABLE_NAME);
 }
@@ -41,7 +41,7 @@ function mediamosa_asset_supplement_install() {
 /**
  * Implement hook_uninstall().
  */
-function mediamosa_asset_supplement_uninstall() {
+function _mediamosa_asset_supplement_uninstall() {
   // Drop our table(s).
   mediamosa::drupal_uninstall_schema(mediamosa_asset_supplement_db::TABLE_NAME);
 }

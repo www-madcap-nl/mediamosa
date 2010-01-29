@@ -36,20 +36,20 @@ require_once 'metadata/mediamosa_asset_mediafile_metadata.install.inc';
 /**
  * Implement hook_install().
  */
-function mediamosa_asset_mediafile_install() {
+function _mediamosa_asset_mediafile_install() {
   // Create our table(s).
   mediamosa::drupal_install_schema(mediamosa_asset_mediafile_db::TABLE_NAME);
 
   // Call the asset media metadata installer.
-  mediamosa_asset_mediafile_metadata_install();
+  _mediamosa_asset_mediafile_metadata_install();
 }
 
 /**
  * Implement hook_uninstall().
  */
-function mediamosa_asset_mediafile_uninstall() {
+function _mediamosa_asset_mediafile_uninstall() {
   // Call the asset media metadata uninstaller.
-  mediamosa_asset_mediafile_metadata_uninstall();
+  _mediamosa_asset_mediafile_metadata_uninstall();
 
   // Drop our table(s).
   mediamosa::drupal_uninstall_schema(mediamosa_asset_mediafile_db::TABLE_NAME);

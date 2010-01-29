@@ -35,7 +35,7 @@ require_once 'mediamosa_ticket_db.inc';
 /**
  * Implement hook_install().
  */
-function mediamosa_ticket_install() {
+function _mediamosa_ticket_install() {
   // Create our table(s).
   mediamosa::drupal_install_schema(mediamosa_ticket_db::TABLE_NAME);
 }
@@ -43,7 +43,7 @@ function mediamosa_ticket_install() {
 /**
  * Implement hook_uninstall().
  */
-function mediamosa_ticket_uninstall() {
+function _mediamosa_ticket_uninstall() {
   // Drop our table(s).
   mediamosa::drupal_uninstall_schema(mediamosa_ticket_db::TABLE_NAME);
 }

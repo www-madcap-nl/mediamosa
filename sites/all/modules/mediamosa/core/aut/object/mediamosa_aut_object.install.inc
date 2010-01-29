@@ -34,7 +34,7 @@ require_once 'mediamosa_aut_object_db.inc';
 /**
  * Our sub install.
  */
-function mediamosa_aut_object_install() {
+function _mediamosa_aut_object_install() {
 // Create our table.
   mediamosa::drupal_install_schema('mediamosa_aut_object');
 }
@@ -42,7 +42,7 @@ function mediamosa_aut_object_install() {
 /**
  * Our sub uninstall.
  */
-function mediamosa_aut_object_uninstall() {
+function _mediamosa_aut_object_uninstall() {
 // Create our table.
   mediamosa::drupal_uninstall_schema('mediamosa_aut_object');
 }

@@ -36,14 +36,14 @@ require_once 'transcode/mediamosa_job_server_transcode.install.inc';
 /**
  * Implement hook_install().
  */
-function mediamosa_job_server_install() {
+function _mediamosa_job_server_install() {
   // Create our table(s).
   mediamosa::drupal_install_schema(mediamosa_job_server_db::TABLE_NAME);
 
   // Create child tables;
-  mediamosa_job_server_analyse_install();
-  mediamosa_job_server_still_install();
-  mediamosa_job_server_transcode_install();
+  _mediamosa_job_server_analyse_install();
+  _mediamosa_job_server_still_install();
+  _mediamosa_job_server_transcode_install();
 
   // @todo
   return;
@@ -62,9 +62,9 @@ function mediamosa_job_server_install() {
       mediamosa::drupal_install_schema(mediamosa_job_server_db::TABLE_NAME);
 
       // Create child tables;
-      mediamosa_job_server_analyse_install();
-      mediamosa_job_server_still_install();
-      mediamosa_job_server_transcode_install();
+      _mediamosa_job_server_analyse_install();
+      _mediamosa_job_server_still_install();
+      _mediamosa_job_server_transcode_install();
     }
     catch(Exception $e) {
       mediamosa_db::db_set_active($old_db);
@@ -73,19 +73,16 @@ function mediamosa_job_server_install() {
 
     mediamosa_db::db_set_active($old_db);
   }
-
-
-
 }
 
 /**
  * Implement hook_uninstall().
  */
-function mediamosa_job_server_uninstall() {
+function _mediamosa_job_server_uninstall() {
   // Drop child tables;
-  mediamosa_job_server_analyse_uninstall();
-  mediamosa_job_server_still_uninstall();
-  mediamosa_job_server_transcode_uninstall();
+  _mediamosa_job_server_analyse_uninstall();
+  _mediamosa_job_server_still_uninstall();
+  _mediamosa_job_server_transcode_uninstall();
 
   // Drop our table(s).
   mediamosa::drupal_uninstall_schema(mediamosa_job_server_db::TABLE_NAME);
