@@ -190,6 +190,7 @@ class mediamosa_rest_call_job_analyse_mediafile extends mediamosa_rest_call {
   // Rest vars;
   const MEDIAFILE_ID = 'mediafile_id';
   const USER_ID = 'user_id';
+  const NO_HINT = 'no_hint';
 
   // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {

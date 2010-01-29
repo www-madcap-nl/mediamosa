@@ -54,14 +54,14 @@ class mediamosa_job_still {
   static public function create($job_id, array $a_still_parameters) {
 
     $a_still_parameters += array(
-      //mediamosa_asset_mediafile_metadata_db::STILL_TYPE => NULL,
-      //'still_per_mediafile' => NULL,
-      //'still_every_second' => NULL,
-      //'start_frame' => NULL,
-      //'end_frame' => NULL,
+      mediamosa_asset_mediafile_metadata_db::STILL_TYPE => NULL,
+      'still_per_mediafile' => NULL,
+      'still_every_second' => NULL,
+      'start_frame' => NULL,
+      'end_frame' => NULL,
       mediamosa_job_still_db::SIZE => mediamosa_settings::STILL_DEFAULT_SIZE,
-      //mediamosa_job_still_db::H_PADDING => NULL,
-      //mediamosa_job_still_db::V_PADDING => NULL,
+      mediamosa_job_still_db::H_PADDING => NULL,
+      mediamosa_job_still_db::V_PADDING => NULL,
       mediamosa_job_still_db::FRAMETIME => mediamosa_settings::STILL_DEFAULT_FRAME_TIME,
     );
 
@@ -99,6 +99,6 @@ class mediamosa_job_still {
     $a_fields = mediamosa_db::db_insert_enrich($a_fields);
 
     // Insert it.
-    return $query->field($a_fields)->execute();
+    return $query->fields($a_fields)->execute();
   }
 }
