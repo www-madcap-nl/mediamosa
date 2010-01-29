@@ -527,6 +527,7 @@ class mediamosa_asset {
         mediamosa_app_db::STILL_URL
       )
     );
+
     foreach ($result as $a_app) {
       $a_items['app_info'][$a_app['id']] = $a_app;
     }
@@ -559,7 +560,9 @@ class mediamosa_asset {
     if (isset($a_items['app_info'])) {
       $a_keys = array_keys($a_items['app_info']);
       foreach ($a_keys as $key) {
-        $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['profile'][mediamosa_db_query::WHERE_OR][] = sprintf("(m.transcode_profile_id = %d AND m.app_id = %d)", $a_items['app_info'][$key]['preview_profile_id'], $key);
+        if (isset($a_items['app_info'][$key])) {
+          $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['profile'][mediamosa_db_query::WHERE_OR][] = sprintf("(m.transcode_profile_id = %d AND m.app_id = %d)", $a_items['app_info'][$key]['preview_profile_id'], $key);
+        }
       }
     }
 
@@ -643,7 +646,7 @@ class mediamosa_asset {
       if (!isset($a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]])) {
         $a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]] = mediamosa_asset::process_asset_output($a_asset, $a_metadata_definitions_full);
 
-        if (isset($a_items['app_info'][$a_asset['app_id']]['play_proxy_url']) && isset($a_items['mediafile_preview'][$a_asset[mediamosa_asset_db::ID]])) {
+        if (isset($a_items['app_info'][$a_asset['app_id']]) && isset($a_items['app_info'][$a_asset['app_id']]['play_proxy_url']) && isset($a_items['mediafile_preview'][$a_asset[mediamosa_asset_db::ID]])) {
           $a_patterns = array(
             '/{asset_id}/i',
             '/{preview_profile_id}/i',
@@ -686,7 +689,7 @@ class mediamosa_asset {
           // Create still response.
           $response = mediamosa_asset_mediafile_play_proxy::create_response_still($ticket, $app_id);
           $a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]]['vpx_still_url'] = $response['output'];
-          $a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]]['ega_still_url'] = str_replace('{asset_id}', $a_asset[mediamosa_asset_db::ID], $a_items['app_info'][$a_asset['app_id']]['still_url']);
+          $a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]]['ega_still_url'] = (isset($a_items['app_info'][$a_asset['app_id']]) ? str_replace('{asset_id}', $a_asset[mediamosa_asset_db::ID], $a_items['app_info'][$a_asset['app_id']]['still_url']) : '');
         }
       }
 

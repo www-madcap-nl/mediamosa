@@ -51,6 +51,7 @@ class mediamosa_app {
    * @return array
    */
   static public function get_by_appids(array $a_app_id, array $a_fields = array()) {
+
     $query = mediamosa_db::db_select(mediamosa_app_db::TABLE_NAME, 'app');
 
     if (count($a_fields)) {
