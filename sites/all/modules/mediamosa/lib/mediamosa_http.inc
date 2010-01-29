@@ -30,8 +30,85 @@
  */
 class mediamosa_http {
 
+  // ------------------------------------------------------------------ Consts.
   const METHOD_GET = 'GET';
   const METHOD_POST = 'POST';
+
+  // ------------------------------------------------------------------ Functions.
+  /**
+   * Parse a URL and return its components.
+   *
+   * @param string $url
+   */
+  static public function parse_url($url) {
+    $a_url = parse_url($url);
+
+    if (!$a_url) {
+      return FALSE;
+    }
+
+    $a_url += array(
+      'scheme' => 'http',
+      'host' => 'localhost',
+      'port' => 0, // 0 should default to 80
+      'user' => '',
+      'pass' => '',
+      'path' => '',
+      'query' => '', // after the question mark ?
+      'fragment' => '', // after the hashmark #
+    );
+
+    // Strip /.
+    $a_url['host'] = trim($a_url['host'], '/');
+    $a_url['path'] = trim($a_url['path'], '/');
+
+    return $a_url;
+  }
+
+  /**
+   * Opposite of parse_url.
+   *
+   * @param $a_url
+   */
+  static public function build_url($a_url) {
+    assert(in_array($a_url['scheme'], array('ftp', 'http', 'https')));
+
+    $a_result = array(
+      $a_url['scheme'] . '://',
+    );
+
+    // Add user : pass
+    if ($a_url['user'] != '' || $a_url['pass'] != '') {
+      $a_result[] = $a_url['user'];
+      $a_result[] = ':';
+      $a_result[] = $a_url['pass'];
+      $a_result[] = '@';
+    }
+
+    // Host.
+    $a_result[] = $a_url['host'];
+
+    // Optional port
+    if ($a_url['port']) {
+      $a_result[] = ':' . $a_url['port'];
+    }
+
+    // Path.
+    if ($a_url['path'] != '') {
+      $a_result[] = '/' . $a_url['path'];
+    }
+
+    if ($a_url['query'] != '') {
+      $a_result[] = '?' . $a_url['query'];
+    }
+
+    if ($a_url['fragment'] != '') {
+      $a_result[] = $a_url['fragment'];
+    }
+
+    // Now build url.
+    return implode('', $a_result);
+  }
 
   /**
    * Do a internal REST call.
@@ -139,6 +216,36 @@ class mediamosa_http {
     $a_options['do_internal'] = true;
     return self::do_head_call($url, $a_options);
   }
+
+  /**
+   * Trigger the maintenance cron.
+   *
+   * @param string $uri
+   *  If you need to change the uri to trigger.
+   */
+  static public function do_head_call_cron($uri) {
+    // Just trigger, it has his own protection on overrun.
+    $url = variable_get('mediamosa_cron_url_app', 'http://localhost');
+    $use_localhost = variable_get('mediamosa_cron_url_app_local', FALSE);
+
+    $a_url = mediamosa_http::parse_url($url);
+    $a_options = array();
+    if ($use_localhost) {
+      $a_options['headers']['Host'] = $a_url['host'];
+      $a_url['host'] = 'localhost';
+    }
+
+    $a_url['path'] = ($a_url['path'] != '' ? $a_url['path'] . '/' : '') . $uri;
+    $url = mediamosa_http::build_url($a_url);
+    mediamosa_http::do_head_call_internal($url, $a_options);
+
+    // Log URL.
+    mediamosa_debug::log_debug('Internal head cron call to @url.', array('@url' => $url));
+
+    // Return the triggert url.
+    return $url;
+  }
+
 
   /**
    * Perform an HTTP request.

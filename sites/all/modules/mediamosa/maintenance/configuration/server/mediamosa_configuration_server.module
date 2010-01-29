@@ -64,7 +64,7 @@ function mediamosa_configuration_server_mediamosa_configuration_collect() {
   }
   else {
     $form['settings_server']['mediamosa_jobscheduler_markup'] = array(
-      '#markup' => t('No enabled jobscheduler servers found')
+      '#markup' => t('No enabled jobscheduler transcoding servers found')
     );
   }
   return $form;

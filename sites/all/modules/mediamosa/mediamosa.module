@@ -144,15 +144,15 @@ function mediamosa_mediamosa_configuration_collect() {
     '#collapsible' => TRUE,
   );
 
-  $form['settings_cron']['mediamosa_cron_uri_app'] = array(
+  $form['settings_cron']['mediamosa_cron_url_app'] = array(
     '#type' => 'textfield',
-    '#title' => t('Hostname REST'),
-    '#description' => t('The hostname or IP Address of the server to apply the call for CRON and other internal global REST calls. This must be a MediaMosa REST interface and open from this server, f.e. \'app.mediamosa2.local\'. <em>Do NOT use http:// or other schema.</em>'),
+    '#title' => t('URL REST'),
+    '#description' => t('The URL or IP Address of the server to apply the call for CRON and other internal global REST calls. This must be a MediaMosa REST interface and open from this server, f.e. \'http://app.mediamosa2.local\'. <em>You must use http:// or other schema.</em>'),
     '#required' => TRUE,
-    '#default_value' => 'localhost',
+    '#default_value' => 'http:://localhost',
   );
 
-  $form['settings_cron']['mediamosa_cron_uri_app_local'] = array(
+  $form['settings_cron']['mediamosa_cron_url_app_local'] = array(
     '#type' => 'checkbox',
     '#title' => t('Use localhost with hostname.'),
     '#description' => t('Enable to use localhost and provide the call with the hostname. This option is useful when your server does not allow to call the host directy on localhost by hostname. Enabled will call localhost with the hostname in the HTTP header, allowing the call to go directly to localhost instead of going outside and back in.'),
@@ -160,6 +160,18 @@ function mediamosa_mediamosa_configuration_collect() {
   );
 
   return $form;
+}
+
+/**
+ * Implements the hook_mediamosa_configuration_validate()
+ */
+function mediamosa_mediamosa_configuration_validate($form, &$form_state) {
+  // Use normal so schema might be empty.
+  $a_parse_url = parse_url($form_state['values']['mediamosa_cron_url_app']);
+
+  if (!isset($a_parse_url['scheme']) || !in_array($a_parse_url['scheme'], array('http', 'https'))) {
+    form_set_error('mediamosa_cron_url_app', t("Include either 'http:// or 'https://' in URL Rest."));
+  }
 }
 
 /**

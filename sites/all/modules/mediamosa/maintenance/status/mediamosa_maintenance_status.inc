@@ -207,4 +207,16 @@
     // Now store in variable.
     mediamosa::variable_set('mediamosa_test_results', $a_test_results);
   }
+
+  /**
+   * Trigger the maintenance cron.
+   *
+   * @param string $uri
+   *  If you need to change the uri to trigger.
+   */
+  static public function trigger_maintenance_status() {
+
+    // Trigger.
+    mediamosa_http::do_head_call_cron('/internal/cron/maintenance_status');
+  }
 }

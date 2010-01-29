@@ -37,17 +37,8 @@ function mediamosa_maintenance_status_cron() {
   $start = time();
   mediamosa_debug::log_debug('mediamosa_maintenance_status_cron started.', array(), 'maintenance_status');
 
-  // Just trigger, it has his own protection on overrun.
-  $hostname = variable_get('mediamosa_cron_uri_app', 'localhost');
-  $use_localhost = variable_get('mediamosa_cron_uri_app_local', FALSE);
-
-  $a_options = array('do_internal' => TRUE, 'method' => 'HEAD');
-  if ($use_localhost) {
-    $a_options['headers']['Host'] = $hostname;
-    $hostname = 'localhost';
-  }
-
-  mediamosa_http::do_head_call('http://' . $hostname  . '/internal/cron/maintenance_status', $a_options);
+  // Trigger unittest run.
+  mediamosa_maintenance_status::trigger_maintenance_status();
 
   // Log it.
   mediamosa_debug::log_debug('mediamosa_maintenance_status_cron ended: @secs', array('@sec' => time() - $start), 'maintenance_status');
