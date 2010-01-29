@@ -33,7 +33,7 @@ require_once 'mediamosa_job_server_transcode_db.inc';
 /**
  * Implement hook_install().
  */
-function mediamosa_job_server_transcode_install() {
+function _mediamosa_job_server_transcode_install() {
   // Create our table(s).
   mediamosa::drupal_install_schema(mediamosa_job_server_transcode_db::TABLE_NAME);
 }
@@ -41,7 +41,7 @@ function mediamosa_job_server_transcode_install() {
 /**
  * Implement hook_uninstall().
  */
-function mediamosa_job_server_transcode_uninstall() {
+function _mediamosa_job_server_transcode_uninstall() {
   // Drop our table(s).
   mediamosa::drupal_uninstall_schema(mediamosa_job_server_transcode_db::TABLE_NAME);
 }

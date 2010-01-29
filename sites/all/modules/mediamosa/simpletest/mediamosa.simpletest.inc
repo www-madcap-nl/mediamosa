@@ -62,7 +62,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     $args = func_get_args();
 
     // Create and setup the CORE module.
-    $args = array_unique(array_merge(array('mediamosa_app', 'mediamosa'), $args));
+    $args = array_unique(array_merge(array('mediamosa', 'mediamosa_app'), $args));
     call_user_func_array(array($this, 'parent::setUp'), $args);
 
     // Now set it, so its in the sandbox.

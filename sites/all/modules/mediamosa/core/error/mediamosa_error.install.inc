@@ -35,7 +35,7 @@ require_once 'mediamosa_error.inc';
 /**
  * Implement hook_install().
  */
-function mediamosa_error_install() {
+function _mediamosa_error_install() {
   // Create our table(s).
   mediamosa::drupal_install_schema(mediamosa_error_db::TABLE_NAME);
 
@@ -234,7 +234,7 @@ function mediamosa_error_install() {
 /**
  * Implement hook_install().
  */
-function mediamosa_error_uninstall() {
+function _mediamosa_error_uninstall() {
   // Drop our table(s).
   mediamosa::drupal_uninstall_schema(mediamosa_error_db::TABLE_NAME);
 }

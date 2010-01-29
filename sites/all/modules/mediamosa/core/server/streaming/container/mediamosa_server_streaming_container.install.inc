@@ -34,7 +34,7 @@ include 'mediamosa_server_streaming_container_db.inc';
 /**
  * Implements hook_install().
  */
-function mediamosa_server_streaming_container_install() {
+function _mediamosa_server_streaming_container_install() {
 
   // Download server.
   mediamosa::drupal_install_schema(mediamosa_server_streaming_container_db::TABLE_NAME);
@@ -43,7 +43,7 @@ function mediamosa_server_streaming_container_install() {
 /**
  * Implements hook_uninstall().
  */
-function mediamosa_server_streaming_container_uninstall() {
+function _mediamosa_server_streaming_container_uninstall() {
 
   // Download server.
   mediamosa::drupal_uninstall_schema(mediamosa_server_streaming_container_db::TABLE_NAME);

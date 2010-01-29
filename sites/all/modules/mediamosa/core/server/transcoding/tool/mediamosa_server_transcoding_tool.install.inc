@@ -34,7 +34,7 @@ require_once 'mediamosa_server_transcoding_tool_db.inc';
 /**
  * Implements hook_install().
  */
-function mediamosa_server_transcoding_tool_install() {
+function _mediamosa_server_transcoding_tool_install() {
 
   // Download server.
   mediamosa::drupal_install_schema(mediamosa_server_transcoding_tool_db::TABLE_NAME);
@@ -43,7 +43,7 @@ function mediamosa_server_transcoding_tool_install() {
 /**
  * Implements hook_uninstall().
  */
-function mediamosa_server_transcoding_tool_uninstall() {
+function _mediamosa_server_transcoding_tool_uninstall() {
 
   // Download server.
   mediamosa::drupal_uninstall_schema(mediamosa_server_transcoding_tool_db::TABLE_NAME);

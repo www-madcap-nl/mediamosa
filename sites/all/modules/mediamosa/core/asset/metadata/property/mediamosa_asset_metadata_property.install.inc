@@ -37,9 +37,9 @@ require_once 'group/mediamosa_asset_metadata_property_group.install.inc';
 /**
  * Implement hook_install().
  */
-function mediamosa_asset_metadata_property_install() {
+function _mediamosa_asset_metadata_property_install() {
   // Create asset metatdata property group table first.
-  mediamosa_asset_metadata_property_group_install();
+  _mediamosa_asset_metadata_property_group_install();
 
   // Create our table(s).
   mediamosa::drupal_install_schema(mediamosa_asset_metadata_property_db::TABLE_NAME);
@@ -111,12 +111,12 @@ function mediamosa_asset_metadata_property_install() {
 /**
  * Implement hook_uninstall().
  */
-function mediamosa_asset_metadata_property_uninstall() {
+function _mediamosa_asset_metadata_property_uninstall() {
   // Drop our table(s).
   mediamosa::drupal_uninstall_schema(mediamosa_asset_metadata_property_db::TABLE_NAME);
 
   // Drop asset metatdata property group table.
-  mediamosa_asset_metadata_property_group_uninstall();
+  _mediamosa_asset_metadata_property_group_uninstall();
 }
 
 /**

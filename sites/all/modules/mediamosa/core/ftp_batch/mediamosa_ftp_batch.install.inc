@@ -35,20 +35,20 @@ require_once 'asset/mediamosa_ftp_batch_asset.install.inc';
 /**
  * Implement hook_ininstall.
  */
-function mediamosa_ftp_batch_install() {
+function _mediamosa_ftp_batch_install() {
 // Create our table.
   mediamosa::drupal_install_schema(mediamosa_ftp_batch_db::TABLE_NAME);
 
   // Create our child table.
-  mediamosa_ftp_batch_asset_install();
+  _mediamosa_ftp_batch_asset_install();
 }
 
 /**
  * Implement hook_uninstall.
  */
-function mediamosa_ftp_batch_uninstall() {
+function _mediamosa_ftp_batch_uninstall() {
   // Uninstall our child table.
-  mediamosa_ftp_batch_asset_uninstall();
+  _mediamosa_ftp_batch_asset_uninstall();
 
   // Uninstall our table.
   mediamosa::drupal_uninstall_schema(mediamosa_ftp_batch_db::TABLE_NAME);

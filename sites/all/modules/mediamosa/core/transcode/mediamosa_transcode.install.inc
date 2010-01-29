@@ -34,17 +34,17 @@ require_once 'mapping/mediamosa_transcode_mapping.install.inc';
 /**
  * Implement hook_install().
  */
-function mediamosa_transcode_install() {
+function _mediamosa_transcode_install() {
   // Create our table(s).
-  mediamosa_transcode_profile_install();
-  mediamosa_transcode_mapping_install();
+  _mediamosa_transcode_profile_install();
+  _mediamosa_transcode_mapping_install();
 }
 
 /**
  * Implement hook_uninstall().
  */
-function mediamosa_transcode_uninstall() {
+function _mediamosa_transcode_uninstall() {
   // Drop our table(s).
-  mediamosa_transcode_profile_uninstall();
-  mediamosa_transcode_mapping_uninstall();
+  _mediamosa_transcode_profile_uninstall();
+  _mediamosa_transcode_mapping_uninstall();
 }

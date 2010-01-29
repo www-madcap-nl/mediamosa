@@ -34,7 +34,7 @@ require_once 'mediamosa_aut_app_master_slave_db.inc';
 /**
  * Implement hook_ininstall.
  */
-function mediamosa_aut_app_master_slave_install() {
+function _mediamosa_aut_app_master_slave_install() {
 // Create our table.
   mediamosa::drupal_install_schema('mediamosa_aut_app_master_slave');
 }
@@ -42,7 +42,7 @@ function mediamosa_aut_app_master_slave_install() {
 /**
  * Implement hook_uninstall.
  */
-function mediamosa_aut_app_master_slave_uninstall() {
+function _mediamosa_aut_app_master_slave_uninstall() {
 // Create our table.
   mediamosa::drupal_uninstall_schema('mediamosa_aut_app_master_slave');
 }

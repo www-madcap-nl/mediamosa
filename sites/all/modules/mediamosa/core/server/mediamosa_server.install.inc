@@ -37,14 +37,14 @@ require_once 'transcoding/mediamosa_server_transcoding.install.inc';
 /**
  * Implements hook_install().
  */
-function mediamosa_server_install() {
+function _mediamosa_server_install() {
 
   // Server node extensions.
   mediamosa::drupal_install_schema(mediamosa_server_db::TABLE_NAME);
 
   // Children.
-  mediamosa_server_streaming_install();
-  mediamosa_server_transcoding_install();
+  _mediamosa_server_streaming_install();
+  _mediamosa_server_transcoding_install();
 
   $a_default_servers = array(
     array(1,0,'ON',"streaming","rtsp://wms.example.org/tickets/{TICKET}","avi","{IF_EXTERNAL}\n<asx version=\"3.0\">\n<entry>\n<ref href=\"{TICKET_URI}\" />\n{IF_START}\n<starttime value=\"{START_TIME}\" />\n{/IF_START}\n{IF_DURATION}\n<duration value=\"{DURATION_TIME}\" />\n{/IF_DURATION}\n</entry>\n</asx>\n{/IF_EXTERNAL}\n<object id='{MEDIAFILE_ID}' classid='CLSID:22D6F312-B0F6-11D0-94AB-0080C74C7E95' standby='Loading Media Player components...' type='application/x-oleobject' width='{WIDTH}' height='{HEIGHT}'>\n<param name='filename' value='{WMA_TICKET_URI}' />\n<param name='autostart' value='{AUTOSTART}' />\n<embed type='application/x-mplayer2' src='{WMA_TICKET_URI}' autostart='{AUTOPLAY_NUM}' name='{MEDIAFILE_ID}' width='{WIDTH}' height='{HEIGHT}'/>\n</embed>\n</object>",'','','','',''),
@@ -113,19 +113,19 @@ function mediamosa_server_install() {
   }
 
   // Server job table is a link table between mediamosa_job and mediamosa_jobserver_job and our server.
-  mediamosa_server_job_install();
+  _mediamosa_server_job_install();
 }
 
 /**
  * Implements hook_uninstall().
  */
-function mediamosa_server_uninstall() {
+function _mediamosa_server_uninstall() {
   // Server job uninstall.
-  mediamosa_server_job_uninstall();
+  _mediamosa_server_job_uninstall();
 
     // Unstall our children..
-  mediamosa_server_streaming_uninstall();
-  mediamosa_server_transcoding_uninstall();
+  _mediamosa_server_streaming_uninstall();
+  _mediamosa_server_transcoding_uninstall();
 
   // Server node extensions.
   mediamosa::drupal_uninstall_schema(mediamosa_server_db::TABLE_NAME);

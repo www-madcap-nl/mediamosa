@@ -55,40 +55,40 @@ require_once 'core/webservice/mediamosa_webservice.install.inc';
 function mediamosa_install() {
 
    // Install the error db.
-  mediamosa_error_install();
+  _mediamosa_error_install();
 
   // Install the app db.
-  mediamosa_app_install();
+  _mediamosa_app_install();
 
   // Install webservice db.
-  mediamosa_webservice_install();
+  _mediamosa_webservice_install();
 
   // Install the collection db.
-  mediamosa_collection_install();
+  _mediamosa_collection_install();
 
   // Install the asset db.
-  mediamosa_asset_install();
+  _mediamosa_asset_install();
 
   // Install the aut dbs.
-  mediamosa_aut_install();
+  _mediamosa_aut_install();
 
   // Install the user dbs.
-  mediamosa_user_install();
+  _mediamosa_user_install();
 
   // Call installer ticket.
-  mediamosa_ticket_install();
+  _mediamosa_ticket_install();
 
   // Call installer ftp_batch.
-  mediamosa_ftp_batch_install();
+  _mediamosa_ftp_batch_install();
 
   // Call installer Transcode.
-  mediamosa_transcode_install();
+  _mediamosa_transcode_install();
 
   // Call installer Job.
-  mediamosa_job_install(); // jobs before server.
+  _mediamosa_job_install(); // jobs before server.
 
   // Install the server db.
-  mediamosa_server_install();
+  _mediamosa_server_install();
 }
 
 /**
@@ -96,38 +96,38 @@ function mediamosa_install() {
  */
 function mediamosa_uninstall() {
   // Remove the server db.
-  mediamosa_server_uninstall();
+  _mediamosa_server_uninstall();
 
   // Remove Job.
-  mediamosa_job_uninstall();
+  _mediamosa_job_uninstall();
 
   // Remove Transcode Profile.
-  mediamosa_transcode_uninstall();
+  _mediamosa_transcode_uninstall();
 
   // Remove ftp_batch.
-  mediamosa_ftp_batch_uninstall();
+  _mediamosa_ftp_batch_uninstall();
 
   // Call uninstaller ticket.
-  mediamosa_ticket_uninstall();
+  _mediamosa_ticket_uninstall();
 
   // Uninstall the user dbs.
-  mediamosa_user_uninstall();
+  _mediamosa_user_uninstall();
 
   // Install the aut dbs.
-  mediamosa_aut_uninstall();
+  _mediamosa_aut_uninstall();
 
   // Remove the app db.
-  mediamosa_asset_uninstall();
+  _mediamosa_asset_uninstall();
 
   // Remove the collection db.
-  mediamosa_collection_uninstall();
+  _mediamosa_collection_uninstall();
 
   // Remove the webservice db.
-  mediamosa_webservice_uninstall();
+  _mediamosa_webservice_uninstall();
 
   // Remove the app db.
-  mediamosa_app_uninstall();
+  _mediamosa_app_uninstall();
 
   // Remove the error db.
-  mediamosa_error_uninstall();
+  _mediamosa_error_uninstall();
 }

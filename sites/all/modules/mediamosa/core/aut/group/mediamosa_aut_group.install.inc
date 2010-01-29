@@ -34,7 +34,7 @@ require_once 'mediamosa_aut_group_db.inc';
 /**
  * Our sub install.
  */
-function mediamosa_aut_group_install() {
+function _mediamosa_aut_group_install() {
 // Create our table.
   mediamosa::drupal_install_schema('mediamosa_aut_group');
 }
@@ -42,7 +42,7 @@ function mediamosa_aut_group_install() {
 /**
  * Our sub uninstall.
  */
-function mediamosa_aut_group_uninstall() {
+function _mediamosa_aut_group_uninstall() {
 // Create our table.
   mediamosa::drupal_uninstall_schema('mediamosa_aut_group');
 }

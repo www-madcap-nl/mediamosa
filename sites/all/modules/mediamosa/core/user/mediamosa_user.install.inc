@@ -37,29 +37,28 @@ require_once 'group/mediamosa_user_group.install.inc';
 /**
  * Implements hook_install().
  */
-function mediamosa_user_install() {
+function _mediamosa_user_install() {
 
   // Create our table(s).
   mediamosa::drupal_install_schema(mediamosa_user_db::TABLE_NAME);
 
   // Installer user group.
-  mediamosa_user_group_install();
+  _mediamosa_user_group_install();
 
   // Installer user group.
-  mediamosa_user_favorite_install();
-
+  _mediamosa_user_favorite_install();
 }
 
 /**
  * Implements hook_uninstall().
  */
-function mediamosa_user_uninstall() {
+function _mediamosa_user_uninstall() {
 
   // Uninstaller user favorite.
-  mediamosa_user_favorite_uninstall();
+  _mediamosa_user_favorite_uninstall();
 
   // Uninstaller user group.
-  mediamosa_user_group_uninstall();
+  _mediamosa_user_group_uninstall();
 
   // Remove our table(s).
   mediamosa::drupal_uninstall_schema(mediamosa_user_db::TABLE_NAME);

@@ -35,7 +35,7 @@ require_once 'mediamosa_asset_mediafile_metadata_db.inc';
 /**
  * Implement hook_install().
  */
-function mediamosa_asset_mediafile_metadata_install() {
+function _mediamosa_asset_mediafile_metadata_install() {
   // Create our table(s).
   mediamosa::drupal_install_schema(mediamosa_asset_mediafile_metadata_db::TABLE_NAME);
 }
@@ -43,7 +43,7 @@ function mediamosa_asset_mediafile_metadata_install() {
 /**
  * Implement hook_uninstall().
  */
-function mediamosa_asset_mediafile_metadata_uninstall() {
+function _mediamosa_asset_mediafile_metadata_uninstall() {
   // Drop our table(s).
   mediamosa::drupal_uninstall_schema(mediamosa_asset_mediafile_metadata_db::TABLE_NAME);
 }

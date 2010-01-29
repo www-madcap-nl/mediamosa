@@ -35,7 +35,7 @@ require_once 'mediamosa_collection_db.inc';
 /**
  * Implement hook_install().
  */
-function mediamosa_collection_install() {
+function _mediamosa_collection_install() {
   // Create our table(s).
   mediamosa::drupal_install_schema(mediamosa_collection_db::TABLE_NAME);
 }
@@ -43,7 +43,7 @@ function mediamosa_collection_install() {
 /**
  * Implement hook_uninstall().
  */
-function mediamosa_collection_uninstall() {
+function _mediamosa_collection_uninstall() {
   // Drop our table(s).
   mediamosa::drupal_uninstall_schema(mediamosa_collection_db::TABLE_NAME);
 }

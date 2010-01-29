@@ -39,38 +39,38 @@ require_once 'upload/mediamosa_job_upload.install.inc';
 /**
  * Implement hook_install().
  */
-function mediamosa_job_install() {
+function _mediamosa_job_install() {
   // Create our table(s).
   mediamosa::drupal_install_schema(mediamosa_job_db::TABLE_NAME);
 
   // Create Job Still table.
-  mediamosa_job_still_install();
+  _mediamosa_job_still_install();
 
   // Create Job Transcode table.
-  mediamosa_job_transcode_install();
+  _mediamosa_job_transcode_install();
 
   // Create Job Upload table.
-  mediamosa_job_upload_install();
+  _mediamosa_job_upload_install();
 
   // Create Job Server table.
-  mediamosa_job_server_install();
+  _mediamosa_job_server_install();
 }
 
 /**
  * Implement hook_uninstall().
  */
-function mediamosa_job_uninstall() {
+function _mediamosa_job_uninstall() {
   // Drop Job Server table.
-  mediamosa_job_server_uninstall();
+  _mediamosa_job_server_uninstall();
 
   // Drop Job Upload table.
-  mediamosa_job_upload_uninstall();
+  _mediamosa_job_upload_uninstall();
 
   // Drop Job Transcode table.
-  mediamosa_job_transcode_uninstall();
+  _mediamosa_job_transcode_uninstall();
 
   // Drop Job Still table.
-  mediamosa_job_still_uninstall();
+  _mediamosa_job_still_uninstall();
 
   // Drop our table(s).
   mediamosa::drupal_uninstall_schema(mediamosa_job_db::TABLE_NAME);

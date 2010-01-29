@@ -36,20 +36,20 @@ require_once 'app/mediamosa_webservice_app.install.inc';
 /**
  * Implement hook_install().
  */
-function mediamosa_webservice_install() {
+function _mediamosa_webservice_install() {
   // Create our table(s).
   mediamosa::drupal_install_schema(mediamosa_webservice_db::TABLE_NAME);
 
   // Create children.
-  mediamosa_webservice_app_install();
+  _mediamosa_webservice_app_install();
 }
 
 /**
  * Implement hook_uninstall().
  */
-function mediamosa_webservice_uninstall() {
+function _mediamosa_webservice_uninstall() {
   // Drop children.
-  mediamosa_webservice_app_uninstall();
+  _mediamosa_webservice_app_uninstall();
 
   // Drop our table(s).
   mediamosa::drupal_uninstall_schema(mediamosa_webservice_db::TABLE_NAME);
