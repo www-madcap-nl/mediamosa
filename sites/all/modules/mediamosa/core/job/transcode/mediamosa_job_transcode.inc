@@ -38,7 +38,7 @@ class mediamosa_job_transcode {
   static public function get($job_id) {
     return mediamosa_db::db_select(mediamosa_job_transcode_db::TABLE_NAME, 'jt')
       ->fields('jt')
-      ->condition(mediamosa_job_db::ID, $job_id)
+      ->condition(mediamosa_job_transcode_db::JOB_ID, $job_id)
       ->execute()
       ->fetchAssoc();
   }

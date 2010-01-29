@@ -38,7 +38,7 @@ class mediamosa_job_upload {
   static public function get($job_id) {
     return mediamosa_db::db_select(mediamosa_job_upload_db::TABLE_NAME, 'ju')
       ->fields('ju')
-      ->condition(mediamosa_job_upload_db::ID, $job_id)
+      ->condition(mediamosa_job_upload_db::JOB_ID, $job_id)
       ->execute()
       ->fetchAssoc();
   }

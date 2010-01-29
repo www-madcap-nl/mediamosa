@@ -430,8 +430,7 @@ class mediamosa_job {
     if ($uploaded_filesize != $a_job_ext_upload[mediamosa_job_upload_db::FILE_SIZE]) {
       // Job failed.
       // Change status to failed.
-      mediamosa_job::update_status($a_job_ext_upload, mediamosa_job_db::JOB_STATUS_FAILED, '1.000');
-      return;
+      return array('status' => mediamosa_job_db::JOB_STATUS_FAILED, 'progress' => '1.000');
     }
 
     // Do analyse.
@@ -618,11 +617,15 @@ class mediamosa_job {
      * If JOB is upload and we are setting the status on FINISHED, then start analyse job.
      */
     if ($a_job_ext[mediamosa_job_db::JOB_TYPE] == mediamosa_job_db::JOB_TYPE_UPLOAD &&
-        $progress = '1.000' &&
+        $progress == '1.000' &&
         $a_job_ext[mediamosa_job_db::JOB_STATUS] != mediamosa_job_db::JOB_STATUS_FINISHED) {
 
       // Create an analyse job.
-      mediamosa_job::create_analyse_job_with_jobext($a_job_ext);
+      $resp = mediamosa_job::create_analyse_job_with_jobext($a_job_ext);
+      if (is_array($resp) && isset($resp['status']) && isset($resp['progress'])) {
+        $status = $resp['status'];
+        $progress = $resp['progress'];
+      }
     }
 
     $a_fields = array();
