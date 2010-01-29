@@ -359,7 +359,6 @@ class mediamosa_rest_call_create_mediafile extends mediamosa_rest_call {
         self::IS_DOWNLOADABLE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Mediafile can be downloaded.',
-          self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
         self::IS_ORIGINAL_FILE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,

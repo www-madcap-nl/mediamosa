@@ -141,7 +141,6 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     // Parameters asset.
     $a_parameters += array(
       mediamosa_rest_call_create_mediafile::IS_APP_ADMIN => 'false',
-      mediamosa_rest_call_create_mediafile::IS_DOWNLOADABLE => 'false',
     );
 
     // Required.
@@ -202,11 +201,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     // Parameters asset.
     $a_parameters += array(
       mediamosa_rest_call_create_mediafile::IS_APP_ADMIN => 'false',
-      mediamosa_rest_call_create_mediafile::IS_DOWNLOADABLE => 'false',
     );
 
     // Required.
-    $a_parameters[mediamosa_rest_call_create_mediafile::MEDIAFILE_ID] = $mediafile_id;
     $a_parameters[mediamosa_rest_call_create_mediafile::USER_ID] = $user_id;
 
     // Do not set the app ID, handle by us.
@@ -250,10 +247,8 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     $this->pass(strtr("Gets the asset: @asset_id'.", array('@asset_id' => $asset_id)));
 
-    $this->var_export($response);
-
     // Return data.
-    return $response;
+    return $response['xml']->items->item[0];
   }
 
 }

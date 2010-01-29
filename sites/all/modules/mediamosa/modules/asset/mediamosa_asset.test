@@ -62,6 +62,16 @@ class MediaMosaAssetTestCaseEga extends MediaMosaTestCaseEga {
     // Create uploadticket
     $ticket = $this->createMediafileUploadTicket($mediafile_id);
 
+    // Get the asset
+    $asset = $this->getAsset($asset_id);
+
+    // Check is_empty_asset field is TRUE
+    $is_empty_asset = (string)$asset->is_empty_asset;
+    $this->assertTrue(
+      $is_empty_asset == 'TRUE',
+      t("The is_empty_asset parameter is TRUE: @is_empty_asset", array('@is_empty_asset' => print_r($is_empty_asset, TRUE),))
+    );
+
     // Update mediafile
     $a_parameters = array(
       mediamosa_rest_call_create_mediafile::URI => 'http://empty.asset.demo',
@@ -72,7 +82,11 @@ class MediaMosaAssetTestCaseEga extends MediaMosaTestCaseEga {
     $asset = $this->getAsset($asset_id);
 
     // Check is_empty_asset field is FALSE
-    // TODO
+    $is_empty_asset = (string)$asset->is_empty_asset;
+    $this->assertTrue(
+      $is_empty_asset == 'FALSE',
+      t("The is_empty_asset parameter is FALSE: @is_empty_asset", array('@is_empty_asset' => print_r($is_empty_asset, TRUE),))
+    );
 
   }
 
@@ -88,7 +102,17 @@ class MediaMosaAssetTestCaseEga extends MediaMosaTestCaseEga {
     $mediafile_id_empty = $this->createMediafile($asset_id);
 
     // Create uploadticket
-    $ticket = $this->createMediafileUploadTicket($mediafile_id);
+    $ticket = $this->createMediafileUploadTicket($mediafile_id_empty);
+
+    // Get the asset
+    $asset = $this->getAsset($asset_id);
+
+    // Check is_empty_asset field is TRUE
+    $is_empty_asset = (string)$asset->is_empty_asset;
+    $this->assertTrue(
+      $is_empty_asset == 'TRUE',
+      t("The is_empty_asset parameter is TRUE: @is_empty_asset", array('@is_empty_asset' => print_r($is_empty_asset, TRUE),))
+    );
 
     // Create an another mediafile with an URI.
     $a_parameters = array(
@@ -100,7 +124,11 @@ class MediaMosaAssetTestCaseEga extends MediaMosaTestCaseEga {
     $asset = $this->getAsset($asset_id);
 
     // Check is_empty_asset field is FALSE
-    // TODO
+    $is_empty_asset = (string)$asset->is_empty_asset;
+    $this->assertTrue(
+      $is_empty_asset == 'FALSE',
+      t("The is_empty_asset parameter is FALSE: @is_empty_asset", array('@is_empty_asset' => print_r($is_empty_asset, TRUE),))
+    );
 
   }
 
