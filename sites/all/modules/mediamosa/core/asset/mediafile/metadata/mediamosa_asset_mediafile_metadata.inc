@@ -155,7 +155,7 @@ class mediamosa_asset_mediafile_metadata {
     $a_fields[mediamosa_asset_mediafile_metadata_db::BITRATE] = isset($a_metadata['File-bitrate']) ? $a_metadata['File-bitrate'] : '';
 
     // bpp.
-    $a_fields[mediamosa_asset_mediafile_metadata_db::BPP] = self::calculate_bpp($width, $height, $a_fields[mediamosa_asset_mediafile_metadata_db::FPS], $a_fields[mediamosa_asset_mediafile_metadata_db::BITRATE]);
+    $a_fields[mediamosa_asset_mediafile_metadata_db::BPP] = (string)self::calculate_bpp($width, $height, $a_fields[mediamosa_asset_mediafile_metadata_db::FPS], $a_fields[mediamosa_asset_mediafile_metadata_db::BITRATE]);
 
     // is hinted.
     $a_fields[mediamosa_asset_mediafile_metadata_db::IS_HINTED] = isset($a_metadata['Is-hinted']) ? $a_metadata['Is-hinted'] : 'no';

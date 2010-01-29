@@ -390,7 +390,7 @@ class mediamosa_job {
       mediamosa_job_db::JOB_TYPE => $job_type,
       mediamosa_job_db::CREATE_STILL => $create_still ? mediamosa_job_db::CREATE_STILL_TRUE : mediamosa_job_db::CREATE_STILL_FALSE,
       mediamosa_job_db::STILL_PARAMETERS => serialize($a_still_parameters),
-      mediamosa_job_db::NO_HINT => $no_hint,
+      mediamosa_job_db::NO_HINT => $no_hint ? mediamosa_job_db::NO_HINT_TRUE : mediamosa_job_db::NO_HINT_FALSE,
       mediamosa_job_db::PROGRESS => '0.000',
     );
 
