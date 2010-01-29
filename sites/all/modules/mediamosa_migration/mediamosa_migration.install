@@ -2166,7 +2166,7 @@ function _mediamosa_migration_create_server_nodes() {
         $status = $row['active'] ? 'ON' : 'OFF';
       }
       elseif (isset($row['status'])) {
-        $status = (empty($row['status']) ? 'OFF' : is_numeric($row['status']) ? 'ON' : $row['status']);
+        $status = (!is_numeric($row['status']) ? $row['status'] : ($row['status'] === 1 ? 'ON' : 'OFF'));
       }
 
       $node->title = $row['description'];

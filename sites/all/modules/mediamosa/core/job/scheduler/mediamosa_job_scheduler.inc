@@ -841,7 +841,7 @@ class mediamosa_job_scheduler {
 
     // stuur de job naar de job server
     $rest_url = sprintf("server/jobstart?job_id=%s&job_type=%s&mediafile_src=%s&frametime=%s&size=%s&h_padding=%s&v_padding=%s&blackstill_check=%s&testtag=%s&still_type=%s&still_per_mediafile=%s&still_every_second=%s&start_frame=%s&end_frame=%s&video_duration=%s&fps=%s&tag=%s",
-      $job_id, JOBTYPE_STILL, $mediafile_id,
+      $job_id, mediamosa_job_db::JOB_TYPE_STILL, $mediafile_id,
       $job_parameters["frametime"],
       $job_parameters["size"],
       $job_parameters["h_padding"],
