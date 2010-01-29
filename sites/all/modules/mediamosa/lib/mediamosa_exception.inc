@@ -67,7 +67,7 @@ class mediamosa_exception extends Exception {
       );
     }
 
-    parent::__construct($msg, $i_errorcode);
+    parent::__construct($msg, intval($i_errorcode));
   }
 
   public function mediamosa_exception_rest_response() {

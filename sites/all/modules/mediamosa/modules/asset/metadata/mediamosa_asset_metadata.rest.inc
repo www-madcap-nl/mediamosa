@@ -67,18 +67,16 @@ class mediamosa_rest_call_asset_metadata_create extends mediamosa_rest_call {
         self::REPLACE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Replace all metadata or append given metadata values. Do not specify both action and replace parameters.',
-          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::ACTION => array(
           self::VAR_TYPE => mediamosa_type::TYPE_ALPHA,
           self::VAR_DESCRIPTION => "Action to choose for given metadata values, choose either 'replace', 'append' or 'update'. Do not specify both action and replace parameters.",
-          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::VAR_ALLOWED_VALUES => array('replace', 'append', 'update'),
         ),
       ),
     );
 
-    return $a_var_setup;
+    return self::get_var_setup_default($a_var_setup);
   }
 
   // ------------------------------------------------------------------ Override process_rest_args.

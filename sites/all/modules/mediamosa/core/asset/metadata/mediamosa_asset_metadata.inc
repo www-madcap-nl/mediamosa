@@ -136,7 +136,7 @@ class mediamosa_asset_metadata {
   static public function metadata_create($asset_id, array $a_metadata_definitions_full, array $a_params, $action) {
     $a_value_set = array();
 
-    foreach ($this->a_metadata_definitions_full as $name => $a_definition) {
+    foreach ($a_metadata_definitions_full as $name => $a_definition) {
       // All off.
       $do_delete = FALSE;
 
@@ -185,7 +185,7 @@ class mediamosa_asset_metadata {
         $query = mediamosa_db::db_insert(mediamosa_asset_metadata_db::TABLE_NAME);
         // FIXME: changed date will never be right if we just delete, and then replace.
         //        really should rewrite this properly with updating the metadata instead of deleting it.
-        $a_values = array(
+        $a_fields = array(
           mediamosa_asset_metadata_db::ASSET_ID => $asset_id,
           mediamosa_asset_metadata_db::PROP_ID => $prop_id,
         );
@@ -196,15 +196,15 @@ class mediamosa_asset_metadata {
         // Change from 1.x, we don't store all values in every val_[char/int/datetime] type. No more int value also in val_char etc.
         switch ($a_definition['propdef_type']) {
           case mediamosa_asset_metadata_property_db::TYPE_DATETIME:
-            $a_values[mediamosa_asset_metadata_db::VAL_DATETIME] = $value;
+            $a_fields[mediamosa_asset_metadata_db::VAL_DATETIME] = $value;
             break;
           case mediamosa_asset_metadata_property_db::TYPE_INT:
-            $a_values[mediamosa_asset_metadata_db::VAL_INT] = $value;
+            $a_fields[mediamosa_asset_metadata_db::VAL_INT] = $value;
             break;
           case mediamosa_asset_metadata_property_db::TYPE_CHAR:
-            $a_values[mediamosa_asset_metadata_db::VAL_CHAR] = $value;
-            $a_values[mediamosa_asset_metadata_db::VAL_CHAR_LFT] = mediamosa_unicode::substr($value, 0, mediamosa_asset_metadata_db::VAL_CHAR_LFT_LENGTH);
-            $a_values[mediamosa_asset_metadata_db::VAL_CHAR_RGHT] = mediamosa_unicode::strrev(mediamosa_unicode::substr($value, 0, mediamosa_asset_metadata_db::VAL_CHAR_RGHT_LENGTH));
+            $a_fields[mediamosa_asset_metadata_db::VAL_CHAR] = $value;
+            $a_fields[mediamosa_asset_metadata_db::VAL_CHAR_LFT] = mediamosa_unicode::substr($value, 0, mediamosa_asset_metadata_db::VAL_CHAR_LFT_LENGTH);
+            $a_fields[mediamosa_asset_metadata_db::VAL_CHAR_RGHT] = mediamosa_unicode::strrev(mediamosa_unicode::substr($value, 0, mediamosa_asset_metadata_db::VAL_CHAR_RGHT_LENGTH));
             break;
           default:
             assert(0);
@@ -213,7 +213,7 @@ class mediamosa_asset_metadata {
         }
 
         // Insert it.
-        $query->fields($a_value_set)->execute();
+        $query->fields($a_fields)->execute();
 
         $a_value_set[$name] = $value;
       }
