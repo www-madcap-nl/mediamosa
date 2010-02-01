@@ -26,57 +26,57 @@
 
 /**
  * @file
- * Installer for mediamosa_server_transcoding_tool module.
+ * Installer for mediamosa_server_transcoding module.
  */
 
-require_once 'mediamosa_server_transcoding_tool_db.inc';
+require_once('mediamosa_server_tool_db.inc');
 
 /**
  * Implements hook_install().
  */
-function _mediamosa_server_transcoding_tool_install() {
+function _mediamosa_server_tool_install() {
 
   // Download server.
-  mediamosa::drupal_install_schema(mediamosa_server_transcoding_tool_db::TABLE_NAME);
+  mediamosa::drupal_install_schema(mediamosa_server_tool_db::TABLE_NAME);
 }
 
 /**
  * Implements hook_uninstall().
  */
-function _mediamosa_server_transcoding_tool_uninstall() {
+function _mediamosa_server_tool_uninstall() {
 
   // Download server.
-  mediamosa::drupal_uninstall_schema(mediamosa_server_transcoding_tool_db::TABLE_NAME);
+  mediamosa::drupal_uninstall_schema(mediamosa_server_tool_db::TABLE_NAME);
 }
 
 /**
  * Implements hook_schema().
  */
-function mediamosa_server_transcoding_tool_schema() {
+function mediamosa_server_tool_schema() {
 
-  $a_schema[mediamosa_server_transcoding_tool_db::TABLE_NAME] = array(
-    'description' => t('Contains the tools for transcoding subtable.'),
+  $a_schema[mediamosa_server_tool_db::TABLE_NAME] = array(
+    'description' => t('Contains the tools for server subtable.'),
     'fields' => array(
-      mediamosa_server_transcoding_tool_db::ID => array(
+      mediamosa_server_tool_db::ID => array(
         'description' => t('Primary key.'),
         'type' => 'serial',
         'not null' => TRUE,
       ),
-      mediamosa_server_transcoding_tool_db::NID => array(
-        'description' => t('The parent transcoding server node ID.'),
+      mediamosa_server_tool_db::NID => array(
+        'description' => t('The parent server node ID.'),
         'type' => 'int',
         'not null' => TRUE,
       ),
-      mediamosa_server_transcoding_tool_db::TOOL => array(
-        'description' => t('The tool used for transcoding.'),
+      mediamosa_server_tool_db::TOOL => array(
+        'description' => t('The tool used for job process.'),
         'type' => 'varchar',
-        'length' => mediamosa_server_transcoding_tool_db::TOOL_LENGTH,
+        'length' => mediamosa_server_tool_db::TOOL_LENGTH,
         'not null' => TRUE,
       ),
     ),
-    'primary key' => array(mediamosa_server_transcoding_tool_db::ID),
+    'primary key' => array(mediamosa_server_tool_db::ID),
     'indexes' => array(
-      'idx_tool_serverid' => array(mediamosa_server_transcoding_tool_db::TOOL, mediamosa_server_transcoding_tool_db::NID),
+      'idx_tool_serverid' => array(mediamosa_server_tool_db::TOOL, mediamosa_server_tool_db::NID),
     ),
   );
 

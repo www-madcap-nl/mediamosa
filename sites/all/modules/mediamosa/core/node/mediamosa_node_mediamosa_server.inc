@@ -105,13 +105,13 @@ function mediamosa_server_insert($node) {
 
     // Check type.
     switch ($node->server_type) {
-      case mediamosa_server_db::SERVER_TYPE_TRANSCODE:
-        if (isset($node->{mediamosa_server_transcoding_tool_db::TABLE_NAME})) {
-          foreach ($node->{mediamosa_server_transcoding_tool_db::TABLE_NAME} as $a_transcoding) {
-            mediamosa_db::db_insert(mediamosa_server_transcoding_tool_db::TABLE_NAME)
+      case mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR:
+        if (isset($node->{mediamosa_server_tool_db::TABLE_NAME})) {
+          foreach ($node->{mediamosa_server_tool_db::TABLE_NAME} as $a_tool) {
+            mediamosa_db::db_insert(mediamosa_server_tool_db::TABLE_NAME)
               ->fields(array(
                 'nid' => $node->nid,
-                mediamosa_server_transcoding_tool_db::TOOL => $a_transcoding[mediamosa_server_transcoding_tool_db::TOOL]
+                mediamosa_server_tool_db::TOOL => $a_tool[mediamosa_server_tool_db::TOOL]
               ))
               ->execute();
           }

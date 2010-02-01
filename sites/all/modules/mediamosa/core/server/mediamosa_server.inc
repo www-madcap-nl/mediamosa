@@ -56,7 +56,7 @@ class mediamosa_server {
   static public function get_enabled_transcode() {
     return mediamosa_db::db_select(mediamosa_server_db::TABLE_NAME, 'ms')
       ->fields('ms')
-      ->condition(mediamosa_server_db::SERVER_TYPE, mediamosa_server_db::SERVER_TYPE_TRANSCODE, '=')
+      ->condition(mediamosa_server_db::SERVER_TYPE, mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR, '=')
       ->condition(mediamosa_server_db::SERVER_STATUS, mediamosa_server_db::SERVER_STATUS_OFF, '!=')
       ->execute();
   }

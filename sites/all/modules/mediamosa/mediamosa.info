@@ -2,7 +2,7 @@
 name = "MediaMosa 2"
 description = "Open source media management and distribution platform."
 package = "MediaMosa 2 - Core"
-version = "2.1.0.204:14eb45e9e20e"
+version = "2.1.0.207:787ac61ea5ac"
 core = 7.x
 
 ; Dependencies (module names)
@@ -227,12 +227,9 @@ files[] = core/server/streaming/mediamosa_server_streaming.install.inc
 files[] = core/server/streaming/container/mediamosa_server_streaming_container_db.inc
 files[] = core/server/streaming/container/mediamosa_server_streaming_container.install.inc
 
-; Server Transcoding.
-files[] = core/server/transcoding/mediamosa_server_transcoding.install.inc
-
-; Server Transcoding Tool.
-files[] = core/server/transcoding/tool/mediamosa_server_transcoding_tool_db.inc
-files[] = core/server/transcoding/tool/mediamosa_server_transcoding_tool.install.inc
+; Server Tool.
+files[] = core/server/tool/mediamosa_server_tool.install.inc
+files[] = core/server/tool/mediamosa_server_tool_db.inc
 
 ; Ticket.
 files[] = core/ticket/mediamosa_ticket_db.inc

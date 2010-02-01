@@ -32,7 +32,7 @@
 require_once 'mediamosa_server_db.inc';
 require_once 'job/mediamosa_server_job.install.inc';
 require_once 'streaming/mediamosa_server_streaming.install.inc';
-require_once 'transcoding/mediamosa_server_transcoding.install.inc';
+require_once 'tool/mediamosa_server_tool.install.inc';
 
 /**
  * Implements hook_install().
@@ -44,7 +44,7 @@ function _mediamosa_server_install() {
 
   // Children.
   _mediamosa_server_streaming_install();
-  _mediamosa_server_transcoding_install();
+  _mediamosa_server_tool_install();
 
   $a_default_servers = array(
     array(1,0,'ON',"streaming","http://localhost/ticket/{TICKET}",
@@ -113,7 +113,7 @@ s1.write('mediaspace');
       ,'','','','',''),
     array(11,2,'ON',"download","http://localhost/download/{TICKET}",'','','','','','',''),
     array(12,0,'OFF',"still","http://localhost/still/{TICKET}",'','','','','','',''),
-    array(13,0,'ON',"transcode",'','','',"localhost","127.0.0.1",10,"ANALYSE|ffmpeg|STILL",''),
+    array(13,0,'ON',"job_processor",'http::/localhost','','',"localhost","127.0.0.1",10,"ANALYSE|ffmpeg|STILL",''),
     array(14,0,'ON',"upload","http://localhost/mediafile/upload?upload_ticket={TICKET}",'','','','','','',"http://example.org/mediafile/uploadprogress"),
   );
 
@@ -150,10 +150,10 @@ s1.write('mediaspace');
     $node->{mediamosa_server_db::TOOLS} = $a_default_server[9];
     $node->{mediamosa_server_db::URI_UPLOAD_PROGRESS} = $a_default_server[10];
 
-    if ($a_default_server[3] == 'transcode') {
+    if ($a_default_server[3] == 'job_progress') {
       $a_tools = explode('|', $a_default_server[9]);
       foreach ($a_tools as $tool) {
-        $node->{mediamosa_server_transcoding_tool_db::TABLE_NAME}[] = array(mediamosa_server_transcoding_tool_db::TOOL => $tool);
+        $node->{mediamosa_server_tool_db::TABLE_NAME}[] = array(mediamosa_server_tool_db::TOOL => $tool);
       }
     }
 
@@ -180,7 +180,7 @@ function _mediamosa_server_uninstall() {
 
     // Unstall our children..
   _mediamosa_server_streaming_uninstall();
-  _mediamosa_server_transcoding_uninstall();
+  _mediamosa_server_tool_uninstall();
 
   // Server node extensions.
   mediamosa::drupal_uninstall_schema(mediamosa_server_db::TABLE_NAME);
@@ -194,7 +194,7 @@ function mediamosa_server_schema() {
     mediamosa_server_db::SERVER_TYPE_DOWNLOAD,
     mediamosa_server_db::SERVER_TYPE_STILL,
     mediamosa_server_db::SERVER_TYPE_STREAMING,
-    mediamosa_server_db::SERVER_TYPE_TRANSCODE,
+    mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR,
     mediamosa_server_db::SERVER_TYPE_UPLOAD,
   );
 
