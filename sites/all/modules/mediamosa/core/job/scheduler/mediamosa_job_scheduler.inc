@@ -1149,7 +1149,7 @@ class mediamosa_job_scheduler {
    * @param string $mediafile_id
    */
   static public function map_parameters($tool, $command, $mediafile_id) {
-    $cli = "";
+    $a_cli = array();
 
     // first determine if we have to alter the aspect ratio.
     $alter_size_param = FALSE;
@@ -1160,17 +1160,13 @@ class mediamosa_job_scheduler {
     // op basis van de toolname worden alle parameters die gebruikt kunnen
     // worden opgevraagd. De opgegeven parameters worden hier mee gecontroleerd.
     $result = mediamosa_transcode_mapping::get_by_tool($tool);
-    $cli = "";
     foreach ($result as $result_row) {
       if ($result_row[mediamosa_transcode_mapping_db::NICE_PARAMETER] == 'size' && $alter_size_param) {
         $a_parameters = mediamosa_lib::create_named_array($command, ";", ":");
         $target_size = $a_parameters['size'];// We skip the size here.
       }
       else {
-        if ($cli != "") {
-          $cli .= ";";
-        }
-        $cli .= self::mapping_value(
+        $value = self::mapping_value(
           $result_row[mediamosa_transcode_mapping_db::NICE_PARAMETER],
           $result_row[mediamosa_transcode_mapping_db::TOOL_PARAMETER],
           $result_row[mediamosa_transcode_mapping_db::MIN_VALUE],
@@ -1179,20 +1175,28 @@ class mediamosa_job_scheduler {
           $result_row[mediamosa_transcode_mapping_db::DEFAULT_VALUE],
           $result_row[mediamosa_transcode_mapping_db::REQUIRED],
           $command);
+
+        if ($value != '') {
+          $a_cli[] = $value;
+        }
       }
     }
 
     // Adjust for aspect ratio? makes only sense if size is set, else we
     // convert to size same as source (default ffmpeg behaviour).
     if ($alter_size_param) {
+
       // First get source width and height.
       $a_metadata = mediamosa_asset_mediafile_metadata::get_with_mediafileid($mediafile_id, array(mediamosa_asset_mediafile_metadata_db::WIDTH, mediamosa_asset_mediafile_metadata_db::HEIGHT));
 
       // Get the parameter string.
-      $cli .= ";" . self::calc_aspect_ratio($a_metadata[mediamosa_asset_mediafile_metadata_db::WIDTH], $a_metadata[mediamosa_asset_mediafile_metadata_db::HEIGHT], $target_size);
+      $ratio = self::calc_aspect_ratio($a_metadata[mediamosa_asset_mediafile_metadata_db::WIDTH], $a_metadata[mediamosa_asset_mediafile_metadata_db::HEIGHT], $target_size);
+      if (!empty($ratio)) {
+        $a_cli[] = $ratio;
+      }
     }
 
-    return $cli;
+    return implode(';', $a_cli);
   }
 
   /**

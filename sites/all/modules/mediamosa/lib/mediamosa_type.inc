@@ -233,7 +233,7 @@ class mediamosa_type {
         break;
 
       case self::TYPE_COMMAND:
-        if (!preg_match("/^(([a-zA-Z]+:[a-zA-Z0-9]+){0,1}|[a-zA-Z]+:[a-zA-Z0-9.]+(;[a-zA-Z]+:[a-zA-Z0-9.]+)*)$/", $mixed_param_value)) {
+        if (preg_match("/^(([-a-zA-Z]+:[a-zA-Z0-9]+){0,1}|[-a-zA-Z]+:[a-zA-Z0-9.]+(;[-a-zA-Z]+:[a-zA-Z0-9.]+)*)$/", $mixed_param_value) !== 1) {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
         }
 
