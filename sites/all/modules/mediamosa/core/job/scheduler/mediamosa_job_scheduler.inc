@@ -92,6 +92,9 @@ class mediamosa_job_scheduler {
     // Set max run time on 120 sec.
     set_time_limit(120);
 
+    // Wait 5 seconds so we match possible job parser.
+    sleep(5);
+
     for ($x = 0; $x < 6; $x++) {
       $start_at = microtime(TRUE);
 

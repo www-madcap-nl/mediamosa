@@ -33,13 +33,15 @@ Mediamosa 2.1.0
 - Added support CQL for is_empty_asset (See MediaMosa ticket #180).
 - Banner text was updated (See MediaMosa ticket #222).
 - Clean up cancelled upload and transcode jobs test (See MediaMosa ticket #112).
-- <is_empty_asset> = true, while there is a valid, usable mediafile (See MediaMosa ticket #165 and #167).
+- <is_empty_asset> = true, while there is a valid, usable mediafile (See
+  MediaMosa ticket #165 and #167).
 - Added coll_id search to CQL. (See MediaMosa ticket #241).
 - Added app_id search to CQL. (See MediaMosa ticket #241).
 
 Mediamosa 2.0.0 (unreleased)
 ---------------
 - Port to drupal 7.
+- VPX name use in code has been replaced with MediaMosa.
 - Complete redesign and renaming of v1.x source code. All code has been moved 
   into (static) classes to support auto loading of classes in Drupal 7.
 - New REST interface, class based.
