@@ -135,7 +135,12 @@ class mediamosa_rest_call_get_mediafile extends mediamosa_rest_call {
     mediamosa_aut::read_single_object(mediamosa_aut::AUT_TYPE_MEDIAFILE, $mediafile_id, $a_app_ids);
 
     // Now enrich response with mediafile data.
-    mediamosa_asset_mediafile::enrich_response_mediafile(array($mediafile_id), $a_app_ids, FALSE, $show_stills);
+    $a_items = mediamosa_asset_mediafile::enrich_response_mediafile(array($mediafile_id), $a_app_ids, FALSE, $show_stills);
+
+    // Add to response.
+    foreach ($a_items['mediafile'] as $a_item) {
+      $o_mediamosa->add_item($a_item);
+    }
 
     // Done.
   }
