@@ -65,10 +65,13 @@ class mediamosa_asset_mediafile_metadata {
    * Test if mediafile can be transcoded.
    * Will throw an exception when failure.
    *
+   * 1.x: media_management_is_transcodable.
+   *
    * @param string $mediafile_id
    */
-  static public function is_transcodable($mediafile_id) { // media_management_is_transcodable.
-    $query = mediamosa_db::db_select(mediamosa_asset_mediafile_metadata_db::TABLE_NAME);
+  static public function is_transcodable($mediafile_id) {
+    $query = mediamosa_db::db_select(mediamosa_asset_mediafile_metadata_db::TABLE_NAME, 'mamm');
+    $query->fields('mamm');
     $query->condition(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID, $mediafile_id);
     $a_mediafile = $query->execute()->fetchAssoc();
 

@@ -1172,13 +1172,13 @@ class mediamosa_job_scheduler {
           $cli .= ";";
         }
         $cli .= self::mapping_value(
-          $result_row->nice_parameter,
-          $result_row->tool_parameter,
-          $result_row->min_value,
-          $result_row->max_value,
-          $result_row->allowed_value,
-          $result_row->default_value,
-          $result_row->required,
+          $result_row[mediamosa_transcode_mapping_db::NICE_PARAMETER],
+          $result_row[mediamosa_transcode_mapping_db::TOOL_PARAMETER],
+          $result_row[mediamosa_transcode_mapping_db::MIN_VALUE],
+          $result_row[mediamosa_transcode_mapping_db::MAX_VALUE],
+          $result_row[mediamosa_transcode_mapping_db::ALLOWED_VALUE],
+          $result_row[mediamosa_transcode_mapping_db::DEFAULT_VALUE],
+          $result_row[mediamosa_transcode_mapping_db::REQUIRED],
           $command);
       }
     }

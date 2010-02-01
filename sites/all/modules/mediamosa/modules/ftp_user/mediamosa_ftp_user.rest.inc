@@ -175,7 +175,7 @@ class mediamosa_rest_call_ftp_user_create extends mediamosa_rest_call {
     catch (PDOException $e) {
       assert($e);
       mediamosa_db::db_set_active($old_db);
-      throw new mediamosa_exception(mediamosa_error::ERRORCODE_FTP_ERROR);
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_FTP_ERROR);
     }
     catch (Exception $e) {
       assert($e);
