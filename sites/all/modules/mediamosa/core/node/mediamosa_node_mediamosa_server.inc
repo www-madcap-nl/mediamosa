@@ -94,7 +94,7 @@ function mediamosa_server_insert($node) {
       mediamosa_server_db::VERSION => (isset($node->{mediamosa_server_db::VERSION})) ? $node->{mediamosa_server_db::VERSION} : NULL,
       mediamosa_server_db::URI => (isset($node->uri)) ? $node->uri : NULL,
       mediamosa_server_db::CONTAINERS => (isset($node->containers)) ? $node->containers : NULL,
-      mediamosa_server_db::CONTAINERS => (isset($node->containers)) ? $node->containers : NULL,
+      mediamosa_server_db::DESCRIPTION => (isset($node->description)) ? $node->description : NULL,
       mediamosa_server_db::OBJECT_CODE => (isset($node->object_code)) ? $node->object_code : NULL,
       mediamosa_server_db::SERVER_NAME => (isset($node->server_name)) ? $node->server_name : NULL,
       mediamosa_server_db::SLOTS => (isset($node->slots)) ? $node->slots : NULL,
