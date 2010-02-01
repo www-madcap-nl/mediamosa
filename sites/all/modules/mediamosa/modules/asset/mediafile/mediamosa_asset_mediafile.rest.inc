@@ -205,7 +205,12 @@ class mediamosa_rest_call_get_asset_mediafiles extends mediamosa_rest_call {
     $a_mediafile_ids = mediamosa_asset_mediafile::mediafiles_search($asset_id, $tag, $is_still);
 
     // Create output.
-    mediamosa_asset_mediafile::enrich_response_mediafile($a_mediafile_ids, $a_app_ids, $is_oai);
+    $a_items = mediamosa_asset_mediafile::enrich_response_mediafile($a_mediafile_ids, $a_app_ids, $is_oai);
+
+    // Add to response.
+    foreach ($a_items['mediafile'] as $a_item) {
+      $o_mediamosa->add_item($a_item);
+    }
   }
 }
 
