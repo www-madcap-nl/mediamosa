@@ -49,7 +49,7 @@ class mediamosa_rest_call_download_mediafile_still extends mediamosa_rest_call {
         self::TICKET_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_TICKET_ID,
           self::VAR_DESCRIPTION => 'The ticket ID.',
-          self::VAR_IS_REQUIRED => TRUE,
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
       )
     );

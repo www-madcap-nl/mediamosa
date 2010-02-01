@@ -201,7 +201,7 @@ class mediamosa_type {
           mediamosa_job_db::JOB_TYPE_UPLOAD
         );
 
-        if (!in_array(mediamosa_unicode::strtolower($mixed_param_value), $a_job_types)) {
+        if (!in_array(mediamosa_unicode::strtoupper($mixed_param_value), $a_job_types)) {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_UNKNOWN_JOB_TYPE);
         }
 

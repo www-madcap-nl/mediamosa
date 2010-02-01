@@ -127,8 +127,6 @@ class mediamosa_asset_mediafile {
    * 1.x _media_management_return_mediafile_list()
    *
    * Merged with 1.x _media_management_process_mediafile_output.
-   * FIXME: Uses response object, better to return array and let REST call fill response object.
-   *        Noway to reuse this code without response object.
    *
    * @param array $a_mediafile_ids
    * @param array $mixed_app_id

@@ -28,20 +28,3 @@
   * @file
   * The configuration module helper functions.
   */
-
-function mediamosa_configuration_watchdog() {
-  $content = t('List of the 50 most recent log entries.');
-
-  $levels = watchdog_severity_levels();
-  $types = array('job', 'job_handler', 'job_server', 'page not found', 'server');
-  $result = db_query("SELECT * FROM {watchdog} WHERE type IN ('". implode("', '", $types) ."') ORDER BY timestamp DESC LIMIT 50");
-
-  $rows = array();
-  foreach ($result as $row) {
-    $rows[] = array($row->type, nl2br($row->message), $levels[$row->severity], format_date($row->timestamp, 'small'));
-  }
-
-  $content .= theme('table', array(t('Type'), t('Message'), t('Severity'), t('Date')), $rows);
-
-  return $content;
-}

@@ -42,6 +42,8 @@ class mediamosa_server_db {
   const SERVER_STATUS_OFF = 'OFF';
   const SERVER_STATUS_CLOSE = 'CLOSE';
   const SERVER_TYPE = 'server_type';
+  const DESCRIPTION = 'description';
+  const DESCRIPTION_LENGTH = 255;
   const URI = 'uri';
   const URI_LENGTH = 255;
   const CONTAINERS = 'containers';

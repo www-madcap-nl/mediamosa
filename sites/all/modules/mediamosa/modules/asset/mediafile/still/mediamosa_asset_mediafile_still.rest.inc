@@ -52,12 +52,12 @@ class mediamosa_rest_call_delete_stills extends mediamosa_rest_call {
         self::ASSET_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
           self::VAR_DESCRIPTION => 'Delete still only from this asset.',
-          self::VAR_IS_REQUIRED => TRUE,
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::USER_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'Owner of the stills.',
-          self::VAR_IS_REQUIRED => TRUE,
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::MEDIAFILE_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_MEDIAFILE_ID,
@@ -154,22 +154,22 @@ class mediamosa_rest_call_set_still_default extends mediamosa_rest_call {
         self::ASSET_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
           self::VAR_DESCRIPTION => 'ID of asset.',
-          self::VAR_IS_REQUIRED => TRUE,
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::USER_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'Owner of the stills.',
-          self::VAR_IS_REQUIRED => TRUE,
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::MEDIAFILE_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_MEDIAFILE_ID,
           self::VAR_DESCRIPTION => 'The delete stills from this mediafile ID.',
-          self::VAR_IS_REQUIRED => TRUE,
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::STILL_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_STILL_ID,
           self::VAR_DESCRIPTION => 'Default this specific still.',
-          self::VAR_IS_REQUIRED => TRUE,
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
       ),
     );
@@ -271,27 +271,27 @@ class mediamosa_rest_call_set_still_order extends mediamosa_rest_call {
         self::ASSET_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
           self::VAR_DESCRIPTION => 'ID of asset.',
-          self::VAR_IS_REQUIRED => TRUE,
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::USER_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'Owner of the still.',
-          self::VAR_IS_REQUIRED => TRUE,
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::MEDIAFILE_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_MEDIAFILE_ID,
           self::VAR_DESCRIPTION => 'The mediafile ID.',
-          self::VAR_IS_REQUIRED => TRUE,
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::STILL_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_MEDIAFILE_ID,
           self::VAR_DESCRIPTION => 'Setting the order for this specific still.',
-          self::VAR_IS_REQUIRED => TRUE,
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::ORDER => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
           self::VAR_DESCRIPTION => 'The order for this still.',
-          self::VAR_IS_REQUIRED => TRUE,
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
       ),
     );

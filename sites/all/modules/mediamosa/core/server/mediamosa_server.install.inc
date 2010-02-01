@@ -243,6 +243,13 @@ function mediamosa_server_schema() {
         'length' => mediamosa_server_db::URI_LENGTH,
         'not null' => FALSE,
       ),
+      mediamosa_server_db::DESCRIPTION => array(
+        'description' => t('The description of the server.'),
+        'type' => 'varchar',
+        'length' => mediamosa_server_db::DESCRIPTION_LENGTH,
+        'not null' => FALSE,
+        'default' => '',
+      ),
       mediamosa_server_db::CONTAINERS => array(
         'description' => t('The optional container names this server can serve.'),
         'type' => 'varchar',

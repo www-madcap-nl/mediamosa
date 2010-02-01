@@ -171,15 +171,16 @@ class mediamosa_rest_call_user_favorite_delete extends mediamosa_rest_call {
 class mediamosa_rest_call_user_favorite_search {
   // ------------------------------------------------------------------ Consts.
   // Rest vars;
+  const APP_ID = 'app_id'; // because its not a normal REST call.
   const FAV_TYPE = 'fav_type';
 
   /**
    * get_object function is special. It can be used to supply the REST interface
    * with the correct class to create.
    */
-  static public function get_object_rest_call($a_rest_call) {
+  static public function get_object_rest_call($a_rest_call, $default_param_values = array()) {
     // Get the value.
-    $fav_type = mediamosa_rest_call::get_param_value_global(self::FAV_TYPE);
+    $fav_type = (isset($default_param_values[self::FAV_TYPE]) ? $default_param_values[self::FAV_TYPE] : mediamosa_rest_call::get_param_value_global(self::FAV_TYPE));
 
     // Based on type, we return the class.
     switch ($fav_type) {

@@ -119,7 +119,7 @@ function mediamosa_aut_mediamosa_register_rest_call() {
   $a_rest_calls['asset/$asset_id/acl'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_aut_asset_set_rights',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::DESCRIPTION => 'Set rights on a asset.',
+    mediamosa_rest_call::DESCRIPTION => 'This call will change the acl rules to an asset. All of the existing ACL rules in this asset will be replaced by the sent rules. Using \'replace\' setting with value FALSE to result in not replace the existing rules.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_aut',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_6_0,
   );

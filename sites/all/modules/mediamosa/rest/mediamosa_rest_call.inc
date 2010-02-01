@@ -73,6 +73,9 @@ abstract class mediamosa_rest_call {
   const VERSION = 'version';
   const VERSION_MAX_LEN = 12;
 
+  // Set these so we have default values when we need them for calling get_var_setup();
+  const DEFAULT_PARAMS_VALUES = 'default_params_values';
+
   // Access to the REST call.
   const ACCESS = 'access';      // Value OR'd;
   const ACCESS_INTERNAL = 1;    // Access to REST call when internally accessed.
@@ -83,7 +86,7 @@ abstract class mediamosa_rest_call {
   const ACCESS_AUTHENTICATED_ONLY = 4; // Access to REST call when authenticated only.
   const ACCESS_DEFAULT = 5;     // Access default allowes internals and authenticated access.
                                 // External access needs to be specified.
-  const ACCESS_FOR_EXTERNAL = 6; // Default for external calls.
+  const ACCESS_FOR_EXTERNAL = 7; // Default for external calls (normal/internal/external).
 
   const DESCRIPTION = 'description';   // Description of the REST call (In English, required).
 
@@ -178,6 +181,7 @@ abstract class mediamosa_rest_call {
 
     // Other.
     $this->{self::URI_PARAMS} = isset($a_rest_call[self::URI_PARAMS]) ? $a_rest_call[self::URI_PARAMS] : array();
+    $this->{self::DEFAULT_PARAMS_VALUES} = isset($a_rest_call[self::DEFAULT_PARAMS_VALUES]) ? $a_rest_call[self::DEFAULT_PARAMS_VALUES] : array();
   }
 
   // ------------------------------------------------------------------ Functions (abstract).

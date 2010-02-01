@@ -44,16 +44,11 @@
  * Menu callback; Provide the administration overview page.
  */
 function mediamosa_maintenance_admin_page($path) {
-
-  // Check for status report errors.
- // if (system_status(TRUE) && user_access('administer site configuration')) {
-  //  drupal_set_message(t('One or more problems were detected with your Drupal installation. Check the <a href="@status">status report</a> for more information.', array('@status' => url('admin/reports/status'))), 'error');
-  //}
   $blocks = array();
-  $admin = db_query("SELECT menu_name, mlid FROM {menu_links} WHERE link_path = 'admin/mediamosa' AND module = 'system'", array(':path' => $path))->fetchAssoc();
+  $admin = db_query("SELECT menu_name, mlid FROM {menu_links} WHERE link_path = 'admin/mediamosa' AND module = 'system'", array())->fetchAssoc();
 
   if ($admin) {
-    $admin['path'] = $path . '%';
+    $admin[':path'] = $path . '%';
     $result = db_query("
       SELECT m.*, ml.*
       FROM {menu_links} ml

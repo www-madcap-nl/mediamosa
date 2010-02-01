@@ -44,7 +44,7 @@ class mediamosa_rest_call_list extends mediamosa_rest_call {
     $a_var_setup = self::get_var_setup_range($a_var_setup);
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($a_var_setup, FALSE);
   }
 
   public function do_call() {
@@ -80,7 +80,7 @@ class mediamosa_rest_call_get extends mediamosa_rest_call {
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($a_var_setup, FALSE);
   }
 
   public function do_call() {

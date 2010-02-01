@@ -38,7 +38,7 @@ class mediamosa_job_scheduler {
    * @param string $severity
    */
   static public function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
-    mediamosa::log($message, $variables, $severity, 'job_scheduler');
+    mediamosa::log($message, $variables, $severity, 'job scheduler');
   }
 
   /**
@@ -219,6 +219,7 @@ class mediamosa_job_scheduler {
 
       // Update.
       mediamosa_db::db_update(mediamosa_job_db::TABLE_NAME)
+        ->fields($a_fields)
         ->condition(mediamosa_job_db::ID, $response_data->items->item[$i]->job_id)
         ->execute();
 
@@ -246,7 +247,7 @@ class mediamosa_job_scheduler {
 
           case mediamosa_job_db::JOB_TYPE_ANALYSE:
             // als het een analyse job is die compleet is, voeg technische metadata toe
-            mediamosa_asset_mediafile_metadata::store_analyse($response_data->items->item[$i]->job_id, $response_data->items->item[$i]->analyse_result);
+            mediamosa_asset_mediafile_metadata::store_analyse($response_data->items->item[$i]->job_id, explode("\n" , $response_data->items->item[$i]->analyse_result));
             break;
 
           case mediamosa_job_db::JOB_TYPE_STILL:
@@ -279,10 +280,10 @@ class mediamosa_job_scheduler {
    */
   static public function remove_job_on_server($uri, $job_id) {
 
-    $rest_url = strtr('server/@job_id/delete', array('@job_id' => $job_id), '', mediamosa_http::METHOD_POST);
+    $rest_url = strtr('server/@job_id/delete', array('@job_id' => $job_id));
 
     // Call URL.
-    mediamosa_http::do_internal_call($uri, $job_id);
+    mediamosa_http::do_internal_call($uri, $rest_url, '', mediamosa_http::METHOD_POST);
   }
 
   /**
@@ -577,9 +578,8 @@ class mediamosa_job_scheduler {
    *
    * @param integer $job_id
    * @param string $mediafile_id_dest
-   * @param string $testtag
    */
-  static public function parse_failed_transcode($job_id, $mediafile_id_dest, $testtag) {
+  static public function parse_failed_transcode($job_id, $mediafile_id_dest) {
     // haal de asset id en original filename op basis van een job op
     $a_job_info = self::get_transcodejob_info($job_id);
 
@@ -606,17 +606,11 @@ class mediamosa_job_scheduler {
   }
 
   /**
- * Haal een lijst op van alle servers waarbij geteld wordt hoeveel
- * jobs een server nog mag starten. Per beschikbaar 'slot' wordt een
- * job uitgezocht om uit te voeren.
- */
-  /**
    * Get the list and find empty slots to start jobs.
    *
    * 1.x: _vpx_jobhandler_start_new_jobs
    */
   static public function start_new_jobs() {
-
     // Get for every active server (status ON)
     // the number of job that is not FINISHED, FAILED of CANCELLED
     // and job type is not UPLOAD (does not take a slot).
@@ -821,7 +815,7 @@ class mediamosa_job_scheduler {
   /**
    * Function for starting a still job
    */
-  static public function start_server_still_job($job_id, $uri, $mediafile_id, $testtag){
+  static public function start_server_still_job($job_id, $uri, $mediafile_id){
     // Get job parameters;
     $job_parameters = self::get_job_parameters($job_id, mediamosa_job_db::JOB_TYPE_STILL, $mediafile_id);
 
@@ -840,14 +834,13 @@ class mediamosa_job_scheduler {
     }
 
     // stuur de job naar de job server
-    $rest_url = sprintf("server/jobstart?job_id=%s&job_type=%s&mediafile_src=%s&frametime=%s&size=%s&h_padding=%s&v_padding=%s&blackstill_check=%s&testtag=%s&still_type=%s&still_per_mediafile=%s&still_every_second=%s&start_frame=%s&end_frame=%s&video_duration=%s&fps=%s&tag=%s",
+    $rest_url = sprintf("server/jobstart?job_id=%s&job_type=%s&mediafile_src=%s&frametime=%s&size=%s&h_padding=%s&v_padding=%s&blackstill_check=%s&still_type=%s&still_per_mediafile=%s&still_every_second=%s&start_frame=%s&end_frame=%s&video_duration=%s&fps=%s&tag=%s",
       $job_id, mediamosa_job_db::JOB_TYPE_STILL, $mediafile_id,
       $job_parameters["frametime"],
       $job_parameters["size"],
       $job_parameters["h_padding"],
       $job_parameters["v_padding"],
       $job_parameters["blackstill_check"],
-      $testtag,
       $job_parameters['still_parameters']['still_type'],
       $job_parameters['still_parameters']['still_per_mediafile'],
       $job_parameters['still_parameters']['still_every_second'],

@@ -396,6 +396,7 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Override Process Rest Args.
   // Fix for alias of user_id / aut_user_id.
   protected function process_rest_args(array $a_var_setup) {
+
     // Process input.
     $a_var_setup = parent::process_rest_args($a_var_setup);
 
@@ -786,28 +787,6 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
 
     // Increase viewed.
     mediamosa_asset::asset_viewed($asset_id);
-/*
-    // toevoegen van mediafile informatie:
-    $res = _media_management_search_mediafiles($a_funcparam);
-    if ($res) {
-      foreach ($res->response['items'] as $r_key => $r_value) {
-        $results->response['items']['1']['mediafiles']['mediafile_'.$r_key] = $r_value;
-      }
-    }
-/*
-    if (isset($a_args['show_collections']) && $a_args['show_collections'] == 'TRUE') {
-      // toevoegen van collection informatie:
-      db_set_active('data');
-      $result = db_query("SELECT c.coll_id, c.title FROM {asset_collection} ac
-        LEFT JOIN {collection} c USING(coll_id)
-        WHERE ac.asset_id = '%s'", $asset_id);
-
-      while ($rs = db_fetch_object($result)) {
-        $results->response['items']['collection']['#' . serialize( array('id' => $rs->coll_id))] = $rs->title;
-      }
-      db_set_active();
-    }
-*/
   }
 }
 

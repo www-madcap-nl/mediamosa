@@ -130,6 +130,10 @@ function mediamosa_user_mediamosa_register_rest_call() {
     mediamosa_rest_call::DESCRIPTION => 'Search for assets.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_user_favorite',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+    mediamosa_rest_call::DEFAULT_PARAMS_VALUES => array(
+      mediamosa_rest_call_user_favorite_search::APP_ID => 1,
+      mediamosa_rest_call_user_favorite_search::FAV_TYPE => mediamosa_user_favorite_db::FAV_TYPE_ASSET,
+    ),
   );
 
   $a_rest_calls['group/$group_id'][mediamosa_rest_call::METHOD_GET] = array(

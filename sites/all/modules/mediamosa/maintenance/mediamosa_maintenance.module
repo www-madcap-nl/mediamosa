@@ -41,37 +41,37 @@ function mediamosa_maintenance_menu() {
     'page callback' => '_mediamosa_maintenance_status',
     'access arguments' => array('access mediamosa'),
     'weight' => -20,
-    'file' => 'mediamosa_maintenance.admin.inc',
   );
-
   $items['admin/mediamosa/mediamosa'] = array(
     'title' => 'Status',
     'access arguments' => array('access mediamosa'),
     'type' => MENU_DEFAULT_LOCAL_TASK,
-    'weight' => -10,
-    'file' => 'mediamosa_maintenance.admin.inc',
+    'weight' => -20,
   );
-
   $items['admin/mediamosa/browse'] = array(
     'title' => 'Browse',
     'access arguments' => array('access mediamosa'),
     'page callback' => 'mediamosa_maintenance_admin_page',
     'page arguments' => array('admin/mediamosa/browse'),
-    'type' => MENU_LOCAL_TASK,
-    'weight' => 0,
     'file' => 'mediamosa_maintenance.admin.inc',
+    'type' => MENU_LOCAL_TASK,
   );
-
+  $items['admin/mediamosa/browse/list'] = array(
+    'title' => 'List',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
   $items['admin/mediamosa/config'] = array(
     'title' => 'Configuration',
     'access arguments' => array('access mediamosa'),
     'page callback' => 'mediamosa_maintenance_admin_page',
     'page arguments' => array('admin/mediamosa/config'),
-    'type' => MENU_LOCAL_TASK,
-    'weight' => 10,
     'file' => 'mediamosa_maintenance.admin.inc',
+    'type' => MENU_LOCAL_TASK,
   );
-
+  $items['admin/mediamosa/config/list'] = array(
+    'title' => 'List',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
   return $items;
 }
 
@@ -87,6 +87,21 @@ function mediamosa_maintenance_permission() {
   );
 }
 
+/**
+ * Implement hook_help().
+ */
+function mediamosa_maintenance_help($path, $arg) {
+  global $base_url;
+
+  switch ($path) {
+    case 'admin/mediamosa':
+      return '<p>' . t('Mediamosa 2 status page show results of basic unit tests that are run at fixed intervals. All tests must be green.') . '</p>';
+  }
+}
+
+/**
+ * Generate the status page.
+ */
 function _mediamosa_maintenance_status() {
 
   // Need the classes of simpletest.

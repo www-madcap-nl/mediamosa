@@ -34,13 +34,10 @@ Mediamosa 2.1.0
 - Banner text was updated (See MediaMosa ticket #222).
 - Clean up cancelled upload and transcode jobs test (See MediaMosa ticket #112).
 - <is_empty_asset> = true, while there is a valid, usable mediafile (See MediaMosa ticket #165 and #167).
+- Added coll_id search to CQL. (See MediaMosa ticket #241).
+- Added app_id search to CQL. (See MediaMosa ticket #241).
 
-Mediamosa 2.0.1
----------------
-- Added coll_id search to CQL. (See MediaMosa ticket #).
-- Added app_id search to CQL. (See MediaMosa ticket #).
-
-Mediamosa 2.0.0
+Mediamosa 2.0.0 (unreleased)
 ---------------
 - Port to drupal 7.
 - Complete redesign and renaming of v1.x source code. All code has been moved 
@@ -69,3 +66,19 @@ Mediamosa 2.0.0
 - Internal calls now have access to all apps when app_id was not provided.
 - GET / POST / URI variables now share the same scope.
 - Redesign of the SAN/NAS globals/paths into static class 'storage'.
+- Removed /internal/check_existence (function media_management_check_existence).
+- parent_id of asset has been made depricated. Will remove code supporting 
+  parent_id from code in the future.
+- is_original_file in mediafile has been made depricated. Will still support 
+  this flag in output in future versions, but will be removed in database in 
+  future version.
+- Introducing mediafile_id_source as replacement of is_original_file. This field
+  is either NULL (is original) or points to the mediafile of which is its 
+  original mediafile. 
+- 1.7.3 migration to 2.0.0 database will now move child assets mediafiles to its
+  root asset. This will make the database more reliable, faster and easier to
+  maintain.
+- Mediafile db field asset_id_root is now depricated and will be removed in 
+  future releases.
+  
+  

@@ -229,7 +229,7 @@ class mediamosa_rest_call_collection_search extends mediamosa_rest_call {
     parent::validate_rest_args($a_var_setup);
 
     $cql = $this->get_param_value(self::CQL);
-    $a_app_ids = $this->get_param_value_app();;
+    $a_app_ids = $this->get_param_value_app();
     $error_text = '';
 
     if ($cql != '' && !mediamosa_core_cql::verify_collection($cql, $a_app_ids, $error_text)) {
@@ -351,6 +351,9 @@ class mediamosa_rest_call_collection_favorites_count extends mediamosa_rest_call
         ),
       ),
     );
+
+    // Enrich with required REST vars.
+    return self::get_var_setup_default($a_var_setup);
   }
 
   // ------------------------------------------------------------------ Do Call.
@@ -398,6 +401,9 @@ class mediamosa_rest_call_collection_get extends mediamosa_rest_call {
         ),
       ),
     );
+
+    // Enrich with required REST vars.
+    return self::get_var_setup_default($a_var_setup);
   }
 
   // ------------------------------------------------------------------ Do Call.
@@ -648,6 +654,9 @@ class mediamosa_rest_call_collection_update extends mediamosa_rest_call {
         ),
       ),
     );
+
+    // Enrich with required REST vars.
+    return self::get_var_setup_default($a_var_setup);
   }
 
   public function do_call() {
@@ -769,6 +778,9 @@ class mediamosa_rest_call_collection_delete extends mediamosa_rest_call {
         ),
       ),
     );
+
+    // Enrich with required REST vars.
+    return self::get_var_setup_default($a_var_setup);
   }
 
   public function do_call() {
@@ -897,6 +909,9 @@ class mediamosa_rest_call_collection_delete_relation extends mediamosa_rest_call
         ),
       ),
     );
+
+    // Enrich with required REST vars.
+    return self::get_var_setup_default($a_var_setup);
   }
 
   public function do_call() {

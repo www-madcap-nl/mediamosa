@@ -149,7 +149,7 @@ function mediamosa_mediamosa_configuration_collect() {
     '#title' => t('URL REST'),
     '#description' => t('The URL or IP Address of the server to apply the call for CRON and other internal global REST calls. This must be a MediaMosa REST interface and open from this server, f.e. \'http://app.mediamosa2.local\'. <em>You must use http:// or other schema.</em>'),
     '#required' => TRUE,
-    '#default_value' => 'http:://localhost',
+    '#default_value' => 'http://localhost',
   );
 
   $form['settings_cron']['mediamosa_cron_url_app_local'] = array(
@@ -171,17 +171,5 @@ function mediamosa_mediamosa_configuration_validate($form, &$form_state) {
 
   if (!isset($a_parse_url['scheme']) || !in_array($a_parse_url['scheme'], array('http', 'https'))) {
     form_set_error('mediamosa_cron_url_app', t("Include either 'http:// or 'https://' in URL Rest."));
-  }
-}
-
-/**
- * Implement hook_help().
- */
-function mediamosa_help($path, $arg) {
-  global $base_url;
-
-  switch ($path) {
-    case 'admin/mediamosa':
-      return '<p>' . t('Mediamosa 2 status page show results of basic unit tests that are run at fixed intervals. All tests must be green.') . '</p>';
   }
 }

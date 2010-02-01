@@ -40,7 +40,7 @@ class mediamosa_job_server {
    * @param string $severity
    */
   static public function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
-    mediamosa::log($message, $variables, $severity, 'job_server');
+    mediamosa::log($message, $variables, $severity, 'job server');
   }
 
   /**
@@ -74,7 +74,7 @@ class mediamosa_job_server {
 
     $run_last = variable_get('mediamosa_jobserver_cron_last_' . $server_id, NULL);
 
-    // may run? (0 - 60 seconds)
+    // may run? (0 - 60 seconds).
     if (round(REQUEST_TIME - $run_last) < 60) {
       return; // Still running.
     }
@@ -137,7 +137,7 @@ class mediamosa_job_server {
     // Create basic server job.
     $jobserver_job_id = self::create_job($job_id, $job_type, $mediafile_id_src);
 
-    $a_values = array(
+    $a_fields = array(
       mediamosa_job_server_analyse_db::ID => $jobserver_job_id,
       mediamosa_job_server_analyse_db::ANALYSE_RESULT => '',
     );
@@ -163,7 +163,7 @@ class mediamosa_job_server {
     // Create basic server job.
     $jobserver_job_id = self::create_job($job_id, $job_type, $mediafile_id_src);
 
-    $a_values = array(
+    $a_fields = array(
       mediamosa_job_server_transcode_db::ID => $jobserver_job_id,
       mediamosa_job_server_transcode_db::TOOL => $tool,
       mediamosa_job_server_transcode_db::FILE_EXTENSION => $file_extension,
@@ -453,10 +453,24 @@ class mediamosa_job_server {
    *
    * @param integer $job_id
    */
-  static public function get($job_id) {
+  static public function get($jobserver_job_id) {
     return mediamosa_db::db_select(mediamosa_job_server_db::TABLE_NAME, 'js')
       ->fields('js')
-      ->condition(mediamosa_job_server_db::ID, $job_id)
+      ->condition(mediamosa_job_server_db::ID, $jobserver_job_id)
+      ->execute()
+      ->fetchAssoc();
+  }
+
+  /**
+   * Get the job.
+   * (only from this installation(!))
+   *
+   * @param integer $job_id
+   */
+  static public function get_with_jobid($job_id) {
+    return mediamosa_db::db_select(mediamosa_job_server_db::TABLE_NAME, 'js')
+      ->fields('js')
+      ->condition(mediamosa_job_server_db::JOB_ID, $job_id)
       ->condition(mediamosa_job_server_db::INSTALL_ID, mediamosa::variable_get('mediamosa_installation_id', 'default'))
       ->execute()
       ->fetchAssoc();
@@ -493,8 +507,9 @@ class mediamosa_job_server {
     }
 
     // Check if its started.
-    $a_jobserver_job = self::get($job_id);
+    $a_jobserver_job = self::get_with_jobid($job_id);
     if (!$a_jobserver_job) {
+      self::log('Fatal: trying to update job with ID; @job_id', array('@job_id' => $job_id));
       assert(0);
       return;
     }
@@ -556,9 +571,9 @@ class mediamosa_job_server {
   static public function get_analyse_string($mediafile_id, $job_id) {
 
     // Get the job.
-    $a_app = mediamosa_job::get($job_id, array(mediamosa_job_db::APP_ID));
-    $app_id = $a_app[mediamosa_app_db::APP_ID];
-    $no_hint = $a_app[mediamosa_app_db::NO_HINT];
+    $a_job = mediamosa_job::get($job_id, array(mediamosa_job_db::APP_ID, mediamosa_job_db::NO_HINT));
+    $app_id = $a_job[mediamosa_job_db::APP_ID];
+    $no_hint = $a_job[mediamosa_job_db::NO_HINT];
 
     // Get the app.
     $a_mediamosa_app = mediamosa_app::get_by_appid($app_id, array(mediamosa_app_db::ALWAYS_HINT_MP4, mediamosa_app_db::ALWAYS_INSERT_MD));

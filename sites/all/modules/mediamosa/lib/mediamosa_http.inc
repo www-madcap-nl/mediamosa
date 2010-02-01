@@ -119,8 +119,13 @@ class mediamosa_http {
    * @param $method
    */
   static public function do_internal_call($uri, $rest_url, $data = NULL, $method = self::METHOD_GET) {
+    // Make sure it starts with 'http://'.
+    if (mediamosa_unicode::substr($uri, 0, strlen('http://')) != 'http://' && mediamosa_unicode::substr($uri, 0, strlen('https://')) != 'https://') {
+      $uri = 'http://' . $uri;
+    }
+
     $url = strtr(
-      'http://@hostname/internal/@rest_url',
+      '@hostname/internal/@rest_url',
       array(
         '@hostname' => $uri,
         '@rest_url' =>  $rest_url
@@ -334,7 +339,6 @@ class mediamosa_http {
     // Mediamosa specific;
     // Data in option array should not be set with GET.
     assert($options['method'] != 'GET' || ($options['method'] == 'GET' && (!isset($options['data']) || !mediamosa_unicode::strlen($options['data']) ) ));
-
     switch ($uri['scheme']) {
       case 'http':
         $port = isset($uri['port']) ? $uri['port'] : 80;

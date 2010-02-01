@@ -30,6 +30,95 @@
  */
 
 /**
+ * Implement hook_menu().
+ */
+function mediamosa_server_menu() {
+  $items = array();
+
+  $items['admin/mediamosa/config/server'] = array(
+    'title' => 'Server',
+    'description' => 'List all MediaMosa Servers.',
+    'page callback' => '_mediamosa_server_list',
+    'access arguments' => array('access mediamosa'),
+  );
+
+  $items['admin/mediamosa/config/server/list'] = array(
+    'title' => 'Server',
+    'access arguments' => array('access mediamosa'),
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+
+  $items['admin/mediamosa/config/server/%/edit'] = array(
+    'title' => 'Client application contacts',
+    'type' => MENU_CALLBACK,
+    'page callback' => '_mediamosa_app_contacts',
+    'page arguments' => array(4),
+    'access arguments' => array('administer mediamosa config server'),
+  );
+
+  return $items;
+}
+
+/**
+ * Implement hook_permission().
+ */
+function mediamosa_server_permission() {
+  return array(
+    'administer mediamosa config server' =>  array(
+      'title' => t('Adminster MediaMosa servers.'),
+      'description' => t('Give administer rights for editing MediaMosa 2 servers.'),
+    ),
+  );
+}
+
+/**
+ * Show the mediamosa servers.
+ */
+function _mediamosa_server_list() {
+  $rows = array();
+
+  $header = array(
+    array('data' => t('Server Type'), 'field' => 'ms.' . mediamosa_server_db::SERVER_TYPE, 'sort' => 'asc'),
+    array('data' => t('URI'), 'field' => 'ms.' . mediamosa_server_db::URI, 'sort' => 'asc'),
+    array('data' => t('Description')),
+    array('data' => t('Status'), 'field' => 'ms.' . mediamosa_server_db::SERVER_STATUS, 'sort' => 'asc'),
+    t('Actions'),
+  );
+
+  $query = db_select(mediamosa_server_db::TABLE_NAME, 'ms')->extend('TableSort');
+  $query->fields('ms');
+  $query->orderByHeader($header);
+  $result = $query->execute();
+
+  $a_actions = array(
+    'edit', 'delete'
+  );
+
+  foreach ($result as $server) {
+    $rows[] = array('data' =>
+      array(
+        // Cells
+        t($server->{mediamosa_server_db::SERVER_TYPE}),
+        t($server->{mediamosa_server_db::URI}),
+        t($server->{mediamosa_server_db::DESCRIPTION}),
+        t($server->{mediamosa_server_db::SERVER_STATUS}),
+        implode(' | ', $a_actions),
+      ),
+    );
+  }
+
+  $build['log_table'] = array(
+    '#theme' => 'table',
+    '#header' => $header,
+    '#rows' => $rows,
+    '#attributes' => array('id' => 'admin-dblog'),
+  );
+
+  return $build;
+}
+
+
+/**
  * Implementation of hook_view().
  */
 function mediamosa_server_view($node, $build_mode = 'full') {

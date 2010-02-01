@@ -274,6 +274,53 @@ class mediamosa_asset_mediafile_upload {
     return TRUE;
   }
 
+  /**
+   * Return the status of the upload using given ID and APC.
+   *
+   * @param unknown_type $id
+   */
+  static public function get_uploadprogress($id) {
+
+    // Lets make sure APC is enabled.
+    if (!function_exists('apc_fetch')) {
+      return array(
+        'message' => 'Uploading (No Progress Information Available)',
+        'percentage' => -1,
+        'status' => 1,
+      );
+    }
+
+    $a_status = apc_fetch('upload_' . $id);
+
+    if (!$a_status['total']) {
+      return array(
+        'status' => 1,
+        'percentage' => -1,
+        'message' => 'Uploading',
+      );
+    }
+
+    $a_status['status'] = 1;
+    $a_status['percentage'] = round($a_status['current'] / $a_status['total'] * 100, 0);
+    $a_status['message'] = "--:-- left (at --/sec)";
+
+    $a_status['speed_average'] = 0;
+    $a_status['est_sec'] = 0;
+
+    $a_status['elapsed'] = time() - $a_status['start_time'];
+
+    if ($a_status['elapsed'] > 0) {
+      $a_status['speed_average'] = $a_status['current'] / $a_status['elapsed'];
+
+      if ($a_status['speed_average'] > 0) {
+        $a_status['est_sec'] = ($a_status['total'] - $a_status['current']) / $a_status['speed_average'];
+        $a_status['message'] = sprintf("%02d:%02d left (at %s/sec)", $a_status['est_sec'] / 60, $a_status['est_sec'] % 60, format_size($a_status['speed_average']));
+      }
+    }
+
+    return $a_status;
+  }
+
 /*
 function vpx_upload_handle_file($a_args) {
   if ($a_args['get']['still_upload'] == 'TRUE' || $a_args['get']['type'] == 'still') {

@@ -314,6 +314,10 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
  */
 class mediamosa_rest_call_asset_mediafile_upload_app extends mediamosa_rest_call_asset_mediafile_upload {
 
+  // ------------------------------------------------------------------ Consts.
+  // Rest vars;
+  const USER_ID = 'user_id';
+
   // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
 
@@ -351,5 +355,44 @@ class mediamosa_rest_call_asset_mediafile_upload_app extends mediamosa_rest_call
     $ticket_id = mediamosa_ticket::create_for_upload($app_id, $mediafile_id, $user_id);
 
     return $a_var_setup;
+  }
+}
+
+
+/**
+ * URI: mediafile/uploadprogress
+ *
+ * Method: GET
+ *
+ * 1.x: vpx_upload_uploadprogress_get
+ */
+class mediamosa_rest_call_asset_mediafile_uploadprogress extends mediamosa_rest_call {
+
+  // ------------------------------------------------------------------ Consts.
+  // Rest vars;
+  const ID = 'id';
+
+  // ------------------------------------------------------------------ Get Var Setup.
+  public function get_var_setup() {
+    $a_var_setup = array();
+
+    // Add ID of the upload.
+    $a_var_setup[self::VARS][self::ID] = array(
+      self::VAR_TYPE => mediamosa_type::TYPE_ALPHA_NUM,
+      self::VAR_DESCRIPTION => 'ID of the upload that has been randomly chosen and provided when the upload was send to the server.',
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+    );
+
+    return $a_var_setup;
+  }
+
+  // ------------------------------------------------------------------ Do Call.
+  public function do_call() {
+    $o_mediamosa = mediamosa::get();
+
+    $id = $this->get_param_value(self::ID);
+
+    // Add to response.
+    $o_mediamosa->add_item(json_encode(mediamosa_asset_mediafile_upload::get_uploadprogress($id)));
   }
 }

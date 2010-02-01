@@ -126,6 +126,7 @@ function mediamosa_job_server_schema() {
         'length' => mediamosa_job_server_db::PROGRESS_LENGTH,
         'not null' => TRUE,
         'description' => t('The progress of the job from 0.000 to 1.000.'),
+        'default' => '0.000',
       ),
       mediamosa_job_server_db::JOB_TYPE => array(
         'description' => t('The status of the job.'),
@@ -137,8 +138,8 @@ function mediamosa_job_server_schema() {
       mediamosa_job_server_db::PROGRESS_ID => array(
         'type' => 'int',
         'unsigned' => TRUE,
-        'not null' => TRUE,
         'description' => t('Unused.'),
+        'default' => NULL,
       ),
       mediamosa_job_server_db::MEDIAFILE_ID_SRC => array(
         'type' => 'varchar',
@@ -153,7 +154,7 @@ function mediamosa_job_server_schema() {
       ),
       mediamosa_job_server_db::STARTED => array(
         'type' => 'datetime',
-        'not null' => TRUE,
+        'default' => NULL,
         'description' => t('The date and time when job was started.'),
       ),
       mediamosa_job_server_db::FINISHED => array(

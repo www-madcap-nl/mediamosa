@@ -60,6 +60,12 @@ function mediamosa_app_menu() {
     'access arguments' => array('access mediamosa'),
   );
 
+  $items['admin/mediamosa/config/app/list'] = array(
+    'title' => 'Client applications',
+    'access arguments' => array('access mediamosa'),
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+
   $items['admin/mediamosa/config/app/%/contacts'] = array(
     'title' => 'Client application contacts',
     'type' => MENU_CALLBACK,

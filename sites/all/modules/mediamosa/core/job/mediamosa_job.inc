@@ -41,6 +41,17 @@ class mediamosa_job {
 
   // ------------------------------------------------------------------ Static Functions.
   /**
+   * Log for job.
+   *
+   * @param string $message
+   * @param array $variables
+   * @param string $severity
+   */
+  static public function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
+    mediamosa::log($message, $variables, $severity, 'job');
+  }
+
+  /**
    * Make sure the job exists.
    *
    * @param integer $job_id
@@ -487,6 +498,7 @@ class mediamosa_job {
 
     // Analyse the mediafile.
     $a_analyse_result = mediamosa_asset_mediafile::analyse($a_job_ext_upload[mediamosa_job_db::APP_ID], $a_job_ext_upload[mediamosa_job_db::MEDIAFILE_ID]);
+    assert(is_array($a_analyse_result));
 
     // Store it.
     mediamosa_asset_mediafile_metadata::store_analyse($a_job_ext_upload[mediamosa_job_db::ID], $a_analyse_result);
@@ -501,7 +513,7 @@ class mediamosa_job {
    * @param integer $app_id
    */
   static public function create_analyse_job($owner, $asset_id, $mediafile_id, $app_id) {
-    mediamosa::log('Start analyse job: mediafileid = @mediafile_id', $mediafile_id, array('@mediafile_id' => $mediafile_id), WATCHDOG_NOTICE, 'job_handler');
+    self::log('Start analyse job: mediafileid = @mediafile_id', $mediafile_id, array('@mediafile_id' => $mediafile_id));
 
     $a_fields = array(
       mediamosa_job_db::ASSET_ID => $asset_id,
@@ -542,7 +554,7 @@ class mediamosa_job {
 
     if (!empty($a_job_transcode[mediamosa_job_transcode_db::COMPLETED_TRANSCODING_URL])) {
       $completed_transcoding_url = $a_job_transcode[mediamosa_job_transcode_db::COMPLETED_TRANSCODING_URL];
-      mediamosa::log($completed_transcoding_url . $new_status, array(), WATCHDOG_NOTICE, 'completed_transcoding_url');
+      self::log($completed_transcoding_url . $new_status, array(), WATCHDOG_NOTICE);
 
       // Do the call (through proxy).
       mediamosa_http::do_head_call($completed_transcoding_url . $new_status, array('use_curlproxy' => TRUE));

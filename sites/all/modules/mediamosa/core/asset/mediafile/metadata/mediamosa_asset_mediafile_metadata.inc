@@ -140,7 +140,7 @@ class mediamosa_asset_mediafile_metadata {
     $a_fields[mediamosa_asset_mediafile_metadata_db::AUDIO_CODEC] = isset($a_metadata['Audio-codec']) ? $a_metadata['Audio-codec'] : '';
 
     // Audio-frequency.
-    $a_fields[mediamosa_asset_mediafile_metadata_db::SAMPLE_RATE] = isset($a_metadata['Audio-frequency']) ? $a_metadata['Audio-frequency'] : '';
+    $a_fields[mediamosa_asset_mediafile_metadata_db::SAMPLE_RATE] = isset($a_metadata['Audio-frequency']) ? $a_metadata['Audio-frequency'] : '0';
 
     // Audio-channels.
     $a_fields[mediamosa_asset_mediafile_metadata_db::CHANNELS] = isset($a_metadata['Audio-channels']) ? $a_metadata['Audio-channels'] : '';
@@ -152,7 +152,7 @@ class mediamosa_asset_mediafile_metadata {
     $a_fields[mediamosa_asset_mediafile_metadata_db::CONTAINER_TYPE] = isset($a_metadata['File-type']) ? $a_metadata['File-type'] : '';
 
     // file-bitrate.
-    $a_fields[mediamosa_asset_mediafile_metadata_db::BITRATE] = isset($a_metadata['File-bitrate']) ? $a_metadata['File-bitrate'] : '';
+    $a_fields[mediamosa_asset_mediafile_metadata_db::BITRATE] = isset($a_metadata['File-bitrate']) ? $a_metadata['File-bitrate'] : '0';
 
     // bpp.
     $a_fields[mediamosa_asset_mediafile_metadata_db::BPP] = (string)self::calculate_bpp($width, $height, $a_fields[mediamosa_asset_mediafile_metadata_db::FPS], $a_fields[mediamosa_asset_mediafile_metadata_db::BITRATE]);

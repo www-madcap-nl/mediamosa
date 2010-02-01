@@ -26,6 +26,9 @@
 
 /**
  * Implements the hook_mediamosa_configuration_collect()
+ *
+ * Hook iterates the configuration form for global settings that are shared
+ * on multiple modules into one form; the configuration form.
  */
 function mediamosa_configuration_server_mediamosa_configuration_collect() {
 

@@ -73,7 +73,7 @@ class mediamosa_rest_call_job_set_status extends mediamosa_rest_call {
         self::STATUS => array(
           self::VAR_TYPE => mediamosa_type::TYPE_ALPHA,
           self::VAR_DESCRIPTION => 'The status.',
-          self::VAR_ALLOWED_VALUES => array(mediamosa_job_db::STATUS_WAITING, mediamosa_job_db::STATUS_INPROGRESS, mediamosa_job_db::STATUS_FINISHED, mediamosa_job_db::STATUS_FAILED),
+          self::VAR_ALLOWED_VALUES => array(mediamosa_job_db::JOB_STATUS_WAITING, mediamosa_job_db::JOB_STATUS_INPROGRESS, mediamosa_job_db::JOB_STATUS_FINISHED, mediamosa_job_db::JOB_STATUS_FAILED),
         ),
         self::PROGRESS => array(
           self::VAR_TYPE => mediamosa_type::TYPE_STRING,

@@ -761,18 +761,21 @@ class mediamosa_rest_call_aut_asset_set_rights extends mediamosa_rest_call {
     $a_var_setup[mediamosa_rest_call::VARS]['user_id'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
+      mediamosa_rest_call::VAR_DESCRIPTION => 'User ID, owner of the asset.',
     );
 
     $a_var_setup[mediamosa_rest_call::VARS]['replace'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_BOOL,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_DEFAULT_VALUE => 'TRUE',
+      mediamosa_rest_call::VAR_DESCRIPTION => '\'TRUE\' or \'FALSE\'. Is the rest call overwrite the existing rules? Default is TRUE. Defined as \'FALSE\' means the old rules will not be overwritten.',
     );
 
     $a_var_setup[mediamosa_rest_call::VARS]['aut_app'] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_INT,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
+      mediamosa_rest_call::VAR_DESCRIPTION => 'Application(s) that get acces to the asset.',
     );
 
     $a_var_setup[mediamosa_rest_call::VARS]['aut_user'] = array(

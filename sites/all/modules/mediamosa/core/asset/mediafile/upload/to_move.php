@@ -54,66 +54,6 @@ function vpx_upload_handle_file_put($a_args) {
   return vpx_upload_handle_file($a_args);
 }
 
-
-
-function vpx_upload_uploadprogress_get($a_args) {
-
-  // Get the id of the upload (is not ticket)
-  vpx_funcparam_add($a_funcparam, $a_args, 'id', VPX_TYPE_ALPHANUM);
-
-  // Get id
-  $id = vpx_funcparam_get_value($a_funcparam, 'id');
-
-  // Create output
-  $o_response = new rest_response();
-
-  // Add it
-  $o_response->add_item(json_encode(vpx_upload_uploadprogress($id)));
-
-  return $o_response;
-}
-
-function vpx_upload_uploadprogress($id) {
-
-  if (!function_exists('apc_fetch')) {
-    return array(
-      'message' => 'Uploading (No Progress Information Available)',
-      'percentage' => -1,
-      'status' => 1,
-    );
-  }
-
-  $a_status = apc_fetch('upload_' . $id);
-
-  if (!$a_status['total']) {
-    return array(
-      'status' => 1,
-      'percentage' => -1,
-      'message' => 'Uploading',
-    );
-  }
-
-  $a_status['status'] = 1;
-  $a_status['percentage'] = round($a_status['current'] / $a_status['total'] * 100, 0);
-  $a_status['message'] = "--:-- left (at --/sec)";
-
-  $a_status['speed_average'] = 0;
-  $a_status['est_sec'] = 0;
-
-  $a_status['elapsed'] = time() - $a_status['start_time'];
-
-  if ($a_status['elapsed'] > 0) {
-    $a_status['speed_average'] = $a_status['current'] / $a_status['elapsed'];
-
-    if ($a_status['speed_average'] > 0) {
-      $a_status['est_sec'] = ($a_status['total'] - $a_status['current']) / $a_status['speed_average'];
-      $a_status['message'] = sprintf("%02d:%02d left (at %s/sec)", $a_status['est_sec'] / 60, $a_status['est_sec'] % 60, format_size($a_status['speed_average']));
-    }
-  }
-
-  return $a_status;
-}
-
 /**
  * Still upload as an image
  */

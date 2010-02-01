@@ -104,8 +104,22 @@ function mediamosa_maintenance_browse_restcall_details($uri, $method) {
   $rest_calls[$uri][$method][mediamosa_rest_call::URI] = $uri;
   $rest_calls[$uri][$method][mediamosa_rest_call::METHOD] = $method;
 
+  $a_rest_call = mediamosa_rest::set_default_rest_call($rest_calls[$uri][$method]);
+
   // Create class from it.
-  $o_rest_call = new $rest_calls[$uri][$method][mediamosa_rest_call::CLASS_NAME](mediamosa_rest::set_default_rest_call($rest_calls[$uri][$method]));
+  $o_rest_call = new $rest_calls[$uri][$method][mediamosa_rest_call::CLASS_NAME]($a_rest_call);
+
+  // Check if override for class selection is here.
+  if (method_exists($o_rest_call, 'get_object_rest_call')) {
+    $o_rest_call = $o_rest_call->get_object_rest_call($a_rest_call, isset($a_rest_call[mediamosa_rest_call::DEFAULT_PARAMS_VALUES]) ? $a_rest_call[mediamosa_rest_call::DEFAULT_PARAMS_VALUES] : array());
+  }
+
+  // Set as uri values, so we dont fail checks.
+  if (isset($rest_calls[$uri][$method][mediamosa_rest_call::DEFAULT_PARAMS_VALUES])) {
+    foreach ($rest_calls[$uri][$method][mediamosa_rest_call::DEFAULT_PARAMS_VALUES] as $param => $value) {
+      $o_rest_call->{mediamosa_rest_call::URI_PARAMS}[$param] = $value;
+    }
+  }
 
   // Turn off so we can call the get_var_setup without problems.
   // Although get_var_setup should not test variables.
@@ -122,10 +136,6 @@ function mediamosa_maintenance_browse_restcall_details($uri, $method) {
     array('data' => t('Max. length')),
   );
 
-  if (!isset($a_var_setup[mediamosa_rest_call::VARS])) {
-    $a_var_setup[mediamosa_rest_call::VARS] = array();
-  }
-
   // Sort on param.
   ksort($a_var_setup[mediamosa_rest_call::VARS]);
   $form = $rows = array();
@@ -139,13 +149,19 @@ function mediamosa_maintenance_browse_restcall_details($uri, $method) {
     )
   );
 
+
+  if (!isset($a_var_setup[mediamosa_rest_call::VARS])) {
+    $a_var_setup[mediamosa_rest_call::VARS] = array();
+  }
   // First required.
   foreach ($a_var_setup[mediamosa_rest_call::VARS] as $param => $a_item) {
     if (isset($a_item[mediamosa_rest_call::VAR_IS_REQUIRED]) && $a_item[mediamosa_rest_call::VAR_IS_REQUIRED] == mediamosa_rest_call::VAR_IS_REQUIRED_YES) {
+      $is_array = isset($a_item[mediamosa_rest_call::VAR_IS_ARRAY]) && $a_item[mediamosa_rest_call::VAR_IS_ARRAY] == mediamosa_rest_call::VAR_IS_ARRAY_YES ? '[]' : '';
+
       $rows[] = array(
-        $param,
+        $param . $is_array,
         $a_item[mediamosa_rest_call::VAR_TYPE],
-        $a_item[mediamosa_rest_call::VAR_DESCRIPTION],
+        isset($a_item[mediamosa_rest_call::VAR_DESCRIPTION]) ? $a_item[mediamosa_rest_call::VAR_DESCRIPTION] : '',
         t('Required'),
         '-',
       );
@@ -155,10 +171,12 @@ function mediamosa_maintenance_browse_restcall_details($uri, $method) {
   // Not required.
   foreach ($a_var_setup[mediamosa_rest_call::VARS] as $param => $a_item) {
     if (!isset($a_item[mediamosa_rest_call::VAR_IS_REQUIRED]) || $a_item[mediamosa_rest_call::VAR_IS_REQUIRED] == mediamosa_rest_call::VAR_IS_REQUIRED_NO) {
+      $is_array = isset($a_item[mediamosa_rest_call::VAR_IS_ARRAY]) && $a_item[mediamosa_rest_call::VAR_IS_ARRAY] == mediamosa_rest_call::VAR_IS_ARRAY_YES ? '[]' : '';
+
       $rows[] = array(
-        $param,
+        $param . $is_array,
         $a_item[mediamosa_rest_call::VAR_TYPE],
-        $a_item[mediamosa_rest_call::VAR_DESCRIPTION],
+        isset($a_item[mediamosa_rest_call::VAR_DESCRIPTION]) ? $a_item[mediamosa_rest_call::VAR_DESCRIPTION] : '',
         t('Optional'),
         '-',
       );

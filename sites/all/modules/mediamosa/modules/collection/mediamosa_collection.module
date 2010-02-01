@@ -119,7 +119,7 @@ function mediamosa_collection_mediamosa_register_rest_call() {
 
   // Delete Collection/asset relation.
   $a_rest_calls['collection/$coll_id/asset_relation/delete'][mediamosa_rest_call::METHOD_POST] = array(
-    mediamosa_rest_call::CLASS_NAME => 'media_management_delete_collection_relation',
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_collection_delete_relation',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::DESCRIPTION => 'Delete the relations between collection and assets.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_collection',

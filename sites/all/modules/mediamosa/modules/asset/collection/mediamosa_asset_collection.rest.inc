@@ -141,6 +141,7 @@ class mediamosa_rest_call_asset_collection_delete_asset_from_all_collections ext
   // Rest vars;
   const ASSET_ID = 'asset_id';
   const USER_ID = 'user_id';
+  const COLL_ID = 'coll_id';
 
   // ------------------------------------------------------------------ Get Var Setup.
 public function get_var_setup() {
