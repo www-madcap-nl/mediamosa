@@ -634,7 +634,7 @@ class mediamosa_rest_call_asset_delete extends mediamosa_rest_call {
     mediamosa_aut::owner_check($app_id, $user_id, $a_asset[mediamosa_asset_db::APP_ID], $a_asset[mediamosa_asset_db::OWNER_ID], $is_app_admin);
 
     // Delete the asset (and all other stuff related).
-    mediamosa_asset::delete($asset_id, $delete == 'delete');
+    mediamosa_asset::delete($asset_id, $delete == 'cascade');
 
     // All ok.
     $o_mediamosa->set_result_okay();

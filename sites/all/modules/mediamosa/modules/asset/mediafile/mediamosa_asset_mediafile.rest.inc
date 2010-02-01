@@ -135,7 +135,12 @@ class mediamosa_rest_call_get_mediafile extends mediamosa_rest_call {
     mediamosa_aut::read_single_object(mediamosa_aut::AUT_TYPE_MEDIAFILE, $mediafile_id, $a_app_ids);
 
     // Now enrich response with mediafile data.
-    mediamosa_asset_mediafile::enrich_response_mediafile(array($mediafile_id), $a_app_ids, FALSE, $show_stills);
+    $a_items = mediamosa_asset_mediafile::enrich_response_mediafile(array($mediafile_id), $a_app_ids, FALSE, $show_stills);
+
+    // Add to response.
+    foreach ($a_items['mediafile'] as $a_item) {
+      $o_mediamosa->add_item($a_item);
+    }
 
     // Done.
   }
@@ -200,7 +205,12 @@ class mediamosa_rest_call_get_asset_mediafiles extends mediamosa_rest_call {
     $a_mediafile_ids = mediamosa_asset_mediafile::mediafiles_search($asset_id, $tag, $is_still);
 
     // Create output.
-    mediamosa_asset_mediafile::enrich_response_mediafile($a_mediafile_ids, $a_app_ids, $is_oai);
+    $a_items = mediamosa_asset_mediafile::enrich_response_mediafile($a_mediafile_ids, $a_app_ids, $is_oai);
+
+    // Add to response.
+    foreach ($a_items['mediafile'] as $a_item) {
+      $o_mediamosa->add_item($a_item);
+    }
   }
 }
 
@@ -273,7 +283,7 @@ class mediamosa_rest_call_delete_mediafiles extends mediamosa_rest_call {
     // Check if this mediafile is the only one under a sub-asset.
     $query = db_select(mediamosa_asset_db::TABLE_NAME, 'a');
     $query->fields('a', array(mediamosa_asset_db::PARENT_ID, mediamosa_asset_db::ID));
-    $query->addJoin('mf', mediamosa_asset_mediafile_db::ID, strtr('a.#asset_id = mf.#asset_id', array('#asset_id' => mediamosa_asset_db::ID)));
+    $query->join(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf', strtr('a.#asset_id = mf.#asset_id', array('#asset_id' => mediamosa_asset_db::ID)));
     $query->condition('mf.' . mediamosa_asset_mediafile_db::ID, $mediafile_id);
     $a_asset = $query->execute()->fetchAssoc();
 

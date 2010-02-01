@@ -79,13 +79,46 @@ class mediamosa_job_server {
       return; // Still running.
     }
 
+    // A period of 60 to 120 seconds we wait till its killed (or done running).
+    $run_last = variable_get('mediamosa_jobstatus_cron_running_' . $server_id, NULL);
+    if (round(REQUEST_TIME - $run_last) < 120) {
+      self::log('run_parse_queue() in safety timeout zone.');
+      return; // In timeout zone.
+    }
+
     variable_set('mediamosa_jobserver_cron_last_' . $server_id, REQUEST_TIME);
 
     // Log it.
     self::log_debug('Start parse queue job server');
 
-    // Run.
-    self::parse_queue();
+    // We set this to NULL when we are done.
+    variable_set('mediamosa_jobserver_cron_running_' . $server_id, REQUEST_TIME);
+
+    // Set max run time on 120 sec.
+    set_time_limit(120);
+
+    for ($x = 0; $x < 6; $x++) {
+      $start_at = microtime(TRUE);
+
+      try {
+        // Parse queue.
+        self::parse_queue();
+      }
+      catch (mediamosa_exception $e) {
+        // ignore, its logged
+      }
+      // Now take the time it took, and subtrac that from 10.
+      $time_to_sleep = 10 - round(microtime(TRUE) - $start_at);
+      self::log_debug_high('Server run_parse_queue: Time to sleep @time', array('@time' => $time_to_sleep));
+      if ($time_to_sleep > 0) {
+        sleep($time_to_sleep);
+      }
+
+      // And repeat for 6 times = 1 minute = 1 cron run.
+    }
+
+    // Done.
+    variable_set('mediamosa_server_cron_running_' . $server_id, NULL);
 
     // Log it.
     self::log_debug('Ending parse queue job server');

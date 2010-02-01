@@ -64,6 +64,6 @@ class mediamosa_server_db {
   const SERVER_TYPE_DOWNLOAD = 'download';
   const SERVER_TYPE_STILL = 'still';
   const SERVER_TYPE_STREAMING = 'streaming';
-  const SERVER_TYPE_TRANSCODE = 'transcode';
+  const SERVER_TYPE_JOB_PROCESSOR = 'job_processor';
   const SERVER_TYPE_UPLOAD = 'upload';
 }

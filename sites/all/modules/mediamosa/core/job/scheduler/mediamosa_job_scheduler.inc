@@ -92,6 +92,9 @@ class mediamosa_job_scheduler {
     // Set max run time on 120 sec.
     set_time_limit(120);
 
+    // Wait 5 seconds so we match possible job parser.
+    sleep(5);
+
     for ($x = 0; $x < 6; $x++) {
       $start_at = microtime(TRUE);
 
@@ -643,7 +646,7 @@ class mediamosa_job_scheduler {
         '#server_status' => mediamosa_server_db::SERVER_STATUS,
         ':server_status_on' => mediamosa_server_db::SERVER_STATUS_ON,
         '#server_type' => mediamosa_server_db::SERVER_TYPE,
-        ':server_type' => mediamosa_server_db::SERVER_TYPE_TRANSCODE,
+        ':server_type' => mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR,
       )
     );
 
@@ -914,15 +917,15 @@ class mediamosa_job_scheduler {
             (
               (mj.job_type = :JOBTYPE_TRANSCODE AND
                 (SELECT COUNT(*) FROM {#mediamosa_job_transcode} AS mjt
-                  JOIN {#mediamosa_server_transcoding_tool} USING(tool)
+                  JOIN {#mediamosa_server_tool} USING(tool)
                   WHERE #nid = :nid AND mjt.job_id = mj.job_id LIMIT 1) = 1)
             OR
               (mj.job_type = :JOBTYPE_ANALYSE AND
-                (SELECT COUNT(*) FROM {#mediamosa_server_transcoding_tool} AS mstt
+                (SELECT COUNT(*) FROM {#mediamosa_server_tool} AS mstt
                   WHERE mstt.tool = :JOBTYPE_ANALYSE AND #nid = :nid LIMIT 1) = 1)
             OR
               (mj.job_type = :JOBTYPE_STILL AND
-                (SELECT COUNT(mstt2.tool) FROM {#mediamosa_server_transcoding_tool} AS mstt2
+                (SELECT COUNT(mstt2.tool) FROM {#mediamosa_server_tool} AS mstt2
                   WHERE mstt2.tool = :JOBTYPE_STILL AND #nid = :nid LIMIT 1) = 1)
             OR
               (mj.job_type = :JOBTYPE_DELETE_MEDIAFILE)
@@ -943,14 +946,14 @@ class mediamosa_job_scheduler {
         ':JOBSTATUS_CANCELLING' => mediamosa_job_db::JOB_STATUS_CANCELLING,
         ':JOBTYPE_TRANSCODE' => mediamosa_job_db::JOB_TYPE_TRANSCODE,
         ':nid' => $server_id,
-        '#nid' => mediamosa_server_transcoding_tool_db::NID,
+        '#nid' => mediamosa_server_tool_db::NID,
         ':JOBTYPE_ANALYSE' => mediamosa_job_db::JOB_TYPE_ANALYSE,
         ':JOBTYPE_STILL' => mediamosa_job_db::JOB_TYPE_STILL,
         ':JOBTYPE_DELETE_MEDIAFILE' => mediamosa_job_db::JOB_TYPE_DELETE_MEDIAFILE,
         '#mediamosa_job' => mediamosa_job_db::TABLE_NAME,
         '#mediamosa_server_job' => mediamosa_server_job_db::TABLE_NAME,
         '#mediamosa_job_transcode' => mediamosa_job_transcode_db::TABLE_NAME,
-        '#mediamosa_server_transcoding_tool' => mediamosa_server_transcoding_tool_db::TABLE_NAME,
+        '#mediamosa_server_tool' => mediamosa_server_tool_db::TABLE_NAME,
        )
     );
 
@@ -991,12 +994,12 @@ class mediamosa_job_scheduler {
         $query_job = mediamosa_job_still::get($job_id);
 
         if ($query_job) {
-          //$a_result["frametime"] = $query_job_row->frametime;
-          //$a_result["size"] = $query_job_row->size;
-          //$a_result["h_padding"] = $query_job_row->h_padding;
-          //$a_result["v_padding"] = $query_job_row->v_padding;
-          $a_result["blackstill_check"] = $query_job_row->blackstill_check;
-          $a_result["still_parameters"] = unserialize($query_job_row->still_parameters);
+          //$a_result["frametime"] = $query_job->frametime;
+          //$a_result["size"] = $query_job->size;
+          //$a_result["h_padding"] = $query_job->h_padding;
+          //$a_result["v_padding"] = $query_job->v_padding;
+          $a_result["blackstill_check"] = $query_job->blackstill_check;
+          $a_result["still_parameters"] = unserialize($query_job->still_parameters);
           $a_result["frametime"] = $a_result["still_parameters"]['frametime'];
           //$a_result["size"] = $a_result["still_parameters"]['size'];
           $a_result["h_padding"] = $a_result["still_parameters"]['h_padding'];
@@ -1005,90 +1008,90 @@ class mediamosa_job_scheduler {
 
           // Calculating aspect ratio
           // Base value
-          //$target_size = $query_job_row->size;
+          //$target_size = $query_job->size;
           $target_size = $a_result["still_parameters"]['size'];
-          if ($query_job_row->size == 'sqcif') {
+          if ($query_job->size == 'sqcif') {
             $target_size = '128x96';
           }
-          elseif ($query_job_row->size == 'qcif') {
+          elseif ($query_job->size == 'qcif') {
             $target_size = '176x144';
           }
-          elseif ($query_job_row->size == 'cif') {
+          elseif ($query_job->size == 'cif') {
             $target_size = '352x288';
           }
-          elseif ($query_job_row->size == '4cif') {
+          elseif ($query_job->size == '4cif') {
             $target_size = '704x576';
           }
-          elseif ($query_job_row->size == 'qqvga') {
+          elseif ($query_job->size == 'qqvga') {
             $target_size = '160x120';
           }
-          elseif ($query_job_row->size == 'qvga') {
+          elseif ($query_job->size == 'qvga') {
             $target_size = '320x240';
           }
-          elseif ($query_job_row->size == 'vga') {
+          elseif ($query_job->size == 'vga') {
             $target_size = '640x480';
           }
-          elseif ($query_job_row->size == 'svga') {
+          elseif ($query_job->size == 'svga') {
             $target_size = '800x600';
           }
-          elseif ($query_job_row->size == 'xga') {
+          elseif ($query_job->size == 'xga') {
             $target_size = '1024x768';
           }
-          elseif ($query_job_row->size == 'uxga') {
+          elseif ($query_job->size == 'uxga') {
             $target_size = '1600x1200';
           }
-          elseif ($query_job_row->size == 'qxga') {
+          elseif ($query_job->size == 'qxga') {
             $target_size = '2048x1536';
           }
-          elseif ($query_job_row->size == 'sxga') {
+          elseif ($query_job->size == 'sxga') {
             $target_size = '1280x1024';
           }
-          elseif ($query_job_row->size == 'qsxga') {
+          elseif ($query_job->size == 'qsxga') {
             $target_size = '2560x2048';
           }
-          elseif ($query_job_row->size == 'hsxga') {
+          elseif ($query_job->size == 'hsxga') {
             $target_size = '5120x4096';
           }
-          elseif ($query_job_row->size == 'wvga') {
+          elseif ($query_job->size == 'wvga') {
             $target_size = '852x480';
           }
-          elseif ($query_job_row->size == 'wxga') {
+          elseif ($query_job->size == 'wxga') {
             $target_size = '1366x768';
           }
-          elseif ($query_job_row->size == 'wsxga') {
+          elseif ($query_job->size == 'wsxga') {
             $target_size = '1600x1024';
           }
-          elseif ($query_job_row->size == 'wuxga') {
+          elseif ($query_job->size == 'wuxga') {
             $target_size = '1920x1200';
           }
-          elseif ($query_job_row->size == 'woxga') {
+          elseif ($query_job->size == 'woxga') {
             $target_size = '2560x1600';
           }
-          elseif ($query_job_row->size == 'wqsxga') {
+          elseif ($query_job->size == 'wqsxga') {
             $target_size = '3200x2048';
           }
-          elseif ($query_job_row->size == 'wquxga') {
+          elseif ($query_job->size == 'wquxga') {
             $target_size = '3840x2400';
           }
-          elseif ($query_job_row->size == 'whsxga') {
+          elseif ($query_job->size == 'whsxga') {
             $target_size = '6400x4096';
           }
-          elseif ($query_job_row->size == 'whuxga') {
+          elseif ($query_job->size == 'whuxga') {
             $target_size = '7680x4800';
           }
-          elseif ($query_job_row->size == 'cga') {
+          elseif ($query_job->size == 'cga') {
             $target_size = '320x200';
           }
-          elseif ($query_job_row->size == 'ega') {
+          elseif ($query_job->size == 'ega') {
             $target_size = '640x350';
           }
-          elseif ($query_job_row->size == 'hd480') {
+          elseif ($query_job->size == 'hd480') {
             $target_size = '852x480';
           }
-          elseif ($query_job_row->size == 'hd720') {
+          elseif ($query_job->size == 'hd720') {
             $target_size = '1280x720';
           }
-          elseif ($query_job_row->size == 'hd1080') {
+          elseif ($query_job->size == 'hd1080') {
             $target_size = '1920x1080';
           }
           // First get source width and height.
@@ -1350,7 +1353,7 @@ class mediamosa_job_scheduler {
        'SELECT mj.#job_id, ms.#uri FROM {#mediamosa_job} AS mj
         JOIN {#mediamosa_server_job} AS msj ON msj.#job_id = mj.#job_id
         JOIN {#mediamosa_server} AS ms ON ms.#nid = msj.#server_id
-        WHERE NOT mj.#started IS NULL AND TIME_TO_SEC(TIMEDIFF(NOW(), mj.#started)) > :JOB_TRANSCODE_TIMEOUT AND #server_type = :server_type_transcode',
+        WHERE NOT mj.#started IS NULL AND TIME_TO_SEC(TIMEDIFF(NOW(), mj.#started)) > :JOB_TRANSCODE_TIMEOUT AND #server_type = :server_type_job_processor',
         array(
           '#job_id' => mediamosa_job_db::ID,
           '#uri' => mediamosa_server_db::URI,
@@ -1361,7 +1364,7 @@ class mediamosa_job_scheduler {
           '#nid' => mediamosa_server_db::NID,
           '#server_id' => mediamosa_server_job_db::SERVER_ID,
           '#server_type' => mediamosa_server_db::SERVER_TYPE,
-          ':server_type_transcode' => mediamosa_server_db::SERVER_TYPE_TRANSCODE,
+          ':server_type_job_processor' => mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR,
           '#started' => mediamosa_job_db::STARTED,
         )
     );
@@ -1425,7 +1428,7 @@ class mediamosa_job_scheduler {
   }
 
   /**
-   * Check if there are transcode servers on CLOSE and have no jobs, then
+   * Check if there are servers on CLOSE and have no jobs, then
    * set them on OFF.
    *
    * 1.x: _vpx_jobhandler_check_server_on_status_close

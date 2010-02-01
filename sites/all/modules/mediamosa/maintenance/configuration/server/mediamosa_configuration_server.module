@@ -59,7 +59,7 @@ function mediamosa_configuration_server_mediamosa_configuration_collect() {
     $form['settings_server']['mediamosa_jobscheduler_uri'] = array(
       '#type' => 'select',
       '#title' => t('Jobscheduler server'),
-      '#description' => t('Select from one of the (enabled) transcode servers the server that handles the main job scheduler CRON.'),
+      '#description' => t('Select from one of the (enabled) job process servers the server that handles the main job scheduler CRON.'),
       '#required' => TRUE,
       '#options' => $a_options,
       '#default_value' => '',// Set empty, so its filled.

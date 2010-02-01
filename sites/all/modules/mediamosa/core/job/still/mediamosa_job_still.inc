@@ -91,7 +91,7 @@ class mediamosa_job_still {
       mediamosa_job_still_db::SIZE => $a_still_parameters[mediamosa_job_still_db::SIZE],
       mediamosa_job_still_db::H_PADDING => $a_still_parameters[mediamosa_job_still_db::H_PADDING],
       mediamosa_job_still_db::V_PADDING => $a_still_parameters[mediamosa_job_still_db::V_PADDING],
-      mediamosa_job_still_db::BLACKSTILL_CHECK => $a_still_parameters[mediamosa_job_still_db::BLACKSTILL_CHECK],
+      mediamosa_job_still_db::BLACKSTILL_CHECK => $blackstill_check,
       mediamosa_job_still_db::STILL_PARAMETERS => serialize($a_still_parameters),
     );
 

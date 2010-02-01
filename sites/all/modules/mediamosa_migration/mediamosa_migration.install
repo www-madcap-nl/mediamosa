@@ -118,7 +118,7 @@ function mediamosa_migration_requirements($phase) {
       'mediamosa_app',
       'mediamosa_collection',
       'mediamosa_server_streaming_container',
-      'mediamosa_server_transcoding_tool',
+      'mediamosa_server_tool',
       'mediamosa_ticket',
       'mediamosa_ftp_batch',
       'mediamosa_ftp_batch_asset'
@@ -2106,7 +2106,7 @@ function _mediamosa_migration_create_server_nodes() {
   // Clean the tables.
   $a_to_truncate = array(
     'mediamosa_server_streaming_container',
-    'mediamosa_server_transcoding_tool',
+    'mediamosa_server_tool',
   );
 
   foreach ($a_to_truncate as $table_name) {
@@ -2126,7 +2126,7 @@ function _mediamosa_migration_create_server_nodes() {
     mediamosa_server_db::SERVER_TYPE_DOWNLOAD => 'download_server',
     mediamosa_server_db::SERVER_TYPE_STILL => 'still_server',
     mediamosa_server_db::SERVER_TYPE_STREAMING => 'streaming_server',
-    mediamosa_server_db::SERVER_TYPE_TRANSCODE => 'transcoding_server',
+    mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR => 'transcoding_server',
     mediamosa_server_db::SERVER_TYPE_UPLOAD => 'upload_server',
   );
 
@@ -2183,10 +2183,10 @@ function _mediamosa_migration_create_server_nodes() {
       $node->{mediamosa_server_db::URI_UPLOAD_PROGRESS} = (isset($row['uri_uploadprogress']) ? $row['uri_uploadprogress'] : NULL);
 
       switch ($type) {
-        case mediamosa_server_db::SERVER_TYPE_TRANSCODE:
+        case mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR:
           foreach ($a_transcoding_server_tool as $o_tool) {
             if ($o_tool->transcoding_server_id == $server_id) {
-              $node->{mediamosa_server_transcoding_tool_db::TABLE_NAME}[] = array(mediamosa_server_transcoding_tool_db::TOOL => $o_tool->{mediamosa_server_transcoding_tool_db::TOOL});
+              $node->{mediamosa_server_tool_db::TABLE_NAME}[] = array(mediamosa_server_tool_db::TOOL => $o_tool->{mediamosa_server_tool_db::TOOL});
             }
           }
           break;
