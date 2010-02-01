@@ -53,11 +53,13 @@ class mediamosa_transcode_mapping {
 
     if ($nice_parameter) {
       $query->condition(mediamosa_transcode_mapping_db::NICE_PARAMETER, $nice_parameter);
+      return $query->condition(mediamosa_transcode_mapping_db::TOOL, $tool)
+        ->execute()
+        ->fetchAssoc();
     }
 
     return $query->condition(mediamosa_transcode_mapping_db::TOOL, $tool)
-      ->execute()
-      ->fetchAssoc();
+      ->execute();
   }
 
   /**

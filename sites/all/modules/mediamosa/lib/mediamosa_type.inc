@@ -166,7 +166,6 @@ class mediamosa_type {
 
       case self::TYPE_APP_ID:
         if ( (!is_int($mixed_param_value) && !ctype_digit($mixed_param_value))) {
-          mediamosa::log_export($checked_param_value, WATCHDOG_DEBUG,'debug');
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INVALID_APP_ID, array('@app_id' => $mixed_param_value));
         }
 
