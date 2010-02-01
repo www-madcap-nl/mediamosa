@@ -273,7 +273,7 @@ class mediamosa_rest_call_delete_mediafiles extends mediamosa_rest_call {
     // Check if this mediafile is the only one under a sub-asset.
     $query = db_select(mediamosa_asset_db::TABLE_NAME, 'a');
     $query->fields('a', array(mediamosa_asset_db::PARENT_ID, mediamosa_asset_db::ID));
-    $query->addJoin('mf', mediamosa_asset_mediafile_db::ID, strtr('a.#asset_id = mf.#asset_id', array('#asset_id' => mediamosa_asset_db::ID)));
+    $query->join(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf', strtr('a.#asset_id = mf.#asset_id', array('#asset_id' => mediamosa_asset_db::ID)));
     $query->condition('mf.' . mediamosa_asset_mediafile_db::ID, $mediafile_id);
     $a_asset = $query->execute()->fetchAssoc();
 
