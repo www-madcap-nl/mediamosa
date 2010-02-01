@@ -100,7 +100,7 @@ function _mediamosa_server_list() {
         // Cells
         t($server->{mediamosa_server_db::SERVER_TYPE}),
         t($server->{mediamosa_server_db::URI}),
-        t($server->{mediamosa_server_db::DESCRIPTION}),
+        ( isset($server->{mediamosa_server_db::DESCRIPTION}) ? t($server->{mediamosa_server_db::DESCRIPTION}) : '' ),
         t($server->{mediamosa_server_db::SERVER_STATUS}),
         implode(' | ', $a_actions),
       ),

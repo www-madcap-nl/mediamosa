@@ -1160,10 +1160,9 @@ class mediamosa_job_scheduler {
     // op basis van de toolname worden alle parameters die gebruikt kunnen
     // worden opgevraagd. De opgegeven parameters worden hier mee gecontroleerd.
     $result = mediamosa_transcode_mapping::get_by_tool($tool);
-
     $cli = "";
     foreach ($result as $result_row) {
-      if (($result_row[mediamosa_transcode_mapping_db::NICE_PARAMETER] == 'size') && $alter_size_param) {
+      if ($result_row[mediamosa_transcode_mapping_db::NICE_PARAMETER] == 'size' && $alter_size_param) {
         $a_parameters = mediamosa_lib::create_named_array($command, ";", ":");
         $target_size = $a_parameters['size'];// We skip the size here.
       }
@@ -1172,13 +1171,13 @@ class mediamosa_job_scheduler {
           $cli .= ";";
         }
         $cli .= self::mapping_value(
-          $result_row->nice_parameter,
-          $result_row->tool_parameter,
-          $result_row->min_value,
-          $result_row->max_value,
-          $result_row->allowed_value,
-          $result_row->default_value,
-          $result_row->required,
+          $result_row[mediamosa_transcode_mapping_db::NICE_PARAMETER],
+          $result_row[mediamosa_transcode_mapping_db::TOOL_PARAMETER],
+          $result_row[mediamosa_transcode_mapping_db::MIN_VALUE],
+          $result_row[mediamosa_transcode_mapping_db::MAX_VALUE],
+          $result_row[mediamosa_transcode_mapping_db::ALLOWED_VALUE],
+          $result_row[mediamosa_transcode_mapping_db::DEFAULT_VALUE],
+          $result_row[mediamosa_transcode_mapping_db::REQUIRED],
           $command);
       }
     }

@@ -79,13 +79,13 @@ function mediamosa_job_still_schema() {
       mediamosa_job_still_db::H_PADDING => array(
         'type' => 'int',
         'unsigned' => TRUE,
-        'not null' => TRUE,
+        'default' => NULL,
         'description' => t('The horizontal padding.'),
       ),
       mediamosa_job_still_db::V_PADDING => array(
         'type' => 'int',
         'unsigned' => TRUE,
-        'not null' => TRUE,
+        'default' => NULL,
         'description' => t('The vertical padding.'),
       ),
       mediamosa_job_still_db::BLACKSTILL_CHECK => array(

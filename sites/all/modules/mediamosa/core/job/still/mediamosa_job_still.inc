@@ -69,11 +69,11 @@ class mediamosa_job_still {
       case mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NORMAL:
       case mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SECONDS:
       case mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SCENE:
-        $blackstill_check = FALSE;
+        $blackstill_check = mediamosa_job_still_db::BLACKSTILL_CHECK_FALSE;
         break;
 
       default:
-        $blackstill_check = TRUE;
+        $blackstill_check = mediamosa_job_still_db::BLACKSTILL_CHECK_TRUE;
         break;
     }
 
