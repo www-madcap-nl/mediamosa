@@ -39,7 +39,7 @@ $conf['mediamosa_installation_id'] = 'default';
  * for this URL / Location, disabling all REST calls; except upload
  * REST calls, which is controlled by mediamosa_app_upload.
  */
-$conf['mediamosa_app'] = FALSE;
+$conf['mediamosa_app'] = TRUE;
 
 /**
  * Default setting, TRUE / FALSE for enabling / disabling the
@@ -49,7 +49,7 @@ $conf['mediamosa_app'] = FALSE;
  * as an upload interface, put 'mediamosa_app' to FALSE and set
  * 'mediamosa_app_upload' to TRUE.
  */
-$conf['mediamosa_app_upload'] = FALSE;
+$conf['mediamosa_app_upload'] = TRUE;
 
 /**
  * Default setting, TRUE / FALSE for enabling / disabling the

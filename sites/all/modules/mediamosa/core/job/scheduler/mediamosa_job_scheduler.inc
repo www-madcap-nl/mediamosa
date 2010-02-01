@@ -643,7 +643,7 @@ class mediamosa_job_scheduler {
         '#server_status' => mediamosa_server_db::SERVER_STATUS,
         ':server_status_on' => mediamosa_server_db::SERVER_STATUS_ON,
         '#server_type' => mediamosa_server_db::SERVER_TYPE,
-        ':server_type' => mediamosa_server_db::SERVER_TYPE_TRANSCODE,
+        ':server_type' => mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR,
       )
     );
 
@@ -914,15 +914,15 @@ class mediamosa_job_scheduler {
             (
               (mj.job_type = :JOBTYPE_TRANSCODE AND
                 (SELECT COUNT(*) FROM {#mediamosa_job_transcode} AS mjt
-                  JOIN {#mediamosa_server_transcoding_tool} USING(tool)
+                  JOIN {#mediamosa_server_tool} USING(tool)
                   WHERE #nid = :nid AND mjt.job_id = mj.job_id LIMIT 1) = 1)
             OR
               (mj.job_type = :JOBTYPE_ANALYSE AND
-                (SELECT COUNT(*) FROM {#mediamosa_server_transcoding_tool} AS mstt
+                (SELECT COUNT(*) FROM {#mediamosa_server_tool} AS mstt
                   WHERE mstt.tool = :JOBTYPE_ANALYSE AND #nid = :nid LIMIT 1) = 1)
             OR
               (mj.job_type = :JOBTYPE_STILL AND
-                (SELECT COUNT(mstt2.tool) FROM {#mediamosa_server_transcoding_tool} AS mstt2
+                (SELECT COUNT(mstt2.tool) FROM {#mediamosa_server_tool} AS mstt2
                   WHERE mstt2.tool = :JOBTYPE_STILL AND #nid = :nid LIMIT 1) = 1)
             OR
               (mj.job_type = :JOBTYPE_DELETE_MEDIAFILE)
@@ -943,14 +943,14 @@ class mediamosa_job_scheduler {
         ':JOBSTATUS_CANCELLING' => mediamosa_job_db::JOB_STATUS_CANCELLING,
         ':JOBTYPE_TRANSCODE' => mediamosa_job_db::JOB_TYPE_TRANSCODE,
         ':nid' => $server_id,
-        '#nid' => mediamosa_server_transcoding_tool_db::NID,
+        '#nid' => mediamosa_server_tool_db::NID,
         ':JOBTYPE_ANALYSE' => mediamosa_job_db::JOB_TYPE_ANALYSE,
         ':JOBTYPE_STILL' => mediamosa_job_db::JOB_TYPE_STILL,
         ':JOBTYPE_DELETE_MEDIAFILE' => mediamosa_job_db::JOB_TYPE_DELETE_MEDIAFILE,
         '#mediamosa_job' => mediamosa_job_db::TABLE_NAME,
         '#mediamosa_server_job' => mediamosa_server_job_db::TABLE_NAME,
         '#mediamosa_job_transcode' => mediamosa_job_transcode_db::TABLE_NAME,
-        '#mediamosa_server_transcoding_tool' => mediamosa_server_transcoding_tool_db::TABLE_NAME,
+        '#mediamosa_server_tool' => mediamosa_server_tool_db::TABLE_NAME,
        )
     );
 
@@ -1350,7 +1350,7 @@ class mediamosa_job_scheduler {
        'SELECT mj.#job_id, ms.#uri FROM {#mediamosa_job} AS mj
         JOIN {#mediamosa_server_job} AS msj ON msj.#job_id = mj.#job_id
         JOIN {#mediamosa_server} AS ms ON ms.#nid = msj.#server_id
-        WHERE NOT mj.#started IS NULL AND TIME_TO_SEC(TIMEDIFF(NOW(), mj.#started)) > :JOB_TRANSCODE_TIMEOUT AND #server_type = :server_type_transcode',
+        WHERE NOT mj.#started IS NULL AND TIME_TO_SEC(TIMEDIFF(NOW(), mj.#started)) > :JOB_TRANSCODE_TIMEOUT AND #server_type = :server_type_job_processor',
         array(
           '#job_id' => mediamosa_job_db::ID,
           '#uri' => mediamosa_server_db::URI,
@@ -1361,7 +1361,7 @@ class mediamosa_job_scheduler {
           '#nid' => mediamosa_server_db::NID,
           '#server_id' => mediamosa_server_job_db::SERVER_ID,
           '#server_type' => mediamosa_server_db::SERVER_TYPE,
-          ':server_type_transcode' => mediamosa_server_db::SERVER_TYPE_TRANSCODE,
+          ':server_type_job_processor' => mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR,
           '#started' => mediamosa_job_db::STARTED,
         )
     );
@@ -1425,7 +1425,7 @@ class mediamosa_job_scheduler {
   }
 
   /**
-   * Check if there are transcode servers on CLOSE and have no jobs, then
+   * Check if there are servers on CLOSE and have no jobs, then
    * set them on OFF.
    *
    * 1.x: _vpx_jobhandler_check_server_on_status_close

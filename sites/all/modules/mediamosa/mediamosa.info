@@ -227,12 +227,9 @@ files[] = core/server/streaming/mediamosa_server_streaming.install.inc
 files[] = core/server/streaming/container/mediamosa_server_streaming_container_db.inc
 files[] = core/server/streaming/container/mediamosa_server_streaming_container.install.inc
 
-; Server Transcoding.
-files[] = core/server/transcoding/mediamosa_server_transcoding.install.inc
-
-; Server Transcoding Tool.
-files[] = core/server/transcoding/tool/mediamosa_server_transcoding_tool_db.inc
-files[] = core/server/transcoding/tool/mediamosa_server_transcoding_tool.install.inc
+; Server Tool.
+files[] = core/server/tool/mediamosa_server_tool.install.inc
+files[] = core/server/tool/mediamosa_server_tool_db.inc
 
 ; Ticket.
 files[] = core/ticket/mediamosa_ticket_db.inc

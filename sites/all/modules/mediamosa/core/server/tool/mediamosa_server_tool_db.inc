@@ -26,25 +26,17 @@
 
 /**
  * @file
- * Installer for mediamosa_server_transcoding module.
+ * DB Class for mediamosa_server_tool module.
  */
 
-require_once 'tool/mediamosa_server_transcoding_tool.install.inc';
+class mediamosa_server_tool_db {
+  // ------------------------------------------------------------------ Consts.
+  // Table name;
+  const TABLE_NAME = 'mediamosa_server_tool'; // 1.x name transcoding_server_tool.
 
-/**
- * Implements hook_install().
- */
-function _mediamosa_server_transcoding_install() {
-
-  // Our child.
-  _mediamosa_server_transcoding_tool_install();
-}
-
-/**
- * Implements hook_uninstall().
- */
-function _mediamosa_server_transcoding_uninstall() {
-
-  // Our child.
-  _mediamosa_server_transcoding_tool_uninstall();
+  // Database fields;
+  const ID = 'server_tool_id';
+  const NID = 'nid';
+  const TOOL = 'tool';
+  const TOOL_LENGTH = 255;
 }

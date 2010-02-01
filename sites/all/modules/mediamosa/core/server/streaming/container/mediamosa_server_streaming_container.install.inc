@@ -29,7 +29,7 @@
  * Installer for mediamosa_server_streaming_container module.
  */
 
-include 'mediamosa_server_streaming_container_db.inc';
+require_once 'mediamosa_server_streaming_container_db.inc';
 
 /**
  * Implements hook_install().

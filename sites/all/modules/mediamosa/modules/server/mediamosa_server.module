@@ -183,7 +183,7 @@ function mediamosa_server_form($node, $form_state) {
         mediamosa_server_db::SERVER_TYPE_DOWNLOAD => t('Download server'),
         mediamosa_server_db::SERVER_TYPE_STILL => t('Still server'),
         mediamosa_server_db::SERVER_TYPE_STREAMING => t('Streaming server'),
-        mediamosa_server_db::SERVER_TYPE_TRANSCODE => t('Transcode server'),
+        mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR => t('Job process server'),
         mediamosa_server_db::SERVER_TYPE_UPLOAD => t('upload server'),
       ),
       '#description' => t('The server type cannot be changed once the server is created.'),
@@ -295,7 +295,7 @@ function _mediamosa_server_get_server_options($server_type) {
       $form_elements = array('uri', 'containers', 'object_code');
       break;
 
-    case mediamosa_server_db::SERVER_TYPE_TRANSCODE:
+    case mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR:
       $form_elements = array('server_name', 'uri', 'slots', 'tools');
       break;
 

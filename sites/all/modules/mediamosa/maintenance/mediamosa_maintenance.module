@@ -41,6 +41,7 @@ function mediamosa_maintenance_menu() {
     'page callback' => '_mediamosa_maintenance_status',
     'access arguments' => array('access mediamosa'),
     'weight' => -20,
+    'position' => ''
   );
   $items['admin/mediamosa/mediamosa'] = array(
     'title' => 'Status',
@@ -72,6 +73,7 @@ function mediamosa_maintenance_menu() {
     'title' => 'List',
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
+
   return $items;
 }
 
