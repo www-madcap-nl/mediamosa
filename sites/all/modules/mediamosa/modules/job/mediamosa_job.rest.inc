@@ -542,7 +542,7 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
     if (in_array($job_type, array(mediamosa_job_db::JOB_TYPE_TRANSCODE, mediamosa_job_db::JOB_TYPE_UPLOAD))) {
     }
 
-    if ($a_mediafile[mediamosa_asset_mediafile_db::URI] == '' || is_null($a_mediafile[mediamosa_asset_mediafile_db::URI])) {
+    if ($a_mediafile[mediamosa_asset_mediafile_db::URI] != '' || !is_null($a_mediafile[mediamosa_asset_mediafile_db::URI])) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CHANGE_URI_AND_FILE, array('@mediafile_id' => $mediafile_id));
     }
 
