@@ -136,3 +136,17 @@ it will have never been ported - 4553: Module update
 it will have never been ported - 4554: Drupal update
 ported - 4555: vpx_statistics.module
 it will have never been ported - 4556: Module update
+
+truncate mediamosa_job_still;
+truncate mediamosa_job_transcode;
+truncate mediamosa_job_upload;
+truncate mediamosa_server_job;
+truncate mediamosa_job_server_still;
+truncate mediamosa_job_server_transcode;
+truncate mediamosa_job_server_analyse;
+truncate mediamosa_job_server;
+truncate mediamosa_job;
+ 
+  
+
+
