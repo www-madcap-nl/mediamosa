@@ -513,7 +513,7 @@ class mediamosa_job {
    * @param integer $app_id
    */
   static public function create_analyse_job($owner, $asset_id, $mediafile_id, $app_id) {
-    self::log('Start analyse job: mediafileid = @mediafile_id', $mediafile_id, array('@mediafile_id' => $mediafile_id));
+    self::log('Starting analyse job for #mediafile_id', array('#mediafile_id' => (string)$mediafile_id));
 
     $a_fields = array(
       mediamosa_job_db::ASSET_ID => $asset_id,

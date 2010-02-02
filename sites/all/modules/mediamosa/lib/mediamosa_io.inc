@@ -133,6 +133,10 @@ class mediamosa_io {
     $success = FALSE;
     $message = 'cause unknown';
     try {
+      // Make sure dest. map exists.
+      $dirname = dirname($new_name);
+      self::mkdir($dirname, TRUE);
+
       $success = rename($old_name, $new_name);
     }
     catch (Exception $e) {

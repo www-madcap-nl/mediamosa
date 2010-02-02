@@ -410,6 +410,12 @@ class mediamosa_job_server {
     // Read the contents of the status file in an array.
     $a_job_status = self::get_status_contents($mediafile_id_src);
 
+    // No status file found.
+    if (empty($a_job_status)) {
+      self::log('No status file found for job @job_id', array('@job_id' => $job_id));
+      return;
+    }
+
     // Defailt status.
     $status = mediamosa_job_server_db::JOB_STATUS_INPROGRESS;
 
@@ -424,6 +430,9 @@ class mediamosa_job_server {
 
           // Log it.
           self::log('End job @job_type, Job ID: @job_id, status: @status', array('@job_type' => $job_type, '@job_id' => $job_id, '@status' => $status));
+
+          // Set job status.
+          self::set_job_status($job_id, $status, $a_job_status['Progress']);
         }
         elseif ($a_job_status['Status'] == 'error' && $a_job_status['Errors'] != 'none') {
           $status = mediamosa_job_server_db::JOB_STATUS_FAILED;
@@ -431,6 +440,9 @@ class mediamosa_job_server {
 
           self::log("End @job_type job, Job ID @job_id, with status: @status<br /><br />@link", array('@job_type' => $job_type, '@job_id' => $job_id, '@status' => $status, '@link' => $link_asset));
           self::log("Info @job_type job, Job ID @job_id, status file '@statusfile'", array('@job_type' => $job_type, '@job_id' => $job_id, '@statusfile' => self::get_status_contents($mediafile_id_src, TRUE)));
+
+          // Set status to failed.
+          self::set_job_status($job_id, $status, $a_job_status['Progress'],  isset($a_job_status["ffmpeg-output"]) ? ($a_job_status["Errors"] != "" ? $a_job_status["Errors"] . "-\n" : '') . $a_job_status["ffmpeg-output"] : $a_job_status["Errors"]);
         }
 
 
@@ -1043,7 +1055,7 @@ class mediamosa_job_server {
 
     $a_result = $a_lines = array();
 
-    // FIXME move to mediamosa_io
+    // FIXME: move to mediamosa_io
     $handle = fopen($statusfile, "r");
     while (!feof($handle)) {
       $a_lines[] = fgets($handle);
@@ -1052,7 +1064,11 @@ class mediamosa_job_server {
 
     // strip the garbage from the file
     foreach ($a_lines as $line) {
-      list($name, $value) = explode(":", $line, 2);
+      if (mediamosa_unicode::strpos($line, ':') === FALSE) {
+        continue;
+      }
+
+      list($name, $value) = explode(':', $line, 2);
       if ($name == "Progress" || $name == "Status" || $name == "Errors") {
         $a_result[$name] = trim($value);
       }
@@ -1219,7 +1235,8 @@ class mediamosa_job_server {
     // Update the filename in mediafile_dest.
     mediamosa_db::db_update(mediamosa_job_server_db::TABLE_NAME)
       ->fields($a_fields)
-      ->condition(mediamosa_job_server_db::JOB_ID, $job_id);
+      ->condition(mediamosa_job_server_db::JOB_ID, $job_id)
+      ->execute();
 
     // Log it.
     self::log("Job with ID @job_id ready, new mediafile stored as '@file_dest'.", array('@job_id' => $job_id, '@file_dest' => $file_dest));

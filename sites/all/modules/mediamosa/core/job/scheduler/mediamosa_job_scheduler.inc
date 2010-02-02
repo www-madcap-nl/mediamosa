@@ -242,10 +242,9 @@ class mediamosa_job_scheduler {
 
       if ($response_data->items->item[$i]->status == mediamosa_job_db::JOB_STATUS_FINISHED) {
         switch ($response_data->items->item[$i]->job_type) {
-
           case mediamosa_job_db::JOB_TYPE_TRANSCODE:
             // als het een transcode job is die compleet is, voeg de mediafile toe
-            self::parse_finished_transcode($response_data->items->item[$i]->job_id, $response_data->items->item[$i]->mediafile_dest);
+            self::parse_finished_transcode($response_data->items->item[$i]->job_id, $response_data->items->item[$i]->mediafile_src, $response_data->items->item[$i]->mediafile_dest);
             break;
 
           case mediamosa_job_db::JOB_TYPE_ANALYSE:
@@ -307,10 +306,10 @@ class mediamosa_job_scheduler {
 
     $query = mediamosa_db::db_select(mediamosa_job_db::TABLE_NAME, 'j');
     $query->join(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf', 'mf.asset_id = j.asset_id');
-    $query->join(mediamosa_job_transcode_db::TABLE_NAME, 'jb', 'jb.job_id = j.job_id');
+    $query->join(mediamosa_job_transcode_db::TABLE_NAME, 'jt', 'jt.job_id = j.job_id');
     $query->fields('j', array(mediamosa_job_db::ASSET_ID, mediamosa_job_db::JOB_TYPE, mediamosa_job_db::OWNER_ID, mediamosa_job_db::APP_ID));
     $query->fields('mf', array(mediamosa_asset_mediafile_db::FILENAME, mediamosa_asset_mediafile_db::ID));
-    $query->fields('tj', array(mediamosa_job_transcode_db::TOOL, mediamosa_job_transcode_db::COMMAND, mediamosa_job_transcode_db::FILE_EXTENSION, mediamosa_job_transcode_db::TRANSCODE_PROFILE_ID));
+    $query->fields('jt', array(mediamosa_job_transcode_db::TOOL, mediamosa_job_transcode_db::COMMAND, mediamosa_job_transcode_db::FILE_EXTENSION, mediamosa_job_transcode_db::TRANSCODE_PROFILE_ID));
     $query->condition('j.' . mediamosa_job_db::ID, $job_id);
     $query->condition('mf.' . mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE, mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_TRUE);
     $result_row = $query->execute()->fetchAssoc();
@@ -402,15 +401,17 @@ class mediamosa_job_scheduler {
    * 1.x: _vpx_jobhandler_parse_finished_transcode
    *
    * @param integer $job_id
+   * @param string $mediafile_id_src
    * @param string $mediafile_id_dest
    */
-  static public function parse_finished_transcode($job_id, $mediafile_id_dest) {
-    // haal de asset id en original filename op basis van een job op
+  static public function parse_finished_transcode($job_id, $mediafile_id_src, $mediafile_id_dest) {
+
+    // Get the original transcode job.
     $job_info = self::get_transcodejob_info($job_id);
 
-    // controleer of de vorige job_id naar boven is te halen.
+    // Is the original job id found?
     $command_parameters = mediamosa_lib::create_named_array($job_info['command'], ';', ':');
-    $original_job_id = $command_parameters['internal_previous_job'];
+    $original_job_id = isset($command_parameters['internal_previous_job']) ? $command_parameters['internal_previous_job'] : 0;
     if ($original_job_id > 0) {
 
       // controleer op basis van de file_extension of er een extra job
@@ -465,8 +466,9 @@ class mediamosa_job_scheduler {
 
     // Get Asset.
     $a_asset = mediamosa_asset::get($job_info['asset_id']);
+    assert(!empty($a_asset));
 
-    // Set the root.
+    // Set the root (depricated).
     $asset_id_root = ($a_asset[mediamosa_asset_db::PARENT_ID] ? $a_asset[mediamosa_asset_db::PARENT_ID] : $job_info['asset_id']);
 
     $a_fields = array(
@@ -482,6 +484,7 @@ class mediamosa_job_scheduler {
       mediamosa_asset_mediafile_db::OWNER_ID => $job_info['owner'],
       mediamosa_asset_mediafile_db::APP_ID => $job_info['app_id'],
       mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE => mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_FALSE,
+      mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE => $mediafile_id_src,
     );
 
     // Add created/changed.
@@ -657,8 +660,8 @@ class mediamosa_job_scheduler {
         // Get 1 new job.
         $job_info = self::fetch_single_available_job($result_row[mediamosa_server_db::NID]);
 
-        if (!count($job_info) > 0) {
-          continue;
+        if (empty($job_info)) {
+          break; // no more for this server.
         }
 
         if (mediamosa_job::is_valid_job($job_info[mediamosa_job_db::ID], $job_info[mediamosa_job_db::JOB_TYPE], $job_info[mediamosa_job_db::MEDIAFILE_ID])) {
