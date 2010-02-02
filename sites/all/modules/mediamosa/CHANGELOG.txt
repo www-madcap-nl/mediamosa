@@ -39,8 +39,13 @@ Mediamosa 2.1.0
 - Added app_id search to CQL. (See MediaMosa ticket #241).
 - Fixed transcode without padding. (See MediaMosa ticket #194).
 - Deleting asset with running jobs gives an error. (See MediaMosa ticket #220).
+- Admin: Added mediamosa server browser.
+- Admin: Added mediamosa REST call browser.
+- Added MediaMosa Connector.
+- Fixed asset / collection browser to use MediaMosa Connector.
 
-Mediamosa 2.0.0 (unreleased)
+
+Mediamosa 2.0.0 (released as read-only)
 ---------------
 - Port to drupal 7.
 - VPX name use in code has been replaced with MediaMosa.
@@ -57,7 +62,7 @@ Mediamosa 2.0.0 (unreleased)
   from REST interface.
 - Mediamosa 1 multiple database design combined and migrated to new single 
   Drupal database called mediamosa2. No longer required to switch databases in 
-  code.
+  code and has been removed.
 - Jobserver database(s) design moved into single main mediamosa2 database. No 
   more multiple database required for multiple jobserver installations.
 - Internal REST calls IP white listing removed, replaced with internal 
