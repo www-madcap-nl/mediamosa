@@ -224,7 +224,7 @@ class mediamosa_job_server {
     // Create basic server job.
     $jobserver_job_id = self::create_job($job_id, $job_type, $mediafile_id_src);
 
-    $a_values = array(
+    $a_fields = array(
       mediamosa_job_server_still_db::ID => $jobserver_job_id,
       mediamosa_job_server_still_db::FRAMETIME => $frametime,
       mediamosa_job_server_still_db::SIZE => $size,
@@ -253,7 +253,8 @@ class mediamosa_job_server {
 
     // Get the job_server_job, make sure its not already created.
     $a_job_server_job = mediamosa_job_server::get($job_id);
-    if (!empty($a_job_server_job)) {
+
+    if (empty($a_job_server_job)) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STARTING_JOB_FAILED);
     }
 
@@ -465,7 +466,10 @@ class mediamosa_job_server {
 
         // Update the status.
         if (!file_exists($file_scene) && $a_job_status['Errors'] != 'none') {
-          self::set_job_status($job_id, $status, $a_job_status['Progress'], $a_job_status["Errors"]);
+          // Might be because there is no status file, dont bother to update.
+          if (isset($a_job_status['Errors'])) {
+            self::set_job_status($job_id, $status, $a_job_status['Progress'], $a_job_status["Errors"]);
+          }
         }
         else {
           self::set_job_status($job_id, $status, $a_job_status['Progress']);

@@ -187,7 +187,7 @@ class mediamosa_rest_call_jobserver_job_start extends mediamosa_rest_call {
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($a_var_setup, FALSE);
   }
 
   // ------------------------------------------------------------------ Do Call.
