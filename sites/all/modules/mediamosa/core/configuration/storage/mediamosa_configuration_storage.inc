@@ -160,6 +160,8 @@ class mediamosa_configuration_storage {
    * Returns the full path and filename of the transcode file of
    * given filename.
    *
+   * FIXME: also used for stills, should be called jobprocessor tmp?
+   *
    * @param string $filename
    */
   static public function transcode_file_location_get($filename) {

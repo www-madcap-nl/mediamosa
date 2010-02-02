@@ -147,15 +147,18 @@ class mediamosa_job_scheduler {
      */
     self::check_upload_timeout();
 
+
     /**
      * Remove any timedout transcode jobs.
      */
     self::check_transcode_timeout();
 
+
     /**
      * Put server that are set on close, on off when they have done all jobs.
      */
     self::check_server_on_status_close();
+
 
     // Log end point.
     self::log_debug('Ending parse queue job scheduler');
@@ -540,7 +543,7 @@ class mediamosa_job_scheduler {
     $a_asset = mediamosa_asset::get($asset_id);
     $parent_id = ($a_asset[mediamosa_asset_db::PARENT_ID] ? $a_asset[mediamosa_asset_db::PARENT_ID] : $asset_id);
 
-    self::log("Start creation DB multiple still, e.g. @filename, job: @job_id", array('@filename' => $filenames[0], '@job_id' => $job_id));
+    self::log("Start creation DB multiple still, e.g. @filename, job: @job_id", array('@filename' => $filenames[0], '@job_id' => (string)$job_id));
 
     // Remove old stills
     // We have multiple stills now, so we don't delete the old ones
@@ -656,7 +659,6 @@ class mediamosa_job_scheduler {
     foreach ($result as $result_row) {
       // Try to start as many jobs as there are free slots.
       for ($i = $result_row['jobcount']; $i < $result_row['slots']; $i++) {
-
         // Get 1 new job.
         $job_info = self::fetch_single_available_job($result_row[mediamosa_server_db::NID]);
 
@@ -773,7 +775,7 @@ class mediamosa_job_scheduler {
       return $response_data->header->request_result_id;
     }
 
-    self::log('errorcode @response bij url @rest_url', array('@response' => $response->code, '@rest_url' => $rest_url));
+    self::log('errorcode @response bij url @rest_url (@header)', array('@response' => $response->code, '@rest_url' => $rest_url, '@header' => var_export($response->header, TRUE)));
     return $response->code;
   }
 
@@ -925,7 +927,7 @@ class mediamosa_job_scheduler {
             OR
               (mj.job_type = :JOBTYPE_ANALYSE AND
                 (SELECT COUNT(*) FROM {#mediamosa_server_tool} AS mstt
-                  WHERE mstt.tool = :JOBTYPE_ANALYSE AND mstt2.#nid = :nid LIMIT 1) = 1)
+                  WHERE mstt.tool = :JOBTYPE_ANALYSE AND mstt.#nid = :nid LIMIT 1) = 1)
             OR
               (mj.job_type = :JOBTYPE_STILL AND
                 (SELECT COUNT(*) FROM {#mediamosa_server_tool} AS mstt2

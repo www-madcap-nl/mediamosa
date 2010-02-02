@@ -23,7 +23,7 @@ Steps for changelog and commits;
   - Added app_id search to CQL. (See MediaMosa ticket #24).
   
 4. Reassign to TPL (robert).
-5. Put status on ready for review. 
+5. Put status on ready for review.
 
 
 START CHANGELOG:
@@ -37,6 +37,8 @@ Mediamosa 2.1.0
   MediaMosa ticket #165 and #167).
 - Added coll_id search to CQL. (See MediaMosa ticket #241).
 - Added app_id search to CQL. (See MediaMosa ticket #241).
+- Fixed transcode without padding. (See MediaMosa ticket #194).
+- Deleting asset with running jobs gives an error. (See MediaMosa ticket #220).
 
 Mediamosa 2.0.0 (unreleased)
 ---------------
@@ -82,5 +84,3 @@ Mediamosa 2.0.0 (unreleased)
   maintain.
 - Mediafile db field asset_id_root is now depricated and will be removed in 
   future releases.
-  
-  

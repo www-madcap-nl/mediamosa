@@ -254,7 +254,7 @@ class mediamosa_job_server {
     // Get the job_server_job, make sure its not already created.
     $a_job_server_job = mediamosa_job_server::get($job_id);
 
-    if (empty($a_job_server_job)) {
+    if (!empty($a_job_server_job)) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STARTING_JOB_FAILED);
     }
 
@@ -809,6 +809,7 @@ class mediamosa_job_server {
       $framerate = 1;
 
       switch (mediamosa_unicode::strtoupper($still_parameters['still_type'])) {
+
         case 'NORMAL':
           $still_per_mediafile = $still_parameters['still_per_mediafile'];
           $frametime = $start_frame;
@@ -1030,16 +1031,14 @@ class mediamosa_job_server {
 
     // Enrich with changed/created.
     $a_fields = mediamosa_db::db_update_enrich($a_fields);
-
     mediamosa_db::db_update(mediamosa_job_db::TABLE_NAME)
       ->fields($a_fields)
-      ->condition(mediamosa_job_db::JOB_ID)
+      ->condition(mediamosa_job_db::ID, $job_id)
       ->execute();
 
     // Combine the string (only for linux, windows does not generate stills).
     $execution_string = sprintf('%s %s %s jpeg ' . mediamosa_settings::STILL_STRING, mediamosa_settings::still_file(), mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::data_location_get(), $mediafile_id, $size, $h_padding, $h_padding, $v_padding, $v_padding, $frametime, $duration, $framerate);
     $execution_string .= ' > /dev/null &';
-
     return $execution_string;
   }
 
@@ -1101,25 +1100,26 @@ class mediamosa_job_server {
     $base_filename = mediamosa_io::get_base_filename($mediafile_id_src);
 
     // Is black still working?
-    if (@filesize(mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_settings::SAN_NAS_TRANSCODE_FOLDER . DIRECTORY_SEPARATOR . $base_filename .'_0.jpeg')) {
+    if (@filesize(mediamosa_configuration_storage::transcode_file_location_get($base_filename . '_0.jpeg'))) {
       return mediamosa_job_server_db::JOB_STATUS_INPROGRESS;
     }
 
     // Check if there really is an image ($file_size > 0)
-    if (filesize(mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_settings::SAN_NAS_TRANSCODE_FOLDER . DIRECTORY_SEPARATOR . $base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, 1) . ".jpeg") == 0) {
+    $filename = mediamosa_configuration_storage::transcode_file_location_get($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, 1) . ".jpeg");
+    if (!file_exists($filename) || !filesize($filename)) {
       // Something failed, very likely the frametime was too high. Remove the files and fail the job.
       $still_error = mediamosa_error::error_code_find_description(mediamosa_error::ERRORCODE_JOB_FRAMETIME_GREATER_THEN_DURATION);
 
       // Update status.
       self::set_job_status($job_id, mediamosa_job_db::JOB_STATUS_FAILED, '1.000', $still_error);
 
-      // Remove all of the still images
+      // Remove all of the still images.
       $i = 1;
-      while (file_exists(mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_settings::SAN_NAS_TRANSCODE_FOLDER . DIRECTORY_SEPARATOR . $base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) .".jpeg") && $i <= mediamosa_settings::STILL_MAXIMUM) {
-        unlink(mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_settings::SAN_NAS_TRANSCODE_FOLDER . DIRECTORY_SEPARATOR . $base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) .".jpeg");
+      while (file_exists(mediamosa_configuration_storage::transcode_file_location_get($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) . '.jpeg')) && $i <= mediamosa_settings::STILL_MAXIMUM) {
+        mediamosa_io::unlink(mediamosa_configuration_storage::transcode_file_location_get($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) . '.jpeg'));
         $i++;
       }
-      unlink(mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_settings::SAN_NAS_TRANSCODE_FOLDER . DIRECTORY_SEPARATOR . $base_filename .".status");
+      mediamosa_io::unlink(mediamosa_configuration_storage::status_file_location_get($base_filename));
 
       self::log($still_error);
       return mediamosa_job_server_db::JOB_STATUS_FAILED;
@@ -1129,33 +1129,36 @@ class mediamosa_job_server {
     $mediafile_id_src = mediamosa_job_server_still::still_validate($job_id, $mediafile_id_src);
 
     if ($mediafile_id_src === FALSE) {
-      self::log("Job failed, are there any colors in this movie?");
-      self::set_job_status($job_id, mediamosa_job_db::JOB_STATUS_FAILED, '1.000', "Job failed, are there any colors in this movie?");
+      self::log('Job failed, are there any colors in this movie?');
+      self::set_job_status($job_id, mediamosa_job_db::JOB_STATUS_FAILED, '1.000', 'Job failed, are there any colors in this movie?');
       return mediamosa_job_server_db::JOB_STATUS_FAILED;
     }
 
     $i = 1;
     $mediafile_dest = array();
-    while (file_exists(mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_settings::SAN_NAS_TRANSCODE_FOLDER . DIRECTORY_SEPARATOR . $base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) .".jpeg")) {
+    while (file_exists(mediamosa_configuration_storage::transcode_file_location_get($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) . '.jpeg'))) {
       if ($i <= mediamosa_settings::STILL_MAXIMUM) {
         // Generate new hash
         $filename = mediamosa_db::uuid(rand(1, 9999));
 
+        $source = mediamosa_configuration_storage::transcode_file_location_get($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) . '.jpeg');
+        $dest = mediamosa_configuration_storage::mediafile_still_filename_get($filename);
+
+        // Make sure dest. exists.
+        mediamosa_io::mkdir(mediamosa_io::dirname($dest), TRUE);
+
         // Everything went ok, move the still and remove other files
-        mediamosa_io::rename(
-          mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_settings::SAN_NAS_TRANSCODE_FOLDER . DIRECTORY_SEPARATOR . $base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) .".jpeg",
-          mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . STILL_LOCATION . DIRECTORY_SEPARATOR . $filename{0} . DIRECTORY_SEPARATOR . $filename
-        );
+        mediamosa_io::rename($source, $dest);
         $mediafile_dest[] = $filename;
       }
       else {
         // Reached the maximum, just delete the remain stills
-        unlink(mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_settings::SAN_NAS_TRANSCODE_FOLDER . DIRECTORY_SEPARATOR . $base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) .".jpeg");
+        mediamosa_io::unlink(mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_settings::SAN_NAS_TRANSCODE_FOLDER . DIRECTORY_SEPARATOR . $base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) . '.jpeg');
       }
 
       $i++;
     }
-    mediamosa_io::unlink(mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_settings::SAN_NAS_TRANSCODE_FOLDER . DIRECTORY_SEPARATOR . $base_filename .".status");
+    mediamosa_io::unlink(mediamosa_configuration_storage::status_file_location_get($base_filename));
 
     // Data to update.
     $a_fields = array(
@@ -1171,7 +1174,7 @@ class mediamosa_job_server {
       ->condition(mediamosa_job_server_db::JOB_ID, $job_id)
       ->execute();
 
-    self::log('Job finished: Multiple stills saved as e.g.: ' . mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . STILL_LOCATION . DIRECTORY_SEPARATOR . $filename{0} . DIRECTORY_SEPARATOR . $filename, NULL);
+    self::log('Job finished: Multiple stills saved as e.g.: @filenames.', array('@filenames' => implode(',', $mediafile_dest)));
 
     return mediamosa_job_server_db::JOB_STATUS_FINISHED;
   }

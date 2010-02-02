@@ -212,6 +212,16 @@ function mediamosa_job_mediamosa_register_rest_call() {
     mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY,
   );
 
+  // FIXME remove me
+  $a_rest_calls['server/jobstart'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_jobserver_job_start',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Start a server job.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_job_server',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+    //mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY,
+  );
+
   $a_rest_calls['server/jobstart'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_jobserver_job_start',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,

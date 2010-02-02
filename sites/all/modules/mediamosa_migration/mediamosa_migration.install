@@ -1225,11 +1225,13 @@ function _mediamosa_migration_asset_delete() {
       (
         asset_id,
         app_id,
-        videotimestampmodified
+        videotimestampmodified,
+        coll_id
       ) (SELECT
         asset_id,
         app_id,
-        videotimestampmodified
+        videotimestampmodified,
+        coll_id
       FROM #db_name.asset_delete ORDER BY videotimestampmodified ASC)",
     array(
       '#db_name' => $db_name

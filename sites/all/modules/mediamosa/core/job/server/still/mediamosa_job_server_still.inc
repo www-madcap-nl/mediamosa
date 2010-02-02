@@ -230,7 +230,7 @@ class mediamosa_job_server_still {
     $offset = 0;
     for ($i = 1; $i <= mediamosa_settings::STILLS_AMOUNT; $i++) {
       // Calc the time offsets
-      if ($i%2) {
+      if ($i % 2) {
         $offset = floor($i * mediamosa_settings::STILL_INTERVAL * mediamosa_settings::STILL_INTERVAL_JITTER);
         $time = $frametime + $offset;
       }
@@ -245,11 +245,15 @@ class mediamosa_job_server_still {
 
       $duration = 1;
       $framerate = 1;
-      $execution_string = sprintf("%s %s %s jpeg ". mediamosa_settings::STILL_STRING . " > /dev/null",
-      mediamosa_settings::still_file(), mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . DATA_LOCATION, $base_filename, $size, $h_padding, $h_padding, $v_padding, $v_padding, $time, $duration, $framerate);
+      $execution_string = sprintf(
+        "%s %s %s jpeg ". mediamosa_settings::STILL_STRING . " > /dev/null",
+        mediamosa_settings::still_file(),
+        mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::data_location_get(),
+        $base_filename,
+        $size, $h_padding, $h_padding, $v_padding, $v_padding, $time, $duration, $framerate);
 
       // Execute the LUA call
-      exec($execution_string);
+      mediamosa_io::exec($execution_string);
 
       // Move it
       $path = $base_path . sprintf(mediamosa_settings::STILL_EXTENSION, 1) . '.jpeg';
