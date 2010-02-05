@@ -220,8 +220,8 @@ class mediamosa_asset_collection {
 
     // Return the number of found rows.
     $query = mediamosa_db::db_select(mediamosa_asset_collection_db::TABLE_NAME, 'mac');
-    $query->fields('mac', array(mediamosa_asset_collection_db::ID));
-    $query->condition(mediamosa_asset_collection_db::ID, $asset_id);
+    $query->fields('mac', array(mediamosa_asset_collection_db::COLL_ID));
+    $query->condition(mediamosa_asset_collection_db::ASSET_ID, $asset_id);
     return $query->countQuery()->execute()->fetchField();
   }
 }
