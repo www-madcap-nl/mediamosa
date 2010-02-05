@@ -868,6 +868,13 @@ class mediamosa_rest_call_collection_delete extends mediamosa_rest_call {
       // All ok.
       $o_mediamosa->set_result_okay();
     }
+    else {
+      // Now delete the collection.
+      mediamosa_collection::delete($coll_id);
+
+      // All ok.
+      $o_mediamosa->set_result_okay();
+    }
   }
 }
 
