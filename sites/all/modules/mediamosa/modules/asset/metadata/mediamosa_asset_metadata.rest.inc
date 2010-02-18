@@ -45,6 +45,9 @@ class mediamosa_rest_call_asset_metadata_create extends mediamosa_rest_call {
   const USER_ID = 'user_id';
   const REPLACE = 'replace';
   const ACTION = 'action';
+  const ACTION_REPLACE = 'replace';
+  const ACTION_APPEND = 'append';
+  const ACTION_UPDATE = 'update';
 
   private $a_metadata_definitions_full = NULL;
 
@@ -71,7 +74,7 @@ class mediamosa_rest_call_asset_metadata_create extends mediamosa_rest_call {
         self::ACTION => array(
           self::VAR_TYPE => mediamosa_type::TYPE_ALPHA,
           self::VAR_DESCRIPTION => "Action to choose for given metadata values, choose either 'replace', 'append' or 'update'. Do not specify both action and replace parameters.",
-          self::VAR_ALLOWED_VALUES => array('replace', 'append', 'update'),
+          self::VAR_ALLOWED_VALUES => array(self::ACTION_REPLACE, self::ACTION_APPEND, self::ACTION_UPDATE),
         ),
       ),
     );
