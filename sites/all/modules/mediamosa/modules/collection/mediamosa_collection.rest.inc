@@ -83,6 +83,9 @@ class mediamosa_rest_call_count_collection extends mediamosa_rest_call {
 }
 
 /**
+ * URI: /collection
+ * Method: GET
+ *
  * URI: /asset/$asset_id/collection
  * Method: GET
  */
@@ -420,7 +423,7 @@ class mediamosa_rest_call_collection_get extends mediamosa_rest_call {
     mediamosa_db::db_must_exists(mediamosa_collection_db::TABLE_NAME, array(mediamosa_collection_db::ID => $coll_id));
 
     $a_collection = mediamosa_db::db_query(
-      'SELECT #app_id, #owner_id, #is_unappropriate FROM {#mediamosa_collection} WHERE #coll_id  = :coll_id',
+      'SELECT #app_id, #owner_id, #is_unappropriate FROM {#mediamosa_collection} WHERE #coll_id = :coll_id',
       array(
         '#app_id' => mediamosa_collection_db::APP_ID,
         '#owner_id' => mediamosa_collection_db::OWNER_ID,
@@ -457,7 +460,7 @@ class mediamosa_rest_call_collection_get extends mediamosa_rest_call {
 
 /**
  * URI: /collection/create
- * Method: GET
+ * Method: POST
  *
  * 1.x: media_management_create_collection
  */
@@ -540,7 +543,6 @@ class mediamosa_rest_call_collection_create extends mediamosa_rest_call {
     $a_params = array(
       mediamosa_collection_db::APP_ID,
       mediamosa_collection_db::GROUP_ID,
-      mediamosa_collection_db::USER_ID,
       mediamosa_collection_db::_PRIVATE,
       mediamosa_collection_db::_PUBLIC,
       mediamosa_collection_db::CATEGORY,
@@ -549,14 +551,17 @@ class mediamosa_rest_call_collection_create extends mediamosa_rest_call {
       mediamosa_collection_db::IS_UNAPPROPRIATE,
     );
 
-    $a_fields = array(mediamosa_collection_db::ID => $coll_id);
+    $a_fields = array(
+      mediamosa_collection_db::ID => $coll_id,
+      mediamosa_collection_db::OWNER_ID => $this->get_param_value(self::USER_ID)
+    );
+
     $query = mediamosa_db::db_insert(mediamosa_collection_db::TABLE_NAME);
     foreach ($a_params as $old_param => $param) {
       if (!$this->isset_given_param($param)) {
         // If its not set, skip it.
         continue;
       }
-
       $a_fields[$param] = $this->get_param_value($param);
     }
 
@@ -565,10 +570,10 @@ class mediamosa_rest_call_collection_create extends mediamosa_rest_call {
 
     // Add the fields to the query.
     $query->fields($a_fields);
-    $coll_id = $query->execute();
+    $query->execute();
 
     // Unique ID to response.
-    $o_mediamosa->add_item(array(mediamosa_asset_mediafile_db::ID => $coll_id));
+    $o_mediamosa->add_item(array(mediamosa_collection_db::ID => $coll_id));
   }
 }
 
@@ -613,12 +618,10 @@ class mediamosa_rest_call_collection_update extends mediamosa_rest_call {
         self::TITLE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The title of the collection.',
-          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::DESCRIPTION => array(
           self::VAR_TYPE => mediamosa_type::TYPE_STRING,
-          self::VAR_DESCRIPTION => 'The title of the collection.',
-          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+          self::VAR_DESCRIPTION => 'Description of the collection.',
         ),
         self::OWNER_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
