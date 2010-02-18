@@ -76,6 +76,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $this->doEgaLogin();
   }
 
+  /**
+   * Login using generated app, name and shared_key (password).
+   */
   protected function doEgaLogin() {
     // Do login.
     $app_id = $this->a_app[mediamosa_app_db::APP_ID];
@@ -102,12 +105,50 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $this->pass(check_plain(var_export($response['xml'], TRUE)));
   }
 
+  // ------------------------------------------------------------------ Get items functions.
   /**
-   * Create an asset (using /asset/create).
-   *
-   * @param array $a_parameters
+   * Get an asset.
+   * Based on the GET rest call /asset/$asset_id (GET)
    */
-  protected function createAsset(array $a_parameters = array()) {
+  protected function getAsset($asset_id, array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+    // Parameters asset.
+    $a_parameters += array(
+      mediamosa_rest_call_asset_get::IS_APP_ADMIN => 'false',
+      mediamosa_rest_call_create_mediafile::USER_ID => self::SIMPLETEST_USER_ID,
+    );
+
+    // Required.
+
+    // Do not set the app ID, handle by us.
+    $this->assertFalse(isset($a_parameters[mediamosa_rest_call_asset_create::APP_ID]));
+
+    $uri = strtr('asset/@asset_id', array('@asset_id' => $asset_id));
+
+    // Do Post call.
+    $response = $this->restCallGet($uri, $a_parameters);
+
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr(
+        "Get asset with ID: @asset_id, got result @result (@result_description)",
+        array(
+          '@asset_id' => $asset_id,
+          '@result' => (string)$response['xml']->header->request_result_id,
+          '@result_description' => (string)$response['xml']->header->request_result_description
+        )
+      )
+    );
+
+    // Return data.
+    return mediamosa_lib::simplexml2array($response['xml']->items->item[0]);
+  }
+
+  // ------------------------------------------------------------------ Create items functions.
+  /**
+   * Create an asset.
+   * Based on REST call /asset/create (POST)
+   */
+  protected function createAsset(array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
     // Parameters asset.
     $a_parameters += array(
       mediamosa_rest_call_asset_create::USER_ID => self::SIMPLETEST_USER_ID,
@@ -123,29 +164,39 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     // Do Post call.
     $response = $this->restCallPost('asset/create', $a_parameters);
 
-    $this->pass(strtr("Create asset with ID '@id'.", array('@id' => $response['xml']->items->item[0]->asset_id)));
+    // Get the new asset_id.
+    $asset_id = (string)$response['xml']->items->item[0]->asset_id;
+
+    // Check response.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr(
+        "Created asset with ID: @asset_id, got result @result (@result_description)",
+        array(
+          '@asset_id' => $asset_id,
+          '@result' => (string)$response['xml']->header->request_result_id,
+          '@result_description' => (string)$response['xml']->header->request_result_description
+        )
+      )
+    );
 
     // Return the asset_id.
-    return $response['xml']->items->item[0]->asset_id;
+    return $asset_id;
   }
 
-
   /**
-   * Create an mediafile (using /mediafile/create).
-   *
-   * @param string $asset_id
-   * @param string $user_id
-   * @param array $a_parameters
+   * Create an mediafile
+   * Based on REST call /mediafile/create (POST)
    */
-  protected function createMediafile($asset_id, $user_id = self::SIMPLETEST_USER_ID, array $a_parameters = array()) {
+  protected function createMediafile($asset_id, array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
     // Parameters asset.
     $a_parameters += array(
+      mediamosa_rest_call_create_mediafile::USER_ID => self::SIMPLETEST_USER_ID,
       mediamosa_rest_call_create_mediafile::IS_APP_ADMIN => 'false',
     );
 
     // Required.
     $a_parameters[mediamosa_rest_call_create_mediafile::ASSET_ID] = $asset_id;
-    $a_parameters[mediamosa_rest_call_create_mediafile::USER_ID] = $user_id;
 
     // Do not set the app ID, handle by us.
     $this->assertFalse(isset($a_parameters[mediamosa_rest_call_asset_create::APP_ID]));
@@ -153,102 +204,170 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     // Do Post call.
     $response = $this->restCallPost('mediafile/create', $a_parameters);
 
-    $this->pass(strtr("Create mediafile with ID '@id'.", array('@id' => $response['xml']->items->item[0]->mediafile_id)));
+    // Get the new mediafile_id.
+    $mediafile_id = (string)$response['xml']->items->item[0]->mediafile_id;
+
+    // Check response.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr(
+        "Created mediafile with ID: @mediafile_id, got result @result (@result_description)",
+        array(
+          '@mediafile_id' => $mediafile_id,
+          '@result' => (string)$response['xml']->header->request_result_id,
+          '@result_description' => (string)$response['xml']->header->request_result_description
+        )
+      )
+    );
 
     // Return the mediafile ID.
-    return $response['xml']->items->item[0]->mediafile_id;
+    return $mediafile_id;
   }
 
   /**
    * Create upload ticket.
-   *
-   * @param string $mediafile_id
-   * @param string $user_id
-   * @param array $a_parameters
+   * Based on REST call /mediafile/$mediafile_id/uploadticket/create (POST)
    */
-  protected function createMediafileUploadTicket($mediafile_id, $user_id = self::SIMPLETEST_USER_ID, array $a_parameters = array()) {
+  protected function createMediafileUploadTicket($mediafile_id, array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
     // Parameters asset.
     $a_parameters += array(
+      mediamosa_rest_call_create_mediafile::USER_ID => self::SIMPLETEST_USER_ID,
       mediamosa_rest_call_asset_mediafile_uploadticket_create::IS_APP_ADMIN => 'false',
       mediamosa_rest_call_asset_mediafile_uploadticket_create::GROUP_ID => '',
     );
 
-    // Required.
-    $a_parameters[mediamosa_rest_call_asset_mediafile_uploadticket_create::USER_ID] = $user_id;
-
     // Do not set the app ID, handle by us.
     $this->assertFalse(isset($a_parameters[mediamosa_rest_call_asset_create::APP_ID]));
 
+    // Set the URI.
     $uri = strtr('mediafile/@mediafile_id/uploadticket/create', array('@mediafile_id' => $mediafile_id));
 
     // Do Post call.
     $response = $this->restCallPost($uri, $a_parameters);
 
-    $this->pass(strtr("Create upload ticket with action '@action', uploadprogress_url '@uploadprogress_url'.", array('@action' => $response['xml']->items->item[0]->action, '@uploadprogress_url' => $response['xml']->items->item[0]->uploadprogress_url)));
+    // Check response.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr(
+        "Created upload ticket with action '@action', uploadprogress_url '@uploadprogress_url', got result @result (@result_description)",
+        array(
+          '@action' => (string)$response['xml']->items->item[0]->action,
+          '@uploadprogress_url' => (string)$response['xml']->items->item[0]->uploadprogress_url,
+          '@result' => (string)$response['xml']->header->request_result_id,
+          '@result_description' => (string)$response['xml']->header->request_result_description
+        )
+      )
+    );
 
     // Return data.
-    return array('action' => $response['xml']->items->item[0]->action, 'uploadprogress_url' => $response['xml']->items->item[0]->uploadprogress_url);
+    return mediamosa_lib::simplexml2array($response['xml']->items->item[0]);
   }
 
   /**
-   * Update mediafile (using /mediafile/{id}).
-   *
-   * @param string $mediafile_id
-   * @param string $user_id
-   * @param array $a_parameters
+   * Create a asset supplement.
+   * Based on REST call asset/$asset_id/supplement/create (POST)
    */
-  protected function updateMediafile($mediafile_id, $user_id = self::SIMPLETEST_USER_ID, array $a_parameters = array()) {
+  protected function createAssetSupplement($asset_id, array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
     // Parameters asset.
     $a_parameters += array(
-      mediamosa_rest_call_create_mediafile::IS_APP_ADMIN => 'false',
+      mediamosa_rest_call_asset_update::USER_ID => self::SIMPLETEST_USER_ID,
     );
-
-    // Required.
-    $a_parameters[mediamosa_rest_call_create_mediafile::USER_ID] = $user_id;
 
     // Do not set the app ID, handle by us.
     $this->assertFalse(isset($a_parameters[mediamosa_rest_call_asset_create::APP_ID]));
 
+    // Set the URI.
+    $uri = strtr('asset/@asset_id/supplement/create', array('@asset_id' => $asset_id));
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $a_parameters);
+
+    // Get the new asset_supplement_id.
+    $asset_supplement_id = (string)$response['xml']->items->item[0]->supplement_id;
+
+    // Check response.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr(
+        "Created asset supplement with ID '@asset_supplement_id', got result @result (@result_description)",
+        array(
+          '@asset_supplement_id' => $asset_supplement_id,
+          '@result' => (string)$response['xml']->header->request_result_id,
+          '@result_description' => (string)$response['xml']->header->request_result_description
+        )
+      )
+    );
+
+    // Return data.
+    return mediamosa_lib::simplexml2array($response['xml']->items->item[0]);
+  }
+
+  // ------------------------------------------------------------------ Update items functions.
+  /**
+   * Update mediafile.
+   * Based on the GET rest call /mediafile/$mediafile_id (POST)
+   */
+  protected function updateMediafile($mediafile_id, array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+    // Parameters asset.
+    $a_parameters += array(
+      mediamosa_rest_call_create_mediafile::IS_APP_ADMIN => 'false',
+      mediamosa_rest_call_create_mediafile::USER_ID => self::SIMPLETEST_USER_ID,
+    );
+
+    // Required.
+
+    // Do not set the app ID, handle by us.
+    $this->assertFalse(isset($a_parameters[mediamosa_rest_call_asset_create::APP_ID]));
+
+    // Set the URI.
     $uri = strtr('mediafile/@mediafile_id', array('@mediafile_id' => $mediafile_id));
 
     // Do Post call.
     $response = $this->restCallPost($uri, $a_parameters);
 
-    $this->pass(strtr("Update mediafile with ID '@id'.", array('@id' => $mediafile_id)));
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr("Updated mediafile with ID: @mediafile_id, got result @result (@result_description)", array('@mediafile_id' => $mediafile_id, '@result' => (string)$response['xml']->header->request_result_id, '@result_description' => $response['xml']->header->request_result_description))
+    );
 
-    // Return.
-    return;
+    // Return response.
+    return $response;
   }
 
   /**
-   * Get an asset.
-   *
-   * @param string $asset_id
-   * @param string $user_id
-   * @param array $a_parameters
+   * Updates an asset.
+   * Based on the REST call /asset/$asset_id (POST)
    */
-  protected function getAsset($asset_id, $user_id = self::SIMPLETEST_USER_ID, array $a_parameters = array()) {
+  protected function updateAsset($asset_id, array $a_parameters = array(), $description = 'Update on asset ID', array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+
     // Parameters asset.
     $a_parameters += array(
-      mediamosa_rest_call_asset_create::IS_APP_ADMIN => 'false',
-      mediamosa_rest_call_asset_create::GROUP_ID => '',
+      mediamosa_rest_call_asset_update::USER_ID => self::SIMPLETEST_USER_ID,
     );
 
-    // Required.
-    $a_parameters[mediamosa_rest_call_asset_create::USER_ID] = $user_id;
+    // More than one, we need to do something.
+    $this->assertFalse(count($a_parameters) == 1, 'Any update parameters set');
 
-    // Do not set the app ID, handle by us.
-    $this->assertFalse(isset($a_parameters[mediamosa_rest_call_asset_create::APP_ID]));
-
+    // The uri.
     $uri = strtr('asset/@asset_id', array('@asset_id' => $asset_id));
 
     // Do Post call.
-    $response = $this->restCallGet($uri, $a_parameters);
+    $response = $this->restCallPost($uri, $a_parameters);
 
-    $this->pass(strtr("Gets the asset: @asset_id'.", array('@asset_id' => $asset_id)));
+    // Test return status.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr(
+        "@description: @asset_id, got result @result (@result_description)",
+        array(
+          '@description' => $description,
+          '@asset_id' => $asset_id,
+          '@result' => (string)$response['xml']->header->request_result_id,
+          '@result_description' => (string)$response['xml']->header->request_result_description
+        )
+      )
+    );
 
-    // Return data.
-    return $response['xml']->items->item[0];
+    return $response;
   }
-
 }

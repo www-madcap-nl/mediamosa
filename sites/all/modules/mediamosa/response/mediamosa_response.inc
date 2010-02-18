@@ -1,6 +1,7 @@
 <?php
 // $Id$
 
+
 /**
  * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
  * Distribution platform (http://mediamosa.org)
@@ -79,7 +80,7 @@ class mediamosa_response extends mediamosa {
   public function process_rest() {
 
     // If REST interface is disabled, the don't bother.
-    if (!mediamosa::is_app_enabled()) {
+    if (! mediamosa::is_app_enabled()) {
       return;
     }
 
@@ -96,17 +97,17 @@ class mediamosa_response extends mediamosa {
       $a_rest_call = $this->o_mediamosa_rest->match_call();
 
       // If we return here, try to let Drupal handle the output.
-      if (!$a_rest_call) {
+      if (! $a_rest_call) {
         return;
       }
 
       // Check if the REST and Admin interface are enabled and if we conflict with admin /user/login or /user/logout.
       if (mediamosa::show_drupal_login()) {
-        return;// At this point we override for interface mode.
+        return; // At this point we override for interface mode.
       }
 
       // Enable sessions.
-      if (!drupal_session_started()) {
+      if (! drupal_session_started()) {
         drupal_session_start();
       }
       elseif (mediamosa::in_simpletest_sandbox()) {
@@ -114,7 +115,7 @@ class mediamosa_response extends mediamosa {
       }
 
       // Make sure response type is set.
-      if (!isset($a_rest_call[mediamosa_rest_call::RESPONSE_TYPE])) {
+      if (! isset($a_rest_call[mediamosa_rest_call::RESPONSE_TYPE])) {
         $a_rest_call[mediamosa_rest_call::RESPONSE_TYPE] = mediamosa_rest_call::RESPONSE_TYPE_XML;
       }
 
@@ -135,7 +136,13 @@ class mediamosa_response extends mediamosa {
       exit();
     }
     catch (mediamosa_exception_error $e) {
-      mediamosa_debug::error_log('mediamosa_exception_error caught; ' . $e->getMessage(), $e->getFile(), $e->getLine());
+      // If we are in simpletest, we need to skip logging of mediamosa exceptions, because these might be generated
+      // intentially for testing. The test must always check the error response anyway and not rely on
+      // logging here.
+      if (!mediamosa::in_simpletest_sandbox()) {
+        mediamosa_debug::error_log('mediamosa_exception_error caught; ' . $e->getMessage(), $e->getFile(), $e->getLine());
+      }
+
       $e->mediamosa_exception_rest_response($this);
     }
     catch (PDOException $e) {
@@ -165,7 +172,7 @@ class mediamosa_response extends mediamosa {
           }
           break;
         case mediamosa_rest_call::RESPONSE_TYPE_XML:
-        default:
+        default :
           header('Content-Type: text/xml; charset=utf-8');
           $output = $this->generate_xml();
           break;
@@ -194,15 +201,10 @@ class mediamosa_response extends mediamosa {
 
     $this->a_response = array(
       'header' => array(
-        'request_result' => self::SUCCESS,
-        'request_result_id' => mediamosa_error::ERRORCODE_OKAY,
-        'request_result_description' => mediamosa_error::error_code_find_description(mediamosa_error::ERRORCODE_OKAY),
-        'request_uri' => "[" . self::get_method() . "] " . (mediamosa_unicode::substr($this->request_uri, 0, mediamosa_unicode::strlen('internal')) == 'internal' ? 'Internal MediaMosa call' : (mediamosa_unicode::substr($this->request_uri, 0, 1) == '/' ? '' : '/') . $this->request_uri),
-        'item_count' => 0,
-        'version' => mediamosa_version::MEDIAMOSA_VERSION,
-      ),
+      'request_result' => self::SUCCESS, 'request_result_id' => mediamosa_error::ERRORCODE_OKAY, 'request_result_description' => mediamosa_error::error_code_find_description(mediamosa_error::ERRORCODE_OKAY), 'request_uri' => "[" . self::get_method() . "] " . (mediamosa_unicode::substr($this->request_uri, 0, mediamosa_unicode::strlen('internal')) == 'internal' ? 'Internal MediaMosa call' : (mediamosa_unicode::substr($this->request_uri, 0, 1) == '/' ? '' : '/') . $this->request_uri), 'item_count' => 0, 'version' => mediamosa_version::MEDIAMOSA_VERSION
+    ),
 
-      'items' => array()
+    'items' => array()
     );
 
     // Reset setting.
@@ -233,7 +235,7 @@ class mediamosa_response extends mediamosa {
    */
   public function add_program_error($mixed_item) {
 
-    if (!isset($this->a_response['errors'])) {
+    if (! isset($this->a_response['errors'])) {
       $this->a_response['errors'] = array();
     }
 
@@ -309,13 +311,14 @@ class mediamosa_response extends mediamosa {
    */
   function log_restcall() {
 
-   // if ($this->is_dev_query()) {
-  //    $this->a_response['header']['request_query_count'] = $this->get_number_of_queries();
-  //  }
+    // if ($this->is_dev_query()) {
+    //    $this->a_response['header']['request_query_count'] = $this->get_number_of_queries();
+    //  }
+
 
     if ($this->is_log_rest()) {
       assert(0); // todo :)
-      /*
+    /*
       $count = $this->get_number_of_queries();
       db_query(
         "INSERT INTO {statistics_rest_log} (request, process_time, query_count) VALUES ('%s', %f, %d)",
@@ -336,7 +339,7 @@ class mediamosa_response extends mediamosa {
     $output = '';
 
     for ($x = 1; $x <= $this->item_count; $x++) {
-      $output .= $this->a_response['items'][$x];// Just concat the data
+      $output .= $this->a_response['items'][$x]; // Just concat the data
     }
 
     $this->log_restcall();
@@ -352,7 +355,7 @@ class mediamosa_response extends mediamosa {
 
     $this->a_response['header']['request_process_time'] = $this->get_processed_time();
 
-    $this->a_response['header']['item_count_total'] = (!$this->item_total_count ? $this->item_count : $this->item_total_count);
+    $this->a_response['header']['item_count_total'] = (! $this->item_total_count ? $this->item_count : $this->item_total_count);
     $this->a_response['header']['item_offset'] = $this->item_offset;
     $this->a_response['header']['item_count'] = $this->item_count;
 
@@ -376,7 +379,7 @@ class mediamosa_response extends mediamosa {
     $o_xml_response_items = $o_xml_response->addChild('items');
 
     foreach ($this->a_response['header'] as $key => $value) {
-      if (!is_array($value)) {
+      if (! is_array($value)) {
         $o_xml_response_header->addChild($key, htmlspecialchars($value));
       }
       else {
@@ -427,11 +430,11 @@ class mediamosa_response extends mediamosa {
    * @return NULL or added item.
    */
   function generate_plain_xml_add_child($item, $key, $mixed_value, $max_depth = 99) {
-    if (!--$max_depth) {
+    if (! --$max_depth) {
       return NULL;
     }
 
-    if (!is_array($mixed_value)) {
+    if (! is_array($mixed_value)) {
       return $item->addChild($key, htmlspecialchars($mixed_value));
     }
 
@@ -504,11 +507,13 @@ class mediamosa_response extends mediamosa {
       $caller = _drupal_get_last_caller(debug_backtrace());
 
       // We treat recoverable errors as fatal.
-      $params = array('@type' => isset($a_types[$error_level]) ? $a_types[$error_level] : 'Unknown error',
+      $params = array(
+        '@type' => (isset($a_types[$error_level]) ? $a_types[$error_level] : 'Unknown error'),
         '@message' => $message,
         '@function' => $caller['function'],
         '@file' => $caller['file'],
-        '@line' => $caller['line']);
+        '@line' => $caller['line']
+      );
 
       // Add to XML output.
       $this->add_program_error(strtr('@type: @message, @function() in file @file on line @line.', $params));
