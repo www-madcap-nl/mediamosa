@@ -29,8 +29,40 @@
  * Play proxy unittests.
  *
  * Based on tickets mediamosa 1:
- *
- *
- *
+ * ticket_2
  */
 
+class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'Play proxy test',
+      'description' => 'Testing the play proxy call.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE,
+    );
+  }
+
+  // ------------------------------------------------------------------ Tests.
+  public function testPlayProxy() {
+
+    // Create a upload test file with asset and mediafile.
+    $a_upload = $this->uploadTestFile();
+
+    // Set the parameters.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_mediafile_play::USER_ID => self::SIMPLETEST_USER_ID,
+      mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $a_upload['mediafile_id']
+    );
+
+    // Set the Uri.
+    $uri = strtr('asset/@asset_id/play', array('@asset_id' => $a_upload['asset_id']));
+
+    // Do basic play proxy call.
+    $response = $this->restCallGet($uri, $a_parameters);
+
+    $this->var_export($response['xml']);
+  }
+}
