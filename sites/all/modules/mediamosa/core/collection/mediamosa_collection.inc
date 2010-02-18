@@ -64,7 +64,7 @@ class mediamosa_collection {
    */
   static public function get($coll_id) {
 
-    $query = mediamosa_db::db_select(mediamosa_collection_db::ID, 'c');
+    $query = mediamosa_db::db_select(mediamosa_collection_db::TABLE_NAME, 'c');
     $query->fields('c');
     $query->condition('c.' . mediamosa_collection_db::ID, $coll_id);
     return $query->execute()->fetchAssoc();
