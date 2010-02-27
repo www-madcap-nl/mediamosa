@@ -517,7 +517,7 @@ class mediamosa_aut {
    * @param array $is_app_admin
    *  For future expansion
    */
-  static public function rights_set($app_id, $user_id, $aut_type, $a_object, $a_app_ids, $a_aut_user_ids, $a_aut_group_ids, $a_aut_domains, $a_aut_realms, $b_replace = TRUE, $a_rights = array(VPX_ACL_RIGHT_ACCESS), $is_app_admin = FALSE) {
+  static public function rights_set($app_id, $user_id, $aut_type, array $a_object, array $a_app_ids, array $a_aut_user_ids, array $a_aut_group_ids, array $a_aut_domains, array $a_aut_realms, $b_replace = TRUE, array $a_rights = array(mediamosa_aut::RIGHT_ACCESS), $is_app_admin = FALSE) {
     assert(count($a_rights));
     assert($aut_type == mediamosa_aut::AUT_TYPE_MEDIAFILE || $aut_type == mediamosa_aut::AUT_TYPE_ASSET || $aut_type == mediamosa_aut::AUT_TYPE_COLLECTION); // media files for now
 
@@ -567,9 +567,13 @@ class mediamosa_aut {
     // Only the owner can share his media to another app
     // The other app is then called 'master', and the media shared is the slave.
     foreach ($a_app_ids as $app_id_master) {
-      $allow_masterslave = mediamosa_db::db_query("SELECT allow_masterslave FROM {mediamosa_app} WHERE id = %d", $app_id_master)->fetchAssoc();
+      $allow_masterslave = mediamosa_db::db_select(mediamosa_app_db::TABLE_NAME, 'app')
+        ->fields('app', array(mediamosa_app_db::ALLOW_MASTERSLAVE))
+        ->condition(mediamosa_app_db::APP_ID, $app_id_master)
+        ->execute()
+        ->fetchField();
 
-      if (mediamosa_lib::boolstr2bool($allow_masterslave)) {
+      if ($allow_masterslave == mediamosa_app_db::ALLOW_MASTERSLAVE_TRUE) {
         try {
           mediamosa_aut_app_master_slave::create($aut_object_id, $aut_type, $app_id_master, $app_id);
 
@@ -800,7 +804,7 @@ class mediamosa_aut {
    * @param array $a_object
    * @param boolean $is_app_admin
    */
-  static public function rights_clear($app_id, $user_id, $aut_type, $a_object, $is_app_admin = FALSE) {
+  static public function rights_clear($app_id, $user_id, $aut_type, array $a_object, $is_app_admin = FALSE) {
     switch ($aut_type) {
       case mediamosa_aut::AUT_TYPE_MEDIAFILE:
         $owner_id = $a_object["owner_id"];

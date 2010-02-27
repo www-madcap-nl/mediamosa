@@ -10,10 +10,12 @@ core = 7.x
 dependencies[] = mediamosa
 ; because of class override for search.
 dependencies[] = mediamosa_asset
-
+; because of fav. REST code that re-uses class from collection.
+dependencies[] = mediamosa_collection
 
 ; Used files.
 files[] = mediamosa_user.module
 files[] = mediamosa_user.rest.inc
+files[] = mediamosa_user.test
 files[] = group/mediamosa_user_group.rest.inc
 files[] = favorite/mediamosa_user_favorite.rest.inc

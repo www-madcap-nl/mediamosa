@@ -26,22 +26,39 @@
 
  /**
   * @file
-  * User DB Class.
+  * REST calls specific for use inside the simpletest sandbox.
   */
 
-class mediamosa_user_db {
-  // ------------------------------------------------------------------ Consts.
-  // Table name;
-  const TABLE_NAME = 'mediamosa_user'; // 1.x name quota_user.
+/**
+ * URI: /simpletest/whoami
+ * Returns information about current EGA login / session.
+ */
+class mediamosa_rest_call_simpletest_whoami extends mediamosa_rest_call {
 
-  // Database fields;
-  const APP_ID = 'app_id';
-  const ID = 'name';
-  const NAME = 'name';
-  const NAME_LENGTH = 255;
-  const GROUP_ID = 'group_id';
-  const GROUP_ID_LENGTH = 255;
-  const QUOTUM = 'quotum';
-  const CREATED = 'created';
-  const CHANGED = 'changed';
+  public function get_var_setup() {
+    $a_var_setup = array(
+      mediamosa_rest_call::VARS => array(),
+    );
+
+    // Enrich with required REST vars.
+    return self::get_var_setup_default($a_var_setup, FALSE);
+  }
+
+  public function do_call() {
+    $o_mediamosa = mediamosa::get();
+
+    // Return app id.
+    $app_id = $this->get_param_value_app();
+
+    // Fill it.
+    $a_result = array(
+      'app_id' => $app_id,
+      'mediamosa_dbus' => $_SESSION['mediamosa_dbus'],
+      'cookie' => $_COOKIE,
+      'mediamosa_app' => $_SESSION['mediamosa_app'],
+    );
+
+    // Add info to output.
+    $o_mediamosa->add_item($a_result);
+  }
 }

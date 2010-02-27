@@ -28,6 +28,11 @@ Steps for changelog and commits;
 
 START CHANGELOG:
 
+Mediamosa 2.1.2
+---------------
+- Play proxy call will now return the ticket id in result.
+
+
 MediaMosa 2.1.1
 ---------------
 - Fixed problems editing the transcode profile.

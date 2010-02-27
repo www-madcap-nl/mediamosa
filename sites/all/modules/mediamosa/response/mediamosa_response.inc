@@ -107,7 +107,7 @@ class mediamosa_response extends mediamosa {
       }
 
       // Enable sessions.
-      if (! drupal_session_started()) {
+      if (!drupal_session_started()) {
         drupal_session_start();
       }
       elseif (mediamosa::in_simpletest_sandbox()) {

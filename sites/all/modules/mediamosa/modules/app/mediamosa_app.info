@@ -12,3 +12,4 @@ core = 7.x
 ; Used files.
 files[] = mediamosa_app.module
 files[] = mediamosa_app.rest.inc
+files[] = mediamosa_app.test

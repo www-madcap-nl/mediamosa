@@ -451,68 +451,97 @@ class mediamosa_rest_call_aut_group_delete extends mediamosa_rest_call {
  */
 class mediamosa_rest_call_aut_mediafile_set_rights extends mediamosa_rest_call {
 
+  // Rest vars;
+  const MEDIAFILE_ID = 'mediafile_id';
+  const USER_ID = 'user_id';
+  const REPLACE = 'replace';
+  const AUT_APP = 'aut_app';
+  const AUT_USER = 'aut_user';
+  const AUT_GROUP = 'aut_group';
+  const AUT_DOMAIN = 'aut_domain';
+  const AUT_REALM = 'aut_realm';
+  const AUT_USER_ID = 'aut_user_id';
+  const AUT_GROUP_ID = 'aut_group_id';
+
   // ------------------------------------------------------------------ Functions (public).
   public function get_var_setup() {
     $a_var_setup = array();
 
-    $a_var_setup[mediamosa_rest_call::VARS]['mediafile_id'] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_INT,
+    $a_var_setup[mediamosa_rest_call::VARS][self::MEDIAFILE_ID] = array(
+      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_MEDIAFILE_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
+      mediamosa_rest_call::VAR_DESCRIPTION => 'The mediafile ID of which to change the rights.',
     );
 
-    $a_var_setup[mediamosa_rest_call::VARS]['user_id'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS][self::USER_ID] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
-    );
+      mediamosa_rest_call::VAR_DESCRIPTION => 'Must match the owner fo the mediafile.',
+      );
 
-    $a_var_setup[mediamosa_rest_call::VARS]['replace'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS][self::REPLACE] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_BOOL,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_DEFAULT_VALUE => 'TRUE',
+      mediamosa_rest_call::VAR_DESCRIPTION => "'TRUE' of 'FALSE' if the current right has to be replaced. Standard is TRUE. Define if 'FALSE' if you want to keep the old rights.",
     );
 
-    $a_var_setup[mediamosa_rest_call::VARS]['aut_app'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS][self::AUT_APP] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_INT,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
+      mediamosa_rest_call::VAR_DESCRIPTION => 'Application(s) that gain access to the mediafile.',
+      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
     );
 
-    $a_var_setup[mediamosa_rest_call::VARS]['aut_user'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS][self::AUT_USER] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
+      mediamosa_rest_call::VAR_DESCRIPTION => 'User(s) that gain access to the mediafile.',
+      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
     );
 
-    $a_var_setup[mediamosa_rest_call::VARS]['aut_group'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS][self::AUT_GROUP] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
+      mediamosa_rest_call::VAR_DESCRIPTION => 'Group(s) that gain access to the mediafile.',
+      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
     );
 
-    $a_var_setup[mediamosa_rest_call::VARS]['aut_domain'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS][self::AUT_DOMAIN] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_DOMAIN,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
+      mediamosa_rest_call::VAR_DESCRIPTION => 'Domain(s) that gain access to the mediafile.',
+      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
     );
 
-    $a_var_setup[mediamosa_rest_call::VARS]['aut_realm'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS][self::AUT_REALM] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_REALM,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
+      mediamosa_rest_call::VAR_DESCRIPTION => 'Realm(s) that gain access to the mediafile.',
+      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
     );
 
     // alias.
-    $a_var_setup[mediamosa_rest_call::VARS]['aut_user_id'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS][self::AUT_USER_ID] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
+      mediamosa_rest_call::VAR_DESCRIPTION => 'Alias of aut_user.',
+      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
     );
 
     // alias.
-    $a_var_setup[mediamosa_rest_call::VARS]['aut_group_id'] = array(
+    $a_var_setup[mediamosa_rest_call::VARS][self::AUT_GROUP_ID] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
+      mediamosa_rest_call::VAR_DESCRIPTION => 'Alias of aut_group.',
+      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
     );
 
     // Enrich with required REST vars.
@@ -540,36 +569,26 @@ class mediamosa_rest_call_aut_mediafile_set_rights extends mediamosa_rest_call {
     $a_aut_realms = $this->get_param_value('aut_realm');
     $b_replace = $this->get_param_value('replace');
 
-    // Get the media file
-    $a_mediafile = mediamosa_db::db_query(
-      "SELECT * FROM {#mediamosa_asset_mediafile} WHERE #app_id = :app_id AND #mediafile_id = :mediafile_id",
-      array(
-        '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
-        '#app_id' => mediamosa_asset_mediafile_db::APP_ID,
-        '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
-        ':app_id' => $app_id,
-        ':mediafile_id' => $mediafile_id
-      )
-    );
-
+    // Get the media file.
+    $a_mediafile = mediamosa_asset_mediafile::get($mediafile_id, $app_id);
 
     // Fix for difference in aut_user and aut_user_id
     if (!count($a_aut_user_ids)) {
       // Hmmm no a_aut_user_ids, then try aut_user_id and set user_id if we find one
       $a_aut_user_ids = $this->get_param_value('aut_user_id');
-      $o_mediamosa->set_param_value('aut_user', $a_aut_user_ids);
+      $this->set_param_value('aut_user', $a_aut_user_ids);
     }
     else {
-      $o_mediamosa->set_param_value('aut_user_id', $a_aut_user_ids);
+      $this->set_param_value('aut_user_id', $a_aut_user_ids);
     }
 
     if (!count($a_aut_group_ids)) {
       // Hmmm no a_aut_group_ids, then try aut_group_id and set group_id if we find one
       $a_aut_group_ids = $this->get_param_value('aut_group_id');
-      $o_mediamosa->set_param_value('aut_group', $a_aut_group_ids);
+      $this->set_param_value('aut_group', $a_aut_group_ids);
     }
     else {
-      $o_mediamosa->set_param_value('aut_group_id', $a_aut_group_ids);
+      $this->set_param_value('aut_group_id', $a_aut_group_ids);
     }
 
     // Set access rights
@@ -625,7 +644,7 @@ class mediamosa_rest_call_aut_mediafile_delete_rights extends mediamosa_rest_cal
     $a_var_setup = array();
 
     $a_var_setup[mediamosa_rest_call::VARS]['mediafile_id'] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_INT,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_MEDIAFILE_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'The mediafile ID where from to remove the ACL rights',
     );
@@ -655,17 +674,9 @@ class mediamosa_rest_call_aut_mediafile_delete_rights extends mediamosa_rest_cal
     mediamosa_asset_mediafile::must_exists($mediafile_id, $app_id);
 
     // Get the media file
-    $a_mediafile = mediamosa_db::db_query(
-      "SELECT * FROM {#mediamosa_asset_mediafile} WHERE #app_id = :app_id AND #mediafile_id = :mediafile_id",
-      array(
-        '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
-        '#app_id' => mediamosa_asset_mediafile_db::APP_ID,
-        '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
-        ':app_id' => $app_id,
-        ':mediafile_id' => $mediafile_id
-      )
-    );
+    $a_mediafile = mediamosa_asset_mediafile::get($mediafile_id, $app_id);
 
+    // Remove rights.
     mediamosa_aut::rights_clear($app_id, $user_id, mediamosa_aut::AUT_TYPE_MEDIAFILE, $a_mediafile);
 
     // All ok.
@@ -684,7 +695,7 @@ class mediamosa_rest_call_aut_mediafile_get_rights extends mediamosa_rest_call {
     $a_var_setup = array();
 
     $a_var_setup[mediamosa_rest_call::VARS]['mediafile_id'] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_INT,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_MEDIAFILE_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
     );
 
@@ -845,19 +856,19 @@ class mediamosa_rest_call_aut_asset_set_rights extends mediamosa_rest_call {
     if (!count($a_aut_user_ids)) {
       // Hmmm no a_aut_user_ids, then try aut_user_id and set user_id if we find one
       $a_aut_user_ids = $this->get_param_value('aut_user_id');
-      $o_mediamosa->set_param_value('aut_user', $a_aut_user_ids);
+      $this->set_param_value('aut_user', $a_aut_user_ids);
     }
     else {
-      $o_mediamosa->set_param_value('aut_user_id', $a_aut_user_ids);
+      $this->set_param_value('aut_user_id', $a_aut_user_ids);
     }
 
     if (!count($a_aut_group_ids)) {
       // Hmmm no a_aut_group_ids, then try aut_group_id and set group_id if we find one
       $a_aut_group_ids = $this->get_param_value('aut_group_id');
-      $o_mediamosa->set_param_value('aut_group', $a_aut_group_ids);
+      $this->set_param_value('aut_group', $a_aut_group_ids);
     }
     else {
-      $o_mediamosa->set_param_value('aut_group_id', $a_aut_group_ids);
+      $this->set_param_value('aut_group_id', $a_aut_group_ids);
     }
 
     // Get the asset
@@ -955,16 +966,7 @@ class mediamosa_rest_call_aut_asset_delete_rights extends mediamosa_rest_call {
     mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::APP_ID => $app_id, mediamosa_asset_db::ID => $asset_id));
 
     // Get the media file
-    $a_asset = mediamosa_db::db_query(
-      "SELECT * FROM {#mediamosa_asset} WHERE #app_id = :app_id AND #asset_id = :asset_id",
-      array(
-        '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
-        '#app_id' => mediamosa_asset_db::APP_ID,
-        '#asset_id' => mediamosa_asset_db::ID,
-        ':app_id' => $app_id,
-        ':asset_id' => $asset_id
-      )
-    );
+    $a_asset = mediamosa_asset::get($asset_id, $app_id);
 
     // Remove rights.
     mediamosa_aut::rights_clear($app_id, $user_id, mediamosa_aut::AUT_TYPE_ASSET, $a_asset);
@@ -1073,26 +1075,17 @@ class mediamosa_rest_call_aut_collection_delete_rights extends mediamosa_rest_ca
 
     // Get the app id(s).
     $a_app_ids = $this->get_param_value_app();
-    $collection_id = $this->get_param_value('coll_id');
+    $coll_id = $this->get_param_value('coll_id');
     $user_id = $this->get_param_value('user_id');
 
     // First is always the main app.
     $app_id = reset($a_app_ids);
 
     // Make sure the media file exists.
-    mediamosa_db::db_must_exists(mediamosa_collection_db::TABLE_NAME, array(mediamosa_collection_db::APP_ID => $app_id, mediamosa_collection_db::ID => $collection_id));
+    mediamosa_db::db_must_exists(mediamosa_collection_db::TABLE_NAME, array(mediamosa_collection_db::APP_ID => $app_id, mediamosa_collection_db::ID => $coll_id));
 
     // Get the media file
-    $a_collection = mediamosa_db::db_query(
-      "SELECT * FROM {#mediamosa_collection} WHERE #app_id = :app_id AND #collection_id = :collection_id",
-      array(
-        '#mediamosa_collection' => mediamosa_collection_db::TABLE_NAME,
-        '#app_id' => mediamosa_collection_db::APP_ID,
-        '#collection_id' => mediamosa_collection_db::ID,
-        ':app_id' => $app_id,
-        ':collection_id' => $collection_id
-      )
-    );
+    $a_collection = mediamosa_collection::get($coll_id, $app_id);
 
     // Remove rights.
     mediamosa_aut::rights_clear($app_id, $user_id, mediamosa_aut::AUT_TYPE_COLLECTION, $a_collection);
@@ -1235,7 +1228,7 @@ class mediamosa_rest_call_aut_collection_set_rights extends mediamosa_rest_call 
     $a_result_rights_set = mediamosa_aut::rights_set(
       $app_id,
       $user_id,
-      VPX_ACL_AUT_TYPE_COLLECTION,
+      mediamosa_aut::AUT_TYPE_COLLECTION,
       $a_collection,
       $a_app_ids,
       array(),
@@ -1243,7 +1236,7 @@ class mediamosa_rest_call_aut_collection_set_rights extends mediamosa_rest_call 
       array(),
       array(),
       $b_replace,
-      array(VPX_ACL_RIGHT_ACCESS),
+      array(mediamosa_aut::RIGHT_ACCESS),
       $is_app_admin
     );
 

@@ -167,6 +167,8 @@ class mediamosa_asset_mediafile_play_proxy {
    * Calculate the size of the video based on given size and type.
    * See Mantis [0016569] for specification.
    *
+   * 1.x: _play_proxy_calc_video_size
+   *
    * @param integer v_width
    *  mediafile width
    * @param integer v_height
@@ -578,6 +580,7 @@ class mediamosa_asset_mediafile_play_proxy {
     $a_result = array(
       'output' => $output,
       'content_type' => $content_type,
+      'ticket_id' => $ticket,
     );
 
     $i = 1;

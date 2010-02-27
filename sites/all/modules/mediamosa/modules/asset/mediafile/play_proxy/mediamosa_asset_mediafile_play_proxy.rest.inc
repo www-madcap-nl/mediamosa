@@ -410,14 +410,14 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
         $result = $query->execute();
 
         foreach ($result as $t_stills) {
-          $ticket = mediamosa_db::uuid($app_id);
+          $ticket_still = mediamosa_db::uuid($app_id);
 
           // make a play or download symlink.
           if (!isset($a_mediafile_ext[mediamosa_asset_mediafile_db::URI])) {
-            $ticket = mediamosa_ticket::create_play_proxy($ticket, $a_mediafile_ext, $response_type, $app_id, $user_id, $t_stills['still_id']);
+            $ticket_still = mediamosa_ticket::create_play_proxy($ticket_still, $a_mediafile_ext, $response_type, $app_id, $user_id, $t_stills['still_id']);
           }
 
-          $t_stills['ticket'] = $ticket;
+          $t_stills['ticket'] = $ticket_still;
           $a_stills[] = $t_stills;
         }
       }

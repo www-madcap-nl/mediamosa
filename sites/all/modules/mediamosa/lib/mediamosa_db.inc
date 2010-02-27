@@ -447,13 +447,6 @@ class mediamosa_db {
   }
 
   /**
-   * Switch to jobserver database.
-   */
-  static public function db_set_active_jobserver() {
-    return self::db_set_active('jobserver');
-  }
-
-  /**
    * Install the foreign keys.
    * Drupal 7 at this time only describes how it wants to implement foreign keys in
    * their schema layer. For now we will add foreign keys ourselfs after creation of
@@ -470,7 +463,7 @@ class mediamosa_db {
     }
 
     if (mediamosa::in_simpletest_sandbox()) {
-      // fixme
+      // @FIXME not working in simpletest setup.
       return;
     }
 

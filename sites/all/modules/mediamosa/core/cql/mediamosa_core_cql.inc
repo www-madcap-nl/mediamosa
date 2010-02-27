@@ -986,7 +986,7 @@ class mediamosa_asset_cql_context extends mediamosa_core_cql_context {
           MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => $table,
           MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => $type,
           MEDIAMOSA_CQL_CONTEXT_KEY_PROP_ID => $a_def['propdef_id'],
-          MEDIAMOSA_CQL_CONTEXT_KEY_JOIN => sprintf('LEFT JOIN mediamosa_asset_metadata AS mediamosa_asset_metadata_%s ON mediamosa_asset_metadata_%s.prop_id = %d AND mediamosa_asset_metadata_%s.asset_id = a.asset_id', $name, $name, $a_def['propdef_id'], $name),
+          MEDIAMOSA_CQL_CONTEXT_KEY_JOIN => sprintf('LEFT JOIN {mediamosa_asset_metadata} AS mediamosa_asset_metadata_%s ON mediamosa_asset_metadata_%s.prop_id = %d AND mediamosa_asset_metadata_%s.asset_id = a.asset_id', $name, $name, $a_def['propdef_id'], $name),
 //          MEDIAMOSA_CQL_CONTEXT_KEY_PREFIX => sprintf('(v_asset_property_%s.prop_id = %d AND ', $name, $a_def['propdef_id']),
 //          MEDIAMOSA_CQL_CONTEXT_KEY_SUFFIX => ')',
         );

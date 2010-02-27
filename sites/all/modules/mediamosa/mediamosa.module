@@ -126,10 +126,21 @@ function mediamosa_mediamosa_register_rest_call() {
   $a_rest_calls['rest/#$uri_id'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_get',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::DESCRIPTION => 'Retrieve specific information about an registered MediaMosa REST calls',
+    mediamosa_rest_call::DESCRIPTION => 'Retrieve specific information about an registered MediaMosa REST calls/',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_0_0,
   );
+
+  // These REST calls are only available during the sandbox of simpletest.
+  if (mediamosa::in_simpletest_sandbox()) {
+    $a_rest_calls['simpletest/whoami'][mediamosa_rest_call::METHOD_GET] = array(
+      mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_simpletest_whoami',
+      mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+      mediamosa_rest_call::DESCRIPTION => 'Returns information about the current EGA session.',
+      mediamosa_rest_call::MODULE_NAME => 'mediamosa',
+      mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_1_0,
+    );
+  }
 
   return $a_rest_calls;
 }

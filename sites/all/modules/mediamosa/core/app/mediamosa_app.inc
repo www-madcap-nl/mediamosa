@@ -63,7 +63,7 @@ class mediamosa_app {
       $query->fields('app');
     }
     $query->condition(mediamosa_app_db::APP_ID, $a_app_id, 'IN');
-    return $query->execute();
+    return $query->execute()->fetchAll();
   }
 
   /**
@@ -88,6 +88,20 @@ class mediamosa_app {
       $query->orderBy($order_by, $order_direction);
     }
 
-    return $query->execute();
+    return $query->execute()->fetchAll();
   }
+
+  /**
+   * Update an application. Used for internal code.
+   */
+  static public function update($app_id, $a_fields = array()) {
+
+   // Update.
+    return mediamosa_db::db_update(mediamosa_app_db::TABLE_NAME)
+      ->fields($a_fields)
+      ->condition(mediamosa_app_db::APP_ID, $app_id)
+      ->execute();
+  }
+
+
 }

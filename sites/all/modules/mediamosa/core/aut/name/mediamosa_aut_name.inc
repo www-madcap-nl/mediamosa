@@ -102,13 +102,13 @@ class mediamosa_aut_name {
       case mediamosa_aut::AUT_NAME_TYPE_APP: // no longer in the aut_name table
         assert(0);
         throw new mediamosa_exception_error_unexpected_error();
-      case VPX_ACL_AUT_NAME_TYPE_DOMAIN:
-      case VPX_ACL_AUT_NAME_TYPE_USER:
-      case VPX_ACL_AUT_NAME_TYPE_USER_GROUP:
+      case mediamosa_aut::AUT_NAME_TYPE_DOMAIN:
+      case mediamosa_aut::AUT_NAME_TYPE_USER:
+      case mediamosa_aut::AUT_NAME_TYPE_USER_GROUP:
         $s_suffix = $s_name;
         $s_prefix = NULL;
         break;
-      case VPX_ACL_AUT_NAME_TYPE_REALM:
+      case mediamosa_aut::AUT_NAME_TYPE_REALM:
         if (mediamosa_unicode::substr($s_name, '@') === FALSE) {
           $s_suffix = '@' . $s_name;
           $s_prefix = NULL;
@@ -128,7 +128,7 @@ class mediamosa_aut_name {
 
     // Get the row (if exists).
     $query = mediamosa_db::db_select(mediamosa_aut_name_db::TABLE_NAME, 'an');
-    $query->fields('an', mediamosa_aut_name_db::ID);
+    $query->fields('an', array(mediamosa_aut_name_db::ID));
     $query->condition(mediamosa_aut_name_db::APP_ID, $app_id);
     $query->condition(mediamosa_aut_name_db::AUT_TYPE, $aut_type);
 
@@ -145,15 +145,14 @@ class mediamosa_aut_name {
     }
 
     $a_fields = array(
-      mediamosa_aut_name_db::APP_ID => $aut_id,
+      mediamosa_aut_name_db::APP_ID => $app_id,
       mediamosa_aut_name_db::AUT_TYPE => $aut_type,
       mediamosa_aut_name_db::AUT_GROUP_ID => $aut_group_id,
       mediamosa_aut_name_db::AUT_NAME => $s_suffix,
       mediamosa_aut_name_db::AUT_PREFIX => $s_prefix
     );
 
-    // Add created value.
-    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+    // No enrich here.
 
     // Insert it.
     return mediamosa_db::db_insert(mediamosa_aut_name_db::TABLE_NAME)

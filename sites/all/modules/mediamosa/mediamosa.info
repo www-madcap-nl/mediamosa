@@ -264,3 +264,4 @@ files[] = core/user/favorite/mediamosa_user_favorite.install.inc
 files[] = simpletest/mediamosa.simpletest.inc
 files[] = simpletest/mediamosa.simpletest.ega.inc
 files[] = simpletest/mediamosa.simpletest.ega.test
+files[] = simpletest/mediamosa.simpletest.rest.inc

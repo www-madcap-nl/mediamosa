@@ -128,14 +128,19 @@ class mediamosa_user_group {
    *  The quotum.
    */
   static public function create($app_id, $group_id, $quotum) {
-    return mediamosa_db::db_query(
-      'INSERT INTO {#mediamosa_user_group} SET #app_id = :app_id, #group_id = :group_id, #quotum = :quotum',
-      array(
-        '#app_id' => $app_id,
-        '#group_id' => $group_id,
-        '#quotum' => $quotum,
-      )
+    $a_fields = array(
+      mediamosa_user_group_db::APP_ID => $app_id,
+      mediamosa_user_group_db::ID => $group_id,
+      mediamosa_user_group_db::QUOTUM => $quotum,
     );
+
+    // Add changed/created.
+    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+
+    // Insert into database.
+    return mediamosa_db::db_insert(mediamosa_user_group_db::TABLE_NAME)
+      ->fields($a_fields)
+      ->execute();
   }
 
   /**

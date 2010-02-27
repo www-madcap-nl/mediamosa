@@ -116,7 +116,7 @@ class mediamosa_rest_call_change_ownership extends mediamosa_rest_call {
     $a_table = array(
       mediamosa_asset_mediafile_db::TABLE_NAME,
       mediamosa_asset_db::TABLE_NAME,
-      mediamosa_collection_db::TABLE_NAME,l
+      mediamosa_collection_db::TABLE_NAME,
     );
 
     // Go through each table and do our stuff.

@@ -188,7 +188,6 @@ class mediamosa_asset_mediafile_metadata {
   static public function create_metadata_still_default($still_id, $width, $height, $filesize, $mime, $file_type) {
     // Create mediafile metadata.
     $a_fields = array(
-      mediamosa_asset_mediafile_metadata_db::ID => $still_id,
       mediamosa_asset_mediafile_metadata_db::WIDTH => $width,
       mediamosa_asset_mediafile_metadata_db::HEIGHT => $height,
       mediamosa_asset_mediafile_metadata_db::BPP => '',
@@ -200,7 +199,21 @@ class mediamosa_asset_mediafile_metadata {
       mediamosa_asset_mediafile_metadata_db::STILL_DEFAULT => STILL_DEFAULT_FALSE,
     );
 
-    // Add created value.
+    return self::create($still_id, $a_fields);
+  }
+
+  /**
+   * Basic creation of metadata.
+   * Remember that you need to remove any other metadata before you insert here.
+   *
+   * @param array $a_fields
+   */
+  static public function create($mediafile_id, array $a_fields) {
+
+    // Set ID always.
+    $a_fields[mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID] = $mediafile_id;
+
+    // Enrich with created/changed.
     $a_fields = mediamosa_db::db_insert_enrich($a_fields);
 
     // Insert it.
@@ -208,6 +221,7 @@ class mediamosa_asset_mediafile_metadata {
       ->fields($a_fields)
       ->execute();
   }
+
 
   /**
    * Store the analyse result in the mediafile metadata.

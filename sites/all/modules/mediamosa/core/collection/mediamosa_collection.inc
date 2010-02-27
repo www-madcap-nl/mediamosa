@@ -62,11 +62,16 @@ class mediamosa_collection {
    *
    * @param string $coll_id
    */
-  static public function get($coll_id) {
+  static public function get($coll_id, $app_id = NULL) {
 
     $query = mediamosa_db::db_select(mediamosa_collection_db::ID, 'c');
     $query->fields('c');
     $query->condition('c.' . mediamosa_collection_db::ID, $coll_id);
+
+    if (isset($app_id)) {
+      $query->condition('c.' . mediamosa_collection_db::APP_ID, $app_id);
+    }
+
     return $query->execute()->fetchAssoc();
   }
 }

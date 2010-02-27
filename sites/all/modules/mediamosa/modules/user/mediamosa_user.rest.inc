@@ -100,7 +100,6 @@ class mediamosa_rest_call_user_list extends mediamosa_rest_call {
         self::GROUP_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'Name of the group where the user has to be a member.',
-          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::VAR_RANGE_END => mediamosa_user_db::NAME_LENGTH,
         ),
       )
@@ -129,11 +128,11 @@ class mediamosa_rest_call_user_list extends mediamosa_rest_call {
 
     // Fill the response.
     foreach ($result as $a_row) {
-      $o_mediamosa->add_item($result);
+      $o_mediamosa->add_item($a_row);
     }
 
     // Set total count.
-    $o_mediamosa->$item_total_count = $result->found_rows();
+    $o_mediamosa->item_total_count = $result->found_rows;
   }
 }
 
@@ -168,6 +167,7 @@ class mediamosa_rest_call_user_create extends mediamosa_rest_call {
           self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'Name of the group where the user will be.',
           self::VAR_RANGE_END => mediamosa_user_db::GROUP_ID_LENGTH,
+          self::VAR_DEFAULT_VALUE => '',
         ),
         self::QUOTUM => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
@@ -271,7 +271,7 @@ class mediamosa_rest_call_user_delete extends mediamosa_rest_call {
 class mediamosa_rest_call_user_update extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
   // Rest vars;
-  const USER_ID = 'user';
+  const USER_ID = 'user_id';
   const GROUP_ID = 'group_id';
   const QUOTUM = 'quotum';
 

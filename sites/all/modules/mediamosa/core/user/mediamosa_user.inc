@@ -121,20 +121,22 @@ class mediamosa_user {
    *  Group ID.
    */
   static public function create($app_id, $user_id, $quotum, $group_id) {
-    return mediamosa_db::db_query(
-      'INSERT INTO {#mediamosa_user} SET #group_id = :group_id, #app_id = :app_id, #name = :user_id, #quotum = :quotum',
-      array(
-        '#mediamosa_user' => mediamosa_user_db::TABLE_NAME,
-        '#group_id' => mediamosa_user_db::GROUP_ID,
-        ':group_id' => $group_id,
-        '#app_id' => mediamosa_user_db::APP_ID,
-        ':app_id' => $app_id,
-        '#name' => mediamosa_user_db::NAME,
-        ':user_id' => $user_id,
-        '#quotum' => $quotum,
-        ':quotum' => mediamosa_user_db::QUOTUM,
-      )
+
+    // Values to insert.
+    $a_fields = array(
+      mediamosa_user_db::GROUP_ID => $group_id,
+      mediamosa_user_db::APP_ID => $app_id,
+      mediamosa_user_db::NAME => $user_id,
+      mediamosa_user_db::QUOTUM => $quotum,
     );
+
+    // Enrich with created/changed.
+    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+
+    // Insert.
+    return mediamosa_db::db_insert(mediamosa_user_db::TABLE_NAME)
+      ->fields($a_fields)
+      ->execute();
   }
 
   /**

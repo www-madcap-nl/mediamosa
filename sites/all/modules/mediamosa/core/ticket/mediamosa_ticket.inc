@@ -422,9 +422,29 @@ class mediamosa_ticket {
     // Get the current time.
     $db_time_now = mediamosa::db_current_timestamp_now();
 
+    // Get the correct expire date.
+    $expire_seconds = mediamosa_settings::TICKET_EXPIRATION_UPLOAD;
+    switch ($ticket_type) {
+      case mediamosa_ticket_db::TICKET_TYPE_DOWNLOAD:
+        $expire_seconds = mediamosa_settings::TICKET_EXPIRATION_DOWNLOAD;
+        break;
+
+      case mediamosa_ticket_db::TICKET_TYPE_PLAY:
+        $expire_seconds = mediamosa_settings::TICKET_EXPIRATION_PLAY;
+        break;
+
+      case mediamosa_ticket_db::TICKET_TYPE_STILL:
+        $expire_seconds = mediamosa_settings::TICKET_EXPIRATION_UPLOAD;
+        break;
+
+      case mediamosa_ticket_db::TICKET_TYPE_UPLOAD:
+      default:
+        break;
+    }
+
     // Do the query.
     return mediamosa_db::db_query(
-      'SELECT * FROM {#mediamosa_ticket} WHERE #ticket_id = :ticket_id AND #ticket_type = :ticket_type AND #issued > DATE_SUB(:now, INTERVAL #expire_play SECOND)',
+      'SELECT * FROM {#mediamosa_ticket} WHERE #ticket_id = :ticket_id AND #ticket_type = :ticket_type AND #issued > DATE_SUB(:now, INTERVAL #expire_seconds SECOND)',
       array(
         '#mediamosa_ticket' => mediamosa_ticket_db::TABLE_NAME,
         '#ticket_id' => mediamosa_ticket_db::ID,
@@ -433,7 +453,7 @@ class mediamosa_ticket {
         ':ticket_type' => $ticket_type,
         '#issued' => mediamosa_ticket_db::ISSUED,
         ':now' => $db_time_now,
-        '#expire_play' => mediamosa_settings::TICKET_EXPIRATION_UPLOAD,
+        '#expire_seconds' => $expire_seconds,
       )
     )->fetchAssoc();
   }

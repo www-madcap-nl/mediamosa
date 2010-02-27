@@ -65,13 +65,15 @@ class mediamosa_aut_app_master_slave {
   /**
    * Create a master - slave record.
    *
+   * 1.x: vpx_acl_aut_master_slave_create
+   *
    * @param string $aut_object_id
    * @param string $aut_object_type
    * @param integer $app_id
    * @param integer $app_id_slave
    * @param array $a_rights (reserved)
    */
-  function create($aut_object_id, $aut_object_type, $app_id_master, $app_id_slave, array $a_rights = array(VPX_ACL_RIGHT_ACCESS)) {
+  function create($aut_object_id, $aut_object_type, $app_id_master, $app_id_slave, array $a_rights = array(mediamosa_aut::RIGHT_ACCESS)) {
 
     // Here to sadisify Zend about unused var.
     assert(is_array($a_rights));
@@ -86,7 +88,7 @@ class mediamosa_aut_app_master_slave {
       mediamosa_db::db_query(
         'INSERT INTO {#mediamosa_aut_app_master_slave} SET #aut_object_type= :aut_object_type, #aut_object_id = :aut_object_id, #app_id_master = :app_id_master, #app_id_slave = :app_id_slave',
         array(
-          '#aut_app_master_slave' => mediamosa_aut_app_master_slave_db::TABLE_NAME,
+          '#mediamosa_aut_app_master_slave' => mediamosa_aut_app_master_slave_db::TABLE_NAME,
           '#aut_object_type' => mediamosa_aut_app_master_slave_db::AUT_OBJECT_TYPE,
           ':aut_object_type' => $aut_object_type,
           '#aut_object_id' => mediamosa_aut_app_master_slave_db::AUT_OBJECT_ID,

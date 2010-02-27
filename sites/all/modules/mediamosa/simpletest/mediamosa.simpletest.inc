@@ -39,10 +39,15 @@ define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE', 'MediaMosa');
  * The basic lowest simpletest class.
  */
 class MediaMosaTestCase extends DrupalWebTestCase {
+
+  // file to unlink on teardown.
+  protected $a_unlink = array();
+
   // ------------------------------------------------------------------ Functions (protected)
   // Default old user/group.
   const SIMPLETEST_USER_ID = 'Simpletest user id';
   const SIMPLETEST_GROUP_ID = 'Simpletest test group';
+
 
   // ------------------------------------------------------------------ Functions (protected)
 
@@ -85,10 +90,18 @@ class MediaMosaTestCase extends DrupalWebTestCase {
 
     // Dump the log.
     $a_logs = db_query('SELECT * FROM {watchdog}');
-    $this->pass('Dumping contents of watchdog', 'watchdog dump');
+    $this->verbose('Dumping contents of watchdog', 'watchdog dump');
     foreach ($a_logs as $o_log) {
-      $this->pass(strtr($o_log->message, (empty($o_log->variables) ? array() : unserialize($o_log->variables))), 'watchdog dump');
+      $this->verbose(strtr($o_log->message, (empty($o_log->variables) ? array() : unserialize($o_log->variables))), 'watchdog dump');
     }
+
+    // Unlink files.
+    foreach ($this->a_unlink as $filename) {
+      mediamosa_io::unlink($filename);
+    }
+
+    // Clean up...
+    $this->a_unlink = array();
 
     // keep it.
     $old_prefix = $db_prefix;
@@ -181,11 +194,11 @@ class MediaMosaTestCase extends DrupalWebTestCase {
    *  name => value
    * @param array $a_headers
    *  Name: value
+   * @param array $a_expected_result_ids
+   *  Contains the mediamosa_error::ERRORCODE_* that we expect. For example, you
+   *  might expect an error instead of OKAY; specify the error code here.
    */
-  protected function restCall($uri, $request_method = 'POST', array $a_parameters = array(), array $a_headers = array()) {
-    // Add MediaMosa menu path prefix
-    //$uri = /*MEDIAMOSA_MENU_PATH . '/'*/ $uri;
-
+  protected function restCall($uri, $request_method = 'POST', array $a_parameters = array(), array $a_headers = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
     // Prepare the CURL options.
     $curl_opts = array(
       CURLOPT_NOBODY => FALSE,
@@ -206,7 +219,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
       );
     }
 
-    $this->pass('Session ID: ' . $this->session_id);
+    $this->verbose('Session ID: ' . $this->session_id);
 
     // Perform the CURL request.
     $result = $this->curlExec($curl_opts);
@@ -234,6 +247,10 @@ class MediaMosaTestCase extends DrupalWebTestCase {
 
     // Create a SimpleXMLElement from the restcall's output.
     try {
+      // We expect char '<' on REST calls, if not we need to output it.
+      if ($out['body']{0} != '<') {
+        $this->var_export($out['body']);
+      }
       $out['xml'] = new SimpleXMLElement($out['body']);
     }
     catch (Exception $e) {
@@ -241,8 +258,12 @@ class MediaMosaTestCase extends DrupalWebTestCase {
       return;
     }
 
+    // Get the result ID.
+    $result_id = empty($out['xml']->header->request_result_id) ? 0 : (int)$out['xml']->header->request_result_id;
+    $result_description = empty($out['xml']->header->request_result_description) ? 'no description' : (string)$out['xml']->header->request_result_description;
+
     // Look for a request_result_id.
-    $this->assertTrue(isset($out['xml']->header->request_result_id), $request_method . ' request to: "' . $uri . '". Result id: ' . $out['xml']->header->request_result_id . ', ' . $out['xml']->header->request_result_description . '<hr />');
+    $this->assertTrue(in_array($result_id, $a_expected_result_ids), $request_method . ' request to: "' . $uri . '". Result id: ' . $result_id . ', ' . $result_description . '<hr />');
 
     // Return the request data.
     return $out;
@@ -251,22 +272,22 @@ class MediaMosaTestCase extends DrupalWebTestCase {
   /**
    * Wrapper for POST restCall
    */
-  protected function restCallPost($uri, array $a_parameters = array(), array $a_headers = array()) {
-    return $this->restCall($uri, 'POST', $a_parameters, $a_headers);
+  protected function restCallPost($uri, array $a_parameters = array(), array $a_headers = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+    return $this->restCall($uri, 'POST', $a_parameters, $a_headers, $a_expected_result_ids);
   }
 
   /**
    * Wrapper for GET restCall
    */
-  protected function restCallGet($uri, array $a_parameters = array(), array $a_headers = array()) {
-    return $this->restCall($uri, 'GET', $a_parameters, $a_headers);
+  protected function restCallGet($uri, array $a_parameters = array(), array $a_headers = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+    return $this->restCall($uri, 'GET', $a_parameters, $a_headers, $a_expected_result_ids);
   }
 
   /**
    * Wrapper for PUT restCall
    */
-  protected function restCallPut($uri, array $a_parameters = array(), array $a_headers = array()) {
-    return $this->restCall($uri, 'PUT', $a_parameters, $a_headers);
+  protected function restCallPut($uri, array $a_parameters = array(), array $a_headers = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+    return $this->restCall($uri, 'PUT', $a_parameters, $a_headers, $a_expected_result_ids);
   }
 
   /**
@@ -307,6 +328,9 @@ class MediaMosaTestCase extends DrupalWebTestCase {
       file_exists($dest),
       t("Symlink: New file '@target' exists.", array('@target' => $dest))
     );
+
+    // Register to be removed.
+    $this->a_unlink[] = $dest;
   }
 
   /**
@@ -334,6 +358,50 @@ class MediaMosaTestCase extends DrupalWebTestCase {
   protected function mkdir($location) {
     // Create the directory first.
     $this->assertTrue(mediamosa_io::mkdir($location), t('Check if @location can be created by Mediamosa', array('@location' => $location)));
+  }
+
+  /**
+   * Create empty file.
+   *
+   * @param string $filename
+   * @param string $text
+   */
+  protected function touch($filename, $text = 'Create empty file.') {
+    mediamosa_io::touch($filename);
+    $this->a_unlink[] = $filename;
+    return $this->file_exists($filename, $text);
+  }
+
+  /**
+   * Check if file or path exists.
+   *
+   * @param string $filename
+   */
+  protected function file_exists($filename, $text = 'Check if file exists.') {
+    mediamosa_io::clearstatcache();
+
+    $this->assertTrue(
+      file_exists($filename),
+      $text
+    );
+
+    return file_exists($filename);
+  }
+
+  /**
+   * Check if file or path does not exists.
+   *
+   * @param string $filename
+   */
+  protected function file_not_exists($filename, $text = 'Check if file does not exists.') {
+    mediamosa_io::clearstatcache();
+
+    $this->assertFalse(
+      file_exists($filename),
+      $text
+    );
+
+    return file_exists($filename);
   }
 
   /**

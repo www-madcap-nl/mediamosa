@@ -35,17 +35,15 @@ class MediaMosaAssetTestCaseEga extends MediaMosaTestCaseEga {
   // ------------------------------------------------------------------ Functions.
   public static function getInfo() {
     return array(
-      'name' => 'Asset test',
-      'description' => 'Testing the asset calls.',
+      'name' => 'Asset tests',
+      'description' => 'Testing asset related functions and rest calls.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE,
     );
   }
 
   // ------------------------------------------------------------------ Tests.
 
-  /*
-   * Testing is_empty_asset issues, see: ticket 165
-   */
+  // Testing is_empty_asset issues, see: ticket 165.
   function testAssetIsEmptyAsset() {
 
     // Create an asset.
@@ -84,9 +82,8 @@ class MediaMosaAssetTestCaseEga extends MediaMosaTestCaseEga {
     );
   }
 
-  /*
-   * Testing is_empty_asset issue, see: ticket 167
-   */
+
+  // Testing is_empty_asset issue, see: ticket 167.
   function testAssetIsEmptyAsset2() {
 
     // Create an asset.

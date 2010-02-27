@@ -257,4 +257,12 @@ class mediamosa_server {
       ->execute();
   }
 
+  /**
+   * Basic search on containers, for now return all.
+   */
+  static public function search_containers() {
+    return mediamosa_db::db_select(mediamosa_server_streaming_container_db::TABLE_NAME, 'mssc')
+      ->fields('mssc')
+      ->execute();
+  }
 }

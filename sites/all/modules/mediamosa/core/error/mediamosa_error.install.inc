@@ -93,9 +93,9 @@ function _mediamosa_error_install() {
 
     'ERRORCODE_UNKNOWN_JOB' => 'Jobs - unknown job specified',
 
-    'ERRORCODE_VALIDATE_INVALID_TYPE' => 'MediaMosia - invalid type specified: @type',
-    'ERRORCODE_VALIDATE_INVALID_LENGTH_USE' => 'MediaMosia - \'length\' can not be used in combination with \'length_(min|max)\'',
-    'ERRORCODE_VALIDATE_REQUIRED_PARAMETER' => 'MediaMosia - missing required parameter: @param (@type)',
+    'ERRORCODE_VALIDATE_INVALID_TYPE' => 'MediaMosa - invalid type specified: @type',
+    'ERRORCODE_VALIDATE_INVALID_LENGTH_USE' => 'MediaMosa - \'length\' can not be used in combination with \'length_(min|max)\'',
+    'ERRORCODE_VALIDATE_REQUIRED_PARAMETER' => 'MediaMosa - missing required parameter: @param (@type)',
     'ERRORCODE_VALIDATE_FAILED' => 'MediaMosa - parameter validation failed: @param (@type)',
     'ERRORCODE_SORT_FIELD_ERROR' => 'MediaMosa - sorting on \'@field\' is not allowed',
     'ERRORCODE_SORT_DIRECTION_ERROR' => 'MediaMosa - invalid sort direction specified: \'@sort_direction\'. Use \'ASC\' or \'DESC\' instead.',

@@ -58,14 +58,49 @@ class MediaMosaTestCaseEgaTest extends MediaMosaTestCaseEga {
     }
   }
 
+  // ------------------------------------------------------------------ Test multi app logins.
+  public function testApps() {
+    // Be default, we always create 3 apps, but only first is logged in.
+
+    // Now login on other 2.
+    $this->doEgaLogin_2();
+    $this->doEgaLogin_3();
+
+    // Now do REST call on app 1.
+    $result = $this->restCallGet('simpletest/whoami');
+    $this->assertTrue((int)$result['xml']->items->item[0]->app_id == $this->a_app[mediamosa_app_db::APP_ID], 'App 1 match');
+
+    // Now do REST call on app 2.
+    $result = $this->restCallGet_2('simpletest/whoami');
+    $this->assertTrue((int)$result['xml']->items->item[0]->app_id == $this->a_app_2[mediamosa_app_db::APP_ID], 'App 2 match');
+
+    // Now do REST call on app 3.
+    $result = $this->restCallGet_3('simpletest/whoami');
+    $this->assertTrue((int)$result['xml']->items->item[0]->app_id == $this->a_app_3[mediamosa_app_db::APP_ID], 'App 3 match');
+
+    // Switch to EGA 2.
+    $this->toEga_2();
+    $result = $this->restCallGet('simpletest/whoami');
+    $this->assertTrue((int)$result['xml']->items->item[0]->app_id == $this->a_app_2[mediamosa_app_db::APP_ID], 'App 2 match');
+
+    // Switch to EGA 3.
+    $this->toEga_3();
+    $result = $this->restCallGet('simpletest/whoami');
+    $this->assertTrue((int)$result['xml']->items->item[0]->app_id == $this->a_app_3[mediamosa_app_db::APP_ID], 'App 3 match');
+
+    // Switch to EGA 1.
+    $this->toEga_1();
+    $result = $this->restCallGet('simpletest/whoami');
+    $this->assertTrue((int)$result['xml']->items->item[0]->app_id == $this->a_app[mediamosa_app_db::APP_ID], 'App 1 match');
+  }
+
   // ------------------------------------------------------------------ Test asset.
-  function testAsset() {
+  public function testAsset() {
     // Create an asset.
     $asset_id = $this->createAsset();
 
     // Get the asset.
     $a_asset_1 = $this->getAsset($asset_id);
-
 
     // Update asset:
     // Play_restriction tests - normal
@@ -103,7 +138,7 @@ class MediaMosaTestCaseEgaTest extends MediaMosaTestCaseEga {
   }
 
   // ------------------------------------------------------------------ Test mediafile.
-  function testMediafile() {
+  public function testMediafile() {
     // Create an asset.
     $asset_id = $this->createAsset();
 
@@ -138,7 +173,7 @@ class MediaMosaTestCaseEgaTest extends MediaMosaTestCaseEga {
   }
 
   // ------------------------------------------------------------------ Test asset supplement.
-  function testAssetSupplement() {
+  public function testAssetSupplement() {
     // Create an asset.
     $asset_id = $this->createAsset();
 
@@ -170,7 +205,7 @@ class MediaMosaTestCaseEgaTest extends MediaMosaTestCaseEga {
     $this->deleteAssetSupplement($asset_id, $supplement_id);
   }
   // ------------------------------------------------------------------ Test asset metadata.
-  function testAssetMetadata() {
+  public function testAssetMetadata() {
     // Create an asset.
     $asset_id = $this->createAsset();
 
@@ -223,7 +258,8 @@ class MediaMosaTestCaseEgaTest extends MediaMosaTestCaseEga {
 
 
 
-/*// maak een nieuwe test asset aan
+/*
+   // maak een nieuwe test asset aan
     $s_asset_id = $this->_create_asset();
     $s_mediafile_id = $this->_create_mediafile($s_asset_id,  $this->s_user_story);
     $s_still_id = $this->_create_still($s_asset_id,  $this->s_user_story);
