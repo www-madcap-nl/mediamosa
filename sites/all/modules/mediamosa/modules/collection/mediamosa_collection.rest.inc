@@ -541,18 +541,17 @@ class mediamosa_rest_call_collection_create extends mediamosa_rest_call {
     $coll_id = mediamosa_db::uuid($app_id);
 
     $a_params = array(
-      mediamosa_collection_db::APP_ID,
+      /*      mediamosa_collection_db::APP_ID,
       mediamosa_collection_db::GROUP_ID,
-      mediamosa_collection_db::USER_ID,
       mediamosa_collection_db::_PRIVATE,
       mediamosa_collection_db::_PUBLIC,
       mediamosa_collection_db::CATEGORY,
       mediamosa_collection_db::ISPRIVATE,
       mediamosa_collection_db::PUBLIC_ASSIGN,
-      mediamosa_collection_db::IS_UNAPPROPRIATE,
+      mediamosa_collection_db::IS_UNAPPROPRIATE,*/
       self::APP_ID => mediamosa_collection_db::APP_ID,
       self::GROUP_ID => mediamosa_collection_db::GROUP_ID,
-      self::USER_ID => mediamosa_collection_db::OWNER_ID,
+      //      self::USER_ID => mediamosa_collection_db::OWNER_ID,
       self::PRIVATE_ => mediamosa_collection_db::_PRIVATE,
       self::PUBLIC_ => mediamosa_collection_db::_PUBLIC,
       self::CATEGORY => mediamosa_collection_db::CATEGORY,

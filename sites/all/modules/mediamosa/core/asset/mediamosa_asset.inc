@@ -78,7 +78,7 @@ class mediamosa_asset {
    */
   static public function getAllAssoc(array $a_asset_ids) {
 
-    $query = mediamosa_db::db_select(mediamosa_asset_db::ID, 'a');
+    $query = mediamosa_db::db_select(mediamosa_asset_db::TABLE_NAME, 'a');
     $query->fields('a');
     $query->condition('a.' . mediamosa_asset_db::ID, $a_asset_ids, 'IN');
     return $query->execute()->fetchAllAssoc(mediamosa_asset_db::ID);
