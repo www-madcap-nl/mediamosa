@@ -45,6 +45,12 @@ class mediamosa_asset_collection {
    */
   static public function delete($asset_id = FALSE, $coll_id = FALSE) {
 
+    // Asset must exist.
+    mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
+
+    // Collection must exist.
+    mediamosa_db::db_must_exists(mediamosa_collection_db::TABLE_NAME, array(mediamosa_collection_db::ID => $coll_id));
+
     if (!$asset_id && !$coll_id) {
       // if none is provided, none will be deleted.
       return FALSE;
@@ -152,9 +158,9 @@ class mediamosa_asset_collection {
    */
   function get_by_ids(array $a_coll_ids) {
     // Build query.
-    $query = mediamosa_db::db_select(mediamosa_collection_db::TABLE_NAME);
-    $query->fields();
-    $query->condition(mediamosa_collection_db::ID, $a_coll_ids, 'IN');
+    $query = mediamosa_db::db_select(mediamosa_collection_db::TABLE_NAME, 'c');
+    $query->fields('c', array());
+    $query->condition('c.'. mediamosa_collection_db::ID, $a_coll_ids, 'IN');
     return $query->execute();
   }
 
@@ -178,7 +184,7 @@ class mediamosa_asset_collection {
     mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
 
     // Check if relation already exist.
-    if (!mediamosa_db::db_exists(
+    if (mediamosa_db::db_exists(
       mediamosa_asset_collection_db::TABLE_NAME,
       array(
         mediamosa_asset_collection_db::ASSET_ID => $asset_id,
@@ -195,16 +201,16 @@ class mediamosa_asset_collection {
     mediamosa_aut::owner_check_collection_assign($app_id, $user_id, $a_asset, $a_collection, $is_app_admin);
 
     // If we get here, we can create the link.
-    mediamosa_db::db_query(
-      'INSERT INTO {#mediamosa_asset_collection} SET #asset_id = :asset_id, #coll_id = :coll_id',
-      array(
-        '#mediamosa_asset_collection' => mediamosa_asset_collection_db::TABLE_NAME,
-        '#asset_id' => mediamosa_asset_collection_db::ASSET_ID,
-        ':asset_id' => $asset_id,
-        '#coll_id' => mediamosa_asset_collection_db::COLL_ID,
-        ':coll_id' => $coll_id,
-      )
+    $a_fields = array(
+      mediamosa_asset_collection_db::ASSET_ID => $asset_id,
+      mediamosa_asset_collection_db::COLL_ID => $coll_id,
     );
+    // Add created value.
+    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+    // Insert into
+    mediamosa_db::db_insert(mediamosa_asset_collection_db::TABLE_NAME)
+      ->fields($a_fields)
+      ->execute();
   }
 
   /**
@@ -220,8 +226,8 @@ class mediamosa_asset_collection {
 
     // Return the number of found rows.
     $query = mediamosa_db::db_select(mediamosa_asset_collection_db::TABLE_NAME, 'mac');
-    $query->fields('mac', array(mediamosa_asset_collection_db::ID));
-    $query->condition(mediamosa_asset_collection_db::ID, $asset_id);
+    $query->fields('mac', array(mediamosa_asset_collection_db::COLL_ID));
+    $query->condition(mediamosa_asset_collection_db::ASSET_ID, $asset_id);
     return $query->countQuery()->execute()->fetchField();
   }
 }

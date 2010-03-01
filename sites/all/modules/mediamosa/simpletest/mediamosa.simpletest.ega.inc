@@ -69,7 +69,12 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $args = func_get_args();
 
     // Create and setup the CORE module.
-    $args = array_unique(array_merge(array('mediamosa_app_authentication', 'mediamosa_asset', 'mediamosa_aut'), $args));
+    $args = array_unique(array_merge(array(
+      'mediamosa_app_authentication',
+      'mediamosa_asset',
+      'mediamosa_aut',
+      'mediamosa_collection'), $args));
+
     call_user_func_array(array($this, 'parent::setUp'), $args);
 
     // Now we are in sandbox, create default APP, our default EGA.
