@@ -28,7 +28,13 @@ Steps for changelog and commits;
 
 START CHANGELOG:
 
-Mediamosa 2.1.0
+MediaMosa 2.1.1
+---------------
+- Fixed problems editing the transcode profile.
+- Fixed migration problem on transcode profiles.
+
+
+MediaMosa 2.1.0
 ---------------
 - Added support CQL for is_empty_asset (See MediaMosa ticket #180).
 - Banner text was updated (See MediaMosa ticket #222).
@@ -45,7 +51,7 @@ Mediamosa 2.1.0
 - Fixed asset / collection browser to use MediaMosa Connector.
 
 
-Mediamosa 2.0.0 (released as read-only)
+MediaMosa 2.0.0 (released as read-only)
 ---------------
 - Port to drupal 7.
 - VPX name use in code has been replaced with MediaMosa.

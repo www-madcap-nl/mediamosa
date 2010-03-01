@@ -76,14 +76,18 @@ function mediamosa_asset_delete_schema() {
       mediamosa_asset_delete_db::COLL_ID => array(
         'type' => 'varchar',
         'length' => mediamosa_db::HASH_ID_LENGTH,
-        'not null' => FALSE,
         'description' => t('Link to collection table.'),
+        'default' => NULL,
       ),
     ),
-    'primary key' => array(mediamosa_asset_delete_db::ID, mediamosa_asset_delete_db::COLL_ID),
+    'primary key' => array(mediamosa_asset_delete_db::ID),
     'indexes' => array(
       'fk_app_videotimestamp' => array(mediamosa_asset_delete_db::APP_ID, mediamosa_asset_delete_db::VIDEOTIMESTAMPMODIFIED),
     ),
+    // Defined as unique and not as primary because drupal will undo the NULL option on coll_id.
+    'unique keys' => array(
+      'uni_id_collid' => array(mediamosa_asset_delete_db::COLL_ID, mediamosa_asset_delete_db::ID),
+    )
   );
 
   return $a_schema;

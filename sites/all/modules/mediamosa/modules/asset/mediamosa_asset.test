@@ -24,11 +24,6 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
- /**
-  * @file
-  * Asset tests.
-  */
-
 /**
   * @file
   * Unittests for assets.
@@ -62,11 +57,11 @@ class MediaMosaAssetTestCaseEga extends MediaMosaTestCaseEga {
     // Create uploadticket
     $ticket = $this->createMediafileUploadTicket($mediafile_id);
 
-    // Get the asset
+    // Get the asset.
     $asset = $this->getAsset($asset_id);
 
     // Check is_empty_asset field is TRUE
-    $is_empty_asset = (string)$asset->is_empty_asset;
+    $is_empty_asset = (string)$asset[mediamosa_asset_db::IS_EMPTY_ASSET];
     $this->assertTrue(
       $is_empty_asset == 'TRUE',
       t("The is_empty_asset parameter is TRUE: @is_empty_asset", array('@is_empty_asset' => print_r($is_empty_asset, TRUE),))
@@ -76,18 +71,17 @@ class MediaMosaAssetTestCaseEga extends MediaMosaTestCaseEga {
     $a_parameters = array(
       mediamosa_rest_call_create_mediafile::URI => 'http://empty.asset.demo',
     );
-    $this->updateMediafile($mediafile_id, self::SIMPLETEST_USER_ID, $a_parameters);
+    $this->updateMediafile($mediafile_id, $a_parameters);
 
-    // Get the asset
+    // Get the asset.
     $asset = $this->getAsset($asset_id);
 
     // Check is_empty_asset field is FALSE
-    $is_empty_asset = (string)$asset->is_empty_asset;
+    $is_empty_asset = (string)$asset[mediamosa_asset_db::IS_EMPTY_ASSET];
     $this->assertTrue(
       $is_empty_asset == 'FALSE',
       t("The is_empty_asset parameter is FALSE: @is_empty_asset", array('@is_empty_asset' => print_r($is_empty_asset, TRUE),))
     );
-
   }
 
   /*
@@ -108,7 +102,7 @@ class MediaMosaAssetTestCaseEga extends MediaMosaTestCaseEga {
     $asset = $this->getAsset($asset_id);
 
     // Check is_empty_asset field is TRUE
-    $is_empty_asset = (string)$asset->is_empty_asset;
+    $is_empty_asset = (string)$asset[mediamosa_asset_db::IS_EMPTY_ASSET];
     $this->assertTrue(
       $is_empty_asset == 'TRUE',
       t("The is_empty_asset parameter is TRUE: @is_empty_asset", array('@is_empty_asset' => print_r($is_empty_asset, TRUE),))
@@ -118,18 +112,16 @@ class MediaMosaAssetTestCaseEga extends MediaMosaTestCaseEga {
     $a_parameters = array(
       mediamosa_rest_call_create_mediafile::URI => 'http://empty.asset.demo',
     );
-    $mediafile_id_with_uri = $this->createMediafile($asset_id, self::SIMPLETEST_USER_ID, $a_parameters);
+    $mediafile_id_with_uri = $this->createMediafile($asset_id, $a_parameters);
 
     // Get the asset
     $asset = $this->getAsset($asset_id);
 
     // Check is_empty_asset field is FALSE
-    $is_empty_asset = (string)$asset->is_empty_asset;
+    $is_empty_asset = (string)$asset[mediamosa_asset_db::IS_EMPTY_ASSET];
     $this->assertTrue(
       $is_empty_asset == 'FALSE',
       t("The is_empty_asset parameter is FALSE: @is_empty_asset", array('@is_empty_asset' => print_r($is_empty_asset, TRUE),))
     );
-
   }
-
 }

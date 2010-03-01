@@ -147,6 +147,3 @@ truncate mediamosa_job_server_analyse;
 truncate mediamosa_job_server;
 truncate mediamosa_job;
  
-  
-
-

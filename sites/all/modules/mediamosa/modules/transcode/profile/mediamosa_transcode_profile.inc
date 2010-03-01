@@ -79,6 +79,10 @@ function mediamosa_transcode_profile_form($node, $form_state) {
     '#description' => t('Required parameters for a transcoding profile.'),
   );
 
+print '<pre>Debug in ' . __FILE__ . ', line ' . __LINE__ . "\n"; // @TODO remove!
+print htmlspecialchars(print_r($node, TRUE));
+print '</pre>';
+
   // Gather all apps
   foreach (mediamosa_app::get_all_apps(array(mediamosa_app_db::APP_ID, mediamosa_app_db::NAME), mediamosa_app_db::NAME, 'ASC') as $app) {
     $all_apps[$app[mediamosa_app_db::APP_ID]] = $app[mediamosa_app_db::NAME];
@@ -124,7 +128,7 @@ function mediamosa_transcode_profile_form($node, $form_state) {
   );
 
   if (isset($node->nid)) {
-    $options = mediamosa_transcode_profile::get_by_tool(NULL, $node->tool);
+    $a_tools = mediamosa_transcode_profile::get_by_tool(NULL, $node->tool)->fetchAll();
 
     $form['tool_options'] = array(
       '#type' => 'fieldset',
@@ -133,23 +137,54 @@ function mediamosa_transcode_profile_form($node, $form_state) {
       '#collapsible' => TRUE,
     );
 
-    foreach ($options as $option) {
-      $form['tool_options']['options_'. $option['tmid']] = array(
-        '#type' => $option['field_type'],
-        '#description' => $option['field_description'],
-        '#title' => $option['field_title'],
-        '#required' => ($option['required'] == 'TRUE'),
-        '#default_value' => (isset($node->options[$option['tmid']])) ? $node->options[$option['tmid']] : '',
-      );
+    // Show all parameters for profile.
+    foreach ($a_tools as $key => $a_tool) {
+      $a_tool[mediamosa_transcode_mapping_db::ALLOWED_VALUE] = trim($a_tool[mediamosa_transcode_mapping_db::ALLOWED_VALUE]) == '' ? array() : explode(';', $a_tool[mediamosa_transcode_mapping_db::ALLOWED_VALUE]);
 
-      if ($option['field_type'] == 'select') {
-        $form['tool_options']['options_'. $option['tmid']]['#options'] = drupal_map_assoc(array_merge(
-          array('' => ''),
-          explode(';', $option['allowed_value'])
-        ));
+      // Tool required?
+      $is_required = $a_tool[mediamosa_transcode_mapping_db::REQUIRED] == mediamosa_transcode_mapping_db::REQUIRED_TRUE;
+      $weight = $is_required ? -10 : -15;
+
+      if (empty($a_tool[mediamosa_transcode_mapping_db::ALLOWED_VALUE])) {
+        $form['tool_options'][$a_tool[mediamosa_transcode_mapping_db::NICE_PARAMETER]] = array(
+          '#description' => t(''),
+          '#type' => 'textfield',
+          '#title' => t($a_tool[mediamosa_transcode_mapping_db::NICE_PARAMETER]),
+          '#required' => $is_required,
+          '#default_value' => isset($node->{$a_tool[mediamosa_transcode_mapping_db::NICE_PARAMETER]}) ? $node->{$a_tool[mediamosa_transcode_mapping_db::NICE_PARAMETER]} : '',
+          '#size' => 25,
+          '#description' => t('The allowed value is between @min_value and @max_value.', array('@min_value' => $a_tool[mediamosa_transcode_mapping_db::MIN_VALUE], '@max_value' => $a_tool[mediamosa_transcode_mapping_db::MAX_VALUE])),
+          '#weight' => $weight
+        );
+      }
+      else {// Select box.
+        $a_select_box = array();
+        foreach ($a_tool[mediamosa_transcode_mapping_db::ALLOWED_VALUE] as $allowed_value) {
+          $a_select_box[$allowed_value] = $allowed_value;
+        }
+
+        $form['tool_options'][$a_tool[mediamosa_transcode_mapping_db::NICE_PARAMETER]] = array(
+          '#description' => t(''),
+          '#type' => 'select',
+          '#title' => t($a_tool[mediamosa_transcode_mapping_db::NICE_PARAMETER]),
+          '#required' => $is_required,
+          '#default_value' => isset($node->{$a_tool[mediamosa_transcode_mapping_db::NICE_PARAMETER]}) ? $node->{$a_tool[mediamosa_transcode_mapping_db::NICE_PARAMETER]} : '',
+          '#options' => $a_select_box,
+          '#weight' => $weight['general']
+        );
       }
     }
   }
 
   return $form;
+}
+
+/**
+ * Implementation of hook_form_alter().
+ */
+function mediamosa_transcode_form_alter(&$form, &$form_state, $form_id) {
+
+  if ($form_id == 'mediamosa_transcode_profile_node_form') {
+    unset($form['body']);
+  }
 }

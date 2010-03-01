@@ -286,6 +286,7 @@ class mediamosa_rest_call_asset_supplement_delete extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
   // Rest vars;
   const SUPPLEMENT_ID = 'supplement_id';
+  const ASSET_ID = 'asset_id';
   const USER_ID = 'user_id';
 
   // ------------------------------------------------------------------ Get Var Setup.
@@ -303,6 +304,10 @@ class mediamosa_rest_call_asset_supplement_delete extends mediamosa_rest_call {
           self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The user ID.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+        ),
+        self::ASSET_ID => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
+          self::VAR_DESCRIPTION => 'The asset ID.',
         ),
       )
     );

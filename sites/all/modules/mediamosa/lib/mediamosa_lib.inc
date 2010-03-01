@@ -125,4 +125,37 @@ class mediamosa_lib {
 
     return $time;
   }
+
+  /**
+   * Simple function to correctly convert simplexml to array.
+   *
+   * @param object $xml
+   */
+  static public function simplexml2array($xml) {
+    $xml_copy = $xml;
+    if (get_class($xml) == 'SimpleXMLElement') {
+      foreach($xml->attributes() as $key => $value) {
+        if ($value) {
+          $attributes[$key] = (string)$value;
+        }
+      }
+
+      $xml = get_object_vars($xml);
+    }
+
+    if (is_array($xml)) {
+      if (empty($xml)) {
+        return (string)$xml_copy;
+      }
+
+      $result = array();
+      foreach($xml as $key => $value) {
+        $result[$key] = self::simplexml2array($value);
+      }
+
+      return $result;
+    }
+
+    return (string)$xml;
+  }
 }

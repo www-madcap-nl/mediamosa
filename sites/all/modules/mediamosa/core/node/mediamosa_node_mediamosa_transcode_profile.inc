@@ -42,18 +42,37 @@ function mediamosa_transcode_profile_load(&$nodes) {
 
   // Gather all additional node properties.
   $result = mediamosa_db::db_query(
-    'SELECT * FROM {#table_name} WHERE vid IN (:vids)',
+    'SELECT * FROM {#mediamosa_transcode_profile} AS mtp
+     WHERE vid IN (:vids)',
     array(
-      '#table_name' => mediamosa_transcode_profile_db::TABLE_NAME,
+      '#mediamosa_transcode_profile' => mediamosa_transcode_profile_db::TABLE_NAME,
       ':vids' => $vids,
     )
-  );
+  )->fetchAll();
 
-  foreach ($result as $record) {
-    foreach ($record as $key => $value) {
-      if ($key == 'options') {
-        $value = unserialize($value);
+  // Get the tools.
+  $a_tools = mediamosa_db::db_query(
+    'SELECT * FROM {#mediamosa_transcode_mapping}',
+    array(
+      '#mediamosa_transcode_mapping' => mediamosa_transcode_mapping_db::TABLE_NAME,
+    )
+  )->fetchAllAssoc(mediamosa_transcode_mapping_db::TOOL);
+
+
+  foreach ($result as $tool => $record) {
+    // Set default of tools first.
+    if (isset($a_tools[$tool])) {
+      foreach ($a_tools[$tool] as $a_tool) {
+        $nodes[$record['nid']]->commands{$a_tool[mediamosa_transcode_mapping_db::NICE_PARAMETER]} = mediamosa_transcode_mapping_db::DEFAULT_VALUE;
       }
+    }
+
+    foreach ($record as $key => $value) {
+      if ($key == mediamosa_transcode_profile_db::COMMAND) {
+        $nodes[$record['nid']]->{mediamosa_transcode_profile_db::COMMAND} = ($value == '' ? array() : mediamosa_lib::create_named_array($value, ';', ':'));
+        continue;
+      }
+
       $nodes[$record['nid']]->$key = $value;
     }
   }
@@ -94,6 +113,9 @@ function mediamosa_transcode_profile_update($node) {
       mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE => $node->is_default_profile,
       mediamosa_transcode_profile_db::TOOL => $node->tool,
       mediamosa_transcode_profile_db::FILE_EXTENSION => $node->file_extension,
+      mediamosa_transcode_profile_db::VERSION => $node->version,
+      mediamosa_transcode_profile_db::PROFILE => $node->profile,
+      mediamosa_transcode_profile_db::COMMAND => $node->command,
       mediamosa_transcode_profile_db::OPTIONS => serialize($options),
       mediamosa_transcode_profile_db::CHANGED => mediamosa::db_current_timestamp_now(),
     ))
@@ -112,6 +134,9 @@ function mediamosa_transcode_profile_insert($node) {
       mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE => $node->is_default_profile,
       mediamosa_transcode_profile_db::TOOL => $node->tool,
       mediamosa_transcode_profile_db::FILE_EXTENSION => $node->file_extension,
+      mediamosa_transcode_profile_db::VERSION => $node->version,
+      mediamosa_transcode_profile_db::PROFILE => $node->profile,
+      mediamosa_transcode_profile_db::COMMAND => $node->command,
       mediamosa_transcode_profile_db::CHANGED => mediamosa::db_current_timestamp_now(),
       mediamosa_transcode_profile_db::CREATED => mediamosa::db_current_timestamp_now(),
     ))

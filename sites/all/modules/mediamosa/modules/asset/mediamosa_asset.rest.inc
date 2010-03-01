@@ -994,17 +994,15 @@ class mediamosa_rest_call_asset_update extends mediamosa_rest_call {
         self::IS_UNAPPROPRIATE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'The is private flag.',
-          self::VAR_DEFAULT_VALUE => 'FALSE',
+          self::VAR_DEFAULT_VALUE => NULL,
         ),
         self::OWNER_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The possible new owner of the asset; Only the app manager can change this flag (is_app_admin=true).',
-          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::GROUP_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The possible new group of the asset; Only the app manager can change this flag(is_app_admin=true).',
-          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
       )
     );

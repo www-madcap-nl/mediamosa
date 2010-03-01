@@ -30,3 +30,4 @@
    2.2
    Create a cron that runs all unittests each day.
    Create a cron that cleans up all unittest garbage each day.
+   Add upload and download switch on REST calls.

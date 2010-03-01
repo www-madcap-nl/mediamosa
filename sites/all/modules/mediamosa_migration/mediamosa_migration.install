@@ -1987,52 +1987,11 @@ function _mediamosa_migration_transcode() {
     node_delete($o_transcode_profile->nid);
   }
 
-  /**
-   * Copy from 1.x to 2.x
-   * Columns dropped;
-   * testtag
-   * -
-   * Columns renamed;
-   * -
-   */
-  db_query(strtr(
-    "INSERT INTO {mediamosa_transcode_profile}
-      (
-        transcode_profile_id,
-        version,
-        profile,
-        is_default_profile,
-        tool,
-        file_extension,
-        command,
-        created,
-        changed,
-        app_id
-      ) (SELECT
-        transcode_profile_id,
-        version,
-        profile,
-        is_default_profile,
-        tool,
-        file_extension,
-        command,
-        created,
-        changed,
-        app_id
-    FROM #db_name.transcode_profile ORDER BY transcode_profile_id ASC)",
+  // Get the transcode_profiles.
+  $result = mediamosa_db::db_query(
+    'SELECT * FROM #db_name.transcode_profile ORDER BY transcode_profile_id ASC',
     array(
-      '#db_name' => $db_name
-    ))
-  );
-
-  $result = db_query(
-    strtr('SELECT * FROM {#table_name}',
-    array(
-      '#table_name' => 'mediamosa_transcode_profile',
-    )),
-    array(),
-    array(
-      'fetch' => PDO::FETCH_ASSOC,
+      '#db_name' => $db_name,
     )
   );
 

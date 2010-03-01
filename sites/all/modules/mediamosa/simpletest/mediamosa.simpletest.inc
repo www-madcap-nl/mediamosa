@@ -87,7 +87,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     $a_logs = db_query('SELECT * FROM {watchdog}');
     $this->pass('Dumping contents of watchdog', 'watchdog dump');
     foreach ($a_logs as $o_log) {
-      $this->pass(strtr($o_log->message, unserialize($o_log->variables)), 'watchdog dump');
+      $this->pass(strtr($o_log->message, (empty($o_log->variables) ? array() : unserialize($o_log->variables))), 'watchdog dump');
     }
 
     // keep it.
