@@ -1256,6 +1256,44 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
   }
 
+  /**
+   * Create a Collection
+   * Based on REST call /collection/create (POST)
+   *
+   * @param array $a_parameters
+   */
+  protected function createCollection(array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+    // Parameters collection.
+    $a_parameters += array(
+      mediamosa_rest_call_collection_create::USER_ID => self::SIMPLETEST_USER_ID,
+      mediamosa_rest_call_collection_create::GROUP_ID => self::SIMPLETEST_GROUP_ID,
+    );
+
+    // Set uri.
+    $uri = 'collection/create';
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $a_parameters, array(), $a_expected_result_ids);
+
+    // Get the new coll_id.
+    $coll_id = empty($response['xml']->items->item[0]->coll_id) ? NULL : (string)$response['xml']->items->item[0]->coll_id;
+
+    // Check response.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr(
+        "Created collection with ID: @coll_id, got result @result (@result_description)",
+        array(
+          '@coll_id' => $coll_id,
+          '@result' => (string)$response['xml']->header->request_result_id,
+          '@result_description' => (string)$response['xml']->header->request_result_description
+        )
+      )
+    );
+
+    // Return the coll_id.
+    return $coll_id;
+  }
 
   // ------------------------------------------------------------------ CQL functions.
   public function cql_do_search_test_assets($cql, $a_expected_asset_ids, array $a_parameters = array(), $aut_user_id = FALSE, $aut_group_id = FALSE, $aut_domain = FALSE, $aut_realm = FALSE, $granted = FALSE, $is_public_list = FALSE) {

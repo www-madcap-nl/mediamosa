@@ -84,7 +84,7 @@ class mediamosa_user_favorite {
    *  ID asset / collection.
    */
   static public function delete($app_id, $user_id, $fav_type, $fav_id) {
-    return mediamosa_db::db_delete(mediamosa_user_favorite_db::TABLE_NAME, 'uf')
+    return mediamosa_db::db_delete(mediamosa_user_favorite_db::TABLE_NAME)
       ->condition(mediamosa_user_favorite_db::NAME, $user_id)
       ->condition(mediamosa_user_favorite_db::APP_ID, $app_id)
       ->condition(mediamosa_user_favorite_db::FAV_TYPE, $fav_type)
@@ -133,9 +133,6 @@ class mediamosa_user_favorite {
         mediamosa_user_favorite_db::FAV_TYPE => $fav_type,
         mediamosa_user_favorite_db::FAV_ID => $fav_id,
       );
-
-      // Add created value.
-      $a_fields = mediamosa_db::db_insert_enrich($a_fields);
 
       // FIXME not master-master save.
       mediamosa_db::db_insert(mediamosa_user_favorite_db::TABLE_NAME)
