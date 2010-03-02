@@ -253,8 +253,8 @@ public function get_var_setup() {
     // Get the count.
     $o_mediamosa->item_count =  mediamosa_asset_collection::count_collections($asset_id);
 
-    // prevent empty result error.
-    $o_mediamosa->set_status_okay();
+    // All done.
+    $o_mediamosa->set_result_okay();
   }
 }
 
