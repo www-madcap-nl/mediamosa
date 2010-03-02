@@ -79,7 +79,7 @@ class mediamosa_rest_call_asset_supplement_get extends mediamosa_rest_call {
     // FIXME: No APP check, can get any supplement, just by suppling an asset id...
 
     // Get the supplements.
-    $a_supplements = mediamosa_asset_supplement::get_with_assetid($asset_id);
+    $a_supplements = mediamosa_asset_supplement::get_all_with_assetid($asset_id);
 
     // Add to response.
     foreach ($a_supplements as $a_supplement) {
@@ -169,7 +169,7 @@ class mediamosa_rest_call_asset_supplement_update extends mediamosa_rest_call {
   const SUPPLEMENT = 'supplement';
 
   // ------------------------------------------------------------------ Get Var Setup.
-public function get_var_setup() {
+  public function get_var_setup() {
     $a_var_setup = array();
 
     $a_var_setup = array(
@@ -244,7 +244,7 @@ public function get_var_setup() {
     }
 
     // Run parent again.
-    parent::process_rest_args($a_var_setup);
+    return parent::process_rest_args($a_var_setup);
   }
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {

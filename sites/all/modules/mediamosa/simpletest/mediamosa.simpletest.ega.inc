@@ -1037,6 +1037,42 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   }
 
   /**
+   * Updates an asset supplement.
+   * Based on the REST call /asset/$asset_id/supplement/$supplement_id/update (POST)
+   */
+  protected function updateAssetSupplement($asset_id, $supplement_id, $supplement, array $a_parameters = array(), $description = 'Update on asset supplement', array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+
+    // Parameters asset.
+    $a_parameters += array(
+      mediamosa_rest_call_asset_update::USER_ID => self::SIMPLETEST_USER_ID,
+      mediamosa_asset_supplement_db::SUPPLEMENT => $supplement,
+    );
+
+    // The uri.
+    $uri = strtr('asset/@asset_id/supplement/@supplement_id/update', array('@asset_id' => $asset_id, '@supplement_id' => $supplement_id));
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $a_parameters, array(), $a_expected_result_ids);
+
+    // Test return status.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr(
+        "@description: @asset_id, @supplement_id, got result @result (@result_description)",
+        array(
+          '@description' => $description,
+          '@asset_id' => $asset_id,
+          '@supplement_id' => $supplement_id,
+          '@result' => (string)$response['xml']->header->request_result_id,
+          '@result_description' => (string)$response['xml']->header->request_result_description
+        )
+      )
+    );
+
+    return $response;
+  }
+
+  /**
    * Updates an user.
    * Based on the REST call /user/$user_id (POST)
    */

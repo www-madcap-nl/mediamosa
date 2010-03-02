@@ -158,4 +158,28 @@ class mediamosa_lib {
 
     return (string)$xml;
   }
+
+  /**
+   * Basicly the same as simplexml2array, with the exception that it will fix
+   * the problem with single and multi items where a single item will end up
+   * in a non-indexed array and multi items will.
+   *
+   * @param object $xml
+   */
+  static public function responsexml2array($xml) {
+
+    // Convert to nice array.
+    $a_xml = self::simplexml2array($xml);
+
+    if (!isset($a_xml['items']['item'])) {
+      return $a_xml;
+    }
+
+    // Fix the problem with 1 or 2+ items in array.
+    $a_tmp = isset($a_xml['items']['item'][0]) ? $a_xml['items']['item'] : array(0 => $a_xml['items']['item']);
+    unset($a_xml['items']);
+    $a_xml['items']['item'] = $a_tmp;
+
+    return $a_xml;
+  }
 }

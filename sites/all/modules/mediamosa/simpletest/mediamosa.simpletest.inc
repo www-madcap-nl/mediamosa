@@ -423,6 +423,15 @@ class MediaMosaTestCase extends DrupalWebTestCase {
   }
 
   /**
+   * Return the path+filename to the test image (gif).
+   */
+  protected function getTestImage_BlobGif() {
+    $filename = drupal_get_path('module', 'mediamosa') . '/lib/testfiles/test_blob.gif';
+    $this->pass(t('Got test video @video.', array('@video' => $filename)));
+    return $filename;
+  }
+
+  /**
    * Create a random app or specified one.
    * @param array $a_attributes
    *  Basic app parameters like the DB version (mediamosa_app_db).
