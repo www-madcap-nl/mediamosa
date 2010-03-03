@@ -1553,6 +1553,38 @@ $this->var_export($a_parameters);
   }
 
   /**
+   * Delete a mediafile.
+   * Based on the REST call /mediafile/$mediafile_id/delete (POST)
+   */
+  protected function deleteMediafile($mediafile_id, array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    // Parameters.
+    $a_parameters += array(
+      mediamosa_rest_call_asset_supplement_update::USER_ID => self::SIMPLETEST_USER_ID,
+    );
+
+    // The uri.
+    $uri = strtr('mediafile/@mediafile_id/delete', array('@mediafile_id' => $mediafile_id));
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $a_parameters, array(), $a_expected_result_ids, $do_internal);
+
+    // Check response.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr(
+        "Delete mediafile with ID: @mediafile_id, got result @result (@result_description)",
+        array(
+          '@mediafile_id' => $mediafile_id,
+          '@result' => (string)$response['xml']->header->request_result_id,
+          '@result_description' => (string)$response['xml']->header->request_result_description
+        )
+      )
+    );
+
+    return $response;
+  }
+
+  /**
    * Delete an asset property definition.
    * Based on the REST call /metadata_tag/delete (POST)
    */
