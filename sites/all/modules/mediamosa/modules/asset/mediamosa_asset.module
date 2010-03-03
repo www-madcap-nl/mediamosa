@@ -68,6 +68,17 @@ function mediamosa_asset_mediamosa_register_rest_call() {
     mediamosa_rest_call::DEFAULT_PARAMS_VALUES => array(mediamosa_rest_call_asset_search::APP_ID => array(0)),
   );
 
+  // Collection asset search.
+  $a_rest_calls['collection/$coll_id/asset'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_search',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Search for assets based on input parameters and return a list of found assets.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+    // Set default so we dont fail when we are called for vars.
+    mediamosa_rest_call::DEFAULT_PARAMS_VALUES => array(mediamosa_rest_call_asset_search::APP_ID => array(0)),
+  );
+
   // Change owner ship/group on asset/mediafile/collections.
   $a_rest_calls['change_ownership'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_change_ownership',

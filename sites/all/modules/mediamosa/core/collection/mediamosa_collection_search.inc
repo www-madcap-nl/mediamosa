@@ -92,14 +92,14 @@ class mediamosa_collection_search {
       // Check if asset exists.
       mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
 
-      $a_query[mediamosa_db_query::A_WHERE][VPX_DB_WHERE_AND]['ac'][] = sprintf("ac.asset_id = '%s'", mediamosa_db::escape_string($asset_id));
+      $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['ac'][] = sprintf("ac.asset_id = '%s'", mediamosa_db::escape_string($asset_id));
     }
 
     // isprivate / unappropiate test.
     // Is outside the ACL check, else we would have problems with 'granted'.
     if (!$is_app_admin) {
       if ($is_public_list && $aut_user_id) {
-        $a_query[mediamosa_db_query::A_WHERE][VPX_DB_WHERE_AND]['collection']['access'][mediamosa_db_query::WHERE_AND][] = sprintf("(c.isprivate = 'FALSE' AND (c.is_unappropriate = 'FALSE' OR c.owner_id = '%s'))", mediamosa_db::escape_string($aut_user_id));
+        $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['collection']['access'][mediamosa_db_query::WHERE_AND][] = sprintf("(c.isprivate = 'FALSE' AND (c.is_unappropriate = 'FALSE' OR c.owner_id = '%s'))", mediamosa_db::escape_string($aut_user_id));
       }
       elseif ($is_public_list) {
         $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['collection']['access'][mediamosa_db_query::WHERE_AND][] = "c.isprivate = 'FALSE' AND c.is_unappropriate = 'FALSE'"; // is_unappropriate must be TRUE

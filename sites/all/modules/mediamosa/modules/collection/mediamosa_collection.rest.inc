@@ -523,7 +523,7 @@ class mediamosa_rest_call_collection_create extends mediamosa_rest_call {
   public function do_call() {
     $o_mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value_app();;
+    $a_app_ids = $this->get_param_value_app();
     $app_id = reset($a_app_ids);
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
 
@@ -844,6 +844,13 @@ class mediamosa_rest_call_collection_delete extends mediamosa_rest_call {
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_COLLECTION_NOT_EMPTY, array('@asset_count' => $count_assets_in_collection));
       }
 
+      // Now delete the collection.
+      mediamosa_collection::delete($coll_id);
+
+      // All ok.
+      $o_mediamosa->set_result_okay();
+    }
+    else {
       // Now delete the collection.
       mediamosa_collection::delete($coll_id);
 

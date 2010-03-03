@@ -598,10 +598,16 @@ class mediamosa_db {
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_JOB_NOT_FOUND, array('@job_id' => $a_columns_and['job_id']));
       case mediamosa_transcode_profile_db::TABLE_NAME:
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_TRANSCODE_PROFILE_NOT_FOUND, array('@profile_id' => $a_columns_and[mediamosa_transcode_profile_db::ID]));
+      case mediamosa_asset_metadata_db::TABLE_NAME:
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_UNEXPECTED_ERROR);
+      case mediamosa_asset_metadata_property_db::TABLE_NAME:
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_UNEXPECTED_ERROR);
+      case mediamosa_asset_metadata_property_group_db::TABLE_NAME:
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_UNEXPECTED_ERROR);
     }
 
     assert(0);
-    throw new mediamosa_exception_error(ERRORCODE_UNEXPECTED_ERROR);
+    throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_UNEXPECTED_ERROR);
   }
 
   /**
