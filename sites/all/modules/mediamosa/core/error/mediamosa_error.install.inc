@@ -102,7 +102,7 @@ function _mediamosa_error_install() {
     'ERRORCODE_PP_INVALID_TIME' => 'PP - parameter validation failed: @param (@type) should be less than 87 400 000 msec (=24h)',
     'ERRORCODE_VALIDATE_INVALID_LANGUAGE' => 'MediaMosa - \'language\' parameter validation failed. Please use the 2-letter codes as defined in ISO 639-1.',
     'ERRORCODE_INVALID_SUPPLEMENT' => 'Invalid XML or maximum allowed size exceeded',
-    'ERRORCODE_MIX_OF_URI_AND_FILE' => 'A single mediafile can have a URI and a filename!',
+    'ERRORCODE_MIX_OF_URI_AND_FILE' => 'A single mediafile can not have a URI and a filename.',
     'ERRORCODE_CHANGE_URI_AND_FILE' => 'A URI-based mediafile can be changed to a file-based mediafile and visa vers.',
     'ERRORCODE_CHANGE_OWNERSHIP_MISSING_PARAMETERS' => 'No \'old\' or \'new\' value present',
     'ERRORCODE_INSUFFICIENT_PARAMETERS' => 'Insufficient parameters given',

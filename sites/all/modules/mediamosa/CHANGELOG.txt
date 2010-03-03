@@ -28,10 +28,15 @@ Steps for changelog and commits;
 
 START CHANGELOG:
 
+Known issues / bugs;
+- play_restriction_start and play_restriction_end doesn't seem to work. The old
+  MediaMosa 1.x code uses 'time_restriction_*' as variables in play proxy code. 
+ 
+
 Mediamosa 2.1.2
 ---------------
 - Play proxy call will now return the ticket id in result.
-
+- Fixed number of query bugs in AUT / ACL code.
 
 MediaMosa 2.1.1
 ---------------

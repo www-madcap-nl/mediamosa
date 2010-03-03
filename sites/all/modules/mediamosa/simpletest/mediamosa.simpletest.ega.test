@@ -177,7 +177,6 @@ class MediaMosaTestCaseEgaTest extends MediaMosaTestCaseEga {
     // Create an asset.
     $asset_id = $this->createAsset();
 
-
     // Create asset supplement:
     // tests - normal
     $supplement_id = $this->createAssetSupplement($asset_id);

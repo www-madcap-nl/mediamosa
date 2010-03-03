@@ -228,10 +228,7 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
 
     if ($mediafile_id) {
       // Get the asset.
-      $a_asset = mediamosa_asset::get($asset_id, $app_id);
-      if (!$a_asset) {
-        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_ASSET_NOT_FOUND, array('@asset_id' => $asset_id));
-      }
+      $a_asset = mediamosa_asset::must_exists($asset_id);
 
       // FIXME: time_restriction_* ? don't we mean play_restriction_* ? No code can be found with time_ (!).
       if (isset($a_asset['time_restriction_start']) && isset($a_asset['time_restriction_end'])) {
@@ -242,11 +239,9 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
       }
 
       // Get the mediafile.
-      $a_mediafile_ext = mediamosa_asset_mediafile::get($mediafile_id, $app_id);
-      if (!$a_mediafile_ext) {
-        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MEDIAFILE_NOT_FOUND, array('@mediafile_id' => $mediafile_id));
-      }
+      $a_mediafile_ext = mediamosa_asset_mediafile::must_exists($mediafile_id);
 
+      // Make sure asset_id matches.
       if ($a_mediafile_ext[mediamosa_asset_mediafile_db::ASSET_ID] != $asset_id) {
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INVALID_ASSET_MEDIAFILE_COMBINATION);
       }
@@ -255,7 +250,7 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
       $a_mediafile_ext['metadata'] = mediamosa_asset_mediafile_metadata::get_with_mediafileid($mediafile_id);
 
       // Test if access on unappropriate flag.
-      mediamosa_asset::is_unappropriate($asset_id, $a_app_ids, $user_id, $is_app_admin);
+      mediamosa_asset::is_unappropriate($asset_id, $a_app_ids, $user_id, $is_app_admin, TRUE);
 
       // @todo:
       //_vpx_statistics_log_requested_stream($a_parameters['mediafile_id']['value'], $a_parameters['response']['value']);

@@ -31,6 +31,7 @@
  * Based on tickets mediamosa 1:
  * ticket_2
  * ticket_71
+ * ticket_72
  */
 
 class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
@@ -45,7 +46,7 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE,
     );
   }
-/*
+
   // ------------------------------------------------------------------ Tests.
   public function testPlayProxy() {
 
@@ -146,9 +147,8 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
     // Must not be cleaned up.
     $this->file_exists($ticket_path . $ticket_id, "Check if the ticket did NOT get cleaned up by 'play_proxy_ticket_cleanup()'.");
   }
-  */
 
-  // 1.x ticket #72.
+  // 1.x ticket #71.
   public function testPlayProxyXMLResponse() {
     $asset_id = $this->createAsset();
     $mediafile_id = $this->createMediafile($asset_id);
@@ -237,7 +237,7 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
         if (!($a_parameters['response']['value'] == mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_OBJECT && $a_mediafile_ext['metadata']['container_type'] == mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_WMV)) {
           $this->assertTrue(
             isset($a_response['output']) && strpos($a_response['output'], $ticket) !== FALSE,
-            "Check if '". $a_parameters['response']['value'] ."/". $a_mediafile_ext['metadata']['container_type'] ."/_play_proxy_create_response()' contains the ticket: ". $ticket ." %s");
+            "Check if '". $a_parameters['response']['value'] ."/". $a_mediafile_ext['metadata']['container_type'] ."/_play_proxy_create_response()' contains the ticket: ". $ticket);
         }
       }
     }
@@ -292,7 +292,7 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
           // depends on which player is used.
           //$this->assertTrue(
           //  stripos($a_response['output'], $tofind) !== FALSE,
-          //  "Check if autoplay is on, %s"
+          //  "Check if autoplay is on"
           //);
           break;
 
@@ -337,7 +337,7 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
           // depends very much on player;
           // $this->assertTrue(
           //   stripos($a_response['output'], $tofind) !== FALSE,
-          //   "Check if autoplay is off, %s"
+          //   "Check if autoplay is off"
           // );
           break;
 
@@ -405,25 +405,26 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
     );
 
     // Streaming server.
-    db_query(
+    mediamosa_db::db_query(
       "INSERT INTO {mediamosa_server} (nid, vid, server_status, server_type, version, description, uri,  containers, object_code) VALUES
        (998, 998, 'ON', 'streaming', 0, 'test server general (mp4)', 'url://unittest.h264', 'test_container:h264', 'Object code for H264 codec')"
     );
 
-    db_query(
+    mediamosa_db::db_query(
       "INSERT INTO {mediamosa_server} (nid, vid, server_status, server_type, version, description, uri,  containers, object_code) VALUES
        (999, 999, 'ON', 'streaming', 0, 'test server (h264)', 'url://unittest.general', 'test_container', 'Object code for general MP4 container')"
     );
 
-    db_query("INSERT INTO {mediamosa_server_streaming_container} (nid, container) VALUES (:nid, :container)",
-      array(':nid' => 998, 'test_container:h264')
+    mediamosa_db::db_query("INSERT INTO {mediamosa_server_streaming_container} (nid, container) VALUES (:nid, :container)",
+      array(':nid' => 998, ':container' => 'test_container:h264')
     );
 
-    db_query("INSERT INTO {mediamosa_server_streaming_container} (nid, container) VALUES (:nid, :container)",
-      array(':nid' => 999, 'test_container')
+    mediamosa_db::db_query("INSERT INTO {mediamosa_server_streaming_container} (nid, container) VALUES (:nid, :container)",
+      array(':nid' => 999, ':container' => 'test_container')
     );
 
     // Specific codec
+    $a_mediafile_ext = $a_parameters = array();
     $a_parameters['response']['value'] = mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_URI;
     $a_mediafile_ext['mediafile_id'] = $mediafile_id;
     $a_mediafile_ext['metadata']['container_type'] = 'test_container';
@@ -441,60 +442,40 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
 
     $this->assertTrue($a_response['output'] == 'url://unittest.h264', 'Test container with specific codec that is defined.');
 
+    // General container
+    $a_parameters['response']['value'] = mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_URI;
+    $a_mediafile_ext['mediafile_id'] = $mediafile_id;
+    $a_mediafile_ext['metadata']['container_type'] = 'test_container';
+    $a_mediafile_ext['metadata']['video_codec'] = NULL;
+    $a_mediafile_ext['filename'] = 'filename.wmv';
+    $a_response = mediamosa_asset_mediafile_play_proxy::create_response_1x_to_2x(
+      $a_parameters,
+      array(),
+      $a_mediafile_ext,
+      array(),
+      $ticket,
+      $this->a_app[mediamosa_app_db::APP_ID],
+      self::SIMPLETEST_GROUP_ID
+    );
+
+    $this->assertTrue($a_response['output'] == 'url://unittest.general', 'Test container with specific codec that is defined.');
+
+   // Codec that is not defined (should get defaukt container)
+    $a_parameters['response']['value'] = mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_URI;
+    $a_mediafile_ext['mediafile_id'] = $mediafile_id;
+    $a_mediafile_ext['metadata']['container_type'] = 'test_container';
+    $a_mediafile_ext['metadata']['video_codec'] = 'undef';
+    $a_mediafile_ext['filename'] = 'filename.wmv';
+    $a_response = mediamosa_asset_mediafile_play_proxy::create_response_1x_to_2x(
+      $a_parameters,
+      array(),
+      $a_mediafile_ext,
+      array(),
+      $ticket,
+      $this->a_app[mediamosa_app_db::APP_ID],
+      self::SIMPLETEST_GROUP_ID
+    );
+
+    $this->assertTrue($a_response['output'] == 'url://unittest.general', 'Test container with undefined codec (plays general container).');
   }
 }
-
-/*
-
-
-
-
-    }
-
-
-    // General container
-    $a_parameters['response']['value'] = RESPONSE_TYPE_URI;
-    $a_mediafile_info['mediafile_id'] = $s_mediafile_id;
-    $a_mediafile_info['metadata']['container_type'] = 'test_container';
-    $a_mediafile_info['metadata']['video_codec'] = NULL;
-    $a_mediafile_info['filename'] = 'filename.wmv';
-    $a_response = _play_proxy_create_response(
-      $a_parameters,
-      array(),
-      $a_mediafile_info,
-      array(),
-      $s_ticket,
-      SIMPLETEST_APP_ID,
-      SIMPLETEST_GROUP_ID
-    );
-
-    $this->assertTrue(
-      ($a_response['output'] == 'url://unittest.general'),
-      "Test container with no specified codec."
-    );
-
-    // Codec that is not defined (should get defaukt container)
-    $a_parameters['response']['value'] = RESPONSE_TYPE_URI;
-    $a_mediafile_info['mediafile_id'] = $s_mediafile_id;
-    $a_mediafile_info['metadata']['container_type'] = 'test_container';
-    $a_mediafile_info['metadata']['video_codec'] = 'undef';
-    $a_mediafile_info['filename'] = 'filename.wmv';
-    $a_response = _play_proxy_create_response(
-      $a_parameters,
-      array(),
-      $a_mediafile_info,
-      array(),
-      $s_ticket,
-      SIMPLETEST_APP_ID,
-      SIMPLETEST_GROUP_ID
-    );
-
-    $this->assertTrue(
-      ($a_response['output'] == 'url://unittest.general'),
-      "Test container with undefined codec (plays general container)."
-    );
-
-    db_query("DELETE FROM {streaming_server} WHERE streaming_server_id = 99998 OR streaming_server_id = 99999");
-    db_query("DELETE FROM {streaming_server_container} WHERE streaming_server_id = 99998 OR streaming_server_id = 99999");
-
- */

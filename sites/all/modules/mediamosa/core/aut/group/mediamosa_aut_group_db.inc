@@ -44,5 +44,4 @@ class mediamosa_aut_group_db {
   const AUT_GROUP_TYPE = 'aut_group_type';
   const AUT_GROUP_TYPE_REALM = 'REALM';
   const AUT_GROUP_TYPE_DOMAIN = 'DOMAIN';
-
 }

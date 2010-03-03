@@ -13,3 +13,4 @@ dependencies[] = mediamosa
 files[] = mediamosa_aut.module
 files[] = mediamosa_aut.rest.inc
 files[] = mediamosa_aut.test
+files[] = mediamosa_aut.masterslave.test

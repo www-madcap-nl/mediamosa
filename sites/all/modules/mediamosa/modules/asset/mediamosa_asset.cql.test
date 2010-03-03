@@ -1,0 +1,141 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+ /**
+  * @file
+  * CQL test file.
+  */
+class MediaMosaAssetCQLTestCaseEga extends MediaMosaTestCaseEga {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'CQL - Asset search and properties',
+      'description' => 'Testing asset CQL related functions and rest calls.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE,
+    );
+  }
+
+  // ------------------------------------------------------------------ Tests.
+  // Test unappropriate flag (16710).
+  public function testCQL_UnAppropriate() {
+
+    // Create asset.
+    $asset_id = $this->createAsset();
+
+    // Mediafile.
+    $mediafile_id = $this->createMediafile($asset_id);
+
+    // Create asset metadata.
+    $this->createAssetMetadata($asset_id,
+      array(
+        'title' => 'aap noot mies',
+      )
+    );
+
+    // We must be app admin to get them.
+    $a_search_params = array(mediamosa_rest_call_asset_search::IS_APP_ADMIN => 'true');
+
+    // May not find anything.
+    $this->cql_do_search_test_assets_1('is_unappropriate == "TRUE"', array(), $a_search_params);
+
+    // May not find anything.
+    $this->cql_do_search_test_assets_1('is_unappropriate == "true"', array(), $a_search_params);
+
+    // Must find it.
+    $this->cql_do_search_test_assets_1('is_unappropriate == "FALSE"', array($asset_id => TRUE), $a_search_params);
+
+    // Must find it.
+    $this->cql_do_search_test_assets_1('is_unappropriate == "false"', array($asset_id => TRUE), $a_search_params);
+
+    // Change is_unappropriate to TRUE.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_update::IS_UNAPPROPRIATE => 'true',
+      mediamosa_rest_call_asset_update::IS_APP_ADMIN => 'true',
+    );
+
+    // Change it.
+    $this->updateAsset($asset_id, $a_parameters);
+
+    // Get asset and check setting.
+    $a_asset = $this->getAsset($asset_id);
+    $this->assertTrue($a_asset[mediamosa_asset_db::IS_UNAPPROPRIATE] == mediamosa_asset_db::IS_UNAPPROPRIATE_TRUE);
+
+    // Must find it.
+    $this->cql_do_search_test_assets_1('is_unappropriate == "TRUE"', array($asset_id => TRUE), $a_search_params);
+
+    // Must find it.
+    $this->cql_do_search_test_assets_1('is_unappropriate == "true"', array($asset_id => TRUE), $a_search_params);
+
+    // May not find anything.
+    $this->cql_do_search_test_assets_1('is_unappropriate == "FALSE"', array(), $a_search_params);
+
+    // May not find anything.
+    $this->cql_do_search_test_assets_1('is_unappropriate == "false"', array(), $a_search_params);
+  }
+
+  // Test the URI. (#16711).
+  public function testCQL_URI() {
+    // Create asset.
+    $asset_id_1 = $this->createAsset();
+    $asset_id_2 = $this->createAsset();
+
+    // Mediafile.
+    $mediafile_id_1 = $this->createMediafile($asset_id_1);
+    $mediafile_id_2 = $this->createMediafile($asset_id_2);
+
+    // Create asset metadata.
+    $this->createAssetMetadata($asset_id_1,
+      array(
+        'title' => 'aap noot mies',
+      )
+    );
+
+    // Create asset metadata.
+    $this->createAssetMetadata($asset_id_2,
+      array(
+        'title' => 'aap noot',
+      )
+    );
+
+    // May not find anything.
+    $this->cql_do_search_test_assets_1('uri <> NULL', array());
+
+    // Update it.
+    $this->updateMediafile($mediafile_id_1, array(mediamosa_rest_call_update_mediafile::URI => 'http://www.vpcore.nl/external_link'));
+
+    // Get it.
+    $a_mediafile = $this->getMediafile($mediafile_id_1);
+
+    // Check it.
+    $this->assertTrue($a_mediafile[mediamosa_asset_mediafile_db::URI] == 'http://www.vpcore.nl/external_link', 'Update URI on mediafile');
+
+    // Should find it.
+    $this->cql_do_search_test_assets_1('uri <> NULL', array($asset_id_1 => TRUE));
+  }
+}

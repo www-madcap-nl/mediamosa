@@ -988,12 +988,12 @@ class mediamosa_rest_call_asset_update extends mediamosa_rest_call {
         ),
         self::IS_INAPPROPRIATE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
-          self::VAR_DESCRIPTION => 'The is inapproriate flag.',
+          self::VAR_DESCRIPTION => 'The inapproriate flag.',
           self::VAR_IS_HIDDEN => self::VAR_IS_HIDDEN_YES,
         ),
         self::IS_UNAPPROPRIATE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
-          self::VAR_DESCRIPTION => 'The is private flag.',
+          self::VAR_DESCRIPTION => 'Alias, same as is_inappropriate.',
           self::VAR_DEFAULT_VALUE => NULL,
         ),
         self::OWNER_ID => array(

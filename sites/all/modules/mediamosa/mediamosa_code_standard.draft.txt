@@ -14,7 +14,7 @@ Draft for starting code standard for Mediamosa 2.x and higher.
      ...
     }
   * Prefix variable name of objects with o_;
-    function foo(array $o_foo) {
+    function foo($o_foo) {
      ...
     }
   * Only array's and objects are type prefixed, do NOT use s_ for prefixing strings or i_ for integers.
@@ -25,7 +25,7 @@ Draft for starting code standard for Mediamosa 2.x and higher.
   * Do not create core functions that enrich a response object, prefer returning array and let the REST call function
     enrich the response with the returned array. Enriching response objects makes the function useless for re-usage
     for code that don't use response objects. In current code there are still some of the old code that uses response 
-    objects, these will re-written.
+    objects, these will be re-written.
 
 - Database;
   * Always use $result as variable name;
@@ -38,8 +38,8 @@ Draft for starting code standard for Mediamosa 2.x and higher.
     mediamosa_asset_mediafile AS amf
     mediamosa_asset_metadata AS amd
     mediamosa_asset_mediafile_metadata AS amfmd
-     mediamosa_collection AS c
-     mediamosa_collection_asset AS ca
+    mediamosa_collection AS c
+    mediamosa_collection_asset AS ca
     etc.
   * Stop using db_set_active(), all is in drupal database. Better use an installation in a installation (prefix).
   * All tables must start with 'mediamosa_'
@@ -67,4 +67,5 @@ Draft for starting code standard for Mediamosa 2.x and higher.
     mediamosa_asset.module (Drupal module file)
     mediamosa_asset.rest.inc (REST functions)
     mediamosa_asset.info (Drupal module info file)
+  
   

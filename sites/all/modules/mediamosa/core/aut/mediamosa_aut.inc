@@ -315,7 +315,7 @@ class mediamosa_aut {
 
       // Collect all names.
       $query = mediamosa_db::db_select(mediamosa_aut_group_db::TABLE_NAME, 'ag');
-      $query->addField('ag', array(
+      $query->fields('ag', array(
         mediamosa_aut_group_db::ID,
         mediamosa_aut_group_db::AUT_GROUP_NAME,
         mediamosa_aut_group_db::AUT_GROUP_TYPE
@@ -327,7 +327,7 @@ class mediamosa_aut {
        */
       foreach ($query->execute() as $a_group) {
         $query = mediamosa_db::db_select(mediamosa_aut_group_db::TABLE_NAME, 'ag');
-        $query->addField('ag', array(
+        $query->fields('ag', array(
           mediamosa_aut_group_db::APP_ID,
           mediamosa_aut_group_db::ID
         ));
@@ -351,7 +351,7 @@ class mediamosa_aut {
         }
 
         $query = mediamosa_db::db_select(mediamosa_aut_group_db::TABLE_NAME, 'ag');
-        $query->addField('ag', array(
+        $query->fields('ag', array(
           mediamosa_aut_group_db::APP_ID,
           mediamosa_aut_group_db::ID
         ));
@@ -363,7 +363,7 @@ class mediamosa_aut {
         foreach ($query->execute() as $a_group_2) {
           // Get the groups, this type, this name, this app.
           $query = mediamosa_db::db_select(mediamosa_aut_group_db::TABLE_NAME, 'ag');
-          $query->addField('ag', array(
+          $query->fields('ag', array(
             mediamosa_aut_group_db::ID
           ));
           $query->condition(mediamosa_aut_group_db::AUT_GROUP_NAME, $a_group['aut_group_name']);
@@ -928,7 +928,18 @@ class mediamosa_aut {
     }
 
     // Haal eerst de aut_id, zo we weten welke links er zijn
-    $db_result = mediamosa_db::db_query("SELECT aut_id, aut_type FROM {mediamosa_aut_object} WHERE aut_object_type = '%s' AND aut_object_id = '%s'", $aut_type, $aut_object_id);
+    $db_result = mediamosa_db::db_query(
+      'SELECT #aut_id, #aut_type FROM {#mediamosa_aut_object} WHERE #aut_object_type = :aut_object_type AND #aut_object_id = :aut_object_id',
+      array(
+        '#mediamosa_aut_object' => mediamosa_aut_object_db::TABLE_NAME,
+        '#aut_id' => mediamosa_aut_object_db::AUT_ID,
+        '#aut_type' => mediamosa_aut_object_db::AUT_TYPE,
+        '#aut_object_type' => mediamosa_aut_object_db::AUT_OBJECT_TYPE,
+        ':aut_object_type' => $aut_type,
+        '#aut_object_id' => mediamosa_aut_object_db::AUT_OBJECT_ID,
+        ':aut_object_id' => $aut_object_id,
+      )
+    );
 
     $a_aut_ids = array();
     foreach ($db_result as $a_row) {
@@ -940,15 +951,17 @@ class mediamosa_aut {
     $db_result_name = $db_result_group = FALSE;
 
     if (isset($a_aut_ids[mediamosa_aut_object_db::AUT_TYPE_NAME]) && !empty($a_aut_ids[mediamosa_aut_object_db::AUT_TYPE_NAME])) {
-      $query = mediamosa_db::db_select(mediamosa_aut_name_db::TABLE_NAME);
-      $query->condition(mediamosa_aut_name_db::ID, $a_aut_ids[mediamosa_aut_object_db::AUT_TYPE_NAME], 'IN');
-      $db_result_name = $query->execute();
+      $db_result_name = mediamosa_db::db_select(mediamosa_aut_name_db::TABLE_NAME, 'an')
+        ->fields('an')
+        ->condition(mediamosa_aut_name_db::ID, $a_aut_ids[mediamosa_aut_object_db::AUT_TYPE_NAME], 'IN')
+        ->execute();
     }
 
     if (isset($a_aut_ids[mediamosa_aut_object_db::AUT_TYPE_GROUP]) && !empty($a_aut_ids[mediamosa_aut_object_db::AUT_TYPE_GROUP])) {
-      $query = mediamosa_db::db_select(mediamosa_aut_group_db::TABLE_NAME);
-      $query->condition(mediamosa_aut_group_db::ID, $a_aut_ids[mediamosa_aut_object_db::AUT_TYPE_GROUP], 'IN');
-      $db_result_group = $query->execute();
+      $db_result_group = mediamosa_db::db_select(mediamosa_aut_group_db::TABLE_NAME, 'ag')
+        ->fields('ag')
+        ->condition(mediamosa_aut_group_db::ID, $a_aut_ids[mediamosa_aut_object_db::AUT_TYPE_GROUP], 'IN')
+        ->execute();
     }
 
     // Master / slave(s)
@@ -981,17 +994,6 @@ class mediamosa_aut {
     }
 
     return $a_result;
-  }
-
-  /**
-   * Retrieve data from mediafile, which might be needed for aut.
-   *
-   * @param string $mediafile_id
-   * @param array $a_what
-   * @return array
-   */
-  static public function get_data_from_mediafile($mediafile_id, $a_what = array('app_id', 'owner_id')) {
-    return mediamosa_db::db_query("SELECT %s FROM {mediamosa_asset_mediafile} WHERE mediafile_id = '%s'", implode(",", $a_what), $mediafile_id)->fetchAssoc();
   }
 
   /**

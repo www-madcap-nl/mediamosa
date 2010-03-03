@@ -131,3 +131,12 @@ function mediamosa_uninstall() {
   // Remove the error db.
   _mediamosa_error_uninstall();
 }
+
+/**
+ * Fix the non-null default value on aut_name table.
+ */
+function mediamosa_update_7000() {
+  $ret = array();
+  db_change_field($ret, mediamosa_aut_name_db::TABLE_NAME, mediamosa_aut_name_db::AUT_PREFIX, mediamosa_aut_name_db::AUT_PREFIX, array('type' => 'varchar', 'length' => mediamosa_aut_name_db::AUT_PREFIX_LENGTH, 'not null' => FALSE, 'default' => NULL, 'description' => t('The optional prefix of the entity, only used with REALM type.')));
+  return $ret;
+}

@@ -328,7 +328,6 @@ class mediamosa_asset_mediafile_play_proxy {
     else {
       $streaming_server_uri = self::get_media_server($response_type, $a_mediafile_ext);
     }
-
     // Replace {TICKET} with app_id / ticket.
     if ($response_type != self::RESPONSE_TYPE_STILL) {
       $streaming_server_ticket_uri = str_replace(self::PARAM_URI_TICKET, $app_id . '/' . $ticket, $streaming_server_uri);

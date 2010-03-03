@@ -534,41 +534,23 @@ class mediamosa_rest_call_collection_create extends mediamosa_rest_call {
     // Test webservice.
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $a_app_ids);
 
-    // Create unique ID.
-    $coll_id = mediamosa_db::uuid($app_id);
+    // Get the user ID (required).
+    $user_id = $this->get_param_value(self::USER_ID);
 
-    $a_params = array(
-      mediamosa_collection_db::APP_ID,
-      mediamosa_collection_db::GROUP_ID,
-      mediamosa_collection_db::USER_ID,
-      mediamosa_collection_db::_PRIVATE,
-      mediamosa_collection_db::_PUBLIC,
-      mediamosa_collection_db::CATEGORY,
-      mediamosa_collection_db::ISPRIVATE,
-      mediamosa_collection_db::PUBLIC_ASSIGN,
-      mediamosa_collection_db::IS_UNAPPROPRIATE,
-    );
+    // Optionals.
+    $group_id = $this->get_param_value(self::GROUP_ID);
+    $private = $this->get_param_value(self::PRIVATE_);
+    $public = $this->get_param_value(self::PUBLIC_);
+    $category = $this->get_param_value(self::CATEGORY);
+    $isprivate = $this->get_param_value(self::ISPRIVATE);
+    $public_assign = $this->get_param_value(self::PUBLIC_ASSIGN);
+    $is_unappropriate = $this->get_param_value(self::IS_UNAPPROPRIATE);
 
-    $a_fields = array(mediamosa_collection_db::ID => $coll_id);
-    $query = mediamosa_db::db_insert(mediamosa_collection_db::TABLE_NAME);
-    foreach ($a_params as $old_param => $param) {
-      if (!$this->isset_given_param($param)) {
-        // If its not set, skip it.
-        continue;
-      }
-
-      $a_fields[$param] = $this->get_param_value($param);
-    }
-
-    // Add created value.
-    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
-
-    // Add the fields to the query.
-    $query->fields($a_fields);
-    $coll_id = $query->execute();
+    // Now create the collection.
+    $coll_id = mediamosa_collection::create($app_id, $user_id, $group_id, $private, $public, $category, $isprivate, $public_assign, $is_unappropriate);
 
     // Unique ID to response.
-    $o_mediamosa->add_item(array(mediamosa_asset_mediafile_db::ID => $coll_id));
+    $o_mediamosa->add_item(array(mediamosa_collection_db::ID => $coll_id));
   }
 }
 

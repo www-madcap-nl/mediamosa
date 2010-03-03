@@ -13,12 +13,14 @@ dependencies[] = mediamosa
 files[] = mediamosa_asset.module
 files[] = mediamosa_asset.rest.inc
 files[] = mediamosa_asset.test
+files[] = mediamosa_asset.cql.test
 
 ; Collection <-> Asset link table.
 files[] = collection/mediamosa_asset_collection.rest.inc
 
 ; Media.
 files[] = mediafile/mediamosa_asset_mediafile.rest.inc
+files[] = mediafile/mediamosa_asset_mediafile.streaming.test
 
 ; Mediafile Metadata.
 files[] = mediafile/metadata/mediamosa_asset_mediafile_metadata.rest.inc

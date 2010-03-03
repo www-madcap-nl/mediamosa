@@ -90,10 +90,15 @@ class MediaMosaTestCase extends DrupalWebTestCase {
 
     // Dump the log.
     $a_logs = db_query('SELECT * FROM {watchdog}');
-    $this->verbose('Dumping contents of watchdog', 'watchdog dump');
+
+    $a_text[] = 'Dumping contents of watchdog';
+
     foreach ($a_logs as $o_log) {
-      $this->verbose(strtr($o_log->message, (empty($o_log->variables) ? array() : unserialize($o_log->variables))), 'watchdog dump');
+      $a_text[] = strtr($o_log->message, (empty($o_log->variables) ? array() : unserialize($o_log->variables)));
+     // $this->pass(strtr($o_log->message, (empty($o_log->variables) ? array() : unserialize($o_log->variables))), 'watchdog dump');
     }
+
+    $this->verbose(implode("<br />", $a_text), 'watchdog dump');
 
     // Unlink files.
     foreach ($this->a_unlink as $filename) {
@@ -198,13 +203,23 @@ class MediaMosaTestCase extends DrupalWebTestCase {
    *  Contains the mediamosa_error::ERRORCODE_* that we expect. For example, you
    *  might expect an error instead of OKAY; specify the error code here.
    */
-  protected function restCall($uri, $request_method = 'POST', array $a_parameters = array(), array $a_headers = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+  protected function restCall($uri, $request_method = 'POST', array $a_parameters = array(), array $a_headers = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+
+    if ($do_internal) {
+      // Set internal password.
+      $a_headers[] = mediamosa_settings::X_MEDIAMOSA_INTERNAL_PASS . ': ' . mediamosa::get_internal_password();
+
+      // Add internal to uri.
+      $uri = 'internal/' . $uri;
+    }
+
     // Prepare the CURL options.
     $curl_opts = array(
       CURLOPT_NOBODY => FALSE,
       CURLOPT_HTTPHEADER => $a_headers,
       CURLOPT_HEADER => TRUE,
     );
+
     if (strcasecmp($request_method, 'GET') == 0) {
       $curl_opts += array(
         CURLOPT_HTTPGET => TRUE,
@@ -272,8 +287,8 @@ class MediaMosaTestCase extends DrupalWebTestCase {
   /**
    * Wrapper for POST restCall
    */
-  protected function restCallPost($uri, array $a_parameters = array(), array $a_headers = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
-    return $this->restCall($uri, 'POST', $a_parameters, $a_headers, $a_expected_result_ids);
+  protected function restCallPost($uri, array $a_parameters = array(), array $a_headers = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    return $this->restCall($uri, 'POST', $a_parameters, $a_headers, $a_expected_result_ids, $do_internal);
   }
 
   /**

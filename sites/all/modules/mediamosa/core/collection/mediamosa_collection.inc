@@ -74,4 +74,53 @@ class mediamosa_collection {
 
     return $query->execute()->fetchAssoc();
   }
+
+  /**
+   * Create a collection.
+   */
+  static public function create($app_id, $owner_id, $group_id = NULL, $private = NULL, $public  = NULL, $category = NULL, $isprivate = NULL, $public_assign = NULL, $is_unappropriate = NULL) {
+
+    // maak een uniek asset_id aan
+    $coll_id = mediamosa_db::uuid($app_id);
+
+    // Required.
+    $a_fields = array();
+    $a_fields[mediamosa_collection_db::ID] = $coll_id;
+    $a_fields[mediamosa_collection_db::APP_ID] = $app_id;
+    $a_fields[mediamosa_collection_db::OWNER_ID] = $owner_id;
+
+    if (!is_null($group_id)) {
+      $a_fields[mediamosa_collection_db::GROUP_ID] = $group_id;
+    }
+    if (!is_null($private)) {
+      $a_fields[mediamosa_collection_db::PRIVATE_] = $private ? mediamosa_collection_db::PRIVATE_TRUE : mediamosa_collection_db::PRIVATE_FALSE;
+    }
+    if (!is_null($public)) {
+      $a_fields[mediamosa_collection_db::PUBLIC_] = $public ? mediamosa_collection_db::PUBLIC_TRUE : mediamosa_collection_db::PUBLIC_FALSE;
+    }
+    if (!is_null($category)) {
+      $a_fields[mediamosa_collection_db::CATEGORY] = $category ? mediamosa_collection_db::CATEGORY_TRUE : mediamosa_collection_db::CATEGORY_FALSE;
+    }
+    if (!is_null($isprivate)) {
+      $a_fields[mediamosa_collection_db::ISPRIVATE] = $isprivate ? mediamosa_collection_db::ISPRIVATE_TRUE : mediamosa_collection_db::ISPRIVATE_FALSE;
+    }
+    if (!is_null($public_assign)) {
+      $a_fields[mediamosa_collection_db::PUBLIC_ASSIGN] = $public_assign ? mediamosa_collection_db::PUBLIC_ASSIGN_TRUE : mediamosa_collection_db::PUBLIC_ASSIGN_FALSE;
+    }
+    if (!is_null($is_unappropriate)) {
+      $a_fields[mediamosa_collection_db::IS_UNAPPROPRIATE] = $is_unappropriate ? mediamosa_collection_db::IS_UNAPPROPRIATE_TRUE : mediamosa_collection_db::IS_UNAPPROPRIATE_FALSE;
+    }
+
+    // Add created value.
+    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+
+    // Insert it.
+    mediamosa_db::db_insert(mediamosa_collection_db::TABLE_NAME)
+      ->fields($a_fields)
+      ->execute();
+
+    return $coll_id;
+  }
+
+
 }
