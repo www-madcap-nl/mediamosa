@@ -1148,7 +1148,7 @@ class mediamosa_rest_call_aut_asset_get_rights extends mediamosa_rest_call {
 }
 
 /**
- * URI: /collection/$collection_id/acl/delete
+ * URI: /collection/$coll_id/acl/delete
  * Method: POST
  */
 class mediamosa_rest_call_aut_collection_delete_rights extends mediamosa_rest_call {
@@ -1202,7 +1202,7 @@ class mediamosa_rest_call_aut_collection_delete_rights extends mediamosa_rest_ca
 }
 
 /**
- * URI: /collection/$collection_id/acl
+ * URI: /collection/$coll_id/acl
  * Method: GET
  */
 class mediamosa_rest_call_aut_collection_get_rights extends mediamosa_rest_call {
@@ -1267,7 +1267,7 @@ class mediamosa_rest_call_aut_collection_get_rights extends mediamosa_rest_call 
 
 
 /**
- * URI: collection/$collection_id/acl
+ * URI: collection/$coll_id/acl
  * Method: POST
  */
 class mediamosa_rest_call_aut_collection_set_rights extends mediamosa_rest_call {
