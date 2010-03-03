@@ -1362,6 +1362,11 @@ $this->var_export($a_parameters);
     // Convert to nice array.
     $a_xml = mediamosa_lib::responsexml2array($response['xml']);
 
+    if (!isset($a_xml['items']['item']) || empty($a_xml['items']['item'])) {
+      $this->assertTrue(empty($a_expected_results), 'Nothing changed, must expect nothing too.');
+      return $a_xml;
+    }
+
     // Get the result.
     $a_items = $a_xml['items']['item'];
 
