@@ -47,6 +47,7 @@ files[] = metadata/mediamosa_asset_metadata.rest.inc
 
 ; Metadata Property.
 files[] = metadata/property/mediamosa_asset_metadata_property.rest.inc
+files[] = metadata/property/mediamosa_asset_metadata_property.test
 
 ; Metadata Property Group.
 files[] = metadata/property/group/mediamosa_asset_metadata_property_group.rest.inc

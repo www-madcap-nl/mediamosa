@@ -178,7 +178,7 @@ class mediamosa_rest_call_asset_metadata_property_create extends mediamosa_rest_
     $property_id = mediamosa_asset_metadata_property::property_create($a_app_ids, $name, $type);
 
     // Get the property.
-    $a_property = mediamosa_asset_metadata_property::property_get($property_id);
+    $a_property = mediamosa_asset_metadata_property::property_get_row($property_id);
 
     assert($a_property);
 

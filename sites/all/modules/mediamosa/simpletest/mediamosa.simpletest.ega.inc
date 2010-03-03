@@ -612,7 +612,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     );
 
     $result = mediamosa_lib::simplexml2array($response['xml']->items);
-    return $result['item'];
+    return isset($result['item']) ? $result['item'] : array();
   }
 
   /**
@@ -793,6 +793,42 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     return $response['xml'];
   }
+
+  /**
+   * Create asset metadata definition.
+   * Based on REST call /metadata_tag/create (POST)
+   */
+  protected function createAssetMetadataDefinition($name, $type, array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+    // Parameters asset.
+    $a_parameters += array(
+      mediamosa_rest_call_asset_metadata_create::USER_ID => self::SIMPLETEST_USER_ID,
+    );
+
+    // Required.
+    $a_parameters['name'] = $name;
+    $a_parameters['type'] = $type;
+
+    // Set the URI.
+    $uri = 'metadata_tag/create';
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $a_parameters, array(), $a_expected_result_ids);
+
+    // Check response.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr(
+        "Created asset metadata definition, got result @result (@result_description)",
+        array(
+          '@result' => (string)$response['xml']->header->request_result_id,
+          '@result_description' => (string)$response['xml']->header->request_result_description
+        )
+      )
+    );
+
+    return $response['xml'];
+  }
+
   /**
    * Create an mediafile
    * Based on REST call /mediafile/create (POST)
@@ -1212,6 +1248,45 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
         "Delete asset with ID: @asset_id, got result @result (@result_description)",
         array(
           '@asset_id' => $asset_id,
+          '@result' => (string)$response['xml']->header->request_result_id,
+          '@result_description' => (string)$response['xml']->header->request_result_description
+        )
+      )
+    );
+
+    return $response;
+  }
+
+  /**
+   * Delete an asset property definition.
+   * Based on the REST call /metadata_tag/delete (POST)
+   */
+  protected function deleteAssetMetadataDefinition($name, $delete = NULL, array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+    // Parameters.
+    $a_parameters += array(
+      mediamosa_rest_call_asset_supplement_update::USER_ID => self::SIMPLETEST_USER_ID,
+    );
+
+    // Name.
+    $a_parameters['name'] = $name;
+
+    // Delete.
+    if ($delete == 'cascade') {
+      $a_parameters['delete'] = 'cascade';
+    }
+
+    // The uri.
+    $uri = 'metadata_tag/delete';
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $a_parameters, array(), $a_expected_result_ids);
+
+    // Check response.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr(
+        "Delete asset metadata definition, got result @result (@result_description)",
+        array(
           '@result' => (string)$response['xml']->header->request_result_id,
           '@result_description' => (string)$response['xml']->header->request_result_description
         )

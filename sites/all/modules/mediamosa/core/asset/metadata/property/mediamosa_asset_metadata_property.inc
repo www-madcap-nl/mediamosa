@@ -94,11 +94,11 @@ class mediamosa_asset_metadata_property {
     $app_id = is_array($mixed_app_ids) ? reset($mixed_app_ids) : $mixed_app_ids;
 
     // Get the propgroups.
-    $a_propgroup = mediamosa_asset_metadata_property_group::get_row_with_appid($app_id);
+    $a_propgroup = mediamosa_asset_metadata_property_group::property_group_row_get_with_appid($app_id);
 
     // If its not exists, then create.
-    if ($a_propgroup == FALSE) {
-      $propgroup_id = mediamosa_asset_metadata_property_group::create_with_appid($app_id);
+    if (!$a_propgroup) {
+      $propgroup_id = mediamosa_asset_metadata_property_group::property_group_create_with_appid($app_id);
     }
     else {
       $propgroup_id = $a_propgroup[mediamosa_asset_metadata_property_group_db::ID];
@@ -160,7 +160,7 @@ class mediamosa_asset_metadata_property {
     // First app_id is always the app of the eua.
     $app_id = is_array($mixed_app_ids) ? reset($mixed_app_ids) : $mixed_app_ids;
 
-    $a_propgroup = mediamosa_asset_metadata_property_group::get_row_with_appid($app_id);
+    $a_propgroup = mediamosa_asset_metadata_property_group::property_group_row_get_with_appid($app_id);
     if (!$a_propgroup) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INVALID_METADATA_DEFINITION);
     }
@@ -203,7 +203,8 @@ class mediamosa_asset_metadata_property {
    * @return array
    */
   static public function property_get_row($prop_id) {
-    return mediamosa_db::db_select(mediamosa_asset_metadata_property_db::TABLE_NAME)
+    return mediamosa_db::db_select(mediamosa_asset_metadata_property_db::TABLE_NAME, 'amp')
+      ->fields('amp')
       ->condition(mediamosa_asset_metadata_property_db::ID, $prop_id, '=')
       ->execute()->fetchAssoc();
   }
@@ -218,7 +219,8 @@ class mediamosa_asset_metadata_property {
    * @return array
    */
   static public function property_get_row_with_name($name, $propgroup_id) {
-    return mediamosa_db::db_select(mediamosa_asset_metadata_property_db::TABLE_NAME)
+    return mediamosa_db::db_select(mediamosa_asset_metadata_property_db::TABLE_NAME, 'amp')
+      ->fields('amp')
       ->condition(mediamosa_asset_metadata_property_db::PROPGROUP_ID, $propgroup_id, '=')
       ->condition(mediamosa_asset_metadata_property_db::NAME, $name, '=')
       ->execute()->fetchAssoc();
