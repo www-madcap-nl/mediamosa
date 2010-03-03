@@ -43,7 +43,7 @@ class MediaMosaAssetSupplementTestCaseEga extends MediaMosaTestCaseEga {
 
   // ------------------------------------------------------------------ Tests.
 
-  // Testing is_empty_asset issues, see: ticket 165.
+  // Testing asset supplement, see: ticket 495.
   function testQueryingSuplement() {
 
     // Create an asset.
