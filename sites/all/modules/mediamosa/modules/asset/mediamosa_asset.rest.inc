@@ -1024,7 +1024,7 @@ class mediamosa_rest_call_asset_update extends mediamosa_rest_call {
     $asset_id = $this->get_param_value(self::ASSET_ID);
     $user_id = $this->get_param_value(self::USER_ID);
 
-    $owner_id = $this->get_param_value(self::USER_ID);
+    $owner_id = $this->get_param_value(self::OWNER_ID);
     $group_id = $this->get_param_value(self::GROUP_ID);
 
     $play_restriction_start = $this->get_param_value(self::PLAY_RESTRICTION_START);

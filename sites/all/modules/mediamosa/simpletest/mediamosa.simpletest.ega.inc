@@ -564,6 +564,47 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   }
 
   /**
+   * Asset search.
+   * Based on the GET rest call /asset (GET)
+   */
+  protected function searchAsset($limit, array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+    // Parameters asset.
+    $a_parameters += array(
+      mediamosa_rest_call_asset_get::IS_APP_ADMIN => 'false',
+      mediamosa_rest_call_asset_get::USER_ID => self::SIMPLETEST_USER_ID,
+      mediamosa_rest_call_asset_get::LIMIT => $limit,
+    );
+
+    // Required.
+    $uri = 'asset';
+
+    // Do Post call.
+    $response = $this->restCallGet($uri, $a_parameters, array(), $a_expected_result_ids);
+
+    // Check response.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr(
+        "Search asset, got result @result (@result_description)",
+        array(
+          '@result' => (string)$response['xml']->header->request_result_id,
+          '@result_description' => (string)$response['xml']->header->request_result_description
+        )
+      )
+    );
+
+    // Must be ok to return object.
+    if (!in_array(mediamosa_error::ERRORCODE_OKAY, $a_expected_result_ids)) {
+      return FALSE;
+    }
+
+    $a_assets = mediamosa_lib::responsexml2array($response['xml']);
+
+    // Return data.
+    return $a_assets;
+  }
+
+  /**
    * Get an asset.
    * Based on the GET rest call /asset/$asset_id/mediafile (GET)
    */
