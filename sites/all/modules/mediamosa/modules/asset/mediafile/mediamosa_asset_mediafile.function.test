@@ -43,7 +43,7 @@ class MediaMosaAssetMediafileFunctionsTestCaseEga extends MediaMosaTestCaseEga {
 
   // ------------------------------------------------------------------ Tests.
 
-  // Testing asset mediafile delete, see: ticket 244.
+  // Testing asset mediafile delete, see: ticket 206.
   function testMediafileFunction() {
 
     //
