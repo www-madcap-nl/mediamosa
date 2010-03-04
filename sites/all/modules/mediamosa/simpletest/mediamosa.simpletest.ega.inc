@@ -526,8 +526,8 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       mediamosa_rest_call_asset_get::IS_APP_ADMIN => 'false',
       mediamosa_rest_call_asset_get::USER_ID => self::SIMPLETEST_USER_ID,
     );
-    // Required.
 
+    // Required.
     $uri = strtr('asset/@asset_id', array('@asset_id' => $asset_id));
 
     // Do Post call.
@@ -558,6 +558,47 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       $a_asset[mediamosa_asset_db::ID] == $asset_id,
       'Got the asset'
     );
+
+    // Return data.
+    return $a_asset;
+  }
+
+  /**
+   * Get an asset.
+   * Based on the GET rest call /asset/$asset_id/mediafile (GET)
+   */
+  protected function getAssetMediafile($asset_id, array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+    // Parameters asset.
+    $a_parameters += array(
+      mediamosa_rest_call_asset_get::IS_APP_ADMIN => 'false',
+      mediamosa_rest_call_asset_get::USER_ID => self::SIMPLETEST_USER_ID,
+    );
+
+    // Required.
+    $uri = strtr('asset/@asset_id/mediafile', array('@asset_id' => $asset_id));
+
+    // Do Post call.
+    $response = $this->restCallGet($uri, $a_parameters, array(), $a_expected_result_ids);
+
+    // Check response.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr(
+        "Get asset/mediafile with ID: @asset_id, got result @result (@result_description)",
+        array(
+          '@asset_id' => $asset_id,
+          '@result' => (string)$response['xml']->header->request_result_id,
+          '@result_description' => (string)$response['xml']->header->request_result_description
+        )
+      )
+    );
+
+    // Must be ok to return object.
+    if (!in_array(mediamosa_error::ERRORCODE_OKAY, $a_expected_result_ids)) {
+      return FALSE;
+    }
+
+    $a_asset = mediamosa_lib::responsexml2array($response['xml']);
 
     // Return data.
     return $a_asset;
