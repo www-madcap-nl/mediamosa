@@ -165,7 +165,7 @@ class MediaMosaAssetMediafileFunctionsTestCaseEga extends MediaMosaTestCaseEga {
 
     // Update mediafile.
     $a_parameters = array(
-      mediamosa_rest_call_update_mediafile::FILENAME => 'een_andere_bestandsnaam.ext',
+      mediamosa_rest_call_update_mediafile::FILENAME => 'an_other_filename.ext',
       mediamosa_rest_call_update_mediafile::TRANSCODE_INHERITS_ACL => 'FALSE',
     );
     $response = $this->updateMediafile($mediafile_id, $a_parameters, array(mediamosa_error::ERRORCODE_OKAY), TRUE);
@@ -189,7 +189,7 @@ class MediaMosaAssetMediafileFunctionsTestCaseEga extends MediaMosaTestCaseEga {
     // Create a not original mediafile with the source mediafile.
     $a_parameters = array(
       mediamosa_rest_call_create_mediafile::IS_ORIGINAL_FILE => mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_FALSE,
-      mediamosa_rest_call_create_mediafile::FILENAME => 'een_niet_bestaande_naam.wmv',
+      mediamosa_rest_call_create_mediafile::FILENAME => 'a_not_existing_name.wmv',
       mediamosa_rest_call_create_mediafile::MEDIAFILE_ID_SOURCE => $mediafile_id,
     );
     $mediafile_id_not_original = $this->createMediafile($asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_OKAY), TRUE);
@@ -211,7 +211,7 @@ class MediaMosaAssetMediafileFunctionsTestCaseEga extends MediaMosaTestCaseEga {
     // Collect the mediafile_ids
     $a_mf = array();
     foreach ($a_asset['mediafiles']['mediafile'] as $mf) {
-      $a_mf[$mf['mediafile_id']] = $mf['mediafile_id'];
+      $a_mf[$mf[mediamosa_asset_mediafile_db::ID]] = $mf[mediamosa_asset_mediafile_db::ID];
     }
 
     // Check the result
@@ -264,7 +264,7 @@ class MediaMosaAssetMediafileFunctionsTestCaseEga extends MediaMosaTestCaseEga {
     }
     $a_mf = array();
     foreach ($a_asset['mediafiles']['mediafile'] as $mf) {
-      $a_mf[$mf['mediafile_id']] = $mf['mediafile_id'];
+      $a_mf[$mf[mediamosa_asset_mediafile_db::ID]] = $mf[mediamosa_asset_mediafile_db::ID];
     }
 
     // Check the result
@@ -277,7 +277,7 @@ class MediaMosaAssetMediafileFunctionsTestCaseEga extends MediaMosaTestCaseEga {
       t("The mediafile_id is exists")
     );
     $this->assertTrue(
-      $a_asset['is_external'] == 'TRUE',
+      $a_asset[mediamosa_asset_db::IS_EXTERNAL] == 'TRUE',
       t("Is_external is TRUE")
     );
 
