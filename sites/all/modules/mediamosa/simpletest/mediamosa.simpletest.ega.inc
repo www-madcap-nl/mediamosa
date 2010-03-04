@@ -526,7 +526,6 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       mediamosa_rest_call_asset_get::IS_APP_ADMIN => 'false',
       mediamosa_rest_call_asset_get::USER_ID => self::SIMPLETEST_USER_ID,
     );
-$this->var_export($a_parameters);
     // Required.
 
     $uri = strtr('asset/@asset_id', array('@asset_id' => $asset_id));

@@ -107,7 +107,7 @@ class mediamosa_rest_call_asset_metadata_create extends mediamosa_rest_call {
     }
     else {
       // Check if there is a master / slave record on the asset / mediafile we are trying to add metadata to.
-      mediamosa_aut::read_single_object(mediamosa_aut::AUT_TYPE_ASSET, $asset_id, $app_id);
+      mediamosa_aut::read_single_object(mediamosa_aut::AUT_TYPE_ASSET, $asset_id, $a_app_ids);
 
       // Only allow own definitions, not dc, qdc etc.
       $this->a_metadata_definitions_full = mediamosa_asset_metadata_property::get_metadata_properties_full($app_id, array());

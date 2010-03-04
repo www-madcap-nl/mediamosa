@@ -953,6 +953,8 @@ class mediamosa_rest_call_asset_update extends mediamosa_rest_call {
   const PLAY_RESTRICTION_START = 'play_restriction_start';
   const PLAY_RESTRICTION_END = 'play_restriction_end';
   const ISPRIVATE = 'isprivate';
+  const ISPRIVATE_TRUE = 'TRUE';
+  const ISPRIVATE_FALSE = 'FALSE';
   const IS_UNAPPROPRIATE = 'is_unappropriate';
   const IS_INAPPROPRIATE = 'is_inappropriate';
   const OWNER_ID = 'owner_id';

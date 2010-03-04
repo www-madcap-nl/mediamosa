@@ -25,6 +25,7 @@ files[] = mediafile/mediamosa_asset_mediafile.delete.test
 
 ; Mediafile Metadata.
 files[] = mediafile/metadata/mediamosa_asset_mediafile_metadata.rest.inc
+files[] = mediafile/metadata/mediamosa_asset_mediafile_metadata.test
 
 ; Mediafile Play Proxy.
 files[] = mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.rest.inc
