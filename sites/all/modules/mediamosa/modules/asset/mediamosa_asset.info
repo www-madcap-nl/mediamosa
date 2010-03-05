@@ -15,6 +15,7 @@ files[] = mediamosa_asset.rest.inc
 files[] = mediamosa_asset.test
 files[] = mediamosa_asset.cql.test
 files[] = mediamosa_asset.function.test
+files[] = mediamosa_asset.search.test
 
 ; Collection <-> Asset link table.
 files[] = collection/mediamosa_asset_collection.rest.inc
