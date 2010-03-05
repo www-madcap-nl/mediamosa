@@ -230,11 +230,11 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
       // Get the asset.
       $a_asset = mediamosa_asset::must_exists($asset_id);
 
-      // FIXME: time_restriction_* ? don't we mean play_restriction_* ? No code can be found with time_ (!).
-      if (isset($a_asset['time_restriction_start']) && isset($a_asset['time_restriction_end'])) {
+      // Check play restrictions
+      if (isset($a_asset['play_restriction_start']) && isset($a_asset['play_restriction_end'])) {
         $result = mediamosa_asset_mediafile_play_proxy::check_time_restrictions(
-          $a_asset['time_restriction_start'],
-          $a_asset['time_restriction_end']
+          strtotime($a_asset['play_restriction_start']),
+          strtotime($a_asset['play_restriction_end'])
         );
       }
 
