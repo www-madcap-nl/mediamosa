@@ -24,6 +24,7 @@ files[] = mediafile/mediamosa_asset_mediafile.rest.inc
 files[] = mediafile/mediamosa_asset_mediafile.streaming.test
 files[] = mediafile/mediamosa_asset_mediafile.delete.test
 files[] = mediafile/mediamosa_asset_mediafile.function.test
+files[] = mediafile/mediamosa_asset_mediafile.download.test
 
 ; Mediafile Metadata.
 files[] = mediafile/metadata/mediamosa_asset_mediafile_metadata.rest.inc
