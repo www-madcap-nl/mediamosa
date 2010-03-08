@@ -540,7 +540,6 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     );
 
     // Required.
-
     $uri = strtr('asset/@asset_id', array('@asset_id' => $asset_id));
 
     // Do Post call.
@@ -577,6 +576,88 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   }
 
   /**
+   * Asset search.
+   * Based on the GET rest call /asset (GET)
+   */
+  protected function searchAsset($limit, array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+    // Parameters asset.
+    $a_parameters += array(
+      mediamosa_rest_call_asset_get::IS_APP_ADMIN => 'false',
+      mediamosa_rest_call_asset_get::USER_ID => self::SIMPLETEST_USER_ID,
+      mediamosa_rest_call_asset_get::LIMIT => $limit,
+    );
+
+    // Required.
+    $uri = 'asset';
+
+    // Do Post call.
+    $response = $this->restCallGet($uri, $a_parameters, array(), $a_expected_result_ids);
+
+    // Check response.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr(
+        "Search asset, got result @result (@result_description)",
+        array(
+          '@result' => (string)$response['xml']->header->request_result_id,
+          '@result_description' => (string)$response['xml']->header->request_result_description
+        )
+      )
+    );
+
+    // Must be ok to return object.
+    if (!in_array(mediamosa_error::ERRORCODE_OKAY, $a_expected_result_ids)) {
+      return FALSE;
+    }
+
+    $a_assets = mediamosa_lib::responsexml2array($response['xml']);
+
+    // Return data.
+    return $a_assets;
+  }
+
+  /**
+   * Get an asset.
+   * Based on the GET rest call /asset/$asset_id/mediafile (GET)
+   */
+  protected function getAssetMediafile($asset_id, array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+    // Parameters asset.
+    $a_parameters += array(
+      mediamosa_rest_call_asset_get::IS_APP_ADMIN => 'false',
+      mediamosa_rest_call_asset_get::USER_ID => self::SIMPLETEST_USER_ID,
+    );
+
+    // Required.
+    $uri = strtr('asset/@asset_id/mediafile', array('@asset_id' => $asset_id));
+
+    // Do Post call.
+    $response = $this->restCallGet($uri, $a_parameters, array(), $a_expected_result_ids);
+
+    // Check response.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr(
+        "Get asset/mediafile with ID: @asset_id, got result @result (@result_description)",
+        array(
+          '@asset_id' => $asset_id,
+          '@result' => (string)$response['xml']->header->request_result_id,
+          '@result_description' => (string)$response['xml']->header->request_result_description
+        )
+      )
+    );
+
+    // Must be ok to return object.
+    if (!in_array(mediamosa_error::ERRORCODE_OKAY, $a_expected_result_ids)) {
+      return FALSE;
+    }
+
+    $a_asset = mediamosa_lib::responsexml2array($response['xml']);
+
+    // Return data.
+    return $a_asset;
+  }
+
+  /**
    * Get an mediafile.
    * Based on the rest call /mediafile/$mediafile_id (GET)
    */
@@ -600,6 +681,11 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       )
     );
 
+    // Must be ok to return object.
+    if (!in_array(mediamosa_error::ERRORCODE_OKAY, $a_expected_result_ids)) {
+      return FALSE;
+    }
+
     // Get response.
     $a_mediafile = mediamosa_lib::simplexml2array($response['xml']->items->item[0]);
 
@@ -611,6 +697,42 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // Return data.
     return $a_mediafile;
+  }
+
+  /**
+   * Get asset supplement.
+   * Based on the GET rest call /asset/$asset_id/supplement (GET)
+   */
+  protected function getAssetSupplement($asset_id, array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+    // Parameters asset.
+    $a_parameters += array(
+      mediamosa_rest_call_asset_get::IS_APP_ADMIN => 'false',
+      mediamosa_rest_call_asset_get::USER_ID => self::SIMPLETEST_USER_ID,
+    );
+
+    // Required.
+    $uri = strtr('asset/@asset_id/supplement', array('@asset_id' => $asset_id));
+
+    // Do Post call.
+    $response = $this->restCallGet($uri, $a_parameters, array(), $a_expected_result_ids);
+
+    // Check response.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr(
+        "Get asset supplement with ID: @asset_id, got result @result (@result_description)",
+        array(
+          '@asset_id' => $asset_id,
+          '@result' => (string)$response['xml']->header->request_result_id,
+          '@result_description' => (string)$response['xml']->header->request_result_description
+        )
+      )
+    );
+
+    $supplements = mediamosa_lib::responsexml2array($response['xml']);
+
+    // Return data.
+    return $supplements;
   }
 
   /**
@@ -1209,6 +1331,38 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       )
     );
   }
+
+  // ------------------------------------------------------------------ Other functions.
+  /**
+   * Change ownership.
+   * Based on the POST rest call /change_ownership (POST)
+   */
+  protected function changeOwnership(array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    // Parameters asset.
+    $a_parameters += array(
+      mediamosa_rest_call_update_mediafile::USER_ID => self::SIMPLETEST_USER_ID,
+    );
+
+    // Set the URI.
+    $uri = 'change_ownership';
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $a_parameters, array(), $a_expected_result_ids, $do_internal);
+
+    // Test response.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr("Change ownership: got result @result (@result_description)", array(
+        '@result' => (string)$response['xml']->header->request_result_id,
+        '@result_description' => $response['xml']->header->request_result_description
+      ))
+    );
+
+    // Return response.
+    return $response;
+  }
+
+
   // ------------------------------------------------------------------ Update items functions.
   /**
    * Updates an asset.
@@ -1598,6 +1752,72 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
         "Delete asset with ID: @asset_id, got result @result (@result_description)",
         array(
           '@asset_id' => $asset_id,
+          '@result' => (string)$response['xml']->header->request_result_id,
+          '@result_description' => (string)$response['xml']->header->request_result_description
+        )
+      )
+    );
+
+    return $response;
+  }
+
+  /**
+   * Delete multiple assets.
+   * Based on the REST call /asset/delete (POST)
+   */
+  protected function deleteAssetMultiple(array $a_asset_ids, array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    // Parameters.
+    $a_parameters += array(
+      mediamosa_rest_call_asset_supplement_update::USER_ID => self::SIMPLETEST_USER_ID,
+    );
+
+    // Add the asset ids to the parameters
+    $a_parameters[mediamosa_rest_call_asset_delete_all::ASSET_ID] = $a_asset_ids;
+
+    // The uri.
+    $uri = 'asset/delete';
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $a_parameters, array(), $a_expected_result_ids, $do_internal);
+
+    // Check response.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr(
+        "Delete assets, got result @result (@result_description)",
+        array(
+          '@result' => (string)$response['xml']->header->request_result_id,
+          '@result_description' => (string)$response['xml']->header->request_result_description
+        )
+      )
+    );
+
+    return $response;
+  }
+
+  /**
+   * Delete a mediafile.
+   * Based on the REST call /mediafile/$mediafile_id/delete (POST)
+   */
+  protected function deleteMediafile($mediafile_id, array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    // Parameters.
+    $a_parameters += array(
+      mediamosa_rest_call_asset_supplement_update::USER_ID => self::SIMPLETEST_USER_ID,
+    );
+
+    // The uri.
+    $uri = strtr('mediafile/@mediafile_id/delete', array('@mediafile_id' => $mediafile_id));
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $a_parameters, array(), $a_expected_result_ids, $do_internal);
+
+    // Check response.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr(
+        "Delete mediafile with ID: @mediafile_id, got result @result (@result_description)",
+        array(
+          '@mediafile_id' => $mediafile_id,
           '@result' => (string)$response['xml']->header->request_result_id,
           '@result_description' => (string)$response['xml']->header->request_result_description
         )

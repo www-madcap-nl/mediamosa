@@ -173,6 +173,15 @@ class mediamosa_io {
   }
 
   /**
+   * Test if path is a directory.
+   *
+   * @param string $path
+   */
+  static public function is_dir($path) {
+    return is_dir($path);
+  }
+
+  /**
    * Create a symbolic link.
    *
    * @param string $target

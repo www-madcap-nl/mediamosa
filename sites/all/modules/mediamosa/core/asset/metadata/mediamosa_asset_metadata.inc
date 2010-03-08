@@ -251,7 +251,21 @@ class mediamosa_asset_metadata {
 
     $a_result = array();
     foreach ($result as $a_metadata) {
-      $a_result[$a_metadata[mediamosa_asset_metadata_property_group_db::NAME]][$a_metadata[mediamosa_asset_metadata_property_db::NAME]][] = $a_metadata[mediamosa_asset_metadata_db::VAL_CHAR];
+      // Choose the value.
+      $asset_property_value = NULL;
+      switch ($a_metadata[mediamosa_asset_metadata_property_db::TYPE]) {
+        case mediamosa_asset_metadata_property_db::TYPE_CHAR:
+          $asset_property_value = $a_metadata[mediamosa_asset_metadata_db::VAL_CHAR];
+          break;
+        case mediamosa_asset_metadata_property_db::TYPE_DATETIME:
+          $asset_property_value = $a_metadata[mediamosa_asset_metadata_db::VAL_DATETIME];
+          break;
+        case mediamosa_asset_metadata_property_db::TYPE_INT:
+          $asset_property_value = $a_metadata[mediamosa_asset_metadata_db::VAL_INT];
+          break;
+      }
+      // Collect the value.
+      $a_result[$a_metadata[mediamosa_asset_metadata_property_group_db::NAME]][$a_metadata[mediamosa_asset_metadata_property_db::NAME]][] = $asset_property_value;
     }
 
     return $a_result;

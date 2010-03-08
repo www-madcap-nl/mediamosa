@@ -232,7 +232,9 @@ class mediamosa_configuration_storage {
    *  The mediafile_id.
    */
   static public function mediafile_id_filename_get($mediafile_id) {
-    return self::mount_point_get() . DIRECTORY_SEPARATOR . self::data_location_get() . DIRECTORY_SEPARATOR . self::objectid_to_location($mediafile_id);
+    $directory = self::mount_point_get() . DIRECTORY_SEPARATOR . self::data_location_get() . DIRECTORY_SEPARATOR;
+    mediamosa_io::mkdir($directory . $mediafile_id{0});
+    return $directory . self::objectid_to_location($mediafile_id);
   }
 
   /**

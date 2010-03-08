@@ -470,8 +470,11 @@ class mediamosa_asset {
 
     $a_query = array();
     $a_query[mediamosa_db_query::A_SELECT_EXPR][] = "a.*";
-    $a_query[mediamosa_db_query::A_SELECT_EXPR][] = "ap.val_char AS asset_property_value";
+    $a_query[mediamosa_db_query::A_SELECT_EXPR][] = "ap.val_char AS asset_property_val_char";
+    $a_query[mediamosa_db_query::A_SELECT_EXPR][] = "ap.val_datetime AS asset_property_val_datetime";
+    $a_query[mediamosa_db_query::A_SELECT_EXPR][] = "ap.val_int AS asset_property_val_int";
     $a_query[mediamosa_db_query::A_SELECT_EXPR][] = "apd.prop_name AS asset_property_name";
+    $a_query[mediamosa_db_query::A_SELECT_EXPR][] = "apd.type AS asset_property_type";
     $a_query[mediamosa_db_query::A_SELECT_EXPR][] = "apg.propgroup_name AS asset_property_group_name";
 
     // Main select on asset table.
@@ -695,7 +698,21 @@ class mediamosa_asset {
 
       // Now stuff that can be set more than once (f.e. metadata).
       if (!empty($a_asset['asset_property_group_name'])) {
-        $a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]][$a_asset['asset_property_group_name']][$a_asset['asset_property_name']][] = $a_asset['asset_property_value'];
+        // Choose the value.
+        $asset_property_value = NULL;
+        switch ($a_asset['asset_property_type']) {
+          case mediamosa_asset_metadata_property_db::TYPE_CHAR:
+            $asset_property_value = $a_asset['asset_property_val_char'];
+            break;
+          case mediamosa_asset_metadata_property_db::TYPE_DATETIME:
+            $asset_property_value = $a_asset['asset_property_val_datetime'];
+            break;
+          case mediamosa_asset_metadata_property_db::TYPE_INT:
+            $asset_property_value = $a_asset['asset_property_val_int'];
+            break;
+        }
+        // Collect the value.
+        $a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]][$a_asset['asset_property_group_name']][$a_asset['asset_property_name']][] = $asset_property_value;
       }
 
       // Add collection data.
