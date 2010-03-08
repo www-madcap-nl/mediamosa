@@ -802,6 +802,8 @@ class mediamosa_rest_call_asset_delete_all extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
   // Rest vars;
   const ASSET_ID = 'asset_id';
+  const USER_ID = 'user_id';
+  const DELETE = 'delete';
 
   // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
@@ -814,6 +816,17 @@ class mediamosa_rest_call_asset_delete_all extends mediamosa_rest_call {
           self::VAR_DESCRIPTION => 'The asset IDs to delete.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+        ),
+        self::USER_ID => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_DESCRIPTION => 'User ID, must be owner to delete asset.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+        ),
+        self::DELETE => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_DESCRIPTION => 'Delete mode.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+          self::VAR_ALLOWED_VALUES => array('', 'cascade'),
         ),
       )
     );
@@ -832,10 +845,29 @@ class mediamosa_rest_call_asset_delete_all extends mediamosa_rest_call {
 
     // Get the asset ids we need to delete.
     $a_asset_ids = $this->get_param_value(self::ASSET_ID);
+    // User id
+    $user_id = $this->get_param_value(self::USER_ID);
+    // Delete
+    $delete = $this->get_param_value(self::DELETE);
 
     foreach ($a_asset_ids as $asset_id) {
       try {
-        mediamosa_asset::delete($asset_id);
+        // Get asset.
+        $a_asset = mediamosa_db::db_query(
+          'SELECT #app_id, #owner_id FROM {#mediamosa_asset} WHERE #asset_id  = :asset_id',
+          array(
+            '#app_id' => mediamosa_asset_db::APP_ID,
+            '#owner_id' => mediamosa_asset_db::OWNER_ID,
+            '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
+            '#asset_id' => mediamosa_asset_db::ID,
+            ':asset_id' => $asset_id,
+          )
+        )->fetchAssoc();
+
+        // Must be owner / app_admin to delete.
+        mediamosa_aut::owner_check($app_id, $user_id, $a_asset[mediamosa_asset_db::APP_ID], $a_asset[mediamosa_asset_db::OWNER_ID], $is_app_admin);
+
+        mediamosa_asset::delete($asset_id, $delete == 'cascade');
 
         $o_mediamosa->add_item(
           array(

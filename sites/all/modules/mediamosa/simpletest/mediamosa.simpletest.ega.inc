@@ -1707,6 +1707,40 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   }
 
   /**
+   * Delete multiple assets.
+   * Based on the REST call /asset/delete (POST)
+   */
+  protected function deleteAssetMultiple(array $a_asset_ids, array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    // Parameters.
+    $a_parameters += array(
+      mediamosa_rest_call_asset_supplement_update::USER_ID => self::SIMPLETEST_USER_ID,
+    );
+
+    // Add the asset ids to the parameters
+    $a_parameters[mediamosa_rest_call_asset_delete_all::ASSET_ID] = $a_asset_ids;
+
+    // The uri.
+    $uri = 'asset/delete';
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $a_parameters, array(), $a_expected_result_ids, $do_internal);
+
+    // Check response.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr(
+        "Delete assets, got result @result (@result_description)",
+        array(
+          '@result' => (string)$response['xml']->header->request_result_id,
+          '@result_description' => (string)$response['xml']->header->request_result_description
+        )
+      )
+    );
+
+    return $response;
+  }
+
+  /**
    * Delete a mediafile.
    * Based on the REST call /mediafile/$mediafile_id/delete (POST)
    */
