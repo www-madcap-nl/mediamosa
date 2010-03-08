@@ -300,9 +300,18 @@ class mediamosa_type {
 
       case self::TYPE_XML_OAI:
         // FIXME: dont like the 1.x way we prefix the XML declaration to the XML... XML declaration is required in XML....
-        $o_dom_document = new DOMDocument();
-        if (!$o_dom_document->loadXML('<?xml version="1.0"?>' . $mixed_param_value)) {
-          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
+        try {
+          set_error_handler('mask_xml_errors');
+
+          $o_dom_document = new DOMDocument();
+          if (!$o_dom_document->loadXML('<?xml version="1.0"?>' . $mixed_param_value)) {
+            throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
+          }
+
+          restore_error_handler();
+        }
+        catch (Exception $e) {
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INVALID_SUPPLEMENT);
         }
 
         $checked_param_value = (string)$mixed_param_value;
@@ -617,4 +626,10 @@ class mediamosa_type {
 
     return $string_val;
   }
+}
+
+/**
+ * Mask XML errors.
+ */
+function mask_xml_errors() {
 }
