@@ -15,3 +15,4 @@ files[] = mediamosa_aut.rest.inc
 files[] = mediamosa_aut.test
 files[] = mediamosa_aut.masterslave.test
 files[] = mediamosa_aut.ega.test
+files[] = mediamosa_aut.owner.test

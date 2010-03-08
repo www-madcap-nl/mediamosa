@@ -1276,6 +1276,38 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       )
     );
   }
+
+  // ------------------------------------------------------------------ Other functions.
+  /**
+   * Change ownership.
+   * Based on the POST rest call /change_ownership (POST)
+   */
+  protected function changeOwnership(array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    // Parameters asset.
+    $a_parameters += array(
+      mediamosa_rest_call_update_mediafile::USER_ID => self::SIMPLETEST_USER_ID,
+    );
+
+    // Set the URI.
+    $uri = 'change_ownership';
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $a_parameters, array(), $a_expected_result_ids, $do_internal);
+
+    // Test response.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr("Change ownership: got result @result (@result_description)", array(
+        '@result' => (string)$response['xml']->header->request_result_id,
+        '@result_description' => $response['xml']->header->request_result_description
+      ))
+    );
+
+    // Return response.
+    return $response;
+  }
+
+
   // ------------------------------------------------------------------ Update items functions.
   /**
    * Updates an asset.
