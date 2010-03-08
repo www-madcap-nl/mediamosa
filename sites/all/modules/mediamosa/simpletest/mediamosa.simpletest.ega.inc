@@ -670,6 +670,11 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       )
     );
 
+    // Must be ok to return object.
+    if (!in_array(mediamosa_error::ERRORCODE_OKAY, $a_expected_result_ids)) {
+      return FALSE;
+    }
+
     // Get response.
     $a_mediafile = mediamosa_lib::simplexml2array($response['xml']->items->item[0]);
 
