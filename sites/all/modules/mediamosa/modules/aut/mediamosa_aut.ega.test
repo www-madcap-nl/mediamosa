@@ -43,7 +43,7 @@ class MediaMosaAutEgaTestCaseEga extends MediaMosaTestCaseEga {
 
   // ------------------------------------------------------------------ Tests.
 
-  // Testing asset mediafile delete, see: ticket 854.
+  // Testing AUT asset and mediafile information from other EGA, see: ticket 854.
   function testAutEga() {
 
     //
