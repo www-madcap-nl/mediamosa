@@ -62,6 +62,35 @@ class mediamosa_job_scheduler {
   static public function log_debug_high($message, array $variables = array()) {
     mediamosa_debug::log_debug_high($message, $variables, 'job_scheduler');
   }
+
+  /**
+   * Trigger the job scheduler.
+   */
+  static public function trigger() {
+    // Now trigger the jobscheduler.
+    $mediamosa_jobscheduler_uri = variable_get('mediamosa_jobscheduler_uri', NULL);
+
+    if (isset($mediamosa_jobscheduler_uri)) {
+      $url = mediamosa_http::uri2url($mediamosa_jobscheduler_uri) . '/internal/cron/jobscheduler';
+
+      // Log it.
+      mediamosa_debug::log_debug('Triggering job scheduler @ @uri', array('@uri' => $url));
+
+      // Dont trigger in sandbox.
+      if (mediamosa::in_simpletest_sandbox()) {
+        // So we wait till finished.
+        MediaMosaTestCase::staticInternalRestCallGet($url);
+      }
+      else {
+        // Trigger.
+        mediamosa_http::do_head_internal_call($url);
+      }
+    }
+    else {
+      mediamosa::log('Jobschedular URL not set, please setup jobschedular server in the @link.', array('@link' => l('Mediamosa configuration', 'admin/mediamosa/config/global')), WATCHDOG_ALERT, 'job_cron');
+    }
+  }
+
   /**
    * Trigger every minute.
    *
@@ -69,6 +98,13 @@ class mediamosa_job_scheduler {
    *
    */
   static public function run_parse_queue() {
+    // Triggert from sandbox, run once, and done.
+    if (mediamosa::in_simpletest_sandbox()) {
+      self::log('Job Scheduler; run_parse_queue() in sandbox, hit and return.');
+      self::parse_queue();
+      return;
+    }
+
     $run_last = variable_get('mediamosa_jobscheduler_cron_last', NULL);
 
     // may run? (0 - 60 seconds)
@@ -199,7 +235,6 @@ class mediamosa_job_scheduler {
       self::log('Parse XML: @msg (@resp)', array('@msg' => $e->getMessage(), '@resp' => print_r($response->data, TRUE)), WATCHDOG_ERROR);
     }
 
-    // stel de update query samen.
     for ($i = 0; $i < $response_data->header->item_count; $i++) {
       // Get current status.
       $a_job = mediamosa_job::get($response_data->items->item[$i]->job_id);
@@ -211,12 +246,12 @@ class mediamosa_job_scheduler {
       );
 
       // Add started time.
-      if ($response_data->items->item[$i]->started != "") {
+      if ($response_data->items->item[$i]->started != '') {
         $a_fields[mediamosa_job_db::STARTED] = $response_data->items->item[$i]->started;
       }
 
       // Add finished time.
-      if ($response_data->items->item[$i]->finished != "") {
+      if ($response_data->items->item[$i]->finished != '') {
         $a_fields[mediamosa_job_db::FINISHED] = $response_data->items->item[$i]->finished;
       }
 
@@ -510,9 +545,6 @@ class mediamosa_job_scheduler {
   }
 
   /**
-   * Verwerk de informatie in de database die terugkomt van een stilljob
-   */
-  /**
    * Process the data from a still job.
    *
    * 1.x: _vpx_jobhandler_add_still_to_db
@@ -525,13 +557,16 @@ class mediamosa_job_scheduler {
     $destination_path = mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::data_location_get() . DIRECTORY_SEPARATOR . 'transcode' . DIRECTORY_SEPARATOR;
     $my_file = $destination_path . $job_id . '_scene.txt';
 
-    $fh = @fopen($my_file, 'r');
     $scenes = array();
-    if ($fh) {
-      while(!feof($fh)) {
-        $scenes[] = fgets($fh);
+
+    if (file_exists($my_file)) {
+      $fh = @fopen($my_file, 'r');
+      if ($fh) {
+        while(!feof($fh)) {
+          $scenes[] = fgets($fh);
+        }
+        fclose($fh);
       }
-      fclose($fh);
     }
 
     // Get job.
@@ -550,12 +585,12 @@ class mediamosa_job_scheduler {
     // And deleting with asset_id is definetly not a good idea, while we have multiple stills per mediafile
     //_media_management_delete_still($asset_id);
 
-    // voeg een record toe aan de mediafile metadata tabel.
+    // Add record to the mediafile metadata table.
     if (is_array($filenames)) {
       $frametime = $still_parameters['frametime'];
       $duration = $still_parameters['duration'];
       if (isset($still_parameters['framerate']) && is_numeric($still_parameters['framerate'])) {
-        $second = 1/$still_parameters['framerate'];
+        $second = $still_parameters['framerate'] > 0 ? 1 / $still_parameters['framerate'] : 0;
       }
       $tag = $still_parameters['tag'];
 
@@ -566,7 +601,7 @@ class mediamosa_job_scheduler {
       }
       $i = 0;
       foreach ($filenames as $filename) {
-        mediamosa_asset_mediafile_still::create($asset_id, $parent_id, $filename, $a_job["app_id"], $a_job["owner"], "", $order, !$order, $still_parameters, ($scenes == array() ? $sec : $scenes[$i]), $a_job["mediafile_id"], $tag);
+        mediamosa_asset_mediafile_still::create($asset_id, $parent_id, $filename, $a_job['app_id'], $a_job['owner'], '', $order, !$order, $still_parameters, ($scenes == array() ? $sec : $scenes[$i]), $a_job['mediafile_id'], $tag);
         $order++;
         if (isset($second) && is_numeric($second)) {
           $sec += $second;
@@ -654,11 +689,12 @@ class mediamosa_job_scheduler {
         '#server_type' => mediamosa_server_db::SERVER_TYPE,
         ':server_type' => mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR,
       )
-    );
+    )->fetchAll();
 
     foreach ($result as $result_row) {
       // Try to start as many jobs as there are free slots.
       for ($i = $result_row['jobcount']; $i < $result_row['slots']; $i++) {
+
         // Get 1 new job.
         $job_info = self::fetch_single_available_job($result_row[mediamosa_server_db::NID]);
 
@@ -822,6 +858,8 @@ class mediamosa_job_scheduler {
 
   /**
    * Function for starting a still job
+   *
+   * 1.x: _vpx_jobhandler_start_server_still_job
    */
   static public function start_server_still_job($job_id, $uri, $mediafile_id){
     // Get job parameters;
@@ -842,13 +880,13 @@ class mediamosa_job_scheduler {
     }
 
     // stuur de job naar de job server
-    $rest_url = sprintf("server/jobstart?job_id=%s&job_type=%s&mediafile_src=%s&frametime=%s&size=%s&h_padding=%s&v_padding=%s&blackstill_check=%s&still_type=%s&still_per_mediafile=%s&still_every_second=%s&start_frame=%s&end_frame=%s&video_duration=%s&fps=%s&tag=%s",
+    $rest_url = sprintf('server/jobstart?job_id=%s&job_type=%s&mediafile_src=%s&frametime=%s&size=%s&h_padding=%s&v_padding=%s&blackstill_check=%s&still_type=%s&still_per_mediafile=%s&still_every_second=%s&start_frame=%s&end_frame=%s&video_duration=%s&fps=%s&tag=%s',
       $job_id, mediamosa_job_db::JOB_TYPE_STILL, $mediafile_id,
-      $job_parameters["frametime"],
-      $job_parameters["size"],
-      $job_parameters["h_padding"],
-      $job_parameters["v_padding"],
-      $job_parameters["blackstill_check"],
+      $job_parameters['frametime'],
+      $job_parameters['size'],
+      $job_parameters['h_padding'],
+      $job_parameters['v_padding'],
+      $job_parameters['blackstill_check'],
       $job_parameters['still_parameters']['still_type'],
       $job_parameters['still_parameters']['still_per_mediafile'],
       $job_parameters['still_parameters']['still_every_second'],
@@ -860,28 +898,19 @@ class mediamosa_job_scheduler {
     );
 
     // Log call.
-    self::log("Start job:". $rest_url);
+    self::log('Start job:'. $rest_url);
 
     // Do request.
     $response = mediamosa_http::do_internal_call($uri, $rest_url, '', mediamosa_http::METHOD_POST);
 
-    $data = "";
-
-    $response = drupal_http_request(
-      $rest_url, // url
-      array("Content-Type: application/x-www-form-urlencoded",
-            "Content-Length: " . strlen($data) ), // headers
-      'POST', // method
-      $data
-    );
-
-    if ($response->code == "201" || $response->code == "200") {
+    if ($response->code == '201' || $response->code == '200') {
       try {
         $response_data = new SimpleXMLElement($response->data);
       }
       catch (Exception $e) {
         self::log('Parse XML: @msg (@resp)', array('@msg' => $e->getMessage(), '@resp' => print_r($response->data, TRUE)), WATCHDOG_ERROR);
       }
+
       return $response_data->header->request_result_id;
     }
 
@@ -902,10 +931,8 @@ class mediamosa_job_scheduler {
    * @param integer $server_id
    */
   static public function fetch_single_available_job($server_id) {
-    $a_result = array();
-
-    $result = mediamosa_db::db_query(
-      'SELECT job_id, job_type, asset_id, mediafile_id, #job_status, progress FROM {#mediamosa_job} AS mj WHERE
+    return mediamosa_db::db_query(
+      'SELECT job_id, job_type, asset_id, mediafile_id FROM {#mediamosa_job} AS mj WHERE
             mj.#job_status = :status
           AND
             mj.asset_id NOT IN
@@ -960,16 +987,7 @@ class mediamosa_job_scheduler {
         '#mediamosa_job_transcode' => mediamosa_job_transcode_db::TABLE_NAME,
         '#mediamosa_server_tool' => mediamosa_server_tool_db::TABLE_NAME,
        )
-    );
-
-    foreach ($result as $result_row) {
-      $a_result['job_id'] = $result_row[mediamosa_job_db::ID];
-      $a_result['job_type'] = $result_row[mediamosa_job_db::JOB_TYPE];
-      $a_result['mediafile_id'] = $result_row[mediamosa_job_db::MEDIAFILE_ID];
-      $a_result['asset_id'] = $result_row[mediamosa_job_db::ASSET_ID];
-    }
-
-    return $a_result;
+    )->fetchAssoc();
   }
 
   /**

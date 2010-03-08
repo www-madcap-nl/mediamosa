@@ -70,6 +70,14 @@ class mediamosa_job_server {
    *
    */
   static public function run_parse_queue() {
+
+    // Trigger from sandbox, run once, and done.
+    if (mediamosa::in_simpletest_sandbox()) {
+      self::log('Job Server; run_parse_queue() in sandbox, hit and return.');
+      self::parse_queue();
+      return;
+    }
+
     $server_id = mediamosa_settings::get_server_id();
 
     $run_last = variable_get('mediamosa_jobserver_cron_last_' . $server_id, NULL);
@@ -126,8 +134,8 @@ class mediamosa_job_server {
   /**
    * Parse the queue jobs.
    *
-   * This function is the engine of the job server. Should be called at
-   * regular intervals.
+   * This function is the engine of the job server (job processor. Should be
+   * called at regular intervals.
    *
    * 1. Get a list of all jobs that are not finished, failed or canceled.
    * 2. For all jobs with status WAITING, the job is started.
@@ -1100,7 +1108,7 @@ class mediamosa_job_server {
     $base_filename = mediamosa_io::get_base_filename($mediafile_id_src);
 
     // Is black still working?
-    if (@filesize(mediamosa_configuration_storage::transcode_file_location_get($base_filename . '_0.jpeg'))) {
+    if (file_exists(mediamosa_configuration_storage::transcode_file_location_get($base_filename . '_0.jpeg'))) {
       return mediamosa_job_server_db::JOB_STATUS_INPROGRESS;
     }
 

@@ -31,6 +31,7 @@ files[] = mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.test
 
 ; Mediafile Still.
 files[] = mediafile/still/mediamosa_asset_mediafile_still.rest.inc
+files[] = mediafile/still/mediamosa_asset_mediafile_still.playproxy.test
 
 ; Mediafile Still Download.
 files[] = mediafile/still/download/mediamosa_asset_mediafile_still_download.rest.inc

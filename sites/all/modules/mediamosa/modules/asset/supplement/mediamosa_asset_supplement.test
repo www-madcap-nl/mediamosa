@@ -37,7 +37,7 @@ class MediaMosaAssetSupplementTestCaseEga extends MediaMosaTestCaseEga {
     return array(
       'name' => 'Asset supplement tests',
       'description' => 'Testing asset supplement related functions and rest calls.',
-      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE,
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET,
     );
   }
 

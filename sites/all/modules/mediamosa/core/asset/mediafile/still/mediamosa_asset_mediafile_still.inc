@@ -2,8 +2,8 @@
 // $Id$
 
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
- * Distribution platform (http://mediamosa.org)
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
  * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
@@ -26,7 +26,7 @@
 
  /**
   * @file
-  * Stills are now mediafiles, so code for still been moved
+  * Stills are now mediafiles, so code for still have been moved
   * under mediafile.
   */
 
@@ -79,7 +79,7 @@ class mediamosa_asset_mediafile_still {
       // Clear the earlier default mark on the video (media) file.
       mediamosa_db::db_query(
         'UPDATE {#mediamosa_asset_mediafile_metadata} AS mm
-         INNER JOIN {#mediamosa_asset_mediafile} AS m USING(#mediafile_id)
+         JOIN {#mediamosa_asset_mediafile} AS m ON m.#mediafile_id = mm.#mediafile_id
          SET mm.#still_default = :still_default_false
          WHERE m.#mediafile_id_source = :mediafile_id_source AND m.#is_still = :is_still_true',
         array(
@@ -130,7 +130,7 @@ class mediamosa_asset_mediafile_still {
       mediamosa_asset_mediafile_metadata_db::STILL_TIME_CODE => $sec,
       mediamosa_asset_mediafile_metadata_db::STILL_ORDER => $order,
       mediamosa_asset_mediafile_metadata_db::STILL_FORMAT => $file_extension,
-      mediamosa_asset_mediafile_metadata_db::STILL_TYPE =>  $a_still_parameters['still_type'],
+      mediamosa_asset_mediafile_metadata_db::STILL_TYPE => (empty($a_still_parameters['still_type']) ? mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NORMAL : $a_still_parameters['still_type']),
       mediamosa_asset_mediafile_metadata_db::STILL_DEFAULT => $still_default ? mediamosa_asset_mediafile_metadata_db::STILL_DEFAULT_TRUE : mediamosa_asset_mediafile_metadata_db::STILL_DEFAULT_FALSE,
     );
 
@@ -163,10 +163,10 @@ class mediamosa_asset_mediafile_still {
     );
 
     mediamosa_db::db_query(
-      "UPDATE {#mediamosa_asset_mediafile_metadata} AS mfmd
+      'UPDATE {#mediamosa_asset_mediafile_metadata} AS mfmd
        INNER JOIN {#mediamosa_asset_mediafile} AS m ON m.#mediafile_id = mfdm.mediafile_id
        SET mfmd.#still_order = :still_order
-       WHERE mfmd.#mediafile_id = :mediafile_id AND m.#asset_id_root = :asset_id_root AND m.#is_still = :is_still_true",
+       WHERE mfmd.#mediafile_id = :mediafile_id AND m.#asset_id_root = :asset_id_root AND m.#is_still = :is_still_true',
       array(
         '#mediamosa_asset_mediafile_metadata' => mediamosa_asset_mediafile_metadata_db::TABLE_NAME,
         '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
@@ -192,10 +192,10 @@ class mediamosa_asset_mediafile_still {
 
     // Try default 1st.
     $still_id = mediamosa_db::db_query_range(
-      "SELECT m.#mediafile_id FROM {#mediamosa_asset_mediafile} AS m
+      'SELECT m.#mediafile_id FROM {#mediamosa_asset_mediafile} AS m
       JOIN {#mediamosa_asset_mediafile_metadata} AS mm USING(#mediafile_id)
       WHERE m.#asset_id_root = :asset_id_root AND m.#is_still = :is_still_true AND mm.#still_default = :still_default_true
-      ORDER BY mm.#metadata_id DESC",
+      ORDER BY mm.#metadata_id DESC',
       0,
       1,
       array(

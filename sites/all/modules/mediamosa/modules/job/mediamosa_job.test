@@ -42,7 +42,7 @@ class MediaMosaJobTestCaseEga extends MediaMosaTestCaseEga {
     return array(
       'name' => 'Job test',
       'description' => 'Testing the job server calls.',
-      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE,
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_JOB,
     );
   }
 

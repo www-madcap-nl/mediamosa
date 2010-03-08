@@ -1165,11 +1165,14 @@ class mediamosa_rest_call_aut_collection_delete_rights extends mediamosa_rest_ca
     $a_var_setup[mediamosa_rest_call::VARS][self::COLL_ID] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_COLLECTION_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
+      mediamosa_rest_call::VAR_DESCRIPTION => 'Collection id, unique identifier of the collection.',
+
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::USER_ID] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
+      mediamosa_rest_call::VAR_DESCRIPTION => 'User id, to determine whether the applicant has the right to remove authorization or not.',
     );
 
     // Enrich with required REST vars.
@@ -1286,23 +1289,27 @@ class mediamosa_rest_call_aut_collection_set_rights extends mediamosa_rest_call 
     $a_var_setup[mediamosa_rest_call::VARS][self::COLL_ID] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_COLLECTION_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
+      mediamosa_rest_call::VAR_DESCRIPTION => 'Collection ID',
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::USER_ID] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
+      mediamosa_rest_call::VAR_DESCRIPTION => 'User id, for authorization the changing  process.',
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::REPLACE] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_BOOL,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_DEFAULT_VALUE => 'true',
+      mediamosa_rest_call::VAR_DESCRIPTION => "'TRUE' or 'FALSE'. Whether the existing rules overwritten or not. Default is 'TRUE'. Defining it as 'FALSE', if you want to keep the old rights."
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::AUT_APP] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_APP_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
+      mediamosa_rest_call::VAR_DESCRIPTION => 'Application(s) that access to the collection.',
     );
 
     // Enrich with required REST vars.
@@ -1333,7 +1340,7 @@ class mediamosa_rest_call_aut_collection_set_rights extends mediamosa_rest_call 
       $user_id,
       mediamosa_aut::AUT_TYPE_COLLECTION,
       $a_collection,
-      $a_app_ids,
+      $a_aut_app_ids,
       array(),
       array(),
       array(),

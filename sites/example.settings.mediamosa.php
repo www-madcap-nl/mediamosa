@@ -25,15 +25,6 @@ $databases['mig_memo_data']['default'] = array(
 );
 
 /**
- * The 'mediamosa_installation_id' defines the default install ID
- * for multiple installations of mediamosa. If you use 2 or more
- * www installations of mediamosa for the same database, then
- * specifiy a server ID here. Max length is 16 chars. The
- * server ID can be anything
- */
-$conf['mediamosa_installation_id'] = 'default';
-
-/**
  * Default setting, TRUE / FALSE for enabling / disabling the
  * APP REST interface. Putting it on FALSE will disable the interface
  * for this URL / Location, disabling all REST calls; except upload
@@ -70,3 +61,12 @@ $conf['mediamosa_app_download'] = TRUE;
  */
 $conf['mediamosa_admin'] = TRUE;
 
+/**
+ * The 'mediamosa_installation_id' defines the default install ID for multiple
+ * installations of mediamosa. For now only job servers need to have unique IDs.
+ * Best practise is to give each MediaMosa installation its own ID. F.e. if you
+ * have 'job1.mediamosa.example' for your 1st job server, then specify 'job1' as
+ * installation ID here. 'admin.mediamosa.example' would be 'admin' as
+ * installation ID, etc, etc. Max length is 16 chars.
+ */
+$conf['mediamosa_installation_id'] = 'default';

@@ -38,7 +38,7 @@ class MediaMosaAssetMediafileStreamingTestCaseEga extends MediaMosaTestCaseEga {
     return array(
       'name' => 'Mediafile - Live streaming support',
       'description' => 'Live Streaming server support.',
-      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE,
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET,
     );
   }
 

@@ -297,6 +297,15 @@ class mediamosa_response extends mediamosa {
   }
 
   /**
+   * Set the class in the header.
+   *
+   * @param string $uri
+   */
+  public function set_class($class_name) {
+    $this->a_response['header']['request_class'] = $class_name;
+  }
+
+  /**
    * Set the method used in the header.
    *
    * @param string $method

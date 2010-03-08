@@ -31,7 +31,7 @@
 abstract class mediamosa_rest_call {
   // ------------------------------------------------------------------ Members.
   // Original REST call arguments.
-  private $a_rest_args = array();
+  public $a_rest_args = array();
 
   // Check if there are unspecified arguments and throw exception when we have unspecified arguments.
   protected $check_for_unspecified = FALSE; // Keep on FALSE so get_var_setup() will not fail if it calls process_vars()

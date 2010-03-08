@@ -42,8 +42,6 @@ require_once 'supplement/mediamosa_asset_supplement.install.inc';
  */
 function _mediamosa_asset_install() {
 
-  error_log('mediamosa_asset_install');
-
   // Create our table(s).
   mediamosa::drupal_install_schema(mediamosa_asset_db::TABLE_NAME);
 

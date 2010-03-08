@@ -37,7 +37,7 @@ class MediaMosaAutTestCaseEga extends MediaMosaTestCaseEga {
     return array(
       'name' => 'AUT/ACL - PlayProxy play access',
       'description' => 'Testing the AUT module, previously known as ACL.',
-      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE,
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_AUT,
     );
   }
 
@@ -134,7 +134,7 @@ class MediaMosaAutTestCaseEga extends MediaMosaTestCaseEga {
     $this->doEgaLogin_3();
 
     $this->toEga_1();
-/*
+
     // Create a upload test file with asset and mediafile.
     $a_upload = $this->uploadTestFile();
     $asset_id = $a_upload['asset_id'];
@@ -743,7 +743,7 @@ class MediaMosaAutTestCaseEga extends MediaMosaTestCaseEga {
 
     // Unknown cant play with domain.
     $result = $this->pp_call_1_cant($asset_id_2, $mediafile_id_2, 'unknown', NULL, 'xs4all.nl');
-*/
+
     // Create a upload test file with asset and mediafile.
     $this->toEga_1();
     $a_upload_3 = $this->uploadTestFile();
@@ -844,138 +844,34 @@ class MediaMosaAutTestCaseEga extends MediaMosaTestCaseEga {
     // Do collection search.
     $this->cql_do_search_test_collections_1('', array($coll_id => TRUE));
 
+    $a_parameters = array(
+      mediamosa_rest_call_aut_mediafile_set_rights::AUT_APP => $app_id_2,
+    );
 
+    // Set rights.
+    $this->toEga_1();
+    $a_response = $this->setCollectionAut($coll_id, $a_parameters);
 
+    // Do collection search.
+    $this->cql_do_search_test_collections_1('', array($coll_id => TRUE));
+
+    // Do collection search.
+    $this->cql_do_search_test_collections_2('', array($coll_id => TRUE));
+
+    // Do collection search.
+    $this->cql_do_search_test_collections_3('', array());
+
+    // Remove rights.
+    $this->toEga_1();
+    $this->deleteCollectionAut($coll_id);
+
+    // Do collection search.
+    $this->cql_do_search_test_collections_1('', array($coll_id => TRUE));
+
+    // Do collection search.
+    $this->cql_do_search_test_collections_2('', array());
+
+    // Do collection search.
+    $this->cql_do_search_test_collections_3('', array());
   }
 }
-
-/*
-    // Test group/master slave combi
-
-    // Collection ACL tests
-
-
-    // Geef app SIMPLETEST_APP_ID2 toegang to collection
-    $a_args = array(
-       'get' => array(
-         'app_id' => SIMPLETEST_APP_ID,
-         'user_id' => SIMPLETEST_USER_ID,
-       ),
-       'uri' => array('coll_id' => $coll_id),
-       'post' => array(
-         mediamosa_rest_call_aut_mediafile_set_rights::AUT_APP => SIMPLETEST_APP_ID2,
-       ),
-    );
-    $result = vpx_acl_collection_set_rights($a_args); // zet autorisatie
-    $this->assertTrue(
-      isset($result->response['items'][1]) && $result->response['items'][1][mediamosa_rest_call_aut_mediafile_set_rights::AUT_APP]['result_id'] == ERRORCODE_OKAY,
-      "Collection authorisation: Set access for App SIMPLETEST_APP_ID2"
-    );
-
-    // Vraag lijst collection app 9999, moet nog steeds in lijst zijn
-    $a_args = array(
-       'get' => array(
-         'app_id' => SIMPLETEST_APP_ID,
-          'limit' => 1,
-         'order_by' => 'changed',
-         'order_direction' => VPX_ORDER_BY_DESC,
-       ),
-       'uri' => array('coll_id' => $coll_id),
-    );
-    $result = media_management_get_collection_search($a_args);
-    $this->assertTrue(
-      isset($result->response['items'][1]) && $result->response['items'][1]['coll_id'] == $coll_id,
-      "Collection authorisation: Collection still exists in result with new ACL rules"
-    );
-
-    // Vraag lijst collection app SIMPLETEST_APP_ID2, moet in lijst zijn
-    $a_args = array(
-       'get' => array(
-         'app_id' => SIMPLETEST_APP_ID2,
-         'limit' => 1,
-         'order_by' => 'created',
-         'order_direction' => VPX_ORDER_BY_DESC,
-       ),
-       'uri' => array('coll_id' => $coll_id),
-    );
-    $result = media_management_get_collection_search($a_args);
-    $this->assertTrue(
-      isset($result->response['items'][1]) && $result->response['items'][1]['coll_id'] == $coll_id,
-      "Collection authorisation: App SIMPLETEST_APP_ID2 has access to collection"
-    );
-
-    // Vraag lijst collection app SIMPLETEST_APP_ID3, moet niet lijst zijn
-    $a_args = array(
-       'get' => array(
-         'app_id' => SIMPLETEST_APP_ID3,
-         'limit' => 1,
-         'order_by' => 'created',
-         'order_direction' => VPX_ORDER_BY_DESC,
-       ),
-       'uri' => array('coll_id' => $coll_id),
-    );
-    $result = media_management_get_collection_search($a_args);
-    $this->assertTrue(
-      !isset($result->response['items'][1]) || $result->response['items'][1]['coll_id'] != $coll_id,
-      "Collection authorisation: App SIMPLETEST_APP_ID3 has no access to collection"
-    );
-
-    // verwijder toegang
-    $a_args = array(
-       'get' => array(
-         'app_id' => SIMPLETEST_APP_ID,
-         'user_id' => SIMPLETEST_USER_ID,
-       ),
-       'uri' => array('coll_id' => $coll_id),
-    );
-    $result = vpx_acl_collection_delete_rights($a_args);
-    $this->assertTrue(
-      isset($result->response['header']) && $result->response['header']['request_result_id'] == ERRORCODE_OKAY,
-      "Collection authorisation: All rights removed from collection"
-    );
-
-    // Vraag lijst collection app 9999, moet nog steeds in lijst zijn
-    $a_args = array(
-       'get' => array(
-         'app_id' => SIMPLETEST_APP_ID,
-         'limit' => 1,
-         'order_by' => 'changed',
-         'order_direction' => VPX_ORDER_BY_DESC,
-       ),
-       'uri' => array('coll_id' => $coll_id),
-    );
-    $result = media_management_get_collection_search($a_args);
-    $this->assertTrue(
-      isset($result->response['items'][1]) && $result->response['items'][1]['coll_id'] == $coll_id,
-      "Collection authorisation: Collection still exists in result without new ACL rules for orginal APP"
-    );
-
-    // Vraag lijst collection app SIMPLETEST_APP_ID2, moet niet in lijst zijn
-    $a_args = array(
-       'get' => array(
-         'app_id' => SIMPLETEST_APP_ID2,
-         'limit' => 1,
-         'order_by' => 'created',
-         'order_direction' => VPX_ORDER_BY_DESC,
-       ),
-       'uri' => array('coll_id' => $coll_id),
-    );
-    $result = media_management_get_collection_search($a_args);
-    $this->assertTrue(
-      !isset($result->response['items'][1]) || $result->response['items'][1]['coll_id'] != $coll_id,
-      "Collection authorisation: App SIMPLETEST_APP_ID2 has access to collection"
-    );
-
-    // verwijder alle rechten
-    $a_args = array(
-       'get' => array(
-         'app_id' => SIMPLETEST_APP_ID,
-         'user_id' => SIMPLETEST_USER_ID,
-       ),
-       'uri' => array('mediafile_id' => $mediafile_id),
-    );
-    vpx_acl_mediafile_delete_rights($a_args);
-
-    // verwijder de test asset/mf
-    $this->_delete_temporary_items($this->s_user_story);
-*/

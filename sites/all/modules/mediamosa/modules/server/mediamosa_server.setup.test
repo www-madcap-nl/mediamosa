@@ -1,0 +1,96 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+ /**
+  * @file
+  * Test if the server is setup as expected.
+  */
+
+
+ /**
+  * @file
+  * CQL test file.
+  */
+class MediaMosaServerSetupTestCaseEga extends MediaMosaTestCaseEgaJob {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'Job Server - Setup',
+      'description' => 'Server setup checks if job servers are setup correctly.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_JOB,
+    );
+  }
+
+  /**
+   * Test job server setup.
+   */
+  public function testSetup() {
+
+    // Get the server status list.
+    $a_server_statuses = mediamosa_server::get_status_enabled_servers();
+    $a_server_hosts = $a_server_ids = array();
+
+    foreach ($a_server_statuses as $a_server_status) {
+      $this->pass(strtr('Found job server, type: @type, host: @uri, mediamosa_installation_id: @server_id.',
+        array(
+          '@type' => $a_server_status['enabled_server']['server_type'],
+          '@uri' => $a_server_status['enabled_server']['uri'],
+          '@server_id' => $a_server_status['status']['server_id'],
+        )
+      ));
+
+      $this->assertFalse(empty($a_server_status), 'Found enabled server');
+
+      $a_server_hosts[$a_server_status['status']['host']] = $a_server_status['status']['server_id'];
+      $a_server_ids[$a_server_status['status']['server_id']] = $a_server_status['status']['server_id'];
+    }
+
+    // All servers must have own server_id.
+    $this->assertTrue(count($a_server_ids) == count($a_server_hosts), 'All enabled server have different installation IDs. Make sure each server has own mediamosa_installation_id specified in settings.php.');
+
+    // Check if we have a default upload server.
+    $a_upload_server = mediamosa_server::get_random_upload();
+    $this->assertFalse(empty($a_upload_server), 'Found default enabled upload server.');
+
+    // Check if we have at least one download server.
+    $a_download_servers = mediamosa_server::get_enabled_download();
+
+    foreach ($a_download_servers as $a_download_server) {
+      $this->pass(strtr('Found download server, type: @type, host: @uri.',
+        array(
+          '@type' => $a_download_server[mediamosa_server_db::SERVER_TYPE],
+          '@uri' => $a_download_server[mediamosa_server_db::URI],
+        )
+      ));
+    }
+
+    // Must have one.
+    $this->assertFalse(empty($a_download_server), 'Found at least one enabled download server.');
+  }
+}

@@ -32,6 +32,43 @@
 class mediamosa_server {
 
   // ------------------------------------------------------------------ Consts.
+
+  /**
+   * Trigger process servers.
+   */
+  static public function trigger() {
+
+    // Get all enabled transcode servers (ON / CLOSE).
+    $a_servers = self::get_enabled_transcode();
+    $a_triggered = array();
+    foreach ($a_servers as $a_server) {
+
+      // Get URL.
+      $url = mediamosa_http::uri2url($a_server[mediamosa_server_db::URI]) . '/internal/cron/jobserver';
+
+      // Prevent multiple triggers if url is on more than one server.
+      if (in_array($url, $a_triggered)) {
+        continue;
+      }
+
+      // Mark triggered.
+      $a_triggered[] = $url;
+
+      // Log it.
+      mediamosa_debug::log_debug('Triggering job server @ @uri', array('@uri' => $url));
+
+      // Dont trigger in sandbox.
+      if (mediamosa::in_simpletest_sandbox()) {
+        // So we wait till finished.
+        MediaMosaTestCase::staticInternalRestCallGet($url);
+      }
+      else {
+        // Trigger.
+        mediamosa_http::do_head_internal_call($url);
+      }
+    }
+  }
+
   /**
    * Get random upload server.
    */
@@ -48,6 +85,31 @@ class mediamosa_server {
         ':server_type' => mediamosa_server_db::SERVER_TYPE_UPLOAD,
       )
     )->fetchAssoc();
+  }
+
+  /**
+   * Returns status information from all enabled servers.
+   */
+  static public function get_status_enabled_servers() {
+    $a_enabled_servers = mediamosa_server::get_enabled_transcode();
+
+    $a_servers = array();
+    foreach ($a_enabled_servers as $a_enabled_server) {
+
+      $response = mediamosa_http::do_internal_call($a_enabled_server[mediamosa_server_db::URI], 'server/status');
+      if ($response->code != '200') {
+        self::log('Call to server/status did not return a 200 result (header: @header)', array('@header' => var_export($response, TRUE)));
+      }
+
+      $xml = new SimpleXMLElement($response->data);
+
+      $a_servers[] = array(
+        'enabled_server' => $a_enabled_server,
+        'status' => (isset($xml->items->item) ? mediamosa_lib::simplexml2array($xml->items->item) : array())
+      );
+    }
+
+    return $a_servers;
   }
 
   /**
@@ -263,6 +325,15 @@ class mediamosa_server {
   static public function search_containers() {
     return mediamosa_db::db_select(mediamosa_server_streaming_container_db::TABLE_NAME, 'mssc')
       ->fields('mssc')
+      ->execute();
+  }
+
+  /**
+   * Basic search on tools, for now return all.
+   */
+  static public function search_tools() {
+    return mediamosa_db::db_select(mediamosa_server_tool_db::TABLE_NAME, 'mst')
+      ->fields('mst')
       ->execute();
   }
 }

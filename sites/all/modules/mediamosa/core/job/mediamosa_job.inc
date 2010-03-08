@@ -699,7 +699,7 @@ class mediamosa_job {
    *
    * @param $a_parameters
    */
-  static public function get_job_list($app_id, $user_id, $is_app_admin, $job_id = '', $asset_id = '', $mediafile_id = '') {
+  static public function get_job_list($app_id, $user_id, $is_app_admin = FALSE, $job_id = 0, $asset_id = '', $mediafile_id = '') {
 
     $query = mediamosa_db::db_select(mediamosa_job_db::TABLE_NAME, 'j');
     $query->fields('j');
@@ -721,10 +721,10 @@ class mediamosa_job {
     if (!empty($mediafile_id)) {
       $query->condition('j.' . mediamosa_job_db::MEDIAFILE_ID, $mediafile_id);
     }
+    $query->orderBy('j.' . mediamosa_job_db::ASSET_ID, 'ASC');
+    $query->orderBy('j.' . mediamosa_job_db::PRIORITY, 'ASC');
 
-    $query->orderBy('a.' . mediamosa_job_db::ASSET_ID, 'ASC');
-    $query->orderBy('a.' . mediamosa_job_db::PRIORITY, 'ASC');
-    return $query->execute();
+    return $query->execute()->fetchAll();
   }
 
   /**
