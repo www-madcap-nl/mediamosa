@@ -28,9 +28,6 @@ Steps for changelog and commits;
 
 START CHANGELOG:
 
-Known issues / bugs;
-- play_restriction_start and play_restriction_end doesn't seem to work. The old
-  MediaMosa 1.x code uses 'time_restriction_*' as variables in play proxy code. 
  
 
 Mediamosa 2.1.2
@@ -50,6 +47,9 @@ Mediamosa 2.1.2
   replaced by mediafile_id_source.
 - mediafile_id_source is now either NULL or points to its original mediafile.
 - Fixed still generation call /mediafile/$mediafile/still. 
+- Fixed play_restriction code. Typo with 'time_restriction_' prevented working
+  of this code in the play proxy code. Seems to be old bug dating back from 1.0.
+
 
 MediaMosa 2.1.1
 ---------------
