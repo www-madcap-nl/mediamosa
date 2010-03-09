@@ -1403,7 +1403,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
   /**
    * Update mediafile.
-   * Based on the GET rest call /mediafile/$mediafile_id (POST)
+   * Based on the POST rest call /mediafile/$mediafile_id (POST)
    */
   protected function updateMediafile($mediafile_id, array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
@@ -1421,6 +1421,36 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $this->assertTrue(
       in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
       strtr("Updated mediafile with ID: @mediafile_id, got result @result (@result_description)", array('@mediafile_id' => $mediafile_id, '@result' => (string)$response['xml']->header->request_result_id, '@result_description' => $response['xml']->header->request_result_description))
+    );
+
+    // Return response.
+    return $response;
+  }
+
+  /**
+   * Update collection.
+   * Based on the POST rest call /collection/$collection_id (POST)
+   */
+  protected function updateCollection($collection_id, array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    // Parameters asset.
+    $a_parameters += array(
+      mediamosa_rest_call_update_mediafile::USER_ID => self::SIMPLETEST_USER_ID,
+    );
+
+    // Set the URI.
+    $uri = strtr('collection/@collection_id', array('@collection_id' => $collection_id));
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $a_parameters, array(), $a_expected_result_ids, $do_internal);
+
+    // Test response.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr("Updated collection with ID: @collection_id, got result @result (@result_description)", array(
+        '@collection_id' => $collection_id,
+        '@result' => (string)$response['xml']->header->request_result_id,
+        '@result_description' => $response['xml']->header->request_result_description
+      ))
     );
 
     // Return response.
