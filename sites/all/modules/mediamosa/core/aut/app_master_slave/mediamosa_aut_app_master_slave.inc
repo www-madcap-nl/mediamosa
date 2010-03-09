@@ -180,7 +180,7 @@ class mediamosa_aut_app_master_slave {
     }
 
     $result = mediamosa_db::db_query(
-      'SELECT #app_master_id FROM {#aut_app_master_slave} WHERE #aut_object_type = :aut_object_type AND #aut_object_id = :aut_object_id AND #app_id_master > 0 AND #app_id_slave = :app_id_slave',
+      'SELECT #app_id_master FROM {#aut_app_master_slave} WHERE #aut_object_type = :aut_object_type AND #aut_object_id = :aut_object_id AND #app_id_master > 0 AND #app_id_slave = :app_id_slave',
       array(
         '#aut_app_master_slave' => mediamosa_aut_app_master_slave_db::TABLE_NAME,
         '#aut_object_type' => mediamosa_aut_app_master_slave_db::AUT_OBJECT_TYPE,

@@ -1153,7 +1153,7 @@ class mediamosa_asset_cql_context extends mediamosa_core_cql_context {
           'mediamosa:aut' => array(
             MEDIAMOSA_CQL_CONTEXT_KEY_COLUMNS=> array(
               'aut_app' => array(
-                MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'app_master_id',
+                MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'app_id_master',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'aut_ms',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_INT,
                 MEDIAMOSA_CQL_CONTEXT_KEY_JOIN => 'AUT_APP_MASTER_SLAVE',// Trick to include the join of this table.

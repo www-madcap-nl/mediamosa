@@ -16,6 +16,7 @@ files[] = mediamosa_asset.test
 files[] = mediamosa_asset.cql.test
 files[] = mediamosa_asset.cql_asset_collection.test
 files[] = mediamosa_asset.cql_isprivate.test
+files[] = mediamosa_asset.cql_acl_context.test
 files[] = mediamosa_asset.function.test
 files[] = mediamosa_asset.search.test
 files[] = mediamosa_asset.delete.test
