@@ -1,5 +1,5 @@
 <?php
-// $Id: translation.module,v 1.74 2010/01/09 21:54:01 webchick Exp $
+// $Id: translation.module,v 1.76 2010/03/07 07:44:18 webchick Exp $
 
 /**
  * @file
@@ -182,7 +182,7 @@ function translation_form_alter(&$form, &$form_state, $form_id) {
 function translation_node_view($node, $view_mode) {
   if (isset($node->tnid) && $translations = translation_node_get_translations($node->tnid)) {
     $path = 'node/' . $node->nid;
-    $links = language_negotiation_get_switch_links(LANGUAGE_TYPE_CONTENT, $path);
+    $links = language_negotiation_get_switch_links(LANGUAGE_TYPE_INTERFACE, $path);
     if (is_object($links)) {
       $links = $links->links;
       // Do not show link to the same node.
@@ -210,7 +210,7 @@ function translation_node_prepare($node) {
     isset($_GET['translation']) &&
     isset($_GET['language']) &&
     is_numeric($_GET['translation'])) {
-    
+
     $source_node = node_load($_GET['translation']);
     if (empty($source_node) || !node_access('view', $source_node)) {
       // Source node not found or no access to view. We should not check
@@ -218,13 +218,13 @@ function translation_node_prepare($node) {
       // to edit the source node but should still be able to translate.
       return;
     }
-    
+
     $language_list = language_list();
     if (!isset($language_list[$_GET['language']]) || ($source_node->language == $_GET['language'])) {
       // If not supported language, or same language as source node, break.
       return;
     }
-    
+
     // Ensure we don't have an existing translation in this language.
     if (!empty($source_node->tnid)) {
       $translations = translation_node_get_translations($source_node->tnid);
@@ -233,7 +233,7 @@ function translation_node_prepare($node) {
         return;
       }
     }
-    
+
     // Populate fields based on source node.
     $node->language = $_GET['language'];
     $node->translation_source = $source_node;
@@ -440,7 +440,7 @@ function translation_path_get_translations($path) {
  * Replaces links with pointers to translated versions of the content.
  */
 function translation_language_switch_links_alter(array &$links, $type, $path) {
-  if ($type == LANGUAGE_TYPE_CONTENT && $paths = translation_path_get_translations($path)) {
+  if ($type == LANGUAGE_TYPE_INTERFACE && $paths = translation_path_get_translations($path)) {
     foreach ($links as $langcode => $link) {
       if (isset($paths[$langcode])) {
         // Translation in a different node.

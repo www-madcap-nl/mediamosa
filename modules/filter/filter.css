@@ -1,17 +1,15 @@
-/* $Id: filter.css,v 1.2 2009/12/14 13:32:53 dries Exp $ */
+/* $Id: filter.css,v 1.4 2010/03/09 11:45:37 dries Exp $ */
 
 .text-format-wrapper .form-item {
   margin-bottom: 0;
 }
 .filter-wrapper {
   border-top: 0;
-  width: 95%;
   margin: 0;
   padding: 1.5em 0 1.5em;
 }
 .filter-wrapper .form-item {
   float: left;
-  margin: 0;
   padding: 0 0 0.5em 1.5em;
 }
 .filter-wrapper .form-item label {

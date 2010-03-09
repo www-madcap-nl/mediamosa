@@ -1,5 +1,5 @@
 <?php
-// $Id: bootstrap.inc,v 1.344 2010/01/15 14:35:08 webchick Exp $
+// $Id: bootstrap.inc,v 1.359 2010/03/07 07:44:18 webchick Exp $
 
 /**
  * @file
@@ -9,7 +9,7 @@
 /**
  * The current system version.
  */
-define('VERSION', '7.0-alpha1');
+define('VERSION', '7.0-dev');
 
 /**
  * Core API compatibility.
@@ -29,7 +29,7 @@ define('DRUPAL_MINIMUM_PHP_MEMORY_LIMIT',    '40M');
 /**
  * Minimum supported version of MySQL, if it is used.
  */
-define('DRUPAL_MINIMUM_MYSQL',  '5.0');
+define('DRUPAL_MINIMUM_MYSQL',  '5.0.15');
 
 /**
  * Minimum supported version of PostgreSQL, if it is used.
@@ -189,12 +189,12 @@ define('LANGUAGE_NONE', 'und');
 /**
  * The type of language used to define the content language.
  */
-define('LANGUAGE_TYPE_CONTENT', 'language');
+define('LANGUAGE_TYPE_CONTENT', 'language_content');
 
 /**
  * The type of language used to select the user interface.
  */
-define('LANGUAGE_TYPE_INTERFACE', 'language_interface');
+define('LANGUAGE_TYPE_INTERFACE', 'language');
 
 /**
  * The type of language used for URLs.
@@ -296,13 +296,17 @@ function timer_read($name) {
 function timer_stop($name) {
   global $timers;
 
-  if (isset($timers[$name]['time'])) {
-    $timers[$name]['time'] += timer_read($name);
+  if (isset($timers[$name]['start'])) {
+    $stop = microtime(TRUE);
+    $diff = round(($stop - $timers[$name]['start']) * 1000, 2);
+    if (isset($timers[$name]['time'])) {
+      $timers[$name]['time'] += $diff;
+    }
+    else {
+      $timers[$name]['time'] = $diff;
+    }
+    unset($timers[$name]['start']);
   }
-  else {
-    $timers[$name]['time'] = timer_read($name);
-  }
-  unset($timers[$name]['start']);
 
   return $timers[$name];
 }
@@ -492,6 +496,13 @@ function drupal_environment_initialize() {
     $_SERVER['HTTP_HOST'] = '';
   }
 
+  // When clean URLs are enabled, emulate ?q=foo/bar using REQUEST_URI. It is
+  // not possible to append the query string using mod_rewrite without the B
+  // flag (this was added in Apache 2.2.8), because mod_rewrite unescapes the
+  // path before passing it on to PHP. This is a problem when the path contains
+  // e.g. "&" or "%" that have special meanings in URLs and must be encoded.
+  $_GET['q'] = request_path();
+
   // Enforce E_ALL, but allow users to set levels not part of E_ALL.
   error_reporting(E_ALL | error_reporting());
 
@@ -512,6 +523,10 @@ function drupal_environment_initialize() {
   ini_set('session.cache_limiter', 'none');
   // Use httponly session cookies.
   ini_set('session.cookie_httponly', '1');
+
+  // Set sane locale settings, to ensure consistent string, dates, times and
+  // numbers handling.
+  setlocale(LC_ALL, 'C');
 }
 
 /**
@@ -559,8 +574,8 @@ function drupal_settings_initialize() {
 
     // $_SERVER['SCRIPT_NAME'] can, in contrast to $_SERVER['PHP_SELF'], not
     // be modified by a visitor.
-    if ($dir = trim(dirname($_SERVER['SCRIPT_NAME']), '\,/')) {
-      $base_path = "/$dir";
+    if ($dir = rtrim(dirname($_SERVER['SCRIPT_NAME']), '\/')) {
+      $base_path = $dir;
       $base_url .= $base_path;
       $base_path .= '/';
     }
@@ -629,7 +644,7 @@ function drupal_settings_initialize() {
  * the above, depending on where the module is located.
  *
  * @param $type
- *   The type of the item (i.e. theme, theme_engine, module).
+ *   The type of the item (i.e. theme, theme_engine, module, profile).
  * @param $name
  *   The name of the item for which the filename is requested.
  * @param $filename
@@ -895,32 +910,22 @@ function drupal_load($type, $name) {
  * too. This is necessary to avoid security bugs (e.g. UTF-7 XSS).
  *
  * @param $name
- *   The HTTP header name, or a status code followed by a reason phrase, e.g.
- *   "404 Not Found".
+ *   The HTTP header name, or the special 'Status' header name.
  * @param $value
- *   The HTTP header value; if omitted, the specified header is unset.
+ *   The HTTP header value; if equal to FALSE, the specified header is unset.
+ *   If $name is 'Status', this is expected to be a status code followed by a
+ *   reason phrase, e.g. "404 Not Found".
  * @param $append
  *   Whether to append the value to an existing header or to replace it.
  */
-function drupal_add_http_header($name = NULL, $value = NULL, $append = FALSE) {
+function drupal_add_http_header($name, $value, $append = FALSE) {
   // The headers as name/value pairs.
-  $headers = &drupal_static(__FUNCTION__, array());
+  $headers = &drupal_static('drupal_http_headers', array());
 
-  if (!isset($name)) {
-    return $headers;
-  }
-
-  // Save status codes using the special key ":status".
-  if (preg_match('/^\d{3} /', $name)) {
-    $value = $name;
-    $name = $name_lower = ':status';
-  }
-  else {
-    $name_lower = strtolower($name);
-  }
+  $name_lower = strtolower($name);
   _drupal_set_preferred_header_name($name);
 
-  if (!isset($value)) {
+  if ($value === FALSE) {
     $headers[$name_lower] = FALSE;
   }
   elseif (isset($headers[$name_lower]) && $append) {
@@ -945,7 +950,7 @@ function drupal_add_http_header($name = NULL, $value = NULL, $append = FALSE) {
  *   or NULL if the header has not been set.
  */
 function drupal_get_http_header($name = NULL) {
-  $headers = drupal_add_http_header();
+  $headers = &drupal_static('drupal_http_headers', array());
   if (isset($name)) {
     $name = strtolower($name);
     return isset($headers[$name]) ? $headers[$name] : NULL;
@@ -995,7 +1000,7 @@ function drupal_send_headers($default_headers = array(), $only_default = FALSE) 
     }
   }
   foreach ($headers as $name_lower => $value) {
-    if ($name_lower == ':status') {
+    if ($name_lower == 'status') {
       header($_SERVER['SERVER_PROTOCOL'] . ' ' . $value);
     }
     // Skip headers that have been unset.
@@ -1178,6 +1183,255 @@ function drupal_unpack($obj, $field = 'data') {
 }
 
 /**
+ * Translate strings to the page language or a given language.
+ *
+ * Human-readable text that will be displayed somewhere within a page should
+ * be run through the t() function.
+ *
+ * Examples:
+ * @code
+ *   if (!$info || !$info['extension']) {
+ *     form_set_error('picture_upload', t('The uploaded file was not an image.'));
+ *   }
+ *
+ *   $form['submit'] = array(
+ *     '#type' => 'submit',
+ *     '#value' => t('Log in'),
+ *   );
+ * @endcode
+ *
+ * Any text within t() can be extracted by translators and changed into
+ * the equivalent text in their native language.
+ *
+ * Special variables called "placeholders" are used to signal dynamic
+ * information in a string which should not be translated. Placeholders
+ * can also be used for text that may change from time to time (such as
+ * link paths) to be changed without requiring updates to translations.
+ *
+ * For example:
+ * @code
+ *   $output = t('There are currently %members and %visitors online.', array(
+ *     '%members' => format_plural($total_users, '1 user', '@count users'),
+ *     '%visitors' => format_plural($guests->count, '1 guest', '@count guests')));
+ * @endcode
+ *
+ * There are three styles of placeholders:
+ * - !variable, which indicates that the text should be inserted as-is. This is
+ *   useful for inserting variables into things like e-mail.
+ *   @code
+ *     $message[] = t("If you don't want to receive such e-mails, you can change your settings at !url.", array('!url' => url("user/$account->uid", array('absolute' => TRUE))));
+ *   @endcode
+ *
+ * - @variable, which indicates that the text should be run through
+ *   check_plain, to escape HTML characters. Use this for any output that's
+ *   displayed within a Drupal page.
+ *   @code
+ *     drupal_set_title($title = t("@name's blog", array('@name' => format_username($account))), PASS_THROUGH);
+ *   @endcode
+ *
+ * - %variable, which indicates that the string should be HTML escaped and
+ *   highlighted with theme_placeholder() which shows up by default as
+ *   <em>emphasized</em>.
+ *   @code
+ *     $message = t('%name-from sent %name-to an e-mail.', array('%name-from' => format_username($user), '%name-to' => format_username($account)));
+ *   @endcode
+ *
+ * When using t(), try to put entire sentences and strings in one t() call.
+ * This makes it easier for translators, as it provides context as to what
+ * each word refers to. HTML markup within translation strings is allowed, but
+ * should be avoided if possible. The exception are embedded links; link
+ * titles add a context for translators, so should be kept in the main string.
+ *
+ * Here is an example of incorrect usage of t():
+ * @code
+ *   $output .= t('<p>Go to the @contact-page.</p>', array('@contact-page' => l(t('contact page'), 'contact')));
+ * @endcode
+ *
+ * Here is an example of t() used correctly:
+ * @code
+ *   $output .= '<p>' . t('Go to the <a href="@contact-page">contact page</a>.', array('@contact-page' => url('contact'))) . '</p>';
+ * @endcode
+ *
+ * Avoid escaping quotation marks wherever possible.
+ *
+ * Incorrect:
+ * @code
+ *   $output .= t('Don\'t click me.');
+ * @endcode
+ *
+ * Correct:
+ * @code
+ *   $output .= t("Don't click me.");
+ * @endcode
+ *
+ * Because t() is designed for handling code-based strings, in almost all
+ * cases, the actual string and not a variable must be passed through t().
+ *
+ * Extraction of translations is done based on the strings contained in t()
+ * calls. If a variable is passed through t(), the content of the variable
+ * cannot be extracted from the file for translation.
+ *
+ * Incorrect:
+ * @code
+ *   $message = 'An error occurred.';
+ *   drupal_set_message(t($message), 'error');
+ *   $output .= t($message);
+ * @endcode
+ *
+ * Correct:
+ * @code
+ *   $message = t('An error occurred.');
+ *   drupal_set_message($message, 'error');
+ *   $output .= $message;
+ * @endcode
+ *
+ * The only case in which variables can be passed safely through t() is when
+ * code-based versions of the same strings will be passed through t() (or
+ * otherwise extracted) elsewhere.
+ *
+ * In some cases, modules may include strings in code that can't use t()
+ * calls. For example, a module may use an external PHP application that
+ * produces strings that are loaded into variables in Drupal for output.
+ * In these cases, module authors may include a dummy file that passes the
+ * relevant strings through t(). This approach will allow the strings to be
+ * extracted.
+ *
+ * Sample external (non-Drupal) code:
+ * @code
+ *   class Time {
+ *     public $yesterday = 'Yesterday';
+ *     public $today = 'Today';
+ *     public $tomorrow = 'Tomorrow';
+ *   }
+ * @endcode
+ *
+ * Sample dummy file.
+ * @code
+ *   // Dummy function included in example.potx.inc.
+ *   function example_potx() {
+ *     $strings = array(
+ *       t('Yesterday'),
+ *       t('Today'),
+ *       t('Tomorrow'),
+ *     );
+ *     // No return value needed, since this is a dummy function.
+ *   }
+ * @endcode
+ *
+ * Having passed strings through t() in a dummy function, it is then
+ * okay to pass variables through t().
+ *
+ * Correct (if a dummy file was used):
+ * @code
+ *   $time = new Time();
+ *   $output .= t($time->today);
+ * @endcode
+ *
+ * However tempting it is, custom data from user input or other non-code
+ * sources should not be passed through t(). Doing so leads to the following
+ * problems and errors:
+ *  - The t() system doesn't support updates to existing strings. When user
+ *    data is updated, the next time it's passed through t() a new record is
+ *    created instead of an update. The database bloats over time and any
+ *    existing translations are orphaned with each update.
+ *  - The t() system assumes any data it receives is in English. User data may
+ *    be in another language, producing translation errors.
+ *  - The "Built-in interface" text group in the locale system is used to
+ *    produce translations for storage in .po files. When non-code strings are
+ *    passed through t(), they are added to this text group, which is rendered
+ *    inaccurate since it is a mix of actual interface strings and various user
+ *    input strings of uncertain origin.
+ *
+ * Incorrect:
+ * @code
+ *   $item = item_load();
+ *   $output .= check_plain(t($item['title']));
+ * @endcode
+ *
+ * Instead, translation of these data can be done through the locale system,
+ * either directly or through helper functions provided by contributed
+ * modules.
+ * @see hook_locale()
+ *
+ * During installation, st() is used in place of t(). Code that may be called
+ * during installation or during normal operation should use the get_t()
+ * helper function.
+ * @see st()
+ * @see get_t()
+ *
+ * @param $string
+ *   A string containing the English string to translate.
+ * @param $args
+ *   An associative array of replacements to make after translation. Incidences
+ *   of any key in this array are replaced with the corresponding value. Based
+ *   on the first character of the key, the value is escaped and/or themed:
+ *    - !variable: inserted as is
+ *    - @variable: escape plain text to HTML (check_plain)
+ *    - %variable: escape text and theme as a placeholder for user-submitted
+ *      content (check_plain + theme_placeholder)
+ * @param $options
+ *   An associative array of additional options, with the following keys:
+ *     - 'langcode' (default to the current language) The language code to
+ *       translate to a language other than what is used to display the page.
+ *     - 'context' (default to the empty context) The context the source string
+ *       belongs to.
+ * @return
+ *   The translated string.
+ */
+function t($string, array $args = array(), array $options = array()) {
+  global $language;
+  static $custom_strings;
+
+  // Merge in default.
+  if (empty($options['langcode'])) {
+    $options['langcode'] = isset($language->language) ? $language->language : 'en';
+  }
+  if (empty($options['context'])) {
+    $options['context'] = '';
+  }
+
+  // First, check for an array of customized strings. If present, use the array
+  // *instead of* database lookups. This is a high performance way to provide a
+  // handful of string replacements. See settings.php for examples.
+  // Cache the $custom_strings variable to improve performance.
+  if (!isset($custom_strings[$options['langcode']])) {
+    $custom_strings[$options['langcode']] = variable_get('locale_custom_strings_' . $options['langcode'], array());
+  }
+  // Custom strings work for English too, even if locale module is disabled.
+  if (isset($custom_strings[$options['langcode']][$options['context']][$string])) {
+    $string = $custom_strings[$options['langcode']][$options['context']][$string];
+  }
+  // Translate with locale module if enabled.
+  elseif (function_exists('locale') && $options['langcode'] != 'en') {
+    $string = locale($string, $options['context'], $options['langcode']);
+  }
+  if (empty($args)) {
+    return $string;
+  }
+  else {
+    // Transform arguments before inserting them.
+    foreach ($args as $key => $value) {
+      switch ($key[0]) {
+        case '@':
+          // Escaped only.
+          $args[$key] = check_plain($value);
+          break;
+
+        case '%':
+        default:
+          // Escaped and placeholder.
+          $args[$key] = drupal_placeholder(array('text' => $value));
+          break;
+
+        case '!':
+          // Pass-through.
+      }
+    }
+    return strtr($string, $args);
+  }
+}
+
+/**
  * Encode special characters in a plain-text string for display as HTML.
  *
  * Also validates strings as UTF-8 to prevent cross site scripting attacks on
@@ -1303,7 +1557,7 @@ function watchdog($type, $message, $variables = array(), $severity = WATCHDOG_NO
 
   // It is possible that the error handling will itself trigger an error. In that case, we could
   // end up in an infinite loop. To avoid that, we implement a simple static semaphore.
-  if (!$in_error_state) {
+  if (!$in_error_state && function_exists('module_implements')) {
     $in_error_state = TRUE;
 
     // Prepare the fields to be logged
@@ -1558,9 +1812,48 @@ function drupal_bootstrap($phase = NULL, $new_phase = TRUE) {
 }
 
 /**
+ * Custom PHP error handler.
+ *
+ * @param $error_level
+ *   The level of the error raised.
+ * @param $message
+ *   The error message.
+ * @param $filename
+ *   The filename that the error was raised in.
+ * @param $line
+ *   The line number the error was raised at.
+ * @param $context
+ *   An array that points to the active symbol table at the point the error occurred.
+ */
+function _drupal_error_handler($error_level, $message, $filename, $line, $context) {
+  require_once DRUPAL_ROOT . '/includes/errors.inc';
+  _drupal_error_handler_real($error_level, $message, $filename, $line, $context);
+}
+
+/**
+ * Custom PHP exception handler.
+ *
+ * Uncaught exceptions are those not enclosed in a try/catch block. They are
+ * always fatal: the execution of the script will stop as soon as the exception
+ * handler exits.
+ *
+ * @param $exception
+ *   The exception object that was thrown.
+ */
+function _drupal_exception_handler($exception) {
+  require_once DRUPAL_ROOT . '/includes/errors.inc';
+  // Log the message to the watchdog and return an error page to the user.
+  _drupal_log_error(_drupal_decode_exception($exception), TRUE);
+}
+
+/**
  * Bootstrap configuration: Setup script environment and load settings.php.
  */
 function _drupal_bootstrap_configuration() {
+  // Set the Drupal custom error handler.
+  set_error_handler('_drupal_error_handler');
+  set_exception_handler('_drupal_exception_handler');
+
   drupal_environment_initialize();
   // Start a page timer:
   timer_start('page');
@@ -1654,7 +1947,7 @@ function _drupal_bootstrap_variables() {
 }
 
 /**
- * Bootstrap page header: Invoke hook_boot(), intialize locking system, and send default HTTP headers.
+ * Bootstrap page header: Invoke hook_boot(), initialize locking system, and send default HTTP headers.
  */
 function _drupal_bootstrap_page_header() {
   bootstrap_invoke_all('boot');
@@ -1788,8 +2081,8 @@ function drupal_language_initialize() {
  */
 function drupal_language_types() {
   return array(
-    LANGUAGE_TYPE_CONTENT => TRUE,
     LANGUAGE_TYPE_INTERFACE => TRUE,
+    LANGUAGE_TYPE_CONTENT => FALSE,
     LANGUAGE_TYPE_URL => FALSE,
   );
 }
@@ -1798,11 +2091,7 @@ function drupal_language_types() {
  * Return true if there is more than one language enabled.
  */
 function drupal_multilingual() {
-  static $multilingual;
-  if (!isset($multilingual)) {
-    $multilingual = variable_get('language_count', 1) > 1;
-  }
-  return $multilingual;
+  return variable_get('language_count', 1) > 1;
 }
 
 /**
@@ -1856,6 +2145,50 @@ function language_list($field = 'language') {
 function language_default($property = NULL) {
   $language = variable_get('language_default', (object) array('language' => 'en', 'name' => 'English', 'native' => 'English', 'direction' => 0, 'enabled' => 1, 'plurals' => 0, 'formula' => '', 'domain' => '', 'prefix' => '', 'weight' => 0, 'javascript' => ''));
   return $property ? $language->$property : $language;
+}
+
+/**
+ * Returns the requested URL path of the page being viewed.
+ *
+ * Examples:
+ * - http://example.com/node/306 returns "node/306".
+ * - http://example.com/drupalfolder/node/306 returns "node/306" while
+ *   base_path() returns "/drupalfolder/".
+ * - http://example.com/path/alias (which is a path alias for node/306) returns
+ *   "path/alias" as opposed to the internal path.
+ *
+ * @return
+ *   The requested Drupal URL path.
+ *
+ * @see current_path()
+ */
+function request_path() {
+  static $path;
+
+  if (isset($path)) {
+    return $path;
+  }
+
+  if (isset($_GET['q'])) {
+    // This is a request with a ?q=foo/bar query string. $_GET['q'] is
+    // overwritten in drupal_path_initialize(), but request_path() is called
+    // very early in the bootstrap process, so the original value is saved in
+    // $path and returned in later calls.
+    $path = $_GET['q'];
+  }
+  elseif (isset($_SERVER['REQUEST_URI'])) {
+    // This is a request using a clean URL. Extract the path from REQUEST_URI.
+    $request_path = strtok($_SERVER['REQUEST_URI'], '?');
+    $base_path_len = strlen(rtrim(dirname($_SERVER['SCRIPT_NAME']), '\/'));
+    // Unescape and strip $base_path prefix, leaving q without a leading slash.
+    $path = substr(urldecode($request_path), $base_path_len + 1);
+  }
+  else {
+    // This is the front page.
+    $path = '';
+  }
+
+  return $path;
 }
 
 /**
@@ -2304,4 +2637,60 @@ function drupal_is_cli() {
  */
 function drupal_placeholder($variables) {
   return '<em class="placeholder">' . check_plain($variables['text']) . '</em>';
+}
+
+/**
+ *
+ * Register a function for execution on shutdown.
+ *
+ * Wrapper for register_shutdown_function() which catches thrown exceptions
+ * to avoid "Exception thrown without a stack frame in Unknown".
+ *
+ * @param $callback
+ *   The shutdown function to register.
+ * @param $parameters
+ *   It is possible to pass parameters to the shutdown function by passing
+ *   additional parameters.
+ * @return
+ *   Array of shutdown functions to be executed.
+ *
+ * @see register_shutdown_function()
+ */
+function &drupal_register_shutdown_function($callback = NULL, $parameters = NULL) {
+  // We cannot use drupal_static() here because the static cache is reset
+  // during batch processing, which breaks batch handling.
+  static $callbacks = array();
+
+  if (isset($callback)) {
+    // Only register the internal shutdown function once.
+    if (empty($callbacks)) {
+      register_shutdown_function('_drupal_shutdown_function');
+    }
+    $args = func_get_args();
+    array_shift($args);
+    // Save callback and arguments
+    $callbacks[] = array('callback' => $callback, 'arguments' => $args);
+  }
+  return $callbacks;
+}
+
+/**
+ * Internal function used to execute registered shutdown functions.
+ */
+function _drupal_shutdown_function() {
+  $callbacks = &drupal_register_shutdown_function();
+
+  try {
+    while (list($key, $callback) = each($callbacks)) {
+      call_user_func_array($callback['callback'], $callback['arguments']);
+    }
+  }
+  catch(Exception $exception) {
+    require_once DRUPAL_ROOT . '/includes/errors.inc';
+    // The theme has already been printed so it doesn't make much sense to use
+    // drupal_exception_handler() because that would display the maintenaince
+    // page below the usual page. For now, just print the error for debugging.
+    // @todo: Improve this.
+    print t('%type: %message in %function (line %line of %file).', _drupal_decode_exception($exception));
+  }
 }

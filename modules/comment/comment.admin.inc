@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.admin.inc,v 1.40 2010/01/11 00:17:02 webchick Exp $
+// $Id: comment.admin.inc,v 1.45 2010/03/07 07:15:28 webchick Exp $
 
 /**
  * @file
@@ -39,13 +39,17 @@ function comment_admin_overview($form, &$form_state, $arg) {
   $form['options'] = array(
     '#type' => 'fieldset',
     '#title' => t('Update options'),
-    '#prefix' => '<div class="container-inline">',
-    '#suffix' => '</div>',
+    '#attributes' => array('class' => array('container-inline')),
   );
-  $options = array();
-  foreach (comment_operations($arg == 'approval' ? 'publish' : 'unpublish') as $key => $value) {
-    $options[$key] = $value[0];
+
+  if ($arg == 'approval') {
+    $options['publish'] = t('Publish the selected comments');
   }
+  else {
+    $options['unpublish'] = t('Unpublish the selected comments');
+  }
+  $options['delete'] = t('Delete the selected comments');
+
   $form['options']['operation'] = array(
     '#type' => 'select',
     '#options' => $options,
@@ -75,7 +79,7 @@ function comment_admin_overview($form, &$form_state, $arg) {
     ->limit(50)
     ->orderByHeader($header)
     ->execute();
-	
+
   $cids = array();
 
   // We collect a sorted list of node_titles during the query to attach to the
@@ -153,28 +157,28 @@ function comment_admin_overview_validate($form, &$form_state) {
  * publishing, unpublishing or deleting.
  */
 function comment_admin_overview_submit($form, &$form_state) {
-  $operations = comment_operations();
-  if (!empty($operations[$form_state['values']['operation']][1])) {
-    // Extract the appropriate database query operation.
-    $query = $operations[$form_state['values']['operation']][1];
-    foreach ($form_state['values']['comments'] as $cid => $value) {
-      if ($value) {
-        // Perform the update action, then refresh node statistics.
-        $query
-          ->condition('cid', $cid )
-          ->execute();
-        $comment = comment_load($cid);
-        _comment_update_node_statistics($comment->nid);
-        // Allow modules to respond to the updating of a comment.
-        module_invoke_all('comment_' . $form_state['values']['operation'], $comment);
-        // Add an entry to the watchdog log.
-        watchdog('content', 'Comment: updated %subject.', array('%subject' => $comment->subject), WATCHDOG_NOTICE, l(t('view'), 'node/' . $comment->nid, array('fragment' => 'comment-' . $comment->cid)));
-      }
-    }
+  $operation = $form_state['values']['operation'];
+  $cids = $form_state['values']['comments'];
+
+  if ($operation == 'delete') {
+    comment_delete_multiple($cids);
     cache_clear_all();
-    drupal_set_message(t('The update has been performed.'));
-    $form_state['redirect'] = 'admin/content/comment';
   }
+  else {
+    foreach ($cids as $cid => $value) {
+      $comment = comment_load($value);
+
+      if ($operation == 'unpublish') {
+        $comment->status = COMMENT_NOT_PUBLISHED;
+      }
+      else if ($operation == 'publish') {
+        $comment->status = COMMENT_PUBLISHED;
+      }
+      comment_save($comment);
+    }
+  }
+  drupal_set_message(t('The update has been performed.'));
+  $form_state['redirect'] = 'admin/content/comment';
 }
 
 /**
@@ -234,6 +238,16 @@ function comment_multiple_delete_confirm_submit($form, &$form_state) {
 }
 
 /**
+ * Page callback for comment deletions.
+ */
+function comment_confirm_delete_page($cid) {
+  if ($comment = comment_load($cid)) {
+    return drupal_get_form('comment_confirm_delete', $comment);
+  }
+  return MENU_NOT_FOUND;
+}
+
+/**
  * Form builder; Builds the confirmation form for deleting a single comment.
  *
  * @ingroup forms
@@ -241,6 +255,8 @@ function comment_multiple_delete_confirm_submit($form, &$form_state) {
  */
 function comment_confirm_delete($form, &$form_state, $comment) {
   $form['#comment'] = $comment;
+  // Always provide entity id in the same form key as in the entity edit form.
+  $form['cid'] = array('#type' => 'value', '#value' => $comment->cid);
   return confirm_form(
     $form,
     t('Are you sure you want to delete the comment %title?', array('%title' => $comment->subject)),

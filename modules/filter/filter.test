@@ -1,5 +1,5 @@
 <?php
-// $Id: filter.test,v 1.55 2010/01/10 22:56:51 webchick Exp $
+// $Id: filter.test,v 1.62 2010/03/07 23:14:20 webchick Exp $
 
 /**
  * Tests for text format and filter CRUD operations.
@@ -168,7 +168,14 @@ class FilterAdminTestCase extends DrupalWebTestCase {
     parent::setUp();
 
     // Create users.
-    $this->admin_user = $this->drupalCreateUser(array('administer filters'));
+    $filtered_html_format = db_query_range('SELECT * FROM {filter_format} WHERE name = :name', 0, 1, array(':name' => 'Filtered HTML'))->fetchObject();
+    $full_html_format = db_query_range('SELECT * FROM {filter_format} WHERE name = :name', 0, 1, array(':name' => 'Full HTML'))->fetchObject();
+    $this->admin_user = $this->drupalCreateUser(array(
+      'administer filters',
+      filter_permission_name($filtered_html_format),
+      filter_permission_name($full_html_format),
+    ));
+
     $this->web_user = $this->drupalCreateUser(array('create page content', 'edit own page content'));
     $this->drupalLogin($this->admin_user);
   }
@@ -231,6 +238,9 @@ class FilterAdminTestCase extends DrupalWebTestCase {
     $result = db_query('SELECT * FROM {cache_filter}')->fetchObject();
     $this->assertFalse($result, t('Cache cleared.'));
 
+    $elements = $this->xpath('//select[@name="filters[' . $first_filter . '][weight]"]/following::select[@name="filters[' . $second_filter . '][weight]"]');
+    $this->assertTrue(!empty($elements), t('Order confirmed in admin interface.'));
+
     // Reorder filters.
     $edit = array();
     $edit['filters[' . $second_filter . '][weight]'] = 1;
@@ -239,6 +249,9 @@ class FilterAdminTestCase extends DrupalWebTestCase {
     $this->assertFieldByName('filters[' . $second_filter . '][weight]', 1, t('Order saved successfully.'));
     $this->assertFieldByName('filters[' . $first_filter . '][weight]', 2, t('Order saved successfully.'));
 
+    $elements = $this->xpath('//select[@name="filters[' . $second_filter . '][weight]"]/following::select[@name="filters[' . $first_filter . '][weight]"]');
+    $this->assertTrue(!empty($elements), t('Reorder confirmed in admin interface.'));
+
     $result = db_query('SELECT * FROM {filter} WHERE format = :format ORDER BY weight ASC', array(':format' => $filtered));
     $filters = array();
     foreach ($result as $filter) {
@@ -246,7 +259,7 @@ class FilterAdminTestCase extends DrupalWebTestCase {
         $filters[] = $filter;
       }
     }
-    $this->assertTrue(($filters[0]->name == $second_filter && $filters[1]->name == $first_filter), t('Order confirmed.'));
+    $this->assertTrue(($filters[0]->name == $second_filter && $filters[1]->name == $first_filter), t('Order confirmed in database.'));
 
     // Add format.
     $edit = array();
@@ -292,7 +305,7 @@ class FilterAdminTestCase extends DrupalWebTestCase {
     $langcode = LANGUAGE_NONE;
     $edit["title"] = $this->randomName();
     $edit["body[$langcode][0][value]"] = $text;
-    $edit["body[$langcode][0][value_format]"] = $filtered;
+    $edit["body[$langcode][0][format]"] = $filtered;
     $this->drupalPost('node/add/page', $edit, t('Save'));
     $this->assertRaw(t('Basic page %title has been created.', array('%title' => $edit["title"])), t('Filtered node created.'));
 
@@ -304,7 +317,7 @@ class FilterAdminTestCase extends DrupalWebTestCase {
 
     // Use plain text and see if it escapes all tags, whether allowed or not.
     $edit = array();
-    $edit["body[$langcode][0][value_format]"] = $plain;
+    $edit["body[$langcode][0][format]"] = $plain;
     $this->drupalPost('node/' . $node->nid . '/edit', $edit, t('Save'));
     $this->drupalGet('node/' . $node->nid);
     $this->assertText(check_plain($text), t('The "Plain text" text format escapes all HTML tags.'));
@@ -596,8 +609,8 @@ class FilterUnitTestCase extends DrupalUnitTestCase {
   /**
    * Test limiting allowed tags, XSS prevention and adding 'nofollow' to links.
    *
-   * XSS tests assume that script is dissallowed on default and src is allowed
-   * on default, but on* and style are dissallowed.
+   * XSS tests assume that script is disallowed on default and src is allowed
+   * on default, but on* and style are disallowed.
    *
    * Script injection vectors mostly adopted from http://ha.ckers.org/xss.html.
    *
@@ -1059,6 +1072,27 @@ class FilterUnitTestCase extends DrupalUnitTestCase {
 
     $f = _filter_htmlcorrector('<p>دروبال');
     $this->assertEqual($f, '<p>دروبال</p>', t('HTML corrector -- Encoding is correctly kept.'));
+
+    $f = _filter_htmlcorrector('<script type="text/javascript">alert("test")</script>');
+    $this->assertEqual($f, '<script type="text/javascript">
+<!--//--><![CDATA[// ><!--
+alert("test")
+//--><!]]>
+</script>', t('HTML corrector -- CDATA added to script element'));
+
+    $f = _filter_htmlcorrector('<p><script type="text/javascript">alert("test")</script></p>');
+    $this->assertEqual($f, '<p><script type="text/javascript">
+<!--//--><![CDATA[// ><!--
+alert("test")
+//--><!]]>
+</script></p>', t('HTML corrector -- CDATA added to a nested script element'));
+
+    $f = _filter_htmlcorrector('<p><style> /* Styling */ body {color:red}</style></p>');
+    $this->assertEqual($f, '<p><style>
+<!--/*--><![CDATA[/* ><!--*/
+ /* Styling */ body {color:red}
+/*--><!]]>*/
+</style></p>', t('HTML corrector -- CDATA added to a style element.'));
   }
 
   /**
@@ -1178,9 +1212,9 @@ class FilterHooksTestCase extends DrupalWebTestCase {
     $custom_block = array();
     $custom_block['info'] = $this->randomName(8);
     $custom_block['title'] = $this->randomName(8);
-    $custom_block['body'] = $this->randomName(32);
+    $custom_block['body[value]'] = $this->randomName(32);
     // Use the format created.
-    $custom_block['body_format'] = $format_id;
+    $custom_block['body[format]'] = $format_id;
     $this->drupalPost('admin/structure/block/add', $custom_block, t('Save block'));
     $this->assertText(t('The block has been created.'), t('New block successfully created.'));
 

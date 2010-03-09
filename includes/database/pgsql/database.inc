@@ -1,5 +1,5 @@
 <?php
-// $Id: database.inc,v 1.32 2010/01/07 04:51:26 webchick Exp $
+// $Id: database.inc,v 1.36 2010/03/07 08:03:45 webchick Exp $
 
 /**
  * @file
@@ -36,6 +36,8 @@ class DatabaseConnection_pgsql extends DatabaseConnection {
       $connection_options['password'] = null;
     }
 
+    $this->connectionOptions = $connection_options;
+
     $dsn = 'pgsql:host=' . $connection_options['host'] . ' dbname=' . $connection_options['database'] . ' port=' . $connection_options['port'];
     parent::__construct($dsn, $connection_options['username'], $connection_options['password'], array(
       // Convert numeric values to strings when fetching.
@@ -52,10 +54,10 @@ class DatabaseConnection_pgsql extends DatabaseConnection {
 
     $options += $this->defaultOptions();
 
-    // The PDO PostgreSQL driver has a bug which 
+    // The PDO PostgreSQL driver has a bug which
     // doesn't type cast booleans correctly when
-    // parameters are bound using associative 
-    // arrays. 
+    // parameters are bound using associative
+    // arrays.
     // See http://bugs.php.net/bug.php?id=48383
     foreach ($args as &$value) {
       if (is_bool($value)) {
@@ -69,8 +71,8 @@ class DatabaseConnection_pgsql extends DatabaseConnection {
         $stmt->execute(NULL, $options);
       }
       else {
-        $modified = $this->expandArguments($query, $args);
-        $stmt = $this->prepareQuery($query, !$modified);
+        $this->expandArguments($query, $args);
+        $stmt = $this->prepareQuery($query);
         $stmt->execute($args, $options);
       }
 
@@ -128,6 +130,7 @@ class DatabaseConnection_pgsql extends DatabaseConnection {
       // statements, we need to use ILIKE instead. Use backslash for escaping
       // wildcard characters.
       'LIKE' => array('operator' => 'ILIKE', 'postfix' => " ESCAPE '\\\\'"),
+      'NOT LIKE' => array('operator' => 'NOT ILIKE', 'postfix' => " ESCAPE '\\\\'"),
     );
 
     return isset($specials[$operator]) ? $specials[$operator] : NULL;
@@ -141,12 +144,12 @@ class DatabaseConnection_pgsql extends DatabaseConnection {
    */
   public function nextId($existing = 0) {
 
-    // Retrive the name of the sequence. This information cannot be cached 
+    // Retrive the name of the sequence. This information cannot be cached
     // because the prefix may change, for example, like it does in simpletests.
     $sequence_name = $this->makeSequenceName('sequences', 'value');
 
-    // When PostgreSQL gets a value too small then it will lock the table, 
-    // retry the INSERT and if it's still too small then alter the sequence. 
+    // When PostgreSQL gets a value too small then it will lock the table,
+    // retry the INSERT and if it's still too small then alter the sequence.
     $id = $this->query("SELECT nextval('" . $sequence_name . "')")->fetchField();
     if ($id > $existing) {
       return $id;
@@ -154,7 +157,7 @@ class DatabaseConnection_pgsql extends DatabaseConnection {
 
     // PostgreSQL advisory locks are simply locks to be used by an
     // application such as Drupal. This will prevent other Drupal proccesses
-    // from altering the sequence while we are. 
+    // from altering the sequence while we are.
     $this->query("SELECT pg_advisory_lock(" . POSTGRESQL_NEXTID_LOCK . ")");
 
     // While waiting to obtain the lock, the sequence may have been altered

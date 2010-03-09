@@ -1,5 +1,5 @@
 <?php
-// $Id: system.module,v 1.876 2010/01/13 23:03:31 webchick Exp $
+// $Id: system.module,v 1.899 2010/03/09 03:39:44 dries Exp $
 
 /**
  * @file
@@ -207,6 +207,7 @@ function system_permission() {
     ),
     'administer site configuration' => array(
       'title' => t('Administer site configuration'),
+      'description' => drupal_placeholder(array('text' => t('Warning: Give to trusted roles only; this permission has security implications.'))),
     ),
     'administer themes' => array(
       'title' => t('Administer themes'),
@@ -216,9 +217,6 @@ function system_permission() {
     ),
     'administer actions' => array(
       'title' => t('Administer actions'),
-    ),
-    'administer files' => array(
-      'title' => t('Administer user-uploaded files'),
     ),
     'access administration pages' => array(
       'title' => t('Use the administration pages and help'),
@@ -236,32 +234,13 @@ function system_permission() {
 }
 
 /**
- * Implements hook_rdf_namespaces().
- */
-function system_rdf_namespaces() {
-  return array(
-    'admin'    => 'http://webns.net/mvcb/',
-    'content'  => 'http://purl.org/rss/1.0/modules/content/',
-    'dc'       => 'http://purl.org/dc/terms/',
-    'foaf'     => 'http://xmlns.com/foaf/0.1/',
-    'owl'      => 'http://www.w3.org/2002/07/owl#',
-    'rdf'      => 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
-    'rdfs'     => 'http://www.w3.org/2000/01/rdf-schema#',
-    'rss'      => 'http://purl.org/rss/1.0/',
-    'tags'     => 'http://www.holygoat.co.uk/owl/redwood/0.1/tags/',
-    'sioc'     => 'http://rdfs.org/sioc/ns#',
-    'sioct'    => 'http://rdfs.org/sioc/types#',
-    'ctag'     => 'http://commontag.org/ns#',
-    'skos'     => 'http://www.w3.org/2004/02/skos/core#',
-    'xsd'      => 'http://www.w3.org/2001/XMLSchema#',
-  );
-}
-
-/**
  * Implements hook_hook_info().
  */
 function system_hook_info() {
   $hooks['token_info'] = array(
+    'group' => 'tokens',
+  );
+  $hooks['token_info_alter'] = array(
     'group' => 'tokens',
   );
   $hooks['tokens'] = array(
@@ -314,11 +293,17 @@ function system_element_info() {
   $types['ajax_commands'] = array(
     '#ajax_commands' => array(),
   );
-
   $types['html_tag'] = array(
     '#theme' => 'html_tag',
+    '#pre_render' => array('drupal_pre_render_conditional_comments'),
     '#attributes' => array(),
     '#value' => NULL,
+  );
+  $types['styles'] = array(
+    '#items' => array(),
+    '#pre_render' => array('drupal_pre_render_styles'),
+    '#group_callback' => 'drupal_group_css',
+    '#aggregate_callback' => 'drupal_aggregate_css',
   );
 
   // Input elements.
@@ -353,7 +338,7 @@ function system_element_info() {
     '#size' => 60,
     '#maxlength' => 128,
     '#autocomplete_path' => FALSE,
-    '#process' => array('form_process_text_format', 'ajax_process_form'),
+    '#process' => array('ajax_process_form'),
     '#theme' => 'textfield',
     '#theme_wrappers' => array('form_element'),
   );
@@ -375,7 +360,7 @@ function system_element_info() {
     '#cols' => 60,
     '#rows' => 5,
     '#resizable' => TRUE,
-    '#process' => array('form_process_text_format', 'ajax_process_form'),
+    '#process' => array('ajax_process_form'),
     '#theme' => 'textarea',
     '#theme_wrappers' => array('form_element'),
   );
@@ -527,13 +512,6 @@ function system_menu() {
     'type' => MENU_CALLBACK,
     'file' => 'system.admin.inc',
   );
-  $items['system/run-cron-check'] = array(
-    'title' => 'Execute cron',
-    'page callback' => 'system_run_cron_check',
-    'access callback' => 'system_run_cron_check_access',
-    'type' => MENU_CALLBACK,
-    'file' => 'system.admin.inc',
-  );
   $items['admin'] = array(
     'title' => 'Administer',
     'access arguments' => array('access administration pages'),
@@ -623,6 +601,7 @@ function system_menu() {
     'access arguments' => array('administer themes'),
     'type' => MENU_LOCAL_TASK,
     'file' => 'system.admin.inc',
+    'weight' => 20,
   );
   // Theme configuration subtabs.
   $items['admin/appearance/settings/global'] = array(
@@ -667,6 +646,7 @@ function system_menu() {
     'access arguments' => array('administer modules'),
     'type' => MENU_LOCAL_TASK,
     'file' => 'system.admin.inc',
+    'weight' => 20,
   );
   $items['admin/modules/uninstall/confirm'] = array(
     'title' => 'Uninstall',
@@ -690,14 +670,6 @@ function system_menu() {
     'description' => 'Manage blocked IP addresses.',
     'page callback' => 'system_ip_blocking',
     'access arguments' => array('block IP addresses'),
-    'file' => 'system.admin.inc',
-  );
-  $items['admin/config/people/ip-blocking/%'] = array(
-    'title' => 'IP address blocking',
-    'description' => 'Manage blocked IP addresses.',
-    'page callback' => 'system_ip_blocking',
-    'access arguments' => array('block IP addresses'),
-    'type' => MENU_CALLBACK,
     'file' => 'system.admin.inc',
   );
   $items['admin/config/people/ip-blocking/delete/%blocked_ip'] = array(
@@ -725,6 +697,7 @@ function system_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('system_file_system_settings'),
     'access arguments' => array('administer site configuration'),
+    'weight' => 10,
     'file' => 'system.admin.inc',
   );
     $items['admin/config/media/image-toolkit'] = array(
@@ -733,6 +706,7 @@ function system_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('system_image_toolkit_settings'),
     'access arguments' => array('administer site configuration'),
+    'weight' => 20,
     'file' => 'system.admin.inc',
   );
 
@@ -769,6 +743,7 @@ function system_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('system_site_maintenance_mode'),
     'access arguments' => array('administer site configuration'),
+    'weight' => 50,
     'file' => 'system.admin.inc',
   );
   $items['admin/config/development/performance'] = array(
@@ -777,6 +752,7 @@ function system_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('system_performance_settings'),
     'access arguments' => array('administer site configuration'),
+    'weight' => -10,
     'file' => 'system.admin.inc',
   );
   $items['admin/config/development/logging'] = array(
@@ -785,6 +761,7 @@ function system_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('system_logging_settings'),
     'access arguments' => array('administer site configuration'),
+    'weight' => 60,
     'file' => 'system.admin.inc',
   );
 
@@ -804,7 +781,7 @@ function system_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('system_regional_settings'),
     'access arguments' => array('administer site configuration'),
-    'weight' => -10,
+    'weight' => 50,
     'file' => 'system.admin.inc',
   );
   $items['admin/config/regional/date-time'] = array(
@@ -813,7 +790,7 @@ function system_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('system_date_time_settings'),
     'access arguments' => array('administer site configuration'),
-    'weight' => -9,
+    'weight' => 60,
     'file' => 'system.admin.inc',
   );
   $items['admin/config/regional/date-time/types'] = array(
@@ -974,7 +951,7 @@ function system_menu() {
     'weight' => -10,
   );
 
-  // Addititional categories
+  // Additional categories
   $items['admin/config/user-interface'] = array(
     'title' => 'User interface',
     'description' => 'Tools that enhance the user interface.',
@@ -1089,7 +1066,7 @@ function system_library() {
   $libraries['form'] = array(
     'title' => 'jQuery Form Plugin',
     'website' => 'http://malsup.com/jquery/form/',
-    'version' => '2.16',
+    'version' => '2.36',
     'js' => array(
       'misc/jquery.form.js' => array(),
     ),
@@ -1101,7 +1078,7 @@ function system_library() {
     'website' => 'http://benalman.com/projects/jquery-bbq-plugin/',
     'version' => '1.0.2',
     'js' => array(
-      'misc/jquery.ba-bbq.js',
+      'misc/jquery.ba-bbq.js' => array(),
     ),
   );
 
@@ -1466,6 +1443,7 @@ function system_stream_wrappers() {
       'name' => t('Temporary files'),
       'class' => 'DrupalTemporaryStreamWrapper',
       'description' => t('Temporary local files for upload and previews.'),
+      'type' => STREAM_WRAPPERS_HIDDEN,
     )
   );
 }
@@ -1593,7 +1571,7 @@ function system_authorized_get_url(array $options = array()) {
 /**
  * Setup and invoke an operation using authorize.php.
  *
- * @see system_authorized_init
+ * @see system_authorized_init()
  */
 function system_authorized_run($callback, $file, $arguments = array(), $page_title = NULL) {
   system_authorized_init($callback, $file, $arguments, $page_title);
@@ -1986,7 +1964,7 @@ function system_check_directory($form_element) {
   }
 
   if (is_dir($directory) && !is_writable($directory) && !drupal_chmod($directory)) {
-    // If the directory is not writable and cannont be made so.
+    // If the directory is not writable and cannot be made so.
     form_set_error($form_element['#parents'][0], t('The directory %directory exists but is not writable and could not be made writable.', array('%directory' => $directory)));
     watchdog('file system', 'The directory %directory exists but is not writable and could not be made writable.', array('%directory' => $directory), WATCHDOG_ERROR);
   }
@@ -2069,7 +2047,7 @@ function system_update_files_database(&$files, $type) {
           ->execute();
       }
 
-      // Indiciate that the file exists already.
+      // Indicate that the file exists already.
       $files[$file->name]->exists = TRUE;
     }
     else {
@@ -2230,6 +2208,8 @@ function _system_update_bootstrap_status() {
     $query->condition('name', $bootstrap_modules, 'NOT IN');
   }
   $query->execute();
+  // Reset the cached list of bootstrap modules.
+  system_list_reset();
 }
 
 /**
@@ -2508,6 +2488,7 @@ function _system_settings_form_automatic_defaults($form) {
 function system_settings_form($form, $automatic_defaults = TRUE) {
   $form['actions']['#type'] = 'container';
   $form['actions']['#attributes']['class'][] = 'form-actions';
+  $form['actions']['#weight'] = 100;
   $form['actions']['submit'] = array('#type' => 'submit', '#value' => t('Save configuration'));
 
   if ($automatic_defaults) {
@@ -2680,7 +2661,7 @@ function system_get_module_admin_tasks($module) {
   $admin_task_count = 0;
   // Check for permissions.
   if (in_array($module, module_implements('permission')) && $admin_access) {
-    $admin_tasks[-1] = l(t('Configure permissions'), 'admin/config/people/permissions', array('fragment' => 'module-' . $module));
+    $admin_tasks[-1] = l(t('Configure permissions'), 'admin/people/permissions', array('fragment' => 'module-' . $module));
   }
 
   // Check for menu items that are admin links.
@@ -2862,11 +2843,26 @@ function system_send_email_action_submit($form, $form_state) {
 }
 
 /**
- * Implements a configurable Drupal action: sends an email.
+ * Sends an e-mail message.
+ *
+ * @param object $entity
+ *   An optional node object, which will be added as $context['node'] if
+ *   provided.
+ * @param array $context
+ *   Array with the following elements:
+ *   - 'recipient': E-mail message recipient. This will be passed through
+ *     token_replace().
+ *   - 'subject': The subject of the message. This will be passed through
+ *     token_replace().
+ *   - 'message': The message to send. This will be passed through
+ *     token_replace().
+ *   - Other elements will be used as the data for token replacement.
+ *
+ * @ingroup actions
  */
-function system_send_email_action($object, $context) {
+function system_send_email_action($entity, $context) {
   if (empty($context['node'])) {
-    $context['node'] = $object;
+    $context['node'] = $entity;
   }
 
   $recipient = token_replace($context['recipient'], $context);
@@ -2912,11 +2908,23 @@ function system_message_action_submit($form, $form_state) {
 }
 
 /**
- * A configurable Drupal action. Sends a message to the current user's screen.
+ * Sends a message to the current user's screen.
+ *
+ * @param object $entity
+ *   An optional node object, which will be added as $context['node'] if
+ *   provided.
+ * @param array $context
+ *   Array with the following elements:
+ *   - 'message': The message to send. This will be passed through
+ *     token_replace().
+ *   - Other elements will be used as the data for token replacement in
+ *     the message.
+ *
+ * @ingroup actions
  */
-function system_message_action(&$object, $context = array()) {
+function system_message_action(&$entity, $context = array()) {
   if (empty($context['node'])) {
-    $context['node'] = $object;
+    $context['node'] = $entity;
   }
 
   $context['message'] = token_replace($context['message'], $context);
@@ -2924,7 +2932,7 @@ function system_message_action(&$object, $context = array()) {
 }
 
 /**
- * Implements a configurable Drupal action: redirect user to a URL.
+ * Settings form for system_goto_action().
  */
 function system_goto_action_form($context) {
   $form['url'] = array(
@@ -2943,12 +2951,27 @@ function system_goto_action_submit($form, $form_state) {
   );
 }
 
-function system_goto_action($object, $context) {
+/**
+ * Redirects to a different URL.
+ *
+ * @param $entity
+ *   Ignored.
+ * @param array $context
+ *   Array with the following elements:
+ *   - 'url': URL to redirect to. This will be passed through
+ *     token_replace().
+ *   - Other elements will be used as the data for token replacement.
+ *
+ * @ingroup actions
+ */
+function system_goto_action($entity, $context) {
   drupal_goto(token_replace($context['url'], $context));
 }
 
 /**
- * Implements a Drupal action: blocks the user's IP address.
+ * Blocks the current user's IP address.
+ *
+ * @ingroup actions
  */
 function system_block_ip_action() {
   $ip = ip_address();
@@ -3058,61 +3081,52 @@ function system_image_toolkits() {
  *   The URL of the file to grab.
  *
  * @param $destination
- *   Where the file should be saved, if a directory is provided, file is saved
- *   in that directory with its original name.  If a filename is provided,
- *   remote fileis stored to that location.  NOTE: Relative to drupal "files" directory"
+ *   Stream wrapper URI specifying where the file should be placed. If a
+ *   directory path is provided, the file is saved into that directory under
+ *   its original name. If the path contains a filename as well, that one will
+ *   be used instead.
+ *   If this value is omitted, the site's default files scheme will be used,
+ *   usually "public://".
  *
- * @param $overwrite boolean
- *   Defaults to TRUE, will overwrite existing files of the same name.
+ * @param $managed boolean
+ *   If this is set to TRUE, the file API hooks will be invoked and the file is
+ *   registered in the database.
+ *
+ * @param $replace boolean
+ *   Replace behavior when the destination file already exists:
+ *   - FILE_EXISTS_REPLACE: Replace the existing file.
+ *   - FILE_EXISTS_RENAME: Append _{incrementing number} until the filename is
+ *     unique.
+ *   - FILE_EXISTS_ERROR: Do nothing and return FALSE.
  *
  * @return
- *   On success the address the files was saved to, FALSE on failure.
+ *   On success the location the file was saved to, FALSE on failure.
  */
-function system_retrieve_file($url, $destination = NULL, $overwrite = TRUE) {
-  if (!$destination) {
-    $destination = file_directory_path('temporary');
-  }
+function system_retrieve_file($url, $destination = NULL, $managed = FALSE, $replace = FILE_EXISTS_RENAME) {
   $parsed_url = parse_url($url);
-  $local = is_dir(file_directory_path() . '/' . $destination) ? $destination . '/' . basename($parsed_url['path']) : $destination;
-
-  if (!$overwrite && file_exists($local)) {
-    drupal_set_message(t('@remote could not be saved. @local already exists', array('@remote' => $url, '@local' => $local)), 'error');
+  if (!isset($destination)) {
+    $path = file_build_uri(basename($parsed_url['path']));
+  }
+  else {
+    if (is_dir(drupal_realpath($destination))) {
+      // Prevent URIs with triple slashes when glueing parts together.
+      $path = str_replace('///', '//', "$destination/") . basename($parsed_url['path']);
+    }
+    else {
+      $path = $destination;
+    }
+  }
+  $result = drupal_http_request($url);
+  if ($result->code != 200) {
+    drupal_set_message(t('HTTP error @errorcode occured when trying to fetch @remote.', array('@errorcode' => $result->code, '@remote' => $url)), 'error');
     return FALSE;
   }
-
-  $result = drupal_http_request($url);
-  if ($result->code != 200 || !file_save_data($result->data, $local)) {
-    drupal_set_message(t('@remote could not be saved.', array('@remote' => $url)), 'error');
-    return FALSE;
+  $local = $managed ? file_save_data($result->data, $path, $replace) : file_unmanaged_save_data($result->data, $path, $replace);
+  if (!$local) {
+    drupal_set_message(t('@remote could not be saved to @path.', array('@remote' => $url, '@path' => $path)), 'error');
   }
 
   return $local;
-}
-
-/**
- * Implements hook_page_build().
- */
-function system_page_build(&$page) {
-  // Automatic cron runs.
-  $cron_threshold = variable_get('cron_safe_threshold', DRUPAL_CRON_DEFAULT_THRESHOLD);
-  if ($cron_threshold) {
-    $page['page_bottom']['run_cron'] = array(
-      // Trigger cron run via AJAX.
-      '#attached' => array(
-        'js' => array(
-          drupal_get_path('module', 'system') . '/system.cron.js' => array('weight' => JS_DEFAULT - 5),
-          array(
-            'data' => array(
-              // Add the timestamp for the next automatic cron run.
-              'cronCheck' => variable_get('cron_last', 0) + $cron_threshold,
-            ),
-            'type' => 'setting',
-          ),
-
-        ),
-      ),
-    );
-  }
 }
 
 /**
@@ -3131,65 +3145,15 @@ function system_page_alter(&$page) {
 }
 
 /**
- * Menu callback; executes cron via an AJAX callback.
- *
- * This callback runs cron in a separate HTTP request to prevent "mysterious"
- * slow-downs of regular HTTP requests. It is invoked via an AJAX request and
- * does not process the returned output.
- *
- * @see system_page_alter()
- * @see system_run_cron_check_access()
+ * Run the automated cron if enabled.
  */
-function system_run_cron_check() {
-  $cron_run = FALSE;
-  $cron_threshold = variable_get('cron_safe_threshold', DRUPAL_CRON_DEFAULT_THRESHOLD);
-
-  // Cron threshold semaphore is used to avoid errors every time the image
-  // callback is displayed when a previous cron is still running.
-  $threshold_semaphore = variable_get('cron_threshold_semaphore', FALSE);
-  if ($threshold_semaphore) {
-    if (REQUEST_TIME - $threshold_semaphore > 3600) {
-      // Either cron has been running for more than an hour or the semaphore
-      // was not reset due to a database error.
-      watchdog('cron', 'Cron has been running for more than an hour and is most likely stuck.', array(), WATCHDOG_ERROR);
-
-      // Release the cron threshold semaphore.
-      variable_del('cron_threshold_semaphore');
-    }
-  }
-  else {
+function system_run_automated_cron() {
+  if (($threshold = variable_get('cron_safe_threshold', DRUPAL_CRON_DEFAULT_THRESHOLD)) > 0) {
     $cron_last = variable_get('cron_last', NULL);
-    // Run cron automatically if it has never run or threshold was crossed.
-    if (!isset($cron_last) || (REQUEST_TIME - $cron_last > $cron_threshold)) {
-      // Lock cron threshold semaphore.
-      variable_set('cron_threshold_semaphore', REQUEST_TIME);
-      $cron_run = drupal_cron_run();
-      // Release the cron threshold semaphore.
-      variable_del('cron_threshold_semaphore');
+    if (!isset($cron_last) || (REQUEST_TIME - $cron_last > $threshold)) {
+      drupal_cron_run();
     }
   }
-
-  // Add an expires header with the time of the next cron run.
-  $cron_last = variable_get('cron_last', NULL);
-  drupal_add_http_header('Expires', gmdate(DATE_RFC1123, $cron_last + $cron_threshold));
-
-  drupal_json_output(array('cron_run' => $cron_run));
-  drupal_page_footer();
-}
-
-/**
- * Checks if the feature to automatically run cron is enabled.
- *
- * Also used as a menu access callback for this feature.
- *
- * @return
- *   TRUE if cron threshold is enabled, FALSE otherwise.
- *
- * @see system_run_cron_check()
- * @see system_page_alter()
- */
-function system_run_cron_check_access() {
-  return variable_get('cron_safe_threshold', DRUPAL_CRON_DEFAULT_THRESHOLD) > 0;
 }
 
 /**
@@ -3546,12 +3510,17 @@ function system_date_format_delete($dfid) {
  * Implements hook_archiver_info().
  */
 function system_archiver_info() {
-  return array(
-    'tar' => array(
-      'class' => 'ArchiverTar',
-      'extensions' => array('tar', 'tar.gz', 'tar.bz2'),
-    ),
+  $archivers['tar'] = array(
+    'class' => 'ArchiverTar',
+    'extensions' => array('tar', 'tgz', 'tar.gz', 'tar.bz2'),
   );
+  if (function_exists('zip_open')) {
+    $archivers['zip'] = array(
+      'class' => 'ArchiverZip',
+      'extensions' => array('zip'),
+    );
+  }
+  return $archivers;
 }
 
 /**

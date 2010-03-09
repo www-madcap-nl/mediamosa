@@ -1,5 +1,5 @@
 <?php
-// $Id: file.field.inc,v 1.15 2009/12/21 13:47:32 dries Exp $
+// $Id: file.field.inc,v 1.22 2010/02/17 05:39:51 webchick Exp $
 
 /**
  * @file
@@ -25,7 +25,7 @@ function file_field_info() {
         'max_filesize' => '',
         'description_field' => 0,
       ),
-      'default_widget' => 'file_file',
+      'default_widget' => 'file_generic',
       'default_formatter' => 'file_default',
     ),
   );
@@ -86,10 +86,8 @@ function file_field_settings_form($field, $instance, $has_data) {
   );
 
   $scheme_options = array();
-  foreach (file_get_stream_wrappers() as $scheme => $stream_wrapper) {
-    if ($scheme != 'temporary') {
-      $scheme_options[$scheme] = $stream_wrapper['name'];
-    }
+  foreach (file_get_stream_wrappers(STREAM_WRAPPERS_WRITE_VISIBLE) as $scheme => $stream_wrapper) {
+    $scheme_options[$scheme] = $stream_wrapper['name'];
   }
   $form['uri_scheme'] = array(
     '#type' => 'radios',
@@ -206,22 +204,22 @@ function _file_generic_settings_file_directory_validate($element, &$form_state) 
 /**
  * Implements hook_field_load().
  */
-function file_field_load($obj_type, $objects, $field, $instances, $langcode, &$items, $age) {
-  foreach ($objects as $obj_id => $object) {
+function file_field_load($entity_type, $entities, $field, $instances, $langcode, &$items, $age) {
+  foreach ($entities as $id => $entity) {
     // Load the files from the files table.
     $fids = array();
-    foreach ($items[$obj_id] as $delta => $item) {
+    foreach ($items[$id] as $delta => $item) {
       $fids[] = $item['fid'];
     }
     $files = file_load_multiple($fids);
 
-    foreach ($items[$obj_id] as $delta => $item) {
+    foreach ($items[$id] as $delta => $item) {
       // If the file does not exist, mark the entire item as empty.
       if (empty($item['fid']) || !isset($files[$item['fid']])) {
-        $items[$obj_id][$delta] = NULL;
+        $items[$id][$delta] = NULL;
       }
       else {
-        $items[$obj_id][$delta] = array_merge($item, (array) $files[$item['fid']]);
+        $items[$id][$delta] = array_merge($item, (array) $files[$item['fid']]);
       }
     }
   }
@@ -230,9 +228,9 @@ function file_field_load($obj_type, $objects, $field, $instances, $langcode, &$i
 /**
  * Implements hook_field_prepare_view().
  */
-function file_field_prepare_view($obj_type, $objects, $field, $instances, $langcode, &$items) {
+function file_field_prepare_view($entity_type, $entities, $field, $instances, $langcode, &$items) {
   // Remove files specified to not be displayed.
-  foreach ($objects as $id => $object) {
+  foreach ($entities as $id => $entity) {
     foreach ($items[$id] as $delta => $item) {
       if (!file_field_displayed($item, $field)) {
         unset($items[$id][$delta]);
@@ -244,20 +242,29 @@ function file_field_prepare_view($obj_type, $objects, $field, $instances, $langc
 }
 
 /**
- * Implements hook_field_insert().
+ * Implements hook_field_presave().
  */
-function file_field_insert($obj_type, $object, $field, $instance, $langcode, &$items) {
-  file_field_update($obj_type, $object, $field, $instance, $langcode, $items);
+function file_field_presave($obj_type, $object, $field, $instance, $langcode, &$items) {
+  // Make sure that each file which will be saved with this object has a
+  // permanent status, so that it will not be removed when temporary files are
+  // cleaned up.
+  foreach ($items as $item) {
+    $file = file_load($item['fid']);
+    if (($file->status & FILE_STATUS_PERMANENT) == 0) {
+      $file->status |= FILE_STATUS_PERMANENT;
+      file_save($file);
+    }
+  }
 }
 
 /**
  * Implements hook_field_update().
+ *
+ * Check for files that have been removed from the object.
  */
-function file_field_update($obj_type, $object, $field, $instance, $langcode, &$items) {
-  // Check for files that have been removed from the object.
-
+function file_field_update($entity_type, $entity, $field, $instance, $langcode, &$items) {
   // On new revisions, old files are always maintained in the previous revision.
-  if ($object->is_new || (isset($object->revision) && $object->revision)) {
+  if (!empty($entity->revision)) {
     return;
   }
 
@@ -268,8 +275,8 @@ function file_field_update($obj_type, $object, $field, $instance, $langcode, &$i
   }
 
   // Delete items from original object.
-  list($id, $vid, $bundle) = entity_extract_ids($obj_type, $object);
-  $load_function = $obj_type . '_load';
+  list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
+  $load_function = $entity_type . '_load';
 
   $original = $load_function($id);
   if (!empty($original->{$field['field_name']}[$langcode])) {
@@ -287,14 +294,14 @@ function file_field_update($obj_type, $object, $field, $instance, $langcode, &$i
 /**
  * Implements hook_field_delete().
  */
-function file_field_delete($obj_type, $object, $field, $instance, $langcode, &$items) {
-  list($id, $vid, $bundle) = entity_extract_ids($obj_type, $object);
+function file_field_delete($entity_type, $entity, $field, $instance, $langcode, &$items) {
+  list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
   foreach ($items as $delta => $item) {
     // For hook_file_references(), remember that this is being deleted.
     $item['file_field_name'] = $field['field_name'];
     // Pass in the ID of the object that is being removed so all references can
     // be counted in hook_file_references().
-    $item['file_field_type'] = $obj_type;
+    $item['file_field_type'] = $entity_type;
     $item['file_field_id'] = $id;
     file_field_delete_file($item, $field);
   }
@@ -303,7 +310,7 @@ function file_field_delete($obj_type, $object, $field, $instance, $langcode, &$i
 /**
  * Implements hook_field_delete_revision().
  */
-function file_field_delete_revision($obj_type, $object, $field, $instance, $langcode, &$items) {
+function file_field_delete_revision($entity_type, $entity, $field, $instance, $langcode, &$items) {
   foreach ($items as $delta => $item) {
     // For hook_file_references, remember that this file is being deleted.
     $item['file_field_name'] = $field['field_name'];
@@ -501,9 +508,9 @@ function file_field_widget_form(&$form, &$form_state, $field, $instance, $langco
     $elements['#process'] = array('file_field_widget_process_multiple');
     $elements['#title'] = $element['#title'];
     $elements['#description'] = $element['#description'];
-    $elements['#object_type'] = $element['#object_type'];
-    $elements['#bundle'] = $element['#bundle'];
     $elements['#field_name'] = $element['#field_name'];
+    $elements['#language'] = $element['#language'];
+    $elements['#display_field'] = $field['settings']['display_field'];
 
     // Add some properties that will eventually be added to the file upload
     // field. These are added here so that they may be referenced easily through
@@ -571,7 +578,7 @@ function file_field_widget_value($element, $input = FALSE, $form_state) {
   if ($input) {
     // Checkboxes lose their value when empty.
     // If the display field is present make sure its unchecked value is saved.
-    $field = field_info_field($element['#field_name']);
+    $field = $form_state['field'][$element['#field_name']][$element['#language']]['field'];
     if (empty($input['display'])) {
       $input['display'] = $field['settings']['display_field'] ? 0 : 1;
     }
@@ -599,8 +606,8 @@ function file_field_widget_process($element, &$form_state, $form) {
   $item = $element['#value'];
   $item['fid'] = $element['fid']['#value'];
 
-  $field = field_info_field($element['#field_name']);
-  $instance = field_info_instance($element['#object_type'], $element['#field_name'], $element['#bundle']);
+  $field = $form_state['field'][$element['#field_name']][$element['#language']]['field'];
+  $instance = $form_state['field'][$element['#field_name']][$element['#language']]['instance'];
   $settings = $instance['widget']['settings'];
 
   $element['#theme'] = 'file_widget';
@@ -711,9 +718,6 @@ function theme_file_widget($variables) {
 function theme_file_widget_multiple($variables) {
   $element = $variables['element'];
 
-  $field = field_info_field($element['#field_name']);
-  $instance = field_info_instance($element['#object_type'], $element['#field_name'], $element['#bundle']);
-
   // Get our list of widgets in order.
   $widgets = array();
   foreach (element_children($element) as $key) {
@@ -728,7 +732,7 @@ function theme_file_widget_multiple($variables) {
   // Build up a table of applicable fields.
   $headers = array();
   $headers[] = t('File information');
-  if (!empty($field['settings']['display_field'])) {
+  if ($element['#display_field']) {
     $headers[] = array(
       'data' => t('Display'),
       'class' => array('checkbox'),
@@ -756,7 +760,7 @@ function theme_file_widget_multiple($variables) {
 
     // Render the "Display" option in its own own column.
     $display = '';
-    if (!empty($field['settings']['display_field'])) {
+    if ($element['#display_field']) {
       unset($element[$key]['display']['#title']);
       $display = array(
         'data' => drupal_render($element[$key]['display']),
@@ -774,7 +778,7 @@ function theme_file_widget_multiple($variables) {
 
     $row = array();
     $row[] = $information;
-    if (!empty($field['settings']['display_field'])) {
+    if ($element['#display_field']) {
       $row[] = $display;
     }
     $row[] = $weight;
@@ -844,7 +848,7 @@ function theme_file_upload_help($variables) {
 /**
  * Implements hook_field_formatter_view().
  */
-function file_field_formatter_view($obj_type, $object, $field, $instance, $langcode, $items, $display) {
+function file_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
   $element = array();
 
   switch ($display['type']) {

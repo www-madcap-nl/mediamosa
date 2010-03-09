@@ -1,5 +1,5 @@
 <?php
-// $Id: user.test,v 1.77 2010/01/14 19:21:55 dries Exp $
+// $Id: user.test,v 1.86 2010/03/07 18:46:55 webchick Exp $
 
 class UserRegistrationTestCase extends DrupalWebTestCase {
   public static function getInfo() {
@@ -25,7 +25,7 @@ class UserRegistrationTestCase extends DrupalWebTestCase {
     $edit['name'] = $name = $this->randomName();
     $edit['mail'] = $mail = $edit['name'] . '@example.com';
     $this->drupalPost('user/register', $edit, t('Create new account'));
-    $this->assertText(t('Your password and further instructions have been sent to your e-mail address.'), t('User registered successfully.'));
+    $this->assertText(t('A welcome message with further instructions has been sent to your e-mail address.'), t('User registered successfully.'));
     $accounts = user_load_multiple(array(), array('name' => $name, 'mail' => $mail));
     $new_user = reset($accounts);
     $this->assertTrue($new_user->status, t('New account is active after registration.'));
@@ -143,7 +143,7 @@ class UserRegistrationTestCase extends DrupalWebTestCase {
     variable_set('user_default_timezone', DRUPAL_USER_TIMEZONE_SELECT);
     $this->drupalLogout();
     $this->drupalGet('user/register');
-    $this->assertRaw('<fieldset id="edit-account"><legend>Account information</legend>', t('Account settings fieldset was not hidden.'));
+    $this->assertText(t('Account information'), t('Account settings fieldset was not hidden.'));
   }
 }
 
@@ -762,30 +762,29 @@ class UserPictureTestCase extends DrupalWebTestCase {
    * results: The image should be uploaded because ImageGDToolkit resizes the picture
    */
   function testWithGDinvalidDimension() {
-    if ($this->_directory_test)
-      if (image_get_toolkit()) {
-        $this->drupalLogin($this->user);
+    if ($this->_directory_test && image_get_toolkit()) {
+      $this->drupalLogin($this->user);
 
-        $image = current($this->drupalGetTestFiles('image'));
-        $info = image_get_info($image->uri);
+      $image = current($this->drupalGetTestFiles('image'));
+      $info = image_get_info($image->uri);
 
-        // Set new variables: invalid dimensions, valid filesize (0 = no limit).
-        $test_dim = ($info['width'] - 10) . 'x' . ($info['height'] - 10);
-        variable_set('user_picture_dimensions', $test_dim);
-        variable_set('user_picture_file_size', 0);
+      // Set new variables: invalid dimensions, valid filesize (0 = no limit).
+      $test_dim = ($info['width'] - 10) . 'x' . ($info['height'] - 10);
+      variable_set('user_picture_dimensions', $test_dim);
+      variable_set('user_picture_file_size', 0);
 
-        $pic_path = $this->saveUserPicture($image);
-        // Check that the image was resized and is being displayed on the
-        // user's profile page.
-        $text = t('The image was resized to fit within the maximum allowed dimensions of %dimensions pixels.', array('%dimensions' => $test_dim));
-        $this->assertRaw($text, t('Image was resized.'));
-        $alt = t("@user's picture", array('@user' => format_username($this->user)));
-        $style = variable_get('user_picture_style', '');
-        $this->assertRaw(image_style_url($style, $pic_path), t("Image is displayed in user's edit page"));
+      $pic_path = $this->saveUserPicture($image);
+      // Check that the image was resized and is being displayed on the
+      // user's profile page.
+      $text = t('The image was resized to fit within the maximum allowed dimensions of %dimensions pixels.', array('%dimensions' => $test_dim));
+      $this->assertRaw($text, t('Image was resized.'));
+      $alt = t("@user's picture", array('@user' => format_username($this->user)));
+      $style = variable_get('user_picture_style', '');
+      $this->assertRaw(image_style_url($style, $pic_path), t("Image is displayed in user's edit page"));
 
-        // Check if file is located in proper directory.
-        $this->assertTrue(is_file($pic_path), t("File is located in proper directory"));
-      }
+      // Check if file is located in proper directory.
+      $this->assertTrue(is_file($pic_path), t("File is located in proper directory"));
+    }
   }
 
   /**
@@ -796,34 +795,32 @@ class UserPictureTestCase extends DrupalWebTestCase {
    * results: The image should be uploaded because ImageGDToolkit resizes the picture
    */
   function testWithGDinvalidSize() {
-    if ($this->_directory_test)
-      if (image_get_toolkit()) {
+    if ($this->_directory_test && image_get_toolkit()) {
+      $this->drupalLogin($this->user);
 
-        $this->drupalLogin($this->user);
+      // Images are sorted first by size then by name. We need an image
+      // bigger than 1 KB so we'll grab the last one.
+      $files = $this->drupalGetTestFiles('image');
+      $image = end($files);
+      $info = image_get_info($image->uri);
 
-        // Images are sorted first by size then by name. We need an image
-        // bigger than 1 KB so we'll grab the last one.
-        $files = $this->drupalGetTestFiles('image');
-        $image = end($files);
-        $info = image_get_info($image->uri);
+      // Set new variables: valid dimensions, invalid filesize.
+      $test_dim = ($info['width'] + 10) . 'x' . ($info['height'] + 10);
+      $test_size = 1;
+      variable_set('user_picture_dimensions', $test_dim);
+      variable_set('user_picture_file_size', $test_size);
 
-        // Set new variables: valid dimensions, invalid filesize.
-        $test_dim = ($info['width'] + 10) . 'x' . ($info['height'] + 10);
-        $test_size = 1;
-        variable_set('user_picture_dimensions', $test_dim);
-        variable_set('user_picture_file_size', $test_size);
+      $pic_path = $this->saveUserPicture($image);
 
-        $pic_path = $this->saveUserPicture($image);
+      // Test that the upload failed and that the correct reason was cited.
+      $text = t('The specified file %filename could not be uploaded.', array('%filename' => $image->filename));
+      $this->assertRaw($text, t('Upload failed.'));
+      $text = t('The file is %filesize exceeding the maximum file size of %maxsize.', array('%filesize' => format_size(filesize($image->uri)), '%maxsize' => format_size($test_size * 1024)));
+      $this->assertRaw($text, t('File size cited as reason for failure.'));
 
-        // Test that the upload failed and that the correct reason was cited.
-        $text = t('The specified file %filename could not be uploaded.', array('%filename' => $image->filename));
-        $this->assertRaw($text, t('Upload failed.'));
-        $text = t('The file is %filesize exceeding the maximum file size of %maxsize.', array('%filesize' => format_size(filesize($image->uri)), '%maxsize' => format_size($test_size * 1024)));
-        $this->assertRaw($text, t('File size cited as reason for failure.'));
-
-        // Check if file is not uploaded.
-        $this->assertFalse(is_file($pic_path), t('File was not uploaded.'));
-      }
+      // Check if file is not uploaded.
+      $this->assertFalse(is_file($pic_path), t('File was not uploaded.'));
+    }
   }
 
   /**
@@ -834,30 +831,28 @@ class UserPictureTestCase extends DrupalWebTestCase {
    * results: The image shouldn't be uploaded
    */
   function testWithoutGDinvalidDimension() {
-    if ($this->_directory_test)
-      if (!image_get_toolkit()) {
+    if ($this->_directory_test && !image_get_toolkit()) {
+      $this->drupalLogin($this->user);
 
-        $this->drupalLogin($this->user);
+      $image = current($this->drupalGetTestFiles('image'));
+      $info = image_get_info($image->uri);
 
-        $image = current($this->drupalGetTestFiles('image'));
-        $info = image_get_info($image->uri);
+      // Set new variables: invalid dimensions, valid filesize (0 = no limit).
+      $test_dim = ($info['width'] - 10) . 'x' . ($info['height'] - 10);
+      variable_set('user_picture_dimensions', $test_dim);
+      variable_set('user_picture_file_size', 0);
 
-        // Set new variables: invalid dimensions, valid filesize (0 = no limit).
-        $test_dim = ($info['width'] - 10) . 'x' . ($info['height'] - 10);
-        variable_set('user_picture_dimensions', $test_dim);
-        variable_set('user_picture_file_size', 0);
+      $pic_path = $this->saveUserPicture($image);
 
-        $pic_path = $this->saveUserPicture($image);
+      // Test that the upload failed and that the correct reason was cited.
+      $text = t('The specified file %filename could not be uploaded.', array('%filename' => $image->filename));
+      $this->assertRaw($text, t('Upload failed.'));
+      $text = t('The image is too large; the maximum dimensions are %dimensions pixels.', array('%dimensions' => $test_dim));
+      $this->assertRaw($text, t('Checking response on invalid image (dimensions).'));
 
-        // Test that the upload failed and that the correct reason was cited.
-        $text = t('The specified file %filename could not be uploaded.', array('%filename' => $image->filename));
-        $this->assertRaw($text, t('Upload failed.'));
-        $text = t('The image is too large; the maximum dimensions are %dimensions pixels.', array('%dimensions' => $test_dim));
-        $this->assertRaw($text, t('Checking response on invalid image (dimensions).'));
-
-        // Check if file is not uploaded.
-        $this->assertFalse(is_file($pic_path), t('File was not uploaded.'));
-      }
+      // Check if file is not uploaded.
+      $this->assertFalse(is_file($pic_path), t('File was not uploaded.'));
+    }
   }
 
   /**
@@ -868,30 +863,29 @@ class UserPictureTestCase extends DrupalWebTestCase {
    * results: The image shouldn't be uploaded
    */
   function testWithoutGDinvalidSize() {
-    if ($this->_directory_test)
-      if (!image_get_toolkit()) {
-        $this->drupalLogin($this->user);
+    if ($this->_directory_test && !image_get_toolkit()) {
+      $this->drupalLogin($this->user);
 
-        $image = current($this->drupalGetTestFiles('image'));
-        $info = image_get_info($image->uri);
+      $image = current($this->drupalGetTestFiles('image'));
+      $info = image_get_info($image->uri);
 
-        // Set new variables: valid dimensions, invalid filesize.
-        $test_dim = ($info['width'] + 10) . 'x' . ($info['height'] + 10);
-        $test_size = 1;
-        variable_set('user_picture_dimensions', $test_dim);
-        variable_set('user_picture_file_size', $test_size);
+      // Set new variables: valid dimensions, invalid filesize.
+      $test_dim = ($info['width'] + 10) . 'x' . ($info['height'] + 10);
+      $test_size = 1;
+      variable_set('user_picture_dimensions', $test_dim);
+      variable_set('user_picture_file_size', $test_size);
 
-        $pic_path = $this->saveUserPicture($image);
+      $pic_path = $this->saveUserPicture($image);
 
-        // Test that the upload failed and that the correct reason was cited.
-        $text = t('The specified file %filename could not be uploaded.', array('%filename' => $image->filename));
-        $this->assertRaw($text, t('Upload failed.'));
-        $text = t('The file is %filesize exceeding the maximum file size of %maxsize.', array('%filesize' => format_size(filesize($image->uri)), '%maxsize' => format_size($test_size * 1024)));
-        $this->assertRaw($text, t('File size cited as reason for failure.'));
+      // Test that the upload failed and that the correct reason was cited.
+      $text = t('The specified file %filename could not be uploaded.', array('%filename' => $image->filename));
+      $this->assertRaw($text, t('Upload failed.'));
+      $text = t('The file is %filesize exceeding the maximum file size of %maxsize.', array('%filesize' => format_size(filesize($image->uri)), '%maxsize' => format_size($test_size * 1024)));
+      $this->assertRaw($text, t('File size cited as reason for failure.'));
 
-        // Check if file is not uploaded.
-        $this->assertFalse(is_file($pic_path), t('File was not uploaded.'));
-      }
+      // Check if file is not uploaded.
+      $this->assertFalse(is_file($pic_path), t('File was not uploaded.'));
+    }
   }
 
   /**
@@ -971,7 +965,7 @@ class UserPermissionsTestCase extends DrupalWebTestCase {
     $this->assertFalse(user_access('administer nodes', $account), t('User does not have "administer nodes" permission.'));
     $edit = array();
     $edit[$rid . '[administer nodes]'] = TRUE;
-    $this->drupalPost('admin/config/people/permissions', $edit, t('Save permissions'));
+    $this->drupalPost('admin/people/permissions', $edit, t('Save permissions'));
     $this->assertText(t('The changes have been saved.'), t('Successful save message displayed.'));
     drupal_static_reset('user_access');
     drupal_static_reset('user_role_permissions');
@@ -981,7 +975,7 @@ class UserPermissionsTestCase extends DrupalWebTestCase {
     $this->assertTrue(user_access('access user profiles', $account), t('User has "access user profiles" permission.'));
     $edit = array();
     $edit[$rid . '[access user profiles]'] = FALSE;
-    $this->drupalPost('admin/config/people/permissions', $edit, t('Save permissions'));
+    $this->drupalPost('admin/people/permissions', $edit, t('Save permissions'));
     $this->assertText(t('The changes have been saved.'), t('Successful save message displayed.'));
     drupal_static_reset('user_access');
     drupal_static_reset('user_role_permissions');
@@ -1210,11 +1204,11 @@ class UserBlocksUnitTests extends DrupalWebTestCase {
     $edit = array();
     $edit['name'] = $user->name;
     $edit['pass'] = $user->pass_raw;
-    $this->drupalPost('admin/config/people/permissions', $edit, t('Log in'));
+    $this->drupalPost('admin/people/permissions', $edit, t('Log in'));
     $this->assertNoText(t('User login'), t('Logged in.'));
 
     // Check that we are still on the same page.
-    $this->assertPattern('!<title.*?' . t('Permissions') . '.*?</title>!', t('Still on the same page after login for access denied page'));
+    $this->assertEqual(url('admin/people/permissions', array('absolute' => TRUE)), $this->getUrl(), t('Still on the same page after login for access denied page'));
 
     // Now, log out and repeat with a non-403 page.
     $this->drupalLogout();
@@ -1350,7 +1344,7 @@ class UserCreateTestCase extends DrupalWebTestCase {
       $this->drupalPost('admin/people/create', $edit, t('Create new account'));
 
       if ($notify) {
-        $this->assertText(t('Password and further instructions have been e-mailed to the new user @name.', array('@name' => $edit['name'])), 'User created');
+        $this->assertText(t('A welcome message with further instructions has been e-mailed to the new user @name.', array('@name' => $edit['name'])), 'User created');
         $this->assertEqual(count($this->drupalGetMails()), 1, 'Notification e-mail sent');
       }
       else {
@@ -1396,5 +1390,70 @@ class UserEditTestCase extends DrupalWebTestCase {
     variable_set('user_pictures', 1);
     $this->drupalPost("user/$user1->uid/edit", $edit, t('Save'));
     $this->assertRaw(t('The name %name is already taken.', array('%name' => $edit['name'])));
+
+    // Test that the error message appears when attempting to change the mail or
+    // pass without the current password.
+    $edit = array();
+    $edit['mail'] = $this->randomName() . '@new.example.com';
+    $this->drupalPost("user/$user1->uid/edit", $edit, t('Save'));
+    $this->assertRaw(t("Your current password is missing or incorrect; it's required to change the %name.", array('%name' => t('E-mail address'))));
+
+    $edit['current_pass'] = $user1->pass_raw;
+    $this->drupalPost("user/$user1->uid/edit", $edit, t('Save'));
+    $this->assertRaw(t("The changes have been saved."));
+
+    // Test that the user must enter current password before changing passwords.
+    $edit = array();
+    $edit['pass[pass1]'] = $new_pass = $this->randomName();
+    $edit['pass[pass2]'] = $new_pass;
+    $this->drupalPost("user/$user1->uid/edit", $edit, t('Save'));
+    $this->assertRaw(t("Your current password is missing or incorrect; it's required to change the %name.", array('%name' => t('Password'))));
+
+    // Try again with the current password.
+    $edit['current_pass'] = $user1->pass_raw;
+    $this->drupalPost("user/$user1->uid/edit", $edit, t('Save'));
+    $this->assertRaw(t("The changes have been saved."));
+
+    // Make sure the user can log in with their new password.
+    $this->drupalLogout();
+    $user1->pass_raw = $new_pass;
+    $this->drupalLogin($user1);
+    $this->drupalLogout();
+  }
+}
+
+/**
+ * Test that a user, having editing their own account, can still log in.
+ */
+class UserEditedOwnAccountTestCase extends DrupalWebTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'User edited own account',
+      'description' => 'Test user edited own account can still log in.',
+      'group' => 'User',
+    );
+  }
+
+  function testUserEditedOwnAccount() {
+    // Change account setting 'Who can register accounts?' to Administrators
+    // only.
+    variable_set('user_register', 0);
+
+    // Create a new user account and log in.
+    $account = $this->drupalCreateUser(array('change own username'));
+    $this->drupalLogin($account);
+
+    // Change own username.
+    $edit = array();
+    $edit['name'] = $this->randomName();
+    $this->drupalPost('user/' . $account->uid . '/edit', $edit, t('Save'));
+
+    // Log out.
+    $this->drupalLogout();
+
+    // Set the new name on the user account and attempt to log back in.
+    $account->name = $edit['name'];
+    $this->drupalLogin($account);
   }
 }

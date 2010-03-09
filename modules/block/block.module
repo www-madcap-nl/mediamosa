@@ -1,5 +1,5 @@
 <?php
-// $Id: block.module,v 1.407 2010/01/13 05:40:03 webchick Exp $
+// $Id: block.module,v 1.412 2010/03/09 03:48:59 dries Exp $
 
 /**
  * @file
@@ -31,7 +31,7 @@ function block_help($path, $arg) {
       $output .= '</dl>';
       return $output;
     case 'admin/structure/block/add':
-      return '<p>' . t('Use this page to create a new custom block. New blocks are disabled by default; assign them to a region, on this page or the <a href="@blocks">Blocks administration page</a>, to make them visible.', array('@blocks' => url('admin/structure/block'))) . '</p>';
+      return '<p>' . t('Use this page to create a new custom block.') . '</p>';
   }
   if ($arg[0] == 'admin' && $arg[1] == 'structure' && $arg['2'] == 'block' && (empty($arg[3]) || $arg[3] == 'list')) {
     $demo_theme = !empty($arg[4]) ? $arg[4] : variable_get('theme_default', 'garland');
@@ -420,10 +420,10 @@ function block_custom_block_form($edit = array()) {
   );
   $form['body_field']['#weight'] = -17;
   $form['body_field']['body'] = array(
-    '#type' => 'textarea',
+    '#type' => 'text_format',
     '#title' => t('Block body'),
     '#default_value' => $edit['body'],
-    '#text_format' => isset($edit['format']) ? $edit['format'] : filter_default_format(),
+    '#format' => isset($edit['format']) ? $edit['format'] : NULL,
     '#rows' => 15,
     '#description' => t('The content of the block as shown to the user.'),
     '#required' => TRUE,
@@ -452,7 +452,7 @@ function block_custom_block_save($edit, $delta) {
     ->fields(array(
       'body' => $edit['body'],
       'info' => $edit['info'],
-      'format' => $edit['body_format'],
+      'format' => $edit['format'],
     ))
     ->condition('bid', $delta)
     ->execute();
@@ -821,11 +821,11 @@ function _block_get_cache_id($block) {
   // it brings too many chances of having unwanted output get in the cache
   // and later be served to other users. We therefore exclude user 1 from
   // block caching.
-  if (variable_get('block_cache', 0) && !in_array($block->cache, array(DRUPAL_NO_CACHE, DRUPAL_CACHE_CUSTOM)) && $user->uid != 1) {
+  if (variable_get('block_cache', FALSE) && !in_array($block->cache, array(DRUPAL_NO_CACHE, DRUPAL_CACHE_CUSTOM)) && $user->uid != 1) {
     // Start with common sub-patterns: block identification, theme, language.
     $cid_parts[] = $block->module;
     $cid_parts[] = $block->delta;
-    $cid_parts += drupal_render_cid_parts($block->cache);
+    $cid_parts = array_merge($cid_parts, drupal_render_cid_parts($block->cache));
 
     return implode(':', $cid_parts);
   }

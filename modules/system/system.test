@@ -1,5 +1,5 @@
 <?php
-// $Id: system.test,v 1.103 2010/01/13 05:08:29 webchick Exp $
+// $Id: system.test,v 1.116 2010/03/06 06:39:01 dries Exp $
 
 /**
  * Helper class for module test cases.
@@ -122,6 +122,7 @@ class EnableDisableTestCase extends ModuleTestCase {
     $this->assertText(t('hook_modules_enabled fired for aggregator'), t('hook_modules_enabled fired.'));
     $this->assertModules(array('aggregator'), TRUE);
     $this->assertTableCount('aggregator', TRUE);
+    $this->assertLogMessage('system', "%module module installed.", array('%module' => 'aggregator'), WATCHDOG_INFO);
     $this->assertLogMessage('system', "%module module enabled.", array('%module' => 'aggregator'), WATCHDOG_INFO);
 
     // Disable aggregator, check tables, uninstall aggregator, check tables.
@@ -345,7 +346,7 @@ class IPAddressBlockingTestCase extends DrupalWebTestCase {
     $edit['ip'] = '192.168.1.1';
     $this->drupalPost('admin/config/people/ip-blocking', $edit, t('Save'));
     $ip = db_query("SELECT iid from {blocked_ips} WHERE ip = :ip", array(':ip' => $edit['ip']))->fetchField();
-    $this->assertNotNull($ip, t('IP address found in database'));
+    $this->assertTrue($ip, t('IP address found in database.'));
     $this->assertRaw(t('The IP address %ip has been blocked.', array('%ip' => $edit['ip'])), t('IP address was blocked.'));
 
     // Try to block an IP address that's already blocked.
@@ -371,6 +372,13 @@ class IPAddressBlockingTestCase extends DrupalWebTestCase {
     $edit['ip'] = '';
     $this->drupalPost('admin/config/people/ip-blocking', $edit, t('Save'));
     $this->assertText(t('Enter a valid IP address.'));
+
+    // Pass an IP address as a URL parameter and submit it.
+    $submit_ip = '1.2.3.4';
+    $this->drupalPost('admin/config/people/ip-blocking/' . $submit_ip, NULL, t('Save'));
+    $ip = db_query("SELECT iid from {blocked_ips} WHERE ip = :ip", array(':ip' => $submit_ip))->fetchField();
+    $this->assertTrue($ip, t('IP address found in database'));
+    $this->assertRaw(t('The IP address %ip has been blocked.', array('%ip' => $submit_ip)), t('IP address was blocked.'));
 
     // Submit your own IP address. This fails, although it works when testing manually.
      // TODO: on some systems this test fails due to a bug or inconsistency in cURL.
@@ -415,7 +423,7 @@ class CronRunTestCase extends DrupalWebTestCase {
   }
 
   /**
-   * Ensure that the automatic cron run callback is working.
+   * Ensure that the automatic cron run feature is working.
    *
    * In these tests we do not use REQUEST_TIME to track start time, because we
    * need the exact time when cron is triggered.
@@ -428,19 +436,13 @@ class CronRunTestCase extends DrupalWebTestCase {
     variable_set('cron_last', $cron_last);
     variable_set('cron_safe_threshold', $cron_safe_threshold);
     $this->drupalGet('');
-    $this->assertRaw('"cronCheck":' . ($cron_last + $cron_safe_threshold));
-    $this->drupalGet('system/run-cron-check');
-    $this->assertExpiresHeader($cron_last + $cron_safe_threshold);
     $this->assertTrue($cron_last == variable_get('cron_last', NULL), t('Cron does not run when the cron threshold is not passed.'));
 
     // Test if cron runs when the cron threshold was passed.
     $cron_last = time() - 200;
     variable_set('cron_last', $cron_last);
     $this->drupalGet('');
-    $this->assertRaw('"cronCheck":' . ($cron_last + $cron_safe_threshold));
     sleep(1);
-    $this->drupalGet('system/run-cron-check');
-    $this->assertExpiresHeader(variable_get('cron_last', NULL) + $cron_safe_threshold);
     $this->assertTrue($cron_last < variable_get('cron_last', NULL), t('Cron runs when the cron threshold is passed.'));
 
     // Disable the cron threshold through the interface.
@@ -454,29 +456,14 @@ class CronRunTestCase extends DrupalWebTestCase {
     $cron_last = time() - 200;
     variable_set('cron_last', $cron_last);
     $this->drupalGet('');
-    $this->assertNoRaw('cronCheck');
-    $this->drupalGet('system/run-cron-check');
-    $this->assertResponse(403);
     $this->assertTrue($cron_last == variable_get('cron_last', NULL), t('Cron does not run when the cron threshold is disabled.'));
-  }
-
-  /**
-   * Assert that the Expires header is a specific timestamp.
-   *
-   * @param $timestamp
-   *   The timestamp value to match against the header.
-   */
-  private function assertExpiresHeader($timestamp) {
-    $expires = $this->drupalGetHeader('Expires');
-    $expires = strtotime($expires);
-    $this->assertEqual($expires, $timestamp, t('Expires header expected @expected got @actual.', array('@expected' => $timestamp, '@actual' => $expires)));
   }
 
   /**
    * Ensure that temporary files are removed.
    *
    * Create files for all the possible combinations of age and status. We are
-   * using UPDATE statments rather than file_save() because it would set the
+   * using UPDATE statements rather than file_save() because it would set the
    * timestamp.
    */
   function testTempFileCleanup() {
@@ -882,7 +869,7 @@ class PageTitleFiltering extends DrupalWebTestCase {
   public static function getInfo() {
     return array(
       'name' => 'HTML in page titles',
-      'description' => 'Tests correct handling or conversion by drupal_set_title() and drupal_get_title().',
+      'description' => 'Tests correct handling or conversion by drupal_set_title() and drupal_get_title() and checks the correct escaping of site name and slogan.',
       'group' => 'System'
     );
   }
@@ -893,7 +880,7 @@ class PageTitleFiltering extends DrupalWebTestCase {
   function setUp() {
     parent::setUp();
 
-    $this->content_user = $this->drupalCreateUser(array('create page content', 'access content'));
+    $this->content_user = $this->drupalCreateUser(array('create page content', 'access content', 'administer themes', 'administer site configuration'));
     $this->drupalLogin($this->content_user);
     $this->saved_title = drupal_get_title();
   }
@@ -924,8 +911,8 @@ class PageTitleFiltering extends DrupalWebTestCase {
     // Generate node content.
     $langcode = LANGUAGE_NONE;
     $edit = array(
-     "title" => '!SimpleTest! ' . $title . $this->randomName(20),
-     "body[$langcode][0][value]" => '!SimpleTest! test body' . $this->randomName(200),
+      "title" => '!SimpleTest! ' . $title . $this->randomName(20),
+      "body[$langcode][0][value]" => '!SimpleTest! test body' . $this->randomName(200),
     );
     // Create the node with HTML in the title.
     $this->drupalPost('node/add/page', $edit, t('Save'));
@@ -934,6 +921,46 @@ class PageTitleFiltering extends DrupalWebTestCase {
     $this->assertNotNull($node, 'Node created and found in database');
     $this->drupalGet("node/" . $node->nid);
     $this->assertText(check_plain($edit["title"]), 'Check to make sure tags in the node title are converted.');
+  }
+  /**
+   * Test if the title of the site is XSS proof.
+   */
+  function testTitleXSS() {
+    // Set some title with JavaScript and HTML chars to escape.
+    $title = '</title><script type="text/javascript">alert("Title XSS!");</script> & < > " \' ';
+    $title_filtered = check_plain($title);
+
+    $slogan = '<script type="text/javascript">alert("Slogan XSS!");</script>';
+    $slogan_filtered = filter_xss_admin($slogan);
+
+    // Activate needed appearance settings.
+    $edit = array(
+      'toggle_name'           => TRUE,
+      'toggle_slogan'         => TRUE,
+      'toggle_main_menu'      => TRUE,
+      'toggle_secondary_menu' => TRUE,
+    );
+    $this->drupalPost('admin/appearance/settings', $edit, t('Save configuration'));
+
+    // Set title and slogan.
+    $edit = array(
+      'site_name'    => $title,
+      'site_slogan'  => $slogan,
+    );
+    $this->drupalPost('admin/config/system/site-information', $edit, t('Save configuration'));
+
+    // Load frontpage.
+    $this->drupalGet('');
+
+    // Test the title.
+    $this->assertNoRaw($title, 'Check for the unfiltered version of the title.');
+    // Adding </title> so we do not test the escaped version from drupal_set_title().
+    $this->assertRaw($title_filtered . '</title>', 'Check for the filtered version of the title.');
+
+    // Test the slogan.
+    // Currently Garland is not displaying the slogan so this test is escaped.
+    $this->assertNoRaw($slogan, 'Check for the unfiltered version of the slogan.');
+    $this->assertRaw($slogan_filtered, 'Check for the filtered version of the slogan.');
   }
 }
 
@@ -1013,7 +1040,7 @@ class SystemBlockTestCase extends DrupalWebTestCase {
    * Test displaying and hiding the powered-by block.
    */
   function testPoweredByBlock() {
-    // Set block title and some settings to confirm that the interface is availble.
+    // Set block title and some settings to confirm that the interface is available.
     $this->drupalPost('admin/structure/block/manage/system/powered-by/configure', array('title' => $this->randomName(8)), t('Save block'));
     $this->assertText(t('The block configuration has been saved.'), t('Block configuration set.'));
 
@@ -1237,7 +1264,7 @@ class SystemThemeFunctionalTest extends DrupalWebTestCase {
     $this->drupalPost('admin/appearance/settings', $edit, t('Save configuration'));
     $this->drupalGet('node');
     $this->assertRaw($file->uri, t('Logo path successfully changed.'));
-  
+
     // Upload a file to use for the logo.
     $file = current($this->drupalGetTestFiles('image'));
     $edit = array(
@@ -1264,7 +1291,7 @@ class SystemThemeFunctionalTest extends DrupalWebTestCase {
     );
     $this->drupalPost('admin/appearance', $edit, t('Save configuration'));
 
-    $this->drupalGet('admin');
+    $this->drupalGet('admin/config');
     $this->assertRaw('themes/garland', t('Administration theme used on an administration page.'));
 
     $this->drupalGet('node/' . $this->node->nid);
@@ -1282,7 +1309,7 @@ class SystemThemeFunctionalTest extends DrupalWebTestCase {
     );
     $this->drupalPost('admin/appearance', $edit, t('Save configuration'));
 
-    $this->drupalGet('admin');
+    $this->drupalGet('admin/config');
     $this->assertRaw('themes/garland', t('Administration theme used on an administration page.'));
 
     $this->drupalGet('node/add');
@@ -1610,5 +1637,77 @@ class FloodFunctionalTest extends DrupalWebTestCase {
     // Run cron and verify event is still not allowed.
     $this->cronRun();
     $this->assertFalse(flood_is_allowed($name, $threshold));
+  }
+}
+
+/**
+ * Test HTTP file downloading capability.
+ */
+class RetrieveFileTestCase extends DrupalWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'HTTP file retrieval',
+      'description' => 'Checks HTTP file fetching and error handling.',
+      'group' => 'System',
+    );
+  }
+
+  /**
+   * Invokes system_retrieve_file() in several scenarios.
+   */
+  function testFileRetrieving() {
+    // Test 404 handling by trying to fetch a randomly named file.
+    drupal_mkdir($sourcedir = 'public://' . $this->randomName());
+    $filename = $this->randomName();
+    $url = file_create_url($sourcedir . '/' . $filename);
+    $retrieved_file = system_retrieve_file($url);
+    $this->assertFalse($retrieved_file, t('Non-existent file not fetched.'));
+
+    // Actually create that file, download it via HTTP and test the returned path.
+    file_put_contents($sourcedir . '/' . $filename, 'testing');
+    $retrieved_file = system_retrieve_file($url);
+    $this->assertEqual($retrieved_file, 'public://' . $filename, t('Sane path for downloaded file returned (public:// scheme).'));
+    $this->assertTrue(is_file($retrieved_file), t('Downloaded file does exist (public:// scheme).'));
+    $this->assertEqual(filesize($retrieved_file), 7, t('File size of downloaded file is correct (public:// scheme).'));
+    file_unmanaged_delete($retrieved_file);
+
+    // Test downloading file to a different location.
+    drupal_mkdir($targetdir = 'temporary://' . $this->randomName());
+    $retrieved_file = system_retrieve_file($url, $targetdir);
+    $this->assertEqual($retrieved_file, "$targetdir/$filename", t('Sane path for downloaded file returned (temporary:// scheme).'));
+    $this->assertTrue(is_file($retrieved_file), t('Downloaded file does exist (temporary:// scheme).'));
+    $this->assertEqual(filesize($retrieved_file), 7, t('File size of downloaded file is correct (temporary:// scheme).'));
+    file_unmanaged_delete($retrieved_file);
+
+    file_unmanaged_delete_recursive($sourcedir);
+    file_unmanaged_delete_recursive($targetdir);
+  }
+}
+
+/**
+ * Functional tests shutdown functions.
+ */
+class ShutdownFunctionsTest extends DrupalWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'Shutdown functions',
+      'description' => 'Functional tests for shutdown functions',
+      'group' => 'System',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('system_test');
+  }
+
+  /**
+   * Test flood control mechanism clean-up.
+   */
+  function testShutdownFunctions() {
+    $arg1 = $this->randomName();
+    $arg2 = $this->randomName();
+    $this->drupalGet('system-test/shutdown-functions/' . $arg1 . '/' . $arg2);
+    $this->assertText(t('First shutdown function, arg1 : @arg1, arg2: @arg2', array('@arg1' => $arg1, '@arg2' => $arg2)));
+    $this->assertText(t('Second shutdown function, arg1 : @arg1, arg2: @arg2', array('@arg1' => $arg1, '@arg2' => $arg2)));
   }
 }

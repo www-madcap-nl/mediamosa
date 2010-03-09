@@ -1,5 +1,5 @@
 <?php
-// $Id: file.inc,v 1.200 2009/12/30 08:16:55 dries Exp $
+// $Id: file.inc,v 1.205 2010/02/01 19:07:07 dries Exp $
 
 /**
  * @file
@@ -30,7 +30,7 @@ require_once DRUPAL_ROOT . '/includes/stream_wrappers.inc';
  * - filemime: The file's MIME type.
  * - filesize: The size of the file in bytes.
  * - status: A bitmapped field indicating the status of the file. The first 8
- *   bits are reserved for Drupal core. The least sigifigant bit indicates
+ *   bits are reserved for Drupal core. The least significant bit indicates
  *   temporary (0) or permanent (1). Temporary files older than
  *   DRUPAL_MAXIMUM_TEMP_FILE_AGE will be removed during cron runs.
  * - timestamp: UNIX timestamp for the date the file was added to the database.
@@ -90,16 +90,24 @@ define('FILE_STATUS_PERMANENT', 1);
  *
  * A stream is referenced as "scheme://target".
  *
+ * @param $filter
+ *  Optionally filter out all types except these.  Defaults to
+ *  STREAM_WRAPPERS_ALL, which returns all registered stream wrappers.
+ *
  * @return
  *   Returns the entire Drupal stream wrapper registry.
  * @see hook_stream_wrappers()
  * @see hook_stream_wrappers_alter()
  */
-function file_get_stream_wrappers() {
-  $wrappers = &drupal_static(__FUNCTION__);
+function file_get_stream_wrappers($filter = STREAM_WRAPPERS_ALL) {
+  $wrappers_storage = &drupal_static(__FUNCTION__);
 
-  if (!isset($wrappers)) {
+  if (!isset($wrappers_storage)) {
     $wrappers = module_invoke_all('stream_wrappers');
+    foreach ($wrappers as $scheme => $info) {
+      // Add defaults.
+      $wrappers[$scheme] += array('type' => STREAM_WRAPPERS_NORMAL);
+    }
     drupal_alter('stream_wrappers', $wrappers);
     $existing = stream_get_wrappers();
     foreach ($wrappers as $scheme => $info) {
@@ -115,9 +123,25 @@ function file_get_stream_wrappers() {
         }
         stream_wrapper_register($scheme, $info['class']);
       }
+      // Pre-populate the static cache with the filters most typically used.
+      $wrappers_storage[STREAM_WRAPPERS_ALL][$scheme] = $wrappers[$scheme];
+      if (($info['type'] & STREAM_WRAPPERS_WRITE_VISIBLE) == STREAM_WRAPPERS_WRITE_VISIBLE) {
+        $wrappers_storage[STREAM_WRAPPERS_WRITE_VISIBLE][$scheme] = $wrappers[$scheme];
+      }
     }
   }
-  return $wrappers;
+
+  if (!isset($wrappers_storage[$filter])) {
+    $wrappers_storage[$filter] = array();
+    foreach ($wrappers_storage[STREAM_WRAPPERS_ALL] as $scheme => $info) {
+      // Bit-wise filter.
+      if ($info['type'] & $filter == $filter) {
+        $wrappers_storage[$filter][$scheme] = $info;
+      }
+    }
+  }
+
+  return $wrappers_storage[$filter];
 }
 
 /**
@@ -488,11 +512,13 @@ function file_save(stdClass $file) {
     drupal_write_record('file', $file);
     // Inform modules about the newly added file.
     module_invoke_all('file_insert', $file);
+    entity_invoke('insert', 'file', $file);
   }
   else {
     drupal_write_record('file', $file, 'fid');
     // Inform modules that the file has been updated.
     module_invoke_all('file_update', $file);
+    entity_invoke('update', 'file', $file);
   }
 
   return $file;
@@ -877,6 +903,10 @@ function file_unmunge_filename($filename) {
  *   of $basename.
  */
 function file_create_filename($basename, $directory) {
+  // Strip control characters (ASCII value < 32). Though these are allowed in
+  // some filesystems, not many applications handle them well.
+  $basename = preg_replace('/[\x00-\x1F]/u', '_', $basename);
+
   // A URI or path may already have a trailing slash or look like "public://".
   if (substr($directory, -1) == '/') {
     $separator = '';
@@ -976,7 +1006,7 @@ function file_unmanaged_delete($path) {
     return unlink($path);
   }
   // Return TRUE for non-existent file, but log that nothing was actually
-  // deleted, as the current state is the indended result.
+  // deleted, as the current state is the intended result.
   if (!file_exists($path)) {
     watchdog('file', 'The file %path was not deleted, because it does not exist.', array('%path' => $path), WATCHDOG_NOTICE);
     return TRUE;
@@ -1000,7 +1030,7 @@ function file_unmanaged_delete($path) {
  * Note that this only deletes visible files with write permission.
  *
  * @param $path
- *   A string containing eiher an URI or a file or directory path.
+ *   A string containing either an URI or a file or directory path.
  * @return
  *   TRUE for success or if path does not exist, FALSE in the event of an
  *   error.
@@ -1238,7 +1268,7 @@ function file_save_upload($source, $validators = array(), $destination = FALSE, 
  *   indicates that the file passed validation. The functions will be called in
  *   the order specified.
  * @return
- *   An array contaning validation error messages.
+ *   An array containing validation error messages.
  *
  * @see hook_file_validate()
  */
@@ -1362,7 +1392,7 @@ function file_validate_is_image(stdClass $file) {
  * Verify that image dimensions are within the specified maximum and minimum.
  *
  * Non-image files will be ignored. If a image toolkit is available the image
- * will be scalled to fit within the desired maximum dimensions.
+ * will be scaled to fit within the desired maximum dimensions.
  *
  * @param $file
  *   A Drupal file object. This function may resize the file affecting its
@@ -1731,7 +1761,7 @@ function file_get_mimetype($uri, $mapping = NULL) {
  *
  * PHP's chmod does not support stream wrappers so we use our wrapper
  * implementation which interfaces with chmod() by default. Contrib wrappers
- * may override this bahavior in their implementations as needed.
+ * may override this behavior in their implementations as needed.
  *
  * @param $uri
  *   A string containing a URI file, or directory path.
@@ -1801,9 +1831,14 @@ function drupal_realpath($uri) {
   if ($wrapper = file_stream_wrapper_get_instance_by_uri($uri)) {
     return $wrapper->realpath();
   }
-  else {
+  // Check that the uri has a value. There is a bug in PHP 5.2 on *BSD systems
+  // that makes realpath not return FALSE as expected when passing an empty
+  // variable.
+  // @todo Remove when Drupal drops support for PHP 5.2.
+  elseif (!empty($uri)) {
     return realpath($uri);
   }
+  return FALSE;
 }
 
 /**
@@ -1895,7 +1930,7 @@ function drupal_mkdir($uri, $mode = NULL, $recursive = FALSE, $context = NULL) {
  *   The prefix of the generated temporary filename.
  *   Note: Windows uses only the first three characters of prefix.
  * @return
- *   The new temporary fillename, or FALSE on failure.
+ *   The new temporary filename, or FALSE on failure.
  *
  * @see tempnam()
  * @ingroup php_wrappers

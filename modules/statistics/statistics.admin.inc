@@ -1,5 +1,5 @@
 <?php
-// $Id: statistics.admin.inc,v 1.37 2009/12/20 19:41:57 dries Exp $
+// $Id: statistics.admin.inc,v 1.39 2010/02/28 20:10:34 dries Exp $
 
 /**
  * @file
@@ -118,8 +118,10 @@ function statistics_top_visitors() {
     ->limit(30)
     ->orderByHeader($header);
 
-  $count_query = db_select('accesslog');
-  $count_query->addExpression('COUNT(DISTINCT CONCAT(CAST(uid AS char), hostname))');
+  $uniques_query = db_select('accesslog')->distinct();
+  $uniques_query->fields('accesslog', array('uid', 'hostname'));
+  $count_query = db_select($uniques_query);
+  $count_query->addExpression('COUNT(*)');
   $query->setCountQuery($count_query);
 
   $result = $query->execute();
@@ -158,7 +160,7 @@ function statistics_top_referrers() {
   $query->addExpression('MAX(timestamp)', 'last');
   $query
     ->fields('a', array('url'))
-    ->where('LOWER(url) NOT LIKE :host', array(':host' => '%' . $_SERVER['HTTP_HOST'] . '%'))
+    ->condition('url', '%' . $_SERVER['HTTP_HOST'] . '%', 'NOT LIKE')
     ->condition('url', '', '<>')
     ->groupBy('url')
     ->limit(30)
@@ -167,7 +169,7 @@ function statistics_top_referrers() {
   $count_query = db_select('accesslog', 'a', array('target' => 'slave'));
   $count_query->addExpression('COUNT(DISTINCT url)');
   $count_query
-    ->where('LOWER(url) NOT LIKE :host', array(':host' => '%' . $_SERVER['HTTP_HOST'] . '%'))
+    ->condition('url', '%' . $_SERVER['HTTP_HOST'] . '%', 'NOT LIKE')
     ->condition('url', '', '<>');
   $query->setCountQuery($count_query);
 

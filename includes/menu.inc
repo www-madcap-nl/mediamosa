@@ -1,5 +1,5 @@
 <?php
-// $Id: menu.inc,v 1.375 2010/01/14 13:45:33 dries Exp $
+// $Id: menu.inc,v 1.381 2010/03/07 07:44:18 webchick Exp $
 
 /**
  * @file
@@ -93,7 +93,7 @@ define('MENU_VISIBLE_IN_TREE', 0x0002);
 define('MENU_VISIBLE_IN_BREADCRUMB', 0x0004);
 
 /**
- * Internal menu flag -- menu item links back to its parnet.
+ * Internal menu flag -- menu item links back to its parent.
  */
 define('MENU_LINKS_TO_PARENT', 0x0008);
 
@@ -969,7 +969,7 @@ function menu_tree_all_data($menu_name, $link = NULL, $max_depth = NULL) {
   // Use $mlid as a flag for whether the data being loaded is for the whole tree.
   $mlid = isset($link['mlid']) ? $link['mlid'] : 0;
   // Generate a cache ID (cid) specific for this $menu_name, $link, $language, and depth.
-  $cid = 'links:' . $menu_name . ':all-cid:' . $mlid . ':' . $GLOBALS['language_interface']->language . ':' . (int)$max_depth;
+  $cid = 'links:' . $menu_name . ':all-cid:' . $mlid . ':' . $GLOBALS['language']->language . ':' . (int)$max_depth;
 
   if (!isset($tree[$cid])) {
     // If the static variable doesn't have the data, check {cache_menu}.
@@ -1081,7 +1081,7 @@ function menu_tree_page_data($menu_name, $max_depth = NULL) {
       $max_depth = min($max_depth, MENU_MAX_DEPTH);
     }
     // Generate a cache ID (cid) specific for this page.
-    $cid = 'links:' . $menu_name . ':page-cid:' . $item['href'] . ':' . $GLOBALS['language_interface']->language . ':' . (int)$item['access'] . ':' . (int)$max_depth;
+    $cid = 'links:' . $menu_name . ':page-cid:' . $item['href'] . ':' . $GLOBALS['language']->language . ':' . (int)$item['access'] . ':' . (int)$max_depth;
 
     if (!isset($tree[$cid])) {
       // If the static variable doesn't have the data, check {cache_menu}.
@@ -1229,7 +1229,7 @@ function menu_tree_page_data($menu_name, $max_depth = NULL) {
  * Helper function - compute the real cache ID for menu tree data.
  */
 function _menu_tree_cid($menu_name, $data) {
-  return 'links:' . $menu_name . ':tree-data:' . $GLOBALS['language_interface']->language . ':' . md5(serialize($data));
+  return 'links:' . $menu_name . ':tree-data:' . $GLOBALS['language']->language . ':' . md5(serialize($data));
 }
 
 /**
@@ -1505,8 +1505,8 @@ function menu_get_active_help() {
  *
  * @param $initialize
  *   This parameter should only be used internally; it is set to TRUE in order
- *   to force the custom theme to be initialized from the menu router item for
- *   the current page.
+ *   to force the custom theme to be initialized for the current page request.
+ *
  * @return
  *   The machine-readable name of the custom theme, if there is one.
  *
@@ -1517,9 +1517,23 @@ function menu_get_custom_theme($initialize = FALSE) {
   // Skip this if the site is offline or being installed or updated, since the
   // menu system may not be correctly initialized then.
   if ($initialize && !_menu_site_is_offline(TRUE) && (!defined('MAINTENANCE_MODE') || (MAINTENANCE_MODE != 'update' && MAINTENANCE_MODE != 'install'))) {
-    $router_item = menu_get_item();
-    if (!empty($router_item['access']) && !empty($router_item['theme_callback']) && function_exists($router_item['theme_callback'])) {
-      $custom_theme = call_user_func_array($router_item['theme_callback'], $router_item['theme_arguments']);
+    // First allow modules to dynamically set a custom theme for the current
+    // page. Since we can only have one, the last module to return a valid
+    // theme takes precedence.
+    $custom_themes = array_filter(module_invoke_all('custom_theme'), 'drupal_theme_access');
+    if (!empty($custom_themes)) {
+      $custom_theme = array_pop($custom_themes);
+    }
+    // Otherwise, execute the theme callback function for the current page, if
+    // there is one, in order to determine the custom theme to set.
+    if (!isset($custom_theme)) {
+      $router_item = menu_get_item();
+      if (!empty($router_item['access']) && !empty($router_item['theme_callback']) && function_exists($router_item['theme_callback'])) {
+        $theme_name = call_user_func_array($router_item['theme_callback'], $router_item['theme_arguments']);
+        if (drupal_theme_access($theme_name)) {
+          $custom_theme = $theme_name;
+        }
+      }
     }
   }
   return $custom_theme;
@@ -1754,7 +1768,7 @@ function menu_local_tasks($level = 0) {
       $next_parent = '';
       $count = 0;
       foreach ($children[$parent] as $item) {
-        if ($item['type'] == MENU_LOCAL_ACTION) {
+        if ($item['type'] & MENU_IS_LOCAL_ACTION) {
           continue;
         }
         if ($item['access']) {
@@ -2180,7 +2194,8 @@ function menu_link_load($mlid) {
     $query = db_select('menu_links', 'ml');
     $query->leftJoin('menu_router', 'm', 'm.path = ml.router_path');
     $query->fields('ml');
-    $query->fields('m');
+    // Weight should be taken from {menu_links}, not {menu_router}.
+    $query->fields('m', array_diff(drupal_schema_fields_sql('menu_router'), array('weight')));
     $query->condition('ml.mlid', $mlid);
     if ($item = $query->execute()->fetchAssoc()) {
       _menu_link_translate($item);
@@ -2201,7 +2216,7 @@ function menu_cache_clear($menu_name = 'navigation') {
     $cache_cleared[$menu_name] = 1;
   }
   elseif ($cache_cleared[$menu_name] == 1) {
-    register_shutdown_function('cache_clear_all', 'links:' . $menu_name . ':', 'cache_menu', TRUE);
+    drupal_register_shutdown_function('cache_clear_all', 'links:' . $menu_name . ':', 'cache_menu', TRUE);
     $cache_cleared[$menu_name] = 2;
   }
 
@@ -2783,9 +2798,9 @@ function _menu_clear_page_cache() {
     $cache_cleared = 1;
   }
   elseif ($cache_cleared == 1) {
-    register_shutdown_function('cache_clear_all');
+    drupal_register_shutdown_function('cache_clear_all');
     // Keep track of which menus have expanded items.
-    register_shutdown_function('_menu_set_expanded_menus');
+    drupal_register_shutdown_function('_menu_set_expanded_menus');
     $cache_cleared = 2;
   }
 }

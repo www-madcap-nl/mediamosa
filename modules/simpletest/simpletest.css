@@ -1,4 +1,4 @@
-/* $Id: simpletest.css,v 1.6 2009/08/04 06:47:00 webchick Exp $ */
+/* $Id: simpletest.css,v 1.8 2010/03/06 06:39:01 dries Exp $ */
 
 /* Addon for the simpletest module */
 #simpletest {
@@ -70,4 +70,23 @@ tr.simpletest-debug.even {
 div.simpletest-image {
   display: inline;
   cursor: pointer;
+}
+
+a.simpletest-collapse {
+  height: 0;
+  width: 0;
+  top: -99em;
+  position: absolute;
+
+}
+
+a.simpletest-collapse:focus,
+a.simpletest-collapse:hover {
+  font-size: 80%;
+  top: 0px;
+  height: auto;
+  width: auto;
+  overflow: visible;
+  position: relative;
+  z-index: 1000;
 }

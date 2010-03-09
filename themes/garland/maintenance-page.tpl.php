@@ -1,5 +1,5 @@
 <?php
-// $Id: maintenance-page.tpl.php,v 1.13 2009/11/22 03:25:42 webchick Exp $
+// $Id: maintenance-page.tpl.php,v 1.16 2010/03/04 09:03:08 dries Exp $
 
 /**
  * @file
@@ -20,9 +20,6 @@
     <?php print $head ?>
     <?php print $styles ?>
     <?php print $scripts ?>
-    <!--[if lt IE 7]>
-      <?php print garland_get_ie_styles(); ?>
-    <![endif]-->
   </head>
   <body class="<?php print $classes ?>">
 
@@ -38,10 +35,10 @@
           // Prepare header
           $site_fields = array();
           if ($site_name) {
-            $site_fields[] = check_plain($site_name);
+            $site_fields[] = $site_name;
           }
           if ($site_slogan) {
-            $site_fields[] = check_plain($site_slogan);
+            $site_fields[] = $site_slogan;
           }
           $site_title = implode(' ', $site_fields);
           if ($site_fields) {
@@ -50,7 +47,7 @@
           $site_html = implode(' ', $site_fields);
 
           if ($logo || $site_title) {
-            print '<h1 id="branding"><a href="' . $base_path . '" title="' . $site_title . '">';            
+            print '<h1 id="branding"><a href="' . $base_path . '" title="' . $site_title . '">';
             if ($logo) {
               print '<img src="' . $logo . '" alt="' . $site_title . '" id="logo" />';
             }

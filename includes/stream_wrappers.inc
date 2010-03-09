@@ -1,5 +1,5 @@
 <?php
-// $Id: stream_wrappers.inc,v 1.8 2009/12/15 05:22:05 webchick Exp $
+// $Id: stream_wrappers.inc,v 1.12 2010/02/06 05:49:35 webchick Exp $
 
 /**
  * @file
@@ -13,12 +13,71 @@
  *
  * Note that PHP 5.2 fopen() only supports URIs of the form "scheme://target"
  * despite the fact that according to RFC 3986 a URI's scheme component
- * delimiter is in general just ":", not "://".  Becuase of this PHP limitation
+ * delimiter is in general just ":", not "://".  Because of this PHP limitation
  * and for consistency Drupal will only accept URIs of form "scheme://target".
  *
  * @link http://www.faqs.org/rfcs/rfc3986.html
  * @link http://bugs.php.net/bug.php?id=47070
  */
+
+/**
+ * Stream wrapper bit flags that are the basis for composite types.
+ */
+
+/**
+ * Stream wrapper bit flag -- a filter that matches all wrappers.
+ */
+define('STREAM_WRAPPERS_ALL', 0x0000);
+
+/**
+ * Stream wrapper bit flag -- refers to a local file system location.
+ */
+define('STREAM_WRAPPERS_LOCAL', 0x0001);
+
+/**
+ * Stream wrapper bit flag -- refers to a remote filesystem location.
+ */
+define('STREAM_WRAPPERS_REMOTE', 0x0002);
+
+/**
+ * Stream wrapper bit flag -- wrapper is readable (almost always true).
+ */
+define('STREAM_WRAPPERS_READ', 0x0004);
+
+/**
+ * Stream wrapper bit flag -- wrapper is writeable.
+ */
+define('STREAM_WRAPPERS_WRITE', 0x0008);
+
+/**
+ * Stream wrapper bit flag -- exposed in the UI and potentially web accessible.
+ */
+define('STREAM_WRAPPERS_VISIBLE', 0x0010);
+
+/**
+ * Composite stream wrapper bit flags that are usually used as the types.
+ */
+
+/**
+ * Stream wrapper type flag -- not visible in the UI or accessible via web,
+ * but readable and writable. E.g. the temporary directory for uploads.
+ */
+define('STREAM_WRAPPERS_HIDDEN', STREAM_WRAPPERS_READ | STREAM_WRAPPERS_WRITE);
+
+/**
+ * Stream wrapper type flag -- visible, readable and writeable.
+ */
+define('STREAM_WRAPPERS_WRITE_VISIBLE', STREAM_WRAPPERS_READ | STREAM_WRAPPERS_WRITE | STREAM_WRAPPERS_VISIBLE);
+
+/**
+ * Stream wrapper type flag -- visible and read-only.
+ */
+define('STREAM_WRAPPERS_READ_VISIBLE', STREAM_WRAPPERS_READ | STREAM_WRAPPERS_VISIBLE);
+
+/**
+ * Stream wrapper type flag -- visible, readable and writeable using local files.
+ */
+define('STREAM_WRAPPERS_NORMAL', STREAM_WRAPPERS_LOCAL | STREAM_WRAPPERS_WRITE_VISIBLE);
 
 /**
  * Generic PHP stream wrapper interface.
@@ -580,7 +639,7 @@ class DrupalPublicStreamWrapper extends DrupalLocalStreamWrapper {
    */
   function getExternalUrl() {
     $path = str_replace('\\', '/', file_uri_target($this->uri));
-    return $GLOBALS['base_url'] . '/' . self::getDirectoryPath() . '/' . $path;
+    return $GLOBALS['base_url'] . '/' . self::getDirectoryPath() . '/' . drupal_encode_path($path);
   }
 }
 

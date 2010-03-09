@@ -1,5 +1,5 @@
 <?php
-// $Id: unicode.inc,v 1.40 2009/09/28 22:22:54 dries Exp $
+// $Id: unicode.inc,v 1.42 2010/03/07 06:38:55 webchick Exp $
 
 /**
  * Indicates an error during check for PHP unicode support.
@@ -38,9 +38,6 @@ function unicode_check() {
 function _unicode_check() {
   // Ensure translations don't break at install time
   $t = get_t();
-
-  // Set the standard C locale to ensure consistent, ASCII-only string handling.
-  setlocale(LC_CTYPE, 'C');
 
   // Check for mbstring extension
   if (!function_exists('mb_strlen')) {
@@ -544,7 +541,7 @@ function drupal_substr($text, $start, $length = NULL) {
           $chars++;
         }
       }
-      // Backtrace one byte if we are not at the begining of the string.
+      // Backtrace one byte if we are not at the beginning of the string.
       if ($iend > 0) {
         $iend--;
       }

@@ -1,5 +1,5 @@
 <?php
-// $Id: path.inc,v 1.55 2010/01/07 04:54:18 webchick Exp $
+// $Id: path.inc,v 1.59 2010/03/07 07:44:18 webchick Exp $
 
 /**
  * @file
@@ -44,7 +44,7 @@ function drupal_path_initialize() {
  *   found.
  */
 function drupal_lookup_path($action, $path = '', $path_language = NULL) {
-  global $language;
+  global $language_content;
   // Use the advanced drupal_static() pattern, since this is called very often.
   static $drupal_static_fast;
   if (!isset($drupal_static_fast)) {
@@ -71,7 +71,7 @@ function drupal_lookup_path($action, $path = '', $path_language = NULL) {
     }
   }
 
-  $path_language = $path_language ? $path_language : $language->language;
+  $path_language = $path_language ? $path_language : $language_content->language;
 
   if ($action == 'wipe') {
     $cache = array();
@@ -155,7 +155,7 @@ function drupal_lookup_path($action, $path = '', $path_language = NULL) {
  * Cache system paths for a page.
  *
  * Cache an array of the system paths available on each page. We assume
- * that aiases will be needed for the majority of these paths during
+ * that aliases will be needed for the majority of these paths during
  * subsequent requests, and load them in a single query during
  * drupal_lookup_path().
  */
@@ -384,6 +384,8 @@ function drupal_match_path($path, $patterns) {
  *
  * @return
  *   The current Drupal URL path.
+ *
+ * @see request_path()
  */
 function current_path() {
   return $_GET['q'];
@@ -392,13 +394,24 @@ function current_path() {
 /**
  * Rebuild the path alias white list.
  *
+ * @param $source
+ *   An optional system path for which an alias is being inserted.
+ *
  * @return
  *   An array containing a white list of path aliases.
  */
-function drupal_path_alias_whitelist_rebuild() {
+function drupal_path_alias_whitelist_rebuild($source = NULL) {
+  // When paths are inserted, only rebuild the whitelist if the system path
+  // has a top level component which is not already in the whitelist.
+  if (!empty($source)) {
+    $whitelist = variable_get('path_alias_whitelist', NULL);
+    if (isset($whitelist[strtok($source, '/')])) {
+      return $whitelist;
+    }
+  }
   // For each alias in the database, get the top level component of the system
-  // path it corresponds to. This is the portion of the path before the first /
-  // if present, otherwise the whole path itself.
+  // path it corresponds to. This is the portion of the path before the first
+  // '/', if present, otherwise the whole path itself.
   $whitelist = array();
   $result = db_query("SELECT SUBSTRING_INDEX(source, '/', 1) AS path FROM {url_alias} GROUP BY path");
   foreach ($result as $row) {
@@ -467,7 +480,7 @@ function path_save(&$path) {
     else {
       module_invoke_all('path_update', $path);
     }
-    drupal_clear_path_cache();
+    drupal_clear_path_cache($path['source']);
   }
 }
 
@@ -488,7 +501,7 @@ function path_delete($criteria) {
   }
   $query->execute();
   module_invoke_all('path_delete', $path);
-  drupal_clear_path_cache();
+  drupal_clear_path_cache($path['source']);
 }
 
 /**
@@ -588,4 +601,16 @@ function drupal_valid_path($path, $dynamic_allowed = FALSE) {
   }
   $menu_admin = FALSE;
   return $item && $item['access'];
+}
+
+/**
+ * Clear the path cache.
+ *
+ * @param $source
+ *   An optional system path for which an alias is being changed.
+ */
+function drupal_clear_path_cache($source = NULL) {
+  // Clear the drupal_lookup_path() static cache.
+  drupal_static_reset('drupal_lookup_path');
+  drupal_path_alias_whitelist_rebuild($source);
 }

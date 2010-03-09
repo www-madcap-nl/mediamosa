@@ -1,4 +1,4 @@
-// $Id: overlay-parent.js,v 1.22 2010/01/14 04:06:54 webchick Exp $
+// $Id: overlay-parent.js,v 1.30 2010/03/07 06:31:48 webchick Exp $
 
 (function ($) {
 
@@ -277,22 +277,30 @@ Drupal.overlay.load = function (url) {
   self.$iframeDocument = null;
   self.$iframeBody = null;
 
-  // Reset lastHeight so the overlay fits user's viewport and the loading 
-  // spinner is centered.
-  self.lastHeight = 0;
-  self.outerResize();
-  // No need to resize when loading.
+  // No need to resize while loading.
   clearTimeout(self.resizeTimeoutID);
 
   // Change the overlay title.
   self.$container.dialog('option', 'title', Drupal.t('Loading...'));
   // Remove any existing shortcut button markup in the title section.
   self.$dialogTitlebar.find('.add-or-remove-shortcuts').remove();
-  // Remove any existing tabs in the title section.
-  self.$dialogTitlebar.find('ul').remove();
+  // Remove any existing tabs in the title section, but only if requested url
+  // is not one of those tabs. If the latter, set that tab active.
+  var urlPath = self.getPath(url);
+  var $tabs = self.$dialogTitlebar.find('ul');
+  var $tabsLinks = $tabs.find('> li > a');
+  var $activeLink = $tabsLinks.filter(function () { return self.getPath(this) == urlPath; });
+  if ($activeLink.length) {
+    var active_tab = Drupal.t('(active tab)');
+    $tabsLinks.parent().removeClass('active').find('element-invisible:contains(' + active_tab + ')').appendTo($activeLink);
+    $activeLink.parent().addClass('active');
+  }
+  else {
+    $tabs.remove();
+  }
 
   // While the overlay is loading, we remove the loaded class from the dialog.
-  // After the loading is finished, the loaded class is added back. The loaded 
+  // After the loading is finished, the loaded class is added back. The loaded
   // class is being used to hide the iframe while loading.
   // @see overlay-parent.css .overlay-loaded #overlay-element
   self.$dialog.removeClass('overlay-loaded');
@@ -406,6 +414,12 @@ Drupal.overlay.bindChild = function (iframeWindow, isClosing) {
   $(document).unbind('mousedown.dialog-overlay click.dialog-overlay');
   $('.ui-widget-overlay').bind('mousedown.dialog-overlay click.dialog-overlay', function (){return false;});
 
+  // Unbind the keydown and keypress handlers installed by ui.dialog because
+  // they interfere with use of browser's keyboard hotkeys like CTRL+w.
+  // This may cause problems when using modules that implement keydown or
+  // keypress handlers as they aren't blocked when overlay is open.
+  $(document).unbind('keydown.dialog-overlay keypress.dialog-overlay');
+
   // Reset the scroll to the top of the window so that the overlay is visible again.
   window.scrollTo(0, 0);
 
@@ -441,14 +455,15 @@ Drupal.overlay.bindChild = function (iframeWindow, isClosing) {
     $tabs = $(self.$iframeWindow('<div>').append($tabs).remove().html());
 
     self.$dialogTitlebar.append($tabs);
-    if ($tabs.is('.primary')) {
-      $tabs.find('a').removeClass('overlay-processed');
-      Drupal.attachBehaviors($tabs);
-    }
+
     // Remove any classes from the list element to avoid theme styles
     // clashing with our styling.
     $tabs.removeAttr('class');
   }
+
+  // Re-attach the behaviors we lost while copying elements from the iframe
+  // document to the parent document.
+  Drupal.attachBehaviors(self.$dialogTitlebar);
 
   // Try to enhance keyboard based navigation of the overlay.
   // Logic inspired by the open() method in ui.dialog.js, and
@@ -575,26 +590,25 @@ Drupal.overlay.isAdminLink = function (url) {
  * Note, though, that the size of the iframe itself may affect the size of the
  * child document, especially on fluid layouts.
  */
-Drupal.overlay.innerResize = function () {
+Drupal.overlay.innerResize = function (height) {
   var self = Drupal.overlay;
   // Proceed only if the dialog still exists.
-  if (!self.isOpen || self.isClosing || self.isLoading) {
+  if (!self.isOpen || self.isClosing) {
     return;
   }
 
-  var height;
-  // Only set height when iframe content is loaded.
-  if ($.isObject(self.$iframeBody)) {
+  // When no height is given try to get height when iframe content is loaded.
+  if (!height && $.isObject(self.$iframeBody)) {
     height = self.$iframeBody.outerHeight() + 25;
-
-    // Only resize when height actually is changed.
-    if (height != self.lastHeight) {
-
-      // Resize the container.
-      self.$container.height(height);
-      // Keep the dim background grow or shrink with the dialog.
-      $.ui.dialog.overlay.resize();
-    }
+  }
+  
+  // Only resize when height actually is changed.
+  if (height && height != self.lastHeight) {
+    // Resize the container.
+    self.$container.height(height);
+    // Keep the dim background grow or shrink with the dialog.
+    $.ui.dialog.overlay.resize();
+    
     self.lastHeight = height;
   }
 };
@@ -674,14 +688,17 @@ Drupal.overlay.clickHandler = function (event) {
     return;
   }
 
-  // Only continue if clicked target (or one of its parents) is a link and does
-  // not have class overlay-exclude. The overlay-exclude class allows to prevent
-  // opening a link in the overlay.
-  if (!$target.is('a') || $target.hasClass('overlay-exclude')) {
+  // Only continue if clicked target (or one of its parents) is a link.
+  if (!$target.is('a')) {
     $target = $target.closest('a');
     if (!$target.length) {
       return;
     }
+  }
+
+  // Never open links in the overlay that contain the overlay-exclude class.
+  if ($target.hasClass('overlay-exclude')) {
+    return;
   }
 
   var href = $target.attr('href');
@@ -767,7 +784,7 @@ Drupal.overlay.hashchangeHandler = function (event) {
     var linkURL = Drupal.settings.basePath + state;
     linkURL = $.param.querystring(linkURL, {'render': 'overlay'});
 
-    var path = self.getPath(linkURL);
+    var path = self.getPath(state);
     self.resetActiveClass(path);
 
     // If the modal frame is already open, replace the loaded document with
@@ -887,6 +904,7 @@ Drupal.overlay.refreshRegions = function (data) {
  */
 Drupal.overlay.resetActiveClass = function(activePath) {
   var self = this;
+  var windowDomain = window.location.protocol + window.location.hostname;
 
   $('.overlay-displace-top, .overlay-displace-bottom')
   .find('a[href]')
@@ -894,7 +912,6 @@ Drupal.overlay.resetActiveClass = function(activePath) {
   .removeClass('active')
   // Add active class to links that match activePath.
   .each(function () {
-    var windowDomain = window.location.protocol + window.location.hostname;
     var linkDomain = this.protocol + this.hostname;
     var linkPath = self.getPath(this);
 

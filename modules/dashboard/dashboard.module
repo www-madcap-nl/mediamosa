@@ -1,5 +1,5 @@
 <?php
-// $Id: dashboard.module,v 1.15 2010/01/14 04:04:30 webchick Exp $
+// $Id: dashboard.module,v 1.23 2010/03/01 13:12:45 dries Exp $
 
 /**
  * Implements hook_help().
@@ -59,6 +59,18 @@ function dashboard_menu() {
     'type' => MENU_CALLBACK,
   );
   return $items;
+}
+
+/**
+ * Implements hook_menu_alter().
+ */
+function dashboard_menu_alter(&$items) {
+  // Make the dashboard the default local task on /admin.
+  $items['admin']['title'] = 'Dashboard';
+  $items['admin']['page callback'] = 'dashboard_admin';
+  $items['admin']['access arguments'] = array('access dashboard');
+  $items['admin/dashboard']['type'] = MENU_DEFAULT_LOCAL_TASK;
+  $items['admin/by-task']['type'] = MENU_LOCAL_TASK;
 }
 
 /**
@@ -149,7 +161,7 @@ function dashboard_permission() {
   return array(
     'access dashboard' => array(
       'title' => t('View the administrative dashboard'),
-      'description' => t('Note: modifying the dashboard requires the !administer_blocks permission.', array('!administer_blocks' => l(t('Administer blocks'), 'admin/config/people/permissions', array('fragment' => 'module-block')))),
+      'description' => t('Note: modifying the dashboard requires the !administer_blocks permission.', array('!administer_blocks' => l(t('Administer blocks'), 'admin/people/permissions', array('fragment' => 'module-block')))),
     ),
   );
 }
@@ -213,7 +225,7 @@ function dashboard_admin($launch_customize = FALSE) {
   );
   $build = array(
     '#theme' => 'dashboard_admin',
-    '#message' => t('To customize the dashboard page, move blocks to the dashboard regions on the <a href="@blocks">Blocks administration page</a>, or enable JavaScript on this page to use the drag-and-drop interface.', array('!blocks' => url('admin/structure/block'))),
+    '#message' => t('To customize the dashboard page, move blocks to the dashboard regions on the <a href="@blocks">Blocks administration page</a>, or enable JavaScript on this page to use the drag-and-drop interface.', array('@blocks' => url('admin/structure/block'))),
     '#access' => user_access('administer blocks'),
     '#attached' => array(
       'js' => array(
@@ -361,6 +373,7 @@ function dashboard_update() {
           ->execute();
       }
     }
+    drupal_set_message(t('The configuration options have been saved.'), 'status', FALSE);
   }
   drupal_exit();
 }
@@ -437,7 +450,7 @@ function theme_dashboard_region($variables) {
  */
 function theme_dashboard_disabled_blocks($variables) {
   extract($variables);
-  $output = '<div class="canvas-content"><p>' . t('Drag and drop these to the columns below. Changes are automatically saved.') . '</p>';
+  $output = '<div class="canvas-content"><p>' . t('Drag and drop these blocks to the columns below. Changes are automatically saved.') . '</p>';
   $output .= '<div id="disabled-blocks"><div class="section region disabled-blocks clearfix">';
   foreach ($blocks as $block) {
     $output .= theme('dashboard_disabled_block', array('block' => $block));
@@ -463,7 +476,7 @@ function theme_dashboard_disabled_block($variables) {
     $output .= '<div id="block-' . $block['module'] . '-' . $block['delta']
     . '" class="disabled-block block block-' . $block['module'] . '-' . $block['delta']
     . ' module-' . $block['module'] . ' delta-' . $block['delta'] . '">'
-    . '<h2>' . (!empty($block['title']) && $block['title'] != '<none>' ? $block['title'] : $block['info']) . '</h2>'
+    . '<h2>' . (!empty($block['title']) && $block['title'] != '<none>' ? check_plain($block['title']) : check_plain($block['info'])) . '</h2>'
     . '<div class="content"></div>'
     . '</div>';
   }

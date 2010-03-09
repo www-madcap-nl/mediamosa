@@ -1,5 +1,5 @@
 <?php
-// $Id: menu_test.module,v 1.11 2009/12/14 20:23:01 dries Exp $
+// $Id: menu_test.module,v 1.13 2010/01/30 03:38:22 webchick Exp $
 
 /**
  * @file
@@ -56,6 +56,15 @@ function menu_test_menu() {
     'title' => 'Page that tests theme callback inheritance.',
     'page callback' => 'menu_test_theme_page_callback',
     'page arguments' => array(TRUE),
+    'access arguments' => array('access content'),
+  );
+  // Path containing "exotic" characters.
+  $path = "menu-test/ -._~!$'\"()*@[]?&+%#,;=:" . // "Special" ASCII characters.
+    "%23%25%26%2B%2F%3F" . // Characters that look like a percent-escaped string.
+    "éøïвβ中國書۞"; // Characters from various non-ASCII alphabets.
+  $items[$path] = array(
+    'title' => '"Exotic" path',
+    'page callback' => 'menu_test_callback',
     'access arguments' => array('access content'),
   );
 
@@ -174,7 +183,7 @@ function menu_test_menu() {
  *  A random string.
  */
 function menu_test_callback() {
-  return $this->randomName();
+  return 'This is menu_test_callback().';
 }
 
 /**
@@ -194,7 +203,7 @@ function menu_test_theme_page_callback($inherited = FALSE) {
   // Now check both the requested custom theme and the actual theme being used.
   $custom_theme = menu_get_custom_theme();
   $requested_theme = empty($custom_theme) ? 'NONE' : $custom_theme;
-  $output = "Requested theme: $requested_theme. Actual theme: $theme_key.";
+  $output = "Custom theme: $requested_theme. Actual theme: $theme_key.";
   if ($inherited) {
     $output .= ' Theme callback inheritance is being tested.';
   }
@@ -225,6 +234,21 @@ function menu_test_theme_callback($argument) {
   // For any other value of the URL argument, do not return anything. This
   // allows us to test that returning nothing from a theme callback function
   // causes the page to correctly fall back on using the main site theme.
+}
+
+/**
+ * Implement hook_custom_theme().
+ *
+ * @return
+ *   The name of the custom theme to use for the current page.
+ */
+function menu_test_custom_theme() {
+  // If an appropriate variable has been set in the database, request the theme
+  // that is stored there. Otherwise, do not attempt to dynamically set the
+  // theme.
+  if ($theme = variable_get('menu_test_hook_custom_theme_name', FALSE)) {
+    return $theme;
+  }
 }
 
 /**

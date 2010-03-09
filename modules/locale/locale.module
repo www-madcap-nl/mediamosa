@@ -1,5 +1,5 @@
 <?php
-// $Id: locale.module,v 1.282 2010/01/14 06:43:24 webchick Exp $
+// $Id: locale.module,v 1.286 2010/03/07 18:52:27 webchick Exp $
 
 /**
  * @file
@@ -24,9 +24,9 @@ define('LOCALE_LANGUAGE_NEGOTIATION_URL', 'locale-url');
 define('LOCALE_LANGUAGE_NEGOTIATION_BROWSER', 'locale-browser');
 
 /**
- * The language is determined using the current content language.
+ * The language is determined using the current interface language.
  */
-define('LOCALE_LANGUAGE_NEGOTIATION_CONTENT', 'locale-content');
+define('LOCALE_LANGUAGE_NEGOTIATION_INTERFACE', 'locale-interface');
 
 /**
  * The language is set based on the user language settings.
@@ -69,7 +69,7 @@ function locale_help($path, $arg) {
     case 'admin/config/regional/language/add':
       return '<p>' . t('Add a language to be supported by your site. If your desired language is not available in the <em>Language name</em> drop-down, click <em>Custom language</em> and provide a language code and other details manually. When providing a language code manually, be sure to enter a standardized language code, since this code may be used by browsers to determine an appropriate display language.') . '</p>';
     case 'admin/config/regional/language/configure':
-      $output = '<p>' . t("Define how to decide which language is used to display content (text that you create and edit) and user interface text (text provided by Drupal and modules, such as field labels and help text). This decision is made by evaluating a series of detection methods for languages; the first detection method that gets a result will determine which language is used for that type of text. Define the order of evaluation of language detection methods on this page.") . '</p>';
+      $output = '<p>' . t("Define how to decide which language is used to display page elements (primarily text provided by Drupal and modules, such as field labels and help text). This decision is made by evaluating a series of detection methods for languages; the first detection method that gets a result will determine which language is used for that type of text. Define the order of evaluation of language detection methods on this page.") . '</p>';
       return $output;
     case 'admin/config/regional/language/configure/session':
       $output = '<p>' . t('Determine the language from a request/session parameter. Example: "http://example.com?language=de" sets language to German based on the use of "de" within the "language" parameter.') . '</p>';
@@ -273,16 +273,6 @@ function locale_init() {
 }
 
 /**
- * Wrapper function to be able to set callbacks in locale.inc
- */
-function locale_inc_callback() {
-  $args = func_get_args();
-  $function = array_shift($args);
-  include_once DRUPAL_ROOT . '/includes/locale.inc';
-  return call_user_func_array($function, $args);
-}
-
-/**
  * Implements hook_permission().
  */
 function locale_permission() {
@@ -329,6 +319,7 @@ function locale_language_selector_form(&$form, &$form_state, $user) {
     '#type' => 'fieldset',
     '#title' => t('Language settings'),
     '#weight' => 1,
+    '#access' => ($form['#user_category'] == 'account' || ($form['#user_category'] == 'register' && user_access('administer users'))),
   );
 
   // Get language negotiation settings.
@@ -391,7 +382,7 @@ function locale_form_alter(&$form, &$form_state, $form_id) {
   if (drupal_multilingual()) {
     // Display language selector when either creating a user on the admin
     // interface or editing a user account.
-    if (($form_id == 'user_register_form' && user_access('administer users')) || ($form_id == 'user_profile_form' && $form['#user_category'] == 'account')) {
+    if ($form_id == 'user_register_form' || ($form_id == 'user_profile_form' && $form['#user_category'] == 'account')) {
       locale_language_selector_form($form, $form_state, $form['#user']);
     }
   }
@@ -476,16 +467,25 @@ function locale_entity_info_alter(&$entity_info) {
 
 /**
  * Implements hook_language_types_info().
+ *
+ * Defines the three core language types:
+ * - Interface language is the only configurable language type in core. It is
+ *   used by t() as the default language if none is specified.
+ * - Content language is by default non-configurable and inherits the interface
+ *   language negotiated value. It is used by the Field API to determine the
+ *   display language for fields if no explicit value is specified.
+ * - URL language is by default non-configurable and is determined through the
+ *   URL language provider. It is used by l() as the default language if none is
+ *   specified.
  */
 function locale_language_types_info() {
   return array(
-    LANGUAGE_TYPE_CONTENT => array(
-      'name' => t('Content language detection'),
-      'description' => t('Order of language detection methods for content. If a version of content is available in the detected language, it will be displayed.'),
-    ),
     LANGUAGE_TYPE_INTERFACE => array(
-      'name' => t('User interface text language detection'),
+      'name' => t('User interface text'),
       'description' => t('Order of language detection methods for user interface text. If a translation of user interface text is available in the detected language, it will be displayed.'),
+    ),
+    LANGUAGE_TYPE_CONTENT => array(
+      'fixed' => array(LOCALE_LANGUAGE_NEGOTIATION_INTERFACE),
     ),
     LANGUAGE_TYPE_URL => array(
       'fixed' => array(LOCALE_LANGUAGE_NEGOTIATION_URL),
@@ -544,13 +544,13 @@ function locale_language_negotiation_info() {
     'description' => t("Determine the language from the browser's language settings."),
   );
 
-  $providers[LOCALE_LANGUAGE_NEGOTIATION_CONTENT] = array(
-    'types' => array(LANGUAGE_TYPE_INTERFACE),
-    'callbacks' => array('language' => 'locale_language_from_content'),
+  $providers[LOCALE_LANGUAGE_NEGOTIATION_INTERFACE] = array(
+    'types' => array(LANGUAGE_TYPE_CONTENT),
+    'callbacks' => array('language' => 'locale_language_from_interface'),
     'file' => $file,
     'weight' => 8,
-    'name' => t('Content'),
-    'description' => t('Use the detected content language.'),
+    'name' => t('Interface'),
+    'description' => t('Use the detected interface language.'),
   );
 
   return $providers;
@@ -766,6 +766,9 @@ function locale_js_alter(&$javascript) {
   $parsed = variable_get('javascript_parsed', array());
   $files = $new_files = FALSE;
 
+  // Require because locale_js_alter() could be called without locale_init().
+  require_once DRUPAL_ROOT . '/includes/locale.inc';
+
   foreach ($javascript as $item) {
     if ($item['type'] == 'file') {
       $files = TRUE;
@@ -773,8 +776,7 @@ function locale_js_alter(&$javascript) {
       if (!in_array($filepath, $parsed)) {
         // Don't parse our own translations files.
         if (substr($filepath, 0, strlen($dir)) != $dir) {
-          locale_inc_callback('_locale_parse_js_file', $filepath);
-          watchdog('locale', 'Parsed JavaScript file %file.', array('%file' => $filepath));
+          _locale_parse_js_file($filepath);
           $parsed[] = $filepath;
           $new_files = TRUE;
         }
@@ -786,14 +788,14 @@ function locale_js_alter(&$javascript) {
   // JavaScript translation files for all languages, adding the refresh
   // flags into the existing array.
   if ($new_files) {
-    $parsed += locale_inc_callback('_locale_invalidate_js');
+    $parsed += _locale_invalidate_js();
   }
 
   // If necessary, rebuild the translation file for the current language.
   if (!empty($parsed['refresh:' . $language->language])) {
     // Don't clear the refresh flag on failure, so that another try will
     // be performed later.
-    if (locale_inc_callback('_locale_rebuild_js')) {
+    if (_locale_rebuild_js()) {
       unset($parsed['refresh:' . $language->language]);
     }
     // Store any changes after refresh was attempted.

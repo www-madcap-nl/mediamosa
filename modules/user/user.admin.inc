@@ -1,5 +1,5 @@
 <?php
-// $Id: user.admin.inc,v 1.96 2010/01/14 04:04:30 webchick Exp $
+// $Id: user.admin.inc,v 1.101 2010/03/07 06:49:10 webchick Exp $
 
 /**
  * @file
@@ -168,8 +168,7 @@ function user_admin_account() {
   $form['options'] = array(
     '#type' => 'fieldset',
     '#title' => t('Update options'),
-    '#prefix' => '<div class="container-inline">',
-    '#suffix' => '</div>',
+    '#attributes' => array('class' => array('container-inline')),
   );
   $options = array();
   foreach (module_invoke_all('user_operations') as $operation => $array) {
@@ -315,7 +314,7 @@ function user_admin_settings() {
   $form['registration_cancellation']['user_cancel_method'] = array(
     '#type' => 'item',
     '#title' => t('When cancelling a user account'),
-    '#description' => t('Users with the %select-cancel-method or %administer-users <a href="@permissions-url">permissions</a> can override this default method.', array('%select-cancel-method' => t('Select method for cancelling account'), '%administer-users' => t('Administer users'), '@permissions-url' => url('admin/config/people/permissions'))),
+    '#description' => t('Users with the %select-cancel-method or %administer-users <a href="@permissions-url">permissions</a> can override this default method.', array('%select-cancel-method' => t('Select method for cancelling account'), '%administer-users' => t('Administer users'), '@permissions-url' => url('admin/people/permissions'))),
   );
   $form['registration_cancellation']['user_cancel_method'] += user_cancel_methods();
   foreach (element_children($form['registration_cancellation']['user_cancel_method']) as $element) {
@@ -423,7 +422,7 @@ function user_admin_settings() {
   );
   // These email tokens are shared for all settings, so just define
   // the list once to help ensure they stay in sync.
-  $email_token_help = t('Available variables are:') . ' [site:name], [site:url], [user:name], [user:mail], [site:login-url], [user:edit-url], [user:password], [user:one-time-login-url], [user:cancel-url].';
+  $email_token_help = t('You can use the following tokens in your e-mail message text: !site-name-token, !site-url-token, !user-name-token, !user-mail-token, !site-login-url-token, !user-edit-url-token, !user-one-time-login-url-token, !user-cancel-url-token', array('!site-name-token' => '[site:name]', '!site-url-token' => '[site:url]', '!user-name-token' => '[user:name]', '!user-mail-token' => '[user:mail]', '!site-login-url-token' => '[site:login-url]', '!user-edit-url-token' => '[user:edit-url]', '!user-one-time-login-url-token' => '[user:one-time-login-url]', '!user-cancel-url-token' => '[user:cancel-url]'));
 
   $form['email_admin_created'] = array(
     '#type' => 'fieldset',
@@ -436,13 +435,13 @@ function user_admin_settings() {
   $form['email_admin_created']['user_mail_register_admin_created_subject'] = array(
     '#type' => 'textfield',
     '#title' => t('Subject'),
-    '#default_value' => _user_mail_text('register_admin_created_subject'),
+    '#default_value' => _user_mail_text('register_admin_created_subject', NULL, array(), FALSE),
     '#maxlength' => 180,
   );
   $form['email_admin_created']['user_mail_register_admin_created_body'] = array(
     '#type' => 'textarea',
     '#title' => t('Body'),
-    '#default_value' => _user_mail_text('register_admin_created_body'),
+    '#default_value' => _user_mail_text('register_admin_created_body', NULL, array(), FALSE),
     '#rows' => 15,
   );
 
@@ -457,13 +456,13 @@ function user_admin_settings() {
   $form['email_pending_approval']['user_mail_register_pending_approval_subject'] = array(
     '#type' => 'textfield',
     '#title' => t('Subject'),
-    '#default_value' => _user_mail_text('register_pending_approval_subject'),
+    '#default_value' => _user_mail_text('register_pending_approval_subject', NULL, array(), FALSE),
     '#maxlength' => 180,
   );
   $form['email_pending_approval']['user_mail_register_pending_approval_body'] = array(
     '#type' => 'textarea',
     '#title' => t('Body'),
-    '#default_value' => _user_mail_text('register_pending_approval_body'),
+    '#default_value' => _user_mail_text('register_pending_approval_body', NULL, array(), FALSE),
     '#rows' => 8,
   );
 
@@ -478,13 +477,13 @@ function user_admin_settings() {
   $form['email_no_approval_required']['user_mail_register_no_approval_required_subject'] = array(
     '#type' => 'textfield',
     '#title' => t('Subject'),
-    '#default_value' => _user_mail_text('register_no_approval_required_subject'),
+    '#default_value' => _user_mail_text('register_no_approval_required_subject', NULL, array(), FALSE),
     '#maxlength' => 180,
   );
   $form['email_no_approval_required']['user_mail_register_no_approval_required_body'] = array(
     '#type' => 'textarea',
     '#title' => t('Body'),
-    '#default_value' => _user_mail_text('register_no_approval_required_body'),
+    '#default_value' => _user_mail_text('register_no_approval_required_body', NULL, array(), FALSE),
     '#rows' => 15,
   );
 
@@ -500,13 +499,13 @@ function user_admin_settings() {
   $form['email_password_reset']['user_mail_password_reset_subject'] = array(
     '#type' => 'textfield',
     '#title' => t('Subject'),
-    '#default_value' => _user_mail_text('password_reset_subject'),
+    '#default_value' => _user_mail_text('password_reset_subject', NULL, array(), FALSE),
     '#maxlength' => 180,
   );
   $form['email_password_reset']['user_mail_password_reset_body'] = array(
     '#type' => 'textarea',
     '#title' => t('Body'),
-    '#default_value' => _user_mail_text('password_reset_body'),
+    '#default_value' => _user_mail_text('password_reset_body', NULL, array(), FALSE),
     '#rows' => 12,
   );
 
@@ -535,13 +534,13 @@ function user_admin_settings() {
   $form['email_activated']['settings']['user_mail_status_activated_subject'] = array(
     '#type' => 'textfield',
     '#title' => t('Subject'),
-    '#default_value' => _user_mail_text('status_activated_subject'),
+    '#default_value' => _user_mail_text('status_activated_subject', NULL, array(), FALSE),
     '#maxlength' => 180,
   );
   $form['email_activated']['settings']['user_mail_status_activated_body'] = array(
     '#type' => 'textarea',
     '#title' => t('Body'),
-    '#default_value' => _user_mail_text('status_activated_body'),
+    '#default_value' => _user_mail_text('status_activated_body', NULL, array(), FALSE),
     '#rows' => 15,
   );
 
@@ -570,13 +569,13 @@ function user_admin_settings() {
   $form['email_blocked']['settings']['user_mail_status_blocked_subject'] = array(
     '#type' => 'textfield',
     '#title' => t('Subject'),
-    '#default_value' => _user_mail_text('status_blocked_subject'),
+    '#default_value' => _user_mail_text('status_blocked_subject', NULL, array(), FALSE),
     '#maxlength' => 180,
   );
   $form['email_blocked']['settings']['user_mail_status_blocked_body'] = array(
     '#type' => 'textarea',
     '#title' => t('Body'),
-    '#default_value' => _user_mail_text('status_blocked_body'),
+    '#default_value' => _user_mail_text('status_blocked_body', NULL, array(), FALSE),
     '#rows' => 3,
   );
 
@@ -591,13 +590,13 @@ function user_admin_settings() {
   $form['email_cancel_confirm']['user_mail_cancel_confirm_subject'] = array(
     '#type' => 'textfield',
     '#title' => t('Subject'),
-    '#default_value' => _user_mail_text('cancel_confirm_subject'),
+    '#default_value' => _user_mail_text('cancel_confirm_subject', NULL, array(), FALSE),
     '#maxlength' => 180,
   );
   $form['email_cancel_confirm']['user_mail_cancel_confirm_body'] = array(
     '#type' => 'textarea',
     '#title' => t('Body'),
-    '#default_value' => _user_mail_text('cancel_confirm_body'),
+    '#default_value' => _user_mail_text('cancel_confirm_body', NULL, array(), FALSE),
     '#rows' => 3,
   );
 
@@ -626,13 +625,13 @@ function user_admin_settings() {
   $form['email_canceled']['settings']['user_mail_status_canceled_subject'] = array(
     '#type' => 'textfield',
     '#title' => t('Subject'),
-    '#default_value' => _user_mail_text('status_canceled_subject'),
+    '#default_value' => _user_mail_text('status_canceled_subject', NULL, array(), FALSE),
     '#maxlength' => 180,
   );
   $form['email_canceled']['settings']['user_mail_status_canceled_body'] = array(
     '#type' => 'textarea',
     '#title' => t('Body'),
-    '#default_value' => _user_mail_text('status_canceled_body'),
+    '#default_value' => _user_mail_text('status_canceled_body', NULL, array(), FALSE),
     '#rows' => 3,
   );
 
@@ -702,7 +701,7 @@ function user_admin_permissions($form, $form_state, $rid = NULL) {
     $form['checkboxes'][$rid] = array('#type' => 'checkboxes', '#options' => $options, '#default_value' => isset($status[$rid]) ? $status[$rid] : array());
     $form['role_names'][$rid] = array('#markup' => $name, '#tree' => TRUE);
   }
-  
+
   $form['actions'] = array('#type' => 'container', '#attributes' => array('class' => array('form-actions')));
   $form['actions']['submit'] = array('#type' => 'submit', '#value' => t('Save permissions'));
 
@@ -776,7 +775,7 @@ function user_admin_role() {
   $rid = arg(5);
   if ($rid) {
     if ($rid == DRUPAL_ANONYMOUS_RID || $rid == DRUPAL_AUTHENTICATED_RID) {
-      drupal_goto('admin/config/people/roles');
+      drupal_goto('admin/people/permissions/roles');
     }
     // Display the edit role form.
     $role = db_query('SELECT * FROM {role} WHERE rid = :rid', array(':rid' => $rid))->fetchObject();
@@ -852,7 +851,7 @@ function user_admin_role_submit($form, &$form_state) {
     user_role_save($role);
     drupal_set_message(t('The role has been added.'));
   }
-  $form_state['redirect'] = 'admin/config/people/roles';
+  $form_state['redirect'] = 'admin/people/permissions/roles';
   return;
 }
 
@@ -866,12 +865,12 @@ function theme_user_admin_new_role($variables) {
 
   $header = array(t('Name'), array('data' => t('Operations'), 'colspan' => 2));
   foreach (user_roles() as $rid => $name) {
-    $edit_permissions = l(t('edit permissions'), 'admin/config/people/permissions/' . $rid);
+    $edit_permissions = l(t('edit permissions'), 'admin/people/permissions/' . $rid);
     if (in_array($rid, array(DRUPAL_ANONYMOUS_RID, DRUPAL_AUTHENTICATED_RID))) {
       $rows[] = array(t('!name %locked', array('!name' => $name, '%locked' => t('(locked)'))), '', $edit_permissions);
     }
     else {
-      $rows[] = array($name, l(t('edit role'), 'admin/config/people/roles/edit/' . $rid), $edit_permissions);
+      $rows[] = array($name, l(t('edit role'), 'admin/people/permissions/roles/edit/' . $rid), $edit_permissions);
     }
   }
   $rows[] = array(array('data' => drupal_render($form['name']) . drupal_render($form['submit']), 'colspan' => 3, 'class' => 'edit-name'));
@@ -898,6 +897,8 @@ function theme_user_filters($variables) {
   }
   $output .= '</ul>';
 
+  $output .= '<div class="clearfix">';
+
   $output .= '<dl class="multiselect">' . (!empty($form['current']) ? '<dt><em>' . t('and') . '</em> ' . t('where') . '</dt>' : '');
 
   $output .= '<dd>';
@@ -909,6 +910,8 @@ function theme_user_filters($variables) {
 
   $output .= '</dl>';
   $output .= drupal_render($form['actions']);
+
+  $output .= '</div>';
 
   return $output;
 }

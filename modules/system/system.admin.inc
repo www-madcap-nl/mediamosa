@@ -1,5 +1,5 @@
 <?php
-// $Id: system.admin.inc,v 1.251 2010/01/15 13:32:41 dries Exp $
+// $Id: system.admin.inc,v 1.262 2010/03/07 07:36:27 webchick Exp $
 
 /**
  * @file
@@ -429,9 +429,10 @@ function system_theme_default() {
       }
       // Set the default theme.
       variable_set('theme_default', $theme);
-      // The status message depends on whether an admin theme is currently in use.
+      // The status message depends on whether an admin theme is currently in use:
+      // a value of 0 means the admin theme is set to be the default theme.
       $admin_theme = variable_get('admin_theme', 0);
-      if ($admin_theme != $theme) {
+      if ($admin_theme != 0 && $admin_theme != $theme) {
         drupal_set_message(t('Please note that the administration theme is still set to the %admin_theme theme; consequently, the theme on this page remains unchanged. All non-administrative sections of the site, however, will show the selected %selected_theme theme by default.', array(
           '%admin_theme' => $themes[$admin_theme]->info['name'],
           '%selected_theme' => $themes[$theme]->info['name'],
@@ -808,9 +809,9 @@ function _system_is_incompatible(&$incompatible, $files, $file) {
 /**
  * Menu callback; provides module enable/disable interface.
  *
- * The list of modules gets populated by module.info files, which contain each module's name,
- * description and information about which modules it requires.
- * @see drupal_parse_info_file for information on module.info descriptors.
+ * The list of modules gets populated by module.info files, which contain each
+ * module's name, description, and information about which modules it requires.
+ * See drupal_parse_info_file() for information on module.info descriptors.
  *
  * Dependency checking is performed to ensure that a module:
  * - can not be enabled if there are disabled modules it requires.
@@ -818,11 +819,13 @@ function _system_is_incompatible(&$incompatible, $files, $file) {
  *
  * @param $form_state
  *   An associative array containing the current state of the form.
+ *
+ * @return
+ *   The form array.
+ *
  * @ingroup forms
  * @see theme_system_modules()
  * @see system_modules_submit()
- * @return
- *   The form array.
  */
 function system_modules($form, $form_state = array()) {
   // Get current list of modules.
@@ -894,7 +897,7 @@ function system_modules($form, $form_state = array()) {
       $extra['links']['permissions'] = array(
         '#type' => 'link',
         '#title' => t('Permissions'),
-        '#href' => 'admin/config/people/permissions',
+        '#href' => 'admin/people/permissions',
         '#options' => array('fragment' => 'module-' . $filename, 'attributes' => array('class' => array('module-link', 'module-link-permissions'), 'title' => t('Configure permissions'))),
       );
     }
@@ -1202,7 +1205,7 @@ function system_modules_submit($form, &$form_state) {
     foreach ($modules_to_be_enabled as $module) {
       $sort[$module] = $files[$module]->sort;
     }
-    array_multisort($sort, $modules_to_be_enabled);
+    array_multisort($sort, SORT_DESC, $modules_to_be_enabled);
     module_enable($modules_to_be_enabled, FALSE);
   }
   // Disable the modules that need disabling.
@@ -1211,8 +1214,8 @@ function system_modules_submit($form, &$form_state) {
     foreach ($disable_modules as $module) {
       $sort[$module] = $files[$module]->sort;
     }
-    array_multisort($sort, $disable_modules);
-    module_disable($disable_modules);
+    array_multisort($sort, SORT_ASC, $disable_modules);
+    module_disable($disable_modules, FALSE);
   }
 
   // Install new modules.
@@ -1224,7 +1227,7 @@ function system_modules_submit($form, &$form_state) {
       }
       $sort[$module] = $files[$module]->sort;
     }
-    array_multisort($sort, $new_modules);
+    array_multisort($sort, SORT_DESC, $new_modules);
     module_enable($new_modules, FALSE);
   }
 
@@ -1390,8 +1393,12 @@ function system_modules_uninstall_submit($form, &$form_state) {
 
 /**
  * Menu callback. Display blocked IP addresses.
+ *
+ * @param $default_ip
+ *   Optional IP address to be passed on to drupal_get_form() for
+ *   use as the default value of the IP address form field.
  */
-function system_ip_blocking() {
+function system_ip_blocking($default_ip = '') {
   $output = '';
   $rows = array();
   $header = array(t('IP address'), t('Operations'));
@@ -1403,7 +1410,7 @@ function system_ip_blocking() {
     );
   }
 
-  $build['system_ip_blocking_form'] = drupal_get_form('system_ip_blocking_form');
+  $build['system_ip_blocking_form'] = drupal_get_form('system_ip_blocking_form', $default_ip);
 
   $build['system_ip_blocking_table'] = array(
     '#theme' => 'table',
@@ -1421,13 +1428,13 @@ function system_ip_blocking() {
  * @see system_ip_blocking_form_validate()
  * @see system_ip_blocking_form_submit()
  */
-function system_ip_blocking_form($form, $form_state) {
+function system_ip_blocking_form($form, $form_state, $default_ip) {
   $form['ip'] = array(
     '#title' => t('IP address'),
     '#type' => 'textfield',
     '#size' => 64,
     '#maxlength' => 32,
-    '#default_value' => arg(4),
+    '#default_value' => $default_ip,
     '#description' => t('Enter a valid IP address.'),
   );
   $form['submit'] = array(
@@ -1554,7 +1561,6 @@ function system_site_information_settings() {
   );
 
   $form['#validate'][] = 'system_site_information_settings_validate';
-  $form['#submit'][] = 'system_site_information_settings_submit';
 
   return system_settings_form($form, FALSE);
 }
@@ -1576,18 +1582,6 @@ function system_site_information_settings_validate($form, &$form_state) {
 }
 
 /**
- * Form submit handler for the site-information form.
- */
-function system_site_information_settings_submit($form, &$form_state) {
-  // Clear caches when the cron threshold is changed to ensure that the cron
-  // image is not contained in cached pages.
-  $cron_threshold = variable_get('cron_safe_threshold', DRUPAL_CRON_DEFAULT_THRESHOLD);
-  if ($cron_threshold != $form_state['input']['cron_safe_threshold']) {
-    cache_clear_all();
-  }
-}
-
-/**
  * Form builder; Configure error reporting settings.
  *
  * @ingroup forms
@@ -1596,13 +1590,14 @@ function system_site_information_settings_submit($form, &$form_state) {
 function system_logging_settings() {
   $form['error_level'] = array(
     '#type' => 'radios',
-    '#title' => t('Display PHP messages'),
+    '#title' => t('Error messages to display'),
     '#default_value' => ERROR_REPORTING_DISPLAY_ALL,
     '#options' => array(
       ERROR_REPORTING_HIDE => t('None'),
       ERROR_REPORTING_DISPLAY_SOME => t('Errors and warnings'),
       ERROR_REPORTING_DISPLAY_ALL => t('All messages'),
     ),
+    '#description' => t('It is recommended that sites running on production environments do not display any errors.'),
   );
 
   return system_settings_form($form);
@@ -1664,17 +1659,14 @@ function system_performance_settings() {
     '#description' => t('External resources  can be optimized automatically, which can reduce both the size and number of requests made to your website.') . $disabled_message,
   );
 
-  // Do not allow Drupal to gzip pages if the server alredy does that.
-  if (strpos($_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip') === FALSE) {
-    $js_hide = $cache == CACHE_DISABLED ? ' class="js-hide"' : '';
-    $form['bandwidth_optimization']['page_compression'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Compress cached pages.'),
-      '#default_value' => variable_get('page_compression', TRUE),
-      '#prefix' => '<div id="page-compression-wrapper"' . $js_hide . '>',
-      '#suffix' => '</div>',
-    );
-  }
+  $js_hide = $cache == CACHE_DISABLED ? ' class="js-hide"' : '';
+  $form['bandwidth_optimization']['page_compression'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Compress cached pages.'),
+    '#default_value' => variable_get('page_compression', TRUE),
+    '#prefix' => '<div id="page-compression-wrapper"' . $js_hide . '>',
+    '#suffix' => '</div>',
+  );
   $form['bandwidth_optimization']['preprocess_css'] = array(
     '#type' => 'checkbox',
     '#title' => t('Aggregate and compress CSS files into one file.'),
@@ -1738,11 +1730,11 @@ function system_file_system_settings() {
     '#description' => t('A local file system path where temporary files will be stored. This directory should not be accessible over the web.'),
     '#after_build' => array('system_check_directory'),
   );
-  $wrappers = file_get_stream_wrappers();
-  $options = array(
-    'public' => $wrappers['public']['description'],
-    'private' => $wrappers['private']['description']
-  );
+  // Any visible, writeable wrapper can potentially be used for the files
+  // directory, including a remote file system that integrates with a CDN.
+  foreach(file_get_stream_wrappers(STREAM_WRAPPERS_WRITE_VISIBLE) as $scheme => $info) {
+    $options[$scheme] = $info['description'];
+  }
   $form['file_default_scheme'] = array(
     '#type' => 'radios',
     '#title' => t('Default download method'),
@@ -2140,7 +2132,7 @@ function system_site_maintenance_mode() {
     '#type' => 'checkbox',
     '#title' => t('Put site into maintenance mode'),
     '#default_value' => 0,
-    '#description' => t('When enabled, only users with the "Access site in maintenance mode" <a href="@permissions-url">permission</a> are able to access your site to perform maintenance; all other visitors see the maintenance mode message configured below. Authorized users can log in directly via the <a href="@user-login">user login</a> page.', array('@permissions-url' => url('admin/config/people/permissions'), '@user-login' => url('user'))),
+    '#description' => t('When enabled, only users with the "Access site in maintenance mode" <a href="@permissions-url">permission</a> are able to access your site to perform maintenance; all other visitors see the maintenance mode message configured below. Authorized users can log in directly via the <a href="@user-login">user login</a> page.', array('@permissions-url' => url('admin/people/permissions'), '@user-login' => url('user'))),
   );
   $form['maintenance_mode_message'] = array(
     '#type' => 'textarea',
@@ -2905,8 +2897,7 @@ function system_actions_manage_form($form, &$form_state, $options = array()) {
   $form['parent'] = array(
     '#type' => 'fieldset',
     '#title' => t('Create an advanced action'),
-    '#prefix' => '<div class="container-inline">',
-    '#suffix' => '</div>',
+    '#attributes' => array('class' => array('container-inline')),
   );
   $form['parent']['action'] = array(
     '#type' => 'select',

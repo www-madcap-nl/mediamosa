@@ -1,5 +1,5 @@
 <?php
-// $Id: node.test,v 1.68 2010/01/13 12:58:47 webchick Exp $
+// $Id: node.test,v 1.76 2010/03/06 06:39:00 dries Exp $
 
 /**
  * Test the node_load_multiple() function.
@@ -173,8 +173,10 @@ class NodeRevisionsTestCase extends DrupalWebTestCase {
     $log = $this->randomName(10);
     $node = $this->drupalCreateNode(array('log' => $log));
 
-    // Save over the same revision but do not provide a log message, and check
-    // that the original log message is preserved.
+    // Save over the same revision and explicitly provide an empty log message
+    // (for example, to mimic the case of a node form submitted with no text in
+    // the "log message" field), and check that the original log message is
+    // preserved.
     $new_title = $this->randomName(10) . 'testNodeRevisionWithoutLogMessage1';
     $updated_node = (object) array(
       'nid' => $node->nid,
@@ -182,6 +184,7 @@ class NodeRevisionsTestCase extends DrupalWebTestCase {
       'uid' => $node->uid,
       'type' => $node->type,
       'title' => $new_title,
+      'log' => '',
     );
     node_save($updated_node);
     $this->drupalGet('node/' . $node->nid);
@@ -212,6 +215,9 @@ class NodeRevisionsTestCase extends DrupalWebTestCase {
 }
 
 class PageEditTestCase extends DrupalWebTestCase {
+  protected $web_user;
+  protected $admin_user;
+
   public static function getInfo() {
     return array(
       'name' => 'Node edit',
@@ -223,14 +229,16 @@ class PageEditTestCase extends DrupalWebTestCase {
   function setUp() {
     parent::setUp();
 
-    $web_user = $this->drupalCreateUser(array('edit own page content', 'create page content'));
-    $this->drupalLogin($web_user);
+    $this->web_user = $this->drupalCreateUser(array('edit own page content', 'create page content'));
+    $this->admin_user = $this->drupalCreateUser(array('bypass node access', 'administer nodes'));
   }
 
   /**
    * Check node edit functionality.
    */
   function testPageEdit() {
+    $this->drupalLogin($this->web_user);
+
     $langcode = LANGUAGE_NONE;
     $title_key = "title";
     $body_key = "body[$langcode][0][value]";
@@ -290,6 +298,51 @@ class PageEditTestCase extends DrupalWebTestCase {
     $first_node_version = node_load($node->nid, $node->vid);
     $second_node_version = node_load($node->nid, $revised_node->vid);
     $this->assertNotIdentical($first_node_version->revision_uid, $second_node_version->revision_uid, 'Each revision has a distinct user.');
+  }
+
+  /**
+   * Check changing node authored by fields.
+   */
+  function testPageAuthoredBy() {
+    $this->drupalLogin($this->admin_user);
+
+    // Create node to edit.
+    $langcode = LANGUAGE_NONE;
+    $body_key = "body[$langcode][0][value]";
+    $edit = array();
+    $edit['title'] = $this->randomName(8);
+    $edit[$body_key] = $this->randomName(16);
+    $this->drupalPost('node/add/page', $edit, t('Save'));
+
+    // Check that the node was authored by the currently logged in user.
+    $node = $this->drupalGetNodeByTitle($edit['title']);
+    $this->assertIdentical($node->uid, $this->admin_user->uid, 'Node authored by admin user.');
+
+    // Try to change the 'authored by' field to an invalid user name.
+    $edit = array(
+      'name' => 'invalid-name',
+    );
+    $this->drupalPost('node/' . $node->nid . '/edit', $edit, t('Save'));
+    $this->assertText('The username invalid-name does not exist.');
+
+    // Change the authored by field to an empty string, which should assign
+    // authorship to the anonymous user (uid 0).
+    $edit['name'] = '';
+    $this->drupalPost('node/' . $node->nid . '/edit', $edit, t('Save'));
+    $node = node_load($node->nid, NULL, TRUE);
+    $this->assertIdentical($node->uid, '0', 'Node authored by anonymous user.');
+
+    // Change the authored by field to another user's name (that is not
+    // logged in).
+    $edit['name'] = $this->web_user->name;
+    $this->drupalPost('node/' . $node->nid . '/edit', $edit, t('Save'));
+    $node = node_load($node->nid, NULL, TRUE);
+    $this->assertIdentical($node->uid, $this->web_user->uid, 'Node authored by normal user.');
+
+    // Check that normal users cannot change the authored by information.
+    $this->drupalLogin($this->web_user);
+    $this->drupalGet('node/' . $node->nid . '/edit');
+    $this->assertNoFieldByName('name');
   }
 }
 
@@ -565,11 +618,11 @@ class NodeBlockTestCase extends DrupalWebTestCase {
   }
 
   function testSearchFormBlock() {
-    // Set block title to confirm that the interface is availble.
+    // Set block title to confirm that the interface is available.
     $this->drupalPost('admin/structure/block/manage/node/syndicate/configure', array('title' => $this->randomName(8)), t('Save block'));
     $this->assertText(t('The block configuration has been saved.'), t('Block configuration set.'));
 
-    // Set the block to a region to confirm block is availble.
+    // Set the block to a region to confirm block is available.
     $edit = array();
     $edit['node_syndicate[region]'] = 'footer';
     $this->drupalPost('admin/structure/block', $edit, t('Save blocks'));
@@ -660,6 +713,12 @@ class NodeRSSContentTestCase extends DrupalWebTestCase {
   function setUp() {
     // Enable dummy module that implements hook_node_view.
     parent::setUp('node_test');
+
+    // Use bypass node access permission here, because the test class uses
+    // hook_grants_alter() to deny access to everyone on node_access
+    // queries.
+    $user = $this->drupalCreateUser(array('bypass node access', 'access content', 'create article content'));
+    $this->drupalLogin($user);
   }
 
   /**
@@ -694,6 +753,7 @@ class NodeRSSContentTestCase extends DrupalWebTestCase {
     // viewing node.
     $this->drupalGet("node/$node->nid");
     $this->assertNoText($rss_only_content, t('Node content designed for RSS doesn\'t appear when viewing node.'));
+
   }
 }
 
@@ -1355,5 +1415,162 @@ class MultiStepNodeFormBasicOptionsTest extends DrupalWebTestCase {
     $this->assertNoFieldChecked('edit-status', 'status stayed unchecked');
     $this->assertNoFieldChecked('edit-promote', 'promote stayed unchecked');
     $this->assertFieldChecked('edit-sticky', 'sticky stayed checked');
+  }
+}
+
+/**
+ * Test to ensure that a node's content is always rebuilt.
+ */
+class NodeBuildContent extends DrupalWebTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Rebuild content',
+      'description' => 'Test the rebuilding of content for different build modes.',
+      'group' => 'Node',
+    );
+  }
+
+ /**
+  * Test to ensure that a node's content array is rebuilt on every call to node_build_content().
+  */
+  function testNodeRebuildContent() {
+    $node = $this->drupalCreateNode();
+
+    // Set a property in the content array so we can test for its existance later on.
+    $node->content['test_content_property'] = array('#value' => $this->randomString());
+    $content = node_build_content($node);
+
+    // If the property doesn't exist it means the node->content was rebuilt.
+    $this->assertFalse(isset($content['test_content_property']), t('Node content was emptied prior to being built.'));
+  }
+}
+
+/**
+ * Tests node_query_node_access_alter().
+ */
+class NodeQueryAlter extends DrupalWebTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Node query alter',
+      'description' => 'Test that node access queries are properly altered by the node module.',
+      'group' => 'Node',
+    );
+  }
+
+  /**
+   * User with permission to view content.
+   */
+  protected $accessUser;
+
+  /**
+   * User without permission to view content.
+   */
+  protected $noAccessUser;
+
+  function setUp() {
+    parent::setUp('node_access_test');
+    node_access_rebuild();
+
+    // Create some content.
+    $this->drupalCreateNode();
+    $this->drupalCreateNode();
+    $this->drupalCreateNode();
+    $this->drupalCreateNode();
+
+    // Create user with simple node access permission.
+    $this->accessUser = $this->drupalCreateUser(array('access content', 'node test view'));
+    $this->noAccessUser = $this->drupalCreateUser(array('access content'));
+  }
+
+  /**
+   * Tests that node access permissions are followed.
+   */
+  function testNodeQueryAlterWithUI() {
+    // Verify that a user with access permission can see at least one node.
+
+    $this->drupalLogin($this->accessUser);
+    $this->drupalGet('node_access_test_page');
+    $this->assertText('Yes, 4 nodes', "4 nodes were found for access user");
+    $this->assertNoText('Exception', "No database exception");
+
+    // Verify that a user with no access permission cannot see nodes.
+
+    $this->drupalLogin($this->noAccessUser);
+    $this->drupalGet('node_access_test_page');
+    $this->assertText('No nodes', "No nodes were found for no access user");
+    $this->assertNoText('Exception', "No database exception");
+  }
+
+  /**
+   * Lower-level test of 'node_access' query alter, for user with access.
+   *
+   * Verifies that a non-standard table alias can be used, and that a
+   * user with node access can view the nodes.
+   */
+  function testNodeQueryAlterLowLevelWithAccess() {
+    // User with access should be able to view 4 nodes.
+    try {
+      $query = db_select('node', 'mytab')
+        ->fields('mytab');
+      $query->addTag('node_access');
+      $query->addMetaData('op', 'view');
+      $query->addMetaData('account', $this->accessUser);
+
+      $result = $query->execute()->fetchAll();
+      $this->assertEqual(count($result), 4, t('User with access can see correct nodes'));
+    }
+    catch (Exception $e) {
+      $this->fail(t('Altered query is malformed'));
+    }
+  }
+
+  /**
+   * Lower-level test of 'node_access' query alter, for user without access.
+   *
+   * Verifies that a non-standard table alias can be used, and that a
+   * user without node access cannot view the nodes.
+   */
+  function testNodeQueryAlterLowLevelNoAccess() {
+    // User without access should be able to view 0 nodes.
+    try {
+      $query = db_select('node', 'mytab')
+        ->fields('mytab');
+      $query->addTag('node_access');
+      $query->addMetaData('op', 'view');
+      $query->addMetaData('account', $this->noAccessUser);
+
+      $result = $query->execute()->fetchAll();
+      $this->assertEqual(count($result), 0, t('User with no access cannot see nodes'));
+    }
+    catch (Exception $e) {
+      $this->fail(t('Altered query is malformed'));
+    }
+  }
+
+  /**
+   * Lower-level test of 'node_access' query alter, for edit access.
+   *
+   * Verifies that a non-standard table alias can be used, and that a
+   * user with view-only node access cannot edit the nodes.
+   */
+  function testNodeQueryAlterLowLevelEditAccess() {
+    // User with view-only access should not be able to edit nodes.
+    try {
+      $query = db_select('node', 'mytab')
+        ->fields('mytab');
+      $query->addTag('node_access');
+      $query->addMetaData('op', 'update');
+      $query->addMetaData('account', $this->accessUser);
+
+      $result = $query->execute()->fetchAll();
+      $this->assertEqual(count($result), 0, t('User with view-only access cannot edit nodes'));
+    }
+    catch (Exception $e) {
+      $this->fail($e->getMessage());
+      $this->fail((string)$query);
+      $this->fail(t('Altered query is malformed'));
+    }
   }
 }

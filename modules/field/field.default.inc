@@ -1,5 +1,5 @@
 <?php
-// $Id: field.default.inc,v 1.30 2009/12/26 16:50:08 dries Exp $
+// $Id: field.default.inc,v 1.33 2010/02/12 05:38:09 webchick Exp $
 
 /**
  * @file
@@ -11,7 +11,7 @@
  * the corresponding field_attach_[operation]() function.
  */
 
-function field_default_extract_form_values($obj_type, $object, $field, $instance, $langcode, &$items, $form, &$form_state) {
+function field_default_extract_form_values($entity_type, $entity, $field, $instance, $langcode, &$items, $form, &$form_state) {
   $field_name = $field['field_name'];
 
   if (isset($form_state['values'][$field_name][$langcode])) {
@@ -29,27 +29,27 @@ function field_default_extract_form_values($obj_type, $object, $field, $instance
  *
  * @see _hook_field_validate()
  *
- * @param $obj_type
- *   The type of $object.
- * @param $object
- *   The object for the operation.
+ * @param $entity_type
+ *   The type of $entity.
+ * @param $entity
+ *   The entity for the operation.
  * @param $field
  *   The field structure for the operation.
  * @param $instance
- *   The instance structure for $field on $object's bundle.
+ *   The instance structure for $field on $entity's bundle.
  * @param $langcode
  *   The language associated to $items.
  * @param $items
- *   $object->{$field['field_name']}[$langcode], or an empty array if unset.
+ *   $entity->{$field['field_name']}[$langcode], or an empty array if unset.
  * @param $errors
  *   The array of errors, keyed by field name and by value delta, that have
- *   already been reported for the object. The function should add its errors
+ *   already been reported for the entity. The function should add its errors
  *   to this array. Each error is an associative array, with the following
  *   keys and values:
  *   - 'error': an error code (should be a string, prefixed with the module name)
  *   - 'message': the human readable message to be displayed.
  */
-function field_default_validate($obj_type, $object, $field, $instance, $langcode, $items, &$errors) {
+function field_default_validate($entity_type, $entity, $field, $instance, $langcode, $items, &$errors) {
   // Filter out empty values.
   $items = _field_filter_items($field, $items);
 
@@ -64,7 +64,7 @@ function field_default_validate($obj_type, $object, $field, $instance, $langcode
   }
 }
 
-function field_default_submit($obj_type, $object, $field, $instance, $langcode, &$items, $form, &$form_state) {
+function field_default_submit($entity_type, $entity, $field, $instance, $langcode, &$items, $form, &$form_state) {
   $field_name = $field['field_name'];
 
   // Reorder items to account for drag-n-drop reordering.
@@ -79,54 +79,54 @@ function field_default_submit($obj_type, $object, $field, $instance, $langcode, 
 /**
  * Default field 'insert' operation.
  *
- * Insert default value if no $object->$field_name entry was provided.
+ * Insert default value if no $entity->$field_name entry was provided.
  * This can happen with programmatic saves, or on form-based creation where
  * the current user doesn't have 'edit' permission for the field.
  */
-function field_default_insert($obj_type, $object, $field, $instance, $langcode, &$items) {
-  // _field_invoke() populates $items with an empty array if the $object has no
-  // entry for the field, so we check on the $object itself.
+function field_default_insert($entity_type, $entity, $field, $instance, $langcode, &$items) {
+  // _field_invoke() populates $items with an empty array if the $entity has no
+  // entry for the field, so we check on the $entity itself.
   // We also check that the current field translation is actually defined before
   // assigning it a default value. This way we ensure that only the intended
   // languages get a default value. Otherwise we could have default values for
   // not yet open languages.
-  if (empty($object) || !property_exists($object, $field['field_name']) ||
-    (isset($object->{$field['field_name']}[$langcode]) && count($object->{$field['field_name']}[$langcode]) == 0)) {
-    $items = field_get_default_value($obj_type, $object, $field, $instance, $langcode);
+  if (empty($entity) || !property_exists($entity, $field['field_name']) ||
+    (isset($entity->{$field['field_name']}[$langcode]) && count($entity->{$field['field_name']}[$langcode]) == 0)) {
+    $items = field_get_default_value($entity_type, $entity, $field, $instance, $langcode);
   }
 }
 
 /**
  * Invokes hook_field_formatter_prepare_view() on the relevant formatters.
  *
- * @param $obj_type
- *   The type of $object; e.g. 'node' or 'user'.
- * @param $objects
- *   An array of objects being displayed, keyed by object id.
+ * @param $entity_type
+ *   The type of $entity; e.g. 'node' or 'user'.
+ * @param $entities
+ *   An array of entities being displayed, keyed by entity id.
  * @param $field
  *   The field structure for the operation.
  * @param $instances
- *   Array of instance structures for $field for each object, keyed by object
+ *   Array of instance structures for $field for each entity, keyed by entity
  *   id.
  * @param $langcode
  *   The language associated to $items.
  * @param $items
- *   Array of field values already loaded for the objects, keyed by object id.
+ *   Array of field values already loaded for the entities, keyed by entity id.
  * @param $display
  *   Can be either:
  *   - the name of a view mode
  *   - or an array of display settings to use for display, as found in the
  *     'display' entry of $instance definitions.
 */
-function field_default_prepare_view($obj_type, $objects, $field, $instances, $langcode, &$items, $display) {
-  // Group objects, instances and items by formatter module.
+function field_default_prepare_view($entity_type, $entities, $field, $instances, $langcode, &$items, $display) {
+  // Group entities, instances and items by formatter module.
   $modules = array();
   foreach ($instances as $id => $instance) {
     $display = is_string($display) ? $instance['display'][$display] : $display;
     if ($display['type'] !== 'hidden') {
       $module = $display['module'];
       $modules[$module] = $module;
-      $grouped_objects[$module][$id] = $objects[$id];
+      $grouped_entities[$module][$id] = $entities[$id];
       $grouped_instances[$module][$id] = $instance;
       $grouped_displays[$module][$id] = $display;
       // hook_field_formatter_prepare_view() alters $items by reference.
@@ -138,7 +138,7 @@ function field_default_prepare_view($obj_type, $objects, $field, $instances, $la
     // Invoke hook_field_formatter_prepare_view().
     $function = $module . '_field_formatter_prepare_view';
     if (function_exists($function)) {
-      $function($obj_type, $grouped_objects[$module], $field, $grouped_instances[$module], $langcode, $grouped_items[$module], $grouped_displays[$module]);
+      $function($entity_type, $grouped_entities[$module], $field, $grouped_instances[$module], $langcode, $grouped_items[$module], $grouped_displays[$module]);
     }
   }
 }
@@ -146,27 +146,27 @@ function field_default_prepare_view($obj_type, $objects, $field, $instances, $la
 /**
  * Builds a renderable array for field values.
  *
- * @param $obj_type
- *   The type of $object; e.g. 'node' or 'user'.
- * @param $objects
- *   An array of objects being displayed, keyed by object id.
+ * @param $entity_type
+ *   The type of $entity; e.g. 'node' or 'user'.
+ * @param $entities
+ *   An array of entities being displayed, keyed by entity id.
  * @param $field
  *   The field structure for the operation.
  * @param $instances
- *   Array of instance structures for $field for each object, keyed by object
+ *   Array of instance structures for $field for each entity, keyed by entity
  *   id.
  * @param $langcode
  *   The language associated to $items.
  * @param $items
- *   Array of field values already loaded for the objects, keyed by object id.
+ *   Array of field values already loaded for the entities, keyed by entity id.
  * @param $display
  *   Can be either:
  *   - the name of a view mode;
  *   - or an array of custom display settings, as found in the 'display' entry
  *     of $instance definitions.
  */
-function field_default_view($obj_type, $object, $field, $instance, $langcode, $items, $display) {
-  list($id, $vid, $bundle) = entity_extract_ids($obj_type, $object);
+function field_default_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+  list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
 
   $addition = array();
 
@@ -189,39 +189,39 @@ function field_default_view($obj_type, $object, $field, $instance, $langcode, $i
     // performance impact on pages with many fields and values.
     $function = $display['module'] . '_field_formatter_view';
     if (function_exists($function)) {
-      $elements = $function($obj_type, $object, $field, $instance, $langcode, $items, $display);
-    }
+      $elements = $function($entity_type, $entity, $field, $instance, $langcode, $items, $display);
 
-    if ($elements) {
-      $info = array(
-        '#theme' => 'field',
-        '#weight' => $display['weight'],
-        '#title' => t($instance['label']),
-        '#access' => field_access('view', $field, $obj_type, $object),
-        '#label_display' => $display['label'],
-        '#view_mode' => $view_mode,
-        '#language' => $langcode,
-        '#field_name' => $field['field_name'],
-        '#field_type' => $field['type'],
-        '#field_translatable' => $field['translatable'],
-        '#object_type' => $obj_type,
-        '#bundle' => $bundle,
-        '#object' => $object,
-        '#items' => $items,
-        '#formatter' => $display['type']
-      );
+      if ($elements) {
+        $info = array(
+          '#theme' => 'field',
+          '#weight' => $display['weight'],
+          '#title' => t($instance['label']),
+          '#access' => field_access('view', $field, $entity_type, $entity),
+          '#label_display' => $display['label'],
+          '#view_mode' => $view_mode,
+          '#language' => $langcode,
+          '#field_name' => $field['field_name'],
+          '#field_type' => $field['type'],
+          '#field_translatable' => $field['translatable'],
+          '#object_type' => $entity_type,
+          '#bundle' => $bundle,
+          '#object' => $entity,
+          '#items' => $items,
+          '#formatter' => $display['type']
+        );
 
-      $addition[$field['field_name']] = array_merge($info, $elements);
+        $addition[$field['field_name']] = array_merge($info, $elements);
+      }
     }
   }
 
   return $addition;
 }
 
-function field_default_prepare_translation($obj_type, $object, $field, $instance, $langcode, &$items) {
+function field_default_prepare_translation($entity_type, $entity, $field, $instance, $langcode, &$items) {
   $addition = array();
-  if (isset($object->translation_source->$field['field_name'])) {
-    $addition[$field['field_name']] = $object->translation_source->$field['field_name'];
+  if (isset($entity->translation_source->$field['field_name'])) {
+    $addition[$field['field_name']] = $entity->translation_source->$field['field_name'];
   }
   return $addition;
 }

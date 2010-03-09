@@ -1,5 +1,5 @@
 <?php
-// $Id: common.test,v 1.101 2010/01/09 23:36:55 webchick Exp $
+// $Id: common.test,v 1.105 2010/03/03 08:40:25 dries Exp $
 
 /**
  * @file
@@ -24,8 +24,8 @@ class DrupalAlterTestCase extends DrupalWebTestCase {
 
   function testDrupalAlter() {
     $array = array('foo' => 'bar');
-    $object = new stdClass;
-    $object->foo = 'bar';
+    $entity = new stdClass;
+    $entity->foo = 'bar';
 
     // Verify alteration of a single argument.
     $array_copy = $array;
@@ -33,23 +33,23 @@ class DrupalAlterTestCase extends DrupalWebTestCase {
     drupal_alter('drupal_alter', $array_copy);
     $this->assertEqual($array_copy, $array_expected, t('Single array was altered.'));
 
-    $object_copy = clone $object;
-    $object_expected = clone $object;
-    $object_expected->foo = 'Drupal theme';
-    drupal_alter('drupal_alter', $object_copy);
-    $this->assertEqual($object_copy, $object_expected, t('Single object was altered.'));
+    $entity_copy = clone $entity;
+    $entity_expected = clone $entity;
+    $entity_expected->foo = 'Drupal theme';
+    drupal_alter('drupal_alter', $entity_copy);
+    $this->assertEqual($entity_copy, $entity_expected, t('Single object was altered.'));
 
     // Verify alteration of multiple arguments.
     $array_copy = $array;
     $array_expected = array('foo' => 'Drupal theme');
-    $object_copy = clone $object;
-    $object_expected = clone $object;
-    $object_expected->foo = 'Drupal theme';
+    $entity_copy = clone $entity;
+    $entity_expected = clone $entity;
+    $entity_expected->foo = 'Drupal theme';
     $array2_copy = $array;
     $array2_expected = array('foo' => 'Drupal theme');
-    drupal_alter('drupal_alter', $array_copy, $object_copy, $array2_copy);
+    drupal_alter('drupal_alter', $array_copy, $entity_copy, $array2_copy);
     $this->assertEqual($array_copy, $array_expected, t('First argument to drupal_alter() was altered.'));
-    $this->assertEqual($object_copy, $object_expected, t('Second argument to drupal_alter() was altered.'));
+    $this->assertEqual($entity_copy, $entity_expected, t('Second argument to drupal_alter() was altered.'));
     $this->assertEqual($array2_copy, $array2_expected, t('Third argument to drupal_alter() was altered.'));
   }
 }
@@ -503,7 +503,7 @@ class CascadingStylesheetsTestCase extends DrupalWebTestCase {
   }
 
   function setUp() {
-    parent::setUp('php', 'locale');
+    parent::setUp('php', 'locale', 'common_test');
     // Reset drupal_add_css() before each test.
     drupal_static_reset('drupal_add_css');
   }
@@ -558,7 +558,9 @@ class CascadingStylesheetsTestCase extends DrupalWebTestCase {
     $css = 'http://example.com/style.css';
     drupal_add_css($css, 'external');
     $styles = drupal_get_css();
-    $this->assertTrue(strpos($styles, 'href="' . $css) > 0, t('Rendering an external CSS file.'));
+    // Stylesheet URL may be the href of a LINK tag or in an @import statement
+    // of a STYLE tag.
+    $this->assertTrue(strpos($styles, 'href="' . $css) > 0 || strpos($styles, '@import url("' . $css . '")') > 0, t('Rendering an external CSS file.'));
   }
 
   /**
@@ -566,10 +568,10 @@ class CascadingStylesheetsTestCase extends DrupalWebTestCase {
    */
   function testRenderInlinePreprocess() {
     $css = 'body { padding: 0px; }';
-    $css_preprocessed = '<style type="text/css">' . drupal_load_stylesheet_content($css, TRUE) . '</style>';
+    $css_preprocessed = '<style type="text/css" media="all">' . drupal_load_stylesheet_content($css, TRUE) . '</style>';
     drupal_add_css($css, 'inline');
     $styles = drupal_get_css();
-    $this->assertEqual($styles, "\n" . $css_preprocessed . "\n", t('Rendering preprocessed inline CSS adds it to the page.'));
+    $this->assertEqual(trim($styles), $css_preprocessed, t('Rendering preprocessed inline CSS adds it to the page.'));
   }
 
   /**
@@ -631,8 +633,10 @@ class CascadingStylesheetsTestCase extends DrupalWebTestCase {
 
 
     $styles = drupal_get_css();
-    if (preg_match_all('/href="' . preg_quote($GLOBALS['base_url'] . '/', '/') . '([^?]+)\?/', $styles, $matches)) {
-      $result = $matches[1];
+    // Stylesheet URL may be the href of a LINK tag or in an @import statement
+    // of a STYLE tag.
+    if (preg_match_all('/(href="|url\(")' . preg_quote($GLOBALS['base_url'] . '/', '/') . '([^?]+)\?/', $styles, $matches)) {
+      $result = $matches[2];
     }
     else {
       $result = array();
@@ -677,6 +681,16 @@ class CascadingStylesheetsTestCase extends DrupalWebTestCase {
 
     // Change the language back to left to right.
     $language->direction = LANGUAGE_LTR;
+  }
+
+  /**
+   * Tests that the query string remains intact when adding CSS files that have
+   * query string parameters.
+   */
+  function testAddCssFileWithQueryString() {
+    $this->drupalGet('common-test/query-string');
+    $query_string = substr(variable_get('css_js_query_string', '0'), 0, 1);
+    $this->assertRaw(drupal_get_path('module', 'node') . '/node.css?arg1=value1&amp;arg2=value2&amp;' . $query_string, t('Query string was appended correctly to css.'));
   }
 }
 
@@ -1251,6 +1265,16 @@ class JavaScriptTestCase extends DrupalWebTestCase {
     $scripts = drupal_get_js();
     $this->assertTrue(strpos($scripts, 'misc/farbtastic/farbtastic.js'), t('The attached_library property adds the additional libraries.'));
   }
+
+  /**
+   * Tests that the query string remains intact when adding JavaScript files
+   *  that have query string parameters.
+   */
+  function testAddJsFileWithQueryString() {
+    $this->drupalGet('common-test/query-string');
+    $query_string = substr(variable_get('css_js_query_string', '0'), 0, 1);
+    $this->assertRaw(drupal_get_path('module', 'node') . '/node.js?arg1=value1&amp;arg2=value2&amp;' . $query_string, t('Query string was appended correctly to js.'));
+  }
 }
 
 /**
@@ -1536,6 +1560,26 @@ class DrupalDataApiTest extends DrupalWebTestCase {
     $result = db_query("SELECT * FROM {test_null} WHERE id = :id", array(':id' => $person->id))->fetchObject();
     $this->assertIdentical($result->name, 'Mary', t('Name field set.'));
     $this->assertIdentical($result->age, NULL, t('Age field set.'));
+
+    // Insert a record - the "data" column should be serialized.
+    $person = new stdClass();
+    $person->name = 'Dave';
+    $update_result = drupal_write_record('test_serialized', $person);
+    $result = db_query("SELECT * FROM {test_serialized} WHERE id = :id", array(':id' => $person->id))->fetchObject();
+    $this->assertIdentical($result->name, 'Dave', t('Name field set.'));
+    $this->assertIdentical($result->info, NULL, t('Info field set.'));
+
+    $person->info = array();
+    $update_result = drupal_write_record('test_serialized', $person, array('id'));
+    $result = db_query("SELECT * FROM {test_serialized} WHERE id = :id", array(':id' => $person->id))->fetchObject();
+    $this->assertIdentical(unserialize($result->info), array(), t('Info field updated.'));
+
+    // Update the serialized record.
+    $data = array('foo' => 'bar', 1 => 2, 'empty' => '', 'null' => NULL);
+    $person->info = $data;
+    $update_result = drupal_write_record('test_serialized', $person, array('id'));
+    $result = db_query("SELECT * FROM {test_serialized} WHERE id = :id", array(':id' => $person->id))->fetchObject();
+    $this->assertIdentical(unserialize($result->info), $data, t('Info field updated.'));
 
     // Run an update query where no field values are changed. The database
     // layer should return zero for number of affected rows, but

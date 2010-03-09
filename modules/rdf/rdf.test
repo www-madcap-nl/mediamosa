@@ -1,5 +1,5 @@
 <?php
-// $Id: rdf.test,v 1.7 2010/01/14 06:31:45 webchick Exp $
+// $Id: rdf.test,v 1.15 2010/03/03 17:06:42 dries Exp $
 
 /**
  * @file
@@ -17,9 +17,6 @@ class RdfMappingHookTestCase extends DrupalWebTestCase {
 
   function setUp() {
     parent::setUp('rdf', 'rdf_test', 'field_test');
-    // We need to trigger rdf_modules_installed() because
-    // hook_modules_installed() is not automatically invoked during testing.
-    rdf_modules_installed(array('rdf_test'));
   }
 
   /**
@@ -53,7 +50,6 @@ class RdfMarkupTestCase extends DrupalWebTestCase {
 
   function setUp() {
     parent::setUp('rdf', 'field_test', 'rdf_test');
-    rdf_modules_installed(array('field_test', 'rdf_test'));
   }
 
   /**
@@ -116,6 +112,64 @@ class RdfMarkupTestCase extends DrupalWebTestCase {
     $this->assertEqual($expected_attributes, $attributes);
   }
 
+  /**
+   * Ensure that file fields have the correct resource as the object in RDFa
+   * when displayed as a teaser.
+   */
+  function testAttributesInMarkupFile() {
+    // Create a user to post the image.
+    $admin_user = $this->drupalCreateUser(array('edit own article content', 'revert revisions', 'administer content types'));
+    $this->drupalLogin($admin_user);
+
+    $langcode = LANGUAGE_NONE;
+    $bundle_name = "article";
+
+    // Create file field.
+    $file_field = 'file_test';
+    $edit = array(
+      '_add_new_field[label]' => $file_field,
+      '_add_new_field[field_name]' => $file_field,
+      '_add_new_field[type]' => 'file',
+      '_add_new_field[widget_type]' => 'file_generic',
+    );
+    $this->drupalPost('admin/structure/types/manage/' . $bundle_name . '/fields',  $edit, t('Save'));
+    // Set the RDF mapping for the new field.
+    $rdf_mapping = rdf_mapping_load('node', $bundle_name);
+    $rdf_mapping += array('field_' . $file_field => array('predicates' => array('rdfs:seeAlso'), 'type' => 'rel'));
+    $rdf_mapping_save = array('mapping' => $rdf_mapping, 'type' => 'node', 'bundle' => $bundle_name);
+    rdf_mapping_save($rdf_mapping_save);
+
+    // Get the test file that simpletest provides.
+    $file = current($this->drupalGetTestFiles('text'));
+
+    // Prepare image variables.
+    $image_field = "field_image";
+    // Get the test image that simpletest provides.
+    $image = current($this->drupalGetTestFiles('image'));
+
+    // Create an array for drupalPost with the field names as the keys and
+    // the uris for the test files as the values.
+    $edit = array("files[field_" . $file_field . "_" . $langcode . "_0]" => drupal_realpath($file->uri),
+                  "files[" . $image_field . "_" . $langcode . "_0]" => drupal_realpath($image->uri));
+
+    // Create node and save, then edit node to upload files.
+    $node = $this->drupalCreateNode(array('type' => 'article', 'promote' => 1));
+    $this->drupalPost('node/' . $node->nid . '/edit', $edit, t('Save'));
+
+    // Get filenames and nid for comparison with HTML output.
+    $file_filename = $file->filename;
+    $image_filename = $image->filename;
+    $nid = $node->nid;
+    // Navigate to front page, where node is displayed in teaser form.
+    $this->drupalGet('node');
+
+    // We only check to make sure that the resource attribute contains '.txt'
+    // instead of the full file name because the filename is altered on upload.
+    $file_rel = $this->xpath("//div[contains(@about, 'node/$nid')]//div[contains(@rel, 'rdfs:seeAlso') and contains(@resource, '.txt')]");
+    $this->assertTrue(!empty($file_rel), t('Attribute \'rel\' set on file field. Attribute \'resource\' is also set.'));
+    $image_rel = $this->xpath("//div[contains(@about, 'node/$nid')]//div[contains(@rel, 'rdfs:seeAlso') and contains(@resource, '$image_filename')]//img[contains(@typeof, 'foaf:Image')]");
+    $this->assertTrue(!empty($image_rel), t('Attribute \'rel\' set on image field. Attribute \'resource\' is also set.'));
+  }
 }
 
 class RdfCrudTestCase extends DrupalWebTestCase {
@@ -135,31 +189,54 @@ class RdfCrudTestCase extends DrupalWebTestCase {
    * Test inserting, loading, updating, and deleting RDF mappings.
    */
   function testCRUD() {
-    $test_mapping = rdf_test_rdf_mapping();
-
     // Verify loading of a default mapping.
-    $this->assertFalse(count(_rdf_mapping_load('test_entity', 'test_bundle')), t('Default mapping was found.'));
+    $mapping = _rdf_mapping_load('test_entity', 'test_bundle');
+    $this->assertTrue(count($mapping), t('Default mapping was found.'));
 
     // Verify saving a mapping.
-    $mapping = (array) $test_mapping;
-    rdf_mapping_save($mapping[0]);
-    $this->assertEqual($mapping[0]['mapping'], $test_mapping[0]['mapping'], t('Saved mapping equals default mapping.'));
-    $this->assertTrue(rdf_mapping_save($mapping[1]) === SAVED_NEW, t('Second mapping was inserted.'));
-    $this->assertEqual($mapping[1]['mapping'], _rdf_mapping_load($test_mapping[1]['type'], $test_mapping[1]['bundle']), t('Second mapping equals default mapping.'));
+    $mapping = array(
+      'type' => 'crud_test_entity',
+      'bundle' => 'crud_test_bundle',
+      'mapping' => array(
+        'rdftype' => array('sioc:Post'),
+        'title' => array(
+          'predicates' => array('dc:title'),
+        ),
+        'uid' => array(
+          'predicates' => array('sioc:has_creator', 'dc:creator'),
+          'type' => 'rel',
+        ),
+      ),
+    );
+    $this->assertTrue(rdf_mapping_save($mapping) === SAVED_NEW, t('Mapping was saved.'));
+
+    // Read the raw record from the {rdf_mapping} table.
+    $result = db_query('SELECT * FROM {rdf_mapping} WHERE type = :type AND bundle = :bundle', array(':type' => $mapping['type'], ':bundle' => $mapping['bundle']));
+    $stored_mapping = $result->fetchAssoc();
+    $stored_mapping['mapping'] = unserialize($stored_mapping['mapping']);
+    $this->assertEqual($mapping, $stored_mapping, t('Mapping was stored properly in the {rdf_mapping} table.'));
 
     // Verify loading of saved mapping.
-    $this->assertEqual($mapping[0]['mapping'], _rdf_mapping_load($test_mapping[0]['type'], $test_mapping[0]['bundle']), t('Saved mapping equals loaded default mapping.'));
+    $this->assertEqual($mapping['mapping'], _rdf_mapping_load($mapping['type'], $mapping['bundle']), t('Saved mapping loaded successfully.'));
 
     // Verify updating of mapping.
-    $mapping[0]['mapping']['boofar'] = array(
-      'predicates' => array('foo:bar'),
+    $mapping['mapping']['title'] = array(
+      'predicates' => array('dc2:bar2'),
     );
-    $this->assertTrue(rdf_mapping_save($mapping[0]) === SAVED_UPDATED, t('Mapping was updated.'));
-    $this->assertEqual($mapping[0]['mapping'], _rdf_mapping_load($test_mapping[0]['type'], $test_mapping[0]['bundle']), t('Updated and loaded mapping are equal.'));
+    $this->assertTrue(rdf_mapping_save($mapping) === SAVED_UPDATED, t('Mapping was updated.'));
+
+    // Read the raw record from the {rdf_mapping} table.
+    $result = db_query('SELECT * FROM {rdf_mapping} WHERE type = :type AND bundle = :bundle', array(':type' => $mapping['type'], ':bundle' => $mapping['bundle']));
+    $stored_mapping = $result->fetchAssoc();
+    $stored_mapping['mapping'] = unserialize($stored_mapping['mapping']);
+    $this->assertEqual($mapping, $stored_mapping, t('Updated mapping was stored properly in the {rdf_mapping} table.'));
+
+    // Verify loading of saved mapping.
+    $this->assertEqual($mapping['mapping'], _rdf_mapping_load($mapping['type'], $mapping['bundle']), t('Saved mapping loaded successfully.'));
 
     // Verify deleting of mapping.
-    $this->assertTrue(rdf_mapping_delete($test_mapping[0]['type'], $test_mapping[0]['bundle']), t('Mapping was deleted.'));
-    $this->assertFalse(_rdf_mapping_load($test_mapping[0]['type'], $test_mapping[0]['bundle']), t('Deleted mapping is no longer found.'));
+    $this->assertTrue(rdf_mapping_delete($mapping['type'], $mapping['bundle']), t('Mapping was deleted.'));
+    $this->assertFalse(_rdf_mapping_load($mapping['type'], $mapping['bundle']), t('Deleted mapping is no longer found in the database.'));
   }
 }
 
@@ -174,12 +251,6 @@ class RdfMappingDefinitionTestCase extends DrupalWebTestCase {
 
   function setUp() {
     parent::setUp('rdf', 'rdf_test', 'blog');
-    // We need to trigger rdf_modules_installed() because
-    // hook_modules_installed() is not automatically invoked during testing.
-    rdf_modules_installed(array('rdf_test', 'node'));
-    // entity_info caches must be cleared during testing. This is done
-    // automatically during the manual installation.
-    entity_info_cache_clear();
   }
 
   /**
@@ -232,17 +303,34 @@ class RdfMappingDefinitionTestCase extends DrupalWebTestCase {
   /**
    * Create a random user and ensure the default mapping for user is used.
    */
-  function testUserProfilesAttributesInMarkup() {
-    // Create a user with access to user profiles.
-    $user = $this->drupalCreateUser(array('access user profiles'));
-    $this->drupalLogin($user);
+  function testUserAttributesInMarkup() {
+    // Create two users, one with access to user profiles.
+    $user1 = $this->drupalCreateUser(array('access user profiles'));
+    $user2 = $this->drupalCreateUser();
+    $username = $user2->name;
+    $this->drupalLogin($user1);
     // Browse to the user profile page.
-    $this->drupalGet('user/' . $user->uid);
-    // Ensure the default bundle mapping for user is used. These attributes come
-    // from the user default bundle definition.
-    $profile_url = url('user/' . $user->uid);
-    $user_profile_about = $this->xpath("//div[@class='profile' and @typeof='sioc:User' and @about='$profile_url']");
-    $this->assertTrue(!empty($user_profile_about), t('RDFa markup found on user profile page'));
+    $this->drupalGet('user/' . $user2->uid);
+    // Ensure the default bundle mapping for user is used on the user profile
+    // page. These attributes come from the user default bundle definition.
+    $account_uri = url('user/' . $user2->uid);
+    $person_uri = url('user/' . $user2->uid, array('fragment' => 'me'));
+    $user2_profile_about = $this->xpath("//div[@class='profile' and @typeof='sioc:User' and @about='$account_uri']");
+    $this->assertTrue(!empty($user2_profile_about), t('RDFa markup found on user profile page'));
+    $user_account_holder = $this->xpath("//meta[contains(@typeof, 'foaf:Person') and @about='$person_uri' and @resource='$account_uri' and contains(@rel, 'foaf:account')]");
+    $this->assertTrue(!empty($user_account_holder), t('URI created for account holder and username set on sioc:User.'));
+    $user_username = $this->xpath("//meta[@about='$account_uri' and contains(@property, 'foaf:name') and @content='$username']");
+    $this->assertTrue(!empty($user_username), t('foaf:name set on username.'));
+
+    // User 2 creates node.
+    $this->drupalLogin($user2);
+    $node = $this->drupalCreateNode(array('type' => 'article', 'promote' => 1));
+    $this->drupalLogin($user1);
+    $this->drupalGet('node/' . $node->nid);
+    // Ensures the default bundle mapping for user is used on the Authored By
+    // information on the node.
+    $author_about = $this->xpath("//a[@typeof='sioc:User' and @about='$account_uri' and @property='foaf:name' and contains(@xml:lang, '')]");
+    $this->assertTrue(!empty($author_about), t('RDFa markup found on author information on post. xml:lang on username is set to empty string.'));
   }
 }
 
@@ -258,13 +346,6 @@ class RdfTrackerAttributesTestCase extends DrupalWebTestCase {
 
   function setUp() {
     parent::setUp('rdf', 'rdf_test', 'tracker');
-    // We need to trigger rdf_modules_installed() because
-    // hook_modules_installed() is not automatically invoked during testing.
-    rdf_modules_installed(array('rdf_test', 'node'));
-    // entity_info caches must be cleared during testing. This is done
-    // automatically during the manual installation.
-    cache_clear_all('entity_info', 'cache');
-    drupal_static_reset('entity_get_info');
     // Enable anonymous posting of content.
     user_role_change_permissions(DRUPAL_ANONYMOUS_RID, array(
       'create article content' => TRUE,
@@ -331,7 +412,7 @@ class RdfTrackerAttributesTestCase extends DrupalWebTestCase {
     }
 
     // Tests whether the property has been set for number of comments.
-    $tracker_replies = $this->xpath("//tr[@about='$url']//td[contains(@property, 'sioc:num_replies') and contains(@content, '0')]");
+    $tracker_replies = $this->xpath("//tr[@about='$url']//td[contains(@property, 'sioc:num_replies') and contains(@content, '0') and @datatype='xsd:integer']");
     $this->assertTrue($tracker_replies, t('Num replies property and content attributes found on @user content.', array('@user'=> $user)));
 
     // Tests that the appropriate RDFa markup to annotate the latest activity
@@ -347,9 +428,9 @@ class RdfTrackerAttributesTestCase extends DrupalWebTestCase {
     $this->drupalGet('tracker');
 
     // Tests whether the property has been set for number of comments.
-    $tracker_replies = $this->xpath("//tr[@about='$url']//td[contains(@property, 'sioc:num_replies') and contains(@content, '1')]");
+    $tracker_replies = $this->xpath("//tr[@about='$url']//td[contains(@property, 'sioc:num_replies') and contains(@content, '1') and @datatype='xsd:integer']");
     $this->assertTrue($tracker_replies, t('Num replies property and content attributes found on @user content.', array('@user'=> $user)));
-    
+
     // Need to query database directly to obtain last_activity_date because
     // it cannot be accessed via node_load().
     $result = db_query('SELECT t.changed FROM {tracker_node} t WHERE t.nid = (:nid)', array(':nid' => $node->nid));

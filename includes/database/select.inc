@@ -1,5 +1,5 @@
 <?php
-// $Id: select.inc,v 1.31 2009/12/13 18:06:48 webchick Exp $
+// $Id: select.inc,v 1.34 2010/02/17 05:24:53 webchick Exp $
 
 /**
  * @ingroup database
@@ -541,7 +541,7 @@ class SelectQueryExtender implements SelectQueryInterface {
     return $this->condition->compile($connection, isset($queryPlaceholder) ? $queryPlaceholder : $this);
   }
 
-  /* Implmeentations of QueryConditionInterface for the HAVING clause. */
+  /* Implementations of QueryConditionInterface for the HAVING clause. */
 
   public function havingCondition($field, $value = NULL, $operator = '=') {
     $this->query->condition($field, $value, $operator, $num_args);
@@ -940,7 +940,7 @@ class SelectQuery extends Query implements SelectQueryInterface {
     return $this->where->compile($connection, isset($queryPlaceholder) ? $queryPlaceholder : $this);
   }
 
-  /* Implmeentations of QueryConditionInterface for the HAVING clause. */
+  /* Implementations of QueryConditionInterface for the HAVING clause. */
 
   public function havingCondition($field, $value = NULL, $operator = '=') {
     if (!isset($num_args)) {
@@ -970,7 +970,7 @@ class SelectQuery extends Query implements SelectQueryInterface {
   /* Implementations of QueryExtendableInterface. */
 
   public function extend($extender_name) {
-    $override_class = __CLASS__ . $this->connection->driver();
+    $override_class = $extender_name . '_' . $this->connection->driver();
     if (class_exists($override_class)) {
       $extender_name = $override_class;
     }
@@ -1250,23 +1250,32 @@ class SelectQuery extends Query implements SelectQueryInterface {
     // Create our new query object that we will mutate into a count query.
     $count = clone($this);
 
-    // Zero-out existing fields and expressions.
-    $fields =& $count->getFields();
-    $fields = array();
-    $expressions =& $count->getExpressions();
-    $expressions = array();
+    if (!$count->distinct) {
+      // When not executing a distinct query, we can zero-out existing fields
+      // and expressions.
+      $fields =& $count->getFields();
+      $fields = array();
+      $expressions =& $count->getExpressions();
+      $expressions = array();
 
-
-    // Also remove 'all_fields' statements, which are expanded into tablename.*
-    // when the query is executed.
-    foreach ($count->tables as $alias => &$table) {
-      unset($table['all_fields']);
+      // Also remove 'all_fields' statements, which are expanded into tablename.*
+      // when the query is executed.
+      foreach ($count->tables as $alias => &$table) {
+        unset($table['all_fields']);
+      }
     }
 
     // Ordering a count query is a waste of cycles, and breaks on some
     // databases anyway.
     $orders = &$count->getOrderBy();
     $orders = array();
+
+    if ($count->distinct) {
+      // If the query is distinct, we need to execute it in a subquery,
+      // because SQL99 does not support counting on distinct multiple fields.
+      $count = db_select($count);
+      $count->distinct = FALSE;
+    }
 
     // COUNT() is an expression, so we add that back in.
     $count->addExpression('COUNT(*)');

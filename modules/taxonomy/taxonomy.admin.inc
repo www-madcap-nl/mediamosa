@@ -1,5 +1,5 @@
 <?php
-// $Id: taxonomy.admin.inc,v 1.91 2010/01/09 12:54:51 dries Exp $
+// $Id: taxonomy.admin.inc,v 1.95 2010/03/07 23:14:20 webchick Exp $
 
 /**
  * @file
@@ -643,12 +643,15 @@ function taxonomy_form_term($form, &$form_state, $edit = array(), $vocabulary = 
     '#title' => t('Name'),
     '#default_value' => $edit['name'],
     '#maxlength' => 255,
-    '#required' => TRUE);
+    '#required' => TRUE,
+    '#weight' => -5,
+  );
   $form['description'] = array(
-    '#type' => 'textarea',
+    '#type' => 'text_format',
     '#title' => t('Description'),
     '#default_value' => $edit['description'],
-    '#text_format' => $edit['format'],
+    '#format' => $edit['format'],
+    '#weight' => 0,
   );
 
   $form['vocabulary_machine_name'] = array(
@@ -664,6 +667,7 @@ function taxonomy_form_term($form, &$form_state, $edit = array(), $vocabulary = 
     '#title' => t('Relations'),
     '#collapsible' => TRUE,
     '#collapsed' => $vocabulary->hierarchy < 2,
+    '#weight' => 10,
   );
 
   // taxonomy_get_tree and taxonomy_get_parents may contain large numbers of
@@ -702,23 +706,35 @@ function taxonomy_form_term($form, &$form_state, $edit = array(), $vocabulary = 
     '#size' => 6,
     '#default_value' => $edit['weight'],
     '#description' => t('Terms are displayed in ascending order by weight.'),
-    '#required' => TRUE);
+    '#required' => TRUE,
+  );
   $form['vid'] = array(
     '#type' => 'value',
-    '#value' => $vocabulary->vid);
-  $form['submit'] = array(
+    '#value' => $vocabulary->vid,
+  );
+  $form['tid'] = array(
+    '#type' => 'value',
+    '#value' => $edit['tid'],
+  );
+
+  $form['actions'] = array(
+    '#type' => 'container',
+    '#attributes' => array('class' => array('form-actions')),
+    '#weight' => 100,
+  );
+  $form['actions']['submit'] = array(
     '#type' => 'submit',
-    '#value' => t('Save'));
+    '#value' => t('Save'),
+    '#weight' => 5,
+  );
 
   if ($edit['tid']) {
-    $form['delete'] = array(
+    $form['actions']['delete'] = array(
       '#type' => 'submit',
       '#value' => t('Delete'),
       '#access' => user_access("delete terms in $vocabulary->vid") || user_access('administer taxonomy'),
+      '#weight' => 10,
     );
-    $form['tid'] = array(
-      '#type' => 'value',
-      '#value' => $edit['tid']);
   }
   else {
     $form_state['redirect'] = $_GET['q'];
@@ -763,10 +779,6 @@ function taxonomy_form_term_submit($form, &$form_state) {
     $form_state['confirm_parents'] = TRUE;
     return;
   }
-
-  // Massage #text_format.
-  $form_state['values']['format'] = $form_state['values']['description_format'];
-  unset($form_state['values']['description_format']);
 
   $term = taxonomy_form_term_submit_builder($form, $form_state);
 
@@ -848,18 +860,21 @@ function taxonomy_term_confirm_parents($form, &$form_state, $vocabulary) {
 function taxonomy_term_confirm_delete($form, &$form_state, $tid) {
   $term = taxonomy_term_load($tid);
 
+  // Always provide entity id in the same form key as in the entity edit form.
+  $form['tid'] = array('#type' => 'value', '#value' => $tid);
+
+  $form['#term'] = $term;
   $form['type'] = array('#type' => 'value', '#value' => 'term');
   $form['name'] = array('#type' => 'value', '#value' => $term->name);
-  $form['tid'] = array('#type' => 'value', '#value' => $tid);
   $form['vocabulary_machine_name'] = array('#type' => 'value', '#value' => $term->vocabulary_machine_name);
   $form['delete'] = array('#type' => 'value', '#value' => TRUE);
   return confirm_form($form,
-                  t('Are you sure you want to delete the term %title?',
-                  array('%title' => $term->name)),
-                  'admin/structure/taxonomy',
-                  t('Deleting a term will delete all its children if there are any. This action cannot be undone.'),
-                  t('Delete'),
-                  t('Cancel'));
+    t('Are you sure you want to delete the term %title?',
+    array('%title' => $term->name)),
+    'admin/structure/taxonomy',
+    t('Deleting a term will delete all its children if there are any. This action cannot be undone.'),
+    t('Delete'),
+    t('Cancel'));
 }
 
 /**
@@ -885,18 +900,21 @@ function taxonomy_term_confirm_delete_submit($form, &$form_state) {
 function taxonomy_vocabulary_confirm_delete($form, &$form_state, $vid) {
   $vocabulary = taxonomy_vocabulary_load($vid);
 
+  // Always provide entity id in the same form key as in the entity edit form.
+  $form['vid'] = array('#type' => 'value', '#value' => $vid);
+
+  $form['#vocabulary'] = $vocabulary;
   $form['#id'] = 'taxonomy_vocabulary_confirm_delete';
   $form['type'] = array('#type' => 'value', '#value' => 'vocabulary');
-  $form['vid'] = array('#type' => 'value', '#value' => $vid);
   $form['name'] = array('#type' => 'value', '#value' => $vocabulary->name);
   $form['#submit'] = array('taxonomy_vocabulary_confirm_delete_submit');
   return confirm_form($form,
-                  t('Are you sure you want to delete the vocabulary %title?',
-                  array('%title' => $vocabulary->name)),
-                  'admin/structure/taxonomy',
-                  t('Deleting a vocabulary will delete all the terms in it. This action cannot be undone.'),
-                  t('Delete'),
-                  t('Cancel'));
+    t('Are you sure you want to delete the vocabulary %title?',
+    array('%title' => $vocabulary->name)),
+    'admin/structure/taxonomy',
+    t('Deleting a vocabulary will delete all the terms in it. This action cannot be undone.'),
+    t('Delete'),
+    t('Cancel'));
 }
 
 /**

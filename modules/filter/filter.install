@@ -1,5 +1,5 @@
 <?php
-// $Id: filter.install,v 1.28 2010/01/09 22:07:56 webchick Exp $
+// $Id: filter.install,v 1.34 2010/03/05 13:32:09 dries Exp $
 
 /**
  * @file
@@ -37,7 +37,6 @@ function filter_schema() {
         'type' => 'int',
         'not null' => TRUE,
         'default' => 0,
-        'size' => 'tiny',
         'description' => 'Weight of filter within format.',
       ),
       'status' => array(
@@ -89,7 +88,6 @@ function filter_schema() {
         'type' => 'int',
         'not null' => TRUE,
         'default' => 0,
-        'size' => 'tiny',
         'description' => 'Weight of text format to use when listing.',
       )
     ),
@@ -106,6 +104,55 @@ function filter_schema() {
   $schema['cache_filter']['description'] = 'Cache table for the Filter module to store already filtered pieces of text, identified by text format and md5 hash of the text.';
 
   return $schema;
+}
+
+/**
+ * Implements hook_install().
+ */
+function filter_install() {
+  // All sites require at least one text format (the fallback format) that all
+  // users have access to, so add it here. We initialize it as a simple, safe
+  // plain text format with very basic formatting, but it can be modified by
+  // installation profiles to have other properties.
+  $plain_text_format = array(
+    'name' => 'Plain text',
+    'weight' => 10,
+    'filters' => array(
+      // Escape all HTML.
+      'filter_html_escape' => array(
+        'weight' => 0,
+        'status' => 1,
+      ),
+      // URL filter.
+      'filter_url' => array(
+        'weight' => 1,
+        'status' => 1,
+      ),
+      // Line break filter.
+      'filter_autop' => array(
+        'weight' => 2,
+        'status' => 1,
+      ),
+    ),
+  );
+  $plain_text_format = (object) $plain_text_format;
+  filter_format_save($plain_text_format);
+
+  // Set the fallback format to plain text.
+  variable_set('filter_fallback_format', $plain_text_format->format);
+}
+
+/**
+ * Implements hook_update_dependencies().
+ */
+function filter_update_dependencies() {
+  // Filter update 7005 migrates block data and therefore needs to run after
+  // the {block_custom} table is properly set up.
+  $dependencies['filter'][7005] = array(
+    'taxonomy' => 7002,
+  );
+
+  return $dependencies;
 }
 
 /**
@@ -306,18 +353,27 @@ function filter_update_7005() {
   $start_name = 'Plain text';
   $format_name = $start_name;
   while ($format = db_query('SELECT format FROM {filter_format} WHERE name = :name', array(':name' => $format_name))->fetchField()) {
-    $id = empty($id) ? 1 : $id + 1;
+    $id = empty($id) ? 2 : $id + 1;
     $format_name = $start_name . ' ' . $id;
   }
   $fallback_format = new stdClass();
   $fallback_format->name = $format_name;
-  $fallback_format->cache = 1;
   $fallback_format->weight = 1;
   // This format should output plain text, so we escape all HTML and apply the
-  // line break filter only.
+  // line break and URL filters only.
   $fallback_format->filters = array(
-    'filter_html_escape' => array('status' => 1),
-    'filter_autop' => array('status' => 1),
+    'filter_html_escape' => array(
+      'weight' => 0,
+      'status' => 1,
+    ),
+    'filter_url' => array(
+      'weight' => 1,
+      'status' => 1,
+    ),
+    'filter_autop' => array(
+      'weight' => 2,
+      'status' => 1,
+    ),
   );
   filter_format_save($fallback_format);
   variable_set('filter_fallback_format', $fallback_format->format);
@@ -335,8 +391,9 @@ function filter_update_7005() {
   // using the default text format. Therefore, we have to convert all such
   // instances (in Drupal core) to explicitly use the appropriate format.
   // Note that the update of the node body field is handled separately, in
-  // node_update_7006().
-  foreach (array('block_custom', 'comment') as $table) {
+  // node_update_7006(), as is the update of the comment body field, in
+  // comment_update_7013().
+  foreach (array('block_custom') as $table) {
     if (db_table_exists($table)) {
       db_update($table)
         ->fields(array('format' => $default_format))
@@ -356,6 +413,56 @@ function filter_update_7005() {
 function filter_update_7006() {
   db_drop_index('filter', 'list');
   db_add_index('filter', 'list', array('weight', 'module', 'name'));
+}
+
+/**
+ * Change the weight columns to normal int.
+ */
+function filter_update_7007() {
+  db_drop_index('filter', 'list');
+  db_change_field('filter', 'weight', 'weight', array(
+    'type' => 'int',
+    'not null' => TRUE,
+    'default' => 0,
+    'description' => 'Weight of filter within format.',
+  ), array(
+    'indexes' => array(
+      'list' => array('weight', 'module', 'name'),
+    ),
+  ));
+
+  db_drop_index('filter_format', 'weight');
+  db_change_field('filter_format', 'weight', 'weight', array(
+    'type' => 'int',
+    'not null' => TRUE,
+    'default' => 0,
+    'description' => 'Weight of text format to use when listing.',
+  ), array(
+    'indexes' => array(
+      'weight' => array('weight'),
+    ),
+  ));
+}
+
+/**
+ * Grant usage of all text formats to user roles having the 'administer filters' permission.
+ */
+function filter_update_7008() {
+  // Build the list of permissions to grant.
+  $permissions = array();
+  foreach (filter_formats() as $format_id => $format) {
+    if ($permission = filter_permission_name($format)) {
+      $permissions[] = $permission;
+    }
+  }
+  // Grant text format permissions to all roles that can 'administer filters'.
+  // Albeit anonymous users *should not* have the permission, we cannot presume
+  // that they do not or must not.
+  if ($roles = user_roles(FALSE, 'administer filters')) {
+    foreach ($roles as $rid => $name) {
+      user_role_grant_permissions($rid, $permissions);
+    }
+  }
 }
 
 /**

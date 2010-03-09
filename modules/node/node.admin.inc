@@ -1,5 +1,5 @@
 <?php
-// $Id: node.admin.inc,v 1.88 2010/01/13 23:30:43 dries Exp $
+// $Id: node.admin.inc,v 1.92 2010/03/07 06:49:10 webchick Exp $
 
 /**
  * @file
@@ -97,15 +97,6 @@ function node_filters() {
     ) + node_type_get_names(),
   );
 
-  // The taxonomy filter
-  if ($taxonomy = module_invoke('taxonomy', 'form_all', 1)) {
-    $filters['term'] = array(
-      'title' => t('term'),
-      'options' => array(
-        '[any]' => t('any'),
-      ) + $taxonomy,
-    );
-  }
   // Language filter if there is a list of languages
   if ($languages = module_invoke('locale', 'language_list')) {
     $languages = array(LANGUAGE_NONE => t('Language neutral')) + $languages;
@@ -229,6 +220,8 @@ function theme_node_filters($variables) {
   }
   $output .= '</ul>';
 
+  $output .= '<div class="clearfix">';
+
   $output .= '<dl class="multiselect">' . (!empty($form['current']) ? '<dt><em>' . t('and') . '</em> ' . t('where') . '</dt>' : '');
 
   $output .= '<dd>';
@@ -240,6 +233,8 @@ function theme_node_filters($variables) {
 
   $output .= '</dl>';
   $output .= drupal_render($form['actions']);
+
+  $output .= '</div>';
 
   return $output;
 }
@@ -397,8 +392,7 @@ function node_admin_nodes() {
   $form['options'] = array(
     '#type' => 'fieldset',
     '#title' => t('Update options'),
-    '#prefix' => '<div class="container-inline">',
-    '#suffix' => '</div>',
+    '#attributes' => array('class' => array('container-inline')),
     '#access' => $admin_access,
   );
   $options = array();
@@ -622,12 +616,4 @@ function node_multiple_delete_confirm_submit($form, &$form_state) {
     drupal_set_message(t('Deleted @count posts.', array('@count' => $count)));
   }
   $form_state['redirect'] = 'admin/content';
-}
-
-/**
- * Implements hook_modules_installed().
- */
-function node_modules_installed($modules) {
-  // Clear node type cache for node permissions.
-  drupal_static_reset('_node_types_build');
 }

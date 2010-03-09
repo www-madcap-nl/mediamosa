@@ -1,5 +1,5 @@
 <?php
-// $Id: simpletest.pages.inc,v 1.23 2010/01/15 04:16:57 dries Exp $
+// $Id: simpletest.pages.inc,v 1.25 2010/02/07 05:36:57 webchick Exp $
 
 /**
  * @file
@@ -83,8 +83,8 @@ function theme_simpletest_test_table($variables) {
   // Define the images used to expand/collapse the test groups.
   $js = array(
     'images' => array(
-      theme('image', array('path' => 'misc/menu-collapsed.png', 'alt' => 'Expand', 'title' => 'Expand')),
-      theme('image', array('path' => 'misc/menu-expanded.png', 'alt' => 'Collapsed', 'title' => 'Collapsed')),
+      theme('image', array('path' => 'misc/menu-collapsed.png', 'alt' => t('Expand'), 'title' => t('Expand'))) . ' <a href="#" class="simpletest-collapse">(' . t('Expand') . ')</a>',
+      theme('image', array('path' => 'misc/menu-expanded.png', 'alt' => t('Collapse'), 'title' => t('Collapse'))) . ' <a href="#" class="simpletest-collapse">(' . t('Collapse') . ')</a>',
     ),
   );
 
@@ -360,6 +360,7 @@ function simpletest_result_form_submit($form, &$form_state) {
   }
 
   simpletest_test_form_submit(array(), $form_state_execute);
+  $form_state['redirect'] = $form_state_execute['redirect'];
 }
 
 /**

@@ -1,5 +1,5 @@
 <?php
-// $Id: user.install,v 1.35 2010/01/09 22:07:57 webchick Exp $
+// $Id: user.install,v 1.40 2010/03/01 07:39:12 dries Exp $
 
 /**
  * @file
@@ -64,6 +64,13 @@ function user_schema() {
         'not null' => TRUE,
         'default' => '',
         'description' => 'A single permission granted to the role identified by rid.',
+      ),
+      'module' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => "The module declaring the permission.",
       ),
     ),
     'primary key' => array('rid', 'permission'),
@@ -245,6 +252,58 @@ function user_schema() {
 }
 
 /**
+ * Implements hook_install().
+ */
+function user_install() {
+  // Insert a row for the anonymous user.
+  db_insert('users')
+    ->fields(array(
+      'uid' => 0,
+      'name' => '',
+      'mail' => '',
+    ))
+    ->execute();
+
+  // We need some placeholders here as name and mail are uniques and data is
+  // presumed to be a serialized array. This will be changed by the settings
+  // form in the installer.
+  db_insert('users')
+    ->fields(array(
+      'uid' => 1,
+      'name' => 'placeholder-for-uid-1',
+      'mail' => 'placeholder-for-uid-1',
+      'created' => REQUEST_TIME,
+      'status' => 1,
+      'data' => serialize(array()),
+    ))
+    ->execute();
+
+  // Built-in roles.
+  $rid_anonymous = db_insert('role')
+    ->fields(array('name' => 'anonymous user'))
+    ->execute();
+  $rid_authenticated = db_insert('role')
+    ->fields(array('name' => 'authenticated user'))
+    ->execute();
+
+  // Sanity check to ensure the anonymous and authenticated role IDs are the
+  // same as the drupal defined constants. In certain situations, this will
+  // not be true.
+  if ($rid_anonymous != DRUPAL_ANONYMOUS_RID) {
+    db_update('role')
+      ->fields(array('rid' => DRUPAL_ANONYMOUS_RID))
+      ->condition('rid', $rid_anonymous)
+      ->execute();
+  }
+  if ($rid_authenticated != DRUPAL_AUTHENTICATED_RID) {
+    db_update('role')
+      ->fields(array('rid' => DRUPAL_AUTHENTICATED_RID))
+      ->condition('rid', $rid_authenticated)
+      ->execute();
+  }
+}
+
+/**
  * @defgroup user-updates-6.x-to-7.x User updates from 6.x to 7.x
  * @{
  */
@@ -413,7 +472,7 @@ function user_update_7004(&$sandbox) {
     'type' => 'int',
     'not null' => TRUE,
     'default' => 0,
-    'description' => t("Foriegn key: {file}.fid of user's picture."),
+    'description' => t("Foreign key: {file}.fid of user's picture."),
   );
 
   if (!isset($sandbox['progress'])) {
@@ -436,30 +495,29 @@ function user_update_7004(&$sandbox) {
   $result = db_query_range("SELECT uid, picture FROM {users} WHERE picture <> '' AND uid > :uid ORDER BY uid", 0, $limit, array(':uid' => $sandbox['last_user_processed']));
   foreach ($result as $user) {
     // Don't bother adding files that don't exist.
-    if (!file_exists($user->picture)) {
-      continue;
-    }
+    if (file_exists($user->picture)) {
 
-    // Check if the file already exists.
-    $files = file_load_multiple(array(), array('uri' => $user->picture));
-    if (count($files)) {
-      $file = reset($files);
-    }
-    else {
-      // Create a file object.
-      $file = new stdClass();
-      $file->uri      = $user->picture;
-      $file->filename = basename($file->uri);
-      $file->filemime = file_get_mimetype($file->uri);
-      $file->uid      = $user->uid;
-      $file->status   = FILE_STATUS_PERMANENT;
-      $file = file_save($file);
-    }
+      // Check if the file already exists.
+      $files = file_load_multiple(array(), array('uri' => $user->picture));
+      if (count($files)) {
+        $file = reset($files);
+      }
+      else {
+        // Create a file object.
+        $file = new stdClass();
+        $file->uri      = $user->picture;
+        $file->filename = basename($file->uri);
+        $file->filemime = file_get_mimetype($file->uri);
+        $file->uid      = $user->uid;
+        $file->status   = FILE_STATUS_PERMANENT;
+        $file = file_save($file);
+      }
 
-    db_update('users')
-      ->fields(array('picture_fid' => $file->fid))
-      ->condition('uid', $user->uid)
-      ->execute();
+      db_update('users')
+        ->fields(array('picture_fid' => $file->fid))
+        ->condition('uid', $user->uid)
+        ->execute();
+    }
 
     // Update our progress information for the batch update.
     $sandbox['progress']++;
@@ -491,3 +549,28 @@ function user_update_7005(&$sandbox) {
  * The next series of updates should start at 8000.
  */
 
+/**
+ * Add module data to {role_permission}.
+ */
+function user_update_7006(&$sandbox) {
+  $module_field = array(
+    'type' => 'varchar',
+    'length' => 255,
+    'not null' => TRUE,
+    'default' => '',
+    'description' => "The module declaring the permission.",
+  );
+  // Check that the field hasn't been updated in an aborted run of this
+  // update.
+  if (!db_column_exists('role_permission', 'module')) {
+    // Add a new field for the fid.
+    db_add_field('role_permission', 'module', $module_field);
+  }
+  $permissions = user_permission_get_modules();
+  foreach ($permissions as $key => $value) {
+    db_update('role_permission')
+      ->fields(array('module' => $value))
+      ->condition('permission', $key)
+      ->execute();
+  }
+}

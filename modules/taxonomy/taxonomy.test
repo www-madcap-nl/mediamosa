@@ -1,5 +1,5 @@
 <?php
-// $Id: taxonomy.test,v 1.68 2010/01/10 22:56:51 webchick Exp $
+// $Id: taxonomy.test,v 1.72 2010/03/07 23:14:20 webchick Exp $
 
 /**
  * @file
@@ -33,6 +33,7 @@ class TaxonomyWebTestCase extends DrupalWebTestCase {
   function createTerm($vocabulary) {
     $term = new stdClass();
     $term->name = $this->randomName();
+    $term->description = $this->randomName();
     $term->vid = $vocabulary->vid;
     taxonomy_term_save($term);
     return $term;
@@ -323,6 +324,21 @@ class TaxonomyTermTestCase extends TaxonomyWebTestCase {
     $this->drupalLogin($this->admin_user);
     $this->vocabulary = $this->createVocabulary();
 
+    $field = array(
+      'field_name' => 'taxonomy_' . $this->vocabulary->machine_name,
+      'type' => 'taxonomy_term_reference',
+      'cardinality' => FIELD_CARDINALITY_UNLIMITED,
+      'settings' => array(
+        'allowed_values' => array(
+          array(
+            'vid' => $this->vocabulary->vid,
+            'parent' => 0,
+          ),
+        ),
+      ),
+    );
+    field_create_field($field);
+
     $this->instance = array(
       'field_name' => 'taxonomy_' . $this->vocabulary->machine_name,
       'bundle' => 'article',
@@ -432,7 +448,7 @@ class TaxonomyTermTestCase extends TaxonomyWebTestCase {
   function testTermInterface() {
     $edit = array(
       'name' => $this->randomName(12),
-      'description' => $this->randomName(100),
+      'description[value]' => $this->randomName(100),
     );
     // Explicitly set the parents field to 'root', to ensure that
     // taxonomy_form_term_submit() handles the invalid term ID correctly.
@@ -454,11 +470,11 @@ class TaxonomyTermTestCase extends TaxonomyWebTestCase {
     $this->clickLink(t('edit'));
 
     $this->assertText($edit['name'], t('The randomly generated term name is present.'));
-    $this->assertText($edit['description'], t('The randomly generated term description is present.'));
+    $this->assertText($edit['description[value]'], t('The randomly generated term description is present.'));
 
     $edit = array(
       'name' => $this->randomName(14),
-      'description' => $this->randomName(102),
+      'description[value]' => $this->randomName(102),
     );
 
     // Edit the term.
@@ -467,7 +483,7 @@ class TaxonomyTermTestCase extends TaxonomyWebTestCase {
     // View the term and check that it is correct.
     $this->drupalGet('taxonomy/term/' . $term->tid);
     $this->assertText($edit['name'], t('The randomly generated term name is present.'));
-    $this->assertText($edit['description'], t('The randomly generated term description is present.'));
+    $this->assertText($edit['description[value]'], t('The randomly generated term description is present.'));
 
     // Check that term feed page is working
     $this->drupalGet('taxonomy/term/' . $term->tid . '/feed');
@@ -836,25 +852,39 @@ class TaxonomyTermFieldTestCase extends TaxonomyWebTestCase {
 }
 
 /**
- * Test taxonomy filters in node forms.
+ * Test taxonomy token replacement in strings.
  */
-class TaxonomyNodeFilterTestCase extends TaxonomyWebTestCase {
-
+class TaxonomyTokenReplaceTestCase extends TaxonomyWebTestCase {
   public static function getInfo() {
     return array(
-      'name'  => 'Taxonomy term filters in node forms',
-      'description'  => 'Test node form filtering by taxonomy terms.',
+      'name' => 'Taxonomy token replacement',
+      'description' => 'Generates text using placeholders for dummy content to check taxonomy token replacement.',
       'group' => 'Taxonomy',
     );
   }
 
   function setUp() {
     parent::setUp();
-    $this->admin_user = $this->drupalCreateUser(array('access administration pages', 'access content overview', 'bypass node access', 'search content', 'use advanced search'));
+    $this->admin_user = $this->drupalCreateUser(array('administer taxonomy', 'bypass node access'));
     $this->drupalLogin($this->admin_user);
     $this->vocabulary = $this->createVocabulary();
-
     $this->langcode = LANGUAGE_NONE;
+
+    $field = array(
+      'field_name' => 'taxonomy_' . $this->vocabulary->machine_name,
+      'type' => 'taxonomy_term_reference',
+      'cardinality' => FIELD_CARDINALITY_UNLIMITED,
+      'settings' => array(
+        'allowed_values' => array(
+          array(
+            'vid' => $this->vocabulary->vid,
+            'parent' => 0,
+          ),
+        ),
+      ),
+    );
+    field_create_field($field);
+
     $this->instance = array(
       'field_name' => 'taxonomy_' . $this->vocabulary->machine_name,
       'bundle' => 'article',
@@ -872,93 +902,75 @@ class TaxonomyNodeFilterTestCase extends TaxonomyWebTestCase {
   }
 
   /**
-   * Test node administration page filtering by taxonomy terms.
+   * Creates some terms and a node, then tests the tokens generated from them.
    */
-  function testContentAdminPage() {
+  function testTaxonomyTokenReplacement() {
     // Create two taxonomy terms.
     $term1 = $this->createTerm($this->vocabulary);
     $term2 = $this->createTerm($this->vocabulary);
 
-    // Create nodes with various terms.
-    $nodes['article1'] = $this->drupalCreateNode(array('type' => 'article'));
-    $edit[$this->instance['field_name'] . '[' . $this->langcode . '][]'] = $term1->tid;
-    $this->drupalPost('node/' . $nodes['article1']->nid . '/edit', $edit, t('Save'));
-    
-    $nodes['article2'] = $this->drupalCreateNode(array('type' => 'article'));
-    $edit[$this->instance['field_name'] . '[' . $this->langcode . '][]'] = $term2->tid;
-    $this->drupalPost('node/' . $nodes['article2']->nid . '/edit', $edit, t('Save'));
+    // Edit $term2, setting $term1 as parent.
+    $edit = array();
+    $edit['parent[]'] = array($term1->tid);
+    $this->drupalPost('taxonomy/term/' . $term2->tid . '/edit', $edit, t('Save'));
 
-    $nodes['article1_2'] = $this->drupalCreateNode(array('type' => 'article'));
-    $edit[$this->instance['field_name'] . '[' . $this->langcode . '][]'] = array($term1->tid, $term2->tid);
-    $this->drupalPost('node/' . $nodes['article1_2']->nid . '/edit', $edit, t('Save'));
-
-    // Verify that nodes appear on content admin page.
-    $this->drupalGet('admin/content');
-    $this->assertResponse(200);
-    foreach ($nodes as $node) {
-      $this->assertLinkByHref('node/' . $node->nid);
-    }
-
-    // Verify filtering by term 1.
-    $edit = array(
-      'term' => $term1->tid,
-    );
-    $this->drupalPost(NULL, $edit, t('Filter'));
-    $this->assertRaw(t('<strong>%type</strong> is <strong>%name</strong>', array('%type' => 'term', '%name' => $term1->name)), t('Content list is filtered by term 1.'));
-    $this->assertLinkByHref('node/' . $nodes['article1']->nid . '/edit');
-    $this->assertLinkByHref('node/' . $nodes['article1_2']->nid . '/edit');
-    $this->assertNoLinkByHref('node/' . $nodes['article2']->nid . '/edit');
-
-    // Verify filtering by term 1 and term 2.
-    $edit = array(
-      'term' => $term2->tid,
-    );
-    $this->drupalPost(NULL, $edit, t('Refine'));
-    $this->assertRaw(t('<strong>%type</strong> is <strong>%name</strong>', array('%type' => 'term', '%name' => $term1->name)), t('Content list is filtered by term 1.'));
-    $this->assertRaw(t('<strong>%type</strong> is <strong>%name</strong>', array('%type' => 'term', '%name' => $term2->name)), t('Content list is filtered by term 2.'));
-    $this->assertLinkByHref('node/' . $nodes['article1_2']->nid . '/edit');
-    $this->assertNoLinkByHref('node/' . $nodes['article1']->nid . '/edit');
-    $this->assertNoLinkByHref('node/' . $nodes['article2']->nid . '/edit');
-
-    // Verify filtering by term 2.
-    $this->drupalPost(NULL, $edit, t('Reset'));
-    $edit = array(
-      'term' => $term2->tid,
-    );
-    $this->drupalPost(NULL, $edit, t('Filter'));
-    $this->assertRaw(t('<strong>%type</strong> is <strong>%name</strong>', array('%type' => 'term', '%name' => $term2->name)), t('Content list is filtered by term 2.'));
-    $this->assertLinkByHref('node/' . $nodes['article2']->nid . '/edit');
-    $this->assertLinkByHref('node/' . $nodes['article1_2']->nid . '/edit');
-    $this->assertNoLinkByHref('node/' . $nodes['article1']->nid . '/edit');
-  }
-
-  /**
-   * Test advanced search filtering by taxonomy terms.
-   */
-  function testAdvancedSearch() {
-    // Create two taxonomy terms.
-    $term1 = $this->createTerm($this->vocabulary);
-    $term2 = $this->createTerm($this->vocabulary);
-
-    // Create a node with the term.
+    // Create node with term2.
+    $edit = array();
     $node = $this->drupalCreateNode(array('type' => 'article'));
-    $edit[$this->instance['field_name'] . '[' . $this->langcode . '][]'] = $term1->tid;
+    $edit[$this->instance['field_name'] . '[' . $this->langcode . '][]'] = $term2->tid;
     $this->drupalPost('node/' . $node->nid . '/edit', $edit, t('Save'));
 
-    // Update the search index.
-    node_update_index();
-    search_update_totals();
-    
-    // Search for the node title.
-    $this->drupalGet('search/node/' . $node->title);
-    $this->assertText($node->title, t('Article node found with search.'));
+    // Generate term token strings (before and after replacement) for term2.
+    $source  = '[term:tid]';
+    $source .= '[term:vid]';
+    $source .= '[term:name]';
+    $source .= '[term:description]';
+    $source .= '[term:url]';
+    $source .= '[term:node-count]';
+    $source .= '[term:parent:name]';
+    $source .= '[term:vocabulary:name]';
 
-    // Search for the node title, filtering by term 1.
-    $this->drupalGet('search/node/' . $node->title . ' term:' . $term1->tid);
-    $this->assertText($node->title, t('Article node found with search filtering by term 1.'));
+    $target  = $term2->tid;
+    $target .= $term2->vid;
+    $target .= check_plain($term2->name);
+    $target .= check_markup($term2->description, $term2->format);
+    $target .= url('taxonomy/term/' . $term2->tid, array('absolute' => TRUE));
+    $target .= 1;
+    $target .= check_plain($term1->name);
+    $target .= check_plain($this->vocabulary->name);
 
-    // Search for the node title, filtering by term 2.
-    $this->drupalGet('search/node/' . $node->title . ' term:' . $term2->tid);
-    $this->assertNoText($node->title, t('Article node not found with search filtering by term 2.'));
+    $result = token_replace($source, array('term' => $term2));
+    $this->assertEqual(strcmp($target, $result), 0, t('Taxonomy term placeholder tokens replaced.'));
+
+    // Generate vocabulary token strings (before and after replacement).
+    $source = '[vocabulary:vid]';
+    $source .= '[vocabulary:name]';
+    $source .= '[vocabulary:description]';
+    $source .= '[vocabulary:node-count]';
+    $source .= '[vocabulary:term-count]';
+
+    $target = $this->vocabulary->vid;
+    $target .= check_plain($this->vocabulary->name);
+    $target .= filter_xss($this->vocabulary->description);
+    $target .= 1;
+    $target .= 2;
+
+    $result = token_replace($source, array('vocabulary' => $this->vocabulary));
+    $this->assertEqual(strcmp($target, $result), 0, t('Taxonomy vocabulary placeholder tokens replaced.'));
+
+    // Check that the results of token_generate are sanitized properly. This
+    // does NOT test the cleanliness of every token -- just that the $sanitize
+    // flag is being passed properly through the call stack and being handled
+    // correctly by a 'known' token, [term:name].
+    $edit = array();
+    $edit['name'] = '<blink>Blinking Text</blink>';
+    $this->drupalPost('taxonomy/term/' . $term2->tid . '/edit', $edit, t('Save'));
+
+    $raw_tokens = array('name' => '[term:name]');
+    $generated = token_generate('term', $raw_tokens, array('term' => $term2));
+    $this->assertEqual(strcmp($generated['[term:name]'], check_plain($term2->name)), 0, t('Token sanitized.'));
+
+    $generated = token_generate('term', $raw_tokens, array('term' => $term2), array('sanitize' => FALSE));
+    $this->assertEqual(strcmp($generated['[term:name]'], $term2->name), 0, t('Unsanitized token generated properly.'));
   }
 }

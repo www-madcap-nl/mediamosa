@@ -1,5 +1,5 @@
 <?php
-// $Id: menu.admin.inc,v 1.71 2010/01/03 21:01:04 webchick Exp $
+// $Id: menu.admin.inc,v 1.76 2010/02/23 10:32:10 dries Exp $
 
 /**
  * @file
@@ -63,7 +63,7 @@ function menu_overview_form($form, &$form_state, $menu) {
 
   $form = array_merge($form, _menu_overview_tree_form($tree));
   $form['#menu'] =  $menu;
-  
+
   if (element_children($form)) {
     $form['actions'] = array('#type' => 'container', '#attributes' => array('class' => array('form-actions')));
     $form['actions']['submit'] = array(
@@ -259,7 +259,7 @@ function menu_edit_item($form, &$form_state, $type, $item, $menu) {
 
   $path = $item['link_path'];
   if (isset($item['options']['query'])) {
-    $path .= '?' . $item['options']['query'];
+    $path .= '?' . drupal_http_build_query($item['options']['query']);
   }
   if (isset($item['options']['fragment'])) {
     $path .= '#' . $item['options']['fragment'];
@@ -346,10 +346,18 @@ function menu_edit_item_validate($form, &$form_state) {
   if (!url_is_external($item['link_path'])) {
     $parsed_link = parse_url($item['link_path']);
     if (isset($parsed_link['query'])) {
-      $item['options']['query'] = $parsed_link['query'];
+      $item['options']['query'] = drupal_get_query_array($parsed_link['query']);
+    }
+    else {
+      // Use unset() rather than setting to empty string
+      // to avoid redundant serialized data being stored.
+      unset($item['options']['query']);
     }
     if (isset($parsed_link['fragment'])) {
       $item['options']['fragment'] = $parsed_link['fragment'];
+    }
+    else {
+      unset($item['options']['fragment']);
     }
     if ($item['link_path'] != $parsed_link['path']) {
       $item['link_path'] = $parsed_link['path'];
@@ -648,13 +656,6 @@ function menu_configure() {
   );
 
   $menu_options = menu_get_menus();
-  $form['menu_default_node_menu'] = array(
-    '#type' => 'select',
-    '#title' => t('Default menu for content'),
-    '#default_value' => 'navigation',
-    '#options' => $menu_options,
-    '#description' => t('Choose the menu to be the default in the menu options in the content authoring form.'),
-  );
 
   $main = variable_get('menu_main_links_source', 'main-menu');
   $main_options = array_merge($menu_options, array('' => t('No Main links')));

@@ -1,5 +1,5 @@
 <?php
-// $Id: default.settings.php,v 1.39 2010/01/14 18:45:17 dries Exp $
+// $Id: default.settings.php,v 1.41 2010/02/28 19:00:21 dries Exp $
 
 /**
  * @file
@@ -67,8 +67,8 @@
  * connection should use.  This is usually the same as the name of the
  * database type, such as mysql or sqlite, but not always.  The other
  * properties will vary depending on the driver.  For SQLite, you must
- * specify a database file name in a directory that is writable by the 
- * webserver.  For most other drivers, you must specify a 
+ * specify a database file name in a directory that is writable by the
+ * webserver.  For most other drivers, you must specify a
  * username, password, host, and database name.
  *
  * Some database engines support transactions.  In order to enable
@@ -182,7 +182,7 @@ $update_free_access = FALSE;
  *
  * Example:
  *   $drupal_hash_salt = file_get_contents('/home/example/salt.txt');
- *   
+ *
  */
 $drupal_hash_salt = '';
 
@@ -212,7 +212,7 @@ $drupal_hash_salt = '';
  *
  * To see what PHP settings are possible, including whether they can be set at
  * runtime (by using ini_set()), read the PHP documentation:
- * http://www.php.net/manual/en/ini.php#ini.list
+ * http://www.php.net/manual/en/ini.list.php
  * See drupal_initialize_variables() in includes/bootstrap.inc for required
  * runtime settings and the .htaccess file for non-runtime settings. Settings
  * defined there should not be duplicated here so as to avoid conflict issues.

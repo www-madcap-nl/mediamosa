@@ -1,5 +1,5 @@
 <?php
-// $Id: locale.test,v 1.60 2010/01/10 22:56:51 webchick Exp $
+// $Id: locale.test,v 1.65 2010/03/07 18:52:27 webchick Exp $
 
 /**
  * @file
@@ -333,8 +333,9 @@ class LocaleTranslationFunctionalTest extends DrupalWebTestCase {
     $edit = array('translations['. $langcode .']' => $this->randomString());
     $this->drupalPost($url, $edit, t('Save translations'));
 
-    // Trigger JavaScript translation parsing and building. 
-    locale_inc_callback('_locale_rebuild_js', $langcode);
+    // Trigger JavaScript translation parsing and building.
+    require_once DRUPAL_ROOT . '/includes/locale.inc';
+    _locale_rebuild_js($langcode);
 
     // Retrieve the JavaScript translation hash code for the custom language to
     // check that the translation file has been properly built.
@@ -350,7 +351,7 @@ class LocaleTranslationFunctionalTest extends DrupalWebTestCase {
     file_unmanaged_delete($js_file);
     $this->assertTrue($result = !file_exists($js_file), t('JavaScript file deleted: %file', array('%file' => $result ? $js_file : t('found'))));
     cache_clear_all();
-    locale_inc_callback('_locale_rebuild_js', $langcode);
+    _locale_rebuild_js($langcode);
     $this->assertTrue($result = file_exists($js_file), t('JavaScript file rebuilt: %file', array('%file' => $result ? $js_file : t('not found'))));
   }
 
@@ -964,11 +965,11 @@ class LocaleUninstallFunctionalTest extends DrupalWebTestCase {
   /**
    * The default language set for the UI before uninstall.
    */
-  protected $language_interface;
+  protected $language;
 
   function setUp() {
     parent::setUp('locale');
-    $this->language_interface = 'en';
+    $this->language = 'en';
   }
 
   /**
@@ -979,12 +980,12 @@ class LocaleUninstallFunctionalTest extends DrupalWebTestCase {
 
     // Add a new language and optionally set it as default.
     require_once DRUPAL_ROOT . '/includes/locale.inc';
-    locale_add_language('fr', 'French', 'Français', LANGUAGE_LTR, '', '', TRUE, $this->language_interface == 'fr');
+    locale_add_language('fr', 'French', 'Français', LANGUAGE_LTR, '', '', TRUE, $this->language == 'fr');
 
     // Check the UI language.
     drupal_language_initialize();
-    global $language_interface;
-    $this->assertEqual($language_interface->language, $this->language_interface, t('Current language: %lang', array('%lang' => $language_interface->language)));
+    global $language;
+    $this->assertEqual($language->language, $this->language, t('Current language: %lang', array('%lang' => $language->language)));
 
     // Enable multilingual workflow option for articles.
     variable_set('language_content_type_article', 1);
@@ -1030,7 +1031,7 @@ class LocaleUninstallFunctionalTest extends DrupalWebTestCase {
 
     // Check the init language logic.
     drupal_language_initialize();
-    $this->assertEqual($language_interface->language, 'en', t('Language after uninstall: %lang', array('%lang' => $language_interface->language)));
+    $this->assertEqual($language->language, 'en', t('Language after uninstall: %lang', array('%lang' => $language->language)));
 
     // Check JavaScript files deletion.
     $this->assertTrue($result = !file_exists($js_file), t('JavaScript file deleted: %file', array('%file' => $result ? $js_file : t('found'))));
@@ -1090,7 +1091,7 @@ class LocaleUninstallFrenchFunctionalTest extends LocaleUninstallFunctionalTest 
 
   function setUp() {
     parent::setUp();
-    $this->language_interface = 'fr';
+    $this->language = 'fr';
   }
 }
 
@@ -1121,8 +1122,9 @@ class LanguageSwitchingFunctionalTest extends DrupalWebTestCase {
    */
   function testLanguageBlock() {
     // Enable the language switching block.
+    $language_type = LANGUAGE_TYPE_INTERFACE;
     $edit = array(
-      'locale_language[region]' => 'sidebar_first',
+      "locale_{$language_type}[region]" => 'sidebar_first',
     );
     $this->drupalPost('admin/structure/block', $edit, t('Save blocks'));
 
@@ -1135,14 +1137,14 @@ class LanguageSwitchingFunctionalTest extends DrupalWebTestCase {
     // Set language negotiation.
     drupal_load('module', 'locale');
     include_once DRUPAL_ROOT . '/includes/language.inc';
-    language_negotiation_set(LANGUAGE_TYPE_CONTENT, locale_language_negotiation_info());
+    language_negotiation_set($language_type, locale_language_negotiation_info());
 
     // Assert that the language switching block is displayed on the frontpage.
     $this->drupalGet('');
     $this->assertText(t('Languages'), t('Language switcher block found.'));
 
     // Assert that only the current language is marked as active.
-    list($language_switcher) = $this->xpath('//div[@id="block-locale-language"]/div[@class="content"]');
+    list($language_switcher) = $this->xpath("//div[@id=\"block-locale-{$language_type}\"]/div[@class=\"content\"]");
     $links = array(
       'active' => array(),
       'inactive' => array(),
@@ -1269,6 +1271,107 @@ class LocaleUserLanguageFunctionalTest extends DrupalWebTestCase {
 }
 
 /**
+ * Functional test for language handling during user creation.
+ */
+class LocalUserCreationTest extends DrupalWebTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'User creation',
+      'description' => 'Tests whether proper language is stored for new users and access to language selector.',
+      'group' => 'Locale',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('locale');
+  }
+
+  /**
+   * Functional test for language handling during user creation.
+   */
+  function testLocalUserCreation() {
+    // User to add and remove language and create new users.
+    $admin_user = $this->drupalCreateUser(array('administer languages', 'access administration pages', 'administer users'));
+    $this->drupalLogin($admin_user);
+
+    // Add predefined language.
+    $langcode = 'fr';
+    $edit = array(
+      'langcode' => 'fr',
+    );
+    $this->drupalPost('admin/config/regional/language/add', $edit, t('Add language'));
+    $this->assertText($langcode, t('Language added successfully.'));
+    $this->assertEqual($this->getUrl(), url('admin/config/regional/language', array('absolute' => TRUE)), t('Correct page redirection.'));
+
+    // Set language negotiation.
+    $edit = array(
+      'language[enabled][locale-url]' => TRUE,
+    );
+    $this->drupalPost('admin/config/regional/language/configure', $edit, t('Save settings'));
+    $this->assertText(t('Language negotiation configuration saved.'), t('Set language negotiation.'));
+
+    // Check if the language selector is available on admin/people/create and
+    // set to the currently active language.
+    $this->drupalGet($langcode . '/admin/people/create');
+    $this->assertFieldChecked("edit-language-$langcode", t('Global language set in the language selector.'));
+
+    // Create a user with the admin/people/create form and check if the correct
+    // language is set.
+    $username = $this->randomName(10);
+    $edit = array(
+      'name' => $username,
+      'mail' => $this->randomName(4) . '@example.com',
+      'pass[pass1]' => $username,
+      'pass[pass2]' => $username,
+    );
+
+    $this->drupalPost($langcode . '/admin/people/create', $edit, t('Create new account'));
+
+    $user = user_load_by_name($username);
+    $this->assertEqual($user->language, $langcode, t('New user has correct language set.'));
+
+    // Register a new user and check if the language selector is hidden.
+    $this->drupalLogout();
+
+    $this->drupalGet($langcode . '/user/register');
+    $this->assertNoFieldByName('language[fr]', t('Language selector is not accessible.'));
+
+    $username = $this->randomName(10);
+    $edit = array(
+      'name' => $username,
+      'mail' => $this->randomName(4) . '@example.com',
+    );
+
+    $this->drupalPost($langcode . '/user/register', $edit, t('Create new account'));
+
+    $user = user_load_by_name($username);
+    $this->assertEqual($user->language, $langcode, t('New user has correct language set.'));
+
+    // Test if the admin can use the language selector and if the
+    // correct language is was saved.
+    $user_edit = $langcode . '/user/' . $user->uid . '/edit';
+
+    $this->drupalLogin($admin_user);
+    $this->drupalGet($user_edit);
+    $this->assertFieldChecked("edit-language-$langcode", t('Language selector is accessible and correct language is selected.'));
+
+    // Set pass_raw so we can login the new user.
+    $user->pass_raw = $this->randomName(10);
+    $edit = array(
+      'pass[pass1]' => $user->pass_raw,
+      'pass[pass2]' => $user->pass_raw,
+    );
+
+    $this->drupalPost($user_edit, $edit, t('Save'));
+
+    $this->drupalLogin($user);
+    $this->drupalGet($user_edit);
+    $this->assertFieldChecked("edit-language-$langcode", t('Language selector is accessible and correct language is selected.'));
+  }
+}
+
+/**
  * Functional tests for configuring a different path alias per language.
  */
 class LocalePathFunctionalTest extends DrupalWebTestCase {
@@ -1327,7 +1430,7 @@ class LocalePathFunctionalTest extends DrupalWebTestCase {
       'alias'    => $english_path,
       'language' => 'en',
     );
-    $this->drupalPost($path, $edit, t('Create new alias'));
+    $this->drupalPost($path, $edit, t('Save'));
 
     // Create a path alias in new custom language.
     $custom_language_path = $this->randomName(8);
@@ -1336,7 +1439,7 @@ class LocalePathFunctionalTest extends DrupalWebTestCase {
       'alias'    => $custom_language_path,
       'language' => $langcode,
     );
-    $this->drupalPost($path, $edit, t('Create new alias'));
+    $this->drupalPost($path, $edit, t('Save'));
 
     // Confirm English language path alias works.
     $this->drupalGet($english_path);
@@ -1534,7 +1637,7 @@ class UILanguageNegotiationTest extends DrupalWebTestCase {
     $language_domain = 'example.cn';
 
     // Setup the site languages by installing two languages.
-    require_once('includes/locale.inc');
+    require_once DRUPAL_ROOT . '/includes/locale.inc';
     locale_add_language($language_browser_fallback);
     locale_add_language($language);
 
@@ -1814,9 +1917,9 @@ class LocalizeDateFormatsFunctionalTest extends DrupalWebTestCase {
     $this->drupalPost('admin/config/regional/language/add', $edit, t('Add language'));
 
     // Set language negotiation.
+    $language_type = LANGUAGE_TYPE_INTERFACE;
     $edit = array(
-      'language[enabled][locale-url]' => TRUE,
-      'language_interface[enabled][locale-url]' => TRUE,
+      "{$language_type}[enabled][locale-url]" => TRUE,
     );
     $this->drupalPost('admin/config/regional/language/configure', $edit, t('Save settings'));
 

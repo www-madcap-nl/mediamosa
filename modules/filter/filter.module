@@ -1,5 +1,5 @@
 <?php
-// $Id: filter.module,v 1.314 2009/12/28 21:52:13 webchick Exp $
+// $Id: filter.module,v 1.322 2010/03/08 03:59:25 webchick Exp $
 
 /**
  * @file
@@ -17,18 +17,20 @@ function filter_help($path, $arg) {
       $output .= '<p>' . t('The Filter module allows administrators to configure text formats. A text format defines the HTML tags, codes, and other input allowed in content and comments, and is a key feature in guarding against potentially damaging input from malicious users. For more information, see the online handbook entry for <a href="@filter">Filter module</a>.', array('@filter' => 'http://drupal.org/handbook/modules/filter/')) . '</p>';
       $output .= '<h3>' . t('Uses') . '</h3>';
       $output .= '<dl>';
+      $output .= '<dt>' . t('Configuring text formats') . '</dt>';
+      $output .= '<dd>' . t('Configure text formats on the <a href="@formats">Text formats page</a>. <strong>Improper text format configuration is a security risk</strong>. To ensure security, untrusted users should only have access to text formats that restrict them to either plain text or a safe set of HTML tags, since certain HTML tags can allow embedding malicious links or scripts in text. More trusted registered users may be granted permission to use less restrictive text formats in order to create rich content.', array('@formats' => url('admin/config/content/formats'))) . '</dd>';
       $output .= '<dt>' . t('Applying filters to text') . '</dt>';
       $output .= '<dd>' . t('Each text format uses filters to manipulate text, and most formats apply several different filters to text in a specific order. Each filter is designed for a specific purpose, and generally either adds, removes, or transforms elements within user-entered text before it is displayed. A filter does not change the actual content, but instead, modifies it temporarily before it is displayed. One filter may remove unapproved HTML tags, while another automatically adds HTML to make URLs display as clickable links.') . '</dd>';
       $output .= '<dt>' . t('Defining text formats') . '</dt>';
       $output .= '<dd>' . t('One format is included by default: <em>Plain text</em> (which removes all HTML tags). Additional formats may be created by your installation profile when you install Drupal, and more can be created by an administrator on the <a href="@text-formats">Text formats page</a>.', array('@text-formats' => url('admin/config/content/formats'))) . '</dd>';
       $output .= '<dt>' . t('Choosing a text format') . '</dt>';
-      $output .= '<dd>' . t('Users with access to more than one text format can use the <em>Text format</em> fieldset to choose between available text formats when creating or editing multi-line content. Administrators can determine the text formats available to each user role, and control the order of formats listed in the <em>Text format</em> fieldset on the <a href="@text-formats">Text formats page</a>.', array('@text-formats' => url('admin/config/content/formats'))) . '</dd>';
+      $output .= '<dd>' . t('Users with access to more than one text format can use the <em>Text format</em> fieldset to choose between available text formats when creating or editing multi-line content. Administrators can define the text formats available to each user role, and control the order of formats listed in the <em>Text format</em> fieldset on the <a href="@text-formats">Text formats page</a>.', array('@text-formats' => url('admin/config/content/formats'))) . '</dd>';
       $output .= '</dl>';
       return $output;
 
     case 'admin/config/content/formats':
-      $output = '<p>' . t("Control which HTML tags and other formatting can be used for text input. Don't allow too much formatting for untrusted users. This can be a serious security risk.") . '</p>';
-      $output .= '<p>' . t('Text formats are presented in the order you arrange them below. Configure a text format to change its behavior.') . '</p>';
+      $output = '<p>' . t('Text formats define the HTML tags, code, and other formatting that can be used when entering text. <strong>Improper text format configuration is a security risk</strong>. Learn more on the <a href="@filterhelp">Filter module help page</a>.', array('@filterhelp' => url('admin/help/filter'))) . '</p>';
+      $output .= '<p>' . t('Text formats are presented on content editing pages in the order defined on this page.') . '</p>';
       return $output;
 
     case 'admin/config/content/formats/%':
@@ -54,6 +56,9 @@ function filter_theme() {
       'variables' => array('tips' => NULL, 'long' => FALSE),
       'file' => 'filter.pages.inc',
     ),
+    'text_format_wrapper' => array(
+      'render element' => 'element',
+    ),
     'filter_tips_more_info' => array(
       'variables' => array(),
     ),
@@ -61,6 +66,20 @@ function filter_theme() {
       'variables' => array('format' => NULL),
     ),
   );
+}
+
+/**
+ * Implements hook_element_info().
+ *
+ * @see filter_process_format()
+ */
+function filter_element_info() {
+  $type['text_format'] = array(
+    '#process' => array('filter_process_format'),
+    '#base_type' => 'textarea',
+    '#theme_wrappers' => array('text_format_wrapper'),
+  );
+  return $type;
 }
 
 /**
@@ -151,14 +170,17 @@ function filter_format_load($format_id) {
  *   - 'name': The title of the text format.
  *   - 'format': (optional) The internal ID of the text format. If omitted, a
  *     new text format is created.
- *   - 'roles': (optional) An associative array containing the roles allowed to
- *     access/use the text format.
+ *   - 'weight': (optional) The weight of the text format, which controls its
+ *     placement in text format lists. If omitted, the weight is set to 0.
  *   - 'filters': (optional) An associative, multi-dimensional array of filters
- *     assigned to the text format, using the properties:
- *     - 'weight': The weight of the filter in the text format.
- *     - 'status': A boolean indicating whether the filter is enabled in the
- *       text format.
- *     - 'module': The name of the module implementing the filter.
+ *     assigned to the text format, keyed by the name of each filter and using
+ *     the properties:
+ *     - 'weight': (optional) The weight of the filter in the text format. If
+ *       omitted, either the currently stored weight is retained (if there is
+ *       one), or the filter is assigned a weight of 10, which will usually
+ *       put it at the bottom of the list.
+ *     - 'status': (optional) A boolean indicating whether the filter is
+ *       enabled in the text format. If omitted, the filter will be disabled.
  *     - 'settings': (optional) An array of configured settings for the filter.
  *       See hook_filter_info() for details.
  */
@@ -267,8 +289,8 @@ function filter_admin_format_title($format) {
  */
 function filter_permission() {
   $perms['administer filters'] = array(
-    'title' => t('Administer and use any text formats and filters'),
-    'description' => drupal_placeholder(array('text' => t('Warning: This permission may have security implications depending on how the text format is configured.'))),
+    'title' => t('Administer text formats and filters'),
+    'description' => drupal_placeholder(array('text' => t('Warning: Give to trusted roles only; this permission has security implications.'))),
   );
 
   // Generate permissions for each text format. Warn the administrator that any
@@ -311,6 +333,24 @@ function filter_permission_name($format) {
  */
 function filter_cron() {
   cache_clear_all(NULL, 'cache_filter');
+}
+
+/**
+ * Implements hook_modules_enabled().
+ */
+function filter_modules_enabled($modules) {
+  // Reset the static cache of module-provided filters, in case any of the
+  // newly enabled modules defines a new filter or alters existing ones.
+  drupal_static_reset('filter_get_filters');
+}
+
+/**
+ * Implements hook_modules_disabled().
+ */
+function filter_modules_disabled($modules) {
+  // Reset the static cache of module-provided filters, in case any of the
+  // newly disabled modules defined or altered any filters.
+  drupal_static_reset('filter_get_filters');
 }
 
 /**
@@ -437,6 +477,31 @@ function filter_default_format($account = NULL) {
 
 /**
  * Returns the ID of the fallback text format that all users have access to.
+ *
+ * The fallback text format is a regular text format in every respect, except
+ * it does not participate in the filter permission system and cannot be
+ * deleted. It needs to exist because any user who has permission to create
+ * formatted content must always have at least one text format they can use.
+ *
+ * Because the fallback format is available to all users, it should always be
+ * configured securely. For example, when the Filter module is installed, this
+ * format is initialized to output plain text. Installation profiles and site
+ * administrators have the freedom to configure it further.
+ *
+ * When a text format is deleted, all content that previously had that format
+ * assigned should be switched to the fallback format. To facilitate this,
+ * Drupal passes in the fallback format object as one of the parameters of
+ * hook_filter_format_delete().
+ *
+ * Note that the fallback format is completely distinct from the default
+ * format, which differs per user and is simply the first format which that
+ * user has access to. The default and fallback formats are only guaranteed to
+ * be the same for users who do not have access to any other format; otherwise,
+ * the fallback format's weight determines its placement with respect to the
+ * user's other formats.
+ *
+ * @see hook_filter_format_delete()
+ * @see filter_default_format()
  */
 function filter_fallback_format() {
   // This variable is automatically set in the database for all installations
@@ -653,71 +718,195 @@ function check_markup($text, $format_id = NULL, $langcode = '', $cache = FALSE) 
 }
 
 /**
- * Generates a selector for choosing a format in a form.
+ * Expands an element into a base element with text format selector attached.
  *
- * @param $selected_format
- *   The ID of the format that is currently selected; uses the default format
- *   for the current user if not provided.
- * @param $weight
- *   The weight of the form element within the form.
- * @param $parents
- *   The parents array of the element. Required when defining multiple text
- *   formats on a single form or having a different parent than 'format'.
+ * The form element will be expanded into two separate form elements, one
+ * holding the original element, and the other holding the text format selector:
+ * - value: Holds the original element, having its #type changed to the value of
+ *   #base_type or 'textarea' by default.
+ * - format: Holds the text format fieldset and the text format selection, using
+ *   the text format id specified in #format or the user's default format by
+ *   default, if NULL.
+ *
+ * Since most modules expect the value of the new 'format' element *next* to the
+ * original element, filter_process_format() utilizes an #after_build to move
+ * the values of the children of the 'text_format' element so as to let the
+ * submitted form values appear as if they were located on the same level.
+ * For example, considering the input values:
+ * @code
+ *   $form_state['input']['body']['value'] = 'foo';
+ *   $form_state['input']['body']['format'] = 'foo';
+ * @endcode
+ * The #after_build will process them into:
+ * @code
+ *   $form_state['values']['body'] = 'foo';
+ *   $form_state['values']['format'] = 'foo';
+ * @endcode
+ *
+ * If multiple text format-enabled elements are required on the same level of
+ * the form structure, modules can set custom #parents on the original element.
+ * Alternatively, the #after_build may be unset through a subsequent #process
+ * callback. If the default #after_build is not invoked and no custom processing
+ * occurs, then the submitted form values will appear like in the
+ * $form_state['input'] array above.
+ *
+ * @see filter_form_after_build()
+ *
+ * @param $element
+ *   The form element to process. Properties used:
+ *   - #base_type: The form element #type to use for the 'value' element.
+ *     'textarea' by default.
+ *   - #format: (optional) The text format id to preselect. If 0, NULL, or not
+ *     set, the default format for the current user will be used.
  *
  * @return
- *   Form API array for the form element.
- *
- * @ingroup forms
+ *   The expanded element.
  */
-function filter_form($selected_format = NULL, $weight = NULL, $parents = array('format')) {
+function filter_process_format($element) {
   global $user;
 
-  // Use the default format for this user if none was selected.
-  if (empty($selected_format)) {
-    $selected_format = filter_default_format($user);
+  // Ensure that children appear as subkeys of this element.
+  $element['#tree'] = TRUE;
+  $blacklist = array(
+    // Make form_builder() regenerate child properties.
+    '#parents',
+    '#id',
+    '#name',
+    // Do not copy this #process function to prevent form_builder() from
+    // recursing infinitely.
+    '#process',
+    // Description is handled by theme_text_format_wrapper().
+    '#description',
+    // Ensure proper ordering of children.
+    '#weight',
+    // Properties already processed for the parent element.
+    '#prefix',
+    '#suffix',
+    '#attached',
+    '#processed',
+    '#theme_wrappers',
+  );
+  // Move this element into sub-element 'value'.
+  unset($element['value']);
+  foreach (element_properties($element) as $key) {
+    if (!in_array($key, $blacklist)) {
+      $element['value'][$key] = $element[$key];
+    }
   }
 
-  // Get a list of formats that the current user has access to.
-  $formats = filter_formats($user);
+  $element['value']['#type'] = $element['#base_type'];
+  $element['value'] += element_info($element['#base_type']);
 
-  drupal_add_js('misc/form.js');
-  drupal_add_css(drupal_get_path('module', 'filter') . '/filter.css');
-  $element_id = drupal_html_id('edit-' . implode('-', $parents));
+  // Turn original element into a text format wrapper.
+  $path = drupal_get_path('module', 'filter');
+  $element['#attached']['js'][] = $path . '/filter.js';
+  $element['#attached']['css'][] = $path . '/filter.css';
 
-  $form = array(
+  // Apply default #after_build behavior.
+  $element['#after_build'][] = 'filter_form_after_build';
+
+  // Setup child container for the text format widget.
+  $element['format'] = array(
     '#type' => 'fieldset',
-    '#weight' => $weight,
     '#attributes' => array('class' => array('filter-wrapper')),
   );
-  $form['format_guidelines'] = array(
-    '#prefix' => '<div id="' . $element_id . '-guidelines" class="filter-guidelines">',
-    '#suffix' => '</div>',
-    '#weight' => 2,
+
+  // Prepare text format guidelines.
+  $element['format']['guidelines'] = array(
+    '#type' => 'container',
+    '#attributes' => array('class' => array('filter-guidelines')),
+    '#weight' => 20,
   );
+  // Get a list of formats that the current user has access to.
+  $formats = filter_formats($user);
   foreach ($formats as $format) {
     $options[$format->format] = $format->name;
-    $form['format_guidelines'][$format->format] = array(
-      '#markup' => theme('filter_guidelines', array('format' => $format)),
+    $element['format']['guidelines'][$format->format] = array(
+      '#theme' => 'filter_guidelines',
+      '#format' => $format,
     );
   }
-  $form['format'] = array(
+
+  // Use the default format for this user if none was selected.
+  if (empty($element['#format'])) {
+    $element['#format'] = filter_default_format($user);
+  }
+  $element['format']['format'] = array(
     '#type' => 'select',
     '#title' => t('Text format'),
     '#options' => $options,
-    '#default_value' => $selected_format,
-    '#parents' => $parents,
+    '#default_value' => $element['#format'],
     '#access' => count($formats) > 1,
-    '#id' => $element_id,
+    '#weight' => 10,
     '#attributes' => array('class' => array('filter-list')),
-  );
-  $form['format_help'] = array(
-    '#prefix' => '<div id="' . $element_id . '-help" class="filter-help">',
-    '#markup' => theme('filter_tips_more_info'),
-    '#suffix' => '</div>',
-    '#weight' => 1,
+    '#parents' => array_merge($element['#parents'], array('format')),
   );
 
-  return $form;
+  $element['format']['help'] = array(
+    '#type' => 'container',
+    '#theme' => 'filter_tips_more_info',
+    '#attributes' => array('class' => array('filter-help')),
+    '#weight' => 0,
+  );
+
+  return $element;
+}
+
+/**
+ * After build callback to move #type 'text_format' values up in $form_state.
+ */
+function filter_form_after_build($element, &$form_state) {
+  // For text fields, the additional subkeys map 1:1 to field schema columns.
+  if (isset($element['#columns'])) {
+    return $element;
+  }
+
+  $parents = $element['#parents'];
+  array_pop($parents);
+
+  foreach (element_children($element) as $key) {
+    $current_parents = $parents;
+    switch ($key) {
+      case 'value':
+        form_set_value(array('#parents' => $element['#parents']), $element[$key]['#value'], $form_state);
+        break;
+
+      case 'format':
+        $current_parents[] = $key;
+        form_set_value(array('#parents' => $current_parents), $element['format']['format']['#value'], $form_state);
+        break;
+
+      default:
+        $current_parents[] = $key;
+        form_set_value(array('#parents' => $current_parents), $element[$key]['#value'], $form_state);
+    }
+  }
+  return $element;
+}
+
+/**
+ * Render a text format-enabled form element.
+ *
+ * @param $variables
+ *   An associative array containing:
+ *   - element: An associative array containing the properties of the element.
+ *     Properties used: #children, #description
+ *
+ * @return
+ *   A string representing the form element.
+ *
+ * @ingroup themeable
+ */
+function theme_text_format_wrapper($variables) {
+  $element = $variables['element'];
+  $output = '<div class="text-format-wrapper">';
+  $output .= $element['#children'];
+  if (!empty($element['#description'])) {
+    $output .= '<div class="description">' . $element['#description'] . '</div>';
+  }
+  $output .= "</div>\n";
+
+  return $output;
 }
 
 /**
@@ -738,8 +927,8 @@ function filter_access($format, $account = NULL) {
     $account = $user;
   }
   // Handle special cases up front. All users have access to the fallback
-  // format, and administrators have access to all formats.
-  if (user_access('administer filters', $account) || $format->format == filter_fallback_format()) {
+  // format.
+  if ($format->format == filter_fallback_format()) {
     return TRUE;
   }
   // Check the permission if one exists; otherwise, we have a non-existent
@@ -817,10 +1006,52 @@ function filter_dom_load($text) {
 function filter_dom_serialize($dom_document) {
   $body_node = $dom_document->getElementsByTagName('body')->item(0);
   $body_content = '';
+
+  foreach($body_node->getElementsByTagName('script') as $node) {
+    filter_dom_serialize_escape_cdata_element($dom_document, $node);
+  }
+
+  foreach($body_node->getElementsByTagName('style') as $node) {
+    filter_dom_serialize_escape_cdata_element($dom_document, $node, '/*', '*/');
+  }
+
   foreach ($body_node->childNodes as $child_node) {
     $body_content .= $dom_document->saveXML($child_node);
   }
   return preg_replace('|<([^>]*)/>|i', '<$1 />', $body_content);
+}
+
+/**
+ * Adds comments around the <!CDATA section in a dom element.
+ *
+ * DOMDocument::loadHTML in filter_dom_load() makes CDATA sections from the
+ * contents of inline script and style tags.  This can cause HTML 4 browsers to
+ * throw exceptions.
+ *
+ * This function attempts to solve the problem by creating a DocumentFragment
+ * and immitating the behavior in drupal_get_js(), commenting the CDATA tag.
+ *
+ * @param $dom_document
+ *   The DOMDocument containing the $dom_element.
+ * @param $dom_element
+ *   The element potentially containing a CDATA node.
+ * @param $comment_start
+ *   String to use as a comment start marker to escape the CDATA declaration.
+ * @param $comment_end
+ *   String to use as a comment end marker to escape the CDATA declaration.
+ */
+function filter_dom_serialize_escape_cdata_element($dom_document, $dom_element, $comment_start = '//', $comment_end = '') {
+  foreach ($dom_element->childNodes as $node) {
+    if (get_class($node) == 'DOMCdataSection') {
+      // @see drupal_get_js().  This code is more or less duplicated there.
+      $embed_prefix = "\n<!--{$comment_start}--><![CDATA[{$comment_start} ><!--{$comment_end}\n";
+      $embed_suffix = "\n{$comment_start}--><!]]>{$comment_end}\n";
+      $fragment = $dom_document->createDocumentFragment();
+      $fragment->appendXML($embed_prefix . $node->data . $embed_suffix);
+      $dom_element->appendChild($fragment);
+      $dom_element->removeChild($node);
+    }
+  }
 }
 
 /**

@@ -1,5 +1,5 @@
 <?php
-// $Id: language.inc,v 1.25 2010/01/14 06:43:24 webchick Exp $
+// $Id: language.inc,v 1.28 2010/03/07 07:44:18 webchick Exp $
 
 /**
  * @file
@@ -34,18 +34,35 @@ function language_types_info() {
  * Return only the configurable language types.
  *
  * A language type maybe configurable or fixed. A fixed language type is a type
- * whose negotiation values are unchangable and defined while defining the
+ * whose negotiation values are unchangeable and defined while defining the
  * language type itself.
+ *
+ * @param $stored
+ *   Optional. By default retrieves values from the 'language_types' variable to
+ *   avoid unnecessary hook invocations.
+ *   If set to FALSE retrieves values from the actual language type definitions.
+ *   This allows to react to alterations performed on the definitions by modules
+ *   installed after the 'language_types' variable is set.
  *
  * @return
  *   An array of language type names.
  */
-function language_types_configurable() {
+function language_types_configurable($stored = TRUE) {
   $configurable = &drupal_static(__FUNCTION__);
 
-  if (!isset($configurable)) {
+  if ($stored && !isset($configurable)) {
     $types = variable_get('language_types', drupal_language_types());
     $configurable = array_keys(array_filter($types));
+  }
+
+  if (!$stored) {
+    $result = array();
+    foreach (language_types_info() as $type => $info) {
+      if (!isset($info['fixed'])) {
+        $result[] = $type;
+      }
+    }
+    return $result;
   }
 
   return $configurable;
@@ -264,7 +281,7 @@ function language_provider_invoke($provider_id, $provider = NULL) {
       require_once DRUPAL_ROOT . '/' . $provider['file'];
     }
 
-    // If the language provider has no cache preference or this is satisified
+    // If the language provider has no cache preference or this is satisfied
     // we can execute the callback.
     $cache = !isset($provider['cache']) || $user->uid || $provider['cache'] == variable_get('cache', CACHE_DISABLED);
     $callback = isset($provider['callbacks']['language']) ? $provider['callbacks']['language'] : FALSE;
@@ -342,7 +359,7 @@ function language_from_default() {
  *    - The path without the prefix on success, the given path otherwise.
  */
 function language_url_split_prefix($path, $languages) {
-  $args = empty($path) ? array() : explode('/', $path);
+  $args = empty($path) ? array() : explode('/', trim($path, '/'));
   $prefix = array_shift($args);
 
   // Search prefix within enabled languages.

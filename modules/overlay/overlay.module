@@ -1,5 +1,5 @@
 <?php
-// $Id: overlay.module,v 1.7 2010/01/14 03:25:43 webchick Exp $
+// $Id: overlay.module,v 1.11 2010/03/07 06:31:48 webchick Exp $
 
 /**
  * @file
@@ -59,6 +59,13 @@ function overlay_init() {
   // Only act if the user has access to administration pages. Other modules can
   // also enable the overlay directly for other uses of the JavaScript.
   if (user_access('access overlay')) {
+    // After overlay is enabled on the modules page, redirect to
+    // <front>#overlay=admin/modules to actually enable the overlay.
+    if (isset($_SESSION['overlay_enable_redirect']) && $_SESSION['overlay_enable_redirect']) {
+      unset($_SESSION['overlay_enable_redirect']);
+      drupal_goto('<front>', array('fragment' => 'overlay=' . current_path()));
+    }
+
     if (isset($_GET['render']) && $_GET['render'] == 'overlay') {
       // If this page shouldn't be rendered here, redirect to the parent.
       if (!path_is_admin($_GET['q'])) {
@@ -77,7 +84,8 @@ function overlay_init() {
       // Unset the render parameter to avoid it being included in URLs on the page.
       unset($_GET['render']);
     }
-    else {
+    // Do not enable the overlay if we already are on an admin page.
+    else if (!path_is_admin(current_path())) {
       // Otherwise add overlay parent code and our behavior.
       overlay_set_mode('parent');
     }
@@ -132,7 +140,7 @@ function overlay_library() {
   // Overlay parent.
   $libraries['parent'] = array(
     'title' => 'Overlay: Parent',
-    'website' => 'http://drupal.org/node/517688',
+    'website' => 'http://drupal.org/handbook/modules/overlay',
     'version' => '1.0',
     'js' => array(
       $module_path . '/overlay-parent.js' => array(),
@@ -148,7 +156,7 @@ function overlay_library() {
   // Overlay child.
   $libraries['child'] = array(
     'title' => 'Overlay: Child',
-    'website' => 'http://drupal.org/node/517688',
+    'website' => 'http://drupal.org/handbook/modules/overlay',
     'version' => '1.0',
     'js' => array(
       $module_path . '/overlay-child.js' => array(),
@@ -454,6 +462,9 @@ function overlay_set_mode($mode = NULL) {
 
     case 'child':
       drupal_add_library('overlay', 'child');
+      // Pass child's document height on to parent document as quickly as
+      // possible so it can be updated accordingly.
+      drupal_add_js('if (jQuery.isObject(parent.Drupal) && jQuery.isObject(parent.Drupal.overlay)) { parent.Drupal.overlay.innerResize(jQuery(document.body).outerHeight()); }', array('type' => 'inline', 'scope' => 'footer'));
 
       // Allow modules to act upon overlay events.
       module_invoke_all('overlay_child_initialize');

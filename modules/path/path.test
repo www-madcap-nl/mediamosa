@@ -1,5 +1,5 @@
 <?php
-// $Id: path.test,v 1.30 2010/01/09 21:54:01 webchick Exp $
+// $Id: path.test,v 1.33 2010/03/07 23:14:20 webchick Exp $
 
 /**
  * @file
@@ -34,7 +34,7 @@ class PathTestCase extends DrupalWebTestCase {
     $edit = array();
     $edit['source'] = 'node/' . $node1->nid;
     $edit['alias'] = $this->randomName(8);
-    $this->drupalPost('admin/config/search/path/add', $edit, t('Create new alias'));
+    $this->drupalPost('admin/config/search/path/add', $edit, t('Save'));
 
     // Visit the system path for the node and confirm a cache entry is
     // created.
@@ -59,19 +59,21 @@ class PathTestCase extends DrupalWebTestCase {
     $edit = array();
     $edit['source'] = 'node/' . $node1->nid;
     $edit['alias'] = $this->randomName(8);
-    $this->drupalPost('admin/config/search/path/add', $edit, t('Create new alias'));
+    $this->drupalPost('admin/config/search/path/add', $edit, t('Save'));
 
     // Confirm that the alias works.
     $this->drupalGet($edit['alias']);
     $this->assertText($node1->title, 'Alias works.');
     $this->assertResponse(200);
 
-    // Change alias.
+    // Change alias to one containing "exotic" characters.
     $pid = $this->getPID($edit['alias']);
 
     $previous = $edit['alias'];
-    $edit['alias'] = $this->randomName(8);
-    $this->drupalPost('admin/config/search/path/edit/' . $pid, $edit, t('Update alias'));
+    $edit['alias'] = "- ._~!$'\"()*@[]?&+%#,;=:" . // "Special" ASCII characters.
+      "%23%25%26%2B%2F%3F" . // Characters that look like a percent-escaped string.
+      "éøïвβ中國書۞"; // Characters from various non-ASCII alphabets.
+    $this->drupalPost('admin/config/search/path/edit/' . $pid, $edit, t('Save'));
 
     // Confirm that the alias works.
     $this->drupalGet($edit['alias']);
@@ -90,13 +92,14 @@ class PathTestCase extends DrupalWebTestCase {
     // Set alias to second test node.
     $edit['source'] = 'node/' . $node2->nid;
     // leave $edit['alias'] the same
-    $this->drupalPost('admin/config/search/path/add', $edit, t('Create new alias'));
+    $this->drupalPost('admin/config/search/path/add', $edit, t('Save'));
 
     // Confirm no duplicate was created.
     $this->assertRaw(t('The alias %alias is already in use in this language.', array('%alias' => $edit['alias'])), 'Attempt to move alias was rejected.');
 
     // Delete alias.
-    $this->drupalPost('admin/config/search/path/delete/' . $pid, array(), t('Confirm'));
+    $this->drupalPost('admin/config/search/path/edit/' . $pid, array(), t('Delete'));
+    $this->drupalPost(NULL, array(), t('Confirm'));
 
     // Confirm that the alias no longer works.
     $this->drupalGet($edit['alias']);
@@ -121,9 +124,11 @@ class PathTestCase extends DrupalWebTestCase {
     $this->assertText($node1->title, 'Alias works.');
     $this->assertResponse(200);
 
-    // Change alias.
+    // Change alias to one containing "exotic" characters.
     $previous = $edit['path[alias]'];
-    $edit['path[alias]'] = $this->randomName(8);
+    $edit['path[alias]'] = "- ._~!$'\"()*@[]?&+%#,;=:" . // "Special" ASCII characters.
+      "%23%25%26%2B%2F%3F" . // Characters that look like a percent-escaped string.
+      "éøïвβ中國書۞"; // Characters from various non-ASCII alphabets.
     $this->drupalPost('node/' . $node1->nid . '/edit', $edit, t('Save'));
 
     // Confirm that the alias works.
@@ -185,15 +190,16 @@ class PathTaxonomyTermTestCase extends DrupalWebTestCase {
    */
   function testTermAlias() {
     // Create a term in the default 'Tags' vocabulary with URL alias.
+    $description = $this->randomName();;
     $edit = array();
     $edit['name'] = $this->randomName();
-    $edit['description'] = $this->randomName();
+    $edit['description[value]'] = $description;
     $edit['path[alias]'] = $this->randomName();
     $this->drupalPost('admin/structure/taxonomy/1/add', $edit, t('Save'));
 
     // Confirm that the alias works.
     $this->drupalGet($edit['path[alias]']);
-    $this->assertText($edit['description'], 'Term can be accessed on URL alias.');
+    $this->assertText($description, 'Term can be accessed on URL alias.');
 
     // Change the term's URL alias.
     $tid = db_query("SELECT tid FROM {taxonomy_term_data} WHERE name = :name", array(':name' => $edit['name']))->fetchField();
@@ -203,11 +209,11 @@ class PathTaxonomyTermTestCase extends DrupalWebTestCase {
 
     // Confirm that the changed alias works.
     $this->drupalGet($edit2['path[alias]']);
-    $this->assertText($edit['description'], 'Term can be accessed on changed URL alias.');
+    $this->assertText($description, 'Term can be accessed on changed URL alias.');
 
     // Confirm that the old alias no longer works.
     $this->drupalGet($edit['path[alias]']);
-    $this->assertNoText($edit['description'], 'Old URL alias has been removed after altering.');
+    $this->assertNoText($description, 'Old URL alias has been removed after altering.');
     $this->assertResponse(404, 'Old URL alias returns 404.');
 
     // Remove the term's URL alias.
@@ -217,7 +223,7 @@ class PathTaxonomyTermTestCase extends DrupalWebTestCase {
 
     // Confirm that the alias no longer works.
     $this->drupalGet($edit2['path[alias]']);
-    $this->assertNoText($edit['description'], 'Old URL alias has been removed after altering.');
+    $this->assertNoText($description, 'Old URL alias has been removed after altering.');
     $this->assertResponse(404, 'Old URL alias returns 404.');
   }
 }

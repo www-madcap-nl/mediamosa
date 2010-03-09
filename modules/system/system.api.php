@@ -1,5 +1,5 @@
 <?php
-// $Id: system.api.php,v 1.120 2010/01/13 06:26:49 webchick Exp $
+// $Id: system.api.php,v 1.141 2010/03/06 12:43:45 dries Exp $
 
 /**
  * @file
@@ -66,8 +66,9 @@ function hook_hook_info() {
  *     static caching of entities during a page request. Defaults to TRUE.
  *   - load hook: The name of the hook which should be invoked by
  *     DrupalDefaultEntityController:attachLoad(), for example 'node_load'.
- *   - path callback: A function taking an entity as argument and returning the
- *     path to the entity.
+ *   - uri callback: A function taking an entity as argument and returning the
+ *     uri elements of the entity, e.g. 'path' and 'options'. The actual entity
+ *     uri can be constructed by passing these elements to url().
  *   - fieldable: Set to TRUE if you want your entity type to be fieldable.
  *   - object keys: An array describing how the Field API can extract the
  *     information it needs from the objects of the type. Elements:
@@ -98,9 +99,9 @@ function hook_hook_info() {
  *     Keys are bundles machine names, as found in the objects' 'bundle'
  *     property (defined in the 'object keys' entry above). Elements:
  *     - label: The human-readable name of the bundle.
- *     - admin: An array of information that allow Field UI pages (currently
- *       implemented in a contributed module) to attach themselves to the
- *       existing administration pages for the bundle. Elements:
+ *     - admin: An array of information that allows Field UI pages to attach
+ *       themselves to the existing administration pages for the bundle.
+ *       Elements:
  *       - path: the path of the bundle's main administration page, as defined
  *         in hook_menu(). If the path includes a placeholder for the bundle,
  *         the 'bundle argument', 'bundle helper' and 'real path' keys below
@@ -218,6 +219,32 @@ function hook_entity_load($entities, $type) {
   foreach ($entities as $entity) {
     $entity->foo = mymodule_add_something($entity, $type);
   }
+}
+
+/**
+ * Act on entities when inserted.
+ *
+ * Generic insert hook called for all entity types via entity_invoke().
+ *
+ * @param $entity
+ *   The entity object.
+ * @param $type
+ *   The type of entity being inserted (i.e. node, user, comment).
+ */
+function hook_entity_insert($entity, $type) {
+}
+
+/**
+ * Act on entities when updated.
+ *
+ * Generic update hook called for all entity types via entity_invoke().
+ *
+ * @param $entity
+ *   The entity object.
+ * @param $type
+ *   The type of entity being updated (i.e. node, user, comment).
+ */
+function hook_entity_update($entity, $type) {
 }
 
 /**
@@ -356,13 +383,31 @@ function hook_cron() {
  *     worker in seconds. Defaults to 15.
  *
  * @see hook_cron()
+ * @see hook_cron_queue_info_alter()
  */
 function hook_cron_queue_info() {
   $queues['aggregator_feeds'] = array(
     'worker callback' => 'aggregator_refresh',
-    'time' => 15,
+    'time' => 60,
   );
   return $queues;
+}
+
+/**
+ * Alter cron queue information before cron runs.
+ *
+ * Called by drupal_run_cron() to allow modules to alter cron queue settings
+ * before any jobs are processesed.
+ *
+ * @param array $queues
+ *   An array of cron queue information.
+ *
+ *  @see hook_cron_queue_info()
+ */
+function hook_cron_queue_info_alter(&$queues) {
+  // This site has many feeds so let's spend 90 seconds on each cron run
+  // updating feeds instead of the default 60.
+  $queues['aggregator_feeds']['time'] = 90;
 }
 
 /**
@@ -586,6 +631,18 @@ function hook_css_alter(&$css) {
 }
 
 /**
+ * Alter the commands that are sent to the user through the AJAX framework.
+ *
+ * @param $commands
+ *   An array of all commands that will be sent to the user.
+ * @see ajax_render()
+ */
+function hook_ajax_render_alter($commands) {
+  // Inject any new status messages into the content area.
+  $commands[] = ajax_command_prepend('#block-system-main .content', theme('status_messages'));
+}
+
+/**
  * Add elements to a page before it is rendered.
  *
  * Use this hook when you want to add elements at the page level. For your
@@ -737,53 +794,29 @@ function hook_form_FORM_ID_alter(&$form, &$form_state) {
 }
 
 /**
- * Allow themes to alter the theme-specific settings form.
+ * Map form_ids to form builder functions.
  *
- * With this hook, themes can alter the theme-specific settings form in any way
- * allowable by Drupal's Forms API, such as adding form elements, changing
- * default values and removing form elements. See the Forms API documentation on
- * api.drupal.org for detailed information.
+ * By default, when drupal_get_form() is called, the system will look for a
+ * function with the same name as the form ID, and use that function to build
+ * the form. This hook allows you to override that behavior in two ways.
  *
- * Note that the base theme's form alterations will be run before any sub-theme
- * alterations.
+ * First, you can use this hook to tell the form system to use a different
+ * function to build certain forms in your module; this is often used to define
+ * a form "factory" function that is used to build several similar forms. In
+ * this case, your hook implementation will likely ignore all of the input
+ * arguments. See node_forms() for an example of this.
  *
- * @param $form
- *   Nested array of form elements that comprise the form.
- * @param $form_state
- *   A keyed array containing the current state of the form.
- */
-function hook_form_system_theme_settings_alter(&$form, &$form_state) {
-  // Add a checkbox to toggle the breadcrumb trail.
-  $form['toggle_breadcrumb'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Display the breadcrumb'),
-    '#default_value' => theme_get_setting('toggle_breadcrumb'),
-    '#description'   => t('Show a trail of links from the homepage to the current page.'),
-  );
-}
-
-/**
- * Map form_ids to builder functions.
- *
- * This hook allows modules to build multiple forms from a single form "factory"
- * function but each form will have a different form id for submission,
- * validation, theming or alteration by other modules.
- *
- * The 'callback arguments' will be passed as parameters to the function defined
- * in 'callback'. In case the code that calls drupal_get_form() also passes
- * parameters, then the 'callback' function will receive the
- * 'callback arguments' specified in hook_forms() before those that have been
- * passed to drupal_get_form().
- *
- * See node_forms() for an actual example of how multiple forms share a common
- * building function.
+ * Second, you could use this hook to define how to build a form with a
+ * dynamically-generated form ID. In this case, you would need to verify that
+ * the $form_id input matched your module's format for dynamically-generated
+ * form IDs, and if so, act appropriately.
  *
  * @param $form_id
  *   The unique string identifying the desired form.
  * @param $args
- *   An array containing the original arguments provided to drupal_get_form().
- *   These are always passed to the form builder and do not have to be specified
- *   manually in 'callback arguments'.
+ *   An array containing the original arguments provided to drupal_get_form()
+ *   or drupal_form_submit(). These are always passed to the form builder and
+ *   do not have to be specified manually in 'callback arguments'.
  *
  * @return
  *   An associative array whose keys define form_ids and whose values are an
@@ -838,7 +871,7 @@ function hook_forms($form_id, $args) {
 function hook_boot() {
   // we need user_access() in the shutdown function. make sure it gets loaded
   drupal_load('module', 'user');
-  register_shutdown_function('devel_shutdown');
+  drupal_register_shutdown_function('devel_shutdown');
 }
 
 /**
@@ -905,7 +938,7 @@ function hook_image_toolkits() {
  * invoke hook_mail_alter(). For example, a contributed module directly
  * calling the drupal_mail_system()->mail() or PHP mail() function
  * will not invoke this hook. All core modules use drupal_mail() for
- * messaging, it is best practice but not manditory in contributed modules.
+ * messaging, it is best practice but not mandatory in contributed modules.
  *
  * @param $message
  *   An array containing the message data. Keys in this array include:
@@ -1058,8 +1091,6 @@ function hook_permission() {
  *   'module', 'theme_engine', or 'theme'.
  * - theme path: (automatically derived) The directory path of the theme or
  *   module, so that it doesn't need to be looked up.
- * - theme paths: (automatically derived) An array of template suggestions where
- *   .tpl.php files related to this theme hook may be found.
  *
  * The following parameters are all optional.
  *
@@ -1136,9 +1167,6 @@ function hook_theme($existing, $type, $theme, $path) {
  *    'file' => 'modules/user/user.pages.inc',
  *    'type' => 'module',
  *    'theme path' => 'modules/user',
- *    'theme paths' => array(
- *      0 => 'modules/user',
- *    ),
  *    'preprocess functions' => array(
  *      0 => 'template_preprocess',
  *      1 => 'template_preprocess_user_profile',
@@ -1158,6 +1186,31 @@ function hook_theme_registry_alter(&$theme_registry) {
     if ($value = 'template_preprocess_forum_topic_navigation') {
       unset($theme_registry['forum_topic_navigation']['preprocess functions'][$key]);
     }
+  }
+}
+
+/**
+ * Return the machine-readable name of the theme to use for the current page.
+ *
+ * This hook can be used to dynamically set the theme for the current page
+ * request. It overrides the default theme as well as any per-page or
+ * per-section theme set by the theme callback function in hook_menu(). This
+ * should be used by modules which need to override the theme based on dynamic
+ * conditions.
+ *
+ * Since only one theme can be used at a time, the last (i.e., highest
+ * weighted) module which returns a valid theme name from this hook will
+ * prevail.
+ *
+ * @return
+ *   The machine-readable name of the theme that should be used for the current
+ *   page request. The value returned from this function will only have an
+ *   effect if it corresponds to a currently-active theme on the site.
+ */
+function hook_custom_theme() {
+  // Allow the user to request a particular theme via a query parameter.
+  if (isset($_GET['theme'])) {
+    return $_GET['theme'];
   }
 }
 
@@ -1257,7 +1310,7 @@ function hook_xmlrpc_alter(&$methods) {
  *   - request_uri: The Request URI for the page the event happened in.
  *   - referer: The page that referred the use to the page where the event occurred.
  *   - ip: The IP address where the request for the page came from.
- *   - timestamp: The UNIX timetamp of the date/time the event occurred
+ *   - timestamp: The UNIX timestamp of the date/time the event occurred
  *   - severity: One of the following values as defined in RFC 3164 http://www.faqs.org/rfcs/rfc3164.html
  *     WATCHDOG_EMERG     Emergency: system is unusable
  *     WATCHDOG_ALERT     Alert: action must be taken immediately
@@ -1360,12 +1413,12 @@ function hook_mail($key, &$message, $params) {
     '%username' => format_username($account),
   );
   if ($context['hook'] == 'taxonomy') {
-    $object = $params['object'];
-    $vocabulary = taxonomy_vocabulary_load($object->vid);
+    $entity = $params['object'];
+    $vocabulary = taxonomy_vocabulary_load($entity->vid);
     $variables += array(
-      '%term_name' => $object->name,
-      '%term_description' => $object->description,
-      '%term_id' => $object->tid,
+      '%term_name' => $entity->name,
+      '%term_description' => $entity->description,
+      '%term_id' => $entity->tid,
       '%vocabulary_name' => $vocabulary->name,
       '%vocabulary_description' => $vocabulary->description,
       '%vocabulary_id' => $vocabulary->vid,
@@ -1478,7 +1531,7 @@ function hook_modules_disabled($modules) {
  * @see hook_uninstall()
  *
  * @param $modules
- *   The name of the uninstalled module.
+ *   An array of the uninstalled modules.
  */
 function hook_modules_uninstalled($modules) {
   foreach ($modules as $module) {
@@ -1507,6 +1560,9 @@ function hook_modules_uninstalled($modules) {
  *   - 'class' A string specifying the PHP class that implements the
  *     DrupalStreamWrapperInterface interface.
  *   - 'description' A string with a short description of what the wrapper does.
+ *   - 'type' A bitmask of flags indicating what type of streams this wrapper
+ *     will access - local or remote, readable and/or writeable, etc. Many
+ *     shortcut constants are defined in stream_wrappers.inc.
  *
  * @see file_get_stream_wrappers()
  * @see hook_stream_wrappers_alter()
@@ -1528,6 +1584,7 @@ function hook_stream_wrappers() {
       'name' => t('Temporary files'),
       'class' => 'DrupalTempStreamWrapper',
       'description' => t('Temporary local files for upload and previews.'),
+      'type' => STREAM_WRAPPERS_HIDDEN,
     )
   );
 }
@@ -2074,10 +2131,11 @@ function hook_install() {
 }
 
 /**
- * Perform a single update. For each patch which requires a database change add
- * a new hook_update_N() which will be called by update.php.
+ * Perform a single update.
  *
- * The database updates are numbered sequentially according to the version of Drupal you are compatible with.
+ * For each patch which requires a database change add a new hook_update_N()
+ * which will be called by update.php. The database updates are numbered
+ * sequentially according to the version of Drupal you are compatible with.
  *
  * Schema updates should adhere to the Schema API:
  * @link http://drupal.org/node/150215 http://drupal.org/node/150215 @endlink
@@ -2179,6 +2237,51 @@ function hook_update_N(&$sandbox) {
 
   // In case of an error, simply throw an exception with an error message.
   throw new DrupalUpdateException('Something went wrong; here is what you should do.');
+}
+
+/**
+ * Return an array of information about module update dependencies.
+ *
+ * This can be used to indicate update functions from other modules that your
+ * module's update functions depend on, or vice versa. It is used by the update
+ * system to determine the appropriate order in which updates should be run, as
+ * well as to search for missing dependencies.
+ *
+ * Implementations of this hook should be placed in a mymodule.install file in
+ * the same directory as mymodule.module.
+ *
+ * @return
+ *   A multidimensional array containing information about the module update
+ *   dependencies. The first two levels of keys represent the module and update
+ *   number (respectively) for which information is being returned, and the
+ *   value is an array of information about that update's dependencies. Within
+ *   this array, each key represents a module, and each value represents the
+ *   number of an update function within that module. In the event that your
+ *   update function depends on more than one update from a particular module,
+ *   you should always list the highest numbered one here (since updates within
+ *   a given module always run in numerical order).
+ *
+ * @see update_resolve_dependencies()
+ * @see hook_update_N()
+ */
+function hook_update_dependencies() {
+  // Indicate that the mymodule_update_7000() function provided by this module
+  // must run after the another_module_update_7002() function provided by the
+  // 'another_module' module.
+  $dependencies['mymodule'][7000] = array(
+    'another_module' => 7002,
+  );
+  // Indicate that the mymodule_update_7001() function provided by this module
+  // must run before the yet_another_module_update_7004() function provided by
+  // the 'yet_another_module' module. (Note that declaring dependencies in this
+  // direction should be done only in rare situations, since it can lead to the
+  // following problem: If a site has already run the yet_another_module
+  // module's database updates before it updates its codebase to pick up the
+  // newest mymodule code, then the dependency declared here will be ignored.)
+  $dependencies['yet_another_module'][7004] = array(
+    'mymodule' => 7001,
+  );
+  return $dependencies;
 }
 
 /**
@@ -2581,6 +2684,8 @@ function hook_file_mimetype_mapping_alter(&$mapping) {
  *       Modules that are processing actions (like Trigger module) should take
  *       special care for the "presave" hook, in which case a dependent "save"
  *       action should NOT be invoked.
+ *
+ * @ingroup actions
  */
 function hook_action_info() {
   return array(
@@ -2646,6 +2751,8 @@ function hook_action_info_alter(&$actions) {
  * - weight: This optional key specifies the weight of this archiver.
  *   When mapping file extensions to archivers, the first archiver by
  *   weight found that supports the requested extension will be used.
+ *
+ * @see hook_archiver_info_alter()
  */
 function hook_archiver_info() {
   return array(
@@ -2656,6 +2763,18 @@ function hook_archiver_info() {
   );
 }
 
+/**
+ * Alter archiver information declared by other modules.
+ *
+ * See hook_archiver_info() for a description of archivers and the archiver
+ * information structure.
+ *
+ * @param $info
+ *   Archiver information to alter (return values from hook_archiver_info()).
+ */
+function hook_archiver_info_alter(&$info) {
+  $info['tar']['extensions'][] = 'tgz';
+}
 
 /**
  * Defines additional date types.
@@ -3086,6 +3205,19 @@ function hook_token_info_alter(&$data) {
   );
 }
 
+/**
+ * Alter the default country list.
+ *
+ * @param $countries
+ *   The associative array of countries keyed by ISO 3166-1 country code.
+ *
+ * @see country_get_list()
+ * @see _country_get_predefined_list()
+ */
+function hook_countries_alter(&$countries) {
+  // Quebec has seceded from Canada. Add to country list.
+  $countries['QC'] = 'Quebec';
+}
 /**
  * @} End of "addtogroup hooks".
  */

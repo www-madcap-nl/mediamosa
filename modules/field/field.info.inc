@@ -1,5 +1,5 @@
 <?php
-// $Id: field.info.inc,v 1.37 2010/01/13 04:37:03 webchick Exp $
+// $Id: field.info.inc,v 1.42 2010/02/27 22:11:11 webchick Exp $
 
 /**
  * @file
@@ -65,18 +65,22 @@ function field_info_cache_clear() {
  *     as well as module, giving the module that exposes the entity type.
  */
 function _field_info_collate_types($reset = FALSE) {
+  global $language;
   static $info;
 
-  // @TODO use entity_get_info().
+  // The _info() hooks invoked below include translated strings, so each
+  // language is cached separately.
+  $langcode = $language->language;
 
   if ($reset) {
     $info = NULL;
-    cache_clear_all('field_info_types', 'cache_field');
+    // Clear all languages.
+    cache_clear_all('field_info_types:', 'cache_field', TRUE);
     return;
   }
 
   if (!isset($info)) {
-    if ($cached = cache_get('field_info_types', 'cache_field')) {
+    if ($cached = cache_get("field_info_types:$langcode", 'cache_field')) {
       $info = $cached->data;
     }
     else {
@@ -144,7 +148,7 @@ function _field_info_collate_types($reset = FALSE) {
       }
       drupal_alter('field_storage_info', $info['storage types']);
 
-      cache_set('field_info_types', $info, 'cache_field');
+      cache_set("field_info_types:$langcode", $info, 'cache_field');
     }
   }
 
@@ -168,7 +172,7 @@ function _field_info_collate_types($reset = FALSE) {
  *   - fields_id: Array of existing fields, keyed by field id. This entry lists
  *     both deleted and non-deleted fields. The bundles element is the same as
  *     for 'fields'.
- *   - instances: Array of existing instances, keyed by object type, bundle
+ *   - instances: Array of existing instances, keyed by entity type, bundle
  *     name and field name. This entry only lists non-deleted instances.
  */
 function _field_info_collate_fields($reset = FALSE) {
@@ -208,9 +212,9 @@ function _field_info_collate_fields($reset = FALSE) {
 
     // Populate 'instances'. Only non-deleted instances are considered.
     $info['instances'] = array();
-    foreach (field_info_bundles() as $obj_type => $bundles) {
+    foreach (field_info_bundles() as $entity_type => $bundles) {
       foreach ($bundles as $bundle => $bundle_info) {
-        $info['instances'][$obj_type][$bundle] = array();
+        $info['instances'][$entity_type][$bundle] = array();
       }
     }
     foreach ($definitions['instances'] as $instance) {
@@ -247,6 +251,9 @@ function _field_info_prepare_field($field) {
   $details = (array) module_invoke($field['storage']['module'], 'field_storage_details', $field);
   drupal_alter('field_storage_details', $details, $field, $instance);
   $field['storage']['details'] = $details;
+
+  // Initialize the 'bundles' list.
+  $field['bundles'] = array();
 
   return $field;
 }
@@ -481,19 +488,19 @@ function field_info_storage_types($storage_type = NULL) {
 /**
  * Returns information about existing bundles.
  *
- * @param $obj_type
- *   The type of object; e.g. 'node' or 'user'.
+ * @param $entity_type
+ *   The type of entity; e.g. 'node' or 'user'.
  *
  * @return
- *   An array of bundles for the $obj_type keyed by bundle name,
- *   or, if no $obj_type was provided, the array of all existing bundles,
- *   keyed by object type.
+ *   An array of bundles for the $entity_type keyed by bundle name,
+ *   or, if no $entity_type was provided, the array of all existing bundles,
+ *   keyed by entity type.
  */
-function field_info_bundles($obj_type = NULL) {
+function field_info_bundles($entity_type = NULL) {
   $info = entity_get_info();
 
-  if ($obj_type) {
-    return isset($info[$obj_type]['bundles']) ? $info[$obj_type]['bundles'] : array();
+  if ($entity_type) {
+    return isset($info[$entity_type]['bundles']) ? $info[$entity_type]['bundles'] : array();
   }
 
   $bundles = array();
@@ -561,27 +568,27 @@ function field_info_field_by_id($field_id) {
 /**
  * Retrieves information about field instances.
  *
- * @param $obj_type
- *   The object type for which to return instances.
+ * @param $entity_type
+ *   The entity type for which to return instances.
  * @param $bundle_name
  *   The bundle name for which to return instances.
  *
  * @return
- *   If $obj_type is not set, return all instances keyed by object type and
- *   bundle name. If $obj_type is set, return all instances for that object
- *   type, keyed by bundle name. If $obj_type and $bundle_name are set, return
+ *   If $entity_type is not set, return all instances keyed by entity type and
+ *   bundle name. If $entity_type is set, return all instances for that entity
+ *   type, keyed by bundle name. If $entity_type and $bundle_name are set, return
  *   all instances for that bundle.
  */
-function field_info_instances($obj_type = NULL, $bundle_name = NULL) {
+function field_info_instances($entity_type = NULL, $bundle_name = NULL) {
   $info = _field_info_collate_fields();
-  if (!isset($obj_type)) {
+  if (!isset($entity_type)) {
     return $info['instances'];
   }
   if (!isset($bundle_name)) {
-    return $info['instances'][$obj_type];
+    return $info['instances'][$entity_type];
   }
-  if (isset($info['instances'][$obj_type][$bundle_name])) {
-    return $info['instances'][$obj_type][$bundle_name];
+  if (isset($info['instances'][$entity_type][$bundle_name])) {
+    return $info['instances'][$entity_type][$bundle_name];
   }
   return array();
 }
@@ -589,17 +596,17 @@ function field_info_instances($obj_type = NULL, $bundle_name = NULL) {
 /**
  * Returns an array of instance data for a specific field and bundle.
  *
- * @param $obj_type
- *   The object type for the instance.
+ * @param $entity_type
+ *   The entity type for the instance.
  * @param $field_name
  *   The field name for the instance.
  * @param $bundle_name
  *   The bundle name for the instance.
  */
-function field_info_instance($obj_type, $field_name, $bundle_name) {
+function field_info_instance($entity_type, $field_name, $bundle_name) {
   $info = _field_info_collate_fields();
-  if (isset($info['instances'][$obj_type][$bundle_name][$field_name])) {
-    return $info['instances'][$obj_type][$bundle_name][$field_name];
+  if (isset($info['instances'][$entity_type][$bundle_name][$field_name])) {
+    return $info['instances'][$entity_type][$bundle_name][$field_name];
   }
 }
 

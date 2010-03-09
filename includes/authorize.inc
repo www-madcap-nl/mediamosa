@@ -1,5 +1,5 @@
 <?php
-// $Id: authorize.inc,v 1.7 2010/01/09 23:03:21 webchick Exp $
+// $Id: authorize.inc,v 1.9 2010/01/30 07:59:24 dries Exp $
 
 /**
  * @file
@@ -19,7 +19,7 @@ function authorize_filetransfer_form($form_state) {
   // CSS we depend on lives in modules/system/maintenance.css, which is loaded
   // via the default maintenance theme.
   $form['#attached']['js'][] = $base_url . '/misc/authorize.js';
-  
+
   // Get all the available ways to transfer files.
   if (empty($_SESSION['authorize_filetransfer_backends'])) {
     drupal_set_message(t('Unable to continue, no available methods of file transfer'), 'error');
@@ -59,7 +59,7 @@ function authorize_filetransfer_form($form_state) {
    * Here we create two submit buttons. For a JS enabled client, they will
    * only ever see submit_process. However, if a client doesn't have JS
    * enabled, they will see submit_connection on the first form (when picking
-   * what filetranfer type to use, and submit_process on the second one (which
+   * what filetransfer type to use, and submit_process on the second one (which
    * leads to the actual operation).
    */
   $form['submit_connection'] = array(
@@ -182,7 +182,7 @@ function authorize_filetransfer_form_submit($form, &$form_state) {
         variable_set('authorize_filetransfer_connection_settings_' . $filetransfer_backend, $connection_settings);
 
         $filetransfer = authorize_get_filetransfer($filetransfer_backend, $form_state['values']['connection_settings'][$filetransfer_backend]);
-        
+
         // Now run the operation.
         authorize_run_operation($filetransfer);
       }

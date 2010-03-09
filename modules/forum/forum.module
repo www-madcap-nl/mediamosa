@@ -1,5 +1,5 @@
 <?php
-// $Id: forum.module,v 1.553 2010/01/14 06:20:15 webchick Exp $
+// $Id: forum.module,v 1.558 2010/03/08 15:40:25 webchick Exp $
 
 /**
  * @file
@@ -40,7 +40,9 @@ function forum_help($path, $arg) {
       $output .= '</dl>';
       return $output;
     case 'admin/structure/forum':
-      return '<p>' . t('Forums contain forum topics. Use containers to group related forums.') . '</p>';
+      $output = '<p>' . t('Forums contain forum topics. Use containers to group related forums.') . '</p>';
+      $output .= theme('more_help_link', array('url' => url('admin/help/forum')));
+      return $output;
     case 'admin/structure/forum/add/container':
       return '<p>' . t('Use containers to group related forums.') . '</p>';
     case 'admin/structure/forum/add/forum':
@@ -251,18 +253,6 @@ function forum_node_view($node, $view_mode) {
       }
       drupal_set_breadcrumb($breadcrumb);
 
-    }
-  }
-}
-
-/**
- * Implements hook_node_prepare().
- */
-function forum_node_prepare($node) {
-  if (_forum_node_check_node_type($node)) {
-    if (empty($node->nid)) {
-      // New topic
-      $node->taxonomy_forums[0]['tid'] =  arg(3);
     }
   }
 }
@@ -495,19 +485,19 @@ function forum_comment_delete($comment) {
 /**
  * Implements hook_field_storage_pre_insert().
  */
-function forum_field_storage_pre_insert($obj_type, $object, &$skip_fields) {
-  if ($obj_type == 'node' && $object->status && _forum_node_check_node_type($object)) {
+function forum_field_storage_pre_insert($entity_type, $entity, &$skip_fields) {
+  if ($entity_type == 'node' && $entity->status && _forum_node_check_node_type($entity)) {
     $query = db_insert('forum_index')->fields(array('nid', 'title', 'tid', 'sticky', 'created', 'comment_count', 'last_comment_timestamp'));
-    foreach ($object->taxonomy_forums as $language) {
+    foreach ($entity->taxonomy_forums as $language) {
       foreach ($language as $item) {
         $query->values(array(
-          'nid' => $object->nid,
-          'title' => $object->title,
+          'nid' => $entity->nid,
+          'title' => $entity->title,
           'tid' => $item['tid'],
-          'sticky' => $object->sticky,
-          'created' => $object->created,
+          'sticky' => $entity->sticky,
+          'created' => $entity->created,
           'comment_count' => 0,
-          'last_comment_timestamp' => $object->created,
+          'last_comment_timestamp' => $entity->created,
         ));
       }
     }
@@ -518,37 +508,37 @@ function forum_field_storage_pre_insert($obj_type, $object, &$skip_fields) {
 /**
  * Implements hook_field_storage_pre_update().
  */
-function forum_field_storage_pre_update($obj_type, $object, &$skip_fields) {
+function forum_field_storage_pre_update($entity_type, $entity, &$skip_fields) {
   $first_call = &drupal_static(__FUNCTION__, array());
 
-  if ($obj_type == 'node' && $object->status && _forum_node_check_node_type($object)) {
+  if ($entity_type == 'node' && $entity->status && _forum_node_check_node_type($entity)) {
     // We don't maintain data for old revisions, so clear all previous values
     // from the table. Since this hook runs once per field, per object, make
     // sure we only wipe values once.
-    if (!isset($first_call[$object->nid])) {
-      $first_call[$object->nid] = FALSE;
-      db_delete('forum_index')->condition('nid', $object->nid)->execute();
+    if (!isset($first_call[$entity->nid])) {
+      $first_call[$entity->nid] = FALSE;
+      db_delete('forum_index')->condition('nid', $entity->nid)->execute();
     }
     // Only save data to the table if the node is published.
-    if ($object->status) {
+    if ($entity->status) {
       $query = db_insert('forum_index')->fields(array('nid', 'title', 'tid', 'sticky', 'created', 'comment_count', 'last_comment_timestamp'));
-      foreach ($object->taxonomy_forums as $language) {
+      foreach ($entity->taxonomy_forums as $language) {
         foreach ($language as $item) {
           $query->values(array(
-            'nid' => $object->nid,
-            'title' => $object->title,
+            'nid' => $entity->nid,
+            'title' => $entity->title,
             'tid' => $item['tid'],
-            'sticky' => $object->sticky,
-            'created' => $object->created,
+            'sticky' => $entity->sticky,
+            'created' => $entity->created,
             'comment_count' => 0,
-            'last_comment_timestamp' => $object->created,
+            'last_comment_timestamp' => $entity->created,
           ));
         }
       }
       $query->execute();
       // The logic for determining last_comment_count is fairly complex, so
       // call _forum_update_forum_index() too.
-      _forum_update_forum_index($object->nid);
+      _forum_update_forum_index($entity->nid);
     }
   }
 }
@@ -578,6 +568,13 @@ function forum_form_alter(&$form, $form_state, $form_id) {
     // Make the vocabulary required for 'real' forum-nodes.
     $form['taxonomy_forums'][$langcode]['#required'] = TRUE;
     $form['taxonomy_forums'][$langcode]['#multiple'] = FALSE;
+    if (empty($form['taxonomy_forums'][$langcode]['#default_value'])) {
+      // If there is no default forum already selected, try to get the forum
+      // ID from the URL (e.g., if we are on a page like node/add/forum/2, we
+      // expect "2" to be the ID of the forum that was requested).
+      $requested_forum_id = arg(3);
+      $form['taxonomy_forums'][$langcode]['#default_value'] = is_numeric($requested_forum_id) ? $requested_forum_id : NULL;
+    }
   }
 }
 
@@ -680,9 +677,6 @@ function forum_form($node, $form_state) {
     $form['shadow'] = array('#type' => 'checkbox', '#title' => t('Leave shadow copy'), '#default_value' => $shadow, '#description' => t('If you move this topic, you can leave a link in the old forum to the new forum.'));
     $form['forum_tid'] = array('#type' => 'value', '#value' => $node->forum_tid);
   }
-
-  $form['#submit'][] = 'forum_submit';
-  // Assign the forum topic submit handler.
 
   return $form;
 }

@@ -1,5 +1,5 @@
 <?php
-// $Id: schema.test,v 1.10 2009/12/15 08:30:53 dries Exp $
+// $Id: schema.test,v 1.18 2010/03/01 11:30:37 dries Exp $
 
 /**
  * @file
@@ -61,8 +61,22 @@ class SchemaTestCase extends DrupalWebTestCase {
     // The insert should fail again.
     $this->assertFalse($this->tryInsert(), t('Insert without a default failed.'));
 
+    // Test for fake index and test for the boolean result of indexExists().
+    $index_exists = Database::getConnection()->schema()->indexExists('test_table', 'test_field');
+    $this->assertIdentical($index_exists, FALSE, t('Fake index does not exists'));
+    // Add index.
+    db_add_index('test_table', 'test_field', array('test_field'));
+    // Test for created index and test for the boolean result of indexExists().
+    $index_exists = Database::getConnection()->schema()->indexExists('test_table', 'test_field');
+    $this->assertIdentical($index_exists, TRUE, t('Index created.'));
+
     // Rename the table.
     db_rename_table('test_table', 'test_table2');
+
+    // Index should be renamed.
+    $index_exists = Database::getConnection()->schema()->indexExists('test_table2', 'test_field');
+    $this->assertTrue($index_exists, t('Index was renamed.'));
+
     // We need the default so that we can insert after the rename.
     db_field_set_default('test_table2', 'test_field', 0);
     $this->assertFalse($this->tryInsert(), t('Insert into the old table failed.'));
@@ -130,13 +144,56 @@ class SchemaTestCase extends DrupalWebTestCase {
   }
 
   /**
-   * Test index status.
+   * Tests creating unsigned columns and data integrity thereof.
    */
-  function testCheckIndex() {
-    $node_changed_index = Database::getConnection()->schema()->indexExists('node', 'node_changed');
-    $this->assertTrue($node_changed_index, t('Node index exists'));
+  function testUnsignedColumns() {
+    // First create the table with just a serial column.
+    $table_name = 'unsigned_table';
+    $table_spec = array(
+      'fields' => array('serial_column' => array('type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE)),
+      'primary key' => array('serial_column'),
+    );
+    $ret = array();
+    db_create_table($table_name, $table_spec);
 
-    $node_fake_index = Database::getConnection()->schema()->indexExists('node', 'node_not_exists');
-    $this->assertFalse($node_fake_index, t('Fake index does not exists'));
+    // Now set up columns for the other types.
+    $types = array('int', 'float', 'numeric');
+    foreach ($types as $type) {
+      $column_spec = array('type' => $type, 'unsigned'=> TRUE);
+      if ($type == 'numeric') {
+        $column_spec += array('precision' => 10, 'scale' => 0);
+      }
+      $column_name = $type . '_column';
+      $table_spec['fields'][$column_name] = $column_spec;
+      db_add_field($table_name, $column_name, $column_spec);
+    }
+
+    // Finally, check each column and try to insert invalid values into them.
+    foreach($table_spec['fields'] as $column_name => $column_spec) {
+      $this->assertTrue(db_column_exists($table_name, $column_name), t('Unsigned @type column was created.', array('@type' => $column_spec['type'])));
+      $this->assertFalse($this->tryUnsignedInsert($table_name, $column_name), t('Unsigned @type column rejected a negative value.', array('@type' => $column_spec['type'])));
+    }
+  }
+
+  /**
+   * Tries to insert a negative value into columns defined as unsigned.
+   *
+   * @param $table_name
+   *   The table to insert
+   * @param $column_name
+   *   The column to insert
+   * @return
+   *   TRUE if the insert succeeded, FALSE otherwise
+   */
+  function tryUnsignedInsert($table_name, $column_name) {
+    try {
+      db_insert($table_name)
+         ->fields(array($column_name => -1))
+         ->execute();
+      return TRUE;
+    }
+    catch (Exception $e) {
+      return FALSE;
+    }
   }
 }

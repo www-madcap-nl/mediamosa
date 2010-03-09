@@ -1,5 +1,5 @@
 <?php
-// $Id: session.inc,v 1.76 2010/01/14 02:05:34 webchick Exp $
+// $Id: session.inc,v 1.79 2010/03/09 03:52:02 dries Exp $
 
 /**
  * @file
@@ -72,7 +72,7 @@ function _drupal_session_read($sid) {
   // since PHP 5.0.5.
   // Thus destructors can use sessions but session handler can't use objects.
   // So we are moving session closure before destructing objects.
-  register_shutdown_function('session_write_close');
+  drupal_register_shutdown_function('session_write_close');
 
   // Handle the case of first time visitors and clients that don't store
   // cookies (eg. web crawlers).
@@ -85,7 +85,7 @@ function _drupal_session_read($sid) {
   // Otherwise, if the session is still active, we have a record of the
   // client's session in the database. If it's HTTPS then we are either have
   // a HTTPS session or we are about to log in so we check the sessions table
-  // for an anonymous session wth the non-HTTPS-only cookie.
+  // for an anonymous session with the non-HTTPS-only cookie.
   if ($is_https) {
     $user = db_query("SELECT u.*, s.* FROM {users} u INNER JOIN {sessions} s ON u.uid = s.uid WHERE s.ssid = :ssid", array(':ssid' => $sid))->fetchObject();
     if (!$user) {
@@ -100,8 +100,9 @@ function _drupal_session_read($sid) {
     $user = db_query("SELECT u.*, s.* FROM {users} u INNER JOIN {sessions} s ON u.uid = s.uid WHERE s.sid = :sid", array(':sid' => $sid))->fetchObject();
   }
 
-  // We found the client's session record and they are an authenticated user.
-  if ($user && $user->uid > 0) {
+  // We found the client's session record and they are an authenticated,
+  // active user.
+  if ($user && $user->uid > 0 && $user->status == 1) {
     // This is done to unserialize the data member of $user.
     $user = drupal_unpack($user);
 
@@ -110,8 +111,8 @@ function _drupal_session_read($sid) {
     $user->roles[DRUPAL_AUTHENTICATED_RID] = 'authenticated user';
     $user->roles += db_query("SELECT r.rid, r.name FROM {role} r INNER JOIN {users_roles} ur ON ur.rid = r.rid WHERE ur.uid = :uid", array(':uid' => $user->uid))->fetchAllKeyed(0, 1);
   }
-  // We didn't find the client's record (session has expired), or they
-  // are an anonymous user.
+  // We didn't find the client's record (session has expired), or they are
+  // blocked, or they are an anonymous user.
   else {
     $session = isset($user->session) ? $user->session : '';
     $user = drupal_anonymous_user($session);
@@ -201,7 +202,7 @@ function drupal_session_initialize() {
   }
   else {
     // Set a session identifier for this request. This is necessary because
-    // we lazyly start sessions at the end of this request, and some
+    // we lazily start sessions at the end of this request, and some
     // processes (like drupal_get_token()) needs to know the future
     // session ID in advance.
     $user = drupal_anonymous_user();
@@ -344,7 +345,7 @@ function _drupal_session_destroy($sid) {
  * @param $name
  *   Name of session cookie to delete.
  * @param $force_insecure
- *   Fornce cookie to be insecure.
+ *   Force cookie to be insecure.
  */
 function _drupal_session_delete_cookie($name, $force_insecure = FALSE) {
   if (isset($_COOKIE[$name])) {

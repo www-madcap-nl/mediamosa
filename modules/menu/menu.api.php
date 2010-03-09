@@ -1,5 +1,5 @@
 <?php
-// $Id: menu.api.php,v 1.21 2009/12/09 17:44:44 dries Exp $
+// $Id: menu.api.php,v 1.24 2010/01/30 07:59:25 dries Exp $
 
 /**
  * @file
@@ -165,7 +165,7 @@
  *     instead.
  *   - "page arguments": An array of arguments to pass to the page callback
  *     function, with path component substitution as described above.
- *   - "delivery callback": The function to call to package the result of the 
+ *   - "delivery callback": The function to call to package the result of the
  *     page callback function and send it to the browser. Defaults to
  *     drupal_deliver_html_page() unless a value is inherited from a parent menu
  *     item.
@@ -175,10 +175,13 @@
  *   - "access arguments": An array of arguments to pass to the access callback
  *     function, with path component substitution as described above.
  *   - "theme callback": Optional. A function returning the machine-readable
- *     name of the theme that will be used to render the page. If the function
- *     returns nothing, the main site theme will be used. If no function is
- *     provided, the main site theme will also be used, unless a value is
- *     inherited from a parent menu item.
+ *     name of the default theme that will be used to render the page. If this
+ *     function is provided, it is expected to return a currently-active theme
+ *     on the site (otherwise, the main site theme will be used instead). If no
+ *     function is provided, the main site theme will also be used, unless a
+ *     value is inherited from a parent menu item. In all cases, the results of
+ *     this function can be dynamically overridden for a particular page
+ *     request by modules which implement hook_custom_theme().
  *   - "theme arguments": An array of arguments to pass to the theme callback
  *     function, with path component substitution as described above.
  *   - "file": A file that will be included before the page callback is called;
@@ -189,7 +192,7 @@
  *   - "file path": The path to the directory containing the file specified in
  *     "file". This defaults to the path to the module implementing the hook.
  *   - "load arguments": An array of arguments to be passed to each of the
- *     wildcard object loaders in the path, after the path argument itself. 
+ *     wildcard object loaders in the path, after the path argument itself.
  *     For example, if a module registers path node/%node/revisions/%/view
  *     with load arguments set to array(3), the '%node' in the path indicates
  *     that the loader function node_load() will be called with the second
@@ -247,7 +250,11 @@
  *       information is generated when the path is accessed.
  *     - MENU_SUGGESTED_ITEM: Modules may "suggest" menu items that the
  *       administrator may enable.
- *     - MENU_LOCAL_TASK: Local tasks are rendered as tabs by default.
+ *     - MENU_LOCAL_ACTION: Local actions are menu items that describe actions
+ *       on the parent item such as adding a new user or block, and are
+ *       rendered in the action-links list in your theme.
+ *     - MENU_LOCAL_TASK: Local tasks are menu items that describe different
+ *       displays of data, and are generally rendered as tabs.
  *     - MENU_DEFAULT_LOCAL_TASK: Every set of local tasks should provide one
  *       "default" task, which should display the same page as the parent item.
  *     If the "type" element is omitted, MENU_NORMAL_ITEM is assumed.

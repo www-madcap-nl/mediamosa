@@ -1,5 +1,5 @@
 <?php
-// $Id: field_test.entity.inc,v 1.2 2009/12/26 16:50:08 dries Exp $
+// $Id: field_test.entity.inc,v 1.4 2010/02/12 05:38:10 webchick Exp $
 
 /**
  * @file
@@ -54,17 +54,17 @@ function field_test_entity_info() {
  */
 function field_test_entity_info_alter(&$entity_info) {
   // Enable/disable field_test as a translation handler.
-  foreach (field_test_entity_info_translatable() as $obj_type => $translatable) {
-    $entity_info[$obj_type]['translation']['field_test'] = $translatable;
+  foreach (field_test_entity_info_translatable() as $entity_type => $translatable) {
+    $entity_info[$entity_type]['translation']['field_test'] = $translatable;
   }
   // Disable locale as a translation handler.
-  foreach ($entity_info as $obj_type => $info) {
-    $entity_info[$obj_type]['translation']['locale'] = FALSE;
+  foreach ($entity_info as $entity_type => $info) {
+    $entity_info[$entity_type]['translation']['locale'] = FALSE;
   }
 }
 
 /**
- * Creates a new bundle for test_entity objects.
+ * Creates a new bundle for test_entity entities.
  *
  * @param $bundle
  *   The machine-readable name of the bundle.
@@ -84,7 +84,7 @@ function field_test_create_bundle($bundle, $text = NULL) {
 }
 
 /**
- * Renames a bundle for test_entity objects.
+ * Renames a bundle for test_entity entities.
  *
  * @param $bundle_old
  *   The machine-readable name of the bundle to rename.
@@ -121,7 +121,7 @@ function field_test_delete_bundle($bundle) {
 }
 
 /**
- * Creates a basic test_entity object.
+ * Creates a basic test_entity entity.
  */
 function field_test_create_stub_entity($id = 1, $vid = 1, $bundle = 'test_bundle') {
   $entity = new stdClass();

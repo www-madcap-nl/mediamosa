@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.test,v 1.63 2010/01/11 16:25:16 webchick Exp $
+// $Id: comment.test,v 1.71 2010/03/07 23:14:20 webchick Exp $
 
 class CommentHelperCase extends DrupalWebTestCase {
   protected $admin_user;
@@ -412,7 +412,7 @@ class CommentPreviewTest extends CommentHelperCase {
 
     // As admin user, configure comment settings.
     $this->drupalLogin($this->admin_user);
-    $this->setCommentPreview(TRUE);
+    $this->setCommentPreview(DRUPAL_OPTIONAL);
     $this->setCommentForm(TRUE);
     $this->setCommentSubject(TRUE);
     $this->setCommentSettings('comment_default_mode', COMMENT_MODE_THREADED, t('Comment paging changed.'));
@@ -442,7 +442,7 @@ class CommentPreviewTest extends CommentHelperCase {
     $langcode = LANGUAGE_NONE;
     $web_user = $this->drupalCreateUser(array('access comments', 'post comments', 'post comments without approval'));
     $this->drupalLogin($this->admin_user);
-    $this->setCommentPreview(TRUE);
+    $this->setCommentPreview(DRUPAL_OPTIONAL);
     $this->setCommentForm(TRUE);
     $this->setCommentSubject(TRUE);
     $this->setCommentSettings('comment_default_mode', COMMENT_MODE_THREADED, t('Comment paging changed.'));
@@ -571,7 +571,7 @@ class CommentAnonymous extends CommentHelperCase {
     $this->drupalGet('comment/reply/' . $this->node->nid);
     $this->assertText('You are not authorized to view comments', t('Error attempting to post comment.'));
     $this->assertNoFieldByName('subject', '', t('Subject field not found.'));
-    $this->assertNoFieldByName('comment', '', t('Comment field not found.'));
+    $this->assertNoFieldByName('comment[value]', '', t('Comment field not found.'));
 
     user_role_change_permissions(DRUPAL_ANONYMOUS_RID, array(
       'access comments' => TRUE,
@@ -607,7 +607,7 @@ class CommentPagerTest extends CommentHelperCase {
     // Set comment variables.
     $this->setCommentForm(TRUE);
     $this->setCommentSubject(TRUE);
-    $this->setCommentPreview(FALSE);
+    $this->setCommentPreview(DRUPAL_DISABLED);
 
     // Create a node and three comments.
     $node = $this->drupalCreateNode(array('type' => 'article', 'promote' => 1));
@@ -680,7 +680,7 @@ class CommentPagerTest extends CommentHelperCase {
     // Set comment variables.
     $this->setCommentForm(TRUE);
     $this->setCommentSubject(TRUE);
-    $this->setCommentPreview(FALSE);
+    $this->setCommentPreview(DRUPAL_DISABLED);
 
     // Display all the comments on the same page.
     $this->setCommentsPerPage(1000);
@@ -780,7 +780,7 @@ class CommentPagerTest extends CommentHelperCase {
     // Set comment variables.
     $this->setCommentForm(TRUE);
     $this->setCommentSubject(TRUE);
-    $this->setCommentPreview(FALSE);
+    $this->setCommentPreview(DRUPAL_DISABLED);
 
     // Set comments to one per page so that we are able to test paging without
     // needing to insert large numbers of comments.
@@ -895,6 +895,33 @@ class CommentApprovalTest extends CommentHelperCase {
 
     $this->drupalGet('node/' . $this->node->nid);
     $this->assertTrue($this->commentExists($anonymous_comment4), t('Anonymous comment visible.'));
+
+    // Post 2 anonymous comments without contact info.
+    $comments[] = $this->postComment($this->node, $this->randomName(), $this->randomName(), TRUE);
+    $comments[] = $this->postComment($this->node, $this->randomName(), $this->randomName(), TRUE);
+
+    // Publish multiple comments in one operation.
+    $this->drupalLogin($this->admin_user);
+    $this->drupalGet('admin/content/comment/approval');
+    $this->assertText(t('Unapproved comments (@count)', array('@count' => 2)), t('Two unapproved comments waiting for approval.'));
+    $edit = array(
+      "comments[{$comments[0]->id}]" => 1,
+      "comments[{$comments[1]->id}]" => 1,
+    );
+    $this->drupalPost(NULL, $edit, t('Update'));
+    $this->assertText(t('Unapproved comments (@count)', array('@count' => 0)), t('All comments were approved.'));
+
+    // Delete multiple comments in one operation.
+    $edit = array(
+      'operation' => 'delete',
+      "comments[{$comments[0]->id}]" => 1,
+      "comments[{$comments[1]->id}]" => 1,
+      "comments[{$anonymous_comment4->id}]" => 1,
+    );
+    $this->drupalPost(NULL, $edit, t('Update'));
+    $this->assertText(t('Are you sure you want to delete these comments and all their children?'), t('Confirmation required.'));
+    $this->drupalPost(NULL, $edit, t('Delete comments'));
+    $this->assertText(t('No comments available.'), t('All comments were deleted.'));
   }
 
   /**
@@ -1103,13 +1130,13 @@ class CommentRdfaTestCase extends CommentHelperCase {
 
     // Tests number of comments in teaser view.
     $this->drupalGet('node');
-    $comment_count_teaser = $this->xpath("//div[contains(@typeof, 'sioc:Item')]//li[contains(@class, 'comment_comments')]/a[contains(@property, 'sioc:num_replies') and contains(@content, '2')]");
+    $comment_count_teaser = $this->xpath("//div[contains(@typeof, 'sioc:Item')]//li[contains(@class, 'comment_comments')]/a[contains(@property, 'sioc:num_replies') and contains(@content, '2') and @datatype='xsd:integer']");
     $this->assertTrue(!empty($comment_count_teaser), t('RDFa markup for the number of comments found on teaser view.'));
 
     // Tests number of comments in full node view.
     $this->drupalGet('node/' . $this->node1->nid);
     $node_url = url('node/' . $this->node1->nid);
-    $comment_count_teaser = $this->xpath("/html/head/meta[@about='$node_url' and @property='sioc:num_replies' and @content='2']");
+    $comment_count_teaser = $this->xpath("/html/head/meta[@about='$node_url' and @property='sioc:num_replies' and @content='2' and @datatype='xsd:integer']");
     $this->assertTrue(!empty($comment_count_teaser), t('RDFa markup for the number of comments found on full node view.'));
   }
 
@@ -1149,10 +1176,10 @@ class CommentRdfaTestCase extends CommentHelperCase {
     // Tests comment #2 as anonymous user.
     $this->_testBasicCommentRdfaMarkup($comment2, $anonymous_user);
     // Tests the RDFa markup for the homepage (specific to anonymous comments).
-    $comment_homepage = $this->xpath("//div[@typeof='sioc:Post']//span[@rel='sioc:has_creator']/a[contains(@class, 'username') and @typeof='sioc:User' and @property='foaf:name' and @href='http://example.org/' and contains(@rel, 'foaf:page')]");
+    $comment_homepage = $this->xpath("//div[contains(@class, 'comment') and contains(@typeof, 'sioct:Comment')]//span[@rel='sioc:has_creator']/a[contains(@class, 'username') and @typeof='sioc:User' and @property='foaf:name' and @href='http://example.org/' and contains(@rel, 'foaf:page')]");
     $this->assertTrue(!empty($comment_homepage), t('RDFa markup for the homepage of anonymous user found.'));
     // There should be no about attribute on anonymous comments.
-    $comment_homepage = $this->xpath("//div[@typeof='sioc:Post']//span[@rel='sioc:has_creator']/a[@about]");
+    $comment_homepage = $this->xpath("//div[contains(@class, 'comment') and contains(@typeof, 'sioct:Comment')]//span[@rel='sioc:has_creator']/a[@about]");
     $this->assertTrue(empty($comment_homepage), t('No about attribute is present on anonymous user comment.'));
 
     // Tests comment #2 as logged in user.
@@ -1160,10 +1187,10 @@ class CommentRdfaTestCase extends CommentHelperCase {
     $this->drupalGet('node/' . $this->node2->nid);
     $this->_testBasicCommentRdfaMarkup($comment2, $anonymous_user);
     // Tests the RDFa markup for the homepage (specific to anonymous comments).
-    $comment_homepage = $this->xpath("//div[@typeof='sioc:Post']//span[@rel='sioc:has_creator']/a[contains(@class, 'username') and @typeof='sioc:User' and @property='foaf:name' and @href='http://example.org/' and contains(@rel, 'foaf:page')]");
+    $comment_homepage = $this->xpath("//div[contains(@class, 'comment') and contains(@typeof, 'sioct:Comment')]//span[@rel='sioc:has_creator']/a[contains(@class, 'username') and @typeof='sioc:User' and @property='foaf:name' and @href='http://example.org/' and contains(@rel, 'foaf:page')]");
     $this->assertTrue(!empty($comment_homepage), t('RDFa markup for the homepage of anonymous user found.'));
     // There should be no about attribute on anonymous comments.
-    $comment_homepage = $this->xpath("//div[@typeof='sioc:Post']//span[@rel='sioc:has_creator']/a[@about]");
+    $comment_homepage = $this->xpath("//div[contains(@class, 'comment') and contains(@typeof, 'sioct:Comment')]//span[@rel='sioc:has_creator']/a[@about]");
     $this->assertTrue(empty($comment_homepage), t('No about attribute is present on anonymous user comment.'));
   }
 
@@ -1174,19 +1201,61 @@ class CommentRdfaTestCase extends CommentHelperCase {
    *
    * @param $comment
    *   Comment object.
-   * @param $acount
+   * @param $account
    *   An array containing information about an anonymous user.
    */
   function _testBasicCommentRdfaMarkup($comment, $account = array()) {
-    $comment_container = $this->xpath("//div[contains(@class, 'comment') and @typeof='sioc:Post']");
-    $this->assertTrue(!empty($comment_container));
-    $comment_title = $this->xpath("//div[@typeof='sioc:Post']//h3[@property='dc:title']");
-    $this->assertEqual((string)$comment_title[0]->a, $comment->subject);
-    $comment_date = $this->xpath("//div[@typeof='sioc:Post']//*[contains(@property, 'dc:date') and contains(@property, 'dc:created')]");
-    $this->assertTrue(!empty($comment_date));
+    $comment_container = $this->xpath("//div[contains(@class, 'comment') and contains(@typeof, 'sioct:Comment')]");
+    $this->assertTrue(!empty($comment_container), t('Comment RDF type for comment found.'));
+    $comment_title = $this->xpath("//div[contains(@class, 'comment') and contains(@typeof, 'sioct:Comment')]//h3[@property='dc:title']");
+    $this->assertEqual((string)$comment_title[0]->a, $comment->subject, t('RDFa markup for the comment title found.'));
+    $comment_date = $this->xpath("//div[contains(@class, 'comment') and contains(@typeof, 'sioct:Comment')]//*[contains(@property, 'dc:date') and contains(@property, 'dc:created')]");
+    $this->assertTrue(!empty($comment_date), t('RDFa markup for the date of the comment found.'));
     // The author tag can be either a or span
-    $comment_author = $this->xpath("//div[@typeof='sioc:Post']//span[@rel='sioc:has_creator']/*[contains(@class, 'username') and @typeof='sioc:User' and @property='foaf:name']");
+    $comment_author = $this->xpath("//div[contains(@class, 'comment') and contains(@typeof, 'sioct:Comment')]//span[@rel='sioc:has_creator']/*[contains(@class, 'username') and @typeof='sioc:User' and @property='foaf:name']");
     $name = empty($account['name']) ? $this->web_user->name : $account['name'] . ' (not verified)';
-    $this->assertEqual((string)$comment_author[0], $name);
+    $this->assertEqual((string)$comment_author[0], $name, t('RDFa markup for the comment author found.'));
+    $comment_body = $this->xpath("//div[contains(@class, 'comment') and contains(@typeof, 'sioct:Comment')]//div[@class='content']//div[contains(@class, 'comment-body')]//div[@property='content:encoded']");
+    $this->assertEqual((string)$comment_body[0]->p, $comment->comment, t('RDFa markup for the comment body found.'));
+  }
+}
+
+/**
+ * Test to make sure comment content is rebuilt.
+ */
+class CommentContentRebuild extends CommentHelperCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'Comment Rebuild',
+      'description' => 'Test to make sure the comment content is rebuilt.',
+      'group' => 'Comment',
+    );
+  }
+
+  /**
+   * Test to ensure that the comment's content array is rebuilt for every
+   * call to comment_view().
+   */
+  function testCommentRebuild() {
+    // Update the comment settings so preview isn't required.
+    $this->drupalLogin($this->admin_user);
+    $this->setCommentSubject(TRUE);
+    $this->setCommentPreview(DRUPAL_OPTIONAL);
+    $this->drupalLogout();
+
+    // Log in as the web user and add the comment.
+    $this->drupalLogin($this->web_user);
+    $subject_text = $this->randomName();
+    $comment_text = $this->randomName();
+    $comment = $this->postComment($this->node, $comment_text, $subject_text, TRUE);
+    $comment_loaded = comment_load($comment->id);
+    $this->assertTrue($this->commentExists($comment), t('Comment found.'));
+
+    // Add the property to the content array and then see if it still exists on build.
+    $comment_loaded->content['test_property'] = array('#value' => $this->randomString());
+    $built_content = comment_view($comment_loaded, $this->node);
+
+    // This means that the content was rebuilt as the added test property no longer exists.
+    $this->assertFalse(isset($built_content['test_property']), t('Comment content was emptied before being built.'));
   }
 }

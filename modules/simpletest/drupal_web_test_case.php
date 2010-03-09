@@ -1,5 +1,5 @@
 <?php
-// $Id: drupal_web_test_case.php,v 1.193 2010/01/15 03:07:34 webchick Exp $
+// $Id: drupal_web_test_case.php,v 1.202 2010/03/07 18:06:06 webchick Exp $
 
 /**
  * Base class for Drupal tests.
@@ -493,7 +493,8 @@ abstract class DrupalTestCase {
       'line' => $exception->getLine(),
       'file' => $exception->getFile(),
     ));
-    $this->error($exception->getMessage(), 'Uncaught exception', _drupal_get_last_caller($backtrace));
+    require_once DRUPAL_ROOT . '/includes/errors.inc';
+    $this->error(t('%type: %message in %function (line %line of %file).', _drupal_decode_exception($exception)), 'Uncaught exception', _drupal_get_last_caller($backtrace));
   }
 
   /**
@@ -504,45 +505,41 @@ abstract class DrupalTestCase {
    * is not restricted.
    *
    * @param $length
-   *   Length of random string to generate which will be appended to $db_prefix.
+   *   Length of random string to generate.
    * @return
    *   Randomly generated string.
    */
   public static function randomString($length = 8) {
-    global $db_prefix;
-
     $str = '';
     for ($i = 0; $i < $length; $i++) {
       $str .= chr(mt_rand(32, 126));
     }
-    return str_replace('simpletest', 's', $db_prefix) . $str;
+    return $str;
   }
 
   /**
    * Generates a random string containing letters and numbers.
    *
-   * The letters may be upper or lower case. This method is better for
-   * restricted inputs that do not accept certain characters. For example,
-   * when testing input fields that require machine readable values (ie without
-   * spaces and non-standard characters) this method is best.
+   * The string will always start with a letter. The letters may be upper or
+   * lower case. This method is better for restricted inputs that do not
+   * accept certain characters. For example, when testing input fields that
+   * require machine readable values (i.e. without spaces and non-standard
+   * characters) this method is best.
    *
    * @param $length
-   *   Length of random string to generate which will be appended to $db_prefix.
+   *   Length of random string to generate.
    * @return
    *   Randomly generated string.
    */
   public static function randomName($length = 8) {
-    global $db_prefix;
-
     $values = array_merge(range(65, 90), range(97, 122), range(48, 57));
     $max = count($values) - 1;
-    $str = '';
-    for ($i = 0; $i < $length; $i++) {
+    $str = chr(mt_rand(97, 122));
+    for ($i = 1; $i < $length; $i++) {
       $str .= chr($values[mt_rand(0, $max)]);
     }
-    return str_replace('simpletest', 's', $db_prefix) . $str;
+    return $str;
   }
-
 }
 
 /**
@@ -550,8 +547,7 @@ abstract class DrupalTestCase {
  *
  * These tests can not access the database nor files. Calling any Drupal
  * function that needs the database will throw exceptions. These include
- * watchdog(), function_exists(), module_implements(),
- * module_invoke_all() etc.
+ * watchdog(), module_implements(), module_invoke_all() etc.
  */
 class DrupalUnitTestCase extends DrupalTestCase {
 
@@ -677,6 +673,13 @@ class DrupalWebTestCase extends DrupalTestCase {
   protected $originalUser = NULL;
 
   /**
+   * The original shutdown handlers array, before it was cleaned for testing purposes.
+   *
+   * @var array
+   */
+  protected $originalShutdownCallbacks = array();
+
+  /**
    * HTTP authentication method
    */
   protected $httpauth_method = CURLAUTH_BASIC;
@@ -700,6 +703,11 @@ class DrupalWebTestCase extends DrupalTestCase {
    * Whether the files were copied to the test files directory.
    */
   protected $generatedTestFiles = FALSE;
+
+  /**
+   * The number of redirects followed during the handling of a request.
+   */
+  protected $redirect_count;
 
   /**
    * Constructor for DrupalWebTestCase.
@@ -1102,6 +1110,14 @@ class DrupalWebTestCase extends DrupalTestCase {
     $this->originalProfile = drupal_get_profile();
     $clean_url_original = variable_get('clean_url', 0);
 
+    // Save and clean shutdown callbacks array because it static cached and
+    // will be changed by the test run. If we don't, then it will contain
+    // callbacks from both environments. So testing environment will try
+    // to call handlers from original environment.
+    $callbacks = &drupal_register_shutdown_function();
+    $this->originalShutdownCallbacks = $callbacks;
+    $callbacks = array();
+
     // Generate temporary prefixed database to ensure that tests have a clean starting point.
     $db_prefix_new = Database::getConnection()->prefixTables('{simpletest' . mt_rand(1000, 1000000) . '}');
     db_update('simpletest_test_id')
@@ -1127,8 +1143,7 @@ class DrupalWebTestCase extends DrupalTestCase {
     ini_set('log_errors', 1);
     ini_set('error_log', $public_files_directory . '/error.log');
 
-    // Reset all statics and variables so that test is performed with a clean
-    // environment.
+    // Reset all statics and variables to perform tests in a clean environment.
     $conf = array();
     drupal_static_reset();
 
@@ -1142,31 +1157,33 @@ class DrupalWebTestCase extends DrupalTestCase {
     $profile_details = install_profile_info('standard', 'en');
 
     // Install the modules specified by the default profile.
-    module_enable($profile_details['dependencies'], FALSE, TRUE);
+    module_enable($profile_details['dependencies'], FALSE);
 
-    drupal_static_reset('_node_types_build');
-
+    // Install modules needed for this test.
     if ($modules = func_get_args()) {
-      // Install modules needed for this test.
-      module_enable($modules, TRUE, TRUE);
+      module_enable($modules, TRUE);
     }
 
-    // Because the schema is static cached, we need to flush
-    // it between each run. If we don't, then it will contain
-    // stale data for the previous run's database prefix and all
-    // calls to it will fail.
-    drupal_get_schema(NULL, TRUE);
-
     // Run default profile tasks.
-    $install_state = array();
-    module_enable(array('standard'), FALSE, TRUE);
+    module_enable(array('standard'), FALSE);
 
     // Rebuild caches.
-    node_types_rebuild();
+    drupal_static_reset();
+    drupal_flush_all_caches();
+
+    // Register actions declared by any modules.
     actions_synchronize();
-    _drupal_flush_css_js();
+
+    // Reload global $conf array and permissions.
     $this->refreshVariables();
     $this->checkPermissions(array(), TRUE);
+
+    // Reset statically cached schema for new database prefix.
+    drupal_get_schema(NULL, TRUE);
+
+    // Run cron once in that environment, as install.php does at the end of
+    // the installation process.
+    drupal_cron_run();
 
     // Log in with a clean $user.
     $this->originalUser = $user;
@@ -1254,6 +1271,11 @@ class DrupalWebTestCase extends DrupalTestCase {
       // Return the database prefix to the original.
       $db_prefix = $this->originalPrefix;
 
+      // Restore original shutdown callbacks array to prevent original
+      // environment of calling handlers from test run.
+      $callbacks = &drupal_register_shutdown_function();
+      $callbacks = $this->originalShutdownCallbacks;
+
       // Return the user to the original one.
       $user = $this->originalUser;
       drupal_save_session(TRUE);
@@ -1300,8 +1322,7 @@ class DrupalWebTestCase extends DrupalTestCase {
       $curl_options = $this->additionalCurlOptions + array(
         CURLOPT_COOKIEJAR => $this->cookieFile,
         CURLOPT_URL => $base_url,
-        CURLOPT_FOLLOWLOCATION => TRUE,
-        CURLOPT_MAXREDIRS => 5,
+        CURLOPT_FOLLOWLOCATION => FALSE,
         CURLOPT_RETURNTRANSFER => TRUE,
         CURLOPT_SSL_VERIFYPEER => FALSE, // Required to make the tests run on https.
         CURLOPT_SSL_VERIFYHOST => FALSE, // Required to make the tests run on https.
@@ -1328,12 +1349,27 @@ class DrupalWebTestCase extends DrupalTestCase {
    *
    * @param $curl_options
    *   Custom cURL options.
+   * @param $redirect
+   *   FALSE if this is an initial request, TRUE if this request is the result of
+   *   a redirect.
    * @return
    *   Content returned from the exec.
    */
-  protected function curlExec($curl_options) {
+  protected function curlExec($curl_options, $redirect = FALSE) {
     $this->curlInitialize();
+
+    // cURL incorrectly handles URLs with a fragment by including the
+    // fragment in the request to the server, causing some web servers
+    // to reject the request citing "400 - Bad Request". To prevent
+    // this, we strip the fragment from the request.
+    // TODO: Remove this for Drupal 8, since fixed in curl 7.20.0.
+    if (!empty($curl_options[CURLOPT_URL]) && strpos($curl_options[CURLOPT_URL], '#')) {
+      $original_url = $curl_options[CURLOPT_URL];
+      $curl_options[CURLOPT_URL] = strtok($curl_options[CURLOPT_URL], '#');
+    }
+
     $url = empty($curl_options[CURLOPT_URL]) ? curl_getinfo($this->curlHandle, CURLINFO_EFFECTIVE_URL) : $curl_options[CURLOPT_URL];
+
     if (!empty($curl_options[CURLOPT_POST])) {
       // This is a fix for the Curl library to prevent Expect: 100-continue
       // headers in POST requests, that may cause unexpected HTTP response
@@ -1344,15 +1380,36 @@ class DrupalWebTestCase extends DrupalTestCase {
     }
     curl_setopt_array($this->curlHandle, $this->additionalCurlOptions + $curl_options);
 
-    // Reset headers and the session ID.
-    $this->session_id = NULL;
-    $this->headers = array();
+    if (!$redirect) {
+      // Reset headers, the session ID and the redirect counter.
+      $this->session_id = NULL;
+      $this->headers = array();
+      $this->redirect_count = 0;
+    }
 
-    $this->drupalSetContent(curl_exec($this->curlHandle), curl_getinfo($this->curlHandle, CURLINFO_EFFECTIVE_URL));
+    $content = curl_exec($this->curlHandle);
+    $status = curl_getinfo($this->curlHandle, CURLINFO_HTTP_CODE);
+
+    // cURL incorrectly handles URLs with fragments, so instead of
+    // letting cURL handle redirects we take of them ourselves to
+    // to prevent fragments being sent to the web server as part
+    // of the request.
+    // TODO: Remove this for Drupal 8, since fixed in curl 7.20.0.
+    if (in_array($status, array(300, 301, 302, 303, 305, 307)) && $this->redirect_count < variable_get('simpletest_maximum_redirects', 5)) {
+      if ($this->drupalGetHeader('location')) {
+        $this->redirect_count++;
+        $curl_options = array();
+        $curl_options[CURLOPT_URL] = $this->drupalGetHeader('location');
+        $curl_options[CURLOPT_HTTPGET] = TRUE;
+        return $this->curlExec($curl_options, TRUE);
+      }
+    }
+
+    $this->drupalSetContent($content, isset($original_url) ? $original_url : curl_getinfo($this->curlHandle, CURLINFO_EFFECTIVE_URL));
     $message_vars = array(
       '!method' => !empty($curl_options[CURLOPT_NOBODY]) ? 'HEAD' : (empty($curl_options[CURLOPT_POSTFIELDS]) ? 'GET' : 'POST'),
-      '@url' => $url,
-      '@status' => curl_getinfo($this->curlHandle, CURLINFO_HTTP_CODE),
+      '@url' => isset($original_url) ? $original_url : $url,
+      '@status' => $status,
       '!length' => format_size(strlen($this->content))
     );
     $message = t('!method @url returned @status (!length).', $message_vars);
@@ -1529,8 +1586,12 @@ class DrupalWebTestCase extends DrupalTestCase {
    * @param $headers
    *   An array containing additional HTTP request headers, each formatted as
    *   "name: value".
+   * @param $form_id
+   *   The optional string identifying the form to be submitted. On some pages
+   *   there are many identical forms, so just using the value of the submit
+   *   button is not enough.
    */
-  protected function drupalPost($path, $edit, $submit, array $options = array(), array $headers = array()) {
+  protected function drupalPost($path, $edit, $submit, array $options = array(), array $headers = array(), $form_id = NULL) {
     $submit_matches = FALSE;
     $ajax = is_array($submit);
     if (isset($path)) {
@@ -1539,7 +1600,11 @@ class DrupalWebTestCase extends DrupalTestCase {
     if ($this->parse()) {
       $edit_save = $edit;
       // Let's iterate over all the forms.
-      $forms = $this->xpath('//form');
+      $xpath = "//form";
+      if (!empty($form_id)) {
+        $xpath .= "[@id='" . drupal_html_id($form_id) . "']";
+      }
+      $forms = $this->xpath($xpath);
       foreach ($forms as $form) {
         // We try to set the fields of this form as specified in $edit.
         $edit = $edit_save;

@@ -1,5 +1,5 @@
 <?php
-// $Id: authorize.php,v 1.4 2009/10/29 06:58:56 webchick Exp $
+// $Id: authorize.php,v 1.7 2010/03/06 06:31:23 dries Exp $
 
 /**
  * @file
@@ -39,7 +39,7 @@ define('MAINTENANCE_MODE', 'update');
  * Render a 403 access denied page for authorize.php
  */
 function authorize_access_denied_page() {
-  drupal_add_http_header('403 Forbidden');
+  drupal_add_http_header('Status', '403 Forbidden');
   watchdog('access denied', 'authorize.php', NULL, WATCHDOG_WARNING);
   drupal_set_title('Access denied');
   return t('You are not allowed to access this page.');
@@ -65,6 +65,7 @@ require_once DRUPAL_ROOT . '/includes/session.inc';
 require_once DRUPAL_ROOT . '/includes/common.inc';
 require_once DRUPAL_ROOT . '/includes/file.inc';
 require_once DRUPAL_ROOT . '/includes/module.inc';
+require_once DRUPAL_ROOT . '/includes/ajax.inc';
 
 // We prepare only a minimal bootstrap. This includes the database and
 // variables, however, so we have access to the class autoloader registry.
@@ -134,7 +135,7 @@ if (authorize_access_allowed()) {
     }
 
     $output = theme('authorize_report', array('messages' => $results['messages']));
-    
+
     $links = array();
     if (is_array($results['tasks'])) {
       $links += $results['tasks'];

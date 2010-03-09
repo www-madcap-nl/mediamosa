@@ -1,4 +1,4 @@
-// $Id: user.js,v 1.20 2009/12/22 14:45:04 dries Exp $
+// $Id: user.js,v 1.23 2010/02/16 01:05:52 webchick Exp $
 (function ($) {
 
 /**
@@ -18,18 +18,17 @@ Drupal.behaviors.password = {
       var passwordResult = $('span.password-result', passwordStrength);
       innerWrapper.addClass('password-parent');
 
-      // Add the description box.
-      var passwordMeter = '<div id="password-strength"><div id="password-strength-text"></div><div class="password-strength-title">' + translate.strengthTitle + '</div><div id="password-indicator"><div id="indicator"></div></div></div>';
-
-      $('div.description', outerWrapper).prepend('<div class="password-suggestions"></div>');
-      $(innerWrapper).prepend(passwordMeter);
-      var passwordDescription = $('div.password-suggestions', outerWrapper).hide();
-
       // Add the password confirmation layer.
       $('input.password-confirm', outerWrapper).after('<div class="password-confirm">' + translate['confirmTitle'] + ' <span></span></div>').parent().addClass('confirm-parent');
       var confirmInput = $('input.password-confirm', outerWrapper);
       var confirmResult = $('div.password-confirm', outerWrapper);
       var confirmChild = $('span', confirmResult);
+
+      // Add the description box.
+      var passwordMeter = '<div id="password-strength"><div id="password-strength-text" aria-live="assertive"></div><div class="password-strength-title">' + translate.strengthTitle + '</div><div id="password-indicator"><div id="indicator"></div></div></div>';
+      $(confirmInput).parent().after('<div class="password-suggestions description"></div>');
+      $(innerWrapper).prepend(passwordMeter);
+      var passwordDescription = $("div.password-suggestions", outerWrapper).hide();
 
       // Check the password strength.
       var passwordCheck = function () {

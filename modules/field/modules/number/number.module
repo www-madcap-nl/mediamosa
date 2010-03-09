@@ -1,5 +1,5 @@
 <?php
-// $Id: number.module,v 1.34 2010/01/07 19:57:49 webchick Exp $
+// $Id: number.module,v 1.37 2010/02/11 17:44:47 webchick Exp $
 
 /**
  * @file
@@ -176,7 +176,7 @@ function number_field_instance_settings_form($field, $instance) {
  * - 'number_min': The value is smaller than the allowed minimum value.
  * - 'number_max': The value is larger than the allowed maximum value.
  */
-function number_field_validate($obj_type, $object, $field, $instance, $langcode, $items, &$errors) {
+function number_field_validate($entity_type, $entity, $field, $instance, $langcode, $items, &$errors) {
   foreach ($items as $delta => $item) {
     if ($item['value'] != '') {
       if (is_numeric($instance['settings']['min']) && $item['value'] < $instance['settings']['min']) {
@@ -198,7 +198,7 @@ function number_field_validate($obj_type, $object, $field, $instance, $langcode,
 /**
  * Implements hook_field_presave().
  */
-function number_field_presave($obj_type, $object, $field, $instance, $langcode, &$items) {
+function number_field_presave($entity_type, $entity, $field, $instance, $langcode, &$items) {
   if ($field['type'] == 'number_decimal') {
     // Let PHP round the value to ensure consistent behavior across storage
     // backends.
@@ -211,7 +211,7 @@ function number_field_presave($obj_type, $object, $field, $instance, $langcode, 
 }
 
 /**
- * Implements hook_content_is_empty().
+ * Implements hook_field_is_empty().
  */
 function number_field_is_empty($item, $field) {
   if (empty($item['value']) && (string)$item['value'] !== '0') {
@@ -255,7 +255,7 @@ function number_field_formatter_info() {
 /**
  * Implements hook_field_formatter_view().
  */
-function number_field_formatter_view($object_type, $object, $field, $instance, $langcode, $items, $display) {
+function number_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
   $element = array();
   $settings = $display['settings'];
 
@@ -337,8 +337,8 @@ function number_field_widget_form(&$form, &$form_state, $field, $instance, $lang
  * FAPI validation of an individual number element.
  */
 function number_field_widget_validate($element, &$form_state) {
-  $field = $form_state['complete form']['#fields'][$element['#field_name']]['field'];
-  $instance = $form_state['complete form']['#fields'][$element['#field_name']]['instance'];
+  $field = $form_state['field'][$element['#field_name']][$element['#language']]['field'];
+  $instance = $form_state['field'][$element['#field_name']][$element['#language']]['instance'];
 
   $type = $element['#number_type'];
   $value = $element['#value'];
@@ -373,6 +373,6 @@ function number_field_widget_validate($element, &$form_state) {
 /**
  * Implements hook_field_widget_error().
  */
-function number_field_widget_error($element, $error) {
+function number_field_widget_error($element, $error, $form, &$form_state) {
   form_error($element['value'], $error['message']);
 }

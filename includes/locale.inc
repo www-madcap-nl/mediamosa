@@ -1,5 +1,5 @@
 <?php
-// $Id: locale.inc,v 1.242 2010/01/13 23:19:54 dries Exp $
+// $Id: locale.inc,v 1.249 2010/03/07 07:44:18 webchick Exp $
 
 /**
  * @file
@@ -41,12 +41,12 @@ define('LOCALE_LANGUAGE_NEGOTIATION_URL_DOMAIN', 1);
  */
 
 /**
- * Identify the language from the current content language.
+ * Identifies the language from the current interface language.
  *
  * @return
- *   The current content language code.
+ *   The current interface language code.
  */
-function locale_language_from_content() {
+function locale_language_from_interface() {
   global $language;
   return isset($language->language) ? $language->language : FALSE;
 }
@@ -100,7 +100,7 @@ function locale_language_from_browser($languages) {
  *   An array of valid language objects.
  *
  * @return
- *   A valid language code on succes, FALSE otherwise.
+ *   A valid language code on success, FALSE otherwise.
  */
 function locale_language_from_user($languages) {
   // User preference (only for logged users).
@@ -121,7 +121,7 @@ function locale_language_from_user($languages) {
  *   An array of valid language objects.
  *
  * @return
- *   A valid language code on succes, FALSE otherwise.
+ *   A valid language code on success, FALSE otherwise.
  */
 function locale_language_from_session($languages) {
   $param = variable_get('locale_language_negotiation_session_param', 'language');
@@ -146,7 +146,7 @@ function locale_language_from_session($languages) {
  *   An array of valid language objects.
  *
  * @return
- *   A valid language code on succes, FALSE otherwise.
+ *   A valid language code on success, FALSE otherwise.
  */
 function locale_language_from_url($languages) {
   $language_url = FALSE;
@@ -303,7 +303,7 @@ function locale_language_url_rewrite_session(&$path, &$options) {
  * This test can be used to detect possibly bad translation strings. It should
  * not have any false positives. But it is only a test, not a transformation,
  * as it destroys valid HTML. We cannot reliably filter translation strings
- * on inport becuase some strings are irreversibly corrupted. For example,
+ * on import because some strings are irreversibly corrupted. For example,
  * a &amp; in the translation would get encoded to &amp;amp; by filter_xss()
  * before being put in the database, and thus would be displayed incorrectly.
  *
@@ -378,6 +378,9 @@ function locale_add_language($langcode, $name = NULL, $native = NULL, $direction
     // Increment enabled language count if we are adding an enabled language.
     variable_set('language_count', variable_get('language_count', 1) + 1);
   }
+
+  // Kill the static cache in language_list().
+  drupal_static_reset('language_list');
 
   // Force JavaScript translation file creation for the newly added language.
   _locale_invalidate_js($langcode);
@@ -924,48 +927,50 @@ function _locale_import_parse_plural_forms($pluralforms, $filepath) {
  */
 function _locale_import_parse_arithmetic($string) {
   // Operator precedence table
-  $prec = array("(" => -1, ")" => -1, "?" => 1, ":" => 1, "||" => 3, "&&" => 4, "==" => 5, "!=" => 5, "<" => 6, ">" => 6, "<=" => 6, ">=" => 6, "+" => 7, "-" => 7, "*" => 8, "/" => 8, "%" => 8);
+  $precedence = array("(" => -1, ")" => -1, "?" => 1, ":" => 1, "||" => 3, "&&" => 4, "==" => 5, "!=" => 5, "<" => 6, ">" => 6, "<=" => 6, ">=" => 6, "+" => 7, "-" => 7, "*" => 8, "/" => 8, "%" => 8);
   // Right associativity
-  $rasc = array("?" => 1, ":" => 1);
+  $right_associativity = array("?" => 1, ":" => 1);
 
   $tokens = _locale_import_tokenize_formula($string);
 
   // Parse by converting into infix notation then back into postfix
-  $opstk = array();
-  $elstk = array();
+  // Operator stack - holds math operators and symbols
+  $operator_stack = array();
+  // Element Stack - holds data to be operated on
+  $element_stack = array();
 
   foreach ($tokens as $token) {
-    $ctok = $token;
+    $current_token = $token;
 
-    // Numbers and the $n variable are simply pushed into $elarr
+    // Numbers and the $n variable are simply pushed into $element_stack
     if (is_numeric($token)) {
-      $elstk[] = $ctok;
+      $element_stack[] = $current_token;
     }
-    elseif ($ctok == "n") {
-      $elstk[] = '$n';
+    elseif ($current_token == "n") {
+      $element_stack[] = '$n';
     }
-    elseif ($ctok == "(") {
-      $opstk[] = $ctok;
+    elseif ($current_token == "(") {
+      $operator_stack[] = $current_token;
     }
-    elseif ($ctok == ")") {
-      $topop = array_pop($opstk);
+    elseif ($current_token == ")") {
+      $topop = array_pop($operator_stack);
       while (isset($topop) && ($topop != "(")) {
-        $elstk[] = $topop;
-        $topop = array_pop($opstk);
+        $element_stack[] = $topop;
+        $topop = array_pop($operator_stack);
       }
     }
-    elseif (!empty($prec[$ctok])) {
-      // If it's an operator, then pop from $oparr into $elarr until the
-      // precedence in $oparr is less than current, then push into $oparr
-      $topop = array_pop($opstk);
-      while (isset($topop) && ($prec[$topop] >= $prec[$ctok]) && !(($prec[$topop] == $prec[$ctok]) && !empty($rasc[$topop]) && !empty($rasc[$ctok]))) {
-        $elstk[] = $topop;
-        $topop = array_pop($opstk);
+    elseif (!empty($precedence[$current_token])) {
+      // If it's an operator, then pop from $operator_stack into $element_stack until the
+      // precedence in $operator_stack is less than current, then push into $operator_stack
+      $topop = array_pop($operator_stack);
+      while (isset($topop) && ($precedence[$topop] >= $precedence[$current_token]) && !(($precedence[$topop] == $precedence[$current_token]) && !empty($right_associativity[$topop]) && !empty($right_associativity[$current_token]))) {
+        $element_stack[] = $topop;
+        $topop = array_pop($operator_stack);
       }
       if ($topop) {
-        $opstk[] = $topop;   // Return element to top
+        $operator_stack[] = $topop;   // Return element to top
       }
-      $opstk[] = $ctok;      // Parentheses are not needed
+      $operator_stack[] = $current_token;      // Parentheses are not needed
     }
     else {
       return FALSE;
@@ -973,38 +978,38 @@ function _locale_import_parse_arithmetic($string) {
   }
 
   // Flush operator stack
-  $topop = array_pop($opstk);
+  $topop = array_pop($operator_stack);
   while ($topop != NULL) {
-    $elstk[] = $topop;
-    $topop = array_pop($opstk);
+    $element_stack[] = $topop;
+    $topop = array_pop($operator_stack);
   }
 
   // Now extract formula from stack
-  $prevsize = count($elstk) + 1;
-  while (count($elstk) < $prevsize) {
-    $prevsize = count($elstk);
-    for ($i = 2; $i < count($elstk); $i++) {
-      $op = $elstk[$i];
-      if (!empty($prec[$op])) {
+  $previous_size = count($element_stack) + 1;
+  while (count($element_stack) < $previous_size) {
+    $previous_size = count($element_stack);
+    for ($i = 2; $i < count($element_stack); $i++) {
+      $op = $element_stack[$i];
+      if (!empty($precedence[$op])) {
         $f = "";
         if ($op == ":") {
-          $f = $elstk[$i - 2] . "):" . $elstk[$i - 1] . ")";
+          $f = $element_stack[$i - 2] . "):" . $element_stack[$i - 1] . ")";
         }
         elseif ($op == "?") {
-          $f = "(" . $elstk[$i - 2] . "?(" . $elstk[$i - 1];
+          $f = "(" . $element_stack[$i - 2] . "?(" . $element_stack[$i - 1];
         }
         else {
-          $f = "(" . $elstk[$i - 2] . $op . $elstk[$i - 1] . ")";
+          $f = "(" . $element_stack[$i - 2] . $op . $element_stack[$i - 1] . ")";
         }
-        array_splice($elstk, $i - 2, 3, $f);
+        array_splice($element_stack, $i - 2, 3, $f);
         break;
       }
     }
   }
 
   // If only one element is left, the number of operators is appropriate
-  if (count($elstk) == 1) {
-    return $elstk[0];
+  if (count($element_stack) == 1) {
+    return $element_stack[0];
   }
   else {
     return FALSE;
@@ -1153,6 +1158,10 @@ function _locale_import_parse_quoted($string) {
 function _locale_parse_js_file($filepath) {
   global $language;
 
+  // The file path might contain a query string, so make sure we only use the
+  // actual file.
+  $parsed_url = drupal_parse_url($filepath);
+  $filepath = $parsed_url['path'];
   // Load the JavaScript file.
   $file = file_get_contents($filepath);
 
@@ -1316,10 +1325,10 @@ function _locale_export_po_generate($language = NULL, $strings = array(), $heade
       if ($string['comment']) {
         $output .= '#: ' . $string['comment'] . "\n";
       }
-      $output .= 'msgid ' . _locale_export_string($string['source']);
       if (!empty($string['context'])) {
         $output .= 'msgctxt ' . _locale_export_string($string['context']);
       }
+      $output .= 'msgid ' . _locale_export_string($string['source']);
       if (!empty($string['plural'])) {
         $plural = $string['plural'];
         $output .= 'msgid_plural ' . _locale_export_string($strings[$plural]['source']);
@@ -1370,11 +1379,11 @@ function _locale_export_po($language = NULL, $output = NULL) {
     $filename = 'drupal.pot';
     watchdog('locale', 'Exported translation file: %filename.', array('%filename' => $filename));
   }
-  // Download the file fo the client.
+  // Download the file for the client.
   header("Content-Disposition: attachment; filename=$filename");
   header("Content-Type: text/plain; charset=utf-8");
   print $output;
-  die();
+  exit();
 }
 
 /**
@@ -2063,4 +2072,3 @@ function locale_get_localized_date_format($languages) {
 
   return $formats;
 }
-

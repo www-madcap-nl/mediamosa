@@ -1,5 +1,5 @@
 <?php
-// $Id: toolbar.module,v 1.32 2010/01/12 23:04:48 webchick Exp $
+// $Id: toolbar.module,v 1.34 2010/01/30 07:59:26 dries Exp $
 
 /**
  * @file
@@ -71,14 +71,14 @@ function toolbar_menu() {
 function toolbar_toggle_page() {
   global $base_path;
   // Toggle the value in the cookie.
-  setcookie('Drupal.admin.toolbar.collapsed', !_toolbar_is_collapsed(), NULL, $base_path);
+  setcookie('Drupal.toolbar.collapsed', !_toolbar_is_collapsed(), NULL, $base_path);
   // Redirect the user from where he used the toggle element.
   drupal_goto();
 }
 
 /**
  * Formats an element used to toggle the toolbar drawer's visibility.
- * 
+ *
  * @param $variables
  *   An associative array containing:
  *   - collapsed: A boolean value representing the toolbar drawer's visibility.
@@ -102,7 +102,7 @@ function theme_toolbar_toggle($variables) {
 
 /**
  * Determines the current state of the toolbar drawer's visibility.
- * 
+ *
  * @return
  *   TRUE when drawer is collapsed, FALSE when it is expanded.
  */
@@ -177,7 +177,7 @@ function toolbar_view() {
         $module_path . '/toolbar.js',
         array('data' => 'misc/jquery.cookie.js', 'weight' => JS_LIBRARY + 2),
         array(
-          'data' => array('tableHeaderOffset' => 'Drupal.admin.toolbar.height'),
+          'data' => array('tableHeaderOffset' => 'Drupal.toolbar.height'),
           'type' => 'setting'
         ),
       ),
@@ -225,7 +225,7 @@ function toolbar_view() {
     '#links' => $links,
     '#attributes' => array('id' => 'toolbar-user'),
   );
-  
+
   // Add a "home" link.
   $link = array(
     'home' => array(
@@ -275,7 +275,7 @@ function toolbar_get_menu_tree() {
     $admin_link = array_pop($tree);
     $tree = $admin_link['below'] ? $admin_link['below'] : array();
   }
-  
+
   return $tree;
 }
 

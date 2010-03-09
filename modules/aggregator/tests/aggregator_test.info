@@ -7,8 +7,9 @@ core = 7.x
 files[] = aggregator_test.module
 hidden = TRUE
 
-; Information added by drupal.org packaging script on 2010-01-15
-version = "7.0-alpha1"
+; Information added by drupal.org packaging script on 2010-03-09
+version = "7.x-dev"
+core = "7.x"
 project = "drupal"
-datestamp = "1263566707"
+datestamp = "1268136300"
 

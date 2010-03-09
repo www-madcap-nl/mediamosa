@@ -1,4 +1,4 @@
-/* $Id: reset.css,v 1.4 2009/11/17 02:50:41 webchick Exp $ */
+/* $Id: reset.css,v 1.6 2010/03/05 15:23:25 dries Exp $ */
 
 /**
  * Reset CSS styles.
@@ -9,15 +9,11 @@
 
 html,
 body,
-
-/* Structures */
 div,
 span,
 applet,
 object,
 iframe,
-
-/* Text */
 h1,
 h2,
 h3,
@@ -55,16 +51,12 @@ b,
 u,
 i,
 center,
-
-/* Lists */
 dl,
 dt,
 dd,
 ol,
 ul,
 li,
-
-/* Forms */
 fieldset,
 form,
 input,
@@ -72,8 +64,6 @@ select,
 textarea,
 label,
 legend,
-
-/* Tables */
 table,
 caption,
 tbody,
@@ -82,17 +72,14 @@ thead,
 tr,
 th,
 td,
-
 /* Drupal: system-menus.css */
 td.menu-disabled,
 ul.links,
 ul.links.inline,
 ul.links li,
 .block ul,
-
 /* Drupal: admin.css */
 div.admin,
-
 /* Drupal: system.css */
 tr.even,
 tr.odd,
@@ -148,26 +135,21 @@ ul.secondary a.active,
   background: transparent;
   line-height: inherit;
 }
-
-
 /* Drupal: system-menus.css */
 ul.links,
 ul.links.inline,
 ul.links li,
 .block ul,
-
 ol,
 ul,
 .item-list ul,
 .item-list ul li {
   list-style: none;
 }
-
 blockquote,
 q {
   quotes: none;
 }
-
 blockquote:before,
 blockquote:after,
 q:before, q:after {
@@ -195,7 +177,7 @@ table {
 }
 
 /**
- * Font reset =========================================================
+ * Font reset.
  *
  * Specifically targets form elements which browsers often times give
  * special treatment.
@@ -208,13 +190,12 @@ body {
 }
 
 /**
- * Markup free clearing ===============================================
+ * Markup free clearing.
  *
  * Consider adding your own selectors to this instead of finding ways
  * to sneak the clearfix class into Drupal's markup.
  * From http://www.positioniseverything.net/easyclearing.html
  */
-div.form-item:after,
 ul.links:after,
 div.admin-panel .body:after,
 .clearfix:after {
@@ -231,8 +212,7 @@ ul.inline:after {
   display: none;
   clear: none;
 }
-
-div.form-item,
+.form-item,
 ul.links,
 div.admin-panel .body,
 .clearfix {
@@ -240,14 +220,13 @@ div.admin-panel .body,
 }
 
 /* Hides from IE-mac \*/
-* html div.form-item,
+* html .form-item,
 * html ul.links,
 * html div.admin-panel .body,
 * html .clearfix {
   height: 1%;
 }
-
-div.form-item,
+.form-item,
 ul.links,
 div.admin-panel .body,
 .clearfix {

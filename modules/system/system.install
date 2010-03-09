@@ -1,5 +1,5 @@
 <?php
-// $Id: system.install,v 1.442 2010/01/13 06:15:39 webchick Exp $
+// $Id: system.install,v 1.455 2010/03/08 15:44:36 webchick Exp $
 
 /**
  * @file
@@ -94,18 +94,72 @@ function system_requirements($phase) {
   else {
     $requirements['php_register_globals']['value'] = $t('Disabled');
   }
-  
-  // Test PDO library availability.
-  $requirements['pdo'] = array(
-    'title' => $t('PDO library'),
+
+  // Test for PHP extensions.
+  $requirements['php_extensions'] = array(
+    'title' => $t('PHP extensions'),
   );
-  if (extension_loaded('pdo')) {
-    $requirements['pdo']['value'] = $t('Enabled');
+
+  $missing_extensions = array();
+  $required_extensions = array(
+    'date',
+    'dom',
+    'filter',
+    'gd',
+    'hash',
+    'json',
+    'pcre',
+    'pdo',
+    'session',
+    'SimpleXML',
+    'SPL',
+    'xml',
+  );
+  foreach ($required_extensions as $extension) {
+    if (!extension_loaded($extension)) {
+      $missing_extensions[] = $extension;
+    }
+  }
+
+  if (!empty($missing_extensions)) {
+    $description = $t('Drupal requires you to enable the PHP extensions in the following list (see the <a href="@system_requirements">system requirements page</a> for more information):', array(
+      '@system_requirements' => 'http://drupal.org/requirements',
+    ));
+
+    $description .= theme('item_list',  array(
+      'type' => 'ul',
+      'items' => $missing_extensions,
+    ));
+
+    $requirements['php_extensions']['value'] = $t('Disabled');
+    $requirements['php_extensions']['severity'] = REQUIREMENT_ERROR;
+    $requirements['php_extensions']['description'] = $description;
   }
   else {
-    $requirements['pdo']['value'] = $t('Disabled');
-    $requirements['pdo']['severity'] = REQUIREMENT_ERROR;
-    $requirements['pdo']['description'] = $t('Your server does not have the PHP PDO extension enabled. See the <a href="@system_requirements">system requirements page</a> for more information.', array('@system_requirements' => 'http://drupal.org/requirements'));
+    $requirements['php_extensions']['value'] = $t('Enabled');
+  }
+
+  // Test for PDO (database).
+  $requirements['database_extensions'] = array(
+    'title' => $t('Database support'),
+  );
+
+  // Test for at least one suitable PDO extension, if PDO is available.
+  $database_ok = extension_loaded('pdo');
+  if ($database_ok) {
+    $drivers = drupal_detect_database_types();
+    $database_ok = !empty($drivers);
+  }
+
+  if (!$database_ok) {
+    $requirements['database_extensions']['value'] = $t('Disabled');
+    $requirements['database_extensions']['severity'] = REQUIREMENT_ERROR;
+    $requirements['database_extensions']['description'] = $t('Your web server does not appear to support any common PDO database extensions. Check with your hosting provider to see if they support PDO (PHP Data Objects) and offer any databases that <a href="@drupal-databases">Drupal supports</a>.', array(
+      '@drupal-databases' => 'http://drupal.org/node/270#database',
+    ));
+  }
+  else {
+    $requirements['database_extensions']['value'] = $t('Enabled');
   }
 
   // Test PHP memory_limit
@@ -303,17 +357,6 @@ function system_requirements($phase) {
   include_once DRUPAL_ROOT . '/includes/unicode.inc';
   $requirements = array_merge($requirements, unicode_requirements());
 
-  // Verify if the DOM PHP 5 extension is available.
-  $has_dom = class_exists('DOMDocument');
-  if (!$has_dom) {
-    $requirements['php_dom'] = array(
-      'title' => $t('PHP DOM Extension'),
-      'value' => $t('Not found'),
-      'severity' => REQUIREMENT_ERROR,
-      'description' => $t("The DOM extension is part of PHP 5 core, but doesn't seem to be enabled on your system. You need to enable the DOM extension on your PHP installation."),
-    );
-  }
-
   if ($phase == 'runtime') {
     // Check for update status module.
     if (!module_exists('update')) {
@@ -349,13 +392,10 @@ function system_requirements($phase) {
  */
 function system_install() {
   // Create tables.
-  $modules = array('system', 'filter', 'user', 'node');
-  foreach ($modules as $module) {
-    drupal_install_schema($module);
-    $versions = drupal_get_schema_versions($module);
-    $version = $versions ? max($versions) : SCHEMA_INSTALLED;
-    drupal_set_installed_schema_version($module, $version);
-  }
+  drupal_install_schema('system');
+  $versions = drupal_get_schema_versions('system');
+  $version = $versions ? max($versions) : SCHEMA_INSTALLED;
+  drupal_set_installed_schema_version('system', $version);
 
   // Clear out module list and hook implementation statics before calling
   // system_rebuild_theme_data().
@@ -365,73 +405,16 @@ function system_install() {
   // Load system theme data appropriately.
   system_rebuild_theme_data();
 
-  db_insert('users')
-    ->fields(array(
-      'uid' => 0,
-      'name' => '',
-      'mail' => '',
-    ))
-    ->execute();
-  // We need some placeholders here as name and mail are uniques and data is
-  // presumed to be a serialized array. This will be changed by the settings
-  // form.
-  db_insert('users')
-    ->fields(array(
-      'uid' => 1,
-      'name' => 'placeholder-for-uid-1',
-      'mail' => 'placeholder-for-uid-1',
-      'created' => REQUEST_TIME,
-      'status' => 1,
-      'data' => serialize(array()),
-    ))
-    ->execute();
-  // Built-in roles.
-  $rid_anonymous = db_insert('role')
-    ->fields(array('name' => 'anonymous user'))
-    ->execute();
-
-  $rid_authenticated = db_insert('role')
-    ->fields(array('name' => 'authenticated user'))
-    ->execute();
-
-  // Sanity check to ensure the anonymous and authenticated role IDs are the
-  // same as the drupal defined constants. In certain situations, this will
-  // not be true.
-  if ($rid_anonymous != DRUPAL_ANONYMOUS_RID) {
-    db_update('role')
-      ->fields(array('rid' => DRUPAL_ANONYMOUS_RID))
-      ->condition('rid', $rid_anonymous)
-      ->execute();
-  }
-
-  if ($rid_authenticated != DRUPAL_AUTHENTICATED_RID) {
-    db_update('role')
-      ->fields(array('rid' => DRUPAL_AUTHENTICATED_RID))
-      ->condition('rid', $rid_authenticated)
-      ->execute();
-  }
-
+  // Enable the default theme.
   variable_set('theme_default', 'garland');
-
   db_update('system')
     ->fields(array('status' => 1))
     ->condition('type', 'theme')
     ->condition('name', 'garland')
     ->execute();
 
-  db_insert('node_access')
-    ->fields(array(
-      'nid' => 0,
-      'gid' => 0,
-      'realm' => 'all',
-      'grant_view' => 1,
-      'grant_update' => 0,
-      'grant_delete' => 0,
-    ))
-    ->execute();
-
+  // Populate the cron key variable.
   $cron_key = md5(mt_rand());
-
   variable_set('cron_key', $cron_key);
 }
 
@@ -1432,7 +1415,7 @@ function system_schema() {
         'default' => '',
       ),
       'type' => array(
-        'description' => 'The type of the item, either module, theme, or theme_engine.',
+        'description' => 'The type of the item, either module, theme, theme_engine, or profile.',
         'type' => 'varchar',
         'length' => 12,
         'not null' => TRUE,
@@ -1580,7 +1563,7 @@ function system_update_6051() {
       'description' => 'The {filter_formats}.format of the signature.',
     );
 
-    db_add_field($ret, 'users', 'signature_format', $schema);
+    db_add_field('users', 'signature_format', $schema);
 
     // Set the format of existing signatures to the current default text format.
     if ($current_default_filter = variable_get('filter_default_format', 0)) {
@@ -1593,26 +1576,37 @@ function system_update_6051() {
 
     drupal_set_message("User signatures no longer inherit comment text formats. Each user's signature now has its own associated format that can be selected on the user's account page. Existing signatures have been set to your site's default text format.");
   }
-
-  return $ret;
 }
 
 /**
  * Add a missing index on the {menu_router} table.
  */
 function system_update_6052() {
-  $ret = array();
-  db_add_index($ret, 'menu_router', 'tab_root_weight_title', array(array('tab_root', 64), 'weight', 'title'));
-  return $ret;
+  db_add_index('menu_router', 'tab_root_weight_title', array(array('tab_root', 64), 'weight', 'title'));
 }
 
 /**
  * Add a {system} index on type and name.
  */
 function system_update_6053() {
-  $ret = array();
-  db_add_index($ret, 'system', 'type_name', array(array('type', 12), 'name'));
-  return $ret;
+  db_add_index('system', 'type_name', array(array('type', 12), 'name'));
+}
+
+/**
+ * Improve indexes on the {url_alias} table.
+ */
+function system_update_6055() {
+  db_drop_index('url_alias', 'src_language');
+  db_drop_unique_key('url_alias', 'dst_language');
+  db_add_index('url_alias', 'src_language_pid', array('src', 'language', 'pid'));
+  db_add_unique_key('url_alias', 'dst_language_pid', array('dst', 'language', 'pid'));
+}
+
+/**
+ * Add semaphore table.
+ */
+function system_update_6054() {
+  // Lives in update_fix_d7_requirements()
 }
 
 /**
@@ -1721,7 +1715,7 @@ function system_update_7003() {
     ));
     $or = db_condition('or');
     foreach ($result as $allowed) {
-      $or->where('LOWER(ip) LIKE LOWER(:mask)', array(':mask' => $allowed->mask));
+      $or->condition('ip', $allowed->mask, 'LIKE');
     }
     if (count($or)) {
       db_delete('blocked_ips')
@@ -1882,15 +1876,7 @@ function system_update_7011() {
   $insert->execute();
 }
 
-/**
- * Rename {blocks} table to {block}, {blocks_roles} to {block_role} and
- * {boxes} to {box}.
- */
-function system_update_7012() {
-  db_rename_table('blocks', 'block');
-  db_rename_table('blocks_roles', 'block_role');
-  db_rename_table('boxes', 'box');
-}
+// system_update_7012() moved to block_update_7002().
 
 /**
  * Convert default time zone offset to default time zone name.
@@ -2016,7 +2002,6 @@ function system_update_7018() {
   db_drop_index('system', 'type_name');
   db_change_field('system', 'type', 'type', array('type' => 'varchar', 'length' => 12, 'not null' => TRUE, 'default' => ''));
   db_add_index('system', 'type_name', array('type', 'name'));
-  db_add_index('system', 'system_list', array('weight', 'name'));
 }
 
 /**
@@ -2028,175 +2013,9 @@ function system_update_7020() {
 }
 
 /**
- * Add new blocks to new regions, migrate custom variables to blocks.
- */
-function system_update_7021() {
-  // Collect a list of themes with blocks.
-  $themes_with_blocks = array();
-  $result = db_query("SELECT s.name FROM {system} s INNER JOIN {block} b ON s.name = b.theme WHERE s.type = 'theme' GROUP by s.name");
-
-  $insert = db_insert('block')->fields(array('module', 'delta', 'theme', 'status', 'weight', 'region', 'pages', 'cache'));
-  foreach ($result as $theme) {
-    $themes_with_blocks[] = $theme->name;
-    // Add new system generated help block.
-    $insert->values(array(
-      'module' => 'system',
-      'delta' => 'help',
-      'theme' => $theme->name,
-      'status' => 1,
-      'weight' => 0,
-      'region' => 'help',
-      'pages' => '',
-      'cache' => 1,
-    ));
-    // Add new system generated main page content block.
-    $insert->values(array(
-      'module' => 'system',
-      'delta' => 'main',
-      'theme' => $theme->name,
-      'status' => 1,
-      'weight' => 0,
-      'region' => 'content',
-      'pages' => '',
-      'cache' => -1,
-    ));
-  }
-  $insert->execute();
-
-  // Migrate blocks from left/right regions to first/second regions.
-  db_update('block')
-    ->fields(array('region' => 'sidebar_first'))
-    ->condition('region', 'left')
-    ->execute();
-  db_update('block')
-    ->fields(array('region' => 'sidebar_second'))
-    ->condition('region', 'right')
-    ->execute();
-
-  // Migrate contact form information.
-  $default_format = variable_get('filter_default_format', 1);
-  if ($contact_help = variable_get('contact_form_information', '')) {
-    $bid = db_insert('box')
-      ->fields(array(
-        'body' => $contact_help,
-        'info' => 'Contact page help',
-        'format' => $default_format,
-      ))
-      ->execute();
-
-    $insert = db_insert('block')->fields(array('module', 'delta', 'theme', 'status', 'weight', 'region', 'visibility', 'pages', 'cache'));
-    foreach ($themes_with_blocks as $theme) {
-      // Add contact help block for themes, which had blocks.
-      $insert->values(array(
-        'module' => 'block',
-        'delta' => $bid,
-        'theme' => $theme,
-        'status' => 1,
-        'weight' => 5,
-        'region' => 'help',
-        'visibility' => 1,
-        'pages' => 'contact',
-        'cache' => -1,
-      ));
-    }
-    drupal_set_message('The contact form information setting was migrated to <a href="' . url('admin/structure/block/manage/block/' . $bid . '/configure') . '">a custom block</a> and set up to only show on the site-wide contact page. The block was set to use the default text format, which might differ from the HTML based format used before. Check the block and ensure that the output is right.');
-  }
-  $insert->execute();
-
-  // Migrate user help setting.
-  if ($user_help = variable_get('user_registration_help', '')) {
-    $bid = db_insert('box')->fields(array('body' => $user_help, 'info' => 'User registration guidelines', 'format' => $default_format))->execute();
-
-    $insert = db_insert('block')->fields(array('module', 'delta', 'theme', 'status', 'weight', 'region', 'visibility', 'pages', 'cache'));
-    foreach ($themes_with_blocks as $theme) {
-      // Add user registration help block for themes, which had blocks.
-      $insert->values(array(
-        'module' => 'block',
-        'delta' => $bid,
-        'theme' => $theme,
-        'status' => 1,
-        'weight' => 5,
-        'region' => 'help',
-        'visibility' => 1,
-        'pages' => 'user/register',
-        'cache' => -1,
-      ));
-    }
-    drupal_set_message('The user registration guidelines were migrated to <a href="' . url('admin/structure/block/manage/block/' . $bid . '/configure') . '">a custom block</a> and set up to only show on the user registration page. The block was set to use the default text format, which might differ from the HTML based format used before. Check the block and ensure that the output is right.');
-    $insert->execute();
-  }
-
-  // Migrate site mission setting.
-  if ($mission = variable_get('site_mission')) {
-    $bid = db_insert('box')->fields(array('body' => $mission, 'info' => 'Site mission', 'format' => $default_format))->execute();
-
-    $insert = db_insert('block')->fields(array('module', 'delta', 'theme', 'status', 'weight', 'region', 'visibility', 'pages', 'cache'));
-    foreach ($themes_with_blocks as $theme) {
-      // Add mission block for themes, which had blocks.
-      $insert->values(array(
-        'module' => 'block',
-        'delta' => $bid,
-        'theme' => $theme,
-        'status' => 1,
-        'weight' => 0,
-        'region' => 'highlight',
-        'visibility' => 1,
-        'pages' => '<front>',
-        'cache' => -1,
-      ));
-    }
-    drupal_set_message('The site mission was migrated to <a href="' . url('admin/structure/block/manage/block/' . $bid . '/configure') . '">a custom block</a> and set up to only show on the front page in the highlighted content region. The block was set to use the default text format, which might differ from the HTML based format used before. Check the block and ensure that the output is right. If your theme does not have a highlighted content region, you might need to <a href="' . url('admin/structure/block') . '">relocate the block</a>.');
-    $insert->execute();
-    // Migrate mission to RSS site description.
-    variable_set('feed_description', $mission);
-  }
-
-  // Migrate site footer message to a custom block.
-  if ($footer_message = variable_get('site_footer', '')) {
-    $bid = db_insert('box')->fields(array('body' => $footer_message, 'info' => 'Footer message', 'format' => $default_format))->execute();
-
-    $insert = db_insert('block')->fields(array('module', 'delta', 'theme', 'status', 'weight', 'region', 'pages', 'cache'));
-    foreach ($themes_with_blocks as $theme) {
-      // Add site footer block for themes, which had blocks.
-      // Set low weight, so the block comes early (it used to be
-      // before the other blocks).
-      $insert->values(array(
-        'module' => 'block',
-        'delta' => $bid,
-        'theme' => $theme,
-        'status' => 1,
-        'weight' => -10,
-        'region' => 'footer',
-        'pages' => '',
-        'cache' => -1,
-      ));
-    }
-    drupal_set_message('The footer message was migrated to <a href="' . url('admin/structure/block/manage/block/' . $bid . '/configure') . '">a custom block</a> and set up to appear in the footer. The block was set to use the default text format, which might differ from the HTML based format used before. Check the block and ensure that the output is right. If your theme does not have a footer region, you might need to <a href="' . url('admin/structure/block') . '">relocate the block</a>.');
-    $insert->execute();
-  }
-
-  // Remove the variables (even if they were saved empty on the admin interface),
-  // to avoid keeping clutter in the variables table.
-  variable_del('contact_form_information');
-  variable_del('user_registration_help');
-  variable_del('site_mission');
-  variable_del('site_footer');
-
-  // Rebuild theme data, so the new 'help' region is identified.
-  system_rebuild_theme_data();
-}
-
-/**
- * Add the queue tables.
- */
-function system_update_7022() {
-  // Moved to update_fix_d7_requirements().
-}
-
-/**
  * Change the PHP for settings permission.
  */
-function system_update_7023() {
+function system_update_7021() {
   db_update('role_permission')
     ->fields(array('permission' => 'use PHP for settings'))
     ->condition('permission', 'use PHP for block visibility')
@@ -2219,48 +2038,14 @@ function system_update_7024() {
 }
 
 /**
- * Improve indexes on the {url_alias} table.
- */
-function system_update_7025() {
-  db_drop_index('url_alias', 'src_language');
-  db_drop_index('url_alias', 'dst_language');
-  db_add_index('url_alias', 'dst_language_pid', array('dst', 'language', 'pid'));
-  db_add_index('url_alias', 'src_language_pid', array('src', 'language', 'pid'));
-}
-
-/**
- * Increase permitted length of url aliases to 255 characters.
- *
- */
-function system_update_7026() {
-  db_change_field('url_alias', 'src', 'src', array('type' => 'varchar', 'length' => 255, 'not null' => TRUE));
-  db_change_field('url_alias', 'dst', 'dst', array('type' => 'varchar', 'length' => 255, 'not null' => TRUE));
-}
-
-/**
  * Enable field type modules.
  */
 function system_update_7027() {
   $module_list = array('text', 'number', 'list', 'options');
-  db_delete('system')
-    ->condition('type', 'module')
-    ->condition('name', $module_list)
-    ->execute();
   module_enable($module_list, FALSE);
 }
 
-/**
- * Rename taxonomy tables.
- */
-function system_update_7028() {
-  db_rename_table('term_data', 'taxonomy_term_data');
-  db_rename_table('term_hierarchy', 'taxonomy_term_hierarchy');
-  db_rename_table('term_node', 'taxonomy_term_node');
-  db_rename_table('term_relation', 'taxonomy_term_relation');
-  db_rename_table('term_synonym', 'taxonomy_term_synonym');
-  db_rename_table('vocabulary', 'taxonomy_vocabulary');
-  db_rename_table('vocabulary_node_types', 'taxonomy_vocabulary_node_type');
-}
+// system_update_7028() moved to taxonomy_update_7001().
 
 /**
  * Add new 'view own unpublished content' permission for authenticated users.
@@ -2408,7 +2193,7 @@ function system_update_7035() {
 
   // The old {files} tables still exists.  We migrate core data from upload
   // module, but any contrib module using it will need to do its own update.
-  $result = db_query('SELECT fid, uid, filename, filepath AS uri, filemime, filesize, status, timestamp FROM {files} f INNER JOIN {upload} u ON u.fid = f.fid', array(), array('fetch' => PDO::FETCH_ASSOC));
+  $result = db_query('SELECT f.fid, uid, filename, filepath AS uri, filemime, filesize, status, timestamp FROM {files} f INNER JOIN {upload} u ON u.fid = f.fid', array(), array('fetch' => PDO::FETCH_ASSOC));
 
   // We will convert filepaths to uri using the default schmeme
   // and stripping off the existing file directory path.
@@ -2450,16 +2235,9 @@ function system_update_7036() {
 }
 
 /**
- * Rename {box} table to {block_custom}.
- */
-function system_update_7037() {
-  db_rename_table('box', 'block_custom');
-}
-
-/**
  * Rename action description to label.
  */
-function system_update_7038() {
+function system_update_7037() {
   db_change_field('actions', 'description', 'label', array('type' => 'varchar', 'length' => 255, 'not null' => TRUE, 'default' => '0'));
 }
 
@@ -2487,7 +2265,7 @@ function system_update_7041() {
 }
 
 /**
- * Rename dst and src to source and alias.
+ * Upgrade the {url_alias} table and create a cache bin for path aliases.
  */
 function system_update_7042() {
   // update_fix_d7_requirements() adds 'fake' source and alias columns to
@@ -2500,16 +2278,16 @@ function system_update_7042() {
   $schema['cache_path'] = drupal_get_schema_unprocessed('system', 'cache');
   $schema['cache_path']['description'] = 'Cache table used for path alias lookups.';
   db_create_table('cache_path', $schema['cache_path']);
+
   // Drop indexes.
   db_drop_index('url_alias', 'src_language_pid');
   db_drop_unique_key('url_alias', 'dst_language_pid');
-  // Rename fields.
+  // Rename the fields, and increase their length to 255 characters.
   db_change_field('url_alias', 'src', 'source', array('type' => 'varchar', 'length' => 255, 'not null' => TRUE, 'default' => ''));
   db_change_field('url_alias', 'dst', 'alias', array('type' => 'varchar', 'length' => 255, 'not null' => TRUE, 'default' => ''));
   // Add indexes back.
   db_add_index('url_alias', 'source_language_pid', array('source', 'language', 'pid'));
   db_add_unique_key('url_alias', 'alias_language_pid', array('alias', 'language', 'pid'));
-
 }
 
 /**

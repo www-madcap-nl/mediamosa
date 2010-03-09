@@ -1,5 +1,5 @@
 <?php
-// $Id: locale.admin.inc,v 1.2 2010/01/14 06:43:24 webchick Exp $
+// $Id: locale.admin.inc,v 1.6 2010/03/07 07:44:18 webchick Exp $
 
 /**
  * @file
@@ -107,7 +107,7 @@ function locale_languages_overview_form_submit($form, &$form_state) {
     if ($form_state['values']['site_default'] == $langcode || $default->language == $langcode) {
       // Automatically enable the default language and the language
       // which was default previously (because we will not get the
-      // value from that disabled checkox).
+      // value from that disabled checkbox).
       $form_state['values']['enabled'][$langcode] = 1;
     }
     if ($form_state['values']['enabled'][$langcode]) {
@@ -479,7 +479,7 @@ function locale_languages_configure_form() {
   $form = array(
     '#submit' => array('locale_languages_configure_form_submit'),
     '#theme' => 'locale_languages_configure_form',
-    '#language_types' => language_types_configurable(),
+    '#language_types' => language_types_configurable(FALSE),
     '#language_types_info' => language_types_info(),
     '#language_providers' => language_negotiation_info(),
   );
@@ -504,7 +504,7 @@ function _locale_languages_configure_form_language_table(&$form, $type) {
   $info = $form['#language_types_info'][$type];
 
   $table_form = array(
-    '#title' => t('@type', array('@type' => $info['name'])),
+    '#title' => t('@type language detection', array('@type' => $info['name'])),
     '#tree' => TRUE,
     '#description' => $info['description'],
     '#language_providers' => array(),
@@ -535,7 +535,7 @@ function _locale_languages_configure_form_language_table(&$form, $type) {
     $provider = $language_providers[$id];
 
     // List the provider only if the current type is defined in its 'types' key.
-    // If it is not defined default to all the configurabe language types.
+    // If it is not defined default to all the configurable language types.
     $types = array_flip(isset($provider['types']) ? $provider['types'] : $form['#language_types']);
 
     if (isset($types[$type])) {
@@ -667,9 +667,10 @@ function locale_languages_configure_form_submit($form, &$form_state) {
     if (isset($info['fixed'])) {
       $language_types[$type] = FALSE;
       $negotiation = array();
-      foreach ($info['fixed'] as $id) {
+      foreach ($info['fixed'] as $weight => $id) {
         if (isset($defined_providers[$id])) {
           $negotiation[$id] = $defined_providers[$id];
+          $negotiation[$id]['weight'] = $weight;
         }
       }
       language_negotiation_set($type, $negotiation);
@@ -1037,21 +1038,20 @@ function locale_translate_export_screen() {
  *   An associate array with localized language names
  */
 function locale_translate_export_po_form($form, &$form_state, $names) {
-  $form['export'] = array('#type' => 'fieldset',
+  $form['export_title'] = array('#type' => 'item',
     '#title' => t('Export translation'),
-    '#collapsible' => TRUE,
   );
-  $form['export']['langcode'] = array('#type' => 'select',
+  $form['langcode'] = array('#type' => 'select',
     '#title' => t('Language name'),
     '#options' => $names,
     '#description' => t('Select the language to export in Gettext Portable Object (<em>.po</em>) format.'),
   );
-  $form['export']['group'] = array('#type' => 'radios',
+  $form['group'] = array('#type' => 'radios',
     '#title' => t('Text group'),
     '#default_value' => 'default',
     '#options' => module_invoke_all('locale', 'groups'),
   );
-  $form['export']['submit'] = array('#type' => 'submit', '#value' => t('Export'));
+  $form['submit'] = array('#type' => 'submit', '#value' => t('Export'));
   return $form;
 }
 
@@ -1060,20 +1060,18 @@ function locale_translate_export_po_form($form, &$form_state, $names) {
  */
 function locale_translate_export_pot_form() {
   // Complete template export of the strings
-  $form['export'] = array('#type' => 'fieldset',
+  $form['export_title'] = array('#type' => 'item',
     '#title' => t('Export template'),
-    '#collapsible' => TRUE,
     '#description' => t('Generate a Gettext Portable Object Template (<em>.pot</em>) file with all strings from the Drupal locale database.'),
   );
-  $form['export']['group'] = array('#type' => 'radios',
+  $form['group'] = array('#type' => 'radios',
     '#title' => t('Text group'),
     '#default_value' => 'default',
     '#options' => module_invoke_all('locale', 'groups'),
   );
-  $form['export']['submit'] = array('#type' => 'submit', '#value' => t('Export'));
+  $form['submit'] = array('#type' => 'submit', '#value' => t('Export'));
   // Reuse PO export submission callback.
   $form['#submit'][] = 'locale_translate_export_po_form_submit';
-  $form['#validate'][] = 'locale_translate_export_po_form_validate';
   return $form;
 }
 

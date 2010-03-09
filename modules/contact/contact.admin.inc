@@ -1,5 +1,5 @@
 <?php
-// $Id: contact.admin.inc,v 1.20 2010/01/03 21:01:04 webchick Exp $
+// $Id: contact.admin.inc,v 1.23 2010/02/26 18:35:35 dries Exp $
 
 /**
  * @file
@@ -19,7 +19,13 @@ function contact_category_list() {
   $rows = array();
 
   // Get all the contact categories from the database.
-  $categories = db_query('SELECT cid, category, recipients, selected FROM {contact} ORDER BY weight, category')->fetchAll();
+  $categories = db_select('contact', 'c')
+    ->addTag('translatable')
+    ->fields('c', array('cid', 'category', 'recipients', 'selected'))
+    ->orderBy('weight')
+    ->orderBy('category')
+    ->execute()
+    ->fetchAll();
 
   // Loop through the categories and add them to the table.
   foreach ($categories as $category) {
@@ -39,7 +45,12 @@ function contact_category_list() {
     ));
   }
 
-  return theme('table', array('header' => $header, 'rows' => $rows));
+  $build['category_table'] = array(
+    '#theme' => 'table',
+    '#header' => $header,
+    '#rows' => $rows,
+  );
+  return $build;
 }
 
 /**
@@ -97,7 +108,10 @@ function contact_category_edit_form($form, &$form_state, array $category = array
     '#type' => 'value',
     '#value' => $category['cid'],
   );
-  $form['actions'] = array('#type' => 'container', '#attributes' => array('class' => array('form-actions')));
+  $form['actions'] = array(
+    '#type' => 'container',
+    '#attributes' => array('class' => array('form-actions')),
+  );
   $form['actions']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save'),
@@ -112,6 +126,18 @@ function contact_category_edit_form($form, &$form_state, array $category = array
 function contact_category_edit_form_validate($form, &$form_state) {
   // Validate and each e-mail recipient.
   $recipients = explode(',', $form_state['values']['recipients']);
+
+  // When creating a new contact form, or renaming the category on an existing
+  // contact form, make sure that the given category is unique.
+  $category = $form_state['values']['category'];
+  $query = db_select('contact', 'c')->condition('c.category', $category, '=');
+  if (!empty($form_state['values']['cid'])) {
+    $query->condition('c.cid', $form_state['values']['cid'], '<>');
+  }
+  if ($query->countQuery()->execute()->fetchField()) {
+    form_set_error('category', t('A contact form with category %category already exists.', array('%category' => $category)));
+  }
+
   foreach ($recipients as &$recipient) {
     $recipient = trim($recipient);
     if (!valid_email_address($recipient)) {

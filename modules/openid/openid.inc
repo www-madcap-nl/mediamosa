@@ -1,5 +1,5 @@
 <?php
-// $Id: openid.inc,v 1.22 2009/11/24 05:20:48 dries Exp $
+// $Id: openid.inc,v 1.26 2010/03/06 06:39:00 dries Exp $
 
 /**
  * @file
@@ -51,6 +51,16 @@ define('OPENID_NS_1_1', 'http://openid.net/signon/1.1');
 define('OPENID_NS_1_0', 'http://openid.net/signon/1.0');
 
 /**
+ * OpenID Simple Registration extension.
+ */
+define('OPENID_NS_SREG', 'http://openid.net/extensions/sreg/1.1');
+
+/**
+ * OpenID Attribute Exchange extension.
+ */
+define('OPENID_NS_AX', 'http://openid.net/srv/ax/1.0');
+
+/**
  * Performs an HTTP 302 redirect (for the 1.x protocol).
  */
 function openid_redirect_http($url, $message) {
@@ -99,6 +109,56 @@ function openid_redirect_form($form, &$form_state, $url, $message) {
 }
 
 /**
+ * Select a service element.
+ *
+ * The procedure is described in OpenID Authentication 2.0, section 7.3.2.
+ *
+ * A new entry is added to the returned array with the key 'version' and the
+ * value 1 or 2 specifying the protocol version used by the service.
+ *
+ * @param $services
+ *   An array of service arrays as returned by openid_discovery().
+ * @return
+ *   The selected service array, or NULL if no valid services were found.
+ */
+function _openid_select_service(array $services) {
+  // Extensible Resource Identifier (XRI) Resolution Version 2.0, section 4.3.3:
+  // Find the service with the highest priority (lowest integer value). If there
+  // is a tie, select a random one, not just the first in the XML document.
+  $selected_service = NULL;
+  shuffle($services);
+
+  // Search for an OP Identifier Element.
+  foreach ($services as $service) {
+    if (!empty($service['uri'])) {
+      if (in_array('http://specs.openid.net/auth/2.0/server', $service['types'])) {
+        $service['version'] = 2;
+      }
+      elseif (in_array(OPENID_NS_1_0, $service['types']) || in_array(OPENID_NS_1_1, $service['types'])) {
+        $service['version'] = 1;
+      }
+      if (isset($service['version']) && (!$selected_service || $service['priority'] < $selected_service['priority'])) {
+        $selected_service = $service;
+      }
+    }
+  }
+
+  if (!$selected_service) {
+    // Search for Claimed Identifier Element.
+    foreach ($services as $service) {
+      if (!empty($service['uri']) && in_array('http://specs.openid.net/auth/2.0/signon', $service['types'])) {
+        $service['version'] = 2;
+        if (!$selected_service || $service['priority'] < $selected_service['priority']) {
+          $selected_service = $service;
+        }
+      }
+    }
+  }
+
+  return $selected_service;
+}
+
+/**
  * Determine if the given identifier is an XRI ID.
  */
 function _openid_is_xri($identifier) {
@@ -118,26 +178,43 @@ function _openid_is_xri($identifier) {
 }
 
 /**
- * Normalize the given identifier as per spec.
+ * Normalize the given identifier.
+ *
+ * The procedure is described in OpenID Authentication 2.0, section 7.2.
  */
-function _openid_normalize($identifier) {
+function openid_normalize($identifier) {
+  $methods = module_invoke_all('openid_normalization_method_info');
+  drupal_alter('openid_normalization_method_info', $methods);
+
+  // Execute each method in turn, stopping after the first method accepted
+  // the identifier.
+  foreach ($methods as $method) {
+    $result = $method($identifier);
+    if ($result !== NULL) {
+      $identifier = $result;
+      break;
+    }
+  }
+
+  return $identifier;
+}
+
+/**
+ * OpenID normalization method: normalize XRI identifiers.
+ */
+function _openid_xri_normalize($identifier) {
   if (_openid_is_xri($identifier)) {
-    return _openid_normalize_xri($identifier);
-  }
-  else {
-    return _openid_normalize_url($identifier);
+    if (stristr($identifier, 'xri://') !== FALSE) {
+      $identifier = substr($identifier, 6);
+    }
+    return $identifier;
   }
 }
 
-function _openid_normalize_xri($xri) {
-  $normalized_xri = $xri;
-  if (stristr($xri, 'xri://') !== FALSE) {
-    $normalized_xri = substr($xri, 6);
-  }
-  return $normalized_xri;
-}
-
-function _openid_normalize_url($url) {
+/**
+ * OpenID normalization method: normalize URL identifiers.
+ */
+function _openid_url_normalize($url) {
   $normalized_url = $url;
 
   if (stristr($url, '://') === FALSE) {
@@ -152,6 +229,34 @@ function _openid_normalize_url($url) {
   }
 
   return $normalized_url;
+}
+
+/**
+ * OpenID normalization method: Normalize Google identifiers.
+ *
+ * This transforms a Google identifier (user@domain) into an XRDS URL.
+ *
+ * @see http://sites.google.com/site/oauthgoog/fedlogininterp/openiddiscovery#TOC-IdP-Discovery
+ */
+function _openid_google_idp_normalize($identifier) {
+  if (!valid_email_address($identifier)) {
+    return;
+  }
+
+  // If the identifier is a valid email address, try to discover the domain
+  // with Google Federated Login. We only use the generic URL, because the
+  // domain-specific URL (http://example.com/.well-known/host-meta) cannot
+  // be trusted.
+  list($name, $domain) = explode('@', $identifier, 2);
+  $response = drupal_http_request('https://www.google.com/accounts/o8/.well-known/host-meta?hd=' . rawurlencode($domain));
+  if (isset($response->error) || $response->code != 200) {
+    return;
+  }
+
+  if (preg_match('/Link: <(.*)>/', $response->data, $matches)) {
+    $xrds_url = $matches[1];
+    return $xrds_url;
+  }
 }
 
 /**
@@ -442,4 +547,62 @@ function _openid_get_params($str) {
     }
   }
   return $data;
+}
+
+/**
+ * Extract all the parameters belonging to an extension in a response message.
+ *
+ * OpenID 2.0 defines a simple extension mechanism, based on a namespace prefix.
+ *
+ * Each request or response can define a prefix using:
+ * @code
+ *   openid.ns.[prefix] = [extension_namespace]
+ *   openid.[prefix].[key1] = [value1]
+ *   openid.[prefix].[key2] = [value2]
+ *   ...
+ * @endcode
+ *
+ * This function extracts all the keys belonging to an extension namespace in a
+ * response, optionally using a fallback prefix if none is provided in the response.
+ *
+ * Note that you cannot assume that a given extension namespace will use the same
+ * prefix on the response and the request: each party may use a different prefix
+ * to refer to the same namespace.
+ *
+ * @param $response
+ *   The response array.
+ * @param $extension_namespace
+ *   The namespace of the extension.
+ * @param $fallback_prefix
+ *   An optional prefix that will be used in case no prefix is found for the
+ *   target extension namespace.
+ * @return
+ *   An associative array containing all the parameters in the response message
+ *   that belong to the extension. The keys are stripped from their namespace
+ *   prefix.
+ * @see http://openid.net/specs/openid-authentication-2_0.html#extensions
+ */
+function openid_extract_namespace($response, $extension_namespace, $fallback_prefix = NULL) {
+  // Find the namespace prefix.
+  $prefix = $fallback_prefix;
+  foreach ($response as $key => $value) {
+    if ($value == $extension_namespace && preg_match('/^openid\.ns\.([^.]+)$/', $key, $matches)) {
+      $prefix = $matches[1];
+      break;
+    }
+  }
+
+  // Now extract the namespace keys from the response.
+  $output = array();
+  if (!isset($prefix)) {
+    return $output;
+  }
+  foreach ($response as $key => $value) {
+    if (preg_match('/^openid\.' . $prefix . '\.(.+)$/', $key, $matches)) {
+      $local_key = $matches[1];
+      $output[$local_key] = $value;
+    }
+  }
+
+  return $output;
 }

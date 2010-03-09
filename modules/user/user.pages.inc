@@ -1,5 +1,5 @@
 <?php
-// $Id: user.pages.inc,v 1.65 2010/01/14 19:21:55 dries Exp $
+// $Id: user.pages.inc,v 1.68 2010/02/28 20:10:34 dries Exp $
 
 /**
  * @file
@@ -12,7 +12,7 @@
 function user_autocomplete($string = '') {
   $matches = array();
   if ($string) {
-    $result = db_query_range("SELECT name FROM {users} WHERE LOWER(name) LIKE LOWER(:name)", 0, 10, array(':name' => $string . '%'));
+    $result = db_select('users')->fields('users', array('name'))->condition('name', db_like($string) . '%', 'LIKE')->range(0, 10)->execute();
     foreach ($result as $user) {
       $matches[$user->name] = check_plain($user->name);
     }
@@ -29,6 +29,8 @@ function user_autocomplete($string = '') {
  * @see user_pass_submit()
  */
 function user_pass() {
+  global $user;
+
   $form['name'] = array(
     '#type' => 'textfield',
     '#title' => t('Username or e-mail address'),
@@ -36,6 +38,16 @@ function user_pass() {
     '#maxlength' => max(USERNAME_MAX_LENGTH, EMAIL_MAX_LENGTH),
     '#required' => TRUE,
   );
+  // Allow logged in users to request this also.
+  if ($user->uid > 0) {
+    $form['name']['#type'] = 'value';
+    $form['name']['#value'] = $user->mail;
+    $form['mail'] = array(
+      '#prefix' => '<p>',
+      '#markup' =>  t('Password reset instructions will be mailed to %email. You must log out to use the password reset link in the e-mail.', array('%email' => $user->mail)),
+      '#suffix' => '</p>',
+    );
+  }
   $form['submit'] = array('#type' => 'submit', '#value' => t('E-mail new password'));
 
   return $form;
@@ -120,7 +132,10 @@ function user_pass_reset($form, &$form_state, $uid, $timestamp, $hashed_pass, $a
           // user, which invalidates further use of the one-time login link.
           user_login_finalize();
           drupal_set_message(t('You have just used your one-time login link. It is no longer necessary to use this link to log in. Please change your password.'));
-          drupal_goto('user/' . $user->uid . '/edit');
+          // Let the user's password be changed without the current password check.
+          $token = md5(drupal_random_bytes(55));
+          $_SESSION['pass_reset_' . $user->uid] = $token;
+          drupal_goto('user/' . $user->uid . '/edit', array('query' => array('pass-reset-token' => $token)));
         }
         else {
           $form['message'] = array('#markup' => t('<p>This is a one-time login for %user_name and will expire on %expiration_date.</p><p>Click on this button to log in to the site and change your password.</p>', array('%user_name' => $account->name, '%expiration_date' => format_date($timestamp + $timeout))));
@@ -219,7 +234,6 @@ function template_preprocess_user_profile_category(&$variables) {
  * @ingroup forms
  * @see user_account_form()
  * @see user_account_form_validate()
- * @see user_account_form_submit()
  * @see user_profile_form_validate()
  * @see user_profile_form_submit()
  * @see user_cancel_confirm_form_submit()
@@ -283,6 +297,10 @@ function user_profile_form_submit($form, &$form_state) {
   user_save($account, $edit, $category);
   $form_state['values']['uid'] = $account->uid;
 
+  if ($category == 'account' && !empty($edit['pass'])) {
+    // Remove the password reset tag since a new password was saved.
+    unset($_SESSION['pass_reset_'. $account->uid]);
+  }
   // Clear the page cache because pages can contain usernames and/or profile information:
   cache_clear_all();
 
@@ -370,6 +388,8 @@ function user_cancel_confirm_form($form, &$form_state, $account) {
     }
   }
 
+  // Always provide entity id in the same form key as in the entity edit form.
+  $form['uid'] = array('#type' => 'value', '#value' => $account->uid);
   return confirm_form($form,
     $question,
     'user/' . $account->uid,

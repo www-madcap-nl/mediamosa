@@ -1,5 +1,5 @@
 <?php
-// $Id: database.inc,v 1.23 2010/01/13 05:49:41 webchick Exp $
+// $Id: database.inc,v 1.26 2010/03/07 08:03:44 webchick Exp $
 
 /**
  * @file
@@ -25,6 +25,8 @@ class DatabaseConnection_mysql extends DatabaseConnection {
       $connection_options['port'] = 3306;
     }
 
+    $this->connectionOptions = $connection_options;
+
     $dsn = 'mysql:host=' . $connection_options['host'] . ';port=' . $connection_options['port'] . ';dbname=' . $connection_options['database'];
     parent::__construct($dsn, $connection_options['username'], $connection_options['password'], array(
       // So we don't have to mess around with cursors and unbuffered queries by default.
@@ -42,7 +44,7 @@ class DatabaseConnection_mysql extends DatabaseConnection {
     // This allows Drupal to run almost seamlessly on many different
     // kinds of database systems. These settings force MySQL to behave
     // the same as postgresql, or sqlite in regards to syntax interpretation
-    // and invalid data handling. See http://drupal.org/node/344575 for further disscussion.
+    // and invalid data handling. See http://drupal.org/node/344575 for further discussion.
     $this->exec("SET sql_mode='ANSI,TRADITIONAL'");
   }
 
@@ -85,7 +87,7 @@ class DatabaseConnection_mysql extends DatabaseConnection {
       $new_id = $this->query('INSERT INTO {sequences} () VALUES ()', array(), array('return' => Database::RETURN_INSERT_ID));
     }
     if (!$shutdown_registered) {
-      register_shutdown_function(array(get_class($this), 'nextIdDelete'));
+      drupal_register_shutdown_function(array(get_class($this), 'nextIdDelete'));
       $shutdown_registered = TRUE;
     }
     return $new_id;

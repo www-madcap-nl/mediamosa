@@ -1,9 +1,122 @@
 <?php
-// $Id: node.api.php,v 1.57 2010/01/13 23:30:43 dries Exp $
+// $Id: node.api.php,v 1.64 2010/03/06 06:39:00 dries Exp $
 
 /**
  * @file
  * Hooks provided by the Node module.
+ */
+
+/**
+ * @defgroup node_api_hooks Node API Hooks
+ * @{
+ * The Node API allows modules to define content types, to modify content
+ * types created in the user interface, and to modify content types created by
+ * other modules.
+ *
+ * Each content type is maintained by a primary module, which is either
+ * node.module (for content types created in the user interface) or the
+ * module that implements hook_node_info() to define the content type.
+ *
+ * During node operations (create, update, view, delete, etc.), there are
+ * several sets of hooks that get invoked to allow modules to modify the base
+ * node operation:
+ * - Node-type-specific hooks: These hooks are only invoked on the primary
+ *   module, using the "base" return component of hook_node_info() as the
+ *   function prefix.  For example, poll.module defines the base for the Poll
+ *   content type as "poll", so during creation of a poll node, hook_insert() is
+ *   only invoked by calling poll_insert().
+ * - All-module hooks: This set of hooks is invoked on all implementing
+ *   modules, to allow other modules to modify what the primary node module is
+ *   doing. For example, hook_node_insert() is invoked on all modules when
+ *   creating a poll node.
+ * - Field hooks: Hooks related to the fields attached to the node. These are
+ *   invoked from the field operations functions described below, and can be
+ *   either field-type-specific or all-module hooks.
+ * - Entity hooks: Generic hooks for "entity" operations. These are always
+ *   invoked on all modules.
+ *
+ * Here is a list of the node and entity hooks that are invoked, field
+ * operations, and other steps that take place during node operations:
+ * - Creating a new node (calling node_save() on a new node):
+ *   - field_attach_presave()
+ *   - hook_node_presave() (all)
+ *   - Node and revision records are written to the database
+ *   - hook_insert() (node-type-specific)
+ *   - field_attach_insert()
+ *   - hook_node_insert() (all)
+ *   - hook_entity_insert() (all)
+ *   - hook_node_access_records() (all)
+ *   - hook_node_access_records_alter() (all)
+ * - Updating an existing node (calling node_save() on an existing node):
+ *   - field_attach_presave()
+ *   - hook_node_presave() (all)
+ *   - Node and revision records are written to the database
+ *   - hook_update() (node-type-specific)
+ *   - field_attach_update()
+ *   - hook_node_update() (all)
+ *   - hook_entity_update() (all)
+ *   - hook_node_access_records() (all)
+ *   - hook_node_access_records_alter() (all)
+ * - Loading a node (calling node_load(), node_load_multiple(), or
+ *   entity_load() with $entity_type of 'node'):
+ *   - Node and revision information is read from database.
+ *   - hook_load() (node-type-specific)
+ *   - field_attach_load_revision() and field_attach_load()
+ *   - hook_entity_load() (all)
+ *   - hook_node_load() (all)
+ * - Viewing a single node (calling node_view() - note that the input to
+ *   node_view() is a loaded node, so the Loading steps above are already
+ *   done):
+ *   - hook_view() (node-type-specific)
+ *   - field_attach_prepare_view()
+ *   - hook_entity_prepare_view() (all)
+ *   - field_attach_view()
+ *   - hook_node_view() (all)
+ * - Viewing multiple nodes (calling node_view_multiple() - note that the input
+ *   to node_view_multiple() is a set of loaded nodes, so the Loading steps
+ *   above are already done):
+ *   - field_attach_prepare_view()
+ *   - hook_entity_prepare_view() (all)
+ *   - hook_view() (node-type-specific)
+ *   - field_attach_view()
+ *   - hook_node_view() (all)
+ *   - hook_node_view_alter() (all)
+ * - Deleting a node (calling node_delete() or node_delete_multiple()):
+ *   - Node is loaded (see Loading section above)
+ *   - Node and revision information is deleted from database
+ *   - hook_delete() (node-type-specific)
+ *   - hook_node_delete() (all)
+ *   - field_attach_delete()
+ * - Deleting a node revision (calling node_revision_delete()):
+ *   - Node is loaded (see Loading section above)
+ *   - Revision information is deleted from database
+ *   - hook_node_revision_delete() (all)
+ *   - field_attach_delete_revision()
+ * - Preparing a node for editing (calling node_form() - note that if it's
+ *   an existing node, it will already be loaded; see the Loading section
+ *   above):
+ *   - hook_prepare() (node-type-specific)
+ *   - hook_node_prepare() (all); if translation.module is enabled, this will
+ *     also invoke hook_node_prepare_translation() on all modules.
+ *   - hook_form() (node-type-specific)
+ *   - field_attach_form()
+ * - Validating a node during editing form submit (calling
+ *   node_form_validate()):
+ *   - hook_validate() (node-type-specific)
+ *   - hook_node_validate() (all)
+ *   - field_attach_form_validate()
+ * - Searching (calling node_search_execute()):
+ *   - hook_ranking() (all)
+ *   - Query is executed to find matching nodes
+ *   - Resulting node is loaded (see Loading section above)
+ *   - Resulting node is prepared for viewing (see Viewing a single node above)
+ *   - comment_node_update_index() is called.
+ *   - hook_node_search_result() (all)
+ * - Search indexing (calling node_update_index()):
+ *   - Node is loaded (see Loading section above)
+ *   - Node is prepared for viewing (see Viewing a single node above)
+ *   - hook_node_update_index() (all)
+ * @}
  */
 
 /**
@@ -57,15 +170,18 @@ function hook_node_grants($account, $op) {
  * interested, it must respond with an array of permissions arrays for that
  * node.
  *
+ * Note that the grant values in the return value from your hook must be
+ * integers and not boolean TRUE and FALSE.
+ *
  * Each permissions item in the array is an array with the following elements:
  * - 'realm': The name of a realm that the module has defined in
  *   hook_node_grants().
  * - 'gid': A 'grant ID' from hook_node_grants().
- * - 'grant_view': If set to TRUE a user that has been identified as a member
+ * - 'grant_view': If set to 1 a user that has been identified as a member
  *   of this gid within this realm can view this node.
- * - 'grant_update': If set to TRUE a user that has been identified as a member
+ * - 'grant_update': If set to 1 a user that has been identified as a member
  *   of this gid within this realm can edit this node.
- * - 'grant_delete': If set to TRUE a user that has been identified as a member
+ * - 'grant_delete': If set to 1 a user that has been identified as a member
  *   of this gid within this realm can delete this node.
  * - 'priority': If multiple modules seek to set permissions on a node, the
  *   realms that have the highest priority will win out, and realms with a lower
@@ -85,10 +201,10 @@ function hook_node_access_records($node) {
     $grants = array();
     $grants[] = array(
       'realm' => 'example',
-      'gid' => TRUE,
-      'grant_view' => TRUE,
-      'grant_update' => FALSE,
-      'grant_delete' => FALSE,
+      'gid' => 1,
+      'grant_view' => 1,
+      'grant_update' => 0,
+      'grant_delete' => 0,
       'priority' => 0,
     );
 
@@ -97,9 +213,9 @@ function hook_node_access_records($node) {
     $grants[] = array(
       'realm' => 'example_author',
       'gid' => $node->uid,
-      'grant_view' => TRUE,
-      'grant_update' => TRUE,
-      'grant_delete' => TRUE,
+      'grant_view' => 1,
+      'grant_update' => 1,
+      'grant_delete' => 1,
       'priority' => 0,
     );
     return $grants;
@@ -269,6 +385,8 @@ function hook_node_operations() {
  *
  * @param $node
  *   The node that is being deleted.
+ *
+ * @ingroup node_api_hooks
  */
 function hook_node_delete($node) {
   db_delete('mytable')
@@ -285,6 +403,8 @@ function hook_node_delete($node) {
  *
  * @param $node
  *   The node revision (node object) that is being deleted.
+ *
+ * @ingroup node_api_hooks
  */
 function hook_node_revision_delete($node) {
   db_delete('upload')->condition('vid', $node->vid)->execute();
@@ -305,6 +425,8 @@ function hook_node_revision_delete($node) {
  *
  * @param $node
  *   The node that is being created.
+ *
+ * @ingroup node_api_hooks
  */
 function hook_node_insert($node) {
   db_insert('mytable')
@@ -343,6 +465,8 @@ function hook_node_insert($node) {
  *   An array containing the types of the nodes.
  *
  * For a detailed usage example, see nodeapi_example.module.
+ *
+ * @ingroup node_api_hooks
  */
 function hook_node_load($nodes, $types) {
   $result = db_query('SELECT nid, foo FROM {mytable} WHERE nid IN(:nids)', array(':nids' => array_keys($nodes)));
@@ -421,6 +545,8 @@ function hook_node_access($node, $op, $account) {
  *
  * @param $node
  *   The node that is about to be shown on the add/edit form.
+ *
+ * @ingroup node_api_hooks
  */
 function hook_node_prepare($node) {
   if (!isset($node->comment)) {
@@ -437,6 +563,8 @@ function hook_node_prepare($node) {
  *
  * @param $node
  *   The node object being prepared for translation.
+ *
+ * @ingroup node_api_hooks
  */
 function hook_node_prepare_translation($node) {
 }
@@ -452,6 +580,8 @@ function hook_node_prepare_translation($node) {
  *
  * @return
  *   Extra information to be displayed with search result.
+ *
+ * @ingroup node_api_hooks
  */
 function hook_node_search_result($node) {
   $comments = db_query('SELECT comment_count FROM {node_comment_statistics} WHERE nid = :nid', array('nid' => $node->nid))->fetchField();
@@ -466,6 +596,8 @@ function hook_node_search_result($node) {
  *
  * @param $node
  *   The node that is being inserted or updated.
+ *
+ * @ingroup node_api_hooks
  */
 function hook_node_presave($node) {
   if ($node->nid && $node->moderate) {
@@ -485,6 +617,8 @@ function hook_node_presave($node) {
  *
  * @param $node
  *   The node that is being updated.
+ *
+ * @ingroup node_api_hooks
  */
 function hook_node_update($node) {
   db_update('mytable')
@@ -504,6 +638,8 @@ function hook_node_update($node) {
  *
  * @return
  *   Array of additional information to be indexed.
+ *
+ * @ingroup node_api_hooks
  */
 function hook_node_update_index($node) {
   $text = '';
@@ -533,6 +669,8 @@ function hook_node_update_index($node) {
  *   The node being validated.
  * @param $form
  *   The form being used to edit the node.
+ *
+ * @ingroup node_api_hooks
  */
 function hook_node_validate($node, $form) {
   if (isset($node->end) && isset($node->start)) {
@@ -562,10 +700,12 @@ function hook_node_validate($node, $form) {
  *   The node that is being assembled for rendering.
  * @param $view_mode
  *   The $view_mode parameter from node_view().
+ *
+ * @ingroup node_api_hooks
  */
 function hook_node_view($node, $view_mode) {
   $node->content['my_additional_field'] = array(
-    '#value' => $additional_field,
+    '#markup' => $additional_field,
     '#weight' => 10,
     '#theme' => 'mymodule_my_additional_field',
   );
@@ -587,8 +727,10 @@ function hook_node_view($node, $view_mode) {
  *   A renderable array representing the node content.
  *
  * @see node_view()
+ *
+ * @ingroup node_api_hooks
  */
-function hook_node_view_alter($build) {
+function hook_node_view_alter(&$build) {
   if ($build['#view_mode'] == 'full' && isset($build['an_additional_field'])) {
     // Change its weight.
     $build['an_additional_field']['#weight'] = -10;
@@ -634,18 +776,20 @@ function hook_node_view_alter($build) {
  *   - "body_label": the label for the body field of this content type. Optional
  *      (defaults to 'Body').
  *   - "locked": boolean indicating whether the administrator can change the
- *      machine name of this type. FALSE = changable (not locked),
- *      TRUE = unchangable (locked). Optional (defaults to TRUE).
+ *      machine name of this type. FALSE = changeable (not locked),
+ *      TRUE = unchangeable (locked). Optional (defaults to TRUE).
  *
  * The machine-readable name of a node type should contain only letters,
  * numbers, and underscores. Underscores will be converted into hyphens for the
- * purpose of contructing URLs.
+ * purpose of constructing URLs.
  *
  * All attributes of a node type that are defined through this hook (except for
  * 'locked') can be edited by a site administrator. This includes the
  * machine-readable name of a node type, if 'locked' is set to FALSE.
  *
  * For a detailed usage example, see node_example.module.
+ *
+ * @ingroup node_api_hooks
  */
 function hook_node_info() {
   return array(
@@ -694,9 +838,11 @@ function hook_node_info() {
  *     not need to take the weighted system into account, as it will be done
  *     automatically. It does, however, need to calculate a decimal between
  *     0 and 1; be careful not to cast the entire score to an integer by
- *     inadvertantly introducing a variable argument. Required.
+ *     inadvertently introducing a variable argument. Required.
  *   - "arguments": if any arguments are required for the score, they can be
  *     specified in an array here.
+ *
+ * @ingroup node_api_hooks
  */
 function hook_ranking() {
   // If voting is disabled, we can avoid returning the array, no hard feelings.
@@ -772,6 +918,8 @@ function hook_node_type_delete($info) {
  *
  * @param $node
  *   The node that is being deleted.
+ *
+ * @ingroup node_api_hooks
  */
 function hook_delete($node) {
   db_delete('mytable')
@@ -790,6 +938,8 @@ function hook_delete($node) {
  *
  * @param $node
  *   The node that is about to be shown on the add/edit form.
+ *
+ * @ingroup node_api_hooks
  */
 function hook_prepare($node) {
   if ($file = file_check_upload($field_name)) {
@@ -830,6 +980,8 @@ function hook_prepare($node) {
  * specific to the node type.
  *
  * For a detailed usage example, see node_example.module.
+ *
+ * @ingroup node_api_hooks
  */
 function hook_form($node, $form_state) {
   $type = node_type_get_type($node);
@@ -878,6 +1030,8 @@ function hook_form($node, $form_state) {
  *
  * @param $node
  *   The node that is being created.
+ *
+ * @ingroup node_api_hooks
  */
 function hook_insert($node) {
   db_insert('mytable')
@@ -912,6 +1066,8 @@ function hook_insert($node) {
  *   An array of the nodes being loaded, keyed by nid.
  *
  * For a detailed usage example, see node_example.module.
+ *
+ * @ingroup node_api_hooks
  */
 function hook_load($nodes) {
   $result = db_query('SELECT nid, foo FROM {mytable} WHERE nid IN (:nids)', array(':nids' => array_keys($nodes)));
@@ -932,6 +1088,8 @@ function hook_load($nodes) {
  *
  * @param $node
  *   The node that is being updated.
+ *
+ * @ingroup node_api_hooks
  */
 function hook_update($node) {
   db_update('mytable')
@@ -962,6 +1120,8 @@ function hook_update($node) {
  *   The node being validated.
  * @param $form
  *   The form being used to edit the node.
+ *
+ * @ingroup node_api_hooks
  */
 function hook_validate($node, &$form) {
   if (isset($node->end) && isset($node->start)) {
@@ -995,6 +1155,8 @@ function hook_validate($node, &$form) {
  *   instead.
  *
  * For a detailed usage example, see node_example.module.
+ *
+ * @ingroup node_api_hooks
  */
 function hook_view($node, $view_mode = 'full') {
   if (node_is_page($node)) {

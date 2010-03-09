@@ -1,5 +1,5 @@
 <?php
-// $Id: simpletest.test,v 1.37 2009/12/24 08:03:53 dries Exp $
+// $Id: simpletest.test,v 1.39 2010/03/03 19:46:26 dries Exp $
 
 class SimpleTestFunctionalTest extends DrupalWebTestCase {
   /**
@@ -54,7 +54,8 @@ class SimpleTestFunctionalTest extends DrupalWebTestCase {
       $this->drupalGet($base_url . '/install.php', array('external' => TRUE));
       $this->assertResponse(403, 'Cannot access install.php with a "simpletest" user-agent header.');
 
-      $this->drupalLogin($this->drupalCreateUser());
+      $user = $this->drupalCreateUser();
+      $this->drupalLogin($user);
       $headers = $this->drupalGetHeaders(TRUE);
       $this->assertEqual(count($headers), 2, t('There was one intermediate request.'));
       $this->assertTrue(strpos($headers[0][':status'], '302') !== FALSE, t('Intermediate response code was 302.'));
@@ -62,6 +63,17 @@ class SimpleTestFunctionalTest extends DrupalWebTestCase {
       $this->assertEqual($this->getUrl(), $headers[0]['location'], t('HTTP redirect was followed'));
       $this->assertFalse($this->drupalGetHeader('Location'), t('Headers from intermediate request were reset.'));
       $this->assertResponse(200, t('Response code from intermediate request was reset.'));
+
+      // Test the maximum redirection option.
+      $this->drupalLogout();
+      $edit = array(
+        'name' => $user->name,
+        'pass' => $user->pass_raw
+      );
+      variable_set('simpletest_maximum_redirects', 1);
+      $this->drupalPost('user?destination=user/logout', $edit, t('Log in'));
+      $headers = $this->drupalGetHeaders(TRUE);
+      $this->assertEqual(count($headers), 2, t('Simpletest stopped following redirects after the first one.'));
     }
   }
 
@@ -208,11 +220,11 @@ class SimpleTestFunctionalTest extends DrupalWebTestCase {
     if ($this->parse()) {
       if ($fieldset = $this->getResultFieldSet()) {
         // Code assumes this is the only test in group.
-        $results['summary'] = $this->asText($fieldset->div[1]);
+        $results['summary'] = $this->asText($fieldset->div->div[1]);
         $results['name'] = $this->asText($fieldset->legend);
 
         $results['assertions'] = array();
-        $tbody = $fieldset->table->tbody;
+        $tbody = $fieldset->div->table->tbody;
         foreach ($tbody->tr as $row) {
           $assertion = array();
           $assertion['message'] = $this->asText($row->td[0]);
@@ -231,8 +243,6 @@ class SimpleTestFunctionalTest extends DrupalWebTestCase {
 
   /**
    * Get the fieldset containing the results for group this test is in.
-   *
-   * @return fieldset containing the results for group this test is in.
    */
   function getResultFieldSet() {
     $fieldsets = $this->xpath('//fieldset');

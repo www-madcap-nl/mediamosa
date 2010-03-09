@@ -1,5 +1,5 @@
 <?php
-// $Id: node.pages.inc,v 1.111 2010/01/13 04:35:28 webchick Exp $
+// $Id: node.pages.inc,v 1.117 2010/02/27 20:37:11 webchick Exp $
 
 /**
  * @file
@@ -80,39 +80,12 @@ function node_form_validate($form, &$form_state) {
   field_attach_form_validate('node', $node, $form, $form_state);
 }
 
-function node_object_prepare($node) {
-  // Set up default values, if required.
-  $node_options = variable_get('node_options_' . $node->type, array('status', 'promote'));
-  // If this is a new node, fill in the default values.
-  if (!isset($node->nid)) {
-    foreach (array('status', 'promote', 'sticky') as $key) {
-      // Multistep node forms might have filled in something already.
-      if (!isset($node->$key)) {
-        $node->$key = (int) in_array($key, $node_options);
-      }
-    }
-    global $user;
-    $node->uid = $user->uid;
-    $node->created = REQUEST_TIME;
-  }
-  else {
-    $node->date = format_date($node->created, 'custom', 'Y-m-d H:i:s O');
-    // Remove the log message from the original node object.
-    $node->log = NULL;
-  }
-  // Always use the default revision setting.
-  $node->revision = in_array('revision', $node_options);
-
-  node_invoke($node, 'prepare');
-  module_invoke_all('node_prepare', $node);
-}
-
 /**
  * Generate the node add/edit form array.
  */
 function node_form($form, &$form_state, $node) {
   global $user;
-  // This form has its own multistep persistance.
+  // This form has its own multistep persistence.
   if ($form_state['rebuild']) {
     $form_state['input'] = array();
   }
@@ -230,11 +203,8 @@ function node_form($form, &$form_state, $node) {
     '#title' => t('Authored on'),
     '#maxlength' => 25,
     '#description' => t('Format: %time. The date format is YYYY-MM-DD and %timezone is the timezone offset from UTC. Leave blank to use the time of form submission.', array('%time' => !empty($node->date) ? $node->date : format_date($node->created, 'custom', 'Y-m-d H:i:s O'), '%timezone' => !empty($node->date) ? $node->date : format_date($node->created, 'custom', 'O'))),
+    '#default_value' => !empty($node->date) ? $node->date : '',
   );
-
-  if (isset($node->date)) {
-    $form['author']['date']['#default_value'] = $node->date;
-  }
 
   // Node options for administrators
   $form['options'] = array(
@@ -264,14 +234,6 @@ function node_form($form, &$form_state, $node) {
     '#title' => t('Sticky at top of lists'),
     '#default_value' => $node->sticky,
   );
-
-  // These values are used when the user has no administrator access.
-  foreach (array('uid', 'created') as $key) {
-    $form[$key] = array(
-      '#type' => 'value',
-      '#value' => $node->$key,
-    );
-  }
 
   // Add the buttons.
   $form['actions'] = array(
@@ -474,11 +436,9 @@ function node_form_submit_build_node($form, &$form_state) {
  * Menu callback -- ask for confirmation of node deletion
  */
 function node_delete_confirm($form, &$form_state, $node) {
-  $form['nid'] = array(
-    '#type' => 'value',
-    '#value' => $node->nid,
-  );
-
+  $form['#node'] = $node;
+  // Always provide entity id in the same form key as in the entity edit form.
+  $form['nid'] = array('#type' => 'value', '#value' => $node->nid);
   return confirm_form($form,
     t('Are you sure you want to delete %title?', array('%title' => $node->title)),
     'node/' . $node->nid,

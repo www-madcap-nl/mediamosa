@@ -1,5 +1,5 @@
 <?php
-// $Id: image.gd.inc,v 1.13 2009/09/18 00:12:48 webchick Exp $
+// $Id: image.gd.inc,v 1.15 2010/01/30 07:59:25 dries Exp $
 
 /**
  * @file
@@ -144,7 +144,7 @@ function image_gd_rotate(stdClass $image, $degrees, $background = NULL) {
     }
   }
 
-  // Images are assigned a new color pallete when rotating, removing any
+  // Images are assigned a new color palette when rotating, removing any
   // transparency flags. For GIF images, keep a record of the transparent color.
   if ($image->info['extension'] == 'gif') {
     $transparent_index = imagecolortransparent($image->resource);
@@ -257,7 +257,7 @@ function image_gd_save(stdClass $image, $destination) {
   if ($wrapper = file_stream_wrapper_get_instance_by_uri($destination)) {
     $destination = $wrapper->realpath();
   }
-  
+
   $extension = str_replace('jpg', 'jpeg', $image->info['extension']);
   $function = 'image' . $extension;
   if (!function_exists($function)) {

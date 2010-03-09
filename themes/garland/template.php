@@ -1,5 +1,5 @@
 <?php
-// $Id: template.php,v 1.36 2010/01/08 07:36:53 webchick Exp $
+// $Id: template.php,v 1.39 2010/03/04 09:03:08 dries Exp $
 
 /**
  * Return a themed breadcrumb trail.
@@ -25,10 +25,12 @@ function garland_breadcrumb($variables) {
  * Override or insert variables into the maintenance page template.
  */
 function garland_preprocess_maintenance_page(&$vars) {
-  // Toggle fixed or fluid width.
-  if (theme_get_setting('garland_width') == 'fluid') {
-    $vars['classes_array'][] = 'fluid-width';
-  }
+  // While markup for normal pages is split into page.tpl.php and html.tpl.php,
+  // the markup for the maintenance page is all in the single
+  // maintenance-page.tpl.php template. So, to have what's done in
+  // garland_preprocess_html() also happen on the maintenance page, it has to be
+  // called here.
+  garland_preprocess_html($vars);
 }
 
 /**
@@ -39,6 +41,8 @@ function garland_preprocess_html(&$vars) {
   if (theme_get_setting('garland_width') == 'fluid') {
     $vars['classes_array'][] = 'fluid-width';
   }
+  // Add conditional CSS for IE6.
+  drupal_add_css(path_to_theme() . '/fix-ie.css', array('weight' => CSS_THEME, 'browsers' => array('IE' => 'lt IE 7', '!IE' => FALSE), 'preprocess' => FALSE));
 }
 
 /**
@@ -49,7 +53,6 @@ function garland_process_html(&$vars) {
   if (module_exists('color')) {
     _color_html_alter($vars);
   }
-  $vars['styles'] .= "\n<!--[if lt IE 7]>\n" . garland_get_ie_styles() . "<![endif]-->\n";
 }
 
 /**
@@ -93,20 +96,20 @@ function garland_preprocess_page(&$vars) {
   // Prepare header.
   $site_fields = array();
   if (!empty($vars['site_name'])) {
-    $site_fields[] = check_plain($vars['site_name']);
+    $site_fields[] = $vars['site_name'];
   }
   if (!empty($vars['site_slogan'])) {
-    $site_fields[] = check_plain($vars['site_slogan']);
+    $site_fields[] = $vars['site_slogan'];
   }
   $vars['site_title'] = implode(' ', $site_fields);
   if (!empty($site_fields)) {
     $site_fields[0] = '<span>' . $site_fields[0] . '</span>';
   }
   $vars['site_html'] = implode(' ', $site_fields);
-  
+
   // Set a variable for the site name title and logo alt attributes text.
-  $slogan_text = filter_xss_admin(variable_get('site_slogan', ''));
-  $site_name_text = filter_xss_admin(variable_get('site_name', 'Drupal'));
+  $slogan_text = $vars['site_slogan'];
+  $site_name_text = $vars['site_name'];
   $vars['site_name_and_slogan'] = $site_name_text . ' ' . $slogan_text;
 }
 
@@ -135,18 +138,4 @@ function garland_preprocess_region(&$vars) {
  */
 function garland_menu_local_tasks() {
   return menu_primary_local_tasks();
-}
-
-/**
- * Generates IE CSS links for LTR and RTL languages.
- */
-function garland_get_ie_styles() {
-  global $language;
-
-  $ie_styles = '<link type="text/css" rel="stylesheet" media="all" href="' . file_create_url(path_to_theme() . '/fix-ie.css') . '" />' . "\n";
-  if ($language->direction == LANGUAGE_RTL) {
-    $ie_styles .= '      <style type="text/css" media="all">@import "' . file_create_url(path_to_theme() . '/fix-ie-rtl.css') . '";</style>' . "\n";
-  }
-
-  return $ie_styles;
 }

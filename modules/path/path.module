@@ -1,5 +1,5 @@
 <?php
-// $Id: path.module,v 1.180 2009/12/14 20:38:15 dries Exp $
+// $Id: path.module,v 1.183 2010/02/13 21:41:58 dries Exp $
 
 /**
  * @file
@@ -18,7 +18,7 @@ function path_help($path, $arg) {
       $output .= '<h3>' . t('Uses') . '</h3>';
       $output .= '<dl>';
       $output .= '<dt>' . t('Creating aliases') . '</dt>';
-      $output .= '<dd>' . t('Users with sufficient <a href="@permissions">permissions</a> can create aliases under the <em>URL path settings</em> section when they create or edit content. Some examples of aliases are: ', array('@permissions' => url('admin/config/people/permissions', array('fragment' => 'module-path'))));
+      $output .= '<dd>' . t('Users with sufficient <a href="@permissions">permissions</a> can create aliases under the <em>URL path settings</em> section when they create or edit content. Some examples of aliases are: ', array('@permissions' => url('admin/people/permissions', array('fragment' => 'module-path'))));
       $output .= '<ul><li>' . t('<em>member/jane-smith</em> aliased to internal path <em>user/123</em>') . '</li>';
       $output .= '<li>' . t('<em>about-us/team</em> aliased to internal path <em>node/456</em>') . '</li>';
       $output .= '</ul></dd>';
@@ -58,6 +58,7 @@ function path_menu() {
     'description' => "Change your site's URL paths by aliasing them.",
     'page callback' => 'path_admin_overview',
     'access arguments' => array('administer url aliases'),
+    'weight' => -10,
     'file' => 'path.admin.inc',
   );
   $items['admin/config/search/path/edit/%path'] = array(
@@ -241,12 +242,12 @@ function path_form_taxonomy_form_term_alter(&$form, $form_state) {
       'alias' => '',
       'language' => LANGUAGE_NONE,
     );
-    $form['identification']['path'] = array(
+    $form['path'] = array(
       '#access' => user_access('create url aliases') || user_access('administer url aliases'),
       '#tree' => TRUE,
       '#element_validate' => array('path_form_element_validate'),
     );
-    $form['identification']['path']['alias'] = array(
+    $form['path']['alias'] = array(
       '#type' => 'textfield',
       '#title' => t('URL alias'),
       '#default_value' => $path['alias'],
@@ -254,9 +255,9 @@ function path_form_taxonomy_form_term_alter(&$form, $form_state) {
       '#weight' => 0,
       '#description' => t("Optionally specify an alternative URL by which this term can be accessed. Use a relative path and don't add a trailing slash or the URL alias won't work."),
     );
-    $form['identification']['path']['pid'] = array('#type' => 'value', '#value' => $path['pid']);
-    $form['identification']['path']['source'] = array('#type' => 'value', '#value' => $path['source']);
-    $form['identification']['path']['language'] = array('#type' => 'value', '#value' => $path['language']);
+    $form['path']['pid'] = array('#type' => 'value', '#value' => $path['pid']);
+    $form['path']['source'] = array('#type' => 'value', '#value' => $path['source']);
+    $form['path']['language'] = array('#type' => 'value', '#value' => $path['language']);
   }
 }
 
@@ -305,4 +306,3 @@ function path_taxonomy_term_delete($term) {
   // Delete all aliases associated with this term.
   path_delete(array('source' => 'taxonomy/term/' . $term->tid));
 }
-

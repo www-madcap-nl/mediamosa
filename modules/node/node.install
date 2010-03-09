@@ -1,5 +1,5 @@
 <?php
-// $Id: node.install,v 1.40 2010/01/14 02:29:37 webchick Exp $
+// $Id: node.install,v 1.45 2010/03/01 07:39:12 dries Exp $
 
 /**
  * @file
@@ -357,6 +357,38 @@ function node_schema() {
 }
 
 /**
+ * Implements hook_install().
+ */
+function node_install() {
+  // Populate the node access table.
+  db_insert('node_access')
+    ->fields(array(
+      'nid' => 0,
+      'gid' => 0,
+      'realm' => 'all',
+      'grant_view' => 1,
+      'grant_update' => 0,
+      'grant_delete' => 0,
+    ))
+    ->execute();
+}
+
+/**
+ * Implements hook_update_dependencies().
+ */
+function node_update_dependencies() {
+  // Node update 7006 migrates node data to fields and therefore must run after
+  // the Field module has been enabled, but before upgrading field data.
+  $dependencies['node'][7006] = array(
+    'system' => 7049,
+  );
+  $dependencies['system'][7050] = array(
+    'node' => 7006,
+  );
+  return $dependencies;
+}
+
+/**
  * @defgroup updates-6.x-to-7.x System updates from 6.x to 7.x
  * @{
  */
@@ -412,7 +444,7 @@ function node_update_7004() {
   $type_list = node_type_get_types();
 
   // Apply original settings to all types.
-  foreach ($type_list as $type => $object) {
+  foreach ($type_list as $type => $entity) {
     variable_set('teaser_length_' . $type, $original_length);
     variable_set('node_preview_' . $type, $original_preview);
   }
@@ -437,8 +469,6 @@ function node_update_7005() {
  * Convert body and teaser from node properties to fields, and migrate status/comment/promote and sticky columns to the {node_revision} table.
  */
 function node_update_7006(&$context) {
-  taxonomy_update_7002();
-
   $context['#finished'] = 0;
 
   // Get node type info for every invocation.
@@ -466,22 +496,23 @@ function node_update_7006(&$context) {
   else {
     // Subsequent invocations.
 
-    // Save the field IDs for field_sql_storage_field_storage_write().
+    // Grab the body field ID for field_sql_storage_field_storage_write().
     $body_field = field_info_field('body');
     $body_field_id = $body_field['id'];
 
     $found = FALSE;
     if ($context['total']) {
       // Operate on every revision of every node (whee!), in batches.
-      $batch_size = 50;
-      $query = db_select('node', 'n');
-      $nr = $query->innerJoin('node_revision', 'nr', 'n.vid = nr.vid');
-      $revisions = $query
+      $batch_size = 200;
+      $query = db_select('node_revision', 'nr');
+      $query->innerJoin('node', 'n', 'n.vid = nr.vid');
+      $query
+        ->fields('nr', array('nid', 'vid', 'body', 'teaser', 'format'))
         ->fields('n', array('type', 'status', 'comment', 'promote', 'sticky'))
-        ->fields($nr)
         ->condition('nr.vid', $context['last'], '>')
         ->orderBy('nr.vid', 'ASC')
-        ->execute();
+        ->range(0, $batch_size);
+      $revisions = $query->execute();
 
       // Load each reversion of each node, set up 'body'
       // appropriately, and save the node's field data.  Note that
@@ -499,7 +530,6 @@ function node_update_7006(&$context) {
             'vid' => $revision->vid,
             'type' => $revision->type,
           );
-          $node->title = $revision->title;
           if (!empty($revision->teaser) && $revision->teaser != text_summary($revision->body)) {
             $node->body[LANGUAGE_NONE][0]['summary'] = $revision->teaser;
           }
@@ -532,10 +562,6 @@ function node_update_7006(&$context) {
 
         $context['last'] = $revision->vid;
         $context['count'] += 1;
-
-        if (--$batch_size == 0) {
-          break;
-        }
       }
 
       $context['#finished'] = min(0.99, $context['count'] / $context['total']);
