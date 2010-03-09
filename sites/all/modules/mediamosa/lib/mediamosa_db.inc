@@ -355,8 +355,8 @@ class mediamosa_db {
 
   /**
    * Escape the value for database
-   * 'db_escape_string' is removed from drupal 7, D7 uses prepare instead. For now
-   * we will use PDO::quote.
+   * 'db_escape_string' is removed from drupal 7, D7 uses prepare instead. For
+   * now we will use PDO::quote.
    */
   static public function escape_string($mixed_string, $glue = ',') {
     // Hmm well kinda hack here, but dont see any other way atm

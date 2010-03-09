@@ -37,7 +37,7 @@ class MediaMosaTransferringOwnershipTestCaseEga extends MediaMosaTestCaseEga {
     return array(
       'name' => 'Transferring ownership',
       'description' => 'Testing transferring ownership related functions and rest calls.',
-      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE,
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_AUT,
     );
   }
 

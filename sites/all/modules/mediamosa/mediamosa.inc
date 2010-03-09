@@ -98,6 +98,13 @@ class mediamosa {
   }
 
   /**
+   * Return the current defined installation id.
+   */
+  static public function get_server_id() {
+    return mediamosa::variable_get('mediamosa_installation_id');
+  }
+
+  /**
    * MediaMosa error handler.
    *
    * @param string $error_level
@@ -384,8 +391,9 @@ class mediamosa {
       return $now_timestamp;
     }
 
-    // Lets not break installer, dont use mediamosa_db here.
-    $now_timestamp = db_query(strtr('SELECT #CURRENT_TIMESTAMP', array('#CURRENT_TIMESTAMP' => mediamosa_db::CURRENT_TIMESTAMP)))->fetchField();
+    // Lets not break installer, dont use mediamosa_db here. String cast here,
+    // d7 seems to have a problem with float values coming from this string?
+    $now_timestamp = (string)db_query(strtr('SELECT #CURRENT_TIMESTAMP', array('#CURRENT_TIMESTAMP' => mediamosa_db::CURRENT_TIMESTAMP)))->fetchField();
 
     return $now_timestamp;
   }

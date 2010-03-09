@@ -11,3 +11,5 @@ dependencies[] = mediamosa
 
 ; Used files.
 files[] = mediamosa_server.module
+files[] = mediamosa_server.rest.inc
+files[] = mediamosa_server.setup.test

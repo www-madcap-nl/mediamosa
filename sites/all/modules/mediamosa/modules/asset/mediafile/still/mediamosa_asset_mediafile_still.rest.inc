@@ -43,7 +43,7 @@ class mediamosa_rest_call_delete_stills extends mediamosa_rest_call {
   const MEDIAFILE_ID = 'mediafile_id';
   const STILL_ID = 'still_id';
 
-  // ------------------------------------------------------------------ Punlic functions.
+  // ------------------------------------------------------------------ Public functions.
   public function get_var_setup() {
     $a_var_setup = array();
 
@@ -145,7 +145,7 @@ class mediamosa_rest_call_set_still_default extends mediamosa_rest_call {
   const MEDIAFILE_ID = 'mediafile_id';
   const STILL_ID = 'still_id';
 
-  // ------------------------------------------------------------------ Punlic functions.
+  // ------------------------------------------------------------------ Public functions.
   public function get_var_setup() {
     $a_var_setup = array();
 
@@ -262,7 +262,7 @@ class mediamosa_rest_call_set_still_order extends mediamosa_rest_call {
   const STILL_ID = 'still_id';
   const ORDER = 'order';
 
-  // ------------------------------------------------------------------ Punlic functions.
+  // ------------------------------------------------------------------ Public functions.
   public function get_var_setup() {
     $a_var_setup = array();
 
@@ -367,5 +367,46 @@ class mediamosa_rest_call_set_still_order extends mediamosa_rest_call {
 
     // Set Still order.
     mediamosa_asset_mediafile_still::set_still_order($asset_id, $mediafile_id, $still_id, $order);
+  }
+}
+
+/**
+ * URI: /mediafile/$mediafile_id/still
+ * Method: POST
+ *
+ * 1.x media_management_get_still_for_mediafile
+ */
+class mediamosa_rest_call_get_still_for_mediafile extends mediamosa_rest_call_asset_mediafile_play {
+  // ------------------------------------------------------------------ Consts.
+  // ------------------------------------------------------------------ Public functions.
+  public function get_var_setup() {
+    $a_var_setup = parent::get_var_setup();
+
+    // Make not required, so we pass the check.
+    $a_var_setup[self::VARS][self::ASSET_ID][self::VAR_IS_REQUIRED] = self::VAR_IS_REQUIRED_NO;
+
+    return $a_var_setup;
+  }
+
+  public function do_call() {
+    $o_mediamosa = mediamosa::get();
+
+    $a_app_ids = $this->get_param_value(self::APP_ID);
+    $app_id = reset($a_app_ids);
+
+    // Set the asset_id value.
+    $mediafile_id = $this->get_param_value(self::MEDIAFILE_ID);
+
+    // Now get the mediafile.
+    $a_mediafile = mediamosa_asset_mediafile::must_exists($mediafile_id, $app_id);
+
+    // Set the asset_id.
+    $this->set_param_value(mediamosa_rest_call_asset_mediafile_play::ASSET_ID, $a_mediafile[mediamosa_asset_mediafile_db::ASSET_ID]);
+
+    // Now fix response on still generation.
+    $this->set_param_value(mediamosa_rest_call_asset_mediafile_play::RESPONSE, mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL);
+
+    // Now do play call.
+    parent::do_call();
   }
 }

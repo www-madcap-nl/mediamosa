@@ -44,7 +44,7 @@ class MediaMosaAppTestCaseEga extends MediaMosaTestCaseEga {
     return array(
       'name' => 'Application tests',
       'description' => 'The application related unit tests.',
-      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE,
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_APP,
     );
   }
 

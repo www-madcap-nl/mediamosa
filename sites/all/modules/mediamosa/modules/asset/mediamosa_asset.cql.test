@@ -37,7 +37,7 @@ class MediaMosaAssetCQLTestCaseEga extends MediaMosaTestCaseEga {
     return array(
       'name' => 'CQL - Asset search and properties',
       'description' => 'Testing asset CQL related functions and rest calls.',
-      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE,
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET_CQL,
     );
   }
 

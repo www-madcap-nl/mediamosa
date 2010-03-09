@@ -41,9 +41,9 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
   // ------------------------------------------------------------------ Functions.
   public static function getInfo() {
     return array(
-      'name' => 'Play proxy test',
+      'name' => 'Play proxy - Common',
       'description' => 'Testing the play proxy call, functions, output and clean up code.',
-      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE,
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_PLAYPROXY,
     );
   }
 

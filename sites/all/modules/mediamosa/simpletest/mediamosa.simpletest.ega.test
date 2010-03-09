@@ -28,11 +28,7 @@
   * @file
   * Test on the simple test sub functions.
   */
- /**
-  * @file
-  * Unittests for aut/ACL.
-  *
-  */
+
 class MediaMosaTestCaseEgaTest extends MediaMosaTestCaseEga {
 
   // ------------------------------------------------------------------ Members.
@@ -41,8 +37,8 @@ class MediaMosaTestCaseEgaTest extends MediaMosaTestCaseEga {
   static public function getInfo() {
     return array(
       'name' => 'MediaMosa APP simpletest',
-      'description' => 'Testing our simple test class.',
-      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE,
+      'description' => 'Testing our parent simple test class for EUA (App) functions.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_APP,
     );
   }
 

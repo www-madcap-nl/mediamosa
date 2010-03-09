@@ -63,13 +63,14 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     // @todo: convert these to nodes.
     $a_servers = mediamosa_server::search();
     $a_server_containers = mediamosa_server::search_containers();
+    $a_server_tools = mediamosa_server::search_tools();
 
     // Run parent first so we are inside sandbox.
     // Call parent::setUp and preserve arguments.
     $args = func_get_args();
 
     // Create and setup the CORE module.
-    $args = array_unique(array_merge(array('mediamosa_app_authentication', 'mediamosa_asset', 'mediamosa_aut', 'mediamosa_collection'), $args));
+    $args = array_unique(array_merge(array('mediamosa_app_authentication', 'mediamosa_asset', 'mediamosa_aut', 'mediamosa_collection', 'mediamosa_server'), $args));
     call_user_func_array(array($this, 'parent::setUp'), $args);
 
     // Now we are in sandbox, create default APP, our default EGA.
@@ -101,6 +102,17 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     foreach ($a_server_containers as $a_server_container) {
       db_insert(mediamosa_server_streaming_container_db::TABLE_NAME)
         ->fields($a_server_container)
+        ->execute();
+    }
+
+    // Truncate current and insert new containers.
+    db_truncate(mediamosa_server_tool_db::TABLE_NAME)->execute();
+
+    // Copy the server tools.
+    // Copy the current server tools to sandbox.
+    foreach ($a_server_tools as $a_server_tool) {
+      db_insert(mediamosa_server_tool_db::TABLE_NAME)
+        ->fields($a_server_tool)
         ->execute();
     }
 
@@ -289,7 +301,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       throw $e;
     }
 
-    // If changed curlHandle, then put it back.
+    // If we changed curlHandle, then put it back.
     if (isset($old_curlHandle)) {
       $this->curlHandle = $old_curlHandle;
     }
@@ -650,11 +662,10 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Based on the rest call /mediafile/$mediafile_id (GET)
    */
   protected function getMediafile($mediafile_id, array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
-
     // Set uri.
     $uri = strtr('mediafile/@mediafile_id', array('@mediafile_id' => $mediafile_id));
 
-    // Do Post call.
+    // Do get call.
     $response = $this->restCallGet($uri, $a_parameters, array(), $a_expected_result_ids);
 
     // Check response.
@@ -723,6 +734,50 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     // Return data.
     return $supplements;
   }
+
+  /**
+   * Get the still(s) from a mediafile..
+   * Based on the rest call /mediafile/$mediafile_id/still (GET)
+   */
+  protected function getMediafileStill($mediafile_id, array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+    // Parameters still.
+    $a_parameters += array(
+      mediamosa_rest_call_get_still_for_mediafile::USER_ID => self::SIMPLETEST_USER_ID,
+    );
+
+    // Set uri.
+    $uri = strtr('mediafile/@mediafile_id/still', array('@mediafile_id' => $mediafile_id));
+
+    // Do Get call.
+    $response = $this->restCallGet($uri, $a_parameters, array(), $a_expected_result_ids);
+
+    // Check response.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr(
+        "Get mediafile still with ID: @mediafile_id, got result @result (@result_description)",
+        array(
+          '@mediafile_id' => $mediafile_id,
+          '@result' => (string)$response['xml']->header->request_result_id,
+          '@result_description' => (string)$response['xml']->header->request_result_description
+        )
+      )
+    );
+
+    // Get response.
+    $a_response = mediamosa_lib::responsexml2array($response['xml']);
+    $a_stills = $a_response['items']['item'];
+
+    // Did we get something?
+    $this->assertTrue(
+      count($a_stills),
+      'Got the mediafile stills'
+    );
+
+    // Return data.
+    return $a_stills;
+  }
+
 
   /**
    * Get metadata definitions.
@@ -1851,7 +1906,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   protected function deleteMediafileAut($mediafile_id, array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
     $a_parameters += array(
-      mediamosa_rest_call_aut_mediafile_set_rights::USER_ID => self::SIMPLETEST_USER_ID,
+      mediamosa_rest_call_aut_mediafile_delete_rights::USER_ID => self::SIMPLETEST_USER_ID,
     );
 
     // The uri.
@@ -1864,7 +1919,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $this->assertTrue(
       in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
       strtr(
-        "Removed ACL rights from @mediafile_id, got result @result (@result_description)",
+        "Removed ACL rights from mediafile @mediafile_id, got result @result (@result_description)",
         array(
           '@mediafile_id' => $mediafile_id,
           '@result' => (string)$response['xml']->header->request_result_id,
@@ -1876,6 +1931,37 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     return $response;
   }
 
+  /**
+   * Delete ACL rights on mediafile.
+   * Based on the REST call /asset/$asset_id/supplement/$supplement_id/delete (POST)
+   */
+  protected function deleteCollectionAut($coll_id, array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    // Parameters asset.
+    $a_parameters += array(
+      mediamosa_rest_call_aut_collection_delete_rights::USER_ID => self::SIMPLETEST_USER_ID,
+    );
+
+    // The uri.
+    $uri = strtr('collection/@coll_id/acl/delete', array('@coll_id' => $coll_id));
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $a_parameters, array(), $a_expected_result_ids, $do_internal);
+
+    // Test return status.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr(
+        "Removed ACL rights from collection @coll_id, got result @result (@result_description)",
+        array(
+          '@coll_id' => $coll_id,
+          '@result' => (string)$response['xml']->header->request_result_id,
+          '@result_description' => (string)$response['xml']->header->request_result_description
+        )
+      )
+    );
+
+    return $response;
+  }
   // ------------------------------------------------------------------ Play Proxy.
   /*
    * Do a play proxy call.

@@ -293,7 +293,9 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
       $range = $this->get_param_value(self::RANGE);
       $tag = $this->get_param_value(self::TAG);
 
-      list($size_width, $size_height) = explode('x', $size, 2);
+      if (!empty($size)) {
+        list($size_width, $size_height) = explode('x', $size, 2);
+      }
 
       if (!isset($width) && !isset($height) && isset($size_width) && $size_width >= 0 && is_numeric($size_width) && isset($size_height) && is_numeric($size_height) && $size_height >= 0) {
         $width = $size_width;
@@ -331,7 +333,7 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
       $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'm');
       $query->join(mediamosa_asset_mediafile_metadata_db::TABLE_NAME, 'mm', strtr('mm.#mediafile_id = m.#mediafile_id', array('#mediafile_id' => mediamosa_asset_mediafile_db::ID)));
       $query->join(
-        mediamosa_asset_mediafile_metadata_db::TABLE_NAME,
+        mediamosa_asset_mediafile_db::TABLE_NAME,
         'v',
         strtr(
           "v.#mediafile_id = m.#mediafile_id_source AND v.#is_still = '#is_still_false'",

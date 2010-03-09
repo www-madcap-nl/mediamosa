@@ -37,7 +37,7 @@ class MediaMosaAssetSearchEmptyTestCaseEga extends MediaMosaTestCaseEga {
     return array(
       'name' => 'Asset search empty assets tests',
       'description' => 'Testing asset search empty asset related functions and rest calls.',
-      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE,
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET,
     );
   }
 

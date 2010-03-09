@@ -42,10 +42,10 @@ require_once getcwd() . '/sites/default/settings.php';
 $conf['mediamosa_app'] = TRUE;
 
 /**
- * Default setting, TRUE / FALSE for enabling / disabling the 
+ * Default setting, TRUE / FALSE for enabling / disabling the
  * APP REST upload interface. The upload setting allows REST call
  * relating to uploading files, it will not allow other REST calls
- * unless 'mediamosa_app' is TRUE also. To setup this interface 
+ * unless 'mediamosa_app' is TRUE also. To setup this interface
  * as an upload interface, put 'mediamosa_app' to FALSE and set
  * 'mediamosa_app_upload' to TRUE.
  */
@@ -69,3 +69,13 @@ $conf['mediamosa_app_download'] = FALSE;
  * app interface.
  */
 $conf['mediamosa_admin'] = FALSE;
+
+/**
+ * The 'mediamosa_installation_id' defines the default install ID for multiple
+ * installations of mediamosa. For now only job servers need to have unique IDs.
+ * Best practise is to give each MediaMosa installation its own ID. F.e. if you
+ * have 'job1.mediamosa.example' for your 1st job server, then specify 'job1' as
+ * installation ID here. 'admin.mediamosa.example' would be 'admin' as
+ * installation ID, etc, etc. Max length is 16 chars.
+ */
+$conf['mediamosa_installation_id'] = 'app2';

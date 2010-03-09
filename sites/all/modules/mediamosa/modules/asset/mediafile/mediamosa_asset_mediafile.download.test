@@ -37,7 +37,7 @@ class MediaMosaAssetMediafileDownloadTestCaseEga extends MediaMosaTestCaseEga {
     return array(
       'name' => 'Asset mediafile download tests',
       'description' => 'Testing asset mediafile download related functions and rest calls.',
-      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE,
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET,
     );
   }
 

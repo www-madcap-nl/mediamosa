@@ -34,6 +34,15 @@
  * MEDIAMOSA_TEST_GROUP_
  */
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE', 'MediaMosa');
+define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_JOB', 'MediaMosa Jobs');
+define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET', 'MediaMosa Assets');
+define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET_CQL', 'MediaMosa Assets Search / CQL');
+define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_PLAYPROXY', 'MediaMosa PlayProxy');
+define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_AUT', 'MediaMosa Authorization');
+define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_USER', 'MediaMosa User / Groups');
+define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_APP', 'MediaMosa End User Applications');
+define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STILL', 'MediaMosa Stills');
+define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STORAGE', 'MediaMosa Storage');
 
 /**
  * The basic lowest simpletest class.
@@ -55,6 +64,10 @@ class MediaMosaTestCase extends DrupalWebTestCase {
    * Implements setUp().
    */
   protected function setUp() {
+
+    // Make this global so we can output debug to the test.
+    $GLOBALS['mediamosa_simpletest'] = $this;
+
     $a_vars_to_copy = array('mediamosa_current_mount_point');
     $a_values = array();
 
@@ -67,7 +80,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     $args = func_get_args();
 
     // Create and setup the CORE module.
-    $args = array_unique(array_merge(array('mediamosa', 'mediamosa_app'), $args));
+    $args = array_unique(array_merge(array('simpletest', 'mediamosa', 'mediamosa_app'), $args));
     call_user_func_array(array($this, 'parent::setUp'), $args);
 
     // Now set it, so its in the sandbox.
@@ -150,10 +163,69 @@ class MediaMosaTestCase extends DrupalWebTestCase {
    *
    * @param mixed $data
    */
-  protected function var_export($data, $group = 'Other') {
+  public function var_export($data, $group = 'Other') {
     $this->pass(highlight_string('<?php ' . var_export($data, TRUE), TRUE), $group);
   }
 
+  /**
+   * Pretty export of var_export.
+   *
+   * @param mixed $data
+   */
+  public function var_export_fail($data, $group = 'Other') {
+    $this->fail(highlight_string('<?php ' . var_export($data, TRUE), TRUE), $group);
+  }
+
+  /**
+   * Call if your outside the unittest and you want to log.
+   *
+   * @param $data
+   */
+  static public function staticMessage($data) {
+    if (isset($GLOBALS['mediamosa_simpletest'])) {
+      $GLOBALS['mediamosa_simpletest']->var_export_fail($data);
+    }
+  }
+
+  /**
+   * Static call to restCall
+   */
+  static public function staticRestCall($uri, $request_method = 'POST', array $a_parameters = array(), array $a_headers = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    assert(isset($GLOBALS['mediamosa_simpletest']));
+    $GLOBALS['mediamosa_simpletest']->restCall($uri, $request_method, $a_parameters, $a_headers, $a_expected_result_ids, $do_internal);
+  }
+
+  /**
+   * Static call to restCall POST
+   */
+  static public function staticRestCallPost($uri, array $a_parameters = array(), array $a_headers = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    assert(isset($GLOBALS['mediamosa_simpletest']));
+    $GLOBALS['mediamosa_simpletest']->restCall($uri, 'POST', $a_parameters, $a_headers, $a_expected_result_ids, $do_internal);
+  }
+
+  /**
+   * Static call to restCall GET
+   */
+  static public function staticRestCallGet($uri, array $a_parameters = array(), array $a_headers = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    assert(isset($GLOBALS['mediamosa_simpletest']));
+    $GLOBALS['mediamosa_simpletest']->restCall($uri, 'GET', $a_parameters, $a_headers, $a_expected_result_ids, $do_internal);
+  }
+
+  /**
+   * Static call to restCall POST
+   */
+  static public function staticInternalRestCallPost($uri, array $a_parameters = array(), array $a_headers = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+    assert(isset($GLOBALS['mediamosa_simpletest']));
+    $GLOBALS['mediamosa_simpletest']->restCall($uri, 'POST', $a_parameters, $a_headers, $a_expected_result_ids, TRUE);
+  }
+
+  /**
+   * Static call to restCall GET
+   */
+  static public function staticInternalRestCallGet($uri, array $a_parameters = array(), array $a_headers = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+    assert(isset($GLOBALS['mediamosa_simpletest']));
+    $GLOBALS['mediamosa_simpletest']->restCall($uri, 'GET', $a_parameters, $a_headers, $a_expected_result_ids, TRUE);
+  }
 
   /**
    * Override drupalGet so we can override the request on the drupal interface.
@@ -210,7 +282,9 @@ class MediaMosaTestCase extends DrupalWebTestCase {
       $a_headers[] = mediamosa_settings::X_MEDIAMOSA_INTERNAL_PASS . ': ' . mediamosa::get_internal_password();
 
       // Add internal to uri.
-      $uri = 'internal/' . $uri;
+      if (strpos($uri, 'internal/') === FALSE) {
+        $uri = 'internal/' . $uri;
+      }
     }
 
     // Prepare the CURL options.

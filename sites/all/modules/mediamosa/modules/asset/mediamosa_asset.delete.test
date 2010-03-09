@@ -37,7 +37,7 @@ class MediaMosaAssetMultipleDeleteTestCaseEga extends MediaMosaTestCaseEga {
     return array(
       'name' => 'Delete multiple assets simultaneously tests',
       'description' => 'Testing delete multiple assets simultaneously related functions and rest calls.',
-      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE,
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET,
     );
   }
 

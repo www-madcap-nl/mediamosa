@@ -37,7 +37,7 @@ class MediaMosaAutEgaTestCaseEga extends MediaMosaTestCaseEga {
     return array(
       'name' => 'AUT asset and mediafile information from other EGA',
       'description' => 'Testing AUT asset and mediafile request from other EGA related functions and rest calls.',
-      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE,
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_AUT,
     );
   }
 

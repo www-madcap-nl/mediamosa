@@ -195,8 +195,8 @@ class mediamosa_asset_mediafile_metadata {
       mediamosa_asset_mediafile_metadata_db::MIME_TYPE => $mime,
       mediamosa_asset_mediafile_metadata_db::STILL_ORDER => 0,
       mediamosa_asset_mediafile_metadata_db::STILL_FORMAT => $file_type,
-      mediamosa_asset_mediafile_metadata_db::STILL_TYPE => STILL_TYPE_NONE,
-      mediamosa_asset_mediafile_metadata_db::STILL_DEFAULT => STILL_DEFAULT_FALSE,
+      mediamosa_asset_mediafile_metadata_db::STILL_TYPE => mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NONE,
+      mediamosa_asset_mediafile_metadata_db::STILL_DEFAULT => mediamosa_asset_mediafile_metadata_db::STILL_DEFAULT_FALSE,
     );
 
     return self::create($still_id, $a_fields);

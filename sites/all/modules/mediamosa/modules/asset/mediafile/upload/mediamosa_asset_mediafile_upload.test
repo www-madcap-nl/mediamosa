@@ -42,7 +42,7 @@ class MediaMosaAssetMediafileUploadTestCaseEga extends MediaMosaTestCaseEga {
     return array(
       'name' => 'Upload Mediafile test',
       'description' => 'Test uploading of files (videos, stills).',
-      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE,
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET,
     );
   }
 
