@@ -88,7 +88,10 @@ abstract class mediamosa_rest_call {
                                 // External access needs to be specified.
   const ACCESS_FOR_EXTERNAL = 7; // Default for external calls (normal/internal/external).
 
-  const DESCRIPTION = 'description';   // Description of the REST call (In English, required).
+  const TITLE = 'title';             // Title of the REST call (In English, required).
+  const DESCRIPTION = 'description'; // Description of the REST call (In English, required).
+  const EXAMPLE_REQUEST = 'example_request'; // Example request url.
+  const EXAMPLE_RESPONSE = 'example_response'; // Example response output.
 
   const BEHAVE_AS_EXTERNAL = 'behave_as_external'; // Set to true if you want this rest call to behave like external without /external.
 
@@ -173,7 +176,10 @@ abstract class mediamosa_rest_call {
     $this->{self::CLASS_NAME} = $a_rest_call[self::CLASS_NAME];
     $this->{self::STATUS} = $a_rest_call[self::STATUS];
     $this->{self::VERSION} = $a_rest_call[self::VERSION];
+    $this->{self::TITLE} = $a_rest_call[self::TITLE];
     $this->{self::DESCRIPTION} = $a_rest_call[self::DESCRIPTION];
+    $this->{self::EXAMPLE_REQUEST} = $a_rest_call[self::EXAMPLE_REQUEST];
+    $this->{self::EXAMPLE_RESPONSE} = $a_rest_call[self::EXAMPLE_RESPONSE];
     $this->{self::BEHAVE_AS_EXTERNAL} = $a_rest_call[self::BEHAVE_AS_EXTERNAL];
 
     // Access.
@@ -302,10 +308,35 @@ abstract class mediamosa_rest_call {
     );
 
     // Optional.
+    // @todo: remove, see next function.
     $a_var_setup[mediamosa_rest_call::VARS][mediamosa_rest_call::IS_APP_ADMIN] = array(
       self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
-      self::VAR_DESCRIPTION => mediamosa::t('A boolean to indicate override by global APP admin. Is ignored by most REST calls.'),
+      self::VAR_DESCRIPTION => mediamosa::t('NOT USED.'),
+      self::VAR_DEFAULT_VALUE => 'FALSE',
+    );
+
+    return $a_var_setup;
+  }
+
+  /**
+   * Get the default vars we always expect in every rest call
+   * plus is_app_admin
+   */
+  protected function get_var_setup_app_admin(array $a_var_setup, $app_id_required = TRUE) {
+    $a_var_setup[mediamosa_rest_call::VARS][mediamosa_rest_call::APP_ID] = array(
+      self::VAR_TYPE => mediamosa_type::TYPE_APP_ID,
+      self::VAR_IS_REQUIRED => ($app_id_required ? ($this->is_internal() ? self::VAR_IS_REQUIRED_NO : self::VAR_IS_REQUIRED_YES) : self::VAR_IS_REQUIRED_NO),
+      self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+      self::VAR_DEFAULT_VALUE => 0,
+      self::VAR_DESCRIPTION => mediamosa::t('The application ID.'),
+    );
+
+    // Optional.
+    $a_var_setup[mediamosa_rest_call::VARS][mediamosa_rest_call::IS_APP_ADMIN] = array(
+      self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+      self::VAR_DESCRIPTION => mediamosa::t('A boolean to indicate the call is done by the APP admin. It overrides user autorisation.'),
       self::VAR_DEFAULT_VALUE => 'FALSE',
     );
 
