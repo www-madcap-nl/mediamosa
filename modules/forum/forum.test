@@ -1,5 +1,5 @@
 <?php
-// $Id: forum.test,v 1.31 2009/09/13 14:12:07 dries Exp $
+// $Id: forum.test,v 1.47 2010/03/05 13:36:35 dries Exp $
 
 class ForumTestCase extends DrupalWebTestCase {
   protected $admin_user;
@@ -68,6 +68,25 @@ class ForumTestCase extends DrupalWebTestCase {
     $this->drupalGet('forum');
     $this->assertRaw("<td class=\"topics\">\n          6                  </td>");
     $this->assertRaw('<td class="posts">6</td>');
+
+    // Test loading multiple forum nodes on the front page.
+    $this->drupalLogin($this->drupalCreateUser(array('administer content types', 'create forum content')));
+    $this->drupalPost('admin/structure/types/manage/forum', array('node_options[promote]' => 'promote'), t('Save content type'));
+    $this->createForumTopic($this->forum, FALSE);
+    $this->createForumTopic($this->forum, FALSE);
+    $this->drupalGet('node');
+
+    // Test adding a comment to a forum topic.
+    $node = $this->createForumTopic($this->forum, FALSE);
+    $edit = array();
+    $edit['comment_body[' . LANGUAGE_NONE . '][0][value]'] = $this->randomName();
+    $this->drupalPost("node/$node->nid", $edit, t('Save'));
+    $this->assertResponse(200);
+
+    // Test editing a forum topic that has a comment.
+    $this->drupalLogin($this->any_user);
+    $this->drupalPost("node/$node->nid/edit", array(), t('Save'));
+    $this->assertResponse(200);
   }
 
   /**
@@ -98,7 +117,7 @@ class ForumTestCase extends DrupalWebTestCase {
 
     // Add forum to navigation menu.
     $edit = array();
-    $this->drupalPost('admin/structure/menu-customize/navigation', $edit, t('Save configuration'));
+    $this->drupalPost('admin/structure/menu/manage/navigation', $edit, t('Save configuration'));
     $this->assertResponse(200);
 
     // Edit forum taxonomy.
@@ -131,12 +150,11 @@ class ForumTestCase extends DrupalWebTestCase {
     $edit = array(
       'name' => $title,
       'description' => $description,
-      'machine_name' => drupal_strtolower($this->randomName()),
-      'help' => '',
+      'machine_name' => drupal_strtolower(drupal_substr($this->randomName(), 3, 9)),
     );
 
     // Edit the vocabulary.
-    $this->drupalPost('admin/structure/taxonomy/' . $vid, $edit, t('Save'));
+    $this->drupalPost('admin/structure/taxonomy/' . $vid . '/edit', $edit, t('Save'));
     $this->assertResponse(200);
     $this->assertRaw(t('Updated vocabulary %name.', array('%name' => $title)), t('Vocabulary was edited'));
 
@@ -205,7 +223,7 @@ class ForumTestCase extends DrupalWebTestCase {
   function deleteForum($tid) {
     // Delete the forum.
     $this->drupalPost('admin/structure/forum/edit/forum/' . $tid, array(), t('Delete'));
-    $this->drupalPost(NULL, NULL, t('Delete'));
+    $this->drupalPost(NULL, array(), t('Delete'));
 
     // Assert that the forum no longer exists.
     $this->drupalGet('forum/' . $tid);
@@ -243,37 +261,30 @@ class ForumTestCase extends DrupalWebTestCase {
     $title = $this->randomName(20);
     $body = $this->randomName(200);
 
-    // Without this being set, post variable equals the first non-blank in
-    // select items list.
-    $tid = $forum['tid'];
-
-    $langcode = FIELD_LANGUAGE_NONE;
+    $langcode = LANGUAGE_NONE;
     $edit = array(
-      'title' => $title,
+      "title" => $title,
       "body[$langcode][0][value]" => $body,
-      'taxonomy[1]' => $tid
     );
 
-    // TODO The taxonomy select value is set by drupal code when the tid is part
-    // of the url. However, unless a tid is passed in the edit array, when
-    // drupalPost() runs, the select value is not preserved. Instead, the post
-    // variables seem to pick up the first non-blank value in the select list.
-    // Create forum topic.
-    $this->drupalPost('node/add/forum/', $edit, t('Save'));
+    // Create the forum topic, preselecting the forum ID via a URL parameter.
+    $this->drupalPost('node/add/forum/' . $forum['tid'], $edit, t('Save'));
+
     $type = t('Forum topic');
     if ($container) {
       $this->assertNoRaw(t('@type %title has been created.', array('@type' => $type, '%title' => $title)), t('Forum topic was not created'));
-      $this->assertRaw(t('The item %title is only a container for forums.', array('%title' => $forum['name'])), t('Error message was shown'));
+      $this->assertRaw(t('The item %title is a forum container, not a forum.', array('%title' => $forum['name'])), t('Error message was shown'));
       return;
     }
     else {
       $this->assertRaw(t('@type %title has been created.', array('%title' => $title, '@type' => $type)), t('Forum topic was created'));
-      $this->assertNoRaw(t('The item %title is only a container for forums.', array('%title' => $forum['name'])), t('No error message was shown'));
+      $this->assertNoRaw(t('The item %title is a forum container, not a forum.', array('%title' => $forum['name'])), t('No error message was shown'));
     }
 
-    // Retrieve node object.
+    // Retrieve node object, ensure that the topic was created and in the proper forum.
     $node = $this->drupalGetNodeByTitle($title);
     $this->assertTrue($node != NULL, t('Node @title was loaded', array('@title' => $title)));
+    $this->assertEqual($node->taxonomy_forums[LANGUAGE_NONE][0]['tid'], $forum['tid'], 'Saved forum topic was in the expected forum');
 
     // View forum topic.
     $this->drupalGet('node/' . $node->nid);
@@ -337,14 +348,14 @@ class ForumTestCase extends DrupalWebTestCase {
     if ($response == 200) {
       // Edit forum node (including moving it to another forum).
       $edit = array();
-      $edit['title'] = 'node/' . $node->nid;
-      $langcode = FIELD_LANGUAGE_NONE;
+      $langcode = LANGUAGE_NONE;
+      $edit["title"] = 'node/' . $node->nid;
       $edit["body[$langcode][0][value]"] = $this->randomName(256);
       // Assume the topic is initially associated with $forum.
-      $edit['taxonomy[1]'] = $this->root_forum['tid'];
+      $edit["taxonomy_forums[$langcode]"] = $this->root_forum['tid'];
       $edit['shadow'] = TRUE;
       $this->drupalPost('node/' . $node->nid . '/edit', $edit, t('Save'));
-      $this->assertRaw(t('Forum topic %title has been updated.', array('%title' => $edit['title'])), t('Forum node was edited'));
+      $this->assertRaw(t('Forum topic %title has been updated.', array('%title' => $edit["title"])), t('Forum node was edited'));
 
       // Verify topic was moved to a different forum.
       $forum_tid = db_query("SELECT tid FROM {forum} WHERE nid = :nid AND vid = :vid", array(

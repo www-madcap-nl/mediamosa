@@ -1,5 +1,5 @@
 <?php
-// $Id: user.module,v 1.1050 2009/09/21 08:52:41 dries Exp $
+// $Id: user.module,v 1.1134 2010/03/07 18:46:55 webchick Exp $
 
 /**
  * @file
@@ -14,8 +14,49 @@ define('USERNAME_MAX_LENGTH', 60);
 /**
  * Maximum length of user e-mail text field.
  */
-define('EMAIL_MAX_LENGTH', 64);
+define('EMAIL_MAX_LENGTH', 254);
 
+/**
+ * Implement hook_help().
+ */
+function user_help($path, $arg) {
+  global $user;
+
+  switch ($path) {
+    case 'admin/help#user':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('The User module allows users to register, log in, and log out. It also allows users with proper permissions to manage user roles (used to classify users) and permissions associated with those roles. For more information, see the online handbook entry for <a href="@user">User module</a>.', array('@user' => 'http://drupal.org/handbook/modules/user')) . '</p>';
+      $output .= '<h3>' . t('Uses') . '</h3>';
+      $output .= '<dl>';
+      $output .= '<dt>' . t('Creating and managing users') . '</dt>';
+      $output .= '<dd>' . t('The User module allows users with the appropriate <a href="@permissions">permissions</a> to create user accounts through the <a href="@people">People administration page</a>, where they can also assign users to one or more roles, and block or delete user accounts. If allowed, users without accounts (anonymous users) can create their own accounts on the <a href="@register">Create new account</a> page.', array('@permissions' => url('admin/people/permissions', array('fragment' => 'module-user')), '@people' => url('admin/people'), '@register' => url('user/register'))) . '</dd>';
+      $output .= '<dt>' . t('User roles and permissions') . '</dt>';
+      $output .= '<dd>' . t('<em>Roles</em> are used to group and classify users; each user can be assigned one or more roles. By default there are two roles: <em>anonymous user</em> (users that are not logged in) and <em>authenticated user</em> (users that are registered and logged in). Depending on choices you made when you installed Drupal, the installation process may have defined more roles, and you can create additional custom roles on the <a href="@roles">Roles page</a>. After creating roles, you can set permissions for each role on the <a href="@permissions_user">Permissions page</a>. Granting a permission allows users who have been assigned a particular role to perform an action on the site, such as viewing a particular type of content, editing or creating content, administering settings for a particular module, or using a particular function of the site (such as search).', array('@permissions_user' => url('admin/people/permissions'), '@roles' => url('admin/people/permissions/roles'))) . '</dd>';
+      $output .= '<dt>' . t('Account settings') . '</dt>';
+      $output .= '<dd>' . t('The <a href="@accounts">Account settings page</a> allows you to manage settings for the displayed name of the anonymous user role, personal contact forms, user registration, and account cancellation. On this page you can also manage settings for account personalization (including signatures and user pictures), and adapt the text for the e-mail messages that are sent automatically during the user registration process.', array('@accounts'  => url('admin/config/people/accounts'))) . '</dd>';
+      $output .= '</dl>';
+      return $output;
+    case 'admin/people/create':
+      return '<p>' . t("This web page allows administrators to register new users. Users' e-mail addresses and usernames must be unique.") . '</p>';
+    case 'admin/people/permissions':
+      return '<p>' . t('Permissions let you control what users can do and see on your site. You can define a specific set of permissions for each role. (See the <a href="@role">Roles</a> page to create a role). Two important roles to consider are Authenticated Users and Administrators. Any permissions granted to the Authenticated Users role will be given to any user who can log into your site.  You can make any role the Administrator role for the site, meaning this will be granted all new permissions automatically. You can do this on the <a href="@settings">User Settings</a> page. You should be careful to ensure that only trusted users are given this access and level of control of your site.', array('@role' => url('admin/people/permissions/roles'), '@settings' => url('admin/config/people/accounts'))) . '</p>';
+    case 'admin/people/permissions/roles':
+      $output = '<p>' . t('Roles allow you to fine tune the security and administration of Drupal. A role defines a group of users that have certain privileges as defined in <a href="@permissions">user permissions</a>. Examples of roles include: anonymous user, authenticated user, moderator, administrator and so on. In this area you will define the <em>role names</em> of the various roles. To delete a role choose "edit".', array('@permissions' => url('admin/people/permissions'))) . '</p>';
+      $output .= '<p>'. t('By default, Drupal comes with two user roles:') . '</p>';
+      $output .= '<ul>';
+      $output .= '<li>' . t("Anonymous user: this role is used for users that don't have a user account or that are not authenticated.") . '</li>';
+      $output .= '<li>' . t('Authenticated user: this role is automatically granted to all logged in users.') . '</li>';
+      $output .= '</ul>';
+      return $output;
+    case 'admin/config/people/accounts/fields':
+      return '<p>' . t('This form lets administrators add, edit, and arrange fields for storing user data.') . '</p>';
+    case 'admin/config/people/accounts/display':
+      return '<p>' . t('This form lets administrators configure how fields should be displayed when rendering a user profile page.') . '</p>';
+    case 'admin/people/search':
+      return '<p>' . t('Enter a simple pattern ("*" may be used as a wildcard match) to search for a username or e-mail address. For example, one may search for "br" and Drupal might return "brian", "brad", and "brenda@example.com".') . '</p>';
+  }
+}
 
 /**
  * Invokes hook_user() in every module.
@@ -31,60 +72,52 @@ function user_module_invoke($type, &$edit, $account, $category = NULL) {
 }
 
 /**
- * Implement hook_theme().
+ * Implements hook_theme().
  */
 function user_theme() {
   return array(
     'user_picture' => array(
-      'arguments' => array('account' => NULL),
+      'variables' => array('account' => NULL),
       'template' => 'user-picture',
     ),
     'user_profile' => array(
-      'arguments' => array('elements' => NULL),
+      'render element' => 'elements',
       'template' => 'user-profile',
       'file' => 'user.pages.inc',
     ),
     'user_profile_category' => array(
-      'arguments' => array('element' => NULL),
+      'render element' => 'element',
       'template' => 'user-profile-category',
       'file' => 'user.pages.inc',
     ),
     'user_profile_item' => array(
-      'arguments' => array('element' => NULL),
+      'render element' => 'element',
       'template' => 'user-profile-item',
       'file' => 'user.pages.inc',
     ),
     'user_list' => array(
-      'arguments' => array('users' => NULL, 'title' => NULL),
+      'variables' => array('users' => NULL, 'title' => NULL),
     ),
     'user_admin_permissions' => array(
-      'arguments' => array('form' => NULL),
+      'render element' => 'form',
       'file' => 'user.admin.inc',
     ),
     'user_admin_new_role' => array(
-      'arguments' => array('form' => NULL),
-      'file' => 'user.admin.inc',
-    ),
-    'user_admin_account' => array(
-      'arguments' => array('form' => NULL),
-      'file' => 'user.admin.inc',
-    ),
-    'user_filter_form' => array(
-      'arguments' => array('form' => NULL),
+      'render element' => 'form',
       'file' => 'user.admin.inc',
     ),
     'user_filters' => array(
-      'arguments' => array('form' => NULL),
+      'render element' => 'form',
       'file' => 'user.admin.inc',
     ),
     'user_signature' => array(
-      'arguments' => array('signature' => NULL),
+      'variables' => array('signature' => NULL),
     ),
   );
 }
 
 /**
- * Implement hook_entity_info().
+ * Implements hook_entity_info().
  */
 function user_entity_info() {
   $return = array(
@@ -92,6 +125,7 @@ function user_entity_info() {
       'label' => t('User'),
       'controller class' => 'UserController',
       'base table' => 'users',
+      'uri callback' => 'user_uri',
       'fieldable' => TRUE,
       'object keys' => array(
         'id' => 'uid',
@@ -105,49 +139,48 @@ function user_entity_info() {
           ),
         ),
       ),
+      'view modes' => array(
+        'full' => array(
+          'label' => t('User account'),
+        ),
+      ),
     ),
   );
   return $return;
 }
 
 /**
- * Implement hook_field_build_modes().
+ * Entity uri callback.
  */
-function user_field_build_modes($obj_type) {
-  $modes = array();
-  if ($obj_type == 'user') {
-    $modes = array(
-      'full' => t('User account'),
-    );
-  }
-  return $modes;
+function user_uri($user) {
+  return array(
+    'path' => 'user/' . $user->uid,
+  );
 }
 
 /**
- * Implement hook_field_extra_fields().
+ * Implements hook_field_extra_fields().
  */
-function user_field_extra_fields($bundle) {
-  $extra = array();
-
-  if ($bundle == 'user') {
-    $extra['account'] = array(
+function user_field_extra_fields() {
+  $return['user']['user'] = array(
+    'account' => array(
       'label' => 'User name and password',
       'description' => t('User module account form elements'),
       'weight' => -10,
-    );
-    $extra['timezone'] = array(
+    ),
+    'timezone' => array(
       'label' => 'Timezone',
       'description' => t('User module timezone form element.'),
       'weight' => 6,
-    );
-    $extra['summary'] = array(
+    ),
+    'summary' => array(
       'label' => 'History',
       'description' => t('User module history view element.'),
       'weight' => 5,
-    );
-  }
+    ),
+  );
 
-  return $extra;
+  return $return;
 }
 
 function user_external_load($authname) {
@@ -195,7 +228,8 @@ function user_load_multiple($uids = array(), $conditions = array(), $reset = FAL
  * special handling for user objects.
  */
 class UserController extends DrupalDefaultEntityController {
-  function attachLoad(&$queried_users) {
+
+  function attachLoad(&$queried_users, $revision_id = FALSE) {
     // Build an array of user picture IDs so that these can be fetched later.
     $picture_fids = array();
     foreach ($queried_users as $key => $record) {
@@ -230,7 +264,7 @@ class UserController extends DrupalDefaultEntityController {
     }
     // Call the default attachLoad() method. This will add fields and call
     // hook_user_load().
-    parent::attachLoad($queried_users);
+    parent::attachLoad($queried_users, $revision_id);
   }
 }
 
@@ -308,217 +342,228 @@ function user_load_by_name($name) {
  *   A fully-loaded $user object upon successful save or FALSE if the save failed.
  */
 function user_save($account, $edit = array(), $category = 'account') {
-  $table = drupal_get_schema('users');
-  $user_fields = $table['fields'];
+  $transaction = db_transaction();
+  try {
+    $table = drupal_get_schema('users');
+    $user_fields = $table['fields'];
 
-  if (!empty($edit['pass'])) {
-    // Allow alternate password hashing schemes.
-    require_once DRUPAL_ROOT . '/' . variable_get('password_inc', 'includes/password.inc');
-    $edit['pass'] = user_hash_password(trim($edit['pass']));
-    // Abort if the hashing failed and returned FALSE.
-    if (!$edit['pass']) {
-      return FALSE;
+    if (!empty($edit['pass'])) {
+      // Allow alternate password hashing schemes.
+      require_once DRUPAL_ROOT . '/' . variable_get('password_inc', 'includes/password.inc');
+      $edit['pass'] = user_hash_password(trim($edit['pass']));
+      // Abort if the hashing failed and returned FALSE.
+      if (!$edit['pass']) {
+        return FALSE;
+      }
     }
-  }
-  else {
-    // Avoid overwriting an existing password with a blank password.
-    unset($edit['pass']);
-  }
-
-  // Get the fields form so we can recognize the fields in the $edit
-  // form that should not go into the serialized data array.
-  $field_form = array();
-  $field_form_state = array();
-  $edit = (object) $edit;
-  field_attach_form('user', $edit, $field_form, $field_form_state);
-
-  // Presave fields.
-  field_attach_presave('user', $edit);
-
-  $edit = (array) $edit;
-
-  if (!isset($account->is_new)) {
-    $account->is_new = empty($account->uid);
-  }
-  if (is_object($account) && !$account->is_new) {
-    user_module_invoke('update', $edit, $account, $category);
-    $data = unserialize(db_query('SELECT data FROM {users} WHERE uid = :uid', array(':uid' => $account->uid))->fetchField());
-    // Consider users edited by an administrator as logged in, if they haven't
-    // already, so anonymous users can view the profile (if allowed).
-    if (empty($edit['access']) && empty($account->access) && user_access('administer users')) {
-      $edit['access'] = REQUEST_TIME;
+    else {
+      // Avoid overwriting an existing password with a blank password.
+      unset($edit['pass']);
     }
-    foreach ($edit as $key => $value) {
-      // Form fields that don't pertain to the users, user_roles, or
-      // Field API are automatically serialized into the users.data
-      // column.
-      if (!in_array($key, array('roles', 'is_new')) && empty($user_fields[$key]) && empty($field_form[$key])) {
-        if ($value === NULL) {
-          unset($data[$key]);
+
+    // Presave field allowing changing of $edit.
+    $edit = (object) $edit;
+    field_attach_presave('user', $edit);
+    $edit = (array) $edit;
+
+    if (!isset($account->is_new)) {
+      $account->is_new = empty($account->uid);
+    }
+
+    user_module_invoke('presave', $edit, $account, $category);
+
+    if (is_object($account) && !$account->is_new) {
+      $data = unserialize(db_query('SELECT data FROM {users} WHERE uid = :uid', array(':uid' => $account->uid))->fetchField());
+      // Consider users edited by an administrator as logged in, if they haven't
+      // already, so anonymous users can view the profile (if allowed).
+      if (empty($edit['access']) && empty($account->access) && user_access('administer users')) {
+        $edit['access'] = REQUEST_TIME;
+      }
+      // Find the fields attached to this user.
+      $field_names = array();
+      list(, , $bundle) = entity_extract_ids('user', (object) $edit);
+      foreach (field_info_instances('user', $bundle) as $instance) {
+        $field = field_info_field_by_id($instance['field_id']);
+        $field_names[] = $field['field_name'];
+      }
+
+      foreach ($edit as $key => $value) {
+        // Form fields that don't pertain to the users, user_roles, or
+        // Field API are automatically serialized into the users.data
+        // column.
+        if (!in_array($key, array('roles', 'is_new')) && empty($user_fields[$key]) && empty($field_names[$key])) {
+          if ($value === NULL) {
+            unset($data[$key]);
+          }
+          else {
+            $data[$key] = $value;
+          }
         }
-        else {
+      }
+
+      // Process picture uploads.
+      if (!empty($edit['picture']->fid)) {
+        $picture = $edit['picture'];
+        // If the picture is a temporary file move it to its final location and
+        // make it permanent.
+        if (($picture->status & FILE_STATUS_PERMANENT) == 0) {
+          $info = image_get_info($picture->uri);
+          $picture_directory =  variable_get('file_default_scheme', 'public') . '://' . variable_get('user_picture_path', 'pictures');
+
+          // Prepare the pictures directory.
+          file_prepare_directory($picture_directory, FILE_CREATE_DIRECTORY);
+          $destination = file_stream_wrapper_uri_normalize($picture_directory . '/picture-' . $account->uid . '.' . $info['extension']);
+
+          if ($picture = file_move($picture, $destination, FILE_EXISTS_REPLACE)) {
+            $picture->status |= FILE_STATUS_PERMANENT;
+            $edit['picture'] = file_save($picture);
+          }
+        }
+      }
+      $edit['picture'] = empty($edit['picture']->fid) ? 0 : $edit['picture']->fid;
+
+      $edit['data'] = $data;
+      // Do not allow 'uid' to be changed.
+      $edit['uid'] = $account->uid;
+      // Save changes to the user table.
+      $success = drupal_write_record('users', $edit, 'uid');
+      if ($success === FALSE) {
+        // The query failed - better to abort the save than risk further
+        // data loss.
+        return FALSE;
+      }
+
+      // If the picture changed or was unset, remove the old one. This step needs
+      // to occur after updating the {users} record so that user_file_references()
+      // doesn't report it in use and block the deletion.
+      if (!empty($account->picture->fid) && ($edit['picture'] != $account->picture->fid)) {
+        file_delete($account->picture);
+      }
+
+      // Reload user roles if provided.
+      if (isset($edit['roles']) && is_array($edit['roles'])) {
+        db_delete('users_roles')
+          ->condition('uid', $account->uid)
+          ->execute();
+
+        $query = db_insert('users_roles')->fields(array('uid', 'rid'));
+        foreach (array_keys($edit['roles']) as $rid) {
+          if (!in_array($rid, array(DRUPAL_ANONYMOUS_RID, DRUPAL_AUTHENTICATED_RID))) {
+            $query->values(array(
+              'uid' => $account->uid,
+              'rid' => $rid,
+            ));
+          }
+        }
+        $query->execute();
+      }
+
+      // Delete a blocked user's sessions to kick them if they are online.
+      if (isset($edit['status']) && $edit['status'] == 0) {
+        drupal_session_destroy_uid($account->uid);
+      }
+
+      // If the password changed, delete all open sessions and recreate
+      // the current one.
+      if (!empty($edit['pass'])) {
+        drupal_session_destroy_uid($account->uid);
+        if ($account->uid == $GLOBALS['user']->uid) {
+          drupal_session_regenerate();
+        }
+      }
+
+      // Save Field data.
+      $entity = (object) $edit;
+      field_attach_update('user', $entity);
+
+      // Refresh user object.
+      $user = user_load($account->uid, TRUE);
+
+      // Send emails after we have the new user object.
+      if (isset($edit['status']) && $edit['status'] != $account->status) {
+        // The user's status is changing; conditionally send notification email.
+        $op = $edit['status'] == 1 ? 'status_activated' : 'status_blocked';
+        _user_mail_notify($op, $user);
+      }
+
+      user_module_invoke('update', $edit, $user, $category);
+      entity_invoke('update', 'user', $user);
+    }
+    else {
+      // Allow 'uid' to be set by the caller. There is no danger of writing an
+      // existing user as drupal_write_record will do an INSERT.
+      if (empty($edit['uid'])) {
+        $edit['uid'] = db_next_id(db_query('SELECT MAX(uid) FROM {users}')->fetchField());
+      }
+      // Allow 'created' to be set by the caller.
+      if (!isset($edit['created'])) {
+        $edit['created'] = REQUEST_TIME;
+      }
+      // Consider users created by an administrator as already logged in, so
+      // anonymous users can view the profile (if allowed).
+      if (empty($edit['access']) && user_access('administer users')) {
+        $edit['access'] = REQUEST_TIME;
+      }
+
+      $edit['mail'] = trim($edit['mail']);
+      $success = drupal_write_record('users', $edit);
+      if ($success === FALSE) {
+        // On a failed INSERT some other existing user's uid may be returned.
+        // We must abort to avoid overwriting their account.
+        return FALSE;
+      }
+
+      // Build the initial user object.
+      $user = user_load($edit['uid'], TRUE);
+
+      $entity = (object) $edit;
+      field_attach_insert('user', $entity);
+
+      user_module_invoke('insert', $edit, $user, $category);
+      entity_invoke('insert', 'user', $user);
+
+      // Note, we wait with saving the data column to prevent module-handled
+      // fields from being saved there.
+      $data = array();
+      foreach ($edit as $key => $value) {
+        // Form fields that don't pertain to the users, user_roles, or
+        // Field API are automatically serialized into the user.data
+        // column.
+        if ((!in_array($key, array('roles', 'is_new'))) && (empty($user_fields[$key]) && empty($field_form[$key])) && ($value !== NULL)) {
           $data[$key] = $value;
         }
       }
-    }
+      if (!empty($data)) {
+        $data_array = array('uid' => $user->uid, 'data' => $data);
+        drupal_write_record('users', $data_array, 'uid');
+      }
 
-    // Process picture uploads.
-    if (!empty($edit['picture']->fid)) {
-      $picture = $edit['picture'];
-      // If the picture is a temporary file move it to its final location and
-      // make it permanent.
-      if (($picture->status & FILE_STATUS_PERMANENT) == 0) {
-        $info = image_get_info($picture->uri);
-        $picture_directory =  variable_get('file_default_scheme', 'public') . '://' . variable_get('user_picture_path', 'pictures');
-
-        // Prepare the pictures directory.
-        file_prepare_directory($picture_directory, FILE_CREATE_DIRECTORY);
-        $destination = file_stream_wrapper_uri_normalize($picture_directory . '/picture-' . $account->uid . '.' . $info['extension']);
-
-        if ($picture = file_move($picture, $destination, FILE_EXISTS_REPLACE)) {
-          $picture->status |= FILE_STATUS_PERMANENT;
-          $edit['picture'] = file_save($picture);
+      // Save user roles (delete just to be safe).
+      if (isset($edit['roles']) && is_array($edit['roles'])) {
+        db_delete('users_roles')
+          ->condition('uid', $edit['uid'])
+          ->execute();
+        $query = db_insert('users_roles')->fields(array('uid', 'rid'));
+        foreach (array_keys($edit['roles']) as $rid) {
+          if (!in_array($rid, array(DRUPAL_ANONYMOUS_RID, DRUPAL_AUTHENTICATED_RID))) {
+            $query->values(array(
+              'uid' => $edit['uid'],
+              'rid' => $rid,
+            ));
+          }
         }
+        $query->execute();
       }
-    }
-    $edit['picture'] = empty($edit['picture']->fid) ? 0 : $edit['picture']->fid;
 
-    $edit['data'] = $data;
-    // Do not allow 'uid' to be changed.
-    $edit['uid'] = $account->uid;
-    // Save changes to the user table.
-    $success = drupal_write_record('users', $edit, 'uid');
-    if (!$success) {
-      // The query failed - better to abort the save than risk further
-      // data loss.
-
-      // TODO: Fields change: I think this is a bug.  If no columns in
-      // the user table are changed, drupal_write_record returns
-      // FALSE because rowCount() (rows changed) is 0.  However,
-      // non-users data may have been changed, e.g. fields.
-      // return FALSE;
+      // Build the finished user object.
+      $user = user_load($edit['uid'], TRUE);
     }
 
-    // If the picture changed or was unset, remove the old one. This step needs
-    // to occur after updating the {users} record so that user_file_references()
-    // doesn't report it in use and block the deletion.
-    if (!empty($account->picture->fid) && ($edit['picture'] != $account->picture->fid)) {
-      file_delete($account->picture);
-    }
-
-    // Reload user roles if provided.
-    if (isset($edit['roles']) && is_array($edit['roles'])) {
-      db_delete('users_roles')
-        ->condition('uid', $account->uid)
-        ->execute();
-
-      $query = db_insert('users_roles')->fields(array('uid', 'rid'));
-      foreach (array_keys($edit['roles']) as $rid) {
-        if (!in_array($rid, array(DRUPAL_ANONYMOUS_RID, DRUPAL_AUTHENTICATED_RID))) {
-          $query->values(array(
-            'uid' => $account->uid,
-            'rid' => $rid,
-          ));
-        }
-      }
-      $query->execute();
-    }
-
-    // Delete a blocked user's sessions to kick them if they are online.
-    if (isset($edit['status']) && $edit['status'] == 0) {
-      drupal_session_destroy_uid($account->uid);
-    }
-
-    // If the password changed, delete all open sessions and recreate
-    // the current one.
-    if (!empty($edit['pass'])) {
-      drupal_session_destroy_uid($account->uid);
-      if ($account->uid == $GLOBALS['user']->uid) {
-        drupal_session_regenerate();
-      }
-    }
-
-    // Save Field data.
-    $object = (object) $edit;
-    field_attach_update('user', $object);
-
-    // Refresh user object.
-    $user = user_load($account->uid, TRUE);
-
-    // Send emails after we have the new user object.
-    if (isset($edit['status']) && $edit['status'] != $account->status) {
-      // The user's status is changing; conditionally send notification email.
-      $op = $edit['status'] == 1 ? 'status_activated' : 'status_blocked';
-      _user_mail_notify($op, $user);
-    }
-
-    user_module_invoke('after_update', $edit, $user, $category);
+    return $user;
   }
-  else {
-    // Allow 'created' to be set by the caller.
-    if (!isset($edit['created'])) {
-      $edit['created'] = REQUEST_TIME;
-    }
-    // Consider users created by an administrator as already logged in, so
-    // anonymous users can view the profile (if allowed).
-    if (empty($edit['access']) && user_access('administer users')) {
-      $edit['access'] = REQUEST_TIME;
-    }
-
-    $edit['mail'] = trim($edit['mail']);
-    $success = drupal_write_record('users', $edit);
-    if (!$success) {
-      // On a failed INSERT some other existing user's uid may be returned.
-      // We must abort to avoid overwriting their account.
-      return FALSE;
-    }
-
-    // Build the initial user object.
-    $user = user_load($edit['uid'], TRUE);
-
-    $object = (object) $edit;
-    field_attach_insert('user', $object);
-
-    user_module_invoke('insert', $edit, $user, $category);
-
-    // Note, we wait with saving the data column to prevent module-handled
-    // fields from being saved there.
-    $data = array();
-    foreach ($edit as $key => $value) {
-      // Form fields that don't pertain to the users, user_roles, or
-      // Field API are automatically serialized into the user.data
-      // column.
-      if ((!in_array($key, array('roles', 'is_new'))) && (empty($user_fields[$key]) && empty($field_form[$key])) && ($value !== NULL)) {
-        $data[$key] = $value;
-      }
-    }
-    if (!empty($data)) {
-      $data_array = array('uid' => $user->uid, 'data' => $data);
-      drupal_write_record('users', $data_array, 'uid');
-    }
-
-    // Save user roles (delete just to be safe).
-    if (isset($edit['roles']) && is_array($edit['roles'])) {
-      db_delete('users_roles')
-        ->condition('uid', $edit['uid'])
-        ->execute();
-      $query = db_insert('users_roles')->fields(array('uid', 'rid'));
-      foreach (array_keys($edit['roles']) as $rid) {
-        if (!in_array($rid, array(DRUPAL_ANONYMOUS_RID, DRUPAL_AUTHENTICATED_RID))) {
-          $query->values(array(
-            'uid' => $edit['uid'],
-            'rid' => $rid,
-          ));
-        }
-      }
-      $query->execute();
-    }
-
-    // Build the finished user object.
-    $user = user_load($edit['uid'], TRUE);
+  catch (Exception $e) {
+    $transaction->rollback('user', $e->getMessage(), array(), WATCHDOG_ERROR);
   }
-
-  return $user;
 }
 
 /**
@@ -675,7 +720,6 @@ function user_role_permissions($roles = array()) {
  */
 function user_access($string, $account = NULL) {
   global $user;
-  $perm = &drupal_static(__FUNCTION__, array());
 
   if (!isset($account)) {
     $account = $user;
@@ -688,6 +732,12 @@ function user_access($string, $account = NULL) {
 
   // To reduce the number of SQL queries, we cache the user's permissions
   // in a static variable.
+  // Use the advanced drupal_static() pattern, since this is called very often.
+  static $drupal_static_fast;
+  if (!isset($drupal_static_fast)) {
+    $drupal_static_fast['perm'] = &drupal_static(__FUNCTION__);
+  }
+  $perm = &$drupal_static_fast['perm'];
   if (!isset($perm[$account->uid])) {
     $role_permissions = user_role_permissions($account->roles);
 
@@ -707,57 +757,57 @@ function user_access($string, $account = NULL) {
  * @return boolean TRUE for blocked users, FALSE for active.
  */
 function user_is_blocked($name) {
-  $deny = db_query("SELECT name FROM {users} WHERE status = 0 AND name = LOWER(:name)", array(':name' => $name))->fetchObject();
-
-  return $deny;
+  return db_select('users')
+    ->fields('users', array('name'))
+    ->condition('name', db_like($name), 'LIKE')
+    ->condition('status', 0)
+    ->execute()->fetchObject();
 }
 
 /**
- * Implement hook_permission().
+ * Implements hook_permission().
  */
 function user_permission() {
   return array(
     'administer permissions' =>  array(
       'title' => t('Administer permissions'),
-      'description' => t('Manage the permissions assigned to user roles. %warning', array('%warning' => t('Warning: Give to trusted roles only; this permission has security implications.'))),
+      'description' => drupal_placeholder(array('text' => t('Warning: Give to trusted roles only; this permission has security implications.'))),
     ),
     'administer users' => array(
       'title' => t('Administer users'),
-      'description' => t('Manage or block users, and manage their role assignments.'),
+      'description' => drupal_placeholder(array('text' => t('Warning: Give to trusted roles only; this permission has security implications.'))),
     ),
     'access user profiles' => array(
-      'title' => t('Access user profiles'),
-      'description' => t('View profiles of users on the site, which may contain personal information.'),
+      'title' => t('View user profiles'),
     ),
     'change own username' => array(
       'title' => t('Change own username'),
-      'description' => t('Select a different username.'),
     ),
     'cancel account' => array(
-      'title' => t('Cancel account'),
-      'description' => t('Remove or disable own user account and unpublish, anonymize, or remove own submissions depending on the configured <a href="@user-settings-url">user settings</a>.', array('@user-settings-url' => url('admin/config/people/accounts'))),
+      'title' => t('Cancel own user account'),
+      'description' => t('Note: content may be kept, unpublished, deleted or transferred to the %anonymous-name user depending on the configured <a href="@user-settings-url">user settings</a>.', array('%anonymous-name' => variable_get('anonymous', t('Anonymous')), '@user-settings-url' => url('admin/config/people/accounts'))),
     ),
     'select account cancellation method' => array(
       'title' => t('Select method for cancelling own account'),
-      'description' => t('Select the method for cancelling own user account. %warning', array('%warning' => t('Warning: Give to trusted roles only; this permission has security implications.'))),
+      'description' => drupal_placeholder(array('text' => t('Warning: Give to trusted roles only; this permission has security implications.'))),
     ),
   );
 }
 
 /**
- * Implement hook_file_download().
+ * Implements hook_file_download().
  *
  * Ensure that user pictures (avatars) are always downloadable.
  */
-function user_file_download($filepath) {
-  if (strpos(file_uri_target($filepath), variable_get('user_picture_path', 'pictures') . '/picture-') === 0) {
-    $info = image_get_info($filepath);
+function user_file_download($uri) {
+  if (strpos(file_uri_target($uri), variable_get('user_picture_path', 'pictures') . '/picture-') === 0) {
+    $info = image_get_info($uri);
     return array('Content-Type' => $info['mime_type']);
   }
 }
 
 /**
- * Implement hook_file_references().
+ * Implements hook_file_references().
  */
 function user_file_references($file) {
   // Determine if the file is used by this module.
@@ -769,7 +819,7 @@ function user_file_references($file) {
 }
 
 /**
- * Implement hook_file_delete().
+ * Implements hook_file_delete().
  */
 function user_file_delete($file) {
   // Remove any references to the file.
@@ -780,7 +830,7 @@ function user_file_delete($file) {
 }
 
 /**
- * Implement hook_search_info().
+ * Implements hook_search_info().
  */
 function user_search_info() {
   return array(
@@ -789,14 +839,14 @@ function user_search_info() {
 }
 
 /**
- * Implement hook_search_access().
+ * Implements hook_search_access().
  */
 function user_search_access() {
   return user_access('access user profiles');
 }
 
 /**
- * Implement hook_search_execute().
+ * Implements hook_search_execute().
  */
 function user_search_execute($keys = NULL) {
   $find = array();
@@ -807,11 +857,11 @@ function user_search_execute($keys = NULL) {
   if (user_access('administer users')) {
     // Administrators can also search in the otherwise private email field.
     $query->condition(db_or()->
-      where('LOWER(name) LIKE LOWER(:name)', array(':name' => "%$keys%"))->
-      where('LOWER(mail) LIKE LOWER(:mail)', array(':mail' => "%$keys%")));
+      condition('name', '%' . db_like($keys) . '%', 'LIKE')->
+      condition('mail', '%' . db_like($keys) . '%', 'LIKE'));
   }
   else {
-    $query->where('LOWER(name) LIKE LOWER(:name)', array(':name' => "%$keys%"));
+    $query->condition('name', '%' . db_like($keys) . '%', 'LIKE');
   }
   $result = $query
     ->limit(15)
@@ -823,7 +873,7 @@ function user_search_execute($keys = NULL) {
 }
 
 /**
- * Implement hook_element_info().
+ * Implements hook_element_info().
  */
 function user_element_info() {
   $types['user_profile_category'] = array(
@@ -836,11 +886,11 @@ function user_element_info() {
 }
 
 /**
- * Implement hook_user_view().
+ * Implements hook_user_view().
  */
 function user_user_view($account) {
   $account->content['user_picture'] = array(
-    '#markup' => theme('user_picture', $account),
+    '#markup' => theme('user_picture', array('account' => $account)),
     '#weight' => -10,
   );
   if (!isset($account->content['summary'])) {
@@ -860,51 +910,237 @@ function user_user_view($account) {
 }
 
 /**
- * Implement hook_user_form.
+ * Helper function to add default user account fields to user registration and edit form.
  */
-function user_user_form(&$edit, $account, $category) {
-  if ($category == 'account') {
-    $form = array();
-    $form_state = array();
-    return user_edit_form($form, $form_state, (isset($account->uid) ? $account->uid : FALSE), $edit);
+function user_account_form(&$form, &$form_state) {
+  global $user;
+
+  $account = $form['#user'];
+  $register = ($form['#user']->uid > 0 ? FALSE : TRUE);
+
+  $admin = user_access('administer users');
+
+  $form['#validate'][] = 'user_account_form_validate';
+
+  // Account information.
+  $form['account'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Account information'),
+    '#weight' => -10,
+  );
+  // Only show name field on registration form or user can change own username.
+  $form['account']['name'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Username'),
+    '#maxlength' => USERNAME_MAX_LENGTH,
+    '#description' => t('Spaces are allowed; punctuation is not allowed except for periods, hyphens, apostrophes, and underscores.'),
+    '#required' => TRUE,
+    '#attributes' => array('class' => array('username')),
+    '#default_value' => (!$register ? $account->name : ''),
+    '#access' => ($register || ($user->uid == $account->uid && user_access('change own username')) || $admin),
+    '#weight' => -10,
+  );
+
+  $form['account']['mail'] = array(
+    '#type' => 'textfield',
+    '#title' => t('E-mail address'),
+    '#maxlength' => EMAIL_MAX_LENGTH,
+    '#description' => t('A valid e-mail address. All e-mails from the system will be sent to this address. The e-mail address is not made public and will only be used if you wish to receive a new password or wish to receive certain news or notifications by e-mail.'),
+    '#required' => TRUE,
+    '#default_value' => (!$register ? $account->mail : ''),
+  );
+
+  // Display password field only for existing users or when user is allowed to
+  // assign a password during registration.
+  if (!$register) {
+    $form['account']['pass'] = array(
+      '#type' => 'password_confirm',
+      '#size' => 25,
+      '#description' => t('To change the current user password, enter the new password in both fields.'),
+    );
+    // To skip the current password field, the user must have logged in via a
+    // one-time link and have the token in the URL.
+    $pass_reset = isset($_SESSION['pass_reset_' . $account->uid]) && isset($_GET['pass-reset-token']) && ($_GET['pass-reset-token'] == $_SESSION['pass_reset_' . $account->uid]);
+    $protected_values = array();
+    $current_pass_description = '';
+    // The user may only change their own password without their current
+    // password if they logged in via a one-time login link.
+    if (!$pass_reset) {
+      $protected_values['mail'] = $form['account']['mail']['#title'];
+      $protected_values['pass'] = t('Password');
+      $request_new = l(t('Request new password'), 'user/password', array('attributes' => array('title' => t('Request new password via e-mail.'))));
+      $current_pass_description = t('Enter your current password to change the %mail or %pass. !request_new.', array('%mail' => $protected_values['mail'], '%pass' => $protected_values['pass'], '!request_new' => $request_new));
+    }
+    // The user must enter their current password to change to a new one.
+    if ($user->uid == $account->uid) {
+      $form['account']['current_pass_required_values'] = array(
+        '#type' => 'value',
+        '#value' => $protected_values,
+      );
+      $form['account']['current_pass'] = array(
+        '#type' => 'password',
+        '#title' => t('Current password'),
+        '#size' => 25,
+        '#access' => !empty($protected_values),
+        '#description' => $current_pass_description,
+        '#weight' => -5,
+      );
+      $form['#validate'][] = 'user_validate_current_pass';
+    }
+  }
+  elseif (!variable_get('user_email_verification', TRUE) || $admin) {
+    $form['account']['pass'] = array(
+      '#type' => 'password_confirm',
+      '#size' => 25,
+      '#description' => t('Provide a password for the new account in both fields.'),
+      '#required' => TRUE,
+    );
+  }
+
+  if ($admin) {
+    $status = isset($account->status) ? $account->status : 1;
+  }
+  else {
+    $status = $register ? variable_get('user_register', 1) == 1 : $account->status;
+  }
+  $form['account']['status'] = array(
+    '#type' => 'radios',
+    '#title' => t('Status'),
+    '#default_value' => $status,
+    '#options' => array(t('Blocked'), t('Active')),
+    '#access' => $admin,
+  );
+
+  $roles = user_roles(TRUE);
+  // The disabled checkbox subelement for the 'authenticated user' role
+  // must be generated separately and added to the checkboxes element,
+  // because of a limitation in Form API not supporting a single disabled
+  // checkbox within a set of checkboxes.
+  // @todo This should be solved more elegantly. See issue #119038.
+  $checkbox_authenticated = array(
+    '#type' => 'checkbox',
+    '#title' => $roles[DRUPAL_AUTHENTICATED_RID],
+    '#default_value' => TRUE,
+    '#disabled' => TRUE,
+  );
+  unset($roles[DRUPAL_AUTHENTICATED_RID]);
+  $form['account']['roles'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Roles'),
+    '#default_value' => (!$register && isset($account->roles) ? array_keys($account->roles) : array()),
+    '#options' => $roles,
+    '#access' => $roles && user_access('administer permissions'),
+    DRUPAL_AUTHENTICATED_RID => $checkbox_authenticated,
+  );
+
+  $form['account']['notify'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Notify user of new account'),
+    '#access' => $register && $admin,
+  );
+
+  // Signature.
+  $form['signature_settings'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Signature settings'),
+    '#weight' => 1,
+    '#access' => (!$register && variable_get('user_signatures', 0)),
+  );
+  $form['signature_settings']['signature'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Signature'),
+    '#default_value' => isset($account->signature) ? $account->signature : '',
+    '#description' => t('Your signature will be publicly displayed at the end of your comments.'),
+  );
+
+  // Picture/avatar.
+  $form['picture'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Picture'),
+    '#weight' => 1,
+    '#access' => (!$register && variable_get('user_pictures', 0)),
+  );
+  $form['picture']['picture'] = array(
+    '#type' => 'value',
+    '#value' => isset($account->picture) ? $account->picture : NULL,
+  );
+  $form['picture']['picture_current'] = array(
+    '#markup' => theme('user_picture', array('account' => $account)),
+  );
+  $form['picture']['picture_delete'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Delete picture'),
+    '#access' => !empty($account->picture->fid),
+    '#description' => t('Check this box to delete your current picture.'),
+  );
+  $form['picture']['picture_upload'] = array(
+    '#type' => 'file',
+    '#title' => t('Upload picture'),
+    '#size' => 48,
+    '#description' => t('Your virtual face or picture. Maximum dimensions are %dimensions pixels and the maximum size is %size kB.', array('%dimensions' => variable_get('user_picture_dimensions', '85x85'), '%size' => variable_get('user_picture_file_size', '30'))) . ' ' . variable_get('user_picture_guidelines', ''),
+  );
+  $form['#validate'][] = 'user_validate_picture';
+}
+
+/**
+ * Form validation handler for the current password on the user_account_form().
+ */
+function user_validate_current_pass(&$form, &$form_state) {
+  global $user;
+
+  $account = $form['#user'];
+  foreach ($form_state['values']['current_pass_required_values'] as $key => $name) {
+    // This validation only works for required textfields (like mail) or
+    // form values like password_confirm that have their own validation
+    // that prevent them from being empty if they are changed.
+    if ((strlen(trim($form_state['values'][$key])) > 0) && ($form_state['values'][$key] != $account->$key)) {
+      require_once DRUPAL_ROOT . '/' . variable_get('password_inc', 'includes/password.inc');
+      $current_pass_failed = empty($form_state['values']['current_pass']) || !user_check_password($form_state['values']['current_pass'], $user);
+      if ($current_pass_failed) {
+        form_set_error('current_pass', t("Your current password is missing or incorrect; it's required to change the %name.", array('%name' => $name)));
+        form_set_error($key);
+      }
+      // We only need to check the password once.
+      break;
+    }
   }
 }
 
 /**
- * Implement hook_user_validate().
+ * Form validation handler for user_account_form().
  */
-function user_user_validate(&$edit, $account, $category) {
-  if ($category == 'account') {
-    $uid = isset($account->uid) ? $account->uid : FALSE;
-    // Validate the username when: new user account; or user is editing own account and can change username; or an admin user.
-    if (!$uid || ($GLOBALS['user']->uid == $uid && user_access('change own username')) || user_access('administer users')) {
-      if ($error = user_validate_name($edit['name'])) {
+function user_account_form_validate($form, &$form_state) {
+  if ($form['#user_category'] == 'account' || $form['#user_category'] == 'register') {
+    $account = $form['#user'];
+    // Validate new or changing username.
+    if (isset($form_state['values']['name'])) {
+      if ($error = user_validate_name($form_state['values']['name'])) {
         form_set_error('name', $error);
       }
-      elseif ((bool) db_query_range("SELECT 1 FROM {users} WHERE uid <> :uid AND LOWER(name) = LOWER(:name)", 0, 1, array(':uid' => $uid, ':name' => $edit['name']))->fetchField()) {
-        form_set_error('name', t('The name %name is already taken.', array('%name' => $edit['name'])));
+      elseif ((bool) db_select('users')->fields('users', array('uid'))->condition('uid', $account->uid, '<>')->condition('name', db_like($form_state['values']['name']), 'LIKE')->range(0, 1)->execute()->fetchField()) {
+        form_set_error('name', t('The name %name is already taken.', array('%name' => $form_state['values']['name'])));
       }
     }
 
     // Validate the e-mail address, and check if it is taken by an existing user.
-    if ($error = user_validate_mail($edit['mail'])) {
+    if ($error = user_validate_mail($form_state['values']['mail'])) {
       form_set_error('mail', $error);
     }
-    elseif ((bool) db_query_range("SELECT 1 FROM {users} WHERE uid <> :uid AND LOWER(mail) = LOWER(:mail)", 0, 1, array(':uid' => $uid, ':mail' => $edit['mail']))->fetchField()) {
+    elseif ((bool) db_select('users')->fields('users', array('uid'))->condition('uid', $account->uid, '<>')->condition('mail', db_like($form_state['values']['mail']), 'LIKE')->range(0, 1)->execute()->fetchField()) {
       // Format error message dependent on whether the user is logged in or not.
       if ($GLOBALS['user']->uid) {
-        form_set_error('mail', t('The e-mail address %email is already taken.', array('%email' => $edit['mail'])));
+        form_set_error('mail', t('The e-mail address %email is already taken.', array('%email' => $form_state['values']['mail'])));
       }
       else {
-        form_set_error('mail', t('The e-mail address %email is already registered. <a href="@password">Have you forgotten your password?</a>', array('%email' => $edit['mail'], '@password' => url('user/password'))));
+        form_set_error('mail', t('The e-mail address %email is already registered. <a href="@password">Have you forgotten your password?</a>', array('%email' => $form_state['values']['mail'], '@password' => url('user/password'))));
       }
     }
 
     // Make sure the signature isn't longer than the size of the database field.
     // Signatures are disabled by default, so make sure it exists first.
-    if (isset($edit['signature'])) {
+    if (isset($form_state['values']['signature'])) {
       $user_schema = drupal_get_schema('users');
-      if (strlen($edit['signature']) > $user_schema['fields']['signature']['length']) {
+      if (drupal_strlen($form_state['values']['signature']) > $user_schema['fields']['signature']['length']) {
         form_set_error('signature', t('The signature is too long: it must be %max characters or less.', array('%max' => $user_schema['fields']['signature']['length'])));
       }
     }
@@ -912,10 +1148,10 @@ function user_user_validate(&$edit, $account, $category) {
 }
 
 /**
- * Implement hook_user_submit().
+ * Implements hook_user_presave().
  */
-function user_user_submit(&$edit, $account, $category) {
-  if ($category == 'account') {
+function user_user_presave(&$edit, $account, $category) {
+  if ($category == 'account' || $category == 'register') {
     if (!empty($edit['picture_upload'])) {
       $edit['picture'] = $edit['picture_upload'];
     }
@@ -927,6 +1163,7 @@ function user_user_submit(&$edit, $account, $category) {
     $edit['picture_upload'] = NULL;
     $edit['picture_delete'] = NULL;
 
+    // Prepare user roles.
     if (isset($edit['roles'])) {
       $edit['roles'] = array_filter($edit['roles']);
     }
@@ -934,7 +1171,7 @@ function user_user_submit(&$edit, $account, $category) {
 }
 
 /**
- * Implement hook_user_categories().
+ * Implements hook_user_categories().
  */
 function user_user_categories() {
   return array(array(
@@ -969,12 +1206,12 @@ function user_login_block($form) {
     $items[] = l(t('Create new account'), 'user/register', array('attributes' => array('title' => t('Create a new user account.'))));
   }
   $items[] = l(t('Request new password'), 'user/password', array('attributes' => array('title' => t('Request new password via e-mail.'))));
-  $form['links'] = array('#markup' => theme('item_list', $items));
+  $form['links'] = array('#markup' => theme('item_list', array('items' => $items)));
   return $form;
 }
 
 /**
- * Implement hook_block_info().
+ * Implements hook_block_info().
  */
 function user_block_info() {
   global $user;
@@ -992,7 +1229,7 @@ function user_block_info() {
 }
 
 /**
- * Implement hook_block_configure().
+ * Implements hook_block_configure().
  */
 function user_block_configure($delta = '') {
   global $user;
@@ -1011,13 +1248,12 @@ function user_block_configure($delta = '') {
       $period = drupal_map_assoc(array(30, 60, 120, 180, 300, 600, 900, 1800, 2700, 3600, 5400, 7200, 10800, 21600, 43200, 86400), 'format_interval');
       $form['user_block_seconds_online'] = array('#type' => 'select', '#title' => t('User activity'), '#default_value' => variable_get('user_block_seconds_online', 900), '#options' => $period, '#description' => t('A user is considered online for this long after they have last viewed a page.'));
       $form['user_block_max_list_count'] = array('#type' => 'select', '#title' => t('User list length'), '#default_value' => variable_get('user_block_max_list_count', 10), '#options' => drupal_map_assoc(array(0, 5, 10, 15, 20, 25, 30, 40, 50, 75, 100)), '#description' => t('Maximum number of currently online users to display.'));
-      $form['user_block_cache'] = array('#markup' => '<p>If page caching is disabled, the block shows the number of anonymous and authenticated users, respectively. If page caching is enabled, only the number of authenticated users is displayed.</p>');
       return $form;
   }
 }
 
 /**
- * Implement hook_block_save().
+ * Implements hook_block_save().
  */
 function user_block_save($delta = '', $edit = array()) {
   global $user;
@@ -1035,7 +1271,7 @@ function user_block_save($delta = '', $edit = array()) {
 }
 
 /**
- * Implement hook_block_view().
+ * Implements hook_block_view().
  */
 function user_block_view($delta = '') {
   global $user;
@@ -1056,7 +1292,7 @@ function user_block_view($delta = '') {
       if (user_access('access content')) {
         // Retrieve a list of new users who have subsequently accessed the site successfully.
         $items = db_query_range('SELECT uid, name FROM {users} WHERE status <> 0 AND access <> 0 ORDER BY created DESC', 0, variable_get('user_block_whois_new_count', 5))->fetchAll();
-        $output = theme('user_list', $items);
+        $output = theme('user_list', array('users' => $items));
 
         $block['subject'] = t('Who\'s new');
         $block['content'] = $output;
@@ -1072,27 +1308,13 @@ function user_block_view($delta = '') {
         // rather than u.access because it is much faster.
         $authenticated_count = db_query("SELECT COUNT(DISTINCT s.uid) FROM {sessions} s WHERE s.timestamp >= :timestamp AND s.uid > 0", array(':timestamp' => $interval))->fetchField();
 
-        // When page caching is enabled, sessions are only created for
-        // anonymous users when needed.
-        if (variable_get('cache', CACHE_DISABLED) == CACHE_DISABLED) {
-          $anonymous_count = drupal_session_count($interval);
-          // Format the output with proper grammar.
-          if ($anonymous_count == 1 && $authenticated_count == 1) {
-            $output = t('There is currently %members and %visitors online.', array('%members' => format_plural($authenticated_count, '1 user', '@count users'), '%visitors' => format_plural($anonymous_count, '1 guest', '@count guests')));
-          }
-          else {
-            $output = t('There are currently %members and %visitors online.', array('%members' => format_plural($authenticated_count, '1 user', '@count users'), '%visitors' => format_plural($anonymous_count, '1 guest', '@count guests')));
-          }
-        }
-        else {
-          $output = format_plural($authenticated_count, 'There is currently 1 user online.', 'There are currently @count users online.');
-        }
+        $output = '<p>' . format_plural($authenticated_count, 'There is currently 1 user online.', 'There are currently @count users online.') . '</p>';
 
         // Display a list of currently online users.
         $max_users = variable_get('user_block_max_list_count', 10);
         if ($authenticated_count && $max_users) {
           $items = db_query_range('SELECT u.uid, u.name, MAX(s.timestamp) AS max_timestamp FROM {users} u INNER JOIN {sessions} s ON u.uid = s.uid WHERE s.timestamp >= :interval AND s.uid > 0 GROUP BY u.uid, u.name ORDER BY max_timestamp DESC', 0, $max_users, array(':interval' => $interval))->fetchAll();
-          $output .= theme('user_list', $items, t('Online users'));
+          $output .= theme('user_list', array('users' => $items));
         }
 
         $block['subject'] = t('Who\'s online');
@@ -1134,12 +1356,12 @@ function template_preprocess_user_picture(&$variables) {
       $filepath = variable_get('user_picture_default', '');
     }
     if (isset($filepath)) {
-      $alt = t("@user's picture", array('@user' => $account->name ? $account->name : variable_get('anonymous', t('Anonymous'))));
+      $alt = t("@user's picture", array('@user' => format_username($account)));
       if (module_exists('image') && $style = variable_get('user_picture_style', '')) {
-        $variables['user_picture'] = theme('image_style', $style, $filepath, $alt, $alt, array(), FALSE);
+        $variables['user_picture'] = theme('image_style', array('style_name' => $style, 'path' => $filepath, 'alt' => $alt, 'title' => $alt, 'attributes' => array(), 'getsize' => FALSE));
       }
       else {
-        $variables['user_picture'] = theme('image', $filepath, $alt, $alt, array(), FALSE);
+        $variables['user_picture'] = theme('image', array('path' => $filepath, 'alt' => $alt, 'title' => $alt, 'attributes' => array(), 'getsize' => FALSE));
       }
       if (!empty($account->uid) && user_access('access user profiles')) {
         $attributes = array('attributes' => array('title' => t('View user profile.')), 'html' => TRUE);
@@ -1152,20 +1374,24 @@ function template_preprocess_user_picture(&$variables) {
 /**
  * Make a list of users.
  *
- * @param $users
- *   An array with user objects. Should contain at least the name and uid.
- * @param $title
- *  (optional) Title to pass on to theme_item_list().
+ * @param $variables
+ *   An associative array containing:
+ *   - users: An array with user objects. Should contain at least the name and
+ *     uid.
+ *   - title: (optional) Title to pass on to theme_item_list().
  *
  * @ingroup themeable
  */
-function theme_user_list($users, $title = NULL) {
+function theme_user_list($variables) {
+  $users = $variables['users'];
+  $title = $variables['title'];
+
   if (!empty($users)) {
     foreach ($users as $user) {
-      $items[] = theme('username', $user);
+      $items[] = theme('username', array('account' => $user));
     }
   }
-  return theme('item_list', $items, $title);
+  return theme('item_list', array('items' => $items, 'title' => $title));
 }
 
 function user_is_anonymous() {
@@ -1181,16 +1407,32 @@ function user_register_access() {
   return user_is_anonymous() && variable_get('user_register', 1);
 }
 
+
+/**
+ * User view access callback.
+ *
+ * @param $account
+ *   Can either be a full user object or a $uid.
+ */
 function user_view_access($account) {
-  return $account && $account->uid &&
-    (
-      // Always let users view their own profile.
-      ($GLOBALS['user']->uid == $account->uid) ||
-      // Administrators can view all accounts.
-      user_access('administer users') ||
-      // The user is not blocked and logged in at least once.
-      ($account->access && $account->status && user_access('access user profiles'))
-    );
+
+  $uid = is_object($account) ? $account->uid : (int) $account;
+
+  // Never allow access to view the anonymous user account.
+  if ($uid) {
+    // Admins can view all, users can view own profiles at all times.
+    if ($GLOBALS['user']->uid == $uid || user_access('administer users')) {
+      return TRUE;
+    }
+    elseif (user_access('access user profiles')) {
+      // At this point, load the complete account object.
+      if (!is_object($account)) {
+        $account = user_load($uid);
+      }
+      return (is_object($account) && $account->access && $account->status);
+    }
+  }
+  return FALSE;
 }
 
 /**
@@ -1216,7 +1458,7 @@ function user_load_self($arg) {
 }
 
 /**
- * Implement hook_menu().
+ * Implements hook_menu().
  */
 function user_menu() {
   $items['user/autocomplete'] = array(
@@ -1246,7 +1488,7 @@ function user_menu() {
   $items['user/register'] = array(
     'title' => 'Create new account',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('user_register'),
+    'page arguments' => array('user_register_form'),
     'access callback' => 'user_register_access',
     'type' => MENU_LOCAL_TASK,
   );
@@ -1255,7 +1497,7 @@ function user_menu() {
     'title' => 'Request new password',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('user_pass'),
-    'access callback' => 'user_is_anonymous',
+    'access callback' => TRUE,
     'type' => MENU_LOCAL_TASK,
     'file' => 'user.pages.inc',
   );
@@ -1280,7 +1522,7 @@ function user_menu() {
   // User listing pages.
   $items['admin/people'] = array(
     'title' => 'People',
-    'description' => 'Find and manage people interacting with your site.',
+    'description' => 'Manage user accounts, roles, and permissions',
     'page callback' => 'user_admin',
     'page arguments' => array('list'),
     'access arguments' => array('administer users'),
@@ -1288,11 +1530,47 @@ function user_menu() {
     'weight' => -4,
     'file' => 'user.admin.inc',
   );
-  $items['admin/people/list'] = array(
+  $items['admin/people/people'] = array(
     'title' => 'List',
+    'description' => 'Find and manage people interacting with your site.',
+    'access arguments' => array('administer users'),
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => -10,
+    'file' => 'user.admin.inc',
   );
+  $items['admin/people/permissions'] = array(
+    'title' => 'Permissions',
+    'description' => 'Determine access to features by selecting permissions for roles.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('user_admin_permissions'),
+    'access arguments' => array('administer permissions'),
+    'file' => 'user.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+  );
+  $items['admin/people/permissions/list'] = array(
+    'title' => 'Permissions',
+    'description' => 'Determine access to features by selecting permissions for roles.',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => -8,
+  );
+  $items['admin/people/permissions/roles'] = array(
+    'title' => 'Roles',
+    'description' => 'List, edit, or add user roles.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('user_admin_new_role'),
+    'access arguments' => array('administer permissions'),
+    'file' => 'user.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => -5,
+  );
+  $items['admin/people/permissions/roles/edit'] = array(
+    'title' => 'Edit role',
+    'page arguments' => array('user_admin_role'),
+    'access arguments' => array('administer permissions'),
+    'type' => MENU_CALLBACK,
+  );
+
+
   $items['admin/people/create'] = array(
     'title' => 'Add user',
     'page arguments' => array('create'),
@@ -1302,8 +1580,8 @@ function user_menu() {
 
   // Administration pages.
   $items['admin/config/people'] = array(
-   'title' => 'People and permissions',
-   'description' => 'Configure user accounts, roles and permissions.',
+   'title' => 'People',
+   'description' => 'Configure user accounts.',
    'position' => 'right',
    'page callback' => 'system_admin_menu_block_page',
    'access arguments' => array('access administration pages'),
@@ -1312,7 +1590,7 @@ function user_menu() {
   );
   $items['admin/config/people/accounts'] = array(
     'title' => 'Account settings',
-    'description' => 'Configure default behavior of users, including registration requirements, e-mails, and user pictures.',
+    'description' => 'Configure default behavior of users, including registration requirements, e-mails, fields, and user pictures.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('user_admin_settings'),
     'access arguments' => array('administer users'),
@@ -1325,43 +1603,18 @@ function user_menu() {
     'weight' => -10,
   );
 
-  // Permission administration pages.
-  $items['admin/config/people/roles'] = array(
-    'title' => 'Roles',
-    'description' => 'List, edit, or add user roles.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('user_admin_new_role'),
-    'access arguments' => array('administer permissions'),
-    'file' => 'user.admin.inc',
-    'weight' => -9,
-  );
-  $items['admin/config/people/roles/edit'] = array(
-    'title' => 'Edit role',
-    'page arguments' => array('user_admin_role'),
-    'access arguments' => array('administer permissions'),
-    'type' => MENU_CALLBACK,
-  );
-  $items['admin/config/people/permissions'] = array(
-    'title' => 'Permissions',
-    'description' => 'Determine access to features by selecting permissions for roles.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('user_admin_permissions'),
-    'access arguments' => array('administer permissions'),
-    'file' => 'user.admin.inc',
-    'weight' => -8,
-  );
-
-  $items['user/%user_uid_optional'] = array(
+  // Use %user_uid_only_optional here to avoid loading the full user for
+  // basic access checks.
+  $items['user/%user_uid_only_optional'] = array(
     'title' => 'My account',
     'title callback' => 'user_page_title',
     'title arguments' => array(1),
-    'page callback' => 'user_build',
+    'page callback' => 'user_view_page',
     'page arguments' => array(1),
     'access callback' => 'user_view_access',
     'access arguments' => array(1),
     'weight' => -10,
     'menu_name' => 'user-menu',
-    'file' => 'user.pages.inc',
   );
 
   $items['user/%user/view'] = array(
@@ -1392,8 +1645,8 @@ function user_menu() {
 
   $items['user/%user/edit'] = array(
     'title' => 'Edit',
-    'page callback' => 'user_edit',
-    'page arguments' => array(1),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('user_profile_form', 1),
     'access callback' => 'user_edit_access',
     'access arguments' => array(1),
     'type' => MENU_LOCAL_TASK,
@@ -1413,8 +1666,8 @@ function user_menu() {
         $items['user/%user_category/edit/' . $category['name']] = array(
           'title callback' => 'check_plain',
           'title arguments' => array($category['title']),
-          'page callback' => 'user_edit',
-          'page arguments' => array(1, 3),
+          'page callback' => 'drupal_get_form',
+          'page arguments' => array('user_profile_form', 1, 3),
           'access callback' => isset($category['access callback']) ? $category['access callback'] : 'user_edit_access',
           'access arguments' => isset($category['access arguments']) ? $category['access arguments'] : array(1),
           'type' => MENU_LOCAL_TASK,
@@ -1429,12 +1682,31 @@ function user_menu() {
   return $items;
 }
 
+/**
+ * Implements hook_init().
+ */
 function user_init() {
   drupal_add_css(drupal_get_path('module', 'user') . '/user.css');
 }
 
-function user_uid_optional_load($arg) {
-  return user_load(isset($arg) ? $arg : $GLOBALS['user']->uid);
+/**
+ * Load either a specified or the current user account.
+ *
+ * @param $uid
+ *   An optional user ID of the user to load. If not provided, the current
+ *   user's ID will be used.
+ * @return
+ *   A fully-loaded $user object upon successful user load, FALSE if user
+ *   cannot be loaded.
+ *
+ * @see user_load()
+ * @todo rethink the naming of this in Drupal 8.
+ */
+function user_uid_optional_load($uid = NULL) {
+  if (!isset($uid)) {
+    $uid = $GLOBALS['user']->uid;
+  }
+  return user_load($uid);
 }
 
 /**
@@ -1476,7 +1748,9 @@ function user_category_load($uid, &$map, $index) {
 }
 
 /**
- * Returns the user id of the currently logged in user.
+ * Returns $arg or the user ID of the current user if $arg is '%' or empty.
+ *
+ * @todo rethink the naming of this in Drupal 8.
  */
 function user_uid_optional_to_arg($arg) {
   // Give back the current user uid when called from eg. tracker, aka.
@@ -1486,10 +1760,25 @@ function user_uid_optional_to_arg($arg) {
 }
 
 /**
+ * Returns $arg or the user ID of the current user if $arg is '%' or empty.
+ *
+ * @todo rethink the naming of this in Drupal 8.
+ */
+function user_uid_only_optional_to_arg($arg) {
+  return user_uid_optional_to_arg($arg);
+}
+
+/**
  * Menu item title callback - use the user name.
  */
-function user_page_title($account) {
-  return $account->name;
+function user_page_title($uid) {
+  if ($GLOBALS['user']->uid == $uid) {
+    $account = $GLOBALS['user'];
+  }
+  else {
+    $account = user_load($uid);
+  }
+  return is_object($account) ? format_username($account) : '';
 }
 
 /**
@@ -1658,19 +1947,19 @@ function user_login_authenticate_validate($form, &$form_state) {
 function user_login_final_validate($form, &$form_state) {
   if (empty($form_state['uid'])) {
     // Always register an IP-based failed login event.
-    flood_register_event('failed_login_attempt_ip');
+    flood_register_event('failed_login_attempt_ip', variable_get('user_failed_login_ip_window', 3600));
     // Register a per-user failed login event.
     if (isset($form_state['flood_control_user_identifier'])) {
-      flood_register_event('failed_login_attempt_user', $form_state['flood_control_user_identifier']);
+      flood_register_event('failed_login_attempt_user', variable_get('user_failed_login_user_window', 21600), $form_state['flood_control_user_identifier']);
     }
 
     if (isset($form_state['flood_control_triggered'])) {
       if ($form_state['flood_control_triggered'] == 'user') {
-        form_set_error('name', format_plural(variable_get('user_failed_login_user_limit', 5), 'Sorry, there has been more than one failed login attempt for this account. It is temporarily blocked. Please try again later, or <a href="@url">request a new password</a>.', 'Sorry, there have been more than @count failed login attempts for this account. It is temporarily blocked. Please try again later, or <a href="@url">request a new password</a>.', array('@url' => url('user/password'))));
+        form_set_error('name', format_plural(variable_get('user_failed_login_user_limit', 5), 'Sorry, there has been more than one failed login attempt for this account. It is temporarily blocked. Try again later or <a href="@url">request a new password</a>.', 'Sorry, there have been more than @count failed login attempts for this account. It is temporarily blocked. Try again later or <a href="@url">request a new password</a>.', array('@url' => url('user/password'))));
       }
       else {
         // We did not find a uid, so the limit is IP-based.
-        form_set_error('name', t('Sorry, too many failed login attempts from your IP address. This IP address is temporarily blocked. Please try again later, or <a href="@url">request a new password</a>.', array('@url' => url('user/password'))));
+        form_set_error('name', t('Sorry, too many failed login attempts from your IP address. This IP address is temporarily blocked. Try again later or <a href="@url">request a new password</a>.', array('@url' => url('user/password'))));
       }
     }
     else {
@@ -1755,9 +2044,9 @@ function user_login_finalize(&$edit = array()) {
 function user_login_submit($form, &$form_state) {
   global $user;
   $user = user_load($form_state['uid']);
-  user_login_finalize();
-
   $form_state['redirect'] = 'user/' . $user->uid;
+
+  user_login_finalize($form_state);
 }
 
 /**
@@ -1776,7 +2065,7 @@ function user_external_login_register($name, $module) {
       'status' => 1,
       'access' => REQUEST_TIME
     );
-    $account = user_save('', $userinfo);
+    $account = user_save(drupal_anonymous_user(), $userinfo);
     // Terminate if an error occurred during user_save().
     if (!$account) {
       drupal_set_message(t("Error saving user account."), 'error');
@@ -1790,6 +2079,16 @@ function user_external_login_register($name, $module) {
   user_login_submit(array(), $form_state);
 }
 
+/**
+ * Generates a unique URL for a user to login and reset their password.
+ *
+ * @param object $account
+ *   An object containing the user account.
+ *
+ * @return
+ *   A unique URL that provides a one-time log in for the user, from which
+ *   they can change their password.
+ */
 function user_pass_reset_url($account) {
   $timestamp = REQUEST_TIME;
   return url("user/reset/$account->uid/$timestamp/" . user_pass_rehash($account->pass, $timestamp, $account->login), array('absolute' => TRUE));
@@ -1807,133 +2106,8 @@ function user_cancel_url($account) {
 }
 
 function user_pass_rehash($password, $timestamp, $login) {
-  return md5($timestamp . $password . $login);
-}
-
-function user_edit_form($form, &$form_state, $uid, $edit, $register = FALSE) {
-  _user_password_dynamic_validation();
-  $admin = user_access('administer users');
-
-  // Account information:
-  $form['account'] = array('#type' => 'fieldset',
-    '#title' => t('Account information'),
-    '#weight' => -10,
-  );
-  // Only show name field when: registration page; or user is editing own account and can change username; or an admin user.
-  if ($register || ($GLOBALS['user']->uid == $uid && user_access('change own username')) || $admin) {
-    $form['account']['name'] = array('#type' => 'textfield',
-      '#title' => t('Username'),
-      '#default_value' => $edit['name'],
-      '#maxlength' => USERNAME_MAX_LENGTH,
-      '#description' => t('Spaces are allowed; punctuation is not allowed except for periods, hyphens, apostrophes, and underscores.'),
-      '#required' => TRUE,
-      '#attributes' => array('class' => array('username')),
-    );
-  }
-  $form['account']['mail'] = array('#type' => 'textfield',
-    '#title' => t('E-mail address'),
-    '#default_value' => $edit['mail'],
-    '#maxlength' => EMAIL_MAX_LENGTH,
-    '#description' => t('A valid e-mail address. All e-mails from the system will be sent to this address. The e-mail address is not made public and will only be used if you wish to receive a new password or wish to receive certain news or notifications by e-mail.'),
-    '#required' => TRUE,
-  );
-  if (!$register) {
-    $form['account']['pass'] = array('#type' => 'password_confirm',
-      '#description' => t('To change the current user password, enter the new password in both fields.'),
-      '#size' => 25,
-    );
-  }
-  elseif (!variable_get('user_email_verification', TRUE) || $admin) {
-    $form['account']['pass'] = array(
-      '#type' => 'password_confirm',
-      '#description' => t('Provide a password for the new account in both fields.'),
-      '#required' => TRUE,
-      '#size' => 25,
-    );
-  }
-  if ($admin) {
-    $form['account']['status'] = array(
-      '#type' => 'radios',
-      '#title' => t('Status'),
-      '#default_value' => isset($edit['status']) ? $edit['status'] : 1,
-      '#options' => array(t('Blocked'), t('Active'))
-    );
-  }
-  if (user_access('administer permissions')) {
-    $roles = user_roles(TRUE);
-
-    // The disabled checkbox subelement for the 'authenticated user' role
-    // must be generated separately and added to the checkboxes element,
-    // because of a limitation in D6 FormAPI not supporting a single disabled
-    // checkbox within a set of checkboxes.
-    // TODO: This should be solved more elegantly. See issue #119038.
-    $checkbox_authenticated = array(
-      '#type' => 'checkbox',
-      '#title' => $roles[DRUPAL_AUTHENTICATED_RID],
-      '#default_value' => TRUE,
-      '#disabled' => TRUE,
-    );
-
-    unset($roles[DRUPAL_AUTHENTICATED_RID]);
-    if ($roles) {
-      $default = empty($edit['roles']) ? array() : array_keys($edit['roles']);
-      $form['account']['roles'] = array(
-        '#type' => 'checkboxes',
-        '#title' => t('Roles'),
-        '#default_value' => $default,
-        '#options' => $roles,
-        DRUPAL_AUTHENTICATED_RID => $checkbox_authenticated,
-      );
-    }
-  }
-
-  // Signature:
-  if (variable_get('user_signatures', 0) && module_exists('comment') && !$register) {
-    $form['signature_settings'] = array(
-      '#type' => 'fieldset',
-      '#title' => t('Signature settings'),
-      '#weight' => 1,
-    );
-    $form['signature_settings']['signature'] = array(
-      '#type' => 'textarea',
-      '#title' => t('Signature'),
-      '#default_value' => $edit['signature'],
-      '#description' => t('Your signature will be publicly displayed at the end of your comments.'),
-    );
-  }
-
-  // Picture/avatar:
-  if (variable_get('user_pictures', 0) && !$register) {
-    $form['picture'] = array(
-      '#type' => 'fieldset',
-      '#title' => t('Picture'),
-      '#weight' => 1,
-    );
-    $form['picture']['picture'] = array(
-      '#type' => 'value',
-      '#value' => $edit['picture'],
-    );
-    $form['picture']['picture_current'] = array(
-      '#markup' => theme('user_picture', (object)$edit),
-    );
-    $form['picture']['picture_delete'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Delete picture'),
-      '#access' => !empty($edit['picture']->fid),
-      '#description' => t('Check this box to delete your current picture.'),
-    );
-    $form['picture']['picture_upload'] = array(
-      '#type' => 'file',
-      '#title' => t('Upload picture'),
-      '#size' => 48,
-      '#description' => t('Your virtual face or picture. Maximum dimensions are %dimensions pixels and the maximum size is %size kB.', array('%dimensions' => variable_get('user_picture_dimensions', '85x85'), '%size' => variable_get('user_picture_file_size', '30'))) . ' ' . variable_get('user_picture_guidelines', ''),
-    );
-    $form['#validate'][] = 'user_profile_form_validate';
-    $form['#validate'][] = 'user_validate_picture';
-  }
-  $form['#uid'] = $uid;
-
-  return $form;
+  // A single md5() is vulnerable to length-extension attacks, so use it twice.
+  return md5(drupal_get_hash_salt() . md5($timestamp . $password . $login));
 }
 
 /**
@@ -2047,6 +2221,16 @@ function _user_cancel($edit, $account, $method) {
 }
 
 /**
+ * Page callback wrapper for user_view().
+ */
+function user_view_page($uid) {
+  // An administrator may try to view a non-existent account,
+  // so we give them a 404 (versus a 403 for non-admins).
+  $account = user_load($uid);
+  return is_object($account) ? user_view($account) : MENU_NOT_FOUND;
+}
+
+/**
  * Generate an array for rendering the given user.
  *
  * When viewing a user profile, the $page array contains:
@@ -2063,26 +2247,32 @@ function _user_cancel($edit, $account, $method) {
  *   The user account of the profile being viewed.
  *
  * To theme user profiles, copy modules/user/user-profile.tpl.php
- * to your theme directory, and edit it as instructed in that file's comments. 
+ * to your theme directory, and edit it as instructed in that file's comments.
  *
  * @param $account
  *   A user object.
+ * @param $view_mode
+ *   View mode, e.g. 'full'.
  *
  * @return
  *   An array as expected by drupal_render().
  */
-function user_build($account) {
+function user_view($account, $view_mode = 'full') {
   // Retrieve all profile fields and attach to $account->content.
-  user_build_content($account);
+  user_build_content($account, $view_mode);
 
   $build = $account->content;
   // We don't need duplicate rendering info in account->content.
   unset($account->content);
-  
+
   $build += array(
     '#theme' => 'user_profile',
     '#account' => $account,
+    '#view_mode' => $view_mode,
   );
+
+  // Allow modules to modify the structured user.
+  drupal_alter('user_view', $build);
 
   return $build;
 }
@@ -2092,24 +2282,28 @@ function user_build($account) {
  *
  * @param $account
  *   A user object.
- *
+ * @param $view_mode
+ *   View mode, e.g. 'full'.
  */
-function user_build_content($account) {
+function user_build_content($account, $view_mode = 'full') {
+  // Remove previously built content, if exists.
   $account->content = array();
 
   // Build fields content.
-  $account->content += field_attach_view('user', $account);
+  field_attach_prepare_view('user', array($account->uid => $account), $view_mode);
+  entity_prepare_view('user', array($account->uid => $account));
+  $account->content += field_attach_view('user', $account, $view_mode);
 
   // Populate $account->content with a render() array.
-  module_invoke_all('user_view', $account);
+  module_invoke_all('user_view', $account, $view_mode);
 }
 
 /**
- * Implement hook_mail().
+ * Implements hook_mail().
  */
 function user_mail($key, &$message, $params) {
   $language = $message['language'];
-  $variables = user_mail_tokens($params['account'], $language);
+  $variables = array('user' => $params['account']);
   $message['subject'] .= _user_mail_text($key . '_subject', $language, $variables);
   $message['body'][] = _user_mail_text($key . '_body', $language, $variables);
 }
@@ -2119,66 +2313,172 @@ function user_mail($key, &$message, $params) {
  *
  * Used by user_mail() and the settings forms to retrieve strings.
  */
-function _user_mail_text($key, $language = NULL, $variables = array()) {
+function _user_mail_text($key, $language = NULL, $variables = array(), $replace = TRUE) {
   $langcode = isset($language) ? $language->language : NULL;
 
   if ($admin_setting = variable_get('user_mail_' . $key, FALSE)) {
     // An admin setting overrides the default string.
-    return strtr($admin_setting, $variables);
+    $text = $admin_setting;
   }
   else {
     // No override, return default string.
     switch ($key) {
       case 'register_no_approval_required_subject':
-        return t('Account details for !username at !site', $variables, array('langcode' => $langcode));
+        $text = t('Account details for !user-name-token at !site-name-token', array('!user-name-token' => '[user:name]', '!site-name-token' => '[site:name]'), array('langcode' => $langcode));
+        break;
       case 'register_no_approval_required_body':
-        return t("!username,\n\nThank you for registering at !site. You may now log in to !login_uri using the following username and password:\n\nusername: !username\npassword: !password\n\nYou may also log in by clicking on this link or copying and pasting it in your browser:\n\n!login_url\n\nThis is a one-time login, so it can be used only once.\n\nAfter logging in, you will be redirected to !edit_uri so you can change your password.\n\n\n--  !site team", $variables, array('langcode' => $langcode));
+        $text = t("!user-name-token,
+
+Thank you for registering at !site-name-token. You may now log in by clicking this link or copying and pasting it to your browser:
+
+!one-time-login-token
+
+This link can only be used once to log in and will lead you to a page where you can set your password.
+
+After setting your password, you will be able to log in at !site-login-url-token in the future using:
+
+username: !user-name-token
+password: Your password
+
+--  !site-name-token team", array('!user-name-token' => '[user:name]', '!site-name-token' => '[site:name]',  '!one-time-login-token' => '[user:one-time-login-url]', '!site-login-url-token' => '[site:login-url]'), array('langcode' => $langcode));
+        break;
+
       case 'register_admin_created_subject':
-        return t('An administrator created an account for you at !site', $variables, array('langcode' => $langcode));
+        $text = t('An administrator created an account for you at !site-name-token', array('!site-name-token' => '[site:name]'), array('langcode' => $langcode));
+        break;
       case 'register_admin_created_body':
-        return t("!username,\n\nA site administrator at !site has created an account for you. You may now log in to !login_uri using the following username and password:\n\nusername: !username\npassword: !password\n\nYou may also log in by clicking on this link or copying and pasting it in your browser:\n\n!login_url\n\nThis is a one-time login, so it can be used only once.\n\nAfter logging in, you will be redirected to !edit_uri so you can change your password.\n\n\n--  !site team", $variables, array('langcode' => $langcode));
+        $text = t("!user-name-token,
+
+A site administrator at !site-name-token has created an account for you. You may now log in by clicking this link or copying and pasting it to your browser:
+
+!one-time-login-token
+
+This link can only be used once to log in and will lead you to a page where you can set your password.
+
+After setting your password, you will be able to log in at !site-login-url-token in the future using:
+
+username: !user-name-token
+password: Your password
+
+--  !site-name-token team", array('!user-name-token' => '[user:name]', '!site-name-token' => '[site:name]',  '!one-time-login-token' => '[user:one-time-login-url]', '!site-login-url-token' => '[site:login-url]'), array('langcode' => $langcode));
+        break;
+
       case 'register_pending_approval_subject':
       case 'register_pending_approval_admin_subject':
-        return t('Account details for !username at !site (pending admin approval)', $variables, array('langcode' => $langcode));
+        $text = t('Account details for !user-name-token at !site-name-token (pending admin approval)', array('!user-name-token' => '[user:name]', '!site-name-token' => '[site:name]'), array('langcode' => $langcode));
+        break;
       case 'register_pending_approval_body':
-        return t("!username,\n\nThank you for registering at !site. Your application for an account is currently pending approval. Once it has been approved, you will receive another e-mail containing information about how to log in, set your password, and other details.\n\n\n--  !site team", $variables, array('langcode' => $langcode));
+        $text = t("!user-name-token,
+
+Thank you for registering at !site-name-token. Your application for an account is currently pending approval. Once it has been approved, you will receive another e-mail containing information about how to log in, set your password, and other details.
+
+
+--  !site-name-token team", array('!user-name-token' => '[user:name]', '!site-name-token' => '[site:name]'), array('langcode' => $langcode));
+        break;
       case 'register_pending_approval_admin_body':
-        return t("!username has applied for an account.\n\n!edit_uri", $variables, array('langcode' => $langcode));
+        $text = t("!user-name-token has applied for an account.
+
+!user-edit-url-token", array('!user-name-token' => '[user:name]', '!user-edit-url-token' => '[user:edit-url]'), array('langcode' => $langcode));
+        break;
+
       case 'password_reset_subject':
-        return t('Replacement login information for !username at !site', $variables, array('langcode' => $langcode));
+        $text = t('Replacement login information for !user-name-token at !site-name-token', array('!user-name-token' => '[user:name]', '!site-name-token' => '[site:name]'), array('langcode' => $langcode));
+        break;
       case 'password_reset_body':
-        return t("!username,\n\nA request to reset the password for your account has been made at !site.\n\nYou may now log in to !uri_brief by clicking on this link or copying and pasting it in your browser:\n\n!login_url\n\nThis is a one-time login, so it can be used only once. It expires after one day and nothing will happen if it's not used.\n\nAfter logging in, you will be redirected to !edit_uri so you can change your password.", $variables, array('langcode' => $langcode));
+        $text = t("!user-name-token,
+
+A request to reset the password for your account has been made at !site-name-token.
+
+You may now log in by clicking this link or copying and pasting it to your browser:
+
+!one-time-login-token
+
+This link can only be used once to log in and will lead you to a page where you can set your password. It expires after one day and nothing will happen if it's not used.
+
+--  !site-name-token team", array('!user-name-token' => '[user:name]', '!site-name-token' => '[site:name]',  '!one-time-login-token' => '[user:one-time-login-url]'), array('langcode' => $langcode));
+        break;
+
       case 'status_activated_subject':
-        return t('Account details for !username at !site (approved)', $variables, array('langcode' => $langcode));
+        $text = t('Account details for !user-name-token at !site-name-token (approved)', array('!user-name-token' => '[user:name]', '!site-name-token' => '[site:name]'), array('langcode' => $langcode));
+        break;
       case 'status_activated_body':
-        return t("!username,\n\nYour account at !site has been activated.\n\nYou may now log in by clicking on this link or copying and pasting it in your browser:\n\n!login_url\n\nThis is a one-time login, so it can be used only once.\n\nAfter logging in, you will be redirected to !edit_uri so you can change your password.\n\nOnce you have set your own password, you will be able to log in to !login_uri in the future using:\n\nusername: !username\n", $variables, array('langcode' => $langcode));
+        $text = t("!user-name-token,
+
+Your account at !site-name-token has been activated.
+
+You may now log in by clicking this link or copying and pasting it into your browser:
+
+!one-time-login-token
+
+This link can only be used once to log in and will lead you to a page where you can set your password.
+
+After setting your password, you will be able to log in at !site-login-url-token in the future using:
+
+username: !user-name-token
+password: Your password
+
+--  !site-name-token team", array('!user-name-token' => '[user:name]', '!site-name-token' => '[site:name]',  '!site-login-url-token' => '[site:login-url]', '!one-time-login-token' => '[user:one-time-login-url]'), array('langcode' => $langcode));
+        break;
+
       case 'status_blocked_subject':
-        return t('Account details for !username at !site (blocked)', $variables, array('langcode' => $langcode));
+        $text = t('Account details for !user-name-token at !site-name-token (blocked)', array('!user-name-token' => '[user:name]', '!site-name-token' => '[site:name]'), array('langcode' => $langcode));
+        break;
       case 'status_blocked_body':
-        return t("!username,\n\nYour account on !site has been blocked.", $variables, array('langcode' => $langcode));
+        $text = t("!user-name-token,
+
+Your account on !site-name-token has been blocked.
+
+--  !site-name-token team", array('!user-name-token' => '[user:name]', '!site-name-token' => '[site:name]'), array('langcode' => $langcode));
+        break;
 
       case 'cancel_confirm_subject':
-        return t('Account cancellation request for !username at !site', $variables, array('langcode' => $langcode));
+        $text = t('Account cancellation request for !user-name-token at !site-name-token', array('!user-name-token' => '[user:name]', '!site-name-token' => '[site:name]'), array('langcode' => $langcode));
+        break;
       case 'cancel_confirm_body':
-        return t("!username,
+        $text = t("!user-name-token,
 
-A request to cancel your account has been made at !site.
+A request to cancel your account has been made at !site-name-token.
 
-You may now cancel your account on !uri_brief by clicking this link or copying and pasting it into your browser:
+You may now cancel your account on !site-url-brief-token by clicking this link or copying and pasting it into your browser:
 
-!cancel_url
+!user-cancel-url-token
 
 NOTE: The cancellation of your account is not reversible.
 
-This link expires in one day and nothing will happen if it is not used.", $variables, array('langcode' => $langcode));
+This link expires in one day and nothing will happen if it is not used.
+
+--  !site-name-token team", array('!user-name-token' => '[user:name]', '!site-name-token' => '[site:name]', '!site-url-brief-token' => '[site:url-brief]', '!user-cancel-url-token' => '[user:cancel-url]'), array('langcode' => $langcode));
+        break;
 
       case 'status_canceled_subject':
-        return t('Account details for !username at !site (canceled)', $variables, array('langcode' => $langcode));
+        $text = t('Account details for !user-name-token at !site-name-token (canceled)', array('!user-name-token' => '[user:name]', '!site-name-token' => '[site:name]'), array('langcode' => $langcode));
+        break;
       case 'status_canceled_body':
-        return t("!username,
+        $text = t("!user-name-token,
 
-Your account on !site has been canceled.", $variables, array('langcode' => $langcode));
+Your account on !site-name-token has been canceled.
+
+--  !site-name-token team", array('!user-name-token' => '[user:name]', '!site-name-token' => '[site:name]'), array('langcode' => $langcode));
+        break;
     }
+  }
+
+  if ($replace) {
+    return token_replace($text, $variables, array('language' => $language, 'callback' => 'user_mail_tokens'));
+  }
+
+  return $text;
+}
+
+/**
+ * Token callback to add unsafe tokens for user mails.
+ *
+ * @see user_mail()
+ */
+function user_mail_tokens(&$replacements, $data, $options) {
+  if (isset($data['user'])) {
+    $replacements['[user:one-time-login-url]'] = user_pass_reset_url($data['user']);
+    $replacements['[user:cancel-url]'] = user_cancel_url($data['user']);
   }
 }
 
@@ -2309,6 +2609,23 @@ function user_role_delete($role) {
 }
 
 /**
+ * Determine the modules that permissions belong to.
+ *
+ * @return
+ *   An associative array in the format $permission => $module.
+ */
+function user_permission_get_modules() {
+  $permissions = array();
+  foreach (module_implements('permission') as $module) {
+    $perms = module_invoke($module, 'permission');
+    foreach ($perms as $key => $value) {
+      $permissions[$key] = $module;
+    }
+  }
+  return $permissions;
+}
+
+/**
  * Change permissions for a user role.
  *
  * This function may be used to grant and revoke multiple permissions at once.
@@ -2358,12 +2675,14 @@ function user_role_change_permissions($rid, array $permissions = array()) {
  * @see user_role_revoke_permissions()
  */
 function user_role_grant_permissions($rid, array $permissions = array()) {
+  $modules = user_permission_get_modules();
   // Grant new permissions for the role.
   foreach ($permissions as $name) {
     db_merge('role_permission')
       ->key(array(
         'rid' => $rid,
         'permission' => $name,
+        'module' => $modules[$name],
       ))
       ->execute();
   }
@@ -2397,7 +2716,7 @@ function user_role_revoke_permissions($rid, array $permissions = array()) {
 }
 
 /**
- * Implement hook_user_operations().
+ * Implements hook_user_operations().
  */
 function user_user_operations($form = array(), $form_state = array()) {
   $operations = array(
@@ -2469,8 +2788,8 @@ function user_user_operations($form = array(), $form_state = array()) {
  * Callback function for admin mass unblocking users.
  */
 function user_user_operations_unblock($accounts) {
-  foreach ($accounts as $uid) {
-    $account = user_load($uid);
+  $accounts = user_load_multiple($accounts);
+  foreach ($accounts as $account) {
     // Skip unblocking user if they are already unblocked.
     if ($account !== FALSE && $account->status == 0) {
       user_save($account, array('status' => 1));
@@ -2482,8 +2801,8 @@ function user_user_operations_unblock($accounts) {
  * Callback function for admin mass blocking users.
  */
 function user_user_operations_block($accounts) {
-  foreach ($accounts as $uid) {
-    $account = user_load($uid);
+  $accounts = user_load_multiple($accounts);
+  foreach ($accounts as $account) {
     // Skip blocking user if they are already blocked.
     if ($account !== FALSE && $account->status == 1) {
       user_save($account, array('status' => 0));
@@ -2501,8 +2820,8 @@ function user_multiple_role_edit($accounts, $operation, $rid) {
 
   switch ($operation) {
     case 'add_role':
-      foreach ($accounts as $uid) {
-        $account = user_load($uid);
+      $accounts = user_load_multiple($accounts);
+      foreach ($accounts as $account) {
         // Skip adding the role to the user if they already have it.
         if ($account !== FALSE && !isset($account->roles[$rid])) {
           $roles = $account->roles + array($rid => $role_name);
@@ -2511,8 +2830,8 @@ function user_multiple_role_edit($accounts, $operation, $rid) {
       }
       break;
     case 'remove_role':
-      foreach ($accounts as $uid) {
-        $account = user_load($uid);
+      $accounts = user_load_multiple($accounts);
+      foreach ($accounts as $account) {
         // Skip removing the role from the user if they already don't have it.
         if ($account !== FALSE && isset($account->roles[$rid])) {
           $roles = array_diff($account->roles, array($rid => $role_name));
@@ -2527,10 +2846,29 @@ function user_multiple_cancel_confirm($form, &$form_state) {
   $edit = $form_state['input'];
 
   $form['accounts'] = array('#prefix' => '<ul>', '#suffix' => '</ul>', '#tree' => TRUE);
-  // array_filter() returns only elements with TRUE values.
-  foreach (array_filter($edit['accounts']) as $uid => $value) {
-    $user = db_query('SELECT name FROM {users} WHERE uid = :uid', array(':uid' => $uid))->fetchField();
-    $form['accounts'][$uid] = array('#type' => 'hidden', '#value' => $uid, '#prefix' => '<li>', '#suffix' => check_plain($user) . "</li>\n");
+  $accounts = user_load_multiple(array_keys(array_filter($edit['accounts'])));
+  foreach ($accounts as $uid => $account) {
+    // Prevent user 1 from being canceled.
+    if ($uid <= 1) {
+      continue;
+    }
+    $form['accounts'][$uid] = array(
+      '#type' => 'hidden',
+      '#value' => $uid,
+      '#prefix' => '<li>',
+      '#suffix' => check_plain($account->name) . "</li>\n",
+    );
+  }
+
+  // Output a notice that user 1 cannot be canceled.
+  if (isset($accounts[1])) {
+    $redirect = (count($accounts) == 1);
+    $message = t('The user account %name cannot be cancelled.', array('%name' => $accounts[1]->name));
+    drupal_set_message($message, $redirect ? 'error' : 'warning');
+    // If only user 1 was selected, redirect to the overview.
+    if ($redirect) {
+      drupal_goto('admin/people');
+    }
   }
 
   $form['operation'] = array('#type' => 'hidden', '#value' => 'cancel');
@@ -2579,6 +2917,10 @@ function user_multiple_cancel_confirm_submit($form, &$form_state) {
 
   if ($form_state['values']['confirm']) {
     foreach ($form_state['values']['accounts'] as $uid => $value) {
+      // Prevent programmatic form submissions from cancelling user 1.
+      if ($uid <= 1) {
+        continue;
+      }
       // Prevent user administrators from deleting themselves without confirmation.
       if ($uid == $user->uid) {
         $admin_form_state = $form_state;
@@ -2592,39 +2934,6 @@ function user_multiple_cancel_confirm_submit($form, &$form_state) {
     }
   }
   $form_state['redirect'] = 'admin/people';
-  return;
-}
-
-/**
- * Implement hook_help().
- */
-function user_help($path, $arg) {
-  global $user;
-
-  switch ($path) {
-    case 'admin/help#user':
-      $output = '<p>' . t('The user module allows users to register, login, and log out. Users benefit from being able to sign on because it associates content they create with their account and allows various permissions to be set for their roles. The user module supports user roles which establish fine grained permissions allowing each role to do only what the administrator wants them to. Each user is assigned to one or more roles. By default there are two roles <em>anonymous</em> - a user who has not logged in, and <em>authenticated</em> a user who has signed up and who has been authorized.') . '</p>';
-      $output .= '<p>' . t("Users can use their own name or handle and can specify personal configuration settings through their individual <em>My account</em> page. Users must authenticate by supplying a local username and password or through their OpenID, an optional and secure method for logging into many websites with a single username and password. In some configurations, users may authenticate using a username and password from another Drupal site, or through some other site-specific mechanism.") . '</p>';
-      $output .= '<p>' . t('A visitor accessing your website is assigned a unique ID, or session ID, which is stored in a cookie. The cookie does not contain personal information, but acts as a key to retrieve information from your site. Users should have cookies enabled in their web browser when using your site.') . '</p>';
-      $output .= '<p>' . t('For more information, see the online handbook entry for <a href="@user">User module</a>.', array('@user' => 'http://drupal.org/handbook/modules/user/')) . '</p>';
-      return $output;
-    case 'admin/people/create':
-      return '<p>' . t("This web page allows administrators to register new users. Users' e-mail addresses and usernames must be unique.") . '</p>';
-    case 'admin/config/people/permissions':
-      return '<p>' . t('Permissions let you control what users can do and see on your site. You can define a specific set of permissions for each role. (See the <a href="@role">Roles</a> page to create a role). Two important roles to consider are Authenticated Users and Administrators. Any permissions granted to the Authenticated Users role will be given to any user who can log into your site.  You can make any role the Administrator role for the site, meaning this will be granted all new permissions automatically. You can do this on the <a href="@settings">User Settings</a> page. You should be careful to ensure that only trusted users are given this access and level of control of your site.', array('@role' => url('admin/config/people/roles'), '@settings' => url('admin/config/people/accounts'))) . '</p>';
-    case 'admin/config/people/roles':
-      return t('<p>Roles allow you to fine tune the security and administration of Drupal. A role defines a group of users that have certain privileges as defined in <a href="@permissions">user permissions</a>. Examples of roles include: anonymous user, authenticated user, moderator, administrator and so on. In this area you will define the <em>role names</em> of the various roles. To delete a role choose "edit".</p><p>By default, Drupal comes with two user roles:</p>
-      <ul>
-      <li>Anonymous user: this role is used for users that don\'t have a user account or that are not authenticated.</li>
-      <li>Authenticated user: this role is automatically granted to all logged in users.</li>
-      </ul>', array('@permissions' => url('admin/config/people/permissions')));
-    case 'admin/config/people/accounts/fields':
-      return '<p>' . t('This form lets administrators add, edit, and arrange fields for storing user data.') . '</p>';
-    case 'admin/config/people/accounts/display':
-      return '<p>' . t('This form lets administrators configure how fields should be displayed when rendering a user profile page.') . '</p>';
-    case 'admin/people/search':
-      return '<p>' . t('Enter a simple pattern ("*" may be used as a wildcard match) to search for a username or e-mail address. For example, one may search for "br" and Drupal might return "brian", "brad", and "brenda@example.com".') . '</p>';
-  }
 }
 
 /**
@@ -2655,7 +2964,9 @@ function user_filters() {
     $filters['role'] = array(
       'title' => t('role'),
       'field' => 'ur.rid',
-      'options' => $roles,
+      'options' => array(
+        '[any]' => t('any'),
+      ) + $roles,
     );
   }
 
@@ -2672,13 +2983,19 @@ function user_filters() {
   ksort($options);
   $filters['permission'] = array(
     'title' => t('permission'),
-    'options' => $options,
+    'options' => array(
+      '[any]' => t('any'),
+    ) + $options,
   );
 
   $filters['status'] = array(
     'title' => t('status'),
     'field' => 'u.status',
-    'options' => array(1 => t('active'), 0 => t('blocked')),
+    'options' => array(
+      '[any]' => t('any'),
+      1 => t('active'),
+      0 => t('blocked'),
+    ),
   );
   return $filters;
 }
@@ -2691,7 +3008,8 @@ function user_filters() {
  */
 function user_build_filter_query(SelectQuery $query) {
   $filters = user_filters();
-
+  $role_count = 0;
+  $permission_count = 0;
   // Extend Query with filter conditions.
   foreach (isset($_SESSION['user_overview_filter']) ? $_SESSION['user_overview_filter'] : array() as $filter) {
     list($key, $value) = $filter;
@@ -2705,8 +3023,19 @@ function user_build_filter_query(SelectQuery $query) {
       if (user_access($value, $account)) {
         continue;
       }
-      $query->leftJoin('role_permission', 'p', 'ur.rid = p.rid');
-      $query->condition(db_or()->condition('u.uid', 1)->condition('p.permission', $value));
+      $user_role_alias = 'ur' . $role_count;
+      $permission_alias = 'p' . $permission_count;
+      $query->innerJoin('users_roles', $user_role_alias, $user_role_alias . '.uid = u.uid');
+      $query->innerJoin('role_permission', $permission_alias , $user_role_alias . '.rid = ' . $permission_alias . '.rid');
+      $query->condition($permission_alias . '.permission', $value);
+      $role_count++;
+      $permission_count++;
+    }
+    else if ($key == 'role') {
+      $user_role_alias = 'ur' . $role_count;
+      $query->innerJoin('users_roles', $user_role_alias, $user_role_alias . '.uid = u.uid');
+      $query->condition($user_role_alias . '.rid' , $value);
+      $role_count++;
     }
     else {
       $query->condition($filters[$key]['field'], $value);
@@ -2715,7 +3044,7 @@ function user_build_filter_query(SelectQuery $query) {
 }
 
 /**
- * Implement hook_forms().
+ * Implements hook_forms().
  */
 function user_forms() {
   $forms['user_admin_access_add_form']['callback'] = 'user_admin_access_form';
@@ -2725,11 +3054,11 @@ function user_forms() {
 }
 
 /**
- * Implement hook_comment_view().
+ * Implements hook_comment_view().
  */
 function user_comment_view($comment) {
   if (variable_get('user_signatures', 0) && !empty($comment->signature)) {
-    $comment->signature = check_markup($comment->signature, $comment->format);
+    $comment->signature = check_markup($comment->signature, $comment->format, '', TRUE);
   }
   else {
     $comment->signature = '';
@@ -2741,8 +3070,10 @@ function user_comment_view($comment) {
  *
  * @ingroup themeable
  */
-function theme_user_signature($signature) {
+function theme_user_signature($variables) {
+  $signature = $variables['signature'];
   $output = '';
+
   if ($signature) {
     $output .= '<div class="clear">';
     $output .= '<div>—</div>';
@@ -2751,37 +3082,6 @@ function theme_user_signature($signature) {
   }
 
   return $output;
-}
-
-/**
- * Return an array of token to value mappings for user e-mail messages.
- *
- * @param $account
- *  The user object of the account being notified. Must contain at
- *  least the fields 'uid', 'name', and 'mail'.
- * @param $language
- *  Language object to generate the tokens with.
- * @return
- *  Array of mappings from token names to values (for use with strtr()).
- */
-function user_mail_tokens($account, $language) {
-  global $base_url;
-  $tokens = array(
-    '!username' => $account->name,
-    '!site' => variable_get('site_name', 'Drupal'),
-    '!login_url' => user_pass_reset_url($account),
-    '!cancel_url' => user_cancel_url($account),
-    '!uri' => $base_url,
-    '!uri_brief' => preg_replace('!^https?://!', '', $base_url),
-    '!mailto' => $account->mail,
-    '!date' => format_date(REQUEST_TIME, 'medium', '', NULL, $language->language),
-    '!login_uri' => url('user', array('absolute' => TRUE, 'language' => $language)),
-    '!edit_uri' => url('user/' . $account->uid . '/edit', array('absolute' => TRUE, 'language' => $language)),
-  );
-  if (!empty($account->password)) {
-    $tokens['!password'] = $account->password;
-  }
-  return $tokens;
 }
 
 /**
@@ -2799,7 +3099,7 @@ function user_mail_tokens($account, $language) {
  */
 function user_preferred_language($account, $default = NULL) {
   $language_list = language_list();
-  if ($account->language && isset($language_list[$account->language])) {
+  if (!empty($account->language) && isset($language_list[$account->language])) {
     return $language_list[$account->language];
   }
   else {
@@ -2831,8 +3131,7 @@ function user_preferred_language($account, $default = NULL) {
  * @param $language
  *  Optional language to use for the notification, overriding account language.
  * @return
- *  The return value from drupal_mail_sending_system()->mail(), if ends up
- *  being called.
+ *  The return value from drupal_mail_system()->mail(), if ends up being called.
  */
 function _user_mail_notify($op, $account, $language = NULL) {
   // By default, we always notify except for canceled and blocked.
@@ -2852,44 +3151,46 @@ function _user_mail_notify($op, $account, $language = NULL) {
 }
 
 /**
- * Add javascript and string translations for dynamic password validation
- * (strength and confirmation checking).
+ * Form element process handler for client-side password validation.
  *
- * This is an internal function that makes it easier to manage the translation
- * strings that need to be passed to the javascript code.
+ * This #process handler is automatically invoked for 'password_confirm' form
+ * elements to add the JavaScript and string translations for dynamic password
+ * validation.
+ *
+ * @see system_element_info()
  */
-function _user_password_dynamic_validation() {
-  static $complete = FALSE;
+function user_form_process_password_confirm($element) {
   global $user;
-  // Only need to do once per page.
-  if (!$complete) {
-    drupal_add_js(drupal_get_path('module', 'user') . '/user.js');
 
-    drupal_add_js(array(
-      'password' => array(
-        'strengthTitle' => t('Password strength:'),
-        'hasWeaknesses' => t('To make your password stronger:'),
-        'tooShort' => t('Make it at least 6 characters'),
-        'addLowerCase' => t('Add lowercase letters'),
-        'addUpperCase' => t('Add uppercase letters'),
-        'addNumbers' => t('Add numbers'),
-        'addPunctuation' => t('Add punctuation'),
-        'sameAsUsername' => t('Make it different from your username'),
-        'confirmSuccess' => t('yes'),
-        'confirmFailure' => t('no'),
-        'weak'           => t('Weak'),
-        'fair'           => t('Fair'),
-        'good'           => t('Good'),
-        'strong'         => t('Strong'),
-        'confirmTitle' => t('Passwords match:'),
-        'username' => (isset($user->name) ? $user->name : ''))),
-      'setting');
-    $complete = TRUE;
-  }
+  $js_settings = array(
+    'password' => array(
+      'strengthTitle' => t('Password strength:'),
+      'hasWeaknesses' => t('To make your password stronger:'),
+      'tooShort' => t('Make it at least 6 characters'),
+      'addLowerCase' => t('Add lowercase letters'),
+      'addUpperCase' => t('Add uppercase letters'),
+      'addNumbers' => t('Add numbers'),
+      'addPunctuation' => t('Add punctuation'),
+      'sameAsUsername' => t('Make it different from your username'),
+      'confirmSuccess' => t('yes'),
+      'confirmFailure' => t('no'),
+      'weak' => t('Weak'),
+      'fair' => t('Fair'),
+      'good' => t('Good'),
+      'strong' => t('Strong'),
+      'confirmTitle' => t('Passwords match:'),
+      'username' => (isset($user->name) ? $user->name : ''),
+    ),
+  );
+
+  $element['#attached']['js'][] = drupal_get_path('module', 'user') . '/user.js';
+  $element['#attached']['js'][] = array('data' => $js_settings, 'type' => 'setting');
+
+  return $element;
 }
 
 /**
- * Implementation of hook_node_load().
+ * Implements hook_node_load().
  */
 function user_node_load($nodes, $types) {
   // Build an array of all uids for node authors, keyed by nid.
@@ -2910,7 +3211,7 @@ function user_node_load($nodes, $types) {
 }
 
 /**
- * Implement hook_image_style_delete().
+ * Implements hook_image_style_delete().
  */
 function user_image_style_delete($style) {
   // If a style is deleted, update the variables.
@@ -2919,7 +3220,7 @@ function user_image_style_delete($style) {
 }
 
 /**
- * Implement hook_image_style_save().
+ * Implements hook_image_style_save().
  */
 function user_image_style_save($style) {
   // If a style is renamed, update the variables that use it.
@@ -2929,7 +3230,7 @@ function user_image_style_save($style) {
 }
 
 /**
- * Implement hook_action_info().
+ * Implements hook_action_info().
  */
 function user_action_info() {
   return array(
@@ -2943,12 +3244,13 @@ function user_action_info() {
 }
 
 /**
- * Implement a Drupal action.
  * Blocks the current user.
+ *
+ * @ingroup actions
  */
-function user_block_user_action(&$object, $context = array()) {
-  if (isset($object->uid)) {
-    $uid = $object->uid;
+function user_block_user_action(&$entity, $context = array()) {
+  if (isset($entity->uid)) {
+    $uid = $entity->uid;
   }
   elseif (isset($context['uid'])) {
     $uid = $context['uid'];
@@ -2966,104 +3268,14 @@ function user_block_user_action(&$object, $context = array()) {
 }
 
 /**
- * Submit handler for the user registration form.
- *
- * This function is shared by the installation form and the normal registration form,
- * which is why it can't be in the user.pages.inc file.
- */
-function user_register_submit($form, &$form_state) {
-  global $base_url;
-  $admin = user_access('administer users');
-
-  $mail = $form_state['values']['mail'];
-  $name = $form_state['values']['name'];
-  if (!variable_get('user_email_verification', TRUE) || $admin) {
-    $pass = $form_state['values']['pass'];
-  }
-  else {
-    $pass = user_password();
-  };
-  $notify = isset($form_state['values']['notify']) ? $form_state['values']['notify'] : NULL;
-  $from = variable_get('site_mail', ini_get('sendmail_from'));
-  if (isset($form_state['values']['roles'])) {
-    // Remove unset roles.
-    $roles = array_filter($form_state['values']['roles']);
-  }
-  else {
-    $roles = array();
-  }
-
-  if (!$admin && array_intersect(array_keys($form_state['values']), array('uid', 'roles', 'init', 'session', 'status'))) {
-    watchdog('security', 'Detected malicious attempt to alter protected user fields.', array(), WATCHDOG_WARNING);
-    $form_state['redirect'] = 'user/register';
-    return;
-  }
-  // The unset below is needed to prevent these form values from being saved as
-  // user data.
-  unset($form_state['values']['form_token'], $form_state['values']['submit'], $form_state['values']['op'], $form_state['values']['notify'], $form_state['values']['form_id'], $form_state['values']['affiliates'], $form_state['values']['destination'], $form_state['values']['form_build_id']);
-
-  $merge_data = array('pass' => $pass, 'init' => $mail, 'roles' => $roles);
-  if (!$admin) {
-    // Set the user's status because it was not displayed in the form.
-    $merge_data['status'] = variable_get('user_register', 1) == 1;
-  }
-  $account = user_save('', array_merge($form_state['values'], $merge_data));
-  // Terminate if an error occurred during user_save().
-  if (!$account) {
-    drupal_set_message(t("Error saving user account."), 'error');
-    $form_state['redirect'] = '';
-    return;
-  }
-  $form_state['user'] = $account;
-
-  watchdog('user', 'New user: %name (%email).', array('%name' => $name, '%email' => $mail), WATCHDOG_NOTICE, l(t('edit'), 'user/' . $account->uid . '/edit'));
-
-  // Add plain text password into user account to generate mail tokens.
-  $account->password = $pass;
-  if ($admin && !$notify) {
-    drupal_set_message(t('Created a new user account for <a href="@url">%name</a>. No e-mail has been sent.', array('@url' => url("user/$account->uid"), '%name' => $account->name)));
-  }
-  elseif (!variable_get('user_email_verification', TRUE) && $account->status && !$admin) {
-    // No e-mail verification is required, create new user account, and login
-    // user immediately.
-    _user_mail_notify('register_no_approval_required', $account);
-    $form_state['uid'] = $account->uid;
-    user_login_submit(array(), $form_state);
-    drupal_set_message(t('Registration successful. You are now logged in.'));
-    $form_state['redirect'] = '';
-    return;
-  }
-  elseif ($account->status || $notify) {
-    // Create new user account, no administrator approval required.
-    $op = $notify ? 'register_admin_created' : 'register_no_approval_required';
-    _user_mail_notify($op, $account);
-    if ($notify) {
-      drupal_set_message(t('Password and further instructions have been e-mailed to the new user <a href="@url">%name</a>.', array('@url' => url("user/$account->uid"), '%name' => $account->name)));
-    }
-    else {
-      drupal_set_message(t('Your password and further instructions have been sent to your e-mail address.'));
-      $form_state['redirect'] = '';
-      return;
-    }
-  }
-  else {
-    // Create new user account, administrator approval required.
-    _user_mail_notify('register_pending_approval', $account);
-    drupal_set_message(t('Thank you for applying for an account. Your account is currently pending approval by the site administrator.<br />In the meantime, a welcome message with further instructions has been sent to your e-mail address.'));
-    $form_state['redirect'] = '';
-    return;
-
-  }
-}
-
-/**
- * Form builder; The user registration form.
+ * Form builder; the user registration form.
  *
  * @ingroup forms
- * @see user_register_validate()
+ * @see user_account_form()
+ * @see user_account_form_validate()
  * @see user_register_submit()
  */
-function user_register($form, &$form_state) {
+function user_register_form($form, &$form_state) {
   global $user;
 
   $admin = user_access('administer users');
@@ -3073,102 +3285,202 @@ function user_register($form, &$form_state) {
     drupal_goto('user/' . $user->uid);
   }
 
-  // Start with the default user edit fields.
-  $form = user_edit_form($form, $form_state, NULL, NULL, TRUE);
+  $form['#user'] = drupal_anonymous_user();
+  $form['#user_category'] = 'register';
+
+  $form['#attached']['library'][] = array('system', 'cookie');
+  $form['#attributes']['class'][] = 'user-info-from-cookie';
+
+  $form['#pre_render'] = array('user_register_form_pre_render');
+
+  // Start with the default user account fields.
+  user_account_form($form, $form_state);
+
   if ($admin) {
-    $form['account']['notify'] = array(
-     '#type' => 'checkbox',
-     '#title' => t('Notify user of new account')
-    );
     // Redirect back to page which initiated the create request;
     // usually admin/people/create.
     $form_state['redirect'] = $_GET['q'];
   }
 
-  // Create a dummy variable for pass-by-reference parameters.
-  $null = NULL;
-  $extra = _user_forms($null, NULL, NULL, 'register');
-  if ($extra) {
-    $form = array_merge_recursive($form, $extra);
-  }
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Create new account'),
+    '#weight' => 30,
+  );
 
-  // If the "account" fieldset is the only element at the top level, its
-  // borders are hidden for aesthetic reasons. We do not remove the fieldset but
-  // preserve the form structure so that modules implementing
-  // hook_form_FORM_ID_alter() know where to find the basic elements.
-  if (count(element_children($form)) == 1) {
-    $form['account']['#type'] = 'markup';
-  }
-
-  $form['submit'] = array('#type' => 'submit', '#value' => t('Create new account'), '#weight' => 30);
-  $form['#validate'][] = 'user_register_validate';
+  // Add the final user registration form submit handler.
+  $form['#submit'][] = 'user_register_submit';
 
   return $form;
 }
 
-function user_register_validate($form, &$form_state) {
-  user_module_invoke('validate', $form_state['values'], $form_state['values'], 'account');
+/**
+ * Form pre-render callback to clean up the user_register_form.
+ *
+ * If the "account" fieldset is the only element at the top level (apart from
+ * the submit button), its borders are hidden for aesthetic reasons.
+ */
+function user_register_form_pre_render($form) {
+  $visible_children = element_get_visible_children($form);
+  if (!count(array_diff($visible_children, array('account', 'submit')))) {
+    $form['account']['#theme_wrappers'] = array();
+  }
+  return $form;
 }
 
 /**
- * Retrieve a list of all form elements for the specified category.
+ * Submit handler for the user registration form.
+ *
+ * This function is shared by the installation form and the normal registration form,
+ * which is why it can't be in the user.pages.inc file.
+ *
+ * @see user_register_form()
  */
-function _user_forms(&$edit, $account, $category, $hook = 'form') {
-  $groups = array();
-  foreach (module_implements('user_' . $hook) as $module) {
-    $function = $module . '_user_' . $hook;
-    if ($data = $function($edit, $account, $category)) {
-      $groups = array_merge_recursive($data, $groups);
+function user_register_submit($form, &$form_state) {
+  $admin = user_access('administer users');
+
+  if (!variable_get('user_email_verification', TRUE) || $admin) {
+    $pass = $form_state['values']['pass'];
+  }
+  else {
+    $pass = user_password();
+  }
+  $notify = !empty($form_state['values']['notify']);
+
+  // The unset below is needed to prevent these form values from being saved as
+  // user data.
+  form_state_values_clean($form_state);
+  unset($form_state['values']['notify']);
+
+  $form_state['values']['pass'] = $pass;
+  $form_state['values']['init'] = $form_state['values']['mail'];
+
+  $account = $form['#user'];
+  $account = user_save($account, $form_state['values']);
+  // Terminate if an error occurred during user_save().
+  if (!$account) {
+    drupal_set_message(t("Error saving user account."), 'error');
+    $form_state['redirect'] = '';
+    return;
+  }
+  $form_state['user'] = $account;
+  $form_state['values']['uid'] = $account->uid;
+
+  watchdog('user', 'New user: %name (%email).', array('%name' => $form_state['values']['name'], '%email' => $form_state['values']['mail']), WATCHDOG_NOTICE, l(t('edit'), 'user/' . $account->uid . '/edit'));
+
+  // Add plain text password into user account to generate mail tokens.
+  $account->password = $pass;
+
+  // New administrative account without notification.
+  if ($admin && !$notify) {
+    drupal_set_message(t('Created a new user account for <a href="@url">%name</a>. No e-mail has been sent.', array('@url' => url("user/$account->uid"), '%name' => $account->name)));
+  }
+  // No e-mail verification required; log in user immediately.
+  elseif (!$admin && !variable_get('user_email_verification', TRUE) && $account->status) {
+    _user_mail_notify('register_no_approval_required', $account);
+    $form_state['uid'] = $account->uid;
+    user_login_submit(array(), $form_state);
+    drupal_set_message(t('Registration successful. You are now logged in.'));
+    $form_state['redirect'] = '';
+  }
+  // No administrator approval required.
+  elseif ($account->status || $notify) {
+    $op = $notify ? 'register_admin_created' : 'register_no_approval_required';
+    _user_mail_notify($op, $account);
+    if ($notify) {
+      drupal_set_message(t('A welcome message with further instructions has been e-mailed to the new user <a href="@url">%name</a>.', array('@url' => url("user/$account->uid"), '%name' => $account->name)));
+    }
+    else {
+      drupal_set_message(t('A welcome message with further instructions has been sent to your e-mail address.'));
+      $form_state['redirect'] = '';
     }
   }
-  uasort($groups, '_user_sort');
-
-  return empty($groups) ? FALSE : $groups;
+  // Administrator approval required.
+  else {
+    _user_mail_notify('register_pending_approval', $account);
+    drupal_set_message(t('Thank you for applying for an account. Your account is currently pending approval by the site administrator.<br />In the meantime, a welcome message with further instructions has been sent to your e-mail address.'));
+    $form_state['redirect'] = '';
+  }
 }
 
-
 /**
- * Implementation of hook_modules_installed().
+ * Implements hook_modules_installed().
  */
 function user_modules_installed($modules) {
   // Assign all available permissions to the administrator role.
   $rid = variable_get('user_admin_role', 0);
   if ($rid) {
+    $permissions = array();
     foreach ($modules as $module) {
-      if ($permissions = module_invoke($module, 'permission')) {
-        foreach (array_keys($permissions) as $permission) {
-          db_insert('role_permission')
-            ->fields(array(
-              'rid' => $rid,
-              'permission' => $permission,
-            ))->execute();
-        }
+      if ($module_permissions = module_invoke($module, 'permission')) {
+        $permissions = array_merge($permissions, array_keys($module_permissions));
       }
     }
-  }
-}
-
-/**
- * Implement hook_modules_uninstalled().
- */
-function user_modules_uninstalled($modules) {
-  $permissions = array();
-  foreach ($modules as $module) {
-    if (function_exists($module . '_permission')) {
-      $permissions = array_merge($permissions, array_keys(module_invoke($module, 'permission')));
+    if (!empty($permissions)) {
+      user_role_grant_permissions($rid, $permissions);
     }
   }
-  if (!empty($permissions)) {
-    db_delete('role_permission')
-      ->condition('permission', $permissions, 'IN')
-      ->execute();
-  }
 }
 
 /**
- * Rewrite the destination to prevent redirecting to login page after login.
+ * Implements hook_modules_uninstalled().
+ */
+function user_modules_uninstalled($modules) {
+   db_delete('role_permission')
+     ->condition('module', $modules, 'IN')
+     ->execute();
+}
+
+/**
+ * Helper function to rewrite the destination to avoid redirecting to login page after login.
+ *
+ * Third-party authentication modules may use this function to determine the
+ * proper destination after a user has been properly logged in.
  */
 function user_login_destination() {
   $destination = drupal_get_destination();
-  return $destination == 'destination=user%2Flogin' ? 'destination=user' : $destination;
+  if ($destination['destination'] == 'user/login') {
+    $destination['destination'] = 'user';
+  }
+  return $destination;
+}
+
+/**
+ * Saves visitor information as a cookie so it can be reused.
+ *
+ * @param $values
+ *   An array of submitted form values with identifying information about the
+ *   current user, typically $form_state['values'] from a submit handler.
+ * @param $fields
+ *   An array of key values from $values to be saved into a cookie.
+ */
+function user_cookie_save(array $values, array $fields = array('name', 'mail', 'homepage')) {
+  foreach ($fields as $field) {
+    if (isset($values[$field])) {
+      // Set cookie for 365 days.
+      setrawcookie('Drupal.visitor.' . $field, rawurlencode($values[$field]), REQUEST_TIME + 31536000, '/');
+    }
+  }
+}
+
+/**
+ * Implements hook_rdf_mapping().
+ */
+function user_rdf_mapping() {
+  return array(
+    array(
+      'type' => 'user',
+      'bundle' => RDF_DEFAULT_BUNDLE,
+      'mapping' => array(
+        'rdftype' => array('sioc:User'),
+        'name' => array(
+          'predicates' => array('foaf:name'),
+        ),
+        'homepage' => array(
+          'predicates' => array('foaf:page'),
+          'type' => 'rel',
+        ),
+      ),
+    ),
+  );
 }

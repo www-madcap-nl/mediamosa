@@ -1,5 +1,5 @@
 <?php
-// $Id: database.inc,v 1.20 2009/09/18 00:04:21 webchick Exp $
+// $Id: database.inc,v 1.28 2010/03/07 08:03:45 webchick Exp $
 
 /**
  * @file
@@ -24,6 +24,8 @@ class DatabaseConnection_sqlite extends DatabaseConnection {
 
     // This driver defaults to transaction support, except if explicitly passed FALSE.
     $this->transactionSupport = !isset($connection_options['transactions']) || $connection_options['transactions'] !== FALSE;
+
+    $this->connectionOptions = $connection_options;
 
     parent::__construct('sqlite:' . $connection_options['database'], '', '', array(
       // Force column names to lower case.
@@ -155,14 +157,36 @@ class DatabaseConnection_sqlite extends DatabaseConnection {
 
   public function mapConditionOperator($operator) {
     // We don't want to override any of the defaults.
-    return NULL;
+    static $specials = array(
+      'LIKE' => array('postfix' => " ESCAPE '\\'"),
+      'NOT LIKE' => array('postfix' => " ESCAPE '\\'"),
+    );
+    return isset($specials[$operator]) ? $specials[$operator] : NULL;
   }
 
-  public function prepareQuery($query, $cache = TRUE) {
-    // It makes no sense to use the static prepared statement cache here,
-    // because all the work in our implementation is done in
-    // DatabaseStatement_sqlite::execute() and cannot be cached.
+  public function prepareQuery($query) {
     return $this->prepare($this->prefixTables($query));
+  }
+
+  public function nextId($existing_id = 0) {
+    $transaction = $this->startTransaction();
+    // We can safely use literal queries here instead of the slower query
+    // builder because if a given database breaks here then it can simply
+    // override nextId. However, this is unlikely as we deal with short strings
+    // and integers and no known databases require special handling for those
+    // simple cases. If another transaction wants to write the same row, it will
+    // wait until this transaction commits.
+    $stmt = $this->query('UPDATE {sequences} SET value = GREATEST(value, :existing_id) + 1', array(
+      ':existing_id' => $existing_id,
+    ));
+    if (!$stmt->rowCount()) {
+      $this->query('INSERT INTO {sequences} (value) VALUES (:existing_id + 1)', array(
+        ':existing_id' => $existing_id,
+      ));
+    }
+    // The transaction gets committed when the transaction object gets destroyed
+    // because it gets out of scope.
+    return (int) $this->query('SELECT value FROM {sequences}')->fetchField();
   }
 }
 
@@ -194,7 +218,12 @@ class DatabaseStatement_sqlite extends DatabaseStatementPrefetch implements Iter
         $count = 0;
         $new_args = array();
         foreach ($args as $value) {
-          if (is_numeric($value)) {
+          if (is_float($value) || is_int($value)) {
+            if (is_float($value)) {
+              // Force the conversion to float so as not to loose precision
+              // in the automatic cast.
+              $value = sprintf('%F', $value);
+            }
             $query = substr_replace($query, $value, strpos($query, '?'), 1);
           }
           else {
@@ -208,8 +237,14 @@ class DatabaseStatement_sqlite extends DatabaseStatementPrefetch implements Iter
       else {
         // Else, this is using named placeholders.
         foreach ($args as $placeholder => $value) {
-          if (is_numeric($value)) {
-            // We will remove this placeholder from the query and PDO throws an
+          if (is_float($value) || is_int($value)) {
+            if (is_float($value)) {
+              // Force the conversion to float so as not to loose precision
+              // in the automatic cast.
+              $value = sprintf('%F', $value);
+            }
+            
+            // We will remove this placeholder from the query as PDO throws an
             // exception if the number of placeholders in the query and the
             // arguments does not match.
             unset($args[$placeholder]);

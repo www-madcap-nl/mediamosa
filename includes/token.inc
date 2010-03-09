@@ -1,5 +1,5 @@
 <?php
-// $Id: token.inc,v 1.5 2009/08/25 02:50:08 webchick Exp $
+// $Id: token.inc,v 1.8 2010/01/25 10:38:34 dries Exp $
 
 /**
  * @file
@@ -50,7 +50,7 @@
  * Replace all tokens in a given string with appropriate values.
  *
  * @param $text
- *   A string potentially containing replacable tokens.
+ *   A string potentially containing replaceable tokens.
  * @param $data
  *   (optional) An array of keyed objects. For simple replacement scenarios
  *   'node', 'user', and others are common keys, with an accompanying node or
@@ -153,7 +153,6 @@ function token_scan($text) {
 function token_generate($type, array $tokens, array $data = array(), array $options = array()) {
   $results = array();
   $options += array('sanitize' => TRUE);
-  _token_initialize();
 
   $result = module_invoke_all('tokens', $type, $tokens, $data, $options);
   foreach ($result as $original => $replacement) {
@@ -192,7 +191,7 @@ function token_generate($type, array $tokens, array $data = array(), array $opti
 function token_find_with_prefix(array $tokens, $prefix, $delimiter = ':') {
   $results = array();
   foreach ($tokens as $token => $raw) {
-    $parts = split($delimiter, $token, 2);
+    $parts = explode($delimiter, $token, 2);
     if (count($parts) == 2 && $parts[0] == $prefix) {
       $results[$parts[1]] = $raw;
     }
@@ -227,25 +226,8 @@ function token_find_with_prefix(array $tokens, $prefix, $delimiter = ':') {
 function token_info() {
   $data = &drupal_static(__FUNCTION__);
   if (!isset($data)) {
-    _token_initialize();
     $data = module_invoke_all('token_info');
     drupal_alter('token_info', $data);
   }
   return $data;
-}
-
-/**
- * Load modulename.tokens.inc for all enabled modules.
- */
-function _token_initialize() {
-  $initialized = &drupal_static(__FUNCTION__);
-  if (!$initialized) {
-    foreach (module_list() as $module) {
-      $filename = DRUPAL_ROOT . '/' . drupal_get_path('module', $module) . "/$module.tokens.inc";
-      if (file_exists($filename)) {
-        include_once $filename;
-      }
-    }
-    $initialized = TRUE;
-  }
 }

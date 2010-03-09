@@ -1,5 +1,5 @@
 <?php
-// $Id: taxonomy.pages.inc,v 1.36 2009/09/21 07:56:08 dries Exp $
+// $Id: taxonomy.pages.inc,v 1.51 2010/02/10 06:28:10 webchick Exp $
 
 /**
  * @file
@@ -22,37 +22,31 @@ function taxonomy_term_page($term) {
   $breadcrumb = array();
   while ($parents = taxonomy_get_parents($current->tid)) {
     $current = array_shift($parents);
-    $breadcrumb[] = l($current->name, taxonomy_term_path($current));
+    $breadcrumb[] = l($current->name, 'taxonomy/term/' . $current->tid);
   }
   $breadcrumb[] = l(t('Home'), NULL);
   $breadcrumb = array_reverse($breadcrumb);
   drupal_set_breadcrumb($breadcrumb);
   drupal_add_feed(url('taxonomy/term/' . $term->tid . '/feed'), 'RSS - ' . $term->name);
-  drupal_add_css(drupal_get_path('module', 'taxonomy') . '/taxonomy.css');
 
-  $build = array();
-  $build += field_attach_view('taxonomy_term', $term);
-  if (!empty($term->description)) {
-    $build['term_description'] = array(
-      '#markup' => filter_xss_admin($term->description),
-      '#weight' => -1,
-      '#prefix' => '<div class="taxonomy-term-description">',
-      '#suffix' => '</div>',
-    );
-  }
+  $build['term_heading'] = array(
+    '#prefix' => '<div class="term-listing-heading">',
+    '#suffix' => '</div>',
+    'term' => taxonomy_term_view($term, 'full'),
+  );
 
-  if ($nids = taxonomy_select_nodes(array($term->tid), NULL, TRUE)) {
+  if ($nids = taxonomy_select_nodes($term->tid, TRUE, variable_get('default_nodes_main', 10))) {
     $nodes = node_load_multiple($nids);
-    $build += node_build_multiple($nodes);
+    $build += node_view_multiple($nodes);
     $build['pager'] = array(
-      '#markup' => theme('pager', NULL),
+      '#markup' => theme('pager', array('tags' => NULL)),
       '#weight' => 5,
      );
   }
   else {
     $build['no_content'] = array(
       '#prefix' => '<p>',
-      '#markup' => t('There are currently no posts in this category.'),
+      '#markup' => t('There is currently no content classified with this term.'),
       '#suffix' => '</p>',
     );
   }
@@ -69,80 +63,17 @@ function taxonomy_term_feed($term) {
   $channel['link'] = url('taxonomy/term/' . $term->tid, array('absolute' => TRUE));
   $channel['title'] = variable_get('site_name', 'Drupal') . ' - ' . $term->name;
   // Only display the description if we have a single term, to avoid clutter and confusion.
-  // HTML will be removed from feed description, so no need to filter here.
-  $channel['description'] = $term->description;
-  $nids = taxonomy_select_nodes(array($term->tid, NULL, NULL, FALSE));
+  // HTML will be removed from feed description.
+  $channel['description'] = check_markup($term->description, $term->format, '', TRUE);
+  $nids = taxonomy_select_nodes($term->tid, FALSE, variable_get('feed_default_items', 10));
 
   node_feed($nids, $channel);
 }
 
 /**
- * Page to edit a vocabulary term.
- */
-function taxonomy_term_edit($term) {
-  if (isset($term)) {
-    drupal_set_title($term->name);
-    include_once DRUPAL_ROOT . '/'. drupal_get_path('module', 'taxonomy') . '/taxonomy.admin.inc';
-    return drupal_get_form('taxonomy_form_term', taxonomy_vocabulary_load($term->vid), (array)$term);
-  }
-  return drupal_not_found();
-}
-
-/**
  * Helper function for autocompletion
  */
-function taxonomy_autocomplete_legacy($vid = 0, $tags_typed = '') {
-  // The user enters a comma-separated list of tags. We only autocomplete the last tag.
-  $tags_typed = drupal_explode_tags($tags_typed);
-  $tag_last = drupal_strtolower(array_pop($tags_typed));
-
-  $matches = array();
-  if ($tag_last != '') {
-    $query = db_select('taxonomy_term_data', 't');
-    $query->addTag('term_access');
-    $query->leftJoin('taxonomy_term_synonym', 'ts', 't.tid = ts.tid');
-    // Don't select already entered terms.
-    if (count($tags_typed)) {
-      $query->condition('t.name', $tags_typed, 'NOT IN');
-    }
-    $tags_return = $query
-      ->fields('t', array('tid', 'name'))
-      ->condition('t.vid', $vid)
-      // Select rows that either match by term or synonym name.
-      ->condition(db_or()
-	    ->where("LOWER(t.name) LIKE :last_string", array(':last_string' => '%' . $tag_last . '%'))
-	    ->where("LOWER(ts.name) LIKE :last_string", array(':last_string' => '%' . $tag_last . '%'))
-      )
-      ->range(0, 10)
-      ->execute()
-      ->fetchAllKeyed();
-
-    $prefix = count($tags_typed) ? implode(', ', $tags_typed) . ', ' : '';
-
-    // We use two arrays to make sure synonym suggestions appear last.
-    $term_matches = $synonym_matches = array();
-    foreach ($tags_return as $tid => $name) {
-      $n = $name;
-      // Commas and quotes in terms are special cases, so encode 'em.
-      if (strpos($name, ',') !== FALSE || strpos($name, '"') !== FALSE) {
-        $n = '"' . str_replace('"', '""', $name) . '"';
-      }
-      // Inform the user his query matched a synonym rather than a term.
-      if (strpos(drupal_strtolower($name), $tag_last) === FALSE) {
-        $name = t('Did you mean %suggestion', array('%suggestion' => $name));
-        $synonym_matches[$prefix . $n] = filter_xss($name);
-      }
-    }
-  }
-
-  drupal_json_output(array_merge($term_matches, $synonym_matches));
-}
-
-/**
- * Helper function for autocompletion
- */
-function taxonomy_autocomplete($field_name, $bundle, $tags_typed = '') {
-  $instance = field_info_instance($field_name, $bundle);
+function taxonomy_autocomplete($field_name, $tags_typed = '') {
   $field = field_info_field($field_name);
 
   // The user enters a comma-separated list of tags. We only autocomplete the last tag.
@@ -159,19 +90,18 @@ function taxonomy_autocomplete($field_name, $bundle, $tags_typed = '') {
     }
 
     $query = db_select('taxonomy_term_data', 't');
+    $query->addTag('translatable');
     $query->addTag('term_access');
 
     // Do not select already entered terms.
     if (!empty($tags_typed)) {
       $query->condition('t.name', $tags_typed, 'NOT IN');
     }
+    // Select rows that match by term name.
     $tags_return = $query
       ->fields('t', array('tid', 'name'))
       ->condition('t.vid', $vids)
-      // Select rows that match by term name.
-      ->condition(db_or()
-      ->where("t.name LIKE :last_string", array(':last_string' => '%' . $tag_last . '%'))
-      )
+      ->condition('t.name', '%' . db_like($tag_last) . '%', 'LIKE')
       ->range(0, 10)
       ->execute()
       ->fetchAllKeyed();
@@ -186,7 +116,7 @@ function taxonomy_autocomplete($field_name, $bundle, $tags_typed = '') {
         $n = '"' . str_replace('"', '""', $name) . '"';
       }
       else {
-        $term_matches[$prefix . $n] = filter_xss($name);
+        $term_matches[$prefix . $n] = check_plain($name);
       }
     }
   }

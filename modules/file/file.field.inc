@@ -1,5 +1,5 @@
 <?php
-// $Id: file.field.inc,v 1.3 2009/09/10 22:31:58 webchick Exp $
+// $Id: file.field.inc,v 1.22 2010/02/17 05:39:51 webchick Exp $
 
 /**
  * @file
@@ -7,7 +7,7 @@
  */
 
 /**
- * Implement hook_field_info().
+ * Implements hook_field_info().
  */
 function file_field_info() {
   return array(
@@ -18,21 +18,21 @@ function file_field_info() {
         'display_field' => 0,
         'display_default' => 0,
         'uri_scheme' => 'public',
-        'default_file' => 0,
       ),
       'instance_settings' => array(
         'file_extensions' => 'txt',
         'file_directory' => '',
         'max_filesize' => '',
+        'description_field' => 0,
       ),
-      'default_widget' => 'file_file',
+      'default_widget' => 'file_generic',
       'default_formatter' => 'file_default',
     ),
   );
 }
 
 /**
- * Implement hook_field_schema().
+ * Implements hook_field_schema().
  */
 function file_field_schema($field) {
   return array(
@@ -51,11 +51,10 @@ function file_field_schema($field) {
         'not null' => TRUE,
         'default' => 1,
       ),
-      'data' => array(
-        'description' => 'Serialized additional data about the file, such as a description.',
+      'description' => array(
+        'description' => 'A description of the file.',
         'type' => 'text',
         'not null' => FALSE,
-        'serialize' => TRUE,
       ),
     ),
     'indexes' => array(
@@ -65,9 +64,9 @@ function file_field_schema($field) {
 }
 
 /**
- * Implement hook_field_settings_form().
+ * Implements hook_field_settings_form().
  */
-function file_field_settings_form($field, $instance) {
+function file_field_settings_form($field, $instance, $has_data) {
   $defaults = field_info_field_settings($field['type']);
   $settings = array_merge($defaults, $field['settings']);
 
@@ -87,10 +86,8 @@ function file_field_settings_form($field, $instance) {
   );
 
   $scheme_options = array();
-  foreach (file_get_stream_wrappers() as $scheme => $stream_wrapper) {
-    if ($scheme != 'temporary') {
-      $scheme_options[$scheme] = $stream_wrapper['name'];
-    }
+  foreach (file_get_stream_wrappers(STREAM_WRAPPERS_WRITE_VISIBLE) as $scheme => $stream_wrapper) {
+    $scheme_options[$scheme] = $stream_wrapper['name'];
   }
   $form['uri_scheme'] = array(
     '#type' => 'radios',
@@ -98,34 +95,24 @@ function file_field_settings_form($field, $instance) {
     '#options' => $scheme_options,
     '#default_value' => $settings['uri_scheme'],
     '#description' => t('Select where the final files should be stored. Private file storage has significantly more overhead than public files, but allows restricted access to files within this field.'),
-  );
-
-  $form['default_file'] = array(
-    '#title' => t('Default file'),
-    '#type' => 'managed_file',
-    '#description' => t('If no file is uploaded, this file will be used on display.'),
-    '#default_value' => $field['settings']['default_file'],
-    '#upload_location' => 'public://default_files/',
+    '#disabled' => $has_data,
   );
 
   return $form;
 }
 
 /**
- * Implement hook_field_instance_settings_form().
+ * Implements hook_field_instance_settings_form().
  */
 function file_field_instance_settings_form($field, $instance) {
   $settings = $instance['settings'];
 
-  $form['#attached']['js'][] = drupal_get_path('module', 'file') . '/file.js';
-
-  $form['max_filesize'] = array(
+  $form['file_directory'] = array(
     '#type' => 'textfield',
-    '#title' => t('Maximum upload size'),
-    '#default_value' => $settings['max_filesize'],
-    '#description' => t('Enter a value like "512" (bytes), "80 KB" (kilobytes) or "50 MB" (megabytes) in order to restrict the allowed file size. If left empty the file sizes will be limited only by PHP\'s maximum post and file upload sizes (current limit <strong>%limit</strong>).', array('%limit' => format_size(file_upload_max_size()))),
-    '#size' => 10,
-    '#element_validate' => array('_file_generic_settings_max_filesize'),
+    '#title' => t('File directory'),
+    '#default_value' => $settings['file_directory'],
+    '#description' => t('Optional subdirectory within the upload destination where files will be stored. Do not include preceding or trailing slashes.', array('%directory' => variable_get('file_directory_path', 'files') . '/')),
+    '#element_validate' => array('_file_generic_settings_file_directory_validate'),
     '#weight' => 3,
   );
 
@@ -135,26 +122,28 @@ function file_field_instance_settings_form($field, $instance) {
     '#type' => 'textfield',
     '#title' => t('Allowed file extensions'),
     '#default_value' => $extensions,
-    '#size' => 64,
     '#description' => t('Separate extensions with a space or comma and do not include the leading dot. Leaving this blank will allow users to upload a file with any extension.'),
     '#element_validate' => array('_file_generic_settings_extensions'),
-    '#weight' => 4,
+    '#weight' => 1,
   );
 
-  $form['destination'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Upload destination'),
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
+  $form['max_filesize'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Maximum upload size'),
+    '#default_value' => $settings['max_filesize'],
+    '#description' => t('Enter a value like "512" (bytes), "80 KB" (kilobytes) or "50 MB" (megabytes) in order to restrict the allowed file size. If left empty the file sizes will be limited only by PHP\'s maximum post and file upload sizes (current limit <strong>%limit</strong>).', array('%limit' => format_size(file_upload_max_size()))),
+    '#size' => 10,
+    '#element_validate' => array('_file_generic_settings_max_filesize'),
     '#weight' => 5,
   );
-  $form['destination']['file_directory'] = array(
-    '#type' => 'textfield',
-    '#title' => t('File directory'),
-    '#default_value' => $settings['file_directory'],
-    '#description' => t('Optional subdirectory within the upload destination where files will be stored. Do not include preceding or trailing slashes.', array('%directory' => variable_get('file_directory_path', 'files') . '/')),
-    '#element_validate' => array('_file_generic_settings_file_directory_validate'),
-    '#parents' => array('instance', 'settings', 'file_directory'),
+
+  $form['description_field'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enable <em>Description</em> field'),
+    '#default_value' => isset($settings['description_field']) ? $settings['description_field'] : '',
+    '#description' => t('The description field allows users to enter a description about the uploaded file.'),
+    '#parents' => array('instance', 'settings', 'description_field'),
+    '#weight' => 11,
   );
 
   return $form;
@@ -213,75 +202,69 @@ function _file_generic_settings_file_directory_validate($element, &$form_state) 
 }
 
 /**
- * Implement hook_field_load().
+ * Implements hook_field_load().
  */
-function file_field_load($obj_type, $objects, $field, $instances, $langcode, &$items, $age) {
-  foreach ($objects as $obj_id => $object) {
+function file_field_load($entity_type, $entities, $field, $instances, $langcode, &$items, $age) {
+  foreach ($entities as $id => $entity) {
     // Load the files from the files table.
     $fids = array();
-    foreach ($items[$obj_id] as $delta => $item) {
+    foreach ($items[$id] as $delta => $item) {
       $fids[] = $item['fid'];
     }
     $files = file_load_multiple($fids);
 
-    foreach ($items[$obj_id] as $delta => $item) {
+    foreach ($items[$id] as $delta => $item) {
       // If the file does not exist, mark the entire item as empty.
       if (empty($item['fid']) || !isset($files[$item['fid']])) {
-        $items[$obj_id][$delta] = NULL;
+        $items[$id][$delta] = NULL;
       }
-      // Unserialize the data column.
       else {
-        $item['data'] = unserialize($item['data']);
-        $items[$obj_id][$delta] = array_merge($item, (array) $files[$item['fid']]);
+        $items[$id][$delta] = array_merge($item, (array) $files[$item['fid']]);
       }
     }
   }
 }
 
 /**
- * Implement hook_field_sanitize().
+ * Implements hook_field_prepare_view().
  */
-function file_field_sanitize($obj_type, $object, $field, $instance, $langcode, &$items) {
-  // If there are no files specified at all, use the default.
-  if (empty($items) && $field['settings']['default_file']) {
-    if ($file = file_load($field['settings']['default_file'])) {
-      $items[0] = (array) $file;
-      $items[0]['is_default'] = TRUE;
-    }
-  }
-  // Remove files from being displayed if they're not displayed.
-  else {
-    foreach ($items as $delta => $item) {
+function file_field_prepare_view($entity_type, $entities, $field, $instances, $langcode, &$items) {
+  // Remove files specified to not be displayed.
+  foreach ($entities as $id => $entity) {
+    foreach ($items[$id] as $delta => $item) {
       if (!file_field_displayed($item, $field)) {
-        unset($items[$delta]);
+        unset($items[$id][$delta]);
       }
+      // Ensure consecutive deltas.
+      $items[$id] = array_values($items[$id]);
     }
   }
-
-  // Return the items including only displayed files.
-  $items = array_values($items);
 }
 
 /**
- * Implement hook_field_insert().
+ * Implements hook_field_presave().
  */
-function file_field_insert($obj_type, $object, $field, $instance, $langcode, &$items) {
-  file_field_update($obj_type, $object, $field, $instance, $langcode, $items);
-}
-
-/**
- * Implement hook_field_update().
- */
-function file_field_update($obj_type, $object, $field, $instance, $langcode, &$items) {
-  // Serialize the data column before storing.
-  foreach ($items as $delta => $item) {
-    $items[$delta]['data'] = serialize($item['data']);
+function file_field_presave($obj_type, $object, $field, $instance, $langcode, &$items) {
+  // Make sure that each file which will be saved with this object has a
+  // permanent status, so that it will not be removed when temporary files are
+  // cleaned up.
+  foreach ($items as $item) {
+    $file = file_load($item['fid']);
+    if (($file->status & FILE_STATUS_PERMANENT) == 0) {
+      $file->status |= FILE_STATUS_PERMANENT;
+      file_save($file);
+    }
   }
+}
 
-  // Check for files that have been removed from the object.
-
+/**
+ * Implements hook_field_update().
+ *
+ * Check for files that have been removed from the object.
+ */
+function file_field_update($entity_type, $entity, $field, $instance, $langcode, &$items) {
   // On new revisions, old files are always maintained in the previous revision.
-  if ($object->is_new || (isset($object->revision) && $object->revision)) {
+  if (!empty($entity->revision)) {
     return;
   }
 
@@ -292,8 +275,8 @@ function file_field_update($obj_type, $object, $field, $instance, $langcode, &$i
   }
 
   // Delete items from original object.
-  list($id, $vid, $bundle) = field_extract_ids($obj_type, $object);
-  $load_function = $obj_type . '_load';
+  list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
+  $load_function = $entity_type . '_load';
 
   $original = $load_function($id);
   if (!empty($original->{$field['field_name']}[$langcode])) {
@@ -309,25 +292,25 @@ function file_field_update($obj_type, $object, $field, $instance, $langcode, &$i
 }
 
 /**
- * Implement hook_field_delete().
+ * Implements hook_field_delete().
  */
-function file_field_delete($obj_type, $object, $field, $instance, $langcode, &$items) {
-  list($id, $vid, $bundle) = field_extract_ids($obj_type, $object);
+function file_field_delete($entity_type, $entity, $field, $instance, $langcode, &$items) {
+  list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
   foreach ($items as $delta => $item) {
     // For hook_file_references(), remember that this is being deleted.
     $item['file_field_name'] = $field['field_name'];
     // Pass in the ID of the object that is being removed so all references can
     // be counted in hook_file_references().
-    $item['file_field_type'] = $obj_type;
+    $item['file_field_type'] = $entity_type;
     $item['file_field_id'] = $id;
     file_field_delete_file($item, $field);
   }
 }
 
 /**
- * Implement hook_field_delete_revision().
+ * Implements hook_field_delete_revision().
  */
-function file_field_delete_revision($obj_type, $object, $field, $instance, $langcode, &$items) {
+function file_field_delete_revision($entity_type, $entity, $field, $instance, $langcode, &$items) {
   foreach ($items as $delta => $item) {
     // For hook_file_references, remember that this file is being deleted.
     $item['file_field_name'] = $field['field_name'];
@@ -363,7 +346,7 @@ function file_field_delete_file($item, $field) {
 }
 
 /**
- * Implement hook_field_is_empty().
+ * Implements hook_field_is_empty().
  */
 function file_field_is_empty($item, $field) {
   return empty($item['fid']);
@@ -387,7 +370,7 @@ function file_field_displayed($item, $field) {
 }
 
 /**
- * Implement hook_field_formatter_info().
+ * Implements hook_field_formatter_info().
  */
 function file_field_formatter_info() {
   return array(
@@ -398,9 +381,6 @@ function file_field_formatter_info() {
     'file_table' => array(
       'label' => t('Table of files'),
       'field types' => array('file'),
-      'behaviors' => array(
-        'multiple values' => FIELD_BEHAVIOR_CUSTOM,
-      ),
     ),
     'file_url_plain' => array(
       'label' => t('URL to file'),
@@ -410,16 +390,15 @@ function file_field_formatter_info() {
 }
 
 /**
- * Implement hook_field_widget_info().
+ * Implements hook_field_widget_info().
  */
 function file_field_widget_info() {
   return array(
     'file_generic' => array(
-      'label' => t('Generic file'),
+      'label' => t('File'),
       'field types' => array('file'),
       'settings' => array(
         'progress_indicator' => 'throbber',
-        'description_field' => 0,
       ),
       'behaviors' => array(
         'multiple values' => FIELD_BEHAVIOR_CUSTOM,
@@ -430,7 +409,7 @@ function file_field_widget_info() {
 }
 
 /**
- * Implement hook_field_widget_settings_form().
+ * Implements hook_field_widget_settings_form().
  */
 function file_field_widget_settings_form($field, $instance) {
   $widget = $instance['widget'];
@@ -445,39 +424,23 @@ function file_field_widget_settings_form($field, $instance) {
     ),
     '#default_value' => $settings['progress_indicator'],
     '#description' => t('The throbber display does not show the status of uploads but takes up space. The progress bar is helpful for monitoring progress on large uploads.'),
-    '#weight' => 2,
+    '#weight' => 16,
     '#access' => file_progress_implementation(),
-  );
-
-  $form['additional'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Additional fields'),
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-    '#weight' => 10,
-  );
-
-  $form['additional']['description_field'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Enable <em>Description</em> field'),
-    '#default_value' => $settings['description_field'],
-    '#description' => t('The description field allows users to enter a description about the uploaded file.'),
-    '#parents' => array('instance', 'widget', 'settings', 'description_field'),
   );
 
   return $form;
 }
 
 /**
- * Implementation of hook_field_widget().
+ * Implements hook_field_widget_form().
  */
-function file_field_widget(&$form, &$form_state, $field, $instance, $langcode, $items, $delta = 0) {
+function file_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
   $form['#attributes'] = array('enctype' => 'multipart/form-data');
 
   $defaults = array(
     'fid' => 0,
-    'display' => $field['settings']['display_default'],
-    'data' => array('description' => ''),
+    'display' => !empty($field['settings']['display_default']),
+    'description' => '',
   );
 
   // Retrieve any values set in $form_state, as will be the case during AJAX
@@ -503,26 +466,21 @@ function file_field_widget(&$form, &$form_state, $field, $instance, $langcode, $
 
   // Essentially we use the managed_file type, extended with some enhancements.
   $element_info = element_info('managed_file');
-  $element = array(
+  $element += array(
     '#type' => 'managed_file',
     '#default_value' => isset($items[$delta]) ? $items[$delta] : $defaults,
-    '#required' => $instance['required'],
     '#upload_location' => file_field_widget_uri($field, $instance),
     '#upload_validators' => file_field_widget_upload_validators($field, $instance),
     '#value_callback' => 'file_field_widget_value',
     '#process' => array_merge($element_info['#process'], array('file_field_widget_process')),
     // Allows this field to return an array instead of a single value.
     '#extended' => TRUE,
-    // Add extra Field properties.
-    '#field_name' => $field['field_name'],
-    '#bundle' => $instance['bundle'],
   );
 
   if ($field['cardinality'] == 1) {
     // If there's only one field, return it as delta 0.
-    $element['#title'] = $instance['label'];
     if (empty($element['#default_value']['fid'])) {
-      $element['#description'] = theme('file_upload_help', $instance['description'], $element['#upload_validators']);
+      $element['#description'] = theme('file_upload_help', array('description' => $element['#description'], 'upload_validators' => $element['#upload_validators']));
     }
     $elements = array($element);
   }
@@ -540,23 +498,25 @@ function file_field_widget(&$form, &$form_state, $field, $instance, $langcode, $
       $elements[$delta] = $element;
       $elements[$delta]['#default_value'] = $defaults;
       $elements[$delta]['#weight'] = $delta;
-      $elements[$delta]['#required'] = ($instance['required'] && $delta == 0);
+      $elements[$delta]['#required'] = ($element['#required'] && $delta == 0);
     }
     // The group of elements all-together need some extra functionality
     // after building up the full list (like draggable table rows).
     $elements['#file_upload_delta'] = $delta;
     $elements['#theme'] = 'file_widget_multiple';
     $elements['#theme_wrappers'] = array('fieldset');
-    $elements['#attributes']['class'] = array('file-widget');
     $elements['#process'] = array('file_field_widget_process_multiple');
-    $elements['#title'] = $instance['label'];
-    $elements['#description'] = $instance['description'];
+    $elements['#title'] = $element['#title'];
+    $elements['#description'] = $element['#description'];
+    $elements['#field_name'] = $element['#field_name'];
+    $elements['#language'] = $element['#language'];
+    $elements['#display_field'] = $field['settings']['display_field'];
 
     // Add some properties that will eventually be added to the file upload
     // field. These are added here so that they may be referenced easily through
     // a hook_form_alter().
     $elements['#file_upload_title'] = t('Add a new file');
-    $elements['#file_upload_description'] = theme('file_upload_help', '', $elements[0]['#upload_validators']);
+    $elements['#file_upload_description'] = theme('file_upload_help', array('description' => '', 'upload_validators' => $elements[0]['#upload_validators']));
   }
 
   return $elements;
@@ -618,7 +578,7 @@ function file_field_widget_value($element, $input = FALSE, $form_state) {
   if ($input) {
     // Checkboxes lose their value when empty.
     // If the display field is present make sure its unchecked value is saved.
-    $field = field_info_field($element['#field_name']);
+    $field = $form_state['field'][$element['#field_name']][$element['#language']]['field'];
     if (empty($input['display'])) {
       $input['display'] = $field['settings']['display_field'] ? 0 : 1;
     }
@@ -631,7 +591,7 @@ function file_field_widget_value($element, $input = FALSE, $form_state) {
   $return += array(
     'fid' => 0,
     'display' => 1,
-    'data' => array(),
+    'description' => '',
   );
 
   return $return;
@@ -646,23 +606,14 @@ function file_field_widget_process($element, &$form_state, $form) {
   $item = $element['#value'];
   $item['fid'] = $element['fid']['#value'];
 
-  $field = field_info_field($element['#field_name']);
-  $instance = field_info_instance($element['#field_name'], $element['#bundle']);
+  $field = $form_state['field'][$element['#field_name']][$element['#language']]['field'];
+  $instance = $form_state['field'][$element['#field_name']][$element['#language']]['instance'];
   $settings = $instance['widget']['settings'];
 
   $element['#theme'] = 'file_widget';
 
-  // Data placeholder for widgets to store additional data.
-  $element['data'] = array(
-    '#tree' => TRUE,
-    '#title' => t('File data'),
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-    '#access' => (bool) $item['fid'],
-  );
-
   // Add the display field if enabled.
-  if ($field['settings']['display_field'] && $item['fid']) {
+  if (!empty($field['settings']['display_field']) && $item['fid']) {
     $element['display'] = array(
       '#type' => empty($item['fid']) ? 'hidden' : 'checkbox',
       '#title' => t('Include file in display'),
@@ -678,11 +629,11 @@ function file_field_widget_process($element, &$form_state, $form) {
   }
 
   // Add the description field if enabled.
-  if ($settings['description_field'] && $item['fid']) {
-    $element['data']['description'] = array(
+  if (!empty($instance['settings']['description_field']) && $item['fid']) {
+    $element['description'] = array(
       '#type' => 'textfield',
       '#title' => t('Description'),
-      '#value' => isset($item['data']['description']) ? $item['data']['description'] : '',
+      '#value' => isset($item['description']) ? $item['description'] : '',
       '#type' => variable_get('file_description_type', 'textfield'),
       '#maxlength' => variable_get('file_description_length', 128),
       '#description' => t('The description may be used as the label of the link to the file.'),
@@ -745,8 +696,10 @@ function file_field_widget_process_multiple($element, &$form_state, $form) {
 /**
  * Theme an individual file upload widget.
  */
-function theme_file_widget($element) {
+function theme_file_widget($variables) {
+  $element = $variables['element'];
   $output = '';
+
   // The "form-managed-file" class is required for proper AJAX functionality.
   $output .= '<div class="file-widget form-managed-file clearfix">';
   if ($element['fid']['#value'] != 0) {
@@ -762,8 +715,8 @@ function theme_file_widget($element) {
 /**
  * Theme a group of file upload widgets.
  */
-function theme_file_widget_multiple($element) {
-  $field = field_info_field($element['#field_name']);
+function theme_file_widget_multiple($variables) {
+  $element = $variables['element'];
 
   // Get our list of widgets in order.
   $widgets = array();
@@ -779,7 +732,7 @@ function theme_file_widget_multiple($element) {
   // Build up a table of applicable fields.
   $headers = array();
   $headers[] = t('File information');
-  if ($field['settings']['display_field']) {
+  if ($element['#display_field']) {
     $headers[] = array(
       'data' => t('Display'),
       'class' => array('checkbox'),
@@ -807,7 +760,7 @@ function theme_file_widget_multiple($element) {
 
     // Render the "Display" option in its own own column.
     $display = '';
-    if ($field['settings']['display_field']) {
+    if ($element['#display_field']) {
       unset($element[$key]['display']['#title']);
       $display = array(
         'data' => drupal_render($element[$key]['display']),
@@ -825,7 +778,7 @@ function theme_file_widget_multiple($element) {
 
     $row = array();
     $row[] = $information;
-    if ($field['settings']['display_field']) {
+    if ($element['#display_field']) {
       $row[] = $display;
     }
     $row[] = $weight;
@@ -839,7 +792,7 @@ function theme_file_widget_multiple($element) {
   drupal_add_tabledrag($table_id, 'order', 'sibling', $weight_class);
 
   $output = '';
-  $output = empty($rows) ? '' : theme('table', $headers, $rows, array('id' => $table_id));
+  $output = empty($rows) ? '' : theme('table', array('header' => $headers, 'rows' => $rows, 'attributes' => array('id' => $table_id)));
   $output .= drupal_render_children($element);
   return $output;
 }
@@ -847,14 +800,20 @@ function theme_file_widget_multiple($element) {
 /**
  * Generate help text based on upload validators.
  *
- * @param $description
- *   The normal description for this field, specified by the user.
- * @param $upload_validators
- *   An array of upload validators as used in $element['#upload_validators'].
+ * @param $variables
+ *   An associative array containing:
+ *   - description: The normal description for this field, specified by the
+ *     user.
+ *   - upload_validators: An array of upload validators as used in
+ *     $element['#upload_validators'].
+ *
  * @return
  *   A string suitable for a file field description.
  */
-function theme_file_upload_help($description, $upload_validators) {
+function theme_file_upload_help($variables) {
+  $description = $variables['description'];
+  $upload_validators = $variables['upload_validators'];
+
   $descriptions = array();
 
   if (strlen($description)) {
@@ -887,31 +846,51 @@ function theme_file_upload_help($description, $upload_validators) {
 }
 
 /**
- * Theme function for 'default' file field formatter.
+ * Implements hook_field_formatter_view().
  */
-function theme_field_formatter_file_default($element) {
-  return theme('file_link', (object) $element['#item']);
-}
+function file_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+  $element = array();
 
-/**
- * Theme function for 'url_plain' file field formatter.
- */
-function theme_field_formatter_file_url_plain($element) {
-  return empty($element['#item']['uri']) ? '' : file_create_url($element['#item']['uri']);
+  switch ($display['type']) {
+    case 'file_default':
+      foreach ($items as $delta => $item) {
+        $element[$delta] = array(
+          '#theme' => 'file_link',
+          '#file' => (object) $item,
+        );
+      }
+      break;
+
+    case 'file_url_plain':
+      foreach ($items as $delta => $item) {
+        $element[$delta] = array('#markup' => empty($item['uri']) ? '' : file_create_url($item['uri']));
+      }
+      break;
+
+    case 'file_table':
+      // Display all values in a single element..
+      $element[0] = array(
+        '#theme' => 'file_formatter_table',
+        '#items' => $items,
+      );
+      break;
+  }
+
+  return $element;
 }
 
 /**
  * Theme function for the 'table' formatter.
  */
-function theme_field_formatter_file_table($element) {
+function theme_file_formatter_table($variables) {
   $header = array(t('Attachment'), t('Size'));
   $rows = array();
-  foreach (element_children($element) as $key) {
+  foreach ($variables['items'] as $delta => $item) {
     $rows[] = array(
-      theme('file_link', (object) $element[$key]['#item']),
-      format_size($element[$key]['#item']['filesize']),
+      theme('file_link', array('file' => (object) $item)),
+      format_size($item['filesize']),
     );
   }
 
-  return empty($rows) ? '' : theme('table', $header, $rows);
+  return empty($rows) ? '' : theme('table', array('header' => $header, 'rows' => $rows));
 }

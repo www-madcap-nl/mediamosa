@@ -1,5 +1,5 @@
 <?php
-// $Id: system.queue.inc,v 1.3 2009/09/18 00:04:23 webchick Exp $
+// $Id: system.queue.inc,v 1.10 2010/01/09 02:51:09 webchick Exp $
 
 /**
  * @file
@@ -30,7 +30,7 @@
  * metadata depending on the implementation. Systems using the interface should
  * only rely on the data property which will contain the information passed to
  * DrupalQueueInterface::createItem(). The full queue item returned by
- * DrupalQueueInterface::createItem() needs to be passed to
+ * DrupalQueueInterface::claimItem() needs to be passed to
  * DrupalQueueInterface::deleteItem() once processing is completed.
  *
  * While the queue system makes a best effort to preserve order in messages,
@@ -131,9 +131,18 @@ interface DrupalQueueInterface {
    * Delete a finished item from the queue.
    *
    * @param $item
-   *   The item returned by claimItem().
+   *   The item returned by DrupalQueueInterface::claimItem().
    */
   public function deleteItem($item);
+
+  /**
+   * Release an item that the worker could not process, so another
+   * worker can come in and process it before the timeout expires.
+   *
+   * @param $item
+   * @return boolean
+   */
+  public function releaseItem($item);
 
   /**
    * Create a queue.
@@ -159,15 +168,6 @@ interface DrupalQueueInterface {
  */
 class SystemQueue implements DrupalQueueInterface {
   /**
-   * Our internal consumer ID for this queue instance.
-   *
-   * This is created lazily when we start consuming items with claimItem().
-   *
-   * @var integer
-   */
-  protected $consumerId;
-
-  /**
    * The name of the queue this instance is working with.
    *
    * @var string
@@ -179,14 +179,17 @@ class SystemQueue implements DrupalQueueInterface {
   }
 
   public function createItem($data) {
-    $record = new stdClass();
-    $record->name = $this->name;
-    $record->data = $data;
-    $record->consumer_id = 0;
-    // We cannot rely on REQUEST_TIME because many items might be created by a
-    // single request which takes longer than 1 second.
-    $record->created = time();
-    return drupal_write_record('queue', $record) !== FALSE;
+    // During a Drupal 6.x to 7.x update, drupal_get_schema() does not contain
+    // the queue table yet, so we cannot rely on drupal_write_record().
+    $query = db_insert('queue')
+      ->fields(array(
+        'name' => $this->name,
+        'data' => serialize($data),
+        // We cannot rely on REQUEST_TIME because many items might be created
+        // by a single request which takes longer than 1 second.
+        'created' => time(),
+      ));
+    return (bool) $query->execute();
   }
 
   public function numberOfItems() {
@@ -194,30 +197,25 @@ class SystemQueue implements DrupalQueueInterface {
   }
 
   public function claimItem($lease_time = 30) {
-    if (!isset($this->consumerId)) {
-      $this->consumerId = db_insert('queue_consumer_id')
-        ->useDefaults(array('consumer_id'))
-        ->execute();
-    }
-    // Claim an item by updating its consumer_id and expire fields. If claim
-    // is not successful another thread may have claimed the item in the
-    // meantime. Therefore loop until an item is successfully claimed or we are
-    // reasonably sure there are no unclaimed items left.
+    // Claim an item by updating its expire fields. If claim is not successful
+    // another thread may have claimed the item in the meantime. Therefore loop
+    // until an item is successfully claimed or we are reasonably sure there
+    // are no unclaimed items left.
     while (TRUE) {
-      $item = db_query_range('SELECT data, item_id FROM {queue} q WHERE consumer_id = 0 AND name = :name ORDER BY created ASC', 0, 1, array(':name' => $this->name))->fetchObject();
+      $item = db_query_range('SELECT data, item_id FROM {queue} q WHERE expire = 0 AND name = :name ORDER BY created ASC', 0, 1, array(':name' => $this->name))->fetchObject();
       if ($item) {
-        // Try to mark the item as ours. We cannot rely on REQUEST_TIME
-        // because items might be claimed by a single consumer which runs
-        // longer than 1 second. If we continue to use REQUEST_TIME instead of
-        // the current time(), we steal time from the lease, and will tend to
-        // reset items before the lease should really expire.
+        // Try to update the item. Only one thread can succeed in UPDATEing the
+        // same row. We cannot rely on REQUEST_TIME because items might be
+        // claimed by a single consumer which runs longer than 1 second. If we
+        // continue to use REQUEST_TIME instead of the current time(), we steal
+        // time from the lease, and will tend to reset items before the lease
+        // should really expire.
         $update = db_update('queue')
           ->fields(array(
-            'consumer_id' => $this->consumerId,
             'expire' => time() + $lease_time,
           ))
           ->condition('item_id', $item->item_id)
-          ->condition('consumer_id', 0);
+          ->condition('expire', 0);
         // If there are affected rows, this update succeeded.
         if ($update->execute()) {
           $item->data = unserialize($item->data);
@@ -229,6 +227,15 @@ class SystemQueue implements DrupalQueueInterface {
         return FALSE;
       }
     }
+  }
+
+  public function releaseItem($item) {
+    $update = db_update('queue')
+      ->fields(array(
+        'expire' => 0,
+      ))
+      ->condition('item_id', $item->item_id);
+      return $update->execute();
   }
 
   public function deleteItem($item) {
@@ -247,6 +254,79 @@ class SystemQueue implements DrupalQueueInterface {
     db_delete('queue')
       ->condition('name', $this->name)
       ->execute();
+  }
+}
+
+/**
+ * Static queue implementation.
+ *
+ * This allows "undelayed" variants of processes relying on the Queue
+ * interface. The queue data resides in memory. It should only be used for
+ * items that will be queued and dequeued within a given page request.
+ */
+class MemoryQueue implements DrupalQueueInterface {
+  /**
+   * The queue data.
+   *
+   * @var array
+   */
+  protected $queue;
+
+  /**
+   * Counter for item ids.
+   *
+   * @var int
+   */
+  protected $id_sequence;
+
+  public function __construct($name) {
+    $this->queue = array();
+    $this->id_sequence = 0;
+  }
+
+  public function createItem($data) {
+    $item = new stdClass();
+    $item->item_id = $this->id_sequence++;
+    $item->data = $data;
+    $item->created = time();
+    $item->expire = 0;
+    $this->queue[$item->item_id] = $item;
+  }
+
+  public function numberOfItems() {
+    return count($this->queue);
+  }
+
+  public function claimItem($lease_time = 30) {
+    foreach ($this->queue as $key => $item) {
+      if ($item->expire == 0) {
+        $item->expire = time() + $lease_time;
+        $this->queue[$key] = $item;
+        return $item;
+      }
+    }
+    return FALSE;
+  }
+
+  public function deleteItem($item) {
+    unset($this->queue[$item->item_id]);
+  }
+
+  public function releaseItem($item) {
+    if (isset($this->queue[$item->item_id]) && $this->queue[$item->item_id]->expire != 0) {
+      $this->queue[$item->item_id]->expire = 0;
+      return TRUE;
+    }
+    return FALSE;
+  }
+
+  public function createQueue() {
+    // Nothing needed here.
+  }
+
+  public function deleteQueue() {
+    $this->queue = array();
+    $this->id_sequence = 0;
   }
 }
 

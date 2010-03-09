@@ -1,5 +1,5 @@
 <?php
-// $Id: field_sql_storage.install,v 1.6 2009/09/10 06:38:17 dries Exp $
+// $Id: field_sql_storage.install,v 1.9 2010/02/15 18:43:00 dries Exp $
 
 /**
  * @file
@@ -7,7 +7,7 @@
  */
 
 /**
- * Implement hook_schema().
+ * Implements hook_schema().
  */
 function field_sql_storage_schema() {
   $schema = array();
@@ -23,7 +23,7 @@ function field_sql_storage_schema() {
       ),
       'type' => array(
         'type' => 'varchar',
-        'length' => 255,
+        'length' => 128,
         'not null' => TRUE,
         'description' => 'An entity type',
       ),
@@ -37,7 +37,9 @@ function field_sql_storage_schema() {
     $fields = field_read_fields(array(), array('include_deleted' => TRUE, 'include_inactive' => TRUE));
     drupal_load('module', 'field_sql_storage');
     foreach ($fields as $field) {
-      $schema += _field_sql_storage_schema($field);
+      if ($field['storage']['type'] == 'field_sql_storage') {
+        $schema += _field_sql_storage_schema($field);
+      }
     }
   }
   return $schema;

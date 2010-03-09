@@ -1,10 +1,11 @@
 <?php
-// $Id: search.test,v 1.36 2009/09/21 06:36:54 dries Exp $
+// $Id: search.test,v 1.57 2010/03/07 23:14:20 webchick Exp $
 
 // The search index can contain different types of content. Typically the type is 'node'.
 // Here we test with _test_ and _test2_ as the type.
 define('SEARCH_TYPE', '_test_');
 define('SEARCH_TYPE_2', '_test2_');
+define('SEARCH_TYPE_JPN', '_test3_');
 
 class SearchMatchTestCase extends DrupalWebTestCase {
   public static function getInfo() {
@@ -41,6 +42,14 @@ class SearchMatchTestCase extends DrupalWebTestCase {
     }
     for ($i = 1; $i <= 5; ++$i) {
       search_index($i + 7, SEARCH_TYPE_2, $this->getText2($i));
+    }
+    // No getText builder function for Japanese text; just a simple array.
+    foreach (array(
+      13 => '以呂波耳・ほへとち。リヌルヲ。',
+      14 => 'ドルーパルが大好きよ！',
+      15 => 'コーヒーとケーキ',
+    ) as $i => $jpn) {
+      search_index($i, SEARCH_TYPE_JPN, $jpn);
     }
     search_update_totals();
   }
@@ -162,6 +171,29 @@ class SearchMatchTestCase extends DrupalWebTestCase {
       $this->_testQueryMatching($query, $set, $results);
       $this->_testQueryScores($query, $set, $results);
     }
+
+    // These queries are run against the third index type, SEARCH_TYPE_JPN.
+    $queries = array(
+      // Simple AND queries.
+      '呂波耳' => array(13),
+      '以呂波耳' => array(13),
+      'ほへと　ヌルヲ' => array(13),
+      'とちリ' => array(),
+      'ドルーパル' => array(14),
+      'パルが大' => array(14),
+      'コーヒー' => array(15),
+      'ヒーキ' => array(),
+    );
+    foreach ($queries as $query => $results) {
+      $result = db_select('search_index', 'i')
+        ->extend('SearchQuery')
+        ->searchExpression($query, SEARCH_TYPE_JPN)
+        ->execute();
+
+      $set = $result ? $result->fetchAll() : array();
+      $this->_testQueryMatching($query, $set, $results);
+      $this->_testQueryScores($query, $set, $results);
+    }
   }
 
   /**
@@ -266,10 +298,10 @@ class SearchAdvancedSearchForm extends DrupalWebTestCase {
 
   /**
    * Test using the search form with GET and POST queries.
-   * Test using the advanced search form to limit search to pages.
+   * Test using the advanced search form to limit search to nodes of type "Basic page".
    */
   function testNodeType() {
-    $this->assertTrue($this->node->type == 'page', t('Node type is page.'));
+    $this->assertTrue($this->node->type == 'page', t('Node type is Basic page.'));
 
     // Assert that the dummy title doesn't equal the real title.
     $dummy_title = 'Lorem ipsum';
@@ -277,20 +309,20 @@ class SearchAdvancedSearchForm extends DrupalWebTestCase {
 
     // Search for the dummy title with a GET query.
     $this->drupalGet('search/node/' . $dummy_title);
-    $this->assertNoText($this->node->title, t('Page node is not found with dummy title.'));
+    $this->assertNoText($this->node->title, t('Basic page node is not found with dummy title.'));
 
     // Search for the title of the node with a GET query.
     $this->drupalGet('search/node/' . $this->node->title);
-    $this->assertText($this->node->title, t('Page node is found with GET query.'));
+    $this->assertText($this->node->title, t('Basic page node is found with GET query.'));
 
     // Search for the title of the node with a POST query.
     $edit = array('or' => $this->node->title);
     $this->drupalPost('search/node', $edit, t('Advanced search'));
-    $this->assertText($this->node->title, t('Page node is found with POST query.'));
+    $this->assertText($this->node->title, t('Basic page node is found with POST query.'));
 
     // Advanced search type option.
     $this->drupalPost('search/node', array_merge($edit, array('type[page]' => 'page')), t('Advanced search'));
-    $this->assertText($this->node->title, t('Page node is found with POST query and type:page.'));
+    $this->assertText($this->node->title, t('Basic page node is found with POST query and type:page.'));
 
     $this->drupalPost('search/node', array_merge($edit, array('type[article]' => 'article')), t('Advanced search'));
     $this->assertText('bike shed', t('Article node is not found with POST query and type:article.'));
@@ -322,7 +354,7 @@ class SearchRankingTestCase extends DrupalWebTestCase {
 
     // Create nodes for testing.
     foreach ($node_ranks as $node_rank) {
-      $settings = array('type' => 'page', 'title' => 'Drupal rocks', 'body' => array(FIELD_LANGUAGE_NONE => array(array('value' => "Drupal's search rocks"))));
+      $settings = array('type' => 'page', 'title' => array(LANGUAGE_NONE => array(array('value' => 'Drupal rocks'))), 'body' => array(LANGUAGE_NONE => array(array('value' => "Drupal's search rocks"))));
       foreach (array(0, 1) as $num) {
         if ($num == 1) {
           switch ($node_rank) {
@@ -331,7 +363,7 @@ class SearchRankingTestCase extends DrupalWebTestCase {
               $settings[$node_rank] = 1;
               break;
             case 'relevance':
-              $settings['body'][FIELD_LANGUAGE_NONE][0]['value'] .= " really rocks";
+              $settings['body'][LANGUAGE_NONE][0]['value'] .= " really rocks";
               break;
             case 'recent':
               $settings['created'] = REQUEST_TIME + 3600;
@@ -353,7 +385,9 @@ class SearchRankingTestCase extends DrupalWebTestCase {
     $this->refreshVariables();
 
     // Add a comment to one of the nodes.
-    $edit = array('subject' => 'my comment title', 'comment' => 'some random comment');
+    $edit = array();
+    $edit['subject'] = 'my comment title';
+    $edit['comment_body[' . LANGUAGE_NONE . '][0][value]'] = 'some random comment';
     $this->drupalGet('comment/reply/' . $nodes['comments'][1]->nid);
     $this->drupalPost(NULL, $edit, t('Preview'));
     $this->drupalPost(NULL, $edit, t('Save'));
@@ -395,16 +429,11 @@ class SearchBlockTestCase extends DrupalWebTestCase {
     // Create and login user
     $admin_user = $this->drupalCreateUser(array('administer blocks', 'search content'));
     $this->drupalLogin($admin_user);
-
-    // Disable the theme form to avoid confusion.
-    $settings = theme_get_settings();
-    $settings['toggle_search'] = FALSE;
-    variable_set('theme_settings', $settings);
   }
 
   function testSearchFormBlock() {
     // Set block title to confirm that the interface is availble.
-    $this->drupalPost('admin/structure/block/configure/search/form', array('title' => $this->randomName(8)), t('Save block'));
+    $this->drupalPost('admin/structure/block/manage/search/form/configure', array('title' => $this->randomName(8)), t('Save block'));
     $this->assertText(t('The block configuration has been saved.'), t('Block configuration set.'));
 
     // Set the block to a region to confirm block is availble.
@@ -429,12 +458,15 @@ class SearchBlockTestCase extends DrupalWebTestCase {
     $this->assertText('Your search yielded no results');
 
     // Test a search from the block on a 404 page.
-    $this->drupalPost('foo', $terms, t('Search'));
+    $this->drupalGet('foo');
+    $this->assertResponse(404);
+    $this->drupalPost(NULL, $terms, t('Search'));
+    $this->assertResponse(200);
     $this->assertText('Your search yielded no results');
 
     // Test a search from the block when it doesn't appear on the search page.
     $edit = array('pages' => 'search');
-    $this->drupalPost('admin/structure/block/configure/search/form', $edit, t('Save block'));
+    $this->drupalPost('admin/structure/block/manage/search/form/configure', $edit, t('Save block'));
     $this->drupalPost('node', $terms, t('Search'));
     $this->assertText('Your search yielded no results');
   }
@@ -458,7 +490,16 @@ class SearchCommentTestCase extends DrupalWebTestCase {
   function setUp() {
     parent::setUp('comment', 'search');
 
-    $this->admin_user = $this->drupalCreateUser(array('administer filters', 'administer permissions', 'create page content', 'post comments without approval'));
+    // Create and log in an administrative user having access to the Full HTML
+    // text format.
+    $full_html_format = db_query_range('SELECT * FROM {filter_format} WHERE name = :name', 0, 1, array(':name' => 'Full HTML'))->fetchObject();
+    $this->admin_user = $this->drupalCreateUser(array(
+      'administer filters',
+      filter_permission_name($full_html_format),
+      'administer permissions',
+      'create page content',
+      'post comments without approval',
+    ));
     $this->drupalLogin($this->admin_user);
   }
 
@@ -466,12 +507,13 @@ class SearchCommentTestCase extends DrupalWebTestCase {
    * Verify that comments are rendered using proper format in search results.
    */
   function testSearchResultsComment() {
-    $comment_body = $this->randomName(5);
+    $comment_body = 'Test comment body';
 
-    variable_set('comment_preview_article', COMMENT_PREVIEW_OPTIONAL);
+    variable_set('comment_preview_article', DRUPAL_OPTIONAL);
     // Enable check_plain() for 'Filtered HTML' text format.
+    $filtered_html_format_id = db_query_range('SELECT format FROM {filter_format} WHERE name = :name', 0, 1, array(':name' => 'Filtered HTML'))->fetchField();
     $edit = array(
-      'filters[filter_html_escape][status]' => 1,
+      'filters[filter_html_escape][status]' => $filtered_html_format_id,
     );
     $this->drupalPost('admin/config/content/formats/1', $edit, t('Save configuration'));
     // Allow anonymous users to search content.
@@ -485,34 +527,41 @@ class SearchCommentTestCase extends DrupalWebTestCase {
       //   seems to be added via node links.
       DRUPAL_ANONYMOUS_RID . '[post comments]' => 1,
     );
-    $this->drupalPost('admin/config/people/permissions', $edit, t('Save permissions'));
+    $this->drupalPost('admin/people/permissions', $edit, t('Save permissions'));
 
     // Create a node.
     $node = $this->drupalCreateNode(array('type' => 'article'));
     // Post a comment using 'Full HTML' text format.
-    $edit_comment = array(
-      'subject' => $this->randomName(2),
-      'comment' => '<h1>' . $comment_body . '</h1>',
-      'comment_format' => 2,
-    );
+    $edit_comment = array();
+    $edit_comment['subject'] = 'Test comment subject';
+    $edit_comment['comment_body[' . LANGUAGE_NONE . '][0][value]'] = '<h1>' . $comment_body . '</h1>';
+    $full_html_format_id = db_query_range('SELECT format FROM {filter_format} WHERE name = :name', 0, 1, array(':name' => 'Full HTML'))->fetchField();
+    $edit_comment['comment_body[' . LANGUAGE_NONE . '][0][format]'] = $full_html_format_id;
     $this->drupalPost('comment/reply/' . $node->nid, $edit_comment, t('Save'));
 
     // Invoke search index update.
     $this->drupalLogout();
-    $this->drupalGet($GLOBALS['base_url'] . '/cron.php', array('external' => TRUE, 'query' => 'cron_key=' . variable_get('cron_key', 'drupal')));
+    $this->cronRun();
 
-    // Search for $title.
+    // Search for the comment subject.
     $edit = array(
-      'search_block_form' => $comment_body,
+      'search_block_form' => "'" . $edit_comment['subject'] . "'",
+    );
+    $this->drupalPost('', $edit, t('Search'));
+    $this->assertText($node->title, t('Node found in search results.'));
+    $this->assertText($edit_comment['subject'], t('Comment subject found in search results.'));
+
+    // Search for the comment body.
+    $edit = array(
+      'search_block_form' => "'" . $comment_body . "'",
     );
     $this->drupalPost('', $edit, t('Search'));
     $this->assertText($node->title, t('Node found in search results.'));
 
     // Verify that comment is rendered using proper format.
-    $this->assertText($edit_comment['subject'], t('Comment subject found in search results.'));
     $this->assertText($comment_body, t('Comment body text found in search results.'));
     $this->assertNoRaw(t('n/a'), t('HTML in comment body is not hidden.'));
-    $this->assertNoRaw(check_plain($edit_comment['comment']), t('HTML in comment body is not escaped.'));
+    $this->assertNoRaw(check_plain($edit_comment['comment_body[' . LANGUAGE_NONE . '][0][value]']), t('HTML in comment body is not escaped.'));
 
     // Hide comments.
     $this->drupalLogin($this->admin_user);
@@ -521,10 +570,43 @@ class SearchCommentTestCase extends DrupalWebTestCase {
 
     // Invoke search index update.
     $this->drupalLogout();
-    $this->drupalGet($GLOBALS['base_url'] . '/cron.php', array('external' => TRUE, 'query' => 'cron_key=' . variable_get('cron_key', 'drupal')));
+    $this->cronRun();
 
     // Search for $title.
     $this->drupalPost('', $edit, t('Search'));
     $this->assertNoText($comment_body, t('Comment body text not found in search results.'));
+  }
+}
+
+/**
+ * Test search_simplify() on every Unicode character.
+ */
+class SearchSimplifyTestCase extends DrupalWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'Search simplify',
+      'description' => 'Check that simplification works as intended.',
+      'group' => 'Search',
+    );
+  }
+
+  function testSearchSimplify() {
+    $input = file_get_contents(DRUPAL_ROOT . '/modules/search/tests/UnicodeTest.txt');
+    $strings = explode(chr(10), $input);
+    foreach ($strings as $key => $string) {
+      $simplified = search_simplify($string);
+      if ($key % 2) {
+        $this->assertIdentical($simplified, ' ', "Line $key is excluded from the index");
+      }
+      else {
+        $this->assertTrue(drupal_strlen($simplified) >= drupal_strlen($string), "Nothing is removed on line $key.");
+      }
+    }
+    $string = '';
+    for ($i = 0; $i < 32; $i++) {
+      $string .= chr($i);
+    }
+    // Diff really does not like files starting with \0 so test it separately.
+    $this->assertIdentical(' ', search_simplify($string), t('Search simplify works for ASCII control characters.'));
   }
 }

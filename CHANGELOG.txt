@@ -1,10 +1,10 @@
-// $Id: CHANGELOG.txt,v 1.343 2009/09/20 07:32:17 dries Exp $
+// $Id: CHANGELOG.txt,v 1.357 2010/03/02 08:59:54 dries Exp $
 
 Drupal 7.0, xxxx-xx-xx (development version)
 ----------------------
 - Database:
     * Fully rewritten database layer utilizing PHP 5's PDO abstraction layer.
-    * Drupal now requires MySQL >= 5.0 or PostgreSQL >= 8.3.
+    * Drupal now requires MySQL >= 5.0.15 or PostgreSQL >= 8.3.
     * Added query builders for INSERT, UPDATE, DELETE, MERGE, and SELECT queries.
     * Support for master/slave replication, transactions, multi-insert queries,
       delayed inserts, and other features.
@@ -18,7 +18,12 @@ Drupal 7.0, xxxx-xx-xx (development version)
     * Rate limited login attempts to prevent brute-force password guessing, and
       improved the flood control API to allow variable time windows and
       identifiers for limiting user access to resources.
+    * Transformed the "Update status" module into the "Update manager" which
+      can securely install or update modules and themes via a web interface.
 - Usability:
+    * Added contextual links (a.k.a. local tasks) to page elements, such as
+      blocks, nodes, or comments, which allows to perform the most common tasks
+      with a single click only.
     * Improved installer requirements check.
     * Improved support for integration of WYSIWYG editors.
     * Implemented drag-and-drop positioning for input format listings.
@@ -36,8 +41,8 @@ Drupal 7.0, xxxx-xx-xx (development version)
       visitors.
     * Added an administrator role which is assigned all permisions for
       installed modules automatically.
-    * Image toolkits are now provided by modules (rather than requiring a manual
-      file copy to the includes directory).
+    * Image toolkits are now provided by modules (rather than requiring a
+      manual file copy to the includes directory).
     * Added an edit tab to taxonomy term pages.
     * Redesigned password strength validator.
     * Redesigned the add content type screen.
@@ -45,8 +50,8 @@ Drupal 7.0, xxxx-xx-xx (development version)
     * Renamed "input formats" to "text formats".
     * Moved text format permissions to the main permissions page.
     * Added configurable ability for users to cancel their own accounts.
-    * Added "vertical tabs", a reusable interface component that features automatic
-      summaries and increases usability.
+    * Added "vertical tabs", a reusable interface component that features
+      automatic summaries and increases usability.
     * Replaced fieldsets on node edit and add pages with vertical tabs.
 - Performance:
     * Improved performance on uncached page views by loading multiple core
@@ -83,8 +88,6 @@ Drupal 7.0, xxxx-xx-xx (development version)
     * Revamped the filter API and text format storage.
     * Added support for default text formats to be assigned on a per-role basis.
     * Refactored the HTML corrector to take advantage of PHP 5 features.
-- Removed ping module:
-    * Contributed modules with similar functionality are available.
 - User system:
     * Added clean API functions for creating, loading, updating, and deleting
       user roles and permissions.
@@ -96,9 +99,11 @@ Drupal 7.0, xxxx-xx-xx (development version)
       at the operating system level.
     * Removed per-user themes: Contributed modules with similar functionality
       are available.
-- Removed throttle module:
-    * Alternative methods for improving performance are available in other core and
-      contributed modules.
+- OpenID:
+    * Added support for Gmail and Google Apps for Domain identifiers. Users can
+      now login with their user@domain.com identifier when domain.com is powered
+      by Google.
+    * Made the OpenID module more pluggable.
 - Added code registry:
     * Using the registry, modules declare their includable files via their .info file,
       allowing Drupal to lazy-load classes and interfaces as needed.
@@ -132,16 +137,29 @@ Drupal 7.0, xxxx-xx-xx (development version)
       hook_file_mimetype_mapping_alter().
     * Added the hook_file_url_alter() hook, which makes it possible to serve
       files from a CDN.
+    * Added a field specifically for uploading files, previously provided by
+      the contributed module FileField.
 - Image handling:
     * Improved image handling, including better support for add-on image
       libraries.
     * Added API and interface for creating advanced image thumbnails.
     * Inclusion of additional effects such as rotate and desaturate.
+    * Added a field specifically for uploading images, previously provided by
+      the contributed module ImageField.
 - Added aliased multi-site support:
     * Added support for mapping domain names to sites directories.
 - Added RDF support:
     * Modules can declare RDF namespaces which are serialized in the <html> tag
       for RDFa support.
+    * Modules can specify how their data structure maps to RDF.
+    * Added support for RDFa export of nodes, comments, terms, users, etc. and
+      their fields.
+- Search engine optimization and web linking:
+    * Added a rel="canonical" link on node and comment pages to prevent
+      duplicate content indexing by search engines.
+    * Added a default rel="shortlink" link on node and comment pages that
+      advertises a short link as an alternative URL to third-party services.
+    * Meta information is now alterable by all modules before rendering.
 - Field API:
     * Custom data fields may be attached to nodes, users, comments and taxonomy
       terms.
@@ -170,13 +188,17 @@ Drupal 7.0, xxxx-xx-xx (development version)
     * Added support for translatable fields to Field API.
 - JavaScript changes
     * Upgraded the core JavaScript library to jQuery version 1.3.2.
-    * Upgraded the jQuery Forms library to 2.21.
+    * Upgraded the jQuery Forms library to 2.36.
     * Added jQuery UI 1.7.2, which allows improvements to Drupal's user
       experience.
-- Better module version support.
+- Better module version support
     * Modules now can specify which version of another module they depend on.
-- Blog API
-    * This module has been removed from core.
+- Removed modules from core
+    * The following modules have been removed from core, because contributed
+      modules with similar functionality are available:
+      * Blog API module
+      * Ping module
+      * Throttle module
 - Improved node access control system.
     * All modules may now influence the access to a node at runtime, not just
       the module that defined a node.
@@ -188,6 +210,11 @@ Drupal 7.0, xxxx-xx-xx (development version)
     * Simplified definitions of actions and triggers.
     * Removed dependency on the combination of hooks and operations. Triggers
       now directly map to module hooks.
+- Task handling
+    * Added a queue API to process many or long-running tasks.
+    * Added queue API support to cron API.
+    * Added a locking framework to coordinate long-running operations across
+      requests.
 
 Drupal 6.0, 2008-02-13
 ----------------------

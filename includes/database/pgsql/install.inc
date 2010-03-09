@@ -1,5 +1,5 @@
 <?php
-// $Id: install.inc,v 1.4 2009/08/01 20:31:50 dries Exp $
+// $Id: install.inc,v 1.6 2010/01/30 07:59:24 dries Exp $
 
 /**
  * @file
@@ -32,17 +32,17 @@ class DatabaseTasks_pgsql extends DatabaseTasks {
    */
   protected function checkEncoding() {
     try {
-      if (db_query('SHOW server_encoding')->fetchField() == 'UTF8') { 
+      if (db_query('SHOW server_encoding')->fetchField() == 'UTF8') {
         $this->pass(st('Database is encoded in UTF-8'));
       }
       else {
         $replacements = array(
-          '%encoding' => 'UTF8', 
-          '%driver' => $this->name(), 
+          '%encoding' => 'UTF8',
+          '%driver' => $this->name(),
           '!link' => '<a href="INSTALL.pgsql.txt">INSTALL.pgsql.txt</a>'
         );
         $text  = 'The %driver database must use %encoding encoding to work with Drupal.';
-        $text .= 'Please recreate the database with %encoding encoding. See !link for more details.';
+        $text .= 'Recreate the database with %encoding encoding. See !link for more details.';
         $this->fail(st($text, $replacements));
       }
     } catch (Exception $e) {
@@ -100,7 +100,7 @@ class DatabaseTasks_pgsql extends DatabaseTasks {
       $this->pass(st('PostgreSQL has initialized itself.'));
     }
     catch (Exception $e) {
-      $this->fail(st('Drupal could not be correctly setup with the existing database. Please revise any errors.'));
+      $this->fail(st('Drupal could not be correctly setup with the existing database. Revise any errors.'));
     }
   }
 }

@@ -1,4 +1,4 @@
-// $Id: tableheader.js,v 1.27 2009/09/20 19:14:40 dries Exp $
+// $Id: tableheader.js,v 1.29 2009/12/18 08:17:26 dries Exp $
 (function ($) {
 
 Drupal.tableHeaderDoScroll = function () {
@@ -14,24 +14,24 @@ Drupal.behaviors.tableHeader = {
       return;
     }
 
-    // Keep track of all cloned table headers.
-    var headers = [];
-
     $('table.sticky-enabled thead', context).once('tableheader', function () {
-      // Clone thead so it inherits original jQuery properties.
-      var headerClone = $(this).clone(true).insertBefore(this.parentNode).wrap('<table class="sticky-header"></table>').parent().css({
+      // Clone the table header so it inherits original jQuery properties. Hide
+      // the table to avoid a flash of the header clone upon page load.
+      var headerClone = $(this).clone(true).hide().insertBefore(this.parentNode).wrap('<table class="sticky-header"></table>').parent().css({
         position: 'fixed',
         top: '0px'
       });
 
       headerClone = $(headerClone)[0];
-      headers.push(headerClone);
 
       // Store parent table.
       var table = $(this).parent('table')[0];
       headerClone.table = table;
       // Finish initializing header positioning.
       tracker(headerClone);
+      // We hid the header to avoid it showing up erroneously on page load;
+      // we need to unhide it now so that it will show up when expected.
+      $(headerClone).children('thead').show();
 
       $(table).addClass('sticky-table');
     });
@@ -90,7 +90,7 @@ Drupal.behaviors.tableHeader = {
 
     // Track scrolling.
     Drupal.tableHeaderOnScroll = function () {
-      $(headers).each(function () {
+      $('table.sticky-header').each(function () {
         tracker(this);
       });
     };

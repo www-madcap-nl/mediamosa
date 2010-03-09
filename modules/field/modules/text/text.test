@@ -1,5 +1,5 @@
 <?php
-// $Id: text.test,v 1.12 2009/09/20 09:37:09 dries Exp $
+// $Id: text.test,v 1.20 2010/03/07 23:14:20 webchick Exp $
 
 class TextFieldTestCase extends DrupalWebTestCase {
   protected $instance;
@@ -8,9 +8,9 @@ class TextFieldTestCase extends DrupalWebTestCase {
 
   public static function getInfo() {
     return array(
-      'name'  => 'Text Field',
+      'name'  => 'Text field',
       'description'  => "Test the creation of text fields.",
-      'group' => 'Field'
+      'group' => 'Field types'
     );
   }
 
@@ -40,7 +40,8 @@ class TextFieldTestCase extends DrupalWebTestCase {
     field_create_field($this->field);
     $this->instance = array(
       'field_name' => $this->field['field_name'],
-      'bundle' => FIELD_TEST_BUNDLE,
+      'object_type' => 'test_entity',
+      'bundle' => 'test_bundle',
       'widget' => array(
         'type' => 'text_textfield',
       ),
@@ -52,8 +53,8 @@ class TextFieldTestCase extends DrupalWebTestCase {
     );
     field_create_instance($this->instance);
     // Test valid and invalid values with field_attach_validate().
-    $entity = field_test_create_stub_entity(0, 0, FIELD_TEST_BUNDLE);
-    $langcode = FIELD_LANGUAGE_NONE;
+    $entity = field_test_create_stub_entity();
+    $langcode = LANGUAGE_NONE;
     for ($i = 0; $i <= $max_length + 2; $i++) {
       $entity->{$this->field['field_name']}[$langcode][0]['value'] = str_repeat('x', $i);
       try {
@@ -85,7 +86,8 @@ class TextFieldTestCase extends DrupalWebTestCase {
     field_create_field($this->field);
     $this->instance = array(
       'field_name' => $this->field_name,
-      'bundle' => FIELD_TEST_BUNDLE,
+      'object_type' => 'test_entity',
+      'bundle' => 'test_bundle',
       'label' => $this->randomName() . '_label',
       'settings' => array(
         'text_processing' => TRUE,
@@ -95,7 +97,7 @@ class TextFieldTestCase extends DrupalWebTestCase {
       )
     );
     field_create_instance($this->instance);
-    $langcode = FIELD_LANGUAGE_NONE;
+    $langcode = LANGUAGE_NONE;
 
     // Display creation form.
     $this->drupalGet('test-entity/add/test-bundle');
@@ -112,8 +114,8 @@ class TextFieldTestCase extends DrupalWebTestCase {
     $id = $match[1];
     $this->assertRaw(t('test_entity @id has been created.', array('@id' => $id)), t('Entity was created'));
 
-    // Display the object.
-    $entity = field_test_entity_load($id);
+    // Display the entity.
+    $entity = field_test_entity_test_load($id);
     $entity->content = field_attach_view($entity_type, $entity);
     $this->content = drupal_render($entity->content);
     $this->assertText($value, 'Filtered tags are not displayed');
@@ -138,7 +140,8 @@ class TextFieldTestCase extends DrupalWebTestCase {
     field_create_field($this->field);
     $this->instance = array(
       'field_name' => $this->field_name,
-      'bundle' => FIELD_TEST_BUNDLE,
+      'object_type' => 'test_entity',
+      'bundle' => 'test_bundle',
       'label' => $this->randomName() . '_label',
       'settings' => array(
         'text_processing' => TRUE,
@@ -148,7 +151,7 @@ class TextFieldTestCase extends DrupalWebTestCase {
       )
     );
     field_create_instance($this->instance);
-    $langcode = FIELD_LANGUAGE_NONE;
+    $langcode = LANGUAGE_NONE;
 
     // Delete all text formats besides the plain text fallback format.
     $this->drupalLogin($this->admin_user);
@@ -163,7 +166,7 @@ class TextFieldTestCase extends DrupalWebTestCase {
     // no format selector will be displayed.
     $this->drupalGet('test-entity/add/test-bundle');
     $this->assertFieldByName("{$this->field_name}[$langcode][0][value]", '', t('Widget is displayed'));
-    $this->assertNoFieldByName("{$this->field_name}[$langcode][0][value_format]", '', t('Format selector is not displayed'));
+    $this->assertNoFieldByName("{$this->field_name}[$langcode][0][format]", '', t('Format selector is not displayed'));
 
     // Submit with data that should be filtered.
     $value = '<em>' . $this->randomName() . '</em>';
@@ -175,8 +178,8 @@ class TextFieldTestCase extends DrupalWebTestCase {
     $id = $match[1];
     $this->assertRaw(t('test_entity @id has been created.', array('@id' => $id)), t('Entity was created'));
 
-    // Display the object.
-    $entity = field_test_entity_load($id);
+    // Display the entity.
+    $entity = field_test_entity_test_load($id);
     $entity->content = field_attach_view($entity_type, $entity);
     $this->content = drupal_render($entity->content);
     $this->assertNoRaw($value, t('HTML tags are not displayed.'));
@@ -192,24 +195,24 @@ class TextFieldTestCase extends DrupalWebTestCase {
     $format_id = db_query("SELECT format FROM {filter_format} WHERE name = :name", array(':name' => $edit['name']))->fetchField();
     $permission = filter_permission_name(filter_format_load($format_id));
     $rid = max(array_keys($this->web_user->roles));
-    user_role_grant_permissions($rid, array($permission), TRUE);
+    user_role_grant_permissions($rid, array($permission));
     $this->drupalLogin($this->web_user);
 
     // Display edition form.
     // We should now have a 'text format' selector.
     $this->drupalGet('test-entity/' . $id . '/edit');
     $this->assertFieldByName("{$this->field_name}[$langcode][0][value]", '', t('Widget is displayed'));
-    $this->assertFieldByName("{$this->field_name}[$langcode][0][value_format]", '', t('Format selector is displayed'));
+    $this->assertFieldByName("{$this->field_name}[$langcode][0][format]", '', t('Format selector is displayed'));
 
     // Edit and change the text format to the new one that was created.
     $edit = array(
-      "{$this->field_name}[$langcode][0][value_format]" => $format_id,
+      "{$this->field_name}[$langcode][0][format]" => $format_id,
     );
     $this->drupalPost(NULL, $edit, t('Save'));
     $this->assertRaw(t('test_entity @id has been updated.', array('@id' => $id)), t('Entity was updated'));
 
-    // Display the object.
-    $entity = field_test_entity_load($id);
+    // Display the entity.
+    $entity = field_test_entity_test_load($id);
     $entity->content = field_attach_view($entity_type, $entity);
     $this->content = drupal_render($entity->content);
     $this->assertRaw($value, t('Value is displayed unfiltered'));
@@ -221,7 +224,7 @@ class TextSummaryTestCase extends DrupalWebTestCase {
     return array(
       'name' => 'Text summary',
       'description' => 'Test text_summary() with different strings and lengths.',
-      'group' => 'Field',
+      'group' => 'Field types',
     );
   }
 

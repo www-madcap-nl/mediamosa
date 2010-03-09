@@ -1,5 +1,5 @@
 <?php
-// $Id: file.test,v 1.44 2009/09/20 17:40:41 dries Exp $
+// $Id: file.test,v 1.51 2010/01/29 22:40:41 dries Exp $
 
 /**
  *  @file
@@ -288,16 +288,22 @@ class FileSpaceUsedTest extends FileTestCase {
     parent::setUp();
 
     // Create records for a couple of users with different sizes.
-    drupal_write_record('file', $file = array('uid' => 2, 'uri' => 'public://example1.txt', 'filesize' => 50, 'status' => FILE_STATUS_PERMANENT));
-    drupal_write_record('file', $file = array('uid' => 2, 'uri' => 'public://example2.txt', 'filesize' => 20, 'status' => FILE_STATUS_PERMANENT));
-    drupal_write_record('file', $file = array('uid' => 3, 'uri' => 'public://example3.txt', 'filesize' => 100, 'status' => FILE_STATUS_PERMANENT));
-    drupal_write_record('file', $file = array('uid' => 3, 'uri' => 'public://example4.txt', 'filesize' => 200, 'status' => FILE_STATUS_PERMANENT));
+    $file = array('uid' => 2, 'uri' => 'public://example1.txt', 'filesize' => 50, 'status' => FILE_STATUS_PERMANENT);
+    drupal_write_record('file', $file);
+    $file = array('uid' => 2, 'uri' => 'public://example2.txt', 'filesize' => 20, 'status' => FILE_STATUS_PERMANENT);
+    drupal_write_record('file', $file);
+    $file = array('uid' => 3, 'uri' => 'public://example3.txt', 'filesize' => 100, 'status' => FILE_STATUS_PERMANENT);
+    drupal_write_record('file', $file);
+    $file = array('uid' => 3, 'uri' => 'public://example4.txt', 'filesize' => 200, 'status' => FILE_STATUS_PERMANENT);
+    drupal_write_record('file', $file);
 
     // Now create some with other statuses. These values were chosen arbitrarily
     // for the sole purpose of testing that bitwise operators were used
     // correctly on the field.
-    drupal_write_record('file', $file = array('uid' => 2, 'uri' => 'public://example5.txt', 'filesize' => 1, 'status' => 2 | 8));
-    drupal_write_record('file', $file = array('uid' => 3, 'uri' => 'public://example6.txt', 'filesize' => 3, 'status' => 2 | 4));
+    $file = array('uid' => 2, 'uri' => 'public://example5.txt', 'filesize' => 1, 'status' => 2 | 8);
+    drupal_write_record('file', $file);
+    $file = array('uid' => 3, 'uri' => 'public://example6.txt', 'filesize' => 3, 'status' => 2 | 4);
+    drupal_write_record('file', $file);
   }
 
   /**
@@ -820,7 +826,7 @@ class FileScanDirectoryTest extends FileTestCase {
 
   function setUp() {
     parent::setUp();
-    $this->path = $this->originalFileDirectory . '/simpletest';
+    $this->path = drupal_get_path('module', 'simpletest') . '/files';
   }
 
   /**
@@ -914,10 +920,10 @@ class FileScanDirectoryTest extends FileTestCase {
    * Check that the recurse option decends into subdirectories.
    */
   function testOptionRecurse() {
-    $files = file_scan_directory($this->originalFileDirectory, '/^javascript-/', array('recurse' => FALSE));
+    $files = file_scan_directory(drupal_get_path('module', 'simpletest'), '/^javascript-/', array('recurse' => FALSE));
     $this->assertTrue(empty($files), t("Without recursion couldn't find javascript files."));
 
-    $files = file_scan_directory($this->originalFileDirectory, '/^javascript-/', array('recurse' => TRUE));
+    $files = file_scan_directory(drupal_get_path('module', 'simpletest'), '/^javascript-/', array('recurse' => TRUE));
     $this->assertEqual(2, count($files), t('With recursion we found the expected javascript files.'));
   }
 
@@ -1582,7 +1588,8 @@ class FileLoadTest extends FileHookTestCase {
    * Try to load a non-existent file by URI.
    */
   function testLoadMissingFilepath() {
-    $this->assertFalse(reset(file_load_multiple(array(), array('uri' => 'foobar://misc/druplicon.png'))), t("Try to load a file that doesn't exist in the database fails."));
+    $files = file_load_multiple(array(), array('uri' => 'foobar://misc/druplicon.png'));
+    $this->assertFalse(reset($files), t("Try to load a file that doesn't exist in the database fails."));
     $this->assertFileHooksCalled(array());
   }
 
@@ -1590,7 +1597,8 @@ class FileLoadTest extends FileHookTestCase {
    * Try to load a non-existent file by status.
    */
   function testLoadInvalidStatus() {
-    $this->assertFalse(reset(file_load_multiple(array(), array('status' => -99))), t("Trying to load a file with an invalid status fails."));
+    $files = file_load_multiple(array(), array('status' => -99));
+    $this->assertFalse(reset($files), t("Trying to load a file with an invalid status fails."));
     $this->assertFileHooksCalled(array());
   }
 
@@ -1880,6 +1888,8 @@ class FileDownloadTest extends FileTestCase {
 
   function setUp() {
     parent::setUp('file_test');
+    // Clear out any hook calls.
+    file_test_reset();
   }
 
   /**
@@ -1892,7 +1902,7 @@ class FileDownloadTest extends FileTestCase {
     $this->assertEqual($GLOBALS['base_url'] . '/' . file_directory_path() . '/' . $file->filename, $url, t('Correctly generated a URL for a created file.'));
     $this->drupalHead($url);
     $this->assertResponse(200, t('Confirmed that the generated URL is correct by downloading the created file.'));
-  
+
     // Test generating an URL to a shipped file (i.e. a file that is part of
     // Drupal core, a module or a theme, for example a JavaScript file).
     $filepath = 'misc/jquery.js';
@@ -1928,6 +1938,70 @@ class FileDownloadTest extends FileTestCase {
     $url = file_create_url('private://' . $this->randomName());
     $this->drupalHead($url);
     $this->assertResponse(404, t('Correctly returned 404 response for a non-existent file.'));
+  }
+
+  /**
+   * Test file_create_url().
+   */
+  function testFileCreateUrl() {
+    global $base_url;
+
+    $basename = " -._~!$'\"()*@[]?&+%#,;=:\n\x00" . // "Special" ASCII characters.
+      "%23%25%26%2B%2F%3F" . // Characters that look like a percent-escaped string.
+      "éøïвβ中國書۞"; // Characters from various non-ASCII alphabets.
+    $basename_encoded = '%20-._%7E%21%24%27%22%28%29%2A%40%5B%5D%3F%26%2B%25%23%2C%3B%3D%3A__' .
+      '%2523%2525%2526%252B%252F%253F' .
+      '%C3%A9%C3%B8%C3%AF%D0%B2%CE%B2%E4%B8%AD%E5%9C%8B%E6%9B%B8%DB%9E';
+
+    $this->checkUrl('public', '', $basename, $base_url . '/' . file_directory_path() . '/' . $basename_encoded);
+    $this->checkUrl('private', '', $basename, $base_url . '/system/files/' . $basename_encoded);
+    $this->checkUrl('private', '', $basename, $base_url . '/?q=system/files/' . $basename_encoded, '0');
+  }
+
+  /**
+   * Download a file from the URL generated by file_create_url().
+   *
+   * Create a file with the specified scheme, directory and filename; check that
+   * the URL generated by file_create_url() for the specified file equals the
+   * specified URL; fetch the URL and then compare the contents to the file.
+   *
+   * @param $scheme
+   *   A scheme, e.g. "public"
+   * @param $directory
+   *   A directory, possibly ""
+   * @param $filename
+   *   A filename
+   * @param $expected_url
+   *   The expected URL
+   * @param $clean_url
+   *   The value of the clean_url setting
+   */
+  private function checkUrl($scheme, $directory, $filename, $expected_url, $clean_url = '1') {
+    variable_set('clean_url', $clean_url);
+
+    // Convert $filename to a valid filename, i.e. strip characters not
+    // supported by the filesystem, and create the file in the specified
+    // directory.
+    $filepath = file_create_filename($filename, $directory);
+    $directory_uri = $scheme . '://' . dirname($filepath);
+    file_prepare_directory($directory_uri, FILE_CREATE_DIRECTORY);
+    $file = $this->createFile($filepath, NULL, $scheme);
+
+    $url = file_create_url($file->uri);
+    $this->assertEqual($url, $expected_url, t('Generated URL matches expected URL.'));
+
+    if ($scheme == 'private') {
+      // Tell the implementation of hook_file_download() in file_test.module
+      // that this file may be downloaded.
+      file_test_set_return('download', array('x-foo' => 'Bar'));
+    }
+
+    $this->drupalGet($url);
+    if ($this->assertResponse(200) == 'pass') {
+      $this->assertRaw(file_get_contents($file->uri), t('Contents of the file are correct.'));
+    }
+
+    file_delete($file);
   }
 }
 
@@ -2118,17 +2192,17 @@ class FileMimeTypeTest extends DrupalWebTestCase {
 }
 
 /**
- * Tests stream wrapper registry.
+ * Tests stream wrapper functions.
  */
-class StreamWrapperRegistryTest extends DrupalWebTestCase {
+class StreamWrapperTest extends DrupalWebTestCase {
 
   protected $scheme = 'dummy';
   protected $classname = 'DrupalDummyStreamWrapper';
 
   public static function getInfo() {
     return array(
-      'name' => 'Stream Wrapper Registry',
-      'description' => 'Tests stream wrapper registry.',
+      'name' => 'Stream wrappers',
+      'description' => 'Tests stream wrapper functions.',
       'group' => 'File API',
     );
   }
@@ -2167,21 +2241,33 @@ class StreamWrapperRegistryTest extends DrupalWebTestCase {
   /**
    * Test the URI and target functions.
    */
-  function testGetInstanceByUri() {
+  function testUriFunctions() {
     $instance = file_stream_wrapper_get_instance_by_uri($this->scheme . '://foo');
     $this->assertEqual($this->classname, get_class($instance), t('Got correct class type for dummy URI.'));
 
     $instance = file_stream_wrapper_get_instance_by_uri('public://foo');
     $this->assertEqual('DrupalPublicStreamWrapper', get_class($instance), t('Got correct class type for public URI.'));
 
-    // Test file_stream_wrapper_uri_normalize.
+    // Test file_stream_wrapper_uri_normalize().
     $uri = 'public:///' . file_directory_path() . '/foo/bar/';
     $uri = file_stream_wrapper_uri_normalize($uri);
     $this->assertEqual('public://foo/bar', $uri, t('Got a properly normalized URI @uri', array('@uri' => $uri)));
 
-    // Test file_uri_taget().
-    $this->assertEqual('foo/bar.txt', file_uri_target('public://foo/bar.txt'), t('Got a valid stream target from public://foo/bar.txt'));
+    // Test file_uri_target().
+    $this->assertEqual(file_uri_target('public://foo/bar.txt'), 'foo/bar.txt', t('Got a valid stream target from public://foo/bar.txt.'));
     $this->assertFalse(file_uri_target('foo/bar.txt'), t('foo/bar.txt is not a valid stream.'));
+
+    // Test file_build_uri() and file_directory_path().
+    $this->assertEqual(file_build_uri('foo/bar.txt'), 'public://foo/bar.txt', t('Expected scheme was added.'));
+    $this->assertEqual(file_directory_path(), variable_get('file_public_path'), t('Expected default directory path was returned.'));
+    $this->assertEqual(file_directory_path('public'), variable_get('file_public_path'), t('Expected public directory path was returned.'));
+    $this->assertEqual(file_directory_path('temporary'), variable_get('file_temporary_path'), t('Expected temporary directory path was returned.'));
+    $this->assertEqual(file_directory_path($this->scheme), variable_get('stream_public_path', 'sites/default/files'), t('Expected dummy directory path was returned.'));
+    $this->assertFalse(file_directory_path('non-existent'), t('No directory path returned for invalid scheme.'));
+    variable_set('file_default_scheme', 'private');
+    $this->assertEqual(file_build_uri('foo/bar.txt'), 'private://foo/bar.txt', t('Got a valid URI from foo/bar.txt.'));
+    $this->assertEqual(file_directory_path(), variable_get('file_private_path'), t('Expected default directory path was returned.'));
+    $this->assertEqual(file_directory_path('private'), variable_get('file_private_path'), t('Expected private directory path was returned.'));
   }
 
   /**

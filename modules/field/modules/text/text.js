@@ -1,18 +1,18 @@
-// $Id: text.js,v 1.1 2009/09/11 13:30:49 webchick Exp $
+// $Id: text.js,v 1.3 2010/03/08 03:59:25 webchick Exp $
 
 (function ($) {
 
 /**
  * Auto-hide summary textarea if empty and show hide and unhide links.
  */
-Drupal.behaviors.textTextareaSummary = {
+Drupal.behaviors.textSummary = {
   attach: function (context, settings) {
-    $('textarea.text-textarea-summary:not(.text-textarea-summary-processed)', context).addClass('text-textarea-summary-processed').each(function () {
-      var $fieldset = $(this).closest('#body-wrapper');
-      var $summary = $fieldset.find('div.text-summary-wrapper');
-      var $summaryLabel = $summary.find('div.form-type-textarea label');
-      var $full = $fieldset.find('div.text-full-wrapper');
-      var $fullLabel = $full.find('div.form-type-textarea label');
+    $('.text-summary', context).once('text-summary', function () {
+      var $widget = $(this).closest('div.field-type-text-with-summary');
+      var $summary = $widget.find('div.text-summary-wrapper');
+      var $summaryLabel = $summary.find('label');
+      var $full = $widget.find('.form-item:has(.text-full)');
+      var $fullLabel = $full.find('label');
 
       // Setup the edit/hide summary link.
       var $link = $('<span class="field-edit-link">(<a class="link-edit-summary" href="#">' + Drupal.t('Hide summary') + '</a>)</span>').toggle(

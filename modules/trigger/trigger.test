@@ -1,14 +1,45 @@
 <?php
-// $Id: trigger.test,v 1.18 2009/09/19 11:07:36 dries Exp $
+// $Id: trigger.test,v 1.28 2010/03/07 18:06:06 webchick Exp $
 
-class TriggerContentTestCase extends DrupalWebTestCase {
+/**
+ * Class with common helper methods.
+ */
+class TriggerWebTestCase extends DrupalWebTestCase {
+
+  /**
+   * Configure an advanced action.
+   *
+   * @param $action
+   *   The name of the action callback. For example: 'user_block_user_action'
+   * @param $edit
+   *   The $edit array for the form to be used to configure.
+   *   Example members would be 'actions_label' (always), 'message', etc.
+   * @return
+   *   the aid (action id) of the configured action, or FALSE if none.
+   */
+  protected function configureAdvancedAction($action, $edit) {
+    // Create an advanced action.
+    $hash = md5($action);
+    $this->drupalPost("admin/config/system/actions/configure/$hash", $edit, t('Save'));
+    $this->assertText(t('The action has been successfully saved.'));
+
+    // Now we have to find out the action ID of what we created.
+    return db_query('SELECT aid FROM {actions} WHERE callback = :callback AND label = :label', array(':callback' => $action, ':label' => $edit['actions_label']))->fetchField();
+  }
+
+}
+
+/**
+ * Test node triggers.
+ */
+class TriggerContentTestCase extends TriggerWebTestCase {
   var $_cleanup_roles = array();
   var $_cleanup_users = array();
 
   public static function getInfo() {
     return array(
       'name' => 'Trigger content (node) actions',
-      'description' => 'Perform various tests with content actions.' ,
+      'description' => 'Perform various tests with content actions.',
       'group' => 'Trigger',
     );
   }
@@ -28,7 +59,8 @@ class TriggerContentTestCase extends DrupalWebTestCase {
       $hash = md5($action);
       $info = $this->actionInfo($action);
 
-      // Test 1: Assign an action to a trigger, then pull the trigger, and make sure the actions fire.
+      // Assign an action to a trigger, then pull the trigger, and make sure
+      // the actions fire.
       $test_user = $this->drupalCreateUser(array('administer actions'));
       $this->drupalLogin($test_user);
       $edit = array('aid' => $hash);
@@ -37,19 +69,20 @@ class TriggerContentTestCase extends DrupalWebTestCase {
       $web_user = $this->drupalCreateUser(array('create page content', 'access content', 'administer nodes'));
       $this->drupalLogin($web_user);
       $edit = array();
-      $edit['title'] = '!SimpleTest test node! ' . $this->randomName(10);
-      $langcode = FIELD_LANGUAGE_NONE;
+      $langcode = LANGUAGE_NONE;
+      $edit["title"] = '!SimpleTest test node! ' . $this->randomName(10);
       $edit["body[$langcode][0][value]"] = '!SimpleTest test body! ' . $this->randomName(32) . ' ' . $this->randomName(32);
       $edit[$info['property']] = !$info['expected'];
       $this->drupalPost('node/add/page', $edit, t('Save'));
       // Make sure the text we want appears.
-      $this->assertRaw(t('!post %title has been created.', array('!post' => 'Page', '%title' => $edit['title'])), t('Make sure the page has actually been created'));
+      $this->assertRaw(t('!post %title has been created.', array('!post' => 'Basic page', '%title' => $edit["title"])), t('Make sure the Basic page has actually been created'));
       // Action should have been fired.
-      $loaded_node = $this->drupalGetNodeByTitle($edit['title']);;
+      $loaded_node = $this->drupalGetNodeByTitle($edit["title"]);
       $this->assertTrue($loaded_node->$info['property'] == $info['expected'], t('Make sure the @action action fired.', array('@action' => $info['name'])));
       // Leave action assigned for next test
 
-      // Test 2: There should be an error when the action is assigned to the trigger twice.
+      // There should be an error when the action is assigned to the trigger
+      // twice.
       $test_user = $this->drupalCreateUser(array('administer actions'));
       $this->drupalLogin($test_user);
       $edit = array('aid' => $hash);
@@ -58,7 +91,7 @@ class TriggerContentTestCase extends DrupalWebTestCase {
       $this->drupalPost('admin/structure/trigger/node', $edit, t('Assign'));
       $this->assertRaw(t('The action you chose is already assigned to that trigger.'), t('Check to make sure an error occurs when assigning an action to a trigger twice.'));
 
-      // Test 3: The action should be able to be unassigned from a trigger.
+      // The action should be able to be unassigned from a trigger.
       $this->drupalPost('admin/structure/trigger/unassign/node/node_presave/' . $hash, array(), t('Unassign'));
       $this->assertRaw(t('Action %action has been unassigned.', array('%action' => ucfirst($info['name']))), t('Check to make sure the @action action can be unassigned from the trigger.', array('@action' => $info['name'])));
       $assigned = db_query("SELECT COUNT(*) FROM {trigger_assignments} WHERE aid IN (:keys)", array(':keys' => $content_actions))->fetchField();
@@ -114,11 +147,11 @@ class TriggerContentTestCase extends DrupalWebTestCase {
 /**
  * Test cron trigger.
  */
-class TriggerCronTestCase extends DrupalWebTestCase {
+class TriggerCronTestCase extends TriggerWebTestCase {
   public static function getInfo() {
     return array(
       'name' => 'Trigger cron (system) actions',
-      'description' => 'Perform various tests with cron trigger.' ,
+      'description' => 'Perform various tests with cron trigger.',
       'group' => 'Trigger',
     );
   }
@@ -144,14 +177,15 @@ class TriggerCronTestCase extends DrupalWebTestCase {
     $this->drupalPost('admin/structure/trigger/system', $edit, t('Assign'));
 
     // Assign a configurable action to the cron trigger.
-    $hash = md5('trigger_test_system_cron_conf_action');
     $action_label = $this->randomName();
     $edit = array(
       'actions_label' => $action_label,
       'subject' => $action_label,
     );
-    $this->drupalPost('admin/config/system/actions/configure/' . $hash, $edit, t('Save'));
-    $edit = array('aid' => md5('1'));
+    $aid = $this->configureAdvancedAction('trigger_test_system_cron_conf_action', $edit);
+    // $aid is likely 3 but if we add more uses for the sequences table in
+    // core it might break, so it is easier to get the value from the database.
+    $edit = array('aid' => md5($aid));
     $this->drupalPost('admin/structure/trigger/system', $edit, t('Assign'));
 
     // Add a second configurable action to the cron trigger.
@@ -160,12 +194,12 @@ class TriggerCronTestCase extends DrupalWebTestCase {
       'actions_label' => $action_label,
       'subject' => $action_label,
     );
-    $this->drupalPost('admin/config/system/actions/configure/' . $hash, $edit, t('Save'));
-    $edit = array('aid' => md5('2'));
+    $aid = $this->configureAdvancedAction('trigger_test_system_cron_conf_action', $edit);
+    $edit = array('aid' => md5($aid));
     $this->drupalPost('admin/structure/trigger/system', $edit, t('Assign'));
 
     // Force a cron run.
-    drupal_cron_run();
+    $this->cronRun();
 
     // Make sure the non-configurable action has fired.
     $action_run = variable_get('trigger_test_system_cron_action', FALSE);
@@ -180,24 +214,24 @@ class TriggerCronTestCase extends DrupalWebTestCase {
 /**
  * Test other triggers.
  */
-class TriggerOtherTestCase extends DrupalWebTestCase {
+class TriggerOtherTestCase extends TriggerWebTestCase {
   var $_cleanup_roles = array();
   var $_cleanup_users = array();
 
   public static function getInfo() {
     return array(
       'name' => 'Trigger other actions',
-      'description' => 'Test triggering of user, comment, taxonomy actions.' ,
+      'description' => 'Test triggering of user, comment, taxonomy actions.',
       'group' => 'Trigger',
     );
   }
 
   function setUp() {
-    parent::setUp('trigger', 'trigger_test');
+    parent::setUp('trigger', 'trigger_test', 'contact');
   }
 
   /**
-   * Test triggering on user create.
+   * Test triggering on user create and user login.
    */
   function testActionsUser() {
     // Assign an action to the create user trigger.
@@ -228,7 +262,29 @@ class TriggerOtherTestCase extends DrupalWebTestCase {
     $this->assertTrue(variable_get($action_id, FALSE), t('Check that creating a user triggered the test action.'));
 
     // Reset the action variable.
-    variable_set( $action_id, FALSE );
+    variable_set($action_id, FALSE);
+
+    $this->drupalLogin($test_user);
+    // Assign a configurable action 'System message' to the user_login trigger.
+    $action_edit = array(
+      'actions_label' => $this->randomName(16),
+      'message' => t("You have logged in:") . $this->randomName(16),
+    );
+
+    // Configure an advanced action that we can assign.
+    $aid = $this->configureAdvancedAction('system_message_action', $action_edit);
+    $edit = array('aid' => md5($aid));
+    $this->drupalPost('admin/structure/trigger/user', $edit, t('Assign'), array(), array(), 'trigger_user_login_assign_form');
+
+    // Verify that the action has been assigned to the correct hook.
+    $actions = trigger_get_assigned_actions('user_login');
+    $this->assertEqual(1, count($actions), t('One Action assigned to the hook'));
+    $this->assertEqual($actions[$aid]['label'], $action_edit['actions_label'], t('Correct action label found.'));
+
+    // User should get the configured message at login.
+    $contact_user = $this->drupalCreateUser(array('access site-wide contact form'));;
+    $this->drupalLogin($contact_user);
+    $this->assertText($action_edit['message']);
   }
 
   /**
@@ -244,7 +300,7 @@ class TriggerOtherTestCase extends DrupalWebTestCase {
     $this->drupalPost('admin/structure/trigger/comment', $edit, t('Assign'));
 
     // Set action variable to FALSE.
-    variable_set( $action_id, FALSE );
+    variable_set($action_id, FALSE);
 
     // Create a node and add a comment to it.
     $web_user = $this->drupalCreateUser(array('create article content', 'access content', 'post comments without approval', 'post comments'));
@@ -252,7 +308,7 @@ class TriggerOtherTestCase extends DrupalWebTestCase {
     $node = $this->drupalCreateNode(array('type' => 'article', 'promote' => 1));
     $edit = array();
     $edit['subject'] = $this->randomName(10);
-    $edit['comment'] = $this->randomName(10) . ' ' . $this->randomName(10);
+    $edit['comment_body[' . LANGUAGE_NONE . '][0][value]'] = $this->randomName(10) . ' ' . $this->randomName(10);
     $this->drupalGet('comment/reply/' . $node->nid);
     $this->drupalPost(NULL, $edit, t('Save'));
 
@@ -273,7 +329,7 @@ class TriggerOtherTestCase extends DrupalWebTestCase {
     $this->drupalPost('admin/structure/trigger/taxonomy', $edit, t('Assign'));
 
     // Set action variable to FALSE.
-    variable_set( $action_id, FALSE );
+    variable_set($action_id, FALSE);
 
     // Create a taxonomy vocabulary and add a term to it.
 
@@ -294,5 +350,63 @@ class TriggerOtherTestCase extends DrupalWebTestCase {
 
     // Verify that the action variable has been set.
     $this->assertTrue(variable_get($action_id, FALSE), t('Check that creating a taxonomy term triggered the action.'));
+  }
+
+}
+
+/**
+ * Test that orphaned actions are properly handled.
+ */
+class TriggerOrphanedActionsTestCase extends DrupalWebTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Trigger orphaned actions',
+      'description' => 'Test triggering an action that has since been removed.',
+      'group' => 'Trigger',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('trigger', 'trigger_test');
+  }
+
+  /**
+   * Test logic around orphaned actions.
+   */
+  function testActionsOrphaned() {
+    $action = 'trigger_test_generic_any_action';
+    $hash = md5($action);
+
+    // Assign an action from a disable-able module to a trigger, then pull the
+    // trigger, and make sure the actions fire.
+    $test_user = $this->drupalCreateUser(array('administer actions'));
+    $this->drupalLogin($test_user);
+    $edit = array('aid' => $hash);
+    $this->drupalPost('admin/structure/trigger/node', $edit, t('Assign'));
+
+    // Create an unpublished node.
+    $web_user = $this->drupalCreateUser(array('create page content', 'edit own page content', 'access content', 'administer nodes'));
+    $this->drupalLogin($web_user);
+    $edit = array();
+    $langcode = LANGUAGE_NONE;
+    $edit["title"] = '!SimpleTest test node! ' . $this->randomName(10);
+    $edit["body[$langcode][0][value]"] = '!SimpleTest test body! ' . $this->randomName(32) . ' ' . $this->randomName(32);
+    $this->drupalPost('node/add/page', $edit, t('Save'));
+    $this->assertRaw(t('!post %title has been created.', array('!post' => 'Basic page', '%title' => $edit["title"])), t('Make sure the Basic page has actually been created'));
+
+    // Action should have been fired.
+    $this->assertTrue(variable_get('trigger_test_generic_any_action', FALSE), t('Trigger test action successfully fired.'));
+
+    // Disable the module that provides the action and make sure the trigger
+    // doesn't white screen.
+    module_disable(array('trigger_test'));
+    $loaded_node = $this->drupalGetNodeByTitle($edit["title"]);
+    $edit["body[$langcode][0][value]"] = '!SimpleTest test body! ' . $this->randomName(32) . ' ' . $this->randomName(32);
+    $this->drupalPost("node/$loaded_node->nid/edit", $edit, t('Save'));
+
+    // If the node body was updated successfully we have dealt with the
+    // unavailable action.
+    $this->assertRaw(t('!post %title has been updated.', array('!post' => 'Basic page', '%title' => $edit["title"])), t('Make sure the Basic page can be updated with the missing trigger function.'));
   }
 }

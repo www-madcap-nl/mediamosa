@@ -1,5 +1,5 @@
 <?php
-// $Id: session.test,v 1.18 2009/09/05 13:05:30 dries Exp $
+// $Id: session.test,v 1.27 2010/02/17 08:56:48 dries Exp $
 
 /**
  * @file
@@ -73,16 +73,11 @@ class SessionTestCase extends DrupalWebTestCase {
    * drupal_session_count() since session data is already generated here.
    */
   function testDataPersistence() {
-    // At the very start, we have no session.
-    $expected_anonymous = 0;
-    $expected_authenticated = 0;
-
     $user = $this->drupalCreateUser(array('access content'));
     // Enable sessions.
     $this->sessionReset($user->uid);
 
     $this->drupalLogin($user);
-    $expected_authenticated++;
 
     $value_1 = $this->randomName();
     $this->drupalGet('session-test/set/' . $value_1);
@@ -105,8 +100,6 @@ class SessionTestCase extends DrupalWebTestCase {
 
     // Logout the user and make sure the stored value no longer persists.
     $this->drupalLogout();
-    $expected_authenticated--;
-
     $this->sessionReset();
     $this->drupalGet('session-test/get');
     $this->assertNoText($value_1, t("After logout, previous user's session data is not available."), t('Session'));
@@ -117,8 +110,6 @@ class SessionTestCase extends DrupalWebTestCase {
     $this->assertText($value_3, t('Session data stored for anonymous user.'), t('Session'));
     $this->drupalGet('session-test/get');
     $this->assertText($value_3, t('Session correctly returned the stored data for an anonymous user.'), t('Session'));
-    // Session count should go up since we have started an anonymous session now.
-    $expected_anonymous++;
 
     // Try to store data when drupal_save_session(FALSE).
     $value_4 = $this->randomName();
@@ -129,8 +120,6 @@ class SessionTestCase extends DrupalWebTestCase {
 
     // Login, the data should persist.
     $this->drupalLogin($user);
-    $expected_anonymous--;
-    $expected_authenticated++;
     $this->sessionReset($user->uid);
     $this->drupalGet('session-test/get');
     $this->assertNoText($value_1, t('Session has persisted for an authenticated user after logging out and then back in.'), t('Session'));
@@ -139,23 +128,6 @@ class SessionTestCase extends DrupalWebTestCase {
     $user2 = $this->drupalCreateUser(array('access content'));
     $this->sessionReset($user2->uid);
     $this->drupalLogin($user2);
-    $expected_authenticated++;
-
-    // Perform drupal_session_count tests here in order to use the session data already generated.
-    // Test absolute count.
-    $anonymous = drupal_session_count(0, TRUE);
-    $authenticated = drupal_session_count(0, FALSE);
-    $this->assertEqual($anonymous + $authenticated, $expected_anonymous + $expected_authenticated, t('@count total sessions (expected @expected).', array('@count' => $anonymous + $authenticated, '@expected' => $expected_anonymous + $expected_authenticated)), t('Session'));
-
-    // Test anonymous count.
-    $this->assertEqual($anonymous, $expected_anonymous, t('@count anonymous sessions (expected @expected).', array('@count' => $anonymous, '@expected' => $expected_anonymous)), t('Session'));
-
-    // Test authenticated count.
-    $this->assertEqual($authenticated, $expected_authenticated, t('@count authenticated sessions (expected @expected).', array('@count' => $authenticated, '@expected' => $expected_authenticated)), t('Session'));
-
-    // Should return 0 sessions from 1 second from now.
-    $this->assertEqual(drupal_session_count(time() + 1), 0, t('0 sessions newer than the current time.'), t('Session'));
-
   }
 
   /**
@@ -272,17 +244,63 @@ class SessionHttpsTestCase extends DrupalWebTestCase {
     global $is_https;
 
     if ($is_https) {
+      $secure_session_name = session_name();
+      $insecure_session_name = substr(session_name(), 1);
+    }
+    else {
+      $secure_session_name = 'S' . session_name();
+      $insecure_session_name = session_name();
+    }
+
+    $user = $this->drupalCreateUser(array('access administration pages'));
+
+    // Test HTTPS session handling by altering the form action to submit the
+    // login form through https.php, which creates a mock HTTPS request.
+    $this->drupalGet('user');
+    $form = $this->xpath('//form[@id="user-login"]');
+    $form[0]['action'] = $this->httpsUrl('user');
+    $edit = array('name' => $user->name, 'pass' => $user->pass_raw);
+    $this->drupalPost(NULL, $edit, t('Log in'));
+
+    // Test a second concurrent session.
+    $this->curlClose();
+    $this->drupalGet('user');
+    $form = $this->xpath('//form[@id="user-login"]');
+    $form[0]['action'] = $this->httpsUrl('user');
+    $this->drupalPost(NULL, $edit, t('Log in'));
+
+    // Check secure cookie on secure page.
+    $this->assertTrue($this->cookies[$secure_session_name]['secure'], 'The secure cookie has the secure attribute');
+    // Check insecure cookie is not set.
+    $this->assertFalse(isset($this->cookies[$insecure_session_name]));
+    $ssid = $this->cookies[$secure_session_name]['value'];
+    $this->assertSessionIds($ssid, $ssid, 'Session has two secure SIDs');
+    $cookie = $secure_session_name . '=' . $ssid;
+
+    // Verify that user is logged in on secure URL.
+    $this->curlClose();
+    $this->drupalGet($this->httpsUrl('admin/config'), array(), array('Cookie: ' . $cookie));
+    $this->assertText(t('Configuration'));
+    $this->assertResponse(200);
+
+    // Verify that user is not logged in on non-secure URL.
+    if (!$is_https) {
+      $this->curlClose();
+      $this->drupalGet('admin/config', array(), array('Cookie: ' . $cookie));
+      $this->assertNoText(t('Configuration'));
+      $this->assertResponse(403);
+    }
+
+    // Clear browser cookie jar.
+    $this->cookies = array();
+
+    if ($is_https) {
       // The functionality does not make sense when running on https.
       return;
     }
 
-    $insecure_session_name = session_name();
-    $secure_session_name = "S$insecure_session_name";
-
     // Enable secure pages.
     variable_set('https', TRUE);
-
-    $user = $this->drupalCreateUser(array('access administration pages'));
 
     $this->curlClose();
     $this->drupalGet('session-test/set/1');
@@ -299,7 +317,7 @@ class SessionHttpsTestCase extends DrupalWebTestCase {
 
     // Check that user login form action is secure.
     $this->drupalGet('user');
-    $form = &$this->xpath('//form[@id="user-login"]');
+    $form = $this->xpath('//form[@id="user-login"]');
     $this->assertEqual(substr($form[0]['action'], 0, 6), 'https:', 'Login form action is secure');
     $form[0]['action'] = $this->httpsUrl('user');
 
@@ -312,29 +330,52 @@ class SessionHttpsTestCase extends DrupalWebTestCase {
     $this->assertTrue($this->cookies[$secure_session_name]['secure'], 'The secure cookie has the secure attribute');
     // Check insecure cookie on secure page.
     $this->assertFalse($this->cookies[$insecure_session_name]['secure'], 'The insecure cookie does not have the secure attribute');
-    $args = array(
-      ':sid' => $this->cookies[$insecure_session_name]['value'],
-      ':ssid' => $this->cookies[$secure_session_name]['value'],
-    );
-    $this->assertTrue(db_query('SELECT sid FROM {sessions} WHERE sid = :sid AND ssid = :ssid', $args)->fetchField(), 'Session has both SIDs');
+
+    $sid = $this->cookies[$insecure_session_name]['value'];
+    $ssid = $this->cookies[$secure_session_name]['value'];
+    $this->assertSessionIds($sid, $ssid, 'Session has both secure and insecure SIDs');
     $cookies = array(
-      $insecure_session_name . '=' . $args[':sid'],
-      $secure_session_name . '=' . $args[':ssid'],
+      $insecure_session_name . '=' . $sid,
+      $secure_session_name . '=' . $ssid,
     );
 
     foreach ($cookies as $cookie_key => $cookie) {
-      foreach (array('admin', $this->httpsUrl('admin')) as $url_key => $url) {
+      foreach (array('admin/config', $this->httpsUrl('admin/config')) as $url_key => $url) {
         $this->curlClose();
 
         $this->drupalGet($url, array(), array('Cookie: ' . $cookie));
         if ($cookie_key == $url_key) {
-          $this->assertText(t('Administer'));
+          $this->assertText(t('Configuration'));
+          $this->assertResponse(200);
         }
         else {
-          $this->assertNoText(t('Administer'));
+          $this->assertNoText(t('Configuration'));
+          $this->assertResponse(403);
         }
       }
     }
+  }
+
+  /**
+   * Test that there exists a session with two specific session IDs.
+   *
+   * @param $sid
+   *   The insecure session ID to search for.
+   * @param $ssid
+   *   The secure session ID to search for.
+   * @param $assertion_text
+   *   The text to display when we perform the assertion.
+   *
+   * @return
+   *   The result of assertTrue() that there's a session in the system that
+   *   has the given insecure and secure session IDs.
+   */
+  protected function assertSessionIds($sid, $ssid, $assertion_text) {
+    $args = array(
+      ':sid' => $sid,
+      ':ssid' => $ssid,
+    );
+    return $this->assertTrue(db_query('SELECT sid FROM {sessions} WHERE sid = :sid AND ssid = :ssid', $args)->fetchField(), $assertion_text);
   }
 
   protected function httpsUrl($url) {

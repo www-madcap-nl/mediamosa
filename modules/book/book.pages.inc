@@ -1,5 +1,5 @@
 <?php
-// $Id: book.pages.inc,v 1.16 2009/09/18 00:12:45 webchick Exp $
+// $Id: book.pages.inc,v 1.24 2010/01/09 21:54:00 webchick Exp $
 
 /**
  * @file
@@ -15,7 +15,7 @@ function book_render() {
     $book_list[] = l($book['title'], $book['href'], $book['options']);
   }
 
-  return theme('item_list', $book_list);
+  return theme('item_list', array('items' => $book_list));
 }
 
 /**
@@ -79,7 +79,7 @@ function book_export_html($nid) {
       $contents = book_export_traverse($tree, 'book_node_export');
     }
 
-    return theme('book_export_html', $node->title, $contents, $node->book['depth']);
+    return theme('book_export_html', array('title' => $node->title, 'contents' => $contents, 'depth' => $node->book['depth']));
   }
   else {
     drupal_access_denied();
@@ -117,7 +117,7 @@ function book_outline_form($form, &$form_state, $node) {
   }
   $form['#node'] = $node;
   $form['#id'] = 'book-outline';
-  _book_add_form_elements($form, $node);
+  _book_add_form_elements($form, $form_state, $node);
 
   $form['book']['#collapsible'] = FALSE;
 
@@ -255,5 +255,8 @@ function book_form_update() {
     $commands[] = ajax_command_replace(NULL, drupal_render($form['book']['plid']));
   }
 
-  ajax_render($commands);
+  // @todo: We could and should just return $form['book']['plid'] and skip the
+  // ajax_command_replace() above. But for now, this provides a test case of
+  // returning an AJAX commands array.
+  return array('#type' => 'ajax_commands', '#ajax_commands' => $commands);
 }

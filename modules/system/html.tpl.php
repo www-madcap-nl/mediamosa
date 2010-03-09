@@ -1,5 +1,5 @@
 <?php
-// $Id: html.tpl.php,v 1.1 2009/09/15 17:10:39 webchick Exp $
+// $Id: html.tpl.php,v 1.3 2009/11/16 05:34:24 webchick Exp $
 
 /**
  * @file
@@ -35,7 +35,7 @@
  */
 ?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML+RDFa 1.0//EN"
   "http://www.w3.org/MarkUp/DTD/xhtml-rdfa-1.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="<?php print $language->language; ?>" dir="<?php print $language->dir; ?>"
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="<?php print $language->language; ?>" version="XHTML+RDFa 1.0" dir="<?php print $language->dir; ?>"
   <?php print $rdf_namespaces; ?>>
 
 <head profile="<?php print $grddl_profile; ?>">
@@ -45,6 +45,9 @@
   <?php print $scripts; ?>
 </head>
 <body class="<?php print $classes; ?>" <?php print $attributes;?>>
+  <div id="skip-link">
+    <a href="#main-content"><?php print t('Skip to main content'); ?></a>
+  </div>
   <?php print $page_top; ?>
   <?php print $page; ?>
   <?php print $page_bottom; ?>

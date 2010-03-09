@@ -1,5 +1,5 @@
 <?php
-// $Id: theme.maintenance.inc,v 1.40 2009/09/11 13:56:56 dries Exp $
+// $Id: theme.maintenance.inc,v 1.54 2010/02/25 20:57:39 dries Exp $
 
 /**
  * @file
@@ -10,46 +10,51 @@
  * Sets up the theming system for site installs, updates and when the site is
  * in maintenance mode. It also applies when the database is unavailable.
  *
- * Minnelli is always used for the initial install and update operations. In
- * other cases, "settings.php" must have a "maintenance_theme" key set for the
- * $conf variable in order to change the maintenance theme.
+ * Seven is always used for the initial install and update operations. In
+ * other cases, Garland is used, but this can be overridden by setting a
+ * "maintenance_theme" key in the $conf variable in settings.php.
  */
 function _drupal_maintenance_theme() {
-  global $theme, $theme_key;
+  global $theme, $theme_key, $conf;
 
   // If $theme is already set, assume the others are set too, and do nothing.
   if (isset($theme)) {
     return;
   }
 
-  require_once DRUPAL_ROOT . '/includes/path.inc';
+  require_once DRUPAL_ROOT . '/' . variable_get('path_inc', 'includes/path.inc');
   require_once DRUPAL_ROOT . '/includes/theme.inc';
   require_once DRUPAL_ROOT . '/includes/common.inc';
   require_once DRUPAL_ROOT . '/includes/unicode.inc';
   require_once DRUPAL_ROOT . '/includes/file.inc';
   require_once DRUPAL_ROOT . '/includes/module.inc';
-  require_once DRUPAL_ROOT . '/includes/database/database.inc';
   unicode_check();
 
   // Install and update pages are treated differently to prevent theming overrides.
   if (defined('MAINTENANCE_MODE') && (MAINTENANCE_MODE == 'install' || MAINTENANCE_MODE == 'update')) {
-    $theme = 'minnelli';
+    $custom_theme = (isset($conf['maintenance_theme']) ? $conf['maintenance_theme'] : 'seven');
   }
   else {
     if (!db_is_active()) {
       // Because we are operating in a crippled environment, we need to
       // bootstrap just enough to allow hook invocations to work.
+      require_once DRUPAL_ROOT . '/includes/database/database.inc';
       $module_list['system']['filename'] = 'modules/system/system.module';
-      $module_list['filter']['filename'] = 'modules/filter/filter.module';
       module_list(TRUE, FALSE, FALSE, $module_list);
       drupal_load('module', 'system');
-      drupal_load('module', 'filter');
     }
 
-    $theme = variable_get('maintenance_theme', 'minnelli');
+    // We use the default theme as the maintenance theme. If a default theme
+    // isn't specified in the database or in settings.php, we use Garland.
+    $custom_theme = variable_get('maintenance_theme', variable_get('theme_default', 'garland'));
   }
 
   $themes = list_themes();
+
+  // list_themes() triggers a drupal_alter() in maintenance mode, but we can't
+  // let themes alter the .info data until we know a theme's base themes. So
+  // don't set global $theme until after list_themes() builds its cache.
+  $theme = $custom_theme;
 
   // Store the identifier for retrieving theme settings with.
   $theme_key = $theme;
@@ -65,8 +70,8 @@ function _drupal_maintenance_theme() {
 
   // These are usually added from system_init() -except maintenance.css.
   // When the database is inactive it's not called so we add it here.
-  drupal_add_css(drupal_get_path('module', 'system') . '/defaults.css');
   drupal_add_css(drupal_get_path('module', 'system') . '/system.css');
+  drupal_add_css(drupal_get_path('module', 'system') . '/system-behavior.css');
   drupal_add_css(drupal_get_path('module', 'system') . '/system-menus.css');
   drupal_add_css(drupal_get_path('module', 'system') . '/maintenance.css');
   drupal_add_css(drupal_get_path('module', 'system') . '/admin.css');
@@ -85,7 +90,10 @@ function _theme_load_offline_registry($theme, $base_theme = NULL, $theme_engine 
  *
  * @ingroup themeable
  */
-function theme_task_list($items, $active = NULL) {
+function theme_task_list($variables) {
+  $items = $variables['items'];
+  $active = $variables['active'];
+
   $done = isset($items[$active]) || $active == NULL;
   $output = '<h2 class="element-invisible">Installation tasks</h2>';
   $output .= '<ol class="task-list">';
@@ -115,14 +123,13 @@ function theme_task_list($items, $active = NULL) {
  *
  * Note: this function is not themeable.
  *
- * @param $content
- *   The page content to show.
+ * @param $variables
+ *   An associative array containing:
+ *   - content: The page content to show.
  */
-function theme_install_page($content) {
-  drupal_set_header('Content-Type', 'text/html; charset=utf-8');
+function theme_install_page($variables) {
+  drupal_add_http_header('Content-Type', 'text/html; charset=utf-8');
 
-  // Assign content.
-  $variables['content'] = $content;
   // Delay setting the message variable so it can be processed below.
   $variables['show_messages'] = FALSE;
   // Variable processors invoked manually since this function and theme_update_page()
@@ -130,37 +137,45 @@ function theme_install_page($content) {
   template_preprocess($variables, 'install_page');
   template_preprocess_maintenance_page($variables);
   template_process($variables, 'install_page');
+  template_process_maintenance_page($variables);
 
   // Special handling of error messages
   $messages = drupal_set_message();
   if (isset($messages['error'])) {
     $title = count($messages['error']) > 1 ? st('The following errors must be resolved before you can continue the installation process') : st('The following error must be resolved before you can continue the installation process');
     $variables['messages'] .= '<h3>' . $title . ':</h3>';
-    $variables['messages'] .= theme('status_messages', 'error');
-    $variables['content'] .= '<p>' . st('Please check the error messages and <a href="!url">try again</a>.', array('!url' => request_uri())) . '</p>';
+    $variables['messages'] .= theme('status_messages', array('display' => 'error'));
+    $variables['content'] .= '<p>' . st('Check the error messages and <a href="!url">try again</a>.', array('!url' => request_uri())) . '</p>';
   }
 
   // Special handling of warning messages
   if (isset($messages['warning'])) {
     $title = count($messages['warning']) > 1 ? st('The following installation warnings should be carefully reviewed') : st('The following installation warning should be carefully reviewed');
     $variables['messages'] .= '<h4>' . $title . ':</h4>';
-    $variables['messages'] .= theme('status_messages', 'warning');
+    $variables['messages'] .= theme('status_messages', array('display' => 'warning'));
   }
 
   // Special handling of status messages
   if (isset($messages['status'])) {
     $title = count($messages['status']) > 1 ? st('The following installation warnings should be carefully reviewed, but in most cases may be safely ignored') : st('The following installation warning should be carefully reviewed, but in most cases may be safely ignored');
     $variables['messages'] .= '<h4>' . $title . ':</h4>';
-    $variables['messages'] .= theme('status_messages', 'status');
+    $variables['messages'] .= theme('status_messages', array('display' => 'status'));
   }
 
-  // This was called as a theme hook (not template), so we need to
-  // fix path_to_theme() for the template, to point at the actual
-  // theme rather than system module as owner of the hook.
-  global $theme_path;
-  $theme_path = 'themes/garland';
+  // This was called as a theme hook (not template), so we need to fix
+  // path_to_theme() for the template, to point at the actual theme rather than
+  // system module as owner of the hook. Additionally, figure out the
+  // maintenance page template to use.
+  global $theme_path, $theme_info, $base_theme_info;
+  $theme_path = dirname($theme_info->uri);
+  $base_themes = $base_theme_info;
+  // Make sure a maintenance-page.tpl.php is always found.
+  $base_themes[] = 'modules/system';
+  while (!file_exists($theme_path . '/maintenance-page.tpl.php') && $base_theme = array_shift($base_themes)) {
+    $theme_path = dirname($base_theme->uri);
+  }
 
-  return theme_render_template('themes/garland/maintenance-page.tpl.php', $variables);
+  return theme_render_template($theme_path . '/maintenance-page.tpl.php', $variables);
 }
 
 /**
@@ -168,38 +183,88 @@ function theme_install_page($content) {
  *
  * Note: this function is not themeable.
  *
- * @param $content
- *   The page content to show.
- * @param $show_messages
- *   Whether to output status and error messages.
- *   FALSE can be useful to postpone the messages to a subsequent page.
+ * @param $variables
+ *   An associative array containing:
+ *   - content: The page content to show.
+ *   - show_messages: Whether to output status and error messages.
+ *     FALSE can be useful to postpone the messages to a subsequent page.
  */
-function theme_update_page($content, $show_messages = TRUE) {
+function theme_update_page($variables) {
   // Set required headers.
-  drupal_set_header('Content-Type', 'text/html; charset=utf-8');
+  drupal_add_http_header('Content-Type', 'text/html; charset=utf-8');
 
-  // Assign content and show message flag.
-  $variables['content'] = $content;
-  $variables['show_messages'] = $show_messages;
   // Variable processors invoked manually since this function and theme_install_page()
   // are exceptions in how it works within the theme system.
   template_preprocess($variables, 'update_page');
   template_preprocess_maintenance_page($variables);
   template_process($variables, 'update_page');
+  template_process_maintenance_page($variables);
 
   // Special handling of warning messages.
   $messages = drupal_set_message();
   if (isset($messages['warning'])) {
     $title = count($messages['warning']) > 1 ? 'The following update warnings should be carefully reviewed before continuing' : 'The following update warning should be carefully reviewed before continuing';
     $variables['messages'] .= '<h4>' . $title . ':</h4>';
-    $variables['messages'] .= theme('status_messages', 'warning');
+    $variables['messages'] .= theme('status_messages', array('display' => 'warning'));
   }
 
-  // This was called as a theme hook (not template), so we need to
-  // fix path_to_theme() for the template, to point at the actual
-  // theme rather than system module as owner of the hook.
-  global $theme_path;
-  $theme_path = 'themes/garland';
+  // This was called as a theme hook (not template), so we need to fix
+  // path_to_theme() for the template, to point at the actual theme rather than
+  // system module as owner of the hook. Additionally, figure out the
+  // maintenance page template to use.
+  global $theme_path, $theme_info, $base_theme_info;
+  $theme_path = dirname($theme_info->uri);
+  $base_themes = $base_theme_info;
+  // Make sure a maintenance-page.tpl.php is always found.
+  $base_themes[] = 'modules/system';
+  while (!file_exists($theme_path . '/maintenance-page.tpl.php') && $base_theme = array_shift($base_themes)) {
+    $theme_path = dirname($base_theme->uri);
+  }
 
-  return theme_render_template('themes/garland/maintenance-page.tpl.php', $variables);
+  return theme_render_template($theme_path . '/maintenance-page.tpl.php', $variables);
+}
+
+/**
+ * Generate a report of the results from an operation run via authorize.php.
+ *
+ * @param array $variables
+ *   - messages: An array of result messages.
+ */
+function theme_authorize_report($variables) {
+  $messages = $variables['messages'];
+  $output = '';
+  if (!empty($messages)) {
+    $output .= '<div id="authorize-results">';
+    foreach ($messages as $heading => $logs) {
+      $output .= '<h3>' . check_plain($heading) . '</h3>';
+      foreach ($logs as $number => $log_message) {
+        if ($number === '#abort') {
+          continue;
+        }
+        $output .= theme('authorize_message', array('message' => $log_message['message'], 'success' => $log_message['success']));
+      }
+    }
+    $output .= '</div>';
+  }
+  return $output;
+}
+
+/**
+ * Render a single log message from the authorize.php batch operation.
+ *
+ * @param $variables
+ *   - message: The log message.
+ *   - success: A boolean indicating failure or success.
+ */
+function theme_authorize_message($variables) {
+  $output = '';
+  $message = $variables['message'];
+  $success = $variables['success'];
+  if ($success) {
+    $output .= '<li class="success">' . $message . '</li>';
+  }
+  else {
+    $output .= '<li class="failure"><strong>' . t('Failed') . ':</strong> ' . $message . '</li>';
+  }
+  return $output;
 }

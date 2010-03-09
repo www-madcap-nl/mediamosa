@@ -1,4 +1,4 @@
-// $Id: form.js,v 1.11 2009/08/31 05:51:07 dries Exp $
+// $Id: form.js,v 1.14 2010/03/07 23:14:20 webchick Exp $
 (function ($) {
 
 /**
@@ -58,31 +58,21 @@ Drupal.behaviors.formUpdated = {
   }
 };
 
-Drupal.behaviors.multiselectSelector = {
-  attach: function (context, settings) {
-    // Automatically selects the right radio button in a multiselect control.
-    $('.multiselect select', context).once('multiselect').change(function () {
-        $('.multiselect input:radio[value="' + this.id.substr(5) + '"]')
-          .attr('checked', true);
-    });
-  }
-};
-
-
 /**
- * Automatically display the guidelines of the selected text format.
+ * Prepopulate form fields with information from the visitor cookie.
  */
-Drupal.behaviors.filterGuidelines = {
-  attach: function (context) {
-    $('.filter-guidelines', context).once('filter-guidelines')
-      .find('label').hide()
-      .parents('.filter-wrapper').find('select.filter-list')
-      .bind('change', function () {
-        $(this).parents('.filter-wrapper')
-          .find('.filter-guidelines-item').hide()
-          .siblings('#filter-guidelines-' + this.value).show();
-      })
-      .change();
+Drupal.behaviors.fillUserInfoFromCookie = {
+  attach: function (context, settings) {
+    $('form.user-info-from-cookie').once('user-info-from-cookie', function () {
+      var formContext = this;
+      $.each(['name', 'mail', 'homepage'], function () {
+        var $element = $('[name=' + this + ']', formContext);
+        var cookie = $.cookie('Drupal.visitor.' + this);
+        if ($element.length && cookie) {
+          $element.val(cookie);
+        }
+      });
+    });
   }
 };
 

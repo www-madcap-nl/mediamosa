@@ -1,5 +1,5 @@
 <?php
-// $Id: list.module,v 1.14 2009/09/09 21:21:54 dries Exp $
+// $Id: list.module,v 1.27 2010/02/15 15:46:23 dries Exp $
 
 /**
  * @file
@@ -7,7 +7,20 @@
  */
 
 /**
- * Implement hook_field_info().
+ * Implements hook_help().
+ */
+function list_help($path, $arg) {
+  switch ($path) {
+    case 'admin/help#list':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('The List module defines various fields for storing a list of items, for use with the Field module. Usually these items are entered through a select list, checkboxes, or radio buttons. See the <a href="@field-help">Field module help page</a> for more information about fields.', array('@field-help' => url('admin/help/field'))) . '</p>';
+      return $output;
+  }
+}
+
+/**
+ * Implements hook_field_info().
  */
 function list_field_info() {
   return array(
@@ -22,7 +35,7 @@ function list_field_info() {
       'label' => t('Boolean'),
       'description' => t('This field stores simple on/off or yes/no options.'),
       'settings' => array('allowed_values' => '', 'allowed_values_function' => ''),
-      'default_widget' => 'options_select',
+      'default_widget' => 'options_buttons',
       'default_formatter' => 'list_default',
     ),
     'list_number' => array(
@@ -43,7 +56,7 @@ function list_field_info() {
 }
 
 /**
- * Implement hook_field_schema().
+ * Implements hook_field_schema().
  */
 function list_field_schema($field) {
   switch ($field['type']) {
@@ -84,9 +97,15 @@ function list_field_schema($field) {
 }
 
 /**
- * Implement hook_field_settings_form().
+ * Implements hook_field_settings_form().
+ *
+ * @todo: If $has_data, add a form validate function to verify that the
+ * new allowed values do not exclude any keys for which data already
+ * exists in the databae (use field_attach_query()) to find out.
+ * Implement the validate function via hook_field_update_forbid() so
+ * list.module does not depend on form submission.
  */
-function list_field_settings_form($field, $instance) {
+function list_field_settings_form($field, $instance, $has_data) {
   $settings = $field['settings'];
 
   $form['allowed_values'] = array(
@@ -96,7 +115,7 @@ function list_field_settings_form($field, $instance) {
     '#required' => FALSE,
     '#rows' => 10,
     '#description' => '<p>' . t('The possible values this field can contain. Enter one value per line, in the format key|label. The key is the value that will be stored in the database, and must be a %type value. The label is optional, and the key will be used as the label if no label is specified.', array('%type' => $field['type'] == 'list_text' ? t('text') : t('numeric'))) . '</p>',
-    '#element_validate' => array('list_allowed_values_validate'),
+    '#element_validate' => array('list_allowed_values_setting_validate'),
     '#list_field_type' => $field['type'],
     '#access' => empty($settings['allowed_values_function']),
   );
@@ -125,52 +144,103 @@ function list_field_settings_form($field, $instance) {
 }
 
 /**
- * Create an array of allowed values for this field.
+ * Element validate callback; check that the entered values are valid.
+ */
+function list_allowed_values_setting_validate($element, &$form_state) {
+  $values = list_extract_allowed_values($element['#value'], $element['#list_field_type'] == 'list');
+  $field_type = $element['#list_field_type'];
+
+  // Check that keys are valid for the field type.
+  foreach ($values as $key => $value) {
+    if ($field_type == 'list_number' && !is_numeric($key)) {
+      form_error($element, t('Allowed values list: each key must be a valid integer or decimal.'));
+      break;
+    }
+    elseif ($field_type == 'list_text' && drupal_strlen($key) > 255) {
+      form_error($element, t('Allowed values list: each key must be a string at most 255 characters long.'));
+      break;
+    }
+    elseif ($field_type == 'list' && !preg_match('/^-?\d+$/', $key)) {
+      form_error($element, t('Allowed values list: keys must be integers.'));
+      break;
+    }
+    elseif ($field_type == 'list_boolean' && !in_array($key, array('0', '1'))) {
+      form_error($element, t('Allowed values list: keys must be either 0 or 1.'));
+      break;
+    }
+  }
+
+  // Check that boolean fields get two values.
+  if ($field_type == 'list_boolean' && count($values) != 2) {
+    form_error($element, t('Allowed values list: two values are required.'));
+  }
+}
+
+/**
+ * Implements hook_field_update_field().
+ */
+function list_field_update_field($field, $prior_field, $has_data) {
+  drupal_static_reset('list_allowed_values');
+}
+
+/**
+ * Returns the set of allowed values for a list field.
+ *
+ * The strings are not safe for output. Keys and values of the array should be
+ * sanitized through field_filter_xss() before being displayed.
+ *
+ * @param $field
+ *   The field definition.
+ *
+ * @return
+ *   The array of allowed values. Keys of the array are the raw stored values
+ *   (integer or text), values of the array are the display aliases.
  */
 function list_allowed_values($field) {
   $allowed_values = &drupal_static(__FUNCTION__, array());
 
-  if (isset($allowed_values[$field['field_name']])) {
-    return $allowed_values[$field['field_name']];
+  if (!isset($allowed_values[$field['id']])) {
+    $values = array();
+
+    $function = $field['settings']['allowed_values_function'];
+    if (!empty($function) && function_exists($function)) {
+      $values = $function($field);
+    }
+    elseif (!empty($field['settings']['allowed_values'])) {
+      $position_keys = $field['type'] == 'list';
+      $values = list_extract_allowed_values($field['settings']['allowed_values'], $position_keys);
+    }
+
+    $allowed_values[$field['id']] = $values;
   }
 
-  $allowed_values[$field['field_name']] = array();
-
-  $function = $field['settings']['allowed_values_function'];
-  if (!empty($function) && function_exists($function)) {
-    $allowed_values[$field['field_name']] = $function($field);
-  }
-  elseif (!empty($field['settings']['allowed_values'])) {
-    $allowed_values[$field['field_name']] = list_allowed_values_list($field['settings']['allowed_values'], $field['type'] == 'list');
-  }
-
-  return $allowed_values[$field['field_name']];
+  return $allowed_values[$field['id']];
 }
 
 /**
- * Create an array of the allowed values for this field.
+ * Generates an array of values from a string.
  *
  * Explode a string with keys and labels separated with '|' and with each new
  * value on its own line.
  *
  * @param $string_values
- *   The list of choices as a string.
+ *   The list of choices as a string, in the format expected by the
+ *   'allowed_values' setting:
+ *    - Values are separated by a carriage return.
+ *    - Each value is in the format "value|label" or "value".
  * @param $position_keys
  *   Boolean value indicating whether to generate keys based on the position of
  *   the value if a key is not manually specified, effectively generating
  *   integer-based keys. This should only be TRUE for fields that have a type of
  *   "list". Otherwise the value will be used as the key if not specified.
  */
-function list_allowed_values_list($string_values, $position_keys = FALSE) {
-  $allowed_values = array();
+function list_extract_allowed_values($string_values, $position_keys = FALSE) {
+  $values = array();
 
   $list = explode("\n", $string_values);
   $list = array_map('trim', $list);
   $list = array_filter($list, 'strlen');
   foreach ($list as $key => $value) {
-    // Sanitize the user input with a permissive filter.
-    $value = field_filter_xss($value);
-
     // Check for a manually specified key.
     if (strpos($value, '|') !== FALSE) {
       list($key, $value) = explode('|', $value);
@@ -180,41 +250,19 @@ function list_allowed_values_list($string_values, $position_keys = FALSE) {
     elseif (!$position_keys) {
       $key = $value;
     }
-    $allowed_values[$key] = (isset($value) && $value !== '') ? $value : $key;
+    $values[$key] = (isset($value) && $value !== '') ? $value : $key;
   }
 
-  return $allowed_values;
+  return $values;
 }
 
 /**
- * Element validate callback; check that the entered values are valid.
- */
-function list_allowed_values_validate($element, &$form_state) {
-  $values = list_allowed_values_list($element['#value'], $element['#list_field_type'] == 'list');
-  $field_type = $element['#list_field_type'];
-  foreach ($values as $key => $value) {
-    if ($field_type == 'list_number' && !is_numeric($key)) {
-      form_error($element, t('The entered available values are not valid. Each key must be a valid integer or decimal.'));
-      break;
-    }
-    elseif ($field_type == 'list_text' && strlen($key) > 255) {
-      form_error($element, t('The entered available values are not valid. Each key must be a string less than 255 characters.'));
-      break;
-    }
-    elseif ($field_type == 'list' && (!preg_match('/^-?\d+$/', $key))) {
-      form_error($element, t('The entered available values are not valid. All specified keys must be integers.'));
-      break;
-    }
-  }
-}
-
-/**
- * Implement hook_field_validate().
+ * Implements hook_field_validate().
  *
  * Possible error codes:
  * - 'list_illegal_value': The value is not part of the list of allowed values.
  */
-function list_field_validate($obj_type, $object, $field, $instance, $langcode, $items, &$errors) {
+function list_field_validate($entity_type, $entity, $field, $instance, $langcode, $items, &$errors) {
   $allowed_values = list_allowed_values($field);
   foreach ($items as $delta => $item) {
     if (!empty($item['value'])) {
@@ -229,7 +277,7 @@ function list_field_validate($obj_type, $object, $field, $instance, $langcode, $
 }
 
 /**
- * Implement hook_field_is_empty().
+ * Implements hook_field_is_empty().
  */
 function list_field_is_empty($item, $field) {
   if (empty($item['value']) && (string)$item['value'] !== '0') {
@@ -239,7 +287,34 @@ function list_field_is_empty($item, $field) {
 }
 
 /**
- * Implement hook_field_formatter_info().
+ * Implements hook_field_widget_info_alter().
+ *
+ * The List module does not implement widgets of its own, but reuses the
+ * widgets defined in options.module.
+ *
+ * @see list_options_list().
+ */
+function list_field_widget_info_alter(&$info) {
+  $widgets = array(
+    'options_select' => array('list', 'list_text', 'list_number'),
+    'options_buttons' => array('list', 'list_text', 'list_number', 'list_boolean'),
+    'options_onoff' => array('list_boolean'),
+  );
+
+  foreach ($widgets as $widget => $field_types) {
+    $info[$widget]['field types'] = array_merge($info[$widget]['field types'], $field_types);
+  }
+}
+
+/**
+ * Implements hook_options_list().
+ */
+function list_options_list($field) {
+  return list_allowed_values($field);
+}
+
+/**
+ * Implements hook_field_formatter_info().
  */
 function list_field_formatter_info() {
   return array(
@@ -255,20 +330,32 @@ function list_field_formatter_info() {
 }
 
 /**
- * Theme function for 'default' list field formatter.
+ * Implements hook_field_formatter_view().
  */
-function theme_field_formatter_list_default($element) {
-  $field = field_info_field($element['#field_name']);
-  if (($allowed_values = list_allowed_values($field)) && isset($allowed_values[$element['#item']['value']])) {
-    return $allowed_values[$element['#item']['value']];
-  }
-  // If no match was found in allowed values, fall back to the key.
-  return $element['#item']['safe'];
-}
+function list_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+  $element = array();
 
-/**
- * Theme function for 'key' list field formatter.
- */
-function theme_field_formatter_list_key($element) {
-  return $element['#item']['safe'];
+  switch ($display['type']) {
+    case 'list_default':
+      $allowed_values = list_allowed_values($field);
+      foreach ($items as $delta => $item) {
+        if (isset($allowed_values[$item['value']])) {
+          $output = field_filter_xss($allowed_values[$item['value']]);
+        }
+        else {
+          // If no match was found in allowed values, fall back to the key.
+          $output = field_filter_xss($value);
+        }
+        $element[$delta] = array('#markup' => $output);
+      }
+      break;
+
+    case 'list_key':
+      foreach ($items as $delta => $item) {
+        $element[$delta] = array('#markup' => field_filter_xss($item['value']));
+      }
+      break;
+  }
+
+  return $element;
 }

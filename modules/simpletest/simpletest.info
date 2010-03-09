@@ -1,4 +1,4 @@
-; $Id: simpletest.info,v 1.12 2009/09/21 06:52:40 dries Exp $
+; $Id: simpletest.info,v 1.16 2010/02/03 18:16:23 webchick Exp $
 name = Testing
 description = Provides a framework for unit and functional testing.
 package = Core
@@ -9,12 +9,13 @@ files[] = simpletest.pages.inc
 files[] = simpletest.install
 files[] = simpletest.test
 files[] = drupal_web_test_case.php
+configure = admin/config/development/testing/settings
 
 ; Tests in tests directory.
 files[] = tests/actions.test
+files[] = tests/ajax.test
 files[] = tests/batch.test
 files[] = tests/bootstrap.test
-files[] = tests/browser.test
 files[] = tests/cache.test
 files[] = tests/common.test
 files[] = tests/database_test.test
@@ -34,11 +35,12 @@ files[] = tests/schema.test
 files[] = tests/session.test
 files[] = tests/theme.test
 files[] = tests/unicode.test
+files[] = tests/update.test
 files[] = tests/xmlrpc.test
 
-; Information added by drupal.org packaging script on 2009-09-21
+; Information added by drupal.org packaging script on 2010-03-09
 version = "7.x-dev"
 core = "7.x"
 project = "drupal"
-datestamp = "1253535013"
+datestamp = "1268136300"
 

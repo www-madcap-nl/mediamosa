@@ -1,4 +1,4 @@
-; $Id: profile.info,v 1.9 2009/06/08 09:23:53 dries Exp $
+; $Id: profile.info,v 1.10 2009/11/17 21:24:18 dries Exp $
 name = Profile
 description = Supports configurable user profiles.
 package = Core
@@ -9,10 +9,11 @@ files[] = profile.admin.inc
 files[] = profile.pages.inc
 files[] = profile.install
 files[] = profile.test
+configure = admin/config/people/profile
 
-; Information added by drupal.org packaging script on 2009-09-21
+; Information added by drupal.org packaging script on 2010-03-09
 version = "7.x-dev"
 core = "7.x"
 project = "drupal"
-datestamp = "1253535013"
+datestamp = "1268136300"
 

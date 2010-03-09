@@ -1,5 +1,5 @@
 <?php
-// $Id: poll.install,v 1.25 2009/09/10 06:38:19 dries Exp $
+// $Id: poll.install,v 1.30 2010/01/30 00:08:34 webchick Exp $
 
 /**
  * @file
@@ -7,7 +7,7 @@
  */
 
 /**
- * Implement hook_schema().
+ * Implements hook_schema().
  */
 function poll_schema() {
   $schema['poll'] = array(
@@ -62,6 +62,7 @@ function poll_schema() {
         'not null' => TRUE,
         'default' => '',
         'description' => 'The text for this choice.',
+        'translatable' => TRUE,
       ),
       'chvotes' => array(
         'type' => 'int',
@@ -71,7 +72,6 @@ function poll_schema() {
       ),
       'weight' => array(
         'type' => 'int',
-        'size' => 'tiny',
         'not null' => TRUE,
         'default' => 0,
         'description' => 'The sort order of this choice among all choices for the same node.',
@@ -141,22 +141,30 @@ function poll_schema() {
  * Rename {poll_choices} table to {poll_choice} and {poll_votes} to {poll_vote}.
  */
 function poll_update_7001() {
-  $ret = array();
-  db_rename_table($ret, 'poll_choices', 'poll_choice');
-  db_rename_table($ret, 'poll_votes', 'poll_vote');
-  return $ret;
+  db_rename_table('poll_choices', 'poll_choice');
+  db_rename_table('poll_votes', 'poll_vote');
 }
 
 /**
- * Add timestamp field to {poll_votes}.
+ * Add timestamp field to {poll_vote}.
  */
 function poll_update_7002() {
-  $ret = array();
   $field = array(
     'type' => 'int',
     'not null' => TRUE,
     'default' => 0,
   );
-  db_add_field($ret, 'poll_votes', 'timestamp', $field);
-  return $ret;
+  db_add_field('poll_vote', 'timestamp', $field);
+}
+
+/**
+ * Change the weight column to normal int.
+ */
+function poll_update_7003() {
+  db_change_field('poll_choice', 'weight', 'weight', array(
+    'type' => 'int',
+    'not null' => TRUE,
+    'default' => 0,
+    'description' => 'The sort order of this choice among all choices for the same node.',
+  ));
 }

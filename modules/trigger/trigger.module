@@ -1,5 +1,5 @@
 <?php
-// $Id: trigger.module,v 1.48 2009/09/19 11:07:36 dries Exp $
+// $Id: trigger.module,v 1.59 2010/03/07 07:22:42 webchick Exp $
 
 /**
  * @file
@@ -8,10 +8,10 @@
  */
 
 /**
- * Implement hook_help().
+ * Implements hook_help().
  */
 function trigger_help($path, $arg) {
-  $explanation = '<p>' . t('Triggers are system events, such as when new content is added or when a user logs in. The trigger module associates these triggers with actions (functional tasks), such as unpublishing content or e-mailing an administrator. The <a href="@url">Actions settings page</a> contains a list of existing actions and provides the ability to create and configure additional actions.', array('@url' => url('admin/config/system/actions'))) . '</p>';
+  $explanation = '<p>' . t('Triggers are events on your site, such as new content being added or a user logging in. The Trigger module associates these triggers with actions (functional tasks), such as unpublishing content containing certain keywords or e-mailing an administrator. The <a href="@url">Actions settings page</a> contains a list of existing actions and provides the ability to create and configure advanced actions (actions requiring configuration, such as an e-mail address or a list of banned words).', array('@url' => url('admin/config/system/actions'))) . '</p>';
   switch ($path) {
     case 'admin/structure/trigger/comment':
       return $explanation . '<p>' . t('Below you can assign actions to run when certain comment-related triggers happen. For example, you could promote a post to the front page when a comment is added.') . '</p>';
@@ -23,16 +23,22 @@ function trigger_help($path, $arg) {
       return $explanation . '<p>' . t('Below you can assign actions to run when certain taxonomy-related triggers happen. For example, you could send an e-mail to an administrator when a term is deleted.') . '</p>';
     case 'admin/structure/trigger/user':
       return $explanation . '<p>' . t("Below you can assign actions to run when certain user-related triggers happen. For example, you could send an e-mail to an administrator when a user account is deleted.") . '</p>';
+
     case 'admin/help#trigger':
-      $output = '<p>' . t('The Trigger module provides the ability to trigger <a href="@actions">actions</a> upon system events, such as when new content is added or when a user logs in.', array('@actions' => url('admin/config/system/actions'))) . '</p>';
-      $output .= '<p>' . t('The combination of actions and triggers can perform many useful tasks, such as e-mailing an administrator if a user account is deleted, or automatically unpublishing comments that contain certain words. By default, there are five "contexts" of events (Comments, Content, Cron, Taxonomy, and Users), but more may be added by additional modules.') . '</p>';
-      $output .= '<p>' . t('For more information, see the online handbook entry for <a href="@trigger">Trigger module</a>.', array('@trigger' => 'http://drupal.org/handbook/modules/trigger/')) . '</p>';
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('The Trigger module provides the ability to cause <em>actions</em> to run when certain <em>triggers</em> take place on your site. Triggers are events, such as new content being added to your site or a user logging in, and actions are tasks, such as unpublishing content or e-mailing an administrator. For more information, see the online handbook entry for <a href="@trigger">Trigger module</a>.', array('@trigger' => 'http://drupal.org/handbook/modules/trigger/')) . '</p>';
+      $output .= '<h3>' . t('Uses') . '</h3>';
+      $output .= '<dl>';
+      $output .= '<dt>' . t('Configuring triggers and actions') . '</dt>';
+      $output .= '<dd>' . t('The combination of actions and triggers can perform many useful tasks, such as e-mailing an administrator if a user account is deleted, or automatically unpublishing comments that contain certain words. To set up a trigger/action combination, first visit the <a href="@actions-page">Actions configuration page</a>, where you can either verify that the action you want is already listed, or create a new <em>advanced</em> action. You will need to set up an advanced action if there are configuration options in your trigger/action combination, such as specifying an e-mail address or a list of banned words. After configuring or verifying your action, visit the <a href="@triggers-page">Triggers configuration page</a> and choose the appropriate tab (Comment, Taxonomy, etc.), where you can assign the action to run when the trigger event occurs.', array('@triggers-page' => url('admin/structure/trigger'), '@actions-page' => url('admin/config/system/actions'))) . '</dd>';
+      $output .= '</dl>';
       return $output;
   }
 }
 
 /**
- * Implement hook_menu().
+ * Implements hook_menu().
  */
 function trigger_menu() {
   $items['admin/structure/trigger'] = array(
@@ -82,7 +88,7 @@ function trigger_menu() {
 }
 
 /**
- * Implement hook_trigger_info().
+ * Implements hook_trigger_info().
  *
  * Defines all the triggers that this module implements triggers for.
  */
@@ -106,7 +112,10 @@ function trigger_trigger_info() {
        ),
      ),
      'comment' => array(
-         'comment_insert' => array(
+       'comment_presave' => array(
+         'label' => t('When either saving a new comment or updating an existing comment'),
+       ),
+       'comment_insert' => array(
          'label' => t('After saving a new comment'),
        ),
        'comment_update' => array(
@@ -136,11 +145,14 @@ function trigger_trigger_info() {
        ),
      ),
      'user' => array(
+       'user_presave' => array(
+         'label' => t('When either creating a new user account or updating an existing'),
+       ),
        'user_insert' => array(
-         'label' => t('After a user account has been created'),
+         'label' => t('After creating a new user account'),
        ),
        'user_update' => array(
-         'label' => t("After a user's profile has been updated"),
+         'label' => t('After updating a user account'),
        ),
        'user_delete' => array(
          'label' => t('After a user has been deleted'),
@@ -175,19 +187,19 @@ function trigger_get_assigned_actions($hook) {
 }
 
 /**
- * Implement hook_theme().
+ * Implements hook_theme().
  */
 function trigger_theme() {
   return array(
     'trigger_display' => array(
-      'arguments' => array('element'),
+      'render element' => 'element',
       'file' => 'trigger.admin.inc',
     ),
   );
 }
 
 /**
- * Implement hook_forms().
+ * Implements hook_forms().
  *
  * We re-use code by using the same assignment form definition for each hook.
  */
@@ -282,35 +294,35 @@ function _trigger_node($node, $hook, $a3 = NULL, $a4 = NULL) {
 }
 
 /**
- * Implement hook_node_view().
+ * Implements hook_node_view().
  */
-function trigger_node_view($node, $build_mode) {
-  _trigger_node($node, 'node_view', $build_mode);
+function trigger_node_view($node, $view_mode) {
+  _trigger_node($node, 'node_view', $view_mode);
 }
 
 /**
- * Implement hook_node_update().
+ * Implements hook_node_update().
  */
 function trigger_node_update($node) {
   _trigger_node($node, 'node_update');
 }
 
 /**
- * Implement hook_node_presave().
+ * Implements hook_node_presave().
  */
 function trigger_node_presave($node) {
   _trigger_node($node, 'node_presave');
 }
 
 /**
- * Implement hook_node_insert().
+ * Implements hook_node_insert().
  */
 function trigger_node_insert($node) {
   _trigger_node($node, 'node_insert');
 }
 
 /**
- * Implement hook_node_delete().
+ * Implements hook_node_delete().
  */
 function trigger_node_delete($node) {
   _trigger_node($node, 'node_delete');
@@ -346,28 +358,35 @@ function _trigger_normalize_comment_context($type, $comment) {
 }
 
 /**
- * Implement hook_comment_insert().
+ * Implements hook_comment_presave().
+ */
+function trigger_comment_presave($comment) {
+  _trigger_comment($comment, 'comment_presave');
+}
+
+/**
+ * Implements hook_comment_insert().
  */
 function trigger_comment_insert($comment) {
   _trigger_comment($comment, 'comment_insert');
 }
 
 /**
- * Implement hook_comment_update().
+ * Implements hook_comment_update().
  */
 function trigger_comment_update($comment) {
   _trigger_comment($comment, 'comment_update');
 }
 
 /**
- * Implement hook_comment_delete().
+ * Implements hook_comment_delete().
  */
 function trigger_comment_delete($comment) {
   _trigger_comment($comment, 'comment_delete');
 }
 
 /**
- * Implement hook_comment_view().
+ * Implements hook_comment_view().
  */
 function trigger_comment_view($comment) {
   _trigger_comment($comment, 'comment_view');
@@ -404,14 +423,13 @@ function _trigger_comment($a1, $hook) {
       actions_do($aid, $objects[$type], $context);
     }
     else {
-      $a1 = (object) $a1;
       actions_do($aid, $a1, $context);
     }
   }
 }
 
 /**
- * Implement hook_cron().
+ * Implements hook_cron().
  */
 function trigger_cron() {
   $aids = trigger_get_assigned_actions('cron');
@@ -456,35 +474,42 @@ function _trigger_normalize_user_context($type, $account) {
 }
 
 /**
- * Implement hook_user_login().
+ * Implements hook_user_login().
  */
 function trigger_user_login(&$edit, $account, $category) {
   _trigger_user('user_login', $edit, $account, $category);
 }
 
 /**
- * Implement hook_user_logout().
+ * Implements hook_user_logout().
  */
 function trigger_user_logout($account) {
   _trigger_user('user_logout', $edit = NULL, $account);
 }
 
 /**
- * Implement hook_user_insert().
+ * Implements hook_user_presave().
+ */
+function trigger_user_presave(&$edit, $account, $category) {
+  _trigger_user('user_presave', $edit, $account, $category);
+}
+
+/**
+ * Implements hook_user_insert().
  */
 function trigger_user_insert(&$edit, $account, $category) {
   _trigger_user('user_insert', $edit, $account, $category);
 }
 
 /**
- * Implement hook_user_update().
+ * Implements hook_user_update().
  */
 function trigger_user_update(&$edit, $account, $category) {
   _trigger_user('user_update', $edit, $account, $category);
 }
 
 /**
- * Implement hook_user_cancel().
+ * Implements hook_user_cancel().
  */
 function trigger_user_cancel($edit, $account, $method) {
   switch ($method) {
@@ -496,7 +521,7 @@ function trigger_user_cancel($edit, $account, $method) {
 }
 
 /**
- * Implement hook_user_view().
+ * Implements hook_user_view().
  */
 function trigger_user_view($account) {
   _trigger_user('user_view', $edit = NULL, $account, NULL);
@@ -549,28 +574,28 @@ function _trigger_taxonomy($hook, $array) {
 }
 
 /**
- * Implement hook_taxonomy_term_insert().
+ * Implements hook_taxonomy_term_insert().
  */
 function trigger_taxonomy_term_insert($term) {
   _trigger_taxonomy('taxonomy_term_insert', (array) $term);
 }
 
 /**
- * Implement hook_taxonomy_term_update().
+ * Implements hook_taxonomy_term_update().
  */
 function trigger_taxonomy_term_update($term) {
   _trigger_taxonomy('taxonomy_term_update', (array) $term);
 }
 
 /**
- * Implement hook_taxonomy_term_delete().
+ * Implements hook_taxonomy_term_delete().
  */
 function trigger_taxonomy_term_delete($term) {
   _trigger_taxonomy('taxonomy_term_delete', (array) $term);
 }
 
 /**
- * Implement hook_actions_delete().
+ * Implements hook_actions_delete().
  *
  * Removes all trigger entries for the given action, when an action is deleted.
  */
@@ -584,13 +609,13 @@ function trigger_actions_delete($aid) {
  * Retrieves and caches information from hook_trigger_info() implementations.
  */
 function _trigger_get_all_info() {
-  static $triggers = NULL;
-  if( $triggers ) {
-    return $triggers;
+  $triggers = &drupal_static(__FUNCTION__);
+
+  if (!isset($triggers)) {
+    $triggers = module_invoke_all('trigger_info');
+    drupal_alter('trigger_info', $triggers);
   }
 
-  $triggers = module_invoke_all('trigger_info');
-  drupal_alter('trigger_info', $triggers);
   return $triggers;
 }
 

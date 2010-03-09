@@ -1,5 +1,5 @@
 <?php
-// $Id: schema.inc,v 1.9 2009/08/22 19:43:12 webchick Exp $
+// $Id: schema.inc,v 1.14 2010/03/01 06:27:58 dries Exp $
 
 /**
  * @file
@@ -86,16 +86,16 @@ class DatabaseSchema_sqlite extends DatabaseSchema {
    * Build the SQL expression for keys.
    */
   protected function createKeySql($fields) {
-    $ret = array();
+    $return = array();
     foreach ($fields as $field) {
       if (is_array($field)) {
-        $ret[] = $field[0];
+        $return[] = $field[0];
       }
       else {
-        $ret[] = $field;
+        $return[] = $field;
       }
     }
-    return implode(', ', $ret);
+    return implode(', ', $return);
   }
 
   /**
@@ -122,22 +122,25 @@ class DatabaseSchema_sqlite extends DatabaseSchema {
   }
 
   /**
-  * Create an SQL string for a field to be used in table creation or alteration.
-  *
-  * Before passing a field out of a schema definition into this function it has
-  * to be processed by db_processField().
-  *
-  * @param $name
-  *    Name of the field.
-  * @param $spec
-  *    The field specification, as per the schema data structure format.
-  */
+   * Create an SQL string for a field to be used in table creation or alteration.
+   *
+   * Before passing a field out of a schema definition into this function it has
+   * to be processed by db_processField().
+   *
+   * @param $name
+   *    Name of the field.
+   * @param $spec
+   *    The field specification, as per the schema data structure format.
+   */
   protected function createFieldSql($name, $spec) {
     if (!empty($spec['auto_increment'])) {
       $sql = $name . " INTEGER PRIMARY KEY AUTOINCREMENT";
+      if (!empty($spec['unsigned'])) {
+        $sql .= ' CHECK (' . $name . '>= 0)';
+      }
     }
     else {
-      $sql = $name . " " . $spec['sqlite_type'];
+      $sql = $name . ' ' . $spec['sqlite_type'];
 
       if (in_array($spec['type'], array('varchar', 'char', 'text')) && isset($spec['length'])) {
         $sql .= '(' . $spec['length'] . ')';
@@ -145,6 +148,10 @@ class DatabaseSchema_sqlite extends DatabaseSchema {
 
       if (!empty($spec['not null'])) {
         $sql .= ' NOT NULL';
+      }
+
+      if (!empty($spec['unsigned'])) {
+        $sql .= ' CHECK (' . $name . '>= 0)';
       }
 
       if (isset($spec['default'])) {
@@ -211,49 +218,58 @@ class DatabaseSchema_sqlite extends DatabaseSchema {
     return $map;
   }
 
-  /**
-  * Rename a table.
-  *
-  * @param $ret
-  *   Array to which query results will be added.
-  * @param $table
-  *   The table to be renamed.
-  * @param $new_name
-  *   The new name for the table.
-  */
-  public function renameTable(&$ret, $table, $new_name) {
-    $ret[] = update_sql('ALTER TABLE {' . $table . '} RENAME TO {' . $new_name . '}');
+  public function renameTable($table, $new_name) {
+    if (!$this->tableExists($table)) {
+      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot rename %table to %table_new: table %table doesn't exist.", array('%table' => $table, '%table_new' => $new_name)));
+    }
+    if ($this->tableExists($new_name)) {
+      throw new DatabaseSchemaObjectExistsException(t("Cannot rename %table to %table_new: table %table_new already exists.", array('%table' => $table, '%table_new' => $new_name)));
+    }
+
+    $schema = $this->introspectSchema($table);
+
+    $this->connection->query('ALTER TABLE {' . $table . '} RENAME TO {' . $new_name . '}');
+
+    // Drop the indexes, there is no RENAME INDEX command in SQLite.
+    if (!empty($schema['unique keys'])) {
+      foreach ($schema['unique keys'] as $key => $fields) {
+        $this->dropIndex($table, $key);
+      }
+    }
+    if (!empty($schema['indexes'])) {
+      foreach ($schema['indexes'] as $index => $fields) {
+        $this->dropIndex($table, $index);
+      }
+    }
+
+    // Recreate the indexes.
+    $statements = $this->createIndexSql($new_name, $schema);
+    foreach ($statements as $statement) {
+      $this->connection->query($statement);
+    }
   }
 
-  /**
-   * Drop a table.
-   *
-   * @param $ret
-   *   Array to which query results will be added.
-   * @param $table
-   *   The table to be dropped.
-   */
-  public function dropTable(&$ret, $table) {
-    $ret[] = update_sql('DROP TABLE {' . $table . '}');
+  public function dropTable($table) {
+    if (!$this->tableExists($table)) {
+      return FALSE;
+    }
+
+    $this->connection->query('DROP TABLE {' . $table . '}');
+    return TRUE;
   }
 
-  /**
-   * Add a new field to a table.
-   *
-   * @param $ret
-   *   Array to which query results will be added.
-   * @param $table
-   *   Name of the table to be altered.
-   * @param $field
-   *   Name of the field to be added.
-   * @param $spec
-   *   The field specification array, as taken from a schema definition.
-   */
-  public function addField(&$ret, $table, $field, $spec, $keys_new = array()) {
+  public function addField($table, $field, $spec, $keys_new = array()) {
+    if (!$this->tableExists($table)) {
+      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot add field %table.%field: table doesn't exist.", array('%field' => $field, '%table' => $table)));
+    }
+    if ($this->columnExists($table, $field)) {
+      throw new DatabaseSchemaObjectExistsException(t("Cannot add field %table.%field: field already exists.", array('%field' => $field, '%table' => $table)));
+    }
+
     // TODO: $keys_new is not supported yet.
     $query = 'ALTER TABLE {' . $table . '} ADD ';
     $query .= $this->createFieldSql($field, $this->processField($spec));
-    $ret[] = update_sql($query);
+    $this->connection->query($query);
   }
 
   /**
@@ -262,30 +278,32 @@ class DatabaseSchema_sqlite extends DatabaseSchema {
    * As SQLite does not support ALTER TABLE (with a few exceptions) it is
    * necessary to create a new table and copy over the old content.
    *
-   * @param $ret
-   *   Array to which query results will be added.
    * @param $table
    *   Name of the table to be altered.
    * @param $new_schema
    *   The new schema array for the table.
    */
-  protected function alterTable(&$ret, $table, $new_schema) {
+  protected function alterTable($table, $new_schema) {
     $i = 0;
     do {
       $new_table = $table . '_' . $i++;
     } while ($this->tableExists($new_table));
-    $this->createTable($ret, $new_table, $new_schema);
-    $fields = implode(', ', array_keys($new_schema['fields']));
-    $ret[] = update_sql('INSERT INTO {' . $new_table . "} ($fields) SELECT $fields FROM {" . $table . '}');
-    $old_count = db_query('SELECT COUNT(*) FROM {' . $table . '}')->fetchField();
-    $new_count = db_query('SELECT COUNT(*) FROM {' . $new_table . '}')->fetchField();
+
+    $this->createTable($new_table, $new_schema);
+
+    $select = $this->connection->select($table)->fields($table, array_keys($new_schema['fields']));
+    $this->connection->insert($new_table)
+      ->from($select)
+      ->execute();
+    $old_count = $this->connection->query('SELECT COUNT(*) FROM {' . $table . '}')->fetchField();
+    $new_count = $this->connection->query('SELECT COUNT(*) FROM {' . $new_table . '}')->fetchField();
     if ($old_count == $new_count) {
       do {
         $temp_table = $table . '_' . $i++;
       } while ($this->tableExists($temp_table));
-      $this->renameTable($ret, $table, $temp_table);
-      $this->renameTable($ret, $new_table, $table);
-      $this->dropTable($ret, $temp_table);
+      $this->renameTable($table, $temp_table);
+      $this->renameTable($new_table, $table);
+      $this->dropTable($temp_table);
     }
   }
 
@@ -305,7 +323,8 @@ class DatabaseSchema_sqlite extends DatabaseSchema {
   protected function introspectSchema($table) {
     $mapped_fields = array_flip($this->getFieldTypeMap());
     $schema = array();
-    foreach (db_query("PRAGMA table_info('{" . $table . "}')") as $row) {
+    $result = $this->connection->query("PRAGMA table_info('{" . $table . "}')");
+    foreach ($result as $row) {
       if (preg_match('/^([^(]+)\((.*)\)$/', $row->type, $matches)) {
         $type = $matches[1];
         $length = $matches[2];
@@ -334,7 +353,8 @@ class DatabaseSchema_sqlite extends DatabaseSchema {
       }
     }
     $indexes = array();
-    foreach (db_query("PRAGMA index_list('{" . $table . "}')") as $row) {
+    $result = $this->connection->query("PRAGMA index_list('{" . $table . "}')");
+    foreach ($result as $row) {
       if (strpos($row->name, 'sqlite_autoindex_') !== 0) {
         $indexes[] = array(
           'schema_key' => $row->unique ? 'unique keys' : 'indexes',
@@ -342,31 +362,25 @@ class DatabaseSchema_sqlite extends DatabaseSchema {
         );
       }
     }
-    $n = strlen($table) + 1;
+    // Get length of table name and underscore.
+    $n = strlen($this->connection->prefixTables('{' . $table . '}')) + 1;
     foreach ($indexes as $index) {
       $name = $index['name'];
+      // Get index name without prefix.
       $index_name = substr($name, $n);
-      foreach (db_query("PRAGMA index_info('$name')") as $row) {
+      $result = $this->connection->query("PRAGMA index_info('$name')");
+      foreach ($result as $row) {
         $schema[$index['schema_key']][$index_name][] = $row->name;
       }
     }
     return $schema;
   }
 
-  /**
-   * Drop a field.
-   *
-   * This implementation can't use ALTER TABLE directly, because SQLite only
-   * supports a limited subset of that command.
-   *
-   * @param $ret
-   *   Array to which query results will be added.
-   * @param $table
-   *   The table to be altered.
-   * @param $field
-   *   The field to be dropped.
-   */
-  public function dropField(&$ret, $table, $field) {
+  public function dropField($table, $field) {
+    if ($this->columnExists($table, $field)) {
+      return FALSE;
+    }
+
     $new_schema = $this->introspectSchema($table);
     unset($new_schema['fields'][$field]);
     foreach ($new_schema['indexes'] as $index => $fields) {
@@ -380,31 +394,18 @@ class DatabaseSchema_sqlite extends DatabaseSchema {
         unset($new_schema['indexes'][$index]);
       }
     }
-    $this->alterTable($ret, $table, $new_schema);
+    $this->alterTable($table, $new_schema);
+    return TRUE;
   }
 
-  /**
-   * Change a field definition.
-   *
-   * This implementation can't use ALTER TABLE directly, because SQLite only
-   * supports a limited subset of that command.
-   *
-   * @param $ret
-   *   Array to which query results will be added.
-   * @param $table
-   *   Name of the table.
-   * @param $field
-   *   Name of the field to change.
-   * @param $field_new
-   *   New name for the field (set to the same as $field if you don't want to change the name).
-   * @param $spec
-   *   The field specification for the new field.
-   * @param $keys_new
-   *   Optional keys and indexes specification to be created on the
-   *   table along with changing the field. The format is the same as a
-   *   table specification but without the 'fields' element.
-   */
-  public function changeField(&$ret, $table, $field, $field_new, $spec, $keys_new = array()) {
+  public function changeField($table, $field, $field_new, $spec, $keys_new = array()) {
+    if (!$this->columnExists($table, $field)) {
+      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot change the definition of field %table.%name: field doesn't exist.", array('%table' => $table, '%name' => $field)));
+    }
+    if (($field != $field_new) && $this->columnExists($table, $field_new)) {
+      throw new DatabaseSchemaObjectExistsException(t("Cannot rename field %table.%name to %name_new: target field already exists.", array('%table' => $table, '%name' => $field, '%name_new' => $field_new)));
+    }
+
     $new_schema = $this->introspectSchema($table);
     unset($new_schema['fields'][$field]);
     $new_schema['fields'][$field_new] = $spec;
@@ -417,162 +418,106 @@ class DatabaseSchema_sqlite extends DatabaseSchema {
         $new_schema[$k] = $keys_new[$k] + $new_schema[$k];
       }
     }
-    $this->alterTable($ret, $table, $new_schema);
+    $this->alterTable($table, $new_schema);
   }
 
-  /**
-   * Add an index.
-   *
-   * @param $ret
-   *   Array to which query results will be added.
-   * @param $table
-   *   The table to be altered.
-   * @param $name
-   *   The name of the index.
-   * @param $fields
-   *   An array of field names.
-   */
-  public function addIndex(&$ret, $table, $name, $fields) {
+  public function addIndex($table, $name, $fields) {
+    if (!$this->tableExists($table)) {
+      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot add index %name to table %table: table doesn't exist.", array('%table' => $table, '%name' => $name)));
+    }
+    if ($this->indexExists($table, $name)) {
+      throw new DatabaseSchemaObjectExistsException(t("Cannot add index %name to table %table: index already exists.", array('%table' => $table, '%name' => $name)));
+    }
+
     $schema['indexes'][$name] = $fields;
     $statements = $this->createIndexSql($table, $schema);
     foreach ($statements as $statement) {
-      $ret[] = update_sql($statement);
+      $this->connection->query($statement);
     }
   }
 
-  /**
-   * Drop an index.
-   *
-   * @param $ret
-   *   Array to which query results will be added.
-   * @param $table
-   *   The table to be altered.
-   * @param $name
-   *   The name of the index.
-   */
-  public function dropIndex(&$ret, $table, $name) {
-    $ret[] = update_sql('DROP INDEX ' . '{' . $table . '}_' . $name);
+  public function indexExists($table, $name) {
+    return $this->connection->query('PRAGMA index_info({' . $table . '}_' . $name . ')')->fetchField() != '';
   }
 
-  /**
-   * Add a unique key.
-   *
-   * @param $ret
-   *   Array to which query results will be added.
-   * @param $table
-   *   The table to be altered.
-   * @param $name
-   *   The name of the key.
-   * @param $fields
-   *   An array of field names.
-   */
-  public function addUniqueKey(&$ret, $table, $name, $fields) {
+  public function dropIndex($table, $name) {
+    if (!$this->indexExists($table, $name)) {
+      return FALSE;
+    }
+
+    $this->connection->query('DROP INDEX ' . '{' . $table . '}_' . $name);
+    return TRUE;
+  }
+
+  public function addUniqueKey($table, $name, $fields) {
+    if (!$this->tableExists($table)) {
+      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot add unique key %name to table %table: table doesn't exist.", array('%table' => $table, '%name' => $name)));
+    }
+    if ($this->indexExists($table, $name)) {
+      throw new DatabaseSchemaObjectExistsException(t("Cannot add unique key %name to table %table: unique key already exists.", array('%table' => $table, '%name' => $name)));
+    }
+
     $schema['unique keys'][$name] = $fields;
     $statements = $this->createIndexSql($table, $schema);
     foreach ($statements as $statement) {
-      $ret[] = update_sql($statement);
+      $this->connection->query($statement);
     }
   }
 
-  /**
-   * Drop a unique key.
-   *
-   * @param $ret
-   *   Array to which query results will be added.
-   * @param $table
-   *   The table to be altered.
-   * @param $name
-   *   The name of the key.
-   */
-  public function dropUniqueKey(&$ret, $table, $name) {
-    $ret[] = update_sql('DROP INDEX ' . '{' . $table . '}_' . $name);
+  public function dropUniqueKey($table, $name) {
+    if (!$this->indexExists($table, $name)) {
+      return FALSE;
+    }
+
+    $this->connection->query('DROP INDEX ' . '{' . $table . '}_' . $name);
+    return TRUE;
   }
 
-  /**
-   * Add a primary key.
-   *
-   * This implementation can't use ALTER TABLE directly, because SQLite only
-   * supports a limited subset of that command.
-   *
-   * @param $ret
-   *   Array to which query results will be added.
-   * @param $table
-   *   The table to be altered.
-   * @param $fields
-   *   Fields for the primary key.
-   */
-  public function addPrimaryKey(&$ret, $table, $fields) {
+  public function addPrimaryKey($table, $fields) {
+    if (!$this->tableExists($table)) {
+      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot add primary key to table %table: table doesn't exist.", array('%table' => $table)));
+    }
+
     $new_schema = $this->introspectSchema($table);
+    if (!empty($new_schema['primary key'])) {
+      throw new DatabaseSchemaObjectExistsException(t("Cannot add primary key to table %table: primary key already exists.", array('%table' => $table)));
+    }
+
     $new_schema['primary key'] = $fields;
-    $this->alterTable($ret, $table, $new_schema);
+    $this->alterTable($table, $new_schema);
   }
 
-  /**
-   * Drop the primary key.
-   *
-   * This implementation can't use ALTER TABLE directly, because SQLite only
-   * supports a limited subset of that command.`
-   *
-   * @param $ret
-   *   Array to which query results will be added.
-   * @param $table
-   *   The table to be altered.
-   */
-  public function dropPrimaryKey(&$ret, $table) {
+  public function dropPrimaryKey($table) {
     $new_schema = $this->introspectSchema($table);
+    if (empty($new_schema['primary key'])) {
+      return FALSE;
+    }
+
     unset($new_schema['primary key']);
-    $this->alterTable($ret, $table, $new_schema);
+    $this->alterTable($table, $new_schema);
+    return TRUE;
   }
 
-  /**
-   * Set the default value for a field.
-   *
-   * This implementation can't use ALTER TABLE directly, because SQLite only
-   * supports a limited subset of that command.
-   *
-   * @param $ret
-   *   Array to which query results will be added.
-   * @param $table
-   *   The table to be altered.
-   * @param $field
-   *   The field to be altered.
-   * @param $default
-   *   Default value to be set. NULL for 'default NULL'.
-   */
-  public function fieldSetDefault(&$ret, $table, $field, $default) {
+  public function fieldSetDefault($table, $field, $default) {
+    if (!$this->columnExists($table, $field)) {
+      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot set default value of field %table.%field: field doesn't exist.", array('%table' => $table, '%field' => $field)));
+    }
+
     $new_schema = $this->introspectSchema($table);
     $new_schema['fields'][$field]['default'] = $default;
-    $this->alterTable($ret, $table, $new_schema);
+    $this->alterTable($table, $new_schema);
   }
 
-  /**
-   * Set a field to have no default value.
-   *
-   * This implementation can't use ALTER TABLE directly, because SQLite only
-   * supports a limited subset of that command.
-   *
-   * @param $ret
-   *   Array to which query results will be added.
-   * @param $table
-   *   The table to be altered.
-   * @param $field
-   *   The field to be altered.
-   */
-  public function fieldSetNoDefault(&$ret, $table, $field) {
+  public function fieldSetNoDefault($table, $field) {
+    if (!$this->columnExists($table, $field)) {
+      throw new DatabaseSchemaObjectDoesNotExistException(t("Cannot remove default value of field %table.%field: field doesn't exist.", array('%table' => $table, '%field' => $field)));
+    }
+
     $new_schema = $this->introspectSchema($table);
     unset($new_schema['fields'][$field]['default']);
-    $this->alterTable($ret, $table, $new_schema);
+    $this->alterTable($table, $new_schema);
   }
 
-  /**
-   * Find all tables that are like the specified base table name.
-   *
-   * @param $table_expression
-   *   An SQL expression, for example "simpletest%" (without the quotes).
-   *   BEWARE: this is not prefixed, the caller should take care of that.
-   * @return
-   *   Array, both the keys and the values are the matching tables.
-   */
   public function findTables($table_expression) {
     // Don't use {} around sqlite_master table.
     $result = db_query("SELECT name FROM sqlite_master WHERE name LIKE :table_name", array(

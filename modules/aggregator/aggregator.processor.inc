@@ -1,5 +1,5 @@
 <?php
-// $Id: aggregator.processor.inc,v 1.10 2009/07/14 10:42:11 dries Exp $
+// $Id: aggregator.processor.inc,v 1.12 2009/12/04 16:49:45 dries Exp $
 
 /**
  * @file
@@ -7,7 +7,7 @@
  */
 
 /**
- * Implement hook_aggregator_process_info().
+ * Implements hook_aggregator_process_info().
  */
 function aggregator_aggregator_process_info() {
   return array(
@@ -17,7 +17,7 @@ function aggregator_aggregator_process_info() {
 }
 
 /**
- * Implement hook_aggregator_process().
+ * Implements hook_aggregator_process().
  */
 function aggregator_aggregator_process($feed) {
   if (is_object($feed)) {
@@ -45,7 +45,7 @@ function aggregator_aggregator_process($feed) {
 }
 
 /**
- * Implement hook_aggregator_remove().
+ * Implements hook_aggregator_remove().
  */
 function aggregator_aggregator_remove($feed) {
   $iids = db_query('SELECT iid FROM {aggregator_item} WHERE fid = :fid', array(':fid' => $feed->fid))->fetchCol();
@@ -62,7 +62,7 @@ function aggregator_aggregator_remove($feed) {
 }
 
 /**
- * Implement hook_form_aggregator_admin_form_alter().
+ * Implements hook_form_aggregator_admin_form_alter().
  *
  * Form alter aggregator module's own form to keep processor functionality
  * separate from aggregator API functionality.
@@ -90,10 +90,9 @@ function aggregator_form_aggregator_admin_form_alter(&$form, $form_state) {
 
     $form['modules']['aggregator']['aggregator_summary_items'] = array(
       '#type' => 'select',
-      '#title' => t('Items shown in sources and categories pages') ,
+      '#title' => t('Number of items shown in listing pages') ,
       '#default_value' => variable_get('aggregator_summary_items', 3),
       '#options' => $items,
-      '#description' => t('Number of feed items displayed in feed and category summary pages.'),
     );
 
     $form['modules']['aggregator']['aggregator_clear'] = array(
@@ -101,16 +100,16 @@ function aggregator_form_aggregator_admin_form_alter(&$form, $form_state) {
       '#title' => t('Discard items older than'),
       '#default_value' => variable_get('aggregator_clear', 9676800),
       '#options' => $period,
-      '#description' => t('The length of time to retain feed items before discarding. (Requires a correctly configured <a href="@cron">cron maintenance task</a>.)', array('@cron' => url('admin/reports/status'))),
+      '#description' => t('Requires a correctly configured <a href="@cron">cron maintenance task</a>.', array('@cron' => url('admin/reports/status'))),
     );
 
     $form['modules']['aggregator']['aggregator_category_selector'] = array(
       '#type' => 'radios',
-      '#title' => t('Category selection type'),
+      '#title' => t('Select categories using'),
       '#default_value' => variable_get('aggregator_category_selector', 'checkboxes'),
       '#options' => array('checkboxes' => t('checkboxes'),
       'select' => t('multiple selector')),
-      '#description' => t('The type of category selection widget displayed on categorization pages. (For a small number of categories, checkboxes are easier to use, while a multiple selector works well with large numbers of categories.)'),
+      '#description' => t('For a small number of categories, checkboxes are easier to use, while a multiple selector works well with large numbers of categories.'),
     );
     $form['modules']['aggregator']['aggregator_teaser_length'] = array(
       '#type' => 'select',

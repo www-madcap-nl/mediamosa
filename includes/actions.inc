@@ -1,9 +1,29 @@
 <?php
-// $Id: actions.inc,v 1.32 2009/09/20 07:47:44 dries Exp $
+// $Id: actions.inc,v 1.36 2010/03/07 07:22:41 webchick Exp $
 
 /**
  * @file
  * This is the actions engine for executing stored actions.
+ */
+
+/**
+ * @defgroup actions Actions
+ * @{
+ * Functions that perform an action on a certain system object.
+ *
+ * Action functions are declared by modules by implementing hook_action_info().
+ * Modules can cause action functions to run by calling actions_do(), and
+ * trigger.module provides a user interface that lets administrators define
+ * events that cause action functions to run.
+ *
+ * Each action function takes two to four arguments:
+ * - $entity: The object that the action acts on, such as a node, comment, or
+ *   user.
+ * - $context: Array of additional information about what triggered the action.
+ * - $a1, $a2: Optional additional information, which can be passed into
+ *   actions_do() and will be passed along to the action function.
+ *
+ * @} End of "defgroup actions".
  */
 
 /**
@@ -32,6 +52,8 @@
  * @return
  *   An associative array containing the results of the functions that
  *   perform the actions, keyed on action ID.
+ *
+ * @ingroup actions
  */
 function actions_do($action_ids, $object = NULL, $context = NULL, $a1 = NULL, $a2 = NULL) {
   // $stack tracks the number of recursive calls.
@@ -107,7 +129,13 @@ function actions_do($action_ids, $object = NULL, $context = NULL, $a1 = NULL, $a
     }
     // Singleton action; $action_ids is the function name.
     else {
-      $actions_result[$action_ids] = $action_ids($object, $context, $a1, $a2);
+      if (function_exists($action_ids)) {
+        $actions_result[$action_ids] = $action_ids($object, $context, $a1, $a2);
+      }
+      else {
+        // Set to avoid undefined index error messages later.
+        $actions_result[$action_ids] = FALSE;
+      }
     }
   }
   $stack--;
@@ -131,7 +159,7 @@ function actions_do($action_ids, $object = NULL, $context = NULL, $a1 = NULL, $a
  * @see hook_action_info()
  */
 function actions_list($reset = FALSE) {
-  static $actions;
+  $actions = &drupal_static(__FUNCTION__);
   if (!isset($actions) || $reset) {
     $actions = module_invoke_all('action_info');
     drupal_alter('action_info', $actions);
@@ -305,7 +333,7 @@ function actions_save($function, $type, $params, $label, $aid = NULL) {
   // aid is the callback for singleton actions so we need to keep a separate
   // table for numeric aids.
   if (!$aid) {
-    $aid = db_insert('actions_aid')->useDefaults(array('aid'))->execute();
+    $aid = db_next_id();
   }
 
   db_merge('actions')

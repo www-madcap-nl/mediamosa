@@ -1,5 +1,5 @@
 <?php
-// $Id: search.extender.inc,v 1.1 2009/08/29 12:43:18 dries Exp $
+// $Id: search.extender.inc,v 1.3 2010/01/13 23:19:54 dries Exp $
 
 /**
  * @file
@@ -404,7 +404,7 @@ class SearchQuery extends SelectQueryExtender {
       $this->executeFirstPass();
     }
     if (!$this->normalize) {
-      return FALSE;
+      return new DatabaseStatementEmpty();
     }
 
     $this->join('search_dataset', 'd', 'i.sid = d.sid AND i.type = d.type');

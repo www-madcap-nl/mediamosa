@@ -1,4 +1,4 @@
-; $Id: trigger.info,v 1.6 2009/06/08 09:23:54 dries Exp $
+; $Id: trigger.info,v 1.7 2009/11/17 21:24:18 dries Exp $
 name = Trigger
 description = Enables actions to be fired on certain system events, such as when new content is created.
 package = Core
@@ -8,10 +8,11 @@ files[] = trigger.module
 files[] = trigger.admin.inc
 files[] = trigger.install
 files[] = trigger.test
+configure = admin/structure/trigger
 
-; Information added by drupal.org packaging script on 2009-09-21
+; Information added by drupal.org packaging script on 2010-03-09
 version = "7.x-dev"
 core = "7.x"
 project = "drupal"
-datestamp = "1253535013"
+datestamp = "1268136300"
 

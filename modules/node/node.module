@@ -1,5 +1,5 @@
 <?php
-// $Id: node.module,v 1.1129 2009/09/21 07:59:18 dries Exp $
+// $Id: node.module,v 1.1245 2010/03/08 02:41:46 webchick Exp $
 
 /**
  * @file
@@ -61,7 +61,7 @@ define('NODE_ACCESS_DENY', 'deny');
 define('NODE_ACCESS_IGNORE', NULL);
 
 /**
- * Implement hook_help().
+ * Implements hook_help().
  */
 function node_help($path, $arg) {
   // Remind site administrators about the {node_access} table being flagged
@@ -73,36 +73,40 @@ function node_help($path, $arg) {
       $message = t('The content access permissions need to be rebuilt.');
     }
     else {
-      $message = t('The content access permissions need to be rebuilt. Please visit <a href="@node_access_rebuild">this page</a>.', array('@node_access_rebuild' => url('admin/reports/status/rebuild')));
+      $message = t('The content access permissions need to be rebuilt. <a href="@node_access_rebuild">Rebuild permissions</a>.', array('@node_access_rebuild' => url('admin/reports/status/rebuild')));
     }
     drupal_set_message($message, 'error');
   }
 
   switch ($path) {
     case 'admin/help#node':
-      $output = '<p>' . t('The node module manages content on your site, and stores all posts (regardless of type) as a "node" . In addition to basic publishing settings, including whether the post has been published, promoted to the site front page, or should remain present (or sticky) at the top of lists, the node module also records basic information about the author of a post. Optional revision control over edits is available. For additional functionality, the node module is often extended by other modules.') . '</p>';
-      $output .= '<p>' . t('Though each post on your site is a node, each post is also of a particular <a href="@content-type">content type</a>. <a href="@content-type">Content types</a> are used to define the characteristics of a post, including the title and description of the fields displayed on its add and edit pages. Each content type may have different default settings for <em>Publishing options</em> and other workflow controls. By default, the two content types in a standard Drupal installation are <em>Page</em> and <em>Story</em>. Use the <a href="@content-type">content types page</a> to add new or edit existing content types. Additional content types also become available as you enable additional core, contributed and custom modules.', array('@content-type' => url('admin/structure/types'))) . '</p>';
-      $output .= '<p>' . t('The administrative <a href="@content">content page</a> allows you to review and manage your site content. The node module makes a number of permissions available for each content type, which may be set by role on the <a href="@permissions">permissions page</a>.', array('@content' => url('admin/content'), '@permissions' => url('admin/config/people/permissions'))) . '</p>';
-      $output .= '<p>' . t('For more information, see the online handbook entry for <a href="@node">Node module</a>.', array('@node' => 'http://drupal.org/handbook/modules/node/')) . '</p>';
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('The Node module manages the creation, editing, deletion, settings, and display of the main site content. Content items managed by the Node module are typically displayed as pages on your site, and include a title, some meta-data (author, creation time, content type, etc.), and optional fields containing text or other data (fields are managed by the <a href="@field">Field module</a>). For more information, see the online handbook entry for <a href="@node">Node module</a>.', array('@node' => 'http://drupal.org/handbook/modules/node', '@field' => url('admin/help/field'))) . '</p>';
+      $output .= '<h3>' . t('Uses') . '</h3>';
+      $output .= '<dl>';
+      $output .= '<dt>' . t('Creating content') . '</dt>';
+      $output .= '<dd>' . t('When new content is created, the Node module records basic information about the content, including the author, date of creation, and the <a href="@content-type">Content type</a>. It also manages the <em>publishing options</em>, which define whether or not the content is published, promoted to the front page of the site, and/or sticky at the top of content lists. Default settings can be configured for each <a href="@content-type">type of content</a> on your site.', array('@content-type' => url('admin/structure/types'))) . '</dd>';
+      $output .= '<dt>' . t('Creating custom content types') . '</dt>';
+      $output .= '<dd>' . t('The Node module gives users with the <em>Administer content types</em> permission the ability to <a href="@content-new">create new content types</a> in addition to the default ones already configured. Creating custom content types allows you the flexibility to add <a href="@field">fields</a> and configure default settings that suit the differing needs of various site content.', array('@content-new' => url('admin/structure/types/add'), '@field' => url('admin/help/field'))) . '</dd>';
+      $output .= '<dt>' . t('Administering content') . '</dt>';
+      $output .= '<dd>' . t('The <a href="@content">Content administration page</a> allows you to review and bulk manage your site content.', array('@content' => url('admin/content'))) . '</dd>';
+      $output .= '<dt>' . t('Creating revisions') . '</dt>';
+      $output .= '<dd>' . t('The Node module also enables you to create multiple versions of any content, and revert to older versions using the <em>Revision information</em> settings.') . '</dd>';
+      $output .= '<dt>' . t('User permissions') . '</dt>';
+      $output .= '<dd>' . t('The Node module makes a number of permissions available for each content type, which can be set by role on the <a href="@permissions">permissions page</a>.', array('@permissions' => url('admin/people/permissions', array('fragment' => 'module-node')))) . '</dd>';
+      $output .= '</dl>';
       return $output;
 
-    case 'admin/content':
-      return ' '; // Return a non-null value so that the 'more help' link is shown.
-
     case 'admin/structure/types/add':
-      return '<p>' . t('Each piece of content is of a specific content type. Each <em>content type</em> can have different fields, behaviors, and permissions assigned to it.') . '</p>';
+      return '<p>' . t('Individual content types can have different fields, behaviors, and permissions assigned to them.') . '</p>';
 
-    case 'admin/structure/node-type/' . $arg[3] . '/fields':
-      return '<p>' . t('This form lets you add, edit, and arrange fields within the %type content type.', array('%type' => node_type_get_name($arg[3]))) . '</p>';
-
-    case 'admin/structure/node-type/' . $arg[3] . '/display':
-      return '<p>' . t('This form lets you configure how fields and labels are displayed when %type content is viewed in teaser and full-page mode.', array('%type' => node_type_get_name($arg[3]))) . '</p>';
-
-    case 'admin/structure/node-type/' . $arg[3] . '/display/' . $arg[5]:
-      return '<p>' . t('This form lets you configure how fields should be displayed when rendered %type content in the following contexts.', array('%type' => node_type_get_name($arg[3]))) . '</p>';
+    case 'admin/structure/types/manage/%/display':
+      return '<p>' . t('Content items can be displayed using different view modes: Teaser, Full content, Print, RSS, etc. <em>Teaser</em> is a short format that is typically used in lists of multiple content items. <em>Full content</em> is typically used when the content is displayed on its own page.') . '</p>' .
+        '<p>' . t('Here, you can define which fields are shown and hidden when %type content is displayed in each view mode, and define how the fields are displayed in each view mode.', array('%type' => node_type_get_name($arg[4]))) . '</p>';
 
     case 'node/%/revisions':
-      return '<p>' . t('The revisions let you track differences between multiple versions of a post.') . '</p>';
+      return '<p>' . t('Revisions allow you to track differences between multiple versions of your content, and revert back to older versions.') . '</p>';
 
     case 'node/%/edit':
       $node = node_load($arg[1]);
@@ -117,55 +121,53 @@ function node_help($path, $arg) {
 }
 
 /**
- * Implement hook_theme().
+ * Implements hook_theme().
  */
 function node_theme() {
   return array(
     'node' => array(
-      'arguments' => array('elements' => NULL),
+      'render element' => 'elements',
       'template' => 'node',
     ),
     'node_list' => array(
-      'arguments' => array('items' => NULL, 'title' => NULL),
+      'variables' => array('items' => NULL, 'title' => NULL),
     ),
     'node_search_admin' => array(
-      'arguments' => array('form' => NULL),
-    ),
-    'node_filter_form' => array(
-      'arguments' => array('form' => NULL),
-      'file' => 'node.admin.inc',
+      'render element' => 'form',
     ),
     'node_filters' => array(
-      'arguments' => array('form' => NULL),
-      'file' => 'node.admin.inc',
-    ),
-    'node_admin_nodes' => array(
-      'arguments' => array('form' => NULL),
+      'render element' => 'form',
       'file' => 'node.admin.inc',
     ),
     'node_add_list' => array(
-      'arguments' => array('content' => NULL),
+      'variables' => array('content' => NULL),
       'file' => 'node.pages.inc',
     ),
     'node_form' => array(
-      'arguments' => array('form' => NULL),
+      'render element' => 'form',
       'file' => 'node.pages.inc',
     ),
     'node_preview' => array(
-      'arguments' => array('node' => NULL),
+      'variables' => array('node' => NULL),
       'file' => 'node.pages.inc',
     ),
     'node_log_message' => array(
-      'arguments' => array('log' => NULL),
+      'variables' => array('log' => NULL),
     ),
     'node_admin_overview' => array(
-      'arguments' => array('name' => NULL, 'type' => NULL),
+      'variables' => array('name' => NULL, 'type' => NULL),
+    ),
+    'node_recent_block' => array(
+      'variables' => array('nodes' => NULL),
+    ),
+    'node_recent_content' => array(
+      'variables' => array('node' => NULL),
     ),
   );
 }
 
 /**
- * Implement hook_cron().
+ * Implements hook_cron().
  */
 function node_cron() {
   db_delete('history')
@@ -174,7 +176,7 @@ function node_cron() {
 }
 
 /**
- * Implement hook_entity_info().
+ * Implements hook_entity_info().
  */
 function node_entity_info() {
   $return = array(
@@ -183,72 +185,86 @@ function node_entity_info() {
       'controller class' => 'NodeController',
       'base table' => 'node',
       'revision table' => 'node_revision',
+      'uri callback' => 'node_uri',
       'fieldable' => TRUE,
       'object keys' => array(
         'id' => 'nid',
         'revision' => 'vid',
         'bundle' => 'type',
       ),
+      'bundle keys' => array(
+        'bundle' => 'type',
+      ),
       // Node.module handles its own caching.
       // 'cacheable' => FALSE,
       'bundles' => array(),
+      'view modes' => array(
+        'full' => array(
+          'label' => t('Full content'),
+        ),
+        'teaser' => array(
+          'label' => t('Teaser'),
+        ),
+        'rss' => array(
+          'label' => t('RSS'),
+        ),
+      ),
     ),
   );
+
+  // Search integration is provided by node.module, so search-related
+  // view modes for nodes are defined here and not in search.module.
+  if (module_exists('search')) {
+    $return['node']['view modes'] += array(
+      'search_index' => array(
+        'label' => t('Search index'),
+      ),
+      'search_result' => array(
+        'label' => t('Search result'),
+      ),
+    );
+  }
+
   // Bundles must provide a human readable name so we can create help and error
   // messages, and the path to attach Field admin pages to.
   foreach (node_type_get_names() as $type => $name) {
     $return['node']['bundles'][$type] = array(
       'label' => $name,
       'admin' => array(
-        'path' => 'admin/structure/node-type/' . str_replace('_', '-', $type),
+        'path' => 'admin/structure/types/manage/%node_type',
+        'real path' => 'admin/structure/types/manage/' . str_replace('_', '-', $type),
+        'bundle argument' => 4,
         'access arguments' => array('administer content types'),
       ),
     );
   }
+
   return $return;
 }
 
-
 /**
- * Implement hook_field_build_modes().
+ * Entity uri callback.
  */
-function node_field_build_modes($obj_type) {
-  $modes = array();
-  if ($obj_type == 'node') {
-    $modes = array(
-      'teaser' => t('Teaser'),
-      'full' => t('Full node'),
-      'rss' => t('RSS'),
-    );
-    // Search integration is provided by node.module, so search-related
-    // build-modes for nodes are defined here and not in search.module.
-    if (module_exists('search')) {
-      $modes += array(
-        'search_index' => t('Search Index'),
-        'search_result' => t('Search Result'),
-      );
-    }
-  }
-  return $modes;
+function node_uri($node) {
+  return array(
+    'path' => 'node/' . $node->nid,
+  );
 }
 
 /**
- * Implement hook_field_extra_fields().
+ * Implements hook_admin_paths().
  */
-function node_field_extra_fields($bundle) {
-  $extra = array();
-
-  if ($type = node_type_get_type($bundle)) {
-    if ($type->has_title) {
-      $extra['title'] = array(
-        'label' => $type->title_label,
-        'description' => t('Node module element.'),
-        'weight' => -5,
-      );
-    }
-  }
-
-  return $extra;
+function node_admin_paths() {
+  $paths = array(
+    'node/*/edit' => TRUE,
+    'node/*/delete' => TRUE,
+    'node/*/revisions' => TRUE,
+    'node/*/revisions/*/revert' => TRUE,
+    'node/*/revisions/*/delete' => TRUE,
+    'node/add' => TRUE,
+    'node/add/*' => TRUE,
+  );
+  return $paths;
 }
 
 /**
@@ -274,7 +290,7 @@ function node_title_list($result, $title = NULL) {
     $num_rows = TRUE;
   }
 
-  return $num_rows ? theme('node_list', $items, $title) : FALSE;
+  return $num_rows ? theme('node_list', array('items' => $items, 'title' => $title)) : FALSE;
 }
 
 /**
@@ -282,25 +298,27 @@ function node_title_list($result, $title = NULL) {
  *
  * @ingroup themeable
  */
-function theme_node_list($items, $title = NULL) {
-  return theme('item_list', $items, $title);
+function theme_node_list($variables) {
+  return theme('item_list', $variables);
 }
 
 /**
  * Update the 'last viewed' timestamp of the specified node for current user.
+ *
+ * @param $node
+ *   A node object.
  */
-function node_tag_new($nid) {
+function node_tag_new($node) {
   global $user;
-
   if ($user->uid) {
     db_merge('history')
       ->key(array(
         'uid' => $user->uid,
-        'nid' => $nid,
+        'nid' => $node->nid,
       ))
       ->fields(array('timestamp' => REQUEST_TIME))
       ->execute();
-  }
+   }
 }
 
 /**
@@ -309,7 +327,7 @@ function node_tag_new($nid) {
  */
 function node_last_viewed($nid) {
   global $user;
-  static $history;
+  $history = &drupal_static(__FUNCTION__, array());
 
   if (!isset($history[$nid])) {
     $history[$nid] = db_query("SELECT timestamp FROM {history} WHERE uid = :uid AND nid = :nid", array(':uid' => $user->uid, ':nid' => $nid))->fetchObject();
@@ -330,7 +348,7 @@ function node_last_viewed($nid) {
  */
 function node_mark($nid, $timestamp) {
   global $user;
-  static $cache;
+  $cache = &drupal_static(__FUNCTION__, array());
 
   if (!$user->uid) {
     return MARK_READ;
@@ -374,21 +392,17 @@ function node_type_get_types() {
 /**
  * Returns the node type of the passed node or node type string.
  *
- *@param $node
+ * @param $node
  *   A node object or string that indicates the node type to return.
- * @return
- *   A single node type, as an object or FALSE if the node type is not found.
- *   The node type is an array with following content:
  *
- *   @code
- *   array(
- *     'type' => 'Machine readable type name',
- *     'name' => 'Name of the node type',
- *     'base' => 'Indicates to which module this node type belongs',
- *     'description' => 'Description of the node type',
- *     // ...
- *   )
- *   @endcode
+ * @return
+ *   A single node type, as an object, or FALSE if the node type is not found.
+ *   The node type is an object containing fields from hook_node_info() return
+ *   values, as well as the field 'type' (the machine-readable type) and other
+ *   fields used internally and defined in _node_types_build() and
+ *   node_type_set_defaults().
+ *
+ * @see hook_node_info();
  */
 function node_type_get_type($node) {
   $type = _node_extract_type($node);
@@ -459,6 +473,20 @@ function node_types_rebuild() {
 }
 
 /**
+ * Menu argument loader; Load a node type by string.
+ *
+ * @param $name
+ *   The machine-readable name of a node type to load; having '_' replaced with
+ *   '-'.
+ *
+ * @return
+ *   A node type object or FALSE if $name does not exist.
+ */
+function node_type_load($name) {
+  return node_type_get_type(strtr($name, array('-' => '_')));
+}
+
+/**
  * Saves a node type to the database.
  *
  * @param $info
@@ -495,7 +523,7 @@ function node_type_save($info) {
       ->execute();
 
     if (!empty($type->old_type) && $type->old_type != $type->type) {
-      field_attach_rename_bundle($type->old_type, $type->type);
+      field_attach_rename_bundle('node', $type->old_type, $type->type);
     }
     node_configure_fields($type);
     module_invoke_all('node_type_update', $type);
@@ -507,7 +535,7 @@ function node_type_save($info) {
       ->fields($fields)
       ->execute();
 
-    field_attach_create_bundle($type->type);
+    field_attach_create_bundle('node', $type->type);
     node_configure_fields($type);
     module_invoke_all('node_type_insert', $type);
     $status = SAVED_NEW;
@@ -532,27 +560,27 @@ function node_type_save($info) {
 function node_configure_fields($type) {
    // Add or remove the body field, as needed.
   $field = field_info_field('body');
-  $instance = field_info_instance('body', $type->type);
+  $instance = field_info_instance('node', 'body', $type->type);
   if ($type->has_body) {
     if (empty($field)) {
       $field = array(
         'field_name' => 'body',
         'type' => 'text_with_summary',
+        'object_types' => array('node'),
+        'translatable' => TRUE,
       );
       $field = field_create_field($field);
     }
     if (empty($instance)) {
       $instance = array(
         'field_name' => 'body',
+        'object_type' => 'node',
         'bundle' => $type->type,
         'label' => $type->body_label,
         'widget_type' => 'text_textarea_with_summary',
         'settings' => array('display_summary' => TRUE),
 
-        // With no UI in core, we have to define default
-        // formatters for the teaser and full view.
-        // This may change if the method of handling displays
-        // is changed or if a UI gets into core.
+        // Define default formatters for the teaser and full view.
         'display' => array(
           'full' => array(
             'label' => 'hidden',
@@ -575,7 +603,27 @@ function node_configure_fields($type) {
   elseif (!empty($instance)) {
     field_delete_instance($instance);
   }
+}
 
+/**
+ * Implements hook_field_extra_fields().
+ */
+function node_field_extra_fields() {
+  $extra = array();
+
+  foreach (node_type_get_types() as $type) {
+    if ($type->has_title) {
+      $extra['node'][$type->type] = array(
+        'title' => array(
+          'label' => $type->title_label,
+          'description' => t('Node module element.'),
+          'weight' => -5,
+        ),
+      );
+    }
+  }
+
+  return $extra;
 }
 
 /**
@@ -625,7 +673,7 @@ function _node_types_build() {
   if (is_object($_node_types)) {
     return $_node_types;
   }
-  $_node_types = (object) array('types' => array(), 'names' => array());
+  $_node_types = (object)array('types' => array(), 'names' => array());
 
   $info_array = module_invoke_all('node_info');
   foreach ($info_array as $type => $info) {
@@ -634,9 +682,10 @@ function _node_types_build() {
     $_node_types->names[$type] = $info['name'];
   }
   $type_result = db_select('node_type', 'nt')
+    ->addTag('translatable')
+    ->addTag('node_type_access')
     ->fields('nt')
     ->orderBy('nt.type', 'ASC')
-    ->addTag('node_type_access')
     ->execute();
   foreach ($type_result as $type_object) {
     // Check for node types from disabled modules and mark their types for removal.
@@ -676,7 +725,7 @@ function _node_types_build() {
  *  A node type object.
  */
 function node_type_set_defaults($info = array()) {
-  static $type;
+  $type = &drupal_static(__FUNCTION__);
 
   if (!isset($type)) {
     $type = new stdClass();
@@ -713,10 +762,57 @@ function node_type_set_defaults($info = array()) {
 }
 
 /**
+ * Implements hook_rdf_mapping().
+ */
+function node_rdf_mapping() {
+  return array(
+    array(
+      'type' => 'node',
+      'bundle' => RDF_DEFAULT_BUNDLE,
+      'mapping' => array(
+        'rdftype' => array('sioc:Item', 'foaf:Document'),
+        'title' => array(
+          'predicates' => array('dc:title'),
+        ),
+        'created' => array(
+          'predicates' => array('dc:date', 'dc:created'),
+          'datatype' => 'xsd:dateTime',
+          'callback' => 'date_iso8601',
+        ),
+        'changed' => array(
+          'predicates' => array('dc:modified'),
+          'datatype' => 'xsd:dateTime',
+          'callback' => 'date_iso8601',
+        ),
+        'body' => array(
+          'predicates' => array('content:encoded'),
+        ),
+        'uid' => array(
+          'predicates' => array('sioc:has_creator'),
+          'type' => 'rel',
+        ),
+        'name' => array(
+          'predicates' => array('foaf:name'),
+        ),
+        'comment_count' => array(
+          'predicates' => array('sioc:num_replies'),
+          'datatype' => 'xsd:integer',
+        ),
+        'last_activity' => array(
+          'predicates' => array('sioc:last_activity_date'),
+          'datatype' => 'xsd:dateTime',
+          'callback' => 'date_iso8601',
+        ),
+      ),
+    ),
+  );
+}
+
+/**
  * Determine whether a node hook exists.
  *
  * @param $node
- *   Either a node object, node array, or a string containing the node type.
+ *   A node object or a string containing the node type.
  * @param $hook
  *   A string containing the name of the hook.
  * @return
@@ -731,7 +827,7 @@ function node_hook($node, $hook) {
  * Invoke a node hook.
  *
  * @param $node
- *   Either a node object, node array, or a string containing the node type.
+ *   A node object or a string containing the node type.
  * @param $hook
  *   A string containing the name of the hook.
  * @param $a2, $a3, $a4
@@ -783,37 +879,67 @@ function node_load_multiple($nids = array(), $conditions = array(), $reset = FAL
  * @return
  *   A fully-populated node object.
  */
-function node_load($nid, $vid = array(), $reset = FALSE) {
-  $vid = isset($vid) ? array('vid' => $vid) : NULL;
-  $node = node_load_multiple(array($nid), $vid, $reset);
-  return $node ? $node[$nid] : FALSE;
+function node_load($nid = NULL, $vid = NULL, $reset = FALSE) {
+  $nids = (isset($nid) ? array($nid) : array());
+  $conditions = (isset($vid) ? array('vid' => $vid) : array());
+  $node = node_load_multiple($nids, $conditions, $reset);
+  return $node ? reset($node) : FALSE;
+}
+
+/**
+ * Prepares a node object for editing.
+ *
+ * Fills in a few default values, and then invokes hook_prepare() on the node
+ * type module, and hook_node_prepare() on all modules.
+ */
+function node_object_prepare($node) {
+  // Set up default values, if required.
+  $node_options = variable_get('node_options_' . $node->type, array('status', 'promote'));
+  // If this is a new node, fill in the default values.
+  if (!isset($node->nid) || isset($node->is_new)) {
+    foreach (array('status', 'promote', 'sticky') as $key) {
+      // Multistep node forms might have filled in something already.
+      if (!isset($node->$key)) {
+        $node->$key = (int) in_array($key, $node_options);
+      }
+    }
+    global $user;
+    $node->uid = $user->uid;
+    $node->created = REQUEST_TIME;
+  }
+  else {
+    $node->date = format_date($node->created, 'custom', 'Y-m-d H:i:s O');
+    // Remove the log message from the original node object.
+    $node->log = NULL;
+  }
+  // Always use the default revision setting.
+  $node->revision = in_array('revision', $node_options);
+
+  node_invoke($node, 'prepare');
+  module_invoke_all('node_prepare', $node);
 }
 
 /**
  * Perform validation checks on the given node.
  */
 function node_validate($node, $form = array()) {
-  // Convert the node to an object, if necessary.
-  $node = (object)$node;
   $type = node_type_get_type($node);
 
   if (isset($node->nid) && (node_last_changed($node->nid) > $node->changed)) {
     form_set_error('changed', t('The content on this page has either been modified by another user, or you have already submitted modifications using this form. As a result, your changes cannot be saved.'));
   }
 
-  if (user_access('administer nodes')) {
-    // Validate the "authored by" field.
-    if (!empty($node->name) && !($account = user_load_by_name($node->name))) {
-      // The use of empty() is mandatory in the context of usernames
-      // as the empty string denotes the anonymous user. In case we
-      // are dealing with an anonymous user we set the user ID to 0.
-      form_set_error('name', t('The username %name does not exist.', array('%name' => $node->name)));
-    }
+  // Validate the "authored by" field.
+  if (!empty($node->name) && !($account = user_load_by_name($node->name))) {
+    // The use of empty() is mandatory in the context of usernames
+    // as the empty string denotes the anonymous user. In case we
+    // are dealing with an anonymous user we set the user ID to 0.
+    form_set_error('name', t('The username %name does not exist.', array('%name' => $node->name)));
+  }
 
-    // Validate the "authored on" field.
-    if (!empty($node->date) && strtotime($node->date) === FALSE) {
-      form_set_error('date', t('You have to specify a valid date.'));
-    }
+  // Validate the "authored on" field.
+  if (!empty($node->date) && strtotime($node->date) === FALSE) {
+    form_set_error('date', t('You have to specify a valid date.'));
   }
 
   // Do node-type-specific validation checks.
@@ -822,16 +948,14 @@ function node_validate($node, $form = array()) {
 }
 
 /**
- * Prepare node for save and allow modules to make changes.
+ * Prepare node for saving by populating author and creation date.
  */
 function node_submit($node) {
   global $user;
 
-  // Convert the node to an object, if necessary.
-  $node = (object)$node;
-
-  if (user_access('administer nodes')) {
-    // Populate the "authored by" field.
+  // A user might assign the node author by entering a user name in the node
+  // form, which we then need to translate to a user ID.
+  if (isset($node->name)) {
     if ($account = user_load_by_name($node->name)) {
       $node->uid = $account->uid;
     }
@@ -839,6 +963,7 @@ function node_submit($node) {
       $node->uid = 0;
     }
   }
+
   $node->created = !empty($node->date) ? strtotime($node->date) : REQUEST_TIME;
   $node->validated = TRUE;
 
@@ -853,97 +978,121 @@ function node_submit($node) {
  *   omitted (or $node->is_new is TRUE), a new node will be added.
  */
 function node_save($node) {
-  field_attach_presave('node', $node);
-  // Let modules modify the node before it is saved to the database.
-  module_invoke_all('node_presave', $node);
-  global $user;
+  $transaction = db_transaction();
 
-  if (!isset($node->is_new)) {
-    $node->is_new = empty($node->nid);
-  }
+  try {
+    field_attach_presave('node', $node);
+    // Let modules modify the node before it is saved to the database.
+    module_invoke_all('node_presave', $node);
+    global $user;
 
-  // Apply filters to some default node fields:
-  if ($node->is_new) {
-    // Insert a new node.
-    $node->is_new = TRUE;
-
-    // When inserting a node, $node->log must be set because
-    // {node_revision}.log does not (and cannot) have a default
-    // value. If the user does not have permission to create
-    // revisions, however, the form will not contain an element for
-    // log so $node->log will be unset at this point.
-    if (!isset($node->log)) {
-      $node->log = '';
+    // Determine if we will be inserting a new node.
+    if (!isset($node->is_new)) {
+      $node->is_new = empty($node->nid);
     }
-  }
-  elseif (!empty($node->revision)) {
-    $node->old_vid = $node->vid;
-    unset($node->vid);
-  }
-  else {
-    // When updating a node, avoid clobbering an existing log entry with an empty one.
-    if (empty($node->log)) {
+
+    if ($node->is_new || !empty($node->revision)) {
+      // When inserting either a new node or a new node revision, $node->log
+      // must be set because {node_revision}.log is a text column and therefore
+      // cannot have a default value. However, it might not be set at this
+      // point (for example, if the user submitting a node form does not have
+      // permission to create revisions), so we ensure that it is at least an
+      // empty string in that case.
+      // @todo: Make the {node_revision}.log column nullable so that we can
+      // remove this check.
+      if (!isset($node->log)) {
+        $node->log = '';
+      }
+    }
+    elseif (empty($node->log)) {
+      // If we are updating an existing node without adding a new revision, we
+      // need to make sure $node->log is unset whenever it is empty. As long as
+      // $node->log is unset, drupal_write_record() will not attempt to update
+      // the existing database column when re-saving the revision; therefore,
+      // this code allows us to avoid clobbering an existing log entry with an
+      // empty one.
       unset($node->log);
     }
-  }
 
-  // Set some required fields:
-  if (empty($node->created)) {
-    $node->created = REQUEST_TIME;
-  }
-  // The changed timestamp is always updated for bookkeeping purposes (revisions, searching, ...)
-  $node->changed = REQUEST_TIME;
+    // When saving a new node revision, unset any existing $node->vid so as to
+    // ensure that a new revision will actually be created, then store the old
+    // revision ID in a separate property for use by node hook implementations.
+    if (!$node->is_new && !empty($node->revision) && $node->vid) {
+      $node->old_vid = $node->vid;
+      unset($node->vid);
+    }
 
-  $node->timestamp = REQUEST_TIME;
-  $update_node = TRUE;
+    // Set the timestamp fields.
+    if (empty($node->created)) {
+      $node->created = REQUEST_TIME;
+    }
+    // The changed timestamp is always updated for bookkeeping purposes (revisions, searching, ...)
+    if (empty($node->changed)) {
+      $node->changed = REQUEST_TIME;
+    }
 
-  // Generate the node table query and the node_revisions table query.
-  if ($node->is_new) {
-    drupal_write_record('node', $node);
-    _node_save_revision($node, $user->uid);
-    $op = 'insert';
-  }
-  else {
-    drupal_write_record('node', $node, 'nid');
-    if (!empty($node->revision)) {
+    $node->timestamp = REQUEST_TIME;
+    $update_node = TRUE;
+
+    // Save the node and node revision.
+    if ($node->is_new) {
+      // For new nodes, save new records for both the node itself and the node
+      // revision.
+      drupal_write_record('node', $node);
       _node_save_revision($node, $user->uid);
+      $op = 'insert';
     }
     else {
-      _node_save_revision($node, $user->uid, 'vid');
-      $update_node = FALSE;
+      // For existing nodes, update the node record which matches the value of
+      // $node->nid.
+      drupal_write_record('node', $node, 'nid');
+      // Then, if a new node revision was requested, save a new record for
+      // that; otherwise, update the node revision record which matches the
+      // value of $node->vid.
+      if (!empty($node->revision)) {
+        _node_save_revision($node, $user->uid);
+      }
+      else {
+        _node_save_revision($node, $user->uid, 'vid');
+        $update_node = FALSE;
+      }
+      $op = 'update';
     }
-    $op = 'update';
+    if ($update_node) {
+      db_update('node')
+        ->fields(array('vid' => $node->vid))
+        ->condition('nid', $node->nid)
+        ->execute();
+    }
+
+    // Call the node specific callback (if any). This can be
+    // node_invoke($node, 'insert') or
+    // node_invoke($node, 'update').
+    node_invoke($node, $op);
+
+    // Save fields.
+    $function = "field_attach_$op";
+    $function('node', $node);
+
+    module_invoke_all('node_' . $op, $node);
+    entity_invoke($op, 'node', $node);
+
+    // Update the node access table for this node.
+    node_access_acquire_grants($node);
+
+    // Clear internal properties.
+    unset($node->is_new);
+
+    // Clear the page and block caches.
+    cache_clear_all();
+
+    // Ignore slave server temporarily to give time for the
+    // saved node to be propagated to the slave.
+    db_ignore_slave();
   }
-  if ($update_node) {
-    db_update('node')
-      ->fields(array('vid' => $node->vid))
-      ->condition('nid', $node->nid)
-      ->execute();
+  catch (Exception $e) {
+    $transaction->rollback('node', $e->getMessage(), array(), WATCHDOG_ERROR);
   }
-
-  // Call the node specific callback (if any). This can be
-  // node_invoke($node, 'insert') or
-  // node_invoke($node, 'update').
-  node_invoke($node, $op);
-
-  // Save fields.
-  $function = "field_attach_$op";
-  $function('node', $node);
-
-  module_invoke_all('node_' . $op, $node);
-
-  // Update the node access table for this node.
-  node_access_acquire_grants($node);
-
-  // Clear internal properties.
-  unset($node->is_new);
-
-  // Clear the page and block caches.
-  cache_clear_all();
-
-  // Ignore slave server temporarily to give time for the
-  // saved node to be propagated to the slave.
-  db_ignore_slave();
 }
 
 /**
@@ -981,64 +1130,100 @@ function node_delete($nid) {
  *   An array of node IDs.
  */
 function node_delete_multiple($nids) {
-  $nodes = node_load_multiple($nids, array());
+  if (!empty($nids)) {
+    $nodes = node_load_multiple($nids, array());
 
-  db_delete('node')
-    ->condition('nid', $nids, 'IN')
-    ->execute();
-  db_delete('node_revision')
-    ->condition('nid', $nids, 'IN')
-    ->execute();
-  db_delete('history')
-    ->condition('nid', $nids, 'IN')
-    ->execute();
+    db_delete('node')
+      ->condition('nid', $nids, 'IN')
+      ->execute();
+    db_delete('node_revision')
+      ->condition('nid', $nids, 'IN')
+      ->execute();
+    db_delete('history')
+      ->condition('nid', $nids, 'IN')
+      ->execute();
 
-  foreach ($nodes as $nid => $node) {
-    // Call the node-specific callback (if any):
-    node_invoke($node, 'delete');
-    module_invoke_all('node_delete', $node);
-    field_attach_delete('node', $node);
+    foreach ($nodes as $nid => $node) {
+      // Call the node-specific callback (if any):
+      node_invoke($node, 'delete');
+      module_invoke_all('node_delete', $node);
+      field_attach_delete('node', $node);
 
-    // Remove this node from the search index if needed.
-    // This code is implemented in node module rather than in search module,
-    // because node module is implementing search module's API, not the other
-    // way around.
-    if (module_exists('search')) {
-      search_reindex($nid, 'node');
+      // Remove this node from the search index if needed.
+      // This code is implemented in node module rather than in search module,
+      // because node module is implementing search module's API, not the other
+      // way around.
+      if (module_exists('search')) {
+        search_reindex($nid, 'node');
+      }
     }
-  }
 
-  // Clear the page and block and node_load_multiple caches.
-  cache_clear_all();
-  drupal_static_reset('node_load_multiple');
+    // Clear the page and block and node_load_multiple caches.
+    cache_clear_all();
+    entity_get_controller('node')->resetCache();
+  }
+}
+
+/**
+ * Delete a node revision.
+ *
+ * @param $revision_id
+ *   The revision ID to delete.
+ */
+function node_revision_delete($revision_id) {
+  if ($revision = node_load(NULL, $revision_id)) {
+    // Prevent deleting the current revision.
+    $node = node_load($revision->nid);
+    if ($revision_id == $node->vid) {
+      return FALSE;
+    }
+
+    db_delete('node_revision')
+      ->condition('nid', $revision->nid)
+      ->condition('vid', $revision->vid)
+      ->execute();
+    module_invoke_all('node_revision_delete', $revision);
+    field_attach_delete_revision('node', $revision);
+    return TRUE;
+  }
+  return FALSE;
 }
 
 /**
  * Generate an array for rendering the given node.
  *
  * @param $node
- *   A node array or node object.
- * @param $build_mode
- *   Build mode, e.g. 'full', 'teaser'...
+ *   A node object.
+ * @param $view_mode
+ *   View mode, e.g. 'full', 'teaser'...
  *
  * @return
  *   An array as expected by drupal_render().
  */
-function node_build($node, $build_mode = 'full') {
-  $node = (object)$node;
-
+function node_view($node, $view_mode = 'full') {
   // Populate $node->content with a render() array.
-  node_build_content($node, $build_mode);
+  node_build_content($node, $view_mode);
 
   $build = $node->content;
   // We don't need duplicate rendering info in node->content.
   unset($node->content);
-  
+
   $build += array(
     '#theme' => 'node',
     '#node' => $node,
-    '#build_mode' => $build_mode,
+    '#view_mode' => $view_mode,
   );
+  // Add contextual links for this node, except when the node is already being
+  // displayed on its own page. Modules may alter this behavior (for example,
+  // to restrict contextual links to certain view modes) by implementing
+  // hook_node_view_alter().
+  if (!node_is_page($node)) {
+    $build['#contextual_links']['node'] = array('node', array($node->nid));
+  }
+
+  // Allow modules to modify the structured node.
+  drupal_alter('node_view', $build);
+
   return $build;
 }
 
@@ -1046,9 +1231,9 @@ function node_build($node, $build_mode = 'full') {
  * Builds a structured array representing the node's content.
  *
  * The content built for the node (field values, comments, file attachments or
- * other node components) will vary depending on the $build_mode parameter.
+ * other node components) will vary depending on the $view_mode parameter.
  *
- * Drupal core defines the following build modes for nodes, with the following
+ * Drupal core defines the following view modes for nodes, with the following
  * default use cases:
  *   - full (default): node is being displayed on its own page (node/123)
  *   - teaser: node is being displayed on the default home page listing, on
@@ -1059,32 +1244,36 @@ function node_build($node, $build_mode = 'full') {
  *   - search_result: node is being displayed as a search result.
  *   If book.module is enabled:
  *   - print: node is being displayed in print-friendly mode.
- * Contributed modules might define additional build modes, or use existing
- * build modes in additional contexts.
+ * Contributed modules might define additional view modes, or use existing
+ * view modes in additional contexts.
  *
  * @param $node
  *   A node object.
- * @param $build_mode
- *   Build mode, e.g. 'full', 'teaser'...
- *
+ * @param $view_mode
+ *   View mode, e.g. 'full', 'teaser'...
  */
-function node_build_content($node, $build_mode = 'full') {
+function node_build_content($node, $view_mode = 'full') {
+  // Remove previously built content, if exists.
+  $node->content = array();
+
   // The 'view' hook can be implemented to overwrite the default function
   // to display nodes.
   if (node_hook($node, 'view')) {
-    $node = node_invoke($node, 'view', $build_mode);
+    $node = node_invoke($node, 'view', $view_mode);
   }
 
   // Build fields content.
-  if (empty($node->content)) {
-    $node->content = array();
-  };
-  $node->content += field_attach_view('node', $node, $build_mode);
+  // In case of a multiple view, node_view_multiple() already ran the
+  // 'prepare_view' step. An internal flag prevents the operation from running
+  // twice.
+  field_attach_prepare_view('node', array($node->nid => $node), $view_mode);
+  entity_prepare_view('node', array($node->nid => $node));
+  $node->content += field_attach_view('node', $node, $view_mode);
 
   // Always display a read more link on teasers because we have no way
   // to know when a teaser view is different than a full view.
   $links = array();
-  if ($build_mode == 'teaser') {
+  if ($view_mode == 'teaser') {
     $links['node_readmore'] = array(
       'title' => t('Read more'),
       'href' => 'node/' . $node->nid,
@@ -1092,16 +1281,13 @@ function node_build_content($node, $build_mode = 'full') {
     );
   }
   $node->content['links']['node'] = array(
-    '#theme' => 'links',
+    '#theme' => 'links__node',
     '#links' => $links,
     '#attributes' => array('class' => array('links', 'inline')),
   );
 
   // Allow modules to make their own additions to the node.
-  module_invoke_all('node_view', $node, $build_mode);
-
-  // Allow modules to modify the structured node.
-  drupal_alter('node_build', $node, $build_mode);
+  module_invoke_all('node_view', $node, $view_mode);
 }
 
 /**
@@ -1120,10 +1306,21 @@ function node_show($node, $message = FALSE) {
   }
 
   // Update the history table, stating that this user viewed this node.
-  node_tag_new($node->nid);
+  node_tag_new($node);
 
-  // For markup consistency with other pages, use node_build_multiple() rather than node_build().
-  return node_build_multiple(array($node), 'full');
+  // For markup consistency with other pages, use node_view_multiple() rather than node_view().
+  return node_view_multiple(array($node->nid => $node), 'full');
+}
+
+/**
+ * Returns whether the current page is the full page view of the passed in node.
+ *
+ * @param $node
+ *   A node object.
+ */
+function node_is_page($node) {
+  $page_node = menu_get_object();
+  return (!empty($page_node) ? $page_node->nid == $node->nid : FALSE);
 }
 
 /**
@@ -1135,23 +1332,23 @@ function node_show($node, $message = FALSE) {
  *
  * The $variables array contains the following arguments:
  * - $node
- * - $build_mode
+ * - $view_mode
  * - $page
  *
  * @see node.tpl.php
  */
 function template_preprocess_node(&$variables) {
-  $variables['build_mode'] = $variables['elements']['#build_mode'];
+  $variables['view_mode'] = $variables['elements']['#view_mode'];
   // Provide a distinct $teaser boolean.
-  $variables['teaser'] = $variables['build_mode'] == 'teaser';
+  $variables['teaser'] = $variables['view_mode'] == 'teaser';
   $variables['node'] = $variables['elements']['#node'];
   $node = $variables['node'];
 
   $variables['date']      = format_date($node->created);
-  $variables['name']      = theme('username', $node);
+  $variables['name']      = theme('username', array('account' => $node));
   $variables['node_url']  = url('node/' . $node->nid);
-  $variables['title']     = check_plain($node->title);
-  $variables['page']      = (bool)menu_get_object();
+  $variables['node_title'] = check_plain($node->title);
+  $variables['page']      = node_is_page($node);
 
   if (!empty($node->in_preview)) {
     unset($node->content['links']);
@@ -1159,7 +1356,7 @@ function template_preprocess_node(&$variables) {
 
   // Flatten the node object's member fields.
   $variables = array_merge((array)$node, $variables);
-  
+
   // Helpful $content variable for templates.
   foreach (element_children($variables['elements']) as $key) {
     $variables['content'][$key] = $variables['elements'][$key];
@@ -1171,7 +1368,7 @@ function template_preprocess_node(&$variables) {
   // Display post information only on certain node types.
   if (variable_get('node_submitted_' . $node->type, TRUE)) {
     $variables['display_submitted'] = TRUE;
-    $variables['user_picture'] = theme_get_setting('toggle_node_user_picture') ? theme('user_picture', $node) : '';
+    $variables['user_picture'] = theme_get_setting('toggle_node_user_picture') ? theme('user_picture', array('account' => $node)) : '';
   }
   else {
     $variables['display_submitted'] = FALSE;
@@ -1179,7 +1376,7 @@ function template_preprocess_node(&$variables) {
   }
 
   // Gather node classes.
-  $variables['classes_array'][] = 'node-' . $node->type;
+  $variables['classes_array'][] = drupal_html_class('node-' . $node->type);
   if ($variables['promote']) {
     $variables['classes_array'][] = 'node-promoted';
   }
@@ -1197,8 +1394,8 @@ function template_preprocess_node(&$variables) {
   }
 
   // Clean up name so there are no underscores.
-  $variables['template_files'][] = 'node-' . str_replace('_', '-', $node->type);
-  $variables['template_files'][] = 'node-' . $node->nid;
+  $variables['theme_hook_suggestions'][] = 'node__' . $node->type;
+  $variables['theme_hook_suggestions'][] = 'node__' . $node->nid;
 }
 
 /**
@@ -1206,46 +1403,44 @@ function template_preprocess_node(&$variables) {
  *
  * @ingroup themeable
  */
-function theme_node_log_message($log) {
-  return '<div class="log"><div class="title">' . t('Log') . ':</div>' . $log . '</div>';
+function theme_node_log_message($variables) {
+  return '<div class="log"><div class="title">' . t('Log') . ':</div>' . $variables['log'] . '</div>';
 }
 
 /**
- * Implement hook_permission().
+ * Implements hook_permission().
  */
 function node_permission() {
   $perms = array(
     'administer content types' => array(
       'title' => t('Administer content types'),
-      'description' => t('Manage content types and content type administration settings.'),
+      'description' => drupal_placeholder(array('text' => t('Warning: Give to trusted roles only; this permission has security implications.'))),
     ),
     'administer nodes' => array(
-      'title' => t('Administer nodes'),
-      'description' => t('Manage all information associated with site content, such as author, publication date and current revision. %warning', array('%warning' => t('Warning: Give to trusted roles only; this permission has security implications.'))),
+      'title' => t('Administer content'),
+      'description' => drupal_placeholder(array('text' => t('Warning: Give to trusted roles only; this permission has security implications.'))),
     ),
     'access content' => array(
-      'title' => t('Access content'),
-      'description' => t('View published content.'),
+      'title' => t('View published content'),
+    ),
+    'access content overview' => array(
+      'title' => t('Access the content overview page'),
     ),
     'bypass node access' => array(
-      'title' => t('Bypass node access'),
-      'description' => t('View, edit and delete all site content. Users with this permission will bypass any content-related access control. %warning', array('%warning' => t('Warning: Give to trusted roles only; this permission has security implications.'))),
+      'title' => t('Bypass content access control'),
+      'description' => t('View, edit and delete all content regardless of permission restrictions. %warning', array('%warning' => t('Warning: Give to trusted roles only; this permission has security implications.'))),
     ),
     'view revisions' => array(
-      'title' => t('View revisions'),
-      'description' => t('View content revisions.'),
+      'title' => t('View content revisions'),
     ),
     'revert revisions' => array(
-      'title' => t('Revert revisions'),
-      'description' => t('Replace content with an older revision.'),
+      'title' => t('Revert content revisions'),
     ),
     'delete revisions' => array(
-      'title' => t('Delete revisions'),
-      'description' => t('Delete content revisions.'),
+      'title' => t('Delete content revisions'),
     ),
     'view own unpublished content' => array(
       'title' => t('View own unpublished content'),
-      'description' => t('View unpublished content created by the user'),
     ),
   );
 
@@ -1280,7 +1475,7 @@ function _node_rankings(SelectQueryExtender $query) {
 }
 
 /**
- * Implement hook_search_info().
+ * Implements hook_search_info().
  */
 function node_search_info() {
   return array(
@@ -1290,14 +1485,14 @@ function node_search_info() {
 }
 
 /**
- * Implement hook_search_access().
+ * Implements hook_search_access().
  */
 function node_search_access() {
   return user_access('access content');
 }
 
 /**
- * Implement hook_search_reset().
+ * Implements hook_search_reset().
  */
 function node_search_reset() {
   db_update('search_dataset')
@@ -1307,19 +1502,18 @@ function node_search_reset() {
 }
 
 /**
- * Implement hook_search_status().
+ * Implements hook_search_status().
  */
 function node_search_status() {
-  $total = db_query('SELECT COUNT(*) FROM {node} WHERE status = :status', array(':status' => NODE_PUBLISHED))->fetchField();
-  $remaining = db_query("SELECT COUNT(*) FROM {node} n LEFT JOIN {search_dataset} d ON d.type = 'node' AND d.sid = n.nid WHERE n.status = :status AND d.sid IS NULL OR d.reindex <> 0", array(':status' => NODE_PUBLISHED))->fetchField();
+  $total = db_query('SELECT COUNT(*) FROM {node}')->fetchField();
+  $remaining = db_query("SELECT COUNT(*) FROM {node} n LEFT JOIN {search_dataset} d ON d.type = 'node' AND d.sid = n.nid WHERE d.sid IS NULL OR d.reindex <> 0")->fetchField();
   return array('remaining' => $remaining, 'total' => $total);
 }
 
 /**
- * Implement hook_search_admin().
+ * Implements hook_search_admin().
  */
 function node_search_admin() {
-  $form = array();
   // Output form for defining rank factor weights.
   $form['content_ranking'] = array(
     '#type' => 'fieldset',
@@ -1329,7 +1523,7 @@ function node_search_admin() {
   $form['content_ranking']['info'] = array(
     '#value' => '<em>' . t('The following numbers control which properties the content search should favor when ordering the results. Higher numbers mean more influence, zero means the property is ignored. Changing these numbers does not require the search index to be rebuilt. Changes take effect immediately.') . '</em>'
   );
-  
+
   // Note: reversed to reflect that higher number = higher ranking.
   $options = drupal_map_assoc(range(0, 10));
   foreach (module_invoke_all('ranking') as $var => $values) {
@@ -1344,60 +1538,59 @@ function node_search_admin() {
 }
 
 /**
- * Implement hook_search_execute().
+ * Implements hook_search_execute().
  */
 function node_search_execute($keys = NULL) {
   // Build matching conditions
-  $query = db_select('search_index', 'i')->extend('SearchQuery')->extend('PagerDefault');
+  $query = db_select('search_index', 'i', array('target' => 'slave'))->extend('SearchQuery')->extend('PagerDefault');
   $query->join('node', 'n', 'n.nid = i.sid');
   $query
     ->condition('n.status', 1)
     ->addTag('node_access')
     ->searchExpression($keys, 'node');
-  
+
   // Insert special keywords.
   $query->setOption('type', 'n.type');
   $query->setOption('language', 'n.language');
-  if ($query->setOption('term', 'tn.nid')) {
-    $query->join('taxonomy_term_node', 'tn', 'n.vid = tn.vid');
+  if ($query->setOption('term', 'ti.tid')) {
+    $query->join('taxonomy_index', 'ti', 'n.nid = ti.nid');
   }
   // Only continue if the first pass query matches.
   if (!$query->executeFirstPass()) {
     return array();
   }
-  
+
   // Add the ranking expressions.
   _node_rankings($query);
-  
+
   // Add a count query.
   $inner_query = clone $query;
-  $count_query = db_select($inner_query->fields('i', array('sid')));
+  $count_query = db_select($inner_query->fields('i', array('sid')), NULL, array('target' => 'slave'));
   $count_query->addExpression('COUNT(*)');
   $query->setCountQuery($count_query);
   $find = $query
     ->limit(10)
     ->execute();
-  
+
   // Load results.
   $results = array();
   foreach ($find as $item) {
     // Render the node.
     $node = node_load($item->sid);
-    node_build_content($node, 'search_result');
-    $node->rendered = drupal_render($node->content);
-  
+    $build = node_view($node, 'search_result');
+    unset($build['#theme']);
+    $node->rendered = drupal_render($build);
+
     // Fetch comments for snippet.
     $node->rendered .= ' ' . module_invoke('comment', 'node_update_index', $node);
-    // Fetch terms for snippet.
-    $node->rendered .= ' ' . module_invoke('taxonomy', 'node_update_index', $node);
-  
+
     $extra = module_invoke_all('node_search_result', $node);
-  
+
     $results[] = array(
       'link' => url('node/' . $item->sid, array('absolute' => TRUE)),
       'type' => check_plain(node_type_get_name($node)),
       'title' => $node->title,
-      'user' => theme('username', $node),
+      'user' => theme('username', array('account' => $node)),
       'date' => $node->changed,
       'node' => $node,
       'extra' => $extra,
@@ -1409,7 +1602,7 @@ function node_search_execute($keys = NULL) {
 }
 
 /**
- * Implement hook_ranking().
+ * Implements hook_ranking().
  */
 function node_ranking() {
   // Create the ranking array and add the basic ranking options.
@@ -1444,7 +1637,7 @@ function node_ranking() {
 }
 
 /**
- * Implement hook_user_cancel().
+ * Implements hook_user_cancel().
  */
 function node_user_cancel($edit, $account, $method) {
   switch ($method) {
@@ -1487,13 +1680,12 @@ function node_user_cancel($edit, $account, $method) {
         ->condition('uid', $account->uid)
         ->execute()
         ->fetchCol();
-      foreach ($nodes as $nid) {
-        node_delete($nid);
-      }
+      node_delete_multiple($nodes);
       // Delete old revisions.
-      db_delete('node_revision')
-        ->condition('uid', $account->uid)
-        ->execute();
+      $revisions = db_query('SELECT vid FROM {node_revision} WHERE uid = :uid', array(':uid' => $account->uid))->fetchCol();
+      foreach ($revisions as $revision) {
+        node_revision_delete($revision);
+      }
       // Clean history.
       db_delete('history')
         ->condition('uid', $account->uid)
@@ -1507,7 +1699,9 @@ function node_user_cancel($edit, $account, $method) {
  *
  * @ingroup themeable
  */
-function theme_node_search_admin($form) {
+function theme_node_search_admin($variables) {
+  $form = $variables['form'];
+
   $output = drupal_render($form['info']);
 
   $header = array(t('Factor'), t('Weight'));
@@ -1518,7 +1712,7 @@ function theme_node_search_admin($form) {
     $row[] = drupal_render($form['factors'][$key]);
     $rows[] = $row;
   }
-  $output .= theme('table', $header, $rows);
+  $output .= theme('table', array('header' => $header, 'rows' => $rows));
 
   $output .= drupal_render_children($form);
   return $output;
@@ -1527,8 +1721,17 @@ function theme_node_search_admin($form) {
 function _node_revision_access($node, $op = 'view') {
   $access = &drupal_static(__FUNCTION__, array());
   if (!isset($access[$node->vid])) {
+    // To save additional calls to the database, return early if the user
+    // doesn't have the required permissions.
+    $map = array('view' => 'view revisions', 'update' => 'revert revisions', 'delete' => 'delete revisions');
+    if (isset($map[$op]) && (!user_access($map[$op]) && !user_access('administer nodes'))) {
+      $access[$node->vid] = FALSE;
+      return FALSE;
+    }
+
     $node_current_revision = node_load($node->nid);
     $is_current_revision = $node_current_revision->vid == $node->vid;
+
     // There should be at least two revisions. If the vid of the given node
     // and the vid of the current revision differs, then we already have two
     // different revisions so there is no need for a separate database check.
@@ -1541,11 +1744,9 @@ function _node_revision_access($node, $op = 'view') {
       $access[$node->vid] = TRUE;
     }
     else {
-      $map = array('view' => 'view revisions', 'update' => 'revert revisions', 'delete' => 'delete revisions');
-      // First check the user permission, second check the access to the
-      // current revision and finally, if the node passed in is not the current
-      // revision then access to that, too.
-      $access[$node->vid] = isset($map[$op]) && user_access($map[$op]) && node_access($op, $node_current_revision) && ($is_current_revision || node_access($op, $node));
+      // First check the access to the current revision and finally, if the
+      // node passed in is not the current revision then access to that, too.
+      $access[$node->vid] = node_access($op, $node_current_revision) && ($is_current_revision || node_access($op, $node));
     }
   }
   return $access[$node->vid];
@@ -1568,20 +1769,21 @@ function _node_add_access() {
 }
 
 /**
- * Implement hook_menu().
+ * Implements hook_menu().
  */
 function node_menu() {
   $items['admin/content'] = array(
     'title' => 'Content',
-    'description' => 'Find and manage content and comments.',
+    'description' => 'Find and manage content.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('node_admin_content'),
-    'access arguments' => array('administer nodes'),
+    'access arguments' => array('access content overview'),
     'weight' => -10,
     'file' => 'node.admin.inc',
   );
   $items['admin/content/node'] = array(
     'title' => 'Content',
+    'description' => "Administer content",
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => -10,
   );
@@ -1599,7 +1801,7 @@ function node_menu() {
 
   $items['admin/structure/types'] = array(
     'title' => 'Content types',
-    'description' => 'Manage posts by content type, including default status, front page promotion, comment settings, etc.',
+    'description' => 'Manage content types, including default status, front page promotion, comment settings, etc.',
     'page callback' => 'node_overview_types',
     'access arguments' => array('administer content types'),
     'file' => 'content_types.inc',
@@ -1617,6 +1819,27 @@ function node_menu() {
     'type' => MENU_LOCAL_ACTION,
     'file' => 'content_types.inc',
   );
+  $items['admin/structure/types/manage/%node_type'] = array(
+    'title' => 'Edit content type',
+    'title callback' => 'node_type_page_title',
+    'title arguments' => array(4),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('node_type_form', 4),
+    'access arguments' => array('administer content types'),
+    'file' => 'content_types.inc',
+  );
+  $items['admin/structure/types/manage/%node_type/edit'] = array(
+    'title' => 'Edit',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+  $items['admin/structure/types/manage/%node_type/delete'] = array(
+    'title' => 'Delete',
+    'page arguments' => array('node_type_delete_confirm', 4),
+    'access arguments' => array('administer content types'),
+    'type' => MENU_CALLBACK,
+    'file' => 'content_types.inc',
+  );
+
   $items['node'] = array(
     'title' => 'Content',
     'page callback' => 'node_page_default',
@@ -1629,6 +1852,7 @@ function node_menu() {
     'access callback' => '_node_add_access',
     'weight' => 1,
     'menu_name' => 'management',
+    'theme callback' => '_node_custom_theme',
     'file' => 'node.pages.inc',
   );
   $items['rss.xml'] = array(
@@ -1637,6 +1861,7 @@ function node_menu() {
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
   );
+  // @todo Remove this loop when we have a 'description callback' property.
   // Reset internal static cache of _node_types_build(), forces to rebuild the
   // node type information.
   drupal_static_reset('_node_types_build');
@@ -1652,46 +1877,29 @@ function node_menu() {
       'description' => $type->description,
       'file' => 'node.pages.inc',
     );
-    $items['admin/structure/node-type/' . $type_url_str] = array(
-      'title' => $type->name,
-      'page callback' => 'drupal_get_form',
-      'page arguments' => array('node_type_form', $type),
-      'access arguments' => array('administer content types'),
-      'type' => MENU_CALLBACK,
-      'file' => 'content_types.inc',
-    );
-    $items['admin/structure/node-type/' . $type_url_str . '/edit'] = array(
-      'title' => 'Edit',
-      'type' => MENU_DEFAULT_LOCAL_TASK,
-    );
-    $items['admin/structure/node-type/' . $type_url_str . '/delete'] = array(
-      'title' => 'Delete',
-      'page arguments' => array('node_type_delete_confirm', $type),
-      'access arguments' => array('administer content types'),
-      'type' => MENU_CALLBACK,
-      'file' => 'content_types.inc',
-    );
   }
   $items['node/%node'] = array(
-    'title callback' => 'node_page_title',
-    'title arguments' => array(1),
     'page callback' => 'node_page_view',
     'page arguments' => array(1),
     'access callback' => 'node_access',
     'access arguments' => array('view', 1),
-    'type' => MENU_CALLBACK);
+    'type' => MENU_CALLBACK,
+  );
   $items['node/%node/view'] = array(
     'title' => 'View',
     'type' => MENU_DEFAULT_LOCAL_TASK,
-    'weight' => -10);
+    'weight' => -10,
+  );
   $items['node/%node/edit'] = array(
     'title' => 'Edit',
     'page callback' => 'node_page_edit',
     'page arguments' => array(1),
     'access callback' => 'node_access',
     'access arguments' => array('update', 1),
-    'weight' => 1,
+    'theme callback' => '_node_custom_theme',
+    'weight' => 0,
     'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
     'file' => 'node.pages.inc',
   );
   $items['node/%node/delete'] = array(
@@ -1700,8 +1908,10 @@ function node_menu() {
     'page arguments' => array('node_delete_confirm', 1),
     'access callback' => 'node_access',
     'access arguments' => array('delete', 1),
+    'theme callback' => '_node_custom_theme',
     'weight' => 1,
-    'type' => MENU_CALLBACK,
+    'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_INLINE,
     'file' => 'node.pages.inc',
   );
   $items['node/%node/revisions'] = array(
@@ -1747,6 +1957,29 @@ function node_menu() {
 }
 
 /**
+ * Implements hook_menu_local_tasks_alter().
+ */
+function node_menu_local_tasks_alter(&$data, $router_item, $root_path) {
+  // Add action link to 'node/add' on 'admin/content' page.
+  if ($root_path == 'admin/content') {
+    $item = menu_get_item('node/add');
+    if ($item['access']) {
+      $data['actions']['output'][] = array(
+        '#theme' => 'menu_local_action',
+        '#link' => $item,
+      );
+    }
+  }
+}
+
+/**
+ * Title callback for a node type.
+ */
+function node_type_page_title($type) {
+  return $type->name;
+}
+
+/**
  * Title callback.
  */
 function node_page_title($node) {
@@ -1754,7 +1987,18 @@ function node_page_title($node) {
 }
 
 /**
- * Implement hook_init().
+ * Theme callback for creating and editing nodes.
+ */
+function _node_custom_theme() {
+  // Use the administration theme if the site is configured to use it for
+  // nodes.
+  if (variable_get('node_admin_theme')) {
+    return variable_get('admin_theme');
+  }
+}
+
+/**
+ * Implements hook_init().
  */
 function node_init() {
   drupal_add_css(drupal_get_path('module', 'node') . '/node.css');
@@ -1769,7 +2013,7 @@ function node_last_changed($nid) {
  */
 function node_revision_list($node) {
   $revisions = array();
-  $result = db_query('SELECT r.vid, r.title, r.log, r.uid, n.vid AS current_vid, r.timestamp, u.name FROM {node_revision} r LEFT JOIN {node} n ON n.vid = r.vid INNER JOIN {users} u ON u.uid = r.uid WHERE r.nid = :nid ORDER BY r.timestamp DESC', array(':nid' => $node->nid));
+  $result = db_query('SELECT r.vid, r.title, r.log, r.uid, n.vid AS current_vid, r.timestamp, u.name FROM {node_revision} r LEFT JOIN {node} n ON n.vid = r.vid INNER JOIN {users} u ON u.uid = r.uid WHERE r.nid = :nid ORDER BY r.vid DESC', array(':nid' => $node->nid));
   foreach ($result as $revision) {
     $revisions[$revision->vid] = $revision;
   }
@@ -1778,23 +2022,225 @@ function node_revision_list($node) {
 }
 
 /**
- * Implement hook_block_info().
+ * Implements hook_block_info().
  */
 function node_block_info() {
   $blocks['syndicate']['info'] = t('Syndicate');
   // Not worth caching.
   $blocks['syndicate']['cache'] = DRUPAL_NO_CACHE;
+
+  $blocks['recent']['info'] = t('Recent content');
+
   return $blocks;
 }
 
 /**
- * Implement hook_block_view().
+ * Implements hook_block_view().
  */
 function node_block_view($delta = '') {
-  $block['subject'] = t('Syndicate');
-  $block['content'] = theme('feed_icon', url('rss.xml'), t('Syndicate'));
+  $block = array();
 
+  switch ($delta) {
+    case 'syndicate':
+      $block['subject'] = t('Syndicate');
+      $block['content'] = theme('feed_icon', array('url' => url('rss.xml'), 'title' => t('Syndicate')));
+      break;
+
+    case 'recent':
+      if (user_access('access content')) {
+        $block['subject'] = t('Recent content');
+        if ($nodes = node_get_recent(variable_get('node_recent_block_count', 10))) {
+          $block['content'] = theme('node_recent_block', array(
+            'nodes' => $nodes,
+          ));
+        } else {
+          $block['content'] = t('No content available.');
+        }
+      }
+      break;
+  }
   return $block;
+}
+
+/**
+ * Implements hook_block_configure().
+ */
+function node_block_configure($delta = '') {
+  $form = array();
+  if ($delta == 'recent') {
+    $form['node_recent_block_count'] = array(
+      '#type' => 'select',
+      '#title' => t('Number of recent content items to display'),
+      '#default_value' => variable_get('node_recent_block_count', 10),
+      '#options' => drupal_map_assoc(array(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 25, 30)),
+    );
+  }
+  return $form;
+}
+
+/**
+ * Implements hook_block_save().
+ */
+function node_block_save($delta = '', $edit = array()) {
+  if ($delta == 'recent') {
+    variable_set('node_recent_block_count', $edit['node_recent_block_count']);
+  }
+}
+
+/**
+ * Find the most recent nodes that are available to the current user.
+ *
+ * @param $number
+ *   (optional) The maximum number of nodes to find. Defaults to 10.
+ *
+ * @return
+ *   An array of partial node objects or an empty array if there are no recent
+ *   nodes visible to the current user.
+ */
+function node_get_recent($number = 10) {
+  $query = db_select('node', 'n');
+
+  if (!user_access('bypass node access')) {
+    // If the user is able to view their own unpublished nodes, allow them
+    // to see these in addition to published nodes. Check that they actually
+    // have some unpublished nodes to view before adding the condition.
+    if (user_access('view own unpublished content') && $own_unpublished = db_query('SELECT nid FROM {node} WHERE uid = :uid AND status = :status', array(':uid' => $GLOBALS['user']->uid, ':status' => NODE_NOT_PUBLISHED))->fetchCol()) {
+      $query->condition(db_or()
+        ->condition('n.status', NODE_PUBLISHED)
+        ->condition('n.nid', $own_unpublished, 'IN')
+      );
+    }
+    else {
+      // If not, restrict the query to published nodes.
+      $query->condition('n.status', NODE_PUBLISHED);
+    }
+  }
+  $nids = $query
+    ->fields('n', array('nid'))
+    ->orderBy('changed', 'DESC')
+    ->range(0, $number)
+    ->addTag('node_access')
+    ->execute()
+    ->fetchCol();
+
+  $nodes = node_load_multiple($nids);
+
+  return $nodes ? $nodes : array();
+}
+
+/**
+ * Returns a formatted list of recent nodes.
+ *
+ * @return
+ *   The recent content table HTML.
+ * @ingroup themeable
+ */
+function theme_node_recent_block($variables) {
+  $rows = array();
+  $output = '';
+
+  $l_options = array('query' => drupal_get_destination());
+  foreach ($variables['nodes'] as $node) {
+    $row = array();
+    $row[] = array(
+      'data' => theme('node_recent_content', array('node' => $node)),
+      'class' => 'title-author',
+    );
+    $row[] = array(
+      'data' => node_access('update', $node) ? l(t('edit'), 'node/' . $node->nid . '/edit', $l_options) : '',
+      'class' => 'edit',
+    );
+    $row[] = array(
+      'data' => node_access('delete', $node) ? l(t('delete'), 'node/' . $node->nid . '/delete', $l_options) : '',
+      'class' => 'delete',
+    );
+    $rows[] = $row;
+  }
+
+  if ($rows) {
+    $output = theme('table', array('rows' => $rows));
+    if (user_access('access content overview')) {
+      $output .= theme('more_link', array('url' => url('admin/content'), 'title' => t('Show more content')));
+    }
+  }
+
+  return $output;
+}
+
+/**
+ * Returns a formatted recent node to be displayed in the recent content block.
+ *
+ * @return
+ *   The recent content node's HTML.
+ * @ingroup themeable
+ */
+function theme_node_recent_content($variables) {
+  $node = $variables['node'];
+
+  $output = '<div class="node-title">';
+  $output .= l($node->title, 'node/' . $node->nid);
+  $output .= theme('mark', array('type' => node_mark($node->nid, $node->changed)));
+  $output .= '</div><div class="node-author">';
+  $output .= theme('username', array('account' => user_load($node->uid)));
+  $output .= '</div>';
+
+  return $output;
+}
+
+/**
+ * Implements hook_form_FORMID_alter().
+ *
+ * Adds node-type specific visibility options to add block form.
+ */
+function node_form_block_add_block_form_alter(&$form, &$form_state) {
+  node_form_block_admin_configure_alter($form, $form_state);
+}
+
+/**
+ * Implements hook_form_FORMID_alter().
+ *
+ * Adds node-type specific visibility options to block configuration form.
+ */
+function node_form_block_admin_configure_alter(&$form, &$form_state) {
+  $default_type_options = db_query("SELECT type FROM {block_node_type} WHERE module = :module AND delta = :delta", array(
+    ':module' => $form['module']['#value'],
+    ':delta' => $form['delta']['#value'],
+  ))->fetchCol();
+  $form['visibility']['node_type'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Content types'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#group' => 'visibility',
+    '#weight' => 5,
+  );
+  $form['visibility']['node_type']['types'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Show block for specific content types'),
+    '#default_value' => $default_type_options,
+    '#options' => node_type_get_names(),
+    '#description' => t('Show this block only on pages that display content of the given type(s). If you select no types, there will be no type-specific limitation.'),
+  );
+  $form['#submit'][] = 'node_block_admin_configure_submit';
+}
+
+/**
+ * Form submit handler for block configuration form.
+ */
+function node_block_admin_configure_submit($form, &$form_state) {
+  db_delete('block_node_type')
+    ->condition('module', $form_state['values']['module'])
+    ->condition('delta', $form_state['values']['delta'])
+    ->execute();
+  $query = db_insert('block_node_type')->fields(array('type', 'module', 'delta'));
+  foreach (array_filter($form_state['values']['types']) as $type) {
+    $query->values(array(
+      'type' => $type,
+      'module' => $form_state['values']['module'],
+      'delta' => $form_state['values']['delta'],
+    ));
+  }
+  $query->execute();
 }
 
 /**
@@ -1805,7 +2251,9 @@ function node_block_view($delta = '') {
  *   generated with passing an empty array, if no items are to be added
  *   to the feed.
  * @param $channel
- *   An associative array containing title, link, description and other keys.
+ *   An associative array containing title, link, description and other keys,
+ *   to be parsed by format_rss_channel() and format_xml_elements().
+ *   A list of channel elements can be found at the @link http://cyber.law.harvard.edu/rss/rss.html RSS 2.0 Specification. @endlink
  *   The link should be an absolute URL.
  */
 function node_feed($nids = FALSE, $channel = array()) {
@@ -1843,16 +2291,17 @@ function node_feed($nids = FALSE, $channel = array()) {
 
     // The node gets built and modules add to or modify $node->rss_elements
     // and $node->rss_namespaces.
-    node_build_content($node, 'rss');
+    $build = node_view($node, 'rss');
+    unset($build['#theme']);
 
     if (!empty($node->rss_namespaces)) {
       $namespaces = array_merge($namespaces, $node->rss_namespaces);
     }
 
-    if ($item_length != 'title' && !empty($node->content)) {
+    if ($item_length != 'title') {
       // We render node contents and force links to be last.
-      $links = drupal_render($node->content['links']);
-      $item_text .= drupal_render($node->content) . $links;
+      $build['links']['#weight'] = 1000;
+      $item_text .= drupal_render($build);
     }
 
     $items .= format_rss_item($node->title, $node->link, $item_text, $node->rss_elements);
@@ -1865,14 +2314,15 @@ function node_feed($nids = FALSE, $channel = array()) {
     'description' => variable_get('feed_description', ''),
     'language'    => $language->language
   );
+  $channel_extras = array_diff_key($channel, $channel_defaults);
   $channel = array_merge($channel_defaults, $channel);
 
   $output = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
   $output .= "<rss version=\"" . $channel["version"] . "\" xml:base=\"" . $base_url . "\" " . drupal_attributes($namespaces) . ">\n";
-  $output .= format_rss_channel($channel['title'], $channel['link'], $channel['description'], $items, $channel['language']);
+  $output .= format_rss_channel($channel['title'], $channel['link'], $channel['description'], $items, $channel['language'], $channel_extras);
   $output .= "</rss>\n";
 
-  drupal_set_header('Content-Type', 'application/rss+xml; charset=utf-8');
+  drupal_add_http_header('Content-Type', 'application/rss+xml; charset=utf-8');
   print $output;
 }
 
@@ -1881,17 +2331,19 @@ function node_feed($nids = FALSE, $channel = array()) {
  *
  * @param $nodes
  *   An array of nodes as returned by node_load_multiple().
- * @param $build_mode
- *   Build mode, e.g. 'full', 'teaser'...
+ * @param $view_mode
+ *   View mode, e.g. 'full', 'teaser'...
  * @param $weight
  *   An integer representing the weight of the first node in the list.
  * @return
  *   An array in the format expected by drupal_render().
  */
-function node_build_multiple($nodes, $build_mode = 'teaser', $weight = 0) {
+function node_view_multiple($nodes, $view_mode = 'teaser', $weight = 0) {
+  field_attach_prepare_view('node', $nodes, $view_mode);
+  entity_prepare_view('node', $nodes);
   $build = array();
   foreach ($nodes as $node) {
-    $build['nodes'][$node->nid] = node_build($node, $build_mode);
+    $build['nodes'][$node->nid] = node_view($node, $view_mode);
     $build['nodes'][$node->nid]['#weight'] = $weight;
     $weight++;
   }
@@ -1917,7 +2369,7 @@ function node_page_default() {
 
   if (!empty($nids)) {
     $nodes = node_load_multiple($nids);
-    $build = node_build_multiple($nodes);
+    $build = node_view_multiple($nodes);
 
     $feed_url = url('rss.xml', array('absolute' => TRUE));
     drupal_add_feed($feed_url, variable_get('site_name', 'Drupal') . ' ' . t('RSS'));
@@ -1934,13 +2386,10 @@ function node_page_default() {
 
     $default_links = array();
     if (_node_add_access()) {
-      $default_links[] = l(t('Create content'), 'node/add');
-    }
-    if (user_access('administer site configuration')) {
-      $default_links[] = l(t('Change the default front page'), 'admin/config/system/site-information');
+      $default_links[] = l(t('Add new content'), 'node/add');
     }
     if (!empty($default_links)) {
-      $default_message .= theme('item_list', $default_links);
+      $default_message .= theme('item_list', array('items' => $default_links));
     }
 
     $build['default_message'] = array(
@@ -1957,16 +2406,20 @@ function node_page_default() {
  */
 function node_page_view($node) {
   drupal_set_title($node->title);
+  // Set the node path as the canonical URL to prevent duplicate content.
+  drupal_add_html_head_link(array('rel' => 'canonical', 'href' => url('node/' . $node->nid)), TRUE);
+  // Set the non-aliased path as a default shortlink.
+  drupal_add_html_head_link(array('rel' => 'shortlink', 'href' => url('node/' . $node->nid, array('alias' => TRUE))), TRUE);
   return node_show($node);
 }
 
 /**
- * Implement hook_update_index().
+ * Implements hook_update_index().
  */
 function node_update_index() {
   $limit = (int)variable_get('search_cron_limit', 100);
 
-  $result = db_query_range("SELECT n.nid FROM {node} n LEFT JOIN {search_dataset} d ON d.type = 'node' AND d.sid = n.nid WHERE d.sid IS NULL OR d.reindex <> 0 ORDER BY d.reindex ASC, n.nid ASC", 0, $limit);
+  $result = db_query_range("SELECT n.nid FROM {node} n LEFT JOIN {search_dataset} d ON d.type = 'node' AND d.sid = n.nid WHERE d.sid IS NULL OR d.reindex <> 0 ORDER BY d.reindex ASC, n.nid ASC", 0, $limit, array(), array('target' => 'slave'));
 
   foreach ($result as $node) {
     _node_index_node($node);
@@ -1987,8 +2440,9 @@ function _node_index_node($node) {
   variable_set('node_cron_last', $node->changed);
 
   // Render the node.
-  node_build_content($node, 'search_index');
-  $node->rendered = drupal_render($node->content);
+  $build = node_view($node, 'search_index');
+  unset($build['#theme']);
+  $node->rendered = drupal_render($build);
 
   $text = '<h1>' . check_plain($node->title) . '</h1>' . $node->rendered;
 
@@ -2003,7 +2457,7 @@ function _node_index_node($node) {
 }
 
 /**
- * Implement hook_form_FORM_ID_alter().
+ * Implements hook_form_FORM_ID_alter().
  */
 function node_form_search_form_alter(&$form, $form_state) {
   if ($form['module']['#value'] == 'node' && user_access('use advanced search')) {
@@ -2038,19 +2492,6 @@ function node_form_search_form_alter(&$form, $form_state) {
       '#maxlength' => 255,
     );
 
-    // Taxonomy box:
-    if ($taxonomy = module_invoke('taxonomy', 'form_all', 1)) {
-      $form['advanced']['term'] = array(
-        '#type' => 'select',
-        '#title' => t('Only in the term(s)'),
-        '#prefix' => '<div class="criterion">',
-        '#size' => 10,
-        '#suffix' => '</div>',
-        '#options' => $taxonomy,
-        '#multiple' => TRUE,
-      );
-    }
-
     // Node types:
     $types = array_map('check_plain', node_type_get_names());
     $form['advanced']['type'] = array(
@@ -2069,8 +2510,8 @@ function node_form_search_form_alter(&$form, $form_state) {
 
     // Languages:
     $language_options = array();
-    foreach (language_list('language') as $key => $object) {
-      $language_options[$key] = $object->name;
+    foreach (language_list('language') as $key => $entity) {
+      $language_options[$key] = $entity->name;
     }
     if (count($language_options) > 1) {
       $form['advanced']['language'] = array(
@@ -2103,10 +2544,10 @@ function node_search_validate($form, &$form_state) {
     }
   }
 
-  if (isset($form_state['values']['term']) && is_array($form_state['values']['term'])) {
+  if (isset($form_state['values']['term']) && is_array($form_state['values']['term']) && count($form_state['values']['term'])) {
     $keys = search_expression_insert($keys, 'term', implode(',', $form_state['values']['term']));
   }
-  if (isset($form_state['values']['language']) && is_array($form_state['values']['language'])) {
+  if (isset($form_state['values']['language']) && is_array($form_state['values']['language']) && count($form_state['values']['language'])) {
     $keys = search_expression_insert($keys, 'language', implode(',', array_filter($form_state['values']['language'])));
   }
   if ($form_state['values']['or'] != '') {
@@ -2123,7 +2564,7 @@ function node_search_validate($form, &$form_state) {
     $keys .= ' "' . str_replace('"', ' ', $form_state['values']['phrase']) . '"';
   }
   if (!empty($keys)) {
-    form_set_value($form['basic']['inline']['processed_keys'], trim($keys), $form_state);
+    form_set_value($form['basic']['processed_keys'], trim($keys), $form_state);
   }
 }
 
@@ -2179,8 +2620,8 @@ function node_search_validate($form, &$form_state) {
  *   - "delete"
  *   - "create"
  * @param $node
- *   The node object (or node array) on which the operation is to be performed,
- *   or node type (e.g. 'forum') for "create" operation.
+ *   The node object on which the operation is to be performed, or node type
+ *   (e.g. 'forum') for "create" operation.
  * @param $account
  *   Optional, a user object representing the user for whom the operation is to
  *   be performed. Determines access for a user other than the current user.
@@ -2190,25 +2631,36 @@ function node_search_validate($form, &$form_state) {
 function node_access($op, $node, $account = NULL) {
   global $user;
 
+  $rights = &drupal_static(__FUNCTION__, array());
+
   if (!$node || !in_array($op, array('view', 'update', 'delete', 'create'), TRUE)) {
     // If there was no node to check against, or the $op was not one of the
     // supported ones, we return access denied.
     return FALSE;
-  }
-  // Convert the node to an object if necessary:
-  if ($op != 'create') {
-    $node = (object)$node;
   }
   // If no user object is supplied, the access check is for the current user.
   if (empty($account)) {
     $account = $user;
   }
 
+  // $node may be either an object or a node type. Since node types cannot be
+  // an integer, use either nid or type as the static cache id.
+
+  $cid = is_object($node) ? $node->nid : $node;
+
+  // If we've already checked access for this node, user and op, return from
+  // cache.
+  if (isset($rights[$account->uid][$cid][$op])) {
+    return $rights[$account->uid][$cid][$op];
+  }
+
   if (user_access('bypass node access', $account)) {
+    $rights[$account->uid][$cid][$op] = TRUE;
     return TRUE;
   }
 
   if (!user_access('access content', $account)) {
+    $rights[$account->uid][$cid][$op] = FALSE;
     return FALSE;
   }
 
@@ -2219,55 +2671,68 @@ function node_access($op, $node, $account = NULL) {
   // node_access table.
   $access = module_invoke_all('node_access', $node, $op, $account);
   if (in_array(NODE_ACCESS_DENY, $access, TRUE)) {
+    $rights[$account->uid][$cid][$op] = FALSE;
     return FALSE;
   }
   elseif (in_array(NODE_ACCESS_ALLOW, $access, TRUE)) {
+    $rights[$account->uid][$cid][$op] = TRUE;
     return TRUE;
   }
 
   // Check if authors can view their own unpublished nodes.
   if ($op == 'view' && !$node->status && user_access('view own unpublished content', $account) && $account->uid == $node->uid && $account->uid != 0) {
+    $rights[$account->uid][$cid][$op] = TRUE;
     return TRUE;
   }
 
   // If the module did not override the access rights, use those set in the
   // node_access table.
   if ($op != 'create' && $node->nid) {
-    $query = db_select('node_access');
-    $query->addExpression('1');
-    $query->condition('grant_' . $op, 1, '>=');
-    $nids = db_or()->condition('nid', $node->nid);
-    if ($node->status) {
-      $nids->condition('nid', 0);
-    }
-    $query->condition($nids);
-    $query->range(0, 1);
-
-    $grants = db_or();
-    foreach (node_access_grants($op, $account) as $realm => $gids) {
-      foreach ($gids as $gid) {
-        $grants->condition(db_and()
-          ->condition('gid', $gid)
-          ->condition('realm', $realm)
-        );
+    if (module_implements('node_grants')) {
+      $query = db_select('node_access');
+      $query->addExpression('1');
+      $query->condition('grant_' . $op, 1, '>=');
+      $nids = db_or()->condition('nid', $node->nid);
+      if ($node->status) {
+        $nids->condition('nid', 0);
       }
+      $query->condition($nids);
+      $query->range(0, 1);
+
+      $grants = db_or();
+      foreach (node_access_grants($op, $account) as $realm => $gids) {
+        foreach ($gids as $gid) {
+          $grants->condition(db_and()
+            ->condition('gid', $gid)
+            ->condition('realm', $realm)
+          );
+        }
+      }
+      if (count($grants) > 0) {
+        $query->condition($grants);
+      }
+      $result =  (bool) $query
+        ->execute()
+        ->fetchField();
+      $rights[$account->uid][$cid][$op] = $result;
+      return $result;
     }
-    if (count($grants) > 0) {
-      $query->condition($grants);
+    elseif (is_object($node) && $op == 'view' && $node->status) {
+      // If no modules implement hook_node_grants(), the default behaviour is to
+      // allow all users to view published nodes, so reflect that here.
+      $rights[$account->uid][$cid][$op] = TRUE;
+      return TRUE;
     }
-    return (bool) $query
-      ->execute()
-      ->fetchField();
   }
 
   return FALSE;
 }
 
 /**
- * Implement hook_node_access().
+ * Implements hook_node_access().
  */
 function node_node_access($node, $op, $account) {
-  $type = is_string($node) ? $node : (is_array($node) ? $node['type'] : $node->type);
+  $type = is_string($node) ? $node : $node->type;
 
   if (in_array($type, node_permissions_get_configured_types())) {
     if ($op == 'create' && user_access('create ' . $type . ' content', $account)) {
@@ -2305,24 +2770,19 @@ function node_list_permissions($type) {
   // Build standard list of node permissions for this type.
   $perms = array(
     "create $type content" => array(
-      'title' => t('Create %type_name content', array('%type_name' => $info->name)),
-      'description' => t('Create new %type_name content.', array('%type_name' => $info->name)),
+      'title' => t('Create new %type_name content', array('%type_name' => $info->name)),
     ),
     "edit own $type content" => array(
       'title' => t('Edit own %type_name content', array('%type_name' => $info->name)),
-      'description' => t('Edit %type_name content created by the user.', array('%type_name' => $info->name)),
     ),
     "edit any $type content" => array(
       'title' => t('Edit any %type_name content', array('%type_name' => $info->name)),
-      'description' => t('Edit any %type_name content, regardless of its author.', array('%type_name' => $info->name)),
     ),
     "delete own $type content" => array(
       'title' => t('Delete own %type_name content', array('%type_name' => $info->name)),
-      'description' => t('Delete %type_name content created by the user.', array('%type_name' => $info->name)),
     ),
     "delete any $type content" => array(
       'title' => t('Delete any %type_name content', array('%type_name' => $info->name)),
-      'description' => t('Delete any %type_name content, regardless of its author.', array('%type_name' => $info->name)),
     ),
   );
 
@@ -2394,7 +2854,7 @@ function node_access_grants($op, $account = NULL) {
  * Determine whether the user has a global viewing grant for all nodes.
  */
 function node_access_view_all_nodes() {
-  static $access;
+  $access = &drupal_static(__FUNCTION__);
 
   if (!isset($access)) {
     // If no modules implement the node access system, access is always true.
@@ -2431,26 +2891,53 @@ function node_access_view_all_nodes() {
 
 
 /**
- * Implement hook_query_TAG_alter().
+ * Implements hook_query_TAG_alter().
+ *
+ * This is the hook_query_alter() for queries tagged with 'node_access'.
+ * It adds node access checks for the user account given by the 'account'
+ * meta-data (or global $user if not provided), for an operation given by
+ * the 'op' meta-data (or 'view' if not provided; other possible values are
+ * 'update' and 'delete').
  */
 function node_query_node_access_alter(QueryAlterableInterface $query) {
-  // Skip the extra expensive alterations if site has no node access control
-  // modules.
-  if (!node_access_view_all_nodes()) {
-    // Prevent duplicate records.
-    $query->distinct();
-    // The recognized operations are 'view', 'update', 'delete'.
-    if (!$op = $query->getMetaData('op')) {
-      $op = 'view';
-    }
-    // Skip the extra joins and conditions for node admins.
-    if (!user_access('bypass node access')) {
+  global $user;
+
+  // Read meta-data from query, if provided.
+  if (!$account = $query->getMetaData('account')) {
+    $account = $user;
+  }
+  if (!$op = $query->getMetaData('op')) {
+    $op = 'view';
+  }
+
+  // If $account can bypass node access, or there are no node access
+  // modules, we don't need to alter the query.
+  if (user_access('bypass node access', $account)) {
+    return;
+  }
+  if (!count(module_implements('node_grants'))) {
+    return;
+  }
+
+  // Prevent duplicate records.
+  $query->distinct();
+
+  // Find all instances of the {node} table being joined -- could appear
+  // more than once in the query, and could be aliased. Join each one to
+  // the node_access table.
+
+  $tables = $query->getTables();
+  $grants = node_access_grants($op, $account);
+  foreach ($tables as $nalias => $tableinfo) {
+    $table = $tableinfo['table'];
+    if (!($table instanceof SelectQueryInterface) && $table == 'node') {
+
       // The node_access table has the access grants for any given node.
-      $access_alias = $query->join('node_access', 'na', 'na.nid = n.nid');
+      $access_alias = $query->join('node_access', 'na', "na.nid = {$nalias}.nid");
       $or = db_or();
-      // If any grant exists for the specified user, then user has access to the
-      // node for the specified operation.
-      foreach (node_access_grants($op, $query->getMetaData('account')) as $realm => $gids) {
+      // If any grant exists for the specified user, then user has access
+      // to the node for the specified operation.
+      foreach ($grants as $realm => $gids) {
         foreach ($gids as $gid) {
           $or->condition(db_and()
             ->condition("{$access_alias}.gid", $gid)
@@ -2469,19 +2956,14 @@ function node_query_node_access_alter(QueryAlterableInterface $query) {
 }
 
 /**
- * This function will call module invoke to get a list of grants and then
- * write them to the database. It is called at node save, and should be
- * called by modules whenever something other than a node_save causes
- * the permissions on a node to change.
+ * Gets the list of node access grants and writes them to the database.
  *
- * After the default grants have been loaded, we allow modules to alter
- * the grants array by reference. This hook allows for complex business
- * logic to be applied when integrating multiple node access modules.
- *
- * @see hook_node_access_records()
- *
- * This function is the only function that should write to the node_access
- * table.
+ * This function is called when a node is saved, and can also be called by
+ * modules if something other than a node save causes node access permissions to
+ * change. It collects all node access grants for the node from
+ * hook_node_access_records() implementations, allows these grants to be altered
+ * via hook_node_access_records_alter() implementations, and saves the collected
+ * and altered grants to the database.
  *
  * @param $node
  *   The $node to acquire grants for.
@@ -2508,15 +2990,16 @@ function node_access_acquire_grants($node) {
 }
 
 /**
- * This function will write a list of grants to the database, deleting
- * any pre-existing grants. If a realm is provided, it will only
- * delete grants from that realm, but it will always delete a grant
- * from the 'all' realm. Modules which utilize node_access can
- * use this function when doing mass updates due to widespread permission
- * changes.
+ * Writes a list of grants to the database, deleting any previously saved ones.
+ *
+ * If a realm is provided, it will only delete grants from that realm, but it
+ * will always delete a grant from the 'all' realm. Modules that utilize
+ * node_access can use this function when doing mass updates due to widespread
+ * permission changes.
  *
  * @param $node
- *   The $node being written to. All that is necessary is that it contain a nid.
+ *   The $node being written to. All that is necessary is that it contains a
+ *   nid.
  * @param $grants
  *   A list of grants to write. Each grant is an array that must contain the
  *   following keys: realm, gid, grant_view, grant_update, grant_delete.
@@ -2564,7 +3047,7 @@ function node_access_write_grants($node, $grants, $realm = NULL, $delete = TRUE)
  * This can be used as an alternative to direct node_access_rebuild calls,
  * allowing administrators to decide when they want to perform the actual
  * (possibly time consuming) rebuild.
- * When unsure the current user is an adminisrator, node_access_rebuild
+ * When unsure the current user is an administrator, node_access_rebuild
  * should be used instead.
  *
  * @param $rebuild
@@ -2716,9 +3199,11 @@ function _node_access_rebuild_batch_finished($success, $results, $operations) {
  */
 
 /**
- * Implement hook_form().
+ * Implements hook_form().
  */
 function node_content_form($node, $form_state) {
+  // It is impossible to define a content type without implementing hook_form()
+  // @todo: remove this requirement.
   $type = node_type_get_type($node);
 
   if ($type->has_title) {
@@ -2740,7 +3225,7 @@ function node_content_form($node, $form_state) {
  */
 
 /**
- * Implement hook_forms().
+ * Implements hook_forms().
  * All node forms share the same form handler.
  */
 function node_forms() {
@@ -2754,7 +3239,7 @@ function node_forms() {
 }
 
 /**
- * Implement hook_action_info().
+ * Implements hook_action_info().
  */
 function node_action_info() {
   return array(
@@ -2762,76 +3247,56 @@ function node_action_info() {
       'type' => 'node',
       'label' => t('Publish content'),
       'configurable' => FALSE,
-      'behavior' => array('changes_node_property'),
-      'triggers' => array('node_presave', 'comment_insert', 'comment_update'),
+      'behavior' => array('changes_property'),
+      'triggers' => array('node_presave', 'comment_insert', 'comment_update', 'comment_delete'),
     ),
     'node_unpublish_action' => array(
       'type' => 'node',
       'label' => t('Unpublish content'),
       'configurable' => FALSE,
-      'behavior' => array('changes_node_property'),
-      'triggers' => array(
-        'node_presave',
-        'comment_insert',
-        'comment_update',
-        'comment_delete'
-      ),
+      'behavior' => array('changes_property'),
+      'triggers' => array('node_presave', 'comment_insert', 'comment_update', 'comment_delete'),
     ),
     'node_make_sticky_action' => array(
       'type' => 'node',
       'label' => t('Make content sticky'),
       'configurable' => FALSE,
-      'behavior' => array('changes_node_property'),
-      'triggers' => array('node_presave', 'comment_insert', 'comment_update'),
+      'behavior' => array('changes_property'),
+      'triggers' => array('node_presave', 'comment_insert', 'comment_update', 'comment_delete'),
     ),
     'node_make_unsticky_action' => array(
       'type' => 'node',
       'label' => t('Make content unsticky'),
       'configurable' => FALSE,
-      'behavior' => array('changes_node_property'),
-      'triggers' => array(
-        'node_presave',
-        'comment_insert',
-        'comment_update',
-        'comment_delete'
-      ),
+      'behavior' => array('changes_property'),
+      'triggers' => array('node_presave', 'comment_insert', 'comment_update', 'comment_delete'),
     ),
     'node_promote_action' => array(
       'type' => 'node',
       'label' => t('Promote content to front page'),
       'configurable' => FALSE,
-      'behavior' => array('changes_node_property'),
-      'triggers' => array('node_presave', 'comment_insert', 'comment_update'),
+      'behavior' => array('changes_property'),
+      'triggers' => array('node_presave', 'comment_insert', 'comment_update', 'comment_delete'),
     ),
     'node_unpromote_action' => array(
       'type' => 'node',
       'label' => t('Remove content from front page'),
       'configurable' => FALSE,
-      'behavior' => array('changes_node_property'),
-      'triggers' => array(
-        'node_presave',
-        'comment_insert',
-        'comment_update',
-        'comment_delete'
-      ),
+      'behavior' => array('changes_property'),
+      'triggers' => array('node_presave', 'comment_insert', 'comment_update', 'comment_delete'),
     ),
     'node_assign_owner_action' => array(
       'type' => 'node',
       'label' => t('Change the author of content'),
       'configurable' => TRUE,
-      'behavior' => array('changes_node_property'),
-      'triggers' => array(
-        'node_presave',
-        'comment_insert',
-        'comment_update',
-        'comment_delete',
-      ),
+      'behavior' => array('changes_property'),
+      'triggers' => array('node_presave', 'comment_insert', 'comment_update', 'comment_delete'),
     ),
     'node_save_action' => array(
       'type' => 'node',
       'label' => t('Save content'),
       'configurable' => FALSE,
-      'triggers' => array('comment_delete', 'comment_insert', 'comment_update'),
+      'triggers' => array('comment_insert', 'comment_update', 'comment_delete'),
     ),
     'node_unpublish_by_keyword_action' => array(
       'type' => 'node',
@@ -2843,8 +3308,9 @@ function node_action_info() {
 }
 
 /**
- * Implement a Drupal action.
- * Sets the status of a node to 1, meaning published.
+ * Sets the status of a node to 1 (published).
+ *
+ * @ingroup actions
  */
 function node_publish_action($node, $context = array()) {
   $node->status = NODE_PUBLISHED;
@@ -2852,8 +3318,9 @@ function node_publish_action($node, $context = array()) {
 }
 
 /**
- * Implement a Drupal action.
- * Sets the status of a node to 0, meaning unpublished.
+ * Sets the status of a node to 0 (unpublished).
+ *
+ * @ingroup actions
  */
 function node_unpublish_action($node, $context = array()) {
   $node->status = NODE_NOT_PUBLISHED;
@@ -2861,8 +3328,9 @@ function node_unpublish_action($node, $context = array()) {
 }
 
 /**
- * Implement a Drupal action.
  * Sets the sticky-at-top-of-list property of a node to 1.
+ *
+ * @ingroup actions
  */
 function node_make_sticky_action($node, $context = array()) {
   $node->sticky = NODE_STICKY;
@@ -2870,8 +3338,9 @@ function node_make_sticky_action($node, $context = array()) {
 }
 
 /**
- * Implement a Drupal action.
  * Sets the sticky-at-top-of-list property of a node to 0.
+ *
+ * @ingroup actions
  */
 function node_make_unsticky_action($node, $context = array()) {
   $node->sticky = NODE_NOT_STICKY;
@@ -2879,8 +3348,9 @@ function node_make_unsticky_action($node, $context = array()) {
 }
 
 /**
- * Implement a Drupal action.
  * Sets the promote property of a node to 1.
+ *
+ * @ingroup actions
  */
 function node_promote_action($node, $context = array()) {
   $node->promote = NODE_PROMOTED;
@@ -2888,8 +3358,9 @@ function node_promote_action($node, $context = array()) {
 }
 
 /**
- * Implement a Drupal action.
  * Sets the promote property of a node to 0.
+ *
+ * @ingroup actions
  */
 function node_unpromote_action($node, $context = array()) {
   $node->promote = NODE_NOT_PROMOTED;
@@ -2897,8 +3368,9 @@ function node_unpromote_action($node, $context = array()) {
 }
 
 /**
- * Implement a Drupal action.
  * Saves a node.
+ *
+ * @ingroup actions
  */
 function node_save_action($node) {
   node_save($node);
@@ -2906,8 +3378,15 @@ function node_save_action($node) {
 }
 
 /**
- * Implement a configurable Drupal action.
  * Assigns ownership of a node to a user.
+ *
+ * @param $node
+ *   A node object to modify.
+ * @param $context
+ *   Array with the following elements:
+ *   - 'owner_uid': User ID to assign to the node.
+ *
+ * @ingroup actions
  */
 function node_assign_owner_action($node, $context) {
   $node->uid = $context['owner_uid'];
@@ -2915,6 +3394,9 @@ function node_assign_owner_action($node, $context) {
   watchdog('action', 'Changed owner of @type %title to uid %name.', array('@type' =>  node_type_get_type($node), '%title' => $node->title, '%name' => $owner_name));
 }
 
+/**
+ * Generates the settings form for node_assign_owner_action().
+ */
 function node_assign_owner_action_form($context) {
   $description = t('The username of the user to which you would like to assign ownership.');
   $count = db_query("SELECT COUNT(*) FROM {users}")->fetchField();
@@ -2952,46 +3434,60 @@ function node_assign_owner_action_form($context) {
   return $form;
 }
 
+/**
+ * Validates settings form for node_assign_owner_action().
+ */
 function node_assign_owner_action_validate($form, $form_state) {
   $exists = (bool) db_query_range('SELECT 1 FROM {users} WHERE name = :name', 0, 1, array(':name' => $form_state['values']['owner_name']))->fetchField();
   if (!$exists) {
-    form_set_error('owner_name', t('Please enter a valid username.'));
+    form_set_error('owner_name', t('Enter a valid username.'));
   }
 }
 
+/**
+ * Saves settings form for node_assign_owner_action().
+ */
 function node_assign_owner_action_submit($form, $form_state) {
   // Username can change, so we need to store the ID, not the username.
   $uid = db_query('SELECT uid from {users} WHERE name = :name', array(':name' => $form_state['values']['owner_name']))->fetchField();
   return array('owner_uid' => $uid);
 }
 
+/**
+ * Generates settings form for node_unpublish_by_keyword_action().
+ */
 function node_unpublish_by_keyword_action_form($context) {
   $form['keywords'] = array(
     '#title' => t('Keywords'),
     '#type' => 'textarea',
-    '#description' => t('The post will be unpublished if it contains any of the phrases above. Use a case-sensitive, comma-separated list of phrases. Example: funny, bungee jumping, "Company, Inc."'),
+    '#description' => t('The content will be unpublished if it contains any of the phrases above. Use a case-sensitive, comma-separated list of phrases. Example: funny, bungee jumping, "Company, Inc."'),
     '#default_value' => isset($context['keywords']) ? drupal_implode_tags($context['keywords']) : '',
   );
   return $form;
 }
 
+/**
+ * Saves settings form for node_unpublish_by_keyword_action().
+ */
 function node_unpublish_by_keyword_action_submit($form, $form_state) {
   return array('keywords' => drupal_explode_tags($form_state['values']['keywords']));
 }
 
 /**
- * Implement a configurable Drupal action.
- * Unpublish a node if it contains a certain string.
+ * Unpublishes a node containing certain keywords.
  *
+ * @param $node
+ *   A node object to modify.
  * @param $context
- *   An array providing more information about the context of the call to this
- *   action.
- * @param $comment
- *   A node object.
+ *   Array with the following elements:
+ *   - 'keywords': Array of keywords. If any keyword is present in the rendered
+ *     node, the node's status flag is set to unpublished.
+ *
+ * @ingroup actions
  */
 function node_unpublish_by_keyword_action($node, $context) {
   foreach ($context['keywords'] as $keyword) {
-    if (strpos(drupal_render(node_build(clone $node)), $keyword) !== FALSE || strpos($node->title, $keyword) !== FALSE) {
+    if (strpos(drupal_render(node_view(clone $node)), $keyword) !== FALSE || strpos($node->title, $keyword) !== FALSE) {
       $node->status = NODE_NOT_PUBLISHED;
       watchdog('action', 'Set @type %title to unpublished.', array('@type' => node_type_get_name($node), '%title' => $node->title));
       break;
@@ -3000,7 +3496,7 @@ function node_unpublish_by_keyword_action($node, $context) {
 }
 
 /**
- * Implement hook_requirements().
+ * Implements hook_requirements().
  */
 function node_requirements($phase) {
   $requirements = array();
@@ -3015,7 +3511,7 @@ function node_requirements($phase) {
   } else {
     $value = $t('Disabled');
   }
-  $description = $t('If the site is experiencing problems with permissions to content, you may have to rebuild the permissions cache. Rebuilding will remove all privileges to posts, and replace them with permissions based on the current modules and settings. Rebuilding may take some time if there is a lot of content or complex permission settings. After rebuilding has completed posts will automatically use the new permissions.');
+  $description = $t('If the site is experiencing problems with permissions to content, you may have to rebuild the permissions cache. Rebuilding will remove all privileges to content and replace them with permissions based on the current modules and settings. Rebuilding may take some time if there is a lot of content or complex permission settings. After rebuilding has completed, content will automatically use the new permissions.');
 
   $requirements['node_access'] = array(
     'title' => $t('Node Access Permissions'),
@@ -3026,18 +3522,30 @@ function node_requirements($phase) {
 }
 
 /**
+ * Implements hook_modules_enabled().
+ */
+function node_modules_enabled($modules) {
+  // Check if any of the newly enabled modules require the node_access table to
+  // be rebuilt.
+  if (!node_access_needs_rebuild() && array_intersect($modules, module_implements('node_grants'))) {
+    node_access_needs_rebuild(TRUE);
+  }
+}
+
+/**
  * Controller class for nodes.
  *
  * This extends the DrupalDefaultEntityController class, adding required
  * special handling for node objects.
  */
 class NodeController extends DrupalDefaultEntityController {
-  protected function attachLoad(&$nodes) {
+
+  protected function attachLoad(&$nodes, $revision_id = FALSE) {
     // Create an array of nodes for each content type and pass this to the
     // object type specific callback.
     $typed_nodes = array();
-    foreach ($nodes as $id => $object) {
-      $typed_nodes[$object->type][$id] = $object;
+    foreach ($nodes as $id => $entity) {
+      $typed_nodes[$entity->type][$id] = $entity;
     }
 
     // Call object type specific callbacks on each typed array of nodes.
@@ -3048,6 +3556,6 @@ class NodeController extends DrupalDefaultEntityController {
       }
     }
     $this->hookLoadArguments[] = array_keys($typed_nodes);
-    parent::attachLoad($nodes);
+    parent::attachLoad($nodes, $revision_id);
   }
 }

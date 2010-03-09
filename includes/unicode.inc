@@ -1,5 +1,5 @@
 <?php
-// $Id: unicode.inc,v 1.39 2009/05/24 17:39:30 dries Exp $
+// $Id: unicode.inc,v 1.42 2010/03/07 06:38:55 webchick Exp $
 
 /**
  * Indicates an error during check for PHP unicode support.
@@ -38,9 +38,6 @@ function unicode_check() {
 function _unicode_check() {
   // Ensure translations don't break at install time
   $t = get_t();
-
-  // Set the standard C locale to ensure consistent, ASCII-only string handling.
-  setlocale(LC_CTYPE, 'C');
 
   // Check for mbstring extension
   if (!function_exists('mb_strlen')) {
@@ -116,6 +113,8 @@ function unicode_requirements() {
  *   The XML data which will be parsed later.
  * @return
  *   An XML parser object or FALSE on error.
+ *
+ * @ingroup php_wrappers
  */
 function drupal_xml_parser_create(&$data) {
   // Default XML encoding is UTF-8
@@ -207,7 +206,7 @@ function drupal_truncate_bytes($string, $len) {
   if ((ord($string[$len]) < 0x80) || (ord($string[$len]) >= 0xC0)) {
     return substr($string, 0, $len);
   }
-  // Scan backwards to beginning of the byte sequence. 
+  // Scan backwards to beginning of the byte sequence.
   while (--$len >= 0 && ord($string[$len]) >= 0x80 && ord($string[$len]) < 0xC0);
 
   return substr($string, 0, $len);
@@ -393,6 +392,8 @@ function _decode_entities($prefix, $codepoint, $original, &$html_entities, &$exc
 /**
  * Count the amount of characters in a UTF-8 string. This is less than or
  * equal to the byte count.
+ *
+ * @ingroup php_wrappers
  */
 function drupal_strlen($text) {
   global $multibyte;
@@ -407,6 +408,8 @@ function drupal_strlen($text) {
 
 /**
  * Uppercase a UTF-8 string.
+ *
+ * @ingroup php_wrappers
  */
 function drupal_strtoupper($text) {
   global $multibyte;
@@ -424,6 +427,8 @@ function drupal_strtoupper($text) {
 
 /**
  * Lowercase a UTF-8 string.
+ *
+ * @ingroup php_wrappers
  */
 function drupal_strtolower($text) {
   global $multibyte;
@@ -449,6 +454,8 @@ function _unicode_caseflip($matches) {
 
 /**
  * Capitalize the first letter of a UTF-8 string.
+ *
+ * @ingroup php_wrappers
  */
 function drupal_ucfirst($text) {
   // Note: no mbstring equivalent!
@@ -462,6 +469,8 @@ function drupal_ucfirst($text) {
  * Note that for cutting off a string at a known character/substring
  * location, the usage of PHP's normal strpos/substr is safe and
  * much faster.
+ *
+ * @ingroup php_wrappers
  */
 function drupal_substr($text, $start, $length = NULL) {
   global $multibyte;
@@ -532,7 +541,7 @@ function drupal_substr($text, $start, $length = NULL) {
           $chars++;
         }
       }
-      // Backtrace one byte if we are not at the begining of the string.
+      // Backtrace one byte if we are not at the beginning of the string.
       if ($iend > 0) {
         $iend--;
       }
@@ -545,5 +554,3 @@ function drupal_substr($text, $start, $length = NULL) {
     return substr($text, $istart, max(0, $iend - $istart + 1));
   }
 }
-
-

@@ -1,5 +1,5 @@
 <?php
-// $Id: field.api.php,v 1.34 2009/09/10 06:31:38 dries Exp $
+// $Id: field.api.php,v 1.66 2010/03/04 18:28:29 webchick Exp $
 
 /**
  * @ingroup field_fieldable_type
@@ -7,7 +7,7 @@
  */
 
 /**
- * Expose "pseudo-field" components on fieldable objects.
+ * Expose "pseudo-field" components on fieldable entities.
  *
  * Field UI's 'Manage fields' page lets users re-order fields, but also
  * non-field components. For nodes, that would be title, menu settings, or
@@ -19,9 +19,7 @@
  * field_attach_extra_weight() to retrieve the user-defined weight when
  * inserting the component.
  *
- * @param $bundle
- *   The name of the bundle being considered.
- * @return
+ * @return @todo
  *   An array of 'pseudo-field' components. The keys are the name of the element
  *   as it appears in the form structure. The values are arrays with the
  *   following key/value pairs:
@@ -30,8 +28,10 @@
  *   - weight: The default weight of the element.
  *   - view: (optional) The name of the element as it appears in the rendered
  *     structure, if different from the name in the form.
+ *
+ * @see hook_field_extra_fields_alter()
  */
-function hook_field_extra_fields($bundle) {
+function hook_field_extra_fields() {
   $extra = array();
 
   if ($type = node_type_get_type($bundle)) {
@@ -64,17 +64,34 @@ function hook_field_extra_fields($bundle) {
 }
 
 /**
+ * Alter "pseudo-field" components on fieldable entities.
+ *
+ * @param $info
+ *   The associative array of 'pseudo-field' components.
+ *
+ * @see hook_field_extra_fields()
+ */
+function hook_field_extra_fields_alter(&$info) {
+  // Force node title to always be at the top of the list
+  // by default.
+  if (isset($info['title'])) {
+    $info['title']['weight'] = -20;
+  }
+
+}
+
+/**
  * @} End of "ingroup field_fieldable_type"
  */
 
 /**
  * @defgroup field_types Field Types API
  * @{
- * Define field types, widget types, and display formatter types.
+ * Define field types, widget types, display formatter types, storage types.
  *
  * The bulk of the Field Types API are related to field types. A field type
- * represents a particular data storage type (integer, string, date, etc.) that
- * can be attached to a fieldable object. hook_field_info() defines the basic
+ * represents a particular type of data (integer, string, date, etc.) that
+ * can be attached to a fieldable entity. hook_field_info() defines the basic
  * properties of a field type, and a variety of other field hooks are called by
  * the Field Attach API to perform field-type-specific actions.
  * @see hook_field_info().
@@ -87,16 +104,19 @@ function hook_field_extra_fields($bundle) {
  * @see hook_field_update().
  * @see hook_field_delete().
  * @see hook_field_delete_revision().
- * @see hook_field_sanitize().
+ * @see hook_field_prepare_view().
  * @see hook_field_is_empty().
  *
  * The Field Types API also defines two kinds of pluggable handlers: widgets
  * and formatters, which specify how the field appears in edit forms and in
- * displayed objects. Widgets and formatters can be implemented by a field-type
+ * displayed entities. Widgets and formatters can be implemented by a field-type
  * module for it's own field types, or by a third-party module to extend the
  * behavior of existing field types.
  * @see hook_field_widget_info().
  * @see hook_field_formatter_info().
+ *
+ * A third kind of pluggable handlers, storage backends, is defined by the
+ * @link field_storage Field Storage API @endlink.
  */
 
 /**
@@ -238,53 +258,50 @@ function hook_field_schema($field) {
 }
 
 /**
- * Define custom load behavior for this module's field types.
+ * Defines custom load behavior for this module's field types.
  *
- * Unlike other field hooks, this hook operates on multiple objects. The
- * $objects, $instances and $items parameters are arrays keyed by object id.
- * For performance reasons, information for all available objects should be
+ * Unlike most other field hooks, this hook operates on multiple entities. The
+ * $entities, $instances and $items parameters are arrays keyed by entity id.
+ * For performance reasons, information for all available entity should be
  * loaded in a single query where possible.
  *
- * Note that the changes made to the field values get cached by the
- * field cache for subsequent loads.
+ * Note that the changes made to the field values get cached by the field cache
+ * for subsequent loads. You should never use this hook to load fieldable
+ * entities, since this is likely to cause infinite recursions when
+ * hook_field_load() is run on those as well. Use
+ * hook_field_formatter_prepare_view() instead.
  *
- * @param $obj_type
- *   The type of $object.
- * @param $objects
- *   Array of objects being loaded, keyed by object id.
+ * @param $entity_type
+ *   The type of $entity.
+ * @param $entities
+ *   Array of entities being loaded, keyed by entity id.
  * @param $field
  *   The field structure for the operation.
  * @param $instances
- *   Array of instance structures for $field for each object, keyed by object id.
+ *   Array of instance structures for $field for each entity, keyed by entity
+ *   id.
  * @param $langcode
  *   The language associated to $items.
  * @param $items
- *   Array of field values already loaded for the objects, keyed by object id.
+ *   Array of field values already loaded for the entities, keyed by entity id.
  * @param $age
  *   FIELD_LOAD_CURRENT to load the most recent revision for all fields, or
- *   FIELD_LOAD_REVISION to load the version indicated by each object.
+ *   FIELD_LOAD_REVISION to load the version indicated by each entity.
  * @return
  *   Changes or additions to field values are done by altering the $items
  *   parameter by reference.
  */
-function hook_field_load($obj_type, $objects, $field, $instances, $langcode, &$items, $age) {
-  foreach ($objects as $id => $object) {
+function hook_field_load($entity_type, $entities, $field, $instances, $langcode, &$items, $age) {
+  // Sample code from text.module: precompute sanitized strings so they are
+  // stored in the field cache.
+  foreach ($entities as $id => $entity) {
     foreach ($items[$id] as $delta => $item) {
-      if (!empty($instances[$id]['settings']['text_processing'])) {
-        // Only process items with a cacheable format, the rest will be
-        // handled by hook_field_sanitize().
-        $format = $item['format'];
-        if (filter_format_allowcache($format)) {
-          $items[$id][$delta]['safe'] = isset($item['value']) ? check_markup($item['value'], $format, $langcode, FALSE) : '';
-          if ($field['type'] == 'text_with_summary') {
-            $items[$id][$delta]['safe_summary'] = isset($item['summary']) ? check_markup($item['summary'], $format, $langcode, FALSE) : '';
-          }
-        }
-      }
-      else {
-        $items[$id][$delta]['safe'] = check_plain($item['value']);
+      // Only process items with a cacheable format, the rest will be handled
+      // by formatters if needed.
+      if (empty($instances[$id]['settings']['text_processing']) || filter_format_allowcache($item['format'])) {
+        $items[$id][$delta]['safe_value'] = isset($item['value']) ? _text_sanitize($instances[$id], $langcode, $item, 'value') : '';
         if ($field['type'] == 'text_with_summary') {
-          $items[$id][$delta]['safe_summary'] = check_plain($item['summary']);
+          $items[$id][$delta]['safe_summary'] = isset($item['summary']) ? _text_sanitize($instances[$id], $langcode, $item, 'summary') : '';
         }
       }
     }
@@ -292,43 +309,43 @@ function hook_field_load($obj_type, $objects, $field, $instances, $langcode, &$i
 }
 
 /**
- * Define custom sanitize behavior for this module's field types.
+ * Prepares field values prior to display.
  *
- * This hook is invoked just before the field values are handed to formatters
- * for display. Formatters being essentially theme functions, it is important
- * that any data sanitization happens outside the theme layer.
+ * This hook is invoked before the field values are handed to formatters
+ * for display, and runs before the formatters' own
+ * hook_field_formatter_prepare_view().
+ * @see hook_field_formatter_prepare_view()
  *
- * @param $obj_type
- *   The type of $object.
- * @param $object
- *   The object for the operation.
+ * Unlike most other field hooks, this hook operates on multiple entities. The
+ * $entities, $instances and $items parameters are arrays keyed by entity id.
+ * For performance reasons, information for all available entities should be
+ * loaded in a single query where possible.
+ *
+ * @param $entity_type
+ *   The type of $entity.
+ * @param $entities
+ *   Array of entities being displayed, keyed by entity id.
  * @param $field
  *   The field structure for the operation.
- * @param $instance
- *   The instance structure for $field on $object's bundle.
+ * @param $instances
+ *   Array of instance structures for $field for each entity, keyed by entity
+ *   id.
  * @param $langcode
  *   The language associated to $items.
  * @param $items
- *   $object->{$field['field_name']}, or an empty array if unset.
+ *   $entity->{$field['field_name']}, or an empty array if unset.
  */
-function hook_field_sanitize($obj_type, $object, $field, $instance, $langcode, &$items) {
-  foreach ($items as $delta => $item) {
-    // Only sanitize items which were not already processed inside
-    // hook_field_load(), i.e. items with uncacheable text formats, or coming
-    // from a form preview.
-    if (!isset($items[$delta]['safe'])) {
-      if (!empty($instance['settings']['text_processing'])) {
-        $format = $item['format'];
-        $items[$delta]['safe'] = isset($item['value']) ? check_markup($item['value'], $format, $langcode) : '';
-        if ($field['type'] == 'text_with_summary') {
-          $items[$delta]['safe_summary'] = isset($item['summary']) ? check_markup($item['summary'], $format, $langcode) : '';
-        }
-      }
-      else {
-        $items[$delta]['safe'] = check_plain($item['value']);
-        if ($field['type'] == 'text_with_summary') {
-          $items[$delta]['safe_summary'] = check_plain($item['summary']);
-        }
+function hook_field_prepare_view($entity_type, $entities, $field, $instances, $langcode, &$items) {
+  // Sample code from image.module: if there are no images specified at all,
+  // use the default.
+  foreach ($entities as $id => $entity) {
+    if (empty($items[$id]) && $field['settings']['default_image']) {
+      if ($file = file_load($field['settings']['default_image'])) {
+        $items[$id][0] = (array) $file + array(
+          'is_default' => TRUE,
+          'alt' => '',
+          'title' => '',
+        );
       }
     }
   }
@@ -337,31 +354,27 @@ function hook_field_sanitize($obj_type, $object, $field, $instance, $langcode, &
 /**
  * Define custom validate behavior for this module's field types.
  *
- * @param $obj_type
- *   The type of $object.
- * @param $object
- *   The object for the operation.
- *   Note that this might not be a full-fledged 'object'. When invoked through
- *   field_attach_query(), the $object will only include properties that the
- *   Field API knows about: bundle, id, revision id, and field values (no node
- *   title, user name...).
+ * @param $entity_type
+ *   The type of $entity.
+ * @param $entity
+ *   The entity for the operation.
  * @param $field
  *   The field structure for the operation.
  * @param $instance
- *   The instance structure for $field on $object's bundle.
+ *   The instance structure for $field on $entity's bundle.
  * @param $langcode
  *   The language associated to $items.
  * @param $items
- *   $object->{$field['field_name']}[$langcode], or an empty array if unset.
+ *   $entity->{$field['field_name']}[$langcode], or an empty array if unset.
  * @param $errors
  *   The array of errors, keyed by field name and by value delta, that have
- *   already been reported for the object. The function should add its errors
+ *   already been reported for the entity. The function should add its errors
  *   to this array. Each error is an associative array, with the following
  *   keys and values:
  *   - 'error': an error code (should be a string, prefixed with the module name)
  *   - 'message': the human readable message to be displayed.
  */
-function hook_field_validate($obj_type, $object, $field, $instance, $langcode, &$items, &$errors) {
+function hook_field_validate($entity_type, $entity, $field, $instance, $langcode, &$items, &$errors) {
   foreach ($items as $delta => $item) {
     if (!empty($item['value'])) {
       if (!empty($field['settings']['max_length']) && drupal_strlen($item['value']) > $field['settings']['max_length']) {
@@ -377,58 +390,67 @@ function hook_field_validate($obj_type, $object, $field, $instance, $langcode, &
 /**
  * Define custom presave behavior for this module's field types.
  *
- * @param $obj_type
- *   The type of $object.
- * @param $object
- *   The object for the operation.
+ * @param $entity_type
+ *   The type of $entity.
+ * @param $entity
+ *   The entity for the operation.
  * @param $field
  *   The field structure for the operation.
  * @param $instance
- *   The instance structure for $field on $object's bundle.
+ *   The instance structure for $field on $entity's bundle.
  * @param $langcode
  *   The language associated to $items.
  * @param $items
- *   $object->{$field['field_name']}[$langcode], or an empty array if unset.
+ *   $entity->{$field['field_name']}[$langcode], or an empty array if unset.
  */
-function hook_field_presave($obj_type, $object, $field, $instance, $langcode, &$items) {
+function hook_field_presave($entity_type, $entity, $field, $instance, $langcode, &$items) {
+  if ($field['type'] == 'number_decimal') {
+    // Let PHP round the value to ensure consistent behavior across storage
+    // backends.
+    foreach ($items as $delta => $item) {
+      if (isset($item['value'])) {
+        $items[$delta]['value'] = round($item['value'], $field['settings']['scale']);
+      }
+    }
+  }
 }
 
 /**
  * Define custom insert behavior for this module's field types.
  *
- * @param $obj_type
- *   The type of $object.
- * @param $object
- *   The object for the operation.
+ * @param $entity_type
+ *   The type of $entity.
+ * @param $entity
+ *   The entity for the operation.
  * @param $field
  *   The field structure for the operation.
  * @param $instance
- *   The instance structure for $field on $object's bundle.
+ *   The instance structure for $field on $entity's bundle.
  * @param $langcode
  *   The language associated to $items.
  * @param $items
- *   $object->{$field['field_name']}[$langcode], or an empty array if unset.
+ *   $entity->{$field['field_name']}[$langcode], or an empty array if unset.
  */
-function hook_field_insert($obj_type, $object, $field, $instance, $langcode, &$items) {
+function hook_field_insert($entity_type, $entity, $field, $instance, $langcode, &$items) {
 }
 
 /**
  * Define custom update behavior for this module's field types.
  *
- * @param $obj_type
- *   The type of $object.
- * @param $object
- *   The object for the operation.
+ * @param $entity_type
+ *   The type of $entity.
+ * @param $entity
+ *   The entity for the operation.
  * @param $field
  *   The field structure for the operation.
  * @param $instance
- *   The instance structure for $field on $object's bundle.
+ *   The instance structure for $field on $entity's bundle.
  * @param $langcode
  *   The language associated to $items.
  * @param $items
- *   $object->{$field['field_name']}[$langcode], or an empty array if unset.
+ *   $entity->{$field['field_name']}[$langcode], or an empty array if unset.
  */
-function hook_field_update($obj_type, $object, $field, $instance, $langcode, &$items) {
+function hook_field_update($entity_type, $entity, $field, $instance, $langcode, &$items) {
 }
 
 /**
@@ -436,20 +458,20 @@ function hook_field_update($obj_type, $object, $field, $instance, $langcode, &$i
  *
  * This hook is invoked just before the data is deleted from field storage.
  *
- * @param $obj_type
- *   The type of $object.
- * @param $object
- *   The object for the operation.
+ * @param $entity_type
+ *   The type of $entity.
+ * @param $entity
+ *   The entity for the operation.
  * @param $field
  *   The field structure for the operation.
  * @param $instance
- *   The instance structure for $field on $object's bundle.
+ *   The instance structure for $field on $entity's bundle.
  * @param $langcode
  *   The language associated to $items.
  * @param $items
- *   $object->{$field['field_name']}[$langcode], or an empty array if unset.
+ *   $entity->{$field['field_name']}[$langcode], or an empty array if unset.
  */
-function hook_field_delete($obj_type, $object, $field, $instance, $langcode, &$items) {
+function hook_field_delete($entity_type, $entity, $field, $instance, $langcode, &$items) {
 }
 
 /**
@@ -458,20 +480,20 @@ function hook_field_delete($obj_type, $object, $field, $instance, $langcode, &$i
  * This hook is invoked just before the data is deleted from field storage,
  * and will only be called for fieldable types that are versioned.
  *
- * @param $obj_type
- *   The type of $object.
- * @param $object
- *   The object for the operation.
+ * @param $entity_type
+ *   The type of $entity.
+ * @param $entity
+ *   The entity for the operation.
  * @param $field
  *   The field structure for the operation.
  * @param $instance
- *   The instance structure for $field on $object's bundle.
+ *   The instance structure for $field on $entity's bundle.
  * @param $langcode
  *   The language associated to $items.
  * @param $items
- *   $object->{$field['field_name']}[$langcode], or an empty array if unset.
+ *   $entity->{$field['field_name']}[$langcode], or an empty array if unset.
  */
-function hook_field_delete_revision($obj_type, $object, $field, $instance, $langcode, &$items) {
+function hook_field_delete_revision($entity_type, $entity, $field, $instance, $langcode, &$items) {
 }
 
 /**
@@ -479,20 +501,20 @@ function hook_field_delete_revision($obj_type, $object, $field, $instance, $lang
  *
  * TODO: This hook may or may not survive in Field API.
  *
- * @param $obj_type
- *   The type of $object.
- * @param $object
- *   The object for the operation.
+ * @param $entity_type
+ *   The type of $entity.
+ * @param $entity
+ *   The entity for the operation.
  * @param $field
  *   The field structure for the operation.
  * @param $instance
- *   The instance structure for $field on $object's bundle.
+ *   The instance structure for $field on $entity's bundle.
  * @param $langcode
  *   The language associated to $items.
  * @param $items
- *   $object->{$field['field_name']}[$langcode], or an empty array if unset.
+ *   $entity->{$field['field_name']}[$langcode], or an empty array if unset.
  */
-function hook_field_prepare_translation($obj_type, $object, $field, $instance, $langcode, &$items) {
+function hook_field_prepare_translation($entity_type, $entity, $field, $instance, $langcode, &$items) {
 }
 
 /**
@@ -520,7 +542,7 @@ function hook_field_is_empty($item, $field) {
  * Widget hooks are typically called by the Field Attach API during the
  * creation of the field form structure with field_attach_form().
  * @see hook_field_widget_info_alter().
- * @see hook_field_widget().
+ * @see hook_field_widget_form().
  * @see hook_field_widget_error().
  *
  * @return
@@ -537,7 +559,7 @@ function hook_field_is_empty($item, $field) {
  *   - settings: An array whose keys are the names of the settings available
  *     for the widget type, and whose values are the default values for those
  *     settings.
- *   - behaviors: (optional) An array describing behaviors of the formatter.
+ *   - behaviors: (optional) An array describing behaviors of the widget.
  *     - multiple values:
  *       FIELD_BEHAVIOR_DEFAULT (default) if the widget allows the input of one
  *       single field value (most common case). The widget will be repeated for
@@ -600,22 +622,31 @@ function hook_field_widget_info_alter(&$info) {
 }
 
 /**
- * Return a single form element for a form.
+ * Return a single form element for a field widget.
  *
- * It will be built out and validated in the callback(s) listed in
- * hook_element_info(). We build it out in the callbacks rather than in
- * hook_field_widget so it can be plugged into any module that can
- * provide it with valid $field information.
+ * Field widget form elements should be based on the passed in $element, which
+ * contains the base form element properties derived from the field
+ * configuration.
  *
- * Field API will set the weight, field name and delta values for each
- * form element. If there are multiple values for this field, the
- * Field API will call this function as many times as needed.
+ * Field API will set the weight, field name and delta values for each form
+ * element. If there are multiple values for this field, the Field API will
+ * call this function as many times as needed.
+ *
+ * Note that, depending on the context in which the widget is being included
+ * (regular entity edit form, 'default value' input in the field settings form,
+ * etc...), the passed in values for $field and $instance might be different
+ * from the official definitions returned by field_info_field() and
+ * field_info_instance(). If the widget uses Form API callbacks (like
+ * #element_validate, #value_callback...) that need to access the $field or
+ * $instance definitions, they should not use the field_info_*() functions, but
+ * fetch the information present in $form_state['field']:
+ * - $form_state['field'][$field_name][$langcode]['field']
+ * - $form_state['field'][$field_name][$langcode]['instance']
  *
  * @param $form
  *   The entire form array.
  * @param $form_state
- *   The form_state, $form_state['values'][$field['field_name']]
- *   holds the field's form values.
+ *   An associative array containing the current state of the form.
  * @param $field
  *   The field structure.
  * @param $instance
@@ -626,11 +657,27 @@ function hook_field_widget_info_alter(&$info) {
  *   Array of default values for this field.
  * @param $delta
  *   The order of this item in the array of subelements (0, 1, 2, etc).
+ * @param $element
+ *   A form element array containing basic properties for the widget:
+ *   - #object_type: The name of the entity the field is attached to.
+ *   - #bundle: The name of the field bundle the field is contained in.
+ *   - #field_name: The name of the field.
+ *   - #language: The language the field is being edited in.
+ *   - #columns: A list of field storage columns of the field.
+ *   - #title: The sanitized element label for the field instance, ready for
+ *     output.
+ *   - #description: The sanitized element description for the field instance,
+ *     ready for output.
+ *   - #required: A Boolean indicating whether the element value is required;
+ *     for required multiple value fields, only the first widget's values are
+ *     required.
+ *   - #delta: The order of this item in the array of subelements; see $delta
+ *     above.
  * @return
- *   The form item for a single element for this field.
+ *   The form elements for a single widget for this field.
  */
-function hook_field_widget(&$form, &$form_state, $field, $instance, $langcode, $items, $delta = 0) {
-  $element = array(
+function hook_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
+  $element += array(
     '#type' => $instance['widget']['type'],
     '#default_value' => isset($items[$delta]) ? $items[$delta] : '',
   );
@@ -650,38 +697,26 @@ function hook_field_widget(&$form, &$form_state, $field, $instance, $langcode, $
  *   - 'error': the error code. Complex widgets might need to report different
  *     errors to different form elements inside the widget.
  *   - 'message': the human readable message to be displayed.
+ * @param $form
+ *   The form array.
+ * @param $form_state
+ *   An associative array containing the current state of the form.
  */
-function hook_field_widget_error($element, $error) {
+function hook_field_widget_error($element, $error, $form, &$form_state) {
   form_error($element['value'], $error['message']);
 }
 
 /**
  * Expose Field API formatter types.
  *
- * Formatters are mainly theme functions that handle the output of individual
- * field values. These theme calls are typically triggered during the execution
- * of drupal_render() on the render structure built by field_attach_view().
- *
- * The name of the theme hook invoked when displaying the values is derived
- * from formatter type names, using the pattern field_formatter_FORMATTER_NAME.
- * field.module takes care of exposing the corresponding theme functions
- * through hook_theme().  Specifically, field.module defines the theme
- * hook:
- *
- * @code
- *   'field_formatter_FORMATTER_NAME' => array(
- *     'arguments' => array('element' => NULL),
- *   )
- * @code
- *
- * If a formatter requires a different theme hook definition,
- * implement hook_theme_registry_alter().
+ * Formatters handle the display of field values. Formatter hooks are typically
+ * called by the Field Attach API field_attach_prepare_view() and
+ * field_attach_view() functions.
  *
  * @see hook_field_formatter_info().
  * @see hook_field_formatter_info_alter().
- * @see theme_field_formatter_FORMATTER_NAME().
- * @see hook_theme().
- * @see hook_theme_registry_alter().
+ * @see hook_field_formatter_view().
+ * @see hook_field_formatter_prepare_view().
  *
  * @return
  *   An array describing the formatter types implemented by the module.
@@ -697,30 +732,16 @@ function hook_field_widget_error($element, $error) {
  *   - settings: An array whose keys are the names of the settings available
  *     for the formatter type, and whose values are the default values for
  *     those settings.
- *   - behaviors: (optional) An array describing behaviors of the formatter.
- *     - multiple values:
- *       FIELD_BEHAVIOR_DEFAULT (default) if the formatter displays one single
- *       field value (most common case). The formatter theme will be invoked
- *       iteratively on each of the field valies.
- *       FIELD_BEHAVIOR_CUSTOM if one single invocation of the formatter theme
- *       takes care of displays all the field values. Examples: points on
- *       a generated graph picture, a Google map, a single link to a popup...
  */
 function hook_field_formatter_info() {
   return array(
     'text_default' => array(
       'label' => t('Default'),
       'field types' => array('text', 'text_long', 'text_with_summary'),
-      'behaviors' => array(
-        'multiple values' => FIELD_BEHAVIOR_DEFAULT,
-      ),
     ),
     'text_plain' => array(
       'label' => t('Plain text'),
       'field types' => array('text', 'text_long', 'text_with_summary'),
-      'behaviors' => array(
-        'multiple values' => FIELD_BEHAVIOR_DEFAULT,
-      ),
     ),
 
     // The text_trimmed formatter displays the trimmed version of the
@@ -731,9 +752,6 @@ function hook_field_formatter_info() {
     'text_trimmed' => array(
       'label' => t('Trimmed'),
       'field types' => array('text', 'text_long', 'text_with_summary'),
-      'behaviors' => array(
-        'multiple values' => FIELD_BEHAVIOR_DEFAULT,
-      ),
     ),
 
     // The 'summary or trimmed' field formatter for text_with_summary
@@ -743,9 +761,6 @@ function hook_field_formatter_info() {
     'text_summary_or_trimmed' => array(
       'label' => t('Summary or trimmed'),
       'field types' => array('text_with_summary'),
-      'behaviors' => array(
-        'multiple values' => FIELD_BEHAVIOR_DEFAULT,
-      ),
     ),
   );
 }
@@ -769,53 +784,111 @@ function hook_field_formatter_info_alter(&$info) {
 }
 
 /**
- * Theme function for a field formatter.
+ * Allow formatters to load information for field values being displayed.
  *
- * This is an example of a 'single' formatter, displaying one single field
- * value (the hook_field_formatter_info() entry uses
- * 'multiple values' = FIELD_BEHAVIOR_DEFAULT).
+ * This should be used when a formatter needs to load additional information
+ * from the database in order to render a field, for example a reference field
+ * which displays properties of the referenced entities such as name or type.
  *
- * @param $element
- *   A render structure sub-array, containing the following keys:
- *   - #item: The field value being displayed.
- *   - #delta: The index of the value being displayed within the object(s values
- *     for the field.
- *   - #field_name: The name of the field being displayed.
- *   - #bundle: The bundle of the object being displayed.
- *   - #object: The object being displayed.
- *   - #object_type: The type of the object being displayed.
- *   - #formatter: The name of the formatter being used.
- *   - #settings: The array of formatter settings.
+ * This hook is called after the field type's own hook_field_prepare_view().
+ * @see hook_field_prepare_view()
+ *
+ * Unlike most other field hooks, this hook operates on multiple entities. The
+ * $entities, $instances and $items parameters are arrays keyed by entity id.
+ * For performance reasons, information for all available entities should be
+ * loaded in a single query where possible.
+ *
+ * @param $entity_type
+ *   The type of $entity.
+ * @param $entities
+ *   Array of entities being displayed, keyed by entity id.
+ * @param $field
+ *   The field structure for the operation.
+ * @param $instances
+ *   Array of instance structures for $field for each entity, keyed by entity
+ *   id.
+ * @param $langcode
+ *   The language the field values are to be shown in. If no language is
+ *   provided the current language is used.
+ * @param $items
+ *   Array of field values for the entities, keyed by entity id.
+ * @param $displays
+ *   Array of display settings to use for each entity, keyed by entity id.
+ * @return
+ *   Changes or additions to field values are done by altering the $items
+ *   parameter by reference.
  */
-function theme_field_formatter_FORMATTER_SINGLE($element) {
-  // This relies on a 'safe' element being prepared in hook_field_sanitize().
-  return $element['#item']['safe'];
+function hook_field_formatter_prepare_view($entity_type, $entities, $field, $instances, $langcode, &$items, $displays) {
+
 }
 
 /**
- * Theme function for a field formatter.
+ * Builds a renderable array for a field value.
  *
- * This is an example of a 'single' formatter, displaying all the field values
- * (the hook_field_formatter_info() entry uses
- * 'multiple values' = FIELD_BEHAVIOR_CUSTOM).
+ * @param $entity_type
+ *   The type of $entity.
+ * @param $entity
+ *   The entity being displayed.
+ * @param $field
+ *   The field structure.
+ * @param $instance
+ *   The field instance.
+ * @param $langcode
+ *   The language associated to $items.
+ * @param $items
+ *   Array of values for this field.
+ * @param $display
+ *   The display settings to use, as found in the 'display' entry of instance
+ *   definitions. The array notably contains the following keys and values;
+ *   - type: The name of the formatter to use.
+ *   - settings: The array of formatter settings.
  *
- * @param $element
- *   A render structure sub-array, containing the following keys:
- *   - #field_name: The name of the field being displayed.
- *   - #bundle: The bundle of the object being displayed.
- *   - #object: The object being displayed.
- *   - #object_type: The type of the object being displayed.
- *   - #formatter: The name of the formatter being used.
- *   - #settings: The array of formatter settings.
- *   - numeric indexes: the field values being displayed.
+ * @return
+ *   A renderable array for the $items, as an array of child elements keyed
+ *   by numeric indexes starting from 0.
  */
-function theme_field_formatter_FORMATTER_MULTIPLE($element) {
-  $items = array();
-  foreach (element_children($element) as $key) {
-    $items[$key] = $key .':'. $element[$key]['#item']['value'];
+function hook_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+  $element = array();
+  $settings = $display['settings'];
+
+  switch ($display['type']) {
+    case 'sample_field_formatter_simple':
+      // Common case: each value is displayed individually in a sub-element
+      // keyed by delta. The field.tpl.php template specifies the markup
+      // wrapping each value.
+      foreach ($items as $delta => $item) {
+        $element[$delta] = array('#markup' => $settings['some_setting'] . $item['value']);
+      }
+      break;
+
+    case 'sample_field_formatter_themeable':
+      // More elaborate formatters can defer to a theme function for easier
+      // customization.
+      foreach ($items as $delta => $item) {
+        $element[$delta] = array(
+          '#theme' => 'mymodule_theme_sample_field_formatter_themeable',
+          '#data' => $item['value'],
+          '#some_setting' => $settings['some_setting'],
+        );
+      }
+      break;
+
+    case 'sample_field_formatter_combined':
+      // Some formatters might need to display all values within a single piece
+      // of markup.
+      $rows = array();
+      foreach ($items as $delta => $item) {
+        $rows[] = array($delta, $item['value']);
+      }
+      $element[0] = array(
+        '#theme' => 'table',
+        '#header' => array(t('Delta'), t('Value')),
+        '#rows' => $rows,
+      );
+      break;
   }
-  $output = implode('|', $items);
-  return $output;
+
+  return $element;
 }
 
 /**
@@ -834,36 +907,42 @@ function theme_field_formatter_FORMATTER_MULTIPLE($element) {
  *
  * See field_attach_form() for details and arguments.
  */
-function hook_field_attach_form($obj_type, $object, &$form, &$form_state, $langcode) {
-}
+function hook_field_attach_form($entity_type, $entity, &$form, &$form_state, $langcode) {
+  $tids = array();
 
-/**
- * Act on field_attach_pre_load.
- *
- * This hook allows modules to load data before the Field Storage API,
- * optionally preventing the field storage module from doing so.
- *
- * This lets 3rd party modules override, mirror, shard, or otherwise store a
- * subset of fields in a different way than the current storage engine.
- * Possible use cases include : per-bundle storage, per-combo-field storage...
- *
- * @param $obj_type
- *   The type of objects for which to load fields; e.g. 'node' or 'user'.
- * @param $objects
- *   An array of objects for which to load fields, keyed by object id.
- * @param $age
- *   FIELD_LOAD_CURRENT to load the most recent revision for all fields, or
- *   FIELD_LOAD_REVISION to load the version indicated by each object.
- * @param $skip_fields
- *   An array keyed by field ids whose data has already been loaded and
- *   therefore should not be loaded again. The values associated to these keys
- *   are not specified.
- * @return
- *   - Loaded field values are added to $objects. Fields with no values should be
- *   set as an empty array.
- *   - Loaded field ids are set as keys in $skip_fields.
- */
-function hook_field_attach_pre_load($obj_type, $objects, $age, &$skip_fields) {
+  // Collect every possible term attached to any of the fieldable entities.
+  foreach ($entities as $id => $entity) {
+    foreach ($items[$id] as $delta => $item) {
+      // Force the array key to prevent duplicates.
+      $tids[$item['value']] = $item['value'];
+    }
+  }
+  if ($tids) {
+    $terms = array();
+
+    // Avoid calling taxonomy_term_load_multiple because it could lead to
+    // circular references.
+    $query = db_select('taxonomy_term_data', 't');
+    $query->fields('t');
+    $query->condition('t.tid', $tids, 'IN');
+    $query->addTag('term_access');
+    $terms = $query->execute()->fetchAllAssoc('tid');
+
+    // Iterate through the fieldable entities again to attach the loaded term data.
+    foreach ($entities as $id => $entity) {
+      foreach ($items[$id] as $delta => $item) {
+        // Check whether the taxonomy term field instance value could be loaded.
+        if (isset($terms[$item['value']])) {
+          // Replace the instance value with the term data.
+          $items[$id][$delta]['taxonomy_term'] = $terms[$item['value']];
+        }
+        // Otherwise, unset the instance value, since the term does not exist.
+        else {
+          unset($items[$id][$delta]);
+        }
+      }
+    }
+  }
 }
 
 /**
@@ -872,21 +951,16 @@ function hook_field_attach_pre_load($obj_type, $objects, $age, &$skip_fields) {
  * This hook is invoked after the field module has performed the operation.
  *
  * Unlike other field_attach hooks, this hook accounts for 'multiple loads'.
- * Instead of the usual $object parameter, it accepts an array of objects,
- * indexed by object id. For performance reasons, information for all available
- * objects should be loaded in a single query where possible.
+ * Instead of the usual $entity parameter, it accepts an array of entities,
+ * indexed by entity id. For performance reasons, information for all available
+ * entities should be loaded in a single query where possible.
  *
- * Note that $objects might not be full-fledged 'objects'. When invoked through
- * field_attach_query(), each object only includes properties that the Field
- * API knows about: bundle, id, revision id, and field values (no node title,
- * user name...)
-
- * The changes made to the objects' field values get cached by the field cache
+ * The changes made to the entities' field values get cached by the field cache
  * for subsequent loads.
  *
  * See field_attach_load() for details and arguments.
  */
-function hook_field_attach_load($obj_type, $objects, $age) {
+function hook_field_attach_load($entity_type, $entities, $age) {
 }
 
 /**
@@ -896,7 +970,7 @@ function hook_field_attach_load($obj_type, $objects, $age) {
  *
  * See field_attach_validate() for details and arguments.
  */
-function hook_field_attach_validate($obj_type, $object, &$errors) {
+function hook_field_attach_validate($entity_type, $entity, &$errors) {
 }
 
 /**
@@ -906,7 +980,7 @@ function hook_field_attach_validate($obj_type, $object, &$errors) {
  *
  * See field_attach_submit() for details and arguments.
  */
-function hook_field_attach_submit($obj_type, $object, $form, &$form_state) {
+function hook_field_attach_submit($entity_type, $entity, $form, &$form_state) {
 }
 
 /**
@@ -916,7 +990,27 @@ function hook_field_attach_submit($obj_type, $object, $form, &$form_state) {
  *
  * See field_attach_presave() for details and arguments.
  */
-function hook_field_attach_presave($obj_type, $object) {
+function hook_field_attach_presave($entity_type, $entity) {
+}
+
+/**
+ * Act on field_attach_insert.
+ *
+ * This hook is invoked after the field module has performed the operation.
+ *
+ * See field_attach_insert() for details and arguments.
+ */
+function hook_field_attach_insert($entity_type, $entity) {
+}
+
+/**
+ * Act on field_attach_update.
+ *
+ * This hook is invoked after the field module has performed the operation.
+ *
+ * See field_attach_update() for details and arguments.
+ */
+function hook_field_attach_update($entity_type, $entity) {
 }
 
 /**
@@ -925,89 +1019,15 @@ function hook_field_attach_presave($obj_type, $object) {
  * This hook is invoked while preprocessing the field.tpl.php template file.
  *
  * @param $variables
- *   The variables array is passed by reference and will be populated with field values.
- * @param $obj_type
- *   The type of $object; e.g. 'node' or 'user'.
- * @param $object
- *   The object with fields to render.
- * @param $element
- *   The structured array containing the values ready for rendering.
+ *   The variables array is passed by reference and will be populated with field
+ *   values.
+ * @param $context
+ *   An associative array containing:
+ *   - obj_type: The type of $entity; e.g. 'node' or 'user'.
+ *   - object: The entity with fields to render.
+ *   - element: The structured array containing the values ready for rendering.
  */
-function hook_field_attach_preprocess_alter(&$variables, $obj_type, $object, $element) {
-}
-
-/**
- * Act on field_attach_insert.
- *
- * This hook allows modules to store data before the Field Storage
- * API, optionally preventing the field storage module from doing so.
- *
- * @param $obj_type
- *   The type of $object; e.g. 'node' or 'user'.
- * @param $object
- *   The object with fields to save.
- * @param $skip_fields
- *   An array keyed by field ids whose data has already been written and
- *   therefore should not be written again. The values associated to these keys
- *   are not specified.
- * @return
- *   Saved field ids are set set as keys in $skip_fields.
- */
-function hook_field_attach_pre_insert($obj_type, $object, &$skip_fields) {
-}
-
-/**
- * Act on field_attach_update.
- *
- * This hook allows modules to store data before the Field Storage
- * API, optionally preventing the field storage module from doing so.
- *
- * @param $obj_type
- *   The type of $object; e.g. 'node' or 'user'.
- * @param $object
- *   The object with fields to save.
- * @param $skip_fields
- *   An array keyed by field ids whose data has already been written and
- *   therefore should not be written again. The values associated to these keys
- *   are not specified.
- * @return
- *   Saved field ids are set set as keys in $skip_fields.
- */
-function hook_field_attach_pre_update($obj_type, $object, &$skip_fields) {
-}
-
-/**
- * Act on field_attach_pre_query.
- *
- * This hook should be implemented by modules that use
- * hook_field_attach_pre_load(), hook_field_attach_pre_insert() and
- * hook_field_attach_pre_update() to bypass the regular storage engine, to
- * handle field queries.
- *
- * @param $field_name
- *   The name of the field to query.
- * @param $conditions
- *   See field_attach_query().
- *   A storage module that doesn't support querying a given column should raise
- *   a FieldQueryException. Incompatibilities should be mentioned on the module
- *   project page.
- * @param $count
- *   See field_attach_query().
- * @param $cursor
- *   See field_attach_query().
- * @param $age
- *   - FIELD_LOAD_CURRENT: query the most recent revisions for all
- *     objects. The results will be keyed by object type and object id.
- *   - FIELD_LOAD_REVISION: query all revisions. The results will be keyed by
- *     object type and object revision id.
- * @param $skip_field
- *   Boolean, always coming as FALSE.
- * @return
- *   See field_attach_query().
- *   The $skip_field parameter should be set to TRUE if the query has been
- *   handled.
- */
-function hook_field_attach_pre_query($field_name, $conditions, $count, &$cursor = NULL, $age, &$skip_field) {
+function hook_field_attach_preprocess_alter(&$variables, $context) {
 }
 
 /**
@@ -1017,7 +1037,7 @@ function hook_field_attach_pre_query($field_name, $conditions, $count, &$cursor 
  *
  * See field_attach_delete() for details and arguments.
  */
-function hook_field_attach_delete($obj_type, $object) {
+function hook_field_attach_delete($entity_type, $entity) {
 }
 
 /**
@@ -1027,7 +1047,7 @@ function hook_field_attach_delete($obj_type, $object) {
  *
  * See field_attach_delete_revision() for details and arguments.
  */
-function hook_field_attach_delete_revision($obj_type, $object) {
+function hook_field_attach_delete_revision($entity_type, $entity) {
 }
 
 /**
@@ -1035,18 +1055,16 @@ function hook_field_attach_delete_revision($obj_type, $object) {
  *
  * This hook is invoked after the field module has performed the operation.
  *
- * @param $output
- *  The structured content array tree for all of $object's fields.
- * @param $obj_type
- *   The type of $object; e.g. 'node' or 'user'.
- * @param $object
- *   The object with fields to render.
- * @param $build_mode
- *   Build mode, e.g. 'full', 'teaser'...
- * @param $langcode
- *   The language in which the field values will be displayed.
+ * @param &$output
+ *   The structured content array tree for all of $entity's fields.
+ * @param $context
+ *   An associative array containing:
+ *   - obj_type: The type of $entity; e.g. 'node' or 'user'.
+ *   - object: The entity with fields to render.
+ *   - view_mode: View mode, e.g. 'full', 'teaser'...
+ *   - langcode: The language in which the field values will be displayed.
  */
-function hook_field_attach_view_alter($output, $obj_type, $object, $build_mode, $langcode) {
+function hook_field_attach_view_alter(&$output, $context) {
 }
 
 /**
@@ -1056,7 +1074,7 @@ function hook_field_attach_view_alter($output, $obj_type, $object, $build_mode, 
  *
  * See field_attach_create_bundle() for details and arguments.
  */
-function hook_field_attach_create_bundle($bundle) {
+function hook_field_attach_create_bundle($entity_type, $bundle) {
 }
 
 /**
@@ -1066,7 +1084,7 @@ function hook_field_attach_create_bundle($bundle) {
  *
  * See field_attach_rename_bundle() for details and arguments.
  */
-function hook_field_attach_rename_bundle($bundle_old, $bundle_new) {
+function hook_field_attach_rename_bundle($entity_type, $bundle_old, $bundle_new) {
 }
 
 /**
@@ -1074,13 +1092,15 @@ function hook_field_attach_rename_bundle($bundle_old, $bundle_new) {
  *
  * This hook is invoked after the field module has performed the operation.
  *
+ * @param $entity_type
+ *   The type of entity; e.g. 'node' or 'user'.
  * @param $bundle
  *   The bundle that was just deleted.
  * @param $instances
- *   An array of all instances that existed for $bundle before it was
+ *   An array of all instances that existed for the bundle before it was
  *   deleted.
  */
-function hook_field_attach_delete_bundle($bundle, $instances) {
+function hook_field_attach_delete_bundle($entity_type, $bundle, $instances) {
 }
 
 /**
@@ -1097,70 +1117,148 @@ function hook_field_attach_delete_bundle($bundle, $instances) {
  */
 
 /**
- * Load field data for a set of objects.
+ * Expose Field API storage backends.
  *
- * @param $obj_type
- *   The entity type of object, such as 'node' or 'user'.
- * @param $objects
- *   The array of objects for which to load data, keyed by object id.
+ * @return
+ *   An array describing the storage backends implemented by the module.
+ *   The keys are storage backend names. To avoid name clashes, storage backend
+ *   names should be prefixed with the name of the module that exposes them.
+ *   The values are arrays describing the storage backend, with the following
+ *   key/value pairs:
+ *   - label: The human-readable name of the storage backend.
+ *   - description: A short description for the storage backend.
+ *   - settings: An array whose keys are the names of the settings available
+ *     for the storage backend, and whose values are the default values for
+ *     those settings.
+ */
+function hook_field_storage_info() {
+  return array(
+    'field_sql_storage' => array(
+      'label' => t('Default SQL storage'),
+      'description' => t('Stores fields in the local SQL database, using per-field tables.'),
+      'settings' => array(),
+    ),
+  );
+}
+
+/**
+ * Perform alterations on Field API storage types.
+ *
+ * @param $info
+ *   Array of informations on storage types exposed by
+ *   hook_field_field_storage_info() implementations.
+ */
+function hook_field_storage_info_alter(&$info) {
+  // Add a setting to a storage type.
+  $info['field_sql_storage']['settings'] += array(
+    'mymodule_additional_setting' => 'default value',
+  );
+}
+
+/**
+ * Reveal the internal details about the storage for a field.
+ *
+ * For example, an SQL storage module might return the Schema API structure for
+ * the table. A key/value storage module might return the server name,
+ * authentication credentials, and bin name.
+ *
+ * Field storage modules are not obligated to implement this hook. Modules
+ * that rely on these details must only use them for read operations.
+ *
+ * @param $field
+ *   A field structure.
+ * @return
+ *   An array of details.
+ *    - The first dimension is a store type (sql, solr, etc).
+ *    - The second dimension indicates the age of the values in the store
+ *      FIELD_LOAD_CURRENT or FIELD_LOAD_REVISION.
+ *    - Other dimensions are specific to the field storage module.
+ */
+function hook_field_storage_details($field) {
+}
+
+/**
+ * Perform alterations on Field API storage details.
+ *
+ * @param $details
+ *   An array of storage details for fields as exposed by
+ *   hook_field_storage_details() implementations.
+ * @param $field
+ *   A field structure.
+ */
+function hook_field_storage_details_alter(&$details, $field) {
+}
+
+/**
+ * Load field data for a set of entities.
+ *
+ * @param $entity_type
+ *   The entity type of entity, such as 'node' or 'user'.
+ * @param $entities
+ *   The array of entities for which to load data, keyed by entity id.
  * @param $age
  *   FIELD_LOAD_CURRENT to load the most recent revision for all
  *   fields, or FIELD_LOAD_REVISION to load the version indicated by
- *   each object.
- * @param $skip_fields
- *   An array keyed by field ids whose data has already been loaded and
- *   therefore should not be loaded again. The values associated to these keys
- *   are not specified.
+ *   each entity.
+ * @param $fields
+ *   An array listing the fields to be loaded. The keys of the array are field
+ *   ids, the values of the array are the entity ids (or revision ids,
+ *   depending on the $age parameter) to be loaded for each field.
  * @return
- *   Loaded field values are added to $objects. Fields with no values should be
+ *   Loaded field values are added to $entities. Fields with no values should be
  *   set as an empty array.
  */
-function hook_field_storage_load($obj_type, $objects, $age, $skip_fields) {
+function hook_field_storage_load($entity_type, $entities, $age, $fields) {
 }
 
 /**
- * Write field data for an object.
+ * Write field data for an entity.
  *
- * @param $obj_type
- *   The entity type of object, such as 'node' or 'user'.
- * @param $object
- *   The object on which to operate.
+ * @param $entity_type
+ *   The entity type of entity, such as 'node' or 'user'.
+ * @param $entity
+ *   The entity on which to operate.
  * @param $op
- *   FIELD_STORAGE_UPDATE when updating an existing object,
- *   FIELD_STORAGE_INSERT when inserting a new object.
- * @param $skip_fields
- *   An array keyed by field ids whose data has already been written and
- *   therefore should not be written again. The values associated to these keys
- *   are not specified.
+ *   FIELD_STORAGE_UPDATE when updating an existing entity,
+ *   FIELD_STORAGE_INSERT when inserting a new entity.
+ * @param $fields
+ *   An array listing the fields to be written. The keys and values of the
+ *   array are field ids.
  */
-function hook_field_storage_write($obj_type, $object, $op, $skip_fields) {
+function hook_field_storage_write($entity_type, $entity, $op, $fields) {
 }
 
 /**
- * Delete all field data for an object.
+ * Delete all field data for an entity.
  *
- * @param $obj_type
- *   The entity type of object, such as 'node' or 'user'.
- * @param $object
- *   The object on which to operate.
+ * @param $entity_type
+ *   The entity type of entity, such as 'node' or 'user'.
+ * @param $entity
+ *   The entity on which to operate.
+ * @param $fields
+ *   An array listing the fields to delete. The keys and values of the
+ *   array are field ids.
  */
-function hook_field_storage_delete($obj_type, $object) {
+function hook_field_storage_delete($entity_type, $entity, $fields) {
 }
 
 /**
- * Delete a single revision of field data for an object.
+ * Delete a single revision of field data for an entity.
  *
  * Deleting the current (most recently written) revision is not
  * allowed as has undefined results.
  *
- * @param $obj_type
- *   The entity type of object, such as 'node' or 'user'.
- * @param $object
- *   The object on which to operate. The revision to delete is
- *   indicated by the object's revision id property, as identified by
- *   hook_fieldable_info() for $obj_type.
+ * @param $entity_type
+ *   The entity type of entity, such as 'node' or 'user'.
+ * @param $entity
+ *   The entity on which to operate. The revision to delete is
+ *   indicated by the entity's revision id property, as identified by
+ *   hook_fieldable_info() for $entity_type.
+ * @param $fields
+ *   An array listing the fields to delete. The keys and values of the
+ *   array are field ids.
  */
-function hook_field_storage_delete_revision($obj_type, $object) {
+function hook_field_storage_delete_revision($entity_type, $entity, $fields) {
 }
 
 /**
@@ -1173,36 +1271,12 @@ function hook_field_storage_delete_revision($obj_type, $object) {
  *   A storage module that doesn't support querying a given column should raise
  *   a FieldQueryException. Incompatibilities should be mentioned on the module
  *   project page.
- * @param $count
- *   See field_attach_query().
- * @param $cursor
- *   See field_attach_query().
- * @param $age
- *   See field_attach_query().
+ * @param $options
+ *   See field_attach_query(). All option keys are guaranteed to be specified.
  * @return
  *   See field_attach_query().
  */
-function hook_field_storage_query($field_name, $conditions, $count, &$cursor = NULL, $age) {
-}
-
-/**
- * Act on creation of a new bundle.
- *
- * @param $bundle
- *   The name of the bundle being created.
- */
-function hook_field_storage_create_bundle($bundle) {
-}
-
-/**
- * Act on a bundle being renamed.
- *
- * @param $bundle_old
- *   The old name of the bundle.
- * @param $bundle_new
- *   The new name of the bundle.
- */
-function hook_field_storage_rename_bundle($bundle_old, $bundle_new) {
+function hook_field_storage_query($field_name, $conditions, $options) {
 }
 
 /**
@@ -1217,21 +1291,164 @@ function hook_field_storage_create_field($field) {
 /**
  * Act on deletion of a field.
  *
- * @param $field_name
- *   The name of the field being deleted.
+ * @param $field
+ *   The field being deleted.
  */
-function hook_field_storage_delete_field($field_name) {
+function hook_field_storage_delete_field($field) {
 }
 
 /**
  * Act on deletion of a field instance.
  *
- * @param $field_name
- *   The name of the field in the new instance.
- * @param $bundle
- *   The name of the bundle in the new instance.
+ * @param $instance
+ *   The instance being deleted.
  */
-function hook_field_storage_delete_instance($field_name, $bundle) {
+function hook_field_storage_delete_instance($instance) {
+}
+
+/**
+ * Act before the storage backends load field data.
+ *
+ * This hook allows modules to load data before the Field Storage API,
+ * optionally preventing the field storage module from doing so.
+ *
+ * This lets 3rd party modules override, mirror, shard, or otherwise store a
+ * subset of fields in a different way than the current storage engine.
+ * Possible use cases include: per-bundle storage, per-combo-field storage...
+ *
+ * @param $entity_type
+ *   The type of entity for which to load fields; e.g. 'node' or 'user'.
+ * @param $entities
+ *   An array of entities for which to load fields, keyed by entity id.
+ * @param $age
+ *   FIELD_LOAD_CURRENT to load the most recent revision for all fields, or
+ *   FIELD_LOAD_REVISION to load the version indicated by each entity.
+ * @param $skip_fields
+ *   An array keyed by field ids whose data has already been loaded and
+ *   therefore should not be loaded again. The values associated to these keys
+ *   are not specified.
+ * @return
+ *   - Loaded field values are added to $entities. Fields with no values should
+ *     be set as an empty array.
+ *   - Loaded field ids are set as keys in $skip_fields.
+ */
+function hook_field_storage_pre_load($entity_type, $entities, $age, &$skip_fields) {
+}
+
+/**
+ * Act before the storage backends insert field data.
+ *
+ * This hook allows modules to store data before the Field Storage API,
+ * optionally preventing the field storage module from doing so.
+ *
+ * @param $entity_type
+ *   The type of $entity; e.g. 'node' or 'user'.
+ * @param $entity
+ *   The entity with fields to save.
+ * @param $skip_fields
+ *   An array keyed by field ids whose data has already been written and
+ *   therefore should not be written again. The values associated to these keys
+ *   are not specified.
+ * @return
+ *   Saved field ids are set set as keys in $skip_fields.
+ */
+function hook_field_storage_pre_insert($entity_type, $entity, &$skip_fields) {
+  if ($entity_type == 'node' && $entity->status && _forum_node_check_node_type($entity)) {
+    $query = db_insert('forum_index')->fields(array('nid', 'title', 'tid', 'sticky', 'created', 'comment_count', 'last_comment_timestamp'));
+    foreach ($entity->taxonomy_forums as $language) {
+      foreach ($language as $delta) {
+        $query->values(array(
+          'nid' => $entity->nid,
+          'title' => $entity->title,
+          'tid' => $delta['value'],
+          'sticky' => $entity->sticky,
+          'created' => $entity->created,
+          'comment_count' => 0,
+          'last_comment_timestamp' => $entity->created,
+        ));
+      }
+    }
+    $query->execute();
+  }
+}
+
+/**
+ * Act before the storage backends update field data.
+ *
+ * This hook allows modules to store data before the Field Storage API,
+ * optionally preventing the field storage module from doing so.
+ *
+ * @param $entity_type
+ *   The type of $entity; e.g. 'node' or 'user'.
+ * @param $entity
+ *   The entity with fields to save.
+ * @param $skip_fields
+ *   An array keyed by field ids whose data has already been written and
+ *   therefore should not be written again. The values associated to these keys
+ *   are not specified.
+ * @return
+ *   Saved field ids are set set as keys in $skip_fields.
+ */
+function hook_field_storage_pre_update($entity_type, $entity, &$skip_fields) {
+  $first_call = &drupal_static(__FUNCTION__, array());
+
+  if ($entity_type == 'node' && $entity->status && _forum_node_check_node_type($entity)) {
+    // We don't maintain data for old revisions, so clear all previous values
+    // from the table. Since this hook runs once per field, per entity, make
+    // sure we only wipe values once.
+    if (!isset($first_call[$entity->nid])) {
+      $first_call[$entity->nid] = FALSE;
+      db_delete('forum_index')->condition('nid', $entity->nid)->execute();
+    }
+    // Only save data to the table if the node is published.
+    if ($entity->status) {
+      $query = db_insert('forum_index')->fields(array('nid', 'title', 'tid', 'sticky', 'created', 'comment_count', 'last_comment_timestamp'));
+      foreach ($entity->taxonomy_forums as $language) {
+        foreach ($language as $delta) {
+          $query->values(array(
+            'nid' => $entity->nid,
+            'title' => $entity->title,
+            'tid' => $delta['value'],
+            'sticky' => $entity->sticky,
+            'created' => $entity->created,
+            'comment_count' => 0,
+            'last_comment_timestamp' => $entity->created,
+          ));
+        }
+      }
+      $query->execute();
+      // The logic for determining last_comment_count is fairly complex, so
+      // call _forum_update_forum_index() too.
+      _forum_update_forum_index($entity->nid);
+    }
+  }
+}
+
+/**
+ * Act before the storage backend runs the query.
+ *
+ * This hook should be implemented by modules that use
+ * hook_field_storage_pre_load(), hook_field_storage_pre_insert() and
+ * hook_field_storage_pre_update() to bypass the regular storage engine, to
+ * handle field queries.
+ *
+ * @param $field_name
+ *   The name of the field to query.
+ * @param $conditions
+ *   See field_attach_query().
+ *   A storage module that doesn't support querying a given column should raise
+ *   a FieldQueryException. Incompatibilities should be mentioned on the module
+ *   project page.
+ * @param $options
+ *   See field_attach_query(). All option keys are guaranteed to be specified.
+ * @param $skip_field
+ *   Boolean, always coming as FALSE.
+ * @return
+ *   See field_attach_query().
+ *   The $skip_field parameter should be set to TRUE if the query has been
+ *   handled.
+ */
+function hook_field_storage_pre_query($field_name, $conditions, $options, &$skip_field) {
 }
 
 /**
@@ -1271,6 +1488,56 @@ function hook_field_create_field($field) {
  *   The instance just created.
  */
 function hook_field_create_instance($instance) {
+}
+
+/**
+ * Forbid a field update from occurring.
+ *
+ * Any module may forbid any update for any reason. For example, the
+ * field's storage module might forbid an update if it would change
+ * the storage schema while data for the field exists. A field type
+ * module might forbid an update if it would change existing data's
+ * semantics, or if there are external dependencies on field settings
+ * that cannot be updated.
+ *
+ * @param $field
+ *   The field as it will be post-update.
+ * @param $prior_field
+ *   The field as it is pre-update.
+ * @param $has_data
+ *   Whether any data already exists for this field.
+ * @return
+ *   Throws a FieldUpdateForbiddenException to prevent the update from occurring.
+ */
+function hook_field_update_field_forbid($field, $prior_field, $has_data) {
+  // A 'list' field stores integer keys mapped to display values. If
+  // the new field will have fewer values, and any data exists for the
+  // abandoned keys, the field will have no way to display them. So,
+  // forbid such an update.
+  if ($has_data && count($field['settings']['allowed_values']) < count($prior_field['settings']['allowed_values'])) {
+    // Identify the keys that will be lost.
+    $lost_keys = array_diff(array_keys($field['settings']['allowed_values']), array_keys($prior_field['settings']['allowed_values']));
+    // If any data exist for those keys, forbid the update.
+    $count = field_attach_query($prior_field['id'], array('value', $lost_keys, 'IN'), 1);
+    if ($count > 0) {
+      throw new FieldUpdateForbiddenException("Cannot update a list field not to include keys with existing data");
+    }
+  }
+}
+
+/**
+ * Act on a field being updated.
+ *
+ * This hook is invoked just after field is updated.
+ *
+ * @param $field
+ *   The field as it is post-update.
+ * @param $prior_field
+ *   The field as it was pre-update.
+ * @param $has_data
+ *   Whether any data already exists for this field.
+ */
+function hook_field_update_field($field, $prior_field, $has_data) {
 }
 
 /**
@@ -1336,16 +1603,6 @@ function hook_field_read_instance($instance) {
  **********************************************************************/
 
 /**
- * TODO
- *
- * Note : Right now this belongs to the "Fieldable Type API".
- * Whether 'build modes' is actually a 'fields' concept is to be debated
- * in a separate overhaul patch for core.
- */
-function hook_field_build_modes($obj_type) {
-}
-
-/**
  * Determine whether the user has access to a given field.
  *
  * @param $op
@@ -1354,11 +1611,15 @@ function hook_field_build_modes($obj_type) {
  *   - "view"
  * @param $field
  *   The field on which the operation is to be performed.
+ * @param $entity_type
+ *   The type of $entity; e.g. 'node' or 'user'.
+ * @param $entity
+ *   (optional) The entity for the operation.
  * @param $account
  *   (optional) The account to check, if not given use currently logged in user.
  * @return
  *   TRUE if the operation is allowed;
  *   FALSE if the operation is denied.
  */
-function hook_field_access($op, $field, $account) {
+function hook_field_access($op, $field, $entity_type, $entity, $account) {
 }
