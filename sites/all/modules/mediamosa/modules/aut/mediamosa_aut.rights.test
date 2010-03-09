@@ -37,7 +37,7 @@ class MediaMosaAutSlaveRightsTestCaseEga extends MediaMosaTestCaseEga {
     return array(
       'name' => 'Allow read access on slave asset for getting acl rights.',
       'description' => 'Testing AUT read access on slave asset related functions and rest calls.',
-      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE,
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_AUT,
     );
   }
 
