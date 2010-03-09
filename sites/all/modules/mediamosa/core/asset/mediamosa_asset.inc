@@ -2,8 +2,8 @@
 // $Id$
 
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
- * Distribution platform (http://mediamosa.org)
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
  * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
@@ -470,8 +470,11 @@ class mediamosa_asset {
 
     $a_query = array();
     $a_query[mediamosa_db_query::A_SELECT_EXPR][] = "a.*";
-    $a_query[mediamosa_db_query::A_SELECT_EXPR][] = "ap.val_char AS asset_property_value";
+    $a_query[mediamosa_db_query::A_SELECT_EXPR][] = "ap.val_char AS asset_property_val_char";
+    $a_query[mediamosa_db_query::A_SELECT_EXPR][] = "ap.val_datetime AS asset_property_val_datetime";
+    $a_query[mediamosa_db_query::A_SELECT_EXPR][] = "ap.val_int AS asset_property_val_int";
     $a_query[mediamosa_db_query::A_SELECT_EXPR][] = "apd.prop_name AS asset_property_name";
+    $a_query[mediamosa_db_query::A_SELECT_EXPR][] = "apd.type AS asset_property_type";
     $a_query[mediamosa_db_query::A_SELECT_EXPR][] = "apg.propgroup_name AS asset_property_group_name";
 
     // Main select on asset table.
@@ -695,7 +698,21 @@ class mediamosa_asset {
 
       // Now stuff that can be set more than once (f.e. metadata).
       if (!empty($a_asset['asset_property_group_name'])) {
-        $a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]][$a_asset['asset_property_group_name']][$a_asset['asset_property_name']][] = $a_asset['asset_property_value'];
+        // Choose the value.
+        $asset_property_value = NULL;
+        switch ($a_asset['asset_property_type']) {
+          case mediamosa_asset_metadata_property_db::TYPE_CHAR:
+            $asset_property_value = $a_asset['asset_property_val_char'];
+            break;
+          case mediamosa_asset_metadata_property_db::TYPE_DATETIME:
+            $asset_property_value = $a_asset['asset_property_val_datetime'];
+            break;
+          case mediamosa_asset_metadata_property_db::TYPE_INT:
+            $asset_property_value = $a_asset['asset_property_val_int'];
+            break;
+        }
+        // Collect the value.
+        $a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]][$a_asset['asset_property_group_name']][$a_asset['asset_property_name']][] = $asset_property_value;
       }
 
       // Add collection data.
@@ -811,7 +828,7 @@ class mediamosa_asset {
    * @param string $user_id
    * @param bool $is_app_admin
    */
-  static public function is_unappropriate($asset_id, array $a_app_ids, $user_id, $is_app_admin = FALSE) {
+  static public function is_unappropriate($asset_id, array $a_app_ids, $user_id, $is_app_admin = FALSE, $play_call = FALSE) {
 
     $a_asset = self::get($asset_id);
     if (!$a_asset) {
@@ -823,17 +840,25 @@ class mediamosa_asset {
       return;
     }
 
+    // If play call, then even if we are owner, then we can only play it when
+    // is_app_admin is TRUE.
+    if ($play_call && !$is_app_admin) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_IS_UNAPPROPRIATE);
+    }
+
     // Must be owner or admin.
     try {
       mediamosa_aut::owner_check(reset($a_app_ids), $user_id, $a_asset[mediamosa_asset_db::APP_ID], $a_asset[mediamosa_asset_db::OWNER_ID], $is_app_admin);
     }
     catch (mediamosa_exception_error_access_denied $e) {
       assert($e);
-      throw new mediamosa_exception_error(mediamosa_db::ERRORCODE_IS_UNAPPROPRIATE);
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_IS_UNAPPROPRIATE);
     }
   }
 
   /**
+   * Create asset.
+   *
    * @param $app_id
    *  The Application ID.
    * @param $owner_id
@@ -867,9 +892,9 @@ class mediamosa_asset {
     if ($provider_id) {
       $a_fields[mediamosa_asset_db::PROVIDER_ID] = $provider_id;
     }
-    if ($parent_id) {
-      $a_fields[mediamosa_asset_db::PARENT_ID] = $parent_id;
-    }
+
+    // Must no longer be used.
+    assert(empty($parent_id));
 
     // Add created value.
     $a_fields = mediamosa_db::db_insert_enrich($a_fields);
@@ -879,8 +904,7 @@ class mediamosa_asset {
       ->fields($a_fields)
       ->execute();
 
-    // Return our ID.
-    return $asset_id;
+    return $asset_id; // previously generated above.
   }
 
   /**
@@ -931,10 +955,10 @@ class mediamosa_asset {
       $a_fields[mediamosa_asset_db::PLAY_RESTRICTION_END] = $play_restriction_end;
     }
     if (!is_null($isprivate)) {
-      $a_fields[mediamosa_asset_db::ISPRIVATE] = $isprivate;
+      $a_fields[mediamosa_asset_db::ISPRIVATE] = $isprivate ? mediamosa_asset_db::ISPRIVATE_TRUE : mediamosa_asset_db::ISPRIVATE_FALSE;
     }
     if (!is_null($is_unappropriate)) {
-      $a_fields[mediamosa_asset_db::IS_UNAPPROPRIATE] = $is_unappropriate;
+      $a_fields[mediamosa_asset_db::IS_UNAPPROPRIATE] = $is_unappropriate ? mediamosa_asset_db::IS_UNAPPROPRIATE_TRUE : mediamosa_asset_db::IS_UNAPPROPRIATE_FALSE;
     }
 
     if ($is_app_admin) {

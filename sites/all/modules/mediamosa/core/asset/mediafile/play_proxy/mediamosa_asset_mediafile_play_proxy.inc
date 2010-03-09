@@ -2,8 +2,8 @@
 // $Id$
 
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
- * Distribution platform (http://mediamosa.org)
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
  * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
@@ -328,7 +328,6 @@ class mediamosa_asset_mediafile_play_proxy {
     else {
       $streaming_server_uri = self::get_media_server($response_type, $a_mediafile_ext);
     }
-
     // Replace {TICKET} with app_id / ticket.
     if ($response_type != self::RESPONSE_TYPE_STILL) {
       $streaming_server_ticket_uri = str_replace(self::PARAM_URI_TICKET, $app_id . '/' . $ticket, $streaming_server_uri);
@@ -585,8 +584,7 @@ class mediamosa_asset_mediafile_play_proxy {
 
     $i = 1;
     foreach ($a_stills as $key => $value) {
-      $a_result['stills']['#'. $i] = $value;
-      $i++;
+      $a_result['stills']['#' . serialize(array('id' => $i++))] = $value;
     }
 
     return $a_result;

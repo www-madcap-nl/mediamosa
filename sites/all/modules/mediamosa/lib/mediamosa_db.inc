@@ -2,8 +2,8 @@
 // $Id$
 
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
- * Distribution platform (http://mediamosa.org)
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
  * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
@@ -355,8 +355,8 @@ class mediamosa_db {
 
   /**
    * Escape the value for database
-   * 'db_escape_string' is removed from drupal 7, D7 uses prepare instead. For now
-   * we will use PDO::quote.
+   * 'db_escape_string' is removed from drupal 7, D7 uses prepare instead. For
+   * now we will use PDO::quote.
    */
   static public function escape_string($mixed_string, $glue = ',') {
     // Hmm well kinda hack here, but dont see any other way atm
@@ -598,10 +598,16 @@ class mediamosa_db {
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_JOB_NOT_FOUND, array('@job_id' => $a_columns_and['job_id']));
       case mediamosa_transcode_profile_db::TABLE_NAME:
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_TRANSCODE_PROFILE_NOT_FOUND, array('@profile_id' => $a_columns_and[mediamosa_transcode_profile_db::ID]));
+      case mediamosa_asset_metadata_db::TABLE_NAME:
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_UNEXPECTED_ERROR);
+      case mediamosa_asset_metadata_property_db::TABLE_NAME:
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_UNEXPECTED_ERROR);
+      case mediamosa_asset_metadata_property_group_db::TABLE_NAME:
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_UNEXPECTED_ERROR);
     }
 
     assert(0);
-    throw new mediamosa_exception_error(ERRORCODE_UNEXPECTED_ERROR);
+    throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_UNEXPECTED_ERROR);
   }
 
   /**

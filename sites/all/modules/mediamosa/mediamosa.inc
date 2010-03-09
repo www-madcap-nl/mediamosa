@@ -2,8 +2,8 @@
 // $Id$
 
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
- * Distribution platform (http://mediamosa.org)
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
  * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
@@ -95,6 +95,13 @@ class mediamosa {
     }
 
     return $o_mediamosa_response;
+  }
+
+  /**
+   * Return the current defined installation id.
+   */
+  static public function get_server_id() {
+    return mediamosa::variable_get('mediamosa_installation_id');
   }
 
   /**
@@ -384,8 +391,9 @@ class mediamosa {
       return $now_timestamp;
     }
 
-    // Lets not break installer, dont use mediamosa_db here.
-    $now_timestamp = db_query(strtr('SELECT #CURRENT_TIMESTAMP', array('#CURRENT_TIMESTAMP' => mediamosa_db::CURRENT_TIMESTAMP)))->fetchField();
+    // Lets not break installer, dont use mediamosa_db here. String cast here,
+    // d7 seems to have a problem with float values coming from this string?
+    $now_timestamp = (string)db_query(strtr('SELECT #CURRENT_TIMESTAMP', array('#CURRENT_TIMESTAMP' => mediamosa_db::CURRENT_TIMESTAMP)))->fetchField();
 
     return $now_timestamp;
   }

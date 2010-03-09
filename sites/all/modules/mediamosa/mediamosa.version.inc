@@ -2,8 +2,8 @@
 // $Id$
 
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
- * Distribution platform (http://mediamosa.org)
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
  * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
@@ -44,7 +44,7 @@ class mediamosa_version {
   const MEDIAMOSA_VERSION_2_0_0 = '2.0.0';
   const MEDIAMOSA_VERSION_2_1_0 = '2.1.0';
 
-  const MEDIAMOSA_VERSION = '2.1.0.243:2a78e4450da3';
+  const MEDIAMOSA_VERSION = '2.1.2.277:5cb72b524924';
 
   const MAJOR = 'major';
   const MINOR = 'minor';

@@ -2,8 +2,8 @@
 // $Id$
 
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
- * Distribution platform (http://mediamosa.org)
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
  * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
@@ -379,9 +379,7 @@ class mediamosa_rest_call_create_mediafile extends mediamosa_rest_call {
         self::MEDIAFILE_ID_SOURCE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_MEDIAFILE_ID,
           self::VAR_DESCRIPTION => 'The ID of the mediafile of the original.',
-          self::VAR_DEFAULT_VALUE => 'TRUE',
           self::VAR_IS_INTERNAL_ONLY => self::VAR_IS_INTERNAL_ONLY_YES,
-          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::FILENAME => array(
           self::VAR_TYPE => mediamosa_type::TYPE_FILENAME,
@@ -449,6 +447,7 @@ class mediamosa_rest_call_create_mediafile extends mediamosa_rest_call {
       self::SANNAS_MOUNT_POINT => mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT,
       self::FILENAME => mediamosa_asset_mediafile_db::FILENAME,
       self::URI => mediamosa_asset_mediafile_db::URI,
+      self::MEDIAFILE_ID_SOURCE => mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE,
     );
 
     // Fields to insert.

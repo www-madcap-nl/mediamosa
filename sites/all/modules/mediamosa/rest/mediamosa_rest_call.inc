@@ -2,8 +2,8 @@
 // $Id$
 
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
- * Distribution platform (http://mediamosa.org)
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
  * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
@@ -31,7 +31,7 @@
 abstract class mediamosa_rest_call {
   // ------------------------------------------------------------------ Members.
   // Original REST call arguments.
-  private $a_rest_args = array();
+  public $a_rest_args = array();
 
   // Check if there are unspecified arguments and throw exception when we have unspecified arguments.
   protected $check_for_unspecified = FALSE; // Keep on FALSE so get_var_setup() will not fail if it calls process_vars()
@@ -218,10 +218,6 @@ abstract class mediamosa_rest_call {
 
     // Check if we are external and allowed.
     if ($this->is_external() && !($this->{self::ACCESS} & self::ACCESS_EXTERNAL)) {
-      throw new mediamosa_exception_error_authentication_failure();
-    }
-    // Check if we are internal and allowed.
-    elseif ($this->is_internal() && !($this->{self::ACCESS} & self::ACCESS_INTERNAL)) {
       throw new mediamosa_exception_error_authentication_failure();
     }
 

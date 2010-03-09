@@ -5,28 +5,6 @@
  */
 
 /**
- * Get stills for mediafile
- * mediafile/$mediafile_id/still
- */
-function media_management_get_still_for_mediafile($a_args) {
-  if (!is_array($a_args['get'])) {
-    $a_args['get'] = array();
-  }
-
-  $a_args['get']['mediafile_id'] = $a_args['uri']['mediafile_id'];
-  db_set_active('data');
-  $a_args['uri']['asset_id'] = db_result(db_query_range("SELECT asset_id_root FROM {mediafile} WHERE mediafile_id = '%s' AND is_still = 'FALSE'", $a_args['get']['mediafile_id'], 0, 1));
-  db_set_active();
-
-  return media_management_get_still($a_args);
-}
-
-
-function media_management_get_still($a_args) {
-  return play_proxy_request(array_merge($a_args, array("internal" => TRUE)));
-}
-
-/**
  * This function retrieves all info about the given asset id (Version 1.5.0)
  *
  * @param string $app_id

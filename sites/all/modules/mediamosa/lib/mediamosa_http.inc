@@ -2,8 +2,8 @@
 // $Id$
 
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
- * Distribution platform (http://mediamosa.org)
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
  * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
@@ -118,17 +118,20 @@ class mediamosa_http {
    * @param array $data
    * @param $method
    */
-  static public function do_internal_call($uri, $rest_url, $data = NULL, $method = self::METHOD_GET) {
+  static public function do_internal_call($host, $rest_uri, $data = NULL, $method = self::METHOD_GET) {
+    // Make lower case.
+    $host = mediamosa_unicode::strtolower($host);
+
     // Make sure it starts with 'http://'.
-    if (mediamosa_unicode::substr($uri, 0, strlen('http://')) != 'http://' && mediamosa_unicode::substr($uri, 0, strlen('https://')) != 'https://') {
-      $uri = 'http://' . $uri;
+    if (mediamosa_unicode::substr($host, 0, strlen('http://')) != 'http://' && mediamosa_unicode::substr($host, 0, strlen('https://')) != 'https://') {
+      $host = 'http://' . $host;
     }
 
     $url = strtr(
-      '@hostname/internal/@rest_url',
+      '@host/internal/@rest_uri',
       array(
-        '@hostname' => $uri,
-        '@rest_url' =>  $rest_url
+        '@host' => $host,
+        '@rest_uri' =>  $rest_uri
       )
     );
 
@@ -217,7 +220,7 @@ class mediamosa_http {
    * @param $url
    * @param $a_options
    */
-  static public function do_head_call_internal($url, array $a_options = array()) {
+  static public function do_head_internal_call($url, array $a_options = array()) {
     $a_options['do_internal'] = true;
     return self::do_head_call($url, $a_options);
   }
@@ -242,7 +245,7 @@ class mediamosa_http {
 
     $a_url['path'] = ($a_url['path'] != '' ? $a_url['path'] . '/' : '') . trim($uri, '/');
     $url = mediamosa_http::build_url($a_url);
-    mediamosa_http::do_head_call_internal($url, $a_options);
+    mediamosa_http::do_head_internal_call($url, $a_options);
 
     // Log URL.
     mediamosa_debug::log_debug('Internal head cron call to @url.', array('@url' => $url));

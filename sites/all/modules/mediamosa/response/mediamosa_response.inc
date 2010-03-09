@@ -3,8 +3,8 @@
 
 
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
- * Distribution platform (http://mediamosa.org)
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
  * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
@@ -294,6 +294,15 @@ class mediamosa_response extends mediamosa {
    */
   public function set_matched_uri($uri) {
     $this->a_response['header']['request_matched_uri'] = (mediamosa_unicode::substr($uri, 0, 1) == '/' ? '' : '/') . $uri;
+  }
+
+  /**
+   * Set the class in the header.
+   *
+   * @param string $uri
+   */
+  public function set_class($class_name) {
+    $this->a_response['header']['request_class'] = $class_name;
   }
 
   /**

@@ -2,8 +2,8 @@
 // $Id$
 
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
- * Distribution platform (http://mediamosa.org)
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
  * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
@@ -45,7 +45,7 @@ class MediaMosaAssetMediafileStillDownloadTestCase extends MediaMosaTestCase {
     return array(
       'name' => 'Download Mediafile Still test',
       'description' => 'Test downloading of stills with tickets.',
-      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE,
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STILL,
     );
   }
 
@@ -102,7 +102,7 @@ class MediaMosaAssetMediafileStillDownloadTestCase extends MediaMosaTestCase {
     $this->assertTrue(!empty($a_still_servers), t('@num enabled still server(s) found.', array('@num' => $a_still_servers->rowCount())));
 
     foreach ($a_still_servers as $a_stillserver) {
-      $url = str_replace("{TICKET}", $ticket_id, $a_stillserver[mediamosa_server_db::URI]);
+      $url = str_replace('{TICKET}', $ticket_id, $a_stillserver[mediamosa_server_db::URI]);
 
       // Get the file.
       $result = mediamosa_http::drupal_http_request($url);

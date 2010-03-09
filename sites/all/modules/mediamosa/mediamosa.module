@@ -2,8 +2,8 @@
 // $Id$
 
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
- * Distribution platform (http://mediamosa.org)
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
  * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
@@ -58,7 +58,7 @@ function mediamosa_requirements($phase) {
     }
 
     // Make sure the mediamosa_server_id is set and not to long.
-    $mediamosa_installation_id = mediamosa::variable_get('mediamosa_installation_id');
+    $mediamosa_installation_id = mediamosa::get_server_id();
 
     if (!isset($mediamosa_installation_id) || drupal_strlen($mediamosa_installation_id) == 0 || drupal_strlen($mediamosa_installation_id) > mediamosa_job_server_db::INSTALL_ID_LENGTH) {
       $a_requirements['mediamosa'] = array(

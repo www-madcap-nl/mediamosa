@@ -2,8 +2,8 @@
 // $Id$
 
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
- * Distribution platform (http://mediamosa.org)
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
  * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
@@ -41,6 +41,14 @@ class mediamosa_node {
   // Node types.
   const MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE = 'mediamosa_transcode_profile';
   const MEDIAMOSA_NODE_TYPE_SERVER = 'mediamosa_server';
+
+  // ------------------------------------------------------------------ Functions.
+  /**
+   * Get all node type of mediamosa.
+   */
+  static public function get_all_node_types() {
+    return array_keys(mediamosa_node_info());
+  }
 }
 
 /**

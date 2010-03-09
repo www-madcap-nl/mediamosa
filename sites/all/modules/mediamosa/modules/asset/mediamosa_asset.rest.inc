@@ -2,8 +2,8 @@
 // $Id$
 
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
- * Distribution platform (http://mediamosa.org)
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
  * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
@@ -755,7 +755,7 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
     mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id, mediamosa_asset_db::PARENT_ID => NULL));
 
     // ACL check.
-  //  mediamosa_aut::read_single_object(mediamosa_aut::AUT_TYPE_ASSET, $asset_id, $a_app_ids);
+    mediamosa_aut::read_single_object(mediamosa_aut::AUT_TYPE_ASSET, $asset_id, $a_app_ids);
 
     // Check un/inappropriate flag.
     mediamosa_asset::is_unappropriate($asset_id, $a_app_ids, $aut_user_id, $is_app_admin);
@@ -802,6 +802,8 @@ class mediamosa_rest_call_asset_delete_all extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
   // Rest vars;
   const ASSET_ID = 'asset_id';
+  const USER_ID = 'user_id';
+  const DELETE = 'delete';
 
   // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
@@ -814,6 +816,17 @@ class mediamosa_rest_call_asset_delete_all extends mediamosa_rest_call {
           self::VAR_DESCRIPTION => 'The asset IDs to delete.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+        ),
+        self::USER_ID => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_DESCRIPTION => 'User ID, must be owner to delete asset.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+        ),
+        self::DELETE => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_DESCRIPTION => 'Delete mode.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+          self::VAR_ALLOWED_VALUES => array('', 'cascade'),
         ),
       )
     );
@@ -832,10 +845,29 @@ class mediamosa_rest_call_asset_delete_all extends mediamosa_rest_call {
 
     // Get the asset ids we need to delete.
     $a_asset_ids = $this->get_param_value(self::ASSET_ID);
+    // User id
+    $user_id = $this->get_param_value(self::USER_ID);
+    // Delete
+    $delete = $this->get_param_value(self::DELETE);
 
     foreach ($a_asset_ids as $asset_id) {
       try {
-        mediamosa_asset::delete($asset_id);
+        // Get asset.
+        $a_asset = mediamosa_db::db_query(
+          'SELECT #app_id, #owner_id FROM {#mediamosa_asset} WHERE #asset_id  = :asset_id',
+          array(
+            '#app_id' => mediamosa_asset_db::APP_ID,
+            '#owner_id' => mediamosa_asset_db::OWNER_ID,
+            '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
+            '#asset_id' => mediamosa_asset_db::ID,
+            ':asset_id' => $asset_id,
+          )
+        )->fetchAssoc();
+
+        // Must be owner / app_admin to delete.
+        mediamosa_aut::owner_check($app_id, $user_id, $a_asset[mediamosa_asset_db::APP_ID], $a_asset[mediamosa_asset_db::OWNER_ID], $is_app_admin);
+
+        mediamosa_asset::delete($asset_id, $delete == 'cascade');
 
         $o_mediamosa->add_item(
           array(
@@ -953,6 +985,8 @@ class mediamosa_rest_call_asset_update extends mediamosa_rest_call {
   const PLAY_RESTRICTION_START = 'play_restriction_start';
   const PLAY_RESTRICTION_END = 'play_restriction_end';
   const ISPRIVATE = 'isprivate';
+  const ISPRIVATE_TRUE = 'TRUE';
+  const ISPRIVATE_FALSE = 'FALSE';
   const IS_UNAPPROPRIATE = 'is_unappropriate';
   const IS_INAPPROPRIATE = 'is_inappropriate';
   const OWNER_ID = 'owner_id';
@@ -988,12 +1022,12 @@ class mediamosa_rest_call_asset_update extends mediamosa_rest_call {
         ),
         self::IS_INAPPROPRIATE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
-          self::VAR_DESCRIPTION => 'The is inapproriate flag.',
+          self::VAR_DESCRIPTION => 'The inapproriate flag.',
           self::VAR_IS_HIDDEN => self::VAR_IS_HIDDEN_YES,
         ),
         self::IS_UNAPPROPRIATE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
-          self::VAR_DESCRIPTION => 'The is private flag.',
+          self::VAR_DESCRIPTION => 'Alias, same as is_inappropriate.',
           self::VAR_DEFAULT_VALUE => NULL,
         ),
         self::OWNER_ID => array(
@@ -1022,7 +1056,7 @@ class mediamosa_rest_call_asset_update extends mediamosa_rest_call {
     $asset_id = $this->get_param_value(self::ASSET_ID);
     $user_id = $this->get_param_value(self::USER_ID);
 
-    $owner_id = $this->get_param_value(self::USER_ID);
+    $owner_id = $this->get_param_value(self::OWNER_ID);
     $group_id = $this->get_param_value(self::GROUP_ID);
 
     $play_restriction_start = $this->get_param_value(self::PLAY_RESTRICTION_START);

@@ -2,8 +2,8 @@
 // $Id$
 
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
- * Distribution platform (http://mediamosa.org)
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
  * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
@@ -83,7 +83,7 @@ function mediamosa_aut_name_schema() {
         'type' => 'varchar',
         'length' => mediamosa_aut_name_db::AUT_PREFIX_LENGTH,
         'not null' => FALSE,
-        'default' => '',
+        'default' => NULL,
         'description' => t('The optional prefix of the entity, only used with REALM type.'),
       ),
       mediamosa_aut_name_db::AUT_TYPE => array(

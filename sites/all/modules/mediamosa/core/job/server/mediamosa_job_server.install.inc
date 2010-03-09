@@ -2,8 +2,8 @@
 // $Id$
 
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
- * Distribution platform (http://mediamosa.org)
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
  * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
@@ -181,7 +181,13 @@ function mediamosa_job_server_schema() {
     'primary key' => array(mediamosa_job_server_db::ID, mediamosa_job_server_db::INSTALL_ID),
     'indexes' => array(
       'idx_install_status' => array(mediamosa_job_server_db::INSTALL_ID, mediamosa_job_server_db::JOB_STATUS),
-    )
+    ),
+    'unique keys' => array(
+      'uni_jobid' => array(mediamosa_job_db::TABLE_NAME => mediamosa_job_db::ID),
+    ),
+    'foreign keys' => array(
+      mediamosa_job_server_db::ID => array(mediamosa_job_db::TABLE_NAME => mediamosa_job_db::ID),
+    ),
   );
 
   return $a_schema;

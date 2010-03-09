@@ -2,8 +2,8 @@
 // $Id$
 
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
- * Distribution platform (http://mediamosa.org)
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
  * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
@@ -69,6 +69,25 @@ function mediamosa_server_permission() {
       'description' => t('Give administer rights for editing MediaMosa 2 servers.'),
     ),
   );
+}
+
+/**
+ * Implements hook_mediamosa_register_rest_call().
+ */
+function mediamosa_server_mediamosa_register_rest_call() {
+
+  $a_rest_calls = array();
+
+  $a_rest_calls['server/status'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_server_status',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Retrieve information about the (process) server.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_server',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_1_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY,
+  );
+
+  return $a_rest_calls;
 }
 
 /**

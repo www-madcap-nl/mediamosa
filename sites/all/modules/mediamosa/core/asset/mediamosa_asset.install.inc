@@ -2,8 +2,8 @@
 // $Id$
 
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
- * Distribution platform (http://mediamosa.org)
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
  * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
@@ -41,8 +41,6 @@ require_once 'supplement/mediamosa_asset_supplement.install.inc';
  * Implement hook_install().
  */
 function _mediamosa_asset_install() {
-
-  error_log('mediamosa_asset_install');
 
   // Create our table(s).
   mediamosa::drupal_install_schema(mediamosa_asset_db::TABLE_NAME);

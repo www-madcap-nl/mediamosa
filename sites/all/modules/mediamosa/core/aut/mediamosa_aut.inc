@@ -2,8 +2,8 @@
 // $Id$
 
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
- * Distribution platform (http://mediamosa.org)
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
  * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
@@ -315,7 +315,7 @@ class mediamosa_aut {
 
       // Collect all names.
       $query = mediamosa_db::db_select(mediamosa_aut_group_db::TABLE_NAME, 'ag');
-      $query->addField('ag', array(
+      $query->fields('ag', array(
         mediamosa_aut_group_db::ID,
         mediamosa_aut_group_db::AUT_GROUP_NAME,
         mediamosa_aut_group_db::AUT_GROUP_TYPE
@@ -327,7 +327,7 @@ class mediamosa_aut {
        */
       foreach ($query->execute() as $a_group) {
         $query = mediamosa_db::db_select(mediamosa_aut_group_db::TABLE_NAME, 'ag');
-        $query->addField('ag', array(
+        $query->fields('ag', array(
           mediamosa_aut_group_db::APP_ID,
           mediamosa_aut_group_db::ID
         ));
@@ -351,7 +351,7 @@ class mediamosa_aut {
         }
 
         $query = mediamosa_db::db_select(mediamosa_aut_group_db::TABLE_NAME, 'ag');
-        $query->addField('ag', array(
+        $query->fields('ag', array(
           mediamosa_aut_group_db::APP_ID,
           mediamosa_aut_group_db::ID
         ));
@@ -363,7 +363,7 @@ class mediamosa_aut {
         foreach ($query->execute() as $a_group_2) {
           // Get the groups, this type, this name, this app.
           $query = mediamosa_db::db_select(mediamosa_aut_group_db::TABLE_NAME, 'ag');
-          $query->addField('ag', array(
+          $query->fields('ag', array(
             mediamosa_aut_group_db::ID
           ));
           $query->condition(mediamosa_aut_group_db::AUT_GROUP_NAME, $a_group['aut_group_name']);
@@ -872,11 +872,18 @@ class mediamosa_aut {
     // Verwijder de links tussen object en de aut_name/aut_group tabel
     // Hierdoor verwijder je alle rechten.
     // Verwijder ook alle master / slave links
-    mediamosa_db::db_query("DELETE FROM {mediamosa_aut_object} WHERE aut_object_type = '%s' AND aut_object_id = '%s'", $aut_type, $aut_object_id);
+    mediamosa_db::db_query("DELETE FROM {mediamosa_aut_object} WHERE aut_object_type = :aut_object_type AND aut_object_id = :aut_object_id", array(
+      ':aut_object_type' => $aut_type,
+      ':aut_object_id' => $aut_object_id,
+    ));
 
     // Verwijder master / slave link, alleen orginele app_id kan deze verwijderen
     // Wij zijn altijd slave en slaves kunnen zich slave maken of verwijderen (moet owner zijn van object)
-    mediamosa_db::db_query("DELETE FROM {mediamosa_aut_app_master_slave} WHERE aut_object_type = '%s' AND aut_object_id = '%s' AND app_id_master > 0 AND app_id_slave = %d", $aut_type, $aut_object_id, $app_id);
+    mediamosa_db::db_query("DELETE FROM {mediamosa_aut_app_master_slave} WHERE aut_object_type = :aut_object_type AND aut_object_id = :aut_object_id AND app_id_master > 0 AND app_id_slave = :app_id_slave", array(
+      ':aut_object_type' => $aut_type,
+      ':aut_object_id' => $aut_object_id,
+      ':app_id_slave' => $app_id,
+    ));
   }
 
   /**
@@ -928,7 +935,18 @@ class mediamosa_aut {
     }
 
     // Haal eerst de aut_id, zo we weten welke links er zijn
-    $db_result = mediamosa_db::db_query("SELECT aut_id, aut_type FROM {mediamosa_aut_object} WHERE aut_object_type = '%s' AND aut_object_id = '%s'", $aut_type, $aut_object_id);
+    $db_result = mediamosa_db::db_query(
+      'SELECT #aut_id, #aut_type FROM {#mediamosa_aut_object} WHERE #aut_object_type = :aut_object_type AND #aut_object_id = :aut_object_id',
+      array(
+        '#mediamosa_aut_object' => mediamosa_aut_object_db::TABLE_NAME,
+        '#aut_id' => mediamosa_aut_object_db::AUT_ID,
+        '#aut_type' => mediamosa_aut_object_db::AUT_TYPE,
+        '#aut_object_type' => mediamosa_aut_object_db::AUT_OBJECT_TYPE,
+        ':aut_object_type' => $aut_type,
+        '#aut_object_id' => mediamosa_aut_object_db::AUT_OBJECT_ID,
+        ':aut_object_id' => $aut_object_id,
+      )
+    );
 
     $a_aut_ids = array();
     foreach ($db_result as $a_row) {
@@ -940,22 +958,28 @@ class mediamosa_aut {
     $db_result_name = $db_result_group = FALSE;
 
     if (isset($a_aut_ids[mediamosa_aut_object_db::AUT_TYPE_NAME]) && !empty($a_aut_ids[mediamosa_aut_object_db::AUT_TYPE_NAME])) {
-      $query = mediamosa_db::db_select(mediamosa_aut_name_db::TABLE_NAME);
-      $query->condition(mediamosa_aut_name_db::ID, $a_aut_ids[mediamosa_aut_object_db::AUT_TYPE_NAME], 'IN');
-      $db_result_name = $query->execute();
+      $db_result_name = mediamosa_db::db_select(mediamosa_aut_name_db::TABLE_NAME, 'an')
+        ->fields('an')
+        ->condition(mediamosa_aut_name_db::ID, $a_aut_ids[mediamosa_aut_object_db::AUT_TYPE_NAME], 'IN')
+        ->execute();
     }
 
     if (isset($a_aut_ids[mediamosa_aut_object_db::AUT_TYPE_GROUP]) && !empty($a_aut_ids[mediamosa_aut_object_db::AUT_TYPE_GROUP])) {
-      $query = mediamosa_db::db_select(mediamosa_aut_group_db::TABLE_NAME);
-      $query->condition(mediamosa_aut_group_db::ID, $a_aut_ids[mediamosa_aut_object_db::AUT_TYPE_GROUP], 'IN');
-      $db_result_group = $query->execute();
+      $db_result_group = mediamosa_db::db_select(mediamosa_aut_group_db::TABLE_NAME, 'ag')
+        ->fields('ag')
+        ->condition(mediamosa_aut_group_db::ID, $a_aut_ids[mediamosa_aut_object_db::AUT_TYPE_GROUP], 'IN')
+        ->execute();
     }
 
     // Master / slave(s)
     // Note / todo ;
     // does the owner of the mediafile have the right to see other slave rights from other master app (not his app)?
     // For now we only allow rights that owner might have set (he cant set or remove app slave rights if he/she does not have the same master app
-    $db_result_master_slave = mediamosa_db::db_query("SELECT * FROM {mediamosa_aut_app_master_slave} WHERE aut_object_type = '%s' AND aut_object_id = '%s' AND app_id_master > 0 AND app_id_slave = %d", $aut_type, $aut_object_id, $object_app_id);
+    $db_result_master_slave = mediamosa_db::db_query("SELECT * FROM {mediamosa_aut_app_master_slave} WHERE aut_object_type = :aut_object_type AND aut_object_id = :aut_object_id AND app_id_master > 0 AND app_id_slave = :app_id_slave", array(
+      ':aut_object_type' => $aut_type,
+      ':aut_object_id' => $aut_object_id,
+      ':app_id_slave' => $object_app_id,
+    ));
 
     if ($db_result_name) {
       foreach ($db_result_name as $a_row) {
@@ -984,17 +1008,6 @@ class mediamosa_aut {
   }
 
   /**
-   * Retrieve data from mediafile, which might be needed for aut.
-   *
-   * @param string $mediafile_id
-   * @param array $a_what
-   * @return array
-   */
-  static public function get_data_from_mediafile($mediafile_id, $a_what = array('app_id', 'owner_id')) {
-    return mediamosa_db::db_query("SELECT %s FROM {mediamosa_asset_mediafile} WHERE mediafile_id = '%s'", implode(",", $a_what), $mediafile_id)->fetchAssoc();
-  }
-
-  /**
    * Copy the ACL rights, slave/master from one object to another, does not have to be the same object type
    * Remember that will add right(s), does not remove current rights.
    *
@@ -1006,29 +1019,51 @@ class mediamosa_aut {
   static public function replace_obj_to_obj($aut_type_source, $aut_id_source, $aut_type_dest, $aut_id_dest) {
 
     // We replace, so remove any existing rights 1st.
-    mediamosa_db::db_query("DELETE FROM {mediamosa_aut_object} WHERE aut_object_type='%s' AND aut_object_id='%s'", $aut_type_dest, $aut_id_dest);
-    mediamosa_db::db_query("DELETE FROM {mediamosa_aut_app_master_slave} WHERE aut_object_type='%s' AND aut_object_id='%s'", $aut_type_dest, $aut_id_dest);
+    mediamosa_db::db_query("DELETE FROM {mediamosa_aut_object} WHERE aut_object_type=:aut_object_type AND aut_object_id=:aut_object_id", array(
+      ':aut_object_type' => $aut_type_dest,
+      ':aut_object_id' => $aut_id_dest,
+    ));
+    mediamosa_db::db_query("DELETE FROM {mediamosa_aut_app_master_slave} WHERE aut_object_type=:aut_object_type AND aut_object_id=:aut_object_id", array(
+      ':aut_object_type' => $aut_type_dest,
+      ':aut_object_id' => $aut_id_dest,
+    ));
 
     // Copy normal ACL rights
-    $db_result = mediamosa_db::db_query("SELECT aut_type, aut_id FROM {mediamosa_aut_object} WHERE aut_object_type = '%s' AND aut_object_id = '%s'", $aut_type_source, $aut_id_source);
+    $db_result = mediamosa_db::db_query("SELECT aut_type, aut_id FROM {mediamosa_aut_object} WHERE aut_object_type = :aut_object_type AND aut_object_id = :aut_object_id", array(
+      ':aut_object_type' => $aut_type_source,
+      ':aut_object_id' => $aut_id_source,
+    ));
     foreach ($db_result as $dbrow) {
-      mediamosa_db::db_query("INSERT INTO {mediamosa_aut_object} SET aut_object_id = '%s', aut_type = '%s', aut_id = %d, aut_object_type = '%s'", $aut_id_dest, $dbrow['aut_type'], $dbrow['aut_id'], $aut_type_dest);
+      mediamosa_db::db_query("INSERT INTO {mediamosa_aut_object} SET aut_object_id = :aut_object_id, aut_type = :aut_type, aut_id = :aut_id, aut_object_type = :aut_object_type", array(
+        ':aut_object_id' => $aut_id_dest,
+        ':aut_type' => $dbrow['aut_type'],
+        ':aut_id' => $dbrow['aut_id'],
+        ':aut_object_type' => $aut_type_dest,
+      ));
     }
 
     // Copy master/slave settings
-    $db_result = mediamosa_db::db_query("SELECT app_id_slave, app_id_master FROM {mediamosa_aut_app_master_slave} WHERE aut_object_type = '%s' AND aut_object_id = '%s'", $aut_type_source, $aut_id_source);
+    $db_result = mediamosa_db::db_query("SELECT app_id_slave, app_id_master FROM {mediamosa_aut_app_master_slave} WHERE aut_object_type = :aut_object_type AND aut_object_id = :aut_object_id", array(
+      ':aut_object_type' => $aut_type_source,
+      ':aut_object_id' => $aut_id_source,
+    ));
     foreach ($db_result as $dbrow) {
-      mediamosa_db::db_query("INSERT INTO {mediamosa_aut_app_master_slave} SET aut_object_id = '%s', aut_object_type = '%s', app_id_slave = '%s', app_id_master='%s'", $aut_id_dest, $aut_type_dest, $dbrow['app_id_slave'], $dbrow['app_id_master']);
+      mediamosa_db::db_query("INSERT INTO {mediamosa_aut_app_master_slave} SET aut_object_id = :aut_object_id, aut_object_type = :aut_object_type, app_id_slave = :app_id_slave, app_id_master=:app_id_master", array(
+        ':aut_object_id' => $aut_id_dest,
+        ':aut_object_type' => $aut_type_dest,
+        ':app_id_slave' => $dbrow['app_id_slave'],
+        ':app_id_master' => $dbrow['app_id_master'],
+      ));
     }
 
     // Now copy the is_protected from source to dest.
     switch ($aut_type_source) {
       case mediamosa_aut::AUT_TYPE_MEDIAFILE:
-        $is_protected = mediamosa_db::db_query("SELECT is_protected FROM {mediamosa_asset_mediafile} WHERE mediafile_id = '%s'", $aut_id_source)->fetchAssoc();
+        $is_protected = mediamosa_db::db_query("SELECT is_protected FROM {mediamosa_asset_mediafile} WHERE mediafile_id = :mediafile_id", array(':mediafile_id' => $aut_id_source))->fetchAssoc();
         break;
 
       case mediamosa_aut::AUT_TYPE_ASSET:
-        $is_protected = mediamosa_db::db_query("SELECT is_protected FROM {mediamosa_asset} WHERE asset_id = '%s'", $aut_id_source)->fetchAssoc();
+        $is_protected = mediamosa_db::db_query("SELECT is_protected FROM {mediamosa_asset} WHERE asset_id = :asset_id", array(':asset_id' => $aut_id_source))->fetchAssoc();
         break;
 
       default:
@@ -1038,11 +1073,17 @@ class mediamosa_aut {
     // Now update the new object with the copy is_protected.
     switch ($aut_type_source) {
       case mediamosa_aut::AUT_TYPE_MEDIAFILE:
-        mediamosa_db::db_query("UPDATE {mediamosa_asset_mediafile} SET is_protected = '%s' WHERE mediafile_id = '%s'", $is_protected, $aut_id_dest);
+        mediamosa_db::db_query("UPDATE {mediamosa_asset_mediafile} SET is_protected = :is_protected WHERE mediafile_id = :mediafile_id", array(
+          ':is_protected' => $is_protected,
+          ':mediafile_id' => $aut_id_dest,
+        ));
         break;
 
       case mediamosa_aut::AUT_TYPE_ASSET:
-        mediamosa_db::db_query("UPDATE {mediamosa_asset} SET is_protected = '%s' WHERE asset_id = '%s'", $is_protected, $aut_id_dest);
+        mediamosa_db::db_query("UPDATE {mediamosa_asset} SET is_protected = :is_protected WHERE asset_id = :asset_id", array(
+          ':is_protected' => $is_protected,
+          ':asset_id' => $aut_id_dest,
+        ));
         break;
 
       default:
@@ -1599,7 +1640,7 @@ class mediamosa_aut {
       case mediamosa_aut::AUT_TYPE_ASSET:
 
         // Basic app_id check
-        $asset_id_app_id = mediamosa_db::db_query("SELECT app_id FROM {mediamosa_asset} WHERE asset_id = '%s'", $id)->fetchField();
+        $asset_id_app_id = mediamosa_db::db_query("SELECT app_id FROM {mediamosa_asset} WHERE asset_id = :asset_id", array(':asset_id' => $id))->fetchField();
 
         if (in_array($asset_id_app_id, $a_app_ids)) {
           break;
@@ -1612,10 +1653,13 @@ class mediamosa_aut {
           JOIN {mediamosa_asset_mediafile} AS m ON a.asset_id = m.asset_id_root
           JOIN {mediamosa_aut_app_master_slave} AS ms ON ms.aut_object_type = 'MEDIAFILE'
             AND ms.aut_object_id = m.mediafile_id
-            AND (ms.app_id_master IN (%s) OR ms.app_id_slave IN (%s))
-          WHERE a.asset_id = '%s'",
-          implode(",", $a_app_ids), implode(",", $a_app_ids),
-          $id
+            AND (ms.app_id_master IN (:app_id_master) OR ms.app_id_slave IN (:app_id_slave))
+          WHERE a.asset_id = :asset_id",
+          array(
+            ':app_id_master' => $a_app_ids,
+            ':app_id_slave' => $a_app_ids,
+            ':asset_id' => $id,
+          )
         );
 
         if ($db_result->fetchAssoc() === FALSE) {
@@ -1625,7 +1669,7 @@ class mediamosa_aut {
 
       case mediamosa_aut::AUT_TYPE_MEDIAFILE:
         // Basic app_id check
-        $mediafile_id_app_id = mediamosa_db::db_query("SELECT app_id FROM {mediamosa_asset_mediafile} WHERE mediafile_id = '%s'", $id)->fetchField();
+        $mediafile_id_app_id = mediamosa_db::db_query("SELECT app_id FROM {mediamosa_asset_mediafile} WHERE mediafile_id = :mediafile_id", array(':mediafile_id' => $id))->fetchField();
 
         if (in_array($mediafile_id_app_id, $a_app_ids)) {
           break;
@@ -1634,10 +1678,11 @@ class mediamosa_aut {
         // Master/slave check.
         $db_result = mediamosa_db::db_query(
           "SELECT 1 FROM {mediamosa_asset_mediafile} AS m
-          JOIN {mediamosa_aut_app_master_slave} AS ms ON ms.aut_object_type = 'MEDIAFILE' AND ms.aut_object_id = m.mediafile_id AND ms.app_id_master IN (%s)
-          WHERE m.mediafile_id = '%s'",
-          implode(",", $a_app_ids),
-          $id
+          JOIN {mediamosa_aut_app_master_slave} AS ms ON ms.aut_object_type = 'MEDIAFILE' AND ms.aut_object_id = m.mediafile_id AND ms.app_id_master IN (:app_id_master)
+          WHERE m.mediafile_id = :mediafile_id", array(
+            ':app_id_master' => $a_app_ids,
+            ':mediafile_id' => $id,
+          )
         );
 
         if ($db_result->fetchAssoc() === FALSE) {

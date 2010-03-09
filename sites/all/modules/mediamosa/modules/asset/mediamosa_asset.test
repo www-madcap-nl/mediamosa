@@ -2,8 +2,8 @@
 // $Id$
 
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
- * Distribution platform (http://mediamosa.org)
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
  * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
@@ -37,14 +37,14 @@ class MediaMosaAssetTestCaseEga extends MediaMosaTestCaseEga {
     return array(
       'name' => 'Asset tests',
       'description' => 'Testing asset related functions and rest calls.',
-      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE,
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET,
     );
   }
 
   // ------------------------------------------------------------------ Tests.
 
   // Testing is_empty_asset issues, see: ticket 165.
-  function testAssetIsEmptyAsset() {
+  public function testAssetIsEmptyAsset() {
 
     // Create an asset.
     $asset_id = $this->createAsset();
@@ -84,7 +84,7 @@ class MediaMosaAssetTestCaseEga extends MediaMosaTestCaseEga {
 
 
   // Testing is_empty_asset issue, see: ticket 167.
-  function testAssetIsEmptyAsset2() {
+  public function testAssetIsEmptyAsset2() {
 
     // Create an asset.
     $asset_id = $this->createAsset();

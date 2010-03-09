@@ -2,8 +2,8 @@
 // $Id$
 
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
- * Distribution platform (http://mediamosa.org)
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
  * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
@@ -44,7 +44,7 @@ class MediaMosaAppTestCaseEga extends MediaMosaTestCaseEga {
     return array(
       'name' => 'Application tests',
       'description' => 'The application related unit tests.',
-      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE,
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_APP,
     );
   }
 
@@ -78,7 +78,7 @@ class MediaMosaAppTestCaseEga extends MediaMosaTestCaseEga {
         $app_id_2
       )
     );
-    $this->setMediafileAut($mediafile_id, $a_parameters, 'Master/slave: master set for mediafile', array(mediamosa_error::ERRORCODE_MASTERSLAVE_DISALLOWED));
+    $this->setMediafileAut($mediafile_id, $a_parameters, 'Master/slave: master set for mediafile', array(), array(mediamosa_error::ERRORCODE_MASTERSLAVE_DISALLOWED));
 
     // Change the master setting.
     $this->enableMasterSlave($app_id_2);
@@ -100,6 +100,6 @@ class MediaMosaAppTestCaseEga extends MediaMosaTestCaseEga {
         $app_id_2
       )
     );
-    $this->setMediafileAut($mediafile_id, $a_parameters, 'Master/slave: master set for mediafile', array(mediamosa_error::ERRORCODE_MASTERSLAVE_DISALLOWED));
+    $this->setMediafileAut($mediafile_id, $a_parameters, 'Master/slave: master set for mediafile', array(), array(mediamosa_error::ERRORCODE_MASTERSLAVE_DISALLOWED));
   }
 }

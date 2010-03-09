@@ -2,8 +2,8 @@
 // $Id$
 
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
- * Distribution platform (http://mediamosa.org)
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
  * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
@@ -42,7 +42,7 @@ class MediaMosaJobTestCaseEga extends MediaMosaTestCaseEga {
     return array(
       'name' => 'Job test',
       'description' => 'Testing the job server calls.',
-      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE,
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_JOB,
     );
   }
 
@@ -101,26 +101,26 @@ class MediaMosaJobTestCaseEga extends MediaMosaTestCaseEga {
     );
 
     // Changing the 'changed' field for upload.
-    mediamosa_db::db_query('UPDATE {#mediamosa_job} SET #changed = NOW() - #JOB_JOB_TIMEOUT -1
+    mediamosa_db::db_query('UPDATE {#mediamosa_job} SET #changed = DATE_SUB(NOW(), INTERVAL #JOB_JOB_TIMEOUT SECOND)
       WHERE #job_id = :job_id',
       array(
         '#mediamosa_job' => mediamosa_job_db::TABLE_NAME,
         '#changed' => mediamosa_job_db::CHANGED,
         '#job_id' => mediamosa_job_db::ID,
         ':job_id' => $job_id_for_upload,
-        '#JOB_JOB_TIMEOUT' => mediamosa_settings::JOB_JOB_TIMEOUT,
+        '#JOB_JOB_TIMEOUT' => mediamosa_settings::JOB_JOB_TIMEOUT - 1,
       )
     );
 
     // Changing the 'changed' field for transcode.
-    mediamosa_db::db_query('UPDATE {#mediamosa_job} SET #changed = NOW() - #JOB_JOB_TIMEOUT -1
+    mediamosa_db::db_query('UPDATE {#mediamosa_job} SET #changed = DATE_SUB(NOW(), INTERVAL #JOB_JOB_TIMEOUT SECOND)
       WHERE #job_id = :job_id',
       array(
         '#mediamosa_job' => mediamosa_job_db::TABLE_NAME,
         '#changed' => mediamosa_job_db::CHANGED,
         '#job_id' => mediamosa_job_db::ID,
         ':job_id' => $job_id_for_transcode,
-        '#JOB_JOB_TIMEOUT' => mediamosa_settings::JOB_JOB_TIMEOUT,
+        '#JOB_JOB_TIMEOUT' => mediamosa_settings::JOB_JOB_TIMEOUT - 1,
       )
     );
 

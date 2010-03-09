@@ -2,8 +2,8 @@
 // $Id$
 
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
- * Distribution platform (http://mediamosa.org)
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
  * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
@@ -1116,7 +1116,7 @@ class mediamosa_asset_cql_context extends mediamosa_core_cql_context {
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'is_unappropriate',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_asset_db::TABLE_NAME,
                 MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'a',
-                MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_STRING,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_BOOL,
               ),
               'uri' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'uri',
@@ -1141,7 +1141,7 @@ class mediamosa_asset_cql_context extends mediamosa_core_cql_context {
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => mediamosa_asset_db::IS_EMPTY_ASSET,
                 MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_asset_db::TABLE_NAME,
                 MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'a',
-                MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_STRING,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_BOOL,
               ),
               mediamosa_asset_collection_db::COLL_ID => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => mediamosa_asset_collection_db::COLL_ID,

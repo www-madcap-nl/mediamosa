@@ -2,8 +2,8 @@
 // $Id$
 
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
- * Distribution platform (http://mediamosa.org)
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
  * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
@@ -537,9 +537,10 @@ class mediamosa_rest_call_collection_create extends mediamosa_rest_call {
     // Test webservice.
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $a_app_ids);
 
-    // Create unique ID.
-    $coll_id = mediamosa_db::uuid($app_id);
+    // Get the user ID (required).
+    $user_id = $this->get_param_value(self::USER_ID);
 
+<<<<<<< /var/www/mediamosa2/sites/all/modules/mediamosa/modules/collection/mediamosa_collection.rest.inc.orig.1157927010
     $a_params = array(
       /*      mediamosa_collection_db::APP_ID,
       mediamosa_collection_db::GROUP_ID,
@@ -581,6 +582,49 @@ class mediamosa_rest_call_collection_create extends mediamosa_rest_call {
     // Add the fields to the query.
     $query->fields($a_fields);
     $query->execute();
+||||||| /tmp/mediamosa_collection.rest.inc~base.CmLb7I
+    $a_params = array(
+      self::APP_ID => mediamosa_collection_db::APP_ID,
+      self::GROUP_ID => mediamosa_collection_db::GROUP_ID,
+      self::USER_ID => mediamosa_collection_db::OWNER_ID,
+      self::PRIVATE_ => mediamosa_collection_db::_PRIVATE,
+      self::PUBLIC_ => mediamosa_collection_db::_PUBLIC,
+      self::CATEGORY => mediamosa_collection_db::CATEGORY,
+      self::ISPRIVATE => mediamosa_collection_db::ISPRIVATE,
+      self::PUBLIC_ASSIGN => mediamosa_collection_db::PUBLIC_ASSIGN,
+      self::IS_UNAPPROPRIATE => mediamosa_collection_db::IS_UNAPPROPRIATE,
+    );
+
+    $a_fields = array(mediamosa_collection_db::ID => $coll_id);
+    $query = mediamosa_db::db_insert(mediamosa_collection_db::TABLE_NAME);
+    foreach ($a_params as $old_param => $param) {
+      if (!$this->isset_given_param($old_param)) {
+        // If its not set, skip it.
+        continue;
+      }
+
+      $a_fields[$param] = $this->get_param_value($old_param);
+    }
+
+    // Add created value.
+    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+
+    // Add the fields to the query.
+    $query->fields($a_fields);
+    $query->execute();
+=======
+    // Optionals.
+    $group_id = $this->get_param_value(self::GROUP_ID);
+    $private = $this->get_param_value(self::PRIVATE_);
+    $public = $this->get_param_value(self::PUBLIC_);
+    $category = $this->get_param_value(self::CATEGORY);
+    $isprivate = $this->get_param_value(self::ISPRIVATE);
+    $public_assign = $this->get_param_value(self::PUBLIC_ASSIGN);
+    $is_unappropriate = $this->get_param_value(self::IS_UNAPPROPRIATE);
+
+    // Now create the collection.
+    $coll_id = mediamosa_collection::create($app_id, $user_id, $group_id, $private, $public, $category, $isprivate, $public_assign, $is_unappropriate);
+>>>>>>> /tmp/mediamosa_collection.rest.inc~other.iDFAuU
 
     // Unique ID to response.
     $o_mediamosa->add_item(array(mediamosa_collection_db::ID => $coll_id));

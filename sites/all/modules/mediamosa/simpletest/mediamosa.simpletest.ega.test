@@ -2,8 +2,8 @@
 // $Id$
 
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
- * Distribution platform (http://mediamosa.org)
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
  * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
@@ -28,11 +28,7 @@
   * @file
   * Test on the simple test sub functions.
   */
- /**
-  * @file
-  * Unittests for aut/ACL.
-  *
-  */
+
 class MediaMosaTestCaseEgaTest extends MediaMosaTestCaseEga {
 
   // ------------------------------------------------------------------ Members.
@@ -41,8 +37,8 @@ class MediaMosaTestCaseEgaTest extends MediaMosaTestCaseEga {
   static public function getInfo() {
     return array(
       'name' => 'MediaMosa APP simpletest',
-      'description' => 'Testing our simple test class.',
-      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE,
+      'description' => 'Testing our parent simple test class for EUA (App) functions.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_APP,
     );
   }
 
@@ -176,7 +172,6 @@ class MediaMosaTestCaseEgaTest extends MediaMosaTestCaseEga {
   public function testAssetSupplement() {
     // Create an asset.
     $asset_id = $this->createAsset();
-
 
     // Create asset supplement:
     // tests - normal
