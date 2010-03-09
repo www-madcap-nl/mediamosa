@@ -24,32 +24,28 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
-/**
- * @file
- * The transcode profile DB class.
- */
-class mediamosa_transcode_profile_db {
-  // ------------------------------------------------------------------ Consts.
-  // Table name;
-  const TABLE_NAME = 'mediamosa_transcode_profile';
+ /**
+  * @file
+  * Contains the global MediaMosa Rest calls.
+  */
 
-  // Database fields;
-  const NID = 'nid';
-  const VID = 'vid';
-  const ID = 'transcode_profile_id';
-  const APP_ID = 'app_id';
-  const VERSION = 'version';
-  const PROFILE = 'profile';
-  const PROFILE_LENGTH = 100;
-  const IS_DEFAULT_PROFILE = 'is_default_profile';
-  const IS_DEFAULT_PROFILE_TRUE = 'TRUE';
-  const IS_DEFAULT_PROFILE_FALSE = 'FALSE';
-  const TOOL = 'tool';
-  const TOOL_LENGTH = 10;
-  const FILE_EXTENSION = 'file_extension';
-  const FILE_EXTENSION_LENGTH = 4;
-  const COMMAND = 'command';
-  const COMMAND_LENGTH = 1000; // used by REST call.
-  const CREATED = 'created';
-  const CHANGED = 'changed';
+
+/**
+ * URI: /version
+ * Get the current version number.
+ */
+class mediamosa_rest_call_mediamosa_version extends mediamosa_rest_call {
+
+  public function get_var_setup() {
+    $a_var_setup = array();
+
+    // Enrich with required REST vars.
+    return self::get_var_setup_default($a_var_setup, FALSE);
+  }
+
+  public function do_call() {
+    $o_mediamosa = mediamosa::get();
+
+    $o_mediamosa->add_item(array('version' => mediamosa_version::get_current_version_str(FALSE)));
+  }
 }

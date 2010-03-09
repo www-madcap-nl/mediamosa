@@ -32,6 +32,7 @@
   */
 
 // Our node type hooks.
+require_once 'mediamosa_node_mediamosa_client_application.inc';
 require_once 'mediamosa_node_mediamosa_server.inc';
 require_once 'mediamosa_node_mediamosa_transcode_profile.inc';
 
@@ -41,6 +42,7 @@ class mediamosa_node {
   // Node types.
   const MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE = 'mediamosa_transcode_profile';
   const MEDIAMOSA_NODE_TYPE_SERVER = 'mediamosa_server';
+  const MEDIAMOSA_NODE_TYPE_CLIENT_APPLICATION = 'mediamosa_client_application';
 
   // ------------------------------------------------------------------ Functions.
   /**
@@ -67,6 +69,12 @@ function mediamosa_node_info() {
       'base' => mediamosa_node::MEDIAMOSA_NODE_TYPE_SERVER,
       'has_body' => FALSE,
       'description' => t('MediaMosa servers execute jobs for transcoding, uploading and other related work.'),
+    ),
+    mediamosa_node::MEDIAMOSA_NODE_TYPE_CLIENT_APPLICATION => array(
+      'name' => t('MediaMosa client application'),
+      'base' => mediamosa_node::MEDIAMOSA_NODE_TYPE_CLIENT_APPLICATION,
+      'has_body' => FALSE,
+      'description' => t('MediaMosa client applications are clients that can login onto MediaMosa and execute REST calls. All data stored is stored under its client application ID; giving each client application its own database of assets, mediafiles etc.'),
     ),
   );
 }

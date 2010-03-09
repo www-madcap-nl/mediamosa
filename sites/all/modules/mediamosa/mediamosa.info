@@ -16,6 +16,7 @@ files[] = mediamosa.module
 files[] = mediamosa.version.inc
 files[] = mediamosa.inc
 files[] = mediamosa.install
+files[] = mediamosa.rest.inc
 files[] = mediamosa.settings.inc
 
 ; Error. (1st for dependency).

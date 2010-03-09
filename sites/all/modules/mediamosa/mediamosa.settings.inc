@@ -131,6 +131,8 @@ class mediamosa_settings {
   // Cron timeout for ticket cleanup.
   const TICKET_CRON_INTERVAL = 600; // 10 minutes.
 
+  // The number of items per page in admin listings, like client apps listing.
+  const MAINTENANCE_ITEMS_PER_PAGE = 25;
 
   // ------------------------------------------------------------------ Functions.
   /**
@@ -182,4 +184,13 @@ class mediamosa_settings {
     // STILL_FILE.
     return self::lua_base_get() . 'vpx-transcode';
   }
+
+  /**
+   * Returns the number of items per page in admin listings, like client apps
+   * listing.
+   */
+  static public function maintenance_items_per_page() {
+    return variable_get('mediamosa_maintenance_items_per_page', self::MAINTENANCE_ITEMS_PER_PAGE);
+  }
+
 }

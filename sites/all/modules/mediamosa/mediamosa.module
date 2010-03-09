@@ -58,6 +58,7 @@ function mediamosa_requirements($phase) {
     }
 
     // Make sure the mediamosa_server_id is set and not to long.
+    // TODO: should be made as REST call to other servers.
     $mediamosa_installation_id = mediamosa::get_server_id();
 
     if (!isset($mediamosa_installation_id) || drupal_strlen($mediamosa_installation_id) == 0 || drupal_strlen($mediamosa_installation_id) > mediamosa_job_server_db::INSTALL_ID_LENGTH) {
@@ -129,6 +130,16 @@ function mediamosa_mediamosa_register_rest_call() {
     mediamosa_rest_call::DESCRIPTION => 'Retrieve specific information about an registered MediaMosa REST calls/',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_0_0,
+  );
+
+  $a_rest_calls['version'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_mediamosa_version',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Retrieve the current version of MediaMosa.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_6_1,
+    mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_DEFAULT | mediamosa_rest_call::ACCESS_EXTERNAL
   );
 
   // These REST calls are only available during the sandbox of simpletest.

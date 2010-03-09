@@ -34,10 +34,11 @@ class mediamosa_app_db {
   const TABLE_NAME = 'mediamosa_app';
 
   // Database fields;
-  const ID = 'id';  // 1.x - caid (autoinc, this is not the APP ID that is used) FIXME: should be dropped and app_id made primary here.
+  const NID = 'nid';  // 1.x - caid
+  const VID = 'vid';
+  const APP_ID = 'app_id'; // 1.x id (this is the APP_ID)
   const NAME = 'name';
   const NAME_LENGTH = 30;
-  const APP_ID = 'app_id'; // 1.x id (this is the APP_ID)
   const TRANSCODING_POSITION_FROM = 'transcoding_position_from';
   const TRANSCODING_POSITION_TO = 'transcoding_position_to';
   const QUOTA = 'quota';
@@ -92,4 +93,16 @@ class mediamosa_app_db {
   const ACTIVE_VERSION = 'active_version';
   const ACTIVE_VERSION_LENGTH = 25;
   const TRANSCODING_MAX_SLOTS = 'transcoding_max_slots';
+
+  // ------------------------------------------------------------------ Functions.
+  /**
+   * Returns all fields.
+   */
+  static public function get_fields() {
+    require_once('mediamosa_app.install.inc');
+
+    // Get the schema.
+    $a_schema = mediamosa_app_schema();
+    return array_keys($a_schema[mediamosa_app_db::TABLE_NAME]['fields']);
+  }
 }

@@ -155,3 +155,42 @@ function mediamosa_update_7001() {
 
   return $ret;
 }
+
+/**
+ * Conversion of client app to nodes.
+ */
+function mediamosa_update_7002() {
+
+  $ret = array();
+
+  // First get all applications.
+  $apps = mediamosa_app::get_all_apps(array(), mediamosa_app_db::APP_ID, 'ASC');
+
+  // Drop table.
+  db_drop_table($ret, mediamosa_app_db::TABLE_NAME);
+
+  // Create table again.
+  $ret[] = mediamosa::drupal_install_schema(mediamosa_app_db::TABLE_NAME);
+
+  // Now add back the apps as nodes.
+  foreach ($apps as $app) {
+    $node = new stdClass();
+    $node->uid = 1; // Admin
+    $node->status = 1; // Published
+    $node->type = mediamosa_node::MEDIAMOSA_NODE_TYPE_CLIENT_APPLICATION;
+
+    $node->title = $app[mediamosa_app_db::NAME];
+
+    // not needed.
+    unset($app['id']);
+
+    foreach ($app as $key => $value) {
+      $node->{$key} = $value;
+    }
+
+    // Save node.
+    node_save($node);
+  }
+
+  return $ret;
+}

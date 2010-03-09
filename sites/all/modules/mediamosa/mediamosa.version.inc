@@ -40,6 +40,7 @@ class mediamosa_version {
   const MEDIAMOSA_VERSION_1_4_0 = '1.4.0';
   const MEDIAMOSA_VERSION_1_5_0 = '1.5.0';
   const MEDIAMOSA_VERSION_1_6_0 = '1.6.0';
+  const MEDIAMOSA_VERSION_1_6_1 = '1.6.1';
   const MEDIAMOSA_VERSION_1_7_0 = '1.7.0';
   const MEDIAMOSA_VERSION_2_0_0 = '2.0.0';
   const MEDIAMOSA_VERSION_2_1_0 = '2.1.0';

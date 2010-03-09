@@ -95,13 +95,13 @@ function mediamosa_transcode_profile_schema() {
   $a_schema[mediamosa_transcode_profile_db::TABLE_NAME] = array(
   'description' => t('The transcode profile table.'),
     'fields' => array(
-      mediamosa_server_db::NID => array(
+      mediamosa_transcode_profile_db::NID => array(
         'description' => t('The Drupal node id.'),
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
-      mediamosa_server_db::VID => array(
+      mediamosa_transcode_profile_db::VID => array(
         'description' => t('The Drupal node revision id.'),
         'type' => 'int',
         'unsigned' => TRUE,
@@ -165,6 +165,7 @@ function mediamosa_transcode_profile_schema() {
     'primary key' => array(mediamosa_transcode_profile_db::ID),
     'unique keys' => array(
       'uni_appid_profile' => array(mediamosa_transcode_profile_db::APP_ID, mediamosa_transcode_profile_db::PROFILE),
+      'uni_drupal' => array(mediamosa_transcode_profile_db::NID, mediamosa_transcode_profile_db::VID),
     ),
     'indexes' => array(
       array(mediamosa_transcode_profile_db::APP_ID, mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE),

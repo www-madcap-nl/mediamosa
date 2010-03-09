@@ -48,6 +48,20 @@ function mediamosa_app_mediamosa_register_rest_call() {
 }
 
 /**
+ * Implement hook_help().
+ */
+function mediamosa_app_help($path, $arg) {
+  global $base_url;
+
+  switch ($path) {
+    case 'admin/mediamosa/config/app':
+      return '<p>' . t('List of client applications.') . '</p>';
+    case 'admin/mediamosa/config/app/add':
+      return '<p>' . t('Add a new client applications.') . '</p>';
+  }
+}
+
+/**
  * Implement hook_menu().
  */
 function mediamosa_app_menu() {
@@ -61,9 +75,17 @@ function mediamosa_app_menu() {
   );
 
   $items['admin/mediamosa/config/app/list'] = array(
-    'title' => 'Client applications',
+    'title' => 'List',
     'access arguments' => array('access mediamosa'),
     'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+
+  $items['admin/mediamosa/config/app/add'] = array(
+    'title' => 'Add',
+    'description' => 'Add MediaMosa End User Applications.',
+    'page callback' => '_mediamosa_app_list',
+    'access arguments' => array('access mediamosa'),
+    'type' => MENU_LOCAL_TASK,
   );
 
   $items['admin/mediamosa/config/app/%/contacts'] = array(
@@ -94,24 +116,40 @@ function mediamosa_app_permission() {
  */
 function _mediamosa_app_list() {
 
-  // Our header defenition
-  $header = array(t('Application ID'), t('Name'), t('Quota'), t('Offline webservices'), t('Owner'), t('Active'), t('Contacts'));
+  // Our header.
+  $header = array(
+    array('data' => t('Application ID'), 'field' => 'a.' . mediamosa_app_db::APP_ID),
+    array('data' => t('Name'), 'field' => 'a.' . mediamosa_app_db::NAME),
+    array('data' => t('Quota'), 'field' => 'a.' . mediamosa_app_db::QUOTA),
+    t('Offline webservices'),
+    array('data' => t('Owner'), 'field' => 'a.' . mediamosa_app_db::OWNER),
+    array('data' => t('Status'), 'field' => 'a.' . mediamosa_app_db::ACTIVE),
+    t('Contacts'),
+    t('Actions')
+  );
 
-  $result = mediamosa_db::db_select(mediamosa_app_db::TABLE_NAME, 'a')->extend('PagerDefault')//->extend('TableSort');
+  $result = mediamosa_db::db_select(mediamosa_app_db::TABLE_NAME, 'a')->extend('PagerDefault')->extend('TableSort')
     ->fields('a')
-    ->limit(10)
+    ->limit(mediamosa_settings::maintenance_items_per_page())
+    ->orderByHeader($header)
     ->execute();
 
   $rows = array();
   foreach ($result as $row) {
+    $actions = array(
+      l(t('Edit'), 'admin/mediamosa/config/app/'. $row[mediamosa_app_db::APP_ID] . '/edit'),
+      l(t('Delete'), 'admin/mediamosa/config/app/'. $row[mediamosa_app_db::APP_ID] . '/delete'),
+    );
+
     $rows[] = array(
       $row[mediamosa_app_db::APP_ID],
       $row[mediamosa_app_db::NAME],
       $row[mediamosa_app_db::QUOTA],
       '', // @TODO: offline webservices
       $row[mediamosa_app_db::OWNER],
-      $row[mediamosa_app_db::ACTIVE],
-      l(t('View'), 'admin/mediamosa/app/'. $row[mediamosa_app_db::APP_ID] . '/contacts'),
+      $row[mediamosa_app_db::ACTIVE] == mediamosa_app_db::ACTIVE_TRUE ? '' : t('<b>Disabled</b>'),
+      l(t('Contacts'), 'admin/mediamosa/config/app/'. $row[mediamosa_app_db::APP_ID] . '/contacts'),
+      implode(' | ', $actions),
     );
   }
 
@@ -133,7 +171,7 @@ function _mediamosa_app_contacts($app_id) {
   $result = $query
     ->fields('a')
     ->condition('a.app_id', $app_id)
-    ->limit(10)
+    ->limit(mediamosa_settings::maintenance_items_per_page())
     ->execute();
 
   $rows = array();
@@ -155,8 +193,8 @@ function _mediamosa_app_contacts($app_id) {
   }
 
   $output = theme('table', array(t('Application ID'), t('Name'), t('Phone'), t('E-mail'), t('Type')), $rows);
-  //$output .= l(t('Return to MediaMosa 2 Application Listing'), 'admin/mediamosa/app');
   $output .= theme('pager');
+  $output .= l(t('Return to MediaMosa 2 Application Listing'), 'admin/mediamosa/app');
 
   return $output;
 }

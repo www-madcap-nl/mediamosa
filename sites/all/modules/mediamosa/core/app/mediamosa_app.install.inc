@@ -56,9 +56,16 @@ function mediamosa_app_schema() {
   $schema[mediamosa_app_db::TABLE_NAME] = array(
     'description' => t('The client applications are stored here. Each app is one client application.'),
     'fields' => array(
-      mediamosa_app_db::ID => array(
-        'description' => t('The database row unique identifier.'),
-        'type' => 'serial',
+      mediamosa_app_db::NID => array(
+        'description' => t('The Drupal node id.'),
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      mediamosa_app_db::VID => array(
+        'description' => t('The Drupal node revision id.'),
+        'type' => 'int',
+        'unsigned' => TRUE,
         'not null' => TRUE,
       ),
       mediamosa_app_db::NAME => array(
@@ -250,9 +257,9 @@ function mediamosa_app_schema() {
         'not null' => FALSE,
       ),
     ),
-    'primary key' => array(mediamosa_app_db::ID),
+    'primary key' => array(mediamosa_app_db::NID, mediamosa_app_db::VID),
     'unique keys' => array(
-      'uni_appid' => array(mediamosa_app_db::APP_ID)
+      'uni_appid' => array(mediamosa_app_db::APP_ID),
     ),
   );
 

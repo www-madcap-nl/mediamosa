@@ -285,7 +285,7 @@ function mediamosa_server_schema() {
         'not null' => FALSE,
       ),
     ),
-    'primary key' => array('nid', 'vid'),
+    'primary key' => array(mediamosa_server_db::NID, mediamosa_server_db::VID),
     'indexes' => array(
       'idx_servertype_serverstatus' => array(mediamosa_server_db::NID, mediamosa_server_db::SERVER_TYPE, mediamosa_server_db::SERVER_STATUS),
     )

@@ -24,32 +24,19 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
-/**
- * @file
- * The transcode profile DB class.
- */
-class mediamosa_transcode_profile_db {
-  // ------------------------------------------------------------------ Consts.
-  // Table name;
-  const TABLE_NAME = 'mediamosa_transcode_profile';
+ /**
+  * @file
+  * Browse the history of all mediamosa node objects changes using Drupals
+  * node revisions.
+  */
 
-  // Database fields;
-  const NID = 'nid';
-  const VID = 'vid';
-  const ID = 'transcode_profile_id';
-  const APP_ID = 'app_id';
-  const VERSION = 'version';
-  const PROFILE = 'profile';
-  const PROFILE_LENGTH = 100;
-  const IS_DEFAULT_PROFILE = 'is_default_profile';
-  const IS_DEFAULT_PROFILE_TRUE = 'TRUE';
-  const IS_DEFAULT_PROFILE_FALSE = 'FALSE';
-  const TOOL = 'tool';
-  const TOOL_LENGTH = 10;
-  const FILE_EXTENSION = 'file_extension';
-  const FILE_EXTENSION_LENGTH = 4;
-  const COMMAND = 'command';
-  const COMMAND_LENGTH = 1000; // used by REST call.
-  const CREATED = 'created';
-  const CHANGED = 'changed';
-}
+/**
+ * node_revision_delete($revision_id)
+ * Delete a node revision (not the latest).
+ *
+ * node_revision_list($node)
+ * Returns a array with all revisions of one node.
+ *
+ * node_revision_overview($node)
+ * Generate an overview table of older revisions of a node.
+ */
