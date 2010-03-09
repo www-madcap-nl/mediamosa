@@ -1,0 +1,577 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+ /**
+  * @file
+  *
+  */
+
+ /*
+  * Implements hook_cron.
+  */
+function mediamosa_asset_cron() {
+  $start = time();
+  mediamosa_debug::log_debug('mediamosa_asset_cron started.', array(), 'asset_cron');
+
+  $run_last = variable_get('mediamosa_asset_cron_last', NULL);
+
+  // may run?
+  if (round(REQUEST_TIME - $run_last) >= mediamosa_settings::ASSET_GARBAGE_COLLECTOR_CRON_INTERVAL) {
+    // For the next time...
+    variable_set('mediamosa_asset_cron_last', REQUEST_TIME);
+
+    // Do garbage cleanup.
+    mediamosa_asset::do_garbage_cleanup();
+  }
+
+  // Log it.
+  mediamosa_debug::log_debug('mediamosa_asset_cron ended: @secs', array('@sec' => time() - $start), 'asset_cron');
+}
+
+/**
+ * Implements hook_mediamosa_register_rest_call().
+ */
+function mediamosa_asset_mediamosa_register_rest_call() {
+  $a_rest_calls = array();
+
+  // Asset search.
+  $a_rest_calls['asset'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_search',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Search for assets based on input parameters and return a list of found assets.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+    // Set default so we dont fail when we are called for vars.
+    mediamosa_rest_call::DEFAULT_PARAMS_VALUES => array(mediamosa_rest_call_asset_search::APP_ID => array(0)),
+  );
+
+  // Collection asset search.
+  $a_rest_calls['collection/$coll_id/asset'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_search',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Search for assets based on input parameters and return a list of found assets.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+    // Set default so we dont fail when we are called for vars.
+    mediamosa_rest_call::DEFAULT_PARAMS_VALUES => array(mediamosa_rest_call_asset_search::APP_ID => array(0)),
+  );
+
+  // Change owner ship/group on asset/mediafile/collections.
+  $a_rest_calls['change_ownership'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_change_ownership',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Change the ownership, app and/or group of assets, mediafiles and collections.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Count number of asset based on owner/app/group.
+  $a_rest_calls['asset/count'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_count_asset',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Return the number of asset based on app_id, owner_id and group_id.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Get Asset Media Metadata.
+  $a_rest_calls['metadata_tag'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_metadata_property_list',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Retrieve the listing of the asset metadata definitions.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_metadata_property',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_4_0,
+  );
+
+  // Create Asset Media Metadata.
+  $a_rest_calls['metadata_tag/create'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_metadata_property_create',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Create a asset metadata definition.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_metadata_property',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Delete Asset Media Metadata.
+  $a_rest_calls['metadata_tag/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_metadata_property_delete',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Delete a asset metadata definition.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_metadata_property',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Count number of mediafiles based on owner/app/group.
+  $a_rest_calls['mediafile/count'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_count_asset_mediafile',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Return the number of mediafile based on app_id, owner_id and group_id.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Count number of mediafiles based on owner/app/group.
+  $a_rest_calls['mediafile/$mediafile_id'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_get_mediafile',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Return information about a mediafile.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Delete from mediafile.
+  $a_rest_calls['mediafile/$mediafile_id/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_delete_mediafiles',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Delete a mediafile.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Get the stills from mediafile.
+  $a_rest_calls['mediafile/$mediafile_id/still'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_get_still_for_mediafile',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Recieve the still information of a mediafile.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_still',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_7_0,
+  );
+
+  // Delete stills from asset.
+  $a_rest_calls['asset/$asset_id/still/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_delete_stills',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Delete stills from an asset.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Set default stills from asset.
+  $a_rest_calls['asset/$asset_id/still/default'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_set_still_default',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Set the default still for an asset.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+    // Set order still from asset.
+  $a_rest_calls['asset/$asset_id/still/order'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_set_still_order',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Set the order for still of a asset.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Get mediafiles of asset.
+  $a_rest_calls['asset/$asset_id/mediafile'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_get_asset_mediafiles',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Get mediafiles of asset.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Create mediafile.
+  $a_rest_calls['asset/$asset_id/mediafile/create'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_create_mediafile',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Create a mediafile, internal use only.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Create mediafile.
+  $a_rest_calls['mediafile/create'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_create_mediafile',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Create a mediafile.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Update mediafile.
+  $a_rest_calls['asset/$asset_id/mediafile/create'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_update_mediafile',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Create a mediafile.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Update mediafile.
+  $a_rest_calls['mediafile/$mediafile_id'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_update_mediafile',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Update a mediafile.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Update mediafile.
+  $a_rest_calls['mediafile/$mediafile_id/update'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_update_mediafile',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Update a mediafile.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY,
+  );
+
+  // Create ticket for upload.
+  $a_rest_calls['mediafile/$mediafile_id/uploadticket/create'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_mediafile_uploadticket_create',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
+    mediamosa_rest_call::DESCRIPTION => 'Create a ticket for upload.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_upload',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Create ticket for upload.
+  $a_rest_calls['mediafile/$mediafile_id/upload_ticket'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_mediafile_uploadticket_create',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
+    mediamosa_rest_call::DESCRIPTION => 'Create a ticket for upload.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_upload',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Create ticket for upload.
+  $a_rest_calls['mediafile/$mediafile_id/uploadticket/create'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_mediafile_uploadticket_create',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Create a ticket for upload.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_upload',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Create ticket for upload.
+  $a_rest_calls['mediafile/$mediafile_id/upload_ticket'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_mediafile_uploadticket_create',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
+    mediamosa_rest_call::DESCRIPTION => 'Create a ticket for upload.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_upload',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Get favorites count of asset.
+  $a_rest_calls['asset/$asset_id/favorites/count'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_favorites_count',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Count the number of favorites of an asset.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Get favorites count of asset.
+  $a_rest_calls['asset/$asset_id/count_favorites'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_favorites_count',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
+    mediamosa_rest_call::DESCRIPTION => 'Count the number of favorites of an asset.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Delete asset.
+  $a_rest_calls['asset/$asset_id/delete'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_delete',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Delete a asset.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Get the asset.
+  $a_rest_calls['asset/$asset_id'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_get',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Retrieve a asset.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Create the asset.
+  $a_rest_calls['asset/create'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_create',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Create a asset.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Update the asset.
+  $a_rest_calls['asset/$asset_id'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_update',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Update the fields of a asset.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Delete the asset.
+  $a_rest_calls['asset/$asset_id/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_delete',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Delete a asset.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Delete all given asset.
+  $a_rest_calls['asset/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_delete_all',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Delete all assets using the given asset IDs.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Create link between asset and collection.
+  $a_rest_calls['collection/$coll_id/asset_relation'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_collection_create',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Create link between asset and collection.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_collection',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Delete all links for asset on all collections.
+  $a_rest_calls['asset/$asset_id/collection_relation/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_collection_delete_asset_from_all_collections',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Create link between asset and collection.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_collection',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_7_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY,
+  );
+
+  // Count number of collections of one asset.
+  $a_rest_calls['asset/$asset_id/collection/count'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_collection_count',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Count the number of collections where given asset is related to.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_collection',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_5,
+  );
+
+  // Count number of collections of one asset.
+  $a_rest_calls['asset/$asset_id/collections/count'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_collection_count',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Count the number of collections where given asset is related to.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_collection',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Count number of collections of one asset.
+  $a_rest_calls['asset/$asset_id/count_collections'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_collection_count',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
+    mediamosa_rest_call::DESCRIPTION => 'Count the number of collections where given asset is related to.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_collection',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Count per prop_id per content.
+  $a_rest_calls['tagcount'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_metadata_property_tagcount',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Return a list of tags of one property and their count, a count more than 1 means multiple occourance of the same tag value.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_metadata_propperty',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_7_0,
+  );
+
+  // Count per prop_id per content.
+  $a_rest_calls['asset/$asset_id/metadata'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_metadata_create',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Create metadata for the asset.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_metadata',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Get the asset supplement.
+  $a_rest_calls['asset/$asset_id/supplement'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_supplement_get',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Get the supplement of the asset.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_supplement',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Create the asset supplement.
+  $a_rest_calls['asset/$asset_id/supplement/create'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_supplement_create',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Create the supplement of the asset.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_supplement',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Update the asset supplement.
+  $a_rest_calls['asset/$asset_id/supplement/$supplement_id/update'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_supplement_update',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Update the supplement of the asset.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_supplement',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Update the asset supplement.
+  $a_rest_calls['supplement/$supplement_id/update'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_supplement_update',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
+    mediamosa_rest_call::DESCRIPTION => 'Update the supplement of the asset.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_supplement',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Update the asset supplement.
+  $a_rest_calls['supplement/update'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_supplement_update',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
+    mediamosa_rest_call::DESCRIPTION => 'Update the supplement of the asset.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_supplement',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Delete the asset supplement.
+  $a_rest_calls['asset/$asset_id/supplement/$supplement_id/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_supplement_delete',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Delete a supplement of the asset.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_supplement',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Delete the asset supplement.
+  $a_rest_calls['supplement/$supplement_id/update'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_supplement_delete',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
+    mediamosa_rest_call::DESCRIPTION => 'Delete a supplement of the asset.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_supplement',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Delete the asset supplement.
+  $a_rest_calls['supplement/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_supplement_delete',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
+    mediamosa_rest_call::DESCRIPTION => 'Delete a supplement of the asset.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_supplement',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Play a mediafile.
+  $a_rest_calls['asset/$asset_id/play'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_mediafile_play',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
+    mediamosa_rest_call::DESCRIPTION => 'Play a mediafile.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_play_proxy',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Play a mediafile.
+  $a_rest_calls['video/$asset_id/play'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_mediafile_play',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
+    mediamosa_rest_call::DESCRIPTION => 'Play a mediafile.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_play_proxy',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  $a_rest_calls['mediafile/upload'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_mediafile_upload',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Upload a mediafile.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_upload',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
+    mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
+  );
+
+  $a_rest_calls['mediafile/upload'][mediamosa_rest_call::METHOD_PUT] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_mediafile_upload_app',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Upload a mediafile.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_upload',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_2_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
+    mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
+  );
+
+  $a_rest_calls['mediafile/$mediafile_id/upload'][mediamosa_rest_call::METHOD_PUT] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_mediafile_upload_app',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Upload a mediafile.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_upload',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_2_0,
+  );
+
+  // Download file.
+  $a_rest_calls['download/$ticket_id/$filename'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_download_mediafile',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Enables downloading of mediafiles using the ticket system.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_download',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_0_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
+    mediamosa_rest_call::RESPONSE_TYPE => mediamosa_rest_call::RESPONSE_TYPE_DOWNLOAD,
+    mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
+  );
+
+  // Allowed on POST as well.
+  $a_rest_calls['download/$ticket_id/$filename'][mediamosa_rest_call::METHOD_POST] = $a_rest_calls['download/$ticket_id/$filename'][mediamosa_rest_call::METHOD_GET];
+
+  // Still.
+  $a_rest_calls['still/$ticket_id'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_download_mediafile_still',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Enables viewing of stills using the ticket system.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_still_download',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_0_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
+    mediamosa_rest_call::RESPONSE_TYPE => mediamosa_rest_call::RESPONSE_TYPE_DOWNLOAD,
+    mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
+  );
+
+  // Allowed on POST as well.
+  $a_rest_calls['still/$ticket_id'][mediamosa_rest_call::METHOD_POST] = $a_rest_calls['still/$ticket_id'][mediamosa_rest_call::METHOD_GET];
+
+  // Upload progress.
+  $a_rest_calls['mediafile/uploadprogress'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_mediafile_uploadprogress',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Allows to retrieve the upload progress of an upload using APC extension.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_upload',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_3_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
+    mediamosa_rest_call::RESPONSE_TYPE => mediamosa_rest_call::RESPONSE_TYPE_PLAIN,
+  );
+
+  return $a_rest_calls;
+}

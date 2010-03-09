@@ -1,0 +1,123 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * @file
+ * Mediamosa Storage / SAN/NAS unittests.
+ *
+ * Based on tickets mediamosa 1:
+ *
+ * ticket_616
+ *
+ *
+ */
+
+/**
+  * @file
+  * Unittests for Conf. storage module.
+  */
+class MediaMosaAssetMediafileStillDownloadTestCase extends MediaMosaTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Download Mediafile Still test',
+      'description' => 'Test downloading of stills with tickets.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STILL,
+    );
+  }
+
+  function setUp() {
+    // Get the current mediamosa server content.
+    $a_servers = mediamosa_server::search();
+
+    parent::setUp('mediamosa_asset');
+
+    // Create and login user
+    $rest_user = $this->drupalCreateUser(array('administer mediamosa'));
+    $this->drupalLogin($rest_user);
+
+    // Truncate current and insert new.
+    db_truncate(mediamosa_server_db::TABLE_NAME)->execute();
+
+    // Copy the current servers to sandbox.
+    foreach ($a_servers as $a_server) {
+      db_insert(mediamosa_server_db::TABLE_NAME)
+        ->fields($a_server)
+        ->execute();
+    }
+  }
+
+  function testStillDownload() {
+
+    $a_app = $this->createApp();
+    $app_id = $a_app[mediamosa_app_db::APP_ID];
+    $ticket_id = mediamosa_db::uuid(1);
+    $uuid = mediamosa_db::uuid(1);
+    $filename = 'testimage.jpg';
+
+    $a_mediafile_ext = array(
+      mediamosa_asset_mediafile_db::ID => $uuid,
+      mediamosa_asset_mediafile_db::FILENAME => $filename,
+    );
+
+    $test_image = $this->getTestImage_NotBlackJpg();
+    $target = mediamosa_configuration_storage::mediafile_still_filename_get($uuid);
+
+    // Create the directory.
+    $this->mkdir(dirname($target));
+
+    // Copy the test image.
+    $this->copy($test_image, $target);
+
+    // Create ticket.
+    $ticket_id = mediamosa_ticket::create_play_proxy($ticket_id, $a_mediafile_ext, mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL, $app_id, 'dummy', $uuid);
+
+    $ticket_path = mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_settings::STILL_TICKET_LOCATION;
+    $ticket_symlink = $ticket_path . DIRECTORY_SEPARATOR . $ticket_id;
+
+    $a_still_servers = mediamosa_server::get_enabled_still();
+    $this->assertTrue(!empty($a_still_servers), t('@num enabled still server(s) found.', array('@num' => $a_still_servers->rowCount())));
+
+    foreach ($a_still_servers as $a_stillserver) {
+      $url = str_replace('{TICKET}', $ticket_id, $a_stillserver[mediamosa_server_db::URI]);
+
+      // Get the file.
+      $result = mediamosa_http::drupal_http_request($url);
+
+      // Check response.
+      $this->assertTrue(
+        $result->code == 200,
+        t("Download the test image from '@url' (code = @code)", array('@url' => $url, '@code' => $result->code))
+      );
+    }
+
+    // Remove link ($ticket).
+    $this->unlink($ticket_symlink);
+
+    // Remove the test video.
+    $this->unlink($target);
+  }
+}

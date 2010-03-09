@@ -1,0 +1,281 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * @file
+ * Error installer.
+ */
+
+require_once 'mediamosa_error_db.inc';
+require_once 'mediamosa_error.inc';
+
+/**
+ * Implement hook_install().
+ */
+function _mediamosa_error_install() {
+  // Create our table(s).
+  mediamosa::drupal_install_schema(mediamosa_error_db::TABLE_NAME);
+
+  $a_error_text = array(
+    'HTTP_OK' => '',
+    'HTTP_CREATED' => '',
+    'HTTP_NO_CONTENT' => '',
+
+    'HTTP_UNAUTHORIZED' => '',
+    'HTTP_FORBIDDEN' => '',
+    'HTTP_NOT_FOUND' => 'Page not found',
+
+    'ERRORCODE_OKAY' => '',
+    'ERRORCODE_TIME_RESTRICTION_START' => 'PP - time_restriction_start error: @date (@timestamp)',
+    'ERRORCODE_TIME_RESTRICTION_END' => 'PP - time_restriction_end error: @date (@timestamp)',
+    'ERRORCODE_FILE_NOT_FOUND' => 'The file \'@filename\' doesn\'t exist!',
+    'ERRORCODE_DIR_NOT_FOUND' => 'Directory \'@location\'not found / doesn\'t exists!',
+    'ERRORCODE_DIR_NOT_WRITABLE' => 'Directory \'@location\' is read-only, need write access.',
+    'ERRORCODE_STREAMING_PROFILE_NOT_FOUND' => 'PP - There was no streaming server profile found for the video container used in this mediafile. (video container: \'@video_container\')',
+    'ERRORCODE_NO_MEDIAFILE_FOUND_FOR_PROFILE_ID' => 'PP - For the given asset and profile_id no mediafile was found.',
+    'ERRORCODE_QUERY_ERROR' => 'Incorrect database query',
+    'ERRORCODE_STREAM_DOWNLOAD_NOT_ALLOWED' => 'Download not allowed for external streams',
+    'ERRORCODE_NO_METAFILE_AVAILABLE' => 'This container type doesn\'t support metafiles (@container_type)',
+    'ERRORCODE_JOBS_COULD_NOT_BE_STOPPED' => 'Some jobs could not be stopped. Please try again later.',
+    'ERRORCODE_REST_CALL_IS_DISABLED' => 'Rest call to \'@uri\' has been disabled, please check documentation.',
+    'ERRORCODE_UNABLE_TO_CREATE_SYMLINK' => 'Unable to create symbolic link ticket to file.',
+    'ERRORCODE_REST_UNSPECIFIED_VARIABLE' => 'The var \'@var\' is not allowed in this REST call, remove it from your request.',
+    'ERRORCODE_REST_DIFF_VALUE_GET_POST_VAR' => '@var is specified more than once (GET / POST / URI), but has different values (value 1; @value1 / value 2; @value2).',
+    'ERRORCODE_REST_NOT_FOUND' => 'The REST call with uri_id @uri_id was not found.',
+    'ERRORCODE_DIR_UNABLE_TO_CREATE' => 'Unable to create directory \'@location\', reason: @reason.',
+
+    'ERRORCODE_ASSET_NOT_FOUND' => 'MM - asset_id=@asset_id was not found in the database',
+    'ERRORCODE_MEDIAFILE_NOT_FOUND' => 'MM - mediafile_id=@mediafile_id was not found in the database',
+    'ERRORCODE_INVALID_APP_ID' => 'MM - invalid application id (app_id)',
+    'ERRORCODE_INVALID_USER_ID' => 'MM - the specified user_id (@user_id) is not the owner of this asset',
+    'ERRORCODE_UNKNOWN_ERROR_SAVING_METADATA' => 'MM - unknows error while saving metadata for asset_id @asset_id',
+    'ERRORCODE_EMPTY_RESULT' => 'The query returned an empty result set (i.e. zero rows).',
+    'ERRORCODE_COLLECTION_NOT_FOUND' => 'MM - coll_id=@coll_id was not found in the database',
+    'ERRORCODE_COLLECTION_ASSET_RELATION_ALREADY_EXISTS' =>  'MM - the asset is already present in the collection',
+    'ERRORCODE_COLLECTION_ASSET_RELATION_NOT_FOUND' => 'MM - the asset (ID: @asset_id) /collection (ID: @coll_id) relation was not found in the database',
+    'ERRORCODE_ASSET_NOT_EMPTY' => 'MM - there are still @mediafile_count mediafile(s) present in this asset.',
+    'ERRORCODE_COLLECTION_NOT_EMPTY' => 'MM - there are still @asset_count asset(s) present in this collection.',
+    'ERRORCODE_ASSET_SUPPLEMENT_NOT_FOUND' => 'MM - Supplement @supplement_id not found.',
+    'ERRORCODE_WEBSERVICE_DISABLED' => 'The webservices has been disabled.',
+    'ERRORCODE_UNKNOWN_MEDIAMOSA_VERSION' => 'Unknown MediaMosa version requested: @version.',
+    'ERRORCODE_INVALID_ASSET_MEDIAFILE_COMBINATION' => 'MM - invalid asset/mediafile combination.',
+    'ERRORCODE_NO_CHANGES' => 'Insufficient paramaters given, changes not saved',
+    'ERRORCODE_INVALID_FAV_TYPE' => 'Invalid favorite type (@type), valid favorite types; (@valid_types)',
+    'ERRORCODE_INVALID_TIMESTAMP' => '@name is not a valid datetime or timestamp value, must be in format of YYYY-MM-DD HH:MM:DD / YYYY-MM-DD HH:MM / YYYY-MM-DD HH / YYYY-MM-DD / YYYY-MM / YYYY',
+    'ERRORCODE_UNEXPECTED_ERROR' => 'A unexpected program error / problem happened',
+    'ERRORCODE_MISSING_TIMESTAMP' => '@name must have 2 dates separated with a |',
+    'ERRORCODE_CANT_PLAY_MEDIAFILE' => 'This mediafile (@mediafile_id) can not be played; @reason.',
+    'ERRORCODE_CANT_TRANSCODE_MEDIAFILE' => 'This mediafile (@mediafile_id) can not be transcoded; @reason.',
+    'ERRORCODE_APP_DISABLED' => 'This application has been disabled',
+
+    'ERRORCODE_UNKNOWN_JOB' => 'Jobs - unknown job specified',
+
+    'ERRORCODE_VALIDATE_INVALID_TYPE' => 'MediaMosa - invalid type specified: @type',
+    'ERRORCODE_VALIDATE_INVALID_LENGTH_USE' => 'MediaMosa - \'length\' can not be used in combination with \'length_(min|max)\'',
+    'ERRORCODE_VALIDATE_REQUIRED_PARAMETER' => 'MediaMosa - missing required parameter: @param (@type)',
+    'ERRORCODE_VALIDATE_FAILED' => 'MediaMosa - parameter validation failed: @param (@type)',
+    'ERRORCODE_SORT_FIELD_ERROR' => 'MediaMosa - sorting on \'@field\' is not allowed',
+    'ERRORCODE_SORT_DIRECTION_ERROR' => 'MediaMosa - invalid sort direction specified: \'@sort_direction\'. Use \'ASC\' or \'DESC\' instead.',
+    'ERRORCODE_PP_INVALID_TIME' => 'PP - parameter validation failed: @param (@type) should be less than 87 400 000 msec (=24h)',
+    'ERRORCODE_VALIDATE_INVALID_LANGUAGE' => 'MediaMosa - \'language\' parameter validation failed. Please use the 2-letter codes as defined in ISO 639-1.',
+    'ERRORCODE_INVALID_SUPPLEMENT' => 'Invalid XML or maximum allowed size exceeded',
+    'ERRORCODE_MIX_OF_URI_AND_FILE' => 'A single mediafile can not have a URI and a filename.',
+    'ERRORCODE_CHANGE_URI_AND_FILE' => 'A URI-based mediafile can be changed to a file-based mediafile and visa vers.',
+    'ERRORCODE_CHANGE_OWNERSHIP_MISSING_PARAMETERS' => 'No \'old\' or \'new\' value present',
+    'ERRORCODE_INSUFFICIENT_PARAMETERS' => 'Insufficient parameters given',
+    'ERRORCODE_SUPPLEMENT_LIMIT_REACHED' => 'Maximum number of supplements for this assed reached (@max)',
+    'ERRORCODE_MEDIAFILE_DOWNLOAD_DISABLED' =>  'Download is disabled for this mediafile',
+    'ERRORCODE_UPLOAD_TARGET_IS_NOT_AN_ORIGINAL_FILE' => 'Uploading to a non-original mediafile is not allowed',
+    'ERRORCODE_QUOTA_REACHED' => 'Quota limit reached. Allowed size: @quota MB. Used size: @used MB.',
+    'ERRORCODE_HOSTNAME_ALREADY_IN_GROUP' =>  'The hostname (@hostname) is already a member of the autorisation group (@group).',
+    'ERRORCODE_HOSTNAME_NOT_FOUND' => 'The hostname (@hostname) was not found in the autorisation group (@group).',
+    'ERRORCODE_GROUP_NOT_EMPTY' => 'There are still one or more hostnames present in this autorisation group (@group)',
+    'ERRORCODE_VALIDATE_SEARCH_SYNTAX_FAILED' => 'Search parameters syntax contains a syntax error, please check your search_* parameters',
+    'ERRORCODE_VALIDATE_SEARCH_SYNTAX_FAILED_UNEXPECTED_END' => 'Search parameters syntax ends abruptly',
+    'ERRORCODE_VALIDATE_SEARCH_SYNTAX_FAILED_INVALID_FIELD' => 'Search parameters: you can search on field \'@field\'',
+    'ERRORCODE_METADATA_DEFINITION_NOT_EMPTY' => 'There are still one or more properties present in this property definition',
+    'ERRORCODE_INVALID_METADATA_DEFINITION' => 'Invalid metadata definition',
+    'ERRORCODE_HOSTNAME_TYPE_NO_MATCH_GROUP_TYPE' => 'The hostname (@hostname) with type (@hostname_type) must be the same type as the group (@group) with type (@group_type).',
+    'ERRORCODE_AUT_GROUP_ALREADY_EXISTS' => 'The authorization group (@group) already exists.',
+    'ERRORCODE_AUT_GROUP_NOT_FOUND' => 'The authorization group (@group) was not found.',
+    'ERRORCODE_AUT_NAME_NOT_FOUND' => 'The authorization hostname (@hostname) was not found.',
+    'ERRORCODE_INVALID_DATA_PARAMETER' => 'MediaMosa - @parameter contains invalid data, expecting @data',
+    'ERRORCODE_FTP_BATCH_NOT_FOUND' => 'The FTP batch id (@batch_id) was not found.',
+    'ERRORCODE_CANT_RETYPE_GROUP_MUST_BE_EMPTY' => 'You can change the type of group \'@group\', when it contains hostnames.',
+    'ERRORCODE_CQL_EXCLUSIVE' => 'MediaMosa - When you define a CQL search string, you can not specify any other search or order by parameter.',
+    'ERRORCODE_CQL_ERROR' => 'MediaMosa - CQL returned an error; @error.',
+    'ERRORCODE_METADATA_DEFINITION_ALREADY_EXISTS' => 'MediaMosa - Metadata definition already exists.',
+    'ERRORCODE_ACTION_AND_REPLACE' => 'Action and Replace vars can not both be set.',
+    'ERRORCODE_VALUE_MUST_START_WITH_ALPHABETIC_CHAR' => 'The parameter @param (@type) first character must be an alphabetic character.',
+    'ERRORCODE_VALIDATE_INT_TO_SMALL' => 'The value of @param is to low, must be at least @min_value.',
+    'ERRORCODE_VALIDATE_INT_TO_BIG' => 'The value of @param is to high, can not be bigger than @max_value.',
+    'ERRORCODE_VALIDATE_STRING_TO_SHORT' => 'The length of @param is to short, must be at least @min_length characters long.',
+    'ERRORCODE_VALIDATE_STRING_TO_LONG' => 'The length of @param is to long, can not be longer than @max_length characters.',
+    'ERRORCODE_VALIDATE_VALUE_NOT_ALLOWED' => 'The value of @param (@type) is not allowed, allowed values are \'@allowed_values\'.',
+    'ERRORCODE_INTERNAL_ONLY' => 'You can not set REST parameter @param (@type), these used by internal REST calls.',
+
+    'ERRORCODE_RETRIEVING_JOBLIST' => 'MediaMosa - error retrieving joblist from the database',
+    'ERRORCODE_RETRIEVING_JOBSTATUS' => 'MediaMosa - error retrieving jobstatus from the database',
+    'ERRORCODE_WRITING_JOBSTATUS' => 'MediaMosa - error writing jobstatus to the database',
+    'ERRORCODE_WRITING_JOBPROGRESS' => 'MediaMosa - error writing jobprogress to the database',
+    'ERRORCODE_WRITING_UNKNOWN_JOBSTATUS' => 'MediaMosa - error writing jobstatus to the database, an invalid status code was sent.',
+    'ERRORCODE_RETRIEVING_TRANSCODELIST' => 'MediaMosa - error retrieving transcodelist from the database.',
+    'ERRORCODE_CREATING_JOB' => 'MediaMosa - error creating a new job',
+    'ERRORCODE_DELETING_JOB' => 'MediaMosa - error deleting a job',
+    'ERRORCODE_UNKNOWN_JOB_TYPE' => 'MediaMosa - unknown job type',
+    'ERRORCODE_RETRIEVING_TRANSCODE_PROFILE' => 'MediaMosa - error retrieving transcode profile from the database.',
+    'ERRORCODE_RETRIEVING_DEFAULT_TRANSCODE_PROFILE' => 'MediaMosa - error retrieving default transcode profile.',
+    'ERRORCODE_NO_DEFAULT_TRANSCODE_PROFILE' => 'MediaMosa - no default transcode profile specified.',
+    'ERRORCODE_UNKNOWN_TRANSCODE_PROFILE' => 'MediaMosa - unknown transcode profile.',
+    'ERRORCODE_NO_TRANSCODE_PARAMETERS' => 'MediaMosa - no transcoding parameters provided.',
+    'ERRORCODE_JOB_TRANSCODE_PARAMETER_NOT_FOUND' => 'MediaMosa - transcoding parameter @key is unknown.',
+    'ERRORCODE_JOB_TRANSCODE_PARAMETER_TOO_LOW' => 'MediaMosa - transcoding parameter @key has a value of @value, which is lower then the minimum @min_value.',
+    'ERRORCODE_JOB_TRANSCODE_PARAMETER_TOO_HIGH' => 'MediaMosa - transcoding parameter @key has a value of @value, which is higher then the maximum @max_value.',
+    'ERRORCODE_JOB_TRANSCODE_PARAMETER_WRONG_VALUE' => 'MediaMosa - transcoding parameter @key has an invalid value of @value.',
+    'ERRORCODE_JOB_TRANSCODE_PARAMETER_NOT_FLOAT' => 'MediaMosa - transcoding parameter @key has an invalid value of @value.',
+    'ERRORCODE_JOB_TRANSCODE_PARAMETER_COMBINATION' => 'MediaMosa - transcoding parameter combination of tool @tool and file extension @file_extension does not exist.',
+    'ERRORCODE_JOB_TRANSCODE_TIMEOUT' => 'MediaMosa - error, transcode job has exceeded the max transcode job runtime (@timeout s)',
+    'ERRORCODE_CREATING_TRANSCODE_JOB' => 'MediaMosa - error creating a transcode job.',
+    'ERRORCODE_JOB_NOT_FOUND' => 'MediaMosa - job_id=@job_id was not found in the database',
+    'ERRORCODE_JOB_ASSET_NOT_FOUND' => 'MediaMosa - asset_id=@asset_id was not found in the database',
+    'ERRORCODE_CREATING_UPLOAD_JOB' => 'MediaMosa - error creating a upload job',
+    'ERRORCODE_CREATING_ANALYSE_JOB' => 'MediaMosa - error creating an analyse job',
+    'ERRORCODE_JOB_MEDIAFILE_NOT_FOUND' => 'MediaMosa - mediafile_id=@mediafile_id was not found in the database',
+    'ERRORCODE_JOB_USER_NOT_FOUND' => 'MediaMosa - user_id=@user_id was not found in the database',
+    'ERRORCODE_JOB_COULD_NOT_BE_REMOVED' => 'MediaMosa - Job kon niet worden verwijderd (job_id=@job_id)',
+    'ERRORCODE_JOB_FRAMETIME_GREATER_THEN_DURATION' => 'chosen frametime is higher dan duration of the mediafile.',
+    'ERRORCODE_RETRIEVING_ASSET' => 'MediaMosa - error retrieving the asset from database',
+    'ERRORCODE_JOB_CANCEL_NOT_ALLOWED' => 'MediaMosa - deleting of job not allowed',
+    'ERRORCODE_JOB_CREATE_NOT_ALLOWED' => 'MediaMosa - creation of job is not allowed',
+    'ERRORCODE_UPLOAD_ALREADY_EXISTS' => 'MediaMosa - a upload is already active for this asset_id',
+    'ERRORCODE_STILL_NOT_FOUND' => 'MM - could not find still for asset_id=@asset_id.',
+    'ERRORCODE_SERVER_STILL_NOT_FOUND' => 'MediaMosa - No default still server found.',
+    'ERRORCODE_SERVER_UPLOAD_NOT_FOUND' => 'Unable to find active upload server.',
+
+    'ERRORCODE_RETRIEVING_SERVERLIST' => 'JH - error retrieving serverlist',
+    'ERRORCODE_RETRIEVING_AVAILABLE_SERVERLIST' => 'JH - error retrieving server-job-list',
+
+    'ERRORCODE_STARTING_JOB_FAILED' => 'Jobserver - starting of job failed',
+    'ERRORCODE_RETRIEVING_SERVER_JOBLIST' => 'Jobserver - error retrieving jobs on server',
+
+    'ERRORCODE_STUB_SERVER_RETRIEVING_JOB_FOR_EXECUTION' => 'Jobserver - error retrieving 1 job for execution',
+    'ERRORCODE_MASTERSLAVE_DISALLOWED' => 'Master/slave relations for @aut_id disabled',
+
+    'ERRORCODE_INVALID_UPLOAD_TICKET' => 'Upload - invalid upload ticket',
+    'ERRORCODE_CREATE_MEDIAFILE_DURING_UPLOAD' => 'Upload - couldn create mediafile during upload',
+    'ERRORCODE_CANNOT_COPY_MEDIAFILE' => 'Upload - couldn copy mediafile to final destination',
+    'ERRORCODE_NOT_ENOUGH_FREE_QUOTA' => 'Upload failed because of too less free quota.',
+
+    'ERRORCODE_DBUS_PROTOCOL_ERROR' => 'Authenticate - identification process',
+    'ERRORCODE_ACCESS_DENIED' => 'Authenticate - access denied',
+    'ERRORCODE_ACCESS_DENIED_INVALID_APP_ID' => 'Authenticate - access denied (invalid app_id)',
+
+    'ERRORCODE_FTP_ERROR' => 'FTP users - error',
+    'ERRORCODE_FTP_CREDENTIAL_LENGTH' => 'FTP users - credentials not of minium length',
+    'ERRORCODE_FTP_UNKNOWN_USER' => 'FTP users - unknown user',
+    'ERRORCODE_FTP_USER_EXISTS' => 'User already exists',
+
+    'ERRORCODE_NOT_AUTHORIZED' => 'Action is not allowed, not authorized (@reason)',
+    'ERRORCODE_ACL_ERROR_AUTHORIZED' => '',
+
+    'ERRORCODE_USERMAN_INVALID_GROUP' => 'Invalid group name',
+    'ERRORCODE_USERMAN_GROUP_NOT_EMPTY' => 'The group is not empty',
+    'ERRORCODE_USERMAN_INVALID_USER' => 'Invalid username',
+    'ERRORCODE_USERMAN_GROUP_EXISTS' => 'Group already exists',
+    'ERRORCODE_USERMAN_USER_EXISTS' => 'User already exists',
+    'ERRORCODE_IS_UNAPPROPRIATE' => 'This video is flagged unappropriate',
+    'ERRORCODE_MASTERSLAVE_OWN_APP' => 'You are not allowed to create a master-slave record where the master and slave app are the same.',
+    'ERRORCODE_IMAGE_FILE_TOO_BIG' => 'The image file size is bigger, than the allowed maximum (@filesize byte)',
+    'ERRORCODE_TRANSCODE_PROFILE_EXISTS' => 'Transcode profile \'@profile_name\' already exists.',
+    'ERRORCODE_TRANSCODE_PROFILE_NOT_FOUND' => 'Transcode profile with ID \'@profile_id\' not found.',
+  );
+
+  $a_query = array();
+  $a_args = array();
+  $x = 0;
+  foreach ($a_error_text as $name => $message) {
+    $code = constant('mediamosa_error::' . $name);
+    assert($code);
+
+    $a_query[] = '(:name_' . $x . ', :code_' . $x . ', :message_' . $x . ')';
+    $a_args[':name_' . $x] = $name;
+    $a_args[':code_' . $x] = $code;
+    $a_args[':message_' . $x] = $message;
+    $x++;
+  }
+
+  // Now insert our errors.
+  db_query('INSERT INTO {mediamosa_error} (name, code, message) VALUES ' . implode(",\n", $a_query), $a_args);
+}
+
+/**
+ * Implement hook_install().
+ */
+function _mediamosa_error_uninstall() {
+  // Drop our table(s).
+  mediamosa::drupal_uninstall_schema(mediamosa_error_db::TABLE_NAME);
+}
+
+/**
+ * Implement hook_schema().
+ */
+function mediamosa_error_schema() {
+  $a_schema[mediamosa_error_db::TABLE_NAME] = array(
+  'description' => t('Stores the error code and messages of the error handeling.'),
+    'fields' => array(
+      mediamosa_error_db::ID => array(
+        'type' => 'serial',
+        'not null' => TRUE,
+        'description' => t('Primary Key: Unique ID.'),
+      ),
+      mediamosa_error_db::NAME => array(
+        'type' => 'varchar',
+        'length' => mediamosa_error_db::NAME_LENGTH,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => t('The ID in capitals of the error code.'),
+      ),
+      mediamosa_error_db::CODE => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => t('The error code number.'),
+      ),
+      mediamosa_error_db::MESSAGE => array(
+        'type' => 'text',
+        'not null' => TRUE,
+        'description' => t('The message to display.'),
+      ),
+    ),
+    'primary key' => array(mediamosa_error_db::ID),
+    'unique keys' => array(
+      'uni_' . mediamosa_error_db::NAME => array(mediamosa_error_db::NAME),
+      'uni_' . mediamosa_error_db::CODE => array(mediamosa_error_db::CODE),
+    ),
+  );
+
+  return $a_schema;
+}

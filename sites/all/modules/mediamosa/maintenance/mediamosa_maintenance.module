@@ -1,0 +1,182 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * @file
+ * The main maintenance module.
+ */
+
+/**
+ * Implement hook_menu().
+ */
+function mediamosa_maintenance_menu() {
+  $items = array();
+
+  // Maintenance / Configuration pages.
+  $items['admin/mediamosa'] = array(
+    'title' => 'MediaMosa 2',
+    'page callback' => '_mediamosa_maintenance_status',
+    'access arguments' => array('access mediamosa'),
+    'weight' => -20,
+    'position' => ''
+  );
+  $items['admin/mediamosa/mediamosa'] = array(
+    'title' => 'Status',
+    'access arguments' => array('access mediamosa'),
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => -20,
+  );
+  $items['admin/mediamosa/browse'] = array(
+    'title' => 'Browse',
+    'access arguments' => array('access mediamosa'),
+    'page callback' => 'mediamosa_maintenance_admin_page',
+    'page arguments' => array('admin/mediamosa/browse'),
+    'file' => 'mediamosa_maintenance.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+  );
+  $items['admin/mediamosa/browse/list'] = array(
+    'title' => 'List',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+  $items['admin/mediamosa/config'] = array(
+    'title' => 'Configuration',
+    'access arguments' => array('access mediamosa'),
+    'page callback' => 'mediamosa_maintenance_admin_page',
+    'page arguments' => array('admin/mediamosa/config'),
+    'file' => 'mediamosa_maintenance.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+  );
+  $items['admin/mediamosa/config/list'] = array(
+    'title' => 'List',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+
+  return $items;
+}
+
+/**
+ * Implement hook_permission().
+ */
+function mediamosa_maintenance_permission() {
+  return array(
+    'access mediamosa config' =>  array(
+      'title' => t('Access MediaMosa Administration'),
+      'description' => t('View the MediaMosa configuration, maintenance and other pages.'),
+    ),
+  );
+}
+
+/**
+ * Implement hook_help().
+ */
+function mediamosa_maintenance_help($path, $arg) {
+  global $base_url;
+
+  switch ($path) {
+    case 'admin/mediamosa':
+      return '<p>' . t('Mediamosa 2 status page show results of basic unit tests that are run at fixed intervals. All tests must be green.') . '</p>';
+  }
+}
+
+/**
+ * Generate the status page.
+ */
+function _mediamosa_maintenance_status() {
+
+  // Need the classes of simpletest.
+  drupal_add_css(drupal_get_path('module', 'simpletest') . '/simpletest.css');
+
+  // Get the result.
+  $a_status = variable_get('mediamosa_test_results', array('a_tests' => array()));
+
+  $header = array(
+    array('data' => t('Component')),
+    array('data' => t('Test')),
+    array('data' => t('Result')),
+    array('data' => t('TTR (seconds)')),
+    array('data' => t('Last run')),
+  );
+
+  $rows = array();
+  foreach ($a_status['a_tests'] as $name => $a_test) {
+    $class = 'simpletest-pass';
+
+    if (!isset($a_test['results']) || empty($a_test['results'])) {
+      $a_test['results'] = array(
+        '#fail' => 0,
+        '#exception' => 0,
+        '#pass' => 0,
+      );
+
+      $a_test['ended'] = $a_test['started'] = 0;
+    }
+
+    if ($a_test['results']['#fail'] > 0 || $a_test['results']['#exception'] > 0 || $a_test['results']['#pass'] == 0) {
+      $class = 'simpletest-fail';
+    }
+
+    //simpletest-fail
+    $rows[] = array(
+      'data' => array(
+        $a_test['info']['group'],
+        $a_test['info']['name'],
+        t('Passes: (!passes), Failures: (!failures), Exceptions: (!exceptions)',
+          array(
+            '!passes' => $a_test['results']['#pass'],
+            '!failures' => $a_test['results']['#fail'],
+            '!exceptions' => $a_test['results']['#exception'],
+          )
+        ),
+        round($a_test['ended'] - $a_test['started'], 2),
+        format_date(round($a_test['started']))
+      ),
+      'class' => array($class)
+    );
+  }
+
+  // theme de arrays naar een tabel
+  $content = theme('table', $header, $rows);
+
+  return $content;
+}
+
+/**
+ * Implement hook_enable().
+ */
+function mediamosa_maintenance_enable() {
+
+  // FIXME: need to throw away the admin menu so we can rebuild our menu when other child menu
+  //        modules where enabled earlier than ours.
+  //        This might be fixed in later version of drupal 7.
+
+  // Remove us so we are rebuild properly.
+  db_delete('menu_links')
+    ->condition('link_path', 'admin/mediamosa%', 'LIKE')
+    ->execute();
+
+  // Rebuild.
+  menu_rebuild();
+}

@@ -1,0 +1,121 @@
+// $Id: 
+
+Steps for changelog and commits;
+
+1. Save all work and test before commit.
+2. Add changes to the changelog, copy change to use in commit.
+
+  Example;
+  
+  Mediamosa 2.1.0
+  ---------------
+  - Added coll_id search to CQL. (See MediaMosa ticket #24).
+  - Added app_id search to CQL. (See MediaMosa ticket #24).
+  - [other changes other tickets]
+
+
+3. Do one ticket per commit. If for some reason you have multiple changes on 
+   multiple tickets then checkin on specific files per commit (use hg ci 
+   [files]). Its not allowed to commit multiple tickets in one commit.
+   
+   Commit example;
+  - Added coll_id search to CQL. (See MediaMosa ticket #24).
+  - Added app_id search to CQL. (See MediaMosa ticket #24).
+  
+4. Reassign to TPL (robert).
+5. Put status on ready for review.
+
+
+START CHANGELOG:
+
+ 
+
+Mediamosa 2.1.2
+---------------
+- Play proxy call will now return the ticket id in result.
+- Fixed number of query bugs in AUT / ACL code.
+- Fixed job server where 2 rows where inserted while only one was allowed.
+- Added unique index on mediamosa_job_server table to prevent multiple rows on
+  same parent job.
+- Added foreign key on mediamosa_job_server to mediamosa_job - job_id.
+- Prevented possible divided by zero problems in job server. 
+- asset_id_root in mediamosa_asset_mediafile table is now depricated, will be 
+  removed in later versions.
+- parent_id in mediamosa_asset table is now depricated, will be removed in later
+  versions.
+- is_original_file boolean in mediamosa_asset_mediafile table is depricated, is
+  replaced by mediafile_id_source.
+- mediafile_id_source is now either NULL or points to its original mediafile.
+- Fixed still generation call /mediafile/$mediafile/still. 
+- Fixed play_restriction code. Typo with 'time_restriction_' prevented working
+  of this code in the play proxy code. Seems to be old bug dating back from 1.0.
+- Added /version REST call.
+
+
+MediaMosa 2.1.1
+---------------
+- Fixed problems editing the transcode profile.
+- Fixed migration problem on transcode profiles.
+
+
+MediaMosa 2.1.0
+---------------
+- Added support CQL for is_empty_asset (See MediaMosa ticket #180).
+- Banner text was updated (See MediaMosa ticket #222).
+- Clean up cancelled upload and transcode jobs test (See MediaMosa ticket #112).
+- <is_empty_asset> = true, while there is a valid, usable mediafile (See
+  MediaMosa ticket #165 and #167).
+- Added coll_id search to CQL. (See MediaMosa ticket #241).
+- Added app_id search to CQL. (See MediaMosa ticket #241).
+- Fixed transcode without padding. (See MediaMosa ticket #194).
+- Deleting asset with running jobs gives an error. (See MediaMosa ticket #220).
+- Admin: Added mediamosa server browser.
+- Admin: Added mediamosa REST call browser.
+- Added MediaMosa Connector.
+- Fixed asset / collection browser to use MediaMosa Connector.
+
+
+MediaMosa 2.0.0 (released as read-only)
+---------------
+- Port to drupal 7.
+- VPX name use in code has been replaced with MediaMosa.
+- Complete redesign and renaming of v1.x source code. All code has been moved 
+  into (static) classes to support auto loading of classes in Drupal 7.
+- New REST interface, class based.
+- All medimosa code now support throw and catching of exceptions at high level, 
+  enabling better error handling.
+- Rewrite of all 1361 SQL queries into new PDO class support of Drupal 7. 
+  Mediamosa now has own new DB layer between Drupal and Mediamosa code for 
+  future expansion.
+- REST calls are now moved from core code into drupal modules, also REST calls 
+  no longer contain core code and only call core functions, seprating core code 
+  from REST interface.
+- Mediamosa 1 multiple database design combined and migrated to new single 
+  Drupal database called mediamosa2. No longer required to switch databases in 
+  code and has been removed.
+- Jobserver database(s) design moved into single main mediamosa2 database. No 
+  more multiple database required for multiple jobserver installations.
+- Internal REST calls IP white listing removed, replaced with internal 
+  authentication. Removed settings for old white listing from maintenance.
+- New REST calls for browsing in the REST calls and retrieving specific 
+  information about a single REST parameters and documentation. URL; /rest and 
+  rest/[rest_id].
+- Usage of new Drupal 7 Simpletest library; unittests are now sandboxed from 
+  normal database.
+- Internal calls now have access to all apps when app_id was not provided.
+- GET / POST / URI variables now share the same scope.
+- Redesign of the SAN/NAS globals/paths into static class 'storage'.
+- Removed /internal/check_existence (function media_management_check_existence).
+- parent_id of asset has been made depricated. Will remove code supporting 
+  parent_id from code in the future.
+- is_original_file in mediafile has been made depricated. Will still support 
+  this flag in output in future versions, but will be removed in database in 
+  future version.
+- Introducing mediafile_id_source as replacement of is_original_file. This field
+  is either NULL (is original) or points to the mediafile of which is its 
+  original mediafile. 
+- 1.7.3 migration to 2.0.0 database will now move child assets mediafiles to its
+  root asset. This will make the database more reliable, faster and easier to
+  maintain.
+- Mediafile db field asset_id_root is now depricated and will be removed in 
+  future releases.

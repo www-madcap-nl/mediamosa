@@ -1,0 +1,562 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * @file
+ * HTTP related functions.
+ */
+class mediamosa_http {
+
+  // ------------------------------------------------------------------ Consts.
+  const METHOD_GET = 'GET';
+  const METHOD_POST = 'POST';
+
+  // ------------------------------------------------------------------ Functions.
+  /**
+   * Parse a URL and return its components.
+   *
+   * @param string $url
+   */
+  static public function parse_url($url) {
+    $a_url = parse_url($url);
+
+    if (!$a_url) {
+      return FALSE;
+    }
+
+    $a_url += array(
+      'scheme' => 'http',
+      'host' => 'localhost',
+      'port' => 0, // 0 should default to 80
+      'user' => '',
+      'pass' => '',
+      'path' => '',
+      'query' => '', // after the question mark ?
+      'fragment' => '', // after the hashmark #
+    );
+
+    // Strip /.
+    $a_url['host'] = trim($a_url['host'], '/');
+    $a_url['path'] = trim($a_url['path'], '/');
+
+    return $a_url;
+  }
+
+  /**
+   * Opposite of parse_url.
+   *
+   * @param $a_url
+   */
+  static public function build_url($a_url) {
+    assert(in_array($a_url['scheme'], array('ftp', 'http', 'https')));
+
+    $a_result = array(
+      $a_url['scheme'] . '://',
+    );
+
+    // Add user : pass
+    if ($a_url['user'] != '' || $a_url['pass'] != '') {
+      $a_result[] = $a_url['user'];
+      $a_result[] = ':';
+      $a_result[] = $a_url['pass'];
+      $a_result[] = '@';
+    }
+
+    // Host.
+    $a_result[] = $a_url['host'];
+
+    // Optional port
+    if ($a_url['port']) {
+      $a_result[] = ':' . $a_url['port'];
+    }
+
+    // Path.
+    if ($a_url['path'] != '') {
+      $a_result[] = '/' . $a_url['path'];
+    }
+
+    if ($a_url['query'] != '') {
+      $a_result[] = '?' . $a_url['query'];
+    }
+
+    if ($a_url['fragment'] != '') {
+      $a_result[] = $a_url['fragment'];
+    }
+
+    // Now build url.
+    return implode('', $a_result);
+  }
+
+  /**
+   * Do a internal REST call.
+   *
+   * @param string $uri
+   * @param string $rest_url
+   * @param array $data
+   * @param $method
+   */
+  static public function do_internal_call($host, $rest_uri, $data = NULL, $method = self::METHOD_GET) {
+    // Make lower case.
+    $host = mediamosa_unicode::strtolower($host);
+
+    // Make sure it starts with 'http://'.
+    if (mediamosa_unicode::substr($host, 0, strlen('http://')) != 'http://' && mediamosa_unicode::substr($host, 0, strlen('https://')) != 'https://') {
+      $host = 'http://' . $host;
+    }
+
+    $url = strtr(
+      '@host/internal/@rest_uri',
+      array(
+        '@host' => $host,
+        '@rest_uri' =>  $rest_uri
+      )
+    );
+
+    $a_options = array('method' => $method);
+
+    if (isset($data)) {
+      $a_options['data'] = $data;
+    }
+
+    // Include the internal password so we gain access.
+    $a_options['headers'][mediamosa_settings::X_MEDIAMOSA_INTERNAL_PASS] = mediamosa::get_internal_password();
+
+    // Do the request.
+    return self::drupal_http_request($url, $a_options);
+  }
+
+  /**
+   * Do a head call.
+   * Triggers the URL without getting or waiting for the output.
+   *
+   * @param string $url
+   * @param array $a_options
+   *  Extra options;
+   *   - header:
+   *     name => value pair for http header.
+   *   - use_curlproxy
+   *     set to TRUE to enable call through curlproxy (if specified).
+   *   - do_internal
+   *     Add the internal pass to the header. Remember to add /internal yourself to the url.
+   */
+  static public function do_head_call($url, array $a_options = array()) {
+    // Set defaults.
+    $a_options += array(
+      'use_curlproxy' => FALSE,
+      'headers' => array(),
+      'do_internal' => FALSE
+    );
+
+    $curlproxy_http = NULL;
+    if ($a_options['use_curlproxy']) {
+      // Get the proxy url.
+      $curlproxy_http = mediamosa::variable_get('mediamosa_curlproxy_http');
+    }
+
+    //
+    if ($a_options['do_internal']) {
+      // Include the internal password so we gain access.
+      $a_options['headers'][mediamosa_settings::X_MEDIAMOSA_INTERNAL_PASS] = mediamosa::get_internal_password();
+    }
+
+    // Init curl.
+    $curl_handle = curl_init($url);
+
+    $curl_options = array();
+    foreach ($a_options['headers'] as $name => $value) {
+      $curl_options[CURLOPT_HTTPHEADER][] = $name . ': ' . $value;
+    }
+
+    // FIXME: need to find out other way to trigger URL.
+    curl_setopt($curl_handle, CURLOPT_TIMEOUT, 1);
+    curl_setopt($curl_handle, CURLOPT_CONNECTTIMEOUT, 1);
+
+    if (!empty($curl_options)) {
+      curl_setopt_array($curl_handle, $curl_options);
+    }
+
+    curl_setopt($curl_handle, CURLOPT_RETURNTRANSFER, TRUE);
+    curl_setopt($curl_handle, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_0);
+
+    // Do a HEAD call here.
+    //curl_setopt($curl_handle, CURLOPT_NOBODY, TRUE);
+
+    // Check for possible proxy setting, if set, use it.
+    if ($curlproxy_http) {
+      curl_setopt($curl_handle, CURLOPT_PROXYTYPE, CURLPROXY_HTTP);
+      curl_setopt($curl_handle, CURLOPT_PROXY, $curlproxy_http);
+    }
+
+    curl_exec($curl_handle);
+    curl_close($curl_handle);
+  }
+
+  /**
+   * Wrapper for internal HEAD calls.
+   *
+   * @param $url
+   * @param $a_options
+   */
+  static public function do_head_internal_call($url, array $a_options = array()) {
+    $a_options['do_internal'] = true;
+    return self::do_head_call($url, $a_options);
+  }
+
+  /**
+   * Trigger the maintenance cron.
+   *
+   * @param string $uri
+   *  If you need to change the uri to trigger.
+   */
+  static public function do_head_call_cron($uri) {
+    // Just trigger, it has his own protection on overrun.
+    $url = variable_get('mediamosa_cron_url_app', 'http://localhost');
+    $use_localhost = variable_get('mediamosa_cron_url_app_local', FALSE);
+
+    $a_url = mediamosa_http::parse_url($url);
+    $a_options = array();
+    if ($use_localhost) {
+      $a_options['headers']['Host'] = $a_url['host'];
+      $a_url['host'] = 'localhost';
+    }
+
+    $a_url['path'] = ($a_url['path'] != '' ? $a_url['path'] . '/' : '') . trim($uri, '/');
+    $url = mediamosa_http::build_url($a_url);
+    mediamosa_http::do_head_internal_call($url, $a_options);
+
+    // Log URL.
+    mediamosa_debug::log_debug('Internal head cron call to @url.', array('@url' => $url));
+
+    // Return the triggert url.
+    return $url;
+  }
+
+
+  /**
+   * Perform an HTTP request.
+   *
+   * Copy of the Drupal HTTP Request.
+   * It overwrites our 'Host:' entry in our headers definition, old versions
+   * worked fine. We need 'Host:' todo localhost calls with Host name
+   * specified in header. We can not always call directly on hostname because
+   * of firewall, so we call localhost with hostname in header instead.
+   *
+   *
+   *
+   * This is a flexible and powerful HTTP client implementation. Correctly
+   * handles GET, POST, PUT or any other HTTP requests. Handles redirects.
+   *
+   * @param $url
+   *   A string containing a fully qualified URI.
+   * @param $options
+   *   (optional) An array which can have one or more of following keys:
+   *   - headers
+   *       An array containing request headers to send as name/value pairs.
+   *   - method
+   *       A string containing the request method. Defaults to 'GET'.
+   *   - data
+   *       A string containing the request body. Defaults to NULL.
+   *   - max_redirects
+   *       An integer representing how many times a redirect may be followed.
+   *       Defaults to 3.
+   *   - timeout
+   *       A float representing the maximum number of seconds the function call
+   *       may take. The default is 30 seconds. If a timeout occurs, the error
+   *       code is set to the HTTP_REQUEST_TIMEOUT constant.
+   * @return
+   *   An object which can have one or more of the following parameters:
+   *   - request
+   *       A string containing the request body that was sent.
+   *   - code
+   *       An integer containing the response status code, or the error code if
+   *       an error occurred.
+   *   - protocol
+   *       The response protocol (e.g. HTTP/1.1 or HTTP/1.0).
+   *   - status_message
+   *       The status message from the response, if a response was received.
+   *   - redirect_code
+   *       If redirected, an integer containing the initial response status code.
+   *   - redirect_url
+   *       If redirected, a string containing the redirection location.
+   *   - error
+   *       If an error occurred, the error message. Otherwise not set.
+   *   - headers
+   *       An array containing the response headers as name/value pairs.
+   *   - data
+   *       A string containing the response body that was received.
+   */
+  static public function drupal_http_request($url, array $options = array()) {
+    global $db_prefix;
+
+    $result = new stdClass();
+
+    // Parse the URL and make sure we can handle the schema.
+    $uri = @parse_url($url);
+
+    if ($uri == FALSE) {
+      $result->error = 'unable to parse URL';
+      $result->code = -1001;
+      return $result;
+    }
+
+    if (!isset($uri['scheme'])) {
+      $result->error = 'missing schema';
+      $result->code = -1002;
+      return $result;
+    }
+
+    timer_start(__FUNCTION__);
+
+    // Merge the default options.
+    $options += array(
+      'headers' => array(),
+      'method' => 'GET',
+      'data' => NULL,
+      'max_redirects' => 3,
+      'timeout' => 30,
+    );
+
+    // Mediamosa specific;
+    // Data in option array should not be set with GET.
+    assert($options['method'] != 'GET' || ($options['method'] == 'GET' && (!isset($options['data']) || !mediamosa_unicode::strlen($options['data']) ) ));
+    switch ($uri['scheme']) {
+      case 'http':
+        $port = isset($uri['port']) ? $uri['port'] : 80;
+        $host = $uri['host'] . ($port != 80 ? ':' . $port : '');
+        $fp = @fsockopen($uri['host'], $port, $errno, $errstr, $options['timeout']);
+        break;
+      case 'https':
+        // Note: Only works when PHP is compiled with OpenSSL support.
+        $port = isset($uri['port']) ? $uri['port'] : 443;
+        $host = $uri['host'] . ($port != 443 ? ':' . $port : '');
+        $fp = @fsockopen('ssl://' . $uri['host'], $port, $errno, $errstr, $options['timeout']);
+        break;
+      default:
+        $result->error = 'invalid schema ' . $uri['scheme'];
+        $result->code = -1003;
+        return $result;
+    }
+
+    // Make sure the socket opened properly.
+    if (!$fp) {
+      // When a network error occurs, we use a negative number so it does not
+      // clash with the HTTP status codes.
+      $result->code = -$errno;
+      $result->error = trim($errstr);
+
+      // Mark that this request failed. This will trigger a check of the web
+      // server's ability to make outgoing HTTP requests the next time that
+      // requirements checking is performed.
+      // @see system_requirements()
+      variable_set('drupal_http_request_fails', TRUE);
+
+      return $result;
+    }
+
+    // Construct the path to act on.
+    $path = isset($uri['path']) ? $uri['path'] : '/';
+    if (isset($uri['query'])) {
+      $path .= '?' . $uri['query'];
+    }
+
+    // Merge the default headers.
+    $options['headers'] += array(
+      'User-Agent' => 'Drupal (+http://drupal.org/)',
+    );
+
+    // RFC 2616: "non-standard ports MUST, default ports MAY be included".
+    // We don't add the standard port to prevent from breaking rewrite rules
+    // checking the host that do not take into account the port number.
+    if (!isset($options['headers']['Host'])) { // HOTFIX Mediamosa.
+      $options['headers']['Host'] = $host;
+    }
+    // Only add Content-Length if we actually have any content or if it is a POST
+    // or PUT request. Some non-standard servers get confused by Content-Length in
+    // at least HEAD/GET requests, and Squid always requires Content-Length in
+    // POST/PUT requests.
+    $content_length = strlen($options['data']);
+    if ($content_length > 0 || $options['method'] == 'POST' || $options['method'] == 'PUT') {
+      $options['headers']['Content-Length'] = $content_length;
+    }
+
+    // If the server URL has a user then attempt to use basic authentication.
+    if (isset($uri['user'])) {
+      $options['headers']['Authorization'] = 'Basic ' . base64_encode($uri['user'] . (!empty($uri['pass']) ? ":" . $uri['pass'] : ''));
+    }
+
+    // If the database prefix is being used by SimpleTest to run the tests in a copied
+    // database then set the user-agent header to the database prefix so that any
+    // calls to other Drupal pages will run the SimpleTest prefixed database. The
+    // user-agent is used to ensure that multiple testing sessions running at the
+    // same time won't interfere with each other as they would if the database
+    // prefix were stored statically in a file or database variable.
+    if (is_string($db_prefix) && preg_match("/simpletest\\d+/", $db_prefix, $matches)) {
+      $options['headers']['User-Agent'] = drupal_generate_test_ua($matches[0]);
+    }
+
+    $request = $options['method'] . ' ' . $path . " HTTP/1.0\r\n";
+    foreach ($options['headers'] as $name => $value) {
+      $request .= $name . ': ' . trim($value) . "\r\n";
+    }
+    $request .= "\r\n" . $options['data'];
+    $result->request = $request;
+    fwrite($fp, $request);
+
+    // Fetch response.
+    $response = '';
+    while (!feof($fp)) {
+      // Calculate how much time is left of the original timeout value.
+      $timeout = $options['timeout'] - timer_read(__FUNCTION__) / 1000;
+      if ($timeout <= 0) {
+        $result->code = HTTP_REQUEST_TIMEOUT;
+        $result->error = 'request timed out';
+        return $result;
+      }
+      stream_set_timeout($fp, floor($timeout), floor(1000000 * fmod($timeout, 1)));
+      $response .= fread($fp, 1024);
+    }
+    fclose($fp);
+
+    // Parse response headers from the response body.
+    list($response, $result->data) = explode("\r\n\r\n", $response, 2);
+    $response = preg_split("/\r\n|\n|\r/", $response);
+
+    // Parse the response status line.
+    list($protocol, $code, $status_message) = explode(' ', trim(array_shift($response)), 3);
+    $result->protocol = $protocol;
+    $result->status_message = $status_message;
+
+    $result->headers = array();
+
+    // Parse the response headers.
+    while (TRUE) {
+      $line = trim(array_shift($response));
+
+      if (!$line) {
+        break;
+      }
+
+      list($header, $value) = explode(':', $line, 2);
+      if (isset($result->headers[$header]) && $header == 'Set-Cookie') {
+        // RFC 2109: the Set-Cookie response header comprises the token Set-
+        // Cookie:, followed by a comma-separated list of one or more cookies.
+        $result->headers[$header] .= ',' . trim($value);
+      }
+      else {
+        $result->headers[$header] = trim($value);
+      }
+    }
+
+    $responses = array(
+      100 => 'Continue',
+      101 => 'Switching Protocols',
+      200 => 'OK',
+      201 => 'Created',
+      202 => 'Accepted',
+      203 => 'Non-Authoritative Information',
+      204 => 'No Content',
+      205 => 'Reset Content',
+      206 => 'Partial Content',
+      300 => 'Multiple Choices',
+      301 => 'Moved Permanently',
+      302 => 'Found',
+      303 => 'See Other',
+      304 => 'Not Modified',
+      305 => 'Use Proxy',
+      307 => 'Temporary Redirect',
+      400 => 'Bad Request',
+      401 => 'Unauthorized',
+      402 => 'Payment Required',
+      403 => 'Forbidden',
+      404 => 'Not Found',
+      405 => 'Method Not Allowed',
+      406 => 'Not Acceptable',
+      407 => 'Proxy Authentication Required',
+      408 => 'Request Time-out',
+      409 => 'Conflict',
+      410 => 'Gone',
+      411 => 'Length Required',
+      412 => 'Precondition Failed',
+      413 => 'Request Entity Too Large',
+      414 => 'Request-URI Too Large',
+      415 => 'Unsupported Media Type',
+      416 => 'Requested range not satisfiable',
+      417 => 'Expectation Failed',
+      500 => 'Internal Server Error',
+      501 => 'Not Implemented',
+      502 => 'Bad Gateway',
+      503 => 'Service Unavailable',
+      504 => 'Gateway Time-out',
+      505 => 'HTTP Version not supported',
+    );
+    // RFC 2616 states that all unknown HTTP codes must be treated the same as the
+    // base code in their class.
+    if (!isset($responses[$code])) {
+      $code = floor($code / 100) * 100;
+    }
+    $result->code = $code;
+
+    switch ($code) {
+      case 200: // OK
+      case 304: // Not modified
+        break;
+      case 301: // Moved permanently
+      case 302: // Moved temporarily
+      case 307: // Moved temporarily
+        $location = $result->headers['Location'];
+        $options['timeout'] -= timer_read(__FUNCTION__) / 1000;
+        if ($options['timeout'] <= 0) {
+          $result->code = HTTP_REQUEST_TIMEOUT;
+          $result->error = 'request timed out';
+        }
+        elseif ($options['max_redirects']) {
+          // Redirect to the new location.
+          $options['max_redirects']--;
+          $result = self::drupal_http_request($location, $options);
+          $result->redirect_code = $code;
+        }
+        $result->redirect_url = $location;
+        break;
+      default:
+        $result->error = $status_message;
+    }
+
+    return $result;
+  }
+
+  /**
+   * Port uri to url.
+   * Simplefix, do think it will fix all possible problems.
+   */
+  static public function uri2url($uri) {
+    $uri = trim($uri);
+    if (substr($uri, 0, strlen('http://')) != 'http://') {
+      $uri = 'http://' . trim($uri, "/ \n\r\t\0");
+    }
+
+    return $uri;
+  }
+}

@@ -1,0 +1,402 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * @file
+ * Error module for storage errorcodes.
+ */
+
+/**
+ * Implements hook_mediamosa_register_rest_call().
+ */
+function mediamosa_error_mediamosa_register_rest_call() {
+  $a_rest_calls = array();
+
+  $a_rest_calls['errorcodes'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_error_list',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Retrieve a listing of the errorcodes.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_error',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_4_0,
+  );
+
+  $a_rest_calls['errorcodes/#$code'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_error_get',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Retrieve a listing of the errorcodes.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_error',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_0_0
+  );
+
+  return $a_rest_calls;
+}
+
+/**
+ * Implements hook_menu().
+ */
+/*
+function mediamosa_error_menu() {
+  $items['mediamosa/mediamosa_error'] = array(
+    'title' => t('Error management'),
+    'page callback' => 'mediamosa_error_list',
+    'access arguments' => array('view errors'),
+  );
+
+  $items['mediamosa/mediamosa_error/list'] = array(
+    'title' => t('List'),
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'access arguments' => array('view errors'),
+  );
+
+  $items['mediamosa/mediamosa_error/%/edit'] = array(
+    'title' => 'Edit error',
+    'page callback' => 'vpx_error',
+    'page arguments' => array(2),
+    'access arguments' => array('administer errors'),
+    'type' => MENU_CALLBACK,// | MENU_IS_LOCAL_TASK,
+  );
+
+  $items['mediamosa/mediamosa_error/%/delete'] = array(
+    'page callback' => 'mediamosa_error_delete',
+    'page arguments' => array(2),
+    'access arguments' => array('administer errors'),
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['mediamosa/mediamosa_error/m/%'] = array(
+    'page callback' => 'mediamosa_error_message',
+    'page arguments' => array(3),
+    'access arguments' => array('view errors'),
+    'type' => MENU_CALLBACK,
+  );
+
+  return $items;
+}
+*/
+/**
+ * Implements hook_perm().
+ */
+/*
+function mediamosa_error_perm() {
+  return array('view errors', 'administer errors');
+}
+*/
+
+/**
+ * Functie voor het weergeven van meldingen
+ */
+/*
+function mediamosa_error_message($type) {
+ // display messages
+  $redirect = FALSE;
+  switch ($type) {
+    case "edited":
+      drupal_set_message("The error is succesfully edited.");
+      $redirect = TRUE;
+      break;
+    case "added":
+      drupal_set_message("The error is succesfully added.");
+      $redirect = TRUE;
+      break;
+    case "deleted":
+      drupal_set_message("The error is succesfully deleted.");
+      $redirect = TRUE;
+      break;
+  }
+  if ($redirect) {
+    drupal_goto('vpx/vpx_error');
+  }
+}
+*/
+/**
+ * Functie voor het returnen van een foutboodschap
+ * Een "error code" is niet uniek, dus het is beter om een "error name" als string door te geven zodat altijd de juiste foutboodschap wordt teruggegeven.
+ *
+ * @param string $error - De waarde mag een "error name" of een "error code" zijn
+ * @param array $a_tags - Tags vervangen de flags in de vertaal string
+ */
+/*
+function mediamosa_error_return_error($error, $a_tags = array()) {
+
+  $a_error_result = array(
+    "description" => "",
+    "id" => ERRORCODE_OKAY,
+    "status" => ($error == ERRORCODE_OKAY || $error == ERRORCODE_EMPTY_RESULT ? ERRORMESSAGE_OKAY : ERRORMESSAGE_ERROR)
+  );
+
+  // error gevonden in de database
+  if ($error != ERRORCODE_OKAY) {
+    db_set_active();
+    if (is_numeric($error)) {
+      $o_error = db_fetch_object(db_query("SELECT * FROM {error} WHERE code=%d LIMIT 1", $error));
+    }
+    else {
+      $o_error = db_fetch_object(db_query("SELECT * FROM {error} WHERE name='%s' LIMIT 1", $error));
+    }
+
+    if ($o_error === FALSE) {
+      // geen error gevonden in de database
+      $a_error_result["id"] = 0;
+      $a_error_result["description"] = t("VPX - Description for error code @error not found!!!'", array("@error" => $error));
+    }
+    else {
+      $a_error_result["id"] = $o_error->code;
+      $a_error_result["description"] = t($o_error->message, $a_tags);
+    }
+  }
+
+  return $a_error_result;
+}
+*/
+/**
+ * Lijst van alle errors
+ */
+/*
+function mediamosa_error_list() {
+
+  // Testje voor de mediamosa_error_return_error() functie
+  //echo "ERROR: ".print_r(mediamosa_error_return_error("ERRORCODE_MEDIAFILE_NOT_FOUND", array('@mediafile_id' => '3333')));
+  //echo "ERROR: ".print_r(vpx_return_error("ERRORCODE_MEDIAFILE_NOT_FOUND", array('@mediafile_id' => '3333')));
+
+  $content = t('This page displays a list of available errors.');
+
+  //Our header defenition
+  $header = array(
+    array('data' => t('ID'), 'field' => 'error_id'),
+    array('data' => t('Name'), 'field' => 'name'),
+    array('data' => t('Code'), 'field' => 'code'),
+    //array('data' => t('Group'), 'field' => 'group'),
+    t('Actions')
+  );
+
+  if (!isset($_GET['order']) || empty($_GET['order'])) {
+    $_GET['order'] = "ID";
+    $_GET['sort'] = "desc";
+  }
+
+  db_set_active();
+  $query = "SELECT * FROM {error} ". tablesort_sql($header);
+  $count_query = "SELECT COUNT(*) FROM {error}";
+
+  $rows = array();
+  $query2 = pager_query($query, $limit = 15, $element = 0, $count_query = NULL);
+  while ($row = db_fetch_object($query2)) {
+    $rows[] = array(
+      'id' => $row->error_id,
+      'name' => $row->name,
+      'code' => $row->code,
+      //'group' => $row->error_group,
+      //'actions' => l('edit', 'vpx/vpx_error/'. $row->error_id .'/edit') .' '. l('delete', 'vpx/vpx_error/'. $row->error_id .'/delete'),
+      'actions' => l('edit', 'vpx/vpx_error/'. $row->error_id .'/edit'),
+    );
+    //print_r($row);
+  }
+
+  //print_r($rows);
+  $content .= theme('table', $header, $rows);
+  $content .= theme('pager');
+
+  return $content;
+}
+*/
+/**
+ * Functie voor het verkrijgen van het juiste formulier
+ */
+/*
+function vpx_error($arg) {
+  // als $arg numeric is, dan gaat het om een error id
+  if (is_numeric($arg) && $arg > 0) {
+    $action = array('edit', $arg);
+  }
+  else {
+    // anders wordt de actie op "Add" gezet
+    $action = array('add');
+  }
+
+  return drupal_get_form('mediamosa_error_form', $action);
+}
+*/
+/*
+function mediamosa_error_menu_alter(&$callbacks) {
+  //print_r($callbacks);
+}*/
+
+/**
+ * Implementatie van hook_form()
+ */
+/*
+function mediamosa_error_form(&$form_state=null, $action=array('add')) {
+
+  // als de action "edit" is
+  if ($action[0] == "edit" && intVal($action[1]) > 0) {
+    db_set_active();
+    $error = db_fetch_object(db_query("SELECT * FROM {error} WHERE error_id=%d", $action[1]));
+  }
+
+  $form = array();
+
+  $form['general'] = array(
+    '#type' => 'fieldset',
+    '#collapsible' => FALSE,
+    '#collapsed' => FALSE,
+    '#title' => t('Error'),
+    '#description' => t('Translation of internal error name and code to error message. Internal name and code can not be changed.')
+  );
+
+  $form['general']['name'] = array(
+    '#prefix' => '<div class="form-item"><label>'. t('Name:') .'</label>',
+    '#value' => '<div class="markup">'. $error->name .'</div>',
+    '#suffix' => '</div>',
+    '#weight' => -15
+  );
+
+  $form['general']['code'] = array(
+    '#prefix' => '<div class="form-item"><label>'. t('Code:') .'</label>',
+    '#value' => '<div class="markup">'. $error->code .'</div>',
+    '#suffix' => '</div>',
+    '#weight' => -14
+  );
+
+//  $form['general']['name'] = array(
+//    '#type' => 'textfield',
+//    '#title' => t('Name'),
+//    '#required' => TRUE,
+//    '#default_value' => $error->name,
+//    '#weight' => -15
+//  );
+//
+//  $form['general']['code'] = array(
+//    '#type' => 'textfield',
+//    '#title' => t('Code'),
+//    '#required' => TRUE,
+//    '#default_value' => $error->code,
+//    '#size' => '15',
+//    '#weight' => -14
+//  );
+
+  $form['general']['message'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Message'),
+    '#description' => t('Message to be displayed in case this error occurs.'),
+    '#required' => FALSE,
+    '#default_value' => $error->message,
+    '#weight' => -13
+  );
+
+//$form['general']['error_group'] = array(
+//    '#type' => 'textfield',
+//    '#title' => t('Group'),
+//    '#required' => FALSE,
+//    '#default_value' => $error->error_group,
+//    '#weight' => -12
+//  );
+//
+//  $available_group_options = array('' => '');
+//  db_set_active();
+//  $query = db_query("SELECT DISTINCT error_group FROM {error} WHERE error_group<>''");
+//  while ($row = db_fetch_array($query)) {
+//    $available_group_options[$row['error_group']] = $row['error_group'];
+//  }
+//
+//  //print_r($available_group_options);
+//
+//  $form['general']['available_error_groups'] = array(
+//    '#type' => 'select',
+//    '#title' => t('Available groups'),
+//    '#options' => $available_group_options,
+//    '#weight' => -11
+//  );
+
+  // definieren van de source tabel
+  $source = array(
+    'pk' => array('error_id', $action[1]),
+    'table_name' => 'error',
+    'db_handle' => '', // leeg is default database
+    'module_name' => 'vpx_error',
+  );
+
+  // als de action "edit" is
+  if ($action[0] == "edit" && intVal($action[1]) > 0) {
+    $form['submit'] = array('#type' => 'submit', '#value' => t('Save'));
+  }
+  else {
+    $form['submit'] = array('#type' => 'submit', '#value' => t('Add'));
+  }
+
+
+  return $form;
+}
+
+/**
+ * Implementation van hook_validate()
+ */
+/*
+function mediamosa_error_form_validate(&$form_state , $form) {
+
+}
+*/
+/**
+ * Implementatie van hook_submit()
+ */
+/*
+function mediamosa_error_form_submit(&$form_state, $form) {
+
+  // maak alias voor kortere naam
+  $fv =& $form['values'];
+
+  // als er een groep is gekozen vanuit de selectbox overschrijf de waarde van het input value.
+  if (isset($fv['available_error_groups']) && !empty($fv['available_error_groups'])) {
+    $fv['error_group'] = $fv['available_error_groups'];
+  }
+
+  if ($fv['submit'] == t('Save')) {
+    db_query(
+      "UPDATE {error} SET message = '%s' WHERE error_id = %d",
+      $fv['message'],
+      intVal(arg(2))
+    );
+    $message = "edited";
+  }
+  else {
+    db_query("INSERT INTO {error} (name, code, message) VALUES ('%s','%s','%s')",
+      $fv['name'], $fv['code'], $fv['message']);
+    $message = "added";
+  }
+
+  drupal_goto('vpx/vpx_error/m/'. $message);
+}
+*/
+/**
+ * Implemenatie van hook_delete()
+ */
+/*
+function mediamosa_error_delete($error_id) {
+  $error_id = intVal($error_id);
+  db_query("DELETE FROM {error} WHERE error_id=%d", $error_id);
+
+  drupal_goto('vpx/vpx_error/m/deleted');
+}
+*/

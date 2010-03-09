@@ -1,0 +1,133 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+ /**
+  * @file
+  * The configuration module is one single form that uses a hook system to
+  * enrich the form.
+  */
+
+/**
+ * Implement hook_permission().
+ */
+function mediamosa_configuration_permission() {
+  return array(
+    'administer mediamosa config global' =>  array(
+      'title' => t('Adminster configuration global settings.'),
+      'description' => t('Give administer rights for editing MediaMosa 2 global configuration settings.'),
+    ),
+  );
+}
+
+/**
+ * Implement hook_help().
+ */
+function mediamosa_configuration_help($path, $arg) {
+  global $base_url;
+
+  switch ($path) {
+    case 'admin/mediamosa/config':
+      return '<p>' . t('The configuration page is a collection of the MediaMosa settings you can view and edit.') . '</p>';
+  }
+}
+
+/**
+ * Implement hook_menu().
+ */
+function mediamosa_configuration_menu() {
+  $items = array();
+
+  // Configuration.
+  $items['admin/mediamosa/config/global'] = array(
+    'title' => 'Configuration',
+    'description' => 'The configuration of global MediaMosa settings.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mediamosa_configuration'),
+    'access arguments' => array('administer mediamosa config global'),
+    'file' => 'mediamosa_configuration.inc',
+  );
+
+  $items['admin/mediamosa/config/global/list'] = array(
+    'title' => 'Configuration',
+    'access arguments' => array('administer mediamosa config global'),
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+
+  return $items;
+}
+
+/**
+ * Block code copied from drupal system.inc.
+ *
+ * @return
+ *   The output HTML.
+ */
+function mediamosa_configuration_menu_block_page() {
+  $item = menu_get_item();
+  $content = system_admin_menu_block($item);
+
+  if ($content) {
+    $output = theme('admin_block_content', $content);
+  }
+  else {
+    $output = t('You do not have any administrative items.');
+  }
+
+  return $output;
+}
+
+/**
+ * Our Maintenance settings form.
+ *
+ * @return array
+ */
+function mediamosa_configuration() {
+
+  // Build the settings form and enrich it with our settings collect hook.
+  $form = system_settings_form(module_invoke_all('mediamosa_configuration_collect'));
+
+  // Add our submit hook.
+  $form['#submit'][] = 'mediamosa_configuration_submit';
+  return $form;
+}
+
+/**
+ * Implements hook_validate.
+ */
+function mediamosa_configuration_validate($form, &$form_state) {
+
+  // Now call our (optional) submit hooks, remember that variables are saved automaticly.
+  module_invoke_all('mediamosa_configuration_validate', $form, $form_state);
+}
+
+/**
+ * Implements hook_submit.
+ */
+function mediamosa_configuration_submit($form, $form_state) {
+
+  // Now call our (optional) submit hooks, remember that variables are saved automaticly.
+  module_invoke_all('mediamosa_configuration_submit', $form, $form_state);
+}

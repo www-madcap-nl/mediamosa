@@ -1,0 +1,163 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+ /**
+  * @file
+  */
+
+// SESSIONs.
+define('MEDIAMOSA_MAINTENACE_BROWSE_ASSETS_SESSION', 'mediamosa_maintenance_browse_assets_session');
+define('MEDIAMOSA_MAINTENACE_BROWSE_COLLECTIONS_SESSION', 'mediamosa_maintenance_browse_collections_session');
+
+// Include my files.
+module_load_include('inc', 'mediamosa_maintenance_browse', 'mediamosa_maintenance_browse');
+
+/**
+ * Implement hook_permission().
+ */
+function mediamosa_maintenance_browse_permission() {
+  return array(
+    'access mediamosa assets' =>  array(
+      'title' => t('Browse assets'),
+      'description' => t('Users with this permission may browse through the assets.'),
+    ),
+    'access mediamosa collections' =>  array(
+      'title' => t('Browse collections'),
+      'description' => t('Users with this permission may browse through the collections.'),
+    ),
+    'access mediamosa restcalls' =>  array(
+      'title' => t('Browse REST calls'),
+      'description' => t('Users with this permission may browse through the REST call listing and view each of the REST call properties.'),
+    ),
+  );
+}
+
+/**
+ * Implement hook_help().
+ */
+function mediamosa_maintenance_browse_help($path, $arg) {
+  global $base_url;
+
+  switch ($path) {
+    case 'admin/mediamosa/browse':
+      return '<p>' . t('The browse section allows you to browse the MediaMosa database.') . '</p>';
+    case 'admin/mediamosa/browse/log':
+      return '<p>' . t('The MediaMosa log is a list of recorded events containing usage data, performance data, errors, warnings and operational information. Besides checking the MediaMosa status page, it\'s also vital to check the MediaMosa report on a regular basis.') . '</p>';
+    case 'admin/mediamosa/browse/restcall':
+      return '<p>' . t('The REST call browser allows you to view all REST calls and their properties.') . '</p>';
+  }
+}
+
+/**
+ * Implementation of hook_menu().
+ */
+function mediamosa_maintenance_browse_menu() {
+  $items = array();
+
+  $items['admin/mediamosa/browse/asset'] = array(
+    'title' => 'Asset browser',
+    'description' => 'View assets currently in our database.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mediamosa_maintenance_browse_asset_form'),
+    'access arguments' => array('access mediamosa assets'),
+    'file' => 'mediamosa_maintenance_browse_asset.inc',
+  );
+  $items['admin/mediamosa/browse/asset/list'] = array(
+    'title' => 'Assets',
+    'access arguments' => array('access mediamosa assets'),
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+  $items['admin/mediamosa/browse/asset/%'] = array(
+    'title' => 'Asset details',
+    'type' => MENU_CALLBACK,
+    'page callback' => 'mediamosa_maintenance_browse_asset_details',
+    'page arguments' => array(4),
+    'access arguments' => array('access mediamosa assets'),
+    'file' => 'mediamosa_maintenance_browse_asset.inc',
+  );
+
+  $items['admin/mediamosa/browse/collection'] = array(
+    'title' => 'Collection browser',
+    'description' => 'View collections currently in our database.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mediamosa_maintenance_browse_collection_form'),
+    'access arguments' => array('access mediamosa collections'),
+    'file' => 'mediamosa_maintenance_browse_collection.inc',
+  );
+  $items['admin/mediamosa/browse/collection/list'] = array(
+    'title' => 'Collection browser',
+    'access arguments' => array('access mediamosa collections'),
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+
+  $items['admin/mediamosa/browse/restcall'] = array(
+    'title' => 'Rest calls browser',
+    'description' => 'View and browse through the REST calls of MediaMosa.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mediamosa_maintenance_browse_restcall_form'),
+    'access arguments' => array('access mediamosa restcalls'),
+    'file' => 'mediamosa_maintenance_browse_restcalls.inc',
+  );
+  $items['admin/mediamosa/browse/restcall/list'] = array(
+    'title' => 'Rest calls browser',
+    'access arguments' => array('access mediamosa restcalls'),
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+
+  $items['admin/mediamosa/browse/restcall/%/%'] = array(
+    'title' => 'Detail rest calls',
+    'description' => 'View the details of a REST call.',
+    'page callback' => 'mediamosa_maintenance_browse_restcall_details',
+    'page arguments' => array(4, 5),
+    'access arguments' => array('access mediamosa restcalls'),
+    'type' => MENU_CALLBACK,
+    'file' => 'mediamosa_maintenance_browse_restcalls.inc',
+  );
+
+  $items['admin/mediamosa/browse/log'] = array(
+    'title' => 'Log entries',
+    'description' => 'The MediaMosa log is a list of recorded events containing usage data, performance data, errors, warnings and operational information. It is vital to check the MediaMosa report on a regular basis as it is often the only way to tell what is going on.',
+    'page callback' => '_mediamosa_maintenance_browse_log',
+    'access arguments' => array('access mediamosa log'),
+    'file' => 'mediamosa_maintenance_browse_log.inc',
+  );
+  $items['admin/mediamosa/browse/log/list'] = array(
+    'title' => 'Rest calls browser',
+    'access arguments' => array('access mediamosa restcalls'),
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+/*
+  $items['admin/mediamosa/browse/reports'] = array(
+    'title' => 'Reports',
+    'description' => 'View logs and other reports.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mediamosa_configuration'),
+    'access arguments' => array('administer mediamosa configuration'),
+  );
+*/
+
+  return $items;
+}

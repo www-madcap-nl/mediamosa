@@ -1,0 +1,149 @@
+
+
+2.0 main changes;
+
+- Made unicode UTF8 compatible.
+- New REST interface build on throw and catch exception technology.
+- Complete rewrite of all database queries to match Drupal 7 new DB layer.
+- REST calls are now iterated by drupal hook making new external REST modules 
+  easier to connect to mediamosa core. Also REST calls are no longer registered
+  and stored in the database.
+- All database creation now done entirely with database schema's.
+- Removed all database triggers and move into code.
+- Removed all database storeprocedures and move into php code.
+- Added new DB layer between Drupal DB and Mediamosa, making future expansion to
+  other CMS's possible.
+
+
+dubble entries(!)
+
+select *, count(*) as total from aut_object group by `aut_object_type`,`aut_object_id`,`aut_type`,`aut_id` having total > 1;
+
+update mediamosa_server set uri = 'http://download.mediamosa2.local/still/{TICKET}' where uri = 'http://xienix/still/{TICKET}';
+update mediamosa_server set uri = 'http://download.mediamosa2.local/download/{TICKET}' where uri = 'http://xienix/download/{TICKET}';
+
+
+Contains reminders and notes collected during migration.
+
+You can delete a default transcode profile and end up with no default transcode profile...
+You can't delete a global transcode profile because app_id can't be 0 and no check for is_app_admin.
+
+Migration rules;
+
+- Watchdog
+  Convert any usage of watchdog to mediamosa::log() function.
+
+- DB Layer
+  db_query can be re-used, just remap the %s/%d operators to new parameter mapping.
+  You can no longer use db_fetch_object / db_fetch_array;
+    use foreach
+      ->fetchObject()
+      ->fetchAssoc()
+
+
+internals:
+Random password generatie met installer;
+X-Mediamosa-Internal-Pass: <password>
+in header.
+
+
+See mediamosa_rest_call_create_mediafile (!) (!) depending now on asset parent_id removal(!)
+
+Notes:
+- The 'version' field in error table has been dropped, was not used.
+- The 'version' field in client_applications had been dropped, not used.
+- The 'stable_testing' field in client_applications had been dropped, not used.
+- The 'id' field in client_applications had been renamed to 'app_id'.
+- The 'ciad' field in client_applications has been renamed to 'id'.
+- The 'testtag' has been removed from the job table.
+- The 'testtag' had been removed from the asset table.
+- asset/delete call now returns failures per failed asset and their cause.
+- Rewrote the HASH creation routines.
+
+Variables;
+- The 'vpx_allowed_internal_ips' is renamed into 'mediomosa_allowed_internal_ips'.
+
+// Not converted (yet);
+alter -> sites/all/modules/mediamosa/modules/maintenance/alter [mediamosa_maintenance.alter]
+vpx_history -> sites/all/modules/mediamosa/modules/history [mediamosa_history] (need rewrite)
+integrity_check -> sites/all/modules/mediamosa/modules/maintenance/integrity_check [mediamosa_maintenance.integrity_check]
+
+
+Modules;
+
+vpx_statistics -> sites/all/modules/mediamosa/modules/maintenance/statistics [mediamosa_maintenance.statistics]
+vpx_stats -> merge with sites/all/modules/mediamosa/modules/maintenance/statistics [mediamosa_maintenance.statistics]
+vpx_upload -> sites/all/modules/mediamosa/modules/asset/media/upload [mediamosa_asset.media.upload]
+vpx_webservice_management -> sites/all/modules/mediamosa/modules/maintenance/webservice [mediamosa_maintenance.webservice)
+
+Onduidelijk (is geshared uit PA)
+vpx_beheer_mm/pa -> sites/all/modules/mediamosa/modules/asset of collections [verdeeld naar modules]
+
+
+Post 2.0 release:
+* drop mediamosa_server(download|streaming|still|upload|transcoding) tabellen
+* pas migratie script aan naar aanmaken server nodes
+* verwijder oude db classes
+
+Backports:
+not ported yet - 4446: trac_tickets_204.inc
+not ported yet - 4447: trac_tickets_227.inc, trac_tickets_2.inc
+ported - 4458: transcoding_profile.module
+ported - 4459: vpx_jobs.module
+ported - 4461: vpx_jobs.module
+ported - 4462: vpx_jobhandler.module, vpx_jobs.module, vpx_jobscheduler.module, vpx_jobserver.module
+ported - 4463: vpx_jobs.module, vpx_jobscheduler.module
+ported - 4465: vpx_jobserver.module
+ported - 4466: transcoding_profile.module
+partly ported (tests are missing) - 4468: vpx_jobhandler.module, trac_tickets_250.inc, trac_tickets_261.inc, trac_tickets_29.inc, trac_tickets_504.inc, trac_tickets_661.inc, trac_tickets_85.inc
+not ported yet - 4469: trac_tickets_504.inc
+not ported yet - 4470: trac_tickets_250.inc, trac_tickets_661.inc
+versioning - 4472
+versioning - 4474
+ported - 4475: media_management.module
+ported (vpx_beheer.module is missing?) - 4487: mediamosa.profile, media_management.module, media_management_search.inc, vpx_beheer.install, vpx_beheer.module
+ported - 4500: media_management_asset.inc, vpx_beheer.install
+ported - 4501: vpx_jobhandler.module,
+ported - 4502: vpx_jobhandler.module,
+ported - 4503: media_management_asset.inc
+ported - 4505: media_management_mediafile.inc
+ported - 4507: download/index.php
+ported - 4509: media_management_search.inc
+ported - 4510: cql_class.inc
+ported - 4512: vpx_jobserver.module
+ported - 4514: vpx_jobserver.module, vpx_shared_defines.php, patches/ffmpeg.diff
+ported - 4515: vpx_jobserver.module
+ported - 4516: vpx_jobserver.module
+it will have never been ported - 4517: integrity_check.info, integrity_check.module, integrity_check.php, vpx_beheer.install, vpx_shared_defines.php
+partly ported - 4519: vpx_acl_access.inc
+ported - 4520: play_proxy.module
+it will have never been ported - 4521: integrity_check.php
+not ported yet - 4522: trac_tickets_250.inc, trac_tickets_661.inc
+it will have never been ported - 4523: debian/changelog, debian/files
+ported - 4524: media_management.module
+not ported yet - 4525: trac_tickets_504.inc, trac_tickets_661.inc
+it will have never been ported - 4531: vpx_shared_defines.php
+ported - 4533: media_management.module
+ported - 4535: lua/vpx-analyse, lua/vpx-transcode
+ported - 4537: media_management.module
+it will have never been ported - 4538: debian/changelog, debian/files
+ported - 4539: lua/vpx-analyse
+ported - 4540: lua/vpx-analyse
+ported - 4546: vpx_jobs.module
+partly ported - 4547: vpx_cql.inc, trac_tickets.test, trac_tickets_809.inc
+ported - 4548: media_management.module
+it will have never been ported - 4553: Module update
+it will have never been ported - 4554: Drupal update
+ported - 4555: vpx_statistics.module
+it will have never been ported - 4556: Module update
+
+truncate mediamosa_job_still;
+truncate mediamosa_job_transcode;
+truncate mediamosa_job_upload;
+truncate mediamosa_server_job;
+truncate mediamosa_job_server_still;
+truncate mediamosa_job_server_transcode;
+truncate mediamosa_job_server_analyse;
+truncate mediamosa_job_server;
+truncate mediamosa_job;
+ 

@@ -1,0 +1,197 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+ /**
+  * @file
+  * Core - Open source media management and distribution platform.
+  */
+define('MEDIAMOSA_MENU_PATH', '');// was mediamosa for menu hook.
+
+// Default settings.
+require_once 'mediamosa.settings.inc';
+
+// Node types hook include.
+require_once 'core/node/mediamosa_node.inc';
+
+/**
+ * Implement hook_requirements().
+ */
+function mediamosa_requirements($phase) {
+  // Ensure translations don't break at install time
+  $t = get_t();
+
+  $a_requirements = array();
+
+  if ($phase == 'runtime') {
+
+    // We require PHP 5 or higher
+    if (version_compare(phpversion(), mediamosa_settings::MINIMUM_PHP_VERSION) < 0) {
+      $a_requirements['php'] = array(
+        'title' => $t('PHP'),
+        'value' => phpversion(),
+        'description' => $t('Your PHP installation does not meet the requirements for using the MediaMosa module. MediaMosa requires at least PHP %version.', array('%version' => mediamosa_settings::MINIMUM_PHP_VERSION)),
+        'severity' => REQUIREMENT_ERROR
+      );
+    }
+
+    // Make sure the mediamosa_server_id is set and not to long.
+    // TODO: should be made as REST call to other servers.
+    $mediamosa_installation_id = mediamosa::get_server_id();
+
+    if (!isset($mediamosa_installation_id) || drupal_strlen($mediamosa_installation_id) == 0 || drupal_strlen($mediamosa_installation_id) > mediamosa_job_server_db::INSTALL_ID_LENGTH) {
+      $a_requirements['mediamosa'] = array(
+        'title' => $t("MediaMosa installation ID ('mediamosa_installation_id')"),
+        'value' => isset($mediamosa_installation_id) ? $mediamosa_installation_id : 'Not defined',
+        'description' => $t("The configuration setting in settings.php 'mediamosa_installation_id' is either not set or is too long, make sure its set and not longer than %length characters.", array('%length' => mediamosa_job_server_db::INSTALL_ID_LENGTH)),
+        'severity' => REQUIREMENT_ERROR
+      );
+    }
+  }
+
+  return $a_requirements;
+}
+
+/**
+ * Implement hook_permission().
+ */
+function mediamosa_permission() {
+  return array(
+    'administer mediamosa' =>  array(
+      'title' => t('Administer MediaMosa'),
+      'description' => t('Administer rights Mediamosa.'),
+    ),
+  );
+}
+
+
+function mediamosa_init() {
+  // Create and get the core object.
+  $o_mediamosa = mediamosa::get();
+
+  // Now call the rest process function to process possible rest call.
+  $o_mediamosa->process_rest();
+}
+
+/**
+ * The MediaMosa REST menu callback.
+ */
+function _mediamosa() {
+  // Create and get the core object.
+  $o_mediamosa = mediamosa::get();
+
+  // Now call the rest process function to process possible rest call.
+  $o_mediamosa->process_rest();
+
+  // If our the URL didn't match, then at this point we return MENU_NOT_FOUND for drupal.
+  return MENU_NOT_FOUND;
+}
+
+/**
+ * Implements hook_mediamosa_register_rest_call().
+ */
+function mediamosa_mediamosa_register_rest_call() {
+
+  $a_rest_calls = array();
+
+  $a_rest_calls['rest'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_list',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Retrieve the listing of the current registered MediaMosa REST calls.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_0_0,
+  );
+
+  $a_rest_calls['rest/#$uri_id'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_get',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Retrieve specific information about an registered MediaMosa REST calls/',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_0_0,
+  );
+
+  $a_rest_calls['version'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_mediamosa_version',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Retrieve the current version of MediaMosa.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_6_1,
+    mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_DEFAULT | mediamosa_rest_call::ACCESS_EXTERNAL
+  );
+
+  // These REST calls are only available during the sandbox of simpletest.
+  if (mediamosa::in_simpletest_sandbox()) {
+    $a_rest_calls['simpletest/whoami'][mediamosa_rest_call::METHOD_GET] = array(
+      mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_simpletest_whoami',
+      mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+      mediamosa_rest_call::DESCRIPTION => 'Returns information about the current EGA session.',
+      mediamosa_rest_call::MODULE_NAME => 'mediamosa',
+      mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_1_0,
+    );
+  }
+
+  return $a_rest_calls;
+}
+
+/**
+ * Implements the hook_mediamosa_settings_collect()
+ */
+function mediamosa_mediamosa_configuration_collect() {
+  $form['settings_cron'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('MediaMosa internal REST call'),
+    '#collapsible' => TRUE,
+  );
+
+  $form['settings_cron']['mediamosa_cron_url_app'] = array(
+    '#type' => 'textfield',
+    '#title' => t('URL REST'),
+    '#description' => t('The URL or IP Address of the server to apply the call for CRON and other internal global REST calls. This must be a MediaMosa REST interface and open from this server, f.e. \'http://app.mediamosa2.local\'. <em>You must use http:// or other schema.</em>'),
+    '#required' => TRUE,
+    '#default_value' => 'http://localhost',
+  );
+
+  $form['settings_cron']['mediamosa_cron_url_app_local'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Use localhost with hostname.'),
+    '#description' => t('Enable to use localhost and provide the call with the hostname. This option is useful when your server does not allow to call the host directy on localhost by hostname. Enabled will call localhost with the hostname in the HTTP header, allowing the call to go directly to localhost instead of going outside and back in.'),
+    '#default_value' => '',
+  );
+
+  return $form;
+}
+
+/**
+ * Implements the hook_mediamosa_configuration_validate()
+ */
+function mediamosa_mediamosa_configuration_validate($form, &$form_state) {
+  // Use normal so schema might be empty.
+  $a_parse_url = parse_url($form_state['values']['mediamosa_cron_url_app']);
+
+  if (!isset($a_parse_url['scheme']) || !in_array($a_parse_url['scheme'], array('http', 'https'))) {
+    form_set_error('mediamosa_cron_url_app', t("Include either 'http:// or 'https://' in URL Rest."));
+  }
+}

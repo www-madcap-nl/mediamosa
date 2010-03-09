@@ -1,0 +1,73 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+ /**
+  * @file
+  * Mediamosa Webservice.
+  */
+
+/**
+ * Implement hook_menu().
+ */
+function mediamosa_webservice_menu() {
+  $items = array();
+
+  $items['admin/mediamosa/webservice'] = array(
+    'title' => 'Webservice management',
+    'description' => 'List of all webservices and global availibity of services.',
+    'page callback' => '_mediamosa_webservice_list',
+    'access arguments' => array('administer mediamosa configuration'),
+  );
+
+  return $items;
+}
+
+/**
+ * Lijst van alle webservices die kunnen worden in en uitgeschakeld
+ */
+function _mediamosa_webservice_list() {
+
+  $result = mediamosa_db::db_select(mediamosa_webservice_db::TABLE_NAME, 'w')
+    ->fields('w')
+    ->orderBy('w.'. mediamosa_webservice_db::ID, 'ASC')
+    ->execute();
+
+  $rows = array();
+  foreach ($result as $row) {
+    $rows[] = array(
+      $row[mediamosa_webservice_db::ID],
+      $row[mediamosa_webservice_db::HANDLE],
+      $row[mediamosa_webservice_db::DESCRIPTION],
+      $row[mediamosa_webservice_db::STATUS] === "TRUE" ? "on" : "off",
+    );
+  }
+
+  $response = t('List of all webservices and global availibity of services. Disabled webservices are unavailable for all client applications. Note: see client application settings for availability of a webservice for the specific client application.');
+  $response .= theme('table', array(t('ID'), t('Handle'), t('Description'), t('Status')), $rows);
+  $response .= l(t('MediaMosa Home'), 'admin/mediamosa');
+
+  return $response;
+}

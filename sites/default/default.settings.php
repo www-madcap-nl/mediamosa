@@ -151,7 +151,6 @@
  *     'database' => '/path/to/databasefilename',
  *   );
  */
-$databases = array();
 $db_prefix = '';
 
 /**
@@ -207,6 +206,7 @@ $drupal_hash_salt = '';
  */
 # $base_url = 'http://www.example.com';  // NO trailing slash!
 
+
 /**
  * PHP settings:
  *
@@ -252,6 +252,7 @@ ini_set('session.cookie_lifetime', 2000000);
  */
 # $cookie_domain = 'example.com';
 
+
 /**
  * Variable overrides:
  *
@@ -269,10 +270,16 @@ ini_set('session.cookie_lifetime', 2000000);
  * - anonymous: Defines the human-readable name of anonymous users.
  * Remove the leading hash signs to enable.
  */
+<<<<<<< /home/rblanker/projects/mediamosa/2.x/trunk2/sites/default/default.settings.php
+$conf = array()#   'site_name' => 'My Drupal site',
+#   'theme_default' => 'minnelli',
+#   'anonymous' => 'Visitor',
+=======
 # $conf['site_name'] = 'My Drupal site';
 # $conf['theme_default'] = 'garland';
 # $conf['anonymous'] = 'Visitor';
 
+>>>>>>> /tmp/default.settings.php~other.otVsI3
 /**
  * A custom theme can be set for the offline page. This applies when the site
  * is explicitly set to maintenance mode through the administration page or when
@@ -311,7 +318,12 @@ ini_set('session.cookie_lifetime', 2000000);
  * reverse proxies. Otherwise, the client could directly connect to
  * your web server spoofing the X-Forwarded-For headers.
  */
+<<<<<<< /home/rblanker/projects/mediamosa/2.x/trunk2/sites/default/default.settings.php
+#   'reverse_proxy_addresses' => array('a.b.c.d', ...), // Leave the comma here.
+;
+=======
 # $conf['reverse_proxy_addresses'] = array('a.b.c.d', ...);
+>>>>>>> /tmp/default.settings.php~other.otVsI3
 
 /**
  * Page caching:
@@ -384,3 +396,10 @@ ini_set('session.cookie_lifetime', 2000000);
  * Remove the leading hash signs to disable.
  */
 # $conf['allow_authorize_operations'] = FALSE;
+
+// MediaMosa Add;
+// Include our global settings.
+if (file_exists(getcwd() . '/sites/settings.mediamosa.php')) {
+  include_once getcwd() . '/sites/settings.mediamosa.php';
+}
+

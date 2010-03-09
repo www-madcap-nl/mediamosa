@@ -1,0 +1,2155 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
+ * Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * @file
+ * Installer for migration.
+ */
+
+/**
+ * Use 'mig_memo' in database array in settings.php for source database.
+ * Use 'mig_memo_data' in database array in settings.php for source database.
+ */
+
+/*
+ * Example for settings.php.
+// Migration memo 1.0 databases;
+$databases['mig_memo']['default'] = array(
+  'driver' => 'mysql',
+  'database' => 'memo',
+  'username' => 'memo',
+  'password' => 'memo',
+  'host' => 'localhost'
+);
+$databases['mig_memo_data']['default'] = array(
+  'driver' => 'mysql',
+  'database' => 'memo_data',
+  'username' => 'memo',
+  'password' => 'memo',
+  'host' => 'localhost'
+);
+ */
+
+define('MIG_MEMO', 'mig_memo');
+define('MIG_MEMO_DATA', 'mig_memo_data');
+
+/**
+ * Get the database name of the mediamosa drupal database.
+ *
+ * @return string
+ */
+function _mediamosa_migration_get_memo_db() {
+  global $databases;
+  return $databases[MIG_MEMO]['default']['database'];
+}
+
+/**
+ * Get the database name of the mediamosa data database.
+ *
+ * @return string
+ */
+function _mediamosa_migration_get_memo_data_db() {
+  global $databases;
+  return $databases[MIG_MEMO_DATA]['default']['database'];
+}
+
+/**
+ * Implement hook_requirements().
+ */
+function mediamosa_migration_requirements($phase) {
+  $requirements = array();
+
+  // Ensure translations don't break at install time.
+  $t = get_t();
+
+  if ($phase != 'install') {
+    return array();
+    /*
+    $requirements['mediamosa2'] = array(
+      'title' => $t('Mediamosa 1.7 to 2.x migration Requirements'),
+      'severity' => REQUIREMENT_INFO
+    );
+*/
+  }
+  else {
+    // Allowed.
+    $requirements['mediamosa2'] = array(
+      'title' => $t('Migration Requirements'),
+      'description' => $t('Mediamosa 1.x installation found.'),
+      'severity' => REQUIREMENT_INFO,
+    );
+
+    // These tables are required on the destination database.
+    $a_table_names_dest_exists = array(
+      'mediamosa_error',
+      'mediamosa_asset',
+      'mediamosa_asset_mediafile',
+      'mediamosa_asset_mediafile_metadata',
+      'mediamosa_asset_metadata',
+      'mediamosa_asset_metadata_property',
+      'mediamosa_asset_metadata_property_group',
+      'mediamosa_aut_app_master_slave',
+      'mediamosa_aut_group',
+      'mediamosa_aut_name',
+      'mediamosa_aut_object',
+      'mediamosa_app',
+      'mediamosa_collection',
+      'mediamosa_server_streaming_container',
+      'mediamosa_server_tool',
+      'mediamosa_ticket',
+      'mediamosa_ftp_batch',
+      'mediamosa_ftp_batch_asset'
+    );
+    // These tables (dest) must be empty.
+    $a_table_names_dest_empty = array(
+      'mediamosa_asset',
+      'mediamosa_asset_mediafile',
+      'mediamosa_aut_app_master_slave',
+      'mediamosa_aut_group',
+      'mediamosa_aut_name',
+      'mediamosa_aut_object',
+      'mediamosa_collection',
+      'mediamosa_ticket',
+      'mediamosa_ftp_batch',
+      'mediamosa_ftp_batch_asset',
+    );
+    // Must exists source drupal db.
+    $a_table_names_source_exists = array(
+      'error',
+      'download_server',
+      'still_server',
+      'streaming_server',
+      'streaming_server_container',
+      'transcoding_server',
+      'transcoding_server_tool',
+      'upload_server',
+      'transcode_profile',
+      'transcode_mapping',
+    );
+    // Must exists source data db.
+    $a_table_names_source_exists_data = array(
+      'asset',
+      'mediafile',
+      'v_asset_property',
+      'asset_property',
+      'assetprop_definition',
+      'assetprop_group',
+      'aut_name',
+      'aut_group',
+      'aut_object',
+      'aut_app_master_slave',
+      'collection',
+      'ticket',
+      'quota_user',
+      'quota_group',
+      'ftp_batch',
+      'ftp_batch_asset',
+      'job',
+      'still_job',
+      'transcode_job',
+      'upload_job',
+    );
+
+    $old_db = 'default';
+    try {
+      _mediamosa_migration_tables_exists($a_table_names_dest_exists);
+
+      // Select the old mediamosa database.
+      $old_db = db_set_active(MIG_MEMO_DATA);
+
+      // Data source.
+      _mediamosa_migration_tables_exists($a_table_names_source_exists_data, MIG_MEMO_DATA);
+
+      // Back to other.
+      db_set_active($old_db);
+
+      // Select the old mediamosa database.
+      $old_db = db_set_active(MIG_MEMO);
+      _mediamosa_migration_tables_exists($a_table_names_source_exists, MIG_MEMO);
+
+      // Back to other.
+      db_set_active($old_db);
+
+      // Make sure we start fresh.
+      _mediamosa_migration_empty_tables($a_table_names_dest_empty);
+
+      // Make sure the medafile_ids in mediafile 1.x table are unique.
+      _mediamosa_migration_mediafileid_is_unique();
+
+      // Make sure these class can be found.
+      if (!class_exists('mediamosa_asset_metadata_db')) {
+        throw new Exception('Could not find class mediamosa_asset_metadata_db, make sure mediamosa 2 core is installed.');
+      }
+    }
+    catch (Exception $e) {
+      // Back to default.
+      db_set_active($old_db);
+
+      // Log it.
+      watchdog('installation', 'Requirement for migration of mediamosa 1.x to 2.0 not met; @reason.', array('@reason' => $e->getMessage()));
+
+      $requirements['mediamosa2'] = array(
+        'title' => $t('Migration Requirements'),
+        'description' => $t('No (valid) mediamosa 1.x installation found, reason; @reason.', array('@reason' => $e->getMessage())),
+        'severity' => REQUIREMENT_ERROR,
+      );
+    }
+  }
+
+  return $requirements;
+}
+
+/**
+ * Implement hook_install().
+ */
+function mediamosa_migration_install() {
+
+  // error -> mediamosa_error.
+  _mediamosa_migration_error();
+
+  // client_applications -> mediamosa_app.
+  _mediamosa_migration_client_applications();
+
+  // San nas settings.
+  _mediamosa_migration_sannas();
+
+  // asset -> mediamosa_asset.
+  _mediamosa_migration_asset();
+
+  // asset_supplement -> mediamosa_asset_supplement.
+  _mediamosa_migration_asset_supplement();
+
+  // mediafile -> mediamosa_asset_mediafile.
+  _mediamosa_migration_mediafile();
+
+  // Fix the parent_id problem (After mediafile mig.)
+  _mediamosa_migration_kill_child_assets();
+
+  // mediafile_metadata -> mediamosa_asset_mediafile_metadata.
+  _mediamosa_migration_mediafile_metadata();
+
+  // assetprop_group -> mediamosa_asset_metadata_property_group.
+  // assetprop_definition -> mediamosa_asset_metadata_property.
+  _mediamosa_migration_asset_metadata_property_group();
+  _mediamosa_migration_asset_metadata_property();
+
+  // asset_property -> mediamosa_asset_metadata.
+  _mediamosa_migration_asset_metadata();
+
+  // collection -> mediamosa_collection.
+  _mediamosa_migration_collection();
+
+  // aut_* -> mediamosa_aut_*.
+  _mediamosa_migration_aut();
+
+  // asset_delete => mediamosa_asset_delete.
+  _mediamosa_migration_asset_delete();
+
+  // ticket -> mediamosa_ticket.
+  _mediamosa_migration_ticket();
+
+  // User / Group tables.
+  _mediamosa_migration_user();
+
+  // ftp_batch -> mediamosa_ftp_batch.
+  _mediamosa_migration_ftp_batch();
+
+  // webservice_management(_capp) -> mediamosa_webservice(_app)
+  _mediamosa_migration_webservice();
+
+  // *_job -> mediamosa_job_*
+  _mediamosa_migration_job();
+
+  // transcode_* -> mediamosa_transcode_*.
+  _mediamosa_migration_transcode();
+
+  // *_job_server -> mediamosa_job_server
+  _mediamosa_migration_jobserver_all(); // @todo
+
+  // create server nodes.
+  _mediamosa_migration_create_server_nodes();
+
+  // <Migrate this setting.
+  $curlproxy_http = variable_get('vpx_curlproxy_http', '');
+  if ($curlproxy_http != '') {
+    variable_set('mediamosa_curlproxy_http', $curlproxy_http);
+  }
+
+}
+
+/**
+ * Implement hook_uninstall().
+ */
+function mediamosa_migration_uninstall() {
+
+}
+
+/**
+ * Check if a table exists in current database.
+ */
+function _mediamosa_db_table_exists($table_name, $key = 'default') {
+  $info = Database::getConnectionInfo($key);
+
+  $schema = $info['default']['database'];
+
+  $condition = new DatabaseCondition('AND');
+  $condition->condition('table_catalog', NULL, 'IS');
+  $condition->condition('table_schema', $schema);
+  $condition->condition('table_name', Database::getConnection('default', $key)->prefixTables('{' . $table_name . '}'));
+  $condition->compile(Database::getConnection($key), Database::getConnection('default', $key)->schema());
+
+  return db_query("SELECT table_name FROM information_schema.tables WHERE " . (string)$condition, $condition->arguments())->fetchField();
+}
+
+/**
+ * Loop through table names and check if they exists.
+ *
+ * @param array $a_table_names
+ */
+function _mediamosa_migration_tables_exists($a_table_names, $key = 'default') {
+  // Ensure translations don't break at install time.
+  $t = get_t();
+
+  foreach ($a_table_names as $table_name) {
+    if (!_mediamosa_db_table_exists($table_name, $key)) {
+      throw new Exception($t("The table '@table_name' does not exists.", array('@table_name' => $table_name)));
+    }
+  }
+}
+
+/**
+ * Loop through table names and check if they exists.
+ *
+ * @param array $a_table_names
+ */
+function _mediamosa_migration_empty_tables($a_table_names, $key = 'default') {
+  $old_db = db_set_active($key);
+
+  // Ensure translations don't break at install time.
+  $t = get_t();
+
+  try {
+    foreach ($a_table_names as $table_name) {
+      $count = db_query('SELECT COUNT(*) FROM ' . $table_name)->fetchField();
+
+      if ($count) {
+        throw new Exception($t("The table '@table_name' must be empty.", array('@table_name' => $table_name)));
+      }
+    }
+  }
+  catch(Exception $e) {
+    db_set_active($old_db);
+    throw $e;
+  }
+
+  db_set_active($old_db);
+}
+
+/**
+ * Check if the medafile 1.x table has unique mediafile ids.
+ * This is because mediafile table has invalid primary key, which will be fixed in 2.x.
+ */
+function _mediamosa_migration_mediafileid_is_unique() {
+  // Get the database name.
+  $db_name = _mediamosa_migration_get_memo_data_db();
+
+  $result = db_query(
+    strtr(
+      "SELECT COUNT(*) AS total, mediafile_id FROM #db_name.{mediafile} GROUP BY mediafile_id HAVING total > 1",
+      array(
+        '#db_name' => $db_name,
+      )
+    )
+  )->fetchField();
+
+  if ($result > 0) {
+    // Ensure translations don't break at install time.
+    $t = get_t();
+    throw new Exception($t("The table 'mediafile' contains non-unique ids."));
+  }
+}
+
+
+/**
+ * Migrate the error table.
+ */
+function _mediamosa_migration_error() {
+  // Get the database name.
+  $db_name = _mediamosa_migration_get_memo_db();
+
+  $current_ids = array_keys(db_query("SELECT code FROM {mediamosa_error}")->fetchAllAssoc('code'));
+
+  // Copy all to new table.
+  db_query(strtr("INSERT INTO {mediamosa_error} (name, code, message) (SELECT name, code, message FROM #db_name.error#whereORDER BY code ASC)",
+    array(
+      '#db_name' => $db_name,
+      '#where' => count($current_ids) ? ' WHERE code NOT IN(' . implode(',', $current_ids) . ') ' : ' ',
+    )
+  ));
+}
+
+/**
+ * Migrate the client_applications table.
+ */
+function _mediamosa_migration_client_applications() {
+  // Get the database name.
+  $db_name = _mediamosa_migration_get_memo_db();
+
+  // Get the current apps.
+  $migrate_apps = db_query(strtr("SELECT * FROM #db_name.{client_applications} ORDER BY caid ASC", array('#db_name' => $db_name)))->fetchAllAssoc('id');
+
+  // Now add back the apps as nodes.
+  foreach ($migrate_apps as $app_id => $app) {
+    $node = new stdClass();
+    $node->uid = 1; // Admin
+    $node->status = 1; // Published
+    $node->type = mediamosa_node::MEDIAMOSA_NODE_TYPE_CLIENT_APPLICATION;
+
+    $node->title = $app->{mediamosa_app_db::NAME};
+
+    // not needed.
+    unset($app->caid);
+    unset($app->id);
+    $app->app_id = $app_id;
+
+    $app = (array)$app;
+    foreach ($app as $key => $value) {
+      $node->{$key} = $value;
+    }
+
+    // Save node.
+    node_save($node);
+  }
+}
+
+/**
+ * Migrate the asset table.
+ */
+function _mediamosa_migration_asset() {
+  // Get the database name.
+  $db_name = _mediamosa_migration_get_memo_data_db();
+
+  // Get the current mode, which might be empty;
+  $old_mode = db_query('SELECT @@SESSION.sql_mode')->fetchField();
+
+  // Turn off problems with empty dates.
+  db_query("SET SESSION sql_mode = 'ALLOW_INVALID_DATES'");
+
+  // The mediamosa_asset table should be empty (its checked as requirement).
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * testtag
+   * has_streamable_mediafiles
+   * Columns renamed;
+   * mediafile_duration = media_duration
+   * mediafile_container_type = media_container_type
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_asset}
+      (
+        asset_id,
+        parent_id,
+        app_id,
+        provider_id,
+        owner_id,
+        group_id,
+        videotimestamp,
+        videotimestampmodified,
+        play_restriction_start,
+        play_restriction_end,
+        is_locked,
+        reference_id,
+        isprivate,
+        mediafile_duration,
+        mediafile_container_type,
+        created,
+        changed,
+        is_unappropriate,
+        is_external,
+        is_empty_asset,
+        viewed,
+        played,
+        is_protected
+      ) (SELECT
+        asset_id,
+        parent_id,
+        app_id,
+        provider_id,
+        owner_id,
+        group_id,
+        videotimestamp,
+        videotimestampmodified,
+        play_restriction_start,
+        play_restriction_end,
+        locked,
+        reference_id,
+        isprivate,
+        mediafile_duration,
+        mediafile_container_type,
+        created,
+        changed,
+        is_unappropiate,
+        is_external,
+        is_empty_asset,
+        viewed,
+        played,
+        is_protected
+      FROM #db_name.asset ORDER BY parent_id, asset_id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+  // Back to old session mode.
+  db_query(strtr("SET SESSION sql_mode = '#old_mode'", array('#old_mode' => $old_mode)));
+
+}
+
+/**
+ * Migrate the mediafile table.
+ */
+function _mediamosa_migration_mediafile() {
+  // Get the database name.
+  $db_name = _mediamosa_migration_get_memo_data_db();
+
+  // Remove foreign key on asset_mediafile_metadata table.
+  db_query('ALTER TABLE mediamosa_asset_mediafile_metadata DROP FOREIGN KEY fk_mediamosa_asset_mediafile_metadata_mediafile_id');
+
+  // Remove the primary key so insert will go fine.
+  db_query('ALTER TABLE mediamosa_asset_mediafile DROP PRIMARY KEY');
+
+  // Get the current mode, which might be empty;
+  $old_mode = db_query('SELECT @@SESSION.sql_mode')->fetchField();
+
+  // Turn off problems with empty dates.
+  db_query("SET SESSION sql_mode = 'ALLOW_INVALID_DATES'");
+
+  // The mediamosa_asset_mediafile table should be empty (its checked as requirement).
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * testtag
+   * has_streamable_mediafiles
+   * Columns renamed;
+   * mediafile_id = mediafile_id
+   * mediafile_source = mediafile_id_source
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_asset_mediafile}
+      (
+        mediafile_id,
+        asset_id,
+        asset_id_root,
+        mediafile_id_source,
+        tag,
+        app_id,
+        owner_id,
+        group_id,
+        is_original_file,
+        is_downloadable,
+        is_streamable,
+        is_still,
+        filename,
+        uri,
+        sannas_mount_point,
+        transcode_profile_id,
+        tool,
+        command,
+        file_extension,
+        is_protected,
+        created,
+        changed,
+        transcode_inherits_acl
+      ) (SELECT
+        mediafile_id,
+        asset_id,
+        asset_id_root,
+        mediafile_source,
+        tag,
+        app_id,
+        owner_id,
+        group_id,
+        is_original_file,
+        is_downloadable,
+        is_streamable,
+        is_still,
+        filename,
+        uri,
+        sannas_mount_point,
+        transcode_profile_id,
+        tool,
+        command,
+        file_extension,
+        is_protected,
+        created,
+        changed,
+        transcode_inherits_acl
+      FROM #db_name.{mediafile} ORDER BY asset_id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE mediamosa_asset_mediafile SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE mediamosa_asset_mediafile SET created = NOW() WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE mediamosa_asset_mediafile SET changed = NOW() WHERE changed = '0000-00-00 00:00:00'");
+
+  // Back to old session mode.
+  db_query(strtr("SET SESSION sql_mode = '#old_mode'", array('#old_mode' => $old_mode)));
+
+  // Add back the primary key.
+  db_query('ALTER TABLE mediamosa_asset_mediafile ADD PRIMARY KEY(mediafile_id)');
+
+  // Add the foreign key on asset_mediafile_metadata table.
+  db_query('ALTER TABLE mediamosa_asset_mediafile_metadata ADD CONSTRAINT fk_mediamosa_asset_mediafile_metadata_mediafile_id FOREIGN KEY (mediafile_id) REFERENCES mediamosa_asset_mediafile (mediafile_id)');
+}
+
+/**
+ * Migrate the mediafile metadata table.
+ */
+function _mediamosa_migration_mediafile_metadata() {
+  // Get the database name.
+  $db_name = _mediamosa_migration_get_memo_data_db();
+
+  // Get the current mode, which might be empty;
+  $old_mode = db_query('SELECT @@SESSION.sql_mode')->fetchField();
+
+  // Turn off problems with empty dates.
+  db_query("SET SESSION sql_mode = 'ALLOW_INVALID_DATES'");
+
+  // Remove the unique index on mediafile_id.
+  db_query("ALTER TABLE {mediamosa_asset_mediafile_metadata} DROP INDEX uni_mediafileid");
+
+  // The mediamosa_asset_mediafile table should be empty (its checked as requirement).
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * mediafile_id = mediafile_id
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_asset_mediafile_metadata}
+      (
+        metadata_id,
+        mediafile_id,
+        video_codec,
+        colorspace,
+        width,
+        height,
+        fps,
+        audio_codec,
+        sample_rate,
+        channels,
+        file_duration,
+        container_type,
+        bitrate,
+        bpp,
+        filesize,
+        mime_type,
+        created,
+        changed,
+        is_hinted,
+        is_inserted_md,
+        still_time_code,
+        still_order,
+        still_type,
+        still_format,
+        still_default
+      ) (SELECT
+        mfd.metadata_id,
+        mfd.mediafile_id,
+        mfd.video_codec,
+        mfd.colorspace,
+        mfd.width,
+        mfd.height,
+        mfd.fps,
+        mfd.audio_codec,
+        mfd.sample_rate,
+        mfd.channels,
+        mfd.file_duration,
+        mfd.container_type,
+        mfd.bitrate,
+        mfd.bpp,
+        mfd.filesize,
+        mfd.mime_type,
+        mfd.created,
+        mfd.changed,
+        mfd.is_hinted,
+        mfd.is_inserted_md,
+        mfd.still_time_code,
+        mfd.still_order,
+        mfd.still_type,
+        mfd.still_format,
+        mfd.still_default
+        FROM #db_name.{mediafile_metadata} AS mfd JOIN #db_name.{mediafile} AS mf USING(mediafile_id) ORDER BY mfd.metadata_id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE {mediamosa_asset_mediafile_metadata} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE {mediamosa_asset_mediafile_metadata} SET created = NOW() WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE {mediamosa_asset_mediafile_metadata} SET changed = NOW() WHERE changed = '0000-00-00 00:00:00'");
+
+  // Now remove the double metadata.
+
+  // Select
+  $tmp_table_name = db_query_temporary("SELECT COUNT(*) AS total, MIN(metadata_id) AS metadata_id FROM {mediamosa_asset_mediafile_metadata} GROUP BY mediafile_id HAVING total > 1");
+  $row_count = db_query("SELECT COUNT(metadata_id) FROM " . $tmp_table_name)->fetchField();
+
+  // Might deadlock, so lets protect.
+  $max = 100;
+  while ($row_count && --$max) {
+    // Delete the doubles we found.
+    db_query("DELETE FROM {mediamosa_asset_mediafile_metadata} WHERE metadata_id IN (SELECT metadata_id FROM " . $tmp_table_name . ")");
+
+    // Now query again, because there can be more than 2, 3, 4, etc rows of each double.
+    $tmp_table_name = db_query_temporary("SELECT COUNT(*) AS total, MIN(metadata_id) AS metadata_id FROM {mediamosa_asset_mediafile_metadata} GROUP BY mediafile_id HAVING total > 1");
+    $row_count = db_query("SELECT COUNT(metadata_id) FROM " . $tmp_table_name)->fetchField();
+  }
+
+  // Remove the unique index on mediafile_id.
+  db_query("ALTER TABLE {mediamosa_asset_mediafile_metadata} ADD UNIQUE KEY `uni_mediafileid` (`mediafile_id`)");
+
+  // Back to old session mode.
+  db_query(strtr("SET SESSION sql_mode = '#old_mode'", array('#old_mode' => $old_mode)));
+}
+
+/**
+ * Migrate the asset metadata property group table.
+ */
+function _mediamosa_migration_asset_metadata_property_group() {
+  // Get the database name.
+  $db_name = _mediamosa_migration_get_memo_data_db();
+
+  // Get the current mode, which might be empty;
+  $old_mode = db_query('SELECT @@SESSION.sql_mode')->fetchField();
+
+  // Turn off problems with empty dates.
+  db_query("SET SESSION sql_mode = 'ALLOW_INVALID_DATES'");
+
+  // Must be empty.
+  db_truncate('mediamosa_asset_metadata_property')->execute();
+  db_truncate('mediamosa_asset_metadata_property_group')->execute();
+
+  // The mediamosa_asset_mediafile table should be empty (its checked as requirement).
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * name = propgroup_name
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_asset_metadata_property_group}
+      (
+        propgroup_id,
+        propgroup_name,
+        created,
+        changed
+      ) (SELECT
+        propgroup_id,
+        name,
+        created,
+        changed
+        FROM #db_name.{assetprop_group} ORDER BY propgroup_id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE {mediamosa_asset_metadata_property_group} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE {mediamosa_asset_metadata_property_group} SET created = NOW() WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE {mediamosa_asset_metadata_property_group} SET changed = NOW() WHERE changed = '0000-00-00 00:00:00'");
+
+  // Back to old session mode.
+  db_query(strtr("SET SESSION sql_mode = '#old_mode'", array('#old_mode' => $old_mode)));
+}
+
+/**
+ * Migrate the asset metadata property table.
+ */
+function _mediamosa_migration_asset_metadata_property() {
+  // Get the database name.
+  $db_name = _mediamosa_migration_get_memo_data_db();
+
+  // Get the current mode, which might be empty;
+  $old_mode = db_query('SELECT @@SESSION.sql_mode')->fetchField();
+
+  // Turn off problems with empty dates.
+  db_query("SET SESSION sql_mode = 'ALLOW_INVALID_DATES'");
+
+  // Must be empty.
+  db_truncate('mediamosa_asset_metadata_property')->execute();
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * name = prop_name
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_asset_metadata_property}
+      (
+        prop_id,
+        propgroup_id,
+        app_id,
+        prop_name,
+        type,
+        min_occurences,
+        max_occurences,
+        created,
+        changed
+      ) (SELECT
+        prop_id,
+        propgroup_id,
+        app_id,
+        name,
+        type,
+        min_occurences,
+        max_occurences,
+        created,
+        changed
+        FROM #db_name.{assetprop_definition} ORDER BY prop_id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE mediamosa_asset_metadata_property SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE mediamosa_asset_metadata_property SET created = NOW() WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE mediamosa_asset_metadata_property SET changed = NOW() WHERE changed = '0000-00-00 00:00:00'");
+
+  // Back to old session mode.
+  db_query(strtr("SET SESSION sql_mode = '#old_mode'", array('#old_mode' => $old_mode)));
+}
+
+/**
+ * Migrate the asset metadata table.
+ */
+function _mediamosa_migration_asset_metadata() {
+  // Get the database name.
+  $db_name = _mediamosa_migration_get_memo_data_db();
+
+  // Get the current mode, which might be empty;
+  $old_mode = db_query('SELECT @@SESSION.sql_mode')->fetchField();
+
+  // Turn off problems with empty dates.
+  db_query("SET SESSION sql_mode = 'ALLOW_INVALID_DATES'");
+
+  // The mediamosa_asset_mediafile table should be empty (its checked as requirement).
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * id -> metadata_id
+   * -
+   * Columns new;
+   * val_char_lft
+   * val_char_rght
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_asset_metadata}
+      (
+        metadata_id,
+        asset_id,
+        prop_id,
+        val_char,
+        val_char_lft,
+        val_char_rght,
+        val_datetime,
+        val_int,
+        created,
+        changed
+      ) (SELECT
+        apd.id,
+        apd.asset_id,
+        apd.prop_id,
+        vap.val_char,
+        left(vap.val_char, #lenlft),
+        reverse(left(vap.val_char, #lenrght)),
+        apd.val_datetime,
+        apd.val_int,
+        apd.created,
+        apd.changed
+        FROM #db_name.{asset_property} AS apd JOIN #db_name.v_asset_property AS vap USING(id) ORDER BY id ASC)",
+    array(
+      '#db_name' => $db_name,
+      '#lenlft' => mediamosa_asset_metadata_db::VAL_CHAR_LFT_LENGTH,
+      '#lenrght' => mediamosa_asset_metadata_db::VAL_CHAR_RGHT_LENGTH,
+    ))
+  );
+
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE mediamosa_asset_metadata_property SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE mediamosa_asset_metadata_property SET created = NOW() WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE mediamosa_asset_metadata_property SET changed = NOW() WHERE changed = '0000-00-00 00:00:00'");
+
+  // Back to old session mode.
+  db_query(strtr("SET SESSION sql_mode = '#old_mode'", array('#old_mode' => $old_mode)));
+}
+
+/**
+ * Migrate the asset metadata table.
+ */
+function _mediamosa_migration_aut() {
+  // Get the database name.
+  $db_name = _mediamosa_migration_get_memo_data_db();
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   * Columns new;
+   * -
+   */
+  db_query(strtr(
+    'INSERT INTO {mediamosa_aut_name}
+      (
+        aut_name_id,
+        app_id,
+        aut_group_id,
+        aut_name,
+        aut_prefix,
+        aut_type
+      ) (SELECT
+        aut_name_id,
+        app_id,
+        aut_group_id,
+        aut_name,
+        aut_prefix,
+        aut_type
+        FROM #db_name.{aut_name} ORDER BY aut_name_id ASC)',
+    array(
+      '#db_name' => $db_name,
+    ))
+  );
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   * Columns new;
+   * -
+   */
+  db_query(strtr(
+    'INSERT INTO {mediamosa_aut_group}
+      (
+        aut_group_id,
+        app_id,
+        aut_group_name,
+        aut_group_type
+      ) (SELECT
+        aut_group_id,
+        app_id,
+        aut_group_name,
+        aut_group_type
+        FROM #db_name.{aut_group} ORDER BY aut_group_id ASC)',
+    array(
+      '#db_name' => $db_name,
+    ))
+  );
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   * Columns new;
+   * -
+   */
+  db_query(strtr(
+    'INSERT INTO {mediamosa_aut_object}
+      (
+        aut_object_id,
+        aut_object_type,
+        aut_id,
+        aut_type
+      ) (SELECT
+        aut_object_id,
+        aut_object_type,
+        aut_id,
+        aut_type
+        FROM #db_name.{aut_object} ORDER BY aut_object_id ASC)',
+    array(
+      '#db_name' => $db_name,
+    ))
+  );
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * aut_id_slave -> aut_slave_id
+   * aut_id_master -> aut_master_id
+   * Columns new;
+   * -
+   */
+  db_query(strtr(
+    'INSERT INTO {mediamosa_aut_app_master_slave}
+      (
+        aut_object_id,
+        aut_object_type,
+        app_id_slave,
+        app_id_master
+      ) (SELECT
+        aut_object_id,
+        aut_object_type,
+        app_slave_id,
+        app_master_id
+        FROM #db_name.{aut_app_master_slave} ORDER BY aut_object_id ASC)',
+    array(
+      '#db_name' => $db_name,
+    ))
+  );
+}
+
+/**
+ * Migrate san nas settings.
+ */
+function _mediamosa_migration_sannas() {
+
+  // Get the database name.
+  $db_name = _mediamosa_migration_get_memo_db();
+
+  $a_san_nas = db_query(
+    strtr(
+      'SELECT current_mount_point, current_mount_point_windows FROM #db_name.{san_nas_settings} LIMIT 1',
+      array(
+      '#db_name' => $db_name
+      )
+    )
+  )->fetchAssoc();
+
+  if ($a_san_nas) {
+    mediamosa_configuration_storage::linux_set($a_san_nas['current_mount_point']);
+    mediamosa_configuration_storage::windows_set($a_san_nas['current_mount_point_windows']);
+  }
+}
+
+/**
+ * Migrate collection table..
+ */
+function _mediamosa_migration_collection() {
+  // Get the database name.
+  $db_name = _mediamosa_migration_get_memo_data_db();
+
+  // Get the current mode, which might be empty;
+  $old_mode = db_query('SELECT @@SESSION.sql_mode')->fetchField();
+
+  // Turn off problems with empty dates.
+  db_query("SET SESSION sql_mode = 'ALLOW_INVALID_DATES'");
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * testtag
+   * has_streamable_mediafiles
+   * Columns renamed;
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_collection}
+      (
+        coll_id,
+        title,
+        description,
+        app_id,
+        owner_id,
+        group_id,
+        isprivate,
+        private,
+        public,
+        category,
+        created,
+        changed,
+        public_assign,
+        is_unappropriate
+      ) (SELECT
+        coll_id,
+        title,
+        description,
+        app_id,
+        owner_id,
+        group_id,
+        isprivate,
+        private,
+        public,
+        category,
+        created,
+        changed,
+        public_assign,
+        is_unappropriate
+      FROM #db_name.collection ORDER BY created ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+  // Back to old session mode.
+  db_query(strtr("SET SESSION sql_mode = '#old_mode'", array('#old_mode' => $old_mode)));
+}
+
+/**
+ * Migrate asset_delete table..
+ */
+function _mediamosa_migration_asset_delete() {
+  // Get the database name.
+  $db_name = _mediamosa_migration_get_memo_data_db();
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_asset_delete}
+      (
+        asset_id,
+        app_id,
+        videotimestampmodified,
+        coll_id
+      ) (SELECT
+        asset_id,
+        app_id,
+        videotimestampmodified,
+        coll_id
+      FROM #db_name.asset_delete ORDER BY videotimestampmodified ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+}
+
+/**
+ * Migrate user/group table..
+ */
+function _mediamosa_migration_user() {
+  // Get the database name.
+  $db_name = _mediamosa_migration_get_memo_data_db();
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_user}
+      (
+        app_id,
+        name,
+        group_id,
+        quotum,
+        created,
+        changed
+      ) (SELECT
+        app_id,
+        name,
+        group_id,
+        quotum,
+        created,
+        changed
+      FROM #db_name.quota_user ORDER BY created ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_user_group}
+      (
+        app_id,
+        group_id,
+        quotum,
+        created,
+        changed
+      ) (SELECT
+        app_id,
+        group_id,
+        quotum,
+        created,
+        changed
+      FROM #db_name.quota_group ORDER BY created ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+  /**
+   * user_favorites -> mediamosa_user_favorite
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_user_favorite}
+      (
+        name,
+        app_id,
+        fav_type,
+        fav_id
+      ) (SELECT
+        name,
+        app_id,
+        fav_type,
+        fav_id
+      FROM #db_name.user_favorites ORDER BY name ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+}
+
+/**
+ * Migrate ticket table..
+ */
+function _mediamosa_migration_ticket() {
+  // Get the database name.
+  $db_name = _mediamosa_migration_get_memo_data_db();
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * user_id -> owner_id
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_ticket}
+      (
+        ticket_id,
+        ticket_type,
+        issued,
+        app_id,
+        owner_id,
+        group_id,
+        mediafile_id,
+        created,
+        changed
+      ) (SELECT
+        ticket_id,
+        ticket_type,
+        issued,
+        app_id,
+        user_id,
+        group_id,
+        mediafile_id,
+        created,
+        changed
+      FROM #db_name.ticket ORDER BY ticket_id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+}
+
+/**
+ * Migrate ftp_batch table..
+ */
+function _mediamosa_migration_ftp_batch() {
+  // Get the database name.
+  $db_name = _mediamosa_migration_get_memo_data_db();
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_ftp_batch}
+      (
+        batch_id,
+        app_id,
+        owner_id,
+        group_id,
+        vuf,
+        started,
+        finished,
+        email_address,
+        email_contents
+      ) (SELECT
+        batch_id,
+        app_id,
+        owner_id,
+        group_id,
+        vuf,
+        started,
+        finished,
+        email_address,
+        email_contents
+      FROM #db_name.ftp_batch ORDER BY batch_id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * id (autoinc not needed in a link table)
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_ftp_batch_asset}
+      (
+        asset_id,
+        batch_id
+      ) (SELECT
+        asset_id,
+        batch_id
+      FROM #db_name.ftp_batch_asset GROUP BY batch_id, asset_id ORDER BY id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+}
+
+/**
+ * Migrate webservice table..
+ */
+function _mediamosa_migration_webservice() {
+  // Get the database name.
+  $db_name = _mediamosa_migration_get_memo_db();
+
+    // Clean the tables.
+    $a_to_truncate = array(
+      'mediamosa_webservice',
+      'mediamosa_webservice_app',
+    );
+
+    foreach ($a_to_truncate as $table_name) {
+      db_truncate($table_name)->execute();
+    }
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_webservice}
+      (
+        webservice_id,
+        version,
+        handle,
+        description,
+        status
+      ) (SELECT
+        webservice_management_id,
+        version,
+        handle,
+        description,
+        status
+      FROM #db_name.webservice_management ORDER BY webservice_management_id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+  /**
+   * Copy from 1.x to 2.x
+   *
+   * Will only copy which have a handle in mediamosa_webservice and valid app_id linked to mediamosa_app.
+   *
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * wmcaid - webservice_app_id
+   * webservice_management_handle - webservice_handle
+   * caid - app_id
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_webservice_app}
+      (
+        webservice_app_id,
+        webservice_handle,
+        app_id,
+        status
+      ) (SELECT
+        wa.wmcaid,
+        wa.webservice_management_handle,
+        wa.caid,
+        wa.status
+      FROM #db_name.webservice_management_capp AS wa JOIN {mediamosa_webservice} AS w ON w.handle = wa.webservice_management_handle JOIN mediamosa_app AS app ON app.app_id = wa.caid ORDER BY wa.wmcaid ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+}
+
+/**
+ * Migrate asset supplement table..
+ */
+function _mediamosa_migration_asset_supplement() {
+  // Get the database name.
+  $db_name = _mediamosa_migration_get_memo_data_db();
+
+  // Get the current mode, which might be empty;
+  $old_mode = db_query('SELECT @@SESSION.sql_mode')->fetchField();
+
+  // Turn off problems with empty dates.
+  db_query("SET SESSION sql_mode = 'ALLOW_INVALID_DATES'");
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_asset_supplement}
+      (
+        supplement_id,
+        asset_id,
+        supplement,
+        tag,
+        oai_prefix,
+        oai_namespaceuri,
+        oai_schemalocation,
+        created,
+        changed
+      ) (SELECT
+        supplement_id,
+        asset_id,
+        supplement,
+        tag,
+        oai_prefix,
+        oai_namespaceuri,
+        oai_schemalocation,
+        created,
+        changed
+      FROM #db_name.asset_supplement ORDER BY created ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+  // Back to old session mode.
+  db_query(strtr("SET SESSION sql_mode = '#old_mode'", array('#old_mode' => $old_mode)));
+}
+
+/**
+ * Migrate job tables.
+ */
+function _mediamosa_migration_job() {
+
+
+  /**
+   * Migration turned off, so we have clean database.
+   */
+  return;
+
+
+
+
+  // Get the database name.
+  $db_name = _mediamosa_migration_get_memo_data_db();
+
+  // Get the current mode, which might be empty;
+  $old_mode = db_query('SELECT @@SESSION.sql_mode')->fetchField();
+
+  // Turn off problems with empty dates.
+  db_query("SET SESSION sql_mode = 'ALLOW_INVALID_DATES'");
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * testtag
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_job}
+      (
+        job_id,
+        asset_id,
+        mediafile_id,
+        owner,
+        app_id,
+        status,
+        progress,
+        priority,
+        job_type,
+        started,
+        finished,
+        error_description,
+        created,
+        changed,
+        create_still,
+        still_parameters
+      ) (SELECT
+        job_id,
+        asset_id,
+        mediafile_id,
+        owner,
+        app_id,
+        status,
+        progress,
+        priority,
+        job_type,
+        started,
+        finished,
+        error_description,
+        created,
+        changed,
+        create_still,
+        still_parameters
+      FROM #db_name.job ORDER BY job_id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_job_still}
+      (
+        still_job_id,
+        job_id,
+        size,
+        frametime,
+        h_padding,
+        v_padding,
+        blackstill_check,
+        still_parameters,
+        created,
+        changed
+      ) (SELECT
+        still_job_id,
+        job_id,
+        size,
+        frametime,
+        h_padding,
+        v_padding,
+        blackstill_check,
+        still_parameters,
+        created,
+        changed
+    FROM #db_name.still_job ORDER BY job_id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_job_transcode}
+      (
+        transcode_job_id ,
+        job_id,
+        transcode_profile_id,
+        tool,
+        command,
+        completed_transcoding_url,
+        file_extension,
+        created,
+        changed
+      ) (SELECT
+        transcode_job_id ,
+        job_id,
+        transcode_profile_id,
+        tool,
+        command,
+        completed_transcoding_url,
+        file_extension,
+        created,
+        changed
+    FROM #db_name.transcode_job ORDER BY job_id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_job_upload}
+      (
+        upload_job_id,
+        job_id,
+        file_size,
+        uploaded_file_size,
+        retranscode,
+        create_still,
+        created,
+        changed
+      ) (SELECT
+        upload_job_id,
+        job_id,
+        file_size,
+        uploaded_file_size,
+        retranscode,
+        create_still,
+        created,
+        changed
+    FROM #db_name.upload_job ORDER BY job_id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+  // Back to old session mode.
+  db_query(strtr("SET SESSION sql_mode = '#old_mode'", array('#old_mode' => $old_mode)));
+}
+
+
+/**
+ * Migrate jobserver tables.
+ */
+function _mediamosa_migration_jobserver_all() {
+
+  global $databases;
+  if (!isset($databases['jobserver']) && !isset($databases['jobserver']['default']) && !isset($databases['jobserver']['default']['mediamosa_jobserver_dbs'])) {
+    return;
+  }
+
+  foreach ($databases['jobserver']['default']['mediamosa_jobserver_dbs'] as $from_dbname => $to_dbname) {
+    if (is_numeric($from_dbname)) {
+      assert(0); // missing key.
+      continue;
+    }
+
+    //_mediamosa_migration_jobserver($from_dbname, $to_dbname);
+  }
+}
+
+function _mediamosa_migration_jobserver($from_dbname, $to_dbname) {
+
+  // Get the current mode, which might be empty;
+  $old_mode = db_query('SELECT @@SESSION.sql_mode')->fetchField();
+
+  // Turn off problems with empty dates.
+  db_query("SET SESSION sql_mode = 'ALLOW_INVALID_DATES'");
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * testtag
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO from_dbname.{mediamosa_job_server}
+      (
+        jobserver_job_id,
+        job_id,
+        status,
+        progress,
+        job_type,
+        progress_id,
+        mediafile_src,
+        mediafile_dest,
+        started,
+        finished,
+        error_description,
+        created,
+        changed
+      ) (SELECT
+        jobserver_job_id,
+        job_id,
+        status,
+        progress,
+        job_type,
+        progress_id,
+        mediafile_src,
+        mediafile_dest,
+        started,
+        finished,
+        error_description,
+        created,
+        changed
+    FROM #to_dbname.{jobserver_job} ORDER BY jobserver_job_id ASC)",
+    array(
+      '#from_dbname' => $from_dbname,
+      '#to_dbname' => $to_dbname,
+    ))
+  );
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * testtag
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO from_dbname.{mediamosa_job_server}
+      (
+        jobserver_job_id,
+        job_id,
+        status,
+        progress,
+        job_type,
+        progress_id,
+        mediafile_src,
+        mediafile_dest,
+        started,
+        finished,
+        error_description,
+        created,
+        changed
+      ) (SELECT
+        jobserver_job_id,
+        job_id,
+        status,
+        progress,
+        job_type,
+        progress_id,
+        mediafile_src,
+        mediafile_dest,
+        started,
+        finished,
+        error_description,
+        created,
+        changed
+    FROM #to_dbname.{jobserver_job} ORDER BY jobserver_job_id ASC)",
+    array(
+      '#from_dbname' => $from_dbname,
+      '#to_dbname' => $to_dbname,
+    ))
+  );
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO from_dbname.{mediamosa_job_server_analyse}
+      (
+        jobserver_job_id,
+        analyse_result,
+        created,
+        changed
+      ) (SELECT
+        jobserver_job_id,
+        analyse_result,
+        created,
+        changed
+    FROM #to_dbname.{jobserver_analyse_job} ORDER BY jobserver_job_id ASC)",
+    array(
+      '#from_dbname' => $from_dbname,
+      '#to_dbname' => $to_dbname,
+    ))
+  );
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO from_dbname.{mediamosa_job_server_still}
+      (
+        jobserver_job_id,
+        frametime,
+        size,
+        h_padding,
+        v_padding,
+        created,
+        changed,
+        blackstill_check,
+        still_parameters
+      ) (SELECT
+        jobserver_job_id,
+        frametime,
+        size,
+        h_padding,
+        v_padding,
+        created,
+        changed,
+        blackstill_check,
+        still_parameters
+    FROM #to_dbname.{jobserver_still_job} ORDER BY jobserver_job_id ASC)",
+    array(
+      '#from_dbname' => $from_dbname,
+      '#to_dbname' => $to_dbname,
+    ))
+  );
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO from_dbname.{mediamosa_job_server_transcode}
+      (
+        jobserver_job_id,
+        frametime,
+        size,
+        h_padding,
+        v_padding,
+        created,
+        changed,
+        blackstill_check,
+        still_parameters
+      ) (SELECT
+        jobserver_job_id,
+        frametime,
+        size,
+        h_padding,
+        v_padding,
+        created,
+        changed,
+        blackstill_check,
+        still_parameters
+    FROM #to_dbname.{jobserver_transcode_job} ORDER BY jobserver_job_id ASC)",
+    array(
+      '#from_dbname' => $from_dbname,
+      '#to_dbname' => $to_dbname,
+    ))
+  );
+
+  // Back to old session mode.
+  db_query(strtr("SET SESSION sql_mode = '#old_mode'", array('#old_mode' => $old_mode)));
+}
+
+/**
+ * Migrate transcode_* tables.
+ */
+function _mediamosa_migration_transcode() {
+
+  // Get the database name.
+  $db_name = _mediamosa_migration_get_memo_db();
+
+  // Get the current mode, which might be empty;
+  $old_mode = db_query('SELECT @@SESSION.sql_mode')->fetchField();
+
+  // Turn off problems with empty dates.
+  db_query("SET SESSION sql_mode = 'ALLOW_INVALID_DATES'");
+
+  // Empty first.
+  $a_all = db_select('mediamosa_transcode_profile', 'mtp')->fields('mtp')->execute()->fetchAll();
+  foreach ($a_all as $o_transcode_profile) {
+    node_delete($o_transcode_profile->nid);
+  }
+
+  // Get the transcode_profiles.
+  $result = mediamosa_db::db_query(
+    'SELECT * FROM #db_name.transcode_profile ORDER BY transcode_profile_id ASC',
+    array(
+      '#db_name' => $db_name,
+    )
+  );
+
+  foreach ($result as $row) {
+    $node = new stdClass();
+    $node->uid = 1; // Admin
+    $node->status = 1; // Published
+    $node->type = mediamosa_node::MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE;
+
+    $node->title = $row[mediamosa_transcode_profile_db::TOOL];
+    $node->{mediamosa_transcode_profile_db::ID} = $row[mediamosa_transcode_profile_db::ID];
+    $node->{mediamosa_transcode_profile_db::APP_ID} = $row[mediamosa_transcode_profile_db::APP_ID];
+    $node->{mediamosa_transcode_profile_db::VERSION} = $row[mediamosa_transcode_profile_db::VERSION];
+    $node->{mediamosa_transcode_profile_db::PROFILE} = $row[mediamosa_transcode_profile_db::PROFILE];
+    $node->{mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE} = $row[mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE];
+    $node->{mediamosa_transcode_profile_db::TOOL} = $row[mediamosa_transcode_profile_db::TOOL];
+    $node->{mediamosa_transcode_profile_db::FILE_EXTENSION} = $row[mediamosa_transcode_profile_db::FILE_EXTENSION];
+    $node->{mediamosa_transcode_profile_db::COMMAND} = $row[mediamosa_transcode_profile_db::COMMAND];
+
+    $node = node_save($node);
+  }
+
+  // Empty first.
+  db_truncate('mediamosa_transcode_mapping')->execute();
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_transcode_mapping}
+      (
+        transcode_mapping_id,
+        tool,
+        nice_parameter,
+        tool_parameter,
+        min_value,
+        max_value,
+        allowed_value,
+        default_value,
+        required,
+        created,
+        changed
+      ) (SELECT
+        transcode_mapping_id,
+        tool,
+        nice_parameter,
+        tool_parameter,
+        min_value,
+        max_value,
+        allowed_value,
+        default_value,
+        required,
+        created,
+        changed
+    FROM #db_name.transcode_mapping ORDER BY transcode_mapping_id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+  // Back to old session mode.
+  db_query(strtr("SET SESSION sql_mode = '#old_mode'", array('#old_mode' => $old_mode)));
+}
+
+/**
+ * Migrate server table to nodes mediamosa_server.
+ */
+function _mediamosa_migration_create_server_nodes() {
+  // Clean the tables.
+  $a_to_truncate = array(
+    'mediamosa_server_streaming_container',
+    'mediamosa_server_tool',
+  );
+
+  foreach ($a_to_truncate as $table_name) {
+    db_truncate($table_name)->execute();
+  }
+
+  // Get the database name.
+  $db_name = _mediamosa_migration_get_memo_db();
+
+  // Empty first.
+  $a_all = db_select('mediamosa_server', 'ms')->fields('ms')->execute()->fetchAll();
+  foreach ($a_all as $o_server) {
+    node_delete($o_server->nid);
+  }
+
+  $tables = array(
+    mediamosa_server_db::SERVER_TYPE_DOWNLOAD => 'download_server',
+    mediamosa_server_db::SERVER_TYPE_STILL => 'still_server',
+    mediamosa_server_db::SERVER_TYPE_STREAMING => 'streaming_server',
+    mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR => 'transcoding_server',
+    mediamosa_server_db::SERVER_TYPE_UPLOAD => 'upload_server',
+  );
+
+  $a_streaming_server_containers = db_query(strtr('SELECT * FROM #db_name.streaming_server_container ORDER BY streaming_server_id ASC', array('#db_name' => $db_name)))->fetchAll();
+  $a_transcoding_server_tool = db_query(strtr('SELECT * FROM #db_name.transcoding_server_tool ORDER BY transcoding_server_id ASC', array('#db_name' => $db_name)))->fetchAll();
+
+  foreach ($tables as $type => $table) {
+    $result = db_query(
+      strtr('SELECT * FROM #db_name.#table_name',
+      array(
+        '#table_name' => $table,
+        '#db_name' => $db_name,
+      )),
+      array(),
+      array(
+        'fetch' => PDO::FETCH_ASSOC,
+      )
+    );
+
+    foreach ($result as $row) {
+      $node = new stdClass();
+      $node->uid = 1; // Admin
+      $node->status = 1; // Published
+      $node->type = mediamosa_node::MEDIAMOSA_NODE_TYPE_SERVER;
+
+      // Find server_id
+      $server_id = 0;
+      foreach ($row as $key => $value) {
+        if (preg_match('/_server_id$/', $key)) {
+          $server_id = $value;
+          break;
+        }
+      }
+
+      $status = 'OFF';
+      if (isset($row['active'])) {
+        $status = $row['active'] ? 'ON' : 'OFF';
+      }
+      elseif (isset($row['status'])) {
+        $status = (!is_numeric($row['status']) ? $row['status'] : ($row['status'] == 1 ? 'ON' : 'OFF'));
+      }
+
+      $node->title = $row['description'];
+      $node->{mediamosa_server_db::SERVER_TYPE} = $type;
+      $node->{mediamosa_server_db::VERSION} = $row['version'];
+      $node->{mediamosa_server_db::SERVER_STATUS} = $status;
+      $node->{mediamosa_server_db::URI} = (isset($row['uri']) ? $row['uri'] : (isset($row['ip_address']) ? $row['ip_address'] : NULL));
+      $node->{mediamosa_server_db::DESCRIPTION} = (isset($row['description']) ? $row['description'] : NULL);
+      $node->{mediamosa_server_db::CONTAINERS} = (isset($row['containers']) ? $row['containers'] : NULL);
+      $node->{mediamosa_server_db::OBJECT_CODE} = (isset($row['objectcode']) ? $row['objectcode'] : NULL);
+      $node->{mediamosa_server_db::SERVER_NAME} = (isset($row['servername']) ? $row['servername'] : NULL);
+      $node->{mediamosa_server_db::SLOTS} = (isset($row['slots']) ? $row['slots'] : NULL);
+      $node->{mediamosa_server_db::TOOLS} = (isset($row['tools']) ? $row['tools'] : NULL);
+      $node->{mediamosa_server_db::URI_UPLOAD_PROGRESS} = (isset($row['uri_uploadprogress']) ? $row['uri_uploadprogress'] : NULL);
+
+      switch ($type) {
+        case mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR:
+          foreach ($a_transcoding_server_tool as $o_tool) {
+            if ($o_tool->transcoding_server_id == $server_id) {
+              $node->{mediamosa_server_tool_db::TABLE_NAME}[] = array(mediamosa_server_tool_db::TOOL => $o_tool->{mediamosa_server_tool_db::TOOL});
+            }
+          }
+          break;
+        case mediamosa_server_db::SERVER_TYPE_STREAMING:
+          foreach ($a_streaming_server_containers as $o_container) {
+            if ($o_container->streaming_server_id == $server_id) {
+              $node->{mediamosa_server_streaming_container_db::TABLE_NAME}[] = array(mediamosa_server_streaming_container_db::CONTAINER => $o_container->{mediamosa_server_streaming_container_db::CONTAINER});
+            }
+          }
+          break;
+      }
+
+      node_save($node);
+    }
+  }
+}
+
+/**
+ * Migrate childs asset mediafiles to the root.
+ * Remove childs assets.
+ */
+function _mediamosa_migration_kill_child_assets() {
+
+  // Lets increase to 10 minutes, although db time isn't counted.
+  set_time_limit(600);
+
+  // First fix the mediamosa_source_id to point to its original.
+
+  // Get all orginals that are have URI on empty.
+  $count = db_query("SELECT COUNT(mediafile_ID) FROM {mediamosa_asset_mediafile} WHERE (uri = '' OR uri IS NULL) AND is_original_file = 'TRUE' AND is_still = 'FALSE'")->fetchField();
+
+  $per = 1000;
+  for ($x = 0; $x < $count; $x += $per) {
+    // Get per 1000 the original IDs.
+    $a_mediafile_originals = db_query_range("SELECT mediafile_id, asset_id FROM {mediamosa_asset_mediafile} WHERE (uri = '' OR uri IS NULL) AND is_original_file = 'TRUE' AND is_still = 'FALSE' GROUP BY asset_id ORDER BY created ASC, mediafile_id ASC", $x, $per)->fetchAllKeyed();
+
+    // Now loop through the originals and set the mediafile_source_id to the original.
+    foreach ($a_mediafile_originals as $mediafile_id => $asset_id) {
+      db_query("UPDATE {mediamosa_asset_mediafile} SET mediafile_id_source = :mediafile_id_source WHERE asset_id = :asset_id AND (URI = '' OR URI IS NULL) AND is_original_file = 'FALSE' AND mediafile_id_source IS NULL", array(':mediafile_id_source' => $mediafile_id, ':asset_id' => $asset_id));
+    }
+
+    // Clear mem.
+    unset($a_mediafile_originals);
+  }
+
+  // Second move all child mediafile under the root.
+  db_query("UPDATE {mediamosa_asset_mediafile} SET asset_id = asset_id_root");
+
+  // Get all orginals that are have URI on empty.
+  $count = db_query("SELECT COUNT(mediafile_ID) FROM {mediamosa_asset_mediafile} WHERE (uri = '' OR uri IS NULL) AND is_original_file = 'TRUE' AND is_still = 'FALSE'")->fetchField();
+
+  $per = 1000;
+  for ($x = 0; $x < $count; $x += $per) {
+    // Get per 1000 the original IDs.
+    $a_mediafile_originals = db_query_range("SELECT mediafile_id, asset_id FROM {mediamosa_asset_mediafile} WHERE (uri = '' OR uri IS NULL) AND is_original_file = 'TRUE' AND is_still = 'FALSE' GROUP BY asset_id ORDER BY created ASC, mediafile_id ASC", $x, $per)->fetchAllKeyed();
+
+    // Now loop through the originals and set the mediafile_source_id to the original.
+    foreach ($a_mediafile_originals as $mediafile_id => $asset_id) {
+      db_query("UPDATE {mediamosa_asset_mediafile} SET mediafile_id_source = :mediafile_id_source WHERE asset_id = :asset_id AND (URI = '' OR URI IS NULL) AND is_original_file = 'FALSE' AND mediafile_id_source IS NULL", array(':mediafile_id_source' => $mediafile_id, ':asset_id' => $asset_id));
+    }
+
+    // Clear mem.
+    unset($a_mediafile_originals);
+  }
+}

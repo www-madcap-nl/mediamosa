@@ -1,0 +1,15 @@
+; $Id $
+
+name = "Status view page"
+description = "Enable to view status of the Mediamosa, which runs a selection of unittests every 10 minutes and shows the results."
+package = "MediaMosa 2 - Maintenance"
+version = "2.0.0"
+core = 7.x
+
+; Dependencies (module names)
+dependencies[] = mediamosa
+
+; Used files.
+files[] = mediamosa_maintenance_status.module
+files[] = mediamosa_maintenance_status.inc
+files[] = mediamosa_maintenance_status.rest.inc

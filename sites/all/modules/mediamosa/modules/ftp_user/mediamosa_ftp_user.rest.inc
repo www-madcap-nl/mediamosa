@@ -1,0 +1,603 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+ /**
+  * @file
+  *
+  */
+
+/**
+ * @file
+ * FTP users module
+ */
+
+/* FTP settings
+ */
+define('MEDIAMOSA_FTP_ROOTDIR', '/ftp');
+define('MEDIAMOSA_FTP_CREDENTIAL_LENGTH', 8);
+
+/**
+ * URI: /ftp
+ *      /ftp/list (depricated)
+ *
+ * Method: GET
+ *
+ * 1.x: ftp_user_list
+ *
+ */
+class mediamosa_rest_call_ftp_user_list extends mediamosa_rest_call {
+  // ------------------------------------------------------------------ Consts.
+  // Rest vars;
+
+  // ------------------------------------------------------------------ Get Var Setup.
+  public function get_var_setup() {
+    $a_var_setup = array();
+
+    // Enrich with required REST vars.
+    return self::get_var_setup_default($a_var_setup);
+  }
+
+  // ------------------------------------------------------------------ Do Call.
+  public function do_call() {
+    $o_mediamosa = mediamosa::get();
+
+    $a_app_ids = $this->get_param_value_app();
+    $app_id = reset($a_app_ids);
+
+    // Test webservice.
+    mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_BATCH_UPLOAD, $a_app_ids);
+
+    // Switch to FTP.
+    $old_db = mediamosa_db::db_set_active_ftp();
+    try {
+      $result = mediamosa_db::db_query('SELECT * FROM {ftpuser} WHERE eua_id = :eua_id', array(':eua_id' => $app_id));
+
+      foreach ($result as $a_user) {
+        $result->add_item(
+          array(
+            'userid' => $a_user['userid'],
+            'active' => intval($a_user['active']) ? 'true' : 'false',
+            'modified' => $a_user['modified'],
+          )
+        );
+      }
+    }
+    catch (Exception $e) {
+      assert($e);
+      mediamosa_db::db_set_active($old_db);
+      throw $e;
+    }
+
+    // Switch back.
+    mediamosa_db::db_set_active($old_db);
+  }
+}
+
+/**
+ * URI: /ftp/$user/create
+ *      /ftp/create
+ *
+ * Method: POST
+ *
+ * 1.x: ftp_user_create
+ *
+ */
+class mediamosa_rest_call_ftp_user_create extends mediamosa_rest_call {
+  // ------------------------------------------------------------------ Consts.
+  // Rest vars;
+  const USER = 'user';
+  const PASSWORD = 'password';
+
+  // ------------------------------------------------------------------ Get Var Setup.
+  public function get_var_setup() {
+    $a_var_setup = array();
+
+    $a_var_setup = array(
+      self::VARS => array(
+        self::USER => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_DESCRIPTION => 'The user.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+        ),
+        self::PASSWORD => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_DESCRIPTION => 'The password.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+        ),
+      )
+    );
+
+    // Enrich with required REST vars.
+    return self::get_var_setup_default($a_var_setup);
+  }
+
+  // ------------------------------------------------------------------ Do Call.
+  public function do_call() {
+    $o_mediamosa = mediamosa::get();
+
+    $a_app_ids = $this->get_param_value_app();
+    $app_id = reset($a_app_ids);
+
+    $username = $this->get_param_value(self::USER);
+    $password = $this->get_param_value(self::PASSWORD);
+
+    // Test webservice.
+    mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_BATCH_UPLOAD, $a_app_ids);
+
+    $password = "{md5}". base64_encode(md5($password, TRUE));
+    $eua_name = sprintf("%03d", $app_id);
+
+    $data_oke = TRUE;
+    if (mediamosa_unicode::substr($username, -3) != $eua_name) {
+      $username .= $eua_name;
+    }
+
+    if ((mediamosa_unicode::strlen($username) < MEDIAMOSA_FTP_CREDENTIAL_LENGTH) || (mediamosa_unicode::strlen($password) < MEDIAMOSA_FTP_CREDENTIAL_LENGTH)) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_FTP_CREDENTIAL_LENGTH);
+    }
+
+    // Switch to FTP.
+    $old_db = mediamosa_db::db_set_active_ftp();
+    try {
+      mediamosa_db::db_query(
+        'INSERT INTO {ftpuser} eua_id = :app_id, userid = :username, passwd = :password, homedir = :homedir, active = 1, count = 0',
+        array(
+          ':app_id' => $app_id,
+          ':username' => $username,
+          ':password' => $password,
+          ':homedir' => mediamosa_configuration_storage::mount_point_get() . MEDIAMOSA_FTP_ROOTDIR . '/' . $username
+        )
+      );
+    }
+    catch (PDOException $e) {
+      assert($e);
+      mediamosa_db::db_set_active($old_db);
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_FTP_ERROR);
+    }
+    catch (Exception $e) {
+      assert($e);
+      mediamosa_db::db_set_active($old_db);
+      throw $e;
+    }
+
+    // Switch back.
+    mediamosa_db::db_set_active($old_db);
+
+    // Set OK
+    $o_mediamosa->set_result_okay();
+  }
+}
+
+/**
+ * URI: /ftp/$user/delete
+ *
+ * Method: POST
+ *
+ * 1.x: ftp_user_delete
+ *
+ */
+class mediamosa_rest_call_ftp_user_delete extends mediamosa_rest_call {
+  // ------------------------------------------------------------------ Consts.
+  // Rest vars;
+  const USER = 'user';
+
+  // ------------------------------------------------------------------ Get Var Setup.
+  public function get_var_setup() {
+    $a_var_setup = array();
+
+    $a_var_setup = array(
+      self::VARS => array(
+        self::USER => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_DESCRIPTION => 'The user.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+        ),
+      )
+    );
+
+    // Enrich with required REST vars.
+    return self::get_var_setup_default($a_var_setup);
+  }
+
+  // ------------------------------------------------------------------ Do Call.
+  public function do_call() {
+    $o_mediamosa = mediamosa::get();
+
+    $a_app_ids = $this->get_param_value_app();
+    $app_id = reset($a_app_ids);
+
+    $user = $this->get_param_value(self::USER);
+
+    // Test webservice.
+    mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_BATCH_UPLOAD, $a_app_ids);
+
+    // Switch to FTP.
+    $old_db = mediamosa_db::db_set_active_ftp();
+    try {
+      mediamosa_db::db_query(
+        'DELETE FROM {ftpuser} WHERE userid = :userid && eua_id = :app_id',
+        array(
+          ':userid' => $user,
+          ':app_id' => $app_id
+        )
+      );
+    }
+    catch (Exception $e) {
+      assert($e);
+      mediamosa_db::db_set_active($old_db);
+      throw $e;
+    }
+
+    // Switch back.
+    mediamosa_db::db_set_active($old_db);
+
+    // Set OK
+    $o_mediamosa->set_result_okay();
+  }
+}
+
+/**
+ * URI: /ftp/$user
+ *      /ftp/$user/update
+ *
+ * Method: POST
+ *
+ * 1.x: ftp_user_update
+ *
+ */
+class mediamosa_rest_call_ftp_user_update extends mediamosa_rest_call {
+  // ------------------------------------------------------------------ Consts.
+  // Rest vars;
+  const USER = 'user';
+  const PASSWORD = 'password';
+  const ACTIVE = 'active';
+
+  // ------------------------------------------------------------------ Get Var Setup.
+  public function get_var_setup() {
+    $a_var_setup = array();
+
+    $a_var_setup = array(
+      self::VARS => array(
+        self::USER => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_DESCRIPTION => 'The user.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+        ),
+        self::PASSWORD => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_DESCRIPTION => 'The password.',
+        ),
+        self::ACTIVE => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_DESCRIPTION => 'Active state.',
+        ),
+      )
+    );
+
+    // Enrich with required REST vars.
+    return self::get_var_setup_default($a_var_setup);
+  }
+
+  // ------------------------------------------------------------------ Do Call.
+  public function do_call() {
+    $o_mediamosa = mediamosa::get();
+
+    $a_app_ids = $this->get_param_value_app();
+    $app_id = reset($a_app_ids);
+
+    $user = $this->get_param_value(self::USER);
+    $password = $this->get_param_value(self::PASSWORD);
+    $active = $this->get_param_value(self::ACTIVE);
+
+    // Test webservice.
+    mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_BATCH_UPLOAD, $a_app_ids);
+
+    if (!$this->isset_given_param(self::PASSWORD) && !$this->isset_given_param(self::ACTIVE)) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_NO_CHANGES);
+    }
+
+    // Switch to FTP.
+    $old_db = mediamosa_db::db_set_active_ftp();
+    try {
+      // Must exist.
+      mediamosa_db::db_must_exists(mediamosa_ftp_user_db::TABLE_NAME, array('userid' => $user));
+
+      $query = mediamosa_db::db_update(mediamosa_ftp_user_db::TABLE_NAME);
+      $query->condition('userid', $user);
+      $query->condition('eua_id', $app_id);
+
+      $a_fields = array(
+        'modified' => mediamosa::db_current_timestamp_now()
+      );
+
+      if ($active) {
+        $a_fields['active'] = $active ? 1 : 0;
+      }
+
+      if ($password) {
+        $a_fields['passwd'] = '{md5}' . base64_encode(md5($password, TRUE));
+      }
+
+      // Add changed field.
+      $a_fields = mediamosa_db::db_update_enrich($a_fields);
+
+      $query->fields($a_fields);
+      $query->execute();
+    }
+    catch (Exception $e) {
+      assert($e);
+      mediamosa_db::db_set_active($old_db);
+      throw $e;
+    }
+
+    // Switch back.
+    mediamosa_db::db_set_active($old_db);
+
+    // Set OK
+    $o_mediamosa->set_result_okay();
+  }
+}
+
+/**
+ * URI: /ftp/$user
+ *
+ *
+ * Method: GET
+ *
+ * 1.x: ftp_user_get
+ *
+ */
+class mediamosa_rest_call_ftp_user_get extends mediamosa_rest_call {
+  // ------------------------------------------------------------------ Consts.
+  // Rest vars;
+  const USER = 'user';
+
+  // ------------------------------------------------------------------ Get Var Setup.
+  public function get_var_setup() {
+    $a_var_setup = array();
+
+    $a_var_setup = array(
+      self::VARS => array(
+        self::USER => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_DESCRIPTION => 'The user.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+        ),
+      )
+    );
+
+    // Enrich with required REST vars.
+    return self::get_var_setup_default($a_var_setup);
+  }
+
+  // ------------------------------------------------------------------ Do Call.
+  public function do_call() {
+    $o_mediamosa = mediamosa::get();
+
+    $a_app_ids = $this->get_param_value_app();
+    $app_id = reset($a_app_ids);
+
+    $user = $this->get_param_value(self::USER);
+
+    // Test webservice.
+    mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_BATCH_UPLOAD, $a_app_ids);
+
+    // Switch to FTP.
+    $old_db = mediamosa_db::db_set_active_ftp();
+    try {
+      $query = mediamosa_db::db_select(mediamosa_ftp_user_db::TABLE_NAME);
+      $query->condition('userid', $user);
+      $query->condition('eua_id', $app_id);
+      $a_user = $query->execute()->fetchAssoc();
+
+      if (!$a_user) {
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_FTP_UNKNOWN_USER);
+      }
+
+      $o_mediamosa->add_item(array(
+        "userid" => $a_user['userid'],
+        "active" => intval($a_user['active']) ? 'true' : 'false',
+        "modified" => $a_user['modified'],
+      ));
+    }
+    catch (Exception $e) {
+      assert($e);
+      mediamosa_db::db_set_active($old_db);
+      throw $e;
+    }
+
+    // Switch back.
+    mediamosa_db::db_set_active($old_db);
+  }
+}
+
+/**
+ * URI: /ftp/$user/change_password
+ * (depricated)
+ *
+ * Method: POST
+ *
+ * 1.x: ftp_user_change_password
+ *
+ */
+class mediamosa_rest_call_ftp_user_update_password extends mediamosa_rest_call {
+  // ------------------------------------------------------------------ Consts.
+  // Rest vars;
+  const USER = 'user';
+  const PASSWORD = 'password';
+
+  // ------------------------------------------------------------------ Get Var Setup.
+  public function get_var_setup() {
+    $a_var_setup = array();
+
+    $a_var_setup = array(
+      self::VARS => array(
+        self::USER => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_DESCRIPTION => 'The user.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+        ),
+        self::PASSWORD => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_DESCRIPTION => 'The password.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+        ),
+      )
+    );
+
+    // Enrich with required REST vars.
+    return self::get_var_setup_default($a_var_setup);
+  }
+
+  // ------------------------------------------------------------------ Do Call.
+  public function do_call() {
+    $o_mediamosa = mediamosa::get();
+
+    $a_app_ids = $this->get_param_value_app();
+    $app_id = reset($a_app_ids);
+
+    $user = $this->get_param_value(self::USER);
+    $password = $this->get_param_value(self::PASSWORD);
+
+    // Test webservice.
+    mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_BATCH_UPLOAD, $a_app_ids);
+
+    // Switch to FTP.
+    $old_db = mediamosa_db::db_set_active_ftp();
+    try {
+      // Must exist.
+      mediamosa_db::db_must_exists(mediamosa_ftp_user_db::TABLE_NAME, array('userid' => $user));
+
+      $query = mediamosa_db::db_update(mediamosa_ftp_user_db::TABLE_NAME);
+      $query->condition('userid', $user);
+      $query->condition('eua_id', $app_id);
+
+      $a_fields = array(
+        'modified' => mediamosa::db_current_timestamp_now(),
+        'passwd' => '{md5}' . base64_encode(md5($password, TRUE)),
+      );
+
+      $query->fields($a_fields);
+      $query->execute();
+    }
+    catch (Exception $e) {
+      assert($e);
+      mediamosa_db::db_set_active($old_db);
+      throw $e;
+    }
+
+    // Switch back.
+    mediamosa_db::db_set_active($old_db);
+
+    // Set OK
+    $o_mediamosa->set_result_okay();
+  }
+}
+
+/**
+ * URI: /ftp/$user/change_status
+ * (depricated)
+ *
+ * Method: POST
+ *
+ * 1.x: ftp_user_change_status
+ *
+ */
+class mediamosa_rest_call_ftp_user_update_status extends mediamosa_rest_call {
+  // ------------------------------------------------------------------ Consts.
+  // Rest vars;
+  const USER = 'user';
+  const ACTIVE = 'active';
+
+  // ------------------------------------------------------------------ Get Var Setup.
+  public function get_var_setup() {
+    $a_var_setup = array();
+
+    $a_var_setup = array(
+      self::VARS => array(
+        self::USER => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_DESCRIPTION => 'The user.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+        ),
+        self::ACTIVE => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_DESCRIPTION => 'Active state.',
+        ),
+      )
+    );
+
+    // Enrich with required REST vars.
+    return self::get_var_setup_default($a_var_setup);
+  }
+
+  // ------------------------------------------------------------------ Do Call.
+  public function do_call() {
+    $o_mediamosa = mediamosa::get();
+
+    $a_app_ids = $this->get_param_value_app();
+    $app_id = reset($a_app_ids);
+
+    $user = $this->get_param_value(self::USER);
+    $active = $this->get_param_value(self::ACTIVE);
+
+    // Test webservice.
+    mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_BATCH_UPLOAD, $a_app_ids);
+
+    // Switch to FTP.
+    $old_db = mediamosa_db::db_set_active_ftp();
+    try {
+      // Must exist.
+      mediamosa_db::db_must_exists(mediamosa_ftp_user_db::TABLE_NAME, array('userid' => $user));
+
+      $query = mediamosa_db::db_update(mediamosa_ftp_user_db::TABLE_NAME);
+      $query->condition('userid', $user);
+      $query->condition('eua_id', $app_id);
+
+      $a_fields = array(
+        'modified' => mediamosa::db_current_timestamp_now()
+      );
+
+      if ($active) {
+        $a_fields['active'] = $active ? 1 : 0;
+      }
+
+      $query->fields($a_fields);
+      $query->execute();
+    }
+    catch (Exception $e) {
+      assert($e);
+      mediamosa_db::db_set_active($old_db);
+      throw $e;
+    }
+
+    // Switch back.
+    mediamosa_db::db_set_active($old_db);
+
+    // Set OK
+    $o_mediamosa->set_result_okay();
+  }
+}
