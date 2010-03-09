@@ -1434,7 +1434,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   protected function updateCollection($collection_id, array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
     $a_parameters += array(
-      mediamosa_rest_call_update_mediafile::USER_ID => self::SIMPLETEST_USER_ID,
+      mediamosa_rest_call_collection_update::USER_ID => self::SIMPLETEST_USER_ID,
     );
 
     // Set the URI.
@@ -1755,6 +1755,72 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // Return the array XML.
     return $a_xml;
+  }
+
+  /**
+   * Set is private on asset.
+   * Based on the POST rest call /asset/$asset_id (POST)
+   */
+  protected function set_isprivate($asset_id, $isprivate = FALSE, array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    // Parameters asset.
+    $a_parameters += array(
+      mediamosa_rest_call_asset_update::USER_ID => self::SIMPLETEST_USER_ID,
+      mediamosa_rest_call_asset_update::ISPRIVATE => (
+        $isprivate ?
+          mediamosa_rest_call_asset_update::ISPRIVATE_TRUE :
+          mediamosa_rest_call_asset_update::ISPRIVATE_FALSE
+      ),
+    );
+
+    // Set the URI.
+    $uri = strtr('asset/@asset_id', array('@asset_id' => $asset_id));
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $a_parameters, array(), $a_expected_result_ids, $do_internal);
+
+    // Test response.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr("Set isprivate with ID: @asset_id, got result @result (@result_description)", array(
+        '@asset_id' => $asset_id,
+        '@result' => (string)$response['xml']->header->request_result_id,
+        '@result_description' => $response['xml']->header->request_result_description
+      ))
+    );
+
+    // Return response.
+    return $response;
+  }
+
+  /**
+   * Set unappropiate on asset.
+   * Based on the POST rest call /asset/$asset_id (POST)
+   */
+  protected function set_unappropiate($asset_id, $unappropiate = FALSE, array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    // Parameters asset.
+    $a_parameters += array(
+      mediamosa_rest_call_asset_update::USER_ID => self::SIMPLETEST_USER_ID,
+      mediamosa_rest_call_asset_update::IS_UNAPPROPRIATE => ($unappropiate ? 'TRUE' : 'FALSE'),
+    );
+
+    // Set the URI.
+    $uri = strtr('asset/@asset_id', array('@asset_id' => $asset_id));
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $a_parameters, array(), $a_expected_result_ids, $do_internal);
+
+    // Test response.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr("Set isprivate with ID: @asset_id, got result @result (@result_description)", array(
+        '@asset_id' => $asset_id,
+        '@result' => (string)$response['xml']->header->request_result_id,
+        '@result_description' => $response['xml']->header->request_result_description
+      ))
+    );
+
+    // Return response.
+    return $response;
   }
 
 
