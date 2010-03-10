@@ -16,3 +16,4 @@ files[] = mediamosa_aut.test
 files[] = mediamosa_aut.masterslave.test
 files[] = mediamosa_aut.ega.test
 files[] = mediamosa_aut.owner.test
+files[] = mediamosa_aut.rights.test
