@@ -122,7 +122,7 @@ class mediamosa_aut_group {
    */
   static function get_by_group_name(array $a_app_ids, $group_name) {
 
-    return db_select(mediamosa_aut_group_db::TABLE_NAME, 'ag')
+    return mediamosa_db::db_select(mediamosa_aut_group_db::TABLE_NAME, 'ag')
       ->fields('ag', array(
         mediamosa_aut_group_db::AUT_GROUP_NAME,
         mediamosa_aut_group_db::AUT_GROUP_TYPE,
@@ -279,7 +279,7 @@ class mediamosa_aut_group {
     // Lets make sure its not an array here.
     assert(!is_array($app_id));
 
-    $a_group = mediamosa_aut_group::get_by_group_name($app_id, $group_name);
+    $a_group = mediamosa_aut_group::get_by_group_name(array($app_id), $group_name);
     if (!$a_group) {
       throw new mediamosa_exception_error_aut_group_not_found(array('@group' => $group_name));
     }

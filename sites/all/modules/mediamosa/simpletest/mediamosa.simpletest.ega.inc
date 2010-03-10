@@ -1332,6 +1332,62 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     );
   }
 
+  /**
+   * Delete an aut group.
+   * Based on REST call autorisation_group/$groupname/delete (POST)
+   */
+  protected function deleteAutGroup($groupname, array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    // Set the URI.
+    $uri = strtr('autorisation_group/@groupname/delete', array('@groupname' => $groupname));
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $a_parameters, array(), $a_expected_result_ids, $do_internal);
+
+    // Check response.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr(
+        "Deleted aut group ID '@groupname', got result @result (@result_description)",
+        array(
+          '@groupname' => $groupname,
+          '@result' => (string)$response['xml']->header->request_result_id,
+          '@result_description' => (string)$response['xml']->header->request_result_description
+        )
+      )
+    );
+  }
+
+  /**
+   * Delete an aut hostname.
+   * Based on REST call autorisation_group/$groupname/hostname/delete (POST)
+   */
+  protected function deleteAutHostname($groupname, array $a_hostnames, array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    // Parameters asset.
+    $a_parameters += array(
+      mediamosa_rest_call_aut_group_create_hostnames::HOSTNAME => $a_hostnames,
+    );
+
+    // Set the URI.
+    $uri = strtr('autorisation_group/@groupname/hostname/delete', array('@groupname' => $groupname));
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $a_parameters, array(), $a_expected_result_ids, $do_internal);
+
+    // Check response.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr(
+        "Deleted aut hostnames @hostname for group with ID '@groupname', got result @result (@result_description)",
+        array(
+          '@groupname' => $groupname,
+          '@hostname' => implode(', ', $a_hostnames),
+          '@result' => (string)$response['xml']->header->request_result_id,
+          '@result_description' => (string)$response['xml']->header->request_result_description
+        )
+      )
+    );
+  }
+
   // ------------------------------------------------------------------ Other functions.
   /**
    * Change ownership.
