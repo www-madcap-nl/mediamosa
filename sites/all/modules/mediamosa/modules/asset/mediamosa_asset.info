@@ -40,6 +40,7 @@ files[] = mediafile/metadata/mediamosa_asset_mediafile_metadata.test
 files[] = mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.rest.inc
 files[] = mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.test
 files[] = mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.acl.test
+files[] = mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.profile.test
 
 ; Mediafile Still.
 files[] = mediafile/still/mediamosa_asset_mediafile_still.rest.inc
