@@ -460,11 +460,13 @@ class mediamosa_response extends mediamosa {
       foreach ($mixed_value as $mixed_key => $value) {
         $item_child = $this->generate_plain_xml_add_child($item, $key, $value, $max_depth);
 
-        $a_attributes = unserialize(mediamosa_unicode::substr($mixed_key, 1));
-        if (is_array($a_attributes)) {
-          foreach ($a_attributes as $attr_name => $attr_value) {
-            assert(count($attr_name));
-            $item_child->addAttribute($attr_name, $attr_value);
+        if ($mixed_key != '#0') {
+          $a_attributes = @unserialize(mediamosa_unicode::substr($mixed_key, 1));
+          if (is_array($a_attributes)) {
+            foreach ($a_attributes as $attr_name => $attr_value) {
+              assert(count($attr_name));
+              $item_child->addAttribute($attr_name, $attr_value);
+            }
           }
         }
       }

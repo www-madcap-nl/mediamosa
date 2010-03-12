@@ -28,7 +28,7 @@
   * @file
   * Unittests for mediafile functions.
   */
-class MediaMosaAssetMediafileFunctionsTestCaseEga extends MediaMosaTestCaseEga {
+class MediaMosaAssetMediafileFunctionsTestCaseEga extends MediaMosaTestCaseEgaJob {
 
   // ------------------------------------------------------------------ Members.
 
@@ -281,90 +281,64 @@ class MediaMosaAssetMediafileFunctionsTestCaseEga extends MediaMosaTestCaseEga {
       t("Is_external is TRUE")
     );
 
-/*
     //
     // show_stills
     //
-    $still_asset_id = $this->_create_asset();
-    $still_mediafile_id = $this->_create_mediafile($still_asset_id);
-    $s_desc = null;
-    $still_time_code = 10;
-    $still_order = 0;
-    $still_type = 'NONE';
-    $still_default = 'TRUE';
-    $tag = '';
-    $still_id = $this->_create_still($still_asset_id, $s_desc, $still_time_code, $still_order, $still_type, $still_default, $still_mediafile_id, $tag);
 
-    // show_stills = NULL
-    $a_args = array(
-      'uri' => array(
-        'mediafile_id' => $still_mediafile_id
-      ),
-      'get' => array(
-        'app_id' => SIMPLETEST_APP_ID
-      ),
-    );
-    $result = $this->_do_restcall(
-      "media_management_get_mediafile",
-      array($a_args)
-    );
+    // Create upload file.
+    $a_upload = $this->uploadTestFile();
+    $asset_id = $a_upload['asset_id'];
+    $mediafile_id = $a_upload['mediafile_id'];
+
+    // Create still job.
+    $job_id = $this->createMediafileStill($mediafile_id);
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Get the stills.
+    $a_stills = $this->getMediafileStill($mediafile_id);
+    $this->assertTrue(count($a_stills) == 1, 'One dimension result.');
+
+    // Get first array.
+    $a_stills = $a_stills[0];
+    $still_mediafile_id = $a_stills['stills']['still_id'];
+
+    // Get still.
+    // show_stills = NULL.
+    $a_mf = $this->getMediafile($mediafile_id);
+    //$this->var_export($a_mf);
+
+    // Check the response.
     $this->assertTrue(
-      $result->response['header']['request_result_id'] === ERRORCODE_OKAY,
-      "Get mediafile ". $still_mediafile_id ." (request_result_id = ". ERRORCODE_OKAY ."): %s"
-    );
-    $item = reset($result->response['items']);
-    $this->assertTrue(
-      isset($item['still']),
-      'Still is isset (show_stills=NULL), %s'
+      isset($a_mf['still']),
+      t("Is still exists?")
     );
 
-    // show_stills = TRUE
-    $a_args = array(
-      'uri' => array(
-        'mediafile_id' => $still_mediafile_id
-      ),
-      'get' => array(
-        'app_id' => SIMPLETEST_APP_ID,
-        'show_stills' => 'TRUE',
-      ),
+    // Get still.
+    // show_stills = TRUE.
+    $a_parameters = array(
+      mediamosa_rest_call_get_mediafile::SHOW_STILLS => 'TRUE',
     );
-    $result = $this->_do_restcall(
-      "media_management_get_mediafile",
-      array($a_args)
-    );
+    $a_mf = $this->getMediafile($mediafile_id, $a_parameters);
+
+    // Check the response.
     $this->assertTrue(
-      $result->response['header']['request_result_id'] === ERRORCODE_OKAY,
-      "Get mediafile ". $still_mediafile_id ." (request_result_id = ". ERRORCODE_OKAY ."): %s"
-    );
-    $item = reset($result->response['items']);
-    $this->assertTrue(
-      isset($item['still']),
-      'Still is isset (show_stills=TRUE), %s'
+      isset($a_mf['still']),
+      t("Is still exists?")
     );
 
-    // show_stills = FALSE
-    $a_args = array(
-      'uri' => array(
-        'mediafile_id' => $still_mediafile_id
-      ),
-      'get' => array(
-        'app_id' => SIMPLETEST_APP_ID,
-        'show_stills' => 'FALSE',
-      ),
+    // Get still.
+    // show_stills = FALSE.
+    $a_parameters = array(
+      mediamosa_rest_call_get_mediafile::SHOW_STILLS => 'FALSE',
     );
-    $result = $this->_do_restcall(
-      "media_management_get_mediafile",
-      array($a_args)
-    );
-    $this->assertTrue(
-      $result->response['header']['request_result_id'] === ERRORCODE_OKAY,
-      "Get mediafile ". $still_mediafile_id ." (request_result_id = ". ERRORCODE_OKAY ."): %s"
-    );
-    $item = reset($result->response['items']);
+    $a_mf = $this->getMediafile($mediafile_id, $a_parameters);
+
+    // Check the response.
     $this->assertFalse(
-      isset($item['still']),
-      'Still is isset (show_stills=FALSE), %s'
+      isset($a_mf['still']),
+      t("Is still not exists?")
     );
-*/
   }
 }
