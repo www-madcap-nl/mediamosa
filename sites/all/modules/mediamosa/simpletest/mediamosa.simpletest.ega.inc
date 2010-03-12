@@ -909,6 +909,75 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   }
 
   /**
+   * Get an autorisation group.
+   * Based on the rest call /autorisation_group/$groupname (GET)
+   */
+  protected function getAutGroup($groupname, array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+
+    // Set uri.
+    $uri = strtr('autorisation_group/@groupname', array('@groupname' => $groupname));
+
+    // Do Post call.
+    $response = $this->restCallGet($uri, $a_parameters, array(), $a_expected_result_ids);
+
+    // Check response.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr(
+        "Get aut group with name: @groupname, got result @result (@result_description)",
+        array(
+          '@groupname' => $groupname,
+          '@result' => (string)$response['xml']->header->request_result_id,
+          '@result_description' => (string)$response['xml']->header->request_result_description
+        )
+      )
+    );
+
+    // Get response.
+    $a_aut_group = mediamosa_lib::simplexml2array($response['xml']->items->item[0]);
+
+    // Return data.
+    return $a_aut_group;
+  }
+
+  /**
+   * Get an autorisation hostname.
+   * Based on the rest call /autorisation_group/$groupname/hostname (GET)
+   */
+  protected function getAutHostname($groupname, $limit, $offset, array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+    // Parameters asset.
+    $a_parameters += array(
+      mediamosa_rest_call_aut_group_get_hostnames::LIMIT => $limit,
+      mediamosa_rest_call_aut_group_get_hostnames::OFFSET => $offset,
+    );
+
+    // Set uri.
+    $uri = strtr('autorisation_group/@groupname/hostname', array('@groupname' => $groupname));
+
+    // Do Post call.
+    $response = $this->restCallGet($uri, $a_parameters, array(), $a_expected_result_ids);
+
+    // Check response.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr(
+        "Get aut hostname with name: @groupname, got result @result (@result_description)",
+        array(
+          '@groupname' => $groupname,
+          '@result' => (string)$response['xml']->header->request_result_id,
+          '@result_description' => (string)$response['xml']->header->request_result_description
+        )
+      )
+    );
+
+    // Get response.
+    $a_xml = mediamosa_lib::responsexml2array($response['xml']);
+
+    // Return data.
+    return $a_xml;
+  }
+
+  /**
    * Get the AUT/ACL settings on mediafile.
    */
   protected function getMediafileAut($mediafile_id, array $a_parameters = array(), $description = 'Get ACL on mediafile', array $a_expected_results = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
@@ -1604,6 +1673,38 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
         array(
           '@description' => $description,
           '@group_id' => $group_id,
+          '@result' => (string)$response['xml']->header->request_result_id,
+          '@result_description' => (string)$response['xml']->header->request_result_description
+        )
+      )
+    );
+
+    return $response;
+  }
+
+  /**
+   * Updates an aut group.
+   * Based on the REST call /autorisation_group/$groupname (POST)
+   */
+  protected function updateAutGroup($groupname, array $a_parameters = array(), $description = 'Update on group', array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+
+    // More than one, we need to do something.
+    $this->assertTrue(count($a_parameters), 'Any update parameters set');
+
+    // The uri.
+    $uri = strtr('autorisation_group/@groupname', array('@groupname' => $groupname));
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $a_parameters, array(), $a_expected_result_ids, $do_internal);
+
+    // Test return status.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr(
+        "@description: @groupname, got result @result (@result_description)",
+        array(
+          '@description' => $description,
+          '@groupname' => $groupname,
           '@result' => (string)$response['xml']->header->request_result_id,
           '@result_description' => (string)$response['xml']->header->request_result_description
         )

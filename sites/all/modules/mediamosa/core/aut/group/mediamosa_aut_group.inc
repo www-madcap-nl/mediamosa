@@ -146,17 +146,17 @@ class mediamosa_aut_group {
   static function get_hostnames_by_group_name(array $a_app_ids, $group_name, $offset, $limit) {
     $a_query = array();
 
-    $a_query[mediamosa_db_query::A_SELECT_EXPR][] = "{aut_name}.aut_name";
-    $a_query[mediamosa_db_query::A_FROM][] = "{aut_name}";
+    $a_query[mediamosa_db_query::A_SELECT_EXPR][] = "{mediamosa_aut_name}.aut_name";
+    $a_query[mediamosa_db_query::A_FROM][] = "{mediamosa_aut_name}";
 
-    $a_query[mediamosa_db_query::A_JOIN]["aut_group"] = "LEFT JOIN {aut_group} USING (aut_group_id)";
+    $a_query[mediamosa_db_query::A_JOIN]["aut_group"] = "LEFT JOIN {mediamosa_aut_group} USING (aut_group_id)";
 
-    $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = sprintf('%s IN(%s)', mediamosa_aut_group_db::APP_ID, implode(',', $a_app_ids));
+    $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = sprintf('{mediamosa_aut_name}.%s IN(%s)', mediamosa_aut_group_db::APP_ID, implode(',', $a_app_ids));
     $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]["group_type"][mediamosa_db_query::WHERE_OR][] = "aut_group_type IS NOT NULL";// trick to keep the index in order
     $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]["group_type"][mediamosa_db_query::WHERE_OR][] = "aut_group_type IS NULL";
-    $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = sprintf("{aut_group}.aut_group_name = '%s'", mediamosa_db::escape_string($group_name));
+    $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = sprintf("{mediamosa_aut_group}.aut_group_name = '%s'", mediamosa_db::escape_string($group_name));
 
-    $a_query[mediamosa_db_query::A_ORDER_BY][] = "{aut_name}.aut_name ASC";
+    $a_query[mediamosa_db_query::A_ORDER_BY][] = "{mediamosa_aut_name}.aut_name ASC";
 
     $a_query[mediamosa_db_query::LIMIT] = $limit;
     $a_query[mediamosa_db_query::OFFSET] = $offset;
