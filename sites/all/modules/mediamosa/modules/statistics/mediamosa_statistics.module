@@ -24,3 +24,127 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
+/**
+ * Implements hook_cron()
+ *
+ * Calculate used diskspace.
+ */
+function mediamosa_statistics_cron() {
+
+  $last_run = variable_get('mediamosa_statistics_cron_last_run', 0);
+
+  $now = time();
+  $hour24 = date("G", $now);    // 24-hour format of an hour without leading zeros (0 through 23).
+  $month= date("n", $now);      // Numeric representation of a month, without leading zeros (1 through 12).
+  $year= date("Y", $now);       // A full numeric representation of a year, 4 digits.
+
+  // Only between 01:00 and 06:00 and more than 12 hours ago.
+  if (($hour24 >= 1 && $hour24 < 6) && ($last_run < ($now - (12 * 3600)))) {
+
+    // Set last run variable to immediately lock out successive
+    // attempts (including those due to this run taking longer
+    // than the cron interval).
+    variable_set('mediamosa_statistics_cron_last_run', $now);
+    mediamosa_statistics::calculate_used_diskspace($year, $month);
+  }
+}
+
+/**
+ * Implements hook_mediamosa_register_rest_call().
+ */
+function mediamosa_statistics_mediamosa_register_rest_call() {
+
+  $a_rest_calls = array();
+
+  $a_rest_calls['statistics/newestmediafiles'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_statistics_get_newest_mediafiles',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Get the 50 latest uploaded mediafiles.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_statistics',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  $a_rest_calls['statistics/popularmediafiles'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_statistics_get_most_popular_mediafiles',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Get most popular mediafiles.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_statistics',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  $a_rest_calls['statistics/newestcollections'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_statistics_get_newest_collections',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Get the latest collections.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_statistics',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  $a_rest_calls['statistics/popularcollections'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_statistics_get_most_popular_collections',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Get most popular collections.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_statistics',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  $a_rest_calls['statistics/dataupload'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_statistics_set_historical_uploaded_mediafiles',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Register a upload for statistics.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_statistics',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY,
+  );
+
+  $a_rest_calls['statistics/dataupload'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_statistics_get_historical_uploaded_mediafiles',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Get the uploaded mediafiles.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_statistics',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  $a_rest_calls['statistics/datausagevideo'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_statistics_get_used_diskspace',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Get the used diskspace.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_statistics',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  $a_rest_calls['statistics/playedstreams'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_statistics_get_requested_streams',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Get the played requests.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_statistics',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  $a_rest_calls['statistics/streams'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_statistics_get_most_popular_streams',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Get the most popular requests.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_statistics',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  $a_rest_calls['statistics/mostsearchedwords'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_statistics_get_most_popular_words',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Get the most popular words.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_statistics',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  // Alias.
+  $a_rest_calls['statistics/searchedwords'][mediamosa_rest_call::METHOD_GET] = $a_rest_calls['statistics/mostsearchedwords'][mediamosa_rest_call::METHOD_GET];
+
+  $a_rest_calls['statistics/searchrequest'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_statistics_get_searchrequest',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Get the most used search.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_statistics',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+}

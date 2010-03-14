@@ -127,13 +127,13 @@ class MediaMosaAssetCQLTestCaseEga extends MediaMosaTestCaseEga {
     $this->cql_do_search_test_assets_1('uri <> NULL', array());
 
     // Update it.
-    $this->updateMediafile($mediafile_id_1, array(mediamosa_rest_call_update_mediafile::URI => 'http://www.vpcore.nl/external_link'));
+    $this->updateMediafile($mediafile_id_1, array(mediamosa_rest_call_update_mediafile::URI => 'http://mediamosa.org/external_link'));
 
     // Get it.
     $a_mediafile = $this->getMediafile($mediafile_id_1);
 
     // Check it.
-    $this->assertTrue($a_mediafile[mediamosa_asset_mediafile_db::URI] == 'http://www.vpcore.nl/external_link', 'Update URI on mediafile');
+    $this->assertTrue($a_mediafile[mediamosa_asset_mediafile_db::URI] == 'http://mediamosa.org/external_link', 'Update URI on mediafile');
 
     // Should find it.
     $this->cql_do_search_test_assets_1('uri <> NULL', array($asset_id_1 => TRUE));

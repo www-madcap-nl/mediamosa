@@ -207,6 +207,22 @@ files[] = core/job/upload/mediamosa_job_upload.install.inc
 ; Node type load/insert/delete/update related code.
 files[] = core/node/mediamosa_node.inc
 
+; Statistics
+files[] = core/statistics/diskspace_used/mediamosa_statistics_diskspace_used_db.inc
+files[] = core/statistics/diskspace_used/mediamosa_statistics_diskspace_used.install.inc
+files[] = core/statistics/file_upload/mediamosa_statistics_file_upload_db.inc
+files[] = core/statistics/file_upload/mediamosa_statistics_file_upload.install.inc
+files[] = core/statistics/rest_log/mediamosa_statistics_rest_log_db.inc
+files[] = core/statistics/rest_log/mediamosa_statistics_rest_log.install.inc
+files[] = core/statistics/search_request/mediamosa_statistics_search_request_db.inc
+files[] = core/statistics/search_request/mediamosa_statistics_search_request.install.inc
+files[] = core/statistics/stream_request/mediamosa_statistics_stream_request_db.inc
+files[] = core/statistics/stream_request/mediamosa_statistics_stream_request.install.inc
+files[] = core/statistics/stream_request/collection/mediamosa_statistics_stream_request_collection_db.inc
+files[] = core/statistics/stream_request/collection/mediamosa_statistics_stream_request_collection.install.inc
+files[] = core/statistics/mediamosa_statistics.inc
+files[] = core/statistics/mediamosa_statistics.install.inc
+
 ; Storage.
 files[] = core/configuration/storage/mediamosa_configuration_storage.inc
 
