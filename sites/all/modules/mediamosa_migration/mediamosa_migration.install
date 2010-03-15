@@ -292,12 +292,14 @@ function mediamosa_migration_install() {
   // create server nodes.
   _mediamosa_migration_create_server_nodes();
 
+  // statistics_*
+  _mediamosa_migration_statistics();
+
   // <Migrate this setting.
   $curlproxy_http = variable_get('vpx_curlproxy_http', '');
   if ($curlproxy_http != '') {
     variable_set('mediamosa_curlproxy_http', $curlproxy_http);
   }
-
 }
 
 /**
@@ -2157,4 +2159,207 @@ function _mediamosa_migration_kill_child_assets() {
     // Clear mem.
     unset($a_mediafile_originals);
   }
+}
+
+function _mediamosa_migration_statistics() {
+  // Get the database name.
+  $db_name = _mediamosa_migration_get_memo_data_db();
+
+  // Get the current mode, which might be empty;
+  $old_mode = db_query('SELECT @@SESSION.sql_mode')->fetchField();
+
+  // Turn off problems with empty dates.
+  db_query("SET SESSION sql_mode = 'ALLOW_INVALID_DATES'");
+
+  // Must be empty.
+  db_truncate('mediamosa_statistics_diskspace_used')->execute();
+  db_truncate('mediamosa_statistics_file_upload')->execute();
+  db_truncate('mediamosa_statistics_rest_log')->execute();
+  db_truncate('mediamosa_statistics_search_request')->execute();
+  db_truncate('mediamosa_statistics_stream_request')->execute();
+  db_truncate('mediamosa_statistics_stream_request_collection')->execute();
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_statistics_diskspace_used}
+      (
+        id,
+        app_id,
+        type,
+        keyword,
+        container_type,
+        diskspace,
+        timestamp
+      ) (SELECT
+        id,
+        app_id,
+        type,
+        keyword,
+        container_type,
+        diskspace,
+        timestamp
+        FROM #db_name.{statistics_diskspace_used} ORDER BY id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_statistics_file_upload}
+      (
+        id,
+        app_id,
+        owner_id,
+        group_id,
+        file_size,
+        timestamp
+        ) (SELECT
+        id,
+        app_id,
+        owner_id,
+        group_id,
+        file_size,
+        timestamp
+        FROM #db_name.{statistics_file_upload} ORDER BY id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_statistics_rest_log}
+      (
+        id,
+        request,
+        process_time,
+        query_count
+      ) (SELECT
+        id,
+        request,
+        process_time,
+        query_count
+        FROM #db_name.{statistics_rest_log} ORDER BY id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+    /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_statistics_search_request}
+      (
+        id,
+        keyword,
+        app_id,
+        searched
+      ) (SELECT
+        id,
+        keyword,
+        app_id,
+        searched
+        FROM #db_name.{statistics_search_request} ORDER BY id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_statistics_stream_request}
+      (
+        id,
+        mediafile_id,
+        asset_id,
+        app_id,
+        owner_id,
+        group_id,
+        filesize,
+        container_type,
+        play_type,
+        played
+      ) (SELECT
+        id,
+        mediafile_id,
+        asset_id,
+        app_id,
+        owner_id,
+        group_id,
+        filesize,
+        container_type,
+        play_type,
+        played
+        FROM #db_name.{statistics_stream_request} ORDER BY id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_statistics_stream_request_collection}
+      (
+        id,
+        request_id,
+        coll_id,
+        title,
+        description,
+        app_id,
+        owner_id,
+        group_id
+      ) (SELECT
+        id,
+        request_id,
+        coll_id,
+        title,
+        description,
+        app_id,
+        owner_id,
+        group_id
+        FROM #db_name.{statistics_stream_request_collection} ORDER BY id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+
+  // Back to old session mode.
+  db_query(strtr("SET SESSION sql_mode = '#old_mode'", array('#old_mode' => $old_mode)));
 }

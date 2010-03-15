@@ -199,8 +199,10 @@ class mediamosa_asset_collection {
       mediamosa_asset_collection_db::ASSET_ID => $asset_id,
       mediamosa_asset_collection_db::COLL_ID => $coll_id,
     );
+
     // Add created value.
     $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+
     // Insert into
     mediamosa_db::db_insert(mediamosa_asset_collection_db::TABLE_NAME)
       ->fields($a_fields)
@@ -223,5 +225,20 @@ class mediamosa_asset_collection {
     $query->fields('mac', array(mediamosa_asset_collection_db::COLL_ID));
     $query->condition(mediamosa_asset_collection_db::ASSET_ID, $asset_id);
     return $query->countQuery()->execute()->fetchField();
+  }
+
+  /**
+   * Find if the asset is in any collection.
+   *
+   * @param string $asset_id
+   */
+  static public function find($asset_id) {
+
+    // return a list of collections.
+    return mediamosa_db::db_select(mediamosa_collection_db::TABLE_NAME, 'c')
+      ->join(mediamosa_asset_collection_db::TABLE_NAME, 'ac', 'ac.coll_id = c.coll_id')
+      ->fields('c')
+      ->condition(mediamosa_asset_collection_db::ASSET_ID, $asset_id)
+      ->execute();
   }
 }
