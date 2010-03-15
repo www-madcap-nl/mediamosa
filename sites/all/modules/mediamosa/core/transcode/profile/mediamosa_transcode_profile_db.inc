@@ -60,7 +60,7 @@ class mediamosa_transcode_profile_db {
     require_once('mediamosa_transcode_profile.install.inc');
 
     // Get the schema.
-    $a_schema = mediamosa_app_schema();
+    $a_schema = mediamosa_transcode_profile_schema();
     return array_keys($a_schema[mediamosa_transcode_profile_db::TABLE_NAME]['fields']);
   }
 }

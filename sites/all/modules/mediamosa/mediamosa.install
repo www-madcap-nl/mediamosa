@@ -59,6 +59,9 @@ function mediamosa_install() {
    // Install the error db.
   _mediamosa_error_install();
 
+  // Install our node db.
+  _mediamosa_node_install();
+
   // Install the app db.
   _mediamosa_app_install();
 
@@ -91,9 +94,6 @@ function mediamosa_install() {
 
   // Install the server db.
   _mediamosa_server_install();
-
-  // Install our node db.
-  _mediamosa_node_install();
 
   // Install the statistics db.
   _mediamosa_statistics_install();

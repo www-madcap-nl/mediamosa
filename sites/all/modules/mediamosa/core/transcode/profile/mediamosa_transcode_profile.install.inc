@@ -61,12 +61,8 @@ function _mediamosa_transcode_profile_install() {
   );
 
   foreach ($a_default_profiles as $a_default_profile) {
-    $node = new stdClass();
-    $node->uid = 1; // Admin
-    $node->status = 1; // Published
-    $node->type = mediamosa_node::MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE;
+    $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE, $a_default_profile[0]);
 
-    $node->title = $a_default_profile[0];
     $node->{mediamosa_transcode_profile_db::APP_ID} = 0;
     $node->{mediamosa_transcode_profile_db::VERSION} = 0;
     $node->{mediamosa_transcode_profile_db::PROFILE} = $a_default_profile[0];

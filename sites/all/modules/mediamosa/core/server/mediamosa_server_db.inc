@@ -74,7 +74,7 @@ class mediamosa_server_db {
     require_once('mediamosa_server.install.inc');
 
     // Get the schema.
-    $a_schema = mediamosa_app_schema();
+    $a_schema = mediamosa_server_schema();
     return array_keys($a_schema[mediamosa_server_db::TABLE_NAME]['fields']);
   }
 }

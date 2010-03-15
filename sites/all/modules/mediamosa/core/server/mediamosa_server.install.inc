@@ -133,12 +133,8 @@ s1.write('mediaspace');
   node_type_save($server_node_type);
 
   foreach ($a_default_servers as $a_default_server) {
-    $node = new stdClass();
-    $node->uid = 1; // Admin
-    $node->status = 1; // Published
-    $node->type = mediamosa_node::MEDIAMOSA_NODE_TYPE_SERVER;
+    $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_SERVER, $a_default_server[4]);
 
-    $node->title = $a_default_server[4];
     $node->{mediamosa_server_db::VERSION} = $a_default_server[1];
     $node->{mediamosa_server_db::SERVER_STATUS} = $a_default_server[2];
     $node->{mediamosa_server_db::SERVER_TYPE} = $a_default_server[3];

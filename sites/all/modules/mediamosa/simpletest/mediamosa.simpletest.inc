@@ -544,16 +544,14 @@ class MediaMosaTestCase extends DrupalWebTestCase {
    */
   protected function createApp($a_fields = array()) {
 
-    $node = new stdClass();
-    $node->uid = 1; // Admin
-    $node->status = 1; // Published
-    $node->type = mediamosa_node::MEDIAMOSA_NODE_TYPE_CLIENT_APPLICATION;
-    $node->language = LANGUAGE_NONE;
+    // Generate the name.
+    $name = $this->randomName();
+
+    $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_CLIENT_APPLICATION, $name);
 
     $node->{mediamosa_app_db::APP_ID} = rand(1, 1000);
     $node->{mediamosa_app_db::SHARED_KEY} = user_password();
-    $node->{mediamosa_app_db::NAME} = $this->randomName();
-    $node->title = $node->{mediamosa_app_db::NAME};
+    $node->{mediamosa_app_db::NAME} = $name;
     $node->{mediamosa_app_db::ACTIVE} = 'TRUE';
     $node->{mediamosa_app_db::TRANSCODING_POSITION_TO} = 0;
     $node->{mediamosa_app_db::QUOTA} = 0;
@@ -572,13 +570,8 @@ class MediaMosaTestCase extends DrupalWebTestCase {
    * Create a download server.
    */
   protected function createDownloadServer() {
-    $node = new stdClass();
-    $node->uid = 1; // Admin.
-    $node->status = 1; // Published.
-    $node->type = mediamosa_node::MEDIAMOSA_NODE_TYPE_SERVER;
-    $node->language = LANGUAGE_NONE;
+    $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_SERVER, 'http://localhost/download/{TICKET}');
 
-    $node->title = 'http://localhost/download/{TICKET}';
     $node->{mediamosa_server_db::VERSION} = 0;
     $node->{mediamosa_server_db::SERVER_STATUS} = mediamosa_server_db::SERVER_STATUS_ON;
     $node->{mediamosa_server_db::SERVER_TYPE} = mediamosa_server_db::SERVER_TYPE_DOWNLOAD;

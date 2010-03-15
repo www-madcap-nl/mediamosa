@@ -130,7 +130,7 @@ function _mediamosa_app_list() {
 
   // Get the app nodes.
   $result = mediamosa_db::db_select(mediamosa_app_db::TABLE_NAME, 'a')->extend('PagerDefault')->extend('TableSort')
-    ->fields('a', mediamosa_app_db::NID)
+    ->fields('a')
     ->limit(mediamosa_settings::maintenance_items_per_page())
     ->orderByHeader($header)
     ->execute();

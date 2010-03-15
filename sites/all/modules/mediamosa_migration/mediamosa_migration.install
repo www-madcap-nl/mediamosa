@@ -425,13 +425,7 @@ function _mediamosa_migration_client_applications() {
 
   // Now add back the apps as nodes.
   foreach ($migrate_apps as $app_id => $app) {
-    $node = new stdClass();
-    $node->uid = 1; // Admin
-    $node->status = 1; // Published
-    $node->type = mediamosa_node::MEDIAMOSA_NODE_TYPE_CLIENT_APPLICATION;
-    $node->language = LANGUAGE_NONE;
-
-    $node->title = $app->{mediamosa_app_db::NAME};
+    $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_CLIENT_APPLICATION, $app->{mediamosa_app_db::NAME});
 
     // not needed.
     unset($app->caid);
@@ -1943,12 +1937,8 @@ function _mediamosa_migration_transcode() {
   );
 
   foreach ($result as $row) {
-    $node = new stdClass();
-    $node->uid = 1; // Admin
-    $node->status = 1; // Published
-    $node->type = mediamosa_node::MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE;
+    $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE, $row[mediamosa_transcode_profile_db::TOOL]);
 
-    $node->title = $row[mediamosa_transcode_profile_db::TOOL];
     $node->{mediamosa_transcode_profile_db::ID} = $row[mediamosa_transcode_profile_db::ID];
     $node->{mediamosa_transcode_profile_db::APP_ID} = $row[mediamosa_transcode_profile_db::APP_ID];
     $node->{mediamosa_transcode_profile_db::VERSION} = $row[mediamosa_transcode_profile_db::VERSION];
@@ -2055,10 +2045,7 @@ function _mediamosa_migration_create_server_nodes() {
     );
 
     foreach ($result as $row) {
-      $node = new stdClass();
-      $node->uid = 1; // Admin
-      $node->status = 1; // Published
-      $node->type = mediamosa_node::MEDIAMOSA_NODE_TYPE_SERVER;
+      $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_SERVER, $row['description']);
 
       // Find server_id
       $server_id = 0;
@@ -2077,7 +2064,6 @@ function _mediamosa_migration_create_server_nodes() {
         $status = (!is_numeric($row['status']) ? $row['status'] : ($row['status'] == 1 ? 'ON' : 'OFF'));
       }
 
-      $node->title = $row['description'];
       $node->{mediamosa_server_db::SERVER_TYPE} = $type;
       $node->{mediamosa_server_db::VERSION} = $row['version'];
       $node->{mediamosa_server_db::SERVER_STATUS} = $status;

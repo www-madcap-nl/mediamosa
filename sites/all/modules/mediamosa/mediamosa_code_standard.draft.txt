@@ -9,16 +9,12 @@ Draft for starting code standard for Mediamosa 2.x and higher.
     function foo(array $a_foo) {
      ...
     }
-  * Prefix variable name of array's with a_;
-    function foo(array $a_foo) {
-     ...
+  * End variable name of array's with s when it contains more than one entity;
+    function foo(array $clients) {
+      foreach ($clients as $client) {
+        ...
+      }
     }
-  * Prefix variable name of objects with o_;
-    function foo($o_foo) {
-     ...
-    }
-  * Only array's and objects are type prefixed, do NOT use s_ for prefixing strings or i_ for integers.
-    The exception on array's and objects is because they are handled differently; $a_foo['param'] and $o_foo->param
   * There is no reason for 99% of the functions to return TRUE / FALSE. We consider functions, when they return
     all was OK. Anything that goes wrong will cause an exception to be thrown. Exceptions for TRUE / FALSE
     returns are functions that are not fatal when returning FALSE, f.e. testing exists on file.

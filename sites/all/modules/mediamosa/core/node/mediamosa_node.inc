@@ -51,6 +51,22 @@ class mediamosa_node {
   static public function get_all_node_types() {
     return array_keys(mediamosa_node_info());
   }
+
+  /**
+   * Create basic node object to fill.
+   *
+   * @param $type
+   * @param $title
+   */
+  static public function create_basic_node($type, $title) {
+    $node = new stdClass();
+    $node->uid = 1; // Admin
+    $node->status = 1; // Published
+    $node->type = $type;
+    $node->language = LANGUAGE_NONE;
+    $node->title = $title;
+    return $node;
+  }
 }
 
 /**
