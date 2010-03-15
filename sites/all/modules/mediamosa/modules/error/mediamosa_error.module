@@ -216,7 +216,7 @@ function mediamosa_error_list() {
   }
 
   //print_r($rows);
-  $content .= theme('table', $header, $rows);
+  $content .= theme('table', array('header' => $header, 'rows' => $rows));
   $content .= theme('pager');
 
   return $content;

@@ -43,19 +43,20 @@
 /**
  * Menu callback; Provide the administration overview page.
  */
-function mediamosa_maintenance_admin_page($path) {
+function _mediamosa_maintenance_admin_page($path) {
   $blocks = array();
-  $admin = db_query("SELECT menu_name, mlid FROM {menu_links} WHERE link_path = 'admin/mediamosa' AND module = 'system'", array())->fetchAssoc();
-
+  $admin = db_query("SELECT menu_name, mlid FROM {menu_links} WHERE link_path = :link_path AND module = 'system'", array(':link_path' => 'admin/mediamosa'))->fetchAssoc();
   if ($admin) {
-    $admin[':path'] = $path . '%';
     $result = db_query("
       SELECT m.*, ml.*
       FROM {menu_links} ml
       INNER JOIN {menu_router} m ON ml.router_path = m.path
-      WHERE ml.link_path != 'admin/help' AND ml.link_path LIKE :path AND menu_name = :menu_name AND ml.plid = :mlid AND hidden = 0", $admin, array('fetch' => PDO::FETCH_ASSOC));
-
+      WHERE ml.link_path != 'admin/help' AND menu_name = :menu_name AND ml.plid = :mlid AND hidden = -1", $admin, array('fetch' => PDO::FETCH_ASSOC));
     foreach ($result as $item) {
+      if ($item['path'] != $path) {
+        continue;
+      }
+
       _menu_link_translate($item);
       if (!$item['access']) {
         continue;
@@ -67,26 +68,12 @@ function mediamosa_maintenance_admin_page($path) {
       }
       $block = $item;
       $block['content'] = '';
-      $block['show'] = FALSE;
+      $block['show'] = TRUE;
       if ($item['block_callback'] && function_exists($item['block_callback'])) {
         $function = $item['block_callback'];
         $block['content'] .= $function();
       }
-      $content = system_admin_menu_block($item);
-
-      if ((isset($item['page_callback']) && !in_array($item['page_callback'], array('mediamosa_maintenance_admin_page'))) || count($content)) {
-        // Only show blocks for items which are not containers, or those which
-        // are containers and do have items we can show.
-        $block['show'] = TRUE;
-        if (empty($content)) {
-          // If no items found below, but access checks did not fail, show.
-          $block['title'] = l($item['title'], $item['href'], $item['localized_options']);
-        }
-        else {
-          // Theme items below.
-          $block['content'] .= theme('admin_block_content', $content);
-        }
-      }
+      $block['content'] .= theme('admin_block_content', array('content' => system_admin_menu_block($item)));
       // Prepare for sorting as in function _menu_tree_check_access().
       // The weight is offset so it is always positive, with a uniform 5-digits.
       $blocks[(50000 + $item['weight']) . ' ' . $item['title'] . ' ' . $item['mlid']] = $block;
@@ -94,10 +81,9 @@ function mediamosa_maintenance_admin_page($path) {
   }
   if ($blocks) {
     ksort($blocks);
-    return theme('admin_page', $blocks);
+    return theme('admin_page', array('blocks' => $blocks));
   }
   else {
     return t('You do not have any administrative items.');
   }
 }
-

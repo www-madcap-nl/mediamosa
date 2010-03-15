@@ -232,7 +232,9 @@ class mediamosa_job_scheduler {
       $response_data = new SimpleXMLElement($response->data);
     }
     catch (Exception $e) {
+      mediamosa::log_export($response->data);
       self::log('Parse XML: @msg (@resp)', array('@msg' => $e->getMessage(), '@resp' => print_r($response->data, TRUE)), WATCHDOG_ERROR);
+      return;
     }
 
     for ($i = 0; $i < $response_data->header->item_count; $i++) {

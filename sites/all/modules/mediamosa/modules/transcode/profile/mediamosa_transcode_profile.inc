@@ -32,7 +32,7 @@
 /**
  * Implementation of hook_view().
  */
-function mediamosa_transcode_profile_view($node, $build_mode = 'full') {
+function mediamosa_transcode_profile_view($node, $view_mode = 'full') {
   // Default parameters
   $rows = array(
     array(t('Title'), check_plain($node->title)),
@@ -44,8 +44,10 @@ function mediamosa_transcode_profile_view($node, $build_mode = 'full') {
 
   // Optional parameters
   $all_options = mediamosa_transcode_profile::get_by_tool(NULL, $node->tool);
-  foreach ($node->options as $key => $value) {
-    $rows[] = array($all_options[$key]['field_title'], check_plain($value));
+  if (!empty($node->options)) {
+    foreach ($node->options as $key => $value) {
+      $rows[] = array($all_options[$key]['field_title'], check_plain($value));
+    }
   }
 
   // Add timestamps
@@ -53,7 +55,7 @@ function mediamosa_transcode_profile_view($node, $build_mode = 'full') {
   $rows[] = array(t('Changed'), format_date($node->changed, 'short'));
 
   $node->content['transcode_profile'] = array(
-    '#markup' => theme('table', array(t('Parameter'), t('Value')), $rows),
+    '#markup' => theme('table', array('header' => array(t('Parameter'), t('Value')), 'rows' => $rows)),
   );
 
   return $node;
@@ -78,10 +80,6 @@ function mediamosa_transcode_profile_form($node, $form_state) {
     '#title' => t('Required parameters'),
     '#description' => t('Required parameters for a transcoding profile.'),
   );
-
-print '<pre>Debug in ' . __FILE__ . ', line ' . __LINE__ . "\n"; // @TODO remove!
-print htmlspecialchars(print_r($node, TRUE));
-print '</pre>';
 
   // Gather all apps
   foreach (mediamosa_app::get_all_apps(array(mediamosa_app_db::APP_ID, mediamosa_app_db::NAME), mediamosa_app_db::NAME, 'ASC') as $app) {

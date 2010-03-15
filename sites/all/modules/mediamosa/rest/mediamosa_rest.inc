@@ -41,15 +41,15 @@ class mediamosa_rest {
   /**
    * Match the current URL to REST call, and return the REST call object.
    *
-   * @param string $request_uri
+   * @param string $uri
    *  The request URL.
-   * @param string $request_method
+   * @param string $method
    *  The method.
    */
   static public function get_uri_definition($request_uri, $request_method = FALSE) {
 
     if (!$request_method) {
-      $request_method = mediamosa_response::get_method();
+      $request_method = $_SERVER['REQUEST_METHOD'];
 
       // If its a HEAD call, switch method to GET.
       if ($request_method == mediamosa_rest_call::METHOD_HEAD) {
@@ -187,7 +187,7 @@ class mediamosa_rest {
    * @param string $key2
    *  Key name used in result array dimension 2.
    */
-  static public function get_rest_calls($limit = 0, $offset = 0, $key = mediamosa_rest_call::METHOD, $key2 = mediamosa_rest_call::URI) {
+  public function get_rest_calls($limit = 0, $offset = 0, $key = mediamosa_rest_call::METHOD, $key2 = mediamosa_rest_call::URI) {
     // Find all REST calls of enabled modules.
     $a_rest_calls = module_invoke_all('mediamosa_register_rest_call');
 
@@ -246,12 +246,16 @@ class mediamosa_rest {
   /**
    * Match the incoming URL with a REST call and return match REST object.
    */
-  final public function match_call() {
+  final public function match_call($uri = NULL, $method = NULL) {
     // Get the mediamosa object.
     $o_mediamosa = mediamosa::get();
 
+    if (!isset($uri)) {
+      $uri = $o_mediamosa->get_request_uri();
+    }
+
     // Translate the URI to possible REST call.
-    $a_rest_call = self::get_uri_definition($o_mediamosa->get_request_uri());
+    $a_rest_call = $this->get_uri_definition($uri, $method);
 
     // If FALSE, then the URI didn't match with a REST call.
     if ($a_rest_call == FALSE) {
@@ -272,7 +276,6 @@ class mediamosa_rest {
     // Add the found class to the response.
     $o_mediamosa->set_class($a_rest_call[mediamosa_rest_call::CLASS_NAME]);
 
-
     // Return the processed REST call.
     return $a_rest_call;
   }
@@ -284,11 +287,6 @@ class mediamosa_rest {
    *  Array containing the data needed to run the REST call.
    */
   final public function process_call(array $a_rest_call) {
-    // Make sure the app/rest interface is enabled.
-    if (!mediamosa::is_app_enabled()) {
-      throw new mediamosa_exception_no_rest_interface();
-    }
-
     // Get the mediamosa object.
     $o_mediamosa = mediamosa::get();
 

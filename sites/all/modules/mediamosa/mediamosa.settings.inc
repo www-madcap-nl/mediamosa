@@ -134,6 +134,11 @@ class mediamosa_settings {
   // The number of items per page in admin listings, like client apps listing.
   const MAINTENANCE_ITEMS_PER_PAGE = 25;
 
+  // The number of maximum tables in the database before we stop the status page
+  // of running new simpletests. Will try to clean up if to many tables are
+  // found.
+  const STATUS_MAX_TABLES = 500;
+
   // ------------------------------------------------------------------ Functions.
   /**
    * Return the unique server ID.

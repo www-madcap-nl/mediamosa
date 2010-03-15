@@ -66,7 +66,7 @@ function _mediamosa_webservice_list() {
   }
 
   $response = t('List of all webservices and global availibity of services. Disabled webservices are unavailable for all client applications. Note: see client application settings for availability of a webservice for the specific client application.');
-  $response .= theme('table', array(t('ID'), t('Handle'), t('Description'), t('Status')), $rows);
+  $response .= theme('table', array('header' => array(t('ID'), t('Handle'), t('Description'), t('Status')), 'rows' => $rows));
   $response .= l(t('MediaMosa Home'), 'admin/mediamosa');
 
   return $response;

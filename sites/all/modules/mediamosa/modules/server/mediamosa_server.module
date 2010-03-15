@@ -166,7 +166,7 @@ function mediamosa_server_view($node, $build_mode = 'full') {
   $rows[] = array(t('Changed'), format_date($node->changed, 'short'));
 
   $node->content['transcode_profile'] = array(
-    '#markup' => theme('table', array(t('Parameter'), t('Value')), $rows),
+    '#markup' => theme('table', array('header' => array(t('Parameter'), t('Value')), 'rows' => $rows)),
   );
 
   return $node;

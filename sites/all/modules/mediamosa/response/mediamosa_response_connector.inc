@@ -1,0 +1,129 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+ /**
+  * @file
+  * The response connector allows you to do REST calls under all APPs and is
+  * used by maintenance. Do not use as normal REST call connection class, use
+  * mediamosa_connector instead, which is application session based.
+  */
+
+class mediamosa_response_connector extends mediamosa_response {
+
+  // ------------------------------------------------------------------ Functions (static).
+  /**
+   * Execute REST call.
+   *
+   * @param $uri
+   *  URI of rest call.
+   * @param $method
+   *  Method of REST call.
+   * @param $params
+   *  GET/POST parameters.
+   */
+  static public function static_do_restcall($uri, $method = 'GET', array $params = array()) {
+
+    if (!isset($params['app_id'])) {
+      $params['app_id'] = array(0) + array(mediamosa_app::get_all_apps(array(mediamosa_app_db::APP_ID), mediamosa_app_db::APP_ID));
+    }
+
+    // Create response object.
+    $o_mediamosa_reponse = new mediamosa_response_connector();
+
+    // Do REST call.
+    return $o_mediamosa_reponse->do_restcall($uri, $method, $params);
+  }
+
+  // ------------------------------------------------------------------ Functions.
+  /**
+   * Do a request, without using HTTP.
+   *
+   * @param string $uri
+   *  The REST call uri, like 'asset', 'version' etc.
+   * @param array $params
+   *  name => value.
+   */
+  public function do_restcall($uri, $method = 'GET', array $params = array()) {
+
+    // Store uri here.
+    $this->request_uri = $uri;
+    $this->request_method = $method;
+
+    // ok reset the header.
+    $this->reset();
+
+    // Replace the global mediamosa_response with us.
+    $current_mediamosa_response = mediamosa::get($this);
+    $GET = $_GET;
+    $POST = $_POST;
+
+    $_GET = array('q' => isset($_GET['q']) ? $_GET['q'] : '');
+    $_POST = array();
+
+    try {
+      // Set the global params, so REST will use that.
+      $GLOBALS['mediamosa_params'] = $params;
+
+      // Create the REST interface class.
+      $this->o_mediamosa_rest = new mediamosa_rest();
+
+      // Find the rest call.
+      $a_rest_call = $this->o_mediamosa_rest->match_call($uri, $method);
+      if (!$a_rest_call) {
+        throw new mediamosa_exception_error(mediamosa_error::HTTP_NOT_FOUND);
+      }
+
+      // Ok make it external so we always get passed the app authorization.
+      $a_rest_call[mediamosa_rest_call::ACCESS] |= mediamosa_rest_call::ACCESS_EXTERNAL;
+      $a_rest_call[mediamosa_rest_call::BEHAVE_AS_EXTERNAL] = TRUE;
+
+      // Now execute the call.
+      $this->o_mediamosa_rest->process_call($a_rest_call);
+    }
+    catch (mediamosa_exception $e) {
+      $e->mediamosa_exception_rest_response($this);
+    }
+    catch (PDOException $e) {
+      mediamosa_debug::error_log('PDOException caught; ' . $e->getMessage() . ', trace; ' . $e->getTraceAsString(), $e->getFile(), $e->getLine());
+      $this->set_result(self::ERROR, mediamosa_error::HTTP_INTERNAL_SERVER_ERROR, 'PDOException caught; ' . $e->getMessage() . ",\ntrace; " . $e->getTraceAsString() . ",\nQuery string; " . $e->query_string . ",\nArgs; " . print_r($e->args, TRUE));
+    }
+    catch (Exception $e) {
+      // Store as error.
+      $this->set_result(self::ERROR, $e->getCode(), $e->getMessage());
+    }
+
+    // Generate output XML.
+    $output = $this->generate_xml();
+
+    // Restore.
+    mediamosa::get($current_mediamosa_response);
+    $_GET = $GET;
+    $_POST = $POST;
+
+    // Return XML.
+    return $output;
+  }
+}

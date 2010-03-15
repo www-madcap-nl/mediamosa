@@ -24,14 +24,15 @@
 
 /**
  * @file
- * VP Core installation profile.
+ * MediaMosa installation profile.
  */
 
 /**
  * Implementation of hook_form_alter().
  */
 function mediamosa_profile_form_alter(&$form, $form_state, $form_id) {
-  if ($form_id == 'install_configure') {
+
+  if ($form_id == 'install_configure_form') {
     // Set default for site name field.
     $form['site_information']['site_name']['#default_value'] = $_SERVER['SERVER_NAME'];
     $form['site_information']['site_mail']['#default_value'] = 'webmaster@' . $_SERVER['SERVER_NAME'];

@@ -40,6 +40,42 @@ function _mediamosa_webservice_install() {
   // Create our table(s).
   mediamosa::drupal_install_schema(mediamosa_webservice_db::TABLE_NAME);
 
+  // Create default global enabled settings.
+  $a_webservices = array(
+    array(
+      'handle' => mediamosa_webservice_app::HANDLE_TRANSCODING,
+      'description' => 'All transcoding, except transcode jobs are still processed when set to off.',
+    ),
+    array(
+      'handle' => mediamosa_webservice_app::HANDLE_JOBS,
+      'description' => 'Enable or disable starting or creating jobs. ',
+    ),
+    array(
+      'handle' => mediamosa_webservice_app::HANDLE_MEDIA_UPLOAD,
+      'description' => 'Enable or disable upload mediafiles.',
+    ),
+    array(
+      'handle' => mediamosa_webservice_app::HANDLE_BATCH_UPLOAD,
+      'description' => 'Enable or disable batch upload/FTP.',
+    ),
+    array(
+      'handle' => mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT,
+      'description' => 'Enable or disable changes to assets, mediafiles and metadata.',
+    ),
+  );
+
+  // Create default.
+  foreach ($a_webservices as $a_webservice) {
+    db_insert(mediamosa_webservice_db::TABLE_NAME)
+      ->fields(array(
+        mediamosa_webservice_db::VERSION => 0,
+        mediamosa_webservice_db::HANDLE => $a_webservice['handle'],
+        mediamosa_webservice_db::DESCRIPTION => $a_webservice['description'],
+        mediamosa_webservice_db::STATUS => mediamosa_webservice_db::STATUS_TRUE,
+      ))
+      ->execute();
+  }
+
   // Create children.
   _mediamosa_webservice_app_install();
 }

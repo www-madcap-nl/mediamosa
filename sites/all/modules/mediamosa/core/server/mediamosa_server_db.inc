@@ -66,4 +66,15 @@ class mediamosa_server_db {
   const SERVER_TYPE_STREAMING = 'streaming';
   const SERVER_TYPE_JOB_PROCESSOR = 'job_processor';
   const SERVER_TYPE_UPLOAD = 'upload';
+
+  /**
+   * Returns all fields.
+   */
+  static public function get_fields() {
+    require_once('mediamosa_server.install.inc');
+
+    // Get the schema.
+    $a_schema = mediamosa_app_schema();
+    return array_keys($a_schema[mediamosa_server_db::TABLE_NAME]['fields']);
+  }
 }

@@ -26,18 +26,25 @@
 
  /**
   * @file
-  * functions for the webservice module.
+  * Dummy file for calling mediamosa_node_revision installer.
   */
 
-class mediamosa_webservice {
+require_once 'revision/mediamosa_node_revision.install.inc';
 
-  /**
-   * Returns all in use (webservice) handles.
-   */
-  static public function get_all_handles() {
-    return mediamosa_db::db_select(mediamosa_webservice_db::TABLE_NAME, 'w')
-      ->fields('w', array(mediamosa_webservice_db::HANDLE))
-      ->execute()
-      ->fetchCol();
-  }
+/**
+ * Implements hook_install().
+ */
+function _mediamosa_node_install() {
+
+  // Installer node revision.
+  _mediamosa_node_revision_install();
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function _mediamosa_node_uninstall() {
+
+  // Installer node revision.
+  _mediamosa_node_revision_uninstall();
 }

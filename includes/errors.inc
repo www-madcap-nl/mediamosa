@@ -164,7 +164,7 @@ function _drupal_log_error($error, $fatal = FALSE) {
   }
 
   try {
-    watchdog('php', '%type: %message in %function (line %line of %file).', $error, $error['severity_level']);
+    watchdog('php', '%type: %message in %function (line %line of %file).', $error, isset($error['severity_level']) ? $error['severity_level'] : WATCHDOG_NOTICE);
   }
   catch (Exception $e) {
     // Ignore any additional watchdog exception, as that probably means

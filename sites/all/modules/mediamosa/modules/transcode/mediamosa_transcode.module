@@ -167,7 +167,7 @@ function _mediamosa_transcode_profile_list() {
     );
   }
 
-  $content = theme('table', $header, $rows);
+  $content = theme('table', array('header' => $header, 'rows' => $rows));
   $content .= theme('pager');
 
   return $content;
@@ -200,7 +200,7 @@ function _mediamosa_transcode_profile_view($profile_id) {
     array(t('Changed'), format_date(strtotime($profile->changed), 'small')),
   );
 
-  $output = theme('table', array(), $rows);
+  $output = theme('table', array('rows' => $rows));
   $output .= l(t('Return'), 'admin/mediamosa/transcode/profile');
 
   return $output;

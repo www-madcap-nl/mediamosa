@@ -34,30 +34,8 @@
 /**
  * Implementation of hook_load().
  */
-function mediamosa_client_application_load(&$nodes, $types) {
-
-  // Gather all vids.
-  $vids = array();
-  foreach ($nodes as $node) {
-    $vids[] = $node->vid;
-  }
-
-  // Gather all additional node properties.
-  $result = mediamosa_db::db_query(
-    'SELECT * FROM {#table_name} WHERE vid IN (:vids)',
-    array(
-      '#table_name' => mediamosa_app_db::TABLE_NAME,
-      ':vids' => $vids,
-    )
-  );
-
-  foreach ($result as $record) {
-    foreach ($record as $key => $value) {
-      $nodes[$record['nid']]->$key = $value;
-    }
-  }
-
-  return $nodes;
+function mediamosa_client_application_load(&$nodes) {
+  return mediamosa_node_revision::load($nodes);
 }
 
 /**
@@ -67,28 +45,14 @@ function mediamosa_client_application_update($node) {
 
   if ($node->revision) {
     mediamosa_client_application_insert($node);
-    return;
   }
+  else {
+    // Get the field names of the table.
+    $names = mediamosa_app_db::get_fields();
 
-  // Get the field names of the table.
-  $names = mediamosa_app_db::get_fields();
-
-  $a_fields = array();
-  foreach ($names as $name) {
-    if (in_array($name, array(mediamosa_app_db::NID))) {
-      continue;
-    }
-
-    if (isset($node->{$name})) {
-      $a_fields[$name] = $node->{$name};
-    }
+    // Update.
+    mediamosa_node_revision::update_ex($node, mediamosa_app_db::TABLE_NAME, $names);
   }
-
-  // Update the new revision
-  mediamosa_db::db_update(mediamosa_app_db::TABLE_NAME)
-    ->fields($a_fields)
-    ->condition(mediamosa_app_db::VID, $node->vid)
-    ->execute();
 }
 
 /**
@@ -99,25 +63,14 @@ function mediamosa_client_application_insert($node) {
   // Get the field names of the table.
   $names = mediamosa_app_db::get_fields();
 
-  // Collect the data we want to insert.
-  $a_fields = array();
-  foreach ($names as $name) {
-    if (isset($node->{$name})) {
-      $a_fields[$name] = $node->{$name};
-    }
-  }
-
-  // Insert.
-  mediamosa_db::db_insert(mediamosa_app_db::TABLE_NAME)
-    ->fields($a_fields)
-    ->execute();
+  // Insert revision.
+  mediamosa_node_revision::insert_ex($node, mediamosa_app_db::TABLE_NAME, $names);
 }
 
 /**
  * Implementation of hook_delete().
  */
 function mediamosa_client_application_delete($node) {
-  db_delete(mediamosa_app_db::TABLE_NAME)
-    ->condition('nid', $node->nid)
-    ->execute();
+  // Delete revisions.
+  mediamosa_node_revision::delete($node, mediamosa_app_db::TABLE_NAME);
 }

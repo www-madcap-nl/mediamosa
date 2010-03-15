@@ -42,10 +42,11 @@ class mediamosa_response extends mediamosa {
   private $response_success = FALSE;
 
   // The rest class object.
-  private $o_mediamosa_rest = NULL;
+  protected $o_mediamosa_rest = NULL;
 
   // The request uri.
-  private $request_uri;
+  protected $request_uri;
+  protected $request_method;
 
   // Start in miliseconds when call was made.
   private $f_start_time = 0;
@@ -69,6 +70,9 @@ class mediamosa_response extends mediamosa {
     $this->request_uri = htmlspecialchars(rawurldecode(mediamosa_unicode::substr(mediamosa::request_uri(), mediamosa_unicode::strlen(base_path()))));
     $this->request_uri = $this->request_uri == '' ? '/' : $this->request_uri;
 
+    // Save the method.
+    $this->request_method = $_SERVER['REQUEST_METHOD'];
+
     // Reset the header.
     $this->reset();
   }
@@ -79,8 +83,8 @@ class mediamosa_response extends mediamosa {
    */
   public function process_rest() {
 
-    // If REST interface is disabled, the don't bother.
-    if (! mediamosa::is_app_enabled()) {
+    // If REST interface is disabled, then don't bother.
+    if (!mediamosa::is_app_enabled()) {
       return;
     }
 
@@ -97,7 +101,7 @@ class mediamosa_response extends mediamosa {
       $a_rest_call = $this->o_mediamosa_rest->match_call();
 
       // If we return here, try to let Drupal handle the output.
-      if (! $a_rest_call) {
+      if (!$a_rest_call) {
         return;
       }
 
@@ -115,7 +119,7 @@ class mediamosa_response extends mediamosa {
       }
 
       // Make sure response type is set.
-      if (! isset($a_rest_call[mediamosa_rest_call::RESPONSE_TYPE])) {
+      if (!isset($a_rest_call[mediamosa_rest_call::RESPONSE_TYPE])) {
         $a_rest_call[mediamosa_rest_call::RESPONSE_TYPE] = mediamosa_rest_call::RESPONSE_TYPE_XML;
       }
 
@@ -201,7 +205,7 @@ class mediamosa_response extends mediamosa {
 
     $this->a_response = array(
       'header' => array(
-      'request_result' => self::SUCCESS, 'request_result_id' => mediamosa_error::ERRORCODE_OKAY, 'request_result_description' => mediamosa_error::error_code_find_description(mediamosa_error::ERRORCODE_OKAY), 'request_uri' => "[" . self::get_method() . "] " . (mediamosa_unicode::substr($this->request_uri, 0, mediamosa_unicode::strlen('internal')) == 'internal' ? 'Internal MediaMosa call' : (mediamosa_unicode::substr($this->request_uri, 0, 1) == '/' ? '' : '/') . $this->request_uri), 'item_count' => 0, 'version' => mediamosa_version::MEDIAMOSA_VERSION
+      'request_result' => self::SUCCESS, 'request_result_id' => mediamosa_error::ERRORCODE_OKAY, 'request_result_description' => mediamosa_error::error_code_find_description(mediamosa_error::ERRORCODE_OKAY), 'request_uri' => "[" . $this->request_method . "] " . (mediamosa_unicode::substr($this->request_uri, 0, mediamosa_unicode::strlen('internal')) == 'internal' ? 'Internal MediaMosa call' : (mediamosa_unicode::substr($this->request_uri, 0, 1) == '/' ? '' : '/') . $this->request_uri), 'item_count' => 0, 'version' => mediamosa_version::MEDIAMOSA_VERSION
     ),
 
     'items' => array()
@@ -533,12 +537,4 @@ class mediamosa_response extends mediamosa {
   }
 
   // ------------------------------------------------------------------ Static Function.
-  /**
-   * Return the current used HTTP method.
-   *
-   * @return string
-   */
-  static public function get_method() {
-    return $_SERVER['REQUEST_METHOD'];
-  }
 }

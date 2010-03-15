@@ -79,7 +79,7 @@ function mediamosa_maintenance_browse_restcall_form() {
   );
 
   $form['results'] = array(
-    '#markup' => theme('table', $header, $rows),
+    '#markup' => theme('table', array('header' => $header, 'rows' => $rows)),
   );
 
   $form['pager_bottom'] = array(
@@ -183,7 +183,7 @@ function mediamosa_maintenance_browse_restcall_details($uri, $method) {
     }
   }
 
-  $contents = theme('table', $header, $rows);
+  $contents = theme('table', array('header' => $header, 'rows' => $rows));
 
   return $contents;
 }

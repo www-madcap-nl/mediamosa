@@ -24,20 +24,18 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
- /**
-  * @file
-  * functions for the webservice module.
-  */
+/**
+ * @file
+ * Database schema for the mediamosa node revision table.
+ */
 
-class mediamosa_webservice {
+class mediamosa_node_revision_db {
+  // ------------------------------------------------------------------ Consts.
+  // Table name;
+  const TABLE_NAME = 'mediamosa_node_revision';
 
-  /**
-   * Returns all in use (webservice) handles.
-   */
-  static public function get_all_handles() {
-    return mediamosa_db::db_select(mediamosa_webservice_db::TABLE_NAME, 'w')
-      ->fields('w', array(mediamosa_webservice_db::HANDLE))
-      ->execute()
-      ->fetchCol();
-  }
+  // Database fields;
+  const NID = 'nid';
+  const VID = 'vid';
+  const REVISION_DATA = 'revision_data'; // serialized array.
 }

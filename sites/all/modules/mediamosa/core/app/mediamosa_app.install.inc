@@ -257,8 +257,9 @@ function mediamosa_app_schema() {
         'not null' => FALSE,
       ),
     ),
-    'primary key' => array(mediamosa_app_db::NID, mediamosa_app_db::VID),
+    'primary key' => array(mediamosa_app_db::NID), // Revisions are stored in mediamosa_node_revision.
     'unique keys' => array(
+      'uni_drupal' => array(mediamosa_app_db::NID, mediamosa_app_db::VID),
       'uni_appid' => array(mediamosa_app_db::APP_ID),
     ),
   );

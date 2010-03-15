@@ -619,44 +619,73 @@ abstract class mediamosa_rest_call {
       $this->a_rest_args[$key_uri][self::PARAM_VALUE] = $value_uri;
     }
 
+    /**
+     * If $GLOBALS['mediamosa_params'] is available, use it instead of _GET and
+     * _POST. This is required if we run the REST call in a sandbox (not
+     * simpletest) inside a page.
+     */
+    if (isset($GLOBALS['mediamosa_params'])) {
+      // Fill the $a_rest_args array with rest input.
+      foreach ($GLOBALS['mediamosa_params'] as $key_params => $value_params) {
+        if ($key_params == 'q') {
+          continue; // Ignore the q variable.
+        }
+        // Set by default off.
 
-    // Fill the $a_rest_args array with rest input.
-    foreach ($_GET as $key_get => $value_get) {
-      if ($key_get == 'q') {
-        continue; // Ignore the q variable.
-      }
-      // Set by default off.
-
-      if (!isset($a_var_setup[self::VARS][$key_get]) && $this->check_for_unspecified) {
-        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_UNSPECIFIED_VARIABLE, array('@var' => $key_get));
-      }
-
-      if (isset($this->a_rest_args[$key_get])) {
-        if ($this->a_rest_args[$key_get][self::PARAM_VALUE] != $value_get) {
-          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_DIFF_VALUE_GET_POST_VAR, array('@var' => $key_get, '@value1' => $this->a_rest_args[$key_get][self::PARAM_VALUE], '@value2' => $value_get));
+        if (!isset($a_var_setup[self::VARS][$key_params]) && $this->check_for_unspecified) {
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_UNSPECIFIED_VARIABLE, array('@var' => $key_params));
         }
 
-        continue;
-      }
+        if (isset($this->a_rest_args[$key_params])) {
+          if ($this->a_rest_args[$key_params][self::PARAM_VALUE] != $value_params) {
+            throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_DIFF_VALUE_GET_POST_VAR, array('@var' => $key_params, '@value1' => $this->a_rest_args[$key_params][self::PARAM_VALUE], '@value2' => $value_params));
+          }
 
-      $this->a_rest_args[$key_get][self::PARAM_VALUE] = $value_get;
+          continue;
+        }
+
+        $this->a_rest_args[$key_params][self::PARAM_VALUE] = $value_params;
+      }
     }
+    else {
+      // Fill the $a_rest_args array with rest input.
+      foreach ($_GET as $key_get => $value_get) {
+        if ($key_get == 'q') {
+          continue; // Ignore the q variable.
+        }
+        // Set by default off.
 
-    // Now do the same to _POST.
-    foreach ($_POST as $key_post => $value_post) {
-      if (!isset($a_var_setup[self::VARS][$key_post]) && $this->check_for_unspecified) {
-        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_UNSPECIFIED_VARIABLE, array('@var' => $key_post));
-      }
-
-      if (isset($this->a_rest_args[$key_post])) {
-        if ($this->a_rest_args[$key_post][self::PARAM_VALUE] != $value_post) {
-          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_DIFF_VALUE_GET_POST_VAR, array('@var' => $key_post, '@value1' => $this->a_rest_args[$key_post][self::PARAM_VALUE], '@value2' => $value_post));
+        if (!isset($a_var_setup[self::VARS][$key_get]) && $this->check_for_unspecified) {
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_UNSPECIFIED_VARIABLE, array('@var' => $key_get));
         }
 
-        continue;
+        if (isset($this->a_rest_args[$key_get])) {
+          if ($this->a_rest_args[$key_get][self::PARAM_VALUE] != $value_get) {
+            throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_DIFF_VALUE_GET_POST_VAR, array('@var' => $key_get, '@value1' => $this->a_rest_args[$key_get][self::PARAM_VALUE], '@value2' => $value_get));
+          }
+
+          continue;
+        }
+
+        $this->a_rest_args[$key_get][self::PARAM_VALUE] = $value_get;
       }
 
-      $this->a_rest_args[$key_post][self::PARAM_VALUE] = $value_post;
+      // Now do the same to _POST.
+      foreach ($_POST as $key_post => $value_post) {
+        if (!isset($a_var_setup[self::VARS][$key_post]) && $this->check_for_unspecified) {
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_UNSPECIFIED_VARIABLE, array('@var' => $key_post));
+        }
+
+        if (isset($this->a_rest_args[$key_post])) {
+          if ($this->a_rest_args[$key_post][self::PARAM_VALUE] != $value_post) {
+            throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_DIFF_VALUE_GET_POST_VAR, array('@var' => $key_post, '@value1' => $this->a_rest_args[$key_post][self::PARAM_VALUE], '@value2' => $value_post));
+          }
+
+          continue;
+        }
+
+        $this->a_rest_args[$key_post][self::PARAM_VALUE] = $value_post;
+      }
     }
 
     // All args are now known. Now walk through the setup and set the defaults.

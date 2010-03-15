@@ -46,6 +46,7 @@ files[] = cql/mediamosa_cql_prefix_assignment.class.inc
 
 ; Response class.
 files[] = response/mediamosa_response.inc
+files[] = response/mediamosa_response_connector.inc
 
 ; Rest interface class.
 files[] = rest/mediamosa_rest_call.inc
@@ -207,6 +208,10 @@ files[] = core/job/upload/mediamosa_job_upload.install.inc
 
 ; Node type load/insert/delete/update related code.
 files[] = core/node/mediamosa_node.inc
+files[] = core/node/mediamosa_node.install.inc
+files[] = core/node/revision/mediamosa_node_revision_db.inc
+files[] = core/node/revision/mediamosa_node_revision.inc
+files[] = core/node/revision/mediamosa_node_revision.install.inc
 
 ; Storage.
 files[] = core/configuration/storage/mediamosa_configuration_storage.inc
