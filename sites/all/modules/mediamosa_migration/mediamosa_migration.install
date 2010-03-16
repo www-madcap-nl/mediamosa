@@ -425,7 +425,7 @@ function _mediamosa_migration_client_applications() {
 
   // Now add back the apps as nodes.
   foreach ($migrate_apps as $app_id => $app) {
-    $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_CLIENT_APPLICATION, $app->{mediamosa_app_db::NAME});
+    $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_APP, $app->{mediamosa_app_db::NAME});
 
     // not needed.
     unset($app->caid);
@@ -436,6 +436,10 @@ function _mediamosa_migration_client_applications() {
     foreach ($app as $key => $value) {
       if (in_array($key, array('active', 'allow_masterslave'))) {
         $value = $value ? 'TRUE' : 'FALSE';
+      }
+
+      if ($key == 'name') {
+        $key = 'app_name';// rename.
       }
 
       $node->{$key} = $value;
@@ -2001,14 +2005,11 @@ function _mediamosa_migration_transcode() {
  * Migrate server table to nodes mediamosa_server.
  */
 function _mediamosa_migration_create_server_nodes() {
-  // Clean the tables.
-  $a_to_truncate = array(
-    'mediamosa_server_streaming_container',
-    'mediamosa_server_tool',
-  );
 
-  foreach ($a_to_truncate as $table_name) {
-    db_truncate($table_name)->execute();
+  // Empty first.
+  $a_all = db_select('mediamosa_server', 's')->fields('s')->execute()->fetchAll();
+  foreach ($a_all as $mediamosa_server) {
+    node_delete($mediamosa_server->nid);
   }
 
   // Get the database name.

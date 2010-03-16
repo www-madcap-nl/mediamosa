@@ -36,16 +36,56 @@ function mediamosa_server_menu() {
   $items = array();
 
   $items['admin/mediamosa/config/server'] = array(
-    'title' => 'Server',
+    'title' => 'Server listing',
     'description' => 'List all MediaMosa Servers.',
     'page callback' => '_mediamosa_server_list',
     'access arguments' => array('access mediamosa'),
   );
 
   $items['admin/mediamosa/config/server/list'] = array(
-    'title' => 'Server',
+    'title' => 'List',
     'access arguments' => array('access mediamosa'),
     'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+
+  $items['admin/mediamosa/config/server/add_download'] = array(
+    'title' => 'Add Download',
+    'description' => 'Add MediaMosa Download Server.',
+    'page callback' => '_mediamosa_server_list',
+    'access arguments' => array('access mediamosa'),
+    'type' => MENU_LOCAL_TASK,
+  );
+
+  $items['admin/mediamosa/config/server/add_still'] = array(
+    'title' => 'Add Still',
+    'description' => 'Add MediaMosa Still Server.',
+    'page callback' => '_mediamosa_server_list',
+    'access arguments' => array('access mediamosa'),
+    'type' => MENU_LOCAL_TASK,
+  );
+
+  $items['admin/mediamosa/config/server/add_streaming'] = array(
+    'title' => 'Add Streaming',
+    'description' => 'Add MediaMosa Streaming Server.',
+    'page callback' => '_mediamosa_server_list',
+    'access arguments' => array('access mediamosa'),
+    'type' => MENU_LOCAL_TASK,
+  );
+
+  $items['admin/mediamosa/config/server/add_processing'] = array(
+    'title' => 'Add Processing',
+    'description' => 'Add MediaMosa Processing Server.',
+    'page callback' => '_mediamosa_server_list',
+    'access arguments' => array('access mediamosa'),
+    'type' => MENU_LOCAL_TASK,
+  );
+
+  $items['admin/mediamosa/config/server/add_upload'] = array(
+    'title' => 'Add Upload',
+    'description' => 'Add MediaMosa Upload Server.',
+    'page callback' => '_mediamosa_server_list',
+    'access arguments' => array('access mediamosa'),
+    'type' => MENU_LOCAL_TASK,
   );
 
   $items['admin/mediamosa/config/server/%/edit'] = array(
@@ -99,14 +139,15 @@ function _mediamosa_server_list() {
   $header = array(
     array('data' => t('Server Type'), 'field' => 'ms.' . mediamosa_server_db::SERVER_TYPE, 'sort' => 'asc'),
     array('data' => t('URI'), 'field' => 'ms.' . mediamosa_server_db::URI, 'sort' => 'asc'),
-    array('data' => t('Description')),
+    array('data' => t('Description'), 'field' => 'ms.' . mediamosa_server_db::DESCRIPTION, 'sort' => 'asc'),
     array('data' => t('Status'), 'field' => 'ms.' . mediamosa_server_db::SERVER_STATUS, 'sort' => 'asc'),
     t('Actions'),
   );
 
-  $query = db_select(mediamosa_server_db::TABLE_NAME, 'ms')->extend('TableSort');
+  $query = db_select(mediamosa_server_db::TABLE_NAME, 'ms')->extend('PagerDefault')->extend('TableSort');
   $query->fields('ms');
   $query->orderByHeader($header);
+  $query->limit(mediamosa_settings::maintenance_items_per_page());
   $result = $query->execute();
 
   $a_actions = array(

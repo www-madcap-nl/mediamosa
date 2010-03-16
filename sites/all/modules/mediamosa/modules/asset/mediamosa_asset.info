@@ -14,6 +14,9 @@ files[] = mediamosa_asset.module
 files[] = mediamosa_asset.rest.inc
 files[] = mediamosa_asset.test
 files[] = mediamosa_asset.cql.test
+files[] = mediamosa_asset.cql_asset_collection.test
+files[] = mediamosa_asset.cql_isprivate.test
+files[] = mediamosa_asset.cql_acl_context.test
 files[] = mediamosa_asset.function.test
 files[] = mediamosa_asset.search.test
 files[] = mediamosa_asset.delete.test
@@ -37,10 +40,13 @@ files[] = mediafile/metadata/mediamosa_asset_mediafile_metadata.test
 files[] = mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.rest.inc
 files[] = mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.test
 files[] = mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.acl.test
+files[] = mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.profile.test
+files[] = mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.ticket_mechanisme.test
 
 ; Mediafile Still.
 files[] = mediafile/still/mediamosa_asset_mediafile_still.rest.inc
 files[] = mediafile/still/mediamosa_asset_mediafile_still.playproxy.test
+files[] = mediafile/still/mediamosa_asset_mediafile_still.delete.test
 
 ; Mediafile Still Download.
 files[] = mediafile/still/download/mediamosa_asset_mediafile_still_download.rest.inc

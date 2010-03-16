@@ -88,6 +88,9 @@ function mediamosa_transcode_profile_load(&$nodes) {
  */
 function mediamosa_transcode_profile_update($node) {
 
+  // If this profile is set als default, then reset the rest to FALSE.
+  _mediamosa_transcode_profile_update_isdefault($node);
+
   if ($node->revision) {
     mediamosa_transcode_profile_insert($node);
   }
@@ -108,7 +111,7 @@ function mediamosa_transcode_profile_update($node) {
     }
 
     // Store the commands.
-    $node[mediamosa_transcode_profile_db::COMMAND] = implode(';', $command);
+    $node->{mediamosa_transcode_profile_db::COMMAND} = implode(';', $commands);
 
     // Get the field names of the table.
     $names = mediamosa_transcode_profile_db::get_fields();
@@ -123,6 +126,9 @@ function mediamosa_transcode_profile_update($node) {
  */
 function mediamosa_transcode_profile_insert($node) {
 
+  // If this profile is set als default, then reset the rest to FALSE.
+  _mediamosa_transcode_profile_update_isdefault($node);
+
   // Get the field names of the table.
   $names = mediamosa_transcode_profile_db::get_fields();
 
@@ -135,5 +141,23 @@ function mediamosa_transcode_profile_insert($node) {
  */
 function mediamosa_transcode_profile_delete($node) {
   // Delete revisions.
-  mediamosa_node_revision::delete($node, mediamosa_transcode_profile_db::TABLE_NAME);
+  mediamosa_node_revision::delete_ex($node, mediamosa_transcode_profile_db::TABLE_NAME);
+}
+
+/**
+ * If this profile is set als default, then reset the rest to FALSE
+ *
+ * @param unknown_type $node
+ */
+function _mediamosa_transcode_profile_update_isdefault($node) {
+  if ($node->{mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE} == mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE_TRUE) {
+    mediamosa_db::db_query(
+      'UPDATE #mediamosa_transcode_profile SET #is_default_profile = :is_default_profile_false',
+      array(
+        '#mediamosa_transcode_profile' => mediamosa_transcode_profile_db::TABLE_NAME,
+        '#is_default_profile' => mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE,
+        '#is_default_profile_false' => mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE_FALSE,
+      )
+    );
+  }
 }

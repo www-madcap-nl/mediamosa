@@ -115,6 +115,8 @@ class mediamosa_settings {
   const JOB_UPLOAD_TIMEOUT = 10800; // 3 hours, POST upload timeout is 2 hours.
   const JOB_JOB_TIMEOUT = 10800;
   const JOB_TRANSCODE_TIMEOUT = 7200;
+  // default amount of transcoding slots per app
+  const JOB_MAX_SLOTS = 5;
 
   // Header item used in internal calls.
   const X_MEDIAMOSA_INTERNAL_PASS = 'X-Mediamosa-Internal-Pass';

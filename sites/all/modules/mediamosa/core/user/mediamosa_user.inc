@@ -247,7 +247,7 @@ class mediamosa_user {
       return (int)$a_quota['quota_available_mb'];
     }
 
-    return $a_quota['quota_available_mb'] >= 0 ? TRUE : FALSE;
+    return ($a_quota['quota_available_mb'] >= 0);
   }
 
   /**

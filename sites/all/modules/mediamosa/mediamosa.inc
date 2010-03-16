@@ -280,7 +280,7 @@ class mediamosa {
     drupal_maintenance_theme();
     drupal_add_http_header('Status', '503 Service unavailable');
     drupal_set_title(t('Site offline'));
-    print theme('maintenance_page', filter_xss_admin($message));
+    print theme('maintenance_page', array('content' => filter_xss_admin($message)));
     drupal_page_footer();
     exit;
   }
@@ -295,7 +295,7 @@ class mediamosa {
     drupal_maintenance_theme();
     drupal_add_http_header('Status', '404 Page not found');
     drupal_set_title(t('Page not found'));
-    print theme('maintenance_page', filter_xss_admin($message));
+    print theme('maintenance_page', array('content' => filter_xss_admin($message)));
     drupal_page_footer();
     exit;
   }

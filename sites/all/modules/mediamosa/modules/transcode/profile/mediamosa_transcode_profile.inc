@@ -30,13 +30,72 @@
   */
 
 /**
+ * Collect the client apps as app_id => title.
+ */
+function _mediamosa_get_apps() {
+  // Get the apps for the drop down listing.
+  $apps = array(0 => t('Global profile (no owner)'));
+
+  // Gather all apps
+  foreach (mediamosa_app::get_all_apps(array(mediamosa_app_db::APP_ID, mediamosa_app_db::APP_NAME), mediamosa_app_db::APP_NAME, 'ASC') as $app) {
+    $apps[$app[mediamosa_app_db::APP_ID]] = $app[mediamosa_app_db::APP_NAME];
+  }
+
+  return $apps;
+}
+
+/**
+ * Show the listing of the current transcode profiles.
+ */
+function _mediamosa_transcode_profile_list() {
+
+  // Get the apps.
+  $apps = _mediamosa_get_apps();
+
+  $header = array(
+    array('data' => t('Profile'), 'field' => 'tp.' . mediamosa_transcode_profile_db::PROFILE),
+    array('data' => t('Is Default'), 'field' => 'tp.' . mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE),
+    array('data' => t('Tool'), 'field' => 'tp.' . mediamosa_transcode_profile_db::TOOL),
+    array('data' => t('Owner'), 'field' => 'tp.' . mediamosa_transcode_profile_db::APP_ID),
+  );
+
+  $query = mediamosa_db::db_select(mediamosa_transcode_profile_db::TABLE_NAME, 'tp')->extend('PagerDefault')->extend('TableSort');
+  $result = $query
+    ->fields('tp')
+    ->orderByHeader($header)
+    ->limit(mediamosa_settings::maintenance_items_per_page())
+    ->execute();
+
+  $rows = array();
+  foreach ($result as $row) {
+    $row = (object)$row;
+    $owner = isset($apps[$row->app_id]) ? $apps[$row->app_id] : t('Unknown owner');
+    $rows[] = array(
+      'title' => array('data' => l($row->profile, 'admin/mediamosa/config/transcode_profile/'. $row->nid), 'field' => $row->profile),
+      'description' => $row->is_default_profile,
+      'tool' => $row->tool,
+      'owner' => $owner,
+    );
+  }
+
+  $content = theme('table', array('header' => $header, 'rows' => $rows));
+  $content .= theme('pager');
+
+  return $content;
+}
+
+/**
  * Implementation of hook_view().
  */
 function mediamosa_transcode_profile_view($node, $view_mode = 'full') {
+
+  // Get the apps.
+  $apps = _mediamosa_get_apps();
+
   // Default parameters
   $rows = array(
     array(t('Title'), check_plain($node->title)),
-    array(t('App ID'), $node->app_id),
+    array(t('Application'), isset($apps[$node->app_id]) ? $apps[$node->app_id] : 'Unknown or deleted application'),
     array(t('Tool'), $node->tool),
     array(t('File extension'), $node->file_extension),
     array(t('Is default profile'), t(drupal_ucfirst(strtolower($node->is_default_profile)))),
@@ -81,17 +140,15 @@ function mediamosa_transcode_profile_form($node, $form_state) {
     '#description' => t('Required parameters for a transcoding profile.'),
   );
 
-  // Gather all apps
-  foreach (mediamosa_app::get_all_apps(array(mediamosa_app_db::APP_ID, mediamosa_app_db::NAME), mediamosa_app_db::NAME, 'ASC') as $app) {
-    $all_apps[$app[mediamosa_app_db::APP_ID]] = $app[mediamosa_app_db::NAME];
-  }
+  // Get the apps for the drop down listing.
+  $apps = _mediamosa_get_apps();
 
   $form['required']['app_id'] = array(
     '#title' => t('Application'),
     '#type' => 'select',
     '#default_value' => $node->{mediamosa_transcode_profile_db::APP_ID},
     '#required' => TRUE,
-    '#options' => $all_apps,
+    '#options' => $apps,
     '#description' => t('The application that owns this profile.'),
   );
   $form['required']['title'] = array(

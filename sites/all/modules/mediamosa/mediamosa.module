@@ -35,7 +35,9 @@ require_once 'mediamosa.settings.inc';
 
 // Node types hook include.
 require_once 'core/node/mediamosa_node.inc';
-
+require_once 'core/node/mediamosa_node_mediamosa_app.inc';
+require_once 'core/node/mediamosa_node_mediamosa_server.inc';
+require_once 'core/node/mediamosa_node_mediamosa_transcode_profile.inc';
 /**
  * Implement hook_requirements().
  */

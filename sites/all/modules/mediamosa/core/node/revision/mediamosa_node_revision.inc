@@ -70,6 +70,8 @@ class mediamosa_node_revision {
 
     foreach ($result as $revision) {
       $revision_data = !empty($revision[mediamosa_node_revision_db::REVISION_DATA]) ? unserialize($revision[mediamosa_node_revision_db::REVISION_DATA]) : array();
+      unset($revision_data['created']);
+      unset($revision_data['changed']);
       foreach ($revision_data as $key => $value) {
         $nodes[$revision['nid']]->$key = $value;
       }
@@ -108,6 +110,11 @@ class mediamosa_node_revision {
    */
   static public function insert_ex($node, $table_name, array $names) {
 
+    // Some things we cant change.
+    $node->status = 1; // Published
+    $node->sticky = 0;
+    $node->promote = 0;
+
     // Collect the data we want to insert.
     $fields = array();
     foreach ($names as $name) {
@@ -121,16 +128,26 @@ class mediamosa_node_revision {
       $fields = mediamosa_db::db_insert_enrich($fields);
     }
 
-    // Insert.
-    mediamosa_db::db_insert($table_name)
-      ->fields($fields)
-      ->execute();
+    // Because revisions are stored in other table, we might have a row already.
+    // Check and update if we already have one.
+    if (mediamosa_db::db_select($table_name, 'tmp')->fields('tmp', array('nid'))->condition('nid', $node->nid)->execute()->fetchField()) {
+      // Update.
+      mediamosa_db::db_update($table_name)
+        ->fields($fields)
+        ->condition('nid', $node->nid)
+        ->execute();
+    }
+    else {
+      // Insert.
+      mediamosa_db::db_insert($table_name)
+        ->fields($fields)
+        ->execute();
+    }
 
     // Get the row so we can store the revision.
     $revision = mediamosa_db::db_select($table_name, 'tmp')
       ->fields('tmp')
       ->condition('nid', $node->nid)
-      ->condition('vid', $node->vid)
       ->execute()
       ->fetchAssoc();
 
@@ -183,7 +200,7 @@ class mediamosa_node_revision {
     $fields = array();
     foreach ($names as $name) {
       // No need to update these.
-      if (in_array($name, array('nid', 'vid'))) {
+      if (in_array($name, array('nid', 'vid', 'created', 'changed'))) {
         continue;
       }
 

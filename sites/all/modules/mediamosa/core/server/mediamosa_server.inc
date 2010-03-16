@@ -40,6 +40,7 @@ class mediamosa_server {
 
     // Get all enabled transcode servers (ON / CLOSE).
     $a_servers = self::get_enabled_transcode();
+
     $a_triggered = array();
     foreach ($a_servers as $a_server) {
 

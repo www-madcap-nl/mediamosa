@@ -62,8 +62,24 @@ class mediamosa_app {
     else {
       $query->fields('app');
     }
+
     $query->condition(mediamosa_app_db::APP_ID, $a_app_id, 'IN');
+
     return $query->execute()->fetchAll();
+  }
+
+  /**
+   * Get the app using the node ID.
+   *
+   * @param string $name
+   * @return array
+   */
+  static public function get_by_nid($nid, $a_fields = array()) {
+    return mediamosa_db::db_select(mediamosa_app_db::TABLE_NAME, 'app')
+      ->fields('app', $a_fields)
+      ->condition(mediamosa_app_db::NID, $nid)
+      ->execute()
+      ->fetchAssoc();
   }
 
   /**
@@ -71,34 +87,34 @@ class mediamosa_app {
    *
    * @return array
    */
-  static public function get_all_apps(array $a_fields = array(), $order_by = FALSE, $order_direction = 'ASC') {
+  static public function get_all_apps(array $fields = array(), $order_by = NULL, $order_direction = 'ASC') {
     $query = mediamosa_db::db_select(mediamosa_app_db::TABLE_NAME, 'app');
 
-    if (count($a_fields)) {
-      foreach ($a_fields as $key => $field) {
+    if (count($fields)) {
+      foreach ($fields as $key => $field) {
         $query->addField('app', $field, (is_numeric($key) ? $field : $key));
       }
     }
     else {
-      $query->fields('app', array(mediamosa_app_db::APP_ID, mediamosa_app_db::NAME));
+      $query->fields('app', array(mediamosa_app_db::APP_ID, mediamosa_app_db::APP_NAME));
     }
 
     // Order the results
-    if ($order_by !== FALSE) {
+    if (isset($order_by)) {
       $query->orderBy($order_by, $order_direction);
     }
 
-    return $query->execute()->fetchAll();
+    return $query->execute();
   }
 
   /**
    * Update an application. Used for internal code.
    */
-  static public function update($app_id, $a_fields = array()) {
+  static public function update($app_id, array $fields = array()) {
 
    // Update.
     return mediamosa_db::db_update(mediamosa_app_db::TABLE_NAME)
-      ->fields($a_fields)
+      ->fields($fields)
       ->condition(mediamosa_app_db::APP_ID, $app_id)
       ->execute();
   }

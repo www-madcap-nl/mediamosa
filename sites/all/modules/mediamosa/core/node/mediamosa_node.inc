@@ -31,18 +31,12 @@
   * creation code.
   */
 
-// Our node type hooks.
-require_once 'mediamosa_node_mediamosa_client_application.inc';
-require_once 'mediamosa_node_mediamosa_server.inc';
-require_once 'mediamosa_node_mediamosa_transcode_profile.inc';
-
-
 class mediamosa_node {
   // ------------------------------------------------------------------ Consts.
   // Node types.
   const MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE = 'mediamosa_transcode_profile';
   const MEDIAMOSA_NODE_TYPE_SERVER = 'mediamosa_server';
-  const MEDIAMOSA_NODE_TYPE_CLIENT_APPLICATION = 'mediamosa_client_application';
+  const MEDIAMOSA_NODE_TYPE_APP = 'mediamosa_app';
 
   // ------------------------------------------------------------------ Functions.
   /**
@@ -67,6 +61,16 @@ class mediamosa_node {
     $node->title = $title;
     return $node;
   }
+
+  /**
+   * Changes the form for mediamosa node type.
+   * @param array $form
+   * @param array $form_state
+   */
+  static public function common_form(&$form, &$form_state) {
+    $form['revision_information']['revision']['#default_value'] = '1';
+    $form['revision_information']['log']['#default_value'] = ' ';
+  }
 }
 
 /**
@@ -86,11 +90,35 @@ function mediamosa_node_info() {
       'has_body' => FALSE,
       'description' => t('MediaMosa servers execute jobs for transcoding, uploading and other related work.'),
     ),
-    mediamosa_node::MEDIAMOSA_NODE_TYPE_CLIENT_APPLICATION => array(
+    mediamosa_node::MEDIAMOSA_NODE_TYPE_APP => array(
       'name' => t('MediaMosa client application'),
-      'base' => mediamosa_node::MEDIAMOSA_NODE_TYPE_CLIENT_APPLICATION,
+      'base' => mediamosa_node::MEDIAMOSA_NODE_TYPE_APP,
       'has_body' => FALSE,
       'description' => t('MediaMosa client applications are clients that can login onto MediaMosa and execute REST calls. All data stored is stored under its client application ID; giving each client application its own database of assets, mediafiles etc.'),
     ),
   );
+}
+
+/**
+ * Implementation of hook_form_alter().
+ */
+function mediamosa_form_mediamosa_transcode_profile_node_form_alter(&$form, &$form_state) {
+  // Change the form.
+  mediamosa_node::common_form($form, $form_state);
+}
+
+/**
+ * Implementation of hook_form_alter().
+ */
+function mediamosa_form_mediamosa_server_node_form_alter(&$form, &$form_state) {
+  // Change the form.
+  mediamosa_node::common_form($form, $form_state);
+}
+
+/**
+ * Implementation of hook_form_alter().
+ */
+function mediamosa_form_mediamosa_app_node_form_alter(&$form, &$form_state) {
+  // Change the form.
+  mediamosa_node::common_form($form, $form_state);
 }

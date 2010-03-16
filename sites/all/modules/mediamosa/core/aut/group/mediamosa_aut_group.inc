@@ -122,7 +122,7 @@ class mediamosa_aut_group {
    */
   static function get_by_group_name(array $a_app_ids, $group_name) {
 
-    return db_select(mediamosa_aut_group_db::TABLE_NAME, 'ag')
+    return mediamosa_db::db_select(mediamosa_aut_group_db::TABLE_NAME, 'ag')
       ->fields('ag', array(
         mediamosa_aut_group_db::AUT_GROUP_NAME,
         mediamosa_aut_group_db::AUT_GROUP_TYPE,
@@ -146,17 +146,17 @@ class mediamosa_aut_group {
   static function get_hostnames_by_group_name(array $a_app_ids, $group_name, $offset, $limit) {
     $a_query = array();
 
-    $a_query[mediamosa_db_query::A_SELECT_EXPR][] = "{aut_name}.aut_name";
-    $a_query[mediamosa_db_query::A_FROM][] = "{aut_name}";
+    $a_query[mediamosa_db_query::A_SELECT_EXPR][] = "{mediamosa_aut_name}.aut_name";
+    $a_query[mediamosa_db_query::A_FROM][] = "{mediamosa_aut_name}";
 
-    $a_query[mediamosa_db_query::A_JOIN]["aut_group"] = "LEFT JOIN {aut_group} USING (aut_group_id)";
+    $a_query[mediamosa_db_query::A_JOIN]["aut_group"] = "LEFT JOIN {mediamosa_aut_group} USING (aut_group_id)";
 
-    $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = sprintf('%s IN(%s)', mediamosa_aut_group_db::APP_ID, implode(',', $a_app_ids));
+    $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = sprintf('{mediamosa_aut_name}.%s IN(%s)', mediamosa_aut_group_db::APP_ID, implode(',', $a_app_ids));
     $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]["group_type"][mediamosa_db_query::WHERE_OR][] = "aut_group_type IS NOT NULL";// trick to keep the index in order
     $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]["group_type"][mediamosa_db_query::WHERE_OR][] = "aut_group_type IS NULL";
-    $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = sprintf("{aut_group}.aut_group_name = '%s'", mediamosa_db::escape_string($group_name));
+    $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = sprintf("{mediamosa_aut_group}.aut_group_name = '%s'", mediamosa_db::escape_string($group_name));
 
-    $a_query[mediamosa_db_query::A_ORDER_BY][] = "{aut_name}.aut_name ASC";
+    $a_query[mediamosa_db_query::A_ORDER_BY][] = "{mediamosa_aut_name}.aut_name ASC";
 
     $a_query[mediamosa_db_query::LIMIT] = $limit;
     $a_query[mediamosa_db_query::OFFSET] = $offset;
@@ -279,7 +279,7 @@ class mediamosa_aut_group {
     // Lets make sure its not an array here.
     assert(!is_array($app_id));
 
-    $a_group = mediamosa_aut_group::get_by_group_name($app_id, $group_name);
+    $a_group = mediamosa_aut_group::get_by_group_name(array($app_id), $group_name);
     if (!$a_group) {
       throw new mediamosa_exception_error_aut_group_not_found(array('@group' => $group_name));
     }

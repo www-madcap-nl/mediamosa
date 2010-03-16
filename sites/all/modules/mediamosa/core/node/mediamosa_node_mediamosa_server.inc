@@ -105,7 +105,7 @@ function mediamosa_server_insert($node) {
  */
 function mediamosa_server_delete($node) {
   // Delete revisions.
-  mediamosa_node_revision::delete($node, mediamosa_app_db::TABLE_NAME);
+  mediamosa_node_revision::delete_ex($node, mediamosa_server_db::TABLE_NAME);
 
   // Remove streaming containers.
   db_delete(mediamosa_server_streaming_container_db::TABLE_NAME)

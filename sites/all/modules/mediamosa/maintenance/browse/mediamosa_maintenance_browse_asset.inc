@@ -254,8 +254,8 @@ function mediamosa_maintenance_browse_asset_form() {
 
   // Gather all apps.
   $all_apps_raw = array();
-  foreach (mediamosa_app::get_all_apps(array(mediamosa_app_db::APP_ID, mediamosa_app_db::NAME), mediamosa_app_db::NAME, 'ASC') as $app) {
-    $all_apps_raw[$app[mediamosa_app_db::APP_ID]] = $app[mediamosa_app_db::NAME];
+  foreach (mediamosa_app::get_all_apps(array(mediamosa_app_db::APP_ID, mediamosa_app_db::APP_NAME), mediamosa_app_db::APP_NAME, 'ASC') as $app) {
+    $all_apps_raw[$app[mediamosa_app_db::APP_ID]] = $app[mediamosa_app_db::APP_NAME];
   }
   $all_apps = array(implode(' ', array_keys($all_apps_raw)) => t('<All applications>'));
   $all_apps += $all_apps_raw;

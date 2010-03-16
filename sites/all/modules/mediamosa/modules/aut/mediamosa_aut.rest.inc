@@ -121,14 +121,18 @@ class mediamosa_rest_call_aut_group_get_hostnames extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
   // Rest vars;
   const GROUPNAME = 'groupname';
+  const LIMIT = 'limit';
+  const OFFSET = 'offset';
 
   // ------------------------------------------------------------------ Functions (public).
   public function get_var_setup() {
-    $a_var_setup = array();
+    // Enrich with limit and offset vars.
+    $a_var_setup = $this->get_var_setup_range();
 
     $a_var_setup[mediamosa_rest_call::VARS][self::GROUPNAME] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_STRING,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
+      mediamosa_rest_call::VAR_DESCRIPTION => 'The name of the group.',
     );
 
     // Enrich with required REST vars.
@@ -142,6 +146,9 @@ class mediamosa_rest_call_aut_group_get_hostnames extends mediamosa_rest_call {
     $a_app_ids = $this->get_param_value_app();
     $group_name = $this->get_param_value(self::GROUPNAME);
 
+    $offset = $this->get_param_value_offset();
+    $limit = $this->get_param_value_limit();
+
     // Get the group.
     $a_row = mediamosa_aut_group::get_by_group_name($a_app_ids, $group_name);
     if (!$a_row) {
@@ -149,11 +156,11 @@ class mediamosa_rest_call_aut_group_get_hostnames extends mediamosa_rest_call {
     }
 
     // Get the group.
-    $result = mediamosa_aut_group::get_hostnames_by_group_name($a_app_ids, $group_name);
+    $result = mediamosa_aut_group::get_hostnames_by_group_name($a_app_ids, $group_name, $offset, $limit);
 
     // Add to result.
     foreach ($result as $a_row) {
-      $a_row['hostname']  = $a_row['aut_name'];
+      $a_row['hostname'] = $a_row['aut_name'];
       unset($a_row['aut_name']);
       $o_mediamosa->add_item($a_row);
     }
@@ -229,11 +236,13 @@ class mediamosa_rest_call_aut_group_delete_hostnames extends mediamosa_rest_call
     $a_var_setup[mediamosa_rest_call::VARS][self::GROUPNAME] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_STRING,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
+      mediamosa_rest_call::VAR_DESCRIPTION => 'The name of the group to delete from.',
     );
     $a_var_setup[mediamosa_rest_call::VARS][self::HOSTNAME] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_STRING,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
+      mediamosa_rest_call::VAR_DESCRIPTION => 'The name of the host to delete.',
     );
 
     // Enrich with required REST vars.
@@ -340,15 +349,17 @@ class mediamosa_rest_call_aut_group_update extends mediamosa_rest_call {
     $a_var_setup[mediamosa_rest_call::VARS][self::GROUPNAME] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_STRING,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
+      mediamosa_rest_call::VAR_DESCRIPTION => 'The name of the group to update.',
     );
     $a_var_setup[mediamosa_rest_call::VARS][self::GROUP_TYPE] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_AUT_GROUP_TYPE,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
-      mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
+      mediamosa_rest_call::VAR_DESCRIPTION => 'The type of the group.',
     );
     $a_var_setup[mediamosa_rest_call::VARS][self::NEW_GROUPNAME] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_STRING,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
+      mediamosa_rest_call::VAR_DESCRIPTION => 'The new name of the group.',
     );
 
     // Enrich with required REST vars.
@@ -429,11 +440,13 @@ class mediamosa_rest_call_aut_group_delete extends mediamosa_rest_call {
     $a_var_setup[mediamosa_rest_call::VARS][self::GROUPNAME] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_STRING,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
+      mediamosa_rest_call::VAR_DESCRIPTION => 'The name of the group to delete.',
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::DELETE] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_DELETE,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
+      mediamosa_rest_call::VAR_DESCRIPTION => 'Delete = cascade field.',
     );
 
     // Enrich with required REST vars.
@@ -497,11 +510,11 @@ class mediamosa_rest_call_aut_group_delete extends mediamosa_rest_call {
 
     // Remove all links from aut_object -> aut_group.
     mediamosa_db::db_query(
-      'DELETE FROM {#mediamosa_aut_object} WHERE #aut_type = #aut_type_group AND #aut_id = :aut_id',
+      'DELETE FROM {#mediamosa_aut_object} WHERE #aut_type = :aut_type_group AND #aut_id = :aut_id',
       array(
         '#mediamosa_aut_object' => mediamosa_aut_object_db::TABLE_NAME,
         '#aut_type' => mediamosa_aut_object_db::AUT_TYPE,
-        '#aut_type_group' => mediamosa_aut_object_db::AUT_TYPE_GROUP,
+        ':aut_type_group' => mediamosa_aut_object_db::AUT_TYPE_GROUP,
         '#aut_id' => mediamosa_aut_object_db::AUT_ID,
         ':aut_id' => $group_id,
       )
@@ -881,6 +894,7 @@ class mediamosa_rest_call_aut_asset_set_rights extends mediamosa_rest_call {
     $a_var_setup[mediamosa_rest_call::VARS][self::ASSET_ID] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
+      mediamosa_rest_call::VAR_DESCRIPTION => 'The asset_id.',
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::USER_ID] = array(
@@ -907,24 +921,28 @@ class mediamosa_rest_call_aut_asset_set_rights extends mediamosa_rest_call {
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
+      mediamosa_rest_call::VAR_DESCRIPTION => 'Aut user.',
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::AUT_GROUP] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
+      mediamosa_rest_call::VAR_DESCRIPTION => 'Aut group.',
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::AUT_DOMAIN] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_DOMAIN,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
+      mediamosa_rest_call::VAR_DESCRIPTION => 'Aut domain.',
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::AUT_REALM] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_REALM,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
+      mediamosa_rest_call::VAR_DESCRIPTION => 'Aut realm.',
     );
 
     // alias.
@@ -932,6 +950,7 @@ class mediamosa_rest_call_aut_asset_set_rights extends mediamosa_rest_call {
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
+      mediamosa_rest_call::VAR_DESCRIPTION => 'Aut user id.',
     );
 
     // alias.
@@ -939,6 +958,7 @@ class mediamosa_rest_call_aut_asset_set_rights extends mediamosa_rest_call {
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
+      mediamosa_rest_call::VAR_DESCRIPTION => 'Aut group id.',
     );
 
     // Enrich with required REST vars.
@@ -1101,11 +1121,13 @@ class mediamosa_rest_call_aut_asset_get_rights extends mediamosa_rest_call {
     $a_var_setup[mediamosa_rest_call::VARS][self::ASSET_ID] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
+      mediamosa_rest_call::VAR_DESCRIPTION => 'The asset id.',
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::USER_ID] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
+      mediamosa_rest_call::VAR_DESCRIPTION => 'The user id.',
     );
 
     // Enrich with required REST vars.
@@ -1222,11 +1244,13 @@ class mediamosa_rest_call_aut_collection_get_rights extends mediamosa_rest_call 
     $a_var_setup[mediamosa_rest_call::VARS][self::COLL_ID] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_COLLECTION_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
+      mediamosa_rest_call::VAR_DESCRIPTION => 'The coll id.',
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::USER_ID] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
+      mediamosa_rest_call::VAR_DESCRIPTION => 'The user id.',
     );
 
     // Enrich with required REST vars.

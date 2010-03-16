@@ -28,7 +28,7 @@
   * @file
   * Unittests for asset functions.
   */
-class MediaMosaAssetFunctionsTestCaseEga extends MediaMosaTestCaseEga {
+class MediaMosaAssetFunctionsTestCaseEga extends MediaMosaTestCaseEgaJob {
 
   // ------------------------------------------------------------------ Members.
 
@@ -279,177 +279,130 @@ class MediaMosaAssetFunctionsTestCaseEga extends MediaMosaTestCaseEga {
       );
     }
 
-/*
     //
     // show_stills
     //
-    $still_asset_id = $this->_create_asset();
-    $still_mediafile_id = $this->_create_mediafile($still_asset_id);
-    $s_desc = null;
-    $still_time_code = 10;
-    $still_order = 0;
-    $still_type = 'NONE';
-    $still_default = 'TRUE';
-    $tag = '';
-    $still_id = $this->_create_still($still_asset_id, $s_desc, $still_time_code, $still_order, $still_type, $still_default, $still_mediafile_id, $tag);
+
+    // Create upload file.
+    $a_upload = $this->uploadTestFile();
+    $asset_id = $a_upload['asset_id'];
+    $mediafile_id = $a_upload['mediafile_id'];
+
+    // Create still job.
+    $job_id = $this->createMediafileStill($mediafile_id);
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Get the stills.
+    $a_stills = $this->getMediafileStill($mediafile_id);
+    $this->assertTrue(count($a_stills) == 1, 'One dimension result.');
+
+    // Get first array.
+    $a_stills = $a_stills[0];
+    $still_mediafile_id = $a_stills['stills']['still_id'];
 
     // Part 1. asset/{asset_id} GET
 
-    // show_stills = NULL
-    $a_args = array(
-      'uri' => array(
-        'asset_id' => $still_asset_id
-      ),
-      'get' => array(
-        'app_id' => SIMPLETEST_APP_ID
-      ),
-    );
-    $result = $this->_do_restcall(
-      "media_management_get_asset_1_6_0",
-      array($a_args)
-    );
+    // Get still.
+    // show_stills = NULL.
+    $a_asset = $this->getAsset($asset_id);
+    //$this->var_export($a_asset);
+
+    // Check the response.
     $this->assertTrue(
-      $result->response['header']['request_result_id'] === ERRORCODE_OKAY,
-      "Get asset ". $still_asset_id ." (request_result_id = ". ERRORCODE_OKAY ."): %s"
-    );
-    $item = reset($result->response['items']);
-    $item = array_pop($item['mediafiles']['mediafile']);
-    $this->assertTrue(
-      isset($item['still']),
-      'Still is isset (show_stills=NULL), %s'
+      isset($a_asset['mediafiles']['mediafile']['still']),
+      t("Is still exists?")
     );
 
-    // show_stills = TRUE
-    $a_args = array(
-      'uri' => array(
-        'asset_id' => $still_asset_id
-      ),
-      'get' => array(
-        'app_id' => SIMPLETEST_APP_ID,
-        'show_stills' => 'TRUE',
-      ),
+    // Get still.
+    $a_parameters = array(
+      mediamosa_rest_call_get_mediafile::SHOW_STILLS => 'TRUE',
     );
-    $result = $this->_do_restcall(
-      "media_management_get_asset_1_6_0",
-      array($a_args)
-    );
+    $a_asset = $this->getAsset($asset_id, $a_parameters);
+
+    // Check the response.
     $this->assertTrue(
-      $result->response['header']['request_result_id'] === ERRORCODE_OKAY,
-      "Get asset ". $still_asset_id ." (request_result_id = ". ERRORCODE_OKAY ."): %s"
-    );
-    $item = reset($result->response['items']);
-    $item = array_pop($item['mediafiles']['mediafile']);
-    $this->assertTrue(
-      isset($item['still']),
-      'Still is isset (show_stills=TRUE), %s'
+      isset($a_asset['mediafiles']['mediafile']['still']),
+      t("Is still exists?")
     );
 
-    // show_stills = FALSE
-    $a_args = array(
-      'uri' => array(
-        'asset_id' => $still_asset_id
-      ),
-      'get' => array(
-        'app_id' => SIMPLETEST_APP_ID,
-        'show_stills' => 'FALSE',
-      ),
+    // Get still.
+    $a_parameters = array(
+      mediamosa_rest_call_get_mediafile::SHOW_STILLS => 'FALSE',
     );
-    $result = $this->_do_restcall(
-      "media_management_get_asset_1_6_0",
-      array($a_args)
-    );
-    $this->assertTrue(
-      $result->response['header']['request_result_id'] === ERRORCODE_OKAY,
-      "Get asset ". $still_asset_id ." (request_result_id = ". ERRORCODE_OKAY ."): %s"
-    );
-    $item = reset($result->response['items']);
-    $item = array_pop($item['mediafiles']['mediafile']);
+    $a_asset = $this->getAsset($asset_id, $a_parameters);
+
+    // Check the response.
     $this->assertFalse(
-      isset($item['still']),
-      'Still is isset (show_stills=FALSE), %s'
+      isset($a_asset['mediafiles']['mediafile']['still']),
+      t("Is still not exists?")
     );
 
     // Part 2. asset GET
 
-    // show_stills = NULL
-    $a_args = array(
-      'get' => array(
-        'app_id' => SIMPLETEST_APP_ID,
-        'limit' => 100,
-      ),
-    );
-    $result = $this->_do_restcall(
-      "media_management_get_asset_search",
-      array($a_args)
+    // Limit.
+    $limit = 10;
+
+    // Get still.
+    // show_stills = NULL.
+    $a_assets = $this->searchAsset($limit);
+    //$this->var_export($a_assets);
+
+    // Check the response.
+    $this->assertFalse(
+      isset($a_assets['items']['item'][0]['mediafiles']),
+      t("Is mediafile not exists?")
     );
     $this->assertTrue(
-      $result->response['header']['request_result_id'] === ERRORCODE_OKAY,
-      "Get all asset (request_result_id = ". ERRORCODE_OKAY ."): %s"
+      $a_assets['items']['item'][0]['asset_id'] == $asset_id,
+      t("Asset id has the good value")
     );
-    $item = NULL;
-    foreach ($result->response['items'] as $it) {
-      if ($it['asset_id'] == $still_asset_id) {
-        $item = $it;
-      }
-    }
     $this->assertTrue(
-      $item && is_array($item) && isset($item['vpx_still_url']) && $item['vpx_still_url'] != '',
-      'Vpx_still_url (show_stills=NULL), %s'
+      isset($a_assets['items']['item'][0]['vpx_still_url']) && $a_assets['items']['item'][0]['vpx_still_url'] != '',
+      t('The vpx_still_url has value')
     );
 
-    // show_stills = TRUE
-    $a_args = array(
-      'get' => array(
-        'app_id' => SIMPLETEST_APP_ID,
-        'limit' => 100,
-        'show_stills' => 'TRUE',
-      ),
+    // Get still.
+    // show_stills = TRUE.
+    $a_parameters = array(
+      mediamosa_rest_call_get_mediafile::SHOW_STILLS => 'TRUE',
     );
-    $result = $this->_do_restcall(
-      "media_management_get_asset_search",
-      array($a_args)
+    $a_assets = $this->searchAsset($limit, $a_parameters);
+
+    // Check the response.
+    $this->assertFalse(
+      isset($a_assets['items']['item'][0]['mediafiles']),
+      t("Is mediafile not exists?")
     );
     $this->assertTrue(
-      $result->response['header']['request_result_id'] === ERRORCODE_OKAY,
-      "Get all asset (request_result_id = ". ERRORCODE_OKAY ."): %s"
+      $a_assets['items']['item'][0]['asset_id'] == $asset_id,
+      t("Asset id has the good value")
     );
-    $item = NULL;
-    foreach ($result->response['items'] as $it) {
-      if ($it['asset_id'] == $still_asset_id) {
-        $item = $it;
-      }
-    }
     $this->assertTrue(
-      $item && is_array($item) && isset($item['vpx_still_url']) && $item['vpx_still_url'] != '',
-      'Vpx_still_url (show_stills=TRUE), %s'
+      isset($a_assets['items']['item'][0]['vpx_still_url']) && $a_assets['items']['item'][0]['vpx_still_url'] != '',
+      t('The vpx_still_url has value')
     );
 
-    // show_stills = FALSE
-    $a_args = array(
-      'get' => array(
-        'app_id' => SIMPLETEST_APP_ID,
-        'limit' => 100,
-        'show_stills' => 'FALSE',
-      ),
+    // Get still.
+    // show_stills = FALSE.
+    $a_parameters = array(
+      mediamosa_rest_call_get_mediafile::SHOW_STILLS => 'FALSE',
     );
-    $result = $this->_do_restcall(
-      "media_management_get_asset_search",
-      array($a_args)
+    $a_assets = $this->searchAsset($limit, $a_parameters);
+
+    // Check the response.
+    $this->assertFalse(
+      isset($a_assets['items']['item'][0]['mediafiles']),
+      t("Is mediafile not exists?")
     );
     $this->assertTrue(
-      $result->response['header']['request_result_id'] === ERRORCODE_OKAY,
-      "Get all asset (request_result_id = ". ERRORCODE_OKAY ."): %s"
+      $a_assets['items']['item'][0]['asset_id'] == $asset_id,
+      t("Asset id has the good value")
     );
-    $item = NULL;
-    foreach ($result->response['items'] as $it) {
-      if ($it['asset_id'] == $still_asset_id) {
-        $item = $it;
-      }
-    }
     $this->assertTrue(
-      $item && is_array($item) && isset($item['vpx_still_url']) && $item['vpx_still_url'] == '',
-      'Vpx_still_url (show_stills=FALSE), %s'
+      isset($a_assets['items']['item'][0]['vpx_still_url']) && $a_assets['items']['item'][0]['vpx_still_url'] == '',
+      t('The vpx_still_url has not value')
     );
-*/
   }
 }

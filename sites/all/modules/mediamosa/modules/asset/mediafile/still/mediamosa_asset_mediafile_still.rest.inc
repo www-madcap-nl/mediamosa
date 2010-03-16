@@ -80,7 +80,7 @@ class mediamosa_rest_call_delete_stills extends mediamosa_rest_call {
     $app_id = reset($a_app_ids);
 
     // Webservice enabled?
-    mediamosa_webservice_app::webservice_must_be_active(HANDLE_MEDIA_MANAGEMENT, $a_app_ids);
+    mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $a_app_ids);
 
     $asset_id = self::get_param_value(self::ASSET_ID);
     $mediafile_id = self::get_param_value(self::MEDIAFILE_ID);
@@ -108,6 +108,7 @@ class mediamosa_rest_call_delete_stills extends mediamosa_rest_call {
     $a_row = mediamosa_db::db_query(
       'SELECT #app_id, #owner_id FROM {#mediamosa_asset} WHERE #asset_id = :asset_id',
       array(
+        '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
         '#app_id' => mediamosa_asset_db::APP_ID,
         '#owner_id' => mediamosa_asset_db::OWNER_ID,
         '#asset_id' => mediamosa_asset_db::ID,
@@ -184,7 +185,7 @@ class mediamosa_rest_call_set_still_default extends mediamosa_rest_call {
     $app_id = reset($a_app_ids);
 
     // Webservice enabled?
-    mediamosa_webservice_app::webservice_must_be_active(HANDLE_MEDIA_MANAGEMENT, $a_app_ids);
+    mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $a_app_ids);
 
     $asset_id = $this->get_param_value(self::ASSET_ID);
     $mediafile_id = $this->get_param_value(self::MEDIAFILE_ID);
@@ -224,6 +225,7 @@ class mediamosa_rest_call_set_still_default extends mediamosa_rest_call {
     $a_row = mediamosa_db::db_query(
       'SELECT #app_id, #owner_id FROM {#mediamosa_asset} WHERE #asset_id = :asset_id',
       array(
+        '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
         '#app_id' => mediamosa_asset_db::APP_ID,
         '#owner_id' => mediamosa_asset_db::OWNER_ID,
         '#asset_id' => mediamosa_asset_db::ID,
@@ -306,7 +308,7 @@ class mediamosa_rest_call_set_still_order extends mediamosa_rest_call {
     $app_id = reset($a_app_ids);
 
     // Webservice enabled?
-    mediamosa_webservice_app::webservice_must_be_active(HANDLE_MEDIA_MANAGEMENT, $a_app_ids);
+    mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $a_app_ids);
 
     $asset_id = $this->get_param_value(self::ASSET_ID);
     $mediafile_id = $this->get_param_value(self::MEDIAFILE_ID);
@@ -347,6 +349,7 @@ class mediamosa_rest_call_set_still_order extends mediamosa_rest_call {
     $a_row = mediamosa_db::db_query(
       'SELECT #app_id, #owner_id FROM {#mediamosa_asset} WHERE #asset_id = :asset_id',
       array(
+        '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
         '#app_id' => mediamosa_asset_db::APP_ID,
         '#owner_id' => mediamosa_asset_db::OWNER_ID,
         '#asset_id' => mediamosa_asset_db::ID,

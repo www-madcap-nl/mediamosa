@@ -43,6 +43,7 @@ class mediamosa_aut_name {
   static public function get($app_id, $aut_type, $aut_name, $aut_group_id/* can be NULL, do not use 0*/) {
 
     $query = mediamosa_db::db_select(mediamosa_aut_name_db::TABLE_NAME, 'an');
+    $query->fields('an', array(mediamosa_aut_name_db::ID));
     $query->condition(mediamosa_aut_name_db::APP_ID, $app_id);
     $query->condition(mediamosa_aut_name_db::AUT_TYPE, $aut_type);
 
@@ -70,7 +71,7 @@ class mediamosa_aut_name {
     }
 
     // Delete all links to this aut_name
-    mediamosa_aut_object::delete(mediamosa_aut_object_db::AUT_TYPE_NAME, $a_aut_name['aut_name_id']);
+    mediamosa_aut_object::delete(mediamosa_aut_object_db::AUT_TYPE_NAME, $a_aut_name[mediamosa_aut_name_db::ID]);
 
     // Delete it.
     $query = mediamosa_db::db_delete(mediamosa_aut_name_db::TABLE_NAME);

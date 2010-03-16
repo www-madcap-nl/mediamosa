@@ -459,7 +459,7 @@ function node_admin_nodes() {
   $destination = drupal_get_destination();
   $options = array();
   foreach ($nodes as $node) {
-    $l_options = isset($node->language) && $node->language != LANGUAGE_NONE ? array('language' => $languages[$node->language]) : array();
+    $l_options = $node->language != LANGUAGE_NONE ? array('language' => $languages[$node->language]) : array();
     $options[$node->nid] = array(
       'title' => array(
         'data' => array(

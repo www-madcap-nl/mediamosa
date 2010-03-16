@@ -68,10 +68,10 @@ function mediamosa_app_schema() {
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
-      mediamosa_app_db::NAME => array(
+      mediamosa_app_db::APP_NAME => array(
         'description' => t('The name of the client.'),
         'type' => 'varchar',
-        'length' => mediamosa_app_db::NAME_LENGTH,
+        'length' => mediamosa_app_db::APP_NAME_LENGTH,
         'not null' => TRUE,
       ),
       mediamosa_app_db::APP_ID => array(
@@ -259,7 +259,6 @@ function mediamosa_app_schema() {
     ),
     'primary key' => array(mediamosa_app_db::NID), // Revisions are stored in mediamosa_node_revision.
     'unique keys' => array(
-      'uni_drupal' => array(mediamosa_app_db::NID, mediamosa_app_db::VID),
       'uni_appid' => array(mediamosa_app_db::APP_ID),
     ),
   );

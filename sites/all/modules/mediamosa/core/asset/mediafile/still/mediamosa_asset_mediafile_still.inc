@@ -272,10 +272,6 @@ class mediamosa_asset_mediafile_still {
    *  Remove specific still.
    */
   static public function delete($asset_id, $mediafile_id = '', $still_id = '') {
-
-    // Can not be set both.
-    assert($still_id != '' && $mediafile_id != '');
-
     // Get the mediafile stills we need to remove.
     if ($still_id != '') {
       // Get specific still.
@@ -319,7 +315,7 @@ class mediamosa_asset_mediafile_still {
     }
     else {
       // Get all stills from asset.
-      $result = mediamosa::db_query(
+      $result = mediamosa_db::db_query(
         'SELECT #mediafile_id AS still_id, #app_id, #sannas_mount_point, #mediafile_id_source FROM {#mediamosa_asset_mediafile} WHERE #asset_id_root = :asset_id_root AND #is_still = :is_still_true',
         array(
           '#mediafile_id' => mediamosa_asset_mediafile_db::ID,

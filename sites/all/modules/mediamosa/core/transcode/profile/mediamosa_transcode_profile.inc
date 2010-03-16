@@ -70,6 +70,29 @@ class mediamosa_transcode_profile {
   }
 
   /**
+   * Retrieve a listing of transcode profiles.
+   *
+   * @param $fields
+   */
+  static public function get_all(array $fields = array()) {
+
+    // Build the query.
+    $query = mediamosa_db::db_select(mediamosa_transcode_profile_db::TABLE_NAME, 'tp');
+
+    if (count($fields)) {
+      foreach ($fields as $key => $field) {
+        $query->addField('tp', $field, (is_numeric($key) ? $field : $key));
+      }
+    }
+    else {
+      $query->fields('tp');
+    }
+
+    return $query->execute()->fetchAll();
+
+  }
+
+  /**
    * Get listing transcode profiles for app.
    *
    * @param integer $app_id

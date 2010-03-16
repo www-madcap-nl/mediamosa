@@ -49,7 +49,7 @@ class mediamosa_app_authentication {
       array(
         '#shared_key' => mediamosa_app_db::SHARED_KEY,
         '#table_name' => mediamosa_app_db::TABLE_NAME,
-        '#name' => mediamosa_app_db::NAME,
+        '#name' => mediamosa_app_db::APP_NAME,
         ':name' => $name,
         '#active' => mediamosa_app_db::ACTIVE,
         ':active_true' => mediamosa_app_db::ACTIVE_TRUE,
@@ -68,7 +68,7 @@ class mediamosa_app_authentication {
       "SELECT #active FROM {#table_name} WHERE #name = :name",
       array(
         '#table_name' => mediamosa_app_db::TABLE_NAME,
-        '#name' => mediamosa_app_db::NAME,
+        '#name' => mediamosa_app_db::APP_NAME,
         ':name' => $name,
         '#active' => mediamosa_app_db::ACTIVE,
       )
@@ -86,7 +86,7 @@ class mediamosa_app_authentication {
     return mediamosa_db::db_query(
       "SELECT * FROM {#table_name} WHERE #name = :name",
       array(
-        '#name' => mediamosa_app_db::NAME,
+        '#name' => mediamosa_app_db::APP_NAME,
         '#table_name' => mediamosa_app_db::TABLE_NAME,
         ':name' => $name,
       )
@@ -210,7 +210,7 @@ class mediamosa_app_authentication {
         // Set the identification in session.
         $_SESSION['mediamosa_app'] = array(
           'app_id' =>  $a_app[mediamosa_app_db::APP_ID],
-          'name' => $a_app[mediamosa_app_db::NAME]
+          'name' => $a_app[mediamosa_app_db::APP_NAME]
         );
 
         return 'OK ' . self::APP_AUTH_SERVER_GUID;

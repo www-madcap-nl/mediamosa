@@ -161,10 +161,10 @@ function mediamosa_transcode_profile_schema() {
     'primary key' => array(mediamosa_transcode_profile_db::ID),
     'unique keys' => array(
       'uni_appid_profile' => array(mediamosa_transcode_profile_db::APP_ID, mediamosa_transcode_profile_db::PROFILE),
-      'uni_drupal' => array(mediamosa_transcode_profile_db::NID, mediamosa_transcode_profile_db::VID),
+      'uni_nid' => array(mediamosa_transcode_profile_db::NID),
     ),
     'indexes' => array(
-      array(mediamosa_transcode_profile_db::APP_ID, mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE),
+      'idx_app_isdefault' => array(mediamosa_transcode_profile_db::APP_ID, mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE),
     ),
   );
 

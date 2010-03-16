@@ -50,7 +50,6 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   // deleted on teardown.
   private $a_mediafiles_cleanup = array();
 
-
   // ------------------------------------------------------------------ Functions.
   /**
    * Implements setUp().
@@ -79,10 +78,6 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     // Create 2 extra.
     $this->a_app_2 = $this->createApp(array(mediamosa_app_db::APP_ID => $this->a_app[mediamosa_app_db::APP_ID] + 1)); // in case we need other.
     $this->a_app_3 = $this->createApp(array(mediamosa_app_db::APP_ID => $this->a_app_2[mediamosa_app_db::APP_ID] + 1)); // in case we need other.
-
-    // Create and login user
-    $rest_user = $this->drupalCreateUser(array('administer mediamosa'));
-    $this->drupalLogin($rest_user);
 
     // Truncate current and insert new.
     db_truncate(mediamosa_server_db::TABLE_NAME)->execute();
@@ -115,6 +110,10 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
         ->fields($a_server_tool)
         ->execute();
     }
+
+    // Create and login user
+    $rest_user = $this->drupalCreateUser(array('administer mediamosa'));
+    $this->drupalLogin($rest_user);
 
     // Do EGA / APP login (app 1).
     // If your test needs more, call doEgaLogin_2 and doEgaLogin_3 in your test.
@@ -159,7 +158,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // Do login.
     $app_id = $a_app[mediamosa_app_db::APP_ID];
-    $app_name = $a_app[mediamosa_app_db::NAME];
+    $app_name = $a_app[mediamosa_app_db::APP_NAME];
     $shared_key = $a_app[mediamosa_app_db::SHARED_KEY];
 
     // Step 1: start auth and capture cookie.
@@ -487,7 +486,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $this->assertTrue(file_exists(mediamosa_configuration_storage::mediafile_filename_get($a_mediafile)), 'File has been uploaded.');
 
     // Lets return the mediafile_id for now.
-    return array('asset_id' => $asset_id, 'mediafile_id' => $mediafile_id);
+    return array('asset_id' => $asset_id, 'mediafile_id' => $mediafile_id, 'filename' => mediamosa_configuration_storage::mediafile_filename_get($a_mediafile));
   }
 
   /**
@@ -906,6 +905,75 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // Return data.
     return $a_group;
+  }
+
+  /**
+   * Get an autorisation group.
+   * Based on the rest call /autorisation_group/$groupname (GET)
+   */
+  protected function getAutGroup($groupname, array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+
+    // Set uri.
+    $uri = strtr('autorisation_group/@groupname', array('@groupname' => $groupname));
+
+    // Do Post call.
+    $response = $this->restCallGet($uri, $a_parameters, array(), $a_expected_result_ids);
+
+    // Check response.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr(
+        "Get aut group with name: @groupname, got result @result (@result_description)",
+        array(
+          '@groupname' => $groupname,
+          '@result' => (string)$response['xml']->header->request_result_id,
+          '@result_description' => (string)$response['xml']->header->request_result_description
+        )
+      )
+    );
+
+    // Get response.
+    $a_aut_group = mediamosa_lib::simplexml2array($response['xml']->items->item[0]);
+
+    // Return data.
+    return $a_aut_group;
+  }
+
+  /**
+   * Get an autorisation hostname.
+   * Based on the rest call /autorisation_group/$groupname/hostname (GET)
+   */
+  protected function getAutHostname($groupname, $limit, $offset, array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+    // Parameters asset.
+    $a_parameters += array(
+      mediamosa_rest_call_aut_group_get_hostnames::LIMIT => $limit,
+      mediamosa_rest_call_aut_group_get_hostnames::OFFSET => $offset,
+    );
+
+    // Set uri.
+    $uri = strtr('autorisation_group/@groupname/hostname', array('@groupname' => $groupname));
+
+    // Do Post call.
+    $response = $this->restCallGet($uri, $a_parameters, array(), $a_expected_result_ids);
+
+    // Check response.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr(
+        "Get aut hostname with name: @groupname, got result @result (@result_description)",
+        array(
+          '@groupname' => $groupname,
+          '@result' => (string)$response['xml']->header->request_result_id,
+          '@result_description' => (string)$response['xml']->header->request_result_description
+        )
+      )
+    );
+
+    // Get response.
+    $a_xml = mediamosa_lib::responsexml2array($response['xml']);
+
+    // Return data.
+    return $a_xml;
   }
 
   /**
@@ -1332,6 +1400,62 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     );
   }
 
+  /**
+   * Delete an aut group.
+   * Based on REST call autorisation_group/$groupname/delete (POST)
+   */
+  protected function deleteAutGroup($groupname, array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    // Set the URI.
+    $uri = strtr('autorisation_group/@groupname/delete', array('@groupname' => $groupname));
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $a_parameters, array(), $a_expected_result_ids, $do_internal);
+
+    // Check response.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr(
+        "Deleted aut group ID '@groupname', got result @result (@result_description)",
+        array(
+          '@groupname' => $groupname,
+          '@result' => (string)$response['xml']->header->request_result_id,
+          '@result_description' => (string)$response['xml']->header->request_result_description
+        )
+      )
+    );
+  }
+
+  /**
+   * Delete an aut hostname.
+   * Based on REST call autorisation_group/$groupname/hostname/delete (POST)
+   */
+  protected function deleteAutHostname($groupname, array $a_hostnames, array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    // Parameters asset.
+    $a_parameters += array(
+      mediamosa_rest_call_aut_group_create_hostnames::HOSTNAME => $a_hostnames,
+    );
+
+    // Set the URI.
+    $uri = strtr('autorisation_group/@groupname/hostname/delete', array('@groupname' => $groupname));
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $a_parameters, array(), $a_expected_result_ids, $do_internal);
+
+    // Check response.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr(
+        "Deleted aut hostnames @hostname for group with ID '@groupname', got result @result (@result_description)",
+        array(
+          '@groupname' => $groupname,
+          '@hostname' => implode(', ', $a_hostnames),
+          '@result' => (string)$response['xml']->header->request_result_id,
+          '@result_description' => (string)$response['xml']->header->request_result_description
+        )
+      )
+    );
+  }
+
   // ------------------------------------------------------------------ Other functions.
   /**
    * Change ownership.
@@ -1403,7 +1527,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
   /**
    * Update mediafile.
-   * Based on the GET rest call /mediafile/$mediafile_id (POST)
+   * Based on the POST rest call /mediafile/$mediafile_id (POST)
    */
   protected function updateMediafile($mediafile_id, array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
@@ -1421,6 +1545,36 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $this->assertTrue(
       in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
       strtr("Updated mediafile with ID: @mediafile_id, got result @result (@result_description)", array('@mediafile_id' => $mediafile_id, '@result' => (string)$response['xml']->header->request_result_id, '@result_description' => $response['xml']->header->request_result_description))
+    );
+
+    // Return response.
+    return $response;
+  }
+
+  /**
+   * Update collection.
+   * Based on the POST rest call /collection/$collection_id (POST)
+   */
+  protected function updateCollection($collection_id, array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    // Parameters asset.
+    $a_parameters += array(
+      mediamosa_rest_call_collection_update::USER_ID => self::SIMPLETEST_USER_ID,
+    );
+
+    // Set the URI.
+    $uri = strtr('collection/@collection_id', array('@collection_id' => $collection_id));
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $a_parameters, array(), $a_expected_result_ids, $do_internal);
+
+    // Test response.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr("Updated collection with ID: @collection_id, got result @result (@result_description)", array(
+        '@collection_id' => $collection_id,
+        '@result' => (string)$response['xml']->header->request_result_id,
+        '@result_description' => $response['xml']->header->request_result_description
+      ))
     );
 
     // Return response.
@@ -1518,6 +1672,38 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
         array(
           '@description' => $description,
           '@group_id' => $group_id,
+          '@result' => (string)$response['xml']->header->request_result_id,
+          '@result_description' => (string)$response['xml']->header->request_result_description
+        )
+      )
+    );
+
+    return $response;
+  }
+
+  /**
+   * Updates an aut group.
+   * Based on the REST call /autorisation_group/$groupname (POST)
+   */
+  protected function updateAutGroup($groupname, array $a_parameters = array(), $description = 'Update on group', array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+
+    // More than one, we need to do something.
+    $this->assertTrue(count($a_parameters), 'Any update parameters set');
+
+    // The uri.
+    $uri = strtr('autorisation_group/@groupname', array('@groupname' => $groupname));
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $a_parameters, array(), $a_expected_result_ids, $do_internal);
+
+    // Test return status.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr(
+        "@description: @groupname, got result @result (@result_description)",
+        array(
+          '@description' => $description,
+          '@groupname' => $groupname,
           '@result' => (string)$response['xml']->header->request_result_id,
           '@result_description' => (string)$response['xml']->header->request_result_description
         )
@@ -1727,6 +1913,72 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     return $a_xml;
   }
 
+  /**
+   * Set is private on asset.
+   * Based on the POST rest call /asset/$asset_id (POST)
+   */
+  protected function set_isprivate($asset_id, $isprivate = FALSE, array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    // Parameters asset.
+    $a_parameters += array(
+      mediamosa_rest_call_asset_update::USER_ID => self::SIMPLETEST_USER_ID,
+      mediamosa_rest_call_asset_update::ISPRIVATE => (
+        $isprivate ?
+          mediamosa_rest_call_asset_update::ISPRIVATE_TRUE :
+          mediamosa_rest_call_asset_update::ISPRIVATE_FALSE
+      ),
+    );
+
+    // Set the URI.
+    $uri = strtr('asset/@asset_id', array('@asset_id' => $asset_id));
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $a_parameters, array(), $a_expected_result_ids, $do_internal);
+
+    // Test response.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr("Set isprivate with ID: @asset_id, got result @result (@result_description)", array(
+        '@asset_id' => $asset_id,
+        '@result' => (string)$response['xml']->header->request_result_id,
+        '@result_description' => $response['xml']->header->request_result_description
+      ))
+    );
+
+    // Return response.
+    return $response;
+  }
+
+  /**
+   * Set unappropiate on asset.
+   * Based on the POST rest call /asset/$asset_id (POST)
+   */
+  protected function set_unappropiate($asset_id, $unappropiate = FALSE, array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    // Parameters asset.
+    $a_parameters += array(
+      mediamosa_rest_call_asset_update::USER_ID => self::SIMPLETEST_USER_ID,
+      mediamosa_rest_call_asset_update::IS_UNAPPROPRIATE => ($unappropiate ? 'TRUE' : 'FALSE'),
+    );
+
+    // Set the URI.
+    $uri = strtr('asset/@asset_id', array('@asset_id' => $asset_id));
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $a_parameters, array(), $a_expected_result_ids, $do_internal);
+
+    // Test response.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr("Set isprivate with ID: @asset_id, got result @result (@result_description)", array(
+        '@asset_id' => $asset_id,
+        '@result' => (string)$response['xml']->header->request_result_id,
+        '@result_description' => $response['xml']->header->request_result_description
+      ))
+    );
+
+    // Return response.
+    return $response;
+  }
+
 
   // ------------------------------------------------------------------ Delete items functions.
   /**
@@ -1818,6 +2070,38 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
         "Delete mediafile with ID: @mediafile_id, got result @result (@result_description)",
         array(
           '@mediafile_id' => $mediafile_id,
+          '@result' => (string)$response['xml']->header->request_result_id,
+          '@result_description' => (string)$response['xml']->header->request_result_description
+        )
+      )
+    );
+
+    return $response;
+  }
+
+  /**
+   * Delete still.
+   * Based on the REST call /asset/$asset_id/still/delete (POST)
+   */
+  protected function deleteStill($asset_id, array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    // Parameters.
+    $a_parameters += array(
+      mediamosa_rest_call_asset_supplement_update::USER_ID => self::SIMPLETEST_USER_ID,
+    );
+
+    // The uri.
+    $uri = strtr('asset/@asset_id/still/delete', array('@asset_id' => $asset_id));
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $a_parameters, array(), $a_expected_result_ids, $do_internal);
+
+    // Check response.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr(
+        "Delete still with ID: @asset_id, got result @result (@result_description)",
+        array(
+          '@asset_id' => $asset_id,
           '@result' => (string)$response['xml']->header->request_result_id,
           '@result_description' => (string)$response['xml']->header->request_result_description
         )

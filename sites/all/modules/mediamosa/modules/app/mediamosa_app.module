@@ -57,7 +57,7 @@ function mediamosa_app_help($path, $arg) {
     case 'admin/mediamosa/config/app':
       return '<p>' . t('List of client applications.') . '</p>';
     case 'admin/mediamosa/config/app/add':
-      return '<p>' . t('Add a new client applications.') . '</p>';
+      return '<p>' . t('Create client application by completing and submitting the form.') . '</p>';
   }
 }
 
@@ -82,9 +82,12 @@ function mediamosa_app_menu() {
 
   $items['admin/mediamosa/config/app/add'] = array(
     'title' => 'Add',
-    'description' => 'Add MediaMosa End User Applications.',
-    'page callback' => '_mediamosa_app_list',
-    'access arguments' => array('access mediamosa'),
+    'page callback' => 'node_add',
+    'page arguments' => array(mediamosa_node::MEDIAMOSA_NODE_TYPE_APP),
+    'access callback' => 'node_access',
+    'access arguments' => array('create', mediamosa_node::MEDIAMOSA_NODE_TYPE_APP),
+    'file' => 'node.pages.inc',
+    'file path' => drupal_get_path('module', 'node'),
     'type' => MENU_LOCAL_TASK,
   );
 
@@ -94,6 +97,26 @@ function mediamosa_app_menu() {
     'page callback' => '_mediamosa_app_contacts',
     'page arguments' => array(4),
     'access arguments' => array('administer mediamosa config app'),
+  );
+
+  $items['admin/mediamosa/config/app/%node'] = array(
+    'page callback' => 'node_page_view',
+    'page arguments' => array(1),
+    'access callback' => 'node_access',
+    'access arguments' => array('view', 1),
+    'type' => MENU_CALLBACK,
+  );
+  $items['admin/mediamosa/config/app/%node/view'] = array(
+    'title' => 'View',
+    'type' => MENU_CALLBACK,
+    'weight' => -10,
+  );
+
+  $items['admin/mediamosa/config/app/js/form'] = array(
+    'page callback' => '_ajax_app_generate_shared_key',
+    'delivery callback' => 'ajax_deliver',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
   );
 
   return $items;
@@ -119,7 +142,7 @@ function _mediamosa_app_list() {
   // Our header.
   $header = array(
     array('data' => t('App ID'), 'field' => 'a.' . mediamosa_app_db::APP_ID),
-    array('data' => t('Name'), 'field' => 'a.' . mediamosa_app_db::NAME),
+    array('data' => t('Name'), 'field' => 'a.' . mediamosa_app_db::APP_NAME),
     array('data' => t('Quota'), 'field' => 'a.' . mediamosa_app_db::QUOTA),
     t('Offline webservices'),
     array('data' => t('Owner'), 'field' => 'a.' . mediamosa_app_db::OWNER),
@@ -138,7 +161,7 @@ function _mediamosa_app_list() {
   // Get all statuses of webservices per app.
   $a_webservice_statuses = mediamosa_webservice_app::webservice_get_all_status();
 
-  $rows = array();
+  $apps = $rows = array();
   foreach ($result as $app) {
     $app_id = $app[mediamosa_app_db::APP_ID];
 
@@ -158,7 +181,7 @@ function _mediamosa_app_list() {
 
     $apps[] = array(
       $app[mediamosa_app_db::APP_ID],
-      $app[mediamosa_app_db::NAME],
+      'title' => array('data' => l($app[mediamosa_app_db::APP_NAME], 'admin/mediamosa/config/app/'. $app[mediamosa_app_db::NID]), 'field' => $app[mediamosa_app_db::APP_NAME]),
       $app[mediamosa_app_db::QUOTA],
       implode(', ', $a_offline_webservices),
       $app[mediamosa_app_db::OWNER],
@@ -168,7 +191,7 @@ function _mediamosa_app_list() {
     );
   }
 
-  $output = theme('table', array('header' => $header, 'rows' => $apps));
+  $output = theme('table', array('header' => $header, 'rows' => $apps, 'empty' => t('You have no client applications. Click on the <em>add</em> tab to create one.')));
   $output .= theme('pager');
 
   return $output;

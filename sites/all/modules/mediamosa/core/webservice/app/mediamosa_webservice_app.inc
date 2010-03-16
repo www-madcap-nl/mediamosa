@@ -125,5 +125,4 @@ class mediamosa_webservice_app {
 
     return $a_webservice_apps;
   }
-
 }

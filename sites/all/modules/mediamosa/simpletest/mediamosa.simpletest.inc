@@ -93,6 +93,9 @@ class MediaMosaTestCase extends DrupalWebTestCase {
       $a_values[$var_to_copy] = mediamosa::variable_get($var_to_copy);
     }
 
+    // Set debug on high.
+    $a_values['mediamosa_debug_level'] = 10;
+
     // Call parent::setUp and preserve arguments.
     $args = func_get_args();
 
@@ -354,7 +357,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     // Create a SimpleXMLElement from the restcall's output.
     try {
       // We expect char '<' on REST calls, if not we need to output it.
-      if ($out['body']{0} != '<') {
+      if ($out['body']{0} != '<' || $uri == 'http://localhost/internal/cron/jobserver') {
         $this->var_export($out['body']);
       }
       $out['xml'] = new SimpleXMLElement($out['body']);
@@ -547,11 +550,11 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     // Generate the name.
     $name = $this->randomName();
 
-    $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_CLIENT_APPLICATION, $name);
+    $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_APP, $name);
 
     $node->{mediamosa_app_db::APP_ID} = rand(1, 1000);
     $node->{mediamosa_app_db::SHARED_KEY} = user_password();
-    $node->{mediamosa_app_db::NAME} = $name;
+    $node->{mediamosa_app_db::APP_NAME} = $name;
     $node->{mediamosa_app_db::ACTIVE} = 'TRUE';
     $node->{mediamosa_app_db::TRANSCODING_POSITION_TO} = 0;
     $node->{mediamosa_app_db::QUOTA} = 0;

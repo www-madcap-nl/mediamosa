@@ -1,0 +1,115 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+  * @file
+  * Unittests for play proxy ticket mechanisme.
+  */
+class MediaMosaAssetMediafilePlayProxyTicketMechanismeTestCaseEga extends MediaMosaTestCaseEgaJob {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'Asset mediafile play proxy ticket mechanisme tests',
+      'description' => 'Testing asset mediafile play proxy ticket mechanisme related functions and rest calls.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_PLAYPROXY,
+    );
+  }
+
+  // ------------------------------------------------------------------ Tests.
+
+  // Testing mediafile play proxy ticket, see: ticket 72.
+  function testPlayProxyTicketMechanisme() {
+
+    return;
+
+    // Preparation.
+
+    // Create upload file.
+    $a_upload = $this->uploadTestFile();
+    $asset_id = $a_upload['asset_id'];
+    $mediafile_id = $a_upload['mediafile_id'];
+    $filename = $a_upload['filename'];
+
+    // Create still job.
+    $job_id = $this->createMediafileStill($mediafile_id);
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Update mediafile.
+    $a_parameters = array(
+      mediamosa_rest_call_update_mediafile::IS_DOWNLOADABLE => 'TRUE',
+    );
+    $response = $this->updateMediafile($mediafile_id, $a_parameters);
+
+    // Play proxy create ticket.
+
+    foreach (array('plain', 'metafile', 'object', 'download', 'still') as $subject){
+      // Ask mediafile download url.
+      $a_parameters = array(
+        mediamosa_rest_call_asset_mediafile_play::RESPONSE => $subject,
+        mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $mediafile_id,
+      );
+      $a_xml = $this->play_proxy('mediamosa_asset_mediafile_play_proxy.ticket_mechanisme.test', 70, $asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_OKAY));
+
+      $output = $a_xml['items']['item']['output'];
+
+      switch ($subject) {
+        case 'plain':
+          // Play proxy function tests if we get ok.
+          break;
+        case 'metafile':
+          $test_string = '<asx version="3.0">';
+          // Check the output.
+          $this->assertTrue(
+            strpos($output, $test_string) !== FALSE,
+            t("Mediafile output has a good format '@output' (@string)", array('@string' => $test_string, '@output' => $output))
+          );
+          break;
+        case 'object':
+          $test_string = '<object id=';
+          // Check the output.
+          $this->assertTrue(
+            strpos($output, $test_string) !== FALSE,
+            t("Object output has a good format '@output' (@string)", array('@string' => $test_string, '@output' => $output))
+          );
+          break;
+        default:
+          // Get the file.
+          $result = mediamosa_http::drupal_http_request($output);
+
+          // Check response.
+          $this->assertTrue(
+            $result->code == 200,
+            t("File exists (@subject): '@url' (code = @code)", array('@subject' => $subject, '@url' => $output, '@code' => $result->code))
+          );
+      }
+    }
+  }
+}

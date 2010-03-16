@@ -113,7 +113,7 @@ s1.write('mediaspace');
       ,'','','','',''),
     array(11,2,'ON',"download","http://localhost/download/{TICKET}",'','','','','','',''),
     array(12,0,'OFF',"still","http://localhost/still/{TICKET}",'','','','','','',''),
-    array(13,0,'ON',"job_processor",'http::/localhost','','',"localhost",10,"ANALYSE|ffmpeg|STILL",''),
+    array(13,0,'ON',"job_processor",'http://localhost','','',"localhost",10,"ANALYSE|ffmpeg|STILL",''),
     array(14,0,'ON',"upload","http://localhost/mediafile/upload?upload_ticket={TICKET}",'','','','','',"http://example.org/mediafile/uploadprogress"),
   );
 
@@ -281,8 +281,9 @@ function mediamosa_server_schema() {
         'not null' => FALSE,
       ),
     ),
-    'primary key' => array(mediamosa_server_db::NID, mediamosa_server_db::VID),
+    'primary key' => array(mediamosa_server_db::NID),
     'indexes' => array(
+      'idx_nid_vid' => array(mediamosa_server_db::NID, mediamosa_server_db::VID),
       'idx_servertype_serverstatus' => array(mediamosa_server_db::NID, mediamosa_server_db::SERVER_TYPE, mediamosa_server_db::SERVER_STATUS),
     )
   );

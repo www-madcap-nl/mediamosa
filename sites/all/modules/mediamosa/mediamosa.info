@@ -5,6 +5,8 @@ package = "MediaMosa 2 - Core"
 version = "2.1.2.277:5cb72b524924"
 core = 7.x
 
+configure = admin/mediamosa/config/global
+
 ; Dependencies (module names)
 ; YOU MUST HAVE VERY GOOD REASON TO GIVE A DEP. TO THE CORE MODULE.
 dependencies[] = simpletest
@@ -209,6 +211,9 @@ files[] = core/job/upload/mediamosa_job_upload.install.inc
 ; Node type load/insert/delete/update related code.
 files[] = core/node/mediamosa_node.inc
 files[] = core/node/mediamosa_node.install.inc
+files[] = core/node/revision/mediamosa_node_mediamosa_app.inc
+files[] = core/node/revision/mediamosa_node_mediamosa_server.inc
+files[] = core/node/revision/mediamosa_node_mediamosa_transcoding_profile.inc
 files[] = core/node/revision/mediamosa_node_revision_db.inc
 files[] = core/node/revision/mediamosa_node_revision.inc
 files[] = core/node/revision/mediamosa_node_revision.install.inc
