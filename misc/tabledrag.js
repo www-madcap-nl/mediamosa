@@ -1,4 +1,4 @@
-// $Id: tabledrag.js,v 1.33 2009/12/08 03:10:51 dries Exp $
+// $Id: tabledrag.js,v 1.35 2010/03/10 20:31:59 webchick Exp $
 (function ($) {
 
 /**
@@ -73,10 +73,10 @@ Drupal.tableDrag = function (table, tableSettings) {
     // manually append 2 indentations in the first draggable row, measure
     // the offset, then remove.
     var indent = Drupal.theme('tableDragIndentation');
-    // Match immediate children of the parent element to allow nesting.
-    var testCell = $('> tbody > tr.draggable:first td:first, > tr.draggable:first td:first', table).prepend(indent).prepend(indent);
+    var testRow = $('<tr/>').addClass('draggable').appendTo(table);
+    var testCell = $('<td/>').appendTo(testRow).prepend(indent).prepend(indent);
     this.indentAmount = $('.indentation', testCell).get(1).offsetLeft - $('.indentation', testCell).get(0).offsetLeft;
-    $('.indentation', testCell).slice(0, 2).remove();
+    testRow.remove();
   }
 
   // Make each applicable row draggable.
@@ -169,7 +169,8 @@ Drupal.tableDrag.prototype.makeDraggable = function (item) {
   // Create the handle.
   var handle = $('<a href="#" class="tabledrag-handle"><div class="handle">&nbsp;</div></a>').attr('title', Drupal.t('Drag to re-order'));
   // Insert the handle after indentations (if any).
-  if ($('td:first .indentation:last', item).after(handle).size()) {
+  if ($('td:first .indentation:last', item).length) {
+    $('td:first .indentation:last', item).after(handle);
     // Update the total width of indentation in this entire table.
     self.indentCount = Math.max($('.indentation', item).size(), self.indentCount);
   }

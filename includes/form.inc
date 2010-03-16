@@ -1,5 +1,5 @@
 <?php
-// $Id: form.inc,v 1.439 2010/03/09 11:45:37 dries Exp $
+// $Id: form.inc,v 1.442 2010/03/13 22:33:05 webchick Exp $
 
 /**
  * @defgroup forms Form builder functions
@@ -1654,11 +1654,14 @@ function form_type_checkboxes_value($element, $input = FALSE) {
     $value = array();
     $element += array('#default_value' => array());
     foreach ($element['#default_value'] as $key) {
-      $value[$key] = 1;
+      $value[$key] = $key;
     }
     return $value;
   }
-  elseif (!isset($input)) {
+  // If the checkboxes are enabled, and NULL input is submitted, it means
+  // they're intentionally unchecked, so we need to return an empty array to
+  // prevent the default value from being used.
+  elseif (!isset($input) && empty($element['#disabled'])) {
     return array();
   }
 }
@@ -1698,7 +1701,15 @@ function form_type_password_confirm_value($element, $input = FALSE) {
 function form_type_select_value($element, $input = FALSE) {
   if ($input !== FALSE) {
     if (isset($element['#multiple']) && $element['#multiple']) {
-      return (is_array($input)) ? drupal_map_assoc($input) : array();
+      // If an enabled multi-select submits NULL, it means all items are
+      // unselected. A disabled multi-select always submits NULL, and the
+      // default value should be used.
+      if (empty($element['#disabled'])) {
+        return (is_array($input)) ? drupal_map_assoc($input) : array();
+      }
+      else {
+        return (isset($element['#default_value']) && is_array($element['#default_value'])) ? $element['#default_value'] : array();
+      }
     }
     else {
       return $input;
@@ -1719,7 +1730,7 @@ function form_type_select_value($element, $input = FALSE) {
  *   for this element. Return nothing to use the default.
  */
 function form_type_textfield_value($element, $input = FALSE) {
-  if ($input !== FALSE) {
+  if ($input !== FALSE && $input !== NULL) {
     // Equate $input to the form value to ensure it's marked for
     // validation.
     return str_replace(array("\r", "\n"), '', $input);
@@ -2206,6 +2217,7 @@ function form_process_radios($element) {
           '#parents' => $element['#parents'],
           '#id' => drupal_html_id('edit-' . implode('-', $parents_for_id)),
           '#ajax' => isset($element['#ajax']) ? $element['#ajax'] : NULL,
+          '#disabled' => isset($element['#disabled']) ? $element['#disabled'] : NULL,
         );
       }
     }
@@ -2308,6 +2320,7 @@ function form_process_checkboxes($element) {
           '#default_value' => isset($value[$key]) ? $key : NULL,
           '#attributes' => $element['#attributes'],
           '#ajax' => isset($element['#ajax']) ? $element['#ajax'] : NULL,
+          '#disabled' => isset($element['#disabled']) ? $element['#disabled'] : NULL,
         );
       }
     }
@@ -2459,6 +2472,7 @@ function form_process_tableselect($element) {
             '#default_value' => isset($value[$key]) ? $key : NULL,
             '#attributes' => $element['#attributes'],
             '#ajax' => isset($element['#ajax']) ? $element['#ajax'] : NULL,
+            '#disabled' => isset($element['#disabled']) ? $element['#disabled'] : NULL,
           );
         }
         else {
@@ -2474,6 +2488,7 @@ function form_process_tableselect($element) {
             '#parents' => $element['#parents'],
             '#id' => drupal_html_id('edit-' . implode('-', $parents_for_id)),
             '#ajax' => isset($element['#ajax']) ? $element['#ajax'] : NULL,
+            '#disabled' => isset($element['#disabled']) ? $element['#disabled'] : NULL,
           );
         }
       }
@@ -2753,15 +2768,8 @@ function theme_textfield($variables) {
   }
   _form_set_class($element, $class);
 
-  if (isset($element['#field_prefix'])) {
-    $output .= '<span class="field-prefix">' . $element['#field_prefix'] . '</span> ';
-  }
-
   $output .= '<input type="text"' . $maxlength . ' name="' . $element['#name'] . '" id="' . $element['#id'] . '"' . $size . ' value="' . check_plain($element['#value']) . '"' . drupal_attributes($element['#attributes']) . ' />';
 
-  if (isset($element['#field_suffix'])) {
-    $output .= ' <span class="field-suffix">' . $element['#field_suffix'] . '</span>';
-  }
   return $output . $extra;
 }
 
@@ -2943,6 +2951,10 @@ function theme_form_element($variables) {
 
   $output = '<div class="' . implode(' ', $class) . '">' . "\n";
 
+  if (isset($element['#field_prefix'])) {
+    $output .= '<span class="field-prefix">' . $element['#field_prefix'] . '</span> ';
+  }
+
   switch ($element['#title_display']) {
     case 'before':
       $output .= ' ' . theme('form_element_label', $variables);
@@ -2959,6 +2971,10 @@ function theme_form_element($variables) {
       // Output no label and no required marker, only the children.
       $output .= ' ' . $element['#children'] . "\n";
       break;
+  }
+
+  if (isset($element['#field_suffix'])) {
+    $output .= ' <span class="field-suffix">' . $element['#field_suffix'] . '</span>';
   }
 
   if (!empty($element['#description'])) {

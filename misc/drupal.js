@@ -1,4 +1,4 @@
-// $Id: drupal.js,v 1.63 2010/01/29 22:40:41 dries Exp $
+// $Id: drupal.js,v 1.65 2010/03/10 15:14:38 dries Exp $
 
 var Drupal = Drupal || { 'settings': {}, 'behaviors': {}, 'locale': {} };
 
@@ -248,18 +248,6 @@ Drupal.theme = function (func) {
 };
 
 /**
- * Parse a JSON response.
- *
- * The result is either the JSON object, or an object with 'status' 0 and 'data' an error message.
- */
-Drupal.parseJson = function (data) {
-  if ((data.substring(0, 1) != '{') && (data.substring(0, 1) != '[')) {
-    return { status: 0, data: data.length ? data : Drupal.t('Unspecified error') };
-  }
-  return eval('(' + data + ');');
-};
-
-/**
  * Freeze the current body height (as minimum height). Used to prevent
  * unnecessary upwards scrolling when doing DOM manipulations.
  */
@@ -365,16 +353,5 @@ Drupal.theme.prototype = {
     return '<em>' + Drupal.checkPlain(str) + '</em>';
   }
 };
-
-/**
- * Return whether the given variable is an object.
- *
- * The HEAD version of jQuery (http://code.jquery.com/jquery-nightly.js)
- * includes an isObject() function, so when that gets released and incorporated
- * into Drupal, this can be removed.
- */
-$.extend({isObject: function(value) {
-  return (value !== null && typeof value === 'object');
-}});
 
 })(jQuery);
