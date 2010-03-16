@@ -1,5 +1,5 @@
 <?php
-// $Id: block.module,v 1.412 2010/03/09 03:48:59 dries Exp $
+// $Id: block.module,v 1.414 2010/03/12 05:14:14 webchick Exp $
 
 /**
  * @file
@@ -127,6 +127,16 @@ function block_menu() {
       'access arguments' => array($theme),
       'file' => 'block.admin.inc',
     );
+    if ($key != $default_theme) {
+      $items['admin/structure/block/list/' . $key . '/add'] = array(
+        'title' => 'Add block',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('block_add_block_form'),
+        'access arguments' => array('administer blocks'),
+        'type' => MENU_LOCAL_ACTION,
+        'file' => 'block.admin.inc',
+      );
+    }
     $items['admin/structure/block/demo/' . $key] = array(
       'title' => check_plain($theme->info['name']),
       'page callback' => 'block_admin_demo',
@@ -924,4 +934,18 @@ function block_form_system_performance_settings_alter(&$form, &$form_state) {
     '#description' => $disabled ? t('Block caching is inactive because you have enabled modules defining content access restrictions.') : NULL,
     '#weight' => -1,
   );
+}
+
+/**
+ * Implements hook_modules_uninstalled().
+ *
+ * Cleanup {block} and {block_role} tables from modules' blocks.
+ */
+function block_modules_uninstalled($modules) {
+  db_delete('block')
+    ->condition('module', $modules, 'IN')
+    ->execute();
+  db_delete('block_role')
+    ->condition('module', $modules, 'IN')
+    ->execute();
 }

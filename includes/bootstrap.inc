@@ -1,5 +1,5 @@
 <?php
-// $Id: bootstrap.inc,v 1.359 2010/03/07 07:44:18 webchick Exp $
+// $Id: bootstrap.inc,v 1.362 2010/03/11 21:23:05 dries Exp $
 
 /**
  * @file
@@ -64,7 +64,7 @@ define('CACHE_NORMAL', 1);
  * @see watchdog()
  * @see watchdog_severity_levels()
  */
-define('WATCHDOG_EMERG', 0);
+define('WATCHDOG_EMERGENCY', 0);
 
 /**
  * Log message severity -- Alert: action must be taken immediately.
@@ -233,6 +233,10 @@ define('CHECK_PLAIN', 0);
 define('PASS_THROUGH', -1);
 
 /**
+ * @} End of "Title text filtering flags".
+ */
+
+/**
  * Signals that the registry lookup cache should be reset.
  */
 define('REGISTRY_RESET_LOOKUP_CACHE', 1);
@@ -241,11 +245,6 @@ define('REGISTRY_RESET_LOOKUP_CACHE', 1);
  * Signals that the registry lookup cache should be written to storage.
  */
 define('REGISTRY_WRITE_LOOKUP_CACHE', 2);
-
-/**
- * @} End of "Title text filtering flags".
- */
-
 
 /**
  * Start the timer with the specified name. If you start and stop the same
@@ -2187,6 +2186,11 @@ function request_path() {
     // This is the front page.
     $path = '';
   }
+
+  // Under certain conditions Apache's RewriteRule directive prepends the value
+  // assigned to $_GET['q'] with a slash. Moreover we can always have a trailing
+  // slash in place, hence we need to normalize $_GET['q'].
+  $path = trim($path, '/');
 
   return $path;
 }
