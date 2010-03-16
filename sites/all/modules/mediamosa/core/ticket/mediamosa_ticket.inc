@@ -178,6 +178,10 @@ class mediamosa_ticket {
 
         // Find default still and make sure its ok.
         $still_id = mediamosa_asset_mediafile_still::find_default($a_mediafile_ext[mediamosa_asset_mediafile_db::ASSET_ID]);
+
+        if (!$still_id) {
+          return;
+        }
       }
       else {
         // When we provide the still ID, we need to check it.

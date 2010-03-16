@@ -421,6 +421,16 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     // Create mediafile.
     $mediafile_id = $this->createMediafile($asset_id);
 
+    $this->uploadTestFileForMediafile($asset_id, $mediafile_id);
+
+    // Lets return the mediafile_id for now.
+    return array('asset_id' => $asset_id, 'mediafile_id' => $mediafile_id);
+  }
+
+  /**
+   * Basic upload of test wmf file.
+   */
+  protected function uploadTestFileForMediafile($asset_id, $mediafile_id) {
     // Create upload ticket.
     $a_uploadticket = $this->createMediafileUploadTicket($mediafile_id);
 
@@ -485,9 +495,6 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // Check if the file has been uploaded.
     $this->assertTrue(file_exists(mediamosa_configuration_storage::mediafile_filename_get($a_mediafile)), 'File has been uploaded.');
-
-    // Lets return the mediafile_id for now.
-    return array('asset_id' => $asset_id, 'mediafile_id' => $mediafile_id);
   }
 
   /**
