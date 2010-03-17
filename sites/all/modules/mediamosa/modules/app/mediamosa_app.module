@@ -91,6 +91,34 @@ function mediamosa_app_menu() {
     'type' => MENU_LOCAL_TASK,
   );
 
+    $items['admin/mediamosa/config/app/%node/edit'] = array(
+    'title' => 'Edit',
+    'page callback' => 'node_page_edit',
+    'page arguments' => array(4),
+    'access callback' => 'node_access',
+    'access arguments' => array('update', 4),
+    'theme callback' => '_node_custom_theme',
+    'weight' => 0,
+    'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
+    'file' => 'node.pages.inc',
+    'file path' => drupal_get_path('module', 'node'),
+  );
+
+  $items['admin/mediamosa/config/app/%node/delete'] = array(
+    'title' => 'Delete',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('_mediamosa_node_delete_confirm', 4),
+    'access callback' => 'node_access',
+    'access arguments' => array('delete', 4),
+    'theme callback' => '_node_custom_theme',
+    'weight' => 1,
+    'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_INLINE,
+    'file' => 'node.pages.inc',
+    'file path' => drupal_get_path('module', 'node'),
+  );
+
   $items['admin/mediamosa/config/app/%/contacts'] = array(
     'title' => 'Client application contacts',
     'type' => MENU_CALLBACK,
@@ -101,9 +129,9 @@ function mediamosa_app_menu() {
 
   $items['admin/mediamosa/config/app/%node'] = array(
     'page callback' => 'node_page_view',
-    'page arguments' => array(1),
+    'page arguments' => array(4),
     'access callback' => 'node_access',
-    'access arguments' => array('view', 1),
+    'access arguments' => array('view', 4),
     'type' => MENU_CALLBACK,
   );
   $items['admin/mediamosa/config/app/%node/view'] = array(
@@ -148,7 +176,7 @@ function _mediamosa_app_list() {
     array('data' => t('Owner'), 'field' => 'a.' . mediamosa_app_db::OWNER),
     array('data' => t('Status'), 'field' => 'a.' . mediamosa_app_db::ACTIVE),
     t('Contacts'),
-    t('Actions')
+    t('Operations')
   );
 
   // Get the app nodes.
@@ -161,13 +189,16 @@ function _mediamosa_app_list() {
   // Get all statuses of webservices per app.
   $a_webservice_statuses = mediamosa_webservice_app::webservice_get_all_status();
 
+  // Get destination.
+  $l_options = array('query' => drupal_get_destination());
+
   $apps = $rows = array();
   foreach ($result as $app) {
     $app_id = $app[mediamosa_app_db::APP_ID];
 
     $actions = array(
-      l(t('Edit'), 'admin/mediamosa/config/app/'. $app_id . '/edit'),
-      l(t('Delete'), 'admin/mediamosa/config/app/'. $app_id . '/delete'),
+      l(t('Edit'), 'admin/mediamosa/config/app/'. $app[mediamosa_app_db::NID] . '/edit', $l_options),
+      l(t('Delete'), 'admin/mediamosa/config/app/'. $app[mediamosa_app_db::NID] . '/delete', $l_options),
     );
 
     $a_offline_webservices = array();
@@ -179,19 +210,19 @@ function _mediamosa_app_list() {
       }
     }
 
-    $apps[] = array(
+   $rows[] = array(
       $app[mediamosa_app_db::APP_ID],
       'title' => array('data' => l($app[mediamosa_app_db::APP_NAME], 'admin/mediamosa/config/app/'. $app[mediamosa_app_db::NID]), 'field' => $app[mediamosa_app_db::APP_NAME]),
       $app[mediamosa_app_db::QUOTA],
       implode(', ', $a_offline_webservices),
       $app[mediamosa_app_db::OWNER],
-      $app[mediamosa_app_db::ACTIVE] == mediamosa_app_db::ACTIVE_TRUE ? '' : t('<b>Disabled</b>'),
+      $app[mediamosa_app_db::ACTIVE] == mediamosa_app_db::ACTIVE_TRUE ? t('Enabled') : t('<b>Disabled</b>'),
       l(t('Contacts'), 'admin/mediamosa/config/app/'. $app[mediamosa_app_db::APP_ID] . '/contacts'),
       implode(' | ', $actions),
     );
   }
 
-  $output = theme('table', array('header' => $header, 'rows' => $apps, 'empty' => t('You have no client applications. Click on the <em>add</em> tab to create one.')));
+  $output = theme('table', array('header' => $header, 'rows' => $rows, 'empty' => t('You have no client applications. Click on the <em>Add</em> tab to create one.')));
   $output .= theme('pager');
 
   return $output;

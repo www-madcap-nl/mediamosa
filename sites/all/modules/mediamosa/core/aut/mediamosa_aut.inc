@@ -872,13 +872,16 @@ class mediamosa_aut {
     // Verwijder de links tussen object en de aut_name/aut_group tabel
     // Hierdoor verwijder je alle rechten.
     // Verwijder ook alle master / slave links
+    // Remove all links between object and the aut_name/aut_group tabel.
+    // This will result into removal of all rights.
+    // Also remove the master / slave links
     mediamosa_db::db_query("DELETE FROM {mediamosa_aut_object} WHERE aut_object_type = :aut_object_type AND aut_object_id = :aut_object_id", array(
       ':aut_object_type' => $aut_type,
       ':aut_object_id' => $aut_object_id,
     ));
 
-    // Verwijder master / slave link, alleen orginele app_id kan deze verwijderen
-    // Wij zijn altijd slave en slaves kunnen zich slave maken of verwijderen (moet owner zijn van object)
+    // Remove the master / slave link, only the original app_id kan remove
+    // these.
     mediamosa_db::db_query("DELETE FROM {mediamosa_aut_app_master_slave} WHERE aut_object_type = :aut_object_type AND aut_object_id = :aut_object_id AND app_id_master > 0 AND app_id_slave = :app_id_slave", array(
       ':aut_object_type' => $aut_type,
       ':aut_object_id' => $aut_object_id,

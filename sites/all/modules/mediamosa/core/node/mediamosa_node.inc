@@ -64,12 +64,26 @@ class mediamosa_node {
 
   /**
    * Changes the form for mediamosa node type.
+   *
    * @param array $form
    * @param array $form_state
    */
   static public function common_form(&$form, &$form_state) {
     $form['revision_information']['revision']['#default_value'] = '1';
     $form['revision_information']['log']['#default_value'] = ' ';
+
+    // Remove the preview button for now (it doesn't work well atm).
+    unset($form['actions']['preview']);
+  }
+
+  /**
+   * Helper setting the default value.
+   *
+   * @param string $name
+   * @param object $node
+   */
+  static public function default_value($name, $node, $default = '') {
+    return isset($node->{$name}) ? $node->{$name} : $default;
   }
 }
 
@@ -100,6 +114,24 @@ function mediamosa_node_info() {
 }
 
 /**
+ * Confirm node deletion.
+ */
+function _mediamosa_node_delete_confirm($form, &$form_state, $node) {
+
+  // Call the node delete confirm form.
+  return node_delete_confirm($form, $form_state, $node);
+}
+
+/**
+ * Execute node deletion
+ */
+function _mediamosa_node_delete_confirm_submit($form, &$form_state) {
+
+  // Call the node confirm submit function.
+  node_delete_confirm_submit($form, $form_state);
+}
+
+/**
  * Implementation of hook_form_alter().
  */
 function mediamosa_form_mediamosa_transcode_profile_node_form_alter(&$form, &$form_state) {
@@ -121,4 +153,7 @@ function mediamosa_form_mediamosa_server_node_form_alter(&$form, &$form_state) {
 function mediamosa_form_mediamosa_app_node_form_alter(&$form, &$form_state) {
   // Change the form.
   mediamosa_node::common_form($form, $form_state);
+
+  $form['#redirect'] = 'admin/mediamosa/config/app';
+  $form_state['redirect'] = 'admin/mediamosa/config/app';
 }

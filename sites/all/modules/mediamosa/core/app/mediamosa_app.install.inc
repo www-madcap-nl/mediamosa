@@ -216,7 +216,6 @@ function mediamosa_app_schema() {
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_app_db::ALWAYS_HINT_MP4_FALSE, mediamosa_app_db::ALWAYS_HINT_MP4_TRUE)) . "')",
         'default' => mediamosa_app_db::ALWAYS_HINT_MP4_TRUE,
-        'not null' => FALSE,
       ),
       mediamosa_app_db::ALWAYS_INSERT_MD => array(
         'description' => t('Always insert extra metadata flv files'),
@@ -224,7 +223,6 @@ function mediamosa_app_schema() {
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_app_db::ALWAYS_INSERT_MD_FALSE, mediamosa_app_db::ALWAYS_INSERT_MD_TRUE)) . "')",
         'default' => mediamosa_app_db::ALWAYS_INSERT_MD_TRUE,
-        'not null' => FALSE,
       ),
       mediamosa_app_db::IS_METADATA_PUBLIC => array(
         'description' => t('Is metadata of this client application public visible in OAI?'),
@@ -232,7 +230,6 @@ function mediamosa_app_schema() {
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_app_db::IS_METADATA_PUBLIC_FALSE, mediamosa_app_db::IS_METADATA_PUBLIC_TRUE)) . "')",
         'default' => mediamosa_app_db::IS_METADATA_PUBLIC_TRUE,
-        'not null' => FALSE,
       ),
       mediamosa_app_db::SHOW_EXTERNAL_ASSETS => array(
         'description' => t('Show external references in OAI (in field referenceId)?'),
@@ -240,7 +237,6 @@ function mediamosa_app_schema() {
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_app_db::SHOW_EXTERNAL_ASSETS_FALSE, mediamosa_app_db::SHOW_EXTERNAL_ASSETS_TRUE)) . "')",
         'default' => mediamosa_app_db::SHOW_EXTERNAL_ASSETS_TRUE,
-        'not null' => FALSE,
       ),
       mediamosa_app_db::TRANSCODING_MAX_SLOTS => array(
         'description' => t('Set the maximum number of transcoding jobs allowed for this application.'),
@@ -254,7 +250,6 @@ function mediamosa_app_schema() {
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_app_db::ALLOW_MASTERSLAVE_FALSE, mediamosa_app_db::ALLOW_MASTERSLAVE_TRUE)) . "')",
         'default' => mediamosa_app_db::ALLOW_MASTERSLAVE_FALSE,
-        'not null' => FALSE,
       ),
     ),
     'primary key' => array(mediamosa_app_db::NID), // Revisions are stored in mediamosa_node_revision.

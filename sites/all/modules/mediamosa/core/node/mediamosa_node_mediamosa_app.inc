@@ -101,7 +101,7 @@ function _ajax_app_generate_shared_key() {
 
   $commands[] = ajax_command_replace(NULL, drupal_render($form['client_application']['shared_key']));
 
-  return array('#type' => 'ajax_commands', '#ajax_commands' => $commands);
+  return array('#type' => 'ajax_commands', '#ajax_commands' => $commands, '#header' => FALSE);
 }
 
 /**
@@ -124,7 +124,7 @@ function mediamosa_app_update($node) {
     $names = mediamosa_app_db::get_fields();
 
     // Exception is title.
-    $node->name = $node->title;
+    $node->app_name = $node->title;
 
     // Update.
     mediamosa_node_revision::update_ex($node, mediamosa_app_db::TABLE_NAME, $names);
@@ -140,7 +140,7 @@ function mediamosa_app_insert($node) {
   $names = mediamosa_app_db::get_fields();
 
   // Exception is title.
-  $node->name = $node->title;
+  $node->app_name = $node->title;
 
   // Insert revision.
   mediamosa_node_revision::insert_ex($node, mediamosa_app_db::TABLE_NAME, $names);
@@ -159,15 +159,30 @@ function mediamosa_app_delete($node) {
  */
 function mediamosa_app_view($node, $view_mode = 'full') {
 
-  // Copy name to title.
-  $node->title = $node->{mediamosa_app_db::APP_NAME};
+  $status = array(
+    mediamosa_app_db::ACTIVE_TRUE => t('Enabled'),
+    mediamosa_app_db::ACTIVE_FALSE => t('Disabled'),
+  );
+
+  $allow_masterslave = array(
+    mediamosa_app_db::ALLOW_MASTERSLAVE_TRUE => t('Allowed'),
+    mediamosa_app_db::ALLOW_MASTERSLAVE_FALSE => t('Not allowed'),
+  );
 
   // Default parameters
   $rows = array(
-    array(t('Name'), check_plain($node->{mediamosa_app_db::APP_NAME})),
+    array(t('Name'), check_plain($node->title)),
+    array(t('Application ID'), check_plain($node->{mediamosa_app_db::APP_ID})),
+    array(t('Quota'), check_plain($node->{mediamosa_app_db::QUOTA})),
+    array(t('Shared Key'), check_plain($node->{mediamosa_app_db::SHARED_KEY})),
+    array(t('Description'), check_plain($node->{mediamosa_app_db::DESCRIPTION})),
+    array(t('Status'), $status[$node->{mediamosa_app_db::ACTIVE}]),
+    array(t('REST call version'), check_plain($node->{mediamosa_app_db::ACTIVE_VERSION})),
+    array(t('Owner'), check_plain($node->{mediamosa_app_db::OWNER})),
+    array(t('Master/Slave'), $allow_masterslave[$node->{mediamosa_app_db::ALLOW_MASTERSLAVE}]),
   );
 
-  // Add timestamps
+  // Add timestamps.
   $rows[] = array(t('Created'), format_date($node->created, 'short'));
   $rows[] = array(t('Changed'), format_date($node->changed, 'short'));
 
@@ -181,7 +196,7 @@ function mediamosa_app_view($node, $view_mode = 'full') {
 /**
  * Implementation of hook_form().
  */
-function mediamosa_app_form($node, $form_state) {
+function mediamosa_app_form($node, &$form_state) {
   global $user;
 
   $form = array();
@@ -194,11 +209,13 @@ function mediamosa_app_form($node, $form_state) {
     '#description' => t('Settings for client application.')
   );
 
-  $form['client_application'][mediamosa_app_db::APP_NAME] = array(
+  $form['client_application']['title'] = array( // app_name.
     '#type' => 'textfield',
     '#title' => t('Client application name'),
     '#description' => t('Full name for client application.'),
     '#required' => TRUE,
+    '#default_value' => mediamosa_node::default_value('title', $node),
+    '#maxlength' => mediamosa_app_db::APP_NAME_LENGTH,
   );
 
   $form['client_application'][mediamosa_app_db::APP_ID] = array(
@@ -206,21 +223,25 @@ function mediamosa_app_form($node, $form_state) {
     '#title' => t('App ID'),
     '#description' => t('Unique application ID.'),
     '#required' => TRUE,
+    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::APP_ID, $node),
   );
 
-  $form['client_application']['quota'] = array(
+  $form['client_application'][mediamosa_app_db::QUOTA] = array(
     '#type' => 'textfield',
     '#title' => t('Quota'),
     '#required' => TRUE,
     '#description' => t('Quota for disk space usage in GB.'),
+    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::QUOTA, $node),
   );
 
-  $form['client_application']['shared_key'] = array(
+  $form['client_application'][mediamosa_app_db::SHARED_KEY] = array(
     '#type' => 'textfield',
     '#title' => t('Shared key'),
     '#required' => TRUE,
     '#prefix' => '<div id="replace_shared_key_div">',
     '#suffix' => '</div>',
+    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::SHARED_KEY, $node),
+    '#maxlength' => mediamosa_app_db::SHARED_KEY_LENGTH,
   );
 
   $form['client_application']['generate_shared_key'] = array(
@@ -233,19 +254,21 @@ function mediamosa_app_form($node, $form_state) {
     ),
   );
 
-  $form['client_application']['description'] = array(
+  $form['client_application'][mediamosa_app_db::DESCRIPTION] = array(
     '#type' => 'textarea',
     '#title' => t('Description'),
     '#description' => t('Description of client application'),
     '#required' => FALSE,
+    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::DESCRIPTION, $node),
+    '#maxlength' => mediamosa_app_db::DESCRIPTION_LENGTH,
   );
 
-  $form['client_application']['active'] = array(
+  $form['client_application'][mediamosa_app_db::ACTIVE] = array(
     '#type' => 'select',
     '#title' => t('Status'),
     '#description' => t('Availability of client application.'),
-    '#options' => array(1 => t('Enabled'), 0 => t('Disabled')),
-    '#default_value' => 1,
+    '#options' => array(mediamosa_app_db::ACTIVE_TRUE => t('Enabled'), mediamosa_app_db::ACTIVE_FALSE => t('Disabled')),
+    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::ACTIVE, $node, mediamosa_app_db::ACTIVE_TRUE),
   );
 
   $form['masterslave'] = array(
@@ -253,14 +276,15 @@ function mediamosa_app_form($node, $form_state) {
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#title' => t('Master/slave settings'),
-    '#description' => t('Control how other clientapplications can access this application')
+    '#description' => t('Control how other clientapplications can access this application'),
   );
 
-  $form['masterslave']['allow_masterslave'] = array(
-    '#type' => 'checkbox',
+  $form['masterslave'][mediamosa_app_db::ALLOW_MASTERSLAVE] = array(
+    '#type' => 'select',
     '#title' => t('Allow master/slave access'),
     '#description' => t('Allow other client applications to create slave or master assets in this application.'),
-    '#default_value' => 'FALSE',
+    '#options' => array(mediamosa_app_db::ALLOW_MASTERSLAVE_TRUE => t('Allowed'), mediamosa_app_db::ALLOW_MASTERSLAVE_FALSE => t('Not allowed')),
+    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::ALLOW_MASTERSLAVE, $node, 'FALSE'),
   );
 
   $form['oai'] = array(
@@ -271,19 +295,19 @@ function mediamosa_app_form($node, $form_state) {
     '#description' => t('')
   );
 
-  $form['oai']['is_metadata_public'] = array(
+  $form['oai'][mediamosa_app_db::IS_METADATA_PUBLIC] = array(
     '#type' => 'select',
     '#title' => t('OAI visibility metadata'),
     '#description' => t('Is metadata of this client application public visible in OAI?'),
-    '#options' => array('TRUE' => t('Public'), 'FALSE' => t('Hidden')),
-    '#default_value' => 'TRUE',
+    '#options' => array(mediamosa_app_db::IS_METADATA_PUBLIC_TRUE => t('Public'), mediamosa_app_db::IS_METADATA_PUBLIC_FALSE => t('Hidden')),
+    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::IS_METADATA_PUBLIC, $node, mediamosa_app_db::IS_METADATA_PUBLIC_TRUE),
   );
-  $form['oai']['show_external_assets'] = array(
+  $form['oai'][mediamosa_app_db::SHOW_EXTERNAL_ASSETS] = array(
     '#type' => 'select',
     '#title' => t('OAI external references'),
     '#description' => t('Show external references in OAI (in field referenceId)?'),
     '#options' => array('TRUE' => t('show'), 'FALSE' => t('hide')),
-    '#default_value' => 'TRUE',
+    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::SHOW_EXTERNAL_ASSETS, $node, mediamosa_app_db::SHOW_EXTERNAL_ASSETS_TRUE),
   );
 
   $form['transcoding'] = array(
@@ -299,55 +323,57 @@ function mediamosa_app_form($node, $form_state) {
     $transcoding_pos[$i] = $i;
   }
 
-  $form['transcoding']['transcoding_position_from'] = array(
+  $form['transcoding'][mediamosa_app_db::TRANSCODING_POSITION_FROM] = array(
     '#type' => 'select',
     '#title' => t('The transcoding position from'),
     '#options' => $transcoding_pos,
     '#description' => t('Give server priority.'),
+    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::TRANSCODING_POSITION_FROM, $node),
   );
 
-  $form['transcoding']['transcoding_position_to'] = array(
+  $form['transcoding'][mediamosa_app_db::TRANSCODING_POSITION_TO] = array(
     '#type' => 'select',
     '#title' => t('The transcoding position to'),
     '#options' => $transcoding_pos,
     '#description' => t('Give server priority.'),
+    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::TRANSCODING_POSITION_TO, $node),
   );
 
-  $form['transcoding']['transcoding_max_slots'] = array(
+  $form['transcoding'][mediamosa_app_db::TRANSCODING_MAX_SLOTS] = array(
     '#type' => 'textfield',
     '#title' => t('Maximum transcoding slots allowed'),
-    '#default_value' => mediamosa_settings::JOB_MAX_SLOTS,
     '#description' => t('Set the maximum number of transcoding jobs allowed for this application.'),
+    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::TRANSCODING_MAX_SLOTS, $node, mediamosa_settings::JOB_MAX_SLOTS),
   );
 
-  $form['transcoding']['always_hint_mp4'] = array(
+  $form['transcoding'][mediamosa_app_db::ALWAYS_HINT_MP4] = array(
     '#type' => 'select',
     '#title' => t('Always hint (make streamable) mp4 files'),
-    '#options' => array('FALSE' => t('Never'), 'TRUE' => t('Always')),
-    '#default_value' => 'TRUE',
+    '#options' => array(mediamosa_app_db::ALWAYS_HINT_MP4_FALSE => t('Never'), mediamosa_app_db::ALWAYS_HINT_MP4_TRUE => t('Always')),
+    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::ALWAYS_HINT_MP4, $node, mediamosa_app_db::ALWAYS_HINT_MP4_TRUE),
   );
 
-  $form['transcoding']['always_insert_md'] = array(
+  $form['transcoding'][mediamosa_app_db::ALWAYS_INSERT_MD] = array(
     '#type' => 'select',
     '#title' => t('Always insert extra metadata flv files'),
-    '#options' => array('FALSE' => t('Never'), 'TRUE' => t('Always')),
-    '#default_value' => 'TRUE',
+    '#options' => array(mediamosa_app_db::ALWAYS_INSERT_MD_FALSE => t('Never'), mediamosa_app_db::ALWAYS_INSERT_MD_TRUE => t('Always')),
+    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::ALWAYS_INSERT_MD, $node, mediamosa_app_db::ALWAYS_INSERT_MD_TRUE),
   );
 
-  $form['transcoding']['preview_profile_id'] = array(
+  $form['transcoding'][mediamosa_app_db::PREVIEW_PROFILE_ID] = array(
     '#type' => 'select',
     '#title' => t('Preview transcode profile id'),
     '#description' => t('Transcoding profile used for previewing.'),
     '#options' => mediamosa_node_mediamosa_app::app_get_transcode_profiles(),
-    '#required' => FALSE,
+    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::PREVIEW_PROFILE_ID, $node),
   );
 
-  $form['client_application']['active_version'] = array(
+  $form['client_application'][mediamosa_app_db::ACTIVE_VERSION] = array(
     '#type' => 'select',
     '#title' => t('Select active version'),
     '#description' => t('Version of the rest calls to execute.'),
     '#options' => mediamosa_node_mediamosa_app::app_get_all_versions(),
-    '#default_value' => 'LATEST',
+    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::ACTIVE_VERSION, $node, 'LATEST'),
   );
 
   $form['urls'] = array(
@@ -358,35 +384,40 @@ function mediamosa_app_form($node, $form_state) {
     '#description' => t('URLs shown in the asset settings.')
   );
 
-  $form['urls']['download_url'] = array(
+  $form['urls'][mediamosa_app_db::DOWNLOAD_URL] = array(
     '#type' => 'textfield',
     '#title' => t('Download url'),
     '#description' => t('Shown in the asset details rest calls. Available tags: {asset_id}, {mediafile_id} and {mediafile_filename}'),
-    '#required' => FALSE,
+    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::DOWNLOAD_URL, $node),
+    '#maxlength' => mediamosa_app_db::DOWNLOAD_URL_LENGTH,
   );
-  $form['urls']['stream_url'] = array(
+  $form['urls'][mediamosa_app_db::STREAM_URL] = array(
     '#type' => 'textfield',
     '#title' => t('Stream url'),
     '#description' => t('Shown in the asset details rest calls. Available tags: {asset_id}, {mediafile_id} and {mediafile_filename}.'),
-    '#required' => FALSE,
+    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::STREAM_URL, $node),
+    '#maxlength' => mediamosa_app_db::STREAM_URL_LENGTH,
   );
-  $form['urls']['play_proxy_url'] = array(
+  $form['urls'][mediamosa_app_db::PLAY_PROXY_URL] = array(
     '#type' => 'textfield',
     '#title' => t('Play proxy url'),
     '#description' => t('Shown in the result of rest calls and shown by OAI. Available tags: {asset_id}, {mediafile_id}, {mediafile_filename} and {preview_profile_id}.'),
-    '#required' => FALSE,
+    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::PLAY_PROXY_URL, $node),
+    '#maxlength' => mediamosa_app_db::PLAY_PROXY_URL_LENGTH,
   );
-  $form['urls']['view_asset_url'] = array(
+  $form['urls'][mediamosa_app_db::VIEW_ASSET_URL] = array(
     '#type' => 'textfield',
     '#title' => t('View asset url'),
     '#description' => t('Shown by OAI, field \'Resource Identifier\'. Available tags: {asset_id}.'),
-    '#required' => FALSE,
+    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::VIEW_ASSET_URL, $node),
+    '#maxlength' => mediamosa_app_db::VIEW_ASSET_URL_LENGTH,
   );
   $form['urls']['still_url'] = array(
     '#type' => 'textfield',
     '#title' => t('Still url'),
     '#description' => t('Shown by OAI for still images. Available tags: {asset_id}.'),
-    '#required' => FALSE,
+    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::STILL_URL, $node),
+    '#maxlength' => mediamosa_app_db::STILL_URL_LENGTH,
   );
 
   $owner = array('' => t('none'), 'surfnet' => 'Surfnet', 'kennisnet' => 'Kennisnet');
@@ -395,11 +426,13 @@ function mediamosa_app_form($node, $form_state) {
     unset($owner[$unset]);
   }
 
-  $form['client_application']['owner'] = array(
+  $form['client_application'][mediamosa_app_db::OWNER] = array(
     '#type' => 'select',
     '#title' => t('Owner'),
     '#description' => t('Owner of client application'),
     '#options' => $owner,
+    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::OWNER, $node),
+    '#maxlength' => mediamosa_app_db::OWNER_LENGTH,
   );
 
   $form['webservice'] = array(
@@ -436,22 +469,28 @@ function mediamosa_app_form($node, $form_state) {
     '#description' => t('Technical contact person for this client application.')
   );
 
-  $form['technical']['technical_name'] = array(
+  $form['technical'][mediamosa_app_db::TECHNICAL_NAME] = array(
     '#type' => 'textfield',
     '#title' => t('Name'),
-    '#description' => t('Name of technical contact person for this client application.')
+    '#description' => t('Name of technical contact person for this client application.'),
+    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::TECHNICAL_NAME, $node),
+    '#maxlength' => mediamosa_app_db::TECHNICAL_NAME_LENGTH,
   );
 
-  $form['technical']['technical_phone'] = array(
+  $form['technical'][mediamosa_app_db::TECHNICAL_PHONE] = array(
     '#type' => 'textfield',
     '#title' => t('Phone'),
-    '#description' => t('Phone number of technical contact person for this client application.')
+    '#description' => t('Phone number of technical contact person for this client application.'),
+    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::TECHNICAL_PHONE, $node),
+    '#maxlength' => mediamosa_app_db::TECHNICAL_PHONE_LENGTH,
   );
 
-  $form['technical']['technical_email'] = array(
+  $form['technical'][mediamosa_app_db::TECHNICAL_EMAIL] = array(
     '#type' => 'textfield',
     '#title' => t('E-mail'),
-    '#description' => t('Email-address of technical contact person for this client application.')
+    '#description' => t('Email-address of technical contact person for this client application.'),
+    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::TECHNICAL_PHONE, $node),
+    '#maxlength' => mediamosa_app_db::TECHNICAL_EMAIL_LENGTH,
   );
 
   $form['administrative'] = array(
@@ -462,23 +501,28 @@ function mediamosa_app_form($node, $form_state) {
     '#description' => t('Administrative contact person for this client application.')
   );
 
-  $form['administrative']['administrative_name'] = array(
+  $form['administrative'][mediamosa_app_db::ADMINISTRATIVE_NAME] = array(
     '#type' => 'textfield',
     '#title' => t('Name'),
-    '#description' => t('Name of administrative contact person for this client application.')
+    '#description' => t('Name of administrative contact person for this client application.'),
+    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::ADMINISTRATIVE_NAME, $node),
+    '#maxlength' => mediamosa_app_db::ADMINISTRATIVE_NAME_LENGTH,
   );
 
-  $form['administrative']['administrative_phone'] = array(
+  $form['administrative'][mediamosa_app_db::ADMINISTRATIVE_PHONE] = array(
     '#type' => 'textfield',
     '#title' => t('Phone'),
-    '#description' => t('Phone number of administrative contact person for this client application.')
+    '#description' => t('Phone number of administrative contact person for this client application.'),
+    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::ADMINISTRATIVE_PHONE, $node),
+    '#maxlength' => mediamosa_app_db::ADMINISTRATIVE_PHONE_LENGTH,
   );
 
-  $form['administrative']['administrative_email'] = array(
+  $form['administrative'][mediamosa_app_db::ADMINISTRATIVE_EMAIL] = array(
     '#type' => 'textfield',
     '#title' => t('E-mail'),
     '#description' => t('Email-address of administrative contact person for this client application.'),
-    '#required' => FALSE,
+    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::ADMINISTRATIVE_EMAIL, $node),
+    '#maxlength' => mediamosa_app_db::ADMINISTRATIVE_EMAIL_LENGTH,
   );
 
   $form['#redirect'] = 'admin/mediamosa/config/app';
@@ -490,6 +534,11 @@ function mediamosa_app_form($node, $form_state) {
  * Implementation of hook_validate().
  */
 function mediamosa_app_validate(&$node) {
+
+  // Some things we cant change.
+  $node->status = 1; // Published
+  $node->sticky = 0;
+  $node->promote = 0;
 
   // We need to know if its an update.
   $is_insert = empty($node->nid);
@@ -513,6 +562,16 @@ function mediamosa_app_validate(&$node) {
         }
       }
     }
+  }
+
+  // Transcoding position.
+  if (!is_numeric($node->{mediamosa_app_db::TRANSCODING_POSITION_FROM})) {
+    form_set_error(mediamosa_app_db::TRANSCODING_POSITION_FROM, t('Please enter a numerical value.'));
+  }
+
+  // Transcoding position.
+  if (!is_numeric($node->{mediamosa_app_db::TRANSCODING_POSITION_TO})) {
+    form_set_error(mediamosa_app_db::TRANSCODING_POSITION_TO, t('Please enter a numerical value.'));
   }
 
   // Transcoding position.

@@ -40,53 +40,38 @@ function mediamosa_server_menu() {
     'description' => 'List all MediaMosa Servers.',
     'page callback' => '_mediamosa_server_list',
     'access arguments' => array('access mediamosa'),
+    'weight' => 10,
   );
 
   $items['admin/mediamosa/config/server/list'] = array(
     'title' => 'List',
     'access arguments' => array('access mediamosa'),
     'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => 10,
   );
 
-  $items['admin/mediamosa/config/server/add_download'] = array(
-    'title' => 'Add Download',
-    'description' => 'Add MediaMosa Download Server.',
-    'page callback' => '_mediamosa_server_list',
-    'access arguments' => array('access mediamosa'),
-    'type' => MENU_LOCAL_TASK,
+  $server_types = array(
+    mediamosa_server_db::SERVER_TYPE_DOWNLOAD => t('Download'),
+    mediamosa_server_db::SERVER_TYPE_STILL => t('Still'),
+    mediamosa_server_db::SERVER_TYPE_STREAMING => t('Streaming'),
+    mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR => t('Processing'),
+    mediamosa_server_db::SERVER_TYPE_UPLOAD => t('Upload'),
   );
 
-  $items['admin/mediamosa/config/server/add_still'] = array(
-    'title' => 'Add Still',
-    'description' => 'Add MediaMosa Still Server.',
-    'page callback' => '_mediamosa_server_list',
-    'access arguments' => array('access mediamosa'),
-    'type' => MENU_LOCAL_TASK,
-  );
-
-  $items['admin/mediamosa/config/server/add_streaming'] = array(
-    'title' => 'Add Streaming',
-    'description' => 'Add MediaMosa Streaming Server.',
-    'page callback' => '_mediamosa_server_list',
-    'access arguments' => array('access mediamosa'),
-    'type' => MENU_LOCAL_TASK,
-  );
-
-  $items['admin/mediamosa/config/server/add_processing'] = array(
-    'title' => 'Add Processing',
-    'description' => 'Add MediaMosa Processing Server.',
-    'page callback' => '_mediamosa_server_list',
-    'access arguments' => array('access mediamosa'),
-    'type' => MENU_LOCAL_TASK,
-  );
-
-  $items['admin/mediamosa/config/server/add_upload'] = array(
-    'title' => 'Add Upload',
-    'description' => 'Add MediaMosa Upload Server.',
-    'page callback' => '_mediamosa_server_list',
-    'access arguments' => array('access mediamosa'),
-    'type' => MENU_LOCAL_TASK,
-  );
+  $weight = 0;
+  foreach ($server_types as $server_type => $title) {
+    $items['admin/mediamosa/config/server/add/' . $server_type] = array(
+      'title' => 'Add ' . $title,
+      'page callback' => 'node_add',
+      'page arguments' => array(mediamosa_node::MEDIAMOSA_NODE_TYPE_SERVER),
+      'access callback' => 'node_access',
+      'access arguments' => array('create', mediamosa_node::MEDIAMOSA_NODE_TYPE_SERVER),
+      'file' => 'node.pages.inc',
+      'file path' => drupal_get_path('module', 'node'),
+      'type' => MENU_LOCAL_TASK,
+      'weight' => $weight++,
+    );
+  }
 
   $items['admin/mediamosa/config/server/%/edit'] = array(
     'title' => 'Client application contacts',
@@ -138,10 +123,10 @@ function _mediamosa_server_list() {
 
   $header = array(
     array('data' => t('Server Type'), 'field' => 'ms.' . mediamosa_server_db::SERVER_TYPE, 'sort' => 'asc'),
+    array('data' => t('Title'), 'field' => 'ms.' . mediamosa_server_db::SERVER_NAME, 'sort' => 'asc'),
     array('data' => t('URI'), 'field' => 'ms.' . mediamosa_server_db::URI, 'sort' => 'asc'),
-    array('data' => t('Description'), 'field' => 'ms.' . mediamosa_server_db::DESCRIPTION, 'sort' => 'asc'),
     array('data' => t('Status'), 'field' => 'ms.' . mediamosa_server_db::SERVER_STATUS, 'sort' => 'asc'),
-    t('Actions'),
+    t('Operations'),
   );
 
   $query = db_select(mediamosa_server_db::TABLE_NAME, 'ms')->extend('PagerDefault')->extend('TableSort');
@@ -150,72 +135,43 @@ function _mediamosa_server_list() {
   $query->limit(mediamosa_settings::maintenance_items_per_page());
   $result = $query->execute();
 
-  $a_actions = array(
-    'edit', 'delete'
-  );
+  // Get destination.
+  $l_options = array('query' => drupal_get_destination());
 
   foreach ($result as $server) {
+    $actions = array(
+      l(t('Edit'), 'admin/mediamosa/config/server/'. $server->{mediamosa_app_db::NID} . '/edit', $l_options),
+      l(t('Delete'), 'admin/mediamosa/config/server/'. $server->{mediamosa_app_db::NID} . '/delete', $l_options),
+    );
+
+    $statuses = array(
+      mediamosa_server_db::SERVER_STATUS_CLOSE => t('Close'),
+      mediamosa_server_db::SERVER_STATUS_ON => t('On'),
+      mediamosa_server_db::SERVER_STATUS_OFF => t('Off'),
+    );
+
     $rows[] = array('data' =>
       array(
         // Cells
         t($server->{mediamosa_server_db::SERVER_TYPE}),
+       'title' => array('data' => l($server->{mediamosa_server_db::SERVER_NAME}, 'admin/mediamosa/config/server/'. $server->{mediamosa_server_db::NID}), 'field' => mediamosa_server_db::SERVER_NAME),
         t($server->{mediamosa_server_db::URI}),
-        ( isset($server->{mediamosa_server_db::DESCRIPTION}) ? t($server->{mediamosa_server_db::DESCRIPTION}) : '' ),
-        t($server->{mediamosa_server_db::SERVER_STATUS}),
-        implode(' | ', $a_actions),
+        $statuses[$server->{mediamosa_server_db::SERVER_STATUS}],
+        implode(' | ', $actions),
       ),
     );
   }
 
-  $build['log_table'] = array(
-    '#theme' => 'table',
-    '#header' => $header,
-    '#rows' => $rows,
-    '#attributes' => array('id' => 'admin-dblog'),
-  );
+  $output = theme('table', array('header' => $header, 'rows' => $rows, 'empty' => t('You have no servers specified. Click on the <em>Add</em> tab to create one.')));
+  $output .= theme('pager');
 
-  return $build;
+  return $output;
 }
 
-
-/**
- * Implementation of hook_view().
- */
-function mediamosa_server_view($node, $build_mode = 'full') {
-  // Default parameters
-  $rows = array(
-    array(t('Title'), check_plain($node->title)),
-    array(t('Status'), ($node->server_status) ? t('On') : t('Off')),
-    array(t('Server type'), $node->server_type),
-  );
-
-  foreach (array(
-    'uri' => t('URI'),
-    'uri_upload_progress' => t('URI upload progress'),
-    'containers' => t('Containers'),
-    'server_name' => t('Server name'),
-    'slots' => t('Slots'),
-    'tools' => t('Tools'),
-  ) as $key => $title) {
-    if (!is_null($node->{$key})) {
-      $rows[] = array($title, check_plain($node->{$key}));
-    }
-  }
-
-  // Add timestamps
-  $rows[] = array(t('Created'), format_date($node->created, 'short'));
-  $rows[] = array(t('Changed'), format_date($node->changed, 'short'));
-
-  $node->content['transcode_profile'] = array(
-    '#markup' => theme('table', array('header' => array(t('Parameter'), t('Value')), 'rows' => $rows)),
-  );
-
-  return $node;
-}
 
 /**
  * Implementation of hook_form().
- */
+
 function mediamosa_server_form($node, $form_state) {
   // If we're inserting a new nod, set some defaults:
   $form = array();
@@ -339,6 +295,7 @@ function mediamosa_server_form($node, $form_state) {
 
   return $form;
 }
+*/
 
 /**
  * Helper function to fetch the optional parameters per server type.

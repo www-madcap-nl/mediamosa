@@ -68,7 +68,7 @@ function _mediamosa_server_install() {
 <embed type='application/x-mplayer2' src='{WMA_TICKET_URI}' autostart='{AUTOPLAY_NUM}' name='{MEDIAFILE_ID}' width='{WIDTH}' height='{HEIGHT}'/>
 </embed>
 </object>"
-      ,'','','','',''),
+      ,'ASF Streaming Server','','','',''),
     array(2,0,'ON',"streaming","http://localhost/ticket/{TICKET}",
       "flv",
       "<script type='text/javascript' src='http://145.97.38.12/swfobject.js'></script>
@@ -82,7 +82,7 @@ s1.addParam('flashvars','streamer={TICKET_URI}&autostart={AUTOPLAY}{IF_START}&st
 s1.addVariable('type', 'mp4');
 s1.write('mediaspace');
 </script>"
-      ,'','','','',''),
+      ,'FLV Streaming Server','','','',''),
     array(3,0,'ON',"streaming","http://localhost/ticket/{TICKET}",
       "mov;mp4;m4a;3gp;3g2;mj2i:h264",
       "<script type='text/javascript' src='http://145.97.38.29/swfobject.js'></script>
@@ -96,7 +96,7 @@ s1.addParam('flashvars','streamer={TICKET_URI}&autostart={AUTOPLAY}{IF_START}&st
 s1.addVariable('type', 'mp4');
 s1.write('mediaspace');
 </script>"
-      ,'','','','',''),
+      ,'MOV/MP4/M4A/3GP/3G2/MJ2I:H264 Streaming Server','','','',''),
     array(4,0,'ON',"streaming","http://localhost/ticket/{TICKET}",
       "mpeg|mov;mp4;m4a;3gp;3g2;mj2",
       "<object id='{MEDIAFILE_ID}' classid='CLSID:02Bf25D5-8C17-4B23-BC80-D3488ABDDC6B' standby='Loading Quicktime Player components...' width='{WIDTH}' height='{HEIGHT}'>
@@ -110,11 +110,11 @@ s1.write('mediaspace');
 <param name='autoplay' value='{AUTOPLAY}' />
 <embed type='video/quicktime' src='{TICKET_URI}' name='{MEDIAFILE_ID}' width='{WIDTH}' height='{HEIGHT}' autoplay='{AUTOPLAY}' {IF_START}starttime='{START_TIME}'{/IF_START} {IF_DURATION}endtime='{END_TIME}'{/IF_DURATION}/>
 </object>"
-      ,'','','','',''),
-    array(11,2,'ON',"download","http://localhost/download/{TICKET}",'','','','','','',''),
-    array(12,0,'OFF',"still","http://localhost/still/{TICKET}",'','','','','','',''),
-    array(13,0,'ON',"job_processor",'http://localhost','','',"localhost",10,"ANALYSE|ffmpeg|STILL",''),
-    array(14,0,'ON',"upload","http://localhost/mediafile/upload?upload_ticket={TICKET}",'','','','','',"http://example.org/mediafile/uploadprogress"),
+      ,'MPEG|MOV;MP4;M4A;3GP;3G2;MJ2 Streaming Server','','','',''),
+    array(11,2,'ON',"download","http://localhost/download/{TICKET}",'','','Default download server','','','',''),
+    array(12,0,'ON',"still","http://localhost/still/{TICKET}",'','','Default still server','','','',''),
+    array(13,0,'ON',"job_processor",'http://localhost','','','Default job processor',10,"ANALYSE|ffmpeg|STILL",''),
+    array(14,0,'ON',"upload","http://localhost/mediafile/upload?upload_ticket={TICKET}",'','','Default upload server','','',"http://example.org/mediafile/uploadprogress"),
   );
 
 
@@ -127,13 +127,14 @@ s1.write('mediaspace');
     'custom' => 1,
     'modified' => 1,
     'locked' => 0,
+    'has_body' => 0,
   );
 
   $server_node_type = node_type_set_defaults($server_node_type);
   node_type_save($server_node_type);
 
   foreach ($a_default_servers as $a_default_server) {
-    $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_SERVER, $a_default_server[4]);
+    $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_SERVER, $a_default_server[7]);
 
     $node->{mediamosa_server_db::VERSION} = $a_default_server[1];
     $node->{mediamosa_server_db::SERVER_STATUS} = $a_default_server[2];

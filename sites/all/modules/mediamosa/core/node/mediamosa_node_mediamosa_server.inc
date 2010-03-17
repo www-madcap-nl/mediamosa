@@ -117,3 +117,200 @@ function mediamosa_server_delete($node) {
     ->condition('nid', $node->nid)
     ->execute();
 }
+
+/**
+ * Implementation of hook_view().
+ */
+function mediamosa_server_view($node, $view_mode = 'full') {
+
+  // Default parameters
+  $rows = array(
+    array(t('Name'), check_plain($node->title)),
+    array(t('Status'), ($node->server_status) ? t('On') : t('Off')),
+    array(t('Server type'), $node->server_type),
+  );
+
+  foreach (array(
+    'uri' => t('URI'),
+    'uri_upload_progress' => t('URI upload progress'),
+    'containers' => t('Containers'),
+    'server_name' => t('Server name'),
+    'slots' => t('Slots'),
+    'tools' => t('Tools'),
+  ) as $key => $title) {
+    if (!is_null($node->{$key})) {
+      $rows[] = array($title, check_plain($node->{$key}));
+    }
+  }
+
+  // Add timestamps.
+  $rows[] = array(t('Created'), format_date($node->created, 'short'));
+  $rows[] = array(t('Changed'), format_date($node->changed, 'short'));
+
+  $node->content['app'] = array(
+    '#markup' => theme('table', array('header' => array(t('Parameter'), t('Value')), 'rows' => $rows)),
+  );
+
+  return $node;
+}
+
+/**
+ * Implementation of hook_form().
+ */
+function mediamosa_server_form($node, &$form_state) {
+
+  // Take type from node if available.
+  if (isset($node->{mediamosa_server_db::SERVER_TYPE})) {
+    $server_type = $node->{mediamosa_server_db::SERVER_TYPE};
+  }
+
+  // Else take it from the uri.
+  if (!isset($server_type)) {
+    $server_type = arg(5);
+  }
+
+  // Default server status options.
+  $server_status_options =  array(mediamosa_server_db::SERVER_STATUS_ON => t('On'), mediamosa_server_db::SERVER_STATUS_OFF => t('Off'));
+
+
+  switch ($server_type) {
+    default:
+    case mediamosa_server_db::SERVER_TYPE_DOWNLOAD:
+      $title = t('New download server');
+      $description = t('A download server handles download requests of mediafiles.');
+      break;
+    case mediamosa_server_db::SERVER_TYPE_STILL:
+      $title = t('New still server');
+      $description = t('A still server serves and generates stills from mediafiles.');
+      break;
+    case mediamosa_server_db::SERVER_TYPE_STREAMING:
+      $title = t('New streaming server');
+      $description = t('A streaming server will stream mediafiles for you.');
+      break;
+    case mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR:
+      $title = t('New processor server');
+      $description = t('A processor server processes jobs like still generation, transcoding of mediafiles.');
+      $server_status_options =  array(mediamosa_server_db::SERVER_STATUS_ON => t('On'), mediamosa_server_db::SERVER_STATUS_CLOSE => t('Close'), mediamosa_server_db::SERVER_STATUS_OFF => t('Off'));
+      break;
+    case mediamosa_server_db::SERVER_TYPE_UPLOAD:
+      $title = t('New upload server');
+      $description = t('A upload server allows users to upload files to MediaMosa.');
+      break;
+  }
+
+  $form = array();
+
+  $form['new_server'] = array(
+    '#type' => 'fieldset',
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+    '#title' => $title,
+    '#description' => $description,
+  );
+
+  $form['new_server']['title'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Server name'),
+    '#description' => t('The name for the server.'),
+    '#required' => TRUE,
+    '#default_value' => mediamosa_node::default_value('title', $node),
+    '#maxlength' => mediamosa_server_db::SERVER_NAME_LENGTH,
+  );
+
+  $form['new_server'][mediamosa_server_db::DESCRIPTION] = array(
+    '#type' => 'textarea',
+    '#required' => TRUE,
+    '#title' => t('Description'),
+    '#description' => t('Description of the server.'),
+    '#default_value' => mediamosa_node::default_value(mediamosa_server_db::DESCRIPTION, $node),
+    '#maxlength' => mediamosa_server_db::DESCRIPTION_LENGTH,
+  );
+
+  if (in_array($server_type, array(mediamosa_server_db::SERVER_TYPE_DOWNLOAD, mediamosa_server_db::SERVER_TYPE_STILL, mediamosa_server_db::SERVER_TYPE_STREAMING))) {
+    $form['new_server'][mediamosa_server_db::URI] = array(
+      '#type' => 'textfield',
+      '#required' => TRUE,
+      '#title' => t('URI'),
+      '#description' => t('{TICKET} is available for use in the URI.'),
+      '#default_value' => mediamosa_node::default_value(mediamosa_server_db::URI, $node),
+      '#maxlength' => mediamosa_server_db::URI_LENGTH,
+    );
+  }
+
+  if (in_array($server_type, array(mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR))) {
+    $form['new_server'][mediamosa_server_db::IP_ADDRESS] = array(
+      '#type' => 'textfield',
+      '#title' => t('IP address'),
+      '#description' => t('IP address of server.'),
+      '#required' => TRUE,
+      '#default_value' => mediamosa_node::default_value(mediamosa_server_db::IP_ADDRESS, $node),
+      '#maxlength' => mediamosa_server_db::IP_ADDRESS_LENGTH,
+    );
+
+    $form['new_server'][mediamosa_server_db::SLOTS] = array(
+      '#type' => 'textfield',
+      '#title' => t('Slots'),
+      '#required' => TRUE,
+      '#default_value' => mediamosa_node::default_value(mediamosa_server_db::SLOTS, $node),
+    );
+
+    $form['new_server'][mediamosa_server_db::TOOLS] = array(
+      '#type' => 'textfield',
+      '#title' => t('Tools'),
+      '#description' => t('Set tools for this server in the following format: ffmpeg|STILL|lin2win.'),
+      '#default_value' => mediamosa_node::default_value(mediamosa_server_db::TOOLS, $node),
+    );
+  }
+
+  if (in_array($server_type, array(mediamosa_server_db::SERVER_TYPE_UPLOAD))) {
+    $form['new_server'][mediamosa_server_db::URI_UPLOAD_PROGRESS] = array(
+      '#type' => 'textfield',
+      '#title' => t('URI upload progress'),
+      '#required' => TRUE,
+      '#description' => t('Optional URI for client side upload progress information.'),
+      '#default_value' => mediamosa_node::default_value(mediamosa_server_db::URI_UPLOAD_PROGRESS, $node),
+      '#maxlength' => mediamosa_server_db::URI_UPLOAD_PROGRESS_LENGTH,
+    );
+  }
+
+  if (in_array($server_type, array(mediamosa_server_db::SERVER_TYPE_STREAMING))) {
+    $form['new_server'][mediamosa_server_db::CONTAINERS] = array(
+      '#type' => 'textfield',
+      '#title' => t('Containers'),
+      '#required' => TRUE,
+      '#description' => t('Set containers for this server in the following format: asf|flv|mpeg|avi|ogg|mov;mp4;m4a;3gp;3g2;mj2|mp3.'),
+      '#default_value' => mediamosa_node::default_value(mediamosa_server_db::CONTAINERS, $node),
+      '#maxlength' => mediamosa_server_db::CONTAINERS_LENGTH,
+    );
+
+    $form['new_server'][mediamosa_server_db::OBJECT_CODE] = array(
+      '#type' => 'textarea',
+      '#title' => t('Object code'),
+      '#description' => t('{WIDTH}, {HEIGHT}, {HEIGHT_PLUS_20}, {MEDIAFILE_ID}, {TICKET_URI}, {AUTOPLAY} (true or false), {AUTOPLAY_NUM} (1 or 0), {IF_START}, {/IF_START}, {IF_DURATION}, {/IF_DURATION} are available for use in this field.'),
+      '#default_value' => mediamosa_node::default_value(mediamosa_server_db::OBJECT_CODE, $node),
+    );
+  }
+  else {
+    $form['new_server'][mediamosa_server_db::CONTAINERS] = array(
+      '#type' => 'hidden',
+      '#value' => '',
+    );
+    $form['new_server'][mediamosa_server_db::OBJECT_CODE] = array(
+      '#type' => 'hidden',
+      '#value' => '',
+    );
+  }
+
+  $form['new_server'][mediamosa_server_db::SERVER_STATUS] = array(
+    '#type' => 'select',
+    '#required' => TRUE,
+    '#options' => $server_status_options,
+    '#title' => t('Status'),
+    '#description' => t('Availability of server.'),
+    '#default_value' => mediamosa_node::default_value(mediamosa_server_db::SERVER_STATUS, $node),
+  );
+
+  $form['#redirect'] = 'admin/mediamosa/config/server';
+
+  return $form;
+}

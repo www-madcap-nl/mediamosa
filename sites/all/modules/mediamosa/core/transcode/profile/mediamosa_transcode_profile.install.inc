@@ -46,6 +46,7 @@ function _mediamosa_transcode_profile_install() {
     'custom' => 1,
     'modified' => 1,
     'locked' => 0,
+    'has_body' => 0,
   );
 
   $transcode_profile_node_type = node_type_set_defaults($transcode_profile_node_type);

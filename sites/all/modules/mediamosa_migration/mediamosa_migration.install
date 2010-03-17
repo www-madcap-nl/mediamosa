@@ -425,7 +425,7 @@ function _mediamosa_migration_client_applications() {
 
   // Now add back the apps as nodes.
   foreach ($migrate_apps as $app_id => $app) {
-    $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_APP, $app->{mediamosa_app_db::NAME});
+    $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_APP, $app->name);
 
     // not needed.
     unset($app->caid);
@@ -2046,7 +2046,8 @@ function _mediamosa_migration_create_server_nodes() {
     );
 
     foreach ($result as $row) {
-      $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_SERVER, $row['description']);
+      $title = (isset($row['servername']) ? $row['servername'] : (isset($row['description']) ? $row['description'] : NULL));
+      $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_SERVER, $title);
 
       // Find server_id
       $server_id = 0;
@@ -2072,7 +2073,7 @@ function _mediamosa_migration_create_server_nodes() {
       $node->{mediamosa_server_db::DESCRIPTION} = (isset($row['description']) ? $row['description'] : NULL);
       $node->{mediamosa_server_db::CONTAINERS} = (isset($row['containers']) ? $row['containers'] : NULL);
       $node->{mediamosa_server_db::OBJECT_CODE} = (isset($row['objectcode']) ? $row['objectcode'] : NULL);
-      $node->{mediamosa_server_db::SERVER_NAME} = (isset($row['servername']) ? $row['servername'] : NULL);
+      $node->{mediamosa_server_db::SERVER_NAME} = $title;
       $node->{mediamosa_server_db::SLOTS} = (isset($row['slots']) ? $row['slots'] : NULL);
       $node->{mediamosa_server_db::TOOLS} = (isset($row['tools']) ? $row['tools'] : NULL);
       $node->{mediamosa_server_db::URI_UPLOAD_PROGRESS} = (isset($row['uri_uploadprogress']) ? $row['uri_uploadprogress'] : NULL);

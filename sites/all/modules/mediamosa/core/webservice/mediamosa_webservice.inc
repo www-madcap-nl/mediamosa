@@ -42,6 +42,19 @@ class mediamosa_webservice {
   }
 
   /**
+   * Return with the webservice row.
+   *
+   * @param integer $webservice_id
+   */
+  static public function get($webservice_id) {
+    return mediamosa_db::db_select(mediamosa_webservice_db::TABLE_NAME, 'w')
+      ->fields('w')
+      ->condition(mediamosa_webservice_db::ID, $webservice_id)
+      ->execute()
+      ->fetchAssoc();
+  }
+
+  /**
    * Get all webservice.
    *
    * @param integer $app_id

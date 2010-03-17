@@ -110,11 +110,6 @@ class mediamosa_node_revision {
    */
   static public function insert_ex($node, $table_name, array $names) {
 
-    // Some things we cant change.
-    $node->status = 1; // Published
-    $node->sticky = 0;
-    $node->promote = 0;
-
     // Collect the data we want to insert.
     $fields = array();
     foreach ($names as $name) {

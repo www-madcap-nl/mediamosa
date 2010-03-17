@@ -558,7 +558,7 @@ function node_type_save($info) {
  * 'body' field on $type->type.
  */
 function node_configure_fields($type) {
-   // Add or remove the body field, as needed.
+  // Add or remove the body field, as needed.
   $field = field_info_field('body');
   $instance = field_info_instance('node', 'body', $type->type);
   if ($type->has_body) {

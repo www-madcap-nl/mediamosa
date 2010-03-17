@@ -24,6 +24,23 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
+/**
+ * Master / slave;
+ *
+ * Giving other apps access to assets and mediafiles, you need to master / slave
+ * apps. By making another app MASTER of your asset / mediafile you grant access
+ * to that asset / mediafile. However; not only must the other (master) app have
+ * access with master/slave, but also with the normal access rules like domain
+ * and realm. As soon is_protected flag is true on the mediafile or asset, also
+ * other rights have to be granted to have access to the master/slaved
+ * asset/mediafile.
+ *
+ * Do not let the name master and slave confuse you. The master is not the app
+ * that owns the asset or mediafile, but is the app that will be granted access.
+ * The slave is the app of the asset/mediafile. The master is the app that has
+ * been granted access to the asset/mediafile.
+ */
+
  /**
   * @file
   * The aut_app_master_slave functions.
@@ -83,7 +100,7 @@ class mediamosa_aut_app_master_slave {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MASTERSLAVE_OWN_APP);
     }
 
-    // Master-slave safe now.
+    // DB Master-slave safe now.
     try {
       mediamosa_db::db_query(
         'INSERT INTO {#mediamosa_aut_app_master_slave} SET #aut_object_type= :aut_object_type, #aut_object_id = :aut_object_id, #app_id_master = :app_id_master, #app_id_slave = :app_id_slave',
@@ -108,7 +125,6 @@ class mediamosa_aut_app_master_slave {
 
   /**
    * Return the app_id(s) of EGAs that are slaves of my supplied EGA (master)
-   *
    *
    * @param array/integer $mixed_app_id
    *  The app ID array or integer.
