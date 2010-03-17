@@ -145,6 +145,13 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     parent::tearDown();
   }
 
+  protected function deleteFromCleanUp($mediafile_id) {
+    // Delete the unnecessary mediafile_id from the clean up array.
+    if (($key = array_search($mediafile_id, $this->a_mediafiles_cleanup)) !== FALSE) {
+      unset($this->a_mediafiles_cleanup[$key]);
+    }
+  }
+
   /**
    * Login using generated app, name and shared_key (password).
    */
@@ -2103,11 +2110,6 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
         )
       )
     );
-
-    // Delete the unnecessary mediafile_id from the clean up array.
-    if (($key = array_search($mediafile_id, $this->a_mediafiles_cleanup)) !== FALSE) {
-      unset($this->a_mediafiles_cleanup[$key]);
-    }
 
     return $response;
   }

@@ -51,6 +51,8 @@ class MediaMosaJobDeleteTestCaseEga extends MediaMosaTestCaseEgaJob {
   // (see ticket 220)
   function testJobDelete() {
 
+    // Delete a mediafile with a running job.
+
     // Create upload file.
     $a_upload = $this->uploadTestFile();
     $asset_id = $a_upload['asset_id'];
@@ -62,5 +64,29 @@ class MediaMosaJobDeleteTestCaseEga extends MediaMosaTestCaseEgaJob {
     // Delete the mediafile.
     // A running job exists.
     $response = $this->deleteMediafile($mediafile_id);
+
+    // Delete the mediafile_id from the clean up.
+    $this->deleteFromCleanUp($mediafile_id);
+
+    // Delete an asset with a running job.
+
+    // Create upload file.
+    $a_upload = $this->uploadTestFile();
+    $asset_id = $a_upload['asset_id'];
+    $mediafile_id = $a_upload['mediafile_id'];
+
+    // Create still job.
+    $job_id = $this->createMediafileStill($mediafile_id);
+
+    // Delete the asset.
+    // A running job exists.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_delete::DELETE => 'cascade',
+    );
+    $response = $this->deleteAsset($asset_id, $a_parameters);
+
+    // Delete the mediafile_id from the clean up.
+    $this->deleteFromCleanUp($mediafile_id);
+
   }
 }
