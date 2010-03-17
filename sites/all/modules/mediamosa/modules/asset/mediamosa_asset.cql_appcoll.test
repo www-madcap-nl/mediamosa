@@ -121,7 +121,7 @@ class MediaMosaAssetCQLAppCollTestCaseEga extends MediaMosaTestCaseEga {
 
     // Search assets.
     $a_parameters = array(
-      mediamosa_rest_call_asset_search::CQL => "((app_id==$app_id_2))",
+      mediamosa_rest_call_asset_search::CQL => "(app_id==$app_id_2)",
     );
     $a_assets = $this->searchAsset($limit, $a_parameters);
 
@@ -135,7 +135,7 @@ class MediaMosaAssetCQLAppCollTestCaseEga extends MediaMosaTestCaseEga {
 
     // Search assets.
     $a_parameters = array(
-      mediamosa_rest_call_asset_search::CQL => "((app_id==$app_id_1))",
+      mediamosa_rest_call_asset_search::CQL => "(app_id==$app_id_1)",
     );
     $a_assets = $this->searchAsset($limit, $a_parameters);
 
@@ -188,7 +188,7 @@ class MediaMosaAssetCQLAppCollTestCaseEga extends MediaMosaTestCaseEga {
 
     // Search assets.
     $a_parameters = array(
-      mediamosa_rest_call_asset_search::CQL => "((coll_id==$coll_id_1))",
+      mediamosa_rest_call_asset_search::CQL => "(coll_id==$coll_id_1)",
     );
     $a_assets = $this->searchAsset($limit, $a_parameters);
 
@@ -202,7 +202,7 @@ class MediaMosaAssetCQLAppCollTestCaseEga extends MediaMosaTestCaseEga {
 
     // Search assets.
     $a_parameters = array(
-      mediamosa_rest_call_asset_search::CQL => "((coll_id==$coll_id_2))",
+      mediamosa_rest_call_asset_search::CQL => "(coll_id==$coll_id_2)",
     );
     $a_assets = $this->searchAsset($limit, $a_parameters);
 
