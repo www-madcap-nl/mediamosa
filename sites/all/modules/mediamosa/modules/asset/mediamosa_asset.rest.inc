@@ -752,7 +752,7 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
     $granted = TRUE;
 
     // Asset must exist.
-    mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id, mediamosa_asset_db::PARENT_ID => NULL));
+    $asset = mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id, mediamosa_asset_db::PARENT_ID => NULL));
 
     // ACL check.
     mediamosa_aut::read_single_object(mediamosa_aut::AUT_TYPE_ASSET, $asset_id, $a_app_ids);
@@ -775,7 +775,7 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
     );
 
     // Add mediafiles.
-    $a_mediafile_ids = mediamosa_asset_mediafile::mediafiles_search($asset_id, $tag);
+    $a_mediafile_ids = mediamosa_asset_mediafile::mediafiles_search($asset_id, $tag, FALSE, ($asset['app_id'] == $app_id ? array() : $a_app_ids));
 
     // Now enrich the output.
     $a_items[0]['mediafiles'] = mediamosa_asset_mediafile::enrich_response_mediafile($a_mediafile_ids, $a_app_ids, $is_oai, $show_stills);

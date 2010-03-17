@@ -346,7 +346,7 @@ class mediamosa_asset_mediafile {
    * @param string $tag
    * @param boolean $is_still
    */
-  static public function mediafiles_search($asset_id, $tag = NULL, $is_still = FALSE) {
+  static public function mediafiles_search($asset_id, $tag = NULL, $is_still = FALSE, array $a_app_ids = array()) {
 
     assert($asset_id !== FALSE);
 
@@ -367,6 +367,15 @@ class mediamosa_asset_mediafile {
 
     // No left join here, only include assets that have mediafiles
     $a_query[mediamosa_db_query::A_JOIN]["mediafile"][] = "JOIN {mediamosa_asset_mediafile} AS mf ON a.asset_id = mf.asset_id_root";
+
+    if (!empty($a_app_ids)) {
+      // Filter mediafiles according to the master-slave aut.
+      $app_ids = implode(',', $a_app_ids);
+      $a_query[mediamosa_db_query::A_JOIN]["mediafile"][] = sprintf("
+        JOIN {mediamosa_aut_app_master_slave} AS ms ON ms.aut_object_type = 'MEDIAFILE'
+          AND ms.aut_object_id = mf.mediafile_id
+          AND ms.app_id_master IN (%s)", $app_ids);
+    }
 
     $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset'][] = sprintf("(a.asset_id = '%s' OR a.parent_id = '%s')", mediamosa_db::escape_string($asset_id), mediamosa_db::escape_string($asset_id));
     $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset'][] = sprintf("mf.is_still = '%s'", $is_still ? mediamosa_asset_mediafile_db::IS_STILL_TRUE :  mediamosa_asset_mediafile_db::IS_STILL_FALSE);
