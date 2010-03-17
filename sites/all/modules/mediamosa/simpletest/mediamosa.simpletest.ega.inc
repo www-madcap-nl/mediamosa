@@ -2104,6 +2104,11 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       )
     );
 
+    // Delete the unnecessary mediafile_id from the clean up array.
+    if (($key = array_search($mediafile_id, $this->a_mediafiles_cleanup)) !== FALSE) {
+      unset($this->a_mediafiles_cleanup[$key]);
+    }
+
     return $response;
   }
 

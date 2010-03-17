@@ -13,6 +13,7 @@ dependencies[] = mediamosa
 files[] = mediamosa_job.module
 files[] = mediamosa_job.rest.inc
 files[] = mediamosa_job.test
+files[] = mediamosa_job.delete.test
 
 ; Job Server.
 files[] = server/mediamosa_job_server.rest.inc
