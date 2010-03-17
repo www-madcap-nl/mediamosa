@@ -1242,7 +1242,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   }
 
   /**
-   * Create an asset.
+   * Create a collection.
    * Based on REST call /collection/create (POST)
    */
   protected function createCollection(array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
@@ -1275,8 +1275,28 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       )
     );
 
-    // Return the asset_id.
+    // Return the coll_id.
     return $coll_id;
+  }
+
+  /**
+   * Create a collection asset relation.
+   * Based on REST call /collection/@coll_id/asset_relation (POST)
+   */
+  protected function createCollectionAssetRelation($coll_id, array $asset_id, array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    // Parameters asset.
+    $a_parameters += array(
+      mediamosa_rest_call_asset_collection_create::USER_ID => self::SIMPLETEST_USER_ID,
+      mediamosa_rest_call_asset_collection_create::ASSET_ID => $asset_id,
+    );
+
+    // Set uri.
+    $uri = strtr('collection/@coll_id/asset_relation', array('@coll_id' => $coll_id));
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $a_parameters, array(), $a_expected_result_ids, $do_internal);
+
+    return $response['xml'];
   }
 
   /**

@@ -21,6 +21,7 @@ files[] = mediamosa_asset.function.test
 files[] = mediamosa_asset.search.test
 files[] = mediamosa_asset.delete.test
 files[] = mediamosa_asset.vpx_still_url.test
+files[] = mediamosa_asset.cql_appcoll.test
 
 ; Collection <-> Asset link table.
 files[] = collection/mediamosa_asset_collection.rest.inc
