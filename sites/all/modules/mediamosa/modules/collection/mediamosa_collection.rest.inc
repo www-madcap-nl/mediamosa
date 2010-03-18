@@ -888,13 +888,13 @@ class mediamosa_rest_call_collection_delete_relation extends mediamosa_rest_call
         ),
         self::ASSET_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
-          self::VAR_DESCRIPTION => 'The asset ID.',
+          self::VAR_DESCRIPTION => 'The asset ID\'s to be removed from the collection. This parameter accepts an array of assets.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
         ),
         self::USER_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
-          self::VAR_DESCRIPTION => 'The user ID.',
+          self::VAR_DESCRIPTION => 'The user ID, must be owner of the collection.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
       ),

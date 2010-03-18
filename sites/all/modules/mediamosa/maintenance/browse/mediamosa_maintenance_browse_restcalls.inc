@@ -164,7 +164,7 @@ function mediamosa_maintenance_browse_restcall_details($uri, $method) {
   $contents = '<h2>' . $o_rest_call->title . '</h2>';
 
   // @todo: find a better text2html
-  $contents .= '<p>' . str_replace("\n\n", "</p>\n<br>\n<p>", $o_rest_call->description) . '</p>';
+  $contents .= '<p>' . str_replace("\n\n", "</p>\n<p>", $o_rest_call->description) . '</p>';
 
   // Show rest call url.
   $contents .= '<h3>' . t('Request URL') . '</h3>';
@@ -236,24 +236,26 @@ function mediamosa_maintenance_browse_restcall_details($uri, $method) {
     }
   }
 
-  $contents = theme('table', array('header' => $header, 'rows' => $rows));
+  $contents .= theme('table', array('header' => $header, 'rows' => $rows));
 
-  $contents .= '<h3>' . t('Response fields') . '</h3>';
-  $header = array(
-    array('data' => t('Field')),
-    array('data' => t('Description')),
-  );
-  $rows = array();
-  foreach ($o_rest_call->response_fields as $key => $value) {
-    $rows[] = array($key, $value);
+  if (is_array($o_rest_call->response_fields)) {
+    $contents .= '<h3>' . t('Response fields') . '</h3>';
+    $header = array(
+      array('data' => t('Field')),
+      array('data' => t('Description')),
+    );
+    $rows = array();
+    foreach ($o_rest_call->response_fields as $key => $value) {
+      $rows[] = array($key, $value);
+    }
+    $contents .= theme('table', array('header' => $header, 'rows' => $rows));
   }
-  $contents .= theme('table', $header, $rows);
 
   $contents .= '<h3>' . t('Example Request') . '</h3>';
   $contents .= '<p>' . str_replace("\n\n", "</p>\n<br>\n<p>", $o_rest_call->example_request) . '</p>';
 
   $contents .= '<h3>' . t('Example response') . '</h3>';
-  $contents .= '<p>' . str_replace("\n\n", "</p>\n<br>\n", nl2br(htmlentities($o_rest_call->example_response))) . '';
+  $contents .= '<p>' . nl2br(str_replace(" ", "&nbsp;", htmlentities($o_rest_call->example_response))) . '</p>';
 
   return $contents;
 }

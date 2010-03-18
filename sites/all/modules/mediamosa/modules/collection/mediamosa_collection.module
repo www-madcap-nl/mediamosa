@@ -88,25 +88,13 @@ The analyse process also determines if the file needs to be hinted. If the ega s
     mediamosa_rest_call::EXAMPLE_RESPONSE => '',
   );
 
+  $a_rest_calls['collection/$coll_id/count_favorites'][mediamosa_rest_call::METHOD_GET] = // deprecated.
   $a_rest_calls['collection/$coll_id/favorites/count'][mediamosa_rest_call::METHOD_GET] = array(
-    mediamosa_rest_call::TITLE => 'Return the number of favorites in given collection.',
-    mediamosa_rest_call::DESCRIPTION => '',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
-    mediamosa_rest_call::RESPONSE_FIELDS => array(
-      '' => ''
-    ),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
-  );
-
-  $a_rest_calls['collection/$coll_id/count_favorites'][mediamosa_rest_call::METHOD_GET] = array(
-    mediamosa_rest_call::DESCRIPTION => '',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
-    mediamosa_rest_call::RESPONSE_FIELDS => array(
-      '' => ''
-    ),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
-    mediamosa_rest_call::TITLE => 'Return the number of favorites in given collection.',
-  );
+    mediamosa_rest_call::TITLE => 'Get the number of favorites in a collection.',
+    mediamosa_rest_call::DESCRIPTION => 'This call returns the number of assets which are added to the favorits of a user within the collection. The result is given in the header: item_count.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/collection/b1Tb9eoIgOeSLZ9cGO04rPej/favorites/count',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<item_count>0</item_count>');
 
   $a_rest_calls['collection/$coll_id'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'Get the details of a collection.',
@@ -156,13 +144,15 @@ collections. This call gives all the collection details.',
     mediamosa_rest_call::DESCRIPTION => 'Create a new collection, with some metadata. The title and description must be set with an extra /collection/{coll_id} [POST] call.',
     mediamosa_rest_call::EXAMPLE_REQUEST => '/collection/create [POST]',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<request_result>success</request_result>
+<request_result_description></request_result_description>
+<request_result_id>601</request_result_id>',
   );
 
   $a_rest_calls['collection/$coll_id'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Update a collection.',
-    mediamosa_rest_call::DESCRIPTION => 'Update all the fields of a collection.',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::DESCRIPTION => 'Update the fields of a collection.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/collection/b1Tb9eoIgOeSLZ9cGO04rPej [POST] user_id=foo&title=bar&description=baz',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
     mediamosa_rest_call::EXAMPLE_RESPONSE => '<request_result>success</request_result>
 <request_result_description></request_result_description>
@@ -177,25 +167,34 @@ Collections can only be removed when there are no assets linked to it, or if the
 
 When you use the \'delete = cascade\' parameter, then all of the linked assets, mediafiles, stills and metadata will be deleted too, even if the assets are also used in other collections. Each asset is verified that the user_id is also the owner of the asset, otherwise the call fails.',
     mediamosa_rest_call::EXAMPLE_REQUEST => '/collection/o1n8DMqafOMP7MgcWsnTUmvf/delete [POST] user_id=foo',
-    mediamosa_rest_call::RESPONSE_FIELDS => array(
-      'request_result' => 'success'
-    ),
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
     mediamosa_rest_call::EXAMPLE_RESPONSE => '<request_result>success</request_result>
 <request_result_id>601</request_result_id> ',
   );
 
   $a_rest_calls['collection/$coll_id/asset_relation/delete'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Delete the relations between collection and assets.',
-    mediamosa_rest_call::DESCRIPTION => '',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::DESCRIPTION => 'Delete all given assets from a collection. This call only removes the links, not the objects itself. Returns an item list of relations deleted.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'collection/b1Tb9eoIgOeSLZ9cGO04rPej/asset_relation/delete [POST] asset_id[]=X2OJSIuWKPUZUsdSNlsE8Tcx&asset_id[]=x1AjaVW8gVjZjsKmQRWsF9uM&user_id=foo',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+    <item id="1">
+      <asset_id>X2OJSIuWKPUZUsdSNlsE8Tcx</asset_id>
+      <coll_id>b1Tb9eoIgOeSLZ9cGO04rPej</coll_id>
+    </item>
+    <item id="2">
+      <asset_id>x1AjaVW8gVjZjsKmQRWsF9uM</asset_id>
+      <coll_id>b1Tb9eoIgOeSLZ9cGO04rPej</coll_id>
+    </item>
+  </items>',
     mediamosa_rest_call::RESPONSE_FIELDS => array(
-      '' => ''
+      'asset_id' => 'the asset_id unlinked from the collection.',
+      'coll_id' => 'the collection id of which the asset_is unlinked from.'
     ),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
   );
 
-
-
+  /*
+collection/b1Tb9eoIgOeSLZ9cGO04rPej/asset_relation [POST] asset_id[]=X2OJSIuWKPUZUsdSNlsE8Tcx&asset_id=x1AjaVW8gVjZjsKmQRWsF9uM
+  */
   return $a_rest_calls;
 }
 

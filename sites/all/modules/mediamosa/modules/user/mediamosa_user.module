@@ -95,6 +95,47 @@ This call returns all users which are created with /user/create and searches for
 <request_result_id>601</request_result_id> ',
   );
 
+  // Group calls
+  $a_rest_calls['group'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Get a list of groups.',
+    mediamosa_rest_call::DESCRIPTION => 'Returns a list of all available groups.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/group [GET]',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+  );
+
+  $a_rest_calls['group/create'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Create a new group.',
+    mediamosa_rest_call::DESCRIPTION => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+  );
+
+  $a_rest_calls['group/$group_id'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Get a group details.',
+    mediamosa_rest_call::DESCRIPTION => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+  );
+
+  $a_rest_calls['group/$group_id'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Update a group.',
+    mediamosa_rest_call::DESCRIPTION => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+  );
+
+  $a_rest_calls['group/$group_id/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Delete a group.',
+    mediamosa_rest_call::DESCRIPTION => ', it can not be deleted if it still contains group members.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+  );
+
   return $a_rest_calls;
 }
 
@@ -205,7 +246,6 @@ function mediamosa_user_mediamosa_register_rest_call() {
   $a_rest_calls['group/$group_id'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_group_get',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::DESCRIPTION => 'Get the group and quota information.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_user_group',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
@@ -213,7 +253,6 @@ function mediamosa_user_mediamosa_register_rest_call() {
   $a_rest_calls['group/$group_id'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_group_update',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::DESCRIPTION => 'Update the group and quota information.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_user_group',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
@@ -221,7 +260,6 @@ function mediamosa_user_mediamosa_register_rest_call() {
   $a_rest_calls['group'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_group_list',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::DESCRIPTION => 'With this call you get a list of groups.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_user_group',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
@@ -229,7 +267,6 @@ function mediamosa_user_mediamosa_register_rest_call() {
   $a_rest_calls['group/create'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_group_create',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::DESCRIPTION => 'With this call you can create a new user group.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_user_group',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
@@ -237,7 +274,6 @@ function mediamosa_user_mediamosa_register_rest_call() {
   $a_rest_calls['group/$group_id/delete'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_group_delete',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::DESCRIPTION => 'With this call you can delete a user group, it can not be deleted if it still contains group members.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_user_group',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
