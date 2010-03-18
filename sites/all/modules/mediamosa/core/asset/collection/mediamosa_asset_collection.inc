@@ -45,6 +45,12 @@ class mediamosa_asset_collection {
    */
   static public function delete($asset_id = FALSE, $coll_id = FALSE) {
 
+    // Asset must exist.
+    mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
+
+    // Collection must exist.
+    mediamosa_db::db_must_exists(mediamosa_collection_db::TABLE_NAME, array(mediamosa_collection_db::ID => $coll_id));
+
     if (!$asset_id && !$coll_id) {
       // if none is provided, none will be deleted.
       return FALSE;

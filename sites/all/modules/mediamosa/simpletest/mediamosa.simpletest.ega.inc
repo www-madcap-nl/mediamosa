@@ -69,7 +69,14 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $args = func_get_args();
 
     // Create and setup the CORE module.
-    $args = array_unique(array_merge(array('mediamosa_app_authentication', 'mediamosa_asset', 'mediamosa_aut', 'mediamosa_collection', 'mediamosa_server'), $args));
+
+    $args = array_unique(array_merge(array(
+      'mediamosa_app_authentication',
+      'mediamosa_asset',
+      'mediamosa_aut',
+      'mediamosa_collection',
+      'mediamosa_server'), $args));
+
     call_user_func_array(array($this, 'parent::setUp'), $args);
 
     // Now we are in sandbox, create default APP, our default EGA.
@@ -1233,12 +1240,15 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     return $asset_supplement_id;
   }
 
+
   /**
-   * Create an asset.
+   * Create a Collection
    * Based on REST call /collection/create (POST)
+   *
+   * @param array $a_parameters
    */
   protected function createCollection(array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
-    // Parameters asset.
+    // Parameters Collection.
     $a_parameters += array(
       mediamosa_rest_call_collection_create::USER_ID => self::SIMPLETEST_USER_ID,
       mediamosa_rest_call_collection_create::GROUP_ID => self::SIMPLETEST_GROUP_ID,
@@ -1267,7 +1277,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       )
     );
 
-    // Return the asset_id.
+    // Return the collection id.
     return $coll_id;
   }
 
@@ -2246,6 +2256,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     return $response;
   }
+
   // ------------------------------------------------------------------ Play Proxy.
   /*
    * Do a play proxy call.
@@ -2257,6 +2268,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     );
 
     $a_parameters[mediamosa_rest_call_asset_mediafile_play::ASSET_ID] = $asset_id;
+
 
     // The uri.
     $uri = strtr('asset/@asset_id/play', array('@asset_id' => $asset_id));
