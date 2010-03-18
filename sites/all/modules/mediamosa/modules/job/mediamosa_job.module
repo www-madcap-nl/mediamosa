@@ -61,8 +61,13 @@ function mediamosa_job_mediamosa_register_rest_call_doc() {
 The response returns a job_id. The job_id can be used to obtain information about the status of the job, or its detailed results. When the job is finished, the mediafile metadata is updated. If the file is the original file of an asset, the duration of the video (in case of a video or audio) and mimetype is updated in the asset information.
 
 The analyse process also determines if the file needs to be hinted. If the ega setting (see admin interface), defines that unhinted videofiles must be hinted, this proces is added after the analyse. Hinting is currently implemented for mp4, and flv (metadata).',
-    mediamosa_rest_call::EXAMPLE_REQUEST => 'mediafile/aap/analyse?user_id=foo&no_hint=TRUE',
-    mediamosa_rest_call::EXAMPLE_RESPONSE => 'blablabla',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/mediafile/6c704fbd4ef58f2447fd1a3e7/analyse [POST] user_id=foo&no_hint=TRUE',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(
+      'job_id' => 'The unique job id of the analyse job. Can be used to obtain the status/result of a job.'
+    ),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<item id="1">
+  <job_id>7599</job_id>
+</item>',
   );
   return $a_rest_calls;
 }

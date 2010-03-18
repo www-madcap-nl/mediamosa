@@ -49,12 +49,10 @@ class mediamosa_rest_call_count_collection extends mediamosa_rest_call {
       self::VARS => array(
         self::GROUP_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
-          self::DESCRIPTION => 'The group ID to match.',
           self::VAR_TRIM_VALUE => self::VAR_TRIM_VALUE_YES,
         ),
         self::OWNER_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
-          self::DESCRIPTION => 'The owner ID to match.',
           self::VAR_TRIM_VALUE => self::VAR_TRIM_VALUE_YES,
         ),
       )
@@ -395,12 +393,11 @@ class mediamosa_rest_call_collection_get extends mediamosa_rest_call {
       self::VARS => array(
         self::COLL_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_COLLECTION_ID,
-          self::VAR_DESCRIPTION => 'The collection ID to find its favorites.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::USER_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
-          self::VAR_DESCRIPTION => 'The user ID, required to see collection when its unappropriate.',
+          self::VAR_DESCRIPTION => 'The User ID requesting the details, used for unappropriate checks.',
         ),
       ),
     );
@@ -484,36 +481,35 @@ class mediamosa_rest_call_collection_create extends mediamosa_rest_call {
       self::VARS => array(
         self::USER_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
-          self::VAR_DESCRIPTION => 'The user ID.',
+          self::VAR_DESCRIPTION => 'The user ID, will become the owner of the collection.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::GROUP_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
-          self::VAR_DESCRIPTION => 'The group ID.',
+          self::VAR_DESCRIPTION => 'The group ID, will be used for the group_id of the collection.',
         ),
         self::PRIVATE_ => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
-          self::VAR_DESCRIPTION => 'The private on/off switch.',
+          self::VAR_DESCRIPTION => 'Used to identify private collections, use [GET] /collection?private=true to get these collections.',
+          self::VAR_DEFAULT_VALUE => 'false',
         ),
         self::PUBLIC_ => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
-          self::VAR_DESCRIPTION => 'The public on/off switch.',
+          self::VAR_DESCRIPTION => 'Used to identify public collections, use [GET] /collection?public=true to get these collections.',
+          self::VAR_DEFAULT_VALUE => 'true',
         ),
         self::CATEGORY => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
-          self::VAR_DESCRIPTION => 'The category on/off switch.',
+          self::VAR_DESCRIPTION => 'Used to identify main category collections, use [GET] /collection?category=true to get these collections.',
+          self::VAR_DEFAULT_VALUE => 'false',
         ),
         self::ISPRIVATE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
-          self::VAR_DESCRIPTION => 'The is private on/off switch.',
+          self::VAR_DEFAULT_VALUE => 'false',
         ),
         self::PUBLIC_ASSIGN => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
-          self::VAR_DESCRIPTION => 'The is public assign on/off switch.',
-        ),
-        self::IS_UNAPPROPRIATE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
-          self::VAR_DESCRIPTION => 'The is unappropriate assign on/off switch.',
+          self::VAR_DEFAULT_VALUE => 'false',
         ),
       ),
     );
@@ -530,9 +526,7 @@ class mediamosa_rest_call_collection_create extends mediamosa_rest_call {
     $app_id = reset($a_app_ids);
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
 
-    if (!$is_app_admin) {
-      $this->unset_param(self::IS_UNAPPROPRIATE);
-    }
+    $this->unset_param(self::IS_UNAPPROPRIATE);
 
     // Test webservice.
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $a_app_ids);
@@ -547,10 +541,9 @@ class mediamosa_rest_call_collection_create extends mediamosa_rest_call {
     $category = $this->get_param_value(self::CATEGORY);
     $isprivate = $this->get_param_value(self::ISPRIVATE);
     $public_assign = $this->get_param_value(self::PUBLIC_ASSIGN);
-    $is_unappropriate = $this->get_param_value(self::IS_UNAPPROPRIATE);
 
     // Now create the collection.
-    $coll_id = mediamosa_collection::create($app_id, $user_id, $group_id, $private, $public, $category, $isprivate, $public_assign, $is_unappropriate);
+    $coll_id = mediamosa_collection::create($app_id, $user_id, $group_id, $private, $public, $category, $isprivate, $public_assign);
 
     // Unique ID to response.
     $o_mediamosa->add_item(array(mediamosa_collection_db::ID => $coll_id));
@@ -592,7 +585,7 @@ class mediamosa_rest_call_collection_update extends mediamosa_rest_call {
         ),
         self::USER_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
-          self::VAR_DESCRIPTION => 'The user ID.',
+          self::VAR_DESCRIPTION => 'The user ID, must match the owner of the collection, otherwise the update will fail.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::TITLE => array(
@@ -605,7 +598,7 @@ class mediamosa_rest_call_collection_update extends mediamosa_rest_call {
         ),
         self::OWNER_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
-          self::VAR_DESCRIPTION => 'The owner ID.',
+          self::VAR_DESCRIPTION => 'An user who is the current owner can reassign a new owner; after changing the owner, the old owner has no rights to modify the collection.',
         ),
         self::GROUP_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
@@ -613,33 +606,37 @@ class mediamosa_rest_call_collection_update extends mediamosa_rest_call {
         ),
         self::PRIVATE_ => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
-          self::VAR_DESCRIPTION => 'The private on/off switch.',
+          self::VAR_DESCRIPTION => 'Used to identify private collections, use [GET] /collection?private=true to get these collections.',
+          self::VAR_DEFAULT_VALUE => 'false',
         ),
         self::PUBLIC_ => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
-          self::VAR_DESCRIPTION => 'The public on/off switch.',
+          self::VAR_DESCRIPTION => 'Used to identify public collections, use [GET] /collection?public=true to get these collections.',
+          self::VAR_DEFAULT_VALUE => 'true',
         ),
         self::CATEGORY => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
-          self::VAR_DESCRIPTION => 'The category on/off switch.',
+          self::VAR_DESCRIPTION => 'Used to identify main category collections, use [GET] /collection?category=true to get these collections.',
+          self::VAR_DEFAULT_VALUE => 'false',
         ),
         self::ISPRIVATE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
-          self::VAR_DESCRIPTION => 'The is private on/off switch.',
+          self::VAR_DEFAULT_VALUE => 'false',
         ),
         self::PUBLIC_ASSIGN => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
-          self::VAR_DESCRIPTION => 'The is public assign on/off switch.',
+          self::VAR_DEFAULT_VALUE => 'false',
         ),
         self::IS_UNAPPROPRIATE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
-          self::VAR_DESCRIPTION => 'The is unappropriate assign on/off switch.',
+          self::VAR_DESCRIPTION => 'A field to flag the collection as inappropriate. Only the is_app_admin is allowed to set this parameter. When set, the collection will not be shown except to the user and the is_app_admin. It does not affect assets belonging to the collection.',
+          self::VAR_DEFAULT_VALUE => 'false',
         ),
       ),
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_app_admin($a_var_setup);
   }
 
   public function do_call() {
@@ -754,10 +751,13 @@ class mediamosa_rest_call_collection_delete extends mediamosa_rest_call {
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::DELETE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
-          self::VAR_DESCRIPTION => 'Delete mode.',
+          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_DESCRIPTION => 'Delete mode. Use this parameter with value \'cascade\' to delete *all* of the underlying items: assets with metadata, mediafiles, stills.
+
+The collection is deleted only if all underlying assets successfully removed.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
           self::VAR_ALLOWED_VALUES => array('', 'cascade'),
+          self::VAR_DEFAULT_VALUE => 'false',
         ),
       ),
     );

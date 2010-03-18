@@ -36,9 +36,26 @@ function mediamosa_maintenance_browse_restcall_form() {
 
   // Call the REST call hook to get the registered REST calls.
   $rest_calls = module_invoke_all('mediamosa_register_rest_call');
+
+  // skip internal calls.
+  foreach ($rest_calls as $key => $value) {
+    if ((isset($value['POST'])) && isset($value['POST']['access']) && ($value['POST']['access'] == 1)) {
+      unset($rest_calls[$key]['POST']);
+    }
+    if ((isset($value['POST'])) && isset($value['POST']['status']) && ($value['POST']['status'] == 'deprecated')) {
+      unset($rest_calls[$key]['POST']);
+    }
+    if ((isset($value['GET'])) && isset($value['GET']['access']) && ($value['GET']['access'] == 1)) {
+      unset($rest_calls[$key]['GET']);
+    }
+    if ((isset($value['GET'])) && isset($value['GET']['status']) && ($value['GET']['status'] == 'deprecated')) {
+      unset($rest_calls[$key]['GET']);
+    }
+  }
+
   ksort($rest_calls);
 
-  $item_limit = 24;
+  $item_limit = 128;
   $item_count_total = count($rest_calls);
   $page = isset($_GET['page']) ? (int)$_GET['page'] : 0;
   $offset = $page * $item_limit;
@@ -84,6 +101,10 @@ function mediamosa_maintenance_browse_restcall_form() {
 
   $form['pager_bottom'] = array(
     '#markup' => _mediamosa_maintenance_browse_pager($page, $item_count_total, $item_limit),
+  );
+
+  $form['total'] = array(
+    '#markup' => "total found: $item_count_total",
   );
 
   return $form;
@@ -140,7 +161,7 @@ function mediamosa_maintenance_browse_restcall_details($uri, $method) {
   );
 
   // Show the title and description
-  $contents = '<h3>' . $o_rest_call->title . '</h3>';
+  $contents = '<h2>' . $o_rest_call->title . '</h2>';
 
   // @todo: find a better text2html
   $contents .= '<p>' . str_replace("\n\n", "</p>\n<br>\n<p>", $o_rest_call->description) . '</p>';
@@ -218,12 +239,21 @@ function mediamosa_maintenance_browse_restcall_details($uri, $method) {
   $contents .= theme('table', $header, $rows);
 
   $contents .= '<h3>' . t('Response fields') . '</h3>';
+  $header = array(
+    array('data' => t('Field')),
+    array('data' => t('Description')),
+  );
+  $rows = array();
+  foreach ($o_rest_call->response_fields as $key => $value) {
+    $rows[] = array($key, $value);
+  }
+  $contents .= theme('table', $header, $rows);
 
   $contents .= '<h3>' . t('Example Request') . '</h3>';
   $contents .= '<p>' . str_replace("\n\n", "</p>\n<br>\n<p>", $o_rest_call->example_request) . '</p>';
 
   $contents .= '<h3>' . t('Example response') . '</h3>';
-  $contents .= '<p>' . str_replace("\n\n", "</p>\n<br>\n<code>", $o_rest_call->example_response) . '</code>';
+  $contents .= '<p>' . str_replace("\n\n", "</p>\n<br>\n", nl2br(htmlentities($o_rest_call->example_response))) . '';
 
   return $contents;
 }
