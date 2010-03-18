@@ -135,7 +135,6 @@ function mediamosa_app_update($node) {
  * Implementation of hook_insert().
  */
 function mediamosa_app_insert($node) {
-
   // Get the field names of the table.
   $names = mediamosa_app_db::get_fields();
 
@@ -533,12 +532,7 @@ function mediamosa_app_form($node, &$form_state) {
 /**
  * Implementation of hook_validate().
  */
-function mediamosa_app_validate(&$node) {
-
-  // Some things we cant change.
-  $node->status = 1; // Published
-  $node->sticky = 0;
-  $node->promote = 0;
+function mediamosa_app_validate($node) {
 
   // We need to know if its an update.
   $is_insert = empty($node->nid);

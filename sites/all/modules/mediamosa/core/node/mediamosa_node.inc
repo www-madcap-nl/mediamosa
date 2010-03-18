@@ -72,6 +72,28 @@ class mediamosa_node {
     $form['revision_information']['revision']['#default_value'] = '1';
     $form['revision_information']['log']['#default_value'] = ' ';
 
+    // Remove the options block.
+    unset($form['options']);
+
+    // Add hidden values.
+    $form['status'] = array(
+      '#type' => 'hidden',
+      '#value' => 1,
+    );
+
+    $form['sticky'] = array(
+      '#type' => 'hidden',
+      '#value' => 0,
+    );
+
+    $form['promote'] = array(
+      '#type' => 'hidden',
+      '#value' => 0,
+    );
+
+    // Make revision top item.
+    $form['revision_information']['#weight'] = -100;
+
     // Remove the preview button for now (it doesn't work well atm).
     unset($form['actions']['preview']);
   }

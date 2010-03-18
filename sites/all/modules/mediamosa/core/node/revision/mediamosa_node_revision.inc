@@ -146,6 +146,11 @@ class mediamosa_node_revision {
       ->execute()
       ->fetchAssoc();
 
+    // Now update with the updated fields so we change the last revision.
+    foreach ($fields as $name => $value) {
+      $revision[$name] = $value;
+    }
+
     // Insert revision.
     mediamosa_node_revision::insert($node->nid, $node->vid, $revision);
   }

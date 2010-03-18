@@ -223,7 +223,7 @@
     }
 
     // Log it.
-    self::log('run_simple_tests() overrun.', array(), WATCHDOG_EMERG);
+    self::log('run_simple_tests() overrun.', array(), WATCHDOG_EMERGENCY);
 
     // Set end point run of runned tests.
     $a_test_results['#ended_at'] = mediamosa::utc_current_timestamp_now(TRUE);

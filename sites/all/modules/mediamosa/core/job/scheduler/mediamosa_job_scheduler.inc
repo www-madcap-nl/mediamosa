@@ -396,7 +396,7 @@ class mediamosa_job_scheduler {
       $command = '';
       $owner = '';
       $app_id = 0;
-      self::log('A wmv job (@job_id) without transcode_job!', array('@job_id' => $job_id), WATCHDOG_EMERG);
+      self::log('A wmv job (@job_id) without transcode_job!', array('@job_id' => $job_id), WATCHDOG_EMERGENCY);
     }
     else {
       $command = $a_job_ext[mediamosa_job_transcode_db::COMMAND];

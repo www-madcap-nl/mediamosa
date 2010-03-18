@@ -42,6 +42,7 @@ require_once 'core/app/mediamosa_app.install.inc';
 require_once 'core/asset/mediamosa_asset.install.inc';
 require_once 'core/collection/mediamosa_collection.install.inc';
 require_once 'core/ftp_batch/mediamosa_ftp_batch.install.inc';
+require_once 'core/ftp_user/mediamosa_ftp_user.install.inc';
 require_once 'core/job/mediamosa_job.install.inc';
 require_once 'core/node/mediamosa_node.install.inc';
 require_once 'core/server/mediamosa_server.install.inc';
@@ -97,16 +98,22 @@ function mediamosa_install() {
 
   // Install the statistics db.
   _mediamosa_statistics_install();
+
+  // Install the ftp_user table.
+  _mediamosa_ftp_user_install();
 }
 
 /**
  * Implement hook_unstall().
  */
 function mediamosa_uninstall() {
+  // Remove the ftp_user table.
+  _mediamosa_ftp_user_uninstall();
+
   // Remove the statistics db.
   _mediamosa_statistics_uninstall();
 
-  // IRemove the node db.
+  // Remove the node db.
   _mediamosa_node_uninstall();
 
   // Remove the server db.

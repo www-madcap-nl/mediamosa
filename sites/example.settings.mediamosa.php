@@ -24,6 +24,15 @@ $databases['mig_memo_data']['default'] = array(
   'host' => 'localhost'
 );
 
+// In case you want to convert vpx_ftp.
+$databases['mig_vpx_ftp']['default'] = array(
+  'driver' => 'mysql',
+  'database' => 'vpx_ftp',
+  'username' => 'memo',
+  'password' => 'memo',
+  'host' => 'localhost'
+);
+
 /**
  * Default setting, TRUE / FALSE for enabling / disabling the
  * APP REST interface. Putting it on FALSE will disable the interface

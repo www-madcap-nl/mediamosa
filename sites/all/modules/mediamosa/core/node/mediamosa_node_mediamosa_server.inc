@@ -40,16 +40,83 @@ function mediamosa_server_load(&$nodes) {
 }
 
 /**
+ * Helper to trim array.
+ * @param string $item1
+ */
+function _mediamosa_server_trim(&$item1) {
+  $item1 = trim($item1);
+}
+
+/**
+ * Save the extra tools and containers.
+ *
+ * @param object $node
+ */
+function _process_server_node(&$node) {
+  if (isset($node->{mediamosa_server_db::TOOLS})) {
+    $tools = explode('|', $node->{mediamosa_server_db::TOOLS});
+    array_walk($tools, '_mediamosa_server_trim');
+    $tools = array_unique($tools);
+
+    // to fix spaces, doubles etc.
+    $node->{mediamosa_server_db::TOOLS} = implode('|', $tools);
+
+    // Remove all first.
+    mediamosa_db::db_delete(mediamosa_server_tool_db::TABLE_NAME)
+      ->condition(mediamosa_server_tool_db::NID, $node->nid)
+      ->execute();
+
+    foreach ($tools as $tool) {
+      mediamosa_db::db_insert(mediamosa_server_tool_db::TABLE_NAME)
+        ->fields(array(
+          mediamosa_server_tool_db::NID => $node->nid,
+          mediamosa_server_tool_db::TOOL => substr($tool, 0, mediamosa_server_tool_db::TOOL_LENGTH)
+        ))
+        ->execute();
+    }
+  }
+
+  if (isset($node->{mediamosa_server_db::CONTAINERS})) {
+    $containers = explode('|', $node->{mediamosa_server_db::CONTAINERS});
+    array_walk($containers, '_mediamosa_server_trim');
+    $containers = array_unique($containers);
+
+    // to fix spaces, doubles etc.
+    $node->{mediamosa_server_db::CONTAINERS} = implode('|', $containers);
+
+    // Remove all first.
+    mediamosa_db::db_delete(mediamosa_server_streaming_container_db::TABLE_NAME)
+      ->condition(mediamosa_server_streaming_container_db::NID, $node->nid)
+      ->execute();
+
+    foreach ($containers as $container) {
+      $container = trim($container);
+      mediamosa_db::db_insert(mediamosa_server_tool_db::TABLE_NAME)
+        ->fields(array(
+          mediamosa_server_streaming_container_db::NID => $node->nid,
+          mediamosa_server_streaming_container_db::CONTAINER => substr($container, 0, mediamosa_server_streaming_container_db::CONTAINER)
+        ))
+        ->execute();
+    }
+  }
+}
+
+/**
  * Implementation of hook_update().
  */
 function mediamosa_server_update($node) {
-
   if ($node->revision) {
     mediamosa_server_insert($node);
   }
   else {
     // Get the field names of the table.
     $names = mediamosa_server_db::get_fields();
+
+    // Copy title.
+    $node->{mediamosa_server_db::SERVER_NAME} = $node->title;
+
+    // Save tools, containers.
+    _process_server_node($node);
 
     // Update.
     mediamosa_node_revision::update_ex($node, mediamosa_server_db::TABLE_NAME, $names);
@@ -59,45 +126,19 @@ function mediamosa_server_update($node) {
 /**
  * Implementation of hook_insert().
  */
-function mediamosa_server_insert($node) {
+function mediamosa_server_insert(&$node) {
 
   // Get the field names of the table.
   $names = mediamosa_server_db::get_fields();
 
+  // Copy title.
+  $node->{mediamosa_server_db::SERVER_NAME} = $node->title;
+
+  // Save tools, containers.
+  _process_server_node($node);
+
   // Insert revision.
   mediamosa_node_revision::insert_ex($node, mediamosa_server_db::TABLE_NAME, $names);
-
-  // Check type.
-  switch ($node->server_type) {
-    case mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR:
-      if (isset($node->{mediamosa_server_tool_db::TABLE_NAME})) {
-        foreach ($node->{mediamosa_server_tool_db::TABLE_NAME} as $a_tool) {
-          mediamosa_db::db_insert(mediamosa_server_tool_db::TABLE_NAME)
-            ->fields(array(
-              'nid' => $node->nid,
-              mediamosa_server_tool_db::TOOL => $a_tool[mediamosa_server_tool_db::TOOL]
-            ))
-            ->execute();
-        }
-      }
-      break;
-
-    case mediamosa_server_db::SERVER_TYPE_STREAMING:
-      if (isset($node->{mediamosa_server_streaming_container_db::TABLE_NAME})) {
-        foreach ($node->{mediamosa_server_streaming_container_db::TABLE_NAME} as $a_streaming) {
-          mediamosa_db::db_insert(mediamosa_server_streaming_container_db::TABLE_NAME)
-            ->fields(array(
-              'nid' => $node->nid,
-              mediamosa_server_streaming_container_db::CONTAINER => $a_streaming[mediamosa_server_streaming_container_db::CONTAINER]
-            ))
-            ->execute();
-        }
-      }
-      break;
-
-    default:
-      break;
-  }
 }
 
 /**
@@ -130,16 +171,54 @@ function mediamosa_server_view($node, $view_mode = 'full') {
     array(t('Server type'), $node->server_type),
   );
 
-  foreach (array(
-    'uri' => t('URI'),
-    'uri_upload_progress' => t('URI upload progress'),
-    'containers' => t('Containers'),
-    'server_name' => t('Server name'),
-    'slots' => t('Slots'),
-    'tools' => t('Tools'),
-  ) as $key => $title) {
+  // The fields we want to show.
+  $fields = array(
+    mediamosa_server_db::URI => t('URI / URL'),
+    mediamosa_server_db::URI_UPLOAD_PROGRESS => t('URI upload progress'),
+    mediamosa_server_db::CONTAINERS => t('Containers'),
+    mediamosa_server_db::SLOTS => t('Slots'),
+    mediamosa_server_db::TOOLS => t('Tools'),
+    mediamosa_server_db::OBJECT_CODE => t('Object Code'),
+  );
+
+  switch ($node->{mediamosa_server_db::SERVER_TYPE}) {
+    default:
+      assert(0); // so we know.
+    case mediamosa_server_db::SERVER_TYPE_DOWNLOAD:
+    case mediamosa_server_db::SERVER_TYPE_STILL:
+      unset($fields[mediamosa_server_db::URI_UPLOAD_PROGRESS]);
+      unset($fields[mediamosa_server_db::CONTAINERS]);
+      unset($fields[mediamosa_server_db::OBJECT_CODE]);
+      unset($fields[mediamosa_server_db::SLOTS]);
+      unset($fields[mediamosa_server_db::TOOLS]);
+      break;
+    case mediamosa_server_db::SERVER_TYPE_STREAMING:
+      unset($fields[mediamosa_server_db::URI_UPLOAD_PROGRESS]);
+      unset($fields[mediamosa_server_db::SLOTS]);
+      unset($fields[mediamosa_server_db::TOOLS]);
+      break;
+    case mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR:
+      unset($fields[mediamosa_server_db::URI_UPLOAD_PROGRESS]);
+      unset($fields[mediamosa_server_db::CONTAINERS]);
+      unset($fields[mediamosa_server_db::OBJECT_CODE]);
+      break;
+    case mediamosa_server_db::SERVER_TYPE_UPLOAD:
+      unset($fields[mediamosa_server_db::URI]);
+      unset($fields[mediamosa_server_db::CONTAINERS]);
+      unset($fields[mediamosa_server_db::OBJECT_CODE]);
+      unset($fields[mediamosa_server_db::SLOTS]);
+      unset($fields[mediamosa_server_db::TOOLS]);
+      break;
+  }
+
+  foreach ($fields as $key => $title) {
     if (!is_null($node->{$key})) {
-      $rows[] = array($title, check_plain($node->{$key}));
+      if ($key == mediamosa_server_db::OBJECT_CODE) {
+        $rows[] = array($title, '<pre>' . check_plain($node->{$key}) . '</pre>');
+      }
+      else {
+        $rows[] = array($title, check_plain($node->{$key}));
+      }
     }
   }
 
@@ -158,7 +237,6 @@ function mediamosa_server_view($node, $view_mode = 'full') {
  * Implementation of hook_form().
  */
 function mediamosa_server_form($node, &$form_state) {
-
   // Take type from node if available.
   if (isset($node->{mediamosa_server_db::SERVER_TYPE})) {
     $server_type = $node->{mediamosa_server_db::SERVER_TYPE};
@@ -169,36 +247,46 @@ function mediamosa_server_form($node, &$form_state) {
     $server_type = arg(5);
   }
 
-  // Default server status options.
-  $server_status_options =  array(mediamosa_server_db::SERVER_STATUS_ON => t('On'), mediamosa_server_db::SERVER_STATUS_OFF => t('Off'));
+  $is_insert = empty($node->nid);
 
+  // Default server status options.
+  $server_status_options =  array(
+    mediamosa_server_db::SERVER_STATUS_ON => t('On'),
+    mediamosa_server_db::SERVER_STATUS_OFF => t('Off')
+  );
 
   switch ($server_type) {
     default:
+      assert(0); // so we know.
     case mediamosa_server_db::SERVER_TYPE_DOWNLOAD:
-      $title = t('New download server');
+      $title = $is_insert ? t('New download server') : t("Editing download server '@server_name'.", array('@server_name' => $node->title));
       $description = t('A download server handles download requests of mediafiles.');
       break;
     case mediamosa_server_db::SERVER_TYPE_STILL:
-      $title = t('New still server');
+      $title = $is_insert ? t('New still server') : t("Editing still server '@server_name'.", array('@server_name' => $node->title));
       $description = t('A still server serves and generates stills from mediafiles.');
       break;
     case mediamosa_server_db::SERVER_TYPE_STREAMING:
-      $title = t('New streaming server');
+      $title = $is_insert ? t('New streaming server') : t("Editing streaming server '@server_name'.", array('@server_name' => $node->title));
       $description = t('A streaming server will stream mediafiles for you.');
       break;
     case mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR:
-      $title = t('New processor server');
+      $title = $is_insert ? t('New processor server') : t("Editing processor server '@server_name'.", array('@server_name' => $node->title));
       $description = t('A processor server processes jobs like still generation, transcoding of mediafiles.');
       $server_status_options =  array(mediamosa_server_db::SERVER_STATUS_ON => t('On'), mediamosa_server_db::SERVER_STATUS_CLOSE => t('Close'), mediamosa_server_db::SERVER_STATUS_OFF => t('Off'));
       break;
     case mediamosa_server_db::SERVER_TYPE_UPLOAD:
-      $title = t('New upload server');
+      $title = $is_insert ? t('New upload server') : t("Editing upload server '@server_name'.", array('@server_name' => $node->title));
       $description = t('A upload server allows users to upload files to MediaMosa.');
       break;
   }
 
   $form = array();
+
+  $form[mediamosa_server_db::SERVER_TYPE] = array(
+    '#type' => 'hidden',
+    '#value' => mediamosa_node::default_value(mediamosa_server_db::SERVER_TYPE, $node),
+  );
 
   $form['new_server'] = array(
     '#type' => 'fieldset',
@@ -238,13 +326,13 @@ function mediamosa_server_form($node, &$form_state) {
   }
 
   if (in_array($server_type, array(mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR))) {
-    $form['new_server'][mediamosa_server_db::IP_ADDRESS] = array(
+    $form['new_server'][mediamosa_server_db::URI] = array(
       '#type' => 'textfield',
-      '#title' => t('IP address'),
-      '#description' => t('IP address of server.'),
+      '#title' => t('URI'),
+      '#description' => t('URI or URL server.'),
       '#required' => TRUE,
-      '#default_value' => mediamosa_node::default_value(mediamosa_server_db::IP_ADDRESS, $node),
-      '#maxlength' => mediamosa_server_db::IP_ADDRESS_LENGTH,
+      '#default_value' => mediamosa_node::default_value(mediamosa_server_db::URI, $node),
+      '#maxlength' => mediamosa_server_db::URI_LENGTH,
     );
 
     $form['new_server'][mediamosa_server_db::SLOTS] = array(
@@ -290,16 +378,6 @@ function mediamosa_server_form($node, &$form_state) {
       '#default_value' => mediamosa_node::default_value(mediamosa_server_db::OBJECT_CODE, $node),
     );
   }
-  else {
-    $form['new_server'][mediamosa_server_db::CONTAINERS] = array(
-      '#type' => 'hidden',
-      '#value' => '',
-    );
-    $form['new_server'][mediamosa_server_db::OBJECT_CODE] = array(
-      '#type' => 'hidden',
-      '#value' => '',
-    );
-  }
 
   $form['new_server'][mediamosa_server_db::SERVER_STATUS] = array(
     '#type' => 'select',
@@ -313,4 +391,10 @@ function mediamosa_server_form($node, &$form_state) {
   $form['#redirect'] = 'admin/mediamosa/config/server';
 
   return $form;
+}
+
+/**
+ * Implementation of hook_validate().
+ */
+function mediamosa_server_validate($node) {
 }

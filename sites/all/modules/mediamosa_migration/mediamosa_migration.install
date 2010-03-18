@@ -53,8 +53,10 @@ $databases['mig_memo_data']['default'] = array(
 );
  */
 
+// TODO: put in settings
 define('MIG_MEMO', 'mig_memo');
 define('MIG_MEMO_DATA', 'mig_memo_data');
+define('MIG_VPX_FTP', 'mig_vpx_ftp');
 
 /**
  * Get the database name of the mediamosa drupal database.
@@ -74,6 +76,16 @@ function _mediamosa_migration_get_memo_db() {
 function _mediamosa_migration_get_memo_data_db() {
   global $databases;
   return $databases[MIG_MEMO_DATA]['default']['database'];
+}
+
+/**
+ * Get the database name of the vpx_ftp data database.
+ *
+ * @return string
+ */
+function _mediamosa_migration_get_vpx_data_db() {
+  global $databases;
+  return $databases[MIG_VPX_FTP]['default']['database'];
 }
 
 /**
@@ -226,6 +238,8 @@ function mediamosa_migration_requirements($phase) {
  * Implement hook_install().
  */
 function mediamosa_migration_install() {
+  // Optional; might not be in every installation.
+  _mediamosa_migration_vpx_ftp();
 
   // error -> mediamosa_error.
   _mediamosa_migration_error();
@@ -295,7 +309,7 @@ function mediamosa_migration_install() {
   // statistics_*
   _mediamosa_migration_statistics();
 
-  // <Migrate this setting.
+  // Migrate this setting.
   $curlproxy_http = variable_get('vpx_curlproxy_http', '');
   if ($curlproxy_http != '') {
     variable_set('mediamosa_curlproxy_http', $curlproxy_http);
@@ -2078,23 +2092,6 @@ function _mediamosa_migration_create_server_nodes() {
       $node->{mediamosa_server_db::TOOLS} = (isset($row['tools']) ? $row['tools'] : NULL);
       $node->{mediamosa_server_db::URI_UPLOAD_PROGRESS} = (isset($row['uri_uploadprogress']) ? $row['uri_uploadprogress'] : NULL);
 
-      switch ($type) {
-        case mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR:
-          foreach ($a_transcoding_server_tool as $o_tool) {
-            if ($o_tool->transcoding_server_id == $server_id) {
-              $node->{mediamosa_server_tool_db::TABLE_NAME}[] = array(mediamosa_server_tool_db::TOOL => $o_tool->{mediamosa_server_tool_db::TOOL});
-            }
-          }
-          break;
-        case mediamosa_server_db::SERVER_TYPE_STREAMING:
-          foreach ($a_streaming_server_containers as $o_container) {
-            if ($o_container->streaming_server_id == $server_id) {
-              $node->{mediamosa_server_streaming_container_db::TABLE_NAME}[] = array(mediamosa_server_streaming_container_db::CONTAINER => $o_container->{mediamosa_server_streaming_container_db::CONTAINER});
-            }
-          }
-          break;
-      }
-
       node_save($node);
     }
   }
@@ -2347,6 +2344,69 @@ function _mediamosa_migration_statistics() {
     ))
   );
 
+  // Back to old session mode.
+  db_query(strtr("SET SESSION sql_mode = '#old_mode'", array('#old_mode' => $old_mode)));
+}
+
+function _mediamosa_migration_vpx_ftp() {
+
+  // If it doesn't exists, we dont care.
+  if (!_mediamosa_db_table_exists('ftpuser', MIG_VPX_FTP)) {
+    return;
+  }
+
+  // Get the database name.
+  $db_name = _mediamosa_migration_get_vpx_data_db();
+
+  // Get the current mode, which might be empty;
+  $old_mode = db_query('SELECT @@SESSION.sql_mode')->fetchField();
+
+  // Turn off problems with empty dates.
+  db_query("SET SESSION sql_mode = 'ALLOW_INVALID_DATES'");
+
+  // Must be empty.
+  db_truncate(mediamosa_ftp_user_db::TABLE_NAME)->execute();
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_ftp_user}
+      (
+        id,
+        app_id,
+        userid,
+        passwd,
+        uid,
+        gid,
+        homedir,
+        shell,
+        active,
+        count,
+        accessed,
+        modified
+      ) (SELECT
+        id,
+        eua_id,
+        userid,
+        passwd,
+        uid,
+        gid,
+        homedir,
+        shell,
+        active,
+        count,
+        accessed,
+        modified
+        FROM #db_name.{ftpuser} ORDER BY id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
 
   // Back to old session mode.
   db_query(strtr("SET SESSION sql_mode = '#old_mode'", array('#old_mode' => $old_mode)));

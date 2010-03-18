@@ -142,7 +142,7 @@ s1.write('mediaspace');
     $node->{mediamosa_server_db::URI} = $a_default_server[4];
     $node->{mediamosa_server_db::CONTAINERS} = $a_default_server[5];
     $node->{mediamosa_server_db::OBJECT_CODE} = $a_default_server[6];
-    $node->{mediamosa_server_db::SERVER_NAME} = $a_default_server[7];
+    $node->{mediamosa_server_db::DESCRIPTION} = $node->{mediamosa_server_db::SERVER_NAME} = $a_default_server[7];
     $node->{mediamosa_server_db::SLOTS} = (int)$a_default_server[8];
     $node->{mediamosa_server_db::TOOLS} = $a_default_server[9];
     $node->{mediamosa_server_db::URI_UPLOAD_PROGRESS} = $a_default_server[10];

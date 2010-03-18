@@ -51,8 +51,6 @@ class mediamosa_server_db {
   const OBJECT_CODE = 'object_code';
   const SERVER_NAME = 'server_name';
   const SERVER_NAME_LENGTH = 255;
-  const IP_ADDRESS = 'ip_address';
-  const IP_ADDRESS_LENGTH = 255;
   const SLOTS = 'slots';
   const TOOLS = 'tools';
   const TOOLS_LENGTH = 255;

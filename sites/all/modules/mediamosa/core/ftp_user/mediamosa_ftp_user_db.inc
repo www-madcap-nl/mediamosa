@@ -31,5 +31,22 @@
 class mediamosa_ftp_user_db {
   // ------------------------------------------------------------------ Consts.
   // Table name;
-  const TABLE_NAME = 'ftpuser';
+  const TABLE_NAME = 'mediamosa_ftp_user';
+
+  const ID = 'id';
+  const APP_ID = 'app_id'; // 1.x eua_id
+  const USERID = 'userid';
+  const USERID_LENGTH = 32;
+  const PASSWD = 'passwd';
+  const PASSWD_LENGTH = 255;
+  const UID = 'uid';
+  const GID = 'gid';
+  const HOMEDIR = 'homedir';
+  const HOMEDIR_LENGTH = 255;
+  const SHELL = 'shell';
+  const SHELL_LENGTH = 16;
+  const ACTIVE = 'active';
+  const COUNT = 'count';
+  const ACCESSED = 'accessed';
+  const MODIFIED = 'modified';
 }
