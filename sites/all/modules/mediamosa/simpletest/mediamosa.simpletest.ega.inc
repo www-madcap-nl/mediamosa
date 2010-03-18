@@ -145,10 +145,30 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     parent::tearDown();
   }
 
+  /*
+   * Delete mediafile_id from clean up.
+   * @param $mediafile_id
+   */
   protected function deleteFromCleanUp($mediafile_id) {
     // Delete the unnecessary mediafile_id from the clean up array.
     if (($key = array_search($mediafile_id, $this->a_mediafiles_cleanup)) !== FALSE) {
       unset($this->a_mediafiles_cleanup[$key]);
+    }
+  }
+
+  /**
+   * Add mediafile_id to clean up.
+   * @param $mediafile_id
+   */
+  protected function addToCleanUp($mediafile_id) {
+    if (($key = array_search($mediafile_id, $this->a_mediafiles_cleanup)) === FALSE) {
+      // Check whether the file exists or not.
+      $this->assertTrue(
+        mediamosa_io::file_exists(mediamosa_configuration_storage::mediafile_id_filename_get($mediafile_id)),
+        T('Mediafile exists (mediafile_id = @mediafile_id)', array('@mediafile_id' => $mediafile_id))
+      );
+      // Add to clean up.
+      $this->a_mediafiles_cleanup[] = $mediafile_id;
     }
   }
 

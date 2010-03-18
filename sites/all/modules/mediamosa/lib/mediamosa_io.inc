@@ -164,6 +164,15 @@ class mediamosa_io {
   }
 
   /**
+   * Test if file is exists.
+   *
+   * @param string $filename
+   */
+  static public function file_exists($filename) {
+    return file_exists($filename);
+  }
+
+  /**
    * Test if file is a symbolic link.
    *
    * @param string $filename

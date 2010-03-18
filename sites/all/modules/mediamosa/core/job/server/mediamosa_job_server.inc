@@ -324,10 +324,12 @@ class mediamosa_job_server {
       return;
     }
 
-    // op basis van het type job wordt een script gestart
+    // Based on jobtype we execute the job.
     $execution_string = "";
     switch ($job_type) {
       case mediamosa_job_server_db::JOB_TYPE_TRANSCODE:
+        // Make sure the tmp transcode directory exists.
+        mediamosa_io::mkdir(mediamosa_configuration_storage::transcode_file_location_get(''));
         $execution_string = self::get_transcode_string($jobserver_job_id, $mediafile_id_src);
         break;
 
@@ -351,7 +353,7 @@ class mediamosa_job_server {
     // Now execute.
     if ($job_type == mediamosa_job_server_db::JOB_TYPE_ANALYSE) {
       $a_output = array();
-      $s_output = exec($execution_string . ' 2>&1', $a_output);
+      $s_output = mediamosa_io::exec($execution_string . ' 2>&1', $a_output);
 
       $link_asset = self::get_asset_link($job_id);
       self::log('Job @job_type (Job ID: @job_id) returned output: @s_output - @a_output<br /><br />@link',
@@ -1265,7 +1267,7 @@ class mediamosa_job_server {
   static public function delete_job($job_id, $killjob = FALSE) {
 
     // Get the job.
-    $a_jobserver_job = mediamosa_job_server::get($job_id);
+    $a_jobserver_job = self::get_with_jobid($job_id);
 
     if (empty($a_jobserver_job)) {
       return;
