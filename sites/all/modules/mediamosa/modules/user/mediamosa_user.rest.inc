@@ -165,13 +165,13 @@ class mediamosa_rest_call_user_create extends mediamosa_rest_call {
         ),
         self::GROUP_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
-          self::VAR_DESCRIPTION => 'Name of the group where the user will be.',
+          self::VAR_DESCRIPTION => 'Name of the group the user belongs to. A user can only be member of 1 group, and the group must exist (see /group/create [POST])',
           self::VAR_RANGE_END => mediamosa_user_db::GROUP_ID_LENGTH,
           self::VAR_DEFAULT_VALUE => '',
         ),
         self::QUOTUM => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
-          self::VAR_DESCRIPTION => 'Disk space of the user in bytes.',
+          self::VAR_DESCRIPTION => 'Maximum disk space of the user in bytes. A quotum of 0 means unlimited diskspace. Quota is is enforced with a soft-quota, a user is allowed to exceed the maximum, but the next action is rejected.',
         ),
       )
     );

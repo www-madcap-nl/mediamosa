@@ -36,9 +36,26 @@ function mediamosa_maintenance_browse_restcall_form() {
 
   // Call the REST call hook to get the registered REST calls.
   $rest_calls = module_invoke_all('mediamosa_register_rest_call');
+
+  // skip internal calls.
+  foreach ($rest_calls as $key => $value) {
+    if ((isset($value['POST'])) && isset($value['POST']['access']) && ($value['POST']['access'] == 1)) {
+      unset($rest_calls[$key]['POST']);
+    }
+    if ((isset($value['POST'])) && isset($value['POST']['status']) && ($value['POST']['status'] == 'deprecated')) {
+      unset($rest_calls[$key]['POST']);
+    }
+    if ((isset($value['GET'])) && isset($value['GET']['access']) && ($value['GET']['access'] == 1)) {
+      unset($rest_calls[$key]['GET']);
+    }
+    if ((isset($value['GET'])) && isset($value['GET']['status']) && ($value['GET']['status'] == 'deprecated')) {
+      unset($rest_calls[$key]['GET']);
+    }
+  }
+
   ksort($rest_calls);
 
-  $item_limit = 12;
+  $item_limit = 128;
   $item_count_total = count($rest_calls);
   $page = isset($_GET['page']) ? (int)$_GET['page'] : 0;
   $offset = $page * $item_limit;
@@ -86,6 +103,10 @@ function mediamosa_maintenance_browse_restcall_form() {
     '#markup' => _mediamosa_maintenance_browse_pager($page, $item_count_total, $item_limit),
   );
 
+  $form['total'] = array(
+    '#markup' => "total found: $item_count_total",
+  );
+
   return $form;
 }
 
@@ -96,6 +117,8 @@ function mediamosa_maintenance_browse_restcall_details($uri, $method) {
 
   $uri = str_replace('-', '/', $uri);
   $rest_calls = module_invoke_all('mediamosa_register_rest_call');
+  $rest_calls_doc = module_invoke_all('mediamosa_register_rest_call_doc');
+  $rest_calls = array_merge_recursive($rest_calls, $rest_calls_doc);
 
   if (!isset($rest_calls[$uri][$method])) {
     return t('Rest Call not found.');
@@ -128,18 +151,6 @@ function mediamosa_maintenance_browse_restcall_details($uri, $method) {
   // Get the var setup for this call.
   $a_var_setup = $o_rest_call->get_var_setup();
 
-  $header = array(
-    array('data' => t('Parameter')),
-    array('data' => t('Type')),
-    array('data' => t('Description')),
-    array('data' => t('Required')),
-    array('data' => t('Max. length')),
-  );
-
-  // Sort on param.
-  ksort($a_var_setup[mediamosa_rest_call::VARS]);
-  $form = $rows = array();
-
   drupal_set_title(
     t('Viewing details rest call URI @uri, method [@method]',
       array(
@@ -149,6 +160,46 @@ function mediamosa_maintenance_browse_restcall_details($uri, $method) {
     )
   );
 
+  // Show the title and description
+  $contents = '<h2>' . $o_rest_call->title . '</h2>';
+
+  // @todo: find a better text2html
+  $contents .= '<p>' . str_replace("\n\n", "</p>\n<p>", $o_rest_call->description) . '</p>';
+
+  // Show rest call url.
+  $contents .= '<h3>' . t('Request URL') . '</h3>';
+  $contents .= t('@uri [@method]', array('@uri' => '/' . $uri, '@method' => $method)) . '</p>';
+
+  // Show rest access
+  $contents .= '<h3>' . t('Request Authorization') . '</h3>';
+  if ($o_rest_call->access >= mediamosa_rest_call::ACCESS_AUTHENTICATED) {
+    $contents .= "This call needs EGA authentication.";
+    if (!isset($a_var_setup['vars']['app_id'])) {
+      $contents .= " WARNING! check vars";
+    }
+    unset($a_var_setup['vars']['app_id']);
+  }
+
+  $contents .= '<h3>' . t('Request Parameters') . '</h3>';
+
+  unset($a_var_setup['vars']['app_id']);
+
+  if ((isset($a_var_setup['vars']['is_app_admin'])) && ($a_var_setup['vars']['is_app_admin']['description'] == 'NOT USED.')) {
+    unset($a_var_setup['vars']['is_app_admin']);
+  }
+
+  $header = array(
+    array('data' => t('Parameter')),
+    array('data' => t('Type')),
+    array('data' => t('Description')),
+    array('data' => t('Required')),
+    array('data' => t('Default value')),
+    array('data' => t('Max. length')),
+  );
+
+  // Sort on param.
+  ksort($a_var_setup[mediamosa_rest_call::VARS]);
+  $form = $rows = array();
 
   if (!isset($a_var_setup[mediamosa_rest_call::VARS])) {
     $a_var_setup[mediamosa_rest_call::VARS] = array();
@@ -163,6 +214,7 @@ function mediamosa_maintenance_browse_restcall_details($uri, $method) {
         $a_item[mediamosa_rest_call::VAR_TYPE],
         isset($a_item[mediamosa_rest_call::VAR_DESCRIPTION]) ? $a_item[mediamosa_rest_call::VAR_DESCRIPTION] : '',
         t('Required'),
+        isset($a_item[mediamosa_rest_call::VAR_DEFAULT_VALUE]) ? $a_item[mediamosa_rest_call::VAR_DEFAULT_VALUE] : '',
         '-',
       );
     }
@@ -178,12 +230,32 @@ function mediamosa_maintenance_browse_restcall_details($uri, $method) {
         $a_item[mediamosa_rest_call::VAR_TYPE],
         isset($a_item[mediamosa_rest_call::VAR_DESCRIPTION]) ? $a_item[mediamosa_rest_call::VAR_DESCRIPTION] : '',
         t('Optional'),
+        isset($a_item[mediamosa_rest_call::VAR_DEFAULT_VALUE]) ? $a_item[mediamosa_rest_call::VAR_DEFAULT_VALUE] : '',
         '-',
       );
     }
   }
 
-  $contents = theme('table', array('header' => $header, 'rows' => $rows));
+  $contents .= theme('table', array('header' => $header, 'rows' => $rows));
+
+  if (is_array($o_rest_call->response_fields)) {
+    $contents .= '<h3>' . t('Response fields') . '</h3>';
+    $header = array(
+      array('data' => t('Field')),
+      array('data' => t('Description')),
+    );
+    $rows = array();
+    foreach ($o_rest_call->response_fields as $key => $value) {
+      $rows[] = array($key, $value);
+    }
+    $contents .= theme('table', array('header' => $header, 'rows' => $rows));
+  }
+
+  $contents .= '<h3>' . t('Example Request') . '</h3>';
+  $contents .= '<p>' . str_replace("\n\n", "</p>\n<br>\n<p>", $o_rest_call->example_request) . '</p>';
+
+  $contents .= '<h3>' . t('Example response') . '</h3>';
+  $contents .= '<p>' . nl2br(str_replace(" ", "&nbsp;", htmlentities($o_rest_call->example_response))) . '</p>';
 
   return $contents;
 }

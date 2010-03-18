@@ -189,6 +189,7 @@ class mediamosa_rest_call_job_analyse_mediafile extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
   // Rest vars;
   const MEDIAFILE_ID = 'mediafile_id';
+
   const USER_ID = 'user_id';
   const NO_HINT = 'no_hint';
 
@@ -205,12 +206,12 @@ class mediamosa_rest_call_job_analyse_mediafile extends mediamosa_rest_call {
         ),
         self::USER_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
-          self::VAR_DESCRIPTION => 'The user ID.',
+          self::VAR_DESCRIPTION => 'The user id, must be the owner of the mediafile.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::NO_HINT => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
-          self::VAR_DESCRIPTION => 'No hinting.',
+          self::VAR_DESCRIPTION => 'when true then, regardless of the ega setting, do not add hinting to the mediafile.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
       )

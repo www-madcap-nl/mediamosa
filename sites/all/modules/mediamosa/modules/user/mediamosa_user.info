@@ -20,3 +20,4 @@ files[] = mediamosa_user.test
 files[] = mediamosa_user.quota.test
 files[] = group/mediamosa_user_group.rest.inc
 files[] = favorite/mediamosa_user_favorite.rest.inc
+files[] = favorite/mediamosa_user_favorite.test

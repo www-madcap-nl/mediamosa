@@ -1,0 +1,1814 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+ /**
+  * @file
+  * Unittests for collection modules.
+  *
+  * Original from unittest tickets:
+  * trac_tickets_205.inc
+  * trac_tickets_209.inc
+  * trac_tickets_498.inc
+  * trac_tickets_502.inc
+  * trac_tickets_518.inc
+  * trac_tickets_656.inc
+  * trac_tickets_658.inc
+  * trac_tickets_664.inc
+  * trac_tickets_16576.inc
+  * trac_tickets_16922.inc.
+  */
+class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Collection test',
+      'description' => 'Testing the collection calls.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE,
+    );
+  }
+
+  /**
+   * Implements setUp().
+   */
+  function setUp() {
+    // $this->drupalModuleEnable('mediamosa_collection');
+    parent::setUp();
+  }
+
+  /**
+   * Testing collection basic working (#205).
+   */
+  function testCollectionMediaManagement() {
+
+    // test 1: [POST] collection/create - make empty collection.
+
+    // Parameters collection.
+    $a_parameters = array(
+      mediamosa_rest_call_collection_create::USER_ID => self::SIMPLETEST_USER_ID,
+      mediamosa_rest_call_collection_create::GROUP_ID => self::SIMPLETEST_GROUP_ID,
+    );
+
+    // Do POST call.
+    $response = $this->restCallPost('collection/create', $a_parameters);
+    $this->pass(strtr("Create collection with ID '@id'.", array('@id' => $response['xml']->items->item[0]->coll_id)));
+    $coll_id = $response['xml']->items->item[0]->coll_id;
+
+    // test header request result
+    $request_result = $response['xml']->header->request_result;
+    $this->assertTrue(
+      $request_result == (string) mediamosa_response::SUCCESS,
+      t("Create collection response is succes: @request_result", array('@request_result' => print_r($request_result, TRUE),))
+    );
+    $request_result_id = $response['xml']->header->request_result_id;
+    $this->assertTrue(
+      $request_result_id == (string) mediamosa_error::ERRORCODE_OKAY,
+      t("Create collection response is succes: @request_result_id", array('@request_result_id' => print_r($request_result_id, TRUE),))
+    );
+
+    // Database lookup.
+    mediamosa_db::db_must_exists(mediamosa_collection_db::TABLE_NAME, array(mediamosa_collection_db::ID => $coll_id));
+    $a_collection = mediamosa_db::db_query(
+      'SELECT #app_id, #owner_id, #group_id FROM {#mediamosa_collection} WHERE #coll_id = :coll_id',
+      array(
+        '#app_id' => mediamosa_collection_db::APP_ID,
+        '#owner_id' => mediamosa_collection_db::OWNER_ID,
+        '#group_id' => mediamosa_collection_db::GROUP_ID,
+        '#mediamosa_collection' => mediamosa_collection_db::TABLE_NAME,
+        '#coll_id' => mediamosa_collection_db::ID,
+        ':coll_id' => $coll_id,
+      )
+    )->fetchAssoc();
+    $this->pass(strtr("Database lookup collection with ID '@id'.", array('@id' => $coll_id)));
+
+    $this->assertTrue(
+      $a_collection['app_id'] == $this->a_app[mediamosa_app_db::APP_ID],
+      t("Database lookup collection app_id: @app_id", array('@app_id' => print_r($a_collection['app_id'], TRUE),))
+    );
+    $this->assertTrue(
+      $a_collection['owner_id'] == self::SIMPLETEST_USER_ID,
+      t("Database lookup collection owner_id: @owner_id", array('@owner_id' => print_r($a_collection['owner_id'], TRUE),))
+    );
+    $this->assertTrue(
+      $a_collection['group_id'] == self::SIMPLETEST_GROUP_ID,
+      t("Database lookup collection group_id: @group_id", array('@group_id' => print_r($a_collection['group_id'], TRUE),))
+    );
+
+    // test: [GET] collection?limit=1 - list of collections
+
+    $a_parameters = array(
+      mediamosa_rest_call_collection_search::USER_ID => self::SIMPLETEST_USER_ID,
+      mediamosa_rest_call_collection_search::LIMIT => 1,
+    );
+
+    // Do GET /collection call.
+    $response = $this->restCallGet('collection', $a_parameters);
+
+    $request_result_id = $response['xml']->header->request_result_id;
+    $this->assertTrue(
+      $request_result_id == (string) mediamosa_error::ERRORCODE_OKAY,
+      t("Call /collection?limit=1 [GET]")
+    );
+    $this->assertTrue(
+      $response['xml']->header->item_count_total == 1,
+      t("Call /collection?limit=1 [GET]")
+    );
+    $this->var_export($response['xml']);
+    $this->assertTrue(
+      $response['xml']->items->item[0]->coll_id == (string) $coll_id,
+      t("Call /collection?limit=1 [GET]")
+    );
+
+    // Test: [GET] collection/{coll_id} - details of a collection
+    $a_parameters = array(
+      mediamosa_rest_call_collection_get::USER_ID => self::SIMPLETEST_USER_ID,
+    );
+
+    // Do GET /collection/{coll_id} call.
+    $response = $this->restCallGet('collection/'. $coll_id, $a_parameters);
+    $request_result_id = $response['xml']->header->request_result_id;
+    $this->assertTrue(
+      $request_result_id == (string) mediamosa_error::ERRORCODE_OKAY,
+      t("Call /collection/coll_id?limit=1 [GET]")
+    );
+
+    // Test: [post] collection/$coll_id/asset_relation?asset=$asset_id
+
+    // Create an asset.
+    $asset_id = $this->createAsset();
+
+    $a_parameters = array(
+      mediamosa_rest_call_asset_collection_create::ASSET_ID => $asset_id,
+      mediamosa_rest_call_asset_collection_create::USER_ID => self::SIMPLETEST_USER_ID,
+    );
+
+    // Do POST /collection/{coll_id}/asset_relation call.
+    $response = $this->restCallPOST('collection/'. $coll_id . '/asset_relation', $a_parameters);
+    $request_result_id = $response['xml']->header->request_result_id;
+    $this->assertTrue(
+      $request_result_id == (string) mediamosa_error::ERRORCODE_OKAY,
+      t("Call /collection/coll_id/asset_relation [POST]")
+    );
+    $this->assertTrue(
+      $response['xml']->items->item[0]->asset_id == (string) $asset_id,
+      t("Call /collection/coll_id/asset_relation [POST]")
+    );
+
+    // Database lookup.
+    mediamosa_db::db_must_exists(mediamosa_collection_db::TABLE_NAME, array(mediamosa_collection_db::ID => $coll_id));
+    $a_asset_collection = mediamosa_db::db_query(
+      'SELECT #coll_id, #asset_id FROM {#mediamosa_asset_collection} WHERE #asset_id = :asset_id',
+      array(
+        '#coll_id' => mediamosa_asset_collection_db::COLL_ID,
+        '#asset_id' => mediamosa_asset_collection_db::ASSET_ID,
+        '#mediamosa_asset_collection' => mediamosa_asset_collection_db::TABLE_NAME,
+        ':asset_id' => $asset_id,
+      )
+    )->fetchAssoc();
+    $this->pass(strtr("Database lookup collection with ID '@id'.", array('@id' => $coll_id)));
+    $this->assertTrue(
+      $a_asset_collection['coll_id'] == $coll_id,
+      t("Database lookup asset_collection coll_id: @coll_id", array('@coll_id' => print_r($a_asset_collection['coll_id'], TRUE),))
+    );
+
+    // test: [GET] collection/$coll_id/asset - list of assets in collection.
+    $a_parameters = array(
+      mediamosa_rest_call_collection_search::USER_ID => self::SIMPLETEST_USER_ID,
+      mediamosa_rest_call_collection_search::LIMIT => 1,
+    );
+    $response = $this->restCallGet('collection/' . $coll_id . '/asset', $a_parameters);
+
+    $request_result_id = $response['xml']->header->request_result_id;
+    $this->assertTrue(
+      $response['xml']->header->request_result_id == (string) mediamosa_error::ERRORCODE_OKAY,
+      t("Call /collection/id/asset [GET]")
+    );
+
+    $this->assertTrue(
+      $response['xml']->header->item_count_total == 1,
+      t("Call /collection/id/asset [GET]")
+    );
+
+    $this->assertTrue(
+      $response['xml']->items->item[0]->asset_id == (string) $asset_id,
+      t("Call /collection/[id]/asset [GET]")
+    );
+
+    // test: [POST] collection/$coll_id - update collection
+    $a_parameters = array(
+      mediamosa_rest_call_collection_update::USER_ID => self::SIMPLETEST_USER_ID,
+      mediamosa_rest_call_collection_update::TITLE => 'new title',
+      mediamosa_rest_call_collection_update::DESCRIPTION => 'new desc',
+    );
+
+    $response = $this->restCallPOST('collection/'. $coll_id , $a_parameters);
+    $request_result_id = $response['xml']->header->request_result_id;
+    $this->assertTrue(
+      $request_result_id == (string) mediamosa_error::ERRORCODE_OKAY,
+      t("Call /collection/[id] [POST]")
+    );
+
+    // Database lookup.
+    mediamosa_db::db_must_exists(mediamosa_collection_db::TABLE_NAME, array(mediamosa_collection_db::ID => $coll_id));
+    $a_collection = mediamosa_db::db_query(
+      'SELECT #title, #description FROM {#mediamosa_collection} WHERE #coll_id = :coll_id',
+      array(
+        '#title' => mediamosa_collection_db::TITLE,
+        '#description' => mediamosa_collection_db::DESCRIPTION,
+        '#mediamosa_collection' => mediamosa_collection_db::TABLE_NAME,
+        '#coll_id' => mediamosa_collection_db::ID,
+        ':coll_id' => $coll_id,
+      )
+    )->fetchAssoc();
+    $this->pass(strtr("Database lookup collection with ID '@id'.", array('@id' => $coll_id)));
+
+    $this->assertTrue(
+      $a_collection['title'] == 'new title',
+      t("Database lookup collection title @title after update", array('@title' => print_r($a_collection['title'], TRUE),))
+    );
+    $this->assertTrue(
+      $a_collection['description'] == 'new desc',
+      t("Database lookup collection description @desc after update", array('@desc' => print_r($a_collection['description'], TRUE),))
+    );
+
+    // test: [POST] collection/$coll_id/asset_relation/delete?asset=$asset_id
+    // delete collectie/asset relation
+    $a_parameters = array(
+      mediamosa_rest_call_asset_collection_delete::USER_ID => self::SIMPLETEST_USER_ID,
+      mediamosa_rest_call_asset_collection_delete::ASSET_ID => $asset_id,
+    );
+    $response = $this->restCallPOST('collection/'. $coll_id . '/asset_relation/delete' , $a_parameters);
+    $request_result_id = $response['xml']->header->request_result_id;
+    $this->assertTrue(
+      $request_result_id == (string) mediamosa_error::ERRORCODE_OKAY,
+      t("Call /collection/[id]/asset_relation/delete [POST]")
+    );
+    // Database lookup.
+    mediamosa_db::db_must_exists(mediamosa_collection_db::TABLE_NAME, array(mediamosa_collection_db::ID => $coll_id));
+    $a_asset_collection = mediamosa_db::db_query(
+      'SELECT #coll_id, #asset_id FROM {#mediamosa_asset_collection} WHERE #asset_id = :asset_id',
+      array(
+        '#coll_id' => mediamosa_asset_collection_db::COLL_ID,
+        '#asset_id' => mediamosa_asset_collection_db::ASSET_ID,
+        '#mediamosa_asset_collection' => mediamosa_asset_collection_db::TABLE_NAME,
+        ':asset_id' => $asset_id,
+      )
+    )->fetchAssoc();
+    $this->pass(strtr("Database lookup collection with ID '@id'.", array('@id' => $coll_id)));
+    $this->var_export($a_asset_collection);
+
+    $this->assertTrue(
+      $a_asset_collection == false,
+      t("Database lookup asset_collection coll_id: @coll_id", array('@coll_id' => print_r($a_asset_collection['coll_id'], TRUE),))
+    );
+
+    // test: Change ownership as non ega admin
+    $a_parameters = array(
+      mediamosa_rest_call_collection_update::USER_ID => self::SIMPLETEST_USER_ID,
+      mediamosa_rest_call_collection_update::OWNER_ID => self::SIMPLETEST_USER_ID,
+      mediamosa_rest_call_collection_update::GROUP_ID => 'testgroup',
+      mediamosa_rest_call_collection_update::IS_APP_ADMIN => false,
+    );
+    $response = $this->restCallPOST('collection/'. $coll_id, $a_parameters);
+    $request_result_id = $response['xml']->header->request_result_id;
+    $this->assertTrue(
+      $request_result_id == (string) mediamosa_error::ERRORCODE_NO_CHANGES,
+      t("Call /collection/[id] [POST] ownership")
+    );
+
+    // Database lookup.
+    mediamosa_db::db_must_exists(mediamosa_collection_db::TABLE_NAME, array(mediamosa_collection_db::ID => $coll_id));
+    $a_collection = mediamosa_db::db_query(
+      'SELECT #owner_id, #group_id FROM {#mediamosa_collection} WHERE #coll_id = :coll_id',
+      array(
+        '#owner_id' => mediamosa_collection_db::OWNER_ID,
+        '#group_id' => mediamosa_collection_db::GROUP_ID,
+        '#mediamosa_collection' => mediamosa_collection_db::TABLE_NAME,
+        '#coll_id' => mediamosa_collection_db::ID,
+        ':coll_id' => $coll_id,
+      )
+    )->fetchAssoc();
+    $this->assertTrue(
+      $a_collection['owner_id'] == 'testuser',
+      t("Database lookup collection owner_id: @owner_id", array('@owner_id' => print_r($a_collection['owner_id'], TRUE),))
+    );
+    $this->assertTrue(
+      $a_collection['group_id'] == 'testgroup',
+      t("Database lookup collection group_id: @group_id", array('@group_id' => print_r($a_collection['group_id'], TRUE),))
+    );
+
+
+    // Test: Change ownership as non ega admin: not allowed.
+    $a_parameters = array(
+      mediamosa_rest_call_collection_update::USER_ID => self::SIMPLETEST_USER_ID,
+      mediamosa_rest_call_collection_update::OWNER_ID => self::SIMPLETEST_USER_ID,
+      mediamosa_rest_call_collection_update::GROUP_ID => 'testgroup',
+      mediamosa_rest_call_collection_update::IS_APP_ADMIN => false,
+    );
+    $response = $this->restCallPOST('collection/'. $coll_id, $a_parameters);
+    $request_result_id = $response['xml']->header->request_result_id;
+    $this->assertTrue(
+      $request_result_id == (string) mediamosa_error::ERRORCODE_NO_CHANGES,
+      t("Call /collection/[id] [POST] ownership")
+    );
+
+
+    // Test: Update a collection's owner_id and group_id as ega admin.
+
+    // ~~~~~~~~~~~~~~~~
+    return;
+
+
+    // database lookup
+    db_set_active('data');
+    $a_row = db_fetch_array(db_query("SELECT * FROM {collection} WHERE coll_id = '%s'", $s_coll_id));
+    db_set_active();
+
+    $this->assertTrue(
+      $a_row['owner_id'] == $owner_id && $a_row['group_id'] == $group_id,
+      "Database lookup: (owner_id == '". $owner_id ."' && group_id == '". $group_id ."'): %s"
+    );
+
+// verwijder tijdelijke database entries
+    $this->_delete_temporary_items( $this->s_user_story);
+  }
+
+
+  /**
+   * Testing collection several assets (#209).
+   */
+  function _testCollectionSeveralAssets() {
+    return;
+
+    $a_asset_ids = array();
+    $s_coll_id = $this->_create_collection();
+    $a_asset_ids[] = $this->_create_asset();
+    $a_asset_ids[] = $this->_create_asset();
+
+// [post] collection/$coll_id/asset_relation?asset=$asset_id - koppel een asset aan een collectie
+    $a_args = array(
+      'uri' => array(
+        'coll_id' => $s_coll_id
+      ),
+      'get' => array(
+        'asset_id' => $a_asset_ids,
+        'app_id' => SIMPLETEST_APP_ID,
+        'user_id' => SIMPLETEST_USER_ID
+      ),
+    );
+
+    $result = $this->_do_restcall(
+      "media_management_create_collection_relation",
+      array($a_args)
+    );
+
+    $this->assertTrue(
+      $result->response['header']['request_result_id'] === ERRORCODE_OKAY,
+      "Add an asset to a collection (request_result_id = ". ERRORCODE_OKAY ."): %s"
+    );
+
+// database lookup
+    foreach ($a_asset_ids as $s_asset_id) {
+
+      db_set_active('data');
+      $array = db_fetch_array(db_query("SELECT * FROM {asset_collection} WHERE asset_id = '%s'", $s_asset_id));
+      db_set_active();
+
+      foreach (array('coll_id', 'asset_id') as $subject) {
+        if ($array[$subject] === $a_asset_ids[0]) {
+          $asset_id = $a_asset_ids[0];
+        }
+        if ($array[$subject] === $a_asset_ids[1]) {
+          $asset_id = $a_asset_ids[1];
+        }
+        $b_found = ($subject == 'asset_id' && ($array[$subject] === $a_asset_ids[0] || $array[$subject] === $a_asset_ids[1]));
+        $this->assertTrue(
+          $array[$subject] === $s_coll_id || $b_found === TRUE,
+          "Database lookup: (". $subject ." == ". $array[$subject] ."): %s"
+        );
+        if ($b_found === TRUE) {
+          $this->a_test_data['asset_collection'][] = array('asset_id' => $asset_id);
+        }
+      }
+    }
+
+    // verwijder tijdelijke database entries
+    $this->_delete_temporary_items( $this->s_user_story);
+
+    return;
+  }
+
+  /**
+   * Testing collection Opvragen collections waarin asset zit (#498).
+   */
+  function _testCollection498() {
+    return;
+    // [post] mediafile/$mediafile_id/delete - delete een mediafile
+    $s_asset_id = $this->_create_asset();
+    $s_coll_1_id = $this->_create_collection();
+    $s_coll_2_id = $this->_create_collection();
+    $this->_create_asset_collection_relation($s_coll_1_id, $s_asset_id,  $this->s_user_story);
+    $this->_create_asset_collection_relation($s_coll_2_id, $s_asset_id,  $this->s_user_story);
+
+    $a_args = array(
+      'get' => array(
+        'app_id' => SIMPLETEST_APP_ID,
+        'limit' => 100,
+        'asset_id' => $s_asset_id,
+      )
+    );
+
+    $result = $this->_do_restcall(
+      "media_management_get_collection_search",
+      array($a_args)
+    );
+
+    $a_items = $result->response['items'];
+    foreach ($result->response['items'] as $item) {
+      $this->assertTrue(
+        ($id = $item['coll_id']) === $s_coll_1_id || ($id = $item['coll_id']) === $s_coll_2_id,
+        "Find the collection (coll_id === ". $id .") %s"
+      );
+    }
+    $this->assertTrue(
+      ($count = count($result->response['items'])) === 2,
+      "Count the collections listed (count === ". $count .") %s"
+    );
+
+    // verwijder tijdelijke database entries
+    $this->_delete_temporary_items( $this->s_user_story);
+  }
+
+  /**
+   * Testing collection delete (#502).
+   */
+  function _testCollectionDelete() {
+    return;
+// maak een test video aan
+    $s_coll_id = $this->_create_collection();
+
+// controleer of de collection daadwerkelijk in de database staat
+    db_set_active('data');
+    $this->assertTrue(
+      ($count = (int)db_result(db_query("SELECT COUNT(coll_id) FROM {collection} WHERE coll_id = '%s'", $s_coll_id))) === 1,
+      "database lookup on coll_id = ". $s_coll_id .". (count = ". $count .") %s"
+    );
+    db_set_active();
+
+// verwijder de collection via media_management_delete_collection()
+    $a_args = array(
+      'uri' => array(
+        'coll_id' => $s_coll_id
+      ),
+      'get' => array(
+        'app_id' => SIMPLETEST_APP_ID,
+        'user_id' => SIMPLETEST_USER_ID,
+      ),
+    );
+
+    $result = $this->_do_restcall(
+      "media_management_delete_collection",
+      array($a_args)
+    );
+
+    if ($success = $result->response['header']['request_result_id'] == ERRORCODE_OKAY) {
+      $this->a_test_data['collection'] = array();
+    }
+
+    $this->assertTrue(
+      $success,
+      "media_management_delete_collection() request. %s"
+    );
+
+// controleer of de collection daadwerkelijk uit de database is verwijderd
+    db_set_active('data');
+    $this->assertTrue(
+      ($count = (int)db_result(db_query("SELECT COUNT(coll_id) FROM {collection} WHERE coll_id = '%s'", $s_coll_id))) === 0,
+      "database lookup on coll_id = ". $s_coll_id .". (count = ". $count .") %s"
+    );
+    db_set_active();
+
+// maak een nieuwe test collection aan
+    $s_coll_id = $this->_create_collection();
+
+// controleer of de collection daadwerkelijk in de database staat
+    db_set_active('data');
+    $this->assertTrue(
+      ($count = (int)db_result(db_query("SELECT COUNT(coll_id) FROM {collection} WHERE coll_id = '%s'", $s_coll_id))) === 1,
+      "database lookup on coll_id = ". $s_coll_id .". (count = ". $count .") %s"
+    );
+    db_set_active();
+
+// verwijder de collection direct via _media_management_delete_collection()
+    $success = _media_management_delete_collection($s_coll_id);
+    if ($success) {
+      $this->a_test_data['collection'] = array();
+    }
+
+    $this->assertTrue(
+      $success,
+      "_media_management_delete_collection() request. %s"
+    );
+
+// controleer of de collection daadwerkelijk uit de database is verwijderd
+    db_set_active('data');
+    $this->assertTrue(
+      ($count = (int)db_result(db_query("SELECT COUNT(coll_id) FROM {collection} WHERE coll_id = '%s'", $s_coll_id))) === 0,
+      "database lookup on coll_id = ". $s_coll_id .". (count = ". $count .") %s"
+    );
+    db_set_active();
+
+// maak een nieuwe test collection aan
+    $s_coll_id = $this->_create_collection();
+    $s_asset_id = $this->_create_asset();
+    $this->_create_asset_collection_relation($s_coll_id, $s_asset_id,  $this->s_user_story);
+
+// controleer of de collection daadwerkelijk in de database staat
+    db_set_active('data');
+    $this->assertTrue(
+      ($count = (int)db_result(db_query("SELECT COUNT(coll_id) FROM {collection} WHERE coll_id = '%s'", $s_coll_id))) === 1,
+      "database lookup on coll_id = ". $s_coll_id .". (count = ". $count .") %s"
+    );
+    db_set_active();
+
+// verwijder de collection via media_management_delete_collection()
+    $a_args = array(
+      'uri' => array(
+        'coll_id' => $s_coll_id
+      ),
+      'get' => array(
+        'app_id' => SIMPLETEST_APP_ID,
+        'user_id' => SIMPLETEST_USER_ID,
+      ),
+    );
+
+    $result = $this->_do_restcall(
+      "media_management_delete_collection",
+      array($a_args)
+    );
+
+    if ($success = $result->response['header']['request_result_id'] == ERRORCODE_OKAY) {
+      $this->a_test_data['collection'] = array();
+    }
+
+    $this->assertFalse(
+      $success,
+      "media_management_delete_collection() request with 1 asset_collection relation in collection. (should fail) %s"
+    );
+
+// controleer of de collection daadwerkelijk in de database staat
+    db_set_active('data');
+    $this->assertTrue(
+      ($count = (int)db_result(db_query("SELECT COUNT(coll_id) FROM {collection} WHERE coll_id = '%s'", $s_coll_id))) === 1,
+      "database lookup on coll_id = ". $s_coll_id .". (count = ". $count .") %s"
+    );
+    db_set_active();
+
+// verwijder de asset collection relatie via media_management_delete_collection_relation()
+    $a_args = array(
+      'uri' => array(
+        'coll_id' => $s_coll_id
+      ),
+      'get' => array(
+        'app_id' => SIMPLETEST_APP_ID,
+        'user_id' => SIMPLETEST_USER_ID,
+        'asset_id' => $s_asset_id,
+      ),
+    );
+
+    $result = $this->_do_restcall(
+      "media_management_delete_collection_relation",
+      array($a_args)
+    );
+
+    if ($success = $result->response['header']['request_result_id'] == ERRORCODE_OKAY) {
+      $this->a_test_data['asset_collection'] = array();
+    }
+
+    $this->assertTrue(
+      $success,
+      "media_management_delete_collection_relation() request. %s"
+    );
+
+// controleer of de collection daadwerkelijk in de database staat
+    db_set_active('data');
+    $this->assertTrue(
+      ($count = (int)db_result(db_query("SELECT COUNT(coll_id) FROM {asset_collection} WHERE coll_id = '%s'", $s_coll_id))) === 0,
+      "database lookup on asset_collection relation. (count = ". $count .") %s"
+    );
+    db_set_active();
+
+    $this->_create_asset_collection_relation($s_coll_id, $s_asset_id);
+
+// controleer of de collection daadwerkelijk in de database staat
+    db_set_active('data');
+    $this->assertTrue(
+      ($count = (int)db_result(db_query("SELECT COUNT(coll_id) FROM {asset_collection} WHERE coll_id = '%s'", $s_coll_id))) === 1,
+      "database lookup on asset_collection relation. (count = ". $count .") %s"
+    );
+    db_set_active();
+
+// verwijder de asset collection relatie via _media_management_delete_asset_collection_relation()
+    $a_args = array(
+      'uri' => array(
+        'coll_id' => $s_coll_id
+      ),
+      'get' => array(
+        'app_id' => SIMPLETEST_APP_ID,
+        'user_id' => SIMPLETEST_USER_ID,
+        'asset_id' => $s_asset_id,
+      ),
+    );
+    $success = _media_management_delete_asset_collection_relation($s_asset_id, $s_coll_id);
+    if ($success) {
+      $this->a_test_data['asset_collection'] = array();
+    }
+
+    $this->assertTrue(
+      $success,
+      "media_management_delete_collection_relation() request. %s"
+    );
+
+// controleer of de collection daadwerkelijk in de database staat
+    db_set_active('data');
+    $this->assertTrue(
+      ($count = (int)db_result(db_query("SELECT COUNT(coll_id) FROM {asset_collection} WHERE coll_id = '%s'", $s_coll_id))) === 0,
+      "database lookup on asset_collection relation. (count = ". $count .") %s"
+    );
+    db_set_active();
+
+
+    //
+    // Delete all collection relation for an asset
+    //
+
+    // Make new test collection
+    $d1_coll_id = $this->_create_collection();
+    $d2_coll_id = $this->_create_collection();
+    $d3_coll_id = $this->_create_collection();
+    $da_asset_id = $this->_create_asset();
+    $db_asset_id = $this->_create_asset();
+    $this->_create_asset_collection_relation($d1_coll_id, $da_asset_id,  $this->s_user_story);
+    $this->_create_asset_collection_relation($d2_coll_id, $da_asset_id,  $this->s_user_story);
+    $this->_create_asset_collection_relation($d3_coll_id, $db_asset_id,  $this->s_user_story);
+
+    // Check the collections
+    db_set_active('data');
+    $this->assertTrue(
+      ($count = (int)db_result(db_query("SELECT COUNT(coll_id) FROM {asset_collection} WHERE asset_id = '%s'", $da_asset_id))) === 2,
+      "database lookup on asset_id = ". $da_asset_id .". (count = ". $count .") %s"
+    );
+    $this->assertTrue(
+      ($count = (int)db_result(db_query("SELECT COUNT(coll_id) FROM {asset_collection} WHERE asset_id = '%s'", $db_asset_id))) === 1,
+      "database lookup on asset_id = ". $db_asset_id .". (count = ". $count .") %s"
+    );
+    db_set_active();
+
+    // Delete all the collections relations from $da_asset_id
+    $a_args = array(
+      'uri' => array(
+        'asset_id' => $da_asset_id
+      ),
+      'get' => array(
+        'app_id' => SIMPLETEST_APP_ID,
+        'user_id' => SIMPLETEST_USER_ID,
+      ),
+    );
+    $result = $this->_do_restcall(
+      "media_management_delete_asset_from_all_collections",
+      array($a_args)
+    );
+
+    $success = ($result->response['header']['request_result_id'] == ERRORCODE_OKAY);
+    $this->assertTrue(
+      $success,
+      "media_management_delete_asset_from_all_collections() request worked fine. %s"
+    );
+
+    // Check the collections
+    db_set_active('data');
+    $this->assertTrue(
+      ($count = (int)db_result(db_query("SELECT COUNT(coll_id) FROM {asset_collection} WHERE asset_id = '%s'", $da_asset_id))) === 0,
+      "database lookup on asset_id = ". $da_asset_id .". (count = ". $count .") %s"
+    );
+    $this->assertTrue(
+      ($count = (int)db_result(db_query("SELECT COUNT(coll_id) FROM {asset_collection} WHERE asset_id = '%s'", $db_asset_id))) === 1,
+      "database lookup on asset_id = ". $db_asset_id .". (count = ". $count .") %s"
+    );
+    db_set_active();
+
+
+    // Delete all the collections relations from $db_asset_id
+    $a_args = array(
+      'uri' => array(
+        'asset_id' => $db_asset_id
+      ),
+      'get' => array(
+        'app_id' => SIMPLETEST_APP_ID,
+        'user_id' => SIMPLETEST_USER_ID,
+      ),
+    );
+    $result = $this->_do_restcall(
+      "media_management_delete_asset_from_all_collections",
+      array($a_args)
+    );
+
+    $success = ($result->response['header']['request_result_id'] == ERRORCODE_OKAY);
+    $this->assertTrue(
+      $success,
+      "media_management_delete_asset_from_all_collections() request worked fine. %s"
+    );
+
+    // Check the collections
+    db_set_active('data');
+    $this->assertTrue(
+      ($count = (int)db_result(db_query("SELECT COUNT(coll_id) FROM {asset_collection} WHERE asset_id = '%s'", $da_asset_id))) === 0,
+      "database lookup on asset_id = ". $da_asset_id .". (count = ". $count .") %s"
+    );
+    $this->assertTrue(
+      ($count = (int)db_result(db_query("SELECT COUNT(coll_id) FROM {asset_collection} WHERE asset_id = '%s'", $db_asset_id))) === 0,
+      "database lookup on asset_id = ". $db_asset_id .". (count = ". $count .") %s"
+    );
+    db_set_active();
+
+
+    //
+    // Cleaning
+    //
+  }
+
+  /**
+   * Testing collection cascaded delete (#518).
+   */
+  function _testCollectionCascadeDelete() {
+    return;
+
+    // maak een collectie, assets en mediafile aan
+    $s_coll_id = $this->_create_collection();
+    $a_asset_id = array();
+    $a_asset_id[] = $this->_create_asset();
+    $a_asset_id[] = $this->_create_asset();
+    $s_mediafile_id = $this->_create_mediafile($a_asset_id[0],  $this->s_user_story);
+    foreach ($a_asset_id as $asset_id) {
+      $this->_create_asset_collection_relation($s_coll_id, $asset_id,  $this->s_user_story);
+    }
+
+// [post] collection/$coll_id/delete - delete een collection en alle assets, mediafiles en stills die er onder vallen (cascade)
+    $a_args = array(
+      'get' => array(
+        'app_id' => SIMPLETEST_APP_ID,
+        'user_id' => SIMPLETEST_USER_ID,
+        'delete' => 'cascade'
+      ),
+      'uri' => array(
+        'coll_id' => $s_coll_id
+      )
+    );
+
+    $result = $this->_do_restcall(
+      "media_management_delete_collection",
+      array($a_args)
+    );
+
+    $this->assertTrue(
+      $result->response['header']['request_result'] === ERRORMESSAGE_OKAY,
+      "Delete a collection and all of it's assets and mediafiles: ". $s_coll_id ." (request_result = ". ERRORMESSAGE_OKAY ."): %s"
+    );
+
+// kijk of de collectie + assets + mediafile daarwerkelijk verwijderd zijn...
+    db_set_active('data');
+    $i_count = db_result(db_query("SELECT COUNT(coll_id) FROM {collection} WHERE coll_id = '%s'", $s_coll_id));
+    db_set_active();
+    $this->assertTrue(
+      ((int)$i_count === 0),
+      "Database lookup on 'coll_id'. (count == ". $i_count ." (should be 0)) '%s'"
+    );
+    if ((int)$i_count === 0) {
+      $this->a_test_data['collection'] = array();
+    }
+    db_set_active('data');
+    $i_count = db_result(db_query("SELECT COUNT(mediafile_id) FROM {mediafile} WHERE mediafile_id = '%s'", $s_mediafile_id));
+    db_set_active();
+    $this->assertTrue(
+      ((int)$i_count === 0),
+      "Database lookup on 'mediafile_id'. (count == ". $i_count ." (should be 0)) '%s'"
+    );
+    if ((int)$i_count === 0) {
+      $this->a_test_data['mediafile_metadata'] = array();
+      $this->a_test_data['mediafile'] = array();
+    }
+    for ($i = 0; $i < count($a_asset_id); $i++) {
+      $asset_id = $a_asset_id[$i];
+      db_set_active('data');
+      $i_count = db_result(db_query("SELECT COUNT(asset_id) FROM {asset} WHERE asset_id = '%s'", $asset_id));
+      db_set_active();
+      $this->assertTrue(
+        ((int)$i_count === 0),
+        "Database lookup on 'asset_id'. (count == ". $i_count ." (should be 0)) '%s'"
+      );
+      if ((int)$i_count === 0) {
+        unset($this->a_test_data['asset'][$i]);
+        unset($this->a_test_data['asset_collection'][$i]);
+      }
+    }
+    foreach (array('asset', 'asset_collection') as $subject) { // reset alle arrays indien leeg
+      if (count($this->a_test_data[$subject]) === 0) {
+        $this->a_test_data[$subject] = array();
+      }
+    }
+
+// maak een collectie, assets en mediafile aan
+    $s_coll_id = $this->_create_collection();
+    $a_asset_id = array();
+    $a_asset_id[] = $this->_create_asset();
+    $a_asset_id[] = $this->_create_asset();
+    $s_mediafile_id = $this->_create_mediafile($a_asset_id[0],  $this->s_user_story);
+    foreach ($a_asset_id as $asset_id) {
+      $this->_create_asset_collection_relation($s_coll_id, $asset_id,  $this->s_user_story);
+    }
+    $owner_id = vpx_create_hash(SIMPLETEST_APP_ID, SIMPLETEST_USER_ID);
+    db_set_active('data');
+    db_query("UPDATE {asset} SET owner_id = '%s' WHERE asset_id = '%s' LIMIT 1", $owner_id, $a_asset_id[0]);
+    db_set_active();
+
+// [post] collection/$coll_id/delete - delete een collection en alle assets, mediafiles en stills die er onder vallen (cascade)
+    $a_args = array(
+      'get' => array(
+        'app_id' => SIMPLETEST_APP_ID,
+        'user_id' => SIMPLETEST_USER_ID,
+        'delete' => 'cascade'
+      ),
+      'uri' => array(
+        'coll_id' => $s_coll_id
+      )
+    );
+    $result = $this->_do_restcall(
+      "media_management_delete_collection",
+      array($a_args)
+    );
+    $this->assertTrue(
+      (int)$result->response['header']['request_result_id'] === ERRORCODE_COLLECTION_NOT_EMPTY,
+      "Delete a collection and all of it's assets and mediafiles: ". $s_coll_id ." (request_result_id = ". ERRORCODE_COLLECTION_NOT_EMPTY ."): %s"
+    );
+
+// kijk of de collectie + assets + mediafile daarwerkelijk verwijderd zijn...
+    db_set_active('data');
+    $i_count = db_result(db_query("SELECT COUNT(coll_id) FROM {collection} WHERE coll_id = '%s'", $s_coll_id));
+    db_set_active();
+    $this->assertTrue(
+      ((int)$i_count === 1),
+      "Database lookup on 'coll_id'. (count == ". $i_count ." (should be 1)) '%s'"
+    );
+    if ((int)$i_count === 0) {
+      $this->a_test_data['collection'] = array();
+    }
+    db_set_active('data');
+    $i_count = db_result(db_query("SELECT COUNT(mediafile_id) FROM {mediafile} WHERE mediafile_id = '%s'", $s_mediafile_id));
+    db_set_active();
+    $this->assertTrue(
+      ((int)$i_count === 1),
+      "Database lookup on 'mediafile_id'. (count == ". $i_count ." (should be 1)) '%s'"
+    );
+    if ((int)$i_count === 0) {
+      $this->a_test_data['mediafile_metadata'] = array();
+      $this->a_test_data['mediafile'] = array();
+    }
+    db_set_active('data');
+    $i_count = db_result(db_query("SELECT COUNT(asset_id) FROM {asset} WHERE asset_id = '%s'", $a_asset_id[0]));
+    db_set_active();
+    $this->assertTrue(
+      ((int)$i_count === 1),
+      "Database lookup on 'asset_id'. (count == ". $i_count ." (should be 1)) '%s'"
+    );
+    if ((int)$i_count === 0) {
+      unset($this->a_test_data['asset'][0]);
+      unset($this->a_test_data['asset_collection'][0]);
+    }
+    $asset_id = $a_asset_id[1];
+    db_set_active('data');
+    $i_count = db_result(db_query("SELECT COUNT(asset_id) FROM {asset} WHERE asset_id = '%s'", $asset_id));
+    db_set_active();
+    $this->assertTrue(
+      ((int)$i_count === 0),
+      "Database lookup on 'asset_id'. (count == ". $i_count ." (should be 0)) '%s'"
+    );
+    if ((int)$i_count === 0) {
+      unset($this->a_test_data['asset'][1]);
+      unset($this->a_test_data['asset_collection'][1]);
+    }
+
+    // ruim de test video op
+
+  }
+
+  /**
+   * Testing collection multi add&delete (#656).
+   */
+  function _testCollectionMultiAddDelete() {
+    return;
+    $coll_id = $this->_create_collection();
+    $asset_ids = array(
+      $this->_create_asset(),
+      $this->_create_asset(),
+    );
+
+// [post] collection/$coll_id/asset_relation?asset[]=$asset_id - verwijder collectie/asset relaties
+    $a_args = array(
+      'uri' => array(
+        'coll_id' => $coll_id
+      ),
+      'get' => array(
+        'asset_id' => $asset_ids,
+        'user_id' => SIMPLETEST_USER_ID,
+        'app_id' => SIMPLETEST_APP_ID,
+      ),
+    );
+
+    $result = $this->_do_restcall(
+      "media_management_create_collection_relation",
+      array($a_args)
+    );
+
+    $this->assertTrue(
+      $result->response['header']['request_result_id'] === ERRORCODE_OKAY,
+      "Delete asset/collection relation: %s"
+    );
+
+// database lookup
+    foreach($asset_ids as $asset_id) {
+      db_set_active('data');
+      $array = db_fetch_array(db_query("SELECT * FROM {asset_collection} WHERE asset_id = '%s'", $asset_id));
+      db_set_active();
+      if (!is_array($array)) {
+        $this->a_test_data['asset_collection'] = array();
+      }
+
+      $this->assertTrue(
+        $array['asset_id'] === $asset_id,
+        "Database lookup on asset_collection: '". $asset_id ."' %s"
+      );
+    }
+
+// [post] collection/$coll_id/asset_relation/delete?asset[]=$asset_id - verwijder collectie/asset relaties
+    $a_args = array(
+      'uri' => array(
+        'coll_id' => $coll_id
+      ),
+      'get' => array(
+        'asset_id' => $asset_ids,
+        'user_id' => SIMPLETEST_USER_ID,
+        'app_id' => SIMPLETEST_APP_ID,
+      ),
+    );
+
+    $result = $this->_do_restcall(
+      "media_management_delete_collection_relation",
+      array($a_args)
+    );
+
+    $this->assertTrue(
+      $result->response['header']['request_result_id'] === ERRORCODE_OKAY,
+      "Delete asset/collection relation: %s"
+    );
+
+// database lookup
+    foreach($asset_ids as $asset_id) {
+      db_set_active('data');
+      $array = db_fetch_array(db_query("SELECT * FROM {asset_collection} WHERE asset_id = '%s'", $asset_id));
+      db_set_active();
+      if (!is_array($array)) {
+        $this->a_test_data['asset_collection'] = array();
+      }
+
+      $this->assertFalse(
+        is_array($array),
+        "Database lookup on asset_collection (should fail): '". $asset_id ."' %s"
+      );
+    }
+
+  }
+
+  /**
+   * Testing collection Count calls (#658).
+   */
+  function _testCollectionCount() {
+    return;
+    $coll_ids = array(
+      $this->_create_collection(),
+      $this->_create_collection(),
+      $this->_create_collection(),
+    );
+    $asset_id = $this->_create_asset();
+    foreach($coll_ids as $coll_id) {
+      $this->_create_asset_collection_relation($coll_id, $asset_id);
+    }
+
+// tel alle collections waar bovenstaande asset in voor komt
+    $a_args = array(
+      'get' => array(
+        'app_id' => SIMPLETEST_APP_ID,
+      ),
+      'uri' => array(
+        'asset_id' => $asset_id,
+      )
+    );
+
+    $result = $this->_do_restcall(
+      "media_management_asset_count_collections",
+      array($a_args)
+    );
+
+    $count = $result->item_total_count;
+    $this->assertTrue(
+      $count == count($coll_ids),
+      'Count the number of collections asset '. $asset_id .' is a member of ('. $count .' == '. count($coll_ids) .'). %s'
+    );
+  }
+
+  /**
+   * Testing collection category tests (#664).
+   */
+  function _testCollectionCategory() {
+    return;
+
+    // maak een nieuwe collectie aan
+    $a_args = array(
+      'get' => array(
+        'app_id' => SIMPLETEST_APP_ID,
+        'user_id' => SIMPLETEST_USER_ID,
+        'group_id' => SIMPLETEST_GROUP_ID,
+        'private' => 'true',
+        'public' => 'true',
+        'category' => 'true',
+      )
+    );
+
+    $result = $this->_do_restcall(
+      "media_management_create_collection",
+      array($a_args)
+    );
+
+    $coll_id = $result->response['items'][1]['coll_id'];
+    $this->a_test_data['collection'][] = array('coll_id' => $coll_id);
+
+    $this->assertTrue(
+      $result->response['header']['request_result'] === ERRORMESSAGE_OKAY,
+      "Create a new collection: ". $coll_id ." (request_result = ". $result->response['header']['request_result'] ."): %s"
+    );
+
+// controleer of de collectie goed in de database staat (o.a. 3 maal TRUE)
+    db_set_active('data');
+    $coll = db_fetch_array(db_query("SELECT * FROM {collection} WHERE coll_id = '%s'", $coll_id));
+    db_set_active();
+
+    foreach ($a_args['get'] as $key => $value) {
+      $db_val = $coll[($key != 'user_id') ? $key : "owner_id"];
+      $this->assertTrue(
+        strcasecmp($db_val, $value) === 0,
+        "Compare ". $key .": '". $value ."' with the database: '". $db_val ."' %s"
+      );
+    }
+
+// pas een nieuwe collectie aan
+    $a_args = array(
+      'uri' => array(
+        'coll_id' => $coll_id,
+      ),
+      'get' => array(
+        'app_id' => SIMPLETEST_APP_ID,
+        'user_id' => SIMPLETEST_USER_ID,
+        'group_id' => SIMPLETEST_GROUP_ID,
+      ),
+      'post' => array(
+        'title' => SIMPLETEST_GROUP_ID,
+        'description' => SIMPLETEST_USER_ID,
+        'private' => 'false',
+        'public' => 'false',
+        'category' => 'false',
+      )
+    );
+
+    $result = $this->_do_restcall(
+      "media_management_update_collection",
+      array($a_args)
+    );
+
+    $this->assertTrue(
+      $result->response['header']['request_result'] === ERRORMESSAGE_OKAY,
+      "Update the new collection: ". $coll_id ." (request_result = ". $result->response['header']['request_result'] ."): %s"
+    );
+
+// controleer of de collectie goed in de database staat (o.a. 3 maal TRUE)
+    db_set_active('data');
+    $coll = db_fetch_array(db_query("SELECT * FROM {collection} WHERE coll_id = '%s'", $coll_id));
+    db_set_active();
+
+    foreach (array_merge($a_args['get'], $a_args['post']) as $key => $value) {
+      $db_val = $coll[($key != 'user_id') ? $key : "owner_id"];
+      $this->assertTrue(
+        strcasecmp($db_val, $value) === 0,
+        "Compare ". $key .": '". $value ."' with the database: '". $db_val ."' %s"
+      );
+    }
+  }
+
+
+  /**
+   * Testing collection if set to unappropriate (#16576).
+   */
+  function _testCollectionUnappropriate() {
+
+    // Create a collection.
+    $coll_id = $this->createCollection();
+
+    // Get the collection with a search.
+    $a_parameters = array(
+      mediamosa_rest_call_collection_search::CQL => 'owner_id=' . self::SIMPLETEST_USER_ID,
+    );
+    $collection = $this->getCollections(self::SIMPLETEST_USER_ID, $a_parameters);
+
+    // search op coll_id werkt niet!?
+    /*
+    $this->assertTrue(
+      $collection == 'FALSE',
+      t("The is_unappropriate parameter is FALSE: @is_unappropriate", array('@is_unappropriate' => print_r($is_unappropiate, TRUE),))
+    );
+    */
+    // Test is_unappropriate.
+    // $collection = $this->getCollection($coll_id, self::SIMPLETEST_USER_ID); //does not work.
+    return;
+
+    // Default is_unappropriate is FALSE
+    $is_unappropiate = $collection->is_unappropriate;
+    $this->assertTrue(
+      $is_unappropriate == 'FALSE',
+      t("The is_unappropriate parameter is FALSE: @is_unappropriate", array('@is_unappropriate' => print_r($is_unappropiate, TRUE),))
+    );
+
+    // Update collection with is_unappropriate = 'TRUE'.
+    $a_parameters = array(
+      mediamosa_rest_call_collection_update::IS_UNAPPROPRIATE => 'TRUE',
+      mediamosa_rest_call_collection_update::TITLE => 'test titel',
+    );
+    $this->updateCollection($coll_id, self::SIMPLETEST_USER_ID, $a_parameters);
+
+    // Test is_unappropriate.
+    $collection = $this->getCollection($coll_id, self::SIMPLETEST_USER_ID, $a_parameters);
+
+    // After update is_unappropriate is TRUE, only for the owner
+    $is_unappropiate = $collection->is_unappropriate;
+    $this->assertTrue(
+      $is_unappropriate == 'TRUE',
+      t("The is_unappropriate parameter is TRUE: @is_unappropriate", array('@is_unappropriate' => print_r($is_unappropiate, TRUE),))
+    );
+
+    // Get the collection with a search.
+    $a_parameters = array(
+      mediamosa_rest_call_collection_update::TITLE => 'test titel',
+    );
+    $collection = $this->getCollections(self::SIMPLETEST_USER_ID, $a_parameters);
+
+    $this->assertTrue(
+      TRUE,
+      t("TEST")
+    );
+    return;
+
+    // Check is_empty_asset field is FALSE
+    $is_empty_asset = (string)$asset->is_empty_asset;
+    $this->assertTrue(
+      $is_empty_asset == 'FALSE',
+      t("The is_empty_asset parameter is FALSE: @is_empty_asset", array('@is_empty_asset' => print_r($is_empty_asset, TRUE),))
+    );
+
+
+    // Nothing to be found, if we search is_unappropriate == 'TRUE', because it is 'FALSE'
+    $this->_cql_do_search_test_collections('is_unappropriate == "TRUE"', array(), FALSE, SIMPLETEST_APP_ID, SIMPLETEST_USER_ID);
+
+    $a_args = array(
+      'uri' => array(
+        'coll_id' => $s_coll_id,
+      ),
+      'get' => array(
+        'app_id' => SIMPLETEST_APP_ID,
+        'user_id' => SIMPLETEST_USER_ID,
+      ),
+      'post' => array(
+        'title' => SIMPLETEST_GROUP_ID,
+        'description' => SIMPLETEST_USER_ID,
+        'is_unappropriate' => 'true',
+        'is_app_admin' => 'true',
+      )
+    );
+
+    $result = $this->_do_restcall(
+      "media_management_update_collection",
+      array($a_args)
+    );
+
+    $this->_cql_do_search_test_collections('is_unappropriate == "TRUE"', array($s_coll_id => TRUE), FALSE, SIMPLETEST_APP_ID, SIMPLETEST_USER_ID);
+
+    // verwijder de collection via media_management_delete_collection()
+    $a_args = array(
+      'uri' => array(
+        'coll_id' => $s_coll_id
+      ),
+      'get' => array(
+        'app_id' => SIMPLETEST_APP_ID,
+        'user_id' => SIMPLETEST_USER_ID,
+      ),
+    );
+
+    $result = $this->_do_restcall(
+      "media_management_delete_collection",
+      array($a_args)
+    );
+
+
+    //
+    // Collection get test
+    //
+
+    // create test collection2
+    //
+    $s_coll_id = $this->_create_collection();
+
+    // Get by owner (TRUE)
+    $a_args = array(
+      'uri' => array(
+        'coll_id' => $s_coll_id
+      ),
+      'get' => array(
+        'app_id' => SIMPLETEST_APP_ID,
+        'user_id' => SIMPLETEST_USER_ID,
+      ),
+    );
+    $result = $this->_do_restcall(
+      "media_management_get_collection",
+      array($a_args)
+    );
+    $this->assertTrue(
+      $result->response['header']['request_result_id'] == ERRORCODE_OKAY,
+      "Collection is available, %s"
+    );
+    $this->assertTrue(
+      $result->response['items'][1]['coll_id'] == $s_coll_id,
+      "Collection has the good coll_id, %s"
+    );
+
+    // Get by other (TRUE)
+    $a_args = array(
+      'uri' => array(
+        'coll_id' => $s_coll_id
+      ),
+      'get' => array(
+        'app_id' => SIMPLETEST_APP_ID2,
+        'user_id' => SIMPLETEST_USER_ID,
+      ),
+    );
+    $result = $this->_do_restcall(
+      "media_management_get_collection",
+      array($a_args)
+    );
+    $this->assertTrue(
+      $result->response['header']['request_result_id'] == ERRORCODE_OKAY,
+      "Collection is available, %s"
+    );
+    $this->assertTrue(
+      $result->response['items'][1]['coll_id'] == $s_coll_id,
+      "Collection has the good coll_id, %s"
+    );
+
+
+    // Set is_unappropriate = TRUE without is_app_admin=TRUE
+    // So it is not working
+    //
+    $a_args = array(
+      'uri' => array(
+        'coll_id' => $s_coll_id,
+      ),
+      'get' => array(
+        'app_id' => SIMPLETEST_APP_ID,
+        'user_id' => SIMPLETEST_USER_ID,
+      ),
+      'post' => array(
+        'title' => SIMPLETEST_GROUP_ID,
+        'description' => SIMPLETEST_USER_ID,
+        'is_unappropriate' => 'true',
+      )
+    );
+    $result = $this->_do_restcall(
+      "media_management_update_collection",
+      array($a_args)
+    );
+
+    $this->_cql_do_search_test_collections('is_unappropriate == "TRUE"', array(), FALSE, SIMPLETEST_APP_ID, SIMPLETEST_USER_ID);
+
+    // Get by owner (TRUE)
+    $a_args = array(
+      'uri' => array(
+        'coll_id' => $s_coll_id
+      ),
+      'get' => array(
+        'app_id' => SIMPLETEST_APP_ID,
+        'user_id' => SIMPLETEST_USER_ID,
+      ),
+    );
+    $result = $this->_do_restcall(
+      "media_management_get_collection",
+      array($a_args)
+    );
+    $this->assertTrue(
+      $result->response['header']['request_result_id'] == ERRORCODE_OKAY,
+      "Collection is available, %s"
+    );
+    $this->assertTrue(
+      $result->response['items'][1]['coll_id'] == $s_coll_id,
+      "Collection has the good coll_id, %s"
+    );
+
+    // Get by other (TRUE)
+    $a_args = array(
+      'uri' => array(
+        'coll_id' => $s_coll_id
+      ),
+      'get' => array(
+        'app_id' => SIMPLETEST_APP_ID2,
+        'user_id' => SIMPLETEST_USER_ID,
+      ),
+    );
+    $result = $this->_do_restcall(
+      "media_management_get_collection",
+      array($a_args)
+    );
+    $this->assertTrue(
+      $result->response['header']['request_result_id'] == ERRORCODE_OKAY,
+      "Collection is available, %s"
+    );
+    $this->assertTrue(
+      $result->response['items'][1]['coll_id'] == $s_coll_id,
+      "Collection has the good coll_id, %s"
+    );
+
+
+    // Set is_unappropriate = TRUE
+    //
+    $a_args = array(
+      'uri' => array(
+        'coll_id' => $s_coll_id,
+      ),
+      'get' => array(
+        'app_id' => SIMPLETEST_APP_ID,
+        'user_id' => SIMPLETEST_USER_ID,
+      ),
+      'post' => array(
+        'title' => SIMPLETEST_GROUP_ID,
+        'description' => SIMPLETEST_USER_ID,
+        'is_unappropriate' => 'true',
+        'is_app_admin' => 'true',
+      )
+    );
+    $result = $this->_do_restcall(
+      "media_management_update_collection",
+      array($a_args)
+    );
+
+    $this->_cql_do_search_test_collections('is_unappropriate == "TRUE"', array($s_coll_id => TRUE), FALSE, SIMPLETEST_APP_ID, SIMPLETEST_USER_ID);
+
+    // Get by owner (TRUE)
+    $a_args = array(
+      'uri' => array(
+        'coll_id' => $s_coll_id
+      ),
+      'get' => array(
+        'app_id' => SIMPLETEST_APP_ID,
+        'user_id' => SIMPLETEST_USER_ID,
+      ),
+    );
+    $result = $this->_do_restcall(
+      "media_management_get_collection",
+      array($a_args)
+    );
+    $this->assertTrue(
+      $result->response['header']['request_result_id'] == ERRORCODE_OKAY,
+      "Collection is available, %s"
+    );
+    $this->assertTrue(
+      $result->response['items'][1]['coll_id'] == $s_coll_id,
+      "Collection has the good coll_id, %s"
+    );
+
+    // Get by other (FALSE)
+    $a_args = array(
+      'uri' => array(
+        'coll_id' => $s_coll_id
+      ),
+      'get' => array(
+        'app_id' => SIMPLETEST_APP_ID2,
+        'user_id' => SIMPLETEST_USER_ID,
+      ),
+    );
+    $result = $this->_do_restcall(
+      "media_management_get_collection",
+      array($a_args)
+    );
+    $this->assertTrue(
+      $result->response['header']['request_result_id'] == (string)ERRORCODE_IS_UNAPPROPRIATE,
+      "Collection is not authorized, %s"
+    );
+
+
+    // Get by owner, is_app_admin=TRUE (TRUE)
+    //
+    $a_args = array(
+      'uri' => array(
+        'coll_id' => $s_coll_id
+      ),
+      'get' => array(
+        'app_id' => SIMPLETEST_APP_ID,
+        'user_id' => SIMPLETEST_USER_ID,
+        'is_app_admin' => 'TRUE',
+      ),
+    );
+    $result = $this->_do_restcall(
+      "media_management_get_collection",
+      array($a_args)
+    );
+    $this->assertTrue(
+      $result->response['header']['request_result_id'] == ERRORCODE_OKAY,
+      "Collection is available, %s"
+    );
+    $this->assertTrue(
+      $result->response['items'][1]['coll_id'] == $s_coll_id,
+      "Collection has the good coll_id, %s"
+    );
+
+    // Get by other, is_app_admin=TRUE (TRUE)
+    $a_args = array(
+      'uri' => array(
+        'coll_id' => $s_coll_id
+      ),
+      'get' => array(
+        'app_id' => SIMPLETEST_APP_ID2,
+        'user_id' => SIMPLETEST_USER_ID,
+        'is_app_admin' => 'TRUE',
+      ),
+    );
+    $this->assertTrue(
+      $result->response['header']['request_result_id'] == ERRORCODE_OKAY,
+      "Collection is available, %s"
+    );
+    $this->assertTrue(
+      $result->response['items'][1]['coll_id'] == $s_coll_id,
+      "Collection has the good coll_id, %s"
+    );
+
+
+    // Set is_unappropriate = FALSE
+    //
+    $a_args = array(
+      'uri' => array(
+        'coll_id' => $s_coll_id,
+      ),
+      'get' => array(
+        'app_id' => SIMPLETEST_APP_ID,
+        'user_id' => SIMPLETEST_USER_ID,
+      ),
+      'post' => array(
+        'title' => SIMPLETEST_GROUP_ID,
+        'description' => SIMPLETEST_USER_ID,
+        'is_unappropriate' => 'false',
+        'is_app_admin' => 'true',
+      )
+    );
+    $result = $this->_do_restcall(
+      "media_management_update_collection",
+      array($a_args)
+    );
+
+    $this->_cql_do_search_test_collections('is_unappropriate == "TRUE"', array(), FALSE, SIMPLETEST_APP_ID, SIMPLETEST_USER_ID);
+
+    // Get by owner (TRUE)
+    $a_args = array(
+      'uri' => array(
+        'coll_id' => $s_coll_id
+      ),
+      'get' => array(
+        'app_id' => SIMPLETEST_APP_ID,
+        'user_id' => SIMPLETEST_USER_ID,
+      ),
+    );
+    $result = $this->_do_restcall(
+      "media_management_get_collection",
+      array($a_args)
+    );
+    $this->assertTrue(
+      $result->response['header']['request_result_id'] == ERRORCODE_OKAY,
+      "Collection is available, %s"
+    );
+    $this->assertTrue(
+      $result->response['items'][1]['coll_id'] == $s_coll_id,
+      "Collection has the good coll_id, %s"
+    );
+
+    // Get by other (TRUE)
+    $a_args = array(
+      'uri' => array(
+        'coll_id' => $s_coll_id
+      ),
+      'get' => array(
+        'app_id' => SIMPLETEST_APP_ID2,
+        'user_id' => SIMPLETEST_USER_ID,
+      ),
+    );
+    $result = $this->_do_restcall(
+      "media_management_get_collection",
+      array($a_args)
+    );
+    $this->assertTrue(
+      $result->response['header']['request_result_id'] == ERRORCODE_OKAY,
+      "Collection is available, %s"
+    );
+    $this->assertTrue(
+      $result->response['items'][1]['coll_id'] == $s_coll_id,
+      "Collection has the good coll_id, %s"
+    );
+  }
+
+
+  /**
+   * Testing collection if set to isprivate (#16922)
+   */
+  function _testCollectionIsprivate() {
+
+    return;
+
+    // Create test collection
+    $s_coll_id = $this->_create_collection();
+
+    // Set the title
+    $a_args = array(
+      'uri' => array(
+        'coll_id' => $s_coll_id,
+      ),
+      'get' => array(
+        'app_id' => SIMPLETEST_APP_ID,
+        'user_id' => SIMPLETEST_USER_ID,
+      ),
+      'post' => array(
+        'title' => SIMPLETEST_GROUP_ID,
+        'description' => SIMPLETEST_USER_ID,
+      )
+    );
+    $result = $this->_do_restcall(
+      "media_management_update_collection",
+      array($a_args)
+    );
+
+
+    // Simple check
+    $a_args = array(
+      'get' => array(
+        'app_id' => SIMPLETEST_APP_ID,
+        'limit' => 10,
+        'user_id' => SIMPLETEST_USER_ID,
+        'title' => SIMPLETEST_GROUP_ID,
+      )
+    );
+    $a_result = $this->_do_restcall(
+      'media_management_get_collection_search',
+      array($a_args)
+    );
+    $this->assertTrue(
+      $a_result->response['header']['request_result_id'] == ERRORCODE_OKAY &&
+      count($a_result->response['items']) == 1 &&
+      $a_result->response['items'][1]['coll_id'] == $s_coll_id,
+      "Simple collection request, %s"
+    );
+
+
+    // Change isprivate
+    $a_args = array(
+      'uri' => array(
+        'coll_id' => $s_coll_id,
+      ),
+      'get' => array(
+        'app_id' => SIMPLETEST_APP_ID,
+        'user_id' => SIMPLETEST_USER_ID,
+      ),
+      'post' => array(
+        'isprivate' => 'true',
+      )
+    );
+    $result = $this->_do_restcall(
+      "media_management_update_collection",
+      array($a_args)
+    );
+
+
+    // Simple check
+    $a_args = array(
+      'get' => array(
+        'app_id' => SIMPLETEST_APP_ID,
+        'limit' => 10,
+        'user_id' => SIMPLETEST_USER_ID,
+        'title' => SIMPLETEST_GROUP_ID,
+      )
+    );
+    $a_result = $this->_do_restcall(
+      'media_management_get_collection_search',
+      array($a_args)
+    );
+    $this->assertTrue(
+      $a_result->response['header']['request_result_id'] == ERRORCODE_OKAY &&
+      count($a_result->response['items']) == 1 &&
+      $a_result->response['items'][1]['coll_id'] == $s_coll_id,
+      "Simple collection request, %s"
+    );
+
+
+    // Simple check
+    $a_args = array(
+      'get' => array(
+        'app_id' => SIMPLETEST_APP_ID,
+        'limit' => 10,
+        'user_id' => SIMPLETEST_USER_ID,
+        'title' => SIMPLETEST_GROUP_ID,
+        'is_public_list' => 'TRUE',
+      )
+    );
+    $a_result = $this->_do_restcall(
+      'media_management_get_collection_search',
+      array($a_args)
+    );
+    $this->assertTrue(
+      $a_result->response['header']['request_result_id'] == ERRORCODE_OKAY &&
+      count($a_result->response['items']) == 0,
+      "Simple collection request, %s"
+    );
+
+
+    // Delete collection
+    $a_args = array(
+      'uri' => array(
+        'coll_id' => $s_coll_id
+      ),
+      'get' => array(
+        'app_id' => SIMPLETEST_APP_ID,
+        'user_id' => SIMPLETEST_USER_ID,
+      ),
+    );
+    $result = $this->_do_restcall(
+      "media_management_delete_collection",
+      array($a_args)
+    );
+  }
+
+
+  /**
+   * Get a collection.
+   *
+   * @param string $coll_id
+   * @param string $user_id
+   * @param array $a_parameters
+   */
+  protected function getCollection($coll_id, $user_id = self::SIMPLETEST_USER_ID, array $a_parameters = array()) {
+
+    // Required parameter.
+    $a_parameters[mediamosa_rest_call_collection_create::USER_ID] = $user_id;
+
+    // Do not set the app ID, handle by us.
+    $this->assertFalse(isset($a_parameters[mediamosa_rest_call_collection_create::APP_ID]));
+
+    $uri = strtr('collection/@coll_id', array('@coll_id' => $coll_id));
+
+    // Do Post call.
+    $response = $this->restCallGet($uri, $a_parameters);
+
+    $this->pass(strtr("Gets the collection id: @coll_id'.", array('@coll_id' => $coll_id)));
+
+    // Return data.
+    return $response['xml']->items->item[0];
+  }
+
+
+  /**
+   * Search collections.
+   *
+   * @param string $user_id
+   * @param array $a_parameters
+   */
+  protected function getCollections($user_id = self::SIMPLETEST_USER_ID, array $a_parameters = array()) {
+    // Parameters collection
+    $a_parameters += array(
+      mediamosa_rest_call_asset_create::IS_APP_ADMIN => 'false',
+      mediamosa_rest_call_asset_create::GROUP_ID => '',
+    );
+
+    // Required.
+    $a_parameters[mediamosa_rest_call_asset_create::USER_ID] = $user_id;
+
+    // Do not set the app ID, handle by us.
+    $this->assertFalse(isset($a_parameters[mediamosa_rest_call_asset_create::APP_ID]));
+
+    $uri = 'collection';
+
+    // Do Post call.
+    $response = $this->restCallGet($uri, $a_parameters);
+
+    // Return data.
+    return $response['xml']->items->item[0];
+  }
+
+  /**
+   * Create a collection (using /asset/collection).
+   *
+   * @param array $a_parameters
+   */
+  protected function createCollection(array $a_parameters = array()) {
+    // Parameters collection.
+    $a_parameters += array(
+      mediamosa_rest_call_collection_create::USER_ID => self::SIMPLETEST_USER_ID,
+      mediamosa_rest_call_collection_create::GROUP_ID => self::SIMPLETEST_GROUP_ID,
+/*       mediamosa_rest_call_collection_create::PRIVATE_ => 'FALSE', */
+/*       mediamosa_rest_call_collection_create::PUBLIC_ => 'TRUE', */
+/*       mediamosa_rest_call_collection_create::CATEGORY => 'FALSE', */
+/*       mediamosa_rest_call_collection_create::ISPRIVATE => 'FALSE', */
+/*       mediamosa_rest_call_collection_create::PUBLIC_ASSIGN => 'FALSE', */
+/*       mediamosa_rest_call_collection_create::IS_UNAPPROPRIATE => 'FALSE', */
+);
+
+    // Do not set the app ID, handle by us.
+    $this->assertFalse(isset($a_parameters[mediamosa_rest_call_collection_create::APP_ID]));
+
+    // Do Post call.
+    $response = $this->restCallPost('collection/create', $a_parameters);
+
+    $this->pass(strtr("Create collection with ID '@id'.", array('@id' => $response['xml']->items->item[0]->coll_id)));
+
+    // Return the asset_id.
+    return $response['xml']->items->item[0]->coll_id;
+  }
+
+  /**
+   * Update collection (using /collection/{id}).
+   *
+   * @param string $coll_id
+   * @param string $user_id
+   * @param array $a_parameters
+   */
+  protected function updateCollection($coll_id, $user_id = self::SIMPLETEST_USER_ID, array $a_parameters = array()) {
+    // Parameters asset.
+    $a_parameters += array(
+      mediamosa_rest_call_collection_update::USER_ID => self::SIMPLETEST_USER_ID,
+      mediamosa_rest_call_collection_update::GROUP_ID => self::SIMPLETEST_GROUP_ID,
+      mediamosa_rest_call_collection_update::PRIVATE_ => 'FALSE',
+      mediamosa_rest_call_collection_update::PUBLIC_ => 'TRUE',
+      mediamosa_rest_call_collection_update::CATEGORY => 'FALSE',
+      mediamosa_rest_call_collection_update::ISPRIVATE => 'FALSE',
+      mediamosa_rest_call_collection_update::PUBLIC_ASSIGN => 'FALSE',
+      mediamosa_rest_call_collection_update::IS_UNAPPROPRIATE => 'FALSE',
+      mediamosa_rest_call_collection_update::TITLE => '',
+      mediamosa_rest_call_collection_update::DESCRIPTION => '',
+    );
+
+    // Required.
+    $a_parameters[mediamosa_rest_call_collection_update::USER_ID] = $user_id;
+
+    // Do not set the app ID, handle by us.
+    $this->assertFalse(isset($a_parameters[mediamosa_rest_call_collection_update::APP_ID]));
+
+    $uri = strtr('collection/@coll_id', array('@coll_id' => $coll_id));
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $a_parameters);
+
+    $this->pass(strtr("Update collection with ID '@id'.", array('@id' => $coll_id)));
+
+    // Return.
+    return;
+  }
+
+}
