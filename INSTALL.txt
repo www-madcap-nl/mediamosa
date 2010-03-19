@@ -1,4 +1,4 @@
-// $Id: INSTALL.txt,v 1.76 2009/09/14 07:33:55 dries Exp $
+// $Id: INSTALL.txt,v 1.79 2010/02/13 21:35:08 dries Exp $
 
 CONTENTS OF THIS FILE
 ---------------------
@@ -18,11 +18,12 @@ Drupal requires:
 
  - a web server, Apache (version 2.0 or greater) is recommended,
  - PHP 5 (5.2.0 or greater) (http://www.php.net/),
- - and either MySQL (5.0 or greater) (http://www.mysql.com/), PostgreSQL (8.3
+ - and either MySQL (5.0.15 or greater) (http://www.mysql.com/), PostgreSQL (8.3
    or greater) (http://www.postgresql.org/), or SQLite (3.4.2 or greater)
    (http://www.sqlite.org/).
 
-For more detailed information about Drupal requirements, see "Requirements"
+For more detailed information about Drupal requirements, including a list of
+PHP extensions and configurations that are required, see "System requirements"
 (http://drupal.org/requirements) in the Drupal handbook.
 
 For detailed information on how to configure a test server environment using
@@ -237,7 +238,7 @@ INSTALLATION
    Note, however, that cron tasks will only be executed when there are site
    visitors. You can enable the built-in cron feature at:
 
-          Administer > Configuration and modules > Development > Maintenance mode
+          Administer > Configuration > System > Site information
 
    Advanced users may want to ensure that cron tasks are executed periodically.
    To do this, visit the page "cron.php", which executes maintenance tasks on

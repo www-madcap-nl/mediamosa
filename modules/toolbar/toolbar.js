@@ -1,87 +1,108 @@
-// $Id: toolbar.js,v 1.6 2009/09/15 20:50:48 dries Exp $
+// $Id: toolbar.js,v 1.15 2010/02/10 10:54:12 dries Exp $
 (function ($) {
 
+Drupal.toolbar = Drupal.toolbar || {};
+
 /**
- * Implementation of Drupal.behaviors for admin.
+ * Attach toggling behavior and notify the overlay of the toolbar.
  */
-Drupal.behaviors.admin = {
+Drupal.behaviors.toolbar = {
   attach: function(context) {
 
-    // Set the intial state of the toolbar.
-    $('#toolbar', context).once('toolbar', Drupal.admin.toolbar.init);
+    // Set the initial state of the toolbar.
+    $('#toolbar', context).once('toolbar', Drupal.toolbar.init);
 
-    // Toggling of admin shortcuts visibility.
-    $('#toolbar span.toggle', context).once('toolbar-toggle').click(function() {
-      Drupal.admin.toolbar.toggle();
+    // Toggling toolbar drawer.
+    $('#toolbar a.toggle', context).once('toolbar-toggle').click(function(e) {
+      Drupal.toolbar.toggle();
+      // As the toolbar is an overlay displaced region, overlay should be
+      // notified of it's height change to adapt its position.
+      $(window).triggerHandler('resize.overlay-event');
       return false;
     });
   }
 };
 
 /**
- * Initialize cautiously to avoid collisions with other modules.
- */
-Drupal.admin = Drupal.admin || {};
-Drupal.admin.toolbar = Drupal.admin.toolbar || {};
-
-/**
  * Retrieve last saved cookie settings and set up the initial toolbar state.
  */
-Drupal.admin.toolbar.init = function() {
+Drupal.toolbar.init = function() {
   // Retrieve the collapsed status from a stored cookie.
-  var collapsed = $.cookie('Drupal.admin.toolbar.collapsed');
+  var collapsed = $.cookie('Drupal.toolbar.collapsed');
 
   // Expand or collapse the toolbar based on the cookie value.
   if (collapsed == 1) {
-    Drupal.admin.toolbar.collapse();
+    Drupal.toolbar.collapse();
   }
   else {
-    Drupal.admin.toolbar.expand();
+    Drupal.toolbar.expand();
   }
-}
+};
 
 /**
- * Collapse the admin toolbar.
+ * Collapse the toolbar.
  */
-Drupal.admin.toolbar.collapse = function() {
-  $('#toolbar div.toolbar-shortcuts').addClass('collapsed');
-  $('#toolbar span.toggle').removeClass('toggle-active');
-  $('body').removeClass('toolbar-shortcuts');
+Drupal.toolbar.collapse = function() {
+  var toggle_text = Drupal.t('Open the drawer');
+  $('#toolbar div.toolbar-drawer').addClass('collapsed');
+  $('#toolbar a.toggle')
+    .removeClass('toggle-active')
+    .attr('title',  toggle_text)
+    .html(toggle_text);
+  $('body').addClass('toolbar-drawer').css('paddingTop', Drupal.toolbar.height());
   $.cookie(
-    'Drupal.admin.toolbar.collapsed', 
-    1, 
-    {path: Drupal.settings.basePath}
+    'Drupal.toolbar.collapsed',
+    1,
+    {
+      path: Drupal.settings.basePath,
+      // The cookie should "never" expire.
+      expires: 36500
+    }
   );
-}
+};
 
 /**
- * Expand the admin toolbar.
+ * Expand the toolbar.
  */
-Drupal.admin.toolbar.expand = function() {
-  $('#toolbar div.toolbar-shortcuts').removeClass('collapsed');
-  $('#toolbar span.toggle').addClass('toggle-active');
-  $('body').addClass('toolbar-shortcuts');
+Drupal.toolbar.expand = function() {
+  var toggle_text = Drupal.t('Close the drawer');
+  $('#toolbar div.toolbar-drawer').removeClass('collapsed');
+  $('#toolbar a.toggle')
+    .addClass('toggle-active')
+    .attr('title',  toggle_text)
+    .html(toggle_text);
+  $('body').addClass('toolbar-drawer').css('paddingTop', Drupal.toolbar.height());
   $.cookie(
-    'Drupal.admin.toolbar.collapsed', 
-    0, 
-    {path: Drupal.settings.basePath}
+    'Drupal.toolbar.collapsed',
+    0,
+    {
+      path: Drupal.settings.basePath,
+      // The cookie should "never" expire.
+      expires: 36500
+    }
   );
-}
+};
 
 /**
- * Toggle the admin toolbar.
+ * Toggle the toolbar.
  */
-Drupal.admin.toolbar.toggle = function() {
-  if ($('#toolbar div.toolbar-shortcuts').is('.collapsed')) {
-    Drupal.admin.toolbar.expand();
+Drupal.toolbar.toggle = function() {
+  if ($('#toolbar div.toolbar-drawer').hasClass('collapsed')) {
+    Drupal.toolbar.expand();
   }
   else {
-    Drupal.admin.toolbar.collapse();
+    Drupal.toolbar.collapse();
   }
-}
+};
 
-Drupal.admin.toolbar.height = function() {
-  return $("#toolbar").height();
-}
+Drupal.toolbar.height = function() {
+  var height = $('#toolbar').outerHeight();
+  // In IE, Shadow filter adds some extra height, so we need to remove it from
+  // the returned height.
+  if ($('#toolbar').css('filter').match(/DXImageTransform\.Microsoft\.Shadow/)) {
+    height -= $('#toolbar').get(0).filters.item("DXImageTransform.Microsoft.Shadow").strength;
+  }
+  return height;
+};
 
 })(jQuery);

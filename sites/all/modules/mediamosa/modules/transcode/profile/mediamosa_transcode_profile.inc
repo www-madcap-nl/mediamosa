@@ -30,161 +30,64 @@
   */
 
 /**
- * Implementation of hook_view().
+ * Collect the client apps as app_id => title.
  */
-function mediamosa_transcode_profile_view($node, $build_mode = 'full') {
-  // Default parameters
-  $rows = array(
-    array(t('Title'), check_plain($node->title)),
-    array(t('App ID'), $node->app_id),
-    array(t('Tool'), $node->tool),
-    array(t('File extension'), $node->file_extension),
-    array(t('Is default profile'), t(drupal_ucfirst(strtolower($node->is_default_profile)))),
-  );
-
-  // Optional parameters
-  $all_options = mediamosa_transcode_profile::get_by_tool(NULL, $node->tool);
-  foreach ($node->options as $key => $value) {
-    $rows[] = array($all_options[$key]['field_title'], check_plain($value));
-  }
-
-  // Add timestamps
-  $rows[] = array(t('Created'), format_date($node->created, 'short'));
-  $rows[] = array(t('Changed'), format_date($node->changed, 'short'));
-
-  $node->content['transcode_profile'] = array(
-    '#markup' => theme('table', array(t('Parameter'), t('Value')), $rows),
-  );
-
-  return $node;
-}
-
-/**
- * Implementation of hook_form().
- */
-function mediamosa_transcode_profile_form($node, $form_state) {
-  // If we're inserting a new node, set some defaults:
-  if (!isset($node->nid)) {
-    $node->app_id = 0;
-    $node->tool = 'ffmpeg';
-    $node->is_default_profile = 'FALSE';
-    $node->file_extension = '';
-  }
-
-  $form = array();
-
-  $form['required'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Required parameters'),
-    '#description' => t('Required parameters for a transcoding profile.'),
-  );
-
-print '<pre>Debug in ' . __FILE__ . ', line ' . __LINE__ . "\n"; // @TODO remove!
-print htmlspecialchars(print_r($node, TRUE));
-print '</pre>';
+function _mediamosa_get_apps() {
+  // Get the apps for the drop down listing.
+  $apps = array(0 => t('Global profile (no owner)'));
 
   // Gather all apps
-  foreach (mediamosa_app::get_all_apps(array(mediamosa_app_db::APP_ID, mediamosa_app_db::NAME), mediamosa_app_db::NAME, 'ASC') as $app) {
-    $all_apps[$app[mediamosa_app_db::APP_ID]] = $app[mediamosa_app_db::NAME];
+  foreach (mediamosa_app::get_all_apps(array(mediamosa_app_db::APP_ID, mediamosa_app_db::APP_NAME), mediamosa_app_db::APP_NAME, 'ASC') as $app) {
+    $apps[$app[mediamosa_app_db::APP_ID]] = $app[mediamosa_app_db::APP_NAME];
   }
 
-  $form['required']['app_id'] = array(
-    '#title' => t('Application'),
-    '#type' => 'select',
-    '#default_value' => $node->{mediamosa_transcode_profile_db::APP_ID},
-    '#required' => TRUE,
-    '#options' => $all_apps,
-    '#description' => t('The application that owns this profile.'),
-  );
-  $form['required']['title'] = array(
-    '#title' => t('Profile name'),
-    '#type' => 'textfield',
-    '#default_value' => $node->title,
-    '#required' => TRUE,
-    '#description' => t('The name of this transcode profile.'),
-  );
-  $form['required']['is_default_profile'] = array(
-    '#title' => t('Is this the default profile?'),
-    '#type' => 'select',
-    '#default_value' => $node->is_default_profile,
-    '#options' => array('TRUE' => t('Yes'), 'FALSE' => t('No')),
-    '#required' => TRUE,
-    '#description' => t('If a transcoding profile is ommited from a transcoding request, the default profile will be choosen.'),
-  );
-  $form['required']['tool'] = array(
-    '#title' => t('Encoder used'),
-    '#type' => 'select',
-    '#default_value' => $node->tool,
-    '#options' => array('ffmpeg' => t('FFMpeg'), 'windows' => t('Windows')),
-    '#disabled' => (isset($node->nid)),
-    '#description' => t('The encoding tool used to perform the transcoding. Currently there are 2 options available: FFMpeg and Windows (used for WMV).'),
-  );
-  $form['required']['file_extension'] = array(
-    '#title' => t('File extension'),
-    '#type' => 'textfield',
-    '#default_value' => $node->file_extension,
-    '#required' => TRUE,
-    '#description' => t('This file extension is only used for the generated filename, which will be the original filename (minus original extension) plus this extension.'),
-  );
-
-  if (isset($node->nid)) {
-    $a_tools = mediamosa_transcode_profile::get_by_tool(NULL, $node->tool)->fetchAll();
-
-    $form['tool_options'] = array(
-      '#type' => 'fieldset',
-      '#title' => t('@tool optional parameters', array('@tool' => drupal_ucfirst($node->tool))),
-      '#collapsed' => TRUE,
-      '#collapsible' => TRUE,
-    );
-
-    // Show all parameters for profile.
-    foreach ($a_tools as $key => $a_tool) {
-      $a_tool[mediamosa_transcode_mapping_db::ALLOWED_VALUE] = trim($a_tool[mediamosa_transcode_mapping_db::ALLOWED_VALUE]) == '' ? array() : explode(';', $a_tool[mediamosa_transcode_mapping_db::ALLOWED_VALUE]);
-
-      // Tool required?
-      $is_required = $a_tool[mediamosa_transcode_mapping_db::REQUIRED] == mediamosa_transcode_mapping_db::REQUIRED_TRUE;
-      $weight = $is_required ? -10 : -15;
-
-      if (empty($a_tool[mediamosa_transcode_mapping_db::ALLOWED_VALUE])) {
-        $form['tool_options'][$a_tool[mediamosa_transcode_mapping_db::NICE_PARAMETER]] = array(
-          '#description' => t(''),
-          '#type' => 'textfield',
-          '#title' => t($a_tool[mediamosa_transcode_mapping_db::NICE_PARAMETER]),
-          '#required' => $is_required,
-          '#default_value' => isset($node->{$a_tool[mediamosa_transcode_mapping_db::NICE_PARAMETER]}) ? $node->{$a_tool[mediamosa_transcode_mapping_db::NICE_PARAMETER]} : '',
-          '#size' => 25,
-          '#description' => t('The allowed value is between @min_value and @max_value.', array('@min_value' => $a_tool[mediamosa_transcode_mapping_db::MIN_VALUE], '@max_value' => $a_tool[mediamosa_transcode_mapping_db::MAX_VALUE])),
-          '#weight' => $weight
-        );
-      }
-      else {// Select box.
-        $a_select_box = array();
-        foreach ($a_tool[mediamosa_transcode_mapping_db::ALLOWED_VALUE] as $allowed_value) {
-          $a_select_box[$allowed_value] = $allowed_value;
-        }
-
-        $form['tool_options'][$a_tool[mediamosa_transcode_mapping_db::NICE_PARAMETER]] = array(
-          '#description' => t(''),
-          '#type' => 'select',
-          '#title' => t($a_tool[mediamosa_transcode_mapping_db::NICE_PARAMETER]),
-          '#required' => $is_required,
-          '#default_value' => isset($node->{$a_tool[mediamosa_transcode_mapping_db::NICE_PARAMETER]}) ? $node->{$a_tool[mediamosa_transcode_mapping_db::NICE_PARAMETER]} : '',
-          '#options' => $a_select_box,
-          '#weight' => $weight['general']
-        );
-      }
-    }
-  }
-
-  return $form;
+  return $apps;
 }
 
 /**
- * Implementation of hook_form_alter().
+ * Show the listing of the current transcode profiles.
  */
-function mediamosa_transcode_form_alter(&$form, &$form_state, $form_id) {
+function _mediamosa_transcode_profile_list() {
 
-  if ($form_id == 'mediamosa_transcode_profile_node_form') {
-    unset($form['body']);
+  // Get the apps.
+  $apps = _mediamosa_get_apps();
+
+  $header = array(
+    array('data' => t('Profile'), 'field' => 'tp.' . mediamosa_transcode_profile_db::PROFILE),
+    array('data' => t('Is Default'), 'field' => 'tp.' . mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE),
+    array('data' => t('Tool'), 'field' => 'tp.' . mediamosa_transcode_profile_db::TOOL),
+    array('data' => t('Owner'), 'field' => 'tp.' . mediamosa_transcode_profile_db::APP_ID),
+    t('Operations')
+  );
+
+  $query = mediamosa_db::db_select(mediamosa_transcode_profile_db::TABLE_NAME, 'tp')->extend('PagerDefault')->extend('TableSort');
+  $result = $query
+    ->fields('tp')
+    ->orderByHeader($header)
+    ->limit(mediamosa_settings::maintenance_items_per_page())
+    ->execute();
+
+  // Get destination.
+  $l_options = array('query' => drupal_get_destination());
+
+  $rows = array();
+  foreach ($result as $row) {
+    $actions = array(
+      l(t('Edit'), 'admin/mediamosa/config/transcode_profile/' . $row[mediamosa_transcode_profile_db::NID] . '/edit', $l_options),
+      l(t('Delete'), 'admin/mediamosa/config/transcode_profile/' . $row[mediamosa_transcode_profile_db::NID] . '/delete', $l_options),
+    );
+
+    $owner = isset($apps[$row[mediamosa_transcode_profile_db::APP_ID]]) ? $apps[$row[mediamosa_transcode_profile_db::APP_ID]] : t('Unknown owner');
+    $rows[] = array(
+      'title' => array('data' => l($row[mediamosa_transcode_profile_db::PROFILE], 'admin/mediamosa/config/transcode_profile/' . $row[mediamosa_transcode_profile_db::NID]), 'field' => $row[mediamosa_transcode_profile_db::PROFILE]),
+      'description' => $row[mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE],
+      'tool' => $row[mediamosa_transcode_profile_db::TOOL],
+      'owner' => $owner,
+      implode(' | ', $actions),
+    );
   }
+
+  $output = theme('table', array('header' => $header, 'rows' => $rows, 'empty' => t('You have no transcode profiles. Click on the <em>Add</em> tab to create one.')));
+  $output .= theme('pager');
+  return $output;
 }

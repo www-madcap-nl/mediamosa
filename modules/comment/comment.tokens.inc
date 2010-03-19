@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.tokens.inc,v 1.1 2009/08/19 20:19:36 dries Exp $
+// $Id: comment.tokens.inc,v 1.10 2010/01/09 21:54:00 webchick Exp $
 
 /**
  * @file
@@ -7,7 +7,7 @@
  */
 
 /**
- * Implement hook_token_info().
+ * Implements hook_token_info().
  */
 function comment_token_info() {
   $type = array(
@@ -108,13 +108,13 @@ function comment_token_info() {
 }
 
 /**
- * Implement hook_tokens().
+ * Implements hook_tokens().
  */
 function comment_tokens($type, $tokens, array $data = array(), array $options = array()) {
   $url_options = array('absolute' => TRUE);
   if (isset($options['language'])) {
-    $url_options['language'] = $language;
-    $language_code = $language->language;
+    $url_options['language'] = $options['language'];
+    $language_code = $options['language']->language;
   }
   else {
     $language_code = NULL;
@@ -175,16 +175,17 @@ function comment_tokens($type, $tokens, array $data = array(), array $options = 
           break;
 
         case 'body':
-          $replacements[$original] = $sanitize ? check_markup($comment->comment, $comment->format) : $replacements[$original] = $comment->comment;
+          $replacements[$original] = $sanitize ? check_markup($comment->comment, $comment->format, '', TRUE) : $comment->comment;
           break;
 
         // Comment related URLs.
         case 'url':
-          $replacements[$original] = url('comment/' . $comment->cid, array('absolute' => TRUE, 'fragment' => 'comment-' . $comment->cid));
+          $url_options['fragment']  = 'comment-' . $comment->cid;
+          $replacements[$original] = url('comment/' . $comment->cid, $url_options);
           break;
 
         case 'edit-url':
-          $replacements[$original] = url('comment/edit/' . $comment->cid, array('absolute' => TRUE));
+          $replacements[$original] = url('comment/' . $comment->cid . '/edit', $url_options);
           break;
 
         // Default values for the chained tokens handled below.
@@ -200,12 +201,17 @@ function comment_tokens($type, $tokens, array $data = array(), array $options = 
           break;
 
         case 'created':
-          $replacements[$original] = format_date($comment->timestamp, 'medium', '', NULL, $language_code);
+          $replacements[$original] = format_date($comment->created, 'medium', '', NULL, $language_code);
+          break;
+
+        case 'changed':
+          $replacements[$original] = format_date($comment->changed, 'medium', '', NULL, $language_code);
           break;
 
         case 'node':
           $node = node_load($comment->nid);
-          $replacements[$original] = $sanitize ? filter_xss($node->title) : $node->title;
+          $title = $node->title;
+          $replacements[$original] = $sanitize ? filter_xss($title) : $title;
           break;
       }
     }
@@ -217,7 +223,7 @@ function comment_tokens($type, $tokens, array $data = array(), array $options = 
     }
 
     if ($date_tokens = token_find_with_prefix($tokens, 'created')) {
-      $replacements += token_generate('date', $date_tokens, array('date' => $comment->timestamp), $options);
+      $replacements += token_generate('date', $date_tokens, array('date' => $comment->created), $options);
     }
 
     if (($parent_tokens = token_find_with_prefix($tokens, 'parent')) && $parent = comment_load($comment->pid)) {

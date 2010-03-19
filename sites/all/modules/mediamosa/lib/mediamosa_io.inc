@@ -112,6 +112,17 @@ class mediamosa_io {
   }
 
   /**
+   * Return the file extension (excluding the dot, like 'jpg' or 'mp4').
+   *
+   * @param string $filename
+   */
+  static public function get_ext($filename) {
+    $last_dot = strripos($filename, '.'); // 0-index
+
+    return $last_dot === FALSE && ($last_dot + 1) != strlen($filename) ? '' : mediamosa_unicode::substr($filename, $last_dot + 1);
+  }
+
+  /**
    * Returns directory name component of path.
    *
    * @param string $path

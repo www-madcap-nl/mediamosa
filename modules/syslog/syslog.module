@@ -1,5 +1,5 @@
 <?php
-// $Id: syslog.module,v 1.25 2009/08/27 07:18:06 dries Exp $
+// $Id: syslog.module,v 1.33 2010/01/27 11:29:51 dries Exp $
 
 /**
  * @file
@@ -14,24 +14,27 @@ else {
 }
 
 /**
- * Implement hook_help().
+ * Implements hook_help().
  */
 function syslog_help($path, $arg) {
   switch ($path) {
     case 'admin/help#syslog':
-      $output = '<p>' . t("Syslog logs events by sending messages to the logging facility of your web server's operating system. Syslog is an operating system administrative logging tool, and provides valuable information for use in system management and security auditing. Most suited to medium and large sites, syslog provides filtering tools that allow messages to be routed by type and severity.") . '</p>';
-      $output .= '<h2>' . t('UNIX, Linux & Mac OS X') . '</h2>';
-      $output .= '<p>' . t('On UNIX, Linux and Mac OS X, the file /etc/syslog.conf defines this routing configuration. Messages can be flagged with the codes <code>LOG_LOCAL0</code> through <code>LOG_LOCAL7</code>. For information on syslog facilities, severity levels, and how to set up <code>syslog.conf</code>, see the <a href="@syslog_conf"><code>syslog.conf</code> manual page</a>.', array('@syslog_conf' => url('http://www.rt.com/man/syslog.5.html'))) . '</p>';
-      $output .= '<h2>' . t('Microsoft Windows') . '</h2>';
-      $output .= '<p>' . t('On Microsoft Windows messages are always sent to the Event Log using the code <code>LOG_USER</code>.') . '</p>';
-      $output .= '<p>' . t('For more information, see the <a href="@syslog">online handbook</a> and  and PHP\'s <a href="@php_openlog">openlog</a> and <a href="@php_syslog">syslog</a> functions.', array('@syslog' => 'http://drupal.org/handbook/modules/syslog', '@php_openlog' => url('http://www.php.net/manual/function.openlog.php'), '@php_syslog' => url('http://www.php.net/manual/function.syslog.php'))) . '</p>';
-
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t("The Syslog module logs events by sending messages to the logging facility of your web server's operating system. Syslog is an operating system administrative logging tool that provides valuable information for use in system management and security auditing. Most suited to medium and large sites, Syslog provides filtering tools that allow messages to be routed by type and severity. For more information, see the online handbook entry for <a href='@syslog'>Syslog module</a> and PHP's <a href='@php_openlog'>openlog</a> and <a href='@php_syslog'>syslog</a> functions.", array('@syslog' => 'http://drupal.org/handbook/modules/syslog', '@php_openlog' => 'http://www.php.net/manual/function.openlog.php', '@php_syslog' => 'http://www.php.net/manual/function.syslog.php')) . '</p>';
+      $output .= '<h3>' . t('Uses') . '</h3>';
+      $output .= '<dl>';
+      $output .= '<dt>' . t('Logging for UNIX, Linux, and Mac OS X') . '</dt>';
+      $output .= '<dd>' . t('On UNIX, Linux, and Mac OS X, the file <em>/etc/syslog.conf</em> defines the routing configuration. Messages can be flagged with the codes <code>LOG_LOCAL0</code> through <code>LOG_LOCAL7</code>. For information on Syslog facilities, severity levels, and how to set up <em>syslog.conf</em>, see the <em>syslog.conf</em> manual page on your command line.') . '</dd>';
+      $output .= '<dt>' . t('Logging for Microsoft Windows') . '</dt>';
+      $output .= '<dd>' . t('On Microsoft Windows, messages are always sent to the Event Log using the code <code>LOG_USER</code>.') . '</dd>';
+      $output .= '</dl>';
       return $output;
   }
 }
 
 /**
- * Implement hook_form_FORM_ID_alter().
+ * Implements hook_form_FORM_ID_alter().
  */
 function syslog_form_system_logging_settings_alter(&$form, &$form_state) {
   if (defined('LOG_LOCAL0')) {
@@ -43,7 +46,7 @@ function syslog_form_system_logging_settings_alter(&$form, &$form_state) {
       '#options'       => syslog_facility_list(),
       '#description'   => t('Depending on the system configuration, Syslog and other logging tools use this code to identify or filter messages from within the entire system log.') . $help,
      );
-    $form['buttons']['#weight'] = 1;
+    $form['actions']['#weight'] = 1;
   }
 }
 
@@ -66,7 +69,7 @@ function syslog_facility_list() {
 }
 
 /**
- * Implement hook_watchdog().
+ * Implements hook_watchdog().
  */
 function syslog_watchdog(array $log_entry) {
   $log_init = &drupal_static(__FUNCTION__, FALSE);
@@ -77,13 +80,16 @@ function syslog_watchdog(array $log_entry) {
     openlog('drupal', LOG_NDELAY, variable_get('syslog_facility', $default_facility));
   }
 
-  syslog($log_entry['severity'], theme('syslog_format', $log_entry));
+  syslog($log_entry['severity'], theme('syslog_format', array('entry' => $log_entry)));
 }
 
+/**
+ * Implements hook_theme().
+ */
 function syslog_theme() {
   return array(
     'syslog_format' => array(
-      'arguments' => array('entry' => NULL),
+      'variables' => array('entry' => NULL),
     ),
   );
 }
@@ -93,7 +99,8 @@ function syslog_theme() {
  *
  * @ingroup themeable
  */
-function theme_syslog_format($entry) {
+function theme_syslog_format($variables) {
+  $entry = $variables['entry'];
   global $base_url;
 
   $message  = $base_url;

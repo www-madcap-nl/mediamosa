@@ -52,7 +52,7 @@ function mediamosa_maintenance_menu() {
   $items['admin/mediamosa/browse'] = array(
     'title' => 'Browse',
     'access arguments' => array('access mediamosa'),
-    'page callback' => 'mediamosa_maintenance_admin_page',
+    'page callback' => '_mediamosa_maintenance_admin_page',
     'page arguments' => array('admin/mediamosa/browse'),
     'file' => 'mediamosa_maintenance.admin.inc',
     'type' => MENU_LOCAL_TASK,
@@ -60,11 +60,12 @@ function mediamosa_maintenance_menu() {
   $items['admin/mediamosa/browse/list'] = array(
     'title' => 'List',
     'type' => MENU_DEFAULT_LOCAL_TASK,
+    'file' => 'mediamosa_maintenance.admin.inc',
   );
   $items['admin/mediamosa/config'] = array(
     'title' => 'Configuration',
     'access arguments' => array('access mediamosa'),
-    'page callback' => 'mediamosa_maintenance_admin_page',
+    'page callback' => '_mediamosa_maintenance_admin_page',
     'page arguments' => array('admin/mediamosa/config'),
     'file' => 'mediamosa_maintenance.admin.inc',
     'type' => MENU_LOCAL_TASK,
@@ -72,6 +73,7 @@ function mediamosa_maintenance_menu() {
   $items['admin/mediamosa/config/list'] = array(
     'title' => 'List',
     'type' => MENU_DEFAULT_LOCAL_TASK,
+    'file' => 'mediamosa_maintenance.admin.inc',
   );
 
   return $items;
@@ -105,6 +107,13 @@ function mediamosa_maintenance_help($path, $arg) {
  * Generate the status page.
  */
 function _mediamosa_maintenance_status() {
+
+  // If we are set as Home page, the breadcrumb isnt set, lets do it here.
+  $breadcrumb = array();
+  $breadcrumb[] = l(t('Home'), NULL);
+  $breadcrumb[] = l(t('Administer'), 'admin');
+  $breadcrumb[] = l(t('Mediamosa 2'), 'mediamosa');
+  drupal_set_breadcrumb($breadcrumb);
 
   // Need the classes of simpletest.
   drupal_add_css(drupal_get_path('module', 'simpletest') . '/simpletest.css');
@@ -158,7 +167,7 @@ function _mediamosa_maintenance_status() {
   }
 
   // theme de arrays naar een tabel
-  $content = theme('table', $header, $rows);
+  $content = theme('table', array('header' => $header, 'rows' => $rows, 'empty' => 'No status information found, please check if cron is working properly.'));
 
   return $content;
 }

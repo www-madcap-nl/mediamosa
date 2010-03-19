@@ -76,6 +76,11 @@ class mediamosa {
     return trim(substr(implode('/', arg()), strlen(MEDIAMOSA_MENU_PATH)), '/');
   }
 
+  // Return the request_uri var, which can be /rest/?foo=foo
+  static public function request_uri() {
+    return request_uri(); // To Drupal mapped.
+  }
+
   // ------------------------------------------------------------------ Protected Functions.
 
   // ------------------------------------------------------------------ Static Functions.
@@ -86,8 +91,20 @@ class mediamosa {
    * @return object
    *  The core object.
    */
-  static public function get() {
+  static public function get($new_mediamosa_response = NULL) {
     static $o_mediamosa_response = NULL;
+
+    if (isset($new_mediamosa_response)) {
+      // Save current, we need to return it.
+      $current_o_mediamosa_response = $o_mediamosa_response;
+
+      // Change to this.
+      $o_mediamosa_response = $new_mediamosa_response;
+
+      // Return current to restore later.
+      return $current_o_mediamosa_response;
+    }
+
 
     if (!isset($o_mediamosa_response)) {
       class_exists('mediamosa_response', TRUE);
@@ -261,9 +278,9 @@ class mediamosa {
    */
   static public function exit_503($message) {
     drupal_maintenance_theme();
-    drupal_set_header($_SERVER['SERVER_PROTOCOL'] . ' 503 Service unavailable');
+    drupal_add_http_header('Status', '503 Service unavailable');
     drupal_set_title(t('Site offline'));
-    print theme('maintenance_page', filter_xss_admin($message));
+    print theme('maintenance_page', array('content' => filter_xss_admin($message)));
     drupal_page_footer();
     exit;
   }
@@ -276,9 +293,9 @@ class mediamosa {
    */
   static public function exit_404($message) {
     drupal_maintenance_theme();
-    drupal_set_header($_SERVER['SERVER_PROTOCOL'] . ' 404 Page not found');
+    drupal_add_http_header('Status', '404 Page not found');
     drupal_set_title(t('Page not found'));
-    print theme('maintenance_page', filter_xss_admin($message));
+    print theme('maintenance_page', array('content' => filter_xss_admin($message)));
     drupal_page_footer();
     exit;
   }
@@ -398,11 +415,6 @@ class mediamosa {
     return $now_timestamp;
   }
 
-
-  // Return the request_uri var.
-  static public function request_uri() {
-    return request_uri(); // To Drupal mapped.
-  }
 
   /**
    * Wrapper around the drupal_http_request function.
@@ -564,6 +576,6 @@ class mediamosa {
    * Test if we are running on windows.
    */
   static public function is_windows_platform() {
-    return (mediamosa_unicode::substr(PHP_OS, 0, 3) == "WIN");
+    return (mediamosa_unicode::substr(PHP_OS, 0, 3) == 'WIN');
   }
 }

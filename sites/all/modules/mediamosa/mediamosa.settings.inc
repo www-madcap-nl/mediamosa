@@ -57,8 +57,11 @@ class mediamosa_settings {
 
   // Max Limits.
   const LIMIT_DEFAULT = 10; // We return 10 items by default.
+  const LIMIT_DEFAULT_STATISTICS = 150; // statistics bit more.
+
   const LIMIT_MAX = 200;
   const LIMIT_MAX_IDS_ONLY = 5000; // In case we only return IDs instead of complete array's.
+
 
   // Max. supplements per asset.
   const MAX_SUPPLEMENT_PER_ASSET = 16;
@@ -112,6 +115,8 @@ class mediamosa_settings {
   const JOB_UPLOAD_TIMEOUT = 10800; // 3 hours, POST upload timeout is 2 hours.
   const JOB_JOB_TIMEOUT = 10800;
   const JOB_TRANSCODE_TIMEOUT = 7200;
+  // default amount of transcoding slots per app
+  const JOB_MAX_SLOTS = 5;
 
   // Header item used in internal calls.
   const X_MEDIAMOSA_INTERNAL_PASS = 'X-Mediamosa-Internal-Pass';
@@ -131,6 +136,13 @@ class mediamosa_settings {
   // Cron timeout for ticket cleanup.
   const TICKET_CRON_INTERVAL = 600; // 10 minutes.
 
+  // The number of items per page in admin listings, like client apps listing.
+  const MAINTENANCE_ITEMS_PER_PAGE = 25;
+
+  // The number of maximum tables in the database before we stop the status page
+  // of running new simpletests. Will try to clean up if to many tables are
+  // found.
+  const STATUS_MAX_TABLES = 500;
 
   // ------------------------------------------------------------------ Functions.
   /**
@@ -182,4 +194,13 @@ class mediamosa_settings {
     // STILL_FILE.
     return self::lua_base_get() . 'vpx-transcode';
   }
+
+  /**
+   * Returns the number of items per page in admin listings, like client apps
+   * listing.
+   */
+  static public function maintenance_items_per_page() {
+    return variable_get('mediamosa_maintenance_items_per_page', self::MAINTENANCE_ITEMS_PER_PAGE);
+  }
+
 }

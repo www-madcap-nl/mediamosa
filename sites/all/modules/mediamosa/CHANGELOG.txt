@@ -49,6 +49,7 @@ Mediamosa 2.1.2
 - Fixed still generation call /mediafile/$mediafile/still. 
 - Fixed play_restriction code. Typo with 'time_restriction_' prevented working
   of this code in the play proxy code. Seems to be old bug dating back from 1.0.
+- Added /version REST call.
 
 
 MediaMosa 2.1.1

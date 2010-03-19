@@ -6,7 +6,6 @@ version = "2.0.0"
 core = 7.x
 
 ; Dependencies (module names)
-dependencies[] = mediamosa
 
 ; Used files.
 

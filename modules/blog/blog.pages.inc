@@ -1,5 +1,5 @@
 <?php
-// $Id: blog.pages.inc,v 1.22 2009/08/10 22:39:24 webchick Exp $
+// $Id: blog.pages.inc,v 1.26 2009/12/21 13:47:31 dries Exp $
 
 /**
  * @file
@@ -12,7 +12,7 @@
 function blog_page_user($account) {
   global $user;
 
-  drupal_set_title($title = t("@name's blog", array('@name' => $account->name)), PASS_THROUGH);
+  drupal_set_title($title = t("@name's blog", array('@name' => format_username($account))), PASS_THROUGH);
 
   $items = array();
 
@@ -44,7 +44,7 @@ function blog_page_user($account) {
 
   if (!empty($nids)) {
     $nodes = node_load_multiple($nids);
-    $build += node_build_multiple($nodes);
+    $build += node_view_multiple($nodes);
     $build['pager'] = array(
       '#theme' => 'pager',
       '#weight' => 5,
@@ -55,7 +55,7 @@ function blog_page_user($account) {
       drupal_set_message(t('You have not created any blog entries.'));
     }
     else {
-      drupal_set_message(t('!author has not created any blog entries.', array('!author' => theme('username', $account))));
+      drupal_set_message(t('!author has not created any blog entries.', array('!author' => theme('username', array('account' => $account)))));
     }
   }
   drupal_add_feed(url('blog/' . $account->uid . '/feed'), t('RSS - !title', array('!title' => $title)));
@@ -69,15 +69,6 @@ function blog_page_user($account) {
 function blog_page_last() {
   global $user;
   $build = array();
-
-  if (user_access('create blog content')) {
-    $items[] = l(t('Create new blog entry.'), "node/add/blog");
-    $build['blog_actions'] = array(
-      '#items' => $items,
-      '#theme' => 'item_list',
-      '#weight' => -1,
-    );
-  }
 
   $query = db_select('node', 'n')->extend('PagerDefault');
   $nids = $query
@@ -93,7 +84,7 @@ function blog_page_last() {
 
   if (!empty($nids)) {
     $nodes = node_load_multiple($nids);
-    $build += node_build_multiple($nodes);
+    $build += node_view_multiple($nodes);
     $build['pager'] = array(
       '#theme' => 'pager',
       '#weight' => 5,
@@ -123,7 +114,7 @@ function blog_feed_user($account) {
     ->execute()
     ->fetchCol();
 
-  $channel['title'] = t("!name's blog", array('!name' => $account->name));
+  $channel['title'] = t("!name's blog", array('!name' => format_username($account)));
   $channel['link'] = url('blog/' . $account->uid, array('absolute' => TRUE));
 
   node_feed($nids, $channel);

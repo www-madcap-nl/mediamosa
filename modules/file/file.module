@@ -1,5 +1,5 @@
 <?php
-// $Id: file.module,v 1.4 2009/09/10 06:31:39 dries Exp $
+// $Id: file.module,v 1.20 2010/03/13 06:55:50 dries Exp $
 
 /**
  * @file
@@ -7,21 +7,45 @@
  */
 
 // Load all Field module hooks for File.
-require(DRUPAL_ROOT . '/modules/file/file.field.inc');
+require_once DRUPAL_ROOT . '/modules/file/file.field.inc';
 
 /**
- * Implement hook_menu().
+ * Implements hook_help().
+ */
+function file_help($path, $arg) {
+  switch ($path) {
+    case 'admin/help#file':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('The File module defines a <em>File</em> field type for the Field module, which lets you manage and validate uploaded files attached to content on your site (see the <a href="@field-help">Field module help page</a> for more information about fields). For more information, see the online handbook entry for <a href="@file">File module</a>.', array('@field-help' => url('admin/help/field'), '@file' => 'http://drupal.org/handbook/modules/file')) . '</p>';
+      $output .= '<h3>' . t('Uses') . '</h3>';
+      $output .= '<dl>';
+      $output .= '<dt>' . t('Attaching files to content') . '</dt>';
+      $output .= '<dd>' . t('The File module allows users to attach files to content (e.g., PDF files, spreadsheets, etc.), when a <em>File</em> field is added to a given content type using the <a href="@fieldui-help">Field UI module</a>. You can add validation options to your File field, such as specifying a maximum file size and allowed file extensions.', array('@fieldui-help' => url('admin/help/field_ui'))) . '</dd>';
+      $output .= '<dt>' . t('Managing attachment display') . '</dt>';
+      $output .= '<dd>' . t('When you attach a file to content, you can specify whether it is <em>listed</em> or not. Listed files are displayed automatically in a section at the bottom of your content; non-listed files are available for embedding in your content, but are not included in the list at the bottom.') . '</dd>';
+      $output .= '<dt>' . t('Managing file locations') . '</dt>';
+      $output .= '<dd>' . t("When you create a File field, you can specify a directory where the files will be stored, which can be within either the <em>public</em> or <em>private</em> files directory. Files in the public directory can be accessed directly through the web server; when public files are listed, direct links to the files are used, and anyone who knows a file's URL can download the file. Files in the private directory are not accessible directly through the web server; when private files are listed, the links are Drupal path requests. This adds to server load and download time, since Drupal must start up and resolve the path for each file download request, but allows for access restrictions.") . '</dd>';
+      $output .= '</dl>';
+      return $output;
+  }
+}
+
+/**
+ * Implements hook_menu().
  */
 function file_menu() {
   $items = array();
 
   $items['file/ajax'] = array(
     'page callback' => 'file_ajax_upload',
+    'delivery callback' => 'ajax_deliver',
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
   );
   $items['file/progress'] = array(
     'page callback' => 'file_ajax_progress',
+    'delivery callback' => 'ajax_deliver',
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
   );
@@ -30,7 +54,7 @@ function file_menu() {
 }
 
 /**
- * Implement hook_element_info().
+ * Implements hook_element_info().
  *
  * The managed file element may be used independently anywhere in Drupal.
  */
@@ -57,38 +81,44 @@ function file_element_info() {
 }
 
 /**
- * Implement hook_theme().
+ * Implements hook_theme().
  */
 function file_theme() {
   return array(
     // file.module.
     'file_link' => array(
-      'arguments' => array('file' => NULL),
+      'variables' => array('file' => NULL),
     ),
     'file_icon' => array(
-      'arguments' => array('file' => NULL),
+      'variables' => array('file' => NULL),
     ),
     'file_managed_file' => array(
-      'arguments' => array('element' => NULL),
+      'render element' => 'element',
     ),
 
     // file.field.inc.
     'file_widget' => array(
-      'arguments' => array('element' => NULL),
+      'render element' => 'element',
     ),
     'file_widget_multiple' => array(
-      'arguments' => array('element' => NULL),
+      'render element' => 'element',
+    ),
+    'file_formatter_table' => array(
+      'variables' => array('items' => NULL),
     ),
     'file_upload_help' => array(
-      'arguments' => array('upload_validators' => NULL),
+      'variables' => array('description' => NULL, 'upload_validators' => NULL),
     ),
   );
 }
 
 /**
- * Implement hook_file_download().
+ * Implements hook_file_download().
+ *
+ * This function takes an extra parameter $field_type so that it may
+ * be re-used by other File-like modules, such as Image.
  */
-function file_file_download($uri) {
+function file_file_download($uri, $field_type = 'file') {
   global $user;
 
   // Get the file record based on the URI. If not in the database just return.
@@ -101,21 +131,21 @@ function file_file_download($uri) {
   }
 
   // Find out which (if any) file fields contain this file.
-  $references = file_get_file_references($file);
+  $references = file_get_file_references($file, NULL, FIELD_LOAD_REVISION, $field_type);
 
   // TODO: Check field-level access if available here.
 
-  $denied = NULL;
+  $denied = $file->status ? NULL : FALSE;
   // Check access to content containing the file fields. If access is allowed
   // to any of this content, allow the download.
   foreach ($references as $field_name => $field_references) {
-    foreach ($field_references as $obj_type => $type_references) {
+    foreach ($field_references as $entity_type => $type_references) {
       foreach ($type_references as $reference) {
         // If access is allowed to any object, immediately stop and grant
         // access. If access is denied, continue through in case another object
         // grants access.
         // TODO: Switch this to a universal access check mechanism if available.
-        if ($obj_type == 'node' && ($node = node_load($reference->nid))) {
+        if ($entity_type == 'node' && ($node = node_load($reference->nid))) {
           if (node_access('view', $node)) {
             $denied = FALSE;
             break 3;
@@ -124,7 +154,7 @@ function file_file_download($uri) {
             $denied = TRUE;
           }
         }
-        if ($obj_type == 'user') {
+        if ($entity_type == 'user') {
           if (user_access('access user profiles') || $user->uid == $reference->uid) {
             $denied = FALSE;
             break 3;
@@ -184,7 +214,7 @@ function file_ajax_upload() {
     drupal_set_message(t('An unrecoverable error occurred. The uploaded file likely exceeded the maximum file size (@size) that this server supports.', array('@size' => format_size(file_upload_max_size()))), 'error');
     $commands = array();
     $commands[] = ajax_command_replace(NULL, theme('status_messages'));
-    ajax_render($commands, FALSE);
+    return array('#type' => 'ajax', '#commands' => $commands, '#header' => FALSE);
   }
 
   list($form, $form_state, $form_id, $form_build_id) = ajax_get_form();
@@ -194,7 +224,7 @@ function file_ajax_upload() {
     drupal_set_message(t('An unrecoverable error occurred. Use of this form has expired. Try reloading the page and submitting again.'), 'error');
     $commands = array();
     $commands[] = ajax_command_replace(NULL, theme('status_messages'));
-    ajax_render($commands, FALSE);
+    return array('#type' => 'ajax', '#commands' => $commands, '#header' => FALSE);
   }
 
   // Get the current element and count the number of files.
@@ -231,7 +261,7 @@ function file_ajax_upload() {
 
   $commands = array();
   $commands[] = ajax_command_replace(NULL, $output, $settings);
-  ajax_render($commands, FALSE);
+  return array('#type' => 'ajax', '#commands' => $commands, '#header' => FALSE);
 }
 
 /**
@@ -262,7 +292,7 @@ function file_ajax_progress($key) {
     }
   }
 
-  drupal_json($progress);
+  drupal_json_output($progress);
 }
 
 /**
@@ -290,7 +320,7 @@ function file_progress_implementation() {
 }
 
 /**
- * Implement hook_file_references().
+ * Implements hook_file_references().
  */
 function file_file_references($file) {
   $count = file_get_file_reference_count($file);
@@ -298,7 +328,7 @@ function file_file_references($file) {
 }
 
 /**
- * Implement hook_file_delete().
+ * Implements hook_file_delete().
  */
 function file_file_delete($file) {
   // TODO: Remove references to a file that is in-use.
@@ -336,6 +366,7 @@ function file_managed_file_process($element, &$form_state, $form) {
     '#value' => t('Upload'),
     '#validate' => array(),
     '#submit' => array('file_managed_file_submit'),
+    '#limit_validation_errors' => array($element['#parents']),
     '#ajax' => $ajax_settings,
     '#weight' => -5,
   );
@@ -349,6 +380,7 @@ function file_managed_file_process($element, &$form_state, $form) {
     '#value' => t('Remove'),
     '#validate' => array(),
     '#submit' => array('file_managed_file_submit'),
+    '#limit_validation_errors' => array($element['#parents']),
     '#ajax' => $ajax_settings,
     '#weight' => -5,
   );
@@ -413,7 +445,7 @@ function file_managed_file_process($element, &$form_state, $form) {
   if ($fid && $element['#file']) {
     $element['filename'] = array(
       '#type' => 'markup',
-      '#markup' => theme('file_link', $element['#file']) . ' ',
+      '#markup' => theme('file_link', array('file' => $element['#file'])) . ' ',
       '#weight' => -10,
     );
   }
@@ -577,7 +609,9 @@ function file_managed_file_save_upload($element) {
 /**
  * Theme a managed file element.
  */
-function theme_file_managed_file($element) {
+function theme_file_managed_file($variables) {
+  $element = $variables['element'];
+
   // This wrapper is required to apply JS behaviors and CSS styling.
   $output = '';
   $output .= '<div class="form-managed-file">';
@@ -589,12 +623,15 @@ function theme_file_managed_file($element) {
 /**
  * Output a link to a file.
  *
- * @param $file
- *   A file object to which the link will be created.
+ * @param $variables
+ *   An associative array containing:
+ *   - file: A file object to which the link will be created.
  */
-function theme_file_link($file) {
+function theme_file_link($variables) {
+  $file = $variables['file'];
+
   $url = file_create_url($file->uri);
-  $icon = theme('file_icon', $file);
+  $icon = theme('file_icon', array('file' => $file));
 
   // Set options as per anchor format described at
   // http://microformats.org/wiki/file-format-examples
@@ -605,11 +642,11 @@ function theme_file_link($file) {
   );
 
   // Use the description as the link text if available.
-  if (empty($file->data['description'])) {
+  if (empty($file->description)) {
     $link_text = check_plain($file->filename);
   }
   else {
-    $link_text = check_plain($file->data['description']);
+    $link_text = check_plain($file->description);
     $options['attributes']['title'] = check_plain($file->filename);
   }
 
@@ -619,10 +656,13 @@ function theme_file_link($file) {
 /**
  * Return an image with an appropriate icon for the given file.
  *
- * @param $file
- *   A file object for which to make an icon.
+ * @param $variables
+ *   An associative array containing:
+ *   - file: A file object for which to make an icon.
  */
-function theme_file_icon($file) {
+function theme_file_icon($variables) {
+  $file = $variables['file'];
+
   $mime = check_plain($file->filemime);
   $icon_url = file_icon_url($file);
   return '<img class="file-icon" alt="" title="' . $mime . '" src="' . $icon_url . '" />';
@@ -830,84 +870,63 @@ function file_icon_map($file) {
  */
 
 /**
- * Return an array of file fields in an bundle or by field name.
+ * Count the number of times the file is referenced.
  *
- * @param $bundle_type
- *   (optional) The bundle type on which to filter the list of fields. In the
- *   case of nodes, this is the node type.
+ * @param $file
+ *   A file object.
  * @param $field
- *   (optional) A field array or name on which to filter the list.
+ *   (optional) A CCK field array or field name as a string. If provided,
+ *   limits the reference check to the given field.
+ * @param $field_type
+ *   (optional) The name of a field type. If provided, limits the reference
+ *   check to fields of the given type.
+ * @return
+ *   An integer value.
  */
-function file_get_field_list($bundle_type = NULL, $field = NULL) {
-  // Build the list of fields to be used for retrieval.
+function file_get_file_reference_count($file, $field = NULL, $field_type = 'file') {
+  // Determine the collection of fields to check.
   if (isset($field)) {
+    // Support $field as 'field name'.
     if (is_string($field)) {
       $field = field_info_field($field);
     }
     $fields = array($field['field_name'] => $field);
   }
-  elseif (isset($bundle_type)) {
-    $instances = field_info_instances($bundle_type);
-    $fields = array();
-    foreach ($instances as $field_name => $instance) {
-      $fields[$field_name] = field_info_field($field_name);
-    }
-  }
   else {
     $fields = field_info_fields();
   }
 
-  // Filter down the list to just file fields.
-  foreach ($fields as $key => $field) {
-    if ($field['type'] != 'file') {
-      unset($fields[$key]);
-    }
-  }
-
-  return $fields;
-}
-
-/**
- * Count the number of times the file is referenced within a field.
- *
- * @param $file
- *   A file object.
- * @param $field
- *   Optional. The CCK field array or field name as a string.
- * @return
- *   An integer value.
- */
-function file_get_file_reference_count($file, $field = NULL) {
-  $fields = file_get_field_list(NULL, $field);
-  $types = field_info_fieldable_types();
+  $types = entity_get_info();
   $reference_count = 0;
 
   foreach ($fields as $field) {
-    // TODO: Use a more efficient mechanism rather than actually retrieving
-    // all the references themselves, such as using a COUNT() query.
-    $references = file_get_file_references($file, $field);
-    foreach ($references as $obj_type => $type_references) {
-      $reference_count += count($type_references);
-    }
+    if (empty($field_type) || $field['type'] == $field_type) {
+      // TODO: Use a more efficient mechanism rather than actually retrieving
+      // all the references themselves, such as using a COUNT() query.
+      $references = file_get_file_references($file, $field, FIELD_LOAD_REVISION, $field_type);
+      foreach ($references as $entity_type => $type_references) {
+        $reference_count += count($type_references);
+      }
 
-    // If a field_name is present in the file object, the file is being deleted
-    // from this field.
-    if (isset($file->file_field_name) && $field['field_name'] == $file->file_field_name) {
-      // If deleting the entire piece of content, decrement references.
-      if (isset($file->file_field_type) && isset($file->file_field_id)) {
-        if ($file->file_field_type == $obj_type) {
-          $info = field_info_fieldable_types($obj_type);
-          $id = $types[$obj_type]['object keys']['id'];
-          foreach ($type_references as $reference) {
-            if ($file->file_field_id == $reference->$id) {
-              $reference_count--;
+      // If a field_name is present in the file object, the file is being deleted
+      // from this field.
+      if (isset($file->file_field_name) && $field['field_name'] == $file->file_field_name) {
+        // If deleting the entire piece of content, decrement references.
+        if (isset($file->file_field_type) && isset($file->file_field_id)) {
+          if ($file->file_field_type == $entity_type) {
+            $info = entity_get_info($entity_type);
+            $id = $types[$entity_type]['object keys']['id'];
+            foreach ($type_references as $reference) {
+              if ($file->file_field_id == $reference->$id) {
+                $reference_count--;
+              }
             }
           }
         }
-      }
-      // Otherwise we're just deleting a single reference in this field.
-      else {
-        $reference_count--;
+        // Otherwise we're just deleting a single reference in this field.
+        else {
+          $reference_count--;
+        }
       }
     }
   }
@@ -917,28 +936,32 @@ function file_get_file_reference_count($file, $field = NULL) {
 
 
 /**
- * Get a list of references to a file by bundle and ID.
+ * Get a list of references to a file.
  *
  * @param $file
  *   A file object.
  * @param $field
- *   (optional) A field array to be used for this check.
+ *   (optional) A field array to be used for this check. If given, limits the
+ *   reference check to the given field.
  * @param $age
  *   (optional) A constant that specifies which references to count. Use
  *   FIELD_LOAD_REVISION to retrieve all references within all revisions or
  *   FIELD_LOAD_CURRENT to retrieve references only in the current revisions.
+ * @param $field_type
+ *   Optional. The name of a field type. If given, limits the reference check to
+ *   fields of the given type.
  * @return
  *   An integer value.
  */
-function file_get_file_references($file, $field = NULL, $age = FIELD_LOAD_REVISION) {
+function file_get_file_references($file, $field = NULL, $age = FIELD_LOAD_REVISION, $field_type = 'file') {
   $references = drupal_static(__FUNCTION__, array());
-  $fields = file_get_field_list(NULL, $field);
+  $fields = isset($field) ? array($field['field_name'] => $field) : field_info_fields();
 
   foreach ($fields as $field_name => $file_field) {
-    if (!isset($references[$field_name])) {
+    if ((empty($field_type) || $field['type'] == $field_type) && !isset($references[$field_name])) {
       // Get each time this file is used within a field.
       $cursor = 0;
-      $references[$field_name] = field_attach_query($file_field['id'], array(array('fid', $file->fid)), FIELD_QUERY_NO_LIMIT, $cursor, $age);
+      $references[$field_name] = field_attach_query($file_field['id'], array(array('fid', $file->fid)), array('limit' => FIELD_QUERY_NO_LIMIT, 'cursor' => &$cursor, 'age'=> $age));
     }
   }
 

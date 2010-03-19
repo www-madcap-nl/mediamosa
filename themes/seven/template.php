@@ -1,12 +1,19 @@
 <?php
-// $Id: template.php,v 1.6 2009/09/15 17:10:39 webchick Exp $
+// $Id: template.php,v 1.14 2010/03/03 19:46:26 dries Exp $
+
+/**
+ * Override or insert variables into the html template.
+ */
+function seven_preprocess_html(&$vars) {
+  // Add conditional CSS for IE8 and below.
+  drupal_add_css(path_to_theme() . '/ie.css', array('weight' => CSS_THEME, 'browsers' => array('IE' => 'lte IE 8', '!IE' => FALSE), 'preprocess' => FALSE));
+  // Add conditional CSS for IE6.
+  drupal_add_css(path_to_theme() . '/ie6.css', array('weight' => CSS_THEME, 'browsers' => array('IE' => 'lt IE 7', '!IE' => FALSE), 'preprocess' => FALSE));
+}
 
 /**
  * Override or insert variables into the page template.
  */
-function seven_process_html(&$vars) {
-  $vars['ie_styles'] = '<!--[if lt IE 7]><style type="text/css" media="screen">@import ' . path_to_theme() . '/ie6.css";</style><![endif]-->';
-}
 function seven_preprocess_page(&$vars) {
   $vars['primary_local_tasks'] = menu_primary_local_tasks();
   $vars['secondary_local_tasks'] = menu_secondary_local_tasks();
@@ -15,7 +22,8 @@ function seven_preprocess_page(&$vars) {
 /**
  * Display the list of available node types for node creation.
  */
-function seven_node_add_list($content) {
+function seven_node_add_list($variables) {
+  $content = $variables['content'];
   $output = '';
   if ($content) {
     $output = '<ul class="node-type-list">';
@@ -35,7 +43,8 @@ function seven_node_add_list($content) {
  *
  * Use unordered list markup in both compact and extended move.
  */
-function seven_admin_block_content($content) {
+function seven_admin_block_content($variables) {
+  $content = $variables['content'];
   $output = '';
   if (!empty($content)) {
     $output = system_admin_compact_mode() ? '<ul class="admin-list compact">' : '<ul class="admin-list">';
@@ -57,35 +66,23 @@ function seven_admin_block_content($content) {
  *
  * Use our own image versions, so they show up as black and not gray on gray.
  */
-function seven_tablesort_indicator($style) {
+function seven_tablesort_indicator($variables) {
+  $style = $variables['style'];
   $theme_path = drupal_get_path('theme', 'seven');
   if ($style == "asc") {
-    return theme('image', $theme_path . '/images/arrow-asc.png', t('sort icon'), t('sort ascending'));
+    return theme('image', array('path' => $theme_path . '/images/arrow-asc.png', 'alt' => t('sort ascending'), 'title' => t('sort ascending')));
   }
   else {
-    return theme('image', $theme_path . '/images/arrow-desc.png', t('sort icon'), t('sort descending'));
+    return theme('image', array('path' => $theme_path . '/images/arrow-desc.png', 'alt' => t('sort descending'), 'title' => t('sort descending')));
   }
 }
 
 /**
- * Override of theme_fieldset().
- *
- * Add span to legend tag, so we can style it to be inside the fieldset.
+ * Implements hook_css_alter().
  */
-function seven_fieldset($element) {
-  if (!empty($element['#collapsible'])) {
-    drupal_add_js('misc/collapse.js');
-
-    if (!isset($element['#attributes']['class'])) {
-      $element['#attributes']['class'] = array();
-    }
-
-    $element['#attributes']['class'][] = 'collapsible';
-    if (!empty($element['#collapsed'])) {
-      $element['#attributes']['class'][] = 'collapsed';
-    }
+function seven_css_alter(&$css) {
+  // Use Seven's vertical tabs style instead of the default one.
+  if (isset($css['misc/vertical-tabs.css'])) {
+    $css['misc/vertical-tabs.css']['data'] = drupal_get_path('theme', 'seven') . '/vertical-tabs.css';
   }
-  $element['#attributes']['id'] = $element['#id'];
-
-  return '<fieldset' . drupal_attributes($element['#attributes']) . '>' . ($element['#title'] ? '<legend><span>' . $element['#title'] . '</span></legend>' : '') . (isset($element['#description']) && $element['#description'] ? '<div class="fieldset-description">' . $element['#description'] . '</div>' : '') . (!empty($element['#children']) ? $element['#children'] : '') . (isset($element['#value']) ? $element['#value'] : '') . "</fieldset>\n";
 }

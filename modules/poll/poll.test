@@ -1,5 +1,5 @@
 <?php
-// $Id: poll.test,v 1.23 2009/09/21 07:56:08 dries Exp $
+// $Id: poll.test,v 1.30 2010/03/06 06:39:00 dries Exp $
 
 /**
  * @file
@@ -57,8 +57,9 @@ class PollTestCase extends DrupalWebTestCase {
     $already_submitted_choices = array_slice($choices, 0, $index);
     $new_choices = array_values(array_slice($choices, $index, $max_new_choices));
 
+    $langcode = LANGUAGE_NONE;
     $edit = array(
-      'title' => $title
+      "title" => $title
     );
     foreach ($already_submitted_choices as $k => $text) {
       $edit['choice[chid:' . $k . '][chtext]'] = $text;
@@ -259,7 +260,7 @@ class PollBlockTestCase extends PollTestCase {
 
   function testRecentBlock() {
     // Set block title to confirm that the interface is available.
-    $this->drupalPost('admin/structure/block/configure/poll/recent', array('title' => $this->randomName(8)), t('Save block'));
+    $this->drupalPost('admin/structure/block/manage/poll/recent/configure', array('title' => $this->randomName(8)), t('Save block'));
     $this->assertText(t('The block configuration has been saved.'), t('Block configuration set.'));
 
     // Set the block to a region to confirm block is available.
@@ -331,38 +332,128 @@ class PollJSAddChoice extends DrupalWebTestCase {
     $web_user = $this->drupalCreateUser(array('create poll content', 'access content'));
     $this->drupalLogin($web_user);
     $this->drupalGet('node/add/poll');
+    $langcode = LANGUAGE_NONE;
     $edit = array(
-      'title' => $this->randomName(),
+      "title" => $this->randomName(),
       'choice[new:0][chtext]' => $this->randomName(),
       'choice[new:1][chtext]' => $this->randomName(),
     );
 
-    // @TODO: the framework should make it possible to submit a form to a
-    // different URL than its action or the current. For now, we can just force
-    // it.
-    $this->additionalCurlOptions[CURLOPT_URL] = url('system/ajax', array('absolute' => TRUE));
-    $this->drupalPost(NULL, $edit, t('More choices'));
-    unset($this->additionalCurlOptions[CURLOPT_URL]);
+    // Press 'add choice' button through AJAX, and place the expected HTML result
+    // as the tested content.
+    $commands = $this->drupalPostAJAX(NULL, $edit, 'poll_more');
+    $this->content = $commands[1]['data'];
 
-    // The response is drupal_json_output, so we need to undo some escaping.
-    $commands = json_decode(str_replace(array('\x3c', '\x3e', '\x26'), array("<", ">", "&"), $this->drupalGetContent()));
-
-    // The JSON response will be two AJAX commands. The first is a settings
-    // command and the second is the replace command.
-    $settings = reset($commands);
-    $replace = next($commands);
-
-    $this->assertTrue(is_object($settings), t('The response settings command is an object'));
-    $this->assertTrue(is_object($replace), t('The response replace command is an object'));
-
-    // This replace data is valid HTML so we will can reuse everything we have
-    // for HTML pages.
-    $this->content = $replace->data;
-
-    // Needs to be emptied out so the new content will be parsed.
-    $this->elements = '';
     $this->assertFieldByName('choice[chid:0][chtext]', $edit['choice[new:0][chtext]'], t('Field !i found', array('!i' => 0)));
     $this->assertFieldByName('choice[chid:1][chtext]', $edit['choice[new:1][chtext]'], t('Field !i found', array('!i' => 1)));
     $this->assertFieldByName('choice[new:0][chtext]', '', t('Field !i found', array('!i' => 2)));
+  }
+}
+
+class PollVoteCheckHostname extends PollTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'User poll vote capability.',
+      'description' => 'Check that users and anonymous users from specified ip-address can only vote once.',
+      'group' => 'Poll'
+    );
+  }
+
+  function setUp() {
+    parent::setUp('poll');
+
+    // Create and login user.
+    $this->admin_user = $this->drupalCreateUser(array('administer permissions', 'create poll content'));
+    $this->drupalLogin($this->admin_user);
+
+    // Allow anonymous users to vote on polls.
+    user_role_change_permissions(DRUPAL_ANONYMOUS_RID, array(
+      'access content' => TRUE,
+      'vote on polls' => TRUE,
+    ));
+
+    // Create poll.
+    $title = $this->randomName();
+    $choices = $this->_generateChoices(3);
+    $this->poll_nid = $this->pollCreate($title, $choices, FALSE);
+
+    $this->drupalLogout();
+
+    // Create web users.
+    $this->web_user1 = $this->drupalCreateUser(array('access content', 'vote on polls'));
+    $this->web_user2 = $this->drupalCreateUser(array('access content', 'vote on polls'));
+  }
+
+  /**
+   * Check that anonymous users with same ip cannot vote on poll more than once
+   * unless user is logged in.
+   */
+  function testHostnamePollVote() {
+    // Login User1.
+    $this->drupalLogin($this->web_user1);
+
+    $edit = array(
+      'choice' => '1',
+    );
+
+    // User1 vote on Poll.
+    $this->drupalPost('node/' . $this->poll_nid, $edit, t('Vote'));
+    $this->assertText(t('Your vote was recorded.'), t('%user vote was recorded.', array('%user' => $this->web_user1->name)));
+    $this->assertText(t('Total votes: @votes', array('@votes' => 1)), t('Vote count updated correctly.'));
+
+    // Check to make sure User1 cannot vote again.
+    $this->drupalGet('node/' . $this->poll_nid);
+    $elements = $this->xpath('//input[@value="Vote"]');
+    $this->assertTrue(empty($elements), t("%user is not able to vote again.", array('%user' => $this->web_user1->name)));
+
+    // Logout User1.
+    $this->drupalLogout();
+
+    // Anonymous user vote on Poll.
+    $this->drupalPost('node/' . $this->poll_nid, $edit, t('Vote'));
+    $this->assertText(t('Your vote was recorded.'), t('Anonymous vote was recorded.'));
+    $this->assertText(t('Total votes: @votes', array('@votes' => 2)), t('Vote count updated correctly.'));
+
+    // Check to make sure Anonymous user cannot vote again.
+    $this->drupalGet('node/' . $this->poll_nid);
+    $elements = $this->xpath('//input[@value="Vote"]');
+    $this->assertTrue(empty($elements), t("Anonymous is not able to vote again."));
+
+    // Login User2.
+    $this->drupalLogin($this->web_user2);
+
+    // User2 vote on poll.
+    $this->drupalPost('node/' . $this->poll_nid, $edit, t('Vote'));
+    $this->assertText(t('Your vote was recorded.'), t('%user vote was recorded.', array('%user' => $this->web_user2->name)));
+    $this->assertText(t('Total votes: @votes', array('@votes' => 3)), 'Vote count updated correctly.');
+
+    // Logout User2.
+    $this->drupalLogout();
+
+    // Change host name for anonymous users.
+    db_update('poll_vote')
+      ->fields(array(
+        'hostname' => '123.456.789.20',
+      ))
+      ->condition('hostname', '', '!=')
+      ->execute();
+
+    // Check to make sure Anonymous user can vote again after hostname change.
+    $this->drupalPost('node/' . $this->poll_nid, $edit, t('Vote'));
+    $this->assertText(t('Your vote was recorded.'), t('%user vote was recorded.', array('%user' => $this->web_user2->name)));
+    $this->assertText(t('Total votes: @votes', array('@votes' => 4)), 'Vote count updated correctly.');
+
+    // Check to make sure Anonymous user cannot vote again.
+    $this->drupalGet('node/' . $this->poll_nid);
+    $elements = $this->xpath('//input[@value="Vote"]');
+    $this->assertTrue(empty($elements), t("Anonymous is not able to vote again."));
+
+    // Login User1.
+    $this->drupalLogin($this->web_user1);
+
+    // Check to make sure User1 still cannot vote even after hostname changed.
+    $this->drupalGet('node/' . $this->poll_nid);
+    $elements = $this->xpath('//input[@value="Vote"]');
+    $this->assertTrue(empty($elements), t("%user is not able to vote again.", array('%user' => $this->web_user1->name)));
   }
 }

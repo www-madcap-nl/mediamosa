@@ -34,31 +34,27 @@
  * @param string $method
  *  The Method (POST/GET/PUT).
  * @param array $data
- *  Array name => value. (POST / PUT Only)
+ *  Array name => value.
  */
 function _mediamosa_restcall($uri, $method = 'GET', array $data = array()) {
-  $options = array(
-    'data' => $data,
-    'method' => $method,
-  );
 
-  // Create the mediamosa connector.
-  $o_connector = new mediamosa_connector();
+  // Call REST response class to generate output.
+  $xml = mediamosa_response_connector::static_do_restcall($uri, $method, $data);
 
-  // Do request will trigger login.
-  $o_response = $o_connector->request_internal($uri, $options);
+  // Make simplexml object.
+  $response = new SimpleXMLElement($xml);
 
-  if (!$o_response) {
+  if (!$response) {
     drupal_set_message('Unable to execute REST call, check MediaMosa connector settings.', 'error');
     return FALSE;
   }
 
-  if ($o_response->xml->header->request_result != 'success') {
+  if ($response->header->request_result != 'success') {
     drupal_set_message($uri);
-    drupal_set_message($o_response->xml->header->request_result_id .': '. $o_response->xml->header->request_result_description, 'error');
+    drupal_set_message($response->header->request_result_id .': '. $response->header->request_result_description, 'error');
   }
 
-  return $o_response;
+  return $response;
 }
 
 /**

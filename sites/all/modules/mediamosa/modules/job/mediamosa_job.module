@@ -31,9 +31,15 @@
 
 /**
  * Trigger the server REST CRONs based on the server settings.
- *
  */
 function mediamosa_job_cron() {
+
+  // If we are in simpletest, this cron will generate problems because its
+  // triggered during install and we are still not finished.
+  if (mediamosa::in_simpletest_sandbox()) {
+    return;
+  }
+
 
   $start = time();
   mediamosa_debug::log_debug('mediamosa_job_cron started.', array(), 'job_cron');

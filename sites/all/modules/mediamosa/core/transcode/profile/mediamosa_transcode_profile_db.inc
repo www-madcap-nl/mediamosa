@@ -34,6 +34,8 @@ class mediamosa_transcode_profile_db {
   const TABLE_NAME = 'mediamosa_transcode_profile';
 
   // Database fields;
+  const NID = 'nid';
+  const VID = 'vid';
   const ID = 'transcode_profile_id';
   const APP_ID = 'app_id';
   const VERSION = 'version';
@@ -50,4 +52,15 @@ class mediamosa_transcode_profile_db {
   const COMMAND_LENGTH = 1000; // used by REST call.
   const CREATED = 'created';
   const CHANGED = 'changed';
+
+  /**
+   * Returns all fields.
+   */
+  static public function get_fields() {
+    require_once('mediamosa_transcode_profile.install.inc');
+
+    // Get the schema.
+    $a_schema = mediamosa_transcode_profile_schema();
+    return array_keys($a_schema[mediamosa_transcode_profile_db::TABLE_NAME]['fields']);
+  }
 }

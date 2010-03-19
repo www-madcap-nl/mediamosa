@@ -70,29 +70,17 @@ class mediamosa_rest_call_ftp_user_list extends mediamosa_rest_call {
     // Test webservice.
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_BATCH_UPLOAD, $a_app_ids);
 
-    // Switch to FTP.
-    $old_db = mediamosa_db::db_set_active_ftp();
-    try {
-      $result = mediamosa_db::db_query('SELECT * FROM {ftpuser} WHERE eua_id = :eua_id', array(':eua_id' => $app_id));
+    $result = mediamosa_db::db_query('SELECT * FROM {mediamosa_ftp_user} WHERE eua_id = :eua_id', array(':eua_id' => $app_id));
 
-      foreach ($result as $a_user) {
-        $result->add_item(
-          array(
-            'userid' => $a_user['userid'],
-            'active' => intval($a_user['active']) ? 'true' : 'false',
-            'modified' => $a_user['modified'],
-          )
-        );
-      }
+    foreach ($result as $a_user) {
+      $result->add_item(
+        array(
+          'userid' => $a_user['userid'],
+          'active' => intval($a_user['active']) ? 'true' : 'false',
+          'modified' => $a_user['modified'],
+        )
+      );
     }
-    catch (Exception $e) {
-      assert($e);
-      mediamosa_db::db_set_active($old_db);
-      throw $e;
-    }
-
-    // Switch back.
-    mediamosa_db::db_set_active($old_db);
   }
 }
 
@@ -159,32 +147,15 @@ class mediamosa_rest_call_ftp_user_create extends mediamosa_rest_call {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_FTP_CREDENTIAL_LENGTH);
     }
 
-    // Switch to FTP.
-    $old_db = mediamosa_db::db_set_active_ftp();
-    try {
-      mediamosa_db::db_query(
-        'INSERT INTO {ftpuser} eua_id = :app_id, userid = :username, passwd = :password, homedir = :homedir, active = 1, count = 0',
-        array(
-          ':app_id' => $app_id,
-          ':username' => $username,
-          ':password' => $password,
-          ':homedir' => mediamosa_configuration_storage::mount_point_get() . MEDIAMOSA_FTP_ROOTDIR . '/' . $username
-        )
-      );
-    }
-    catch (PDOException $e) {
-      assert($e);
-      mediamosa_db::db_set_active($old_db);
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_FTP_ERROR);
-    }
-    catch (Exception $e) {
-      assert($e);
-      mediamosa_db::db_set_active($old_db);
-      throw $e;
-    }
-
-    // Switch back.
-    mediamosa_db::db_set_active($old_db);
+    mediamosa_db::db_query(
+      'INSERT INTO {mediamosa_ftp_user} eua_id = :app_id, userid = :username, passwd = :password, homedir = :homedir, active = 1, count = 0',
+      array(
+        ':app_id' => $app_id,
+        ':username' => $username,
+        ':password' => $password,
+        ':homedir' => mediamosa_configuration_storage::mount_point_get() . MEDIAMOSA_FTP_ROOTDIR . '/' . $username
+      )
+    );
 
     // Set OK
     $o_mediamosa->set_result_okay();
@@ -234,25 +205,13 @@ class mediamosa_rest_call_ftp_user_delete extends mediamosa_rest_call {
     // Test webservice.
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_BATCH_UPLOAD, $a_app_ids);
 
-    // Switch to FTP.
-    $old_db = mediamosa_db::db_set_active_ftp();
-    try {
-      mediamosa_db::db_query(
-        'DELETE FROM {ftpuser} WHERE userid = :userid && eua_id = :app_id',
-        array(
-          ':userid' => $user,
-          ':app_id' => $app_id
-        )
-      );
-    }
-    catch (Exception $e) {
-      assert($e);
-      mediamosa_db::db_set_active($old_db);
-      throw $e;
-    }
-
-    // Switch back.
-    mediamosa_db::db_set_active($old_db);
+    mediamosa_db::db_query(
+      'DELETE FROM {mediamosa_ftp_user} WHERE userid = :userid && eua_id = :app_id',
+      array(
+        ':userid' => $user,
+        ':app_id' => $app_id
+      )
+    );
 
     // Set OK
     $o_mediamosa->set_result_okay();
@@ -319,42 +278,30 @@ class mediamosa_rest_call_ftp_user_update extends mediamosa_rest_call {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_NO_CHANGES);
     }
 
-    // Switch to FTP.
-    $old_db = mediamosa_db::db_set_active_ftp();
-    try {
-      // Must exist.
-      mediamosa_db::db_must_exists(mediamosa_ftp_user_db::TABLE_NAME, array('userid' => $user));
+    // Must exist.
+    mediamosa_db::db_must_exists(mediamosa_ftp_user_db::TABLE_NAME, array('userid' => $user));
 
-      $query = mediamosa_db::db_update(mediamosa_ftp_user_db::TABLE_NAME);
-      $query->condition('userid', $user);
-      $query->condition('eua_id', $app_id);
+    $query = mediamosa_db::db_update(mediamosa_ftp_user_db::TABLE_NAME);
+    $query->condition('userid', $user);
+    $query->condition('eua_id', $app_id);
 
-      $a_fields = array(
-        'modified' => mediamosa::db_current_timestamp_now()
-      );
+    $a_fields = array(
+      'modified' => mediamosa::db_current_timestamp_now()
+    );
 
-      if ($active) {
-        $a_fields['active'] = $active ? 1 : 0;
-      }
-
-      if ($password) {
-        $a_fields['passwd'] = '{md5}' . base64_encode(md5($password, TRUE));
-      }
-
-      // Add changed field.
-      $a_fields = mediamosa_db::db_update_enrich($a_fields);
-
-      $query->fields($a_fields);
-      $query->execute();
-    }
-    catch (Exception $e) {
-      assert($e);
-      mediamosa_db::db_set_active($old_db);
-      throw $e;
+    if ($active) {
+      $a_fields['active'] = $active ? 1 : 0;
     }
 
-    // Switch back.
-    mediamosa_db::db_set_active($old_db);
+    if ($password) {
+      $a_fields['passwd'] = '{md5}' . base64_encode(md5($password, TRUE));
+    }
+
+    // Add changed field.
+    $a_fields = mediamosa_db::db_update_enrich($a_fields);
+
+    $query->fields($a_fields);
+    $query->execute();
 
     // Set OK
     $o_mediamosa->set_result_okay();
@@ -405,32 +352,20 @@ class mediamosa_rest_call_ftp_user_get extends mediamosa_rest_call {
     // Test webservice.
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_BATCH_UPLOAD, $a_app_ids);
 
-    // Switch to FTP.
-    $old_db = mediamosa_db::db_set_active_ftp();
-    try {
-      $query = mediamosa_db::db_select(mediamosa_ftp_user_db::TABLE_NAME);
-      $query->condition('userid', $user);
-      $query->condition('eua_id', $app_id);
-      $a_user = $query->execute()->fetchAssoc();
+    $query = mediamosa_db::db_select(mediamosa_ftp_user_db::TABLE_NAME);
+    $query->condition('userid', $user);
+    $query->condition('eua_id', $app_id);
+    $a_user = $query->execute()->fetchAssoc();
 
-      if (!$a_user) {
-        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_FTP_UNKNOWN_USER);
-      }
-
-      $o_mediamosa->add_item(array(
-        "userid" => $a_user['userid'],
-        "active" => intval($a_user['active']) ? 'true' : 'false',
-        "modified" => $a_user['modified'],
-      ));
-    }
-    catch (Exception $e) {
-      assert($e);
-      mediamosa_db::db_set_active($old_db);
-      throw $e;
+    if (!$a_user) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_FTP_UNKNOWN_USER);
     }
 
-    // Switch back.
-    mediamosa_db::db_set_active($old_db);
+    $o_mediamosa->add_item(array(
+      "userid" => $a_user['userid'],
+      "active" => intval($a_user['active']) ? 'true' : 'false',
+      "modified" => $a_user['modified'],
+    ));
   }
 }
 
@@ -485,32 +420,20 @@ class mediamosa_rest_call_ftp_user_update_password extends mediamosa_rest_call {
     // Test webservice.
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_BATCH_UPLOAD, $a_app_ids);
 
-    // Switch to FTP.
-    $old_db = mediamosa_db::db_set_active_ftp();
-    try {
-      // Must exist.
-      mediamosa_db::db_must_exists(mediamosa_ftp_user_db::TABLE_NAME, array('userid' => $user));
+    // Must exist.
+    mediamosa_db::db_must_exists(mediamosa_ftp_user_db::TABLE_NAME, array('userid' => $user));
 
-      $query = mediamosa_db::db_update(mediamosa_ftp_user_db::TABLE_NAME);
-      $query->condition('userid', $user);
-      $query->condition('eua_id', $app_id);
+    $query = mediamosa_db::db_update(mediamosa_ftp_user_db::TABLE_NAME);
+    $query->condition('userid', $user);
+    $query->condition('eua_id', $app_id);
 
-      $a_fields = array(
-        'modified' => mediamosa::db_current_timestamp_now(),
-        'passwd' => '{md5}' . base64_encode(md5($password, TRUE)),
-      );
+    $a_fields = array(
+      'modified' => mediamosa::db_current_timestamp_now(),
+      'passwd' => '{md5}' . base64_encode(md5($password, TRUE)),
+    );
 
-      $query->fields($a_fields);
-      $query->execute();
-    }
-    catch (Exception $e) {
-      assert($e);
-      mediamosa_db::db_set_active($old_db);
-      throw $e;
-    }
-
-    // Switch back.
-    mediamosa_db::db_set_active($old_db);
+    $query->fields($a_fields);
+    $query->execute();
 
     // Set OK
     $o_mediamosa->set_result_okay();
@@ -567,35 +490,23 @@ class mediamosa_rest_call_ftp_user_update_status extends mediamosa_rest_call {
     // Test webservice.
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_BATCH_UPLOAD, $a_app_ids);
 
-    // Switch to FTP.
-    $old_db = mediamosa_db::db_set_active_ftp();
-    try {
-      // Must exist.
-      mediamosa_db::db_must_exists(mediamosa_ftp_user_db::TABLE_NAME, array('userid' => $user));
+    // Must exist.
+    mediamosa_db::db_must_exists(mediamosa_ftp_user_db::TABLE_NAME, array('userid' => $user));
 
-      $query = mediamosa_db::db_update(mediamosa_ftp_user_db::TABLE_NAME);
-      $query->condition('userid', $user);
-      $query->condition('eua_id', $app_id);
+    $query = mediamosa_db::db_update(mediamosa_ftp_user_db::TABLE_NAME);
+    $query->condition('userid', $user);
+    $query->condition('eua_id', $app_id);
 
-      $a_fields = array(
-        'modified' => mediamosa::db_current_timestamp_now()
-      );
+    $a_fields = array(
+      'modified' => mediamosa::db_current_timestamp_now()
+    );
 
-      if ($active) {
-        $a_fields['active'] = $active ? 1 : 0;
-      }
-
-      $query->fields($a_fields);
-      $query->execute();
-    }
-    catch (Exception $e) {
-      assert($e);
-      mediamosa_db::db_set_active($old_db);
-      throw $e;
+    if ($active) {
+      $a_fields['active'] = $active ? 1 : 0;
     }
 
-    // Switch back.
-    mediamosa_db::db_set_active($old_db);
+    $query->fields($a_fields);
+    $query->execute();
 
     // Set OK
     $o_mediamosa->set_result_okay();

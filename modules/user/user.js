@@ -1,4 +1,4 @@
-// $Id: user.js,v 1.18 2009/09/21 08:52:41 dries Exp $
+// $Id: user.js,v 1.23 2010/02/16 01:05:52 webchick Exp $
 (function ($) {
 
 /**
@@ -18,18 +18,17 @@ Drupal.behaviors.password = {
       var passwordResult = $('span.password-result', passwordStrength);
       innerWrapper.addClass('password-parent');
 
-      // Add the description box.
-      var passwordMeter = '<div id="password-strength"><div id="password-strength-text"></div><div class="password-strength-title">' + translate.strengthTitle + '</div><div id="password-indicator"><div id="indicator"></div></div></div>';
-
-      $('div.description', outerWrapper).prepend('<div class="password-suggestions"></div>');
-      $(innerWrapper).prepend(passwordMeter);
-      var passwordDescription = $('div.password-suggestions', outerWrapper).hide();
-
       // Add the password confirmation layer.
       $('input.password-confirm', outerWrapper).after('<div class="password-confirm">' + translate['confirmTitle'] + ' <span></span></div>').parent().addClass('confirm-parent');
       var confirmInput = $('input.password-confirm', outerWrapper);
       var confirmResult = $('div.password-confirm', outerWrapper);
       var confirmChild = $('span', confirmResult);
+
+      // Add the description box.
+      var passwordMeter = '<div id="password-strength"><div id="password-strength-text" aria-live="assertive"></div><div class="password-strength-title">' + translate.strengthTitle + '</div><div id="password-indicator"><div id="indicator"></div></div></div>';
+      $(confirmInput).parent().after('<div class="password-suggestions description"></div>');
+      $(innerWrapper).prepend(passwordMeter);
+      var passwordDescription = $("div.password-suggestions", outerWrapper).hide();
 
       // Check the password strength.
       var passwordCheck = function () {
@@ -109,10 +108,10 @@ Drupal.evaluatePasswordStrength = function (password, translate) {
   var usernameBox = $('input.username');
   var username = (usernameBox.length > 0) ? usernameBox.val() : translate.username;
 
-  // Lose 10 points for every character less than 6.
+  // Lose 5 points for every character less than 6, plus a 30 point penalty.
   if (password.length < 6) {
     msg.push(translate.tooShort);
-    strength -= (6 - password.length) * 10;
+    strength -= ((6 - password.length) * 5) + 30;
   }
 
   // Count weaknesses.
@@ -166,7 +165,7 @@ Drupal.evaluatePasswordStrength = function (password, translate) {
     indicatorText = translate.fair;
   } else if (strength < 80) {
     indicatorText = translate.good;
-  } else if (strength < 100) {
+  } else if (strength <= 100) {
     indicatorText = translate.strong;
   }
 
@@ -174,18 +173,6 @@ Drupal.evaluatePasswordStrength = function (password, translate) {
   msg = translate.hasWeaknesses + '<ul><li>' + msg.join('</li><li>') + '</li></ul>';
   return { strength: strength, message: msg, indicatorText: indicatorText }
 
-};
-
-/**
- * Show all of the picture-related form elements at admin/config/people/accounts
- * depending on whether user pictures are enabled or not.
- */
-Drupal.behaviors.userSettings = {
-  attach: function (context, settings) {
-    $('#edit-user-pictures', context).change(function () {
-      $('div.user-admin-picture-settings', context).toggle();
-    });
-  }
 };
 
 })(jQuery);

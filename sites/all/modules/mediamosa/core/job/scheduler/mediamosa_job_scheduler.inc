@@ -232,7 +232,9 @@ class mediamosa_job_scheduler {
       $response_data = new SimpleXMLElement($response->data);
     }
     catch (Exception $e) {
+      mediamosa::log_export($response->data);
       self::log('Parse XML: @msg (@resp)', array('@msg' => $e->getMessage(), '@resp' => print_r($response->data, TRUE)), WATCHDOG_ERROR);
+      return;
     }
 
     for ($i = 0; $i < $response_data->header->item_count; $i++) {
@@ -394,7 +396,7 @@ class mediamosa_job_scheduler {
       $command = '';
       $owner = '';
       $app_id = 0;
-      self::log('A wmv job (@job_id) without transcode_job!', array('@job_id' => $job_id), WATCHDOG_EMERG);
+      self::log('A wmv job (@job_id) without transcode_job!', array('@job_id' => $job_id), WATCHDOG_EMERGENCY);
     }
     else {
       $command = $a_job_ext[mediamosa_job_transcode_db::COMMAND];

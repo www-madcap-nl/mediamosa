@@ -52,10 +52,27 @@ class MediaMosaTestCase extends DrupalWebTestCase {
   // file to unlink on teardown.
   protected $a_unlink = array();
 
-  // ------------------------------------------------------------------ Functions (protected)
+  // ------------------------------------------------------------------ Consts.
   // Default old user/group.
   const SIMPLETEST_USER_ID = 'Simpletest user id';
   const SIMPLETEST_GROUP_ID = 'Simpletest test group';
+
+  /**
+   * Clean up tables, copy of simpletest_clean_environment without the
+   * drupal messages.
+   *
+   * Only run when you are not running simpletests(!). Any running tests will
+   * fail.
+   */
+  static public function clean() {
+    simpletest_clean_database();
+    simpletest_clean_temporary_directories();
+    simpletest_clean_results_table();
+
+    // Detect test classes that have been added, renamed or deleted.
+    registry_rebuild();
+    cache_clear_all('simpletest', 'cache');
+  }
 
 
   // ------------------------------------------------------------------ Functions (protected)
@@ -75,6 +92,9 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     foreach ($a_vars_to_copy as $var_to_copy) {
       $a_values[$var_to_copy] = mediamosa::variable_get($var_to_copy);
     }
+
+    // Set debug on high.
+    $a_values['mediamosa_debug_level'] = 10;
 
     // Call parent::setUp and preserve arguments.
     $args = func_get_args();
@@ -124,9 +144,6 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     // keep it.
     $old_prefix = $db_prefix;
 
-    // Call parent.
-    parent::tearDown();
-
     // Save change (db_prefix is changed by parent::teardown).
     $new_prefix = $db_prefix;
     $db_prefix = $old_prefix;
@@ -145,7 +162,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
           list($tmp, $name) = explode('mediamosa_', $table, 2);
 
           try {
-            db_drop_table($ret, 'mediamosa_' . $name);
+            db_drop_table('mediamosa_' . $name);
           }
           catch (PDOException $e) {
             // ignore.
@@ -156,6 +173,9 @@ class MediaMosaTestCase extends DrupalWebTestCase {
 
     // Restore.
     $db_prefix = $new_prefix;
+
+    // Call parent.
+    parent::tearDown();
   }
 
   /**
@@ -337,7 +357,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     // Create a SimpleXMLElement from the restcall's output.
     try {
       // We expect char '<' on REST calls, if not we need to output it.
-      if ($out['body']{0} != '<') {
+      if ($out['body']{0} != '<' || $uri == 'http://localhost/internal/cron/jobserver') {
         $this->var_export($out['body']);
       }
       $out['xml'] = new SimpleXMLElement($out['body']);
@@ -526,37 +546,35 @@ class MediaMosaTestCase extends DrupalWebTestCase {
    *  Basic app parameters like the DB version (mediamosa_app_db).
    */
   protected function createApp($a_fields = array()) {
-    // Merge in the default attributes.
-    $a_fields += array(
-      mediamosa_app_db::APP_ID => rand(1, 1000),
-      mediamosa_app_db::SHARED_KEY => user_password(),
-      mediamosa_app_db::NAME => $this->randomName(),
-      mediamosa_app_db::ACTIVE => 'TRUE',
-      mediamosa_app_db::TRANSCODING_POSITION_TO => 0,
-      mediamosa_app_db::QUOTA => 0,
-      mediamosa_app_db::QUOTA_USED => 0,
-      mediamosa_app_db::ACTIVE_VERSION => '',
-    );
 
-    // Insert the app into the database.
-    $a_fields[mediamosa_app_db::ID] = mediamosa_db::db_insert(mediamosa_app_db::TABLE_NAME)->fields($a_fields)->execute();
+    // Generate the name.
+    $name = $this->randomName();
+
+    $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_APP, $name);
+
+    $node->{mediamosa_app_db::APP_ID} = rand(1, 1000);
+    $node->{mediamosa_app_db::SHARED_KEY} = user_password();
+    $node->{mediamosa_app_db::APP_NAME} = $name;
+    $node->{mediamosa_app_db::ACTIVE} = 'TRUE';
+    $node->{mediamosa_app_db::TRANSCODING_POSITION_TO} = 0;
+    $node->{mediamosa_app_db::QUOTA} = 0;
+    $node->{mediamosa_app_db::QUOTA_USED} = 0;
+    $node->{mediamosa_app_db::ACTIVE_VERSION} = '';
+
+    node_save(&$node);
 
     // Log the creation in the resutls.
-    $this->assert(TRUE, t("App created with unique ID; '%id',  app_id; '%app_id', name; '%name' and shared key; '%shared_key'.", array('%id' => $a_fields[mediamosa_app_db::ID], '%app_id' => $a_fields[mediamosa_app_db::APP_ID], '%name' => $a_fields[mediamosa_app_db::NAME], '%shared_key' => $a_fields[mediamosa_app_db::SHARED_KEY])));
+    $this->assert(TRUE, t("App created with node ID; '%id',  app_id; '%app_id', name; '%name' and shared key; '%shared_key'.", array('%id' => $node->nid, '%app_id' => $node->{mediamosa_app_db::APP_ID}, '%name' => $node->title, '%shared_key' => $node->{mediamosa_app_db::SHARED_KEY})));
 
-    return $a_fields;
+    return (array)$node;
   }
 
   /**
    * Create a download server.
    */
   protected function createDownloadServer() {
-    $node = new stdClass();
-    $node->uid = 1; // Admin.
-    $node->status = 1; // Published.
-    $node->type = mediamosa_node::MEDIAMOSA_NODE_TYPE_SERVER;
+    $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_SERVER, 'http://localhost/download/{TICKET}');
 
-    $node->title = 'http://localhost/download/{TICKET}';
     $node->{mediamosa_server_db::VERSION} = 0;
     $node->{mediamosa_server_db::SERVER_STATUS} = mediamosa_server_db::SERVER_STATUS_ON;
     $node->{mediamosa_server_db::SERVER_TYPE} = mediamosa_server_db::SERVER_TYPE_DOWNLOAD;
@@ -568,7 +586,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     $node->{mediamosa_server_db::TOOLS} = NULL;
     $node->{mediamosa_server_db::URI_UPLOAD_PROGRESS} = NULL;
 
-    node_save(@$node);
+    node_save(&$node);
     $this->pass(t('Created node Downloadserver with node ID @nid', array('@nid' => $node->nid)));
   }
 

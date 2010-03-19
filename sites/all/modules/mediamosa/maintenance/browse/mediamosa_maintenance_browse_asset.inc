@@ -33,14 +33,13 @@
  */
 function mediamosa_maintenance_browse_asset_details($asset_id) {
   $response = _mediamosa_restcall('asset/' . $asset_id, 'GET', array('is_app_admin' => 'true'));
-
   if (!$response) {
     return '';
   }
 
   $output = '';
 
-  $asset = (array)$response->xml->items->item;
+  $asset = (array)$response->items->item;
 
   // Asset attributes
   $rows = array();
@@ -56,7 +55,7 @@ function mediamosa_maintenance_browse_asset_details($asset_id) {
 
   // Add the table to the output
   $output .= t('<h3>Asset attributes</h3>');
-  $output .= theme('table', array(), $rows);
+  $output .= theme('table', array('rows' => $rows));
 
   // Metadata
   foreach (array(
@@ -77,11 +76,11 @@ function mediamosa_maintenance_browse_asset_details($asset_id) {
 
     // Add the table to the output
     $output .= $title;
-    $output .= theme('table', array(), $rows);
+    $output .= theme('table', array('rows' => $rows));
   }
 
   // Mediafiles
-  foreach ($response->xml->items->item->xpath('mediafiles/mediafile') as $mediafile) {
+  foreach ($response->items->item->xpath('mediafiles/mediafile') as $mediafile) {
     // Construct the table rows
     $rows = array();
     foreach ((array)$mediafile as $key => $value) {
@@ -96,7 +95,7 @@ function mediamosa_maintenance_browse_asset_details($asset_id) {
 
     // Add the table to the output
     $output .= t('<h3>Mediafile: @mediafile_id</h3>', array('@mediafile_id' => $mediafile->mediafile_id));
-    $output .= theme('table', array(), $rows);
+    $output .= theme('table', array('rows' => $rows));
   }
 
   return $output;
@@ -112,7 +111,7 @@ function _mediamosa_maintenance_browse_asset_get_all_collections($app_id) {
   }
 
   $collections = array();
-  foreach ($response->xml->xpath('//items/item') as $collection) {
+  foreach ($response->xpath('//items/item') as $collection) {
     $title = trim((string)$collection->title);
     $collections[(string)$collection->coll_id] = ($title != '') ? $title : t('<title not set>');
   }
@@ -255,8 +254,8 @@ function mediamosa_maintenance_browse_asset_form() {
 
   // Gather all apps.
   $all_apps_raw = array();
-  foreach (mediamosa_app::get_all_apps(array(mediamosa_app_db::APP_ID, mediamosa_app_db::NAME), mediamosa_app_db::NAME, 'ASC') as $app) {
-    $all_apps_raw[$app[mediamosa_app_db::APP_ID]] = $app[mediamosa_app_db::NAME];
+  foreach (mediamosa_app::get_all_apps(array(mediamosa_app_db::APP_ID, mediamosa_app_db::APP_NAME), mediamosa_app_db::APP_NAME, 'ASC') as $app) {
+    $all_apps_raw[$app[mediamosa_app_db::APP_ID]] = $app[mediamosa_app_db::APP_NAME];
   }
   $all_apps = array(implode(' ', array_keys($all_apps_raw)) => t('<All applications>'));
   $all_apps += $all_apps_raw;
@@ -376,11 +375,10 @@ function mediamosa_maintenance_browse_asset_form() {
     }
 
     $response = _mediamosa_restcall('asset', 'GET', $data);
-
     if ($response) {
       // Extract the item count.
-      $item_count = (int)$response->xml->header->item_count;
-      $item_count_total = (int)$response->xml->header->item_count_total;
+      $item_count = (int)$response->header->item_count;
+      $item_count_total = (int)$response->header->item_count_total;
     }
 
     // Return the form if no assets were found.
@@ -402,7 +400,7 @@ function mediamosa_maintenance_browse_asset_form() {
     )));
 
     $rows = array();
-    foreach ($response->xml->xpath('//items/item') as $asset) {
+    foreach ($response->xpath('//items/item') as $asset) {
       $title = (isset($asset->dublin_core->title) && trim((string)$asset->dublin_core->title) != '') ? $asset->dublin_core->title : t('<title not set>');
       $rows[] = array(
         l($title, 'admin/mediamosa/browse/asset/' . $asset->asset_id),
@@ -416,7 +414,7 @@ function mediamosa_maintenance_browse_asset_form() {
     );
 
     $form['results'] = array(
-      '#markup' => theme('table', $header, $rows),
+      '#markup' => theme('table', array('header' => $header, 'rows' => $rows)),
     );
 
     $form['pager_bottom'] = array(

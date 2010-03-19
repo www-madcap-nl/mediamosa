@@ -2,8 +2,10 @@
 name = "MediaMosa 2"
 description = "Open source media management and distribution platform."
 package = "MediaMosa 2 - Core"
-version = "2.1.2.277:5cb72b524924"
+version = "2.1.2.315:84615a5e84c2"
 core = 7.x
+
+configure = admin/mediamosa/config/global
 
 ; Dependencies (module names)
 ; YOU MUST HAVE VERY GOOD REASON TO GIVE A DEP. TO THE CORE MODULE.
@@ -16,6 +18,7 @@ files[] = mediamosa.module
 files[] = mediamosa.version.inc
 files[] = mediamosa.inc
 files[] = mediamosa.install
+files[] = mediamosa.rest.inc
 files[] = mediamosa.settings.inc
 
 ; Error. (1st for dependency).
@@ -45,6 +48,7 @@ files[] = cql/mediamosa_cql_prefix_assignment.class.inc
 
 ; Response class.
 files[] = response/mediamosa_response.inc
+files[] = response/mediamosa_response_connector.inc
 
 ; Rest interface class.
 files[] = rest/mediamosa_rest_call.inc
@@ -206,6 +210,29 @@ files[] = core/job/upload/mediamosa_job_upload.install.inc
 
 ; Node type load/insert/delete/update related code.
 files[] = core/node/mediamosa_node.inc
+files[] = core/node/mediamosa_node.install.inc
+files[] = core/node/revision/mediamosa_node_mediamosa_app.inc
+files[] = core/node/revision/mediamosa_node_mediamosa_server.inc
+files[] = core/node/revision/mediamosa_node_mediamosa_transcoding_profile.inc
+files[] = core/node/revision/mediamosa_node_revision_db.inc
+files[] = core/node/revision/mediamosa_node_revision.inc
+files[] = core/node/revision/mediamosa_node_revision.install.inc
+
+; Statistics
+files[] = core/statistics/diskspace_used/mediamosa_statistics_diskspace_used_db.inc
+files[] = core/statistics/diskspace_used/mediamosa_statistics_diskspace_used.install.inc
+files[] = core/statistics/file_upload/mediamosa_statistics_file_upload_db.inc
+files[] = core/statistics/file_upload/mediamosa_statistics_file_upload.install.inc
+files[] = core/statistics/rest_log/mediamosa_statistics_rest_log_db.inc
+files[] = core/statistics/rest_log/mediamosa_statistics_rest_log.install.inc
+files[] = core/statistics/search_request/mediamosa_statistics_search_request_db.inc
+files[] = core/statistics/search_request/mediamosa_statistics_search_request.install.inc
+files[] = core/statistics/stream_request/mediamosa_statistics_stream_request_db.inc
+files[] = core/statistics/stream_request/mediamosa_statistics_stream_request.install.inc
+files[] = core/statistics/stream_request/collection/mediamosa_statistics_stream_request_collection_db.inc
+files[] = core/statistics/stream_request/collection/mediamosa_statistics_stream_request_collection.install.inc
+files[] = core/statistics/mediamosa_statistics.inc
+files[] = core/statistics/mediamosa_statistics.install.inc
 
 ; Storage.
 files[] = core/configuration/storage/mediamosa_configuration_storage.inc

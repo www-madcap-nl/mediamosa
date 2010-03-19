@@ -1,5 +1,5 @@
 <?php
-// $Id: openid.pages.inc,v 1.22 2009/09/21 06:44:14 dries Exp $
+// $Id: openid.pages.inc,v 1.27 2010/03/02 08:59:54 dries Exp $
 
 /**
  * @file
@@ -28,7 +28,7 @@ function openid_authentication_page() {
  * Menu callback; Manage OpenID identities for the specified user.
  */
 function openid_user_identities($account) {
-  drupal_set_title($account->name);
+  drupal_set_title(format_username($account));
   drupal_add_css(drupal_get_path('module', 'openid') . '/openid.css');
 
   // Check to see if we got a response
@@ -54,8 +54,8 @@ function openid_user_identities($account) {
   }
 
   $build['openid_table'] = array(
-    '#theme' => 'table', 
-    '#header' => $header, 
+    '#theme' => 'table',
+    '#header' => $header,
     '#rows' => $rows,
   );
   $build['openid_user_add'] = drupal_get_form('openid_user_add');
@@ -73,13 +73,14 @@ function openid_user_add() {
     '#type' => 'textfield',
     '#title' => t('OpenID'),
   );
-  $form['submit'] = array('#type' => 'submit', '#value' => t('Add an OpenID'));
+  $form['actions'] = array('#type' => 'container', '#attributes' => array('class' => array('form-actions')));
+  $form['actions']['submit'] = array('#type' => 'submit', '#value' => t('Add an OpenID'));
   return $form;
 }
 
 function openid_user_add_validate($form, &$form_state) {
   // Check for existing entries.
-  $claimed_id = _openid_normalize($form_state['values']['openid_identifier']);
+  $claimed_id = openid_normalize($form_state['values']['openid_identifier']);
   if (db_query("SELECT authname FROM {authmap} WHERE authname = :authname", (array(':authname' => $claimed_id)))->fetchField()) {
     form_set_error('openid_identifier', t('That OpenID is already in use on this site.'));
   }
@@ -104,12 +105,12 @@ function openid_user_delete_form($form, $form_state, $account, $aid = 0) {
 
 function openid_user_delete_form_submit($form, &$form_state) {
   $query = db_delete('authmap')
-    ->condition('uid', $form_state['args'][0]->uid)
-    ->condition('aid', $form_state['args'][1])
+    ->condition('uid', $form_state['build_info']['args'][0]->uid)
+    ->condition('aid', $form_state['build_info']['args'][1])
     ->condition('module', 'openid')
     ->execute();
   if ($query) {
     drupal_set_message(t('OpenID deleted.'));
   }
-  $form_state['redirect'] = 'user/' . $form_state['args'][0]->uid . '/openid';
+  $form_state['redirect'] = 'user/' . $form_state['build_info']['args'][0]->uid . '/openid';
 }

@@ -1,5 +1,10 @@
 <?php
-// $Id: xmlrpcs.inc,v 1.31 2009/08/24 00:14:19 webchick Exp $
+// $Id: xmlrpcs.inc,v 1.37 2010/01/28 07:06:57 webchick Exp $
+
+/**
+ * @file
+ * Provides API for defining and handling XML-RPC requests.
+ */
 
 /**
  * The main entry point for XML-RPC requests.
@@ -38,7 +43,7 @@ function xmlrpc_server($callbacks) {
   // We build an array of all method names by combining the built-ins
   // with those defined by modules implementing the _xmlrpc hook.
   // Built-in methods are overridable.
-  foreach (array_merge($defaults, (array)$callbacks) as $key => $callback) {
+  foreach (array_merge($defaults, (array) $callbacks) as $key => $callback) {
     // we could check for is_array($callback)
     if (is_int($key)) {
       $method = $callback[0];
@@ -55,7 +60,7 @@ function xmlrpc_server($callbacks) {
 
   $data = file_get_contents('php://input');
   if (!$data) {
-    die('XML-RPC server accepts POST requests only.');
+    exit('XML-RPC server accepts POST requests only.');
   }
   $xmlrpc_server->message = xmlrpc_message($data);
   if (!xmlrpc_message_parse($xmlrpc_server->message)) {
@@ -63,6 +68,9 @@ function xmlrpc_server($callbacks) {
   }
   if ($xmlrpc_server->message->messagetype != 'methodCall') {
     xmlrpc_server_error(-32600, t('Server error. Invalid XML-RPC. Request must be a methodCall.'));
+  }
+  if (!isset($xmlrpc_server->message->params)) {
+    $xmlrpc_server->message->params = array();
   }
   xmlrpc_server_set($xmlrpc_server);
   $result = xmlrpc_server_call($xmlrpc_server, $xmlrpc_server->message->methodname, $xmlrpc_server->message->params);
@@ -106,10 +114,10 @@ function xmlrpc_server_error($error, $message = FALSE) {
 
 function xmlrpc_server_output($xml) {
   $xml = '<?xml version="1.0"?>' . "\n" . $xml;
-  drupal_set_header('Content-Length', strlen($xml));
-  drupal_set_header('Content-Type', 'text/xml');
+  drupal_add_http_header('Content-Length', strlen($xml));
+  drupal_add_http_header('Content-Type', 'text/xml');
   echo $xml;
-  exit;
+  drupal_exit();
 }
 
 /**
@@ -135,6 +143,8 @@ function xmlrpc_server_get() {
  * Dispatch the request and any parameters to the appropriate handler.
  *
  * @param $xmlrpc_server
+ *   Contains information about this XML-RPC server, the methods it provides,
+ *   their signatures, etc.
  * @param $methodname
  *   The external XML-RPC method name, e.g. 'system.methodHelp'
  * @param $args
@@ -232,7 +242,7 @@ function xmlrpc_server_multicall($methodcalls) {
       );
     }
     else {
-      $return[] = $result;
+      $return[] = array($result);
     }
   }
   return $return;
@@ -249,7 +259,8 @@ function xmlrpc_server_list_methods() {
 
 /**
  * XML-RPC method system.getCapabilities maps to this function.
- * See http://groups.yahoo.com/group/xml-rpc/message/2897
+ *
+ * @see http://groups.yahoo.com/group/xml-rpc/message/2897
  */
 function xmlrpc_server_get_capabilities() {
   return array(
@@ -277,7 +288,7 @@ function xmlrpc_server_get_capabilities() {
  *
  * @param $methodname
  *   Name of method for which we return a method signature.
- * @return array
+ * @return
  *   An array of types representing the method signature of the
  *   function that the methodname maps to. The methodSignature of
  *   this function is 'array', 'string' because it takes an array

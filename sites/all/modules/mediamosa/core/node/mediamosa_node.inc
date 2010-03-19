@@ -31,16 +31,12 @@
   * creation code.
   */
 
-// Our node type hooks.
-require_once 'mediamosa_node_mediamosa_server.inc';
-require_once 'mediamosa_node_mediamosa_transcode_profile.inc';
-
-
 class mediamosa_node {
   // ------------------------------------------------------------------ Consts.
   // Node types.
   const MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE = 'mediamosa_transcode_profile';
   const MEDIAMOSA_NODE_TYPE_SERVER = 'mediamosa_server';
+  const MEDIAMOSA_NODE_TYPE_APP = 'mediamosa_app';
 
   // ------------------------------------------------------------------ Functions.
   /**
@@ -48,6 +44,68 @@ class mediamosa_node {
    */
   static public function get_all_node_types() {
     return array_keys(mediamosa_node_info());
+  }
+
+  /**
+   * Create basic node object to fill.
+   *
+   * @param $type
+   * @param $title
+   */
+  static public function create_basic_node($type, $title) {
+    $node = new stdClass();
+    $node->uid = 1; // Admin
+    $node->status = 1; // Published
+    $node->type = $type;
+    $node->language = LANGUAGE_NONE;
+    $node->title = $title;
+    return $node;
+  }
+
+  /**
+   * Changes the form for mediamosa node type.
+   *
+   * @param array $form
+   * @param array $form_state
+   */
+  static public function common_form(&$form, &$form_state) {
+    $form['revision_information']['revision']['#default_value'] = '1';
+    $form['revision_information']['log']['#default_value'] = ' ';
+
+    // Remove the options block.
+    unset($form['options']);
+
+    // Add hidden values.
+    $form['status'] = array(
+      '#type' => 'hidden',
+      '#value' => 1,
+    );
+
+    $form['sticky'] = array(
+      '#type' => 'hidden',
+      '#value' => 0,
+    );
+
+    $form['promote'] = array(
+      '#type' => 'hidden',
+      '#value' => 0,
+    );
+
+    // Make revision top item.
+    $form['revision_information']['#weight'] = -100;
+
+    // Remove the preview button for now (it doesn't work well atm).
+    unset($form['actions']['preview']);
+  }
+
+  /**
+   * Helper setting the default value.
+   *
+   * @param string $name
+   * @param object $node
+   */
+  static public function default_value($name, $node, $default = '') {
+    return isset($node->{$name}) ? $node->{$name} : $default;
   }
 }
 
@@ -68,5 +126,56 @@ function mediamosa_node_info() {
       'has_body' => FALSE,
       'description' => t('MediaMosa servers execute jobs for transcoding, uploading and other related work.'),
     ),
+    mediamosa_node::MEDIAMOSA_NODE_TYPE_APP => array(
+      'name' => t('MediaMosa client application'),
+      'base' => mediamosa_node::MEDIAMOSA_NODE_TYPE_APP,
+      'has_body' => FALSE,
+      'description' => t('MediaMosa client applications are clients that can login onto MediaMosa and execute REST calls. All data stored is stored under its client application ID; giving each client application its own database of assets, mediafiles etc.'),
+    ),
   );
+}
+
+/**
+ * Confirm node deletion.
+ */
+function _mediamosa_node_delete_confirm($form, &$form_state, $node) {
+
+  // Call the node delete confirm form.
+  return node_delete_confirm($form, $form_state, $node);
+}
+
+/**
+ * Execute node deletion
+ */
+function _mediamosa_node_delete_confirm_submit($form, &$form_state) {
+
+  // Call the node confirm submit function.
+  node_delete_confirm_submit($form, $form_state);
+}
+
+/**
+ * Implementation of hook_form_alter().
+ */
+function mediamosa_form_mediamosa_transcode_profile_node_form_alter(&$form, &$form_state) {
+  // Change the form.
+  mediamosa_node::common_form($form, $form_state);
+}
+
+/**
+ * Implementation of hook_form_alter().
+ */
+function mediamosa_form_mediamosa_server_node_form_alter(&$form, &$form_state) {
+  // Change the form.
+  mediamosa_node::common_form($form, $form_state);
+}
+
+/**
+ * Implementation of hook_form_alter().
+ */
+function mediamosa_form_mediamosa_app_node_form_alter(&$form, &$form_state) {
+  // Change the form.
+  mediamosa_node::common_form($form, $form_state);
+
+  $form['#redirect'] = 'admin/mediamosa/config/app';
+  $form_state['redirect'] = 'admin/mediamosa/config/app';
 }

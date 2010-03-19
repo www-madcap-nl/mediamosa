@@ -1,5 +1,5 @@
 <?php
-// $Id: user.api.php,v 1.12 2009/08/27 20:25:28 dries Exp $
+// $Id: user.api.php,v 1.21 2010/03/12 15:56:30 dries Exp $
 
 /**
  * @file
@@ -32,11 +32,29 @@ function hook_user_load($users) {
 }
 
 /**
+ * Respond to user deletion.
+ *
+ * This hook is invoked from user_delete_multiple() after the account has been
+ * removed from the user tables in the database, and before
+ * field_attach_delete() is called.
+ *
+ * @param $account
+ *   The account that is being deleted.
+ *
+ * @see user_delete_multiple()
+ */
+function hook_user_delete($account) {
+  db_delete('mytable')
+    ->condition('uid', $account->uid)
+    ->execute();
+}
+
+/**
  * Act on user account cancellations.
  *
  * The user account is being canceled. Depending on the account cancellation
- * method, the module should either do nothing, unpublish content, anonymize
- * content, or delete content and data belonging to the canceled user account.
+ * method, the module should either do nothing, unpublish content, or anonymize
+ * content.
  *
  * Expensive operations should be added to the global batch with batch_set().
  *
@@ -76,26 +94,6 @@ function hook_user_cancel($edit, $account, $method) {
       // Anonymize old revisions.
       db_update('node_revision')
         ->fields(array('uid' => 0))
-        ->condition('uid', $account->uid)
-        ->execute();
-      // Clean history.
-      db_delete('history')
-        ->condition('uid', $account->uid)
-        ->execute();
-      break;
-
-    case 'user_cancel_delete':
-      // Delete nodes (current revisions).
-      $nodes = db_select('node', 'n')
-        ->fields('n', array('nid'))
-        ->condition('uid', $account->uid)
-        ->execute()
-        ->fetchCol();
-      foreach ($nodes as $nid) {
-        node_delete($nid);
-      }
-      // Delete old revisions.
-      db_delete('node_revision')
         ->condition('uid', $account->uid)
         ->execute();
       // Clean history.
@@ -179,28 +177,6 @@ function hook_user_operations() {
 }
 
 /**
- * The user object has been updated and changed.
- *
- * Use this if (probably along with 'insert') if you want to reuse some
- * information from the user object.
- *
- * @param &$edit
- *   The array of form values submitted by the user.
- * @param $account
- *   The user object on which the operation is performed.
- * @param $category
- *   The active category of user information being edited.
- */
-function hook_user_after_update(&$edit, $account, $category) {
-  db_insert('user_changes')
-    ->fields(array(
-      'uid' => $account->uid,
-      'changed' => time(),
-    ))
-    ->execute();
-}
-
-/**
  * Retrieve a list of all user setting/information categories.
  *
  * @return
@@ -218,39 +194,36 @@ function hook_user_categories() {
 }
 
 /**
- * The user account edit form is about to be displayed.
+ * A user account is about to be created or updated.
  *
- * The module should present the form elements it wishes to inject
- * into the form.
+ * This hook is primarily intended for modules that want to store properties in
+ * the serialized {users}.data column, which is automatically loaded whenever a
+ * user account object is loaded, and the module needs to prepare the stored
+ * data in some way.
+ * The module should save its custom additions to the user object into the
+ * database and set the saved fields to NULL in $edit.
  *
  * @param &$edit
  *   The array of form values submitted by the user.
  * @param $account
- *   The user object on which the operation is being performed.
+ *   The user object on which the operation is performed.
  * @param $category
  *   The active category of user information being edited.
- * @return
- *   A $form array containing the form elements to display.
+ *
+ * @see hook_user_insert()
+ * @see hook_user_update()
  */
-function hook_user_form(&$edit, $account, $category = NULL) {
-  if ($category == 'account') {
-    $form['comment_settings'] = array(
-      '#type' => 'fieldset',
-      '#title' => t('Comment settings'),
-      '#collapsible' => TRUE,
-      '#weight' => 4);
-    $form['comment_settings']['signature'] = array(
-      '#type' => 'textarea',
-      '#title' => t('Signature'),
-      '#default_value' => $edit['signature'],
-      '#description' => t('Your signature will be publicly displayed at the end of your comments.'));
-    return $form;
+function hook_user_presave(&$edit, $account, $category) {
+  // Make sure that our form value 'mymodule_foo' is stored as 'mymodule_bar'.
+  if (isset($edit['mymodule_foo'])) {
+    $edit['mymodule_bar'] = $edit['mymodule_foo'];
+    // Inform user_save() to ignore the value of our property.
+    $edit['mymodule_foo'] = NULL;
   }
 }
 
-
 /**
- * The user account is being added.
+ * A user account was created.
  *
  * The module should save its custom additions to the user object into the
  * database and set the saved fields to NULL in $edit.
@@ -261,6 +234,9 @@ function hook_user_form(&$edit, $account, $category = NULL) {
  *   The user object on which the operation is being performed.
  * @param $category
  *   The active category of user information being edited.
+ *
+ * @see hook_user_presave()
+ * @see hook_user_update()
  */
 function hook_user_insert(&$edit, $account, $category) {
   db_insert('mytable')
@@ -269,7 +245,33 @@ function hook_user_insert(&$edit, $account, $category) {
       'uid' => $account->uid,
     ))
     ->execute();
+  // Inform user_save() to ignore the value of our property.
   $edit['myfield'] = NULL;
+}
+
+/**
+ * A user account was updated.
+ *
+ * Modules may use this hook to update their user data in a custom storage
+ * after a user account has been updated.
+ *
+ * @param &$edit
+ *   The array of form values submitted by the user.
+ * @param $account
+ *   The user object on which the operation is performed.
+ * @param $category
+ *   The active category of user information being edited.
+ *
+ * @see hook_user_presave()
+ * @see hook_user_insert()
+ */
+function hook_user_update(&$edit, $account, $category) {
+  db_insert('user_changes')
+    ->fields(array(
+      'uid' => $account->uid,
+      'changed' => time(),
+    ))
+    ->execute();
 }
 
 /**
@@ -283,7 +285,7 @@ function hook_user_insert(&$edit, $account, $category) {
 function hook_user_login(&$edit, $account) {
   // If the user has a NULL time zone, notify them to set a time zone.
   if (!$user->timezone && variable_get('configurable_timezones', 1) && variable_get('empty_timezone_message', 0)) {
-    drupal_set_message(t('Please configure your <a href="@user-edit">account time zone setting</a>.', array('@user-edit' => url("user/$user->uid/edit", array('query' => drupal_get_destination(), 'fragment' => 'edit-timezone')))));
+    drupal_set_message(t('Configure your <a href="@user-edit">account time zone setting</a>.', array('@user-edit' => url("user/$user->uid/edit", array('query' => drupal_get_destination(), 'fragment' => 'edit-timezone')))));
   }
 }
 
@@ -303,106 +305,6 @@ function hook_user_logout($account) {
 }
 
 /**
- * The user account registration form is about to be displayed.
- *
- * The module should present the form elements it wishes to inject into the
- * form.
- *
- * @param &$edit
- *   The array of form values submitted by the user.
- * @param $account
- *   The user object on which the operation is being performed.
- * @param $category
- *   The active category of user information being edited.
- * @return
- *   A $form array containing the form elements to display.
- */
-function hook_user_register(&$edit, $account, $category) {
-  if (variable_get('configurable_timezones', 1)) {
-    $form = array();
-    if (variable_get('user_default_timezone', DRUPAL_USER_TIMEZONE_DEFAULT) == DRUPAL_USER_TIMEZONE_SELECT) {
-      system_user_timezone($edit, $form);
-    }
-    else {
-      $form['timezone'] = array(
-        '#type' => 'hidden',
-        '#value' => variable_get('user_default_timezone', DRUPAL_USER_TIMEZONE_DEFAULT) ? '' : variable_get('date_default_timezone', ''),
-      );
-    }
-    return $form;
-  }
-}
-
-/**
- * Modify the account before it gets saved.
- *
- * @param &$edit
- *   The array of form values submitted by the user.
- * @param $account
- *   The user object on which the operation is performed.
- * @param $category
- *   The active category of user information being edited.
- */
-function hook_user_submit(&$edit, $account, $category) {
-  if ($category == 'account') {
-    if (!empty($edit['picture_upload'])) {
-      $edit['picture'] = $edit['picture_upload'];
-    }
-    // Delete picture if requested, and if no replacement picture was given.
-    elseif (!empty($edit['picture_delete'])) {
-      $edit['picture'] = NULL;
-    }
-    // Remove these values so they don't end up serialized in the data field.
-    $edit['picture_upload'] = NULL;
-    $edit['picture_delete'] = NULL;
-
-    if (isset($edit['roles'])) {
-      $edit['roles'] = array_filter($edit['roles']);
-    }
-  }
-}
-
-/**
- * The user account is being changed.
- *
- * The module should save its custom additions to the user object into the
- * database and set the saved fields to NULL in $edit.
- *
- * @param &$edit
- *   The array of form values submitted by the user.
- * @param $account
- *   The user object on which the operation is performed.
- * @param $category
- *   The active category of user information being edited.
- */
-function hook_user_update(&$edit, $account, $category) {
-  db_update('mytable')
-    ->fields(array('myfield' => $edit['myfield']))
-    ->condition('uid', $account->uid)
-    ->execute();
-  $edit['myfield'] = NULL;
-}
-
-/**
- * The user account is about to be modified.
- *
- * The module should validate its custom additions to the user object,
- * registering errors as necessary.
- *
- * @param &$edit
- *   The array of form values submitted by the user.
- * @param $account
- *   The user object on which the operation is being performed.
- * @param $category
- *   The active category of user information being edited.
- */
-function hook_user_validate(&$edit, $account, $category) {
-  if ($category == 'mymodule' && empty($edit['myfield'])) {
-    form_set_error('myfield', t('Myfield is required.'));
-  }
-}
-
-/**
  * The user's account information is being displayed.
  *
  * The module should format its custom additions for display and add them to the
@@ -410,16 +312,46 @@ function hook_user_validate(&$edit, $account, $category) {
  *
  * @param $account
  *   The user object on which the operation is being performed.
+ * @param $view_mode
+ *   View mode, e.g. 'full'.
  */
-function hook_user_view($account) {
+function hook_user_view($account, $view_mode) {
   if (user_access('create blog content', $account)) {
     $account->content['summary']['blog'] =  array(
       '#type' => 'user_profile_item',
       '#title' => t('Blog'),
-      '#markup' => l(t('View recent blog entries'), "blog/$account->uid", array('attributes' => array('title' => t("Read !username's latest blog entries.", array('!username' => $account->name))))),
+      '#markup' => l(t('View recent blog entries'), "blog/$account->uid", array('attributes' => array('title' => t("Read !username's latest blog entries.", array('!username' => format_username($account)))))),
       '#attributes' => array('class' => array('blog')),
     );
   }
+}
+
+/**
+ * The user was built; the module may modify the structured content.
+ *
+ * This hook is called after the content has been assembled in a structured array
+ * and may be used for doing processing which requires that the complete user
+ * content structure has been built.
+ *
+ * If the module wishes to act on the rendered HTML of the user rather than the
+ * structured content array, it may use this hook to add a #post_render callback.
+ * Alternatively, it could also implement hook_preprocess_user_profile(). See
+ * drupal_render() and theme() documentation respectively for details.
+ *
+ * @param $build
+ *   A renderable array representing the user.
+ *
+ * @see user_view()
+ */
+function hook_user_view_alter(&$build) {
+  // Check for the existence of a field added by another module.
+  if (isset($build['an_additional_field'])) {
+    // Change its weight.
+    $build['an_additional_field']['#weight'] = -10;
+  }
+
+  // Add a #post_render callback to act on the rendered HTML of the user.
+  $build['#post_render'][] = 'my_module_user_post_render';
 }
 
 /**
@@ -468,7 +400,7 @@ function hook_user_role_update($role) {
  * Inform other modules that a user role has been deleted.
  *
  * This hook allows you act when a user role has been deleted.
- * If your module stores references to roles, it's recommended that you 
+ * If your module stores references to roles, it's recommended that you
  * implement this hook and delete existing instances of the deleted role
  * in your module database tables.
  *

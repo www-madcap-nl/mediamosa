@@ -108,8 +108,8 @@ function mediamosa_maintenance_browse_collection_form() {
   $offset = $page * $item_limit;
 
   // Gather all apps
-  foreach (mediamosa_app::get_all_apps(array(mediamosa_app_db::APP_ID, mediamosa_app_db::NAME), mediamosa_app_db::NAME, 'ASC') as $app) {
-    $all_apps_raw[$app[mediamosa_app_db::APP_ID]] = $app[mediamosa_app_db::NAME];
+  foreach (mediamosa_app::get_all_apps(array(mediamosa_app_db::APP_ID, mediamosa_app_db::APP_NAME), mediamosa_app_db::APP_NAME, 'ASC') as $app) {
+    $all_apps_raw[$app[mediamosa_app_db::APP_ID]] = $app[mediamosa_app_db::APP_NAME];
   }
   $all_apps = array(implode(' ', array_keys($all_apps_raw)) => t('<All applications>'));
   $all_apps += $all_apps_raw;
@@ -209,8 +209,8 @@ function mediamosa_maintenance_browse_collection_form() {
     $response = _mediamosa_restcall('collection', 'GET', $data);
 
     // Extract the item count
-    $item_count = (int)$response->xml->header->item_count;
-    $item_count_total = (int)$response->xml->header->item_count_total;
+    $item_count = (int)$response->header->item_count;
+    $item_count_total = (int)$response->header->item_count_total;
 
     // Return the form if no collections were found
     if ($item_count_total == 0) {
@@ -231,7 +231,7 @@ function mediamosa_maintenance_browse_collection_form() {
     )));
 
     $rows = array();
-    foreach ($response->xml->xpath('//items/item') as $collection) {
+    foreach ($response->xpath('//items/item') as $collection) {
       $title = (isset($collection->title) && trim((string)$collection->title) != '') ? $collection->title : t('<title not set>');
       $rows[] = array(
         l($title, 'admin/mediamosa/browse/asset', array('query' => array('coll_id' => $collection->coll_id))),
@@ -245,7 +245,7 @@ function mediamosa_maintenance_browse_collection_form() {
     );
 
     $form['results'] = array(
-      '#markup' => theme('table', $header, $rows),
+      '#markup' => theme('table', array('header' => $header, 'rows' => $rows)),
     );
 
     $form['pager_bottom'] = array(

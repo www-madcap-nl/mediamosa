@@ -86,7 +86,7 @@ function mediamosa_maintenance_browse_menu() {
     'file' => 'mediamosa_maintenance_browse_asset.inc',
   );
   $items['admin/mediamosa/browse/asset/list'] = array(
-    'title' => 'Assets',
+    'title' => 'Asset browser',
     'access arguments' => array('access mediamosa assets'),
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );

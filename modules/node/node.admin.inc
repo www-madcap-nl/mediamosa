@@ -1,5 +1,5 @@
 <?php
-// $Id: node.admin.inc,v 1.67 2009/09/18 00:12:47 webchick Exp $
+// $Id: node.admin.inc,v 1.92 2010/03/07 06:49:10 webchick Exp $
 
 /**
  * @file
@@ -23,42 +23,42 @@ function node_configure_rebuild_confirm_submit($form, &$form_state) {
 }
 
 /**
- * Implement hook_node_operations().
+ * Implements hook_node_operations().
  */
 function node_node_operations() {
   $operations = array(
     'publish' => array(
-      'label' => t('Publish'),
+      'label' => t('Publish selected content'),
       'callback' => 'node_mass_update',
       'callback arguments' => array('updates' => array('status' => NODE_PUBLISHED)),
     ),
     'unpublish' => array(
-      'label' => t('Unpublish'),
+      'label' => t('Unpublish selected content'),
       'callback' => 'node_mass_update',
       'callback arguments' => array('updates' => array('status' => NODE_NOT_PUBLISHED)),
     ),
     'promote' => array(
-      'label' => t('Promote to front page'),
+      'label' => t('Promote selected content to front page'),
       'callback' => 'node_mass_update',
       'callback arguments' => array('updates' => array('status' => NODE_PUBLISHED, 'promote' => NODE_PROMOTED)),
     ),
     'demote' => array(
-      'label' => t('Demote from front page'),
+      'label' => t('Demote selected content from front page'),
       'callback' => 'node_mass_update',
       'callback arguments' => array('updates' => array('promote' => NODE_NOT_PROMOTED)),
     ),
     'sticky' => array(
-      'label' => t('Make sticky'),
+      'label' => t('Make selected content sticky'),
       'callback' => 'node_mass_update',
       'callback arguments' => array('updates' => array('status' => NODE_PUBLISHED, 'sticky' => NODE_STICKY)),
     ),
     'unsticky' => array(
-      'label' => t('Remove stickiness'),
+      'label' => t('Make selected content not sticky'),
       'callback' => 'node_mass_update',
       'callback arguments' => array('updates' => array('sticky' => NODE_NOT_STICKY)),
     ),
     'delete' => array(
-      'label' => t('Delete'),
+      'label' => t('Delete selected content'),
       'callback' => NULL,
     ),
   );
@@ -73,6 +73,7 @@ function node_filters() {
   $filters['status'] = array(
     'title' => t('status'),
     'options' => array(
+      '[any]' => t('any'),
       'status-1' => t('published'),
       'status-0' => t('not published'),
       'promote-1' => t('promoted'),
@@ -89,16 +90,22 @@ function node_filters() {
     );
   }
 
-  $filters['type'] = array('title' => t('type'), 'options' => node_type_get_names());
+  $filters['type'] = array(
+    'title' => t('type'),
+    'options' => array(
+      '[any]' => t('any'),
+    ) + node_type_get_names(),
+  );
 
-  // The taxonomy filter
-  if ($taxonomy = module_invoke('taxonomy', 'form_all', 1)) {
-    $filters['term'] = array('title' => t('term'), 'options' => $taxonomy);
-  }
   // Language filter if there is a list of languages
   if ($languages = module_invoke('locale', 'language_list')) {
-    $languages = array('' => t('Language neutral')) + $languages;
-    $filters['language'] = array('title' => t('language'), 'options' => $languages);
+    $languages = array(LANGUAGE_NONE => t('Language neutral')) + $languages;
+    $filters['language'] = array(
+      'title' => t('language'),
+      'options' => array(
+        '[any]' => t('any'),
+      ) + $languages,
+    );
   }
   return $filters;
 }
@@ -117,8 +124,8 @@ function node_build_filter_query(SelectQueryInterface $query) {
     list($key, $value) = $filter;
     switch ($key) {
       case 'term':
-        $index = 'tn' . $counter++;
-        $query->join('taxonomy_term_node', $index, "n.nid = $index.nid");
+        $index = 'ti' . $counter++;
+        $query->join('taxonomy_index', $index, "n.nid = $index.nid");
         $query->condition($index . '.tid', $value);
         break;
       case 'status':
@@ -153,7 +160,7 @@ function node_filter_form() {
       $value = $value->name;
     }
     elseif ($type == 'language') {
-      $value = empty($value) ? t('Language neutral') : module_invoke('locale', 'language_name', $value);
+      $value = $value == LANGUAGE_NONE ? t('Language neutral') : module_invoke('locale', 'language_name', $value);
     }
     else {
       $value = $filters[$type]['options'][$value];
@@ -172,14 +179,23 @@ function node_filter_form() {
 
   foreach ($filters as $key => $filter) {
     $names[$key] = $filter['title'];
-    $form['filters']['status'][$key] = array('#type' => 'select', '#options' => $filter['options']);
+    $form['filters']['status'][$key] = array(
+      '#type' => 'select',
+      '#options' => $filter['options'],
+      '#title' => $filter['title'],
+      '#default_value' => '[any]',
+    );
   }
 
-  $form['filters']['filter'] = array('#type' => 'radios', '#options' => $names, '#default_value' => 'status');
-  $form['filters']['buttons']['submit'] = array('#type' => 'submit', '#value' => (count($session) ? t('Refine') : t('Filter')));
+  $form['filters']['actions'] = array(
+    '#type' => 'container',
+    '#id' => 'node-admin-buttons',
+    '#attributes' => array('class' => array('form-actions', 'container-inline')),
+  );
+  $form['filters']['actions']['submit'] = array('#type' => 'submit', '#value' => (count($session) ? t('Refine') : t('Filter')));
   if (count($session)) {
-    $form['filters']['buttons']['undo'] = array('#type' => 'submit', '#value' => t('Undo'));
-    $form['filters']['buttons']['reset'] = array('#type' => 'submit', '#value' => t('Reset'));
+    $form['filters']['actions']['undo'] = array('#type' => 'submit', '#value' => t('Undo'));
+    $form['filters']['actions']['reset'] = array('#type' => 'submit', '#value' => t('Reset'));
   }
 
   drupal_add_js('misc/form.js');
@@ -188,40 +204,27 @@ function node_filter_form() {
 }
 
 /**
- * Theme node administration filter form.
- *
- * @ingroup themeable
- */
-function theme_node_filter_form($form) {
-  $output = '';
-  $output .= '<div id="node-admin-filter">';
-  $output .= drupal_render($form['filters']);
-  $output .= '</div>';
-  $output .= drupal_render_children($form);
-  return $output;
-}
-
-/**
  * Theme node administration filter selector.
  *
  * @ingroup themeable
  */
-function theme_node_filters($form) {
+function theme_node_filters($variables) {
+  $form = $variables['form'];
   $output = '';
+
   $output .= '<ul class="clearfix">';
   if (!empty($form['current'])) {
     foreach (element_children($form['current']) as $key) {
       $output .= '<li>' . drupal_render($form['current'][$key]) . '</li>';
     }
   }
+  $output .= '</ul>';
 
-  $output .= '<li><dl class="multiselect">' . (!empty($form['current']) ? '<dt><em>' . t('and') . '</em> ' . t('where') . '</dt>' : '') . '<dd class="a">';
-  foreach (element_children($form['filter']) as $key) {
-    $output .= drupal_render($form['filter'][$key]);
-  }
-  $output .= '</dd>';
+  $output .= '<div class="clearfix">';
 
-  $output .= '<dt>' . t('is') . '</dt><dd class="b">';
+  $output .= '<dl class="multiselect">' . (!empty($form['current']) ? '<dt><em>' . t('and') . '</em> ' . t('where') . '</dt>' : '');
+
+  $output .= '<dd>';
 
   foreach (element_children($form['status']) as $key) {
     $output .= drupal_render($form['status'][$key]);
@@ -229,8 +232,9 @@ function theme_node_filters($form) {
   $output .= '</dd>';
 
   $output .= '</dl>';
-  $output .= '<div class="container-inline" id="node-admin-buttons">' . drupal_render($form['buttons']) . '</div>';
-  $output .= '</li></ul>';
+  $output .= drupal_render($form['actions']);
+
+  $output .= '</div>';
 
   return $output;
 }
@@ -243,14 +247,15 @@ function node_filter_form_submit($form, &$form_state) {
   switch ($form_state['values']['op']) {
     case t('Filter'):
     case t('Refine'):
-      if (isset($form_state['values']['filter'])) {
-        $filter = $form_state['values']['filter'];
-
-        // Flatten the options array to accommodate hierarchical/nested options.
-        $flat_options = form_options_flatten($filters[$filter]['options']);
-
-        if (isset($flat_options[$form_state['values'][$filter]])) {
-          $_SESSION['node_overview_filter'][] = array($filter, $form_state['values'][$filter]);
+      // Apply every filter that has a choice selected other than 'any'.
+      foreach ($filters as $filter => $options) {
+        if (isset($form_state['values'][$filter]) && $form_state['values'][$filter] != '[any]') {
+          // Flatten the options array to accommodate hierarchical/nested options.
+          $flat_options = form_options_flatten($filters[$filter]['options']);
+          // Only accept valid selections offered on the dropdown, block bad input.
+          if (isset($flat_options[$form_state['values'][$filter]])) {
+            $_SESSION['node_overview_filter'][] = array($filter, $form_state['values'][$filter]);
+          }
         }
       }
       break;
@@ -358,7 +363,7 @@ function _node_mass_update_batch_finished($success, $results, $operations) {
   else {
     drupal_set_message(t('An error occurred and processing did not complete.'), 'error');
     $message = format_plural(count($results), '1 item successfully processed:', '@count items successfully processed:');
-    $message .= theme('item_list', $results);
+    $message .= theme('item_list', array('items' => $results));
     drupal_set_message($message);
   }
 }
@@ -368,16 +373,10 @@ function _node_mass_update_batch_finished($success, $results, $operations) {
  */
 function node_admin_content($form, $form_state) {
   if (isset($form_state['values']['operation']) && $form_state['values']['operation'] == 'delete') {
-    return node_multiple_delete_confirm($form_state, array_filter($form_state['values']['nodes']));
+    return node_multiple_delete_confirm($form, $form_state, array_filter($form_state['values']['nodes']));
   }
-  // Show the 'add new content' link.
-  $form['add_content'] = array(
-    '#access' => _node_add_access(),
-    '#markup' => theme('links', array(array('title' => t('Add new content'), 'href' => 'node/add')), array('class' => array('action-links'))),
-  );
-  $form[] = node_filter_form();
+  $form['filter'] = node_filter_form();
   $form['#submit'][] = 'node_filter_form_submit';
-  $form['#theme'] = 'node_filter_form';
   $form['admin'] = node_admin_nodes();
 
   return $form;
@@ -387,44 +386,14 @@ function node_admin_content($form, $form_state) {
  * Form builder: Builds the node administration overview.
  */
 function node_admin_nodes() {
-  // Enable language column if translation module is enabled
-  // or if we have any node with language.
-  $multilanguage = (module_exists('translation') || db_query("SELECT COUNT(*) FROM {node} WHERE language <> ''")->fetchField());
-
-  // Build the sortable table header.
-  $header = array();
-  $header[] = theme('table_select_header_cell');
-  $header[] = array('data' => t('Title'), 'field' => 'n.title');
-  $header[] = array('data' => t('Type'), 'field' => 'n.type');
-  $header[] = array('data' => t('Author'), 'field' => 'u.name');
-  $header[] = array('data' => t('Status'), 'field' => 'n.status');
-  $header[] = array('data' => t('Updated'), 'field' => 'n.changed', 'sort' => 'desc');
-  if ($multilanguage) {
-    $header[] = array('data' => t('Language'), 'field' => 'n.language');
-  }
-  $header[] = array('data' => t('Operations'));
-
-  $form['header'] = array(
-   '#type' => 'value',
-   '#value' => $header,
-  );
-
-  $query = db_select('node', 'n')->extend('PagerDefault')->extend('TableSort');
-  $query->join('users', 'u', 'n.uid = u.uid');
-  node_build_filter_query($query);
-
-  $result = $query
-    ->fields('n')
-    ->fields('u', array('name'))
-    ->limit(50)
-    ->execute();
+  $admin_access = user_access('administer nodes');
 
   // Build the 'Update options' form.
   $form['options'] = array(
     '#type' => 'fieldset',
     '#title' => t('Update options'),
-    '#prefix' => '<div class="container-inline">',
-    '#suffix' => '</div>',
+    '#attributes' => array('class' => array('container-inline')),
+    '#access' => $admin_access,
   );
   $options = array();
   foreach (module_invoke_all('node_operations') as $operation => $array) {
@@ -438,31 +407,139 @@ function node_admin_nodes() {
   $form['options']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Update'),
+    '#validate' => array('node_admin_nodes_validate'),
     '#submit' => array('node_admin_nodes_submit'),
   );
 
+  // Enable language column if translation module is enabled
+  // or if we have any node with language.
+  $multilanguage = (module_exists('translation') || db_query("SELECT COUNT(*) FROM {node} WHERE language <> :language", array(':language' => LANGUAGE_NONE))->fetchField());
+
+  // Build the sortable table header.
+  $header = array(
+    'title' => array('data' => t('Title'), 'field' => 'n.title'),
+    'type' => array('data' => t('Type'), 'field' => 'n.type'),
+    'author' => t('Author'),
+    'status' => array('data' => t('Status'), 'field' => 'n.status'),
+    'changed' => array('data' => t('Updated'), 'field' => 'n.changed', 'sort' => 'desc')
+  );
+  if ($multilanguage) {
+    $header['language'] = array('data' => t('Language'), 'field' => 'n.language');
+  }
+  $header['operations'] = array('data' => t('Operations'));
+
+  $query = db_select('node', 'n')->extend('PagerDefault')->extend('TableSort');
+  node_build_filter_query($query);
+
+  if (!user_access('bypass node access')) {
+    // If the user is able to view their own unpublished nodes, allow them
+    // to see these in addition to published nodes. Check that they actually
+    // have some unpublished nodes to view before adding the condition.
+    if (user_access('view own unpublished content') && $own_unpublished = db_query('SELECT nid FROM {node} WHERE uid = :uid AND status = :status', array(':uid' => $GLOBALS['user']->uid, ':status' => 0))->fetchCol()) {
+      $query->condition(db_or()
+        ->condition('n.status', 1)
+        ->condition('n.nid', $own_unpublished, 'IN')
+      );
+    }
+    else {
+      // If not, restrict the query to published nodes.
+      $query->condition('n.status', 1);
+    }
+  }
+  $nids = $query
+    ->fields('n',array('nid'))
+    ->limit(50)
+    ->orderByHeader($header)
+    ->execute()
+    ->fetchCol();
+  $nodes = node_load_multiple($nids);
+
+  // Prepare the list of nodes.
   $languages = language_list();
   $destination = drupal_get_destination();
-  $nodes = array();
-  foreach ($result as $node) {
-    $nodes[$node->nid] = '';
-    $options = empty($node->language) ? array() : array('language' => $languages[$node->language]);
-    $form['title'][$node->nid] = array('#markup' => l($node->title, 'node/' . $node->nid, $options) . ' ' . theme('mark', node_mark($node->nid, $node->changed)));
-    $form['name'][$node->nid] =  array('#markup' => check_plain(node_type_get_name($node)));
-    $form['username'][$node->nid] = array('#markup' => theme('username', $node));
-    $form['status'][$node->nid] =  array('#markup' => ($node->status ? t('published') : t('not published')));
-    $form['changed'][$node->nid] = array('#markup' => format_date($node->changed, 'short'));
+  $options = array();
+  foreach ($nodes as $node) {
+    $l_options = $node->language != LANGUAGE_NONE ? array('language' => $languages[$node->language]) : array();
+    $options[$node->nid] = array(
+      'title' => array(
+        'data' => array(
+          '#type' => 'link',
+          '#title' => $node->title,
+          '#href' => 'node/' . $node->nid,
+          '#options' => $l_options,
+          '#suffix' => ' ' . theme('mark', array('type' => node_mark($node->nid, $node->changed))),
+        ),
+      ),
+      'type' => check_plain(node_type_get_name($node)),
+      'author' => theme('username', array('account' => $node)),
+      'status' => $node->status ? t('published') : t('not published'),
+      'changed' => format_date($node->changed, 'short'),
+    );
     if ($multilanguage) {
-      $form['language'][$node->nid] = array('#markup' => empty($node->language) ? t('Language neutral') : t($languages[$node->language]->name));
+      $options[$node->nid]['language'] = $node->language == LANGUAGE_NONE ? t('Language neutral') : t($languages[$node->language]->name);
     }
-    $form['operations'][$node->nid] = array('#markup' => l(t('edit'), 'node/' . $node->nid . '/edit', array('query' => $destination)));
+    // Build a list of all the accessible operations for the current node.
+    $operations = array();
+    if (node_access('update', $node)) {
+      $operations['edit'] = array(
+        'title' => t('edit'),
+        'href' => 'node/' . $node->nid . '/edit',
+        'query' => $destination,
+      );
+    }
+    if (node_access('delete', $node)) {
+      $operations['delete'] = array(
+        'title' => t('delete'),
+        'href' => 'node/' . $node->nid . '/delete',
+        'query' => $destination,
+      );
+    }
+    $options[$node->nid]['operations'] = array();
+    if (count($operations) > 1) {
+      // Render an unordered list of operations links.
+      $options[$node->nid]['operations'] = array(
+        'data' => array(
+          '#theme' => 'links__node_operations',
+          '#links' => $operations,
+          '#attributes' => array('class' => array('links', 'inline')),
+        ),
+      );
+    }
+    elseif (!empty($operations)) {
+      // Render the first and only operation as a link.
+      $link = reset($operations);
+      $options[$node->nid]['operations'] = array(
+        'data' => array(
+          '#type' => 'link',
+          '#title' => $link['title'],
+          '#href' => $link['href'],
+          '#options' => array('query' => $link['query']),
+        ),
+      );
+    }
   }
-  $form['nodes'] = array(
-    '#type' => 'checkboxes',
-    '#options' => $nodes,
-  );
-  $form['pager'] = array('#markup' => theme('pager', NULL));
-  $form['#theme'] = 'node_admin_nodes';
+
+  // Only use a tableselect when the current user is able to perform any
+  // operations.
+  if ($admin_access) {
+    $form['nodes'] = array(
+      '#type' => 'tableselect',
+      '#header' => $header,
+      '#options' => $options,
+      '#empty' => t('No content available.'),
+    );
+  }
+  // Otherwise, use a simple table.
+  else {
+    $form['nodes'] = array(
+      '#theme' => 'table',
+      '#header' => $header,
+      '#rows' => $options,
+      '#empty' => t('No content available.'),
+    );
+  }
+
+  $form['pager'] = array('#markup' => theme('pager', array('tags' => NULL)));
   return $form;
 }
 
@@ -473,8 +550,8 @@ function node_admin_nodes() {
  * 'Update option' on.
  */
 function node_admin_nodes_validate($form, &$form_state) {
-  $nodes = array_filter($form_state['values']['nodes']);
-  if (count($nodes) == 0) {
+  // Error if there are no items to select.
+  if (!is_array($form_state['values']['nodes']) || !count(array_filter($form_state['values']['nodes']))) {
     form_set_error('', t('No items selected.'));
   }
 }
@@ -508,53 +585,6 @@ function node_admin_nodes_submit($form, &$form_state) {
   }
 }
 
-
-/**
- * Theme node administration overview.
- *
- * @ingroup themeable
- */
-function theme_node_admin_nodes($form) {
-  $output = '';
-  $output .= drupal_render($form['options']);
-
-  $header = $form['header']['#value'];
-
-  $has_posts = isset($form['title']) && is_array($form['title']);
-  if ($has_posts) {
-    $rows = array();
-    foreach (element_children($form['title']) as $key) {
-      $row = array();
-      $row[] = drupal_render($form['nodes'][$key]);
-      $row[] = drupal_render($form['title'][$key]);
-      $row[] = drupal_render($form['name'][$key]);
-      $row[] = drupal_render($form['username'][$key]);
-      $row[] = drupal_render($form['status'][$key]);
-      $row[] = drupal_render($form['changed'][$key]);
-      if (isset($form['language'])) {
-        $row[] = drupal_render($form['language'][$key]);
-      }
-      $row[] = drupal_render($form['operations'][$key]);
-      $rows[] = $row;
-    }
-  }
-  else {
-    $rows[] = array(
-      array('data' => t('No content available.'), 'colspan' => count($header)),
-    );
-  }
-
-  $output .= theme('table', $header, $rows);
-
-  if ($form['pager']['#markup']) {
-    $output .= drupal_render($form['pager']);
-  }
-
-  $output .= drupal_render_children($form);
-
-  return $output;
-}
-
 function node_multiple_delete_confirm($form, &$form_state, $nodes) {
   $form['nodes'] = array('#prefix' => '<ul>', '#suffix' => '</ul>', '#tree' => TRUE);
   // array_filter returns only elements with TRUE values
@@ -586,12 +616,4 @@ function node_multiple_delete_confirm_submit($form, &$form_state) {
     drupal_set_message(t('Deleted @count posts.', array('@count' => $count)));
   }
   $form_state['redirect'] = 'admin/content';
-}
-
-/**
- * Implement hook_modules_installed()
- */
-function node_modules_installed($modules) {
-  // Clear node type cache for node permissions.
-  drupal_static_reset('_node_types_build');
 }

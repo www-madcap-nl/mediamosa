@@ -1,5 +1,5 @@
 <?php
-// $Id: theme.test,v 1.6 2009/09/15 17:10:39 webchick Exp $
+// $Id: theme.test,v 1.12 2010/02/23 18:32:00 webchick Exp $
 
 /**
  * @file
@@ -19,36 +19,39 @@ class TemplateUnitTest extends DrupalWebTestCase {
   }
 
   /**
-   * Test function template_page_suggestions() for SA-CORE-2009-003.
+   * Test function theme_get_suggestions() for SA-CORE-2009-003.
    */
-  function testTemplateSuggestions() {
+  function testThemeSuggestions() {
     // Set the front page as something random otherwise the CLI
     // test runner fails.
     variable_set('site_frontpage', 'nobody-home');
     $args = array('node', '1', 'edit');
-    $suggestions = template_page_suggestions($args, 'page');
-    $this->assertEqual($suggestions, array('page-node', 'page-node-%', 'page-node-1', 'page-node-edit'), t('Found expected node edit page template suggestions'));
+    $suggestions = theme_get_suggestions($args, 'page');
+    $this->assertEqual($suggestions, array('page__node', 'page__node__%', 'page__node__1', 'page__node__edit'), t('Found expected node edit page suggestions'));
     // Check attack vectors.
     $args = array('node', '\\1');
-    $suggestions = template_page_suggestions($args, 'page');
-    $this->assertEqual($suggestions, array('page-node', 'page-node-%', 'page-node-1'), t('Removed invalid \\ from template suggestions'));
+    $suggestions = theme_get_suggestions($args, 'page');
+    $this->assertEqual($suggestions, array('page__node', 'page__node__%', 'page__node__1'), t('Removed invalid \\ from suggestions'));
     $args = array('node', '1/');
-    $suggestions = template_page_suggestions($args, 'page');
-    $this->assertEqual($suggestions, array('page-node', 'page-node-%', 'page-node-1'), t('Removed invalid / from template suggestions'));
+    $suggestions = theme_get_suggestions($args, 'page');
+    $this->assertEqual($suggestions, array('page__node', 'page__node__%', 'page__node__1'), t('Removed invalid / from suggestions'));
     $args = array('node', "1\0");
-    $suggestions = template_page_suggestions($args, 'page');
-    $this->assertEqual($suggestions, array('page-node', 'page-node-%', 'page-node-1'), t('Removed invalid \\0 from template suggestions'));
-    // Tests for drupal_discover_template()
-    $suggestions = array('page');
-    $this->assertEqual(drupal_discover_template(array('themes/garland'), $suggestions), 'themes/garland/page.tpl.php', t('Safe template discovered'));
-    $suggestions = array('page');
-    $this->assertEqual(drupal_discover_template(array('themes/garland'), $suggestions, '\\.tpl.php'), 'themes/garland/page.tpl.php', t('Unsafe extension fixed'));
-    $suggestions = array('page\\');
-    $this->assertEqual(drupal_discover_template(array('themes/garland'), $suggestions), 'themes/garland/page.tpl.php', t('Unsafe template suggestion fixed'));
-    $suggestions = array('page/');
-    $this->assertEqual(drupal_discover_template(array('themes/garland'), $suggestions), 'themes/garland/page.tpl.php', t('Unsafe template suggestion fixed'));
-    $suggestions = array("page\0");
-    $this->assertEqual(drupal_discover_template(array('themes/garland'), $suggestions), 'themes/garland/page.tpl.php', t('Unsafe template suggestion fixed'));
+    $suggestions = theme_get_suggestions($args, 'page');
+    $this->assertEqual($suggestions, array('page__node', 'page__node__%', 'page__node__1'), t('Removed invalid \\0 from suggestions'));
+  }
+
+  /**
+   * Ensure page-front template suggestion is added when on front page.
+   */
+  function testFrontPageThemeSuggestion() {
+    $q = $_GET['q'];
+    // Set $_GET['q'] to node because theme_get_suggestions() will query it to
+    // see if we are on the front page.
+    $_GET['q'] = variable_get('site_frontpage', 'node');
+    $suggestions = theme_get_suggestions(explode('/', $_GET['q']), 'page');
+    // Set it back to not annoy the batch runner.
+    $_GET['q'] = $q;
+    $this->assertTrue(in_array('page__front', $suggestions), t('Front page template was suggested.'));
   }
 }
 
@@ -63,14 +66,14 @@ class ThemeTableUnitTest extends DrupalWebTestCase {
       'group' => 'Theme',
     );
   }
-  
+
   /**
    * Tableheader.js provides 'sticky' table headers, and is included by default.
    */
   function testThemeTableStickyHeaders() {
     $header = array('one', 'two', 'three');
     $rows = array(array(1,2,3), array(4,5,6), array(7,8,9));
-    $this->content = theme('table', $header, $rows);
+    $this->content = theme('table', array('header' => $header, 'rows' => $rows));
     $js = drupal_add_js();
     $this->assertTrue(isset($js['misc/tableheader.js']), t('tableheader.js was included when $sticky = TRUE.'));
     $this->assertRaw('sticky-enabled',  t('Table has a class of sticky-enabled when $sticky = TRUE.'));
@@ -86,10 +89,38 @@ class ThemeTableUnitTest extends DrupalWebTestCase {
     $attributes = array();
     $caption = NULL;
     $colgroups = array();
-    $this->content = theme('table', $header, $rows, $attributes, $caption, $colgroups, FALSE);
+    $this->content = theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => $attributes, 'caption' => $caption, 'colgroups' => $colgroups, 'sticky' => FALSE));
     $js = drupal_add_js();
     $this->assertFalse(isset($js['misc/tableheader.js']), t('tableheader.js was not included because $sticky = FALSE.'));
     $this->assertNoRaw('sticky-enabled',  t('Table does not have a class of sticky-enabled because $sticky = FALSE.'));
     drupal_static_reset('drupal_add_js');
+  }
+}
+
+/**
+ * Unit tests for theme_item_list().
+ */
+class ThemeItemListUnitTest extends DrupalWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'Theme item list',
+      'description' => 'Test the theme_item_list() function.',
+      'group' => 'Theme',
+    );
+  }
+
+  /**
+   * Test nested list rendering.
+   */
+  function testNestedList() {
+    $items = array('a', array('data' => 'b', 'children' => array('c', 'd')), 'e');
+    $expected = '<div class="item-list"><ul><li class="first">a</li>
+<li>b<div class="item-list"><ul><li class="first">c</li>
+<li class="last">d</li>
+</ul></div></li>
+<li class="last">e</li>
+</ul></div>';
+    $output = theme('item_list', array('items' => $items, 'type' => 'ul', 'title' => NULL, 'attributes' => array()));
+    $this->assertIdentical($expected, $output, 'Nested list is rendered correctly.');
   }
 }

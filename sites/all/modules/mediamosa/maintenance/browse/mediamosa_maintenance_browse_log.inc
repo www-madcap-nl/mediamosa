@@ -35,24 +35,24 @@
 function _mediamosa_maintenance_browse_log() {
   $rows = array();
   $icons = array(
-    WATCHDOG_DEBUG    => '',
-    WATCHDOG_INFO     => '',
-    WATCHDOG_NOTICE   => '',
-    WATCHDOG_WARNING  => theme('image', 'misc/watchdog-warning.png', t('warning'), t('warning')),
-    WATCHDOG_ERROR    => theme('image', 'misc/watchdog-error.png', t('error'), t('error')),
-    WATCHDOG_CRITICAL => theme('image', 'misc/watchdog-error.png', t('critical'), t('critical')),
-    WATCHDOG_ALERT    => theme('image', 'misc/watchdog-error.png', t('alert'), t('alert')),
-    WATCHDOG_EMERG    => theme('image', 'misc/watchdog-error.png', t('emergency'), t('emergency')),
+    WATCHDOG_DEBUG     => '',
+    WATCHDOG_INFO      => '',
+    WATCHDOG_NOTICE    => '',
+    WATCHDOG_WARNING   => theme('image', 'misc/watchdog-warning.png', t('warning'), t('warning')),
+    WATCHDOG_ERROR     => theme('image', 'misc/watchdog-error.png', t('error'), t('error')),
+    WATCHDOG_CRITICAL  => theme('image', 'misc/watchdog-error.png', t('critical'), t('critical')),
+    WATCHDOG_ALERT     => theme('image', 'misc/watchdog-error.png', t('alert'), t('alert')),
+    WATCHDOG_EMERGENCY => theme('image', 'misc/watchdog-error.png', t('emergency'), t('emergency')),
   );
   $classes = array(
-    WATCHDOG_DEBUG    => 'dblog-debug',
-    WATCHDOG_INFO     => 'dblog-info',
-    WATCHDOG_NOTICE   => 'dblog-notice',
-    WATCHDOG_WARNING  => 'dblog-warning',
-    WATCHDOG_ERROR    => 'dblog-error',
-    WATCHDOG_CRITICAL => 'dblog-critical',
-    WATCHDOG_ALERT    => 'dblog-alert',
-    WATCHDOG_EMERG    => 'dblog-emerg',
+    WATCHDOG_DEBUG     => 'dblog-debug',
+    WATCHDOG_INFO      => 'dblog-info',
+    WATCHDOG_NOTICE    => 'dblog-notice',
+    WATCHDOG_WARNING   => 'dblog-warning',
+    WATCHDOG_ERROR     => 'dblog-error',
+    WATCHDOG_CRITICAL  => 'dblog-critical',
+    WATCHDOG_ALERT     => 'dblog-alert',
+    WATCHDOG_EMERGENCY => 'dblog-emerg',
   );
 
   $header = array(
@@ -64,11 +64,11 @@ function _mediamosa_maintenance_browse_log() {
   );
 
   $levels = watchdog_severity_levels();
-  $types = array('MediaMosa - job', 'MediaMosa - job scheduler', 'MediaMosa - job server', 'page not found');
+  $types = array('page not found');
 
   $query = db_select('watchdog', 'w')->extend('PagerDefault')->extend('TableSort');
   $query->fields('w');
-  //$query->condition('type', $types, 'IN');
+  $query->condition(db_or()->condition('type', $types, 'IN')->condition('type', 'MediaMosa%', 'LIKE'));
   $result = $query
     ->limit(50)
     ->orderByHeader($header)

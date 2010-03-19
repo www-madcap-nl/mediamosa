@@ -42,8 +42,11 @@ require_once 'core/app/mediamosa_app.install.inc';
 require_once 'core/asset/mediamosa_asset.install.inc';
 require_once 'core/collection/mediamosa_collection.install.inc';
 require_once 'core/ftp_batch/mediamosa_ftp_batch.install.inc';
+require_once 'core/ftp_user/mediamosa_ftp_user.install.inc';
 require_once 'core/job/mediamosa_job.install.inc';
+require_once 'core/node/mediamosa_node.install.inc';
 require_once 'core/server/mediamosa_server.install.inc';
+require_once 'core/statistics/mediamosa_statistics.install.inc';
 require_once 'core/ticket/mediamosa_ticket.install.inc';
 require_once 'core/transcode/mediamosa_transcode.install.inc';
 require_once 'core/user/mediamosa_user.install.inc';
@@ -56,6 +59,9 @@ function mediamosa_install() {
 
    // Install the error db.
   _mediamosa_error_install();
+
+  // Install our node db.
+  _mediamosa_node_install();
 
   // Install the app db.
   _mediamosa_app_install();
@@ -89,12 +95,27 @@ function mediamosa_install() {
 
   // Install the server db.
   _mediamosa_server_install();
+
+  // Install the statistics db.
+  _mediamosa_statistics_install();
+
+  // Install the ftp_user table.
+  _mediamosa_ftp_user_install();
 }
 
 /**
  * Implement hook_unstall().
  */
 function mediamosa_uninstall() {
+  // Remove the ftp_user table.
+  _mediamosa_ftp_user_uninstall();
+
+  // Remove the statistics db.
+  _mediamosa_statistics_uninstall();
+
+  // Remove the node db.
+  _mediamosa_node_uninstall();
+
   // Remove the server db.
   _mediamosa_server_uninstall();
 
@@ -130,28 +151,4 @@ function mediamosa_uninstall() {
 
   // Remove the error db.
   _mediamosa_error_uninstall();
-}
-
-/**
- * Fix the non-null default value on aut_name table.
- */
-function mediamosa_update_7000() {
-  $ret = array();
-  db_change_field($ret, mediamosa_aut_name_db::TABLE_NAME, mediamosa_aut_name_db::AUT_PREFIX, mediamosa_aut_name_db::AUT_PREFIX, array('type' => 'varchar', 'length' => mediamosa_aut_name_db::AUT_PREFIX_LENGTH, 'not null' => FALSE, 'default' => NULL, 'description' => t('The optional prefix of the entity, only used with REALM type.')));
-  return $ret;
-}
-
-/**
- * Fix mediamosa_job_server multi rows on same job.
- * If for some reason the update fails, then truncate all mediamosa_job tables
- * or put all job server to OFF and wait till all jobs are done.
- */
-function mediamosa_update_7001() {
-  $ret = array();
-  db_add_unique_key(&$ret, mediamosa_job_server_db::TABLE_NAME, 'uni_jobid', array(mediamosa_job_server_db::JOB_ID));
-
-  // Alter table for foreign key.
-  db_query("ALTER TABLE {mediamosa_job_server} ADD CONSTRAINT `fk_mediamosa_job_server_job_id` FOREIGN KEY (`job_id`) REFERENCES `mediamosa_job` (`job_id`)");
-
-  return $ret;
 }

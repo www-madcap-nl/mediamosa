@@ -50,7 +50,6 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   // deleted on teardown.
   private $a_mediafiles_cleanup = array();
 
-
   // ------------------------------------------------------------------ Functions.
   /**
    * Implements setUp().
@@ -79,10 +78,6 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     // Create 2 extra.
     $this->a_app_2 = $this->createApp(array(mediamosa_app_db::APP_ID => $this->a_app[mediamosa_app_db::APP_ID] + 1)); // in case we need other.
     $this->a_app_3 = $this->createApp(array(mediamosa_app_db::APP_ID => $this->a_app_2[mediamosa_app_db::APP_ID] + 1)); // in case we need other.
-
-    // Create and login user
-    $rest_user = $this->drupalCreateUser(array('administer mediamosa'));
-    $this->drupalLogin($rest_user);
 
     // Truncate current and insert new.
     db_truncate(mediamosa_server_db::TABLE_NAME)->execute();
@@ -115,6 +110,10 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
         ->fields($a_server_tool)
         ->execute();
     }
+
+    // Create and login user
+    $rest_user = $this->drupalCreateUser(array('administer mediamosa'));
+    $this->drupalLogin($rest_user);
 
     // Do EGA / APP login (app 1).
     // If your test needs more, call doEgaLogin_2 and doEgaLogin_3 in your test.
@@ -186,7 +185,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // Do login.
     $app_id = $a_app[mediamosa_app_db::APP_ID];
-    $app_name = $a_app[mediamosa_app_db::NAME];
+    $app_name = $a_app[mediamosa_app_db::APP_NAME];
     $shared_key = $a_app[mediamosa_app_db::SHARED_KEY];
 
     // Step 1: start auth and capture cookie.
@@ -448,10 +447,10 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     // Create mediafile.
     $mediafile_id = $this->createMediafile($asset_id);
 
-    $this->uploadTestFileForMediafile($asset_id, $mediafile_id);
+    $filename = $this->uploadTestFileForMediafile($asset_id, $mediafile_id);
 
     // Lets return the mediafile_id for now.
-    return array('asset_id' => $asset_id, 'mediafile_id' => $mediafile_id);
+    return array('asset_id' => $asset_id, 'mediafile_id' => $mediafile_id, 'filename' => $filename);
   }
 
   /**
@@ -522,6 +521,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // Check if the file has been uploaded.
     $this->assertTrue(file_exists(mediamosa_configuration_storage::mediafile_filename_get($a_mediafile)), 'File has been uploaded.');
+
+    // Lets return the filename.
+    return mediamosa_configuration_storage::mediafile_filename_get($a_mediafile);
   }
 
   /**

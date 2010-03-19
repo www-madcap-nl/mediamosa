@@ -138,22 +138,6 @@ function mediamosa_connector_settings() {
     '#default_value' => '',
   );
 
-  /*
-  if (function_exists('madrest_get_uri_definition')) {
-    $form['connection']['mediamosa_use_rest_interface'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Use the VP-X REST interface'),
-      '#description' => t('Unchecking this item requires a working copy of VP-X at this instance of Drupal.'),
-      '#default_value' => variable_get('mediamosa_use_rest_interface', TRUE),
-    );
-    $form['connection']['mediamosa_connector_masquerade_owner'] = array(
-      '#type' => 'checkbox',
-      '#title' => t("Always use the owner's credentials to perform an action on an item."),
-      '#description' => t('Use this option with care!'),
-      '#default_value' => variable_get('mediamosa_connector_masquerade_owner', FALSE),
-    );
-  }*/
-
   if (variable_get('mediamosa_connector_url', '') != '' && variable_get('mediamosa_connector_username', '') != '') {
     $form['connection']['check_connection'] = array(
       '#type' => 'submit',
@@ -176,14 +160,6 @@ function mediamosa_connector_settings() {
     '#description' => t('Enable to view debug request information. This information is show in a drupal block. You must enable this block to view the debug contents.'),
     '#default_value' => FALSE,
   );
-  /*
-  $form['other']['mediamosa_connector_menu_prefix'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Menu prefix'),
-    '#description' => t('Use a training slash and please remember to clear the !cache after changing the menu prefix!', array('!cache' => l(t('cache'), 'admin/settings/performance'))),
-    '#default_value' => variable_get('mediamosa_connector_menu_prefix', ''),
-  );
-*/
 
   $form['#submit'] = array('mediamosa_connector_settings_submit');
   $form = system_settings_form($form);

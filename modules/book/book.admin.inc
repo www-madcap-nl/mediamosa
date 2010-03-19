@@ -1,5 +1,5 @@
 <?php
-// $Id: book.admin.inc,v 1.22 2009/09/18 00:12:45 webchick Exp $
+// $Id: book.admin.inc,v 1.32 2010/02/25 09:44:51 dries Exp $
 
 /**
  * @file
@@ -19,12 +19,7 @@ function book_admin_overview() {
     $rows[] = array(l($book['title'], $book['href'], $book['options']), l(t('edit order and titles'), 'admin/content/book/' . $book['nid']));
   }
 
-  // If no books were found, let the user know.
-  if (empty($rows)) {
-    $rows[] = array(array('data' => t('No books available.'), 'colspan' => 2));
-  }
-
-  return theme('table', $headers, $rows);
+  return theme('table', array('header' => $headers, 'rows' => $rows, 'empty' => t('No books available.')));
 }
 
 /**
@@ -38,18 +33,17 @@ function book_admin_settings() {
   $types = node_type_get_names();
   $form['book_allowed_types'] = array(
     '#type' => 'checkboxes',
-    '#title' => t('Allowed book outline types'),
+    '#title' => t('Content types allowed in book outlines'),
     '#default_value' => array('book'),
     '#options' => $types,
-    '#description' => t('Select content types which users with the %add-perm permission will be allowed to add to the book hierarchy. Users with the %outline-perm permission can add all content types.', array('%add-perm' => t('add content to books'),  '%outline-perm' => t('administer book outlines'))),
+    '#description' => t('Users with the %outline-perm permission can add all content types.', array('%outline-perm' => t('Administer book outlines'))),
     '#required' => TRUE,
   );
   $form['book_child_type'] = array(
     '#type' => 'radios',
-    '#title' => t('Default child page type'),
+    '#title' => t('Content type for child pages'),
     '#default_value' => 'book',
     '#options' => $types,
-    '#description' => t('The content type for the %add-child link must be one of those selected as an allowed book outline type.', array('%add-child' => t('Add child page'))),
     '#required' => TRUE,
   );
   $form['array_filter'] = array('#type' => 'value', '#value' => TRUE);
@@ -130,11 +124,13 @@ function book_admin_edit_submit($form, &$form_state) {
 
       // Update the title if changed.
       if ($row['title']['#default_value'] != $values['title']) {
-        $node = node_load($values['nid'], FALSE);
+        $node = node_load($values['nid']);
+        $langcode = LANGUAGE_NONE;
         $node->title = $values['title'];
         $node->book['link_title'] = $values['title'];
         $node->revision = 1;
         $node->log = t('Title changed from %original to %current.', array('%original' => $node->title, '%current' => $values['title']));
+
         node_save($node);
         watchdog('content', 'book: updated %title.', array('%title' => $node->title), WATCHDOG_NOTICE, l(t('view'), 'node/' . $node->nid));
       }
@@ -221,7 +217,9 @@ function _book_admin_table_tree($tree, &$form) {
  * @ingroup themeable
  * @see book_admin_table()
  */
-function theme_book_admin_table($form) {
+function theme_book_admin_table($variables) {
+  $form = $variables['form'];
+
   drupal_add_tabledrag('book-outline', 'match', 'parent', 'book-plid', 'book-plid', 'book-mlid', TRUE, MENU_MAX_DEPTH - 2);
   drupal_add_tabledrag('book-outline', 'order', 'sibling', 'book-weight');
 
@@ -240,7 +238,7 @@ function theme_book_admin_table($form) {
     $form[$key]['weight']['#attributes']['class'] = array('book-weight');
 
     $data = array(
-      theme('indentation', $form[$key]['depth']['#value'] - 2) . drupal_render($form[$key]['title']),
+      theme('indentation', array('size' => $form[$key]['depth']['#value'] - 2)) . drupal_render($form[$key]['title']),
       drupal_render($form[$key]['weight']),
       drupal_render($form[$key]['plid']) . drupal_render($form[$key]['mlid']),
       l(t('view'), $href),
@@ -255,6 +253,5 @@ function theme_book_admin_table($form) {
     $rows[] = $row;
   }
 
-  return theme('table', $header, $rows, array('id' => 'book-outline'));
+  return theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('id' => 'book-outline')));
 }
-

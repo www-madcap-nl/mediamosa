@@ -1,5 +1,5 @@
 <?php
-// $Id: schema.inc,v 1.20 2009/08/29 05:43:35 dries Exp $
+// $Id: schema.inc,v 1.31 2010/03/09 11:39:07 dries Exp $
 
 /**
  * @file
@@ -39,11 +39,11 @@
  *       curly-brackets. For example, the node table vid field
  *       description might contain "Always holds the largest (most
  *       recent) {node_revision}.vid value for this nid."
- *     - 'type': The generic datatype: 'varchar', 'int', 'serial'
- *       'float', 'numeric', 'text', 'blob' or 'datetime'. Most types
- *       just map to the according database engine specific
- *       datatypes. Use 'serial' for auto incrementing fields. This
- *       will expand to 'int auto_increment' on mysql.
+ *     - 'type': The generic datatype: 'char', 'varchar', 'text', 'blob', 'int',
+ *       'float', 'numeric', 'serial', 'date', 'datetime' or 'time'. Most types
+ *       types just map to the according database engine specific datatypes. Use
+ *       'serial' for auto incrementing fields. This will expand to 'INT
+ *       auto_increment' on MySQL.
  *     - 'serialize': A boolean indicating whether the field will be stored as
  *       a serialized string.
  *     - 'size': The data size: 'tiny', 'small', 'medium', 'normal',
@@ -54,7 +54,7 @@
  *       INT, VARCHAR, BLOB, etc.).
  *
  *       Not all sizes are available for all data types. See
- *       db_type_map() for possible combinations.
+ *       DatabaseSchema::getFieldTypeMap() for possible combinations.
  *     - 'not null': If true, no NULL values will be allowed in this
  *       database column. Defaults to false.
  *     - 'default': The field's default value. The PHP type of the
@@ -84,7 +84,7 @@
  *    of the local table, each value is an array with a single key pair as
  *    'tablename' => 'column' where 'column' is the foreign column to
  *    reference.
- *  - 'indexes':  An associative array of indexes ('indexame' =>
+ *  - 'indexes':  An associative array of indexes ('indexname' =>
  *    specification). Each specification is an array of one or more
  *    key column specifiers (see below) that form an index on the
  *    table.
@@ -183,11 +183,11 @@ abstract class DatabaseSchema implements QueryPlaceholderInterface {
    *   The name of the table to explode.
    * @param $operator
    *   The operator to apply on the 'table' part of the condition.
-   * @return
+   * @return QueryConditionInterface
    *   A DatabaseCondition object.
    */
   protected function buildTableNameCondition($table_name, $operator = '=') {
-    $info = Database::getConnectionInfo();
+    $info = $this->connection->getConnectionOptions();
 
     // The table name may describe the schema eg. schema.table.
     if (strpos($table_name, '.')) {
@@ -198,7 +198,7 @@ abstract class DatabaseSchema implements QueryPlaceholderInterface {
     }
 
     $condition = new DatabaseCondition('AND');
-    $condition->condition('table_catalog', $info['default']['database']);
+    $condition->condition('table_catalog', $info['database']);
     $condition->condition('table_schema', $schema);
     $condition->condition('table_name', $table_name, $operator);
     return $condition;
@@ -210,17 +210,17 @@ abstract class DatabaseSchema implements QueryPlaceholderInterface {
    * @param $table
    *   The name of the table in drupal (no prefixing).
    * @return
-   *   false is no table exists otherwise the actual table name.
+   *   TRUE if the given table exists, otherwise FALSE.
    */
   public function tableExists($table) {
     $condition = $this->buildTableNameCondition($this->connection->prefixTables('{' . $table . '}'));
     $condition->compile($this->connection, $this);
     // Normally, we would heartily discourage the use of string
-    // concatination for conditionals like this however, we
+    // concatenation for conditionals like this however, we
     // couldn't use db_select() here because it would prefix
     // information_schema.tables and the query would fail.
     // Don't use {} around information_schema.tables table.
-    return db_query("SELECT table_name FROM information_schema.tables WHERE " . (string) $condition, $condition->arguments())->fetchField();
+    return (bool) $this->connection->query("SELECT 1 FROM information_schema.tables WHERE " . (string) $condition, $condition->arguments())->fetchField();
   }
 
   /**
@@ -236,61 +236,75 @@ abstract class DatabaseSchema implements QueryPlaceholderInterface {
     $condition = $this->buildTableNameCondition($table_expression, 'LIKE');
     $condition->compile($this->connection, $this);
     // Normally, we would heartily discourage the use of string
-    // concatination for conditionals like this however, we
+    // concatenation for conditionals like this however, we
     // couldn't use db_select() here because it would prefix
     // information_schema.tables and the query would fail.
     // Don't use {} around information_schema.tables table.
-    return db_query("SELECT table_name FROM information_schema.tables WHERE " . (string) $condition, $condition->arguments())->fetchAllKeyed(0, 0);
+    return $this->connection->query("SELECT table_name FROM information_schema.tables WHERE " . (string) $condition, $condition->arguments())->fetchAllKeyed(0, 0);
   }
 
   /**
    * Check if a column exists in the given table.
+   *
+   * @param $table
+   *   The name of the table in drupal (no prefixing).
+   * @param $name
+   *   The name of the column.
+   * @return
+   *   TRUE if the given column exists, otherwise FALSE.
    */
   public function columnExists($table, $column) {
     $condition = $this->buildTableNameCondition($this->connection->prefixTables('{' . $table . '}'));
     $condition->condition('column_name', $column);
     $condition->compile($this->connection, $this);
     // Normally, we would heartily discourage the use of string
-    // concatination for conditionals like this however, we
+    // concatenation for conditionals like this however, we
     // couldn't use db_select() here because it would prefix
     // information_schema.tables and the query would fail.
     // Don't use {} around information_schema.columns table.
-    return db_query("SELECT column_name FROM information_schema.columns WHERE " . (string) $condition, $condition->arguments())->fetchAllKeyed(0, 0);
+    return (bool) $this->connection->query("SELECT 1 FROM information_schema.columns WHERE " . (string) $condition, $condition->arguments())->fetchField();
   }
 
   /**
-   * This maps a generic data type in combination with its data size
-   * to the engine-specific data type.
-   */
+  * Returns a mapping of Drupal schema field names to DB-native field types.
+  *
+  * Because different field types do not map 1:1 between databases, Drupal has
+  * its own normalized field type names. This function returns a driver-specific
+  * mapping table from Drupal names to the native names for each database.
+  *
+  * @return array
+  *   An array of Schema API field types to driver-specific field types.
+  */
   abstract public function getFieldTypeMap();
 
   /**
    * Rename a table.
    *
-   * @param $ret
-   *   Array to which query results will be added.
    * @param $table
    *   The table to be renamed.
    * @param $new_name
    *   The new name for the table.
+   * @throws DatabaseSchemaObjectDoesNotExistException
+   *   If the specified table doesn't exist.
+   * @throws DatabaseSchemaObjectExistsException
+   *   If a table with the specified new name already exists.
    */
-  abstract public function renameTable(&$ret, $table, $new_name);
+  abstract public function renameTable($table, $new_name);
 
   /**
    * Drop a table.
    *
-   * @param $ret
-   *   Array to which query results will be added.
    * @param $table
    *   The table to be dropped.
+   * @return
+   *   TRUE if the table was successfully dropped, FALSE if there was no table
+   *   by that name to begin with.
    */
-  abstract public function dropTable(&$ret, $table);
+  abstract public function dropTable($table);
 
   /**
    * Add a new field to a table.
    *
-   * @param $ret
-   *   Array to which query results will be added.
    * @param $table
    *   Name of the table to be altered.
    * @param $field
@@ -306,123 +320,148 @@ abstract class DatabaseSchema implements QueryPlaceholderInterface {
    *   table along with adding the field. The format is the same as a
    *   table specification but without the 'fields' element. If you are
    *   adding a type 'serial' field, you MUST specify at least one key
-   *   or index including it in this array. @see db_change_field for more
+   *   or index including it in this array. See db_change_field() for more
    *   explanation why.
+   * @throws DatabaseSchemaObjectDoesNotExistException
+   *   If the specified table doesn't exist.
+   * @throws DatabaseSchemaObjectExistsException
+   *   If the specified table already has a field by that name.
    */
-  abstract public function addField(&$ret, $table, $field, $spec, $keys_new = array());
+  abstract public function addField($table, $field, $spec, $keys_new = array());
 
   /**
    * Drop a field.
    *
-   * @param $ret
-   *   Array to which query results will be added.
    * @param $table
    *   The table to be altered.
    * @param $field
    *   The field to be dropped.
+   * @return
+   *   TRUE if the field was successfully dropped, FALSE if there was no field
+   *   by that name to begin with.
    */
-  abstract public function dropField(&$ret, $table, $field);
+  abstract public function dropField($table, $field);
 
   /**
    * Set the default value for a field.
    *
-   * @param $ret
-   *   Array to which query results will be added.
    * @param $table
    *   The table to be altered.
    * @param $field
    *   The field to be altered.
    * @param $default
    *   Default value to be set. NULL for 'default NULL'.
+   * @throws DatabaseSchemaObjectDoesNotExistException
+   *   If the specified table or field doesn't exist.
    */
-  abstract public function fieldSetDefault(&$ret, $table, $field, $default);
+  abstract public function fieldSetDefault($table, $field, $default);
 
   /**
    * Set a field to have no default value.
    *
-   * @param $ret
-   *   Array to which query results will be added.
    * @param $table
    *   The table to be altered.
    * @param $field
    *   The field to be altered.
+   * @throws DatabaseSchemaObjectDoesNotExistException
+   *   If the specified table or field doesn't exist.
    */
-  abstract public function fieldSetNoDefault(&$ret, $table, $field);
+  abstract public function fieldSetNoDefault($table, $field);
+
+  /**
+   * Checks if an index exists in the given table.
+   *
+   * @param $table
+   *   The name of the table in drupal (no prefixing).
+   * @param $name
+   *   The name of the index in drupal (no prefixing).
+   * @return
+   *   TRUE if the given index exists, otherwise FALSE.
+   */
+  abstract public function indexExists($table, $name);
 
   /**
    * Add a primary key.
    *
-   * @param $ret
-   *   Array to which query results will be added.
    * @param $table
    *   The table to be altered.
    * @param $fields
    *   Fields for the primary key.
+   * @throws DatabaseSchemaObjectDoesNotExistException
+   *   If the specified table doesn't exist.
+   * @throws DatabaseSchemaObjectExistsException
+   *   If the specified table already has a primary key.
    */
-  abstract public function addPrimaryKey(&$ret, $table, $fields);
+  abstract public function addPrimaryKey($table, $fields);
 
   /**
    * Drop the primary key.
    *
-   * @param $ret
-   *   Array to which query results will be added.
    * @param $table
    *   The table to be altered.
+   * @return
+   *   TRUE if the primary key was successfully dropped, FALSE if there was no
+   *   primary key on this table to begin with.
    */
-  abstract public function dropPrimaryKey(&$ret, $table);
+  abstract public function dropPrimaryKey($table);
 
   /**
    * Add a unique key.
    *
-   * @param $ret
-   *   Array to which query results will be added.
    * @param $table
    *   The table to be altered.
    * @param $name
    *   The name of the key.
    * @param $fields
    *   An array of field names.
+   * @throws DatabaseSchemaObjectDoesNotExistException
+   *   If the specified table doesn't exist.
+   * @throws DatabaseSchemaObjectExistsException
+   *   If the specified table already has a key by that name.
    */
-  abstract public function addUniqueKey(&$ret, $table, $name, $fields);
+  abstract public function addUniqueKey($table, $name, $fields);
 
   /**
    * Drop a unique key.
    *
-   * @param $ret
-   *   Array to which query results will be added.
    * @param $table
    *   The table to be altered.
    * @param $name
    *   The name of the key.
+   * @return
+   *   TRUE if the key was successfully dropped, FALSE if there was no key by
+   *   that name to begin with.
    */
-  abstract public function dropUniqueKey(&$ret, $table, $name);
+  abstract public function dropUniqueKey($table, $name);
 
   /**
    * Add an index.
    *
-   * @param $ret
-   *   Array to which query results will be added.
    * @param $table
    *   The table to be altered.
    * @param $name
    *   The name of the index.
    * @param $fields
    *   An array of field names.
+   * @throws DatabaseSchemaObjectDoesNotExistException
+   *   If the specified table doesn't exist.
+   * @throws DatabaseSchemaObjectExistsException
+   *   If the specified table already has an index by that name.
    */
-  abstract public function addIndex(&$ret, $table, $name, $fields);
+  abstract public function addIndex($table, $name, $fields);
 
   /**
    * Drop an index.
    *
-   * @param $ret
-   *   Array to which query results will be added.
    * @param $table
    *   The table to be altered.
    * @param $name
    *   The name of the index.
+   * @return
+   *   TRUE if the index was successfully dropped, FALSE if there was no index
+   *   by that name to begin with.
    */
-  abstract public function dropIndex(&$ret, $table, $name);
-
+  abstract public function dropIndex($table, $name);
 
   /**
    * Change a field definition.
@@ -447,8 +486,8 @@ abstract class DatabaseSchema implements QueryPlaceholderInterface {
    * and you want to change foo.bar to be type serial, leaving it as the
    * primary key. The correct sequence is:
    * @code
-   * db_drop_primary_key($ret, 'foo');
-   * db_change_field($ret, 'foo', 'bar', 'bar',
+   * db_drop_primary_key('foo');
+   * db_change_field('foo', 'bar', 'bar',
    *   array('type' => 'serial', 'not null' => TRUE),
    *   array('primary key' => array('bar')));
    * @endcode
@@ -471,8 +510,6 @@ abstract class DatabaseSchema implements QueryPlaceholderInterface {
    * unless you are converting a field to be type serial. You can use
    * the $keys_new argument in all cases.
    *
-   * @param $ret
-   *   Array to which query results will be added.
    * @param $table
    *   Name of the table.
    * @param $field
@@ -485,23 +522,30 @@ abstract class DatabaseSchema implements QueryPlaceholderInterface {
    *   Optional keys and indexes specification to be created on the
    *   table along with changing the field. The format is the same as a
    *   table specification but without the 'fields' element.
+   * @throws DatabaseSchemaObjectDoesNotExistException
+   *   If the specified table or source field doesn't exist.
+   * @throws DatabaseSchemaObjectExistsException
+   *   If the specified destination field already exists.
    */
-  abstract public function changeField(&$ret, $table, $field, $field_new, $spec, $keys_new = array());
+  abstract public function changeField($table, $field, $field_new, $spec, $keys_new = array());
 
   /**
    * Create a new table from a Drupal table definition.
    *
-   * @param $ret
-   *   Array to which query results will be added.
    * @param $name
    *   The name of the table to create.
    * @param $table
    *   A Schema API table definition array.
+   * @throws DatabaseSchemaObjectExistsException
+   *   If the specified table already exists.
    */
-  public function createTable(&$ret, $name, $table) {
-    $statements = $this->createTableSql($name, $table);
+  public function createTable($name, $table) {
+    if ($this->tableExists($name)) {
+      throw new DatabaseSchemaObjectExistsException(t('Table %name already exists.', array('%name' => $name)));
+    }
+  	$statements = $this->createTableSql($name, $table);
     foreach ($statements as $statement) {
-      $ret[] = update_sql($statement);
+    	$this->connection->query($statement);
     }
   }
 
@@ -517,16 +561,16 @@ abstract class DatabaseSchema implements QueryPlaceholderInterface {
    *   An array of field names.
    */
   public function fieldNames($fields) {
-    $ret = array();
+    $return = array();
     foreach ($fields as $field) {
       if (is_array($field)) {
-        $ret[] = $field[0];
+        $return[] = $field[0];
       }
       else {
-        $ret[] = $field;
+        $return[] = $field;
       }
     }
-    return $ret;
+    return $return;
   }
 
   /**
@@ -543,6 +587,24 @@ abstract class DatabaseSchema implements QueryPlaceholderInterface {
     return $this->connection->quote($comment);
   }
 }
+
+/**
+ * Exception thrown if an object being created already exists.
+ *
+ * For example, this exception should be thrown whenever there is an attempt to
+ * create a new database table, field, or index that already exists in the
+ * database schema.
+ */
+class DatabaseSchemaObjectExistsException extends Exception {}
+
+/**
+ * Exception thrown if an object being modified doesn't exist yet.
+ *
+ * For example, this exception should be thrown whenever there is an attempt to
+ * modify a database table, field, or index that does not currently exist in
+ * the database schema.
+ */
+class DatabaseSchemaObjectDoesNotExistException extends Exception {}
 
 /**
  * @} End of "defgroup schemaapi".

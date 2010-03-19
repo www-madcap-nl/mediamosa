@@ -1,7 +1,7 @@
-/* $Id: reset.css,v 1.1 2009/07/31 19:35:57 dries Exp $ */
+/* $Id: reset.css,v 1.7 2010/03/10 19:31:17 webchick Exp $ */
 
 /**
- * Reset CSS styles. 
+ * Reset CSS styles.
  *
  * Based on Eric Meyer's "Reset CSS 1.0" tool from
  * http://meyerweb.com/eric/tools/css/reset
@@ -9,15 +9,11 @@
 
 html,
 body,
-
-/* Structures */
 div,
 span,
 applet,
 object,
 iframe,
-
-/* Text */
 h1,
 h2,
 h3,
@@ -55,16 +51,12 @@ b,
 u,
 i,
 center,
-
-/* Lists */
 dl,
 dt,
 dd,
 ol,
 ul,
 li,
-
-/* Forms */
 fieldset,
 form,
 input,
@@ -72,8 +64,6 @@ select,
 textarea,
 label,
 legend,
-
-/* Tables */
 table,
 caption,
 tbody,
@@ -82,17 +72,14 @@ thead,
 tr,
 th,
 td,
-
 /* Drupal: system-menus.css */
 td.menu-disabled,
 ul.links,
 ul.links.inline,
 ul.links li,
 .block ul,
-
 /* Drupal: admin.css */
 div.admin,
-
 /* Drupal: system.css */
 tr.even,
 tr.odd,
@@ -124,13 +111,10 @@ tr.even .form-item,
 .item-list .pager li,
 .pager-current,
 .tips,
-dl.multiselect dd.b,
-dl.multiselect dd.b .form-item,
-dl.multiselect dd.b select,
-dl.multiselect dd.a,
-dl.multiselect dd.a .form-item,
-dl.multiselect dt,
 dl.multiselect dd,
+dl.multiselect dd .form-item,
+dl.multiselect dd select,
+dl.multiselect dt,
 dl.multiselect .form-item,
 ul.primary,
 ul.primary li,
@@ -145,33 +129,26 @@ ul.secondary a.active,
   margin: 0;
   padding: 0;
   border: 0;
-  outline: 0;
   font-size: 100%;
   vertical-align: baseline;
   background: transparent;
   line-height: inherit;
-  text-align: left;
 }
-
-
 /* Drupal: system-menus.css */
 ul.links,
 ul.links.inline,
 ul.links li,
 .block ul,
-
 ol,
 ul,
 .item-list ul,
 .item-list ul li {
   list-style: none;
 }
-
 blockquote,
 q {
   quotes: none;
 }
-
 blockquote:before,
 blockquote:after,
 q:before, q:after {
@@ -179,14 +156,9 @@ q:before, q:after {
   content: none;
 }
 
-/* Remember to define focus styles! */
-:focus {
-  outline: 0;
-}
-
 /* Remember to highlight inserts somehow! */
-ins { 
-  text-decoration: none; 
+ins {
+  text-decoration: none;
 }
 del {
   text-decoration: line-through;
@@ -199,7 +171,7 @@ table {
 }
 
 /**
- * Font reset =========================================================
+ * Font reset.
  *
  * Specifically targets form elements which browsers often times give
  * special treatment.
@@ -207,18 +179,17 @@ table {
 input,
 select,
 textarea,
-body { 
-  font: 13px/20px "Helvetica Neue", Helvetica, Arial, sans-serif; 
+body {
+  font: 13px/20px "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 /**
- * Markup free clearing ===============================================
+ * Markup free clearing.
  *
  * Consider adding your own selectors to this instead of finding ways
  * to sneak the clearfix class into Drupal's markup.
  * From http://www.positioniseverything.net/easyclearing.html
  */
-div.form-item:after,
 ul.links:after,
 div.admin-panel .body:after,
 .clearfix:after {
@@ -235,8 +206,7 @@ ul.inline:after {
   display: none;
   clear: none;
 }
-
-div.form-item,
+.form-item,
 ul.links,
 div.admin-panel .body,
 .clearfix {
@@ -244,14 +214,13 @@ div.admin-panel .body,
 }
 
 /* Hides from IE-mac \*/
-* html div.form-item,
+* html .form-item,
 * html ul.links,
 * html div.admin-panel .body,
 * html .clearfix {
   height: 1%;
 }
-
-div.form-item,
+.form-item,
 ul.links,
 div.admin-panel .body,
 .clearfix {

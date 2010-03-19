@@ -51,8 +51,6 @@ class mediamosa_server_db {
   const OBJECT_CODE = 'object_code';
   const SERVER_NAME = 'server_name';
   const SERVER_NAME_LENGTH = 255;
-  const IP_ADDRESS = 'ip_address';
-  const IP_ADDRESS_LENGTH = 255;
   const SLOTS = 'slots';
   const TOOLS = 'tools';
   const TOOLS_LENGTH = 255;
@@ -66,4 +64,15 @@ class mediamosa_server_db {
   const SERVER_TYPE_STREAMING = 'streaming';
   const SERVER_TYPE_JOB_PROCESSOR = 'job_processor';
   const SERVER_TYPE_UPLOAD = 'upload';
+
+  /**
+   * Returns all fields.
+   */
+  static public function get_fields() {
+    require_once('mediamosa_server.install.inc');
+
+    // Get the schema.
+    $a_schema = mediamosa_server_schema();
+    return array_keys($a_schema[mediamosa_server_db::TABLE_NAME]['fields']);
+  }
 }

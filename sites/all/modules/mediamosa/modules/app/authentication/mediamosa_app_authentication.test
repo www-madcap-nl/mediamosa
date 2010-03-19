@@ -49,7 +49,7 @@ class MediaMosaAppAuthenticationTestCase extends MediaMosaTestCase {
   function testAppAuthentication() {
     // Create all stuff needed for this test.
     $a_app = $this->createApp();
-    $app_name = $a_app[mediamosa_app_db::NAME];
+    $app_name = $a_app[mediamosa_app_db::APP_NAME];
     $shared_key = $a_app[mediamosa_app_db::SHARED_KEY];
 
 

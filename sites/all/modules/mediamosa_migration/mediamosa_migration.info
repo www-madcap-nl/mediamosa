@@ -10,6 +10,7 @@ dependencies[] = mediamosa
 dependencies[] = mediamosa_configuration
 dependencies[] = mediamosa_transcode
 dependencies[] = mediamosa_server
+dependencies[] = mediamosa_app
 
 ; Used files.
 

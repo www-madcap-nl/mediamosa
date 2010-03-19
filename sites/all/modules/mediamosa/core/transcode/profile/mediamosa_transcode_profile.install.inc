@@ -46,6 +46,7 @@ function _mediamosa_transcode_profile_install() {
     'custom' => 1,
     'modified' => 1,
     'locked' => 0,
+    'has_body' => 0,
   );
 
   $transcode_profile_node_type = node_type_set_defaults($transcode_profile_node_type);
@@ -61,12 +62,8 @@ function _mediamosa_transcode_profile_install() {
   );
 
   foreach ($a_default_profiles as $a_default_profile) {
-    $node = new stdClass();
-    $node->uid = 1; // Admin
-    $node->status = 1; // Published
-    $node->type = mediamosa_node::MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE;
+    $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE, $a_default_profile[0]);
 
-    $node->title = $a_default_profile[0];
     $node->{mediamosa_transcode_profile_db::APP_ID} = 0;
     $node->{mediamosa_transcode_profile_db::VERSION} = 0;
     $node->{mediamosa_transcode_profile_db::PROFILE} = $a_default_profile[0];
@@ -95,13 +92,13 @@ function mediamosa_transcode_profile_schema() {
   $a_schema[mediamosa_transcode_profile_db::TABLE_NAME] = array(
   'description' => t('The transcode profile table.'),
     'fields' => array(
-      mediamosa_server_db::NID => array(
+      mediamosa_transcode_profile_db::NID => array(
         'description' => t('The Drupal node id.'),
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
-      mediamosa_server_db::VID => array(
+      mediamosa_transcode_profile_db::VID => array(
         'description' => t('The Drupal node revision id.'),
         'type' => 'int',
         'unsigned' => TRUE,
@@ -165,9 +162,10 @@ function mediamosa_transcode_profile_schema() {
     'primary key' => array(mediamosa_transcode_profile_db::ID),
     'unique keys' => array(
       'uni_appid_profile' => array(mediamosa_transcode_profile_db::APP_ID, mediamosa_transcode_profile_db::PROFILE),
+      'uni_nid' => array(mediamosa_transcode_profile_db::NID),
     ),
     'indexes' => array(
-      array(mediamosa_transcode_profile_db::APP_ID, mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE),
+      'idx_app_isdefault' => array(mediamosa_transcode_profile_db::APP_ID, mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE),
     ),
   );
 

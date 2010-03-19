@@ -1,5 +1,5 @@
 <?php
-// $Id: search.install,v 1.24 2009/09/21 06:36:54 dries Exp $
+// $Id: search.install,v 1.27 2009/12/04 16:49:47 dries Exp $
 
 /**
  * @file
@@ -7,7 +7,7 @@
  */
 
 /**
- * Implement hook_uninstall().
+ * Implements hook_uninstall().
  */
 function search_uninstall() {
   variable_del('minimum_word_size');
@@ -16,14 +16,7 @@ function search_uninstall() {
 }
 
 /**
- * Implement hook_install().
- */
-function search_install() {
-  drupal_set_message(t('You can <a href="@url">add the search block</a> now.', array('@url' => url('admin/structure/block'))));
-}
-
-/**
- * Implement hook_schema().
+ * Implements hook_schema().
  */
 function search_schema() {
   $schema['search_dataset'] = array(
@@ -161,13 +154,10 @@ function search_schema() {
  * Replace unique keys in 'search_dataset' and 'search_index' by primary keys.
  */
 function search_update_7000() {
-  $ret = array();
-  db_drop_unique_key($ret, 'search_dataset', 'sid_type');
-  db_add_primary_key($ret, 'search_dataset', array('sid', 'type'));
+  db_drop_unique_key('search_dataset', 'sid_type');
+  db_add_primary_key('search_dataset', array('sid', 'type'));
 
-  db_drop_index($ret, 'search_index', 'word');
-  db_drop_unique_key($ret, 'search_index', 'word_sid_type');
-  db_add_primary_key($ret, 'search_index', array('word', 'sid', 'type'));
-
-  return $ret;
+  db_drop_index('search_index', 'word');
+  db_drop_unique_key('search_index', 'word_sid_type');
+  db_add_primary_key('search_index', array('word', 'sid', 'type'));
 }

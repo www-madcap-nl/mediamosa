@@ -1,16 +1,9 @@
-// $Id: drupal.js,v 1.58 2009/08/31 05:51:07 dries Exp $
+// $Id: drupal.js,v 1.65 2010/03/10 15:14:38 dries Exp $
 
 var Drupal = Drupal || { 'settings': {}, 'behaviors': {}, 'locale': {} };
 
 // Allow other JavaScript libraries to use $.
 jQuery.noConflict();
-
-// Indicate when other scripts use $ with out wrapping their code.
-if ($ === undefined) {
-  $ = function () {
-    alert('Please wrap your JavaScript code in (function ($) { ... })(jQuery); to be compatible. See http://docs.jquery.com/Using_jQuery_with_Other_Libraries.');
-  };
-}
 
 (function ($) {
 
@@ -22,10 +15,10 @@ if ($ === undefined) {
  * object using the method 'attach' and optionally also 'detach' as follows:
  * @code
  *    Drupal.behaviors.behaviorName = {
- *      attach: function (context) {
+ *      attach: function (context, settings) {
  *        ...
  *      },
- *      detach: function (context) {
+ *      detach: function (context, settings, trigger) {
  *        ...
  *      }
  *    };
@@ -81,16 +74,38 @@ Drupal.attachBehaviors = function (context, settings) {
  * @param context
  *   An element to detach behaviors from. If none is given, the document element
  *   is used.
+ * @param settings
+ *   An object containing settings for the current context. If none given, the
+ *   global Drupal.settings object is used.
+ * @param trigger
+ *   A string containing what's causing the behaviors to be detached. The
+ *   possible triggers are:
+ *   - unload: (default) The context element is being removed from the DOM.
+ *   - move: The element is about to be moved within the DOM (for example,
+ *     during a tabledrag row swap). After the move is completed,
+ *     Drupal.attachBehaviors() is called, so that the behavior can undo
+ *     whatever it did in response to the move. Many behaviors won't need to
+ *     do anything simply in response to the element being moved, but because
+ *     IFRAME elements reload their "src" when being moved within the DOM,
+ *     behaviors bound to IFRAME elements (like WYSIWYG editors) may need to
+ *     take some action.
+ *   - serialize: When an AJAX form is submitted, this is called with the
+ *     form as the context. This provides every behavior within the form an
+ *     opportunity to ensure that the field elements have correct content
+ *     in them before the form is serialized. The canonical use-case is so
+ *     that WYSIWYG editors can update the hidden textarea to which they are
+ *     bound.
  *
  * @see Drupal.attachBehaviors
  */
-Drupal.detachBehaviors = function (context, settings) {
+Drupal.detachBehaviors = function (context, settings, trigger) {
   context = context || document;
   settings = settings || Drupal.settings;
+  trigger = trigger || 'unload';
   // Execute all of them.
   $.each(Drupal.behaviors, function () {
     if ($.isFunction(this.detach)) {
-      this.detach(context, settings);
+      this.detach(context, settings, trigger);
     }
   });
 };
@@ -233,18 +248,6 @@ Drupal.theme = function (func) {
 };
 
 /**
- * Parse a JSON response.
- *
- * The result is either the JSON object, or an object with 'status' 0 and 'data' an error message.
- */
-Drupal.parseJson = function (data) {
-  if ((data.substring(0, 1) != '{') && (data.substring(0, 1) != '[')) {
-    return { status: 0, data: data.length ? data : Drupal.t('Unspecified error') };
-  }
-  return eval('(' + data + ');');
-};
-
-/**
  * Freeze the current body height (as minimum height). Used to prevent
  * unnecessary upwards scrolling when doing DOM manipulations.
  */
@@ -267,14 +270,13 @@ Drupal.unfreezeHeight = function () {
 };
 
 /**
- * Wrapper around encodeURIComponent() which avoids Apache quirks (equivalent of
- * drupal_encode_path() in PHP). This function should only be used on paths, not
- * on query string arguments.
+ * Encodes a Drupal path for use in a URL.
+ *
+ * For aesthetic reasons slashes are not escaped.
  */
 Drupal.encodePath = function (item, uri) {
   uri = uri || location.href;
-  item = encodeURIComponent(item).replace(/%2F/g, '/');
-  return (uri.indexOf('?q=') != -1) ? item : item.replace(/%26/g, '%2526').replace(/%23/g, '%2523').replace(/\/\//g, '/%252F');
+  return encodeURIComponent(item).replace(/%2F/g, '/');
 };
 
 /**
@@ -301,18 +303,26 @@ Drupal.getSelection = function (element) {
  * Build an error message from an AJAX response.
  */
 Drupal.ajaxError = function (xmlhttp, uri) {
-  if (xmlhttp.status == 200 || (xmlhttp.status == 500 && xmlhttp.statusText == 'Service unavailable (with message)')) {
-    if ($.trim(xmlhttp.responseText)) {
-      var message = Drupal.t("An error occurred. \nPath: @uri\nMessage: !text", { '@uri': uri, '!text': xmlhttp.responseText });
-    }
-    else {
-      var message = Drupal.t("An error occurred. \nPath: @uri\n(no information available).", {'@uri': uri });
-    }
+  var statusCode, statusText, pathText, responseText, readyStateText, message;
+  if (xmlhttp.status) {
+    statusCode = "\n" + Drupal.t("An AJAX HTTP error occurred.") +  "\n" + Drupal.t("HTTP Result Code: !status", {'!status': xmlhttp.status});
   }
   else {
-    var message = Drupal.t("An HTTP error @status occurred. \nPath: @uri", { '@uri': uri, '@status': xmlhttp.status });
+    statusCode = "\n" + Drupal.t("An AJAX HTTP request terminated abnormally.");
   }
-  return message.replace(/\n/g, '<br />');
+  statusCode += "\n" + Drupal.t("Debugging information follows.");
+  pathText = "\n" + Drupal.t("Path: !uri", {'!uri': uri} );
+  statusText = xmlhttp.statusText ? ("\n" + Drupal.t("StatusText: !statusText", {'!statusText': $.trim(xmlhttp.statusText)})) : "";
+  responseText = xmlhttp.responseText ? ("\n" + Drupal.t("ResponseText: !responseText", {'!responseText': $.trim(xmlhttp.responseText)})) : "";
+  // Make the responseText more readable by stripping HTML tags and newlines.
+  responseText = responseText.replace(/<("[^"]*"|'[^']*'|[^'">])*>/gi,"");
+  responseText = responseText.replace(/[\n]+\s+/g,"\n");
+
+  // We don't need readyState except for status == 0.
+  readyStateText = xmlhttp.status == 0 ? ("\n" + Drupal.t("ReadyState: !readyState", {'!readyState': xmlhttp.readyState})) : "";
+
+  message = statusCode + pathText + statusText + responseText + readyStateText;
+  return message;
 };
 
 // Class indicating that JS is enabled; used for styling purpose.

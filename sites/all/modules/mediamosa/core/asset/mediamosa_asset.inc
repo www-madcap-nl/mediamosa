@@ -691,9 +691,14 @@ class mediamosa_asset {
 
           if ($ticket_id) {
             // Create still response.
-            $response = mediamosa_asset_mediafile_play_proxy::create_response_still($ticket, $app_id);
-            $a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]]['vpx_still_url'] = $response['output'];
-            $a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]]['ega_still_url'] = (isset($a_items['app_info'][$a_asset['app_id']]) ? str_replace('{asset_id}', $a_asset[mediamosa_asset_db::ID], $a_items['app_info'][$a_asset['app_id']]['still_url']) : '');
+            try {
+              $response = mediamosa_asset_mediafile_play_proxy::create_response_still($ticket, $app_id);
+              $a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]]['vpx_still_url'] = $response['output'];
+              $a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]]['ega_still_url'] = (isset($a_items['app_info'][$a_asset['app_id']]) ? str_replace('{asset_id}', $a_asset[mediamosa_asset_db::ID], $a_items['app_info'][$a_asset['app_id']]['still_url']) : '');
+            }
+            catch (mediamosa_exception $e) {
+              // Ignore.
+            }
           }
         }
       }

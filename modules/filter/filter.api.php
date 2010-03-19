@@ -1,5 +1,5 @@
 <?php
-// $Id: filter.api.php,v 1.15 2009/09/20 07:32:17 dries Exp $
+// $Id: filter.api.php,v 1.18 2010/03/08 05:21:23 webchick Exp $
 
 /**
  * @file
@@ -81,23 +81,24 @@
  * in $filter->settings.
  *
  * 'settings callback' is invoked with the following arguments (most filter
- * implementations will only need the first 3):
+ * implementations will only need $form_state, $filter and $defaults):
+ * - $form: The prepopulated form array, which will usually have no use here.
  * - &$form_state: The form state of the (entire) configuration form.
  * - $filter: The filter object containing settings for the given format.
+ * - $format: The format object being configured.
  * - $defaults: The default settings for the filter, as defined in 'default
  *   settings' in hook_filter_info().
- * - $format: The format object being configured.
  * - $filters: Complete list of filter objects that are enabled for the given
  *   format.
  *
  * @code
- *   function mymodule_filter_settings($form, &$form_state, $filter, $defaults) {
- *     $form['mymodule_url_length'] = array(
+ *   function mymodule_filter_settings($form, &$form_state, $filter, $format, $defaults, $filters) {
+ *     $settings['mymodule_url_length'] = array(
  *       '#type' => 'textfield',
  *       '#title' => t('Maximum link text length'),
  *       '#default_value' => isset($filter->settings['mymodule_url_length']) ? $filter->settings['mymodule_url_length'] : $defaults['mymodule_url_length'],
  *     );
- *     return $form;
+ *     return $settings;
  *   }
  * @endcode
  *
@@ -244,8 +245,8 @@ function hook_filter_format_update($format) {
  *   The format object of the site's fallback format, which is always available
  *   to all users.
  *
+ * @see hook_filter_format_insert().
  * @see hook_filter_format_update().
- * @see hook_filter_format_delete().
  */
 function hook_filter_format_delete($format, $fallback) {
   // Replace the deleted format with the fallback format.

@@ -1,5 +1,5 @@
 <?php
-// $Id: dblog.admin.inc,v 1.30 2009/09/18 00:12:46 webchick Exp $
+// $Id: dblog.admin.inc,v 1.35 2010/03/11 21:23:06 dries Exp $
 
 /**
  * @file
@@ -13,24 +13,24 @@ function dblog_overview() {
   $filter = dblog_build_filter_query();
   $rows = array();
   $icons = array(
-    WATCHDOG_DEBUG    => '',
-    WATCHDOG_INFO     => '',
-    WATCHDOG_NOTICE   => '',
-    WATCHDOG_WARNING  => theme('image', 'misc/watchdog-warning.png', t('warning'), t('warning')),
-    WATCHDOG_ERROR    => theme('image', 'misc/watchdog-error.png', t('error'), t('error')),
-    WATCHDOG_CRITICAL => theme('image', 'misc/watchdog-error.png', t('critical'), t('critical')),
-    WATCHDOG_ALERT    => theme('image', 'misc/watchdog-error.png', t('alert'), t('alert')),
-    WATCHDOG_EMERG    => theme('image', 'misc/watchdog-error.png', t('emergency'), t('emergency')),
+    WATCHDOG_DEBUG     => '',
+    WATCHDOG_INFO      => '',
+    WATCHDOG_NOTICE    => '',
+    WATCHDOG_WARNING   => theme('image', array('path' => 'misc/watchdog-warning.png', 'alt' => t('warning'), 'title' => t('warning'))),
+    WATCHDOG_ERROR     => theme('image', array('path' => 'misc/watchdog-error.png', 'alt' => t('error'), 'title' => t('error'))),
+    WATCHDOG_CRITICAL  => theme('image', array('path' => 'misc/watchdog-error.png', 'alt' => t('critical'), 'title' => t('critical'))),
+    WATCHDOG_ALERT     => theme('image', array('path' => 'misc/watchdog-error.png', 'alt' => t('alert'), 'title' => t('alert'))),
+    WATCHDOG_EMERGENCY => theme('image', array('path' => 'misc/watchdog-error.png', 'alt' => t('emergency'), 'title' => t('emergency'))),
   );
   $classes = array(
-    WATCHDOG_DEBUG    => 'dblog-debug',
-    WATCHDOG_INFO     => 'dblog-info',
-    WATCHDOG_NOTICE   => 'dblog-notice',
-    WATCHDOG_WARNING  => 'dblog-warning',
-    WATCHDOG_ERROR    => 'dblog-error',
-    WATCHDOG_CRITICAL => 'dblog-critical',
-    WATCHDOG_ALERT    => 'dblog-alert',
-    WATCHDOG_EMERG    => 'dblog-emerg',
+    WATCHDOG_DEBUG     => 'dblog-debug',
+    WATCHDOG_INFO      => 'dblog-info',
+    WATCHDOG_NOTICE    => 'dblog-notice',
+    WATCHDOG_WARNING   => 'dblog-warning',
+    WATCHDOG_ERROR     => 'dblog-error',
+    WATCHDOG_CRITICAL  => 'dblog-critical',
+    WATCHDOG_ALERT     => 'dblog-alert',
+    WATCHDOG_EMERGENCY => 'dblog-emerg',
   );
 
   $build['dblog_filter_form'] = drupal_get_form('dblog_filter_form');
@@ -46,7 +46,7 @@ function dblog_overview() {
   );
 
   $query = db_select('watchdog', 'w')->extend('PagerDefault')->extend('TableSort');
-  $query->join('users', 'u', 'w.uid = u.uid');
+  $query->leftJoin('users', 'u', 'w.uid = u.uid');
   $query
     ->fields('w', array('wid', 'uid', 'severity', 'type', 'timestamp', 'message', 'variables', 'link'))
     ->addField('u', 'name');
@@ -66,7 +66,7 @@ function dblog_overview() {
         t($dblog->type),
         format_date($dblog->timestamp, 'short'),
         l(truncate_utf8(_dblog_format_message($dblog), 56, TRUE, TRUE), 'admin/reports/event/' . $dblog->wid, array('html' => TRUE)),
-        theme('username', $dblog),
+        theme('username', array('account' => $dblog)),
         $dblog->link,
       ),
       // Attributes for tr
@@ -74,15 +74,12 @@ function dblog_overview() {
     );
   }
 
-  if (!$rows) {
-    $rows[] = array(array('data' => t('No log messages available.'), 'colspan' => 6));
-  }
-
   $build['dblog_table'] = array(
     '#theme' => 'table',
     '#header' => $header,
     '#rows' => $rows,
     '#attributes' => array('id' => 'admin-dblog'),
+    '#empty' => t('No log messages available.'),
   );
   $build['dblog_pager'] = array('#theme' => 'pager');
 
@@ -120,14 +117,11 @@ function dblog_top($type) {
     $rows[] = array($dblog->count, truncate_utf8(_dblog_format_message($dblog), 56, TRUE, TRUE));
   }
 
-  if (empty($rows)) {
-    $rows[] = array(array('data' => t('No log messages available.'), 'colspan' => 2));
-  }
-
   $build['dblog_top_table']  = array(
     '#theme' => 'table',
     '#header' => $header,
     '#rows' => $rows,
+    '#empty' => t('No log messages available.'),
   );
   $build['dblog_top_pager'] = array('#theme' => 'pager');
 
@@ -152,7 +146,7 @@ function dblog_event($id) {
       ),
       array(
         array('data' => t('User'), 'header' => TRUE),
-        theme('username', $dblog),
+        theme('username', array('account' => $dblog)),
       ),
       array(
         array('data' => t('Location'), 'header' => TRUE),
@@ -280,7 +274,6 @@ function dblog_filter_form($form) {
   $form['filters'] = array(
     '#type' => 'fieldset',
     '#title' => t('Filter log messages'),
-    '#theme' => 'dblog_filters',
     '#collapsible' => TRUE,
     '#collapsed' => empty($session),
   );
@@ -297,12 +290,16 @@ function dblog_filter_form($form) {
     }
   }
 
-  $form['filters']['buttons']['submit'] = array(
+  $form['filters']['actions'] = array(
+    '#type' => 'container',
+    '#attributes' => array('class' => array('form-actions', 'container-inline')),
+  );
+  $form['filters']['actions']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Filter'),
   );
   if (!empty($_SESSION['dblog_overview_filter'])) {
-    $form['filters']['buttons']['reset'] = array(
+    $form['filters']['actions']['reset'] = array(
       '#type' => 'submit',
       '#value' => t('Reset')
     );

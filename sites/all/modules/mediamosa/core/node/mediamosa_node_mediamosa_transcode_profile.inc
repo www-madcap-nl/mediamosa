@@ -27,13 +27,16 @@
  /**
   * @file
   * hook_load / -update / -delete / -insert hooks for node type mediamosa_transcode_profile.
+  *
+  *
   */
 
 /**
  * Implementation of hook_load().
  */
 function mediamosa_transcode_profile_load(&$nodes) {
-
+  $nodes = mediamosa_node_revision::load($nodes);
+  /*
   // Gather all vids.
   $vids = array();
   foreach ($nodes as $node) {
@@ -75,7 +78,7 @@ function mediamosa_transcode_profile_load(&$nodes) {
 
       $nodes[$record['nid']]->$key = $value;
     }
-  }
+  }*/
 
   return $nodes;
 }
@@ -84,70 +87,238 @@ function mediamosa_transcode_profile_load(&$nodes) {
  * Implementation of hook_update().
  */
 function mediamosa_transcode_profile_update($node) {
-  $options = array();
-  foreach ($node as $key => $value) {
-    if (strpos($key, 'options_') === 0) {
 
-      // Get the tmid and strip the value
-      $tmid = substr($key, strlen('options_'));
-      $value = trim($value);
+  // If this profile is set als default, then reset the rest to FALSE.
+  _mediamosa_transcode_profile_update_isdefault($node);
 
-      // Gather all set options
-      if ($value != '') {
-        $options[$tmid] = $value;
+  if ($node->revision) {
+    mediamosa_transcode_profile_insert($node);
+  }
+  else {
+    $commands = array();
+    foreach ($node as $key => $value) {
+      if (strpos($key, 'options_') === 0) {
+
+        // Get the tmid and strip the value
+        $command = substr($key, strlen('options_'));
+        $value = trim($value);
+
+        // Gather all set options
+        if ($value != '') {
+          $commands[] = $command . ':' . $value;
+        }
       }
     }
+
+    // Store the commands.
+    $node->{mediamosa_transcode_profile_db::COMMAND} = implode(';', $commands);
+
+    // Get the field names of the table.
+    $names = mediamosa_transcode_profile_db::get_fields();
+
+    // Exception is title.
+    $node->{mediamosa_transcode_profile_db::PROFILE} = $node->title;
+
+    // Update.
+    mediamosa_node_revision::update_ex($node, mediamosa_transcode_profile_db::TABLE_NAME, $names);
   }
-
-  // Delete the old revision
-  db_delete(mediamosa_transcode_profile_db::TABLE_NAME)
-    ->condition('vid', $node->vid)
-    ->execute();
-
-  // Insert the new revision
-  db_insert(mediamosa_transcode_profile_db::TABLE_NAME)
-    ->fields(array(
-      'nid' => $node->nid,
-      'vid' => $node->vid,
-      mediamosa_transcode_profile_db::APP_ID => $node->app_id,
-      mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE => $node->is_default_profile,
-      mediamosa_transcode_profile_db::TOOL => $node->tool,
-      mediamosa_transcode_profile_db::FILE_EXTENSION => $node->file_extension,
-      mediamosa_transcode_profile_db::VERSION => $node->version,
-      mediamosa_transcode_profile_db::PROFILE => $node->profile,
-      mediamosa_transcode_profile_db::COMMAND => $node->command,
-      mediamosa_transcode_profile_db::OPTIONS => serialize($options),
-      mediamosa_transcode_profile_db::CHANGED => mediamosa::db_current_timestamp_now(),
-    ))
-    ->execute();
 }
 
 /**
  * Implementation of hook_insert().
  */
 function mediamosa_transcode_profile_insert($node) {
-  db_insert(mediamosa_transcode_profile_db::TABLE_NAME)
-    ->fields(array(
-      'nid' => $node->nid,
-      'vid' => $node->vid,
-      mediamosa_transcode_profile_db::APP_ID => $node->app_id,
-      mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE => $node->is_default_profile,
-      mediamosa_transcode_profile_db::TOOL => $node->tool,
-      mediamosa_transcode_profile_db::FILE_EXTENSION => $node->file_extension,
-      mediamosa_transcode_profile_db::VERSION => $node->version,
-      mediamosa_transcode_profile_db::PROFILE => $node->profile,
-      mediamosa_transcode_profile_db::COMMAND => $node->command,
-      mediamosa_transcode_profile_db::CHANGED => mediamosa::db_current_timestamp_now(),
-      mediamosa_transcode_profile_db::CREATED => mediamosa::db_current_timestamp_now(),
-    ))
-    ->execute();
+
+  // If this profile is set als default, then reset the rest to FALSE.
+  _mediamosa_transcode_profile_update_isdefault($node);
+
+  // Get the field names of the table.
+  $names = mediamosa_transcode_profile_db::get_fields();
+
+  // Exception is title.
+  $node->{mediamosa_transcode_profile_db::PROFILE} = $node->title;
+
+  // Insert revision.
+  mediamosa_node_revision::insert_ex($node, mediamosa_transcode_profile_db::TABLE_NAME, $names);
 }
 
 /**
  * Implementation of hook_delete().
  */
 function mediamosa_transcode_profile_delete($node) {
-  db_delete(mediamosa_transcode_profile_db::TABLE_NAME)
-    ->condition('nid', $node->nid)
-    ->execute();
+  // Delete revisions.
+  mediamosa_node_revision::delete_ex($node, mediamosa_transcode_profile_db::TABLE_NAME);
+}
+
+/**
+ * If this profile is set als default, then reset the rest to FALSE
+ *
+ * @param object $node
+ */
+function _mediamosa_transcode_profile_update_isdefault($node) {
+  if ($node->{mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE} == mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE_TRUE) {
+    mediamosa_db::db_query(
+      'UPDATE #mediamosa_transcode_profile SET #is_default_profile = :is_default_profile_false',
+      array(
+        '#mediamosa_transcode_profile' => mediamosa_transcode_profile_db::TABLE_NAME,
+        '#is_default_profile' => mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE,
+        '#is_default_profile_false' => mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE_FALSE,
+      )
+    );
+  }
+}
+
+/**
+ * Implementation of hook_view().
+ */
+function mediamosa_transcode_profile_view($node, $view_mode = 'full') {
+
+  // Get the apps.
+  $apps = _mediamosa_get_apps();
+
+  // Default parameters
+  $rows = array(
+    array(t('Title'), check_plain($node->title)),
+    array(t('Application'), isset($apps[$node->app_id]) ? $apps[$node->app_id] : 'Unknown or deleted application'),
+    array(t('Tool'), $node->tool),
+    array(t('File extension'), $node->file_extension),
+    array(t('Is default profile'), t(drupal_ucfirst(strtolower($node->is_default_profile)))),
+  );
+
+  // Optional parameters.
+  $all_options = mediamosa_transcode_profile::get_by_tool(NULL, $node->tool);
+  if (!empty($node->options)) {
+    foreach ($node->options as $key => $value) {
+      $rows[] = array($all_options[$key]['field_title'], check_plain($value));
+    }
+  }
+
+  // Add timestamps
+  $rows[] = array(t('Created'), format_date($node->created, 'short'));
+  $rows[] = array(t('Changed'), format_date($node->changed, 'short'));
+
+  $node->content['transcode_profile'] = array(
+    '#markup' => theme('table', array('header' => array(t('Parameter'), t('Value')), 'rows' => $rows)),
+  );
+
+  return $node;
+}
+
+/**
+ * Implementation of hook_form().
+ */
+function mediamosa_transcode_profile_form($node, $form_state) {
+  // If we're inserting a new node, set some defaults:
+  if (!isset($node->nid)) {
+    $node->app_id = 0;
+    $node->tool = 'ffmpeg';
+    $node->is_default_profile = 'FALSE';
+    $node->file_extension = '';
+  }
+
+  $form = array();
+
+  $form['required'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Required parameters'),
+    '#description' => t('Required parameters for a transcoding profile.'),
+  );
+
+  // Get the apps for the drop down listing.
+  $apps = _mediamosa_get_apps();
+
+  $form['required'][mediamosa_transcode_profile_db::APP_ID] = array(
+    '#title' => t('Application'),
+    '#type' => 'select',
+    '#default_value' => $node->{mediamosa_transcode_profile_db::APP_ID},
+    '#required' => TRUE,
+    '#options' => $apps,
+    '#description' => t('The application that owns this profile.'),
+  );
+
+  $form['required']['title'] = array(
+    '#title' => t('Profile name'),
+    '#type' => 'textfield',
+    '#required' => TRUE,
+    '#description' => t('The name of this transcode profile.'),
+    '#default_value' => mediamosa_node::default_value('title', $node),
+    '#maxlength' => mediamosa_transcode_profile_db::PROFILE_LENGTH,
+  );
+
+  $form['required'][mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE] = array(
+    '#title' => t('Is this the default profile?'),
+    '#type' => 'select',
+    '#default_value' => mediamosa_node::default_value(mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE, $node),
+    '#options' => array(mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE_TRUE => t('Yes'), mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE_FALSE => t('No')),
+    '#required' => TRUE,
+    '#description' => t('If a transcoding profile is ommited from a transcoding request, the default profile will be choosen.'),
+  );
+
+  $form['required'][mediamosa_transcode_profile_db::TOOL] = array(
+    '#title' => t('Encoder used'),
+    '#type' => 'select',
+    '#default_value' => mediamosa_node::default_value(mediamosa_transcode_profile_db::TOOL, $node),
+    '#options' => array('ffmpeg' => t('FFMpeg'), 'windows' => t('Windows')),
+    '#description' => t('The encoding tool used to perform the transcoding. Currently there are 2 options available: FFMpeg and Windows (used for WMV).'),
+  );
+
+  $form['required'][mediamosa_transcode_profile_db::FILE_EXTENSION] = array(
+    '#title' => t('File extension'),
+    '#type' => 'textfield',
+    '#required' => TRUE,
+    '#description' => t('This file extension is only used for the generated filename, which will be the original filename (minus original extension) plus this extension.'),
+    '#default_value' => mediamosa_node::default_value(mediamosa_transcode_profile_db::FILE_EXTENSION, $node),
+    '#maxlength' => mediamosa_transcode_profile_db::FILE_EXTENSION_LENGTH,
+  );
+
+  if (isset($node->nid)) {
+    $a_tools = mediamosa_transcode_profile::get_by_tool(NULL, $node->tool)->fetchAll();
+
+    $form['tool_options'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('@tool optional parameters', array('@tool' => drupal_ucfirst($node->tool))),
+      '#collapsed' => TRUE,
+      '#collapsible' => TRUE,
+    );
+
+    // Show all parameters for profile.
+    foreach ($a_tools as $key => $a_tool) {
+      $a_tool[mediamosa_transcode_mapping_db::ALLOWED_VALUE] = trim($a_tool[mediamosa_transcode_mapping_db::ALLOWED_VALUE]) == '' ? array() : explode(';', $a_tool[mediamosa_transcode_mapping_db::ALLOWED_VALUE]);
+
+      // Tool required?
+      $is_required = $a_tool[mediamosa_transcode_mapping_db::REQUIRED] == mediamosa_transcode_mapping_db::REQUIRED_TRUE;
+      $weight = $is_required ? -10 : -15;
+
+      if (empty($a_tool[mediamosa_transcode_mapping_db::ALLOWED_VALUE])) {
+        $form['tool_options'][$a_tool[mediamosa_transcode_mapping_db::NICE_PARAMETER]] = array(
+          '#description' => t(''),
+          '#type' => 'textfield',
+          '#title' => t($a_tool[mediamosa_transcode_mapping_db::NICE_PARAMETER]),
+          '#required' => $is_required,
+          '#default_value' => isset($node->{$a_tool[mediamosa_transcode_mapping_db::NICE_PARAMETER]}) ? $node->{$a_tool[mediamosa_transcode_mapping_db::NICE_PARAMETER]} : '',
+          '#size' => 25,
+          '#description' => t('The allowed value is between @min_value and @max_value.', array('@min_value' => $a_tool[mediamosa_transcode_mapping_db::MIN_VALUE], '@max_value' => $a_tool[mediamosa_transcode_mapping_db::MAX_VALUE])),
+          '#weight' => $weight
+        );
+      }
+      else {// Select box.
+        $a_select_box = array();
+        foreach ($a_tool[mediamosa_transcode_mapping_db::ALLOWED_VALUE] as $allowed_value) {
+          $a_select_box[$allowed_value] = $allowed_value;
+        }
+
+        $form['tool_options'][$a_tool[mediamosa_transcode_mapping_db::NICE_PARAMETER]] = array(
+          '#description' => t(''),
+          '#type' => 'select',
+          '#title' => t($a_tool[mediamosa_transcode_mapping_db::NICE_PARAMETER]),
+          '#required' => $is_required,
+          '#default_value' => isset($node->{$a_tool[mediamosa_transcode_mapping_db::NICE_PARAMETER]}) ? $node->{$a_tool[mediamosa_transcode_mapping_db::NICE_PARAMETER]} : '',
+          '#options' => $a_select_box,
+          '#weight' => $weight['general']
+        );
+      }
+    }
+  }
+
+  return $form;
 }

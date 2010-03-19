@@ -36,7 +36,7 @@
  * @author      Vincent Blavet <vincent@phpconcept.net>
  * @copyright   1997-2008 The Authors
  * @license     http://www.opensource.org/licenses/bsd-license.php New BSD License
- * @version     CVS: $Id: system.tar.inc,v 1.2 2009/08/17 19:14:41 webchick Exp $
+ * @version     CVS: $Id: system.tar.inc,v 1.5 2010/02/09 12:29:39 dries Exp $
  * @link        http://pear.php.net/package/Archive_Tar
  */
 
@@ -47,11 +47,11 @@ define ('ARCHIVE_TAR_END_BLOCK', pack("a512", ''));
 * Creates a (compressed) Tar archive
 *
 * @author   Vincent Blavet <vincent@phpconcept.net>
-* @version  $Revision: 1.2 $
+* @version  $Revision: 1.5 $
 * @license  http://www.opensource.org/licenses/bsd-license.php New BSD License
 * @package  Archive_Tar
 */
-class Archive_Tar 
+class Archive_Tar
 {
     /**
     * @var string Name of the Tar
@@ -154,7 +154,7 @@ class Archive_Tar
             }
             if (!extension_loaded($extname)) {
                 die("The extension '$extname' couldn't be found.\n".
-                    "Please make sure your version of PHP was built ".
+                    "Make sure your version of PHP was built ".
                     "with '$extname' support.\n");
                 return false;
             }
@@ -962,7 +962,7 @@ class Archive_Tar
       }
 
       // ----- Calculate the stored filename
-      $p_filename = $this->_translateWinPath($p_filename, false);;
+      $p_filename = $this->_translateWinPath($p_filename, false);
       $v_stored_filename = $p_filename;
       if (strcmp($p_filename, $p_remove_dir) == 0) {
           return true;
@@ -1025,7 +1025,7 @@ class Archive_Tar
       }
 
       // ----- Calculate the stored filename
-      $p_filename = $this->_translateWinPath($p_filename, false);;
+      $p_filename = $this->_translateWinPath($p_filename, false);
 
       if (!$this->_writeHeaderBlock($p_filename, strlen($p_string),
 	                                  time(), 384, "", 0, 0))

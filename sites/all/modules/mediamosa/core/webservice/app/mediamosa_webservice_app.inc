@@ -34,6 +34,7 @@ class mediamosa_webservice_app {
   const HANDLE_BATCH_UPLOAD = 'batch_upload';
   const HANDLE_JOBS = 'jobs';
   const HANDLE_MEDIA_UPLOAD = 'media_upload';
+  const HANDLE_TRANSCODING = 'transcoding';
 
   // ------------------------------------------------------------------ Static Functions.
   /**
@@ -107,5 +108,21 @@ class mediamosa_webservice_app {
     if (!self::webservice_is_active($handle, $a_app_ids)) {
       throw new mediamosa_exception_error_webservice_disabled();
     }
+  }
+
+  /**
+   * Return enabled/disabled statussem of webservices of each app.
+   */
+  static public function webservice_get_all_status() {
+    $result = mediamosa_db::db_select(mediamosa_webservice_app_db::TABLE_NAME, 'w')
+      ->fields('w')
+      ->execute();
+
+    $a_webservice_apps = array();
+    foreach ($result as $a_webservice_app) {
+      $a_webservice_apps[$a_webservice_app[mediamosa_webservice_app_db::APP_ID]][$a_webservice_app[mediamosa_webservice_app_db::WEBSERVICE_HANDLE]] = ($a_webservice_app[mediamosa_webservice_app_db::STATUS] == mediamosa_webservice_app_db::STATUS_TRUE);
+    }
+
+    return $a_webservice_apps;
   }
 }

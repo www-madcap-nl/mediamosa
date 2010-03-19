@@ -78,7 +78,30 @@
     $run_last = variable_get('mediamosa_maintenance_status_cron_last', NULL);
 
     // may run?
-    return (round(REQUEST_TIME - $run_last) >= self::get_interval());
+    if (round(REQUEST_TIME - $run_last) < self::get_interval()) {
+      return FALSE;
+    }
+
+    // Before we start, we count the number of tables. If simpletest fails,
+    // it doesn't clean up. We stop running the tests if we have to many tables.
+    // Also we'll try to clean up if we detect to many tables.
+    $count_tables = mediamosa_db::db_count_tables();
+
+    // Check if we have to many tables, else clean up.
+    if ($count_tables > mediamosa_settings::STATUS_MAX_TABLES) {
+      self::log('To many simpletest tables detected, trying to clean up, found @count tables.', array('@count' => $count_tables), WATCHDOG_ALERT);
+
+      MediaMosaTestCase::clean();
+
+      $count_tables = mediamosa_db::db_count_tables();
+      if ($count_tables > mediamosa_settings::STATUS_MAX_TABLES) {
+        // Clean failed.
+        self::log('Status page update down, unable to clean up old tests, still @count tables left.', array('@count' => $count_tables), WATCHDOG_CRITICAL);
+      }
+    }
+
+    // All ok, run new tests.
+    return TRUE;
   }
 
   /**
@@ -100,6 +123,7 @@
    * Run the tests one by one.
    */
   static public function run_simple_tests() {
+
     mediamosa_debug::log_debug('run_simple_tests() started.');
 
     // Prevent us running twice and make sure we are enabled.
@@ -199,7 +223,7 @@
     }
 
     // Log it.
-    self::log('run_simple_tests() overrun.', array(), WATCHDOG_EMERG);
+    self::log('run_simple_tests() overrun.', array(), WATCHDOG_EMERGENCY);
 
     // Set end point run of runned tests.
     $a_test_results['#ended_at'] = mediamosa::utc_current_timestamp_now(TRUE);

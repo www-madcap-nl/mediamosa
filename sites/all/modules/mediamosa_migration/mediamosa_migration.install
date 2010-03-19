@@ -53,8 +53,10 @@ $databases['mig_memo_data']['default'] = array(
 );
  */
 
+// TODO: put in settings
 define('MIG_MEMO', 'mig_memo');
 define('MIG_MEMO_DATA', 'mig_memo_data');
+define('MIG_VPX_FTP', 'mig_vpx_ftp');
 
 /**
  * Get the database name of the mediamosa drupal database.
@@ -74,6 +76,16 @@ function _mediamosa_migration_get_memo_db() {
 function _mediamosa_migration_get_memo_data_db() {
   global $databases;
   return $databases[MIG_MEMO_DATA]['default']['database'];
+}
+
+/**
+ * Get the database name of the vpx_ftp data database.
+ *
+ * @return string
+ */
+function _mediamosa_migration_get_vpx_data_db() {
+  global $databases;
+  return $databases[MIG_VPX_FTP]['default']['database'];
 }
 
 /**
@@ -226,6 +238,8 @@ function mediamosa_migration_requirements($phase) {
  * Implement hook_install().
  */
 function mediamosa_migration_install() {
+  // Optional; might not be in every installation.
+  _mediamosa_migration_vpx_ftp();
 
   // error -> mediamosa_error.
   _mediamosa_migration_error();
@@ -292,12 +306,14 @@ function mediamosa_migration_install() {
   // create server nodes.
   _mediamosa_migration_create_server_nodes();
 
-  // <Migrate this setting.
+  // statistics_*
+  _mediamosa_migration_statistics();
+
+  // Migrate this setting.
   $curlproxy_http = variable_get('vpx_curlproxy_http', '');
   if ($curlproxy_http != '') {
     variable_set('mediamosa_curlproxy_http', $curlproxy_http);
   }
-
 }
 
 /**
@@ -418,90 +434,33 @@ function _mediamosa_migration_client_applications() {
   // Get the database name.
   $db_name = _mediamosa_migration_get_memo_db();
 
-  // Get current app_ids so we dont insert more than once.
-  $current_app_ids = array_keys(db_query("SELECT * FROM {mediamosa_app}")->fetchAllAssoc('app_id'));
-
   // Get the current apps.
   $migrate_apps = db_query(strtr("SELECT * FROM #db_name.{client_applications} ORDER BY caid ASC", array('#db_name' => $db_name)))->fetchAllAssoc('id');
 
-  foreach ($migrate_apps as $app_id => $migrate_app) {
-    if (in_array($app_id, $current_app_ids)) {
-      continue;
+  // Now add back the apps as nodes.
+  foreach ($migrate_apps as $app_id => $app) {
+    $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_APP, $app->name);
+
+    // not needed.
+    unset($app->caid);
+    unset($app->id);
+    $app->app_id = $app_id;
+
+    $app = (array)$app;
+    foreach ($app as $key => $value) {
+      if (in_array($key, array('active', 'allow_masterslave'))) {
+        $value = $value ? 'TRUE' : 'FALSE';
+      }
+
+      if ($key == 'name') {
+        $key = 'app_name';// rename.
+      }
+
+      $node->{$key} = $value;
     }
 
-    /**
-     * Copy from 1.x to 2.x
-     * Columns dropped;
-     * version
-     * stable_testing
-     * Columns renamed;
-     * id to app_id
-     * caid_id to id
-     */
-    db_query("INSERT INTO {mediamosa_app} SET " .
-      implode(",",
-        array(
-          'name = :name',
-          'app_id = :app_id',
-          'transcoding_position_from = :transcoding_position_from',
-          'transcoding_position_to = :transcoding_position_to',
-          'quota = :quota',
-          'quota_used = :quota_used',
-          'shared_key = :shared_key',
-          'active = :active',
-          'description = :description',
-          'owner = :owner',
-          'technical_name = :technical_name',
-          'technical_phone = :technical_phone',
-          'technical_email = :technical_email',
-          'administrative_name = :administrative_name',
-          'administrative_phone = :administrative_phone',
-          'administrative_email = :administrative_email',
-          'play_proxy_url = :play_proxy_url',
-          'view_asset_url = :view_asset_url',
-          'preview_profile_id = :preview_profile_id',
-          'download_url = :download_url',
-          'stream_url = :stream_url',
-          'always_hint_mp4 = :always_hint_mp4',
-          'always_insert_md = :always_insert_md',
-          'is_metadata_public = :is_metadata_public',
-          'show_external_assets = :show_external_assets',
-          'active_version = :active_version',
-          'transcoding_max_slots = :transcoding_max_slots',
-          'allow_masterslave = :allow_masterslave',
-        )
-      ),
-      array(
-        'name' => $migrate_app->name,
-        'app_id' => $migrate_app->id,
-        'transcoding_position_from' => $migrate_app->transcoding_position_from,
-        'transcoding_position_to' => $migrate_app->transcoding_position_to,
-        'quota' => $migrate_app->quota,
-        'quota_used' => $migrate_app->quota_used,
-        'shared_key' => $migrate_app->shared_key,
-        'active' => $migrate_app->active ? 'TRUE' : 'FALSE',
-        'description' => $migrate_app->description,
-        'owner' => $migrate_app->owner,
-        'technical_name' => $migrate_app->technical_name,
-        'technical_phone' => $migrate_app->technical_phone,
-        'technical_email' => $migrate_app->technical_email,
-        'administrative_name' => $migrate_app->administrative_name,
-        'administrative_phone' => $migrate_app->administrative_phone,
-        'administrative_email' => $migrate_app->administrative_email,
-        'play_proxy_url' => $migrate_app->play_proxy_url,
-        'view_asset_url' => $migrate_app->view_asset_url,
-        'preview_profile_id' => $migrate_app->preview_profile_id,
-        'download_url' => $migrate_app->download_url,
-        'stream_url' => $migrate_app->stream_url,
-        'always_hint_mp4' => $migrate_app->always_hint_mp4,
-        'always_insert_md' => $migrate_app->always_insert_md,
-        'is_metadata_public' => $migrate_app->is_metadata_public,
-        'show_external_assets' => $migrate_app->show_external_assets,
-        'active_version' => $migrate_app->active_version,
-        'transcoding_max_slots' => (int)$migrate_app->transcoding_max_slots,
-        'allow_masterslave' => $migrate_app->allow_masterslave,
-      )
-    );
+    // Save node.
+    node_save($node);
   }
 }
 
@@ -1996,12 +1955,8 @@ function _mediamosa_migration_transcode() {
   );
 
   foreach ($result as $row) {
-    $node = new stdClass();
-    $node->uid = 1; // Admin
-    $node->status = 1; // Published
-    $node->type = mediamosa_node::MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE;
+    $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE, $row[mediamosa_transcode_profile_db::TOOL]);
 
-    $node->title = $row[mediamosa_transcode_profile_db::TOOL];
     $node->{mediamosa_transcode_profile_db::ID} = $row[mediamosa_transcode_profile_db::ID];
     $node->{mediamosa_transcode_profile_db::APP_ID} = $row[mediamosa_transcode_profile_db::APP_ID];
     $node->{mediamosa_transcode_profile_db::VERSION} = $row[mediamosa_transcode_profile_db::VERSION];
@@ -2064,14 +2019,11 @@ function _mediamosa_migration_transcode() {
  * Migrate server table to nodes mediamosa_server.
  */
 function _mediamosa_migration_create_server_nodes() {
-  // Clean the tables.
-  $a_to_truncate = array(
-    'mediamosa_server_streaming_container',
-    'mediamosa_server_tool',
-  );
 
-  foreach ($a_to_truncate as $table_name) {
-    db_truncate($table_name)->execute();
+  // Empty first.
+  $a_all = db_select('mediamosa_server', 's')->fields('s')->execute()->fetchAll();
+  foreach ($a_all as $mediamosa_server) {
+    node_delete($mediamosa_server->nid);
   }
 
   // Get the database name.
@@ -2108,10 +2060,8 @@ function _mediamosa_migration_create_server_nodes() {
     );
 
     foreach ($result as $row) {
-      $node = new stdClass();
-      $node->uid = 1; // Admin
-      $node->status = 1; // Published
-      $node->type = mediamosa_node::MEDIAMOSA_NODE_TYPE_SERVER;
+      $title = (isset($row['servername']) ? $row['servername'] : (isset($row['description']) ? $row['description'] : NULL));
+      $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_SERVER, $title);
 
       // Find server_id
       $server_id = 0;
@@ -2130,7 +2080,6 @@ function _mediamosa_migration_create_server_nodes() {
         $status = (!is_numeric($row['status']) ? $row['status'] : ($row['status'] == 1 ? 'ON' : 'OFF'));
       }
 
-      $node->title = $row['description'];
       $node->{mediamosa_server_db::SERVER_TYPE} = $type;
       $node->{mediamosa_server_db::VERSION} = $row['version'];
       $node->{mediamosa_server_db::SERVER_STATUS} = $status;
@@ -2138,27 +2087,10 @@ function _mediamosa_migration_create_server_nodes() {
       $node->{mediamosa_server_db::DESCRIPTION} = (isset($row['description']) ? $row['description'] : NULL);
       $node->{mediamosa_server_db::CONTAINERS} = (isset($row['containers']) ? $row['containers'] : NULL);
       $node->{mediamosa_server_db::OBJECT_CODE} = (isset($row['objectcode']) ? $row['objectcode'] : NULL);
-      $node->{mediamosa_server_db::SERVER_NAME} = (isset($row['servername']) ? $row['servername'] : NULL);
+      $node->{mediamosa_server_db::SERVER_NAME} = $title;
       $node->{mediamosa_server_db::SLOTS} = (isset($row['slots']) ? $row['slots'] : NULL);
       $node->{mediamosa_server_db::TOOLS} = (isset($row['tools']) ? $row['tools'] : NULL);
       $node->{mediamosa_server_db::URI_UPLOAD_PROGRESS} = (isset($row['uri_uploadprogress']) ? $row['uri_uploadprogress'] : NULL);
-
-      switch ($type) {
-        case mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR:
-          foreach ($a_transcoding_server_tool as $o_tool) {
-            if ($o_tool->transcoding_server_id == $server_id) {
-              $node->{mediamosa_server_tool_db::TABLE_NAME}[] = array(mediamosa_server_tool_db::TOOL => $o_tool->{mediamosa_server_tool_db::TOOL});
-            }
-          }
-          break;
-        case mediamosa_server_db::SERVER_TYPE_STREAMING:
-          foreach ($a_streaming_server_containers as $o_container) {
-            if ($o_container->streaming_server_id == $server_id) {
-              $node->{mediamosa_server_streaming_container_db::TABLE_NAME}[] = array(mediamosa_server_streaming_container_db::CONTAINER => $o_container->{mediamosa_server_streaming_container_db::CONTAINER});
-            }
-          }
-          break;
-      }
 
       node_save($node);
     }
@@ -2212,4 +2144,270 @@ function _mediamosa_migration_kill_child_assets() {
     // Clear mem.
     unset($a_mediafile_originals);
   }
+}
+
+function _mediamosa_migration_statistics() {
+  // Get the database name.
+  $db_name = _mediamosa_migration_get_memo_data_db();
+
+  // Get the current mode, which might be empty;
+  $old_mode = db_query('SELECT @@SESSION.sql_mode')->fetchField();
+
+  // Turn off problems with empty dates.
+  db_query("SET SESSION sql_mode = 'ALLOW_INVALID_DATES'");
+
+  // Must be empty.
+  db_truncate('mediamosa_statistics_diskspace_used')->execute();
+  db_truncate('mediamosa_statistics_file_upload')->execute();
+  db_truncate('mediamosa_statistics_rest_log')->execute();
+  db_truncate('mediamosa_statistics_search_request')->execute();
+  db_truncate('mediamosa_statistics_stream_request')->execute();
+  db_truncate('mediamosa_statistics_stream_request_collection')->execute();
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_statistics_diskspace_used}
+      (
+        id,
+        app_id,
+        type,
+        keyword,
+        container_type,
+        diskspace,
+        timestamp
+      ) (SELECT
+        id,
+        app_id,
+        type,
+        keyword,
+        container_type,
+        diskspace,
+        timestamp
+        FROM #db_name.{statistics_diskspace_used} ORDER BY id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_statistics_file_upload}
+      (
+        id,
+        app_id,
+        owner_id,
+        group_id,
+        file_size,
+        timestamp
+        ) (SELECT
+        id,
+        app_id,
+        owner_id,
+        group_id,
+        file_size,
+        timestamp
+        FROM #db_name.{statistics_file_upload} ORDER BY id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_statistics_rest_log}
+      (
+        id,
+        request,
+        process_time,
+        query_count
+      ) (SELECT
+        id,
+        request,
+        process_time,
+        query_count
+        FROM #db_name.{statistics_rest_log} ORDER BY id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+    /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_statistics_search_request}
+      (
+        id,
+        keyword,
+        app_id,
+        searched
+      ) (SELECT
+        id,
+        keyword,
+        app_id,
+        searched
+        FROM #db_name.{statistics_search_request} ORDER BY id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_statistics_stream_request}
+      (
+        id,
+        mediafile_id,
+        asset_id,
+        app_id,
+        owner_id,
+        group_id,
+        filesize,
+        container_type,
+        play_type,
+        played
+      ) (SELECT
+        id,
+        mediafile_id,
+        asset_id,
+        app_id,
+        owner_id,
+        group_id,
+        filesize,
+        container_type,
+        play_type,
+        played
+        FROM #db_name.{statistics_stream_request} ORDER BY id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_statistics_stream_request_collection}
+      (
+        id,
+        request_id,
+        coll_id,
+        title,
+        description,
+        app_id,
+        owner_id,
+        group_id
+      ) (SELECT
+        id,
+        request_id,
+        coll_id,
+        title,
+        description,
+        app_id,
+        owner_id,
+        group_id
+        FROM #db_name.{statistics_stream_request_collection} ORDER BY id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+  // Back to old session mode.
+  db_query(strtr("SET SESSION sql_mode = '#old_mode'", array('#old_mode' => $old_mode)));
+}
+
+function _mediamosa_migration_vpx_ftp() {
+
+  // If it doesn't exists, we dont care.
+  if (!_mediamosa_db_table_exists('ftpuser', MIG_VPX_FTP)) {
+    return;
+  }
+
+  // Get the database name.
+  $db_name = _mediamosa_migration_get_vpx_data_db();
+
+  // Get the current mode, which might be empty;
+  $old_mode = db_query('SELECT @@SESSION.sql_mode')->fetchField();
+
+  // Turn off problems with empty dates.
+  db_query("SET SESSION sql_mode = 'ALLOW_INVALID_DATES'");
+
+  // Must be empty.
+  db_truncate(mediamosa_ftp_user_db::TABLE_NAME)->execute();
+
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_ftp_user}
+      (
+        id,
+        app_id,
+        userid,
+        passwd,
+        uid,
+        gid,
+        homedir,
+        shell,
+        active,
+        count,
+        accessed,
+        modified
+      ) (SELECT
+        id,
+        eua_id,
+        userid,
+        passwd,
+        uid,
+        gid,
+        homedir,
+        shell,
+        active,
+        count,
+        accessed,
+        modified
+        FROM #db_name.{ftpuser} ORDER BY id ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
+  // Back to old session mode.
+  db_query(strtr("SET SESSION sql_mode = '#old_mode'", array('#old_mode' => $old_mode)));
 }

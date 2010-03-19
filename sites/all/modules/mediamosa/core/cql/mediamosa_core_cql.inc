@@ -402,9 +402,8 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
    *
    * @param array $keywords
    */
-  private function mediamosa_save_search($keywords) {
-    // @todo:
-    //_vpx_statistics_log_cql_search_query($keywords, $this->m_a_app_ids);
+  private function mediamosa_save_search(array $keywords) {
+    mediamosa_statistics::log_event_search_query($keywords, $this->m_a_app_ids);
   }
 
   /**
@@ -425,13 +424,14 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
     $a_having = $o_part_group->mediamosa_cql_part_parse($this, 'mediamosa_core_cql_hook_cql2sql_having', $a_result_parse);
     $str_sql_having = $this->mediamosa_cql_parseresult_2_sql($a_having);
 
-    // Get the keywords fron CQL and put them in a seperate array
+    // Get the keywords from CQL.
     $_keywords = $this->search_keywords;
     $keywords = array();
     foreach ($_keywords as $key => $value) {
-      $keywords[] = $_keywords[$key]->mediamosa_cql_part_str_get();
+      $keywords[] = trim($_keywords[$key]->mediamosa_cql_part_str_get());
     }
 
+    // Store the keywords for statistics.
     $this->mediamosa_save_search($keywords);
 
     if (drupal_strlen($str_sql_where) > 1) {

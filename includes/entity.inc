@@ -1,5 +1,5 @@
 <?php
-// $Id: entity.inc,v 1.1 2009/08/25 21:53:47 dries Exp $
+// $Id: entity.inc,v 1.6 2010/03/10 14:04:26 dries Exp $
 
 /**
  * Interface for entity controller classes.
@@ -55,7 +55,6 @@ class DrupalDefaultEntityController implements DrupalEntityControllerInterface {
   protected $idKey;
   protected $revisionKey;
   protected $revisionTable;
-  protected $query;
 
   /**
    * Constructor. Set basic variables.
@@ -68,7 +67,7 @@ class DrupalDefaultEntityController implements DrupalEntityControllerInterface {
     $this->idKey = $this->entityInfo['object keys']['id'];
 
     // Check if the entity type supports revisions.
-    if (isset($this->entityInfo['object keys']['revision'])) {
+    if (!empty($this->entityInfo['object keys']['revision'])) {
       $this->revisionKey = $this->entityInfo['object keys']['revision'];
       $this->revisionTable = $this->entityInfo['revision table'];
     }
@@ -85,45 +84,41 @@ class DrupalDefaultEntityController implements DrupalEntityControllerInterface {
   }
 
   public function load($ids = array(), $conditions = array()) {
-    $this->ids = $ids;
-    $this->conditions = $conditions;
-
     $entities = array();
 
     // Revisions are not statically cached, and require a different query to
     // other conditions, so separate the revision id into its own variable.
-    if ($this->revisionKey && isset($this->conditions[$this->revisionKey])) {
-      $this->revisionId = $this->conditions[$this->revisionKey];
-      unset($this->conditions[$this->revisionKey]);
+    if ($this->revisionKey && isset($conditions[$this->revisionKey])) {
+      $revision_id = $conditions[$this->revisionKey];
+      unset($conditions[$this->revisionKey]);
     }
     else {
-      $this->revisionId = FALSE;
+      $revision_id = FALSE;
     }
-
 
     // Create a new variable which is either a prepared version of the $ids
     // array for later comparison with the entity cache, or FALSE if no $ids
     // were passed. The $ids array is reduced as items are loaded from cache,
     // and we need to know if it's empty for this reason to avoid querying the
     // database when all requested entities are loaded from cache.
-    $passed_ids = !empty($this->ids) ? array_flip($this->ids) : FALSE;
+    $passed_ids = !empty($ids) ? array_flip($ids) : FALSE;
     // Try to load entities from the static cache, if the entity type supports
     // static caching.
-    if ($this->cache) {
-      $entities += $this->cacheGet($this->ids, $this->conditions);
+    if ($this->cache && !$revision_id) {
+      $entities += $this->cacheGet($ids, $conditions);
       // If any entities were loaded, remove them from the ids still to load.
       if ($passed_ids) {
-        $this->ids = array_keys(array_diff_key($passed_ids, $entities));
+        $ids = array_keys(array_diff_key($passed_ids, $entities));
       }
     }
 
     // Load any remaining entities from the database. This is the case if $ids
     // is set to FALSE (so we load all entities), if there are any ids left to
     // load, if loading a revision, or if $conditions was passed without $ids.
-    if ($this->ids === FALSE || $this->ids || $this->revisionId || ($this->conditions && !$passed_ids)) {
+    if ($ids === FALSE || $ids || $revision_id || ($conditions && !$passed_ids)) {
       // Build the query.
-      $this->buildQuery();
-      $queried_entities = $this->query
+      $query = $this->buildQuery($ids, $conditions, $revision_id);
+      $queried_entities = $query
         ->execute()
         ->fetchAllAssoc($this->idKey);
     }
@@ -132,25 +127,26 @@ class DrupalDefaultEntityController implements DrupalEntityControllerInterface {
     // which attaches fields (if supported by the entity type) and calls the
     // entity type specific load callback, for example hook_node_load().
     if (!empty($queried_entities)) {
-      $this->attachLoad($queried_entities);
+      $this->attachLoad($queried_entities, $revision_id);
       $entities += $queried_entities;
     }
 
     if ($this->cache) {
       // Add entities to the cache if we are not loading a revision.
-      if (!empty($queried_entities) && !$this->revisionId) {
+      if (!empty($queried_entities) && !$revision_id) {
         $this->cacheSet($queried_entities);
       }
-      // Ensure that the returned array is ordered the same as the original
-      // $ids array if this was passed in and remove any invalid ids.
-      if ($passed_ids) {
-        // Remove any invalid ids from the array.
-        $passed_ids = array_intersect_key($passed_ids, $entities);
-        foreach ($entities as $entity) {
-          $passed_ids[$entity->{$this->idKey}] = $entity;
-        }
-        $entities = $passed_ids;
+    }
+
+    // Ensure that the returned array is ordered the same as the original
+    // $ids array if this was passed in and remove any invalid ids.
+    if ($passed_ids) {
+      // Remove any invalid ids from the array.
+      $passed_ids = array_intersect_key($passed_ids, $entities);
+      foreach ($entities as $entity) {
+        $passed_ids[$entity->{$this->idKey}] = $entity;
       }
+      $entities = $passed_ids;
     }
 
     return $entities;
@@ -165,19 +161,22 @@ class DrupalDefaultEntityController implements DrupalEntityControllerInterface {
    * being loaded needs to be augmented with additional data from another
    * table, such as loading node type into comments or vocabulary machine name
    * into terms, however it can also support $conditions on different tables.
-   * See NodeController::buildQuery() or TaxonomyTermController::buildQuery()
+   * See CommentController::buildQuery() or TaxonomyTermController::buildQuery()
    * for examples.
+   *
+   * @return SelectQuery
+   *   A SelectQuery object for loading the entity.
    */
-  protected function buildQuery() {
-    $this->query = db_select($this->entityInfo['base table'], 'base');
+  protected function buildQuery($ids, $conditions = array(), $revision_id = FALSE) {
+    $query = db_select($this->entityInfo['base table'], 'base');
 
-    $this->query->addTag($this->entityType . '_load_multiple');
+    $query->addTag($this->entityType . '_load_multiple');
 
-    if ($this->revisionId) {
-      $this->query->join($this->revisionTable, 'revision', "revision.{$this->idKey} = base.{$this->idKey} AND revision.{$this->revisionKey} = :revisionId", array(':revisionId' => $this->revisionId));
+    if ($revision_id) {
+      $query->join($this->revisionTable, 'revision', "revision.{$this->idKey} = base.{$this->idKey} AND revision.{$this->revisionKey} = :revisionId", array(':revisionId' => $revision_id));
     }
     elseif ($this->revisionKey) {
-      $this->query->join($this->revisionTable, 'revision', "revision.{$this->revisionKey} = base.{$this->revisionKey}");
+      $query->join($this->revisionTable, 'revision', "revision.{$this->revisionKey} = base.{$this->revisionKey}");
     }
 
     // Add fields from the {entity} table.
@@ -193,9 +192,9 @@ class DrupalDefaultEntityController implements DrupalEntityControllerInterface {
       // revision_uid before adding them to the query.
       // TODO: This is node specific and has to be moved into NodeController.
       unset($entity_revision_fields['timestamp']);
-      $this->query->addField('revision', 'timestamp', 'revision_timestamp');
+      $query->addField('revision', 'timestamp', 'revision_timestamp');
       unset($entity_revision_fields['uid']);
-      $this->query->addField('revision', 'uid', 'revision_uid');
+      $query->addField('revision', 'uid', 'revision_uid');
 
       // Remove all fields from the base table that are also fields by the same
       // name in the revision table.
@@ -205,35 +204,37 @@ class DrupalDefaultEntityController implements DrupalEntityControllerInterface {
           unset($entity_fields[$entity_field_keys[$name]]);
         }
       }
-      $this->query->fields('revision', $entity_revision_fields);
+      $query->fields('revision', $entity_revision_fields);
     }
 
-    $this->query->fields('base', $entity_fields);
+    $query->fields('base', $entity_fields);
 
-    if ($this->ids) {
-      $this->query->condition("base.{$this->idKey}", $this->ids, 'IN');
+    if ($ids) {
+      $query->condition("base.{$this->idKey}", $ids, 'IN');
     }
-    if ($this->conditions) {
-      foreach ($this->conditions as $field => $value) {
-        $this->query->condition('base.' . $field, $value);
+    if ($conditions) {
+      foreach ($conditions as $field => $value) {
+        $query->condition('base.' . $field, $value);
       }
     }
+    return $query;
   }
 
   /**
    * Attach data to entities upon loading.
    *
-   * This will attach fields, if the entity is fieldable. It also calls
-   * hook_TYPE_load() on the loaded entities. For example
+   * This will attach fields, if the entity is fieldable. It calls
+   * hook_entity_load() for modules which need to add data to all entities.
+   * It also calls hook_TYPE_load() on the loaded entities. For example
    * hook_node_load() or hook_user_load(). If your hook_TYPE_load()
    * expects special parameters apart from the queried entities, you can set
    * $this->hookLoadArguments prior to calling the method.
    * See NodeController::attachLoad() for an example.
    */
-  protected function attachLoad(&$queried_entities) {
+  protected function attachLoad(&$queried_entities, $revision_id = FALSE) {
     // Attach fields.
     if ($this->entityInfo['fieldable']) {
-      if ($this->revisionId) {
+      if ($revision_id) {
         field_attach_load_revision($this->entityType, $queried_entities);
       }
       else {
@@ -241,6 +242,11 @@ class DrupalDefaultEntityController implements DrupalEntityControllerInterface {
       }
     }
 
+    // Call hook_entity_load().
+    foreach (module_implements('entity_load') as $module) {
+      $function = $module . '_entity_load';
+      $function($queried_entities, $this->entityType);
+    }
     // Call hook_TYPE_load(). The first argument for hook_TYPE_load() are
     // always the queried entities, followed by additional arguments set in
     // $this->hookLoadArguments.
@@ -261,7 +267,7 @@ class DrupalDefaultEntityController implements DrupalEntityControllerInterface {
   protected function cacheGet($ids, $conditions = array()) {
     $entities = array();
     // Load any available entities from the internal cache.
-    if (!empty($this->entityCache) && !$this->revisionId) {
+    if (!empty($this->entityCache)) {
       if ($ids) {
         $entities += array_intersect_key($this->entityCache, array_flip($ids));
       }

@@ -659,6 +659,15 @@ class mediamosa_db {
   }
 
   /**
+   * Returns the number of tables in the current database.
+   */
+  static public function db_count_tables() {
+    $a_tables = db_find_tables('%');
+    return count($a_tables);
+  }
+
+
+  /**
    * Return the column names from an table.
    * NOTE: might not work on all databases, mysql only for now.
    *

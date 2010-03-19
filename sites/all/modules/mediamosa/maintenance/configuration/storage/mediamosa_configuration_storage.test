@@ -58,7 +58,6 @@ class MediaMosaConfigurationStorageTestCase extends MediaMosaTestCase {
     $this->drupalLogin($rest_user);
   }
 
-
   function testTicket615() {
     $uuid = mediamosa_db::uuid(1);
 

@@ -1,4 +1,4 @@
-; $Id: system.info,v 1.16 2009/08/31 18:30:27 webchick Exp $
+; $Id: system.info,v 1.20 2009/12/15 08:37:18 dries Exp $
 name = System
 description = Handles general site configuration for administrators.
 package = Core
@@ -6,18 +6,21 @@ version = VERSION
 core = 7.x
 files[] = system.module
 files[] = system.admin.inc
+files[] = system.archiver.inc
 files[] = system.queue.inc
 files[] = image.gd.inc
 files[] = system.install
 files[] = system.test
 files[] = system.tar.inc
 files[] = system.tokens.inc
-files[] = mail.sending.inc
+files[] = system.updater.inc
+files[] = system.mail.inc
 required = TRUE
+configure = admin/config/system
 
-; Information added by drupal.org packaging script on 2009-09-21
+; Information added by drupal.org packaging script on 2010-03-14
 version = "7.x-dev"
 core = "7.x"
 project = "drupal"
-datestamp = "1253535013"
+datestamp = "1268525085"
 

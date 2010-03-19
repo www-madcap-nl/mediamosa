@@ -1,5 +1,5 @@
 <?php
-// $Id: user.tokens.inc,v 1.1 2009/08/19 20:19:37 dries Exp $
+// $Id: user.tokens.inc,v 1.5 2010/03/07 23:18:06 webchick Exp $
 
 /**
  * @file
@@ -7,7 +7,7 @@
  */
 
 /**
- * Implement hook_token_info().
+ * Implements hook_token_info().
  */
 function user_token_info() {
   $types['user'] = array(
@@ -41,6 +41,7 @@ function user_token_info() {
     'name' => t("Edit URL"),
     'description' => t("The url of the account edit page."),
   );
+
   $user['last-login'] = array(
     'name' => t("Last login"),
     'description' => t("The date the user last logged in to the site."),
@@ -53,20 +54,20 @@ function user_token_info() {
   );
 
   return array(
-    'types' => array('user' => $types),
+    'types' => $types,
     'tokens' => array('user' => $user),
   );
 }
 
 /**
- * Implement hook_tokens().
+ * Implements hook_tokens().
  */
 function user_tokens($type, $tokens, array $data = array(), array $options = array()) {
   global $user;
   $url_options = array('absolute' => TRUE);
   if (isset($options['language'])) {
-    $url_options['language'] = $language;
-    $language_code = $language->language;
+    $url_options['language'] = $options['language'];
+    $language_code = $options['language']->language;
   }
   else {
     $language_code = NULL;
@@ -85,7 +86,7 @@ function user_tokens($type, $tokens, array $data = array(), array $options = arr
           break;
 
         case 'name':
-          $name = ($account->uid == 0) ? variable_get('anonymous', t('Anonymous')) : $account->name;
+          $name = format_username($account);
           $replacements[$original] = $sanitize ? filter_xss($name) : $name;
           break;
 

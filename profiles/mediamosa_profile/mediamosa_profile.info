@@ -12,5 +12,6 @@ dependencies[] = dblog
 dependencies[] = toolbar
 dependencies[] = simpletest
 
+
 ; Using _profile extension to prevent name collisions with core module.
 files[] = mediamosa_profile.profile
