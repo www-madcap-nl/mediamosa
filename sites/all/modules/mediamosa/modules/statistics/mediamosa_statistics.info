@@ -11,3 +11,5 @@ dependencies[] = mediamosa
 
 ; Used files.
 files[] = mediamosa_statistics.module
+files[] = mediamosa_statistics.rest.inc
+files[] = mediamosa_statistics.test

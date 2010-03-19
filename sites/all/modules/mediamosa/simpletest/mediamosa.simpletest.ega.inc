@@ -69,7 +69,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $args = func_get_args();
 
     // Create and setup the CORE module.
-    $args = array_unique(array_merge(array('mediamosa_app_authentication', 'mediamosa_asset', 'mediamosa_aut', 'mediamosa_collection', 'mediamosa_server'), $args));
+    $args = array_unique(array_merge(array('mediamosa_app_authentication', 'mediamosa_asset', 'mediamosa_aut', 'mediamosa_collection', 'mediamosa_server', 'mediamosa_statistics'), $args));
     call_user_func_array(array($this, 'parent::setUp'), $args);
 
     // Now we are in sandbox, create default APP, our default EGA.
@@ -1036,6 +1036,42 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
         array(
           '@description' => $description,
           '@mediafile_id' => $mediafile_id,
+          '@result' => (string)$response['xml']->header->request_result_id,
+          '@result_description' => (string)$response['xml']->header->request_result_description
+        )
+      )
+    );
+
+    // Convert to nice array.
+    return mediamosa_lib::responsexml2array($response['xml']);
+  }
+
+  /**
+   * Get statistics data upload.
+   * Based on the rest call /statistics/dataupload (GET)
+   */
+  protected function getStatisticsDataupload($year, $month, $limit, array $a_parameters = array(), $description = 'Get statistics data upload', array $a_expected_results = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    // Parameters asset.
+    $a_parameters += array(
+      mediamosa_rest_call_statistics_get_historical_uploaded_mediafiles::USER_ID => self::SIMPLETEST_USER_ID,
+      mediamosa_rest_call_statistics_get_historical_uploaded_mediafiles::YEAR  => $year,
+      mediamosa_rest_call_statistics_get_historical_uploaded_mediafiles::MONTH => $month,
+      'limit' => $limit,
+    );
+
+    // The uri.
+    $uri = 'statistics/dataupload';
+
+    // Do Post call.
+    $response = $this->restCallGet($uri, $a_parameters, array(), $a_expected_result_ids, $do_internal);
+
+    // Test return status.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr(
+        "@description: got result @result (@result_description)",
+        array(
+          '@description' => $description,
           '@result' => (string)$response['xml']->header->request_result_id,
           '@result_description' => (string)$response['xml']->header->request_result_description
         )
