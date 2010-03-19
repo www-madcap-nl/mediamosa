@@ -69,7 +69,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $args = func_get_args();
 
     // Create and setup the CORE module.
-    $args = array_unique(array_merge(array('mediamosa_app_authentication', 'mediamosa_asset', 'mediamosa_aut', 'mediamosa_collection', 'mediamosa_server', 'mediamosa_statistics'), $args));
+    $args = array_unique(array_merge(array('mediamosa_app_authentication', 'mediamosa_asset', 'mediamosa_aut', 'mediamosa_collection', 'mediamosa_server', 'mediamosa_statistics', 'mediamosa_ftp_user'), $args));
     call_user_func_array(array($this, 'parent::setUp'), $args);
 
     // Now we are in sandbox, create default APP, our default EGA.
@@ -1082,6 +1082,39 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     return mediamosa_lib::responsexml2array($response['xml']);
   }
 
+  /**
+   * Get statistics data upload.
+   * Based on the rest call /statistics/dataupload (GET)
+   */
+  protected function getFtpUser($user, array $a_parameters = array(), $description = 'Get FTP User', array $a_expected_results = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    // Parameters asset.
+    $a_parameters += array(
+    );
+
+    // The uri.
+    $uri = strtr('ftp/@user', array('@user' => $user));
+
+    // Do Post call.
+    $response = $this->restCallGet($uri, $a_parameters, array(), $a_expected_result_ids, $do_internal);
+
+    // Test return status.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr(
+        "@description: user = @user, got result @result (@result_description)",
+        array(
+          '@description' => $description,
+          '@user' => $user,
+          '@result' => (string)$response['xml']->header->request_result_id,
+          '@result_description' => (string)$response['xml']->header->request_result_description
+        )
+      )
+    );
+
+    // Convert to nice array.
+    return mediamosa_lib::responsexml2array($response['xml']);
+  }
+
   // ------------------------------------------------------------------ Create items functions.
   /**
    * Create an asset.
@@ -1494,6 +1527,37 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   }
 
   /**
+   * Create an ftp user.
+   * Based on REST call ftp/create (POST)
+   */
+  protected function createFtpUser($user, $password, array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    // Parameters asset.
+    $a_parameters += array(
+      mediamosa_rest_call_ftp_user_create::USER => $user,
+      mediamosa_rest_call_ftp_user_create::PASSWORD => $password,
+    );
+
+    // Set the URI.
+    $uri = 'ftp/create';
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $a_parameters, array(), $a_expected_result_ids, $do_internal);
+
+    // Check response.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr(
+        "Created ftp user: user = @user, got result @result (@result_description)",
+        array(
+          '@user' => $user,
+          '@result' => (string)$response['xml']->header->request_result_id,
+          '@result_description' => (string)$response['xml']->header->request_result_description
+        )
+      )
+    );
+  }
+
+  /**
    * Delete an aut group.
    * Based on REST call autorisation_group/$groupname/delete (POST)
    */
@@ -1542,6 +1606,36 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
         array(
           '@groupname' => $groupname,
           '@hostname' => implode(', ', $a_hostnames),
+          '@result' => (string)$response['xml']->header->request_result_id,
+          '@result_description' => (string)$response['xml']->header->request_result_description
+        )
+      )
+    );
+  }
+
+  /**
+   * Delete an FTP User.
+   * Based on REST call ftp/$user/delete (POST)
+   */
+  protected function deleteFtpUser($user, array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    // Parameters asset.
+    $a_parameters += array(
+      mediamosa_rest_call_ftp_user_delete::USER => $user,
+    );
+
+    // Set the URI.
+    $uri = strtr('ftp/@user/delete', array('@user' => $user));
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $a_parameters, array(), $a_expected_result_ids, $do_internal);
+
+    // Check response.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr(
+        "Deleted FTP User @user, got result @result (@result_description)",
+        array(
+          '@user' => $user,
           '@result' => (string)$response['xml']->header->request_result_id,
           '@result_description' => (string)$response['xml']->header->request_result_description
         )
@@ -1797,6 +1891,38 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
         array(
           '@description' => $description,
           '@groupname' => $groupname,
+          '@result' => (string)$response['xml']->header->request_result_id,
+          '@result_description' => (string)$response['xml']->header->request_result_description
+        )
+      )
+    );
+
+    return $response;
+  }
+
+  /**
+   * Updates an FTP user.
+   * Based on the REST call /ftp/$user/update (POST)
+   */
+  protected function updateFtpUser($user, array $a_parameters = array(), $description = 'Update FTP User', array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+
+    // More than one, we need to do something.
+    $this->assertTrue(count($a_parameters), 'Any update parameters set');
+
+    // The uri.
+    $uri = strtr('ftp/@user/update', array('@user' => $user));
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $a_parameters, array(), $a_expected_result_ids, $do_internal);
+
+    // Test return status.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr(
+        "@description: @user, got result @result (@result_description)",
+        array(
+          '@description' => $description,
+          '@user' => $user,
           '@result' => (string)$response['xml']->header->request_result_id,
           '@result_description' => (string)$response['xml']->header->request_result_description
         )

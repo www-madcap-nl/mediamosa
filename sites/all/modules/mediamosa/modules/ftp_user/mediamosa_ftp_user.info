@@ -12,3 +12,4 @@ dependencies[] = mediamosa
 ; Used files.
 files[] = mediamosa_ftp_user.module
 files[] = mediamosa_ftp_user.rest.inc
+files[] = mediamosa_ftp_user.test

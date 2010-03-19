@@ -70,7 +70,7 @@ class mediamosa_rest_call_ftp_user_list extends mediamosa_rest_call {
     // Test webservice.
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_BATCH_UPLOAD, $a_app_ids);
 
-    $result = mediamosa_db::db_query('SELECT * FROM {mediamosa_ftp_user} WHERE eua_id = :eua_id', array(':eua_id' => $app_id));
+    $result = mediamosa_db::db_query('SELECT * FROM {mediamosa_ftp_user} WHERE app_id = :app_id', array(':app_id' => $app_id));
 
     foreach ($result as $a_user) {
       $result->add_item(
@@ -136,9 +136,8 @@ class mediamosa_rest_call_ftp_user_create extends mediamosa_rest_call {
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_BATCH_UPLOAD, $a_app_ids);
 
     $password = "{md5}". base64_encode(md5($password, TRUE));
-    $eua_name = sprintf("%03d", $app_id);
 
-    $data_oke = TRUE;
+    $eua_name = sprintf("%03d", $app_id);
     if (mediamosa_unicode::substr($username, -3) != $eua_name) {
       $username .= $eua_name;
     }
@@ -148,7 +147,7 @@ class mediamosa_rest_call_ftp_user_create extends mediamosa_rest_call {
     }
 
     mediamosa_db::db_query(
-      'INSERT INTO {mediamosa_ftp_user} eua_id = :app_id, userid = :username, passwd = :password, homedir = :homedir, active = 1, count = 0',
+      'INSERT INTO {mediamosa_ftp_user} SET app_id = :app_id, userid = :username, passwd = :password, homedir = :homedir, active = 1, count = 0, accessed = NOW(), modified = NOW()',
       array(
         ':app_id' => $app_id,
         ':username' => $username,
@@ -202,11 +201,16 @@ class mediamosa_rest_call_ftp_user_delete extends mediamosa_rest_call {
 
     $user = $this->get_param_value(self::USER);
 
+    $eua_name = sprintf("%03d", $app_id);
+    if (mediamosa_unicode::substr($user, -3) != $eua_name) {
+      $user .= $eua_name;
+    }
+
     // Test webservice.
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_BATCH_UPLOAD, $a_app_ids);
 
     mediamosa_db::db_query(
-      'DELETE FROM {mediamosa_ftp_user} WHERE userid = :userid && eua_id = :app_id',
+      'DELETE FROM {mediamosa_ftp_user} WHERE userid = :userid && app_id = :app_id',
       array(
         ':userid' => $user,
         ':app_id' => $app_id
@@ -268,6 +272,11 @@ class mediamosa_rest_call_ftp_user_update extends mediamosa_rest_call {
     $app_id = reset($a_app_ids);
 
     $user = $this->get_param_value(self::USER);
+    $eua_name = sprintf("%03d", $app_id);
+    if (mediamosa_unicode::substr($user, -3) != $eua_name) {
+      $user .= $eua_name;
+    }
+
     $password = $this->get_param_value(self::PASSWORD);
     $active = $this->get_param_value(self::ACTIVE);
 
@@ -283,13 +292,13 @@ class mediamosa_rest_call_ftp_user_update extends mediamosa_rest_call {
 
     $query = mediamosa_db::db_update(mediamosa_ftp_user_db::TABLE_NAME);
     $query->condition('userid', $user);
-    $query->condition('eua_id', $app_id);
+    $query->condition('app_id', $app_id);
 
     $a_fields = array(
       'modified' => mediamosa::db_current_timestamp_now()
     );
 
-    if ($active) {
+    if (is_bool($active)) {
       $a_fields['active'] = $active ? 1 : 0;
     }
 
@@ -298,7 +307,7 @@ class mediamosa_rest_call_ftp_user_update extends mediamosa_rest_call {
     }
 
     // Add changed field.
-    $a_fields = mediamosa_db::db_update_enrich($a_fields);
+    $a_fields['modified'] = mediamosa::db_current_timestamp_now();
 
     $query->fields($a_fields);
     $query->execute();
@@ -349,12 +358,18 @@ class mediamosa_rest_call_ftp_user_get extends mediamosa_rest_call {
 
     $user = $this->get_param_value(self::USER);
 
+    $eua_name = sprintf("%03d", $app_id);
+    if (mediamosa_unicode::substr($user, -3) != $eua_name) {
+      $user .= $eua_name;
+    }
+
     // Test webservice.
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_BATCH_UPLOAD, $a_app_ids);
 
-    $query = mediamosa_db::db_select(mediamosa_ftp_user_db::TABLE_NAME);
-    $query->condition('userid', $user);
-    $query->condition('eua_id', $app_id);
+    $query = mediamosa_db::db_select(mediamosa_ftp_user_db::TABLE_NAME, 'fu');
+    $query->fields('fu', array('userid', 'active', 'modified'));
+    $query->condition('fu.userid', $user);
+    $query->condition('fu.app_id', $app_id);
     $a_user = $query->execute()->fetchAssoc();
 
     if (!$a_user) {
@@ -415,6 +430,11 @@ class mediamosa_rest_call_ftp_user_update_password extends mediamosa_rest_call {
     $app_id = reset($a_app_ids);
 
     $user = $this->get_param_value(self::USER);
+    $eua_name = sprintf("%03d", $app_id);
+    if (mediamosa_unicode::substr($user, -3) != $eua_name) {
+      $user .= $eua_name;
+    }
+
     $password = $this->get_param_value(self::PASSWORD);
 
     // Test webservice.
@@ -425,7 +445,7 @@ class mediamosa_rest_call_ftp_user_update_password extends mediamosa_rest_call {
 
     $query = mediamosa_db::db_update(mediamosa_ftp_user_db::TABLE_NAME);
     $query->condition('userid', $user);
-    $query->condition('eua_id', $app_id);
+    $query->condition('app_id', $app_id);
 
     $a_fields = array(
       'modified' => mediamosa::db_current_timestamp_now(),
@@ -485,6 +505,11 @@ class mediamosa_rest_call_ftp_user_update_status extends mediamosa_rest_call {
     $app_id = reset($a_app_ids);
 
     $user = $this->get_param_value(self::USER);
+    $eua_name = sprintf("%03d", $app_id);
+    if (mediamosa_unicode::substr($user, -3) != $eua_name) {
+      $user .= $eua_name;
+    }
+
     $active = $this->get_param_value(self::ACTIVE);
 
     // Test webservice.
@@ -495,13 +520,13 @@ class mediamosa_rest_call_ftp_user_update_status extends mediamosa_rest_call {
 
     $query = mediamosa_db::db_update(mediamosa_ftp_user_db::TABLE_NAME);
     $query->condition('userid', $user);
-    $query->condition('eua_id', $app_id);
+    $query->condition('app_id', $app_id);
 
     $a_fields = array(
       'modified' => mediamosa::db_current_timestamp_now()
     );
 
-    if ($active) {
+    if (is_bool($active)) {
       $a_fields['active'] = $active ? 1 : 0;
     }
 
