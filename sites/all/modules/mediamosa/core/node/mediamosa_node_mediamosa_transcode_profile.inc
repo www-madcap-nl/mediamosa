@@ -36,6 +36,12 @@
  */
 function mediamosa_transcode_profile_load(&$nodes) {
   $nodes = mediamosa_node_revision::load($nodes);
+
+  foreach ($nodes as $key => $node) {
+    $nodes[$key]->commands = mediamosa_lib::create_named_array($node->{mediamosa_transcode_profile_db::COMMAND});
+  }
+
+
   /*
   // Gather all vids.
   $vids = array();
@@ -272,7 +278,7 @@ function mediamosa_transcode_profile_form($node, $form_state) {
   );
 
   if (isset($node->nid)) {
-    $a_tools = mediamosa_transcode_profile::get_by_tool(NULL, $node->tool)->fetchAll();
+    $tools = mediamosa_transcode_profile::get_by_tool(NULL, $node->tool)->fetchAll();
 
     $form['tool_options'] = array(
       '#type' => 'fieldset',
@@ -281,40 +287,62 @@ function mediamosa_transcode_profile_form($node, $form_state) {
       '#collapsible' => TRUE,
     );
 
+    // Skip these, not changable or internal.
+    $tools_to_skip = array(
+      'internal_previous_job',
+      'internal_file_extension',
+      'startposition',
+      'duration',
+    );
+
     // Show all parameters for profile.
-    foreach ($a_tools as $key => $a_tool) {
-      $a_tool[mediamosa_transcode_mapping_db::ALLOWED_VALUE] = trim($a_tool[mediamosa_transcode_mapping_db::ALLOWED_VALUE]) == '' ? array() : explode(';', $a_tool[mediamosa_transcode_mapping_db::ALLOWED_VALUE]);
+    foreach ($tools as $key => $tool) {
+
+      // get the name of the parameter.
+      $name = $tool[mediamosa_transcode_mapping_db::NICE_PARAMETER];
+
+      if (in_array($name, $tools_to_skip)) {
+        continue;
+      }
+
+      // Convert the allowed value to array.
+      $tool[mediamosa_transcode_mapping_db::ALLOWED_VALUE] = trim($tool[mediamosa_transcode_mapping_db::ALLOWED_VALUE]) == '' ? array() : explode(';', $tool[mediamosa_transcode_mapping_db::ALLOWED_VALUE]);
 
       // Tool required?
-      $is_required = $a_tool[mediamosa_transcode_mapping_db::REQUIRED] == mediamosa_transcode_mapping_db::REQUIRED_TRUE;
-      $weight = $is_required ? -10 : -15;
+      $is_required = $tool[mediamosa_transcode_mapping_db::REQUIRED] == mediamosa_transcode_mapping_db::REQUIRED_TRUE;
 
-      if (empty($a_tool[mediamosa_transcode_mapping_db::ALLOWED_VALUE])) {
-        $form['tool_options'][$a_tool[mediamosa_transcode_mapping_db::NICE_PARAMETER]] = array(
+      // Put required higher.
+      $weight = $is_required ? 0 : 15;
+
+      // Get the value.
+      $value = isset($node->commands{$name}) ? $node->commands{$name} : $tool[mediamosa_transcode_mapping_db::DEFAULT_VALUE];
+
+      if (empty($tool[mediamosa_transcode_mapping_db::ALLOWED_VALUE])) {
+        $form['tool_options'][$tool[mediamosa_transcode_mapping_db::NICE_PARAMETER]] = array(
           '#description' => t(''),
           '#type' => 'textfield',
-          '#title' => t($a_tool[mediamosa_transcode_mapping_db::NICE_PARAMETER]),
+          '#title' => t($tool[mediamosa_transcode_mapping_db::NICE_PARAMETER]),
           '#required' => $is_required,
-          '#default_value' => isset($node->{$a_tool[mediamosa_transcode_mapping_db::NICE_PARAMETER]}) ? $node->{$a_tool[mediamosa_transcode_mapping_db::NICE_PARAMETER]} : '',
+          '#default_value' => $value,
           '#size' => 25,
-          '#description' => t('The allowed value is between @min_value and @max_value.', array('@min_value' => $a_tool[mediamosa_transcode_mapping_db::MIN_VALUE], '@max_value' => $a_tool[mediamosa_transcode_mapping_db::MAX_VALUE])),
+          '#description' => t('The allowed value is between @min_value and @max_value.', array('@min_value' => $tool[mediamosa_transcode_mapping_db::MIN_VALUE], '@max_value' => $tool[mediamosa_transcode_mapping_db::MAX_VALUE])),
           '#weight' => $weight
         );
       }
       else {// Select box.
         $a_select_box = array();
-        foreach ($a_tool[mediamosa_transcode_mapping_db::ALLOWED_VALUE] as $allowed_value) {
+        foreach ($tool[mediamosa_transcode_mapping_db::ALLOWED_VALUE] as $allowed_value) {
           $a_select_box[$allowed_value] = $allowed_value;
         }
 
-        $form['tool_options'][$a_tool[mediamosa_transcode_mapping_db::NICE_PARAMETER]] = array(
+        $form['tool_options'][$tool[mediamosa_transcode_mapping_db::NICE_PARAMETER]] = array(
           '#description' => t(''),
           '#type' => 'select',
-          '#title' => t($a_tool[mediamosa_transcode_mapping_db::NICE_PARAMETER]),
+          '#title' => t($tool[mediamosa_transcode_mapping_db::NICE_PARAMETER]),
           '#required' => $is_required,
-          '#default_value' => isset($node->{$a_tool[mediamosa_transcode_mapping_db::NICE_PARAMETER]}) ? $node->{$a_tool[mediamosa_transcode_mapping_db::NICE_PARAMETER]} : '',
+          '#default_value' => $value,
           '#options' => $a_select_box,
-          '#weight' => $weight['general']
+          '#weight' => $weight
         );
       }
     }
