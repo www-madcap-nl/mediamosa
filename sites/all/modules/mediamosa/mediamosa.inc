@@ -501,6 +501,11 @@ class mediamosa {
   static public function drupal_install_schema($module) {
     $ret = drupal_install_schema($module);
 
+    // Mark it installed, so its not install again.
+    $versions = drupal_get_schema_versions($module);
+    $version = $versions ? max($versions) : SCHEMA_INSTALLED;
+    drupal_set_installed_schema_version($module, $version);
+
     // Drupal 7 does not create foreign keys yet, so we will.
     mediamosa_db::db_install_schema_foreign_keys($module);
 
