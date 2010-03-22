@@ -53,27 +53,51 @@ class mediamosa_node_revision {
    */
   static public function load(&$nodes) {
     // Gather all vids.
-    $vids = array();
+    $nid = $vids = array();
     foreach ($nodes as $node) {
       $vids[] = $node->vid;
+      $nids[] = $node->nid;
     }
 
-    // Gather all additional node properties.
-    $result = mediamosa_db::db_query(
+    // Gather all required vids.
+    $result_vids = mediamosa_db::db_query(
       'SELECT * FROM {#table_name} WHERE #vid IN (:vids)',
       array(
         '#table_name' => mediamosa_node_revision_db::TABLE_NAME,
         '#vid' => mediamosa_node_revision_db::VID,
         ':vids' => $vids,
       )
-    );
+    )->fetchAllAssoc(mediamosa_node_revision_db::VID);
 
-    foreach ($result as $revision) {
-      $revision_data = !empty($revision[mediamosa_node_revision_db::REVISION_DATA]) ? unserialize($revision[mediamosa_node_revision_db::REVISION_DATA]) : array();
+    // Gether latest if we miss a revision (f.e. not saved).
+    $result_latest = mediamosa_db::db_query(
+      'SELECT * FROM {#table_name} WHERE #nid IN (:nids) GROUP BY #nid ORDER BY #nid ASC, #vid DESC',
+      array(
+        '#table_name' => mediamosa_node_revision_db::TABLE_NAME,
+        '#nid' => mediamosa_node_revision_db::NID,
+        ':nids' => $nids,
+        '#vid' => mediamosa_node_revision_db::VID,
+      )
+    )->fetchAllAssoc(mediamosa_node_revision_db::NID);
+
+    foreach ($nodes as $nid => $node) {
+
+      $revision_data = array();
+      if (isset($result_vids[$node->vid])) {
+        $revision_data = !empty($result_vids[$node->vid]->{mediamosa_node_revision_db::REVISION_DATA}) ? unserialize($result_vids[$node->vid]->{mediamosa_node_revision_db::REVISION_DATA}) : array();
+      }
+
+      // Found it?
+      if (empty($revision_data)) {
+        // If we didn't find the revision, we'll take the latest version instead.
+        $revision_data = !empty($result_latest[$node->nid]->{mediamosa_node_revision_db::REVISION_DATA}) ? unserialize($result_latest[$node->nid]->{mediamosa_node_revision_db::REVISION_DATA}) : array();
+      }
+
       unset($revision_data['created']);
       unset($revision_data['changed']);
+
       foreach ($revision_data as $key => $value) {
-        $nodes[$revision['nid']]->$key = $value;
+        $nodes[$node->nid]->$key = $value;
       }
     }
 

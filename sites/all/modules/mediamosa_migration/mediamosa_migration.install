@@ -1955,7 +1955,7 @@ function _mediamosa_migration_transcode() {
   );
 
   foreach ($result as $row) {
-    $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE, $row[mediamosa_transcode_profile_db::TOOL]);
+    $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE, $row[mediamosa_transcode_profile_db::PROFILE]);
 
     $node->{mediamosa_transcode_profile_db::ID} = $row[mediamosa_transcode_profile_db::ID];
     $node->{mediamosa_transcode_profile_db::APP_ID} = $row[mediamosa_transcode_profile_db::APP_ID];
@@ -2350,11 +2350,16 @@ function _mediamosa_migration_statistics() {
 
 function _mediamosa_migration_vpx_ftp() {
 
-  // If it doesn't exists, we dont care.
-  if (!_mediamosa_db_table_exists('ftpuser', MIG_VPX_FTP)) {
-    return;
+  try {
+    // If it doesn't exists, we dont care.
+    if (!_mediamosa_db_table_exists('ftpuser', MIG_VPX_FTP)) {
+      return;
+    }
   }
-
+  catch (PDOException $e) {
+    assert($e);
+    return; // Ignore.
+  }
   // Get the database name.
   $db_name = _mediamosa_migration_get_vpx_data_db();
 

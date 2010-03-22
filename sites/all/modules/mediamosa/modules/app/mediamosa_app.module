@@ -51,7 +51,6 @@ function mediamosa_app_mediamosa_register_rest_call() {
  * Implement hook_help().
  */
 function mediamosa_app_help($path, $arg) {
-  global $base_url;
 
   switch ($path) {
     case 'admin/mediamosa/config/app':

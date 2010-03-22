@@ -141,8 +141,6 @@ class mediamosa_transcode_profile {
     return $query->execute();
   }
 
-
-
   /**
    * Will test if transcode profile exits, will throw when fail.
    *

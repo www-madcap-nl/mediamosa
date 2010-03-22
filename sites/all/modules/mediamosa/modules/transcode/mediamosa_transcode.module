@@ -32,7 +32,18 @@
 require_once('profile/mediamosa_transcode_profile.inc');
 
 /**
- * Implements hook_mediamosa_register_rest_call().
+ * Implement hook_help().
+ */
+function mediamosa_transcode_help($path, $arg) {
+
+  switch ($path) {
+    case 'admin/mediamosa/config/transcode_profile':
+      return '<p>' . t('Transcoding profiles are used by the transcoding software of MediaMosa. When a user transcodes a mediafile, the given profile parameters are used to convert the file. These profiles are available to all applications, and only 1 of them is the default.') . '</p>';
+  }
+}
+
+/**
+ * Implement hook_mediamosa_register_rest_call().
  */
 function mediamosa_transcode_mediamosa_register_rest_call() {
   $a_rest_calls = array();
