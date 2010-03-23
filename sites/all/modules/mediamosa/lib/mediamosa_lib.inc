@@ -79,7 +79,7 @@ class mediamosa_lib {
    * @param $name_value_seperator
    *  Name value sperator.
    */
-  static public function create_named_array($string, $pair_seperator, $name_value_seperator) {
+  static public function create_named_array($string, $pair_seperator = ';', $name_value_seperator = ':') {
     $a_result = array();
 
     if (!mediamosa_unicode::strlen($string)) {

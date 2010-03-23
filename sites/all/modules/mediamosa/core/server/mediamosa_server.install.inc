@@ -46,7 +46,7 @@ function _mediamosa_server_install() {
   _mediamosa_server_streaming_install();
   _mediamosa_server_tool_install();
 
-  $a_default_servers = array(
+  $default_servers = array(
     array(1,0,'ON',"streaming","http://localhost/ticket/{TICKET}",
       "asf",
       "{IF_EXTERNAL}
@@ -133,33 +133,19 @@ s1.write('mediaspace');
   $server_node_type = node_type_set_defaults($server_node_type);
   node_type_save($server_node_type);
 
-  foreach ($a_default_servers as $a_default_server) {
-    $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_SERVER, $a_default_server[7]);
+  foreach ($default_servers as $default_server) {
+    $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_SERVER, $default_server[7]);
 
-    $node->{mediamosa_server_db::VERSION} = $a_default_server[1];
-    $node->{mediamosa_server_db::SERVER_STATUS} = $a_default_server[2];
-    $node->{mediamosa_server_db::SERVER_TYPE} = $a_default_server[3];
-    $node->{mediamosa_server_db::URI} = $a_default_server[4];
-    $node->{mediamosa_server_db::CONTAINERS} = $a_default_server[5];
-    $node->{mediamosa_server_db::OBJECT_CODE} = $a_default_server[6];
-    $node->{mediamosa_server_db::DESCRIPTION} = $node->{mediamosa_server_db::SERVER_NAME} = $a_default_server[7];
-    $node->{mediamosa_server_db::SLOTS} = (int)$a_default_server[8];
-    $node->{mediamosa_server_db::TOOLS} = $a_default_server[9];
-    $node->{mediamosa_server_db::URI_UPLOAD_PROGRESS} = $a_default_server[10];
-
-    if ($a_default_server[3] == 'job_processor') {
-      $a_tools = explode('|', $a_default_server[9]);
-      foreach ($a_tools as $tool) {
-        $node->{mediamosa_server_tool_db::TABLE_NAME}[] = array(mediamosa_server_tool_db::TOOL => $tool);
-      }
-    }
-
-    if ($a_default_server[3] == 'streaming') {
-      $a_containers = explode('|', $a_default_server[5]);
-      foreach ($a_containers as $container) {
-        $node->{mediamosa_server_streaming_container_db::TABLE_NAME}[] = array(mediamosa_server_streaming_container_db::CONTAINER => $container);
-      }
-    }
+    $node->{mediamosa_server_db::VERSION} = $default_server[1];
+    $node->{mediamosa_server_db::SERVER_STATUS} = $default_server[2];
+    $node->{mediamosa_server_db::SERVER_TYPE} = $default_server[3];
+    $node->{mediamosa_server_db::URI} = $default_server[4];
+    $node->{mediamosa_server_db::CONTAINERS} = $default_server[5];
+    $node->{mediamosa_server_db::OBJECT_CODE} = $default_server[6];
+    $node->{mediamosa_server_db::DESCRIPTION} = $node->{mediamosa_server_db::SERVER_NAME} = $default_server[7];
+    $node->{mediamosa_server_db::SLOTS} = (int)$default_server[8];
+    $node->{mediamosa_server_db::TOOLS} = $default_server[9];
+    $node->{mediamosa_server_db::URI_UPLOAD_PROGRESS} = $default_server[10];
 
     $node = node_save($node);
   }

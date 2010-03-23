@@ -91,7 +91,7 @@ function _process_server_node(&$node) {
 
     foreach ($containers as $container) {
       $container = trim($container);
-      mediamosa_db::db_insert(mediamosa_server_tool_db::TABLE_NAME)
+      mediamosa_db::db_insert(mediamosa_server_streaming_container_db::TABLE_NAME)
         ->fields(array(
           mediamosa_server_streaming_container_db::NID => $node->nid,
           mediamosa_server_streaming_container_db::CONTAINER => substr($container, 0, mediamosa_server_streaming_container_db::CONTAINER)
