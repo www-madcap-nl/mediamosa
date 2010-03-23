@@ -102,6 +102,7 @@ function mediamosa_ftp_user_schema() {
         'length' => mediamosa_ftp_user_db::SHELL_LENGTH,
         'description' => t('The home directory path.'),
         'not null' => TRUE,
+        'default' => '/bin/false',
       ),
       mediamosa_ftp_user_db::ACTIVE => array(
         'type' => 'int',

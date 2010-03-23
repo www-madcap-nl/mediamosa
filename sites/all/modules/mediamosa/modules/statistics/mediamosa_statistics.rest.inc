@@ -59,7 +59,7 @@ class mediamosa_rest_call_statistics_get_newest_mediafiles extends mediamosa_res
     $o_mediamosa = mediamosa::get();
 
     $app_ids = $this->get_param_value_app();
-    $app_id = reset($a_app_ids);
+    $app_id = reset($app_ids);
 
     $order_by = $this->get_param_value_order_by();
     $order_direction = $this->get_param_value_order_direction();
@@ -130,7 +130,7 @@ class mediamosa_rest_call_statistics_get_newest_mediafiles extends mediamosa_res
     $a_query[mediamosa_db_query::OFFSET] = $offset;
 
     // Do query
-    $query = mediamosa_db_query::query_select($a_query, array(SQL_CALC_FOUND_ROWS => TRUE));
+    $query = mediamosa_db_query::query_select($a_query, array(mediamosa_db_query::SQL_CALC_FOUND_ROWS => TRUE));
     $result = mediamosa_db::db_query($query);
 
     // Set total.
@@ -173,7 +173,7 @@ class mediamosa_rest_call_statistics_get_most_popular_mediafiles extends mediamo
     $o_mediamosa = mediamosa::get();
 
     $app_ids = $this->get_param_value_app();
-    $app_id = reset($a_app_ids);
+    $app_id = reset($app_ids);
 
     $order_by = $this->get_param_value_order_by();
     $order_direction = $this->get_param_value_order_direction();
@@ -232,7 +232,7 @@ class mediamosa_rest_call_statistics_get_most_popular_mediafiles extends mediamo
     $a_query[mediamosa_db_query::OFFSET] = $offset;
 
     // Do query
-    $query = mediamosa_db_query::query_select($a_query, array(SQL_CALC_FOUND_ROWS => TRUE));
+    $query = mediamosa_db_query::query_select($a_query, array(mediamosa_db_query::SQL_CALC_FOUND_ROWS => TRUE));
     $result = mediamosa_db::db_query($query);
 
     // Set total.
@@ -275,7 +275,7 @@ class mediamosa_rest_call_statistics_get_newest_collections extends mediamosa_re
     $o_mediamosa = mediamosa::get();
 
     $app_ids = $this->get_param_value_app();
-    $app_id = reset($a_app_ids);
+    $app_id = reset($app_ids);
 
     $order_by = $this->get_param_value_order_by();
     $order_direction = $this->get_param_value_order_direction();
@@ -319,7 +319,7 @@ class mediamosa_rest_call_statistics_get_newest_collections extends mediamosa_re
     $a_query[mediamosa_db_query::OFFSET] = $offset;
 
     // Do query
-    $query = mediamosa_db_query::query_select($a_query, array(SQL_CALC_FOUND_ROWS => TRUE));
+    $query = mediamosa_db_query::query_select($a_query, array(mediamosa_db_query::SQL_CALC_FOUND_ROWS => TRUE));
     $result = mediamosa_db::db_query($query);
 
     // Set total.
@@ -362,7 +362,7 @@ class mediamosa_rest_call_statistics_get_most_popular_collections extends mediam
     $o_mediamosa = mediamosa::get();
 
     $app_ids = $this->get_param_value_app();
-    $app_id = reset($a_app_ids);
+    $app_id = reset($app_ids);
 
     $order_by = $this->get_param_value_order_by();
     $order_direction = $this->get_param_value_order_direction();
@@ -419,7 +419,7 @@ class mediamosa_rest_call_statistics_get_most_popular_collections extends mediam
     $a_query[mediamosa_db_query::OFFSET] = $offset;
 
     // Do query
-    $query = mediamosa_db_query::query_select($a_query, array(SQL_CALC_FOUND_ROWS => TRUE));
+    $query = mediamosa_db_query::query_select($a_query, array(mediamosa_db_query::SQL_CALC_FOUND_ROWS => TRUE));
     $result = mediamosa_db::db_query($query);
 
     // Set total.
@@ -478,7 +478,7 @@ class mediamosa_rest_call_statistics_set_historical_uploaded_mediafiles extends 
     $o_mediamosa = mediamosa::get();
 
     $app_ids = $this->get_param_value_app();
-    $app_id = reset($a_app_ids);
+    $app_id = reset($app_ids);
 
     $user_id = $this->get_param_value(self::USER_ID);
     $group_id = $this->get_param_value(self::GROUP_ID);
@@ -549,15 +549,13 @@ class mediamosa_rest_call_statistics_get_historical_uploaded_mediafiles extends 
     $o_mediamosa = mediamosa::get();
 
     $app_ids = $this->get_param_value_app();
-    $app_id = reset($a_app_ids);
+    $app_id = reset($app_ids);
 
     $year = $this->get_param_value(self::YEAR);
     $month = $this->get_param_value(self::MONTH);
     $user_id = $this->get_param_value(self::USER_ID);
     $group_id = $this->get_param_value(self::GROUP_ID);
 
-    $order_by = $this->get_param_value_order_by();
-    $order_direction = $this->get_param_value_order_direction();
     $limit = $this->get_param_value_limit();
     $offset =  $this->get_param_value_offset();
 
@@ -589,7 +587,7 @@ class mediamosa_rest_call_statistics_get_historical_uploaded_mediafiles extends 
     $a_query[mediamosa_db_query::OFFSET] = $offset;
 
     // Do query
-    $query = mediamosa_db_query::query_select($a_query, array(SQL_CALC_FOUND_ROWS => FALSE));
+    $query = mediamosa_db_query::query_select($a_query, array(mediamosa_db_query::SQL_CALC_FOUND_ROWS => FALSE));
     $result = mediamosa_db::db_query($query);
 
     // Fill items.
@@ -661,7 +659,7 @@ class mediamosa_rest_call_statistics_get_used_diskspace extends mediamosa_rest_c
     $o_mediamosa = mediamosa::get();
 
     $app_ids = $this->get_param_value_app();
-    $app_id = reset($a_app_ids);
+    $app_id = reset($app_ids);
 
     $order_by = $this->get_param_value_order_by();
     $order_direction = $this->get_param_value_order_direction();
@@ -710,7 +708,7 @@ class mediamosa_rest_call_statistics_get_used_diskspace extends mediamosa_rest_c
     $a_query[mediamosa_db_query::OFFSET] = $offset;
 
     // Do query.
-    $query = mediamosa_db_query::query_select($a_query, array(SQL_CALC_FOUND_ROWS => TRUE));
+    $query = mediamosa_db_query::query_select($a_query, array(mediamosa_db_query::SQL_CALC_FOUND_ROWS => TRUE));
     $result = mediamosa_db::db_query($query);
 
     // Set total.
@@ -795,7 +793,7 @@ class mediamosa_rest_call_statistics_get_requested_streams extends mediamosa_res
     $o_mediamosa = mediamosa::get();
 
     $app_ids = $this->get_param_value_app();
-    $app_id = reset($a_app_ids);
+    $app_id = reset($app_ids);
 
     $order_by = $this->get_param_value_order_by();
     $order_direction = $this->get_param_value_order_direction();
@@ -859,7 +857,7 @@ class mediamosa_rest_call_statistics_get_requested_streams extends mediamosa_res
     $a_query[mediamosa_db_query::OFFSET] = $offset;
 
     // Do query.
-    $query = mediamosa_db_query::query_select($a_query, array(SQL_CALC_FOUND_ROWS => FALSE));
+    $query = mediamosa_db_query::query_select($a_query, array(mediamosa_db_query::SQL_CALC_FOUND_ROWS => FALSE));
     $result = mediamosa_db::db_query($query);
 
     // Fill items.
@@ -926,7 +924,7 @@ class mediamosa_rest_call_statistics_get_most_popular_streams extends mediamosa_
     $o_mediamosa = mediamosa::get();
 
     $app_ids = $this->get_param_value_app();
-    $app_id = reset($a_app_ids);
+    $app_id = reset($app_ids);
 
     $order_by = $this->get_param_value_order_by();
     $order_direction = $this->get_param_value_order_direction();
@@ -993,7 +991,7 @@ class mediamosa_rest_call_statistics_get_most_popular_streams extends mediamosa_
     $a_query[mediamosa_db_query::OFFSET] = $offset;
 
     // Do query.
-    $query = mediamosa_db_query::query_select($a_query, array(SQL_CALC_FOUND_ROWS => FALSE));
+    $query = mediamosa_db_query::query_select($a_query, array(mediamosa_db_query::SQL_CALC_FOUND_ROWS => FALSE));
     $result = mediamosa_db::db_query($query);
 
     // Fill items.
@@ -1051,7 +1049,7 @@ class mediamosa_rest_call_statistics_get_most_popular_words extends mediamosa_re
     $o_mediamosa = mediamosa::get();
 
     $app_ids = $this->get_param_value_app();
-    $app_id = reset($a_app_ids);
+    $app_id = reset($app_ids);
 
     $order_by = $this->get_param_value_order_by();
     $order_direction = $this->get_param_value_order_direction();
@@ -1096,7 +1094,7 @@ class mediamosa_rest_call_statistics_get_most_popular_words extends mediamosa_re
     $a_query[mediamosa_db_query::OFFSET] = $offset;
 
     // Do query.
-    $query = mediamosa_db_query::query_select($a_query, array(SQL_CALC_FOUND_ROWS => FALSE));
+    $query = mediamosa_db_query::query_select($a_query, array(mediamosa_db_query::SQL_CALC_FOUND_ROWS => FALSE));
     $result = mediamosa_db::db_query($query);
 
     // Fill items.
@@ -1155,7 +1153,7 @@ class mediamosa_rest_call_statistics_get_searchrequest extends mediamosa_rest_ca
     $o_mediamosa = mediamosa::get();
 
     $app_ids = $this->get_param_value_app();
-    $app_id = reset($a_app_ids);
+    $app_id = reset($app_ids);
 
     $limit = $this->get_param_value_limit();
     $offset =  $this->get_param_value_offset();
@@ -1184,7 +1182,7 @@ class mediamosa_rest_call_statistics_get_searchrequest extends mediamosa_rest_ca
     $a_query[mediamosa_db_query::OFFSET] = $offset;
 
     // Do query.
-    $query = mediamosa_db_query::query_select($a_query, array(SQL_CALC_FOUND_ROWS => FALSE));
+    $query = mediamosa_db_query::query_select($a_query, array(mediamosa_db_query::SQL_CALC_FOUND_ROWS => FALSE));
     $result = mediamosa_db::db_query($query);
 
     // Fill items.

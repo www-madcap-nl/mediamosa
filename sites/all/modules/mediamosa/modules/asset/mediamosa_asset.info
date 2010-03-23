@@ -20,6 +20,9 @@ files[] = mediamosa_asset.cql_acl_context.test
 files[] = mediamosa_asset.function.test
 files[] = mediamosa_asset.search.test
 files[] = mediamosa_asset.delete.test
+files[] = mediamosa_asset.vpx_still_url.test
+files[] = mediamosa_asset.cql_appcoll.test
+files[] = mediamosa_asset.cql_mediafile_duration.test
 
 ; Collection <-> Asset link table.
 files[] = collection/mediamosa_asset_collection.rest.inc

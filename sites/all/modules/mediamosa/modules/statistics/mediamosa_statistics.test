@@ -1,0 +1,64 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+  * @file
+  * Unittests for statistics functions.
+  */
+class MediaMosaStatisticsTestCaseEga extends MediaMosaTestCaseEga {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'Statistics function tests',
+      'description' => 'Testing statistics related functions and rest calls.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STATISTICS,
+    );
+  }
+
+  // ------------------------------------------------------------------ Tests.
+
+  // Testing statistics, see: ticket 565.
+  function testStatisticsFunction() {
+
+    // Setup.
+
+    // Limit.
+    $limit = 10;
+
+    // Get the month and the year.
+    $now = time();
+    // Numeric representation of a month, without leading zeros (1 through 12).
+    $month= date("n", $now);
+    // A full numeric representation of a year, 4 digits.
+    $year= date("Y", $now);
+
+    $a_xml = $this->getStatisticsDataupload($year, $month, $limit, array(), 'Get statistics data upload', array(), array(mediamosa_error::ERRORCODE_OKAY, mediamosa_error::ERRORCODE_EMPTY_RESULT));
+    //$this->var_export($a_xml);
+  }
+}

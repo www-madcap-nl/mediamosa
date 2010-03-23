@@ -121,4 +121,72 @@ class MediaMosaAssetTestCaseEga extends MediaMosaTestCaseEga {
       t("The is_empty_asset parameter is FALSE: @is_empty_asset", array('@is_empty_asset' => print_r($is_empty_asset, TRUE),))
     );
   }
+
+  // Testing is_empty_asset issue with CQL, see: ticket 180.
+  public function testAssetIsEmptyAsset3() {
+
+    // Set up.
+
+    // Limit.
+    $limit = 10;
+
+    // Create assets.
+    $asset_id = array();
+    $asset_id[1] = $this->createAsset();
+    $asset_id[2] = $this->createAsset();
+    $asset_id[3] = $this->createAsset();
+    $asset_id[4] = $this->createAsset();
+    $asset_id[5] = $this->createAsset();
+
+    // Create mediafiles.
+    $mediafile_id = array();
+    $a_parameters = array(
+      mediamosa_rest_call_create_mediafile::URI => 'http://empty.asset.demo',
+    );
+    $mediafile_id[2][1] = $this->createMediafile($asset_id[2]);
+    $mediafile_id[2][2] = $this->createMediafile($asset_id[2], $a_parameters);
+    $mediafile_id[3][1] = $this->createMediafile($asset_id[3], $a_parameters);
+    $mediafile_id[4][1] = $this->createMediafile($asset_id[4]);
+
+    // Search without CQL.
+
+    // Search assets.
+    $a_assets = $this->searchAsset($limit);
+    //$this->var_export($a_assets);
+
+    // Check result.
+    $this->assertTrue(
+      count($a_assets['items']['item']) == 5,
+      t("There are all the assets (5 = @get)", array('@get' => count($a_assets['items']['item'])))
+    );
+
+    // Search with is_empty_asset = TRUE.
+
+    // Search assets.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_search::CQL => '((is_empty_asset==TRUE))',
+    );
+    $a_assets = $this->searchAsset($limit, $a_parameters);
+
+    // Check result.
+    $this->assertTrue(
+      count($a_assets['items']['item']) == 3,
+      t("There are all the assets (3 = @get)", array('@get' => count($a_assets['items']['item'])))
+    );
+
+    // Search with is_empty_asset = FALSE.
+
+    // Search assets.
+    $a_parameters = array(
+      mediamosa_rest_call_asset_search::CQL => '((is_empty_asset==FALSE))',
+    );
+    $a_assets = $this->searchAsset($limit, $a_parameters);
+
+    // Check result.
+    $this->assertTrue(
+      count($a_assets['items']['item']) == 2,
+      t("There are all the assets (2 = @get)", array('@get' => count($a_assets['items']['item'])))
+    );
+
+  }
 }
