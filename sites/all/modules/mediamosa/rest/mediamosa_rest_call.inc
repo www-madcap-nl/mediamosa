@@ -36,6 +36,15 @@ abstract class mediamosa_rest_call {
   // Check if there are unspecified arguments and throw exception when we have unspecified arguments.
   protected $check_for_unspecified = FALSE; // Keep on FALSE so get_var_setup() will not fail if it calls process_vars()
 
+  // default parameter description.
+  protected $mediamosa_parameter_docs = array(
+    'asset_id' => 'Unique asset id',
+    'coll_id' => 'Unique collection id',
+    'user_id' => 'User id',
+    'group_id' => 'Group id',
+    'isprivate' => '',
+  );
+
   // ------------------------------------------------------------------ Constants.
   const ID = 'uri_id';
   const URI = 'uri';
@@ -88,7 +97,11 @@ abstract class mediamosa_rest_call {
                                 // External access needs to be specified.
   const ACCESS_FOR_EXTERNAL = 7; // Default for external calls (normal/internal/external).
 
-  const DESCRIPTION = 'description';   // Description of the REST call (In English, required).
+  const TITLE = 'title';             // Title of the REST call (In English, required).
+  const DESCRIPTION = 'description'; // Description of the REST call (In English, required).
+  const EXAMPLE_REQUEST = 'example_request';   // Example request url.
+  const EXAMPLE_RESPONSE = 'example_response'; // Example response output.
+  const RESPONSE_FIELDS = 'response_fields';   // Response fields in output.
 
   const BEHAVE_AS_EXTERNAL = 'behave_as_external'; // Set to true if you want this rest call to behave like external without /external.
 
@@ -173,8 +186,13 @@ abstract class mediamosa_rest_call {
     $this->{self::CLASS_NAME} = $a_rest_call[self::CLASS_NAME];
     $this->{self::STATUS} = $a_rest_call[self::STATUS];
     $this->{self::VERSION} = $a_rest_call[self::VERSION];
-    $this->{self::DESCRIPTION} = $a_rest_call[self::DESCRIPTION];
     $this->{self::BEHAVE_AS_EXTERNAL} = $a_rest_call[self::BEHAVE_AS_EXTERNAL];
+
+    $this->{self::TITLE} = isset($a_rest_call[self::TITLE]) ? $a_rest_call[self::TITLE] : '';
+    $this->{self::DESCRIPTION} = isset($a_rest_call[self::DESCRIPTION]) ? $a_rest_call[self::DESCRIPTION] : '';
+    $this->{self::EXAMPLE_REQUEST} = isset($a_rest_call[self::EXAMPLE_REQUEST]) ? $a_rest_call[self::EXAMPLE_REQUEST] : '';
+    $this->{self::EXAMPLE_RESPONSE} = isset($a_rest_call[self::EXAMPLE_RESPONSE]) ? $a_rest_call[self::EXAMPLE_RESPONSE] : '';
+    $this->{self::RESPONSE_FIELDS} = isset($a_rest_call[self::RESPONSE_FIELDS]) ? $a_rest_call[self::RESPONSE_FIELDS] : '';
 
     // Access.
     $this->{self::ACCESS} = $a_rest_call[self::ACCESS];
@@ -301,12 +319,39 @@ abstract class mediamosa_rest_call {
       self::VAR_DESCRIPTION => mediamosa::t('The application ID.'),
     );
 
-    // Optional.
+    // @todo: remove when all calls are scanned, see next function.
     $a_var_setup[mediamosa_rest_call::VARS][mediamosa_rest_call::IS_APP_ADMIN] = array(
       self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
-      self::VAR_DESCRIPTION => mediamosa::t('A boolean to indicate override by global APP admin. Is ignored by most REST calls.'),
-      self::VAR_DEFAULT_VALUE => 'FALSE',
+      self::VAR_DESCRIPTION => mediamosa::t('NOT USED.'),
+      self::VAR_DEFAULT_VALUE => 'false',
+    );
+
+    // add default parameter descriptions
+    foreach ($a_var_setup[mediamosa_rest_call::VARS] as $key => $value) {
+      if (!isset($value[self::VAR_DESCRIPTION])) {
+        if (isset($this->mediamosa_parameter_docs[$key])) {
+          $a_var_setup[mediamosa_rest_call::VARS][$key][self::VAR_DESCRIPTION] = $this->mediamosa_parameter_docs[$key];
+        }
+      }
+    }
+
+    return $a_var_setup;
+  }
+
+  /**
+   * Get the default vars we always expect in every rest call
+   * plus is_app_admin
+   */
+  protected function get_var_setup_app_admin(array $a_var_setup, $app_id_required = TRUE) {
+    $a_var_setup = $this->get_var_setup_default($a_var_setup, $app_id_required);
+
+    // add is_app_admin.
+    $a_var_setup[mediamosa_rest_call::VARS][mediamosa_rest_call::IS_APP_ADMIN] = array(
+      self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
+      self::VAR_DESCRIPTION => mediamosa::t('A boolean to indicate the call is done by the APP admin. It overrides user autorisation.'),
+      self::VAR_DEFAULT_VALUE => 'false',
     );
 
     return $a_var_setup;
@@ -690,9 +735,6 @@ abstract class mediamosa_rest_call {
 
     // All args are now known. Now walk through the setup and set the defaults.
     foreach ($a_var_setup[self::VARS] as $param => &$a_var) {
-
-      // Lets assert when we forget the description.
-      assert(isset($a_var[self::VAR_DESCRIPTION]));
 
       // Set by default off.
       $this->a_rest_args[$param][self::PARAM_ISSET_DEFAULT] = FALSE; // Set by default
