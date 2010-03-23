@@ -235,8 +235,7 @@ function mediamosa_server_schema() {
       ),
       mediamosa_server_db::CONTAINERS => array(
         'description' => t('The optional container names this server can serve.'),
-        'type' => 'varchar',
-        'length' => mediamosa_server_db::CONTAINERS_LENGTH,
+        'type' => 'text',
         'not null' => FALSE,
       ),
       mediamosa_server_db::OBJECT_CODE => array(
@@ -257,8 +256,7 @@ function mediamosa_server_schema() {
       ),
       mediamosa_server_db::TOOLS => array(
         'description' => t('The optional tools this server serves.'),
-        'type' => 'varchar',
-        'length' => mediamosa_server_db::TOOLS_LENGTH,
+        'type' => 'text',
         'not null' => FALSE,
       ),
       mediamosa_server_db::URI_UPLOAD_PROGRESS => array(

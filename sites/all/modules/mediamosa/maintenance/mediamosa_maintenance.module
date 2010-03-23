@@ -112,7 +112,7 @@ function _mediamosa_maintenance_status() {
   $breadcrumb = array();
   $breadcrumb[] = l(t('Home'), NULL);
   $breadcrumb[] = l(t('Administer'), 'admin');
-  $breadcrumb[] = l(t('Mediamosa 2'), 'mediamosa');
+  $breadcrumb[] = l(t('MediaMosa 2'), 'admin/mediamosa');
   drupal_set_breadcrumb($breadcrumb);
 
   // Need the classes of simpletest.

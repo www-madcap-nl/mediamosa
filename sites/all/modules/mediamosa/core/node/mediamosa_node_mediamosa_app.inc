@@ -154,6 +154,13 @@ function mediamosa_app_delete($node) {
 }
 
 /**
+ * Implementation of hook_node_revision_delete().
+ */
+function mediamosa_app_node_revision_delete($vid) {
+  mediamosa_node_revision::delete_revision($vid);
+}
+
+/**
  * Implementation of hook_view().
  */
 function mediamosa_app_view($node, $view_mode = 'full') {
@@ -419,19 +426,9 @@ function mediamosa_app_form($node, &$form_state) {
     '#maxlength' => mediamosa_app_db::STILL_URL_LENGTH,
   );
 
-  $owner = array('' => t('none'), 'surfnet' => 'Surfnet', 'kennisnet' => 'Kennisnet');
-  if ($user->uid != 1) { // admin
-    $unset = (in_array('kennisnet', (array)$user->roles)) ? 'surfnet' : 'kennisnet';
-    unset($owner[$unset]);
-  }
-
   $form['client_application'][mediamosa_app_db::OWNER] = array(
-    '#type' => 'select',
-    '#title' => t('Owner'),
-    '#description' => t('Owner of client application'),
-    '#options' => $owner,
-    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::OWNER, $node),
-    '#maxlength' => mediamosa_app_db::OWNER_LENGTH,
+    '#type' => 'hidden',
+    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::OWNER, $node, ($user->uid > 1 ? $user->name : '')),
   );
 
   $form['webservice'] = array(

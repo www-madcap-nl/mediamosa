@@ -31,12 +31,21 @@
   * creation code.
   */
 
+/**
+ * These are required, or else some hooks will not work for these node types.
+ */
+require_once 'mediamosa_node_mediamosa_app.inc';
+require_once 'mediamosa_node_mediamosa_server.inc';
+require_once 'mediamosa_node_mediamosa_settings.inc';
+require_once 'mediamosa_node_mediamosa_transcode_profile.inc';
+
 class mediamosa_node {
   // ------------------------------------------------------------------ Consts.
   // Node types.
   const MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE = 'mediamosa_transcode_profile';
   const MEDIAMOSA_NODE_TYPE_SERVER = 'mediamosa_server';
   const MEDIAMOSA_NODE_TYPE_APP = 'mediamosa_app';
+  const MEDIAMOSA_NODE_TYPE_SETTINGS = 'mediamosa_settings';
 
   // ------------------------------------------------------------------ Functions.
   /**
@@ -53,10 +62,15 @@ class mediamosa_node {
    * @param $title
    */
   static public function create_basic_node($type, $title) {
+
     $node = new stdClass();
     $node->uid = 1; // Admin
     $node->status = 1; // Published
     $node->type = $type;
+    $node->locked = 0;
+    $node->has_title = 1;
+    $node->has_body = 0;
+    $node->custom = 1;
     $node->language = LANGUAGE_NONE;
     $node->title = $title;
     return $node;
@@ -107,6 +121,80 @@ class mediamosa_node {
   static public function default_value($name, $node, $default = '') {
     return isset($node->{$name}) ? $node->{$name} : $default;
   }
+
+  /**
+   * returns the field names used in this node type.
+   *
+   * @param $node
+   */
+  static public function get_fields($node) {
+
+    switch ($node->type) {
+      case mediamosa_node::MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE:
+        $fields = mediamosa_transcode_profile_db::get_fields();
+        $fields[] = 'commands';
+        return $fields;
+
+      case mediamosa_node::MEDIAMOSA_NODE_TYPE_SERVER:
+        $fields = mediamosa_server_db::get_fields();
+
+        switch ($node->{mediamosa_server_db::SERVER_TYPE}) {
+          default:
+            assert(0); // so we know.
+          case mediamosa_server_db::SERVER_TYPE_DOWNLOAD:
+          case mediamosa_server_db::SERVER_TYPE_STILL:
+            $to_remove = array(
+              mediamosa_server_db::URI_UPLOAD_PROGRESS,
+              mediamosa_server_db::CONTAINERS,
+              mediamosa_server_db::OBJECT_CODE,
+              mediamosa_server_db::SLOTS,
+              mediamosa_server_db::TOOLS
+            );
+            break;
+          case mediamosa_server_db::SERVER_TYPE_STREAMING:
+            $to_remove = array(
+              mediamosa_server_db::URI_UPLOAD_PROGRESS,
+              mediamosa_server_db::SLOTS,
+              mediamosa_server_db::TOOLS,
+            );
+            break;
+          case mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR:
+            $to_remove = array(
+              mediamosa_server_db::URI_UPLOAD_PROGRESS,
+              mediamosa_server_db::CONTAINERS,
+              mediamosa_server_db::OBJECT_CODE,
+            );
+            break;
+          case mediamosa_server_db::SERVER_TYPE_UPLOAD:
+            $to_remove = array(
+              mediamosa_server_db::URI,
+              mediamosa_server_db::CONTAINERS,
+              mediamosa_server_db::OBJECT_CODE,
+              mediamosa_server_db::SLOTS,
+              mediamosa_server_db::TOOLS,
+            );
+            break;
+        }
+
+        // Remove unused fields.
+        foreach ($to_remove as $remove) {
+          $key = array_search($remove, $fields);
+          if ($key !== FALSE) {
+            unset($fields[$key]);
+          }
+        }
+
+        return $fields;
+
+      case mediamosa_node::MEDIAMOSA_NODE_TYPE_APP:
+        return mediamosa_app_db::get_fields();
+
+      case mediamosa_node::MEDIAMOSA_NODE_TYPE_SETTINGS:
+        return mediamosa_node_mediamosa_settings::get_fields();
+    }
+
+    return array();
+  }
 }
 
 /**
@@ -131,6 +219,12 @@ function mediamosa_node_info() {
       'base' => mediamosa_node::MEDIAMOSA_NODE_TYPE_APP,
       'has_body' => FALSE,
       'description' => t('MediaMosa client applications are clients that can login onto MediaMosa and execute REST calls. All data stored is stored under its client application ID; giving each client application its own database of assets, mediafiles etc.'),
+    ),
+    mediamosa_node::MEDIAMOSA_NODE_TYPE_SETTINGS => array(
+      'name' => t('MediaMosa settings'),
+      'base' => mediamosa_node::MEDIAMOSA_NODE_TYPE_SETTINGS,
+      'has_body' => FALSE,
+      'description' => t('MediaMosa settings node type contains a copy of the configuration settings for revision usage.'),
     ),
   );
 }

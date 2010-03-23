@@ -93,16 +93,16 @@ function _mediamosa_maintenance_browse_log() {
     $rows[] = array(array('data' => t('No log messages available.'), 'colspan' => 5));
   }
 
-  $build['log_pager_top'] = array('#theme' => 'pager');
-  $build['log_table'] = array(
+  $form['log_pager_top'] = array('#theme' => 'pager');
+  $form['log_table'] = array(
     '#theme' => 'table',
     '#header' => $header,
     '#rows' => $rows,
     '#attributes' => array('id' => 'admin-dblog'),
   );
-  $build['log_pager_bottom'] = array('#theme' => 'pager');
+  $form['log_pager_bottom'] = array('#theme' => 'pager');
 
-  return $build;
+  return $form;
 }
 
 /**

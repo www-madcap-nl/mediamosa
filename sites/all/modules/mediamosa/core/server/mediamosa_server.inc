@@ -39,13 +39,13 @@ class mediamosa_server {
   static public function trigger() {
 
     // Get all enabled transcode servers (ON / CLOSE).
-    $a_servers = self::get_enabled_transcode();
+    $servers = self::get_enabled_transcode();
 
     $a_triggered = array();
-    foreach ($a_servers as $a_server) {
+    foreach ($servers as $server) {
 
       // Get URL.
-      $url = mediamosa_http::uri2url($a_server[mediamosa_server_db::URI]) . '/internal/cron/jobserver';
+      $url = mediamosa_http::uri2url($server[mediamosa_server_db::URI]) . '/internal/cron/jobserver';
 
       // Prevent multiple triggers if url is on more than one server.
       if (in_array($url, $a_triggered)) {
@@ -94,7 +94,7 @@ class mediamosa_server {
   static public function get_status_enabled_servers() {
     $a_enabled_servers = mediamosa_server::get_enabled_transcode();
 
-    $a_servers = array();
+    $servers = array();
     foreach ($a_enabled_servers as $a_enabled_server) {
 
       $response = mediamosa_http::do_internal_call($a_enabled_server[mediamosa_server_db::URI], 'server/status');
@@ -104,13 +104,13 @@ class mediamosa_server {
 
       $xml = new SimpleXMLElement($response->data);
 
-      $a_servers[] = array(
+      $servers[] = array(
         'enabled_server' => $a_enabled_server,
         'status' => (isset($xml->items->item) ? mediamosa_lib::simplexml2array($xml->items->item) : array())
       );
     }
 
-    return $a_servers;
+    return $servers;
   }
 
   /**
@@ -187,15 +187,15 @@ class mediamosa_server {
    *  Codec.
    */
   static public function get_streaming($container_type, $video_codec) {
-    static $a_servers = array();
+    static $servers = array();
 
-    if (isset($a_servers[$container_type . ':' . $video_codec]) && $a_servers[$container_type . ':' . $video_codec]) {
-      return $a_servers[$container_type . ':' . $video_codec];
+    if (isset($servers[$container_type . ':' . $video_codec]) && $servers[$container_type . ':' . $video_codec]) {
+      return $servers[$container_type . ':' . $video_codec];
     }
 
     // Choose a random available streaming server.
     // try to match container:codec first.
-    $a_servers[$container_type . ':' . $video_codec] = mediamosa_db::db_query(
+    $servers[$container_type . ':' . $video_codec] = mediamosa_db::db_query(
       "SELECT mss.* FROM {#mediamosa_server} AS mss
       JOIN {#mediamosa_server_streaming_container} AS mssc ON mssc.#nid = mss.#nid
       WHERE mssc.#container = :container AND mss.#server_type = :server_type AND mss.#server_status = :server_status_on ORDER BY rand() LIMIT 1",
@@ -212,15 +212,15 @@ class mediamosa_server {
       )
     )->fetchAssoc();
 
-    if ($a_servers[$container_type .':'. $video_codec]) {
-      return $a_servers[$container_type .':'. $video_codec];
+    if ($servers[$container_type .':'. $video_codec]) {
+      return $servers[$container_type .':'. $video_codec];
     }
 
-    if (isset($a_servers[$container_type]) && $a_servers[$container_type]) {
-      return $a_servers[$container_type];
+    if (isset($servers[$container_type]) && $servers[$container_type]) {
+      return $servers[$container_type];
     }
 
-    $a_servers[$container_type] = mediamosa_db::db_query(
+    $servers[$container_type] = mediamosa_db::db_query(
       "SELECT mss.* FROM {#mediamosa_server} AS mss
       JOIN {#mediamosa_server_streaming_container} AS mssc ON mssc.#nid = mss.#nid
       WHERE mssc.#container = :container AND mss.#server_type = :server_type AND mss.#server_status = :server_status_on ORDER BY rand() LIMIT 1",
@@ -237,7 +237,7 @@ class mediamosa_server {
       )
     )->fetchAssoc();
 
-    return $a_servers[$container_type];
+    return $servers[$container_type];
   }
 
   /**
@@ -250,10 +250,10 @@ class mediamosa_server {
    */
   static public function get_objectcode_streaming($container_type, $video_codec) {
 
-    $a_server = self::get_streaming($container_type, $video_codec);
+    $server = self::get_streaming($container_type, $video_codec);
 
-    if ($a_server) {
-      return $a_server[mediamosa_server_db::OBJECT_CODE];
+    if ($server) {
+      return $server[mediamosa_server_db::OBJECT_CODE];
     }
 
     return FALSE;
@@ -269,10 +269,10 @@ class mediamosa_server {
    */
   static public function get_uri_streaming($container_type, $video_codec) {
 
-    $a_server = self::get_streaming($container_type, $video_codec);
+    $server = self::get_streaming($container_type, $video_codec);
 
-    if ($a_server) {
-      return $a_server[mediamosa_server_db::URI];
+    if ($server) {
+      return $server[mediamosa_server_db::URI];
     }
 
     return FALSE;
@@ -282,13 +282,13 @@ class mediamosa_server {
    * Get the default still server.
    */
   static public function get_still() {
-    static $a_server = NULL;
+    static $server = NULL;
 
-    if (isset($a_server)) {
-      return $a_server;
+    if (isset($server)) {
+      return $server;
     }
 
-    $a_server = mediamosa_db::db_query(
+    $server = mediamosa_db::db_query(
       'SELECT * FROM {#mediamosa_server} WHERE #server_type = :server_type AND #server_status = :server_status_on LIMIT 1',
       array(
         '#mediamosa_server' => mediamosa_server_db::TABLE_NAME,
@@ -299,16 +299,16 @@ class mediamosa_server {
       )
     )->fetchAssoc();
 
-    return $a_server;
+    return $server;
   }
 
   /**
    * Get the URI of the default still server.
    */
   static public function get_uri_still() {
-    $a_server = self::get_still();
+    $server = self::get_still();
 
-    return $a_server[mediamosa_server_db::URI];
+    return $server[mediamosa_server_db::URI];
   }
 
   /**

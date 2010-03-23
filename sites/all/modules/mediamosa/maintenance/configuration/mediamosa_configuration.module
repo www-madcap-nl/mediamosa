@@ -129,4 +129,28 @@ function mediamosa_configuration_submit($form, $form_state) {
 
   // Now call our (optional) submit hooks, remember that variables are saved automaticly.
   module_invoke_all('mediamosa_configuration_submit', $form, $form_state);
+
+  // Save new revision.
+
+  // Get the current settings node.
+  $fields = mediamosa_node_mediamosa_settings::get_fields();
+
+  // Get the current node for settings (is only one node).
+  $node = mediamosa_node_mediamosa_settings::get_node_settings();
+
+  foreach ($fields as $field) {
+    if (isset($form_state['values'][$field])) {
+      $node->{$field} = $form_state['values'][$field];
+    }
+  }
+
+  // New revision force.
+  $node->revision = 1;
+  $node->sticky = 0;
+  $node->comment = 0;
+  $node->promote = 0;
+  $node->status = 1; // published.
+
+  // Save the node.
+  node_save($node);
 }
