@@ -221,10 +221,16 @@ function _mediamosa_app_list() {
     );
   }
 
-  $output = theme('table', array('header' => $header, 'rows' => $rows, 'empty' => t('You have no client applications. Click on the <em>Add</em> tab to create one.')));
-  $output .= theme('pager');
+  $form['pager_top'] = array('#theme' => 'pager');
+  $form['table'] = array(
+    '#theme' => 'table',
+    '#header' => $header,
+    '#rows' => $rows,
+    '#empty' => t('You have no client applications. Click on the <em>Add</em> tab to create one.')
+  );
+  $form['pager_bottom'] = array('#theme' => 'pager');
 
-  return $output;
+  return $form;
 }
 
 /**

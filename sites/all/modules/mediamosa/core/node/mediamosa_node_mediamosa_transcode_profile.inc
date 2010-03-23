@@ -50,6 +50,12 @@ function mediamosa_transcode_profile_load(&$nodes) {
  * @param $commands
  */
 function _mediamosa_transcode_profile_do_command($node) {
+
+  // In some cases, command is already set and not empty, then prefer this one.
+  if (!empty($node->{mediamosa_transcode_profile_db::COMMAND})) {
+    return $node->{mediamosa_transcode_profile_db::COMMAND};
+  }
+
   $commands = array();
   foreach ($node as $key => $value) {
     if (strpos($key, 'options_') === 0) {
@@ -123,6 +129,13 @@ function mediamosa_transcode_profile_delete($node) {
 }
 
 /**
+ * Implementation of hook_node_revision_delete().
+ */
+function mediamosa_transcode_profile_node_revision_delete($vid) {
+  mediamosa_node_revision::delete_revision($vid);
+}
+
+/**
  * If this profile is set als default, then reset the rest to FALSE
  *
  * @param object $node
@@ -144,7 +157,6 @@ function _mediamosa_transcode_profile_update_isdefault($node) {
  * Implementation of hook_view().
  */
 function mediamosa_transcode_profile_view($node, $view_mode = 'full') {
-
   // Get the apps.
   $apps = _mediamosa_get_apps();
 

@@ -256,14 +256,28 @@ class mediamosa_node_revision {
   }
 
   /**
+   * Delete the revisions of this node.
+   * @param $nid
+   */
+  static public function delete_revision($vid) {
+    // Remove revision.
+    mediamosa_db::db_delete(mediamosa_node_revision_db::TABLE_NAME)
+      ->condition('vid', $vid)
+      ->execute();
+  }
+
+  /**
    * Delete the revisions of this node and from parent table.
    * @param $nid
    */
-  static public function delete_ex($node, $table_name) {
-    // Remove from main table.
-    mediamosa_db::db_delete($table_name)
-      ->condition('nid', $node->nid)
-      ->execute();
+  static public function delete_ex($node, $table_name = NULL) {
+    // Not all types have child tables.
+    if (isset($table_name)) {
+      // Remove from main table.
+      mediamosa_db::db_delete($table_name)
+        ->condition('nid', $node->nid)
+        ->execute();
+    }
 
     // Remove revision.
     self::delete($node->nid);

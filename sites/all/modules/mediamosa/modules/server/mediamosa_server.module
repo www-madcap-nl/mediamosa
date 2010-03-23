@@ -195,7 +195,7 @@ function _mediamosa_server_list() {
       array(
         // Cells
         t($server->{mediamosa_server_db::SERVER_TYPE}),
-       'title' => array('data' => l($server->{mediamosa_server_db::SERVER_NAME}, 'admin/mediamosa/config/server/'. $server->{mediamosa_server_db::NID}), 'field' => mediamosa_server_db::SERVER_NAME),
+       'title' => array('data' => l($server->{mediamosa_server_db::SERVER_NAME}, 'admin/mediamosa/config/server/' . $server->{mediamosa_server_db::NID}), 'field' => mediamosa_server_db::SERVER_NAME),
         t($server->{mediamosa_server_db::URI}),
         $statuses[$server->{mediamosa_server_db::SERVER_STATUS}],
         implode(' | ', $actions),
