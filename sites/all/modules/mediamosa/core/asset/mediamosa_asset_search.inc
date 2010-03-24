@@ -487,8 +487,7 @@ class mediamosa_asset_search {
         mediamosa_db::db_query('INSERT INTO {assets_all} '. $query);
 
         // Deleted asset query
-        mediamosa_db::db_query('INSERT INTO {assets_all} SELECT a.asset_id, a.videotimestampmodified FROM {asset_delete} AS a'. ($d_where ? ' WHERE '. $d_where : ''));
-        //db_query('INSERT INTO {assets_all} SELECT a.asset_id, a.videotimestampmodified FROM {asset_delete} AS a'. ($d_where ? ' WHERE '. $d_where : '') .' LIMIT '. ($d_offset + $d_limit + 1));
+        mediamosa_db::db_query('INSERT INTO {assets_all} SELECT a.asset_id, a.videotimestampmodified FROM {asset_delete} AS a'. ($d_where ? ' WHERE '. $d_where : '') .' GROUP BY a.asset_id');
 
         // Harvesting the data
         $result = mediamosa_db::db_query('SELECT DISTINCT a.asset_id FROM {assets_all} AS a'. ($d_ordby ? ' ORDER BY '. $d_ordby : '') . ($d_limit ? ($d_offset ? ' LIMIT '. $d_offset .','. $d_limit : ' LIMIT '. $d_limit) : ''));
