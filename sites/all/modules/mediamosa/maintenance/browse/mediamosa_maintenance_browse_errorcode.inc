@@ -63,7 +63,7 @@ function mediamosa_maintenance_browse_errorcode_form() {
       array(
         // Cells
         $errorcode[mediamosa_error_db::ID],
-        check_plain($errorcode[mediamosa_error_db::NAME]),
+        check_plain($errorcode[mediamosa_error_db::NAME]) . '<br /><small>' . check_plain($errorcode[mediamosa_error_db::MESSAGE])  . '</small>',
         check_plain($errorcode[mediamosa_error_db::CODE]),
         implode(' | ', $actions)
       ),
@@ -84,8 +84,70 @@ function mediamosa_maintenance_browse_errorcode_form() {
 /**
  * The edit form.
  */
-function mediamosa_maintenance_browse_errorcode_edit_form($id) {
-  exit('foo');
+function mediamosa_maintenance_browse_errorcode_edit_form($form, &$form_state, $id) {
+  // If we are set as Home page, the breadcrumb isnt set, lets do it here.
+  $breadcrumb = array();
+  $breadcrumb[] = l(t('Home'), NULL);
+  $breadcrumb[] = l(t('Administer'), 'admin');
+  $breadcrumb[] = l(t('MediaMosa 2'), 'admin/mediamosa');
+  $breadcrumb[] = l(t('Browse'), 'admin/mediamosa/browse');
+  $breadcrumb[] = l(t('Errorcode Management'), 'admin/mediamosa/browse/errorcode');
+  drupal_set_breadcrumb($breadcrumb);
+
+  $form = array();
+
+  $errorcode = mediamosa_error::get($id);
+
+  // Settings for anonymous users.
+  $form['errorcode'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('MediaMosa Errorcode'),
+  );
+  $form[mediamosa_error_db::ID] = array(
+    '#type' => 'hidden',
+    '#default_value' => $errorcode[mediamosa_error_db::ID],
+  );
+  $form['errorcode'][mediamosa_error_db::NAME] = array(
+    '#type' => 'item',
+    '#title' => t('Name'),
+    '#description' => $errorcode[mediamosa_error_db::NAME],
+  );
+  $form['errorcode'][mediamosa_error_db::CODE] = array(
+    '#type' => 'item',
+    '#title' => t('Code'),
+    '#description' => $errorcode[mediamosa_error_db::CODE]
+  );
+  $form['errorcode'][mediamosa_error_db::MESSAGE] = array(
+    '#type' => 'textarea',
+    '#title' => t('Message'),
+    '#default_value' => $errorcode[mediamosa_error_db::MESSAGE],
+    '#description' => t('Message to be displayed in case this error occurs.'),
+  );
+
+  $form['errorcode']['actions']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save'),
+  );
+
+
+  return $form;
 }
 
+/**
+ * Submit the errorcode update form.
+ */
+function mediamosa_maintenance_browse_errorcode_edit_form_submit($form, &$form_state) {
 
+  $id = $form_state['values'][mediamosa_error_db::ID];
+  $message = $form_state['values'][mediamosa_error_db::MESSAGE];
+
+  // Save.
+  mediamosa_db::db_update(mediamosa_error_db::TABLE_NAME)
+    ->fields(array(
+      mediamosa_error_db::MESSAGE => $message
+    ))
+    ->condition(mediamosa_error_db::ID, $id)
+    ->execute();
+
+  drupal_set_message(t('The errorcode has been saved.'));
+}

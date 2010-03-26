@@ -456,7 +456,7 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
     }
 
     $cql = '';
-    if (count($a_cql)) {
+    if (!empty($a_cql)) {
 
       // CQL must not be set.
       if (!self::empty_param(self::CQL)) {
@@ -477,7 +477,7 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
 
       $cql .= ($cql == '' ? ' ' : '') . 'sortby ' . $order_by;
     }
-    else {
+    elseif (empty($a_cql)) {
       // Now normal search params, then take CQL (if any).
       $cql = self::get_param_value(self::CQL);
     }

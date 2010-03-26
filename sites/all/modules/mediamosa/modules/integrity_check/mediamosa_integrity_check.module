@@ -98,8 +98,8 @@ function mediamosa_integrity_check_type_box() {
 
   // Select box.
   $form['type_box'] = array(
-    '#type' => 'select', 
-    '#title' => t('Display list for type'), 
+    '#type' => 'select',
+    '#title' => t('Display list for type'),
     '#default_value' => $type,
     '#options' => $options,
     '#attributes' => array('onchange' => 'location.href="' . base_path() . 'admin/mediamosa/browse/integrity/" + this.value'),
@@ -136,7 +136,7 @@ function mediamosa_integrity_check_page() {
 
   // Check whether the mediamosa_integrity_check.inc is running or not.
   $output = array();
-  exec('ps ax | grep mediamosa_integrity_check.inc | grep -v grep', $output);
+  mediamosa_io::exec('ps ax | grep mediamosa_integrity_check.inc | grep -v grep', $output);
   if (count($output) > 0) {
     drupal_set_message('The integrity check is currently running.');
   }
@@ -196,7 +196,7 @@ function mediamosa_integrity_check_page() {
     // Additional info.
     $post_page_info = '';
   }
-  else if ($type == 'missing mediarecord') {
+  elseif ($type == 'missing mediarecord') {
     $header = array(
       array('data' => t('Mediafile id'), 'field' => 'object_id'),
       array('data' => t('size'), 'field' => 'size'),
@@ -328,7 +328,7 @@ function mediamosa_integrity_check_start_submit($form, &$form_state) {
   if ($op == t('Start integrity check')) {
     // Call the script.
     global $base_url;
-    exec('wget -O - -q -t 1 ' . escapeshellcmd($base_url . '/' . drupal_get_path("module", "mediamosa_integrity_check") . '/mediamosa_integrity_check.php >/dev/null 2>/dev/null &'));
+    mediamosa_io::exec('wget -O - -q -t 1 ' . escapeshellcmd($base_url . '/' . drupal_get_path("module", "mediamosa_integrity_check") . '/mediamosa_integrity_check.php >/dev/null 2>/dev/null &'));
 
     //exec('nice -n20 /usr/bin/php -f ' . $_SERVER["DOCUMENT_ROOT"] . '/' . drupal_get_path("module", "mediamosa_integrity_check") . '/mediamosa_integrity_check.php </dev/null >/dev/null 2>/dev/null &');// 1>/dev/null/ 2>&1 &
 

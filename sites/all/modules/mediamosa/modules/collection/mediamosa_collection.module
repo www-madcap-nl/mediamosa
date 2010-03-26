@@ -119,23 +119,23 @@ collections. This call gives all the collection details.',
       '' => ''
     ),
     mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
-    <item id="1">
-      <coll_id>A2VIXJhHiplJWliYVTVeD8Ee</coll_id>
-      <title>test collection</title>
-      <description></description>
-      <app_id>1</app_id>
-      <owner_id>foo</owner_id>
-      <group_id></group_id>
-      <isprivate>FALSE</isprivate>
-      <private>FALSE</private>
-      <public>TRUE</public>
-      <category>FALSE</category>
-      <created>2010-03-10 11:00:59</created>
-      <changed>2010-03-10 11:00:59</changed>
-      <is_unappropriate>FALSE</is_unappropriate>
-      <public_assign>FALSE</public_assign>
-    </item>
-  </items>
+  <item id="1">
+    <coll_id>A2VIXJhHiplJWliYVTVeD8Ee</coll_id>
+    <title>test collection</title>
+    <description></description>
+    <app_id>1</app_id>
+    <owner_id>foo</owner_id>
+    <group_id></group_id>
+    <isprivate>FALSE</isprivate>
+    <private>FALSE</private>
+    <public>TRUE</public>
+    <category>FALSE</category>
+    <created>2010-03-10 11:00:59</created>
+    <changed>2010-03-10 11:00:59</changed>
+    <is_unappropriate>FALSE</is_unappropriate>
+    <public_assign>FALSE</public_assign>
+  </item>
+</items>
 ',
   );
 

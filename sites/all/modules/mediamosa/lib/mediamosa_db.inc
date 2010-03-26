@@ -29,7 +29,6 @@
  * Our DB layer between MediaMosa and Drupal DB.
  */
 
-
 class mediamosa_db {
   // ------------------------------------------------------------------ Consts.
   const LIMIT = 'limit';
@@ -396,13 +395,13 @@ class mediamosa_db {
   }
 
   /**
-   * Returns a valid escaped string when using like
+   * Returns a valid escaped string when using like.
    *
    * @param string $str_like
    * @return string
    */
   static public function escape_string_like($string_like) {
-    return str_replace(array('%', '_'), array('\%', '\_'), self::escape_string($string_like));
+    return db_like($string_like);
   }
 
   /**

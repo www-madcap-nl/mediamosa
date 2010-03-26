@@ -38,11 +38,11 @@ class mediamosa_response extends mediamosa {
 
   // ------------------------------------------------------------------ Members
   // The stored response.
-  private $a_response = array();
+  private $response = array();
   private $response_success = FALSE;
 
   // The rest class object.
-  protected $o_mediamosa_rest = NULL;
+  protected $mediamosa_rest = NULL;
 
   // The request uri.
   protected $request_uri;
@@ -67,13 +67,13 @@ class mediamosa_response extends mediamosa {
     $this->f_start_time = microtime(TRUE);
 
     // Save the request URI.
-    $this->request_uri = htmlspecialchars(rawurldecode(mediamosa_unicode::substr(mediamosa::request_uri(), mediamosa_unicode::strlen(base_path()))));
+    $this->request_uri = rawurldecode(mediamosa_unicode::substr(mediamosa::request_uri(), mediamosa_unicode::strlen(base_path())));
     $this->request_uri = $this->request_uri == '' ? '/' : $this->request_uri;
 
     // Save the method.
     $this->request_method = $_SERVER['REQUEST_METHOD'];
 
-    // Reset the header.
+    // All ok, now reset the header.
     $this->reset();
   }
 
@@ -95,10 +95,10 @@ class mediamosa_response extends mediamosa {
       set_error_handler(array($this, 'mediamosa_error_handler_response'), E_ALL);
 
       // Create the REST interface class.
-      $this->o_mediamosa_rest = new mediamosa_rest();
+      $this->mediamosa_rest = new mediamosa_rest();
 
       // Find the rest call.
-      $a_rest_call = $this->o_mediamosa_rest->match_call();
+      $a_rest_call = $this->mediamosa_rest->match_call();
 
       // If we return here, try to let Drupal handle the output.
       if (!$a_rest_call) {
@@ -127,7 +127,7 @@ class mediamosa_response extends mediamosa {
       $response_type = $a_rest_call[mediamosa_rest_call::RESPONSE_TYPE];
 
       // Now execute the call.
-      $this->o_mediamosa_rest->process_call($a_rest_call);
+      $this->mediamosa_rest->process_call($a_rest_call);
     }
     catch (mediamosa_exception_no_rest_interface $e) {
       mediamosa::exit_503(mediamosa::t('No MediaMosa REST interface available...'));
@@ -140,8 +140,9 @@ class mediamosa_response extends mediamosa {
       exit();
     }
     catch (mediamosa_exception_error $e) {
-      // If we are in simpletest, we need to skip logging of mediamosa exceptions, because these might be generated
-      // intentially for testing. The test must always check the error response anyway and not rely on
+      // If we are in simpletest, we need to skip logging of mediamosa
+      // exceptions, because these might be generated intentially for testing.
+      // The test must always check the error response anyway and not rely on
       // logging here.
       if (!mediamosa::in_simpletest_sandbox()) {
         mediamosa_debug::error_log('mediamosa_exception_error caught; ' . $e->getMessage(), $e->getFile(), $e->getLine());
@@ -167,9 +168,9 @@ class mediamosa_response extends mediamosa {
         case mediamosa_rest_call::RESPONSE_TYPE_DOWNLOAD:
         case mediamosa_rest_call::RESPONSE_TYPE_STILL:
 
-          if ($this->a_response['header']['request_result'] == self::ERROR) {
+          if ($this->response['header']['request_result'] == self::ERROR) {
             header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
-            $output = $this->a_response['header']['request_result_description'];
+            $output = $this->response['header']['request_result_description'];
           }
           else {
             $output = '';
@@ -199,13 +200,18 @@ class mediamosa_response extends mediamosa {
     $errors = NULL;
 
     // We don't reset the errors if there are any.
-    if (isset($this->a_response['errors'])) {
-      $errors = $this->a_response['errors'];
+    if (isset($this->response['errors'])) {
+      $errors = $this->response['errors'];
     }
 
-    $this->a_response = array(
+    $this->response = array(
       'header' => array(
-      'request_result' => self::SUCCESS, 'request_result_id' => mediamosa_error::ERRORCODE_OKAY, 'request_result_description' => mediamosa_error::error_code_find_description(mediamosa_error::ERRORCODE_OKAY), 'request_uri' => "[" . $this->request_method . "] " . (mediamosa_unicode::substr($this->request_uri, 0, mediamosa_unicode::strlen('internal')) == 'internal' ? 'Internal MediaMosa call' : (mediamosa_unicode::substr($this->request_uri, 0, 1) == '/' ? '' : '/') . $this->request_uri), 'item_count' => 0, 'version' => mediamosa_version::MEDIAMOSA_VERSION
+      'request_result' => self::SUCCESS,
+      'request_result_id' => mediamosa_error::ERRORCODE_OKAY,
+      'request_result_description' => '',//mediamosa_error::error_code_find_description(mediamosa_error::ERRORCODE_OKAY),
+      'request_uri' => "[" . $this->request_method . "] " . (mediamosa_unicode::substr($this->request_uri, 0, mediamosa_unicode::strlen('internal')) == 'internal' ? 'Internal MediaMosa call' : (mediamosa_unicode::substr($this->request_uri, 0, 1) == '/' ? '' : '/') . $this->request_uri),
+      'item_count' => 0,
+      'version' => mediamosa_version::MEDIAMOSA_VERSION
     ),
 
     'items' => array()
@@ -215,7 +221,7 @@ class mediamosa_response extends mediamosa {
     $this->response_success = FALSE;
 
     if ($errors) {
-      $this->a_response['errors'] = $errors;
+      $this->response['errors'] = $errors;
     }
 
     $this->item_count = 0;
@@ -229,7 +235,7 @@ class mediamosa_response extends mediamosa {
    */
   public function add_item($a_item) {
     assert(is_array($a_item));
-    $this->a_response['items'][++$this->item_count] = $a_item;
+    $this->response['items'][++$this->item_count] = $a_item;
   }
 
   /**
@@ -239,15 +245,15 @@ class mediamosa_response extends mediamosa {
    */
   public function add_program_error($mixed_item) {
 
-    if (! isset($this->a_response['errors'])) {
-      $this->a_response['errors'] = array();
+    if (! isset($this->response['errors'])) {
+      $this->response['errors'] = array();
     }
 
-    if (count($this->a_response['errors']) < 100) {
-      $this->a_response['errors'][count($this->a_response['errors'])] = $mixed_item;
+    if (count($this->response['errors']) < 100) {
+      $this->response['errors'][count($this->response['errors'])] = $mixed_item;
     }
     else {
-      $this->a_response['errors'][100] = 'More than 100 errors, skipping.';
+      $this->response['errors'][100] = 'More than 100 errors, skipping.';
     }
   }
 
@@ -259,9 +265,9 @@ class mediamosa_response extends mediamosa {
    * @param string $request_result_description
    */
   public function set_result($request_result, $request_result_id, $request_result_description = FALSE) {
-    $this->a_response['header']['request_result'] = $request_result;
-    $this->a_response['header']['request_result_id'] = $request_result_id;
-    $this->a_response['header']['request_result_description'] = $request_result_description !== FALSE ? $request_result_description : mediamosa_error::error_code_find_description($request_result_id);
+    $this->response['header']['request_result'] = $request_result;
+    $this->response['header']['request_result_id'] = $request_result_id;
+    $this->response['header']['request_result_description'] = $request_result_description !== FALSE ? $request_result_description : mediamosa_error::error_code_find_description($request_result_id);
   }
 
   /**
@@ -279,7 +285,7 @@ class mediamosa_response extends mediamosa {
    * @param string $name
    */
   public function set_result_header_extra($mixed_data, $name = 'additional_info') {
-    $this->a_response['header'][$name] = $mixed_data;
+    $this->response['header'][$name] = $mixed_data;
   }
 
   /**
@@ -297,7 +303,7 @@ class mediamosa_response extends mediamosa {
    * @param string $uri
    */
   public function set_matched_uri($uri) {
-    $this->a_response['header']['request_matched_uri'] = (mediamosa_unicode::substr($uri, 0, 1) == '/' ? '' : '/') . $uri;
+    $this->response['header']['request_matched_uri'] = (mediamosa_unicode::substr($uri, 0, 1) == '/' ? '' : '/') . $uri;
   }
 
   /**
@@ -306,7 +312,7 @@ class mediamosa_response extends mediamosa {
    * @param string $uri
    */
   public function set_class($class_name) {
-    $this->a_response['header']['request_class'] = $class_name;
+    $this->response['header']['request_class'] = $class_name;
   }
 
   /**
@@ -315,7 +321,7 @@ class mediamosa_response extends mediamosa {
    * @param string $method
    */
   public function set_matched_method($method) {
-    $this->a_response['header']['request_matched_method'] = $method;
+    $this->response['header']['request_matched_method'] = $method;
   }
 
   /**
@@ -325,7 +331,7 @@ class mediamosa_response extends mediamosa {
   function log_restcall() {
 
     // if ($this->is_dev_query()) {
-    //    $this->a_response['header']['request_query_count'] = $this->get_number_of_queries();
+    //    $this->response['header']['request_query_count'] = $this->get_number_of_queries();
     //  }
 
 
@@ -335,7 +341,7 @@ class mediamosa_response extends mediamosa {
       $count = $this->get_number_of_queries();
       db_query(
         "INSERT INTO {statistics_rest_log} (request, process_time, query_count) VALUES ('%s', %f, %d)",
-        $this->a_response['header']['real_request_uri'],
+        $this->response['header']['real_request_uri'],
         $this->get_processed_time(),
         $count
       );
@@ -352,7 +358,7 @@ class mediamosa_response extends mediamosa {
     $output = '';
 
     for ($x = 1; $x <= $this->item_count; $x++) {
-      $output .= $this->a_response['items'][$x]; // Just concat the data
+      $output .= $this->response['items'][$x]; // Just concat the data
     }
 
     $this->log_restcall();
@@ -366,18 +372,18 @@ class mediamosa_response extends mediamosa {
    */
   public function generate_xml() {
 
-    $this->a_response['header']['request_process_time'] = $this->get_processed_time();
+    $this->response['header']['request_process_time'] = $this->get_processed_time();
 
-    $this->a_response['header']['item_count_total'] = (! $this->item_total_count ? $this->item_count : $this->item_total_count);
-    $this->a_response['header']['item_offset'] = $this->item_offset;
-    $this->a_response['header']['item_count'] = $this->item_count;
+    $this->response['header']['item_count_total'] = (! $this->item_total_count ? $this->item_count : $this->item_total_count);
+    $this->response['header']['item_offset'] = $this->item_offset;
+    $this->response['header']['item_count'] = $this->item_count;
 
-    if (!$this->item_count && $this->a_response['header']['request_result_id'] == mediamosa_error::ERRORCODE_OKAY && !$this->response_success) {
+    if (!$this->item_count && $this->response['header']['request_result_id'] == mediamosa_error::ERRORCODE_OKAY && !$this->response_success) {
       self::set_result(self::SUCCESS, mediamosa_error::ERRORCODE_EMPTY_RESULT);
     }
 
     // Sort the header.
-    ksort($this->a_response['header']);
+    ksort($this->response['header']);
 
     // Log the rest call.
     $this->log_restcall();
@@ -391,7 +397,7 @@ class mediamosa_response extends mediamosa {
     // Add Items array.
     $o_xml_response_items = $o_xml_response->addChild('items');
 
-    foreach ($this->a_response['header'] as $key => $value) {
+    foreach ($this->response['header'] as $key => $value) {
       if (! is_array($value)) {
         $o_xml_response_header->addChild($key, htmlspecialchars($value));
       }
@@ -405,21 +411,21 @@ class mediamosa_response extends mediamosa {
 
     $item_counter = 0;
 
-    if (isset($this->a_response['errors']) && count($this->a_response['errors'])) {
+    if (isset($this->response['errors']) && count($this->response['errors'])) {
       $o_xml_response_errors = $o_xml_response_header->addChild('errors');
 
-      foreach ($this->a_response['errors'] as $s_key => $error) {
+      foreach ($this->response['errors'] as $s_key => $error) {
         $o_xml_response_errors->addChild('error', htmlspecialchars($error));
       }
     }
 
-    foreach ($this->a_response['items'] as $a_item) {
+    foreach ($this->response['items'] as $item) {
       $o_xml_response_items_item = $o_xml_response_items->addChild('item');
       $o_xml_response_items_item->addAttribute('id', ++$item_counter);
 
       // Process items with a maximum recursion depth (last parameter).
       //
-      foreach ($a_item as $s_key => $value) {
+      foreach ($item as $s_key => $value) {
         $this->generate_plain_xml_add_child($o_xml_response_items_item, $s_key, $value);
       }
     }

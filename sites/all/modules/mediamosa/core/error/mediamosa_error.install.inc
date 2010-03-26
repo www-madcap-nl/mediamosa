@@ -39,7 +39,7 @@ function _mediamosa_error_install() {
   // Create our table(s).
   mediamosa::drupal_install_schema(mediamosa_error_db::TABLE_NAME);
 
-  $a_error_text = array(
+  $messages = array(
     'HTTP_OK' => '',
     'HTTP_CREATED' => '',
     'HTTP_NO_CONTENT' => '',
@@ -213,22 +213,22 @@ function _mediamosa_error_install() {
     'ERRORCODE_TRANSCODE_PROFILE_NOT_FOUND' => 'Transcode profile with ID \'@profile_id\' not found.',
   );
 
-  $a_query = array();
-  $a_args = array();
+  $query = array();
+  $args = array();
   $x = 0;
-  foreach ($a_error_text as $name => $message) {
+  foreach ($messages as $name => $message) {
     $code = constant('mediamosa_error::' . $name);
     assert($code);
 
-    $a_query[] = '(:name_' . $x . ', :code_' . $x . ', :message_' . $x . ')';
-    $a_args[':name_' . $x] = $name;
-    $a_args[':code_' . $x] = $code;
-    $a_args[':message_' . $x] = $message;
+    $query[] = '(:name_' . $x . ', :code_' . $x . ', :message_' . $x . ')';
+    $args[':name_' . $x] = $name;
+    $args[':code_' . $x] = $code;
+    $args[':message_' . $x] = $message;
     $x++;
   }
 
   // Now insert our errors.
-  db_query('INSERT INTO {mediamosa_error} (name, code, message) VALUES ' . implode(",\n", $a_query), $a_args);
+  db_query('INSERT INTO {mediamosa_error} (name, code, message) VALUES ' . implode(",\n", $query), $args);
 }
 
 /**

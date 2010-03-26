@@ -88,10 +88,10 @@ class mediamosa_response_connector extends mediamosa_response {
       $GLOBALS['mediamosa_params'] = $params;
 
       // Create the REST interface class.
-      $this->o_mediamosa_rest = new mediamosa_rest();
+      $this->mediamosa_rest = new mediamosa_rest();
 
       // Find the rest call.
-      $a_rest_call = $this->o_mediamosa_rest->match_call($uri, $method);
+      $a_rest_call = $this->mediamosa_rest->match_call($uri, $method);
       if (!$a_rest_call) {
         throw new mediamosa_exception_error(mediamosa_error::HTTP_NOT_FOUND);
       }
@@ -101,7 +101,7 @@ class mediamosa_response_connector extends mediamosa_response {
       $a_rest_call[mediamosa_rest_call::BEHAVE_AS_EXTERNAL] = TRUE;
 
       // Now execute the call.
-      $this->o_mediamosa_rest->process_call($a_rest_call);
+      $this->mediamosa_rest->process_call($a_rest_call);
     }
     catch (mediamosa_exception $e) {
       $e->mediamosa_exception_rest_response($this);

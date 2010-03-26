@@ -54,7 +54,7 @@ class mediamosa_collection {
     $query = mediamosa_db::db_select(mediamosa_collection_db::ID, 'c');
     $query->fields('c');
     $query->condition('c.' . mediamosa_collection_db::ID, $a_coll_ids, 'IN');
-    return $query->execute()->fetchAllAssoc(mediamosa_collection_db::ID);
+    return $query->execute()->fetchAllAssoc(mediamosa_collection_db::ID, PDO::FETCH_ASSOC);
   }
 
   /**

@@ -50,6 +50,8 @@ Mediamosa 2.1.2
 - Fixed play_restriction code. Typo with 'time_restriction_' prevented working
   of this code in the play proxy code. Seems to be old bug dating back from 1.0.
 - Added /version REST call.
+- Empty metadata values is no longer allowed. This made the search query a bit
+  faster.
 
 
 MediaMosa 2.1.1

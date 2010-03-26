@@ -552,6 +552,26 @@ class mediamosa_type {
     return $result;
   }
 
+  /**
+   * Convert possible alias to real type.
+   * F.e TYPE_GROUP_ID is actually a TYPE_ALPHA_NUM
+   * @param unknown_type $type
+   */
+  static public function typeAlias2Type($type) {
+
+    switch ($type) {
+      case self::TYPE_SUPPLEMENT_ID:
+      case self::TYPE_USER_ID:
+      case self::TYPE_GROUP_ID:
+      case self::TYPE_ASSET_ID:
+      case self::TYPE_MEDIAFILE_ID:
+      case self::TYPE_COLLECTION_ID:
+      case self::TYPE_BATCH_ID:
+        return self::TYPE_ALPHA_NUM;
+    }
+
+    return $type;
+  }
 
 
   /**

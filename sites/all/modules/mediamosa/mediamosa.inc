@@ -92,26 +92,25 @@ class mediamosa {
    *  The core object.
    */
   static public function get($new_mediamosa_response = NULL) {
-    static $o_mediamosa_response = NULL;
+    static $mediamosa_response = NULL;
 
     if (isset($new_mediamosa_response)) {
       // Save current, we need to return it.
-      $current_o_mediamosa_response = $o_mediamosa_response;
+      $current_mediamosa_response = $mediamosa_response;
 
       // Change to this.
-      $o_mediamosa_response = $new_mediamosa_response;
+      $mediamosa_response = $new_mediamosa_response;
 
       // Return current to restore later.
-      return $current_o_mediamosa_response;
+      return $current_mediamosa_response;
     }
 
-
-    if (!isset($o_mediamosa_response)) {
-      class_exists('mediamosa_response', TRUE);
-      $o_mediamosa_response = new mediamosa_response();
+    if (!isset($mediamosa_response)) {
+      //class_exists('mediamosa_response', TRUE);
+      $mediamosa_response = new mediamosa_response();
     }
 
-    return $o_mediamosa_response;
+    return $mediamosa_response;
   }
 
   /**

@@ -154,7 +154,7 @@ function _mediamosa_maintenance_view_revision($nid, $vid) {
   $nids = db_select('node_revision', 'nr')
     ->fields('nr', array('vid'))
     ->condition('nid', $nid)
-    ->orderBy('nid', 'DESC')
+    ->orderBy('vid', 'ASC')
     ->execute()
     ->fetchCol();
 
@@ -230,4 +230,25 @@ function _mediamosa_maintenance_revision_line($field, $previous, $revision, $cur
     ($previous != $revision ? '<b>' : '') . check_plain($revision) . ($previous != $revision ? '</b>' : ''),
     check_plain($current),
   );
+}
+
+/**
+ * Show information of revision.
+ *
+ * @param $node
+ */
+function theme_mediamosa_maintenance_browse_revision_info($variables) {
+
+  $name = 'unknown admin';
+  if (isset($variables['user'])) {
+    $name = $variables['user']->name;
+  }
+
+  $log = trim($variables['node']->log);
+
+  $output[] = t('View details of a change to MediaMosa configuration settings. Differences compared to current values are displayed <b>bold</b>.');
+  $output[] = t('<b>Date change</b>: ') . format_date($variables['node']->created, 'short');
+  $output[] = t('<b>Log message</b>: ') . (empty($log) ? t('no log message found.') : check_plain($log));
+  $output[] = t('<b>User</b>: ') . check_plain($name);
+  return '<p>' . implode('</p><p>', $output) . '</p>';
 }

@@ -211,21 +211,29 @@ class mediamosa_error {
    *
    * @return array
    */
-  static public function error_code_list($order_by = mediamosa_error_db::CODE, $order_direction = mediamosa_type::ORDER_DIRECTION_ASC) {
-    static $a_codes = NULL;
+  static public function error_code_list($order_by = mediamosa_error_db::CODE, $order_direction = mediamosa_type::ORDER_DIRECTION_ASC, $errorcode = 0) {
+    static $codes = NULL;
 
-    if (!isset($a_codes[$order_by][$order_direction])) {
-      $a_codes[$order_by][$order_direction] = mediamosa_db::db_query(
-        "SELECT * FROM {#mediamosa_error} ORDER BY #order_by #order_direction",
-        array(
-          '#mediamosa_error' => mediamosa_error_db::TABLE_NAME,
-          '#order_by' => $order_by,
-          '#order_direction' => $order_direction,
-        )
-      )->fetchAllAssoc($order_by);
+    if (!isset($codes[$order_by][$order_direction])) {
+      $codes[$order_by][$order_direction] = mediamosa_db::db_select(mediamosa_error_db::TABLE_NAME, 'e')
+        ->fields('e')
+        ->orderBy($order_by, $order_direction)
+        ->execute()->fetchAllAssoc($order_by, PDO::FETCH_ASSOC);
     }
 
-    return $a_codes[$order_by][$order_direction];
+    // If errorcode was specified, get that one specific.
+    if ($errorcode && $order_by == mediamosa_error_db::CODE) {
+      if (isset($codes[$order_by][$order_direction][$errorcode])) {
+        return array($errorcode => (array)$codes[$order_by][$order_direction][$errorcode]);
+      }
+
+      return array();
+    }
+    elseif ($errorcode) {
+      assert(0);
+    }
+
+    return $codes[$order_by][$order_direction];
   }
 
   /**
@@ -234,37 +242,53 @@ class mediamosa_error {
    * @param integer $code
    * @return array
    */
-  static public function error_code_find($code, $a_tags = array(), $fail = FALSE) {
+  static public function error_code_find($errorcode, $tags = array(), $fail = FALSE) {
 
     // Get the current listing.
-    $a_codes = self::error_code_list();
+    $code = self::error_code_list(mediamosa_error_db::CODE, mediamosa_type::ORDER_DIRECTION_ASC, $errorcode);
 
-    if (!isset($a_codes[$code])) {
+    // Do we find the error?
+    if (!isset($code[$errorcode])) {
       if ($fail) {
         return FALSE;
       }
 
       return array(
-        mediamosa_error_db::MESSAGE => strtr('Server error; Unable to find error code: @code', array('@code' => $code)),
+        mediamosa_error_db::MESSAGE => strtr('Server error; Unable to find error code: @errorcode', array('@errorcode' => $errorcode)),
         mediamosa_error_db::CODE => self::HTTP_INTERNAL_SERVER_ERROR,
       );
     }
 
-    $a_code = (array)$a_codes[$code];
-    $a_code[mediamosa_error_db::MESSAGE] = strtr($a_code[mediamosa_error_db::MESSAGE], $a_tags);
+    // Fill message with tags.
+    if (!empty($tags)) {
+      $code[$errorcode][mediamosa_error_db::MESSAGE] = strtr($code[$errorcode][mediamosa_error_db::MESSAGE], $tags);
+    }
 
-    return $a_code;
+    return $code[$errorcode];
   }
 
   /**
    * Find the error code and the description.
    *
-   * @param integer $code
+   * @param integer $errorcode
    * @return array
    */
-  static public function error_code_find_description($code, $a_tags = array()) {
-    $a_code = self::error_code_find($code, $a_tags);
+  static public function error_code_find_description($errorcode, $tags = array()) {
+    $code = self::error_code_find($errorcode, $tags);
 
-    return ($a_code ? $a_code[mediamosa_error_db::MESSAGE] : 'Description not available.');
+    return ($code ? $code[mediamosa_error_db::MESSAGE] : 'Description not available.');
+  }
+
+  /**
+   * Get errorcode by row id.
+   *
+   * @param integer $id
+   */
+  static public function get($id) {
+    return mediamosa_db::db_select(mediamosa_error_db::TABLE_NAME, 'e')
+      ->fields('e')
+      ->condition(mediamosa_error_db::ID, $id)
+      ->execute()
+      ->fetchAssoc();
   }
 }

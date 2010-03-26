@@ -24,10 +24,10 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
- /**
-  * @file
-  * Contains the global MediaMosa Rest calls.
-  */
+/**
+ * @file
+ * Contains the global MediaMosa Rest calls.
+ */
 
 
 /**
