@@ -204,6 +204,11 @@ class mediamosa_response extends mediamosa {
       $errors = $this->response['errors'];
     }
 
+    /**
+     * Because ERRORCODE_OKAY does not have a text, we do not retrieve it here.
+     * This saves a call to the error table in the database when drupal mode is
+     * active.
+     */
     $this->response = array(
       'header' => array(
       'request_result' => self::SUCCESS,
@@ -329,23 +334,16 @@ class mediamosa_response extends mediamosa {
    *
    */
   function log_restcall() {
-
-    // if ($this->is_dev_query()) {
-    //    $this->response['header']['request_query_count'] = $this->get_number_of_queries();
-    //  }
-
+    if (mediamosa_debug::is_debug()) {
+      $this->response['header']['request_query_count'] = mediamosa_db::query_count();
+    }
 
     if ($this->is_log_rest()) {
-      assert(0); // todo :)
-    /*
-      $count = $this->get_number_of_queries();
-      db_query(
-        "INSERT INTO {statistics_rest_log} (request, process_time, query_count) VALUES ('%s', %f, %d)",
-        $this->response['header']['real_request_uri'],
+      mediamosa_statistics::log_restcall(
+        '['. $this->request_method . '] ' . $this->request_uri,
         $this->get_processed_time(),
-        $count
+        mediamosa_db::query_count()
       );
-      */
     }
   }
 
@@ -363,6 +361,33 @@ class mediamosa_response extends mediamosa {
 
     $this->log_restcall();
     return $output;
+  }
+
+  /**
+   * Return result as PHP array.
+   *
+   * @return string
+   */
+  public function generate_array() {
+
+    $this->response['header']['request_process_time'] = $this->get_processed_time();
+
+    $this->response['header']['item_count_total'] = (! $this->item_total_count ? $this->item_count : $this->item_total_count);
+    $this->response['header']['item_offset'] = $this->item_offset;
+    $this->response['header']['item_count'] = $this->item_count;
+
+    if (!$this->item_count && $this->response['header']['request_result_id'] == mediamosa_error::ERRORCODE_OKAY && !$this->response_success) {
+      self::set_result(self::SUCCESS, mediamosa_error::ERRORCODE_EMPTY_RESULT);
+    }
+
+    // Sort the header.
+    ksort($this->response['header']);
+
+    // Log the rest call.
+    $this->log_restcall();
+
+    // This return response, which is a array.
+    return $this->response;
   }
 
   /**
@@ -411,7 +436,7 @@ class mediamosa_response extends mediamosa {
 
     $item_counter = 0;
 
-    if (isset($this->response['errors']) && count($this->response['errors'])) {
+    if (!empty($this->response['errors'])) {
       $o_xml_response_errors = $o_xml_response_header->addChild('errors');
 
       foreach ($this->response['errors'] as $s_key => $error) {

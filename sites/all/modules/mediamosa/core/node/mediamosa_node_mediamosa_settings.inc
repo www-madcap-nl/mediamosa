@@ -117,14 +117,14 @@ class mediamosa_node_mediamosa_settings {
 }
 
 /**
- * Implementation of hook_load().
+ * Implements hook_load().
  */
 function mediamosa_settings_load(&$nodes) {
   return mediamosa_node_revision::load($nodes);
 }
 
 /**
- * Implementation of hook_update().
+ * Implements hook_update().
  */
 function mediamosa_settings_update($node) {
 
@@ -146,7 +146,7 @@ function mediamosa_settings_update($node) {
 }
 
 /**
- * Implementation of hook_insert().
+ * Implements hook_insert().
  */
 function mediamosa_settings_insert($node) {
   // Get the field names of the table.
@@ -162,14 +162,14 @@ function mediamosa_settings_insert($node) {
 }
 
 /**
- * Implementation of hook_node_revision_delete().
+ * Implements hook_node_revision_delete().
  */
 function mediamosa_settings_node_revision_delete($vid) {
   mediamosa_node_revision::delete_revision($vid);
 }
 
 /**
- * Implementation of hook_delete().
+ * Implements hook_delete().
  */
 function mediamosa_settings_delete($node) {
   // Delete revisions.
@@ -177,14 +177,14 @@ function mediamosa_settings_delete($node) {
 }
 
 /**
- * Implementation of hook_view().
+ * Implements hook_view().
  */
 function mediamosa_settings_view($node, $view_mode = 'full') {
   drupal_goto('admin/mediamosa/config/global');
 }
 
 /**
- * Implementation of hook_view().
+ * Implements hook_view().
  */
 function mediamosa_settings_form($node, $view_mode = 'full') {
   drupal_goto('admin/mediamosa/config/global');

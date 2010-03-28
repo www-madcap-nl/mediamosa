@@ -198,7 +198,7 @@ class mediamosa_node {
 }
 
 /**
- * Implementation of hook_node_info().
+ * Implements hook_node_info().
  */
 function mediamosa_node_info() {
   return array(
@@ -248,34 +248,31 @@ function _mediamosa_node_delete_confirm_submit($form, &$form_state) {
 }
 
 /**
- * Implementation of hook_form_alter().
+ * Implements hook_form_alter().
  */
 function mediamosa_form_mediamosa_transcode_profile_node_form_alter(&$form, &$form_state) {
   // Change the form.
   mediamosa_node::common_form($form, $form_state);
 
   $form['#redirect'] = 'admin/mediamosa/config/transcode_profile';
-  $form_state['redirect'] = 'admin/mediamosa/config/transcode_profile';
 }
 
 /**
- * Implementation of hook_form_alter().
+ * Implements hook_form_alter().
  */
 function mediamosa_form_mediamosa_server_node_form_alter(&$form, &$form_state) {
   // Change the form.
   mediamosa_node::common_form($form, $form_state);
 
   $form['#redirect'] = 'admin/mediamosa/config/server';
-  $form_state['redirect'] = 'admin/mediamosa/config/server';
 }
 
 /**
- * Implementation of hook_form_alter().
+ * Implements hook_form_alter().
  */
 function mediamosa_form_mediamosa_app_node_form_alter(&$form, &$form_state) {
   // Change the form.
   mediamosa_node::common_form($form, $form_state);
 
   $form['#redirect'] = 'admin/mediamosa/config/app';
-  $form_state['redirect'] = 'admin/mediamosa/config/app';
 }

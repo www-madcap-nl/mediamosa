@@ -119,5 +119,24 @@ class mediamosa_app {
       ->execute();
   }
 
+  /**
+   * Returns all owners as app_id => owner.
+   */
+  static public function collect_app_owners() {
+    $result = mediamosa_db::db_select(mediamosa_app_db::TABLE_NAME, 'app')
+      ->fields('app', array(mediamosa_app_db::OWNER, mediamosa_app_db::APP_ID))
+      ->groupBy(mediamosa_app_db::OWNER, mediamosa_app_db::APP_ID)
+      ->condition(mediamosa_app_db::OWNER, '', '!=')
+      ->execute()
+      ->fetchAll();
+
+    $owners = array();
+    foreach ($result as $app) {
+      $owners[$app['owner']][] = $app['app_id'];
+    }
+
+    return $owners;
+  }
+
 
 }

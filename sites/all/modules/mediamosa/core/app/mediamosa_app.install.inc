@@ -33,7 +33,7 @@ require_once 'mediamosa_app.inc';
 require_once 'mediamosa_app_db.inc';
 
 /**
- * Implement hook_install().
+ * Implements hook_install().
  */
 function _mediamosa_app_install() {
   // Create our table(s).
@@ -41,7 +41,7 @@ function _mediamosa_app_install() {
 }
 
 /**
- * Implement hook_uninstall().
+ * Implements hook_uninstall().
  */
 function _mediamosa_app_uninstall() {
   // Drop our table(s).

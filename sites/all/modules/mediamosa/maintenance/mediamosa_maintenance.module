@@ -30,7 +30,7 @@
  */
 
 /**
- * Implement hook_menu().
+ * Implements hook_menu().
  */
 function mediamosa_maintenance_menu() {
   $items = array();
@@ -56,6 +56,7 @@ function mediamosa_maintenance_menu() {
     'page arguments' => array('admin/mediamosa/browse'),
     'file' => 'mediamosa_maintenance.admin.inc',
     'type' => MENU_LOCAL_TASK,
+    'weight' => -10,
   );
   $items['admin/mediamosa/browse/list'] = array(
     'title' => 'List',
@@ -80,7 +81,7 @@ function mediamosa_maintenance_menu() {
 }
 
 /**
- * Implement hook_permission().
+ * Implements hook_permission().
  */
 function mediamosa_maintenance_permission() {
   return array(
@@ -92,7 +93,7 @@ function mediamosa_maintenance_permission() {
 }
 
 /**
- * Implement hook_help().
+ * Implements hook_help().
  */
 function mediamosa_maintenance_help($path, $arg) {
   global $base_url;
@@ -173,7 +174,7 @@ function _mediamosa_maintenance_status() {
 }
 
 /**
- * Implement hook_enable().
+ * Implements hook_enable().
  */
 function mediamosa_maintenance_enable() {
 

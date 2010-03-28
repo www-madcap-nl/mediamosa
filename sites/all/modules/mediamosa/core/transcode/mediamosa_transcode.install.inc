@@ -32,7 +32,7 @@ require_once 'profile/mediamosa_transcode_profile.install.inc';
 require_once 'mapping/mediamosa_transcode_mapping.install.inc';
 
 /**
- * Implement hook_install().
+ * Implements hook_install().
  */
 function _mediamosa_transcode_install() {
   // Create our table(s).
@@ -41,7 +41,7 @@ function _mediamosa_transcode_install() {
 }
 
 /**
- * Implement hook_uninstall().
+ * Implements hook_uninstall().
  */
 function _mediamosa_transcode_uninstall() {
   // Drop our table(s).

@@ -32,7 +32,7 @@
   */
 
 /**
- * Implementation of hook_load().
+ * Implements hook_load().
  */
 function mediamosa_transcode_profile_load(&$nodes) {
   $nodes = mediamosa_node_revision::load($nodes);
@@ -75,7 +75,7 @@ function _mediamosa_transcode_profile_do_command($node) {
 }
 
 /**
- * Implementation of hook_update().
+ * Implements hook_update().
  */
 function mediamosa_transcode_profile_update($node) {
 
@@ -101,7 +101,7 @@ function mediamosa_transcode_profile_update($node) {
 }
 
 /**
- * Implementation of hook_insert().
+ * Implements hook_insert().
  */
 function mediamosa_transcode_profile_insert($node) {
   // If this profile is set als default, then reset the rest to FALSE.
@@ -121,7 +121,7 @@ function mediamosa_transcode_profile_insert($node) {
 }
 
 /**
- * Implementation of hook_delete().
+ * Implements hook_delete().
  */
 function mediamosa_transcode_profile_delete($node) {
   // Delete revisions.
@@ -129,7 +129,7 @@ function mediamosa_transcode_profile_delete($node) {
 }
 
 /**
- * Implementation of hook_node_revision_delete().
+ * Implements hook_node_revision_delete().
  */
 function mediamosa_transcode_profile_node_revision_delete($vid) {
   mediamosa_node_revision::delete_revision($vid);
@@ -154,7 +154,7 @@ function _mediamosa_transcode_profile_update_isdefault($node) {
 }
 
 /**
- * Implementation of hook_view().
+ * Implements hook_view().
  */
 function mediamosa_transcode_profile_view($node, $view_mode = 'full') {
   // Get the apps.
@@ -189,7 +189,7 @@ function mediamosa_transcode_profile_view($node, $view_mode = 'full') {
 }
 
 /**
- * Implementation of hook_form().
+ * Implements hook_form().
  */
 function mediamosa_transcode_profile_form($node, $form_state) {
   // If we're inserting a new node, set some defaults:

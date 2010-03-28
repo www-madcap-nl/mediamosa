@@ -53,7 +53,7 @@ require_once 'core/user/mediamosa_user.install.inc';
 require_once 'core/webservice/mediamosa_webservice.install.inc';
 
 /**
- * Implement hook_install().
+ * Implements hook_install().
  */
 function mediamosa_install() {
 
@@ -104,7 +104,7 @@ function mediamosa_install() {
 }
 
 /**
- * Implement hook_unstall().
+ * Implements hook_unstall().
  */
 function mediamosa_uninstall() {
   // Remove the ftp_user table.

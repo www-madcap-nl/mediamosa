@@ -52,7 +52,10 @@ Mediamosa 2.1.2
 - Added /version REST call.
 - Empty metadata values is no longer allowed. This made the search query a bit
   faster.
-
+- Statistics in 1.x falsely created new statistics based on what some unittest
+  was testing. F.e. the CQL unit test would generate new stats based on the
+  searches during test and store them as normal stats. This no longer is
+  a bug because of the sandbox environment of 2.x unittests.
 
 MediaMosa 2.1.1
 ---------------

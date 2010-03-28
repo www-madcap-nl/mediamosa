@@ -105,14 +105,14 @@ function _ajax_app_generate_shared_key() {
 }
 
 /**
- * Implementation of hook_load().
+ * Implements hook_load().
  */
 function mediamosa_app_load(&$nodes) {
   return mediamosa_node_revision::load($nodes);
 }
 
 /**
- * Implementation of hook_update().
+ * Implements hook_update().
  */
 function mediamosa_app_update($node) {
 
@@ -132,7 +132,7 @@ function mediamosa_app_update($node) {
 }
 
 /**
- * Implementation of hook_insert().
+ * Implements hook_insert().
  */
 function mediamosa_app_insert($node) {
   // Get the field names of the table.
@@ -146,7 +146,7 @@ function mediamosa_app_insert($node) {
 }
 
 /**
- * Implementation of hook_delete().
+ * Implements hook_delete().
  */
 function mediamosa_app_delete($node) {
   // Delete revisions.
@@ -154,14 +154,14 @@ function mediamosa_app_delete($node) {
 }
 
 /**
- * Implementation of hook_node_revision_delete().
+ * Implements hook_node_revision_delete().
  */
 function mediamosa_app_node_revision_delete($vid) {
   mediamosa_node_revision::delete_revision($vid);
 }
 
 /**
- * Implementation of hook_view().
+ * Implements hook_view().
  */
 function mediamosa_app_view($node, $view_mode = 'full') {
 
@@ -200,7 +200,7 @@ function mediamosa_app_view($node, $view_mode = 'full') {
 }
 
 /**
- * Implementation of hook_form().
+ * Implements hook_form().
  */
 function mediamosa_app_form($node, &$form_state) {
   global $user;
@@ -527,7 +527,7 @@ function mediamosa_app_form($node, &$form_state) {
 }
 
 /**
- * Implementation of hook_validate().
+ * Implements hook_validate().
  */
 function mediamosa_app_validate($node) {
 

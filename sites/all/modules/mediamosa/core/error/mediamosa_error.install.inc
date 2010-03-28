@@ -33,7 +33,7 @@ require_once 'mediamosa_error_db.inc';
 require_once 'mediamosa_error.inc';
 
 /**
- * Implement hook_install().
+ * Implements hook_install().
  */
 function _mediamosa_error_install() {
   // Create our table(s).
@@ -232,7 +232,7 @@ function _mediamosa_error_install() {
 }
 
 /**
- * Implement hook_install().
+ * Implements hook_install().
  */
 function _mediamosa_error_uninstall() {
   // Drop our table(s).
@@ -240,7 +240,7 @@ function _mediamosa_error_uninstall() {
 }
 
 /**
- * Implement hook_schema().
+ * Implements hook_schema().
  */
 function mediamosa_error_schema() {
   $a_schema[mediamosa_error_db::TABLE_NAME] = array(

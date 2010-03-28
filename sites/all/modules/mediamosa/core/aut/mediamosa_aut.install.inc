@@ -35,7 +35,7 @@ require_once 'object/mediamosa_aut_object.install.inc';
 require_once 'app_master_slave/mediamosa_aut_app_master_slave.install.inc';
 
 /**
- * Implement hook_install().
+ * Implements hook_install().
  */
 function _mediamosa_aut_install() {
 
@@ -53,7 +53,7 @@ function _mediamosa_aut_install() {
 }
 
 /**
- * Implement hook_uninstall().
+ * Implements hook_uninstall().
  */
 function _mediamosa_aut_uninstall() {
   // Install mediamosa_aut_app_master_slave.

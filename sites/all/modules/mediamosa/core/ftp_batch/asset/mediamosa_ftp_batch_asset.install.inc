@@ -32,7 +32,7 @@
 require_once 'mediamosa_ftp_batch_asset_db.inc';
 
 /**
- * Implement hook_ininstall.
+ * Implements hook_ininstall.
  */
 function _mediamosa_ftp_batch_asset_install() {
 // Create our table.
@@ -40,7 +40,7 @@ function _mediamosa_ftp_batch_asset_install() {
 }
 
 /**
- * Implement hook_uninstall.
+ * Implements hook_uninstall.
  */
 function _mediamosa_ftp_batch_asset_uninstall() {
 // Create our table.
@@ -48,7 +48,7 @@ function _mediamosa_ftp_batch_asset_uninstall() {
 }
 
 /**
- * Implement hook_schema().
+ * Implements hook_schema().
  */
 function mediamosa_ftp_batch_asset_schema() {
   $a_schema[mediamosa_ftp_batch_asset_db::TABLE_NAME] = array(

@@ -34,7 +34,7 @@ require_once 'still/mediamosa_job_server_still.install.inc';
 require_once 'transcode/mediamosa_job_server_transcode.install.inc';
 
 /**
- * Implement hook_install().
+ * Implements hook_install().
  */
 function _mediamosa_job_server_install() {
   // Create our table(s).
@@ -76,7 +76,7 @@ function _mediamosa_job_server_install() {
 }
 
 /**
- * Implement hook_uninstall().
+ * Implements hook_uninstall().
  */
 function _mediamosa_job_server_uninstall() {
   // Drop child tables;
@@ -89,7 +89,7 @@ function _mediamosa_job_server_uninstall() {
 }
 
 /**
- * Implement hook_schema().
+ * Implements hook_schema().
  */
 function mediamosa_job_server_schema() {
 

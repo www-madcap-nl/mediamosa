@@ -59,7 +59,6 @@ class mediamosa_rest_call_statistics_get_newest_mediafiles extends mediamosa_res
     $o_mediamosa = mediamosa::get();
 
     $app_ids = $this->get_param_value_app();
-    $app_id = reset($app_ids);
 
     $order_by = $this->get_param_value_order_by();
     $order_direction = $this->get_param_value_order_direction();
@@ -106,13 +105,13 @@ class mediamosa_rest_call_statistics_get_newest_mediafiles extends mediamosa_res
     $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = "a.parent_id IS NULL";
 
     // Dont count private assets
-    $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = "a.isprivate='FALSE'";
+    $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = "a.isprivate = 'FALSE'";
 
     // Dont count unappropiate assets
-    $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = "a.is_unappropiate='FALSE'";
+    $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = "a.is_unappropriate = 'FALSE'";
 
     // Join the mediafiles
-    $a_query[mediamosa_db_query::A_JOIN]['mediafile'] = "LEFT JOIN {mediamosa_asset_mediafile} AS mf ON mf.asset_id_root=a.asset_id";
+    $a_query[mediamosa_db_query::A_JOIN]['mediafile'] = "LEFT JOIN {mediamosa_asset_mediafile} AS mf ON mf.asset_id = a.asset_id";
 
     // MF must be original
     $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = "mf.is_original_file='TRUE'";
@@ -131,6 +130,7 @@ class mediamosa_rest_call_statistics_get_newest_mediafiles extends mediamosa_res
 
     // Do query
     $query = mediamosa_db_query::query_select($a_query, array(mediamosa_db_query::SQL_CALC_FOUND_ROWS => TRUE));
+
     $result = mediamosa_db::db_query($query);
 
     // Set total.
@@ -420,6 +420,7 @@ class mediamosa_rest_call_statistics_get_most_popular_collections extends mediam
 
     // Do query
     $query = mediamosa_db_query::query_select($a_query, array(mediamosa_db_query::SQL_CALC_FOUND_ROWS => TRUE));
+
     $result = mediamosa_db::db_query($query);
 
     // Set total.
@@ -628,7 +629,7 @@ class mediamosa_rest_call_statistics_get_used_diskspace extends mediamosa_rest_c
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
           self::VAR_DESCRIPTION => 'The year of the query.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
-          self::VAR_RANGE_START => 2000,
+          self::VAR_RANGE_START => 1970,
           self::VAR_RANGE_END => 2099,
         ),
         self::TYPE => array(
@@ -648,7 +649,7 @@ class mediamosa_rest_call_statistics_get_used_diskspace extends mediamosa_rest_c
     $a_var_setup = self::get_var_setup_range($a_var_setup, mediamosa_settings::LIMIT_MAX, mediamosa_settings::LIMIT_DEFAULT_STATISTICS);
 
     // Enrich with order by.
-    $a_var_setup = self::get_var_setup_order_by($a_var_setup, '', array(), mediamosa_type::ORDER_DIRECTION_DESC);
+    $a_var_setup = self::get_var_setup_order_by($a_var_setup, '', array(), mediamosa_type::ORDER_DIRECTION_ASC);
 
     // Enrich with required REST vars.
     return self::get_var_setup_default($a_var_setup);
@@ -1041,7 +1042,7 @@ class mediamosa_rest_call_statistics_get_most_popular_words extends mediamosa_re
     $a_var_setup = self::get_var_setup_order_by($a_var_setup, '', array(), mediamosa_type::ORDER_DIRECTION_DESC);
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($a_var_setup, FALSE);
   }
 
   // ------------------------------------------------------------------ Do Call.

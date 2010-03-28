@@ -24,43 +24,30 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
- /**
-  * @file
-  */
-
 /**
- * Execute a REST call.
- * @param string $uri
- *  The URI of the REST call.
- * @param string $method
- *  The Method (POST/GET/PUT).
- * @param array $data
- *  Array name => value.
+ * @file
+ * Theme functions for statistics.
  */
-function _mediamosa_restcall($uri, $method = 'GET', array $data = array()) {
 
-  // Wrapper.
-  return mediamosa_response_connector::static_do_restcall_drupal($uri, $method, $data);
-}
+function theme_mediamosa_statistics_filters($variables) {
+  $form = $variables['form'];
 
-/**
- * This function returns a themed pager
- */
-function _mediamosa_maintenance_browse_pager($page, $item_count_total, $item_limit, $element = 0) {
-  global $pager_page_array, $pager_total, $pager_total_items;
+  $output = '<div class="clearfix">';
 
-  $pager_page_array = array($element => $page);
+  $output .= '<dl class="multiselect">';
 
-  // Total items.
-  $pager_total_items[$element] = $item_count_total;
+  $output .= '<dd>';
 
-  if (!is_array($element)) {
-    // Number of pagelinks.
-    $pager_total[$element] = ceil($item_count_total / $item_limit);
+  foreach (element_children($form['status']) as $key) {
+    $output .= drupal_render($form['status'][$key]);
   }
-  return theme('pager', array('quantity' => 10));
-}
+  $output .= '</dd>';
 
-function _mediamosa_maintenance_browse_clean_string($string) {
-  return drupal_ucfirst(str_replace('_', ' ', $string));
+  $output .= '</dl>';
+  $output .= drupal_render($form['actions']);
+
+  $output .= '</div>';
+
+  return $output;
+
 }

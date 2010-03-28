@@ -34,7 +34,7 @@ require_once 'mediamosa_webservice_db.inc';
 require_once 'app/mediamosa_webservice_app.install.inc';
 
 /**
- * Implement hook_install().
+ * Implements hook_install().
  */
 function _mediamosa_webservice_install() {
   // Create our table(s).
@@ -81,7 +81,7 @@ function _mediamosa_webservice_install() {
 }
 
 /**
- * Implement hook_uninstall().
+ * Implements hook_uninstall().
  */
 function _mediamosa_webservice_uninstall() {
   // Drop children.

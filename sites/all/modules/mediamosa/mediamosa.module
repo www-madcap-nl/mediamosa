@@ -39,7 +39,7 @@ require_once 'core/node/mediamosa_node_mediamosa_app.inc';
 require_once 'core/node/mediamosa_node_mediamosa_server.inc';
 require_once 'core/node/mediamosa_node_mediamosa_transcode_profile.inc';
 /**
- * Implement hook_requirements().
+ * Implements hook_requirements().
  */
 function mediamosa_requirements($phase) {
   // Ensure translations don't break at install time
@@ -77,7 +77,7 @@ function mediamosa_requirements($phase) {
 }
 
 /**
- * Implement hook_permission().
+ * Implements hook_permission().
  */
 function mediamosa_permission() {
   return array(
