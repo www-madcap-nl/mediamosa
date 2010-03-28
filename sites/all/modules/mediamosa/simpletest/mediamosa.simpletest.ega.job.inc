@@ -156,7 +156,7 @@ class MediaMosaTestCaseEgaJob extends MediaMosaTestCaseEga {
    */
   protected function doQueueCycleAll() {
 
-    $max_runs = 15;
+    $max_runs = 5;
     $running_jobs = 1;
     while ($max_runs-- && $running_jobs) {
       // Run one job cycle.

@@ -506,8 +506,7 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
       $this->get_param_value_limit(),
       $this->get_param_value_offset()
     );
-    // @todo;
-    //_vpx_statistics_log_search_query($a_args, $app_id);
+
   }
 }
 

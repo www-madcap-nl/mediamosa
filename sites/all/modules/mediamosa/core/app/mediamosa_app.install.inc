@@ -244,12 +244,11 @@ function mediamosa_app_schema() {
         'not null' => TRUE,
         'default' => 5,
       ),
-      mediamosa_app_db::ALLOW_MASTERSLAVE => array(
-        'description' => t('Control how other clientapplications can access this application.'),
-        'type' => "enum('" . implode("','", array(mediamosa_app_db::ALLOW_MASTERSLAVE_FALSE, mediamosa_app_db::ALLOW_MASTERSLAVE_TRUE)) . "')",
-        'not null' => TRUE,
-        'mysql_type' => "enum('" . implode("','", array(mediamosa_app_db::ALLOW_MASTERSLAVE_FALSE, mediamosa_app_db::ALLOW_MASTERSLAVE_TRUE)) . "')",
-        'default' => mediamosa_app_db::ALLOW_MASTERSLAVE_FALSE,
+      mediamosa_app_db::ALLOW_MASTERSLAVE_APPS => array(
+        'description' => t('An array of application IDs as PHP serialized which are allowed to add master/slave.'),
+        'type' => 'text',
+        'not null' => FALSE,
+        'default' => NULL,
       ),
     ),
     'primary key' => array(mediamosa_app_db::NID), // Revisions are stored in mediamosa_node_revision.

@@ -104,6 +104,7 @@ class mediamosa_app {
       $query->orderBy($order_by, $order_direction);
     }
 
+    // Dont change with ->fetchAll(), some callers expect the object here.
     return $query->execute();
   }
 
@@ -138,5 +139,23 @@ class mediamosa_app {
     return $owners;
   }
 
+  /**
+   * return an array of all apps that are allowed to master/slave this app.
+   *
+   * @param integer $app_id
+   */
+  static public function get_allowed_master_slave_apps($app_id) {
+    $allowed_apps = mediamosa_db::db_select(mediamosa_app_db::TABLE_NAME, 'app')
+      ->fields('app', array(mediamosa_app_db::ALLOW_MASTERSLAVE_APPS))
+      ->condition(mediamosa_app_db::APP_ID, $app_id)
+      ->execute()
+      ->fetchField();
 
+    if (empty($allowed_apps)) {
+      return array();
+    }
+
+    // Return stored array.
+    return unserialize($allowed_apps);
+  }
 }

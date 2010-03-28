@@ -293,4 +293,5 @@ files[] = simpletest/mediamosa.simpletest.inc
 files[] = simpletest/mediamosa.simpletest.ega.inc
 files[] = simpletest/mediamosa.simpletest.ega.job.inc
 files[] = simpletest/mediamosa.simpletest.ega.test
+files[] = simpletest/mediamosa.simpletest.ega.job.test
 files[] = simpletest/mediamosa.simpletest.rest.inc

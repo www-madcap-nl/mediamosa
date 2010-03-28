@@ -108,7 +108,17 @@ function _ajax_app_generate_shared_key() {
  * Implements hook_load().
  */
 function mediamosa_app_load(&$nodes) {
-  return mediamosa_node_revision::load($nodes);
+  mediamosa_node_revision::load($nodes);
+
+  // Loop through the nodes and unserialize the master slave apps.
+  foreach ($nodes as $key => $node) {
+    $apps = array();
+    if (!empty($nodes[$key]->{mediamosa_app_db::ALLOW_MASTERSLAVE_APPS})) {
+      $apps = unserialize($nodes[$key]->{mediamosa_app_db::ALLOW_MASTERSLAVE_APPS});
+    }
+
+    $nodes[$key]->{mediamosa_app_db::ALLOW_MASTERSLAVE_APPS} = $apps;
+  }
 }
 
 /**
@@ -126,6 +136,9 @@ function mediamosa_app_update($node) {
     // Exception is title.
     $node->app_name = $node->title;
 
+    // Master/Slave Apps is an array, serialize it.
+    $node->{mediamosa_app_db::ALLOW_MASTERSLAVE_APPS} = serialize($node->{mediamosa_app_db::ALLOW_MASTERSLAVE_APPS});
+
     // Update.
     mediamosa_node_revision::update_ex($node, mediamosa_app_db::TABLE_NAME, $names);
   }
@@ -140,6 +153,9 @@ function mediamosa_app_insert($node) {
 
   // Exception is title.
   $node->app_name = $node->title;
+
+  // Master/Slave Apps is an array, serialize it.
+  $node->{mediamosa_app_db::ALLOW_MASTERSLAVE_APPS} = serialize($node->{mediamosa_app_db::ALLOW_MASTERSLAVE_APPS});
 
   // Insert revision.
   mediamosa_node_revision::insert_ex($node, mediamosa_app_db::TABLE_NAME, $names);
@@ -170,10 +186,17 @@ function mediamosa_app_view($node, $view_mode = 'full') {
     mediamosa_app_db::ACTIVE_FALSE => t('Disabled'),
   );
 
-  $allow_masterslave = array(
-    mediamosa_app_db::ALLOW_MASTERSLAVE_TRUE => t('Allowed'),
-    mediamosa_app_db::ALLOW_MASTERSLAVE_FALSE => t('Not allowed'),
-  );
+  // Get all apps.
+  $apps = mediamosa_app::get_all_apps(array(mediamosa_app_db::APP_ID, mediamosa_app_db::APP_NAME), mediamosa_app_db::APP_NAME);
+
+  $allow_masterslave_apps = array();
+  foreach ($apps as $app) {
+    if (!in_array($app[mediamosa_app_db::APP_ID], $node->{mediamosa_app_db::ALLOW_MASTERSLAVE_APPS})) {
+      continue;
+    }
+
+    $allow_masterslave_apps[] = strtr('@app_name (@app_id)', array('@app_name' => $app[mediamosa_app_db::APP_NAME], '@app_id' => $app[mediamosa_app_db::APP_ID]));
+  }
 
   // Default parameters
   $rows = array(
@@ -185,7 +208,7 @@ function mediamosa_app_view($node, $view_mode = 'full') {
     array(t('Status'), $status[$node->{mediamosa_app_db::ACTIVE}]),
     array(t('REST call version'), check_plain($node->{mediamosa_app_db::ACTIVE_VERSION})),
     array(t('Owner'), check_plain($node->{mediamosa_app_db::OWNER})),
-    array(t('Master/Slave'), $allow_masterslave[$node->{mediamosa_app_db::ALLOW_MASTERSLAVE}]),
+    array(t('Allowed Master/Slave Apps'), empty($allow_masterslave_apps) ? t('No applications allowed.') : implode(', ', $allow_masterslave_apps)),
   );
 
   // Add timestamps.
@@ -204,6 +227,19 @@ function mediamosa_app_view($node, $view_mode = 'full') {
  */
 function mediamosa_app_form($node, &$form_state) {
   global $user;
+
+  // Get all apps. app_id -> name
+  $apps_all = mediamosa_app::get_all_apps(array(mediamosa_app_db::NID, mediamosa_app_db::APP_ID, mediamosa_app_db::APP_NAME), mediamosa_app_db::APP_NAME);
+
+  $apps = array();
+  foreach ($apps_all as $app) {
+    // Skip yourself.
+    if ($app[mediamosa_app_db::NID] == $node->nid) {
+      continue;
+    }
+
+    $apps[$app[mediamosa_app_db::APP_ID]] = strtr('@app_name (@app_id)', array('@app_name' => $app[mediamosa_app_db::APP_NAME], '@app_id' => $app[mediamosa_app_db::APP_ID]));
+  }
 
   $form = array();
 
@@ -285,12 +321,14 @@ function mediamosa_app_form($node, &$form_state) {
     '#description' => t('Control how other clientapplications can access this application'),
   );
 
-  $form['masterslave'][mediamosa_app_db::ALLOW_MASTERSLAVE] = array(
+  $form['masterslave'][mediamosa_app_db::ALLOW_MASTERSLAVE_APPS] = array(
     '#type' => 'select',
     '#title' => t('Allow master/slave access'),
-    '#description' => t('Allow other client applications to create slave or master assets in this application.'),
-    '#options' => array(mediamosa_app_db::ALLOW_MASTERSLAVE_TRUE => t('Allowed'), mediamosa_app_db::ALLOW_MASTERSLAVE_FALSE => t('Not allowed')),
-    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::ALLOW_MASTERSLAVE, $node, 'FALSE'),
+    '#description' => t('Select other client applications that are allowed to master/slave your assets and mediafiles. Use SHIFT or CTRL to select more than one application. If no applications are selected, then no application can master/slave your assets/mediafiles (default).'),
+    '#options' => $apps,
+    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::ALLOW_MASTERSLAVE_APPS, $node, array()),
+    '#multiple' => TRUE,
+    '#size' => 20,
   );
 
   $form['oai'] = array(

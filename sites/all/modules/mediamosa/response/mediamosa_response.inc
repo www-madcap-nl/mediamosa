@@ -333,13 +333,13 @@ class mediamosa_response extends mediamosa {
    * Log the REST call.
    *
    */
-  function log_restcall() {
+  function log_event_restcall() {
     if (mediamosa_debug::is_debug()) {
       $this->response['header']['request_query_count'] = mediamosa_db::query_count();
     }
 
     if ($this->is_log_rest()) {
-      mediamosa_statistics::log_restcall(
+      mediamosa_statistics::log_event_restcall(
         '['. $this->request_method . '] ' . $this->request_uri,
         $this->get_processed_time(),
         mediamosa_db::query_count()
@@ -359,7 +359,7 @@ class mediamosa_response extends mediamosa {
       $output .= $this->response['items'][$x]; // Just concat the data
     }
 
-    $this->log_restcall();
+    $this->log_event_restcall();
     return $output;
   }
 
@@ -384,7 +384,7 @@ class mediamosa_response extends mediamosa {
     ksort($this->response['header']);
 
     // Log the rest call.
-    $this->log_restcall();
+    $this->log_event_restcall();
 
     // This return response, which is a array.
     return $this->response;
@@ -411,7 +411,7 @@ class mediamosa_response extends mediamosa {
     ksort($this->response['header']);
 
     // Log the rest call.
-    $this->log_restcall();
+    $this->log_event_restcall();
 
     // Create the SimpleXML element.
     $o_xml_response = new SimpleXMLElement('<?xml version="1.0" encoding="utf-8" ?><response></response>');

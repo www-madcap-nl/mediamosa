@@ -84,7 +84,7 @@ class mediamosa_statistics {
     $query->fields('mf');
     $query->fields('a', array(mediamosa_asset_db::ID)); // 2.x allows us to use the asset_id instead of the asset_id_root.
     $query->fields('mfm', array(mediamosa_asset_mediafile_metadata_db::FILESIZE, mediamosa_asset_mediafile_metadata_db::CONTAINER_TYPE));
-    $mediafile_ext = $query->execute();
+    $mediafile_ext = $query->execute()->fetchAssoc();
 
     // Not found?
     if ($mediafile_ext === FALSE) {
@@ -163,7 +163,7 @@ class mediamosa_statistics {
    * @param float $processed_time
    * @param integer $query_count
    */
-  static public function log_restcall($request, $process_time, $query_count) {
+  static public function log_event_restcall($request, $process_time, $query_count) {
 
     return mediamosa_db::db_insert(mediamosa_statistics_rest_log_db::TABLE_NAME)
       ->fields(array(
@@ -171,6 +171,17 @@ class mediamosa_statistics {
         mediamosa_statistics_rest_log_db::PROCESS_TIME => $process_time,
         mediamosa_statistics_rest_log_db::QUERY_COUNT => $query_count,
       ))
+      ->execute();
+  }
+
+  /**
+   * Delete all stats related to this asset.
+   *
+   * @param string $asset_id
+   */
+  static public function delete_by_asset_id($asset_id) {
+    mediamosa_db::db_delete(mediamosa_statistics_stream_request_db::TABLE_NAME)
+      ->condition(mediamosa_statistics_stream_request_db::ASSET_ID, $asset_id)
       ->execute();
   }
 
