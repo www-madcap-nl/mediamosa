@@ -137,7 +137,7 @@ function mediamosa_app_update($node) {
     $node->app_name = $node->title;
 
     // Master/Slave Apps is an array, serialize it.
-    $node->{mediamosa_app_db::ALLOW_MASTERSLAVE_APPS} = serialize($node->{mediamosa_app_db::ALLOW_MASTERSLAVE_APPS});
+    $node->{mediamosa_app_db::ALLOW_MASTERSLAVE_APPS} = isset($node->{mediamosa_app_db::ALLOW_MASTERSLAVE_APPS}) ? serialize($node->{mediamosa_app_db::ALLOW_MASTERSLAVE_APPS}) : serialize(array());
 
     // Update.
     mediamosa_node_revision::update_ex($node, mediamosa_app_db::TABLE_NAME, $names);
@@ -155,7 +155,7 @@ function mediamosa_app_insert($node) {
   $node->app_name = $node->title;
 
   // Master/Slave Apps is an array, serialize it.
-  $node->{mediamosa_app_db::ALLOW_MASTERSLAVE_APPS} = serialize($node->{mediamosa_app_db::ALLOW_MASTERSLAVE_APPS});
+  $node->{mediamosa_app_db::ALLOW_MASTERSLAVE_APPS} = isset($node->{mediamosa_app_db::ALLOW_MASTERSLAVE_APPS}) ? serialize($node->{mediamosa_app_db::ALLOW_MASTERSLAVE_APPS}) : serialize(array());
 
   // Insert revision.
   mediamosa_node_revision::insert_ex($node, mediamosa_app_db::TABLE_NAME, $names);
@@ -234,7 +234,7 @@ function mediamosa_app_form($node, &$form_state) {
   $apps = array();
   foreach ($apps_all as $app) {
     // Skip yourself.
-    if ($app[mediamosa_app_db::NID] == $node->nid) {
+    if (isset($node->nid) && $app[mediamosa_app_db::NID] == $node->nid) {
       continue;
     }
 

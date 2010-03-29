@@ -127,7 +127,6 @@ function mediamosa_server_update($node) {
  * Implements hook_insert().
  */
 function mediamosa_server_insert(&$node) {
-
   // Get the field names of the table.
   $names = mediamosa_server_db::get_fields();
 
@@ -297,7 +296,7 @@ function mediamosa_server_form($node, &$form_state) {
 
   $form[mediamosa_server_db::SERVER_TYPE] = array(
     '#type' => 'hidden',
-    '#value' => mediamosa_node::default_value(mediamosa_server_db::SERVER_TYPE, $node),
+    '#value' => mediamosa_node::default_value(mediamosa_server_db::SERVER_TYPE, $node, $server_type),
   );
 
   $form['mediamosa_server'] = array(
