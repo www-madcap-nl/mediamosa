@@ -492,6 +492,9 @@ class mediamosa_asset_search {
         ));
 
         // Harvesting the data
+        if (substr($d_ordby, 0, 5) == 'sort.') {
+          $d_ordby = 'a.' . substr($d_ordby, 5);
+        }
         $result = mediamosa_db::db_query('SELECT DISTINCT a.asset_id FROM {assets_all} AS a'. ($d_ordby ? ' ORDER BY '. $d_ordby : '') . ($d_limit ? ($d_offset ? ' LIMIT '. $d_offset .','. $d_limit : ' LIMIT '. $d_limit) : ''));
         $a_asset_ids = array();
         foreach ($result as $a_row) {

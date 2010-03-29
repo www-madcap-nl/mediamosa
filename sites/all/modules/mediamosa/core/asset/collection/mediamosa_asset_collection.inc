@@ -128,10 +128,17 @@ class mediamosa_asset_collection {
     }
 
     $query = mediamosa_db::db_select(mediamosa_asset_collection_db::TABLE_NAME, 'ac');
-    $query->leftJoin(mediamosa_collection_db::TABLE_NAME, 'c', 'ac.asset_id = c.asset_id');
+    $query->leftJoin(mediamosa_collection_db::TABLE_NAME, 'c', 'ac.coll_id = c.coll_id');
     if (count($a_fields)) {
       foreach ($a_fields as $key => $field) {
-        $query->addField('c', $field, (is_numeric($key) ? $field : $key));
+        if (($pos = strpos($field, '.')) === FALSE) {
+          $query->addField('c', $field, (is_numeric($key) ? $field : $key));
+        }
+        else {
+          $pref = substr($field, 0, $pos);
+          $field_exp = substr($field, $pos + 1);
+          $query->addField($pref, $field_exp, (is_numeric($key) ? $field_exp : $key));
+        }
       }
     }
     else {
