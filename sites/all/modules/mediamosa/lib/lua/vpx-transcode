@@ -91,6 +91,7 @@ local ln_audio = space * "Stream #" * float * language^-1 * COLON *
 -- additional formats, introduced in 0.5 for ogg, mkv &c.
 -- Stream #0.0: Video: h264, yuv420p, 640x480, PAR 1:1 DAR 4:3, 25 tbr, 1k tbn, 2k tbc
 -- Stream #0.0: Video: dvvideo, yuv411p, 720x480, 28771 kb/s, PAR 10:11 DAR 15:11, 29.97 tbr, 29.97 tbn, 29.97 tbc
+-- Stream #0.1(und): Video: h264, yuv420p, 480x270 [PAR 1:1 DAR 16:9], 539 kb/s, 23.97 fps, 23.97 tbr, 23971 tbn, 47.94 tbc
 -- the tb{r,n,c} fields can have a 'k' suffix, in which case the value must be multiplied by 1000
 -- captures: stream, codecs, colorspace, size, ar, bitrate, tbr (= fps)
 function convert_units(amount, unit)
@@ -108,7 +109,7 @@ local ln_video = space * "Stream #" * float * language * COLON *
   (dimension + lpeg.Cc("unknown")) *
   ((COMMA * number * "kb/s") + lpeg.Cc("unknown")) *
   (aspectratio + lpeg.Cc("unknown")) *
-  ((COMMA * number * "kb/s") + lpeg.Cc("unknown")) *
+  ((COMMA * number * "kb/s")^-1 * (COMMA * float * "fps")^-1 + lpeg.Cc("unknown")) *
   (COMMA * ((float + number) * unit) / convert_units) * space * "tbr"
 
 -- Stream #0.0: Video: h264, yuv420p, 640x480 [PAR 0:1 DAR 0:1], 25.00 tb(r)
