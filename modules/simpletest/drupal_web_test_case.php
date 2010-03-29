@@ -1357,7 +1357,7 @@ class DrupalWebTestCase extends DrupalTestCase {
    */
   protected function curlExec($curl_options, $redirect = FALSE) {
     $this->curlInitialize();
-
+$this->var_export_verbose($curl_options);
     // cURL incorrectly handles URLs with a fragment by including the
     // fragment in the request to the server, causing some web servers
     // to reject the request citing "400 - Bad Request". To prevent

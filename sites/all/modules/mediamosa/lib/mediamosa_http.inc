@@ -201,6 +201,9 @@ class mediamosa_http {
     curl_setopt($curl_handle, CURLOPT_RETURNTRANSFER, TRUE);
     curl_setopt($curl_handle, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_0);
 
+    // Set to kill notices about missing user agent.
+    //curl_setopt($curl_handle, CURLOPT_USERAGENT, 'MediaMosa2');
+
     // Do a HEAD call here.
     //curl_setopt($curl_handle, CURLOPT_NOBODY, TRUE);
 

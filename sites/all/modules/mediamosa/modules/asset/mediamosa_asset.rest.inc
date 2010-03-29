@@ -88,9 +88,9 @@ class mediamosa_rest_call_change_ownership extends mediamosa_rest_call {
   }
 
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value_app();;
+    $app_ids = $this->get_param_value_app();;
 
     /*
      * Because its to dangerous, new_app_id/old_app_id has been turned off (#774).
@@ -99,7 +99,7 @@ class mediamosa_rest_call_change_ownership extends mediamosa_rest_call {
     $new_owner_id = $this->get_param_value(self::NEW_OWNER_ID);
     $old_group_id = $this->get_param_value(self::OLD_GROUP_ID);
     $new_group_id = $this->get_param_value(self::NEW_GROUP_ID);
-    $old_app_id = reset($a_app_ids);
+    $old_app_id = reset($app_ids);
     $new_app_id = 0;
 
     // One (or more) of each set, and its ok.
@@ -110,7 +110,7 @@ class mediamosa_rest_call_change_ownership extends mediamosa_rest_call {
     }
 
     // All ok.
-    $o_mediamosa->set_result_okay();
+    $mediamosa->set_result_okay();
 
     // The tables.
     $a_table = array(
@@ -159,7 +159,7 @@ class mediamosa_rest_call_change_ownership extends mediamosa_rest_call {
       $query->fields($a_fields);
 
       // Add affected rows to output.
-      $o_mediamosa->add_item(array($table => $query->execute()));
+      $mediamosa->add_item(array($table => $query->execute()));
     }
   }
 }
@@ -202,20 +202,20 @@ class mediamosa_rest_call_count_asset extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value_app();;
+    $app_ids = $this->get_param_value_app();;
 
     // Get the 1st app.
-    $app_id = reset($a_app_ids);
+    $app_id = reset($app_ids);
 
     $group_id = $this->get_param_value(self::GROUP_ID);
     $owner_id = $this->get_param_value(self::OWNER_ID);
 
-    $o_mediamosa->set_result_okay();
+    $mediamosa->set_result_okay();
 
     // Set the total count.
-    $o_mediamosa->item_total_count = mediamosa_db::db_count_items(mediamosa_asset_db::TABLE_NAME, $app_id, $owner_id, $group_id);
+    $mediamosa->item_total_count = mediamosa_db::db_count_items(mediamosa_asset_db::TABLE_NAME, $app_id, $owner_id, $group_id);
   }
 }
 
@@ -385,10 +385,10 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
       $a_var_setup = self::get_var_setup_range($a_var_setup, mediamosa_settings::LIMIT_MAX_IDS_ONLY);
     }
 
-    $a_app_ids = $this->get_param_value_app();
+    $app_ids = $this->get_param_value_app();
 
     // Now include metadata search stuff.
-    $a_var_setup = mediamosa_core_cql::get_var_setup_search_asset($a_app_ids, $a_var_setup, self::get_search_params());
+    $a_var_setup = mediamosa_core_cql::get_var_setup_search_asset($app_ids, $a_var_setup, self::get_search_params());
 
     return $a_var_setup;
   }
@@ -419,22 +419,22 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
     parent::validate_rest_args($a_var_setup);
 
     $cql = $this->get_param_value(self::CQL);
-    $a_app_ids = $this->get_param_value_app();;
+    $app_ids = $this->get_param_value_app();;
     $error_text = '';
 
-    if ($cql != '' && !mediamosa_core_cql::verify_asset($cql, $a_app_ids, $error_text)) {
+    if ($cql != '' && !mediamosa_core_cql::verify_asset($cql, $app_ids, $error_text)) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CQL_ERROR, array('@error' => $error_text));
     }
   }
 
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value_app();;
+    $app_ids = $this->get_param_value_app();;
 
     // Now convert the old search parameters to CQL.
-    $a_var_setup = mediamosa_core_cql::get_var_setup_search_asset($a_app_ids, array(), self::get_search_params());
+    $a_var_setup = mediamosa_core_cql::get_var_setup_search_asset($app_ids, array(), self::get_search_params());
 
     // Non CQL parameters.
     $order_by = $this->get_param_value(self::ORDER_BY);
@@ -484,8 +484,8 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
 
     // Now search.
     mediamosa_asset_search::asset_search(
-      $o_mediamosa,
-      $a_app_ids,
+      $mediamosa,
+      $app_ids,
       $cql,
       $this->get_param_value(self::AUT_USER_ID),
       $this->get_param_value(self::AUT_GROUP_ID),
@@ -542,7 +542,7 @@ class mediamosa_rest_call_asset_favorites_count extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     $asset_id = $this->get_param_value(self::ASSET_ID);
 
@@ -550,9 +550,9 @@ class mediamosa_rest_call_asset_favorites_count extends mediamosa_rest_call {
     // Any app can get any count from any asset....
 
     // Set total count.
-    $o_mediamosa->item_total_count = mediamosa_user_favorite::count_items(mediamosa_user_favorite_db::FAV_TYPE_ASSET, $asset_id);
+    $mediamosa->item_total_count = mediamosa_user_favorite::count_items(mediamosa_user_favorite_db::FAV_TYPE_ASSET, $asset_id);
 
-    $o_mediamosa->set_result_okay();
+    $mediamosa->set_result_okay();
   }
 }
 
@@ -599,12 +599,12 @@ class mediamosa_rest_call_asset_delete extends mediamosa_rest_call {
   }
 
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     $asset_id = $this->get_param_value(self::ASSET_ID);
 
-    $a_app_ids = $this->get_param_value_app();;
-    $app_id = reset($a_app_ids);
+    $app_ids = $this->get_param_value_app();;
+    $app_id = reset($app_ids);
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
 
     $asset_id = $this->get_param_value(self::ASSET_ID);
@@ -612,7 +612,7 @@ class mediamosa_rest_call_asset_delete extends mediamosa_rest_call {
     $delete = $this->get_param_value(self::DELETE);
 
     // Test webservice.
-    mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $a_app_ids);
+    mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $app_ids);
 
     // Asset must exist to be deleted.
     mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
@@ -636,7 +636,7 @@ class mediamosa_rest_call_asset_delete extends mediamosa_rest_call {
     mediamosa_asset::delete($asset_id, $delete == 'cascade');
 
     // All ok.
-    $o_mediamosa->set_result_okay();
+    $mediamosa->set_result_okay();
   }
 }
 
@@ -671,7 +671,7 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
       self::VARS => array(
         self::ASSET_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
-          self::VAR_DESCRIPTION => 'The asset ID to delete.',
+          self::VAR_DESCRIPTION => 'The ID of the asset to retrieve.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::TAG => array(
@@ -681,34 +681,34 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
         ),
         self::USER_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
-          self::VAR_DESCRIPTION => 'Alias for aut_user_id parameter, is chosen above aut_user_id.',
+          self::VAR_DESCRIPTION => 'Alias for aut_user_id parameter. Warning: is chosen above aut_user_id when both are used.',
         ),
         self::AUT_USER_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
-          self::VAR_DESCRIPTION => 'Authentication parameter.',
+          self::VAR_DESCRIPTION => 'The current user is used for authorization. The aut_* fields affect the [granted] field in the output, and the parameter "granted" was given the number of records.',
         ),
         self::AUT_GROUP_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
-          self::VAR_DESCRIPTION => 'Authentication parameter.',
+          self::VAR_DESCRIPTION => 'The group(s), where the current user is in, is used for authorization.',
           self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
           self::VAR_DEFAULT_VALUE => array(), // NULL is bad when not provided.
         ),
         self::AUT_DOMAIN => array(
           self::VAR_TYPE => mediamosa_type::TYPE_DOMAIN,
-          self::VAR_DESCRIPTION => 'Authentication parameter.',
+          self::VAR_DESCRIPTION => 'The domain of the user for autohorisation.',
         ),
         self::AUT_REALM=> array(
           self::VAR_TYPE => mediamosa_type::TYPE_REALM,
-          self::VAR_DESCRIPTION => 'Authentication parameter.',
+          self::VAR_DESCRIPTION => 'The realm of the user for autohorisation.',
         ),
         self::SHOW_STILLS => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
-          self::VAR_DESCRIPTION => 'Include stills in output.',
+          self::VAR_DESCRIPTION => 'If true, then include all of the still information.',
           self::VAR_DEFAULT_VALUE => 'TRUE',
         ),
         self::SHOW_COLLECTIONS => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
-          self::VAR_DESCRIPTION => 'Include collection information of each assets, when available.',
+          self::VAR_DESCRIPTION => 'If true, then include all of the collection information.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
         self::IS_OAI => array(
@@ -725,10 +725,10 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value_app();
-    $app_id = reset($a_app_ids);
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
 
     $asset_id = $this->get_param_value(self::ASSET_ID);
@@ -754,15 +754,15 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
     $asset = mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id, mediamosa_asset_db::PARENT_ID => NULL));
 
     // ACL check.
-    mediamosa_aut::read_single_object(mediamosa_aut::AUT_TYPE_ASSET, $asset_id, $a_app_ids);
+    mediamosa_aut::read_single_object(mediamosa_aut::AUT_TYPE_ASSET, $asset_id, $app_ids);
 
     // Check un/inappropriate flag.
-    mediamosa_asset::is_unappropriate($asset_id, $a_app_ids, $aut_user_id, $is_app_admin);
+    mediamosa_asset::is_unappropriate($asset_id, $app_ids, $aut_user_id, $is_app_admin);
 
     // Collect.
-    $a_items = mediamosa_asset::asset_collect(
+    $items = mediamosa_asset::asset_collect(
       array($asset_id),
-      $a_app_ids,
+      $app_ids,
       $aut_user_id,
       $granted,
       $a_aut_group_id,
@@ -774,14 +774,14 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
     );
 
     // Add mediafiles.
-    $a_mediafile_ids = mediamosa_asset_mediafile::mediafiles_search($asset_id, $tag, FALSE, ($asset['app_id'] == $app_id ? array() : $a_app_ids));
+    $mediafile_ids = mediamosa_asset_mediafile::mediafiles_search($asset_id, $tag, FALSE, ($asset['app_id'] == $app_id ? array() : $app_ids));
 
     // Now enrich the output.
-    $a_items[0]['mediafiles'] = mediamosa_asset_mediafile::enrich_response_mediafile($a_mediafile_ids, $a_app_ids, $is_oai, $show_stills);
+    $items[0]['mediafiles'] = mediamosa_asset_mediafile::enrich_response_mediafile($mediafile_ids, $app_ids, $is_oai, $show_stills);
 
     // Add to response.
-    foreach ($a_items as $a_item) {
-      $o_mediamosa->add_item($a_item);
+    foreach ($items as $item) {
+      $mediamosa->add_item($item);
     }
 
     // Increase viewed.
@@ -836,10 +836,10 @@ class mediamosa_rest_call_asset_delete_all extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value_app();;
-    $app_id = reset($a_app_ids);
+    $app_ids = $this->get_param_value_app();;
+    $app_id = reset($app_ids);
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
 
     // Get the asset ids we need to delete.
@@ -868,7 +868,7 @@ class mediamosa_rest_call_asset_delete_all extends mediamosa_rest_call {
 
         mediamosa_asset::delete($asset_id, $delete == 'cascade');
 
-        $o_mediamosa->add_item(
+        $mediamosa->add_item(
           array(
             'asset_id' => $asset_id,
             'result' => mediamosa_response::SUCCESS,
@@ -878,7 +878,7 @@ class mediamosa_rest_call_asset_delete_all extends mediamosa_rest_call {
         );
       }
       catch (mediamosa_exception_error $e) {
-        $o_mediamosa->add_item(
+        $mediamosa->add_item(
           array(
             'asset_id' => $asset_id,
             'result' => mediamosa_response::ERROR,
@@ -945,10 +945,10 @@ class mediamosa_rest_call_asset_create extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value_app();;
-    $app_id = reset($a_app_ids);
+    $app_ids = $this->get_param_value_app();;
+    $app_id = reset($app_ids);
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
 
     $owner_id = $this->get_param_value(self::USER_ID);
@@ -959,12 +959,12 @@ class mediamosa_rest_call_asset_create extends mediamosa_rest_call {
     $parent_id = NULL; // $this->get_param_value(self::PARENT_ID);
 
     // Test webservice.
-    mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $a_app_ids);
+    mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $app_ids);
 
     // Create the asset.
     $asset_id = mediamosa_asset::create($app_id, $owner_id, $group_id, $reference_id, $provider_id, $parent_id);
 
-    $o_mediamosa->add_item(array('asset_id' => $asset_id));
+    $mediamosa->add_item(array('asset_id' => $asset_id));
   }
 }
 
@@ -999,12 +999,12 @@ class mediamosa_rest_call_asset_update extends mediamosa_rest_call {
       self::VARS => array(
         self::ASSET_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
-          self::VAR_DESCRIPTION => 'The asset ID.',
+          self::VAR_DESCRIPTION => 'The ID of the asset to update.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::USER_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
-          self::VAR_DESCRIPTION => 'The user ID.',
+          self::VAR_DESCRIPTION => 'The user ID used for authotication.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::PLAY_RESTRICTION_START => array(
@@ -1017,11 +1017,11 @@ class mediamosa_rest_call_asset_update extends mediamosa_rest_call {
         ),
         self::ISPRIVATE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
-          self::VAR_DESCRIPTION => 'The is private flag.',
+          self::VAR_DESCRIPTION => 'If isprivate = true, then the asset is not displayed in public lists, such as top 10, last uploaded, etc.',
         ),
         self::IS_INAPPROPRIATE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
-          self::VAR_DESCRIPTION => 'The inapproriate flag.',
+          self::VAR_DESCRIPTION => 'If is_inappropiate = true then only the owner or the app admin (and underlying media files) can see this asset. Only the app manager can change this flag(is_app_admin=true).',
           self::VAR_IS_HIDDEN => self::VAR_IS_HIDDEN_YES,
         ),
         self::IS_UNAPPROPRIATE => array(
@@ -1046,10 +1046,10 @@ class mediamosa_rest_call_asset_update extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value_app();;
-    $app_id = reset($a_app_ids);
+    $app_ids = $this->get_param_value_app();;
+    $app_id = reset($app_ids);
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
 
     $asset_id = $this->get_param_value(self::ASSET_ID);
@@ -1070,12 +1070,12 @@ class mediamosa_rest_call_asset_update extends mediamosa_rest_call {
     $is_unappropriate =  $this->get_param_value(self::IS_UNAPPROPRIATE);
 
     // Test webservice.
-    mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $a_app_ids);
+    mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $app_ids);
 
     // Update the asset.
     mediamosa_asset::update($app_id, $user_id, $is_app_admin, $asset_id, $owner_id, $group_id, $play_restriction_start, $play_restriction_end, $isprivate, $is_unappropriate);
 
     // Default OK.
-    $o_mediamosa->set_result_okay();
+    $mediamosa->set_result_okay();
   }
 }

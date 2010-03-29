@@ -1,5 +1,5 @@
 <?php
-// $Id: coder_review_security.inc,v 1.3 2009/10/18 12:45:36 snpower Exp $
+// $Id: coder_review_security.inc,v 1.2 2009/03/11 03:05:04 snpower Exp $
 
 /**
  * @file
@@ -80,8 +80,8 @@ function coder_review_security_reviews() {
 function _coder_review_security_l_check_plain_warning() {
   return t('!l() already contains a !check_plain() call by default',
     array(
-      '!l' => theme('drupalapi', array('function' => 'l')),
-      '!check_plain' => theme('drupalapi', array('function' => 'check_plain')),
+      '!l' => theme('drupalapi', 'l'),
+      '!check_plain' => theme('drupalapi', 'check_plain'),
     )
   );
 }
@@ -89,7 +89,7 @@ function _coder_review_security_l_check_plain_warning() {
 function _coder_review_security_request_uri_warning() {
   return t('the use of REQUEST_URI is prone to XSS exploits and does not work on IIS; use !request_uri() instead',
     array(
-      '!request_uri' => theme('drupalapi', array('function' => 'request_uri')),
+      '!request_uri' => theme('drupalapi', 'request_uri'),
     )
   );
 }
@@ -98,7 +98,7 @@ function _coder_review_security_sql_var_warning() {
   return array(
     '#warning' => t('In SQL strings, Use !db_query() placeholders in place of variables.  This is a potential source of SQL injection attacks when the variable can come from user data.',
       array(
-        '!db_query' => theme('drupalapi', array('function' => 'db_query')),
+        '!db_query' => theme('drupalapi', 'db_query'),
       )
     ),
     '#link' => 'http://drupal.org/writing-secure-code',

@@ -1,5 +1,5 @@
 <?php
-// $Id: coder.module,v 1.100 2009/10/18 12:45:35 snpower Exp $
+// $Id: coder.module,v 1.99 2009/09/26 23:00:50 sun Exp $
 
 /**
  * @file
@@ -10,11 +10,10 @@
  * Implement hook_menu().
  */
 function coder_menu() {
-  $items['admin/config/development/coder/configure'] = array(
-    'title' => 'Configure',
+  $items['admin/settings/coder'] = array(
+    'title' => 'Coder',
     'description' => 'Select code review plugins and modules, and upgrade files.',
     'access arguments' => array('administer site configuration'),
-    'type' => MENU_LOCAL_TASK,
   );
   $items['admin/config/development/coder'] = array(
     'title' => 'Coder',
@@ -22,7 +21,7 @@ function coder_menu() {
     'access arguments' => array('administer site configuration'),
   );
   if (!module_exists('coder_review') && !module_exists('coder_upgrade')) {
-    $items['admin/config/development/coder/configure']['page callback'] = 'coder_display_required_module_message';
+    $items['admin/settings/coder']['page callback'] = 'coder_display_required_module_message';
     $items['admin/config/development/coder']['page callback'] = 'coder_display_required_module_message';
   }
   return $items;

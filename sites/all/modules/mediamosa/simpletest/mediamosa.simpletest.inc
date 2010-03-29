@@ -194,6 +194,15 @@ class MediaMosaTestCase extends DrupalWebTestCase {
    *
    * @param mixed $data
    */
+  public function var_export_verbose($data, $group = 'Other') {
+    $this->verbose(highlight_string('<?php ' . var_export($data, TRUE), TRUE), $group);
+  }
+
+  /**
+   * Pretty export of var_export.
+   *
+   * @param mixed $data
+   */
   public function var_export_fail($data, $group = 'Other') {
     $this->fail(highlight_string('<?php ' . var_export($data, TRUE), TRUE), $group);
   }
@@ -261,6 +270,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     // Just let them know we need the Drupal part.
     $headers[] = mediamosa_settings::X_MEDIAMOSA_DISABLE_APP . ': True';
 
+    $this->pass('Passing through drupalGet()');
     return parent::drupalGet($path, $options, $headers);
   }
 
@@ -359,8 +369,11 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     // Create a SimpleXMLElement from the restcall's output.
     try {
       // We expect char '<' on REST calls, if not we need to output it.
-      if ($out['body']{0} != '<' || $uri == 'http://localhost/internal/cron/jobserver') {
+      if ($out['body']{0} != '<') {
         $this->var_export($out['body']);
+      }
+      else {
+        $this->var_export_verbose(substr($out['body'], 0, 1000) . '...<snap>...');
       }
       $out['xml'] = new SimpleXMLElement($out['body']);
     }

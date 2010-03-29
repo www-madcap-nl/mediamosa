@@ -47,7 +47,6 @@ function mediamosa_aut_mediamosa_register_rest_call() {
   $a_rest_calls['autorisation_group/$groupname'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_aut_group_get',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::DESCRIPTION => 'Retrieve a authorization group.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_aut',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
@@ -55,7 +54,6 @@ function mediamosa_aut_mediamosa_register_rest_call() {
   $a_rest_calls['autorisation_group/$groupname/delete'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_aut_group_delete',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::DESCRIPTION => 'Delete an authorization group.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_aut',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
@@ -63,7 +61,6 @@ function mediamosa_aut_mediamosa_register_rest_call() {
   $a_rest_calls['autorisation_group/$groupname/hostname'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_aut_group_get_hostnames',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::DESCRIPTION => 'Retrieve the hostname from an authorization group.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_aut',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
@@ -71,7 +68,6 @@ function mediamosa_aut_mediamosa_register_rest_call() {
   $a_rest_calls['autorisation_group/$groupname/hostname/create'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_aut_group_create_hostnames',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::DESCRIPTION => 'Create hostnames from an authorization group.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_aut',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
@@ -79,7 +75,6 @@ function mediamosa_aut_mediamosa_register_rest_call() {
   $a_rest_calls['autorisation_group/$groupname/hostname/delete'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_aut_group_delete_hostnames',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::DESCRIPTION => 'Delete hostnames from an authorization group.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_aut',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
@@ -87,7 +82,6 @@ function mediamosa_aut_mediamosa_register_rest_call() {
   $a_rest_calls['autorisation_group/create'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_aut_group_create',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::DESCRIPTION => 'Create a authorization group.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_aut',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
@@ -95,7 +89,6 @@ function mediamosa_aut_mediamosa_register_rest_call() {
   $a_rest_calls['autorisation_group/$groupname'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_aut_group_update',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::DESCRIPTION => 'Update a authorization group.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_aut',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
@@ -103,7 +96,6 @@ function mediamosa_aut_mediamosa_register_rest_call() {
   $a_rest_calls['mediafile/$mediafile_id/acl'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_aut_mediafile_set_rights',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::DESCRIPTION => 'Set rights on a mediafile.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_aut',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
@@ -111,7 +103,6 @@ function mediamosa_aut_mediamosa_register_rest_call() {
   $a_rest_calls['mediafile/$mediafile_id/acl/delete'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_aut_mediafile_delete_rights',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::DESCRIPTION => 'Remove rights on a mediafile.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_aut',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
@@ -119,7 +110,6 @@ function mediamosa_aut_mediamosa_register_rest_call() {
   $a_rest_calls['mediafile/$mediafile_id/acl'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_aut_mediafile_get_rights',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::DESCRIPTION => 'Get rights on a mediafile.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_aut',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
@@ -127,7 +117,6 @@ function mediamosa_aut_mediamosa_register_rest_call() {
   $a_rest_calls['asset/$asset_id/acl'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_aut_asset_set_rights',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::DESCRIPTION => 'This call will change the acl rules to an asset. All of the existing ACL rules in this asset will be replaced by the sent rules. Using \'replace\' setting with value FALSE to result in not replace the existing rules.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_aut',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_6_0,
   );
@@ -135,7 +124,6 @@ function mediamosa_aut_mediamosa_register_rest_call() {
   $a_rest_calls['asset/$asset_id/acl/delete'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_aut_asset_delete_rights',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::DESCRIPTION => 'Remove rights on a asset.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_aut',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_6_0,
   );
@@ -143,7 +131,6 @@ function mediamosa_aut_mediamosa_register_rest_call() {
   $a_rest_calls['asset/$asset_id/acl'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_aut_asset_get_rights',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::DESCRIPTION => 'Get rights on a asset.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_aut',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_6_0,
   );
@@ -151,7 +138,6 @@ function mediamosa_aut_mediamosa_register_rest_call() {
   $a_rest_calls['collection/$coll_id/acl'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_aut_collection_set_rights',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::DESCRIPTION => 'Set rights on a collection.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_aut',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_6_0,
   );
@@ -159,7 +145,6 @@ function mediamosa_aut_mediamosa_register_rest_call() {
   $a_rest_calls['collection/$coll_id/acl/delete'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_aut_collection_delete_rights',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::DESCRIPTION => 'Remove rights on a collection.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_aut',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_6_0,
   );
@@ -167,9 +152,167 @@ function mediamosa_aut_mediamosa_register_rest_call() {
   $a_rest_calls['collection/$coll_id/acl'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_aut_collection_get_rights',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::DESCRIPTION => 'Get rights on a collection.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_aut',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_6_0,
+  );
+
+  return $a_rest_calls;
+}
+
+/**
+ * Implements hook_mediamosa_register_rest_call_doc().
+ */
+function mediamosa_aut_mediamosa_register_rest_call_doc() {
+  $a_rest_calls = array();
+
+  // Get Asset Media Metadata (1.x:  media_management_metadata_definition_get)
+  $a_rest_calls['autorisation_group'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Retrieve the authorization group listing.',
+    mediamosa_rest_call::DESCRIPTION => 'Retrieve the authorization group listing.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+  );
+
+  $a_rest_calls['autorisation_group/$groupname'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Retrieve a authorization group.',
+    mediamosa_rest_call::DESCRIPTION => 'Retrieve a authorization group.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+  );
+
+  $a_rest_calls['autorisation_group/$groupname/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Delete an authorization group.',
+    mediamosa_rest_call::DESCRIPTION => 'Delete an authorization group.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+  );
+
+  $a_rest_calls['autorisation_group/$groupname/hostname'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Retrieve the hostname from an authorization group.',
+    mediamosa_rest_call::DESCRIPTION => 'Retrieve the hostname from an authorization group.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+  );
+
+  $a_rest_calls['autorisation_group/$groupname/hostname/create'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Create hostnames from an authorization group.',
+    mediamosa_rest_call::DESCRIPTION => 'Create hostnames from an authorization group.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+  );
+
+  $a_rest_calls['autorisation_group/$groupname/hostname/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Delete hostnames from an authorization group.',
+    mediamosa_rest_call::DESCRIPTION => 'Delete hostnames from an authorization group.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+  );
+
+  $a_rest_calls['autorisation_group/create'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Create a authorization group.',
+    mediamosa_rest_call::DESCRIPTION => 'Create a authorization group.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+  );
+
+  $a_rest_calls['autorisation_group/$groupname'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Update a authorization group.',
+    mediamosa_rest_call::DESCRIPTION => 'Update a authorization group.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+  );
+
+  $a_rest_calls['mediafile/$mediafile_id/acl'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Set rights on a mediafile.',
+    mediamosa_rest_call::DESCRIPTION => 'Set rights on a mediafile.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+  );
+
+  $a_rest_calls['mediafile/$mediafile_id/acl/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Remove rights on a mediafile.',
+    mediamosa_rest_call::DESCRIPTION => 'Remove rights on a mediafile.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+  );
+
+  $a_rest_calls['mediafile/$mediafile_id/acl'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Get rights on a mediafile.',
+    mediamosa_rest_call::DESCRIPTION => 'Get rights on a mediafile.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+  );
+
+  $a_rest_calls['asset/$asset_id/acl'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Set or change acl rules on asset.',
+    mediamosa_rest_call::DESCRIPTION => 'This call will change the acl rules to an asset. All of the existing ACL rules in this asset will be replaced by the sent rules. Using \'replace\' setting with value FALSE to result in not replace the existing rules.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => array('/asset/IuQahqi9ATcSAw2QMFAXeC2N/acl', 'user_id=entree004', 'aut_app[]=5'),
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <aut_app>
+      <value>5</value>
+      <result>success</result>
+      <result_id>601</result_id>
+      <result_description></result_description>
+    </aut_app>
+  </item>
+</items>',
+  );
+
+  $a_rest_calls['asset/$asset_id/acl/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Remove rights on a asset.',
+    mediamosa_rest_call::DESCRIPTION => 'Remove all rights on a asset.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/assset/IuQahqi9ATcSAw2QMFAXeC2N/acl/delete?user_id=entree004',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => 'Will return empty <item> response, check the header for success value.',
+  );
+
+  $a_rest_calls['asset/$asset_id/acl'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Retrieve all rights on a asset.',
+    mediamosa_rest_call::DESCRIPTION => 'Retrieve all rights on a asset.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/asset/IuQahqi9ATcSAw2QMFAXeC2N/acl?user_id=entree004',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <aut_app>5</aut_app>
+  </item>
+</items>',
+  );
+
+  $a_rest_calls['collection/$coll_id/acl'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Set rights on a collection.',
+    mediamosa_rest_call::DESCRIPTION => 'Set rights on a collection.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+  );
+
+  $a_rest_calls['collection/$coll_id/acl/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Remove rights on a collection.',
+    mediamosa_rest_call::DESCRIPTION => 'Remove rights on a collection.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+  );
+
+  $a_rest_calls['collection/$coll_id/acl'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Get rights on a collection.',
+    mediamosa_rest_call::DESCRIPTION => 'Get rights on a collection.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
   );
 
   return $a_rest_calls;

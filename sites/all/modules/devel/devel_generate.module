@@ -1,8 +1,8 @@
 <?php
-// $Id: devel_generate.module,v 1.2 2010/03/16 04:42:45 weitzman Exp $
+// $Id: devel_generate.module,v 1.35 2009/08/29 20:23:44 weitzman Exp $
 
 /**
- * Implementation of hook_menu().
+ * Implements hook_menu().
  */
 function devel_generate_menu() {
   $items = array();
@@ -46,14 +46,6 @@ function devel_generate_users_form() {
     '#title' => t('Delete all users (except user id 1) before generating new users.'),
     '#default_value' => FALSE,
   );
-  $options = user_roles(TRUE);
-  unset($options[DRUPAL_AUTHENTICATED_RID]);
-  $form['roles'] = array(
-    '#type' => 'checkboxes',
-    '#title' => t('Which roles should the users receive?'),
-    '#description' => t('Users always receive the <em>authenticated user</em> role.'),
-    '#options' => $options,
-  );
 
   $options = array(1 => t('Now'));
   foreach (array(3600, 86400, 604800, 2592000, 31536000) as $interval) {
@@ -76,8 +68,7 @@ function devel_generate_users_form() {
 
 function devel_generate_users_form_submit($form_id, &$form_state) {
   module_load_include('inc', 'devel_generate');
-  $values = $form_state['values'];
-  devel_create_users($values['num'], $values['kill_users'], $values['time_range'], $values['roles']);
+  devel_create_users($form_state['values']['num'], $form_state['values']['kill_users'], $form_state['values']['time_range']);
 }
 
 function devel_generate_content_form() {
@@ -95,14 +86,8 @@ function devel_generate_content_form() {
   }
   else {
     $types = node_type_get_types();
-    $suffix = '';
     foreach ($types as $type) {
-      if (module_exists('comment')) {
-        $default = variable_get('comment_' . $type->type, COMMENT_NODE_OPEN);
-        $map = array(t('Hidden'), t('Closed'), t('Open'));
-        $suffix = '<small>. ' . t('Comments: ') . $map[$default]. '</small>';
-      }
-      $options[$type->type] = t($type->name) . $suffix;
+      $options[$type->type] = t($type->name);
     }
   }
   // we cannot currently generate valid polls.
@@ -143,10 +128,10 @@ function devel_generate_content_form() {
     '#default_value' => 604800,
   );
 
-  $form['max_comments'] = array(
+  $form['num_comments'] = array(
     '#type' => module_exists('comment') ? 'textfield' : 'value',
-    '#title' => t('Maximum number of comments per node.'),
-    '#description' => t('You must also enable comments for the content types you are generating. Note that some nodes will randomly receive zero comments. Some will receive the max.'),
+    '#title' => t('How many comments per node would you like to generate?'),
+    '#description' => t('You must also enable comments for the node types you are generating.'),
     '#default_value' => 0,
     '#size' => 3,
     '#access' => module_exists('comment'),
@@ -156,6 +141,20 @@ function devel_generate_content_form() {
     '#title' => t('Max word length of titles'),
     '#default_value' => 4,
     '#size' => 10,
+  );
+  $form['add_upload'] = array(
+    '#type' =>  'checkbox',
+    '#disabled' => !module_exists('upload'),
+    '#description' => t('Requires upload.module'),
+    '#title' => t('Add an upload to each node'),
+    '#default_value' => FALSE,
+  );
+  $form['add_terms'] = array(
+    '#disabled' => !module_exists('taxonomy'),
+    '#description' => t('Requires taxonomy.module'),
+    '#type' => 'checkbox',
+    '#title' => t('Add taxonomy terms to each node.'),
+    '#default_value' => FALSE,
   );
   $form['add_alias'] = array(
     '#type' => 'checkbox',
@@ -183,7 +182,7 @@ function devel_generate_content_form() {
 function devel_generate_content_form_submit($form_id, &$form_state) {
   module_load_include('inc', 'devel_generate', 'devel_generate');
   $form_state['values']['node_types'] = array_filter($form_state['values']['node_types']);
-  if ($form_state['values']['num_nodes'] <= 50 && $form_state['values']['max_comments'] <= 10) {
+  if ($form_state['values']['num_nodes'] <= 50 && $form_state['values']['num_comments'] <= 10) {
     module_load_include('inc', 'devel_generate');
     devel_generate_content($form_state);
   }
@@ -197,7 +196,6 @@ function devel_generate_taxonomy_form() {
   $form['num_vocab'] = array(
     '#type' => 'textfield',
     '#title' => t('How many vocabularies would you like to generate?'),
-    '#description' => t('Terms will be generated from the new vocabularies and any existing vocabularies.'),
     '#default_value' => 3,
     '#size' => 10,
   );
@@ -209,13 +207,13 @@ function devel_generate_taxonomy_form() {
   );
   $form['title_length'] = array(
     '#type' => 'textfield',
-    '#title' => t('Max word length of term/vocabulary names'),
+    '#title' => t('Max word length of term/vocab names'),
     '#default_value' => 12,
     '#size' => 10,
   );
   $form['kill_taxonomy'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Delete existing terms and vocabularies before generating new ones.'),
+    '#title' => t('Delete existing terms and vocabularies before generating new content.'),
     '#default_value' => FALSE,
   );
   $form['submit'] = array(
@@ -230,22 +228,32 @@ function devel_generate_taxonomy_form_submit($form_id, &$form_state) {
   devel_generate_taxonomy_data($form_state['values']['num_vocab'], $form_state['values']['num_terms'], $form_state['values']['title_length'], $form_state['values']['kill_taxonomy']);
 }
 
+// Modules that want to affect generated nodes may implement hook_node('presave'). See OG module or CCK.
+// A few implementations live here because core doesn't do bulk node generation.
+function devel_generate_node_presave(&$node) {
+  if (isset($node->devel_generate)) {
+    $results = $node->devel_generate;
+    if (!empty($results['add_upload'])) {
+      devel_generate_add_upload($node);
+    }
+    if (!empty($results['add_terms'])) {
+      devel_generate_add_terms($node);
+    }
+  }
+}
+
 function devel_generate_node_insert(&$node) {
   if (isset($node->devel_generate)) {
     $results = $node->devel_generate;
 
-    if (!empty($results['max_comments'])) {
-      devel_generate_add_comments($node, $results['users'], $results['max_comments'], $results['title_length']);
+    if (!empty($results['num_comments'])) {
+      devel_generate_add_comments($node, $results['users'], $results['num_comments'], $results['title_length']);
     }
 
 
     // Add an url alias. Cannot happen before save because we don't know the nid.
     if (!empty($results['add_alias'])) {
-      $path = array(
-        'source' => 'node/' . $node->nid,
-        'alias' => 'node-' . $node->nid . '-' . $node->type,
-      );
-      path_save($path);
+      path_set_alias("node/$node->nid", "node-$node->nid-$node->type");
     }
 
     // Add node statistics.
@@ -254,3 +262,4 @@ function devel_generate_node_insert(&$node) {
     }
   }
 }
+

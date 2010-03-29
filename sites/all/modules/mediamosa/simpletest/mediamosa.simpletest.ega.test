@@ -199,6 +199,7 @@ class MediaMosaTestCaseEgaTest extends MediaMosaTestCaseEga {
     // tests - normal
     $this->deleteAssetSupplement($asset_id, $supplement_id);
   }
+
   // ------------------------------------------------------------------ Test asset metadata.
   public function testAssetMetadata() {
     // Create an asset.

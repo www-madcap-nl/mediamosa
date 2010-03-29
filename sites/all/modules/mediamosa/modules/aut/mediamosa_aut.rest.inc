@@ -814,7 +814,7 @@ class mediamosa_rest_call_aut_mediafile_get_rights extends mediamosa_rest_call {
     $a_var_setup[mediamosa_rest_call::VARS][self::USER_ID] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'The owner of the mediafile object.',
+      mediamosa_rest_call::VAR_DESCRIPTION => 'Must be the owner of the mediafile object to alter rights.',
     );
 
     // Enrich with required REST vars.
@@ -921,28 +921,28 @@ class mediamosa_rest_call_aut_asset_set_rights extends mediamosa_rest_call {
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'Aut user.',
+      mediamosa_rest_call::VAR_DESCRIPTION => 'User(s) that get acces to the asset.',
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::AUT_GROUP] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'Aut group.',
+      mediamosa_rest_call::VAR_DESCRIPTION => 'Group(s) that get acces to the asset.',
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::AUT_DOMAIN] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_DOMAIN,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'Aut domain.',
+      mediamosa_rest_call::VAR_DESCRIPTION => 'Domain(s) that get acces to the asset.',
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::AUT_REALM] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_REALM,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'Aut realm.',
+      mediamosa_rest_call::VAR_DESCRIPTION => 'Realm(s) that get acces to the asset.',
     );
 
     // alias.
@@ -950,7 +950,7 @@ class mediamosa_rest_call_aut_asset_set_rights extends mediamosa_rest_call {
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'Aut user id.',
+      mediamosa_rest_call::VAR_DESCRIPTION => 'Alias of aut_user. If both are set, aut_user has priority.',
     );
 
     // alias.
@@ -958,7 +958,7 @@ class mediamosa_rest_call_aut_asset_set_rights extends mediamosa_rest_call {
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'Aut group id.',
+      mediamosa_rest_call::VAR_DESCRIPTION => 'Alias of aut_group. If both are set, aut_group has priority.',
     );
 
     // Enrich with required REST vars.
@@ -979,7 +979,7 @@ class mediamosa_rest_call_aut_asset_set_rights extends mediamosa_rest_call {
     // Make sure the asset exists
     $a_asset = mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::APP_ID => $app_id, mediamosa_asset_db::ID => $asset_id));
 
-    $a_app_ids = $this->get_param_value(self::AUT_APP);
+    $a_aut_app_ids = $this->get_param_value(self::AUT_APP);
     $a_aut_user_ids = $this->get_param_value(self::AUT_USER);
     $a_aut_group_ids = $this->get_param_value(self::AUT_GROUP);
     $a_aut_domains = $this->get_param_value(self::AUT_DOMAIN);
@@ -1006,7 +1006,7 @@ class mediamosa_rest_call_aut_asset_set_rights extends mediamosa_rest_call {
     }
 
     // Set access rights
-    $a_result_rights_set = mediamosa_aut::rights_set($app_id, $user_id, mediamosa_aut::AUT_TYPE_ASSET, $a_asset, $a_app_ids, $a_aut_user_ids, $a_aut_group_ids, $a_aut_domains, $a_aut_realms, $b_replace);
+    $a_result_rights_set = mediamosa_aut::rights_set($app_id, $user_id, mediamosa_aut::AUT_TYPE_ASSET, $a_asset, $a_aut_app_ids, $a_aut_user_ids, $a_aut_group_ids, $a_aut_domains, $a_aut_realms, $b_replace);
 
     $a_types = array(
       mediamosa_aut::AUT_NAME_TYPE_APP => 'aut_app',
@@ -1121,13 +1121,13 @@ class mediamosa_rest_call_aut_asset_get_rights extends mediamosa_rest_call {
     $a_var_setup[mediamosa_rest_call::VARS][self::ASSET_ID] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'The asset id.',
+      mediamosa_rest_call::VAR_DESCRIPTION => 'The ID of the asset to set the rights on.',
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::USER_ID] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'The user id.',
+      mediamosa_rest_call::VAR_DESCRIPTION => 'This must be the owner ID of the asset.',
     );
 
     // Enrich with required REST vars.

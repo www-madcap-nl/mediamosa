@@ -1376,11 +1376,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
 
   /**
-<<<<<<< /home/rblanker/sambamnt/www/mediamosa2/sites/all/modules/mediamosa/simpletest/mediamosa.simpletest.ega.inc
    * Create a collection.
-=======
-   * Create a Collection
->>>>>>> /tmp/mediamosa.simpletest.ega.inc~other.BSeM-l
    * Based on REST call /collection/create (POST)
    *
    * @param array $a_parameters
