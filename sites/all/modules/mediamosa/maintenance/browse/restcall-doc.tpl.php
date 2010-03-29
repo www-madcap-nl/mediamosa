@@ -30,7 +30,13 @@
  *
  * Available variables:
  * - $title: title of rest call.
- * - $page: Pager links rendered through theme_pager().
+ * - $description: Description of the REST call.
+ * - $uri: The uri of the REST call.
+ * - $method: The method of the REST call (GET/POST)
+ * - $request_authorization: Text if autorization is required.
+ * - $warnings: possible warnings during page creation.
+ * - $example_request: A example uri of a request.
+ * - $example_response: A example response XML.
  *
  * @see template_preprocess()
  * @see template_preprocess_restcall_doc()
@@ -64,8 +70,10 @@
 ?>
 <h3><?php print t('Request Parameters'); ?></h3>
 <?php print $variables['parameters']; ?>
+<?php if (isset($variables['response_fields'])) { ?>
 <h3><?php print t('Response fields'); ?></h3>
 <?php print $variables['response_fields']; ?>
+<?php } ?>
 <h3><?php print t('Example Request'); ?></h3>
 <p><?php print str_replace("\n\n", "</p>\n<br>\n<p>", $example_request); ?></p>
 <h3><?php print t('Example Response'); ?></h3>

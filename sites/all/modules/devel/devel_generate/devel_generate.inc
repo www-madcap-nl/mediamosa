@@ -1,9 +1,5 @@
 <?php
-// $Id: devel_generate.inc,v 1.54 2009/09/18 07:44:31 drewish Exp $
-// If not in 'safe mode', increase the maximum execution time:
-if (!ini_get('safe_mode')) {
-  set_time_limit(240);
-}
+// $Id: devel_generate.inc,v 1.13 2010/03/18 14:43:22 weitzman Exp $
 
 /**
  * Generate some random users.
@@ -14,13 +10,19 @@ if (!ini_get('safe_mode')) {
  *  Boolean that indicates if existing users should be removed first.
  * @param $age
  *  The max age of each randomly-generated user, in seconds.
+ * @param $roles
+ *  An array of role IDs that the users should receive.
  */
-function devel_create_users($num, $kill, $age = 0) {
+function devel_create_users($num, $kill, $age = 0, $roles = array()) {
   $url = parse_url($GLOBALS['base_url']);
   if ($kill) {
-    // TODO: deal with cancel API
-    db_delete('users')->condition('uid', 1, '>')->execute();
-    drupal_set_message(t('Users deleted.'));
+    $uids = db_select('users', 'u')
+            ->fields('u', array('uid'))
+            ->condition('uid', 1, '>')
+            ->execute()
+            ->fetchAllAssoc('uid');
+    user_delete_multiple(array_keys($uids));
+    drupal_set_message(format_plural(count($uids), '1 user deleted', '@count users deleted.'));
   }
   // Determine if we should create user pictures.
   $pic_config = FALSE;
@@ -36,14 +38,26 @@ function devel_create_users($num, $kill, $age = 0) {
       $name = devel_generate_word(mt_rand(6, 12));
       $names[$name] = '';
     }
+
+    if (empty($roles)) {
+      $roles = array(DRUPAL_AUTHENTICATED_RID);
+    }
     foreach ($names as $name => $value) {
       $edit = array(
         'name'    => $name,
-        'pass'    => user_password(),
+        'pass'    => NULL, // No password avoids user_hash_password() which is expensive.
         'mail'    => $name . '@' . $url['host'],
         'status'  => 1,
         'created' => REQUEST_TIME - mt_rand(0, $age),
+        'roles' => drupal_map_assoc($roles),
       );
+
+      // Populate all core fields on behalf of field.module
+      module_load_include('inc', 'devel_generate', 'devel_generate.fields');
+      $edit = (object) $edit;
+      devel_generate_fields($edit, 'user', 'user');
+      $edit = (array) $edit;
+
       $account = user_save(NULL, $edit);
 
       if ($pic_config) {
@@ -111,20 +125,25 @@ function devel_generate_content($form_state) {
   if (count($form_state['values']['node_types'])) {
     // Generate nodes.
     devel_generate_content_pre_node($form_state['values']);
-    for ($i = 1; $i <= $form_state['values']['num_nodes']; $i ++) {
+    $start = time();
+    for ($i = 1; $i <= $form_state['values']['num_nodes']; $i++) {
       devel_generate_content_add_node($form_state['values']);
+      if (function_exists('drush_log') && $i % drush_get_option('feedback', 1000) == 0) {
+        $now = time();
+        drush_log(dt('Completed !feedback nodes (!rate nodes/min)', array('!feedback' => drush_get_option('feedback', 1000), '!rate' => (drush_get_option('feedback', 1000)*60)/($now-$start))), 'ok');
+        $start = $now;
+      }
     }
   }
 
-  drupal_set_message(format_plural($form_state['values']['num_nodes'], '1 node created.', '@count nodes created'));
+  devel_set_message(format_plural($form_state['values']['num_nodes'], '1 node created.', 'Finished creating @count nodes'));
 }
 
-function devel_generate_add_comments($node, $users, $num_comments, $title_length = 8) {
-  // Insert new data:
+function devel_generate_add_comments($node, $users, $max_comments, $title_length = 8) {
+  $num_comments = mt_rand(1, $max_comments);
   for ($i = 1; $i <= $num_comments; $i++) {
     $comment->nid = $node->nid;
     $comment->cid = NULL;
-    $comment->comment_format = FILTER_FORMAT_DEFAULT;
     $comment->name = 'devel generate';
     $comment->mail = 'devel_generate@example.com';
     $comment->timestamp = mt_rand($node->created, REQUEST_TIME);
@@ -141,19 +160,23 @@ function devel_generate_add_comments($node, $users, $num_comments, $title_length
     }
 
     $comment->subject = devel_create_greeking(mt_rand(1, $title_length), TRUE);
-    $comment->comment = devel_create_content();
     $comment->uid = $users[array_rand($users)];
+    $comment->language = LANGUAGE_NONE;
+    // Populate all core fields on behalf of field.module
+    module_load_include('inc', 'devel_generate', 'devel_generate.fields');
+    devel_generate_fields($comment, 'comment', 'comment_node_' . $node->type);
     comment_save($comment);
   }
 }
 
-function devel_generate_vocabs($records, $maxlength = 12, $types = array('story', 'blog', 'forum', 'page')) {
+function devel_generate_vocabs($records, $maxlength = 12, $types = array('page', 'article')) {
   $vocs = array();
 
   // Insert new data:
   for ($i = 1; $i <= $records; $i++) {
     $voc = new stdClass();
     $voc->name = devel_generate_word(mt_rand(2, $maxlength));
+    $voc->machine_name = drupal_strtolower($voc->name);
     $voc->description = "description of ". $voc->name;
     // TODO: not working
     $voc->nodes = array_flip(array($types[array_rand($types)]));
@@ -179,44 +202,74 @@ function devel_generate_terms($records, $vocs, $maxlength = 12) {
   $terms = array();
 
   // Insert new data:
+  $max = db_query('SELECT MAX(tid) FROM taxonomy_term_data')->fetchField();
+  $start = time();
   for ($i = 1; $i <= $records; $i++) {
-  	$term = new stdClass();
     switch ($i % 2) {
       case 1:
-        $term->vid = $vocs[array_rand($vocs)];
+        // Set vid and vocabulary_machine_name properties.
+        $vid = array_rand($vocs);
+        $term = $vocs[$vid];
         // dont set a parent. handled by taxonomy_save_term()
         // $term->parent = 0;
         break;
-      case 2:
       default:
-        $parent = db_query_range("SELECT t.tid, v.vid FROM {taxonomy_term_data} t INNER JOIN {taxonomy_vocabulary} v ON t.vid = v.vid ORDER BY RAND()", 0, 1)->fetchObject();
-        $term->parent = array($parent->tid);
-        $term->vid = $parent->vid;
+        while (TRUE) {
+          $candidate = mt_rand(1, $max);
+          $query = db_select('taxonomy_term_data', 't');
+          $query->innerJoin('taxonomy_vocabulary', 'v', 't.vid = v.vid');
+          $parent = $query
+                    ->fields('t', array('tid', 'vid'))
+                    ->fields('v', array('machine_name'))
+                    ->condition('v.vid', array_keys($vocs), 'IN')
+                    ->condition('t.tid', $candidate, '>=')
+                    ->range(0,1)
+                    ->execute()
+                    ->fetchAssoc();
+          if ($parent['tid']) {
+            break;
+          }
+        }
+        $term->parent = $parent['tid'];
+        // Slight speedup due to this property being set.
+        $term->vocabulary_machine_name = $parent['machine_name'];
+        $term->vid = $parent['vid'];
         break;
     }
 
     $term->name = devel_generate_word(mt_rand(2, $maxlength));
     $term->description = "description of ". $term->name;
-    $term->weight = mt_rand(0,10);
-    $status = taxonomy_term_save($term);
-    $output = NULL;
+    $term->format = filter_fallback_format();
+    $term->weight = mt_rand(0, 10);
 
-    if ($status) {
-      $terms[] = $term->name;
+    // Populate all core fields on behalf of field.module
+    module_load_include('inc', 'devel_generate', 'devel_generate.fields');
+    devel_generate_fields($term, 'term', $term->vocabulary_machine_name);
+
+    if ($status = taxonomy_term_save($term)) {
+      $max += 1;
+      if (function_exists('drush_log')) {
+        $feedback = drush_get_option('feedback', 1000);
+        if ($i % $feedback == 0) {
+          $now = time();
+          drush_log(dt('Completed !feedback terms (!rate terms/min)', array('!feedback' => $feedback, '!rate' => $feedback*60 / ($now-$start) )), 'ok');
+          $start = $now;
+        }
+      }
+
+      // Limit memory usage.
+      if ($i < 20) {
+        $terms[] = $term->name;
+      }
+
+      unset($term);
     }
-
-    unset($term);
   }
   return $terms;
 }
 
 function devel_generate_get_vocabs() {
-  $vocs = array();
-  $result = db_query("SELECT vid FROM {taxonomy_vocabulary}");
-  while($voc = db_fetch_object($result)){
-    $vocs[] = $voc->vid;
-  }
-  return $vocs;
+  return db_query("SELECT vid, machine_name AS vocabulary_machine_name FROM {taxonomy_vocabulary}")->fetchAllAssoc('vid');
 }
 
 function devel_generate_taxonomy_data($num_vocab, $num_terms, $title_length, $kill) {
@@ -230,12 +283,12 @@ function devel_generate_taxonomy_data($num_vocab, $num_terms, $title_length, $ki
 
   $new_vocs = devel_generate_vocabs($num_vocab, $title_length);
   if (!empty($new_vocs)) {
-    drupal_set_message(t('Created the following new vocabularies: !vocs', array('!vocs' => theme('item_list', $new_vocs))));
+    drupal_set_message(t('Created the following new vocabularies: !vocs', array('!vocs' => theme('item_list', array('items' => $new_vocs)))));
   }
   $vocs = devel_generate_get_vocabs();
   $new_terms = devel_generate_terms($num_terms, $vocs, $title_length);
   if (!empty($new_terms)) {
-    drupal_set_message(t('Created the following new terms: !terms', array('!terms' => theme('item_list', $new_terms))));
+    drupal_set_message(t('Created the following new terms: !terms', array('!terms' => theme('item_list', array('items' => $new_terms)))));
   }
 }
 
@@ -340,27 +393,31 @@ function devel_create_greeking($words, $title = FALSE) {
   $greeking = "";
 
   if (!$title) {
-	  while ($words > 0) {
-	    $sentence_length = mt_rand(3,10);
+    while ($words > 0) {
+      $sentence_length = mt_rand(3,10);
 
-	    $greeking .= ucfirst($dictionary[array_rand($dictionary)]);
-	    for ($i = 1; $i < $sentence_length; $i++) {
-	      $greeking .= " " . $dictionary[array_rand($dictionary)];
-	    }
+      $greeking .= ucfirst($dictionary[array_rand($dictionary)]);
+      for ($i = 1; $i < $sentence_length; $i++) {
+        $greeking .= " " . $dictionary[array_rand($dictionary)];
+      }
 
-	    $greeking .= ". ";
-	    $words -= $sentence_length;
-	  }
+      $greeking .= ". ";
+      $words -= $sentence_length;
+    }
   }
   else {
-  	// use different method for titles
-  	$title_length = $words;
-  	$array = array();
-  	for ($i = 0; $i < $words; $i++) {
-  		$array[] = $dictionary[array_rand($dictionary)];
-  	}
-  	$greeking = ucwords(implode(' ', $array));
+    // use different method for titles
+    $title_length = $words;
+    $array = array();
+    for ($i = 0; $i < $words; $i++) {
+      $array[] = $dictionary[array_rand($dictionary)];
+    }
+    $greeking = ucwords(implode(' ', $array));
   }
+
+  // Work around possible php garbage collection bug. Without an unset(), this
+  // function gets very expensive over many calls (php 5.2.11).
+  unset($dictionary);
   return $greeking;
 }
 
@@ -368,14 +425,9 @@ function devel_generate_add_terms(&$node) {
   $vocabs = taxonomy_get_vocabularies($node->type);
   foreach ($vocabs as $vocab) {
     $sql = "SELECT tid FROM {taxonomy_term_data} WHERE vid = :vid ORDER BY RAND()";
-    $result = db_query_range($sql, array(':vid' => $vocab->vid), 0, 5);
-    while ($row = db_fetch_object($result)) {
-      if ($vocab->tags) {
-        $node->taxonomy['tags'][] = $row->tid;
-      }
-      else {
-        $node->taxonomy[$row->tid] = $row->tid;
-      }
+    $result = db_query_range($sql, 0, 5 , array(':vid' => $vocab->vid));
+    foreach($result as $row) {
+      $node->taxonomy[] = $row->tid;
       if (!$vocab->multiple) {
         break;
       }
@@ -406,29 +458,6 @@ function devel_generate_add_statistics($node) {
   );
   $statistic['daycount'] = mt_rand(0, $statistic['totalcount']);
   db_insert('node_counter')->fields($statistic)->execute();
-}
-
-function devel_generate_add_upload(&$node) {
-  // Pick a random PNG to attach.
-  $files = file_scan_directory(DRUPAL_ROOT. '/misc', '/^.*\.png$/');
-  $source = $files[array_rand($files)];
-
-  // Setup the file object.
-  $file = new stdClass();
-  $file->uri = file_unmanaged_copy($source->uri);
-  $file->filename = $source->filename;
-  $file->filemime = 'image/png';
-  $file->uid = $node->uid;
-  $file->status = FILE_STATUS_PERMANENT;
-
-  // Data for upload.module.
-  $file->list = variable_get('upload_list_default', TRUE);
-  $file->description = $source->name . ' was here';
-  $file->weight = mt_rand(0,10);
-  $file->new = TRUE;
-
-  $file = file_save($file);
-  $node->files[$file->fid] = $file;
 }
 
 /**
@@ -477,20 +506,16 @@ function devel_generate_content_pre_node(&$results) {
  */
 function devel_generate_content_add_node(&$results) {
   global $language;
+  $node = new StdClass();
 
   // Insert new data:
   $node->type = array_rand($results['node_types']);
-  module_load_include('inc', 'node', 'node.pages');
   node_object_prepare($node);
   $users = $results['users'];
   $node->uid = $users[array_rand($users)];
-
   $type = node_type_get_type($node);
   $node->title = $type->has_title ? devel_create_greeking(mt_rand(1, $results['title_length']), TRUE) : '';
-
-  $node->filter = variable_get('filter_default_format', 1);
-  $node->node_format = FILTER_FORMAT_DEFAULT;
-  $node->language = '';
+  $node->language = LANGUAGE_NONE;
   $node->revision = mt_rand(0,1);
   $node->promote = mt_rand(0, 1);
   // Avoid NOTICE.
@@ -504,7 +529,7 @@ function devel_generate_content_add_node(&$results) {
 
   // Populate all core fields on behalf of field.module
   module_load_include('inc', 'devel_generate', 'devel_generate.fields');
-  cck_generate_fields($node, $node->type);
+  devel_generate_fields($node, 'node', $node->type);
 
   // See devel_generate_nodeapi() for actions that happen before and after this save.
   node_save($node);

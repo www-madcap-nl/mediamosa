@@ -1,11 +1,11 @@
 <?php
-// $Id: coder_upgrade.inc,v 1.2 2009/08/03 00:11:11 solotandem Exp $
+// $Id: coder_upgrade.inc,v 1.4 2010/02/18 16:53:56 solotandem Exp $
 
 /**
  * @file
  * Constants and utility functions for the coder_upgrade module.
  *
- * Copyright 2008-9 by Jim Berry ("solotandem", http://drupal.org/user/240748)
+ * Copyright 2008-10 by Jim Berry ("solotandem", http://drupal.org/user/240748)
  */
 
 /**
@@ -33,14 +33,14 @@ define('DEADWOOD_NEW', 'coder_upgrade/new');
 define('DEADWOOD_PATCH', 'coder_upgrade/patch');
 
 /**
- * Pass a string through t() and wrap the result in html entity <p>.
+ * Passes a string through t() and wraps the result in html entity <p>.
  */
 function tp($string, $args = array()) {
   return '<p>' . t($string, $args) . '</p>';
 }
 
 /**
- * Scan a specified directory and find all first-level directories beneath it.
+ * Scans a directory and finds all first-level directories beneath it.
  *
  * TODO Replace this with a call to file_scan_directory in include/files.inc.
  *
@@ -66,8 +66,7 @@ function coder_upgrade_scan_directory($path) {
 }
 
 /**
- * Remove all files from the specified directory and optionally remove the
- * directory.
+ * Removes all files from a directory and optionally removes the directory.
  *
  * @param string $path Directory path.
  */

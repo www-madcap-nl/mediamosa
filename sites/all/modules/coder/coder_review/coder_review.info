@@ -1,6 +1,6 @@
-; $Id: coder_review.info,v 1.4 2009/05/23 23:21:27 snpower Exp $
+; $Id: coder_review.info,v 1.5 2009/10/18 12:58:25 snpower Exp $
 name = Coder Review
-description = Developer Module that assists with code review and version upgrade
+description = Developer module which reviews your code identifying coding style problems and where updates to the API are required.
 package = Development
 core = 7.x
 dependencies[] = coder
@@ -26,9 +26,9 @@ files[] = tests/coder_review_security.test
 files[] = tests/coder_review_sql.test
 files[] = tests/coder_review_style.test
 
-; Information added by drupal.org packaging script on 2009-09-27
-version = "7.x-1.x-dev"
+; Information added by drupal.org packaging script on 2010-03-12
+version = "7.x-1.0-beta3"
 core = "7.x"
 project = "coder"
-datestamp = "1254009839"
+datestamp = "1268405104"
 

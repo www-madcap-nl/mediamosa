@@ -76,9 +76,6 @@ class mediamosa_type {
   const TYPE_FILENAME                    = 'FILENAME';
   const TYPE_LANGUAGE_CODE               = 'LANGUAGE_CODE';
 
-  const TYPE_SEARCH_ASSET                = 'ASSET';
-  const TYPE_SEARCH_COLLECTION           = 'COLLECTION';
-
   const TYPE_CQL_ASSET                   = 'CQL_ASSET';
   const TYPE_CQL_COLLECTION              = 'CQL_COLLECTION';
 
@@ -568,6 +565,28 @@ class mediamosa_type {
       case self::TYPE_COLLECTION_ID:
       case self::TYPE_BATCH_ID:
         return self::TYPE_ALPHA_NUM;
+
+      case self::TYPE_SEARCH_BOOL:
+        return self::TYPE_BOOL;
+
+      case self::TYPE_OPERATOR:
+      case self::TYPE_ORDER_DIRECTION:
+        return self::TYPE_ALPHA;
+
+      case self::TYPE_SEARCH_MATCH:
+      case self::TYPE_SEARCH_STRING:
+      case self::TYPE_DOMAIN:
+      case self::TYPE_REALM:
+      case self::TYPE_CQL_ASSET:
+      case self::TYPE_CQL_COLLECTION:
+        return self::TYPE_STRING;
+
+      case self::TYPE_SEARCH_INT:
+      case self::TYPE_LIMIT:
+        return self::TYPE_INT;
+
+      case self::TYPE_SEARCH_DATETIME:
+        return self::TYPE_DATETIME;
     }
 
     return $type;

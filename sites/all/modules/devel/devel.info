@@ -1,4 +1,4 @@
-; $Id: devel.info,v 1.9 2009/07/17 11:54:59 weitzman Exp $
+; $Id: devel.info,v 1.11 2010/01/27 23:45:52 weitzman Exp $
 name = Devel
 description = Various blocks, pages, and functions for developers.
 package = Development
@@ -6,10 +6,11 @@ dependencies[] = menu
 core = 7.x
 files[] = devel.module
 files[] = devel.install
+configure = admin/config/development/devel
 
-; Information added by drupal.org packaging script on 2009-09-24
-version = "7.x-1.x-dev"
+; Information added by drupal.org packaging script on 2010-03-19
+version = "7.x-1.0-beta1"
 core = "7.x"
 project = "devel"
-datestamp = "1253750866"
+datestamp = "1268976905"
 

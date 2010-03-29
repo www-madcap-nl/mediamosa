@@ -1,5 +1,5 @@
 <?php
-// $Id: coder_review.drush.inc,v 1.3 2009/05/15 15:25:21 snpower Exp $
+// $Id: coder_review.drush.inc,v 1.6 2010/01/02 00:12:55 davereid Exp $
 
 /**
  * @file
@@ -7,10 +7,10 @@
  */
 
 /**
- * Implements hook_help().
+ * Implements hook_drush_help().
  */
-function coder_review_drush_help($path, $arg) {
-  switch ($path) {
+function coder_review_drush_help($section) {
+  switch ($section) {
     case 'drush:coder review':
       return dt('Run code reviews');
   }
@@ -23,6 +23,7 @@ function coder_review_drush_command() {
   $items['coder review'] = array(
     'callback' => 'coder_review_drush_review',
     'description' => dt('Run code reviews'),
+    'drupal dependencies' => array('coder_review'),
   );
   return $items;
 }

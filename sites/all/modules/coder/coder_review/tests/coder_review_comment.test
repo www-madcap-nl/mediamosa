@@ -40,13 +40,13 @@ class CoderReviewCommentTest extends CoderReviewTestCase {
   }
 
   function testHookImplementationComment() {
-    $this->assertCoderReviewPass($this->comment_header . "/**\n * Implements hook_foo().\n */");
-    $this->assertCoderReviewFail($this->comment_header . "/**\n * Implements hook_foo()\n */");
-    $this->assertCoderReviewFail($this->comment_header . "/**\n * Implements hook_foo\n */");
-    $this->assertCoderReviewFail($this->comment_header . "/**\n * Implements hook_foo.\n */");
-    $this->assertCoderReviewFail($this->comment_header . "/**\n * Implements hook_foo().\n */");
-    $this->assertCoderReviewFail($this->comment_header . '// Implements hook_foo().');
-    $this->assertCoderReviewFail($this->comment_header . "/* Implements hook_foo().\n */");
+    $this->assertCoderReviewPass($this->comment_header . "/**\n * Implementation of hook_foo().\n */");
+    $this->assertCoderReviewFail($this->comment_header . "/**\n * Implementation of hook_foo()\n */");
+    $this->assertCoderReviewFail($this->comment_header . "/**\n * Implementation of hook_foo\n */");
+    $this->assertCoderReviewFail($this->comment_header . "/**\n * Implementation of hook_foo.\n */");
+    $this->assertCoderReviewFail($this->comment_header . "/**\n * implementation of hook_foo().\n */");
+    $this->assertCoderReviewFail($this->comment_header . '// Implementation of hook_foo().');
+    $this->assertCoderReviewFail($this->comment_header . "/* Implementation of hook_foo().\n */");
     $this->assertCoderReviewFail($this->comment_header . "/**\n * Implemetation of hook_foo().\n */");
   }
 

@@ -302,14 +302,17 @@ function template_preprocess_restcall_doc(&$variables) {
     }
   }
 
-  $variables['response_fields'] = theme(
-    'table',
-    array(
-      'header' => $header,
-      'rows' => $rows,
-      'empty' => t('No response fields found.')
-    )
-  );
+  // Hide table when response fields is empty.
+  if (!empty($rows)) {
+    $variables['response_fields'] = theme(
+      'table',
+      array(
+        'header' => $header,
+        'rows' => $rows,
+        'empty' => t('No response fields found.')
+      )
+    );
+  }
 
   if (empty($variables['rest_call']->example_request)) {
     $variables['warnings'][] = t('No example request specified.');
