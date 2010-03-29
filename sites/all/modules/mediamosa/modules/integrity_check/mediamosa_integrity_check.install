@@ -32,7 +32,7 @@
 require_once 'mediamosa_integrity_check_db.inc';
 
 /**
- * Implement hook_install().
+ * Implements hook_install().
  */
 function mediamosa_integrity_check_install() {
   // Create table.
@@ -40,7 +40,7 @@ function mediamosa_integrity_check_install() {
 }
 
 /**
- * Implement hook_uninstall().
+ * Implements hook_uninstall().
  */
 function mediamosa_integrity_check_uninstall() {
   // Drop variables.
@@ -52,10 +52,10 @@ function mediamosa_integrity_check_uninstall() {
 }
 
 /**
- * Implement hook_schema().
+ * Implements hook_schema().
  */
 function mediamosa_integrity_check_schema() {
-  $a_schema[mediamosa_integrity_check_db::TABLE_NAME] = array(
+  $schema[mediamosa_integrity_check_db::TABLE_NAME] = array(
     'description' => t('The integrity check table.'),
     'fields' => array(
       mediamosa_integrity_check_db::ID => array(
@@ -132,5 +132,5 @@ function mediamosa_integrity_check_schema() {
     ),
   );
 
-  return $a_schema;
+  return $schema;
 }

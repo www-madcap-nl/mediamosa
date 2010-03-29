@@ -100,8 +100,8 @@ class mediamosa_job_upload {
       ->fields($a_fields)
       ->execute();
 
-    // TODO: log de upload.
-    //_vpx_statistics_log_file_upload($app_id, $user_id, $group_id, $file_size);
+    // Log the upload event.
+    mediamosa_statistics::log_event_file_upload($app_id, $user_id, $group_id, $file_size);
   }
 }
 

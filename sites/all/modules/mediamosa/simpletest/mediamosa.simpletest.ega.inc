@@ -275,17 +275,44 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   /**
    * Enable the master/slave on app.
    */
-  protected function enableMasterSlave($app_id) {
+  protected function enableMasterSlave($master_app_id) {
+
+    // Which app to enable?
+    $slave_app_id = $this->switch_to_app;
+
+    // Get the current master/slave.
+    $allowed_masterslave_apps = mediamosa_app::get_allowed_master_slave_apps($master_app_id);
+
+    if (!in_array($slave_app_id, $allowed_masterslave_apps)) {
+      $allowed_masterslave_apps[] = $slave_app_id;
+    }
+
     // Change the master setting.
-    mediamosa_app::update($app_id, array(mediamosa_app_db::ALLOW_MASTERSLAVE => mediamosa_app_db::ALLOW_MASTERSLAVE_TRUE));
+    mediamosa_app::update($master_app_id, array(mediamosa_app_db::ALLOW_MASTERSLAVE_APPS => serialize($allowed_masterslave_apps)));
   }
 
   /**
    * Enable the master/slave on app.
    */
-  protected function disableMasterSlave($app_id) {
+  protected function disableMasterSlave($master_app_id) {
+
+    // Which app to disable?
+    $slave_app_id = $this->switch_to_app;
+
+    // Get the current master/slave.
+    $allowed_masterslave_apps = mediamosa_app::get_allowed_master_slave_apps($master_app_id);
+
+    $key = array_search($slave_app_id, $allowed_masterslave_apps);
+
+    if ($key === FALSE) {
+      return; // Not found, not enabled.
+    }
+
+    // Remove it.
+    unset($allowed_masterslave_apps[$key]);
+
     // Change the master setting.
-    mediamosa_app::update($app_id, array(mediamosa_app_db::ALLOW_MASTERSLAVE => mediamosa_app_db::ALLOW_MASTERSLAVE_FALSE));
+    mediamosa_app::update($master_app_id, array(mediamosa_app_db::ALLOW_MASTERSLAVE_APPS => serialize($allowed_masterslave_apps)));
   }
 
   /**
@@ -1971,7 +1998,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     // The uri.
     $uri = strtr('mediafile/@mediafile_id/acl', array('@mediafile_id' => $mediafile_id));
 
-    // Do Post call.
+    // Do Post call, the call itself should not fail, even when we dont have access in some cases.
     $response = $this->restCallPost($uri, $a_parameters, array(), $a_expected_result_ids, $do_internal);
 
     // Test return status.

@@ -31,7 +31,7 @@
 require_once 'mediamosa_server_job_db.inc';
 
 /**
- * Implement hook_install().
+ * Implements hook_install().
  */
 function _mediamosa_server_job_install() {
   // Create our table(s).
@@ -39,7 +39,7 @@ function _mediamosa_server_job_install() {
 }
 
 /**
- * Implement hook_uninstall().
+ * Implements hook_uninstall().
  */
 function _mediamosa_server_job_uninstall() {
   // Drop our table(s).
@@ -47,7 +47,7 @@ function _mediamosa_server_job_uninstall() {
 }
 
 /**
- * Implement hook_schema().
+ * Implements hook_schema().
  */
 function mediamosa_server_job_schema() {
 

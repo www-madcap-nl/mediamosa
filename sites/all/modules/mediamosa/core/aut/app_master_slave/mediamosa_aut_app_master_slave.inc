@@ -100,7 +100,15 @@ class mediamosa_aut_app_master_slave {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MASTERSLAVE_OWN_APP);
     }
 
-    // DB Master-slave safe now.
+    // Check if we are allowed to master/slave to this app.
+    $allowed_apps = mediamosa_app::get_allowed_master_slave_apps($app_id_master);
+
+    // Is my app allowed to add?
+    if (!in_array($app_id_slave, $allowed_apps)) {
+      throw new mediamosa_exception_error_masterslave_disallowed(array('@aut_id' => $app_id_master));
+    }
+
+    // TODO: make mysql master/slave safe.
     try {
       mediamosa_db::db_query(
         'INSERT INTO {#mediamosa_aut_app_master_slave} SET #aut_object_type= :aut_object_type, #aut_object_id = :aut_object_id, #app_id_master = :app_id_master, #app_id_slave = :app_id_slave',

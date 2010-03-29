@@ -48,7 +48,7 @@ function mediamosa_app_mediamosa_register_rest_call() {
 }
 
 /**
- * Implement hook_help().
+ * Implements hook_help().
  */
 function mediamosa_app_help($path, $arg) {
 
@@ -61,7 +61,7 @@ function mediamosa_app_help($path, $arg) {
 }
 
 /**
- * Implement hook_menu().
+ * Implements hook_menu().
  */
 function mediamosa_app_menu() {
   $items = array();
@@ -150,7 +150,7 @@ function mediamosa_app_menu() {
 }
 
 /**
- * Implement hook_permission().
+ * Implements hook_permission().
  */
 function mediamosa_app_permission() {
   return array(

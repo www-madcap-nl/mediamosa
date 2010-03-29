@@ -30,13 +30,26 @@
  */
 
 /**
- * Implementation of hook_menu().
+ * Implements hook_help().
+ */
+function mediamosa_integrity_check_help($path, $arg) {
+  global $base_url;
+
+  switch ($path) {
+    case 'admin/mediamosa/browse/integrity':
+      return '<p>' . t('Integrity check does several checks on your MediaMosa database for data loss and consistency checks on your stored Media.') . '</p>';
+  }
+}
+
+/**
+ * Implements hook_menu().
  */
 function mediamosa_integrity_check_menu() {
   $items = array();
 
   $items['admin/mediamosa/browse/integrity'] = array(
-    'title' => 'File Integrity',
+    'title' => t('File Integrity'),
+    'description' => t('Integrity check does several checks on your MediaMosa database for data loss and consistency checks on your stored Media.'),
     'page callback' => 'mediamosa_integrity_check_page',
     'access arguments' => array('view integrity'),
   );
@@ -45,7 +58,7 @@ function mediamosa_integrity_check_menu() {
 }
 
 /**
- * Implementation of hook_perm().
+ * Implements hook_perm().
  */
 function mediamosa_integrity_check_permission() {
   return array(

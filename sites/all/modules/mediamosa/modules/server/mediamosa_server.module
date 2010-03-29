@@ -30,7 +30,7 @@
  */
 
 /**
- * Implement hook_menu().
+ * Implements hook_menu().
  */
 function mediamosa_server_menu() {
   $items = array();
@@ -126,7 +126,7 @@ function mediamosa_server_menu() {
 }
 
 /**
- * Implement hook_permission().
+ * Implements hook_permission().
  */
 function mediamosa_server_permission() {
   return array(
@@ -211,7 +211,7 @@ function _mediamosa_server_list() {
 
 
 /**
- * Implementation of hook_form().
+ * Implements hook_form().
 
 function mediamosa_server_form($node, $form_state) {
   // If we're inserting a new nod, set some defaults:

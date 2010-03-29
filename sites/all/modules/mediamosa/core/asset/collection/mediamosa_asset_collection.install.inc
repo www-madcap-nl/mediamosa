@@ -33,7 +33,7 @@ require_once 'mediamosa_asset_collection.inc';
 require_once 'mediamosa_asset_collection_db.inc';
 
 /**
- * Implement hook_install().
+ * Implements hook_install().
  */
 function _mediamosa_asset_collection_install() {
   // Create our table(s).
@@ -41,7 +41,7 @@ function _mediamosa_asset_collection_install() {
 }
 
 /**
- * Implement hook_uninstall().
+ * Implements hook_uninstall().
  */
 function _mediamosa_asset_collection_uninstall() {
   // Drop our table(s).
@@ -49,7 +49,7 @@ function _mediamosa_asset_collection_uninstall() {
 }
 
 /**
- * Implement hook_schema().
+ * Implements hook_schema().
  */
 function mediamosa_asset_collection_schema() {
 

@@ -182,4 +182,24 @@ class mediamosa_lib {
 
     return $a_xml;
   }
+
+  /**
+   * Returns a link to show asset in maintenance.
+   *
+   * @param string $asset_id
+   * @param string $text
+   */
+  static public function l_asset($asset_id, $text) {
+    return l($text, strtr(mediamosa_settings::URL_ASSET, array('@asset_id' => $asset_id)));
+  }
+
+  /**
+   * Returns a link to show collection in maintenance.
+   *
+   * @param string $coll_id
+   * @param string $text
+   */
+  static public function l_collection($coll_id, $text) {
+    return l($text, strtr(mediamosa_settings::URL_COLLECTION, array('@coll_id' => $coll_id)));
+  }
 }

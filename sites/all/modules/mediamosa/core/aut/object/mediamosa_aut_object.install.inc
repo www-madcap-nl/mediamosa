@@ -48,7 +48,7 @@ function _mediamosa_aut_object_uninstall() {
 }
 
 /**
- * Implement hook_schema().
+ * Implements hook_schema().
  */
 function mediamosa_aut_object_schema() {
   $a_schema[mediamosa_aut_object_db::TABLE_NAME] = array(

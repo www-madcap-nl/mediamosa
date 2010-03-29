@@ -31,7 +31,7 @@
   */
 
 /**
- * Implement hook_permission().
+ * Implements hook_permission().
  */
 function mediamosa_configuration_permission() {
   return array(
@@ -43,7 +43,7 @@ function mediamosa_configuration_permission() {
 }
 
 /**
- * Implement hook_help().
+ * Implements hook_help().
  */
 function mediamosa_configuration_help($path, $arg) {
   global $base_url;
@@ -55,7 +55,7 @@ function mediamosa_configuration_help($path, $arg) {
 }
 
 /**
- * Implement hook_menu().
+ * Implements hook_menu().
  */
 function mediamosa_configuration_menu() {
   $items = array();

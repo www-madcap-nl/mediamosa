@@ -567,33 +567,22 @@ class mediamosa_aut {
     // Only the owner can share his media to another app
     // The other app is then called 'master', and the media shared is the slave.
     foreach ($a_app_ids as $app_id_master) {
-      $allow_masterslave = mediamosa_db::db_select(mediamosa_app_db::TABLE_NAME, 'app')
-        ->fields('app', array(mediamosa_app_db::ALLOW_MASTERSLAVE))
-        ->condition(mediamosa_app_db::APP_ID, $app_id_master)
-        ->execute()
-        ->fetchField();
 
-      if ($allow_masterslave == mediamosa_app_db::ALLOW_MASTERSLAVE_TRUE) {
-        try {
-          mediamosa_aut_app_master_slave::create($aut_object_id, $aut_type, $app_id_master, $app_id);
+      try {
+        mediamosa_aut_app_master_slave::create($aut_object_id, $aut_type, $app_id_master, $app_id);
 
-          $a_result[] = array(
-            "type" => mediamosa_aut::AUT_NAME_TYPE_APP,
-            "value" => $app_id_master,
-            "a_error" => FALSE,
-          );
-        }
-        catch (mediamosa_exception_error $e) {
-          $a_result[] = array(
-            "type" => mediamosa_aut::AUT_NAME_TYPE_APP,
-            "value" => $app_id_master,
-            "a_error" => $e->mediamosa_exception_error_array_get(),
-          );
-        }
+        $a_result[] = array(
+          'type' => mediamosa_aut::AUT_NAME_TYPE_APP,
+          'value' => $app_id_master,
+          'a_error' => FALSE,
+        );
       }
-      else {
-        //Throw an error that you are not allowed to create master/slave relations for this app.
-        throw new mediamosa_exception_error_masterslave_disallowed(array("@aut_id" => $app_id_master));
+      catch (mediamosa_exception_error $e) {
+        $a_result[] = array(
+          'type' => mediamosa_aut::AUT_NAME_TYPE_APP,
+          'value' => $app_id_master,
+          'a_error' => $e->mediamosa_exception_error_array_get(),
+        );
       }
     }
 

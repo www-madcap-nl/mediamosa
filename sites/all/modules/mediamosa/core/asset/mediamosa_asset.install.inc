@@ -38,7 +38,7 @@ require_once 'metadata/mediamosa_asset_metadata.install.inc';
 require_once 'supplement/mediamosa_asset_supplement.install.inc';
 
 /**
- * Implement hook_install().
+ * Implements hook_install().
  */
 function _mediamosa_asset_install() {
 
@@ -62,7 +62,7 @@ function _mediamosa_asset_install() {
 }
 
 /**
- * Implement hook_uninstall().
+ * Implements hook_uninstall().
  */
 function _mediamosa_asset_uninstall() {
   // Call uninstaller asset_supplement.
@@ -85,7 +85,7 @@ function _mediamosa_asset_uninstall() {
 }
 
 /**
- * Implement hook_schema().
+ * Implements hook_schema().
  */
 function mediamosa_asset_schema() {
 

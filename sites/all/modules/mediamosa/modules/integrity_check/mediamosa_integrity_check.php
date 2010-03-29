@@ -30,8 +30,8 @@
  */
 
 // Get Drupal.
-define('DRUPAL_ROOT', $_SERVER["DOCUMENT_ROOT"]);
-chdir($_SERVER["DOCUMENT_ROOT"]);
+define('DRUPAL_ROOT', $_SERVER['DOCUMENT_ROOT']);
+chdir($_SERVER['DOCUMENT_ROOT']);
 include_once './includes/bootstrap.inc';
 drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
 
@@ -58,6 +58,7 @@ function check_media_records() {
     '#is_still' => mediamosa_asset_mediafile_db::IS_STILL,
     ':is_still_false' => mediamosa_asset_mediafile_db::IS_STILL_FALSE,
   ));
+
   foreach ($result as $mediafile) {
     // Check if file exists.
     if (!file_exists(mediamosa_configuration_storage::mediafile_id_filename_get($mediafile['mediafile_id']))) {
@@ -93,18 +94,22 @@ function check_media_files() {
   $dir = mediamosa_configuration_storage::get_data_location();
   $dh = opendir($dir);
   $missing_db_mediafiles = array();
+
   while (($folder = readdir($dh)) !== FALSE) {
     // Is it "." or ".."?
     if (!is_dir($dir . DIRECTORY_SEPARATOR . $folder) || strpos($folder, '..') === 0 || strpos($folder, '.') === 0 || drupal_strlen($folder) > 1) {
       continue;
     }
+
     // Open the sub directory.
     $fh = opendir($dir . DIRECTORY_SEPARATOR . $folder);
     while (($file = readdir($fh)) !== FALSE) {
+
       // Is it "." or ".."?
       if (strpos($file, '.') === 0 || strpos($file, '..') === 0) {
         continue;
       }
+
       // Check the file in the db.
       $result = mediamosa_db::db_query("
         SELECT COUNT(*)
@@ -114,6 +119,7 @@ function check_media_files() {
         '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
         ':mediafile_id' => $file,
       ));
+
       if ($result->fetchField() == 0) {
         // Collect the data.
         $file_path = $dir . DIRECTORY_SEPARATOR . $folder . DIRECTORY_SEPARATOR . $file;
@@ -141,8 +147,10 @@ function check_media_files() {
         ));
       }
     }
+
     closedir($fh);
   }
+
   closedir($dh);
 }
 
@@ -204,10 +212,10 @@ function check_still_files($skip_files) {
 
 // Start.
 watchdog('integrity_check', 'running...');
-variable_set("mediamosa_integrity_run_date_start", date('c'));
+variable_set('mediamosa_integrity_run_date_start', date('c'));
 
 // Empty log table.
-db_query("TRUNCATE TABLE {mediamosa_log_integrity_check}");
+db_query('TRUNCATE TABLE {mediamosa_log_integrity_check}');
 
 // Run checks.
 check_media_records();
@@ -218,5 +226,5 @@ check_media_files();
 // check_still_files();
 
 // End.
-variable_set("mediamosa_integrity_run_date_end", date('c'));
+variable_set('mediamosa_integrity_run_date_end', date('c'));
 watchdog('integrity_check', 'ended...');

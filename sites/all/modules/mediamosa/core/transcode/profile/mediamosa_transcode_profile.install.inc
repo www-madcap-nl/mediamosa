@@ -31,7 +31,7 @@
 require_once 'mediamosa_transcode_profile_db.inc';
 
 /**
- * Implement hook_install().
+ * Implements hook_install().
  */
 function _mediamosa_transcode_profile_install() {
   // Create our table(s).
@@ -77,7 +77,7 @@ function _mediamosa_transcode_profile_install() {
 }
 
 /**
- * Implement hook_uninstall().
+ * Implements hook_uninstall().
  */
 function _mediamosa_transcode_profile_uninstall() {
   // Drop our table(s).
@@ -85,7 +85,7 @@ function _mediamosa_transcode_profile_uninstall() {
 }
 
 /**
- * Implement hook_schema().
+ * Implements hook_schema().
  */
 function mediamosa_transcode_profile_schema() {
 

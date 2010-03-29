@@ -36,8 +36,11 @@ class mediamosa_settings {
   // Length of the unique ID generator, is always this length.
   const UUID_LENGTH = 24;
 
-  // URL to asset.
+  // URL to asset. (lib function mediamosa_lib::l_asset($asset_id, $text);)
   const URL_ASSET = 'admin/mediamosa/browse/asset/@asset_id';
+
+  // URL to collection. (lib function mediamosa_lib::l_collection($coll_id, $text);)
+  const URL_COLLECTION = 'admin/mediamosa/browse/collection/@coll_id';
 
   // Path / SAN NAS Settings.
   const SAN_NAS_DATA_FOLDER = 'data';

@@ -111,6 +111,7 @@ class mediamosa_asset {
     // @todo: start of transaction?
 
     // Find all my asset children.
+    // @todo: parent_id no longer used (is always NULL).
     $a_asset_ids = mediamosa_db::db_query(
       'SELECT #asset_id FROM {#mediamosa_asset} WHERE #parent_id = :asset_id',
       array(
@@ -172,9 +173,8 @@ class mediamosa_asset {
       mediamosa_asset_mediafile::delete($a_mediafile_ids);
     }
 
-    // @todo: stats
-    //mediamosa_statistics::delete_by_asset_id($asset_id)
-    // db_query("DELETE FROM {statistics_stream_request} WHERE asset_id = '%s'", $asset_id);
+    // Remove my stats.
+    mediamosa_statistics::delete_by_asset_id($asset_id);
 
     // Find my children.
     $result = mediamosa_db::db_query(

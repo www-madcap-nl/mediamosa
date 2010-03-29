@@ -1161,6 +1161,32 @@ function _mediamosa_migration_collection() {
     ))
   );
 
+  /**
+   * Copy from 1.x to 2.x
+   * Columns dropped;
+   * -
+   * has_streamable_mediafiles
+   * Columns renamed;
+   * -
+   */
+  db_query(strtr(
+    "INSERT INTO {mediamosa_asset_collection}
+      (
+        asset_id,
+        coll_id,
+        created,
+        changed
+      ) (SELECT
+        asset_id,
+        coll_id,
+        created,
+        changed
+      FROM #db_name.asset_collection ORDER BY created ASC)",
+    array(
+      '#db_name' => $db_name
+    ))
+  );
+
   // Back to old session mode.
   db_query(strtr("SET SESSION sql_mode = '#old_mode'", array('#old_mode' => $old_mode)));
 }

@@ -78,13 +78,13 @@ class mediamosa_statistics {
    */
   static public function log_event_requested_stream($mediafile_id, $response_type) {
 
-    $mediafile_ext = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf')
-      ->leftJoin(mediamosa_asset_mediafile_metadata_db::TABLE_NAME, 'mfm', 'mfm.mediafile_id = mf.mediafile_id')
-      ->leftJoin(mediamosa_asset_db::TABLE_NAME, 'a', 'a.asset_id = mf.asset_id')
-      ->fields('mf')
-      ->fields('a', array(mediamosa_asset_db::ID)) // 2.x allows us to use the asset_id instead of the asset_id_root.
-      ->fields('mfm', array(mediamosa_asset_mediafile_metadata_db::FILESIZE, mediamosa_asset_mediafile_metadata_db::CONTAINER_TYPE))
-      ->execute();
+    $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
+    $query->leftJoin(mediamosa_asset_mediafile_metadata_db::TABLE_NAME, 'mfm', 'mfm.mediafile_id = mf.mediafile_id');
+    $query->leftJoin(mediamosa_asset_db::TABLE_NAME, 'a', 'a.asset_id = mf.asset_id');
+    $query->fields('mf');
+    $query->fields('a', array(mediamosa_asset_db::ID)); // 2.x allows us to use the asset_id instead of the asset_id_root.
+    $query->fields('mfm', array(mediamosa_asset_mediafile_metadata_db::FILESIZE, mediamosa_asset_mediafile_metadata_db::CONTAINER_TYPE));
+    $mediafile_ext = $query->execute()->fetchAssoc();
 
     // Not found?
     if ($mediafile_ext === FALSE) {
@@ -156,6 +156,34 @@ class mediamosa_statistics {
       ->execute();
   }
 
+  /**
+   * Log a REST call request.
+   *
+   * @param string $request_uri
+   * @param float $processed_time
+   * @param integer $query_count
+   */
+  static public function log_event_restcall($request, $process_time, $query_count) {
+
+    return mediamosa_db::db_insert(mediamosa_statistics_rest_log_db::TABLE_NAME)
+      ->fields(array(
+        mediamosa_statistics_rest_log_db::REQUEST => $request,
+        mediamosa_statistics_rest_log_db::PROCESS_TIME => $process_time,
+        mediamosa_statistics_rest_log_db::QUERY_COUNT => $query_count,
+      ))
+      ->execute();
+  }
+
+  /**
+   * Delete all stats related to this asset.
+   *
+   * @param string $asset_id
+   */
+  static public function delete_by_asset_id($asset_id) {
+    mediamosa_db::db_delete(mediamosa_statistics_stream_request_db::TABLE_NAME)
+      ->condition(mediamosa_statistics_stream_request_db::ASSET_ID, $asset_id)
+      ->execute();
+  }
 
   /**
    * Calculate and store used diskspace.

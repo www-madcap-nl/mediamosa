@@ -36,7 +36,7 @@ require_once 'search_request/mediamosa_statistics_search_request.install.inc';
 require_once 'stream_request/mediamosa_statistics_stream_request.install.inc';
 
 /**
- * Implement hook_install().
+ * Implements hook_install().
  */
 function _mediamosa_statistics_install() {
   // Create our table(s).
@@ -48,7 +48,7 @@ function _mediamosa_statistics_install() {
 }
 
 /**
- * Implement hook_uninstall().
+ * Implements hook_uninstall().
  */
 function _mediamosa_statistics_uninstall() {
   // Drop our table(s).

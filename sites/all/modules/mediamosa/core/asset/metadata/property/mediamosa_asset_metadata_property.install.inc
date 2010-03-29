@@ -35,7 +35,7 @@ require_once 'group/mediamosa_asset_metadata_property_group_db.inc';
 require_once 'group/mediamosa_asset_metadata_property_group.install.inc';
 
 /**
- * Implement hook_install().
+ * Implements hook_install().
  */
 function _mediamosa_asset_metadata_property_install() {
   // Create asset metatdata property group table first.
@@ -109,7 +109,7 @@ function _mediamosa_asset_metadata_property_install() {
 }
 
 /**
- * Implement hook_uninstall().
+ * Implements hook_uninstall().
  */
 function _mediamosa_asset_metadata_property_uninstall() {
   // Drop our table(s).
@@ -120,7 +120,7 @@ function _mediamosa_asset_metadata_property_uninstall() {
 }
 
 /**
- * Implement hook_schema().
+ * Implements hook_schema().
  */
 function mediamosa_asset_metadata_property_schema() {
 

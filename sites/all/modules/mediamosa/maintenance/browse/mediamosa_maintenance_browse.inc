@@ -27,6 +27,7 @@
  /**
   * @file
   */
+
 /**
  * Execute a REST call.
  * @param string $uri
@@ -38,23 +39,8 @@
  */
 function _mediamosa_restcall($uri, $method = 'GET', array $data = array()) {
 
-  // Call REST response class to generate output.
-  $xml = mediamosa_response_connector::static_do_restcall($uri, $method, $data);
-
-  // Make simplexml object.
-  $response = new SimpleXMLElement($xml);
-
-  if (!$response) {
-    drupal_set_message('Unable to execute REST call, check MediaMosa connector settings.', 'error');
-    return FALSE;
-  }
-
-  if ($response->header->request_result != 'success') {
-    drupal_set_message($uri);
-    drupal_set_message($response->header->request_result_id .': '. $response->header->request_result_description, 'error');
-  }
-
-  return $response;
+  // Wrapper.
+  return mediamosa_response_connector::static_do_restcall_drupal($uri, $method, $data);
 }
 
 /**

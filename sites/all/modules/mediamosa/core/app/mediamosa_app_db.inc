@@ -60,9 +60,7 @@ class mediamosa_app_db {
   const SHOW_EXTERNAL_ASSETS = 'show_external_assets';
   const SHOW_EXTERNAL_ASSETS_TRUE = 'TRUE';
   const SHOW_EXTERNAL_ASSETS_FALSE = 'FALSE';
-  const ALLOW_MASTERSLAVE = 'allow_masterslave';
-  const ALLOW_MASTERSLAVE_TRUE = 'TRUE';
-  const ALLOW_MASTERSLAVE_FALSE = 'FALSE';
+  const ALLOW_MASTERSLAVE_APPS = 'allow_masterslave_apps';
   const DESCRIPTION = 'description';
   const DESCRIPTION_LENGTH = 255;
   const OWNER = 'owner';

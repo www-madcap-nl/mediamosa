@@ -34,7 +34,7 @@ require_once 'mediamosa_asset_mediafile_db.inc';
 require_once 'metadata/mediamosa_asset_mediafile_metadata.install.inc';
 
 /**
- * Implement hook_install().
+ * Implements hook_install().
  */
 function _mediamosa_asset_mediafile_install() {
   // Create our table(s).
@@ -45,7 +45,7 @@ function _mediamosa_asset_mediafile_install() {
 }
 
 /**
- * Implement hook_uninstall().
+ * Implements hook_uninstall().
  */
 function _mediamosa_asset_mediafile_uninstall() {
   // Call the asset media metadata uninstaller.
@@ -56,7 +56,7 @@ function _mediamosa_asset_mediafile_uninstall() {
 }
 
 /**
- * Implement hook_schema().
+ * Implements hook_schema().
  */
 function mediamosa_asset_mediafile_schema() {
 

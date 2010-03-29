@@ -29,6 +29,9 @@
   * The response connector allows you to do REST calls under all APPs and is
   * used by maintenance. Do not use as normal REST call connection class, use
   * mediamosa_connector instead, which is application session based.
+  *
+  * This class is only intended for MediaMosa internal workings for maintenance
+  * and administration modules. Again, better to use the mediamosa_connector.
   */
 
 class mediamosa_response_connector extends mediamosa_response {
@@ -45,9 +48,10 @@ class mediamosa_response_connector extends mediamosa_response {
    *  GET/POST parameters.
    */
   static public function static_do_restcall($uri, $method = 'GET', array $params = array()) {
-
-    if (!isset($params['app_id'])) {
-      $params['app_id'] = array(0) + array(mediamosa_app::get_all_apps(array(mediamosa_app_db::APP_ID), mediamosa_app_db::APP_ID));
+    if (empty($params['app_id'])) {
+      // Because the rule is the 1st is always the leading application, we don't
+      // have one here, so use 0 instead.
+      $params['app_id'] = array(0) + mediamosa_app::get_all_apps(array(mediamosa_app_db::APP_ID), mediamosa_app_db::APP_ID)->fetchCol();
     }
 
     // Create response object.
@@ -55,6 +59,29 @@ class mediamosa_response_connector extends mediamosa_response {
 
     // Do REST call.
     return $o_mediamosa_reponse->do_restcall($uri, $method, $params);
+  }
+
+  /**
+   * Execute a REST call. Report to drupal if an error was found.
+   *
+   * @param string $uri
+   *  The URI of the REST call.
+   * @param string $method
+   *  The Method (POST/GET/PUT).
+   * @param array $data
+   *  Array name => value.
+   */
+  static public function static_do_restcall_drupal($uri, $method = 'GET', array $params = array()) {
+
+    // Call REST response class to generate output.
+    $result = self::static_do_restcall($uri, $method, $params);
+
+    if ($result['header']['request_result'] != self::SUCCESS) {
+      drupal_set_message($uri);
+      drupal_set_message($result['header']['request_result_id'] .': '. $result['header']['request_result_description'], 'error');
+    }
+
+    return $result;
   }
 
   // ------------------------------------------------------------------ Functions.
@@ -115,8 +142,8 @@ class mediamosa_response_connector extends mediamosa_response {
       $this->set_result(self::ERROR, $e->getCode(), $e->getMessage());
     }
 
-    // Generate output XML.
-    $output = $this->generate_xml();
+    // Generate output PHP array.
+    $output = $this->generate_array();
 
     // Restore.
     mediamosa::get($current_mediamosa_response);

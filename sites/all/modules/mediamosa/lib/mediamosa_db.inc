@@ -72,6 +72,20 @@ class mediamosa_db {
   }
 
   /**
+   * Increase/retrieve query_count.
+   *
+   * @param integer $add
+   *  Number to increase, use 0 to retrieve.
+   */
+  static public function query_count($add = 0) {
+    static $queries = 0;
+
+    $queries += $add;
+    return $queries;
+  }
+
+
+  /**
    * Wrapper around query functions.
    *
    * @param string $func
@@ -84,6 +98,9 @@ class mediamosa_db {
    *  DB result set object.
    */
   static private function query($func = 'db_query', array $a_args = array()) {
+
+    // Increase query count.
+    self::query_count(1);
 
     // Because the order can change of the a_args per func, lets create pointers to them.
     switch ($func) {
@@ -267,6 +284,9 @@ class mediamosa_db {
    *  DB Select object.
    */
   static public function db_select(/* $table, $alias = NULL, array $options = array()*/) {
+    // Increase query count.
+    self::query_count(1);
+
     $a_args = func_get_args(); // Must copy into $a_args, cant use it directly in call_user_func_array
 
     // Lets return array's by default and not objects.
@@ -294,6 +314,9 @@ class mediamosa_db {
    *  DB Insert object.
    */
   static public function db_insert(/* $table, array $options = array()*/) {
+    // Increase query count.
+    self::query_count(1);
+
     $a_args = func_get_args(); // Must copy into $a_args, cant use it directly in call_user_func_array
 
     if (mediamosa::is_db_logging()) {
@@ -327,6 +350,9 @@ class mediamosa_db {
    *  DB Update object.
    */
   static public function db_update(/* $table, array $options = array()*/) {
+    // Increase query count.
+    self::query_count(1);
+
     $a_args = func_get_args(); // Must copy into $a_args, cant use it directly in call_user_func_array
 
     if (mediamosa::is_db_logging()) {
@@ -436,13 +462,6 @@ class mediamosa_db {
     db_set_active($current_key);
 
     return $current_key;
-  }
-
-  /**
-   * Switch to ftp database.
-   */
-  static public function db_set_active_ftp() {
-    return self::db_set_active('ftp');
   }
 
   /**

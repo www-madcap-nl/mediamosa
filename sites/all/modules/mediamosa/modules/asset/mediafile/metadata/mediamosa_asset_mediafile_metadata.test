@@ -333,7 +333,7 @@ class MediaMosaAssetMediafileMetadataTestCaseEga extends MediaMosaTestCaseEga {
     // Create an asset.
     $asset_id = $this->createAsset();
 
-    // First, is_unappropiate
+    // First, is_unappropriate
 
     // Update asset
     $a_parameters = array(
@@ -352,7 +352,7 @@ class MediaMosaAssetMediafileMetadataTestCaseEga extends MediaMosaTestCaseEga {
     // Check the result
     $this->assertTrue(
       $a_asset[mediamosa_asset_db::IS_UNAPPROPRIATE] == mediamosa_asset_db::IS_UNAPPROPRIATE_TRUE,
-      t('is_unappropiate is TRUE')
+      t('is_unappropriate is TRUE')
     );
 
     // Then, is_unappropriate
@@ -374,7 +374,7 @@ class MediaMosaAssetMediafileMetadataTestCaseEga extends MediaMosaTestCaseEga {
     // Check the result
     $this->assertTrue(
       $a_asset[mediamosa_asset_db::IS_UNAPPROPRIATE] == mediamosa_asset_db::IS_UNAPPROPRIATE_FALSE,
-      t('is_unappropiate is FALSE')
+      t('is_unappropriate is FALSE')
     );
 
     // Last, is_inappropriate
@@ -396,7 +396,7 @@ class MediaMosaAssetMediafileMetadataTestCaseEga extends MediaMosaTestCaseEga {
     // Check the result
     $this->assertTrue(
       $a_asset[mediamosa_asset_db::IS_UNAPPROPRIATE] == mediamosa_asset_db::IS_UNAPPROPRIATE_TRUE,
-      t('is_unappropiate is TRUE')
+      t('is_unappropriate is TRUE')
     );
   }
 }
