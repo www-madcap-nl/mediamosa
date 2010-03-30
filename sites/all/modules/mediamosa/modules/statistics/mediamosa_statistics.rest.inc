@@ -462,6 +462,7 @@ class mediamosa_rest_call_statistics_set_historical_uploaded_mediafiles extends 
         self::GROUP_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'Group of the upload.',
+          self::VAR_DEFAULT_VALUE => '',
         ),
         self::FILE_SIZE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
