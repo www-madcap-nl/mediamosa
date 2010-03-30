@@ -147,6 +147,24 @@ class mediamosa_settings {
   // found.
   const STATUS_MAX_TABLES = 500;
 
+  // FTP root directory under SAN/NAS.
+  const FTP_ROOT_DIR = 'ftp';
+
+  // FTP history directory under FTP_ROOT.
+  const FTP_HISTORY_DIR = 'history';
+
+  // FTP upload directory under FTP_ROOT.
+  const FTP_UPLOAD_DIR = 'upload';
+
+  // Current job.
+  const FTP_CURRENT_JOB_DIR = 'current.txt';
+
+  // History extention.
+  const FTP_HISTORY_EXTENTION = 'history';
+
+  // VUF extgention.
+  const FTP_QUEUE_EXTENTION = 'vuf';
+
   // ------------------------------------------------------------------ Functions.
   /**
    * Return the unique server ID.

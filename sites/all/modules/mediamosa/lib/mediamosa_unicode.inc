@@ -128,4 +128,11 @@ class mediamosa_unicode {
 
     return TRUE;
   }
+
+  /**
+   * Format date
+   */
+  static public function format_date($timestamp, $type = 'medium', $format = '', $timezone = NULL, $langcode = NULL) {
+    return format_date($timestamp, $type, $format, $timezone, $langcode);
+  }
 }

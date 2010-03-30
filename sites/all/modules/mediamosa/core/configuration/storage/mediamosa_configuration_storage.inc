@@ -252,4 +252,39 @@ class mediamosa_configuration_storage {
   static public function mediafile_still_filename_get($mediafile_id, $mount_point = '') {
     return (empty($mount_point) ? self::mount_point_get() : $mount_point) . DIRECTORY_SEPARATOR . self::still_location_get() . DIRECTORY_SEPARATOR . self::objectid_to_location($mediafile_id);
   }
+
+  /**
+   * Get the FTP location.
+   */
+  static public function ftp_location_get() {
+    return mediamosa_settings::FTP_ROOT_DIR;
+  }
+
+  /**
+   * Get the (FTP) history location.
+   */
+  static public function history_location_get() {
+    return mediamosa_settings::FTP_HISTORY_DIR;
+  }
+
+  /**
+   * Get the SAN/NAS FTP path.
+   */
+  static public function get_full_ftp_path() {
+    return self::mount_point_get() . DIRECTORY_SEPARATOR . self::ftp_location_get();
+  }
+
+  /**
+   * Get the SAN/NAS history path.
+   */
+  static public function get_full_history_path() {
+    return self::mount_point_get() . DIRECTORY_SEPARATOR . self::ftp_location_get() . DIRECTORY_SEPARATOR . self::history_location_get();
+  }
+
+  /**
+   * Get the current job path.
+   */
+  static public function current_job_path() {
+    return self::get_full_history_path() . DIRECTORY_SEPARATOR . mediamosa_settings::FTP_CURRENT_JOB_DIR;
+  }
 }

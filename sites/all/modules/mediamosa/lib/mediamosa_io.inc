@@ -260,4 +260,16 @@ class mediamosa_io {
   static public function copy($source, $dest) {
     return @copy($source, $dest);
   }
+
+  /**
+   * File scan directory
+   *
+   * @param dir
+   * @param mask
+   * @param options
+   * @param depth
+   */
+  static public function file_scan_directory($dir, $mask, $options = array(), $depth = 0) {
+    return file_scan_directory($dir, $mask, $options, $depth);
+  }
 }
