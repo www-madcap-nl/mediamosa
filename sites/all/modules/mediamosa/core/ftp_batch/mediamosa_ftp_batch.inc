@@ -111,6 +111,7 @@ class mediamosa_ftp_batch {
       mediamosa_ftp_batch_db::APP_ID => $app_id,
       mediamosa_ftp_batch_db::OWNER_ID => $owner_id,
       mediamosa_ftp_batch_db::GROUP_ID => $group_id,
+      mediamosa_ftp_batch_db::VUF => '',
     );
 
     // No created/changed fields.

@@ -252,10 +252,10 @@ class mediamosa_asset_collection {
   static public function find($asset_id) {
 
     // return a list of collections.
-    return mediamosa_db::db_select(mediamosa_collection_db::TABLE_NAME, 'c')
-      ->join(mediamosa_asset_collection_db::TABLE_NAME, 'ac', 'ac.coll_id = c.coll_id')
+    $query = mediamosa_db::db_select(mediamosa_collection_db::TABLE_NAME, 'c')
       ->fields('c')
-      ->condition(mediamosa_asset_collection_db::ASSET_ID, $asset_id)
-      ->execute();
+      ->condition(mediamosa_asset_collection_db::ASSET_ID, $asset_id);
+    $query->join(mediamosa_asset_collection_db::TABLE_NAME, 'ac', 'ac.coll_id = c.coll_id');
+    return $query->execute();
   }
 }

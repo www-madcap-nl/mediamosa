@@ -219,7 +219,7 @@ class mediamosa_rest_call_ftp_batch_update extends mediamosa_rest_call {
         self::GROUP_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'The group ID.',
-          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+          self::VAR_DEFAULT_VALUE => '',
         ),
         self::BATCH_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
