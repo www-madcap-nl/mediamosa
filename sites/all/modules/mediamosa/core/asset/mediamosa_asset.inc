@@ -633,7 +633,7 @@ class mediamosa_asset {
       $result = mediamosa_asset_collection::get_by_asset_ids(
         $a_asset_ids,
         array(
-          mediamosa_asset_collection_db::ASSET_ID => 'ca.' . mediamosa_asset_collection_db::ASSET_ID,
+          mediamosa_asset_collection_db::ASSET_ID => 'ac.' . mediamosa_asset_collection_db::ASSET_ID,
           mediamosa_collection_db::ID => 'c.' . mediamosa_collection_db::ID,
           mediamosa_collection_db::TITLE => 'c.' . mediamosa_collection_db::TITLE
         )
