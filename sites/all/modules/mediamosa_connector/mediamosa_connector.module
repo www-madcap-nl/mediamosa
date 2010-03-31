@@ -171,13 +171,13 @@ function mediamosa_connector_settings() {
 function mediamosa_connector_check_connection_submit() {
   // Create the mediamosa connector.
   $o_connector = new mediamosa_connector();
-
+/*
   // Do request will trigger login.
   $response = $o_connector->request_internal('rest');
 
   if ($response !== FALSE) {
     drupal_set_message(t('Internal call test successful.'));
-
+*/
     // Do request will trigger login.
     $response = $o_connector->request('rest');
     if ($response !== FALSE) {
@@ -186,10 +186,10 @@ function mediamosa_connector_check_connection_submit() {
     else {
       drupal_set_message(t('Login test sucess.'));
     }
-  }
+/*  }
   else {
     drupal_set_message(t('Login test failed, please check your input.'), 'error');
-  }
+  }*/
 }
 
 /**

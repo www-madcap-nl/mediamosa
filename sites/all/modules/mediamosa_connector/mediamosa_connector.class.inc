@@ -58,10 +58,20 @@ class mediamosa_connector {
   private $is_app_admin;
   private $log = array();
 
+  // Stored username, password.
+  private $username;
+  private $password;
+
   // ------------------------------------------------------------------ Constructor.
-  public function __construct() {
+  public function __construct($username = NULL, $password = NULL) {
     $this->url = variable_get('mediamosa_connector_url', NULL);
     $this->cookie = variable_get('mediamosa_connector_cookie', NULL);
+
+    $username = isset($username) ? $username : variable_get('mediamosa_connector_username', NULL);
+    $password = isset($password) ? $password : variable_get('mediamosa_connector_password', NULL);
+
+    $this->username = $username;
+    $this->password = $password;
   }
 
   // ------------------------------------------------------------------ Public Functions.
@@ -131,12 +141,8 @@ class mediamosa_connector {
     $this->cookie = NULL;
     variable_del('mediamosa_connector_cookie');
 
-    // get the authentication credentials
-    $username = variable_get('mediamosa_connector_username', NULL);
-    $password = variable_get('mediamosa_connector_password', NULL);
-
     // Step 1: request the challenge
-    $data = array('dbus' => 'AUTH DBUS_COOKIE_SHA1 '. $username);
+    $data = array('dbus' => 'AUTH DBUS_COOKIE_SHA1 '. $this->username);
     $method = 'POST';
     $response = $this->do_request('login', array('method' => $method, 'data' => $data));
 
@@ -164,7 +170,7 @@ class mediamosa_connector {
     // Step 2: Do challenge.
     $challenge = $dbus_data[3];
     $random = substr(md5(microtime(TRUE)), 0, 10);
-    $challenge_response = sha1(sprintf('%s:%s:%s', $challenge, $random, $password));
+    $challenge_response = sha1(sprintf('%s:%s:%s', $challenge, $random, $this->password));
     $data = array('dbus' => sprintf('DATA %s %s', $random, $challenge_response));
     $method = 'POST';
     $response = $this->do_request('login', array('method' => $method, 'data' => $data));

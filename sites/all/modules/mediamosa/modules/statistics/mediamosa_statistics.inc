@@ -80,7 +80,6 @@ function mediamosa_statistics_filter_form($form, $form_state) {
         $apps[$row['app_id']] = $row[mediamosa_app_db::APP_NAME] . ' (app id ' . $row['app_id'] .')';
       }
 
-
       $form['filters']['status']['app_owner'] = array(
         '#type' => 'select',
         '#options' => array('' => '') + $owners,

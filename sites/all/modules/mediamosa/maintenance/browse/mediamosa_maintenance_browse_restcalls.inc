@@ -40,18 +40,16 @@ function mediamosa_maintenance_browse_restcall_form() {
   $rest_calls = array_merge_recursive($rest_calls, $rest_calls_doc);
 
   // Skip internal calls.
-  foreach ($rest_calls as $key => $value) {
-    if ((isset($value['POST'])) && isset($value['POST']['access']) && ($value['POST']['access'] == 1)) {
-      unset($rest_calls[$key]['POST']);
-    }
-    if ((isset($value['POST'])) && isset($value['POST']['status']) && ($value['POST']['status'] == 'deprecated')) {
-      unset($rest_calls[$key]['POST']);
-    }
-    if ((isset($value['GET'])) && isset($value['GET']['access']) && ($value['GET']['access'] == 1)) {
-      unset($rest_calls[$key]['GET']);
-    }
-    if ((isset($value['GET'])) && isset($value['GET']['status']) && ($value['GET']['status'] == 'deprecated')) {
-      unset($rest_calls[$key]['GET']);
+  foreach ($rest_calls as $key => $rest_call) {
+    foreach ($rest_call as $method => $value) {
+
+
+      if (isset($value['access']) && ($value['access'] == 1)) {
+        unset($rest_calls[$key][$method]);
+      }
+      if (isset($value['status']) && ($value['status'] == 'deprecated')) {
+        unset($rest_calls[$key][$method]);
+      }
     }
   }
 
