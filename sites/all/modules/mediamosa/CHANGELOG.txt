@@ -58,6 +58,14 @@ Mediamosa 2.1.2
   was testing. F.e. the CQL unit test would generate new stats based on the
   searches during test and store them as normal stats. This no longer is
   a bug because of the sandbox environment of 2.x unittests.
+- Some ffmpeg versions give value 'N/A' for bitrate. This caused database errors
+  when trying to insert. Fixed by converting all required numeric values to 
+  integers.
+- Conversion of some queries where NULL was inserted into NON-NULL allowed 
+  values is creating problems in DP7 database. This is because the old D6 code
+  unintentially forced NULL values to be empty strings. This behavor can not be
+  replicated in D7. Decided to put those columns in the database to allow NULL
+  values instead. Statistics as example had owner_id and group_id as non-null.
 
 MediaMosa 2.1.1
 ---------------

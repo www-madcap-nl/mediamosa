@@ -90,7 +90,7 @@ class mediamosa_rest_call_change_ownership extends mediamosa_rest_call {
   public function do_call() {
     $mediamosa = mediamosa::get();
 
-    $app_ids = $this->get_param_value_app();;
+    $app_ids = $this->get_param_value_app();
 
     /*
      * Because its to dangerous, new_app_id/old_app_id has been turned off (#774).
@@ -204,7 +204,7 @@ class mediamosa_rest_call_count_asset extends mediamosa_rest_call {
   public function do_call() {
     $mediamosa = mediamosa::get();
 
-    $app_ids = $this->get_param_value_app();;
+    $app_ids = $this->get_param_value_app();
 
     // Get the 1st app.
     $app_id = reset($app_ids);
@@ -419,7 +419,7 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
     parent::validate_rest_args($a_var_setup);
 
     $cql = $this->get_param_value(self::CQL);
-    $app_ids = $this->get_param_value_app();;
+    $app_ids = $this->get_param_value_app();
     $error_text = '';
 
     if ($cql != '' && !mediamosa_core_cql::verify_asset($cql, $app_ids, $error_text)) {
@@ -431,7 +431,7 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
   public function do_call() {
     $mediamosa = mediamosa::get();
 
-    $app_ids = $this->get_param_value_app();;
+    $app_ids = $this->get_param_value_app();
 
     // Now convert the old search parameters to CQL.
     $a_var_setup = mediamosa_core_cql::get_var_setup_search_asset($app_ids, array(), self::get_search_params());
@@ -603,7 +603,7 @@ class mediamosa_rest_call_asset_delete extends mediamosa_rest_call {
 
     $asset_id = $this->get_param_value(self::ASSET_ID);
 
-    $app_ids = $this->get_param_value_app();;
+    $app_ids = $this->get_param_value_app();
     $app_id = reset($app_ids);
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
 
@@ -838,7 +838,7 @@ class mediamosa_rest_call_asset_delete_all extends mediamosa_rest_call {
   public function do_call() {
     $mediamosa = mediamosa::get();
 
-    $app_ids = $this->get_param_value_app();;
+    $app_ids = $this->get_param_value_app();
     $app_id = reset($app_ids);
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
 
@@ -947,7 +947,7 @@ class mediamosa_rest_call_asset_create extends mediamosa_rest_call {
   public function do_call() {
     $mediamosa = mediamosa::get();
 
-    $app_ids = $this->get_param_value_app();;
+    $app_ids = $this->get_param_value_app();
     $app_id = reset($app_ids);
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
 
@@ -1048,7 +1048,7 @@ class mediamosa_rest_call_asset_update extends mediamosa_rest_call {
   public function do_call() {
     $mediamosa = mediamosa::get();
 
-    $app_ids = $this->get_param_value_app();;
+    $app_ids = $this->get_param_value_app();
     $app_id = reset($app_ids);
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
 

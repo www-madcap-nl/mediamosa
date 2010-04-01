@@ -43,9 +43,9 @@ class mediamosa_rest_call_count_collection extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Public Functions.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::GROUP_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
@@ -59,13 +59,13 @@ class mediamosa_rest_call_count_collection extends mediamosa_rest_call {
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   public function do_call() {
     $o_mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value_app();;
+    $a_app_ids = $this->get_param_value_app();
 
     // Get the 1st app.
     $app_id = reset($a_app_ids);
@@ -121,10 +121,15 @@ class mediamosa_rest_call_collection_search extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
+        self::ASSET_ID => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
+          self::VAR_DESCRIPTION => 'Search within the collection of this supplied asset ID.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+        ),
         self::CQL => array(
           self::VAR_TYPE => mediamosa_type::TYPE_CQL_COLLECTION,
           self::VAR_DESCRIPTION => 'The CQL search string, used for extended and complex search options.',
@@ -140,10 +145,6 @@ class mediamosa_rest_call_collection_search extends mediamosa_rest_call {
         self::AUT_USER_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'Authentication parameter, for including the collections that are private.',
-        ),
-        self::ASSET_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
-          self::VAR_DESCRIPTION => 'Search within the collection of this supplied asset ID.',
         ),
         self::PRIVATE_ => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
@@ -191,25 +192,25 @@ class mediamosa_rest_call_collection_search extends mediamosa_rest_call {
     );
 
     // Include limit, offset vars.
-    $a_var_setup = self::get_var_setup_range($a_var_setup);
+    $var_setup = self::get_var_setup_range($var_setup);
 
     // Include order by.
-    $a_var_setup = self::get_var_setup_order_by($a_var_setup);
+    $var_setup = self::get_var_setup_order_by($var_setup);
 
     // Include default.
-    $a_var_setup = self::get_var_setup_default($a_var_setup);
+    $var_setup = self::get_var_setup_default($var_setup);
 
     // Now include metadata search stuff.
-    $a_var_setup = mediamosa_core_cql::get_var_setup_search($a_var_setup, self::get_search_params());
+    $var_setup = mediamosa_core_cql::get_var_setup_search($var_setup, self::get_search_params());
 
-    return $a_var_setup;
+    return $var_setup;
   }
 
   // ------------------------------------------------------------------ OVerride Process Rest Args.
   // Fix for alias of user_id / aut_user_id.
-  protected function process_rest_args(array $a_var_setup) {
+  protected function process_rest_args(array $var_setup) {
     // Process input.
-    $a_var_setup = parent::process_rest_args($a_var_setup);
+    $var_setup = parent::process_rest_args($var_setup);
 
     // If user_id is set, override aut_user_id, dont care if aut_user_id is set.
     $user_id = $this->get_param_value(self::USER_ID);
@@ -219,15 +220,15 @@ class mediamosa_rest_call_collection_search extends mediamosa_rest_call {
     }
 
     // Return the var_setup.
-    return $a_var_setup;
+    return $var_setup;
   }
 
   // ------------------------------------------------------------------ OVerride Validate Rest Args.
   // Override for checking CQL string.
-  protected function validate_rest_args(array $a_var_setup) {
+  protected function validate_rest_args(array $var_setup) {
 
     // Validate first.
-    parent::validate_rest_args($a_var_setup);
+    parent::validate_rest_args($var_setup);
 
     $cql = $this->get_param_value(self::CQL);
     $a_app_ids = $this->get_param_value_app();
@@ -242,10 +243,10 @@ class mediamosa_rest_call_collection_search extends mediamosa_rest_call {
   public function do_call() {
     $o_mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value_app();;
+    $a_app_ids = $this->get_param_value_app();
 
     // Now convert the old search parameters to CQL.
-    $a_var_setup = mediamosa_core_cql::get_var_setup_search(array(), self::get_search_params());
+    $var_setup = mediamosa_core_cql::get_var_setup_search(array(), self::get_search_params());
 
     // Non CQL parameters.
     $order_by = $this->get_param_value(self::ORDER_BY);
@@ -253,7 +254,7 @@ class mediamosa_rest_call_collection_search extends mediamosa_rest_call {
 
     $a_cql = array();
     $a_translate_to = array();
-    foreach ($a_var_setup[mediamosa_rest_call::VARS] as $param => $a_param) {
+    foreach ($var_setup[mediamosa_rest_call::VARS] as $param => $a_param) {
       if ($a_param[mediamosa_rest_call::VAR_TYPE] == mediamosa_type::TYPE_SEARCH_MATCH) {
         continue;
       }
@@ -341,9 +342,9 @@ class mediamosa_rest_call_collection_favorites_count extends mediamosa_rest_call
 
   // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::COLL_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_COLLECTION_ID,
@@ -354,7 +355,7 @@ class mediamosa_rest_call_collection_favorites_count extends mediamosa_rest_call
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   // ------------------------------------------------------------------ Do Call.
@@ -387,9 +388,9 @@ class mediamosa_rest_call_collection_get extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::COLL_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_COLLECTION_ID,
@@ -403,14 +404,14 @@ class mediamosa_rest_call_collection_get extends mediamosa_rest_call {
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
     $o_mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value_app();;
+    $a_app_ids = $this->get_param_value_app();
     $app_id = reset($a_app_ids);
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
     $coll_id = $this->get_param_value(self::COLL_ID);
@@ -475,9 +476,9 @@ class mediamosa_rest_call_collection_create extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::USER_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
@@ -515,7 +516,7 @@ class mediamosa_rest_call_collection_create extends mediamosa_rest_call {
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   // ------------------------------------------------------------------ Do Call.
@@ -574,9 +575,9 @@ class mediamosa_rest_call_collection_update extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Functions (public).
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::COLL_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_COLLECTION_ID,
@@ -636,13 +637,13 @@ class mediamosa_rest_call_collection_update extends mediamosa_rest_call {
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_app_admin($a_var_setup);
+    return self::get_var_setup_app_admin($var_setup);
   }
 
   public function do_call() {
     $o_mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value_app();;
+    $a_app_ids = $this->get_param_value_app();
     $app_id = reset($a_app_ids);
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
 
@@ -736,9 +737,9 @@ class mediamosa_rest_call_collection_delete extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Functions (public).
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::COLL_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_COLLECTION_ID,
@@ -763,13 +764,13 @@ The collection is deleted only if all underlying assets successfully removed.',
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   public function do_call() {
     $o_mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value_app();;
+    $a_app_ids = $this->get_param_value_app();
     $app_id = reset($a_app_ids);
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
 
@@ -877,9 +878,9 @@ class mediamosa_rest_call_collection_delete_relation extends mediamosa_rest_call
 
   // ------------------------------------------------------------------ Functions (public).
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::COLL_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_COLLECTION_ID,
@@ -901,13 +902,13 @@ class mediamosa_rest_call_collection_delete_relation extends mediamosa_rest_call
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   public function do_call() {
     $o_mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value_app();;
+    $a_app_ids = $this->get_param_value_app();
     $app_id = reset($a_app_ids);
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
 

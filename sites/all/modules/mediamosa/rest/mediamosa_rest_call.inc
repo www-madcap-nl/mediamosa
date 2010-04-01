@@ -606,6 +606,11 @@ abstract class mediamosa_rest_call {
    * @param string $param
    */
   static public function get_param_value_global($param) {
+    // Is mediamosa_params is set, we take priority on those.
+    if (isset($GLOBALS['mediamosa_params'])) {
+      return isset($GLOBALS['mediamosa_params'][$param]) ? $GLOBALS['mediamosa_params'][$param] : NULL;
+    }
+
     return isset($_GET[$param]) ? $_GET[$param] : (isset($_POST[$param]) ? $_POST[$param] : NULL);
   }
 

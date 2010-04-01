@@ -310,4 +310,38 @@ class mediamosa_rest {
       $o_mediamosa->item_offset = $o_rest_call->get_param_value(mediamosa_rest_call::OFFSET);
     }
   }
+
+  /**
+   * Returns the var_setup of the REST call.
+   *
+   * @param array $rest_call
+   *  The found REST call with get_uri_definition().
+   */
+  static public function get_var_setup(array $rest_call) {
+    if (!class_exists($rest_call[mediamosa_rest_call::CLASS_NAME], TRUE)) {
+      throw new mediamosa_exception_program_error(strtr('Class #class was not found!', array('#class' => $rest_call[mediamosa_rest_call::CLASS_NAME])));
+    }
+
+    // Create class from it.
+    $o_rest_call = new $rest_call[mediamosa_rest_call::CLASS_NAME]($rest_call);
+
+    // Check if override for class selection is here.
+    if (method_exists($o_rest_call, 'get_object_rest_call')) {
+      $o_rest_call = $o_rest_call->get_object_rest_call($rest_call);
+    }
+
+    // Turn off so we dont fail.
+    $o_rest_call->set_check_for_unspecified(FALSE);
+
+    // Set as uri values, so we dont fail checks.
+    if (isset($rest_call[mediamosa_rest_call::DEFAULT_PARAMS_VALUES])) {
+      foreach ($rest_call[mediamosa_rest_call::DEFAULT_PARAMS_VALUES] as $param => $value) {
+        $o_rest_call->{mediamosa_rest_call::URI_PARAMS}[$param] = $value;
+      }
+    }
+
+    // Return the var setup.
+    return $o_rest_call->get_var_setup();
+  }
+
 }

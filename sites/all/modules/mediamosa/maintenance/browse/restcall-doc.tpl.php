@@ -46,6 +46,9 @@
   $description = $variables['rest_call']->description;
   $uri = $variables['rest_call']->uri;
   $method = $variables['rest_call']->method;
+
+  $link_to_debug = module_exists('mediamosa_development') ? l(t('Debug REST call'), strtr('admin/mediamosa/config/development/set_rest_call/@uri/@method', array('@uri' => str_replace('/', '-', $uri), '@method' => $method))) : '';
+
   $request_authorization = $variables['rest_call']->request_authorization;
   $warnings = $variables['warnings'];
   $example_request = is_array($variables['rest_call']->example_request) ? '<p>' . implode("</p>\n<p>", $variables['rest_call']->example_request) . '</p>' : $variables['rest_call']->example_request;
@@ -55,7 +58,12 @@
 <h2><?php print $title; ?></h2>
 <p><?php print str_replace("\n\n", "</p>\n<p>", check_plain($description)); ?></p>
 <h3><?php print t('Request URL'); ?></h3>
-<p><?php print t('@uri [@method]', array('@uri' => '/' . $uri, '@method' => $method)); ?></p>
+<p><?php
+  print t('@uri [@method]', array('@uri' => '/' . $uri, '@method' => $method));
+  if (!empty($link_to_debug)) {
+    print ' <small>(' . $link_to_debug . ')</small>';
+  }
+?></p>
 <h3><?php print t('Request Authorization'); ?></h3>
 <p><?php print $request_authorization; ?></p>
 

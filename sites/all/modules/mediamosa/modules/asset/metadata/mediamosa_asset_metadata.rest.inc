@@ -153,7 +153,7 @@ class mediamosa_rest_call_asset_metadata_create extends mediamosa_rest_call {
 
     $asset_id = $this->get_param_value(self::ASSET_ID);
 
-    $a_app_ids = $this->get_param_value_app();;
+    $a_app_ids = $this->get_param_value_app();
     $app_id = reset($a_app_ids);
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
 

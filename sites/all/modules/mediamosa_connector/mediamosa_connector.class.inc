@@ -58,10 +58,23 @@ class mediamosa_connector {
   private $is_app_admin;
   private $log = array();
 
+  // Stored username, password.
+  private $username;
+  private $password;
+
   // ------------------------------------------------------------------ Constructor.
-  public function __construct() {
-    $this->url = variable_get('mediamosa_connector_url', NULL);
-    $this->cookie = variable_get('mediamosa_connector_cookie', NULL);
+  public function __construct($username = NULL, $password = NULL, $url = NULL) {
+    $this->url = isset($url) ? $url : variable_get('mediamosa_connector_url', NULL);
+    $cookies = variable_get('mediamosa_connector_cookies', array());
+
+    // Get cookie.
+    $this->cookie = isset($cookies[$url]) ? $cookies[$url] : NULL;
+
+    $username = isset($username) ? $username : variable_get('mediamosa_connector_username', NULL);
+    $password = isset($password) ? $password : variable_get('mediamosa_connector_password', NULL);
+
+    $this->username = $username;
+    $this->password = $password;
   }
 
   // ------------------------------------------------------------------ Public Functions.
@@ -105,7 +118,7 @@ class mediamosa_connector {
     $response = self::do_request($uri, $options);
 
     // If we return anything else but 1601, then return result. 1601 = failure login, cookie expired etc.
-    if ($response->xml->header->request_result_id != 1601) {
+    if ($response && $response->xml->header->request_result_id != 1601) {
       return $response;
     }
 
@@ -118,7 +131,7 @@ class mediamosa_connector {
     $response = self::do_request($uri, $options);
 
     // Check again.
-    if ($response->xml->header->request_result_id != 1601) {
+    if ($response && $response->xml->header->request_result_id != 1601) {
       return $response;
     }
 
@@ -127,16 +140,22 @@ class mediamosa_connector {
 
   // ------------------------------------------------------------------ Private Functions.
   private function do_login() {
+    if (empty($this->url)) {
+      watchdog('mediamosa connector', 'Unable to do request, connector not setup.');
+      return FALSE;
+    }
+
     // Remove cookie.
     $this->cookie = NULL;
-    variable_del('mediamosa_connector_cookie');
+    if (isset($this->url)) {
+      $cookies = variable_get('mediamosa_connector_cookies', array());
+      unset($cookies[$this->url]);
 
-    // get the authentication credentials
-    $username = variable_get('mediamosa_connector_username', NULL);
-    $password = variable_get('mediamosa_connector_password', NULL);
+      variable_set('mediamosa_connector_cookies', $cookies);
+    }
 
     // Step 1: request the challenge
-    $data = array('dbus' => 'AUTH DBUS_COOKIE_SHA1 '. $username);
+    $data = array('dbus' => 'AUTH DBUS_COOKIE_SHA1 '. $this->username);
     $method = 'POST';
     $response = $this->do_request('login', array('method' => $method, 'data' => $data));
 
@@ -155,8 +174,9 @@ class mediamosa_connector {
     }
 
     // Parse the response.
-    list($this->cookie) = explode(";", $response->headers['Set-Cookie']);
-    variable_set('mediamosa_connector_cookie', $this->cookie);
+    list($this->cookie) = explode(';', $response->headers['Set-Cookie']);
+    $cookies[$this->url] = $this->cookie;
+    variable_set('mediamosa_connector_cookies', $cookies);
 
     // Set DBUS data.
     $dbus_data = explode(' ', $response->xml->items->item->dbus);
@@ -164,7 +184,7 @@ class mediamosa_connector {
     // Step 2: Do challenge.
     $challenge = $dbus_data[3];
     $random = substr(md5(microtime(TRUE)), 0, 10);
-    $challenge_response = sha1(sprintf('%s:%s:%s', $challenge, $random, $password));
+    $challenge_response = sha1(sprintf('%s:%s:%s', $challenge, $random, $this->password));
     $data = array('dbus' => sprintf('DATA %s %s', $random, $challenge_response));
     $method = 'POST';
     $response = $this->do_request('login', array('method' => $method, 'data' => $data));

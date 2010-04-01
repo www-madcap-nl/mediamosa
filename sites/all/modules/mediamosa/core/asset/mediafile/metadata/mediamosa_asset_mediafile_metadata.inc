@@ -155,7 +155,7 @@ class mediamosa_asset_mediafile_metadata {
     $a_fields[mediamosa_asset_mediafile_metadata_db::CONTAINER_TYPE] = isset($a_metadata['File-type']) ? $a_metadata['File-type'] : '';
 
     // file-bitrate.
-    $a_fields[mediamosa_asset_mediafile_metadata_db::BITRATE] = isset($a_metadata['File-bitrate']) ? $a_metadata['File-bitrate'] : '0';
+    $a_fields[mediamosa_asset_mediafile_metadata_db::BITRATE] = isset($a_metadata['File-bitrate']) ? intval($a_metadata['File-bitrate']) : '0';
 
     // bpp.
     $a_fields[mediamosa_asset_mediafile_metadata_db::BPP] = (string)self::calculate_bpp($width, $height, $a_fields[mediamosa_asset_mediafile_metadata_db::FPS], $a_fields[mediamosa_asset_mediafile_metadata_db::BITRATE]);

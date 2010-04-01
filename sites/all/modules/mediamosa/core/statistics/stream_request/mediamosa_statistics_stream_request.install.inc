@@ -91,26 +91,26 @@ function mediamosa_statistics_stream_request_schema() {
       mediamosa_statistics_stream_request_db::OWNER_ID => array(
         'type' => 'varchar',
         'length' => mediamosa_asset_db::OWNER_ID_LENGTH,
-        'not null' => TRUE,
+        'not null' => FALSE,
         'description' => t('The owner ID.'),
       ),
       mediamosa_statistics_stream_request_db::GROUP_ID => array(
         'type' => 'varchar',
         'length' => mediamosa_asset_db::GROUP_ID_LENGTH,
-        'not null' => TRUE,
+        'not null' => FALSE,
         'description' => t('The group ID.'),
       ),
       mediamosa_statistics_stream_request_db::FILESIZE => array(
         'type' => 'int',
         'size' => 'big',
-        'not null' => TRUE,
+        'not null' => FALSE,
         'unsigned' => FALSE,
         'description' => t('The file size of the request.'),
       ),
       mediamosa_statistics_stream_request_db::CONTAINER_TYPE => array(
         'type' => 'varchar',
         'length' => mediamosa_statistics_stream_request_db::CONTAINER_TYPE_LENGTH,
-        'not null' => TRUE,
+        'not null' => FALSE,
         'description' => t('The container type of the request.'),
       ),
       mediamosa_statistics_stream_request_db::PLAY_TYPE => array(

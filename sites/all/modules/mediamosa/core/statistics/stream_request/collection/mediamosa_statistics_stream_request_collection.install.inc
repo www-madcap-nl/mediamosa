@@ -82,13 +82,13 @@ function mediamosa_statistics_stream_request_collection_schema() {
       mediamosa_statistics_stream_request_collection_db::OWNER_ID => array(
         'type' => 'varchar',
         'length' => mediamosa_db::HASH_ID_LENGTH,
-        'default' => 'NULL',
+        'default' => NULL,
         'description' => t('The owner ID.'),
       ),
       mediamosa_statistics_stream_request_collection_db::GROUP_ID => array(
         'type' => 'varchar',
         'length' => mediamosa_db::HASH_ID_LENGTH,
-        'default' => 'NULL',
+        'default' => NULL,
         'description' => t('The group ID.'),
       ),
       mediamosa_statistics_stream_request_collection_db::TITLE => array(

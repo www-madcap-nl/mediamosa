@@ -5,6 +5,8 @@ package = "MediaMosa 2 - Misc"
 version = "1.0.0"
 core = 7.x
 
+configure = admin/mediamosa/config/migration/settings
+
 ; Dependencies (module names)
 dependencies[] = mediamosa
 dependencies[] = mediamosa_configuration
@@ -15,5 +17,5 @@ dependencies[] = mediamosa_app
 ; Used files.
 
 ; Migration files.
-files[] = mediamosa_migration.install
 files[] = mediamosa_migration.test
+files[] = mediamosa_migration.admin.inc

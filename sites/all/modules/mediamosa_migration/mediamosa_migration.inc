@@ -2,8 +2,8 @@
 // $Id$
 
 /**
- * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
- * Distribution platform (http://mediamosa.org)
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
  * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
@@ -24,18 +24,13 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
-/**
- * @file
- * Installer for migration.
- */
-
-/**
- * Use 'mig_memo' in database array in settings.php for source database.
- * Use 'mig_memo_data' in database array in settings.php for source database.
- */
-
+ /**
+  * @file
+  * Migration functions.
+  */
 /*
- * Example for settings.php.
+ * Taken from sites/[example.]settings.mediamosa.php ;
+
 // Migration memo 1.0 databases;
 $databases['mig_memo']['default'] = array(
   'driver' => 'mysql',
@@ -51,12 +46,20 @@ $databases['mig_memo_data']['default'] = array(
   'password' => 'memo',
   'host' => 'localhost'
 );
- */
 
-// TODO: put in settings
-define('MIG_MEMO', 'mig_memo');
-define('MIG_MEMO_DATA', 'mig_memo_data');
-define('MIG_VPX_FTP', 'mig_vpx_ftp');
+// In case you want to convert vpx_ftp.
+$databases['mig_vpx_ftp']['default'] = array(
+  'driver' => 'mysql',
+  'database' => 'vpx_ftp',
+  'username' => 'memo',
+  'password' => 'memo',
+  'host' => 'localhost'
+);
+*/
+
+define('MIG_MEMO', variable_get('mediamosa_db_mig_memo', 'mig_memo'));
+define('MIG_MEMO_DATA', variable_get('mediamosa_db_mig_memo_data', 'mig_memo_data'));
+define('MIG_VPX_FTP', variable_get('mediamosa_db_mig_vpx_ftp', 'mig_vpx_ftp'));
 
 /**
  * Get the database name of the mediamosa drupal database.
@@ -65,7 +68,7 @@ define('MIG_VPX_FTP', 'mig_vpx_ftp');
  */
 function _mediamosa_migration_get_memo_db() {
   global $databases;
-  return $databases[MIG_MEMO]['default']['database'];
+  return empty($databases[MIG_MEMO]['default']['database']) ? FALSE : $databases[MIG_MEMO]['default']['database'];
 }
 
 /**
@@ -75,7 +78,7 @@ function _mediamosa_migration_get_memo_db() {
  */
 function _mediamosa_migration_get_memo_data_db() {
   global $databases;
-  return $databases[MIG_MEMO_DATA]['default']['database'];
+  return empty($databases[MIG_MEMO_DATA]['default']['database']) ? FALSE : $databases[MIG_MEMO_DATA]['default']['database'];
 }
 
 /**
@@ -85,242 +88,151 @@ function _mediamosa_migration_get_memo_data_db() {
  */
 function _mediamosa_migration_get_vpx_data_db() {
   global $databases;
-  return $databases[MIG_VPX_FTP]['default']['database'];
+  return empty($databases[MIG_VPX_FTP]['default']['database']) ? FALSE : $databases[MIG_VPX_FTP]['default']['database'];
 }
 
 /**
- * Implement hook_requirements().
+ * Test if all is ok to migrate
  */
-function mediamosa_migration_requirements($phase) {
-  $requirements = array();
+function _mediamosa_requirements_test() {
 
-  // Ensure translations don't break at install time.
-  $t = get_t();
+  // These tables are required on the destination database.
+  $table_names_dest_exists = array(
+    'mediamosa_error',
+    'mediamosa_asset',
+    'mediamosa_asset_mediafile',
+    'mediamosa_asset_mediafile_metadata',
+    'mediamosa_asset_metadata',
+    'mediamosa_asset_metadata_property',
+    'mediamosa_asset_metadata_property_group',
+    'mediamosa_aut_app_master_slave',
+    'mediamosa_aut_group',
+    'mediamosa_aut_name',
+    'mediamosa_aut_object',
+    'mediamosa_app',
+    'mediamosa_collection',
+    'mediamosa_server_streaming_container',
+    'mediamosa_server_tool',
+    'mediamosa_ticket',
+    'mediamosa_ftp_batch',
+    'mediamosa_ftp_batch_asset'
+  );
+  // These tables (dest) must be empty.
+  $table_names_dest_empty = array(
+    'mediamosa_asset',
+    'mediamosa_asset_mediafile',
+    'mediamosa_aut_app_master_slave',
+    'mediamosa_aut_group',
+    'mediamosa_aut_name',
+    'mediamosa_aut_object',
+    'mediamosa_collection',
+    'mediamosa_ticket',
+    'mediamosa_ftp_batch',
+    'mediamosa_ftp_batch_asset',
+  );
+  // Must exists source drupal db.
+  $table_names_source_exists = array(
+    'error',
+    'download_server',
+    'still_server',
+    'streaming_server',
+    'streaming_server_container',
+    'transcoding_server',
+    'transcoding_server_tool',
+    'upload_server',
+    'transcode_profile',
+    'transcode_mapping',
+  );
+  // Must exists source data db.
+  $table_names_source_exists_data = array(
+    'asset',
+    'mediafile',
+    'v_asset_property',
+    'asset_property',
+    'assetprop_definition',
+    'assetprop_group',
+    'aut_name',
+    'aut_group',
+    'aut_object',
+    'aut_app_master_slave',
+    'collection',
+    'ticket',
+    'quota_user',
+    'quota_group',
+    'ftp_batch',
+    'ftp_batch_asset',
+    'job',
+    'still_job',
+    'transcode_job',
+    'upload_job',
+  );
 
-  if ($phase != 'install') {
-    return array();
-    /*
-    $requirements['mediamosa2'] = array(
-      'title' => $t('Mediamosa 1.7 to 2.x migration Requirements'),
-      'severity' => REQUIREMENT_INFO
-    );
-*/
+  // Possible reasons.
+  $reasons = array();
+
+  $old_db = 'default';
+  try {
+    _mediamosa_migration_tables_exists($table_names_dest_exists);
   }
-  else {
-    // Allowed.
-    $requirements['mediamosa2'] = array(
-      'title' => $t('Migration Requirements'),
-      'description' => $t('Mediamosa 1.x installation found.'),
-      'severity' => REQUIREMENT_INFO,
-    );
+  catch (Exception $e) {
+    $reasons[] = $e->getMessage();
+  }
 
-    // These tables are required on the destination database.
-    $a_table_names_dest_exists = array(
-      'mediamosa_error',
-      'mediamosa_asset',
-      'mediamosa_asset_mediafile',
-      'mediamosa_asset_mediafile_metadata',
-      'mediamosa_asset_metadata',
-      'mediamosa_asset_metadata_property',
-      'mediamosa_asset_metadata_property_group',
-      'mediamosa_aut_app_master_slave',
-      'mediamosa_aut_group',
-      'mediamosa_aut_name',
-      'mediamosa_aut_object',
-      'mediamosa_app',
-      'mediamosa_collection',
-      'mediamosa_server_streaming_container',
-      'mediamosa_server_tool',
-      'mediamosa_ticket',
-      'mediamosa_ftp_batch',
-      'mediamosa_ftp_batch_asset'
-    );
-    // These tables (dest) must be empty.
-    $a_table_names_dest_empty = array(
-      'mediamosa_asset',
-      'mediamosa_asset_mediafile',
-      'mediamosa_aut_app_master_slave',
-      'mediamosa_aut_group',
-      'mediamosa_aut_name',
-      'mediamosa_aut_object',
-      'mediamosa_collection',
-      'mediamosa_ticket',
-      'mediamosa_ftp_batch',
-      'mediamosa_ftp_batch_asset',
-    );
-    // Must exists source drupal db.
-    $a_table_names_source_exists = array(
-      'error',
-      'download_server',
-      'still_server',
-      'streaming_server',
-      'streaming_server_container',
-      'transcoding_server',
-      'transcoding_server_tool',
-      'upload_server',
-      'transcode_profile',
-      'transcode_mapping',
-    );
-    // Must exists source data db.
-    $a_table_names_source_exists_data = array(
-      'asset',
-      'mediafile',
-      'v_asset_property',
-      'asset_property',
-      'assetprop_definition',
-      'assetprop_group',
-      'aut_name',
-      'aut_group',
-      'aut_object',
-      'aut_app_master_slave',
-      'collection',
-      'ticket',
-      'quota_user',
-      'quota_group',
-      'ftp_batch',
-      'ftp_batch_asset',
-      'job',
-      'still_job',
-      'transcode_job',
-      'upload_job',
-    );
+  try {
+  // Select the old mediamosa database.
+    $old_db = db_set_active(MIG_MEMO_DATA);
 
-    $old_db = 'default';
-    try {
-      _mediamosa_migration_tables_exists($a_table_names_dest_exists);
+    // Data source.
+    _mediamosa_migration_tables_exists($table_names_source_exists_data, MIG_MEMO_DATA);
+  }
+  catch (Exception $e) {
+    $reasons[] = $e->getMessage();
+  }
 
-      // Select the old mediamosa database.
-      $old_db = db_set_active(MIG_MEMO_DATA);
+  // Back to other.
+  db_set_active($old_db);
 
-      // Data source.
-      _mediamosa_migration_tables_exists($a_table_names_source_exists_data, MIG_MEMO_DATA);
+  try {
+    // Select the old mediamosa database.
+    $old_db = db_set_active(MIG_MEMO);
 
-      // Back to other.
-      db_set_active($old_db);
+    // Test if these tables exists.
+    _mediamosa_migration_tables_exists($table_names_source_exists, MIG_MEMO);
+  }
+  catch (Exception $e) {
+    $reasons[] = $e->getMessage();
+  }
 
-      // Select the old mediamosa database.
-      $old_db = db_set_active(MIG_MEMO);
-      _mediamosa_migration_tables_exists($a_table_names_source_exists, MIG_MEMO);
+  // Back to other.
+  db_set_active($old_db);
 
-      // Back to other.
-      db_set_active($old_db);
+  try {
+    // Test if the required destination tables ARE empty.
+    _mediamosa_migration_empty_tables($table_names_dest_empty);
+  }
+  catch (Exception $e) {
+    $reasons[] = $e->getMessage();
+  }
 
-      // Make sure we start fresh.
-      _mediamosa_migration_empty_tables($a_table_names_dest_empty);
+  try {
+    // Make sure the medafile_ids in mediafile 1.x table are unique.
+    _mediamosa_migration_mediafileid_is_unique();
+  }
+  catch (Exception $e) {
+    $reasons[] = $e->getMessage();
+  }
 
-      // Make sure the medafile_ids in mediafile 1.x table are unique.
-      _mediamosa_migration_mediafileid_is_unique();
-
-      // Make sure these class can be found.
-      if (!class_exists('mediamosa_asset_metadata_db')) {
-        throw new Exception('Could not find class mediamosa_asset_metadata_db, make sure mediamosa 2 core is installed.');
-      }
-    }
-    catch (Exception $e) {
-      // Back to default.
-      db_set_active($old_db);
-
-      // Log it.
-      watchdog('installation', 'Requirement for migration of mediamosa 1.x to 2.0 not met; @reason.', array('@reason' => $e->getMessage()));
-
-      $requirements['mediamosa2'] = array(
-        'title' => $t('Migration Requirements'),
-        'description' => $t('No (valid) mediamosa 1.x installation found, reason; @reason.', array('@reason' => $e->getMessage())),
-        'severity' => REQUIREMENT_ERROR,
-      );
+  try {
+    // Make sure these class can be found.
+    if (!class_exists('mediamosa_asset_metadata_db')) {
+      throw new Exception('Could not find class mediamosa_asset_metadata_db, make sure mediamosa 2 core is installed.');
     }
   }
-
-  return $requirements;
-}
-
-/**
- * Implement hook_install().
- */
-function mediamosa_migration_install() {
-  // Optional; might not be in every installation.
-  _mediamosa_migration_vpx_ftp();
-
-  // error -> mediamosa_error.
-  _mediamosa_migration_error();
-
-  // client_applications -> mediamosa_app.
-  _mediamosa_migration_client_applications();
-
-  // San nas settings.
-  _mediamosa_migration_sannas();
-
-  // asset -> mediamosa_asset.
-  _mediamosa_migration_asset();
-
-  // asset_supplement -> mediamosa_asset_supplement.
-  _mediamosa_migration_asset_supplement();
-
-  // mediafile -> mediamosa_asset_mediafile.
-  _mediamosa_migration_mediafile();
-
-  // Fix the parent_id problem (After mediafile mig.)
-  _mediamosa_migration_kill_child_assets();
-
-  // mediafile_metadata -> mediamosa_asset_mediafile_metadata.
-  _mediamosa_migration_mediafile_metadata();
-
-  // assetprop_group -> mediamosa_asset_metadata_property_group.
-  // assetprop_definition -> mediamosa_asset_metadata_property.
-  _mediamosa_migration_asset_metadata_property_group();
-  _mediamosa_migration_asset_metadata_property();
-
-  // asset_property -> mediamosa_asset_metadata.
-  _mediamosa_migration_asset_metadata();
-
-  // collection -> mediamosa_collection.
-  _mediamosa_migration_collection();
-
-  // aut_* -> mediamosa_aut_*.
-  _mediamosa_migration_aut();
-
-  // asset_delete => mediamosa_asset_delete.
-  _mediamosa_migration_asset_delete();
-
-  // ticket -> mediamosa_ticket.
-  _mediamosa_migration_ticket();
-
-  // User / Group tables.
-  _mediamosa_migration_user();
-
-  // ftp_batch -> mediamosa_ftp_batch.
-  _mediamosa_migration_ftp_batch();
-
-  // webservice_management(_capp) -> mediamosa_webservice(_app)
-  _mediamosa_migration_webservice();
-
-  // *_job -> mediamosa_job_*
-  _mediamosa_migration_job();
-
-  // transcode_* -> mediamosa_transcode_*.
-  _mediamosa_migration_transcode();
-
-  // *_job_server -> mediamosa_job_server
-  _mediamosa_migration_jobserver_all(); // @todo
-
-  // create server nodes.
-  _mediamosa_migration_create_server_nodes();
-
-  // statistics_*
-  _mediamosa_migration_statistics();
-
-  // Migrate this setting.
-  $curlproxy_http = variable_get('vpx_curlproxy_http', '');
-  if ($curlproxy_http != '') {
-    variable_set('mediamosa_curlproxy_http', $curlproxy_http);
+  catch (Exception $e) {
+    $reasons[] = $e->getMessage();
   }
-}
 
-/**
- * Implement hook_uninstall().
- */
-function mediamosa_migration_uninstall() {
-
+  return $reasons;
 }
 
 /**
@@ -2441,4 +2353,12 @@ function _mediamosa_migration_vpx_ftp() {
 
   // Back to old session mode.
   db_query(strtr("SET SESSION sql_mode = '#old_mode'", array('#old_mode' => $old_mode)));
+}
+
+function _mediamosa_migration_settings() {
+  // Migrate this setting.
+  $curlproxy_http = variable_get('vpx_curlproxy_http', '');
+  if ($curlproxy_http != '') {
+    variable_set('mediamosa_curlproxy_http', $curlproxy_http);
+  }
 }

@@ -121,10 +121,10 @@ class mediamosa_statistics {
         mediamosa_statistics_stream_request_collection_db::REQUEST_ID => $request_id,
         mediamosa_statistics_stream_request_collection_db::APP_ID => $collection[mediamosa_collection_db::APP_ID],
         mediamosa_statistics_stream_request_collection_db::COLL_ID => $collection[mediamosa_collection_db::ID],
-        mediamosa_statistics_stream_request_collection_db::OWNER_ID => $collection[mediamosa_collection_db::OWNER_ID],
-        mediamosa_statistics_stream_request_collection_db::GROUP_ID => $collection[mediamosa_collection_db::GROUP_ID],
-        mediamosa_statistics_stream_request_collection_db::TITLE => $collection[mediamosa_collection_db::TITLE],
-        mediamosa_statistics_stream_request_collection_db::DESCRIPTION => $collection[mediamosa_collection_db::DESCRIPTION],
+        mediamosa_statistics_stream_request_collection_db::OWNER_ID => (string)$collection[mediamosa_collection_db::OWNER_ID],
+        mediamosa_statistics_stream_request_collection_db::GROUP_ID => (string)$collection[mediamosa_collection_db::GROUP_ID],
+        mediamosa_statistics_stream_request_collection_db::TITLE => (string)$collection[mediamosa_collection_db::TITLE],
+        mediamosa_statistics_stream_request_collection_db::DESCRIPTION => (string)$collection[mediamosa_collection_db::DESCRIPTION],
       );
 
       // Insert the collection ID as request.

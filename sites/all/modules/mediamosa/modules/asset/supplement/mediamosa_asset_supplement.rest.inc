@@ -308,6 +308,7 @@ class mediamosa_rest_call_asset_supplement_delete extends mediamosa_rest_call {
         self::ASSET_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
           self::VAR_DESCRIPTION => 'The asset ID.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
       )
     );

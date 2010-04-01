@@ -82,8 +82,8 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
         ),
         self::MEDIAFILE_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_MEDIAFILE_ID,
-          self::VAR_DESCRIPTION => 'The mediafile ID, only required when profile_id is used.',
-          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,// Is required in some cases.
+          self::VAR_DESCRIPTION => 'The mediafile ID, is not required when profile_id is used or when response type is still.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,// Is required in some cases.
         ),
         self::GROUP_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
@@ -177,6 +177,19 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
 
     // Enrich with required REST vars.
     return self::get_var_setup_default($a_var_setup);
+  }
+
+  // Override for some cases.
+  protected function process_rest_args(array $a_var_setup) {
+    $response_type = $this->get_param_value_global(self::RESPONSE);
+    $profile_id = $this->get_param_value_global(self::PROFILE_ID);
+
+    // Is reponse is set or response type is still then mediafile_id is not required.
+    if (isset($profile_id) || $response_type == mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL) {
+      $a_var_setup[self::VARS][self::MEDIAFILE_ID][self::VAR_IS_REQUIRED] = self::VAR_IS_REQUIRED_NO;
+    }
+
+    return parent::process_rest_args($a_var_setup);
   }
 
   // ------------------------------------------------------------------ Do Call.
