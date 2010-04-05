@@ -105,6 +105,73 @@ function mediamosa_maintenance_help($path, $arg) {
 }
 
 /**
+ * Implements hook_theme().
+ */
+function mediamosa_maintenance_theme() {
+  return array(
+    'mediamosa_maintenance_date' => array(
+      'variables' => array(
+        'datetime' => NULL,
+        'type' => 'short',
+      ),
+      'file' => 'mediamosa_maintenance.admin.inc',
+    ),
+    'mediamosa_maintenance_table' => array(
+      'variables' => array(
+        // Table
+        'header' => NULL,
+        'rows' => NULL,
+        'attributes' => array(),
+        'caption' => NULL,
+        'colgroups' => array(),
+        'sticky' => TRUE,
+        'empty' => '',
+        // Pager (optional)
+        'page' => 0,
+        'item_count_total' => 0,
+        'item_limit' => mediamosa_settings::maintenance_items_per_page(),
+        'element' => 0,
+        'quantity' => 10,
+        // Note (small font, bottom right).
+        'note' => NULL,
+        // caption bottom, right.
+        'caption_bottom' => NULL,
+        // Title, description (top).
+        'title' => NULL,
+        'description' => NULL,
+      ),
+      'file' => 'mediamosa_maintenance.admin.inc',
+    ),
+    'mediamosa_maintenance_pager' => array(
+      'variables' => array(
+        'page' => 0,
+        'item_count_total' => 0,
+        'item_limit' => mediamosa_settings::maintenance_items_per_page(),
+        'element' => 0,
+        'quantity' => 10,
+      ),
+      'file' => 'mediamosa_maintenance.admin.inc',
+    ),
+    // Create a link to a collection.
+    'l_mediamosa_collection' => array(
+      'variables' => array(
+        'id' => 0,
+        'title' => t('<collection has no title>'),
+      ),
+      'file' => 'mediamosa_maintenance.admin.inc',
+    ),
+    // Create a link to a collection.
+    'l_mediamosa_asset' => array(
+      'variables' => array(
+        'id' => 0,
+        'title' => t('<asset has no title>'),
+      ),
+      'file' => 'mediamosa_maintenance.admin.inc',
+    ),
+  );
+}
+
+/**
  * Generate the status page.
  */
 function _mediamosa_maintenance_status() {
@@ -161,7 +228,7 @@ function _mediamosa_maintenance_status() {
           )
         ),
         round($a_test['ended'] - $a_test['started'], 2),
-        format_date(round($a_test['started']))
+        theme('mediamosa_maintenance_date', array('datetime' => round($a_test['started']))),
       ),
       'class' => array($class)
     );

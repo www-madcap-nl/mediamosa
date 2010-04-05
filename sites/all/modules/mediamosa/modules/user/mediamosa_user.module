@@ -128,6 +128,9 @@ This call returns all users which are created with /user/create and searches for
     mediamosa_rest_call::EXAMPLE_RESPONSE => '',
   );
 
+  // Alias.
+  $a_rest_calls['group/$group_id/set_quotum'][mediamosa_rest_call::METHOD_POST] = $a_rest_calls['group/$group_id'][mediamosa_rest_call::METHOD_POST];
+
   $a_rest_calls['group/$group_id/delete'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Delete a group.',
     mediamosa_rest_call::DESCRIPTION => ', it can not be deleted if it still contains group members.',
@@ -243,6 +246,21 @@ function mediamosa_user_mediamosa_register_rest_call() {
     ),
   );
 
+  $a_rest_calls['group'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_group_list',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_user_group',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  $a_rest_calls['group/create'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_group_create',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_user_group',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+
   $a_rest_calls['group/$group_id'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_group_get',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
@@ -257,19 +275,9 @@ function mediamosa_user_mediamosa_register_rest_call() {
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
 
-  $a_rest_calls['group'][mediamosa_rest_call::METHOD_GET] = array(
-    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_group_list',
-    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::MODULE_NAME => 'mediamosa_user_group',
-    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
-  );
-
-  $a_rest_calls['group/create'][mediamosa_rest_call::METHOD_POST] = array(
-    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_group_create',
-    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::MODULE_NAME => 'mediamosa_user_group',
-    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
-  );
+  // Alias.
+  $a_rest_calls['group/$group_id/set_quotum'][mediamosa_rest_call::METHOD_POST] = $a_rest_calls['group/$group_id'][mediamosa_rest_call::METHOD_POST];
+  $a_rest_calls['group/$group_id/set_quotum'][mediamosa_rest_call::METHOD_POST][mediamosa_rest_call::STATUS] = mediamosa_rest_call::STATUS_DEPRECATED;
 
   $a_rest_calls['group/$group_id/delete'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_group_delete',

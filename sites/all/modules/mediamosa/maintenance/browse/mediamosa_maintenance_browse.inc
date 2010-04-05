@@ -43,24 +43,188 @@ function _mediamosa_restcall($uri, $method = 'GET', array $data = array()) {
   return mediamosa_response_connector::static_do_restcall_drupal($uri, $method, $data);
 }
 
-/**
- * This function returns a themed pager
- */
-function _mediamosa_maintenance_browse_pager($page, $item_count_total, $item_limit, $element = 0) {
-  global $pager_page_array, $pager_total, $pager_total_items;
-
-  $pager_page_array = array($element => $page);
-
-  // Total items.
-  $pager_total_items[$element] = $item_count_total;
-
-  if (!is_array($element)) {
-    // Number of pagelinks.
-    $pager_total[$element] = ceil($item_count_total / $item_limit);
-  }
-  return theme('pager', array('quantity' => 10));
-}
-
 function _mediamosa_maintenance_browse_clean_string($string) {
   return drupal_ucfirst(str_replace('_', ' ', $string));
+}
+
+/**
+ * Create one filter item.
+ */
+function _mediamosa_browse_searchparameters_helper($x, $values = array('item' => '', 'item_value' => '')) {
+  $search = array(
+    'title' => t('Title'),
+    'description' => t('Description'),
+    'owner_id' => t('Owner'),
+    'group_id' => t('Group'),
+  );
+
+  $form = array();
+
+  $form['item'] = array(
+    '#type' => 'select',
+    '#title' => t('Search item @n', array('@n' => $x + 1)),
+    '#description' => t('Select field to be used for filtering.'),
+    '#options' => $search,
+    '#default_value' => $values['item'],
+  );
+
+  $form['item_value'] = array(
+    '#type' => 'textfield',
+    '#description' => t('Value for filtering on search item @n, wildcard = *', array('@n' => $x + 1)),
+    '#default_value' => $values['item_value'],
+  );
+
+  return $form;
+}
+
+/**
+ * Builds CQL based on session.
+ *
+ * @param unknown_type $session
+ */
+function _mediamosa_browse_cql_build($session) {
+  $operators = array('or' => ' OR ', 'and' => ' AND ');
+
+  $filters = isset($session['filters']) ? $session['filters'] : array();
+  $operator = isset($session['operator']) ? $session['operator'] : 'or';
+  $operator = isset($operators[$operator]) ? $operators[$operator] : ' OR ';
+
+  // Build CQL from search items.
+  $cql_filter = array();
+  foreach ($filters as $filter) {
+    if ($filter['item_value'] == '') {
+      continue;
+    }
+
+    $cql_filter[] = $filter['item'] . ' == "' . $filter['item_value'] . '"';
+  }
+
+  return implode($operator, $cql_filter);
+}
+
+/**
+ * Our asset/collection detail view.
+ *
+ * @param array $variables
+ */
+function theme_mediamosa_maintenance_browse_properties($variables) {
+
+  // Include our css.
+  drupal_add_css(drupal_get_path('module', 'mediamosa_maintenance_browse') . '/mediamosa_maintenance_browse.css');
+
+  $build = array();
+
+  if (!empty($variables['description'])) {
+    $build['description'] = '<p>' . check_plain($variables['description']) . '</p>';
+  }
+
+  if (!empty($variables['properties'])) {
+    $header = array(
+      t('Property'),
+      t('Value'),
+    );
+
+    $rows = array();
+    foreach ($variables['properties'] as $name => $value) {
+      $rows[] = array(
+        check_plain($name),
+        check_plain($value),
+      );
+    }
+
+    $build['properties'] = theme('table', array('header' => $header, 'rows' => $rows));
+  }
+
+  if (!empty($variables['metadata_description'])) {
+    $build['metadata_description'] = '<p>' . check_plain($variables['metadata_description']) . '</p>';
+  }
+
+  if (!empty($variables['metadata'])) {
+    $header = array(
+      t('Property'),
+      t('Value'),
+    );
+
+    $rows = array();
+    foreach ($variables['metadata'] as $name => $value) {
+      if (is_array($value)) {
+        foreach ($value as $value_2) {
+          $rows[] = array(
+            check_plain($name),
+            check_plain($value_2),
+          );
+        }
+      }
+      else {
+        $rows[] = array(
+          check_plain($name),
+          check_plain($value),
+        );
+      }
+    }
+
+    $build['metadata'] = theme('table', array('header' => $header, 'rows' => $rows));
+  }
+
+  if (!empty($variables['collection_assets'])) {
+    if (!empty($variables['collection_assets']['title'])) {
+      $build['collection_assets_title'] = '<h1>' . check_plain($variables['collection_assets']['title']) . '</h1>';
+    }
+
+    if (!empty($variables['collection_assets']['description'])) {
+      $build['collection_assets_description'] = '<p>' . $variables['collection_assets']['description'] . '</p>';
+    }
+
+    if (!empty($variables['collection_assets']['assets'])) {
+      $header = array(
+        t('Title'),
+        array('data' => t('Operations'), 'class' => 'mmoperation'),
+      );
+
+      // Get destination.
+      $l_options = array('query' => drupal_get_destination());
+
+      $rows = array();
+      foreach ($variables['collection_assets']['assets'] as $asset) {
+        $actions = array(
+          l(t('Remove'), 'admin/mediamosa/browse/collection/'. rawurlencode($variables['collection_assets']['coll_id']) . '/remove_asset/' . rawurlencode($asset['asset_id']), $l_options),
+        );
+
+        $rows[] = array(
+          array('data' => theme('l_mediamosa_asset', array('id' => $asset['asset_id'], 'title' => _mediamosa_browse_asset_get_title($asset)))),
+          array('data' => implode(' | ', $actions), 'class' => 'mmoperation'),
+        );
+      }
+
+      $pager_variables['page'] = ceil($variables['collection_assets']['item_offset'] / 10);
+      $pager_variables['item_count_total'] = $variables['collection_assets']['item_count_total'];
+      $pager_variables['item_limit'] = 10;
+      $pager_variables['element'] = 0;
+      $pager_variables['quantity'] = 10;
+
+      $build['collection_assets_pager_top'] = theme('mediamosa_maintenance_pager', $pager_variables);
+
+      $build['collection_assets'] = theme('table', array('header' => $header, 'rows' => $rows));
+
+      $build['collection_assets_pager_bottom'] = theme('mediamosa_maintenance_pager', $pager_variables);
+    }
+
+  }
+
+  return implode('', $build);
+}
+
+/**
+ * Helper to find best title to show.
+ *
+ * @param array $row
+ */
+function _mediamosa_browse_asset_get_title($asset) {
+  $title = NULL;
+
+  if (isset($asset['dublin_core']['title'])) {
+    $title = reset($asset['dublin_core']['title']);
+  }
+
+  return $title;
 }

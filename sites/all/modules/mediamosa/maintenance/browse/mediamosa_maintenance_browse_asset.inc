@@ -24,13 +24,421 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
- /**
-  * @file
-  */
+/**
+ * @file
+ * Asset browser.
+ */
+
+define('MEDIAMOSA_BROWSE_FILTER_ASSET', 'mediafile_browse_asset');
 
 /**
- * Single asset details.
+ * Build the form for browsing assets.
  */
+function mediamosa_browse_asset_page($op = 'list') {
+
+  // Get/set session.
+  $session = _mediamosa_browse_asset_session();
+
+  $build = array();
+
+  $build['asset_filter'] = drupal_get_form('mediamosa_browse_asset_filter_form');
+  $build['asset_list'] = drupal_get_form('mediamosa_browse_asset_list_form');
+
+  return $build;
+}
+
+/**
+ * Form builder; Return form for asset filters.
+ *
+ * @see mediamosa_browse_asset_filter_form_submit()
+ */
+function mediamosa_browse_asset_filter_form() {
+  // Get session.
+  $session = _mediamosa_browse_asset_session();
+
+  // Get all collections.
+  $collections = array_merge(array(0 => ''), mediamosa_collection::getAll(array(mediamosa_collection_db::ID, mediamosa_collection_db::TITLE))->fetchAllKeyed());
+  foreach ($collections as $coll_id => $name) {
+    if (!$coll_id || trim($name) != '') {
+      continue;
+    }
+
+    // Set empty titles.
+    $collections[$coll_id] = t('<collection has no name> ID: @id', array('@id' => $coll_id));
+  }
+
+  $form = array();
+
+  $form['filters'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Filter'),
+    '#collapsible' => TRUE,
+    '#prefix' => '<div id="searchparameters">',
+    '#suffix' => '</div>',
+  );
+
+  $form['filters']['operator'] = array(
+    '#type' => 'select',
+    '#title' => t('Search criteria operator'),
+    '#description' => t("Filter on all search criteria ('AND') or a least one criterium ('OR')."),
+    '#options' => array('and' => t('AND'), 'or' => t('OR')),
+    '#default_value' => isset($session['operator']) ? $session['operator'] : 'and',
+  );
+
+  $form['filters']['coll_id'] = array(
+    '#type' => 'select',
+    '#title' => t('Search within collection'),
+    '#description' => t("Select collection to be searched. Leave empty for all collections."),
+    '#options' => $collections,
+    '#default_value' => isset($session['coll_id']) ? $session['coll_id'] : 0,
+  );
+
+  $form['filters']['searchparameters'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Search criteria'),
+  );
+
+  $form['filters']['searchparameters']['add'] = array(
+    '#type' => 'submit',
+    '#value' => t('Add search item'),
+    '#ajax' => array(
+      'event' => 'click',
+      'wrapper' => 'searchparameters',
+      'path' => 'admin/mediamosa/browse/js/asset/searchparameters',
+      'method' => 'replace',
+    ),
+    '#weight' => 10,
+  );
+
+  $form['filters']['searchparameters']['reset'] = array(
+    '#type' => 'submit',
+    '#value' => t('Reset'),
+    '#ajax' => array(
+      'event' => 'click',
+      'wrapper' => 'searchparameters',
+      'path' => 'admin/mediamosa/browse/js/asset/searchparameters',
+      'method' => 'replace',
+    ),
+    '#weight' => 11,
+  );
+
+  $form['filters']['apply'] = array(
+    '#type' => 'submit',
+    '#value' => t('Apply filter'),
+  );
+
+  // CQL filter.
+  $form['cqlfilter'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('CQL Filter'),
+    '#collapsible' => TRUE,
+  );
+
+  $form['cqlfilter']['cql'] = array(
+    '#type' => 'textfield',
+    //'#title' => t('CQL:'),
+    '#description' => t('Enter a CQL search command here. Usage can be found in the Webservice document. Examples: "aut_app==5" or "is_protected == FALSE"'),
+    '#default_value' => isset($session['cql']) ? $session['cql'] : '',
+  );
+
+  $form['cqlfilter']['apply_cql'] = array(
+    '#type' => 'submit',
+    '#value' => t('Apply CQL filter'),
+  );
+
+  $form = _mediamosa_browse_asset_searchparameters($form);
+
+  return $form;
+}
+
+/**
+ * Insert the search form into a text area.
+ */
+function _ajax_browse_asset_search_parameters() {
+
+  // Load the form based upon the $_POST data sent via the ajax call.
+  list($form, $form_state) = ajax_get_form();
+
+  // Fix drupal notice.
+  $form_state['values'] = isset($form_state['values']) ? $form_state['values'] : array();
+  $form = form_builder('', _mediamosa_browse_asset_searchparameters($form, $form_state), $form_state);
+
+  $commands[] = ajax_command_replace('', drupal_render($form['filters']));
+
+  return array('#type' => 'ajax', '#commands' => $commands, '#header' => FALSE);
+}
+
+/**
+ * Enrich the form with the filter items.
+ *
+ * @param array $form
+ * @param array $form_state
+ */
+function _mediamosa_browse_asset_searchparameters($form, $form_state = array()) {
+
+  // Get session.
+  $session = _mediamosa_browse_asset_session($form_state);
+
+  if (!isset($form_state['input']['filters'])) {
+    $form_state['input']['filters'] = isset($session['filters']) ? $session['filters'] : array();
+  }
+
+  $op = isset($form_state['input']['op']) ? $form_state['input']['op'] : '';
+
+  switch ($op) {
+    case t('Reset'):
+      $session['operator'] = 'and';
+      $session['coll_id'] = 0;
+      $session['filters'] = array();
+      $form_state['input']['filters'] = array();
+
+    case t('Add search item'):
+      $form_state['input']['filters'][] = array('item' => '', 'item_value' => '');
+      break;
+
+    default:
+      if (empty($form_state['input']['filters'])) {
+        $form_state['input']['filters'][] = array('item' => '', 'item_value' => '');
+      }
+      break;
+
+    case t('Apply filter'):
+      break;
+  }
+
+  // Set it again.
+  $_SESSION[MEDIAMOSA_BROWSE_FILTER_ASSET] = $session;
+
+  unset($form['filters']['searchparameters']['filters']);
+  foreach ($form_state['input']['filters'] as $x => $filter) {
+    $form_filter = _mediamosa_browse_searchparameters_helper($x, $filter);
+
+    $form['filters']['searchparameters']['filters']['filters[' . $x . '][item]'] = $form_filter['item'];
+    $form['filters']['searchparameters']['filters']['filters[' . $x . '][item_value]'] = $form_filter['item_value'];
+  }
+
+  return $form;
+}
+
+/**
+ * Process result from asset filter form.
+ */
+function mediamosa_browse_asset_filter_form_submit($form, $form_state) {
+  _mediamosa_browse_asset_session($form_state);
+}
+
+/**
+ * Form builder; asset listing page.
+ *
+ */
+function mediamosa_browse_asset_list_form() {
+  // Get session.
+  $session = _mediamosa_browse_asset_session();
+
+  // Include our css.
+  drupal_add_css(drupal_get_path('module', 'mediamosa_maintenance_browse') . '/mediamosa_maintenance_browse.css');
+
+  $limit = $session['limit'];
+  $page = isset($_GET['page']) ? (int)$_GET['page'] : 0;
+  $item_count_total = 0;
+
+  $header = array(
+    array('field' => 'title', 'data' => t('Title'), 'sort' => 'asc'),
+    array('field' => 'app_id', 'data' => t('App ID'), 'class' => array('mmappid')),
+    array('field' => 'changed', 'data' => t('Last modified'), 'class' => array('mmdate')),
+  );
+
+  $result = _mediamosa_browse_asset_execute();
+  $item_count_total = isset($result['header']['item_count_total']) ? $result['header']['item_count_total'] : 0;
+
+  $rows = array();
+
+  foreach ($result['items'] as $row) {
+    $rows[] = array(
+      theme('l_mediamosa_asset', array('title' => _mediamosa_browse_asset_get_title($row), 'id' => $row[mediamosa_asset_db::ID])),
+      array('data' => check_plain($row['app_id']), 'class' => array('mmappid')),
+      array('data' => theme('mediamosa_maintenance_date', array('datetime' => $row[mediamosa_asset_db::VIDEOTIMESTAMP])), 'class' => array('mmdate')),
+    );
+  }
+
+  // Our listing.
+  $form['list'] = array(
+    '#theme' => 'mediamosa_maintenance_table',
+    '#header' => $header,
+    '#rows' => $rows,
+    '#empty' => t('No assets found.'),
+    // Pager.
+    '#page' => $page,
+    '#item_count_total' => $item_count_total,
+    '#item_limit' => $limit,
+    // Top
+    '#title' => t('Assets (@total)', array('@total' => $item_count_total)),
+    '#description' => t('Assets matching the search criteria above are listed below. Click on a asset title below to view details.'),
+    // Total note.
+    '#caption_bottom' => t('Assets found: @total', array('@total' => $item_count_total))
+  );
+
+  return $form;
+}
+
+/**
+ * Do the REST call and return the response object.
+ */
+function _mediamosa_browse_asset_execute() {
+  // Get session.
+  $session = _mediamosa_browse_asset_session();
+
+  // What to sort on.
+  $sort = $session['sort'];
+  $order = $session['order'];
+  $limit = $session['limit'];
+  $page = $session['page'];
+  $op = $session['op'];
+
+  switch ($order) {
+    case t('App ID'):
+      $order = 'app_id';
+      break;
+
+    case t('Last modified'):
+      $order = mediamosa_asset_db::VIDEOTIMESTAMP;
+      break;
+
+    case t('Title'):
+    default:
+      $order = 'title';
+      break;
+  }
+
+  $params = array();
+
+  $cqls = array();
+
+  switch ($op) {
+    case t('Apply filter'):
+    default:
+      $cql_session = _mediamosa_browse_cql_build($session);
+      if (!empty($cql_session)) {
+        $cqls[] = '(' . $cql_session . ')';
+      }
+
+      $coll_id = isset($session['coll_id']) ? $session['coll_id'] : 0;
+      if ($coll_id) {
+        $cqls[] = strtr('AND coll_id == "^@coll_id^"', array('@coll_id' => $coll_id));
+      }
+      break;
+
+    case t('Apply CQL filter'):
+      $cqls[] = $session['cql'];
+      break;
+  }
+
+  // Add sort.
+  $cqls[] = strtr('sortBy @order/@sort', array('@order' => $order, '@sort' => drupal_strtolower($sort) == 'asc' ? 'ascending' : 'descending'));
+
+  // Add params.
+  $params['cql'] = implode(' ', $cqls);
+  $params['limit'] = $limit;
+  $params['offset'] = $page * $limit;
+
+  // Do the rest call.
+  return mediamosa_response_connector::static_do_restcall_drupal('asset', 'GET', $params);
+}
+
+/**
+ * Get and set the session.
+ */
+function _mediamosa_browse_asset_session($filter_form_state = array()) {
+  // Get session.
+  $session = isset($_SESSION[MEDIAMOSA_BROWSE_FILTER_ASSET]) ? $_SESSION[MEDIAMOSA_BROWSE_FILTER_ASSET] : array();
+
+  // Get these from _GET if present.
+  foreach (array('order', 'sort', 'page') as $param) {
+    unset($session[$param]);
+    if (isset($_GET[$param])) {
+      $session[$param] = $_GET[$param];
+    }
+  }
+
+  foreach (array('operator', 'coll_id', 'filters', 'cql', 'op') as $param) {
+    if (!empty($filter_form_state['input'][$param])) {
+      $session[$param] = $filter_form_state['input'][$param];
+    }
+  }
+
+  // Set defaults.
+  $session += array(
+    'order' => t('Title'),
+    'sort' => 'asc',
+    'page' => 0,
+    'limit' => mediamosa_settings::maintenance_items_per_page(),
+    'op' => t('Apply filter'),
+  );
+
+  // Set it again.
+  $_SESSION[MEDIAMOSA_BROWSE_FILTER_ASSET] = $session;
+
+  return $session;
+}
+
+/**
+ * View the details of an asset.
+ */
+function mediamosa_maintenance_browse_asset_details($asset_id) {
+  // If we are set as Home page, the breadcrumb isnt set, lets do it here.
+  $breadcrumb = array();
+  $breadcrumb[] = l(t('Home'), NULL);
+  $breadcrumb[] = l(t('Administer'), 'admin');
+  $breadcrumb[] = l(t('MediaMosa 2'), 'admin/mediamosa');
+  $breadcrumb[] = l(t('Browse'), 'admin/mediamosa/browse');
+  $breadcrumb[] = l(t('Asset browser'), 'admin/mediamosa/browse/asset');
+  drupal_set_breadcrumb($breadcrumb);
+
+  // Get the asset.
+  $response =  mediamosa_response_connector::static_do_restcall_drupal(strtr('asset/@asset_id', array('@asset_id' => rawurlencode($asset_id))) , 'GET');
+
+  if ($response['header']['request_result_id'] != 601) {
+    return '<h1>Asset not found</h1>';
+  }
+
+  $asset = reset($response['items']);
+
+  $variables = array(
+    'description' => t('Details for this asset are shown below.'),
+    'properties' => array(
+      t('App ID') => $asset[mediamosa_asset_db::APP_ID],
+      t('Owner ID') => $asset[mediamosa_asset_db::OWNER_ID],
+      t('Group ID') => $asset[mediamosa_asset_db::GROUP_ID],
+    ),
+    'metadata_description' => t('Metadata properties for the asset are shown below.'),
+    'metadata' => array(),
+  );
+
+  foreach (array('dublin_core', 'qualified_dublin_core', 'czp', 'app_' . $asset[mediamosa_asset_db::APP_ID]) as $metadata_group) {
+    if (empty($asset[$metadata_group])) {
+      continue;
+    }
+
+    foreach ($asset[$metadata_group] as $name => $value) {
+      if (empty($value)) {
+        continue;
+      }
+
+      $variables['metadata'][t($name)] = $value;
+    }
+  }
+
+
+  $build['properties'] = theme('mediamosa_maintenance_browse_properties', $variables);
+
+  return implode('', $build);
+}
+
+
+
+/*
+ * Single asset details.
+
 function mediamosa_maintenance_browse_asset_details($asset_id) {
   $response = _mediamosa_restcall('asset/' . $asset_id, 'GET', array('is_app_admin' => 'true'));
   if (!$response) {
@@ -101,27 +509,27 @@ function mediamosa_maintenance_browse_asset_details($asset_id) {
   return $output;
 }
 
-function _mediamosa_maintenance_browse_asset_get_all_collections($app_id) {
+function _mediamosa_maintenance_browse_asset_get_all_assets($app_id) {
   $app_ids = explode(' ', $app_id);
 
-  $response = _mediamosa_restcall('collection', 'GET', array('app_id' => $app_ids));
+  $response = _mediamosa_restcall('asset', 'GET', array('app_id' => $app_ids));
 
   if (!$response) {
     return array();
   }
 
-  $collections = array();
-  foreach ($response->xpath('//items/item') as $collection) {
-    $title = trim((string)$collection->title);
-    $collections[(string)$collection->coll_id] = ($title != '') ? $title : t('<title not set>');
+  $assets = array();
+  foreach ($response->xpath('//items/item') as $asset) {
+    $title = trim((string)$asset->title);
+    $assets[(string)$asset->coll_id] = ($title != '') ? $title : t('<title not set>');
   }
 
-  return $collections;
+  return $assets;
 }
 
 /**
  * Helper function for the asset filter form
- */
+
 function _mediamosa_maintenance_browse_asset_list_filter() {
   $search_terms = array(
     'asset_info' => array(
@@ -240,7 +648,7 @@ function _mediamosa_maintenance_browse_asset_get_cql_from_session() {
 
 /**
  * The browse form which also contains a list of browsable assets.
- */
+
 function mediamosa_maintenance_browse_asset_form() {
   if (isset($_GET['coll_id'])) {
     $_SESSION[MEDIAMOSA_MAINTENACE_BROWSE_ASSETS_SESSION] = array('coll_id' => check_plain($_GET['coll_id']));
@@ -269,19 +677,19 @@ function mediamosa_maintenance_browse_asset_form() {
     '#default_value' => $app_id,
   );
 
-  $all_collections_raw = _mediamosa_maintenance_browse_asset_get_all_collections($app_id);
+  $all_assets_raw = _mediamosa_maintenance_browse_asset_get_all_assets($app_id);
 
-  if (count($all_collections_raw)) {
-    $all_collections = array_merge(array(0 => ''), $all_collections_raw);
+  if (count($all_assets_raw)) {
+    $all_assets = array_merge(array(0 => ''), $all_assets_raw);
   }
   else {
-    $all_collections = array(0 => t('No collections found...'));
+    $all_assets = array(0 => t('No assets found...'));
   }
 
   $coll_id = (isset($_SESSION[MEDIAMOSA_MAINTENACE_BROWSE_ASSETS_SESSION]['coll_id'])) ? $_SESSION[MEDIAMOSA_MAINTENACE_BROWSE_ASSETS_SESSION]['coll_id'] : 0;
   $form['coll_id'] = array(
     '#type' => 'select',
-    '#options' => $all_collections,
+    '#options' => $all_assets,
     '#title' => t('Collection'),
     '#default_value' => $coll_id,
   );
@@ -427,7 +835,7 @@ function mediamosa_maintenance_browse_asset_form() {
 
 /**
  * The browse filter form submit function.
- */
+
 function mediamosa_maintenance_browse_asset_form_submit($form, $form_state) {
   $filters = array();
   foreach ($form_state['values'] as $key => $value) {
@@ -448,3 +856,4 @@ function mediamosa_maintenance_browse_asset_form_submit($form, $form_state) {
     $_SESSION[MEDIAMOSA_MAINTENACE_BROWSE_ASSETS_SESSION]['coll_id'] = $form_state['values']['coll_id'];
   }
 }
+*/

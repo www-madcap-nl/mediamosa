@@ -11,4 +11,3 @@ dependencies[] = mediamosa
 
 ; Used files.
 files[] = mediamosa_ticket.module
-files[] = mediamosa_ticket.test

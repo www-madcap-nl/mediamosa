@@ -263,7 +263,13 @@ abstract class mediamosa_rest_call {
 
     // Validate reg args.
     $this->validate_rest_args($a_var_setup);
-
+/*
+ *  code turned off, during debug_high this code will crash unit test
+ *  class MediaMosaAssetSupplementAddTestCaseEga().
+ *  UTF8 problems when storing the data into watchdog. Strangly enough the
+ *  normal code handles the data without problem. Seems that var_export and
+ *  print_r are not proper UTF8.
+ *
     $params = array();
     foreach ($this->a_rest_args as $param => $a_rest_arg) {
       $params[] = $param . '=' . print_r($this->a_rest_args[$param][self::PARAM_VALUE], TRUE);
@@ -278,7 +284,7 @@ abstract class mediamosa_rest_call {
         '@params' => var_export($params, TRUE),
       )
     );
-
+*/
     // Call the function.
     $this->do_call();
   }

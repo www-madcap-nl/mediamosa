@@ -41,13 +41,13 @@ class mediamosa_http {
    * @param string $url
    */
   static public function parse_url($url) {
-    $a_url = parse_url($url);
+    $urls = parse_url($url);
 
-    if (!$a_url) {
+    if (!$urls) {
       return FALSE;
     }
 
-    $a_url += array(
+    $urls += array(
       'scheme' => 'http',
       'host' => 'localhost',
       'port' => 0, // 0 should default to 80
@@ -59,55 +59,61 @@ class mediamosa_http {
     );
 
     // Strip /.
-    $a_url['host'] = trim($a_url['host'], '/');
-    $a_url['path'] = trim($a_url['path'], '/');
+    $urls['host'] = trim($urls['host'], '/');
+    $urls['path'] = trim($urls['path'], '/');
 
-    return $a_url;
+    return $urls;
   }
 
   /**
    * Opposite of parse_url.
    *
-   * @param $a_url
+   * @param $urls
+   * @param $return_parts
+   *  Return the array with host and uri.
    */
-  static public function build_url($a_url) {
-    assert(in_array($a_url['scheme'], array('ftp', 'http', 'https')));
+  static public function build_url($urls, $return_parts = FALSE) {
+    // We expect these.
+    assert(in_array($urls['scheme'], array('ftp', 'http', 'https')));
 
-    $a_result = array(
-      $a_url['scheme'] . '://',
+    $result = array(
+      'host' => array($urls['scheme'] . '://'),
+      'uri' => array(),
     );
 
     // Add user : pass
-    if ($a_url['user'] != '' || $a_url['pass'] != '') {
-      $a_result[] = $a_url['user'];
-      $a_result[] = ':';
-      $a_result[] = $a_url['pass'];
-      $a_result[] = '@';
+    if ($urls['user'] != '' || $urls['pass'] != '') {
+      $result['host'][] = $urls['user'];
+      $result['host'][] = ':';
+      $result['host'][] = $urls['pass'];
+      $result['host'][] = '@';
     }
 
     // Host.
-    $a_result[] = $a_url['host'];
+    $result['host'][] = $urls['host'];
 
     // Optional port
-    if ($a_url['port']) {
-      $a_result[] = ':' . $a_url['port'];
+    if ($urls['port']) {
+      $result['host'][] = ':' . $urls['port'];
     }
 
     // Path.
-    if ($a_url['path'] != '') {
-      $a_result[] = '/' . $a_url['path'];
+    if ($urls['path'] != '') {
+      $result['uri'][] = '/' . $urls['path'];
     }
 
-    if ($a_url['query'] != '') {
-      $a_result[] = '?' . $a_url['query'];
+    // Query.
+    if ($urls['query'] != '') {
+      $result['uri'][] = '?' . $urls['query'];
     }
 
-    if ($a_url['fragment'] != '') {
-      $a_result[] = $a_url['fragment'];
+    // Fragment.
+    if ($urls['fragment'] != '') {
+      $result['uri'][] = $urls['fragment'];
     }
 
     // Now build url.
-    return implode('', $a_result);
+    return $return_parts ? array('host' => implode('', $result['host']), 'uri' => implode('', $result['uri'])) : (implode('', $result['host']) . implode('', $result['uri']));
   }
 
   /**
@@ -135,17 +141,17 @@ class mediamosa_http {
       )
     );
 
-    $a_options = array('method' => $method);
+    $options = array('method' => $method);
 
     if (isset($data)) {
-      $a_options['data'] = $data;
+      $options['data'] = $data;
     }
 
     // Include the internal password so we gain access.
-    $a_options['headers'][mediamosa_settings::X_MEDIAMOSA_INTERNAL_PASS] = mediamosa::get_internal_password();
+    $options['headers'][mediamosa_settings::X_MEDIAMOSA_INTERNAL_PASS] = mediamosa::get_internal_password();
 
     // Do the request.
-    return self::drupal_http_request($url, $a_options);
+    return self::drupal_http_request($url, $options);
   }
 
   /**
@@ -153,7 +159,7 @@ class mediamosa_http {
    * Triggers the URL without getting or waiting for the output.
    *
    * @param string $url
-   * @param array $a_options
+   * @param array $options
    *  Extra options;
    *   - header:
    *     name => value pair for http header.
@@ -162,31 +168,31 @@ class mediamosa_http {
    *   - do_internal
    *     Add the internal pass to the header. Remember to add /internal yourself to the url.
    */
-  static public function do_head_call($url, array $a_options = array()) {
+  static public function do_head_call($url, array $options = array()) {
     // Set defaults.
-    $a_options += array(
+    $options += array(
       'use_curlproxy' => FALSE,
       'headers' => array(),
       'do_internal' => FALSE
     );
 
     $curlproxy_http = NULL;
-    if ($a_options['use_curlproxy']) {
+    if ($options['use_curlproxy']) {
       // Get the proxy url.
       $curlproxy_http = mediamosa::variable_get('mediamosa_curlproxy_http');
     }
 
     //
-    if ($a_options['do_internal']) {
+    if ($options['do_internal']) {
       // Include the internal password so we gain access.
-      $a_options['headers'][mediamosa_settings::X_MEDIAMOSA_INTERNAL_PASS] = mediamosa::get_internal_password();
+      $options['headers'][mediamosa_settings::X_MEDIAMOSA_INTERNAL_PASS] = mediamosa::get_internal_password();
     }
 
     // Init curl.
     $curl_handle = curl_init($url);
 
     $curl_options = array();
-    foreach ($a_options['headers'] as $name => $value) {
+    foreach ($options['headers'] as $name => $value) {
       $curl_options[CURLOPT_HTTPHEADER][] = $name . ': ' . $value;
     }
 
@@ -221,11 +227,11 @@ class mediamosa_http {
    * Wrapper for internal HEAD calls.
    *
    * @param $url
-   * @param $a_options
+   * @param $options
    */
-  static public function do_head_internal_call($url, array $a_options = array()) {
-    $a_options['do_internal'] = true;
-    return self::do_head_call($url, $a_options);
+  static public function do_head_internal_call($url, array $options = array()) {
+    $options['do_internal'] = true;
+    return self::do_head_call($url, $options);
   }
 
   /**
@@ -239,16 +245,16 @@ class mediamosa_http {
     $url = variable_get('mediamosa_cron_url_app', 'http://localhost');
     $use_localhost = variable_get('mediamosa_cron_url_app_local', FALSE);
 
-    $a_url = mediamosa_http::parse_url($url);
-    $a_options = array();
+    $urls = mediamosa_http::parse_url($url);
+    $options = array();
     if ($use_localhost) {
-      $a_options['headers']['Host'] = $a_url['host'];
-      $a_url['host'] = 'localhost';
+      $options['headers']['Host'] = $urls['host'];
+      $urls['host'] = 'localhost';
     }
 
-    $a_url['path'] = ($a_url['path'] != '' ? $a_url['path'] . '/' : '') . trim($uri, '/');
-    $url = mediamosa_http::build_url($a_url);
-    mediamosa_http::do_head_internal_call($url, $a_options);
+    $urls['path'] = ($urls['path'] != '' ? $urls['path'] . '/' : '') . trim($uri, '/');
+    $url = mediamosa_http::build_url($urls);
+    mediamosa_http::do_head_internal_call($url, $options);
 
     // Log URL.
     mediamosa_debug::log_debug('Internal head cron call to @url.', array('@url' => $url));

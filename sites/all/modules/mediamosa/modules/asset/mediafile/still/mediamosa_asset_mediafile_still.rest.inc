@@ -375,7 +375,7 @@ class mediamosa_rest_call_set_still_order extends mediamosa_rest_call {
 
 /**
  * URI: /mediafile/$mediafile_id/still
- * Method: POST
+ * Method: GET
  *
  * 1.x media_management_get_still_for_mediafile
  */
@@ -411,5 +411,30 @@ class mediamosa_rest_call_get_still_for_mediafile extends mediamosa_rest_call_as
 
     // Now do play call.
     parent::do_call();
+  }
+}
+
+/**
+ * URI: /asset/$asset_id/still
+ * Method: GET
+ *
+ * 1.x media_management_get_still
+ */
+class mediamosa_rest_call_get_still extends mediamosa_rest_call_asset_mediafile_play {
+  // ------------------------------------------------------------------ Consts.
+  // ------------------------------------------------------------------ Public functions.
+  public function get_var_setup() {
+    $a_var_setup = parent::get_var_setup();
+
+    $a_var_setup[self::VARS][self::RESPONSE] = array(
+      self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+      self::VAR_DESCRIPTION => 'The still response type.',
+      self::VAR_ALLOWED_VALUES => array(
+        mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL,
+      ),
+      self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL
+    );
+
+    return $a_var_setup;
   }
 }

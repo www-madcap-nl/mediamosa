@@ -634,16 +634,16 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       return FALSE;
     }
 
-    $a_asset = mediamosa_lib::simplexml2array($response['xml']->items->item[0]);
+    $asset = mediamosa_lib::simplexml2array($response['xml']->items->item[0]);
 
     // Did we get something?
     $this->assertTrue(
-      $a_asset[mediamosa_asset_db::ID] == $asset_id,
+      $asset[mediamosa_asset_db::ID] == $asset_id,
       'Got the asset'
     );
 
     // Return data.
-    return $a_asset;
+    return $asset;
   }
 
   /**

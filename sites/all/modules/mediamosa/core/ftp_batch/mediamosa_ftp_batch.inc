@@ -57,10 +57,9 @@ class mediamosa_ftp_batch {
     $a_query[mediamosa_db_query::A_ORDER_BY][] = "batch_id ASC";
 
     $a_query[mediamosa_db_query::LIMIT] = $limit;
-    $a_query[mediamosa_db_query::OFFSET] = $offset;
 
     // Build the query.
-    $query = mediamosa_db_query::query($a_query, array(SQL_CALC_FOUND_ROWS => TRUE));
+    $query = mediamosa_db_query::query_select($a_query, array(mediamosa_db_query::SQL_CALC_FOUND_ROWS => TRUE));
 
     // Do the query.
     $result = mediamosa_db::db_query($query);

@@ -1030,7 +1030,7 @@ class mediamosa_rest_call_job_create_still_for_mediafile extends mediamosa_rest_
 }
 
 /**
- * URI: /mediafile/$mediafile_id/still/create
+ * URI: /job/$job_id/delete
  *
  * Method: POST
  *

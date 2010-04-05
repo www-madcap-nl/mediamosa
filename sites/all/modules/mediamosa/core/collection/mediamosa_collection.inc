@@ -76,6 +76,18 @@ class mediamosa_collection {
   }
 
   /**
+   * Get all collections.
+   *
+   * @param $fields
+   */
+  static public function getAll($fields = array(), $order_by = mediamosa_collection_db::TITLE, $order_direction = mediamosa_db::ORDER_DIRECTION_ASC) {
+    return mediamosa_db::db_select(mediamosa_collection_db::TABLE_NAME, 'c')
+      ->fields('c', $fields)
+      ->orderBy($order_by, $order_direction)
+      ->execute();
+  }
+
+  /**
    * Create a collection.
    */
   static public function create($app_id, $owner_id, $group_id = NULL, $private = NULL, $public  = NULL, $category = NULL, $isprivate = NULL, $public_assign = NULL, $is_unappropriate = NULL) {

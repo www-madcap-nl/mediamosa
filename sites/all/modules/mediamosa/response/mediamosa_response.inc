@@ -129,9 +129,6 @@ class mediamosa_response extends mediamosa {
       // Now execute the call.
       $this->mediamosa_rest->process_call($a_rest_call);
     }
-    catch (mediamosa_exception_no_rest_interface $e) {
-      mediamosa::exit_503(mediamosa::t('No MediaMosa REST interface available...'));
-    }
     catch (mediamosa_exception_redirect_and_exit $e) {
       // Redirect to URI.
       header('Location: ' . $e->get_redirect_uri());
@@ -152,10 +149,22 @@ class mediamosa_response extends mediamosa {
     }
     catch (PDOException $e) {
       mediamosa_debug::error_log('PDOException caught; ' . $e->getMessage() . ', trace; ' . $e->getTraceAsString(), $e->getFile(), $e->getLine());
+      try {
+        mediamosa::log_export(strtr('PDOException caught file @file at line @line; @message, trace; @trace.', array('@file' => $e->getFile(), '@line' => $e->getLine(), '@message' => $e->getMessage(), '@trace' => $e->getTraceAsString())));
+      }
+      catch (Exception $e) {
+        // ignore.
+      }
       $this->set_result(self::ERROR, mediamosa_error::HTTP_INTERNAL_SERVER_ERROR, 'PDOException caught; ' . $e->getMessage() . ",\ntrace; " . $e->getTraceAsString() . ",\nQuery string; " . $e->query_string . ",\nArgs; " . print_r($e->args, TRUE));
     }
     catch (Exception $e) {
       mediamosa_debug::error_log('Exception caught; ' . $e->getMessage() . ', trace; ' . $e->getTraceAsString(), $e->getFile(), $e->getLine());
+      try {
+        mediamosa::log_export(strtr('Exception caught file @file at line @line; @message, trace; @trace.', array('@file' => $e->getFile(), '@line' => $e->getLine(), '@message' => $e->getMessage(), '@trace' => $e->getTraceAsString())));
+      }
+      catch (Exception $e) {
+        // ignore.
+      }
       $this->set_result(self::ERROR, $e->getCode(), $e->getMessage());
     }
 

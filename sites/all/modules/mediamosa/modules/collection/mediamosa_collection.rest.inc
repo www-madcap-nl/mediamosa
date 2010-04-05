@@ -83,9 +83,6 @@ class mediamosa_rest_call_count_collection extends mediamosa_rest_call {
 /**
  * URI: /collection
  * Method: GET
- *
- * URI: /asset/$asset_id/collection
- * Method: GET
  */
 class mediamosa_rest_call_collection_search extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
@@ -128,7 +125,6 @@ class mediamosa_rest_call_collection_search extends mediamosa_rest_call {
         self::ASSET_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
           self::VAR_DESCRIPTION => 'Search within the collection of this supplied asset ID.',
-          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::CQL => array(
           self::VAR_TYPE => mediamosa_type::TYPE_CQL_COLLECTION,
@@ -326,6 +322,22 @@ class mediamosa_rest_call_collection_search extends mediamosa_rest_call {
   }
 }
 
+/**
+ * URI: /asset/$asset_id/collection
+ * Method: GET
+ */
+class mediamosa_rest_call_collection_search_asset extends mediamosa_rest_call_collection_search {
+  // ------------------------------------------------------------------ Var Setup.
+  public function get_var_setup() {
+    // Get var setup.
+    $var_setup = parent::get_var_setup();
+
+    // Make asset_id required.
+    $var_setup[self::VARS][self::ASSET_ID][self::VAR_IS_REQUIRED] = self::VAR_IS_REQUIRED_YES;
+
+    return $var_setup;
+  }
+}
 
 /**
  * URI: /collection/$coll_id/favorites/count

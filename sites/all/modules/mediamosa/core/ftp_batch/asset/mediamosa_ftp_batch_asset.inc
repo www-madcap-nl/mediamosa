@@ -55,7 +55,7 @@ class mediamosa_ftp_batch_asset {
     $a_query[mediamosa_db_query::OFFSET] = $offset;
 
     // Build the query.
-    $query = mediamosa_db_query::query($a_query, array(SQL_CALC_FOUND_ROWS => TRUE));
+    $query = mediamosa_db_query::query($a_query, array(mediamosa_db_query::SQL_CALC_FOUND_ROWS => TRUE));
 
     // Do the query.
     $result = mediamosa_db::db_query($query);

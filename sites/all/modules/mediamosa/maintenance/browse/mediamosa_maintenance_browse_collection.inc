@@ -24,13 +24,381 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
- /**
-  * @file
-  */
+/**
+ * @file
+ * Collection browser.
+ */
+
+define('MEDIAMOSA_BROWSE_FILTER_COLLECTION', 'mediafile_browse_collection');
+
+/**
+ * Build the form for browsing collections.
+ */
+function mediamosa_browse_collection_page($op = 'list') {
+
+  $build = array();
+
+  $build['collection_filter'] = drupal_get_form('mediamosa_browse_collection_filter_form');
+  $build['collection_list'] = drupal_get_form('mediamosa_browse_collection_list_form');
+
+  return $build;
+}
+
+/**
+ * Form builder; Return form for collection filters.
+ *
+ * @see mediamosa_browse_collection_filter_form_submit()
+ */
+function mediamosa_browse_collection_filter_form() {
+
+  // Get session.
+  $session = _mediamosa_browse_collection_session();
+
+  $form = array();
+
+  $form['filters'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Filter'),
+    '#collapsible' => TRUE,
+    '#prefix' => '<div id="searchparameters">',
+    '#suffix' => '</div>',
+  );
+
+  $form['filters']['operator'] = array(
+    '#type' => 'select',
+    '#title' => t('Search criteria operator'),
+    '#description' => t("Filter on all search criteria ('AND') or a least one criterium ('OR')."),
+    '#options' => array('and' => t('AND'), 'or' => t('OR')),
+    '#default_value' => isset($session['operator']) ? $session['operator'] : 'and',
+  );
+
+  $form['filters']['searchparameters'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Search criteria'),
+  );
+
+  $form['filters']['searchparameters']['add'] = array(
+    '#type' => 'submit',
+    '#value' => t('Add search item'),
+    '#ajax' => array(
+      'event' => 'click',
+      'wrapper' => 'searchparameters',
+      'path' => 'admin/mediamosa/browse/js/collection/searchparameters',
+      'method' => 'replace',
+    ),
+    '#weight' => 10,
+  );
+
+  $form['filters']['searchparameters']['reset'] = array(
+    '#type' => 'submit',
+    '#value' => t('Reset'),
+    '#ajax' => array(
+      'event' => 'click',
+      'wrapper' => 'searchparameters',
+      'path' => 'admin/mediamosa/browse/js/collection/searchparameters',
+      'method' => 'replace',
+    ),
+    '#weight' => 11,
+  );
+
+
+  $form['filter']['apply'] = array(
+    '#type' => 'submit',
+    '#value' => t('Apply filter'),
+  );
+
+  $form = _mediamosa_browse_collection_searchparameters($form);
+
+  return $form;
+}
+
+/**
+ * Insert the search form into a text area.
+ */
+function _ajax_browse_collection_search_parameters() {
+
+  // Load the form based upon the $_POST data sent via the ajax call.
+  list($form, $form_state) = ajax_get_form();
+
+  // Fix drupal notice.
+  $form_state['values'] = isset($form_state['values']) ? $form_state['values'] : array();
+  $form = form_builder('', _mediamosa_browse_collection_searchparameters($form, $form_state), $form_state);
+
+  $commands[] = ajax_command_replace('', drupal_render($form['filters']));
+
+  return array('#type' => 'ajax', '#commands' => $commands, '#header' => FALSE);
+}
+
+/**
+ * Enrich the form with the filter items.
+ *
+ * @param array $form
+ * @param array $form_state
+ */
+function _mediamosa_browse_collection_searchparameters($form, $form_state = array()) {
+
+  // Get session.
+  $session = _mediamosa_browse_collection_session($form_state);
+
+  if (!isset($form_state['input']['filters'])) {
+    $form_state['input']['filters'] = isset($session['filters']) ? $session['filters'] : array();
+  }
+
+  $op = isset($form_state['input']['op']) ? $form_state['input']['op'] : '';
+
+  switch ($op) {
+    case t('Reset'):
+      $session['operator'] = 'and';
+      $session['filters'] = array();
+      $form_state['input']['filters'] = array();
+
+    case t('Add search item'):
+      $form_state['input']['filters'][] = array('item' => '', 'item_value' => '');
+      break;
+
+    default:
+      if (empty($form_state['input']['filters'])) {
+        $form_state['input']['filters'][] = array('item' => '', 'item_value' => '');
+      }
+      break;
+
+    case t('Apply filter'):
+      break;
+  }
+
+  // Set it again.
+  $_SESSION[MEDIAMOSA_BROWSE_FILTER_COLLECTION] = $session;
+
+  unset($form['filters']['searchparameters']['filters']);
+  foreach ($form_state['input']['filters'] as $x => $filter) {
+    $form_filter = _mediamosa_browse_searchparameters_helper($x, $filter);
+
+    $form['filters']['searchparameters']['filters']['filters[' . $x . '][item]'] = $form_filter['item'];
+    $form['filters']['searchparameters']['filters']['filters[' . $x . '][item_value]'] = $form_filter['item_value'];
+  }
+
+  return $form;
+}
+
+/**
+ * Process result from collection filter form.
+ */
+function mediamosa_browse_collection_filter_form_submit($form, $form_state) {
+  _mediamosa_browse_collection_session($form_state);
+}
+
+/**
+ * Form builder; collection listing page.
+ *
+ */
+function mediamosa_browse_collection_list_form() {
+  // Get session.
+  $session = _mediamosa_browse_collection_session();
+
+  // Include our css.
+  drupal_add_css(drupal_get_path('module', 'mediamosa_maintenance_browse') . '/mediamosa_maintenance_browse.css');
+
+  $limit = $session['limit'];
+  $page = isset($_GET['page']) ? (int)$_GET['page'] : 0;
+  $item_count_total = 0;
+
+  $header = array(
+    array('field' => 'title', 'data' => t('Title'), 'sort' => 'asc'),
+    array('field' => 'app_id', 'data' => t('App ID'), 'class' => array('mmappid')),
+    array('field' => 'changed', 'data' => t('Last modified'), 'class' => array('mmdate')),
+  );
+
+  $result = _mediamosa_browse_collection_execute();
+  $item_count_total = isset($result['header']['item_count_total']) ? $result['header']['item_count_total'] : 0;
+
+  $rows = array();
+
+  foreach ($result['items'] as $row) {
+    $title = empty($row['title']) ? NULL : check_plain($row['title']);
+    $rows[] = array(
+      theme('l_mediamosa_collection', array('title' => $title, 'id' => $row[mediamosa_collection_db::ID])),
+      array('data' => check_plain($row['app_id']), 'class' => array('mmappid')),
+      array('data' => theme('mediamosa_maintenance_date', array('datetime' => $row[mediamosa_collection_db::CHANGED])), 'class' => array('mmdate')),
+    );
+  }
+
+  // Our listing.
+  $form['list'] = array(
+    '#theme' => 'mediamosa_maintenance_table',
+    '#header' => $header,
+    '#rows' => $rows,
+    '#empty' => t('No collections found.'),
+    // Pager.
+    '#page' => $page,
+    '#item_count_total' => $item_count_total,
+    '#item_limit' => $limit,
+    // Top
+    '#title' => t('Collections (@total)', array('@total' => $item_count_total)),
+    '#description' => t('Collections matching the search criteria above are listed below. Click on a collection title below to view details.'),
+    // Total note.
+    '#caption_bottom' => t('Collections found: @total', array('@total' => $item_count_total))
+  );
+
+  return $form;
+}
+
+/**
+ * Do the REST call and return the response object.
+ */
+function _mediamosa_browse_collection_execute() {
+  // Get session.
+  $session = _mediamosa_browse_collection_session();
+
+  // What to sort on.
+  $sort = $session['sort'];
+  $order = $session['order'];
+  $limit = $session['limit'];
+  $page = $session['page'];
+
+  switch ($order) {
+    case t('App ID'):
+      $order = 'app_id';
+      break;
+
+    case t('Last modified'):
+      $order = 'changed';
+      break;
+
+    case t('Title'):
+    default:
+      $order = 'title';
+      break;
+  }
+
+  $params = array();
+
+  $cqls = array();
+
+  $cql_session = _mediamosa_browse_cql_build($session);
+  if (!empty($cql_session)) {
+    $cqls[] = $cql_session;
+  }
+
+  // Add sort.
+  $cqls[] = strtr('sortBy @order/@sort', array('@order' => $order, '@sort' => drupal_strtolower($sort) == 'asc' ? 'ascending' : 'descending'));
+
+  // Add params.
+  $params['cql'] = implode(' ', $cqls);
+  $params['limit'] = $limit;
+  $params['offset'] = $page * $limit;
+
+  // Do the rest call.
+  return mediamosa_response_connector::static_do_restcall_drupal('collection', 'GET', $params);
+}
+
+/**
+ * Get and set the session.
+ */
+function _mediamosa_browse_collection_session($filter_form_state = array()) {
+  // Get session.
+  $session = isset($_SESSION[MEDIAMOSA_BROWSE_FILTER_COLLECTION]) ? $_SESSION[MEDIAMOSA_BROWSE_FILTER_COLLECTION] : array();
+
+  // Get these from _GET if present.
+  foreach (array('order', 'sort', 'page') as $param) {
+    unset($session[$param]);
+    if (isset($_GET[$param])) {
+      $session[$param] = $_GET[$param];
+    }
+  }
+
+  // Set defaults.
+  $session += array(
+    'order' => t('Title'),
+    'sort' => 'asc',
+    'page' => 0,
+    'limit' => mediamosa_settings::maintenance_items_per_page(),
+  );
+
+  // Process filter.
+  if (!empty($filter_form_state['input']['operator'])) {
+    $session['operator'] = $filter_form_state['input']['operator'];
+  }
+
+  if (!empty($filter_form_state['input']['filters'])) {
+    $session['filters'] = $filter_form_state['input']['filters'];
+  }
+
+  // Set it again.
+  $_SESSION[MEDIAMOSA_BROWSE_FILTER_COLLECTION] = $session;
+
+  return $session;
+}
+
+/**
+ * View the details of an collection.
+ */
+function mediamosa_maintenance_browse_collection_details($coll_id) {
+  // If we are set as Home page, the breadcrumb isnt set, lets do it here.
+  $breadcrumb = array();
+  $breadcrumb[] = l(t('Home'), NULL);
+  $breadcrumb[] = l(t('Administer'), 'admin');
+  $breadcrumb[] = l(t('MediaMosa 2'), 'admin/mediamosa');
+  $breadcrumb[] = l(t('Browse'), 'admin/mediamosa/browse');
+  $breadcrumb[] = l(t('Collection browser'), 'admin/mediamosa/browse/collection');
+  drupal_set_breadcrumb($breadcrumb);
+
+  // Get the collection.
+  $response =  mediamosa_response_connector::static_do_restcall_drupal(strtr('collection/@coll_id', array('@coll_id' => rawurlencode($coll_id))) , 'GET');
+
+  if ($response['header']['request_result_id'] != 601) {
+    return '<h1>Collection not found</h1>';
+  }
+
+  $collection = reset($response['items']);
+
+  $variables = array(
+    'description' => t('Details for this collection are shown below.'),
+    'properties' => array(
+      t('Title') => $collection[mediamosa_collection_db::TITLE],
+      t('Description') => $collection[mediamosa_collection_db::DESCRIPTION],
+      t('App ID') => $collection[mediamosa_collection_db::APP_ID],
+      t('Owner ID') => $collection[mediamosa_collection_db::OWNER_ID],
+      t('Group ID') => $collection[mediamosa_collection_db::GROUP_ID],
+    ),
+  );
+
+  $page = isset($_GET['page']) ? $_GET['page'] : 0;
+
+  // Get the possible assets in this collection.
+  $params = array('limit' => 10, 'offset' => $page * 10);
+  $response =  mediamosa_response_connector::static_do_restcall_drupal(strtr('collection/@coll_id/asset', array('@coll_id' => rawurlencode($coll_id))) , 'GET', $params);
+
+  if ($response['header']['request_result_id'] == 601) {
+    $variables['collection_assets']['title'] = t('Assets (@total)', array('@total' => $response['header']['item_count_total']));
+    $variables['collection_assets']['coll_id'] = $coll_id;
+
+    if ($response['header']['item_count_total'] > 0) {
+      $variables['collection_assets']['description'] = t('Collection <em>@name</em> contains the following assets.', array('@name' => $collection[mediamosa_collection_db::TITLE]));
+
+      $variables['collection_assets']['item_count_total'] = $response['header']['item_count_total'];
+      $variables['collection_assets']['item_offset'] = $response['header']['item_offset'];
+      $variables['collection_assets']['page'] = $page;
+      $variables['collection_assets']['assets'] = array();
+
+      foreach ($response['items'] as $asset) {
+        $variables['collection_assets']['assets'][] = $asset;
+      }
+    }
+    else {
+      $variables['collection_assets']['description'] = t('Collection <em>@name</em> does not contain any assets.', array('@name' => $collection[mediamosa_collection_db::TITLE]));
+    }
+  }
+
+  $build['properties'] = theme('mediamosa_maintenance_browse_properties', $variables);
+
+  return implode('', $build);
+}
+
+
 
 /**
  * Helper function for the collection filter form
- */
+
 function _mediamosa_maintenance_browse_collection_list_filter() {
   $search_terms = array(
     0 => '',
@@ -99,7 +467,7 @@ function _mediamosa_maintenance_browse_collection_get_cql_from_session() {
 
 /**
  * The browse form which also contains a list of browsable collections.
- */
+
 function mediamosa_maintenance_browse_collection_form() {
   // Gather and prepare some variables.
   $form = array();
@@ -184,7 +552,7 @@ function mediamosa_maintenance_browse_collection_form() {
 
   $form['add_filter_row'] = array(
     '#type' => 'submit',
-    '#value' => t('Add filter item'),
+    '#value' => t('Add search item'),
     '#suffix' => '<a href="#" id="edit-clear">Clear form</a>',
   );
 
@@ -258,7 +626,7 @@ function mediamosa_maintenance_browse_collection_form() {
 
 /**
  * The browse filter form submit function.
- */
+
 function mediamosa_maintenance_browse_collection_form_submit($form, $form_state) {
   $filters = array();
   foreach ($form_state['values'] as $key => $value) {
@@ -275,3 +643,4 @@ function mediamosa_maintenance_browse_collection_form_submit($form, $form_state)
     'app_id' => $form_state['values']['app_id'],
   );
 }
+*/

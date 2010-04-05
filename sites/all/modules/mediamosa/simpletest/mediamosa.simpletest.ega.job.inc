@@ -156,7 +156,7 @@ class MediaMosaTestCaseEgaJob extends MediaMosaTestCaseEga {
    */
   protected function doQueueCycleAll() {
 
-    $max_runs = 5;
+    $max_runs = 12; // Max 60 seconds.
     $running_jobs = 1;
     while ($max_runs-- && $running_jobs) {
       // Run one job cycle.
@@ -177,6 +177,7 @@ class MediaMosaTestCaseEgaJob extends MediaMosaTestCaseEga {
 
       if ($running_jobs) {
         $this->pass(strtr('Found @running running jobs, waiting for next cycle.', array('@running' => $running_jobs)));
+        Sleep(5); // Wait 5 seconds.
       }
       else {
         $this->pass(strtr('No more running jobs found, exiting job cycle.', array('@running' => $running_jobs)));

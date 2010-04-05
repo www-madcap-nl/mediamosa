@@ -136,10 +136,22 @@ class mediamosa_response_connector extends mediamosa_response {
     catch (PDOException $e) {
       mediamosa_debug::error_log('PDOException caught; ' . $e->getMessage() . ', trace; ' . $e->getTraceAsString(), $e->getFile(), $e->getLine());
       $this->set_result(self::ERROR, mediamosa_error::HTTP_INTERNAL_SERVER_ERROR, 'PDOException caught; ' . $e->getMessage() . ",\ntrace; " . $e->getTraceAsString() . ",\nQuery string; " . $e->query_string . ",\nArgs; " . print_r($e->args, TRUE));
+      try {
+        mediamosa::log_export(strtr('PDOException caught file @file at line @line; @message, trace; @trace.', array('@file' => $e->getFile(), '@line' => $e->getLine(), '@message' => $e->getMessage(), '@trace' => $e->getTraceAsString())));
+      }
+      catch (Exception $e) {
+        // ignore.
+      }
     }
     catch (Exception $e) {
       // Store as error.
       $this->set_result(self::ERROR, $e->getCode(), $e->getMessage());
+      try {
+        mediamosa::log_export(strtr('Exception caught file @file at line @line; @message, trace; @trace.', array('@file' => $e->getFile(), '@line' => $e->getLine(), '@message' => $e->getMessage(), '@trace' => $e->getTraceAsString())));
+      }
+      catch (Exception $e) {
+        // ignore.
+      }
     }
 
     // Generate output PHP array.

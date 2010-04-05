@@ -54,7 +54,7 @@ class MediaMosaAssetMediafileCreateTestCaseEga extends MediaMosaTestCaseEga {
     $asset_id = $this->createAsset();
 
     // Save mediafile_id.
-    $a_mf = array();
+    $mediafiles = array();
 
     //
     // Make a new mediafile.
@@ -64,7 +64,7 @@ class MediaMosaAssetMediafileCreateTestCaseEga extends MediaMosaTestCaseEga {
     $mediafile_id = $this->createMediafile($asset_id);
 
     // Save mediafile_id.
-    $a_mf['1'] = $mediafile_id;
+    $mediafiles['1'] = $mediafile_id;
 
     // Get the mediafile.
     $a_mediafile = $this->getMediafile($mediafile_id);
@@ -93,7 +93,7 @@ class MediaMosaAssetMediafileCreateTestCaseEga extends MediaMosaTestCaseEga {
     $mediafile_id = $this->createMediafile($asset_id);
 
     // Save mediafile_id.
-    $a_mf['2'] = $mediafile_id;
+    $mediafiles['2'] = $mediafile_id;
 
     // Get the mediafile.
     $a_mediafile = $this->getMediafile($mediafile_id);
@@ -122,7 +122,7 @@ class MediaMosaAssetMediafileCreateTestCaseEga extends MediaMosaTestCaseEga {
     $mediafile_id = $this->createMediafile($asset_id);
 
     // Save mediafile_id.
-    $a_mf['3'] = $mediafile_id;
+    $mediafiles['3'] = $mediafile_id;
 
     // Get the mediafile.
     $a_mediafile = $this->getMediafile($mediafile_id);
@@ -151,12 +151,12 @@ class MediaMosaAssetMediafileCreateTestCaseEga extends MediaMosaTestCaseEga {
     $do_internal = TRUE;
     $a_parameters = array(
       mediamosa_rest_call_create_mediafile::IS_ORIGINAL_FILE => 'false',
-      mediamosa_rest_call_create_mediafile::MEDIAFILE_ID_SOURCE => $a_mf['1'],
+      mediamosa_rest_call_create_mediafile::MEDIAFILE_ID_SOURCE => $mediafiles['1'],
     );
     $mediafile_id = $this->createMediafile($asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_OKAY), $do_internal);
 
     // Save mediafile_id.
-    $a_mf['4'] = $mediafile_id;
+    $mediafiles['4'] = $mediafile_id;
 
     // Get the mediafile.
     $a_mediafile = $this->getMediafile($mediafile_id);
@@ -185,6 +185,7 @@ class MediaMosaAssetMediafileCreateTestCaseEga extends MediaMosaTestCaseEga {
         $counted++;
       }
     }
+
     $this->assertTrue(
       $counted == $expected,
       t("Get the original mediafile belonging to asset. Asset_id = @asset_id, Count = @count (expected @expected)", array('@asset_id' => $asset_id, '@count' => $counted, '@expected' => $expected))
@@ -198,12 +199,12 @@ class MediaMosaAssetMediafileCreateTestCaseEga extends MediaMosaTestCaseEga {
     $do_internal = TRUE;
     $a_parameters = array(
       mediamosa_rest_call_create_mediafile::IS_ORIGINAL_FILE => 'false',
-      mediamosa_rest_call_create_mediafile::MEDIAFILE_ID_SOURCE => $a_mf['1'],
+      mediamosa_rest_call_create_mediafile::MEDIAFILE_ID_SOURCE => $mediafiles['1'],
     );
     $mediafile_id = $this->createMediafile($asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_OKAY), $do_internal);
 
     // Save mediafile_id.
-    $a_mf['5'] = $mediafile_id;
+    $mediafiles['5'] = $mediafile_id;
 
     // Get the mediafile.
     $a_mediafile = $this->getMediafile($mediafile_id);
@@ -211,7 +212,7 @@ class MediaMosaAssetMediafileCreateTestCaseEga extends MediaMosaTestCaseEga {
     // Check the mediafile_id.
     $this->assertTrue(
       $a_mediafile['mediafile_id'] == $mediafile_id,
-      t("Mediafile has the good id.")
+      t("Mediafile has the right id.")
     );
 
     // Get the mediafiles belonging to an asset.
@@ -227,15 +228,15 @@ class MediaMosaAssetMediafileCreateTestCaseEga extends MediaMosaTestCaseEga {
     // We have still 3 original mediafile.
     $expected = 3;
     $counted = 0;
-    foreach ($a_asset_mediafile['items']['item'] as $mf) {
-      if ($mf['is_original_file'] == 'TRUE') {
+    foreach ($a_asset_mediafile['items']['item'] as $mediafile) {
+      if ($mediafile['is_original_file'] == 'TRUE') {
         $counted++;
       }
     }
+
     $this->assertTrue(
       $counted == $expected,
       t("Get the original mediafile belonging to asset. Asset_id = @asset_id, Count = @count (expected @expected)", array('@asset_id' => $asset_id, '@count' => $counted, '@expected' => $expected))
     );
-
   }
 }

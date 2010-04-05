@@ -39,16 +39,20 @@ function mediamosa_maintenance_browse_restcall_form() {
   $rest_calls_doc = module_invoke_all('mediamosa_register_rest_call_doc');
   $rest_calls = array_merge_recursive($rest_calls, $rest_calls_doc);
 
-  // Skip internal calls.
+  $item_count_total = 0;
+
+  // Skip internal calls, but count the rest.
   foreach ($rest_calls as $key => $rest_call) {
     foreach ($rest_call as $method => $value) {
 
-
-      if (isset($value['access']) && ($value['access'] == 1)) {
+      if (isset($value['access']) && ($value['access'] == mediamosa_rest_call::ACCESS_INTERNAL_ONLY)) {
         unset($rest_calls[$key][$method]);
       }
-      if (isset($value['status']) && ($value['status'] == 'deprecated')) {
+      elseif (isset($value['status']) && ($value['status'] == 'deprecated')) { // @todo make switch for admin to select to show them.
         unset($rest_calls[$key][$method]);
+      }
+      else {
+        $item_count_total++;
       }
     }
   }
@@ -56,8 +60,7 @@ function mediamosa_maintenance_browse_restcall_form() {
   // Sort the rest calls on URI.
   ksort($rest_calls);
 
-  $item_limit = 128;
-  $item_count_total = count($rest_calls);
+  $item_limit = mediamosa_settings::maintenance_items_per_page();
   $page = isset($_GET['page']) ? (int)$_GET['page'] : 0;
   $offset = $page * $item_limit;
 
@@ -72,17 +75,27 @@ function mediamosa_maintenance_browse_restcall_form() {
 
   $pos = 0;
   foreach ($rest_calls as $uri => $rest_calls_2) {
-    if ($pos < $offset) {
-      $pos++;
-      continue;
-    }
-    elseif ($pos >= ($offset + $item_limit)) {
+
+    if ($pos >= ($offset + $item_limit)) {
       break;
     }
 
-    $pos++;
+    ksort($rest_calls_2);
 
     foreach ($rest_calls_2 as $method => $rest_call) {
+
+      // Because we get all the REST calls, we need to skip some before we start.
+      if ($pos < $offset) {
+        $pos++;
+        continue;
+      }
+      elseif ($pos >= ($offset + $item_limit)) {
+        break;
+      }
+
+      $pos++;
+
+
       $has_example_request = !empty($rest_call[mediamosa_rest_call::EXAMPLE_REQUEST]);
       $has_example_response = !empty($rest_call[mediamosa_rest_call::EXAMPLE_RESPONSE]);
 
@@ -103,24 +116,20 @@ function mediamosa_maintenance_browse_restcall_form() {
     }
   }
 
-  $form['pager_top'] = array(
-    '#markup' => _mediamosa_maintenance_browse_pager($page, $item_count_total, $item_limit),
-  );
-
-  $form['results'] = array(
-    '#markup' => theme('table', array('header' => $header, 'rows' => $rows, 'empty' => t('No REST calls found.'))),
-  );
-
-  $form['sup'] = array(
-    '#markup' => implode(', ', array(t('<div align="right"><sup><small>1) missing example request</small>'), t('<small>2) missing example response</small></sup><div>'))),
-  );
-
-  $form['pager_bottom'] = array(
-    '#markup' => _mediamosa_maintenance_browse_pager($page, $item_count_total, $item_limit),
-  );
-
-  $form['total'] = array(
-    '#markup' => 'total found: ' . $item_count_total,
+  // Our listing.
+  $form['list'] = array(
+    '#theme' => 'mediamosa_maintenance_table',
+    '#header' => $header,
+    '#rows' => $rows,
+    '#empty' => t('No REST calls found.'),
+    // Pager.
+    '#page' => $page,
+    '#item_count_total' => $item_count_total,
+    '#item_limit' => $item_limit,
+    // Note
+    '#note' => implode(', ', array(t('1) missing example request'), t('2) missing example response'))),
+    // Total note.
+    '#caption_bottom' => t('Total found: @total', array('@total' => $item_count_total))
   );
 
   return $form;

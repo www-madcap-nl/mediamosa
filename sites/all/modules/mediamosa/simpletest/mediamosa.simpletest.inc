@@ -52,7 +52,7 @@ define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_USER', 'MediaMosa User / Groups');
 class MediaMosaTestCase extends DrupalWebTestCase {
 
   // file to unlink on teardown.
-  protected $a_unlink = array();
+  protected $unlinks = array();
 
   // ------------------------------------------------------------------ Consts.
   // Default old user/group.
@@ -112,6 +112,9 @@ class MediaMosaTestCase extends DrupalWebTestCase {
         mediamosa::variable_set($name, $value);
       }
     }
+
+    // Lets put debug on high.
+    mediamosa::variable_set('mediamosa_debug_level', 10);
   }
 
   /**
@@ -124,24 +127,15 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     global $db_prefix;
 
     // Dump the log.
-    $a_logs = db_query('SELECT * FROM {watchdog}');
-
-    $a_text[] = 'Dumping contents of watchdog';
-
-    foreach ($a_logs as $o_log) {
-      $a_text[] = strtr($o_log->message, (empty($o_log->variables) ? array() : unserialize($o_log->variables)));
-     // $this->pass(strtr($o_log->message, (empty($o_log->variables) ? array() : unserialize($o_log->variables))), 'watchdog dump');
-    }
-
-    $this->verbose(implode("<br />", $a_text), 'watchdog dump');
+    $this->dump_watchdog();
 
     // Unlink files.
-    foreach ($this->a_unlink as $filename) {
+    foreach ($this->unlinks as $filename) {
       mediamosa_io::unlink($filename);
     }
 
     // Clean up...
-    $this->a_unlink = array();
+    $this->unlinks = array();
 
     // keep it.
     $old_prefix = $db_prefix;
@@ -178,6 +172,24 @@ class MediaMosaTestCase extends DrupalWebTestCase {
 
     // Call parent.
     parent::tearDown();
+  }
+
+  /**
+   * Dump the log so we know what happened.
+   */
+  protected function dump_watchdog() {
+    // Dump the log.
+    $result = db_query('SELECT * FROM {watchdog}');
+
+    $texts[] = 'Dumping contents of watchdog';
+
+    foreach ($result as $log_item) {
+      $items = empty($log_item->variables) ? array() : unserialize($log_item->variables);
+      $texts[] = strtr($log_item->message, is_array($items) ? $items : array());
+    }
+
+    // In verbose mode only.
+    $this->verbose(implode("<br />", $texts), 'watchdog dump');
   }
 
   /**
@@ -221,41 +233,41 @@ class MediaMosaTestCase extends DrupalWebTestCase {
   /**
    * Static call to restCall
    */
-  static public function staticRestCall($uri, $request_method = 'POST', array $a_parameters = array(), array $a_headers = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  static public function staticRestCall($uri, $request_method = 'POST', array $parameters = array(), array $headers = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     assert(isset($GLOBALS['mediamosa_simpletest']));
-    $GLOBALS['mediamosa_simpletest']->restCall($uri, $request_method, $a_parameters, $a_headers, $a_expected_result_ids, $do_internal);
+    $GLOBALS['mediamosa_simpletest']->restCall($uri, $request_method, $parameters, $headers, $expected_result_ids, $do_internal);
   }
 
   /**
    * Static call to restCall POST
    */
-  static public function staticRestCallPost($uri, array $a_parameters = array(), array $a_headers = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  static public function staticRestCallPost($uri, array $parameters = array(), array $headers = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     assert(isset($GLOBALS['mediamosa_simpletest']));
-    $GLOBALS['mediamosa_simpletest']->restCall($uri, 'POST', $a_parameters, $a_headers, $a_expected_result_ids, $do_internal);
+    $GLOBALS['mediamosa_simpletest']->restCall($uri, 'POST', $parameters, $headers, $expected_result_ids, $do_internal);
   }
 
   /**
    * Static call to restCall GET
    */
-  static public function staticRestCallGet($uri, array $a_parameters = array(), array $a_headers = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  static public function staticRestCallGet($uri, array $parameters = array(), array $headers = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     assert(isset($GLOBALS['mediamosa_simpletest']));
-    $GLOBALS['mediamosa_simpletest']->restCall($uri, 'GET', $a_parameters, $a_headers, $a_expected_result_ids, $do_internal);
+    $GLOBALS['mediamosa_simpletest']->restCall($uri, 'GET', $parameters, $headers, $expected_result_ids, $do_internal);
   }
 
   /**
    * Static call to restCall POST
    */
-  static public function staticInternalRestCallPost($uri, array $a_parameters = array(), array $a_headers = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+  static public function staticInternalRestCallPost($uri, array $parameters = array(), array $headers = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
     assert(isset($GLOBALS['mediamosa_simpletest']));
-    $GLOBALS['mediamosa_simpletest']->restCall($uri, 'POST', $a_parameters, $a_headers, $a_expected_result_ids, TRUE);
+    $GLOBALS['mediamosa_simpletest']->restCall($uri, 'POST', $parameters, $headers, $expected_result_ids, TRUE);
   }
 
   /**
    * Static call to restCall GET
    */
-  static public function staticInternalRestCallGet($uri, array $a_parameters = array(), array $a_headers = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+  static public function staticInternalRestCallGet($uri, array $parameters = array(), array $headers = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
     assert(isset($GLOBALS['mediamosa_simpletest']));
-    $GLOBALS['mediamosa_simpletest']->restCall($uri, 'GET', $a_parameters, $a_headers, $a_expected_result_ids, TRUE);
+    $GLOBALS['mediamosa_simpletest']->restCall($uri, 'GET', $parameters, $headers, $expected_result_ids, TRUE);
   }
 
   /**
@@ -299,19 +311,19 @@ class MediaMosaTestCase extends DrupalWebTestCase {
    *  The uri of the REST call.
    * @param string $request_method
    *  POST / GET / PUT / DELETE.
-   * @param array $a_parameters
+   * @param array $parameters
    *  name => value
-   * @param array $a_headers
+   * @param array $headers
    *  Name: value
-   * @param array $a_expected_result_ids
+   * @param array $expected_result_ids
    *  Contains the mediamosa_error::ERRORCODE_* that we expect. For example, you
    *  might expect an error instead of OKAY; specify the error code here.
    */
-  protected function restCall($uri, $request_method = 'POST', array $a_parameters = array(), array $a_headers = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function restCall($uri, $request_method = 'POST', array $parameters = array(), array $headers = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
 
     if ($do_internal) {
       // Set internal password.
-      $a_headers[] = mediamosa_settings::X_MEDIAMOSA_INTERNAL_PASS . ': ' . mediamosa::get_internal_password();
+      $headers[] = mediamosa_settings::X_MEDIAMOSA_INTERNAL_PASS . ': ' . mediamosa::get_internal_password();
 
       // Add internal to uri.
       if (strpos($uri, 'internal/') === FALSE) {
@@ -322,21 +334,21 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     // Prepare the CURL options.
     $curl_opts = array(
       CURLOPT_NOBODY => FALSE,
-      CURLOPT_HTTPHEADER => $a_headers,
+      CURLOPT_HTTPHEADER => $headers,
       CURLOPT_HEADER => TRUE,
     );
 
     if (strcasecmp($request_method, 'GET') == 0) {
       $curl_opts += array(
         CURLOPT_HTTPGET => TRUE,
-        CURLOPT_URL => url($uri, array('absolute' => TRUE, 'query' => $a_parameters)),
+        CURLOPT_URL => url($uri, array('absolute' => TRUE, 'query' => $parameters)),
       );
     }
     else {
       $curl_opts += array(
         CURLOPT_POST => TRUE,
         CURLOPT_URL => url($uri, array('absolute' => TRUE)),
-        CURLOPT_POSTFIELDS => http_build_query($a_parameters),
+        CURLOPT_POSTFIELDS => http_build_query($parameters),
       );
     }
 
@@ -348,6 +360,8 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     // Parse the headers and get the body.
     $lines = explode("\n", $result);
     $line_count = count($lines);
+
+    $http_result = explode(' ', $lines[0]);
 
     // Unset the HTTP header line.
     unset($lines[0]);
@@ -373,12 +387,19 @@ class MediaMosaTestCase extends DrupalWebTestCase {
         $this->var_export($out['body']);
       }
       else {
-        $this->var_export_verbose(substr($out['body'], 0, 1000) . '...<snap>...');
+        $this->var_export_verbose(mediamosa_unicode::substr($out['body'], 0, 10000) . '...<snap>...');
       }
+    }
+    catch (Exception $e) {
+      $this->assert(FALSE, 'var_export of REST response body failed! ' . $e->getMessage());
+      return;
+    }
+
+    try {
       $out['xml'] = new SimpleXMLElement($out['body']);
     }
     catch (Exception $e) {
-      $this->assert(FALSE, $e->getMessage());
+      $this->assert(FALSE, 'simple XML creation failed! ' . $e->getMessage());
       return;
     }
 
@@ -387,7 +408,9 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     $result_description = empty($out['xml']->header->request_result_description) ? 'no description' : (string)$out['xml']->header->request_result_description;
 
     // Look for a request_result_id.
-    $this->assertTrue(in_array($result_id, $a_expected_result_ids), $request_method . ' request to: "' . $uri . '". Result id: ' . $result_id . ', ' . $result_description . '<hr />');
+    $this->assertTrue(in_array($result_id, $expected_result_ids), t('@method request to: "@uri", got result ID @result_id (@description) was expecting one of; {@expected}.', array('@method' => $request_method, '@uri' => $uri, '@result_id' => $result_id, '@description' => $result_description, '@expected' => implode(', ', $expected_result_ids))));
+
+    $this->assertFalse($http_result[1] == 404, 'REST call was found');
 
     // Return the request data.
     return $out;
@@ -396,22 +419,22 @@ class MediaMosaTestCase extends DrupalWebTestCase {
   /**
    * Wrapper for POST restCall
    */
-  protected function restCallPost($uri, array $a_parameters = array(), array $a_headers = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
-    return $this->restCall($uri, 'POST', $a_parameters, $a_headers, $a_expected_result_ids, $do_internal);
+  protected function restCallPost($uri, array $parameters = array(), array $headers = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    return $this->restCall($uri, 'POST', $parameters, $headers, $expected_result_ids, $do_internal);
   }
 
   /**
    * Wrapper for GET restCall
    */
-  protected function restCallGet($uri, array $a_parameters = array(), array $a_headers = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
-    return $this->restCall($uri, 'GET', $a_parameters, $a_headers, $a_expected_result_ids);
+  protected function restCallGet($uri, array $parameters = array(), array $headers = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+    return $this->restCall($uri, 'GET', $parameters, $headers, $expected_result_ids);
   }
 
   /**
    * Wrapper for PUT restCall
    */
-  protected function restCallPut($uri, array $a_parameters = array(), array $a_headers = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
-    return $this->restCall($uri, 'PUT', $a_parameters, $a_headers, $a_expected_result_ids);
+  protected function restCallPut($uri, array $parameters = array(), array $headers = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+    return $this->restCall($uri, 'PUT', $parameters, $headers, $expected_result_ids);
   }
 
   /**
@@ -454,7 +477,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     );
 
     // Register to be removed.
-    $this->a_unlink[] = $dest;
+    $this->unlinks[] = $dest;
   }
 
   /**
@@ -492,7 +515,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
    */
   protected function touch($filename, $text = 'Create empty file.') {
     mediamosa_io::touch($filename);
-    $this->a_unlink[] = $filename;
+    $this->unlinks[] = $filename;
     return $this->file_exists($filename, $text);
   }
 
@@ -560,7 +583,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
    * @param array $a_attributes
    *  Basic app parameters like the DB version (mediamosa_app_db).
    */
-  protected function createApp($a_fields = array()) {
+  protected function createApp($fields = array()) {
 
     // Generate the name.
     $name = $this->randomName();
@@ -608,8 +631,8 @@ class MediaMosaTestCase extends DrupalWebTestCase {
   /**
    * Create a job.
    */
-  protected function createJob($a_fields = array()) {
-    $a_fields += array(
+  protected function createJob($fields = array()) {
+    $fields += array(
       mediamosa_job_db::APP_ID => rand(1, 1000),
       mediamosa_job_db::ASSET_ID => mediamosa_db::uuid(rand(1, 1000)),
       mediamosa_job_db::MEDIAFILE_ID => mediamosa_db::uuid(rand(1, 1000)),
@@ -624,40 +647,40 @@ class MediaMosaTestCase extends DrupalWebTestCase {
       mediamosa_job_db::CREATE_STILL => mediamosa_job_db::CREATE_STILL_FALSE,
       mediamosa_job_db::NO_HINT => mediamosa_job_db::NO_HINT_FALSE,
     );
-    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+    $fields = mediamosa_db::db_insert_enrich($fields);
 
     // Insert the job into the database.
-    $a_fields[mediamosa_job_db::ID] = mediamosa_db::db_insert(mediamosa_job_db::TABLE_NAME)->fields($a_fields)->execute();
-    return $a_fields[mediamosa_job_db::ID];
+    $fields[mediamosa_job_db::ID] = mediamosa_db::db_insert(mediamosa_job_db::TABLE_NAME)->fields($fields)->execute();
+    return $fields[mediamosa_job_db::ID];
   }
 
   /**
    * Create an upload job.
    */
-  protected function createUploadJob($job_id, $a_fields = array()) {
-    $a_fields[mediamosa_job_upload_db::JOB_ID] = $job_id;
+  protected function createUploadJob($job_id, $fields = array()) {
+    $fields[mediamosa_job_upload_db::JOB_ID] = $job_id;
 
-    $a_fields += array(
+    $fields += array(
       mediamosa_job_upload_db::FILE_SIZE => 0,
       mediamosa_job_upload_db::UPLOADED_FILE_SIZE => 0,
       mediamosa_job_upload_db::RETRANSCODE => mediamosa_job_upload_db::RETRANSCODE_FALSE,
       mediamosa_job_upload_db::CREATE_STILL => mediamosa_job_upload_db::CREATE_STILL_FALSE,
     );
 
-    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+    $fields = mediamosa_db::db_insert_enrich($fields);
 
     // Insert the upload job into the database.
-    $a_fields[mediamosa_job_upload_db::ID] = mediamosa_db::db_insert(mediamosa_job_upload_db::TABLE_NAME)->fields($a_fields)->execute();
-    return $a_fields[mediamosa_job_upload_db::ID];
+    $fields[mediamosa_job_upload_db::ID] = mediamosa_db::db_insert(mediamosa_job_upload_db::TABLE_NAME)->fields($fields)->execute();
+    return $fields[mediamosa_job_upload_db::ID];
   }
 
   /**
    * Create a transcode job.
    */
-  protected function createTranscodeJob($job_id, $a_fields = array()) {
-    $a_fields[mediamosa_job_transcode_db::JOB_ID] = $job_id;
+  protected function createTranscodeJob($job_id, $fields = array()) {
+    $fields[mediamosa_job_transcode_db::JOB_ID] = $job_id;
 
-    $a_fields += array(
+    $fields += array(
       mediamosa_job_transcode_db::TRANSCODE_PROFILE_ID => 1,
       mediamosa_job_transcode_db::TOOL => '',
       mediamosa_job_transcode_db::COMMAND => '',
@@ -665,10 +688,10 @@ class MediaMosaTestCase extends DrupalWebTestCase {
       mediamosa_job_transcode_db::COMPLETED_TRANSCODING_URL => '',
     );
 
-    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+    $fields = mediamosa_db::db_insert_enrich($fields);
 
-    $a_fields[mediamosa_job_transcode_db::ID] = mediamosa_db::db_insert(mediamosa_job_transcode_db::TABLE_NAME)->fields($a_fields)->execute();
-    return $a_fields[mediamosa_job_transcode_db::ID];
+    $fields[mediamosa_job_transcode_db::ID] = mediamosa_db::db_insert(mediamosa_job_transcode_db::TABLE_NAME)->fields($fields)->execute();
+    return $fields[mediamosa_job_transcode_db::ID];
   }
 
 }

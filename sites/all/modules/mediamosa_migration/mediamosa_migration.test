@@ -30,7 +30,7 @@ define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_MIGRATION', 'MediaMosa Migration');
  * @file
  * Unittests the migration from 1.x to 2.x
  */
-class MediaMosaMigrationTestCase extends MediaMosaTestCase {
+class MediaMosaMigrationTestCase extends MediaMosaTestCaseEga {
 
   public static function getInfo() {
     return array(
@@ -40,15 +40,17 @@ class MediaMosaMigrationTestCase extends MediaMosaTestCase {
     );
   }
 
-  function setUp() {
-    parent::setUp('mediamosa_app_authentication', 'mediamosa');
+  public function setUp() {
+    // Run parent first so we are inside sandbox.
+    // Call parent::setUp and preserve arguments.
+    $args = func_get_args();
 
-    // Create and login user
-    $rest_user = $this->drupalCreateUser(array('administer mediamosa'));
-    $this->drupalLogin($rest_user);
+    // Create and setup the CORE module.
+    $args = array_unique(array_merge(array('mediamosa_job', 'mediamosa_transcode', 'mediamosa_user', 'mediamosa_error', 'mediamosa_ftp_user', 'mediamosa_ftp_batch', 'mediamosa_maintenance_status'), $args));
+    call_user_func_array(array($this, 'parent::setUp'), $args);
   }
 
-  function testPingRestcalls() {
+  public function testPingRestcalls() {
     $app = $this->createApp();
 
     $uri_replace = array(
@@ -66,10 +68,42 @@ class MediaMosaMigrationTestCase extends MediaMosaTestCase {
       '$groupname' => $this->randomName(),
     );
 
+    $ignore = array(
+      'acl/get_foreign_apps',
+      'asset/1/watermark/delete',
+      'asset/1/watermark/upload',
+      'statistics/created',
+      'external/mediafile/uploadprogress', // output not xml.
+      'group/1/set_quotum', // post now, not get.
+    );
+
     $result = db_query("SELECT * FROM memo.madrest AS m WHERE NOT URI LIKE 'internal/%' ORDER BY m.uri");
     foreach ($result as $restcall) {
       $uri = str_replace(array_keys($uri_replace), array_values($uri_replace), $restcall->uri);
-      $response = $this->restCall($app, $uri, $restcall->method);
+
+      if (in_array($uri, $ignore)) {
+        continue;
+      }
+
+      $response = $this->restCall($uri, $restcall->method, array(), array(), array(
+        mediamosa_error::ERRORCODE_OKAY,
+        mediamosa_error::ERRORCODE_EMPTY_RESULT,
+        mediamosa_error::ERRORCODE_ASSET_NOT_FOUND,
+        mediamosa_error::ERRORCODE_MEDIAFILE_NOT_FOUND,
+        mediamosa_error::ERRORCODE_VALIDATE_REQUIRED_PARAMETER,
+        mediamosa_error::ERRORCODE_CHANGE_OWNERSHIP_MISSING_PARAMETERS,
+        mediamosa_error::ERRORCODE_AUT_GROUP_NOT_FOUND,
+        mediamosa_error::ERRORCODE_COLLECTION_NOT_FOUND,
+        mediamosa_error::ERRORCODE_INVALID_ASSET_MEDIAFILE_COMBINATION,
+        mediamosa_error::ERRORCODE_NO_CHANGES,
+        mediamosa_error::ERRORCODE_UNKNOWN_JOB_TYPE,
+        mediamosa_error::ERRORCODE_FTP_UNKNOWN_USER,
+        mediamosa_error::ERRORCODE_FTP_BATCH_NOT_FOUND,
+        mediamosa_error::ERRORCODE_USERMAN_INVALID_GROUP,
+        mediamosa_error::ERRORCODE_TRANSCODE_PROFILE_NOT_FOUND,
+        mediamosa_error::ERRORCODE_INVALID_USER_ID,
+        mediamosa_error::ERRORCODE_USERMAN_INVALID_USER,
+      ));
     }
   }
 }

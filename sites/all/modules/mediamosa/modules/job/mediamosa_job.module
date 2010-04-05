@@ -119,6 +119,15 @@ function mediamosa_job_mediamosa_register_rest_call() {
     mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY,
   );
 
+  $a_rest_calls['job/$job_id/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_job_cancel',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Delete a job by canceling it.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_job',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY,
+  );
+
   $a_rest_calls['user/$user_id/joblist'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_job_user_search',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,

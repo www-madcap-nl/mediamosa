@@ -63,9 +63,21 @@ class MediaMosaAssetCollectionCQLTestCaseEga extends MediaMosaTestCaseEga {
     $this->doEgaLogin_3();
 
     // enable change master/slave.
-    $this->enableMasterSlave($app_id_1);
+
+    // Switch Ega.
+    $this->toEga_1();
     $this->enableMasterSlave($app_id_2);
     $this->enableMasterSlave($app_id_3);
+
+    // Switch Ega.
+    $this->toEga_2();
+    $this->enableMasterSlave($app_id_1);
+    $this->enableMasterSlave($app_id_3);
+
+    // Switch Ega.
+    $this->toEga_3();
+    $this->enableMasterSlave($app_id_1);
+    $this->enableMasterSlave($app_id_2);
 
     //
     // Set up assets.
@@ -122,7 +134,7 @@ class MediaMosaAssetCollectionCQLTestCaseEga extends MediaMosaTestCaseEga {
       '\**' => '*%',
       '*\**' => '%*%',
       '\"test\"' => '\"test\"',
-      '"test"' => '\"test\"',
+      '"test"' => '"test"',
       '\\\'test\\\'' => '\\\'test\\\'',
       '*noot' => '%noot',
       '*noot?' => '%noot_',

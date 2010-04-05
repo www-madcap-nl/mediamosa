@@ -70,7 +70,7 @@ function _mediamosa_maintenance_browse_log() {
   $query->fields('w');
   $query->condition(db_or()->condition('type', $types, 'IN')->condition('type', 'MediaMosa%', 'LIKE'));
   $result = $query
-    ->limit(50)
+    ->limit(mediamosa_settings::maintenance_items_per_page())
     ->orderByHeader($header)
     ->execute();
 
@@ -82,7 +82,7 @@ function _mediamosa_maintenance_browse_log() {
         t($dblog->type),
         truncate_utf8(_mediamosa_maintenance_browse_log_format_message($dblog), 1000, TRUE, TRUE),
         $levels[$dblog->severity],
-        format_date($dblog->timestamp, 'short'),
+        theme('mediamosa_maintenance_date', array('datetime' => $dblog->timestamp)),
       ),
       // Attributes for tr
       'class' => array('dblog-' . preg_replace('/[^a-z]/i', '-', $dblog->type), $classes[$dblog->severity]),

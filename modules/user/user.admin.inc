@@ -23,6 +23,7 @@ function user_admin($callback_arg = '') {
         $build['user_admin_account'] = drupal_get_form('user_admin_account');
       }
   }
+
   return $build;
 }
 

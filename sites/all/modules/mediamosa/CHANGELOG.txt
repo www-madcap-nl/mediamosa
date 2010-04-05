@@ -66,6 +66,8 @@ Mediamosa 2.1.2
   unintentially forced NULL values to be empty strings. This behavor can not be
   replicated in D7. Decided to put those columns in the database to allow NULL
   values instead. Statistics as example had owner_id and group_id as non-null.
+- Fixed /collection which had asset_id as required, which is only when the call
+  was made as /asset/{asset_id}/collection.
 
 MediaMosa 2.1.1
 ---------------
@@ -88,6 +90,8 @@ MediaMosa 2.1.0
 - Admin: Added mediamosa REST call browser.
 - Added MediaMosa Connector.
 - Fixed asset / collection browser to use MediaMosa Connector.
+- Was missing in 2.0.0 notes: vpx_version in XML response has been renamed to 
+  version.
 
 
 MediaMosa 2.0.0 (released as read-only)

@@ -94,7 +94,7 @@ function _process_server_node(&$node) {
       mediamosa_db::db_insert(mediamosa_server_streaming_container_db::TABLE_NAME)
         ->fields(array(
           mediamosa_server_streaming_container_db::NID => $node->nid,
-          mediamosa_server_streaming_container_db::CONTAINER => substr($container, 0, mediamosa_server_streaming_container_db::CONTAINER)
+          mediamosa_server_streaming_container_db::CONTAINER => substr($container, 0, mediamosa_server_streaming_container_db::CONTAINER_LENGTH)
         ))
         ->execute();
     }
@@ -281,9 +281,16 @@ function mediamosa_server_form($node, &$form_state) {
       break;
 
     case mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR:
+      // If its already OFF then the value is allowed as option, else its either On or Close.
+      if ($node->{mediamosa_server_db::SERVER_STATUS} != mediamosa_server_db::SERVER_STATUS_OFF) {
+        $server_status_options =  array(
+          mediamosa_server_db::SERVER_STATUS_ON => t('On'),
+          mediamosa_server_db::SERVER_STATUS_CLOSE => t('Close'), // Job servers are set to off by cron.
+        );
+      }
+
       $title = $is_insert ? t('New processor server') : t("Editing processor server '@server_name'.", array('@server_name' => $node->title));
       $description = t('A processor server processes jobs like still generation, transcoding of mediafiles.');
-      $server_status_options =  array(mediamosa_server_db::SERVER_STATUS_ON => t('On'), mediamosa_server_db::SERVER_STATUS_CLOSE => t('Close'), mediamosa_server_db::SERVER_STATUS_OFF => t('Off'));
       break;
 
     case mediamosa_server_db::SERVER_TYPE_UPLOAD:

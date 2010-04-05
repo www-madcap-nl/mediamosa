@@ -61,13 +61,12 @@ class MediaMosaAssetCQLAppCollTestCaseEga extends MediaMosaTestCaseEga {
     $this->doEgaLogin_2();
     $this->doEgaLogin_3();
 
-    // Enable master/slave.
+    $this->toEga_2();
     $this->enableMasterSlave($app_id_1);
-    $this->enableMasterSlave($app_id_2);
-    //$this->enableMasterSlave($app_id_3);
 
     // Change Ega.
     $this->toEga_1();
+    $this->enableMasterSlave($app_id_2);
 
     // Create assets.
     $a_asset_id = array();

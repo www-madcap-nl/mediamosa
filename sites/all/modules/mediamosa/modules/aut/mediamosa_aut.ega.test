@@ -117,8 +117,11 @@ class MediaMosaAutEgaTestCaseEga extends MediaMosaTestCaseEga {
     //
 
     // enable change master/slave.
-    $this->enableMasterSlave($app_id_1);
+    $this->toEga_1();
     $this->enableMasterSlave($app_id_2);
+
+    $this->toEga_2();
+    $this->enableMasterSlave($app_id_1);
 
     // To first Ega.
     $this->toEga_1();

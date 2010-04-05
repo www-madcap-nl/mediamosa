@@ -65,12 +65,19 @@ class MediaMosaJobTranscodeTestCaseEga extends MediaMosaTestCaseEgaJob {
     $this->doQueueCycleAll();
 
     // Get the asset.
-    $a_asset = $this->getAsset($asset_id);
-    $this->var_export($a_asset);
+    $asset = $this->getAsset($asset_id);
+    $this->var_export($asset);
 
     // Add mediafile clean up.
-    foreach ($a_asset['mediafiles']['mediafile'] as $mf) {
-      $this->addToCleanUp($mf['mediafile_id']);
+    foreach ($asset['mediafiles'] as $mediafile) {
+      if (isset($mediafile[0])) {
+        foreach ($mediafile as $mediafile_child) {
+          $this->addToCleanUp($mediafile_child['mediafile_id']);
+        }
+      }
+      else {
+        $this->addToCleanUp($mediafile['mediafile_id']);
+      }
     }
 
     // TODO: Windows transcoding

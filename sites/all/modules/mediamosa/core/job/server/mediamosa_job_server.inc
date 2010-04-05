@@ -73,8 +73,9 @@ class mediamosa_job_server {
 
     // Trigger from sandbox, run once, and done.
     if (mediamosa::in_simpletest_sandbox()) {
-      self::log('Job Server; run_parse_queue() in sandbox, hit and return.');
+      self::log('Job Server; run_parse_queue() in sandbox, hitting.');
       self::parse_queue();
+      self::log('Job Server; run_parse_queue() in sandbox, returning.');
       return;
     }
 
@@ -314,13 +315,15 @@ class mediamosa_job_server {
 
     // Check if source mediafile exists.
     // but first do a clear cache.
-    clearstatcache();
+    mediamosa_io::clearstatcache();
+
     $filename = mediamosa_configuration_storage::mediafile_id_filename_get($mediafile_id_src);
+
     if (!file_exists($filename)) {
       $link_asset = self::get_asset_link($job_id);
-      self::log("s: $job_id File '@file' not found,<br /><br/>@link", array('@file' => $filename, '@link' => $link_asset));
+      self::log("Job ID: $job_id File '@file' not found,<br /><br/>@link", array('@file' => $filename, '@link' => $link_asset), WATCHDOG_CRITICAL);
       self::set_job_status($job_id, mediamosa_job_server_db::JOB_STATUS_FAILED, '1.000', 'File not found (@file)', array('@file' => $filename));
-      self::log("s: $job_id, memory_get_peak_usage = " . memory_get_peak_usage() . " memory_usage: " . memory_get_usage());
+      self::log("Job ID: $job_id, memory_get_peak_usage = " . memory_get_peak_usage() . " memory_usage: " . memory_get_usage());
       return;
     }
 
@@ -342,7 +345,7 @@ class mediamosa_job_server {
         break;
 
       default:
-        self::log('Unknown job type: @job_type in job id: @job_id.', array('@job_type' => $job_type, '@job_id' => $job_id));
+        self::log('Unknown job type: @job_type in job id: @job_id.', array('@job_type' => $job_type, '@job_id' => $job_id), WATCHDOG_ALERT);
         self::set_job_status($job_id, mediamosa_job_server_db::JOB_STATUS_FAILED, '1.000', 'Unknown job type: @job_type.', array('@job_type' => $job_type));
         return FALSE;
     }
@@ -391,7 +394,7 @@ class mediamosa_job_server {
         ->execute();
     }
     else {
-      exec($execution_string);
+      mediamosa_io::exec($execution_string);
       self::log('Started @job_type job, Job ID: @job_id', array('@job_type' => $job_type, '@job_id' => $job_id));
     }
   }
@@ -421,9 +424,9 @@ class mediamosa_job_server {
     // Read the contents of the status file in an array.
     $a_job_status = self::get_status_contents($mediafile_id_src);
 
-    // No status file found.
+    // No status file found, we just have to wait.
     if (empty($a_job_status)) {
-      self::log('No status file found for job @job_id', array('@job_id' => $job_id));
+      self::log('No status file found with name @name for job @job_id, maybe next run.', array('@name' => mediamosa_configuration_storage::status_file_location_get($mediafile_id_src), '@job_id' => $job_id));
       return;
     }
 
@@ -1062,7 +1065,9 @@ class mediamosa_job_server {
    */
   static public function get_status_contents($filename, $orig = FALSE) {
     $statusfile = mediamosa_configuration_storage::status_file_location_get($filename);
-    if (!file_exists($statusfile)) {
+
+    if (!mediamosa_io::file_exists($statusfile)) {
+      self::log('Unable to load status contents; file @file does not exists.', array('@file' => $statusfile), WATCHDOG_CRITICAL);
       return array();
     }
 

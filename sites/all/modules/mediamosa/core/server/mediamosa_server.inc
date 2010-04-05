@@ -89,15 +89,15 @@ class mediamosa_server {
   }
 
   /**
-   * Returns status information from all enabled servers.
+   * Returns status information from all enabled job (transcode) servers.
    */
-  static public function get_status_enabled_servers() {
-    $a_enabled_servers = mediamosa_server::get_enabled_transcode();
+  static public function get_status_enabled_job_servers() {
+    $enabled_servers = mediamosa_server::get_enabled_transcode();
 
     $servers = array();
-    foreach ($a_enabled_servers as $a_enabled_server) {
+    foreach ($enabled_servers as $enabled_server) {
 
-      $response = mediamosa_http::do_internal_call($a_enabled_server[mediamosa_server_db::URI], 'server/status');
+      $response = mediamosa_http::do_internal_call($enabled_server[mediamosa_server_db::URI], 'server/status');
       if ($response->code != '200') {
         self::log('Call to server/status did not return a 200 result (header: @header)', array('@header' => var_export($response, TRUE)));
       }
@@ -105,7 +105,7 @@ class mediamosa_server {
       $xml = new SimpleXMLElement($response->data);
 
       $servers[] = array(
-        'enabled_server' => $a_enabled_server,
+        'enabled_server' => $enabled_server,
         'status' => (isset($xml->items->item) ? mediamosa_lib::simplexml2array($xml->items->item) : array())
       );
     }
@@ -142,6 +142,16 @@ class mediamosa_server {
     return mediamosa_db::db_select(mediamosa_server_db::TABLE_NAME, 'ms')
       ->fields('ms')
       ->condition(mediamosa_server_db::SERVER_TYPE, mediamosa_server_db::SERVER_TYPE_STILL, '=')
+      ->condition(mediamosa_server_db::SERVER_STATUS, mediamosa_server_db::SERVER_STATUS_ON, '=')
+      ->execute();
+  }
+
+  /**
+   * Get all enabled servers.
+   */
+  static public function get_enabled() {
+    return mediamosa_db::db_select(mediamosa_server_db::TABLE_NAME, 'ms')
+      ->fields('ms')
       ->condition(mediamosa_server_db::SERVER_STATUS, mediamosa_server_db::SERVER_STATUS_ON, '=')
       ->execute();
   }

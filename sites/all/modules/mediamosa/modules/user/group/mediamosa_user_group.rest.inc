@@ -119,7 +119,7 @@ class mediamosa_rest_call_group_list extends mediamosa_rest_call {
     }
 
     // Set total count.
-    $o_mediamosa->$item_total_count = $result->found_rows();
+    $o_mediamosa->item_total_count = $result->found_rows;
   }
 }
 
@@ -242,7 +242,7 @@ class mediamosa_rest_call_group_delete extends mediamosa_rest_call {
 
 /**
  * URI: /group/$group_id
- *
+ *      /group/$group_id/set_quotum
  * Method: POST
  *
  * 1.x: user_management_set_group_quotum

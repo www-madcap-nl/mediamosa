@@ -73,26 +73,26 @@ class mediamosa_rest_call_error_list extends mediamosa_rest_call {
     $offset = $this->get_param_value(self::OFFSET);
 
     if ($code) {
-      $a_code = mediamosa_error::error_code_find($code, array(), TRUE);
-      if (!$a_code) {
+      $code = mediamosa_error::error_code_find($code, array(), TRUE);
+      if (!$code) {
         return;
       }
 
-      $a_codes[] = (object)$a_code;
+      $codes = array($code);
     }
     else {
-      $a_codes = mediamosa_error::error_code_list($order_by, $order_direction);
+      $codes = mediamosa_error::error_code_list($order_by, $order_direction);
     }
 
-    foreach ($a_codes as $o_code) {
-      if ($offset-- > 0) {
+    foreach ($codes as $code) {
+      if ($offset--) {
         continue;
       }
 
       $o_mediamosa->add_item(array(
-        mediamosa_error_db::NAME => $o_code->{mediamosa_error_db::NAME},
-        mediamosa_error_db::CODE => $o_code->{mediamosa_error_db::CODE},
-        mediamosa_error_db::MESSAGE => $o_code->{mediamosa_error_db::MESSAGE},
+        mediamosa_error_db::NAME => $code[mediamosa_error_db::NAME],
+        mediamosa_error_db::CODE => $code[mediamosa_error_db::CODE],
+        mediamosa_error_db::MESSAGE => $code[mediamosa_error_db::MESSAGE],
       ));
 
       if (!--$limit) {
