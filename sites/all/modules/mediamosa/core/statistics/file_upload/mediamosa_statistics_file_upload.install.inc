@@ -70,13 +70,11 @@ function mediamosa_statistics_file_upload_schema() {
       mediamosa_statistics_file_upload_db::OWNER_ID => array(
         'type' => 'varchar',
         'length' => mediamosa_db::HASH_ID_LENGTH,
-        'not null' => TRUE,
         'description' => t('The owner ID.'),
       ),
       mediamosa_statistics_file_upload_db::GROUP_ID => array(
         'type' => 'varchar',
         'length' => mediamosa_db::HASH_ID_LENGTH,
-        'not null' => TRUE,
         'description' => t('The group ID.'),
       ),
       mediamosa_statistics_file_upload_db::FILE_SIZE => array(
