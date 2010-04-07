@@ -143,7 +143,7 @@ The analyse process also determines if the file needs to be hinted. If the ega s
 
   $rest_calls['collection/count'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'Count collections',
-    mediamosa_rest_call::DESCRIPTION => 'Count the number of collections that match a group or an owner. If no parameter is given, the total number of collections is returned. The item_total_count is part of the header response output.',
+    mediamosa_rest_call::DESCRIPTION => 'Count the number of collections that match a group or an owner. If no parameter is given, the total number of collections is returned. The item_count_total is part of the header response output.',
     mediamosa_rest_call::EXAMPLE_REQUEST => '/collection/count?owner_id=foo [GET]',
     mediamosa_rest_call::RESPONSE_FIELDS => array(
       'item_count_total' => 'The total number of collections found.',
@@ -172,10 +172,26 @@ The analyse process also determines if the file needs to be hinted. If the ega s
     mediamosa_rest_call::TITLE => 'Search in the collections of specified asset ID.',
     mediamosa_rest_call::DESCRIPTION => '',
     mediamosa_rest_call::EXAMPLE_REQUEST => '/asset/VlN2ZDKv9rpsfmBAWpvfiw1zQ6z/collection',
-    mediamosa_rest_call::RESPONSE_FIELDS => array(
-      '' => ''
-    ),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <coll_id>EjDv4oI50sjPu01WXdXH5Eva</coll_id>
+    <title>CDE Collectieup</title>
+    <description>Collectie CDE</description>
+    <app_id>5</app_id>
+    <owner_id>SURFgroepen.smibuildings</owner_id>
+    <group_id>default</group_id>
+    <isprivate>FALSE</isprivate>
+    <private>FALSE</private>
+    <public>TRUE</public>
+    <category>FALSE</category>
+    <created>2009-05-27 10:37:43</created>
+    <changed>2009-09-18 12:04:31</changed>
+    <is_unappropriate>FALSE</is_unappropriate>
+    <public_assign>FALSE</public_assign>
+    <numofvideos>1</numofvideos>
+  </item>
+</items>',
   );
 
   $rest_calls['collection/$coll_id/count_favorites'][mediamosa_rest_call::METHOD_GET] = // deprecated.

@@ -48,7 +48,11 @@ class mediamosa_asset {
       $a_asset['parent_id'],
       $a_asset['asset_property_value'],
       $a_asset['asset_property_name'],
-      $a_asset['asset_property_group_name']
+      $a_asset['asset_property_group_name'],
+      $a_asset['asset_property_type'],
+      $a_asset['asset_property_val_char'],
+      $a_asset['asset_property_val_int'],
+      $a_asset['asset_property_val_datetime']
     );
 
     return $a_asset;
@@ -501,24 +505,37 @@ class mediamosa_asset {
     $result = mediamosa_db::db_query($s_query);
 
     $a_items = array();
-    foreach ($result as $a_row) {
-      if (!empty($a_row['still_id']) && $a_row['still_default'] != 'FALSE') {
-        $a_items['stills'][$a_row['asset_id']] = $a_row['still_id'];
+    foreach ($result as $row) {
+      if (!empty($row['still_id']) && $row['still_default'] != 'FALSE') {
+        $a_items['stills'][$row['asset_id']] = $row['still_id'];
       }
 
       unset(
-        $a_row['created'],
-        $a_row['changed'],
-        $a_row['still_id']
+        $row['created'],
+        $row['changed'],
+        $row['still_id']
       );
 
-      $a_items['assets'][] = $a_row;
+      // 2.x changes to database need to be renamed to 1.x name giving (for now).
+      $renames = array(
+        mediamosa_asset_db::IS_UNAPPROPRIATE => 'is_unappropiate',
+      );
+
+      // Renames.
+      foreach ($renames as $from => $to) {
+        if (isset($row[$from])) {
+          $row[$to] = $row[$from];
+          unset($row[$from]);
+        }
+      }
+
+      $a_items['assets'][] = $row;
     }
 
     $result = mediamosa_db::db_query(sprintf("SELECT * FROM {mediamosa_asset_delete} WHERE asset_id IN ('%s')", $s_ids));
-    foreach ($result as $a_row) {
-      $a_row['status'] = 'deleted';
-      $a_items['assets'][] = $a_row;
+    foreach ($result as $row) {
+      $row['status'] = 'deleted';
+      $a_items['assets'][] = $row;
     }
 
     $result = mediamosa_app::get_by_appids($a_app_ids,
@@ -548,8 +565,8 @@ class mediamosa_asset {
       $s_query = mediamosa_db_query::query_select($a_query);
       $result = mediamosa_db::db_query($s_query);
 
-      foreach ($result as $a_row) {
-        $a_items['user_favorites'][] = $a_row[mediamosa_user_favorite_db::FAV_ID];
+      foreach ($result as $row) {
+        $a_items['user_favorites'][] = $row[mediamosa_user_favorite_db::FAV_ID];
       }
     }
 
@@ -575,8 +592,8 @@ class mediamosa_asset {
 
     $s_query = mediamosa_db_query::query_select($a_query);
     $result = mediamosa_db::db_query($s_query);
-    foreach ($result as $a_row) {
-      $a_items['mediafile_preview'][$a_row['asset_id']] = $a_row;
+    foreach ($result as $row) {
+      $a_items['mediafile_preview'][$row['asset_id']] = $row;
     }
 
     // If granted is TRUE, we check access, but allow assets in our result even when we dont have access.
@@ -592,8 +609,8 @@ class mediamosa_asset {
     }
     else {
       // Expect we have access on all...
-      foreach ($a_items['assets'] as $a_row) {
-        $a_items['granted'][$a_row['asset_id']] = $a_row['asset_id'];
+      foreach ($a_items['assets'] as $row) {
+        $a_items['granted'][$row['asset_id']] = $row['asset_id'];
       }
     }
 
@@ -644,6 +661,7 @@ class mediamosa_asset {
         $a_collections[$a_collection[mediamosa_asset_collection_db::ASSET_ID]][$a_collection[mediamosa_asset_collection_db::COLL_ID]] = $a_collection;
       }
     }
+
     foreach ($a_items['assets'] as $a_asset) {
       // Now only stuff that may be set once per asset.
       if (!isset($a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]])) {
@@ -728,6 +746,8 @@ class mediamosa_asset {
           $a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]]['collection_' . $coll_id] = $a_coll[mediamosa_collection_db::TITLE];
         }
       }
+
+
     }
 
     $a_items = array();

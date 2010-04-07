@@ -68,13 +68,10 @@ class mediamosa_connector {
     $cookies = variable_get('mediamosa_connector_cookies', array());
 
     // Get cookie.
-    $this->cookie = isset($cookies[$url]) ? $cookies[$url] : NULL;
+    $this->cookie = !empty($cookies[$this->url][$this->username][$this->password]) ? $cookies[$this->url][$this->username][$this->password] : NULL;
 
-    $username = isset($username) ? $username : variable_get('mediamosa_connector_username', NULL);
-    $password = isset($password) ? $password : variable_get('mediamosa_connector_password', NULL);
-
-    $this->username = $username;
-    $this->password = $password;
+    $this->username = isset($username) ? $username : variable_get('mediamosa_connector_username', NULL);
+    $this->password = isset($password) ? $password : variable_get('mediamosa_connector_password', NULL);
   }
 
   // ------------------------------------------------------------------ Public Functions.
@@ -118,7 +115,7 @@ class mediamosa_connector {
     $response = self::do_request($uri, $options);
 
     // If we return anything else but 1601, then return result. 1601 = failure login, cookie expired etc.
-    if ($response && $response->xml->header->request_result_id != 1601) {
+    if ($response && !in_array($response->xml->header->request_result_id, array(1601, 1800))) {
       return $response;
     }
 
@@ -147,10 +144,9 @@ class mediamosa_connector {
 
     // Remove cookie.
     $this->cookie = NULL;
-    if (isset($this->url)) {
-      $cookies = variable_get('mediamosa_connector_cookies', array());
+    $cookies = variable_get('mediamosa_connector_cookies', array());
+    if (isset($cookies[$this->url])) {
       unset($cookies[$this->url]);
-
       variable_set('mediamosa_connector_cookies', $cookies);
     }
 

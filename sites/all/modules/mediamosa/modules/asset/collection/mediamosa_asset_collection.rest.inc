@@ -380,7 +380,7 @@ public function get_var_setup() {
     $asset_id = $this->get_param_value(self::ASSET_ID);
 
     // Get the count.
-    $o_mediamosa->item_count =  mediamosa_asset_collection::count_collections($asset_id);
+    $o_mediamosa->item_count_total =  mediamosa_asset_collection::count_collections($asset_id);
 
     // All done.
     $o_mediamosa->set_result_okay();

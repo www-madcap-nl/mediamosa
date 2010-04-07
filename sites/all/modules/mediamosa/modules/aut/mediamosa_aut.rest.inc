@@ -61,7 +61,7 @@ class mediamosa_rest_call_aut_group_list extends mediamosa_rest_call {
     $result = mediamosa_aut_group::get_list($a_app_ids, $offset, $limit);
 
     // Total rows?
-    $o_mediamosa->item_total_count = $result->found_rows;
+    $o_mediamosa->item_count_total = $result->found_rows;
 
     // Set result.
     foreach ($result as $a_row) {

@@ -132,7 +132,7 @@ class mediamosa_rest_call_user_list extends mediamosa_rest_call {
     }
 
     // Set total count.
-    $o_mediamosa->item_total_count = $result->found_rows;
+    $o_mediamosa->item_count_total = $result->found_rows;
   }
 }
 

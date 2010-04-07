@@ -148,13 +148,6 @@ function mediamosa_asset_schema() {
         'default' => NULL,
         'description' => t('The end time in an range of time to restrict.'),
       ),
-      mediamosa_asset_db::IS_LOCKED => array(
-        'description' => t('The asset can be locked or unlocked.'),
-        'type' => "enum('" . implode("','", array(mediamosa_asset_db::IS_LOCKED_FALSE, mediamosa_asset_db::IS_LOCKED_TRUE)) . "')",
-        'not null' => TRUE,
-        'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_db::IS_LOCKED_FALSE, mediamosa_asset_db::IS_LOCKED_TRUE)) . "')",
-        'default' => mediamosa_asset_db::IS_LOCKED_FALSE,
-      ),
       mediamosa_asset_db::REFERENCE_ID => array(
         'type' => 'varchar',
         'length' => mediamosa_asset_db::REFERENCE_ID_LENGTH,

@@ -270,14 +270,6 @@ function mediamosa_asset_mediamosa_register_rest_call() {
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
 
-  // Delete asset.
-  $rest_calls['asset/$asset_id/delete'][mediamosa_rest_call::METHOD_GET] = array(
-    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_delete',
-    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset',
-    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
-  );
-
   // Get the asset.
   $rest_calls['asset/$asset_id'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_get',
@@ -547,7 +539,6 @@ function mediamosa_asset_mediamosa_register_rest_call_doc() {
     <videotimestampmodified>2004-09-10 22:22:08</videotimestampmodified>
     <play_restriction_start></play_restriction_start>
     <play_restriction_end></play_restriction_end>
-    <locked>FALSE</locked>
     <reference_id></reference_id>
     <isprivate>FALSE</isprivate>
     <is_protected>FALSE</is_protected>
@@ -593,7 +584,6 @@ function mediamosa_asset_mediamosa_register_rest_call_doc() {
     <videotimestampmodified></videotimestampmodified>
     <play_restriction_start></play_restriction_start>
     <play_restriction_end></play_restriction_end>
-    <locked>FALSE</locked>
     <reference_id></reference_id>
     <isprivate>FALSE</isprivate>
     <is_protected>FALSE</is_protected>
@@ -662,7 +652,6 @@ function mediamosa_asset_mediamosa_register_rest_call_doc() {
     <videotimestampmodified>2009-09-23 14:40:54</videotimestampmodified>
     <play_restriction_start></play_restriction_start>
     <play_restriction_end></play_restriction_end>
-    <locked>FALSE</locked>
     <reference_id></reference_id>
     <isprivate>FALSE</isprivate>
     <mediafile_duration>00:00:45.7</mediafile_duration>
@@ -1037,37 +1026,27 @@ function mediamosa_asset_mediamosa_register_rest_call_doc() {
   // Get favorites count of asset.
   $rest_calls['asset/$asset_id/favorites/count'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'Count the number of favorites of an asset.',
-    mediamosa_rest_call::DESCRIPTION => '',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
-    mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::DESCRIPTION => 'Returns the number of favorites that an asset as been made favorite.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/asset/8rJd5sznz424iB65wjjDuvqx/favorites/count',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
   );
 
   // Get favorites count of asset.
-  $rest_calls['asset/$asset_id/count_favorites'][mediamosa_rest_call::METHOD_GET] = array(
-    mediamosa_rest_call::TITLE => 'Count the number of favorites of an asset.',
-    mediamosa_rest_call::DESCRIPTION => '',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
-    mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
-  );
-
-  // Delete asset.
-  $rest_calls['asset/$asset_id/delete'][mediamosa_rest_call::METHOD_GET] = array(
-    mediamosa_rest_call::TITLE => 'Delete a asset.',
-    mediamosa_rest_call::DESCRIPTION => '',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
-    mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
-  );
+  $rest_calls['asset/$asset_id/count_favorites'][mediamosa_rest_call::METHOD_GET] = $rest_calls['asset/$asset_id/favorites/count'][mediamosa_rest_call::METHOD_GET];
 
   // Create the asset.
   $rest_calls['asset/create'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Create a asset.',
-    mediamosa_rest_call::DESCRIPTION => '',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
-    mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::DESCRIPTION => 'The asset create REST call will create a empty asset without metadata and/or mediafiles.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/asset/create
+user_id = "username"',
+    mediamosa_rest_call::RESPONSE_FIELDS => array('asset_id' => 'The ID of created asset.'),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <asset_id>q1WmtebDr9F8eberUIjKrhTa</asset_id>
+  </item>
+</items>',
   );
 
   // Update the asset.
@@ -1075,17 +1054,17 @@ function mediamosa_asset_mediamosa_register_rest_call_doc() {
     mediamosa_rest_call::TITLE => 'Update the fields of a asset.',
     mediamosa_rest_call::DESCRIPTION => '',
     mediamosa_rest_call::EXAMPLE_REQUEST => array('/asset/VlN2ZDKv9rpsfmBAWpvfiw1zQ6z', 'play_restriction_start=”2007-12-05 08:30:00”', 'play_restriction_end=”2007-12-31 10:00:00”'),
-    mediamosa_rest_call::RESPONSE_FIELDS => array('na/a' =>'No response, use header.'),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => 'Will return empty <item> response, check the header for success value.',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
   );
 
   // Delete the asset.
   $rest_calls['asset/$asset_id/delete'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Delete a asset.',
-    mediamosa_rest_call::DESCRIPTION => '',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
-    mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::DESCRIPTION => 'By calling this REST call you can remove a asset from the database. Assets can only be removed when no longer attached media files to this asset or if the delete=cascade parameter is exsists. If you remove an asset, then stills, metadata and collections are removed too.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '<p>/asset/q1WmtebDr9F8eberUIjKrhTa/delete</p><p>delete = "cascade"</p>',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
   );
 
   // Delete all given asset.
@@ -1134,29 +1113,21 @@ function mediamosa_asset_mediamosa_register_rest_call_doc() {
   // Count number of collections of one asset.
   $rest_calls['asset/$asset_id/collection/count'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'Count the number of collections where given asset is related to.',
-    mediamosa_rest_call::DESCRIPTION => '',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
-    mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::DESCRIPTION => 'Returns the number of collections where the given asset is related to. This number is stored in the header->item_count_total. The <items> array is empty in this call.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/asset/1kr9rRFs6ljcBNNtpM8T5AI3/collection/count',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE, // indicate no response fields.
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<header>
+  <item_count>0</item_count>
+  <item_count_total>1</item_count_total>
+  <item_offset>0</item_offset>
+  ...
+</header>',
   );
 
   // Count number of collections of one asset.
-  $rest_calls['asset/$asset_id/collections/count'][mediamosa_rest_call::METHOD_GET] = array(
-    mediamosa_rest_call::TITLE => 'Count the number of collections where given asset is related to.',
-    mediamosa_rest_call::DESCRIPTION => '',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
-    mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
-  );
-
+  $rest_calls['asset/$asset_id/collections/count'][mediamosa_rest_call::METHOD_GET] = $rest_calls['asset/$asset_id/collection/count'][mediamosa_rest_call::METHOD_GET];
   // Count number of collections of one asset.
-  $rest_calls['asset/$asset_id/count_collections'][mediamosa_rest_call::METHOD_GET] = array(
-    mediamosa_rest_call::TITLE => 'Count the number of collections where given asset is related to.',
-    mediamosa_rest_call::DESCRIPTION => '',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
-    mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
-  );
+  $rest_calls['asset/$asset_id/count_collections'][mediamosa_rest_call::METHOD_GET] = $rest_calls['asset/$asset_id/collection/count'][mediamosa_rest_call::METHOD_GET];
 
   // Count per prop_id per content.
   $rest_calls['tagcount'][mediamosa_rest_call::METHOD_GET] = array(

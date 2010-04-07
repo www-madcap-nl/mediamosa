@@ -69,36 +69,36 @@ class mediamosa_asset_mediafile {
    * @param mixed $mediafile_id
    */
   static public function delete($mixed_mediafile_id) {
-    $a_mediafile_ids = is_array($mixed_mediafile_id) ? $mixed_mediafile_id : (empty($mixed_mediafile_id) ? array() : array($mixed_mediafile_id));
+    $mediafile_ids = is_array($mixed_mediafile_id) ? $mixed_mediafile_id : (empty($mixed_mediafile_id) ? array() : array($mixed_mediafile_id));
 
     // must have something.
-    assert(count($a_mediafile_ids));
-    if (!count($a_mediafile_ids)) {
+    assert(count($mediafile_ids));
+    if (!count($mediafile_ids)) {
       return;
     }
 
     // Delete mediafile metadata first.
     mediamosa_db::db_delete(mediamosa_asset_mediafile_metadata_db::TABLE_NAME)
-      ->condition(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID, $a_mediafile_ids, 'IN')
+      ->condition(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID, $mediafile_ids, 'IN')
       ->execute();
 
     // Delete from SAN/NAS.
     $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
     $query->fields('mf', array(mediamosa_asset_mediafile_db::APP_ID, mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT, mediamosa_asset_mediafile_db::ID));
-    $query->condition(mediamosa_asset_mediafile_db::ID, $a_mediafile_ids, 'IN');
+    $query->condition(mediamosa_asset_mediafile_db::ID, $mediafile_ids, 'IN');
 
     // Now delete the file of each found mediafile.
-    foreach ($query->execute() as $a_mediafile) {
-      mediamosa_io::unlink(mediamosa_configuration_storage::mediafile_filename_get($a_mediafile));
+    foreach ($query->execute() as $mediafile) {
+      mediamosa_io::unlink(mediamosa_configuration_storage::mediafile_filename_get($mediafile));
     }
 
     // Delete mediafile from DB.
     $query = mediamosa_db::db_delete(mediamosa_asset_mediafile_db::TABLE_NAME);
-    $query->condition(mediamosa_asset_mediafile_db::ID, $a_mediafile_ids, 'IN');
+    $query->condition(mediamosa_asset_mediafile_db::ID, $mediafile_ids, 'IN');
     $query->execute();
 
     // Update the asset information.
-    foreach ($a_mediafile_ids as $mediafile_id) {
+    foreach ($mediafile_ids as $mediafile_id) {
       mediamosa_asset::update_asset_info($mediafile_id);
     }
   }
@@ -128,23 +128,23 @@ class mediamosa_asset_mediafile {
    *
    * Merged with 1.x _media_management_process_mediafile_output.
    *
-   * @param array $a_mediafile_ids
+   * @param array $mediafile_ids
    * @param array $mixed_app_id
    *  Either array or integer application ID.
    * @param boolean $is_oai
    *  Include extended EGA Play Urls. (WAS hack is_oai on _POST/_GET (!))
    * @param boolean $show_stills
    */
-  static public function enrich_response_mediafile(array $a_mediafile_ids, $mixed_app_id, $is_oai, $show_stills = TRUE) {
+  static public function enrich_response_mediafile(array $mediafile_ids, $mixed_app_id, $is_oai, $show_stills = TRUE) {
 
     // Can be empty or null.
-    if (empty($a_mediafile_ids) || is_null(reset($a_mediafile_ids))) {
+    if (empty($mediafile_ids) || is_null(reset($mediafile_ids))) {
       return;
     }
 
     // Both are allowed and needed.
     $app_id = is_array($mixed_app_id) ? reset($mixed_app_id) : $mixed_app_id;
-    $a_app_ids = is_array($mixed_app_id) ? $mixed_app_id : array($mixed_app_id);
+    $app_ids = is_array($mixed_app_id) ? $mixed_app_id : array($mixed_app_id);
 
     // Prefix for metadata in array.
     $prefix = 'mediafile_metadata_';
@@ -155,9 +155,8 @@ class mediamosa_asset_mediafile {
     $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
     $query->leftJoin(mediamosa_asset_mediafile_metadata_db::TABLE_NAME, 'mfm', 'mfm.mediafile_id = mf.mediafile_id');
     $query->leftJoin(mediamosa_asset_db::TABLE_NAME, 'a', 'mf.asset_id = a.asset_id');
-    $query->condition('mf.' . mediamosa_asset_mediafile_db::ID, $a_mediafile_ids, 'IN');
+    $query->condition('mf.' . mediamosa_asset_mediafile_db::ID, $mediafile_ids, 'IN');
     $query->fields('mf');
-    $query->addField('a', mediamosa_asset_db::PARENT_ID);
 
     // Now select the metadata columns to the query.
     foreach ($a_columns as $column) {
@@ -184,22 +183,22 @@ class mediamosa_asset_mediafile {
     $result = $query->execute();
 
     // Add to item.
-    $a_items = array();
+    $items = array();
     foreach ($result as $a_row) {
-      $a_items[$a_row[mediamosa_asset_mediafile_db::ID]] = $a_row;
+      $items[$a_row[mediamosa_asset_mediafile_db::ID]] = $a_row;
     }
 
     // Now we know which mediafiles where found.
-    $a_mediafile_ids_found = array_keys($a_items);
+    $mediafile_ids_found = array_keys($items);
 
     // Lets include the still, if we need them.
-    if (!empty($a_mediafile_ids_found) && $show_stills) {
+    if (!empty($mediafile_ids_found) && $show_stills) {
       // Get the stills.
       $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
       $query->fields('mf');
       $query->leftJoin(mediamosa_asset_mediafile_metadata_db::TABLE_NAME, 'mfm', 'mfm.mediafile_id = mf.mediafile_id');
       $query->fields('mfm');
-      $query->condition('mf.' . mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE, $a_mediafile_ids_found, 'IN');
+      $query->condition('mf.' . mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE, $mediafile_ids_found, 'IN');
       $query->condition('mf.' . mediamosa_asset_mediafile_db::IS_STILL, mediamosa_asset_mediafile_db::IS_STILL_TRUE);
       $query->orderBy('mfm.' . mediamosa_asset_mediafile_metadata_db::STILL_ORDER, 'ASC');
       $result = $query->execute();
@@ -225,115 +224,109 @@ class mediamosa_asset_mediafile {
 
         // Add still to mediafile.
         assert(!empty($a_row[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE])); // Make sure its here.
-        $a_items[$a_row[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE]]['still']['#'. $i++] = $a_row;
+        $items[$a_row[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE]]['still']['#'. $i++] = $a_row;
       }
     }
 
     // Get the app.
     $a_app = mediamosa_app::get_by_appid($app_id);
 
-    $a_patterns = array(
+    $patterns = array(
       '/{asset_id}/i',
       '/{mediafile_id}/i',
       '/{mediafile_filename}/i',
     );
 
     // Result array.
-    $a_items_result = array();
+    $items_result = array();
 
     $i = 1;
 
     // Now add to result array.
-    // Must be in the same order as $a_mediafile_ids.
-    foreach ($a_mediafile_ids as $mediafile_id) {
-      if (!isset($a_items[$mediafile_id])) { // In case the mediafile was not found.
+    // Must be in the same order as $mediafile_ids.
+    foreach ($mediafile_ids as $mediafile_id) {
+      if (!isset($items[$mediafile_id])) { // In case the mediafile was not found.
         continue;
       }
 
       // Set empty array for metadata.
-      $a_items[$mediafile_id]['metadata'] = array();
-
-      // If its a child, then unparent it.
-      if (isset($a_items[$mediafile_id][mediamosa_asset_db::PARENT_ID])) {
-        // Copy parent to main asset_id.
-        $a_items[$mediafile_id][mediamosa_asset_db::ID] = $a_items[$mediafile_id][mediamosa_asset_db::PARENT_ID];
-
-        // Unset the parent value.
-        unset($a_items[$mediafile_id][mediamosa_asset_db::PARENT_ID]);
-      }
+      $items[$mediafile_id]['metadata'] = array();
 
       // Test for downloadable.
-      $is_downloadable = mediamosa_lib::boolstr2bool($a_items[$mediafile_id][mediamosa_asset_mediafile_db::IS_DOWNLOADABLE]);
+      $is_downloadable = mediamosa_lib::boolstr2bool($items[$mediafile_id][mediamosa_asset_mediafile_db::IS_DOWNLOADABLE]);
 
       // Download URI replacements.
-      $a_replacements = array(
-        $a_items[$mediafile_id][mediamosa_asset_db::ID],
-        $a_items[$mediafile_id][mediamosa_asset_mediafile_db::ID],
-        $a_items[$mediafile_id][mediamosa_asset_mediafile_db::FILENAME],
+      $replacements = array(
+        $items[$mediafile_id][mediamosa_asset_db::ID],
+        $items[$mediafile_id][mediamosa_asset_mediafile_db::ID],
+        $items[$mediafile_id][mediamosa_asset_mediafile_db::FILENAME],
       );
 
       // Default empty.
-      $a_items[$mediafile_id]['ega_download_url'] = '';
+      $items[$mediafile_id]['ega_download_url'] = '';
 
       // If downloadable and application has its download URL set, then include it in our output.
       if ($is_downloadable && !empty($a_app[mediamosa_app_db::DOWNLOAD_URL])) {
 
         // Set EGA download url.
-        $a_items[$mediafile_id]['ega_download_url'] = preg_replace($a_patterns, $a_replacements, $a_app[mediamosa_app_db::DOWNLOAD_URL]);
+        $items[$mediafile_id]['ega_download_url'] = preg_replace($patterns, $replacements, $a_app[mediamosa_app_db::DOWNLOAD_URL]);
       }
 
       // Default empty.
-      $a_items[$mediafile_id]['ega_stream_url'] = '';
+      $items[$mediafile_id]['ega_stream_url'] = '';
 
       // Stream URL, only if streamable.
-      if (mediamosa_server::is_streamable($a_items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata_db::CONTAINER_TYPE])) {
-        $a_items[$mediafile_id]['ega_play_url'] = preg_replace($a_patterns, $a_replacements, $a_app[mediamosa_app_db::PLAY_PROXY_URL]);
+      if (mediamosa_server::is_streamable($items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata_db::CONTAINER_TYPE])) {
+        $items[$mediafile_id]['ega_play_url'] = preg_replace($patterns, $replacements, $a_app[mediamosa_app_db::PLAY_PROXY_URL]);
 
         // Output extra?
         if ($is_oai) {
           // Stream URL(s) for OAI.
-          $mediafile_app_id = $a_items[$mediafile_id][mediamosa_asset_mediafile_db::APP_ID];
+          $mediafile_app_id = $items[$mediafile_id][mediamosa_asset_mediafile_db::APP_ID];
 
           // Check if mediafile APP ID is in the requested app_ids.
-          if (in_array($mediafile_app_id, $a_app_ids)) {
-            $a_items[$mediafile_id]['ega_stream_url'][] = !empty($a_app[mediamosa_app_db::STREAM_URL]) ? preg_replace($a_patterns, $a_replacements, $a_app[mediamosa_app_db::STREAM_URL]) : '';
+          if (in_array($mediafile_app_id, $app_ids)) {
+            $items[$mediafile_id]['ega_stream_url'][] = !empty($a_app[mediamosa_app_db::STREAM_URL]) ? preg_replace($patterns, $replacements, $a_app[mediamosa_app_db::STREAM_URL]) : '';
           }
 
           // Get masters of this mediafile.
-          $a_app_id_master = mediamosa_aut_app_master_slave::master_get($mediafile_app_id, mediamosa_aut::AUT_TYPE_MEDIAFILE, $a_items[$mediafile_id][mediamosa_asset_mediafile_db::ID]);
+          $a_app_id_master = mediamosa_aut_app_master_slave::master_get($mediafile_app_id, mediamosa_aut::AUT_TYPE_MEDIAFILE, $items[$mediafile_id][mediamosa_asset_mediafile_db::ID]);
 
           foreach ($a_app_id_master as $app_id_master) {
-            if (in_array($app_id_master, $a_app_ids)) {
+            if (in_array($app_id_master, $app_ids)) {
               // Get the master app.
-              $a_app_tmp = mediamosa_app::get_by_appid($app_id_master);
+              $app_tmp = mediamosa_app::get_by_appid($app_id_master);
 
               // Set the ega_stream_url of the master.
-              $a_items[$mediafile_id]['ega_stream_url'][] = preg_replace($a_patterns, $a_replacements, $a_app_tmp[mediamosa_app_db::STREAM_URL]);
+              $items[$mediafile_id]['ega_stream_url'][] = preg_replace($patterns, $replacements, $app_tmp[mediamosa_app_db::STREAM_URL]);
             }
           }
         }
         else {
-          $a_items[$mediafile_id]['ega_stream_url'][] = !empty($a_app[mediamosa_app_db::STREAM_URL]) ? preg_replace($a_patterns, $a_replacements, $a_app[mediamosa_app_db::STREAM_URL]) : '';
+          $items[$mediafile_id]['ega_stream_url'][] = !empty($a_app[mediamosa_app_db::STREAM_URL]) ? preg_replace($patterns, $replacements, $a_app[mediamosa_app_db::STREAM_URL]) : '';
         }
       }
 
       // Remove the prefix from the metadata and move into the metadata array of the asset.
-      foreach ($a_items[$mediafile_id] as $key => $value) {
+      foreach ($items[$mediafile_id] as $key => $value) {
         if (mediamosa_unicode::strpos($key, $prefix) === 0) { // is het een metadata tag?
           $new_key = mediamosa_unicode::substr($key, mediamosa_unicode::strlen($prefix));
-          $a_items[$mediafile_id]['metadata'][$new_key] = $a_items[$mediafile_id][$key];
-          unset($a_items[$mediafile_id][$key]);
+          $items[$mediafile_id]['metadata'][$new_key] = $items[$mediafile_id][$key];
+          unset($items[$mediafile_id][$key]);
         }
       }
 
       // Unset these;
-      unset($a_items[$mediafile_id][mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT]);
+      unset(
+        $items[$mediafile_id][mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT],
+        $items[$mediafile_id][mediamosa_asset_mediafile_db::ASSET_ID_ROOT]
+      );
 
       // Add to result.
-      $a_items_result['mediafile']['#' . serialize(array('id' => $i++))] = $a_items[$mediafile_id];
+      $items_result['mediafile']['#' . serialize(array('id' => $i++))] = $items[$mediafile_id];
     }
 
-    return $a_items_result;
+    return $items_result;
   }
 
   /**
@@ -346,7 +339,7 @@ class mediamosa_asset_mediafile {
    * @param string $tag
    * @param boolean $is_still
    */
-  static public function mediafiles_search($asset_id, $tag = NULL, $is_still = FALSE, array $a_app_ids = array()) {
+  static public function mediafiles_search($asset_id, $tag = NULL, $is_still = FALSE, array $app_ids = array()) {
 
     assert($asset_id !== FALSE);
 
@@ -368,16 +361,15 @@ class mediamosa_asset_mediafile {
     // No left join here, only include assets that have mediafiles
     $a_query[mediamosa_db_query::A_JOIN]["mediafile"][] = "JOIN {mediamosa_asset_mediafile} AS mf ON a.asset_id = mf.asset_id_root";
 
-    if (!empty($a_app_ids)) {
+    if (!empty($app_ids)) {
       // Filter mediafiles according to the master-slave aut.
-      $app_ids = implode(',', $a_app_ids);
       $a_query[mediamosa_db_query::A_JOIN]["mediafile"][] = sprintf("
         JOIN {mediamosa_aut_app_master_slave} AS ms ON ms.aut_object_type = 'MEDIAFILE'
           AND ms.aut_object_id = mf.mediafile_id
-          AND ms.app_id_master IN (%s)", $app_ids);
+          AND ms.app_id_master IN (%s)", implode(',', $app_ids));
     }
 
-    $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset'][] = sprintf("(a.asset_id = '%s' OR a.parent_id = '%s')", mediamosa_db::escape_string($asset_id), mediamosa_db::escape_string($asset_id));
+    $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset'][] = sprintf("a.asset_id = '%s'", mediamosa_db::escape_string($asset_id));
     $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset'][] = sprintf("mf.is_still = '%s'", $is_still ? mediamosa_asset_mediafile_db::IS_STILL_TRUE :  mediamosa_asset_mediafile_db::IS_STILL_FALSE);
 
     if ($tag) {
@@ -424,14 +416,14 @@ class mediamosa_asset_mediafile {
     // Get the app.
     $a_mediamosa_app = mediamosa_app::get_by_appid($app_id);
 
-    $a_options = array();
+    $options = array();
 
     if ($a_mediamosa_app[mediamosa_app_db::ALWAYS_HINT_MP4] == mediamosa_app_db::ALWAYS_HINT_MP4_TRUE) {
-      $a_options[] =  mediamosa_settings::ANALYSE_FILE_ALWAYS_HINT_MP4_OPTION;
+      $options[] =  mediamosa_settings::ANALYSE_FILE_ALWAYS_HINT_MP4_OPTION;
     }
 
     if ($a_mediamosa_app[mediamosa_app_db::ALWAYS_INSERT_MD] == mediamosa_app_db::ALWAYS_INSERT_MD_TRUE) {
-      $a_options[] =  mediamosa_settings::ANALYSE_FILE_ALWAYS_INSERT_MD_OPTION;
+      $options[] =  mediamosa_settings::ANALYSE_FILE_ALWAYS_INSERT_MD_OPTION;
     }
 
     $execution_string = sprintf('%s %s %s',
@@ -440,22 +432,22 @@ class mediamosa_asset_mediafile {
       $mediafile_id
     );
 
-    $execution_string .= (count($a_options) ? ' ' . implode(' ', $a_options) : '');
+    $execution_string .= (count($options) ? ' ' . implode(' ', $options) : '');
 
-    $a_output = array();
-    mediamosa_io::exec($execution_string . " 2>&1", $a_output);
+    $output = array();
+    mediamosa_io::exec($execution_string . " 2>&1", $output);
 
-    return $a_output;
+    return $output;
   }
 
   /**
    * Returns TRUE/FALSE if the mediafile is an original.
    *
-   * @param array $a_mediafile
+   * @param array $mediafile
    */
-  static public function is_original($a_asset_mediafile) {
+  static public function is_original($mediafile) {
     // FIXME: will need to convert into mediafile_id_source.
-    return ($a_asset_mediafile[mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE] == mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_TRUE);
+    return ($mediafile[mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE] == mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_TRUE);
   }
 
 
@@ -466,39 +458,39 @@ class mediamosa_asset_mediafile {
    * @param string $mediafile_id
    * @param string $user_id
    * @param string $type
-   * @param array $a_fields
+   * @param array $fields
    */
-  static public function update($app_id, $mediafile_id, $user_id, array $a_fields) {
+  static public function update($app_id, $mediafile_id, $user_id, array $fields) {
     // Cant mix input of uri/filename/is_downloadable.
-    if (isset($a_fields[mediamosa_asset_mediafile_db::URI]) && (isset($a_fields[mediamosa_asset_mediafile_db::FILENAME]) || isset($a_fields[mediamosa_asset_mediafile_db::IS_DOWNLOADABLE]))) {
+    if (isset($fields[mediamosa_asset_mediafile_db::URI]) && (isset($fields[mediamosa_asset_mediafile_db::FILENAME]) || isset($fields[mediamosa_asset_mediafile_db::IS_DOWNLOADABLE]))) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MIX_OF_URI_AND_FILE);
     }
 
     // Mediafile must exists.
-    $a_mediafile = mediamosa_asset_mediafile::must_exists($mediafile_id);
+    $mediafile = mediamosa_asset_mediafile::must_exists($mediafile_id);
 
     // Does the user has access?
     mediamosa_aut::owner_check(
       $app_id,
       $user_id,
-      $a_mediafile[mediamosa_asset_mediafile_db::APP_ID],
-      $a_mediafile[mediamosa_asset_mediafile_db::OWNER_ID]
+      $mediafile[mediamosa_asset_mediafile_db::APP_ID],
+      $mediafile[mediamosa_asset_mediafile_db::OWNER_ID]
     );
 
     // Can't change the type.
-    if (!empty($a_mediafile[mediamosa_asset_mediafile_db::URI]) && ( isset($a_fields[mediamosa_asset_mediafile_db::FILENAME]) || isset($a_fields[mediamosa_asset_mediafile_db::IS_DOWNLOADABLE]) ) || (!empty($a_mediafile[mediamosa_asset_mediafile_db::FILENAME]) && isset($a_fields[mediamosa_asset_mediafile_db::URI])) ) {
+    if (!empty($mediafile[mediamosa_asset_mediafile_db::URI]) && ( isset($fields[mediamosa_asset_mediafile_db::FILENAME]) || isset($fields[mediamosa_asset_mediafile_db::IS_DOWNLOADABLE]) ) || (!empty($mediafile[mediamosa_asset_mediafile_db::FILENAME]) && isset($fields[mediamosa_asset_mediafile_db::URI])) ) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CHANGE_URI_AND_FILE);
     }
 
     // Update the timestamps of the asset
-    mediamosa_asset::update_asset_timestamps($a_mediafile[mediamosa_asset_mediafile_db::ASSET_ID]);
+    mediamosa_asset::update_asset_timestamps($mediafile[mediamosa_asset_mediafile_db::ASSET_ID]);
 
     // Add changed field.
-    $a_fields = mediamosa_db::db_update_enrich($a_fields);
+    $fields = mediamosa_db::db_update_enrich($fields);
 
     // Build the query.
     mediamosa_db::db_update(mediamosa_asset_mediafile_db::TABLE_NAME)
-      ->fields($a_fields)
+      ->fields($fields)
       ->condition(mediamosa_asset_mediafile_db::ID, $mediafile_id)
       ->execute();
 
@@ -519,37 +511,37 @@ class mediamosa_asset_mediafile {
    *  Parent asset.
    * @param string $user_id
    *  The new owner.
-   * @param array $a_fields
+   * @param array $fields
    *  Optional fields. See mediamosa_asset_mediafile_db.
    */
-  static public function create($mediafile_id, $app_id, $asset_id, $user_id, array $a_fields = array()) {
+  static public function create($mediafile_id, $app_id, $asset_id, $user_id, array $fields = array()) {
     // Is original with mediafile_id_source combo.
     assert(
       (
-        isset($a_fields[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE]) && $a_fields[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE] != ''
+        isset($fields[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE]) && $fields[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE] != ''
         &&
-        $a_fields[mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE] == mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_FALSE
+        $fields[mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE] == mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_FALSE
       )
       ||
       (
-        (!isset($a_fields[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE]) || $a_fields[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE] == '')
+        (!isset($fields[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE]) || $fields[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE] == '')
         &&
-        $a_fields[mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE] == mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_TRUE
+        $fields[mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE] == mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_TRUE
       )
     );
 
-    $a_fields[mediamosa_asset_mediafile_db::ID] = $mediafile_id;
-    $a_fields[mediamosa_asset_mediafile_db::APP_ID] = $app_id;
-    $a_fields[mediamosa_asset_mediafile_db::ASSET_ID] = $asset_id;
-    $a_fields[mediamosa_asset_mediafile_db::ASSET_ID_ROOT] = $asset_id; // depricated, set to own asset.
-    $a_fields[mediamosa_asset_mediafile_db::OWNER_ID] = $user_id;
+    $fields[mediamosa_asset_mediafile_db::ID] = $mediafile_id;
+    $fields[mediamosa_asset_mediafile_db::APP_ID] = $app_id;
+    $fields[mediamosa_asset_mediafile_db::ASSET_ID] = $asset_id;
+    $fields[mediamosa_asset_mediafile_db::ASSET_ID_ROOT] = $asset_id; // depricated, set to own asset.
+    $fields[mediamosa_asset_mediafile_db::OWNER_ID] = $user_id;
 
     // Enrich for created/changed.
-    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+    $fields = mediamosa_db::db_insert_enrich($fields);
 
     // Insert it.
     mediamosa_db::db_insert(mediamosa_asset_mediafile_db::TABLE_NAME)
-      ->fields($a_fields)
+      ->fields($fields)
       ->execute();
 
     // Set the external.

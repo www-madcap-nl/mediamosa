@@ -69,7 +69,7 @@ class mediamosa_rest_call_ftp_batch_list extends mediamosa_rest_call {
       $o_mediamosa->add_item($a_row);
     }
 
-    $o_rest_reponse->item_total_count = $result->found_rows;
+    $o_rest_reponse->item_count_total = $result->found_rows;
   }
 }
 
@@ -396,7 +396,7 @@ class mediamosa_rest_call_ftp_batch_assets_get extends mediamosa_rest_call {
       $o_mediamosa->add_item($a_row);
     }
 
-    $o_rest_reponse->item_total_count = $result->found_rows;
+    $o_rest_reponse->item_count_total = $result->found_rows;
   }
 }
 

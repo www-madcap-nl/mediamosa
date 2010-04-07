@@ -68,6 +68,14 @@ Mediamosa 2.1.2
   values instead. Statistics as example had owner_id and group_id as non-null.
 - Fixed /collection which had asset_id as required, which is only when the call
   was made as /asset/{asset_id}/collection.
+- Removed field 'locked' from asset and asset output(s). Field was not 
+  documented or used.
+- Header fields item_count_total and item_offset are always present in the 
+  header while in 1.x these only where found for multi item results. In case of
+  single item results, then item_count_total will always be 1 and item_offset 0.
+- mediafile output will include new mediafile_id_source which can hold the ID of
+  the original mediafile. When empty, then the mediafile is a original.
+  
 
 MediaMosa 2.1.1
 ---------------

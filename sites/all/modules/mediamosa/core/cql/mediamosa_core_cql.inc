@@ -130,12 +130,12 @@ class mediamosa_core_cql {
    * Start parsing the CQL for asset search.
    *
    * @param string $str_cql
-   * @param array $a_app_ids
+   * @param array $app_ids
    */
-  static public function parse_asset($str_cql, array $a_app_ids) {
+  static public function parse_asset($str_cql, array $app_ids) {
 
     // Create the CQL object.
-    $mediamosa_cql = new mediamosa_asset_cql_context($a_app_ids);
+    $mediamosa_cql = new mediamosa_asset_cql_context($app_ids);
     return $mediamosa_cql->mediamosa_core_parse_cql($str_cql);
   }
 
@@ -146,10 +146,10 @@ class mediamosa_core_cql {
    * @param string $str_cql
    * @return boolean
    */
-  static public function verify_asset($str_cql, array $a_app_ids, &$error_text) {
+  static public function verify_asset($str_cql, array $app_ids, &$error_text) {
 
     // Create the CQL object.
-    $mediamosa_cql = new mediamosa_asset_cql_context($a_app_ids);
+    $mediamosa_cql = new mediamosa_asset_cql_context($app_ids);
     $result = $mediamosa_cql->mediamosa_cql_verify($str_cql);
     if (!$result) {
       $error_text = $mediamosa_cql->mediamosa_cql_last_exception_get()->getMessage();
@@ -161,12 +161,12 @@ class mediamosa_core_cql {
    * Start parsing the CQL for collection search.
    *
    * @param string $str_cql
-   * @param array $a_app_ids
+   * @param array $app_ids
    */
-  static public function parse_collection($str_cql, array $a_app_ids) {
+  static public function parse_collection($str_cql, array $app_ids) {
 
     // Create the CQL object.
-    $mediamosa_cql = new mediamosa_collection_cql_context($a_app_ids);
+    $mediamosa_cql = new mediamosa_collection_cql_context($app_ids);
     return $mediamosa_cql->mediamosa_core_parse_cql($str_cql);
   }
 
@@ -177,10 +177,10 @@ class mediamosa_core_cql {
    * @param string $str_cql
    * @return boolean
    */
-  static public function verify_collection($str_cql, $a_app_ids, &$error_text) {
+  static public function verify_collection($str_cql, $app_ids, &$error_text) {
 
     // Create the CQL object.
-    $mediamosa_cql = new mediamosa_collection_cql_context($a_app_ids);
+    $mediamosa_cql = new mediamosa_collection_cql_context($app_ids);
     $result = $mediamosa_cql->mediamosa_cql_verify($str_cql);
     if (!$result) {
       $error_text = $mediamosa_cql->mediamosa_cql_last_exception_get()->getMessage();
@@ -219,13 +219,13 @@ class mediamosa_core_cql {
    * Fill the a_var_setup with allowed parameters for search.
    * @param array $a_var_setup
    */
-  static public function get_var_setup_search_asset(array $a_app_ids, array $a_var_setup, array $a_search) {
+  static public function get_var_setup_search_asset(array $app_ids, array $a_var_setup, array $a_search) {
 
     // Enrich with normal search.
     $a_var_setup = self::get_var_setup_search($a_var_setup, $a_search);
 
     // Now add custom allowed metadata and own.
-    $a_metadata_properties = mediamosa_asset_metadata_property::get_metadata_properties_full($a_app_ids);
+    $a_metadata_properties = mediamosa_asset_metadata_property::get_metadata_properties_full($app_ids);
 
     foreach ($a_metadata_properties as $param => $a_metadata_property) {
       switch ($a_metadata_property['propdef_type']) {
@@ -269,14 +269,14 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
 
   abstract protected function mediamosa_core_cql_context_array_get();
 
-  protected $m_a_app_ids;
+  protected $app_ids;
   public static $search_keywords;
 
   /**
    * Constructor
    */
-  final public function __construct($a_app_ids) {
-    $this->m_a_app_ids = $a_app_ids;
+  final public function __construct($app_ids) {
+    $this->app_ids = $app_ids;
     $this->m_o_prefix_assignment = new mediamosa_cql_prefix_assignment('mediamosa', 'info:srw/cql-context-set/1/,mediamosa-v1.1');
     $this->search_keywords = array();
   }
@@ -403,7 +403,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
    * @param array $keywords
    */
   private function mediamosa_save_search(array $keywords) {
-    mediamosa_statistics::log_event_search_query($keywords, $this->m_a_app_ids);
+    mediamosa_statistics::log_event_search_query($keywords, $this->app_ids);
   }
 
   /**
@@ -938,7 +938,7 @@ class mediamosa_asset_cql_context extends mediamosa_core_cql_context {
     if (!isset($a_mediamosa_context)) {
       $a_mediamosa_context = $this->m_a_mediamosa_context;
 
-      $a_defs = mediamosa_asset_metadata_property::get_metadata_properties_full($this->m_a_app_ids);
+      $a_defs = mediamosa_asset_metadata_property::get_metadata_properties_full($this->app_ids);
 
       foreach ($a_defs as $name => $a_def) {
         switch ($a_def['propgroup_name']) {

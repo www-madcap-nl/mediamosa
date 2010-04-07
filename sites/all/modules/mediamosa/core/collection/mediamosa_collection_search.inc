@@ -37,7 +37,7 @@ class mediamosa_collection_search {
    *
    * 1.x: _media_management_search_collection
    *
-   * @param array $a_app_id
+   * @param array $app_ids
    *  The application IDs.
    * @param string $cql
    *  The search CQL string.
@@ -59,7 +59,7 @@ class mediamosa_collection_search {
    *  Offset row number with result set.
    */
   static public function collection_search(
-    array $a_app_id,
+    array $app_ids,
     $cql = NULL,
     $asset_id = NULL,
     $fav_user_id = NULL,
@@ -85,7 +85,7 @@ class mediamosa_collection_search {
     $a_query[mediamosa_db_query::A_JOIN]['asset_collection'][] = 'LEFT JOIN {mediamosa_asset_collection} AS ac USING(coll_id)';
 
     // Collect my slaves.
-    $a_slaves = mediamosa_aut_app_master_slave::slave_get($a_app_id, mediamosa_aut::AUT_TYPE_COLLECTION);
+    $a_slaves = mediamosa_aut_app_master_slave::slave_get($app_ids, mediamosa_aut::AUT_TYPE_COLLECTION);
 
     // Include possible asset restriction.
     if ($asset_id) {
@@ -114,11 +114,11 @@ class mediamosa_collection_search {
     }
 
     // Access selection is done here;
-    mediamosa_aut::build_access_where($a_query, mediamosa_aut::AUT_TYPE_COLLECTION, NULL, $a_app_id, $aut_user_id, NULL, NULL, NULL, NULL, $is_app_admin);
+    mediamosa_aut::build_access_where($a_query, mediamosa_aut::AUT_TYPE_COLLECTION, NULL, $app_ids, $aut_user_id, NULL, NULL, NULL, NULL, $is_app_admin);
 
     $order_by = '';
     if ($cql) {
-      $a_result_cql2sql = mediamosa_core_cql::parse_collection($cql, $a_app_id);
+      $a_result_cql2sql = mediamosa_core_cql::parse_collection($cql, $app_ids);
 
       if (isset($a_result_cql2sql['str_where']) && $a_result_cql2sql['str_where'] != "") {
         $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['cql'] = $a_result_cql2sql['str_where'];
@@ -157,7 +157,7 @@ class mediamosa_collection_search {
       $a_query[mediamosa_db_query::A_JOIN]['user_favorite']['user_fav'] = "LEFT JOIN {mediamosa_user_favorite} AS user_fav ON user_fav.fav_type = '". mediamosa_user_favorite_db::FAV_TYPE_COLLECTION . "' AND user_fav.fav_id = c.coll_id\n";
 
       $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['user_fav'][] = sprintf("user_fav.name = '%s'", mediamosa_db::escape_string($fav_user_id));
-      $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['user_fav'][] = sprintf("user_fav.app_id IN(%s)", mediamosa_db::escape_string($a_app_id));
+      $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['user_fav'][] = sprintf("user_fav.app_id IN(%s)", mediamosa_db::escape_string($app_ids));
     }
 
     $a_query[mediamosa_db_query::LIMIT] = $limit;

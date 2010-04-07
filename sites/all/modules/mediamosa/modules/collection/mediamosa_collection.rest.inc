@@ -76,7 +76,7 @@ class mediamosa_rest_call_count_collection extends mediamosa_rest_call {
     $o_mediamosa->set_result_okay();
 
     // Set the total count.
-    $o_mediamosa->item_total_count = mediamosa_db::db_count_items(mediamosa_collection_db::TABLE_NAME, $app_id, $owner_id, $group_id);
+    $o_mediamosa->item_count_total = mediamosa_db::db_count_items(mediamosa_collection_db::TABLE_NAME, $app_id, $owner_id, $group_id);
   }
 }
 
@@ -145,22 +145,18 @@ class mediamosa_rest_call_collection_search extends mediamosa_rest_call {
         self::PRIVATE_ => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Search on the private flag status of the collection.',
-          self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
         self::PUBLIC_ => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Search on the public flag status of the collection.',
-          self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
         self::CATEGORY => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Search on the category flag status of the collection.',
-          self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
         self::PUBLIC_ASSIGN => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Search on the public assign flag status of the collection.',
-          self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
         self::IS_APP_ADMIN => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
@@ -248,25 +244,24 @@ class mediamosa_rest_call_collection_search extends mediamosa_rest_call {
     $order_by = $this->get_param_value(self::ORDER_BY);
     $order_direction = $this->get_param_value(self::ORDER_DIRECTION);
 
-    $a_cql = array();
+    $cqls = array();
     $a_translate_to = array();
     foreach ($var_setup[mediamosa_rest_call::VARS] as $param => $a_param) {
       if ($a_param[mediamosa_rest_call::VAR_TYPE] == mediamosa_type::TYPE_SEARCH_MATCH) {
         continue;
       }
-
       // When provided, then convert.
       if (!self::empty_param($param)) {
         $a_value = self::get_param_value($param);
         $match = self::get_param_value($param . '_match');
 
-        $a_cql[] = mediamosa_core_cql::convert_searchparam_to_cql($param, $match, $a_value, $a_param[mediamosa_rest_call::PARAM_TYPE], $a_translate_to);
+        $cqls[] = mediamosa_core_cql::convert_searchparam_to_cql($param, $match, $a_value, $a_param[mediamosa_rest_call::PARAM_TYPE], $a_translate_to);
       }
     }
 
     // Build either the CQL from scratch or build from the parameters.
     $cql = '';
-    if (count($a_cql)) {
+    if (count($cqls)) {
 
       // CQL must not be set.
       if (!self::empty_param(self::CQL)) {
@@ -276,7 +271,7 @@ class mediamosa_rest_call_collection_search extends mediamosa_rest_call {
       // Get the glue operator.
       $operator = self::get_param_value(self::OPERATOR);
 
-      $cql = implode(' ' . mediamosa_unicode::strtoupper($operator) . ' ', $a_cql);
+      $cql = implode(' ' . mediamosa_unicode::strtoupper($operator) . ' ', $cqls);
     }
 
     // Add possible order by to the CQL.
@@ -287,11 +282,10 @@ class mediamosa_rest_call_collection_search extends mediamosa_rest_call {
 
       $cql .= ($cql == '' ? ' ' : '') . 'sortby ' . $order_by;
     }
-    else {
+    elseif ($cql == '') {
       // Now normal search params, then take CQL (if any).
       $cql = self::get_param_value(self::CQL);
     }
-
 
     // If order by is set on NUMOFVIDEOS and no value for order_direction was given, then set it to other default.
     if (self::get_param_value_order_by() == self::NUMOFVIDEOS && self::isset_default_param(self::ORDER_DIRECTION)) {
@@ -313,7 +307,7 @@ class mediamosa_rest_call_collection_search extends mediamosa_rest_call {
     );
 
     // Total rows.
-    $o_mediamosa->item_total_count = $result->found_rows;
+    $o_mediamosa->item_count_total = $result->found_rows;
 
     // Set result.
     foreach ($result as $a_row) {
@@ -380,7 +374,7 @@ class mediamosa_rest_call_collection_favorites_count extends mediamosa_rest_call
     // Any app can get any count from any asset....
 
     // Set total count.
-    $o_mediamosa->item_total_count = mediamosa_user_favorite::count_items(mediamosa_user_favorite_db::FAV_TYPE_COLLECTION, $collection_id);
+    $o_mediamosa->item_count_total = mediamosa_user_favorite::count_items(mediamosa_user_favorite_db::FAV_TYPE_COLLECTION, $collection_id);
 
     $o_mediamosa->set_result_okay();
   }
@@ -459,7 +453,7 @@ class mediamosa_rest_call_collection_get extends mediamosa_rest_call {
     $result = mediamosa_asset_collection::get_by_ids(array($coll_id));
 
     // Total rows.
-    $o_mediamosa->item_total_count = 1;
+    $o_mediamosa->item_count_total = 1;
 
     // Set result.
     foreach ($result as $a_row) {

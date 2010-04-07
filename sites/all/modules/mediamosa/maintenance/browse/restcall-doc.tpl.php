@@ -46,8 +46,11 @@
   $description = $variables['rest_call']->description;
   $uri = $variables['rest_call']->uri;
   $method = $variables['rest_call']->method;
+  $class = $variables['rest_call']->method;
 
-  $link_to_debug = module_exists('mediamosa_development') ? l(t('Debug REST call'), strtr('admin/mediamosa/config/development/set_rest_call/@uri/@method', array('@uri' => str_replace('/', '-', $uri), '@method' => $method))) : '';
+  $classname = $variables['rest_call']->{mediamosa_rest_call::CLASS_NAME};
+  $link_to_debug = module_exists('mediamosa_development') ? l(t('Debug REST call'), strtr('admin/mediamosa/config/development/set_rest_call/@uri/@method', array('@uri' => str_replace('/', '-', $uri), '@method' => $method))) . ', REST class: ' . $classname : '';
+
 
   $request_authorization = $variables['rest_call']->request_authorization;
   $warnings = $variables['warnings'];
@@ -78,7 +81,7 @@
 ?>
 <h3><?php print t('Request Parameters'); ?></h3>
 <?php print $variables['parameters']; ?>
-<?php if (isset($variables['response_fields'])) { ?>
+<?php if (!empty($variables['response_fields'])) { ?>
 <h3><?php print t('Response fields'); ?></h3>
 <?php print $variables['response_fields']; ?>
 <?php } ?>

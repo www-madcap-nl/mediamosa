@@ -134,7 +134,7 @@ class mediamosa_rest_call_statistics_get_newest_mediafiles extends mediamosa_res
     $result = mediamosa_db::db_query($query);
 
     // Set total.
-    $o_mediamosa->item_total_count = mediamosa_db_query::found_rows();
+    $o_mediamosa->item_count_total = mediamosa_db_query::found_rows();
 
     // Fill items.
     foreach ($result as $row) {
@@ -236,7 +236,7 @@ class mediamosa_rest_call_statistics_get_most_popular_mediafiles extends mediamo
     $result = mediamosa_db::db_query($query);
 
     // Set total.
-    $o_mediamosa->item_total_count = mediamosa_db_query::found_rows();
+    $o_mediamosa->item_count_total = mediamosa_db_query::found_rows();
 
     // Fill items.
     foreach ($result as $row) {
@@ -323,7 +323,7 @@ class mediamosa_rest_call_statistics_get_newest_collections extends mediamosa_re
     $result = mediamosa_db::db_query($query);
 
     // Set total.
-    $o_mediamosa->item_total_count = mediamosa_db_query::found_rows();
+    $o_mediamosa->item_count_total = mediamosa_db_query::found_rows();
 
     // Fill items.
     foreach ($result as $row) {
@@ -424,7 +424,7 @@ class mediamosa_rest_call_statistics_get_most_popular_collections extends mediam
     $result = mediamosa_db::db_query($query);
 
     // Set total.
-    $o_mediamosa->item_total_count = mediamosa_db_query::found_rows();
+    $o_mediamosa->item_count_total = mediamosa_db_query::found_rows();
 
     // Fill items.
     foreach ($result as $row) {
@@ -714,7 +714,7 @@ class mediamosa_rest_call_statistics_get_used_diskspace extends mediamosa_rest_c
     $result = mediamosa_db::db_query($query);
 
     // Set total.
-    $o_mediamosa->item_total_count = mediamosa_db_query::found_rows();
+    $o_mediamosa->item_count_total = mediamosa_db_query::found_rows();
 
     // Fill items.
     foreach ($result as $row) {

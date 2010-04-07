@@ -215,7 +215,7 @@ class mediamosa_rest_call_count_asset extends mediamosa_rest_call {
     $mediamosa->set_result_okay();
 
     // Set the total count.
-    $mediamosa->item_total_count = mediamosa_db::db_count_items(mediamosa_asset_db::TABLE_NAME, $app_id, $owner_id, $group_id);
+    $mediamosa->item_count_total = mediamosa_db::db_count_items(mediamosa_asset_db::TABLE_NAME, $app_id, $owner_id, $group_id);
   }
 }
 
@@ -550,7 +550,7 @@ class mediamosa_rest_call_asset_favorites_count extends mediamosa_rest_call {
     // Any app can get any count from any asset....
 
     // Set total count.
-    $mediamosa->item_total_count = mediamosa_user_favorite::count_items(mediamosa_user_favorite_db::FAV_TYPE_ASSET, $asset_id);
+    $mediamosa->item_count_total = mediamosa_user_favorite::count_items(mediamosa_user_favorite_db::FAV_TYPE_ASSET, $asset_id);
 
     $mediamosa->set_result_okay();
   }
@@ -583,11 +583,11 @@ class mediamosa_rest_call_asset_delete extends mediamosa_rest_call {
         ),
         self::USER_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
-          self::VAR_DESCRIPTION => 'User ID, must be owner to delete asset.',
+          self::VAR_DESCRIPTION => 'User ID, must be the owner to delete asset.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::DELETE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_type::TYPE_ALPHA,
           self::VAR_DESCRIPTION => 'Delete mode.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
           self::VAR_ALLOWED_VALUES => array('', 'cascade'),
