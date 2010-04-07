@@ -34,8 +34,20 @@
  */
 function _ajax_execute_rest_call() {
 
+  // Ignore compare check key listing.
+  $ignore_list = array(
+    'asset' => array(
+      'GET' => array('locked')
+    ),
+    'asset/$asset_id' => array(
+      'GET' => array('locked')
+    ),
+  );
+
   // Load the form based upon the $_POST data sent via the ajax call.
   list($form, $form_state) = ajax_get_form();
+  // Fix drupal notice.
+  $form_state['values'] = isset($form_state['values']) ? $form_state['values'] : array();
 
   // Get the select REST call.
   $uri_method = isset($_SESSION['mediamosa_development_params']['uri']) ? $_SESSION['mediamosa_development_params']['uri'] : '';
@@ -101,23 +113,23 @@ function _ajax_execute_rest_call() {
   $commands = array();
 
   // Run same on mediamosa 1.7?
-  $run_on_mm_17 = $form_state['input']['run_on_mm_17'] == 1;
-  // Build and render the new output, then return it in JSON format.
-  $form_state = array('programmed' => FALSE, 'values' => array());
-  $form = form_builder($form['form_id']['#value'], $form, $form_state);
+  $run_on_mm_17 = ($form_state['input']['run_on_mm_17'] == 1);
+
+  $response1x = $response2x = FALSE;
 
   if (empty($errors)) {
     // Create mediamosa_connector.
     $mediamosa_connector = new mediamosa_connector($username, $password);
 
     // Get response.
-    $response = $mediamosa_connector->request($uri, array('method' => $method, 'data' => $data));
+    $response_mm2 = $mediamosa_connector->request($uri, array('method' => $method, 'data' => $data));
 
-    if (empty($response) || empty($response->data)) {
+    if (empty($response_mm2) || empty($response_mm2->data)) {
       $form['rest_result']['output']['#value'] = t('Check mediamosa connector settings, no output received.');
     }
     else {
-      $form['rest_result']['output']['#value'] = $response->data;
+      $form['rest_result']['output']['#value'] = $response_mm2->data;
+      $response2x = TRUE;
     }
 
     if ($run_on_mm_17) {
@@ -128,28 +140,103 @@ function _ajax_execute_rest_call() {
         $mediamosa_connector = new mediamosa_connector($username, $password, $mediamosa_development_mediamosa_17_rest_url);
 
         // Get response.
-        $response = $mediamosa_connector->request($uri, array('method' => $method, 'data' => $data));
+        $response_mm1 = $mediamosa_connector->request($uri, array('method' => $method, 'data' => $data));
 
-        if (empty($response) || empty($response->data)) {
-          $response = t('Check MediaMosa 1.7 settings, unable to retrieve data');
+        if (empty($response_mm1) || empty($response_mm1->data)) {
+          $form['rest_result']['output_mm17']['#value'] = t('Check MediaMosa 1.7 settings, unable to retrieve data');
         }
         else {
-          $response = $response->data;
+          $form['rest_result']['output_mm17']['#value'] = $response_mm1->data;
+          $response1x = TRUE;
         }
 
-        $form['rest_result']['output2']['#type'] = 'textarea';
-        $form['rest_result']['output2']['#value'] = $response;
+        $form['rest_result']['output_mm17']['#type'] = 'textarea';
+      }
+      else {
+        drupal_set_message('No REST interface URL set, check settings.');
       }
     }
-
   }
   else {
     $form['rest_result']['output']['#value'] = implode("\n", $errors);
   }
 
+  if ($response1x && $response2x) {
+    $pass = $failure = 0;
+
+    $response_mm1_array = mediamosa_lib::simplexml2array($response_mm1->xml->items);
+    $response_mm2_array = mediamosa_lib::simplexml2array($response_mm2->xml->items);
+
+    $compares = array(t('Result compare MediaMosa 2.x with MediaMosa 1.x response.'));
+
+    if ((int)$response_mm1->xml->header->item_count != (int)$response_mm2->xml->header->item_count) {
+      $compares[] = t('Item count does not match.');
+    }
+
+    if ((int)$response_mm1->xml->header->item_count_total != (int)$response_mm2->xml->header->item_count_total) {
+      $compares[] = t('Item count total does not match.');
+    }
+
+    // Find possible ignore key listing for this uri/method.
+    $ignore = empty($ignore_list[$uri][$method]) ? array() : $ignore_list[$uri][$method];
+
+    $compares = _mediamosa_development_compare_array($response_mm1_array['item'], $response_mm2_array['item'], 'MediaMosa 1.7.x', 'MediaMosa 2.x', $compares, $ignore);
+
+    $form['rest_result']['output_compare']['#type'] = 'textarea';
+    $form['rest_result']['output_compare']['#value'] = implode("\n", $compares);
+  }
+
+
+  $form = form_builder('', $form, $form_state);
   $commands[] = ajax_command_replace('', drupal_render($form['rest_result']));
 
   return array('#type' => 'ajax', '#commands' => $commands, '#header' => FALSE);
+}
+
+/**
+ * Compare 2 arrays and store the difference.
+ */
+function _mediamosa_development_compare_array($array1, $array2, $name1 = 'array1', $name2 = 'array2', $results, $ignore_keys = array(), $location = array()) {
+
+  if (is_array($array1)) {
+    if (!is_array($array2)) { // array 1 is value, array 2 not.
+      $results[] = t('Difference types at !loc values of @name1 = array - @name2 = value', array('!loc' => (string)implode('->', $location), '@name1' => $name1, '@name2' => $name2));
+    }
+    else {
+      foreach ($array1 as $key => $value1) {
+        if (in_array($key, $ignore_keys)) {
+          continue;
+        }
+
+        if (!isset($array2[$key])) {
+          $results[] = t('Missing value in @name2 at !loc found in @name1.', array('!loc' => (string)implode('->', $location) . '->' . $key, '@name1' => $name1, '@name2' => $name2));
+        }
+        else {
+          // Call ourselfs again.
+          $location[] = (string)$key;
+          $results = _mediamosa_development_compare_array($value1, $array2[$key], $name1, $name2, $results, $ignore_keys, $location);
+          array_pop($location);
+        }
+      }
+
+      foreach ($array2 as $key => $value1) {
+        if (!isset($array1[$key])) {
+          $results[] = t('Missing value in @name1 at !loc found in @name2.', array('!loc' => (string)implode('->', $location) . '->' . $key, '@name1' => $name1, '@name2' => $name2));
+        }
+      }
+    }
+  }
+  else {
+    if (is_array($array2)) { // array 1 is value, array 2 not.
+      $results[] = t('Difference types at !loc values of @name1 = value - @name2 = array', array('!loc' => (string)implode('->', $location), '@name1' => $name1, '@name2' => $name2));
+    }
+    // Compare values;
+    elseif ($array1 != $array2) {
+      $results[] = t('Difference at !loc values of @name1 = @value1 - @name2 = @value2', array('!loc' => (string)implode('->', $location), '@name1' => $name1, '@name2' => $name2, '@value1' => $array1, '@value2' => $array2));
+    }
+  }
+
+  return $results;
 }
 
 /**
@@ -172,6 +259,7 @@ function mediamosa_development_rest_page_form() {
 function _mediamosa_development_set_rest_call($uri, $method) {
   // Get session.
   $_SESSION['mediamosa_development_params']['uri'] = str_replace('-', '/', $uri) . '|' . $method;
+  unset($_SESSION['mediamosa_development_params']['rest_call']);
 
   drupal_goto('admin/mediamosa/config/development/rest');
 }
@@ -233,7 +321,7 @@ function mediamosa_development_rest_form() {
   if (!empty($mediamosa_development_mediamosa_17_rest_url)) {
     $form['rest']['run_on_mm_17'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Run REST call on MediaMosa 1.7.2 to compare output.'),
+      '#title' => t('Run REST call on MediaMosa 1.7.x to compare output.'),
       '#default_value' => 0,
     );
   }
@@ -303,9 +391,14 @@ function mediamosa_development_rest_form() {
 
     $form['rest_result']['output_mm17'] = array(
       '#type' => 'hidden',
-      '#title' => t('Output 2'),
+      '#title' => t('Output MediaMosa 1.7.x'),
       '#default_value' => '',
-      '#attributes' => array('class' => 'output_mm17'),
+    );
+
+    $form['rest_result']['output_compare'] = array(
+      '#type' => 'hidden',
+      '#title' => t('Compare results'),
+      '#default_value' => '',
     );
 
     $form = _mediamosa_build_form($form);
@@ -347,8 +440,20 @@ function mediamosa_development_rest_form_submit($form, &$form_state) {
 }
 
 function _mediamosa_build_form($form) {
+
   if (empty($_SESSION['mediamosa_development_params']['rest_call'])) {
-    return $form;
+
+    if (empty($_SESSION['mediamosa_development_params']['uri'])) {
+      return $form;
+    }
+
+    list($uri, $method) = explode('|', $_SESSION['mediamosa_development_params']['uri']);
+
+    // Find rest_call.
+    $_SESSION['mediamosa_development_params']['rest_call'] = mediamosa_rest::get_uri_definition($uri, $method);
+    if (empty($_SESSION['mediamosa_development_params']['rest_call'])) {
+      continue;
+    }
   }
 
   $var_setup = mediamosa_rest::get_var_setup($_SESSION['mediamosa_development_params']['rest_call']);
@@ -494,14 +599,11 @@ function _build_param($name, $var, $required) {
         '#type' => 'select',
         '#title' => $title,
         '#description' => $description,
-        '#options' => array('false' => t('false'), 'true' => t('true')),
+        '#options' => array('' => '', 'false' => t('false'), 'true' => t('true')),
       );
 
       if (isset($var[mediamosa_rest_call::VAR_DEFAULT_VALUE])) {
         $var[mediamosa_rest_call::VAR_DEFAULT_VALUE] = drupal_strtolower($var[mediamosa_rest_call::VAR_DEFAULT_VALUE]);
-      }
-      else {
-        $var[mediamosa_rest_call::VAR_DEFAULT_VALUE] = 'false';
       }
 
       break;

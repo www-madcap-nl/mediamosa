@@ -95,9 +95,8 @@ function mediamosa_maintenance_browse_restcall_form() {
 
       $pos++;
 
-
       $has_example_request = !empty($rest_call[mediamosa_rest_call::EXAMPLE_REQUEST]);
-      $has_example_response = !empty($rest_call[mediamosa_rest_call::EXAMPLE_RESPONSE]);
+      $has_example_response = !empty($rest_call[mediamosa_rest_call::EXAMPLE_RESPONSE]) || (isset($rest_call[mediamosa_rest_call::EXAMPLE_RESPONSE]) && $rest_call[mediamosa_rest_call::EXAMPLE_RESPONSE] === FALSE);
 
       $warnings = array();
       if (!$has_example_request) {
@@ -166,6 +165,7 @@ function mediamosa_maintenance_browse_restcall_details($uri, $method) {
 
   // Create class from it.
   $rest_call = new $rest_calls[$uri][$method][mediamosa_rest_call::CLASS_NAME]($a_rest_call);
+  $rest_call->{mediamosa_rest_call::CLASS_NAME} = $rest_calls[$uri][$method][mediamosa_rest_call::CLASS_NAME];
 
   // Check if override for class selection is here.
   if (method_exists($rest_call, 'get_object_rest_call')) {
@@ -259,10 +259,13 @@ function template_preprocess_restcall_doc(&$variables) {
     if (isset($item[mediamosa_rest_call::VAR_IS_REQUIRED]) && $item[mediamosa_rest_call::VAR_IS_REQUIRED] == mediamosa_rest_call::VAR_IS_REQUIRED_YES) {
       $is_array = isset($item[mediamosa_rest_call::VAR_IS_ARRAY]) && $item[mediamosa_rest_call::VAR_IS_ARRAY] == mediamosa_rest_call::VAR_IS_ARRAY_YES ? '[]' : '';
 
+      // Get allowed values.
+      $allowed_values = !empty($item[mediamosa_rest_call::VAR_ALLOWED_VALUES]) ? $item[mediamosa_rest_call::VAR_ALLOWED_VALUES] : array();
+
       $rows[] = array(
         $param . $is_array,
         mediamosa_type::typeAlias2Type($item[mediamosa_rest_call::VAR_TYPE]),
-        isset($item[mediamosa_rest_call::VAR_DESCRIPTION]) ? $item[mediamosa_rest_call::VAR_DESCRIPTION] : '',
+        (isset($item[mediamosa_rest_call::VAR_DESCRIPTION]) ? $item[mediamosa_rest_call::VAR_DESCRIPTION] : '') . (!empty($allowed_values) ? '<br /><small>Value must be either "' . implode('" or "', $allowed_values) . '".' : ''),
         t('Required'),
         isset($item[mediamosa_rest_call::VAR_DEFAULT_VALUE]) ? $item[mediamosa_rest_call::VAR_DEFAULT_VALUE] : '',
         '-',
@@ -275,10 +278,13 @@ function template_preprocess_restcall_doc(&$variables) {
     if (!isset($item[mediamosa_rest_call::VAR_IS_REQUIRED]) || $item[mediamosa_rest_call::VAR_IS_REQUIRED] == mediamosa_rest_call::VAR_IS_REQUIRED_NO) {
       $is_array = isset($item[mediamosa_rest_call::VAR_IS_ARRAY]) && $item[mediamosa_rest_call::VAR_IS_ARRAY] == mediamosa_rest_call::VAR_IS_ARRAY_YES ? '[]' : '';
 
+      // Get allowed values.
+      $allowed_values = !empty($item[mediamosa_rest_call::VAR_ALLOWED_VALUES]) ? $item[mediamosa_rest_call::VAR_ALLOWED_VALUES] : array();
+
       $rows[] = array(
         $param . $is_array,
         mediamosa_type::typeAlias2Type($item[mediamosa_rest_call::VAR_TYPE]),
-        isset($item[mediamosa_rest_call::VAR_DESCRIPTION]) ? $item[mediamosa_rest_call::VAR_DESCRIPTION] : '',
+        (isset($item[mediamosa_rest_call::VAR_DESCRIPTION]) ? $item[mediamosa_rest_call::VAR_DESCRIPTION] : '') . (!empty($allowed_values) ? '<br /><small>Value (when supplied) must be either "' . implode('" or "', $allowed_values) . '".' : ''),
         t('Optional'),
         isset($item[mediamosa_rest_call::VAR_DEFAULT_VALUE]) ? $item[mediamosa_rest_call::VAR_DEFAULT_VALUE] : '',
         '-',
@@ -302,27 +308,38 @@ function template_preprocess_restcall_doc(&$variables) {
     array('data' => t('Description')),
   );
 
-  $rows = array();
   if (!empty($rest_call->response_fields)) {
+    $rows = array();
     foreach ($rest_call->response_fields as $key => $value) {
       $rows[] = array($key, $value);
     }
-  }
 
-  // Hide table when response fields is empty.
-  if (!empty($rows)) {
-    $variables['response_fields'] = theme(
-      'table',
-      array(
-        'header' => $header,
-        'rows' => $rows,
-        'empty' => t('No response fields found.')
-      )
-    );
+    // Hide table when response fields is empty.
+    if (!empty($rows)) {
+      $variables['response_fields'] = theme(
+        'table',
+        array(
+          'header' => $header,
+          'rows' => $rows,
+          'empty' => t('No response fields found.')
+        )
+      );
+    }
+  }
+  elseif ($rest_call->response_fields === FALSE) {
+    $variables['response_fields'] = t('This REST call does not have any response fields and will always return empty items array');
   }
 
   if (empty($variables['rest_call']->example_request)) {
     $variables['warnings'][] = t('No example request specified.');
+  }
+  if ($variables['rest_call']->example_response === FALSE) {
+    if ($rest_call->{mediamosa_rest_call::METHOD} == mediamosa_rest_call::METHOD_GET) {
+      $variables['rest_call']->example_response = t('This REST call does not generate a items response, check the result ID instead. Will return 601 (OK) or 705 (empty result) as success.');
+    }
+    else {
+      $variables['rest_call']->example_response = t('This REST call does not generate a items response, check the result ID instead. Will return 601 (OK) as success.');
+    }
   }
 
   if (empty($variables['rest_call']->example_response)) {

@@ -422,7 +422,7 @@ abstract class mediamosa_rest_call {
    * @return array
    *  Returns the altered $a_var_setup.
    */
-  protected function get_var_setup_order_by(array $a_var_setup = array(), $default_order_by = '', array $a_allowed_values_order_by = array(), $default_order_direction = mediamosa_type::ORDER_DIRECTION_ASC) {
+  protected function get_var_setup_order_by(array $a_var_setup = array(), $default_order_by = '', array $allowed_values_order_by = array(), $default_order_direction = mediamosa_type::ORDER_DIRECTION_ASC) {
 
     // Either must be set.
     assert(in_array($default_order_direction, array(mediamosa_type::ORDER_DIRECTION_ASC, mediamosa_type::ORDER_DIRECTION_DESC)));
@@ -436,8 +436,8 @@ abstract class mediamosa_rest_call {
     );
 
     // Add allowed values for order by.
-    if (count($a_allowed_values_order_by)) {
-      $a_var_setup[self::VARS][self::ORDER_BY][self::VAR_ALLOWED_VALUES] = $a_allowed_values_order_by;
+    if (count($allowed_values_order_by)) {
+      $a_var_setup[self::VARS][self::ORDER_BY][self::VAR_ALLOWED_VALUES] = $allowed_values_order_by;
     }
 
     $a_var_setup[self::VARS][self::ORDER_DIRECTION] = array(

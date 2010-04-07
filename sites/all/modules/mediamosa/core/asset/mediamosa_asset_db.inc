@@ -48,9 +48,6 @@ class mediamosa_asset_db {
   const VIDEOTIMESTAMPMODIFIED = 'videotimestampmodified';
   const PLAY_RESTRICTION_START = 'play_restriction_start';
   const PLAY_RESTRICTION_END = 'play_restriction_end';
-  const IS_LOCKED = 'is_locked';
-  const IS_LOCKED_TRUE = 'TRUE';
-  const IS_LOCKED_FALSE = 'FALSE';
   const REFERENCE_ID = 'reference_id';
   const REFERENCE_ID_LENGTH = 255;
   const ISPRIVATE = 'isprivate';

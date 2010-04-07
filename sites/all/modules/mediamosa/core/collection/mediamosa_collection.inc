@@ -133,6 +133,4 @@ class mediamosa_collection {
 
     return $coll_id;
   }
-
-
 }

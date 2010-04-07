@@ -46,7 +46,7 @@ class mediamosa_asset_search {
    * Search for assets with given parameters.
    * 1.x _media_management_search_asset
    *
-   * @param mediamosa_response $o_mediamosa
+   * @param mediamosa_response $mediamosa
    *  Mediamosa response object.
    * @param array $a_app_ids
    *  Application IDs.
@@ -92,7 +92,7 @@ class mediamosa_asset_search {
    *  Offset within the result rows.
    */
   static public function asset_search(
-    mediamosa_response $o_mediamosa,
+    mediamosa_response $mediamosa,
     array $a_app_ids,
     $cql = NULL,
 
@@ -600,18 +600,18 @@ class mediamosa_asset_search {
     }
 
     // Set the total amount found.
-    $o_mediamosa->item_total_count = $i_found_rows;
+    $mediamosa->item_count_total = $i_found_rows;
 
     if ($return_asset_ids) {
       foreach ($a_asset_ids as $asset_id) {
-        $o_mediamosa->add_item(array('asset_id' => $asset_id));
+        $mediamosa->add_item(array('asset_id' => $asset_id));
       }
     }
     else {
       $a_items = mediamosa_asset::asset_collect($a_asset_ids, $a_app_ids, $aut_user_id, $granted, $a_aut_group_id, $aut_domain, $aut_realm, $is_app_admin, $show_stills, $show_collections);
 
       foreach ($a_items as $a_item) {
-        $o_mediamosa->add_item($a_item);
+        $mediamosa->add_item($a_item);
       }
     }
   }

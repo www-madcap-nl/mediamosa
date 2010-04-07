@@ -331,7 +331,7 @@ function _mediamosa_migration_error() {
   $current_ids = array_keys(db_query("SELECT code FROM {mediamosa_error}")->fetchAllAssoc('code'));
 
   // Copy all to new table.
-  db_query(strtr("INSERT INTO {mediamosa_error} (name, code, message) (SELECT name, code, message FROM #db_name.error#whereORDER BY code ASC)",
+  db_query(strtr("INSERT INTO {mediamosa_error} (name, code, message) (SELECT name, code, message FROM #db_name.error#where)",
     array(
       '#db_name' => $db_name,
       '#where' => count($current_ids) ? ' WHERE code NOT IN(' . implode(',', $current_ids) . ') ' : ' ',
@@ -347,7 +347,7 @@ function _mediamosa_migration_client_applications() {
   $db_name = _mediamosa_migration_get_memo_db();
 
   // Get the current apps.
-  $migrate_apps = db_query(strtr("SELECT * FROM #db_name.{client_applications} ORDER BY caid ASC", array('#db_name' => $db_name)))->fetchAllAssoc('id');
+  $migrate_apps = db_query(strtr("SELECT * FROM #db_name.{client_applications}", array('#db_name' => $db_name)))->fetchAllAssoc('id');
 
   // Now add back the apps as nodes.
   foreach ($migrate_apps as $app_id => $app) {
@@ -394,6 +394,7 @@ function _mediamosa_migration_asset() {
    * Copy from 1.x to 2.x
    * Columns dropped;
    * testtag
+   * locked (unused)
    * has_streamable_mediafiles
    * Columns renamed;
    * mediafile_duration = media_duration
@@ -412,7 +413,6 @@ function _mediamosa_migration_asset() {
         videotimestampmodified,
         play_restriction_start,
         play_restriction_end,
-        is_locked,
         reference_id,
         isprivate,
         mediafile_duration,
@@ -436,7 +436,6 @@ function _mediamosa_migration_asset() {
         videotimestampmodified,
         play_restriction_start,
         play_restriction_end,
-        locked,
         reference_id,
         isprivate,
         mediafile_duration,
@@ -449,7 +448,7 @@ function _mediamosa_migration_asset() {
         viewed,
         played,
         is_protected
-      FROM #db_name.asset ORDER BY parent_id, asset_id ASC)",
+      FROM #db_name.{asset} ORDER BY parent_id, asset_id ASC)",
     array(
       '#db_name' => $db_name
     ))
@@ -539,7 +538,7 @@ function _mediamosa_migration_mediafile() {
         created,
         changed,
         transcode_inherits_acl
-      FROM #db_name.{mediafile} ORDER BY asset_id ASC)",
+      FROM #db_name.{mediafile})",
     array(
       '#db_name' => $db_name
     ))
@@ -642,7 +641,7 @@ function _mediamosa_migration_mediafile_metadata() {
         mfd.still_type,
         mfd.still_format,
         mfd.still_default
-        FROM #db_name.{mediafile_metadata} AS mfd JOIN #db_name.{mediafile} AS mf USING(mediafile_id) ORDER BY mfd.metadata_id ASC)",
+        FROM #db_name.{mediafile_metadata} AS mfd JOIN #db_name.{mediafile} AS mf USING(mediafile_id))",
     array(
       '#db_name' => $db_name
     ))
@@ -718,7 +717,7 @@ function _mediamosa_migration_asset_metadata_property_group() {
         name,
         created,
         changed
-        FROM #db_name.{assetprop_group} ORDER BY propgroup_id ASC)",
+        FROM #db_name.{assetprop_group})",
     array(
       '#db_name' => $db_name
     ))
@@ -782,7 +781,7 @@ function _mediamosa_migration_asset_metadata_property() {
         max_occurences,
         created,
         changed
-        FROM #db_name.{assetprop_definition} ORDER BY prop_id ASC)",
+        FROM #db_name.{assetprop_definition})",
     array(
       '#db_name' => $db_name
     ))
@@ -850,7 +849,7 @@ function _mediamosa_migration_asset_metadata() {
         apd.val_int,
         apd.created,
         apd.changed
-        FROM #db_name.{asset_property} AS apd JOIN #db_name.v_asset_property AS vap USING(id) ORDER BY id ASC)",
+        FROM #db_name.{asset_property} AS apd JOIN #db_name.v_asset_property AS vap USING(id))",
     array(
       '#db_name' => $db_name,
       '#lenlft' => mediamosa_asset_metadata_db::VAL_CHAR_LFT_LENGTH,
@@ -903,7 +902,7 @@ function _mediamosa_migration_aut() {
         aut_name,
         aut_prefix,
         aut_type
-        FROM #db_name.{aut_name} ORDER BY aut_name_id ASC)',
+        FROM #db_name.{aut_name})',
     array(
       '#db_name' => $db_name,
     ))
@@ -930,7 +929,7 @@ function _mediamosa_migration_aut() {
         app_id,
         aut_group_name,
         aut_group_type
-        FROM #db_name.{aut_group} ORDER BY aut_group_id ASC)',
+        FROM #db_name.{aut_group})',
     array(
       '#db_name' => $db_name,
     ))
@@ -957,7 +956,7 @@ function _mediamosa_migration_aut() {
         aut_object_type,
         aut_id,
         aut_type
-        FROM #db_name.{aut_object} ORDER BY aut_object_id ASC)',
+        FROM #db_name.{aut_object})',
     array(
       '#db_name' => $db_name,
     ))
@@ -985,7 +984,7 @@ function _mediamosa_migration_aut() {
         aut_object_type,
         app_slave_id,
         app_master_id
-        FROM #db_name.{aut_app_master_slave} ORDER BY aut_object_id ASC)',
+        FROM #db_name.{aut_app_master_slave})',
     array(
       '#db_name' => $db_name,
     ))
@@ -1067,7 +1066,7 @@ function _mediamosa_migration_collection() {
         changed,
         public_assign,
         is_unappropriate
-      FROM #db_name.collection ORDER BY created ASC)",
+      FROM #db_name.collection)",
     array(
       '#db_name' => $db_name
     ))
@@ -1093,7 +1092,7 @@ function _mediamosa_migration_collection() {
         coll_id,
         created,
         changed
-      FROM #db_name.asset_collection ORDER BY created ASC)",
+      FROM #db_name.asset_collection)",
     array(
       '#db_name' => $db_name
     ))
@@ -1129,7 +1128,7 @@ function _mediamosa_migration_asset_delete() {
         app_id,
         videotimestampmodified,
         coll_id
-      FROM #db_name.asset_delete ORDER BY videotimestampmodified ASC)",
+      FROM #db_name.asset_delete)",
     array(
       '#db_name' => $db_name
     ))
@@ -1166,7 +1165,7 @@ function _mediamosa_migration_user() {
         quotum,
         created,
         changed
-      FROM #db_name.quota_user ORDER BY created ASC)",
+      FROM #db_name.quota_user)",
     array(
       '#db_name' => $db_name
     ))
@@ -1193,7 +1192,7 @@ function _mediamosa_migration_user() {
         quotum,
         created,
         changed
-      FROM #db_name.quota_group ORDER BY created ASC)",
+      FROM #db_name.quota_group)",
     array(
       '#db_name' => $db_name
     ))
@@ -1219,7 +1218,7 @@ function _mediamosa_migration_user() {
         app_id,
         fav_type,
         fav_id
-      FROM #db_name.user_favorites ORDER BY name ASC)",
+      FROM #db_name.user_favorites)",
     array(
       '#db_name' => $db_name
     ))
@@ -1262,7 +1261,7 @@ function _mediamosa_migration_ticket() {
         mediafile_id,
         created,
         changed
-      FROM #db_name.ticket ORDER BY ticket_id ASC)",
+      FROM #db_name.ticket)",
     array(
       '#db_name' => $db_name
     ))
@@ -1305,7 +1304,7 @@ function _mediamosa_migration_ftp_batch() {
         finished,
         email_address,
         email_contents
-      FROM #db_name.ftp_batch ORDER BY batch_id ASC)",
+      FROM #db_name.ftp_batch)",
     array(
       '#db_name' => $db_name
     ))
@@ -1327,7 +1326,7 @@ function _mediamosa_migration_ftp_batch() {
       ) (SELECT
         asset_id,
         batch_id
-      FROM #db_name.ftp_batch_asset GROUP BY batch_id, asset_id ORDER BY id ASC)",
+      FROM #db_name.ftp_batch_asset GROUP BY batch_id, asset_id)",
     array(
       '#db_name' => $db_name
     ))
@@ -1372,7 +1371,7 @@ function _mediamosa_migration_webservice() {
         handle,
         description,
         status
-      FROM #db_name.webservice_management ORDER BY webservice_management_id ASC)",
+      FROM #db_name.webservice_management)",
     array(
       '#db_name' => $db_name
     ))
@@ -1402,7 +1401,7 @@ function _mediamosa_migration_webservice() {
         wa.webservice_management_handle,
         wa.caid,
         wa.status
-      FROM #db_name.webservice_management_capp AS wa JOIN {mediamosa_webservice} AS w ON w.handle = wa.webservice_management_handle JOIN mediamosa_app AS app ON app.app_id = wa.caid ORDER BY wa.wmcaid ASC)",
+        FROM #db_name.webservice_management_capp AS wa JOIN {mediamosa_webservice} AS w ON w.handle = wa.webservice_management_handle JOIN mediamosa_app AS app ON app.app_id = wa.caid)",
     array(
       '#db_name' => $db_name
     ))
@@ -1451,7 +1450,7 @@ function _mediamosa_migration_asset_supplement() {
         oai_schemalocation,
         created,
         changed
-      FROM #db_name.asset_supplement ORDER BY created ASC)",
+      FROM #db_name.asset_supplement)",
     array(
       '#db_name' => $db_name
     ))
@@ -1528,7 +1527,7 @@ function _mediamosa_migration_job() {
         changed,
         create_still,
         still_parameters
-      FROM #db_name.job ORDER BY job_id ASC)",
+      FROM #db_name.job)",
     array(
       '#db_name' => $db_name
     ))
@@ -1565,7 +1564,7 @@ function _mediamosa_migration_job() {
         still_parameters,
         created,
         changed
-    FROM #db_name.still_job ORDER BY job_id ASC)",
+    FROM #db_name.still_job)",
     array(
       '#db_name' => $db_name
     ))
@@ -1600,7 +1599,7 @@ function _mediamosa_migration_job() {
         file_extension,
         created,
         changed
-    FROM #db_name.transcode_job ORDER BY job_id ASC)",
+    FROM #db_name.transcode_job)",
     array(
       '#db_name' => $db_name
     ))
@@ -1633,7 +1632,7 @@ function _mediamosa_migration_job() {
         create_still,
         created,
         changed
-    FROM #db_name.upload_job ORDER BY job_id ASC)",
+    FROM #db_name.upload_job)",
     array(
       '#db_name' => $db_name
     ))
@@ -1710,7 +1709,7 @@ function _mediamosa_migration_jobserver($from_dbname, $to_dbname) {
         error_description,
         created,
         changed
-    FROM #to_dbname.{jobserver_job} ORDER BY jobserver_job_id ASC)",
+    FROM #to_dbname.{jobserver_job})",
     array(
       '#from_dbname' => $from_dbname,
       '#to_dbname' => $to_dbname,
@@ -1755,7 +1754,7 @@ function _mediamosa_migration_jobserver($from_dbname, $to_dbname) {
         error_description,
         created,
         changed
-    FROM #to_dbname.{jobserver_job} ORDER BY jobserver_job_id ASC)",
+    FROM #to_dbname.{jobserver_job})",
     array(
       '#from_dbname' => $from_dbname,
       '#to_dbname' => $to_dbname,
@@ -1781,7 +1780,7 @@ function _mediamosa_migration_jobserver($from_dbname, $to_dbname) {
         analyse_result,
         created,
         changed
-    FROM #to_dbname.{jobserver_analyse_job} ORDER BY jobserver_job_id ASC)",
+    FROM #to_dbname.{jobserver_analyse_job})",
     array(
       '#from_dbname' => $from_dbname,
       '#to_dbname' => $to_dbname,
@@ -1817,7 +1816,7 @@ function _mediamosa_migration_jobserver($from_dbname, $to_dbname) {
         changed,
         blackstill_check,
         still_parameters
-    FROM #to_dbname.{jobserver_still_job} ORDER BY jobserver_job_id ASC)",
+    FROM #to_dbname.{jobserver_still_job})",
     array(
       '#from_dbname' => $from_dbname,
       '#to_dbname' => $to_dbname,
@@ -1853,7 +1852,7 @@ function _mediamosa_migration_jobserver($from_dbname, $to_dbname) {
         changed,
         blackstill_check,
         still_parameters
-    FROM #to_dbname.{jobserver_transcode_job} ORDER BY jobserver_job_id ASC)",
+    FROM #to_dbname.{jobserver_transcode_job})",
     array(
       '#from_dbname' => $from_dbname,
       '#to_dbname' => $to_dbname,
@@ -1886,7 +1885,7 @@ function _mediamosa_migration_transcode() {
 
   // Get the transcode_profiles.
   $result = mediamosa_db::db_query(
-    'SELECT * FROM #db_name.transcode_profile ORDER BY transcode_profile_id ASC',
+    'SELECT * FROM #db_name.transcode_profile',
     array(
       '#db_name' => $db_name,
     )
@@ -1943,7 +1942,7 @@ function _mediamosa_migration_transcode() {
         required,
         created,
         changed
-    FROM #db_name.transcode_mapping ORDER BY transcode_mapping_id ASC)",
+    FROM #db_name.transcode_mapping)",
     array(
       '#db_name' => $db_name
     ))
@@ -1981,8 +1980,8 @@ function _mediamosa_migration_create_server_nodes() {
     mediamosa_server_db::SERVER_TYPE_UPLOAD => 'upload_server',
   );
 
-  $a_streaming_server_containers = db_query(strtr('SELECT * FROM #db_name.streaming_server_container ORDER BY streaming_server_id ASC', array('#db_name' => $db_name)))->fetchAll();
-  $a_transcoding_server_tool = db_query(strtr('SELECT * FROM #db_name.transcoding_server_tool ORDER BY transcoding_server_id ASC', array('#db_name' => $db_name)))->fetchAll();
+  $a_streaming_server_containers = db_query(strtr('SELECT * FROM #db_name.streaming_server_container', array('#db_name' => $db_name)))->fetchAll();
+  $a_transcoding_server_tool = db_query(strtr('SELECT * FROM #db_name.transcoding_server_tool', array('#db_name' => $db_name)))->fetchAll();
 
   foreach ($tables as $type => $table) {
     $result = db_query(
@@ -2127,7 +2126,7 @@ function _mediamosa_migration_statistics() {
         container_type,
         diskspace,
         timestamp
-        FROM #db_name.{statistics_diskspace_used} ORDER BY id ASC)",
+        FROM #db_name.{statistics_diskspace_used})",
     array(
       '#db_name' => $db_name
     ))
@@ -2156,7 +2155,7 @@ function _mediamosa_migration_statistics() {
         group_id,
         file_size,
         timestamp
-        FROM #db_name.{statistics_file_upload} ORDER BY id ASC)",
+        FROM #db_name.{statistics_file_upload})",
     array(
       '#db_name' => $db_name
     ))
@@ -2181,7 +2180,7 @@ function _mediamosa_migration_statistics() {
         request,
         process_time,
         query_count
-        FROM #db_name.{statistics_rest_log} ORDER BY id ASC)",
+        FROM #db_name.{statistics_rest_log})",
     array(
       '#db_name' => $db_name
     ))
@@ -2206,7 +2205,7 @@ function _mediamosa_migration_statistics() {
         keyword,
         app_id,
         searched
-        FROM #db_name.{statistics_search_request} ORDER BY id ASC)",
+        FROM #db_name.{statistics_search_request})",
     array(
       '#db_name' => $db_name
     ))
@@ -2243,7 +2242,7 @@ function _mediamosa_migration_statistics() {
         container_type,
         play_type,
         played
-        FROM #db_name.{statistics_stream_request} ORDER BY id ASC)",
+        FROM #db_name.{statistics_stream_request})",
     array(
       '#db_name' => $db_name
     ))
@@ -2276,7 +2275,7 @@ function _mediamosa_migration_statistics() {
         app_id,
         owner_id,
         group_id
-        FROM #db_name.{statistics_stream_request_collection} ORDER BY id ASC)",
+        FROM #db_name.{statistics_stream_request_collection})",
     array(
       '#db_name' => $db_name
     ))
@@ -2345,7 +2344,7 @@ function _mediamosa_migration_vpx_ftp() {
         count,
         accessed,
         modified
-        FROM #db_name.{ftpuser} ORDER BY id ASC)",
+        FROM #db_name.{ftpuser})",
     array(
       '#db_name' => $db_name
     ))

@@ -56,7 +56,7 @@ class mediamosa_response extends mediamosa {
 
   // Public counters.
   public $item_count = 0;
-  public $item_total_count = 0;
+  public $item_count_total = 0;
   public $item_offset = 0;
 
   // ------------------------------------------------------------------ Contructor
@@ -223,7 +223,7 @@ class mediamosa_response extends mediamosa {
       'request_result' => self::SUCCESS,
       'request_result_id' => mediamosa_error::ERRORCODE_OKAY,
       'request_result_description' => '',//mediamosa_error::error_code_find_description(mediamosa_error::ERRORCODE_OKAY),
-      'request_uri' => "[" . $this->request_method . "] " . (mediamosa_unicode::substr($this->request_uri, 0, mediamosa_unicode::strlen('internal')) == 'internal' ? 'Internal MediaMosa call' : (mediamosa_unicode::substr($this->request_uri, 0, 1) == '/' ? '' : '/') . $this->request_uri),
+      'request_uri' => "[" . $this->request_method . "] " . (mediamosa_unicode::substr($this->request_uri, 0, mediamosa_unicode::strlen('internal')) == 'internal' ? 'Internal MediaMosa call' : $this->request_uri),
       'item_count' => 0,
       'version' => mediamosa_version::MEDIAMOSA_VERSION
     ),
@@ -239,7 +239,7 @@ class mediamosa_response extends mediamosa {
     }
 
     $this->item_count = 0;
-    $this->item_total_count = $this->item_offset = 0;
+    $this->item_count_total = $this->item_offset = 0;
   }
 
   /**
@@ -381,7 +381,7 @@ class mediamosa_response extends mediamosa {
 
     $this->response['header']['request_process_time'] = $this->get_processed_time();
 
-    $this->response['header']['item_count_total'] = (! $this->item_total_count ? $this->item_count : $this->item_total_count);
+    $this->response['header']['item_count_total'] = (!$this->item_count_total ? $this->item_count : $this->item_count_total);
     $this->response['header']['item_offset'] = $this->item_offset;
     $this->response['header']['item_count'] = $this->item_count;
 
@@ -405,10 +405,9 @@ class mediamosa_response extends mediamosa {
    * @return string
    */
   public function generate_xml() {
-
     $this->response['header']['request_process_time'] = $this->get_processed_time();
 
-    $this->response['header']['item_count_total'] = (! $this->item_total_count ? $this->item_count : $this->item_total_count);
+    $this->response['header']['item_count_total'] = (!$this->item_count_total ? $this->item_count : $this->item_count_total);
     $this->response['header']['item_offset'] = $this->item_offset;
     $this->response['header']['item_count'] = $this->item_count;
 

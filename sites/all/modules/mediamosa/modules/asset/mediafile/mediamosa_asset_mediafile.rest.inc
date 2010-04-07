@@ -80,7 +80,7 @@ class mediamosa_rest_call_count_asset_mediafile extends mediamosa_rest_call {
     $o_mediamosa->set_result_okay();
 
     // Set the total count.
-    $o_mediamosa->item_total_count = mediamosa_db::db_count_items(mediamosa_asset_mediafile_db::TABLE_NAME, $app_id, $owner_id, $group_id);
+    $o_mediamosa->item_count_total = mediamosa_db::db_count_items(mediamosa_asset_mediafile_db::TABLE_NAME, $app_id, $owner_id, $group_id);
   }
 }
 

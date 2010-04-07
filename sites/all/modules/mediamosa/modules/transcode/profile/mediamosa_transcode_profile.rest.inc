@@ -65,7 +65,7 @@ class mediamosa_rest_call_transcode_profile_search extends mediamosa_rest_call {
 
     $a_item = array();
     foreach ($a_transcode_profiles as $a_transcode_profile) {
-      $a_item[mediamosa_transcode_profile_db::ID] = $a_transcode_profile[mediamosa_transcode_profile_db::ID];
+      $a_item['profile_id'] = $a_transcode_profile[mediamosa_transcode_profile_db::ID];
       $a_item[mediamosa_transcode_profile_db::PROFILE] = $a_transcode_profile[mediamosa_transcode_profile_db::PROFILE];
       $a_item['default'] = $a_transcode_profile[mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE];
       $a_item['global'] = $a_transcode_profile[mediamosa_transcode_profile_db::APP_ID] > 0 ? 'FALSE' : 'TRUE';
