@@ -49,6 +49,188 @@ function mediamosa_statistics_cron() {
   }
 }
 
+function mediamosa_statistics_mediamosa_register_rest_call_doc() {
+  $a_rest_calls = array();
+
+  $a_rest_calls['statistics/dataupload'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Get the uploaded mediafiles.',
+    mediamosa_rest_call::DESCRIPTION => 'Get the uploaded mediafiles.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'statistics/dataupload?month=1&year=2010&limit=150',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <app_id>14</app_id>
+    <owner_id>admin</owner_id>
+    <group_id></group_id>
+    <file_size>993480</file_size>
+    <timestamp>2010-01-22 16:22:54</timestamp>
+  </item>
+</items>',
+  );
+
+  $a_rest_calls['statistics/mostsearchedwords'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Get the search.',
+    mediamosa_rest_call::DESCRIPTION => 'Get the most popular words.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'statistics/mostsearchedwords?begindate=2009&limit=150&order_direction=desc',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <word>Best</word>
+    <count>863</count>
+  </item>
+</items>',
+  );
+
+  $a_rest_calls['statistics/searchedwords'][mediamosa_rest_call::METHOD_GET] = $a_rest_calls['statistics/mostsearchedwords'][mediamosa_rest_call::METHOD_GET];
+
+  $a_rest_calls['statistics/datausagevideo'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Get the used diskspace.',
+    mediamosa_rest_call::DESCRIPTION => 'Get the used diskspace.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'statistics/datausagevideo?month=1&year=2010&type=user&limit=150&order_direction=asc',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <container_type>asf</container_type>
+    <user_id>admin</user_id>
+    <type>user</type>
+    <app_id>14</app_id>
+    <diskspace_mb>105</diskspace_mb>
+  </item>
+</items>',
+  );
+
+  $a_rest_calls['statistics/newestcollections'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Get the latest collections.',
+    mediamosa_rest_call::DESCRIPTION => 'Get the latest collections.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'statistics/newestcollections?limit=150&order_direction=desc',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <coll_id>vTSPjPOSJ7pIeNQVTX0BGv6z</coll_id>
+    <app_id>14</app_id>
+    <owner_id>admin</owner_id>
+    <title>Best</title>
+    <description></description>
+    <created>2010-04-08 14:58:27</created>
+    <changed>2010-04-08 14:58:27</changed>
+  </item>
+</items>',
+  );
+
+  $a_rest_calls['statistics/newestmediafiles'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Get the latest mediafiles.',
+    mediamosa_rest_call::DESCRIPTION => 'Get the 50 latest uploaded mediafiles.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'statistics/newestmediafiles?limit=150&order_direction=desc',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <asset_id>IwHgMjfuMdbSdxdOPWEQJHdk</asset_id>
+    <app_id>14</app_id>
+    <owner_id>admin</owner_id>
+    <group_id></group_id>
+    <mediafile_id>e2NbmiUoaRJAXVZPPJW4T9BW</mediafile_id>
+    <filename>Best.wmv</filename>
+    <created>2010-04-07 15:21:12</created>
+    <container_type>asf</container_type>
+    <filesize>993480</filesize>
+  </item>
+</items>',
+  );
+
+  $a_rest_calls['statistics/playedstreams'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Get the played requests.',
+    mediamosa_rest_call::DESCRIPTION => 'Get the played requests.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'statistics/playedstreams?month=1&year=2010&limit=150&order_direction=desc',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <id>97</id>
+    <app_id>14</app_id>
+    <asset_id>7pAkDsceysAZPo0q3PhjtBE1</asset_id>
+    <mediafile_id>VxsIJXDjuYUJKq81n9Ulimmu</mediafile_id>
+    <owner_id>admin</owner_id>
+    <group_id></group_id>
+    <filesize>1282548</filesize>
+    <container_type>flv</container_type>
+    <play_type>object</play_type>
+    <played>2010-01-27 14:27:22</played>
+  </item>
+</items>',
+  );
+
+  $a_rest_calls['statistics/popularcollections'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Get the collections.',
+    mediamosa_rest_call::DESCRIPTION => 'Get most popular collections.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'statistics/popularcollections?limit=150&order_direction=desc',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <coll_id>vTSPjPOSJ7pIeNQVTX0BGv6z</coll_id>
+    <title>Best</title>
+    <description></description>
+    <app_id>14</app_id>
+    <owner_id>admin</owner_id>
+    <created>2010-04-08 14:58:27</created>
+    <count>97</count>
+  </item>
+</items>',
+  );
+
+  $a_rest_calls['statistics/popularmediafiles'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Get the mediafiles.',
+    mediamosa_rest_call::DESCRIPTION => 'Get most popular mediafiles.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'statistics/popularmediafiles?limit=150&order_direction=desc',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <mediafile_id>VxsIJXDjuYUJKq81n9Ulimmu</mediafile_id>
+    <asset_id>7pAkDsceysAZPo0q3PhjtBE1</asset_id>
+    <app_id>14</app_id>
+    <owner_id>admin</owner_id>
+    <group_id></group_id>
+    <container_type>flv</container_type>
+    <filesize>1282548</filesize>
+    <count>100</count>
+    <filename>Best.flv</filename>
+    <created>2010-01-22 16:23:41</created>
+  </item>
+</items>',
+  );
+
+  $a_rest_calls['statistics/searchrequest'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Get the search.',
+    mediamosa_rest_call::DESCRIPTION => 'Get the most used search.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'statistics/searchrequest?month=1&year=2010&limit=150',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <word>best</word>
+    <count>878</count>
+  </item>
+</items>',
+  );
+
+  $a_rest_calls['statistics/streams'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Get the streams.',
+    mediamosa_rest_call::DESCRIPTION => 'Get the most popular stream requests.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'statistics/streams?begindate=2009&enddate=2011&limit=150&order_direction=desc',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <mediafile_id>VxsIJXDjuYUJKq81n9Ulimmu</mediafile_id>
+    <owner_id>admin</owner_id>
+    <group_id></group_id>
+    <filename>Best.flv</filename>
+    <asset_id>7pAkDsceysAZPo0q3PhjtBE1</asset_id>
+    <requested>100</requested>
+    <app_id>14</app_id>
+  </item>
+</items>',
+  );
+
+  return $a_rest_calls;
+}
+
 /**
  * Implements hook_mediamosa_register_rest_call().
  */
@@ -59,7 +241,6 @@ function mediamosa_statistics_mediamosa_register_rest_call() {
   $a_rest_calls['statistics/newestmediafiles'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_statistics_get_newest_mediafiles',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::DESCRIPTION => 'Get the 50 latest uploaded mediafiles.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_statistics',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
@@ -67,7 +248,6 @@ function mediamosa_statistics_mediamosa_register_rest_call() {
   $a_rest_calls['statistics/popularmediafiles'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_statistics_get_most_popular_mediafiles',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::DESCRIPTION => 'Get most popular mediafiles.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_statistics',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
@@ -75,7 +255,6 @@ function mediamosa_statistics_mediamosa_register_rest_call() {
   $a_rest_calls['statistics/newestcollections'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_statistics_get_newest_collections',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::DESCRIPTION => 'Get the latest collections.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_statistics',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
@@ -83,7 +262,6 @@ function mediamosa_statistics_mediamosa_register_rest_call() {
   $a_rest_calls['statistics/popularcollections'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_statistics_get_most_popular_collections',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::DESCRIPTION => 'Get most popular collections.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_statistics',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
@@ -100,7 +278,6 @@ function mediamosa_statistics_mediamosa_register_rest_call() {
   $a_rest_calls['statistics/dataupload'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_statistics_get_historical_uploaded_mediafiles',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::DESCRIPTION => 'Get the uploaded mediafiles.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_statistics',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
@@ -108,7 +285,6 @@ function mediamosa_statistics_mediamosa_register_rest_call() {
   $a_rest_calls['statistics/datausagevideo'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_statistics_get_used_diskspace',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::DESCRIPTION => 'Get the used diskspace.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_statistics',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
@@ -116,7 +292,6 @@ function mediamosa_statistics_mediamosa_register_rest_call() {
   $a_rest_calls['statistics/playedstreams'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_statistics_get_requested_streams',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::DESCRIPTION => 'Get the played requests.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_statistics',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
@@ -124,7 +299,6 @@ function mediamosa_statistics_mediamosa_register_rest_call() {
   $a_rest_calls['statistics/streams'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_statistics_get_most_popular_streams',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::DESCRIPTION => 'Get the most popular requests.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_statistics',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
@@ -132,7 +306,6 @@ function mediamosa_statistics_mediamosa_register_rest_call() {
   $a_rest_calls['statistics/mostsearchedwords'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_statistics_get_most_popular_words',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::DESCRIPTION => 'Get the most popular words.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_statistics',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
@@ -143,7 +316,6 @@ function mediamosa_statistics_mediamosa_register_rest_call() {
   $a_rest_calls['statistics/searchrequest'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_statistics_get_searchrequest',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::DESCRIPTION => 'Get the most used search.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_statistics',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
