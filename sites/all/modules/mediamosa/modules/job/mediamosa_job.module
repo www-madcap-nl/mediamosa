@@ -403,9 +403,21 @@ At least one output file must be specified</error_description>
   $a_rest_calls['mediafile/transcode/$job_id/status'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'Return a listing of the given job ID.',
     mediamosa_rest_call::DESCRIPTION => 'Return a listing of the given job ID.',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'mediafile/transcode/12/status?user_id=admin',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <id>12</id>
+    <owner>admin</owner>
+    <status>FINISHED</status>
+    <progress>1.000</progress>
+    <priority>0</priority>
+    <job_type>STILL</job_type>
+    <started>07-04-2010 17:22</started>
+    <started_unix>1270653732</started_unix>
+    <error_description></error_description>
+  </item>
+</items>',
   );
 
   $a_rest_calls['video/$mediafile_id/transcode'][mediamosa_rest_call::METHOD_POST] = array(

@@ -817,7 +817,7 @@ class mediamosa_rest_call_job_search extends mediamosa_rest_call {
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::JOB_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_JOB,
+          self::VAR_TYPE => mediamosa_type::TYPE_INT,
           self::VAR_DESCRIPTION => 'The job ID to search on.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
