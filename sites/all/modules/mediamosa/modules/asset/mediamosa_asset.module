@@ -895,11 +895,11 @@ name=Example&delete=cascade',
 
   // Count number of mediafiles based on owner/app/group.
   $rest_calls['mediafile/count'][mediamosa_rest_call::METHOD_GET] = array(
-    mediamosa_rest_call::TITLE => 'Return the number of mediafile based on app_id, owner_id and group_id.',
-    mediamosa_rest_call::DESCRIPTION => '',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::TITLE => 'Return the number of mediafiles.',
+    mediamosa_rest_call::DESCRIPTION => 'Return the number of mediafile based on app_id, owner_id and group_id.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'mediafile/count',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => 'The amount is in the <header> the <item_count_total>6254</item_count_total>',
   );
 
   // Count number of mediafiles based on owner/app/group.
@@ -922,11 +922,39 @@ name=Example&delete=cascade',
 
   // Get the stills from mediafile.
   $rest_calls['mediafile/$mediafile_id/still'][mediamosa_rest_call::METHOD_GET] = array(
-    mediamosa_rest_call::TITLE => 'Recieve the still information of a mediafile.',
-    mediamosa_rest_call::DESCRIPTION => '',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::TITLE => 'Recieve the still information.',
+    mediamosa_rest_call::DESCRIPTION => 'Recieve the still information of a mediafile.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'mediafile/OW35AQyoPNUSi4iINunmS2nr/still?user_id=admin&autostart=true',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <output>http://mediamosa2/still/g2hJMVii7ND9UbKaoNu6xwMw</output>
+    <content_type></content_type>
+    <ticket_id>g2hJMVii7ND9UbKaoNu6xwMw</ticket_id>
+    <stills id="1">
+      <still_id>GqrqS9UYfyKAsrW73mPVAyRH</still_id>
+      <mediafile_id>OW35AQyoPNUSi4iINunmS2nr</mediafile_id>
+      <asset_id>7pAkDsceysAZPo0q3PhjtBE1</asset_id>
+      <orderasset_id>7pAkDsceysAZPo0q3PhjtBE1</orderasset_id>
+      <app_id>14</app_id>
+      <owner_id>admin</owner_id>
+      <filename>GqrqS9UYfyKAsrW73mPVAyRH</filename>
+      <mediafile_id_source>OW35AQyoPNUSi4iINunmS2nr</mediafile_id_source>
+      <tag></tag>
+      <width>176</width>
+      <height>144</height>
+      <filesize>6165</filesize>
+      <mime_type>image/jpeg</mime_type>
+      <still_time_code>7</still_time_code>
+      <still_order>0</still_order>
+      <still_format>jpeg</still_format>
+      <still_type>NORMAL</still_type>
+      <still_default>TRUE</still_default>
+      <ticket>V2cbOQCJcasaabUtUIXIqW23</ticket>
+      <still_ticket>http://mediamosa2/still/V2cbOQCJcasaabUtUIXIqW23</still_ticket>
+    </stills>
+  </item>
+</items>',
   );
 
   // Get the still.
@@ -1083,10 +1111,14 @@ name=Example&delete=cascade',
   // Create mediafile.
   $rest_calls['mediafile/create'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Create a mediafile.',
-    mediamosa_rest_call::DESCRIPTION => '',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::DESCRIPTION => 'Create a mediafile.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'mediafile/create',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <mediafile_id>ERTpgSptYbqvUaYUJGrryyML</mediafile_id>
+  </item>
+</items>',
   );
 
   // Update mediafile.
@@ -1128,10 +1160,15 @@ name=Example&delete=cascade',
   // Create ticket for upload.
   $rest_calls['mediafile/$mediafile_id/uploadticket/create'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Create a ticket for upload.',
-    mediamosa_rest_call::DESCRIPTION => '',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::DESCRIPTION => 'Create a ticket for upload.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'mediafile/ERTpgSptYbqvUaYUJGrryyML/uploadticket/create',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <action>http://mediamosa2/mediafile/upload?upload_ticket=F1LVMTUCNi5kjXNbHMZPFwzD</action>
+    <uploadprogress_url>http://mediamosa2/mediafile/uploadprogress</uploadprogress_url>
+  </item>
+</items>',
   );
 
   // Create ticket for upload.
@@ -1381,10 +1418,11 @@ user_id = "username"',
 
   $rest_calls['mediafile/$mediafile_id/upload'][mediamosa_rest_call::METHOD_PUT] = array(
     mediamosa_rest_call::TITLE => 'Upload a mediafile.',
-    mediamosa_rest_call::DESCRIPTION => '',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
-    mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::DESCRIPTION => 'Upload a mediafile.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'mediafile/ERTpgSptYbqvUaYUJGrryyML/upload<br />
+user_id=admin',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
   );
 
   // Download file.

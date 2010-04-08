@@ -630,6 +630,7 @@ function _build_param($name, $var, $required) {
     case mediamosa_type::TYPE_SERIAL:
     case mediamosa_type::TYPE_URL:
     case mediamosa_type::TYPE_JOB:
+    case mediamosa_type::TYPE_COMMAND:
       $item = array(
         '#weight' => '10',
         '#type' => 'textfield',

@@ -379,9 +379,21 @@ At least one output file must be specified</error_description>
   $a_rest_calls['mediafile/$mediafile_id/joblist'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'Return a listing of the given mediafile ID.',
     mediamosa_rest_call::DESCRIPTION => 'Return a listing of the given mediafile ID.',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'mediafile/OW35AQyoPNUSi4iINunmS2nr/joblist?user_id=admin',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <id>13</id>
+    <owner>admin</owner>
+    <status>WAITING</status>
+    <progress>0.000</progress>
+    <priority>0</priority>
+    <job_type>TRANSCODE</job_type>
+    <started></started>
+    <started_unix></started_unix>
+    <error_description></error_description>
+  </item>
+</items>',
   );
 
   $a_rest_calls['job/$job_id/status'][mediamosa_rest_call::METHOD_GET] = array(
@@ -431,9 +443,13 @@ At least one output file must be specified</error_description>
   $a_rest_calls['mediafile/$mediafile_id/transcode'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Create a transcode job.',
     mediamosa_rest_call::DESCRIPTION => 'Create a transcode job.',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'mediafile/OW35AQyoPNUSi4iINunmS2nr/transcode',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <job_id>14</job_id>
+  </item>
+</items>',
   );
 
   $a_rest_calls['asset/$asset_id/still/create'][mediamosa_rest_call::METHOD_POST] = array(
@@ -447,9 +463,14 @@ At least one output file must be specified</error_description>
   $a_rest_calls['mediafile/$mediafile_id/still/create'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Create still job for mediafile.',
     mediamosa_rest_call::DESCRIPTION => 'Create still job for mediafile.',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'mediafile/OW35AQyoPNUSi4iINunmS2nr/still/create<br />
+user_id=admin',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <job_id>15</job_id>
+  </item>
+</items>',
   );
 
   $a_rest_calls['server/joblist'][mediamosa_rest_call::METHOD_GET] = array(
