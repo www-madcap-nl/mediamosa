@@ -1376,11 +1376,11 @@ user_id = "username"',
 
   // Still.
   $rest_calls['still/$ticket_id'][mediamosa_rest_call::METHOD_GET] = array(
-    mediamosa_rest_call::TITLE => 'Enables viewing of stills using the ticket system.',
-    mediamosa_rest_call::DESCRIPTION => '',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::TITLE => 'Enables viewing of stills',
+    mediamosa_rest_call::DESCRIPTION => 'Enables viewing of stills using the ticket system.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'still/142',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => 'It returns the still image',
   );
 
   // Allowed on POST as well.

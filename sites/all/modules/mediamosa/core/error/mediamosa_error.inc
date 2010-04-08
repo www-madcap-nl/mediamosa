@@ -205,6 +205,8 @@ class mediamosa_error {
   const ERRORCODE_USERMAN_USER_EXISTS = 1904;
   const ERRORCODE_IS_UNAPPROPRIATE = 1905;
 
+  const ERRORCODE_INVALID_STILL_TICKET = 2000;
+
   // ------------------------------------------------------------------ Static Function.
   /**
    * Get the listing of the error code table.

@@ -211,6 +211,7 @@ function _mediamosa_error_install() {
     'ERRORCODE_IMAGE_FILE_TOO_BIG' => 'The image file size is bigger, than the allowed maximum (@filesize byte)',
     'ERRORCODE_TRANSCODE_PROFILE_EXISTS' => 'Transcode profile \'@profile_name\' already exists.',
     'ERRORCODE_TRANSCODE_PROFILE_NOT_FOUND' => 'Transcode profile with ID \'@profile_id\' not found.',
+    'ERRORCODE_INVALID_STILL_TICKET' => 'Invalid still ticket with ID \'@ticket_id\'',
   );
 
   $query = array();

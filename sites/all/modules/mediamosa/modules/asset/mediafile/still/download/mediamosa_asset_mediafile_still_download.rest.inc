@@ -69,7 +69,7 @@ class mediamosa_rest_call_download_mediafile_still extends mediamosa_rest_call {
     $file = mediamosa_configuration_storage::ticket_still_location_get() . $ticket_id;
 
     if (!file_exists($file)) {
-      throw new mediamosa_exception(0, 'Invalid still ticket');
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INVALID_STILL_TICKET, array('@ticket_id' => $ticket_id));
     }
 
     // Set headers.
