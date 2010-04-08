@@ -945,19 +945,116 @@ function mediamosa_asset_mediamosa_register_rest_call_doc() {
   // Get mediafiles of asset.
   $rest_calls['asset/$asset_id/mediafile'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'Get mediafiles of asset.',
-    mediamosa_rest_call::DESCRIPTION => '',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::DESCRIPTION => 'Retrieve a detailed list of the mediafiles of an asset.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'asset/F2J4KfIVAiwicAygMfXpPUuT/mediafile',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <mediafile_id>1zVCthfDab50KwdksbsqGJU7</mediafile_id>
+    <asset_id>F2J4KfIVAiwicAygMfXpPUuT</asset_id>
+    <mediafile_id_source>mHFdpBJz9dTK911fRpI14MKK</mediafile_id_source>
+    <tag></tag>
+    <app_id>5</app_id>
+    <owner_id>SURFNET.michiel</owner_id>
+    <group_id></group_id>
+    <is_original_file>FALSE</is_original_file>
+    <is_downloadable>FALSE</is_downloadable>
+    <is_streamable>FALSE</is_streamable>
+    <is_still>FALSE</is_still>
+    <filename>Introduction.flv</filename>
+    <uri></uri>
+    <transcode_profile_id>13</transcode_profile_id>
+    <tool>ffmpeg</tool>
+    <command>videobitrate:200000;fps:15;size:352x288;videocodec:flv;audiocodec:libmp3lame;audiobitrate:40000;audiosamplingrate:22050;maintain_aspect_ratio:yes</command>
+    <file_extension>flv</file_extension>
+    <is_protected>DOMAIN_REALM</is_protected>
+    <created>2009-06-17 18:04:17</created>
+    <changed>2009-09-21 13:03:04</changed>
+    <transcode_inherits_acl>FALSE</transcode_inherits_acl>
+    <metadata>
+      <video_codec>flv</video_codec>
+      <colorspace>yuv420p</colorspace>
+      <width>352</width>
+      <height>288</height>
+      <fps>15.00</fps>
+      <audio_codec>mp3</audio_codec>
+      <sample_rate>22050</sample_rate>
+      <channels>stereo</channels>
+      <file_duration>00:00:20.4</file_duration>
+      <container_type>flv</container_type>
+      <bitrate>40</bitrate>
+      <bpp>0.03</bpp>
+      <filesize>491381</filesize>
+      <mime_type>video/x-flv</mime_type>
+      <created>2009-06-17 18:04:48</created>
+      <changed>2009-11-10 17:02:37</changed>
+      <is_hinted>FALSE</is_hinted>
+      <is_inserted_md>TRUE</is_inserted_md>
+    </metadata>
+    <ega_download_url></ega_download_url>
+    <ega_stream_url>http://www.20.test.surfmedia.nl/app/video/F2J4KfIVAiwicAygMfXpPUuT/play?format_id=1zVCthfDab50KwdksbsqGJU7</ega_stream_url>
+    <ega_play_url>http://www.20.test.surfmedia.nl/app/video/F2J4KfIVAiwicAygMfXpPUuT/play?format_id=1zVCthfDab50KwdksbsqGJU7</ega_play_url>
+  </item>
+  <item id="2">
+    <mediafile_id>mHFdpBJz9dTK911fRpI14MKK</mediafile_id>
+    <asset_id>F2J4KfIVAiwicAygMfXpPUuT</asset_id>
+    <mediafile_id_source></mediafile_id_source>
+    <tag></tag>
+    <app_id>5</app_id>
+    <owner_id>SURFNET.michiel</owner_id>
+    <group_id>default</group_id>
+    <is_original_file>TRUE</is_original_file>
+    <is_downloadable>FALSE</is_downloadable>
+    <is_streamable>FALSE</is_streamable>
+    <is_still>FALSE</is_still>
+    <filename>Introduction.mov</filename>
+    <uri></uri>
+    <transcode_profile_id></transcode_profile_id>
+    <tool></tool>
+    <command></command>
+    <file_extension></file_extension>
+    <is_protected>DOMAIN_REALM</is_protected>
+    <created>2009-06-17 17:51:58</created>
+    <changed>2009-09-21 13:03:04</changed>
+    <transcode_inherits_acl>TRUE</transcode_inherits_acl>
+    <metadata>
+      <video_codec>qtrle</video_codec>
+      <colorspace>rgb32</colorspace>
+      <width>640</width>
+      <height>480</height>
+      <fps>24.00</fps>
+      <audio_codec>pcm_s16be</audio_codec>
+      <sample_rate>44100</sample_rate>
+      <channels>stereo</channels>
+      <file_duration>00:00:20.0</file_duration>
+      <container_type>mov;mp4;m4a;3gp;3g2;mj2</container_type>
+      <bitrate>5863</bitrate>
+      <bpp>0.8</bpp>
+      <filesize>14659968</filesize>
+      <mime_type>video/quicktime</mime_type>
+      <created>2009-06-17 18:03:17</created>
+      <changed>2009-11-10 17:02:37</changed>
+      <is_hinted>TRUE</is_hinted>
+      <is_inserted_md>FALSE</is_inserted_md>
+    </metadata>
+    <ega_download_url></ega_download_url>
+    <ega_stream_url>http://www.20.test.surfmedia.nl/app/video/F2J4KfIVAiwicAygMfXpPUuT/play?format_id=mHFdpBJz9dTK911fRpI14MKK</ega_stream_url>
+    <ega_play_url>http://www.20.test.surfmedia.nl/app/video/F2J4KfIVAiwicAygMfXpPUuT/play?format_id=mHFdpBJz9dTK911fRpI14MKK</ega_play_url>
+  </item>
+</items>',
   );
 
   // Create mediafile.
   $rest_calls['asset/$asset_id/mediafile/create'][mediamosa_rest_call::METHOD_POST] = array(
-    mediamosa_rest_call::TITLE => 'Create a mediafile, internal use only.',
-    mediamosa_rest_call::DESCRIPTION => '',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
-    mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::TITLE => 'Create a mediafile.',
+    mediamosa_rest_call::DESCRIPTION => 'Create a default mediafile under given asset ID.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'asset/1kr9rRFs6ljcBNNtpM8T5AI3/mediafile/create',
+    mediamosa_rest_call::RESPONSE_FIELDS => array('mediafile_id' => 'The mediafile ID of the created mediafile.'),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <mediafile_id>a1RSbqQNSieYbDTgXS4zlW7G</mediafile_id>
+  </item>
+</items>',
   );
 
   // Create mediafile.

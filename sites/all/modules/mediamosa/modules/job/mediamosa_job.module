@@ -277,11 +277,91 @@ The analyse process also determines if the file needs to be hinted. If the ega s
   );
 
   $a_rest_calls['asset/$asset_id/joblist'][mediamosa_rest_call::METHOD_GET] = array(
-    mediamosa_rest_call::TITLE => 'Return a listing of the given asset ID.',
-    mediamosa_rest_call::DESCRIPTION => 'Return a listing of the given asset ID.',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::TITLE => 'Get the job listing of the given asset ID.',
+    mediamosa_rest_call::DESCRIPTION => 'Returns a listing of all the jobs belonging to the asset.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'asset/F2J4KfIVAiwicAygMfXpPUuT/joblist?user_id=usertest',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <id>9598</id>
+    <owner>usertest</owner>
+    <status>FINISHED</status>
+    <progress>1.000</progress>
+    <priority>-1</priority>
+    <job_type>ANALYSE</job_type>
+    <started>17-06-2009 20:04</started>
+    <started_unix>1245261872</started_unix>
+    <error_description>FFmpeg version SVN-r15936, Copyright (c) 2000-2008 Fabrice Bellard, et al.
+  configuration: --enable-libx264 --enable-gpl --enable-pthreads --enable-libmp3lame --enable-libfaac --enable-libfaad --enable-libvorbis --enable-libtheora --enable-libgsm --enable-libxvid
+  libavutil     49.12. 0 / 49.12. 0
+  libavcodec    52. 3. 0 / 52. 3. 0
+  libavformat   52.23. 1 / 52.23. 1
+  libavdevice   52. 1. 0 / 52. 1. 0
+  built on Nov 26 2008 10:17:33, gcc: 4.1.2 20061115 (prerelease) (Debian 4.1.1-21)
+
+Seems stream 0 codec frame rate differs from container frame rate: 1000.00 (1000/1) -&gt; 15.00 (15/1)
+Input #0, flv, from \'/mnt/naspcd1/vpx-acc/data/1/1zVCthfDab50KwdksbsqGJU7\':
+  Duration: 00:00:20.40, start: 0.000000, bitrate: 40 kb/s
+    Stream #0.0: Video: flv, yuv420p, 352x288, 15.00 tb(r)
+    Stream #0.1: Audio: mp3, 22050 Hz, stereo, s16, 40 kb/s
+At least one output file must be specified</error_description>
+  </item>
+  <item id="2">
+    <id>9594</id>
+    <owner>usertest</owner>
+    <status>FINISHED</status>
+    <progress>1.000</progress>
+    <priority>0</priority>
+    <job_type>UPLOAD</job_type>
+    <started>17-06-2009 20:01</started>
+    <started_unix>1245261706</started_unix>
+    <error_description></error_description>
+  </item>
+  <item id="3">
+    <id>9595</id>
+    <owner>usertest</owner>
+    <status>FINISHED</status>
+    <progress>1.000</progress>
+    <priority>0</priority>
+    <job_type>ANALYSE</job_type>
+    <started>17-06-2009 20:03</started>
+    <started_unix>1245261781</started_unix>
+    <error_description>FFmpeg version SVN-r15936, Copyright (c) 2000-2008 Fabrice Bellard, et al.
+  configuration: --enable-libx264 --enable-gpl --enable-pthreads --enable-libmp3lame --enable-libfaac --enable-libfaad --enable-libvorbis --enable-libtheora --enable-libgsm --enable-libxvid
+  libavutil     49.12. 0 / 49.12. 0
+  libavcodec    52. 3. 0 / 52. 3. 0
+  libavformat   52.23. 1 / 52.23. 1
+  libavdevice   52. 1. 0 / 52. 1. 0
+  built on Nov 26 2008 10:17:33, gcc: 4.1.2 20061115 (prerelease) (Debian 4.1.1-21)
+Input #0, mov,mp4,m4a,3gp,3g2,mj2, from \'/mnt/naspcd1/vpx-acc/data/m/mHFdpBJz9dTK911fRpI14MKK\':
+  Duration: 00:00:20.00, start: 0.000000, bitrate: 5863 kb/s
+    Stream #0.0(eng): Video: qtrle, rgb32, 640x480, 24.00 tb(r)
+    Stream #0.1(eng): Audio: pcm_s16be, 44100 Hz, stereo, s16, 1411 kb/s
+At least one output file must be specified</error_description>
+  </item>
+  <item id="4">
+    <id>9596</id>
+    <owner>usertest</owner>
+    <status>FINISHED</status>
+    <progress>1.000</progress>
+    <priority>0</priority>
+    <job_type>TRANSCODE</job_type>
+    <started>17-06-2009 20:03</started>
+    <started_unix>1245261811</started_unix>
+    <error_description></error_description>
+  </item>
+  <item id="5">
+    <id>9597</id>
+    <owner>usertest</owner>
+    <status>FINISHED</status>
+    <progress>1.000</progress>
+    <priority>0</priority>
+    <job_type>STILL</job_type>
+    <started>17-06-2009 20:05</started>
+    <started_unix>1245261932</started_unix>
+    <error_description></error_description>
+  </item>
+</items>',
   );
 
   $a_rest_calls['mediafile/$mediafile_id/joblist'][mediamosa_rest_call::METHOD_GET] = array(
@@ -325,6 +405,7 @@ The analyse process also determines if the file needs to be hinted. If the ega s
   );
 
   $a_rest_calls['mediafile/$mediafile_id/transcode'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Create a transcode job.',
     mediamosa_rest_call::DESCRIPTION => 'Create a transcode job.',
     mediamosa_rest_call::EXAMPLE_REQUEST => '',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
@@ -381,6 +462,7 @@ The analyse process also determines if the file needs to be hinted. If the ega s
 
   $a_rest_calls['cron/jobserver'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'Run the cron cycle for jobserver.',
+    mediamosa_rest_call::DESCRIPTION => 'Run the cron cycle for jobserver.',
     mediamosa_rest_call::EXAMPLE_REQUEST => '',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
     mediamosa_rest_call::EXAMPLE_RESPONSE => '',

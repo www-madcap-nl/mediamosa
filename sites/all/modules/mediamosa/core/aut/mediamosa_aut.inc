@@ -945,7 +945,7 @@ class mediamosa_aut {
       $a_aut_ids[$a_row['aut_type']][] = $a_row['aut_id'];
     }
 
-    $a_result = array(mediamosa_aut_object_db::AUT_TYPE_NAME => array(), mediamosa_aut_object_db::AUT_TYPE_GROUP => array());
+    $a_result = array(mediamosa_aut_object_db::AUT_TYPE_NAME => array(), mediamosa_aut_object_db::AUT_TYPE_GROUP => array(), mediamosa_aut::AUT_NAME_TYPE_APP => array());
 
     $db_result_name = $db_result_group = FALSE;
 

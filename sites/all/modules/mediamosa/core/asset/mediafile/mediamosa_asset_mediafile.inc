@@ -208,23 +208,28 @@ class mediamosa_asset_mediafile {
         // Create unique ID.
         $ticket = mediamosa_db::uuid($app_id);
 
-        // Create ticket.
-        mediamosa_ticket::create_play_proxy(
-          $ticket,
-          NULL,
-          mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL,
-          $app_id,
-          $a_row[mediamosa_asset_mediafile_db::OWNER_ID],
-          $a_row[mediamosa_asset_mediafile_db::ID]
-        );
+        try {
+          // Create ticket.
+          mediamosa_ticket::create_play_proxy(
+            $ticket,
+            NULL,
+            mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL,
+            $app_id,
+            $a_row[mediamosa_asset_mediafile_db::OWNER_ID],
+            $a_row[mediamosa_asset_mediafile_db::ID]
+          );
 
-        // Create response.
-        $response = mediamosa_asset_mediafile_play_proxy::create_response_still($ticket, $app_id);
-        $a_row['still_ticket'] = $response['output'];
+          // Create response.
+          $response = mediamosa_asset_mediafile_play_proxy::create_response_still($ticket, $app_id);
+          $a_row['still_ticket'] = $response['output'];
 
-        // Add still to mediafile.
-        assert(!empty($a_row[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE])); // Make sure its here.
-        $items[$a_row[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE]]['still']['#'. $i++] = $a_row;
+          // Add still to mediafile.
+          assert(!empty($a_row[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE])); // Make sure its here.
+          $items[$a_row[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE]]['still']['#'. $i++] = $a_row;
+        }
+        catch (mediamosa_exception_error_file_not_found $e) {
+          // Ignore.
+        }
       }
     }
 
@@ -309,7 +314,7 @@ class mediamosa_asset_mediafile {
 
       // Remove the prefix from the metadata and move into the metadata array of the asset.
       foreach ($items[$mediafile_id] as $key => $value) {
-        if (mediamosa_unicode::strpos($key, $prefix) === 0) { // is het een metadata tag?
+        if (mediamosa_unicode::strpos($key, $prefix) === 0) { // is it an metadata tag?
           $new_key = mediamosa_unicode::substr($key, mediamosa_unicode::strlen($prefix));
           $items[$mediafile_id]['metadata'][$new_key] = $items[$mediafile_id][$key];
           unset($items[$mediafile_id][$key]);

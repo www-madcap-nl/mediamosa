@@ -1166,6 +1166,8 @@ class mediamosa_rest_call_aut_asset_get_rights extends mediamosa_rest_call {
     foreach ($a_rights[mediamosa_aut::OBJ_LINK_TYPE_APP] as $a_right) {
       $o_mediamosa->add_item(array($a_right['type'] => $a_right['app_id_master']));
     }
+
+    $o_mediamosa->set_result_okay();
   }
 }
 

@@ -256,7 +256,7 @@ class mediamosa_asset_mediafile_still {
     // controleer of de still op het filesystem staat
     $filename = mediamosa_configuration_storage::mediafile_still_filename_get($still_id);
     if (!file_exists($filename)) {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_FILE_NOT_FOUND, array('@filename' => $filename));
+      throw new mediamosa_exception_error_file_not_found(array('@filename' => $filename));
     }
   }
 

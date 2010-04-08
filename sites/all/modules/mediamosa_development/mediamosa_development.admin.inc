@@ -558,6 +558,11 @@ function _mediamosa_build_form($form) {
 function _build_param($name, $var, $required) {
   $item = array();
 
+  // For now skip internal vars.
+  if (isset($var[mediamosa_rest_call::VAR_IS_INTERNAL_ONLY]) && $var[mediamosa_rest_call::VAR_IS_INTERNAL_ONLY] == mediamosa_rest_call::VAR_IS_INTERNAL_ONLY_YES) {
+    return '';
+  }
+
   $type = mediamosa_type::typeAlias2Type($var[mediamosa_rest_call::VAR_TYPE]);
   $is_array = isset($var[mediamosa_rest_call::VAR_IS_ARRAY]) && $var[mediamosa_rest_call::VAR_IS_ARRAY] == mediamosa_rest_call::VAR_IS_ARRAY_YES;
 
@@ -611,6 +616,8 @@ function _build_param($name, $var, $required) {
     case mediamosa_type::TYPE_INT:
     case mediamosa_type::TYPE_UINT:
 
+    case mediamosa_type::TYPE_URI:
+    case mediamosa_type::TYPE_FILENAME:
     case mediamosa_type::TYPE_STRING:
     case mediamosa_type::TYPE_ALPHA:
     case mediamosa_type::TYPE_ALPHA_NUM:

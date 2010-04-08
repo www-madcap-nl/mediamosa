@@ -68,18 +68,18 @@ class MediaMosaCookieDomain extends DrupalWebTestCase {
 
     $cookie_domain_test_cases = array(
       // Regular domains.
-      // 'drupal.org'             => '.drupal.org',
+      'drupal.org'             => '.drupal.org',
       'www.drupal.org'         => '.drupal.org',
       'www2.drupal.org'        => '.drupal.org',
       'www.testing.drupal.org' => '.testing.drupal.org',
       'app.testing.drupal.org' => '.testing.drupal.org',
 
       // 2 level top domains.
-      // 'drupal.co.uk'           => '.drupal.co.uk',
+      //'drupal.co.uk'           => '.drupal.co.uk', TODO: should work in future
       'www.drupal.co.uk'       => '.drupal.co.uk',
-      // 'dev.drupal.co.uk'       => '.drupal.co.uk',
+      'dev.drupal.co.uk'       => '.drupal.co.uk',
       'www.dev.drupal.co.uk'   => '.dev.drupal.co.uk',
-      // 'app.dev.drupal.co.uk'   => '.dev.drupal.co.uk',
+      'app.dev.drupal.co.uk'   => '.dev.drupal.co.uk',
 
       // vpx specific
       'app.vpcore.nl'                    => '.vpcore.nl',

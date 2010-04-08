@@ -749,21 +749,11 @@ abstract class mediamosa_rest_call {
 
       // Set by default off.
       $this->a_rest_args[$param][self::PARAM_ISSET_DEFAULT] = FALSE; // Set by default
-
-      // If variable is internal value only, then we set the value to default or NULL. Put it on READ ONLY.
-      // If REST has tried set then we throw exception.
-      if (isset($a_var[self::VAR_IS_INTERNAL_ONLY]) && $a_var[self::VAR_IS_INTERNAL_ONLY] == self::VAR_IS_INTERNAL_ONLY_YES && !$this->is_internal()) {
-        if (isset($this->a_rest_args[$param][self::PARAM_VALUE]) && !self::is_internal()) {
-          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INTERNAL_ONLY, array('@param' => $param, '@type' => $a_var[self::PARAM_TYPE]));
-        }
-
-        unset($this->a_rest_args[$param][self::PARAM_VALUE]);
-      }
+      $this->a_rest_args[$param][self::PARAM_ISSET_GIVEN] = FALSE;
 
       // Make sure its set, even when empty.
       if (!isset($this->a_rest_args[$param][self::PARAM_VALUE])) {
         $this->a_rest_args[$param][self::PARAM_VALUE] = NULL; // Default NULL.
-        $this->a_rest_args[$param][self::PARAM_ISSET_GIVEN] = FALSE;
 
         // Defaults.
         if (isset($a_var[self::VAR_DEFAULT_VALUE])) {
@@ -777,6 +767,16 @@ abstract class mediamosa_rest_call {
 
       // Set not validated so we can validate when we need it.
       $this->a_rest_args[$param][self::PARAM_VALIDATED] = FALSE;
+
+      // If variable is internal value only, then we set the value to default or NULL. Put it on READ ONLY.
+      // If REST has tried set then we throw exception.
+      if (isset($a_var[self::VAR_IS_INTERNAL_ONLY]) && $a_var[self::VAR_IS_INTERNAL_ONLY] == self::VAR_IS_INTERNAL_ONLY_YES && !$this->is_internal()) {
+        if ($this->isset_given_param($param) && !self::is_internal()) {
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INTERNAL_ONLY, array('@param' => $param, '@type' => $a_var[self::PARAM_TYPE]));
+        }
+
+        $this->a_rest_args[$param][self::PARAM_VALUE] = isset($a_var[self::VAR_DEFAULT_VALUE]) ? $a_var[self::VAR_DEFAULT_VALUE] : NULL;
+      }
 
       // array check.
       if (isset($this->a_rest_args[$param][self::PARAM_VALUE])) {

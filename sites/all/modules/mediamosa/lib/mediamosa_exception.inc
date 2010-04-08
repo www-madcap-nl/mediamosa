@@ -255,6 +255,13 @@ class mediamosa_exception_error_job_mediafile_not_found extends mediamosa_except
   }
 }
 
+class mediamosa_exception_error_file_not_found extends mediamosa_exception_error {
+  public function __construct($a_tags = array()) {
+    assert(isset($a_tags['@filename']));
+    parent::__construct(mediamosa_error::ERRORCODE_FILE_NOT_FOUND, $a_tags);
+  }
+}
+
 class mediamosa_exception_error_webservice_disabled extends mediamosa_exception_error {
   public function __construct($a_tags = array()) {
     parent::__construct(mediamosa_error::ERRORCODE_WEBSERVICE_DISABLED, $a_tags);

@@ -600,20 +600,21 @@ function drupal_settings_initialize() {
       $cookie_domain = $_SERVER['HTTP_HOST'];
     }
   }
-  // Strip leading periods, www., and port numbers from cookie domain.
 
   // Strip leading periods, and port numbers from cookie domain.
   $cookie_domain = ltrim($cookie_domain, '.');
-  $cookie_domain = array_shift(explode(":", $cookie_domain, 2));
+  $cookie_domain = '.' . array_shift(explode(':', $cookie_domain));
 
   // Per RFC 2109, cookie domains must contain at least one dot other than the
   // first. For hosts such as 'localhost' or IP Addresses we don't set a cookie domain.
   // todo: how about co.uk type of domains?
   if (count(explode('.', $cookie_domain)) > 2 && !is_numeric(str_replace('.', '', $cookie_domain))) {
-    // remove first part before the dot and replace by a dot only
-    $cookie_domain = explode(".", $cookie_domain, 2);
-    array_shift($cookie_domain);
-    $cookie_domain = ".". implode($cookie_domain);
+    if (count(explode('.', $cookie_domain)) > 3) {
+      // remove first part before the dot and replace by a dot only
+      $cookie_domain = explode('.', substr($cookie_domain, 1), 2);
+      array_shift($cookie_domain);
+      $cookie_domain = '.' . implode($cookie_domain);
+    }
 
     ini_set('session.cookie_domain', $cookie_domain);
   }
