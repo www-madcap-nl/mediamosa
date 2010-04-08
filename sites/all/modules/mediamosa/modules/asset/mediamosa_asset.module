@@ -905,19 +905,114 @@ name=Example&delete=cascade',
   // Count number of mediafiles based on owner/app/group.
   $rest_calls['mediafile/$mediafile_id'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'Return information about a mediafile.',
-    mediamosa_rest_call::DESCRIPTION => '',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::DESCRIPTION => 'Return information about a mediafile.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'mediafile/OW35AQyoPNUSi4iINunmS2nr?show_stills=true',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <mediafile_id>OW35AQyoPNUSi4iINunmS2nr</mediafile_id>
+    <asset_id>7pAkDsceysAZPo0q3PhjtBE1</asset_id>
+    <mediafile_id_source></mediafile_id_source>
+    <tag></tag>
+    <app_id>14</app_id>
+    <owner_id>admin</owner_id>
+    <group_id></group_id>
+    <is_original_file>TRUE</is_original_file>
+    <is_downloadable>FALSE</is_downloadable>
+    <is_streamable>FALSE</is_streamable>
+    <is_still>FALSE</is_still>
+    <filename>Test.wmv</filename>
+    <uri></uri>
+    <transcode_profile_id></transcode_profile_id>
+    <tool></tool>
+    <command></command>
+    <file_extension></file_extension>
+    <is_protected>FALSE</is_protected>
+    <created>2010-01-22 16:22:54</created>
+    <changed>2010-04-08 17:49:39</changed>
+    <transcode_inherits_acl>FALSE</transcode_inherits_acl>
+    <still>
+      <mediafile_id>GqrqS9UYfyKAsrW73mPVAyRH</mediafile_id>
+      <asset_id>7pAkDsceysAZPo0q3PhjtBE1</asset_id>
+      <asset_id_root>7pAkDsceysAZPo0q3PhjtBE1</asset_id_root>
+      <mediafile_id_source>OW35AQyoPNUSi4iINunmS2nr</mediafile_id_source>
+      <tag></tag>
+      <app_id>14</app_id>
+      <owner_id>admin</owner_id>
+      <group_id></group_id>
+      <is_original_file>FALSE</is_original_file>
+      <is_downloadable>FALSE</is_downloadable>
+      <is_streamable>FALSE</is_streamable>
+      <is_still>TRUE</is_still>
+      <filename>GqrqS9UYfyKAsrW73mPVAyRH</filename>
+      <uri></uri>
+      <sannas_mount_point>/srv/mediamosa_install</sannas_mount_point>
+      <transcode_profile_id></transcode_profile_id>
+      <tool></tool>
+      <command></command>
+      <file_extension>jpeg</file_extension>
+      <is_protected>FALSE</is_protected>
+      <created>2010-01-22 16:23:21</created>
+      <changed>2010-01-22 16:23:21</changed>
+      <transcode_inherits_acl>TRUE</transcode_inherits_acl>
+      <metadata_id>3</metadata_id>
+      <video_codec></video_codec>
+      <colorspace></colorspace>
+      <width>176</width>
+      <height>144</height>
+      <fps></fps>
+      <audio_codec></audio_codec>
+      <sample_rate></sample_rate>
+      <channels></channels>
+      <file_duration></file_duration>
+      <container_type></container_type>
+      <bitrate></bitrate>
+      <bpp></bpp>
+      <filesize>6165</filesize>
+      <mime_type>image/jpeg</mime_type>
+      <is_hinted>FALSE</is_hinted>
+      <is_inserted_md>FALSE</is_inserted_md>
+      <still_time_code>7</still_time_code>
+      <still_order>0</still_order>
+      <still_type>NORMAL</still_type>
+      <still_format>jpeg</still_format>
+      <still_default>TRUE</still_default>
+      <still_ticket>http://mediamosa2/still/f1MZGcHaodK9t7UODeCPNW5B</still_ticket>
+    </still>
+    <metadata>
+      <video_codec>wmv3</video_codec>
+      <colorspace>yuv420p</colorspace>
+      <width>320</width>
+      <height>240</height>
+      <fps>25</fps>
+      <audio_codec>wmav2</audio_codec>
+      <sample_rate>32000</sample_rate>
+      <channels>2</channels>
+      <file_duration>00:00:29.92</file_duration>
+      <container_type>asf</container_type>
+      <bitrate>265</bitrate>
+      <bpp>0.14</bpp>
+      <filesize>993480</filesize>
+      <mime_type>video/x-ms-asf</mime_type>
+      <created>2010-01-22 16:22:55</created>
+      <changed>2010-01-22 16:22:55</changed>
+      <is_hinted>FALSE</is_hinted>
+      <is_inserted_md>FALSE</is_inserted_md>
+    </metadata>
+    <ega_download_url></ega_download_url>
+    <ega_stream_url></ega_stream_url>
+    <ega_play_url></ega_play_url>
+  </item>
+</items>',
   );
 
   // Delete from mediafile.
   $rest_calls['mediafile/$mediafile_id/delete'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Delete a mediafile.',
-    mediamosa_rest_call::DESCRIPTION => '',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
-    mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::DESCRIPTION => 'Delete a mediafile.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'mediafile/ERTpgSptYbqvUaYUJGrryyML/delete',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
   );
 
   // Get the stills from mediafile.
@@ -1124,10 +1219,11 @@ name=Example&delete=cascade',
   // Update mediafile.
   $rest_calls['mediafile/$mediafile_id'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Update a mediafile.',
-    mediamosa_rest_call::DESCRIPTION => '',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
-    mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::DESCRIPTION => 'Update a mediafile.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'mediafile/OW35AQyoPNUSi4iINunmS2nr<br />
+tag=Best',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
   );
 
   // Update mediafile.

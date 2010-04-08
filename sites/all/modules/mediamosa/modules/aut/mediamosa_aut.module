@@ -233,25 +233,38 @@ function mediamosa_aut_mediamosa_register_rest_call_doc() {
   $a_rest_calls['mediafile/$mediafile_id/acl'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Set rights on a mediafile.',
     mediamosa_rest_call::DESCRIPTION => 'Set rights on a mediafile.',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'mediafile/OW35AQyoPNUSi4iINunmS2nr/acl',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <aut_app>
+      <value>1</value>
+      <result>success</result>
+      <result_id>601</result_id>
+      <result_description></result_description>
+    </aut_app>
+  </item>
+</items>',
   );
 
   $a_rest_calls['mediafile/$mediafile_id/acl/delete'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Remove rights on a mediafile.',
     mediamosa_rest_call::DESCRIPTION => 'Remove rights on a mediafile.',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
-    mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'mediafile/OW35AQyoPNUSi4iINunmS2nr/acl/delete',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
   );
 
   $a_rest_calls['mediafile/$mediafile_id/acl'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'Get rights on a mediafile.',
     mediamosa_rest_call::DESCRIPTION => 'Get rights on a mediafile.',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'mediafile/OW35AQyoPNUSi4iINunmS2nr/acl?user_id=admin',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <aut_app>1</aut_app>
+  </item>
+</items>',
   );
 
   $a_rest_calls['asset/$asset_id/acl'][mediamosa_rest_call::METHOD_POST] = array(
