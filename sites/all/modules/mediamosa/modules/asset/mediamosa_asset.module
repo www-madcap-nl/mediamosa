@@ -1228,11 +1228,16 @@ user_id = "username"',
 
   // Count per prop_id per content.
   $rest_calls['tagcount'][mediamosa_rest_call::METHOD_GET] = array(
-    mediamosa_rest_call::TITLE => 'Return a list of tags of one property and their count, a count more than 1 means multiple occourance of the same tag value.',
-    mediamosa_rest_call::DESCRIPTION => '',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::TITLE => 'Return a list of tags',
+    mediamosa_rest_call::DESCRIPTION => 'Return a list of tags of one property and their count, a count more than 1 means multiple occourance of the same tag value.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'tagcount?prop_id=3&limit=10',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <count>6</count>
+    <tag>en</tag>
+  </item>
+</items>',
   );
 
   // Count per prop_id per content.

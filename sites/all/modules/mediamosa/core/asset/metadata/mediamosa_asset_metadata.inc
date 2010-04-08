@@ -105,7 +105,7 @@ class mediamosa_asset_metadata {
        INNER JOIN {#mediamosa_asset_metadata} AS ap ON a.#asset_id = ap.#asset_id
        WHERE ap.#prop_id = :prop_id AND a.#app_id = :app_id
        GROUP BY #val_char
-       ORDER BY cnt DESC',
+       ORDER BY tagcount DESC',
       $offset,
       $limit,
       array(
