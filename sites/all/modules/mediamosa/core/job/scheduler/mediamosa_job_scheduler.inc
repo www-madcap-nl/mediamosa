@@ -870,12 +870,13 @@ class mediamosa_job_scheduler {
     $a_mediafile = mediamosa_asset_mediafile_metadata::get_with_mediafileid($mediafile_id, array(mediamosa_asset_mediafile_metadata_db::FILE_DURATION, mediamosa_asset_mediafile_metadata_db::FPS));
     $actual_duration = $a_mediafile[mediamosa_asset_mediafile_metadata_db::FILE_DURATION];
     $fps = $a_mediafile[mediamosa_asset_mediafile_metadata_db::FPS];
-    if ($actual_duration && $actual_duration != "") {
-      // haal de ms van de tijd af.
+    $video_duration = 0;
+    if ($actual_duration && $actual_duration != '') {
+      // Remove the ms from time.
       $actual_duration = mediamosa_unicode::substr($actual_duration, 0, 8);
       @list($uren, $minuten, $seconden) = explode(':', $actual_duration, 3);
       $video_duration = (($uren * 3600) + ($minuten * 60) + $seconden);
-      if  ($video_duration < $job_parameters["frametime"]) {
+      if ($video_duration < $job_parameters["frametime"]) {
         // If the video duration is less than still picture time, we decrease the still picture time to half of video duration
         $job_parameters["frametime"] = ($video_duration >> 1);
       }

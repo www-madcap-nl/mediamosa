@@ -79,13 +79,13 @@ class mediamosa_rest_call_asset_supplement_get extends mediamosa_rest_call {
     // FIXME: No APP check, can get any supplement, just by suppling an asset id...
 
     // Get the supplements.
-    $a_supplements = mediamosa_asset_supplement::get_all_with_assetid($asset_id);
+    $supplements = mediamosa_asset_supplement::get_all_with_assetid($asset_id);
 
     // Add to response.
-    foreach ($a_supplements as $a_supplement) {
-      $a_supplement['supplement_base64'] = base64_encode($a_supplement[mediamosa_asset_supplement_db::SUPPLEMENT]);
-      unset($a_supplement[mediamosa_asset_supplement_db::SUPPLEMENT]);
-      $o_mediamosa->add_item($a_supplement);
+    foreach ($supplements as $supplement) {
+      $supplement['supplement_base64'] = base64_encode($supplement[mediamosa_asset_supplement_db::SUPPLEMENT]);
+      unset($supplement[mediamosa_asset_supplement_db::SUPPLEMENT]);
+      $o_mediamosa->add_item($supplement);
     }
   }
 }
@@ -161,6 +161,7 @@ public function get_var_setup() {
 class mediamosa_rest_call_asset_supplement_update extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
   // Rest vars;
+  const ASSET_ID = 'asset_id';
   const SUPPLEMENT_ID = 'supplement_id';
   const USER_ID = 'user_id';
   const OAI_PREFIX = 'oai_prefix';
@@ -174,9 +175,20 @@ class mediamosa_rest_call_asset_supplement_update extends mediamosa_rest_call {
 
     $a_var_setup = array(
       self::VARS => array(
+        self::ASSET_ID => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
+          self::VAR_DESCRIPTION => 'The asset ID.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+        ),
         self::SUPPLEMENT_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_SUPPLEMENT_ID,
           self::VAR_DESCRIPTION => 'The supplement ID.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+        ),
+        self::SUPPLEMENT => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_DESCRIPTION => 'The supplement.',
+          self::VAR_RANGE_END => 64 * 1024, // 64k max length.
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::USER_ID => array(
@@ -198,11 +210,6 @@ class mediamosa_rest_call_asset_supplement_update extends mediamosa_rest_call {
           self::VAR_TYPE => mediamosa_type::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The OAI schema location.',
           self::VAR_RANGE_END => mediamosa_asset_supplement_db::OAI_SCHEMALOCATION_LENGTH
-        ),
-        self::SUPPLEMENT => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
-          self::VAR_DESCRIPTION => 'The supplement.',
-          self::VAR_RANGE_END => 64 * 1024 // 64k max length.
         ),
       )
     );
@@ -257,12 +264,16 @@ class mediamosa_rest_call_asset_supplement_update extends mediamosa_rest_call {
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $a_app_ids);
 
     // Get args.
+    $asset_id = $this->get_param_value(self::ASSET_ID);
     $supplement_id = $this->get_param_value(self::SUPPLEMENT_ID);
     $user_id = $this->get_param_value(self::USER_ID);
     $oai_prefix = $this->get_param_value(self::OAI_PREFIX);
     $oai_namespaceuri = $this->get_param_value(self::OAI_NAMESPACEURI);
     $oai_schemalocation = $this->get_param_value(self::OAI_SCHEMALOCATION);
     $supplement = $this->get_param_value(self::SUPPLEMENT);
+
+    // Must exists.
+    $asset = mediamosa_asset::must_exists($asset_id);
 
     // Update the supplement.
     mediamosa_asset_supplement::update($app_id, $user_id, $supplement_id, $oai_prefix, $oai_namespaceuri, $oai_schemalocation, $supplement);

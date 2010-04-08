@@ -253,8 +253,8 @@ class mediamosa_rest_call_collection_search extends mediamosa_rest_call {
       }
       // When provided, then convert.
       if (!self::empty_param($param)) {
-        $a_value = self::get_param_value($param);
-        $match = self::get_param_value($param . '_match');
+        $a_value = $this->get_param_value($param);
+        $match = $this->get_param_value($param . '_match');
 
         $cqls[] = mediamosa_core_cql::convert_searchparam_to_cql($param, $match, $a_value, $a_param[mediamosa_rest_call::PARAM_TYPE], $a_translate_to);
       }
@@ -270,7 +270,7 @@ class mediamosa_rest_call_collection_search extends mediamosa_rest_call {
       }
 
       // Get the glue operator.
-      $operator = self::get_param_value(self::OPERATOR);
+      $operator = $this->get_param_value(self::OPERATOR);
 
       $cql = implode(' ' . mediamosa_unicode::strtoupper($operator) . ' ', $cqls);
     }
@@ -285,11 +285,11 @@ class mediamosa_rest_call_collection_search extends mediamosa_rest_call {
     }
     elseif ($cql == '') {
       // Now normal search params, then take CQL (if any).
-      $cql = self::get_param_value(self::CQL);
+      $cql = $this->get_param_value(self::CQL);
     }
 
     // If order by is set on NUMOFVIDEOS and no value for order_direction was given, then set it to other default.
-    if (self::get_param_value_order_by() == self::NUMOFVIDEOS && self::isset_default_param(self::ORDER_DIRECTION)) {
+    if ($this->get_param_value_order_by() == self::NUMOFVIDEOS && $this->isset_default_param(self::ORDER_DIRECTION)) {
       self::set_param_value(self::ORDER_DIRECTION, mediamosa_db::ORDER_DIRECTION_DESC);
     }
 

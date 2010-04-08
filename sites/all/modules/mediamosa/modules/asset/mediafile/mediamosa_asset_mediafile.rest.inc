@@ -52,11 +52,13 @@ class mediamosa_rest_call_count_asset_mediafile extends mediamosa_rest_call {
           self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'The group ID to match.',
           self::VAR_TRIM_VALUE => self::VAR_TRIM_VALUE_YES,
+          self::VAR_DEFAULT_VALUE => '',
         ),
         self::OWNER_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The owner ID to match.',
           self::VAR_TRIM_VALUE => self::VAR_TRIM_VALUE_YES,
+          self::VAR_DEFAULT_VALUE => '',
         ),
       )
     );
@@ -265,6 +267,7 @@ class mediamosa_rest_call_delete_mediafiles extends mediamosa_rest_call {
     $user_id = $this->get_param_value(self::USER_ID);
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
     $delete = $this->get_param_value(self::DELETE);
+    $user_id = $this->get_param_value(self::USER_ID);
 
     // Test webservice.
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $a_app_ids);
@@ -275,7 +278,7 @@ class mediamosa_rest_call_delete_mediafiles extends mediamosa_rest_call {
     // Does the user has access?
     mediamosa_aut::owner_check(
       $app_id,
-      self::get_param_value(self::USER_ID),
+      $user_id,
       $a_mediafile[mediamosa_asset_mediafile_db::APP_ID],
       $a_mediafile[mediamosa_asset_mediafile_db::OWNER_ID]
     );

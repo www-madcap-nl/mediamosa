@@ -35,9 +35,9 @@ class mediamosa_job_still {
    * @param integer $job_id
    *  The job ID.
    */
-  static public function get($job_id, $a_fields = array()) {
+  static public function get($job_id, $fields = array()) {
     return mediamosa_db::db_select(mediamosa_job_still_db::TABLE_NAME, 'js')
-      ->fields('js', $a_fields)
+      ->fields('js', $fields)
       ->condition(mediamosa_job_still_db::JOB_ID, $job_id)
       ->execute()
       ->fetchAssoc();
@@ -85,7 +85,7 @@ class mediamosa_job_still {
     $query = mediamosa_db::db_insert(mediamosa_job_still_db::TABLE_NAME);
 
     // Insert values.
-    $a_fields = array(
+    $fields = array(
       mediamosa_job_still_db::JOB_ID => $job_id,
       mediamosa_job_still_db::FRAMETIME => $a_still_parameters[mediamosa_job_still_db::FRAMETIME],
       mediamosa_job_still_db::SIZE => $a_still_parameters[mediamosa_job_still_db::SIZE],
@@ -96,9 +96,9 @@ class mediamosa_job_still {
     );
 
     // Enrich with created/changed.
-    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+    $fields = mediamosa_db::db_insert_enrich($fields);
 
     // Insert it.
-    return $query->fields($a_fields)->execute();
+    return $query->fields($fields)->execute();
   }
 }

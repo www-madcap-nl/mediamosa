@@ -144,12 +144,31 @@ function mediamosa_collection_mediamosa_register_rest_call_doc() {
 
   $rest_calls['collection'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'Search in the collections of assets.',
-    mediamosa_rest_call::DESCRIPTION => '',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
-    mediamosa_rest_call::RESPONSE_FIELDS => array(
-      '' => ''
-    ),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::DESCRIPTION => 'Returns a list of collections based on search patterns or CQL.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'collection?is_public_list=false&calculate_total_count=true&operator=and&limit=10&order_direction=asc',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <coll_id>1</coll_id>
+    <title>News</title>
+    <description>News related assets.</description>
+    <app_id>3</app_id>
+    <owner_id>testuser</owner_id>
+    <group_id>videoandimages</group_id>
+    <isprivate>FALSE</isprivate>
+    <private>FALSE</private>
+    <public>TRUE</public>
+    <category>TRUE</category>
+    <created>2009-11-06 17:50:36</created>
+    <changed>2009-05-27 21:47:34</changed>
+    <is_unappropriate>FALSE</is_unappropriate>
+    <public_assign>TRUE</public_assign>
+    <numofvideos>14</numofvideos>
+  </item>
+  <item id="2">
+  ....
+  </item>
+</item>',
   );
 
   $rest_calls['asset/$asset_id/collection'][mediamosa_rest_call::METHOD_GET] = array(
