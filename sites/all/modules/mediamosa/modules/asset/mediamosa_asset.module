@@ -845,29 +845,52 @@ function mediamosa_asset_mediamosa_register_rest_call_doc() {
 
   // Get Asset Media Metadata.
   $rest_calls['metadata_tag'][mediamosa_rest_call::METHOD_GET] = array(
-    mediamosa_rest_call::TITLE => 'Retrieve the listing of the asset metadata definitions.',
-    mediamosa_rest_call::DESCRIPTION => '',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::TITLE => 'Retrieve metadata definitions.',
+    mediamosa_rest_call::DESCRIPTION => 'Retrieve the listing of the asset metadata definitions.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'metadata_tag?include_default_definitions=true&limit=10&order_direction=asc',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '  <items>
+  <item id="1">
+    <prop_id>125</prop_id>
+    <name>Example</name>
+    <prop_group>app_14</prop_group>
+    <type>CHAR</type>
+    <created>2010-04-08 16:08:01</created>
+    <changed>2010-04-08 16:08:01</changed>
+  </item>
+</items>',
   );
 
   // Create Asset Media Metadata.
   $rest_calls['metadata_tag/create'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Create a asset metadata definition.',
-    mediamosa_rest_call::DESCRIPTION => '',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::DESCRIPTION => 'Create a asset metadata definition.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'metadata_tag/create<br />
+name=Example&type=char',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '  <items>
+  <item id="1">
+    <prop_id>125</prop_id>
+    <app_id>14</app_id>
+    <propgroup_id>5</propgroup_id>
+    <prop_name>Example</prop_name>
+    <type>CHAR</type>
+    <min_occurences>0</min_occurences>
+    <max_occurences>0</max_occurences>
+    <created>2010-04-08 16:08:01</created>
+    <changed>2010-04-08 16:08:01</changed>
+  </item>
+</items>',
   );
 
   // Delete Asset Media Metadata.
   $rest_calls['metadata_tag/delete'][mediamosa_rest_call::METHOD_POST] = array(
-    mediamosa_rest_call::TITLE => 'Delete a asset metadata definition.',
-    mediamosa_rest_call::DESCRIPTION => '',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
-    mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::TITLE => 'Delete a metadata definition.',
+    mediamosa_rest_call::DESCRIPTION => 'Delete an asset metadata definition.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'metadata_tag/delete<br />
+name=Example&delete=cascade',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
   );
 
   // Count number of mediafiles based on owner/app/group.
