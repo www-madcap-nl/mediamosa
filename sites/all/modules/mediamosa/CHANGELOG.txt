@@ -75,7 +75,12 @@ Mediamosa 2.1.2
   single item results, then item_count_total will always be 1 and item_offset 0.
 - mediafile output will include new mediafile_id_source which can hold the ID of
   the original mediafile. When empty, then the mediafile is a original.
-  
+- /asset/$asset_id/joblist [GET] will now return 705 (empty result) when no jobs
+  where found, instead of result ID 601 (OK).
+- /asset/$asset_id/metadata [POST] will now return 705 (empty result) when no
+  metadata was added.
+- /asset/$asset_id/still/create [POST] will now return the job_id in the
+  items response when success. 1.x only returned a 601 success result ID.
 
 MediaMosa 2.1.1
 ---------------

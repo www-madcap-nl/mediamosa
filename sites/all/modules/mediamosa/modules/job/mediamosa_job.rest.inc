@@ -929,12 +929,20 @@ class mediamosa_rest_call_job_create_transcode extends mediamosa_rest_call_job_c
  */
 class mediamosa_rest_call_job_create_still extends mediamosa_rest_call_job_create {
   // ------------------------------------------------------------------ Consts.
+  // The asset ID.
+  const ASSET_ID = 'asset_id';
 
   // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
     $a_var_setup = parent::get_var_setup();
 
     unset($a_var_setup[self::VARS][parent::JOB_TYPE]);
+
+    $a_var_setup[self::VARS][self::ASSET_ID] = array(
+      self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
+      self::VAR_DESCRIPTION => 'The asset ID of the medafile.',
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+    );
 
     return $a_var_setup;
   }

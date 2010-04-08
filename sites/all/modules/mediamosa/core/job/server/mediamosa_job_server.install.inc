@@ -186,7 +186,7 @@ function mediamosa_job_server_schema() {
       'uni_jobid' => array(mediamosa_job_db::TABLE_NAME => mediamosa_job_db::ID),
     ),
     'foreign keys' => array(
-      mediamosa_job_server_db::ID => array(mediamosa_job_db::TABLE_NAME => mediamosa_job_db::ID),
+      mediamosa_job_server_db::JOB_ID => array(mediamosa_job_db::TABLE_NAME => mediamosa_job_db::ID),
     ),
   );
 

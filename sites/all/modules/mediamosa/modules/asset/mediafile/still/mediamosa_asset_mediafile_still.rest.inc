@@ -82,9 +82,9 @@ class mediamosa_rest_call_delete_stills extends mediamosa_rest_call {
     // Webservice enabled?
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $a_app_ids);
 
-    $asset_id = self::get_param_value(self::ASSET_ID);
-    $mediafile_id = self::get_param_value(self::MEDIAFILE_ID);
-    $still_id = self::get_param_value(self::STILL_ID);
+    $asset_id = $this->get_param_value(self::ASSET_ID);
+    $mediafile_id = $this->get_param_value(self::MEDIAFILE_ID);
+    $still_id = $this->get_param_value(self::STILL_ID);
 
     // Asset must exist.
     mediamosa_db::db_must_exists(
@@ -119,7 +119,7 @@ class mediamosa_rest_call_delete_stills extends mediamosa_rest_call {
     // Does the user has access?
     mediamosa_aut::owner_check(
       $app_id,
-      self::get_param_value(self::USER_ID),
+      $this->get_param_value(self::USER_ID),
       $a_row[mediamosa_asset_db::APP_ID],
       $a_row[mediamosa_asset_db::OWNER_ID]
     );
@@ -159,12 +159,12 @@ class mediamosa_rest_call_set_still_default extends mediamosa_rest_call {
         ),
         self::USER_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
-          self::VAR_DESCRIPTION => 'Owner of the stills.',
+          self::VAR_DESCRIPTION => 'Owner of the asset.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::MEDIAFILE_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_MEDIAFILE_ID,
-          self::VAR_DESCRIPTION => 'The delete stills from this mediafile ID.',
+          self::VAR_DESCRIPTION => 'The mediafile of the asset.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::STILL_ID => array(
@@ -190,62 +190,12 @@ class mediamosa_rest_call_set_still_default extends mediamosa_rest_call {
     $asset_id = $this->get_param_value(self::ASSET_ID);
     $mediafile_id = $this->get_param_value(self::MEDIAFILE_ID);
     $still_id = $this->get_param_value(self::STILL_ID);
-
-    // Asset must exist.
-    mediamosa_db::db_must_exists(
-      mediamosa_asset_db::TABLE_NAME,
-      array(
-        mediamosa_asset_db::ID => $asset_id,
-        mediamosa_asset_db::PARENT_ID => NULL
-      )
-    );
-
-    // Mediafile(s) must exist.
-    mediamosa_db::db_must_exists(
-      mediamosa_asset_mediafile_db::TABLE_NAME,
-      array(
-        mediamosa_asset_mediafile_db::ASSET_ID_ROOT => $asset_id,
-        mediamosa_asset_mediafile_db::ID => $mediafile_id,
-        mediamosa_error::ERRORCODE_STILL_NOT_FOUND,
-        array('@asset_id' => $asset_id)
-      )
-    );
-
-    // Still(s) must exist.
-    mediamosa_db::db_must_exists(
-      mediamosa_asset_mediafile_db::TABLE_NAME,
-      array(
-        mediamosa_asset_mediafile_db::ASSET_ID_ROOT => $asset_id,
-        mediamosa_asset_mediafile_db::ID => $still_id,
-        mediamosa_error::ERRORCODE_STILL_NOT_FOUND,
-        array('@asset_id' => $asset_id)
-      )
-    );
-
-    $a_row = mediamosa_db::db_query(
-      'SELECT #app_id, #owner_id FROM {#mediamosa_asset} WHERE #asset_id = :asset_id',
-      array(
-        '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
-        '#app_id' => mediamosa_asset_db::APP_ID,
-        '#owner_id' => mediamosa_asset_db::OWNER_ID,
-        '#asset_id' => mediamosa_asset_db::ID,
-        ':asset_id' => $asset_id
-      )
-    )->fetchAssoc();
-
-    // Does the user has access?
-    mediamosa_aut::owner_check(
-      $app_id,
-      self::get_param_value(self::USER_ID),
-      $a_row[mediamosa_asset_db::APP_ID],
-      $a_row[mediamosa_asset_db::OWNER_ID]
-    );
+    $user_id = $this->get_param_value(self::USER_ID);
+    // Set default.
+    mediamosa_asset_mediafile_still::set_still_default($app_id, $user_id, $asset_id, $mediafile_id, $still_id);
 
     // Default all ok.
     $o_mediamosa->set_result_okay();
-
-    // Set default.
-    mediamosa_asset_mediafile_still::set_still_default($asset_id, $mediafile_id, $still_id);
   }
 }
 
@@ -313,63 +263,14 @@ class mediamosa_rest_call_set_still_order extends mediamosa_rest_call {
     $asset_id = $this->get_param_value(self::ASSET_ID);
     $mediafile_id = $this->get_param_value(self::MEDIAFILE_ID);
     $still_id = $this->get_param_value(self::STILL_ID);
+    $user_id = $this->get_param_value(self::USER_ID);
     $order = $this->get_param_value(self::ORDER);
 
-    // Asset must exist.
-    mediamosa_db::db_must_exists(
-      mediamosa_asset_db::TABLE_NAME,
-      array(
-        mediamosa_asset_db::ID => $asset_id,
-        mediamosa_asset_db::PARENT_ID => NULL
-      )
-    );
-
-    // Mediafile(s) must exist.
-    mediamosa_db::db_must_exists(
-      mediamosa_asset_mediafile_db::TABLE_NAME,
-      array(
-        mediamosa_asset_mediafile_db::ASSET_ID_ROOT => $asset_id,
-        mediamosa_asset_mediafile_db::ID => $mediafile_id,
-        mediamosa_error::ERRORCODE_STILL_NOT_FOUND,
-        array('@asset_id' => $asset_id)
-      )
-    );
-
-    // Still(s) must exist.
-    mediamosa_db::db_must_exists(
-      mediamosa_asset_mediafile_db::TABLE_NAME,
-      array(
-        mediamosa_asset_mediafile_db::ASSET_ID_ROOT => $asset_id,
-        mediamosa_asset_mediafile_db::ID => $still_id,
-        mediamosa_error::ERRORCODE_STILL_NOT_FOUND,
-        array('@asset_id' => $asset_id)
-      )
-    );
-
-    $a_row = mediamosa_db::db_query(
-      'SELECT #app_id, #owner_id FROM {#mediamosa_asset} WHERE #asset_id = :asset_id',
-      array(
-        '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
-        '#app_id' => mediamosa_asset_db::APP_ID,
-        '#owner_id' => mediamosa_asset_db::OWNER_ID,
-        '#asset_id' => mediamosa_asset_db::ID,
-        ':asset_id' => $asset_id
-      )
-    )->fetchAssoc();
-
-    // Does the user has access?
-    mediamosa_aut::owner_check(
-      $app_id,
-      self::get_param_value(self::USER_ID),
-      $a_row[mediamosa_asset_db::APP_ID],
-      $a_row[mediamosa_asset_db::OWNER_ID]
-    );
+    // Set Still order.
+    mediamosa_asset_mediafile_still::set_still_order($app_id, $user_id, $asset_id, $mediafile_id, $still_id, $order);
 
     // Default all ok.
     $o_mediamosa->set_result_okay();
-
-    // Set Still order.
-    mediamosa_asset_mediafile_still::set_still_order($asset_id, $mediafile_id, $still_id, $order);
   }
 }
 

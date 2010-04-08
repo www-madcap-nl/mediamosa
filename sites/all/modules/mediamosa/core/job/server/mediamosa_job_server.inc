@@ -179,17 +179,17 @@ class mediamosa_job_server {
     // Create basic server job.
     $jobserver_job_id = self::create_job($job_id, $job_type, $mediafile_id_src);
 
-    $a_fields = array(
+    $fields = array(
       mediamosa_job_server_analyse_db::ID => $jobserver_job_id,
       mediamosa_job_server_analyse_db::ANALYSE_RESULT => '',
     );
 
     // Enrich with created time.
-    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+    $fields = mediamosa_db::db_insert_enrich($fields);
 
     // Insert it.
     mediamosa_db::db_insert(mediamosa_job_server_analyse_db::TABLE_NAME)
-      ->fields($a_fields)
+      ->fields($fields)
       ->execute();
   }
 
@@ -205,7 +205,7 @@ class mediamosa_job_server {
     // Create basic server job.
     $jobserver_job_id = self::create_job($job_id, $job_type, $mediafile_id_src);
 
-    $a_fields = array(
+    $fields = array(
       mediamosa_job_server_transcode_db::ID => $jobserver_job_id,
       mediamosa_job_server_transcode_db::TOOL => $tool,
       mediamosa_job_server_transcode_db::FILE_EXTENSION => $file_extension,
@@ -213,11 +213,11 @@ class mediamosa_job_server {
     );
 
     // Enrich with created time.
-    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+    $fields = mediamosa_db::db_insert_enrich($fields);
 
     // Insert it.
     mediamosa_db::db_insert(mediamosa_job_server_transcode_db::TABLE_NAME)
-      ->fields($a_fields)
+      ->fields($fields)
       ->execute();
   }
 
@@ -233,7 +233,7 @@ class mediamosa_job_server {
     // Create basic server job.
     $jobserver_job_id = self::create_job($job_id, $job_type, $mediafile_id_src);
 
-    $a_fields = array(
+    $fields = array(
       mediamosa_job_server_still_db::ID => $jobserver_job_id,
       mediamosa_job_server_still_db::FRAMETIME => $frametime,
       mediamosa_job_server_still_db::SIZE => $size,
@@ -245,11 +245,11 @@ class mediamosa_job_server {
     );
 
     // Enrich with created time.
-    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+    $fields = mediamosa_db::db_insert_enrich($fields);
 
     // Insert it.
     mediamosa_db::db_insert(mediamosa_job_server_still_db::TABLE_NAME)
-      ->fields($a_fields)
+      ->fields($fields)
       ->execute();
   }
 
@@ -261,14 +261,14 @@ class mediamosa_job_server {
   static public function create_job($job_id, $job_type, $mediafile_id_src) {
 
     // Get the job_server_job, make sure its not already created.
-    $a_job_server_job = mediamosa_job_server::get($job_id);
+    $job_server_job = mediamosa_job_server::get($job_id);
 
-    if (!empty($a_job_server_job)) {
+    if (!empty($job_server_job)) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STARTING_JOB_FAILED);
     }
 
     // Data we want to insert.
-    $a_fields = array(
+    $fields = array(
       mediamosa_job_server_db::JOB_ID => $job_id,
       mediamosa_job_server_db::JOB_TYPE => $job_type,
       mediamosa_job_server_db::JOB_STATUS => mediamosa_job_server_db::JOB_STATUS_WAITING,
@@ -277,11 +277,11 @@ class mediamosa_job_server {
     );
 
     // Enrich with created time.
-    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+    $fields = mediamosa_db::db_insert_enrich($fields);
 
     // Insert it.
     return mediamosa_db::db_insert(mediamosa_job_server_db::TABLE_NAME)
-      ->fields($a_fields)
+      ->fields($fields)
       ->execute();
   }
 
@@ -290,7 +290,7 @@ class mediamosa_job_server {
    *
    * 1.x: _vpx_jobserver_startjob.
    */
-  static public function waiting_job_start($a_job_server_job) {
+  static public function waiting_job_start($job_server_job) {
 
     // 2.x:
     // Check if jobs module is enable has been removed.
@@ -299,16 +299,16 @@ class mediamosa_job_server {
     // when job module is turned off. Lets process jobs, even when its been disabled.
 
     // Job ID.
-    $job_id = $a_job_server_job[mediamosa_job_server_db::JOB_ID];
+    $job_id = $job_server_job[mediamosa_job_server_db::JOB_ID];
 
     // Source Mediafile ID.
-    $mediafile_id_src = $a_job_server_job[mediamosa_job_server_db::MEDIAFILE_ID_SRC];
+    $mediafile_id_src = $job_server_job[mediamosa_job_server_db::MEDIAFILE_ID_SRC];
 
     // Job type.
-    $job_type = $a_job_server_job[mediamosa_job_server_db::JOB_TYPE];
+    $job_type = $job_server_job[mediamosa_job_server_db::JOB_TYPE];
 
     // Job server id (ID of the row in the mediamosa_job_server table).
-    $jobserver_job_id = $a_job_server_job[mediamosa_job_server_db::ID];
+    $jobserver_job_id = $job_server_job[mediamosa_job_server_db::ID];
 
     // Set status in progress.
     self::set_job_status($job_id, mediamosa_job_server_db::JOB_STATUS_INPROGRESS, '0.000');
@@ -380,16 +380,16 @@ class mediamosa_job_server {
       self::log('Starting new followup analyse job for job ID: @job_id.', array('@job_id' => $job_id));
 
       // Update job_server_analyse row.
-      $a_fields = array(
+      $fields = array(
         mediamosa_job_server_analyse_db::ANALYSE_RESULT => implode("\n", $a_output),
       );
 
       // Enrich with changed.
-      $a_fields = mediamosa_db::db_update_enrich($a_fields);
+      $fields = mediamosa_db::db_update_enrich($fields);
 
       // And update row.
       mediamosa_db::db_update(mediamosa_job_server_analyse_db::TABLE_NAME)
-        ->fields($a_fields)
+        ->fields($fields)
         ->condition(mediamosa_job_server_analyse_db::ID, $jobserver_job_id)
         ->execute();
     }
@@ -410,16 +410,16 @@ class mediamosa_job_server {
    *
    * 1.x: _vpx_jobserver_updatestatus.
    */
-  static public function running_job_update($a_job_server_job) {
+  static public function running_job_update($job_server_job) {
 
     // Job ID.
-    $job_id = $a_job_server_job[mediamosa_job_server_db::JOB_ID];
+    $job_id = $job_server_job[mediamosa_job_server_db::JOB_ID];
 
     // Source Mediafile ID.
-    $mediafile_id_src = $a_job_server_job[mediamosa_job_server_db::MEDIAFILE_ID_SRC];
+    $mediafile_id_src = $job_server_job[mediamosa_job_server_db::MEDIAFILE_ID_SRC];
 
     // Job type.
-    $job_type = $a_job_server_job[mediamosa_job_server_db::JOB_TYPE];
+    $job_type = $job_server_job[mediamosa_job_server_db::JOB_TYPE];
 
     // Read the contents of the status file in an array.
     $a_job_status = self::get_status_contents($mediafile_id_src);
@@ -555,7 +555,7 @@ class mediamosa_job_server {
       $error_description = strtr($error_description, $a_error_description_args);
     }
 
-    $a_fields = array(
+    $fields = array(
       mediamosa_job_server_db::JOB_STATUS => $job_status,
       mediamosa_job_server_db::PROGRESS => $progress,
     );
@@ -564,7 +564,7 @@ class mediamosa_job_server {
       case mediamosa_job_server_db::JOB_STATUS_FINISHED:
       case mediamosa_job_server_db::JOB_STATUS_FAILED:
       case mediamosa_job_server_db::JOB_STATUS_CANCELLED:
-        $a_fields[mediamosa_job_server_db::FINISHED] = mediamosa::db_current_timestamp_now();
+        $fields[mediamosa_job_server_db::FINISHED] = mediamosa::db_current_timestamp_now();
         break;
     }
 
@@ -578,16 +578,16 @@ class mediamosa_job_server {
 
     // Set status.
     if ($a_jobserver_job[mediamosa_job_server_db::JOB_STATUS] == mediamosa_job_server_db::JOB_STATUS_WAITING && $job_status == mediamosa_job_server_db::JOB_STATUS_INPROGRESS) {
-      $a_fields[mediamosa_job_server_db::STARTED] = mediamosa::db_current_timestamp_now();
+      $fields[mediamosa_job_server_db::STARTED] = mediamosa::db_current_timestamp_now();
     }
 
     if (!empty($error_description)) {
-      $a_fields[mediamosa_job_server_db::ERROR_DESCRIPTION] = $error_description;
+      $fields[mediamosa_job_server_db::ERROR_DESCRIPTION] = $error_description;
     }
 
     // Update.
     mediamosa_db::db_update(mediamosa_job_server_db::TABLE_NAME)
-      ->fields($a_fields)
+      ->fields($fields)
       ->condition(mediamosa_job_server_db::JOB_ID, $job_id)
       ->execute();
   }
@@ -1038,14 +1038,14 @@ class mediamosa_job_server {
     $still_parameters['duration'] = $duration;
     $still_parameters['framerate'] = $framerate;
 
-    $a_fields = array(
+    $fields = array(
       mediamosa_job_db::STILL_PARAMETERS => serialize($still_parameters),
     );
 
     // Enrich with changed/created.
-    $a_fields = mediamosa_db::db_update_enrich($a_fields);
+    $fields = mediamosa_db::db_update_enrich($fields);
     mediamosa_db::db_update(mediamosa_job_db::TABLE_NAME)
-      ->fields($a_fields)
+      ->fields($fields)
       ->condition(mediamosa_job_db::ID, $job_id)
       ->execute();
 
@@ -1176,16 +1176,16 @@ class mediamosa_job_server {
     mediamosa_io::unlink(mediamosa_configuration_storage::status_file_location_get($base_filename));
 
     // Data to update.
-    $a_fields = array(
+    $fields = array(
       mediamosa_job_server_db::MEDIAFILE_DEST => serialize($mediafile_dest),
     );
 
     // Add changed.
-    $a_fields = mediamosa_db::db_update_enrich($a_fields);
+    $fields = mediamosa_db::db_update_enrich($fields);
 
     // Update mediafile_dest of the job
     mediamosa_db::db_update(mediamosa_job_server_db::TABLE_NAME)
-      ->fields($a_fields)
+      ->fields($fields)
       ->condition(mediamosa_job_server_db::JOB_ID, $job_id)
       ->execute();
 
@@ -1247,16 +1247,16 @@ class mediamosa_job_server {
     // Now remove the status file.
     mediamosa_io::unlink($file_status);
 
-    $a_fields = array(
+    $fields = array(
       mediamosa_job_server_db::MEDIAFILE_DEST => $new_filename,
     );
 
     // Enrich with update date.
-    $a_fields = mediamosa_db::db_update_enrich($a_fields);
+    $fields = mediamosa_db::db_update_enrich($fields);
 
     // Update the filename in mediafile_dest.
     mediamosa_db::db_update(mediamosa_job_server_db::TABLE_NAME)
-      ->fields($a_fields)
+      ->fields($fields)
       ->condition(mediamosa_job_server_db::JOB_ID, $job_id)
       ->execute();
 
@@ -1279,16 +1279,16 @@ class mediamosa_job_server {
     }
 
     if ($killjob) {
-      $a_fields = array(
+      $fields = array(
         mediamosa_job_server_db::JOB_STATUS => mediamosa_job_server_db::JOB_STATUS_CANCELLED,
       );
 
       // Enrich with changed value.
-      $a_fields = mediamosa_db::db_update_enrich($a_fields);
+      $fields = mediamosa_db::db_update_enrich($fields);
 
       // Update.
       mediamosa_db::db_update(mediamosa_job_server_db::TABLE_NAME)
-        ->fields($a_fields)
+        ->fields($fields)
         ->condition(mediamosa_job_server_db::INSTALL_ID, mediamosa::variable_get('mediamosa_installation_id', 'default'))
         ->condition(mediamosa_job_server_db::JOB_ID, $job_id)
         ->execute();

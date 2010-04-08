@@ -827,20 +827,30 @@ function mediamosa_asset_mediamosa_register_rest_call_doc() {
 
   // Change owner ship/group on asset/mediafile/collections.
   $rest_calls['change_ownership'][mediamosa_rest_call::METHOD_POST] = array(
-    mediamosa_rest_call::TITLE => 'Change the ownership, app and/or group of assets, mediafiles and collections.',
-    mediamosa_rest_call::DESCRIPTION => '',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::TITLE => 'Change the ownership of objects.',
+    mediamosa_rest_call::DESCRIPTION => 'Change the ownership and/or group of assets, mediafiles and collections.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'change_ownership<br /><br />old_owner_id = "testuser"<br />new_owner_id = "testuser2"',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <mediafile>1</mediafile>
+  </item>
+  <item id="2">
+    <asset>1</asset>
+  </item>
+  <item id="3">
+    <collection>3</collection>
+  </item>
+</items>',
   );
 
   // Count number of asset based on owner/app/group.
   $rest_calls['asset/count'][mediamosa_rest_call::METHOD_GET] = array(
-    mediamosa_rest_call::TITLE => 'Return the number of asset based on app_id, owner_id and group_id.',
-    mediamosa_rest_call::DESCRIPTION => '',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
-    mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::TITLE => 'Return the number of asset.',
+    mediamosa_rest_call::DESCRIPTION => 'Counts the number of assets based on owner and/or group_id. ',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'asset/count?owner_id=testuser',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => 'Returns the number of found assets in the header->item_count_total.',
   );
 
   // Get Asset Media Metadata.
@@ -910,36 +920,42 @@ function mediamosa_asset_mediamosa_register_rest_call_doc() {
   $rest_calls['asset/$asset_id/still'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'Retrieve the still information of a asset.',
     mediamosa_rest_call::DESCRIPTION => 'Retrieve the complete still list of the given asset ID.',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
-    mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'asset/2XCvTieR5AnFDWZadHjbM6fl/still?user_id=testuser&mediafile_id=ZWm0J9IuWlfoU7qoeT9LDl9H',
+    mediamosa_rest_call::RESPONSE_FIELDS => array('output' => 'The external URL you can use to see the avatar.'),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <output>http://download.mediamosa2.local/still/n2Ybk1bPL6jRgkSSLUiYxfLn</output>
+    <content_type></content_type>
+    <ticket_id>n2Ybk1bPL6jRgkSSLUiYxfLn</ticket_id>
+  </item>
+</items>',
   );
 
   // Delete stills from asset.
   $rest_calls['asset/$asset_id/still/delete'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Delete stills from an asset.',
-    mediamosa_rest_call::DESCRIPTION => '',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
-    mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::DESCRIPTION => 'Delete all the still from this asset, or when mediafile_id was specified, only stills generated from that mediafile. ',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'asset/4BVZIK8gpwDUFGyR8nnDiL7V/still/delete',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
   );
 
   // Set default stills from asset.
   $rest_calls['asset/$asset_id/still/default'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Set the default still for an asset.',
-    mediamosa_rest_call::DESCRIPTION => '',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
-    mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::DESCRIPTION => 'You can set the default flag for a still, all other stills of the asset are set to false. Only one default still exists is set for one asset.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'asset/4BVZIK8gpwDUFGyR8nnDiL7V/still/default',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
   );
 
     // Set order still from asset.
   $rest_calls['asset/$asset_id/still/order'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Set the order for still of a asset.',
-    mediamosa_rest_call::DESCRIPTION => '',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
-    mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::DESCRIPTION => 'The order is a number like a weight. The higher the weight, the higher it will return in the result.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'asset/S2Eg3Fzh2Rdw5dLbArmgqRKr/still/order<br /><br />mediafile_id = "F2tpgYq4XFLTk9MjlT6FdPLh"<br />order = 10<br />still_id = "1gP1MlYMmieBvir2wLdHfUJI"<br />user_id = "testuser"',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
   );
 
   // Get mediafiles of asset.
@@ -1167,10 +1183,23 @@ user_id = "username"',
   // Delete all given asset.
   $rest_calls['asset/delete'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Delete all assets using the given asset IDs.',
-    mediamosa_rest_call::DESCRIPTION => '',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::DESCRIPTION => 'Same as asset/$asset_id/delete, except it wiil allow you to delete more than one asset.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/asset/delete<br /><br />asset_id[] = "S2Eg3Fzh2Rdw5dLbArmgqRKr"<br />asset_id[] = "Eg3Fzh2Rdw5dLbArmgqRKrer"<br />userid = "SURFgroepen.frans"',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <asset_id>S2Eg3Fzh2Rdw5dLbArmgqRKr</asset_id>
+    <result>error</result>
+    <result_id>709</result_id>
+    <result_description>MM - there are still 4 mediafile(s) present in this asset.</result_description>
+  </item>
+  <item id="2">
+    <asset_id>Eg3Fzh2Rdw5dLbArmgqRKrer</asset_id>
+    <result>success</result>
+    <result_id>601</result_id>
+    <result_description></result_description>
+  </item>
+</items>',
   );
 
   // Create link between asset and collection.
@@ -1239,36 +1268,56 @@ user_id = "username"',
   $rest_calls['asset/$asset_id/metadata'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Create metadata for the asset.',
     mediamosa_rest_call::DESCRIPTION => '',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
-    mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'asset/2RcNiH26TY50e23MY3xw78cq/metadata<br /><br />description = "test description"',
+    mediamosa_rest_call::RESPONSE_FIELDS => array('metadata parameter' => 'the created/replaced metadata field value'),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <description>test description</description>
+  </item>
+</items>',
   );
 
   // Get the asset supplement.
   $rest_calls['asset/$asset_id/supplement'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'Get the supplement of the asset.',
-    mediamosa_rest_call::DESCRIPTION => '',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::DESCRIPTION => 'Return the supplement object with the data in BASE64 format.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'asset/S2Eg3Fzh2Rdw5dLbArmgqRKr/supplement',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <supplement_id>w27fFVLXbXIQqUuiTAqDe7Hx</supplement_id>
+    <asset_id>S2Eg3Fzh2Rdw5dLbArmgqRKr</asset_id>
+    <tag></tag>
+    <oai_prefix></oai_prefix>
+    <oai_namespaceuri></oai_namespaceuri>
+    <oai_schemalocation></oai_schemalocation>
+    <created>2010-04-08 15:42:41</created>
+    <changed>2010-04-08 15:50:54</changed>
+    <supplement_base64>YmxhYmxh</supplement_base64>
+  </item>
+</items>',
   );
 
   // Create the asset supplement.
   $rest_calls['asset/$asset_id/supplement/create'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Create the supplement of the asset.',
-    mediamosa_rest_call::DESCRIPTION => '',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
-    mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::DESCRIPTION => 'Create a empty supplement object.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'asset/S2Eg3Fzh2Rdw5dLbArmgqRKr/supplement/create',
+    mediamosa_rest_call::RESPONSE_FIELDS => array('supplement_id' => 'The ID of the created empty supplement.'),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '  <items>
+  <item id="1">
+    <supplement_id>w27fFVLXbXIQqUuiTAqDe7Hx</supplement_id>
+  </item>
+</items>',
   );
 
   // Update the asset supplement.
   $rest_calls['asset/$asset_id/supplement/$supplement_id/update'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Update the supplement of the asset.',
-    mediamosa_rest_call::DESCRIPTION => '',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
-    mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::DESCRIPTION => 'Store the supplement data in the supplement db object. The maximum size is 64k.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'asset/S2Eg3Fzh2Rdw5dLbArmgqRKr/supplement/w27fFVLXbXIQqUuiTAqDe7Hx/update<br /><br />user_id  = "testuser"<br />supplement  = "my binary test, this can be anything as long is not bigger than 64k."',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
   );
 
   // Update the asset supplement.
@@ -1292,10 +1341,10 @@ user_id = "username"',
   // Delete the asset supplement.
   $rest_calls['asset/$asset_id/supplement/$supplement_id/delete'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Delete a supplement of the asset.',
-    mediamosa_rest_call::DESCRIPTION => '',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
-    mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::DESCRIPTION => 'Deletes the supplement of the asset.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'asset/S2Eg3Fzh2Rdw5dLbArmgqRKr/supplement/w27fFVLXbXIQqUuiTAqDe7Hx/delete',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
   );
 
   // Delete the asset supplement.

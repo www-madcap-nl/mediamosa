@@ -39,7 +39,6 @@ function mediamosa_aut_mediamosa_register_rest_call() {
   $a_rest_calls['autorisation_group'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_aut_group_list',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::DESCRIPTION => 'Retrieve the authorization group listing.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_aut',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
@@ -167,67 +166,118 @@ function mediamosa_aut_mediamosa_register_rest_call_doc() {
 
   // Get Asset Media Metadata (1.x:  media_management_metadata_definition_get)
   $a_rest_calls['autorisation_group'][mediamosa_rest_call::METHOD_GET] = array(
-    mediamosa_rest_call::TITLE => 'Retrieve the authorization group listing.',
+    mediamosa_rest_call::TITLE => 'List the authorization group.',
     mediamosa_rest_call::DESCRIPTION => 'Retrieve the authorization group listing.',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'autorisation_group?limit=10',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <aut_group_name>@ACADEMIA.group</aut_group_name>
+    <aut_group_type>REALM</aut_group_type>
+  </item>
+  <item id="2">
+    <aut_group_name>@test.group</aut_group_name>
+    <aut_group_type>REALM</aut_group_type>
+  </item>
+  <item id="3">
+    <aut_group_name>ACADEMIA.group</aut_group_name>
+    <aut_group_type>DOMAIN</aut_group_type>
+  </item>
+  <item id="4">
+    <aut_group_name>test.domain</aut_group_name>
+    <aut_group_type>DOMAIN</aut_group_type>
+  </item>
+  <item id="5">
+    <aut_group_name>test.group</aut_group_name>
+    <aut_group_type>DOMAIN</aut_group_type>
+  </item>
+</items>',
   );
 
   $a_rest_calls['autorisation_group/$groupname'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'Retrieve a authorization group.',
     mediamosa_rest_call::DESCRIPTION => 'Retrieve a authorization group.',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'autorisation_group/ACADEMIA.group',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <aut_group_name>ACADEMIA.group</aut_group_name>
+    <aut_group_type>DOMAIN</aut_group_type>
+    <aut_group_id>14</aut_group_id>
+  </item>
+</items>',
   );
 
   $a_rest_calls['autorisation_group/$groupname/delete'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Delete an authorization group.',
     mediamosa_rest_call::DESCRIPTION => 'Delete an authorization group.',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
-    mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'autorisation_group/test2.group/delete',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
   );
 
   $a_rest_calls['autorisation_group/$groupname/hostname'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'Retrieve the hostname from an authorization group.',
     mediamosa_rest_call::DESCRIPTION => 'Retrieve the hostname from an authorization group.',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'autorisation_group/test2.group/hostname?limit=10',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <hostname>hostname.test</hostname>
+  </item>
+</items>',
   );
 
   $a_rest_calls['autorisation_group/$groupname/hostname/create'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Create hostnames from an authorization group.',
     mediamosa_rest_call::DESCRIPTION => 'Create hostnames from an authorization group.',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'autorisation_group/test2.group/hostname/create<br /><br />hostname[] = "hostname.test"',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <hostname>hostname.test</hostname>
+    <result>success</result>
+    <result_id>601</result_id>
+    <result_description></result_description>
+  </item>
+</items>',
   );
 
   $a_rest_calls['autorisation_group/$groupname/hostname/delete'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Delete hostnames from an authorization group.',
     mediamosa_rest_call::DESCRIPTION => 'Delete hostnames from an authorization group.',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'autorisation_group/test2.group/hostname/delete<br /><br />hostname[] = "hostname.test"',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <hostname>hostname.test</hostname>
+    <result>success</result>
+    <result_id>601</result_id>
+    <result_description></result_description>
+  </item>
+</items>',
   );
 
   $a_rest_calls['autorisation_group/create'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Create a authorization group.',
     mediamosa_rest_call::DESCRIPTION => 'Create a authorization group.',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'autorisation_group/create<br /><br />groupname = "test.group"',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <aut_group_name>test.group</aut_group_name>
+    <aut_group_type>DOMAIN</aut_group_type>
+    <aut_group_id>149</aut_group_id>
+  </item>
+</items>',
   );
 
   $a_rest_calls['autorisation_group/$groupname'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Update a authorization group.',
     mediamosa_rest_call::DESCRIPTION => 'Update a authorization group.',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
-    mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'autorisation_group/test.group<br /><br />new_groupname = "test2.group"',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
   );
 
   $a_rest_calls['mediafile/$mediafile_id/acl'][mediamosa_rest_call::METHOD_POST] = array(

@@ -158,8 +158,14 @@ class mediamosa_rest_call_change_ownership extends mediamosa_rest_call {
       // Add sets.
       $query->fields($a_fields);
 
+      $rename = array(
+        mediamosa_asset_db::TABLE_NAME => 'asset',
+        mediamosa_asset_mediafile_db::TABLE_NAME => 'mediafile',
+        mediamosa_collection_db::TABLE_NAME => 'collection',
+      );
+
       // Add affected rows to output.
-      $mediamosa->add_item(array($table => $query->execute()));
+      $mediamosa->add_item(array($rename[$table] => $query->execute()));
     }
   }
 }
@@ -449,8 +455,8 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
 
       // When provided, then convert.
       if (!self::empty_param($param)) {
-        $a_value = self::get_param_value($param);
-        $match = self::get_param_value($param . '_match');
+        $a_value = $this->get_param_value($param);
+        $match = $this->get_param_value($param . '_match');
         $a_cql[] = mediamosa_core_cql::convert_searchparam_to_cql($param, $match, $a_value, $a_param[mediamosa_rest_call::PARAM_TYPE], $a_translate_to);
       }
     }
@@ -464,7 +470,7 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
       }
 
       // Get the glue operator.
-      $operator = self::get_param_value(self::OPERATOR);
+      $operator = $this->get_param_value(self::OPERATOR);
 
       $cql = implode(' ' . mediamosa_unicode::strtoupper($operator) . ' ', $a_cql);
     }
@@ -479,7 +485,7 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
     }
     elseif (empty($a_cql)) {
       // Now normal search params, then take CQL (if any).
-      $cql = self::get_param_value(self::CQL);
+      $cql = $this->get_param_value(self::CQL);
     }
 
     // Now search.

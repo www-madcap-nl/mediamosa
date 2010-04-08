@@ -292,6 +292,7 @@ class mediamosa_rest_call_aut_group_create extends mediamosa_rest_call {
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_AUT_GROUP_TYPE,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'The type of the group to create.',
+      mediamosa_rest_call::VAR_ALLOWED_VALUES => array(mediamosa_aut_group_db::AUT_GROUP_TYPE_DOMAIN, mediamosa_aut_group_db::AUT_GROUP_TYPE_REALM),
     );
 
     // Enrich with required REST vars.
@@ -444,9 +445,10 @@ class mediamosa_rest_call_aut_group_delete extends mediamosa_rest_call {
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::DELETE] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_DELETE,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_ALPHA,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'Delete = cascade field.',
+      mediamosa_rest_call::VAR_DESCRIPTION => 'Provide value "cascade" to delete also contents of group. Will fail if group is not empty and this value is not set to "cascade".',
+      mediamosa_rest_call::VAR_ALLOWED_VALUES => array('', 'cascade'),
     );
 
     // Enrich with required REST vars.

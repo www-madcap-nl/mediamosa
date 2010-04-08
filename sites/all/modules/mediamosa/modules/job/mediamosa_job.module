@@ -414,10 +414,14 @@ At least one output file must be specified</error_description>
 
   $a_rest_calls['asset/$asset_id/still/create'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Create still job.',
-    mediamosa_rest_call::DESCRIPTION => 'Create still job.',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
-    mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::DESCRIPTION => 'Create a process job for creating a still from a mediafile.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'asset/Cd2WoNCzHX14mfLwbxbPgowc/still/create',
+    mediamosa_rest_call::RESPONSE_FIELDS => array('job_id' => 'ID of the created Still job.'),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <job_id>15839</job_id>
+  </item>
+</items>',
   );
 
   $a_rest_calls['mediafile/$mediafile_id/still/create'][mediamosa_rest_call::METHOD_POST] = array(
