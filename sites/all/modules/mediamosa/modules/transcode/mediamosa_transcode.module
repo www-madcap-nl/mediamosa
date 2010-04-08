@@ -42,6 +42,105 @@ function mediamosa_transcode_help($path, $arg) {
   }
 }
 
+function mediamosa_transcode_mediamosa_register_rest_call_doc() {
+  $a_rest_calls = array();
+
+  $a_rest_calls['transcode/parameter'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Get transcode parameters.',
+    mediamosa_rest_call::DESCRIPTION => 'Get transcode parameters.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'transcode/parameter',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <transcode_mapping_id>1</transcode_mapping_id>
+    <tool>ffmpeg</tool>
+    <nice_parameter>videobitrate</nice_parameter>
+    <tool_parameter>-b</tool_parameter>
+    <min_value>128000</min_value>
+    <max_value>800000</max_value>
+    <allowed_value></allowed_value>
+    <default_value>200000</default_value>
+    <required>FALSE</required>
+    <created>2010-04-07 12:39:03</created>
+    <changed>2010-04-07 12:39:03</changed>
+  </item>
+</items>',
+  );
+
+  $a_rest_calls['transcode/profile'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Get the profile.',
+    mediamosa_rest_call::DESCRIPTION => 'Get the profile listing.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'transcode/profile',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <profile_id>1</profile_id>
+    <profile>standaard flash</profile>
+    <default>FALSE</default>
+    <global>TRUE</global>
+  </item>
+</items>',
+  );
+
+  $a_rest_calls['transcode/profile/$profile_id'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Get a profile.',
+    mediamosa_rest_call::DESCRIPTION => 'Get a profile.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'transcode/profile/1',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <nid>1</nid>
+    <vid>42</vid>
+    <transcode_profile_id>1</transcode_profile_id>
+    <app_id>0</app_id>
+    <version>0</version>
+    <profile>standaard flash</profile>
+    <is_default_profile>FALSE</is_default_profile>
+    <tool>ffmpeg</tool>
+    <file_extension>flv</file_extension>
+    <command>videobitrate:500000;fps:25;size:320x200;videocodec:flv;audiocodec:libmp3lame;audiobitrate:64000;audiosamplingrate:22050;audiochannels:1;maintain_aspect_ratio:yes</command>
+    <created>2010-04-07 13:37:31</created>
+    <changed>2010-04-07 13:37:31</changed>
+  </item>
+</items>',
+  );
+
+  $a_rest_calls['transcode/profile/$profile_id'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Update a profile.',
+    mediamosa_rest_call::DESCRIPTION => 'Update a profile.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'transcode/profile/1',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <profile_id>1</profile_id>
+  </item>
+</items>',
+  );
+
+  $a_rest_calls['transcode/profile/$profile_id/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Delete a profile.',
+    mediamosa_rest_call::DESCRIPTION => 'Delete a profile.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'transcode/profile/1/delete',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
+  );
+
+  $a_rest_calls['transcode/profile/create'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Create a profile.',
+    mediamosa_rest_call::DESCRIPTION => 'Create a transcode profile.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'transcode/profile/create<br />
+command=videobitrate:500000;size:320x200;&file_extension=xid&name=standard_xid&tool=ffmpeg',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <profile_id>11</profile_id>
+  </item>
+</items>',
+  );
+
+  return $a_rest_calls;
+}
+
 /**
  * Implements hook_mediamosa_register_rest_call().
  */
@@ -52,7 +151,6 @@ function mediamosa_transcode_mediamosa_register_rest_call() {
   $a_rest_calls['transcode/profile'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_transcode_profile_search',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::DESCRIPTION => 'Get the profile listing.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_transcode_profile',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_7_0,
   );
@@ -79,7 +177,6 @@ function mediamosa_transcode_mediamosa_register_rest_call() {
   $a_rest_calls['transcode/profile/$profile_id'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_transcode_profile_get',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::DESCRIPTION => 'Get a profile.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_transcode_profile',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_7_0,
   );
@@ -88,7 +185,6 @@ function mediamosa_transcode_mediamosa_register_rest_call() {
   $a_rest_calls['transcode/profile/create'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_transcode_profile_create',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::DESCRIPTION => 'Create a profile.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_transcode_profile',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_7_0,
   );
@@ -106,7 +202,6 @@ function mediamosa_transcode_mediamosa_register_rest_call() {
   $a_rest_calls['transcode/profile/$profile_id/delete'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_transcode_profile_delete',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::DESCRIPTION => 'Update a profile.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_transcode_profile',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_7_0,
   );
@@ -115,7 +210,6 @@ function mediamosa_transcode_mediamosa_register_rest_call() {
   $a_rest_calls['transcode/parameter'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_transcode_mapping_search',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::DESCRIPTION => 'Get transcode parameters.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_transcode_mapping',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_7_0,
   );

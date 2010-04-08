@@ -190,22 +190,23 @@ class mediamosa_transcode_profile {
         ->execute();
     }
 
-    $a_fields = array(
-      mediamosa_transcode_profile_db::APP_ID => $app_id,
-      mediamosa_transcode_profile_db::NAME => $name,
-      mediamosa_transcode_profile_db::VERSION => $version,
-      mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE => $default ? mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE_TRUE : mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE_FALSE,
-      mediamosa_transcode_profile_db::TOOL => $tool,
-      mediamosa_transcode_profile_db::FILE_EXTENSION => $file_extension,
-      mediamosa_transcode_profile_db::COMMAND => $command,
-    );
+    $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE, $name);
 
-    // Add created value.
-    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+    $node->{mediamosa_transcode_profile_db::APP_ID} = $app_id;
+    $node->{mediamosa_transcode_profile_db::VERSION} = $version;
+    $node->{mediamosa_transcode_profile_db::PROFILE} = $name;
+    $node->{mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE} = $default ? mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE_TRUE : mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE_FALSE;
+    $node->{mediamosa_transcode_profile_db::TOOL} = $tool;
+    $node->{mediamosa_transcode_profile_db::FILE_EXTENSION} = $file_extension;
+    $node->{mediamosa_transcode_profile_db::COMMAND} = $command;
 
-    return mediamosa_db::db_insert(mediamosa_transcode_profile_db::TABLE_NAME)
-      ->fields($a_fields)
-      ->execute();
+    node_save(&$node);
+
+    // Get a fresh $node object with other parameters (eg. transcode_profile_id).
+    $node = node_load($node->nid);
+
+    // Return the profile id.
+    return $node->transcode_profile_id;
   }
 
   /**
@@ -232,7 +233,7 @@ class mediamosa_transcode_profile {
   static public function update($app_id, $profile_id, $name = NULL, $version = NULL, $default = 'FALSE', $tool = NULL, $file_extension = NULL, $command = NULL) {
 
     // Must exists.
-    mediamosa_transcode_profile::must_exists($app_id, $name);
+    mediamosa_transcode_profile::must_exists($app_id, $profile_id);
 
     // When setting default, make sure no other default is set.
     if ($default) {
@@ -256,7 +257,7 @@ class mediamosa_transcode_profile {
     );
     // Optional parameters
     if (!is_null($name)) {
-      $a_fields[mediamosa_transcode_profile_db::NAME] = $name;
+      $a_fields[mediamosa_transcode_profile_db::PROFILE] = $name;
     }
     if (!is_null($version)) {
       $a_fields[mediamosa_transcode_profile_db::VERSION] = $version;
