@@ -207,6 +207,8 @@ class mediamosa_error {
 
   const ERRORCODE_INVALID_STILL_TICKET = 2000;
 
+  const ERRORCODE_INVALID_REST_CALL = 3000;
+
   // ------------------------------------------------------------------ Static Function.
   /**
    * Get the listing of the error code table.

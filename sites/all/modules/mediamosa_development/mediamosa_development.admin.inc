@@ -452,7 +452,7 @@ function _mediamosa_build_form($form) {
     // Find rest_call.
     $_SESSION['mediamosa_development_params']['rest_call'] = mediamosa_rest::get_uri_definition($uri, $method);
     if (empty($_SESSION['mediamosa_development_params']['rest_call'])) {
-      continue;
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INVALID_REST_CALL, array('@rest_call' => $uri . ' '. $method));
     }
   }
 
@@ -624,6 +624,8 @@ function _build_param($name, $var, $required) {
     case mediamosa_type::TYPE_ALPHA_NUM:
 
     case mediamosa_type::TYPE_DATETIME:
+
+    case mediamosa_type::TYPE_SERIAL:
       $item = array(
         '#weight' => '10',
         '#type' => 'textfield',

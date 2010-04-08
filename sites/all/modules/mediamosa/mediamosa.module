@@ -126,7 +126,7 @@ function mediamosa_mediamosa_register_rest_call() {
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_0_0,
   );
 
-  $rest_calls['rest/#$uri_id'][mediamosa_rest_call::METHOD_GET] = array(
+  $rest_calls['rest/$uri_id'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_get',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa',
@@ -165,17 +165,66 @@ function mediamosa_mediamosa_register_rest_call_doc() {
   $rest_calls['rest'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'Get listing MediaMosa REST calls.',
     mediamosa_rest_call::DESCRIPTION => 'Retrieve the listing of the current registered MediaMosa REST calls.',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'rest?limit=10',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
-  );
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '  <items>
+<item id="1">
+  <access>5</access>
+  <behave_as_external></behave_as_external>
+  <class_name>mediamosa_rest_call_asset_search</class_name>
+  <default_params_values>
+    <app_id>0</app_id>
+  </default_params_values>
+  <method>GET</method>
+  <module_name>mediamosa_asset</module_name>
+  <response_type>text/xml</response_type>
+  <status>active</status>
+  <uri>asset</uri>
+  <uri_id>1</uri_id>
+  <version>1.1.0</version>
+</item>
+</items>',
+);
 
-  $rest_calls['rest/#$uri_id'][mediamosa_rest_call::METHOD_GET] = array(
-    mediamosa_rest_call::TITLE => 'Get details REST call.',
-    mediamosa_rest_call::DESCRIPTION => 'Retrieve specific information about a registered MediaMosa REST call.',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
-    mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+$rest_calls['rest/$uri_id'][mediamosa_rest_call::METHOD_GET] = array(
+  mediamosa_rest_call::TITLE => 'Get details REST call.',
+  mediamosa_rest_call::DESCRIPTION => 'Retrieve specific information about a registered MediaMosa REST call.',
+  mediamosa_rest_call::EXAMPLE_REQUEST => 'rest/33',
+  mediamosa_rest_call::RESPONSE_FIELDS => array(),
+  mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <access>5</access>
+    <behave_as_external></behave_as_external>
+    <class_name>mediamosa_rest_call_aut_group_get</class_name>
+    <method>GET</method>
+    <module_name>mediamosa_aut</module_name>
+    <response_type>text/xml</response_type>
+    <status>active</status>
+    <uri>autorisation_group/$groupname</uri>
+    <uri_id>33</uri_id>
+    <version>1.1.0</version>
+    <vars>
+      <groupname>
+        <type>STRING</type>
+        <is_required>YES</is_required>
+        <description>The group name to retrieve</description>
+      </groupname>
+      <app_id>
+        <type>APP_ID</type>
+        <is_required>YES</is_required>
+        <is_array>YES</is_array>
+        <default_value>0</default_value>
+        <description>The application ID.</description>
+      </app_id>
+      <is_app_admin>
+        <type>BOOL</type>
+        <is_required>NO</is_required>
+        <description>NOT USED.</description>
+        <default_value>false</default_value>
+      </is_app_admin>
+    </vars>
+  </item>
+</items>',
   );
 
   $rest_calls['version'][mediamosa_rest_call::METHOD_GET] = array(
