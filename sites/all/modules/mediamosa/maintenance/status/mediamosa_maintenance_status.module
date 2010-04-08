@@ -44,6 +44,30 @@ function mediamosa_maintenance_status_cron() {
   mediamosa_debug::log_debug('mediamosa_maintenance_status_cron ended: @secs', array('@sec' => time() - $start), 'maintenance_status');
 }
 
+function mediamosa_maintenance_status_mediamosa_register_rest_call_doc() {
+  $a_rest_calls = array();
+
+  $a_rest_calls['status'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Retrieve the CRON status',
+    mediamosa_rest_call::DESCRIPTION => 'Retrieve the status of the CRON status run.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'status',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <test>Challenge-reponse authentication</test>
+    <test_description>Challenge-reponse authentication for end user applications.</test_description>
+    <passes>35</passes>
+    <fails>0</fails>
+    <exceptions>0</exceptions>
+    <last_run>2010-04-08 13:11:25</last_run>
+    <ttr>35.18</ttr>
+  </item>
+</items>',
+  );
+
+  return $a_rest_calls;
+}
+
 /**
  * Implements hook_mediamosa_register_rest_call().
  */
@@ -63,7 +87,6 @@ function mediamosa_maintenance_status_mediamosa_register_rest_call() {
   $a_rest_calls['status'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_status',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::DESCRIPTION => 'Retrieve the status of the CRON status run.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
     mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
