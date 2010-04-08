@@ -38,7 +38,15 @@ function mediamosa_user_mediamosa_register_rest_call_doc() {
     mediamosa_rest_call::DESCRIPTION => 'With this call you get a list of all known users. User integrity is not forced in Mediamosa, but rather left to the application builder. There is however some basic knowledge of users. The /user... restcalls can be used to store basic user data. So if you create an asset whit a user, this will succeed regardless the user exists in the userlist. The main purpose for the user lists in MediaMosa is the storage of the quotum per user/group.
 
 This call returns all users which are created with /user/create and searches for all users who created objects (assets, mediafiles, collections). If the user has some quota information, this is added to the output.',
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <user_id>admin</user_id>
+    <group_id></group_id>
+    <quotum></quotum>
+    <created></created>
+    <changed></changed>
+  </item>
+</items>',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
   );
 
@@ -52,7 +60,7 @@ This call returns all users which are created with /user/create and searches for
   );
 
   $a_rest_calls['user/$user_id'][mediamosa_rest_call::METHOD_GET] = array(
-    mediamosa_rest_call::TITLE => 'Cet the user information.',
+    mediamosa_rest_call::TITLE => 'Get the user information.',
     mediamosa_rest_call::DESCRIPTION => 'Get the user, group and quota information.',
     mediamosa_rest_call::EXAMPLE_REQUEST => '/user/foo [GET] ',
     mediamosa_rest_call::RESPONSE_FIELDS => array(
@@ -86,6 +94,14 @@ This call returns all users which are created with /user/create and searches for
 </items>',
   );
 
+  $a_rest_calls['user/$user_id'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Update the user information.',
+    mediamosa_rest_call::DESCRIPTION => 'Update the user, group and quota information.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/user/admin',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
+  );
+
   $a_rest_calls['user/$user_id/delete'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Delete a user.',
     mediamosa_rest_call::DESCRIPTION => 'Deletes a user. The collections/assets/mediafiles of the user will not be deleted. This means that as long as there are objects belonging to the user, the user will appear in the /user [GET] lists. If the user must be deleted everywhere, you must change the owner of these objects first.',
@@ -93,6 +109,98 @@ This call returns all users which are created with /user/create and searches for
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
     mediamosa_rest_call::EXAMPLE_RESPONSE => '<request_result>success</request_result>
 <request_result_id>601</request_result_id> ',
+  );
+
+  $a_rest_calls['user/$fav_user_id/favorites'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Search for favorites.',
+    mediamosa_rest_call::DESCRIPTION => 'Search for favorites.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'user/admin/favorites?fav_type=ASSET',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <asset_id>7pAkDsceysAZPo0q3PhjtBE1</asset_id>
+    <app_id>14</app_id>
+    <provider_id></provider_id>
+    <owner_id>admin</owner_id>
+    <group_id></group_id>
+    <videotimestamp>2010-01-22 16:22:45</videotimestamp>
+    <videotimestampmodified>2010-01-22 16:22:54</videotimestampmodified>
+    <play_restriction_start></play_restriction_start>
+    <play_restriction_end></play_restriction_end>
+    <is_locked>FALSE</is_locked>
+    <reference_id></reference_id>
+    <isprivate>FALSE</isprivate>
+    <mediafile_duration>00:00:29.92</mediafile_duration>
+    <mediafile_container_type>asf</mediafile_container_type>
+    <is_external>FALSE</is_external>
+    <is_empty_asset>FALSE</is_empty_asset>
+    <viewed>185</viewed>
+    <played>105</played>
+    <is_protected>FALSE</is_protected>
+    <is_unappropiate>FALSE</is_unappropiate>
+    <dublin_core>
+      <contributor></contributor>
+      <coverage_spatial></coverage_spatial>
+      <coverage_temporal></coverage_temporal>
+      <creator></creator>
+      <date></date>
+      <description></description>
+      <format></format>
+      <identifier></identifier>
+      <language>nl</language>
+      <publisher></publisher>
+      <relation></relation>
+      <rights></rights>
+      <source></source>
+      <subject></subject>
+      <title>test</title>
+      <type></type>
+    </dublin_core>
+    <qualified_dublin_core>
+      <created></created>
+      <description_abstract></description_abstract>
+      <format_extent></format_extent>
+      <format_medium></format_medium>
+      <hasformat></hasformat>
+      <isformatof></isformatof>
+      <isreferencedby></isreferencedby>
+      <issued></issued>
+      <license></license>
+      <rightsholder></rightsholder>
+      <title_alternative></title_alternative>
+    </qualified_dublin_core>
+    <is_favorite>FALSE</is_favorite>
+    <granted>TRUE</granted>
+    <vpx_still_url>http://mediamosa2/still/F1cAk7KYiDIGYVHQKnk32YPy</vpx_still_url>
+    <ega_still_url></ega_still_url>
+  </item>
+</items>',
+  );
+
+  $a_rest_calls['user/$fav_user_id/favorites/create'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Add a user favorite.',
+    mediamosa_rest_call::DESCRIPTION => 'Add a user favorite. This can be a collection or an asset.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'user/admin/favorites/create<br />
+fav_id=14&fav_type=ASSET',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
+  );
+
+  $a_rest_calls['user/$fav_user_id/favorites/delete'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Delete a user favorite.',
+    mediamosa_rest_call::DESCRIPTION => 'Delete a user favorite using favorite ID, favorite type and favorite user ID.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'user/admin/favorites/delete<br />
+fav_id=14&fav_type=ASSET',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
+  );
+
+  $a_rest_calls['user/$fav_user_id/favorites/delete'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Delete a user favorite.',
+    mediamosa_rest_call::DESCRIPTION => 'Delete a user favorite using favorite ID, favorite type and favorite user ID.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'user/admin/favorites/delete?fav_id=14&fav_type=ASSET',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
   );
 
   // Group calls
@@ -205,7 +313,6 @@ function mediamosa_user_mediamosa_register_rest_call() {
   $a_rest_calls['user/$fav_user_id/favorites/create'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_user_favorite_create',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::DESCRIPTION => 'Add a user favorite. This can be a collection or an asset.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_user_favorite',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
@@ -221,7 +328,6 @@ function mediamosa_user_mediamosa_register_rest_call() {
   $a_rest_calls['user/$fav_user_id/favorites/delete'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_user_favorite_delete',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::DESCRIPTION => 'Delete a user favorite.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_user_favorite',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
@@ -229,7 +335,6 @@ function mediamosa_user_mediamosa_register_rest_call() {
   $a_rest_calls['user/$fav_user_id/favorites/delete'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_user_favorite_delete',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::DESCRIPTION => 'Delete a user favorite.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_user_favorite',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
@@ -237,7 +342,6 @@ function mediamosa_user_mediamosa_register_rest_call() {
   $a_rest_calls['user/$fav_user_id/favorites'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_user_favorite_search',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
-    mediamosa_rest_call::DESCRIPTION => 'Search for assets.',
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_user_favorite',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
     mediamosa_rest_call::DEFAULT_PARAMS_VALUES => array(

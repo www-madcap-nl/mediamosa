@@ -59,13 +59,13 @@ class mediamosa_rest_call_user_favorite_create extends mediamosa_rest_call {
         ),
         self::FAV_TYPE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_ALPHA_NUM,
-          self::VAR_DESCRIPTION => '.',
+          self::VAR_DESCRIPTION => 'Favorite type (asset or collection)',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::VAR_ALLOWED_VALUES => array(mediamosa_user_favorite_db::FAV_TYPE_ASSET, mediamosa_user_favorite_db::FAV_TYPE_COLLECTION),
         ),
         self::FAV_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_ALPHA_NUM,
-          self::VAR_DESCRIPTION => '.',
+          self::VAR_DESCRIPTION => 'Favorite ID (asset or collection ID)',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
       )
@@ -130,7 +130,7 @@ class mediamosa_rest_call_user_favorite_delete extends mediamosa_rest_call {
         ),
         self::FAV_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_ALPHA_NUM,
-          self::VAR_DESCRIPTION => '.',
+          self::VAR_DESCRIPTION => 'Favorite ID.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
       )
@@ -184,12 +184,11 @@ class mediamosa_rest_call_user_favorite_search {
 
     // Based on type, we return the class.
     switch ($fav_type) {
+      default:
       case mediamosa_user_favorite_db::FAV_TYPE_ASSET:
         return new mediamosa_rest_call_user_favorite_search_asset($a_rest_call);
       case mediamosa_user_favorite_db::FAV_TYPE_COLLECTION:
         return new mediamosa_rest_call_user_favorite_search_collection($a_rest_call);
-      case NULL:
-        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_REQUIRED_PARAMETER, array('@param' => self::FAV_TYPE, '@type' => mediamosa_type::TYPE_ALPHA_NUM));
     }
 
     // Invalid value.

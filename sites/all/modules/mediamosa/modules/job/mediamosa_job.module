@@ -271,9 +271,21 @@ The analyse process also determines if the file needs to be hinted. If the ega s
   $a_rest_calls['user/$user_id/joblist'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'Return a listing of the given user ID as owner of the jobs.',
     mediamosa_rest_call::DESCRIPTION => 'Return a listing of the given user ID as owner of the jobs.',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'user/admin/joblist',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <id>10</id>
+    <owner>admin</owner>
+    <status>FINISHED</status>
+    <progress>1.000</progress>
+    <priority>-1</priority>
+    <job_type>ANALYSE</job_type>
+    <started>07-04-2010 16:11</started>
+    <started_unix>1270649471</started_unix>
+    <error_description></error_description>
+  </item>
+</items>',
   );
 
   $a_rest_calls['asset/$asset_id/joblist'][mediamosa_rest_call::METHOD_GET] = array(
