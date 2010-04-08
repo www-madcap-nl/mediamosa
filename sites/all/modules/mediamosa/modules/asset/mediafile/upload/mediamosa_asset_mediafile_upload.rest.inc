@@ -308,11 +308,11 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
 /**
  * URI: /mediafile/upload
  *
- * Method: POST
+ * Method: PUT
  *
  * 1.x: vpx_upload_handle_file_put_app
  */
-class mediamosa_rest_call_asset_mediafile_upload_app extends mediamosa_rest_call_asset_mediafile_upload {
+class mediamosa_rest_call_asset_mediafile_upload_put extends mediamosa_rest_call_asset_mediafile_upload {
 
   // ------------------------------------------------------------------ Consts.
   // Rest vars;
@@ -324,9 +324,6 @@ class mediamosa_rest_call_asset_mediafile_upload_app extends mediamosa_rest_call
     // Call parent.
     $a_var_setup = parent::get_var_setup();
 
-    // Not required.
-    $a_var_setup[self::VARS][self::UPLOAD_TICKET][self::VAR_IS_REQUIRED] = self::VAR_IS_REQUIRED_NO;
-
     // Add user_id.
     $a_var_setup[self::VARS][self::USER_ID] = array(
       self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
@@ -334,25 +331,6 @@ class mediamosa_rest_call_asset_mediafile_upload_app extends mediamosa_rest_call
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
       self::VAR_RANGE_END => mediamosa_user_db::NAME_LENGTH,
     );
-
-    return $a_var_setup;
-  }
-
-  // ------------------------------------------------------------------ Process Rest Args.
-  protected function process_rest_args(array $a_var_setup) {
-
-    $a_var_setup = parent::process_rest_args($a_var_setup);
-
-    $a_app_ids = $this->get_param_value(self::APP_ID);
-
-    // Get the 1st app.
-    $app_id = reset($a_app_ids);
-
-    $mediafile_id = $this->get_param_value(self::MEDIAFILE_ID);
-    $user_id = $this->get_param_value(self::USER_ID);
-
-    // Create ticket.
-    $ticket_id = mediamosa_ticket::create_for_upload($app_id, $mediafile_id, $user_id);
 
     return $a_var_setup;
   }

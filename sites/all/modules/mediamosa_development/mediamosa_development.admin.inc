@@ -628,6 +628,7 @@ function _build_param($name, $var, $required) {
     case mediamosa_type::TYPE_DATETIME:
 
     case mediamosa_type::TYPE_SERIAL:
+    case mediamosa_type::TYPE_URL:
       $item = array(
         '#weight' => '10',
         '#type' => 'textfield',
