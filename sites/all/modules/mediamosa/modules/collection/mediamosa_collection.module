@@ -286,15 +286,15 @@ When you use the \'delete = cascade\' parameter, then all of the linked assets, 
     mediamosa_rest_call::DESCRIPTION => 'Delete all given assets from a collection. This call only removes the links, not the objects itself. Returns an item list of relations deleted.',
     mediamosa_rest_call::EXAMPLE_REQUEST => 'collection/b1Tb9eoIgOeSLZ9cGO04rPej/asset_relation/delete [POST] asset_id[]=X2OJSIuWKPUZUsdSNlsE8Tcx&asset_id[]=x1AjaVW8gVjZjsKmQRWsF9uM&user_id=foo',
     mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
-    <item id="1">
-      <asset_id>X2OJSIuWKPUZUsdSNlsE8Tcx</asset_id>
-      <coll_id>b1Tb9eoIgOeSLZ9cGO04rPej</coll_id>
-    </item>
-    <item id="2">
-      <asset_id>x1AjaVW8gVjZjsKmQRWsF9uM</asset_id>
-      <coll_id>b1Tb9eoIgOeSLZ9cGO04rPej</coll_id>
-    </item>
-  </items>',
+  <item id="1">
+    <asset_id>X2OJSIuWKPUZUsdSNlsE8Tcx</asset_id>
+    <coll_id>b1Tb9eoIgOeSLZ9cGO04rPej</coll_id>
+  </item>
+  <item id="2">
+    <asset_id>x1AjaVW8gVjZjsKmQRWsF9uM</asset_id>
+    <coll_id>b1Tb9eoIgOeSLZ9cGO04rPej</coll_id>
+  </item>
+</items>',
     mediamosa_rest_call::RESPONSE_FIELDS => array(
       'asset_id' => 'the asset_id unlinked from the collection.',
       'coll_id' => 'the collection id of which the asset_is unlinked from.'

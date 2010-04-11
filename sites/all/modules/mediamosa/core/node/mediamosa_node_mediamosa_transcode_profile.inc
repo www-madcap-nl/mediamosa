@@ -143,7 +143,7 @@ function mediamosa_transcode_profile_node_revision_delete($vid) {
 function _mediamosa_transcode_profile_update_isdefault($node) {
   if ($node->{mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE} == mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE_TRUE) {
     mediamosa_db::db_query(
-      'UPDATE #mediamosa_transcode_profile SET #is_default_profile = :is_default_profile_false',
+      'UPDATE {#mediamosa_transcode_profile} SET #is_default_profile = :is_default_profile_false',
       array(
         '#mediamosa_transcode_profile' => mediamosa_transcode_profile_db::TABLE_NAME,
         '#is_default_profile' => mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE,

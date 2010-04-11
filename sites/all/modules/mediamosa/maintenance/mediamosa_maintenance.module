@@ -24,6 +24,12 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
+// Permissions.
+define('MEDIAMOSA_PERMISSION_DELETE_MEDIAMOSA_MEDIAFILES', 'delete mediamosa mediafiles');
+define('MEDIAMOSA_PERMISSION_DELETE_MEDIAMOSA_JOBS', 'delete mediamosa jobs');
+define('MEDIAMOSA_PERMISSION_ANALYSE_MEDIAMOSA_MEDIAFILES', 'analyse mediamosa mediafiles');
+define('MEDIAMOSA_PERMISSION_DOWNLOAD_MEDIAMOSA_MEDIAFILES', 'download mediamosa mediafiles');
+
 /**
  * @file
  * The main maintenance module.
@@ -77,6 +83,36 @@ function mediamosa_maintenance_menu() {
     'file' => 'mediamosa_maintenance.admin.inc',
   );
 
+  $items['admin/mediamosa/asset/%/mediafile/%/delete'] = array(
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mediamosa_maintenance_mediafile_delete', 3, 5),
+    'access arguments' => array(MEDIAMOSA_PERMISSION_DELETE_MEDIAMOSA_MEDIAFILES),
+    'type' => MENU_CALLBACK,
+    'file' => 'mediamosa_maintenance.admin.inc',
+  );
+  $items['admin/mediamosa/asset/%/mediafile/%/analyse'] = array(
+    'page callback' => 'mediamosa_maintenance_mediafile_analyse',
+    'page arguments' => array(3,5),
+    'access arguments' => array(MEDIAMOSA_PERMISSION_ANALYSE_MEDIAMOSA_MEDIAFILES),
+    'type' => MENU_CALLBACK,
+    'file' => 'mediamosa_maintenance.admin.inc',
+  );
+  $items['admin/mediamosa/asset/%/mediafile/%/download'] = array(
+    'page callback' => 'mediamosa_maintenance_mediafile_download',
+    'page arguments' => array(3,5),
+    'access arguments' => array(MEDIAMOSA_PERMISSION_DOWNLOAD_MEDIAMOSA_MEDIAFILES),
+    'type' => MENU_CALLBACK,
+    'file' => 'mediamosa_maintenance.admin.inc',
+  );
+  $items['admin/mediamosa/asset/%/job/%/delete'] = array(
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mediamosa_maintenance_job_delete', 3, 5),
+    'access arguments' => array(MEDIAMOSA_PERMISSION_DELETE_MEDIAMOSA_MEDIAFILES),
+    'type' => MENU_CALLBACK,
+    'file' => 'mediamosa_maintenance.admin.inc',
+  );
+
+
   return $items;
 }
 
@@ -85,6 +121,22 @@ function mediamosa_maintenance_menu() {
  */
 function mediamosa_maintenance_permission() {
   return array(
+    MEDIAMOSA_PERMISSION_DELETE_MEDIAMOSA_JOBS =>  array(
+      'title' => t('Delete jobs'),
+      'description' => t('Users with this permission may delete jobs.'),
+    ),
+    MEDIAMOSA_PERMISSION_DELETE_MEDIAMOSA_MEDIAFILES =>  array(
+      'title' => t('Delete mediafiles'),
+      'description' => t('Users with this permission may delete mediafiles.'),
+    ),
+    MEDIAMOSA_PERMISSION_ANALYSE_MEDIAMOSA_MEDIAFILES =>  array(
+      'title' => t('Analyse mediafiles'),
+      'description' => t('Users with this permission may start analyse jobs for mediafiles.'),
+    ),
+    MEDIAMOSA_PERMISSION_DOWNLOAD_MEDIAMOSA_MEDIAFILES =>  array(
+      'title' => t('Download mediafiles'),
+      'description' => t('Users with this permission may download mediafiles.'),
+    ),
     'access mediamosa config' =>  array(
       'title' => t('Access MediaMosa Administration'),
       'description' => t('View the MediaMosa configuration, maintenance and other pages.'),

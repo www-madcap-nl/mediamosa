@@ -216,6 +216,9 @@ class mediamosa_rest_call_user_favorite_search_asset extends mediamosa_rest_call
       self::VAR_ALLOWED_VALUES => array(mediamosa_user_favorite_db::FAV_TYPE_ASSET, mediamosa_user_favorite_db::FAV_TYPE_COLLECTION),
     );
 
+    // fav_user_id is now required.
+    $a_var_setup[self::VARS][self::FAV_USER_ID][self::VAR_IS_REQUIRED] = self::VAR_IS_REQUIRED_YES;
+
     return $a_var_setup;
   }
 }
@@ -239,6 +242,9 @@ class mediamosa_rest_call_user_favorite_search_collection extends mediamosa_rest
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
       self::VAR_ALLOWED_VALUES => array(mediamosa_user_favorite_db::FAV_TYPE_ASSET, mediamosa_user_favorite_db::FAV_TYPE_COLLECTION),
     );
+
+    // fav_user_id is now required.
+    $a_var_setup[self::VARS][self::FAV_USER_ID][self::VAR_IS_REQUIRED] = self::VAR_IS_REQUIRED_YES;
 
     return $a_var_setup;
   }

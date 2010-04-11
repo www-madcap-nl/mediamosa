@@ -873,7 +873,7 @@ class mediamosa_job {
       'SELECT * FROM {#mediamosa_job} WHERE
        #job_id = :job_id AND
        #status IN (:JOBSTATUS_WAITING, :JOBSTATUS_FINISHED, :JOBSTATUS_FAILED) AND
-       #job_id NOT IN (SELECT #job_id FROM #mediamosa_server_job)',
+       #job_id NOT IN (SELECT #job_id FROM {#mediamosa_server_job})',
       array(
         '#mediamosa_job' => mediamosa_job_db::TABLE_NAME,
         '#mediamosa_server_job' => mediamosa_server_job_db::TABLE_NAME,
@@ -882,6 +882,7 @@ class mediamosa_job {
         ':JOBSTATUS_FAILED' => mediamosa_job_db::JOB_STATUS_FAILED,
         '#job_id' => mediamosa_job_db::ID,
         '#status' => mediamosa_job_db::JOB_STATUS,
+        ':job_id' => $job_id,
       )
     )->fetchAssoc();
 

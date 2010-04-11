@@ -223,6 +223,8 @@ class mediamosa_rest_call_job_analyse_mediafile extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
+    $mediamosa = mediamosa::get();
+
     $a_app_ids = $this->get_param_value_app();
     $app_id = reset($a_app_ids);
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
@@ -234,6 +236,8 @@ class mediamosa_rest_call_job_analyse_mediafile extends mediamosa_rest_call {
 
     // Create it.
     mediamosa_job::create(mediamosa_job_db::JOB_TYPE_ANALYSE, $app_id, $user_id, $is_app_admin, $mediafile_id, FALSE, array(), NULL, $no_hint);
+
+    $mediamosa->set_result_okay();
   }
 }
 
@@ -1065,7 +1069,7 @@ class mediamosa_rest_call_job_cancel extends mediamosa_rest_call {
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::JOB_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_JOB,
+          self::VAR_TYPE => mediamosa_type::TYPE_JOB_ID,
           self::VAR_DESCRIPTION => 'The job ID to search on.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
@@ -1078,7 +1082,7 @@ class mediamosa_rest_call_job_cancel extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     $a_app_ids = $this->get_param_value_app();
     $app_id = reset($a_app_ids);
@@ -1089,6 +1093,8 @@ class mediamosa_rest_call_job_cancel extends mediamosa_rest_call {
 
     // Cancel it.
     mediamosa_job::cancel_job($app_id, $job_id, $user_id);
+
+    $mediamosa->set_result_okay();
   }
 }
 

@@ -216,3 +216,161 @@ function theme_l_mediamosa_asset($variables) {
 function theme_l_mediamosa_collection($variables) {
   return mediamosa_lib::l_collection($variables['id'], empty($variables['title']) ? t('<collection has no title>') : $variables['title']);
 }
+
+
+/**
+ * Confirm deletion of mediafile.
+ */
+function mediamosa_maintenance_mediafile_delete($form, &$form_state, $asset_id, $mediafile_id) {
+  return confirm_form(
+    array(
+      'asset_id' => array(
+        '#type' => 'hidden',
+        '#value' => $asset_id,
+      ),
+      'mediafile_id' => array(
+        '#type' => 'hidden',
+        '#value' => $mediafile_id,
+      ),
+    ), // form
+    t('Are you sure you want to delete this mediafile?'),
+    mediamosa_settings::get_url_asset($asset_id),
+    t('This action cannot be undone.'),
+    t('Delete'), t('Cancel')
+  );
+}
+
+/**
+ * This function deletes an asset and optionally all mediafiles within it
+ */
+function mediamosa_maintenance_mediafile_delete_submit($form, &$form_state) {
+
+  // Get ids.
+  $asset_id = $form_state['values']['asset_id'];
+  $mediafile_id = $form_state['values']['mediafile_id'];
+
+  // REST uri.
+  $uri = strtr('mediafile/@mediafile_id/delete', array('@mediafile_id' => $mediafile_id));
+
+  // Get the asset.
+  $asset = mediamosa_asset::get($asset_id);
+
+  if ($asset) {
+    $params = array('user_id' => $asset['owner_id'], 'app_id' => $asset['app_id']);
+    $result = mediamosa_response_connector::static_do_restcall($uri, 'POST', $params);
+
+    if (mediamosa_response_connector::static_result_okay($result)) {
+      drupal_set_message(t('Mediafile deleted.'));
+      drupal_goto('admin/mediamosa/browse/asset/' . rawurlencode($asset_id));
+    }
+  }
+
+  // Set failed.
+  drupal_set_message(t('Failed to delete mediafile.'));
+}
+
+/**
+ * Start a analyse of a mediafile.
+ *
+ * @param $asset_id
+ * @param $mediafile_id
+ */
+function mediamosa_maintenance_mediafile_analyse($asset_id, $mediafile_id) {
+
+  // REST uri.
+  $uri = strtr('mediafile/@mediafile_id/analyse', array('@mediafile_id' => $mediafile_id));
+
+  // Get the asset.
+  $asset = mediamosa_asset::get($asset_id);
+
+  if ($asset) {
+    $params = array('user_id' => $asset['owner_id'], 'app_id' => $asset['app_id']);
+    $result = mediamosa_response_connector::static_do_restcall_drupal($uri, 'POST', $params);
+
+    if (mediamosa_response_connector::static_result_okay($result)) {
+      drupal_set_message(t('Analyse started.'));
+      drupal_goto('admin/mediamosa/browse/asset/' . rawurlencode($asset_id));
+    }
+  }
+
+  // Set failed.
+  drupal_set_message(t('Failed to start analyse.'));
+  drupal_goto('admin/mediamosa/browse/asset/' . rawurlencode($asset_id));
+}
+
+/**
+ * start download proxy call.
+ */
+function mediamosa_maintenance_mediafile_download($asset_id, $mediafile_id) {
+
+  // REST uri.
+  $uri = strtr('asset/@asset_id/play', array('@asset_id' => $asset_id));
+
+  // Get the asset.
+  $asset = mediamosa_asset::get($asset_id);
+
+  if ($asset) {
+    $params = array('user_id' => $asset['owner_id'], 'app_id' => $asset['app_id']);
+    $result = mediamosa_response_connector::static_do_restcall($uri, 'POST', $params);
+
+    if (mediamosa_response_connector::static_result_okay($result)) {
+      $item = reset($result['items']);
+      drupal_goto($item['output']);
+    }
+  }
+
+  // Set failed.
+  drupal_set_message(t('Failed to start download.'));
+  drupal_goto('admin/mediamosa/browse/asset/' . rawurlencode($asset_id));
+}
+
+/**
+ * Confirm deletion of job.
+ */
+function mediamosa_maintenance_job_delete($form, &$form_state, $asset_id, $job_id) {
+  return confirm_form(
+    array(
+      'asset_id' => array(
+        '#type' => 'hidden',
+        '#value' => $asset_id,
+      ),
+      'job_id' => array(
+        '#type' => 'hidden',
+        '#value' => $job_id,
+      ),
+    ), // form
+    t('Are you sure you want to delete this job?'),
+    mediamosa_settings::get_url_asset($asset_id),
+    t('This action cannot be undone.'),
+    t('Delete'), t('Cancel')
+  );
+}
+
+/**
+ * This function deletes an asset and optionally all mediafiles within it
+ */
+function mediamosa_maintenance_job_delete_submit($form, &$form_state) {
+
+  // Get ids.
+  $asset_id = $form_state['values']['asset_id'];
+  $job_id = $form_state['values']['job_id'];
+
+  // REST uri.
+  $uri = strtr('job/@job_id/delete', array('@job_id' => $job_id));
+
+  // Get the asset.
+  $asset = mediamosa_asset::get($asset_id);
+
+  if ($asset) {
+    $params = array('user_id' => $asset['owner_id'], 'app_id' => $asset['app_id']);
+    $result = mediamosa_response_connector::static_do_restcall($uri, 'POST', $params);
+
+    if (mediamosa_response_connector::static_result_okay($result)) {
+      drupal_set_message(t('Job deleted.'));
+      drupal_goto('admin/mediamosa/browse/asset/' . rawurlencode($asset_id));
+    }
+  }
+
+  // Set failed.
+  drupal_set_message(t('Failed to delete job.'));
+}

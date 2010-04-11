@@ -619,7 +619,7 @@ class mediamosa_job_server {
     }
 
     // Return link.
-    return l(mediamosa::t('Go to asset @asset_id', array('@asset_id' => $asset_id)), strtr(mediamosa_settings::URL_ASSET, array('@asset_id' => $asset_id)));
+    return l(mediamosa::t('Go to asset @asset_id', array('@asset_id' => $asset_id)), mediamosa_settings::get_url_asset($asset_id));
   }
 
   /**

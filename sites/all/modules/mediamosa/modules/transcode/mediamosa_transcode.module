@@ -234,7 +234,7 @@ function mediamosa_transcode_menu() {
     'title' => 'List',
     'access arguments' => array('access mediamosa'),
     'type' => MENU_DEFAULT_LOCAL_TASK,
-    'weight' => 10,
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_LIST,
   );
 
   $items['admin/mediamosa/config/transcode_profile/add'] = array(
@@ -246,6 +246,7 @@ function mediamosa_transcode_menu() {
     'file' => 'node.pages.inc',
     'file path' => drupal_get_path('module', 'node'),
     'type' => MENU_LOCAL_TASK,
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_ADD,
   );
 
   $items['admin/mediamosa/config/transcode_profile/%node'] = array(
@@ -255,12 +256,11 @@ function mediamosa_transcode_menu() {
     'access callback' => 'node_access',
     'access arguments' => array('view', 4),
     'type' => MENU_LOCAL_TASK,
-    'weight' => -10,
   );
   $items['admin/mediamosa/config/transcode_profile/%node/view'] = array(
     'title' => 'View',
     'type' => MENU_LOCAL_TASK,
-    'weight' => -10,
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_VIEW,
   );
 
   $items['admin/mediamosa/config/transcode_profile/%node/edit'] = array(
@@ -270,11 +270,11 @@ function mediamosa_transcode_menu() {
     'access callback' => 'node_access',
     'access arguments' => array('update', 4),
     'theme callback' => '_node_custom_theme',
-    'weight' => 0,
     'type' => MENU_LOCAL_TASK,
     'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
     'file' => 'node.pages.inc',
     'file path' => drupal_get_path('module', 'node'),
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_EDIT,
   );
 
   $items['admin/mediamosa/config/transcode_profile/%node/delete'] = array(
@@ -284,11 +284,11 @@ function mediamosa_transcode_menu() {
     'access callback' => 'node_access',
     'access arguments' => array('delete', 4),
     'theme callback' => '_node_custom_theme',
-    'weight' => 1,
     'type' => MENU_LOCAL_TASK,
     'context' => MENU_CONTEXT_INLINE,
     'file' => 'node.pages.inc',
     'file path' => drupal_get_path('module', 'node'),
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_DELETE,
   );
 
   return $items;

@@ -80,10 +80,10 @@ class mediamosa_asset {
    *
    * @param array $a_asset_ids
    */
-  static public function getAllAssoc(array $a_asset_ids) {
+  static public function getAllAssoc(array $a_asset_ids, array $fields = array()) {
 
     $query = mediamosa_db::db_select(mediamosa_asset_db::TABLE_NAME, 'a');
-    $query->fields('a');
+    $query->fields('a', $fields);
     $query->condition('a.' . mediamosa_asset_db::ID, $a_asset_ids, 'IN');
     return $query->execute()->fetchAllAssoc(mediamosa_asset_db::ID, PDO::FETCH_ASSOC);
   }
@@ -214,7 +214,7 @@ class mediamosa_asset {
         '#asset_id' => mediamosa_asset_collection_db::ASSET_ID,
         ':asset_id' => $asset_id
       )
-    );
+    )->fetchCol();
 
     // Foreach my collection.
     $is_coll = FALSE;

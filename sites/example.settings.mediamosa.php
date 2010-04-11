@@ -39,7 +39,7 @@ $databases['mig_vpx_ftp']['default'] = array(
  * for this URL / Location, disabling all REST calls; except upload
  * REST calls, which is controlled by mediamosa_app_upload.
  */
-$conf['mediamosa_app'] = TRUE;
+$conf['mediamosa_app'] = FALSE;
 
 /**
  * Default setting, TRUE / FALSE for enabling / disabling the
@@ -49,7 +49,7 @@ $conf['mediamosa_app'] = TRUE;
  * as an upload interface, put 'mediamosa_app' to FALSE and set
  * 'mediamosa_app_upload' to TRUE.
  */
-$conf['mediamosa_app_upload'] = TRUE;
+$conf['mediamosa_app_upload'] = FALSE;
 
 /**
  * Default setting, TRUE / FALSE for enabling / disabling the
@@ -60,7 +60,7 @@ $conf['mediamosa_app_upload'] = TRUE;
  * sure you allow this setting on the admin, else your MediaMosa status page
  * will show failures.
  */
-$conf['mediamosa_app_download'] = TRUE;
+$conf['mediamosa_app_download'] = FALSE;
 
 /**
  * Default setting, TRUE / FALSE for enabling / disabling the

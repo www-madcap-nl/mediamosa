@@ -164,14 +164,15 @@ class mediamosa_asset_collection {
    *
    * 2.x: no longer return response object.
    *
-   * @param array $a_ids
+   * @param array $coll_ids
    *  The collection ids.
    */
-  function get_by_ids(array $a_coll_ids) {
+  static public function get_asset_ids_by_coll_ids(array $coll_ids, array $fields = array(mediamosa_asset_collection_db::ASSET_ID)) {
     // Build query.
-    $query = mediamosa_db::db_select(mediamosa_collection_db::TABLE_NAME, 'c');
-    $query->fields('c', array());
-    $query->condition('c.'. mediamosa_collection_db::ID, $a_coll_ids, 'IN');
+    $query = mediamosa_db::db_select(mediamosa_asset_collection_db::TABLE_NAME, 'ac');
+    $query->fields('ac', $fields);
+    $query->condition('ac.'. mediamosa_asset_collection_db::COLL_ID, $coll_ids, 'IN');
+
     return $query->execute();
   }
 

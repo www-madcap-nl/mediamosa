@@ -165,6 +165,13 @@ class mediamosa_settings {
   // VUF extgention.
   const FTP_QUEUE_EXTENTION = 'vuf';
 
+  // UI settings.
+  const UI_TAB_WEIGHT_LIST = -10; // Weights of tab items. -10 left, +10 right.
+  const UI_TAB_WEIGHT_EDIT = -6;
+  const UI_TAB_WEIGHT_VIEW = -8;
+  const UI_TAB_WEIGHT_ADD = -8;
+  const UI_TAB_WEIGHT_DELETE = -4;
+
   // ------------------------------------------------------------------ Functions.
   /**
    * Return the unique server ID.
@@ -224,4 +231,21 @@ class mediamosa_settings {
     return variable_get('mediamosa_maintenance_items_per_page', self::MAINTENANCE_ITEMS_PER_PAGE);
   }
 
+  /**
+   * Return url to asset.
+   *
+   * @param string $asset_id
+   */
+  static public function get_url_asset($asset_id) {
+    return strtr(self::URL_ASSET, array('@asset_id' => $asset_id));
+  }
+
+  /**
+   * Return url to collection.
+   *
+   * @param string $coll_id
+   */
+  static public function get_url_collection($coll_id) {
+    return strtr(self::URL_COLLECTION, array('@coll_id' => $coll_id));
+  }
 }

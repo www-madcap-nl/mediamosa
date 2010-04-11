@@ -99,7 +99,7 @@ function mediamosa_collection_schema() {
         'mysql_type' => "enum('" . implode("','", array(mediamosa_collection_db::ISPRIVATE_FALSE, mediamosa_collection_db::ISPRIVATE_TRUE)) . "')",
         'default' => mediamosa_collection_db::ISPRIVATE_FALSE,
       ),
-      mediamosa_collection_db::_PRIVATE => array(
+      mediamosa_collection_db::PRIVATE_ => array(
         'description' => t('The collection is private.'),
         'type' => "enum('" . implode("','", array(mediamosa_collection_db::PRIVATE_FALSE, mediamosa_collection_db::PRIVATE_TRUE)) . "')",
         'not null' => TRUE,

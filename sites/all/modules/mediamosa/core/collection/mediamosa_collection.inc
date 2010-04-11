@@ -44,6 +44,17 @@ class mediamosa_collection {
   }
 
   /**
+   * Collection must exists, will throw exception.
+   *
+   * returns found collection.
+   *
+   * @param string $coll_id
+   */
+  static public function must_exists($coll_id) {
+    return mediamosa_db::db_must_exists(mediamosa_collection_db::TABLE_NAME, array(mediamosa_collection_db::ID => $coll_id));
+  }
+
+  /**
    * Get multiple collections within an array, with key
    * as coll_id.
    *
@@ -90,47 +101,122 @@ class mediamosa_collection {
   /**
    * Create a collection.
    */
-  static public function create($app_id, $owner_id, $group_id = NULL, $private = NULL, $public  = NULL, $category = NULL, $isprivate = NULL, $public_assign = NULL, $is_unappropriate = NULL) {
+  static public function create($app_id, $owner_id, $title = NULL, $description = NULL, $group_id = NULL, $private = false, $public  = true, $category = false, $isprivate = false, $public_assign = false, $is_unappropriate = false) {
 
-    // maak een uniek asset_id aan
+    // New ID.
     $coll_id = mediamosa_db::uuid($app_id);
 
     // Required.
-    $a_fields = array();
-    $a_fields[mediamosa_collection_db::ID] = $coll_id;
-    $a_fields[mediamosa_collection_db::APP_ID] = $app_id;
-    $a_fields[mediamosa_collection_db::OWNER_ID] = $owner_id;
+    $fields = array();
+    $fields[mediamosa_collection_db::ID] = $coll_id;
+    $fields[mediamosa_collection_db::APP_ID] = $app_id;
+    $fields[mediamosa_collection_db::OWNER_ID] = $owner_id;
 
-    if (!is_null($group_id)) {
-      $a_fields[mediamosa_collection_db::GROUP_ID] = $group_id;
+    if (isset($title)) {
+      $fields[mediamosa_collection_db::TITLE] = $title;
     }
-    if (!is_null($private)) {
-      $a_fields[mediamosa_collection_db::PRIVATE_] = $private ? mediamosa_collection_db::PRIVATE_TRUE : mediamosa_collection_db::PRIVATE_FALSE;
+    if (isset($description)) {
+      $fields[mediamosa_collection_db::DESCRIPTION] = $description;
     }
-    if (!is_null($public)) {
-      $a_fields[mediamosa_collection_db::PUBLIC_] = $public ? mediamosa_collection_db::PUBLIC_TRUE : mediamosa_collection_db::PUBLIC_FALSE;
+    if (isset($group_id)) {
+      $fields[mediamosa_collection_db::GROUP_ID] = $group_id;
     }
-    if (!is_null($category)) {
-      $a_fields[mediamosa_collection_db::CATEGORY] = $category ? mediamosa_collection_db::CATEGORY_TRUE : mediamosa_collection_db::CATEGORY_FALSE;
+    if (isset($private)) {
+      $fields[mediamosa_collection_db::PRIVATE_] = $private ? mediamosa_collection_db::PRIVATE_TRUE : mediamosa_collection_db::PRIVATE_FALSE;
     }
-    if (!is_null($isprivate)) {
-      $a_fields[mediamosa_collection_db::ISPRIVATE] = $isprivate ? mediamosa_collection_db::ISPRIVATE_TRUE : mediamosa_collection_db::ISPRIVATE_FALSE;
+    if (isset($public)) {
+      $fields[mediamosa_collection_db::PUBLIC_] = $public ? mediamosa_collection_db::PUBLIC_TRUE : mediamosa_collection_db::PUBLIC_FALSE;
     }
-    if (!is_null($public_assign)) {
-      $a_fields[mediamosa_collection_db::PUBLIC_ASSIGN] = $public_assign ? mediamosa_collection_db::PUBLIC_ASSIGN_TRUE : mediamosa_collection_db::PUBLIC_ASSIGN_FALSE;
+    if (isset($category)) {
+      $fields[mediamosa_collection_db::CATEGORY] = $category ? mediamosa_collection_db::CATEGORY_TRUE : mediamosa_collection_db::CATEGORY_FALSE;
     }
-    if (!is_null($is_unappropriate)) {
-      $a_fields[mediamosa_collection_db::IS_UNAPPROPRIATE] = $is_unappropriate ? mediamosa_collection_db::IS_UNAPPROPRIATE_TRUE : mediamosa_collection_db::IS_UNAPPROPRIATE_FALSE;
+    if (isset($isprivate)) {
+      $fields[mediamosa_collection_db::ISPRIVATE] = $isprivate ? mediamosa_collection_db::ISPRIVATE_TRUE : mediamosa_collection_db::ISPRIVATE_FALSE;
+    }
+    if (isset($public_assign)) {
+      $fields[mediamosa_collection_db::PUBLIC_ASSIGN] = $public_assign ? mediamosa_collection_db::PUBLIC_ASSIGN_TRUE : mediamosa_collection_db::PUBLIC_ASSIGN_FALSE;
+    }
+    if (isset($is_unappropriate)) {
+      $fields[mediamosa_collection_db::IS_UNAPPROPRIATE] = $is_unappropriate ? mediamosa_collection_db::IS_UNAPPROPRIATE_TRUE : mediamosa_collection_db::IS_UNAPPROPRIATE_FALSE;
     }
 
     // Add created value.
-    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+    $fields = mediamosa_db::db_insert_enrich($fields);
 
     // Insert it.
     mediamosa_db::db_insert(mediamosa_collection_db::TABLE_NAME)
-      ->fields($a_fields)
+      ->fields($fields)
       ->execute();
 
+    // Return self made ID.
     return $coll_id;
+  }
+
+  /**
+   * Update a collection.
+   *
+   * @param string $coll_id
+   * @param string $owner_id
+   * @param string $title
+   * @param string $description
+   * @param string $group_id
+   * @param bool $private
+   * @param bool $public
+   * @param bool $category
+   * @param bool $isprivate
+   * @param bool $public_assign
+   * @param bool $is_unappropriate
+   */
+  static public function update($coll_id, $owner_id = NULL, $title = NULL, $description = NULL, $group_id = NULL, $private = false, $public  = true, $category = false, $isprivate = false, $public_assign = false, $is_unappropriate = false) {
+
+    // Required.
+    $fields = array();
+
+    if (isset($owner_id)) {
+      $fields[mediamosa_collection_db::OWNER_ID] = $owner_id;
+    }
+    if (isset($title)) {
+      $fields[mediamosa_collection_db::TITLE] = $title;
+    }
+    if (isset($description)) {
+      $fields[mediamosa_collection_db::DESCRIPTION] = $description;
+    }
+    if (isset($group_id)) {
+      $fields[mediamosa_collection_db::GROUP_ID] = $group_id;
+    }
+    if (isset($private)) {
+      $fields[mediamosa_collection_db::PRIVATE_] = $private ? mediamosa_collection_db::PRIVATE_TRUE : mediamosa_collection_db::PRIVATE_FALSE;
+    }
+    if (isset($public)) {
+      $fields[mediamosa_collection_db::PUBLIC_] = $public ? mediamosa_collection_db::PUBLIC_TRUE : mediamosa_collection_db::PUBLIC_FALSE;
+    }
+    if (isset($category)) {
+      $fields[mediamosa_collection_db::CATEGORY] = $category ? mediamosa_collection_db::CATEGORY_TRUE : mediamosa_collection_db::CATEGORY_FALSE;
+    }
+    if (isset($isprivate)) {
+      $fields[mediamosa_collection_db::ISPRIVATE] = $isprivate ? mediamosa_collection_db::ISPRIVATE_TRUE : mediamosa_collection_db::ISPRIVATE_FALSE;
+    }
+    if (isset($public_assign)) {
+      $fields[mediamosa_collection_db::PUBLIC_ASSIGN] = $public_assign ? mediamosa_collection_db::PUBLIC_ASSIGN_TRUE : mediamosa_collection_db::PUBLIC_ASSIGN_FALSE;
+    }
+    if (isset($is_unappropriate)) {
+      $fields[mediamosa_collection_db::IS_UNAPPROPRIATE] = $is_unappropriate ? mediamosa_collection_db::IS_UNAPPROPRIATE_TRUE : mediamosa_collection_db::IS_UNAPPROPRIATE_FALSE;
+    }
+
+    if (empty($fields)) {
+      return FALSE;
+    }
+
+    // Add created value.
+    $fields = mediamosa_db::db_update_enrich($fields);
+
+    // Insert it.
+    mediamosa_db::db_update(mediamosa_collection_db::TABLE_NAME)
+      ->fields($fields)
+      ->condition(mediamosa_collection_db::ID, $coll_id)
+      ->execute();
+
+    // Return true that we have updated.
+    return TRUE;
   }
 }

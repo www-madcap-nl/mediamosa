@@ -286,7 +286,6 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
         self::FAV_USER_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'Search within the favorites of this supplied user ID.',
-          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::HIDE_EMPTY_ASSETS => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,

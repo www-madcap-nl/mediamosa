@@ -99,7 +99,7 @@ class MediaMosaAssetMediafilePlayProxyAclTestCaseEga extends MediaMosaTestCaseEg
       mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_DOWNLOAD,
       mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $mediafile_id,
     );
-    $a_xml = $this->play_proxy('mediamosa_asset_mediafile_play_proxy.acl.test', 102, $asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_TIME_RESTRICTION_END));
+    $a_xml = $this->play_proxy('mediamosa_asset_mediafile_play_proxy.acl.test', __LINE__, $asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_TIME_RESTRICTION_END));
 
     // Check the function directly.
     $start_time = time() - (7*24*60*60); // One week in the past.
@@ -150,7 +150,7 @@ class MediaMosaAssetMediafilePlayProxyAclTestCaseEga extends MediaMosaTestCaseEg
       mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_DOWNLOAD,
       mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $mediafile_id,
     );
-    $a_xml = $this->play_proxy('mediamosa_asset_mediafile_play_proxy.acl.test', 102, $asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_TIME_RESTRICTION_START));
+    $a_xml = $this->play_proxy('mediamosa_asset_mediafile_play_proxy.acl.test', __LINE__, $asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_TIME_RESTRICTION_START));
 
     // Check the function directly.
     $start_time = time() + (24*60*60); // One day in the future.
@@ -203,7 +203,7 @@ class MediaMosaAssetMediafilePlayProxyAclTestCaseEga extends MediaMosaTestCaseEg
       mediamosa_rest_call_asset_mediafile_play::RESPONSE => mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_DOWNLOAD,
       mediamosa_rest_call_asset_mediafile_play::MEDIAFILE_ID => $mediafile_id,
     );
-    $a_xml = $this->play_proxy('mediamosa_asset_mediafile_play_proxy.acl.test', 102, $asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_OKAY));
+    $a_xml = $this->play_proxy('mediamosa_asset_mediafile_play_proxy.acl.test', __LINE__, $asset_id, $a_parameters, array(mediamosa_error::ERRORCODE_OKAY));
 
     // Check the function directly.
     $start_time = time() - (24*60*60); // One day in the past.

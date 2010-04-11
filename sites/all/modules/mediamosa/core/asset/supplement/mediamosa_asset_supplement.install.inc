@@ -112,6 +112,3 @@ function mediamosa_asset_supplement_schema() {
 
   return $a_schema;
 }
-
-
-

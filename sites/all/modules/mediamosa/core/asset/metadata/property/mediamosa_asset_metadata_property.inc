@@ -232,7 +232,7 @@ class mediamosa_asset_metadata_property {
    * @param array $a_propgroup_name
    * @return array
    */
-  static public function get_metadata_properties(array $a_propgroup_name = array('dublin_core')) {
+  static public function get_metadata_properties(array $a_propgroup_name = array('dublin_core'), $get_all_apps = FALSE) {
 
     // Caching.
     static $a_metadata_properties = array();

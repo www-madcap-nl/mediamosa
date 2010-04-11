@@ -41,7 +41,7 @@ class mediamosa_rest_call_count_collection extends mediamosa_rest_call {
   const GROUP_ID = 'group_id';
   const OWNER_ID = 'owner_id';
 
-  // ------------------------------------------------------------------ Public Functions.
+  // --------------------------------------------------------- Public Functions.
   public function get_var_setup() {
     $var_setup = array();
 
@@ -101,7 +101,7 @@ class mediamosa_rest_call_collection_search extends mediamosa_rest_call {
   const OPERATOR = 'operator';
   const CALCULATE_TOTAL_COUNT = 'calculate_total_count';
 
-  // ------------------------------------------------------------------ Public Functions.
+  // --------------------------------------------------------- Public Functions.
   static public function get_search_params() {
     return array(
       'title' => mediamosa_type::TYPE_SEARCH_STRING,
@@ -116,7 +116,7 @@ class mediamosa_rest_call_collection_search extends mediamosa_rest_call {
     );
   }
 
-  // ------------------------------------------------------------------ Var Setup.
+  // ---------------------------------------------------------------- Var Setup.
   public function get_var_setup() {
     $var_setup = array();
 
@@ -133,7 +133,6 @@ class mediamosa_rest_call_collection_search extends mediamosa_rest_call {
         self::FAV_USER_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'Search within the favorites of this supplied user ID.',
-          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::USER_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
@@ -199,7 +198,7 @@ class mediamosa_rest_call_collection_search extends mediamosa_rest_call {
     return $var_setup;
   }
 
-  // ------------------------------------------------------------------ OVerride Process Rest Args.
+  // ----------------------------------------------- Override Process Rest Args.
   // Fix for alias of user_id / aut_user_id.
   protected function process_rest_args(array $var_setup) {
     // Process input.
@@ -216,7 +215,7 @@ class mediamosa_rest_call_collection_search extends mediamosa_rest_call {
     return $var_setup;
   }
 
-  // ------------------------------------------------------------------ OVerride Validate Rest Args.
+  // ---------------------------------------------- Override Validate Rest Args.
   // Override for checking CQL string.
   protected function validate_rest_args(array $var_setup) {
 
@@ -322,7 +321,7 @@ class mediamosa_rest_call_collection_search extends mediamosa_rest_call {
  * Method: GET
  */
 class mediamosa_rest_call_collection_search_asset extends mediamosa_rest_call_collection_search {
-  // ------------------------------------------------------------------ Var Setup.
+  // ---------------------------------------------------------------- Var Setup.
   public function get_var_setup() {
     // Get var setup.
     $var_setup = parent::get_var_setup();
@@ -347,7 +346,7 @@ class mediamosa_rest_call_collection_favorites_count extends mediamosa_rest_call
   const COLL_ID = 'coll_id';
   const FAV_TYPE= 'fav_type';
 
-  // ------------------------------------------------------------------ Get Var Setup.
+  // -------------------------------------------------------------Get Var Setup.
   public function get_var_setup() {
     $var_setup = array();
 
@@ -372,7 +371,7 @@ class mediamosa_rest_call_collection_favorites_count extends mediamosa_rest_call
     $collection_id = $this->get_param_value(self::COLL_ID);
 
     // FIXME:
-    // Any app can get any count from any asset....
+    // Any app can get any count from any asset.... behavor copied from 1.x.
 
     // Set total count.
     $o_mediamosa->item_count_total = mediamosa_user_favorite::count_items(mediamosa_user_favorite_db::FAV_TYPE_COLLECTION, $collection_id);
@@ -388,12 +387,12 @@ class mediamosa_rest_call_collection_favorites_count extends mediamosa_rest_call
  * 1.x: media_management_get_collection
  */
 class mediamosa_rest_call_collection_get extends mediamosa_rest_call {
-// ------------------------------------------------------------------ Consts.
+// --------------------------------------------------------------------- Consts.
   // Rest vars;
   const COLL_ID = 'coll_id';
   const USER_ID = 'user_id';
 
-  // ------------------------------------------------------------------ Get Var Setup.
+  // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
     $var_setup = array();
 
@@ -425,41 +424,20 @@ class mediamosa_rest_call_collection_get extends mediamosa_rest_call {
     $user_id = $this->get_param_value(self::USER_ID);
 
     // Collection must exist.
-    mediamosa_db::db_must_exists(mediamosa_collection_db::TABLE_NAME, array(mediamosa_collection_db::ID => $coll_id));
+    $collection = mediamosa_collection::must_exists($coll_id);
 
-    $a_collection = mediamosa_db::db_query(
-      'SELECT #app_id, #owner_id, #is_unappropriate FROM {#mediamosa_collection} WHERE #coll_id = :coll_id',
-      array(
-        '#app_id' => mediamosa_collection_db::APP_ID,
-        '#owner_id' => mediamosa_collection_db::OWNER_ID,
-        '#is_unappropriate' => mediamosa_collection_db::IS_UNAPPROPRIATE,
-        '#mediamosa_collection' => mediamosa_collection_db::TABLE_NAME,
-        '#coll_id' => mediamosa_collection_db::ID,
-        ':coll_id' => $coll_id,
-      )
-    )->fetchAssoc();
-
-    if ($a_collection[mediamosa_collection_db::IS_UNAPPROPRIATE] == mediamosa_collection_db::IS_UNAPPROPRIATE_TRUE) {
+    if ($collection[mediamosa_collection_db::IS_UNAPPROPRIATE] == mediamosa_collection_db::IS_UNAPPROPRIATE_TRUE) {
       // Must be owner or admin.
       try {
         // Check the rights
-        mediamosa_aut::owner_check($app_id, $user_id, $a_collection[mediamosa_collection_db::APP_ID], $a_collection[mediamosa_collection_db::OWNER_ID], $is_app_admin);
+        mediamosa_aut::owner_check($app_id, $user_id, $collection[mediamosa_collection_db::APP_ID], $collection[mediamosa_collection_db::OWNER_ID], $is_app_admin);
       }
       catch (mediamosa_exception_error_access_denied $e) {
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_IS_UNAPPROPRIATE);
       }
     }
 
-    // Get the collection.
-    $result = mediamosa_asset_collection::get_by_ids(array($coll_id));
-
-    // Total rows.
-    $o_mediamosa->item_count_total = 1;
-
-    // Set result.
-    foreach ($result as $a_row) {
-      $o_mediamosa->add_item($a_row);
-    }
+    $o_mediamosa->add_item($collection);
   }
 }
 
@@ -474,6 +452,8 @@ class mediamosa_rest_call_collection_create extends mediamosa_rest_call {
   // Rest vars;
   const USER_ID = 'user_id';
   const GROUP_ID = 'group_id';
+  const TITLE = 'title';
+  const DESCRIPTION = 'description';
   const PRIVATE_ = 'private';
   const PUBLIC_ = 'public';
   const CATEGORY = 'category';
@@ -481,7 +461,7 @@ class mediamosa_rest_call_collection_create extends mediamosa_rest_call {
   const PUBLIC_ASSIGN = 'public_assign';
   const IS_UNAPPROPRIATE = 'is_unappropriate';
 
-  // ------------------------------------------------------------------ Get Var Setup.
+  // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
     $var_setup = array();
 
@@ -495,6 +475,14 @@ class mediamosa_rest_call_collection_create extends mediamosa_rest_call {
         self::GROUP_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'The group ID, will be used for the group_id of the collection.',
+        ),
+        self::TITLE => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_DESCRIPTION => 'The title of the new collection.',
+        ),
+        self::DESCRIPTION => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_DESCRIPTION => 'Description of the new collection.',
         ),
         self::PRIVATE_ => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
@@ -513,10 +501,12 @@ class mediamosa_rest_call_collection_create extends mediamosa_rest_call {
         ),
         self::ISPRIVATE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_DESCRIPTION => t('If isprivate = true, then the collction is not displayed in public lists, such as top 10, last uploaded, etc.'),
           self::VAR_DEFAULT_VALUE => 'false',
         ),
         self::PUBLIC_ASSIGN => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_DESCRIPTION => "A 'true' value indicates that all users have access to the collection entitled to assets.",
           self::VAR_DEFAULT_VALUE => 'false',
         ),
       ),
@@ -543,6 +533,8 @@ class mediamosa_rest_call_collection_create extends mediamosa_rest_call {
     $user_id = $this->get_param_value(self::USER_ID);
 
     // Optionals.
+    $title = $this->get_param_value(self::TITLE);
+    $description = $this->get_param_value(self::DESCRIPTION);
     $group_id = $this->get_param_value(self::GROUP_ID);
     $private = $this->get_param_value(self::PRIVATE_);
     $public = $this->get_param_value(self::PUBLIC_);
@@ -551,7 +543,7 @@ class mediamosa_rest_call_collection_create extends mediamosa_rest_call {
     $public_assign = $this->get_param_value(self::PUBLIC_ASSIGN);
 
     // Now create the collection.
-    $coll_id = mediamosa_collection::create($app_id, $user_id, $group_id, $private, $public, $category, $isprivate, $public_assign);
+    $coll_id = mediamosa_collection::create($app_id, $user_id, $title, $description, $group_id, $private, $public, $category, $isprivate, $public_assign);
 
     // Unique ID to response.
     $o_mediamosa->add_item(array(mediamosa_collection_db::ID => $coll_id));
@@ -580,10 +572,11 @@ class mediamosa_rest_call_collection_update extends mediamosa_rest_call {
   const TITLE = 'title';
   const DESCRIPTION = 'description';
 
-  // ------------------------------------------------------------------ Functions (public).
+  // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
     $var_setup = array();
 
+    // Do not set default values for update REST calls.
     $var_setup = array(
       self::VARS => array(
         self::COLL_ID => array(
@@ -615,30 +608,24 @@ class mediamosa_rest_call_collection_update extends mediamosa_rest_call {
         self::PRIVATE_ => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Used to identify private collections, use [GET] /collection?private=true to get these collections.',
-          self::VAR_DEFAULT_VALUE => 'false',
         ),
         self::PUBLIC_ => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Used to identify public collections, use [GET] /collection?public=true to get these collections.',
-          self::VAR_DEFAULT_VALUE => 'true',
         ),
         self::CATEGORY => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Used to identify main category collections, use [GET] /collection?category=true to get these collections.',
-          self::VAR_DEFAULT_VALUE => 'false',
         ),
         self::ISPRIVATE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
-          self::VAR_DEFAULT_VALUE => 'false',
         ),
         self::PUBLIC_ASSIGN => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
-          self::VAR_DEFAULT_VALUE => 'false',
         ),
         self::IS_UNAPPROPRIATE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'A field to flag the collection as inappropriate. Only the is_app_admin is allowed to set this parameter. When set, the collection will not be shown except to the user and the is_app_admin. It does not affect assets belonging to the collection.',
-          self::VAR_DEFAULT_VALUE => 'false',
         ),
       ),
     );
@@ -668,61 +655,26 @@ class mediamosa_rest_call_collection_update extends mediamosa_rest_call {
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $a_app_ids);
 
     // Collection must exist.
-    mediamosa_db::db_must_exists(mediamosa_collection_db::TABLE_NAME, array(mediamosa_collection_db::ID => $coll_id));
-
-    $a_collection = mediamosa_db::db_query(
-      'SELECT #app_id, #owner_id FROM {#mediamosa_collection} WHERE #coll_id  = :coll_id',
-      array(
-        '#app_id' => mediamosa_collection_db::APP_ID,
-        '#owner_id' => mediamosa_collection_db::OWNER_ID,
-        '#mediamosa_collection' => mediamosa_collection_db::TABLE_NAME,
-        '#coll_id' => mediamosa_collection_db::ID,
-        ':coll_id' => $coll_id,
-      )
-    )->fetchAssoc();
+    $collection = mediamosa_collection::must_exists($coll_id);
 
     // Must be owner / app_admin to update.
-    mediamosa_aut::owner_check($app_id, $user_id, $a_collection[mediamosa_collection_db::APP_ID], $a_collection[mediamosa_collection_db::OWNER_ID], $is_app_admin);
+    mediamosa_aut::owner_check($app_id, $user_id, $collection[mediamosa_collection_db::APP_ID], $collection[mediamosa_collection_db::OWNER_ID], $is_app_admin);
 
-    $a_params = array(
-      mediamosa_collection_db::TITLE,
-      mediamosa_collection_db::DESCRIPTION,
-      mediamosa_collection_db::_PRIVATE,
-      mediamosa_collection_db::_PRIVATE,
-      mediamosa_collection_db::CATEGORY,
-      mediamosa_collection_db::ISPRIVATE,
-      mediamosa_collection_db::PUBLIC_ASSIGN,
-      mediamosa_collection_db::IS_UNAPPROPRIATE, // Only app_admin.
-      mediamosa_collection_db::OWNER_ID, // Only app_admin.
-      mediamosa_collection_db::GROUP_ID, // Only app_admin.
-    );
+    // Optionals.
+    $title = $this->get_param_value(self::TITLE);
+    $description = $this->get_param_value(self::DESCRIPTION);
+    $group_id = $this->get_param_value(self::GROUP_ID);
+    $private = $this->get_param_value(self::PRIVATE_);
+    $public = $this->get_param_value(self::PUBLIC_);
+    $category = $this->get_param_value(self::CATEGORY);
+    $isprivate = $this->get_param_value(self::ISPRIVATE);
+    $public_assign = $this->get_param_value(self::PUBLIC_ASSIGN);
+    $is_unappropriate = $this->get_param_value(self::IS_UNAPPROPRIATE);
 
-    // Build the query.
-    $query = mediamosa_db::db_update(mediamosa_collection_db::TABLE_NAME);
-
-    $a_fields = array();
-    foreach ($a_params as $param) {
-      if (!$this->isset_given_param($param)) {
-        // If its not set, skip it.
-        // If it was set with default value, then don't use it for update.
-        continue;
-      }
-
-      $a_fields[$param] = $this->get_param_value($param);
-    }
-
-    if (empty($a_fields)) {
+    // Now update the collection.
+    if (!mediamosa_collection::update($coll_id, $user_id, $title, $description, $group_id, $private, $public, $category, $isprivate, $public_assign, $is_unappropriate)) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_NO_CHANGES);
     }
-
-    // Add changed field.
-    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
-
-    // Add the fields to the query.
-    $query->fields($a_fields);
-    // Add conditions.
-    $query->condition(mediamosa_collection_db::ID, $coll_id);
-    $query->execute();
 
     // Set all OK.
     $o_mediamosa->set_result_okay();
@@ -742,7 +694,7 @@ class mediamosa_rest_call_collection_delete extends mediamosa_rest_call {
   const USER_ID = 'user_id';
   const DELETE = 'delete';
 
-  // ------------------------------------------------------------------ Functions (public).
+  // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
     $var_setup = array();
 
@@ -765,7 +717,7 @@ class mediamosa_rest_call_collection_delete extends mediamosa_rest_call {
 The collection is deleted only if all underlying assets successfully removed.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
           self::VAR_ALLOWED_VALUES => array('', 'cascade'),
-          self::VAR_DEFAULT_VALUE => 'false',
+          self::VAR_DEFAULT_VALUE => '',
         ),
       ),
     );
@@ -789,24 +741,13 @@ The collection is deleted only if all underlying assets successfully removed.',
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $a_app_ids);
 
     // Collection must exist.
-    mediamosa_db::db_must_exists(mediamosa_collection_db::TABLE_NAME, array(mediamosa_collection_db::ID => $coll_id));
-
-    $a_collection = mediamosa_db::db_query(
-      'SELECT #app_id, #owner_id FROM {#mediamosa_collection} WHERE #coll_id  = :coll_id',
-      array(
-        '#app_id' => mediamosa_collection_db::APP_ID,
-        '#owner_id' => mediamosa_collection_db::OWNER_ID,
-        '#mediamosa_collection' => mediamosa_collection_db::TABLE_NAME,
-        '#coll_id' => mediamosa_collection_db::ID,
-        ':coll_id' => $coll_id,
-      )
-    )->fetchAssoc();
+    $collection = mediamosa_collection::must_exists($coll_id);
 
     // Must be owner / app_admin to update.
-    mediamosa_aut::owner_check($app_id, $user_id, $a_collection[mediamosa_collection_db::APP_ID], $a_collection[mediamosa_collection_db::OWNER_ID], $is_app_admin);
+    mediamosa_aut::owner_check($app_id, $user_id, $collection[mediamosa_collection_db::APP_ID], $collection[mediamosa_collection_db::OWNER_ID], $is_app_admin);
 
     // Count the links between this collection and possible assets.
-    $a_asset_ids = mediamosa_db::db_query(
+    $asset_ids = mediamosa_db::db_query(
       'SELECT #asset_id FROM {#mediamosa_asset_collection} WHERE #coll_id = :coll_id',
       array(
         '#asset_id' => mediamosa_asset_collection_db::ASSET_ID,
@@ -817,12 +758,12 @@ The collection is deleted only if all underlying assets successfully removed.',
     )->fetchCol();
 
     // Check if there are assets in our collection.
-    if (count($a_asset_ids)) {
+    if (count($asset_ids)) {
       if ($delete != 'cascade') {
-        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_COLLECTION_NOT_EMPTY, array('@asset_count' => count($a_asset_ids)));
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_COLLECTION_NOT_EMPTY, array('@asset_count' => count($asset_ids)));
       }
 
-      foreach ($a_asset_ids as $asset_id) {
+      foreach ($asset_ids as $asset_id) {
         $result = mediamosa_response::SUCCESS;
         $result_id = mediamosa_error::ERRORCODE_OKAY;
         $result_description = mediamosa_error::error_code_find_description(mediamosa_error::ERRORCODE_OKAY);
@@ -883,7 +824,7 @@ class mediamosa_rest_call_collection_delete_relation extends mediamosa_rest_call
   const ASSET_ID = 'asset_id';
   const USER_ID = 'user_id';
 
-  // ------------------------------------------------------------------ Functions (public).
+  // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
     $var_setup = array();
 
@@ -921,22 +862,19 @@ class mediamosa_rest_call_collection_delete_relation extends mediamosa_rest_call
 
     $coll_id = $this->get_param_value(self::COLL_ID);
     $user_id = $this->get_param_value(self::USER_ID);
-    $a_asset_ids = $this->get_param_value(self::ASSET_ID);
+    $asset_ids = $this->get_param_value(self::ASSET_ID);
 
     // Test webservice.
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $a_app_ids);
 
-    // Get the collection.
-    $a_collection = mediamosa_collection::get($coll_id);
-    if (!$a_collection) {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_COLLECTION_NOT_FOUND, array('@coll_id' => $coll_id));
-    }
+    // Collection must exist.
+    $collection = mediamosa_collection::must_exists($coll_id);
 
     // Get the assets.
-    $a_assets = mediamosa_asset::getAllAssoc($a_asset_ids);
+    $a_assets = mediamosa_asset::getAllAssoc($asset_ids);
 
     // Now go through each asset.
-    foreach ($a_asset_ids as $asset_id) {
+    foreach ($asset_ids as $asset_id) {
 
       if (!isset($a_assets[$asset_id])) {
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_ASSET_NOT_FOUND, array('@asset_id' => $asset_id));
@@ -951,8 +889,13 @@ class mediamosa_rest_call_collection_delete_relation extends mediamosa_rest_call
         )
       );
 
-      mediamosa_aut::owner_check_collection_assign($app_id, $user_id, $a_assets[$asset_id], $a_collection, $is_app_admin);
+      mediamosa_aut::owner_check_collection_assign($app_id, $user_id, $a_assets[$asset_id], $collection, $is_app_admin);
+    }
 
+    // If we get to this point, then all was passed and we can remove them from the collection.
+
+    // Now go through each asset.
+    foreach ($asset_ids as $asset_id) {
       // Delete the relation.
       mediamosa_asset_collection::delete($asset_id, $coll_id);
 

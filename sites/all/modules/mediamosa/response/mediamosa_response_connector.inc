@@ -51,7 +51,7 @@ class mediamosa_response_connector extends mediamosa_response {
     if (empty($params['app_id'])) {
       // Because the rule is the 1st is always the leading application, we don't
       // have one here, so use 0 instead.
-      $params['app_id'] = array(0) + mediamosa_app::get_all_apps(array(mediamosa_app_db::APP_ID), mediamosa_app_db::APP_ID)->fetchCol();
+      $params['app_id'] = array_merge(array(0), mediamosa_app::get_all_apps(array(mediamosa_app_db::APP_ID), mediamosa_app_db::APP_ID)->fetchCol());
     }
 
     // Create response object.
@@ -82,6 +82,13 @@ class mediamosa_response_connector extends mediamosa_response {
     }
 
     return $result;
+  }
+
+  /**
+   * Test if the result is okay. (empty result is not okay).
+   */
+  static public function static_result_okay($result) {
+    return (!empty($result['header']['request_result_id']) && $result['header']['request_result_id'] == mediamosa_error::ERRORCODE_OKAY) ? TRUE : FALSE;
   }
 
   // ------------------------------------------------------------------ Functions.

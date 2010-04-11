@@ -190,7 +190,7 @@ class mediamosa_lib {
    * @param string $text
    */
   static public function l_asset($asset_id, $text) {
-    return l($text, strtr(mediamosa_settings::URL_ASSET, array('@asset_id' => $asset_id)));
+    return l($text, mediamosa_settings::get_url_asset($asset_id));
   }
 
   /**
@@ -200,6 +200,6 @@ class mediamosa_lib {
    * @param string $text
    */
   static public function l_collection($coll_id, $text) {
-    return l($text, strtr(mediamosa_settings::URL_COLLECTION, array('@coll_id' => $coll_id)));
+    return l($text, mediamosa_settings::get_url_collection($coll_id));
   }
 }

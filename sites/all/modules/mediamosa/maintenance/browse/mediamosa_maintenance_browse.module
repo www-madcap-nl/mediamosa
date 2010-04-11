@@ -120,7 +120,7 @@ function mediamosa_maintenance_browse_menu() {
   $items['admin/mediamosa/browse/asset'] = array(
     'title' => 'Asset browser',
     'description' => 'View assets currently in our database.',
-    'page callback' => 'mediamosa_browse_asset_page',
+    'page callback' => '_mediamosa_browse_asset_page',
     'page arguments' => array('list'),
     'access arguments' => array('access mediamosa assets'),
     'file' => 'mediamosa_maintenance_browse_asset.inc',
@@ -129,36 +129,110 @@ function mediamosa_maintenance_browse_menu() {
     'title' => 'Asset browser',
     'access arguments' => array('access mediamosa assets'),
     'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_LIST,
   );
   $items['admin/mediamosa/browse/asset/%'] = array(
     'title' => 'Asset details',
     'type' => MENU_CALLBACK,
-    'page callback' => 'mediamosa_maintenance_browse_asset_details',
+    'page callback' => '_mediamosa_browse_asset_page_view',
     'page arguments' => array(4),
     'access arguments' => array('access mediamosa assets'),
     'file' => 'mediamosa_maintenance_browse_asset.inc',
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_VIEW,
+  );
+  $items['admin/mediamosa/browse/asset/%/view'] = array(
+    'title' => 'View',
+    'access arguments' => array('access mediamosa assets'),
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_VIEW,
+  );
+  $items['admin/mediamosa/browse/asset/%/edit'] = array(
+    'title' => 'Edit',
+    'description' => 'Edit asset.',
+    'type' => MENU_LOCAL_TASK,
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mediamosa_browse_asset_form', 4),
+    'access arguments' => array('access mediamosa assets'),
+    'file' => 'mediamosa_maintenance_browse_asset.inc',
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_EDIT,
+  );
+  $items['admin/mediamosa/browse/asset/%/delete'] = array(
+    'title' => 'Delete',
+    'description' => 'Delete asset.',
+    'type' => MENU_LOCAL_TASK,
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mediamosa_browse_asset_delete_confirm_form', 4),
+    'access arguments' => array('access mediamosa assets'),
+    'file' => 'mediamosa_maintenance_browse_asset.inc',
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_DELETE,
   );
 
   $items['admin/mediamosa/browse/collection'] = array(
     'title' => 'Collection browser',
     'description' => 'View collections currently in our database.',
-    'page callback' => 'mediamosa_browse_collection_page',
+    'page callback' => '_mediamosa_browse_collection_page',
     'page arguments' => array('list'),
     'access arguments' => array('access mediamosa collections'),
     'file' => 'mediamosa_maintenance_browse_collection.inc',
   );
   $items['admin/mediamosa/browse/collection/list'] = array(
-    'title' => 'Collection browser',
+    'title' => 'List',
     'access arguments' => array('access mediamosa collections'),
     'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_LIST,
   );
   $items['admin/mediamosa/browse/collection/%'] = array(
     'title' => 'Collection details',
     'type' => MENU_CALLBACK,
-    'page callback' => 'mediamosa_maintenance_browse_collection_details',
+    'page callback' => '_mediamosa_browse_collection_page_view',
     'page arguments' => array(4),
     'access arguments' => array('access mediamosa collections'),
     'file' => 'mediamosa_maintenance_browse_collection.inc',
+  );
+  $items['admin/mediamosa/browse/collection/%/view'] = array(
+    'title' => 'View',
+    'access arguments' => array('access mediamosa collections'),
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_VIEW,
+  );
+  $items['admin/mediamosa/browse/collection/%/edit'] = array(
+    'title' => 'Edit',
+    'description' => 'Edit collection.',
+    'type' => MENU_LOCAL_TASK,
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mediamosa_browse_collection_form', 4),
+    'access arguments' => array('access mediamosa collections'),
+    'file' => 'mediamosa_maintenance_browse_collection.inc',
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_EDIT,
+  );
+  $items['admin/mediamosa/browse/collection/%/delete'] = array(
+    'title' => 'Delete',
+    'description' => 'Delete collection.',
+    'type' => MENU_LOCAL_TASK,
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mediamosa_browse_collection_delete_confirm_form', 4),
+    'access arguments' => array('access mediamosa collections'),
+    'file' => 'mediamosa_maintenance_browse_collection.inc',
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_DELETE,
+  );
+  $items['admin/mediamosa/browse/collection/%/remove_asset/%'] = array(
+    'title' => 'Delete collection',
+    'description' => 'Delete collection.',
+    'type' => MENU_CALLBACK,
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mediamosa_browse_collection_remove_asset_confirm_form', 4, 6),
+    'access arguments' => array('access mediamosa collections'),
+    'file' => 'mediamosa_maintenance_browse_collection.inc',
+  );
+  $items['admin/mediamosa/browse/collection/add'] = array(
+    'title' => 'Add',
+    'description' => 'Add a new collection.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mediamosa_browse_collection_form'),
+    'access arguments' => array('administer mediamosa collections'),
+    'file' => 'mediamosa_maintenance_browse_collection.inc',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_ADD,
   );
 
   $items['admin/mediamosa/browse/restcall'] = array(

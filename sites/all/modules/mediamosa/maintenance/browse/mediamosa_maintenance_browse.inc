@@ -96,7 +96,12 @@ function _mediamosa_browse_cql_build($session) {
       continue;
     }
 
-    $cql_filter[] = $filter['item'] . ' == "' . $filter['item_value'] . '"';
+    if (mediamosa_unicode::stripos($filter['item_value'], '*') !== FALSE) {
+      $cql_filter[] = $filter['item'] . ' == "' . $filter['item_value'] . '"';
+    }
+    else {
+      $cql_filter[] = $filter['item'] . ' == "^' . $filter['item_value'] . '^"';
+    }
   }
 
   return implode($operator, $cql_filter);
@@ -175,16 +180,16 @@ function theme_mediamosa_maintenance_browse_properties($variables) {
       $build['collection_assets_description'] = '<p>' . $variables['collection_assets']['description'] . '</p>';
     }
 
-    if (!empty($variables['collection_assets']['assets'])) {
-      $header = array(
-        t('Title'),
-        array('data' => t('Operations'), 'class' => 'mmoperation'),
-      );
+    $header = array(
+      t('Title'),
+      array('data' => t('Operations'), 'class' => 'mmoperation'),
+    );
 
-      // Get destination.
-      $l_options = array('query' => drupal_get_destination());
+    // Get destination.
+    $l_options = array('query' => drupal_get_destination());
 
-      $rows = array();
+    $rows = array();
+    if (isset($variables['collection_assets']['assets'])) {
       foreach ($variables['collection_assets']['assets'] as $asset) {
         $actions = array(
           l(t('Remove'), 'admin/mediamosa/browse/collection/'. rawurlencode($variables['collection_assets']['coll_id']) . '/remove_asset/' . rawurlencode($asset['asset_id']), $l_options),
@@ -198,17 +203,17 @@ function theme_mediamosa_maintenance_browse_properties($variables) {
 
       $pager_variables['page'] = ceil($variables['collection_assets']['item_offset'] / 10);
       $pager_variables['item_count_total'] = $variables['collection_assets']['item_count_total'];
-      $pager_variables['item_limit'] = 10;
-      $pager_variables['element'] = 0;
-      $pager_variables['quantity'] = 10;
-
-      $build['collection_assets_pager_top'] = theme('mediamosa_maintenance_pager', $pager_variables);
-
-      $build['collection_assets'] = theme('table', array('header' => $header, 'rows' => $rows));
-
-      $build['collection_assets_pager_bottom'] = theme('mediamosa_maintenance_pager', $pager_variables);
     }
 
+    $pager_variables['item_limit'] = 10;
+    $pager_variables['element'] = 0;
+    $pager_variables['quantity'] = 10;
+
+    $build['collection_assets_pager_top'] = theme('mediamosa_maintenance_pager', $pager_variables);
+
+    $build['collection_assets'] = theme('table', array('header' => $header, 'rows' => $rows, 'empty' => isset($variables['collection_assets']['empty']) ? $variables['collection_assets']['empty'] : ''));
+
+    $build['collection_assets_pager_bottom'] = theme('mediamosa_maintenance_pager', $pager_variables);
   }
 
   return implode('', $build);
@@ -227,4 +232,22 @@ function _mediamosa_browse_asset_get_title($asset) {
   }
 
   return $title;
+}
+
+/**
+ * Fix the name for display.
+ */
+function _mediamosa_browse_fix_metadata_name($name) {
+  // Some need some help.
+  $fixed = array(
+    'hasformat' => 'has format',
+    'isreferencedby' => 'is referenced by',
+    'isformatof' => 'is format of',
+    'videotimestamp' => 'video timestamp',
+    'videotimestampmodified' => 'video modified',
+    'app_id_search' => 'app id',
+    'title_alternative' => 'alternative title',
+  );
+
+  return drupal_ucfirst(str_replace('_', ' ', isset($fixed[$name]) ? $fixed[$name] : $name));
 }

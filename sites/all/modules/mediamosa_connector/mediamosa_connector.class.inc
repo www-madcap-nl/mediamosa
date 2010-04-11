@@ -62,7 +62,7 @@ class mediamosa_connector {
   private $username;
   private $password;
 
-  // ------------------------------------------------------------------ Constructor.
+  // -------------------------------------------------------------- Constructor.
   public function __construct($username = NULL, $password = NULL, $url = NULL) {
     $this->url = isset($url) ? $url : variable_get('mediamosa_connector_url', NULL);
     $cookies = variable_get('mediamosa_connector_cookies', array());
@@ -74,7 +74,7 @@ class mediamosa_connector {
     $this->password = isset($password) ? $password : variable_get('mediamosa_connector_password', NULL);
   }
 
-  // ------------------------------------------------------------------ Public Functions.
+  // --------------------------------------------------------- Public Functions.
   /**
    * @param string $uri
    *  The REST uri.
@@ -115,7 +115,7 @@ class mediamosa_connector {
     $response = self::do_request($uri, $options);
 
     // If we return anything else but 1601, then return result. 1601 = failure login, cookie expired etc.
-    if ($response && !in_array($response->xml->header->request_result_id, array(1601, 1800))) {
+    if ($response && !in_array($response->xml->header->request_result_id, array(mediamosa_error::ERRORCODE_ACCESS_DENIED, mediamosa_error::ERRORCODE_NOT_AUTHORIZED))) {
       return $response;
     }
 
@@ -135,7 +135,7 @@ class mediamosa_connector {
     return FALSE;
   }
 
-  // ------------------------------------------------------------------ Private Functions.
+  // -------------------------------------------------------- Private Functions.
   private function do_login() {
     if (empty($this->url)) {
       watchdog('mediamosa connector', 'Unable to do request, connector not setup.');

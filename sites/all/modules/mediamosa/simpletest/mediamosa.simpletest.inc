@@ -65,6 +65,8 @@ class MediaMosaTestCase extends DrupalWebTestCase {
    *
    * Only run when you are not running simpletests(!). Any running tests will
    * fail.
+   *
+   * @see simpletest_clean_environment()
    */
   static public function clean() {
     simpletest_clean_database();
@@ -75,7 +77,6 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     registry_rebuild();
     cache_clear_all('simpletest', 'cache');
   }
-
 
   // ------------------------------------------------------------------ Functions (protected)
 
@@ -120,8 +121,6 @@ class MediaMosaTestCase extends DrupalWebTestCase {
   /**
    * Implements tearDown().
    * Because drupal doesn't tear down our tables, we have to do it.
-   * FIXME: seems to drop mediamosa_app but skips the rest... might
-   *        be fixed in future versions.
    */
   protected function tearDown() {
     global $db_prefix;
@@ -137,15 +136,11 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     // Clean up...
     $this->unlinks = array();
 
-    // keep it.
-    $old_prefix = $db_prefix;
-
-    // Save change (db_prefix is changed by parent::teardown).
-    $new_prefix = $db_prefix;
-    $db_prefix = $old_prefix;
-
+    // For some reason our tables are not dropped by teardown parent.
+    // So we need to do it ourselfs.
     if (preg_match('/simpletest\d+/', $db_prefix)) {
 
+      // We'll only drop tables from this simpletest.
       $prefix = Database::getConnection()->prefixTables('{mediamosa_}') . '%';
 
       // Get tables that match our pattern.
@@ -157,6 +152,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
         if (preg_match('/simpletest\d+mediamosa.*/', $table, $matches)) {
           list($tmp, $name) = explode('mediamosa_', $table, 2);
 
+          // If the drop fails then we consider that its already dropped.
           try {
             db_drop_table('mediamosa_' . $name);
           }
@@ -166,9 +162,6 @@ class MediaMosaTestCase extends DrupalWebTestCase {
         }
       }
     }
-
-    // Restore.
-    $db_prefix = $new_prefix;
 
     // Call parent.
     parent::tearDown();
