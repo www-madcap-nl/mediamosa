@@ -608,7 +608,9 @@ class mediamosa_asset_search {
       }
     }
     else {
-      $a_items = mediamosa_asset::asset_collect($a_asset_ids, $a_app_ids, $aut_user_id, $granted, $a_aut_group_id, $aut_domain, $aut_realm, $is_app_admin, $show_stills, $show_collections);
+      $add_has_streamable_mediafiles = TRUE;
+
+      $a_items = mediamosa_asset::asset_collect($a_asset_ids, $a_app_ids, $aut_user_id, $granted, $a_aut_group_id, $aut_domain, $aut_realm, $is_app_admin, $show_stills, $show_collections, $add_has_streamable_mediafiles);
 
       foreach ($a_items as $a_item) {
         $mediamosa->add_item($a_item);
