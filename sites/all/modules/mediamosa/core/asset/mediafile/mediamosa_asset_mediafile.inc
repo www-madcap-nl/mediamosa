@@ -32,6 +32,8 @@ class mediamosa_asset_mediafile {
 
   // ------------------------------------------------------------------ Consts.
   const UNKNOWN_FILENAME = 'Filename_not_set';
+  const RESPONSE_TRUE = 'TRUE';
+  const RESPONSE_FALSE = 'FALSE';
 
   // ------------------------------------------------------------------ Static Functions.
   /**
@@ -326,6 +328,15 @@ class mediamosa_asset_mediafile {
         $items[$mediafile_id][mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT],
         $items[$mediafile_id][mediamosa_asset_mediafile_db::ASSET_ID_ROOT]
       );
+
+      // Response object/plain/metafile available.
+      $a_response = mediamosa_server::get_streaming_info($items[$mediafile_id]['metadata']['container_type'], $items[$mediafile_id]['metadata']['video_codec'], $items[$mediafile_id]['uri']);
+      // Object.
+      $items[$mediafile_id]['response_object_available'] = ($a_response['response_object_available'] ? self::RESPONSE_TRUE : self::RESPONSE_FALSE);
+      // Plain.
+      $items[$mediafile_id]['response_plain_available'] = ($a_response['response_plain_available'] ? self::RESPONSE_TRUE : self::RESPONSE_FALSE);
+      // Metafile.
+      $items[$mediafile_id]['response_metafile_available'] = ($a_response['response_metafile_available'] ? self::RESPONSE_TRUE : self::RESPONSE_FALSE);
 
       // Add to result.
       $items_result['mediafile']['#' . serialize(array('id' => $i++))] = $items[$mediafile_id];
