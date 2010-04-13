@@ -189,7 +189,7 @@ class mediamosa_server {
   }
 
   /**
-   * Find the streaming server based on container and codec)
+   * Find the streaming server based on container and codec.
    *
    * @param string $container_type
    *  Container type like mp4;mpg etc.
@@ -248,6 +248,71 @@ class mediamosa_server {
     )->fetchAssoc();
 
     return $servers[$container_type];
+  }
+
+  /**
+   * Get the info of streaming server based on container and codec.
+   *
+   * @param string $container_type
+   *  Container type like mp4;mpg etc.
+   * @param string $video_codec
+   *  Codec.
+   * @param string $uri
+   *  URI.
+   */
+  static public function get_streaming_info($container_type, $video_codec, $uri) {
+    static $servers = NULL;
+
+    // Is there loaded data in the $servers variable?
+    if (!isset($servers)) {
+      // Choose a random available streaming server.
+      $servers = mediamosa_db::db_query(
+        "SELECT mssc.#container FROM {#mediamosa_server} AS mss
+        JOIN {#mediamosa_server_streaming_container} AS mssc ON mssc.#nid = mss.#nid
+        WHERE mss.#server_type = :server_type AND mss.#server_status = :server_status_on",
+        array(
+          '#mediamosa_server' => mediamosa_server_db::TABLE_NAME,
+          '#mediamosa_server_streaming_container' => mediamosa_server_streaming_container_db::TABLE_NAME,
+          '#nid' => mediamosa_server_db::NID,
+          '#container' => mediamosa_server_streaming_container_db::CONTAINER,
+          '#server_type' => mediamosa_server_db::SERVER_TYPE,
+          ':server_type' => mediamosa_server_db::SERVER_TYPE_STREAMING,
+          '#server_status' => mediamosa_server_db::SERVER_STATUS,
+          ':server_status_on' => mediamosa_server_db::SERVER_STATUS_ON,
+        )
+      )->fetchAllAssoc(mediamosa_server_streaming_container_db::CONTAINER);
+    }
+
+    // Object.
+    if (isset($servers[$container_type . ':' . $video_codec]) || isset($servers[$container_type])) {
+      $response_object_available = TRUE;
+    }
+    else {
+      $response_object_available = FALSE;
+    }
+
+    // Plain.
+    if (isset($uri) && trim($uri) != '') {
+      $response_plain_available = TRUE;
+    }
+    else {
+      $response_plain_available = $response_object_available;
+    }
+
+    // Metafile.
+    if ($container_type == mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_MP4 || $container_type == mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_MP3 || $container_type == mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_WMV) {
+      $container_type_ok = TRUE;
+    }
+    else {
+      $container_type_ok = FALSE;
+    }
+    $response_metafile_available = ($response_plain_available && $container_type_ok);
+
+    return array(
+      'response_object_available' => $response_object_available,
+      'response_plain_available' => $response_plain_available,
+      'response_metafile_available' => $response_metafile_available,
+    );
   }
 
   /**

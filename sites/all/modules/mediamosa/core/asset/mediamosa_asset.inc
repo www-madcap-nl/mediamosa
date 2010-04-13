@@ -462,7 +462,8 @@ class mediamosa_asset {
     $aut_realm,
     $is_app_admin = FALSE,
     $show_stills = TRUE,
-    $show_collections = FALSE
+    $show_collections = FALSE,
+    $add_has_streamable_mediafiles = FALSE
   ) {
     $a_prop_ids = array();
     $a_metadata_definitions_full = mediamosa_asset_metadata_property::get_metadata_properties_full($a_app_ids);
@@ -614,7 +615,7 @@ class mediamosa_asset {
       }
     }
 
-    return mediamosa_asset::enrich_response_asset($a_items, $a_asset_ids, $a_app_ids, $aut_user_id, $show_stills, $show_collections);
+    return mediamosa_asset::enrich_response_asset($a_items, $a_asset_ids, $a_app_ids, $aut_user_id, $show_stills, $show_collections, $add_has_streamable_mediafiles);
   }
 
   /**
@@ -628,7 +629,7 @@ class mediamosa_asset {
    * @param boolean $show_collections
    *  Include collections (was hack on _GET)
    */
-  static public function enrich_response_asset(array $a_items, array $a_asset_ids, array $a_app_ids, $aut_user_id, $show_stills = TRUE, $show_collections = FALSE) {
+  static public function enrich_response_asset(array $a_items, array $a_asset_ids, array $a_app_ids, $aut_user_id, $show_stills = TRUE, $show_collections = FALSE, $add_has_streamable_mediafiles = FALSE) {
     $a_collections = array();
 
     $a_items_pre_sort = array();
@@ -644,7 +645,7 @@ class mediamosa_asset {
       // Get all collection information in one go.
       $a_asset_ids = array();
       foreach ($a_items['assets'] as $a_asset) {
-        $a_asset_ids[] = $a_asset['asset_id'];
+        $a_asset_ids[$a_asset['asset_id']] = $a_asset['asset_id'];
       }
 
       $result = mediamosa_asset_collection::get_by_asset_ids(
@@ -659,6 +660,27 @@ class mediamosa_asset {
       // Now store it in the cache.
       foreach ($result as $a_collection) {
         $a_collections[$a_collection[mediamosa_asset_collection_db::ASSET_ID]][$a_collection[mediamosa_asset_collection_db::COLL_ID]] = $a_collection;
+      }
+    }
+
+    // has_streamable_mediafiles.
+    if ($add_has_streamable_mediafiles) {
+      $s_ids = implode("','", $a_asset_ids);
+      $mf = array();
+      $result = mediamosa_db::db_query(sprintf("
+        SELECT mf.asset_id, mf.uri, mamm.container_type, mamm.video_codec
+        FROM {mediamosa_asset_mediafile} mf
+        INNER JOIN {mediamosa_asset_mediafile_metadata} mamm USING (mediafile_id)
+        WHERE mf.asset_id IN ('%s')", $s_ids));
+      foreach ($result as $row) {
+        // It is FALSE in the beginning.
+        if (!isset($mf[$row['asset_id']])) {
+          $mf[$row['asset_id']] = FALSE;
+        }
+        // Get the info.
+        $a_response = mediamosa_server::get_streaming_info($row['container_type'], $row['video_codec'], $row['uri']);
+        // Set the mediafile has_streamable_mediafiles value.
+        $mf[$row['asset_id']] = ($mf[$row['asset_id']] || $a_response['response_object_available'] == 'TRUE');
       }
     }
 
@@ -701,6 +723,11 @@ class mediamosa_asset {
         // Add ticket.
         $a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]]['vpx_still_url'] = "";
         $a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]]['ega_still_url'] = "";
+
+        // has_streamable_mediafiles.
+        if ($add_has_streamable_mediafiles) {
+          $a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]]['has_streamable_mediafiles'] = (isset($mf[$a_asset[mediamosa_asset_db::ID]]) && $mf[$a_asset[mediamosa_asset_db::ID]] ? 'TRUE' : 'FALSE');
+        }
 
         if ($show_stills) {
           $ticket = mediamosa_db::uuid($app_id);
@@ -756,6 +783,21 @@ class mediamosa_asset {
     }
 
     return $a_items;
+  }
+
+  /**
+   * Enrich the response object with has_streamable_mediafiles information.
+   *
+   * @param array $a_items
+   */
+  static public function enrich_response_has_streamable_mediafiles($mediafiles) {
+    $has_streamable_mediafiles = FALSE;
+
+    foreach ($mediafiles['mediafile'] as $mf) {
+      $has_streamable_mediafiles = ($has_streamable_mediafiles || $mf['response_object_available'] == 'TRUE');
+    }
+
+    return ($has_streamable_mediafiles ? 'TRUE' : 'FALSE');
   }
 
   /**
