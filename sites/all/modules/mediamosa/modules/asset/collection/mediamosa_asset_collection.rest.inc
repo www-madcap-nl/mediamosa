@@ -219,41 +219,6 @@ class mediamosa_rest_call_asset_collection_delete extends mediamosa_rest_call {
     }
   }
 }
-/* to verify: where is this code [@TODO]
-
-// kijk of de collection bestaat
-  if (!vpx_count_rows('collection', array('coll_id', $a_parameters['coll_id']['value']))) {
-    return new rest_response(vpx_return_error(ERRORCODE_COLLECTION_NOT_FOUND, array('@coll_id' => $a_parameters['coll_id']['value'])));
-  }
-
-    // kijk of de asset bestaat
-    if (!vpx_count_rows('asset', array('asset_id', $asset_id))) {
-      return new rest_response(vpx_return_error(ERRORCODE_ASSET_NOT_FOUND, array('@asset_id' => $asset_id)));
-    }
-
-    // kijk of de asset/collection relatie bestaat
-    if (!vpx_count_rows('asset_collection', array('coll_id', $a_parameters['coll_id']['value'], 'asset_id', $asset_id))) {
-      return new rest_response(vpx_return_error(ERRORCODE_COLLECTION_ASSET_RELATION_NOT_FOUND, array('@coll_id' => $a_parameters['coll_id']['value'])));
-    }
-
-    // get owner info
-    db_set_active('data');
-    $db_result  = db_query("SELECT * FROM {collection} where coll_id  = '%s' ", $a_parameters['coll_id']['value']);
-    $dbrow_collection = db_fetch_array($db_result);
-    $db_result  = db_query("SELECT * FROM {asset} where asset_id  = '%s' ", $asset_id);
-    $dbrow_asset = db_fetch_array($db_result);
-    db_set_active();
-
-
-    // controleer of de gebruiker rechten heeft om de collection te verwijderen
-    try {
-      vpx_acl_owner_check_collection_assign($a_parameters['app_id']['value'], $a_parameters['user_id']['value'], $dbrow_asset, $dbrow_collection, $is_app_admin);
-    }
-    catch (vpx_exception_error_access_denied $e) {
-      return $e->vpx_exception_rest_response();
-    }
-*/
-
 
 /**
  * URI: /asset/$asset_id/collection_relation/delete

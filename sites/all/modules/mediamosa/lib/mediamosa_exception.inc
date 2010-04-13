@@ -217,7 +217,7 @@ class mediamosa_exception_error_invalid_data_parameter extends mediamosa_excepti
 class mediamosa_exception_error_job_could_not_be_removed extends mediamosa_exception_error {
   public function __construct($a_tags = array()) {
     assert(isset($a_tags['@job_id']));
-    parent::__construct(mediamosa_error::ERRORCODE_JOB_COULD_NOT_BE_REMOVED, $a_tags, VPX_EXCEPTION_HIGH);
+    parent::__construct(mediamosa_error::ERRORCODE_JOB_COULD_NOT_BE_REMOVED, $a_tags, MEDIAMOSA_EXCEPTION_SEVERITY_HIGH);
   }
 }
 
@@ -244,7 +244,7 @@ class mediamosa_exception_error_cant_retype_group_must_be_empty extends mediamos
 
 class mediamosa_exception_error_query_error extends mediamosa_exception_error {
   public function __construct($a_tags = array()) {
-    parent::__construct(mediamosa_error::ERRORCODE_QUERY_ERROR, $a_tags, VPX_EXCEPTION_SEVERITY_HIGH);
+    parent::__construct(mediamosa_error::ERRORCODE_QUERY_ERROR, $a_tags, MEDIAMOSA_EXCEPTION_SEVERITY_HIGH);
   }
 }
 

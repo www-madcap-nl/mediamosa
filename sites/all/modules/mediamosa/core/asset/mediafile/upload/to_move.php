@@ -184,13 +184,13 @@ function vpx_upload_handle_still($a_args) {
     // Open the new file
     $destination_file = @fopen($destination, 'w');
     if (!$destination_file) {
-      throw new vpx_exception(0, "Unable to write to '". $destination ."'.", VPX_EXCEPTION_SEVERITY_HIGH);
+      throw new vpx_exception(0, "Unable to write to '". $destination ."'.", MEDIAMOSA_EXCEPTION_SEVERITY_HIGH);
     }
 
     // Open the stream
     $stream = fopen('php://input', 'r');
     if ($stream === FALSE) {
-      throw new vpx_exception(0, 'Unable to open stream', VPX_EXCEPTION_SEVERITY_HIGH);
+      throw new vpx_exception(0, 'Unable to open stream', MEDIAMOSA_EXCEPTION_SEVERITY_HIGH);
     }
 
     $b_continue = TRUE;

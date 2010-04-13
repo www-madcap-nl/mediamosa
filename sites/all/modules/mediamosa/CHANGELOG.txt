@@ -32,7 +32,7 @@ START CHANGELOG:
 
  
 
-Mediamosa 2.1.2
+Mediamosa 2.1.0
 ---------------
 - Play proxy call will now return the ticket id in result.
 - Fixed number of query bugs in AUT / ACL code.
@@ -89,9 +89,6 @@ Mediamosa 2.1.2
 - Server IP/URL settings are now prepared/compliant for IPv7.
 - MediaMosa is now UTF8 Compliant.
 - asset/delete REST call now returns failures per failed asset and their cause.
-
-MediaMosa.1.1
----------------
 - Fixed problems editing the transcode profile.
 - Fixed migration problem on transcode profiles.
 
