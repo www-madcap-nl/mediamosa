@@ -645,7 +645,7 @@ class mediamosa_asset {
       // Get all collection information in one go.
       $a_asset_ids = array();
       foreach ($a_items['assets'] as $a_asset) {
-        $a_asset_ids[] = $a_asset['asset_id'];
+        $a_asset_ids[$a_asset['asset_id']] = $a_asset['asset_id'];
       }
 
       $result = mediamosa_asset_collection::get_by_asset_ids(
