@@ -105,7 +105,7 @@ function mediamosa_maintenance_browse_help($path, $arg) {
     case 'admin/mediamosa/browse/restcall':
       return '<p>' . t('The REST call browser allows you to view all REST calls and their properties.') . '</p>';
     case 'admin/mediamosa/browse/revision':
-      return '<p>' . t('The revision log is a list of changes made on the configuration of MediaMosa 2. You can view changes made on transcode profiles, client applications, servers and global settings.') . '</p>';
+      return '<p>' . t('The revision log is a list of changes made on the configuration of MediaMosa. You can view changes made on transcode profiles, client applications, servers and global settings.') . '</p>';
     case 'admin/mediamosa/browse/errorcode':
       return '<p>' . t('This list show the translation of a MediaMosa error name and code to error message. MediaMosa error name and code can not be changed.') . '</p>';
   }

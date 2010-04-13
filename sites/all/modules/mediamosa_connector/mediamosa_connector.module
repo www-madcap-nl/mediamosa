@@ -38,7 +38,7 @@ function mediamosa_connector_menu() {
 
   $items['admin/mediamosa/config/connector'] = array(
     'title' => t('MediaMosa Connector'),
-    'description' => t('The MediaMosa connector enables other modules to connect on the MediaMosa REST interface. The configuration needs username, password and URL to connect to MediaMosa 2. You need to create or have a MediaMosa application login.'),
+    'description' => t('The MediaMosa connector enables other modules to connect on the MediaMosa REST interface. The configuration needs username, password and URL to connect to MediaMosa. You need to create or have a MediaMosa application login.'),
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mediamosa_connector_settings'),
     'access arguments' => array('administer mediamosa connector settings'),
@@ -61,7 +61,7 @@ function mediamosa_connector_permission() {
   return array(
     'administer mediamosa connector configuration' => array(
       'title' => t('MediaMosa connector configuration administer permissions'),
-      'description' => t('Manage the configuration of MediaMosa 2 connector to be edited.')
+      'description' => t('Manage the configuration of MediaMosa connector to be edited.')
     ),
   );
 }
@@ -74,7 +74,7 @@ function mediamosa_connector_block($op = 'list', $delta = 0, $edit = array()) {
   switch ($op) {
     case 'list':
       $blocks[0] = array(
-        'info' => t('MediaMosa 2 Connector debug info'),
+        'info' => t('MediaMosa Connector debug info'),
       );
 
       return $blocks;
@@ -83,7 +83,7 @@ function mediamosa_connector_block($op = 'list', $delta = 0, $edit = array()) {
       switch ($delta) {
         case 0:
           if ($_SERVER['REQUEST_METHOD'] !== 'POST' && isset($_SESSION['mediamosa_connector_debug_info'])) {
-            $block['subject'] = t('MediaMosa 2 Connector request info');
+            $block['subject'] = t('MediaMosa Connector request info');
             $header = array(t('Method'), t('URL'), t('Response time (sec)'));
             $rows = array();
             foreach ($_SESSION['mediamosa_connector_debug_info'] as $log) {
@@ -112,7 +112,7 @@ function mediamosa_connector_settings() {
 
   $form['connection'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Connection settings to MediaMosa 2 REST interface'),
+    '#title' => t('Connection settings to MediaMosa REST interface'),
     '#collapsible' => TRUE,
     '#weight' => -5,
   );
@@ -126,7 +126,7 @@ function mediamosa_connector_settings() {
   $form['connection']['mediamosa_connector_username'] = array(
     '#type' => 'textfield',
     '#title' => t('Username'),
-    '#description' => t('Enter the MediaMosa 2 user name that needs to connect.'),
+    '#description' => t('Enter the MediaMosa user name that needs to connect.'),
     '#required' => TRUE,
     '#default_value' => '',
   );

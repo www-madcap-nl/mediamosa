@@ -37,7 +37,7 @@ function mediamosa_maintenance_menu() {
 
   // Maintenance / Configuration pages.
   $items['admin/mediamosa'] = array(
-    'title' => 'MediaMosa 2',
+    'title' => 'MediaMosa',
     'page callback' => '_mediamosa_maintenance_status',
     'access arguments' => array('access mediamosa'),
     'weight' => -20,
@@ -118,7 +118,7 @@ function mediamosa_maintenance_help($path, $arg) {
 
   switch ($path) {
     case 'admin/mediamosa':
-      return '<p>' . t('Mediamosa 2 status page show results of basic unit tests that are run at fixed intervals. All tests must be green.') . '</p>';
+      return '<p>' . t('MediaMosa status page show results of basic unit tests that are run at fixed intervals. All tests must be green.') . '</p>';
   }
 }
 
@@ -198,7 +198,7 @@ function _mediamosa_maintenance_status() {
   $breadcrumb = array();
   $breadcrumb[] = l(t('Home'), NULL);
   $breadcrumb[] = l(t('Administer'), 'admin');
-  $breadcrumb[] = l(t('MediaMosa 2'), 'admin/mediamosa');
+  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
   drupal_set_breadcrumb($breadcrumb);
 
   // Need the classes of simpletest.

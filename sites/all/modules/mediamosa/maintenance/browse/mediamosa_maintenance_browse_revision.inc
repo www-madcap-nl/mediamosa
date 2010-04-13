@@ -146,7 +146,7 @@ function _mediamosa_maintenance_view_revision($nid, $vid) {
   $breadcrumb = array();
   $breadcrumb[] = l(t('Home'), NULL);
   $breadcrumb[] = l(t('Administer'), 'admin');
-  $breadcrumb[] = l(t('MediaMosa 2'), 'admin/mediamosa');
+  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
   $breadcrumb[] = l(t('Browse'), 'admin/mediamosa/browse');
   $breadcrumb[] = l(t('Revision'), 'admin/mediamosa/browse/revision');
   drupal_set_breadcrumb($breadcrumb);

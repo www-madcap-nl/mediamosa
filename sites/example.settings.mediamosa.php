@@ -36,7 +36,7 @@ $databases['default']['default'] = array(
 
 /**
  * The following settings you can use when migration 1.7.x MediaMosa databases
- * to the new MediaMosa 2.x database.
+ * to the new MediaMosa.x database.
  *
  * You can remove/disable mig_memo, mig_memo_data and mig_vpx_ftp if you are not
  * planning to migrate your old database.

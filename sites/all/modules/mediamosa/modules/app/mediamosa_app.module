@@ -189,7 +189,7 @@ function mediamosa_app_permission() {
   return array(
     'administer mediamosa config app' =>  array(
       'title' => t('Adminster MediaMosa applications.'),
-      'description' => t('Give administer rights for editing MediaMosa 2 applications.'),
+      'description' => t('Give administer rights for editing MediaMosa applications.'),
     ),
   );
 }
@@ -276,7 +276,7 @@ function _mediamosa_app_contacts($app_id) {
   $breadcrumb = array();
   $breadcrumb[] = l(t('Home'), NULL);
   $breadcrumb[] = l(t('Administer'), 'admin');
-  $breadcrumb[] = l(t('MediaMosa 2'), 'admin/mediamosa');
+  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
   $breadcrumb[] = l(t('Configuration'), 'admin/mediamosa/config');
   $breadcrumb[] = l(t('Client applications'), 'admin/mediamosa/config/app');
   drupal_set_breadcrumb($breadcrumb);
@@ -317,5 +317,5 @@ function _mediamosa_app_contacts($app_id) {
   /*
   $output['contacts'] = theme('table', ));
   $output['page] .= theme('pager');
-  $output .= l(t('Return to MediaMosa 2 Application Listing'), 'admin/mediamosa/app');*/
+  $output .= l(t('Return to MediaMosa Application Listing'), 'admin/mediamosa/app');*/
 }

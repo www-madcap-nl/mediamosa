@@ -347,7 +347,7 @@ function _mediamosa_browse_collection_page_view($coll_id) {
   $breadcrumb = array();
   $breadcrumb[] = l(t('Home'), NULL);
   $breadcrumb[] = l(t('Administer'), 'admin');
-  $breadcrumb[] = l(t('MediaMosa 2'), 'admin/mediamosa');
+  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
   $breadcrumb[] = l(t('Browse'), 'admin/mediamosa/browse');
   $breadcrumb[] = l(t('Collection browser'), 'admin/mediamosa/browse/collection');
   drupal_set_breadcrumb($breadcrumb);

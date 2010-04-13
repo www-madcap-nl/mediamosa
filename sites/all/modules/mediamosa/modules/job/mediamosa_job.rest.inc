@@ -1020,7 +1020,7 @@ class mediamosa_rest_call_job_create_still extends mediamosa_rest_call_job_creat
  * I could choose to set the URL directly on the class, but for better
  * view on code, lets keep it like own class for now. The only difference
  * is that mediafile_id comes from the URI, which is not a problem for the
- * mediamosa 2 REST interface. Doesn't matter if mediafile_id comes from
+ * MediaMosa REST interface. Doesn't matter if mediafile_id comes from
  * URI / GET / POST.
  *
  * 1.x: vpx_jobscheduler_create_new_still_job_for_mediafile

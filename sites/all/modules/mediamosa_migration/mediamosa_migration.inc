@@ -225,7 +225,7 @@ function _mediamosa_requirements_test() {
   try {
     // Make sure these class can be found.
     if (!class_exists('mediamosa_asset_metadata_db')) {
-      throw new Exception('Could not find class mediamosa_asset_metadata_db, make sure mediamosa 2 core is installed.');
+      throw new Exception('Could not find class mediamosa_asset_metadata_db, make sure MediaMosa core is installed.');
     }
   }
   catch (Exception $e) {

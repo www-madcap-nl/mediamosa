@@ -243,7 +243,7 @@ function _mediamosa_node_revision_overview($node) {
       $breadcrumb = array();
       $breadcrumb[] = l(t('Home'), NULL);
       $breadcrumb[] = l(t('Administer'), 'admin');
-      $breadcrumb[] = l(t('MediaMosa 2'), 'admin/mediamosa');
+      $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
       $breadcrumb[] = l(t('Configuration'), 'admin/mediamosa/config');
       $breadcrumb[] = l(t('Client applications'), 'admin/mediamosa/config/app');
       drupal_set_breadcrumb($breadcrumb);
@@ -254,7 +254,7 @@ function _mediamosa_node_revision_overview($node) {
       $breadcrumb = array();
       $breadcrumb[] = l(t('Home'), NULL);
       $breadcrumb[] = l(t('Administer'), 'admin');
-      $breadcrumb[] = l(t('MediaMosa 2'), 'admin/mediamosa');
+      $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
       $breadcrumb[] = l(t('Configuration'), 'admin/mediamosa/config');
       $breadcrumb[] = l(t('Server listing'), 'admin/mediamosa/config/server');
       drupal_set_breadcrumb($breadcrumb);
@@ -265,7 +265,7 @@ function _mediamosa_node_revision_overview($node) {
       $breadcrumb = array();
       $breadcrumb[] = l(t('Home'), NULL);
       $breadcrumb[] = l(t('Administer'), 'admin');
-      $breadcrumb[] = l(t('MediaMosa 2'), 'admin/mediamosa');
+      $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
       $breadcrumb[] = l(t('Configuration'), 'admin/mediamosa/config');
       $breadcrumb[] = l(t('Transcode profiles'), 'admin/mediamosa/config/transcode_profile');
       drupal_set_breadcrumb($breadcrumb);
@@ -276,7 +276,7 @@ function _mediamosa_node_revision_overview($node) {
       $breadcrumb = array();
       $breadcrumb[] = l(t('Home'), NULL);
       $breadcrumb[] = l(t('Administer'), 'admin');
-      $breadcrumb[] = l(t('MediaMosa 2'), 'admin/mediamosa');
+      $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
       $breadcrumb[] = l(t('Configuration'), 'admin/mediamosa/config');
       drupal_set_breadcrumb($breadcrumb);
       break;

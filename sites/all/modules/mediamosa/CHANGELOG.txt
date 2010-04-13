@@ -90,13 +90,13 @@ Mediamosa 2.1.2
 - MediaMosa is now UTF8 Compliant.
 - asset/delete REST call now returns failures per failed asset and their cause.
 
-MediaMosa 2.1.1
+MediaMosa.1.1
 ---------------
 - Fixed problems editing the transcode profile.
 - Fixed migration problem on transcode profiles.
 
 
-MediaMosa 2.1.0
+MediaMosa.1.0
 ---------------
 - Added support CQL for is_empty_asset (See MediaMosa ticket #180).
 - Banner text was updated (See MediaMosa ticket #222).
@@ -115,7 +115,7 @@ MediaMosa 2.1.0
   version.
 
 
-MediaMosa 2.0.0 (released as read-only)
+MediaMosa.0.0 (released as read-only)
 ---------------
 - Port to drupal 7.
 - VPX name use in code has been replaced with MediaMosa.
