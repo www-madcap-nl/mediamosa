@@ -86,7 +86,10 @@ Mediamosa 2.1.2
 - Date types uses ISO8601 norm; 'YYYY-MM-DD HH:MM:SS' or 'YYYY-MM-DDTHH:MM:SS'.
   Timezone specification in ISO8601 however is ignored for now. Its now allowed
   to enter '2007' or '2007-10' without triggering errors.
- 
+- Server IP/URL settings are now prepared/compliant for IPv7.
+- MediaMosa is now UTF8 Compliant.
+- asset/delete REST call now returns failures per failed asset and their cause.
+
 MediaMosa 2.1.1
 ---------------
 - Fixed problems editing the transcode profile.

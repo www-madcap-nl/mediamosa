@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -41,6 +41,9 @@
  * @see template_preprocess()
  * @see template_preprocess_restcall_doc()
  */
+
+  // Just here so ZEND analyser doesn't give warnings about $variables.
+  $variables['ignore_zend'] = TRUE;
 
   $title = $variables['rest_call']->title;
   $description = $variables['rest_call']->description;

@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -81,6 +81,26 @@ function mediamosa_requirements($phase) {
  */
 function mediamosa_permission() {
   return array(
+    mediamosa_settings::MEDIAMOSA_PERMISSION_DELETE_MEDIAMOSA_JOBS =>  array(
+      'title' => t('Delete jobs'),
+      'description' => t('Users with this permission may delete jobs.'),
+    ),
+    mediamosa_settings::MEDIAMOSA_PERMISSION_DELETE_MEDIAMOSA_MEDIAFILES =>  array(
+      'title' => t('Delete mediafiles'),
+      'description' => t('Users with this permission may delete mediafiles.'),
+    ),
+    mediamosa_settings::MEDIAMOSA_PERMISSION_ANALYSE_MEDIAMOSA_MEDIAFILES =>  array(
+      'title' => t('Analyse mediafiles'),
+      'description' => t('Users with this permission may start analyse jobs for mediafiles.'),
+    ),
+    mediamosa_settings::MEDIAMOSA_PERMISSION_DOWNLOAD_MEDIAMOSA_MEDIAFILES =>  array(
+      'title' => t('Download mediafiles'),
+      'description' => t('Users with this permission may download mediafiles.'),
+    ),
+    'access mediamosa config' =>  array(
+      'title' => t('Access MediaMosa Administration'),
+      'description' => t('View the MediaMosa configuration, maintenance and other pages.'),
+    ),
     'administer mediamosa' =>  array(
       'title' => t('Administer MediaMosa'),
       'description' => t('Administer rights Mediamosa.'),

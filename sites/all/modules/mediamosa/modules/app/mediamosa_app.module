@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -107,17 +107,30 @@ function mediamosa_app_menu() {
     'file' => 'node.pages.inc',
     'file path' => drupal_get_path('module', 'node'),
     'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
     'weight' => mediamosa_settings::UI_TAB_WEIGHT_ADD,
   );
 
-    $items['admin/mediamosa/config/app/%node/edit'] = array(
+  $items['admin/mediamosa/config/app/%node'] = array(
+    'page callback' => 'node_page_view',
+    'page arguments' => array(4),
+    'access callback' => 'node_access',
+    'access arguments' => array('view', 4),
+    'type' => MENU_CALLBACK,
+  );
+  $items['admin/mediamosa/config/app/%node/view'] = array(
+    'title' => 'View',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_VIEW
+  );
+
+  $items['admin/mediamosa/config/app/%node/edit'] = array(
     'title' => 'Edit',
     'page callback' => 'node_page_edit',
     'page arguments' => array(4),
     'access callback' => 'node_access',
     'access arguments' => array('update', 4),
     'theme callback' => '_node_custom_theme',
-    'weight' => 0,
     'type' => MENU_LOCAL_TASK,
     'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
     'file' => 'node.pages.inc',
@@ -132,12 +145,23 @@ function mediamosa_app_menu() {
     'access callback' => 'node_access',
     'access arguments' => array('delete', 4),
     'theme callback' => '_node_custom_theme',
-    'weight' => 1,
     'type' => MENU_LOCAL_TASK,
     'context' => MENU_CONTEXT_INLINE,
     'file' => 'node.pages.inc',
     'file path' => drupal_get_path('module', 'node'),
     'weight' => mediamosa_settings::UI_TAB_WEIGHT_DELETE,
+  );
+
+  $items['admin/mediamosa/config/app/%node/revisions'] = array(
+    'title' => 'Revisions',
+    'page callback' => '_mediamosa_node_revision_overview',
+    'page arguments' => array(4),
+    'access callback' => '_node_revision_access',
+    'access arguments' => array(4),
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'node.pages.inc',
+    'file path' => drupal_get_path('module', 'node'),
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_REVISIONS,
   );
 
   $items['admin/mediamosa/config/app/%/contacts'] = array(
@@ -146,19 +170,6 @@ function mediamosa_app_menu() {
     'page callback' => '_mediamosa_app_contacts',
     'page arguments' => array(4),
     'access arguments' => array('administer mediamosa config app'),
-  );
-
-  $items['admin/mediamosa/config/app/%node'] = array(
-    'page callback' => '_mediamosa_app_view',
-    'page arguments' => array(4),
-    'access callback' => 'node_access',
-    'access arguments' => array('view', 4),
-    'type' => MENU_CALLBACK,
-  );
-  $items['admin/mediamosa/config/app/%node/view'] = array(
-    'title' => 'View',
-    'type' => MENU_CALLBACK,
-    'weight' => mediamosa_settings::UI_TAB_WEIGHT_VIEW
   );
 
   $items['admin/mediamosa/config/app/js/form'] = array(
@@ -255,21 +266,6 @@ function _mediamosa_app_list() {
   return $form;
 }
 
-/**
- * Node app view.
- */
-function _mediamosa_app_view($node) {
-  // Reset the breadcrum.
-  $breadcrumb = array();
-  $breadcrumb[] = l(t('Home'), NULL);
-  $breadcrumb[] = l(t('Administer'), 'admin');
-  $breadcrumb[] = l(t('MediaMosa 2'), 'admin/mediamosa');
-  $breadcrumb[] = l(t('Configuration'), 'admin/mediamosa/config');
-  $breadcrumb[] = l(t('Client applications'), 'admin/mediamosa/config/app');
-  drupal_set_breadcrumb($breadcrumb);
-
-  return node_page_view($node);
-}
 /**
  * Show more specific information about a application.
  *

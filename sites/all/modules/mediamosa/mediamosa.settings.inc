@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -167,10 +167,17 @@ class mediamosa_settings {
 
   // UI settings.
   const UI_TAB_WEIGHT_LIST = -10; // Weights of tab items. -10 left, +10 right.
-  const UI_TAB_WEIGHT_EDIT = -6;
-  const UI_TAB_WEIGHT_VIEW = -8;
-  const UI_TAB_WEIGHT_ADD = -8;
-  const UI_TAB_WEIGHT_DELETE = -4;
+  const UI_TAB_WEIGHT_VIEW = -6;
+  const UI_TAB_WEIGHT_EDIT = -4;
+  const UI_TAB_WEIGHT_ADD = -9;
+  const UI_TAB_WEIGHT_DELETE = -3;
+  const UI_TAB_WEIGHT_REVISIONS = 0;
+
+  // Drupal permissions.
+  const MEDIAMOSA_PERMISSION_DELETE_MEDIAMOSA_MEDIAFILES = 'delete mediamosa mediafiles';
+  const MEDIAMOSA_PERMISSION_DELETE_MEDIAMOSA_JOBS = 'delete mediamosa jobs';
+  const MEDIAMOSA_PERMISSION_ANALYSE_MEDIAMOSA_MEDIAFILES = 'analyse mediamosa mediafiles';
+  const MEDIAMOSA_PERMISSION_DOWNLOAD_MEDIAMOSA_MEDIAFILES = 'download mediamosa mediafiles';
 
   // ------------------------------------------------------------------ Functions.
   /**

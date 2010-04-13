@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -36,10 +36,11 @@ function mediamosa_server_menu() {
   $items = array();
 
   $items['admin/mediamosa/config/server'] = array(
-    'title' => 'Server listing',
-    'description' => 'List all MediaMosa Servers.',
+    'title' => 'Servers',
+    'description' => 'List all MediaMosa servers.',
     'page callback' => '_mediamosa_server_list',
     'access arguments' => array('access mediamosa'),
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_LIST,
   );
 
   $items['admin/mediamosa/config/server/list'] = array(
@@ -72,15 +73,6 @@ function mediamosa_server_menu() {
     );
   }
 
-  $items['admin/mediamosa/config/server/%/edit'] = array(
-    'title' => 'Client application contacts',
-    'type' => MENU_CALLBACK,
-    'page callback' => '_mediamosa_app_contacts',
-    'page arguments' => array(4),
-    'access arguments' => array('administer mediamosa config server'),
-    'weight' => mediamosa_settings::UI_TAB_WEIGHT_EDIT,
-  );
-
   $items['admin/mediamosa/config/server/%node'] = array(
     'page callback' => 'node_page_view',
     'page arguments' => array(4),
@@ -88,10 +80,11 @@ function mediamosa_server_menu() {
     'access arguments' => array('view', 4),
     'type' => MENU_CALLBACK,
   );
+
   $items['admin/mediamosa/config/server/%node/view'] = array(
     'title' => 'View',
-    'type' => MENU_CALLBACK,
-    'weight' => mediamosa_settings::UI_TAB_WEIGHT_VIEW,
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_VIEW
   );
 
   $items['admin/mediamosa/config/server/%node/edit'] = array(
@@ -101,7 +94,6 @@ function mediamosa_server_menu() {
     'access callback' => 'node_access',
     'access arguments' => array('update', 4),
     'theme callback' => '_node_custom_theme',
-    'weight' => 0,
     'type' => MENU_LOCAL_TASK,
     'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
     'file' => 'node.pages.inc',
@@ -116,7 +108,6 @@ function mediamosa_server_menu() {
     'access callback' => 'node_access',
     'access arguments' => array('delete', 4),
     'theme callback' => '_node_custom_theme',
-    'weight' => 1,
     'type' => MENU_LOCAL_TASK,
     'context' => MENU_CONTEXT_INLINE,
     'file' => 'node.pages.inc',
@@ -124,6 +115,17 @@ function mediamosa_server_menu() {
     'weight' => mediamosa_settings::UI_TAB_WEIGHT_DELETE,
   );
 
+  $items['admin/mediamosa/config/server/%node/revisions'] = array(
+    'title' => 'Revisions',
+    'page callback' => '_mediamosa_node_revision_overview',
+    'page arguments' => array(4),
+    'access callback' => '_node_revision_access',
+    'access arguments' => array(4),
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'node.pages.inc',
+    'file path' => drupal_get_path('module', 'node'),
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_REVISIONS,
+  );
   return $items;
 }
 
@@ -182,8 +184,9 @@ function _mediamosa_server_list() {
   $l_options = array('query' => drupal_get_destination());
 
   foreach ($result as $server) {
+
     $actions = array(
-      l(t('Edit'), 'admin/mediamosa/config/server/'. $server->{mediamosa_app_db::NID} . '/edit', $l_options),
+      l(t('Edit'), 'node/'. $server->{mediamosa_app_db::NID} . '/edit', $l_options),
       l(t('Delete'), 'admin/mediamosa/config/server/'. $server->{mediamosa_app_db::NID} . '/delete', $l_options),
     );
 

@@ -1,14 +1,48 @@
 <?php
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
 $databases = array();
+
+// Default MediaMosa database.
 $databases['default']['default'] = array(
   'driver' => 'mysql',
-  'database' => 'mediamosa2',
+  'database' => 'mediamosa',
   'username' => 'memo',
   'password' => 'memo',
   'host' => 'localhost'
 );
 
-// Migration memo 1.0 databases;
+/**
+ * The following settings you can use when migration 1.7.x MediaMosa databases
+ * to the new MediaMosa 2.x database.
+ *
+ * You can remove/disable mig_memo, mig_memo_data and mig_vpx_ftp if you are not
+ * planning to migrate your old database.
+ */
+
+// Migration memo 1.7.x Drupal database.
 $databases['mig_memo']['default'] = array(
   'driver' => 'mysql',
   'database' => 'memo',
@@ -16,6 +50,7 @@ $databases['mig_memo']['default'] = array(
   'password' => 'memo',
   'host' => 'localhost'
 );
+// Migration memo 1.7.x MediaMosa data database.
 $databases['mig_memo_data']['default'] = array(
   'driver' => 'mysql',
   'database' => 'memo_data',
@@ -23,7 +58,6 @@ $databases['mig_memo_data']['default'] = array(
   'password' => 'memo',
   'host' => 'localhost'
 );
-
 // In case you want to convert vpx_ftp.
 $databases['mig_vpx_ftp']['default'] = array(
   'driver' => 'mysql',
@@ -76,6 +110,7 @@ $conf['mediamosa_admin'] = TRUE;
  * Best practise is to give each MediaMosa installation its own ID. F.e. if you
  * have 'job1.mediamosa.example' for your 1st job server, then specify 'job1' as
  * installation ID here. 'admin.mediamosa.example' would be 'admin' as
- * installation ID, etc, etc. Max length is 16 chars.
+ * installation ID, etc, etc. Max length for this ID is 16 chars.
  */
+//                                    1234567890123456 chars max
 $conf['mediamosa_installation_id'] = 'default';

@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
  * Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -78,4 +78,4 @@ $conf['mediamosa_admin'] = FALSE;
  * installation ID here. 'admin.mediamosa.example' would be 'admin' as
  * installation ID, etc, etc. Max length is 16 chars.
  */
-$conf['mediamosa_installation_id'] = 'app1';
+$conf['mediamosa_installation_id'] = 'app2';

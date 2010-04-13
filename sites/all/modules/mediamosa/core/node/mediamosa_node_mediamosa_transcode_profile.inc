@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -131,8 +131,8 @@ function mediamosa_transcode_profile_delete($node) {
 /**
  * Implements hook_node_revision_delete().
  */
-function mediamosa_transcode_profile_node_revision_delete($vid) {
-  mediamosa_node_revision::delete_revision($vid);
+function mediamosa_transcode_profile_node_revision_delete($node) {
+  mediamosa_node_revision::delete_revision($node);
 }
 
 /**
@@ -157,6 +157,15 @@ function _mediamosa_transcode_profile_update_isdefault($node) {
  * Implements hook_view().
  */
 function mediamosa_transcode_profile_view($node, $view_mode = 'full') {
+  // Reset the breadcrum.
+  $breadcrumb = array();
+  $breadcrumb[] = l(t('Home'), NULL);
+  $breadcrumb[] = l(t('Administer'), 'admin');
+  $breadcrumb[] = l(t('MediaMosa 2'), 'admin/mediamosa');
+  $breadcrumb[] = l(t('Configuration'), 'admin/mediamosa/config');
+  $breadcrumb[] = l(t('Transcode profiles'), 'admin/mediamosa/config/transcode_profile');
+  drupal_set_breadcrumb($breadcrumb);
+
   // Get the apps.
   $apps = _mediamosa_get_apps();
 

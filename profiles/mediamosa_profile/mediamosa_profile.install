@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
  * Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -294,4 +294,48 @@ function mediamosa_profile_install() {
     ->execute();
   variable_set('admin_theme', 'seven');
   variable_set('node_admin_theme', '1');
+  variable_set('theme_default', 'seven');
+
+  // Turn auto Cron off.
+  variable_set('cron_safe_threshold', '0');
+
+  // Set site front page to admin/mediamosa.
+  variable_set('site_frontpage', 'admin/mediamosa');
+
+  // Enable these module.
+  $module_list = array(
+    'mediamosa',
+    'mediamosa_app',
+    'mediamosa_app_authentication',
+    'mediamosa_asset',
+    'mediamosa_aut',
+    'mediamosa_batch_jobs',
+    'mediamosa_collection',
+    'mediamosa_configuration',
+    'mediamosa_configuration_debug',
+    'mediamosa_configuration_proxy',
+    'mediamosa_configuration_server',
+    'mediamosa_configuration_storage',
+    'mediamosa_connector',
+    'mediamosa_development',
+    'mediamosa_error',
+    'mediamosa_ftp_batch',
+    'mediamosa_ftp_user',
+    'mediamosa_integrity_check',
+    'mediamosa_job',
+    'mediamosa_maintenance',
+    'mediamosa_maintenance_browse',
+    'mediamosa_maintenance_status',
+    'mediamosa_migration',
+    'mediamosa_profile',
+    'mediamosa_server',
+    'mediamosa_statistics',
+    'mediamosa_ticket',
+    'mediamosa_transcode',
+    'mediamosa_user',
+    'mediamosa_webservice',
+  );
+
+  // Enable modules.
+  module_enable($module_list);
 }

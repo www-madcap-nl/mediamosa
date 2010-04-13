@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
  * Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -26,7 +26,7 @@
 
 /**
  * @file
- * Example settings file for upload interface.
+ * Example settings file for app interface.
  */
 
 // Load default.
@@ -39,7 +39,7 @@ require_once getcwd() . '/sites/default/settings.php';
  * for this URL / Location, disabling all REST calls; except upload/download
  * REST calls, which is controlled by mediamosa_app_upload.
  */
-$conf['mediamosa_app'] = FALSE;
+$conf['mediamosa_app'] = TRUE;
 
 /**
  * Default setting, TRUE / FALSE for enabling / disabling the
@@ -49,7 +49,7 @@ $conf['mediamosa_app'] = FALSE;
  * as an upload interface, put 'mediamosa_app' to FALSE and set
  * 'mediamosa_app_upload' to TRUE.
  */
-$conf['mediamosa_app_upload'] = TRUE;
+$conf['mediamosa_app_upload'] = FALSE;
 
 /**
  * Default setting, TRUE / FALSE for enabling / disabling the
@@ -78,4 +78,4 @@ $conf['mediamosa_admin'] = FALSE;
  * installation ID here. 'admin.mediamosa.example' would be 'admin' as
  * installation ID, etc, etc. Max length is 16 chars.
  */
-$conf['mediamosa_installation_id'] = 'upload';
+$conf['mediamosa_installation_id'] = 'app1';

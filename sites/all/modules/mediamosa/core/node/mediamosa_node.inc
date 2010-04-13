@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -227,6 +227,107 @@ function mediamosa_node_info() {
       'description' => t('MediaMosa settings node type contains a copy of the configuration settings for revision usage.'),
     ),
   );
+}
+
+/**
+ * Show the node revision information.
+ *
+ * @param node $nid
+ */
+function _mediamosa_node_revision_overview($node) {
+
+  // Set breadcrum.
+  switch ($node->type) {
+    case mediamosa_node::MEDIAMOSA_NODE_TYPE_APP:
+      // Reset the breadcrum.
+      $breadcrumb = array();
+      $breadcrumb[] = l(t('Home'), NULL);
+      $breadcrumb[] = l(t('Administer'), 'admin');
+      $breadcrumb[] = l(t('MediaMosa 2'), 'admin/mediamosa');
+      $breadcrumb[] = l(t('Configuration'), 'admin/mediamosa/config');
+      $breadcrumb[] = l(t('Client applications'), 'admin/mediamosa/config/app');
+      drupal_set_breadcrumb($breadcrumb);
+      break;
+
+    case mediamosa_node::MEDIAMOSA_NODE_TYPE_SERVER:
+      // Reset the breadcrum.
+      $breadcrumb = array();
+      $breadcrumb[] = l(t('Home'), NULL);
+      $breadcrumb[] = l(t('Administer'), 'admin');
+      $breadcrumb[] = l(t('MediaMosa 2'), 'admin/mediamosa');
+      $breadcrumb[] = l(t('Configuration'), 'admin/mediamosa/config');
+      $breadcrumb[] = l(t('Server listing'), 'admin/mediamosa/config/server');
+      drupal_set_breadcrumb($breadcrumb);
+      break;
+
+    case mediamosa_node::MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE:
+      // Reset the breadcrum.
+      $breadcrumb = array();
+      $breadcrumb[] = l(t('Home'), NULL);
+      $breadcrumb[] = l(t('Administer'), 'admin');
+      $breadcrumb[] = l(t('MediaMosa 2'), 'admin/mediamosa');
+      $breadcrumb[] = l(t('Configuration'), 'admin/mediamosa/config');
+      $breadcrumb[] = l(t('Transcode profiles'), 'admin/mediamosa/config/transcode_profile');
+      drupal_set_breadcrumb($breadcrumb);
+      break;
+
+    case mediamosa_node::MEDIAMOSA_NODE_TYPE_SETTINGS:
+      // Reset the breadcrum.
+      $breadcrumb = array();
+      $breadcrumb[] = l(t('Home'), NULL);
+      $breadcrumb[] = l(t('Administer'), 'admin');
+      $breadcrumb[] = l(t('MediaMosa 2'), 'admin/mediamosa');
+      $breadcrumb[] = l(t('Configuration'), 'admin/mediamosa/config');
+      drupal_set_breadcrumb($breadcrumb);
+      break;
+  }
+
+  return node_revision_overview($node);
+}
+
+function _mediamosa_node_revision_overview_globalconfig() {
+  // Only one node of global config type.
+  $nid = db_select('node', 'n')
+    ->fields('n', array('nid'))
+    ->condition('type', mediamosa_node::MEDIAMOSA_NODE_TYPE_SETTINGS)
+    ->range(0, 1)
+    ->execute()
+    ->fetchField();
+
+  // Not found, no revisions.
+  if (!$nid) {
+    drupal_goto('admin/mediamosa/config/global');
+  }
+
+  // Get the node.
+  $node = node_load($nid);
+
+  // Now access on it.
+  return _mediamosa_node_revision_overview($node);
+}
+
+/**
+ * Access check for revisions on global config.
+ */
+function _mediamosa_node_revision_access_globalconfig() {
+
+  // Only one node of global config type.
+  $nid = db_select('node', 'n')
+    ->fields('n', array('nid'))
+    ->condition('type', mediamosa_node::MEDIAMOSA_NODE_TYPE_SETTINGS)
+    ->range(0, 1)
+    ->execute()
+    ->fetchField();
+
+  if (!$nid) {
+    return FALSE;
+  }
+
+  // Get the node.
+  $node = node_load($nid);
+
+  // Now access on it.
+  return _node_revision_access($node);
 }
 
 /**
