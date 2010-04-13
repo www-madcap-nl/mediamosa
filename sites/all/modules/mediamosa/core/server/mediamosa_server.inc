@@ -32,6 +32,16 @@
 class mediamosa_server {
 
   // ------------------------------------------------------------------ Consts.
+  /**
+   * Log for asset_mediafile_uplaod.
+   *
+   * @param string $message
+   * @param array $variables
+   * @param string $severity
+   */
+  static public function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
+    mediamosa::log($message, $variables, $severity, 'server');
+  }
 
   /**
    * Trigger process servers.

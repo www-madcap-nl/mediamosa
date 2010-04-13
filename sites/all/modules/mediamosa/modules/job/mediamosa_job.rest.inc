@@ -942,6 +942,9 @@ class mediamosa_rest_call_job_create_still extends mediamosa_rest_call_job_creat
 
     unset($a_var_setup[self::VARS][parent::JOB_TYPE]);
 
+    // Although its required, its not used(!).
+    // note: mediamosa_rest_call_job_create_still_for_mediafile() depends on
+    // this non-requirement and non-usage.
     $a_var_setup[self::VARS][self::ASSET_ID] = array(
       self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
       self::VAR_DESCRIPTION => 'The asset ID of the medafile.',
@@ -1032,6 +1035,10 @@ class mediamosa_rest_call_job_create_still_for_mediafile extends mediamosa_rest_
   // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
     $a_var_setup = parent::get_var_setup();
+
+    // Unset the asset_id (we dont use it).
+    unset($a_var_setup[self::VARS][self::ASSET_ID]);
+
     return $a_var_setup;
   }
 
