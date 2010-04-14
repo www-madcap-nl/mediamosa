@@ -516,16 +516,15 @@ class mediamosa_asset {
         $row['still_id']
       );
 
-      // 2.x changes to database need to be renamed to 1.x name giving (for now).
-      $renames = array(
+      // 2.x changes to database need to be aliased to 1.x name giving (for now).
+      $aliases = array(
         mediamosa_asset_db::IS_UNAPPROPRIATE => 'is_unappropiate',
       );
 
-      // Renames.
-      foreach ($renames as $from => $to) {
+      // Aliases.
+      foreach ($aliases as $from => $to) {
         if (isset($row[$from])) {
           $row[$to] = $row[$from];
-          unset($row[$from]);
         }
       }
 

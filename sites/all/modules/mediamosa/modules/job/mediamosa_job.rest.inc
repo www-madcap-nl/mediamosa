@@ -1014,6 +1014,7 @@ class mediamosa_rest_call_job_create_still extends mediamosa_rest_call_job_creat
 
 /**
  * URI: /mediafile/$mediafile_id/still/create
+ *      /video/$mediafile_id/still/create (depricated)
  *
  * Method: POST
  *

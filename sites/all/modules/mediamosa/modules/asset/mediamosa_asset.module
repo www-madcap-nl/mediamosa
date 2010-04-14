@@ -640,6 +640,8 @@ function mediamosa_asset_mediamosa_register_rest_call_doc() {
       'videotimestampmodified' => 'Set each time when changes are made to metadata or mediafiles .',
       'play_restriction_start' => 'The start datetime of play restriction.',
       'play_restriction_end' => 'The end datetime of play restriction.',
+      'is_unappropriate' => 'Marked unsuitable for viewing or usage.',
+      'is_unappropiate' => 'Alias for is_unappropriate, depricated use is_unappropriate instead.',
     ),
     mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
   <item id="1">
@@ -657,6 +659,7 @@ function mediamosa_asset_mediamosa_register_rest_call_doc() {
     <mediafile_duration>00:00:45.7</mediafile_duration>
     <mediafile_container_type>asf</mediafile_container_type>
     <is_unappropiate>FALSE</is_unappropiate>
+    <is_unappropriate>FALSE</is_unappropriate>
     <is_external>FALSE</is_external>
     <viewed>1631</viewed>
     <played>97</played>

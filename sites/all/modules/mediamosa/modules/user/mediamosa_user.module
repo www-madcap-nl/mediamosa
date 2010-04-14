@@ -115,7 +115,10 @@ This call returns all users which are created with /user/create and searches for
     mediamosa_rest_call::TITLE => 'Search for favorites.',
     mediamosa_rest_call::DESCRIPTION => 'Search for favorites.',
     mediamosa_rest_call::EXAMPLE_REQUEST => 'user/admin/favorites?fav_type=ASSET',
-    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::RESPONSE_FIELDS => array(
+      'is_unappropriate' => 'Marked unsuitable for viewing or usage.',
+      'is_unappropiate' => 'Alias for is_unappropriate, depricated use is_unappropriate instead.',
+    ),
     mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
   <item id="1">
     <asset_id>7pAkDsceysAZPo0q3PhjtBE1</asset_id>
@@ -138,6 +141,7 @@ This call returns all users which are created with /user/create and searches for
     <played>105</played>
     <is_protected>FALSE</is_protected>
     <is_unappropiate>FALSE</is_unappropiate>
+    <is_unappropriate>FALSE</is_unappropriate>
     <dublin_core>
       <contributor></contributor>
       <coverage_spatial></coverage_spatial>
