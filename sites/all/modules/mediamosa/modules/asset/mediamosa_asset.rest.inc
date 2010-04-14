@@ -788,10 +788,11 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
     // Show in old format?
     $old_output = $app_active_version !== FALSE && ($app_active_version[mediamosa_version::MAJOR] == 1 && $app_active_version[mediamosa_version::MINOR] < 6);
 
-    // Now enrich the output.
+    // Now enrich the output with mediafiles.
     $items[0]['mediafiles'] = mediamosa_asset_mediafile::enrich_response_mediafile($mediafile_ids, $app_ids, $is_oai, $show_stills, $old_output);
 
-    $items[0]['has_streamable_mediafiles'] = mediamosa_asset::enrich_response_has_streamable_mediafiles($items[0]['mediafiles']);
+    // Add streamable setting on asset.
+    $items[0]['has_streamable_mediafiles'] = mediamosa_asset::enrich_response_has_streamable_mediafiles($old_output ?  $items[0]['mediafiles'] : $items[0]['mediafiles']['mediafile']) ? 'TRUE' : 'FALSE';
 
     // Add to response.
     foreach ($items as $item) {

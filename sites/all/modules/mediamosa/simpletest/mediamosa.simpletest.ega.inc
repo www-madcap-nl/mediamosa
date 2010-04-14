@@ -1317,6 +1317,17 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   }
 
   /**
+   * Create asset metadata.
+   * Based on REST call /asset/$asset_id/metadata (POST)
+   */
+  protected function createAssetMetadataAppend($asset_id, array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    // Do append.
+    $a_parameters['action'] = 'append';
+
+    // Call create metadata.
+    $this->createAssetMetadata($asset_id, $a_parameters, $a_expected_result_ids, $do_internal);
+  }
+  /**
    * Create asset metadata definition.
    * Based on REST call /metadata_tag/create (POST)
    */

@@ -109,20 +109,20 @@ class MediaMosaAssetCollectionCQLTestCaseEga extends MediaMosaTestCaseEga {
     $this->createAssetMetadata($asset_id_6, array('title' => 'blaat en foo'));
 
     // Description.
-    $this->createAssetMetadata($asset_id_1, array('description' => 'PHP 5 allows developers to declare constructor methods for classes. Classes which have a constructor method call this method on each newly-created object, so it is suitable for any initialization that the object may need before it is used.'));
-    $this->createAssetMetadata($asset_id_2, array('description' => 'For backwards compatibility, if PHP 5 cannot find a __construct() function for a given class, it will search for the old-style constructor function, by the name of the class. Effectively, it means that the only case that would have compatibility issues is if the class had a method named __construct() which was used for different semantics.'));
-    $this->createAssetMetadata($asset_id_3, array('description' => 'PHP 5 introduces a destructor concept similar to that of other object-oriented languages, such as C++. "cannot find" The destructor method will be called as soon as all references to a particular object are removed or when the object is explicitly destroyed or in any order in shutdown sequence.'));
-    $this->createAssetMetadata($asset_id_4, array('description' => 'Since we are still in the __construct and __destruct section, alot of emphasis has been on __destruct - which I know nothing about. But I would like to show the power of parent::__construct for use with PHP\'s OOP polymorphic behavior (you\'ll see what this is very quickly'));
-    $this->createAssetMetadata($asset_id_5, array('description' => 'Notice how subclass definitions are really short - no variables or functions at all, and there is no private __construct() method anywhere?'));
-    $this->createAssetMetadata($asset_id_6, array('description' => 'we are still'));
+    $this->createAssetMetadataAppend($asset_id_1, array('description' => 'PHP 5 allows developers to declare constructor methods for classes. Classes which have a constructor method call this method on each newly-created object, so it is suitable for any initialization that the object may need before it is used.'));
+    $this->createAssetMetadataAppend($asset_id_2, array('description' => 'For backwards compatibility, if PHP 5 cannot find a __construct() function for a given class, it will search for the old-style constructor function, by the name of the class. Effectively, it means that the only case that would have compatibility issues is if the class had a method named __construct() which was used for different semantics.'));
+    $this->createAssetMetadataAppend($asset_id_3, array('description' => 'PHP 5 introduces a destructor concept similar to that of other object-oriented languages, such as C++. "cannot find" The destructor method will be called as soon as all references to a particular object are removed or when the object is explicitly destroyed or in any order in shutdown sequence.'));
+    $this->createAssetMetadataAppend($asset_id_4, array('description' => 'Since we are still in the __construct and __destruct section, alot of emphasis has been on __destruct - which I know nothing about. But I would like to show the power of parent::__construct for use with PHP\'s OOP polymorphic behavior (you\'ll see what this is very quickly'));
+    $this->createAssetMetadataAppend($asset_id_5, array('description' => 'Notice how subclass definitions are really short - no variables or functions at all, and there is no private __construct() method anywhere?'));
+    $this->createAssetMetadataAppend($asset_id_6, array('description' => 'we are still'));
 
     // Created.
-    $this->createAssetMetadata($asset_id_1, array('created' => '2008-06-06 00:15:00'));
-    $this->createAssetMetadata($asset_id_2, array('created' => '2007-06-06 10:15:00'));
-    $this->createAssetMetadata($asset_id_3, array('created' => '2006-06-06 20:15:00'));
-    $this->createAssetMetadata($asset_id_4, array('created' => '2008-01-01 15:15:00'));
-    $this->createAssetMetadata($asset_id_5, array('created' => '2008-04-01 10:15:00'));
-    $this->createAssetMetadata($asset_id_6, array('created' => '2008-08-01 10:15:00'));
+    $this->createAssetMetadataAppend($asset_id_1, array('created' => '2008-06-06 00:15:00'));
+    $this->createAssetMetadataAppend($asset_id_2, array('created' => '2007-06-06 10:15:00'));
+    $this->createAssetMetadataAppend($asset_id_3, array('created' => '2006-06-06 20:15:00'));
+    $this->createAssetMetadataAppend($asset_id_4, array('created' => '2008-01-01 15:15:00'));
+    $this->createAssetMetadataAppend($asset_id_5, array('created' => '2008-04-01 10:15:00'));
+    $this->createAssetMetadataAppend($asset_id_6, array('created' => '2008-08-01 10:15:00'));
 
     //
     // Check escape.

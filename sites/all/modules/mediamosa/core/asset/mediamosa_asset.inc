@@ -792,11 +792,17 @@ class mediamosa_asset {
   static public function enrich_response_has_streamable_mediafiles($mediafiles) {
     $has_streamable_mediafiles = FALSE;
 
-    foreach ($mediafiles['mediafile'] as $mf) {
-      $has_streamable_mediafiles = ($has_streamable_mediafiles || $mf['response_object_available'] == 'TRUE');
+    // Empty? Then no streamable media.
+    if (empty($mediafiles)) {
+      return FALSE;
     }
 
-    return ($has_streamable_mediafiles ? 'TRUE' : 'FALSE');
+    foreach ($mediafiles as $mediafile) {
+      $has_streamable_mediafiles = ($has_streamable_mediafiles || $mediafile['response_object_available'] == 'TRUE');
+    }
+
+    // Return boolean.
+    return $has_streamable_mediafiles;
   }
 
   /**

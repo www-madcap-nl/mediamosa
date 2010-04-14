@@ -147,8 +147,10 @@ class mediamosa_asset_metadata {
       switch ($action) {
         case 'replace':
           $do_delete = TRUE;
+
         case 'append':
           break;
+
         case 'update':
           if (isset($a_params[$name])) {
             $do_delete = TRUE;

@@ -420,7 +420,7 @@ abstract class mediamosa_rest_call {
     $app = mediamosa_app::get_by_appid($app_id);
 
     // Is at latest version?
-    if ($app[mediamosa_app_db::ACTIVE_VERSION] == mediamosa_version::LATEST) {
+    if ($app[mediamosa_app_db::ACTIVE_VERSION] == mediamosa_version::LATEST || empty($app[mediamosa_app_db::ACTIVE_VERSION])) {
       return FALSE;
     }
 
