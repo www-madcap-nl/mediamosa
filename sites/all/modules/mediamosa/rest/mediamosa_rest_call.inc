@@ -249,20 +249,20 @@ abstract class mediamosa_rest_call {
     }
 
     // Get the var setup.
-    $a_var_setup = $this->get_var_setup();
+    $var_setup = $this->get_var_setup();
 
     // Assert when failed.
-    assert($a_var_setup);
+    assert($var_setup);
 
     // @todo: make this an setting per app or else we are not 1.x compatible. Default should be FALSE.
     $this->check_for_unspecified = FALSE;// turned off for now
 
     // Check rest args.
-    $a_var_setup = $this->process_rest_args($a_var_setup);
-    assert($a_var_setup);
+    $var_setup = $this->process_rest_args($var_setup);
+    assert($var_setup);
 
     // Validate reg args.
-    $this->validate_rest_args($a_var_setup);
+    $this->validate_rest_args($var_setup);
 /*
  *  code turned off, during debug_high this code will crash unit test
  *  class MediaMosaAssetSupplementAddTestCaseEga().
@@ -316,8 +316,8 @@ abstract class mediamosa_rest_call {
   /**
    * Get the default vars we always expect in every rest call
    */
-  protected function get_var_setup_default(array $a_var_setup, $app_id_required = TRUE) {
-    $a_var_setup[mediamosa_rest_call::VARS][mediamosa_rest_call::APP_ID] = array(
+  protected function get_var_setup_default(array $var_setup, $app_id_required = TRUE) {
+    $var_setup[mediamosa_rest_call::VARS][mediamosa_rest_call::APP_ID] = array(
       self::VAR_TYPE => mediamosa_type::TYPE_APP_ID,
       self::VAR_IS_REQUIRED => ($app_id_required ? ($this->is_internal() ? self::VAR_IS_REQUIRED_NO : self::VAR_IS_REQUIRED_YES) : self::VAR_IS_REQUIRED_NO),
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
@@ -326,7 +326,7 @@ abstract class mediamosa_rest_call {
     );
 
     // @todo: remove when all calls are scanned, see next function.
-    $a_var_setup[mediamosa_rest_call::VARS][mediamosa_rest_call::IS_APP_ADMIN] = array(
+    $var_setup[mediamosa_rest_call::VARS][mediamosa_rest_call::IS_APP_ADMIN] = array(
       self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
       self::VAR_DESCRIPTION => mediamosa::t('NOT USED.'),
@@ -334,44 +334,44 @@ abstract class mediamosa_rest_call {
     );
 
     // add default parameter descriptions
-    foreach ($a_var_setup[mediamosa_rest_call::VARS] as $key => $value) {
+    foreach ($var_setup[mediamosa_rest_call::VARS] as $key => $value) {
       if (!isset($value[self::VAR_DESCRIPTION])) {
         if (isset($this->mediamosa_parameter_docs[$key])) {
-          $a_var_setup[mediamosa_rest_call::VARS][$key][self::VAR_DESCRIPTION] = $this->mediamosa_parameter_docs[$key];
+          $var_setup[mediamosa_rest_call::VARS][$key][self::VAR_DESCRIPTION] = $this->mediamosa_parameter_docs[$key];
         }
       }
     }
 
-    return $a_var_setup;
+    return $var_setup;
   }
 
   /**
    * Get the default vars we always expect in every rest call
    * plus is_app_admin
    */
-  protected function get_var_setup_app_admin(array $a_var_setup, $app_id_required = TRUE) {
-    $a_var_setup = $this->get_var_setup_default($a_var_setup, $app_id_required);
+  protected function get_var_setup_app_admin(array $var_setup, $app_id_required = TRUE) {
+    $var_setup = $this->get_var_setup_default($var_setup, $app_id_required);
 
     // add is_app_admin.
-    $a_var_setup[mediamosa_rest_call::VARS][mediamosa_rest_call::IS_APP_ADMIN] = array(
+    $var_setup[mediamosa_rest_call::VARS][mediamosa_rest_call::IS_APP_ADMIN] = array(
       self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
       self::VAR_DESCRIPTION => mediamosa::t('A boolean to indicate the call is done by the APP admin. It overrides user autorisation.'),
       self::VAR_DEFAULT_VALUE => 'false',
     );
 
-    return $a_var_setup;
+    return $var_setup;
   }
 
   /**
    * Enrich the VAR setup with the default LIMIT and OFFSET
    *
-   * @param array $a_var_setup
+   * @param array $var_setup
    *   Provide current array to merge.
    */
-  protected function get_var_setup_range(array $a_var_setup = array(), $limit_max = mediamosa_settings::LIMIT_MAX, $limit_default = mediamosa_settings::LIMIT_DEFAULT) {
+  protected function get_var_setup_range(array $var_setup = array(), $limit_max = mediamosa_settings::LIMIT_MAX, $limit_default = mediamosa_settings::LIMIT_DEFAULT) {
 
-    $a_var_setup[self::VARS][self::LIMIT] = array(
+    $var_setup[self::VARS][self::LIMIT] = array(
       self::VAR_TYPE => mediamosa_type::TYPE_LIMIT,
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_NO,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
@@ -382,7 +382,7 @@ abstract class mediamosa_rest_call {
       self::VAR_RANGE_END => $limit_max,
     );
 
-    $a_var_setup[self::VARS][self::OFFSET] = array(
+    $var_setup[self::VARS][self::OFFSET] = array(
       self::VAR_TYPE => mediamosa_type::TYPE_UINT,
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_NO,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
@@ -391,7 +391,7 @@ abstract class mediamosa_rest_call {
       self::VAR_DESCRIPTION => mediamosa::t('The starting items position in the result set.'),
     );
 
-    return $a_var_setup;
+    return $var_setup;
   }
 
   /**
@@ -411,7 +411,7 @@ abstract class mediamosa_rest_call {
   /**
    * Enrich the VAR setup with the default ORDER BY, ORDER_DIRECTION
    *
-   * @param array $a_var_setup
+   * @param array $var_setup
    *   Provide current array to merge.
    * @param string $default_order_by
    *  Default field to order on.
@@ -420,14 +420,14 @@ abstract class mediamosa_rest_call {
    * @param string $default_order_direction
    *  ASC (default) / DESC direction.
    * @return array
-   *  Returns the altered $a_var_setup.
+   *  Returns the altered $var_setup.
    */
-  protected function get_var_setup_order_by(array $a_var_setup = array(), $default_order_by = '', array $allowed_values_order_by = array(), $default_order_direction = mediamosa_type::ORDER_DIRECTION_ASC) {
+  protected function get_var_setup_order_by(array $var_setup = array(), $default_order_by = '', array $allowed_values_order_by = array(), $default_order_direction = mediamosa_type::ORDER_DIRECTION_ASC) {
 
     // Either must be set.
     assert(in_array($default_order_direction, array(mediamosa_type::ORDER_DIRECTION_ASC, mediamosa_type::ORDER_DIRECTION_DESC)));
 
-    $a_var_setup[self::VARS][self::ORDER_BY] = array(
+    $var_setup[self::VARS][self::ORDER_BY] = array(
       self::VAR_TYPE => mediamosa_type::TYPE_ALPHA_NUM,
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_NO,
       self::VAR_DEFAULT_VALUE => $default_order_by,
@@ -437,10 +437,10 @@ abstract class mediamosa_rest_call {
 
     // Add allowed values for order by.
     if (count($allowed_values_order_by)) {
-      $a_var_setup[self::VARS][self::ORDER_BY][self::VAR_ALLOWED_VALUES] = $allowed_values_order_by;
+      $var_setup[self::VARS][self::ORDER_BY][self::VAR_ALLOWED_VALUES] = $allowed_values_order_by;
     }
 
-    $a_var_setup[self::VARS][self::ORDER_DIRECTION] = array(
+    $var_setup[self::VARS][self::ORDER_DIRECTION] = array(
       self::VAR_TYPE => mediamosa_type::TYPE_ORDER_DIRECTION,
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_NO,
       self::VAR_DEFAULT_VALUE => $default_order_direction,
@@ -448,7 +448,7 @@ abstract class mediamosa_rest_call {
       self::VAR_DESCRIPTION => mediamosa::t('The direction of the result set.'),
     );
 
-    return $a_var_setup;
+    return $var_setup;
   }
 
   /**
@@ -661,14 +661,14 @@ abstract class mediamosa_rest_call {
   /**
    * Process the supplied parameters.
    *
-   * @param array $a_var_setup
+   * @param array $var_setup
    */
-  protected function process_rest_args(array $a_var_setup) {
+  protected function process_rest_args(array $var_setup) {
 
     // Clear it.
     $this->a_rest_args = array();
     foreach ($this->{self::URI_PARAMS} as $key_uri => $value_uri) {
-      if (!isset($a_var_setup[self::VARS][$key_uri]) && $this->check_for_unspecified) {
+      if (!isset($var_setup[self::VARS][$key_uri]) && $this->check_for_unspecified) {
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_UNSPECIFIED_VARIABLE, array('@var' => $key_uri));
       }
 
@@ -688,7 +688,7 @@ abstract class mediamosa_rest_call {
         }
         // Set by default off.
 
-        if (!isset($a_var_setup[self::VARS][$key_params]) && $this->check_for_unspecified) {
+        if (!isset($var_setup[self::VARS][$key_params]) && $this->check_for_unspecified) {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_UNSPECIFIED_VARIABLE, array('@var' => $key_params));
         }
 
@@ -711,7 +711,7 @@ abstract class mediamosa_rest_call {
         }
         // Set by default off.
 
-        if (!isset($a_var_setup[self::VARS][$key_get]) && $this->check_for_unspecified) {
+        if (!isset($var_setup[self::VARS][$key_get]) && $this->check_for_unspecified) {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_UNSPECIFIED_VARIABLE, array('@var' => $key_get));
         }
 
@@ -728,7 +728,7 @@ abstract class mediamosa_rest_call {
 
       // Now do the same to _POST.
       foreach ($_POST as $key_post => $value_post) {
-        if (!isset($a_var_setup[self::VARS][$key_post]) && $this->check_for_unspecified) {
+        if (!isset($var_setup[self::VARS][$key_post]) && $this->check_for_unspecified) {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_UNSPECIFIED_VARIABLE, array('@var' => $key_post));
         }
 
@@ -745,7 +745,7 @@ abstract class mediamosa_rest_call {
     }
 
     // All args are now known. Now walk through the setup and set the defaults.
-    foreach ($a_var_setup[self::VARS] as $param => &$a_var) {
+    foreach ($var_setup[self::VARS] as $param => &$a_var) {
 
       // Set by default off.
       $this->a_rest_args[$param][self::PARAM_ISSET_DEFAULT] = FALSE; // Set by default
@@ -828,15 +828,15 @@ abstract class mediamosa_rest_call {
       $this->a_rest_args[$param][self::PARAM_ALLOWED_VALUES] = isset($a_var[self::VAR_ALLOWED_VALUES]) ? $a_var[self::VAR_ALLOWED_VALUES] : array();
     }
 
-    return $a_var_setup;
+    return $var_setup;
   }
 
   /**
    * Validate the supplied parameters and type validation.
    *
-   * @param array $a_var_setup
+   * @param array $var_setup
    */
-  protected function validate_rest_args(array $a_var_setup) {
+  protected function validate_rest_args(array $var_setup) {
     foreach ($this->a_rest_args as $param => $a_param) {
       if (!isset($a_param[self::PARAM_TYPE])) {
         unset($this->a_rest_args[$param]); // set but not in var_set_up, unset.

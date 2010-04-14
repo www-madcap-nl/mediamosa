@@ -48,7 +48,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
   // Array with mediafile ids of mediafiles that have files that need to be
   // deleted on teardown.
-  private $a_mediafiles_cleanup = array();
+  private $mediafiles_cleanup = array();
 
   // ------------------------------------------------------------------ Functions.
   /**
@@ -134,19 +134,19 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   protected function tearDown() {
 
     // Delete possible uploaded files.
-    foreach ($this->a_mediafiles_cleanup as $mediafile_id) {
+    foreach ($this->mediafiles_cleanup as $mediafile_id) {
       // Get the mediafile.
-      $a_mediafile = mediamosa_asset_mediafile::get($mediafile_id);
+      $mediafile = mediamosa_asset_mediafile::get($mediafile_id);
 
       // Delete uploaded file by deleting the mediafile.
       mediamosa_asset_mediafile::delete($mediafile_id);
 
       // Check if the file has been deleted.
-      $this->assertFalse(file_exists(mediamosa_configuration_storage::mediafile_filename_get($a_mediafile)), 'File has been deleted.');
+      $this->assertFalse(file_exists(mediamosa_configuration_storage::mediafile_filename_get($mediafile)), 'File has been deleted.');
     }
 
     // Clean up array.
-    $this->a_mediafiles_cleanup = array();
+    $this->mediafiles_cleanup = array();
 
     // Call parent.
     parent::tearDown();
@@ -158,8 +158,8 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    */
   protected function deleteFromCleanUp($mediafile_id) {
     // Delete the unnecessary mediafile_id from the clean up array.
-    if (($key = array_search($mediafile_id, $this->a_mediafiles_cleanup)) !== FALSE) {
-      unset($this->a_mediafiles_cleanup[$key]);
+    if (($key = array_search($mediafile_id, $this->mediafiles_cleanup)) !== FALSE) {
+      unset($this->mediafiles_cleanup[$key]);
     }
   }
 
@@ -168,14 +168,14 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * @param $mediafile_id
    */
   protected function addToCleanUp($mediafile_id) {
-    if (($key = array_search($mediafile_id, $this->a_mediafiles_cleanup)) === FALSE) {
+    if (($key = array_search($mediafile_id, $this->mediafiles_cleanup)) === FALSE) {
       // Check whether the file exists or not.
       $this->assertTrue(
         mediamosa_io::file_exists(mediamosa_configuration_storage::mediafile_id_filename_get($mediafile_id)),
         T('Mediafile exists (mediafile_id = @mediafile_id)', array('@mediafile_id' => $mediafile_id))
       );
       // Add to clean up.
-      $this->a_mediafiles_cleanup[] = $mediafile_id;
+      $this->mediafiles_cleanup[] = $mediafile_id;
     }
   }
 
@@ -493,7 +493,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    */
   protected function uploadTestFileForMediafile($asset_id, $mediafile_id) {
     // Create upload ticket.
-    $a_uploadticket = $this->createMediafileUploadTicket($mediafile_id);
+    $uploadticket = $this->createMediafileUploadTicket($mediafile_id);
 
     $result = mediamosa_db::db_query('SELECT * FROM {mediamosa_ticket}');
     foreach ($result as $row) {
@@ -501,14 +501,14 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     }
 
     // Check ticket link etc.
-    $this->assertTrue(!empty($a_uploadticket['action']), 'action set');
-    $this->assertTrue(!empty($a_uploadticket['uploadprogress_url']), 'uploadprogress_url set');
+    $this->assertTrue(!empty($uploadticket['action']), 'action set');
+    $this->assertTrue(!empty($uploadticket['uploadprogress_url']), 'uploadprogress_url set');
 
     // Get link to upload file.
     $filename = self::getTestVideo();
 
     // URL.
-    $action = $a_uploadticket['action'];
+    $action = $uploadticket['action'];
 
     // File.
     $a_post['file'] = '@' . $filename;
@@ -520,7 +520,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $out = $this->curlExec(array(CURLOPT_URL => $action, CURLOPT_POST => TRUE, CURLOPT_POSTFIELDS => $a_post, CURLOPT_HTTPHEADER => $headers));
 
     // Add for deletion.
-    $this->a_mediafiles_cleanup[] = $mediafile_id;
+    $this->mediafiles_cleanup[] = $mediafile_id;
 
     // Replace original page output with new output from redirected page(s).
     $new = $this->checkForMetaRefresh();
@@ -552,13 +552,103 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $this->var_export($a_job_upload, 'Dump Job Upload');
 
     // Get the mediafile.
-    $a_mediafile = mediamosa_asset_mediafile::get($mediafile_id);
+    $mediafile = mediamosa_asset_mediafile::get($mediafile_id);
 
     // Check if the file has been uploaded.
-    $this->assertTrue(file_exists(mediamosa_configuration_storage::mediafile_filename_get($a_mediafile)), 'File has been uploaded.');
+    $this->assertTrue(file_exists(mediamosa_configuration_storage::mediafile_filename_get($mediafile)), 'File has been uploaded.');
 
     // Lets return the filename.
-    return mediamosa_configuration_storage::mediafile_filename_get($a_mediafile);
+    return mediamosa_configuration_storage::mediafile_filename_get($mediafile);
+  }
+
+  /**
+   * Basic upload of still.
+   */
+  protected function uploadTestStill($order = 0, $default = false) {
+    // Create an asset.
+    $asset_id = $this->createAsset();
+
+    // Create mediafile.
+    $mediafile_id = $this->createMediafile($asset_id);
+
+    // Create upload ticket.
+    $uploadticket = $this->createMediafileUploadTicket($mediafile_id);
+
+    $result = mediamosa_db::db_query('SELECT * FROM {mediamosa_ticket}');
+    foreach ($result as $row) {
+      $this->var_export($row, 'Dump Ticket');
+    }
+
+    // Check ticket link etc.
+    $this->assertTrue(!empty($uploadticket['action']), 'action set');
+    $this->assertTrue(!empty($uploadticket['uploadprogress_url']), 'uploadprogress_url set');
+    $this->assertTrue(!empty($uploadticket['ticket_id']), 'ticket_id set');
+
+    // Get link to upload file.
+    $filename = self::getTestImage_NotBlackJpg();
+
+    // URL.
+    // Still upload does not use the action from the upload ticket.
+    $uri = strtr('asset/@asset_id/still/upload', array('@asset_id' => $asset_id));
+
+    // Post parameters.
+    $postfields['file'] = '@' . $filename;
+    $postfields['mediafile_id'] = $mediafile_id;
+    $postfields['upload_ticket'] = $uploadticket['ticket_id'];
+    $postfields['order'] = $order;
+    $postfields['default'] = $default ? 'true' : 'false';
+
+    // No headers.
+    $headers = array();
+
+    // Upload the test file.
+    $out = $this->curlExec(array(CURLOPT_URL => url($uri, array('absolute' => TRUE)), CURLOPT_POST => TRUE, CURLOPT_POSTFIELDS => $postfields, CURLOPT_HTTPHEADER => $headers));
+
+    // Add for deletion.
+    $this->mediafiles_cleanup[] = $mediafile_id;
+
+    // Replace original page output with new output from redirected page(s).
+    $new = $this->checkForMetaRefresh();
+    if ($new) {
+      $out = $new;
+    }
+
+    // Our upload.
+    $this->verbose('POST request to: ' . url($uri, array('absolute' => TRUE)) .
+                   '<hr />Ending URL: ' . $this->getUrl() .
+                   '<hr />Fields: ' . highlight_string('<?php ' . var_export($postfields, TRUE), TRUE) .
+                   '<hr />' . $out);
+
+    list($response, $data) = explode("\r\n\r\n", $out, 2);
+    $response = preg_split("/\r\n|\n|\r/", $response);
+
+    try {
+      $xml = new SimpleXMLElement($data);
+    }
+    catch (Exception $e) {
+      $this->assert(FALSE, 'simple XML creation failed! ' . $e->getMessage());
+    }
+
+    // Get the still ID.
+    $still_id = (string)$xml->items->item->still_id;
+
+    // Parse the response status line.
+    list($protocol, $code, $status_message) = explode(' ', trim(array_shift($response)), 3);
+
+    // Check 200 resonse.
+    $this->assertTrue($code == 200, 'Upload HTML response 200.');
+
+    // Get path to still.
+    $still_filename = mediamosa_configuration_storage::mediafile_still_filename_get($still_id);
+
+    // Add to unlinks.
+    $this->unlinks[] = $still_filename;
+
+    // Check if the file has been uploaded.
+    $this->assertTrue(file_exists($still_filename), 'File has been uploaded.');
+
+    // Lets return the mediafile_id for now.
+    return array('asset_id' => $asset_id, 'mediafile_id' => $mediafile_id, 'filename' => $still_filename);
   }
 
   /**
@@ -758,16 +848,16 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     }
 
     // Get response.
-    $a_mediafile = mediamosa_lib::simplexml2array($response['xml']->items->item[0]);
+    $mediafile = mediamosa_lib::simplexml2array($response['xml']->items->item[0]);
 
     // Did we get something?
     $this->assertTrue(
-      $a_mediafile[mediamosa_asset_mediafile_db::ID] == $mediafile_id,
+      $mediafile[mediamosa_asset_mediafile_db::ID] == $mediafile_id,
       'Got the mediafile'
     );
 
     // Return data.
-    return $a_mediafile;
+    return $mediafile;
   }
 
   /**

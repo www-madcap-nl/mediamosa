@@ -131,6 +131,9 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     // Unlink files.
     foreach ($this->unlinks as $filename) {
       mediamosa_io::unlink($filename);
+
+      // Show deletion.
+      $this->pass(t('File @filename deleted.', array('@filename' => $filename)));
     }
 
     // Clean up...

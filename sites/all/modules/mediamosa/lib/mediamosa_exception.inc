@@ -82,7 +82,7 @@ class mediamosa_exception extends Exception {
 class mediamosa_exception_redirect_and_exit extends mediamosa_exception {
   private $redirect_uri;
 
-  public function __construct($redirect_uri, $i_errorcode, $msg = '', $severity = self::MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL) {
+  public function __construct($redirect_uri, $i_errorcode, $msg = '', $severity = self::MEDIAMOSA_EXCEPTION_SEVERITY_LOW) {
     $this->redirect_uri = $redirect_uri;
 
     parent::__construct($i_errorcode, $msg, $severity);

@@ -51,32 +51,32 @@ class mediamosa_asset_mediafile_upload {
    * 1.x: vpx_upload_handle_file
    *
    */
-  static public function handle_upload($ticket_id, $is_method_put, array $a_trancode_profiles, $retranscode, $transcode_inherits_acl, $tag, $create_still, $a_still_parameters, $completed_url, $completed_transcoding_url, $filename_put) {
+  static public function handle_upload($ticket_id, $is_method_put, $tag, $completed_url, $filename_put, array $trancode_profiles = array(), $retranscode = FALSE, $transcode_inherits_acl = FALSE, $create_still = FALSE, array $still_parameters = array(), $completed_transcoding_url = '') {
 
     // Set to false.
     $is_app_admin = false;
 
     // Get the ticket.
-    $a_ticket = mediamosa_ticket::get_valid_upload($ticket_id);
+    $ticket = mediamosa_ticket::get_valid_upload($ticket_id);
 
-    if (empty($a_ticket)) {
+    if (empty($ticket)) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INVALID_UPLOAD_TICKET);
     }
 
     // Get the app id from the ticket.
-    $app_id = $a_ticket[mediamosa_ticket_db::APP_ID];
+    $app_id = $ticket[mediamosa_ticket_db::APP_ID];
 
     // Remove ticket.
     mediamosa_ticket::delete($ticket_id);
 
     // Check user quota.
-    mediamosa_user::must_have_user_quota($app_id, $a_ticket[mediamosa_ticket_db::OWNER_ID], $a_ticket[mediamosa_ticket_db::GROUP_ID]);
+    mediamosa_user::must_have_user_quota($app_id, $ticket[mediamosa_ticket_db::OWNER_ID], $ticket[mediamosa_ticket_db::GROUP_ID]);
 
     // Check if mediafile exists.
-    $a_asset_mediafile = mediamosa_asset_mediafile::must_exists($a_ticket[mediamosa_ticket_db::MEDIAFILE_ID]);
+    $asset_mediafile = mediamosa_asset_mediafile::must_exists($ticket[mediamosa_ticket_db::MEDIAFILE_ID]);
 
     // Must be original.
-    if (!mediamosa_asset_mediafile::is_original($a_asset_mediafile)) {
+    if (!mediamosa_asset_mediafile::is_original($asset_mediafile)) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_UPLOAD_TARGET_IS_NOT_AN_ORIGINAL_FILE);
     }
 
@@ -88,10 +88,10 @@ class mediamosa_asset_mediafile_upload {
     $file_size = $is_method_put ? $_SERVER['CONTENT_LENGTH'] : $_FILES['file']['size'];
 
     // Create job.
-    $job_id = mediamosa_job::create_job_upload($app_id,  $a_ticket[mediamosa_ticket_db::OWNER_ID], $a_ticket[mediamosa_ticket_db::GROUP_ID], $is_app_admin, $a_ticket[mediamosa_ticket_db::MEDIAFILE_ID], $file_size, $retranscode, $create_still, $a_still_parameters);
+    $job_id = mediamosa_job::create_job_upload($app_id,  $ticket[mediamosa_ticket_db::OWNER_ID], $ticket[mediamosa_ticket_db::GROUP_ID], $is_app_admin, $ticket[mediamosa_ticket_db::MEDIAFILE_ID], $file_size, $retranscode, $create_still, $still_parameters);
 
     // Build the filename.
-    $filename = mediamosa_configuration_storage::mediafile_id_filename_get($a_ticket[mediamosa_ticket_db::MEDIAFILE_ID]);
+    $filename = mediamosa_configuration_storage::mediafile_id_filename_get($ticket[mediamosa_ticket_db::MEDIAFILE_ID]);
 
     // Create possible missing directories.
     mediamosa_io::mkdir(mediamosa_io::dirname($filename));
@@ -107,25 +107,8 @@ class mediamosa_asset_mediafile_upload {
       $success = (isset($_FILES['file']) && move_uploaded_file($_FILES['file']['tmp_name'], $filename));
     }
 
-    // (re)build the completed_url based on success.
-    if (!empty($completed_url)) {
-      $a_query = array();
-
-      $pos = strpos($completed_url, '?');// Lets see if there is a http query
-      if ($pos !== FALSE) {
-        if (strlen($completed_url) > $pos + 1) {
-          parse_str(substr($completed_url, $pos+1), $a_query);
-        }
-
-        // Strip the query_string.
-        $completed_url = substr($completed_url, 0, $pos);
-      }
-
-      $a_query['upload_ticket'] = $ticket_id;
-      $a_query['status_code'] = $success ? mediamosa_error::ERRORCODE_OKAY : mediamosa_error::ERRORCODE_CANNOT_COPY_MEDIAFILE;
-
-      $completed_url .= '?' . http_build_query($a_query, '', '&');
-    }
+    // Enrich completed URL based on success.
+    $completed_url = self::enrich_completed_url($completed_url, $ticket_id, $success);
 
     // When upload has failed, then set the upload job on 'failed'.
     if (!$success) {
@@ -153,7 +136,7 @@ class mediamosa_asset_mediafile_upload {
     );
 
     // Update mediafile.
-    mediamosa_asset_mediafile::update($app_id, $a_ticket[mediamosa_ticket_db::MEDIAFILE_ID], $a_ticket[mediamosa_ticket_db::OWNER_ID], $a_fields);
+    mediamosa_asset_mediafile::update($app_id, $ticket[mediamosa_ticket_db::MEDIAFILE_ID], $ticket[mediamosa_ticket_db::OWNER_ID], $a_fields);
 
     // Update the job.
     mediamosa_job::update_progress_upload($job_id, $file_size);
@@ -162,16 +145,16 @@ class mediamosa_asset_mediafile_upload {
     self::trigger_completion_url($completed_url);
 
     // Start transcodes.
-    foreach ($a_trancode_profiles as $profile_id) {
+    foreach ($trancode_profiles as $profile_id) {
       try {
         mediamosa_job::create_job_transcode(
           $app_id,
-          $a_ticket[mediamosa_ticket_db::OWNER_ID],
-          $a_ticket[mediamosa_ticket_db::GROUP_ID],
+          $ticket[mediamosa_ticket_db::OWNER_ID],
+          $ticket[mediamosa_ticket_db::GROUP_ID],
           $is_app_admin,
-          $a_ticket[mediamosa_ticket_db::MEDIAFILE_ID],
+          $ticket[mediamosa_ticket_db::MEDIAFILE_ID],
           $create_still,
-          $a_still_parameters,
+          $still_parameters,
           '', '', '', // file_ext, command, tool set by profile ID
           $profile_id,
           $completed_transcoding_url
@@ -181,6 +164,121 @@ class mediamosa_asset_mediafile_upload {
         // ignore.
       }
     }
+  }
+
+  /**
+   * Upload still
+   *
+   * @param array $mediafile
+   * @param string $ticket_id
+   * @param boolean $is_method_put
+   * @param string $tag
+   * @param string $completed_url
+   * @param string $filename_put
+   */
+  static public function handle_upload_still(array $mediafile, $ticket_id, $is_method_put, $tag, $completed_url, $order, $default, $filename_put) {
+
+    // Set to false.
+    $is_app_admin = false;
+
+    // Get the ticket.
+    $ticket = mediamosa_ticket::get_valid_upload($ticket_id);
+
+    if (empty($ticket)) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INVALID_UPLOAD_TICKET);
+    }
+
+    // Get the app id from the ticket.
+    $app_id = $ticket[mediamosa_ticket_db::APP_ID];
+
+    // Remove ticket.
+    mediamosa_ticket::delete($ticket_id);
+
+    // Check user quota.
+    mediamosa_user::must_have_user_quota($app_id, $ticket[mediamosa_ticket_db::OWNER_ID], $ticket[mediamosa_ticket_db::GROUP_ID]);
+
+    // Check if mediafile exists.
+    mediamosa_asset_mediafile::must_exists($ticket[mediamosa_ticket_db::MEDIAFILE_ID]);
+
+    // Must be on.
+    mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_UPLOAD, array($app_id));
+
+    // file_size depends on method used.
+    // FIXME: $_FILES might be posted as an array in a array (more than one file uploaded).
+    $file_size = $is_method_put ? $_SERVER['CONTENT_LENGTH'] : $_FILES['file']['size'];
+
+    // Check filesize.
+    if ($file_size > mediamosa_settings::STILL_FILE_MAXIMUM) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_IMAGE_FILE_TOO_BIG, array('@filesize' => mediamosa_settings::STILL_FILE_MAXIMUM));
+    }
+
+    // Generate still_id.
+    $still_id = mediamosa_db::uuid($app_id);
+
+    // Get path to still.
+    $still_filename = mediamosa_configuration_storage::mediafile_still_filename_get($still_id);
+
+    // Create possible missing directories.
+    mediamosa_io::mkdir(mediamosa_io::dirname($still_filename));
+
+    if ($is_method_put) {
+      // PUT.
+      $success = self::handle_upload_put($still_filename);
+    }
+    else {
+      // Expecting POST here.
+
+      // FIXME: $_FILES might be posted as an array in a array (more than one file uploaded).
+      $success = (isset($_FILES['file']) && move_uploaded_file($_FILES['file']['tmp_name'], $still_filename));
+    }
+
+    // Enrich completed URL based on success.
+    $completed_url = self::enrich_completed_url($completed_url, $ticket_id, $success);
+
+    // When upload has failed, then set the upload job on 'failed'.
+    if (!$success) {
+      // Trigger URL.
+      self::trigger_completion_url($completed_url);
+
+      // Throw exception.
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CANNOT_COPY_MEDIAFILE);
+    }
+
+    // Create still.
+    mediamosa_asset_mediafile_still::create($mediafile['asset_id'], $mediafile['asset_id']/*no more asset_id_root*/, $still_id, $ticket[mediamosa_ticket_db::APP_ID], $ticket[mediamosa_ticket_db::OWNER_ID], $ticket[mediamosa_ticket_db::GROUP_ID], $order, $default, array('still_type' => 'PICTURE'), NULL, $mediafile[mediamosa_asset_mediafile_db::ID], $tag);
+
+    // Trigger URL.
+    self::trigger_completion_url($completed_url);
+
+    // Done.
+    return $still_id;
+  }
+
+  /**
+   * Enrich completed url based on success.
+   */
+  static public function enrich_completed_url($completed_url, $ticket_id, $success) {
+    // (re)build the completed_url based on success.
+    if (!empty($completed_url)) {
+      $http_query = array();
+
+      $pos = strpos($completed_url, '?');// Lets see if there is a http query
+      if ($pos !== FALSE) {
+        if (strlen($completed_url) > $pos + 1) {
+          parse_str(substr($completed_url, $pos+1), $http_query);
+        }
+
+        // Strip the query_string.
+        $completed_url = substr($completed_url, 0, $pos);
+      }
+
+      $http_query['upload_ticket'] = $ticket_id;
+      $http_query['status_code'] = $success ? mediamosa_error::ERRORCODE_OKAY : mediamosa_error::ERRORCODE_CANNOT_COPY_MEDIAFILE;
+
+      $completed_url .= '?' . http_build_query($http_query, '', '&');
+    }
+
+    return $completed_url;
   }
 
   /**
@@ -208,7 +306,7 @@ class mediamosa_asset_mediafile_upload {
    * @param integer $job_id
    *  Job ID.
    */
-  static protected function handle_upload_put($filename, $job_id) {
+  static protected function handle_upload_put($filename, $job_id = 0) {
     $filename_after_upload = NULL;
 
     // If mediafile exists, rename it.
@@ -217,11 +315,13 @@ class mediamosa_asset_mediafile_upload {
       $filename .= '.upload_temp';
     }
 
-    // Get complete job.
-    $a_job_ext = mediamosa_job::get_job_ext($job_id);
+    if ($job_id) {
+      // Get complete job.
+      $job_ext = mediamosa_job::get_job_ext($job_id);
 
-    // Change status to inprogress.
-    mediamosa_job::update_status($a_job_ext, mediamosa_job_db::JOB_STATUS_INPROGRESS, '0.000');
+      // Change status to inprogress.
+      mediamosa_job::update_status($job_ext, mediamosa_job_db::JOB_STATUS_INPROGRESS, '0.000');
+    }
 
     // Open the new file
     $filename_file = @fopen($filename, 'w');
@@ -235,30 +335,31 @@ class mediamosa_asset_mediafile_upload {
       throw new mediamosa_exception(0, 'Unable to open stream', mediamosa_exception::MEDIAMOSA_EXCEPTION_SEVERITY_HIGH);
     }
 
-    $i_byte_count = 0;
-    $last_update = $i_timestamp = time();
+    $written_bytes = 0;
+    $last_update = $timestamp = time();
 
     /// Read a chunk.
     $kb = fread($stream, mediamosa_settings::UPLOAD_PUT_CHUNK_SIZE);
 
     while ($kb) {
-      if (!@fwrite($filename_file, $kb, mediamosa_settings::UPLOAD_PUT_CHUNK_SIZE)) {
+      $written_bytes += @fwrite($filename_file, $kb);
+      if (!$written_bytes) {
         return FALSE;
       }
 
-      $i_byte_count += mediamosa_settings::UPLOAD_PUT_CHUNK_SIZE;
-
-      if ($last_update != time() && ((time() - $i_timestamp) % mediamosa_settings::UPLOAD_PROGRESS_INTERVAL) == 0) {
+      if ($last_update != time() && ((time() - $timestamp) % mediamosa_settings::UPLOAD_PROGRESS_INTERVAL) == 0) {
         $last_update = time();
 
-        // Update the upload job progress.
-        mediamosa_job::update_progress_upload($job_id, $i_byte_count);
+        if ($job_id) {
+          // Update the upload job progress.
+          mediamosa_job::update_progress_upload($job_id, $written_bytes);
+        }
       }
 
       // Read a chunk.
       $kb = fread($stream, mediamosa_settings::UPLOAD_PUT_CHUNK_SIZE);
 
-      // Hmm why every loop?
+      // Set header.
       header('HTTP/1.1 201 Created');
     }
 
@@ -277,7 +378,7 @@ class mediamosa_asset_mediafile_upload {
   /**
    * Return the status of the upload using given ID and APC.
    *
-   * @param unknown_type $id
+   * @param string $id
    */
   static public function get_uploadprogress($id) {
 
@@ -320,16 +421,4 @@ class mediamosa_asset_mediafile_upload {
 
     return $a_status;
   }
-
-/*
-function vpx_upload_handle_file($a_args) {
-  if ($a_args['get']['still_upload'] == 'TRUE' || $a_args['get']['type'] == 'still') {
-    if (!$a_args['get']['mediafile_id']) {
-      $a_args['get']['mediafile_id'] = $a_args['uri']['mediafile_id'];
-    }
-    return vpx_upload_handle_still($a_args);
-  }
-
-}
-*/
 }

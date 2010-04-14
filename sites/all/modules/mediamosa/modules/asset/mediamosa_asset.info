@@ -55,6 +55,10 @@ files[] = mediafile/still/mediamosa_asset_mediafile_still.delete.test
 files[] = mediafile/still/download/mediamosa_asset_mediafile_still_download.rest.inc
 files[] = mediafile/still/download/mediamosa_asset_mediafile_still_download.test
 
+; Mediafile Still Upload.
+files[] = mediafile/still/upload/mediamosa_asset_mediafile_still_upload.rest.inc
+files[] = mediafile/still/upload/mediamosa_asset_mediafile_still_upload.test
+
 ; Mediafile Upload.
 files[] = mediafile/upload/mediamosa_asset_mediafile_upload.rest.inc
 files[] = mediafile/upload/mediamosa_asset_mediafile_upload.test

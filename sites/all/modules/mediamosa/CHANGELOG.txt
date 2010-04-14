@@ -91,7 +91,8 @@ Mediamosa 2.1.0
 - asset/delete REST call now returns failures per failed asset and their cause.
 - Fixed problems editing the transcode profile.
 - Fixed migration problem on transcode profiles.
-
+- REST call mediafile/$mediafile_id/uploadticket/create now also returns the
+  ticket_id as seperate value.
 
 MediaMosa.1.0
 ---------------
