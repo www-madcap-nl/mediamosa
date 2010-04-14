@@ -135,7 +135,7 @@ class mediamosa_asset_mediafile {
    *  Include extended EGA Play Urls. (WAS hack is_oai on _POST/_GET (!))
    * @param boolean $show_stills
    */
-  static public function enrich_response_mediafile(array $mediafile_ids, $mixed_app_id, $is_oai, $show_stills = TRUE) {
+  static public function enrich_response_mediafile(array $mediafile_ids, $mixed_app_id, $is_oai, $show_stills = TRUE, $old_output = FALSE) {
 
     // Can be empty or null.
     if (empty($mediafile_ids) || is_null(reset($mediafile_ids))) {
@@ -327,8 +327,13 @@ class mediamosa_asset_mediafile {
         $items[$mediafile_id][mediamosa_asset_mediafile_db::ASSET_ID_ROOT]
       );
 
-      // Add to result.
-      $items_result['mediafile']['#' . serialize(array('id' => $i++))] = $items[$mediafile_id];
+      if ($old_output) {
+        $items_result['mediafile_' . $i++] = $items[$mediafile_id];
+      }
+      else {
+        // Add to result.
+        $items_result['mediafile']['#' . serialize(array('id' => $i++))] = $items[$mediafile_id];
+      }
     }
 
     return $items_result;

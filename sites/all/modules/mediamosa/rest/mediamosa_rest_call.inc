@@ -202,14 +202,14 @@ abstract class mediamosa_rest_call {
     $this->{self::DEFAULT_PARAMS_VALUES} = isset($a_rest_call[self::DEFAULT_PARAMS_VALUES]) ? $a_rest_call[self::DEFAULT_PARAMS_VALUES] : array();
   }
 
-  // ------------------------------------------------------------------ Functions (abstract).
+  // ----------------------------------------------------- Functions (abstract).
 
   // Get the rest input info.
   abstract function get_var_setup();
   // The execution of the call.
   abstract function do_call();
 
-  // ------------------------------------------------------------------ Functions (public).
+  // ------------------------------------------------------- Functions (public).
   /**
    * Dispatch the rest call processing.
    */
@@ -409,6 +409,26 @@ abstract class mediamosa_rest_call {
   }
 
   /**
+   * Return the active version to use for APP.
+   *
+   * Returns NULL for latest version or array
+   * (@see mediamosa_version::mediamosa_version())
+   *
+   * @param integer $app_id
+   */
+  protected function app_active_version($app_id) {
+    $app = mediamosa_app::get_by_appid($app_id);
+
+    // Is at latest version?
+    if ($app[mediamosa_app_db::ACTIVE_VERSION] == mediamosa_version::LATEST) {
+      return FALSE;
+    }
+
+    // Return in array.
+    return mediamosa_version::get_version($app[mediamosa_app_db::ACTIVE_VERSION]);
+  }
+
+  /**
    * Enrich the VAR setup with the default ORDER BY, ORDER_DIRECTION
    *
    * @param array $var_setup
@@ -528,7 +548,8 @@ abstract class mediamosa_rest_call {
 
   /**
    * Will return TRUE if the param was set by POST/GET/URI.
-   * If the param is set any other way (like default value or set_param), it will return FALSE.
+   * If the param is set any other way (like default value or set_param), it
+   * will return FALSE.
    *
    * @param string $param
    * @return boolean
@@ -657,7 +678,7 @@ abstract class mediamosa_rest_call {
   public function is_method_put() {
     return $this->get_method() == self::METHOD_PUT;
   }
-  // ------------------------------------------------------------------ Functions (protected).
+  // ---------------------------------------------------- Functions (protected).
   /**
    * Process the supplied parameters.
    *

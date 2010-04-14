@@ -75,7 +75,7 @@ class mediamosa_node_mediamosa_app {
     }
 
     // Must be first.
-    $versions['LATEST'] = t('Latest');
+    $versions[mediamosa_version::LATEST] = t('Latest');
 
     // Sort on version.
     krsort($versions);
@@ -435,7 +435,7 @@ function mediamosa_app_form($node, &$form_state) {
     '#title' => t('Select active version'),
     '#description' => t('Version of the rest calls to execute.'),
     '#options' => mediamosa_node_mediamosa_app::app_get_all_versions(),
-    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::ACTIVE_VERSION, $node, 'LATEST'),
+    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::ACTIVE_VERSION, $node, mediamosa_version::LATEST),
   );
 
   $form['urls'] = array(
