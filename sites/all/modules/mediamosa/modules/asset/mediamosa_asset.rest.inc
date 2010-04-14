@@ -791,6 +791,8 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
     // Now enrich the output.
     $items[0]['mediafiles'] = mediamosa_asset_mediafile::enrich_response_mediafile($mediafile_ids, $app_ids, $is_oai, $show_stills, $old_output);
 
+    $items[0]['has_streamable_mediafiles'] = mediamosa_asset::enrich_response_has_streamable_mediafiles($items[0]['mediafiles']);
+
     // Add to response.
     foreach ($items as $item) {
       $mediamosa->add_item($item);

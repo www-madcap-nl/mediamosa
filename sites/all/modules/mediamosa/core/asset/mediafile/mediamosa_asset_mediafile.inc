@@ -32,6 +32,8 @@ class mediamosa_asset_mediafile {
 
   // ------------------------------------------------------------------ Consts.
   const UNKNOWN_FILENAME = 'Filename_not_set';
+  const RESPONSE_TRUE = 'TRUE';
+  const RESPONSE_FALSE = 'FALSE';
 
   // ------------------------------------------------------------------ Static Functions.
   /**
@@ -135,7 +137,7 @@ class mediamosa_asset_mediafile {
    *  Include extended EGA Play Urls. (WAS hack is_oai on _POST/_GET (!))
    * @param boolean $show_stills
    */
-  static public function enrich_response_mediafile(array $mediafile_ids, $mixed_app_id, $is_oai, $show_stills = TRUE, $old_output = FALSE) {
+  static public function enrich_response_mediafile(array $mediafile_ids, $mixed_app_id, $is_oai, $show_stills = TRUE) {
 
     // Can be empty or null.
     if (empty($mediafile_ids) || is_null(reset($mediafile_ids))) {
@@ -327,13 +329,17 @@ class mediamosa_asset_mediafile {
         $items[$mediafile_id][mediamosa_asset_mediafile_db::ASSET_ID_ROOT]
       );
 
-      if ($old_output) {
-        $items_result['mediafile_' . $i++] = $items[$mediafile_id];
-      }
-      else {
-        // Add to result.
-        $items_result['mediafile']['#' . serialize(array('id' => $i++))] = $items[$mediafile_id];
-      }
+      // Response object/plain/metafile available.
+      $a_response = mediamosa_server::get_streaming_info($items[$mediafile_id]['metadata']['container_type'], $items[$mediafile_id]['metadata']['video_codec'], $items[$mediafile_id]['uri']);
+      // Object.
+      $items[$mediafile_id]['response_object_available'] = ($a_response['response_object_available'] ? self::RESPONSE_TRUE : self::RESPONSE_FALSE);
+      // Plain.
+      $items[$mediafile_id]['response_plain_available'] = ($a_response['response_plain_available'] ? self::RESPONSE_TRUE : self::RESPONSE_FALSE);
+      // Metafile.
+      $items[$mediafile_id]['response_metafile_available'] = ($a_response['response_metafile_available'] ? self::RESPONSE_TRUE : self::RESPONSE_FALSE);
+
+      // Add to result.
+      $items_result['mediafile']['#' . serialize(array('id' => $i++))] = $items[$mediafile_id];
     }
 
     return $items_result;
