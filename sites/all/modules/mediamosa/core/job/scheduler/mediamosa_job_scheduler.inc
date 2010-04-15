@@ -853,7 +853,7 @@ class mediamosa_job_scheduler {
       return $response_data->header->request_result_id;
     }
 
-    self::log('errorcode @response with url @rest_url', array('@response' => $response->code, '@rest_url' => $rest_url));
+    self::log('errorcode @response with url @host/@rest_url', array('@response' => $response->code, '@rest_url' => $rest_url, '@host' => $uri));
     return $response->code;
   }
 

@@ -557,7 +557,7 @@ class mediamosa_job_server {
 
     $fields = array(
       mediamosa_job_server_db::JOB_STATUS => $job_status,
-      mediamosa_job_server_db::PROGRESS => $progress,
+      mediamosa_job_server_db::PROGRESS => is_null($progress) ? '0.000' : $progress,
     );
 
     switch ($job_status) {
@@ -1087,7 +1087,10 @@ class mediamosa_job_server {
       }
 
       list($name, $value) = explode(':', $line, 2);
-      if ($name == "Progress" || $name == "Status" || $name == "Errors") {
+      if ($name == "Progress" && is_null($value)) {
+        $value = '0.000';
+      }
+      elseif ($name == "Progress" || $name == "Status" || $name == "Errors") {
         $a_result[$name] = trim($value);
       }
       elseif ($name == 'ffmpeg-output') {
