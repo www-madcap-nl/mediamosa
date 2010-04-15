@@ -35,7 +35,7 @@ class MediaMosaAssetMetadataPropertyTestCaseEga extends MediaMosaTestCaseEga {
   // ------------------------------------------------------------------ Functions.
   public static function getInfo() {
     return array(
-      'name' => 'Asset metadata property tests: Free attributum',
+      'name' => 'Asset - metadata property tests',
       'description' => 'Testing asset metadata property related functions and rest calls.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET,
     );

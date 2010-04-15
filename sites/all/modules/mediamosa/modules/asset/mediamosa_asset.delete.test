@@ -35,7 +35,7 @@ class MediaMosaAssetMultipleDeleteTestCaseEga extends MediaMosaTestCaseEga {
   // ------------------------------------------------------------------ Functions.
   public static function getInfo() {
     return array(
-      'name' => 'Delete multiple assets simultaneously tests',
+      'name' => 'Asset - delete multiple assets',
       'description' => 'Testing delete multiple assets simultaneously related functions and rest calls.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET,
     );

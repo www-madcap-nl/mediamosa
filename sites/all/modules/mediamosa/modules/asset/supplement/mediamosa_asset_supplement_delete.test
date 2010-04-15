@@ -37,7 +37,7 @@ class MediaMosaAssetSupplementDeleteTestCaseEga extends MediaMosaTestCaseEga {
     return array(
       'name' => 'Asset supplement delete tests',
       'description' => 'Testing asset supplement delete related functions and rest calls.',
-      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET,
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET_SUPPLEMENT,
     );
   }
 

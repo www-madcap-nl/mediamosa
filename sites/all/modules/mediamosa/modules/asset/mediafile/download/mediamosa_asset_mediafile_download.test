@@ -43,7 +43,7 @@ class MediaMosaAssetMediafileDownloadTestCase extends MediaMosaTestCase {
 
   public static function getInfo() {
     return array(
-      'name' => 'Download Mediafile test',
+      'name' => 'Mediafile - download test',
       'description' => 'Test downloading of files with tickets.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET,
     );

@@ -88,6 +88,10 @@ function mediamosa_maintenance_browse_theme() {
       ),
       'file' => 'mediamosa_maintenance_browse.inc',
     ),
+    'mediamosa_simpletest_test_table' => array(
+      'render element' => 'table',
+      'file' => 'mediamosa_maintenance_browse_simpletest.inc',
+    ),
   );
 }
 
@@ -108,6 +112,8 @@ function mediamosa_maintenance_browse_help($path, $arg) {
       return '<p>' . t('The revision log is a list of changes made on the configuration of MediaMosa. You can view changes made on transcode profiles, client applications, servers and global settings.') . '</p>';
     case 'admin/mediamosa/browse/errorcode':
       return '<p>' . t('This list show the translation of a MediaMosa error name and code to error message. MediaMosa error name and code can not be changed.') . '</p>';
+    case 'admin/mediamosa/browse/testing':
+      return '<p>' . t('Run our MediaMosa tests against MediaMosa core and MediaMosa modules. These tests help assure that MediaMosa is working as designed.') . '</p>';
   }
 }
 
@@ -323,6 +329,28 @@ function mediamosa_maintenance_browse_menu() {
     'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
     'file' => 'mediamosa_maintenance_browse_errorcode.inc',
     'access arguments' => array('access mediamosa errorcodes'),
+  );
+
+  $items['admin/mediamosa/browse/testing'] = array(
+    'title' => 'Testing',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mediamosa_maintenance_browse_test_form'),
+    'description' => 'Run our MediaMosa tests against MediaMosa core and MediaMosa modules. These tests help assure that MediaMosa is working as designed.',
+    'access arguments' => array('access mediamosa unit tests'),
+    'file' => 'mediamosa_maintenance_browse_simpletest.inc',
+  );
+  $items['admin/mediamosa/browse/testing/list'] = array(
+    'title' => 'List',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+  $items['admin/mediamosa/browse/testing/results/%'] = array(
+    'title' => 'Test result',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mediamosa_maintenance_browse_simpletest_result_form', 5),
+    'description' => 'View result of tests.',
+    'access arguments' => array('administer unit tests'),
+    'type' => MENU_CALLBACK,
+    'file' => 'mediamosa_maintenance_browse_simpletest.inc',
   );
 
   $items['admin/mediamosa/browse/js/collection/searchparameters'] = array(

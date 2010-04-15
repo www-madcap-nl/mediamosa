@@ -44,6 +44,7 @@ class MediaMosaServerSetupTestCaseEga extends MediaMosaTestCaseEgaJob {
       'name' => 'Job Server - Setup',
       'description' => 'Server setup checks if job servers are setup correctly.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_JOB,
+      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_10_MINUTES,
     );
   }
 

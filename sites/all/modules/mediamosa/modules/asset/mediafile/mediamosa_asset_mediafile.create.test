@@ -35,9 +35,9 @@ class MediaMosaAssetMediafileCreateTestCaseEga extends MediaMosaTestCaseEga {
   // ------------------------------------------------------------------ Functions.
   public static function getInfo() {
     return array(
-      'name' => 'Asset mediafile create tests',
+      'name' => 'Mediafile - create tests',
       'description' => 'Testing asset mediafile create related functions and rest calls.',
-      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET,
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET_MEDIAFILE,
     );
   }
 

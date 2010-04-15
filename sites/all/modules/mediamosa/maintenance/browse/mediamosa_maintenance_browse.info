@@ -14,6 +14,7 @@ files[] = mediamosa_maintenance_browse_errorcode.inc
 files[] = mediamosa_maintenance_browse_history.inc
 files[] = mediamosa_maintenance_browse_restcalls.inc
 files[] = mediamosa_maintenance_browse_revision.inc
+files[] = mediamosa_maintenance_browse_simpletest.inc
 files[] = mediamosa_maintenance_browse.inc
 
 ; Dependencies
@@ -22,3 +23,5 @@ dependencies[] = mediamosa_app
 dependencies[] = mediamosa_asset
 dependencies[] = mediamosa_collection
 dependencies[] = mediamosa_maintenance
+dependencies[] = mediamosa_maintenance
+dependencies[] = simpletest

@@ -38,6 +38,7 @@ class MediaMosaAutTestCaseEga extends MediaMosaTestCaseEga {
       'name' => 'AUT/ACL - PlayProxy play access',
       'description' => 'Testing the AUT module, previously known as ACL.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_AUT,
+      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_10_MINUTES,
     );
   }
 

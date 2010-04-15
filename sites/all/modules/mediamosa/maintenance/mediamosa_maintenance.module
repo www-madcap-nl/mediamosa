@@ -205,7 +205,7 @@ function _mediamosa_maintenance_status() {
   drupal_add_css(drupal_get_path('module', 'simpletest') . '/simpletest.css');
 
   // Get the result.
-  $a_status = variable_get('mediamosa_test_results', array('a_tests' => array()));
+  $tests = variable_get('mediamosa_test_results', array('tests' => array()));
 
   $header = array(
     array('data' => t('Component')),
@@ -216,42 +216,44 @@ function _mediamosa_maintenance_status() {
   );
 
   $rows = array();
-  foreach ($a_status['a_tests'] as $name => $a_test) {
-    $class = 'simpletest-pass';
 
-    if (!isset($a_test['results']) || empty($a_test['results'])) {
-      $a_test['results'] = array(
-        '#fail' => 0,
-        '#exception' => 0,
-        '#pass' => 0,
-      );
+  if (isset($tests[mediamosa_settings::MEDIAMOSA_RUN_10_MINUTES])) {
+    foreach ($tests[mediamosa_settings::MEDIAMOSA_RUN_10_MINUTES] as $name => $test) {
+      $class = 'simpletest-pass';
 
-      $a_test['ended'] = $a_test['started'] = 0;
-    }
+      if (!isset($test['results']) || empty($test['results'])) {
+        $test['results'] = array(
+          '#fail' => 0,
+          '#exception' => 0,
+          '#pass' => 0,
+        );
 
-    if ($a_test['results']['#fail'] > 0 || $a_test['results']['#exception'] > 0 || $a_test['results']['#pass'] == 0) {
-      $class = 'simpletest-fail';
-    }
+        $test['ended'] = $test['started'] = 0;
+      }
 
-    //simpletest-fail
-    $rows[] = array(
-      'data' => array(
-        $a_test['info']['group'],
-        $a_test['info']['name'],
-        t('Passes: (!passes), Failures: (!failures), Exceptions: (!exceptions)',
-          array(
-            '!passes' => $a_test['results']['#pass'],
-            '!failures' => $a_test['results']['#fail'],
-            '!exceptions' => $a_test['results']['#exception'],
-          )
+      if ($test['results']['#fail'] > 0 || $test['results']['#exception'] > 0 || $test['results']['#pass'] == 0) {
+        $class = 'simpletest-fail';
+      }
+
+      //simpletest-fail
+      $rows[] = array(
+        'data' => array(
+          $test['info']['group'],
+          $test['info']['name'],
+          t('Passes: (!passes), Failures: (!failures), Exceptions: (!exceptions)',
+            array(
+              '!passes' => $test['results']['#pass'],
+              '!failures' => $test['results']['#fail'],
+              '!exceptions' => $test['results']['#exception'],
+            )
+          ),
+          round($test['ended'] - $test['started'], 2),
+          theme('mediamosa_maintenance_date', array('datetime' => round($test['started']))),
         ),
-        round($a_test['ended'] - $a_test['started'], 2),
-        theme('mediamosa_maintenance_date', array('datetime' => round($a_test['started']))),
-      ),
-      'class' => array($class)
-    );
+        'class' => array($class)
+      );
+    }
   }
-
   // theme de arrays naar een tabel
   $content = theme('table', array('header' => $header, 'rows' => $rows, 'empty' => 'No status information found, please check if cron is working properly.'));
 

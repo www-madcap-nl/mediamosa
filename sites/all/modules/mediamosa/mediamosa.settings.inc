@@ -178,6 +178,12 @@ class mediamosa_settings {
   const MEDIAMOSA_PERMISSION_ANALYSE_MEDIAMOSA_MEDIAFILES = 'analyse mediamosa mediafiles';
   const MEDIAMOSA_PERMISSION_DOWNLOAD_MEDIAMOSA_MEDIAFILES = 'download mediamosa mediafiles';
 
+  // Run at;
+  const MEDIAMOSA_RUN = 'mediamosa_run';
+  const MEDIAMOSA_RUN_10_MINUTES  = 'mediamosa_run_10_minutes';
+  const MEDIAMOSA_RUN_3_HOURS = 'mediamosa_run_3_hours';
+  const MEDIAMOSA_RUN_DAILY = 'mediamosa_run_daily';
+
   // ------------------------------------------------------------------ Functions.
   /**
    * Return the unique server ID.

@@ -35,9 +35,9 @@ class MediaMosaAssetMediafileDeleteTestCaseEga extends MediaMosaTestCaseEga {
   // ------------------------------------------------------------------ Functions.
   public static function getInfo() {
     return array(
-      'name' => 'Asset mediafile delete tests',
+      'name' => 'Mediafile - delete tests',
       'description' => 'Testing asset mediafile delete related functions and rest calls.',
-      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET,
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET_MEDIAFILE,
     );
   }
 

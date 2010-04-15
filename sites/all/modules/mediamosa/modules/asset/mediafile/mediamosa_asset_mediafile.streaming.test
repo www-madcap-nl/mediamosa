@@ -36,9 +36,9 @@ class MediaMosaAssetMediafileStreamingTestCaseEga extends MediaMosaTestCaseEga {
   // ------------------------------------------------------------------ Functions.
   public static function getInfo() {
     return array(
-      'name' => 'Mediafile - Live streaming support',
+      'name' => 'Mediafile - live streaming support',
       'description' => 'Live Streaming server support.',
-      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET,
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET_MEDIAFILE,
     );
   }
 

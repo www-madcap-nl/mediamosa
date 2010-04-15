@@ -46,6 +46,7 @@ class MediaMosaConfigurationStorageTestCase extends MediaMosaTestCase {
       'name' => 'Basic SAN/NAS tests',
       'description' => 'Test the storage class paths for SAN/NAS.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STORAGE,
+      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_10_MINUTES,
     );
   }
 

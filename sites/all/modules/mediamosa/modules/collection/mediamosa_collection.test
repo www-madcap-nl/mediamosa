@@ -46,7 +46,7 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
     return array(
       'name' => 'Collection test',
       'description' => 'Testing the collection calls.',
-      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE,
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_COLLECTION,
     );
   }
 

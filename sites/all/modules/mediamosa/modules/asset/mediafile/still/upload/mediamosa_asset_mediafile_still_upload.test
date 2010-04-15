@@ -46,6 +46,7 @@ class MediaMosaAssetMediafileStillUploadTestCase extends MediaMosaTestCaseEga {
       'name' => 'Upload Mediafile Still test',
       'description' => 'Test upload of stills to an asset.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STILL,
+      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_10_MINUTES,
     );
   }
 

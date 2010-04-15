@@ -40,9 +40,10 @@ class MediaMosaAssetMediafileUploadTestCaseEga extends MediaMosaTestCaseEga {
   // ----------------------------------------------------------------- Functions.
   public static function getInfo() {
     return array(
-      'name' => 'Upload Mediafile test',
+      'name' => 'Mediafile - upload test',
       'description' => 'Test uploading of files (videos, stills).',
-      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET,
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET_MEDIAFILE,
+      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_10_MINUTES,
     );
   }
 

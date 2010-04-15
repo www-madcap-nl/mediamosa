@@ -38,6 +38,7 @@ class MediaMosaAssetMediafilePlayProxyTicketMechanismeTestCaseEga extends MediaM
       'name' => 'Asset mediafile play proxy ticket mechanisme tests',
       'description' => 'Testing asset mediafile play proxy ticket mechanisme related functions and rest calls.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_PLAYPROXY,
+      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_10_MINUTES,
     );
   }
 

@@ -35,8 +35,8 @@ class MediaMosaAssetSearchEmptyTestCaseEga extends MediaMosaTestCaseEga {
   // ------------------------------------------------------------------ Functions.
   public static function getInfo() {
     return array(
-      'name' => 'Asset search empty assets tests',
-      'description' => 'Testing asset search empty asset related functions and rest calls.',
+      'name' => 'Asset - search empty assets tests',
+      'description' => 'Testing asset search empty asset flags.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET,
     );
   }

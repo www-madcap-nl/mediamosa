@@ -17,5 +17,5 @@ dependencies[] = mediamosa_app
 ; Used files.
 
 ; Migration files.
-files[] = mediamosa_migration.test
+; files[] = mediamosa_migration.test
 files[] = mediamosa_migration.admin.inc

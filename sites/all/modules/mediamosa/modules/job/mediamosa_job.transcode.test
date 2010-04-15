@@ -43,6 +43,7 @@ class MediaMosaJobTranscodeTestCaseEga extends MediaMosaTestCaseEgaJob {
       'name' => 'Job transcode test',
       'description' => 'Testing the transcoding jobs.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_JOB,
+      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_10_MINUTES,
     );
   }
 

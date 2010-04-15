@@ -38,6 +38,7 @@ class MediaMosaAssetMediafilePlayProxyAclTestCaseEga extends MediaMosaTestCaseEg
       'name' => 'Asset mediafile play proxy acl tests',
       'description' => 'Testing asset mediafile play proxy acl related functions and rest calls.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_PLAYPROXY,
+      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_10_MINUTES,
     );
   }
 

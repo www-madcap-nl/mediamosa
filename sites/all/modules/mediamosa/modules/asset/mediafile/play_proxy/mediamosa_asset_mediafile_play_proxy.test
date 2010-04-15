@@ -44,6 +44,7 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
       'name' => 'Play proxy - Common',
       'description' => 'Testing the play proxy call, functions, output and clean up code.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_PLAYPROXY,
+      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_10_MINUTES,
     );
   }
 

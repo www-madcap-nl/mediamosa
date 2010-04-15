@@ -35,9 +35,9 @@ class MediaMosaAssetMediafileMetadataTestCaseEga extends MediaMosaTestCaseEga {
   // ------------------------------------------------------------------ Functions.
   public static function getInfo() {
     return array(
-      'name' => 'Asset mediafile metadata tests',
+      'name' => 'Mediafile - metadata tests',
       'description' => 'Testing asset mediafile metadata related functions and rest calls.',
-      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET,
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET_MEDIAFILE,
     );
   }
 

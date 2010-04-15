@@ -54,13 +54,28 @@
    * to report this.
    */
   static public function get_default_tests() {
-    return array(
-      'MediaMosaAppAuthenticationTestCase',
-      'MediaMosaConfigurationStorageTestCase',
-      'MediaMosaAssetMediafileDownloadTestCase',
-      'MediaMosaAssetMediafileStillDownloadTestCase',
-      'MediaMosaAssetMediafileUploadTestCaseEga',
+    $simpletests = array(
+      mediamosa_settings::MEDIAMOSA_RUN_10_MINUTES => array(),
+      mediamosa_settings::MEDIAMOSA_RUN_3_HOURS => array(),
+      mediamosa_settings::MEDIAMOSA_RUN_DAILY => array(),
     );
+
+    $groups = simpletest_test_get_all();
+    foreach ($groups as $group => $tests) {
+      if (drupal_strtolower(drupal_substr($group, 0, strlen('mediamosa'))) != 'mediamosa') {
+        continue;
+      }
+
+      foreach ($tests as $class => $test) {
+        if (!isset($test[mediamosa_settings::MEDIAMOSA_RUN])) {
+          continue;
+        }
+
+        $simpletests[$test[mediamosa_settings::MEDIAMOSA_RUN]][$class] = $test;
+      }
+    }
+
+    return $simpletests;
   }
 
   /**
@@ -68,7 +83,7 @@
    * defaults to 600 (10 minutes).
    */
   static public function get_interval() {
-    return 600;
+    return 15*60;
   }
 
   /**
@@ -132,6 +147,9 @@
       return;
     }
 
+    // 10 min ones.
+    $mediamosa_run = mediamosa_settings::MEDIAMOSA_RUN_10_MINUTES;
+
     mediamosa_debug::log_debug('run_simple_tests() running.');
 
     // Set time when we started, so we aren't twice.
@@ -142,12 +160,14 @@
     set_time_limit(self::get_interval() - 1);
 
     // Where to store the results.
-    $a_test_results = array('a_tests' => array());
+    $a_test_results = array('tests' => array());
 
     // Create the tests first so we can store the names etc.
     $a_tests = array();
 
-    foreach (self::get_default_tests() as $class_name) {
+    $default_tests = self::get_default_tests();
+
+    foreach ($default_tests[$mediamosa_run] as $class_name => $info) {
       if (!mediamosa::autoload_class($class_name)) {
         // log that we cant find the test.
         self::log("Warning; can't run simpletest on class '@class', unable to load class, either typo in name or module not enabled!", array('@class' => $class_name));
@@ -163,7 +183,7 @@
       $a_tests[$class_name] = new $class_name($test_id);
 
       // Add to run list and result.
-      $a_test_results['a_tests'][$class_name] = array('info' => $a_tests[$class_name]->getInfo(), 'runphase' => self::RUNPHASE_WAITING, 'results' => array());
+      $a_test_results[$mediamosa_run][$class_name] = array('info' => $a_tests[$class_name]->getInfo(), 'runphase' => self::RUNPHASE_WAITING, 'results' => array());
     }
 
     // Set start point run of all tests.
@@ -178,7 +198,7 @@
 
     // Now loop through the tests and store the results.
     foreach ($a_tests as $class_name => $simpletest_class) {
-      $a_test_results['a_tests'][$class_name]['runphase'] = self::RUNPHASE_STARTED;
+      $a_test_results[$mediamosa_run][$class_name]['runphase'] = self::RUNPHASE_STARTED;
 
       // Ok Run.
       $start = microtime(TRUE);
@@ -186,12 +206,12 @@
       $end = microtime(TRUE);
 
       // Store results.
-      $a_test_results['a_tests'][$class_name]['results'] = $simpletest_class->results;
-      $a_test_results['a_tests'][$class_name]['started'] = $start;
-      $a_test_results['a_tests'][$class_name]['ended'] = $end;
+      $a_test_results[$mediamosa_run][$class_name]['results'] = $simpletest_class->results;
+      $a_test_results[$mediamosa_run][$class_name]['started'] = $start;
+      $a_test_results[$mediamosa_run][$class_name]['ended'] = $end;
 
       // Set to completed.
-      $a_test_results['a_tests'][$class_name]['runphase'] = self::RUNPHASE_COMPLETED;
+      $a_test_results[$mediamosa_run][$class_name]['runphase'] = self::RUNPHASE_COMPLETED;
 
       // Store in static.
       self::test_results($a_test_results);

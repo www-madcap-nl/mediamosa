@@ -35,8 +35,8 @@ class MediaMosaAssetVpxStillUrlTestCaseEga extends MediaMosaTestCaseEgaJob {
   // ------------------------------------------------------------------ Functions.
   public static function getInfo() {
     return array(
-      'name' => 'Vpx still url',
-      'description' => 'Testing asset vpx_still_url functions.',
+      'name' => 'Asset - VPX still url',
+      'description' => 'Testing asset vpx_still_url functions and in asset output.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET,
     );
   }
@@ -59,7 +59,7 @@ class MediaMosaAssetVpxStillUrlTestCaseEga extends MediaMosaTestCaseEgaJob {
     // Check the result.
     $this->assertFalse(
       isset($a_asset['vpx_still_url']) && $a_asset['vpx_still_url'],
-      t('There is not vpx_still_url')
+      t('There is no vpx_still_url')
     );
 
     // Create a still.
