@@ -327,6 +327,9 @@ class mediamosa_rest_call_get_still extends mediamosa_rest_call_asset_mediafile_
   public function get_var_setup() {
     $a_var_setup = parent::get_var_setup();
 
+    // Not required now.
+    $a_var_setup[self::VARS][self::MEDIAFILE_ID][self::VAR_IS_REQUIRED] = self::VAR_IS_REQUIRED_NO;
+
     $a_var_setup[self::VARS][self::RESPONSE] = array(
       self::VAR_TYPE => mediamosa_type::TYPE_STRING,
       self::VAR_DESCRIPTION => 'The still response type.',
