@@ -130,6 +130,7 @@ function mediamosa_maintenance_theme() {
     'mediamosa_maintenance_date' => array(
       'variables' => array(
         'datetime' => NULL,
+        'timestamp' => NULL,
         'type' => 'short',
       ),
       'file' => 'mediamosa_maintenance.admin.inc',
@@ -248,7 +249,7 @@ function _mediamosa_maintenance_status() {
             )
           ),
           round($test['ended'] - $test['started'], 2),
-          theme('mediamosa_maintenance_date', array('datetime' => round($test['started']))),
+          theme('mediamosa_maintenance_date', array('timestamp' => round($test['started']))),
         ),
         'class' => array($class)
       );

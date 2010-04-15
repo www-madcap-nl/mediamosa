@@ -82,7 +82,7 @@ function _mediamosa_maintenance_browse_log() {
         t($dblog->type),
         truncate_utf8(_mediamosa_maintenance_browse_log_format_message($dblog), 1000, TRUE, TRUE),
         $levels[$dblog->severity],
-        theme('mediamosa_maintenance_date', array('datetime' => $dblog->timestamp)),
+        theme('mediamosa_maintenance_date', array('timestamp' => $dblog->timestamp)),
       ),
       // Attributes for tr
       'class' => array('dblog-' . preg_replace('/[^a-z]/i', '-', $dblog->type), $classes[$dblog->severity]),

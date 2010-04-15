@@ -104,7 +104,8 @@ function _mediamosa_maintenance_admin_page($path) {
  */
 function theme_mediamosa_maintenance_date($variables) {
   $type = $variables['type'];
-  $datetime = $variables['datetime'];
+  $datetime = isset($variables['datetime']) ? $variables['datetime'] : NULL;
+  $timestamp = isset($variables['timestamp']) ? $variables['timestamp'] : NULL;
 
   switch ($type) {
     case 'short':
@@ -118,7 +119,9 @@ function theme_mediamosa_maintenance_date($variables) {
 
   }
 
-  return check_plain(empty($datetime) ? t('<empty date>') : format_date(mediamosa_lib::iso8601date_to_unix($datetime), $type));
+  $timestamp = isset($datetime) ? mediamosa_lib::iso8601date_to_unix($datetime) : $timestamp;
+
+  return check_plain(empty($timestamp) ? t('<empty date>') : format_date($timestamp, $type));
 }
 
 /**

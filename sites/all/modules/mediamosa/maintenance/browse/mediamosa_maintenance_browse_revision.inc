@@ -116,7 +116,7 @@ function mediamosa_maintenance_browse_revision_form() {
         check_plain($names[$revision['uid']]),
         $link,
         check_plain($revision['title']),
-        array('data' => theme('mediamosa_maintenance_date', array('datetime' => $revision['timestamp'])), 'class' => 'mmdate'),
+        array('data' => theme('mediamosa_maintenance_date', array('timestamp' => $revision['timestamp'])), 'class' => 'mmdate'),
         'change'
       ),
     );
@@ -251,7 +251,7 @@ function theme_mediamosa_maintenance_browse_revision_info($variables) {
   $log = trim($variables['node']->log);
 
   $output[] = t('View details of a change to MediaMosa configuration settings. Differences compared to current values are displayed <b>bold</b>.');
-  $output[] = t('<b>Date change</b>: ') . theme('mediamosa_maintenance_date', array('datetime' => $variables['node']->created));
+  $output[] = t('<b>Date change</b>: ') . theme('mediamosa_maintenance_date', array('timestamp' => $variables['node']->created));
   $output[] = t('<b>Log message</b>: ') . (empty($log) ? t('no log message found.') : check_plain($log));
   $output[] = t('<b>User</b>: ') . check_plain($name);
   return '<p>' . implode('</p><p>', $output) . '</p>';
