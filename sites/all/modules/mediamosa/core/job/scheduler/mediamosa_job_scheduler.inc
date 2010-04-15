@@ -813,7 +813,7 @@ class mediamosa_job_scheduler {
       return $response_data->header->request_result_id;
     }
 
-    self::log('errorcode @response bij url @rest_url (@header)', array('@response' => $response->code, '@rest_url' => $rest_url, '@header' => var_export($response->header, TRUE)));
+    self::log('errorcode @response with url @rest_url (@header)', array('@response' => $response->code, '@rest_url' => $rest_url, '@header' => var_export($response->header, TRUE)));
     return $response->code;
   }
 
@@ -853,7 +853,7 @@ class mediamosa_job_scheduler {
       return $response_data->header->request_result_id;
     }
 
-    self::log('errorcode @response bij url @rest_url', array('@response' => $response->code, '@rest_url' => $rest_url));
+    self::log('errorcode @response with url @rest_url', array('@response' => $response->code, '@rest_url' => $rest_url));
     return $response->code;
   }
 
@@ -917,7 +917,7 @@ class mediamosa_job_scheduler {
       return $response_data->header->request_result_id;
     }
 
-    self::log('errorcode @response bij url @rest_url', array('@response' => $response->code, '@rest_url' => $rest_url));
+    self::log('errorcode @response with url @rest_url', array('@response' => $response->code, '@rest_url' => $rest_url));
     return $response->code;
   }
 
