@@ -195,6 +195,12 @@
 
       // Store in static.
       self::test_results($a_test_results);
+
+      // Unset so we might free some memory.
+      unset($a_tests[$class_name]);
+      unset($simpletest_class);
+
+      mediamosa::log('Peak usage after unit test @test; @peak.', array('@test' => $class_name, '@peak' => memory_get_peak_usage()));
     }
 
     // Set end point run of all tests.
