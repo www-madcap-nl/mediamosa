@@ -220,7 +220,7 @@
       unset($a_tests[$class_name]);
       unset($simpletest_class);
 
-      mediamosa::log('Peak usage after unit test @test; @peak.', array('@test' => $class_name, '@peak' => memory_get_peak_usage()));
+      mediamosa_debug::log_debug('Peak usage after unit test @test; @peak.', array('@test' => $class_name, '@peak' => memory_get_peak_usage()), 'memory');
     }
 
     // Set end point run of all tests.
