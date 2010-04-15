@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -24,12 +24,6 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
-// Permissions.
-define('MEDIAMOSA_PERMISSION_DELETE_MEDIAMOSA_MEDIAFILES', 'delete mediamosa mediafiles');
-define('MEDIAMOSA_PERMISSION_DELETE_MEDIAMOSA_JOBS', 'delete mediamosa jobs');
-define('MEDIAMOSA_PERMISSION_ANALYSE_MEDIAMOSA_MEDIAFILES', 'analyse mediamosa mediafiles');
-define('MEDIAMOSA_PERMISSION_DOWNLOAD_MEDIAMOSA_MEDIAFILES', 'download mediamosa mediafiles');
-
 /**
  * @file
  * The main maintenance module.
@@ -43,7 +37,7 @@ function mediamosa_maintenance_menu() {
 
   // Maintenance / Configuration pages.
   $items['admin/mediamosa'] = array(
-    'title' => 'MediaMosa 2',
+    'title' => 'MediaMosa',
     'page callback' => '_mediamosa_maintenance_status',
     'access arguments' => array('access mediamosa'),
     'weight' => -20,
@@ -86,62 +80,34 @@ function mediamosa_maintenance_menu() {
   $items['admin/mediamosa/asset/%/mediafile/%/delete'] = array(
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mediamosa_maintenance_mediafile_delete', 3, 5),
-    'access arguments' => array(MEDIAMOSA_PERMISSION_DELETE_MEDIAMOSA_MEDIAFILES),
+    'access arguments' => array(mediamosa_settings::MEDIAMOSA_PERMISSION_DELETE_MEDIAMOSA_MEDIAFILES),
     'type' => MENU_CALLBACK,
     'file' => 'mediamosa_maintenance.admin.inc',
   );
   $items['admin/mediamosa/asset/%/mediafile/%/analyse'] = array(
     'page callback' => 'mediamosa_maintenance_mediafile_analyse',
     'page arguments' => array(3,5),
-    'access arguments' => array(MEDIAMOSA_PERMISSION_ANALYSE_MEDIAMOSA_MEDIAFILES),
+    'access arguments' => array(mediamosa_settings::MEDIAMOSA_PERMISSION_ANALYSE_MEDIAMOSA_MEDIAFILES),
     'type' => MENU_CALLBACK,
     'file' => 'mediamosa_maintenance.admin.inc',
   );
   $items['admin/mediamosa/asset/%/mediafile/%/download'] = array(
     'page callback' => 'mediamosa_maintenance_mediafile_download',
     'page arguments' => array(3,5),
-    'access arguments' => array(MEDIAMOSA_PERMISSION_DOWNLOAD_MEDIAMOSA_MEDIAFILES),
+    'access arguments' => array(mediamosa_settings::MEDIAMOSA_PERMISSION_DOWNLOAD_MEDIAMOSA_MEDIAFILES),
     'type' => MENU_CALLBACK,
     'file' => 'mediamosa_maintenance.admin.inc',
   );
   $items['admin/mediamosa/asset/%/job/%/delete'] = array(
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mediamosa_maintenance_job_delete', 3, 5),
-    'access arguments' => array(MEDIAMOSA_PERMISSION_DELETE_MEDIAMOSA_MEDIAFILES),
+    'access arguments' => array(mediamosa_settings::MEDIAMOSA_PERMISSION_DELETE_MEDIAMOSA_MEDIAFILES),
     'type' => MENU_CALLBACK,
     'file' => 'mediamosa_maintenance.admin.inc',
   );
 
 
   return $items;
-}
-
-/**
- * Implements hook_permission().
- */
-function mediamosa_maintenance_permission() {
-  return array(
-    MEDIAMOSA_PERMISSION_DELETE_MEDIAMOSA_JOBS =>  array(
-      'title' => t('Delete jobs'),
-      'description' => t('Users with this permission may delete jobs.'),
-    ),
-    MEDIAMOSA_PERMISSION_DELETE_MEDIAMOSA_MEDIAFILES =>  array(
-      'title' => t('Delete mediafiles'),
-      'description' => t('Users with this permission may delete mediafiles.'),
-    ),
-    MEDIAMOSA_PERMISSION_ANALYSE_MEDIAMOSA_MEDIAFILES =>  array(
-      'title' => t('Analyse mediafiles'),
-      'description' => t('Users with this permission may start analyse jobs for mediafiles.'),
-    ),
-    MEDIAMOSA_PERMISSION_DOWNLOAD_MEDIAMOSA_MEDIAFILES =>  array(
-      'title' => t('Download mediafiles'),
-      'description' => t('Users with this permission may download mediafiles.'),
-    ),
-    'access mediamosa config' =>  array(
-      'title' => t('Access MediaMosa Administration'),
-      'description' => t('View the MediaMosa configuration, maintenance and other pages.'),
-    ),
-  );
 }
 
 /**
@@ -152,7 +118,7 @@ function mediamosa_maintenance_help($path, $arg) {
 
   switch ($path) {
     case 'admin/mediamosa':
-      return '<p>' . t('Mediamosa 2 status page show results of basic unit tests that are run at fixed intervals. All tests must be green.') . '</p>';
+      return '<p>' . t('MediaMosa status page show results of basic unit tests that are run at fixed intervals. All tests must be green.') . '</p>';
   }
 }
 
@@ -232,7 +198,7 @@ function _mediamosa_maintenance_status() {
   $breadcrumb = array();
   $breadcrumb[] = l(t('Home'), NULL);
   $breadcrumb[] = l(t('Administer'), 'admin');
-  $breadcrumb[] = l(t('MediaMosa 2'), 'admin/mediamosa');
+  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
   drupal_set_breadcrumb($breadcrumb);
 
   // Need the classes of simpletest.
@@ -297,9 +263,9 @@ function _mediamosa_maintenance_status() {
  */
 function mediamosa_maintenance_enable() {
 
-  // FIXME: need to throw away the admin menu so we can rebuild our menu when other child menu
-  //        modules where enabled earlier than ours.
-  //        This might be fixed in later version of drupal 7.
+  // FIXME: need to throw away the admin menu so we can rebuild our menu when
+  //        other child menu modules where enabled earlier than ours. This might
+  //        be fixed in later version of drupal 7.
 
   // Remove us so we are rebuild properly.
   db_delete('menu_links')

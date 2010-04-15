@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -120,12 +120,12 @@ class mediamosa_db_query {
   /*
    * Execute a query.
    */
-  static public function query($s_query) {
+  static public function query($query) {
     // Escape % so its not removed by db_query
-    $s_query = str_replace("%", "%%", $s_query);
+    $query = str_replace("%", "%%", $query);
 
     // Call drupal wrapper.
-    return mediamosa_db::db_query($s_query);
+    return mediamosa_db::db_query($query);
   }
 
   /**

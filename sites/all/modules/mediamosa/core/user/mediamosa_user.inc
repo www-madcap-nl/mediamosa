@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -361,7 +361,7 @@ class mediamosa_user {
    * @param $group_id
    *  The group ID (optional).
    */
-  function fetch_items($is_users, $app_id, $offset, $limit, $group_id = NULL) {
+  function get_all($is_users, $app_id, $offset, $limit, $group_id = NULL) {
 
     // Do the query.
     $result = mediamosa_db::db_query_range(

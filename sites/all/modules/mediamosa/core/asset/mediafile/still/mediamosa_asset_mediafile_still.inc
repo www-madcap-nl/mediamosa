@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -49,13 +49,13 @@ class mediamosa_asset_mediafile_still {
    * @param string $mediafile_id_source
    * @param string $tag
    */
-  static public function create($asset_id, $asset_parent_id, $still_id, $app_id, $owner_id, $group_id, $order, $still_default = TRUE, $a_still_parameters = NULL, $sec = 0, $mediafile_id_source = '', $tag = '') {
+  static public function create($asset_id, $asset_parent_id, $still_id, $app_id, $owner_id, $group_id, $order, $still_default = TRUE, $still_parameters = NULL, $sec = 0, $mediafile_id_source = '', $tag = '') {
 
     // Get path to still.
     $still_filename = mediamosa_configuration_storage::mediafile_still_filename_get($still_id);
 
     // Check if still exists.
-    if (!file_exists($still_filename)) {
+    if (!mediamosa_io::file_exists($still_filename)) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STILL_NOT_FOUND, array('@asset_id' => $asset_id));
     }
 
@@ -73,7 +73,7 @@ class mediamosa_asset_mediafile_still {
     $file_extension = ($pos === FALSE ? '' : substr($mime_type, $pos + 1));
 
     // Get file size of still.
-    $file_size = filesize($still_filename);
+    $file_size = mediamosa_io::filesize($still_filename);
 
     if ($still_default) {
       // Clear the earlier default mark on the video (media) file.
@@ -97,7 +97,7 @@ class mediamosa_asset_mediafile_still {
     }
 
     // Insert into Mediafile.
-    $a_fields = array(
+    $fields = array(
         mediamosa_asset_mediafile_db::ID => $still_id,
         mediamosa_asset_mediafile_db::ASSET_ID => $asset_id,
         mediamosa_asset_mediafile_db::APP_ID => $app_id,
@@ -112,15 +112,15 @@ class mediamosa_asset_mediafile_still {
     );
 
     // Add created value.
-    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+    $fields = mediamosa_db::db_insert_enrich($fields);
 
     // Insert it.
     mediamosa_db::db_insert(mediamosa_asset_mediafile_db::TABLE_NAME)
-      ->fields($a_fields)
+      ->fields($fields)
       ->execute();
 
     // Insert into Mediafile.
-    $a_fields = array(
+    $fields = array(
       mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID => $still_id,
       mediamosa_asset_mediafile_metadata_db::WIDTH => $width,
       mediamosa_asset_mediafile_metadata_db::HEIGHT => $height,
@@ -130,16 +130,16 @@ class mediamosa_asset_mediafile_still {
       mediamosa_asset_mediafile_metadata_db::STILL_TIME_CODE => $sec,
       mediamosa_asset_mediafile_metadata_db::STILL_ORDER => $order,
       mediamosa_asset_mediafile_metadata_db::STILL_FORMAT => $file_extension,
-      mediamosa_asset_mediafile_metadata_db::STILL_TYPE => (empty($a_still_parameters['still_type']) ? mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NORMAL : $a_still_parameters['still_type']),
+      mediamosa_asset_mediafile_metadata_db::STILL_TYPE => (empty($still_parameters['still_type']) ? mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NORMAL : $still_parameters['still_type']),
       mediamosa_asset_mediafile_metadata_db::STILL_DEFAULT => $still_default ? mediamosa_asset_mediafile_metadata_db::STILL_DEFAULT_TRUE : mediamosa_asset_mediafile_metadata_db::STILL_DEFAULT_FALSE,
     );
 
     // Add created value.
-    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+    $fields = mediamosa_db::db_insert_enrich($fields);
 
     // Insert in metadata.
     mediamosa_db::db_insert(mediamosa_asset_mediafile_metadata_db::TABLE_NAME)
-      ->fields($a_fields)
+      ->fields($fields)
       ->execute();
   }
 

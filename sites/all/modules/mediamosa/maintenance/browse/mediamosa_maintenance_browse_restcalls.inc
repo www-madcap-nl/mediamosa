@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -81,7 +81,7 @@ function mediamosa_maintenance_browse_restcall_form() {
     }
 
     ksort($rest_calls_2);
-
+    $has_warnings = FALSE;
     foreach ($rest_calls_2 as $method => $rest_call) {
 
       // Because we get all the REST calls, we need to skip some before we start.
@@ -100,9 +100,11 @@ function mediamosa_maintenance_browse_restcall_form() {
 
       $warnings = array();
       if (!$has_example_request) {
+        $has_warnings = TRUE;
         $warnings[] = '<sup>1</sup>';
       }
       if (!$has_example_response) {
+        $has_warnings = TRUE;
         $warnings[] = '<sup>2</sup>';
       }
 
@@ -126,7 +128,7 @@ function mediamosa_maintenance_browse_restcall_form() {
     '#item_count_total' => $item_count_total,
     '#item_limit' => $item_limit,
     // Note
-    '#note' => implode(', ', array(t('1) missing example request'), t('2) missing example response'))),
+    '#note' => $has_warnings ? implode(', ', array(t('1) missing example request'), t('2) missing example response'))) : '',
     // Total note.
     '#caption_bottom' => t('Total found: @total', array('@total' => $item_count_total))
   );
@@ -142,7 +144,7 @@ function mediamosa_maintenance_browse_restcall_details($uri, $method) {
   $breadcrumb = array();
   $breadcrumb[] = l(t('Home'), NULL);
   $breadcrumb[] = l(t('Administer'), 'admin');
-  $breadcrumb[] = l(t('MediaMosa 2'), 'admin/mediamosa');
+  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
   $breadcrumb[] = l(t('Browse'), 'admin/mediamosa/browse');
   $breadcrumb[] = l(t('Rest calls browser'), 'admin/mediamosa/browse/restcall');
   drupal_set_breadcrumb($breadcrumb);
@@ -198,7 +200,7 @@ function mediamosa_maintenance_browse_restcall_details($uri, $method) {
 
   $warnings = array();
 
-  if ($rest_call->access >= mediamosa_rest_call::ACCESS_AUTHENTICATED) {
+  if ($rest_call->access >= mediamosa_rest_call::ACCESS_AUTHENTICATED && ($rest_call->access & mediamosa_rest_call::ACCESS_EXTERNAL) != mediamosa_rest_call::ACCESS_EXTERNAL) {
     if (!isset($var_setup['vars']['app_id'])) {
       $warnings[] = 'Check vars, missing app_id.';
     }

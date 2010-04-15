@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice Oriented Media Management and
  * Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -52,14 +52,14 @@ function mediamosa_migration_menu() {
   $items = array();
 
   $items['admin/mediamosa/config/migration'] = array(
-    'title' => 'MediaMosa 1.7.x migration tool.',
+    'title' => 'MediaMosa 1.7.x migration tool',
     'description' => 'This migration tool enables you to convert your 1.7.x database to 2.1.x database.',
     'page callback' => 'mediamosa_migration_page_form',
     'access arguments' => array('access mediamosa development'),
     'file' => 'mediamosa_migration.admin.inc',
   );
   $items['admin/mediamosa/config/migration/list'] = array(
-    'title' => 'MediaMosa 1.7.x migration tool.',
+    'title' => 'Migrate',
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
 

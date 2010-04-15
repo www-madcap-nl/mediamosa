@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -377,9 +377,9 @@ class mediamosa_rest_call_ftp_user_get extends mediamosa_rest_call {
     }
 
     $o_mediamosa->add_item(array(
-      "userid" => $a_user['userid'],
-      "active" => intval($a_user['active']) ? 'true' : 'false',
-      "modified" => $a_user['modified'],
+      'userid' => $a_user['userid'],
+      'active' => intval($a_user['active']) ? 'true' : 'false',
+      'modified' => $a_user['modified'],
     ));
   }
 }

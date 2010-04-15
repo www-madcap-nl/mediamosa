@@ -2,7 +2,7 @@
 
 name = "Status view page"
 description = "Enable to view status of the Mediamosa, which runs a selection of unittests every 10 minutes and shows the results."
-package = "MediaMosa 2 - Maintenance"
+package = "MediaMosa - Maintenance"
 version = "2.0.0"
 core = 7.x
 

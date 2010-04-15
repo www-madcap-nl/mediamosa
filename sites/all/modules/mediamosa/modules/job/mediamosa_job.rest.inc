@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -942,6 +942,9 @@ class mediamosa_rest_call_job_create_still extends mediamosa_rest_call_job_creat
 
     unset($a_var_setup[self::VARS][parent::JOB_TYPE]);
 
+    // Although its required, its not used(!).
+    // note: mediamosa_rest_call_job_create_still_for_mediafile() depends on
+    // this non-requirement and non-usage.
     $a_var_setup[self::VARS][self::ASSET_ID] = array(
       self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
       self::VAR_DESCRIPTION => 'The asset ID of the medafile.',
@@ -1011,6 +1014,7 @@ class mediamosa_rest_call_job_create_still extends mediamosa_rest_call_job_creat
 
 /**
  * URI: /mediafile/$mediafile_id/still/create
+ *      /video/$mediafile_id/still/create (depricated)
  *
  * Method: POST
  *
@@ -1020,7 +1024,7 @@ class mediamosa_rest_call_job_create_still extends mediamosa_rest_call_job_creat
  * I could choose to set the URL directly on the class, but for better
  * view on code, lets keep it like own class for now. The only difference
  * is that mediafile_id comes from the URI, which is not a problem for the
- * mediamosa 2 REST interface. Doesn't matter if mediafile_id comes from
+ * MediaMosa REST interface. Doesn't matter if mediafile_id comes from
  * URI / GET / POST.
  *
  * 1.x: vpx_jobscheduler_create_new_still_job_for_mediafile
@@ -1032,6 +1036,10 @@ class mediamosa_rest_call_job_create_still_for_mediafile extends mediamosa_rest_
   // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
     $a_var_setup = parent::get_var_setup();
+
+    // Unset the asset_id (we dont use it).
+    unset($a_var_setup[self::VARS][self::ASSET_ID]);
+
     return $a_var_setup;
   }
 

@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -236,7 +236,7 @@ function mediamosa_browse_asset_list_form() {
   $session = _mediamosa_browse_asset_session();
 
   // Include our css.
-  drupal_add_css(drupal_get_path('module', 'mediamosa_maintenance_browse') . '/mediamosa_maintenance_browse.css');
+  drupal_add_css(drupal_get_path('module', 'mediamosa_maintenance') . '/mediamosa_maintenance.css');
 
   $limit = $session['limit'];
   $page = isset($_GET['page']) ? (int)$_GET['page'] : 0;
@@ -399,7 +399,7 @@ function _mediamosa_browse_asset_page_view($asset_id) {
   $breadcrumb = array();
   $breadcrumb[] = l(t('Home'), NULL);
   $breadcrumb[] = l(t('Administer'), 'admin');
-  $breadcrumb[] = l(t('MediaMosa 2'), 'admin/mediamosa');
+  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
   $breadcrumb[] = l(t('Browse'), 'admin/mediamosa/browse');
   $breadcrumb[] = l(t('Asset browser'), 'admin/mediamosa/browse/asset');
   drupal_set_breadcrumb($breadcrumb);
@@ -559,9 +559,9 @@ function _mediamosa_browse_asset_page_view_mediafile_list($asset) {
   $item_count = count($result['items']);
 
   // Cache rights.
-  $may_delete = user_access(MEDIAMOSA_PERMISSION_DELETE_MEDIAMOSA_MEDIAFILES);
-  $may_analyse = user_access(MEDIAMOSA_PERMISSION_ANALYSE_MEDIAMOSA_MEDIAFILES);
-  $may_download = user_access(MEDIAMOSA_PERMISSION_DOWNLOAD_MEDIAMOSA_MEDIAFILES);
+  $may_delete = user_access(mediamosa_settings::MEDIAMOSA_PERMISSION_DELETE_MEDIAMOSA_MEDIAFILES);
+  $may_analyse = user_access(mediamosa_settings::MEDIAMOSA_PERMISSION_ANALYSE_MEDIAMOSA_MEDIAFILES);
+  $may_download = user_access(mediamosa_settings::MEDIAMOSA_PERMISSION_DOWNLOAD_MEDIAMOSA_MEDIAFILES);
 
   $allowed_still_fields = array(
     'mediafile_id',
@@ -736,7 +736,7 @@ function mediamosa_browse_asset_form($form, &$form_state, $asset_id) {
   $breadcrumb = array();
   $breadcrumb[] = l(t('Home'), NULL);
   $breadcrumb[] = l(t('Administer'), 'admin');
-  $breadcrumb[] = l(t('MediaMosa 2'), 'admin/mediamosa');
+  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
   $breadcrumb[] = l(t('Browse'), 'admin/mediamosa/browse');
   $breadcrumb[] = l(t('Asset browser'), 'admin/mediamosa/browse/asset');
   drupal_set_breadcrumb($breadcrumb);

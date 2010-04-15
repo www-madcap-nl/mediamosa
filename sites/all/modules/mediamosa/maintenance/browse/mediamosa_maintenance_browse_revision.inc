@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -45,12 +45,16 @@
  * Show listing of the revisions (of our nodes).
  */
 function mediamosa_maintenance_browse_revision_form() {
+
+  // Include our css.
+  drupal_add_css(drupal_get_path('module', 'mediamosa_maintenance') . '/mediamosa_maintenance.css');
+
   $header = array(
     array('data' => t('ID'), 'field' => 'mnr.vid', 'sort' => 'desc'),
     array('data' => t('User'), 'field' => 'nr.uid'),
     array('data' => t('Type'), 'field' => 'n.type'),
     array('data' => t('Title'), 'field' => 'n.title'),
-    array('data' => t('Date'), 'field' => 'nr.timestamp', 'sort' => 'desc'),
+    array('data' => t('Date'), 'field' => 'nr.timestamp', 'class' => 'mmdate'),
     array('data' => t('Type')),
   );
 
@@ -112,7 +116,7 @@ function mediamosa_maintenance_browse_revision_form() {
         check_plain($names[$revision['uid']]),
         $link,
         check_plain($revision['title']),
-        theme('mediamosa_maintenance_date', array('datetime' => $revision['timestamp'])),
+        array('data' => theme('mediamosa_maintenance_date', array('datetime' => $revision['timestamp'])), 'class' => 'mmdate'),
         'change'
       ),
     );
@@ -142,7 +146,7 @@ function _mediamosa_maintenance_view_revision($nid, $vid) {
   $breadcrumb = array();
   $breadcrumb[] = l(t('Home'), NULL);
   $breadcrumb[] = l(t('Administer'), 'admin');
-  $breadcrumb[] = l(t('MediaMosa 2'), 'admin/mediamosa');
+  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
   $breadcrumb[] = l(t('Browse'), 'admin/mediamosa/browse');
   $breadcrumb[] = l(t('Revision'), 'admin/mediamosa/browse/revision');
   drupal_set_breadcrumb($breadcrumb);

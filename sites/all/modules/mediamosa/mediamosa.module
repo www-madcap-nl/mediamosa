@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -81,6 +81,26 @@ function mediamosa_requirements($phase) {
  */
 function mediamosa_permission() {
   return array(
+    mediamosa_settings::MEDIAMOSA_PERMISSION_DELETE_MEDIAMOSA_JOBS =>  array(
+      'title' => t('Delete jobs'),
+      'description' => t('Users with this permission may delete jobs.'),
+    ),
+    mediamosa_settings::MEDIAMOSA_PERMISSION_DELETE_MEDIAMOSA_MEDIAFILES =>  array(
+      'title' => t('Delete mediafiles'),
+      'description' => t('Users with this permission may delete mediafiles.'),
+    ),
+    mediamosa_settings::MEDIAMOSA_PERMISSION_ANALYSE_MEDIAMOSA_MEDIAFILES =>  array(
+      'title' => t('Analyse mediafiles'),
+      'description' => t('Users with this permission may start analyse jobs for mediafiles.'),
+    ),
+    mediamosa_settings::MEDIAMOSA_PERMISSION_DOWNLOAD_MEDIAMOSA_MEDIAFILES =>  array(
+      'title' => t('Download mediafiles'),
+      'description' => t('Users with this permission may download mediafiles.'),
+    ),
+    'access mediamosa config' =>  array(
+      'title' => t('Access MediaMosa Administration'),
+      'description' => t('View the MediaMosa configuration, maintenance and other pages.'),
+    ),
     'administer mediamosa' =>  array(
       'title' => t('Administer MediaMosa'),
       'description' => t('Administer rights Mediamosa.'),
@@ -139,7 +159,7 @@ function mediamosa_mediamosa_register_rest_call() {
     mediamosa_rest_call::MODULE_NAME => 'mediamosa',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_6_1,
     mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
-    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_DEFAULT | mediamosa_rest_call::ACCESS_EXTERNAL
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
   );
 
   // These REST calls are only available during the sandbox of simpletest.
@@ -234,7 +254,7 @@ $rest_calls['rest/$uri_id'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
     mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
   <item id="1">
-    <version>2.1.2</version>
+    <version>2.1.0</version>
   </item>
 </items>',
   );

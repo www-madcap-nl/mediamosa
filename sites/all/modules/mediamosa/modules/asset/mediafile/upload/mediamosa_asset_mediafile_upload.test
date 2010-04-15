@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -37,7 +37,7 @@ class MediaMosaAssetMediafileUploadTestCaseEga extends MediaMosaTestCaseEga {
 
   // ------------------------------------------------------------------ Members.
 
-  // ------------------------------------------------------------------ Functions.
+  // ----------------------------------------------------------------- Functions.
   public static function getInfo() {
     return array(
       'name' => 'Upload Mediafile test',
@@ -46,9 +46,10 @@ class MediaMosaAssetMediafileUploadTestCaseEga extends MediaMosaTestCaseEga {
     );
   }
 
-  // ------------------------------------------------------------------ Tests.
+  // -------------------------------------------------------------------- Tests.
   function testTicket504() {
-    // Code moved to lower class so we can use it in other tests that need uploaded test file.
+    // Code moved to lower class so we can use it in other tests that need
+    // uploaded test file.
     $this->uploadTestFile();
   }
 }

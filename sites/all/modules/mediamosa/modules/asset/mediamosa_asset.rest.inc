@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -782,8 +782,17 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
     // Add mediafiles.
     $mediafile_ids = mediamosa_asset_mediafile::mediafiles_search($asset_id, $tag, FALSE, ($asset['app_id'] == $app_id ? array() : $app_ids));
 
-    // Now enrich the output.
-    $items[0]['mediafiles'] = mediamosa_asset_mediafile::enrich_response_mediafile($mediafile_ids, $app_ids, $is_oai, $show_stills);
+    // Is app client at 1.6 ?
+    $app_active_version = $this->app_active_version($app_id);
+
+    // Show in old format?
+    $old_output = $app_active_version !== FALSE && ($app_active_version[mediamosa_version::MAJOR] == 1 && $app_active_version[mediamosa_version::MINOR] < 6);
+
+    // Now enrich the output with mediafiles.
+    $items[0]['mediafiles'] = mediamosa_asset_mediafile::enrich_response_mediafile($mediafile_ids, $app_ids, $is_oai, $show_stills, $old_output);
+
+    // Add streamable setting on asset.
+    $items[0]['has_streamable_mediafiles'] = mediamosa_asset::enrich_response_has_streamable_mediafiles($old_output ?  $items[0]['mediafiles'] : $items[0]['mediafiles']['mediafile']) ? 'TRUE' : 'FALSE';
 
     // Add to response.
     foreach ($items as $item) {

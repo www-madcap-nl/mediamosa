@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -60,7 +60,7 @@ function mediamosa_migration_form() {
     // Get possible reasons not to migrate.
     $reasons = _mediamosa_requirements_test();
     $form['migration']['text_passed_intro'] = array(
-      '#markup' => '<p>' . t('To use your MediaMosa 1.7.x database, you need to migrate your 1.7.x database to MediaMosa 2. Your origninal 1.7.x database is not changed. If for some reason migration fails, please report on !mediamosaorg. Make sure you are migrating with version MediaMosa 1.7.3. to MediaMosa 2.1.x.', array('!mediamosaorg' => l('mediamosa.org', 'http://mediamosa.org'))) . '</p>'
+      '#markup' => '<p>' . t('To use your MediaMosa 1.7.x database, you need to migrate your 1.7.x database to MediaMosa. Your origninal 1.7.x database is not changed. Warning: Your old database must be installed on the same mysql server as the new MediaMosa 2.x database. If for some reason migration fails, please report on !mediamosaorg. Make sure you are migrating with version MediaMosa 1.7.3. to MediaMosa.1.x.', array('!mediamosaorg' => l('mediamosa.org', 'http://mediamosa.org'))) . '</p>'
     );
 
     if (count($reasons)) {
@@ -97,7 +97,7 @@ function mediamosa_migration_form_submit($form, &$form_state) {
           array('_mediamosa_migration_process', array('_mediamosa_migration_asset', t('asset table(s)'))),
           array('_mediamosa_migration_process', array('_mediamosa_migration_asset_supplement', t('asset supplement table(s)'))),
           array('_mediamosa_migration_process', array('_mediamosa_migration_mediafile', t('mediafile table(s)'))),
-          array('_mediamosa_migration_process', array('_mediamosa_migration_kill_child_assets', t('move child assets from possible parents, parent_id in asset table is no longer used in MediaMosa 2'))),
+          array('_mediamosa_migration_process', array('_mediamosa_migration_kill_child_assets', t('move child assets from possible parents, parent_id in asset table is no longer used in MediaMosa'))),
           array('_mediamosa_migration_process', array('_mediamosa_migration_mediafile_metadata', t('mediafile metadata table(s)'))),
           array('_mediamosa_migration_process', array('_mediamosa_migration_asset_metadata_property_group', t('asset metadata property group table(s)'))),
           array('_mediamosa_migration_process', array('_mediamosa_migration_asset_metadata_property', t('asset metadata property table(s)'))),

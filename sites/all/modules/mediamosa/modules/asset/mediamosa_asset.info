@@ -2,7 +2,7 @@
 
 name = "Asset"
 description = "The asset module contains all submodules for asset like mediafile, metadata, access layer etc."
-package = "MediaMosa 2 - Modules"
+package = "MediaMosa - Modules"
 version = "2.0.0"
 core = 7.x
 
@@ -54,6 +54,10 @@ files[] = mediafile/still/mediamosa_asset_mediafile_still.delete.test
 ; Mediafile Still Download.
 files[] = mediafile/still/download/mediamosa_asset_mediafile_still_download.rest.inc
 files[] = mediafile/still/download/mediamosa_asset_mediafile_still_download.test
+
+; Mediafile Still Upload.
+files[] = mediafile/still/upload/mediamosa_asset_mediafile_still_upload.rest.inc
+files[] = mediafile/still/upload/mediamosa_asset_mediafile_still_upload.test
 
 ; Mediafile Upload.
 files[] = mediafile/upload/mediamosa_asset_mediafile_upload.rest.inc

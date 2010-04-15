@@ -6,6 +6,7 @@ Index: bootstrap.inc
      }
    }
    // Strip leading periods, www., and port numbers from cookie domain.
+-  // Strip leading periods, www., and port numbers from cookie domain.
 +
 +  // Strip leading periods, and port numbers from cookie domain.
    $cookie_domain = ltrim($cookie_domain, '.');

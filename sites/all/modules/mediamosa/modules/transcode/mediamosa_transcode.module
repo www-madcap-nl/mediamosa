@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -250,17 +250,16 @@ function mediamosa_transcode_menu() {
   );
 
   $items['admin/mediamosa/config/transcode_profile/%node'] = array(
-    'title' => 'View',
     'page callback' => 'node_page_view',
     'page arguments' => array(4),
     'access callback' => 'node_access',
     'access arguments' => array('view', 4),
-    'type' => MENU_LOCAL_TASK,
+    'type' => MENU_CALLBACK,
   );
   $items['admin/mediamosa/config/transcode_profile/%node/view'] = array(
     'title' => 'View',
-    'type' => MENU_LOCAL_TASK,
-    'weight' => mediamosa_settings::UI_TAB_WEIGHT_VIEW,
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_VIEW
   );
 
   $items['admin/mediamosa/config/transcode_profile/%node/edit'] = array(
@@ -289,6 +288,18 @@ function mediamosa_transcode_menu() {
     'file' => 'node.pages.inc',
     'file path' => drupal_get_path('module', 'node'),
     'weight' => mediamosa_settings::UI_TAB_WEIGHT_DELETE,
+  );
+
+  $items['admin/mediamosa/config/transcode_profile/%node/revisions'] = array(
+    'title' => 'Revisions',
+    'page callback' => '_mediamosa_node_revision_overview',
+    'page arguments' => array(4),
+    'access callback' => '_node_revision_access',
+    'access arguments' => array(4),
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'node.pages.inc',
+    'file path' => drupal_get_path('module', 'node'),
+    'weight' => mediamosa_settings::UI_TAB_WEIGHT_REVISIONS,
   );
 
   return $items;

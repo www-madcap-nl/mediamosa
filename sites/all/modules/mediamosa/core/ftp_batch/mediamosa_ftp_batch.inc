@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -85,6 +85,7 @@ class mediamosa_ftp_batch {
     return mediamosa_db::db_query(
       'SELECT * FROM {#mediamosa_ftp_batch} WHERE #batch_id = :batch_id',
       array(
+        '#mediamosa_ftp_batch' => mediamosa_ftp_batch_db::TABLE_NAME,
         '#batch_id' => mediamosa_ftp_batch_db::ID,
         ':batch_id' => $batch_id
       )

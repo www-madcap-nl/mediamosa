@@ -32,7 +32,7 @@ START CHANGELOG:
 
  
 
-Mediamosa 2.1.2
+Mediamosa 2.1.0
 ---------------
 - Play proxy call will now return the ticket id in result.
 - Fixed number of query bugs in AUT / ACL code.
@@ -86,14 +86,15 @@ Mediamosa 2.1.2
 - Date types uses ISO8601 norm; 'YYYY-MM-DD HH:MM:SS' or 'YYYY-MM-DDTHH:MM:SS'.
   Timezone specification in ISO8601 however is ignored for now. Its now allowed
   to enter '2007' or '2007-10' without triggering errors.
- 
-MediaMosa 2.1.1
----------------
+- Server IP/URL settings are now prepared/compliant for IPv7.
+- MediaMosa is now UTF8 Compliant.
+- asset/delete REST call now returns failures per failed asset and their cause.
 - Fixed problems editing the transcode profile.
 - Fixed migration problem on transcode profiles.
+- REST call mediafile/$mediafile_id/uploadticket/create now also returns the
+  ticket_id as seperate value.
 
-
-MediaMosa 2.1.0
+MediaMosa.1.0
 ---------------
 - Added support CQL for is_empty_asset (See MediaMosa ticket #180).
 - Banner text was updated (See MediaMosa ticket #222).
@@ -112,7 +113,7 @@ MediaMosa 2.1.0
   version.
 
 
-MediaMosa 2.0.0 (released as read-only)
+MediaMosa.0.0 (released as read-only)
 ---------------
 - Port to drupal 7.
 - VPX name use in code has been replaced with MediaMosa.

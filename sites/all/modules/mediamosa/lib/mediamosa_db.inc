@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -52,16 +52,16 @@ class mediamosa_db {
 
   // ------------------------------------------------------------------ Static Function.
   static public function db_delete(/* $table, $options = NULL*/) {
-    $a_args = func_get_args(); // Must copy into $a_args, cant use it directly in call_user_func_array
+    $args = func_get_args(); // Must copy into $args, cant use it directly in call_user_func_array
 
     if (mediamosa::is_db_logging()) {
       $f_start_time = microtime(TRUE);
-      $result = call_user_func_array('db_delete', $a_args);
-      mediamosa::log_db(round(microtime(TRUE) - $f_start_time, 4), $result && isset($result->queryString) ? $result->queryString : $a_args[0]);
+      $result = call_user_func_array('db_delete', $args);
+      mediamosa::log_db(round(microtime(TRUE) - $f_start_time, 4), $result && isset($result->queryString) ? $result->queryString : $args[0]);
       return $result;
     }
 
-    return call_user_func_array('db_delete', $a_args);
+    return call_user_func_array('db_delete', $args);
   }
 
   /**
@@ -92,12 +92,12 @@ class mediamosa_db {
    *  String value of the db_query[_*] function.
    * @param string $query
    *  SQL query.
-   * @param array $a_args
+   * @param array $args
    *  The arguments for $query.
    * @return result
    *  DB result set object.
    */
-  static private function query($func = 'db_query', array $a_args = array()) {
+  static private function query($func = 'db_query', array $args = array()) {
 
     // Increase query count.
     self::query_count(1);
@@ -105,27 +105,27 @@ class mediamosa_db {
     // Because the order can change of the a_args per func, lets create pointers to them.
     switch ($func) {
       case 'db_query_range':
-        if (!isset($a_args[4])) {
-          $a_args[4] = array();
+        if (!isset($args[4])) {
+          $args[4] = array();
         }
 
        // By default, specify we want array's and not objects.
-        $a_args[4] += array(
+        $args[4] += array(
           'fetch' => PDO::FETCH_ASSOC,
         );
-        $query = &$a_args[0]; // The Query
-        $args = &$a_args[3];  // The Arguments.
+        $query = &$args[0]; // The Query
+        $args_cpy = &$args[3];  // The Arguments.
         break;
 
       case 'db_query_temporary':
       case 'db_query':
         // By default, specify we want array's and not objects.
-        $a_args[2] += array(
+        $args[2] += array(
           'fetch' => PDO::FETCH_ASSOC,
         );
 
-        $query = &$a_args[0]; // The Query.
-        $args = &$a_args[1];  // The Arguments.
+        $query = &$args[0]; // The Query.
+        $args_cpy = &$args[1];  // The Arguments.
         break;
 
       default:
@@ -140,9 +140,9 @@ class mediamosa_db {
     }
 
     // Define '#vars' for inserting values that are not quoted in the result.
-    if (isset($args)) {
+    if (isset($args_cpy)) {
       $a_extras = array();
-      foreach ($args as $key => $value) {
+      foreach ($args_cpy as $key => $value) {
         if ($key{0} != '#') {
           continue;
         }
@@ -153,7 +153,7 @@ class mediamosa_db {
       if (count($a_extras)) {
         $query = strtr($query, $a_extras);
         foreach ($a_extras as $key => $value) {
-          unset($args[$key]);
+          unset($args_cpy[$key]);
         }
       }
     }
@@ -164,7 +164,7 @@ class mediamosa_db {
     }
 
     // Do the query.
-    $result = call_user_func_array($func, $a_args);
+    $result = call_user_func_array($func, $args);
 
     // Loggin on.
     if (mediamosa::is_db_logging()) {
@@ -181,8 +181,8 @@ class mediamosa_db {
    *  DB result set object.
    */
   static public function db_query_range(/* $query, $from, $count, array $args = array(), array $options = array()*/) {
-    $a_args = func_get_args();
-    return self::query('db_query_range', $a_args);
+    $args = func_get_args();
+    return self::query('db_query_range', $args);
   }
 
   /**
@@ -192,16 +192,16 @@ class mediamosa_db {
    *  DB result set object.
    */
   static public function db_query(/* $query, $args = array(), $options = array()*/) {
-    $a_args = func_get_args();
+    $args = func_get_args();
 
     /**
      * FIXME
      * Remove code once we migrated all old db_query sprintf queries.
      * Start Query hack fix for old 6.x drupal queries.
      */
-    if (isset($a_args[1]) && !is_array($a_args[1])) {
-      $query = &$a_args[0]; // The Query.
-      $a_args_2 = array();
+    if (isset($args[1]) && !is_array($args[1])) {
+      $query = &$args[0]; // The Query.
+      $args_2 = array();
 
       $y = 1;
       for ($x = 0; $x < mediamosa_unicode::strlen($query); $x++) {
@@ -227,43 +227,43 @@ class mediamosa_db {
 
           switch ($char) {
             case 'd':
-              $a_args_2[$prefix . 'mediamosa_var_' . $y] = (int)$a_args[$y];
+              $args_2[$prefix . 'mediamosa_var_' . $y] = (int)$args[$y];
               break;
             case 'f':
-              $a_args_2[$prefix . 'mediamosa_var_' . $y] = (float)$a_args[$y];
+              $args_2[$prefix . 'mediamosa_var_' . $y] = (float)$args[$y];
               break;
             default:
-              $a_args_2[$prefix . 'mediamosa_var_' . $y] = (string)$a_args[$y];
+              $args_2[$prefix . 'mediamosa_var_' . $y] = (string)$args[$y];
               break;
           }
 
           // Remove the numbered index version.
-          unset($a_args[$y++]);
+          unset($args[$y++]);
         }
       }
 
       // Copy the new array into args[1]
-      $a_args[1] = $a_args_2;
+      $args[1] = $args_2;
     }
     /**
      * End Query hack fix for old 6.x drupal queries.
      */
 
-    if (!isset($a_args[1])) {
-      $a_args[1] = array();
+    if (!isset($args[1])) {
+      $args[1] = array();
     }
-    if (!isset($a_args[2])) {
-      $a_args[2] = array();
+    if (!isset($args[2])) {
+      $args[2] = array();
     }
 
     // Lets make sure we return the inserted ID with insert into!
-    if (mediamosa_unicode::strtoupper(mediamosa_unicode::substr($a_args[0], 0, mediamosa_unicode::strlen('INSERT INTO '))) == 'INSERT INTO ') {
-      $a_args[2] += array(
+    if (mediamosa_unicode::strtoupper(mediamosa_unicode::substr($args[0], 0, mediamosa_unicode::strlen('INSERT INTO '))) == 'INSERT INTO ') {
+      $args[2] += array(
         'return' => Database::RETURN_INSERT_ID,
       );
     }
 
-    return self::query('db_query', $a_args);
+    return self::query('db_query', $args);
   }
 
   /**
@@ -273,8 +273,8 @@ class mediamosa_db {
    *  DB result set object.
    */
   static public function db_query_temporary(/* $query, array $args = array(), array $options = array()*/) {
-    $a_args = func_get_args();
-    return self::query('db_query_temporary', $a_args);
+    $args = func_get_args();
+    return self::query('db_query_temporary', $args);
   }
 
   /**
@@ -287,10 +287,10 @@ class mediamosa_db {
     // Increase query count.
     self::query_count(1);
 
-    $a_args = func_get_args(); // Must copy into $a_args, cant use it directly in call_user_func_array
+    $args = func_get_args(); // Must copy into $args, cant use it directly in call_user_func_array
 
     // Lets return array's by default and not objects.
-    $a_args += array(2 =>
+    $args += array(2 =>
       array(
         'fetch' => PDO::FETCH_ASSOC,
       ),
@@ -298,13 +298,13 @@ class mediamosa_db {
 
     if (mediamosa::is_db_logging()) {
       $f_start_time = microtime(TRUE);
-      $result = call_user_func_array('db_select', $a_args);
+      $result = call_user_func_array('db_select', $args);
       mediamosa::log_db(round(microtime(TRUE) - $f_start_time, 4), $result && isset($result->queryString) ? $result->queryString : '-failure-');
       return $result;
     }
 
     // Call db_select function and attach ouy select extender.
-    return call_user_func_array('db_select', $a_args);
+    return call_user_func_array('db_select', $args);
   }
 
   /**
@@ -317,16 +317,16 @@ class mediamosa_db {
     // Increase query count.
     self::query_count(1);
 
-    $a_args = func_get_args(); // Must copy into $a_args, cant use it directly in call_user_func_array
+    $args = func_get_args(); // Must copy into $args, cant use it directly in call_user_func_array
 
     if (mediamosa::is_db_logging()) {
       $f_start_time = microtime(TRUE);
-      $result = call_user_func_array('db_insert', $a_args);
+      $result = call_user_func_array('db_insert', $args);
       mediamosa::log_db(round(microtime(TRUE) - $f_start_time, 4), $result && isset($result->queryString) ? $result->queryString : '-failure-');
       return $result;
     }
 
-    return call_user_func_array('db_insert', $a_args);
+    return call_user_func_array('db_insert', $args);
   }
 
   /**
@@ -353,16 +353,16 @@ class mediamosa_db {
     // Increase query count.
     self::query_count(1);
 
-    $a_args = func_get_args(); // Must copy into $a_args, cant use it directly in call_user_func_array
+    $args = func_get_args(); // Must copy into $args, cant use it directly in call_user_func_array
 
     if (mediamosa::is_db_logging()) {
       $f_start_time = microtime(TRUE);
-      $result = call_user_func_array('db_update', $a_args);
+      $result = call_user_func_array('db_update', $args);
       mediamosa::log_db(round(microtime(TRUE) - $f_start_time, 4), $result && isset($result->queryString) ? $result->queryString : '-failure-');
       return $result;
     }
 
-    return call_user_func_array('db_update', $a_args);
+    return call_user_func_array('db_update', $args);
   }
 
   /**

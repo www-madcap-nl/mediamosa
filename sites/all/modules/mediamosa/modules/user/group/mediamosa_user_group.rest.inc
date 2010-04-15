@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -111,11 +111,11 @@ class mediamosa_rest_call_group_list extends mediamosa_rest_call {
     $limit = $this->get_param_value_limit();
 
     // Fetch the items.
-    $result = mediamosa_user::fetch_items(FALSE, $app_id, $offset, $limit);
+    $result = mediamosa_user::get_all(FALSE, $app_id, $offset, $limit);
 
     // Fill the response.
-    foreach ($result as $a_row) {
-      $o_mediamosa->add_item($result);
+    foreach ($result as $row) {
+      $o_mediamosa->add_item($row);
     }
 
     // Set total count.
@@ -152,6 +152,7 @@ class mediamosa_rest_call_group_create extends mediamosa_rest_call {
         self::QUOTUM => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
           self::VAR_DESCRIPTION => 'Disk space of the group in bytes.',
+          self::VAR_DEFAULT_VALUE => 0,
         ),
       )
     );

@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -147,8 +147,10 @@ class mediamosa_asset_metadata {
       switch ($action) {
         case 'replace':
           $do_delete = TRUE;
+
         case 'append':
           break;
+
         case 'update':
           if (isset($a_params[$name])) {
             $do_delete = TRUE;

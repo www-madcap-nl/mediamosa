@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -105,6 +105,7 @@ class mediamosa_rest_call_asset_mediafile_uploadticket_create extends mediamosa_
       array(
         'action' => str_replace("{TICKET}", $ticket_id, $a_server_upload[mediamosa_server_db::URI]),
         'uploadprogress_url' => $a_server_upload[mediamosa_server_db::URI_UPLOAD_PROGRESS],
+        'ticket_id' => $ticket_id,
       )
     );
   }
@@ -231,6 +232,7 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
         self::FILENAME => array(
           self::VAR_TYPE => mediamosa_type::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The filename of the media file (PUT method only, ignored otherwise).',
+          self::VAR_IS_REQUIRED => $this->is_method_put() ? self::VAR_IS_REQUIRED_YES : self::VAR_IS_REQUIRED_NO,
         ),
         self::COMPLETED_URL => array(
           self::VAR_TYPE => mediamosa_type::TYPE_URL,
@@ -254,7 +256,7 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
     // Get params.
     $ticket_id = $this->get_param_value(self::UPLOAD_TICKET);
     $create_still = $this->get_param_value(self::CREATE_STILL);
-    $a_still_parameters = array(
+    $still_parameters = array(
       'still_type' => $this->get_param_value(self::STILL_TYPE),
       'still_per_mediafile' => $this->get_param_value(self::STILL_PER_MEDIAFILE),
       'still_every_second' => $this->get_param_value(self::STILL_EVERY_SECOND),
@@ -272,7 +274,7 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
     $completed_transcoding_url = $this->get_param_value(self::COMPLETED_TRANSCODING_URL);
     $transcode_inherits_acl = $this->get_param_value(self::TRANSCODE_INHERITS_ACL);
     $tag = $this->get_param_value(self::TAG);
-    $a_trancode_profiles = $this->get_param_value(self::TRANSCODE);
+    $trancode_profiles = $this->get_param_value(self::TRANSCODE);
     $retranscode = $this->get_param_value(self::RETRANSCODE);
 
     $filename_put = NULL;
@@ -282,7 +284,7 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
     }
 
     try {
-      mediamosa_asset_mediafile_upload::handle_upload($ticket_id, $this->is_method_put(), $a_trancode_profiles, $retranscode, $transcode_inherits_acl, $tag, $create_still, $a_still_parameters, $completed_url, $completed_transcoding_url, $filename_put);
+      mediamosa_asset_mediafile_upload::handle_upload($ticket_id, $this->is_method_put(), $tag, $completed_url, $filename_put, $trancode_profiles, $retranscode, $transcode_inherits_acl, $create_still, $still_parameters, $completed_transcoding_url);
     }
     catch (Exception $e) {
 

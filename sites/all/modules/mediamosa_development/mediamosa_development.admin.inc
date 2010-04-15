@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -167,7 +167,7 @@ function _ajax_execute_rest_call() {
     $response_mm1_array = mediamosa_lib::simplexml2array($response_mm1->xml->items);
     $response_mm2_array = mediamosa_lib::simplexml2array($response_mm2->xml->items);
 
-    $compares = array(t('Result compare MediaMosa 2.x with MediaMosa 1.x response.'));
+    $compares = array(t('Result compare MediaMosa2.x with MediaMosa 1.x response.'));
 
     if ((int)$response_mm1->xml->header->item_count != (int)$response_mm2->xml->header->item_count) {
       $compares[] = t('Item count does not match.');
@@ -180,7 +180,7 @@ function _ajax_execute_rest_call() {
     // Find possible ignore key listing for this uri/method.
     $ignore = empty($ignore_list[$uri][$method]) ? array() : $ignore_list[$uri][$method];
 
-    $compares = _mediamosa_development_compare_array($response_mm1_array['item'], $response_mm2_array['item'], 'MediaMosa 1.7.x', 'MediaMosa 2.x', $compares, $ignore);
+    $compares = _mediamosa_development_compare_array($response_mm1_array['item'], $response_mm2_array['item'], 'MediaMosa 1.7.x', 'MediaMosa2.x', $compares, $ignore);
 
     $form['rest_result']['output_compare']['#type'] = 'textarea';
     $form['rest_result']['output_compare']['#value'] = implode("\n", $compares);

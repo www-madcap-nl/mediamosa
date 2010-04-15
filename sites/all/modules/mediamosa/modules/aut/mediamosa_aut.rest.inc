@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -1338,6 +1338,7 @@ class mediamosa_rest_call_aut_collection_set_rights extends mediamosa_rest_call 
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'Application(s) that access to the collection.',
+      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
     );
 
     // Enrich with required REST vars.
@@ -1412,166 +1413,3 @@ class mediamosa_rest_call_aut_collection_set_rights extends mediamosa_rest_call 
     }
   }
 }
-
-/*
-@todo:
-
-
-function vpx_acl_rest_owner_check($a_args) { // TODO: werkt nu alleen voor mediafiles...
-
-  try {
-    vpx_funcparam_add($a_funcparam, $a_args, 'app_id', VPX_TYPE_INT, TRUE);
-    vpx_funcparam_add($a_funcparam, $a_args, 'mediafile_id', VPX_TYPE_MEDIAFILE_ID, TRUE);
-    vpx_funcparam_add($a_funcparam, $a_args, 'user_id', VPX_TYPE_USER_ID, TRUE);
-    vpx_funcparam_add($a_funcparam, $a_args, 'group_id', VPX_TYPE_GROUP_ID);
-
-    $app_id = vpx_funcparam_get_value($a_funcparam, 'app_id');
-    $mediafile_id = vpx_funcparam_get_value($a_funcparam, 'mediafile_id');
-
-    // Make sure the media file exists
-    mediamosa_db::db_must_exists("mediafile", array("app_id" => $app_id, "mediafile_id" => $mediafile_id));
-
-    $user_id = vpx_funcparam_get_value($a_funcparam, 'user_id');
-
-    // controleer de acl
-    db_set_active('data');
-    $db_result = mediamosa_db::db_query("SELECT app_id, owner_id FROM {mediafile} where mediafile_id='%s' ", $mediafile_id);
-    $a_row = db_fetch_array($db_result);
-    assert($a_row);
-
-    $asset_app_id = $a_row['app_id'];
-    $asset_owner  = $a_row['owner_id'];
-    db_set_active();
-
-    vpx_acl_owner_check($app_id, $user_id, $asset_app_id, $asset_owner);
-
-    return new rest_response(vpx_return_error(ERRORCODE_OKAY));
-  }
-  catch (vpx_exception $e) {
-    return $e->vpx_exception_rest_response();
-  }
-}
-
-  /**
- * Wrapper REST call om in 1 keer alle mediafiles van een asset van ACL te voorzien
- */
-  /*
-  function vpx_acl_asset_mediafile_wrapper($a_args) {
-    $a_parameters = array(
-      'asset_id' => array(
-        'value' => vpx_get_parameter_2($a_args['get'], 'asset_id'),
-        'type' => 'skip',
-        'required' => TRUE
-      ),
-      'app_id' => array(
-        'value' => vpx_get_parameter_2($a_args['get'], 'app_id'),
-        'type' => 'int',
-        'required' => TRUE
-      ),
-      'user_id' => array(
-        'value' => vpx_get_parameter_2($a_args['get'], 'user_id'),
-        'type' => TYPE_USER_ID,
-        'required' => TRUE
-      ),
-    );
-    $result = vpx_validate($a_parameters);
-    if (vpx_check_result_for_error($result)) {
-      return new rest_response($result);
-    }
-
-    if (!is_array($a_parameters['asset_id']['value'])) {
-      $a_parameters['asset_id']['value'] = array($a_parameters['asset_id']['value']);
-    }
-
-    $o_mediamosa = new rest_response(vpx_return_error(ERRORCODE_OKAY));
-
-    foreach ($a_parameters['asset_id']['value'] as $asset_id) {
-      $asset = array(
-        'asset_id' => array(
-        'value' => $asset_id,
-        'type' => 'alphanum',
-        'required' => TRUE
-        ),
-      );
-      $result_object = vpx_validate($asset);
-      if (vpx_check_result_for_error($result_object)) {
-        $o_mediamosa->add_item(array(
-        'asset_id' => $asset_id,
-        'result' => $result_object->response['header']['request_result'],
-        'result_id' => $result_object->response['header']['request_result_id'],
-        'result_description' => $result_object->response['header']['request_result_description'],
-        ));
-      }
-      else {
-        // zoek alle mediafile op van deze asset
-        db_set_active('data');
-        $resource = mediamosa_db::db_query(
-        "SELECT m.mediafile_id FROM {asset} a
-        JOIN {mediafile} m ON a.asset_id = m.asset_id
-        WHERE a.asset_id = '%s' OR a.parent_id = '%s'",
-        $asset_id,
-        $asset_id
-        );
-        db_set_active();
-
-        while ($mediafile_id = db_result($resource)) {
-          $a_args['uri']['mediafile_id'] = $mediafile_id;
-          $result_object = vpx_acl_mediafile_set_rights($a_args);
-          $o_mediamosa->add_result_item(array(
-          'asset_id' => $asset_id,
-          'mediafile_id' => $mediafile_id,
-          'result' => $result_object->response['header']['request_result'],
-          'result_id' => $result_object->response['header']['request_result_id'],
-          'result_description' => $result_object->response['header']['request_result_description'],
-          ));
-        }
-      }
-    }
-
-    return $o_mediamosa;
-  }
-
-
-  /**
- * REST call alle voor jouw beschikbare 'foreign' applicaties op te halen
- */
-  /*
-  function vpx_acl_get_foreign_apps($a_args) {
-    $a_parameters = array(
-    'app_id' => array(
-      'value' => vpx_get_parameter_2($a_args['get'], 'app_id'),
-      'type' => 'int',
-      'required' => TRUE
-      ),
-    'secret' => array(
-      'value' => vpx_get_parameter_2($a_args['get'], 'secret'),
-      'type' => 'enum',
-      'enum_values' => array('34yher8hio34jtksmdf823r'),
-      'required' => TRUE
-      ),
-    'is_oai' => array(
-      'value' => vpx_get_parameter_2($a_args['get'], 'is_oai'),
-      'type' => 'bool',
-      ),
-    );
-    $result = vpx_validate($a_parameters);
-    if (vpx_check_result_for_error($result)) {
-      return new rest_response($result);
-    }
-
-    $o_mediamosa = new rest_response(vpx_return_error(ERRORCODE_OKAY));
-
-    $resource = mediamosa_db::db_query(
-    "SELECT id AS app_id, name, play_proxy_url, view_asset_url, download_url
-    FROM {client_applications}
-    WHERE id <> %d OR %d
-    ORDER BY name ASC",
-    $a_parameters['app_id']['value'], ($a_parameters['is_oai']['value'] == 'TRUE' ? 1 : 0)
-    );
-    while ($app = db_fetch_array($resource)) {
-      $o_mediamosa->add_item($app);
-    }
-
-    return $o_mediamosa;
-  }
- */

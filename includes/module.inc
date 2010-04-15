@@ -301,6 +301,7 @@ function module_enable($module_list, $enable_dependencies = TRUE) {
   if ($enable_dependencies) {
     // Get all module data so we can find dependencies and sort.
     $module_data = system_rebuild_module_data();
+
     // Create an associative array with weights as values.
     $module_list = array_flip(array_values($module_list));
 

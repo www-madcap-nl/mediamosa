@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -154,7 +154,14 @@ function mediamosa_settings_insert($node) {
 
   $revision = array();
   foreach ($names as $name) {
-    $revision[$name] = variable_get($name);
+    // Suppling revision?
+    if ($node->revision) {
+      $revision[$name] = $node->{$name};
+      variable_set($name, $node->{$name});
+    }
+    else {
+      $revision[$name] = variable_get($name);
+    }
   }
 
   // Insert revision.
@@ -164,8 +171,8 @@ function mediamosa_settings_insert($node) {
 /**
  * Implements hook_node_revision_delete().
  */
-function mediamosa_settings_node_revision_delete($vid) {
-  mediamosa_node_revision::delete_revision($vid);
+function mediamosa_settings_node_revision_delete($node) {
+  mediamosa_node_revision::delete_revision($node);
 }
 
 /**

@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -55,7 +55,7 @@ class mediamosa_ftp_batch_asset {
     $a_query[mediamosa_db_query::OFFSET] = $offset;
 
     // Build the query.
-    $query = mediamosa_db_query::query($a_query, array(mediamosa_db_query::SQL_CALC_FOUND_ROWS => TRUE));
+    $query = mediamosa_db_query::query_select($a_query, array(mediamosa_db_query::SQL_CALC_FOUND_ROWS => TRUE));
 
     // Do the query.
     $result = mediamosa_db::db_query($query);

@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -225,7 +225,7 @@ function _mediamosa_requirements_test() {
   try {
     // Make sure these class can be found.
     if (!class_exists('mediamosa_asset_metadata_db')) {
-      throw new Exception('Could not find class mediamosa_asset_metadata_db, make sure mediamosa 2 core is installed.');
+      throw new Exception('Could not find class mediamosa_asset_metadata_db, make sure MediaMosa core is installed.');
     }
   }
   catch (Exception $e) {

@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -453,7 +453,7 @@ class mediamosa_asset_search {
       $d_limit = $a_query[mediamosa_db_query::LIMIT];
       $d_offset = $a_query[mediamosa_db_query::OFFSET];
       $d_search = isset($a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][self::SEARCH]) ? $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][self::SEARCH] : FALSE;
-      $d_where = sprintf('a.app_id IN(%s)', implode(',', $a_app_ids_tmp)) . ($d_search ? ' AND '. $d_search : '') . ($coll_id ? ' AND (a.coll_id = "'. implode('" OR a.coll_id = "', $coll_id) .'")' : '');
+      $d_where = sprintf('a.app_id IN(%s)', implode(',', $a_app_ids_tmp)) . ($d_search ? ' AND '. $d_search : '') . ($coll_id ? ' AND (a.coll_id = \''. implode('\' OR a.coll_id = \'', $coll_id) .'\')' : '');
 
       global $db_url;
       /*
@@ -471,23 +471,27 @@ class mediamosa_asset_search {
       /**
        * @todo: fix this to db_query_temp or even refactor without temp.
        */
-      mediamosa_db::db_query('
-        CREATE TEMPORARY TABLE {assets_all} (
-          asset_id VARCHAR(32) NOT NULL,
-          videotimestampmodified TIMESTAMP NULL DEFAULT NULL,
-          PRIMARY KEY  (asset_id)
-        ) ENGINE=MEMORY');
 
         // Modified original query
         $a_query[mediamosa_db_query::A_SELECT_EXPR][] = 'a.videotimestampmodified';
         unset($a_query[mediamosa_db_query::A_ORDER_BY]);
         unset($a_query[mediamosa_db_query::LIMIT]);
         unset($a_query[mediamosa_db_query::OFFSET]);
+        // Clean the joins, because of performance issue.
+        unset($a_query[mediamosa_db_query::A_JOIN]);
         $query = mediamosa_db_query::query_select($a_query);
-        mediamosa_db::db_query('INSERT INTO {assets_all} '. $query);
+        // Join check
+        // Put back the joins, if they are (one of them) necessary
+        if (stripos($query, 'mf.') !== FALSE || stripos($query, 'aut_ms.') !== FALSE || stripos($query, 'asset_coll.') !== FALSE || stripos($query, ' c.') !== FALSE) {
+          $a_query[mediamosa_db_query::A_JOIN] = $tmp_a_query[mediamosa_db_query::A_JOIN];
+          $query = mediamosa_db_query::query_select($a_query);
+        }
+        $query = str_replace('SQL_CALC_FOUND_ROWS', '', $query);
+
+        $table_name = db_query_temporary($query);
 
         // Deleted asset query
-        mediamosa_db::db_query('INSERT INTO {assets_all} SELECT a.asset_id, a.videotimestampmodified FROM {#mediamosa_asset_delete} AS a'. ($d_where ? ' WHERE '. $d_where : '') .' GROUP BY a.asset_id', array(
+        mediamosa_db::db_query('INSERT INTO {' . $table_name . '} SELECT a.asset_id, a.videotimestampmodified FROM {#mediamosa_asset_delete} AS a'. ($d_where ? ' WHERE '. $d_where : '') .' GROUP BY a.asset_id', array(
           '#mediamosa_asset_delete' => mediamosa_asset_delete_db::TABLE_NAME,
         ));
 
@@ -495,17 +499,17 @@ class mediamosa_asset_search {
         if (substr($d_ordby, 0, 5) == 'sort.') {
           $d_ordby = 'a.' . substr($d_ordby, 5);
         }
-        $result = mediamosa_db::db_query('SELECT DISTINCT a.asset_id FROM {assets_all} AS a'. ($d_ordby ? ' ORDER BY '. $d_ordby : '') . ($d_limit ? ($d_offset ? ' LIMIT '. $d_offset .','. $d_limit : ' LIMIT '. $d_limit) : ''));
+        $result = mediamosa_db::db_query('SELECT DISTINCT a.asset_id FROM {' . $table_name . '} AS a'. ($d_ordby ? ' ORDER BY '. $d_ordby : '') . ($d_limit ? ($d_offset ? ' LIMIT '. $d_offset .','. $d_limit : ' LIMIT '. $d_limit) : ''));
         $a_asset_ids = array();
         foreach ($result as $a_row) {
           $a_asset_ids[] = $a_row[mediamosa_asset_db::ID];
         }
 
         // How much assets we have globally
-        $i_found_rows = $calculate_total_count ? mediamosa_db::db_query('SELECT COUNT(*) FROM {assets_all}')->fetchField() : count($a_asset_ids);
+        $i_found_rows = $calculate_total_count ? mediamosa_db::db_query('SELECT COUNT(*) FROM {' . $table_name . '}')->fetchField() : count($a_asset_ids);
 
         // Drop temporary table (no need to drop temp, this is done by mysql when session closes).
-        //mediamosa_db::db_query('DROP TABLE {assets_all}');
+        //mediamosa_db::db_query('DROP TABLE {' . $table_name . '}');
 
         // Restore.
         $a_query = $tmp_a_query;
@@ -608,7 +612,9 @@ class mediamosa_asset_search {
       }
     }
     else {
-      $a_items = mediamosa_asset::asset_collect($a_asset_ids, $a_app_ids, $aut_user_id, $granted, $a_aut_group_id, $aut_domain, $aut_realm, $is_app_admin, $show_stills, $show_collections);
+      $add_has_streamable_mediafiles = TRUE;
+
+      $a_items = mediamosa_asset::asset_collect($a_asset_ids, $a_app_ids, $aut_user_id, $granted, $a_aut_group_id, $aut_domain, $aut_realm, $is_app_admin, $show_stills, $show_collections, $add_has_streamable_mediafiles);
 
       foreach ($a_items as $a_item) {
         $mediamosa->add_item($a_item);

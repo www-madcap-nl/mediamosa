@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -219,6 +219,7 @@ class MediaMosaAssetMediafileMetadataTestCaseEga extends MediaMosaTestCaseEga {
     // Collect metadatas.
     $a_parameters_append = array(
       'description' => 'most original',
+      'action' => 'append',
     );
 
     // Create metadatas.
@@ -227,7 +228,7 @@ class MediaMosaAssetMediafileMetadataTestCaseEga extends MediaMosaTestCaseEga {
     // Get the asset metadatas.
     $a_asset = $this->getAsset($asset_id);
     $metadata = array_merge($a_asset['dublin_core'], $a_asset['qualified_dublin_core']);
-
+$this->var_export($a_asset);
     $key = 'description';
     $this->assertTrue(
       $a_parameters[$key] == $metadata[$key][0],

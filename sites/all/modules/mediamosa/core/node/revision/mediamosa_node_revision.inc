@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -248,10 +248,10 @@ class mediamosa_node_revision {
    * Delete the revisions of this node.
    * @param $nid
    */
-  static public function delete($nid) {
+  static public function delete($node) {
     // Remove revision.
     mediamosa_db::db_delete(mediamosa_node_revision_db::TABLE_NAME)
-      ->condition('nid', $nid)
+      ->condition(mediamosa_node_revision_db::NID, $node->nid)
       ->execute();
   }
 
@@ -259,10 +259,11 @@ class mediamosa_node_revision {
    * Delete the revisions of this node.
    * @param $nid
    */
-  static public function delete_revision($vid) {
+  static public function delete_revision($node) {
+
     // Remove revision.
     mediamosa_db::db_delete(mediamosa_node_revision_db::TABLE_NAME)
-      ->condition('vid', $vid)
+      ->condition(mediamosa_node_revision_db::VID, $node->vid)
       ->execute();
   }
 
@@ -280,6 +281,6 @@ class mediamosa_node_revision {
     }
 
     // Remove revision.
-    self::delete($node->nid);
+    self::delete($node);
   }
 }

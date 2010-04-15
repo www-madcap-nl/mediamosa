@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -75,7 +75,7 @@ class mediamosa_node_mediamosa_app {
     }
 
     // Must be first.
-    $versions['LATEST'] = t('Latest');
+    $versions[mediamosa_version::LATEST] = t('Latest');
 
     // Sort on version.
     krsort($versions);
@@ -172,14 +172,23 @@ function mediamosa_app_delete($node) {
 /**
  * Implements hook_node_revision_delete().
  */
-function mediamosa_app_node_revision_delete($vid) {
-  mediamosa_node_revision::delete_revision($vid);
+function mediamosa_app_node_revision_delete($node) {
+  mediamosa_node_revision::delete_revision($node);
 }
 
 /**
  * Implements hook_view().
  */
 function mediamosa_app_view($node, $view_mode = 'full') {
+
+  // Reset the breadcrum.
+  $breadcrumb = array();
+  $breadcrumb[] = l(t('Home'), NULL);
+  $breadcrumb[] = l(t('Administer'), 'admin');
+  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
+  $breadcrumb[] = l(t('Configuration'), 'admin/mediamosa/config');
+  $breadcrumb[] = l(t('Client applications'), 'admin/mediamosa/config/app');
+  drupal_set_breadcrumb($breadcrumb);
 
   $status = array(
     mediamosa_app_db::ACTIVE_TRUE => t('Enabled'),
@@ -227,6 +236,15 @@ function mediamosa_app_view($node, $view_mode = 'full') {
  */
 function mediamosa_app_form($node, &$form_state) {
   global $user;
+
+  // Reset the breadcrum.
+  $breadcrumb = array();
+  $breadcrumb[] = l(t('Home'), NULL);
+  $breadcrumb[] = l(t('Administer'), 'admin');
+  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
+  $breadcrumb[] = l(t('Configuration'), 'admin/mediamosa/config');
+  $breadcrumb[] = l(t('Client applications'), 'admin/mediamosa/config/app');
+  drupal_set_breadcrumb($breadcrumb);
 
   // Get all apps. app_id -> name
   $apps_all = mediamosa_app::get_all_apps(array(mediamosa_app_db::NID, mediamosa_app_db::APP_ID, mediamosa_app_db::APP_NAME), mediamosa_app_db::APP_NAME);
@@ -417,7 +435,7 @@ function mediamosa_app_form($node, &$form_state) {
     '#title' => t('Select active version'),
     '#description' => t('Version of the rest calls to execute.'),
     '#options' => mediamosa_node_mediamosa_app::app_get_all_versions(),
-    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::ACTIVE_VERSION, $node, 'LATEST'),
+    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::ACTIVE_VERSION, $node, mediamosa_version::LATEST),
   );
 
   $form['urls'] = array(

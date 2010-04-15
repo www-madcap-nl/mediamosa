@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -357,25 +357,38 @@ function mediamosa_aut_mediamosa_register_rest_call_doc() {
   $a_rest_calls['collection/$coll_id/acl'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Set rights on a collection.',
     mediamosa_rest_call::DESCRIPTION => 'Set rights on a collection.',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'collection/7jUOpquLUVf5yCaH4dEmXC6f/acl<br \><br \>aut_app = "3"<br />coll_id = "7jUOpquLUVf5yCaH4dEmXC6f"<br />user_id = "testuser"',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => ' <items>
+  <item id="1">
+    <aut_app>
+      <value>3</value>
+      <result>success</result>
+      <result_id>601</result_id>
+      <result_description></result_description>
+    </aut_app>
+  </item>
+</items>',
   );
 
   $a_rest_calls['collection/$coll_id/acl/delete'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Remove rights on a collection.',
     mediamosa_rest_call::DESCRIPTION => 'Remove rights on a collection.',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'collection/VlN2ZDKv9rpsfmBAWpvfiw1zQ6z/delete<br /><br />delete = "cascade"',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
   );
 
   $a_rest_calls['collection/$coll_id/acl'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'Get rights on a collection.',
     mediamosa_rest_call::DESCRIPTION => 'Get rights on a collection.',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/collection/58/acl?user_id=entree004',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => ' <items>
+  <item id="1">
+    <aut_app>3</aut_app>
+  </item>
+</items>',
   );
 
   return $a_rest_calls;

@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -161,14 +161,22 @@ function mediamosa_server_delete($node) {
 /**
  * Implements hook_node_revision_delete().
  */
-function mediamosa_server_node_revision_delete($vid) {
-  mediamosa_node_revision::delete_revision($vid);
+function mediamosa_server_node_revision_delete($node) {
+  mediamosa_node_revision::delete_revision($node);
 }
 
 /**
  * Implements hook_view().
  */
 function mediamosa_server_view($node, $view_mode = 'full') {
+
+  $breadcrumb = array();
+  $breadcrumb[] = l(t('Home'), NULL);
+  $breadcrumb[] = l(t('Administer'), 'admin');
+  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
+  $breadcrumb[] = l(t('Configuration'), 'admin/mediamosa/config');
+  $breadcrumb[] = l(t('Server listing'), 'admin/mediamosa/config/server');
+  drupal_set_breadcrumb($breadcrumb);
 
   // Default parameters
   $rows = array(
@@ -248,6 +256,14 @@ function mediamosa_server_form($node, &$form_state) {
     $server_type = $node->{mediamosa_server_db::SERVER_TYPE};
   }
 
+  $breadcrumb = array();
+  $breadcrumb[] = l(t('Home'), NULL);
+  $breadcrumb[] = l(t('Administer'), 'admin');
+  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
+  $breadcrumb[] = l(t('Configuration'), 'admin/mediamosa/config');
+  $breadcrumb[] = l(t('Server listing'), 'admin/mediamosa/config/server');
+  drupal_set_breadcrumb($breadcrumb);
+
   // Else take it from the uri.
   if (!isset($server_type)) {
     $server_type = arg(5);
@@ -282,7 +298,7 @@ function mediamosa_server_form($node, &$form_state) {
 
     case mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR:
       // If its already OFF then the value is allowed as option, else its either On or Close.
-      if ($node->{mediamosa_server_db::SERVER_STATUS} != mediamosa_server_db::SERVER_STATUS_OFF) {
+      if (isset($node->{mediamosa_server_db::SERVER_STATUS}) && $node->{mediamosa_server_db::SERVER_STATUS} != mediamosa_server_db::SERVER_STATUS_OFF) {
         $server_status_options =  array(
           mediamosa_server_db::SERVER_STATUS_ON => t('On'),
           mediamosa_server_db::SERVER_STATUS_CLOSE => t('Close'), // Job servers are set to off by cron.
