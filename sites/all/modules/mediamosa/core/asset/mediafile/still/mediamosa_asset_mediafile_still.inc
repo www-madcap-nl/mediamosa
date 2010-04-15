@@ -59,14 +59,14 @@ class mediamosa_asset_mediafile_still {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STILL_NOT_FOUND, array('@asset_id' => $asset_id));
     }
 
-    $a_size = getimagesize($still_filename);
+    $size = getimagesize($still_filename);
 
     // Set width, height.
-    $width = $a_size[0];
-    $height = $a_size[1];
+    $width = $size[0];
+    $height = $size[1];
 
     // Mime type.
-    $mime_type = $a_size['mime'];
+    $mime_type = $size['mime'];
 
     // Set file_type of still based on the mime type of the image.
     $pos = strrpos($mime_type, '/');

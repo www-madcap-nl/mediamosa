@@ -245,7 +245,19 @@ class mediamosa_asset_mediafile_upload {
     }
 
     // Create still.
-    mediamosa_asset_mediafile_still::create($mediafile['asset_id'], $mediafile['asset_id']/*no more asset_id_root*/, $still_id, $ticket[mediamosa_ticket_db::APP_ID], $ticket[mediamosa_ticket_db::OWNER_ID], $ticket[mediamosa_ticket_db::GROUP_ID], $order, $default, array('still_type' => 'PICTURE'), NULL, $mediafile[mediamosa_asset_mediafile_db::ID], $tag);
+    mediamosa_asset_mediafile_still::create(
+      $mediafile['asset_id'], $mediafile['asset_id']/*no more asset_id_root*/,
+      $still_id,
+      $ticket[mediamosa_ticket_db::APP_ID],
+      $ticket[mediamosa_ticket_db::OWNER_ID],
+      $ticket[mediamosa_ticket_db::GROUP_ID],
+      $order,
+      $default,
+      array('still_type' => 'PICTURE'),
+      NULL,
+      $mediafile[mediamosa_asset_mediafile_db::ID],
+      $tag
+    );
 
     // Trigger URL.
     self::trigger_completion_url($completed_url);
