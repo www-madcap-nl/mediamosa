@@ -24,7 +24,8 @@ Steps for changelog and commits;
   
 4. Reassign to TPL (robert).
 5. Put status on ready for review.
-6. Job list with the same timestamp bug fix (See: mediamosa_batch_jobs_sort_files() function).
+6. Job list with the same timestamp bug fix (See: 
+   mediamosa_batch_jobs_sort_files() function).
 7. Queue log fix.
 
 
@@ -34,6 +35,52 @@ START CHANGELOG:
 
 Mediamosa 2.1.0
 ---------------
+- Master-slave enhancements; Client applications can now select which other 
+  client application may create master slave records to the other asset and
+  mediafiles. (See MediaMosa ticket #28).
+- Fixed download problem with filenames having invalid chars. (See MediaMosa 
+  ticket #60).
+- Clean up cancelled upload and transcode jobs test (See MediaMosa ticket #112).
+- Updated transcode package to fix analyse/transcode problems (See MediaMosa 
+  ticket #122).
+- <is_empty_asset> = true, while there is a valid, usable mediafile (See
+  MediaMosa ticket #165 and #167).
+- Added support CQL for is_empty_asset (See MediaMosa ticket #180).
+- is_streamable improvements; returns extra information about response in
+  mediafile output;
+  response_object_available <true / false>
+  response_plain_available <true / false>
+  response_metafile_available <true / false>
+  and in asset output:
+  has_streamable_mediafiles <true / false>
+  (See MediaMosa ticket #187).
+- Transcoding without padding fixed. (See MediaMosa ticket #194).
+- Transcoding error (depends on system) (See MediaMosa ticket #209). 
+- Fixed problem with deleting asset with jobs (See MediaMosa ticket #220).
+- Banner text was updated (See MediaMosa ticket #222).
+- Improved filehandling and file analyser (See MediaMosa ticket #224).
+- Fixed lame mp3 ffmpeg crash (See MediaMosa ticket #230).
+- Fixed visible mediafiles in asset master/slave (See MediaMosa ticket #232).
+- Fixed sort on mediafile_duration gives strange result. (See MediaMosa ticket 
+  #233).
+- Rebuild transcoding package (See MediaMosa ticket #235).
+- bulk-ftp: licence -> license (See MediaMosa ticket #236).
+- Added coll_id search to CQL. (See MediaMosa ticket #241).
+- Added app_id search to CQL. (See MediaMosa ticket #241).
+- Error message in /asset/{id}/collection. (See MediaMosa ticket #243).
+- Error message in /collection/{id} (See MediaMosa ticket #244).
+- /collection/{id}/asset doesn't exist (See MediaMosa ticket #245).
+- Version does not exists. (See MediaMosa ticket #246).
+- /asset/{id}/collection/count is broken (See MediaMosa ticket #249).
+- 'aut_realm' parameter op een /asset call gaat fout (See MediaMosa ticket #252).
+- /autorisation_group?limit=10 broken (See MediaMosa ticket #253).
+- Assets of other apps visible (See MediaMosa ticket #254).
+- /asset owner_id does not work (See 
+  MediaMosa ticket #255).
+- /asset/{id} post call now requires an 'owner_id'. (See MediaMosa ticket #257).
+
+
+Other changes (non-ticket related)
 - Play proxy call will now return the ticket id in result.
 - Fixed number of query bugs in AUT / ACL code.
 - Fixed job server where 2 rows where inserted while only one was allowed.
@@ -93,18 +140,13 @@ Mediamosa 2.1.0
 - Fixed migration problem on transcode profiles.
 - REST call mediafile/$mediafile_id/uploadticket/create now also returns the
   ticket_id as seperate value.
+- Removed notices and warnings when mediafile's file on disk does not exists.
+- Added new unit test listing under Browse tab.
+- Added new development tool/module for testing REST calls.
 
-MediaMosa.1.0
+
+MediaMosa.2.0
 ---------------
-- Added support CQL for is_empty_asset (See MediaMosa ticket #180).
-- Banner text was updated (See MediaMosa ticket #222).
-- Clean up cancelled upload and transcode jobs test (See MediaMosa ticket #112).
-- <is_empty_asset> = true, while there is a valid, usable mediafile (See
-  MediaMosa ticket #165 and #167).
-- Added coll_id search to CQL. (See MediaMosa ticket #241).
-- Added app_id search to CQL. (See MediaMosa ticket #241).
-- Fixed transcode without padding. (See MediaMosa ticket #194).
-- Deleting asset with running jobs gives an error. (See MediaMosa ticket #220).
 - Admin: Added mediamosa server browser.
 - Admin: Added mediamosa REST call browser.
 - Added MediaMosa Connector.

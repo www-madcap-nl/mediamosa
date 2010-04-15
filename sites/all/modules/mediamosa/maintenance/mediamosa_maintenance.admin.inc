@@ -118,7 +118,7 @@ function theme_mediamosa_maintenance_date($variables) {
 
   }
 
-  return check_plain(empty($datetime) ? t('<empty date>') : format_date($datetime, $type));
+  return check_plain(empty($datetime) ? t('<empty date>') : format_date(mediamosa_lib::iso8601date_to_unix($datetime), $type));
 }
 
 /**
@@ -310,8 +310,8 @@ function mediamosa_maintenance_mediafile_download($asset_id, $mediafile_id) {
   $asset = mediamosa_asset::get($asset_id);
 
   if ($asset) {
-    $params = array('user_id' => $asset['owner_id'], 'app_id' => $asset['app_id']);
-    $result = mediamosa_response_connector::static_do_restcall($uri, 'POST', $params);
+    $params = array('user_id' => $asset['owner_id'], 'app_id' => $asset['app_id'], 'mediafile_id' => $mediafile_id, 'response' => 'download', 'is_app_admin' => 'true');
+    $result = mediamosa_response_connector::static_do_restcall($uri, 'GET', $params);
 
     if (mediamosa_response_connector::static_result_okay($result)) {
       $item = reset($result['items']);

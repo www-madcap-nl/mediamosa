@@ -24,12 +24,12 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
- /**
-  * @file
-  * Unit test for User / Group.
-  * Coversion of;
-  * trac_tickets_203
-  */
+/**
+ * @file
+ * Unit test for User / Group.
+ * Coversion of;
+ * trac_tickets_203
+ */
 
 class MediaMosaUserTestCaseEga extends MediaMosaTestCaseEga {
 

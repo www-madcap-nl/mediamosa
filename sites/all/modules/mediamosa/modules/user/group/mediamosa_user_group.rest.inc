@@ -269,7 +269,7 @@ class mediamosa_rest_call_group_update extends mediamosa_rest_call {
         ),
         self::QUOTUM => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
-          self::VAR_DESCRIPTION => 'Disk space of the user in bytes.',
+          self::VAR_DESCRIPTION => 'Disk space of the user in megabytes.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
       )

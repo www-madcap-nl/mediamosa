@@ -24,9 +24,9 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
- /**
-  * @file
-  */
+/**
+ * @file
+ */
 
 // SESSIONs.
 define('MEDIAMOSA_MAINTENACE_BROWSE_ASSETS_SESSION', 'mediamosa_maintenance_browse_assets_session');
