@@ -72,7 +72,16 @@ class mediamosa_rest_call_status extends mediamosa_rest_call {
     $o_mediamosa = mediamosa::get();
 
     // Fill the output.
-    $test_results = mediamosa::variable_get('mediamosa_test_results', array('a_tests' => array()));
+    $test_results = mediamosa::variable_get(
+      'mediamosa_test_results',
+      array(
+        'tests' => array(
+          mediamosa_settings::MEDIAMOSA_RUN_10_MINUTES => array(),
+          mediamosa_settings::MEDIAMOSA_RUN_3_HOURS => array(),
+          mediamosa_settings::MEDIAMOSA_RUN_DAILY => array(),
+        )
+      )
+    );
 
     // For now, return the 10 minutes ones.
     foreach ($test_results[mediamosa_settings::MEDIAMOSA_RUN_10_MINUTES] as $name => $test_result) {
