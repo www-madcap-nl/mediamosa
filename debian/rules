@@ -50,6 +50,7 @@ install: build
 	cp *.php debian/vpcore/opt/www/vpcore/htdocs
 	cp .htaccess debian/vpcore/opt/www/vpcore/htdocs
 	cp crossdomain.xml debian/vpcore/opt/www/vpcore/htdocs
+	cp robots.txt debian/vpcore/opt/www/vpcore/htdocs
 
 # Build architecture-independent files here.
 binary-indep: build install
