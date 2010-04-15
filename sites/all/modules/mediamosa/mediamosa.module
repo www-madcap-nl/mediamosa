@@ -159,7 +159,7 @@ function mediamosa_mediamosa_register_rest_call() {
     mediamosa_rest_call::MODULE_NAME => 'mediamosa',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_6_1,
     mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
-    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_DEFAULT | mediamosa_rest_call::ACCESS_EXTERNAL
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_FOR_EXTERNAL,
   );
 
   // These REST calls are only available during the sandbox of simpletest.
@@ -254,7 +254,7 @@ $rest_calls['rest/$uri_id'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
     mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
   <item id="1">
-    <version>2.1.2</version>
+    <version>2.1.0</version>
   </item>
 </items>',
   );

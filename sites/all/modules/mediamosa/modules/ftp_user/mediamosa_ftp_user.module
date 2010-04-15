@@ -122,8 +122,14 @@ function mediamosa_ftp_user_mediamosa_register_rest_call_doc() {
     mediamosa_rest_call::EXAMPLE_REQUEST => '/ftp ',
     mediamosa_rest_call::DESCRIPTION => 'mediamosa supports upload files through ftp. There are a number of rest calls available to the ega builder to maintain a set of ftp users. The features needs a configured ftp server, with mod_sql. Ask on the forum for more information if needed.
 
-Thet /ftp [GET] restcall gives a list of all ftp users of the ega.',
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+The /ftp [GET] restcall gives a list of all ftp users of the ega.',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item>
+    <userid>testuser</userid>
+    <active>true</active>
+    <modified>2009-04-04 00:34:03</modified>
+  </item>
+</items>',
     mediamosa_rest_call::RESPONSE_FIELDS => array('userid' => 'ftp loginname'),
   );
 
@@ -132,7 +138,7 @@ Thet /ftp [GET] restcall gives a list of all ftp users of the ega.',
     mediamosa_rest_call::TITLE => 'Create a FTP user.',
     mediamosa_rest_call::EXAMPLE_REQUEST => '/ftp/create [POST] username=foofoo&password=foofoofoo ',
     mediamosa_rest_call::DESCRIPTION => 'Create a FTP user. A 3-digit text is added to the ftp username, to ensure unique ftpusers. The password must be at least 8 characters.',
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
   );
 
@@ -140,7 +146,7 @@ Thet /ftp [GET] restcall gives a list of all ftp users of the ega.',
     mediamosa_rest_call::TITLE => 'Delete a FTP user.',
     mediamosa_rest_call::EXAMPLE_REQUEST => '/ftp/foofoo/delete ',
     mediamosa_rest_call::DESCRIPTION => 'Deletes a ftp-user. The home directory is not cleaned.',
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
   );
 
@@ -149,7 +155,7 @@ Thet /ftp [GET] restcall gives a list of all ftp users of the ega.',
     mediamosa_rest_call::TITLE => 'Update a FTP user.',
     mediamosa_rest_call::EXAMPLE_REQUEST => '/ftp/foofoo [POST] active=false&password=barbar',
     mediamosa_rest_call::DESCRIPTION => 'Updates the ftp-user. A user can be disabled (with active), and the password can be changed.',
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
   );
 
@@ -157,7 +163,13 @@ Thet /ftp [GET] restcall gives a list of all ftp users of the ega.',
     mediamosa_rest_call::TITLE => 'Get a FTP user.',
     mediamosa_rest_call::EXAMPLE_REQUEST => '/ftp/foofoo [GET] ',
     mediamosa_rest_call::DESCRIPTION => 'Get all the available details of a ftp-user.',
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item>
+    <userid>testuser</userid>
+    <active>true</active>
+    <modified>2009-04-04 00:34:03</modified>
+  </item>
+</items>',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
   );
 

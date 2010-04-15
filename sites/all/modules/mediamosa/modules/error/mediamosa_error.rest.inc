@@ -85,7 +85,7 @@ class mediamosa_rest_call_error_list extends mediamosa_rest_call {
     }
 
     foreach ($codes as $code) {
-      if ($offset--) {
+      if ($offset && $offset--) {
         continue;
       }
 
@@ -117,6 +117,7 @@ class mediamosa_rest_call_error_get extends mediamosa_rest_call {
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_UINT,
       mediamosa_rest_call::VAR_RANGE_START => mediamosa_error_db::CODE_RANGE_START,
       mediamosa_rest_call::VAR_RANGE_END => mediamosa_error_db::CODE_RANGE_END,
+      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
     );
 
     // Enrich with required REST vars.
