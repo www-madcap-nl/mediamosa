@@ -174,8 +174,6 @@ class mediamosa_ticket {
     if ($response_type == mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL) {
       // Find default or at least one still.
       if (!$still_id) {
-        assert(is_array($a_mediafile_ext)); // lets make sure its here.
-
         // Find default still and make sure its ok.
         $still_id = mediamosa_asset_mediafile_still::find_default($a_mediafile_ext[mediamosa_asset_mediafile_db::ASSET_ID]);
 

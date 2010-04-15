@@ -283,7 +283,7 @@ class mediamosa_asset_mediafile {
       $items[$mediafile_id]['ega_stream_url'] = '';
 
       // Stream URL, only if streamable.
-      if (mediamosa_server::is_streamable($items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata_db::CONTAINER_TYPE])) {
+      if (isset($items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata_db::CONTAINER_TYPE]) && mediamosa_server::is_streamable($items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata_db::CONTAINER_TYPE])) {
         $items[$mediafile_id]['ega_play_url'] = preg_replace($patterns, $replacements, $a_app[mediamosa_app_db::PLAY_PROXY_URL]);
 
         // Output extra?
@@ -330,13 +330,17 @@ class mediamosa_asset_mediafile {
       );
 
       // Response object/plain/metafile available.
-      $a_response = mediamosa_server::get_streaming_info($items[$mediafile_id]['metadata']['container_type'], $items[$mediafile_id]['metadata']['video_codec'], $items[$mediafile_id]['uri']);
+      // When file is missing these will be non-existing, make them empty.
+      $items[$mediafile_id]['metadata']['container_type'] = isset($items[$mediafile_id]['metadata']['container_type']) ? $items[$mediafile_id]['metadata']['container_type'] : '';
+      $items[$mediafile_id]['metadata']['video_codec'] = isset($items[$mediafile_id]['metadata']['video_codec']) ? $items[$mediafile_id]['metadata']['video_codec'] : '';
+
+      $response = mediamosa_server::get_streaming_info($items[$mediafile_id]['metadata']['container_type'], $items[$mediafile_id]['metadata']['video_codec'], $items[$mediafile_id]['uri']);
       // Object.
-      $items[$mediafile_id]['response_object_available'] = ($a_response['response_object_available'] ? self::RESPONSE_TRUE : self::RESPONSE_FALSE);
+      $items[$mediafile_id]['response_object_available'] = ($response['response_object_available'] ? self::RESPONSE_TRUE : self::RESPONSE_FALSE);
       // Plain.
-      $items[$mediafile_id]['response_plain_available'] = ($a_response['response_plain_available'] ? self::RESPONSE_TRUE : self::RESPONSE_FALSE);
+      $items[$mediafile_id]['response_plain_available'] = ($response['response_plain_available'] ? self::RESPONSE_TRUE : self::RESPONSE_FALSE);
       // Metafile.
-      $items[$mediafile_id]['response_metafile_available'] = ($a_response['response_metafile_available'] ? self::RESPONSE_TRUE : self::RESPONSE_FALSE);
+      $items[$mediafile_id]['response_metafile_available'] = ($response['response_metafile_available'] ? self::RESPONSE_TRUE : self::RESPONSE_FALSE);
 
       // Add to result.
       if ($old_output) {

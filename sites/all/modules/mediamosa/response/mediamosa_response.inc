@@ -248,7 +248,6 @@ class mediamosa_response extends mediamosa {
    * @param array $a_item
    */
   public function add_item($a_item) {
-    assert(is_array($a_item));
     $this->response['items'][++$this->item_count] = $a_item;
   }
 

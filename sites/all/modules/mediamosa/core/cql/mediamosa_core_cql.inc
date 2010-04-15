@@ -660,34 +660,48 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
     $ancor_right = $ancor_left = '';
 
     switch ($str_relation) {
+
       case 'all':
         $str_sub_parts_glue = ' AND ';
       case '=':
       case 'any':
         $a_words = explode(' ', $str_search_term);
+        switch ($a_index2column[MEDIAMOSA_CQL_CONTEXT_KEY_TYPE]) {
+          case mediamosa_type::TYPE_INT:
+          case mediamosa_type::TYPE_UINT:
+            // Rewrite to IN statement: $str_table_column IN ($a_sub_parts).
+            $tmp = array();
+            foreach ($a_words as $str_word) {
+              $tmp[] = sprintf('%d', (int)$str_word);
+            }
+            $a_sub_parts[] = sprintf("%s IN(%s)", $str_table_column, implode(',', $tmp));
 
-        foreach ($a_words as $str_word) {
-          if (mediamosa_unicode::substr($str_word, 0, 1) == '^' && mediamosa_unicode::substr($str_word, -1) == '^' && mediamosa_unicode::substr(str_replace('\\\\', '', $str_word), -2) != '\^') {
-            $str_search_term = mediamosa_unicode::substr($str_search_term, 1, -1);
-          }
+            break;
+          default:
+            foreach ($a_words as $str_word) {
+              if (trim($str_word) == '') {
+                continue;
+              }
 
-          if (trim($str_word) == '') {
-            continue;
-          }
+              if (mediamosa_unicode::substr($str_word, 0, 1) == '^' && mediamosa_unicode::substr($str_word, -1) == '^' && mediamosa_unicode::substr(str_replace('\\\\', '', $str_word), -2) != '\^') {
+                $str_search_term = mediamosa_unicode::substr($str_search_term, 1, -1);
+              }
 
-          $ancor_right = $ancor_left = '%';
+              $ancor_right = $ancor_left = '%';
 
-          if (mediamosa_unicode::substr($str_word, 0, 1) == '^') {
-            $str_word = mediamosa_unicode::substr($str_word, 1);
-            $ancor_left = '';
-          }
+              if (mediamosa_unicode::substr($str_word, 0, 1) == '^') {
+                $str_word = mediamosa_unicode::substr($str_word, 1);
+                $ancor_left = '';
+              }
 
-          if (mediamosa_unicode::substr($str_word, -1) == '^' && mediamosa_unicode::substr(str_replace('\\\\', '', $str_word), -2) != '\^') {
-            $str_word = mediamosa_unicode::substr($str_word, 0, -1);
-            $ancor_right = '';
-          }
+              if (mediamosa_unicode::substr($str_word, -1) == '^' && mediamosa_unicode::substr(str_replace('\\\\', '', $str_word), -2) != '\^') {
+                $str_word = mediamosa_unicode::substr($str_word, 0, -1);
+                $ancor_right = '';
+              }
 
-          $a_sub_parts[] = sprintf("%s%s LIKE %s%s%s%s%s", $str_binary, $str_table_column, $str_quotes, $ancor_left, $this->mediamosa_cql_context_sql_escape_like($str_word), $ancor_right, $str_quotes);
+              $a_sub_parts[] = sprintf("%s%s LIKE %s%s%s%s%s", $str_binary, $str_table_column, $str_quotes, $ancor_left, $this->mediamosa_cql_context_sql_escape_like($str_word), $ancor_right, $str_quotes);
+            }
+            break;
         }
         break;
       case '<>':
