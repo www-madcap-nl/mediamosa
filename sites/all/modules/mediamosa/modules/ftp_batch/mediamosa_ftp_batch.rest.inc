@@ -392,8 +392,8 @@ class mediamosa_rest_call_ftp_batch_assets_get extends mediamosa_rest_call {
     $result = mediamosa_ftp_batch_asset::get_asset_relations($app_id, $batch_id, $offset, $limit);
 
     // Add to response.
-    foreach ($result as $a_row) {
-      $o_mediamosa->add_item($a_row);
+    foreach ($result as $row) {
+      $o_mediamosa->add_item($row);
     }
 
     $o_rest_reponse->item_count_total = $result->found_rows;

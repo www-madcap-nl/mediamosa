@@ -213,31 +213,55 @@ fav_id=14&fav_type=ASSET',
     mediamosa_rest_call::DESCRIPTION => 'Returns a list of all available groups.',
     mediamosa_rest_call::EXAMPLE_REQUEST => '/group [GET]',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <group_id>mygroup</group_id>
+    <quotum>0</quotum>
+    <created>2009-11-06 17:54:52</created>
+    <changed>2008-07-17 13:54:42</changed>
+  </item>
+  <item id="2">
+    <group_id>Simpletest test group</group_id>
+    <quotum></quotum>
+    <created>2008-09-03 12:24:42</created>
+    <changed>2008-09-17 12:44:42</changed>
+  </item>
+</items>',
   );
 
   $a_rest_calls['group/create'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Create a new group.',
-    mediamosa_rest_call::DESCRIPTION => '',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::DESCRIPTION => 'Create a new user group.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'group/create<br /><br />group_id = "mygroup"',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
   );
 
   $a_rest_calls['group/$group_id'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'Get a group details.',
     mediamosa_rest_call::DESCRIPTION => '',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'group/mygroup',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <app_quota_mb>10240000</app_quota_mb>
+    <group_quota_mb>0</group_quota_mb>
+    <app_diskspace_used_mb>8435543</app_diskspace_used_mb>
+    <group_diskspace_used_mb>5843399</group_diskspace_used_mb>
+    <quota_available_mb>1804457</quota_available_mb>
+    <group_over_quota>false</group_over_quota>
+    <created>2009-11-06 17:54:52</created>
+    <changed>2008-07-17 13:54:42</changed>
+  </item>
+</items>',
   );
 
   $a_rest_calls['group/$group_id'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Update a group.',
-    mediamosa_rest_call::DESCRIPTION => '',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::DESCRIPTION => 'Update the quotum value of a user group.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'group/mygroup<br /><br />quotum = "456"',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
   );
 
   // Alias.
@@ -245,10 +269,10 @@ fav_id=14&fav_type=ASSET',
 
   $a_rest_calls['group/$group_id/delete'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Delete a group.',
-    mediamosa_rest_call::DESCRIPTION => ', it can not be deleted if it still contains group members.',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::DESCRIPTION => 'Delete a user group, it can not be deleted if it still contains group members.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'group/mygroup/delete',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
   );
 
   return $a_rest_calls;

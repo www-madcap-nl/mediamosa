@@ -85,6 +85,7 @@ class mediamosa_ftp_batch {
     return mediamosa_db::db_query(
       'SELECT * FROM {#mediamosa_ftp_batch} WHERE #batch_id = :batch_id',
       array(
+        '#mediamosa_ftp_batch' => mediamosa_ftp_batch_db::TABLE_NAME,
         '#batch_id' => mediamosa_ftp_batch_db::ID,
         ':batch_id' => $batch_id
       )

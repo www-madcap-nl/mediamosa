@@ -361,7 +361,7 @@ class mediamosa_user {
    * @param $group_id
    *  The group ID (optional).
    */
-  function fetch_items($is_users, $app_id, $offset, $limit, $group_id = NULL) {
+  function get_all($is_users, $app_id, $offset, $limit, $group_id = NULL) {
 
     // Do the query.
     $result = mediamosa_db::db_query_range(

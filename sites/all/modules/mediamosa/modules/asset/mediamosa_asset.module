@@ -835,11 +835,103 @@ function mediamosa_asset_mediamosa_register_rest_call_doc() {
 
   // Collection asset search.
   $rest_calls['collection/$coll_id/asset'][mediamosa_rest_call::METHOD_GET] = array(
-    mediamosa_rest_call::TITLE => 'Search for assets based on input parameters and return a list of found assets.',
-    mediamosa_rest_call::DESCRIPTION => '',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::TITLE => 'Search within a collection',
+    mediamosa_rest_call::DESCRIPTION => 'Search for assets based on input parameters and return a list of found assets within the given collection.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/collection/VlN2ZDKv9rpsfmBAWpvfiw1zQ6z/asset?limit=200&order_by=created&order_direction=desc&title[]=test',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '
+  <item id="1">
+    <asset_id>1</asset_id>
+    <app_id>1</app_id>
+    <provider_id></provider_id>
+    <owner_id>av-user-zfontys</owner_id>
+    <group_id>fontys</group_id>
+    <videotimestamp>2004-09-10 19:59:26</videotimestamp>
+    <videotimestampmodified></videotimestampmodified>
+    <play_restriction_start></play_restriction_start>
+    <play_restriction_end></play_restriction_end>
+    <locked>FALSE</locked>
+    <reference_id></reference_id>
+    <isprivate>FALSE</isprivate>
+    <dublin_core>
+      <type>Video</type>
+      <language>NL</language>
+      <title>bijeenkomst mediatheken 10 maart</title>
+      <creator>g.bierens</creator>
+      <description>De personeelsbijeenkomst voor alle medewerkers van de mediatheken stond in het teken van "De medewerker als partner in learning communities". Het doel was om de aanstaande veranderingen in de mediatheken in een strategisch perspectief te zetten.</description>
+      <date>2004-09-10 19:59:26</date>
+      <format></format>
+      <publisher></publisher>
+      <subject></subject>
+      <contributor></contributor>
+      <identifier></identifier>
+      <source></source>
+      <relation></relation>
+      <coverage_temporal></coverage_temporal>
+      <coverage_spatial></coverage_spatial>
+      <rights></rights>
+    </dublin_core>
+    <qualified_dublin_core>
+      <title_alternative>De medewerker als partner in learning communities</title_alternative>
+      <description_abstract></description_abstract>
+      <created></created>
+      <issued></issued>
+      <hasformat></hasformat>
+      <isformatof></isformatof>
+      <format_medium></format_medium>
+      <format_extent></format_extent>
+      <license></license>
+      <rightsholder></rightsholder>
+      <isreferencedby></isreferencedby>
+    </qualified_dublin_core>
+  </item>
+  <item id="2">
+    <asset_id>15745</asset_id>
+    <app_id>1</app_id>
+    <provider_id></provider_id>
+    <owner_id>av-user-zfontys</owner_id>
+    <group_id>fontys</group_id>
+    <videotimestamp>2005-08-23 13:44:26</videotimestamp>
+    <videotimestampmodified></videotimestampmodified>
+    <play_restriction_start></play_restriction_start>
+    <play_restriction_end></play_restriction_end>
+    <locked>FALSE</locked>
+    <reference_id></reference_id>
+    <isprivate>FALSE</isprivate>
+    <dublin_core>
+      <type>Video</type>
+      <language>NL</language>
+      <title>Fontys Mediatheek TF Introductiefilm</title>
+      <creator>Fokke M&#xFC;ller</creator>
+      <creator>Erik Oomen</creator>
+      <description>Mediatheek introductie</description>
+      <date>2005-08-23 13:44:26</date>
+      <format></format>
+      <publisher></publisher>
+      <subject></subject>
+      <contributor></contributor>
+      <identifier></identifier>
+      <source></source>
+      <relation></relation>
+      <coverage_temporal></coverage_temporal>
+      <coverage_spatial></coverage_spatial>
+      <rights></rights>
+    </dublin_core>
+    <qualified_dublin_core>
+      <title_alternative></title_alternative>
+      <description_abstract></description_abstract>
+      <created></created>
+      <issued></issued>
+      <hasformat></hasformat>
+      <isformatof></isformatof>
+      <format_medium></format_medium>
+      <format_extent></format_extent>
+      <license></license>
+      <rightsholder></rightsholder>
+      <isreferencedby></isreferencedby>
+    </qualified_dublin_core>
+  </item>
+</items>',
   );
 
   // Change owner ship/group on asset/mediafile/collections.
@@ -1126,6 +1218,19 @@ name=Example&delete=cascade',
     mediamosa_rest_call::TITLE => 'Upload still image.',
     mediamosa_rest_call::DESCRIPTION => 'Still images can be uploaded to existing mediafiles.',
     mediamosa_rest_call::EXAMPLE_REQUEST => '/asset/B93Y4bJxLRof608OtHofiK9C/still/upload<br /><br />mediafile_id = "2rw3r5235gdg"<br />"upload_ticket = "j89y492b84"<br />order = 2<br />default = "TRUE"',
+    mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item>
+    <still_id>f608OtH9CB9R3Y4ofiKbJxLo</still_id>
+  </item>
+</items>',
+  );
+
+  // Upload still.
+  $rest_calls['asset/$asset_id/still/upload'][mediamosa_rest_call::METHOD_PUT] = array(
+    mediamosa_rest_call::TITLE => 'Upload still image.',
+    mediamosa_rest_call::DESCRIPTION => 'Still images can be uploaded to existing mediafiles.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/asset/B93Y4bJxLRof608OtHofiK9C/still/upload<br /><br />mediafile_id = "2rw3r5235gdg"<br />"upload_ticket = "j89y492b84"<br />order = 2<br />default = "TRUE"<br />filename = "test.jpg"',
     mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
     mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
   <item>
@@ -1608,11 +1713,11 @@ user_id=admin',
 
   // Download file.
   $rest_calls['download/$ticket_id/$filename'][mediamosa_rest_call::METHOD_GET] = array(
-    mediamosa_rest_call::TITLE => 'Enables downloading of mediafiles using the ticket system.',
-    mediamosa_rest_call::DESCRIPTION => '',
-    mediamosa_rest_call::EXAMPLE_REQUEST => '',
+    mediamosa_rest_call::TITLE => 'Download a mediafile.',
+    mediamosa_rest_call::DESCRIPTION => 'Enables downloading the contents of mediafiles using the ticket system.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'download/j89y492b84/foo.mpg',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => 'This call will return the mediafile as HTTP download.',
   );
 
   // Allowed on POST as well.

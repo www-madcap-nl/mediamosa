@@ -1338,6 +1338,7 @@ class mediamosa_rest_call_aut_collection_set_rights extends mediamosa_rest_call 
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'Application(s) that access to the collection.',
+      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
     );
 
     // Enrich with required REST vars.
