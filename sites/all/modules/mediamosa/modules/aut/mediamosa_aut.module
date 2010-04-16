@@ -155,6 +155,14 @@ function mediamosa_aut_mediamosa_register_rest_call() {
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_6_0,
   );
 
+  $a_rest_calls['acl/get_foreign_apps'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_aut_get_foreign_apps',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_aut',
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY,
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
   return $a_rest_calls;
 }
 
@@ -389,6 +397,23 @@ function mediamosa_aut_mediamosa_register_rest_call_doc() {
     <aut_app>3</aut_app>
   </item>
 </items>',
+  );
+
+  $a_rest_calls['acl/get_foreign_apps'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Get foreign apps.',
+    mediamosa_rest_call::DESCRIPTION => 'Get foreign apps.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/acl/get_foreign_apps?secret=***&app_id=1&is_oai=TRUE',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <app_id>3</app_id>
+    <name>NIBG</name>
+    <play_proxy_url>http://videotheek_5_.hiero.nl/play/{asset_id}/{mediafile_id}/{mediafile_filename}</play_proxy_url>
+    <view_asset_url>http://videotheek_5_.hiero.nl/viewasset/{asset_id}</view_asset_url>
+    <download_url>http://download_5_url/{asset_id}/{mediafile_id}/{mediafile_filename}</download_url>
+  </item>
+</items>
+',
   );
 
   return $a_rest_calls;
