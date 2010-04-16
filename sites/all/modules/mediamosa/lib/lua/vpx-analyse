@@ -48,7 +48,7 @@ local language = ((LPAREN * (1 - RPAREN)^0 * RPAREN) + (LHOOK * (1 - RHOOK)^0 * 
 local channels = ((number * space)^0 * word + float) * space
 local containertype = lpeg.C(lpeg.R("az", "AZ", "09", "__")^1)
 local codec = (lpeg.C(symbol * (space * symbol)^0) + hex) * space
-local codecs = lpeg.Ct(codec * (SLASH * codec)^0)
+local codecs = lpeg.C(codec * (SLASH * codec)^0)
 local is_hinted = lpeg.C(symbol)
 local unit = lpeg.C(lpeg.P("k")^-1) * space
 
@@ -98,6 +98,7 @@ function convert_units(amount, unit)
   end
 end
 
+--Stream #0.0(und): Video: h264, yuv420p, 320x176, 577 kb/s, 25 fps, 25 tbr, 25 tbn, 50 tbc
 local ln_video = space * "Stream #" * float * language * COLON *
   "Video" * COLON *
   codecs * COMMA *
@@ -105,7 +106,7 @@ local ln_video = space * "Stream #" * float * language * COLON *
   (dimension + lpeg.Cc("unknown")) *
   ((COMMA * number * "kb/s") + lpeg.Cc("unknown")) *
   (aspectratio + lpeg.Cc("unknown")) *
-  ((COMMA * number * "kb/s")^-1 * (COMMA * float * "fps")^-1 + lpeg.Cc("unknown")) *
+  ((COMMA * number * "kb/s")^-1 * (COMMA * (float + number) * "fps")^-1 + lpeg.Cc("unknown")) *
   (COMMA * ((float + number) * unit) / convert_units) * space * "tbr"
 
 -- Stream #0.0: Video: h264, yuv420p, 640x480 [PAR 0:1 DAR 0:1], 25.00 tb(r)
