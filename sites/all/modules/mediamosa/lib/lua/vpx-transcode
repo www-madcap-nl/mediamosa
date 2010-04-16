@@ -109,7 +109,7 @@ local ln_video = space * "Stream #" * float * language * COLON *
   (dimension + lpeg.Cc("unknown")) *
   ((COMMA * number * "kb/s") + lpeg.Cc("unknown")) *
   (aspectratio + lpeg.Cc("unknown")) *
-  ((COMMA * number * "kb/s")^-1 * (COMMA * float * "fps")^-1 + lpeg.Cc("unknown")) *
+  ((COMMA * number * "kb/s")^-1 * (COMMA * (float + number) * "fps")^-1 + lpeg.Cc("unknown")) *
   (COMMA * ((float + number) * unit) / convert_units) * space * "tbr"
 
 -- Stream #0.0: Video: h264, yuv420p, 640x480 [PAR 0:1 DAR 0:1], 25.00 tb(r)
