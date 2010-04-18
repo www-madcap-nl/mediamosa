@@ -197,7 +197,7 @@ end
 function find_best_streams(source_path, hash)
   local filename = mkpath(source_path, hash)
   local command = string.format("ffmpeg -i \"%s\" 2>&1", filename)
-  print(command)
+  -- print(command)
   local fd = io.popen(command, "r")
   local line = fd:read("*l")
   local video_max_bitrate
@@ -207,7 +207,7 @@ function find_best_streams(source_path, hash)
   local audio_max_bitrate_stream
 
   while line do
-    log[#log+1] = line
+    -- log[#log+1] = line
 
     local streamtype = string.match(line, "Stream #%d+%.%d+.*: (.*): .*")
 
@@ -341,7 +341,7 @@ function analyse(source_path, hash, always_hint_mp4, always_insert_md)
 
   -- analyse with ffmpeg
   local command = string.format("ffmpeg -i \"%s\" 2>&1", filename)
-  print(command)
+  -- print(command)
   local fd = io.popen(command, "r")
   local line = fd:read("*l")
   local file_is_hinted = false
@@ -386,7 +386,6 @@ function analyse(source_path, hash, always_hint_mp4, always_insert_md)
 
     if streamtype == "Audio" then
       local stream, codec, hertz, channels, sample_format, bitrate = lpeg.match(ln_audio, line)
-      print(stream)
       if stream == audio_stream then
         if codec == nil then
           --add_error("The audio input stream uses an unknown codec")
