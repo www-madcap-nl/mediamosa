@@ -73,7 +73,7 @@ local ln_duration = space * "Duration" * COLON *
 -- captures: stream, codecs, frequency, channels, sample_format, bitrate
 local ln_audio = space * "Stream #" * float * language^-1 * COLON *
   "Audio" * COLON *
-  codecs * COMMA *
+  codec * COMMA *
   number * "Hz" * COMMA *
   (((number * space)^-1 * channels) + lpeg.C(digits^1 * "." * digits^1)) *
   ((COMMA * word) + lpeg.Cc("unknown")) *
@@ -101,7 +101,7 @@ end
 --Stream #0.0(und): Video: h264, yuv420p, 320x176, 577 kb/s, 25 fps, 25 tbr, 25 tbn, 50 tbc
 local ln_video = space * "Stream #" * float * language * COLON *
   "Video" * COLON *
-  codecs * COMMA *
+  codec * COMMA *
   ((word * COMMA) + lpeg.Cc("unknown")) *
   (dimension + lpeg.Cc("unknown")) *
   ((COMMA * number * "kb/s") + lpeg.Cc("unknown")) *
@@ -117,7 +117,7 @@ local ln_video = space * "Stream #" * float * language * COLON *
 -- captures: stream, codecs, colorspace, size, ar, bitrate, tb (= fps)
 local ln_video_best = space * "Stream #" * float * language * COLON *
   "Video" * COLON *
-  codecs * COMMA *
+  codec * COMMA *
   ((word * COMMA) + lpeg.Cc("unknown")) *
   (dimension + lpeg.Cc("unknown")) *
   (aspectratio + lpeg.Cc("unknown")) * COMMA *
@@ -212,7 +212,7 @@ function find_best_streams(source_path, hash)
     local streamtype = string.match(line, "Stream #%d+%.%d+.*: (.*): .*")
 
     if streamtype == "Audio" then
-      local stream, codecs, hertz, channels, sample_format, bitrate, addition = lpeg.match(ln_audio, line)
+      local stream, codec, hertz, channels, sample_format, bitrate, addition = lpeg.match(ln_audio, line)
       if addition ~= nil then
         channels = channels.." "..sample_format
         sample_format = bitrate
@@ -230,9 +230,9 @@ function find_best_streams(source_path, hash)
       print('addition: '..addition)
       ]]
       log_out("audio: detected stream: %s", stream)
-      if codecs == nil then
+      if codec == nil then
         --add_error("The audio input stream uses an unknown codec")
-        codecs = {}
+        codec = {}
       end
       if audio_max_bitrate_stream == nil then
         -- 1) When the bitrate field is missing, the target bitrate will be nil. This is not
@@ -251,7 +251,7 @@ function find_best_streams(source_path, hash)
       end
     elseif streamtype == "Video" then
       --local stream, codecs, colorspace, size, ar, bitrate, fps = lpeg.match(ln_video_best, line)
-      local stream, codecs, colorspace, size, bitrate, ar, br2, fps = lpeg.match(ln_video, line)
+      local stream, codec, colorspace, size, bitrate, ar, br2, fps = lpeg.match(ln_video, line)
       log_out("video: detected stream: %s", stream)
       --[[if codecs == nil then
         add_error("The video input stream uses an unknown codec")
@@ -385,14 +385,15 @@ function analyse(source_path, hash, always_hint_mp4, always_insert_md)
     local streamtype = string.match(line, "Stream #%d+%.%d+.*: (.*): .*")
 
     if streamtype == "Audio" then
-      local stream, codecs, hertz, channels, sample_format, bitrate = lpeg.match(ln_audio, line)
+      local stream, codec, hertz, channels, sample_format, bitrate = lpeg.match(ln_audio, line)
+      print(stream)
       if stream == audio_stream then
-        if codecs == nil then
+        if codec == nil then
           --add_error("The audio input stream uses an unknown codec")
-          codecs = {}
+          codec = {}
         else
           add_property("X-Audio-stream", line)
-          add_property("Audio-codec", table.concat(codecs, ";"))
+          add_property("Audio-codec", codec)
           add_property("Audio-frequency", hertz)
           add_property("Audio-channels", channels)
           if bitrate then
@@ -401,11 +402,11 @@ function analyse(source_path, hash, always_hint_mp4, always_insert_md)
         end
       end
     elseif streamtype == "Video" then
-      local stream, codecs, colorspace, size, br1, ar, br2, fps = lpeg.match(ln_video, line)
+      local stream, codec, colorspace, size, br1, ar, br2, fps = lpeg.match(ln_video, line)
       if stream == video_stream then
-        if codecs == nil then
+        if codec == nil then
           add_error("The video input stream uses an unknown codec")
-          codecs = {}
+          codec = {}
         else
           local bitrate
           if(br1 ~= "unknown") then
@@ -414,13 +415,18 @@ function analyse(source_path, hash, always_hint_mp4, always_insert_md)
             bitrate = br2
           end
           add_property("X-Video-stream", line)
-          add_property("Video-codec", table.concat(codecs, ";"))
+	  -- print("line " .. line)
+          add_property("Video-codec", codec)
+	  -- print("codecs " .. codecs)
           add_property("Video-colorspace", colorspace)
+	  -- print("colorsp: " .. colorspace)
           add_property("Video-size", size)
+	  -- print("size " .. size)
           add_property("Video-aspectratio", ar)
           add_property("Video-framespersecond", fps)
           if bitrate ~= "unknown" then
             add_property("Video-bitrate", bitrate)
+	    -- print("bitrate " .. bitrate)
             if tonumber(bitrate) > max_video_bitrate then
               max_video_bitrate = tonumber(bitrate)
             end
