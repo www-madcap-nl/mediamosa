@@ -878,7 +878,7 @@ class mediamosa_job_server {
   // Hot fix
           $order = sprintf('ffmpeg -i %s %s', $input, $destination_path . $mediafile_id .'_scene.wmv');
           //self::log($order);
-          exec($order);
+          mediamosa_io::exec($order);
 
           $order = sprintf('ffmpeg -i %s -r 25 -an -vcodec mjpeg %s', $destination_path . $mediafile_id . '_scene.wmv', $destination_path . $mediafile_id .'_scene.avi');
           //self::log($order);

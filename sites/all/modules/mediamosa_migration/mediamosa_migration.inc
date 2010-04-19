@@ -579,6 +579,19 @@ function _mediamosa_migration_mediafile_metadata() {
   // Remove the unique index on mediafile_id.
   db_query("ALTER TABLE {mediamosa_asset_mediafile_metadata} DROP INDEX uni_mediafileid");
 
+  // Add SECOND, so SECONDS and SECOND.
+  db_change_field(
+    mediamosa_asset_mediafile_metadata_db::TABLE_NAME,
+    mediamosa_asset_mediafile_metadata_db::STILL_TYPE,
+    mediamosa_asset_mediafile_metadata_db::STILL_TYPE,
+    array(
+      'description' => t('The type of the still.'),
+      'type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NONE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NORMAL, 'SECONDS', mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SECOND, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SCENE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_PICTURE)) . "')",
+      'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NONE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NORMAL, 'SECONDS', mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SECOND, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SCENE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_PICTURE)) . "')",
+      'default' => mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NONE,
+    )
+  );
+
   // The mediamosa_asset_mediafile table should be empty (its checked as requirement).
   /**
    * Copy from 1.x to 2.x
@@ -645,6 +658,22 @@ function _mediamosa_migration_mediafile_metadata() {
     array(
       '#db_name' => $db_name
     ))
+  );
+
+  // Update still_type_2 SECONDS to SECOND.
+  db_query("UPDATE {mediamosa_asset_mediafile_metadata} SET still_type = 'SECOND' WHERE still_type = 'SECONDS'");
+
+  // Remove SECONDS.
+  db_change_field(
+    mediamosa_asset_mediafile_metadata_db::TABLE_NAME,
+    mediamosa_asset_mediafile_metadata_db::STILL_TYPE,
+    mediamosa_asset_mediafile_metadata_db::STILL_TYPE,
+    array(
+      'description' => t('The type of the still.'),
+      'type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NONE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NORMAL, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SECOND, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SCENE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_PICTURE)) . "')",
+      'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NONE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NORMAL, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SECOND, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SCENE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_PICTURE)) . "')",
+      'default' => mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NONE,
+    )
   );
 
   // Now copy all changed dates to overwrite empty created dates.

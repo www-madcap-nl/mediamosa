@@ -144,6 +144,8 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
   const COMPLETED_URL = 'completed_url';
   const COMPLETED_TRANSCODING_URL = 'completed_transcoding_url';
   const STILL_UPLOAD = 'still_upload';
+  const ORDER = 'order';
+  const DEFAULT_ = 'default';
 
   // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
@@ -182,9 +184,25 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
           self::VAR_DESCRIPTION => "Specify TRUE for adding a still to the mediafile.",
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
+        self::ORDER => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_DESCRIPTION => 'Still order number. Only used when still_upload = true.',
+          self::VAR_DEFAULT_VALUE => 0,
+        ),
+        self::DEFAULT_ => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_DESCRIPTION => 'Is default still? Only used when still_upload = true.',
+          self::VAR_DEFAULT_VALUE => 'FALSE',
+        ),
         self::STILL_TYPE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The still type.',
+          self::VAR_ALLOWED_VALUES => array(
+            mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NONE,
+            mediamosa_asset_mediafile_metadata_db::STILL_TYPE_PICTURE,
+            mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SCENE,
+            mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SECOND,
+          ),
         ),
         self::STILL_PER_MEDIAFILE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
@@ -285,6 +303,8 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
 
     // Is still upload?
     $still_upload = $this->get_param_value(self::STILL_UPLOAD);
+    $order = $this->get_param_value(self::ORDER);
+    $default = $this->get_param_value(self::DEFAULT_);
 
     $filename_put = NULL;
 
@@ -294,7 +314,7 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
 
     try {
       if ($still_upload) {
-        $still_id = mediamosa_asset_mediafile_upload::handle_upload_still($ticket_id, $this->is_method_put(), $tag, $completed_url, $filename_put);
+        $still_id = mediamosa_asset_mediafile_upload::handle_upload_still($ticket_id, $this->is_method_put(), $tag, $completed_url, $filename_put, $order, $default);
 
         // Add still_id to output.
         $mediamosa->add_item(array('still_id' => $still_id));

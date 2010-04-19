@@ -176,9 +176,9 @@ function mediamosa_asset_mediafile_metadata_schema() {
       ),
       mediamosa_asset_mediafile_metadata_db::STILL_TYPE => array(
         'description' => t('The type of the still.'),
-        'type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NONE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NORMAL, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SECONDS, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SCENE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_PICTURE)) . "')",
-        'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NONE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NORMAL, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SECONDS, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SCENE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_PICTURE)) . "')",
-        'default' => NULL,
+        'type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NONE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NORMAL, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SECOND, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SCENE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_PICTURE)) . "')",
+        'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NONE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NORMAL, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SECOND, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SCENE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_PICTURE)) . "')",
+        'default' => mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NONE,
       ),
       mediamosa_asset_mediafile_metadata_db::STILL_FORMAT => array(
         'type' => 'varchar',

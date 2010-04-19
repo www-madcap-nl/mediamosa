@@ -152,3 +152,38 @@ function mediamosa_uninstall() {
   // Remove the error db.
   _mediamosa_error_uninstall();
 }
+
+/**
+ * Change mediafile metadata STILL_TYPE ENUM value 'SECONDS' to 'SECOND'.
+ */
+function mediamosa_update_7000() {
+  // Add 'SECOND' first
+  db_change_field(
+    mediamosa_asset_mediafile_metadata_db::TABLE_NAME,
+    mediamosa_asset_mediafile_metadata_db::STILL_TYPE,
+    mediamosa_asset_mediafile_metadata_db::STILL_TYPE,
+    array(
+      'description' => t('The type of the still.'),
+      'type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NONE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NORMAL, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SECOND, 'SECONDS', mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SCENE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_PICTURE)) . "')",
+      'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NONE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NORMAL, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SECOND, 'SECONDS', mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SCENE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_PICTURE)) . "')",
+      'default' => mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NONE,
+    )
+  );
+
+  // Then replace 'SECONDS' with 'SECOND'.
+  db_query("UPDATE {mediamosa_asset_mediafile_metadata} SET still_type = 'SECOND' WHERE still_type = 'SECONDS'");
+
+  // Now remove 'SECONDS'
+  db_change_field(
+    mediamosa_asset_mediafile_metadata_db::TABLE_NAME,
+    mediamosa_asset_mediafile_metadata_db::STILL_TYPE,
+    mediamosa_asset_mediafile_metadata_db::STILL_TYPE,
+    array(
+      'description' => t('The type of the still.'),
+      'type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NONE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NORMAL, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SECOND, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SCENE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_PICTURE)) . "')",
+      'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NONE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NORMAL, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SECOND, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SCENE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_PICTURE)) . "')",
+      'default' => mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NONE,
+    )
+  );
+}
+

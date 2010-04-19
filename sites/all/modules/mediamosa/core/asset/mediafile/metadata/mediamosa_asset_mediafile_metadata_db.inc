@@ -73,7 +73,7 @@ class mediamosa_asset_mediafile_metadata_db {
   const STILL_TYPE = 'still_type';
   const STILL_TYPE_NONE = 'NONE';
   const STILL_TYPE_NORMAL = 'NORMAL';
-  const STILL_TYPE_SECONDS = 'SECONDS';
+  const STILL_TYPE_SECOND = 'SECOND';
   const STILL_TYPE_SCENE = 'SCENE';
   const STILL_TYPE_PICTURE = 'PICTURE';
   const STILL_FORMAT = 'still_format';

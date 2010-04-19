@@ -519,7 +519,7 @@ class mediamosa_asset_mediafile_still {
 
     mediamosa_db::db_query(
       'UPDATE {#mediamosa_asset_mediafile_metadata} AS mfmd
-       INNER JOIN {#mediamosa_asset_mediafile} AS mf ON mf.#mediafile_id = mfmd.#mediafile_id
+       JOIN {#mediamosa_asset_mediafile} AS mf ON mf.#mediafile_id = mfmd.#mediafile_id
        SET mfmd.#still_default = IF(mfmd.#mediafile_id = :mediafile_id, :still_default_true, :still_default_false)
        WHERE mf.#asset_id = :asset_id AND mf.#is_still = :#is_still_true',
       array(
