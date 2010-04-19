@@ -176,7 +176,7 @@ class mediamosa_asset_mediafile_upload {
    * @param string $completed_url
    * @param string $filename_put
    */
-  static public function handle_upload_still(array $mediafile, $ticket_id, $is_method_put, $tag, $completed_url, $order, $default, $filename_put) {
+  static public function handle_upload_still($ticket_id, $is_method_put, $tag, $completed_url, $filename_put, $order = 0, $default = FALSE) {
 
     // Set to false.
     $is_app_admin = false;
@@ -187,6 +187,9 @@ class mediamosa_asset_mediafile_upload {
     if (empty($ticket)) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INVALID_UPLOAD_TICKET);
     }
+
+    // Get the mediafile using the ticket mediafile_id.
+    $mediafile = mediamosa_asset_mediafile::must_exists($ticket[mediamosa_ticket_db::MEDIAFILE_ID]);
 
     // Get the app id from the ticket.
     $app_id = $ticket[mediamosa_ticket_db::APP_ID];

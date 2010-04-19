@@ -73,6 +73,7 @@ class mediamosa_rest_call_upload_mediafile_still extends mediamosa_rest_call {
         self::ORDER => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
           self::VAR_DESCRIPTION => 'Still order number.',
+          self::VAR_DEFAULT_VALUE => 0,
         ),
         self::DEFAULT_ => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
@@ -122,14 +123,13 @@ class mediamosa_rest_call_upload_mediafile_still extends mediamosa_rest_call {
       $filename_put = $this->get_param_value(self::FILENAME); // With PUT only.
     }
 
-    // Get the mediafile.
-    $mediafile = mediamosa_asset_mediafile::must_exists($mediafile_id);
+    // Check the mediafile.
+    mediamosa_asset_mediafile::must_exists($mediafile_id);
 
     try {
-      $still_id = mediamosa_asset_mediafile_upload::handle_upload_still($mediafile, $ticket_id, $this->is_method_put(), $tag, $completed_url, $order, $default, $filename_put);
+      $still_id = mediamosa_asset_mediafile_upload::handle_upload_still($ticket_id, $this->is_method_put(), $tag, $completed_url, $filename_put, $order, $default);
     }
     catch (Exception $e) {
-
       if ($this->isset_param(self::REDIRECT_URI)) {
         // Any errors need to be redirected.
         throw new mediamosa_exception_redirect_and_exit($this->get_param_value(self::REDIRECT_URI), $e->getCode(), $e->getMessage());

@@ -57,5 +57,8 @@ class MediaMosaAssetMediafileStillUploadTestCase extends MediaMosaTestCaseEga {
 
     // Upload still test.
     $this->uploadTestStill();
+
+    // Attached still test.
+    $this->uploadTestStillAttach();
   }
 }

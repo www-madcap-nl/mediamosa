@@ -79,7 +79,7 @@ class mediamosa_rest_call_asset_mediafile_uploadticket_create extends mediamosa_
 
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     $a_app_ids = $this->get_param_value(self::APP_ID);
 
@@ -101,7 +101,7 @@ class mediamosa_rest_call_asset_mediafile_uploadticket_create extends mediamosa_
     }
 
     // Set response.
-    $o_mediamosa->add_item(
+    $mediamosa->add_item(
       array(
         'action' => str_replace("{TICKET}", $ticket_id, $a_server_upload[mediamosa_server_db::URI]),
         'uploadprogress_url' => $a_server_upload[mediamosa_server_db::URI_UPLOAD_PROGRESS],
@@ -143,6 +143,7 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
   const FILENAME = 'filename';
   const COMPLETED_URL = 'completed_url';
   const COMPLETED_TRANSCODING_URL = 'completed_transcoding_url';
+  const STILL_UPLOAD = 'still_upload';
 
   // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
@@ -174,6 +175,11 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
         self::CREATE_STILL => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
           self::VAR_DESCRIPTION => "Specify 'true', if you want a still is generated after the upload and analysis\n\nSee: Still creation parameters (POST) on /mediafile/{mediafile_id}/still/create [POST].",
+          self::VAR_DEFAULT_VALUE => 'FALSE',
+        ),
+        self::STILL_UPLOAD => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_DESCRIPTION => "Specify TRUE for adding a still to the mediafile.",
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
         self::STILL_TYPE => array(
@@ -251,7 +257,7 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     // Get params.
     $ticket_id = $this->get_param_value(self::UPLOAD_TICKET);
@@ -277,6 +283,9 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
     $trancode_profiles = $this->get_param_value(self::TRANSCODE);
     $retranscode = $this->get_param_value(self::RETRANSCODE);
 
+    // Is still upload?
+    $still_upload = $this->get_param_value(self::STILL_UPLOAD);
+
     $filename_put = NULL;
 
     if ($this->is_method_put()) {
@@ -284,7 +293,15 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
     }
 
     try {
-      mediamosa_asset_mediafile_upload::handle_upload($ticket_id, $this->is_method_put(), $tag, $completed_url, $filename_put, $trancode_profiles, $retranscode, $transcode_inherits_acl, $create_still, $still_parameters, $completed_transcoding_url);
+      if ($still_upload) {
+        $still_id = mediamosa_asset_mediafile_upload::handle_upload_still($ticket_id, $this->is_method_put(), $tag, $completed_url, $filename_put);
+
+        // Add still_id to output.
+        $mediamosa->add_item(array('still_id' => $still_id));
+      }
+      else { // Normal upload.
+        mediamosa_asset_mediafile_upload::handle_upload($ticket_id, $this->is_method_put(), $tag, $completed_url, $filename_put, $trancode_profiles, $retranscode, $transcode_inherits_acl, $create_still, $still_parameters, $completed_transcoding_url);
+      }
     }
     catch (Exception $e) {
 
@@ -303,7 +320,7 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
     }
 
     // Set ok.
-    $o_mediamosa->set_result_okay();
+    $mediamosa->set_result_okay();
   }
 }
 
@@ -368,11 +385,11 @@ class mediamosa_rest_call_asset_mediafile_uploadprogress extends mediamosa_rest_
 
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     $id = $this->get_param_value(self::ID);
 
     // Add to response.
-    $o_mediamosa->add_item(json_encode(mediamosa_asset_mediafile_upload::get_uploadprogress($id)));
+    $mediamosa->add_item(json_encode(mediamosa_asset_mediafile_upload::get_uploadprogress($id)));
   }
 }

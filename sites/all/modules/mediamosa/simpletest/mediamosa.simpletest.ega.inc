@@ -652,6 +652,99 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   }
 
   /**
+   * Upload of still on a existing mediafile.
+   */
+  protected function uploadTestStillAttach($order = 0, $default = false) {
+    // Create an asset.
+    $asset_id = $this->createAsset();
+
+    // Create mediafile.
+    $mediafile_id = $this->createMediafile($asset_id);
+
+    // Create upload ticket.
+    $uploadticket = $this->createMediafileUploadTicket($mediafile_id);
+
+    $result = mediamosa_db::db_query('SELECT * FROM {mediamosa_ticket}');
+    foreach ($result as $row) {
+      $this->var_export($row, 'Dump Ticket');
+    }
+
+    // Check ticket link etc.
+    $this->assertTrue(!empty($uploadticket['action']), 'action set');
+    $this->assertTrue(!empty($uploadticket['uploadprogress_url']), 'uploadprogress_url set');
+    $this->assertTrue(!empty($uploadticket['ticket_id']), 'ticket_id set');
+
+    // Get link to upload file.
+    $filename = self::getTestImage_NotBlackJpg();
+
+    // URL.
+    // Still upload does not use the action from the upload ticket.
+    $uri = $uploadticket['action'] . '&still_upload=true';
+
+    // Post parameters.
+    $postfields['file'] = '@' . $filename;
+    $postfields['mediafile_id'] = $mediafile_id;
+    $postfields['upload_ticket'] = $uploadticket['ticket_id'];
+    $postfields['order'] = $order;
+    $postfields['default'] = $default ? 'true' : 'false';
+
+    // No headers.
+    $headers = array();
+
+    // Upload the test file.
+    $out = $this->curlExec(array(CURLOPT_URL => url($uri, array('absolute' => TRUE)), CURLOPT_POST => TRUE, CURLOPT_POSTFIELDS => $postfields, CURLOPT_HTTPHEADER => $headers));
+
+    // Add for deletion.
+    $this->mediafiles_cleanup[] = $mediafile_id;
+
+    // Replace original page output with new output from redirected page(s).
+    $new = $this->checkForMetaRefresh();
+    if ($new) {
+      $out = $new;
+    }
+
+    // Our upload.
+    $this->verbose('POST request to: ' . url($uri, array('absolute' => TRUE)) .
+                   '<hr />Ending URL: ' . $this->getUrl() .
+                   '<hr />Fields: ' . highlight_string('<?php ' . var_export($postfields, TRUE), TRUE) .
+                   '<hr />' . $out);
+
+    list($response, $data) = explode("\r\n\r\n", $out, 2);
+    $response = preg_split("/\r\n|\n|\r/", $response);
+
+    try {
+      $xml = new SimpleXMLElement($data);
+    }
+    catch (Exception $e) {
+      $this->assert(FALSE, 'simple XML creation failed! ' . $e->getMessage());
+    }
+
+    // Get the still ID.
+    $still_id = (string)$xml->items->item->still_id;
+
+    // Add for deletion.
+    $this->mediafiles_cleanup[] = $still_id;
+
+    // Parse the response status line.
+    list($protocol, $code, $status_message) = explode(' ', trim(array_shift($response)), 3);
+
+    // Check 200 resonse.
+    $this->assertTrue($code == 200, 'Upload HTML response 200.');
+
+    // Get path to still.
+    $still_filename = mediamosa_configuration_storage::mediafile_still_filename_get($still_id);
+
+    // Add to unlinks.
+    $this->unlinks[] = $still_filename;
+
+    // Check if the file has been uploaded.
+    $this->assertTrue(file_exists($still_filename), 'File has been uploaded.');
+
+    // Lets return the mediafile_id for now.
+    return array('asset_id' => $asset_id, 'mediafile_id' => $mediafile_id, 'filename' => $still_filename);
+  }
+
+  /**
    * Compare input insert/update with result.
    * @param string $table
    *  Table name.
