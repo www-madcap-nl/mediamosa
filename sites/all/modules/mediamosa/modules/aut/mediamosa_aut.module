@@ -399,7 +399,7 @@ function mediamosa_aut_mediamosa_register_rest_call_doc() {
 </items>',
   );
 
-  $a_rest_calls['acl/get_foreign_apps'][mediamosa_rest_call::METHOD_POST] = array(
+  $a_rest_calls['acl/get_foreign_apps'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'Get foreign apps.',
     mediamosa_rest_call::DESCRIPTION => 'Get foreign apps.',
     mediamosa_rest_call::EXAMPLE_REQUEST => '/acl/get_foreign_apps?secret=***&app_id=1&is_oai=TRUE',
