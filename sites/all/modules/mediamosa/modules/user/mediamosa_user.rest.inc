@@ -171,7 +171,7 @@ class mediamosa_rest_call_user_create extends mediamosa_rest_call {
         ),
         self::QUOTUM => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
-          self::VAR_DESCRIPTION => 'Maximum disk space of the user in bytes. A quotum of 0 means unlimited diskspace. Quota is is enforced with a soft-quota, a user is allowed to exceed the maximum, but the next action is rejected.',
+          self::VAR_DESCRIPTION => 'Maximum disk space of the user in mega bytes. A quotum of 0 means unlimited diskspace. Quota is is enforced with a soft-quota, a user is allowed to exceed the maximum, but the next action is rejected.',
         ),
       )
     );

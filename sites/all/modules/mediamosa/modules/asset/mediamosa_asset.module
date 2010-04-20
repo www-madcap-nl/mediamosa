@@ -1457,7 +1457,7 @@ user_id = "username"',
   $rest_calls['asset/$asset_id'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Update the fields of a asset.',
     mediamosa_rest_call::DESCRIPTION => '',
-    mediamosa_rest_call::EXAMPLE_REQUEST => array('/asset/VlN2ZDKv9rpsfmBAWpvfiw1zQ6z', 'play_restriction_start=”2007-12-05 08:30:00”', 'play_restriction_end=”2007-12-31 10:00:00”'),
+    mediamosa_rest_call::EXAMPLE_REQUEST => array('/asset/VlN2ZDKv9rpsfmBAWpvfiw1zQ6z', 'play_restriction_start="2007-12-05 08:30:00"', 'play_restriction_end="2007-12-31 10:00:00"'),
     mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
     mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
   );

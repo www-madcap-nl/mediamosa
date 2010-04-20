@@ -97,7 +97,6 @@ function mediamosa_app_authentication_mediamosa_register_rest_call_doc() {
   );
 
   $a_rest_calls['check_cookie'][mediamosa_rest_call::METHOD_GET] = $a_rest_calls['login/cookie'][mediamosa_rest_call::METHOD_GET];
-  $a_rest_calls['check_cookie'][mediamosa_rest_call::METHOD_GET][mediamosa_rest_call::STATUS] = mediamosa_rest_call::STATUS_DEPRECATED;
 
   return $a_rest_calls;
 }
