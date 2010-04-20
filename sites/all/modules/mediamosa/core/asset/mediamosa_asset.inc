@@ -169,7 +169,7 @@ class mediamosa_asset {
     // Find all mediafiles.
     $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
     $query->addField('mf', mediamosa_asset_mediafile_db::ID);
-    $query->condition(mediamosa_asset_mediafile_db::ASSET_ID_ROOT, $asset_id);
+    $query->condition(mediamosa_asset_mediafile_db::ASSET_ID, $asset_id);
     $a_mediafile_ids = $query->execute()->fetchCol();
 
     // Delete the mediafiles.
@@ -265,26 +265,27 @@ class mediamosa_asset {
   /**
    * Update the normalized fields in asset table.
    *
-   * @param string $mediafile_id
+   * @param string $asset_id
    */
-  static public function update_asset_info($mediafile_id) {
+  static public function update_asset_info_with_mediafileid($mediafile_id) {
+    $asset_id = mediamosa_asset_mediafile::get_my_parent_assetid($mediafile_id);
+    if ($asset_id) {
+      self::update_asset_info($asset_id);
+    }
+  }
 
-    // Find top asset.
-    $asset_id_root = mediamosa_db::db_query(
-      "SELECT #asset_id_root FROM {#mediamosa_asset_mediafile} WHERE #mediafile_id = :mediafile_id",
-      array(
-        '#asset_id_root' => mediamosa_asset_mediafile_db::ASSET_ID_ROOT,
-        '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
-        '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
-        ':mediafile_id' => $mediafile_id,
-      )
-    )->fetchField();
+  /**
+   * Update the normalized fields in asset table.
+   *
+   * @param string $asset_id
+   */
+  static public function update_asset_info($asset_id) {
 
     // Find the length of the first mediafile.
     $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
     $query->fields('mfm', array(mediamosa_asset_mediafile_metadata_db::FILE_DURATION, mediamosa_asset_mediafile_metadata_db::CONTAINER_TYPE));
     $query->join(mediamosa_asset_mediafile_metadata_db::TABLE_NAME, 'mfm', "mf.mediafile_id = mfm.mediafile_id AND mf.is_original_file = 'TRUE'");
-    $query->condition('mf.' . mediamosa_asset_mediafile_db::ASSET_ID_ROOT, $asset_id_root);
+    $query->condition('mf.' . mediamosa_asset_mediafile_db::ASSET_ID, $asset_id);
     $query->orderBy('mf.changed');
     $query->range(0, 1);
     $mediafile_info = $query->execute()->fetchAssoc();
@@ -300,43 +301,28 @@ class mediamosa_asset {
           '#mediafile_container_type' => mediamosa_asset_db::MEDIAFILE_CONTAINER_TYPE,
           ':mediafile_container_type' => $mediafile_info[mediamosa_asset_mediafile_metadata_db::CONTAINER_TYPE],
           '#asset_id' => mediamosa_asset_db::ID,
-          ':asset_id' => $asset_id_root,
+          ':asset_id' => $asset_id,
         )
       );
     }
 
     // Set the external.
-    mediamosa_asset::update_asset_info_is_external($mediafile_id, $asset_id_root);
-    // Set the empty asset.
-    mediamosa_asset::update_asset_info_is_empty_asset($mediafile_id, $asset_id_root);
+    mediamosa_asset::update_asset_info_is_external($asset_id);
 
+    // Set the empty asset.
+    mediamosa_asset::update_asset_info_is_empty_asset($asset_id);
   }
 
   /**
    * Update the normalized field in asset for is_empty_asset flag.
    *
-   * @param string $mediafile_id
-   * @param string $asset_id_root
+   * @param string $asset_id
    */
-  static public function update_asset_info_is_empty_asset($mediafile_id, $asset_id_root = NULL) {
-    // Search the asset_id_root.
-    if (!isset($asset_id_root)) {
-      // Find top asset.
-      $asset_id_root = mediamosa_db::db_query(
-        "SELECT #asset_id_root FROM {#mediamosa_asset_mediafile} WHERE #mediafile_id = :mediafile_id",
-        array(
-          '#asset_id_root' => mediamosa_asset_mediafile_db::ASSET_ID_ROOT,
-          '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
-          '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
-          ':mediafile_id' => $mediafile_id,
-        )
-      )->fetchField();
-    }
-
-    $a_mediafile = mediamosa_db::db_query_range(
+  static public function update_asset_info_is_empty_asset($asset_id) {
+    $mediafile = mediamosa_db::db_query_range(
       "SELECT m.#uri, m.#filename FROM {#mediamosa_asset_mediafile} AS m
        LEFT JOIN {#mediamosa_asset_mediafile_metadata} AS mm USING (#mediafile_id)
-       WHERE m.#is_original_file = :is_original_file_true AND m.#asset_id_root = :asset_id_root AND
+       WHERE m.#is_original_file = :is_original_file_true AND m.#asset_id = :asset_id AND
              (m.#uri IS NOT NULL OR m.#filename IS NOT NULL OR m.#is_downloadable = :is_downloadable_true OR mm.#filesize > 0)",
       0, // From.
       1, // Count.
@@ -348,8 +334,8 @@ class mediamosa_asset {
         '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
         '#is_original_file' => mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE,
         ':is_original_file_true' => mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_TRUE,
-        '#asset_id_root' => mediamosa_asset_mediafile_db::ASSET_ID_ROOT,
-        ':asset_id_root' => $asset_id_root,
+        '#asset_id' => mediamosa_asset_mediafile_db::ASSET_ID,
+        ':asset_id' => $asset_id,
         '#uri' => mediamosa_asset_mediafile_db::URI,
         '#filename' => mediamosa_asset_mediafile_db::FILENAME,
         '#is_downloadable' => mediamosa_asset_mediafile_db::IS_DOWNLOADABLE,
@@ -364,37 +350,22 @@ class mediamosa_asset {
       array(
         '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
         '#is_empty_asset' => mediamosa_asset_db::IS_EMPTY_ASSET,
-        ':is_empty_asset' => $a_mediafile ? mediamosa_asset_db::IS_EMPTY_ASSET_FALSE : mediamosa_asset_db::IS_EMPTY_ASSET_TRUE,
+        ':is_empty_asset' => $mediafile ? mediamosa_asset_db::IS_EMPTY_ASSET_FALSE : mediamosa_asset_db::IS_EMPTY_ASSET_TRUE,
         '#asset_id' => mediamosa_asset_db::ID,
-        ':asset_id' => $asset_id_root,
+        ':asset_id' => $asset_id,
       )
     );
-
   }
 
   /**
    * Update the normalized field in asset for is_external flag.
    *
-   * @param string $mediafile_id
-   * @param string $asset_id_root
+   * @param string $asset_id
    */
-  static public function update_asset_info_is_external($mediafile_id, $asset_id_root = NULL) {
-    // Search the asset_id_root.
-    if (!isset($asset_id_root)) {
-      // Find top asset.
-      $asset_id_root = mediamosa_db::db_query(
-        "SELECT #asset_id_root FROM {#mediamosa_asset_mediafile} WHERE #mediafile_id = :mediafile_id",
-        array(
-          '#asset_id_root' => mediamosa_asset_mediafile_db::ASSET_ID_ROOT,
-          '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
-          '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
-          ':mediafile_id' => $mediafile_id,
-        )
-      )->fetchField();
-    }
+  static public function update_asset_info_is_external($asset_id) {
 
-    $a_mediafile = mediamosa_db::db_query_range(
-      "SELECT #uri, #filename FROM {#mediamosa_asset_mediafile} WHERE #is_original_file = :TRUE AND #asset_id_root = :asset_id_root",
+    $mediafile = mediamosa_db::db_query_range(
+      "SELECT #uri, #filename FROM {#mediamosa_asset_mediafile} WHERE #is_original_file = :TRUE AND #asset_id = :asset_id",
       0, // From.
       1, // Count.
       array(
@@ -403,14 +374,14 @@ class mediamosa_asset {
         '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
         '#is_original_file' => mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE,
         ':TRUE' => mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_TRUE,
-        '#asset_id_root' => mediamosa_asset_mediafile_db::ASSET_ID_ROOT,
-        ':asset_id_root' => $asset_id_root,
+        '#asset_id' => mediamosa_asset_mediafile_db::ASSET_ID,
+        ':asset_id' => $asset_id,
       )
     )->fetchAssoc();
 
-    if ($a_mediafile) {
-      $uri = $a_mediafile[mediamosa_asset_mediafile_db::URI];
-      $filename = $a_mediafile[mediamosa_asset_mediafile_db::FILENAME];
+    if ($mediafile) {
+      $uri = $mediafile[mediamosa_asset_mediafile_db::URI];
+      $filename = $mediafile[mediamosa_asset_mediafile_db::FILENAME];
 
       // Set is_external.
       mediamosa_db::db_query(
@@ -420,7 +391,7 @@ class mediamosa_asset {
           '#is_external' => mediamosa_asset_db::IS_EXTERNAL,
           ':is_external' => trim($uri) != '' ? mediamosa_asset_db::IS_EXTERNAL_TRUE : mediamosa_asset_db::IS_EXTERNAL_FALSE,
           '#asset_id' => mediamosa_asset_db::ID,
-          ':asset_id' => $asset_id_root,
+          ':asset_id' => $asset_id,
         )
       );
     }
@@ -1072,7 +1043,7 @@ class mediamosa_asset {
         // Change the mediafile table
         mediamosa_db::db_update(mediamosa_asset_mediafile_db::TABLE_NAME)
           ->fields($a_fields)
-          ->condition(mediamosa_asset_mediafile_db::ASSET_ID_ROOT, $asset_id)
+          ->condition(mediamosa_asset_mediafile_db::ASSET_ID, $asset_id)
           ->execute();
 
         if (!is_null($owner_id)) {

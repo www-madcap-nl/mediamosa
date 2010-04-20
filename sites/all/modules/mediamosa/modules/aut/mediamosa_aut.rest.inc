@@ -1446,15 +1446,15 @@ class mediamosa_rest_call_aut_get_foreign_apps extends mediamosa_rest_call {
   }
 
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     // Get the app id(s).
-    $a_app_ids = $this->get_param_value_app();
+    $app_ids = $this->get_param_value_app();
     $secret = $this->get_param_value(self::SECRET);
     $is_oai = $this->get_param_value(self::IS_OAI);
 
     // First is always the main app.
-    $app_id = reset($a_app_ids);
+    $app_id = reset($app_ids);
 
     // Check secret code.
     if ($secret != '34yher8hio34jtksmdf823r') {
@@ -1462,21 +1462,22 @@ class mediamosa_rest_call_aut_get_foreign_apps extends mediamosa_rest_call {
     }
 
     $result = mediamosa_db::db_query(
-    "SELECT #id AS app_id, #name, #play_proxy_url, #view_asset_url, #download_url
-    FROM {#client_applications}
-    WHERE #id <> :id OR #falsetrue
-    ORDER BY #name ASC", array(
-      '#id' => mediamosa_app_db::APP_ID,
-      '#name' => mediamosa_app_db::APP_NAME,
-      '#play_proxy_url' => mediamosa_app_db::PLAY_PROXY_URL,
-      '#view_asset_url' => mediamosa_app_db::VIEW_ASSET_URL,
-      '#download_url' => mediamosa_app_db::DOWNLOAD_URL,
-      '#client_applications' => mediamosa_app_db::TABLE_NAME,
-      ':id' => $app_id,
-      '#falsetrue' => ($is_oai == 'TRUE' ? 1 : 0),
+      "SELECT #id AS app_id, #name, #play_proxy_url, #view_asset_url, #download_url
+      FROM {#client_applications}
+      WHERE #id <> :id OR #falsetrue
+      ORDER BY #name ASC", array(
+        '#id' => mediamosa_app_db::APP_ID,
+        '#name' => mediamosa_app_db::APP_NAME,
+        '#play_proxy_url' => mediamosa_app_db::PLAY_PROXY_URL,
+        '#view_asset_url' => mediamosa_app_db::VIEW_ASSET_URL,
+        '#download_url' => mediamosa_app_db::DOWNLOAD_URL,
+        '#client_applications' => mediamosa_app_db::TABLE_NAME,
+        ':id' => $app_id,
+        '#falsetrue' => ($is_oai == 'TRUE' ? 1 : 0),
     ));
+
     foreach ($result as $record) {
-      $o_mediamosa->add_item(array(
+      $mediamosa->add_item(array(
         mediamosa_app_db::APP_ID => $record[mediamosa_app_db::APP_ID],
         self::NAME => $record[mediamosa_app_db::APP_NAME],
         mediamosa_app_db::PLAY_PROXY_URL => $record[mediamosa_app_db::PLAY_PROXY_URL],

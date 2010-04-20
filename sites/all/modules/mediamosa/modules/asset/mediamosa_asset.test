@@ -42,7 +42,6 @@ class MediaMosaAssetTestCaseEga extends MediaMosaTestCaseEga {
   }
 
   // ------------------------------------------------------------------ Tests.
-
   // Testing is_empty_asset issues, see: ticket 165.
   public function testAssetIsEmptyAsset() {
 
@@ -82,7 +81,6 @@ class MediaMosaAssetTestCaseEga extends MediaMosaTestCaseEga {
     );
   }
 
-
   // Testing is_empty_asset issue, see: ticket 167.
   public function testAssetIsEmptyAsset2() {
 
@@ -119,6 +117,67 @@ class MediaMosaAssetTestCaseEga extends MediaMosaTestCaseEga {
     $this->assertTrue(
       $is_empty_asset == 'FALSE',
       t("The is_empty_asset parameter is FALSE: @is_empty_asset", array('@is_empty_asset' => print_r($is_empty_asset, TRUE),))
+    );
+  }
+
+  // Testing is_empty_asset issue, see: ticket 166.
+  public function testAssetIsEmptyAsset4() {
+
+    // Create an asset with upload
+    $upload = $this->uploadTestFile();
+    $asset_id = $upload['asset_id'];
+    $mediafile_id = $upload['mediafile_id'];
+
+    // Get the asset
+    $asset = $this->getAsset($asset_id);
+
+    // Check is_empty_asset field is TRUE
+    $is_empty_asset = (string)$asset[mediamosa_asset_db::IS_EMPTY_ASSET];
+    $this->assertTrue(
+      $is_empty_asset == 'FALSE',
+      strtr("The is_empty_asset parameter is FALSE: @is_empty_asset", array('@is_empty_asset' => print_r($is_empty_asset, TRUE),))
+    );
+
+    // Create an another mediafile with an URI.
+    $a_parameters = array(
+      mediamosa_rest_call_create_mediafile::URI => 'http://empty.asset.demo',
+    );
+    $mediafile_id_with_uri = $this->createMediafile($asset_id, $a_parameters);
+
+    // Get the asset
+    $asset = $this->getAsset($asset_id);
+
+    // Check is_empty_asset field is FALSE
+    $is_empty_asset = (string)$asset[mediamosa_asset_db::IS_EMPTY_ASSET];
+    $this->assertTrue(
+      $is_empty_asset == 'FALSE',
+      strtr("The is_empty_asset parameter is FALSE: @is_empty_asset", array('@is_empty_asset' => print_r($is_empty_asset, TRUE),))
+    );
+
+    // Now delete the upload, so is_empty_asset still false
+    self::deleteMediafile($mediafile_id);
+
+    // Get the asset
+    $asset = $this->getAsset($asset_id);
+
+    // Check is_empty_asset field is TRUE
+    $is_empty_asset = (string)$asset[mediamosa_asset_db::IS_EMPTY_ASSET];
+    $this->assertTrue(
+      $is_empty_asset == 'FALSE',
+      strtr("The is_empty_asset parameter is FALSE: @is_empty_asset", array('@is_empty_asset' => print_r($is_empty_asset, TRUE),))
+    );
+
+    // Now delete the uri, so is_empty_asset = true
+    self::deleteMediafile($mediafile_id_with_uri);
+
+    // Get the asset
+    $asset = $this->getAsset($asset_id);
+
+    // Check is_empty_asset field is TRUE
+    $is_empty_asset = (string)$asset[mediamosa_asset_db::IS_EMPTY_ASSET];
+    $this->assertTrue(
+      $is_empty_asset == 'TRUE',
+      strtr("The is_empty_asset parameter is TRUE: @is_empty_asset", array('@is_empty_asset' => print_r($is_empty_asset, TRUE),))
     );
   }
 
@@ -187,6 +246,5 @@ class MediaMosaAssetTestCaseEga extends MediaMosaTestCaseEga {
       count($a_assets['items']['item']) == 2,
       t("There are all the assets (2 = @get)", array('@get' => count($a_assets['items']['item'])))
     );
-
   }
 }

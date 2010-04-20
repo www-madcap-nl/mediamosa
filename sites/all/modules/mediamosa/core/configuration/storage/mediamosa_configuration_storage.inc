@@ -214,15 +214,15 @@ class mediamosa_configuration_storage {
   /**
    * Get the Mediafile mountpath path.
    *
-   * @param array $a_mediafile
+   * @param array $mediafile
    *  The mediafile array or simular, must contain at least 'mediafile_id'.
    */
-  static public function mediafile_filename_get($a_mediafile) {
-    if (!isset($a_mediafile[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT]) || empty($a_mediafile[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT])) {
-      $a_mediafile[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT] = self::mount_point_get();
+  static public function mediafile_filename_get($mediafile) {
+    if (!isset($mediafile[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT]) || empty($mediafile[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT])) {
+      $mediafile[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT] = self::mount_point_get();
     }
 
-    return $a_mediafile[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT] . DIRECTORY_SEPARATOR . self::data_location_get() . DIRECTORY_SEPARATOR . self::objectid_to_location($a_mediafile[mediamosa_asset_mediafile_db::ID]);
+    return $mediafile[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT] . DIRECTORY_SEPARATOR . self::data_location_get() . DIRECTORY_SEPARATOR . self::objectid_to_location($mediafile[mediamosa_asset_mediafile_db::ID]);
   }
 
   /**

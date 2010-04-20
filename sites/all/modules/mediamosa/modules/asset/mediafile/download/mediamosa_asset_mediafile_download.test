@@ -45,7 +45,7 @@ class MediaMosaAssetMediafileDownloadTestCase extends MediaMosaTestCase {
     return array(
       'name' => 'Mediafile - download test',
       'description' => 'Test downloading of files with tickets.',
-      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET,
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET_MEDIAFILE,
     );
   }
 

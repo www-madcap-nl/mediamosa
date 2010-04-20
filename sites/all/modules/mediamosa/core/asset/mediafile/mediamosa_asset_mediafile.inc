@@ -41,15 +41,25 @@ class mediamosa_asset_mediafile {
    *
    * @param string $mediafile_id
    */
-  static public function get($mediafile_id, $app_id = NULL) {
+  static public function get($mediafile_id, $app_id = NULL, $fields = array()) {
 
     $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
-    $query->fields('mf');
+    $query->fields('mf', $fields);
     $query->condition('mf.' . mediamosa_asset_mediafile_db::ID, $mediafile_id);
     if (isset($app_id)) {
       $query->condition('mf.' . mediamosa_asset_mediafile_db::APP_ID, $app_id);
     }
     return $query->execute()->fetchAssoc();
+  }
+
+  /**
+   * returns the parent asset id of mediafile.
+   */
+  static public function get_my_parent_assetid($mediafile_id) {
+    $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
+    $query->fields('mf', array(mediamosa_asset_mediafile_db::ASSET_ID));
+    $query->condition('mf.' . mediamosa_asset_mediafile_db::ID, $mediafile_id);
+    return $query->execute()->fetchField();
   }
 
   /**
@@ -86,11 +96,19 @@ class mediamosa_asset_mediafile {
 
     // Delete from SAN/NAS.
     $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
-    $query->fields('mf', array(mediamosa_asset_mediafile_db::APP_ID, mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT, mediamosa_asset_mediafile_db::ID));
+    $query->fields('mf', array(mediamosa_asset_mediafile_db::APP_ID, mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT, mediamosa_asset_mediafile_db::ID, mediamosa_asset_mediafile_db::ASSET_ID));
     $query->condition(mediamosa_asset_mediafile_db::ID, $mediafile_ids, 'IN');
+    $result = $query->execute();
+
+    // Collect the asset ids, for normalization.
+    $normalize_asset_ids = array();
 
     // Now delete the file of each found mediafile.
-    foreach ($query->execute() as $mediafile) {
+    foreach ($result as $mediafile) {
+      // Collect asset id.
+      $normalize_asset_ids[$mediafile[mediamosa_asset_mediafile_db::ASSET_ID]] = $mediafile[mediamosa_asset_mediafile_db::ASSET_ID];
+
+      // Unlink mediafile.
       mediamosa_io::unlink(mediamosa_configuration_storage::mediafile_filename_get($mediafile));
     }
 
@@ -100,8 +118,8 @@ class mediamosa_asset_mediafile {
     $query->execute();
 
     // Update the asset information.
-    foreach ($mediafile_ids as $mediafile_id) {
-      mediamosa_asset::update_asset_info($mediafile_id);
+    foreach ($normalize_asset_ids as $asset_id) {
+      mediamosa_asset::update_asset_info($asset_id);
     }
   }
 
@@ -521,10 +539,10 @@ class mediamosa_asset_mediafile {
       ->execute();
 
     // Set the external.
-    mediamosa_asset::update_asset_info_is_external($mediafile_id);
-    // Set the empty asset.
-    mediamosa_asset::update_asset_info_is_empty_asset($mediafile_id);
+    mediamosa_asset::update_asset_info_is_external($mediafile[mediamosa_asset_mediafile_db::ASSET_ID]);
 
+    // Set the empty asset.
+    mediamosa_asset::update_asset_info_is_empty_asset($mediafile[mediamosa_asset_mediafile_db::ASSET_ID]);
   }
 
   /**
@@ -571,9 +589,10 @@ class mediamosa_asset_mediafile {
       ->execute();
 
     // Set the external.
-    mediamosa_asset::update_asset_info_is_external($mediafile_id);
+    mediamosa_asset::update_asset_info_is_external($asset_id);
+
     // Set the empty asset.
-    mediamosa_asset::update_asset_info_is_empty_asset($mediafile_id);
+    mediamosa_asset::update_asset_info_is_empty_asset($asset_id);
 
     // Return the mediafile ID.
     return $mediafile_id;
