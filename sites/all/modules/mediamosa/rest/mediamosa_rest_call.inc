@@ -448,7 +448,7 @@ abstract class mediamosa_rest_call {
     assert(in_array($default_order_direction, array(mediamosa_type::ORDER_DIRECTION_ASC, mediamosa_type::ORDER_DIRECTION_DESC)));
 
     $var_setup[self::VARS][self::ORDER_BY] = array(
-      self::VAR_TYPE => mediamosa_type::TYPE_ALPHA_NUM,
+      self::VAR_TYPE => mediamosa_type::TYPE_ALPHA_NUM_UNDERSCORE,
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_NO,
       self::VAR_DEFAULT_VALUE => $default_order_by,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,

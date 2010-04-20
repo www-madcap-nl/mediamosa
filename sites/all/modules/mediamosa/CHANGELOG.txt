@@ -78,7 +78,8 @@ Mediamosa 2.1.0
 - /asset owner_id does not work (See 
   MediaMosa ticket #255).
 - /asset/{id} post call now requires an 'owner_id'. (See MediaMosa ticket #257).
-
+- Fixed is_empty_asset flag bug when asset no longer has mediafiles. (See 
+  MediaMosa ticket #166).
 
 Other changes (non-ticket related)
 - Play proxy call will now return the ticket id in result.

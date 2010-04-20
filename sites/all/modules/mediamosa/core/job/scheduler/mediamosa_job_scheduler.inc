@@ -1177,14 +1177,14 @@ class mediamosa_job_scheduler {
   static public function map_parameters($tool, $command, $mediafile_id) {
     $a_cli = array();
 
-    // first determine if we have to alter the aspect ratio.
+    // First determine if we have to alter the aspect ratio.
     $alter_size_param = FALSE;
     if (strstr($command, 'maintain_aspect_ratio:yes') !== FALSE && strstr($command, 'size:') !== FALSE) {
       $alter_size_param = TRUE;
     }
 
-    // op basis van de toolname worden alle parameters die gebruikt kunnen
-    // worden opgevraagd. De opgegeven parameters worden hier mee gecontroleerd.
+    // Get all parameters based on the toolname that can be queried.
+    // Check the given paramters.
     $result = mediamosa_transcode_mapping::get_by_tool($tool);
     foreach ($result as $result_row) {
       if ($result_row[mediamosa_transcode_mapping_db::NICE_PARAMETER] == 'size' && $alter_size_param) {
