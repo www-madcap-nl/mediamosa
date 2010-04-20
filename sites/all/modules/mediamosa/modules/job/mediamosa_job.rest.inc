@@ -545,7 +545,7 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
     $a_mediafile = mediamosa_asset_mediafile::must_exists($mediafile_id, $app_id);
 
     if (in_array($job_type, array(mediamosa_job_db::JOB_TYPE_TRANSCODE, mediamosa_job_db::JOB_TYPE_UPLOAD))) {
-      mediamosa_user::check_user_quota($app_id, $user_id, $group_id);
+      mediamosa_user::must_have_user_quota($app_id, $user_id, $group_id);
     }
 
     if (!empty($a_mediafile[mediamosa_asset_mediafile_db::URI])) {

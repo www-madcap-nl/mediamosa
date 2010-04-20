@@ -144,6 +144,7 @@ Other changes (non-ticket related)
 - Removed notices and warnings when mediafile's file on disk does not exists.
 - Added new unit test listing under Browse tab.
 - Added new development tool/module for testing REST calls.
+- Fixed problem with quota test, didn't throw exception when it was reached.
 
 
 MediaMosa.2.0
