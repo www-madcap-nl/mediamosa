@@ -151,7 +151,7 @@ class mediamosa_rest_call_group_create extends mediamosa_rest_call {
         ),
         self::QUOTUM => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
-          self::VAR_DESCRIPTION => 'Disk space of the group in bytes.',
+          self::VAR_DESCRIPTION => 'Disk space of the group in mega bytes. 0 means unlimited.',
           self::VAR_DEFAULT_VALUE => 0,
         ),
       )

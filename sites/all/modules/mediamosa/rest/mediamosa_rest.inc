@@ -190,6 +190,8 @@ class mediamosa_rest {
   public function get_rest_calls($limit = 0, $offset = 0, $key = mediamosa_rest_call::METHOD, $key2 = mediamosa_rest_call::URI) {
     // Find all REST calls of enabled modules.
     $a_rest_calls = module_invoke_all('mediamosa_register_rest_call');
+    $a_rest_calls_doc = module_invoke_all('mediamosa_register_rest_call_doc');
+    $a_rest_calls = array_merge_recursive($a_rest_calls, $a_rest_calls_doc);
 
     // Sort on URI.
     ksort($a_rest_calls);
