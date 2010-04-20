@@ -1430,14 +1430,8 @@ class mediamosa_rest_call_aut_get_foreign_apps extends mediamosa_rest_call {
   public function get_var_setup() {
     $a_var_setup = array();
 
-    $a_var_setup[mediamosa_rest_call::VARS][self::SECRET] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_COLLECTION_ID,
-      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'Secret code',
-    );
-
     $a_var_setup[mediamosa_rest_call::VARS][self::IS_OAI] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_BOOL,
       mediamosa_rest_call::VAR_DESCRIPTION => 'Is it an OAI REST call?',
     );
 
@@ -1450,16 +1444,10 @@ class mediamosa_rest_call_aut_get_foreign_apps extends mediamosa_rest_call {
 
     // Get the app id(s).
     $app_ids = $this->get_param_value_app();
-    $secret = $this->get_param_value(self::SECRET);
     $is_oai = $this->get_param_value(self::IS_OAI);
 
     // First is always the main app.
     $app_id = reset($app_ids);
-
-    // Check secret code.
-    if ($secret != '34yher8hio34jtksmdf823r') {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_ACCESS_DENIED);
-    }
 
     $result = mediamosa_db::db_query(
       "SELECT #id AS app_id, #name, #play_proxy_url, #view_asset_url, #download_url
@@ -1473,7 +1461,7 @@ class mediamosa_rest_call_aut_get_foreign_apps extends mediamosa_rest_call {
         '#download_url' => mediamosa_app_db::DOWNLOAD_URL,
         '#client_applications' => mediamosa_app_db::TABLE_NAME,
         ':id' => $app_id,
-        '#falsetrue' => ($is_oai == 'TRUE' ? 1 : 0),
+        '#falsetrue' => ($is_oai ? 1 : 0),
     ));
 
     foreach ($result as $record) {
