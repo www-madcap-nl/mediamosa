@@ -124,7 +124,7 @@ class mediamosa_rest_call_user_list extends mediamosa_rest_call {
     $limit = $this->get_param_value_limit();
 
     // Fetch the items.
-    $result = mediamosa_user::fetch_items(TRUE, $app_id, $offset, $limit, $group_id);
+    $result = mediamosa_user::get_all(TRUE, $app_id, $offset, $limit, $group_id);
 
     // Fill the response.
     foreach ($result as $a_row) {
@@ -337,7 +337,7 @@ class mediamosa_rest_call_user_update extends mediamosa_rest_call {
 
 /**
  * URI: /user/$user_id/set_group
- * (depricated)
+ * (deprecated)
  *
  * Method: POST
  *
@@ -349,7 +349,7 @@ class mediamosa_rest_call_user_set_group extends mediamosa_rest_call_user_update
 
 /**
  * URI: /user/$user_id/set_quotum
- * (depricated)
+ * (deprecated)
  *
  * Method: POST
  *

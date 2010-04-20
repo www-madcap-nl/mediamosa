@@ -948,7 +948,7 @@ class mediamosa_rest_call_asset_create extends mediamosa_rest_call {
         ),
         self::PARENT_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_ALPHA_NUM,
-          self::VAR_DESCRIPTION => 'The parent ID. Is depricated, do not supply, value will be ignored.',
+          self::VAR_DESCRIPTION => 'The parent ID. Is deprecated, do not supply, value will be ignored.',
           self::VAR_IS_INTERNAL_ONLY => self::VAR_IS_INTERNAL_ONLY_YES,
         ),
       )
@@ -1037,12 +1037,12 @@ class mediamosa_rest_call_asset_update extends mediamosa_rest_call {
         self::IS_INAPPROPRIATE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'If is_inappropiate = true then only the owner or the app admin (and underlying media files) can see this asset. Only the app manager can change this flag(is_app_admin=true).',
-          self::VAR_IS_HIDDEN => self::VAR_IS_HIDDEN_YES,
         ),
         self::IS_UNAPPROPRIATE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Alias, same as is_inappropriate.',
           self::VAR_DEFAULT_VALUE => NULL,
+          self::VAR_IS_HIDDEN => self::VAR_IS_HIDDEN_YES,
         ),
         self::OWNER_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,

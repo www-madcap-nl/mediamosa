@@ -228,7 +228,7 @@ class MediaMosaAssetMediafileMetadataTestCaseEga extends MediaMosaTestCaseEga {
     // Get the asset metadatas.
     $a_asset = $this->getAsset($asset_id);
     $metadata = array_merge($a_asset['dublin_core'], $a_asset['qualified_dublin_core']);
-$this->var_export($a_asset);
+
     $key = 'description';
     $this->assertTrue(
       $a_parameters[$key] == $metadata[$key][0],

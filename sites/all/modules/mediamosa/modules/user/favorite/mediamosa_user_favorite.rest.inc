@@ -31,7 +31,7 @@
 
 /**
  * URI: user/$fav_user_id/favorites/create
- * user/$fav_user_id/favorites/add (depricated)
+ * user/$fav_user_id/favorites/add (deprecated)
  *
  * Method: POST
  *
@@ -96,7 +96,7 @@ class mediamosa_rest_call_user_favorite_create extends mediamosa_rest_call {
 
 /**
  * URI: user/$fav_user_id/favorites/delete
- * user/$fav_user_id/favorites/detete [GET] (depricated)
+ * user/$fav_user_id/favorites/detete [GET] (deprecated)
  *
  * Method: POST
  *

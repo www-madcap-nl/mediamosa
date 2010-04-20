@@ -793,7 +793,7 @@ class mediamosa_rest_call_job_mediafile_search extends mediamosa_rest_call {
 
 /**
  * URI: /job/$job_id/status
- *      /video/transcode/$job_id/status (depricated)
+ *      /video/transcode/$job_id/status (deprecated)
  *      /mediafile/transcode/$job_id/status
  *
  * Method: GET
@@ -871,7 +871,7 @@ class mediamosa_rest_call_job_search extends mediamosa_rest_call {
 }
 
 /**
- * URI: /video/$mediafile_id/transcode (depricated)
+ * URI: /video/$mediafile_id/transcode (deprecated)
  *      /mediafile/$mediafile_id/transcode
  *
  * Method: POST
@@ -1014,7 +1014,7 @@ class mediamosa_rest_call_job_create_still extends mediamosa_rest_call_job_creat
 
 /**
  * URI: /mediafile/$mediafile_id/still/create
- *      /video/$mediafile_id/still/create (depricated)
+ *      /video/$mediafile_id/still/create (deprecated)
  *
  * Method: POST
  *

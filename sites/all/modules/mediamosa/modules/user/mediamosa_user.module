@@ -117,7 +117,7 @@ This call returns all users which are created with /user/create and searches for
     mediamosa_rest_call::EXAMPLE_REQUEST => 'user/admin/favorites?fav_type=ASSET',
     mediamosa_rest_call::RESPONSE_FIELDS => array(
       'is_unappropriate' => 'Marked unsuitable for viewing or usage.',
-      'is_unappropiate' => 'Alias for is_unappropriate, depricated use is_unappropriate instead.',
+      'is_unappropiate' => 'Alias for is_unappropriate, deprecated use is_unappropriate instead.',
     ),
     mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
   <item id="1">

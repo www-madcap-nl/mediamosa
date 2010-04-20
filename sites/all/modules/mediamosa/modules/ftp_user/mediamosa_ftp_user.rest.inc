@@ -41,7 +41,7 @@ define('MEDIAMOSA_FTP_CREDENTIAL_LENGTH', 8);
 
 /**
  * URI: /ftp
- *      /ftp/list (depricated)
+ *      /ftp/list (deprecated)
  *
  * Method: GET
  *
@@ -386,7 +386,7 @@ class mediamosa_rest_call_ftp_user_get extends mediamosa_rest_call {
 
 /**
  * URI: /ftp/$user/change_password
- * (depricated)
+ * (deprecated)
  *
  * Method: POST
  *
@@ -462,7 +462,7 @@ class mediamosa_rest_call_ftp_user_update_password extends mediamosa_rest_call {
 
 /**
  * URI: /ftp/$user/change_status
- * (depricated)
+ * (deprecated)
  *
  * Method: POST
  *

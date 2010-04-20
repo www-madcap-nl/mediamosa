@@ -58,7 +58,7 @@ Mediamosa 2.1.0
 - Transcoding error (depends on system) (See MediaMosa ticket #209). 
 - Fixed problem with deleting asset with jobs (See MediaMosa ticket #220).
 - Banner text was updated (See MediaMosa ticket #222).
-- Improved filehandling and file analyser (See MediaMosa ticket #224).
+- Improved filehandling and file analyzer (See MediaMosa ticket #224).
 - Fixed lame mp3 ffmpeg crash (See MediaMosa ticket #230).
 - Fixed visible mediafiles in asset master/slave (See MediaMosa ticket #232).
 - Fixed sort on mediafile_duration gives strange result. (See MediaMosa ticket 
@@ -88,11 +88,11 @@ Other changes (non-ticket related)
   same parent job.
 - Added foreign key on mediamosa_job_server to mediamosa_job - job_id.
 - Prevented possible divided by zero problems in job server. 
-- asset_id_root in mediamosa_asset_mediafile table is now depricated, will be 
+- asset_id_root in mediamosa_asset_mediafile table is now deprecated, will be 
   removed in later versions.
-- parent_id in mediamosa_asset table is now depricated, will be removed in later
+- parent_id in mediamosa_asset table is now deprecated, will be removed in later
   versions.
-- is_original_file boolean in mediamosa_asset_mediafile table is depricated, is
+- is_original_file boolean in mediamosa_asset_mediafile table is deprecated, is
   replaced by mediafile_id_source.
 - mediafile_id_source is now either NULL or points to its original mediafile.
 - Fixed still generation call /mediafile/$mediafile/still. 
@@ -139,7 +139,7 @@ Other changes (non-ticket related)
 - Fixed problems editing the transcode profile.
 - Fixed migration problem on transcode profiles.
 - REST call mediafile/$mediafile_id/uploadticket/create now also returns the
-  ticket_id as seperate value.
+  ticket_id as separate value.
 - Removed notices and warnings when mediafile's file on disk does not exists.
 - Added new unit test listing under Browse tab.
 - Added new development tool/module for testing REST calls.
@@ -186,9 +186,9 @@ MediaMosa.0.0 (released as read-only)
 - GET / POST / URI variables now share the same scope.
 - Redesign of the SAN/NAS globals/paths into static class 'storage'.
 - Removed /internal/check_existence (function media_management_check_existence).
-- parent_id of asset has been made depricated. Will remove code supporting 
+- parent_id of asset has been made deprecated. Will remove code supporting 
   parent_id from code in the future.
-- is_original_file in mediafile has been made depricated. Will still support 
+- is_original_file in mediafile has been made deprecated. Will still support 
   this flag in output in future versions, but will be removed in database in 
   future version.
 - Introducing mediafile_id_source as replacement of is_original_file. This field
@@ -197,5 +197,5 @@ MediaMosa.0.0 (released as read-only)
 - 1.7.3 migration to 2.0.0 database will now move child assets mediafiles to its
   root asset. This will make the database more reliable, faster and easier to
   maintain.
-- Mediafile db field asset_id_root is now depricated and will be removed in 
+- Mediafile db field asset_id_root is now deprecated and will be removed in 
   future releases.

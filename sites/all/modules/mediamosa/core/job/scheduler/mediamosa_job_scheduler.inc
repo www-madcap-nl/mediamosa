@@ -508,7 +508,7 @@ class mediamosa_job_scheduler {
     $a_asset = mediamosa_asset::get($job_info['asset_id']);
     assert(!empty($a_asset));
 
-    // Set the root (depricated).
+    // Set the root (deprecated).
     $asset_id_root = ($a_asset[mediamosa_asset_db::PARENT_ID] ? $a_asset[mediamosa_asset_db::PARENT_ID] : $job_info['asset_id']);
 
     $a_fields = array(

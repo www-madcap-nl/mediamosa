@@ -75,7 +75,7 @@ class mediamosa_rest_call_app_ident extends mediamosa_rest_call {
 }
 
 /**
- * URI: /check_cookie (depricated)
+ * URI: /check_cookie (deprecated)
  *      /login/cookie
  *
  * Retrieve cookie information.

@@ -655,7 +655,7 @@ function mediamosa_asset_mediamosa_register_rest_call_doc() {
       'play_restriction_start' => 'The start datetime of play restriction.',
       'play_restriction_end' => 'The end datetime of play restriction.',
       'is_unappropriate' => 'Marked unsuitable for viewing or usage.',
-      'is_unappropiate' => 'Alias for is_unappropriate, depricated use is_unappropriate instead.',
+      'is_unappropiate' => 'Alias for is_unappropriate, deprecated use is_unappropriate instead.',
     ),
     mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
   <item id="1">

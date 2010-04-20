@@ -32,8 +32,8 @@
 
 /**
  * URI: /transcode/profile
- *      /video/transcode_profiles (depricated)
- *      /transcode/profiles (depricated)
+ *      /video/transcode_profiles (deprecated)
+ *      /transcode/profiles (deprecated)
  * Method: GET
  *
  * 1.x: _transcoding_profiles_get_transcode_list.

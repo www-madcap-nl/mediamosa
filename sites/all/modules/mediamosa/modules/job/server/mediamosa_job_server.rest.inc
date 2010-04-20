@@ -217,13 +217,13 @@ class mediamosa_rest_call_jobserver_job_start extends mediamosa_rest_call {
           'still_every_second' => $this->get_param_value(self::STILL_EVERY_SECOND),
           'start_frame' => $this->get_param_value(self::START_FRAME),
           'end_frame' => $this->get_param_value(self::END_FRAME),
-          //'size' => $a_parameters['size']['value'], // Depricated
-          //'h_padding' => $a_parameters['h_padding']['value'], // Depricated
-          //'v_padding' => $a_parameters['v_padding']['value'], // Depricated
+          //'size' => $a_parameters['size']['value'], // deprecated
+          //'h_padding' => $a_parameters['h_padding']['value'], // deprecated
+          //'v_padding' => $a_parameters['v_padding']['value'], // deprecated
           'tag' => $this->get_param_value(self::TAG),
-          //'frametime' => $a_parameters['frametime']['value'], // Depricated
-          //'width' => $a_parameters['width']['value'], // Depricated
-          //'height' => $a_parameters['height']['value'], // Depricated
+          //'frametime' => $a_parameters['frametime']['value'], // deprecated
+          //'width' => $a_parameters['width']['value'], // deprecated
+          //'height' => $a_parameters['height']['value'], // deprecated
           'video_duration' => $this->get_param_value(self::VIDEO_DURATION),
           'fps' => $this->get_param_value(self::FPS),
         );

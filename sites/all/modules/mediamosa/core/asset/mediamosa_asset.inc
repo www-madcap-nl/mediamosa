@@ -943,7 +943,7 @@ class mediamosa_asset {
    *  The reference ID.
    * @param $provider_id
    *  The provider ID
-   * @param $parent_id (depricated)
+   * @param $parent_id (deprecated)
    *  The parent ID.
    */
   static public function create($app_id, $owner_id, $group_id = NULL, $reference_id = NULL, $provider_id = NULL, $parent_id = NULL) {

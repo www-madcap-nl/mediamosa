@@ -559,7 +559,7 @@ class mediamosa_asset_mediafile {
     $fields[mediamosa_asset_mediafile_db::ID] = $mediafile_id;
     $fields[mediamosa_asset_mediafile_db::APP_ID] = $app_id;
     $fields[mediamosa_asset_mediafile_db::ASSET_ID] = $asset_id;
-    $fields[mediamosa_asset_mediafile_db::ASSET_ID_ROOT] = $asset_id; // depricated, set to own asset.
+    $fields[mediamosa_asset_mediafile_db::ASSET_ID_ROOT] = $asset_id; // deprecated, set to own asset.
     $fields[mediamosa_asset_mediafile_db::OWNER_ID] = $user_id;
 
     // Enrich for created/changed.

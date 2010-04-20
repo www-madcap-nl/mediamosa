@@ -33,7 +33,7 @@
 
 /**
  * URI: /asset/$asset_id/play
- *      /video/$asset_id/play (depricated)
+ *      /video/$asset_id/play (deprecated)
  * Method: GET
  *
  * 1.x: play_proxy_request.
