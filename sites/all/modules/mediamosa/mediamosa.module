@@ -275,7 +275,7 @@ function mediamosa_mediamosa_configuration_collect() {
   $form['settings_cron']['mediamosa_cron_url_app'] = array(
     '#type' => 'textfield',
     '#title' => t('URL REST'),
-    '#description' => t('The URL or IP Address of the server to apply the call for CRON and other internal global REST calls. This must be a MediaMosa REST interface and open from this server, f.e. \'http://app.mediamosa2.local\'. <em>You must use http:// or other schema.</em>'),
+    '#description' => t('The URL or IP Address of the server to apply the call for CRON and other internal global REST calls. This must be a MediaMosa REST interface and open from this server, f.e. \'http://app.mediamosa.local\'. <em>You must use http:// or other schema.</em>'),
     '#required' => TRUE,
     '#default_value' => 'http://localhost',
   );

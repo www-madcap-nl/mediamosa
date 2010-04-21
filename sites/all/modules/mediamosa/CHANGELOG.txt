@@ -31,7 +31,20 @@ Steps for changelog and commits;
 
 START CHANGELOG:
 
- 
+Mediamosa 2.1.1
+---------------
+- Fixed asx not written or created (see MediaMosa ticket #188).
+
+Other changes (non-ticket related)
+- Fixed problem with quota test, didn't throw exception when it was reached.
+- Added documentation information in the /rest restcall.
+- Changed type of order_by from ALPHANUM to ALPHANUM_UNDERSCORE
+- Added REST call /internal/acl/get_foreign_apps.
+- Removed secret password from acl/get_foreign_apps function (its protected by
+  internal password).
+- Mutli typo fixed in comments (depricated to deprecated).
+- Fixed migration; transcode profiles where not migrated.
+
 
 Mediamosa 2.1.0
 ---------------
@@ -144,7 +157,6 @@ Other changes (non-ticket related)
 - Removed notices and warnings when mediafile's file on disk does not exists.
 - Added new unit test listing under Browse tab.
 - Added new development tool/module for testing REST calls.
-- Fixed problem with quota test, didn't throw exception when it was reached.
 
 
 MediaMosa.2.0

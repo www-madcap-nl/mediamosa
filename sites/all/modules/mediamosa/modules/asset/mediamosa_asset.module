@@ -1179,7 +1179,7 @@ name=Example&delete=cascade',
     mediamosa_rest_call::RESPONSE_FIELDS => array('output' => 'The external URL you can use to see the avatar.'),
     mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
   <item id="1">
-    <output>http://download.mediamosa2.local/still/n2Ybk1bPL6jRgkSSLUiYxfLn</output>
+    <output>http://download.mediamosa.local/still/n2Ybk1bPL6jRgkSSLUiYxfLn</output>
     <content_type></content_type>
     <ticket_id>n2Ybk1bPL6jRgkSSLUiYxfLn</ticket_id>
   </item>
@@ -1669,7 +1669,7 @@ user_id = "username"',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
     mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
   <item id="1">
-    <output>http://mediamosa2.local/download/T2hLaHNlDROR6UTYJFn2b8Cz/Filename_not_set</output>
+    <output>http://mediamosa.local/download/T2hLaHNlDROR6UTYJFn2b8Cz/Filename_not_set</output>
     <content_type></content_type>
     <ticket_id>T2hLaHNlDROR6UTYJFn2b8Cz</ticket_id>
   </item>

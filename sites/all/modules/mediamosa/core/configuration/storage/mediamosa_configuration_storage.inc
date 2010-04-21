@@ -186,7 +186,7 @@ class mediamosa_configuration_storage {
    *  path to ticket location
    */
   function asx_file_location($ticket) {
-    return self::still_location_get() . DIRECTORY_SEPARATOR . $ticket . '.asx';
+    return self::mount_point_get() . DIRECTORY_SEPARATOR . self::still_location_get() . DIRECTORY_SEPARATOR . $ticket . '.asx';
   }
 
   /**

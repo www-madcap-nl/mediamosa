@@ -491,7 +491,6 @@ class mediamosa_asset_mediafile_play_proxy {
 
           case self::CONTAINER_TYPE_WMV:
           default:
-
             // Either set, then we must use an external asx file.
             $use_external_asx_file = (isset($start) || isset($duration));
 
