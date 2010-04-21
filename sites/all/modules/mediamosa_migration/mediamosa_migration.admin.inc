@@ -112,6 +112,7 @@ function mediamosa_migration_form_submit($form, &$form_state) {
           array('_mediamosa_migration_process', array('_mediamosa_migration_create_server_nodes', t('server table(s)'))),
           //array('_mediamosa_migration_process', array('_mediamosa_migration_job', t('job table(s)'))),
           //array('_mediamosa_migration_process', array('_mediamosa_migration_jobserver_all', t('job server table(s)'))),
+          array('_mediamosa_migration_process', array('_mediamosa_migration_transcode', t('transcode table(s)'))),
           array('_mediamosa_migration_process', array('_mediamosa_migration_statistics', t('statistic table(s)'))),
           array('_mediamosa_migration_process', array('_mediamosa_migration_settings', t('settings table(s)'))),
           ),
