@@ -1565,7 +1565,7 @@ user_id = "username"',
     mediamosa_rest_call::TITLE => 'Create metadata for the asset.',
     mediamosa_rest_call::DESCRIPTION => '',
     mediamosa_rest_call::EXAMPLE_REQUEST => 'asset/2RcNiH26TY50e23MY3xw78cq/metadata<br /><br />description = "test description"',
-    mediamosa_rest_call::RESPONSE_FIELDS => array('metadata parameter' => 'the created/replaced metadata field value'),
+    mediamosa_rest_call::RESPONSE_FIELDS => array('metadata_parameter' => 'the created/replaced metadata field value'),
     mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
   <item id="1">
     <description>test description</description>
