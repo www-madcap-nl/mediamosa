@@ -132,7 +132,7 @@ function mediamosa_collection_mediamosa_register_rest_call_doc() {
     mediamosa_rest_call::RESPONSE_FIELDS => array(
       'item_count_total' => 'The total number of collections found.',
       'item_count' => 'The total number of items returned is with this call always 0, since we only return the total number. Use the call /collection [GET] to also obtain the details of the found collections.',
-      htmlentities('<items/>') => 'always empty.',
+      'items' => 'always empty.',
     ),
     mediamosa_rest_call::EXAMPLE_RESPONSE => '<header>
   <item_count>0</item_count>
