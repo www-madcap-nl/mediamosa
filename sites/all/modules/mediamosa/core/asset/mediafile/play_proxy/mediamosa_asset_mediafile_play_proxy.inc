@@ -546,7 +546,10 @@ class mediamosa_asset_mediafile_play_proxy {
 
                   // Create new streaming server URI based on asx file.
                   $streaming_server_ticket_uri = str_replace(self::PARAM_URI_TICKET, urlencode($ticket) . '.asx', $uri);
-                  $content_type = 'video/x-ms-asx';
+
+                  // Changed to text/html for ticket #188.
+                  //'video/x-ms-asx';
+                  $content_type = 'text/html';
                 }
                 else {
                   mediamosa::log('Unable to write to .asx file (@filename), falling back to normal object code', array('@filename' => $file_asx), WATCHDOG_CRITICAL, 'playproxy');
@@ -575,7 +578,7 @@ class mediamosa_asset_mediafile_play_proxy {
       $output = str_replace('{' . $key . '}', $value, $output);
     }
 
-    $a_result = array(
+    $result = array(
       'output' => $output,
       'content_type' => $content_type,
       'ticket_id' => $ticket,
@@ -583,10 +586,10 @@ class mediamosa_asset_mediafile_play_proxy {
 
     $i = 1;
     foreach ($a_stills as $key => $value) {
-      $a_result['stills']['#' . serialize(array('id' => $i++))] = $value;
+      $result['stills']['#' . serialize(array('id' => $i++))] = $value;
     }
 
-    return $a_result;
+    return $result;
   }
 
   /**
