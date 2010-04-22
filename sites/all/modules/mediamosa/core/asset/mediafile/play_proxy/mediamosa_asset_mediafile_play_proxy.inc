@@ -386,8 +386,8 @@ class mediamosa_asset_mediafile_play_proxy {
             $a_subjects = array('TITLE' => 'title', 'COPYRIGHT' => 'rights', 'ABSTRACT' => 'description', 'AUTHOR' => 'creator');
             if (isset($a_asset_metadata['dublin_core'])) {
               foreach ($a_subjects as $tag => $subject) {
-                if (is_array($a_asset_metadata['dublin_core'][$subject]) && count($a_asset_metadata['dublin_core'][$subject])) {
-                  $output .= "\t\t<" . $tag .'>'. implode(' ', $a_asset_metadata['dublin_core'][$subject]) .'</'. $tag. ">\n";
+                if (!empty($a_asset_metadata['dublin_core'][$subject]) && is_array($a_asset_metadata['dublin_core'][$subject])) {
+                  $output .= "\t\t<" . $tag .'>'. implode(' ', $a_asset_metadata['dublin_core'][$subject]) . '</' . $tag . ">\n";
                 }
               }
             }
