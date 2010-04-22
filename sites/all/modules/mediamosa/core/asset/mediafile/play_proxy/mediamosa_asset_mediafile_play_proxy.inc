@@ -351,6 +351,7 @@ class mediamosa_asset_mediafile_play_proxy {
 
     // So it exists.
     $a_variables = array();
+    $output = '';
 
     switch ($response_type) {
       case self::RESPONSE_TYPE_METAFILE:

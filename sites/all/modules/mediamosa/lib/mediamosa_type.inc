@@ -484,11 +484,11 @@ class mediamosa_type {
     }
 
     if (!isset($checked_param_value) || (!is_string($checked_param_value) && !is_int($checked_param_value))) {
-        throw new mediamosa_exception_program_error('Value type param @param (@type) is not integer or string value.', array('@param' => $param, '@type' => $param_type));
+      throw new mediamosa_exception_program_error('Value type param @param (@type) is not integer or string value.', array('@param' => $param, '@type' => $param_type));
     }
 
     // Check if value is allowed as value (if specified and if required var).
-    if ($is_required && isset($allowed_values) && !in_array($checked_param_value, $allowed_values)) {
+    if (isset($allowed_values) && !in_array($checked_param_value, $allowed_values)) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_VALUE_NOT_ALLOWED, array('@param' => $param, '@type' => $param_type, '@allowed_values' => implode("', '", $allowed_values)));
     }
 
