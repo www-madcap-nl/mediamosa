@@ -71,6 +71,7 @@ abstract class mediamosa_rest_call {
   const METHOD_HEAD = 'HEAD'; // Can only do GET calls.
 
   const CLASS_NAME = 'class_name';
+  const CLASS_FILE_NAME = 'class_file_name';
 
   const MODULE_NAME = 'module_name';
 

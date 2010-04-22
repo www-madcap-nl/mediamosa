@@ -232,6 +232,8 @@ class mediamosa_rest {
           $a_result[$a_rest_call[$key]][$a_rest_call[$key2]] = $a_rest_call;
         }
         else {
+          $a_rest_call[mediamosa_rest_call::CLASS_FILE_NAME] = mediamosa_db::db_query("SELECT filename FROM {registry} WHERE type = 'class' AND name = :name", array(':name' => $a_rest_call[mediamosa_rest_call::CLASS_NAME]))->fetchField();
+
           assert(!isset($a_result[$a_rest_call[$key]]));
           $a_result[$a_rest_call[$key]] = $a_rest_call;
         }
