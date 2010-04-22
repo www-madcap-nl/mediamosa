@@ -99,6 +99,11 @@ class mediamosa_rest_call_get extends mediamosa_rest_call {
     // Create class from it.
     $o_rest_call = new $a_calls[$uri_id][mediamosa_rest_call::CLASS_NAME]($a_calls[$uri_id]);
 
+    // Check if override for class selection is here.
+    if (method_exists($o_rest_call, 'get_object_rest_call')) {
+      $o_rest_call = $o_rest_call->get_object_rest_call($a_rest_call);
+    }
+
     // Turn off so we can call the get_var_setup without problems.
     // Although get_var_setup should not test variables.
     $o_rest_call->check_for_unspecified = FALSE;
