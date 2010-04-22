@@ -62,10 +62,9 @@ class mediamosa_asset_mediafile_play_proxy {
    * Get the uri of the correct media server.
    *
    * @param string $response_type
-   * @param unknown_type $a_mediafile_info
-   * @return unknown
+   * @param array $mediafile_ext
    */
-  static public function get_media_server($response_type, $a_mediafile_ext = array()) {
+  static public function get_media_server($response_type, array $mediafile_ext = array()) {
 
     switch ($response_type) {
       case self::RESPONSE_TYPE_STILL:
@@ -94,13 +93,13 @@ class mediamosa_asset_mediafile_play_proxy {
     }
 
     // Needed at this point.
-    assert(!empty($a_mediafile_ext));
+    assert(!empty($mediafile_ext));
 
     // Get the URI.
-    $uri = mediamosa_server::get_uri_streaming($a_mediafile_ext['metadata']['container_type'], $a_mediafile_ext['metadata']['video_codec']);
+    $uri = mediamosa_server::get_uri_streaming($mediafile_ext['metadata']['container_type'], $mediafile_ext['metadata']['video_codec']);
 
     if (!$uri) { // No streaming profile found
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STREAMING_PROFILE_NOT_FOUND, array('@video_container' => $a_mediafile_ext['metadata']['container_type']));
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STREAMING_PROFILE_NOT_FOUND, array('@video_container' => $mediafile_ext['metadata']['container_type']));
     }
 
     return $uri;
@@ -182,24 +181,24 @@ class mediamosa_asset_mediafile_play_proxy {
    *  new width en height.
    *
    */
-  function calc_video_size($v_width, $v_height, $width, $height, $container_type) {
+  function calc_video_size($video_width, $video_height, $width, $height, $container_type) {
 
     // If video size is known, we can do some calculations on height/weight.
-    if ($v_width > 0 && $v_height > 0) {
+    if ($video_width > 0 && $video_height > 0) {
       if ($width > 0 && ($height == 0 || !isset($height))) {
-        $height = (int)round($width * ($v_height / $v_width));
+        $height = (int)round($width * ($video_height / $video_width));
       }
       elseif (($width == 0 || !isset($width)) && $height > 0) {
-        $width = (int)round($height * ($v_width / $v_height));
+        $width = (int)round($height * ($video_width / $video_height));
       }
-      elseif (($width == 0 || !isset($width)) && ($height == 0 || !isset($height))) {
+      elseif ( ($width == 0 || !isset($width) ) && ($height == 0 || !isset($height)) ) {
         // if none is given we use the default size.
-        $width = $v_width;
-        $height = $v_height;
+        $width = $video_width;
+        $height = $video_height;
       }
     }
 
-    if (!($width > 0 && $height > 0)) {
+    if ($width <= 0 && $height <= 0) {
       // no luck, use default values.
       $width = self::PP_FLASH_OBJECT_WIDTH;
       $height = self::PP_FLASH_OBJECT_HEIGHT;
@@ -237,14 +236,14 @@ class mediamosa_asset_mediafile_play_proxy {
    * Wrapper for 1.x to 2.x.
    * @param array $a_parameters
    * @param array $a_asset_info (used for the metadata)
-   * @param array $a_mediafile_ext
-   * @param array $a_asset_metadata (not used)
+   * @param array $mediafile_ext
+   * @param array $asset_metadata (not used)
    * @param string $ticket
    * @param integer $app_id
    * @param string $mediafile_group_id
-   * @param array $a_stills
+   * @param array $stills
    */
-  static public function create_response_1x_to_2x($a_parameters, $a_asset_info, $a_mediafile_ext, $a_asset_metadata/*unused*/, $ticket, $app_id, $mediafile_group_id = '', $a_stills = array()) {
+  static public function create_response_1x_to_2x($a_parameters, $a_asset_info, $mediafile_ext, $asset_metadata/*unused*/, $ticket, $app_id, $mediafile_group_id = '', $stills = array()) {
     return self::create_response(
       $a_parameters['response']['value'],
       $app_id,
@@ -256,15 +255,15 @@ class mediamosa_asset_mediafile_play_proxy {
       isset($a_parameters['duration']['value']) ? $a_parameters['duration']['value'] : NULL,
       isset($a_parameters['is_app_admin']['value']) ? mediamosa_lib::boolstr2bool($a_parameters['is_app_admin']['value']) : FALSE,
       $a_asset_info,
-      $a_mediafile_ext,
+      $mediafile_ext,
       $mediafile_group_id,
-      $a_stills
+      $stills
     );
   }
 
   /**
    * Create response for mediafile.
-   * 1.x params; $a_parameters, $a_asset_info, $a_mediafile_ext, $a_asset_metadata, $ticket, $app_id, $mediafile_group_id = '', $a_stills = array()) {
+   * 1.x params; $a_parameters, $a_asset_info, $mediafile_ext, $asset_metadata, $ticket, $app_id, $mediafile_group_id = '', $stills = array()) {
    *
    * 1.x: _play_proxy_create_response
    *
@@ -286,13 +285,13 @@ class mediamosa_asset_mediafile_play_proxy {
    *  Duration param in HTML object.
    * @param boolean $is_app_admin
    *  Super admin.
-   * @param array $a_asset_metadata
+   * @param array $asset_metadata
    *  Collection of the metadata of the asset, use metadata_get function.
-   * @param array $a_mediafile_ext
+   * @param array $mediafile_ext
    *  Mediafile array.
    * @param string $mediafile_group_id
    *  Group ID mediafile.
-   * @param $a_stills
+   * @param $stills
    *  Array stills.
    */
   static public function create_response(
@@ -305,28 +304,28 @@ class mediamosa_asset_mediafile_play_proxy {
     $start = NULL,
     $duration = NULL,
     $is_app_admin = FALSE,
-    $a_asset_metadata = array(),
-    $a_mediafile_ext = array(),
+    array $asset_metadata = array(),
+    array $mediafile_ext = array(),
     $mediafile_group_id = '',
-    $a_stills = array()
+    array $stills = array()
   ) {
 
     // Not an array here.
     assert(!is_array($app_id));
 
     // Expecting array here, even when empty.
-    assert(is_array($a_stills));
+    assert(is_array($stills));
 
     $content_type = "";
-    if (isset($a_mediafile_ext['uri']) && trim($a_mediafile_ext['uri']) != '') {
-      $streaming_server_uri = $a_mediafile_ext['uri'];
+    if (isset($mediafile_ext['uri']) && trim($mediafile_ext['uri']) != '') {
+      $streaming_server_uri = $mediafile_ext['uri'];
 
       if (trim($streaming_server_uri) == '') { // No streaming profile found
-        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STREAMING_PROFILE_NOT_FOUND, array('@video_container' => $a_mediafile_ext['metadata']['container_type']));
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STREAMING_PROFILE_NOT_FOUND, array('@video_container' => $mediafile_ext['metadata']['container_type']));
       }
     }
     else {
-      $streaming_server_uri = self::get_media_server($response_type, $a_mediafile_ext);
+      $streaming_server_uri = self::get_media_server($response_type, $mediafile_ext);
     }
     // Replace {TICKET} with app_id / ticket.
     if ($response_type != self::RESPONSE_TYPE_STILL) {
@@ -334,29 +333,21 @@ class mediamosa_asset_mediafile_play_proxy {
     }
 
     // Uri voor niet-tickets (still, download etc).
-    foreach ($a_stills as $key => $value) {
-      $a_stills[$key]['still_ticket'] = str_replace(self::PARAM_URI_TICKET, urlencode($a_stills[$key]['ticket']), $streaming_server_uri);
+    foreach ($stills as $key => $value) {
+      $stills[$key]['still_ticket'] = str_replace(self::PARAM_URI_TICKET, urlencode($stills[$key]['ticket']), $streaming_server_uri);
     }
 
     // Replace ticker param in URI.
     $streaming_server_uri = str_replace(self::PARAM_URI_TICKET, urlencode($ticket), $streaming_server_uri);
 
-    $a_video_size = self::calc_video_size(
-      isset($a_mediafile_ext['metadata']['width']) ? $a_mediafile_ext['metadata']['width'] : 0,
-      isset($a_mediafile_ext['metadata']['height']) ? $a_mediafile_ext['metadata']['height'] : 0,
-      $width,
-      $height,
-      isset($a_mediafile_ext['metadata']['container_type']) ? $a_mediafile_ext['metadata']['container_type'] : self::CONTAINER_TYPE_WMV
-    );
-
     // So it exists.
-    $a_variables = array();
+    $variables = array();
     $output = '';
 
     switch ($response_type) {
       case self::RESPONSE_TYPE_METAFILE:
 
-        switch ($a_mediafile_ext['metadata']['container_type']) {
+        switch ($mediafile_ext['metadata']['container_type']) {
           case self::CONTAINER_TYPE_MP4:
             $output = '<?xml version="1.0"?>' . "\n";
             $output .= '<?quicktime type="application/x-quicktime-media-link"?>' . "\n";
@@ -368,10 +359,10 @@ class mediamosa_asset_mediafile_play_proxy {
             $content_type = "audio/mpeg";
             $output = "<asx version=\"3.0\">\n\t<entry>\n";
             $a_subjects = array('TITLE' => 'title', 'COPYRIGHT' => 'rights', 'ABSTRACT' => 'description', 'AUTHOR' => 'creator');
-            if (isset($a_asset_metadata['dublin_core'])) {
+            if (isset($asset_metadata['dublin_core'])) {
               foreach ($a_subjects as $tag => $subject) {
-                if (is_array($a_asset_metadata['dublin_core'][$subject]) && count($a_asset_metadata['dublin_core'][$subject])) {
-                  $output .= "\t\t<" . $tag .'>'. implode(' ', $a_asset_metadata['dublin_core'][$subject]) .'</'. $tag. ">\n";
+                if (is_array($asset_metadata['dublin_core'][$subject]) && count($asset_metadata['dublin_core'][$subject])) {
+                  $output .= "\t\t<" . $tag .'>'. implode(' ', $asset_metadata['dublin_core'][$subject]) .'</'. $tag. ">\n";
                 }
               }
             }
@@ -385,10 +376,10 @@ class mediamosa_asset_mediafile_play_proxy {
             $content_type = "video/x-ms-asf";
             $output = "<asx version=\"3.0\">\n\t<entry>\n";
             $a_subjects = array('TITLE' => 'title', 'COPYRIGHT' => 'rights', 'ABSTRACT' => 'description', 'AUTHOR' => 'creator');
-            if (isset($a_asset_metadata['dublin_core'])) {
+            if (isset($asset_metadata['dublin_core'])) {
               foreach ($a_subjects as $tag => $subject) {
-                if (!empty($a_asset_metadata['dublin_core'][$subject]) && is_array($a_asset_metadata['dublin_core'][$subject])) {
-                  $output .= "\t\t<" . $tag .'>'. implode(' ', $a_asset_metadata['dublin_core'][$subject]) . '</' . $tag . ">\n";
+                if (!empty($asset_metadata['dublin_core'][$subject]) && is_array($asset_metadata['dublin_core'][$subject])) {
+                  $output .= "\t\t<" . $tag .'>'. implode(' ', $asset_metadata['dublin_core'][$subject]) . '</' . $tag . ">\n";
                 }
               }
             }
@@ -407,12 +398,12 @@ class mediamosa_asset_mediafile_play_proxy {
             break;
 
           default:
-            throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_NO_METAFILE_AVAILABLE, array('@container_type' => $a_mediafile_ext['metadata']['container_type']));
+            throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_NO_METAFILE_AVAILABLE, array('@container_type' => $mediafile_ext['metadata']['container_type']));
         }
         break;
 
       case self::RESPONSE_TYPE_URI:
-        switch ($a_mediafile_ext['metadata']['container_type']) {
+        switch ($mediafile_ext['metadata']['container_type']) {
           case self::CONTAINER_TYPE_FLV:
             $output = str_replace(self::PARAM_URI_SCRIPT, 'StroboScope.php?file=', $streaming_server_ticket_uri);
             break;
@@ -425,33 +416,41 @@ class mediamosa_asset_mediafile_play_proxy {
 
       case self::RESPONSE_TYPE_DOWNLOAD:
         if (!$is_app_admin) {
-          if (isset($a_mediafile_ext['is_downloadable']) && !mediamosa_lib::boolstr2bool($a_mediafile_ext['is_downloadable'])) {
+          if (isset($mediafile_ext['is_downloadable']) && !mediamosa_lib::boolstr2bool($mediafile_ext['is_downloadable'])) {
             throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MEDIAFILE_DOWNLOAD_DISABLED);
           }
         }
 
-        if (!@is_null($a_mediafile_ext['uri'])) {
+        if (!@is_null($mediafile_ext['uri'])) {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STREAM_DOWNLOAD_NOT_ALLOWED);
         }
 
-        if ($a_mediafile_ext['filename'] == '') {
-          $a_mediafile_ext['filename'] = mediamosa_asset_mediafile::UNKNOWN_FILENAME;
+        if ($mediafile_ext['filename'] == '') {
+          $mediafile_ext['filename'] = mediamosa_asset_mediafile::UNKNOWN_FILENAME;
         }
 
-        $output = $streaming_server_uri . '/' . $a_mediafile_ext['filename'];
+        $output = $streaming_server_uri . '/' . $mediafile_ext['filename'];
         break;
 
       case self::RESPONSE_TYPE_OBJECT:
-        // Get the Object code.
-        $output = mediamosa_server::get_objectcode_streaming($a_mediafile_ext['metadata']['container_type'], $a_mediafile_ext['metadata']['video_codec']);
+        $video_size = self::calc_video_size(
+          isset($mediafile_ext['metadata']['width']) ? $mediafile_ext['metadata']['width'] : 0,
+          isset($mediafile_ext['metadata']['height']) ? $mediafile_ext['metadata']['height'] : 0,
+          $width,
+          $height,
+          isset($mediafile_ext['metadata']['container_type']) ? $mediafile_ext['metadata']['container_type'] : self::CONTAINER_TYPE_WMV
+        );
 
-        $a_variables = array(
-          'WIDTH' => !$width ? '' : $width,
-          'HEIGHT' => !$height ? '' : $height,
-          'HEIGHT_PLUS_20' => $height > 0 ? $height + 20 : '',
-          'MEDIAFILE_ID' => $a_mediafile_ext['mediafile_id'],
+        // Get the Object code.
+        $output = mediamosa_server::get_objectcode_streaming($mediafile_ext['metadata']['container_type'], $mediafile_ext['metadata']['video_codec']);
+
+        $variables = array(
+          'WIDTH' => !$video_size['width'] ? '' : $video_size['width'],
+          'HEIGHT' => !$video_size['height'] ? '' : $video_size['height'],
+          'HEIGHT_PLUS_20' => $video_size['height'] > 0 ? $video_size['height'] + 20 : '',
+          'MEDIAFILE_ID' => $mediafile_ext['mediafile_id'],
           'TICKET_URI' => $streaming_server_ticket_uri,
-          'STILL_URI' => isset($a_asset_metadata['vpx_still_url']) ? $a_asset_metadata['vpx_still_url'] : '',
+          'STILL_URI' => isset($asset_metadata['vpx_still_url']) ? $asset_metadata['vpx_still_url'] : '',
           'AUTOPLAY' => $autostart ? 'true' : 'false',
           'AUTOPLAY_NUM' => $autostart ? '1' : '0',
           'AUTOPLAY_TEXT' => $autostart ? 'autoplay' : '',
@@ -462,8 +461,8 @@ class mediamosa_asset_mediafile_play_proxy {
 
         // START, END DURATION TIMES variables
         if (isset($start)) {
-          $a_variables['START_TIME'] = self::convert_msec($start, $a_mediafile_ext['metadata']['container_type']);
-          $a_variables['START_TIME_SECONDS'] = (int)($start / 1000);
+          $variables['START_TIME'] = self::convert_msec($start, $mediafile_ext['metadata']['container_type']);
+          $variables['START_TIME_SECONDS'] = (int)($start / 1000);
         }
         else {
           // Remove code {IF_START} (Exclude from output) //   \{IF_START\}(.*?)\{/IF_START\}/is
@@ -472,10 +471,10 @@ class mediamosa_asset_mediafile_play_proxy {
 
         if (isset($duration)) {
           $endtime = $start + $duration;
-          $a_variables['DURATION_TIME'] = self::convert_msec($duration, $a_mediafile_ext['metadata']['container_type']);
-          $a_variables['DURATION_TIME_SECONDS'] = (int)($duration/1000);
-          $a_variables['START_PLUS_DURATION_TIME_SECONDS'] = (int)($start + $duration)/1000;
-          $a_variables['END_TIME'] = self::convert_msec($endtime, $a_mediafile_ext['metadata']['container_type']);
+          $variables['DURATION_TIME'] = self::convert_msec($duration, $mediafile_ext['metadata']['container_type']);
+          $variables['DURATION_TIME_SECONDS'] = (int)($duration/1000);
+          $variables['START_PLUS_DURATION_TIME_SECONDS'] = (int)($start + $duration)/1000;
+          $variables['END_TIME'] = self::convert_msec($endtime, $mediafile_ext['metadata']['container_type']);
         }
         else {
           $output = preg_replace('@\{IF_DURATION\}.*?\{/IF_DURATION\}@si', '', $output);
@@ -483,7 +482,7 @@ class mediamosa_asset_mediafile_play_proxy {
 
         $content_type = 'text/html';
 
-        switch ($a_mediafile_ext['metadata']['container_type']) {
+        switch ($mediafile_ext['metadata']['container_type']) {
           case self::CONTAINER_TYPE_FLV:
           case self::CONTAINER_TYPE_MP4:
           case self::CONTAINER_TYPE_MP3:
@@ -504,21 +503,21 @@ class mediamosa_asset_mediafile_play_proxy {
 
               if (isset($start)) {
                 // Remove code {IF_START} (Exclude from output)
-                $a_variables['START_TIME'] = self::convert_msec($start, self::CONTAINER_TYPE_WMV);
+                $variables['START_TIME'] = self::convert_msec($start, self::CONTAINER_TYPE_WMV);
               }
               else {
                 $output_asx = preg_replace('@\{IF_START\}.*?\{/IF_START\}@si', '', $output_asx);
               }
 
               if (isset($duration)) {
-                $a_variables['DURATION_TIME'] = self::convert_msec($duration, self::CONTAINER_TYPE_WMV);
+                $variables['DURATION_TIME'] = self::convert_msec($duration, self::CONTAINER_TYPE_WMV);
               }
               else {
                 $output_asx = preg_replace('@\{IF_DURATION\}.*?\{/IF_DURATION\}@si', '', $output_asx);
               }
 
               // Process all the variables and make replacement in the objectcode.
-              foreach ($a_variables as $key => $value) {
+              foreach ($variables as $key => $value) {
                 $output_asx = str_replace('{'. $key .'}', $value, $output_asx);
               }
 
@@ -561,7 +560,7 @@ class mediamosa_asset_mediafile_play_proxy {
               }
             }
 
-            $a_variables['WMA_TICKET_URI'] = $streaming_server_ticket_uri;
+            $variables['WMA_TICKET_URI'] = $streaming_server_ticket_uri;
 
             // Remove code {IF_EXTERNAL} (Exclude from output)
             $output = preg_replace('@\{IF_EXTERNAL\}.*?\{/IF_EXTERNAL\}@si', '', $output);
@@ -575,7 +574,7 @@ class mediamosa_asset_mediafile_play_proxy {
     }
 
     // Process all the variables and make replacement in the objectcode
-    foreach ($a_variables as $key => $value) {
+    foreach ($variables as $key => $value) {
       $output = str_replace('{' . $key . '}', $value, $output);
     }
 
@@ -586,7 +585,7 @@ class mediamosa_asset_mediafile_play_proxy {
     );
 
     $i = 1;
-    foreach ($a_stills as $key => $value) {
+    foreach ($stills as $key => $value) {
       $result['stills']['#' . serialize(array('id' => $i++))] = $value;
     }
 
