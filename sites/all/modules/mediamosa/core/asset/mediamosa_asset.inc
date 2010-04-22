@@ -677,9 +677,34 @@ class mediamosa_asset {
           $a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]]['ega_play_url'] = isset($a_items['app_info'][$a_asset[mediamosa_asset_db::APP_ID]]) ? preg_replace($a_patterns, $a_replacements, $a_items['app_info'][$a_asset[mediamosa_asset_db::APP_ID]]['play_proxy_url']) : '';
         }
         else {
+          $result = mediamosa_db::db_query('
+            SELECT DISTINCT ms.#app_master_id
+            FROM {#mediafile} m
+            INNER JOIN {#aut_app_master_slave} ms ON m.#mediafile_id = ms.#aut_object_id AND ms.#aut_object_type = :type_mediafile AND ms.#app_slave_id = :app_slave_id
+            WHERE m.#asset_id = :asset_id_root
+          ', array(
+            '#mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
+            '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
+            '#asset_id' => mediamosa_asset_mediafile_db::ASSET_ID,
+            '#aut_app_master_slave' => mediamosa_aut_app_master_slave_db::TABLE_NAME,
+            '#app_master_id' => mediamosa_aut_app_master_slave_db::APP_ID_MASTER,
+            '#aut_object_id' => mediamosa_aut_app_master_slave_db::AUT_OBJECT_ID,
+            '#aut_object_type' => mediamosa_aut_app_master_slave_db::AUT_OBJECT_TYPE,
+            ':type_mediafile' => mediamosa_aut_app_master_slave_db::AUT_OBJECT_TYPE_MEDIAFILE,
+            '#app_slave_id' => mediamosa_aut_app_master_slave_db::APP_ID_SLAVE,
+            ':app_slave_id' => $a_asset[mediamosa_asset_db::APP_ID],
+            ':asset_id_root' => $a_asset[mediamosa_asset_db::ID],
+          ));
+          $master_app_ids = array();
+          foreach ($result as $record) {
+            $master_app_ids[] = $record[mediamosa_aut_app_master_slave_db::APP_ID_MASTER];
+          }
+
           foreach ($a_app_ids as $a_app_id) {
             if (isset($a_items['app_info'][$a_app_id]) && $a_items['app_info'][$a_app_id]['view_asset_url']) {
-              $a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]]['ega_view_url'][] = preg_replace('/{asset_id}/i', $a_asset[mediamosa_asset_db::ID], $a_items['app_info'][$a_app_id]['view_asset_url']);
+              if ($a_app_id == $a_asset[mediamosa_asset_db::APP_ID] || in_array($a_app_id, $master_app_ids)) {
+                $a_items_pre_sort[$a_asset[mediamosa_asset_db::ID]]['ega_view_url'][] = preg_replace('/{asset_id}/i', $a_asset[mediamosa_asset_db::ID], $a_items['app_info'][$a_app_id]['view_asset_url']);
+              }
             }
           }
         }
