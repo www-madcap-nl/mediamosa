@@ -517,8 +517,8 @@ class mediamosa_asset_search {
 
     // Now create the query that will include all other results that are not included here
     // but only when a order by was present
-
-    if (isset($order_by) && $order_by != '') {
+    // If $calculate_total_count == FALSE, then skip this when we already have the limit full.
+    if (isset($order_by) && $order_by != '' && ($calculate_total_count || count($a_asset_ids) < $a_query[mediamosa_db_query::LIMIT])) {
 
       // The first part of the query got all assets that had values on its order by column. For example,
       // Not every asset has a title, so the assets without title will not be included in the 1st query.
@@ -604,7 +604,7 @@ class mediamosa_asset_search {
     }
 
     // Set the total amount found.
-    $mediamosa->item_count_total = $i_found_rows;
+    $mediamosa->item_count_total = $calculate_total_count ? $i_found_rows : count($a_asset_ids);
 
     if ($return_asset_ids) {
       foreach ($a_asset_ids as $asset_id) {
@@ -614,10 +614,10 @@ class mediamosa_asset_search {
     else {
       $add_has_streamable_mediafiles = TRUE;
 
-      $a_items = mediamosa_asset::asset_collect($a_asset_ids, $a_app_ids, $aut_user_id, $granted, $a_aut_group_id, $aut_domain, $aut_realm, $is_app_admin, $show_stills, $show_collections, $add_has_streamable_mediafiles);
+      $items = mediamosa_asset::asset_collect($a_asset_ids, $a_app_ids, $aut_user_id, $granted, $a_aut_group_id, $aut_domain, $aut_realm, $is_app_admin, $show_stills, $show_collections, $add_has_streamable_mediafiles);
 
-      foreach ($a_items as $a_item) {
-        $mediamosa->add_item($a_item);
+      foreach ($items as $item) {
+        $mediamosa->add_item($item);
       }
     }
   }

@@ -359,7 +359,7 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
         ),
         self::CALCULATE_TOTAL_COUNT => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
-          self::VAR_DESCRIPTION => "Calculate the number of rows in the complete scope of the search. Performance wise to use this parameter with value 'FALSE' if you don't need to know the total number of rows in your scope result.",
+          self::VAR_DESCRIPTION => "Calculate the number of rows in the complete scope of the search and store it in the header parameter 'item_count_total'. Performance will drasticly improve with value 'FALSE' if you don't need to know the total number of assets in your scope result. If your query 'limit' is less than 7, then the default will be 'FALSE'. Is your limit 7 or higher, then the default for this parameter will be 'TRUE'. If you provide 'FALSE', then 'item_count_total' value in the header will always be the number of items returned, same as 'item_count'.",
           self::VAR_DEFAULT_VALUE => 'TRUE',
         ),
 
@@ -488,6 +488,14 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
       $cql = $this->get_param_value(self::CQL);
     }
 
+    // FIXME: ?
+    // HACK: limit < 7 and calculate_total_count not given, then do not
+    // calculate_total_count.
+    $calculate_total_count = $this->get_param_value(self::CALCULATE_TOTAL_COUNT);
+    if ($this->get_param_value_limit() < 7 && !$this->isset_given_param(self::CALCULATE_TOTAL_COUNT)) {
+      $calculate_total_count = false;
+    }
+
     // Now search.
     mediamosa_asset_search::asset_search(
       $mediamosa,
@@ -508,11 +516,10 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
       $this->get_param_value(self::RETURN_ASSET_IDS),
       $this->get_param_value(self::SHOW_STILLS),
       $this->get_param_value(self::SHOW_COLLECTIONS),
-      $this->get_param_value(self::CALCULATE_TOTAL_COUNT),
+      $calculate_total_count,
       $this->get_param_value_limit(),
       $this->get_param_value_offset()
     );
-
   }
 }
 
