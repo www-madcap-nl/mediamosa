@@ -66,7 +66,7 @@ class mediamosa_server {
       $a_triggered[] = $url;
 
       // Log it.
-      mediamosa_debug::log_debug('Triggering job server @ @uri', array('@uri' => $url));
+      mediamosa_debug::log('Triggering job server @ @uri', array('@uri' => $url));
 
       // Dont trigger in sandbox.
       if (mediamosa::in_simpletest_sandbox()) {

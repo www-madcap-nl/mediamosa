@@ -35,7 +35,7 @@ class MediaMosaFtpUserTestCaseEga extends MediaMosaTestCaseEga {
   // ------------------------------------------------------------------ Functions.
   public static function getInfo() {
     return array(
-      'name' => 'FTP user function tests',
+      'name' => 'FTP User - common tests',
       'description' => 'Testing FTP user related functions and rest calls.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_FTP_USER,
     );

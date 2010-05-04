@@ -40,8 +40,8 @@ class MediaMosaJobDeleteTestCaseEga extends MediaMosaTestCaseEgaJob {
   // ------------------------------------------------------------------ Functions.
   public static function getInfo() {
     return array(
-      'name' => 'Job delete with mediafile delete test',
-      'description' => 'Testing the deleting asset with running jobs.',
+      'name' => 'JOB - delete with mediafile test',
+      'description' => 'Deleting an asset with running jobs.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_JOB,
     );
   }

@@ -49,7 +49,7 @@ class mediamosa_job_scheduler {
    * @param string $severity
    */
   static public function log_debug($message, array $variables = array()) {
-    mediamosa_debug::log_debug($message, $variables, 'job_scheduler');
+    mediamosa_debug::log($message, $variables, 'job_scheduler');
   }
 
   /**
@@ -60,7 +60,7 @@ class mediamosa_job_scheduler {
    * @param string $severity
    */
   static public function log_debug_high($message, array $variables = array()) {
-    mediamosa_debug::log_debug_high($message, $variables, 'job_scheduler');
+    mediamosa_debug::log_high($message, $variables, 'job_scheduler');
   }
 
   /**
@@ -74,7 +74,7 @@ class mediamosa_job_scheduler {
       $url = mediamosa_http::uri2url($mediamosa_jobscheduler_uri) . '/internal/cron/jobscheduler';
 
       // Log it.
-      mediamosa_debug::log_debug('Triggering job scheduler @ @uri', array('@uri' => $url));
+      mediamosa_debug::log('Triggering job scheduler @ @uri', array('@uri' => $url));
 
       // Dont trigger in sandbox.
       if (mediamosa::in_simpletest_sandbox()) {

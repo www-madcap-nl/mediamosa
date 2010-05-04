@@ -276,7 +276,7 @@ abstract class mediamosa_rest_call {
     }
 
     // Processing URL, Method.
-    mediamosa_debug::log_debug_high("REST call; @uri [@method], Class: @class, params: @params.",
+    mediamosa_debug::log_high("REST call; @uri [@method], Class: @class, params: @params.",
       array(
         '@uri' => $this->{self::URI},
         '@method' => $this->{self::METHOD},

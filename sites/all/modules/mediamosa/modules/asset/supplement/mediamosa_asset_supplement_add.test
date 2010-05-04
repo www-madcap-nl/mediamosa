@@ -35,7 +35,7 @@ class MediaMosaAssetSupplementAddTestCaseEga extends MediaMosaTestCaseEga {
   // ------------------------------------------------------------------ Functions.
   public static function getInfo() {
     return array(
-      'name' => 'Asset supplement add tests',
+      'name' => 'Asset supplement - add tests',
       'description' => 'Testing asset supplement add related functions and rest calls.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET_SUPPLEMENT,
     );

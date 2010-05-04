@@ -124,7 +124,7 @@ class mediamosa_http {
    * @param array $data
    * @param $method
    */
-  static public function do_internal_call($host, $rest_uri, $data = NULL, $method = self::METHOD_GET) {
+  static public function do_internal_call($host, $rest_uri, $data = NULL, $method = self::METHOD_GET, array $options = array()) {
     // Make lower case.
     $host = mediamosa_unicode::strtolower($host);
 
@@ -141,7 +141,7 @@ class mediamosa_http {
       )
     );
 
-    $options = array('method' => $method);
+    $options += array('method' => $method);
 
     if (isset($data)) {
       $options['data'] = $data;
@@ -155,8 +155,7 @@ class mediamosa_http {
   }
 
   /**
-   * Do a head call.
-   * Triggers the URL without getting or waiting for the output.
+   * Do call to URL using CURL lib.
    *
    * @param string $url
    * @param array $options
@@ -167,13 +166,25 @@ class mediamosa_http {
    *     set to TRUE to enable call through curlproxy (if specified).
    *   - do_internal
    *     Add the internal pass to the header. Remember to add /internal yourself to the url.
+   *   - do_head
+   *     true to trigger call.
+   */
+  static public function do_call($url, array $options = array()) {
+    $options['do_head'] = FALSE;
+    return self::do_head_call($url, $options);
+  }
+
+  /**
+   * Do a head call.
+   * Triggers the URL without getting or waiting for the output.
    */
   static public function do_head_call($url, array $options = array()) {
     // Set defaults.
     $options += array(
       'use_curlproxy' => FALSE,
       'headers' => array(),
-      'do_internal' => FALSE
+      'do_internal' => FALSE,
+      'do_head' => TRUE,
     );
 
     $curlproxy_http = NULL;
@@ -182,9 +193,8 @@ class mediamosa_http {
       $curlproxy_http = mediamosa::variable_get('mediamosa_curlproxy_http');
     }
 
-    //
+    // Include the internal password so we gain access.
     if ($options['do_internal']) {
-      // Include the internal password so we gain access.
       $options['headers'][mediamosa_settings::X_MEDIAMOSA_INTERNAL_PASS] = mediamosa::get_internal_password();
     }
 
@@ -197,8 +207,13 @@ class mediamosa_http {
     }
 
     // FIXME: need to find out other way to trigger URL.
-    curl_setopt($curl_handle, CURLOPT_TIMEOUT, 1);
-    curl_setopt($curl_handle, CURLOPT_CONNECTTIMEOUT, 1);
+    if ($options['do_head']) {
+      curl_setopt($curl_handle, CURLOPT_TIMEOUT, 1);
+      curl_setopt($curl_handle, CURLOPT_CONNECTTIMEOUT, 1);
+
+      // Do a HEAD call here.
+      //curl_setopt($curl_handle, CURLOPT_NOBODY, TRUE);
+    }
 
     if (!empty($curl_options)) {
       curl_setopt_array($curl_handle, $curl_options);
@@ -210,17 +225,16 @@ class mediamosa_http {
     // Set to kill notices about missing user agent.
     //curl_setopt($curl_handle, CURLOPT_USERAGENT, 'MediaMosa2');
 
-    // Do a HEAD call here.
-    //curl_setopt($curl_handle, CURLOPT_NOBODY, TRUE);
-
     // Check for possible proxy setting, if set, use it.
     if ($curlproxy_http) {
       curl_setopt($curl_handle, CURLOPT_PROXYTYPE, CURLPROXY_HTTP);
       curl_setopt($curl_handle, CURLOPT_PROXY, $curlproxy_http);
     }
 
-    curl_exec($curl_handle);
+    $result = curl_exec($curl_handle);
     curl_close($curl_handle);
+
+    return $result;
   }
 
   /**
@@ -235,18 +249,22 @@ class mediamosa_http {
   }
 
   /**
-   * Trigger the maintenance cron.
+   * Trigger uri with the hostname and settings taken from
+   * mediamosa_cron_url_app_*.
    *
    * @param string $uri
    *  If you need to change the uri to trigger.
+   * @param bool $do_head
+   *  Do HEAD call (trigger the uri, do wait for result).
+   * @param array $options
+   *  HTTP options.
    */
-  static public function do_head_call_cron($uri) {
+  static public function do_internal_call_cron($uri, $do_head = false, array $options = array()) {
     // Just trigger, it has his own protection on overrun.
     $url = variable_get('mediamosa_cron_url_app', 'http://localhost');
     $use_localhost = variable_get('mediamosa_cron_url_app_local', FALSE);
 
     $urls = mediamosa_http::parse_url($url);
-    $options = array();
     if ($use_localhost) {
       $options['headers']['Host'] = $urls['host'];
       $urls['host'] = 'localhost';
@@ -254,13 +272,35 @@ class mediamosa_http {
 
     $urls['path'] = ($urls['path'] != '' ? $urls['path'] . '/' : '') . trim($uri, '/');
     $url = mediamosa_http::build_url($urls);
-    mediamosa_http::do_head_internal_call($url, $options);
 
-    // Log URL.
-    mediamosa_debug::log_debug('Internal head cron call to @url.', array('@url' => $url));
+    if ($do_head) {
+      // Not expecting data array.
+      assert(!isset($options['data']));
+
+      mediamosa_http::do_head_internal_call($url, $options);
+      $result = $url;
+
+      // Log URL.
+      mediamosa_debug::log('Triggering internal CRON call to @url.', array('@url' => $url));
+    }
+    else {
+      $options['headers'][mediamosa_settings::X_MEDIAMOSA_INTERNAL_PASS] = mediamosa::get_internal_password();
+      if (isset($options['data']) && is_array($options['data'])) {
+        $options['data'] = http_build_query($options['data'], '', '&');
+      }
+
+      if ($options['method'] == 'POST') {
+        $options['headers']['Content-Type'] = 'application/x-www-form-urlencoded';
+      }
+
+      $result = mediamosa_http::drupal_http_request($url, $options);
+
+      // Log URL.
+      mediamosa_debug::log('Internal CRON call to @url.', array('@url' => $url));
+    }
 
     // Return the triggert url.
-    return $url;
+    return $result;
   }
 
 

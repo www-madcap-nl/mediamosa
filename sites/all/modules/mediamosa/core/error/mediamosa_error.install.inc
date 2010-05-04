@@ -93,6 +93,8 @@ function _mediamosa_error_install() {
 
     'ERRORCODE_UNKNOWN_JOB' => 'Jobs - unknown job specified',
 
+    'ERRORCODE_TEST_RUNNING' => 'Timeout: test "@test" is currently running.',
+
     'ERRORCODE_VALIDATE_INVALID_TYPE' => 'MediaMosa - invalid type specified: @type',
     'ERRORCODE_VALIDATE_INVALID_LENGTH_USE' => 'MediaMosa - \'length\' can not be used in combination with \'length_(min|max)\'',
     'ERRORCODE_VALIDATE_REQUIRED_PARAMETER' => 'MediaMosa - missing required parameter: @param (@type)',
