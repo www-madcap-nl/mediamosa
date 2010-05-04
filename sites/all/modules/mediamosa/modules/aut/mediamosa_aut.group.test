@@ -35,7 +35,7 @@ class MediaMosaAutGroupsTestCaseEga extends MediaMosaTestCaseEga {
   // ------------------------------------------------------------------ Functions.
   public static function getInfo() {
     return array(
-      'name' => 'AUT/ACL - Groups',
+      'name' => 'AUT - Groups',
       'description' => 'Testing the AUT module, groups, previously known as ACL.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_AUT,
     );

@@ -144,7 +144,7 @@ class mediamosa_settings {
   // The number of maximum tables in the database before we stop the status page
   // of running new simpletests. Will try to clean up if to many tables are
   // found.
-  const STATUS_MAX_TABLES = 500;
+  const STATUS_MAX_TABLES = 800;
 
   // FTP root directory under SAN/NAS.
   const FTP_ROOT_DIR = 'ftp';
@@ -180,7 +180,7 @@ class mediamosa_settings {
 
   // Run at;
   const MEDIAMOSA_RUN = 'mediamosa_run';
-  const MEDIAMOSA_RUN_10_MINUTES  = 'mediamosa_run_10_minutes';
+  const MEDIAMOSA_RUN_15_MINUTES  = 'mediamosa_run_15_minutes';
   const MEDIAMOSA_RUN_3_HOURS = 'mediamosa_run_3_hours';
   const MEDIAMOSA_RUN_DAILY = 'mediamosa_run_daily';
 

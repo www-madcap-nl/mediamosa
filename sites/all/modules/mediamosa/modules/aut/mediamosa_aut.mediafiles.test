@@ -35,7 +35,7 @@ class MediaMosaAutMediafileVisibleTestCaseEga extends MediaMosaTestCaseEga {
   // ------------------------------------------------------------------ Functions.
   public static function getInfo() {
     return array(
-      'name' => 'Master/Slave: mediafiles are visible',
+      'name' => 'AUT - Master/Slave: mediafiles are visible',
       'description' => 'Testing AUT master/Slave: mediafiles are visible functions and rest calls.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_AUT,
     );

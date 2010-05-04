@@ -44,6 +44,7 @@ define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_COLLECTION', 'MediaMosa Collections'
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_FTP_USER', 'MediaMosa FTP User');
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_JOB', 'MediaMosa Jobs');
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_PLAYPROXY', 'MediaMosa PlayProxy');
+define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_SIMPLETEST', 'MediaMosa Simpletest Parents');
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STATISTICS', 'MediaMosa Statistics');
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STILL', 'MediaMosa Stills');
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STORAGE', 'MediaMosa Storage');
@@ -171,6 +172,13 @@ class MediaMosaTestCase extends DrupalWebTestCase {
 
     // Call parent.
     parent::tearDown();
+  }
+
+  /**
+   * Return my assertions.
+   */
+  public function get_assertions() {
+    return $this->assertions;
   }
 
   /**

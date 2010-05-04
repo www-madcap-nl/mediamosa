@@ -42,7 +42,7 @@ function mediamosa_job_cron() {
 
 
   $start = time();
-  mediamosa_debug::log_debug('mediamosa_job_cron started.', array(), 'job_cron');
+  mediamosa_debug::log('mediamosa_job_cron started.', array(), 'job_cron');
 
   // Trigger process servers.
   mediamosa_server::trigger();
@@ -51,7 +51,7 @@ function mediamosa_job_cron() {
   mediamosa_job_scheduler::trigger();
 
   // Log it.
-  mediamosa_debug::log_debug('mediamosa_job_cron ended: @secs', array('@sec' => time() - $start), 'job_cron');
+  mediamosa_debug::log('mediamosa_job_cron ended: @secs', array('@sec' => time() - $start), 'job_cron');
 }
 
 /**

@@ -26,39 +26,15 @@
 
 /**
  * @file
- * Mediamosa Storage / SAN/NAS unittests.
- *
- * Based on tickets mediamosa 1:
- *
- * ticket_616
- *
- *
+ * App database class object.
  */
+class mediamosa_maintenance_status_db {
+  // ------------------------------------------------------------------ Consts.
+  // Table name;
+  const TABLE_NAME = 'mediamosa_maintenance_status';
 
-/**
-  * @file
-  * Unittest for upload still.
-  */
-class MediaMosaAssetMediafileStillUploadTestCase extends MediaMosaTestCaseEga {
-
-  public static function getInfo() {
-    return array(
-      'name' => 'Still - Upload test',
-      'description' => 'Test upload of stills to an asset.',
-      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STILL,
-      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES,
-    );
-  }
-
-  /**
-   * The still upload test.
-   */
-  function testStillDownload() {
-
-    // Upload still test.
-    $this->uploadTestStill();
-
-    // Attached still test.
-    $this->uploadTestStillAttach();
-  }
+  // Database fields;
+  const NAME = 'name';
+  const NAME_LENGTH = 255;
+  const VALUE = 'value';
 }

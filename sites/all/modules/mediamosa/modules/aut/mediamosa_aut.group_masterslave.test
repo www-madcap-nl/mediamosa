@@ -35,7 +35,7 @@ class MediaMosaAutGroupsMasterSlaveTestCaseEga extends MediaMosaTestCaseEga {
   // ------------------------------------------------------------------ Functions.
   public static function getInfo() {
     return array(
-      'name' => 'AUT/ACL - Groups, Master-Slave',
+      'name' => 'AUT - Groups, Master-Slave',
       'description' => 'Testing the AUT module, groups with master slave, previously known as ACL.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_AUT,
     );

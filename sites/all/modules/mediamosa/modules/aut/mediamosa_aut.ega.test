@@ -35,7 +35,7 @@ class MediaMosaAutEgaTestCaseEga extends MediaMosaTestCaseEga {
   // ------------------------------------------------------------------ Functions.
   public static function getInfo() {
     return array(
-      'name' => 'AUT asset and mediafile information from other EGA',
+      'name' => 'AUT - asset and mediafile information from other EGA',
       'description' => 'Testing AUT asset and mediafile request from other EGA related functions and rest calls.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_AUT,
     );

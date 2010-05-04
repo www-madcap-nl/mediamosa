@@ -38,7 +38,7 @@ class MediaMosaUserTestCaseEga extends MediaMosaTestCaseEga {
   // ------------------------------------------------------------------ Functions.
   public static function getInfo() {
     return array(
-      'name' => '(Quota) user / group',
+      'name' => 'User/Group - quota common tests',
       'description' => 'The (quota) user and group unit tests.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_USER,
     );

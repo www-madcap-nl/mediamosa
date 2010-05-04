@@ -43,10 +43,10 @@ class MediaMosaAssetMediafileStillDownloadTestCase extends MediaMosaTestCase {
 
   public static function getInfo() {
     return array(
-      'name' => 'Download Mediafile Still test',
+      'name' => 'Still - Download test',
       'description' => 'Test downloading of stills with tickets.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STILL,
-      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_10_MINUTES,
+      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES,
     );
   }
 

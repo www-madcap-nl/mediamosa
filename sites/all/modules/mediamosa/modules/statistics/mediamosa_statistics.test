@@ -35,7 +35,7 @@ class MediaMosaStatisticsTestCaseEga extends MediaMosaTestCaseEga {
   // ------------------------------------------------------------------ Functions.
   public static function getInfo() {
     return array(
-      'name' => 'Statistics function tests',
+      'name' => 'Statistics - common tests',
       'description' => 'Testing statistics related functions and rest calls.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STATISTICS,
     );

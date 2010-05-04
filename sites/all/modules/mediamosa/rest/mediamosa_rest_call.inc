@@ -171,7 +171,7 @@ abstract class mediamosa_rest_call {
   const PARAM_RANGE_END = 'range_end';
   const PARAM_IS_READ_ONLY = 'read_only';
   const PARAM_IS_REQUIRED = 'is_required';
-  const PARAM_ALLOWED_VALUES = 'a_allowed_values';
+  const PARAM_ALLOWED_VALUES = 'allowed_values';
 
   /**
    * Main constructor.
@@ -277,7 +277,7 @@ abstract class mediamosa_rest_call {
     }
 
     // Processing URL, Method.
-    mediamosa_debug::log_debug_high("REST call; @uri [@method], Class: @class, params: @params.",
+    mediamosa_debug::log_high("REST call; @uri [@method], Class: @class, params: @params.",
       array(
         '@uri' => $this->{self::URI},
         '@method' => $this->{self::METHOD},
@@ -839,7 +839,8 @@ abstract class mediamosa_rest_call {
       // Is required.
       $this->a_rest_args[$param][self::PARAM_IS_REQUIRED] = $a_var[self::VAR_IS_REQUIRED];
 
-      // if param is specified with range and the param is provided during rest call or had defaulft value, then check range.
+      // if param is specified with range and the param is provided during rest
+      // call or had defaulft value, then check range.
       $this->a_rest_args[$param][self::PARAM_RANGE_START] = isset($a_var[self::VAR_RANGE_START]) && $this->isset_param($param) ? $a_var[self::VAR_RANGE_START] : NULL;
       $this->a_rest_args[$param][self::PARAM_RANGE_END] = isset($a_var[self::VAR_RANGE_END]) && $this->isset_param($param) ? $a_var[self::VAR_RANGE_END] : NULL;
 
@@ -865,7 +866,20 @@ abstract class mediamosa_rest_call {
         continue;
       }
 
-      $this->a_rest_args[$param][self::PARAM_VALUE] = mediamosa_type::check($param, $a_param[self::PARAM_TYPE], $this->a_rest_args[$param][self::PARAM_VALUE], $this->a_rest_args[$param][self::PARAM_IS_REQUIRED] == self::VAR_IS_REQUIRED_YES, $this->a_rest_args[$param][self::PARAM_RANGE_START], $this->a_rest_args[$param][self::PARAM_RANGE_END], isset($this->a_rest_args[$param][self::PARAM_ALLOWED_VALUES]) && count($this->a_rest_args[$param][self::PARAM_ALLOWED_VALUES]) ? $this->a_rest_args[$param][self::PARAM_ALLOWED_VALUES] : NULL);
+      // If allowed values is set and default value is set and the given value
+      // is not allowed and the value is empty, then value will get the default
+      //  value.
+      if (!empty($this->a_rest_args[$param][self::PARAM_ALLOWED_VALUES]) &&
+          empty($this->a_rest_args[$param][self::PARAM_VALUE]) &&
+          isset($var_setup[self::VARS][$param][self::VAR_DEFAULT_VALUE]) &&
+          !in_array($this->a_rest_args[$param][self::PARAM_VALUE], $this->a_rest_args[$param][self::PARAM_ALLOWED_VALUES])
+         ) {
+        $this->a_rest_args[$param][self::PARAM_VALUE] = $var_setup[self::VARS][$param][self::VAR_DEFAULT_VALUE];
+        // The default value must be allowed.
+        assert(in_array($this->a_rest_args[$param][self::PARAM_VALUE], $this->a_rest_args[$param][self::PARAM_ALLOWED_VALUES]));
+      }
+
+      $this->a_rest_args[$param][self::PARAM_VALUE] = mediamosa_type::check($param, $a_param[self::PARAM_TYPE], $this->a_rest_args[$param][self::PARAM_VALUE], $this->a_rest_args[$param][self::PARAM_IS_REQUIRED] == self::VAR_IS_REQUIRED_YES, $this->a_rest_args[$param][self::PARAM_RANGE_START], $this->a_rest_args[$param][self::PARAM_RANGE_END], !empty($this->a_rest_args[$param][self::PARAM_ALLOWED_VALUES]) ? $this->a_rest_args[$param][self::PARAM_ALLOWED_VALUES] : NULL);
       $this->a_rest_args[$param][self::PARAM_VALIDATED] = TRUE;
     }
   }

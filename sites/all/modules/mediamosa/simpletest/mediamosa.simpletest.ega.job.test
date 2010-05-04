@@ -37,9 +37,9 @@ class MediaMosaTestCaseEgaJobTest extends MediaMosaTestCaseEgaJob {
   // ------------------------------------------------------------------ Functions.
   static public function getInfo() {
     return array(
-      'name' => 'MediaMosa APP simpletest job server related.',
-      'description' => 'Testing our parent simple test class for EUA (App) job functions.',
-      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_APP,
+      'name' => 'SimpleTest - Job server environment.',
+      'description' => 'Testing our parent simple test class for EUA (App) job environment.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_SIMPLETEST,
     );
   }
 

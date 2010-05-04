@@ -32,10 +32,10 @@ class MediaMosaAppAuthenticationTestCase extends MediaMosaTestCase {
 
   public static function getInfo() {
     return array(
-      'name' => 'Challenge-reponse authentication',
+      'name' => 'APP - Challenge-reponse',
       'description' => 'Challenge-reponse authentication for end user applications.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_APP,
-      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_10_MINUTES,
+      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES,
     );
   }
 
