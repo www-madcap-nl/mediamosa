@@ -45,7 +45,7 @@ function mediamosa_maintenance_menu() {
   );
   // Tabs
   $items['admin/mediamosa/status'] = array(
-    'title' => 'MediaMosa',
+    'title' => 'Status',
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => -20,
   );
