@@ -868,13 +868,16 @@ abstract class mediamosa_rest_call {
 
       // If allowed values is set and default value is set and the given value
       // is not allowed and the value is empty, then value will get the default
-      //  value.
+      // value.
       if (!empty($this->a_rest_args[$param][self::PARAM_ALLOWED_VALUES]) &&
           empty($this->a_rest_args[$param][self::PARAM_VALUE]) &&
           isset($var_setup[self::VARS][$param][self::VAR_DEFAULT_VALUE]) &&
           !in_array($this->a_rest_args[$param][self::PARAM_VALUE], $this->a_rest_args[$param][self::PARAM_ALLOWED_VALUES])
          ) {
+
+        // No value was given, but there is a default, then set the default.
         $this->a_rest_args[$param][self::PARAM_VALUE] = $var_setup[self::VARS][$param][self::VAR_DEFAULT_VALUE];
+
         // The default value must be allowed.
         assert(in_array($this->a_rest_args[$param][self::PARAM_VALUE], $this->a_rest_args[$param][self::PARAM_ALLOWED_VALUES]));
       }

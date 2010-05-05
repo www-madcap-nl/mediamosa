@@ -51,11 +51,16 @@ Other changes (non-ticket related)
 - Changed the MediaMosa internal REST calls text on configure page to reflect
   that these settings are only used for REST calls during the CRON like status
   trigger and running the tests.
-- Rewrote the status page unittest running. Now runs in a queue form and also
-  runs other tests once per 24 hours. Also runs one test per minute max.
+- Rewrote the status page unittest running. Now runs in a queue form and runs
+  each test per minute (unless a test is still running).
 - Status page now show which test is currently being tested (if any).
-  
-
+- Can now show the test data on each test that was run on the status page.
+- Tests are now devided into 3 groups; 30 minutes, 180 minutes and 3600 minutes.
+  The 180 minutes group is empty atm.
+- You can now re-run any test on the status page by putting it into the test 
+  queue.
+- Config page now includes settings for the status page. Including the interval
+  lengths of the 3 tests groups.
 
 Mediamosa 2.1.0
 ---------------

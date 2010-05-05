@@ -123,14 +123,39 @@ function mediamosa_maintenance_status_mediamosa_configuration_collect() {
     '#title' => t('Status page'),
     '#description' => t('The status page show vital information about your MediaMosa installation.'),
     '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
   );
 
   $form['settings_status']['mediamosa_status_timeout_tests'] = array(
     '#type' => 'textfield',
     '#title' => t('Timeout test run'),
-    '#description' => t('The amount of seconds a new run for a test will wait before a test can be run again.'),
+    '#description' => t('The amount of seconds a new run for a test will wait before a test can be run again; if a test is taking longer than given value in seconds, then the test is considered failed and the next test will be started. Default is 180 seconds. Increase if your server is slow.'),
     '#required' => TRUE,
     '#default_value' => mediamosa_maintenance_status::timeout_test_run(),
+  );
+
+  $form['settings_status']['mediamosa_status_minutes_tests_fast'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Timeout test run - halve hour'),
+    '#description' => t('The interval in minutes the fast tests are run, default @interval minutes. 0 = Off.', array('@interval' => mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_FAST)),
+    '#required' => TRUE,
+    '#default_value' => mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_FAST,
+  );
+
+  $form['settings_status']['mediamosa_status_minutes_tests_normal'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Timeout test run - 3 hours'),
+    '#description' => t('The interval in minutes the normal tests are run, default @interval minutes. 0 = Off.', array('@interval' => mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_NORMAL)),
+    '#required' => TRUE,
+    '#default_value' => mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_NORMAL,
+  );
+
+  $form['settings_status']['mediamosa_status_minutes_tests_slow'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Timeout test run - daily'),
+    '#description' => t('The interval in minutes the slow (daily) tests are run, default @interval minutes. 0 = Off.', array('@interval' => mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_SLOW)),
+    '#required' => TRUE,
+    '#default_value' => mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_SLOW,
   );
 
   $form['settings_status']['mediamosa_status_run_tests'] = array(

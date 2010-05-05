@@ -200,9 +200,9 @@
     $queue = variable_get('mediamosa_maintenance_status_queue', array());
 
     $runs = array(
-      mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES => 15,
-      mediamosa_settings::MEDIAMOSA_RUN_3_HOURS => 180,
-      mediamosa_settings::MEDIAMOSA_RUN_DAILY => 3600,
+      mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES => variable_get('mediamosa_status_minutes_tests_fast', mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_FAST),
+      mediamosa_settings::MEDIAMOSA_RUN_3_HOURS => variable_get('mediamosa_status_minutes_tests_normal', mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_NORMAL),
+      mediamosa_settings::MEDIAMOSA_RUN_DAILY => variable_get('mediamosa_status_minutes_tests_slow', mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_SLOW),
     );
 
     // Get the tests.
@@ -210,6 +210,11 @@
 
     // Now find the test and add to queue (if not already).
     foreach ($runs as $run => $minutes) {
+
+      // Seed?
+      if ($minutes < 1) {
+        continue; // seeding turned off.
+      }
 
       // Get the last run of this type.
       $run_last = variable_get($run, NULL);
@@ -351,6 +356,7 @@
     $response = mediamosa_http::do_internal_call_cron('internal/status/run', false, $options);
     $end = microtime(TRUE);
     try {
+      mediamosa::log_export($response->data);
       $response->xml = new SimpleXMLElement($response->data);
     }
     catch (Exception $e) {

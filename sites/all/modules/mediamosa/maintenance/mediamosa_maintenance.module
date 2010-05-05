@@ -43,21 +43,55 @@ function mediamosa_maintenance_menu() {
     'weight' => -20,
     'position' => ''
   );
-  $items['admin/mediamosa/mediamosa'] = array(
-    'title' => 'Status',
-    'access arguments' => array('access mediamosa'),
+  // Tabs
+  $items['admin/mediamosa/status'] = array(
+    'title' => 'MediaMosa',
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => -20,
   );
-  $items['admin/mediamosa/mediamosa/%/details'] = array(
+
+  // Sub-tabs.
+  $items['admin/mediamosa/status/fast'] = array(
+    'title' => '30 minutes',
+    'page callback' => '_mediamosa_maintenance_status',
+    'access arguments' => array('access mediamosa'),
+    'page arguments' => array(mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES),
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => -3,
+  );
+  $items['admin/mediamosa/status/normal'] = array(
+    'title' => '3 hours',
+    'page callback' => '_mediamosa_maintenance_status',
+    'access arguments' => array('access mediamosa'),
+    'page arguments' => array(mediamosa_settings::MEDIAMOSA_RUN_3_HOURS),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => -2,
+  );
+  $items['admin/mediamosa/status/slow'] = array(
+    'title' => 'daily',
+    'page callback' => '_mediamosa_maintenance_status',
+    'access arguments' => array('access mediamosa'),
+    'page arguments' => array(mediamosa_settings::MEDIAMOSA_RUN_DAILY),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => -1,
+  );
+
+  $items['admin/mediamosa/status/%/details'] = array(
     'title' => 'Details of status unit test results.',
-    'description' => 'This page displays a list of the 150 latest created collections.',
+    'description' => 'This page displays details of a run unit test.',
     'page callback' => '_mediamosa_maintenance_status_details',
     'page arguments' => array(3),
     'access arguments' => array('access mediamosa'),
     'type' => MENU_CALLBACK,
     'file' => 'simpletest.pages.inc',
     'file path' => drupal_get_path('module', 'simpletest'),
+  );
+
+  $items['admin/mediamosa/status/%/seed'] = array(
+    'page callback' => '_mediamosa_maintenance_status_seed',
+    'page arguments' => array(3),
+    'access arguments' => array('access mediamosa'),
+    'type' => MENU_CALLBACK,
   );
 
   $items['admin/mediamosa/browse'] = array(
@@ -128,7 +162,26 @@ function mediamosa_maintenance_help($path, $arg) {
 
   switch ($path) {
     case 'admin/mediamosa':
-      return '<p>' . t('MediaMosa status page show results of basic unit tests that are run at fixed intervals. All tests must be green.') . '</p>';
+      $interval = variable_get('mediamosa_status_minutes_tests_fast', mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_FAST);
+      if ($interval < 1) {
+        return '<p>' . t("MediaMosa status page show results of basic unit tests. Warning: automatic update of these tests has been turned of, visit the !config_page and edit section 'status page' to turn back on.", array('!config_page' => l('config page', 'admin/mediamosa/config/global'))) . '</p>';
+      }
+
+      return '<p>' . t('MediaMosa status page show results of basic unit tests that are run at @interval minutes interval. All tests must be green.', array('@interval' => $interval)) . '</p>';
+    case 'admin/mediamosa/status/normal':
+      $interval = variable_get('mediamosa_status_minutes_tests_normal', mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_NORMAL);
+      if ($interval < 1) {
+        return '<p>' . t("MediaMosa status page show results of basic unit tests. Warning: automatic update of these tests has been turned of, visit the !config_page and edit section 'status page' to turn back on.", array('!config_page' => l('config page', 'admin/mediamosa/config/global'))) . '</p>';
+      }
+
+      return '<p>' . t('MediaMosa status page show results of basic unit tests that are run at @interval minutes interval. All tests must be green.', array('@interval' => $interval)) . '</p>';
+    case 'admin/mediamosa/status/slow':
+      $interval = variable_get('mediamosa_status_minutes_tests_slow', mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_SLOW);
+      if ($interval < 1) {
+        return '<p>' . t("MediaMosa status page show results of basic unit tests. Warning: automatic update of these tests has been turned of, visit the !config_page and edit section 'status page' to turn back on.", array('!config_page' => l('config page', 'admin/mediamosa/config/global'))) . '</p>';
+      }
+
+      return '<p>' . t('MediaMosa status page show results of basic unit tests that are run at @interval minutes interval. All tests must be green.', array('@interval' => $interval)) . '</p>';
   }
 }
 
@@ -203,7 +256,7 @@ function mediamosa_maintenance_theme() {
 /**
  * Generate the status page.
  */
-function _mediamosa_maintenance_status() {
+function _mediamosa_maintenance_status($show_tests = NULL) {
 
   // If we are set as Home page, the breadcrumb isnt set, lets do it here.
   $breadcrumb = array();
@@ -226,8 +279,13 @@ function _mediamosa_maintenance_status() {
   // Get all tests.
   $all_tests = mediamosa_maintenance_status::get_default_tests();
 
+  // Get the current queue.
+  $queue = variable_get('mediamosa_maintenance_status_queue', array());
+
   // Default.
-  $show_tests = mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES;
+  if (!in_array($show_tests, array(mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES, mediamosa_settings::MEDIAMOSA_RUN_3_HOURS, mediamosa_settings::MEDIAMOSA_RUN_DAILY))) {
+    $show_tests = mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES;
+  }
 
   $header = array(
     array('data' => t('Component')),
@@ -283,7 +341,7 @@ function _mediamosa_maintenance_status() {
                 '!failures' => $test['results']['fail'],
                 '!exceptions' => $test['results']['exception'],
               )),
-              'admin/mediamosa/mediamosa/' . $name . '/details'
+              'admin/mediamosa/status/' . $name . '/details'
             );
             break;
         }
@@ -294,6 +352,14 @@ function _mediamosa_maintenance_status() {
 
         $time = round($test['ended'] - $test['started'], 2);
         $time_started = theme('mediamosa_maintenance_date', array('timestamp' => round($test['started'])));
+      }
+
+      $queued = array_search($name, $queue);
+      if ($queued !== FALSE) {
+        $result .= '<br /><small>' . t('(re-run of test is currently queued, @place place in queue)', array('@place' => mediamosa_lib::ordinal($queued + 1))) . '</small>';
+      }
+      else { // not queued.
+        $result .= ', ' . l('put in queue', 'admin/mediamosa/status/' . $name . '/seed', array('query' => drupal_get_destination()));
       }
 
       $rows[] = array(
@@ -314,7 +380,7 @@ function _mediamosa_maintenance_status() {
 
   // Check if enabled.
   if (!variable_get('mediamosa_status_run_tests', TRUE)) {
-    $content .= '<p>' . t('Warning: update on tests has been turned off, enable on the !page', array('!page' => l('configure page', 'admin/mediamosa/config/global'))) . '</p>';
+    $content .= '<p>' . t('Warning: update on tests has been turned off, enable on the !page', array('!page' => l('configure page', 'admin/mediamosa/config/global', array('query' => drupal_get_destination())))) . '</p>';
   }
 
   return $content;
@@ -400,4 +466,58 @@ function _mediamosa_maintenance_status_details($name) {
   $content = theme('table', array('header' => $header, 'rows' => $rows, 'empty' => 'No status information found.'));
 
   return $content;
+}
+
+/**
+ * Reseed the given test in the test queue.
+ * @param string $name
+ */
+function _mediamosa_maintenance_status_seed($name) {
+  // Get all tests.
+  $all_tests = mediamosa_maintenance_status::get_default_tests();
+
+  $runs = array(
+    mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES,
+    mediamosa_settings::MEDIAMOSA_RUN_3_HOURS,
+    mediamosa_settings::MEDIAMOSA_RUN_DAILY,
+  );
+
+  // Must be valid test.
+  $valid = FALSE;
+  foreach ($runs as $run) {
+    foreach ($all_tests[$run] as $class_name => $info) {
+      if ($name == $class_name) {
+        $valid = TRUE;
+        break;
+      }
+    }
+
+    if ($valid) {
+      break;
+    }
+  }
+
+  // Is Valid?
+  if (!$valid) {
+    drupal_set_message('Invalid unit test name!', 'error');
+  }
+  else {
+    // Add to queue.
+
+    // Get the current queue.
+    $queue = variable_get('mediamosa_maintenance_status_queue', array());
+
+    if (!in_array($class_name, $queue)) {
+      drupal_set_message('Test add to queue.');
+      $queue = array_merge(array($class_name), $queue);
+
+      // Set the queue.
+      variable_set('mediamosa_maintenance_status_queue', $queue);
+    }
+    else {
+      drupal_set_message('Test is already queued.', 'warning');
+    }
+  }
+
+  drupal_goto('admin/mediamosa');
 }

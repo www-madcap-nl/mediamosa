@@ -113,7 +113,7 @@ function _ajax_execute_rest_call() {
   $commands = array();
 
   // Run same on mediamosa 1.7?
-  $run_on_mm_17 = ($form_state['input']['run_on_mm_17'] == 1);
+  $run_on_mm_17 = (isset($form_state['input']['run_on_mm_17']) && $form_state['input']['run_on_mm_17'] == 1);
 
   $response1x = $response2x = FALSE;
 

@@ -37,6 +37,7 @@ function mediamosa_configuration_debug_mediamosa_configuration_collect() {
     '#type' => 'fieldset',
     '#title' => t('Debug settings'),
     '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
   );
 
   $form['settings_debug']['mediamosa_debug_level'] = array(
