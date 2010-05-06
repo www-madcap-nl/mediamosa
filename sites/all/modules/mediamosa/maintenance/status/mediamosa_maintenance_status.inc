@@ -99,7 +99,7 @@
     $run_last = variable_get('mediamosa_status_timeout_tests_running', NULL);
 
     // may run?
-    if (round(REQUEST_TIME - $run_last['started']) < self::timeout_test_run()) {
+    if (round(REQUEST_TIME - $run_last['started']) < (self::timeout_test_run() + 60)) { // extra 60 seconds.
       return FALSE;
     }
 
@@ -359,6 +359,7 @@
       $response->xml = new SimpleXMLElement($response->data);
     }
     catch (Exception $e) {
+      mediamosa::log_export($response->data);
     }
 
     if (isset($response->xml) && isset($response->xml->header) && $response->xml->header->request_result_id == mediamosa_error::ERRORCODE_OKAY) {

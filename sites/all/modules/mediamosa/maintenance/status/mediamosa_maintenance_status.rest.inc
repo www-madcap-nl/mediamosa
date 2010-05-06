@@ -152,6 +152,9 @@ class mediamosa_rest_call_status_run extends mediamosa_rest_call {
     // Add default info.
     $item = array('runphase' => mediamosa_maintenance_status::RUNPHASE_STARTED);
 
+    // So we can access it in exception.
+    $my_simpletest = NULL;
+
     try {
       // Now create and add.
       $test_id = db_insert('simpletest_test_id')
@@ -171,7 +174,7 @@ class mediamosa_rest_call_status_run extends mediamosa_rest_call {
 
       // Run.
       $start = microtime(TRUE);
-      $my_simpletest->run();
+      $my_simpletest->runSafe();
       $end = microtime(TRUE);
 
       // Store results.
@@ -201,6 +204,16 @@ class mediamosa_rest_call_status_run extends mediamosa_rest_call {
       $item['runphase'] = mediamosa_maintenance_status::RUNPHASE_COMPLETED;
     }
     catch (Exception $e) {
+      mediamosa::log(
+        'Unittest running failed! @message (Exception thrown on line @line, in @file)<br />Partial backtrace: <pre>@backtrace</pre>',
+        array(
+          '@message' => $e->getMessage(),
+          '@line' => $e->getLine(),
+          '@file' => $e->getFile(),
+          '@backtrace' => $e->getTraceAsString(),
+        )
+      );
+
       // ignore.
       $item['runphase'] = mediamosa_maintenance_status::RUNPHASE_FAILED;
     }

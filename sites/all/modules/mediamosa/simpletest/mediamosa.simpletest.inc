@@ -82,6 +82,34 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     cache_clear_all('simpletest', 'cache');
   }
 
+
+  /**
+   * Because run() can create unused tables.
+   */
+  public function runSafe() {
+    try {
+      session_regenerate_id(FALSE);
+
+      $this->run();
+    }
+    catch (Exception $e) {
+      // Do tearDown first, so we are in the right db again.
+      $this->tearDown();
+
+      mediamosa::log(
+        'runSafe caught exception! @message (Exception thrown on line @line, in @file)<br />Partial backtrace: <pre>@backtrace</pre>',
+        array(
+          '@message' => $e->getMessage(),
+          '@line' => $e->getLine(),
+          '@file' => $e->getFile(),
+          '@backtrace' => $e->getTraceAsString(),
+        )
+      );
+
+      throw $e;
+    }
+  }
+
   // ------------------------------------------------------------------ Functions (protected)
 
   /**
