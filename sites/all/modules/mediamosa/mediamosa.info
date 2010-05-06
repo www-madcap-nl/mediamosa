@@ -2,7 +2,7 @@
 name = "MediaMosa"
 description = "Open source media management and distribution platform."
 package = "MediaMosa - Core"
-version = "2.1.1.492:472d65d64a4c"
+version = "2.1.1.499:3c055af0d09f"
 core = 7.x
 
 configure = admin/mediamosa/config/global
