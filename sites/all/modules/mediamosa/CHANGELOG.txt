@@ -37,7 +37,8 @@ Mediamosa 2.1.1
 - Fixed asset search not to calculate item_count_total when limit is set to 6
   or lower (like in 1.7.x). Added 'calculate_total_count' flag to enable/disable
   calculation of 'item_count_total'. Default of this flag is 'false' when limit 
-  is set to 6 or lower, 'true' when limit is higher than 6.
+  is set to 6 or lower, 'true' when limit is higher than 6. (see MediaMosa 
+  ticket #288).
 - ACL master/slave fix. (see MediaMosa ticket #281).
 - Fixed error message quota limit reached (see MediaMosa ticket #207).
 
@@ -54,7 +55,7 @@ Other changes (non-ticket related)
 - Changed the MediaMosa internal REST calls text on configure page to reflect
   that these settings are only used for REST calls during the CRON like status
   trigger and running the tests.
-- Rewrote the status page unittest running. Now runs in a queue form and runs
+- Rewrote the status page unittest running. Now runs in a queue system and runs
   each test per minute (unless a test is still running).
 - Status page now show which test is currently being tested (if any).
 - Can now show the test data on each test that was run on the status page.
