@@ -136,7 +136,6 @@ class mediamosa_aut {
       foreach ($a_aut_group_id as $key => $s_group_id) {
         if (trim($s_group_id) == "") {
           unset($a_aut_group_id[$key]);
-          reset($a_aut_group_id); // Hmm lets reset the pointer, dont know if the unset might cause skipping of items.
         }
       }
 
@@ -326,52 +325,66 @@ class mediamosa_aut {
        * Now with all group names + types, find the groups of the other apps.
        */
       foreach ($query->execute() as $a_group) {
-        $query = mediamosa_db::db_select(mediamosa_aut_group_db::TABLE_NAME, 'ag');
-        $query->fields('ag', array(
+        $query_2 = mediamosa_db::db_select(mediamosa_aut_group_db::TABLE_NAME, 'ag');
+        $query_2->fields('ag', array(
           mediamosa_aut_group_db::APP_ID,
           mediamosa_aut_group_db::ID
         ));
-        $query->condition(mediamosa_aut_group_db::AUT_GROUP_NAME, $a_group['aut_group_name']);
-        $query->condition(mediamosa_aut_group_db::AUT_GROUP_TYPE, $a_group['aut_group_type']);
+        $query_2->condition(mediamosa_aut_group_db::AUT_GROUP_NAME, $a_group['aut_group_name']);
+        $query_2->condition(mediamosa_aut_group_db::AUT_GROUP_TYPE, $a_group['aut_group_type']);
 
         // Loop through the results of muy group name + type search, so we find the groups of all apps.
-        foreach ($query->execute() as $a_group_2) {
+        foreach ($query_2->execute() as $a_group_2) {
           // If app of found group is not one of my slaves, then I cant use it.
           if (!isset($a_slaves[$a_group_2['app_id']])) {
             continue;
           }
 
-          $app_id_master = $a_group_2['app_id'];
-
-          $a_result['slaves']['a_group'][$a_group_2['app_id']][] = $a_group_2['aut_group_id'];
-
-          if (!in_array($a_group_2['aut_group_id'], $a_groups)) {
-            $a_result['slaves_convert']['a_group'][$a_group_2['app_id']][] = $a_group_2['aut_group_id'];
-          }
+          // Group was found on one of my master/slaved apps.
+          $a_result['slaves']['a_group'][$a_group_2['app_id']][$a_group_2['aut_group_id']] = $a_group_2['aut_group_id'];
         }
 
+        // Get our app.
+        $app_id = reset($mixed_app_id);
+
+        // Get the app ids of our slaves.
+        $a_app_id_slaves = array_keys($a_slaves);
+
+        // Collect all names of the groups of our app.
         $query = mediamosa_db::db_select(mediamosa_aut_group_db::TABLE_NAME, 'ag');
         $query->fields('ag', array(
-          mediamosa_aut_group_db::APP_ID,
-          mediamosa_aut_group_db::ID
+          mediamosa_aut_group_db::ID,
+          mediamosa_aut_group_db::AUT_GROUP_NAME,
+          mediamosa_aut_group_db::AUT_GROUP_TYPE,
         ));
-        $query->condition(mediamosa_aut_group_db::AUT_GROUP_NAME, $a_group['aut_group_name']);
-        $query->condition(mediamosa_aut_group_db::AUT_GROUP_TYPE, $a_group['aut_group_type']);
-        $query->condition(mediamosa_aut_group_db::APP_ID, $app_id, '<>');
         $query->condition(mediamosa_aut_group_db::ID, $a_groups, 'IN');
+        $query->condition(mediamosa_aut_group_db::APP_ID, $app_id);
 
-        foreach ($query->execute() as $a_group_2) {
-          // Get the groups, this type, this name, this app.
-          $query = mediamosa_db::db_select(mediamosa_aut_group_db::TABLE_NAME, 'ag');
-          $query->fields('ag', array(
+        foreach ($query->execute() as $a_group) {
+          // Collect all names of the groups of our app.
+          $query_2 = mediamosa_db::db_select(mediamosa_aut_group_db::TABLE_NAME, 'ag');
+          $query_2->fields('ag', array(
+            mediamosa_aut_group_db::APP_ID,
             mediamosa_aut_group_db::ID
           ));
-          $query->condition(mediamosa_aut_group_db::AUT_GROUP_NAME, $a_group['aut_group_name']);
-          $query->condition(mediamosa_aut_group_db::AUT_GROUP_TYPE, $a_group['aut_group_type']);
-          $query->condition(mediamosa_aut_group_db::APP_ID, $app_id);
+          $query_2->condition(mediamosa_aut_group_db::AUT_GROUP_NAME, $a_group['aut_group_name']);
+          $query_2->condition(mediamosa_aut_group_db::AUT_GROUP_TYPE, $a_group['aut_group_type']);
+          $query_2->condition(mediamosa_aut_group_db::APP_ID, $app_id, '<>');
 
-          foreach ($query->execute() as $a_group_3) {
-            $a_result['slaves_convert']['a_group'][$app_id_master][] = $a_group_3['aut_group_id'];
+          // Now loop through all my groups that are not my app.
+          foreach ($query_2->execute() as $a_group_2) {
+            $query_3 = mediamosa_db::db_select(mediamosa_aut_group_db::TABLE_NAME, 'ag');
+            $query_3->fields('ag', array(
+              mediamosa_aut_group_db::ID,
+              mediamosa_aut_group_db::APP_ID,
+            ));
+            $query_3->condition(mediamosa_aut_group_db::AUT_GROUP_NAME, $a_group['aut_group_name']);
+            $query_3->condition(mediamosa_aut_group_db::AUT_GROUP_TYPE, $a_group['aut_group_type']);
+            $query_3->condition(mediamosa_aut_group_db::APP_ID, $a_app_id_slaves, 'IN');
+
+            foreach ($query_3->execute() as $a_group_3) {
+              $a_result['slaves_convert']['a_group'][$a_group_3['app_id']][$a_group_3['aut_group_id']] = $a_group_3['aut_group_id'];
+            }
           }
         }
       }
