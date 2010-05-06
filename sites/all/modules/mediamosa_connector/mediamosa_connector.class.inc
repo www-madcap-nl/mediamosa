@@ -155,12 +155,12 @@ class mediamosa_connector {
     $method = 'POST';
     $response = $this->do_request('login', array('method' => $method, 'data' => $data));
 
-    if ($response->xml->header->request_result_id == 404) {
-      drupal_set_message(t('Enable the Application Authentication module, unable to login. '), 'error');
+    if (!$response || !$response->xml) {
       return FALSE;
     }
 
-    if (!$response || !$response->xml) {
+    if ($response->xml->header->request_result_id == 404) {
+      drupal_set_message(t('Enable the Application Authentication module, unable to login. '), 'error');
       return FALSE;
     }
 

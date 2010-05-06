@@ -38,6 +38,8 @@ Mediamosa 2.1.1
   or lower (like in 1.7.x). Added 'calculate_total_count' flag to enable/disable
   calculation of 'item_count_total'. Default of this flag is 'false' when limit 
   is set to 6 or lower, 'true' when limit is higher than 6.
+- ACL master/slave fix. (see MediaMosa ticket #281).
+- Fixed error message quota limit reached (see MediaMosa ticket #207).
 
 Other changes (non-ticket related)
 - Fixed problem with quota test, didn't throw exception when it was reached.
@@ -56,7 +58,7 @@ Other changes (non-ticket related)
 - Status page now show which test is currently being tested (if any).
 - Can now show the test data on each test that was run on the status page.
 - Tests are now devided into 3 groups; 30 minutes, 180 minutes and 1440 minutes.
-  The 180 minutes group is empty atm.
+  The 180 minutes test group is empty atm.
 - You can now re-run any test on the status page by putting it into the test 
   queue.
 - Config page now includes settings for the status page. Including the interval
