@@ -55,7 +55,7 @@ Other changes (non-ticket related)
   each test per minute (unless a test is still running).
 - Status page now show which test is currently being tested (if any).
 - Can now show the test data on each test that was run on the status page.
-- Tests are now devided into 3 groups; 30 minutes, 180 minutes and 3600 minutes.
+- Tests are now devided into 3 groups; 30 minutes, 180 minutes and 1440 minutes.
   The 180 minutes group is empty atm.
 - You can now re-run any test on the status page by putting it into the test 
   queue.

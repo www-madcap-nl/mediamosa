@@ -186,7 +186,7 @@ class mediamosa_settings {
   // Run interval in minutes.
   const MEDIAMOSA_RUN_INTERVAL_FAST = 30; // calling it fast, normal, slow interval groups.
   const MEDIAMOSA_RUN_INTERVAL_NORMAL = 180;
-  const MEDIAMOSA_RUN_INTERVAL_SLOW = 3600;
+  const MEDIAMOSA_RUN_INTERVAL_SLOW = 1440;
 
   // ------------------------------------------------------------------ Functions.
   /**
