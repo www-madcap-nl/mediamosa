@@ -929,6 +929,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
 
     return array(
       MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => $a_index['column'] == 'val_char' ? 'val_char_lft' : $a_index['column'],
+      MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => $a_index[MEDIAMOSA_CQL_CONTEXT_KEY_TYPE],
       MEDIAMOSA_CQL_CONTEXT_KEY_DIRECTION => $str_direction,
       MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => $a_index[MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT],
       MEDIAMOSA_CQL_CONTEXT_KEY_PROP_ID => isset($a_index[MEDIAMOSA_CQL_CONTEXT_KEY_PROP_ID]) ? $a_index[MEDIAMOSA_CQL_CONTEXT_KEY_PROP_ID] : 0,
