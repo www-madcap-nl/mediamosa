@@ -54,7 +54,7 @@
    */
   static public function timeout_test_run() {
     // Default is 3 minutes before we consider test timed-out.
-    return variable_get('mediamosa_status_timeout_tests', 180);
+    return variable_get('mediamosa_status_timeout_tests', 360);
   }
 
   /**

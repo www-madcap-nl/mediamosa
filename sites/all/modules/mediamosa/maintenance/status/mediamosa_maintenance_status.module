@@ -129,7 +129,7 @@ function mediamosa_maintenance_status_mediamosa_configuration_collect() {
   $form['settings_status']['mediamosa_status_timeout_tests'] = array(
     '#type' => 'textfield',
     '#title' => t('Timeout test run'),
-    '#description' => t('The amount of seconds a new run for a test will wait before a test can be run again; if a test is taking longer than given value in seconds, then the test is considered failed and the next test will be started. Default is 180 seconds. Increase if your server is slow.'),
+    '#description' => t('The amount of seconds a new run for a test will wait before a test can be run again; if a test is taking longer than given value in seconds, then the test is considered failed and the next test will be started. Default is 360 seconds. Increase if your server is slow.'),
     '#required' => TRUE,
     '#default_value' => mediamosa_maintenance_status::timeout_test_run(),
   );
