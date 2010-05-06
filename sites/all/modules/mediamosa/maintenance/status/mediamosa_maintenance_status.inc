@@ -356,7 +356,6 @@
     $response = mediamosa_http::do_internal_call_cron('internal/status/run', false, $options);
     $end = microtime(TRUE);
     try {
-      mediamosa::log_export($response->data);
       $response->xml = new SimpleXMLElement($response->data);
     }
     catch (Exception $e) {
