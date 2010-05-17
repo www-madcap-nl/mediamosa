@@ -73,7 +73,7 @@ class mediamosa_rest_call_ftp_user_list extends mediamosa_rest_call {
     $result = mediamosa_db::db_query('SELECT * FROM {mediamosa_ftp_user} WHERE app_id = :app_id', array(':app_id' => $app_id));
 
     foreach ($result as $a_user) {
-      $result->add_item(
+      $o_mediamosa->add_item(
         array(
           'userid' => $a_user['userid'],
           'active' => intval($a_user['active']) ? 'true' : 'false',
