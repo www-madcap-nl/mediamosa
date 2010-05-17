@@ -101,7 +101,7 @@ class mediamosa_rest_call_get extends mediamosa_rest_call {
 
     // Check if override for class selection is here.
     if (method_exists($o_rest_call, 'get_object_rest_call')) {
-      $o_rest_call = $o_rest_call->get_object_rest_call($a_rest_call);
+      $o_rest_call = $o_rest_call->get_object_rest_call($a_calls[$uri_id]);
     }
 
     // Turn off so we can call the get_var_setup without problems.
