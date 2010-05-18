@@ -35,12 +35,13 @@ Mediamosa 2.1.2
 ---------------
 - Renamed dummy titles of transcode profiles to their correct names. (See 
   mediamosa ticket #282)
-
+- Fixed problem with changed date update on profiles (See ticket #276).
 
 
 Other changes (not ticket related)
 - Fixed problem retrieving user/$fav_user_id/favorites with /rest/$rest_id call.
-
+- Made core-hack patch on bootstrap.inc. Simpletests can not run on multiple 
+  servers because of filedate and fileinode tests on local file. 
 
 Mediamosa 2.1.1
 ---------------
