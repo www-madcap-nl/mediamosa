@@ -280,7 +280,8 @@ function mediamosa_transcode_profile_form($node, $form_state) {
     'fps' => t('Set frame rate (Hz value, fraction or abbereviation@default'),
     'audiosamplingrate' => t('Set the audio sampling frequency@default'),
     'audiocodec' => t('Force audio codec to codec. Use the copy special value to specify that the raw codec data must be copied as is@default'),
-    'maintain_aspect_ratio' => t('Force audio codec to codec. Use the copy special value to specify that the raw codec data must be copied as is@default'),
+    'maintain_aspect_ratio' => t('Force maintain the original video aspect ratio or not@default'),
+    'padding' => t('Force padding, if aspect ratio is maintained@default'),
     'audiobitrate' => t('Set the audio bitrate in bit/s@default'),
     'audiochannels' => t('The allowed value is between 0 and 2@default')
   );

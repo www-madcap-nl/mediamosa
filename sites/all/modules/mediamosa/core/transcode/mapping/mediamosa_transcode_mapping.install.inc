@@ -60,7 +60,8 @@ function _mediamosa_transcode_mapping_install() {
     array('windows', 'videocodec', '-v_codec', NULL, NULL, 'flv;wmv;mpeg4;libx264;rawvideo', NULL, 'FALSE'),
     array('windows', 'audiocodec', '-a_codec', NULL, NULL, 'mp3;wma;pcm_s16le;libfaac', NULL, 'FALSE'),
     array('windows', 'audiosetting', '-a_setting', NULL, NULL, '40_22_1;40_22_2;40_44_1;40_44_2;64_22_1;64_22_2;64_44_1;64_44_2;128_22_1;128_22_2;128_44_1;128_44_2;192_22_1;192_22_2;192_44_1;192_44_2;256_22_1;256_22_2;256_44_1;256_44_2', NULL, 'FALSE'),
-    array('ffmpeg', 'maintain_aspect_ratio', '', NULL, NULL, 'yes;no', 'yes', 'FALSE')
+    array('ffmpeg', 'maintain_aspect_ratio', '', NULL, NULL, 'yes;no', 'yes', 'FALSE'),
+    array('ffmpeg', 'padding', '', NULL, NULL, 'yes;no', 'yes', 'FALSE'),
   );
 
   // Insert default mappings as nodes.
