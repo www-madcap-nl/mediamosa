@@ -23,6 +23,9 @@ case "$1" in
     mkdir /opt/www/vpcore/htdocs/sites/default/files
     chown www-data:www-data /opt/www/vpcore/htdocs/sites/default/files
     mkdir /opt/www/vpcore/htdocs/sites/default/private
+    chown www-data:www-data /opt/www/vpcore/htdocs/sites/default/private
+    mkdir /opt/www/vpcore/htdocs/sites/default/private/temp
+    chown www-data:www-data /opt/www/vpcore/htdocs/sites/default/private/temp
     mkdir /opt/www/vpcore/htdocs/sites/default/private/files
     chown www-data:www-data /opt/www/vpcore/htdocs/sites/default/private/files
     ;;

@@ -1994,7 +1994,7 @@ function drupal_valid_test_ua($user_agent) {
   // the database is not yet initialized and we can't access any Drupal variables.
   // The file properties add more entropy not easily accessible to others.
   $filepath = DRUPAL_ROOT . '/includes/bootstrap.inc';
-  $key = sha1(serialize($databases) . filectime($filepath) . fileinode($filepath), TRUE);
+  $key = sha1(serialize($databases) /*. filectime($filepath) . fileinode($filepath)*/, TRUE);
   // The HMAC must match.
   return $hmac == base64_encode(hash_hmac('sha1', $check_string, $key, TRUE));
 }
@@ -2011,7 +2011,7 @@ function drupal_generate_test_ua($prefix) {
     // check the HMAC before the database is initialized. filectime()
     // and fileinode() are not easily determined from remote.
     $filepath = DRUPAL_ROOT . '/includes/bootstrap.inc';
-    $key = sha1(serialize($databases) . filectime($filepath) . fileinode($filepath), TRUE);
+    $key = sha1(serialize($databases) /*. filectime($filepath) . fileinode($filepath)*/, TRUE);
   }
    // Generate a moderately secure HMAC based on the database credentials.
    $salt = uniqid('', TRUE);

@@ -143,8 +143,19 @@ class mediamosa_node_revision {
     }
 
     // Enrich.
-    if (in_array(mediamosa_db::CREATED, $names)) {
+    if (in_array(mediamosa_db::CREATED, $names) && (!isset($node->revision) || !$node->revision)) {
       $fields = mediamosa_db::db_insert_enrich($fields);
+    }
+    elseif (in_array(mediamosa_db::CHANGED, $names)) {
+      // Update the changed time node.
+      mediamosa_db::db_update('node')
+        ->fields(array('changed' => REQUEST_TIME))
+        ->condition('nid', $node->nid)
+        ->execute();
+
+      // Remove created from result so we dont save created.
+      unset($fields[mediamosa_db::CREATED]);
+      $fields = mediamosa_db::db_update_enrich($fields);
     }
 
     // Because revisions are stored in other table, we might have a row already.
@@ -232,6 +243,16 @@ class mediamosa_node_revision {
         $revision[$name] = $fields[$name] = $node->{$name};
       }
     }
+
+    // Update the changed time node.
+    mediamosa_db::db_update('node')
+      ->fields(array('changed' => REQUEST_TIME))
+      ->condition('nid', $node->nid)
+      ->execute();
+
+    // Lets do sep.
+    $fields['changed'] = $revision['changed'];
+    $revision['changed'] = $node->changed = REQUEST_TIME;
 
     // Update the edited revision.
     mediamosa_node_revision::update($node->nid, $node->vid, $revision);
