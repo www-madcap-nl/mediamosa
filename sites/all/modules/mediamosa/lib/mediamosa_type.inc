@@ -510,7 +510,7 @@ class mediamosa_type {
     $iso8601 = '#^(\d{4}((-)?(0[1-9]|1[0-2])((-)?(0[1-9]|[1-2][0-9]|3[0-1])((T| )(24:00(:00(\.[0]+)?)?|(([0-1][0-9]|2[0-3])(:)[0-5][0-9])((:)[0-5][0-9](\.[\d]+)?)?)((\+|-)(14:00|(0[0-9]|1[0-3])(:)[0-5][0-9])|(|Z)))?)?)?)$#';
     if (!preg_match($iso8601, $mixed_param_value)) {
 
-      // Let's try the old style: mm/dd/yyyy
+      // Let's try the old style: dd/mm/yyyy
       if (!preg_match('/^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$/', $mixed_param_value)) {
 
         // This is not ISO 8601 and not the old style...
@@ -520,7 +520,7 @@ class mediamosa_type {
       else {
         // Old style to ISO 8601 converter.
         $a_old_date = explode('/', $mixed_param_value);
-        $mixed_param_value = $a_old_date[2] . '-' . $a_old_date[0] . '-' . $a_old_date[1];
+        $mixed_param_value = $a_old_date[2] . '-' . $a_old_date[1] . '-' . $a_old_date[0];
       }
 
     }
