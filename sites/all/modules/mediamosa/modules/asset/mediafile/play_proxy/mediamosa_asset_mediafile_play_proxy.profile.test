@@ -35,7 +35,7 @@ class MediaMosaAssetMediafilePlayProxyProfileTestCaseEga extends MediaMosaTestCa
   // ------------------------------------------------------------------ Functions.
   public static function getInfo() {
     return array(
-      'name' => 'Asset mediafile play proxy profile play request tests',
+      'name' => 'PlayProxy - asset/mediafile play proxy profile play request tests',
       'description' => 'Testing asset mediafile play proxy profile play request related functions and rest calls.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_PLAYPROXY,
     );

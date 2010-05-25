@@ -40,7 +40,7 @@ class MediaMosaJobTestCaseEga extends MediaMosaTestCaseEga {
   // ------------------------------------------------------------------ Functions.
   public static function getInfo() {
     return array(
-      'name' => 'Job test',
+      'name' => 'JOB - common tests',
       'description' => 'Testing the job server calls.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_JOB,
     );

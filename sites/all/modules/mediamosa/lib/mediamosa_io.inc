@@ -39,7 +39,7 @@ class mediamosa_io {
    * @param string $severity
    */
   static public function log($message, array $variables = array()) {
-    mediamosa_debug::log_debug($message, $variables, 'mediamosa_io');
+    mediamosa_debug::log($message, $variables, 'mediamosa_io');
   }
 
   /**

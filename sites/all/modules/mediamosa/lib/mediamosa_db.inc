@@ -141,18 +141,18 @@ class mediamosa_db {
 
     // Define '#vars' for inserting values that are not quoted in the result.
     if (isset($args_cpy)) {
-      $a_extras = array();
+      $extras = array();
       foreach ($args_cpy as $key => $value) {
         if ($key{0} != '#') {
           continue;
         }
 
-        $a_extras[$key] = $value;
+        $extras[$key] = $value;
       }
 
-      if (count($a_extras)) {
-        $query = strtr($query, $a_extras);
-        foreach ($a_extras as $key => $value) {
+      if (!empty($extras)) {
+        $query = strtr($query, $extras);
+        foreach ($extras as $key => $value) {
           unset($args_cpy[$key]);
         }
       }
@@ -373,9 +373,9 @@ class mediamosa_db {
    * @return array
    *
    */
-  static public function db_update_enrich(array $a_fields) {
-    $a_fields[mediamosa_db::CHANGED] = mediamosa::db_current_timestamp_now();
-    return $a_fields;
+  static public function db_update_enrich(array $fields) {
+    $fields[mediamosa_db::CHANGED] = mediamosa::db_current_timestamp_now();
+    return $fields;
   }
 
   /**

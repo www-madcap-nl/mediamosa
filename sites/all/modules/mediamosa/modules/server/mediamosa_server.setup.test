@@ -41,10 +41,10 @@ class MediaMosaServerSetupTestCaseEga extends MediaMosaTestCaseEgaJob {
   // ------------------------------------------------------------------ Functions.
   public static function getInfo() {
     return array(
-      'name' => 'Job Server - Setup',
-      'description' => 'Server setup checks if job servers are setup correctly.',
+      'name' => 'JOB - server setup',
+      'description' => 'Server setup checks if job servers are setup correctly and other checks.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_JOB,
-      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_10_MINUTES,
+      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES,
     );
   }
 

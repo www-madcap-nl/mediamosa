@@ -39,7 +39,7 @@
  *
  */
 class mediamosa_rest_call_job_set_status extends mediamosa_rest_call {
-  // ------------------------------------------------------------------ Consts.
+  // ------------------------------------------------------------------- Consts.
   // Rest vars;
   const JOB_ID = 'job_id';
   const STATUS = 'status';
@@ -59,7 +59,7 @@ class mediamosa_rest_call_job_set_status extends mediamosa_rest_call {
   const WIDTH = 'width';
   const HEIGHT ='height';
 
-  // ------------------------------------------------------------------ Get Var Setup.
+  // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
     $a_var_setup = array();
 

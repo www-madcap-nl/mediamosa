@@ -37,7 +37,7 @@ class mediamosa_debug {
    * @param array $variables
    * @param string $type
    */
-  static public function log_debug($message, array $variables = array(), $type = NULL) {
+  static public function log($message, array $variables = array(), $type = NULL) {
     if (self::is_debug()) {
       mediamosa::log($message, $variables, WATCHDOG_DEBUG, $type);
     }
@@ -50,7 +50,7 @@ class mediamosa_debug {
    * @param array $variables
    * @param string $type
    */
-  static public function log_debug_high($message, array $variables = array(), $type = NULL) {
+  static public function log_high($message, array $variables = array(), $type = NULL) {
     if (self::is_debug_high()) {
       mediamosa::log($message, $variables, WATCHDOG_DEBUG, $type);
     }

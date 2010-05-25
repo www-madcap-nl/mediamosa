@@ -289,8 +289,10 @@ class mediamosa_asset_search {
       }
 
       $a_order_by = reset($a_result_cql2sql['a_order_by']);
+
       $order_by = $a_order_by[MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN];
       $order_direction = $a_order_by[MEDIAMOSA_CQL_CONTEXT_KEY_DIRECTION];
+      $order_type = $a_order_by[MEDIAMOSA_CQL_CONTEXT_KEY_TYPE];
       $order_table = $a_order_by[MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT];
       $order_prop_id = $a_order_by[MEDIAMOSA_CQL_CONTEXT_KEY_PROP_ID];
     }
@@ -323,6 +325,14 @@ class mediamosa_asset_search {
             '#table' => $order_table,
           )
         );
+
+        // We need to skip empty values
+        // We skip NULL values and empty strings with <> '' (tested).
+        // String types are special, we also need to skip empty '' here.
+        // We include the NULL and empty '' later again in fase 2.
+        if ($order_type == mediamosa_type::TYPE_STRING) {
+          $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][self::ORDER_BY] = 'sort.' . $order_by . " <> ''";
+        }
       }
 
       // 000_ will make me top join.
@@ -517,8 +527,8 @@ class mediamosa_asset_search {
 
     // Now create the query that will include all other results that are not included here
     // but only when a order by was present
-
-    if (isset($order_by) && $order_by != '') {
+    // If $calculate_total_count == FALSE, then skip this when we already have the limit full.
+    if (isset($order_by) && $order_by != '' && ($calculate_total_count || count($a_asset_ids) < $a_query[mediamosa_db_query::LIMIT])) {
 
       // The first part of the query got all assets that had values on its order by column. For example,
       // Not every asset has a title, so the assets without title will not be included in the 1st query.
@@ -532,6 +542,10 @@ class mediamosa_asset_search {
 
       // Remove the old order by from the query, no need to order NULLs.
       unset($a_query_null[mediamosa_db_query::A_ORDER_BY]);
+      unset($a_query_null[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][self::ORDER_BY]);
+
+      // Set where we sort on, include the NULL, skip the rest.
+      $a_query_null[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][self::ORDER_BY] = 'sort.' . $order_by . ' IS NULL';
 
       if ($order_prop_id) {
         $join = strtr(
@@ -541,6 +555,7 @@ class mediamosa_asset_search {
             '#prop_id' => intval($order_prop_id),
           )
         );
+
       }
       else {
         $join = strtr(
@@ -549,13 +564,17 @@ class mediamosa_asset_search {
             '#table' => $order_table,
           )
         );
+
+        // String types are special, we also need to include empty '' here.
+        if ($order_type == mediamosa_type::TYPE_STRING) {
+          // Set where we sort on, that is empty strings and NULL.
+          $a_query_null[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][self::ORDER_BY] = '(sort.' . $order_by . ' IS NULL OR sort.' . $order_by . " = '')";
+        }
       }
 
       // 000_ will make me top join.
       $a_query_null[mediamosa_db_query::A_JOIN] = array('sort' => $join) + (isset($a_query_null[mediamosa_db_query::A_JOIN]) ? $a_query_null[mediamosa_db_query::A_JOIN] : array());
 
-      // Set where we sort on.
-      $a_query_null[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][self::ORDER_BY] = 'sort.' . $order_by . ' IS NULL';
 
       // Correct the offset when inside the NULL range.
       if ($i_found_rows < $a_query[mediamosa_db_query::OFFSET]) {
@@ -572,7 +591,8 @@ class mediamosa_asset_search {
 
       // Create the query.
       $query = mediamosa_db_query::query_select($a_query_null, array(mediamosa_db_query::SQL_CALC_FOUND_ROWS => $calculate_total_count));
-      /*
+
+/*
        * @todo: fix hack here.
        *
       if (array_key_exists('data2', $db_url)) {
@@ -604,7 +624,7 @@ class mediamosa_asset_search {
     }
 
     // Set the total amount found.
-    $mediamosa->item_count_total = $i_found_rows;
+    $mediamosa->item_count_total = $calculate_total_count ? $i_found_rows : count($a_asset_ids);
 
     if ($return_asset_ids) {
       foreach ($a_asset_ids as $asset_id) {
@@ -614,10 +634,10 @@ class mediamosa_asset_search {
     else {
       $add_has_streamable_mediafiles = TRUE;
 
-      $a_items = mediamosa_asset::asset_collect($a_asset_ids, $a_app_ids, $aut_user_id, $granted, $a_aut_group_id, $aut_domain, $aut_realm, $is_app_admin, $show_stills, $show_collections, $add_has_streamable_mediafiles);
+      $items = mediamosa_asset::asset_collect($a_asset_ids, $a_app_ids, $aut_user_id, $granted, $a_aut_group_id, $aut_domain, $aut_realm, $is_app_admin, $show_stills, $show_collections, $add_has_streamable_mediafiles);
 
-      foreach ($a_items as $a_item) {
-        $mediamosa->add_item($a_item);
+      foreach ($items as $item) {
+        $mediamosa->add_item($item);
       }
     }
   }

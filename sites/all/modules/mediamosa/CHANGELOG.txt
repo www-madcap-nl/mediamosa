@@ -31,11 +31,31 @@ Steps for changelog and commits;
 
 START CHANGELOG:
 
+Mediamosa 2.1.2
+---------------
+- Renamed dummy titles of transcode profiles to their correct names. (See 
+  mediamosa ticket #282)
+- Fixed problem with changed date update on profiles (See ticket #276).
+
+
+Other changes (not ticket related)
+- Fixed problem retrieving user/$fav_user_id/favorites with /rest/$rest_id call.
+- Made core-hack patch on bootstrap.inc. Simpletests can not run on multiple 
+  servers because of filedate and fileinode tests on local file. 
+
 Mediamosa 2.1.1
 ---------------
 - Fixed asx not written or created (see MediaMosa ticket #188).
+- Fixed asset search not to calculate item_count_total when limit is set to 6
+  or lower (like in 1.7.x). Added 'calculate_total_count' flag to enable/disable
+  calculation of 'item_count_total'. Default of this flag is 'false' when limit 
+  is set to 6 or lower, 'true' when limit is higher than 6. (see MediaMosa 
+  ticket #288).
+- ACL master/slave fix. (see MediaMosa ticket #281).
+- Fixed error message quota limit reached (see MediaMosa ticket #207).
 
-Other changes (non-ticket related)
+
+Other changes (not ticket related)
 - Fixed problem with quota test, didn't throw exception when it was reached.
 - Added documentation information in the /rest restcall.
 - Changed type of order_by from ALPHANUM to ALPHANUM_UNDERSCORE
@@ -44,7 +64,19 @@ Other changes (non-ticket related)
   internal password).
 - Mutli typo fixed in comments (depricated to deprecated).
 - Fixed migration; transcode profiles where not migrated.
-
+- Changed the MediaMosa internal REST calls text on configure page to reflect
+  that these settings are only used for REST calls during the CRON like status
+  trigger and running the tests.
+- Rewrote the status page unittest running. Now runs in a queue system and runs
+  each test per minute (unless a test is still running).
+- Status page now show which test is currently being tested (if any).
+- Can now show the test data on each test that was run on the status page.
+- Tests are now devided into 3 groups; 30 minutes, 180 minutes and 1440 minutes.
+  The 180 minutes test group is empty atm.
+- You can now re-run any test on the status page by putting it into the test 
+  queue.
+- Config page now includes settings for the status page. Including the interval
+  lengths of the 3 tests groups.
 
 Mediamosa 2.1.0
 ---------------
@@ -94,7 +126,7 @@ Mediamosa 2.1.0
 - Fixed is_empty_asset flag bug when asset no longer has mediafiles. (See 
   MediaMosa ticket #166).
 
-Other changes (non-ticket related)
+Other changes (not ticket related)
 - Play proxy call will now return the ticket id in result.
 - Fixed number of query bugs in AUT / ACL code.
 - Fixed job server where 2 rows where inserted while only one was allowed.

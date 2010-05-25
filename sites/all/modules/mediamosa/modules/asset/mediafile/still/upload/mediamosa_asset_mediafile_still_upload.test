@@ -43,10 +43,10 @@ class MediaMosaAssetMediafileStillUploadTestCase extends MediaMosaTestCaseEga {
 
   public static function getInfo() {
     return array(
-      'name' => 'Upload Mediafile Still test',
+      'name' => 'Still - Upload test',
       'description' => 'Test upload of stills to an asset.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STILL,
-      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_10_MINUTES,
+      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES,
     );
   }
 

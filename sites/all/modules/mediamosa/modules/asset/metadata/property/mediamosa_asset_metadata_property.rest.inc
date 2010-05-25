@@ -64,7 +64,7 @@ class mediamosa_rest_call_asset_metadata_property_list extends mediamosa_rest_ca
     // Add order by stuff.
     $a_var_setup = self::get_var_setup_order_by(
       $a_var_setup,
-      '', // No default.
+      NULL, // No default.
       array(
         mediamosa_asset_metadata_property_db::ID,
         mediamosa_asset_metadata_property_db::NAME,

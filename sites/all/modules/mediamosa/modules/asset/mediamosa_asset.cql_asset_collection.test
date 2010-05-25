@@ -38,7 +38,7 @@ class MediaMosaAssetCollectionCQLTestCaseEga extends MediaMosaTestCaseEga {
       'name' => 'CQL - Asset and collection search and properties',
       'description' => 'Testing asset and collection CQL related functions and rest calls.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET_CQL,
-      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_10_MINUTES,
+      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES,
     );
   }
 

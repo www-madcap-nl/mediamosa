@@ -50,7 +50,7 @@ class mediamosa_job_server {
    * @param array $variables
    */
   static public function log_debug($message, array $variables = array()) {
-    mediamosa_debug::log_debug($message, $variables, 'job_server');
+    mediamosa_debug::log($message, $variables, 'job_server');
   }
 
   /**
@@ -60,7 +60,7 @@ class mediamosa_job_server {
    * @param array $variables
    */
   static public function log_debug_high($message, array $variables = array()) {
-    mediamosa_debug::log_debug_high($message, $variables, 'job_server');
+    mediamosa_debug::log_high($message, $variables, 'job_server');
   }
 
   /**

@@ -55,7 +55,7 @@ class mediamosa_rest_call_app_ident extends mediamosa_rest_call {
   }
 
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     // Get the dbus line.
     $dbus = $this->get_param_value(mediamosa_rest_call_app_ident::DBUS);
@@ -64,13 +64,13 @@ class mediamosa_rest_call_app_ident extends mediamosa_rest_call {
     $result = mediamosa_app_authentication::app_dbus_protocol($dbus);
 
     if (mediamosa_unicode::substr($result, 0, 5) != 'ERROR') {
-      $o_mediamosa->set_result(mediamosa_response::SUCCESS, mediamosa_error::ERRORCODE_OKAY, 'DBUS authentication protocol');
+      $mediamosa->set_result(mediamosa_response::SUCCESS, mediamosa_error::ERRORCODE_OKAY, 'DBUS authentication protocol');
     }
     else {
-      $o_mediamosa->set_result(mediamosa_response::ERROR, mediamosa_error::ERRORCODE_DBUS_PROTOCOL_ERROR, 'DBUS ' . $result);
+      $mediamosa->set_result(mediamosa_response::ERROR, mediamosa_error::ERRORCODE_DBUS_PROTOCOL_ERROR, 'DBUS ' . $result);
     }
 
-    $o_mediamosa->add_item(array('dbus' => $result));
+    $mediamosa->add_item(array('dbus' => $result));
   }
 }
 
@@ -93,12 +93,12 @@ class mediamosa_rest_call_check_cookie extends mediamosa_rest_call {
   }
 
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     // Output cookie.
-    $o_mediamosa->add_item($_COOKIE);
+    $mediamosa->add_item($_COOKIE);
 
     // Ok.
-    $o_mediamosa->set_result_okay();
+    $mediamosa->set_result_okay();
   }
 }

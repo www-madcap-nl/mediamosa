@@ -35,13 +35,13 @@
 function mediamosa_maintenance_status_cron() {
 
   $start = time();
-  mediamosa_debug::log_debug('mediamosa_maintenance_status_cron started.', array(), 'maintenance_status');
+  mediamosa_debug::log('mediamosa_maintenance_status_cron started.', array(), 'maintenance_status');
 
   // Trigger unittest run.
   mediamosa_maintenance_status::trigger_maintenance_status();
 
   // Log it.
-  mediamosa_debug::log_debug('mediamosa_maintenance_status_cron ended: @secs', array('@sec' => time() - $start), 'maintenance_status');
+  mediamosa_debug::log('mediamosa_maintenance_status_cron ended: @secs', array('@sec' => time() - $start), 'maintenance_status');
 }
 
 function mediamosa_maintenance_status_mediamosa_register_rest_call_doc() {
@@ -93,6 +93,77 @@ function mediamosa_maintenance_status_mediamosa_register_rest_call() {
     mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
   );
 
+  $a_rest_calls['status/run'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_status_run',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Execute the given unit test and return its result.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_1_1,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY,
+  );
+
+  // @FIXME: remove me!
+  $a_rest_calls['status/run'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_status_run',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Execute the given unit test and return its result.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_1_1,
+  );
 
   return $a_rest_calls;
+}
+
+/**
+ * Implements the hook_mediamosa_configuration_collect()
+ */
+function mediamosa_maintenance_status_mediamosa_configuration_collect() {
+  $form['settings_status'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Status page'),
+    '#description' => t('The status page show vital information about your MediaMosa installation.'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  $form['settings_status']['mediamosa_status_timeout_tests'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Timeout test run'),
+    '#description' => t('The amount of seconds a new run for a test will wait before a test can be run again; if a test is taking longer than given value in seconds, then the test is considered failed and the next test will be started. Default is 360 seconds. Increase if your server is slow.'),
+    '#required' => TRUE,
+    '#default_value' => mediamosa_maintenance_status::timeout_test_run(),
+  );
+
+  $form['settings_status']['mediamosa_status_minutes_tests_fast'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Timeout test run - halve hour'),
+    '#description' => t('The interval in minutes the fast tests are run, default @interval minutes. 0 = Off.', array('@interval' => mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_FAST)),
+    '#required' => TRUE,
+    '#default_value' => mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_FAST,
+  );
+
+  $form['settings_status']['mediamosa_status_minutes_tests_normal'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Timeout test run - 3 hours'),
+    '#description' => t('The interval in minutes the normal tests are run, default @interval minutes. 0 = Off.', array('@interval' => mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_NORMAL)),
+    '#required' => TRUE,
+    '#default_value' => mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_NORMAL,
+  );
+
+  $form['settings_status']['mediamosa_status_minutes_tests_slow'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Timeout test run - daily'),
+    '#description' => t('The interval in minutes the slow (daily) tests are run, default @interval minutes. 0 = Off.', array('@interval' => mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_SLOW)),
+    '#required' => TRUE,
+    '#default_value' => mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_SLOW,
+  );
+
+  $form['settings_status']['mediamosa_status_run_tests'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Run tests master switch'),
+    '#description' => t('Enable or disable running of tests on the background.'),
+    '#default_value' => TRUE,
+  );
+
+  return $form;
 }

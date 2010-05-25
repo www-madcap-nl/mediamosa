@@ -32,13 +32,13 @@
 // So we load the MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE define.
 class_exists('MediaMosaTestCase');
 
-class MediaMosaCookieDomain extends DrupalWebTestCase {
+class MediaMosaCookieDomain extends MediaMosaTestCase {
   // ------------------------------------------------------------------ Members.
 
   // ------------------------------------------------------------------ Functions.
   static public function getInfo() {
     return array(
-      'name' => 'MediaMosa Cookie Domain Core Fix.',
+      'name' => 'MediaMosa - Cookie Domain Core Fix.',
       'description' => 'Fixing the problem with storing the cookie on the main domain, instead of some subdomains.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE,
     );

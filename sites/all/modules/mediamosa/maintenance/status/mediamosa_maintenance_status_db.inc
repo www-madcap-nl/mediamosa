@@ -24,33 +24,17 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
- /**
-  * @file
-  * Upload test of files (videos / stills).
-  */
-
 /**
-  * @file
-  * Unittests for upload.
-  */
-class MediaMosaAssetMediafileUploadTestCaseEga extends MediaMosaTestCaseEga {
+ * @file
+ * App database class object.
+ */
+class mediamosa_maintenance_status_db {
+  // ------------------------------------------------------------------ Consts.
+  // Table name;
+  const TABLE_NAME = 'mediamosa_maintenance_status';
 
-  // ------------------------------------------------------------------ Members.
-
-  // ----------------------------------------------------------------- Functions.
-  public static function getInfo() {
-    return array(
-      'name' => 'Mediafile - upload test',
-      'description' => 'Test uploading of files (videos).',
-      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_ASSET_MEDIAFILE,
-      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES,
-    );
-  }
-
-  // -------------------------------------------------------------------- Tests.
-  function testTicket504() {
-    // Code moved to lower class so we can use it in other tests that need
-    // uploaded test file.
-    $this->uploadTestFile();
-  }
+  // Database fields;
+  const NAME = 'name';
+  const NAME_LENGTH = 255;
+  const VALUE = 'value';
 }

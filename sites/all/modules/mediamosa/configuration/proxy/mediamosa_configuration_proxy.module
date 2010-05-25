@@ -37,6 +37,7 @@ function mediamosa_configuration_proxy_mediamosa_configuration_collect() {
     '#type' => 'fieldset',
     '#title' => t('Proxy settings'),
     '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
   );
 
   $form['settings_proxy']['mediamosa_curlproxy_http'] = array(

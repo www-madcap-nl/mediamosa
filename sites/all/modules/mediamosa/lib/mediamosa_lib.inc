@@ -202,4 +202,32 @@ class mediamosa_lib {
   static public function l_collection($coll_id, $text) {
     return l($text, mediamosa_settings::get_url_collection($coll_id));
   }
+
+  /**
+   * Adds English ordinal suffix to numbers.
+   * @param integer $value
+   */
+  static public function ordinal($value) {
+
+    if ($value % 100 > 10 && $value % 100 < 14) {
+      return $value . 'th';
+    }
+
+    switch ($value % 10) {
+      case 0:
+        return $value . 'th';
+
+      case 1:
+        return $value . 'st';
+
+      case 2:
+        return $value . 'nd';
+
+      case 3:
+        return $value . 'rd';
+    }
+
+    // Anything else ends with 'th'.
+    return $value . 'th';
+  }
 }

@@ -31,9 +31,10 @@
 
  class mediamosa_maintenance_status {
   // ------------------------------------------------------------------ Consts.
-  const RUNPHASE_WAITING = 0;
-  const RUNPHASE_STARTED = 1; // If we find the test in this mode, the test was still running when the script timed-out.
-  const RUNPHASE_COMPLETED = 2;
+  const RUNPHASE_TIMED_OUT = 'timed-out';
+  const RUNPHASE_STARTED = 'started';
+  const RUNPHASE_FAILED = 'failed';
+  const RUNPHASE_COMPLETED = 'completed';
 
   // ------------------------------------------------------------------ Static Functions.
   /**
@@ -48,6 +49,15 @@
   }
 
   /**
+   * Return the amount of seconds before a test may run again if the same test
+   * is still in running mode.
+   */
+  static public function timeout_test_run() {
+    // Default is 3 minutes before we consider test timed-out.
+    return variable_get('mediamosa_status_timeout_tests', 360);
+  }
+
+  /**
    * Return a array with the class of the tests
    * we wish to run. If modules are not enabled and
    * there for their class is not loaded, we will need
@@ -55,19 +65,22 @@
    */
   static public function get_default_tests() {
     $simpletests = array(
-      mediamosa_settings::MEDIAMOSA_RUN_10_MINUTES => array(),
+      mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES => array(),
       mediamosa_settings::MEDIAMOSA_RUN_3_HOURS => array(),
       mediamosa_settings::MEDIAMOSA_RUN_DAILY => array(),
     );
 
     $groups = simpletest_test_get_all();
+
     foreach ($groups as $group => $tests) {
       if (drupal_strtolower(drupal_substr($group, 0, strlen('mediamosa'))) != 'mediamosa') {
         continue;
       }
 
       foreach ($tests as $class => $test) {
+        // Not set? Then run it daily.
         if (!isset($test[mediamosa_settings::MEDIAMOSA_RUN])) {
+          $simpletests[mediamosa_settings::MEDIAMOSA_RUN_DAILY][$class] = $test;
           continue;
         }
 
@@ -79,21 +92,19 @@
   }
 
   /**
-   * returns the interval for cron in seconds.
-   * defaults to 600 (10 minutes).
-   */
-  static public function get_interval() {
-    return 15*60;
-  }
-
-  /**
-   * Returns TRUE / FALSE if we may run the tests again.
+   * Returns TRUE / FALSE if we can run a test from the queue.
    */
   static public function may_run() {
-    $run_last = variable_get('mediamosa_maintenance_status_cron_last', NULL);
+    // Variable is set by the REST call that is running the test.
+    $run_last = variable_get('mediamosa_status_timeout_tests_running', NULL);
 
     // may run?
-    if (round(REQUEST_TIME - $run_last) < self::get_interval()) {
+    if (round(REQUEST_TIME - $run_last['started']) < (self::timeout_test_run() + 60)) { // extra 60 seconds.
+      return FALSE;
+    }
+
+    // Master switch.
+    if (!variable_get('mediamosa_status_run_tests', TRUE)) {
       return FALSE;
     }
 
@@ -120,18 +131,112 @@
   }
 
   /**
+   * Retrieve the test results.
+   */
+  static function get_test_results(array $value = NULL) {
+    static $test_results = NULL;
+
+    if (isset($value)) {
+      $test_results = $value;
+
+      // Store value (master-slave safe).
+      mediamosa_db::db_query('INSERT INTO {#mediamosa_maintenance_status} SET #value = :value, #name = :name ON DUPLICATE KEY UPDATE #value = :value',
+        array(
+          '#mediamosa_maintenance_status' => mediamosa_maintenance_status_db::TABLE_NAME,
+          '#value' => mediamosa_maintenance_status_db::VALUE,
+          ':value' => serialize($test_results),
+          '#name' => mediamosa_maintenance_status_db::NAME,
+          ':name' => 'test_results',
+        )
+      );
+    }
+
+    if (!isset($test_results)) {
+      $test_results = db_select(mediamosa_maintenance_status_db::TABLE_NAME, 'mms')
+        ->fields('mms', array(mediamosa_maintenance_status_db::VALUE))
+        ->condition(mediamosa_maintenance_status_db::NAME, 'test_results')
+        ->execute()
+        ->fetchField();
+
+      if ($test_results) {
+        $test_results = unserialize($test_results);
+      }
+      else {
+        $test_results = NULL;
+      }
+    }
+
+    return $test_results;
+  }
+
+  /**
+   * Set the test results.
+   */
+  static function set_test_results(array $value) {
+    self::get_test_results($value);
+  }
+
+  /**
    * Staticly store the results.
    *
    * @param array $value
    */
-  static function test_results(array $a_value = NULL) {
+  static function test_results(array $value = NULL) {
     $test_results = &drupal_static(__FUNCTION__);
 
-    if ($a_value) {
-      $test_results = $a_value;
+    if ($value) {
+      $test_results = $value;
     }
 
     return $test_results;
+  }
+
+  /**
+   * Fill the queue with tests.
+   */
+  static public function fill_queue() {
+
+    // Get the current queue.
+    $queue = variable_get('mediamosa_maintenance_status_queue', array());
+
+    $runs = array(
+      mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES => variable_get('mediamosa_status_minutes_tests_fast', mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_FAST),
+      mediamosa_settings::MEDIAMOSA_RUN_3_HOURS => variable_get('mediamosa_status_minutes_tests_normal', mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_NORMAL),
+      mediamosa_settings::MEDIAMOSA_RUN_DAILY => variable_get('mediamosa_status_minutes_tests_slow', mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_SLOW),
+    );
+
+    // Get the tests.
+    $default_tests = self::get_default_tests();
+
+    // Now find the test and add to queue (if not already).
+    foreach ($runs as $run => $minutes) {
+
+      // Seed?
+      if ($minutes < 1) {
+        continue; // seeding turned off.
+      }
+
+      // Get the last run of this type.
+      $run_last = variable_get($run, NULL);
+
+      // Check if we can seed the queue for this type.
+      if (round(REQUEST_TIME - $run_last) < $minutes * 60) {
+        continue;
+      }
+
+      // Set time.
+      mediamosa::variable_set($run, REQUEST_TIME);
+
+      // Seed them.
+      foreach ($default_tests[$run] as $class_name => $info) {
+        if (!in_array($class_name, $queue)) {
+          $queue[] = $class_name;
+        }
+      }
+    }
+
+    // Set the queue.
+    variable_set('mediamosa_maintenance_status_queue', $queue);
   }
 
   /**
@@ -139,123 +244,142 @@
    */
   static public function run_simple_tests() {
 
-    mediamosa_debug::log_debug('run_simple_tests() started.');
-
-    // Prevent us running twice and make sure we are enabled.
+    // We are still running something (or we are switched off).
     if (!self::may_run()) {
-      mediamosa_debug::log_debug('run_simple_tests() not yet.');
       return;
     }
 
-    // 10 min ones.
-    $mediamosa_run = mediamosa_settings::MEDIAMOSA_RUN_10_MINUTES;
+    // Get the current queue.
+    $queue = variable_get('mediamosa_maintenance_status_queue', array());
 
-    mediamosa_debug::log_debug('run_simple_tests() running.');
+    // Get the next test.
+    $queued_class_name = array_shift($queue);
 
-    // Set time when we started, so we aren't twice.
-    mediamosa::variable_set('mediamosa_maintenance_status_cron_last', REQUEST_TIME);
+    // No tests?
+    if (!$queued_class_name) {
+      return;
+    }
 
-    // Because we don't know how long these tests run, we will set the time-out
-    // of the script to the length of the interval of the cron.
-    set_time_limit(self::get_interval() - 1);
+    // Set the queue.
+    variable_set('mediamosa_maintenance_status_queue', $queue);
 
-    // Where to store the results.
-    $a_test_results = array('tests' => array());
+    // Now run the test we found in the queue.
+    $runs = array(
+      mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES,
+      mediamosa_settings::MEDIAMOSA_RUN_3_HOURS,
+      mediamosa_settings::MEDIAMOSA_RUN_DAILY,
+    );
 
-    // Create the tests first so we can store the names etc.
-    $a_tests = array();
+    // Get test results.
+    $test_results = self::get_test_results();
 
+    // Put started to timed-out.
+    $save_again = FALSE;
+    foreach ($runs as $run) {
+      if (isset($test_results['tests'][$run])) {
+        foreach ($test_results['tests'][$run] as $class_name => $info) {
+          if ($info['runphase'] == self::RUNPHASE_STARTED) {
+            $test_results['tests'][$run][$class_name] = array('runphase' => self::RUNPHASE_TIMED_OUT, 'results' => array(), 'info' => $info);
+            $save_again = TRUE;
+          }
+        }
+      }
+    }
+
+    // Any changes?
+    if ($save_again) {
+      mediamosa_maintenance_status::set_test_results($test_results);
+    }
+
+    // Get the tests.
     $default_tests = self::get_default_tests();
 
-    foreach ($default_tests[$mediamosa_run] as $class_name => $info) {
-      if (!mediamosa::autoload_class($class_name)) {
-        // log that we cant find the test.
-        self::log("Warning; can't run simpletest on class '@class', unable to load class, either typo in name or module not enabled!", array('@class' => $class_name));
-        continue;
+    $run_test = FALSE;
+    foreach ($runs as $run) {
+      foreach ($default_tests[$run] as $class_name => $info) {
+        if ($queued_class_name != $class_name) {
+          continue;
+        }
+
+        // Indicate we have run a test.
+        $run_test = TRUE;
+
+        // Run test. Dont care if it fails, this will be registered.
+        self::run_simple_test($run, $class_name, $info);
       }
 
-      // Now create and add.
-      $test_id = db_insert('simpletest_test_id')
-        ->useDefaults(array('test_id'))
-        ->execute();
-
-      // Create.
-      $a_tests[$class_name] = new $class_name($test_id);
-
-      // Add to run list and result.
-      $a_test_results[$mediamosa_run][$class_name] = array('info' => $a_tests[$class_name]->getInfo(), 'runphase' => self::RUNPHASE_WAITING, 'results' => array());
+      if ($run_test) {
+        break;
+      }
     }
-
-    // Set start point run of all tests.
-    $a_test_results['#started_at'] = mediamosa::utc_current_timestamp_now(TRUE);
-    $a_test_results['#completed'] = FALSE;
-
-    // Store the unrun stuff in our static.
-    self::test_results($a_test_results);
-
-    // Set the shutdown function so we can see tests that still where not completed.
-    register_shutdown_function('mediamosa_maintenance_status::shutdown');
-
-    // Now loop through the tests and store the results.
-    foreach ($a_tests as $class_name => $simpletest_class) {
-      $a_test_results[$mediamosa_run][$class_name]['runphase'] = self::RUNPHASE_STARTED;
-
-      // Ok Run.
-      $start = microtime(TRUE);
-      $simpletest_class->run();
-      $end = microtime(TRUE);
-
-      // Store results.
-      $a_test_results[$mediamosa_run][$class_name]['results'] = $simpletest_class->results;
-      $a_test_results[$mediamosa_run][$class_name]['started'] = $start;
-      $a_test_results[$mediamosa_run][$class_name]['ended'] = $end;
-
-      // Set to completed.
-      $a_test_results[$mediamosa_run][$class_name]['runphase'] = self::RUNPHASE_COMPLETED;
-
-      // Store in static.
-      self::test_results($a_test_results);
-
-      // Unset so we might free some memory.
-      unset($a_tests[$class_name]);
-      unset($simpletest_class);
-
-      mediamosa_debug::log_debug('Peak usage after unit test @test; @peak.', array('@test' => $class_name, '@peak' => memory_get_peak_usage()), 'memory');
-    }
-
-    // Set end point run of all tests.
-    $a_test_results['#ended_at'] = mediamosa::utc_current_timestamp_now(TRUE);
-    $a_test_results['#completed'] = TRUE;
-
-    // Store in static also.
-    self::test_results($a_test_results);
-
-    // Now store in variable.
-    mediamosa::variable_set('mediamosa_test_results', $a_test_results);
-
-    // Done.
-    mediamosa_debug::log_debug('run_simple_tests() ended.');
   }
 
   /**
-   * Triggered when end of script or timed-out so er still
-   * have some results.
+   * Run the test.
+   * @param string $class_name
+   * @param array $info
    */
-  static public function shutdown() {
-    $a_test_results = self::test_results();
+  static public function run_simple_test($run, $class_name, array $info) {
 
-    if (isset($a_test_results['#ended_at'])) {
-      return; // no need.
+    // log start.
+    mediamosa_debug::log_high('Starting unit test @class_name.', array('@class_name' => $class_name));
+
+    // Call REST call.
+    $options = array(
+      'data' => array(
+        'class_name' => $class_name,
+      ),
+      'method' => 'POST',
+      'timeout' => self::timeout_test_run(),
+    );
+
+    // Make sure we wait long enough.
+    if (self::timeout_test_run() > 0) {
+      set_time_limit(self::timeout_test_run() + 5);
     }
 
-    // Log it.
-    self::log('run_simple_tests() overrun.', array(), WATCHDOG_EMERGENCY);
+    // Get test results.
+    $test_results = self::get_test_results();
 
-    // Set end point run of runned tests.
-    $a_test_results['#ended_at'] = mediamosa::utc_current_timestamp_now(TRUE);
+    if (isset($test_results['tests'][$run][$class_name])) {
+      $test_results['tests'][$run][$class_name]['runphase'] = self::RUNPHASE_STARTED;
+    }
+    else {
+      $test_results['tests'][$run][$class_name] = array('runphase' => self::RUNPHASE_STARTED, 'results' => array(), 'info' => $info);
+    }
+
+    // Now store started status in variable.
+    mediamosa_maintenance_status::set_test_results($test_results);
+
+    // Do the call.
+    $start = microtime(TRUE);
+    $response = mediamosa_http::do_internal_call_cron('internal/status/run', false, $options);
+    $end = microtime(TRUE);
+    try {
+      $response->xml = new SimpleXMLElement($response->data);
+    }
+    catch (Exception $e) {
+      mediamosa::log_export($response->data);
+    }
+
+    if (isset($response->xml) && isset($response->xml->header) && $response->xml->header->request_result_id == mediamosa_error::ERRORCODE_OKAY) {
+      // As array is easier.
+      $response = mediamosa_lib::responsexml2array($response->xml);
+      $item = reset($response['items']['item']);
+
+      // Add to run list and result.
+      $test_results['tests'][$run][$class_name] = array('runphase' => self::RUNPHASE_COMPLETED, 'results' => $item['results'], 'assertions' => $item['assertions'], 'info' => $info, 'started' => $start, 'ended' => $end);
+    }
+    else {
+      // Failed.
+      $test_results['tests'][$run][$class_name] = array('runphase' => self::RUNPHASE_FAILED, 'results' => array(), 'info' => $info, 'started' => $start, 'ended' => $end);
+    }
 
     // Now store in variable.
-    mediamosa::variable_set('mediamosa_test_results', $a_test_results);
+    mediamosa_maintenance_status::set_test_results($test_results);
+
+    // log start.
+    mediamosa_debug::log_high('Ended unit test @class_name.', array('@class_name' => $class_name));
   }
 
   /**
@@ -267,6 +391,6 @@
   static public function trigger_maintenance_status() {
 
     // Trigger.
-    mediamosa_http::do_head_call_cron('/internal/cron/maintenance_status');
+    mediamosa_http::do_internal_call_cron('internal/cron/maintenance_status', true);
   }
 }

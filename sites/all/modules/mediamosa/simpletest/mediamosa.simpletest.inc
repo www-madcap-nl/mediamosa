@@ -44,6 +44,7 @@ define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_COLLECTION', 'MediaMosa Collections'
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_FTP_USER', 'MediaMosa FTP User');
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_JOB', 'MediaMosa Jobs');
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_PLAYPROXY', 'MediaMosa PlayProxy');
+define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_SIMPLETEST', 'MediaMosa Simpletest Parents');
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STATISTICS', 'MediaMosa Statistics');
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STILL', 'MediaMosa Stills');
 define('MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STORAGE', 'MediaMosa Storage');
@@ -79,6 +80,34 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     // Detect test classes that have been added, renamed or deleted.
     registry_rebuild();
     cache_clear_all('simpletest', 'cache');
+  }
+
+
+  /**
+   * Because run() can create unused tables.
+   */
+  public function runSafe() {
+    try {
+      session_regenerate_id(FALSE);
+
+      $this->run();
+    }
+    catch (Exception $e) {
+      // Do tearDown first, so we are in the right db again.
+      $this->tearDown();
+
+      mediamosa::log(
+        'runSafe caught exception! @message (Exception thrown on line @line, in @file)<br />Partial backtrace: <pre>@backtrace</pre>',
+        array(
+          '@message' => $e->getMessage(),
+          '@line' => $e->getLine(),
+          '@file' => $e->getFile(),
+          '@backtrace' => $e->getTraceAsString(),
+        )
+      );
+
+      throw $e;
+    }
   }
 
   // ------------------------------------------------------------------ Functions (protected)
@@ -171,6 +200,13 @@ class MediaMosaTestCase extends DrupalWebTestCase {
 
     // Call parent.
     parent::tearDown();
+  }
+
+  /**
+   * Return my assertions.
+   */
+  public function get_assertions() {
+    return $this->assertions;
   }
 
   /**

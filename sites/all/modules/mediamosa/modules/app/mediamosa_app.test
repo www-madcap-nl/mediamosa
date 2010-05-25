@@ -42,7 +42,7 @@ class MediaMosaAppTestCaseEga extends MediaMosaTestCaseEga {
   // ------------------------------------------------------------------ Functions.
   public static function getInfo() {
     return array(
-      'name' => 'Application tests',
+      'name' => 'APP - common tests',
       'description' => 'The application related unit tests.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_APP,
     );

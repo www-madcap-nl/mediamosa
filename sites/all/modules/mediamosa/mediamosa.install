@@ -187,3 +187,17 @@ function mediamosa_update_7000() {
   );
 }
 
+/**
+ * Create new errorcode in database.
+ */
+function mediamosa_update_7001() {
+
+  db_insert(mediamosa_error_db::TABLE_NAME)
+    ->fields(array(
+      mediamosa_error_db::NAME =>'ERRORCODE_TEST_RUNNING',
+      mediamosa_error_db::MESSAGE => 'Timeout: test "@test" is currently running.',
+      mediamosa_error_db::CODE => mediamosa_error::ERRORCODE_TEST_RUNNING,
+    ))
+  ->execute();
+
+}

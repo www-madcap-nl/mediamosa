@@ -38,9 +38,9 @@ class MediaMosaUserFavoriteTestCaseEga extends MediaMosaTestCaseEga {
 
   public static function getInfo() {
     return array(
-      'name' => 'User Favorites',
+      'name' => 'User/Group - favorites',
       'description' => 'Test user favorites rest calls.',
-      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE,
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_USER,
     );
   }
 
