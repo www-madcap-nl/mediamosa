@@ -361,7 +361,7 @@
     }
 
     // Now store started status in variable.
-    mediamosa_maintenance_status::set_test_results($run, $class_name, $test_results);
+    mediamosa_maintenance_status::set_test_results($run, $class_name, $test_results[$run][$class_name]);
 
     // Do the call.
     $start = microtime(TRUE);
