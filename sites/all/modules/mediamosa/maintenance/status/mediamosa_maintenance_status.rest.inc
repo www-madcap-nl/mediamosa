@@ -78,7 +78,6 @@ class mediamosa_rest_call_status extends mediamosa_rest_call {
 
     // Fill the output.
     $test_results = mediamosa_maintenance_status::get_test_results();
-    $test_results = $test_results['tests'];
 
     // For now, return the 10 minutes ones.
     if (isset($test_results[mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES])) {

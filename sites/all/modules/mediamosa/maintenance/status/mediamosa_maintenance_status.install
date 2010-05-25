@@ -73,3 +73,15 @@ function mediamosa_maintenance_status_schema() {
 
   return $schema;
 }
+
+/**
+ * Remove the old status array.
+ */
+function mediamosa_maintenance_status_update_7000() {
+  db_query("DELETE FROM {mediamosa_maintenance_status} WHERE name = 'test_results'");
+
+  // ok reset.
+  variable_del(mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES);
+  variable_del(mediamosa_settings::MEDIAMOSA_RUN_3_HOURS);
+  variable_del(mediamosa_settings::MEDIAMOSA_RUN_DAILY);
+}

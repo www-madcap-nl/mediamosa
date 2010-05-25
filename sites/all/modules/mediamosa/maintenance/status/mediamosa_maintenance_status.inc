@@ -149,36 +149,38 @@
   /**
    * Retrieve the test results.
    */
-  static function get_test_results(array $value = NULL) {
+  static function get_test_results($name = NULL, array $value = NULL) {
     static $test_results = NULL;
 
     if (isset($value)) {
-      $test_results = $value;
+      list($run, $class_name) = explode('|', $name, 2);
+      $test_results[$run][$class_name] = $value;
 
       // Store value (master-slave safe).
       mediamosa_db::db_query('INSERT INTO {#mediamosa_maintenance_status} SET #value = :value, #name = :name ON DUPLICATE KEY UPDATE #value = :value',
         array(
           '#mediamosa_maintenance_status' => mediamosa_maintenance_status_db::TABLE_NAME,
           '#value' => mediamosa_maintenance_status_db::VALUE,
-          ':value' => serialize($test_results),
+          ':value' => serialize($value),
           '#name' => mediamosa_maintenance_status_db::NAME,
-          ':name' => 'test_results',
+          ':name' => $name,
         )
       );
     }
 
     if (!isset($test_results)) {
-      $test_results = db_select(mediamosa_maintenance_status_db::TABLE_NAME, 'mms')
-        ->fields('mms', array(mediamosa_maintenance_status_db::VALUE))
-        ->condition(mediamosa_maintenance_status_db::NAME, 'test_results')
-        ->execute()
-        ->fetchField();
+      $result = mediamosa_db::db_select(mediamosa_maintenance_status_db::TABLE_NAME, 'mms')
+        ->fields('mms')
+        ->execute();
 
-      if ($test_results) {
-        $test_results = unserialize($test_results);
-      }
-      else {
-        $test_results = NULL;
+      $test_results = NULL;
+      foreach ($result as $row) {
+        if (strpos($row[mediamosa_maintenance_status_db::NAME], '|') === FALSE) {
+          continue;
+        }
+
+        list($run, $class_name) = explode('|', $row[mediamosa_maintenance_status_db::NAME], 2);
+        $test_results[$run][$class_name] = unserialize($row[mediamosa_maintenance_status_db::VALUE]);
       }
     }
 
@@ -188,8 +190,8 @@
   /**
    * Set the test results.
    */
-  static function set_test_results(array $value) {
-    self::get_test_results($value);
+  static function set_test_results($run, $class_name, array $value) {
+    self::get_test_results($run . '|' . $class_name, $value);
   }
 
   /**
@@ -290,21 +292,15 @@
     $test_results = self::get_test_results();
 
     // Put started to timed-out.
-    $save_again = FALSE;
     foreach ($runs as $run) {
-      if (isset($test_results['tests'][$run])) {
-        foreach ($test_results['tests'][$run] as $class_name => $info) {
+      if (isset($test_results[$run])) {
+        foreach ($test_results[$run] as $class_name => $info) {
           if ($info['runphase'] == self::RUNPHASE_STARTED) {
-            $test_results['tests'][$run][$class_name] = array('runphase' => self::RUNPHASE_TIMED_OUT, 'results' => array(), 'info' => $info);
-            $save_again = TRUE;
+            $test_results[$run][$class_name] = array('runphase' => self::RUNPHASE_TIMED_OUT, 'results' => array(), 'info' => $info);
+            mediamosa_maintenance_status::set_test_results($run, $class_name, $test_results);
           }
         }
       }
-    }
-
-    // Any changes?
-    if ($save_again) {
-      mediamosa_maintenance_status::set_test_results($test_results);
     }
 
     // Get the tests.
@@ -357,15 +353,15 @@
     // Get test results.
     $test_results = self::get_test_results();
 
-    if (isset($test_results['tests'][$run][$class_name])) {
-      $test_results['tests'][$run][$class_name]['runphase'] = self::RUNPHASE_STARTED;
+    if (isset($test_results[$run][$class_name])) {
+      $test_results[$run][$class_name]['runphase'] = self::RUNPHASE_STARTED;
     }
     else {
-      $test_results['tests'][$run][$class_name] = array('runphase' => self::RUNPHASE_STARTED, 'results' => array(), 'info' => $info);
+      $test_results[$run][$class_name] = array('runphase' => self::RUNPHASE_STARTED, 'results' => array(), 'info' => $info);
     }
 
     // Now store started status in variable.
-    mediamosa_maintenance_status::set_test_results($test_results);
+    mediamosa_maintenance_status::set_test_results($run, $class_name, $test_results);
 
     // Do the call.
     $start = microtime(TRUE);
@@ -384,15 +380,15 @@
       $item = reset($response['items']['item']);
 
       // Add to run list and result.
-      $test_results['tests'][$run][$class_name] = array('runphase' => self::RUNPHASE_COMPLETED, 'results' => $item['results'], 'assertions' => $item['assertions'], 'info' => $info, 'started' => $start, 'ended' => $end);
+      $test_results[$run][$class_name] = array('runphase' => self::RUNPHASE_COMPLETED, 'results' => $item['results'], 'assertions' => $item['assertions'], 'info' => $info, 'started' => $start, 'ended' => $end);
     }
     else {
       // Failed.
-      $test_results['tests'][$run][$class_name] = array('runphase' => self::RUNPHASE_FAILED, 'results' => array(), 'info' => $info, 'started' => $start, 'ended' => $end);
+      $test_results[$run][$class_name] = array('runphase' => self::RUNPHASE_FAILED, 'results' => array(), 'info' => $info, 'started' => $start, 'ended' => $end);
     }
 
     // Now store in variable.
-    mediamosa_maintenance_status::set_test_results($test_results);
+    mediamosa_maintenance_status::set_test_results($run, $class_name, $test_results[$run][$class_name]);
 
     // log start.
     mediamosa_debug::log_high('Ended unit test @class_name.', array('@class_name' => $class_name));
