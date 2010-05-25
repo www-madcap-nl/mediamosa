@@ -34,6 +34,17 @@ $databases['default']['default'] = array(
   'host' => 'localhost'
 );
 
+// Optional simpletest MediaMosa database.
+/*
+$databases['mediamosa_simpletest']['default'] = array(
+  'driver' => 'mysql',
+  'database' => 'mediamosa_simpletest',
+  'username' => 'memo',
+  'password' => 'memo',
+  'host' => 'localhost'
+);
+*/
+
 /**
  * The following settings you can use when migration 1.7.x MediaMosa databases
  * to the new MediaMosa.x database.
