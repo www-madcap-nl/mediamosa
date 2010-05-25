@@ -42,6 +42,8 @@ Other changes (not ticket related)
 - Fixed problem retrieving user/$fav_user_id/favorites with /rest/$rest_id call.
 - Made core-hack patch on bootstrap.inc. Simpletests can not run on multiple 
   servers because of filedate and fileinode tests on local file. 
+- Made fix on simpletest to run on own database (when configured) so it 
+  generate less binlog on mysql.
 
 Mediamosa 2.1.1
 ---------------
