@@ -172,6 +172,7 @@ function mediamosa_transcode_profile_view($node, $view_mode = 'full') {
   // Default parameters.
   $rows = array(
     array(t('Title'), check_plain($node->title)),
+    array(t('Transcode profile id'), check_plain($node->transcode_profile_id)),
     array(t('Application'), isset($apps[$node->app_id]) ? $apps[$node->app_id] : 'Unknown or deleted application'),
     array(t('Tool'), $node->tool),
     array(t('File extension'), $node->file_extension),
@@ -219,6 +220,12 @@ function mediamosa_transcode_profile_form($node, $form_state) {
 
   // Get the apps for the drop down listing.
   $apps = _mediamosa_get_apps();
+
+  $form['required']['transcode_profile_id'] = array(
+    '#title' => t('Transcode profile id'),
+    '#type' => 'item',
+    '#markup' => $node->transcode_profile_id,
+  );
 
   $form['required'][mediamosa_transcode_profile_db::APP_ID] = array(
     '#title' => t('Application'),
