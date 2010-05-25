@@ -509,7 +509,20 @@ class mediamosa_type {
   static public function cast_timestamp($mixed_param_value, $param, $param_type = mediamosa_type::TYPE_DATETIME) {
     $iso8601 = '#^(\d{4}((-)?(0[1-9]|1[0-2])((-)?(0[1-9]|[1-2][0-9]|3[0-1])((T| )(24:00(:00(\.[0]+)?)?|(([0-1][0-9]|2[0-3])(:)[0-5][0-9])((:)[0-5][0-9](\.[\d]+)?)?)((\+|-)(14:00|(0[0-9]|1[0-3])(:)[0-5][0-9])|(|Z)))?)?)?)$#';
     if (!preg_match($iso8601, $mixed_param_value)) {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
+
+      // Let's try the old style: mm/dd/yyyy
+      if (!preg_match('/^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$/', $mixed_param_value)) {
+
+        // This is not ISO 8601 and not the old style...
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
+
+      }
+      else {
+        // Old style to ISO 8601 converter.
+        $a_old_date = explode('/', $mixed_param_value);
+        $mixed_param_value = $a_old_date[2] . '-' . $a_old_date[0] . '-' . $a_old_date[1];
+      }
+
     }
 
     $a_value = split("[-:T ]", $mixed_param_value);
@@ -518,7 +531,7 @@ class mediamosa_type {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
     }
 
-    $a_value[0] = (int)$a_value[0];
+    $a_value[0] = (int)$a_value[0];// YYYY
     $a_value[1] = isset($a_value[1]) && $a_value[1] > 0 ? (int)$a_value[1] : 1;// MM
     $a_value[2] = isset($a_value[2]) && $a_value[2] > 0 ? (int)$a_value[2] : 1;// DD
     $a_value[3] = isset($a_value[3]) ? (int)$a_value[3] : 0;// HH
