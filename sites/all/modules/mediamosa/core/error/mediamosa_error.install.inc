@@ -46,7 +46,7 @@ function _mediamosa_error_install() {
 
     'HTTP_UNAUTHORIZED' => '',
     'HTTP_FORBIDDEN' => '',
-    'HTTP_NOT_FOUND' => 'Page not found',
+    'HTTP_NOT_FOUND' => 'Page not found: @uri (method: @method, parameters: @params)',
 
     'ERRORCODE_OKAY' => '',
     'ERRORCODE_TIME_RESTRICTION_START' => 'PP - time_restriction_start error: @date (@timestamp)',

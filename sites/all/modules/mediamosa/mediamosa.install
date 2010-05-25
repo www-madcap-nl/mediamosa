@@ -232,3 +232,15 @@ function mediamosa_update_7002() {
       ->execute();
   }
 }
+
+/**
+ * Change HTTP_NOT_FOUND errorcode in database.
+ */
+function mediamosa_update_7003() {
+  db_update(mediamosa_error_db::TABLE_NAME)
+    ->fields(array(
+      mediamosa_error_db::MESSAGE => 'Page not found: @uri (method: @method, parameters: @params)',
+    ))
+    ->condition(mediamosa_error_db::NAME, 'HTTP_NOT_FOUND')
+    ->execute();
+}
