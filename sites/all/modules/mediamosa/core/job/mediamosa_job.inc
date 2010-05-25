@@ -460,7 +460,7 @@ class mediamosa_job {
     }
     else {
       // Delete the unoriginal mediafiles of this asset.
-      mediamosa_asset_mediafile::delete_transcoded_unoriginal_mediafiles($job_ext_upload[mediamosa_job_db::ASSET_ID]);
+      mediamosa_asset_mediafile::delete_transcoded_unoriginal_mediafiles($job_ext_upload[mediamosa_job_db::ASSET_ID], $job_ext_upload[mediamosa_job_db::MEDIAFILE_ID]);
     }
 
     // Lets try to get it so we know we either UPDATE or INSERT.
