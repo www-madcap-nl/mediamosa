@@ -1541,6 +1541,20 @@ abstract class Database {
       self::parseConnectionInfo();
     }
     try {
+
+      // We need to pass around the simpletest database prefix in the request
+      // and we put that in the user_agent header. The header HMAC was already
+      // validated in bootstrap.inc.
+      if (isset($_SERVER['HTTP_USER_AGENT']) && preg_match("/^(simpletest\d+);db_(\w*);/", $_SERVER['HTTP_USER_AGENT'], $matches)) {
+        $db_prefix_string = is_array($db_prefix) ? $db_prefix['default'] : $db_prefix;
+        $db_prefix = $db_prefix_string . $matches[1];
+
+        // Check if we need to switch to other database, select it here.
+        if (!empty($matches[2])) {
+          $key = $matches[2]; // In a simpletest we overwrite the key, default is just not possible.
+        }
+      }
+
       // If the requested database does not exist then it is an unrecoverable
       // error.
       if (!isset(self::$databaseInfo[$key])) {
@@ -1555,6 +1569,7 @@ abstract class Database {
       // open database connection.
       $driver_class = 'DatabaseConnection_' . $driver;
       require_once DRUPAL_ROOT . '/includes/database/' . $driver . '/database.inc';
+
       $new_connection = new $driver_class(self::$databaseInfo[$key][$target]);
       $new_connection->setTarget($target);
 
@@ -1564,13 +1579,6 @@ abstract class Database {
         $new_connection->setLogger(self::$logs[$key]);
       }
 
-      // We need to pass around the simpletest database prefix in the request
-      // and we put that in the user_agent header. The header HMAC was already
-      // validated in bootstrap.inc.
-      if (isset($_SERVER['HTTP_USER_AGENT']) && preg_match("/^(simpletest\d+);/", $_SERVER['HTTP_USER_AGENT'], $matches)) {
-        $db_prefix_string = is_array($db_prefix) ? $db_prefix['default'] : $db_prefix;
-        $db_prefix = $db_prefix_string . $matches[1];
-      }
       return $new_connection;
     }
     catch (Exception $e) {

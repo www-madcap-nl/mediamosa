@@ -111,7 +111,16 @@
     // Before we start, we count the number of tables. If simpletest fails,
     // it doesn't clean up. We stop running the tests if we have to many tables.
     // Also we'll try to clean up if we detect to many tables.
+    $simpleDb = variable_get('mediamosa_simpletest_database', '');
+    if (!empty($simpleDb)) {
+      $oldDb = db_set_active($simpleDb);
+    }
+
     $count_tables = mediamosa_db::db_count_tables();
+
+    if (!empty($oldDb)) {
+      db_set_active($oldDb);
+    }
 
     // Check if we have to many tables, else clean up.
     if ($count_tables > mediamosa_settings::STATUS_MAX_TABLES) {
@@ -119,7 +128,14 @@
 
       MediaMosaTestCase::clean();
 
+      if (!empty($simpleDb)) {
+        $oldDb = db_set_active($simpleDb);
+      }
       $count_tables = mediamosa_db::db_count_tables();
+      if (!empty($oldDb)) {
+        db_set_active($oldDb);
+      }
+
       if ($count_tables > mediamosa_settings::STATUS_MAX_TABLES) {
         // Clean failed.
         self::log('Status page update down, unable to clean up old tests, still @count tables left.', array('@count' => $count_tables), WATCHDOG_CRITICAL);

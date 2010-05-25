@@ -445,8 +445,15 @@ function simpletest_clean_environment() {
  * Removed prefixed tables from the database that are left over from crashed tests.
  */
 function simpletest_clean_database() {
-  $tables = db_find_tables(Database::getConnection()->prefixTables('{simpletest}') . '%');
+
   $schema = drupal_get_schema_unprocessed('simpletest');
+
+  $simpleDb = variable_get('mediamosa_simpletest_database', '');
+  if (!empty($simpleDb)) {
+    $oldDb = db_set_active($simpleDb);
+  }
+
+  $tables = db_find_tables(Database::getConnection()->prefixTables('{simpletest}') . '%');
   $count = 0;
   foreach (array_diff_key($tables, $schema) as $table) {
     // Strip the prefix and skip tables without digits following "simpletest",
@@ -456,6 +463,11 @@ function simpletest_clean_database() {
       $count++;
     }
   }
+
+  if (!empty($oldDb)) {
+    db_set_active($oldDb);
+  }
+
 
   if ($count > 0) {
     drupal_set_message(format_plural($count, 'Removed 1 leftover table.', 'Removed @count leftover tables.'));
