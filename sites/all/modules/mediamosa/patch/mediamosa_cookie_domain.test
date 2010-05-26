@@ -30,7 +30,9 @@
  */
 
 // So we load the MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE define.
-class_exists('MediaMosaTestCase');
+if (!class_exists('MediaMosaTestCase')) {
+  return;
+}
 
 class MediaMosaCookieDomain extends MediaMosaTestCase {
   // ------------------------------------------------------------------ Members.

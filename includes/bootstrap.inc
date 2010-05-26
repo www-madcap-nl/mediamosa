@@ -1988,8 +1988,8 @@ function drupal_get_bootstrap_phase() {
 function drupal_valid_test_ua($user_agent) {
   global $databases;
 
-  list($prefix, $time, $salt, $hmac) = explode(';', $user_agent);
-  $check_string =  $prefix . ';' . $time . ';' . $salt;
+  list($prefix, $db, $time, $salt, $hmac) = explode(';', $user_agent);
+  $check_string =  $prefix . ';' . $db . ';' . $time . ';' . $salt;
   // We use the database credentials from settings.php to make the HMAC key, since
   // the database is not yet initialized and we can't access any Drupal variables.
   // The file properties add more entropy not easily accessible to others.
@@ -2015,7 +2015,7 @@ function drupal_generate_test_ua($prefix) {
   }
    // Generate a moderately secure HMAC based on the database credentials.
    $salt = uniqid('', TRUE);
-   $check_string = $prefix . ';' . time() . ';' . $salt;
+   $check_string = $prefix . ';db_' . variable_get('mediamosa_simpletest_database', '') . ';' . time() . ';' . $salt;
    return  $check_string . ';' . base64_encode(hash_hmac('sha1', $check_string, $key, TRUE));
 }
 
@@ -2411,12 +2411,23 @@ function _registry_check_code($type, $name = NULL) {
   // This function may get called when the default database is not active, but
   // there is no reason we'd ever want to not use the default database for
   // this query.
-  $file = Database::getConnection('default', 'default')->query("SELECT filename FROM {registry} WHERE name = :name AND type = :type", array(
-      ':name' => $name,
-      ':type' => $type,
-    ))
-    ->fetchField();
 
+  // Well I know one now; simpletest.
+  global $db_prefix;
+  if (preg_match('/simpletest\d+/', $db_prefix)) {
+    $file = db_query("SELECT filename FROM {registry} WHERE name = :name AND type = :type", array(
+        ':name' => $name,
+        ':type' => $type,
+      ))
+      ->fetchField();
+  }
+  else {
+    $file = Database::getConnection('default', 'default')->query("SELECT filename FROM {registry} WHERE name = :name AND type = :type", array(
+        ':name' => $name,
+        ':type' => $type,
+      ))
+      ->fetchField();
+  }
   // Flag that we've run a lookup query and need to update the cache.
   $cache_update_needed = TRUE;
 

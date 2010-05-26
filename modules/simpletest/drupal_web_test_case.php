@@ -22,6 +22,14 @@ abstract class DrupalTestCase {
   protected $originalPrefix = NULL;
 
   /**
+   * The original database select, before it was (optionally) changed for
+   * testing purposes.
+   *
+   * @var string
+   */
+  protected $originalDb = NULL;
+
+  /**
    * The original file directory, before it was changed for testing purposes.
    *
    * @var string
@@ -108,6 +116,9 @@ abstract class DrupalTestCase {
     // Switch to non-testing database to store results in.
     $current_db_prefix = $db_prefix;
     $db_prefix = $this->originalPrefix;
+    if (!empty($this->originalDb)) {
+      $simpleDb = db_set_active($this->originalDb);
+    }
 
     // Creation assertion array that can be displayed while tests are running.
     $this->assertions[] = $assertion = array(
@@ -128,6 +139,10 @@ abstract class DrupalTestCase {
 
     // Return to testing prefix.
     $db_prefix = $current_db_prefix;
+    if (!empty($this->originalDb)) {
+      db_set_active($simpleDb);
+    }
+
     // We do not use a ternary operator here to allow a breakpoint on
     // test failure.
     if ($status == 'pass') {
@@ -1126,6 +1141,12 @@ class DrupalWebTestCase extends DrupalTestCase {
       ->execute();
     $db_prefix = $db_prefix_new;
 
+    // Switch to other db, when needed.
+    $mediamosa_simpletest_database = variable_get('mediamosa_simpletest_database', '');
+    if (!empty($mediamosa_simpletest_database)) {
+      $this->originalDb = db_set_active($mediamosa_simpletest_database);
+    }
+
     // Create test directory ahead of installation so fatal errors and debug
     // information can be logged during installation process.
     // Use temporary files directory with the same prefix as the database.
@@ -1158,6 +1179,11 @@ class DrupalWebTestCase extends DrupalTestCase {
 
     // Install the modules specified by the default profile.
     module_enable($profile_details['dependencies'], FALSE);
+
+    // Need to set it in our simpletest database variable table too.
+    if (!empty($mediamosa_simpletest_database)) {
+      variable_set('mediamosa_simpletest_database', $mediamosa_simpletest_database);
+    }
 
     // Install modules needed for this test.
     if ($modules = func_get_args()) {
@@ -1215,8 +1241,67 @@ class DrupalWebTestCase extends DrupalTestCase {
    * setup a clean environment for the current test run.
    */
   protected function preloadRegistry() {
-    db_query('INSERT INTO {registry} SELECT * FROM ' . $this->originalPrefix . 'registry');
-    db_query('INSERT INTO {registry_file} SELECT * FROM ' . $this->originalPrefix . 'registry_file');
+    // If we have sep. database we need to copy from db to db.
+    if (!empty($this->originalDb)) {
+      global $db_prefix;
+
+      $from = 0;
+      $count = 100;
+      while (1) {
+        // Switch to original.
+        $current_db_prefix = $db_prefix;
+        $db_prefix = $this->originalPrefix;
+        $simpleDb = db_set_active($this->originalDb);
+
+        $result = db_query_range('SELECT * FROM {registry}', $from, $count)->fetchAll(PDO::FETCH_ASSOC);
+
+        // Switch to simpledb.
+        db_set_active($simpleDb);
+        $db_prefix = $current_db_prefix;
+
+        if (empty($result)) {
+          break;
+        }
+
+        foreach ($result as $row) {
+          db_insert('registry')
+            ->fields($row)
+            ->execute();
+        }
+
+        $from += $count;
+      }
+
+      $from = 0;
+      while (1) {
+        // Switch to original.
+        $current_db_prefix = $db_prefix;
+        $db_prefix = $this->originalPrefix;
+        $simpleDb = db_set_active($this->originalDb);
+
+        $result = db_query_range('SELECT * FROM {registry_file}', $from, $count)->fetchAll(PDO::FETCH_ASSOC);
+
+        // Switch to simpledb.
+        db_set_active($simpleDb);
+        $db_prefix = $current_db_prefix;
+
+        if (empty($result)) {
+          break;
+        }
+
+        foreach ($result as $row) {
+          db_insert('registry_file')
+            ->fields($row)
+            ->execute();
+        }
+
+        $from += $count;
+      }
+    }
+    else {
+      db_query('INSERT INTO {registry} SELECT * FROM ' . $this->originalPrefix . 'registry');
+      db_query('INSERT INTO {registry_file} SELECT * FROM ' . $this->originalPrefix . 'registry_file');
+    }
   }
 
   /**
@@ -1248,8 +1333,15 @@ class DrupalWebTestCase extends DrupalTestCase {
     // log to pick up any fatal errors.
     $db_prefix_temp = $db_prefix;
     $db_prefix = $this->originalPrefix;
+    if (!empty($this->originalDb)) {
+      $simpleDb = db_set_active($this->originalDb);
+    }
+
     simpletest_log_read($this->testId, $db_prefix, get_class($this), TRUE);
     $db_prefix = $db_prefix_temp;
+    if (!empty($simpleDb)) {
+      db_set_active($simpleDb);
+    }
 
     $emailCount = count(variable_get('drupal_test_email_collector', array()));
     if ($emailCount) {
@@ -1270,6 +1362,11 @@ class DrupalWebTestCase extends DrupalTestCase {
 
       // Return the database prefix to the original.
       $db_prefix = $this->originalPrefix;
+
+      // And the database again (if done).
+      if (!empty($this->originalDb)) {
+        db_set_active($this->originalDb);
+      }
 
       // Restore original shutdown callbacks array to prevent original
       // environment of calling handlers from test run.

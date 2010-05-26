@@ -89,12 +89,16 @@ function dblog_init() {
  * Remove expired log messages and flood control events.
  */
 function dblog_cron() {
+  global $db_prefix;
+
   // Cleanup the watchdog table
   if (variable_get('dblog_row_limit', 1000) > 0) {
-    $max = Database::getConnection('default', 'default')->query('SELECT MAX(wid) FROM {watchdog}')->fetchField();
-    Database::getConnection('default', 'default')->delete('watchdog')
-      ->condition('wid', $max - variable_get('dblog_row_limit', 1000), '<=')
-      ->execute();
+    if (!preg_match('/simpletest\d+/', $db_prefix)) {
+      $max = Database::getConnection('default', 'default')->query('SELECT MAX(wid) FROM {watchdog}')->fetchField();
+      Database::getConnection('default', 'default')->delete('watchdog')
+        ->condition('wid', $max - variable_get('dblog_row_limit', 1000), '<=')
+        ->execute();
+    }
   }
 }
 
@@ -115,8 +119,15 @@ function _dblog_get_message_types() {
  * Note some values may be truncated for database column size restrictions.
  */
 function dblog_watchdog(array $log_entry) {
-  Database::getConnection('default', 'default')->insert('watchdog')
-    ->fields(array(
+  global $db_prefix;
+  if (preg_match('/simpletest\d+/', $db_prefix)) {
+    $query = db_insert('watchdog');
+  }
+  else {
+    $query = Database::getConnection('default', 'default')->insert('watchdog');
+  }
+
+  $query->fields(array(
       'uid' => $log_entry['user']->uid,
       'type' => substr($log_entry['type'], 0, 64),
       'message' => $log_entry['message'],

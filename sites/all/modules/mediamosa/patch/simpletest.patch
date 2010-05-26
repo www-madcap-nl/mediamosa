@@ -1,0 +1,437 @@
+--- a/includes/bootstrap.inc	Tue Apr 06 01:00:52 2010 +0200
++++ b/includes/bootstrap.inc	Wed Apr 07 12:33:07 2010 +0200
+@@ -1994,7 +1994,7 @@
+   // the database is not yet initialized and we can't access any Drupal variables.
+   // The file properties add more entropy not easily accessible to others.
+   $filepath = DRUPAL_ROOT . '/includes/bootstrap.inc';
+-  $key = sha1(serialize($databases) . filectime($filepath) . fileinode($filepath), TRUE);
++  $key = sha1(serialize($databases) /*. filectime($filepath) . fileinode($filepath)*/, TRUE);
+   // The HMAC must match.
+   return $hmac == base64_encode(hash_hmac('sha1', $check_string, $key, TRUE));
+ }
+@@ -2011,7 +2011,7 @@
+     // check the HMAC before the database is initialized. filectime()
+     // and fileinode() are not easily determined from remote.
+     $filepath = DRUPAL_ROOT . '/includes/bootstrap.inc';
+-    $key = sha1(serialize($databases) . filectime($filepath) . fileinode($filepath), TRUE);
++    $key = sha1(serialize($databases) /*. filectime($filepath) . fileinode($filepath)*/, TRUE);
+   }
+    // Generate a moderately secure HMAC based on the database credentials.
+    $salt = uniqid('', TRUE);
+--- a/includes/bootstrap.inc	Tue May 25 10:09:22 2010 +0200
++++ b/includes/bootstrap.inc	Tue May 25 15:03:29 2010 +0200
+@@ -1988,8 +1988,8 @@
+ function drupal_valid_test_ua($user_agent) {
+   global $databases;
+ 
+-  list($prefix, $time, $salt, $hmac) = explode(';', $user_agent);
+-  $check_string =  $prefix . ';' . $time . ';' . $salt;
++  list($prefix, $db, $time, $salt, $hmac) = explode(';', $user_agent);
++  $check_string =  $prefix . ';' . $db . ';' . $time . ';' . $salt;
+   // We use the database credentials from settings.php to make the HMAC key, since
+   // the database is not yet initialized and we can't access any Drupal variables.
+   // The file properties add more entropy not easily accessible to others.
+@@ -2015,7 +2015,7 @@
+   }
+    // Generate a moderately secure HMAC based on the database credentials.
+    $salt = uniqid('', TRUE);
+-   $check_string = $prefix . ';' . time() . ';' . $salt;
++   $check_string = $prefix . ';db_' . variable_get('mediamosa_simpletest_database', '') . ';' . time() . ';' . $salt;
+    return  $check_string . ';' . base64_encode(hash_hmac('sha1', $check_string, $key, TRUE));
+ }
+ 
+@@ -2411,12 +2411,23 @@
+   // This function may get called when the default database is not active, but
+   // there is no reason we'd ever want to not use the default database for
+   // this query.
+-  $file = Database::getConnection('default', 'default')->query("SELECT filename FROM {registry} WHERE name = :name AND type = :type", array(
+-      ':name' => $name,
+-      ':type' => $type,
+-    ))
+-    ->fetchField();
+ 
++  // Well I know one now; simpletest.
++  global $db_prefix;
++  if (preg_match('/simpletest\d+/', $db_prefix)) {
++    $file = db_query("SELECT filename FROM {registry} WHERE name = :name AND type = :type", array(
++        ':name' => $name,
++        ':type' => $type,
++      ))
++      ->fetchField();
++  }
++  else {
++    $file = Database::getConnection('default', 'default')->query("SELECT filename FROM {registry} WHERE name = :name AND type = :type", array(
++        ':name' => $name,
++        ':type' => $type,
++      ))
++      ->fetchField();
++  }
+   // Flag that we've run a lookup query and need to update the cache.
+   $cache_update_needed = TRUE;
+ 
+--- a/includes/database/database.inc	Tue May 25 10:09:22 2010 +0200
++++ b/includes/database/database.inc	Tue May 25 15:03:29 2010 +0200
+@@ -1541,6 +1541,20 @@
+       self::parseConnectionInfo();
+     }
+     try {
++
++      // We need to pass around the simpletest database prefix in the request
++      // and we put that in the user_agent header. The header HMAC was already
++      // validated in bootstrap.inc.
++      if (isset($_SERVER['HTTP_USER_AGENT']) && preg_match("/^(simpletest\d+);db_(\w*);/", $_SERVER['HTTP_USER_AGENT'], $matches)) {
++        $db_prefix_string = is_array($db_prefix) ? $db_prefix['default'] : $db_prefix;
++        $db_prefix = $db_prefix_string . $matches[1];
++
++        // Check if we need to switch to other database, select it here.
++        if (!empty($matches[2])) {
++          $key = $matches[2]; // In a simpletest we overwrite the key, default is just not possible.
++        }
++      }
++
+       // If the requested database does not exist then it is an unrecoverable
+       // error.
+       if (!isset(self::$databaseInfo[$key])) {
+@@ -1555,6 +1569,7 @@
+       // open database connection.
+       $driver_class = 'DatabaseConnection_' . $driver;
+       require_once DRUPAL_ROOT . '/includes/database/' . $driver . '/database.inc';
++
+       $new_connection = new $driver_class(self::$databaseInfo[$key][$target]);
+       $new_connection->setTarget($target);
+ 
+@@ -1564,13 +1579,6 @@
+         $new_connection->setLogger(self::$logs[$key]);
+       }
+ 
+-      // We need to pass around the simpletest database prefix in the request
+-      // and we put that in the user_agent header. The header HMAC was already
+-      // validated in bootstrap.inc.
+-      if (isset($_SERVER['HTTP_USER_AGENT']) && preg_match("/^(simpletest\d+);/", $_SERVER['HTTP_USER_AGENT'], $matches)) {
+-        $db_prefix_string = is_array($db_prefix) ? $db_prefix['default'] : $db_prefix;
+-        $db_prefix = $db_prefix_string . $matches[1];
+-      }
+       return $new_connection;
+     }
+     catch (Exception $e) {
+--- a/modules/dblog/dblog.module	Tue May 25 10:09:22 2010 +0200
++++ b/modules/dblog/dblog.module	Tue May 25 15:03:29 2010 +0200
+@@ -89,12 +89,16 @@
+  * Remove expired log messages and flood control events.
+  */
+ function dblog_cron() {
++  global $db_prefix;
++
+   // Cleanup the watchdog table
+   if (variable_get('dblog_row_limit', 1000) > 0) {
+-    $max = Database::getConnection('default', 'default')->query('SELECT MAX(wid) FROM {watchdog}')->fetchField();
+-    Database::getConnection('default', 'default')->delete('watchdog')
+-      ->condition('wid', $max - variable_get('dblog_row_limit', 1000), '<=')
+-      ->execute();
++    if (!preg_match('/simpletest\d+/', $db_prefix)) {
++      $max = Database::getConnection('default', 'default')->query('SELECT MAX(wid) FROM {watchdog}')->fetchField();
++      Database::getConnection('default', 'default')->delete('watchdog')
++        ->condition('wid', $max - variable_get('dblog_row_limit', 1000), '<=')
++        ->execute();
++    }
+   }
+ }
+ 
+@@ -115,8 +119,15 @@
+  * Note some values may be truncated for database column size restrictions.
+  */
+ function dblog_watchdog(array $log_entry) {
+-  Database::getConnection('default', 'default')->insert('watchdog')
+-    ->fields(array(
++  global $db_prefix;
++  if (preg_match('/simpletest\d+/', $db_prefix)) {
++    $query = db_insert('watchdog');
++  }
++  else {
++    $query = Database::getConnection('default', 'default')->insert('watchdog');
++  }
++
++  $query->fields(array(
+       'uid' => $log_entry['user']->uid,
+       'type' => substr($log_entry['type'], 0, 64),
+       'message' => $log_entry['message'],
+--- a/modules/simpletest/drupal_web_test_case.php	Tue May 25 10:09:22 2010 +0200
++++ b/modules/simpletest/drupal_web_test_case.php	Tue May 25 15:03:29 2010 +0200
+@@ -22,6 +22,14 @@
+   protected $originalPrefix = NULL;
+ 
+   /**
++   * The original database select, before it was (optionally) changed for
++   * testing purposes.
++   *
++   * @var string
++   */
++  protected $originalDb = NULL;
++
++  /**
+    * The original file directory, before it was changed for testing purposes.
+    *
+    * @var string
+@@ -108,6 +116,9 @@
+     // Switch to non-testing database to store results in.
+     $current_db_prefix = $db_prefix;
+     $db_prefix = $this->originalPrefix;
++    if (!empty($this->originalDb)) {
++      $simpleDb = db_set_active($this->originalDb);
++    }
+ 
+     // Creation assertion array that can be displayed while tests are running.
+     $this->assertions[] = $assertion = array(
+@@ -128,6 +139,10 @@
+ 
+     // Return to testing prefix.
+     $db_prefix = $current_db_prefix;
++    if (!empty($this->originalDb)) {
++      db_set_active($simpleDb);
++    }
++
+     // We do not use a ternary operator here to allow a breakpoint on
+     // test failure.
+     if ($status == 'pass') {
+@@ -1126,6 +1141,12 @@
+       ->execute();
+     $db_prefix = $db_prefix_new;
+ 
++    // Switch to other db, when needed.
++    $mediamosa_simpletest_database = variable_get('mediamosa_simpletest_database', '');
++    if (!empty($mediamosa_simpletest_database)) {
++      $this->originalDb = db_set_active($mediamosa_simpletest_database);
++    }
++
+     // Create test directory ahead of installation so fatal errors and debug
+     // information can be logged during installation process.
+     // Use temporary files directory with the same prefix as the database.
+@@ -1159,6 +1180,11 @@
+     // Install the modules specified by the default profile.
+     module_enable($profile_details['dependencies'], FALSE);
+ 
++    // Need to set it in our simpletest database variable table too.
++    if (!empty($mediamosa_simpletest_database)) {
++      variable_set('mediamosa_simpletest_database', $mediamosa_simpletest_database);
++    }
++
+     // Install modules needed for this test.
+     if ($modules = func_get_args()) {
+       module_enable($modules, TRUE);
+@@ -1215,8 +1241,67 @@
+    * setup a clean environment for the current test run.
+    */
+   protected function preloadRegistry() {
+-    db_query('INSERT INTO {registry} SELECT * FROM ' . $this->originalPrefix . 'registry');
+-    db_query('INSERT INTO {registry_file} SELECT * FROM ' . $this->originalPrefix . 'registry_file');
++    // If we have sep. database we need to copy from db to db.
++    if (!empty($this->originalDb)) {
++      global $db_prefix;
++
++      $from = 0;
++      $count = 100;
++      while (1) {
++        // Switch to original.
++        $current_db_prefix = $db_prefix;
++        $db_prefix = $this->originalPrefix;
++        $simpleDb = db_set_active($this->originalDb);
++
++        $result = db_query_range('SELECT * FROM {registry}', $from, $count)->fetchAll(PDO::FETCH_ASSOC);
++
++        // Switch to simpledb.
++        db_set_active($simpleDb);
++        $db_prefix = $current_db_prefix;
++
++        if (empty($result)) {
++          break;
++        }
++
++        foreach ($result as $row) {
++          db_insert('registry')
++            ->fields($row)
++            ->execute();
++        }
++
++        $from += $count;
++      }
++
++      $from = 0;
++      while (1) {
++        // Switch to original.
++        $current_db_prefix = $db_prefix;
++        $db_prefix = $this->originalPrefix;
++        $simpleDb = db_set_active($this->originalDb);
++
++        $result = db_query_range('SELECT * FROM {registry_file}', $from, $count)->fetchAll(PDO::FETCH_ASSOC);
++
++        // Switch to simpledb.
++        db_set_active($simpleDb);
++        $db_prefix = $current_db_prefix;
++
++        if (empty($result)) {
++          break;
++        }
++
++        foreach ($result as $row) {
++          db_insert('registry_file')
++            ->fields($row)
++            ->execute();
++        }
++
++        $from += $count;
++      }
++    }
++    else {
++      db_query('INSERT INTO {registry} SELECT * FROM ' . $this->originalPrefix . 'registry');
++      db_query('INSERT INTO {registry_file} SELECT * FROM ' . $this->originalPrefix . 'registry_file');
++    }
+   }
+ 
+   /**
+@@ -1248,8 +1333,15 @@
+     // log to pick up any fatal errors.
+     $db_prefix_temp = $db_prefix;
+     $db_prefix = $this->originalPrefix;
++    if (!empty($this->originalDb)) {
++      $simpleDb = db_set_active($this->originalDb);
++    }
++
+     simpletest_log_read($this->testId, $db_prefix, get_class($this), TRUE);
+     $db_prefix = $db_prefix_temp;
++    if (!empty($simpleDb)) {
++      db_set_active($simpleDb);
++    }
+ 
+     $emailCount = count(variable_get('drupal_test_email_collector', array()));
+     if ($emailCount) {
+@@ -1271,6 +1363,11 @@
+       // Return the database prefix to the original.
+       $db_prefix = $this->originalPrefix;
+ 
++      // And the database again (if done).
++      if (!empty($this->originalDb)) {
++        db_set_active($this->originalDb);
++      }
++
+       // Restore original shutdown callbacks array to prevent original
+       // environment of calling handlers from test run.
+       $callbacks = &drupal_register_shutdown_function();
+--- a/modules/simpletest/simpletest.module	Tue May 25 10:09:22 2010 +0200
++++ b/modules/simpletest/simpletest.module	Tue May 25 15:03:29 2010 +0200
+@@ -445,8 +445,15 @@
+  * Removed prefixed tables from the database that are left over from crashed tests.
+  */
+ function simpletest_clean_database() {
++
++  $schema = drupal_get_schema_unprocessed('simpletest');
++
++  $simpleDb = variable_get('mediamosa_simpletest_database', '');
++  if (!empty($simpleDb)) {
++    $oldDb = db_set_active($simpleDb);
++  }
++
+   $tables = db_find_tables(Database::getConnection()->prefixTables('{simpletest}') . '%');
+-  $schema = drupal_get_schema_unprocessed('simpletest');
+   $count = 0;
+   foreach (array_diff_key($tables, $schema) as $table) {
+     // Strip the prefix and skip tables without digits following "simpletest",
+@@ -457,6 +464,11 @@
+     }
+   }
+ 
++  if (!empty($oldDb)) {
++    db_set_active($oldDb);
++  }
++
++
+   if ($count > 0) {
+     drupal_set_message(format_plural($count, 'Removed 1 leftover table.', 'Removed @count leftover tables.'));
+   }
+--- a/sites/all/modules/mediamosa/maintenance/status/mediamosa_maintenance_status.inc	Tue May 25 10:09:22 2010 +0200
++++ b/sites/all/modules/mediamosa/maintenance/status/mediamosa_maintenance_status.inc	Tue May 25 15:03:29 2010 +0200
+@@ -111,15 +111,31 @@
+     // Before we start, we count the number of tables. If simpletest fails,
+     // it doesn't clean up. We stop running the tests if we have to many tables.
+     // Also we'll try to clean up if we detect to many tables.
++    $simpleDb = variable_get('mediamosa_simpletest_database', '');
++    if (!empty($simpleDb)) {
++      $oldDb = db_set_active($simpleDb);
++    }
++
+     $count_tables = mediamosa_db::db_count_tables();
+ 
++    if (!empty($oldDb)) {
++      db_set_active($oldDb);
++    }
++
+     // Check if we have to many tables, else clean up.
+     if ($count_tables > mediamosa_settings::STATUS_MAX_TABLES) {
+       self::log('To many simpletest tables detected, trying to clean up, found @count tables.', array('@count' => $count_tables), WATCHDOG_ALERT);
+ 
+       MediaMosaTestCase::clean();
+ 
++      if (!empty($simpleDb)) {
++        $oldDb = db_set_active($simpleDb);
++      }
+       $count_tables = mediamosa_db::db_count_tables();
++      if (!empty($oldDb)) {
++        db_set_active($oldDb);
++      }
++
+       if ($count_tables > mediamosa_settings::STATUS_MAX_TABLES) {
+         // Clean failed.
+         self::log('Status page update down, unable to clean up old tests, still @count tables left.', array('@count' => $count_tables), WATCHDOG_CRITICAL);
+--- a/sites/all/modules/mediamosa/mediamosa.module	Tue May 25 10:09:22 2010 +0200
++++ b/sites/all/modules/mediamosa/mediamosa.module	Tue May 25 15:03:29 2010 +0200
+@@ -295,6 +295,19 @@
+     '#required' => TRUE,
+   );
+ 
++  $form['settings_simpletest'] = array(
++    '#type' => 'fieldset',
++    '#title' => t('Simpletest settings'),
++    '#collapsible' => TRUE,
++    '#collapsed' => TRUE,
++  );
++  $form['settings_simpletest']['mediamosa_simpletest_database'] = array(
++    '#type' => 'textfield',
++    '#title' => t('Simpletest database prefix.'),
++    '#description' => t('The simpletest database prefix allows MediaMosa to run its simpletests on a separate database then current. Its also enables you to run Simpletests on different mysql database server, because you are entering a Drupal database reference. Default is empty, which will turn off this feature and makes Simpletest to run its tests on the default database. See /sites/mediamosa.settings.php for the database definition of mediamosa_simpletest. For enabling; uncomment the database definition of \'mediamosa_simpletest\' and enter \'mediamosa_simpletest\' here. Changing of this setting will fail if the database define does not exists. Make sure the user and password are correct for access to this database.'),
++    '#default_value' => '',
++  );
++
+   return $form;
+ }
+ 
+@@ -302,10 +315,17 @@
+  * Implements the hook_mediamosa_configuration_validate()
+  */
+ function mediamosa_mediamosa_configuration_validate($form, &$form_state) {
++  global $databases;
++
+   // Use normal so schema might be empty.
+   $parse_url = parse_url($form_state['values']['mediamosa_cron_url_app']);
++  $mediamosa_simpletest_database = $form_state['values']['mediamosa_simpletest_database'];
+ 
+   if (!isset($parse_url['scheme']) || !in_array($parse_url['scheme'], array('http', 'https'))) {
+     form_set_error('mediamosa_cron_url_app', t("Include either 'http:// or 'https://' in URL Rest."));
+   }
++
++  if ($mediamosa_simpletest_database != '' && empty($databases[$mediamosa_simpletest_database])) {
++    form_set_error('mediamosa_simpletest_database', t("Database not enabled or does not match with mediamosa_simpletest db in /sites/mediamosa.settings.php."));
++  }
+ }
+--- a/sites/all/modules/mediamosa/patch/mediamosa_cookie_domain.test	Tue May 25 10:09:22 2010 +0200
++++ b/sites/all/modules/mediamosa/patch/mediamosa_cookie_domain.test	Tue May 25 15:03:29 2010 +0200
+@@ -30,7 +30,9 @@
+  */
+ 
+ // So we load the MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE define.
+-class_exists('MediaMosaTestCase');
++if (!class_exists('MediaMosaTestCase')) {
++  return;
++}
+ 
+ class MediaMosaCookieDomain extends MediaMosaTestCase {
+   // ------------------------------------------------------------------ Members.
+
