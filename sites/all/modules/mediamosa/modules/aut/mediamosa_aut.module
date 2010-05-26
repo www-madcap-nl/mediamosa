@@ -92,6 +92,13 @@ function mediamosa_aut_mediamosa_register_rest_call() {
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
 
+  $a_rest_calls['mediafile/acl'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_aut_mediafile_set_multi_rights',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_aut',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_1_1,
+  );
+
   $a_rest_calls['mediafile/$mediafile_id/acl'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_aut_mediafile_set_rights',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
@@ -286,6 +293,46 @@ function mediamosa_aut_mediamosa_register_rest_call_doc() {
     mediamosa_rest_call::EXAMPLE_REQUEST => 'autorisation_group/test.group<br /><br />new_groupname = "test2.group"',
     mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
     mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,
+  );
+
+  $a_rest_calls['mediafile/acl'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Set rights on multiple mediafiles.',
+    mediamosa_rest_call::DESCRIPTION => 'Set rights on multiple mediafiles using asset ids.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'mediafile/acl
+asset_id[]=7pAkDsceysAZPo0q3PhjtBE1&asset_id[]=J2MKUJUcleMUfUcsZVDpdxi8',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <aut_user>
+      <asset_id>7pAkDsceysAZPo0q3PhjtBE1</asset_id>
+      <mediafile_id>VxsIJXDjuYUJKq81n9Ulimmu</mediafile_id>
+      <value>user1</value>
+      <result>success</result>
+      <result_id>601</result_id>
+      <result_description></result_description>
+    </aut_user>
+  </item>
+  <item id="2">
+    <aut_user>
+      <asset_id>7pAkDsceysAZPo0q3PhjtBE1</asset_id>
+      <mediafile_id>OW35AQyoPNUSi4iINunmS2nr</mediafile_id>
+      <value>user1</value>
+      <result>success</result>
+      <result_id>601</result_id>
+      <result_description></result_description>
+    </aut_user>
+  </item>
+  <item id="3">
+    <aut_user>
+      <asset_id>J2MKUJUcleMUfUcsZVDpdxi8</asset_id>
+      <mediafile_id>lH8hZUCQmjAUWXIYWnXioHHF</mediafile_id>
+      <value>user1</value>
+      <result>success</result>
+      <result_id>601</result_id>
+      <result_description></result_description>
+    </aut_user>
+  </item>
+</items>',
   );
 
   $a_rest_calls['mediafile/$mediafile_id/acl'][mediamosa_rest_call::METHOD_POST] = array(
