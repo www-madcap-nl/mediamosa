@@ -202,6 +202,7 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
             mediamosa_asset_mediafile_metadata_db::STILL_TYPE_PICTURE,
             mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SCENE,
             mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SECOND,
+            mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NORMAL,
           ),
         ),
         self::STILL_PER_MEDIAFILE => array(

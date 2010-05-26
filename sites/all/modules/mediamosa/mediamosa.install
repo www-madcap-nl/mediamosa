@@ -201,3 +201,46 @@ function mediamosa_update_7001() {
   ->execute();
 
 }
+
+/**
+ * Create "padding" transcode mapping.
+ */
+function mediamosa_update_7002() {
+  $a_default_mappings = array(
+    array('ffmpeg', 'padding', '', NULL, NULL, 'yes;no', 'yes', 'FALSE'),
+  );
+
+  // Insert default mappings as nodes.
+  foreach ($a_default_mappings as $a_default_mapping) {
+    $a_fields = array(
+      mediamosa_transcode_mapping_db::TOOL => $a_default_mapping[0],
+      mediamosa_transcode_mapping_db::NICE_PARAMETER => $a_default_mapping[1],
+      mediamosa_transcode_mapping_db::TOOL_PARAMETER => $a_default_mapping[2],
+      mediamosa_transcode_mapping_db::MIN_VALUE => $a_default_mapping[3],
+      mediamosa_transcode_mapping_db::MAX_VALUE => $a_default_mapping[4],
+      mediamosa_transcode_mapping_db::ALLOWED_VALUE => $a_default_mapping[5],
+      mediamosa_transcode_mapping_db::DEFAULT_VALUE => $a_default_mapping[6],
+      mediamosa_transcode_mapping_db::REQUIRED => $a_default_mapping[7],
+    );
+
+    // Add changed/created.
+    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+
+    // Insert it.
+    db_insert(mediamosa_transcode_mapping_db::TABLE_NAME)
+      ->fields($a_fields)
+      ->execute();
+  }
+}
+
+/**
+ * Change HTTP_NOT_FOUND errorcode in database.
+ */
+function mediamosa_update_7003() {
+  db_update(mediamosa_error_db::TABLE_NAME)
+    ->fields(array(
+      mediamosa_error_db::MESSAGE => 'Page not found: @uri (method: @method, parameters: @params)',
+    ))
+    ->condition(mediamosa_error_db::NAME, 'HTTP_NOT_FOUND')
+    ->execute();
+}

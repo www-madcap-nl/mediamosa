@@ -128,10 +128,11 @@ class mediamosa_asset_mediafile {
    *
    * @param string $asset_id
    */
-  static public function delete_transcoded_unoriginal_mediafiles($asset_id) {
+  static public function delete_transcoded_unoriginal_mediafiles($asset_id, $mediafile_id) {
     $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
     $query->addField('mf', mediamosa_asset_mediafile_db::ID);
     $query->condition(mediamosa_asset_mediafile_db::ASSET_ID, $asset_id);
+    $query->condition(mediamosa_asset_mediafile_db::ID, $mediafile_id);
     $query->condition(mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE, mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_FALSE);
     $result = $query->execute()->fetchCol();
 

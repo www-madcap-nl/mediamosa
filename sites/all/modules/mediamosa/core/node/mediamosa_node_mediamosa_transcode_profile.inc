@@ -172,6 +172,7 @@ function mediamosa_transcode_profile_view($node, $view_mode = 'full') {
   // Default parameters.
   $rows = array(
     array(t('Title'), check_plain($node->title)),
+    array(t('Transcode profile id'), check_plain($node->transcode_profile_id)),
     array(t('Application'), isset($apps[$node->app_id]) ? $apps[$node->app_id] : 'Unknown or deleted application'),
     array(t('Tool'), $node->tool),
     array(t('File extension'), $node->file_extension),
@@ -219,6 +220,12 @@ function mediamosa_transcode_profile_form($node, $form_state) {
 
   // Get the apps for the drop down listing.
   $apps = _mediamosa_get_apps();
+
+  $form['required']['transcode_profile_id'] = array(
+    '#title' => t('Transcode profile id'),
+    '#type' => 'item',
+    '#markup' => $node->transcode_profile_id,
+  );
 
   $form['required'][mediamosa_transcode_profile_db::APP_ID] = array(
     '#title' => t('Application'),
@@ -280,7 +287,8 @@ function mediamosa_transcode_profile_form($node, $form_state) {
     'fps' => t('Set frame rate (Hz value, fraction or abbereviation@default'),
     'audiosamplingrate' => t('Set the audio sampling frequency@default'),
     'audiocodec' => t('Force audio codec to codec. Use the copy special value to specify that the raw codec data must be copied as is@default'),
-    'maintain_aspect_ratio' => t('Force audio codec to codec. Use the copy special value to specify that the raw codec data must be copied as is@default'),
+    'maintain_aspect_ratio' => t('Force maintain the original video aspect ratio or not@default'),
+    'padding' => t('Force padding, if aspect ratio is maintained@default'),
     'audiobitrate' => t('Set the audio bitrate in bit/s@default'),
     'audiochannels' => t('The allowed value is between 0 and 2@default')
   );

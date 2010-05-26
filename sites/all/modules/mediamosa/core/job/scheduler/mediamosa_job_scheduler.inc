@@ -1215,8 +1215,14 @@ class mediamosa_job_scheduler {
       // First get source width and height.
       $a_metadata = mediamosa_asset_mediafile_metadata::get_with_mediafileid($mediafile_id, array(mediamosa_asset_mediafile_metadata_db::WIDTH, mediamosa_asset_mediafile_metadata_db::HEIGHT));
 
+      // Determine if padding necessary or not.
+      $is_padding = TRUE;
+      if (strstr($command, 'padding:no') !== FALSE) {
+        $is_padding = FALSE;
+      }
+
       // Get the parameter string.
-      $ratio = self::calc_aspect_ratio($a_metadata[mediamosa_asset_mediafile_metadata_db::WIDTH], $a_metadata[mediamosa_asset_mediafile_metadata_db::HEIGHT], $target_size);
+      $ratio = self::calc_aspect_ratio($a_metadata[mediamosa_asset_mediafile_metadata_db::WIDTH], $a_metadata[mediamosa_asset_mediafile_metadata_db::HEIGHT], $target_size, TRUE, NULL, NULL, $is_padding);
       if (!empty($ratio)) {
         $a_cli[] = $ratio;
       }
@@ -1297,7 +1303,7 @@ class mediamosa_job_scheduler {
    * @return
    *   Parameter string to use with ffmpeg.
    */
-  static public function calc_aspect_ratio($w_source, $h_source, $target_size, $response_string = TRUE, $h_padding = NULL, $v_padding = NULL) {
+  static public function calc_aspect_ratio($w_source, $h_source, $target_size, $response_string = TRUE, $h_padding = NULL, $v_padding = NULL, $is_padding = TRUE) {
 
     // Get target width and height, format is 'wxh'.
     preg_match('/(\d+)x(\d+)/',  $target_size, $matches);
@@ -1328,8 +1334,18 @@ class mediamosa_job_scheduler {
       $padding = (($padding - ($padding % 4)) /2);   // Single size of padding (must be even).
       $new_height = $h_target - (2 * $padding);
       $new_height = ($new_height - ($new_height % 2)); // must be even.
-      $param_string = sprintf("-s:%dx%d;-padtop:%d;-padbottom:%d", (int)$w_target, (int)$new_height, (int)$padding, (int)$padding);
-      $param_array = array('width' => (int)$w_target, 'height' => (int)$new_height, 'h_padding' => (int)$padding, 'v_padding' => 0);
+      $param_string = sprintf("-s:%dx%d;-padtop:%d;-padbottom:%d",
+        (int)$w_target,
+        (int)$new_height,
+        ($is_padding ? (int)$padding : 0),
+        ($is_padding ? (int)$padding : 0)
+      );
+      $param_array = array(
+        'width' => (int)$w_target,
+        'height' => (int)$new_height,
+        'h_padding' => ($is_padding ? (int)$padding : 0),
+        'v_padding' => 0
+      );
     }
     else {
       // Adjust width padding.
@@ -1337,8 +1353,18 @@ class mediamosa_job_scheduler {
       $padding = (($padding - ($padding % 4)) /2);   // Single size of padding (must be even).
       $new_width = $w_target - (2 * $padding);
       $new_width = ($new_width - ($new_width % 2)); // must be even.
-      $param_string = sprintf("-s:%dx%d;-padleft:%d;-padright:%d", (int)$new_width, (int)$h_target, (int)$padding, (int)$padding);
-      $param_array = array('width' => (int)$new_width, 'height' => (int)$h_target, 'h_padding' => 0, 'v_padding' => (int)$padding);
+      $param_string = sprintf("-s:%dx%d;-padleft:%d;-padright:%d",
+        (int)$new_width,
+        (int)$h_target,
+        ($is_padding ? (int)$padding : 0),
+        ($is_padding ? (int)$padding : 0)
+      );
+      $param_array = array(
+        'width' => (int)$new_width,
+        'height' => (int)$h_target,
+        'h_padding' => 0,
+        'v_padding' => ($is_padding ? (int)$padding : 0)
+      );
     }
     return ( $response_string ? $param_string : $param_array );
   }
