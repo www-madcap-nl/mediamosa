@@ -1258,6 +1258,8 @@ function _mediamosa_migration_user() {
  * Migrate ticket table..
  */
 function _mediamosa_migration_ticket() {
+
+  return true; // why would we ever want to migrate this?
   // Get the database name.
   $db_name = _mediamosa_migration_get_memo_data_db();
 
