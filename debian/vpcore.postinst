@@ -21,13 +21,9 @@ set -e
 case "$1" in
     configure)
     mkdir /opt/www/vpcore/htdocs/sites/default/files
-    chown www-data:www-data /opt/www/vpcore/htdocs/sites/default/files
-    mkdir /opt/www/vpcore/htdocs/sites/default/private
-    chown www-data:www-data /opt/www/vpcore/htdocs/sites/default/private
-    mkdir /opt/www/vpcore/htdocs/sites/default/private/temp
-    chown www-data:www-data /opt/www/vpcore/htdocs/sites/default/private/temp
+    mkdir -p /opt/www/vpcore/htdocs/sites/default/private/temp
     mkdir /opt/www/vpcore/htdocs/sites/default/private/files
-    chown www-data:www-data /opt/www/vpcore/htdocs/sites/default/private/files
+    chown -R www-data:www-data /opt/www/vpcore/htdocs/sites/default/files
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)

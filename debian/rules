@@ -47,6 +47,7 @@ install: build
 	cp -r scripts debian/vpcore/opt/www/vpcore/htdocs
 	cp -r sites debian/vpcore/opt/www/vpcore/htdocs
 	cp -r themes debian/vpcore/opt/www/vpcore/htdocs
+	cp -r mmplayer debian/vpcore/opt/www/vpcore/htdocs
 	cp *.php debian/vpcore/opt/www/vpcore/htdocs
 	cp .htaccess debian/vpcore/opt/www/vpcore/htdocs
 	cp crossdomain.xml debian/vpcore/opt/www/vpcore/htdocs
