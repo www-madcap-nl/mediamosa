@@ -359,7 +359,7 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
         ),
         self::CALCULATE_TOTAL_COUNT => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
-          self::VAR_DESCRIPTION => "Calculate the number of rows in the complete scope of the search and store it in the header parameter 'item_count_total'. Performance will drasticly improve with value 'FALSE' if you don't need to know the total number of assets in your scope result. If your query 'limit' is less than 7, then the default will be 'FALSE'. Is your limit 7 or higher, then the default for this parameter will be 'TRUE'. If you provide 'FALSE', then 'item_count_total' value in the header will always be the number of items returned, same as 'item_count'.",
+          self::VAR_DESCRIPTION => "Calculate the number of rows in the complete scope of the search and store it in the header parameter 'item_count_total'. Performance will drasticly improve with value 'FALSE' if you don't need to know the total number of assets in your scope result. If you provide 'FALSE', then 'item_count_total' value in the header will always be the number of items returned, same as 'item_count'.",
           self::VAR_DEFAULT_VALUE => 'TRUE',
         ),
 
