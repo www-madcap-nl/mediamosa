@@ -53,12 +53,12 @@ function _mediamosa_transcode_profile_install() {
   node_type_save($transcode_profile_node_type);
 
   $a_default_profiles = array(
-    array('standaard flash' ,'FALSE', 'ffmpeg', 'flv', 'videobitrate:500000;size:320x200;audiobitrate:64000;audiosamplingrate:22050;maintain_aspect_ratio:yes'),
-    array('qcif flash', 'TRUE', 'ffmpeg', 'flv', 'videobitrate:200000;size:176x144;audiosamplingrate:22050;maintain_aspect_ratio:yes'),
+    array('standaard flash' ,'FALSE', 'ffmpeg', 'flv', 'videobitrate:500000;size:320x200;audiobitrate:64000;audiosamplingrate:22050;maintain_aspect_ratio:yes;padding:yes'),
+    array('qcif flash', 'TRUE', 'ffmpeg', 'flv', 'videobitrate:200000;size:176x144;audiosamplingrate:22050;maintain_aspect_ratio:yes;padding:yes'),
     array('standaard wmv', 'FALSE', 'windows', 'wmv', ''),
     array('standaard mp4', 'FALSE', 'ffmpeg', 'mp4', ''),
     array('FLASH 800x600', 'FALSE', 'ffmpeg', 'flv', 'size:800x600;audiobitrate:128000;audiosamplingrate:22050'),
-    array('h.264 flash', 'FALSE', 'ffmpeg', 'flv', 'videobitrate:800000;size:640x480;videocodec:libx264;audiocodec:libmp3lame;audiobitrate:256000;audiosamplingrate:44100;maintain_aspect_ratio:yes'),
+    array('h.264 flash', 'FALSE', 'ffmpeg', 'flv', 'videobitrate:800000;size:640x480;videocodec:libx264;audiocodec:libmp3lame;audiobitrate:256000;audiosamplingrate:44100;maintain_aspect_ratio:yes;padding:yes'),
   );
 
   foreach ($a_default_profiles as $a_default_profile) {

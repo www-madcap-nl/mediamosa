@@ -127,7 +127,11 @@ class mediamosa_response_connector extends mediamosa_response {
       // Find the rest call.
       $a_rest_call = $this->mediamosa_rest->match_call($uri, $method);
       if (!$a_rest_call) {
-        throw new mediamosa_exception_error(mediamosa_error::HTTP_NOT_FOUND);
+        throw new mediamosa_exception_error(mediamosa_error::HTTP_NOT_FOUND, array(
+          '@uri' => print_r($uri, TRUE),
+          '@method' => ($method ? print_r($method, TRUE) : '-'),
+          '@params' => ($params ? print_r($params, TRUE) : '-'),
+        ));
       }
 
       // Ok make it external so we always get passed the app authorization.
