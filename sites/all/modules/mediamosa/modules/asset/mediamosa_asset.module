@@ -794,7 +794,7 @@ function mediamosa_asset_mediamosa_register_rest_call_doc() {
         <uri></uri>
         <transcode_profile_id>2</transcode_profile_id>
         <tool>ffmpeg</tool>
-        <command>videobitrate:200000;size:320x240;audiosamplingrate:22050;maintain_aspect_ratio:yes</command>
+        <command>videobitrate:200000;size:320x240;audiosamplingrate:22050;maintain_aspect_ratio:yes;padding:no</command>
         <file_extension>flv</file_extension>
         <is_protected>FALSE</is_protected>
         <created>2009-09-22 14:42:30</created>
@@ -1262,7 +1262,7 @@ name=Example&delete=cascade',
     <uri></uri>
     <transcode_profile_id>13</transcode_profile_id>
     <tool>ffmpeg</tool>
-    <command>videobitrate:200000;fps:15;size:352x288;videocodec:flv;audiocodec:libmp3lame;audiobitrate:40000;audiosamplingrate:22050;maintain_aspect_ratio:yes</command>
+    <command>videobitrate:200000;fps:15;size:352x288;videocodec:flv;audiocodec:libmp3lame;audiobitrate:40000;audiosamplingrate:22050;maintain_aspect_ratio:yes;padding:no</command>
     <file_extension>flv</file_extension>
     <is_protected>DOMAIN_REALM</is_protected>
     <created>2009-06-17 18:04:17</created>
