@@ -548,6 +548,211 @@ class mediamosa_rest_call_aut_group_delete extends mediamosa_rest_call {
 }
 
 /**
+ * URI: /mediafile/acl
+ * Method: POST
+ */
+class mediamosa_rest_call_aut_mediafile_set_multi_rights extends mediamosa_rest_call {
+
+  // ------------------------------------------------------------------ Consts.
+  // Rest vars;
+  const ASSET_ID = 'asset_id';
+  const USER_ID = 'user_id';
+  const REPLACE = 'replace';
+  const AUT_APP = 'aut_app';
+  const AUT_USER = 'aut_user';
+  const AUT_GROUP = 'aut_group';
+  const AUT_DOMAIN = 'aut_domain';
+  const AUT_REALM = 'aut_realm';
+  const AUT_USER_ID = 'aut_user_id';
+  const AUT_GROUP_ID = 'aut_group_id';
+
+  // ------------------------------------------------------------------ Functions (public).
+  public function get_var_setup() {
+    $a_var_setup = array();
+
+    $a_var_setup[mediamosa_rest_call::VARS][self::ASSET_ID] = array(
+      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
+      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
+      mediamosa_rest_call::VAR_DESCRIPTION => 'The asset IDs of mediafiles which to change the rights.',
+      mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
+    );
+
+    $a_var_setup[mediamosa_rest_call::VARS][self::USER_ID] = array(
+      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
+      mediamosa_rest_call::VAR_DESCRIPTION => 'Must match the owner fo the mediafile.',
+      );
+
+    $a_var_setup[mediamosa_rest_call::VARS][self::REPLACE] = array(
+      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
+      mediamosa_rest_call::VAR_DEFAULT_VALUE => 'TRUE',
+      mediamosa_rest_call::VAR_DESCRIPTION => "'TRUE' of 'FALSE' if the current right has to be replaced. Standard is TRUE. Define if 'FALSE' if you want to keep the old rights.",
+    );
+
+    $a_var_setup[mediamosa_rest_call::VARS][self::AUT_APP] = array(
+      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_INT,
+      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
+      mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
+      mediamosa_rest_call::VAR_DESCRIPTION => 'Application(s) that gain access to the mediafile.',
+      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
+    );
+
+    $a_var_setup[mediamosa_rest_call::VARS][self::AUT_USER] = array(
+      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
+      mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
+      mediamosa_rest_call::VAR_DESCRIPTION => 'User(s) that gain access to the mediafile.',
+      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
+    );
+
+    $a_var_setup[mediamosa_rest_call::VARS][self::AUT_GROUP] = array(
+      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
+      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
+      mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
+      mediamosa_rest_call::VAR_DESCRIPTION => 'Group(s) that gain access to the mediafile.',
+      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
+    );
+
+    $a_var_setup[mediamosa_rest_call::VARS][self::AUT_DOMAIN] = array(
+      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_DOMAIN,
+      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
+      mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
+      mediamosa_rest_call::VAR_DESCRIPTION => 'Domain(s) that gain access to the mediafile.',
+      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
+    );
+
+    $a_var_setup[mediamosa_rest_call::VARS][self::AUT_REALM] = array(
+      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_REALM,
+      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
+      mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
+      mediamosa_rest_call::VAR_DESCRIPTION => 'Realm(s) that gain access to the mediafile.',
+      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
+    );
+
+    // alias.
+    $a_var_setup[mediamosa_rest_call::VARS][self::AUT_USER_ID] = array(
+      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
+      mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
+      mediamosa_rest_call::VAR_DESCRIPTION => 'Alias of aut_user.',
+      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
+    );
+
+    // alias.
+    $a_var_setup[mediamosa_rest_call::VARS][self::AUT_GROUP_ID] = array(
+      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
+      mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
+      mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
+      mediamosa_rest_call::VAR_DESCRIPTION => 'Alias of aut_group.',
+      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
+    );
+
+    // Enrich with required REST vars.
+    return self::get_var_setup_default($a_var_setup);
+  }
+
+  public function do_call() {
+    $o_mediamosa = mediamosa::get();
+
+    // Get the app id(s).
+    $a_app_ids = $this->get_param_value_app();
+    $asset_ids = $this->get_param_value('asset_id');
+    $user_id = $this->get_param_value('user_id');
+
+    // First is always the main app.
+    $app_id = reset($a_app_ids);
+
+    // Validate the asset_ids.
+    $a_mediafile_ids = array();
+    foreach ($asset_ids as $asset_id) {
+      // Collect all the mediafile_id belonging to the asset_id.
+      $a_mediafile_ids[$asset_id] = mediamosa_asset_mediafile::mediafiles_search($asset_id);
+    }
+
+    // Set the rights.
+    foreach ($asset_ids as $asset_id) {
+      foreach ($a_mediafile_ids[$asset_id] as $mediafile_id) {
+        // Change the ACL rule for the mediafile.
+
+        $a_app_ids = $this->get_param_value('aut_app');
+        $a_aut_user_ids = $this->get_param_value('aut_user');
+        $a_aut_group_ids = $this->get_param_value('aut_group');
+        $a_aut_domains = $this->get_param_value('aut_domain');
+        $a_aut_realms = $this->get_param_value('aut_realm');
+        $b_replace = $this->get_param_value('replace');
+
+        // Get the media file.
+        $a_mediafile = mediamosa_asset_mediafile::get($mediafile_id, $app_id);
+
+        // Fix for difference in aut_user and aut_user_id
+        if (!count($a_aut_user_ids)) {
+          // Hmmm no a_aut_user_ids, then try aut_user_id and set user_id if we find one
+          $a_aut_user_ids = $this->get_param_value('aut_user_id');
+          $this->set_param_value('aut_user', $a_aut_user_ids);
+        }
+        else {
+          $this->set_param_value('aut_user_id', $a_aut_user_ids);
+        }
+
+        if (!count($a_aut_group_ids)) {
+          // Hmmm no a_aut_group_ids, then try aut_group_id and set group_id if we find one
+          $a_aut_group_ids = $this->get_param_value('aut_group_id');
+          $this->set_param_value('aut_group', $a_aut_group_ids);
+        }
+        else {
+          $this->set_param_value('aut_group_id', $a_aut_group_ids);
+        }
+
+        // Set access rights
+        $a_result_rights_set = mediamosa_aut::rights_set($app_id, $user_id, mediamosa_aut::AUT_TYPE_MEDIAFILE, $a_mediafile, $a_app_ids, $a_aut_user_ids, $a_aut_group_ids, $a_aut_domains, $a_aut_realms, $b_replace);
+
+        $a_types = array(
+          mediamosa_aut::AUT_NAME_TYPE_APP => 'aut_app',
+          mediamosa_aut::AUT_NAME_TYPE_USER => 'aut_user',
+          mediamosa_aut::AUT_NAME_TYPE_USER_GROUP => 'aut_group',
+          mediamosa_aut::AUT_NAME_TYPE_DOMAIN => 'aut_domain',
+          mediamosa_aut::AUT_NAME_TYPE_REALM => 'aut_realm',
+        );
+
+        foreach ($a_result_rights_set as $a_error) {
+          $type = (isset($a_types[$a_error['type']]) ? $a_types[$a_error['type']] : 'unknown');
+
+          if ($a_error['a_error'] === FALSE) {
+            $o_mediamosa->add_item(
+              array(
+                $type => array(
+                  'asset_id' => $asset_id,
+                  'mediafile_id' => $mediafile_id,
+                  'value' => $a_error['value'],
+                  'result' => mediamosa_response::SUCCESS,
+                  'result_id' => mediamosa_error::ERRORCODE_OKAY,
+                  'result_description' => mediamosa_error::error_code_find_description(mediamosa_error::ERRORCODE_OKAY),
+                )
+              )
+            );
+          }
+          else {
+            $o_mediamosa->add_item(
+              array(
+                $type => array(
+                  'asset_id' => $asset_id,
+                  'mediafile_id' => $mediafile_id,
+                  'value' => $a_error['value'],
+                  'result' => mediamosa_response::ERROR,
+                  'result_id' => $a_error['a_error']['code'],
+                  'result_description' => $a_error['a_error']['message'],
+                )
+              )
+            );
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
  * URI: /mediafile/$mediafile_id/acl
  * Method: POST
  */

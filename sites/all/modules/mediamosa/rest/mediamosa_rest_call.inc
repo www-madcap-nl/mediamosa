@@ -716,7 +716,7 @@ abstract class mediamosa_rest_call {
 
         if (isset($this->a_rest_args[$key_params])) {
           if ($this->a_rest_args[$key_params][self::PARAM_VALUE] != $value_params) {
-            throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_DIFF_VALUE_GET_POST_VAR, array('@var' => $key_params, '@value1' => $this->a_rest_args[$key_params][self::PARAM_VALUE], '@value2' => $value_params));
+            throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_DIFF_VALUE_GET_POST_VAR, array('@var' => $key_params, '@value1' => $this->a_rest_args[$key_params][self::PARAM_VALUE], '@value2' => print_r($value_params, TRUE)));
           }
 
           continue;
@@ -739,7 +739,7 @@ abstract class mediamosa_rest_call {
 
         if (isset($this->a_rest_args[$key_get])) {
           if ($this->a_rest_args[$key_get][self::PARAM_VALUE] != $value_get) {
-            throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_DIFF_VALUE_GET_POST_VAR, array('@var' => $key_get, '@value1' => $this->a_rest_args[$key_get][self::PARAM_VALUE], '@value2' => $value_get));
+            throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_DIFF_VALUE_GET_POST_VAR, array('@var' => $key_get, '@value1' => $this->a_rest_args[$key_get][self::PARAM_VALUE], '@value2' => print_r($value_get, TRUE)));
           }
 
           continue;
@@ -756,7 +756,7 @@ abstract class mediamosa_rest_call {
 
         if (isset($this->a_rest_args[$key_post])) {
           if ($this->a_rest_args[$key_post][self::PARAM_VALUE] != $value_post) {
-            throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_DIFF_VALUE_GET_POST_VAR, array('@var' => $key_post, '@value1' => $this->a_rest_args[$key_post][self::PARAM_VALUE], '@value2' => $value_post));
+            throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_DIFF_VALUE_GET_POST_VAR, array('@var' => $key_post, '@value1' => $this->a_rest_args[$key_post][self::PARAM_VALUE], '@value2' => print_r($value_post, TRUE)));
           }
 
           continue;

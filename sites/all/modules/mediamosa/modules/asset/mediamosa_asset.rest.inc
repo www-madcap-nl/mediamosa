@@ -488,11 +488,9 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
       $cql = $this->get_param_value(self::CQL);
     }
 
-    // FIXME: ?
-    // HACK: limit < 7 and calculate_total_count not given, then do not
-    // calculate_total_count.
+    // Calculate the total.
     $calculate_total_count = $this->get_param_value(self::CALCULATE_TOTAL_COUNT);
-    if ($this->get_param_value_limit() < 7 && !$this->isset_given_param(self::CALCULATE_TOTAL_COUNT)) {
+    if (!$this->isset_given_param(self::CALCULATE_TOTAL_COUNT)) {
       $calculate_total_count = false;
     }
 
