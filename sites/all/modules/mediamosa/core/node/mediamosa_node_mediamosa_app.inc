@@ -336,13 +336,13 @@ function mediamosa_app_form($node, &$form_state) {
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#title' => t('Master/slave settings'),
-    '#description' => t('Control how other clientapplications can access this application'),
+    '#description' => t('Control which other clientapplications can slave asset to this application'),
   );
 
   $form['masterslave'][mediamosa_app_db::ALLOW_MASTERSLAVE_APPS] = array(
     '#type' => 'select',
     '#title' => t('Allow master/slave access'),
-    '#description' => t('Select other client applications that are allowed to master/slave your assets and mediafiles. Use SHIFT or CTRL to select more than one application. If no applications are selected, then no application can master/slave your assets/mediafiles (default).'),
+    '#description' => t('Select other client applications that are allowed to master/slave their  assets and mediafiles to this application. Use Use SHIFT or CTRL to select more than one application. If no applications are selected, then no application can master/slave their assets/mediafiles to this application (default). Existing master/slave rules will continue to function.'),
     '#options' => $apps,
     '#default_value' => mediamosa_node::default_value(mediamosa_app_db::ALLOW_MASTERSLAVE_APPS, $node, array()),
     '#multiple' => TRUE,
