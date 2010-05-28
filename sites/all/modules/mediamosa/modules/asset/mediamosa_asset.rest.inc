@@ -490,9 +490,6 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
 
     // Calculate the total.
     $calculate_total_count = $this->get_param_value(self::CALCULATE_TOTAL_COUNT);
-    if (!$this->isset_given_param(self::CALCULATE_TOTAL_COUNT)) {
-      $calculate_total_count = false;
-    }
 
     // Now search.
     mediamosa_asset_search::asset_search(
