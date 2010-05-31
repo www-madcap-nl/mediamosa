@@ -465,6 +465,7 @@ class mediamosa_job_scheduler {
         $a_fields = array(
           mediamosa_asset_mediafile_db::ID => $mediafile_id_dest,
           mediamosa_asset_mediafile_db::ASSET_ID => $job_info['asset_id'],
+          mediamosa_asset_mediafile_db::ASSET_ID_ROOT => $job_info['asset_id'],
           mediamosa_asset_mediafile_db::FILENAME => $job_info["filename"],
           mediamosa_asset_mediafile_db::APP_ID => $job_info["app_id"],
           mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT => mediamosa_configuration_storage::mount_point_get(),
