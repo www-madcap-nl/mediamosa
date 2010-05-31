@@ -221,11 +221,13 @@ function mediamosa_transcode_profile_form($node, $form_state) {
   // Get the apps for the drop down listing.
   $apps = _mediamosa_get_apps();
 
-  $form['required']['transcode_profile_id'] = array(
-    '#title' => t('Transcode profile id'),
-    '#type' => 'item',
-    '#markup' => $node->transcode_profile_id,
-  );
+  if (isset($node->transcode_profile_id)) {
+    $form['required']['transcode_profile_id'] = array(
+      '#title' => t('Transcode profile id'),
+      '#type' => 'item',
+      '#markup' => $node->transcode_profile_id,
+    );
+  }
 
   $form['required'][mediamosa_transcode_profile_db::APP_ID] = array(
     '#title' => t('Application'),
