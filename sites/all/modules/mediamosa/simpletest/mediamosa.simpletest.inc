@@ -634,7 +634,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     $node->{mediamosa_app_db::QUOTA_USED} = 0;
     $node->{mediamosa_app_db::ACTIVE_VERSION} = '';
 
-    node_save(&$node);
+    node_save($node);
 
     // Log the creation in the resutls.
     $this->assert(TRUE, t("App created with node ID; '%id',  app_id; '%app_id', name; '%name' and shared key; '%shared_key'.", array('%id' => $node->nid, '%app_id' => $node->{mediamosa_app_db::APP_ID}, '%name' => $node->title, '%shared_key' => $node->{mediamosa_app_db::SHARED_KEY})));
@@ -659,7 +659,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     $node->{mediamosa_server_db::TOOLS} = NULL;
     $node->{mediamosa_server_db::URI_UPLOAD_PROGRESS} = NULL;
 
-    node_save(&$node);
+    node_save($node);
     $this->pass(t('Created node Downloadserver with node ID @nid', array('@nid' => $node->nid)));
   }
 
