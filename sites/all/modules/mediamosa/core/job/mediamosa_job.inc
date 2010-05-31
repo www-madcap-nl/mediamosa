@@ -207,6 +207,7 @@ class mediamosa_job {
       mediamosa_job_db::OWNER_ID => $a_job[mediamosa_job_db::OWNER_ID],
       mediamosa_job_db::APP_ID => $a_job[mediamosa_job_db::APP_ID],
       mediamosa_job_db::PRIORITY => $a_job[mediamosa_job_db::PRIORITY],
+      mediamosa_job_db::JOB_TYPE => $a_job[mediamosa_job_db::JOB_TYPE],
     );
 
     // Add created/changed.
