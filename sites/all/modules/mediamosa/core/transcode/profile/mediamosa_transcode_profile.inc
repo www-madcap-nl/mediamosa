@@ -200,7 +200,7 @@ class mediamosa_transcode_profile {
     $node->{mediamosa_transcode_profile_db::FILE_EXTENSION} = $file_extension;
     $node->{mediamosa_transcode_profile_db::COMMAND} = $command;
 
-    node_save(&$node);
+    node_save($node);
 
     // Get a fresh $node object with other parameters (eg. transcode_profile_id).
     $node = node_load($node->nid);
