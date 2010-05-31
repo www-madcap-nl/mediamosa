@@ -168,6 +168,7 @@ class mediamosa_node_revision {
         ->execute();
     }
     else {
+      $fields = mediamosa_db::db_insert_enrich($fields);
       // Insert.
       mediamosa_db::db_insert($table_name)
         ->fields($fields)
