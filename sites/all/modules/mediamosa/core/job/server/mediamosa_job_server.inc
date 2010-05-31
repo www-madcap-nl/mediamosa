@@ -859,7 +859,7 @@ class mediamosa_job_server {
           break;
         case 'SCENE':
           self::log('Scene detection starts');
-          $destination_path = mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . DATA_LOCATION . DIRECTORY_SEPARATOR . 'transcode' . DIRECTORY_SEPARATOR;
+          $destination_path = mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::data_location_get() . DIRECTORY_SEPARATOR . 'transcode' . DIRECTORY_SEPARATOR;
           //self::log(sprintf('Scene: destination path = %s', $destination_path));
           $input = mediamosa_configuration_storage::mediafile_id_filename_get($mediafile_id);
 
