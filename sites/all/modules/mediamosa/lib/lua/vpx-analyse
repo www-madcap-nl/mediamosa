@@ -422,7 +422,11 @@ function analyse(source_path, hash, always_hint_mp4, always_insert_md)
           add_property("Video-size", size)
 	  -- print("size " .. size)
           add_property("Video-aspectratio", ar)
-          add_property("Video-framespersecond", fps)
+          if fps ~= nil then
+            add_property("Video-framespersecond", fps)
+          else
+            add_property("Video-framespersecond", br2)
+          end
           if bitrate ~= "unknown" then
             add_property("Video-bitrate", bitrate)
 	    -- print("bitrate " .. bitrate)
