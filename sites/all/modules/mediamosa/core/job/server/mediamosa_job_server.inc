@@ -424,17 +424,17 @@ class mediamosa_job_server {
     // Read the contents of the status file in an array.
     $a_job_status = self::get_status_contents($mediafile_id_src);
 
-    // No status file found, we just have to wait.
-    if (empty($a_job_status)) {
-      self::log('No status file found with name @name for job @job_id, maybe next run.', array('@name' => mediamosa_configuration_storage::status_file_location_get($mediafile_id_src), '@job_id' => $job_id));
-      return;
-    }
-
     // Defailt status.
     $status = mediamosa_job_server_db::JOB_STATUS_INPROGRESS;
 
     switch ($job_type) {
       case mediamosa_job_server_db::JOB_TYPE_TRANSCODE:
+        // No status file found, we just have to wait.
+        if (empty($a_job_status)) {
+          self::log('No status file found with name @name for job @job_id, maybe next run.', array('@name' => mediamosa_configuration_storage::status_file_location_get($mediafile_id_src), '@job_id' => $job_id));
+          return;
+        }
+
         if ($a_job_status['Status'] == 'done' && $a_job_status['Errors'] == 'none') {
           // Status to finished.
           $status = mediamosa_job_server_db::JOB_STATUS_FINISHED;
@@ -465,6 +465,14 @@ class mediamosa_job_server {
       case mediamosa_job_server_db::JOB_TYPE_STILL:
         // Scene still filename.
         $file_scene = mediamosa_configuration_storage::still_scene_file_location_get($job_id);
+
+        if (!file_exists($file_scene)) {
+          // No status file found, we just have to wait.
+          if (empty($a_job_status)) {
+            self::log('No status file found with name @name for job @job_id, maybe next run.', array('@name' => mediamosa_configuration_storage::status_file_location_get($mediafile_id_src), '@job_id' => $job_id));
+            return;
+          }
+        }
 
         if (file_exists($file_scene) || ($a_job_status["Status"] == "done" && $a_job_status["Errors"] == "none")) {
           $status = self::store_new_still($job_id, $mediafile_id_src);
