@@ -66,6 +66,15 @@ class mediamosa_lib {
   }
 
   /**
+   * Converts order direction to CQL equivalent.
+   * @param string order direction
+   * @return string CQL order direction
+   */
+  static public function order_direction2cql($order_direction) {
+    return drupal_strtolower($order_direction) == 'desc' ? '/sort.descending' : '';
+  }
+
+  /**
    * Create a name pair list from a string.
    *
    * create_named_array('name1:value1;name2:value2;name3:value3', ';', ':')
