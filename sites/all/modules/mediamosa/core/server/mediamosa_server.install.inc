@@ -84,7 +84,7 @@ s1.write('mediaspace');
 </script>"
       ,'FLV Streaming Server','','','',''),
     array(3,0,'ON',"streaming","http://localhost/ticket/{TICKET}",
-      "mov;mp4;m4a;3gp;3g2;mj2i:h264",
+      "mov;mp4;m4a;3gp;3g2;mj2:h264",
       "<script type='text/javascript' src='http://145.97.38.29/swfobject.js'></script>
 <div id='mediaspace'>This div will be replaced</div>
 <script type='text/javascript'>

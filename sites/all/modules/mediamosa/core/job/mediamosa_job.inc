@@ -484,7 +484,7 @@ class mediamosa_job {
     else {
       // INSERT.
       $fields = array(
-        mediamosa_asset_mediafile_metadata_db::FILESIZE => $uploaded_filesize,
+        mediamosa_asset_mediafile_metadata_db::FILESIZE => (int) $uploaded_filesize,
         mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID => $job_ext_upload[mediamosa_job_db::MEDIAFILE_ID],
       );
 

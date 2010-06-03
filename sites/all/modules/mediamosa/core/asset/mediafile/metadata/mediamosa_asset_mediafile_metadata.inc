@@ -249,7 +249,7 @@ class mediamosa_asset_mediafile_metadata {
 
     // Add these.
     $a_fields[mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID] = $a_job[mediamosa_job_db::MEDIAFILE_ID];
-    $a_fields[mediamosa_asset_mediafile_metadata_db::FILESIZE] = $filesize;
+    $a_fields[mediamosa_asset_mediafile_metadata_db::FILESIZE] = (int) $filesize;
 
     // Copy and remove.
     $ffmpeg_output = $a_fields['ffmpeg_output'];

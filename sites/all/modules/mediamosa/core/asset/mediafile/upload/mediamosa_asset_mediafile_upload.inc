@@ -85,7 +85,7 @@ class mediamosa_asset_mediafile_upload {
 
     // file_size depends on method used.
     // FIXME: $_FILES might be posted as an array in a array (more than one file uploaded).
-    $file_size = $is_method_put ? $_SERVER['CONTENT_LENGTH'] : $_FILES['file']['size'];
+    $file_size = (int) ($is_method_put ? $_SERVER['CONTENT_LENGTH'] : $_FILES['file']['size']);
 
     // Create job.
     $job_id = mediamosa_job::create_job_upload($app_id,  $ticket[mediamosa_ticket_db::OWNER_ID], $ticket[mediamosa_ticket_db::GROUP_ID], $is_app_admin, $ticket[mediamosa_ticket_db::MEDIAFILE_ID], $file_size, $retranscode, $create_still, $still_parameters);

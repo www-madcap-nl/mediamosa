@@ -60,7 +60,7 @@ class mediamosa_statistics {
       mediamosa_statistics_file_upload_db::APP_ID => $app_id,
       mediamosa_statistics_file_upload_db::OWNER_ID => $owner_id,
       mediamosa_statistics_file_upload_db::GROUP_ID => $group_id,
-      mediamosa_statistics_file_upload_db::FILE_SIZE => $file_size,
+      mediamosa_statistics_file_upload_db::FILE_SIZE => (is_null($file_size)? 0 : $file_size),
       mediamosa_statistics_file_upload_db::TIMESTAMP => mediamosa::db_current_timestamp_now()
     );
 
