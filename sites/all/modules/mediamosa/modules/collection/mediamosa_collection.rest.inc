@@ -280,7 +280,7 @@ class mediamosa_rest_call_collection_search extends mediamosa_rest_call {
         throw new mediamosa_exception_error_cql_exclusive();
       }
 
-      $cql .= ($cql == '' ? ' ' : '') . 'sortby ' . $order_by;
+      $cql .= ($cql == '' ? ' ' : '') . 'sortby ' . $order_by . mediamosa_lib::order_direction2cql($order_direction);
     }
     elseif ($cql == '') {
       // Now normal search params, then take CQL (if any).
