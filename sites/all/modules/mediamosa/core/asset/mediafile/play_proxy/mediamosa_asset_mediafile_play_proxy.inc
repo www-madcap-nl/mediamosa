@@ -57,6 +57,11 @@ class mediamosa_asset_mediafile_play_proxy {
   const CONTAINER_TYPE_FLV = 'flv';
   const CONTAINER_TYPE_OGG = 'ogg';
 
+  /**
+   * Video codec types.
+   */
+  const VIDEO_CODEC_H264 = 'h264';
+
   // ------------------------------------------------------------------ Static Functions.
   /**
    * Get the uri of the correct media server.
@@ -349,10 +354,46 @@ class mediamosa_asset_mediafile_play_proxy {
 
         switch ($mediafile_ext['metadata']['container_type']) {
           case self::CONTAINER_TYPE_MP4:
-            $output = '<?xml version="1.0"?>' . "\n";
-            $output .= '<?quicktime type="application/x-quicktime-media-link"?>' . "\n";
-            $output .= sprintf("<embed autoplay=\"%s\" src=\"%s\" />\n", $autostart ? 'true' : 'false', $streaming_server_ticket_uri);
-            $content_type = 'application/x-quicktimeplayer';
+            if ($mediafile_ext['metadata']['video_codec'] == self::VIDEO_CODEC_H264) {
+
+              // Get the rtmp (wowza) server URI.
+              // URI should looks like:
+              // rtmp://wowstreaming.test.snkn.nl/vod&file=vpx-acc/{TICKET}
+              // rtmp://wowstreaming.snkn.nl/simplevideostreaming&file=vpx/{TICKET}
+              // Separate the URL into two parts:
+              // "rtmp://wowstreaming.test.snkn.nl/vod" and "vpx-acc/{TICKET}"
+              $exploded_uri = explode('&file=', $streaming_server_uri);
+              if (isset($exploded_uri[1])) {
+                $uri_base = $exploded_uri[0];
+                $uri_src = $exploded_uri[1];
+              }
+              else {
+                // Apache server.
+                // http://mediamosa2/ticket/LRQKJp4RRHdiOQjZJAiV2rOP.flv
+                // Separation by the last '/':
+                // "http://mediamosa2/ticket/" and "LRQKJp4RRHdiOQjZJAiV2rOP.flv"
+                $last_index = strrpos($streaming_server_uri, '/');
+                $uri_base = substr($streaming_server_uri, 0, $last_index + 1);
+                $uri_src = substr($streaming_server_uri, $last_index + 1);
+              }
+              // Create the output.
+              $output = '<smil>' . "\n";
+              $output .= '  <head>' . "\n";
+              $output .= '    <meta base="' . $uri_base . '" />' . "\n";
+              $output .= '  </head>' . "\n";
+              $output .= '  <body>' . "\n";
+              $output .= '    <video src="' . $uri_src . '" />' . "\n";
+              $output .= '  </body>' . "\n";
+              $output .= '</smil>';
+              // Content type.
+              $content_type = 'application/x-shockwave-flash';
+            }
+            else {
+              $output = '<?xml version="1.0"?>' . "\n";
+              $output .= '<?quicktime type="application/x-quicktime-media-link"?>' . "\n";
+              $output .= sprintf("<embed autoplay=\"%s\" src=\"%s\" />\n", $autostart ? 'true' : 'false', $streaming_server_ticket_uri);
+              $content_type = 'application/x-quicktimeplayer';
+            }
             break;
 
           case self::CONTAINER_TYPE_MP3:
@@ -395,6 +436,41 @@ class mediamosa_asset_mediafile_play_proxy {
 
             $output .= sprintf("\t\t<ref href=\"%s\" />\n", $streaming_server_ticket_uri);
             $output .= "\t</entry>\n</asx>\n";
+            break;
+
+          case self::CONTAINER_TYPE_FLV:
+
+            // Get the rtmp (wowza) server URI.
+            // URI should looks like:
+            // rtmp://wowstreaming.test.snkn.nl/vod&file=vpx-acc/{TICKET}
+            // rtmp://wowstreaming.snkn.nl/simplevideostreaming&file=vpx/{TICKET}
+            // Separate the URL into two parts:
+            // "rtmp://wowstreaming.test.snkn.nl/vod" and "vpx-acc/{TICKET}"
+            $exploded_uri = explode('&file=', $streaming_server_uri);
+            if (isset($exploded_uri[1])) {
+              $uri_base = $exploded_uri[0];
+              $uri_src = $exploded_uri[1];
+            }
+            else {
+              // Apache server.
+              // http://mediamosa2/ticket/LRQKJp4RRHdiOQjZJAiV2rOP.flv
+              // Separation by the last '/':
+              // "http://mediamosa2/ticket/" and "LRQKJp4RRHdiOQjZJAiV2rOP.flv"
+              $last_index = strrpos($streaming_server_uri, '/');
+              $uri_base = substr($streaming_server_uri, 0, $last_index + 1);
+              $uri_src = substr($streaming_server_uri, $last_index + 1);
+            }
+            // Create the output.
+            $output = '<smil>' . "\n";
+            $output .= '  <head>' . "\n";
+            $output .= '    <meta base="' . $uri_base . '" />' . "\n";
+            $output .= '  </head>' . "\n";
+            $output .= '  <body>' . "\n";
+            $output .= '    <video src="' . $uri_src . '" />' . "\n";
+            $output .= '  </body>' . "\n";
+            $output .= '</smil>';
+            // Content type.
+            $content_type = 'application/x-shockwave-flash';
             break;
 
           default:
