@@ -82,24 +82,111 @@ class MediaMosaJobTranscodeTestCaseEga extends MediaMosaTestCaseEgaJob {
     }
 
     // TODO: Windows transcoding
+  }
+
+  // (see ticket 228)
+  function testJobTranscode_calc_aspect_ratio() {
+
+    // Basic tests.
+
+    $result = mediamosa_job_scheduler::calc_aspect_ratio(1024,576,"640x480");
+    $this->assertTrue(
+      $result == "-s:640x360;-padtop:60;-padbottom:60",
+      strtr("Calculate ffmpeg params for aspect ratio: @result", array('@result' => $result))
+    );
+
+    $result = mediamosa_job_scheduler::calc_aspect_ratio(640,480,"200x200");
+    $this->assertTrue(
+      $result == "-s:200x152;-padtop:24;-padbottom:24",
+      strtr("Calculate ffmpeg params for aspect ratio: @result", array('@result' => $result))
+    );
+
+    $result = mediamosa_job_scheduler::calc_aspect_ratio(100,100,"200x300");
+    $this->assertTrue(
+      $result == "-s:200x200;-padtop:50;-padbottom:50",
+      strtr("Calculate ffmpeg params for aspect ratio: @result", array('@result' => $result))
+    );
+
+    $result = mediamosa_job_scheduler::calc_aspect_ratio(100,100,"300x200");
+    $this->assertTrue(
+      $result == "-s:200x200;-padleft:50;-padright:50",
+      strtr("Calculate ffmpeg params for aspect ratio: @result", array('@result' => $result))
+    );
+
+    $result = mediamosa_job_scheduler::calc_aspect_ratio(1920,1080,"352x288");
+    $this->assertTrue(
+      $result == "-s:352x198;-padtop:44;-padbottom:44",
+      strtr("Calculate ffmpeg params for aspect ratio: @result", array('@result' => $result))
+    );
+
+    // With "padding = yes | no".
+
+    $result = mediamosa_job_scheduler::calc_aspect_ratio(320,176,"320x240", TRUE, NULL, NULL, TRUE);
+    $this->assertTrue(
+      $result == "-s:320x176;-padtop:32;-padbottom:32",
+      strtr("Calculate ffmpeg params for aspect ratio: @result", array('@result' => $result))
+    );
+
+    $result = mediamosa_job_scheduler::calc_aspect_ratio(320,176,"320x240", TRUE, NULL, NULL, FALSE);
+    $this->assertTrue(
+      $result == "-s:320x176;-padtop:0;-padbottom:0",
+      strtr("Calculate ffmpeg params for aspect ratio: @result", array('@result' => $result))
+    );
+
+    $result = mediamosa_job_scheduler::calc_aspect_ratio(320,176,"640x480", TRUE, NULL, NULL, TRUE);
+    $this->assertTrue(
+      $result == "-s:640x352;-padtop:64;-padbottom:64",
+      strtr("Calculate ffmpeg params for aspect ratio: @result", array('@result' => $result))
+    );
+
+    $result = mediamosa_job_scheduler::calc_aspect_ratio(320,176,"640x480", TRUE, NULL, NULL, FALSE);
+    $this->assertTrue(
+      $result == "-s:640x352;-padtop:0;-padbottom:0",
+      strtr("Calculate ffmpeg params for aspect ratio: @result", array('@result' => $result))
+    );
+
+    $result = mediamosa_job_scheduler::calc_aspect_ratio(1280,720,"352x288", TRUE, NULL, NULL, TRUE);
+    $this->assertTrue(
+      $result == "-s:352x200;-padtop:44;-padbottom:44",
+      strtr("Calculate ffmpeg params for aspect ratio: @result", array('@result' => $result))
+    );
+
+    $result = mediamosa_job_scheduler::calc_aspect_ratio(1280,720,"352x288", TRUE, NULL, NULL, FALSE);
+    $this->assertTrue(
+      $result == "-s:352x200;-padtop:0;-padbottom:0",
+      strtr("Calculate ffmpeg params for aspect ratio: @result", array('@result' => $result))
+    );
+
+    $result = mediamosa_job_scheduler::calc_aspect_ratio(720,480,"1280x720", TRUE, NULL, NULL, TRUE);
+    $this->assertTrue(
+      $result == "-s:1080x720;-padleft:100;-padright:100",
+      strtr("Calculate ffmpeg params for aspect ratio: @result", array('@result' => $result))
+    );
+
+    $result = mediamosa_job_scheduler::calc_aspect_ratio(720,480,"1280x720", TRUE, NULL, NULL, FALSE);
+    $this->assertTrue(
+      $result == "-s:1080x720;-padleft:0;-padright:0",
+      strtr("Calculate ffmpeg params for aspect ratio: @result", array('@result' => $result))
+    );
+
 
     // TODO: Check, develop, and test this:
-/*
-Transcode without padding
+    /*
+    Transcode without padding
 
-In the past the option 'keep aspect ratio' was introduced in the transcoding parameters which can be filled in from the management portal.
-When set to yes, in combination with a fixed size, at that moment it generated a video which size was within the bounding box of {size}, and maintained the aspect ratio.
-This behaviour has changed recently (I missed the trac issue in which is was changed), and now black padding is added so that the size of the video is exactly {size}. While I can see the need for this behaviour, I also want the opportunity to have the previous situation, so that no padding is added.
-I suggest the 'Maintain aspect ratio' drop down get 3 possible states:
-* no: the video is rescaled to fit {size}, possibly deforming
-* yes, add padding: the video is rescaled, aspect ratio maintained. Padding is added to create a video exactly of {size}
-* yes, no padding: the video is rescaled, aspect ratio maintained. No padding is added. Resulting size of the video fits in the bounding box {size}, but it's absolutely not necessary that we get an exact fit.
-Example.
-Original material is 1024 x 600 pixels
-Target size is 320 x 240
-No: resulting video is 320 x 240 and 'highly deformed'
-yes, padding: the video is scaled to 320 x 188, and 26pixels black padding is added on top and below to create a 320 x 240 video.
-Yes, no padding: the video is scaled to 320 x 188.
- */
+    In the past the option 'keep aspect ratio' was introduced in the transcoding parameters which can be filled in from the management portal.
+    When set to yes, in combination with a fixed size, at that moment it generated a video which size was within the bounding box of {size}, and maintained the aspect ratio.
+    This behaviour has changed recently (I missed the trac issue in which is was changed), and now black padding is added so that the size of the video is exactly {size}. While I can see the need for this behaviour, I also want the opportunity to have the previous situation, so that no padding is added.
+    I suggest the 'Maintain aspect ratio' drop down get 3 possible states:
+    * no: the video is rescaled to fit {size}, possibly deforming
+    * yes, add padding: the video is rescaled, aspect ratio maintained. Padding is added to create a video exactly of {size}
+    * yes, no padding: the video is rescaled, aspect ratio maintained. No padding is added. Resulting size of the video fits in the bounding box {size}, but it's absolutely not necessary that we get an exact fit.
+    Example.
+    Original material is 1024 x 600 pixels
+    Target size is 320 x 240
+    No: resulting video is 320 x 240 and 'highly deformed'
+    yes, padding: the video is scaled to 320 x 188, and 26pixels black padding is added on top and below to create a 320 x 240 video.
+    Yes, no padding: the video is scaled to 320 x 188.
+     */
   }
 }
