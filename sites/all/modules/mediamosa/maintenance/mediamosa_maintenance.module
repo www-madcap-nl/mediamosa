@@ -433,7 +433,7 @@ function _mediamosa_maintenance_status_details($name) {
 
   // Get the result.
   $tests = mediamosa_maintenance_status::get_test_results();
-  $tests = isset($tests['tests']) ? $tests['tests'] : array();
+  //$tests = isset($tests['tests']) ? $tests['tests'] : array();
 
   // Find it.
   $found_test = NULL;
