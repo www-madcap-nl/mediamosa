@@ -169,7 +169,7 @@ class mediamosa_node_revision {
     }
     else {
       // Created field check.
-      $table_description = mediamosa_db::db_query(sprintf('DESCRIBE %s', $table_name));
+      $table_description = mediamosa_db::db_query(sprintf('DESCRIBE {%s}', $table_name));
       foreach ($table_description as $table_row) {
         if ($table_row['field'] == 'created') {
           $fields = mediamosa_db::db_insert_enrich($fields);
