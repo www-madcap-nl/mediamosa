@@ -215,7 +215,7 @@ class mediamosa_aut_app_master_slave {
         '#app_id_slave' => mediamosa_aut_app_master_slave_db::APP_ID_SLAVE,
         ':app_id_slave' => $app_id_slave
       )
-    )->fetchField();
+    )->fetchAll();
 
     // Default none.
     $a_app_id_masters[$app_id_slave][$aut_object_type][$aut_object_id] = array();
