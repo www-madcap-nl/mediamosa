@@ -115,8 +115,11 @@ class MediaMosaAssetMediafileStillDownloadTestCase extends MediaMosaTestCase {
       );
     }
 
-    // Remove link ($ticket).
-    $this->unlink($ticket_symlink);
+    // Test removed link.
+    $this->assertTrue(
+      file_exists($ticket_symlink) == FALSE,
+      t("Unlink: File '@target' is removed.", array('@target' => $ticket_symlink))
+    );
 
     // Remove the test video.
     $this->unlink($target);
