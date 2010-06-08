@@ -290,6 +290,14 @@ function mediamosa_asset_mediamosa_register_rest_call() {
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
 
+  // Get multiple assets.
+  $rest_calls['assets'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_assets_get',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
   // Create the asset.
   $rest_calls['asset/create'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_asset_create',
@@ -646,6 +654,201 @@ function mediamosa_asset_mediamosa_register_rest_call_doc() {
     mediamosa_rest_call::RESPONSE_FIELDS => array(
       'item' => 'Full description of the asset including the metadata in XML format.',
       'asset_id' => 'Asset id of the object.',
+      'app_id' => 'Application ID of the asset.',
+      'provider_id' => 'ID of the source provider.',
+      'owner_id' => 'The user ID of the owner of the asset.',
+      'group_id' => 'The group ID of the asset.',
+      'videotimestamp' => 'Set once when metadata or mediafiles are added.',
+      'videotimestampmodified' => 'Set each time when changes are made to metadata or mediafiles .',
+      'play_restriction_start' => 'The start datetime of play restriction.',
+      'play_restriction_end' => 'The end datetime of play restriction.',
+      'is_unappropriate' => 'Marked unsuitable for viewing or usage.',
+      'is_unappropiate' => 'Alias for is_unappropriate, deprecated use is_unappropriate instead.',
+    ),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <asset_id>M9FyEFTVy0zFzpbOv7DaEH4U</asset_id>
+    <app_id>4</app_id>
+    <provider_id></provider_id>
+    <owner_id>owner</owner_id>
+    <group_id></group_id>
+    <videotimestamp>2009-06-11 16:07:38</videotimestamp>
+    <videotimestampmodified>2009-09-23 14:40:54</videotimestampmodified>
+    <play_restriction_start></play_restriction_start>
+    <play_restriction_end></play_restriction_end>
+    <reference_id></reference_id>
+    <isprivate>FALSE</isprivate>
+    <mediafile_duration>00:00:45.7</mediafile_duration>
+    <mediafile_container_type>asf</mediafile_container_type>
+    <is_unappropiate>FALSE</is_unappropiate>
+    <is_unappropriate>FALSE</is_unappropriate>
+    <is_external>FALSE</is_external>
+    <viewed>1631</viewed>
+    <played>97</played>
+    <is_empty_asset>FALSE</is_empty_asset>
+    <is_protected>DOMAIN_REALM</is_protected>
+    <has_streamable_mediafiles>FALSE</has_streamable_mediafiles>
+    <dublin_core>
+      <type></type>
+      <format></format>
+      <language>nl</language>
+      <title>Test title</title>
+      <creator></creator>
+      <publisher></publisher>
+      <subject></subject>
+      <description>Test description</description>
+      <contributor></contributor>
+      <date></date>
+      <identifier></identifier>
+      <source></source>
+      <relation></relation>
+      <coverage_temporal></coverage_temporal>
+      <coverage_spatial></coverage_spatial>
+      <rights></rights>
+    </dublin_core>
+    <qualified_dublin_core>
+      <title_alternative></title_alternative>
+      <description_abstract></description_abstract>
+      <created></created>
+      <issued></issued>
+      <hasformat></hasformat>
+      <isformatof></isformatof>
+      <format_medium></format_medium>
+      <format_extent></format_extent>
+      <license></license>
+      <rightsholder></rightsholder>
+      <isreferencedby></isreferencedby>
+    </qualified_dublin_core>
+    <czp>
+      <schemanaam>http://your_wle/</schemanaam>
+      <identificatiecode>http://your_wle/asset/M9FyEFTVy0zFzpbOv7DaEH4U</identificatiecode>
+      <titel></titel>
+      <taal></taal>
+      <beschrijving></beschrijving>
+      <sleutelwoord></sleutelwoord>
+      <aggregatieniveau>niveau</aggregatieniveau>
+      <versie>x</versie>
+      <status>final</status>
+      <soort_leermateriaal>Evaluatie- en toetsmateriaal</soort_leermateriaal>
+      <beoogde_eindgebruiker>Auteur</beoogde_eindgebruiker>
+      <context>VVE</context>
+      <beoogde_leeftijdsgroep></beoogde_leeftijdsgroep>
+      <kosten>nee</kosten>
+      <auteursrechten>Ja</auteursrechten>
+      <omschrijving_rechten>x</omschrijving_rechten>
+      <classificatie>x</classificatie>
+    </czp>
+    <ega_view_url>http://your_ega_view_url/viewasset/M9FyEFTVy0zFzpbOv7DaEH4U</ega_view_url>
+    <is_favorite>FALSE</is_favorite>
+    <granted>TRUE</granted>
+    <vpx_still_url>http://your_vpx/still/Em4fKZU6iiKuuWrgbcQ86vPR</vpx_still_url>
+    <ega_still_url>http://your_still_url/M9FyEFTVy0zFzpbOv7DaEH4U</ega_still_url>
+    <mediafiles>
+      <mediafile id="1">
+        <mediafile_id>9PIxRij3YGRgenkyjwOT7zyS</mediafile_id>
+        <asset_id>M9FyEFTVy0zFzpbOv7DaEH4U</asset_id>
+        <app_id>4</app_id>
+        <owner_id>owner</owner_id>
+        <group_id></group_id>
+        <is_original_file>TRUE</is_original_file>
+        <is_downloadable>FALSE</is_downloadable>
+        <filename>testfilename.wmv</filename>
+        <uri></uri>
+        <transcode_profile_id></transcode_profile_id>
+        <tool></tool>
+        <command></command>
+        <file_extension></file_extension>
+        <is_protected>FALSE</is_protected>
+        <created>2009-09-22 14:42:03</created>
+        <changed>2009-09-23 14:40:02</changed>
+        <transcode_inherits_acl>FALSE</transcode_inherits_acl>
+        <mediafile_source></mediafile_source>
+        <tag>test</tag>
+        <is_streamable>FALSE</is_streamable>
+        <is_still>FALSE</is_still>
+        <metadata>
+          <video_codec>wmv3</video_codec>
+          <colorspace>yuv420p</colorspace>
+          <width>384</width>
+          <height>288</height>
+          <fps>25</fps>
+          <audio_codec>wmav2</audio_codec>
+          <sample_rate>44100</sample_rate>
+          <channels>2</channels>
+          <file_duration>00:00:45.7</file_duration>
+          <container_type>asf</container_type>
+          <bitrate>1023</bitrate>
+          <bpp>0.37</bpp>
+          <filesize>5851382</filesize>
+          <mime_type>video/x-ms-asf</mime_type>
+          <created>2009-10-12 16:48:33</created>
+          <changed>2009-10-12 16:48:33</changed>
+          <is_hinted>FALSE</is_hinted>
+          <is_inserted_md>FALSE</is_inserted_md>
+        </metadata>
+        <ega_download_url></ega_download_url>
+        <ega_play_url>http://your_ega_play_url/play/M9FyEFTVy0zFzpbOv7DaEH4U/9PIxRij3YGRgenkyjwOT7zyS/19697</ega_play_url>
+        <ega_stream_url>http://your_stream_url/M9FyEFTVy0zFzpbOv7DaEH4U/9PIxRij3YGRgenkyjwOT7zyS/19697</ega_stream_url>
+      </mediafile>
+      <mediafile id="2">
+        <mediafile_id>2vi8R0dDLXyCKE3vC6qYL2bG</mediafile_id>
+        <asset_id>M9FyEFTVy0zFzpbOv7DaEH4U</asset_id>
+        <app_id>4</app_id>
+        <owner_id>owner</owner_id>
+        <group_id></group_id>
+        <is_original_file>FALSE</is_original_file>
+        <is_downloadable>FALSE</is_downloadable>
+        <filename>testvideo.flv</filename>
+        <uri></uri>
+        <transcode_profile_id>2</transcode_profile_id>
+        <tool>ffmpeg</tool>
+        <command>videobitrate:200000;size:320x240;audiosamplingrate:22050;maintain_aspect_ratio:yes;padding:no</command>
+        <file_extension>flv</file_extension>
+        <is_protected>FALSE</is_protected>
+        <created>2009-09-22 14:42:30</created>
+        <changed>2009-09-22 15:19:49</changed>
+        <transcode_inherits_acl>FALSE</transcode_inherits_acl>
+        <mediafile_source></mediafile_source>
+        <tag>transcoded</tag>
+        <is_streamable>FALSE</is_streamable>
+        <is_still>FALSE</is_still>
+        <metadata>
+          <video_codec>flv</video_codec>
+          <colorspace>yuv420p</colorspace>
+          <width>320</width>
+          <height>240</height>
+          <fps>25</fps>
+          <audio_codec>mp3</audio_codec>
+          <sample_rate>22050</sample_rate>
+          <channels>1</channels>
+          <file_duration>00:00:45.6</file_duration>
+          <container_type>flv</container_type>
+          <bitrate>200</bitrate>
+          <bpp>0.1</bpp>
+          <filesize>1828989</filesize>
+          <mime_type>video/x-flv</mime_type>
+          <created>2009-10-12 16:48:33</created>
+          <changed>2009-10-12 16:48:33</changed>
+          <is_hinted>FALSE</is_hinted>
+          <is_inserted_md>TRUE</is_inserted_md>
+        </metadata>
+        <ega_download_url></ega_download_url>
+        <ega_play_url>http://your_ega_play_url/play/M9FyEFTVy0zFzpbOv7DaEH4U/2vi8R0dDLXyCKE3vC6qYL2bG/19697.flv</ega_play_url>
+        <ega_stream_url>http://your_stream_url/M9FyEFTVy0zFzpbOv7DaEH4U/2vi8R0dDLXyCKE3vC6qYL2bG/19697.flv</ega_stream_url>
+      </mediafile>
+    </mediafiles>
+  </item>
+</items>',
+  );
+
+  // Get the asset.
+  $rest_calls['assets'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Getting multiple asset details.',
+    mediamosa_rest_call::DESCRIPTION => 'Retrieve the details of assets.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/assets?asset_id[]=VlN2ZDKv9rpsfmBAWpvfiw1zQ6z',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(
+      'item' => 'Full description of the asset including the metadata in XML format.',
+      'asset_id[]' => 'Asset id of the object.',
       'app_id' => 'Application ID of the asset.',
       'provider_id' => 'ID of the source provider.',
       'owner_id' => 'The user ID of the owner of the asset.',

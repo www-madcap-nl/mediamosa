@@ -761,6 +761,11 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
     // Asset must exist.
     $asset = mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id, mediamosa_asset_db::PARENT_ID => NULL));
 
+    // Fix app_id
+    if (in_array($asset['app_id'], $app_ids)) {
+      $app_id = $asset['app_id'];
+    }
+
     // ACL check.
     mediamosa_aut::read_single_object(mediamosa_aut::AUT_TYPE_ASSET, $asset_id, $app_ids);
 
@@ -805,6 +810,173 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
     mediamosa_asset::asset_viewed($asset_id);
   }
 }
+
+
+/**
+ * URI: /assets
+ * Method: GET
+ *
+ * Get multiple assets.
+ */
+class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
+  // ------------------------------------------------------------------ Consts.
+  // Rest vars;
+  const ASSET_ID = 'asset_id';
+  const USER_ID = 'user_id';
+  const AUT_USER_ID = 'aut_user_id'; // Alias for user_id.
+  const AUT_GROUP_ID = 'aut_group_id';
+  const AUT_DOMAIN = 'aut_domain';
+  const AUT_REALM = 'aut_realm';
+  const SHOW_STILLS = 'show_stills';
+  const SHOW_COLLECTIONS = 'show_collections';
+  const TAG = 'tag';
+  const IS_OAI = 'is_oai';
+
+  // ------------------------------------------------------------------ Get Var Setup.
+  public function get_var_setup() {
+    $a_var_setup = array();
+
+    $a_var_setup = array(
+      self::VARS => array(
+        self::ASSET_ID => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
+          self::VAR_DESCRIPTION => 'The ID of the assets to retrieve.',
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+          self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+        ),
+        self::TAG => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_DESCRIPTION => 'Include tag to search on mediafiles of the specified asset.',
+          self::VAR_RANGE_END => mediamosa_asset_mediafile_db::TAG_LENGTH,
+        ),
+        self::USER_ID => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_DESCRIPTION => 'Alias for aut_user_id parameter. Warning: is chosen above aut_user_id when both are used.',
+        ),
+        self::AUT_USER_ID => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_DESCRIPTION => 'The current user is used for authorization. The aut_* fields affect the [granted] field in the output, and the parameter "granted" was given the number of records.',
+        ),
+        self::AUT_GROUP_ID => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
+          self::VAR_DESCRIPTION => 'The group(s), where the current user is in, is used for authorization.',
+          self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
+          self::VAR_DEFAULT_VALUE => array(), // NULL is bad when not provided.
+        ),
+        self::AUT_DOMAIN => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_DOMAIN,
+          self::VAR_DESCRIPTION => 'The domain of the user for autohorisation.',
+        ),
+        self::AUT_REALM=> array(
+          self::VAR_TYPE => mediamosa_type::TYPE_REALM,
+          self::VAR_DESCRIPTION => 'The realm of the user for autohorisation.',
+        ),
+        self::SHOW_STILLS => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_DESCRIPTION => 'If true, then include all of the still information.',
+          self::VAR_DEFAULT_VALUE => 'TRUE',
+        ),
+        self::SHOW_COLLECTIONS => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_DESCRIPTION => 'If true, then include all of the collection information.',
+          self::VAR_DEFAULT_VALUE => 'FALSE',
+        ),
+        self::IS_OAI => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_DESCRIPTION => 'Generate additonal asset data for OAI output.',
+          self::VAR_DEFAULT_VALUE => 'FALSE',
+        ),
+      )
+    );
+
+    // Include default.
+    return self::get_var_setup_default($a_var_setup);
+  }
+
+  // ------------------------------------------------------------------ Do Call.
+  public function do_call() {
+    $mediamosa = mediamosa::get();
+
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
+    $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
+
+    $asset_ids = $this->get_param_value(self::ASSET_ID);
+    if (is_array($asset_ids) && !empty($asset_ids)) {
+      foreach ($asset_ids as $asset_id) {
+        if ($this->isset_given_param(self::USER_ID)) {
+          $this->set_param_value(self::AUT_USER_ID, $this->get_param_value(self::USER_ID));
+        }
+
+        $aut_user_id = $this->get_param_value(self::AUT_USER_ID);
+        $a_aut_group_id = $this->get_param_value(self::AUT_GROUP_ID);
+        $aut_domain = $this->get_param_value(self::AUT_DOMAIN);
+        $aut_realm = $this->get_param_value(self::AUT_REALM);
+        $tag = $this->get_param_value(self::TAG);
+        $is_oai = $this->get_param_value(self::IS_OAI);
+
+        $show_stills = $this->get_param_value(self::SHOW_STILLS);
+        $show_collections = $this->get_param_value(self::SHOW_COLLECTIONS);
+
+        // Hotfix, we dont provide this, we always return the asset, so always supply the granted flag
+        $granted = TRUE;
+
+        // Asset must exist.
+        $asset = mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id, mediamosa_asset_db::PARENT_ID => NULL));
+
+        // Fix app_id
+        if (in_array($asset['app_id'], $app_ids)) {
+          $app_id = $asset['app_id'];
+        }
+
+        // ACL check.
+        mediamosa_aut::read_single_object(mediamosa_aut::AUT_TYPE_ASSET, $asset_id, $app_ids);
+
+        // Check un/inappropriate flag.
+        mediamosa_asset::is_unappropriate($asset_id, $app_ids, $aut_user_id, $is_app_admin);
+
+        // Collect.
+        $items = mediamosa_asset::asset_collect(
+          array($asset_id),
+          $app_ids,
+          $aut_user_id,
+          $granted,
+          $a_aut_group_id,
+          $aut_domain,
+          $aut_realm,
+          $is_app_admin,
+          $show_stills,
+          $show_collections
+        );
+
+        // Add mediafiles.
+        $mediafile_ids = mediamosa_asset_mediafile::mediafiles_search($asset_id, $tag, FALSE, ($asset['app_id'] == $app_id ? array() : $app_ids));
+
+        // Is app client at 1.6 ?
+        $app_active_version = $this->app_active_version($app_id);
+
+        // Show in old format?
+        $old_output = $app_active_version !== FALSE && ($app_active_version[mediamosa_version::MAJOR] == 1 && $app_active_version[mediamosa_version::MINOR] < 6);
+
+        // Now enrich the output with mediafiles.
+        $items[0]['mediafiles'] = mediamosa_asset_mediafile::enrich_response_mediafile($mediafile_ids, $app_ids, $is_oai, $show_stills, $old_output);
+
+        // Add streamable setting on asset.
+        $items[0]['has_streamable_mediafiles'] = mediamosa_asset::enrich_response_has_streamable_mediafiles($old_output ?  $items[0]['mediafiles'] : $items[0]['mediafiles']['mediafile']) ? 'TRUE' : 'FALSE';
+
+        // Add to response.
+        foreach ($items as $item) {
+          $mediamosa->add_item($item);
+        }
+
+        // Increase viewed.
+        mediamosa_asset::asset_viewed($asset_id);
+      }
+    }
+
+  }
+}
+
 
 /**
  * URI: /asset/delete
