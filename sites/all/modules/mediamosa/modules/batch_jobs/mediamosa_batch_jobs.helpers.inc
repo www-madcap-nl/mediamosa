@@ -65,7 +65,7 @@ function mediamosa_batch_jobs_parse_table($files = array(), $type = 'queue') {
                   // Load metadata.
                   if (file_exists($metadatafile)) {
                     @$dom_metadata->load($metadatafile);
-                    $record['title'] = $dom_metadata->getElementsByTagName('title')->item(0)->nodeValue;
+                    $record['title'] = (isset($dom_metadata->getElementsByTagName('title')->item(0)->nodeValue) ? $dom_metadata->getElementsByTagName('title')->item(0)->nodeValue : '');
                   }
                   else {
                     $record['title'] = '';
@@ -80,10 +80,20 @@ function mediamosa_batch_jobs_parse_table($files = array(), $type = 'queue') {
               $usr = mediamosa_unicode::substr(basename(dirname($file->uri)), 0, -3) . '_' . ltrim(mediamosa_unicode::substr(dirname($file->uri), -3), '0');
 
               $record['vuf'] = basename($file->uri);
-              $record['email'] = l($dom->getElementsByTagName('email')->item(0)->nodeValue, 'mailto:'. $dom->getElementsByTagName('email')->item(0)->nodeValue);
-              $record['referenceId'] = $video->getElementsByTagName('referenceId')->item(0)->nodeValue;
-              $record['action'] = $video->getElementsByTagName('action')->item(0)->nodeValue;
-              $record['mediaFile'] = $format->getElementsByTagName('mediaFile')->item(0)->nodeValue;
+              $record['email'] = (isset($dom->getElementsByTagName('email')->item(0)->nodeValue) ? l($dom->getElementsByTagName('email')->item(0)->nodeValue, 'mailto:'. $dom->getElementsByTagName('email')->item(0)->nodeValue) : '');
+              // Reference id (with asset id)
+              $record['referenceId'] = '';
+              if (isset($video->getElementsByTagName('referenceId')->item(0)->nodeValue)) {
+                $record['referenceId'] = $video->getElementsByTagName('referenceId')->item(0)->nodeValue;
+              }
+              if (isset($video->getElementsByTagName('assetid')->item(0)->nodeValue)) {
+                $record['referenceId'] = (isset($record['referenceId']) && $record['referenceId'] ? $record['referenceId'] . ' ' : '') . 'asset_id => ' . $video->getElementsByTagName('assetid')->item(0)->nodeValue;
+              }
+              if (isset($video->getElementsByTagName('assetId')->item(0)->nodeValue)) {
+                $record['referenceId'] = (isset($record['referenceId']) && $record['referenceId'] ? $record['referenceId'] . ' ' : '') . 'asset_id => ' . $video->getElementsByTagName('assetId')->item(0)->nodeValue;
+              }
+              $record['action'] = (isset($video->getElementsByTagName('action')->item(0)->nodeValue) ? $video->getElementsByTagName('action')->item(0)->nodeValue : '');
+              $record['mediaFile'] = (isset($format->getElementsByTagName('mediaFile')->item(0)->nodeValue) ? $format->getElementsByTagName('mediaFile')->item(0)->nodeValue : '');
               $record['status'] = l(t('Log'), 'admin/mediamosa/browse/ftp_batch/log/' . basename($file->uri) . '/'. $usr);
 
               // Delete doesn't work because the apache user has insufficient rights.
