@@ -99,7 +99,7 @@ class mediamosa_core_cql {
 
       case mediamosa_type::TYPE_SEARCH_BOOL:
         foreach ($a_value as $value) {
-          $a_or[] = $name . ' == "' . addslashes($value) . '"';
+          $a_or[] = $name . ' == ' . addslashes($value);
         }
         break;
 
