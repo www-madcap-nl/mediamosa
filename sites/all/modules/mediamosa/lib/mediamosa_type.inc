@@ -248,7 +248,7 @@ class mediamosa_type {
 
       // Check ticket id for download/still downloads.
       case self::TYPE_TICKET_ID:
-        if (preg_match("@^([a-zA-Z0-9]+)$@", $mixed_param_value, $matches) !== 1) {
+        if (preg_match("@^([a-zA-Z0-9]+)(\.asx)?$@", $mixed_param_value, $matches) !== 1) {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
         }
         $checked_param_value = (string)$mixed_param_value;
