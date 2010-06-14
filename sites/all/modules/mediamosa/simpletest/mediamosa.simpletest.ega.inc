@@ -78,12 +78,13 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       'mediamosa_statistics',
       'mediamosa_ftp_user'), $args));
 
-    //mediamosa_debug::log_high(print_r(drupal_substr(phpversion(), 0, 3), TRUE));
+    // Fixme; 5.3 fix calls __NAMESPACE__ which refers to a static namespace,
+    // not dynamic like $this.
     if (drupal_substr(phpversion(), 0, 3) < '5.3') {
       call_user_func_array(array($this, 'parent::setUp'), $args);
     }
     else {
-      call_user_func_array(array(__NAMESPACE__ .'\MediaMosaTestCase', 'parent::setUp'), $args);
+      call_user_func_array(array(__NAMESPACE__ . '\MediaMosaTestCaseEga', 'parent::setUp'), $args);
     }
 
     // Now we are in sandbox, create default APP, our default EGA.

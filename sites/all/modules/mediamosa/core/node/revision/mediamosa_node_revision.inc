@@ -168,6 +168,7 @@ class mediamosa_node_revision {
         ->execute();
     }
     else {
+      // FIXME Use drupal db layer for DESCRIBE here, use the schema functions.
       // Created field check.
       $table_description = mediamosa_db::db_query(sprintf('DESCRIBE {%s}', $table_name));
       foreach ($table_description as $table_row) {

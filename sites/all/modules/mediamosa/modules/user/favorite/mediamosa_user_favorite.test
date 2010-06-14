@@ -51,6 +51,7 @@ class MediaMosaUserFavoriteTestCaseEga extends MediaMosaTestCaseEga {
     // Create and setup the modules.
     $args = func_get_args();
     $args = array_unique(array_merge(array('mediamosa_user'), $args));
+
     call_user_func_array(array($this, 'parent::setUp'), $args);
   }
 
