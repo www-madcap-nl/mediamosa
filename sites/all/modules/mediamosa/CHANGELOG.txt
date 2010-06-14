@@ -38,7 +38,7 @@ Known issues;
 
 Mediamosa 2.1.4
 ---------------
-- Batchjobs history causes notice bug fix (ps. some batch job doesn't have 
+- Batchjobs history causes notice bug fix (Some batch job doesn't have 
   referenceId, just assetid) (See ticket #305).
 - Content type application/smil now. (See ticket #262).
 - Collection search with boolean value bug fix. (See ticket #304).
@@ -48,6 +48,9 @@ Mediamosa 2.1.4
 Other changes (not ticket related)
 - Changed unlink of tickets in simpletest into a test if ticket is gone.
 - Added new REST call /assets for retrieving multiple assets.
+- All filesize and file_exists checks now use clearcachestats to make sure the
+  IO cache is up to date (SAN/NAS problems).
+- Added slave option for search asset query to run on slave.
 
 Mediamosa 2.1.3
 ---------------
