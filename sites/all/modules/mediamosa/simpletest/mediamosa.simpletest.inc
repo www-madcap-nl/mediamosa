@@ -562,6 +562,9 @@ class MediaMosaTestCase extends DrupalWebTestCase {
   protected function file_exists($filename, $text = 'Check if file exists.') {
     mediamosa_io::clearstatcache();
 
+    // Extra w8 for update from san/nas.
+    sleep(2);
+
     $this->assertTrue(
       file_exists($filename),
       $text
