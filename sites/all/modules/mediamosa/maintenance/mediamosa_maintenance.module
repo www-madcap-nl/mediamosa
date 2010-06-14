@@ -339,6 +339,10 @@ function _mediamosa_maintenance_status($show_tests = NULL) {
           $class = 'simpletest-fail';
         }
 
+        if (!isset($test['runphase'])) {
+          $test['runphase'] = '';
+        }
+
         switch ($test['runphase']) {
           case mediamosa_maintenance_status::RUNPHASE_TIMED_OUT:
             $result = t('Test has timed out.');
