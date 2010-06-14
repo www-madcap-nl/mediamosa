@@ -31,19 +31,54 @@ Steps for changelog and commits;
 
 START CHANGELOG:
 
+Mediamosa 2.1.4
+---------------
+Other changes (not ticket related)
+- Changed unlink of tickets in simpletest into a test if ticket is gone.
+
+
+Mediamosa 2.1.3
+---------------
+- Transcoding progress fix (See ticket #297).
+- Play response=metafile support for Wowza-server (See ticket 262).
+- Order direction fix for collection. (See ticket #300).
+
+Other changes (not ticket related)
+- Made fix on simpletest to run on own database (when configured) so it 
+  generate less binlog on mysql (about 25mb per test to 30k per test).
+- Made core-hack patch on bootstrap.inc. Simpletests can not run on multiple 
+  servers because of filedate and fileinode tests on local file. 
+
+
 Mediamosa 2.1.2
 ---------------
 - Renamed dummy titles of transcode profiles to their correct names. (See 
-  mediamosa ticket #282)
-- Fixed problem with changed date update on profiles (See ticket #276).
+  mediamosa ticket #282).
+- Added transcode profile_id in the admin interface. (See ticket #293). 
+- Added explanation to the interface (client applications edit page) (See ticket
+  #28).
+- Changes of a transcode profile also updates the changed field. (See ticket 
+  #276).
+- added documentation for un-documented variables in the object code. (See 
+  ticket #279).
+- Log entries: page not found gives the the requested page. (See ticket #296)
+- Removed the '< 7' check for asset search and updated documentation for it. 
+  (See ticket #288) .
+- New REST call for set ACL right for multiple mediafiles at once 
+  (mediafile/acl) (See ticket #289).
+- Upload with parameter still=normal was broken in v2. (See ticket #294).
+- /asset/{id}/mediafile now only shows the slaved mediafiles (in case of an 
+  slaved asset) (See ticket #232).
+- fixed an error in /ftp in v.2. (See ticket #247).
+- Transcode without padding. Added a new parameter to the transcode profile to 
+  use in combination with maintain aspect ratio: (padding: yes, no) (See ticket
+  #194).
+- Added another mp4 (f4v, flash video) analyze fix. (See ticket #122).
+- OAI: updated to Drupal 7 latests. (See ticket #299).
 
 
 Other changes (not ticket related)
 - Fixed problem retrieving user/$fav_user_id/favorites with /rest/$rest_id call.
-- Made core-hack patch on bootstrap.inc. Simpletests can not run on multiple 
-  servers because of filedate and fileinode tests on local file. 
-- Made fix on simpletest to run on own database (when configured) so it 
-  generate less binlog on mysql.
 
 Mediamosa 2.1.1
 ---------------
