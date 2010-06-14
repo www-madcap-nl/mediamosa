@@ -96,7 +96,7 @@ class MediaMosaTestCaseEgaJobTest extends MediaMosaTestCaseEgaJob {
     // File check.
     $file = mediamosa_configuration_storage::still_filename_get($still_id);
     $this->assertTrue(
-      file_exists($file),
+      mediamosa_io::file_exists($file),
       t("file lookup on @file.", array('@file' => $file))
     );
 
@@ -127,7 +127,7 @@ class MediaMosaTestCaseEgaJobTest extends MediaMosaTestCaseEgaJob {
     // File check.
     $file = mediamosa_configuration_storage::still_filename_get($still_id);
     $this->assertFalse(
-      file_exists($file),
+      mediamosa_io::file_exists($file),
       t("file lookup on @file.", array('@file' => $file))
     );
   }

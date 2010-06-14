@@ -33,7 +33,16 @@ $databases['default']['default'] = array(
   'password' => 'memo',
   'host' => 'localhost'
 );
-
+// Define slave for heavy searches on slave database.
+/*
+$databases['slave']['default'] = array(
+  'driver' => 'mysql',
+  'database' => 'mediamosa',
+  'username' => 'memo',
+  'password' => 'memo',
+  'host' => 'localhost'
+);
+*/
 // Optional simpletest MediaMosa database.
 /*
 $databases['mediamosa_simpletest']['default'] = array(

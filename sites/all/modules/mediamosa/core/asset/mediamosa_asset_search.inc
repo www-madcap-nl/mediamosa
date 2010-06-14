@@ -407,27 +407,37 @@ class mediamosa_asset_search {
       // Do the query
       $query = mediamosa_db_query::query_select($a_query, array(mediamosa_db_QUERY::SQL_CALC_FOUND_ROWS => $calculate_total_count));
 
-      global $db_url;
-      /*
-       * @todo: fix slave hack here.
-       *
-      if (array_key_exists('data2', $db_url)) {
-        db_set_active('data2');
+      // If we specify data2, then we do our read queries on the slave.
+      global $databases;
+      $olddb = NULL;
+      if (isset($databases['slave'])) {
+        $olddb = db_set_active('data2');
       }
-      else {
-        db_set_active('data');
+
+      try {
+        // Do the query.
+        $result = mediamosa_db::db_query($query);
+
+        // Get the number of found rows.
+        $i_found_rows = mediamosa_db::db_found_rows();
+
+        $a_asset_ids = array();
+        foreach ($result as $a_row) {
+          $a_asset_ids[] = $a_row[mediamosa_asset_db::ID];
+        }
       }
-      */
+      catch (Exception $e) {
+        // Make sure we switch back(!).
+        if (isset($olddb)) {
+          db_set_active($olddb);
+        }
 
-      // Do the query.
-      $result = mediamosa_db::db_query($query);
+        throw $e;
+      }
 
-      // Get the number of found rows.
-      $i_found_rows = mediamosa_db::db_found_rows();
-
-      $a_asset_ids = array();
-      foreach ($result as $a_row) {
-        $a_asset_ids[] = $a_row[mediamosa_asset_db::ID];
+      // Switch back.
+      if (isset($olddb)) {
+        db_set_active($olddb);
       }
     }
     else {
@@ -465,18 +475,6 @@ class mediamosa_asset_search {
       $d_search = isset($a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][self::SEARCH]) ? $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][self::SEARCH] : FALSE;
       $d_where = sprintf('a.app_id IN(%s)', implode(',', $a_app_ids_tmp)) . ($d_search ? ' AND '. $d_search : '') . ($coll_id ? ' AND (a.coll_id = \''. implode('\' OR a.coll_id = \'', $coll_id) .'\')' : '');
 
-      global $db_url;
-      /*
-       * FIXME: fix hack here.
-       *
-      if (array_key_exists('data2', $db_url)) {
-        db_set_active('data2');
-      }
-      else {
-        db_set_active('data');
-      }
-      */
-
       // Temporary table
       /**
        * @todo: fix this to db_query_temp or even refactor without temp.
@@ -498,30 +496,49 @@ class mediamosa_asset_search {
         }
         $query = str_replace('SQL_CALC_FOUND_ROWS', '', $query);
 
-        $table_name = db_query_temporary($query);
-
-        // Deleted asset query
-        mediamosa_db::db_query('INSERT INTO {' . $table_name . '} SELECT a.asset_id, a.videotimestampmodified FROM {#mediamosa_asset_delete} AS a'. ($d_where ? ' WHERE '. $d_where : '') .' GROUP BY a.asset_id', array(
-          '#mediamosa_asset_delete' => mediamosa_asset_delete_db::TABLE_NAME,
-        ));
-
-        // Harvesting the data
-        if (substr($d_ordby, 0, 5) == 'sort.') {
-          $d_ordby = 'a.' . substr($d_ordby, 5);
-        }
-        $result = mediamosa_db::db_query('SELECT DISTINCT a.asset_id FROM {' . $table_name . '} AS a'. ($d_ordby ? ' ORDER BY '. $d_ordby : '') . ($d_limit ? ($d_offset ? ' LIMIT '. $d_offset .','. $d_limit : ' LIMIT '. $d_limit) : ''));
-        $a_asset_ids = array();
-        foreach ($result as $a_row) {
-          $a_asset_ids[] = $a_row[mediamosa_asset_db::ID];
+        // If we specify data2, then we do our read queries on the slave.
+        global $databases;
+        $olddb = NULL;
+        if (isset($databases['slave'])) {
+          $olddb = db_set_active('data2');
         }
 
-        // How much assets we have globally
-        $i_found_rows = $calculate_total_count ? mediamosa_db::db_query('SELECT COUNT(*) FROM {' . $table_name . '}')->fetchField() : count($a_asset_ids);
+        try {
+          $table_name = db_query_temporary($query);
 
-        // Drop temporary table (no need to drop temp, this is done by mysql when session closes).
-        //mediamosa_db::db_query('DROP TABLE {' . $table_name . '}');
+          // Deleted asset query
+          mediamosa_db::db_query('INSERT INTO {' . $table_name . '} SELECT a.asset_id, a.videotimestampmodified FROM {#mediamosa_asset_delete} AS a'. ($d_where ? ' WHERE '. $d_where : '') .' GROUP BY a.asset_id', array(
+            '#mediamosa_asset_delete' => mediamosa_asset_delete_db::TABLE_NAME,
+          ));
 
-        // Restore.
+          // Harvesting the data
+          if (substr($d_ordby, 0, 5) == 'sort.') {
+            $d_ordby = 'a.' . substr($d_ordby, 5);
+          }
+          $result = mediamosa_db::db_query('SELECT DISTINCT a.asset_id FROM {' . $table_name . '} AS a'. ($d_ordby ? ' ORDER BY '. $d_ordby : '') . ($d_limit ? ($d_offset ? ' LIMIT '. $d_offset .','. $d_limit : ' LIMIT '. $d_limit) : ''));
+          $a_asset_ids = array();
+          foreach ($result as $a_row) {
+            $a_asset_ids[] = $a_row[mediamosa_asset_db::ID];
+          }
+
+          // How much assets we have globally
+          $i_found_rows = $calculate_total_count ? mediamosa_db::db_query('SELECT COUNT(*) FROM {' . $table_name . '}')->fetchField() : count($a_asset_ids);
+        }
+        catch (Exception $e) {
+          // Make sure we switch back(!).
+          if (isset($olddb)) {
+            db_set_active($olddb);
+          }
+
+          throw $e;
+        }
+
+        // Switch back.
+        if (isset($olddb)) {
+          db_set_active($olddb);
+        }
+
+      // Restore.
         $a_query = $tmp_a_query;
       }
 
@@ -592,29 +609,40 @@ class mediamosa_asset_search {
       // Create the query.
       $query = mediamosa_db_query::query_select($a_query_null, array(mediamosa_db_query::SQL_CALC_FOUND_ROWS => $calculate_total_count));
 
-/*
-       * @todo: fix hack here.
-       *
-      if (array_key_exists('data2', $db_url)) {
-        db_set_active('data2');
+      // If we specify data2, then we do our read queries on the slave.
+      global $databases;
+      $olddb = NULL;
+      if (isset($databases['slave'])) {
+        $olddb = db_set_active('data2');
       }
-      else {
-        db_set_active('data');
+
+      try {
+        // Do the query.
+        $result = mediamosa_db::db_query($query);
+
+        // Get the number of found rows.
+        $i_found_rows += mediamosa_db::db_found_rows();
+
+        foreach ($result as $a_row) {
+          if (count($a_asset_ids) >= $a_query[mediamosa_db_query::LIMIT]) {
+            break;
+          }
+
+          $a_asset_ids[] = $a_row['asset_id'];
+        }
       }
-      */
-
-      // Do the query.
-      $result = mediamosa_db::db_query($query);
-
-      // Get the number of found rows.
-      $i_found_rows += mediamosa_db::db_found_rows();
-
-      foreach ($result as $a_row) {
-        if (count($a_asset_ids) >= $a_query[mediamosa_db_query::LIMIT]) {
-          break;
+      catch (Exception $e) {
+        // Make sure we switch back(!).
+        if (isset($olddb)) {
+           db_set_active($olddb);
         }
 
-        $a_asset_ids[] = $a_row['asset_id'];
+        throw $e;
+      }
+
+      // Switch back.
+      if (isset($olddb)) {
+         db_set_active($olddb);
       }
     }
 

@@ -433,9 +433,6 @@ class mediamosa_job {
     // Get the newly uploaded filename.
     $uploaded_filename = mediamosa_configuration_storage::mediafile_filename_get($a_mediafile);
 
-    // Reset IO cache, so we are sure we get the latest information about the file.
-    mediamosa_io::clearstatcache();
-
     // Get the filesize of the uploaded file.
     $uploaded_filesize = mediamosa_io::filesize($uploaded_filename);
 
