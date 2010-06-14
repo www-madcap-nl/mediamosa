@@ -78,7 +78,13 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       'mediamosa_statistics',
       'mediamosa_ftp_user'), $args));
 
-    call_user_func_array(array($this, 'parent::setUp'), $args);
+    //mediamosa_debug::log_high(print_r(drupal_substr(phpversion(), 0, 3), TRUE));
+    if (drupal_substr(phpversion(), 0, 3) < '5.3') {
+      call_user_func_array(array($this, 'parent::setUp'), $args);
+    }
+    else {
+      call_user_func_array(array(__NAMESPACE__ .'\MediaMosaTestCase', 'parent::setUp'), $args);
+    }
 
     // Now we are in sandbox, create default APP, our default EGA.
     $this->a_app = $this->createApp();
