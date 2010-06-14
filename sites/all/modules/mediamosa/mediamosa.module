@@ -119,7 +119,7 @@ function mediamosa_init() {
 }
 
 /**
- * The MediaMosa REST menu callback.
+ * The MediaMosa REST menu callback. (not implemented)
  */
 function _mediamosa() {
   // Create and get the core object.
@@ -130,6 +130,65 @@ function _mediamosa() {
 
   // If our the URL didn't match, then at this point we return MENU_NOT_FOUND for drupal.
   return MENU_NOT_FOUND;
+}
+
+/**
+ * Implements hook_block_info().
+ */
+function mediamosa_block_info() {
+  // Set block.
+  $blocks['mediamosa-version'] = array(
+    'info' => t('MediaMosa version'),
+    'weight' => '15',
+    'cache' => DRUPAL_NO_CACHE,
+  );
+
+  return $blocks;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function mediamosa_theme() {
+  return array(
+    'mediamosa_version' => array(
+      'variables' => array(
+      ),
+    ),
+  );
+}
+/**
+ * Format the MediaMosa version text.
+ *
+ * @ingroup themeable
+ */
+function theme_mediamosa_version($variables) {
+  // Get version info.
+  $version = mediamosa_version::get_current_version();
+
+  return '<p align="center">' .
+    t('MediaMosa version v!MAJOR.!MINOR.!RELEASE build !BUILD',
+      array(
+        '!MAJOR' => $version[mediamosa_version::MAJOR],
+        '!MINOR' => $version[mediamosa_version::MINOR],
+        '!RELEASE' => $version[mediamosa_version::RELEASE],
+        '!BUILD' => $version[mediamosa_version::BUILD],
+      )
+    ) .
+    '</p>';
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function mediamosa_block_view($delta = '') {
+  $block = array();
+  switch ($delta) {
+    case 'mediamosa-version':
+      $block['subject'] = NULL;
+      $block['content'] = theme('mediamosa_version');
+      return $block;
+  }
 }
 
 /**
