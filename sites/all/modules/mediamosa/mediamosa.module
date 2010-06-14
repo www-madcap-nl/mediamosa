@@ -167,7 +167,7 @@ function theme_mediamosa_version($variables) {
   $version = mediamosa_version::get_current_version();
 
   return '<p align="center">' .
-    t('MediaMosa version v!MAJOR.!MINOR.!RELEASE build !BUILD',
+    t('MediaMosa v!MAJOR.!MINOR.!RELEASE build !BUILD',
       array(
         '!MAJOR' => $version[mediamosa_version::MAJOR],
         '!MINOR' => $version[mediamosa_version::MINOR],
