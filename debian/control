@@ -6,7 +6,7 @@ Build-Depends: debhelper (>= 5)
 Standards-Version: 3.7.2
 
 Package: vpcore
-Architecture: any
+Architecture: i386
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: VP-Core
  Mediamosa is a full featured, webservice oriented media management
