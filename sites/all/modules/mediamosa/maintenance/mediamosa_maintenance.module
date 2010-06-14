@@ -339,6 +339,7 @@ function _mediamosa_maintenance_status($show_tests = NULL) {
           $class = 'simpletest-fail';
         }
 
+        // Fix possible notice.
         if (!isset($test['runphase'])) {
           $test['runphase'] = '';
         }
