@@ -332,6 +332,7 @@ class mediamosa_asset_mediafile_play_proxy {
     else {
       $streaming_server_uri = self::get_media_server($response_type, $mediafile_ext);
     }
+
     // Replace {TICKET} with app_id / ticket.
     if ($response_type != self::RESPONSE_TYPE_STILL) {
       $streaming_server_ticket_uri = str_replace(self::PARAM_URI_TICKET, $app_id . '/' . $ticket, $streaming_server_uri);
@@ -362,7 +363,7 @@ class mediamosa_asset_mediafile_play_proxy {
               // rtmp://wowstreaming.snkn.nl/simplevideostreaming&file=vpx/{TICKET}
               // Separate the URL into two parts:
               // "rtmp://wowstreaming.test.snkn.nl/vod" and "vpx-acc/{TICKET}"
-              $exploded_uri = explode('&file=', $streaming_server_uri);
+              $exploded_uri = explode('&file=', $streaming_server_ticket_uri);
               if (isset($exploded_uri[1])) {
                 $uri_base = $exploded_uri[0];
                 $uri_src = $exploded_uri[1];
@@ -372,9 +373,9 @@ class mediamosa_asset_mediafile_play_proxy {
                 // http://mediamosa2/ticket/LRQKJp4RRHdiOQjZJAiV2rOP.flv
                 // Separation by the last '/':
                 // "http://mediamosa2/ticket/" and "LRQKJp4RRHdiOQjZJAiV2rOP.flv"
-                $last_index = strrpos($streaming_server_uri, '/');
-                $uri_base = substr($streaming_server_uri, 0, $last_index + 1);
-                $uri_src = substr($streaming_server_uri, $last_index + 1);
+                $last_index = strrpos($streaming_server_ticket_uri, '/');
+                $uri_base = substr($streaming_server_ticket_uri, 0, $last_index + 1);
+                $uri_src = substr($streaming_server_ticket_uri, $last_index + 1);
               }
               // Create the output.
               $output = '<smil>' . "\n";
@@ -446,7 +447,7 @@ class mediamosa_asset_mediafile_play_proxy {
             // rtmp://wowstreaming.snkn.nl/simplevideostreaming&file=vpx/{TICKET}
             // Separate the URL into two parts:
             // "rtmp://wowstreaming.test.snkn.nl/vod" and "vpx-acc/{TICKET}"
-            $exploded_uri = explode('&file=', $streaming_server_uri);
+            $exploded_uri = explode('&file=', $streaming_server_ticket_uri);
             if (isset($exploded_uri[1])) {
               $uri_base = $exploded_uri[0];
               $uri_src = $exploded_uri[1];
@@ -456,9 +457,9 @@ class mediamosa_asset_mediafile_play_proxy {
               // http://mediamosa2/ticket/LRQKJp4RRHdiOQjZJAiV2rOP.flv
               // Separation by the last '/':
               // "http://mediamosa2/ticket/" and "LRQKJp4RRHdiOQjZJAiV2rOP.flv"
-              $last_index = strrpos($streaming_server_uri, '/');
-              $uri_base = substr($streaming_server_uri, 0, $last_index + 1);
-              $uri_src = substr($streaming_server_uri, $last_index + 1);
+              $last_index = strrpos($streaming_server_ticket_uri, '/');
+              $uri_base = substr($streaming_server_ticket_uri, 0, $last_index + 1);
+              $uri_src = substr($streaming_server_ticket_uri, $last_index + 1);
             }
             // Create the output.
             $output = '<smil>' . "\n";
