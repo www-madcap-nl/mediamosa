@@ -97,6 +97,9 @@ class mediamosa_io {
    * Gets file size.
    */
   static public function filesize($filename) {
+    // Filesize needs clear cache.
+    self::clearstatcache();
+
     return filesize($filename);
   }
 
@@ -180,6 +183,10 @@ class mediamosa_io {
    * @param string $filename
    */
   static public function file_exists($filename) {
+    // File exists needs clear cache.
+    self::clearstatcache();
+
+    // Test it.
     return file_exists($filename);
   }
 

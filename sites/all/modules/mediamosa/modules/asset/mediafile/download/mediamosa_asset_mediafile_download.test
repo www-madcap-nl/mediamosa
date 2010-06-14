@@ -116,7 +116,7 @@ class MediaMosaAssetMediafileDownloadTestCase extends MediaMosaTestCase {
 
     // Remove link ($ticket).
     $this->assertTrue(
-      file_exists($ticket_symlink) == FALSE,
+      mediamosa_io::file_exists($ticket_symlink) == FALSE,
       t("Unlink: File '@target' is removed.", array('@target' => $ticket_symlink))
     );
 
