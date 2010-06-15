@@ -55,7 +55,7 @@ function mediamosa_aut_object_schema() {
     'description' => t('This table stores authorization links between named/group entities to objects.'),
     'fields' => array(
       mediamosa_aut_object_db::AUT_OBJECT_ID => array(
-        'type' => 'varchar',
+        'type' => 'varbinary',
         'length' => mediamosa_aut_object_db::AUT_OBJECT_ID_LENGTH,
         'not null' => TRUE,
         'default' => '',
