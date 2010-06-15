@@ -186,6 +186,9 @@ class mediamosa_io {
     // File exists needs clear cache.
     self::clearstatcache();
 
+    // Sleep, so file_exists may read non-cache.
+    sleep(2);
+
     // Test it.
     return file_exists($filename);
   }

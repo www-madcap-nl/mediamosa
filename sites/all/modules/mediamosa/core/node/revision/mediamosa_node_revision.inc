@@ -133,7 +133,6 @@ class mediamosa_node_revision {
    *  The $names of the object in $node we want to store.
    */
   static public function insert_ex($node, $table_name, array $names) {
-
     // Collect the data we want to insert.
     $fields = array();
     foreach ($names as $name) {
@@ -168,14 +167,11 @@ class mediamosa_node_revision {
         ->execute();
     }
     else {
-      // FIXME Use drupal db layer for DESCRIBE here, use the schema functions.
-      // Created field check.
-      $table_description = mediamosa_db::db_query(sprintf('DESCRIBE {%s}', $table_name));
-      foreach ($table_description as $table_row) {
-        if ($table_row['field'] == 'created') {
-          $fields = mediamosa_db::db_insert_enrich($fields);
-        }
+      // If have a created field, then enrich with created and changed fields.
+      if (in_array(mediamosa_db::CREATED, $names)) {
+        $fields = mediamosa_db::db_insert_enrich($fields);
       }
+
       // Insert.
       mediamosa_db::db_insert($table_name)
         ->fields($fields)

@@ -51,6 +51,9 @@ Other changes (not ticket related)
 - All filesize and file_exists checks now use clearcachestats to make sure the
   IO cache is up to date (SAN/NAS problems).
 - Added slave option for search asset query to run on slave.
+- Fixed saving of empty values in drop down select boxes in transcode profile
+  admin.
+- Fixed problem saving transcode profile without revision saving.
 
 Mediamosa 2.1.3
 ---------------

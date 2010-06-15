@@ -222,10 +222,14 @@ function mediamosa_transcode_profile_form($node, $form_state) {
   $apps = _mediamosa_get_apps();
 
   if (isset($node->transcode_profile_id)) {
-    $form['required']['transcode_profile_id'] = array(
+    $form['required']['transcode_profile_id_markup'] = array(
       '#title' => t('Transcode profile id'),
       '#type' => 'item',
       '#markup' => $node->transcode_profile_id,
+    );
+    $form['required']['transcode_profile_id'] = array(
+      '#type' => 'hidden',
+      '#value' => $node->transcode_profile_id,
     );
   }
 
@@ -330,7 +334,7 @@ function mediamosa_transcode_profile_form($node, $form_state) {
     $weight = $is_required ? 0 : 15;
 
     // Get the value.
-    $value = isset($node->commands{$name}) ? $node->commands{$name} : $tool[mediamosa_transcode_mapping_db::DEFAULT_VALUE];
+    $value = isset($node->commands{$name}) ? $node->commands{$name} : ($is_required ? $tool[mediamosa_transcode_mapping_db::DEFAULT_VALUE] : '');
 
     $descriptions = array();
     $description = isset($comments[$name]) ? $comments[$name] : '';
@@ -362,7 +366,7 @@ function mediamosa_transcode_profile_form($node, $form_state) {
       );
     }
     else {// Select box.
-      $options = array();
+      $options = $is_required ? array() : array('' => '');
       foreach ($tool[mediamosa_transcode_mapping_db::ALLOWED_VALUE] as $allowed_value) {
         $options[$allowed_value] = $allowed_value;
       }
