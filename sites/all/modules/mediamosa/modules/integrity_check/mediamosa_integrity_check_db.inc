@@ -43,7 +43,7 @@ class mediamosa_integrity_check_db {
   const TYPE_MISSING_STILLFILE = 'missing stillfile';
   const TYPE_MISSING_STILLRECORD = 'missing stillrecord';
   const OBJECT_ID = 'object_id';
-  const OBJECT_ID_LENGTH = 32;
+  const OBJECT_ID_LENGTH = mediamosa_db::HASH_ID_LENGTH;
   const APP_ID = 'app_id';
   const OWNER_ID = 'owner_id';
   const OWNER_ID_LENGTH = 255;

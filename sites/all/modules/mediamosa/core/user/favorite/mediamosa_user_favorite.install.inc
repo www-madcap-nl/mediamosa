@@ -72,10 +72,10 @@ function mediamosa_user_favorite_schema() {
         'mysql_type' => "enum('" . implode("','", array(mediamosa_user_favorite_db::FAV_TYPE_ASSET, mediamosa_user_favorite_db::FAV_TYPE_COLLECTION)) . "')",
       ),
       mediamosa_user_favorite_db::FAV_ID => array(
-        'type' => 'varchar',
-        'length' => mediamosa_user_favorite_db::FAV_ID_LENGTH,
+        'type' => 'varbinary',
+        'length' => mediamosa_db::HASH_ID_LENGTH,
         'not null' => TRUE,
-        'description' => t('The name of group.'),
+        'description' => t('The ID to the favorite object.'),
       ),
     ),
     'primary key' => array(mediamosa_user_favorite_db::NAME, mediamosa_user_favorite_db::APP_ID, mediamosa_user_favorite_db::FAV_TYPE, mediamosa_user_favorite_db::FAV_ID),

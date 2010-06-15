@@ -68,13 +68,13 @@ function mediamosa_statistics_file_upload_schema() {
         'description' => t('The application ID.'),
       ),
       mediamosa_statistics_file_upload_db::OWNER_ID => array(
-        'type' => 'varbinary',
-        'length' => mediamosa_db::HASH_ID_LENGTH,
+        'type' => 'varchar',
+        'length' => 255,
         'description' => t('The owner ID.'),
       ),
       mediamosa_statistics_file_upload_db::GROUP_ID => array(
-        'type' => 'varbinary',
-        'length' => mediamosa_db::HASH_ID_LENGTH,
+        'type' => 'varchar',
+        'length' => 255,
         'description' => t('The group ID.'),
       ),
       mediamosa_statistics_file_upload_db::FILE_SIZE => array(
