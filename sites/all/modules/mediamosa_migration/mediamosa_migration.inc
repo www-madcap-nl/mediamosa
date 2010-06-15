@@ -985,7 +985,7 @@ function _mediamosa_migration_aut() {
         aut_object_type,
         aut_id,
         aut_type
-        FROM #db_name.{aut_object})',
+        FROM #db_name.{aut_object} GROUP BY aut_object_type, aut_object_id, aut_type, aut_id)',
     array(
       '#db_name' => $db_name,
     ))

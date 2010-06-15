@@ -44,7 +44,6 @@ Mediamosa 2.1.4
 - Collection search with boolean value bug fix. (See ticket #304).
 - .asx file is not downloadable with timing parameter - fix (See ticket #306).
 
-
 Other changes (not ticket related)
 - Changed unlink of tickets in simpletest into a test if ticket is gone.
 - Added new REST call /assets for retrieving multiple assets.
@@ -54,18 +53,26 @@ Other changes (not ticket related)
 - Fixed saving of empty values in drop down select boxes in transcode profile
   admin.
 - Fixed problem saving transcode profile without revision saving.
+- Drupal 7 does not allow case-sensitive schema creation, this caused problems
+  migrating database with IDs. Fixed by adding varbinary type to schema creation
+  code of mediamosa. All IDs that are varchar and have the 32 character length
+  are now varbinary type.
+- Fixed problem migrating aut_object table when it contained double rows.
 
 Mediamosa 2.1.3
 ---------------
 - Transcoding progress fix (See ticket #297).
 - Play response=metafile support for Wowza-server (See ticket 262).
 - Order direction fix for collection. (See ticket #300).
+- Fixed bulk upload format not allowed for video::action=delete (See ticket 
+  #301).
 
 Other changes (not ticket related)
 - Made fix on simpletest to run on own database (when configured) so it 
   generate less binlog on mysql (about 25mb per test to 30k per test).
 - Made core-hack patch on bootstrap.inc. Simpletests can not run on multiple 
   servers because of filedate and fileinode tests on local file. 
+- Transcode profile ID is now visible in admin view and edit pages.
 
 
 Mediamosa 2.1.2
