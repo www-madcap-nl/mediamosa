@@ -64,17 +64,17 @@ function mediamosa_integrity_check_schema() {
         'unsigned' => TRUE,
         'description' => t('Primary Key: Unique ID.'),
       ),
+      mediamosa_integrity_check_db::OBJECT_ID => array(
+        'type' => 'varchar',
+        'length' => mediamosa_integrity_check_db::OBJECT_ID_LENGTH,
+        'not null' => TRUE,
+        'description' => t('The object ID.'),
+      ),
       mediamosa_integrity_check_db::TYPE => array(
         'description' => t('The type of the integrity check problem.'),
         'type' => "enum('" . implode("','", array(mediamosa_integrity_check_db::TYPE_ERROR, mediamosa_integrity_check_db::TYPE_MISSING_MEDIAFILE, mediamosa_integrity_check_db::TYPE_MISSING_MEDIARECORD, mediamosa_integrity_check_db::TYPE_MISSING_STILLFILE, mediamosa_integrity_check_db::TYPE_MISSING_STILLRECORD)) . "')",
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_integrity_check_db::TYPE_ERROR, mediamosa_integrity_check_db::TYPE_MISSING_MEDIAFILE, mediamosa_integrity_check_db::TYPE_MISSING_MEDIARECORD, mediamosa_integrity_check_db::TYPE_MISSING_STILLFILE, mediamosa_integrity_check_db::TYPE_MISSING_STILLRECORD)) . "')",
-      ),
-      mediamosa_integrity_check_db::OBJECT_ID => array(
-        'type' => 'varbinary',
-        'length' => mediamosa_db::HASH_ID_LENGTH,
-        'not null' => TRUE,
-        'description' => t('The ojbect ID.'),
       ),
       mediamosa_integrity_check_db::APP_ID => array(
         'type' => 'int',
