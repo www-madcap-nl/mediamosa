@@ -55,7 +55,7 @@ function mediamosa_aut_app_master_slave_schema() {
     'description' => t('This table stores master/slave links to media.'),
     'fields' => array(
       mediamosa_aut_app_master_slave_db::AUT_OBJECT_ID => array(
-        'type' => 'varchar',
+        'type' => 'varbinary',
         'length' => mediamosa_aut_app_master_slave_db::AUT_OBJECT_ID_LENGTH,
         'not null' => TRUE,
         'default' => '',
