@@ -66,13 +66,13 @@ function mediamosa_ftp_user_schema() {
         'description' => t('The application ID of the FTP user.'),
       ),
       mediamosa_ftp_user_db::USERID => array(
-        'type' => 'varchar',
+        'type' => 'varbinary',
         'length' => mediamosa_ftp_user_db::USERID_LENGTH,
         'description' => t('The User ID.'),
         'not null' => TRUE,
       ),
       mediamosa_ftp_user_db::PASSWD => array(
-        'type' => 'varchar',
+        'type' => 'varbinary',
         'length' => mediamosa_ftp_user_db::PASSWD_LENGTH,
         'description' => t('The Password.'),
         'not null' => TRUE,

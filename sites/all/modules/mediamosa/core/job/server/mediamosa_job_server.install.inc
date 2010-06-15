@@ -142,8 +142,8 @@ function mediamosa_job_server_schema() {
         'default' => NULL,
       ),
       mediamosa_job_server_db::MEDIAFILE_ID_SRC => array(
-        'type' => 'varchar',
-        'length' => mediamosa_job_server_db::MEDIAFILE_ID_SRC_LENGTH,
+        'type' => 'varbinary',
+        'length' => mediamosa_db::HASH_ID_LENGTH,
         'default' => NULL,
         'description' => t('The mediafile ID.'),
       ),

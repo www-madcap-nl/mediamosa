@@ -97,14 +97,14 @@ function mediamosa_job_schema() {
         'description' => t('The application ID.'),
       ),
       mediamosa_job_db::ASSET_ID => array(
-        'type' => 'varchar',
-        'length' => mediamosa_job_db::ASSET_ID_LENGTH,
+        'type' => 'varbinary',
+        'length' => mediamosa_db::HASH_ID_LENGTH,
         'not null' => TRUE,
         'description' => t('The asset ID.'),
       ),
       mediamosa_job_db::MEDIAFILE_ID => array(
-        'type' => 'varchar',
-        'length' => mediamosa_job_db::MEDIAFILE_ID_LENGTH,
+        'type' => 'varbinary',
+        'length' => mediamosa_db::HASH_ID_LENGTH,
         'default' => NULL,
         'description' => t('The mediafile ID.'),
       ),
