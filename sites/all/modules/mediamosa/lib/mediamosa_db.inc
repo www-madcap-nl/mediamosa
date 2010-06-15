@@ -465,6 +465,27 @@ class mediamosa_db {
   }
 
   /**
+   * Change varchars of IDs into varbinary, so these will be case-sensitive.
+   *
+   * @param $module_name
+   */
+  static public function db_install_schema_preprocess($module, $schema) {
+    // Now loop through the fields and replace the varbinary types.
+    // We could remove these in the future when drupal supports these types.
+    foreach ($schema as $name => $table) {
+      foreach ($table['fields'] as $field_name => $field) {
+        // Our new var type?
+        if ($field['type'] == 'varbinary') {
+          $schema[$name]['fields'][$field_name]['mysql_type'] = 'VARBINARY';
+          $schema[$name]['fields'][$field_name]['type'] = 'varchar';
+        }
+      }
+    }
+
+    return $schema;
+  }
+
+  /**
    * Install the foreign keys.
    * Drupal 7 at this time only describes how it wants to implement foreign keys in
    * their schema layer. For now we will add foreign keys ourselfs after creation of

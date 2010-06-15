@@ -77,13 +77,13 @@ function mediamosa_statistics_stream_request_schema() {
         'description' => t('The application ID.'),
       ),
       mediamosa_statistics_stream_request_db::ASSET_ID => array(
-        'type' => 'varchar',
+        'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
         'not null' => TRUE,
         'description' => t('The parent asset ID.'),
       ),
       mediamosa_statistics_stream_request_db::MEDIAFILE_ID => array(
-        'type' => 'varchar',
+        'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
         'not null' => TRUE,
         'description' => t('The parent mediafile ID.'),

@@ -54,16 +54,16 @@ function _mediamosa_asset_collection_uninstall() {
 function mediamosa_asset_collection_schema() {
 
   $a_schema[mediamosa_asset_collection_db::TABLE_NAME] = array(
-  'description' => t('The asset collection link table.'),
+    'description' => t('The asset collection link table.'),
     'fields' => array(
       mediamosa_asset_collection_db::ASSET_ID => array(
-        'type' => 'varchar',
+        'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
         'not null' => TRUE,
         'description' => t('Link to asset table.'),
       ),
       mediamosa_asset_collection_db::COLL_ID => array(
-        'type' => 'varchar',
+        'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
         'not null' => TRUE,
         'description' => t('Link to collection table.'),

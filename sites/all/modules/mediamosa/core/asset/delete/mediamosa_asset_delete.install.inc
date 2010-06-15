@@ -57,7 +57,7 @@ function mediamosa_asset_delete_schema() {
   'description' => t('The asset collection link table.'),
     'fields' => array(
       mediamosa_asset_delete_db::ID => array(
-        'type' => 'varchar',
+        'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
         'not null' => TRUE,
         'description' => t('Link to asset table.'),
@@ -74,7 +74,7 @@ function mediamosa_asset_delete_schema() {
         'description' => t('The modified time and date of the asset.'),
       ),
       mediamosa_asset_delete_db::COLL_ID => array(
-        'type' => 'varchar',
+        'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
         'description' => t('Link to collection table.'),
         'default' => NULL,

@@ -55,7 +55,7 @@ function mediamosa_ftp_batch_asset_schema() {
     'description' => t('This FTP Batch asset link table.'),
     'fields' => array(
       mediamosa_ftp_batch_asset_db::ASSET_ID => array(
-        'type' => 'varchar',
+        'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
         'not null' => TRUE,
         'description' => t('The asset ID that links to mediamosa_asset table.'),

@@ -53,7 +53,7 @@ function _mediamosa_statistics_file_upload_uninstall() {
 function mediamosa_statistics_file_upload_schema() {
 
   $a_schema[mediamosa_statistics_file_upload_db::TABLE_NAME] = array(
-  'description' => t('The statistics file upload table.'),
+    'description' => t('The statistics file upload table.'),
     'fields' => array(
       mediamosa_statistics_file_upload_db::ID => array(
         'type' => 'serial',
@@ -68,12 +68,12 @@ function mediamosa_statistics_file_upload_schema() {
         'description' => t('The application ID.'),
       ),
       mediamosa_statistics_file_upload_db::OWNER_ID => array(
-        'type' => 'varchar',
+        'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
         'description' => t('The owner ID.'),
       ),
       mediamosa_statistics_file_upload_db::GROUP_ID => array(
-        'type' => 'varchar',
+        'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
         'description' => t('The group ID.'),
       ),

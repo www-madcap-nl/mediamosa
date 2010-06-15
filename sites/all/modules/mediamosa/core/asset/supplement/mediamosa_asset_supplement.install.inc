@@ -55,13 +55,13 @@ function mediamosa_asset_supplement_schema() {
   'description' => t('The asset supplement table.'),
     'fields' => array(
       mediamosa_asset_supplement_db::ID => array(
-        'type' => 'varchar',
+        'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
         'not null' => TRUE,
         'description' => t('Primary Key: Unique ID.'),
       ),
       mediamosa_asset_supplement_db::ASSET_ID => array(
-        'type' => 'varchar',
+        'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
         'not null' => TRUE,
         'description' => t('Primary Key: Unique ID.'),

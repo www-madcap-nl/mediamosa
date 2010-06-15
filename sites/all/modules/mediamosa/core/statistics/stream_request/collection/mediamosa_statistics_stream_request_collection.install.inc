@@ -74,19 +74,19 @@ function mediamosa_statistics_stream_request_collection_schema() {
         'description' => t('The application ID.'),
       ),
       mediamosa_statistics_stream_request_collection_db::COLL_ID => array(
-        'type' => 'varchar',
+        'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
         'not null' => TRUE,
         'description' => t('The owner ID.'),
       ),
       mediamosa_statistics_stream_request_collection_db::OWNER_ID => array(
-        'type' => 'varchar',
+        'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
         'default' => NULL,
         'description' => t('The owner ID.'),
       ),
       mediamosa_statistics_stream_request_collection_db::GROUP_ID => array(
-        'type' => 'varchar',
+        'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
         'default' => NULL,
         'description' => t('The group ID.'),

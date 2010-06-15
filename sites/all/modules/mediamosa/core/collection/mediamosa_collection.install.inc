@@ -57,7 +57,7 @@ function mediamosa_collection_schema() {
   'description' => t('The collection table.'),
     'fields' => array(
       mediamosa_collection_db::ID => array(
-        'type' => 'varchar',
+        'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
         'not null' => TRUE,
         'description' => t('Primary Key: Unique ID.'),

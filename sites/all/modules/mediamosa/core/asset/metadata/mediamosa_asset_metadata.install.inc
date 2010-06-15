@@ -70,7 +70,7 @@ function mediamosa_asset_metadata_schema() {
         'description' => t('Primary Key: Unique ID.'),
       ),
       mediamosa_asset_metadata_db::ASSET_ID => array(
-        'type' => 'varchar',
+        'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
         'not null' => TRUE,
         'description' => t('The asset ID.'),

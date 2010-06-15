@@ -57,7 +57,7 @@ function mediamosa_ticket_schema() {
   'description' => t('The ticket table enables temporary events for allowing user actions.'),
     'fields' => array(
       mediamosa_ticket_db::ID => array(
-        'type' => 'varchar',
+        'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
         'not null' => TRUE,
         'description' => t('Primary Key: Unique ID.'),
@@ -93,7 +93,7 @@ function mediamosa_ticket_schema() {
         'description' => t('The group ID.'),
       ),
       mediamosa_ticket_db::MEDIAFILE_ID => array(
-        'type' => 'varchar',
+        'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
         'not null' => TRUE,
         'description' => t('The mediafile ID.'),

@@ -499,7 +499,15 @@ class mediamosa {
    */
   static public function drupal_install_schema($module) {
     try {
-      drupal_install_schema($module);
+      $schema = drupal_get_schema_unprocessed($module);
+      _drupal_schema_initialize($module, $schema);
+
+      // Changes we might want in MediaMosa.
+      $schema = mediamosa_db::db_install_schema_preprocess($module, $schema);
+
+      foreach ($schema as $name => $table) {
+        db_create_table($name, $table);
+      }
     }
     catch (Exception $e) {
       // ignore.

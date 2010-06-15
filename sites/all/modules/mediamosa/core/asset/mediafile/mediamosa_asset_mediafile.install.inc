@@ -64,31 +64,31 @@ function mediamosa_asset_mediafile_schema() {
   'description' => t('The asset table.'),
     'fields' => array(
       mediamosa_asset_mediafile_db::ID => array(
-        'type' => 'varchar',
+        'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
         'not null' => TRUE,
         'description' => t('Primary Key: Unique ID.'),
       ),
       mediamosa_asset_mediafile_db::ASSET_ID => array(
-        'type' => 'varchar',
+        'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
         'not null' => TRUE,
         'description' => t('The parent asset ID.'),
       ),
       mediamosa_asset_mediafile_db::ASSET_ID_ROOT => array(
-        'type' => 'varchar',
+        'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
         'not null' => TRUE,
         'description' => t('The highest parent asset ID.'),
       ),
       mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE => array(
-        'type' => 'varchar',
+        'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
         'default' => NULL,
         'description' => t('The source or original ID of the media from which this media was created.'),
       ),
       mediamosa_asset_mediafile_db::TAG => array(
-        'type' => 'varchar',
+        'type' => 'varbinary',
         'length' => mediamosa_asset_mediafile_db::TAG_LENGTH,
         'default' => NULL,
         'description' => t('Can contain user defined tag.'),
