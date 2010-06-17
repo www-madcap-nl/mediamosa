@@ -1,6 +1,42 @@
 ; $Id:  $
 name = "MediaMosa (Default installation)"
-description = "Default starting installation profile for MediaMosa (user/pass: admin/admin)."
+description = "<p>
+      MediaMosa is a full featured, webservice oriented media management
+      and distribution platform. MediaMosa is implemented as a modular
+      extension to the open source Drupal system. You'll find the MediaMosa
+      specific modules in sites/all/modules, the remainder of the tree is
+      the standard Drupal core.
+    </p>
+    <p>
+      Please visit <a href=\"http://www.mediamosa.org\">http://www.mediamosa.org</a> for more information, announcements,
+      documentation, community forums, and new releases.
+    </p>
+    <p>
+    References:
+    <ul>
+      <li><a href=\"http://www.mediamosa.org\">http://www.mediamosa.org</a></li>
+      <li><a href=\"http://www.drupal.org\">http://www.drupal.org</a></li>
+    </ul>
+  </p>
+  <p>
+    Use the database \"mediamosa2\" example below to create your database before proceeding.
+   </p>
+    <code>
+        # You have to create a user with a database:<br />
+        CREATE USER mediamosa2@'%' IDENTIFIED BY 'yourpasswd';<br />
+        CREATE USER mediamosa2@'localhost' IDENTIFIED BY 'yourpasswd';<br />
+        GRANT USAGE ON * . * TO 'mediamosa2'@'%' IDENTIFIED BY 'yourpasswd' WITH MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0 MAX_UPDATES_PER_HOUR 0 MAX_USER_CONNECTIONS 0 ;<br />
+        <br />
+        CREATE DATABASE mediamosa2 DEFAULT CHARSET=utf8;<br />
+        <br />
+        GRANT ALL ON `mediamosa2`.* TO 'mediamosa2'@'%';<br />
+    </code>
+    <p>
+        You may vary the mediamosa2 database prefix and the mediamosa2 user name.<br />
+        You also have to give write rights to the apache user to your VPX SAN/NAS mount points, e.g. /srv/mediamosa.<br />
+        <br />
+        If you want to migrate your old 1.7 Mediamosa database into this, you have to create a user, who has enought rights to read your old databases.
+    </p>"
 version = 2.0
 core = 7.x
 dependencies[] = block
