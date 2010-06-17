@@ -82,27 +82,28 @@ class mediamosa_settings {
   // Maximum still file size in byte
   const STILL_FILE_MAXIMUM = 1000000;
 
-  // Scene still: The still is THIS number of frames after the detected still change
+  // Scene still: The still is THIS number of frames after the detected still
+  // change.
   const STILL_SCENE_AFTER = 5;
-  // Scene still: Minimal distance between two stills in frames
+  // Scene still: Minimal distance between two stills in frames.
   const STILL_SCENE_DISTANCE = 25;
 
-  // Time in seconds at which a still is made in a movie, if the movie is shorter
-  // than 10 seconds, half the movie length is used.
+  // Time in seconds at which a still is made in a movie, if the movie is
+  // shorter than 10 seconds, half the movie length is used.
   const STILL_DEFAULT_FRAME_TIME = 10;
   // Still default size (qcif = 176x144)
   const STILL_DEFAULT_SIZE = 'qcif';
-  // Stills are generated with STILL_INTERVAL as interval in seconds
+  // Stills are generated with STILL_INTERVAL as interval in seconds.
   const STILL_INTERVAL = 1;
   // If you wish to space the interval (STILL_INTERVAL) every still being
-  // created (STILLS_AMOUNT). 1 for equal spaced intervals
+  // created (STILLS_AMOUNT). 1 for equal spaced intervals.
   const STILL_INTERVAL_JITTER = 1;
-  // Minimal amount of colors that need to be present in a still to be valid
+  // Minimal amount of colors that need to be present in a still to be valid.
   const STILL_MIN_COLORS = 8;
-  // Amount of extra stills to create to get the best still
+  // Amount of extra stills to create to get the best still.
   const STILLS_AMOUNT = 4;
   // To check the stills the amount of colors is calculated, to improved speed
-  // stills are resampled. Lower sizes is faster but less accurate
+  // stills are resampled. Lower sizes is faster but less accurate.
   const STILL_RESAMPLE_WIDTH = 150;
   const STILL_RESAMPLE_HEIGHT = 150;
 
@@ -122,9 +123,10 @@ class mediamosa_settings {
 
   // Header item used in internal calls.
   const X_MEDIAMOSA_INTERNAL_PASS = 'X-Mediamosa-Internal-Pass';
-  // Header item during rest call and simpletest. When running in simpletest we can force
-  // to disable App on any interface. If not added to header, all REST calls are considered
-  // on a REST (app) interface.
+
+  // Header item during rest call and simpletest. When running in simpletest we
+  // can force to disable App on any interface. If not added to header, all
+  // REST calls are considered on a REST (app) interface.
   const X_MEDIAMOSA_DISABLE_APP = 'X-Mediamosa-Disable-App';
 
   // Upload Settings.

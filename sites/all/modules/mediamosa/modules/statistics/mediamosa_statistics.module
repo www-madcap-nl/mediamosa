@@ -367,7 +367,7 @@ function mediamosa_statistics_help($path, $arg) {
 /**
  * Implements hook_permission().
  */
-function mediamosa_statitics_permission() {
+function mediamosa_statistics_permission() {
   return array(
     'access mediamosa statistics' =>  array(
       'title' => t('Access MediaMosa Statistics'),

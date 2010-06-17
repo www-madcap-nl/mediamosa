@@ -861,7 +861,8 @@ class mediamosa_rest_call_job_search extends mediamosa_rest_call {
       $a_job['progress'] = $a_row[mediamosa_job_db::PROGRESS];
       $a_job['priority'] = $a_row[mediamosa_job_db::PRIORITY];
       $a_job['job_type'] = $a_row[mediamosa_job_db::JOB_TYPE];
-      $a_job['started'] = $started_unix ? date('d-m-Y H:i', $started_unix) : '';
+      // FIXME: needs rewrite for dates.
+      $a_job['started'] = $started_unix ? gmdate('d-m-Y H:i', $started_unix) : '';
       $a_job['started_unix'] = $started_unix;
       $a_job['error_description'] = $a_row[mediamosa_job_db::ERROR_DESCRIPTION];
 

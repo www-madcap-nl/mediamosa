@@ -46,7 +46,7 @@ class MediaMosaAssetMediafileStillDownloadTestCase extends MediaMosaTestCase {
       'name' => 'Still - Download test',
       'description' => 'Test downloading of stills with tickets.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STILL,
-      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES,
+      //mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES,
     );
   }
 
