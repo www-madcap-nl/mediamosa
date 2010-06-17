@@ -97,8 +97,12 @@ function mediamosa_permission() {
       'title' => t('Download mediafiles'),
       'description' => t('Users with this permission may download mediafiles.'),
     ),
-    'access mediamosa config' =>  array(
+    'access mediamosa' =>  array(
       'title' => t('Access MediaMosa Administration'),
+      'description' => t('Access MediaMosa pages.'),
+    ),
+    'access mediamosa config' =>  array(
+      'title' => t('Access MediaMosa Configuration'),
       'description' => t('View the MediaMosa configuration, maintenance and other pages.'),
     ),
     'administer mediamosa' =>  array(

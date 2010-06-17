@@ -59,7 +59,7 @@ function mediamosa_connector_menu() {
 function mediamosa_connector_permission() {
 
   return array(
-    'administer mediamosa connector configuration' => array(
+    'administer mediamosa connector settings' => array(
       'title' => t('MediaMosa connector configuration administer permissions'),
       'description' => t('Manage the configuration of MediaMosa connector to be edited.')
     ),
