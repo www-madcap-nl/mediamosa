@@ -392,7 +392,7 @@ function mediamosa_profile_configure_server($install_state) {
 }
 
 /**
- * Information about cron.
+ * Information about cron, apache and migration.
  * Task callback.
  */
 function mediamosa_profile_cron_settings_form() {
