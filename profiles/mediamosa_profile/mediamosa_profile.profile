@@ -65,9 +65,14 @@ function mediamosa_profile_install_tasks() {
       'type' => 'form',
       'run' => variable_get('mediamosa_current_mount_point', '') ? INSTALL_TASK_SKIP : INSTALL_TASK_RUN_IF_NOT_COMPLETED,
     ),
+    'mediamosa_profile_configure_server' => array(
+      'display_name' => st('Configure the server'),
+      //'run' => INSTALL_TASK_RUN_IF_REACHED,
+    ),
     'mediamosa_profile_cron_settings_form' => array(
       'display_name' => st('Cron & Apache settings'),
       'type' => 'form',
+      //'run' => INSTALL_TASK_RUN_IF_REACHED,
     ),
   );
   return $tasks;
@@ -81,7 +86,7 @@ function mediamosa_profile_install_tasks_alter(&$tasks, $install_state) {
   // Should be first.
   $tasks = array(
     'mediamosa_profile_php_settings' => array(
-      'display_name' => 'PHP settings',
+      'display_name' => st('PHP settings'),
     ),
   ) + $tasks;
 }
@@ -210,21 +215,297 @@ function mediamosa_profile_php_settings($install_state) {
 }
 
 /**
+ * Get the mount point.
  * Task callback.
  */
 function mediamosa_profile_storage_location_form() {
   $form = array();
 
+  $mount_point = variable_get('mediamosa_current_mount_point', '');
+  $mount_point_windows = variable_get('mediamosa_current_mount_point_windows', '');
+
+  $mount_point = ($mount_point ? $mount_point : '/srv/mediamosa');
+  $mount_point_windows = ($mount_point_windows ? $mount_point_windows : '//');
+
+  $form['current_mount_point'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Mediamosa SAN/NAS Mount point'),
+    '#description' => t('The mount point is used to store the mediafiles.<br />Make sure the Apache user has write access to the Mediamosa SAN/NAS mount point.'),
+    '#required' => TRUE,
+    '#default_value' => $mount_point,
+  );
+
+  $form['current_mount_point_windows'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Mediamosa SAN/NAS Mount point for Windows'),
+    '#description' => t("The mount point is used to store the mediafiles.<br />Make sure the webserver has write access to the Windows Mediamosa SAN/NAS mount point.<br />If you don't use Windows, just leave it as it is."),
+    '#required' => FALSE,
+    '#default_value' => $mount_point_windows,
+  );
+
+  $form['continue'] = array(
+    '#type' => 'submit',
+    '#value' => st('Continue'),
+  );
 
   return $form;
 }
 
+function mediamosa_profile_storage_location_form_validate($form, &$form_state) {
+  $values = $form_state['values'];
+
+  if (trim($values['current_mount_point']) == '') {
+    form_set_error('current_mount_point', t("The current Linux mount point can't be empty."));
+  }
+  elseif (!is_dir($values['current_mount_point'])) {
+    form_set_error('current_mount_point', t('The current Linux mount point is not a directory.'));
+  }
+  elseif (!is_writable($values['current_mount_point'])) {
+    form_set_error('current_mount_point', t('The current Linux mount point is not writeable for the apache user.'));
+  }
+}
+
+function mediamosa_profile_storage_location_form_submit($form, &$form_state) {
+  $values = $form_state['values'];
+
+  variable_set('mediamosa_current_mount_point', $values['current_mount_point']);
+  variable_set('mediamosa_current_mount_point_windows', $values['current_mount_point_windows']);
+
+  // Inside the storage location, create a Mediamosa storage structure.
+  // data.
+  mediamosa_profile_mkdir($values['current_mount_point'] . '/data');
+  for ($i = 0; $i <= 9; $i++) {
+    mediamosa_profile_mkdir($values['current_mount_point'] . '/data/' . $i);
+  }
+  for ($i = ord('a'); $i <= ord('z'); $i++) {
+    mediamosa_profile_mkdir($values['current_mount_point'] . '/data/' . chr($i));
+  }
+  for ($i = ord('A'); $i <= ord('Z'); $i++) {
+    mediamosa_profile_mkdir($values['current_mount_point'] . '/data/' . chr($i));
+  }
+  // data/stills.
+  mediamosa_profile_mkdir($values['current_mount_point'] . '/data/stills');
+  for ($i = 0; $i <= 9; $i++) {
+    mediamosa_profile_mkdir($values['current_mount_point'] . '/data/stills/' . $i);
+  }
+  for ($i = ord('a'); $i <= ord('z'); $i++) {
+    mediamosa_profile_mkdir($values['current_mount_point'] . '/data/stills/' . chr($i));
+  }
+  for ($i = ord('A'); $i <= ord('Z'); $i++) {
+    mediamosa_profile_mkdir($values['current_mount_point'] . '/data/stills/' . chr($i));
+  }
+  // Other.
+  mediamosa_profile_mkdir($values['current_mount_point'] . '/data/transcode');
+  mediamosa_profile_mkdir($values['current_mount_point'] . '/links');
+  mediamosa_profile_mkdir($values['current_mount_point'] . '/download_links');
+  mediamosa_profile_mkdir($values['current_mount_point'] . '/still_links');
+  mediamosa_profile_mkdir($values['current_mount_point'] . '/ftp');
+}
+
 /**
+ * Configure the server.
+ * Tasks callback.
+ */
+function mediamosa_profile_configure_server($install_state) {
+  $output = '';
+  $error = FALSE;
+
+  $server_name = mediamosa_profile_server_name();
+
+  // Configure the servers.
+
+  // Mediamosa server table.
+  db_query("
+    UPDATE {mediamosa_server}
+    SET uri = REPLACE(uri, 'http://localhost', :server)
+    WHERE LOCATE('http://localhost', uri) > 0", array(
+    ':server' => "http://$server_name",
+  ));
+  db_query("
+    UPDATE {mediamosa_server}
+    SET uri_upload_progress = REPLACE(uri_upload_progress, 'http://example.org', :server)
+    WHERE LOCATE('http://example.org', uri_upload_progress) > 0", array(
+    ':server' => "http://$server_name",
+  ));
+
+  // Mediamosa node revision table.
+  $result = db_query("SELECT nid, vid, revision_data FROM {mediamosa_node_revision}");
+  foreach ($result as $record) {
+    $revision_data = unserialize($record->revision_data);
+    if (isset($revision_data['uri'])) {
+      $revision_data['uri'] = str_replace('http://localhost', "http://$server_name", $revision_data['uri']);
+    }
+    if (isset($revision_data['uri_upload_progress'])) {
+      $revision_data['uri_upload_progress'] = str_replace('http://example.org', "http://$server_name", $revision_data['uri_upload_progress']);
+    }
+    db_query("
+      UPDATE {mediamosa_node_revision}
+      SET revision_data = :revision_data
+      WHERE nid = :nid AND vid = :vid", array(
+      ':revision_data' => serialize($revision_data),
+      ':nid' => $record->nid,
+      ':vid' => $record->vid,
+    ));
+  }
+
+  // Configure mediamosa connector.
+  variable_set('mediamosa_connector_url', "http://$server_name");
+
+// TODO: Client applications, MediaMosa Connector, Configure.
+
+/*
+  // Configure client applications
+  db_query("UPDATE {client_applications} SET shared_key = '%s' WHERE caid = 1", generatePassword(mt_rand(MEDIAMOSA_PROFILE_PASSWD_MIN, MEDIAMOSA_PROFILE_PASSWD_MAX)));
+  db_query("UPDATE {client_applications} SET shared_key = '%s' WHERE caid > 1", generatePassword(mt_rand(MEDIAMOSA_PROFILE_PASSWD_MIN, MEDIAMOSA_PROFILE_PASSWD_MAX)));
+*/
+
+  // TODO: remove:
+  $output .= 'test: '. $server_name;
+//  $error = TRUE;
+
+  return $error ? $output : NULL;
+}
+
+/**
+ * Information about cron.
  * Task callback.
  */
 function mediamosa_profile_cron_settings_form() {
   $form = array();
 
+  $server_name = mediamosa_profile_server_name();
+
+
+  // Cron.
+
+  $form['cron'] = array(
+    '#type' => 'fieldset',
+    '#collapsible' => FALSE,
+    '#collapsed' => FALSE,
+    '#title' => t('Cron'),
+    '#description' => t('The cron will used to process your uploads and other jobs.'),
+  );
+
+  $form['cron']['cron_every_minute'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Cron every minute'),
+    '#description' => t('You have to copy this content to a file to your home directory: <code>~/bin/cron_every_minute.sh.</code><br />After, you have to modify the file permissions:<br />
+    <code>
+      chmod a+x ~/bin/cron_every_minute.sh<br />
+    </code>'),
+    '#default_value' => '#!/bin/sh
+/usr/bin/wget -q --spider http://localhost/cron.php?cron_key=' . variable_get('mediamosa_internal_password', '') . ' --header="Host: ' . $server_name . '"',
+    '#cols' => 60,
+    '#rows' => 5,
+  );
+
+  $form['cron']['crontab'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Crontab'),
+    '#description' => t('After, you have to modify your crontab: <code>crontab -e</code><br />Add these lines.'),
+    '#default_value' => '# Mediamosa 2
+* * * * * /home/pforgacs/bin/cron_every_minute.sh',
+    '#cols' => 60,
+    '#rows' => 5,
+  );
+
+
+  // Apache.
+
+  $mount_point = variable_get('mediamosa_current_mount_point', '');
+  $document_root = mediamosa_profile_document_root();
+
+
+  $form['apache'] = array(
+    '#type' => 'fieldset',
+    '#collapsible' => FALSE,
+    '#collapsed' => FALSE,
+    '#title' => t(''),
+    '#description' => t("You have to set up your Apache2 following this instruction:<br />
+1) Change your site's settings in <code>/etc/apache2/sites-enabled/your-site</code>.<br />
+Insert there the following code<br />
+2) Restart your Apache: <code>sudo /etc/init.d/apache2 restart</code>"),
+  );
+
+  $form['apache']['apache'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Apache'),
+    '#default_value' => "<VirtualHost *>
+  ServerName $server_name
+  ServerAlias $server_name.local app.$server_name.local upload.$server_name.local download.$server_name.local
+  DocumentRoot $document_root
+
+  <Directory $document_root>
+   Options Indexes FollowSymLinks MultiViews
+   AllowOverride All
+    Order deny,allow
+    Allow from All
+  </Directory>
+
+  Alias /ticket $mount_point/links
+  <Directory $mount_point/links>
+   Options FollowSymLinks
+   AllowOverride All
+    Order deny,allow
+    Allow from All
+  </Directory>
+
+  LogLevel warn
+  ErrorLog /var/log/apache2/error.log
+  CustomLog /var/log/apache2/access.log combined
+
+  <IfModule mod_php5.c>
+    php_admin_value post_max_size 2000M
+    php_admin_value upload_max_filesize 2000M
+    php_admin_value memory_limit 256M
+  </IfModule>
+
+</VirtualHost>",
+    '#cols' => 60,
+    '#rows' => 40,
+  );
+
+  $form['continue'] = array(
+    '#type' => 'submit',
+    '#value' => t('Continue'),
+  );
 
   return $form;
+}
+
+/**
+ * Advanced mkdir().
+ * Check if the directory is exist, before makes it.
+ * @param string $check_dir Directory to check.
+ */
+function mediamosa_profile_mkdir($check_dir) {
+  if (!is_dir($check_dir)) {
+    mkdir($check_dir);
+  }
+}
+
+/**
+ * Give back the server name.
+ */
+function mediamosa_profile_server_name() {
+  $server_name = url('', array('absolute' => TRUE));
+  $server_name = drupal_substr($server_name, 0, -1);
+  $server_name = drupal_substr($server_name, drupal_strlen('http://'));
+  $server_name = check_plain($server_name);
+  return $server_name;
+}
+
+/**
+ * Give back the document root for install.php.
+ */
+function mediamosa_profile_document_root() {
+  // Document root.
+  $script_filename = getenv('PATH_TRANSLATED');
+  if (empty($script_filename)) {
+    $script_filename = getenv('SCRIPT_FILENAME');
+  }
+  $script_filename = str_replace('', '/', $script_filename);
+  $script_filename = str_replace('//', '/', $script_filename);
+  $document_root = dirname($script_filename);
+  return $document_root;
 }
