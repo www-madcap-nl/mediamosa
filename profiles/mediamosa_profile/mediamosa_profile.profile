@@ -348,20 +348,18 @@ function mediamosa_profile_configure_server($install_state) {
     ));
   }
 
+  // Configure.
+  variable_set('mediamosa_cron_url_app', "http://app.$server_name.local");
+
   // Configure mediamosa connector.
   variable_set('mediamosa_connector_url', "http://$server_name");
 
-// TODO: Client applications, MediaMosa Connector, Configure.
-
+// TODO: Client applications, MediaMosa Connector.
 /*
   // Configure client applications
   db_query("UPDATE {client_applications} SET shared_key = '%s' WHERE caid = 1", generatePassword(mt_rand(MEDIAMOSA_PROFILE_PASSWD_MIN, MEDIAMOSA_PROFILE_PASSWD_MAX)));
   db_query("UPDATE {client_applications} SET shared_key = '%s' WHERE caid > 1", generatePassword(mt_rand(MEDIAMOSA_PROFILE_PASSWD_MIN, MEDIAMOSA_PROFILE_PASSWD_MAX)));
 */
-
-  // TODO: remove:
-  $output .= 'test: '. $server_name;
-//  $error = TRUE;
 
   return $error ? $output : NULL;
 }
@@ -394,7 +392,7 @@ function mediamosa_profile_cron_settings_form() {
       chmod a+x ~/bin/cron_every_minute.sh<br />
     </code>'),
     '#default_value' => '#!/bin/sh
-/usr/bin/wget -q --spider http://localhost/cron.php?cron_key=' . variable_get('mediamosa_internal_password', '') . ' --header="Host: ' . $server_name . '"',
+/usr/bin/wget -q --spider http://localhost/cron.php?cron_key=' . variable_get('cron_key', '') . ' --header="Host: ' . $server_name . '"',
     '#cols' => 60,
     '#rows' => 5,
   );
@@ -404,7 +402,7 @@ function mediamosa_profile_cron_settings_form() {
     '#title' => t('Crontab'),
     '#description' => t('After, you have to modify your crontab: <code>crontab -e</code><br />Add these lines.'),
     '#default_value' => '# Mediamosa 2
-* * * * * /home/pforgacs/bin/cron_every_minute.sh',
+* * * * * ~/bin/cron_every_minute.sh',
     '#cols' => 60,
     '#rows' => 5,
   );
@@ -423,8 +421,8 @@ function mediamosa_profile_cron_settings_form() {
     '#title' => t(''),
     '#description' => t("You have to set up your Apache2 following this instruction:<br />
 1) Change your site's settings in <code>/etc/apache2/sites-enabled/your-site</code>.<br />
-Insert there the following code<br />
-2) Restart your Apache: <code>sudo /etc/init.d/apache2 restart</code>"),
+First save your original file, then insert this code to your settings file.<br />
+2) Restart your Apache: <code>sudo /etc/init.d/apache2 restart</code><br />") . (strpos($server_name, '/') === FALSE ? '' : t("<b>It is strongly recommended, that you use server name like '<code>@mediamosa</code>', when you install Mediamosa, and not like '<code>@server_name</code>'.</b>", array('@mediamosa' => (substr($server_name, -1) == '/' ? 'mediamosa' : substr($server_name, strrpos($server_name, '/')+1)), '@server_name' => $server_name,))),
   );
 
   $form['apache']['apache'] = array(
