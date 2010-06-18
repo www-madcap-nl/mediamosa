@@ -65,6 +65,10 @@ function mediamosa_profile_install_tasks() {
       'type' => 'form',
       'run' => variable_get('mediamosa_current_mount_point', '') ? INSTALL_TASK_SKIP : INSTALL_TASK_RUN_IF_NOT_COMPLETED,
     ),
+    'mediamosa_profile_client_application_form' => array(
+      'display_name' => st('Client application'),
+      'type' => 'form',
+    ),
     'mediamosa_profile_configure_server' => array(
       'display_name' => st('Configure the server'),
       //'run' => INSTALL_TASK_RUN_IF_REACHED,
@@ -72,7 +76,6 @@ function mediamosa_profile_install_tasks() {
     'mediamosa_profile_cron_settings_form' => array(
       'display_name' => st('Cron & Apache settings'),
       'type' => 'form',
-      //'run' => INSTALL_TASK_RUN_IF_REACHED,
     ),
   );
   return $tasks;
@@ -303,6 +306,27 @@ function mediamosa_profile_storage_location_form_submit($form, &$form_state) {
 }
 
 /**
+ * Client application.
+ * Tasks callback.
+ */
+function mediamosa_profile_client_application_form() {
+  $form = array();
+
+  $form['client_application'] = array(
+    '#type' => 'item',
+    '#title' => t('Client application'),
+    '#description' => t("You can create a client application here following the link: !link. The link opens in a new window. After you created a client application you have to came back here.<br /><br />If you don't want to do it now, you can do it later in Admin / Mediamosa / Configuration / Client application.<br /><br />You don't have to do it, if you want to migrate your old 1.7 Mediamosa data to this installation.", array('!link' => l(t('Create client application'), 'admin/mediamosa/config/app/add', array('attributes' => array('target' => '_blank'))))),
+  );
+
+  $form['continue'] = array(
+    '#type' => 'submit',
+    '#value' => t('Continue'),
+  );
+
+  return $form;
+}
+
+/**
  * Configure the server.
  * Tasks callback.
  */
@@ -311,6 +335,7 @@ function mediamosa_profile_configure_server($install_state) {
   $error = FALSE;
 
   $server_name = mediamosa_profile_server_name();
+
 
   // Configure the servers.
 
@@ -348,18 +373,20 @@ function mediamosa_profile_configure_server($install_state) {
     ));
   }
 
+
   // Configure.
+  // URL REST.
   variable_set('mediamosa_cron_url_app', "http://app.$server_name.local");
+
 
   // Configure mediamosa connector.
   variable_set('mediamosa_connector_url', "http://$server_name");
+  $result = db_query("SELECT app_name, shared_key FROM {mediamosa_app} LIMIT 1");
+  foreach ($result as $record) {
+    variable_set('mediamosa_connector_username', $record->app_name);
+    variable_set('mediamosa_connector_password', $record->shared_key);
+  }
 
-// TODO: Client applications, MediaMosa Connector.
-/*
-  // Configure client applications
-  db_query("UPDATE {client_applications} SET shared_key = '%s' WHERE caid = 1", generatePassword(mt_rand(MEDIAMOSA_PROFILE_PASSWD_MIN, MEDIAMOSA_PROFILE_PASSWD_MAX)));
-  db_query("UPDATE {client_applications} SET shared_key = '%s' WHERE caid > 1", generatePassword(mt_rand(MEDIAMOSA_PROFILE_PASSWD_MIN, MEDIAMOSA_PROFILE_PASSWD_MAX)));
-*/
 
   return $error ? $output : NULL;
 }
@@ -418,7 +445,7 @@ function mediamosa_profile_cron_settings_form() {
     '#type' => 'fieldset',
     '#collapsible' => FALSE,
     '#collapsed' => FALSE,
-    '#title' => t(''),
+    '#title' => t('Apache'),
     '#description' => t("You have to set up your Apache2 following this instruction:<br />
 1) Change your site's settings in <code>/etc/apache2/sites-enabled/your-site</code>.<br />
 First save your original file, then insert this code to your settings file.<br />
@@ -462,6 +489,39 @@ First save your original file, then insert this code to your settings file.<br /
     '#cols' => 60,
     '#rows' => 40,
   );
+
+
+  // Migration.
+
+  $form['migration'] = array(
+    '#type' => 'fieldset',
+    '#collapsible' => FALSE,
+    '#collapsed' => FALSE,
+    '#title' => t('Migration'),
+    '#description' => t("You can migrate your data from your old 1.7 Mediamosa installation following these steps:<br />1) Open your <code>settings.mediamosa.php</code> in your <code>sites</code> directory.<br />2) Insert there the following code there and save it.<br />3) Be sure, that the MySQL user of current installation, and the MySQL user of the old databases can read from the other database(s)."),
+  );
+
+  $form['migration']['settings'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Migration'),
+    '#default_value' => "\$databases['mig_memo']['default'] = array(
+  'driver' => 'mysql',
+  'database' => 'your_old_database',
+  'username' => 'your_user_name',
+  'password' => 'your_password',
+  'host' => 'localhost'
+);
+\$databases['mig_memo_data']['default'] = array(
+  'driver' => 'mysql',
+  'database' => 'your_old_database_data',
+  'username' => 'your_user_name',
+  'password' => 'your_password',
+  'host' => 'localhost'
+);",
+    '#cols' => 60,
+    '#rows' => 20,
+  );
+
 
   $form['continue'] = array(
     '#type' => 'submit',
