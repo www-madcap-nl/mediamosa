@@ -19,23 +19,23 @@ description = "<p>
     </ul>
   </p>
   <p>
-    Use the database \"mediamosa2\" example below to create your database before proceeding.
+    Use the database \"mediamosa\" example below to create your database before proceeding.
    </p>
     <code>
         # You have to create a user with a database:<br />
-        CREATE USER mediamosa2@'%' IDENTIFIED BY 'yourpasswd';<br />
-        CREATE USER mediamosa2@'localhost' IDENTIFIED BY 'yourpasswd';<br />
-        GRANT USAGE ON * . * TO 'mediamosa2'@'%' IDENTIFIED BY 'yourpasswd' WITH MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0 MAX_UPDATES_PER_HOUR 0 MAX_USER_CONNECTIONS 0 ;<br />
+        CREATE USER mediamosa@'%' IDENTIFIED BY 'yourpasswd';<br />
+        CREATE USER mediamosa@'localhost' IDENTIFIED BY 'yourpasswd';<br />
+        GRANT USAGE ON * . * TO 'mediamosa'@'%' IDENTIFIED BY 'yourpasswd' WITH MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0 MAX_UPDATES_PER_HOUR 0 MAX_USER_CONNECTIONS 0;<br />
         <br />
-        CREATE DATABASE mediamosa2 DEFAULT CHARSET=utf8;<br />
+        CREATE DATABASE mediamosa DEFAULT CHARSET=utf8;<br />
         <br />
-        GRANT ALL ON `mediamosa2`.* TO 'mediamosa2'@'%';<br />
+        GRANT ALL ON `mediamosa`.* TO 'mediamosa'@'%';<br />
     </code>
     <p>
-        You may vary the mediamosa2 database prefix and the mediamosa2 user name.<br />
-        You also have to give write rights to the apache user to your VPX SAN/NAS mount points, e.g. /srv/mediamosa.<br />
+        You may vary the mediamosa database prefix and the mediamosa user name.<br />
+        You also have to give write access to the apache user to your MediaMosa SAN/NAS mount points, e.g. /srv/mediamosa.<br />
         <br />
-        If you want to migrate your old 1.7 Mediamosa database into this, you have to create a user, who has enought rights to read your old databases.
+        If you want to migrate your old 1.7 Mediamosa database to the new 2.x version, you have to create a new database user, which has enough rights to read your old databases.
     </p>"
 version = 2.0
 core = 7.x

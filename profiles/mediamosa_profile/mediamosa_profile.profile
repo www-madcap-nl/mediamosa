@@ -138,9 +138,10 @@ function mediamosa_profile_php_settings($install_state) {
   $output .= '<ul>';
 
   // FFmpeg.
-  $last_line = exec('ffmpeg 2>&1');
+  exec('ffmpeg -version > /dev/null 2>&1', $output, $ret_val);
+
   $output .= '<li>FFmpeg</li>';
-  if ($last_line) {
+  if ($ret_val != 0) {
     drupal_set_message(t('FFmpeg is not found. Please, install it first.'), 'error');
     $error = TRUE;
   }
@@ -315,7 +316,7 @@ function mediamosa_profile_client_application_form() {
   $form['client_application'] = array(
     '#type' => 'item',
     '#title' => t('Client application'),
-    '#description' => t("You can create a client application here following the link: !link. The link opens in a new window. After you created a client application you have to came back here.<br /><br />If you don't want to do it now, you can do it later in Admin / Mediamosa / Configuration / Client application.<br /><br />You don't have to do it, if you want to migrate your old 1.7 Mediamosa data to this installation.", array('!link' => l(t('Create client application'), 'admin/mediamosa/config/app/add', array('attributes' => array('target' => '_blank'))))),
+    '#description' => t("You can create a client application here following the link: !link. The link opens in a new window. After you created a client application you have to came back here.<br /><br />If you don't want to do it now, you can do it later in Admin / MediaMosa / Configuration / Client application.<br /><br />You don't have to create a client application, if you are going to migrate your old 1.7 MediaMosa data to version 2.", array('!link' => l(t('Create client application'), 'admin/mediamosa/config/app/add', array('attributes' => array('target' => '_blank'))))),
   );
 
   $form['continue'] = array(
@@ -521,7 +522,6 @@ First save your original file, then insert this code to your settings file.<br /
     '#cols' => 60,
     '#rows' => 20,
   );
-
 
   $form['continue'] = array(
     '#type' => 'submit',
