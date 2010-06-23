@@ -96,23 +96,3 @@ function mediamosa_job_server_transcode_schema() {
 
   return $a_schema;
 }
-
-/**
- * Remove wrong foreign key.
- */
-function mediamosa_job_server_transcode_7000() {
-
-  try {
-    db_query('ALTER TABLE {mediamosa_job_server_transcode} DROP FOREIGN KEY fk_mediamosa_job_server_transcode_jobserver_job_id');
-  }
-  catch (Exception $e) {
-    // ignore.
-  }
-
-  try {
-    db_query('ALTER TABLE {mediamosa_job_server_transcode} ADD CONSTRAINT `fk_mediamosa_job_server_transcode_jobserver_job_id` FOREIGN KEY (`jobserver_job_id`) REFERENCES `mediamosa_job_server` (`jobserver_job_id`)');
-  }
-  catch (Exception $e) {
-    // ignore.
-  }
-}
