@@ -729,7 +729,7 @@ class mediamosa_job_scheduler {
    * @param $mediafile_id
    */
   static public function start_server_job($job_id, $job_type, $server_id, $uri, $mediafile_id) {
-    self::log('Start job: job_id = @job_id, job_type = @job_type, server_ip = @server_ip, mediafile_id = @mediamosa_id', array('@job_id' => $job_id, '@job_type' => $job_type, '@server_ip' => $server_id, '@mediamosa_id' => $mediafile_id));
+    self::log('Start job: job_id = @job_id, job_type = @job_type, server_id = @server_id, mediafile_id = @mediamosa_id', array('@job_id' => $job_id, '@job_type' => $job_type, '@server_id' => $server_id, '@mediamosa_id' => $mediafile_id));
 
     switch ($job_type) {
       case mediamosa_job_db::JOB_TYPE_TRANSCODE:
@@ -1426,7 +1426,7 @@ class mediamosa_job_scheduler {
     );
 
     foreach ($result as $result_row) {
-      // voor elke gevonden job stuur een verwijder request naar de transcoding server
+      // For each found job, send a remove to the transcode server.
       self::remove_job_on_server($result_row[mediamosa_server_db::URI], $result_row[mediamosa_job_db::ID]);
 
       // verwijder de job uit de koppeltabel
@@ -1478,7 +1478,7 @@ class mediamosa_job_scheduler {
           ':JOBSTATUS_FAILED' => mediamosa_job_db::JOB_STATUS_FAILED,
           '#JOB_JOB_TIMEOUT' => mediamosa_settings::JOB_JOB_TIMEOUT,
           ':JOBSTATUS_INPROGRESS' => mediamosa_job_db::JOB_STATUS_INPROGRESS,
-          ':error_description' => strtr('JOB changed timeout expired (#JOB_JOB_TIMEOUTs)', array('#JOB_UPLOAD_TIMEOUT' => mediamosa_settings::JOB_JOB_TIMEOUT))
+          ':error_description' => strtr('JOB changed timeout expired (#JOB_UPLOAD_TIMEOUTs)', array('#JOB_UPLOAD_TIMEOUT' => mediamosa_settings::JOB_JOB_TIMEOUT))
         )
     );
   }

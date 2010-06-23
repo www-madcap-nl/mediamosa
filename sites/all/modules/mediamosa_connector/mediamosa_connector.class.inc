@@ -43,6 +43,13 @@ class mediamosa_connector {
   // Log will store the last # of requests and will drop the first.
   const MAX_LOG_ENTRIES = 250;
 
+  // MediaMosa errorcodes we use.
+  const HTTP_NOT_FOUND = 404;
+  const ERRORCODE_OKAY = 601;
+  const ERRORCODE_EMPTY_RESULT = 705;
+  const ERRORCODE_ACCESS_DENIED = 1601;
+  const ERRORCODE_NOT_AUTHORIZED = 1800;
+
   // ------------------------------------------------------------------ Members.
   // The URL to connect to.
   private $url;
@@ -65,13 +72,14 @@ class mediamosa_connector {
   // -------------------------------------------------------------- Constructor.
   public function __construct($username = NULL, $password = NULL, $url = NULL) {
     $this->url = isset($url) ? $url : variable_get('mediamosa_connector_url', NULL);
-    $cookies = variable_get('mediamosa_connector_cookies', array());
 
-    // Get cookie.
-    $this->cookie = !empty($cookies[$this->url][$this->username][$this->password]) ? $cookies[$this->url][$this->username][$this->password] : NULL;
-
+    // User / password.
     $this->username = isset($username) ? $username : variable_get('mediamosa_connector_username', NULL);
     $this->password = isset($password) ? $password : variable_get('mediamosa_connector_password', NULL);
+
+    // Get cookie.
+    $cookies = variable_get('mediamosa_connector_cookies', array());
+    $this->cookie = !empty($cookies[$this->url][$this->username][$this->password]) ? $cookies[$this->url][$this->username][$this->password] : NULL;
   }
 
   // --------------------------------------------------------- Public Functions.
@@ -115,7 +123,7 @@ class mediamosa_connector {
     $response = self::do_request($uri, $options);
 
     // If we return anything else but 1601, then return result. 1601 = failure login, cookie expired etc.
-    if ($response && !in_array($response->xml->header->request_result_id, array(mediamosa_error::ERRORCODE_ACCESS_DENIED, mediamosa_error::ERRORCODE_NOT_AUTHORIZED))) {
+    if ($response && !in_array($response->xml->header->request_result_id, array(self::ERRORCODE_ACCESS_DENIED, self::ERRORCODE_NOT_AUTHORIZED))) {
       return $response;
     }
 
@@ -128,7 +136,7 @@ class mediamosa_connector {
     $response = self::do_request($uri, $options);
 
     // Check again.
-    if ($response && $response->xml->header->request_result_id != 1601) {
+    if ($response && $response->xml->header->request_result_id != self::ERRORCODE_ACCESS_DENIED) {
       return $response;
     }
 
@@ -142,16 +150,16 @@ class mediamosa_connector {
       return FALSE;
     }
 
-    // Remove cookie.
+    // Remove cookie, so we are sure we get a new session.
     $this->cookie = NULL;
     $cookies = variable_get('mediamosa_connector_cookies', array());
-    if (isset($cookies[$this->url])) {
-      unset($cookies[$this->url]);
+    if (isset($cookies[$this->url][$this->username][$this->password])) {
+      unset($cookies[$this->url][$this->username][$this->password]);
       variable_set('mediamosa_connector_cookies', $cookies);
     }
 
     // Step 1: request the challenge
-    $data = array('dbus' => 'AUTH DBUS_COOKIE_SHA1 '. $this->username);
+    $data = array('dbus' => 'AUTH DBUS_COOKIE_SHA1 ' . $this->username);
     $method = 'POST';
     $response = $this->do_request('login', array('method' => $method, 'data' => $data));
 
@@ -159,7 +167,7 @@ class mediamosa_connector {
       return FALSE;
     }
 
-    if ($response->xml->header->request_result_id == 404) {
+    if ($response->xml->header->request_result_id == self::HTTP_NOT_FOUND) {
       drupal_set_message(t('Enable the Application Authentication module, unable to login. '), 'error');
       return FALSE;
     }
@@ -170,8 +178,11 @@ class mediamosa_connector {
     }
 
     // Parse the response.
+    // FIXME: We only store the 1st cookie here(!).
     list($this->cookie) = explode(';', $response->headers['Set-Cookie']);
-    $cookies[$this->url] = $this->cookie;
+
+    // Store the cookie for later usage.
+    $cookies[$this->url][$this->username][$this->password] = $this->cookie;
     variable_set('mediamosa_connector_cookies', $cookies);
 
     // Set DBUS data.
@@ -260,7 +271,7 @@ class mediamosa_connector {
           $query_string[] = $options['data'];
         }
 
-        // Quick fix for now.
+        // Its in the URL, so skip it.
         unset($options['data']);
 
         // Now add to uri (if any).
@@ -279,7 +290,7 @@ class mediamosa_connector {
     $url .= $uri;
 
     $start = microtime(TRUE);
-    $response = mediamosa_http::drupal_http_request($url, $options);
+    $response = drupal_http_request($url, $options['headers'], $options['method'], $options['data']);
     $end = microtime(TRUE);
 
     // If the log size overflows our buffer, lose the first.
@@ -287,14 +298,31 @@ class mediamosa_connector {
       array_shift($this->log);
     }
 
+    // Set to empty.
+    $response->xml = NULL;
+
+    // If we detect xml output, fill the xml member.
+    if ((int)$response->code == 200 && (strpos($response->headers['Content-Type'], 'text/xml') !== FALSE || drupal_substr($response->data, 0, strlen('<?xml')) == '<?xml')) {
+      try {
+        $response->xml = new SimpleXMLElement($response->data);
+      }
+      catch (Exception $e) {
+        // Dont care.
+        $response->xml = NULL;
+      }
+    }
+
     // Log the request.
     $this->log[] = array(
       'method' => $options['method'] . $data_log,
       'url' => $url,
-      'response_time' => round($end - $start, 3)
+      'response_time' => round($end - $start, 3),
+      'result_id' => (isset($response->xml) ? (int)$response->xml->header->request_result_id : 0),
+      'result_description' => (isset($response->xml) ? $response->xml->header->request_result_description : ''),
+      'errors' => (isset($response->xml) && isset($response->xml->header->errors) ? (is_array($response->xml->header->errors) ? implode('<br />', $response->xml->header->errors) : $response->xml->header->errors) : NULL),
     );
 
-    if (variable_get('mediamosa_connector_debug')) {
+    if (variable_get('mediamosa_connector_debug', FALSE)) {
       $_SESSION['mediamosa_connector_debug_info'] = $this->log;
     }
 
@@ -303,19 +331,26 @@ class mediamosa_connector {
       return FALSE;
     }
 
-    // Set to empty.
-    $response->xml = NULL;
-
-    // If we detect xml output, fill the xml member.
-    if (strpos($response->headers['Content-Type'], 'text/xml') !== FALSE || drupal_substr($response->data, 0, strlen('<?xml')) == '<?xml') {
-      try {
-        $response->xml = new SimpleXMLElement($response->data);
-      }
-      catch (Exception $e) {
-      }
-    }
-
     // Return result.
     return $response;
+  }
+
+  public function check_result($response, $ok = NULL, $error = NULL) {
+    $result_id = (int)$response->xml->header->request_result_id;
+
+    if ($result_id != self::ERRORCODE_OKAY && $result_id != self::ERRORCODE_EMPTY_RESULT) {
+      if (isset($error)) {
+        $error = t($error, array('%code' => $result_id, '%message' => $response->xml->header->request_result_description));
+        drupal_set_message($error, 'error');
+      }
+
+      return FALSE;
+    }
+
+    if (isset($ok)) {
+      drupal_set_message(t($ok));
+    }
+
+    return TRUE;
   }
 }
