@@ -245,12 +245,29 @@ class mediamosa_job_server_still {
 
       $duration = 1;
       $framerate = 1;
-      $execution_string = sprintf(
-        "%s %s %s jpeg ". mediamosa_settings::STILL_STRING . " > /dev/null",
-        mediamosa_settings::still_file(),
-        mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::data_location_get(),
-        $base_filename,
-        $size, $h_padding, $h_padding, $v_padding, $v_padding, $time, $duration, $framerate);
+      if (mediamosa_settings::get_ffmpeg_pad()) {
+        $execution_string = sprintf(
+          "%s %s %s jpeg ". mediamosa_settings::STILL_STRING . " > /dev/null",
+          mediamosa_settings::still_file(),
+          mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::data_location_get(),
+          $base_filename,
+          $size, $h_padding, $h_padding, $v_padding, $v_padding,
+          round($duration * $framerate),
+          $time, $duration, $framerate);
+      }
+      else {
+        $size_explode = explode('x', $size);
+        $size_width = $size_explode[0] + (2 * $v_padding);
+        $size_height = $size_explode[1] + (2 * $h_padding);
+        $execution_string = sprintf(
+          "%s %s %s jpeg ". mediamosa_settings::STILL_STRING_VFPAD . " > /dev/null",
+          mediamosa_settings::still_file(),
+          mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::data_location_get(),
+          $base_filename,
+          $size, $size_width, $size_height, $v_padding, $h_padding,
+          round($duration * $framerate),
+          $time, $duration, $framerate);
+      }
 
       // Execute the LUA call
       mediamosa_io::exec($execution_string);

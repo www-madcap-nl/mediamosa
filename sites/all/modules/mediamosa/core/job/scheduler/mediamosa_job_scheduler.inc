@@ -1321,7 +1321,12 @@ class mediamosa_job_scheduler {
     }
 
     if (isset($h_padding) && is_numeric($h_padding) && $h_padding >= 0 && isset($v_padding) && is_numeric($v_padding) && $v_padding >= 0) {
-      $param_string = sprintf("-s:%dx%d;-padtop:%d;-padbottom:%d;-padleft:%d;-padright:%d", (int)$w_target, (int)$h_target, (int)$h_padding, (int)$h_padding, (int)$v_padding, (int)$v_padding);
+      if (mediamosa_settings::get_ffmpeg_pad()) {
+        $param_string = sprintf("-s:%dx%d;-padtop:%d;-padbottom:%d;-padleft:%d;-padright:%d", (int)$w_target, (int)$h_target, (int)$h_padding, (int)$h_padding, (int)$v_padding, (int)$v_padding);
+      }
+      else {
+        $param_string = sprintf("-s:%dx%d;-vf:'pad=%d:%d:%d:%d:black'", (int)$w_target, (int)$h_target, (int)$w_target + (2 * (int)$v_padding), (int)$h_target + (2 * (int)$h_padding), (int)$v_padding, (int)$h_padding);
+      }
       $param_array = array('width' => (int)$w_target, 'height' => (int)$h_target, 'h_padding' => (int)$h_padding, 'v_padding' => $v_padding);
       return ( $response_string ? $param_string : $param_array );
     }
@@ -1335,12 +1340,24 @@ class mediamosa_job_scheduler {
       $padding = (($padding - ($padding % 4)) /2);   // Single size of padding (must be even).
       $new_height = $h_target - (2 * $padding);
       $new_height = ($new_height - ($new_height % 2)); // must be even.
-      $param_string = sprintf("-s:%dx%d;-padtop:%d;-padbottom:%d",
-        (int)$w_target,
-        (int)$new_height,
-        ($is_padding ? (int)$padding : 0),
-        ($is_padding ? (int)$padding : 0)
-      );
+      if (mediamosa_settings::get_ffmpeg_pad()) {
+        $param_string = sprintf("-s:%dx%d;-padtop:%d;-padbottom:%d",
+          (int)$w_target,
+          (int)$new_height,
+          ($is_padding ? (int)$padding : 0),
+          ($is_padding ? (int)$padding : 0)
+        );
+      }
+      else {
+        $param_string = sprintf("-s:%dx%d;-vf:'pad=%d:%d:%d:%d:black'",
+          (int)$w_target,
+          (int)$new_height,
+          (int)$w_target,
+          (int)$new_height + (2 * ($is_padding ? (int)$padding : 0)),
+          0,
+          ($is_padding ? (int)$padding : 0)
+        );
+      }
       $param_array = array(
         'width' => (int)$w_target,
         'height' => (int)$new_height,
@@ -1354,12 +1371,24 @@ class mediamosa_job_scheduler {
       $padding = (($padding - ($padding % 4)) /2);   // Single size of padding (must be even).
       $new_width = $w_target - (2 * $padding);
       $new_width = ($new_width - ($new_width % 2)); // must be even.
-      $param_string = sprintf("-s:%dx%d;-padleft:%d;-padright:%d",
-        (int)$new_width,
-        (int)$h_target,
-        ($is_padding ? (int)$padding : 0),
-        ($is_padding ? (int)$padding : 0)
-      );
+      if (mediamosa_settings::get_ffmpeg_pad()) {
+        $param_string = sprintf("-s:%dx%d;-padleft:%d;-padright:%d",
+          (int)$new_width,
+          (int)$h_target,
+          ($is_padding ? (int)$padding : 0),
+          ($is_padding ? (int)$padding : 0)
+        );
+      }
+      else {
+        $param_string = sprintf("-s:%dx%d;-vf:'pad=%d:%d:%d:%d:black'",
+          (int)$new_width,
+          (int)$h_target,
+          (int)$new_width + (2 * ($is_padding ? (int)$padding : 0)),
+          (int)$h_target,
+          ($is_padding ? (int)$padding : 0),
+          0
+        );
+      }
       $param_array = array(
         'width' => (int)$new_width,
         'height' => (int)$h_target,

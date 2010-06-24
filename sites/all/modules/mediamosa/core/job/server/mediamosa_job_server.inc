@@ -1001,7 +1001,15 @@ class mediamosa_job_server {
               fclose($fh);
 
               // This version is creating stills for the original video
-              $order = sprintf(mediamosa_settings::STILL_SCENE_STRING, $input, $size, $h_padding, $h_padding, $v_padding, $v_padding, $my_file, ($map ? '-map 0.'. $map : ''), $destination_path . $mediafile_id . mediamosa_settings::STILL_EXTENSION .".jpeg");
+              if (mediamosa_settings::get_ffmpeg_pad()) {
+                $order = sprintf(mediamosa_settings::STILL_SCENE_STRING, $input, $size, $h_padding, $h_padding, $v_padding, $v_padding, $my_file, ($map ? '-map 0.'. $map : ''), $destination_path . $mediafile_id . mediamosa_settings::STILL_EXTENSION .".jpeg");
+              }
+              else {
+                $size_explode = explode('x', $size);
+                $size_width = $size_explode[0] + (2 * $v_padding);
+                $size_height = $size_explode[1] + (2 * $h_padding);
+                $order = sprintf(mediamosa_settings::STILL_SCENE_STRING_VFPAD, $input, $size, $size_width, $size_height, $v_padding, $h_padding, $my_file, ($map ? '-map 0.'. $map : ''), $destination_path . $mediafile_id . mediamosa_settings::STILL_EXTENSION .".jpeg");
+              }
 
               // This version is creating stills for the analysed file
               //$order = sprintf(mediamosa_settings::STILL_SCENE_STRING, $destination_path . $mediafile_id .'_scene.avi', $size, $h_padding, $h_padding, $v_padding, $v_padding, $my_file, '', $destination_path . $mediafile_id . mediamosa_settings::STILL_EXTENSION .".jpeg");
@@ -1062,7 +1070,19 @@ class mediamosa_job_server {
       ->execute();
 
     // Combine the string (only for linux, windows does not generate stills).
-    $execution_string = sprintf('%s %s %s jpeg ' . mediamosa_settings::STILL_STRING, mediamosa_settings::still_file(), mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::data_location_get(), $mediafile_id, $size, $h_padding, $h_padding, $v_padding, $v_padding, $frametime, $duration, $framerate);
+    if (mediamosa_settings::get_ffmpeg_pad()) {
+      $execution_string = sprintf('%s %s %s jpeg ' . mediamosa_settings::STILL_STRING, mediamosa_settings::still_file(), mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::data_location_get(), $mediafile_id, $size, $h_padding, $h_padding, $v_padding, $v_padding,
+      round($duration * $framerate),
+      $frametime, $duration, $framerate);
+    }
+    else {
+      $size_explode = explode('x', $size);
+      $size_width = $size_explode[0] + (2 * $v_padding);
+      $size_height = $size_explode[1] + (2 * $h_padding);
+      $execution_string = sprintf('%s %s %s jpeg ' . mediamosa_settings::STILL_STRING_VFPAD, mediamosa_settings::still_file(), mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::data_location_get(), $mediafile_id, $size, $size_width, $size_height, $v_padding, $h_padding,
+      round($duration * $framerate),
+      $frametime, $duration, $framerate);
+    }
     $execution_string .= ' > /dev/null &';
     return $execution_string;
   }
@@ -1183,7 +1203,7 @@ class mediamosa_job_server {
       }
       else {
         // Reached the maximum, just delete the remain stills
-        mediamosa_io::unlink(mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_settings::SAN_NAS_TRANSCODE_FOLDER . DIRECTORY_SEPARATOR . $base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) . '.jpeg');
+        mediamosa_io::unlink(mediamosa_configuration_storage::transcode_file_location_get($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) . '.jpeg'));
       }
 
       $i++;
