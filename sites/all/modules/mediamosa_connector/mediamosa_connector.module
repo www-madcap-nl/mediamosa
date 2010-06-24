@@ -82,14 +82,21 @@ function mediamosa_connector_block($op = 'list', $delta = 0, $edit = array()) {
     case 'view':
       switch ($delta) {
         case 0:
-          if ($_SERVER['REQUEST_METHOD'] !== 'POST' && isset($_SESSION['mediamosa_connector_debug_info'])) {
+          if ($_SERVER['REQUEST_METHOD'] != 'POST' && isset($_SESSION['mediamosa_connector_debug_info'])) {
             $block['subject'] = t('MediaMosa Connector request info');
-            $header = array(t('Method'), t('URL'), t('Response time (sec)'));
+            $header = array(t('Method'), t('Call'), t('Time (sec)'));
             $rows = array();
             foreach ($_SESSION['mediamosa_connector_debug_info'] as $log) {
+
+              $call = array($log['url'], $log['result_id'] . ': ' . $log['result_description']);
+
+              if (isset($log['errors'])) {
+                $call[] = theme('table', array(sprintf('Errors during call %s.', $log['url'])), $log['errors']);
+              }
+
               $rows[] = array(
                 $log['method'],
-                $log['uri'],
+                implode('<br />', $call),
                 $log['response_time']
               );
             }
@@ -99,6 +106,7 @@ function mediamosa_connector_block($op = 'list', $delta = 0, $edit = array()) {
           }
           break;
       }
+
       return $block;
   }
 }
@@ -113,7 +121,7 @@ function mediamosa_connector_settings() {
   $form['connection'] = array(
     '#type' => 'fieldset',
     '#title' => t('Connection settings to MediaMosa REST interface'),
-    '#description' => t("Enter MediaMosa Application login and REST interface URL. <p><b>Do not forget to save the changes before you press the 'Check connection' button or else the connection is checked on the unsafed settings.</b></p>"),
+    '#description' => t("Enter MediaMosa Application login and REST interface URL. <p><b>Do not forget to save the changes before you press the 'Check connection' button or else the connection is checked on the unsaved settings.</b></p>"),
     '#collapsible' => TRUE,
     '#weight' => -5,
   );
@@ -159,7 +167,7 @@ function mediamosa_connector_settings() {
     '#type' => 'checkbox',
     '#title' => t('Verbose MediaMosa request information'),
     '#description' => t('Enable to view debug request information. This information is show in a drupal block. You must enable this block to view the debug contents.'),
-    '#default_value' => FALSE,
+    '#default_value' => variable_get('mediamosa_connector_debug', FALSE),
   );
 
   $form['#submit'] = array('mediamosa_connector_settings_submit');
@@ -171,27 +179,17 @@ function mediamosa_connector_settings() {
 
 function mediamosa_connector_check_connection_submit() {
   // Create the mediamosa connector.
-  $o_connector = new mediamosa_connector();
-/*
+  $mediamosa_connector = new mediamosa_connector();
+
   // Do request will trigger login.
-  $response = $o_connector->request_internal('rest');
+  $response = $mediamosa_connector->request('version');
 
   if ($response !== FALSE) {
-    drupal_set_message(t('Internal call test successful.'));
-*/
-    // Do request will trigger login.
-    $response = $o_connector->request('rest');
-
-    if ($response !== FALSE) {
-      drupal_set_message(t('Normal call test successful.'));
-    }
-    else {
-      drupal_set_message(t('Login test failed, check settings...'), 'error');
-    }
-/*  }
+    drupal_set_message(t('Normal call test successful.'));
+  }
   else {
-    drupal_set_message(t('Login test failed, please check your input.'), 'error');
-  }*/
+    drupal_set_message(t('Login test failed, check settings...'), 'error');
+  }
 }
 
 /**

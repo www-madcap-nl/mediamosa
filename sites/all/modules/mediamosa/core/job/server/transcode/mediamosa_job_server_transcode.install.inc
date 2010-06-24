@@ -90,7 +90,7 @@ function mediamosa_job_server_transcode_schema() {
     ),
     'primary key' => array(mediamosa_job_server_transcode_db::ID),
     'foreign keys' => array(
-      mediamosa_job_server_transcode_db::ID => array(mediamosa_job_db::TABLE_NAME => mediamosa_job_db::ID),
+      mediamosa_job_server_transcode_db::ID => array(mediamosa_job_server_db::TABLE_NAME => mediamosa_job_server_db::ID),
     ),
   );
 
