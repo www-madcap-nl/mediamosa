@@ -1199,7 +1199,7 @@ class mediamosa_job_server {
       }
       else {
         // Reached the maximum, just delete the remain stills
-        mediamosa_io::unlink(mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_settings::SAN_NAS_TRANSCODE_FOLDER . DIRECTORY_SEPARATOR . $base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) . '.jpeg');
+        mediamosa_io::unlink(mediamosa_configuration_storage::transcode_file_location_get($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, $i) . '.jpeg'));
       }
 
       $i++;
