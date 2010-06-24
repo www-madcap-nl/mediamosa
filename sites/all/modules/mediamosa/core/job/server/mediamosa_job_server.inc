@@ -1071,13 +1071,17 @@ class mediamosa_job_server {
 
     // Combine the string (only for linux, windows does not generate stills).
     if (mediamosa_settings::get_ffmpeg_pad()) {
-      $execution_string = sprintf('%s %s %s jpeg ' . mediamosa_settings::STILL_STRING, mediamosa_settings::still_file(), mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::data_location_get(), $mediafile_id, $size, $h_padding, $h_padding, $v_padding, $v_padding, $frametime, $duration, $framerate);
+      $execution_string = sprintf('%s %s %s jpeg ' . mediamosa_settings::STILL_STRING, mediamosa_settings::still_file(), mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::data_location_get(), $mediafile_id, $size, $h_padding, $h_padding, $v_padding, $v_padding,
+      round($duration * $framerate),
+      $frametime, $duration, $framerate);
     }
     else {
       $size_explode = explode('x', $size);
       $size_width = $size_explode[0] + (2 * $v_padding);
       $size_height = $size_explode[1] + (2 * $h_padding);
-      $execution_string = sprintf('%s %s %s jpeg ' . mediamosa_settings::STILL_STRING_VFPAD, mediamosa_settings::still_file(), mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::data_location_get(), $mediafile_id, $size, $size_width, $size_height, $v_padding, $h_padding, $frametime, $duration, $framerate);
+      $execution_string = sprintf('%s %s %s jpeg ' . mediamosa_settings::STILL_STRING_VFPAD, mediamosa_settings::still_file(), mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::data_location_get(), $mediafile_id, $size, $size_width, $size_height, $v_padding, $h_padding,
+      round($duration * $framerate),
+      $frametime, $duration, $framerate);
     }
     $execution_string .= ' > /dev/null &';
     return $execution_string;

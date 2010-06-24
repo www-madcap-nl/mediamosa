@@ -251,7 +251,9 @@ class mediamosa_job_server_still {
           mediamosa_settings::still_file(),
           mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::data_location_get(),
           $base_filename,
-          $size, $h_padding, $h_padding, $v_padding, $v_padding, $time, $duration, $framerate);
+          $size, $h_padding, $h_padding, $v_padding, $v_padding,
+          round($duration * $framerate),
+          $time, $duration, $framerate);
       }
       else {
         $size_explode = explode('x', $size);
@@ -262,7 +264,9 @@ class mediamosa_job_server_still {
           mediamosa_settings::still_file(),
           mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::data_location_get(),
           $base_filename,
-          $size, $size_width, $size_height, $v_padding, $h_padding, $time, $duration, $framerate);
+          $size, $size_width, $size_height, $v_padding, $h_padding,
+          round($duration * $framerate),
+          $time, $duration, $framerate);
       }
 
       // Execute the LUA call

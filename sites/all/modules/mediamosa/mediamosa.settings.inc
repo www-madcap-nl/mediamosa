@@ -109,8 +109,8 @@ class mediamosa_settings {
 
   // FFmpeg.
 
-  const STILL_STRING = "' -s %s -padtop %d -padbottom %d -padleft %d -padright %d -an -deinterlace -y -ss %s -t %s -r %s -vcodec mjpeg -f image2'";
-  const STILL_STRING_VFPAD = "' -s %s -vf 'pad=%d:%d:%d:%d:black' -an -deinterlace -y -ss %s -t %s -r %s -vcodec mjpeg -f image2'";
+  const STILL_STRING = "' -s %s -padtop %d -padbottom %d -padleft %d -padright %d -vframes %d -an -deinterlace -y -ss %s -t %s -r %s -vcodec mjpeg -f image2'";
+  const STILL_STRING_VFPAD = "' -s %s -vf 'pad=%d:%d:%d:%d:black' -vframes %d -an -deinterlace -y -ss %s -t %s -r %s -vcodec mjpeg -f image2'";
 
   const STILL_SCENE_STRING = 'ffmpeg -i %s -s %s -padtop %d -padbottom %d -padleft %d -padright %d -an -deinterlace -y -scene %s %s -r 1 -f image2 %s';
   const STILL_SCENE_STRING_VFPAD = 'ffmpeg -i %s -s %s -vf "pad=%d:%d:%d:%d:black" -an -deinterlace -y -scene %s %s -r 1 -f image2 %s';
