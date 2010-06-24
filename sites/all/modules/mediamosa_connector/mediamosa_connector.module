@@ -67,17 +67,21 @@ function mediamosa_connector_permission() {
 }
 
 /**
- * Implement hook_block().
+ * Implement of hook_block().
+ *
+ * Displays the debug information of the mediamosa_connector.
  */
 function mediamosa_connector_block($op = 'list', $delta = 0, $edit = array()) {
 
+  $block = array();
+
   switch ($op) {
     case 'list':
-      $blocks[0] = array(
+      $block[0] = array(
         'info' => t('MediaMosa Connector debug info'),
       );
 
-      return $blocks;
+      return $block;
 
     case 'view':
       switch ($delta) {
@@ -107,6 +111,8 @@ function mediamosa_connector_block($op = 'list', $delta = 0, $edit = array()) {
           break;
       }
 
+      $block['subject'] = t('MediaMosa Connector request info');
+      $block['content'] = isset($block['content']) ? $block['content'] : 'No calls done by MediaMosa Connector';
       return $block;
   }
 }
@@ -121,14 +127,14 @@ function mediamosa_connector_settings() {
   $form['connection'] = array(
     '#type' => 'fieldset',
     '#title' => t('Connection settings to MediaMosa REST interface'),
-    '#description' => t("Enter MediaMosa Application login and REST interface URL. <p><b>Do not forget to save the changes before you press the 'Check connection' button or else the connection is checked on the unsaved settings.</b></p>"),
+    '#description' => t("Enter MediaMosa Application login and REST interface URL."),
     '#collapsible' => TRUE,
     '#weight' => -5,
   );
   $form['connection']['mediamosa_connector_url'] = array(
     '#type' => 'textfield',
     '#title' => t('URL'),
-    '#description' => t('Enter the URL of the interface you want to connect to.'),
+    '#description' => t('Enter the URL of the REST interface you want to connect to.'),
     '#required' => TRUE,
     '#default_value' => '',
   );
@@ -142,7 +148,7 @@ function mediamosa_connector_settings() {
   $form['connection']['mediamosa_connector_password'] = array(
     '#type' => 'textfield',
     '#title' => t('Password'),
-    '#description' => t('Password might be required to login.'),
+    '#description' => t("Password might be required to login, is also called 'shared key'."),
     '#required' => FALSE,
     '#default_value' => '',
   );
@@ -173,30 +179,60 @@ function mediamosa_connector_settings() {
   $form['#submit'] = array('mediamosa_connector_settings_submit');
   $form = system_settings_form($form);
 
- // $form['buttons']['submit'] = array($form['buttons']['submit'], array('#type' => 'submit', '#value' => t('Check connection') ));
   return $form;
 }
 
-function mediamosa_connector_check_connection_submit() {
-  // Create the mediamosa connector.
-  $mediamosa_connector = new mediamosa_connector();
+/**
+ * Implement hook_settings_validate().
+ */
+function mediamosa_connector_settings_validate(&$form_state, $form) {
+  $mediamosa_connector_username = $form['values']['mediamosa_connector_username'];
+  $mediamosa_connector_password = $form['values']['mediamosa_connector_password'];
+  $mediamosa_connector_url = $form['values']['mediamosa_connector_url'];
 
-  // Do request will trigger login.
-  $response = $mediamosa_connector->request('version');
-
-  if ($response !== FALSE) {
-    drupal_set_message(t('Normal call test successful.'));
-  }
-  else {
-    drupal_set_message(t('Login test failed, check settings...'), 'error');
+  // Validate the login.
+  if (!_mediamosa_connector_check_connection($mediamosa_connector_username, $mediamosa_connector_password, $mediamosa_connector_url)) {
+    drupal_set_message(t('Login test failed, check settings. Settings are not saved.'), 'error');
+    form_set_error('mediamosa_connector_username');
+    form_set_error('mediamosa_connector_password');
+    form_set_error('mediamosa_connector_url');
   }
 }
 
 /**
- * MediaMosa connector handler
+ * Implement hook_settings_submit().
  */
-function mediamosa_connector_settings_submit(&$form_state , $form) {
+function mediamosa_connector_settings_submit(&$form_state, $form) {
+  // Check the submit.
+  mediamosa_connector_check_connection_submit($form_state, $form);
 
-  // Remove so we re-login.
-  variable_del('mediamosa_connector_cookie');
+}
+
+function _mediamosa_connector_check_connection($mediamosa_connector_username, $mediamosa_connector_password, $mediamosa_connector_url) {
+  // Create the mediamosa connector.
+  $mediamosa_connector = new mediamosa_connector($mediamosa_connector_username, $mediamosa_connector_password, $mediamosa_connector_url);
+  $mediamosa_connector->reset_session();
+
+  // Do request will trigger login.
+  return $mediamosa_connector->request('version') === FALSE ? FALSE : TRUE;
+}
+
+/**
+ * Implement hook_submit().
+ */
+function mediamosa_connector_check_connection_submit(&$form_state, $form) {
+
+  $mediamosa_connector_username = $form['values']['mediamosa_connector_username'];
+  $mediamosa_connector_password = $form['values']['mediamosa_connector_password'];
+  $mediamosa_connector_url = $form['values']['mediamosa_connector_url'];
+
+  if (_mediamosa_connector_check_connection($mediamosa_connector_username, $mediamosa_connector_password, $mediamosa_connector_url)) {
+    drupal_set_message(t('Normal call test successful, settings saved.'));
+    foreach (array('mediamosa_connector_url', 'mediamosa_connector_username', 'mediamosa_connector_password', 'mediamosa_connector_debug') as $subject) {
+      variable_set($subject, $form['values'][$subject]);
+    }
+  }
+  else {
+    drupal_set_message(t('Login test failed, check settings. Settings are not saved.'), 'error');
+  }
 }
