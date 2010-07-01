@@ -431,7 +431,7 @@ class mediamosa_job_scheduler {
 
     // Now create the transcode job.
     $a_fields = array(
-      mediamosa_job_transcode_db::JOB_ID => $job_id,
+      mediamosa_job_transcode_db::JOB_ID => $job_id_new,
       mediamosa_job_transcode_db::TOOL => mediamosa_job::JOBWINDOWS_TOOL,
       mediamosa_job_transcode_db::COMMAND => $command . ';internal_previous_job:' . $job_id,
       mediamosa_job_transcode_db::FILE_EXTENSION => 'wmv',
