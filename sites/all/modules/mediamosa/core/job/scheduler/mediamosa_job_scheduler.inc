@@ -387,6 +387,7 @@ class mediamosa_job_scheduler {
    */
   static public function create_wmv_job($job_id, $asset_id, $mediafile_id) {
 
+    // FIXME: @mediafile_id is empty.
     self::log('Start job wmv job: job_id = @job_id, mediafile_id = @mediafile_id', array('@job_id' => $job_id, '@mediafile_id' => $mediafile_id));
 
     // Get all info.
@@ -404,8 +405,35 @@ class mediamosa_job_scheduler {
       $app_id = $a_job_ext[mediamosa_job_db::APP_ID];
     }
 
-    // Create job.
-    mediamosa_job::create_job_transcode($app_id, $owner, '', FALSE, $mediafile_id, FALSE, array(), 'wmv', $command, mediamosa_job::JOBWINDOWS_TOOL, '', '', -1);
+    // Must have user_quota.
+    mediamosa_user::must_have_user_quota($app_id, $owner, '');
+
+    // Must be transcodable.
+    mediamosa_asset_mediafile_metadata::is_transcodable($mediafile_id);
+
+    // Create the job.
+    $fields = array(
+      mediamosa_job_db::ASSET_ID => $asset_id,
+      mediamosa_job_db::MEDIAFILE_ID => $mediafile_id,
+      mediamosa_job_db::OWNER_ID => $owner,
+      mediamosa_job_db::APP_ID => $app_id,
+      mediamosa_job_db::JOB_TYPE => mediamosa_job_db::JOB_TYPE_TRANSCODE,
+      mediamosa_job_db::PRIORITY => -1,
+    );
+
+    // Add created value.
+    $fields = mediamosa_db::db_insert_enrich($fields);
+
+    // Insert it.
+    $job_id_new = mediamosa_db::db_insert(mediamosa_job_db::TABLE_NAME)
+      ->fields($fields)
+      ->execute();
+
+    // Create sub transcode job.
+    mediamosa_job_transcode::create($app_id, $job_id_new, 'wmv', $command . ';internal_previous_job:' . $job_id, mediamosa_job::JOBWINDOWS_TOOL, '', '', $mediafile_id);
+
+    // old call.
+    //mediamosa_job::create_job_transcode($app_id, $owner, '', FALSE, $mediafile_id, FALSE, array(), 'wmv', $command, mediamosa_job::JOBWINDOWS_TOOL, '', '', -1, $params_job);
   }
 
   /**
@@ -486,7 +514,7 @@ class mediamosa_job_scheduler {
         // RBL:
         // Update the original job for progress.
         // Set progress.
-        mediamosa_job::set_progress($job_id, '0.666', FALSE);
+        mediamosa_job::set_progress($original_job_id, '0.666', FALSE);
 
         // bail out: the mediafile record for the intermediate result
         // has been created; we don't want any further action here.
