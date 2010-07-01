@@ -429,8 +429,24 @@ class mediamosa_job_scheduler {
       ->fields($fields)
       ->execute();
 
+    // Now create the transcode job.
+    $a_fields = array(
+      mediamosa_job_transcode_db::JOB_ID => $job_id,
+      mediamosa_job_transcode_db::TOOL => mediamosa_job::JOBWINDOWS_TOOL,
+      mediamosa_job_transcode_db::COMMAND => $command . ';internal_previous_job:' . $job_id,
+      mediamosa_job_transcode_db::FILE_EXTENSION => 'wmv',
+    );
+
+    // Add changed/created values.
+    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+
+    // Insert it.
+    mediamosa_db::db_insert(mediamosa_job_transcode_db::TABLE_NAME)
+      ->fields($a_fields)
+      ->execute();
+
     // Create sub transcode job.
-    mediamosa_job_transcode::create($app_id, $job_id_new, 'wmv', $command . ';internal_previous_job:' . $job_id, mediamosa_job::JOBWINDOWS_TOOL, '', '', $mediafile_id);
+    //mediamosa_job_transcode::create($app_id, $job_id_new, 'wmv', $command . ';internal_previous_job:' . $job_id, mediamosa_job::JOBWINDOWS_TOOL, '', '', $mediafile_id);
 
     // old call.
     //mediamosa_job::create_job_transcode($app_id, $owner, '', FALSE, $mediafile_id, FALSE, array(), 'wmv', $command, mediamosa_job::JOBWINDOWS_TOOL, '', '', -1, $params_job);
