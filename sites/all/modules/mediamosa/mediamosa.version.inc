@@ -48,8 +48,9 @@ class mediamosa_version {
   const MEDIAMOSA_VERSION_2_1_2 = '2.1.2';
   const MEDIAMOSA_VERSION_2_1_3 = '2.1.3';
   const MEDIAMOSA_VERSION_2_1_4 = '2.1.4';
+  const MEDIAMOSA_VERSION_2_1_5 = '2.1.5';
 
-  const MEDIAMOSA_VERSION = '2.1.4.645:755b402d5f8d';
+  const MEDIAMOSA_VERSION = '2.1.5.649:3ac9ca37492e';
 
   // Used for APPs.
   const LATEST = 'LATEST';
