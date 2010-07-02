@@ -1457,7 +1457,7 @@ class mediamosa_job_scheduler {
        'SELECT mj.#job_id, ms.#uri FROM {#mediamosa_job} AS mj
         JOIN {#mediamosa_server_job} AS msj ON msj.#job_id = mj.#job_id
         JOIN {#mediamosa_server} AS ms ON ms.#nid = msj.#server_id
-        WHERE NOT mj.#started IS NULL AND TIME_TO_SEC(TIMEDIFF(NOW(), mj.#started)) > :JOB_TRANSCODE_TIMEOUT AND #server_type = :server_type_job_processor',
+        WHERE NOT mj.#started IS NULL AND TIME_TO_SEC(TIMEDIFF(utc_timestamp(), mj.#started)) > :JOB_TRANSCODE_TIMEOUT AND #server_type = :server_type_job_processor',
         array(
           '#job_id' => mediamosa_job_db::ID,
           '#uri' => mediamosa_server_db::URI,
