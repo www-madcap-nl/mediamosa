@@ -926,7 +926,6 @@ class mediamosa_job_scheduler {
         $job_parameters["frametime"] = ($video_duration >> 1);
       }
     }
-
     // stuur de job naar de job server
     $rest_url = sprintf('server/jobstart?job_id=%s&job_type=%s&mediafile_src=%s&frametime=%s&size=%s&h_padding=%s&v_padding=%s&blackstill_check=%s&still_type=%s&still_per_mediafile=%s&still_every_second=%s&start_frame=%s&end_frame=%s&video_duration=%s&fps=%s&tag=%s',
       $job_id, mediamosa_job_db::JOB_TYPE_STILL, $mediafile_id,
@@ -1165,15 +1164,20 @@ class mediamosa_job_scheduler {
           elseif ($query_job['size'] == 'hd1080') {
             $target_size = '1920x1080';
           }
+          else {
+            $target_size = mediamosa_settings::STILL_DEFAULT_SIZE;
+            $a_result['h_padding'] = 0;
+            $a_result['v_padding'] = 0;
+          }
+
           // First get source width and height.
           $a_metadata = mediamosa_asset_mediafile_metadata::get_with_mediafileid($mediafile_id, array(mediamosa_asset_mediafile_metadata_db::WIDTH, mediamosa_asset_mediafile_metadata_db::HEIGHT));
           $width = $a_metadata[mediamosa_asset_mediafile_metadata_db::WIDTH];
           $height = $a_metadata[mediamosa_asset_mediafile_metadata_db::HEIGHT];
+
           // Get the parameter string.
-          //watchdog('server', 'vpx_jobhandler $a_result: '. print_r($a_result, TRUE));
-          //watchdog('server', "vpx_jobhandler: $width $height $target_size");
           $cmmd = self::calc_aspect_ratio($width, $height, $target_size, FALSE, $a_result['h_padding'], $a_result['v_padding']);
-          //watchdog('server', 'vpx_jobhandler $cmmd: '. print_r($cmmd, TRUE));
+
           // Set result
           if ($cmmd) {
             $a_result['size'] = $cmmd['width'] .'x'. $cmmd['height'];
