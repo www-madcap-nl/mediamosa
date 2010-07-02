@@ -471,7 +471,7 @@ class mediamosa_asset_mediafile_play_proxy {
             $output .= '  </body>' . "\n";
             $output .= '</smil>';
             // Content type.
-            $content_type = 'application/x-shockwave-flash';
+            $content_type = 'application/smil';
             break;
 
           default:
