@@ -235,9 +235,10 @@ class mediamosa_rest_call_job_analyse_mediafile extends mediamosa_rest_call {
     $no_hint = $this->get_param_value(self::NO_HINT);
 
     // Create it.
-    mediamosa_job::create(mediamosa_job_db::JOB_TYPE_ANALYSE, $app_id, $user_id, $is_app_admin, $mediafile_id, FALSE, array(), NULL, $no_hint);
+    $job_id = mediamosa_job::create(mediamosa_job_db::JOB_TYPE_ANALYSE, $app_id, $user_id, $is_app_admin, $mediafile_id, FALSE, array(), NULL, $no_hint);
 
-    $mediamosa->set_result_okay();
+    // Add job_id.
+    $mediamosa->add_item(array('job_id' => $job_id));
   }
 }
 
