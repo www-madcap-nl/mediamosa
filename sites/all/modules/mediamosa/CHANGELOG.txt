@@ -39,7 +39,7 @@ Known issues;
   timezone in Drupal 7 region settings or user timezone settings. This issue 
   will be fixed in 2.2.
 
-Mediamosa 2.1.5 (build 649)
+Mediamosa 2.1.5 (build 654)
 ---------------------------
 - Default still image size is now 352x288, with no maintain aspect ratio (no 
   padding).
@@ -48,6 +48,7 @@ Mediamosa 2.1.5 (build 649)
 - fixed several Windows transcoding related issues.
 - <content_type> on a playrequest for flash is now also 'application/smil'.
   (see ticket #323).
+
 
 Mediamosa 2.1.4 (build 628)
 ---------------------------
