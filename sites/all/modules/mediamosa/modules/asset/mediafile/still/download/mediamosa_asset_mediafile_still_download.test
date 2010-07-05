@@ -105,6 +105,9 @@ class MediaMosaAssetMediafileStillDownloadTestCase extends MediaMosaTestCase {
     foreach ($a_still_servers as $a_stillserver) {
       $url = str_replace('{TICKET}', $ticket_id, $a_stillserver[mediamosa_server_db::URI]);
 
+      // Test the output, do output call.
+      $url = str_replace('/still/', '/simpletest/still/', $url);
+
       // Get the file.
       $result = mediamosa_http::drupal_http_request($url);
 
