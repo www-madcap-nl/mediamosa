@@ -31,7 +31,7 @@
 class mediamosa_version {
 
   // ------------------------------------------------------------------ Constants.
-  // Official versions.
+  // Official versions (only in define when actually used somewhere).
   const MEDIAMOSA_VERSION_1_1_0 = '1.1.0';
   const MEDIAMOSA_VERSION_1_1_5 = '1.1.5';
   const MEDIAMOSA_VERSION_1_1_7 = '1.1.7';
@@ -45,12 +45,9 @@ class mediamosa_version {
   const MEDIAMOSA_VERSION_2_0_0 = '2.0.0';
   const MEDIAMOSA_VERSION_2_1_0 = '2.1.0';
   const MEDIAMOSA_VERSION_2_1_1 = '2.1.1';
-  const MEDIAMOSA_VERSION_2_1_2 = '2.1.2';
-  const MEDIAMOSA_VERSION_2_1_3 = '2.1.3';
-  const MEDIAMOSA_VERSION_2_1_4 = '2.1.4';
-  const MEDIAMOSA_VERSION_2_1_5 = '2.1.5';
+  const MEDIAMOSA_VERSION_2_2_0 = '2.2.0';
 
-  const MEDIAMOSA_VERSION = '2.1.5.657:1fed2191d582';
+  const MEDIAMOSA_VERSION = '2.2.0.665:cdfb3fce918a';
 
   // Used for APPs.
   const LATEST = 'LATEST';
