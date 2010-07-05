@@ -44,6 +44,9 @@ Mediamosa 2.2.0
 - Fixed saving webservice with client application in admin. (See ticket #315).
 - Fixed unit test Still download/playproxy when using apache alias on /still
   (See ticket #313). 
+- Fixed /mediafile/$asset_id/analyse call to return created job ID. (See ticket
+  #320).
+- Fixed missing mediafiles in asset view in admin. (See ticket #322).
 
 
 Mediamosa 2.1.5 (build 657)
