@@ -47,6 +47,7 @@ Mediamosa 2.2.0
 - Fixed /mediafile/$asset_id/analyse call to return created job ID. (See ticket
   #320).
 - Fixed missing mediafiles in asset view in admin. (See ticket #322).
+- Added job_ids to several log messages (See ticket #214).
 
 
 Mediamosa 2.1.5 (build 657)
