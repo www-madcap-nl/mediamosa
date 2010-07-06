@@ -275,7 +275,7 @@ class mediamosa_job {
    * @param string $tool
    * @param integer $profile_id
    * @param string $completed_transcoding_url
-   * @param string $mediafile_id
+   * @param string $priority
    */
   static public function create_job_transcode($app_id, $user_id, $group_id, $is_app_admin, $mediafile_id, $create_still, $still_parameters, $file_extension, $command, $tool = '', $profile_id = '', $completed_transcoding_url = '', $priority = NULL) {
 

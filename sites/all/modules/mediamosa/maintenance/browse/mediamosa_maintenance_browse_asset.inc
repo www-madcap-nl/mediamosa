@@ -549,11 +549,14 @@ function _mediamosa_browse_asset_page_view_mediafile_list($asset) {
   // Get the asset_id.
   $asset_id = $asset[mediamosa_asset_db::ID];
 
+  // Need app_id to get mediafiles.
+  $app_id = $asset[mediamosa_asset_db::APP_ID];
+
   // Get job list uri.
   $uri = strtr('asset/@asset_id/mediafile', array('@asset_id' => $asset_id));
 
   // Do REST call.
-  $result = mediamosa_response_connector::static_do_restcall($uri);
+  $result = mediamosa_response_connector::static_do_restcall($uri, 'GET', array('app_id' => $app_id));
 
   // Get Items count.
   $item_count = count($result['items']);
@@ -683,11 +686,14 @@ function _mediamosa_browse_asset_page_view_collections_list($asset) {
   // Get the asset_id.
   $asset_id = $asset[mediamosa_asset_db::ID];
 
+  // Need app_id to get mediafiles.
+  $app_id = $asset[mediamosa_asset_db::APP_ID];
+
   // Get job list uri.
   $uri = strtr('asset/@asset_id/collection', array('@asset_id' => $asset_id));
 
   // Do REST call.
-  $result = mediamosa_response_connector::static_do_restcall($uri);
+  $result = mediamosa_response_connector::static_do_restcall($uri, 'GET', array('app_id' => $app_id));
 
   // Get Items count.
   $item_count = count($result['items']);

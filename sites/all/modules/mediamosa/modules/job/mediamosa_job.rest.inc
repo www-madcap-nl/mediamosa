@@ -235,9 +235,10 @@ class mediamosa_rest_call_job_analyse_mediafile extends mediamosa_rest_call {
     $no_hint = $this->get_param_value(self::NO_HINT);
 
     // Create it.
-    mediamosa_job::create(mediamosa_job_db::JOB_TYPE_ANALYSE, $app_id, $user_id, $is_app_admin, $mediafile_id, FALSE, array(), NULL, $no_hint);
+    $job_id = mediamosa_job::create(mediamosa_job_db::JOB_TYPE_ANALYSE, $app_id, $user_id, $is_app_admin, $mediafile_id, FALSE, array(), NULL, $no_hint);
 
-    $mediamosa->set_result_okay();
+    // Add job_id.
+    $mediamosa->add_item(array('job_id' => $job_id));
   }
 }
 
@@ -631,7 +632,7 @@ class mediamosa_rest_call_job_user_search extends mediamosa_rest_call {
       $a_job['progress'] = $a_row[mediamosa_job_db::PROGRESS];
       $a_job['priority'] = $a_row[mediamosa_job_db::PRIORITY];
       $a_job['job_type'] = $a_row[mediamosa_job_db::JOB_TYPE];
-      $a_job['started'] = $started_unix ? date('d-m-Y H:i', $started_unix) : '';
+      $a_job['started'] = $started_unix ? format_date($started_unix, 'custom', 'd-m-Y H:i') : '';
       $a_job['started_unix'] = $started_unix;
       $a_job['error_description'] = $a_row[mediamosa_job_db::ERROR_DESCRIPTION];
 
@@ -706,7 +707,7 @@ class mediamosa_rest_call_job_asset_search extends mediamosa_rest_call {
       $a_job['progress'] = $a_row[mediamosa_job_db::PROGRESS];
       $a_job['priority'] = $a_row[mediamosa_job_db::PRIORITY];
       $a_job['job_type'] = $a_row[mediamosa_job_db::JOB_TYPE];
-      $a_job['started'] = $started_unix ? date('d-m-Y H:i', $started_unix) : '';
+      $a_job['started'] = $started_unix ? format_date($started_unix, 'custom', 'd-m-Y H:i') : '';
       $a_job['started_unix'] = $started_unix;
       $a_job['error_description'] = $a_row[mediamosa_job_db::ERROR_DESCRIPTION];
 
@@ -782,7 +783,7 @@ class mediamosa_rest_call_job_mediafile_search extends mediamosa_rest_call {
       $a_job['progress'] = $a_row[mediamosa_job_db::PROGRESS];
       $a_job['priority'] = $a_row[mediamosa_job_db::PRIORITY];
       $a_job['job_type'] = $a_row[mediamosa_job_db::JOB_TYPE];
-      $a_job['started'] = $started_unix ? date('d-m-Y H:i', $started_unix) : '';
+      $a_job['started'] = $started_unix ? format_date($started_unix, 'custom', 'd-m-Y H:i') : '';
       $a_job['started_unix'] = $started_unix;
       $a_job['error_description'] = $a_row[mediamosa_job_db::ERROR_DESCRIPTION];
 
@@ -861,8 +862,7 @@ class mediamosa_rest_call_job_search extends mediamosa_rest_call {
       $a_job['progress'] = $a_row[mediamosa_job_db::PROGRESS];
       $a_job['priority'] = $a_row[mediamosa_job_db::PRIORITY];
       $a_job['job_type'] = $a_row[mediamosa_job_db::JOB_TYPE];
-      // FIXME: needs rewrite for dates.
-      $a_job['started'] = $started_unix ? gmdate('d-m-Y H:i', $started_unix) : '';
+      $a_job['started'] = $started_unix ? format_date($started_unix, 'custom', 'd-m-Y H:i') : '';
       $a_job['started_unix'] = $started_unix;
       $a_job['error_description'] = $a_row[mediamosa_job_db::ERROR_DESCRIPTION];
 

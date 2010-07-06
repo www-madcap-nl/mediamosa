@@ -532,6 +532,12 @@ function mediamosa_asset_mediamosa_register_rest_call() {
     mediamosa_rest_call::RESPONSE_TYPE => mediamosa_rest_call::RESPONSE_TYPE_PLAIN,
   );
 
+  // In sandbox we have /still as special REST call so we don't have problems
+  // with apache alias on /still.
+  if (mediamosa::get()->in_simpletest_sandbox()) {
+    $rest_calls['simpletest/still/$ticket_id'] = $rest_calls['still/$ticket_id'];
+  }
+
   return $rest_calls;
 }
 

@@ -110,6 +110,8 @@ function _ajax_app_generate_shared_key() {
 function mediamosa_app_load(&$nodes) {
   mediamosa_node_revision::load($nodes);
 
+  $app_ids = array();
+
   // Loop through the nodes and unserialize the master slave apps.
   foreach ($nodes as $key => $node) {
     $apps = array();
@@ -141,7 +143,11 @@ function mediamosa_app_update($node) {
 
     // Update.
     mediamosa_node_revision::update_ex($node, mediamosa_app_db::TABLE_NAME, $names);
+
+    // Update webservice.
+    _mediamosa_app_update_webservice($node);
   }
+
 }
 
 /**
@@ -159,6 +165,30 @@ function mediamosa_app_insert($node) {
 
   // Insert revision.
   mediamosa_node_revision::insert_ex($node, mediamosa_app_db::TABLE_NAME, $names);
+
+  // Update webservice.
+  _mediamosa_app_update_webservice($node);
+}
+
+/**
+ * Update the webservice link.
+ *
+ * @param object $node
+ */
+function _mediamosa_app_update_webservice($node) {
+
+  // Get all handles.
+  $handles = mediamosa_webservice::get_all_handles();
+
+  // Now set any.
+  foreach ($handles as $handle) {
+    if (isset($node->{'webservice_' . $handle})) {
+      mediamosa_webservice_app::webservice_status($node->app_id, $handle, $node->{'webservice_' . $handle} == mediamosa_webservice_app_db::STATUS_TRUE);
+    }
+    else {
+      mediamosa_webservice_app::webservice_status($node->app_id, $handle, TRUE);
+    }
+  }
 }
 
 /**
@@ -503,14 +533,31 @@ function mediamosa_app_form($node, &$form_state) {
     $result = mediamosa_webservice::get_all();
   }
 
-  foreach ($result as $row) {
-    $form['webservice']['webservice_'. $row['handle']] = array(
-      '#type' => 'select',
-      '#title' => $row['handle'],
-      '#description' => t('Availibility of web service \''. $row['handle'] .'\' for this client application.'),
-      '#default_value' => (isset($row->status)) ? drupal_strtoupper($row['status']) : 'TRUE',
-      '#options' => array('TRUE' => t('Enabled'), 'FALSE' => t('Disabled')),
+  // Get the stored one.
+  $stored = $result->fetchAllAssoc(mediamosa_webservice_db::HANDLE);
+
+  // any skipped hanlde?
+  $handles = mediamosa_webservice::get_all_handles();
+
+  foreach ($handles as $handle) {
+    if (!isset($stored[$handle])) {
+      $form['webservice']['webservice_' . $handle] = array(
+        '#type' => 'select',
+        '#title' => $handle,
+        '#description' => t('Availibility of web service \''. $handle .'\' for this client application.'),
+        '#default_value' => 'TRUE',
+        '#options' => array(mediamosa_webservice_app_db::STATUS_TRUE => t('Enabled'), mediamosa_webservice_app_db::STATUS_FALSE => t('Disabled')),
+      );
+    }
+    else {
+      $form['webservice']['webservice_' . $handle] = array(
+        '#type' => 'select',
+        '#title' => $stored[$handle]->handle,
+        '#description' => t('Availibility of web service \''. $stored[$handle]->handle .'\' for this client application.'),
+        '#default_value' => $stored[$handle]->status,
+        '#options' => array(mediamosa_webservice_app_db::STATUS_TRUE => t('Enabled'), mediamosa_webservice_app_db::STATUS_FALSE => t('Disabled')),
     );
+    }
   }
 
   $form['technical'] = array(

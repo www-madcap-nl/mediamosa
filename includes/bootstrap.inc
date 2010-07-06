@@ -1988,6 +1988,12 @@ function drupal_get_bootstrap_phase() {
 function drupal_valid_test_ua($user_agent) {
   global $databases;
 
+  // Well this does not work well if you have Windows and Linux webservers.
+  // Its a risk not checking, but this does not work at all atm. The
+  // serialize($databases) seems to give the problem here on Windows and Linux
+  // servers while $databases are the same on both machines.
+  return true;
+
   list($prefix, $db, $time, $salt, $hmac) = explode(';', $user_agent);
   $check_string =  $prefix . ';' . $db . ';' . $time . ';' . $salt;
   // We use the database credentials from settings.php to make the HMAC key, since

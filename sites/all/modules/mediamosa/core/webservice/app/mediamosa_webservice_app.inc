@@ -111,12 +111,66 @@ class mediamosa_webservice_app {
   }
 
   /**
+   * Enable webservice for app.
+   *
+   * @param integer $app_id
+   * @param string $handle
+   */
+  static public function webservice_status($app_id, $handle, $status) {
+
+    // get all possible handles.
+    $handles = mediamosa_webservice::get_all_handles();
+
+    // Handle must exists.
+    if (!in_array($handle, $handles)) {
+      mediamosa::log("Try to insert handle '!handle' that does not exists as webservice.", array('!handle' => $handle));
+      return; // ignore.
+    }
+
+    // Get current.
+    $current = mediamosa_db::db_select(mediamosa_webservice_app_db::TABLE_NAME, 'wa')
+      ->fields('wa')
+      ->condition(mediamosa_webservice_app_db::APP_ID, $app_id)
+      ->condition(mediamosa_webservice_app_db::WEBSERVICE_HANDLE, $handle)
+      ->execute()
+      ->fetchAssoc();
+
+
+    // FIXME: Not master-master save.
+    if ($current) {
+      mediamosa_db::db_update(mediamosa_webservice_app_db::TABLE_NAME)
+        ->fields(array(
+          mediamosa_webservice_app_db::STATUS => $status ? mediamosa_webservice_app_db::STATUS_TRUE : mediamosa_webservice_app_db::STATUS_FALSE,
+        ))
+        ->condition(mediamosa_webservice_app_db::APP_ID, $app_id)
+        ->condition(mediamosa_webservice_app_db::WEBSERVICE_HANDLE, $handle)
+        ->execute();
+    }
+    else {
+      // Enable.
+      mediamosa_db::db_insert(mediamosa_webservice_app_db::TABLE_NAME)
+        ->fields(array(
+          mediamosa_webservice_app_db::APP_ID => $app_id,
+          mediamosa_webservice_app_db::STATUS => $status ? mediamosa_webservice_app_db::STATUS_TRUE : mediamosa_webservice_app_db::STATUS_FALSE,
+          mediamosa_webservice_app_db::WEBSERVICE_HANDLE => $handle,
+        ))
+        ->execute();
+    }
+  }
+
+  /**
    * Return enabled/disabled statussem of webservices of each app.
    */
-  static public function webservice_get_all_status() {
-    $result = mediamosa_db::db_select(mediamosa_webservice_app_db::TABLE_NAME, 'w')
-      ->fields('w')
-      ->execute();
+  static public function webservice_get_all_status($app_ids = array()) {
+    $query = mediamosa_db::db_select(mediamosa_webservice_app_db::TABLE_NAME, 'w')
+      ->fields('w');
+
+    // If we provide app_ids, then only retrieve those.
+    if (!empty($app_ids)) {
+      $query->condition(mediamosa_webservice_app_db::APP_ID, $app_ids, 'IN');
+    }
+
+    $result = $query->execute();
 
     $a_webservice_apps = array();
     foreach ($result as $a_webservice_app) {
@@ -124,5 +178,16 @@ class mediamosa_webservice_app {
     }
 
     return $a_webservice_apps;
+  }
+
+
+  /**
+   * Remove all handles from this app_id. Provide 0 for all globals.
+   * @param integer $app_id
+   */
+  static public function remove_all($app_id) {
+    mediamosa_db::db_delete(mediamosa_webservice_db::TABLE_NAME)
+      ->condition(mediamosa_webservice_app_db::APP_ID, $app_id)
+      ->execute();
   }
 }

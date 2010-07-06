@@ -590,7 +590,7 @@ class mediamosa_job_server {
 
     // Set status.
     if ($a_jobserver_job[mediamosa_job_server_db::JOB_STATUS] == mediamosa_job_server_db::JOB_STATUS_WAITING && $job_status == mediamosa_job_server_db::JOB_STATUS_INPROGRESS) {
-      $fields[mediamosa_job_server_db::STARTED] = mediamosa::db_current_timestamp_now();
+      $fields[mediamosa_job_server_db::STARTED] = mediamosa::utc_current_timestamp_now();
     }
 
     if (!empty($error_description)) {
