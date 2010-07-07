@@ -71,8 +71,8 @@ function mediamosa_statistics_popularstreams_list_form() {
 
   $params = array(
     'app_id' => $app_ids,
-    'begindate' => $year . '-' . $month,
-    'enddate' => $year_end . '-' . $month_end,
+    'begindate' => sprintf('%02d-%02d', $year, $month),
+    'enddate' => sprintf('%02d-%02d', $year_end, $month_end),
   );
 
   // Do the rest call.
@@ -97,6 +97,10 @@ function mediamosa_statistics_popularstreams_list_form() {
       check_plain($row['owner_id']),
       );
   }
+
+  /**
+   * No total count, pager not possible.
+   */
 
   //$form['pager_top'] = array('#theme' => 'pager');
   $form['table'] = array(

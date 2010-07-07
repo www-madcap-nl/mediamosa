@@ -2745,6 +2745,40 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     return mediamosa_lib::simplexml2array($response['xml']);
   }
 
+  // -------------------------------------------------------------- Statistics.
+  /*
+   * Do a search word stats call.
+   */
+  protected function stats_get(array $a_parameters = array(), array $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+
+    $a_parameters += array(
+      'begindate' => sprintf('%02d-%02d', date('Y'), date('n')),
+      'enddate' => sprintf('%02d-%02d', (date('n') + 1 == 13 ? date('Y') + 1 : date('Y')), (date('n') + 1 == 13 ? 1 : date('n') + 1)),
+      'limit' => 10,
+      'offset' => 0,
+    );
+
+    // The uri.
+    $uri = 'statistics/searchedwords';
+
+    // Do Post call.
+    $response = $this->restCallGet($uri, $a_parameters, array(), $a_expected_result_ids);
+
+    // Test return status.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr(
+        'Do stats call, got result @result (@result_description)',
+        array(
+          '@result' => (string)$response['xml']->header->request_result_id,
+          '@result_description' => (string)$response['xml']->header->request_result_description
+        )
+      )
+    );
+
+    return mediamosa_lib::simplexml2array($response['xml']);
+  }
+
   // ------------------------------------------------------------------ CQL functions.
   public function cql_do_search_test_assets($cql, $a_expected_asset_ids, array $a_parameters = array(), $aut_user_id = FALSE, $aut_group_id = FALSE, $aut_domain = FALSE, $aut_realm = FALSE, $granted = FALSE, $is_public_list = FALSE) {
     $a_parameters += array(

@@ -394,8 +394,18 @@ class mediamosa_job_server {
         ->execute();
     }
     else {
-      mediamosa_io::exec($execution_string);
-      self::log('Started @job_type job, Job ID: @job_id', array('@job_type' => $job_type, '@job_id' => $job_id));
+      $a_output = array();
+      $s_output = mediamosa_io::exec($execution_string, $a_output);
+      $link_asset = self::get_asset_link($job_id);
+      self::log('Job @job_type (Job ID: @job_id) returned output: @s_output - @a_output<br /><br />@link',
+        array(
+          '@job_type' => $job_type,
+          '@job_id' => $job_id,
+          '@s_output' => $s_output,
+          '@a_output' => implode("\n", $a_output),
+          '@link' => $link_asset,
+        )
+      );
     }
   }
 

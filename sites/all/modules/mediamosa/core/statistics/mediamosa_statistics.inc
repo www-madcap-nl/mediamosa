@@ -141,11 +141,16 @@ class mediamosa_statistics {
    * @param integer $app_id
    */
   static public function log_event_search_query(array $keywords, $app_id) {
-
     // Is we detect an array, then we are not gonna log it. In this case we
     // are in multi App mode, and we only log during single app mode.
     if (is_array($app_id)) {
-      return;
+
+      $app_id = reset($app_id);
+
+      // If we are as super user, then dont store the stats.
+      if (!$app_id) {
+        return;
+      }
     }
 
     $keywords = trim(implode(' ', $keywords));

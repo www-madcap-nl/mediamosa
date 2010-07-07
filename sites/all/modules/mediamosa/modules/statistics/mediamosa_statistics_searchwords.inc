@@ -59,9 +59,15 @@ function mediamosa_statistics_searchwords_list_form() {
   }
   $year_end = empty($session['year_end']) ? (isset($year_end) ? $year_end : $year) : $session['year_end'];
 
+  // Limit, page.
+  $limit = mediamosa_settings::LIMIT_DEFAULT_STATISTICS;
+  $page = isset($_GET['page']) ? (int)$_GET['page'] : 0;
+
   $params = array(
-    'begindate' => $year . '-' . $month,
-    'enddate' => $year_end . '-' . $month_end,
+    'begindate' => sprintf('%02d-%02d', $year, $month),
+    'enddate' => sprintf('%02d-%02d', $year_end, $month_end),
+    'limit' => $limit,
+    'offset' => $page * $limit,
   );
 
   // Do the rest call.
@@ -81,14 +87,22 @@ function mediamosa_statistics_searchwords_list_form() {
     );
   }
 
-  //$form['pager_top'] = array('#theme' => 'pager');
-  $form['table'] = array(
-    '#theme' => 'table',
+  // Set item_count_total.
+  $item_count_total = isset($result['header']['item_count_total']) ? $result['header']['item_count_total'] : 0;
+
+  // Our listing.
+  $form['list'] = array(
+    '#theme' => 'mediamosa_maintenance_table',
     '#header' => $header,
     '#rows' => $rows,
-    '#empty' => t('No data found.')
+    '#empty' => t('No statistics usage found.'),
+    // Pager.
+    '#page' => $page,
+    '#item_count_total' => $item_count_total,
+    '#item_limit' => $limit,
+    // Total note.
+    '#caption_bottom' => t('Words found: @total', array('@total' => $item_count_total))
   );
-  //$form['pager_bottom'] = array('#theme' => 'pager');
 
   return $form;
 }

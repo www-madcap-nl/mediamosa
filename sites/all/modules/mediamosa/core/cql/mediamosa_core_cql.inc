@@ -425,10 +425,9 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
     $str_sql_having = $this->mediamosa_cql_parseresult_2_sql($a_having);
 
     // Get the keywords from CQL.
-    $_keywords = $this->search_keywords;
     $keywords = array();
-    foreach ($_keywords as $key => $value) {
-      $keywords[] = trim($_keywords[$key]->mediamosa_cql_part_str_get());
+    foreach ($this->search_keywords as $key => $value) {
+      $keywords[] = trim($this->search_keywords[$key]);
     }
 
     // Store the keywords for statistics.
@@ -484,12 +483,30 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
     return $this->mediamosa_core_cql_hook_cql2sql($o_cql_part, $a_result, $is_append, FALSE);
   }
 
-  private function mediamosa_core_cql_add_keyword($keyword) {
+  private function mediamosa_core_cql_add_keyword(mediamosa_cql_part $o_cql_part) {
 
+    // Get the keyword.
+    $keyword = trim($o_cql_part->mediamosa_cql_part_search_term_get()->mediamosa_cql_part_str_get());
+
+    // Make sure we didnt see it already.
     if (!in_array($keyword, $this->search_keywords) && $keyword !== FALSE) {
+      $o_cql_part_index = $o_cql_part->mediamosa_cql_part_index_get();
+
+      // No index, use default and default is always string.
+      if ($o_cql_part_index) {
+        $str_index = $o_cql_part_index->mediamosa_cql_part_str_get();
+        $a_index2column = $this->mediamosa_core_cql_context_index2column($str_index);
+
+        if ($a_index2column[MEDIAMOSA_CQL_CONTEXT_KEY_TYPE] != mediamosa_type::TYPE_STRING) {
+          return; // leave.
+        }
+      }
+
+      // Must be string type.
       $this->search_keywords[] = $keyword;
     }
   }
+
   /**
    * Hook function that translates cql to sql (where/having part)
    *
@@ -497,12 +514,10 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
    * @return string to use as sql
    */
   final public function mediamosa_core_cql_hook_cql2sql(mediamosa_cql_part $o_cql_part, array &$a_result, $is_append, $do_having) {
-    $o_cql_part_search_term = $o_cql_part->mediamosa_cql_part_search_term_get();
-
-    $this->mediamosa_core_cql_add_keyword($o_cql_part_search_term);
 
     $o_cql_part_boolean = $o_cql_part->mediamosa_cql_part_boolean_get();
-    $a_mediamosa_core_cql_context = $this->mediamosa_core_cql_context_array_get();
+
+    $o_cql_part_search_term = $o_cql_part->mediamosa_cql_part_search_term_get();
 
     if ($o_cql_part_search_term === FALSE) {
 
@@ -523,10 +538,14 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
       return ''; // only when appending...
     }
 
+    // Add keyword for search stats.
+    $this->mediamosa_core_cql_add_keyword($o_cql_part);
+
     $o_cql_part_relation = $o_cql_part->mediamosa_cql_part_relation_get();
     $a_parts = array();
 
     if (!$o_cql_part_relation) {
+      $a_mediamosa_core_cql_context = $this->mediamosa_core_cql_context_array_get();
       assert(isset($a_mediamosa_core_cql_context[MEDIAMOSA_CQL_CONTEXT_KEY_DEFAULT_RELATION]));
       assert(isset($a_mediamosa_core_cql_context[MEDIAMOSA_CQL_CONTEXT_KEY_DEFAULT_SEARCH_TERMS]));
 
