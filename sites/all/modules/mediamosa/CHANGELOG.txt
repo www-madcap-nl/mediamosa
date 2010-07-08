@@ -64,6 +64,8 @@ Other changes (not ticket related).
   message that its still running instead wrong ending message.
 - DBUS REJECTED message will now return error 1600 in /login rest call instead
   of 601 OK message.
+- ftp/create REST call will now also create the FTP home directory for the new
+  user.
 
 Mediamosa 2.1.5 (build 657)
 ---------------------------

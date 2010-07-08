@@ -146,13 +146,23 @@ class mediamosa_rest_call_ftp_user_create extends mediamosa_rest_call {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_FTP_CREDENTIAL_LENGTH);
     }
 
+    // Create FTP dir.
+    $user_home_dir = mediamosa_configuration_storage::mount_point_get() . MEDIAMOSA_FTP_ROOTDIR . '/' . $username;
+
+    try {
+      mediamosa_io::mkdir($user_home_dir, TRUE, 0775);
+    }
+    catch (mediamosa_exception $e) {
+      // Ignore.
+    }
+    // Create entry.
     mediamosa_db::db_query(
       'INSERT INTO {mediamosa_ftp_user} SET app_id = :app_id, userid = :username, passwd = :password, homedir = :homedir, active = 1, count = 0, accessed = NOW(), modified = NOW()',
       array(
         ':app_id' => $app_id,
         ':username' => $username,
         ':password' => $password,
-        ':homedir' => mediamosa_configuration_storage::mount_point_get() . MEDIAMOSA_FTP_ROOTDIR . '/' . $username
+        ':homedir' => $user_home_dir,
       )
     );
 
