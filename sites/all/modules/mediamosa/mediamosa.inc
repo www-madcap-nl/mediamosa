@@ -450,6 +450,7 @@ class mediamosa {
   static public function log_export($data, $severity = WATCHDOG_NOTICE, $type = NULL) {
     self::log(highlight_string(var_export($data, TRUE), TRUE), array(), $severity, $type);
   }
+
   /**
    * Log an DB Query timing.
    *

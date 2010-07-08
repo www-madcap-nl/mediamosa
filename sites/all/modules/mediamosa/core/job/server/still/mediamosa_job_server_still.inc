@@ -219,7 +219,7 @@ class mediamosa_job_server_still {
     // Move the original still to safety
     $path = $base_path . sprintf(mediamosa_settings::STILL_EXTENSION, 1) .'.jpeg';
     $new_path = $base_path .'_0.jpeg';
-    rename($path, $new_path);
+    mediamosa_io::rename($path, $new_path);
 
     // Add our still to an array
     $stills[0] = array(
@@ -246,7 +246,7 @@ class mediamosa_job_server_still {
       $duration = 1;
       $framerate = 1;
       $execution_string = sprintf(
-        "%s %s %s jpeg ". mediamosa_settings::STILL_STRING . " > /dev/null",
+        '%s %s %s jpeg '. mediamosa_settings::STILL_STRING . ' > /dev/null',
         mediamosa_settings::still_file(),
         mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::data_location_get(),
         $base_filename,
@@ -258,7 +258,7 @@ class mediamosa_job_server_still {
       // Move it
       $path = $base_path . sprintf(mediamosa_settings::STILL_EXTENSION, 1) . '.jpeg';
       $new_path = $base_path .'_'. $i .'.jpeg';
-      rename($path, $new_path);
+      mediamosa_io::rename($path, $new_path);
 
       // Add our still to an array
       $stills[$i] = array(
@@ -295,7 +295,7 @@ class mediamosa_job_server_still {
       $still = $file[0];
       $path = $stills[$maxkey]['path'];
       $new_path = mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::transcode_tmp_location_get() . DIRECTORY_SEPARATOR . $file[0] . sprintf(mediamosa_settings::STILL_EXTENSION, 1) .'.jpeg';
-      rename($path, $new_path);
+      mediamosa_io::rename($path, $new_path);
 
       // Remove everything in $stills since we no longer need it
       foreach ($stills as $key => $value) {
@@ -306,6 +306,11 @@ class mediamosa_job_server_still {
       return $still;
     }
     else {
+
+      // @FIXME:
+      // Should remove the original still instead of rename, otherwise the still
+      // generation will hang for 2 hours.
+
       return FALSE;
     }
   }

@@ -95,7 +95,7 @@ class MediaMosaAppAuthenticationTestCase extends MediaMosaTestCase {
     $challenge = $dbus_data[3];
     $random = substr(md5(microtime(TRUE)), 0, 10);
     $post_data = array('dbus' => 'DATA '. $random .' '. sha1(sprintf('%s:%s:%s', $challenge, $random, $shared_key . 'boo')));
-    $response = $this->restCall('login', 'POST', $post_data);
+    $response = $this->restCall('login', 'POST', $post_data, array(), array(mediamosa_error::ERRORCODE_DBUS_PROTOCOL_ERROR));
 
     $this->assertTrue($response['xml']->items->item->dbus == 'REJECTED', 'Login must fail.');
 

@@ -56,7 +56,14 @@ Other changes (not ticket related).
   saver. It also stored search on dates, which are not words. Bug fixed, stats
   now only stores words. Added stats unit test to make sure stats saving on
   search words works as intended.
-
+- Fixed input errors in statistics dates (search words and other stats).
+- Put some logging of still generation to debug level instead of normal.
+- Still generation that is busy for black check now logs right text about 
+  status.
+- Logging message about ending still job while job in progress will now log
+  message that its still running instead wrong ending message.
+- DBUS REJECTED message will now return error 1600 in /login rest call instead
+  of 601 OK message.
 
 Mediamosa 2.1.5 (build 657)
 ---------------------------
