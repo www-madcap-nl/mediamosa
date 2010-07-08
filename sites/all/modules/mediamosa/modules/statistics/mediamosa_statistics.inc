@@ -118,7 +118,6 @@ function mediamosa_statistics_filter_form($form, $form_state) {
         '#type' => 'select',
         '#options' => $months,
         '#title' => 'Month',
-        '#default_value' => !empty($session['month']) ? $session['month'] : date('n'),
       );
 
       $types = array(
@@ -205,4 +204,23 @@ function mediamosa_statistics_filter_form($form, $form_state) {
 
 function mediamosa_statistics_filter_form_submit($form, &$form_state) {
   $_SESSION['mediamosa_statistics_filter'][$form_state['values']['filter_type']] = $form_state['values'];
+}
+
+/**
+ * Create pager.
+ *
+ * @param integer $item_offset
+ * @param integer $item_count_total
+ * @param integer $item_limit
+ * @param integer $element
+ */
+function _mediamosa_pager($item_offset, $item_count_total, $item_limit = mediamosa_settings::LIMIT_DEFAULT_STATISTICS, $element = 0) {
+
+  $pager_variables['page'] = ceil($item_offset / $item_limit);
+  $pager_variables['item_count_total'] = $item_count_total;
+  $pager_variables['item_limit'] = $item_limit;
+  $pager_variables['quantity'] = $item_limit;
+  $pager_variables['element'] = $element;
+
+  return theme('mediamosa_maintenance_pager', $pager_variables);
 }

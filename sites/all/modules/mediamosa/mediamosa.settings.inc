@@ -60,7 +60,8 @@ class mediamosa_settings {
 
   // Max Limits.
   const LIMIT_DEFAULT = 10; // We return 10 items by default.
-  const LIMIT_DEFAULT_STATISTICS = 150; // statistics bit more.
+  const LIMIT_DEFAULT_STATISTICS = 50; // statistics bit more.
+  const LIMIT_DEFAULT_STATISTICS_NO_PAGER = 150; // When we dont have a pager.
 
   const LIMIT_MAX = 200;
   const LIMIT_MAX_IDS_ONLY = 5000; // In case we only return IDs instead of complete array's.

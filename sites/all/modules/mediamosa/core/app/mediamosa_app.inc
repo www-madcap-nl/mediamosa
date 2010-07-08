@@ -109,6 +109,23 @@ class mediamosa_app {
   }
 
   /**
+   * Get the app.
+   *
+   * @param string $name
+   * @return array
+   */
+  static public function get_by_name($name) {
+    return mediamosa_db::db_query(
+      "SELECT * FROM {#table_name} WHERE #name = :name",
+      array(
+        '#name' => mediamosa_app_db::APP_NAME,
+        '#table_name' => mediamosa_app_db::TABLE_NAME,
+        ':name' => $name,
+      )
+    )->fetchAssoc();
+  }
+
+  /**
    * Update an application. Used for internal code.
    */
   static public function update($app_id, array $fields = array()) {

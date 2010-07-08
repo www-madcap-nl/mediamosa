@@ -540,7 +540,7 @@ class mediamosa_rest_call_statistics_get_historical_uploaded_mediafiles extends 
     );
 
     // Enrich with limit, offset.
-    $a_var_setup = self::get_var_setup_range($a_var_setup, mediamosa_settings::LIMIT_MAX, mediamosa_settings::LIMIT_DEFAULT_STATISTICS);
+    $a_var_setup = self::get_var_setup_range($a_var_setup, mediamosa_settings::LIMIT_MAX, mediamosa_settings::LIMIT_DEFAULT_STATISTICS_NO_PAGER);
 
     // Enrich with required REST vars.
     return self::get_var_setup_default($a_var_setup);
@@ -646,7 +646,7 @@ class mediamosa_rest_call_statistics_get_used_diskspace extends mediamosa_rest_c
       )
     );
 
-        // Enrich with limit, offset.
+    // Enrich with limit, offset.
     $a_var_setup = self::get_var_setup_range($a_var_setup, mediamosa_settings::LIMIT_MAX, mediamosa_settings::LIMIT_DEFAULT_STATISTICS);
 
     // Enrich with order by.
@@ -781,7 +781,7 @@ class mediamosa_rest_call_statistics_get_requested_streams extends mediamosa_res
     );
 
         // Enrich with limit, offset.
-    $a_var_setup = self::get_var_setup_range($a_var_setup, mediamosa_settings::LIMIT_MAX, mediamosa_settings::LIMIT_DEFAULT_STATISTICS);
+    $a_var_setup = self::get_var_setup_range($a_var_setup, mediamosa_settings::LIMIT_MAX, mediamosa_settings::LIMIT_DEFAULT_STATISTICS_NO_PAGER);
 
     // Enrich with order by.
     $a_var_setup = self::get_var_setup_order_by($a_var_setup, '', array(), mediamosa_type::ORDER_DIRECTION_DESC);
@@ -912,7 +912,7 @@ class mediamosa_rest_call_statistics_get_most_popular_streams extends mediamosa_
     );
 
     // Enrich with limit, offset.
-    $a_var_setup = self::get_var_setup_range($a_var_setup, mediamosa_settings::LIMIT_MAX, mediamosa_settings::LIMIT_DEFAULT_STATISTICS);
+    $a_var_setup = self::get_var_setup_range($a_var_setup, mediamosa_settings::LIMIT_MAX, mediamosa_settings::LIMIT_DEFAULT_STATISTICS_NO_PAGER);
 
     // Enrich with order by.
     $a_var_setup = self::get_var_setup_order_by($a_var_setup, '', array(), mediamosa_type::ORDER_DIRECTION_DESC);
@@ -1081,7 +1081,10 @@ class mediamosa_rest_call_statistics_get_most_popular_words extends mediamosa_re
 
     $a_query[mediamosa_db_query::A_WHERE][] = sprintf("searched >= '%s'", $begindate);
     if (!is_null($enddate)) {
-      $a_query[mediamosa_db_query::A_WHERE][] = sprintf("searched < DATE_ADD('%s', INTERVAL 1 MONTH)", $enddate);
+      $a_query[mediamosa_db_query::A_WHERE][] = sprintf("searched < '%s'", $enddate);
+    }
+    elseif (!is_null($enddate)) {
+      $a_query[mediamosa_db_query::A_WHERE][] = sprintf("searched < DATE_ADD('%s', INTERVAL 1 MONTH)", $begindate);
     }
 
     $a_query[mediamosa_db_query::A_GROUP_BY][] = 'keyword';
@@ -1096,8 +1099,12 @@ class mediamosa_rest_call_statistics_get_most_popular_words extends mediamosa_re
     $a_query[mediamosa_db_query::OFFSET] = $offset;
 
     // Do query.
-    $query = mediamosa_db_query::query_select($a_query, array(mediamosa_db_query::SQL_CALC_FOUND_ROWS => FALSE));
+    $query = mediamosa_db_query::query_select($a_query, array(mediamosa_db_query::SQL_CALC_FOUND_ROWS => TRUE));
+
     $result = mediamosa_db::db_query($query);
+
+    // Set total.
+    $o_mediamosa->item_count_total = mediamosa_db_query::found_rows();
 
     // Fill items.
     foreach ($result as $row) {
@@ -1184,8 +1191,11 @@ class mediamosa_rest_call_statistics_get_searchrequest extends mediamosa_rest_ca
     $a_query[mediamosa_db_query::OFFSET] = $offset;
 
     // Do query.
-    $query = mediamosa_db_query::query_select($a_query, array(mediamosa_db_query::SQL_CALC_FOUND_ROWS => FALSE));
+    $query = mediamosa_db_query::query_select($a_query, array(mediamosa_db_query::SQL_CALC_FOUND_ROWS => TRUE));
     $result = mediamosa_db::db_query($query);
+
+    // Set total.
+    $o_mediamosa->item_count_total = mediamosa_db_query::found_rows();
 
     // Fill items.
     foreach ($result as $row) {

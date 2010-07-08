@@ -242,7 +242,7 @@ class mediamosa_cql_part_relation extends mediamosa_cql_modifiers {
  * Search term is part of cql_part
  *
  */
-class mediamosa_cql_part_search_term {
+final class mediamosa_cql_part_search_term {
 
   private $m_str_search_term = "";
 

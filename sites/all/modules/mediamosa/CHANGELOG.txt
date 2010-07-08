@@ -47,7 +47,23 @@ Mediamosa 2.2.0
 - Fixed /mediafile/$asset_id/analyse call to return created job ID. (See ticket
   #320).
 - Fixed missing mediafiles in asset view in admin. (See ticket #322).
+- Added job_ids to several log messages (See ticket #214).
+- Added pager to all stats pages and decreased items per page to 50 instead of 
+  150 (ticket (#225)
 
+Other changes (not ticket related).
+- During ticket #255, adding pager to stats, bug was found on the stats keyword
+  saver. It also stored search on dates, which are not words. Bug fixed, stats
+  now only stores words. Added stats unit test to make sure stats saving on
+  search words works as intended.
+- Fixed input errors in statistics dates (search words and other stats).
+- Put some logging of still generation to debug level instead of normal.
+- Still generation that is busy for black check now logs right text about 
+  status.
+- Logging message about ending still job while job in progress will now log
+  message that its still running instead wrong ending message.
+- DBUS REJECTED message will now return error 1600 in /login rest call instead
+  of 601 OK message.
 
 Mediamosa 2.1.5 (build 657)
 ---------------------------

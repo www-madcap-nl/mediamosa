@@ -63,11 +63,12 @@ class mediamosa_rest_call_app_ident extends mediamosa_rest_call {
     // Login.
     $result = mediamosa_app_authentication::app_dbus_protocol($dbus);
 
-    if (mediamosa_unicode::substr($result, 0, 5) != 'ERROR') {
-      $mediamosa->set_result(mediamosa_response::SUCCESS, mediamosa_error::ERRORCODE_OKAY, 'DBUS authentication protocol');
+    // Must return OK.
+    if (mediamosa_unicode::substr($result, 0, 5) == 'ERROR' || mediamosa_unicode::substr($result, 0, 8) == 'REJECTED') {
+      $mediamosa->set_result(mediamosa_response::ERROR, mediamosa_error::ERRORCODE_DBUS_PROTOCOL_ERROR, 'DBUS ' . $result);
     }
     else {
-      $mediamosa->set_result(mediamosa_response::ERROR, mediamosa_error::ERRORCODE_DBUS_PROTOCOL_ERROR, 'DBUS ' . $result);
+      $mediamosa->set_result(mediamosa_response::SUCCESS, mediamosa_error::ERRORCODE_OKAY, 'DBUS authentication protocol');
     }
 
     $mediamosa->add_item(array('dbus' => $result));

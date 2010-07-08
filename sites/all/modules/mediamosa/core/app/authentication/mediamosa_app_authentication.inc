@@ -43,7 +43,7 @@ class mediamosa_app_authentication {
    * @param string $name
    * @return string
    */
-  function get_shared_key($name) {
+  public function get_shared_key($name) {
     return mediamosa_db::db_query(
       "SELECT #shared_key FROM {#table_name} WHERE #name = :name AND #active = :active_true",
       array(
@@ -58,12 +58,19 @@ class mediamosa_app_authentication {
   }
 
   /**
+   * Returns the server guid.
+   */
+  static public function get_server_guid() {
+    return self::APP_AUTH_SERVER_GUID;
+  }
+
+  /**
    * Test if application is enabled (active).
    *
    * @param string $name
    * @return boolean
    */
-  function is_app_active($name) {
+  public function is_app_active($name) {
     return mediamosa_db::db_query(
       "SELECT #active FROM {#table_name} WHERE #name = :name",
       array(
@@ -82,15 +89,8 @@ class mediamosa_app_authentication {
    * @param string $name
    * @return array
    */
-  function get_app($name) {
-    return mediamosa_db::db_query(
-      "SELECT * FROM {#table_name} WHERE #name = :name",
-      array(
-        '#name' => mediamosa_app_db::APP_NAME,
-        '#table_name' => mediamosa_app_db::TABLE_NAME,
-        ':name' => $name,
-      )
-    )->fetchAssoc();
+  static public function get_app($name) {
+    return mediamosa_app::get_by_name($name);
   }
 
   /**
@@ -132,7 +132,7 @@ class mediamosa_app_authentication {
    * @param string $line
    * @return string
    */
-  function app_dbus_protocol($line) {
+  public function app_dbus_protocol($line) {
     // Initialize identification.
     $auth_methods = array(
       'DBUS_COOKIE_SHA1' => 'dbus_cookie_sha1'
@@ -213,7 +213,7 @@ class mediamosa_app_authentication {
           'name' => $a_app[mediamosa_app_db::APP_NAME]
         );
 
-        return 'OK ' . self::APP_AUTH_SERVER_GUID;
+        return 'OK ' . self::get_server_guid();
 
       case 'BEGIN':
         if ($_SESSION['mediamosa_app'] == FALSE) {

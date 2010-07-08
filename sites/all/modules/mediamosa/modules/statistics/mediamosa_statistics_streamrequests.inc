@@ -93,6 +93,10 @@ function mediamosa_statistics_streamrequests_list_form() {
       );
   }
 
+  /**
+   * No total count, pager not possible.
+   */
+
   //$form['pager_top'] = array('#theme' => 'pager');
   $form['table'] = array(
     '#theme' => 'table',

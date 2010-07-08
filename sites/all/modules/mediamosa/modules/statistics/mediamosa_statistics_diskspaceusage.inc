@@ -64,11 +64,17 @@ function mediamosa_statistics_diskspaceused_list_form() {
   $month = empty($session['month']) ? date('n') : $session['month'];
   $type = empty($session['type']) ? mediamosa_statistics_diskspace_used_db::TYPE_CONTAINER : $session['type'];
 
+  // Limit, page.
+  $limit = mediamosa_settings::LIMIT_DEFAULT_STATISTICS;
+  $page = isset($_GET['page']) ? (int)$_GET['page'] : 0;
+
   $params = array(
     'app_id' => $app_ids,
     'month' => $month,
     'year' => $year,
     'type' => $type,
+    'limit' => $limit,
+    'offset' => $page * $limit,
   );
 
   // Do the rest call.
@@ -91,17 +97,25 @@ function mediamosa_statistics_diskspaceused_list_form() {
       check_plain($row['container_type']),
       check_plain($row['type']),
       check_plain($row['diskspace_mb']) . ' MB',
-      );
+    );
   }
 
-  //$form['pager_top'] = array('#theme' => 'pager');
-  $form['table'] = array(
-    '#theme' => 'table',
+  // Set item_count_total.
+  $item_count_total = isset($result['header']['item_count_total']) ? $result['header']['item_count_total'] : 0;
+
+  // Our listing.
+  $form['list'] = array(
+    '#theme' => 'mediamosa_maintenance_table',
     '#header' => $header,
     '#rows' => $rows,
-    '#empty' => t('No diskspace usage found.')
+    '#empty' => t('No diskspace usage found.'),
+    // Pager.
+    '#page' => $page,
+    '#item_count_total' => $item_count_total,
+    '#item_limit' => $limit,
+    // Total note.
+    '#caption_bottom' => t('Entries found: @total', array('@total' => $item_count_total))
   );
-  //$form['pager_bottom'] = array('#theme' => 'pager');
 
   return $form;
 }

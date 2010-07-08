@@ -61,8 +61,14 @@ function mediamosa_statistics_collection_latest_list_form() {
     $app_ids += $app_owners[$session['app_owner']];
   }
 
+  // Limit, page.
+  $limit = mediamosa_settings::LIMIT_DEFAULT_STATISTICS;
+  $page = isset($_GET['page']) ? (int)$_GET['page'] : 0;
+
   $params = array(
     'app_id' => $app_ids,
+    'limit' => $limit,
+    'offset' => $page * $limit,
   );
 
   // Do the rest call.
@@ -88,14 +94,22 @@ function mediamosa_statistics_collection_latest_list_form() {
     );
   }
 
-  //$form['pager_top'] = array('#theme' => 'pager');
-  $form['table'] = array(
-    '#theme' => 'table',
+   // Set item_count_total.
+  $item_count_total = isset($result['header']['item_count_total']) ? $result['header']['item_count_total'] : 0;
+
+  // Our listing.
+  $form['list'] = array(
+    '#theme' => 'mediamosa_maintenance_table',
     '#header' => $header,
     '#rows' => $rows,
-    '#empty' => t('No collections were found.')
+    '#empty' => t('No collections were found..'),
+    // Pager.
+    '#page' => $page,
+    '#item_count_total' => $item_count_total,
+    '#item_limit' => $limit,
+    // Total note.
+    '#caption_bottom' => t('Collections found: @total', array('@total' => $item_count_total))
   );
-  //$form['pager_bottom'] = array('#theme' => 'pager');
 
   return $form;
 }
