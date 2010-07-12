@@ -481,7 +481,8 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
         throw new mediamosa_exception_error_cql_exclusive();
       }
 
-      $cql .= ($cql == '' ? ' ' : '') . 'sortby ' . $order_by;
+      $cql .= (!empty($cql) ? ' ' : '') . 'sortby ' . $order_by;
+      $cql .= (empty($order_direction) ? '' : '/' . (mediamosa_unicode::strtolower($order_direction) == mediamosa_type::ORDER_DIRECTION_ASC ? 'ascending' : 'descending'));
     }
     elseif (empty($a_cql)) {
       // Now normal search params, then take CQL (if any).
