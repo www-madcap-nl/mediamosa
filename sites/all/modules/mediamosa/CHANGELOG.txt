@@ -49,7 +49,7 @@ Mediamosa 2.2.0
 - Fixed missing mediafiles in asset view in admin. (See ticket #322).
 - Added job_ids to several log messages (See ticket #214).
 - Added pager to all stats pages and decreased items per page to 50 instead of 
-  150 (ticket (#225)
+  150 (ticket (#225).
 
 Other changes (not ticket related).
 - During ticket #255, adding pager to stats, bug was found on the stats keyword
@@ -66,8 +66,9 @@ Other changes (not ticket related).
   of 601 OK message.
 - ftp/create REST call will now also create the FTP home directory for the new
   user.
+- Added extra tests for search on metadata dates.
 
-Mediamosa 2.1.5 (build 657)
+Mediamosa 2.1.5 (build 664)
 ---------------------------
 - Default still image size is now 352x288, with no maintain aspect ratio (no 
   padding).
@@ -80,7 +81,15 @@ Mediamosa 2.1.5 (build 657)
 Other changes (not ticket related)
 - drupal_valid_test_ua() will now always return true; windows servers seem to
   have problem even though the settings files are the same.
-
+- /ftp/user/create will now try to make the homedir of the user itself. 
+  Previously it relied on proftpd (CreateHome), which did not always used the 
+  correct uid/gid (dependend on the Proftpd version).
+- Fix: orderby descending did not work when not using CQL.
+- Transcoding support for underscore in parameters allowed (some windows encoder
+  software use this)
+- Image generation bug fixed, in some cases ffmpeg generated too many stills
+  due to a changed parameter behaviour (vpadding).
+   
 
 Mediamosa 2.1.4 (build 628)
 ---------------------------
