@@ -213,6 +213,15 @@ class MediaMosaAssetCollectionCQLTestCaseEga extends MediaMosaTestCaseEga {
     // Gives all, where date is between 2007-01-01 00:00:00 - 2009-01-01 00:00:00.
     $this->cql_do_search_test_assets_3('created within "2007-01-01 2009"', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_4 => TRUE, $asset_id_5 => TRUE, $asset_id_6 => TRUE));
 
+    // Gives all, where date is between 2007-2008.
+    $this->cql_do_search_test_assets_3('created >= "2007-01-01" AND created <= "2008"', array($asset_id_2 => TRUE));
+
+    // Gives all, where date is between 2007-01-01 00:00:00 - 2009-01-01 00:00:00.
+    $this->cql_do_search_test_assets_3('created >= "2007-01-01" AND created <= "2009"', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_4 => TRUE, $asset_id_5 => TRUE, $asset_id_6 => TRUE));
+
+    // Gives all, where date is beyond 2008.
+    $this->cql_do_search_test_assets_3('created >= "2008-01-01"', array($asset_id_1 => TRUE, $asset_id_4 => TRUE, $asset_id_5 => TRUE, $asset_id_6 => TRUE));
+
     // Check for UTF8, just to check if this CQL is accepted.
     $this->cql_do_search_test_assets_3('vpx:dc.description == "pÃ¥Ã?É?q:" sortBy title/sort.ascending', array());
 
