@@ -360,6 +360,9 @@ class mediamosa_job {
     // Owner check.
     mediamosa_aut::owner_check($app_id, $user_id, $a_mediafile[mediamosa_asset_mediafile_db::APP_ID], $a_mediafile[mediamosa_asset_mediafile_db::OWNER_ID], $is_app_admin);
 
+    // Get the asset ID.
+    $asset_id = $a_mediafile[mediamosa_asset_mediafile_db::ASSET_ID];
+
     // Re-analysing still.
     if ($job_type == mediamosa_job_db::JOB_TYPE_ANALYSE && $a_mediafile[mediamosa_asset_mediafile_db::IS_STILL] == mediamosa_asset_mediafile_db::IS_STILL_TRUE) {
       // Get the metadata.
@@ -372,7 +375,11 @@ class mediamosa_job {
         $destination = mediamosa_configuration_storage::still_filename_get($still_id);
 
         // Still size.
-        $size = getimagesize($destination);
+        $size = @getimagesize($destination);
+        if (!$size) {
+          self::post_create_job_failed($app_id, $user_id, $mediafile_id, $asset_id, mediamosa_job_db::JOB_TYPE_ANALYSE, 'File is not an image.', $still_parameters);
+        }
+
         $width = $size[0];
         $height = $size[1];
 
@@ -385,13 +392,12 @@ class mediamosa_job {
         $filesize = filesize($destination);
 
         mediamosa_asset_mediafile_metadata::create_metadata_still_default($still_id, $width, $height, $filesize, $size['mime'], $file_type);
+
+        self::post_create_job_finished($app_id, $user_id, $mediafile_id, $asset_id, mediamosa_job_db::JOB_TYPE_ANALYSE, '', $still_parameters);
       }
 
       return 0;
     }
-
-    // Get the asset ID.
-    $asset_id = $a_mediafile[mediamosa_asset_mediafile_db::ASSET_ID];
 
     // Create the job.
     $fields = array(
@@ -417,6 +423,86 @@ class mediamosa_job {
     return mediamosa_db::db_insert(mediamosa_job_db::TABLE_NAME)
       ->fields($fields)
       ->execute();
+  }
+
+  /**
+   * Create a job.
+   *
+   * @param integer $app_id
+   * @param string $user_id
+   * @param string $mediafile_id
+   * @param string $job_type
+   * @param string $error_description
+   * @param array $still_parameters
+   * @param string $status
+   */
+  static private function post_create_job($app_id, $user_id, $mediafile_id, $asset_id, $job_type = mediamosa_job_db::JOB_TYPE_ANALYSE, $error_description = '', $still_parameters = array(), $status = mediamosa_job_db::JOB_STATUS_FINISHED) {
+
+    if ($status == mediamosa_job_db::JOB_STATUS_FINISHED) {
+      // Get the mediafile.
+      $a_mediafile = mediamosa_asset_mediafile::must_exists($mediafile_id);
+
+      // Owner check.
+      $is_app_admin = FALSE;
+      mediamosa_aut::owner_check($app_id, $user_id, $a_mediafile[mediamosa_asset_mediafile_db::APP_ID], $a_mediafile[mediamosa_asset_mediafile_db::OWNER_ID], $is_app_admin);
+
+      // Get the asset ID.
+      $asset_id = $a_mediafile[mediamosa_asset_mediafile_db::ASSET_ID];
+    }
+
+    // Create the job.
+    $fields = array(
+      mediamosa_job_db::APP_ID => $app_id,
+      mediamosa_job_db::ASSET_ID => $asset_id,
+      mediamosa_job_db::MEDIAFILE_ID => $mediafile_id,
+      mediamosa_job_db::OWNER_ID => $user_id,
+      mediamosa_job_db::JOB_STATUS => $status,
+      mediamosa_job_db::PROGRESS => '1.000',
+      mediamosa_job_db::PRIORITY => 0,
+      mediamosa_job_db::JOB_TYPE => $job_type,
+      mediamosa_job_db::STARTED => mediamosa::db_current_timestamp_now(),
+      mediamosa_job_db::FINISHED => mediamosa::db_current_timestamp_now(),
+      mediamosa_job_db::CREATE_STILL => mediamosa_job_db::CREATE_STILL_FALSE,
+      mediamosa_job_db::NO_HINT => mediamosa_job_db::NO_HINT_FALSE,
+      mediamosa_job_db::STILL_PARAMETERS => serialize($still_parameters),
+      mediamosa_job_db::ERROR_DESCRIPTION => $error_description,
+    );
+
+    // Add created and changed value.
+    $fields = mediamosa_db::db_insert_enrich($fields);
+
+    // Insert it.
+    return mediamosa_db::db_insert(mediamosa_job_db::TABLE_NAME)
+      ->fields($fields)
+      ->execute();
+  }
+
+  /**
+   * Create a finished job.
+   *
+   * @param integer $app_id
+   * @param string $user_id
+   * @param string $mediafile_id
+   * @param string $job_type
+   * @param string $error_description
+   * @param array $still_parameters
+   */
+  static public function post_create_job_finished($app_id, $user_id, $mediafile_id, $asset_id, $job_type = mediamosa_job_db::JOB_TYPE_ANALYSE, $error_description = '', $still_parameters = array()) {
+    self::post_create_job($app_id, $user_id, $mediafile_id, $asset_id, $job_type, $error_description, $still_parameters, mediamosa_job_db::JOB_STATUS_FINISHED);
+  }
+
+  /**
+   * Create a failed job.
+   *
+   * @param integer $app_id
+   * @param string $user_id
+   * @param string $mediafile_id
+   * @param string $job_type
+   * @param string $error_description
+   * @param array $still_parameters
+   */
+  static public function post_create_job_failed($app_id, $user_id, $mediafile_id, $asset_id, $job_type = mediamosa_job_db::JOB_TYPE_ANALYSE, $error_description = '', $still_parameters = array()) {
+    self::post_create_job($app_id, $user_id, $mediafile_id, $asset_id, $job_type, $error_description, $still_parameters, mediamosa_job_db::JOB_STATUS_FAILED);
   }
 
   // Create a analyse job, after upload has been completed.
