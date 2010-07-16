@@ -55,6 +55,17 @@ class mediamosa_collection {
   }
 
   /**
+   * Count the assets in a given collection.
+   *
+   * returns number of found assetes in the collection.
+   *
+   * @param string $coll_id
+   */
+  static public function count_assets_in_collection($coll_id) {
+    return mediamosa_db::db_count_rows(mediamosa_asset_collection_db::TABLE_NAME, array(mediamosa_asset_collection_db::COLL_ID => $coll_id));
+  }
+
+  /**
    * Get multiple collections within an array, with key
    * as coll_id.
    *

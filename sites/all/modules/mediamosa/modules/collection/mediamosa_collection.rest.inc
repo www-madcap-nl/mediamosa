@@ -437,6 +437,71 @@ class mediamosa_rest_call_collection_get extends mediamosa_rest_call {
       }
     }
 
+    $collection['numofvideos'] = mediamosa_collection::count_assets_in_collection($coll_id);
+
+    $o_mediamosa->add_item($collection);
+  }
+}
+
+/**
+ * URI: /collection/$coll_id/asset/count
+ * Method: GET
+ *
+ */
+class mediamosa_rest_call_collection_count_relation extends mediamosa_rest_call {
+// --------------------------------------------------------------------- Consts.
+  // Rest vars;
+  const COLL_ID = 'coll_id';
+  const USER_ID = 'user_id';
+
+  // ------------------------------------------------------------ Get Var Setup.
+  public function get_var_setup() {
+    $var_setup = array();
+
+    $var_setup = array(
+      self::VARS => array(
+        self::COLL_ID => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_COLLECTION_ID,
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+        ),
+        self::USER_ID => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_DESCRIPTION => 'The User ID requesting the details, used for unappropriate checks.',
+        ),
+      ),
+    );
+
+    // Enrich with required REST vars.
+    return self::get_var_setup_default($var_setup);
+  }
+
+  // ------------------------------------------------------------------ Do Call.
+  public function do_call() {
+    $o_mediamosa = mediamosa::get();
+
+    $a_app_ids = $this->get_param_value_app();
+    $app_id = reset($a_app_ids);
+    $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
+    $coll_id = $this->get_param_value(self::COLL_ID);
+    $user_id = $this->get_param_value(self::USER_ID);
+
+    // Collection must exist.
+    $collection = mediamosa_collection::must_exists($coll_id);
+
+    if ($collection[mediamosa_collection_db::IS_UNAPPROPRIATE] == mediamosa_collection_db::IS_UNAPPROPRIATE_TRUE) {
+      // Must be owner or admin.
+      try {
+        // Check the rights
+        mediamosa_aut::owner_check($app_id, $user_id, $collection[mediamosa_collection_db::APP_ID], $collection[mediamosa_collection_db::OWNER_ID], $is_app_admin);
+      }
+      catch (mediamosa_exception_error_access_denied $e) {
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_IS_UNAPPROPRIATE);
+      }
+    }
+
+    $collection = array();
+    $collection['numofvideos'] = mediamosa_collection::count_assets_in_collection($coll_id);
+
     $o_mediamosa->add_item($collection);
   }
 }
@@ -789,7 +854,7 @@ The collection is deleted only if all underlying assets successfully removed.',
       }
 
       // Now count if any assets are still left in collection.
-      $count_assets_in_collection = mediamosa_db::db_count_rows(mediamosa_asset_collection_db::TABLE_NAME, array(mediamosa_asset_collection_db::COLL_ID => $coll_id));
+      $count_assets_in_collection = count_assets_in_collection($coll_id);
       if ($count_assets_in_collection) {
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_COLLECTION_NOT_EMPTY, array('@asset_count' => $count_assets_in_collection));
       }
