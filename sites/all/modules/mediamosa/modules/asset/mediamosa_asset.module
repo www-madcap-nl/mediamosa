@@ -854,7 +854,7 @@ function mediamosa_asset_mediamosa_register_rest_call_doc() {
     mediamosa_rest_call::EXAMPLE_REQUEST => '/assets?asset_id[]=VlN2ZDKv9rpsfmBAWpvfiw1zQ6z',
     mediamosa_rest_call::RESPONSE_FIELDS => array(
       'item' => 'Full description of the asset including the metadata in XML format.',
-      'asset_id[]' => 'Asset id of the object.',
+      'asset_id' => 'Asset id of the object.',
       'app_id' => 'Application ID of the asset.',
       'provider_id' => 'ID of the source provider.',
       'owner_id' => 'The user ID of the owner of the asset.',
