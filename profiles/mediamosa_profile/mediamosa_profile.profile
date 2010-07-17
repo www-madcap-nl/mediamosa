@@ -108,7 +108,7 @@ function mediamosa_profile_php_settings($install_state) {
 
   $output .= '<h1>' . t('PHP modules') . '</h1>';
 
-  $required_extensions = array('bcmath', 'gd', 'mcrypt', 'curl', 'mysql', 'mysqli', 'SimpleXML');
+  $required_extensions = array('bcmath', 'gd', /*'mcrypt',*/ 'curl', 'mysql', 'mysqli', 'SimpleXML');
   $modules = '';
   foreach ($required_extensions as $extension) {
     $modules .= $extension . ', ';
@@ -138,7 +138,8 @@ function mediamosa_profile_php_settings($install_state) {
   $output .= '<ul>';
 
   // FFmpeg.
-  exec('ffmpeg -version > /dev/null 2>&1', $output, $ret_val);
+  $exec_output = array();
+  exec('ffmpeg -version > /dev/null 2>&1', $exec_output, $ret_val);
 
   $output .= '<li>FFmpeg</li>';
   if ($ret_val != 0) {
@@ -225,11 +226,8 @@ function mediamosa_profile_php_settings($install_state) {
 function mediamosa_profile_storage_location_form() {
   $form = array();
 
-  $mount_point = variable_get('mediamosa_current_mount_point', '');
-  $mount_point_windows = variable_get('mediamosa_current_mount_point_windows', '');
-
-  $mount_point = ($mount_point ? $mount_point : '/srv/mediamosa');
-  $mount_point_windows = ($mount_point_windows ? $mount_point_windows : '//');
+  $mount_point = variable_get('mediamosa_current_mount_point', '/srv/mediamosa');
+  $mount_point_windows = variable_get('mediamosa_current_mount_point_windows', '\\\\');
 
   $form['current_mount_point'] = array(
     '#type' => 'textfield',
