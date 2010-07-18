@@ -46,6 +46,7 @@ Other changes (not ticket related).
 - Fixed bug in admin where new collections where created with empty app_id.
 - Added check to /assets on the asset_id array, will give notices when array
   in array was supplied.
+- Fixed number of notices when tests where not completed (because of restarts).
 
 Mediamosa 2.1.5 (build 664)
 ---------------------------
