@@ -428,7 +428,8 @@ function mediamosa_browse_collection_form($form, &$form_state, $coll_id = NULL) 
   if (!isset($collection)) {
     // Get the apps.
     $apps = mediamosa_app::get_all_apps(array(mediamosa_app_db::APP_ID, mediamosa_app_db::APP_NAME), mediamosa_app_db::APP_NAME, 'ASC')->fetchAllKeyed();
-    $apps = array_merge(array('' => ''), $apps);
+    // no array_merge, will lose Ids in apps.
+    $apps = array('' => '') + $apps;
 
     $form['collection']['app_id'] = array(
       '#type' => 'select',
