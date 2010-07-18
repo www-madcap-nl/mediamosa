@@ -905,6 +905,12 @@ class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
     $asset_ids = $this->get_param_value(self::ASSET_ID);
     if (is_array($asset_ids) && !empty($asset_ids)) {
       foreach ($asset_ids as $asset_id) {
+
+        // Will fix some notices when we supply array in array.
+        if (is_array($asset_id)) {
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => self::ASSET_ID, '@type' => mediamosa_type::TYPE_ASSET_ID));
+        }
+
         if ($this->isset_given_param(self::USER_ID)) {
           $this->set_param_value(self::AUT_USER_ID, $this->get_param_value(self::USER_ID));
         }

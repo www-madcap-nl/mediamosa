@@ -44,6 +44,8 @@ Other changes (not ticket related).
 - Fixed weird bug where the stats cron job failed during a query because of
   linefeed char. Fixed by using mediamosa_db::db_query instead of db_query. 
 - Fixed bug in admin where new collections where created with empty app_id.
+- Added check to /assets on the asset_id array, will give notices when array
+  in array was supplied.
 
 Mediamosa 2.1.5 (build 664)
 ---------------------------
