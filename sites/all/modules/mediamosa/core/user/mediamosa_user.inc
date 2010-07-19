@@ -299,9 +299,11 @@ class mediamosa_user {
       )
     )->fetchField();
 
-    if (!$total) {
-      throw new mediamosa_exception_error_userman_invalid_user(array('@user_id' => $user_id));
-    }
+    // Removed: new users that havent created anything will not be able to see
+    // its quota.
+    //if (!$total) {
+    //  throw new mediamosa_exception_error_userman_invalid_user(array('@user_id' => $user_id));
+    //}
 
     // Get the user.
     $a_user = mediamosa_user::get($user_id, $app_id, array(mediamosa_user_db::GROUP_ID, mediamosa_user_db::CREATED, mediamosa_user_db::CHANGED));

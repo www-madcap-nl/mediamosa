@@ -479,6 +479,7 @@ class mediamosa_rest_call_collection_create extends mediamosa_rest_call {
         self::TITLE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The title of the new collection.',
+          self::VAR_RANGE_END => mediamosa_collection_db::TITLE_LENGTH,
         ),
         self::DESCRIPTION => array(
           self::VAR_TYPE => mediamosa_type::TYPE_STRING,

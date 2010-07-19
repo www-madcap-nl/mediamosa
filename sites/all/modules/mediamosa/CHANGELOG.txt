@@ -67,6 +67,13 @@ Other changes (not ticket related).
 - ftp/create REST call will now also create the FTP home directory for the new
   user.
 - Added extra tests for search on metadata dates.
+- /user/user_id will now return quota even if user_id has no quota information.
+  Old behavour would return invalid user Id error when no quota was available.
+  But then you can never get quota information when you haven't uploaded
+  anything yet.
+- Fixed maxlength on title for collection creation, was unlimited.
+- Max length is now shown correctly in REST calls browser.
+  
 
 Mediamosa 2.1.5 (build 664)
 ---------------------------

@@ -84,7 +84,7 @@ class mediamosa {
   // ------------------------------------------------------------------ Protected Functions.
 
   // ------------------------------------------------------------------ Static Functions.
-    /**
+  /**
    * Retrieve the main response object.
    * Must overridden in any child class.
    *

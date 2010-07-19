@@ -353,7 +353,7 @@ class mediamosa_connector {
   }
 
   public function check_result($response, $ok = NULL, $error = NULL) {
-    $result_id = (int)$response->xml->header->request_result_id;
+    $result_id = $response ? (int)$response->xml->header->request_result_id : 0;
 
     if ($result_id != self::ERRORCODE_OKAY && $result_id != self::ERRORCODE_EMPTY_RESULT) {
       if (isset($error)) {
@@ -369,5 +369,72 @@ class mediamosa_connector {
     }
 
     return TRUE;
+  }
+
+  /**
+   * Simple function to correctly convert simplexml to array.
+   *
+   * @param object $xml
+   */
+  private static function _simplexml2array($xml) {
+    $xml_copy = $xml;
+    if (get_class($xml) == 'SimpleXMLElement') {
+      foreach($xml->attributes() as $key => $value) {
+        if ($value) {
+          $attributes[$key] = (string)$value;
+        }
+      }
+
+      $xml = get_object_vars($xml);
+    }
+
+    if (is_array($xml)) {
+      if (empty($xml)) {
+        return (string)$xml_copy;
+      }
+
+      $result = array();
+      foreach($xml as $key => $value) {
+        $result[$key] = self::_simplexml2array($value);
+      }
+
+      return $result;
+    }
+
+    return (string)$xml;
+  }
+
+  /**
+   * Basicly the same as simplexml2array, with the exception that it will fix
+   * the problem with single and multi items where a single item will end up
+   * in a non-indexed array and multi items will.
+   *
+   * @param object $xml
+   */
+  public static function responsexml2array($xml) {
+
+    // Convert to nice array.
+    $a_xml = self::_simplexml2array($xml);
+
+    if (!isset($a_xml['items']['item'])) {
+      return $a_xml;
+    }
+
+    // Fix the problem with 1 or 2+ items in array.
+    $a_tmp = isset($a_xml['items']['item'][0]) ? $a_xml['items']['item'] : array(0 => $a_xml['items']['item']);
+    unset($a_xml['items']);
+    $a_xml['items']['item'] = $a_tmp;
+
+    return $a_xml;
+  }
+
+  /**
+   * Correctly convert to array and return the items object from the mediamosa
+   * response as array.
+   *
+   * @param object $response
+   */
+  public static function response2array($response) {
+    return self::responsexml2array($response->xml);
   }
 }

@@ -270,7 +270,7 @@ function template_preprocess_restcall_doc(&$variables) {
         (isset($item[mediamosa_rest_call::VAR_DESCRIPTION]) ? $item[mediamosa_rest_call::VAR_DESCRIPTION] : '') . (!empty($allowed_values) ? '<br /><small>Value must be either "' . implode('" or "', $allowed_values) . '".' : ''),
         t('Required'),
         isset($item[mediamosa_rest_call::VAR_DEFAULT_VALUE]) ? $item[mediamosa_rest_call::VAR_DEFAULT_VALUE] : '',
-        '-',
+        isset($item[mediamosa_rest_call::VAR_RANGE_END]) ? $item[mediamosa_rest_call::VAR_RANGE_END] : '-',
       );
     }
   }
@@ -289,7 +289,7 @@ function template_preprocess_restcall_doc(&$variables) {
         (isset($item[mediamosa_rest_call::VAR_DESCRIPTION]) ? $item[mediamosa_rest_call::VAR_DESCRIPTION] : '') . (!empty($allowed_values) ? '<br /><small>Value (when supplied) must be either "' . implode('" or "', $allowed_values) . '".' : ''),
         t('Optional'),
         isset($item[mediamosa_rest_call::VAR_DEFAULT_VALUE]) ? $item[mediamosa_rest_call::VAR_DEFAULT_VALUE] : '',
-        '-',
+        isset($item[mediamosa_rest_call::VAR_RANGE_END]) ? $item[mediamosa_rest_call::VAR_RANGE_END] : '-',
       );
     }
   }
