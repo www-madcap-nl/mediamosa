@@ -14,3 +14,12 @@
   width: 120px;
   text-align: center;
 }
+
+.mm-table-summary {
+  font-weight: bold;
+}
+
+.mm-table-summary-right {
+  font-weight: bold;
+  text-align: right;
+}

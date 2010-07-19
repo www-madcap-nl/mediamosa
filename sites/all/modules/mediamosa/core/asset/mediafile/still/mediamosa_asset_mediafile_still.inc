@@ -56,10 +56,17 @@ class mediamosa_asset_mediafile_still {
 
     // Check if still exists.
     if (!mediamosa_io::file_exists($still_filename)) {
+      mediamosa_job::post_create_job_failed($app_id, $owner_id, $still_id, $asset_id, mediamosa_job_db::JOB_TYPE_ANALYSE, 'File not exists.', $still_parameters);
+
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STILL_NOT_FOUND, array('@asset_id' => $asset_id));
     }
 
-    $size = getimagesize($still_filename);
+    $size = @getimagesize($still_filename);
+    if (!$size) {
+      mediamosa_job::post_create_job_failed($app_id, $owner_id, $still_id, $asset_id, mediamosa_job_db::JOB_TYPE_ANALYSE, 'File is not an image.', $still_parameters);
+
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STILL_NOT_IMAGE, array('@asset_id' => $asset_id));
+    }
 
     // Set width, height.
     $width = $size[0];
@@ -141,6 +148,8 @@ class mediamosa_asset_mediafile_still {
     mediamosa_db::db_insert(mediamosa_asset_mediafile_metadata_db::TABLE_NAME)
       ->fields($fields)
       ->execute();
+
+    mediamosa_job::post_create_job_finished($app_id, $owner_id, $still_id, $asset_id, mediamosa_job_db::JOB_TYPE_ANALYSE, '', $still_parameters);
   }
 
   /**

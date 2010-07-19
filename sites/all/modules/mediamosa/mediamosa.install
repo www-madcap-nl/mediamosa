@@ -264,3 +264,14 @@ function mediamosa_update_7004() {
     // ignore.
   }
 }
+
+/**
+ * New error: ERRORCODE_STILL_NOT_IMAGE.
+ */
+function mediamosa_update_7005() {
+  db_query('INSERT INTO {mediamosa_error} (name, code, message) VALUES (:name, :code, :message)', array(
+    ':name' => 'ERRORCODE_STILL_NOT_IMAGE',
+    ':code' => 1153,
+    ':message' => 'MM - still is not an image for asset_id=@asset_id.',
+  ));
+}

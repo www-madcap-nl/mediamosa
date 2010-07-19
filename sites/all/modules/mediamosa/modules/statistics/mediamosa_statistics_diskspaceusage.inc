@@ -80,6 +80,11 @@ function mediamosa_statistics_diskspaceused_list_form() {
   // Do the rest call.
   $result = mediamosa_response_connector::static_do_restcall_drupal('statistics/datausagevideo', 'GET', $params);
 
+  $summary_data = NULL;
+  if (isset($result['header']['statistics']['total_disk_usage_mb'])) {
+    $summary_data = $result['header']['statistics']['total_disk_usage_mb'];
+  }
+
   // Our header.
   $header = array(
     array('data' => t('App ID')),
@@ -114,7 +119,18 @@ function mediamosa_statistics_diskspaceused_list_form() {
     '#item_count_total' => $item_count_total,
     '#item_limit' => $limit,
     // Total note.
-    '#caption_bottom' => t('Entries found: @total', array('@total' => $item_count_total))
+    //'#caption_bottom' => t('Entries found: @total', array('@total' => $item_count_total)),
+    // Summary.
+    '#summary' => array(
+      array(
+        'title' => t('Entries found:'),
+        'data' => $item_count_total,
+      ),
+      array(
+        'title' => t('Disk usage:'),
+        'data' => (is_numeric($summary_data) ? format_size(1024 * 1024 * $summary_data) : t('N/A')),
+      ),
+    ),
   );
 
   return $form;

@@ -724,6 +724,23 @@ class mediamosa_rest_call_statistics_get_used_diskspace extends mediamosa_rest_c
 
       $o_mediamosa->add_item($row);
     }
+
+    // Total disk usage.
+    // Data.
+    $a_query_disk_usage = $a_query;
+    unset($a_query_disk_usage[mediamosa_db_query::A_SELECT_EXPR]);
+    $a_query_disk_usage[mediamosa_db_query::A_SELECT_EXPR][] = 'sum(diskspace) as total_disk_usage';
+    unset($a_query_disk_usage[mediamosa_db_query::A_ORDER_BY]);
+    unset($a_query_disk_usage[mediamosa_db_query::LIMIT]);
+    unset($a_query_disk_usage[mediamosa_db_query::OFFSET]);
+    // Do query.
+    $query_disk_usage = mediamosa_db_query::query_select($a_query_disk_usage);
+    $result = mediamosa_db::db_query($query_disk_usage);
+    // Add data.
+    $statistics_data = array(
+      'total_disk_usage_mb' => $result->fetchField(),
+    );
+    $o_mediamosa->set_result_header_extra($statistics_data, 'statistics');
   }
 }
 

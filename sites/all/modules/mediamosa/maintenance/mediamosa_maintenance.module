@@ -234,6 +234,8 @@ function mediamosa_maintenance_theme() {
         // Title, description (top).
         'title' => NULL,
         'description' => NULL,
+        // Summary.
+        'summary' => NULL,
       ),
       'file' => 'mediamosa_maintenance.admin.inc',
     ),

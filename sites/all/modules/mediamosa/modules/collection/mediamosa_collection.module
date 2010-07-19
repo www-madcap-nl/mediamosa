@@ -84,6 +84,14 @@ function mediamosa_collection_mediamosa_register_rest_call() {
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
 
+  // Get count of assets in a Collection.
+  $rest_calls['collection/$coll_id/asset/count'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_collection_count_relation',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_collection',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_2_0,
+  );
+
   // Create Collection.
   $rest_calls['collection/create'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_collection_create',
@@ -225,6 +233,7 @@ collections. This call gives all the collection details.',
       'changed' => 'date/time when the collection was last modified.',
       'is_unappropriate' => 'A field to flag the collection as inappropriate. Only the is_app_admin is allowed to set this parameter. When set, the collection will not be shown except to the user and the is_app_admin. It does not affect assets belonging to the collection.',
       'public_assign' => '',
+      'numofvideos' => 'Number of assets in the collection.',
       '' => ''
     ),
     mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
@@ -243,6 +252,23 @@ collections. This call gives all the collection details.',
     <changed>2010-03-10 11:00:59</changed>
     <is_unappropriate>FALSE</is_unappropriate>
     <public_assign>FALSE</public_assign>
+    <numofvideos>3</numofvideos>
+  </item>
+</items>
+',
+  );
+
+  $rest_calls['collection/$coll_id/asset/count'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Get the assets in a collection.',
+    mediamosa_rest_call::DESCRIPTION => 'A collection describes one of more assets. An asset can belong to several
+collections. This call counts all the assets in a collection.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/collection/A2VIXJhHiplJWliYVTVeD8Ee/asset/count?user_id=foo',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(
+      'numofvideos' => 'Number of assets in the collection.',
+    ),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <numofvideos>3</numofvideos>
   </item>
 </items>
 ',
