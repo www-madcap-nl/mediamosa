@@ -130,6 +130,8 @@ function theme_mediamosa_maintenance_date($variables) {
  * @param array $variables
  */
 function theme_mediamosa_maintenance_table($variables) {
+  drupal_add_css(drupal_get_path('module', 'mediamosa_maintenance') . '/mediamosa_maintenance.css');
+
   $pager_variables = array();
   foreach (array('page', 'item_count_total', 'item_limit', 'element', 'quantity') as $var) {
     if (isset($variables[$var])) {
@@ -154,6 +156,18 @@ function theme_mediamosa_maintenance_table($variables) {
 
   if (!empty($variables['description'])) {
     $build['description'] = '<p>' . check_plain($variables['description']) . '</p>';
+  }
+
+  // Total used diskspace.
+  if (isset($variables['summary']) && is_array($variables['summary']) && !empty($variables['summary'])) {
+    foreach ($variables['summary'] as $summary_item) {
+      if (isset($summary_item['title']) && isset($summary_item['data'])) {
+        $variables['rows'][] = array(
+          array('data' => $summary_item['title'], 'class' => 'mm-table-summary-right', 'colspan' => count($variables['header'])-1),
+          array('data' => $summary_item['data'], 'class' => 'mm-table-summary'),
+        );
+      }
+    }
   }
 
   $build['table'] = theme('table', $variables);
