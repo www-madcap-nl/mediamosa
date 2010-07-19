@@ -224,7 +224,7 @@ class mediamosa_statistics {
 
     // Per usergroup, user and container
     foreach (array('group_id' => 'group', 'owner_id' => 'user', 'app_id' => 'container') as $subject => $name) {
-      $result = db_query(
+      $result = mediamosa_db::db_query(
         'SELECT SUM(m.filesize) / 1024 / 1024 AS diskspace_mb, mf.#subject, mf.app_id, m.container_type FROM {mediamosa_asset_mediafile_metadata} AS m
          JOIN {mediamosa_asset_mediafile} AS mf ON m.mediafile_id = mf.mediafile_id
          WHERE filesize > 0
@@ -236,7 +236,7 @@ class mediamosa_statistics {
 
       // Insert new (or updated) statistics.
       foreach ($result as $data) {
-        db_query(
+        mediamosa_db::db_query(
           'INSERT INTO {mediamosa_statistics_diskspace_used}
            SET app_id = :app_id, type = :type, keyword = :keyword, container_type = :container_type, diskspace = :diskspace, timestamp = :timestamp',
           array(

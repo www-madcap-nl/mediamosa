@@ -456,7 +456,7 @@ function _mediamosa_maintenance_status_details($name) {
   }
 
   $rows = array();
-  if (isset($found_test)) {
+  if (isset($found_test) && isset($found_test['assertions'])) {
     foreach ($found_test['assertions']['assertion'] as $assertion) {
       $row = array();
       $row[] = $assertion['message'];

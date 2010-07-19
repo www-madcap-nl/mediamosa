@@ -1,34 +1,5 @@
 6~// $Id: 
 
-Steps for changelog and commits;
-
-1. Save all work and test before commit.
-2. Add changes to the changelog, copy change to use in commit.
-
-  Example;
-  
-  Mediamosa 2.1.0
-  ---------------
-  - Added coll_id search to CQL. (See MediaMosa ticket #24).
-  - Added app_id search to CQL. (See MediaMosa ticket #24).
-  - [other changes other tickets]
-
-
-3. Do one ticket per commit. If for some reason you have multiple changes on 
-   multiple tickets then checkin on specific files per commit (use hg ci 
-   [files]). Its not allowed to commit multiple tickets in one commit.
-   
-   Commit example;
-  - Added coll_id search to CQL. (See MediaMosa ticket #24).
-  - Added app_id search to CQL. (See MediaMosa ticket #24).
-  
-4. Reassign to TPL (robert).
-5. Put status on ready for review.
-6. Job list with the same timestamp bug fix (See: 
-   mediamosa_batch_jobs_sort_files() function).
-7. Queue log fix.
-
-
 START CHANGELOG:
 
 Known issues;
@@ -73,7 +44,15 @@ Other changes (not ticket related).
   anything yet.
 - Fixed maxlength on title for collection creation, was unlimited.
 - Max length is now shown correctly in REST calls browser.
-  
+- Fixed bug in mediamosa.profile where output of error messages was not 
+  complete.
+- Changed default mount point for windows in profile to \\ instead of //.
+- Fixed weird bug where the stats cron job failed during a query because of
+  linefeed char. Fixed by using mediamosa_db::db_query instead of db_query. 
+- Fixed bug in admin where new collections where created with empty app_id.
+- Added check to /assets on the asset_id array, will give notices when array
+  in array was supplied.
+- Fixed number of notices when tests where not completed (because of restarts).
 
 Mediamosa 2.1.5 (build 664)
 ---------------------------

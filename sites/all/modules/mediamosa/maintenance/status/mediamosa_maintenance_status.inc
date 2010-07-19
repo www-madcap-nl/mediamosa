@@ -295,7 +295,7 @@
     foreach ($runs as $run) {
       if (isset($test_results[$run])) {
         foreach ($test_results[$run] as $class_name => $info) {
-          if ($info['runphase'] == self::RUNPHASE_STARTED) {
+          if (isset($info['runphase']) && $info['runphase'] == self::RUNPHASE_STARTED) {
             $test_results[$run][$class_name] = array('runphase' => self::RUNPHASE_TIMED_OUT, 'results' => array(), 'info' => $info);
             mediamosa_maintenance_status::set_test_results($run, $class_name, $test_results);
           }
