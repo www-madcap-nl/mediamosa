@@ -190,6 +190,38 @@ class mediamosa_core_cql {
   }
 
   /**
+   * Start parsing the CQL for job search.
+   *
+   * @param string $str_cql
+   * @param array $app_ids
+   */
+  static public function parse_job($str_cql, array $app_ids) {
+
+    // Create the CQL object.
+    $mediamosa_cql = new mediamosa_job_cql_context($app_ids);
+    return $mediamosa_cql->mediamosa_core_parse_cql($str_cql);
+  }
+
+  /**
+   * Format check if CQL has been correctly formated
+   * Will throw exception when verify has failed.
+   *
+   * @param string $str_cql
+   * @return boolean
+   */
+  static public function verify_job($str_cql, $app_ids, &$error_text) {
+
+    // Create the CQL object.
+    $mediamosa_cql = new mediamosa_job_cql_context($app_ids);
+    $result = $mediamosa_cql->mediamosa_cql_verify($str_cql);
+    if (!$result) {
+      $error_text = $mediamosa_cql->mediamosa_cql_last_exception_get()->getMessage();
+    }
+
+    return $result;
+  }
+
+  /**
    * Add search parameters to var setup based on old param conf.
 
    * @param array $a_var_setup
@@ -671,6 +703,12 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
         $str_like = '=';
         $str_relation = '==';
         break;
+
+      case mediamosa_type::TYPE_JOB_PROGRESS:
+        $str_quotes = '\'';
+        $str_like = '=';
+        break;
+
       default:
         $str_quotes = '\'';
         break;
@@ -1342,6 +1380,143 @@ class mediamosa_collection_cql_context extends mediamosa_core_cql_context {
                 MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'c',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_collection_db::TABLE_NAME,
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_INT,
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+
+  protected function mediamosa_core_cql_context_array_get() {
+    return $this->m_a_mediamosa_context;
+  }
+}
+
+/**
+ * Job CQL Context class
+ *
+ */
+class mediamosa_job_cql_context extends mediamosa_core_cql_context {
+
+  // The CQL_CONTEXT_KEY_* keys are default and must be used,
+  // however all other keys are open for own class specification.
+  private $m_a_mediamosa_context = array(
+
+    MEDIAMOSA_CQL_CONTEXT_KEY_DEFAULT_RELATION => '=',
+    MEDIAMOSA_CQL_CONTEXT_KEY_DEFAULT_SEARCH_TERMS => array('mediamosa.error_description'),
+
+    //MEDIAMOSA_CQL_CONTEXT_KEY_INDEX_REFERENCES => array(
+    // 'vpx' => 'mediamosa', // Reference (1.x)
+    // 'vpx:collection' => 'mediamosa:collection', // Reference (1.x)
+    //),
+
+    MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES => array(
+      'mediamosa' => array(
+        MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES => array(
+          'mediamosa:job' => array(
+            MEDIAMOSA_CQL_CONTEXT_KEY_COLUMNS=> array(
+              'job_id' => array(
+                MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'job_id',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'j',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_job_db::TABLE_NAME,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_INT,
+              ),
+              'app_id' => array(
+                MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'app_id',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'j',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_job_db::TABLE_NAME,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_INT,
+              ),
+              //'asset_id' => array(
+              //  MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'asset_id',
+              //  MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_job_db::TABLE_NAME,
+              //  MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'j',
+              //  MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_STRING,
+              //),
+              'mediafile_id' => array(
+                MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'mediafile_id',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_job_db::TABLE_NAME,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'j',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_STRING,
+              ),
+              'owner_id' => array(
+                MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'owner_id',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'j',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_job_db::TABLE_NAME,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_STRING,
+              ),
+              'status' => array(
+                MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'status',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'j',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_job_db::TABLE_NAME,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_JOB_STATUS,
+              ),
+              'progress' => array(
+                MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'progress',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'j',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_job_db::TABLE_NAME,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_JOB_PROGRESS,
+              ),
+              'priority' => array(
+                MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'priority',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'j',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_job_db::TABLE_NAME,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_INT,
+              ),
+              'job_type' => array(
+                MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'job_type',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'j',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_job_db::TABLE_NAME,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_JOB,
+              ),
+              'started' => array(
+                MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'started',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'j',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_job_db::TABLE_NAME,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_DATETIME,
+              ),
+              'finished' => array(
+                MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'finished',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'j',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_job_db::TABLE_NAME,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_DATETIME,
+              ),
+              'create_still' => array(
+                MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'create_still',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'j',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_job_db::TABLE_NAME,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_BOOL,
+              ),
+              'no_hint' => array(
+                MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'no_hint',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'j',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_job_db::TABLE_NAME,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_BOOL,
+              ),
+              'still_parameters' => array(
+                MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'still_parameters',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'j',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_job_db::TABLE_NAME,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_STRING,
+              ),
+              'error_description' => array(
+                MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'error_description',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'j',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_job_db::TABLE_NAME,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_STRING,
+              ),
+              'created' => array(
+                MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'created',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'j',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_job_db::TABLE_NAME,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_DATETIME,
+              ),
+              'changed' => array(
+                MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'changed',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'j',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_job_db::TABLE_NAME,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_DATETIME,
               ),
             ),
           ),

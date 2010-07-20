@@ -15,6 +15,7 @@ files[] = mediamosa_job.rest.inc
 files[] = mediamosa_job.test
 files[] = mediamosa_job.delete.test
 files[] = mediamosa_job.transcode.test
+files[] = mediamosa_job.cql.test
 
 ; Job Server.
 files[] = server/mediamosa_job_server.rest.inc

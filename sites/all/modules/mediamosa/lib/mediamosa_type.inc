@@ -79,6 +79,7 @@ class mediamosa_type {
 
   const TYPE_CQL_ASSET                   = 'CQL_ASSET';
   const TYPE_CQL_COLLECTION              = 'CQL_COLLECTION';
+  const TYPE_CQL_JOB                     = 'CQL_JOB';
 
   const TYPE_ORDER_DIRECTION             = 'ORDER_DIRECTION';
   const TYPE_LIMIT                       = 'LIMIT';
@@ -95,6 +96,8 @@ class mediamosa_type {
   // Job types.
   const TYPE_JOB                         = 'JOB_TYPE';
   const TYPE_COMMAND                     = 'COMMAND';
+  const TYPE_JOB_STATUS                  = 'TYPE_JOB_STATUS';
+  const TYPE_JOB_PROGRESS                = 'TYPE_JOB_PROGRESS';
 
   // Store NOW() time as date
   const FUNC_DATETIME_NOW                = 'NOW()';
@@ -205,6 +208,34 @@ class mediamosa_type {
         $checked_param_value = (string)mediamosa_unicode::strtoupper($mixed_param_value);
         break;
 
+      case self::TYPE_JOB_STATUS:
+        $a_job_statuses = array(
+          mediamosa_job_db::JOB_STATUS_WAITING,
+          mediamosa_job_db::JOB_STATUS_INPROGRESS,
+          mediamosa_job_db::JOB_STATUS_FINISHED,
+          mediamosa_job_db::JOB_STATUS_FAILED,
+          mediamosa_job_db::JOB_STATUS_CANCELLED
+        );
+
+        if (!in_array(mediamosa_unicode::strtoupper($mixed_param_value), $a_job_statuses)) {
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_UNKNOWN_JOB_STATUS);
+        }
+
+        $checked_param_value = (string)mediamosa_unicode::strtoupper($mixed_param_value);
+        break;
+
+      case self::TYPE_JOB_PROGRESS:
+        // 0.000 to 1.000.
+        if (
+          (!is_float($mixed_param_value) || (float)$mixed_param_value < 0 || (float)$mixed_param_value > 1 || strlen($mixed_param_value) > 5) &&
+          $mixed_param_value != ''
+        ) {
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_UNKNOWN_JOB_PROGRESS);
+        }
+
+        $checked_param_value = (string)$mixed_param_value;
+        break;
+
       case self::TYPE_LIMIT:
         $range_start = 0;
         if ($range_end < 1) {
@@ -293,6 +324,7 @@ class mediamosa_type {
 
       case self::TYPE_CQL_ASSET:
       case self::TYPE_CQL_COLLECTION:
+      case self::TYPE_CQL_JOB:
       case self::TYPE_STRING:
         $checked_param_value = (string)$mixed_param_value;
         break;
@@ -595,6 +627,7 @@ class mediamosa_type {
       case self::TYPE_REALM:
       case self::TYPE_CQL_ASSET:
       case self::TYPE_CQL_COLLECTION:
+      case self::TYPE_CQL_JOB:
         return self::TYPE_STRING;
 
       case self::TYPE_SEARCH_INT:

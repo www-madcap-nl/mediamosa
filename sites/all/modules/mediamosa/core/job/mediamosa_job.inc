@@ -783,30 +783,56 @@ class mediamosa_job {
    *
    * @param $a_parameters
    */
-  static public function get_job_list($app_id, $user_id, $is_app_admin = FALSE, $job_id = 0, $asset_id = '', $mediafile_id = '') {
+  static public function get_job_list($app_id, $user_id, $is_app_admin = FALSE, $job_id = 0, $asset_id = '', $mediafile_id = '', $cql = NULL) {
 
     $query = mediamosa_db::db_select(mediamosa_job_db::TABLE_NAME, 'j');
     $query->fields('j');
-    $query->join(mediamosa_asset_db::TABLE_NAME, 'a', 'a.asset_id = j.asset_id');
 
     if (!$is_app_admin) {
       $query->condition('j.' . mediamosa_job_db::APP_ID, $app_id);
       $query->condition('j.' . mediamosa_job_db::OWNER_ID, $user_id);
     }
 
-    if (!empty($job_id)) {
-      $query->condition('j.' . mediamosa_job_db::ID, $job_id);
-    }
-
     if (!empty($asset_id)) {
+      $query->join(mediamosa_asset_db::TABLE_NAME, 'a', 'a.asset_id = j.asset_id');
       $query->condition(db_or()->condition('a.' . mediamosa_asset_db::ID, $asset_id)->condition('a.' . mediamosa_asset_db::PARENT_ID, $asset_id));
     }
 
-    if (!empty($mediafile_id)) {
-      $query->condition('j.' . mediamosa_job_db::MEDIAFILE_ID, $mediafile_id);
+    if ($cql) {
+      // CQL.
+      $a_result_cql2sql = mediamosa_core_cql::parse_job($cql, array($app_id));
+
+      if (isset($a_result_cql2sql['str_where']) && $a_result_cql2sql['str_where'] != "") {
+        $query->where($a_result_cql2sql['str_where']);
+      }
+
+      if (count($a_result_cql2sql['a_order_by']) > 1) {
+        throw new mediamosa_exception_error_cql_error(array('@error' => 'you can not use \'sortBy\' on multiple columns, only specify one column'));
+      }
+      elseif (count($a_result_cql2sql['a_order_by']) == 1) {
+        $a_order_by = reset($a_result_cql2sql['a_order_by']);
+        if (isset($a_order_by['column']) && $a_order_by['column']) {
+          $order_by = $a_order_by['column'];
+          $order_direction = 'ASC';
+          if (isset($a_order_by['direction']) && $a_order_by['direction']) {
+            $order_direction = $a_order_by['direction'];
+          }
+          $query->orderBy('j.' . $order_by, $order_direction);
+        }
+      }
     }
-    $query->orderBy('j.' . mediamosa_job_db::ASSET_ID, 'ASC');
-    $query->orderBy('j.' . mediamosa_job_db::PRIORITY, 'ASC');
+    else {
+      // Normal search (not CQL).
+      if (!empty($job_id)) {
+        $query->condition('j.' . mediamosa_job_db::ID, $job_id);
+      }
+
+      if (!empty($mediafile_id)) {
+        $query->condition('j.' . mediamosa_job_db::MEDIAFILE_ID, $mediafile_id);
+      }
+      $query->orderBy('j.' . mediamosa_job_db::ASSET_ID, 'ASC');
+      $query->orderBy('j.' . mediamosa_job_db::PRIORITY, 'ASC');
+    }
 
     return $query->execute()->fetchAll();
   }

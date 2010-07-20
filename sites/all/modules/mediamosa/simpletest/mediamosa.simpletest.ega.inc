@@ -2880,6 +2880,53 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $this->assertTrue($expected, strtr('Found collections; @found, expected; @expected.', array('@found' => implode(', ', $a_found_ids), '@expected' => implode(', ', array_keys($a_expected_collection_ids)))));
   }
 
+  public function cql_do_search_test_jobs($asset_id, $cql, $a_expected_job_ids, array $a_parameters = array()) {
+    $a_parameters += array(
+      mediamosa_rest_call_asset_search::CQL => $cql,
+    );
+
+    // Set uri.
+    $uri = sprintf('asset/%s/joblist', $asset_id);
+    $a_expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY, mediamosa_error::ERRORCODE_EMPTY_RESULT);
+
+    // Do get call.
+    $response = $this->restCallGet($uri, $a_parameters, array(), $a_expected_result_ids);
+
+    // Check response.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $a_expected_result_ids),
+      strtr(
+        "Executed CQL: '@cql', got result @result (@result_description)",
+        array(
+          '@cql' => $a_parameters[mediamosa_rest_call_asset_search::CQL],
+          '@result' => (string)$response['xml']->header->request_result_id,
+          '@result_description' => (string)$response['xml']->header->request_result_description
+        )
+      )
+    );
+
+    // Make array.
+    $a_found = isset($response['xml']->items) && !empty($response['xml']->items) ? mediamosa_lib::simplexml2array($response['xml']) : array('items' => array('item' => array()));
+    $a_found = !isset($a_found['items']['item'][0]) && !empty($a_found['items']['item']) ? array(0 => $a_found['items']['item']) : $a_found['items']['item'];
+
+    // Value to key.
+    $a_tmp = array();
+    foreach ($a_expected_job_ids as $job_id) {
+      $a_tmp[$job_id] = TRUE;
+    }
+    $a_expected_job_ids = $a_tmp;
+
+    $expected = $this->cql_expected_ids($a_found, $a_expected_job_ids, 'id');
+
+    $a_found_ids = array();
+    foreach ($a_found as $key_item => $a_item) {
+      $a_found_ids[] = $a_item['id'];
+    }
+
+    // Now see if we got what we wanted.
+    $this->assertTrue($expected, strtr('Found jobs; @found, expected; @expected.', array('@found' => implode(', ', $a_found_ids), '@expected' => implode(', ', array_keys($a_expected_job_ids)))));
+  }
+
   function cql_expected_ids($a_found, $a_ids, $name, $granted = FALSE) {
     if (!count($a_found) && count($a_ids)) {
       return FALSE;

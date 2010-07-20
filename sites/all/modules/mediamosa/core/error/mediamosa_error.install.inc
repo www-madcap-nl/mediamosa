@@ -148,6 +148,8 @@ function _mediamosa_error_install() {
     'ERRORCODE_CREATING_JOB' => 'MediaMosa - error creating a new job',
     'ERRORCODE_DELETING_JOB' => 'MediaMosa - error deleting a job',
     'ERRORCODE_UNKNOWN_JOB_TYPE' => 'MediaMosa - unknown job type',
+    'ERRORCODE_UNKNOWN_JOB_STATUS' => 'MediaMosa - unknown job status',
+    'ERRORCODE_UNKNOWN_JOB_PROGRESS' => 'MediaMosa - unknown job progress',
     'ERRORCODE_RETRIEVING_TRANSCODE_PROFILE' => 'MediaMosa - error retrieving transcode profile from the database.',
     'ERRORCODE_RETRIEVING_DEFAULT_TRANSCODE_PROFILE' => 'MediaMosa - error retrieving default transcode profile.',
     'ERRORCODE_NO_DEFAULT_TRANSCODE_PROFILE' => 'MediaMosa - no default transcode profile specified.',

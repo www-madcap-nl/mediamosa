@@ -655,6 +655,7 @@ class mediamosa_rest_call_job_asset_search extends mediamosa_rest_call {
   // Rest vars;
   const USER_ID = 'user_id';
   const ASSET_ID = 'asset_id';
+  const CQL = 'cql';
 
   // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
@@ -672,11 +673,34 @@ class mediamosa_rest_call_job_asset_search extends mediamosa_rest_call {
           self::VAR_DESCRIPTION => 'The asset ID to search on.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
+        self::CQL => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_CQL_JOB,
+          self::VAR_DESCRIPTION => 'The CQL search string, used for extended and complex search options.',
+        ),
       )
     );
 
+    // Set limit and offset.
+    $a_var_setup = self::get_var_setup_range($a_var_setup, mediamosa_settings::LIMIT_MAX_JOBLIST, mediamosa_settings::LIMIT_DEFAULT_JOBLIST);
+
     // Enrich with required REST vars.
     return self::get_var_setup_default($a_var_setup);
+  }
+
+  // ------------------------------------------------------------------ Override Validate Rest Args.
+  // Override for checking CQL string.
+  protected function validate_rest_args(array $a_var_setup) {
+
+    // Validate first.
+    parent::validate_rest_args($a_var_setup);
+
+    $cql = $this->get_param_value(self::CQL);
+    $app_ids = $this->get_param_value_app();
+    $error_text = '';
+
+    if ($cql != '' && !mediamosa_core_cql::verify_job($cql, $app_ids, $error_text)) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CQL_ERROR, array('@error' => $error_text));
+    }
   }
 
   // ------------------------------------------------------------------ Do Call.
@@ -689,12 +713,13 @@ class mediamosa_rest_call_job_asset_search extends mediamosa_rest_call {
 
     $user_id = $this->get_param_value(self::USER_ID);
     $asset_id = $this->get_param_value(self::ASSET_ID);
+    $cql = $this->get_param_value(self::CQL);
 
     // Must exist.
     mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
 
     // Get the jobs from the user.
-    $result = mediamosa_job::get_job_list($app_id, $user_id, $is_app_admin, FALSE, $asset_id);
+    $result = mediamosa_job::get_job_list($app_id, $user_id, $is_app_admin, FALSE, $asset_id, '', $cql);
 
     foreach ($result as $a_row) {
       $started_unix = isset($a_row[mediamosa_job_db::STARTED]) ? mediamosa_lib::iso8601date_to_unix($a_row[mediamosa_job_db::STARTED]) : '';

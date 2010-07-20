@@ -62,9 +62,11 @@ class mediamosa_settings {
   const LIMIT_DEFAULT = 10; // We return 10 items by default.
   const LIMIT_DEFAULT_STATISTICS = 50; // statistics bit more.
   const LIMIT_DEFAULT_STATISTICS_NO_PAGER = 150; // When we dont have a pager.
+  const LIMIT_DEFAULT_JOBLIST = 2000; // For joblist.
 
   const LIMIT_MAX = 200;
   const LIMIT_MAX_IDS_ONLY = 5000; // In case we only return IDs instead of complete array's.
+  const LIMIT_MAX_JOBLIST = 2000; // For joblist.
 
   // Max. supplements per asset.
   const MAX_SUPPLEMENT_PER_ASSET = 16;

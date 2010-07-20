@@ -275,3 +275,19 @@ function mediamosa_update_7005() {
     ':message' => 'MM - still is not an image for asset_id=@asset_id.',
   ));
 }
+
+/**
+ * New error: ERRORCODE_UNKNOWN_JOB_STATUS and ERRORCODE_UNKNOWN_JOB_PROGRESS.
+ */
+function mediamosa_update_7006() {
+  db_query('INSERT INTO {mediamosa_error} (name, code, message) VALUES (:name, :code, :message)', array(
+    ':name' => 'ERRORCODE_UNKNOWN_JOB_STATUS',
+    ':code' => 1154,
+    ':message' => 'MediaMosa - unknown job status',
+  ));
+  db_query('INSERT INTO {mediamosa_error} (name, code, message) VALUES (:name, :code, :message)', array(
+    ':name' => 'ERRORCODE_UNKNOWN_JOB_PROGRESS',
+    ':code' => 1155,
+    ':message' => 'MediaMosa - unknown job progress',
+  ));
+}
