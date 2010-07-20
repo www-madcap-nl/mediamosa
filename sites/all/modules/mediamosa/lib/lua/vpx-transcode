@@ -42,6 +42,7 @@ local symbol = lpeg.R("az", "AZ") * lpeg.R("az", "AZ", "09", "__")^0
 
 local word = lpeg.C(symbol) * space
 local number = lpeg.C(digits) * space
+local any_number = digits * space
 local float = lpeg.C(digits * "." * digits) * space
 local time = lpeg.C(digits * ":" * digits * ":" * digits * "." * digits) * space
 local hex = lpeg.C("0x" * lpeg.R("09", "AF")^1) * space
@@ -64,9 +65,10 @@ local ln_input = lpeg.P("Input #") * number * COMMA *
 
 -- Duration: 00:02:06.9, start: 0.000000, bitrate: 4143 kb/s
 -- Duration: 00:02:06.9, start: 0.000000, bitrate: N/A
+-- Duration: 00:53:01.20, start: -1.000000, bitrate: 1749 kb/s
 local ln_duration = space * "Duration" * COLON *
   time * COMMA *
-  "start" * COLON * lpeg.C(digits * "." * lpeg.P("-")^0 * digits) * space * COMMA *
+  "start" * COLON * lpeg.C(lpeg.P("-")^0 * digits * "." * lpeg.P("-")^0 * digits) * space * COMMA *
   "bitrate" * COLON * ((number * "kb/s") + lpeg.C("N/A")) * space
 
 -- Stream #0.1: Audio: mp2, 44100 Hz, stereo, 64 kb/s
@@ -74,12 +76,13 @@ local ln_duration = space * "Duration" * COLON *
 -- Stream #0.0: Audio: 0x0162, 48000 Hz, 5.1, 254 kb/s
 -- Stream #0.1(eng): Audio: mp4a / 0x6134706D, 24000 Hz, stereo
 -- Stream #0.1[0x103](???): Audio: ac3, 48000 Hz, stereo, 448 kb/s
+-- Stream #0.0: Audio: 0x0162, 48000 Hz, 5.1, s16, 384 kb/s
 -- captures: stream, codecs, frequency, channels, sample_format, bitrate
 local ln_audio = space * "Stream #" * float * language^-1 * COLON *
   "Audio" * COLON *
-  codecs * COMMA *
+  codec * COMMA *
   number * "Hz" * COMMA *
-  (number * space)^-1 * channels *
+  (((number * space)^-1 * channels) + lpeg.C(digits^1 * "." * digits^1)) *
   ((COMMA * word) + lpeg.Cc("unknown")) *
   (COMMA * number * "kb/s")^-1
 
@@ -102,14 +105,20 @@ function convert_units(amount, unit)
   end
 end
 
+--Stream #0.0(und): Video: h264, yuv420p, 320x176, 577 kb/s, 25 fps, 25 tbr, 25 tbn, 50 tbc
+--Stream #0.0(und): Video: h264, yuv420p, 320x200 [PAR 5:6 DAR 4:3], 395 kb/s, PAR 133:160 DAR 133:100, 20.05 fps, 25 tbr, 25 tbn, 50 tbc
 local ln_video = space * "Stream #" * float * language * COLON *
   "Video" * COLON *
-  codecs * COMMA *
+  codec * COMMA *
   ((word * COMMA) + lpeg.Cc("unknown")) *
   (dimension + lpeg.Cc("unknown")) *
   ((COMMA * number * "kb/s") + lpeg.Cc("unknown")) *
   (aspectratio + lpeg.Cc("unknown")) *
-  ((COMMA * number * "kb/s")^-1 * (COMMA * (float + number) * "fps")^-1 + lpeg.Cc("unknown")) *
+  (
+    (COMMA * number * "kb/s")^-1 *
+    (COMMA * "PAR" * space * any_number * ":" * any_number * "DAR" * space * any_number * ":" * any_number)^-1 *
+    ((COMMA * (float + number) * "fps")^-1 + lpeg.Cc("unknown"))
+  ) *
   (COMMA * ((float + number) * unit) / convert_units) * space * "tbr"
 
 -- Stream #0.0: Video: h264, yuv420p, 640x480 [PAR 0:1 DAR 0:1], 25.00 tb(r)

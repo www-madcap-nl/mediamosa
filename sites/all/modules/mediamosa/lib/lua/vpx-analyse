@@ -36,6 +36,7 @@ local symbol = lpeg.R("az", "AZ") * lpeg.R("az", "AZ", "09", "__")^0
 
 local word = lpeg.C(symbol) * space
 local number = lpeg.C(digits) * space
+local any_number = digits * space
 local float = lpeg.C(digits * "." * digits) * space
 local time = lpeg.C(digits * ":" * digits * ":" * digits * "." * digits) * space
 local hex = lpeg.C("0x" * lpeg.R("09", "AF")^1) * space
@@ -99,6 +100,7 @@ function convert_units(amount, unit)
 end
 
 --Stream #0.0(und): Video: h264, yuv420p, 320x176, 577 kb/s, 25 fps, 25 tbr, 25 tbn, 50 tbc
+--Stream #0.0(und): Video: h264, yuv420p, 320x200 [PAR 5:6 DAR 4:3], 395 kb/s, PAR 133:160 DAR 133:100, 20.05 fps, 25 tbr, 25 tbn, 50 tbc
 local ln_video = space * "Stream #" * float * language * COLON *
   "Video" * COLON *
   codec * COMMA *
@@ -106,7 +108,11 @@ local ln_video = space * "Stream #" * float * language * COLON *
   (dimension + lpeg.Cc("unknown")) *
   ((COMMA * number * "kb/s") + lpeg.Cc("unknown")) *
   (aspectratio + lpeg.Cc("unknown")) *
-  ((COMMA * number * "kb/s")^-1 * (COMMA * (float + number) * "fps")^-1 + lpeg.Cc("unknown")) *
+  (
+    (COMMA * number * "kb/s")^-1 *
+    (COMMA * "PAR" * space * any_number * ":" * any_number * "DAR" * space * any_number * ":" * any_number)^-1 *
+    ((COMMA * (float + number) * "fps")^-1 + lpeg.Cc("unknown"))
+  ) *
   (COMMA * ((float + number) * unit) / convert_units) * space * "tbr"
 
 -- Stream #0.0: Video: h264, yuv420p, 640x480 [PAR 0:1 DAR 0:1], 25.00 tb(r)
