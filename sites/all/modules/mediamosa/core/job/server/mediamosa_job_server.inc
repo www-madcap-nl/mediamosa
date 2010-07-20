@@ -1285,6 +1285,16 @@ class mediamosa_job_server {
 
     // If extension is RAW, attach it to the filename.
     if ($file_extension == mediamosa_job::JOBRAW_FILE_EXTENSION) {
+      // First character check.
+      // Windows doesn't make differences between small and capital letter.
+      // So directory 'a' and 'A' can confuse the Windows using Samba share.
+      $first_ascii = ord($new_filename{0});
+      if ($first_ascii < ord('0') || $first_ascii > ord('9')) {
+        // Make the first character a number.
+        $new_filename = (mt_rand(0, 9)) . drupal_substr($new_filename, 1);
+      }
+
+      // Extension.
       $new_filename .= '.' . mediamosa_job::JOBRAW_FILE_EXTENSION;
     }
 
