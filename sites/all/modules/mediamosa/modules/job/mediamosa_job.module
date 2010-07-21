@@ -277,7 +277,7 @@ The analyse process also determines if the file needs to be hinted. If the ega s
 
   $a_rest_calls['asset/$asset_id/joblist'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'Get the job listing of the given asset ID.',
-    mediamosa_rest_call::DESCRIPTION => 'Returns a listing of all the jobs belonging to the asset.',
+    mediamosa_rest_call::DESCRIPTION => nl2br(mediamosa_io::file_get_content(drupal_get_path('module', 'mediamosa') . '/docs/joblist_cql.txt')),
     mediamosa_rest_call::EXAMPLE_REQUEST => 'asset/F2J4KfIVAiwicAygMfXpPUuT/joblist?user_id=usertest',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
     mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>

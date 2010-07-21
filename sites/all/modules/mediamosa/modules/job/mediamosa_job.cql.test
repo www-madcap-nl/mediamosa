@@ -229,5 +229,11 @@ class MediaMosaJobCQLTestCaseEga extends MediaMosaTestCaseEgaJob {
     // Asset 1, no_hint = FALSE.
     $this->cql_do_search_test_jobs($asset_id_1, 'no_hint == "FALSE"', array($job_id_1_1_1, $job_id_1_2_1, $job_id_1_2_2), $a_search_params);
 
+    $a_search_params[mediamosa_rest_call::LIMIT] = '2';
+    $a_search_params[mediamosa_rest_call::OFFSET] = '1';
+
+    // Asset 1 with limit and offset.
+    $this->cql_do_search_test_jobs($asset_id_1, 'sortby job_id/ascending', array($job_id_1_1_2, $job_id_1_2_1), $a_search_params);
+
   }
 }
