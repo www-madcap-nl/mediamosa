@@ -118,6 +118,7 @@ function mediamosa_statistics_filter_form($form, $form_state) {
         '#type' => 'select',
         '#options' => $months,
         '#title' => 'Month',
+        '#default_value' => !empty($session['month']) ? $session['month'] : date('n'),
       );
 
       $types = array(
