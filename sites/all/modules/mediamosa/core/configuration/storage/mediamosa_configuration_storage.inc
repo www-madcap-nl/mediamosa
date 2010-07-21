@@ -203,12 +203,12 @@ class mediamosa_configuration_storage {
 
   /**
    * Map the object ID to store file into location and
-   * filename. Format: ID{0}/ID
+   * filename. Format: ID[0]/ID
    *
    * @param string $id
    */
   static public function objectid_to_location($id) {
-    return $id{0} . DIRECTORY_SEPARATOR . $id;
+    return $id[0] . DIRECTORY_SEPARATOR . $id;
   }
 
   /**
@@ -233,7 +233,7 @@ class mediamosa_configuration_storage {
    */
   static public function mediafile_id_filename_get($mediafile_id) {
     $directory = self::mount_point_get() . DIRECTORY_SEPARATOR . self::data_location_get() . DIRECTORY_SEPARATOR;
-    mediamosa_io::mkdir($directory . $mediafile_id{0});
+    mediamosa_io::mkdir($directory . $mediafile_id[0]);
     return $directory . self::objectid_to_location($mediafile_id);
   }
 

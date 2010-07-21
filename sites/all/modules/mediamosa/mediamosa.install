@@ -271,7 +271,7 @@ function mediamosa_update_7004() {
 function mediamosa_update_7005() {
   db_query('INSERT INTO {mediamosa_error} (name, code, message) VALUES (:name, :code, :message)', array(
     ':name' => 'ERRORCODE_STILL_NOT_IMAGE',
-    ':code' => 1153,
+    ':code' => mediamosa_error::ERRORCODE_STILL_NOT_IMAGE,
     ':message' => 'MM - still is not an image for asset_id=@asset_id.',
   ));
 }
@@ -282,12 +282,21 @@ function mediamosa_update_7005() {
 function mediamosa_update_7006() {
   db_query('INSERT INTO {mediamosa_error} (name, code, message) VALUES (:name, :code, :message)', array(
     ':name' => 'ERRORCODE_UNKNOWN_JOB_STATUS',
-    ':code' => 1154,
+    ':code' => mediamosa_error::ERRORCODE_UNKNOWN_JOB_STATUS,
     ':message' => 'MediaMosa - unknown job status',
   ));
   db_query('INSERT INTO {mediamosa_error} (name, code, message) VALUES (:name, :code, :message)', array(
     ':name' => 'ERRORCODE_UNKNOWN_JOB_PROGRESS',
-    ':code' => 1155,
+    ':code' => mediamosa_error::ERRORCODE_UNKNOWN_JOB_PROGRESS,
     ':message' => 'MediaMosa - unknown job progress',
   ));
+}
+
+/**
+ * Make varchar(10) for transcode ID into INT in mediamosa_asset_mediafile
+ * table. (Conversion can take some time).
+ */
+function mediamosa_update_7007() {
+  // Change it.
+  db_query("ALTER TABLE mediamosa_asset_mediafile CHANGE COLUMN transcode_profile_id transcode_profile_id int(10) unsigned DEFAULT NULL COMMENT 'The transcode profile ID.'");
 }

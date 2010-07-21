@@ -20,7 +20,17 @@ Mediamosa 2.2.0
 - Fixed missing mediafiles in asset view in admin. (See ticket #322).
 - Added job_ids to several log messages (See ticket #214).
 - Added pager to all stats pages and decreased items per page to 50 instead of 
-  150 (ticket (#225).
+  150 (See ticket (#225).
+- Windows transcoding fix & first character fix (See vpcore Ticket 159).
+- Extended asset/$asset_id/joblist with CQL search and now has limit and offset
+  parameters. Limit is set to maximum of 200 jobs in result. Extended the
+  admin documentation for this call for usage of the CQL call, see your
+  MediaMosa admin on uri 
+  /admin/mediamosa/browse/restcall/asset-%24asset_id-joblist/GET  
+  (See ticket #267).
+- Job for still analyse (See ticket 239).
+- Introduction /collection/{id}/asset/count, and implements numofvideos in 
+  /collection/{id} response (See ticket 204).
 
 Other changes (not ticket related).
 - During ticket #255, adding pager to stats, bug was found on the stats keyword
@@ -53,6 +63,13 @@ Other changes (not ticket related).
 - Added check to /assets on the asset_id array, will give notices when array
   in array was supplied.
 - Fixed number of notices when tests where not completed (because of restarts).
+- Made the tag rest parameter in /asset/asset_id/mediafile and 
+  /mediafile/mediafile_id max. length 32 chars.
+- Field 'transcode_profile_id' in mediamosa_asset_mediafile is converted to INT
+  type instead of varchar(10).
+- PHP function getimagesize() is now wrapped with mediamosa_io::getimagesize().
+- Fixed documentation asset_id[] to asset_id in /asset REST call.
+
 
 Mediamosa 2.1.5 (build 664)
 ---------------------------

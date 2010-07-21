@@ -49,7 +49,7 @@ class mediamosa_job_server_still {
    */
   static public function still_colors($image) {
     // Resize the image, we need only the most significant colors
-    $size = getimagesize($image);
+    $size = mediamosa_io::getimagesize($image);
     $scale = 1;
     if ($size[0]>0) {
       $scale = min(mediamosa_settings::STILL_RESAMPLE_WIDTH / $size[0], mediamosa_settings::STILL_RESAMPLE_HEIGHT / $size[1]);
@@ -128,7 +128,7 @@ class mediamosa_job_server_still {
    */
   function still_averagecolor($image) {
     $image_tmp = imagecreatetruecolor(1, 1);
-    $size = getimagesize($image);
+    $size = mediamosa_io::getimagesize($image);
 
     switch ($size[2]) {
       case IMAGETYPE_GIF:

@@ -260,8 +260,7 @@ collections. This call gives all the collection details.',
 
   $rest_calls['collection/$coll_id/asset/count'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'Get the assets in a collection.',
-    mediamosa_rest_call::DESCRIPTION => 'A collection describes one of more assets. An asset can belong to several
-collections. This call counts all the assets in a collection.',
+    mediamosa_rest_call::DESCRIPTION => 'A collection describes one of more assets. An asset can belong to several collections. This call counts all the assets in a collection.',
     mediamosa_rest_call::EXAMPLE_REQUEST => '/collection/A2VIXJhHiplJWliYVTVeD8Ee/asset/count?user_id=foo',
     mediamosa_rest_call::RESPONSE_FIELDS => array(
       'numofvideos' => 'Number of assets in the collection.',

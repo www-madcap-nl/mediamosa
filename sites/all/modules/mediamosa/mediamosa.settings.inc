@@ -62,11 +62,11 @@ class mediamosa_settings {
   const LIMIT_DEFAULT = 10; // We return 10 items by default.
   const LIMIT_DEFAULT_STATISTICS = 50; // statistics bit more.
   const LIMIT_DEFAULT_STATISTICS_NO_PAGER = 150; // When we dont have a pager.
-  const LIMIT_DEFAULT_JOBLIST = 2000; // For joblist.
+  const LIMIT_DEFAULT_JOBLIST = 200; // For joblist.
 
   const LIMIT_MAX = 200;
   const LIMIT_MAX_IDS_ONLY = 5000; // In case we only return IDs instead of complete array's.
-  const LIMIT_MAX_JOBLIST = 2000; // For joblist.
+  const LIMIT_MAX_JOBLIST = 200; // For joblist.
 
   // Max. supplements per asset.
   const MAX_SUPPLEMENT_PER_ASSET = 16;
@@ -199,22 +199,19 @@ class mediamosa_settings {
   const MEDIAMOSA_RUN_INTERVAL_NORMAL = 180;
   const MEDIAMOSA_RUN_INTERVAL_SLOW = 1440;
 
-
-  // Vars.
-
-  // FFmpeg.
-  private static $mediamosa_ffmpeg_pad = NULL;
-
   // ------------------------------------------------------------------ Functions.
   /**
    * Gets FFmpeg pad variable.
    */
   static public function get_ffmpeg_pad() {
-    if (is_null(self::$mediamosa_ffmpeg_pad)) {
-      self::$mediamosa_ffmpeg_pad = (strpos(exec('ffmpeg -padtop 0 2>&1'), 'vf=pad') === FALSE);
+    // FFmpeg.
+    static $mediamosa_ffmpeg_pad = NULL;
+
+    if (is_null($mediamosa_ffmpeg_pad)) {
+      $mediamosa_ffmpeg_pad = (strpos(exec('ffmpeg -padtop 0 2>&1'), 'vf=pad') === FALSE);
     }
 
-    return self::$mediamosa_ffmpeg_pad;
+    return $mediamosa_ffmpeg_pad;
   }
 
   /**

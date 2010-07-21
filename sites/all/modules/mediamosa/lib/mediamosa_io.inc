@@ -282,4 +282,11 @@ class mediamosa_io {
   static public function file_scan_directory($dir, $mask, $options = array(), $depth = 0) {
     return file_scan_directory($dir, $mask, $options, $depth);
   }
+
+  /**
+   * Wrapper for getimagesize() function.
+   */
+  static public function getimagesize($filename, array &$imageinfo = array()) {
+    return @getimagesize($filename, $imageinfo);
+  }
 }
