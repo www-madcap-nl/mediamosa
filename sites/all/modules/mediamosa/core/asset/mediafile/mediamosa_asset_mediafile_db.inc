@@ -64,7 +64,6 @@ class mediamosa_asset_mediafile_db {
   const URI_LENGTH = 255;
   const SANNAS_MOUNT_POINT = 'sannas_mount_point';
   const TRANSCODE_PROFILE_ID = 'transcode_profile_id';
-  const TRANSCODE_PROFILE_ID_LENGTH = 10;
   const TOOL = 'tool';
   const TOOL_LENGTH = 10;
   const COMMAND = 'command';

@@ -53,6 +53,10 @@ Other changes (not ticket related).
 - Added check to /assets on the asset_id array, will give notices when array
   in array was supplied.
 - Fixed number of notices when tests where not completed (because of restarts).
+- Made the tag rest parameter in /asset/asset_id/mediafile and 
+  /mediafile/mediafile_id max. length 32 chars.
+- Field 'transcode_profile_id' in mediamosa_asset_mediafile is converted to INT
+  type instead of varchar(10).
 
 Mediamosa 2.1.5 (build 664)
 ---------------------------

@@ -186,6 +186,7 @@ class mediamosa_rest_call_get_asset_mediafiles extends mediamosa_rest_call {
         self::TAG => array(
           self::VAR_TYPE => mediamosa_type::TYPE_STRING,
           self::VAR_DESCRIPTION => 'Search on tag.',
+          self::VAR_RANGE_END => mediamosa_asset_mediafile_db::TAG_LENGTH,
         )
       )
     );
@@ -536,6 +537,7 @@ class mediamosa_rest_call_update_mediafile extends mediamosa_rest_call {
         self::TAG => array(
           self::VAR_TYPE => mediamosa_type::TYPE_STRING,
           self::VAR_DESCRIPTION => 'User specified tag.',
+          self::VAR_RANGE_END => mediamosa_asset_mediafile_db::TAG_LENGTH,
         ),
         self::MOUNT_POINT => array(
           self::VAR_TYPE => mediamosa_type::TYPE_STRING,

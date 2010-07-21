@@ -157,9 +157,10 @@ function mediamosa_asset_mediafile_schema() {
         'description' => t('The san-nas mount location of the file.'),
       ),
       mediamosa_asset_mediafile_db::TRANSCODE_PROFILE_ID => array(
-        'type' => 'varchar',
-        'length' => mediamosa_asset_mediafile_db::TRANSCODE_PROFILE_ID_LENGTH,
-        'default' => NULL,
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
         'description' => t('The transcoding profile ID.'),
       ),
       mediamosa_asset_mediafile_db::TOOL => array(

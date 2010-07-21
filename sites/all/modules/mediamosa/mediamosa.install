@@ -264,3 +264,22 @@ function mediamosa_update_7004() {
     // ignore.
   }
 }
+
+/**
+ * Make varchar(10) for transcode ID into INT in mediamosa_asset_mediafile
+ * table. (Conversion can take some time).
+ */
+function mediamosa_update_7007() {
+  db_change_field(
+    mediamosa_asset_mediafile_db::TABLE_NAME,
+    mediamosa_asset_mediafile_db::TRANSCODE_PROFILE_ID,
+    mediamosa_asset_mediafile_db::TRANSCODE_PROFILE_ID,
+    array(
+      'type' => 'int',
+      'unsigned' => TRUE,
+      'not null' => TRUE,
+      'default' => 0,
+      'description' => t('The transcoding profile ID.'),
+    )
+  );
+}
