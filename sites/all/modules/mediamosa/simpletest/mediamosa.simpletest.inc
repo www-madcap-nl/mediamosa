@@ -676,7 +676,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
       mediamosa_job_db::MEDIAFILE_ID => mediamosa_db::uuid(rand(1, 1000)),
       mediamosa_job_db::OWNER_ID => mediamosa_db::uuid(rand(1, 1000)),
       mediamosa_job_db::JOB_STATUS => mediamosa_job_db::JOB_STATUS_INPROGRESS,
-      mediamosa_job_db::PROGRESS => '',
+      mediamosa_job_db::PROGRESS => '0.000',
       mediamosa_job_db::PRIORITY => 0,
       mediamosa_job_db::JOB_TYPE => mediamosa_job_db::JOB_TYPE_UPLOAD,
       mediamosa_job_db::STARTED => mediamosa::db_current_timestamp_now(),
