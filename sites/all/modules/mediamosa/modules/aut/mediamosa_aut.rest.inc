@@ -38,9 +38,9 @@
  */
 class mediamosa_rest_call_aut_group_list extends mediamosa_rest_call {
 
-  // ------------------------------------------------------------------ Consts.
+  // ------------------------------------------------------------------- Consts.
 
-  // ------------------------------------------------------------------ Functions (public).
+  // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
     // Enrich with limit and offset vars.
     $a_var_setup = $this->get_var_setup_range();
@@ -76,11 +76,11 @@ class mediamosa_rest_call_aut_group_list extends mediamosa_rest_call {
  */
 class mediamosa_rest_call_aut_group_get extends mediamosa_rest_call {
 
-  // ------------------------------------------------------------------ Consts.
+  // ------------------------------------------------------------------- Consts.
   // Rest vars;
   const GROUPNAME = 'groupname';
 
-  // ------------------------------------------------------------------ Functions (public).
+  // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
     $a_var_setup = array();
 
@@ -118,13 +118,13 @@ class mediamosa_rest_call_aut_group_get extends mediamosa_rest_call {
  */
 class mediamosa_rest_call_aut_group_get_hostnames extends mediamosa_rest_call {
 
-  // ------------------------------------------------------------------ Consts.
+  // ------------------------------------------------------------------- Consts.
   // Rest vars;
   const GROUPNAME = 'groupname';
   const LIMIT = 'limit';
   const OFFSET = 'offset';
 
-  // ------------------------------------------------------------------ Functions (public).
+  // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
     // Enrich with limit and offset vars.
     $a_var_setup = $this->get_var_setup_range();
@@ -173,12 +173,12 @@ class mediamosa_rest_call_aut_group_get_hostnames extends mediamosa_rest_call {
  */
 class mediamosa_rest_call_aut_group_create_hostnames extends mediamosa_rest_call {
 
-  // ------------------------------------------------------------------ Consts.
+  // ------------------------------------------------------------------- Consts.
   // Rest vars;
   const GROUPNAME = 'groupname';
   const HOSTNAME = 'hostname';
 
-  // ------------------------------------------------------------------ Functions (public).
+  // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
     $a_var_setup = array();
 
@@ -224,12 +224,12 @@ class mediamosa_rest_call_aut_group_create_hostnames extends mediamosa_rest_call
  */
 class mediamosa_rest_call_aut_group_delete_hostnames extends mediamosa_rest_call {
 
-  // ------------------------------------------------------------------ Consts.
+  // ------------------------------------------------------------------- Consts.
   // Rest vars;
   const GROUPNAME = 'groupname';
   const HOSTNAME = 'hostname';
 
-  // ------------------------------------------------------------------ Functions (public).
+  // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
     $a_var_setup = array();
 
@@ -274,12 +274,12 @@ class mediamosa_rest_call_aut_group_delete_hostnames extends mediamosa_rest_call
  */
 class mediamosa_rest_call_aut_group_create extends mediamosa_rest_call {
 
-  // ------------------------------------------------------------------ Consts.
+  // ------------------------------------------------------------------- Consts.
   // Rest vars;
   const GROUPNAME = 'groupname';
   const GROUP_TYPE = 'group_type';
 
-  // ------------------------------------------------------------------ Functions (public).
+  // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
     $a_var_setup = array();
 
@@ -337,13 +337,13 @@ class mediamosa_rest_call_aut_group_create extends mediamosa_rest_call {
  */
 class mediamosa_rest_call_aut_group_update extends mediamosa_rest_call {
 
-  // ------------------------------------------------------------------ Consts.
+  // ------------------------------------------------------------------- Consts.
   // Rest vars;
   const GROUPNAME = 'groupname';
   const GROUP_TYPE = 'group_type';
   const NEW_GROUPNAME = 'new_groupname';
 
-  // ------------------------------------------------------------------ Functions (public).
+  // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
     $a_var_setup = array();
 
@@ -429,12 +429,12 @@ class mediamosa_rest_call_aut_group_update extends mediamosa_rest_call {
  */
 class mediamosa_rest_call_aut_group_delete extends mediamosa_rest_call {
 
-  // ------------------------------------------------------------------ Consts.
+  // ------------------------------------------------------------------- Consts.
   // Rest vars;
   const GROUPNAME = 'groupname';
   const DELETE = 'delete';
 
-  // ------------------------------------------------------------------ Functions (public).
+  // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
     $a_var_setup = array();
 
@@ -553,7 +553,7 @@ class mediamosa_rest_call_aut_group_delete extends mediamosa_rest_call {
  */
 class mediamosa_rest_call_aut_mediafile_set_multi_rights extends mediamosa_rest_call {
 
-  // ------------------------------------------------------------------ Consts.
+  // ------------------------------------------------------------------- Consts.
   // Rest vars;
   const ASSET_ID = 'asset_id';
   const USER_ID = 'user_id';
@@ -566,7 +566,7 @@ class mediamosa_rest_call_aut_mediafile_set_multi_rights extends mediamosa_rest_
   const AUT_USER_ID = 'aut_user_id';
   const AUT_GROUP_ID = 'aut_group_id';
 
-  // ------------------------------------------------------------------ Functions (public).
+  // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
     $a_var_setup = array();
 
@@ -758,7 +758,7 @@ class mediamosa_rest_call_aut_mediafile_set_multi_rights extends mediamosa_rest_
  */
 class mediamosa_rest_call_aut_mediafile_set_rights extends mediamosa_rest_call {
 
-  // ------------------------------------------------------------------ Consts.
+  // ------------------------------------------------------------------- Consts.
   // Rest vars;
   const MEDIAFILE_ID = 'mediafile_id';
   const USER_ID = 'user_id';
@@ -771,7 +771,7 @@ class mediamosa_rest_call_aut_mediafile_set_rights extends mediamosa_rest_call {
   const AUT_USER_ID = 'aut_user_id';
   const AUT_GROUP_ID = 'aut_group_id';
 
-  // ------------------------------------------------------------------ Functions (public).
+  // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
     $a_var_setup = array();
 
@@ -947,12 +947,12 @@ class mediamosa_rest_call_aut_mediafile_set_rights extends mediamosa_rest_call {
  */
 class mediamosa_rest_call_aut_mediafile_delete_rights extends mediamosa_rest_call {
 
-  // ------------------------------------------------------------------ Consts.
+  // ------------------------------------------------------------------- Consts.
   // Rest vars;
   const MEDIAFILE_ID = 'mediafile_id';
   const USER_ID = 'user_id';
 
-  // ------------------------------------------------------------------ Functions (public).
+  // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
     $a_var_setup = array();
 
@@ -1003,12 +1003,12 @@ class mediamosa_rest_call_aut_mediafile_delete_rights extends mediamosa_rest_cal
  */
 class mediamosa_rest_call_aut_mediafile_get_rights extends mediamosa_rest_call {
 
-  // ------------------------------------------------------------------ Consts.
+  // ------------------------------------------------------------------- Consts.
   // Rest vars;
   const MEDIAFILE_ID = 'mediafile_id';
   const USER_ID = 'user_id';
 
-  // ------------------------------------------------------------------ Functions (public).
+  // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
     $a_var_setup = array();
 
@@ -1081,7 +1081,7 @@ class mediamosa_rest_call_aut_mediafile_get_rights extends mediamosa_rest_call {
  */
 class mediamosa_rest_call_aut_asset_set_rights extends mediamosa_rest_call {
 
-  // ------------------------------------------------------------------ Consts.
+  // ------------------------------------------------------------------- Consts.
   // Rest vars;
   const ASSET_ID = 'asset_id';
   const USER_ID = 'user_id';
@@ -1094,7 +1094,7 @@ class mediamosa_rest_call_aut_asset_set_rights extends mediamosa_rest_call {
   const AUT_USER_ID = 'aut_user_id';
   const AUT_GROUP_ID = 'aut_group_id';
 
-  // ------------------------------------------------------------------ Functions (public).
+  // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
     $a_var_setup = array();
 
@@ -1260,12 +1260,12 @@ class mediamosa_rest_call_aut_asset_set_rights extends mediamosa_rest_call {
  */
 class mediamosa_rest_call_aut_asset_delete_rights extends mediamosa_rest_call {
 
-  // ------------------------------------------------------------------ Consts.
+  // ------------------------------------------------------------------- Consts.
   // Rest vars;
   const ASSET_ID = 'asset_id';
   const USER_ID = 'user_id';
 
-  // ------------------------------------------------------------------ Functions (public).
+  // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
     $a_var_setup = array();
 
@@ -1316,12 +1316,12 @@ class mediamosa_rest_call_aut_asset_delete_rights extends mediamosa_rest_call {
  */
 class mediamosa_rest_call_aut_asset_get_rights extends mediamosa_rest_call {
 
-  // ------------------------------------------------------------------ Consts.
+  // ------------------------------------------------------------------- Consts.
   // Rest vars;
   const ASSET_ID = 'asset_id';
   const USER_ID = 'user_id';
 
-  // ------------------------------------------------------------------ Functions (public).
+  // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
     $a_var_setup = array();
 
@@ -1384,12 +1384,12 @@ class mediamosa_rest_call_aut_asset_get_rights extends mediamosa_rest_call {
  */
 class mediamosa_rest_call_aut_collection_delete_rights extends mediamosa_rest_call {
 
-  // ------------------------------------------------------------------ Consts.
+  // ------------------------------------------------------------------- Consts.
   // Rest vars;
   const COLL_ID = 'coll_id';
   const USER_ID = 'user_id';
 
-  // ------------------------------------------------------------------ Functions (public).
+  // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
     $a_var_setup = array();
 
@@ -1441,12 +1441,12 @@ class mediamosa_rest_call_aut_collection_delete_rights extends mediamosa_rest_ca
  */
 class mediamosa_rest_call_aut_collection_get_rights extends mediamosa_rest_call {
 
-  // ------------------------------------------------------------------ Consts.
+  // ------------------------------------------------------------------- Consts.
   // Rest vars;
   const COLL_ID = 'coll_id';
   const USER_ID = 'user_id';
 
-  // ------------------------------------------------------------------ Functions (public).
+  // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
     $a_var_setup = array();
 
@@ -1508,14 +1508,14 @@ class mediamosa_rest_call_aut_collection_get_rights extends mediamosa_rest_call 
  */
 class mediamosa_rest_call_aut_collection_set_rights extends mediamosa_rest_call {
 
-  // ------------------------------------------------------------------ Consts.
+  // ------------------------------------------------------------------- Consts.
   // Rest vars;
   const COLL_ID = 'coll_id';
   const USER_ID = 'user_id';
   const REPLACE = 'replace';
   const AUT_APP = 'aut_app';
 
-  // ------------------------------------------------------------------ Functions (public).
+  // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
     $a_var_setup = array();
 
@@ -1625,13 +1625,12 @@ class mediamosa_rest_call_aut_collection_set_rights extends mediamosa_rest_call 
  */
 class mediamosa_rest_call_aut_get_foreign_apps extends mediamosa_rest_call {
 
-  // ------------------------------------------------------------------ Consts.
+  // ------------------------------------------------------------------- Consts.
   // Rest vars;
-  const SECRET = 'secret';
   const IS_OAI = 'is_oai';
   const NAME = 'name';
 
-  // ------------------------------------------------------------------ Functions (public).
+  // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
     $a_var_setup = array();
 
