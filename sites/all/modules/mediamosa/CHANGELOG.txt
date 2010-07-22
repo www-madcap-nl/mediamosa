@@ -69,6 +69,7 @@ Other changes (not ticket related).
   type instead of varchar(10).
 - PHP function getimagesize() is now wrapped with mediamosa_io::getimagesize().
 - Fixed documentation asset_id[] to asset_id in /asset REST call.
+- Added 'changed', 'created' for assets to the CQL search.
 
 
 Mediamosa 2.1.5 (build 664)

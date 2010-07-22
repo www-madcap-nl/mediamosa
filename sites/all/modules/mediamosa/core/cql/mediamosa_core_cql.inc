@@ -1155,6 +1155,18 @@ class mediamosa_asset_cql_context extends mediamosa_core_cql_context {
                 MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'a',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_DATETIME,
               ),
+              'created' => array(
+                MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'created',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_asset_db::TABLE_NAME,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'a',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_DATETIME,
+              ),
+              'changed' => array(
+                MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'changed',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_asset_db::TABLE_NAME,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'a',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_DATETIME,
+              ),
               'mime_type' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'mime_type',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_asset_mediafile_metadata_db::TABLE_NAME,
