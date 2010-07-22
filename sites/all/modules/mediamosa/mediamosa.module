@@ -112,7 +112,6 @@ function mediamosa_permission() {
   );
 }
 
-
 function mediamosa_init() {
 
   // Create and get the core object.

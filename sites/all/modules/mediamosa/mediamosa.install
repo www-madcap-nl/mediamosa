@@ -300,3 +300,10 @@ function mediamosa_update_7007() {
   // Change it.
   db_query("ALTER TABLE mediamosa_asset_mediafile CHANGE COLUMN transcode_profile_id transcode_profile_id int(10) unsigned DEFAULT NULL COMMENT 'The transcode profile ID.'");
 }
+
+/**
+ * Clear all caches.
+ */
+function mediamosa_update_7008() {
+  drupal_flush_all_caches();
+}

@@ -163,11 +163,18 @@ function mediamosa_aut_mediamosa_register_rest_call() {
   );
 
   $a_rest_calls['acl/get_foreign_apps'][mediamosa_rest_call::METHOD_GET] = array(
-    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_aut_get_foreign_apps',
-    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_aut_get_apps',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_aut',
     mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY,
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
+  $a_rest_calls['acl/app'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_aut_get_apps',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_aut',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_2_0,
   );
 
   return $a_rest_calls;
@@ -447,10 +454,33 @@ asset_id[]=7pAkDsceysAZPo0q3PhjtBE1&asset_id[]=J2MKUJUcleMUfUcsZVDpdxi8',
   );
 
   $a_rest_calls['acl/get_foreign_apps'][mediamosa_rest_call::METHOD_GET] = array(
-    mediamosa_rest_call::TITLE => 'Get foreign apps.',
-    mediamosa_rest_call::DESCRIPTION => 'Get foreign apps.',
+    mediamosa_rest_call::TITLE => 'This call is depricated, see acl/app.',
+    mediamosa_rest_call::DESCRIPTION => 'This call is depricated, see acl/app.',
     mediamosa_rest_call::EXAMPLE_REQUEST => '/acl/get_foreign_apps?app_id=1&is_oai=TRUE',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <app_id>3</app_id>
+    <name>NIBG</name>
+    <play_proxy_url>http://videotheek_5_.hiero.nl/play/{asset_id}/{mediafile_id}/{mediafile_filename}</play_proxy_url>
+    <view_asset_url>http://videotheek_5_.hiero.nl/viewasset/{asset_id}</view_asset_url>
+    <download_url>http://download_5_url/{asset_id}/{mediafile_id}/{mediafile_filename}</download_url>
+  </item>
+</items>
+',
+  );
+
+  $a_rest_calls['acl/app'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Get information about other applications.',
+    mediamosa_rest_call::DESCRIPTION => 'This call will allow you to receive information for master-slaving to other applications. You will only retrieve application on which you are allowed to master-slave to.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => '/acl/app',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(
+      'app_id' => 'The application ID.',
+      'name' => 'The name of the application',
+      'play_proxy_url' => 'The play proxy url setting (only when OAI = TRUE)',
+      'view_asset_url' => 'The view asset url setting (only when OAI = TRUE)',
+      'download_url' => 'The download url setting (only when OAI = TRUE)',
+    ),
     mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
   <item id="1">
     <app_id>3</app_id>

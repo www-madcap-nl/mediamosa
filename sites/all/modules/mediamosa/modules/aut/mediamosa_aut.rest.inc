@@ -1620,10 +1620,13 @@ class mediamosa_rest_call_aut_collection_set_rights extends mediamosa_rest_call 
 }
 
 /**
- * URI: acl/get_foreign_apps
- * Method: POST
+ * URI:
+ *    acl/app
+ *    acl/get_foreign_apps (depricated)
+ *
+ * Method: GET
  */
-class mediamosa_rest_call_aut_get_foreign_apps extends mediamosa_rest_call {
+class mediamosa_rest_call_aut_get_apps extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------- Consts.
   // Rest vars;
@@ -1635,8 +1638,10 @@ class mediamosa_rest_call_aut_get_foreign_apps extends mediamosa_rest_call {
     $a_var_setup = array();
 
     $a_var_setup[mediamosa_rest_call::VARS][self::IS_OAI] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_BOOL,
-      mediamosa_rest_call::VAR_DESCRIPTION => 'Is it an OAI REST call?',
+      self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+      self::VAR_DESCRIPTION => 'The OAI is allowed to see all applications. However, the call must be made internally to work.',
+      self::VAR_IS_INTERNAL_ONLY => self::VAR_IS_INTERNAL_ONLY_YES,
+      self::VAR_DEFAULT_VALUE => 'FALSE',
     );
 
     // Enrich with required REST vars.
@@ -1654,7 +1659,7 @@ class mediamosa_rest_call_aut_get_foreign_apps extends mediamosa_rest_call {
     $app_id = reset($app_ids);
 
     $result = mediamosa_db::db_query(
-      "SELECT #id AS app_id, #name, #play_proxy_url, #view_asset_url, #download_url
+      "SELECT #id AS app_id, #name, #play_proxy_url, #view_asset_url, #download_url, #allowed_masterslave_apps
       FROM {#mediamosa_app}
       WHERE #id <> :id OR #falsetrue
       ORDER BY #name ASC", array(
@@ -1664,18 +1669,42 @@ class mediamosa_rest_call_aut_get_foreign_apps extends mediamosa_rest_call {
         '#view_asset_url' => mediamosa_app_db::VIEW_ASSET_URL,
         '#download_url' => mediamosa_app_db::DOWNLOAD_URL,
         '#mediamosa_app' => mediamosa_app_db::TABLE_NAME,
+        '#allowed_masterslave_apps' => mediamosa_app_db::ALLOW_MASTERSLAVE_APPS,
         ':id' => $app_id,
         '#falsetrue' => ($is_oai ? 1 : 0),
     ));
 
-    foreach ($result as $record) {
-      $mediamosa->add_item(array(
-        mediamosa_app_db::APP_ID => $record[mediamosa_app_db::APP_ID],
-        self::NAME => $record[mediamosa_app_db::APP_NAME],
-        mediamosa_app_db::PLAY_PROXY_URL => $record[mediamosa_app_db::PLAY_PROXY_URL],
-        mediamosa_app_db::VIEW_ASSET_URL => $record[mediamosa_app_db::VIEW_ASSET_URL],
-        mediamosa_app_db::DOWNLOAD_URL => $record[mediamosa_app_db::DOWNLOAD_URL],
+    foreach ($result as $app) {
+      // if not oai, then make sure we have access.
+      if (!$is_oai) {
+        if (empty($app[mediamosa_app_db::ALLOW_MASTERSLAVE_APPS])) {
+          continue;
+        }
+
+        // Get its allowed apps setting.
+        $allowed_apps = unserialize($app[mediamosa_app_db::ALLOW_MASTERSLAVE_APPS]);
+
+        // Must be in allowed array to see.
+        if (!isset($allowed_apps[$app_id])) {
+          continue;
+        }
+      }
+
+      if ($is_oai) {
+        $mediamosa->add_item(array(
+          mediamosa_app_db::APP_ID => $app[mediamosa_app_db::APP_ID],
+          self::NAME => $app[mediamosa_app_db::APP_NAME],
+          mediamosa_app_db::PLAY_PROXY_URL => $app[mediamosa_app_db::PLAY_PROXY_URL],
+          mediamosa_app_db::VIEW_ASSET_URL => $app[mediamosa_app_db::VIEW_ASSET_URL],
+          mediamosa_app_db::DOWNLOAD_URL => $app[mediamosa_app_db::DOWNLOAD_URL],
       ));
+      }
+      else {
+        $mediamosa->add_item(array(
+          mediamosa_app_db::APP_ID => $app[mediamosa_app_db::APP_ID],
+          self::NAME => $app[mediamosa_app_db::APP_NAME],
+        ));
+      }
     }
   }
 }

@@ -32,7 +32,7 @@
 function mediamosa_app_mediamosa_register_rest_call_doc() {
   $a_rest_calls = array();
 
-  // Asset search.
+  // Get profile_id setting.
   $a_rest_calls['preview_profile_id'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'Get the preview profile ID.',
     mediamosa_rest_call::DESCRIPTION => 'Get the preview profile ID.',
