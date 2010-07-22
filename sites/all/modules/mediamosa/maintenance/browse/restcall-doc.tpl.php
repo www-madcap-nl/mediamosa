@@ -62,7 +62,7 @@
 ?>
 <div id="restcall">
 <h2><?php print $title; ?></h2>
-<p><?php print str_replace("\n\n", "</p>\n<p>", check_plain($description)); ?></p>
+<p><?php print str_replace("\n\n", "</p>\n<p>", $description); ?></p>
 <h3><?php print t('Request URL'); ?></h3>
 <p><?php
   print t('@uri [@method]', array('@uri' => '/' . $uri, '@method' => $method));

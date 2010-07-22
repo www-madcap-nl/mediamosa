@@ -272,7 +272,7 @@ class mediamosa_io {
   }
 
   /**
-   * File scan directory
+   * File scan directory.
    *
    * @param dir
    * @param mask
@@ -288,5 +288,14 @@ class mediamosa_io {
    */
   static public function getimagesize($filename, array &$imageinfo = array()) {
     return @getimagesize($filename, $imageinfo);
+  }
+
+  /**
+   * File get content.
+   *
+   * @param filename
+   */
+  static public function file_get_contents($filename) {
+    return file_get_contents($filename);
   }
 }

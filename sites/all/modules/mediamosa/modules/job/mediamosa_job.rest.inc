@@ -714,12 +714,14 @@ class mediamosa_rest_call_job_asset_search extends mediamosa_rest_call {
     $user_id = $this->get_param_value(self::USER_ID);
     $asset_id = $this->get_param_value(self::ASSET_ID);
     $cql = $this->get_param_value(self::CQL);
+    $limit = $this->get_param_value_limit();
+    $offset =  $this->get_param_value_offset();
 
     // Must exist.
     mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
 
     // Get the jobs from the user.
-    $result = mediamosa_job::get_job_list($app_id, $user_id, $is_app_admin, FALSE, $asset_id, '', $cql);
+    $result = mediamosa_job::get_job_list($app_id, $user_id, $is_app_admin, FALSE, $asset_id, '', $cql, $limit, $offset);
 
     foreach ($result as $a_row) {
       $started_unix = isset($a_row[mediamosa_job_db::STARTED]) ? mediamosa_lib::iso8601date_to_unix($a_row[mediamosa_job_db::STARTED]) : '';
