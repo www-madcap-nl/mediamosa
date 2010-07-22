@@ -1655,7 +1655,7 @@ class mediamosa_rest_call_aut_get_foreign_apps extends mediamosa_rest_call {
 
     $result = mediamosa_db::db_query(
       "SELECT #id AS app_id, #name, #play_proxy_url, #view_asset_url, #download_url
-      FROM {#client_applications}
+      FROM {#mediamosa_app}
       WHERE #id <> :id OR #falsetrue
       ORDER BY #name ASC", array(
         '#id' => mediamosa_app_db::APP_ID,
@@ -1663,7 +1663,7 @@ class mediamosa_rest_call_aut_get_foreign_apps extends mediamosa_rest_call {
         '#play_proxy_url' => mediamosa_app_db::PLAY_PROXY_URL,
         '#view_asset_url' => mediamosa_app_db::VIEW_ASSET_URL,
         '#download_url' => mediamosa_app_db::DOWNLOAD_URL,
-        '#client_applications' => mediamosa_app_db::TABLE_NAME,
+        '#mediamosa_app' => mediamosa_app_db::TABLE_NAME,
         ':id' => $app_id,
         '#falsetrue' => ($is_oai ? 1 : 0),
     ));
