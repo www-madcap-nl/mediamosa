@@ -69,7 +69,8 @@ Other changes (not ticket related).
   type instead of varchar(10).
 - PHP function getimagesize() is now wrapped with mediamosa_io::getimagesize().
 - Fixed documentation asset_id[] to asset_id in /asset REST call.
-- Added 'changed', 'created' for assets to the CQL search.
+- Added 'changed', 'created' for assets to the CQL search. Use asset_changed and
+  asset_created.
 - acl/get_foreign_apps is now depricated and replaced by /acl/app
 - Added /acl/app REST call. Returns listing of apps on which the current app has
   master-slave rights on.
