@@ -298,7 +298,7 @@ function mediamosa_update_7006() {
  */
 function mediamosa_update_7007() {
   // Change it.
-  db_query("ALTER TABLE mediamosa_asset_mediafile CHANGE COLUMN transcode_profile_id transcode_profile_id int(10) unsigned DEFAULT NULL COMMENT 'The transcode profile ID.'");
+  db_query("ALTER TABLE {mediamosa_asset_mediafile} CHANGE COLUMN transcode_profile_id transcode_profile_id int(10) unsigned DEFAULT NULL COMMENT 'The transcode profile ID.'");
 }
 
 /**
@@ -307,3 +307,29 @@ function mediamosa_update_7007() {
 function mediamosa_update_7008() {
   drupal_flush_all_caches();
 }
+
+/**
+ * Rename old mediamosa_asset_mediafile_metadata table.
+ * Drop old fk_mediamosa_asset_mediafile_metadata_mediafile_id foregign key.
+ * Create new mediamosa_asset_mediafile_metadata table.
+ * Create new mediamosa_asset_mediafile_metadata_property table.
+ */
+function mediamosa_update_7009() {
+  // Rename the old metadta table.
+  db_query('ALTER TABLE {mediamosa_asset_mediafile_metadata} RENAME {mediamosa_asset_mediafile_metadata_old}');
+
+  // Rename the old metadta table.
+  db_query('ALTER TABLE {mediamosa_asset_mediafile_metadata_old} DROP FOREIGN KEY fk_mediamosa_asset_mediafile_metadata_mediafile_id');
+
+  // Create property table.
+  mediamosa::drupal_install_schema(mediamosa_asset_mediafile_metadata_property_db::TABLE_NAME);
+
+  // Install the new metadata table.
+  mediamosa::drupal_install_schema(mediamosa_asset_mediafile_metadata_db::TABLE_NAME);
+}
+
+/**
+ * Migrate mediamosa_asset_mediafile_metadata table.
+ */
+//function mediamosa_update_7010() {
+//}

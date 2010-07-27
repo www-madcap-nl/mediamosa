@@ -24,23 +24,9 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
-/**
+ /**
   * @file
-  * The database class of the asset_mediafile metadata module.
+  * Metadata functions.
   */
-
-class mediamosa_asset_mediafile_metadata_db {
-  // ------------------------------------------------------------------ Consts.
-  // Table name;
-  const TABLE_NAME = 'mediamosa_asset_mediafile_metadata';
-
-  // Database fields;
-  const ID = 'metadata_id';
-  const MEDIAFILE_ID = 'mediafile_id';
-  const PROP_ID = 'prop_id';
-  const VAL_CHAR = 'val_char';
-  const VAL_DATETIME = 'val_datetime';
-  const VAL_INT = 'val_int';
-  const CREATED = 'created';
-  const CHANGED = 'changed';
+class mediamosa_asset_mediafile_metadata_property {
 }
