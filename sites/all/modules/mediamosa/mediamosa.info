@@ -113,6 +113,11 @@ files[] = core/asset/mediafile/metadata/mediamosa_asset_mediafile_metadata_db.in
 files[] = core/asset/mediafile/metadata/mediamosa_asset_mediafile_metadata.inc
 files[] = core/asset/mediafile/metadata/mediamosa_asset_mediafile_metadata.install.inc
 
+; Asset Mediafile Metadata Property.
+files[] = core/asset/mediafile/metadata/property/mediamosa_asset_mediafile_metadata_property_db.inc
+files[] = core/asset/mediafile/metadata/property/mediamosa_asset_mediafile_metadata_property.inc
+files[] = core/asset/mediafile/metadata/property/mediamosa_asset_mediafile_metadata_property.install.inc
+
 ; Asset Mediafile Playproxy.
 files[] = core/asset/mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.inc
 

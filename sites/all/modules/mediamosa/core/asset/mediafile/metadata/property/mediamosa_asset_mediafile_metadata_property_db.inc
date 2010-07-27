@@ -42,6 +42,8 @@ class mediamosa_asset_mediafile_metadata_property_db {
   const TYPE_DATETIME = 'DATETIME';
   const TYPE_INT = 'INT';
   const TYPE_CHAR = 'CHAR';
+  const TYPE_ENUM = 'ENUM';
+  const ALLOWED_VALUES = 'allowed_values';
   const CREATED = 'created';
   const CHANGED = 'changed';
 }

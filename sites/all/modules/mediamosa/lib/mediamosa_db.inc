@@ -719,6 +719,18 @@ class mediamosa_db {
   }
 
   /**
+   * Return the column names, data types and column types from an table.
+   * NOTE: might not work on all databases, mysql only for now.
+   *
+   * @return array
+   *  Array containing columns.
+   */
+  static public function db_get_columns_with_type($table_name) {
+    // Use db_query directly here, not mediamosa_db version.
+    return db_query('SELECT COLUMN_NAME, DATA_TYPE, COLUMN_TYPE FROM information_schema.columns WHERE TABLE_NAME = :table', array(':table' => $table_name))->fetchAll();
+  }
+
+  /**
    * Generate a new unique ID.
    *
    * @param int $app_id
