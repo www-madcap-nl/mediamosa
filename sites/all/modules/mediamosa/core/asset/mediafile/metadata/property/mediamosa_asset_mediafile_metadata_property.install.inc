@@ -70,15 +70,10 @@ function mediamosa_asset_mediafile_metadata_property_schema() {
       ),
       mediamosa_asset_mediafile_metadata_property_db::TYPE => array(
         'description' => t('The type of the property.'),
-        'type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_metadata_property_db::TYPE_DATETIME, mediamosa_asset_mediafile_metadata_property_db::TYPE_INT, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR, mediamosa_asset_mediafile_metadata_property_db::TYPE_ENUM)) . "')",
+        'type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_metadata_property_db::TYPE_DATETIME, mediamosa_asset_mediafile_metadata_property_db::TYPE_INT, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR)) . "')",
         'not null' => TRUE,
-        'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_metadata_property_db::TYPE_DATETIME, mediamosa_asset_mediafile_metadata_property_db::TYPE_INT, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR, mediamosa_asset_mediafile_metadata_property_db::TYPE_ENUM)) . "')",
+        'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_metadata_property_db::TYPE_DATETIME, mediamosa_asset_mediafile_metadata_property_db::TYPE_INT, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR)) . "')",
         'default' => mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR,
-      ),
-      mediamosa_asset_mediafile_metadata_property_db::ALLOWED_VALUES => array(
-        'type' => 'text',
-        'size' => 'big',
-        'description' => t('The allowed values of the property.'),
       ),
       mediamosa_asset_mediafile_metadata_property_db::CREATED => array(
         'type' => 'datetime',
@@ -93,7 +88,7 @@ function mediamosa_asset_mediafile_metadata_property_schema() {
     ),
     'primary key' => array(mediamosa_asset_mediafile_metadata_property_db::ID),
     'unique keys' => array(
-      'uni_name_type' => array(mediamosa_asset_mediafile_metadata_property_db::NAME, mediamosa_asset_mediafile_metadata_property_db::TYPE, array(mediamosa_asset_mediafile_metadata_property_db::ALLOWED_VALUES, 100)),
+      'uni_name_type' => array(mediamosa_asset_mediafile_metadata_property_db::NAME, mediamosa_asset_mediafile_metadata_property_db::TYPE),
     ),
   );
 

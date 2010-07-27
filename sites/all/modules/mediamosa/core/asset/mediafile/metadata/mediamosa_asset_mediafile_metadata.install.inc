@@ -83,7 +83,7 @@ function mediamosa_asset_mediafile_metadata_schema() {
       ),
       mediamosa_asset_mediafile_metadata_db::VAL_CHAR => array(
         'type' => 'text',
-        'size' => 'big',
+        'size' => 'normal',
         'description' => t('The value of the property stored as a string.'),
       ),
       mediamosa_asset_mediafile_metadata_db::VAL_DATETIME => array(
@@ -95,11 +95,6 @@ function mediamosa_asset_mediafile_metadata_schema() {
         'not null' => TRUE,
         'description' => t('The numeric value of the property.'),
         'default' => 0,
-      ),
-      mediamosa_asset_mediafile_metadata_db::VAL_ENUM => array(
-        'type' => 'text',
-        'size' => 'big',
-        'description' => t('The value of the property stored as an enum.'),
       ),
       mediamosa_asset_mediafile_metadata_db::CREATED => array(
         'type' => 'datetime',
@@ -113,7 +108,7 @@ function mediamosa_asset_mediafile_metadata_schema() {
       ),
     ),
     'primary key' => array(mediamosa_asset_mediafile_metadata_db::ID),
-    'indexes' => array(
+    'unique keys' => array(
       'idx_mediafileid_propid' => array(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID, mediamosa_asset_mediafile_metadata_db::PROP_ID),
     ),
     'foreign keys' => array(

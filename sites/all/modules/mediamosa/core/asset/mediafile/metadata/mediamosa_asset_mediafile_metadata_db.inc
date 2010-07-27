@@ -41,7 +41,6 @@ class mediamosa_asset_mediafile_metadata_db {
   const VAL_CHAR = 'val_char';
   const VAL_DATETIME = 'val_datetime';
   const VAL_INT = 'val_int';
-  const VAL_ENUM = 'val_enum';
   const CREATED = 'created';
   const CHANGED = 'changed';
 }

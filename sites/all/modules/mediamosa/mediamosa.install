@@ -316,10 +316,10 @@ function mediamosa_update_7008() {
  */
 function mediamosa_update_7009() {
   // Rename the old metadta table.
-  db_query('ALTER TABLE {mediamosa_asset_mediafile_metadata} RENAME {mediamosa_asset_mediafile_metadata_old}');
+  db_query('ALTER TABLE {mediamosa_asset_mediafile_metadata} DROP FOREIGN KEY fk_mediamosa_asset_mediafile_metadata_mediafile_id');
 
   // Rename the old metadta table.
-  db_query('ALTER TABLE {mediamosa_asset_mediafile_metadata_old} DROP FOREIGN KEY fk_mediamosa_asset_mediafile_metadata_mediafile_id');
+  db_query('ALTER TABLE {mediamosa_asset_mediafile_metadata} RENAME {mediamosa_asset_mediafile_metadata_old}');
 
   // Create property table.
   mediamosa::drupal_install_schema(mediamosa_asset_mediafile_metadata_property_db::TABLE_NAME);
@@ -352,35 +352,20 @@ function mediamosa_update_7010() {
     ) {
       // Type is eg. "varchar(32)" or "int(10) unsigned" or "enum('FALSE','TRUE')"
       $type = drupal_strtolower($row->data_type);
-      $allowed_values = $row->column_type;
-      if ($type != 'enum') {
-        // No enum values.
-        $allowed_values = NULL;
 
-        // Type formatting.
-        if (strpos($type, 'int') !== FALSE) {
-          $type = 'INT';
-        }
-        elseif (strpos($type, 'char') !== FALSE || strpos($type, 'binary') !== FALSE || $type == 'blob' || $type == 'text') {
-          $type = 'CHAR';
-        }
-        else {
-          $type = 'DATETIME';
-        }
-
+      // Type formatting.
+      if (strpos($type, 'int') !== FALSE) {
+        $type = 'INT';
+      }
+      elseif (strpos($type, 'char') !== FALSE || strpos($type, 'binary') !== FALSE || $type == 'blob' || $type == 'text' || $type == 'enum') {
+        $type = 'CHAR';
       }
       else {
-        // Get the enum values.
-        $allowed_values = drupal_substr($allowed_values, strlen('enum('));
-        // Cut the ")" from the end.
-        $allowed_values = drupal_substr($allowed_values, 0, -1);
-        $allowed_values = str_replace("'", '', $allowed_values);
-        // Type formatting.
-        $type = 'ENUM';
+        $type = 'DATETIME';
       }
 
       // Insert.
-      $prop_id = mediamosa_asset_mediafile_metadata_property::get_property_id($row->column_name, $type, $allowed_values);
+      $prop_id = mediamosa_asset_mediafile_metadata_property::get_property_id($row->column_name, $type);
       $fields[$row->column_name] = array(
         'prop_id' => $prop_id,
         'type' => $type,
@@ -395,14 +380,13 @@ function mediamosa_update_7010() {
       if (!is_null($row->$field)) {
         db_query("
           INSERT INTO {mediamosa_asset_mediafile_metadata}
-          (mediafile_id, prop_id, val_char, val_datetime, val_int, val_enum, created, changed) VALUES
-          (:mediafile_id, :prop_id, :val_char, :val_datetime, :val_int, :val_enum, :created, :changed)", array(
+          (mediafile_id, prop_id, val_char, val_datetime, val_int, created, changed) VALUES
+          (:mediafile_id, :prop_id, :val_char, :val_datetime, :val_int, :created, :changed)", array(
           ':mediafile_id' => $row->mediafile_id,
           ':prop_id' => $property['prop_id'],
           ':val_char' => ($property['type'] == 'CHAR' ? $row->$field : NULL),
           ':val_datetime' => ($property['type'] == 'DATETIME' ? $row->$field : NULL),
           ':val_int' => ($property['type'] == 'INT' ? $row->$field : 0),
-          ':val_enum' => ($property['type'] == 'ENUM' ? $row->$field : NULL),
           ':created' => $row->created,
           ':changed' => $row->changed,
         ));
