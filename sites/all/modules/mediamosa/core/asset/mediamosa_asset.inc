@@ -319,11 +319,12 @@ class mediamosa_asset {
    * @param string $asset_id
    */
   static public function update_asset_info_is_empty_asset($asset_id) {
+    $prop_id_filesize = mediamosa_asset_mediafile_metadata_property::get_property_id('filesize', mediamosa_asset_mediafile_metadata_property_db::TYPE_INT);
     $mediafile = mediamosa_db::db_query_range(
       "SELECT m.#uri, m.#filename FROM {#mediamosa_asset_mediafile} AS m
        LEFT JOIN {#mediamosa_asset_mediafile_metadata} AS mm USING (#mediafile_id)
        WHERE m.#is_original_file = :is_original_file_true AND m.#asset_id = :asset_id AND
-             (m.#uri IS NOT NULL OR m.#filename IS NOT NULL OR m.#is_downloadable = :is_downloadable_true OR mm.#filesize > 0)",
+             (m.#uri IS NOT NULL OR m.#filename IS NOT NULL OR m.#is_downloadable = :is_downloadable_true OR (mm.#prop_id_filesize = :prop_id_filesize AND mm.#val_int > 0))",
       0, // From.
       1, // Count.
       array(
@@ -340,7 +341,9 @@ class mediamosa_asset {
         '#filename' => mediamosa_asset_mediafile_db::FILENAME,
         '#is_downloadable' => mediamosa_asset_mediafile_db::IS_DOWNLOADABLE,
         ':is_downloadable_true' => mediamosa_asset_mediafile_db::IS_DOWNLOADABLE_TRUE,
-        '#filesize' => mediamosa_asset_mediafile_metadata_db::FILESIZE,
+        '#prop_id_filesize' => mediamosa_asset_mediafile_metadata_db::PROP_ID,
+        ':prop_id_filesize' => $prop_id_filesize,
+        '#val_int' => mediamosa_asset_mediafile_metadata_db::VAL_INT,
       )
     )->fetchAssoc();
 

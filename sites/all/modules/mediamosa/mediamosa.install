@@ -314,7 +314,7 @@ function mediamosa_update_7008() {
  * Create new mediamosa_asset_mediafile_metadata table.
  * Create new mediamosa_asset_mediafile_metadata_property table.
  */
-function mediamosa_update_7009() {
+function mediamosa_update_7010() {
   // Rename the old metadta table.
   db_query('ALTER TABLE {mediamosa_asset_mediafile_metadata} DROP FOREIGN KEY fk_mediamosa_asset_mediafile_metadata_mediafile_id');
 
@@ -332,7 +332,7 @@ function mediamosa_update_7009() {
  * Migrate mediamosa_asset_mediafile_metadata table.
  * Drop old mediamosa_asset_mediafile_metadata table.
  */
-function mediamosa_update_7010() {
+function mediamosa_update_7011() {
   //
   // Migration.
   //

@@ -65,7 +65,16 @@ class mediamosa_asset_mediafile_metadata_property {
     // Get the property id, if exists.
     $prop_id = self::get_property_id_cache($prop_name, $type);
 
-    if (is_null($prop_id)) {
+    if (is_null($prop_id) ) {
+      if (
+        $type != mediamosa_asset_mediafile_metadata_property_db::TYPE_DATETIME &&
+        $type != mediamosa_asset_mediafile_metadata_property_db::TYPE_INT &&
+        $type != mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR
+      ) {
+        // Shouldn't be here.
+        throw new mediamosa_exception_program_error(strtr('Invalid mediafile metadata type (@type)!', array('@type' => $type)));
+      }
+
       // Save the property id.
       $fields = array(
         'prop_name' => $prop_name,
@@ -82,5 +91,34 @@ class mediamosa_asset_mediafile_metadata_property {
     }
 
     return $prop_id;
+  }
+
+  /**
+   * Get the property.
+   * @param prop_id
+   * @return array(prop_name, type)
+   */
+  static public function get_property($prop_id, $reset = FALSE) {
+    static $props = NULL;
+
+    if (is_null($props) || $reset) {
+      $props = array();
+
+      $result = mediamosa_db::db_select(mediamosa_asset_mediafile_metadata_property_db::TABLE_NAME, 'p')
+        ->fields('p', array(
+          mediamosa_asset_mediafile_metadata_property_db::ID,
+          mediamosa_asset_mediafile_metadata_property_db::NAME,
+          mediamosa_asset_mediafile_metadata_property_db::TYPE,
+        ))
+        ->execute();
+      foreach ($result as $row) {
+        $props[$row[mediamosa_asset_mediafile_metadata_property_db::ID]] = array(
+          'prop_name' => $row[mediamosa_asset_mediafile_metadata_property_db::NAME],
+          'type' => $row[mediamosa_asset_mediafile_metadata_property_db::TYPE],
+        );
+      }
+    }
+
+    return (!empty($props[$prop_id]) ? $props[$prop_id] : NULL);
   }
 }

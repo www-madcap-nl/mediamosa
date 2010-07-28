@@ -276,4 +276,190 @@ class mediamosa_asset_mediafile_metadata {
       mediamosa_job::create_job_still($a_job[mediamosa_job_db::APP_ID], $a_job[mediamosa_job_db::OWNER_ID], FALSE, $a_job[mediamosa_job_db::MEDIAFILE_ID], $a_still_parameters);
     }
   }
+
+
+  /**
+   * Create mediafile metadata value.
+   * @param mediafile_id
+   * @param value Value of the metadata
+   * @param prop_name Property name
+   * @param type Type of the property
+   */
+  static public function create_mediafile_metadata($mediafile_id, $value, $prop_name, $type) {
+    $prop_id = mediamosa_asset_mediafile_metadata_property::get_property_id($prop_name, $type);
+
+    $mediafile = mediamosa_asset_mediafile::must_exists($mediafile_id);
+
+    $fields = array();
+    if ($type == mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR) {
+      $fields[mediamosa_asset_mediafile_metadata_db::VAL_CHAR] = $value;
+    }
+    elseif ($type == mediamosa_asset_mediafile_metadata_property_db::TYPE_INT) {
+      try {
+        $fields[mediamosa_asset_mediafile_metadata_db::VAL_INT] = mediamosa_type::check($prop_name, mediamosa_type::TYPE_INT, $value);
+      }
+      catch (mediamosa_exception_error $e) {
+        $fields[mediamosa_asset_mediafile_metadata_db::VAL_INT] = 0;
+      }
+    }
+    elseif ($type == mediamosa_asset_mediafile_metadata_property_db::TYPE_DATETIME) {
+      try {
+        $fields[mediamosa_asset_mediafile_metadata_db::VAL_DATETIME] = mediamosa_type::check($prop_name, mediamosa_type::TYPE_DATETIME, $value);
+      }
+      catch (mediamosa_exception_error $e) {
+        return;
+      }
+    }
+    else {
+      // Shouldn't be here.
+      throw new mediamosa_exception_program_error(strtr('Invalid mediafile metadata type (@type)!', array('@type' => $type)));
+    }
+
+    // Enrich with changed.
+    $fields = mediamosa_db::db_update_enrich($fields);
+
+    $num_updated = mediamosa_db::db_update(mediamosa_asset_mediafile_metadata_db::TABLE_NAME)
+      ->fields($fields)
+      ->condition(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID, $mediafile_id)
+      ->condition(mediamosa_asset_mediafile_metadata_db::PROP_ID, $prop_id)
+      ->execute();
+
+    if (!$num_updated) {
+      $fields[mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID] = $mediafile_id;
+      $fields[mediamosa_asset_mediafile_metadata_db::PROP_ID] = $prop_id;
+
+      // Enrich with created/changed.
+      $fields = mediamosa_db::db_insert_enrich($fields);
+
+      $metadata_id = mediamosa_db::db_insert(mediamosa_asset_mediafile_metadata_db::TABLE_NAME)
+        ->fields($fields)
+        ->execute();
+    }
+  }
+
+  /**
+   * Create multiple metadata for a mediafile.
+   * @param mediafile_id
+   * @param metadatas An array (array(value => value, prop_name => prop_name, type => type))
+   */
+  static public function create_mediafile_multiple_metadata($mediafile_id, $metadatas) {
+    if (is_array($metadatas) && !empty($metadatas)) {
+      foreach ($metadatas as $metadata) {
+        self::create_mediafile_metadata($mediafile_id, $metadata['value'], $metadata['prop_name'], $metadata['type']);
+      }
+    }
+  }
+
+  /**
+   * Get mediafile metadata value.
+   * @param mediafile_id Unique id for the mediafile
+   * @param prop_name Property name
+   * @param type Type of the property
+   * @return Property value, or FALSE in case of validation error
+   */
+  static public function get_mediafile_metadata($mediafile_id, $prop_name, $type) {
+    $prop_id = mediamosa_asset_mediafile_metadata_property::get_property_id($prop_name, $type);
+    if (!$prop_id) {
+      return FALSE;
+    }
+
+    $result = mediamosa_db::db_select(mediamosa_asset_mediafile_metadata_db::TABLE_NAME, 'mm')
+      ->fields('mm', array(
+        mediamosa_asset_mediafile_metadata_db::VAL_CHAR,
+        mediamosa_asset_mediafile_metadata_db::VAL_INT,
+        mediamosa_asset_mediafile_metadata_db::VAL_DATETIME,
+      ))
+      ->condition(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID, $mediafile_id)
+      ->condition(mediamosa_asset_mediafile_metadata_db::PROP_ID, $prop_id)
+      ->execute();
+
+    foreach ($result as $row) {
+      if ($type == mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR) {
+        $value = $row[mediamosa_asset_mediafile_metadata_db::VAL_CHAR];
+      }
+      elseif ($type == mediamosa_asset_mediafile_metadata_property_db::TYPE_INT) {
+        $value = $row[mediamosa_asset_mediafile_metadata_db::VAL_INT];
+      }
+      elseif ($type == mediamosa_asset_mediafile_metadata_property_db::TYPE_DATETIME) {
+        $value = $row[mediamosa_asset_mediafile_metadata_db::VAL_DATETIME];
+      }
+      else {
+        // Shouldn't be here.
+        assert(0);
+      }
+    }
+
+    return $value;
+  }
+
+  /**
+   * Get all the metadata values of mediafile.
+   * @param mediafile_id Unique id for the mediafile
+   * @return Value of the properties in an associative array
+   */
+  static public function get_all_mediafile_metadata($mediafile_id) {
+    $values = array();
+
+    $result = mediamosa_db::db_select(mediamosa_asset_mediafile_metadata_db::TABLE_NAME, 'mm')
+      ->fields('mm', array(
+        mediamosa_asset_mediafile_metadata_db::PROP_ID,
+        mediamosa_asset_mediafile_metadata_db::VAL_CHAR,
+        mediamosa_asset_mediafile_metadata_db::VAL_INT,
+        mediamosa_asset_mediafile_metadata_db::VAL_DATETIME,
+      ))
+      ->condition(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID, $mediafile_id)
+      ->execute();
+    foreach ($result as $row) {
+      $prop = mediamosa_asset_mediafile_metadata_property::get_property($row[mediamosa_asset_mediafile_metadata_db::PROP_ID], TRUE);
+
+      if ($prop['type'] == mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR) {
+        $values[$prop['prop_name']] = $row[mediamosa_asset_mediafile_metadata_db::VAL_CHAR];
+      }
+      elseif ($prop['type'] == mediamosa_asset_mediafile_metadata_property_db::TYPE_INT) {
+        $values[$prop['prop_name']] = $row[mediamosa_asset_mediafile_metadata_db::VAL_INT];
+      }
+      elseif ($prop['type'] == mediamosa_asset_mediafile_metadata_property_db::TYPE_DATETIME) {
+        $values[$prop['prop_name']] = $row[mediamosa_asset_mediafile_metadata_db::VAL_DATETIME];
+      }
+      else {
+        // Shouldn't be here.
+        assert(0);
+      }
+    }
+
+    return $values;
+  }
+
+  /**
+   * Delete mediafile metadata value.
+   * @param mediafile_id Unique id for the mediafile
+   * @param prop_name Property name
+   * @param type Type of the property
+   * @return Number of deleted records, or FALSE in case of validation error
+   */
+  static public function delete_mediafile_metadata($mediafile_id, $prop_name, $type) {
+    $prop_id = mediamosa_asset_mediafile_metadata_property::get_property_id($prop_name, $type);
+    if (!$prop_id) {
+      return FALSE;
+    }
+
+    $num_deleted = mediamosa_db::db_delete(mediamosa_asset_mediafile_metadata_db::TABLE_NAME)
+      ->condition(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID, $mediafile_id)
+      ->condition(mediamosa_asset_mediafile_metadata_db::PROP_ID, $prop_id)
+      ->execute();
+
+    return $num_deleted;
+  }
+
+  /**
+   * Delete all the metadata value of mediafile.
+   * @param mediafile_id Unique id for the mediafile
+   */
+  static public function delete_all_mediafile_metadata($mediafile_id) {
+    $num_deleted = mediamosa_db::db_delete(mediamosa_asset_mediafile_metadata_db::TABLE_NAME)
+      ->condition(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID, $mediafile_id)
+      ->execute();
+
+    return $num_deleted;
+  }
 }
