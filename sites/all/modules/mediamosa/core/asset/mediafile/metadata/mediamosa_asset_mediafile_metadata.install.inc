@@ -92,9 +92,10 @@ function mediamosa_asset_mediafile_metadata_schema() {
       ),
       mediamosa_asset_mediafile_metadata_db::VAL_INT => array(
         'type' => 'int',
-        'not null' => TRUE,
+        'size' => 'big',
+        //'not null' => TRUE,
         'description' => t('The numeric value of the property.'),
-        'default' => 0,
+        //'default' => 0,
       ),
       mediamosa_asset_mediafile_metadata_db::CREATED => array(
         'type' => 'datetime',

@@ -319,7 +319,7 @@ class mediamosa_asset {
    * @param string $asset_id
    */
   static public function update_asset_info_is_empty_asset($asset_id) {
-    $prop_id_filesize = mediamosa_asset_mediafile_metadata_property::get_property_id('filesize', mediamosa_asset_mediafile_metadata_property_db::TYPE_INT);
+    $prop_id_filesize = mediamosa_asset_mediafile_metadata_property::get_property_id(mediamosa_asset_mediafile_metadata::FILESIZE, mediamosa_asset_mediafile_metadata_property_db::TYPE_INT);
     $mediafile = mediamosa_db::db_query_range(
       "SELECT m.#uri, m.#filename FROM {#mediamosa_asset_mediafile} AS m
        LEFT JOIN {#mediamosa_asset_mediafile_metadata} AS mm USING (#mediafile_id)

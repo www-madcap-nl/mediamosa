@@ -134,7 +134,14 @@ class MediaMosaUserTestCaseEga extends MediaMosaTestCaseEga {
     $filesize = mt_rand(1, 10) * 1024 * 1024; // in bytes
 
     // Create metadata.
-    mediamosa_asset_mediafile_metadata::create($mediafile_id, array(mediamosa_asset_mediafile_metadata_db::FILESIZE => $filesize));
+    $metadatas = array(
+      array(
+        'value' => $filesize,
+        'prop_name' => mediamosa_asset_mediafile_metadata::FILESIZE,
+        'type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_INT,
+      ),
+    );
+    mediamosa_asset_mediafile_metadata::create_mediafile_multiple_metadata($mediafile_id, $metadatas);
 
     // Get user.
     $a_user = $this->getUser($user_id);
