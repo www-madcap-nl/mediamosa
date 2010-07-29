@@ -423,6 +423,12 @@ class mediamosa_asset_mediafile_metadata {
    * @return Property value, or FALSE in case of validation error
    */
   static public function get_mediafile_metadata($mediafile_id, $prop_name, $type) {
+    $value = NULL;
+
+    if (!$mediafile_id || !$prop_name || !$type) {
+      return $value;
+    }
+
     $prop_id = mediamosa_asset_mediafile_metadata_property::get_property_id($prop_name, $type);
     if (!$prop_id) {
       return FALSE;
@@ -455,6 +461,36 @@ class mediamosa_asset_mediafile_metadata {
     }
 
     return $value;
+  }
+
+  /**
+   * Get mediafile metadata value - INT.
+   * @param mediafile_id Unique id for the mediafile
+   * @param prop_name Property name
+   * @return Property value, or FALSE in case of validation error
+   */
+  static public function get_mediafile_metadata_int($mediafile_id, $prop_name) {
+    self::get_mediafile_metadata($mediafile_id, $prop_name, mediamosa_asset_mediafile_metadata_property_db::TYPE_INT);
+  }
+
+  /**
+   * Get mediafile metadata value - CHAR.
+   * @param mediafile_id Unique id for the mediafile
+   * @param prop_name Property name
+   * @return Property value, or FALSE in case of validation error
+   */
+  static public function get_mediafile_metadata_char($mediafile_id, $prop_name) {
+    self::get_mediafile_metadata($mediafile_id, $prop_name, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
+  }
+
+  /**
+   * Get mediafile metadata value - DATETIME.
+   * @param mediafile_id Unique id for the mediafile
+   * @param prop_name Property name
+   * @return Property value, or FALSE in case of validation error
+   */
+  static public function get_mediafile_metadata_datetime($mediafile_id, $prop_name) {
+    self::get_mediafile_metadata($mediafile_id, $prop_name, mediamosa_asset_mediafile_metadata_property_db::TYPE_DATETIME);
   }
 
   /**

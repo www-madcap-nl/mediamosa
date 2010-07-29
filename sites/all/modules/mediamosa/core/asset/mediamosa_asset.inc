@@ -283,23 +283,27 @@ class mediamosa_asset {
 
     // Find the length of the first mediafile.
     $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
-    $query->fields('mfm', array(mediamosa_asset_mediafile_metadata_db::FILE_DURATION, mediamosa_asset_mediafile_metadata_db::CONTAINER_TYPE));
-    $query->join(mediamosa_asset_mediafile_metadata_db::TABLE_NAME, 'mfm', "mf.mediafile_id = mfm.mediafile_id AND mf.is_original_file = 'TRUE'");
+    $query->fields('mf', array(mediamosa_asset_mediafile_db::ID));
     $query->condition('mf.' . mediamosa_asset_mediafile_db::ASSET_ID, $asset_id);
+    $query->condition('mf.' . mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE, mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_TRUE);
     $query->orderBy('mf.changed');
     $query->range(0, 1);
     $mediafile_info = $query->execute()->fetchAssoc();
 
+    $mediafile_id = (empty($mediafile_info[mediamosa_asset_mediafile_db::ID]) ? NULL : $mediafile_info[mediamosa_asset_mediafile_db::ID]);
+    $file_duration = mediamosa_asset_mediafile_metadata::get_mediafile_metadata($mediafile_id, mediamosa_asset_mediafile_metadata::FILE_DURATION, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
+    $container_type = mediamosa_asset_mediafile_metadata::get_mediafile_metadata($mediafile_id, mediamosa_asset_mediafile_metadata::CONTAINER_TYPE, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
+
     // Set the length of the 1st original mediafile in the parent asset.
-    if ($mediafile_info && $mediafile_info['file_duration'] !== NULL) {
+    if (!is_null($file_duration) && !is_null($container_type)) {
       mediamosa_db::db_query(
         "UPDATE {#mediamosa_asset} SET #mediafile_duration = :mediafile_duration, #mediafile_container_type = :mediafile_container_type WHERE #asset_id = :asset_id",
         array(
           '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
           '#mediafile_duration' => mediamosa_asset_db::MEDIAFILE_DURATION,
-          ':mediafile_duration' => $mediafile_info[mediamosa_asset_mediafile_metadata_db::FILE_DURATION],
+          ':mediafile_duration' => $file_duration,
           '#mediafile_container_type' => mediamosa_asset_db::MEDIAFILE_CONTAINER_TYPE,
-          ':mediafile_container_type' => $mediafile_info[mediamosa_asset_mediafile_metadata_db::CONTAINER_TYPE],
+          ':mediafile_container_type' => $container_type,
           '#asset_id' => mediamosa_asset_db::ID,
           ':asset_id' => $asset_id,
         )
@@ -319,12 +323,12 @@ class mediamosa_asset {
    * @param string $asset_id
    */
   static public function update_asset_info_is_empty_asset($asset_id) {
-    $prop_id_filesize = mediamosa_asset_mediafile_metadata_property::get_property_id(mediamosa_asset_mediafile_metadata::FILESIZE, mediamosa_asset_mediafile_metadata_property_db::TYPE_INT);
+    $prop_id = mediamosa_asset_mediafile_metadata_property::get_property_id_int(mediamosa_asset_mediafile_metadata::FILESIZE);
     $mediafile = mediamosa_db::db_query_range(
       "SELECT m.#uri, m.#filename FROM {#mediamosa_asset_mediafile} AS m
        LEFT JOIN {#mediamosa_asset_mediafile_metadata} AS mm USING (#mediafile_id)
        WHERE m.#is_original_file = :is_original_file_true AND m.#asset_id = :asset_id AND
-             (m.#uri IS NOT NULL OR m.#filename IS NOT NULL OR m.#is_downloadable = :is_downloadable_true OR (mm.#prop_id_filesize = :prop_id_filesize AND mm.#val_int > 0))",
+             (m.#uri IS NOT NULL OR m.#filename IS NOT NULL OR m.#is_downloadable = :is_downloadable_true OR (mm.#prop_id = :prop_id AND mm.#val_int > 0))",
       0, // From.
       1, // Count.
       array(
@@ -341,8 +345,8 @@ class mediamosa_asset {
         '#filename' => mediamosa_asset_mediafile_db::FILENAME,
         '#is_downloadable' => mediamosa_asset_mediafile_db::IS_DOWNLOADABLE,
         ':is_downloadable_true' => mediamosa_asset_mediafile_db::IS_DOWNLOADABLE_TRUE,
-        '#prop_id_filesize' => mediamosa_asset_mediafile_metadata_db::PROP_ID,
-        ':prop_id_filesize' => $prop_id_filesize,
+        '#prop_id' => mediamosa_asset_mediafile_metadata_db::PROP_ID,
+        ':prop_id' => $prop_id,
         '#val_int' => mediamosa_asset_mediafile_metadata_db::VAL_INT,
       )
     )->fetchAssoc();
@@ -641,19 +645,26 @@ class mediamosa_asset {
       $s_ids = implode("','", $a_asset_ids);
       $mf = array();
       $result = mediamosa_db::db_query(sprintf("
-        SELECT mf.asset_id, mf.uri, mamm.container_type, mamm.video_codec
-        FROM {mediamosa_asset_mediafile} mf
-        INNER JOIN {mediamosa_asset_mediafile_metadata} mamm USING (mediafile_id)
-        WHERE mf.asset_id IN ('%s')", $s_ids));
+        SELECT #asset_id, #uri, #mediafile_id
+        FROM {#mediamosa_asset_mediafile}
+        WHERE #asset_id IN ('%s')", $s_ids), array(
+        '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
+        '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
+        '#asset_id' => mediamosa_asset_mediafile_db::ASSET_ID,
+        '#uri' => mediamosa_asset_mediafile_db::URI,
+      ));
       foreach ($result as $row) {
         // It is FALSE in the beginning.
-        if (!isset($mf[$row['asset_id']])) {
-          $mf[$row['asset_id']] = FALSE;
+        if (!isset($mf[$row[mediamosa_asset_mediafile_db::ASSET_ID]])) {
+          $mf[$row[mediamosa_asset_mediafile_db::ASSET_ID]] = FALSE;
         }
         // Get the info.
-        $a_response = mediamosa_server::get_streaming_info($row['container_type'], $row['video_codec'], $row['uri']);
+        $mediafile_id = $row[mediamosa_asset_mediafile_db::ID];
+        $container_type = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::CONTAINER_TYPE);
+        $video_codec = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::VIDEO_CODEC);
+        $a_response = mediamosa_server::get_streaming_info($container_type, $video_codec, $row[mediamosa_asset_mediafile_db::URI]);
         // Set the mediafile has_streamable_mediafiles value.
-        $mf[$row['asset_id']] = ($mf[$row['asset_id']] || $a_response['response_object_available'] == 'TRUE');
+        $mf[$row[mediamosa_asset_mediafile_db::ASSET_ID]] = ($mf[$row[mediamosa_asset_mediafile_db::ASSET_ID]] || $a_response['response_object_available'] == 'TRUE');
       }
     }
 

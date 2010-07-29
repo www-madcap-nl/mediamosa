@@ -94,6 +94,27 @@ class mediamosa_asset_mediafile_metadata_property {
   }
 
   /**
+   * Get the property id - CHAR.
+   */
+  static public function get_property_id_char($prop_name) {
+    self::get_property_id($prop_name, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
+  }
+
+  /**
+   * Get the property id - INT.
+   */
+  static public function get_property_id_int($prop_name) {
+    self::get_property_id($prop_name, mediamosa_asset_mediafile_metadata_property_db::TYPE_INT);
+  }
+
+  /**
+   * Get the property id - DATETIME.
+   */
+  static public function get_property_id_datetime($prop_name) {
+    self::get_property_id($prop_name, mediamosa_asset_mediafile_metadata_property_db::TYPE_DATETIME);
+  }
+
+  /**
    * Get the property.
    * @param prop_id
    * @return array(prop_name, type)

@@ -189,8 +189,10 @@ class mediamosa_asset_search {
         if ($key) {
           unset($a_result_cql2sql['a_joins'][$key]);
 
+          $prop_id = mediamosa_asset_mediafile_metadata_property::get_property_id_char(mediamosa_asset_mediafile_metadata::MIME_TYPE);
+
           $a_query[mediamosa_db_query::A_JOIN]['mediafile'] = "LEFT JOIN {mediamosa_asset_mediafile} AS mf ON a.asset_id=mf.asset_id_root AND mf.is_still = 'FALSE'";
-          $a_query[mediamosa_db_query::A_JOIN]['mediafile_metadata']['mm_mime_type'] = sprintf('LEFT JOIN {mediamosa_asset_mediafile_metadata} AS mm_mime_type ON mf.mediafile_id=mm_mime_type.mediafile_id');
+          $a_query[mediamosa_db_query::A_JOIN]['mediafile_metadata']['mm_mime_type'] = sprintf('LEFT JOIN {mediamosa_asset_mediafile_metadata} AS mm_mime_type ON mf.mediafile_id=mm_mime_type.mediafile_id AND mm_mime_type.prop_id = %d', $prop_id);
         }
 
         $key = array_search('FTP_BATCH', $a_result_cql2sql['a_joins']);
