@@ -26,10 +26,10 @@
 
  /**
   * @file
-  * Static functions for status page.
+  * Static functions for simpletest page.
   */
 
- class mediamosa_maintenance_status {
+ class mediamosa_maintenance_automatedsimpletest {
   // ------------------------------------------------------------------ Consts.
   const RUNPHASE_TIMED_OUT = 'timed-out';
   const RUNPHASE_STARTED = 'started';
@@ -38,14 +38,25 @@
 
   // ------------------------------------------------------------------ Static Functions.
   /**
-   * Log for mediamosa_status.
+   * Log for mediamosa_automatedsimpletest.
    *
    * @param string $message
    * @param array $variables
    * @param string $severity
    */
   static public function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
-    mediamosa::log($message, $variables, $severity, 'mediamosa_status');
+    mediamosa::log($message, $variables, $severity, 'mediamosa_automatedsimpletest');
+  }
+
+  /**
+   * Debug log for mediamosa_automatedsimpletest.
+   *
+   * @param string $message
+   * @param array $variables
+   * @param string $severity
+   */
+  static public function log_debug($message, array $variables = array()) {
+    mediamosa_debug::log($message, $variables, 'mediamosa_automatedsimpletest');
   }
 
   /**
@@ -54,7 +65,7 @@
    */
   static public function timeout_test_run() {
     // Default is 3 minutes before we consider test timed-out.
-    return variable_get('mediamosa_status_timeout_tests', 360);
+    return variable_get('mediamosa_automatedsimpletest_timeout_tests', 360);
   }
 
   /**
@@ -96,7 +107,7 @@
    */
   static public function may_run() {
     // Variable is set by the REST call that is running the test.
-    $run_last = variable_get('mediamosa_status_timeout_tests_running', NULL);
+    $run_last = variable_get('mediamosa_automatedsimpletest_timeout_tests_running', NULL);
 
     // may run?
     if (round(REQUEST_TIME - $run_last['started']) < (self::timeout_test_run() + 60)) { // extra 60 seconds.
@@ -104,7 +115,7 @@
     }
 
     // Master switch.
-    if (!variable_get('mediamosa_status_run_tests', TRUE)) {
+    if (!variable_get('mediamosa_automatedsimpletest_run_tests', TRUE)) {
       return FALSE;
     }
 
@@ -157,30 +168,30 @@
       $test_results[$run][$class_name] = $value;
 
       // Store value (master-slave safe).
-      mediamosa_db::db_query('INSERT INTO {#mediamosa_maintenance_status} SET #value = :value, #name = :name ON DUPLICATE KEY UPDATE #value = :value',
+      mediamosa_db::db_query('INSERT INTO {#mediamosa_maintenance_automatedsimpletest} SET #value = :value, #name = :name ON DUPLICATE KEY UPDATE #value = :value',
         array(
-          '#mediamosa_maintenance_status' => mediamosa_maintenance_status_db::TABLE_NAME,
-          '#value' => mediamosa_maintenance_status_db::VALUE,
+          '#mediamosa_maintenance_automatedsimpletest' => mediamosa_maintenance_automatedsimpletest_db::TABLE_NAME,
+          '#value' => mediamosa_maintenance_automatedsimpletest_db::VALUE,
           ':value' => serialize($value),
-          '#name' => mediamosa_maintenance_status_db::NAME,
+          '#name' => mediamosa_maintenance_automatedsimpletest_db::NAME,
           ':name' => $name,
         )
       );
     }
 
     if (!isset($test_results)) {
-      $result = mediamosa_db::db_select(mediamosa_maintenance_status_db::TABLE_NAME, 'mms')
+      $result = mediamosa_db::db_select(mediamosa_maintenance_automatedsimpletest_db::TABLE_NAME, 'mms')
         ->fields('mms')
         ->execute();
 
       $test_results = NULL;
       foreach ($result as $row) {
-        if (strpos($row[mediamosa_maintenance_status_db::NAME], '|') === FALSE) {
+        if (strpos($row[mediamosa_maintenance_automatedsimpletest_db::NAME], '|') === FALSE) {
           continue;
         }
 
-        list($run, $class_name) = explode('|', $row[mediamosa_maintenance_status_db::NAME], 2);
-        $test_results[$run][$class_name] = unserialize($row[mediamosa_maintenance_status_db::VALUE]);
+        list($run, $class_name) = explode('|', $row[mediamosa_maintenance_automatedsimpletest_db::NAME], 2);
+        $test_results[$run][$class_name] = unserialize($row[mediamosa_maintenance_automatedsimpletest_db::VALUE]);
       }
     }
 
@@ -215,12 +226,12 @@
   static public function fill_queue() {
 
     // Get the current queue.
-    $queue = variable_get('mediamosa_maintenance_status_queue', array());
+    $queue = variable_get('mediamosa_maintenance_automatedsimpletest_queue', array());
 
     $runs = array(
-      mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES => variable_get('mediamosa_status_minutes_tests_fast', mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_FAST),
-      mediamosa_settings::MEDIAMOSA_RUN_3_HOURS => variable_get('mediamosa_status_minutes_tests_normal', mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_NORMAL),
-      mediamosa_settings::MEDIAMOSA_RUN_DAILY => variable_get('mediamosa_status_minutes_tests_slow', mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_SLOW),
+      mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES => variable_get('mediamosa_automatedsimpletest_minutes_tests_fast', mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_FAST),
+      mediamosa_settings::MEDIAMOSA_RUN_3_HOURS => variable_get('mediamosa_automatedsimpletest_minutes_tests_normal', mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_NORMAL),
+      mediamosa_settings::MEDIAMOSA_RUN_DAILY => variable_get('mediamosa_automatedsimpletest_minutes_tests_slow', mediamosa_settings::MEDIAMOSA_RUN_INTERVAL_SLOW),
     );
 
     // Get the tests.
@@ -254,7 +265,7 @@
     }
 
     // Set the queue.
-    variable_set('mediamosa_maintenance_status_queue', $queue);
+    variable_set('mediamosa_maintenance_automatedsimpletest_queue', $queue);
   }
 
   /**
@@ -268,7 +279,7 @@
     }
 
     // Get the current queue.
-    $queue = variable_get('mediamosa_maintenance_status_queue', array());
+    $queue = variable_get('mediamosa_maintenance_automatedsimpletest_queue', array());
 
     // Get the next test.
     $queued_class_name = array_shift($queue);
@@ -279,7 +290,7 @@
     }
 
     // Set the queue.
-    variable_set('mediamosa_maintenance_status_queue', $queue);
+    variable_set('mediamosa_maintenance_automatedsimpletest_queue', $queue);
 
     // Now run the test we found in the queue.
     $runs = array(
@@ -297,7 +308,7 @@
         foreach ($test_results[$run] as $class_name => $info) {
           if (isset($info['runphase']) && $info['runphase'] == self::RUNPHASE_STARTED) {
             $test_results[$run][$class_name] = array('runphase' => self::RUNPHASE_TIMED_OUT, 'results' => array(), 'info' => $info);
-            mediamosa_maintenance_status::set_test_results($run, $class_name, $test_results);
+            mediamosa_maintenance_automatedsimpletest::set_test_results($run, $class_name, $test_results);
           }
         }
       }
@@ -360,12 +371,12 @@
       $test_results[$run][$class_name] = array('runphase' => self::RUNPHASE_STARTED, 'results' => array(), 'info' => $info);
     }
 
-    // Now store started status in variable.
-    mediamosa_maintenance_status::set_test_results($run, $class_name, $test_results[$run][$class_name]);
+    // Now store started in variable.
+    mediamosa_maintenance_automatedsimpletest::set_test_results($run, $class_name, $test_results[$run][$class_name]);
 
     // Do the call.
     $start = microtime(TRUE);
-    $response = mediamosa_http::do_internal_call_cron('internal/status/run', false, $options);
+    $response = mediamosa_http::do_internal_call_cron('internal/simpletest/run', false, $options);
     $end = microtime(TRUE);
     try {
       $response->xml = new SimpleXMLElement($response->data);
@@ -388,7 +399,7 @@
     }
 
     // Now store in variable.
-    mediamosa_maintenance_status::set_test_results($run, $class_name, $test_results[$run][$class_name]);
+    mediamosa_maintenance_automatedsimpletest::set_test_results($run, $class_name, $test_results[$run][$class_name]);
 
     // log start.
     mediamosa_debug::log_high('Ended unit test @class_name.', array('@class_name' => $class_name));
@@ -400,9 +411,9 @@
    * @param string $uri
    *  If you need to change the uri to trigger.
    */
-  static public function trigger_maintenance_status() {
+  static public function trigger_simpletests() {
 
     // Trigger.
-    mediamosa_http::do_internal_call_cron('internal/cron/maintenance_status', true);
+    mediamosa_http::do_internal_call_cron('internal/cron/simpletests', true);
   }
 }

@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.admin.inc,v 1.45 2010/03/07 07:15:28 webchick Exp $
+// $Id: comment.admin.inc,v 1.47 2010/06/25 21:24:35 dries Exp $
 
 /**
  * @file
@@ -16,19 +16,17 @@ function comment_admin($type = 'new') {
     return drupal_get_form('comment_multiple_delete_confirm');
   }
   else {
-    return drupal_get_form('comment_admin_overview', $type, arg(4));
+    return drupal_get_form('comment_admin_overview', $type);
   }
 }
 
 /**
- * Form builder; Builds the comment overview form for the admin.
+ * Form builder for the comment overview administration form.
  *
- * @param $type
- *   Not used.
  * @param $arg
- *   Current path's fourth component deciding the form type (Published comments/Approval queue).
- * @return
- *   The form structure.
+ *   Current path's fourth component: the type of overview form ('approval' or
+ *   'new').
+ *
  * @ingroup forms
  * @see comment_admin_overview_validate()
  * @see comment_admin_overview_submit()
@@ -162,7 +160,6 @@ function comment_admin_overview_submit($form, &$form_state) {
 
   if ($operation == 'delete') {
     comment_delete_multiple($cids);
-    cache_clear_all();
   }
   else {
     foreach ($cids as $cid => $value) {
@@ -179,6 +176,7 @@ function comment_admin_overview_submit($form, &$form_state) {
   }
   drupal_set_message(t('The update has been performed.'));
   $form_state['redirect'] = 'admin/content/comment';
+  cache_clear_all();
 }
 
 /**

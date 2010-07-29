@@ -1,5 +1,5 @@
 <?php
-// $Id: trigger.module,v 1.60 2010/03/12 15:56:30 dries Exp $
+// $Id: trigger.module,v 1.63 2010/06/29 18:24:10 dries Exp $
 
 /**
  * @file
@@ -145,9 +145,6 @@ function trigger_trigger_info() {
        ),
      ),
      'user' => array(
-       'user_presave' => array(
-         'label' => t('When either creating a new user account or updating an existing'),
-       ),
        'user_insert' => array(
          'label' => t('After creating a new user account'),
        ),
@@ -260,15 +257,17 @@ function _trigger_node($node, $hook, $a3 = NULL, $a4 = NULL) {
   static $objects;
   // Prevent recursion by tracking which operations have already been called.
   static $recursion;
-  if (isset($recursion[$hook])) {
-    return;
-  }
-  $recursion[$hook] = TRUE;
 
   $aids = trigger_get_assigned_actions($hook);
   if (!$aids) {
     return;
   }
+
+  if (isset($recursion[$hook])) {
+    return;
+  }
+  $recursion[$hook] = TRUE;
+
   $context = array(
     'group' => 'node',
     'hook' => $hook,
@@ -291,6 +290,8 @@ function _trigger_node($node, $hook, $a3 = NULL, $a4 = NULL) {
       actions_do($aid, $node, $context, $a3, $a4);
     }
   }
+
+  unset($recursion[$hook]);
 }
 
 /**
@@ -484,14 +485,8 @@ function trigger_user_login(&$edit, $account, $category) {
  * Implements hook_user_logout().
  */
 function trigger_user_logout($account) {
-  _trigger_user('user_logout', $edit = NULL, $account);
-}
-
-/**
- * Implements hook_user_presave().
- */
-function trigger_user_presave(&$edit, $account, $category) {
-  _trigger_user('user_presave', $edit, $account, $category);
+  $edit = array();
+  _trigger_user('user_logout', $edit, $account);
 }
 
 /**
@@ -523,14 +518,16 @@ function trigger_user_cancel($edit, $account, $method) {
  * Implements hook_user_delete().
  */
 function trigger_user_delete($account) {
-  _trigger_user('user_delete', $edit, $account, $method);
+  $edit = array();
+  _trigger_user('user_delete', $edit, $account, NULL);
 }
 
 /**
  * Implements hook_user_view().
  */
 function trigger_user_view($account) {
-  _trigger_user('user_view', $edit = NULL, $account, NULL);
+  $edit = NULL;
+  _trigger_user('user_view', $edit, $account, NULL);
 }
 
 /**
@@ -551,7 +548,7 @@ function _trigger_user($hook, &$edit, $account, $category = NULL) {
       if (!isset($objects[$type])) {
         $objects[$type] = _trigger_normalize_user_context($type, $account);
       }
-      $context['account'] = $account;
+      $context['user'] = $account;
       actions_do($aid, $objects[$type], $context);
     }
     else {

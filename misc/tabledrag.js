@@ -1,4 +1,4 @@
-// $Id: tabledrag.js,v 1.35 2010/03/10 20:31:59 webchick Exp $
+// $Id: tabledrag.js,v 1.39 2010/06/20 17:34:51 webchick Exp $
 (function ($) {
 
 /**
@@ -81,10 +81,29 @@ Drupal.tableDrag = function (table, tableSettings) {
 
   // Make each applicable row draggable.
   // Match immediate children of the parent element to allow nesting.
-  $('> tr.draggable, > tbody > tr.draggable', table).each(function() { self.makeDraggable(this); });
+  $('> tr.draggable, > tbody > tr.draggable', table).each(function () { self.makeDraggable(this); });
 
-  // Hide columns containing affected form elements.
-  this.hideColumns();
+  // Add a link before the table for users to show or hide weight columns.
+  $(table).before($('<a href="#" class="tabledrag-toggle-weight"></a>')
+    .attr('title', Drupal.t('Re-order rows by numerical weight instead of dragging.'))
+    .click(function () {
+      if ($.cookie('Drupal.tableDrag.showWeight') == 1) {
+        self.hideColumns();
+      }
+      else {
+        self.showColumns();
+      }
+      return false;
+    })
+    .wrap('<div class="tabledrag-toggle-weight-wrapper"></div>')
+    .parent()
+  );
+
+  // Initialize the specified columns (for example, weight or parent columns)
+  // to show or hide according to user preference. This aids accessibility
+  // so that, e.g., screen reader users can choose to enter weight values and
+  // manipulate form elements directly, rather than using drag-and-drop..
+  self.initColumns();
 
   // Add mouse bindings to the document. The self variable is passed along
   // as event handlers do not have direct access to the tableDrag object.
@@ -93,10 +112,14 @@ Drupal.tableDrag = function (table, tableSettings) {
 };
 
 /**
- * Hide the columns containing form elements according to the settings for
- * this tableDrag instance.
+ * Initialize columns containing form elements to be hidden by default,
+ * according to the settings for this tableDrag instance.
+ *
+ * Identify and mark each cell with a CSS class so we can easily toggle
+ * show/hide it. Finally, hide columns if user does not have a
+ * 'Drupal.tableDrag.showWeight' cookie.
  */
-Drupal.tableDrag.prototype.hideColumns = function () {
+Drupal.tableDrag.prototype.initColumns = function () {
   for (var group in this.tableSettings) {
     // Find the first field in this group.
     for (var d in this.tableSettings[group]) {
@@ -108,13 +131,13 @@ Drupal.tableDrag.prototype.hideColumns = function () {
       }
     }
 
-    // Hide the column containing this field.
+    // Mark the column containing this field so it can be hidden.
     if (hidden && cell[0] && cell.css('display') != 'none') {
       // Add 1 to our indexes. The nth-child selector is 1 based, not 0 based.
       // Match immediate children of the parent element to allow nesting.
       var columnIndex = $('> td', cell.parent()).index(cell.get(0)) + 1;
       var headerIndex = $('> td:not(:hidden)', cell.parent()).index(cell.get(0)) + 1;
-      $('> thead > tr, > tbody > tr, > tr', this.table).each(function(){
+      $('> thead > tr, > tbody > tr, > tr', this.table).each(function (){
         var row = $(this);
         var parentTag = row.parent().get(0).tagName.toLowerCase();
         var index = (parentTag == 'thead') ? headerIndex : columnIndex;
@@ -128,18 +151,83 @@ Drupal.tableDrag.prototype.hideColumns = function () {
         if (index > 0) {
           cell = row.children(':nth-child(' + index + ')');
           if (cell[0].colSpan > 1) {
-            // If this cell has a colspan, simply reduce it.
-            cell[0].colSpan = cell[0].colSpan - 1;
+            // If this cell has a colspan, mark it so we can reduce the colspan.
+            $(cell[0]).addClass('tabledrag-has-colspan');
           }
           else {
-            // Hide table body cells, but remove table header cells entirely
-            // (Safari doesn't hide properly).
-            parentTag == 'thead' ? cell.remove() : cell.css('display', 'none');
+            // Mark this cell so we can hide it.
+            $(cell[0]).addClass('tabledrag-hide');
           }
         }
       });
     }
   }
+
+  // Now hide cells and reduce colspans unless cookie indicates previous choice.
+  // Set a cookie if it is not already present.
+  if ($.cookie('Drupal.tableDrag.showWeight') === null) {
+    $.cookie('Drupal.tableDrag.showWeight', 0, {
+      path: Drupal.settings.basePath,
+      // The cookie expires in one year.
+      expires: 365
+    });
+    this.hideColumns();
+  }
+  // Check cookie value and show/hide weight columns accordingly.
+  else {
+    if ($.cookie('Drupal.tableDrag.showWeight') == 1) {
+      this.showColumns();
+    }
+    else {
+      this.hideColumns();
+    }
+  }
+};
+
+/**
+ * Hide the columns containing weight/parent form elements.
+ * Undo showColumns().
+ */
+Drupal.tableDrag.prototype.hideColumns = function () {
+  // Hide weight/parent cells and headers.
+  $('.tabledrag-hide', 'table.tabledrag-processed').css('display', 'none');
+  // Show TableDrag handles.
+  $('.tabledrag-handle', 'table.tabledrag-processed').css('display', '');
+  // Reduce the colspan of any effected multi-span columns.
+  $('.tabledrag-has-colspan', 'table.tabledrag-processed').each(function () {
+    this.colSpan = this.colSpan - 1;
+  });
+  // Change link text.
+  $('.tabledrag-toggle-weight').text(Drupal.t('Show row weights'));
+  // Change cookie.
+  $.cookie('Drupal.tableDrag.showWeight', 0, {
+    path: Drupal.settings.basePath,
+    // The cookie expires in one year.
+    expires: 365
+  });
+};
+
+/**
+ * Show the columns containing weight/parent form elements
+ * Undo hideColumns().
+ */
+Drupal.tableDrag.prototype.showColumns = function () {
+  // Show weight/parent cells and headers.
+  $('.tabledrag-hide', 'table.tabledrag-processed').css('display', '');
+  // Hide TableDrag handles.
+  $('.tabledrag-handle', 'table.tabledrag-processed').css('display', 'none');
+  // Increase the colspan for any columns where it was previously reduced.
+  $('.tabledrag-has-colspan', 'table.tabledrag-processed').each(function () {
+    this.colSpan = this.colSpan + 1;
+  });
+  // Change link text.
+  $('.tabledrag-toggle-weight').text(Drupal.t('Hide row weights'));
+  // Change cookie.
+  $.cookie('Drupal.tableDrag.showWeight', 1, {
+    path: Drupal.settings.basePath,
+    // The cookie expires in one year.
+    expires: 365
+  });
 };
 
 /**
@@ -516,7 +604,7 @@ Drupal.tableDrag.prototype.getMouseOffset = function (target, event) {
  *   The y coordinate of the mouse on the page (not the screen).
  */
 Drupal.tableDrag.prototype.findDropTargetRow = function (x, y) {
-  var rows = this.table.tBodies[0].rows;
+  var rows = $(this.table.tBodies[0].rows).not(':hidden');
   for (var n = 0; n < rows.length; n++) {
     var row = rows[n];
     var indentDiff = 0;
@@ -640,7 +728,7 @@ Drupal.tableDrag.prototype.updateField = function (changedRow, group) {
       // Use the first row in the table as source, because it's guaranteed to
       // be at the root level. Find the first item, then compare this row
       // against it as a sibling.
-      sourceRow = $('tr.draggable:first').get(0);
+      sourceRow = $(this.table).find('tr.draggable:first').get(0);
       if (sourceRow == this.rowObject.element) {
         sourceRow = $(this.rowObject.group[this.rowObject.group.length - 1]).next('tr.draggable').get(0);
       }
@@ -998,7 +1086,7 @@ Drupal.tableDrag.prototype.row.prototype.findSiblings = function (rowSettings) {
   var siblings = [];
   var directions = ['prev', 'next'];
   var rowIndentation = this.indents;
-  for (var d in directions) {
+  for (var d = 0; d < directions.length; d++) {
     var checkRow = $(this.element)[directions[d]]();
     while (checkRow.length) {
       // Check that the sibling contains a similar target field.

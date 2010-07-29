@@ -76,7 +76,7 @@ class mediamosa_asset_mediafile_play_proxy {
         return mediamosa_db::db_query(
           "SELECT #uri FROM {#mediamosa_server} WHERE #server_status = 'ON' AND #server_type = :server_type ORDER BY rand() LIMIT 1",
           array(
-            '#uri' => mediamosa_server_db::URI,
+            '#uri' => mediamosa_server_db::SERVER_URI,
             '#mediamosa_server' => mediamosa_server_db::TABLE_NAME,
             '#server_status' => mediamosa_server_db::SERVER_STATUS,
             '#server_type' => mediamosa_server_db::SERVER_TYPE,
@@ -88,7 +88,7 @@ class mediamosa_asset_mediafile_play_proxy {
         return mediamosa_db::db_query(
           "SELECT #uri FROM {#mediamosa_server} WHERE #server_status = 'ON' AND #server_type = :server_type ORDER BY rand() LIMIT 1",
           array(
-            '#uri' => mediamosa_server_db::URI,
+            '#uri' => mediamosa_server_db::SERVER_URI,
             '#mediamosa_server' => mediamosa_server_db::TABLE_NAME,
             '#server_status' => mediamosa_server_db::SERVER_STATUS,
             '#server_type' => mediamosa_server_db::SERVER_TYPE,
@@ -322,8 +322,8 @@ class mediamosa_asset_mediafile_play_proxy {
     assert(is_array($stills));
 
     $content_type = "";
-    if (isset($mediafile_ext['uri']) && trim($mediafile_ext['uri']) != '') {
-      $streaming_server_uri = $mediafile_ext['uri'];
+    if (isset($mediafile_ext[mediamosa_asset_mediafile_db::URI]) && trim($mediafile_ext[mediamosa_asset_mediafile_db::URI]) != '') {
+      $streaming_server_uri = $mediafile_ext[mediamosa_asset_mediafile_db::URI];
 
       if (trim($streaming_server_uri) == '') { // No streaming profile found
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STREAMING_PROFILE_NOT_FOUND, array('@video_container' => $mediafile_ext['metadata']['container_type']));
@@ -504,7 +504,7 @@ class mediamosa_asset_mediafile_play_proxy {
           }
         }
 
-        if (!@is_null($mediafile_ext['uri'])) {
+        if (!@is_null($mediafile_ext[mediamosa_asset_mediafile_db::URI])) {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STREAM_DOWNLOAD_NOT_ALLOWED);
         }
 

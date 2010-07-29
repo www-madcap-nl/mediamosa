@@ -1,5 +1,5 @@
 <?php
-// $Id: xmlrpcs.inc,v 1.37 2010/01/28 07:06:57 webchick Exp $
+// $Id: xmlrpcs.inc,v 1.39 2010/04/29 05:35:21 webchick Exp $
 
 /**
  * @file
@@ -60,7 +60,8 @@ function xmlrpc_server($callbacks) {
 
   $data = file_get_contents('php://input');
   if (!$data) {
-    exit('XML-RPC server accepts POST requests only.');
+    print 'XML-RPC server accepts POST requests only.';
+    drupal_exit();
   }
   $xmlrpc_server->message = xmlrpc_message($data);
   if (!xmlrpc_message_parse($xmlrpc_server->message)) {
@@ -75,7 +76,7 @@ function xmlrpc_server($callbacks) {
   xmlrpc_server_set($xmlrpc_server);
   $result = xmlrpc_server_call($xmlrpc_server, $xmlrpc_server->message->methodname, $xmlrpc_server->message->params);
 
-  if ($result->is_error) {
+  if (is_object($result) && !empty($result->is_error)) {
     xmlrpc_server_error($result);
   }
   // Encode the result
@@ -235,7 +236,7 @@ function xmlrpc_server_multicall($methodcalls) {
     elseif ($ok) {
       $result = xmlrpc_server_call($xmlrpc_server, $method, $params);
     }
-    if ($result->is_error) {
+    if (is_object($result) && !empty($result->is_error)) {
       $return[] = array(
         'faultCode' => $result->code,
         'faultString' => $result->message

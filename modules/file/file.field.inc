@@ -1,5 +1,5 @@
 <?php
-// $Id: file.field.inc,v 1.24 2010/03/11 22:44:44 dries Exp $
+// $Id: file.field.inc,v 1.28 2010/07/02 12:37:57 dries Exp $
 
 /**
  * @file
@@ -122,9 +122,12 @@ function file_field_instance_settings_form($field, $instance) {
     '#type' => 'textfield',
     '#title' => t('Allowed file extensions'),
     '#default_value' => $extensions,
-    '#description' => t('Separate extensions with a space or comma and do not include the leading dot. Leaving this blank will allow users to upload a file with any extension.'),
+    '#description' => t('Separate extensions with a space or comma and do not include the leading dot.'),
     '#element_validate' => array('_file_generic_settings_extensions'),
     '#weight' => 1,
+    // By making this field required, we prevent a potential security issue
+    // that would allow files of any type to be uploaded.
+    '#required' => TRUE,
   );
 
   $form['max_filesize'] = array(
@@ -246,7 +249,7 @@ function file_field_prepare_view($entity_type, $entities, $field, $instances, $l
 /**
  * Implements hook_field_presave().
  */
-function file_field_presave($obj_type, $object, $field, $instance, $langcode, &$items) {
+function file_field_presave($entity_type, $entity, $field, $instance, $langcode, &$items) {
   // Make sure that each file which will be saved with this object has a
   // permanent status, so that it will not be removed when temporary files are
   // cleaned up.
@@ -696,7 +699,13 @@ function file_field_widget_process_multiple($element, &$form_state, $form) {
 }
 
 /**
- * Theme an individual file upload widget.
+ * Returns HTML for an individual file upload widget.
+ *
+ * @param $variables
+ *   An associative array containing:
+ *   - element: A render element representing the widget.
+ *
+ * @ingroup themeable
  */
 function theme_file_widget($variables) {
   $element = $variables['element'];
@@ -715,7 +724,13 @@ function theme_file_widget($variables) {
 }
 
 /**
- * Theme a group of file upload widgets.
+ * Returns HTML for a group of file upload widgets.
+ *
+ * @param $variables
+ *   An associative array containing:
+ *   - element: A render element representing the widgets.
+ *
+ * @ingroup themeable
  */
 function theme_file_widget_multiple($variables) {
   $element = $variables['element'];
@@ -752,32 +767,45 @@ function theme_file_widget_multiple($variables) {
       continue;
     }
 
-    // Render all the buttons in the field as an "operation".
-    $operations = '';
+    // Delay rendering of the buttons, so that they can be rendered later in the
+    // "operations" column.
+    $operations_elements = array();
     foreach (element_children($element[$key]) as $sub_key) {
       if (isset($element[$key][$sub_key]['#type']) && $element[$key][$sub_key]['#type'] == 'submit') {
-        $operations .= drupal_render($element[$key][$sub_key]);
+        hide($element[$key][$sub_key]);
+        $operations_elements[] = &$element[$key][$sub_key];
       }
     }
 
-    // Render the "Display" option in its own own column.
-    $display = '';
+    // Delay rendering of the "Display" option and the weight selector, so that
+    // each can be rendered later in its own column.
     if ($element['#display_field']) {
-      unset($element[$key]['display']['#title']);
-      $display = array(
-        'data' => drupal_render($element[$key]['display']),
-        'class' => array('checkbox'),
-      );
+      hide($element[$key]['display']);
     }
-
-    // Render the weight in its own column.
-    $element[$key]['_weight']['#attributes']['class'] = array($weight_class);
-    $weight = drupal_render($element[$key]['_weight']);
+    hide($element[$key]['_weight']);
 
     // Render everything else together in a column, without the normal wrappers.
     $element[$key]['#theme_wrappers'] = array();
     $information = drupal_render($element[$key]);
 
+    // Render the previously hidden elements, using render() instead of
+    // drupal_render(), to undo the earlier hide().
+    $operations = '';
+    foreach ($operations_elements as $operation_element) {
+      $operations .= render($operation_element);
+    }
+    $display = '';
+    if ($element['#display_field']) {
+      unset($element[$key]['display']['#title']);
+      $display = array(
+        'data' => render($element[$key]['display']),
+        'class' => array('checkbox'),
+      );
+    }
+    $element[$key]['_weight']['#attributes']['class'] = array($weight_class);
+    $weight = render($element[$key]['_weight']);
+
+    // Arrange the row with all of the rendered columns.
     $row = array();
     $row[] = $information;
     if ($element['#display_field']) {
@@ -800,7 +828,7 @@ function theme_file_widget_multiple($variables) {
 }
 
 /**
- * Generate help text based on upload validators.
+ * Returns HTML for help text based on file upload validators.
  *
  * @param $variables
  *   An associative array containing:
@@ -809,8 +837,7 @@ function theme_file_widget_multiple($variables) {
  *   - upload_validators: An array of upload validators as used in
  *     $element['#upload_validators'].
  *
- * @return
- *   A string suitable for a file field description.
+ * @ingroup themeable
  */
 function theme_file_upload_help($variables) {
   $description = $variables['description'];
@@ -882,7 +909,13 @@ function file_field_formatter_view($entity_type, $entity, $field, $instance, $la
 }
 
 /**
- * Theme function for the 'table' formatter.
+ * Returns HTML for a file attachments table.
+ *
+ * @param $variables
+ *   An associative array containing:
+ *   - items: An array of file attachments.
+ *
+ * @ingroup themeable
  */
 function theme_file_formatter_table($variables) {
   $header = array(t('Attachment'), t('Size'));

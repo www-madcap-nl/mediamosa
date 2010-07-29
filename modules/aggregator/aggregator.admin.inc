@@ -1,5 +1,5 @@
 <?php
-// $Id: aggregator.admin.inc,v 1.50 2010/02/27 15:05:19 dries Exp $
+// $Id: aggregator.admin.inc,v 1.54 2010/06/26 19:55:47 dries Exp $
 
 /**
  * @file
@@ -109,13 +109,14 @@ function aggregator_form_feed($form, &$form_state, stdClass $feed = NULL) {
       '#description' => t('New feed items are automatically filed in the checked categories.'),
     );
   }
-  $form['submit'] = array(
+
+  $form['actions'] = array('#type' => 'actions');
+  $form['actions']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save'),
   );
-
   if (!empty($feed->fid)) {
-    $form['delete'] = array(
+    $form['actions']['delete'] = array(
       '#type' => 'submit',
       '#value' => t('Delete'),
     );
@@ -270,7 +271,8 @@ function aggregator_form_opml($form, &$form_state) {
       '#description' => t('New feed items are automatically filed in the checked categories.'),
     );
   }
-  $form['submit'] = array(
+  $form['actions'] = array('#type' => 'actions');
+  $form['actions']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Import')
   );
@@ -298,7 +300,8 @@ function aggregator_form_opml_validate($form, &$form_state) {
  */
 function aggregator_form_opml_submit($form, &$form_state) {
   $data = '';
-  if ($file = file_save_upload('upload')) {
+  $validators = array('file_validate_extensions' => array('opml xml'));
+  if ($file = file_save_upload('upload', $validators)) {
     $data = file_get_contents($file->uri);
   }
   else {
@@ -393,6 +396,16 @@ function aggregator_admin_refresh_feed($feed) {
  * @ingroup forms
  */
 function aggregator_admin_form($form, $form_state) {
+  // Global aggregator settings.
+  $form['aggregator_allowed_html_tags'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Allowed HTML tags'),
+    '#size' => 80,
+    '#maxlength' => 255,
+    '#default_value' => variable_get('aggregator_allowed_html_tags', '<a> <b> <br> <dd> <dl> <dt> <em> <i> <li> <ol> <p> <strong> <u> <ul>'),
+    '#description' => t('A space-separated list of HTML tags allowed in the content of feed items. Disallowed tags are stripped from the content.'),
+  );
+
   // Make sure configuration is sane.
   aggregator_sanitize_configuration();
 
@@ -478,7 +491,7 @@ function aggregator_admin_form($form, $form_state) {
   // Implementing modules will expect an array at $form['modules'].
   $form['modules'] = array();
 
-  $form['actions'] = array('#type' => 'container', '#attributes' => array('class' => array('form-actions')));
+  $form['actions'] = array('#type' => 'actions');
   $form['actions']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save configuration'),
@@ -488,7 +501,9 @@ function aggregator_admin_form($form, $form_state) {
 }
 
 function aggregator_admin_form_submit($form, &$form_state) {
-  $form_state['values']['aggregator_processors'] = array_filter($form_state['values']['aggregator_processors']);
+  if (isset($form_state['values']['aggregator_processors'])) {
+    $form_state['values']['aggregator_processors'] = array_filter($form_state['values']['aggregator_processors']);
+  }
   system_settings_form_submit($form, $form_state);
 }
 
@@ -510,10 +525,10 @@ function aggregator_form_category($form, &$form_state, $edit = array('title' => 
     '#title' => t('Description'),
     '#default_value' => $edit['description'],
   );
-  $form['submit'] = array('#type' => 'submit', '#value' => t('Save'));
-
+  $form['actions'] = array('#type' => 'actions');
+  $form['actions']['submit'] = array('#type' => 'submit', '#value' => t('Save'));
   if ($edit['cid']) {
-    $form['delete'] = array('#type' => 'submit', '#value' => t('Delete'));
+    $form['actions']['delete'] = array('#type' => 'submit', '#value' => t('Delete'));
     $form['cid'] = array('#type' => 'hidden', '#value' => $edit['cid']);
   }
 

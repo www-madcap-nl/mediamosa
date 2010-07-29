@@ -1,5 +1,5 @@
 <?php
-// $Id: image.effects.inc,v 1.3 2009/12/04 16:49:46 dries Exp $
+// $Id: image.effects.inc,v 1.5 2010/05/06 05:59:31 webchick Exp $
 
 /**
  * @file
@@ -66,8 +66,10 @@ function image_image_effect_info() {
  *   following items:
  *   - "width": An integer representing the desired width in pixels.
  *   - "height": An integer representing the desired height in pixels.
+ *
  * @return
  *   TRUE on success. FALSE on failure to resize image.
+ *
  * @see image_resize()
  */
 function image_resize_effect(&$image, $data) {
@@ -90,8 +92,10 @@ function image_resize_effect(&$image, $data) {
  *   - "height": An integer representing the desired height in pixels.
  *   - "upscale": A Boolean indicating that the image should be upscalled if
  *     the dimensions are larger than the original image.
+ *
  * @return
  *   TRUE on success. FALSE on failure to scale image.
+ *
  * @see image_scale()
  */
 function image_scale_effect(&$image, $data) {
@@ -228,7 +232,7 @@ function image_rotate_effect(&$image, $data) {
   }
 
   if (!empty($data['random'])) {
-    $degrees = abs((float)$data['degrees']);
+    $degrees = abs((float) $data['degrees']);
     $data['degrees'] = rand(-1 * $degrees, $degrees);
   }
 

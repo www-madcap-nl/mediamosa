@@ -1,5 +1,5 @@
 <?php
-// $Id: file.test,v 1.51 2010/01/29 22:40:41 dries Exp $
+// $Id: file.test,v 1.58 2010/06/30 22:37:49 webchick Exp $
 
 /**
  *  @file
@@ -194,7 +194,7 @@ class FileTestCase extends DrupalWebTestCase {
     $file->status = 0;
     // Write the record directly rather than calling file_save() so we don't
     // invoke the hooks.
-    $this->assertNotIdentical(drupal_write_record('file', $file), FALSE, t('The file was added to the database.'), 'Create test file');
+    $this->assertNotIdentical(drupal_write_record('file_managed', $file), FALSE, t('The file was added to the database.'), 'Create test file');
 
     return $file;
   }
@@ -289,21 +289,21 @@ class FileSpaceUsedTest extends FileTestCase {
 
     // Create records for a couple of users with different sizes.
     $file = array('uid' => 2, 'uri' => 'public://example1.txt', 'filesize' => 50, 'status' => FILE_STATUS_PERMANENT);
-    drupal_write_record('file', $file);
+    drupal_write_record('file_managed', $file);
     $file = array('uid' => 2, 'uri' => 'public://example2.txt', 'filesize' => 20, 'status' => FILE_STATUS_PERMANENT);
-    drupal_write_record('file', $file);
+    drupal_write_record('file_managed', $file);
     $file = array('uid' => 3, 'uri' => 'public://example3.txt', 'filesize' => 100, 'status' => FILE_STATUS_PERMANENT);
-    drupal_write_record('file', $file);
+    drupal_write_record('file_managed', $file);
     $file = array('uid' => 3, 'uri' => 'public://example4.txt', 'filesize' => 200, 'status' => FILE_STATUS_PERMANENT);
-    drupal_write_record('file', $file);
+    drupal_write_record('file_managed', $file);
 
     // Now create some with other statuses. These values were chosen arbitrarily
     // for the sole purpose of testing that bitwise operators were used
     // correctly on the field.
     $file = array('uid' => 2, 'uri' => 'public://example5.txt', 'filesize' => 1, 'status' => 2 | 8);
-    drupal_write_record('file', $file);
+    drupal_write_record('file_managed', $file);
     $file = array('uid' => 3, 'uri' => 'public://example6.txt', 'filesize' => 3, 'status' => 2 | 4);
-    drupal_write_record('file', $file);
+    drupal_write_record('file_managed', $file);
   }
 
   /**
@@ -537,12 +537,17 @@ class FileSaveUploadTest extends FileHookTestCase {
   /**
    * An image file path for uploading.
    */
-  var $image;
+  protected $image;
+
+  /**
+   * A PHP file path for upload security testing.
+   */
+  protected $phpfile;
 
   /**
    * The largest file id when the test starts.
    */
-  var $maxFidBefore;
+  protected $maxFidBefore;
 
   public static function getInfo() {
     return array(
@@ -558,14 +563,18 @@ class FileSaveUploadTest extends FileHookTestCase {
     $this->drupalLogin($account);
 
     $this->image = current($this->drupalGetTestFiles('image'));
-    $this->assertTrue(is_file($this->image->uri), t("The file we're going to upload exists."));
+    list(, $this->image_extension) = explode('.', $this->image->filename);
+    $this->assertTrue(is_file($this->image->uri), t("The image file we're going to upload exists."));
 
-    $this->maxFidBefore = db_query('SELECT MAX(fid) AS fid FROM {file}')->fetchField();
+    $this->phpfile = current($this->drupalGetTestFiles('php'));
+    $this->assertTrue(is_file($this->phpfile->uri), t("The PHP file we're going to upload exists."));
 
-    // Upload with replace to gurantee there's something there.
+    $this->maxFidBefore = db_query('SELECT MAX(fid) AS fid FROM {file_managed}')->fetchField();
+
+    // Upload with replace to guarantee there's something there.
     $edit = array(
       'file_test_replace' => FILE_EXISTS_REPLACE,
-      'files[file_test_upload]' => drupal_realpath($this->image->uri)
+      'files[file_test_upload]' => drupal_realpath($this->image->uri),
     );
     $this->drupalPost('file-test/upload', $edit, t('Submit'));
     $this->assertResponse(200, t('Received a 200 response for posted test file.'));
@@ -581,7 +590,7 @@ class FileSaveUploadTest extends FileHookTestCase {
    * Test the file_save_upload() function.
    */
   function testNormal() {
-    $max_fid_after = db_query('SELECT MAX(fid) AS fid FROM {file}')->fetchField();
+    $max_fid_after = db_query('SELECT MAX(fid) AS fid FROM {file_managed}')->fetchField();
     $this->assertTrue($max_fid_after > $this->maxFidBefore, t('A new file was created.'));
     $file1 = file_load($max_fid_after);
     $this->assertTrue($file1, t('Loaded the file.'));
@@ -592,13 +601,13 @@ class FileSaveUploadTest extends FileHookTestCase {
     file_test_reset();
 
     // Upload a second file.
-    $max_fid_before = db_query('SELECT MAX(fid) AS fid FROM {file}')->fetchField();
+    $max_fid_before = db_query('SELECT MAX(fid) AS fid FROM {file_managed}')->fetchField();
     $image2 = current($this->drupalGetTestFiles('image'));
     $edit = array('files[file_test_upload]' => drupal_realpath($image2->uri));
     $this->drupalPost('file-test/upload', $edit, t('Submit'));
     $this->assertResponse(200, t('Received a 200 response for posted test file.'));
     $this->assertRaw(t('You WIN!'));
-    $max_fid_after = db_query('SELECT MAX(fid) AS fid FROM {file}')->fetchField();
+    $max_fid_after = db_query('SELECT MAX(fid) AS fid FROM {file_managed}')->fetchField();
 
     // Check that the correct hooks were called.
     $this->assertFileHooksCalled(array('validate', 'insert'));
@@ -628,6 +637,158 @@ class FileSaveUploadTest extends FileHookTestCase {
 
     // Check that file_load_multiple() with no arguments returns FALSE.
     $this->assertFalse(file_load_multiple(), t('No files were loaded.'));
+  }
+
+  /**
+   * Test extension handling.
+   */
+  function testHandleExtension() {
+    // The file being tested is a .gif which is in the default safe list
+    // of extensions to allow when the extension validator isn't used. This is
+    // implicitly tested at the testNormal() test. Here we tell
+    // file_save_upload() to only allow ".foo".
+    $extensions = 'foo';
+    $edit = array(
+      'file_test_replace' => FILE_EXISTS_REPLACE,
+      'files[file_test_upload]' => drupal_realpath($this->image->uri),
+      'extensions' => $extensions,
+    );
+
+    $this->drupalPost('file-test/upload', $edit, t('Submit'));
+    $this->assertResponse(200, t('Received a 200 response for posted test file.'));
+    $message = t('Only files with the following extensions are allowed: ') . '<em class="placeholder">' . $extensions . '</em>';
+    $this->assertRaw($message, t('Can\'t upload a disallowed extension'));
+    $this->assertRaw(t('Epic upload FAIL!'), t('Found the failure message.'));
+
+    // Check that the correct hooks were called.
+    $this->assertFileHooksCalled(array('validate'));
+
+    // Reset the hook counters.
+    file_test_reset();
+
+    $extensions = 'foo ' . $this->image_extension;
+    // Now tell file_save_upload() to allow the extension of our test image.
+    $edit = array(
+      'file_test_replace' => FILE_EXISTS_REPLACE,
+      'files[file_test_upload]' => drupal_realpath($this->image->uri),
+      'extensions' => $extensions,
+    );
+
+    $this->drupalPost('file-test/upload', $edit, t('Submit'));
+    $this->assertResponse(200, t('Received a 200 response for posted test file.'));
+    $this->assertNoRaw(t('Only files with the following extensions are allowed:'), t('Can upload an allowed extension.'));
+    $this->assertRaw(t('You WIN!'), t('Found the success message.'));
+
+    // Check that the correct hooks were called.
+    $this->assertFileHooksCalled(array('validate', 'load', 'update'));
+
+    // Reset the hook counters.
+    file_test_reset();
+
+    // Now tell file_save_upload() to allow any extension.
+    $edit = array(
+      'file_test_replace' => FILE_EXISTS_REPLACE,
+      'files[file_test_upload]' => drupal_realpath($this->image->uri),
+      'allow_all_extensions' => TRUE,
+    );
+    $this->drupalPost('file-test/upload', $edit, t('Submit'));
+    $this->assertResponse(200, t('Received a 200 response for posted test file.'));
+    $this->assertNoRaw(t('Only files with the following extensions are allowed:'), t('Can upload any extension.'));
+    $this->assertRaw(t('You WIN!'), t('Found the success message.'));
+
+    // Check that the correct hooks were called.
+    $this->assertFileHooksCalled(array('validate', 'load', 'update'));
+  }
+
+  /**
+   * Test dangerous file handling.
+   */
+  function testHandleDangerousFile() {
+    // Allow the .php extension and make sure it gets renamed to .txt for
+    // safety. Also check to make sure its MIME type was changed.
+    $edit = array(
+      'file_test_replace' => FILE_EXISTS_REPLACE,
+      'files[file_test_upload]' => drupal_realpath($this->phpfile->uri),
+      'is_image_file' => FALSE,
+      'extensions' => 'php',
+    );
+
+    $this->drupalPost('file-test/upload', $edit, t('Submit'));
+    $this->assertResponse(200, t('Received a 200 response for posted test file.'));
+    $message = t('For security reasons, your upload has been renamed to ') . '<em class="placeholder">' . $this->phpfile->filename . '.txt' . '</em>';
+    $this->assertRaw($message, t('Dangerous file was renamed.'));
+    $this->assertRaw(t('File MIME type is text/plain.'), t('Dangerous file\'s MIME type was changed.'));
+    $this->assertRaw(t('You WIN!'), t('Found the success message.'));
+
+    // Check that the correct hooks were called.
+    $this->assertFileHooksCalled(array('validate', 'insert'));
+
+    // Ensure dangerous files are not renamed when insecure uploads is TRUE.
+    // Turn on insecure uploads.
+    variable_set('allow_insecure_uploads', 1);
+    // Reset the hook counters.
+    file_test_reset();
+
+    $this->drupalPost('file-test/upload', $edit, t('Submit'));
+    $this->assertResponse(200, t('Received a 200 response for posted test file.'));
+    $this->assertNoRaw(t('For security reasons, your upload has been renamed'), t('Found no security message.'));
+    $this->assertRaw(t('File name is !filename', array('!filename' => $this->phpfile->filename)), t('Dangerous file was not renamed when insecure uploads is TRUE.'));
+    $this->assertRaw(t('You WIN!'), t('Found the success message.'));
+
+    // Check that the correct hooks were called.
+    $this->assertFileHooksCalled(array('validate', 'insert'));
+
+    // Turn off insecure uploads.
+    variable_set('allow_insecure_uploads', 0);
+  }
+
+  /**
+   * Test file munge handling.
+   */
+  function testHandleFileMunge() {
+    // Ensure insecure uploads are disabled for this test.
+    variable_set('allow_insecure_uploads', 0);
+    $this->image = file_move($this->image, $this->image->uri . '.foo.' . $this->image_extension);
+
+    // Reset the hook counters to get rid of the 'move' we just called.
+    file_test_reset();
+
+    $extensions = $this->image_extension;
+    $edit = array(
+      'files[file_test_upload]' => drupal_realpath($this->image->uri),
+      'extensions' => $extensions,
+    );
+
+    $munged_filename = $this->image->filename;
+    $munged_filename = substr($munged_filename, 0, strrpos($munged_filename, '.'));
+    $munged_filename .= '_.' . $this->image_extension;
+
+    $this->drupalPost('file-test/upload', $edit, t('Submit'));
+    $this->assertResponse(200, t('Received a 200 response for posted test file.'));
+    $this->assertRaw(t('For security reasons, your upload has been renamed'), t('Found security message.'));
+    $this->assertRaw(t('File name is !filename', array('!filename' => $munged_filename)), t('File was successfully munged.'));
+    $this->assertRaw(t('You WIN!'), t('Found the success message.'));
+
+    // Check that the correct hooks were called.
+    $this->assertFileHooksCalled(array('validate', 'insert'));
+
+    // Ensure we don't munge files if we're allowing any extension.
+    // Reset the hook counters.
+    file_test_reset();
+
+    $edit = array(
+      'files[file_test_upload]' => drupal_realpath($this->image->uri),
+      'allow_all_extensions' => TRUE,
+    );
+
+    $this->drupalPost('file-test/upload', $edit, t('Submit'));
+    $this->assertResponse(200, t('Received a 200 response for posted test file.'));
+    $this->assertNoRaw(t('For security reasons, your upload has been renamed'), t('Found no security message.'));
+    $this->assertRaw(t('File name is !filename', array('!filename' => $this->image->filename)), t('File was not munged when allowing any extension.'));
+    $this->assertRaw(t('You WIN!'), t('Found the success message.'));
+
+    // Check that the correct hooks were called.
+    $this->assertFileHooksCalled(array('validate', 'insert'));
   }
 
   /**
@@ -752,7 +913,7 @@ class FileDirectoryTest extends FileTestCase {
   function testFileDirectoryTemp() {
     // Temporary directory handling.
     variable_set('file_directory_temp', NULL);
-    $temp = file_directory_path('temporary');
+    $temp = file_directory_temp();
     $this->assertTrue(!is_null($temp), t('Properly set and retrieved temp directory %directory.', array('%directory' => $temp)), 'File');
   }
 
@@ -1680,7 +1841,7 @@ class FileSaveTest extends FileHookTestCase {
 
     $this->assertNotNull($saved_file, t("Saving the file should give us back a file object."), 'File');
     $this->assertTrue($saved_file->fid > 0, t("A new file ID is set when saving a new file to the database."), 'File');
-    $loaded_file = db_query('SELECT * FROM {file} f WHERE f.fid = :fid', array(':fid' => $saved_file->fid))->fetch(PDO::FETCH_OBJ);
+    $loaded_file = db_query('SELECT * FROM {file_managed} f WHERE f.fid = :fid', array(':fid' => $saved_file->fid))->fetch(PDO::FETCH_OBJ);
     $this->assertNotNull($loaded_file, t("Record exists in the database."));
     $this->assertEqual($loaded_file->status, $file->status, t("Status was saved correctly."));
     $this->assertEqual($saved_file->filesize, filesize($file->uri), t("File size was set correctly."), 'File');
@@ -1697,7 +1858,7 @@ class FileSaveTest extends FileHookTestCase {
 
     $this->assertEqual($resaved_file->fid, $saved_file->fid, t("The file ID of an existing file is not changed when updating the database."), 'File');
     $this->assertTrue($resaved_file->timestamp >= $saved_file->timestamp, t("Timestamp didn't go backwards."), 'File');
-    $loaded_file = db_query('SELECT * FROM {file} f WHERE f.fid = :fid', array(':fid' => $saved_file->fid))->fetch(PDO::FETCH_OBJ);
+    $loaded_file = db_query('SELECT * FROM {file_managed} f WHERE f.fid = :fid', array(':fid' => $saved_file->fid))->fetch(PDO::FETCH_OBJ);
     $this->assertNotNull($loaded_file, t("Record still exists in the database."), 'File');
     $this->assertEqual($loaded_file->status, $saved_file->status, t("Status was saved correctly."));
   }
@@ -1946,10 +2107,13 @@ class FileDownloadTest extends FileTestCase {
   function testFileCreateUrl() {
     global $base_url;
 
-    $basename = " -._~!$'\"()*@[]?&+%#,;=:\n\x00" . // "Special" ASCII characters.
+    // Tilde (~) is excluded from this test because it is encoded by
+    // rawurlencode() in PHP 5.2 but not in PHP 5.3, as per RFC 3986.
+    // @see http://www.php.net/manual/en/function.rawurlencode.php#86506
+    $basename = " -._!$'\"()*@[]?&+%#,;=:\n\x00" . // "Special" ASCII characters.
       "%23%25%26%2B%2F%3F" . // Characters that look like a percent-escaped string.
       "éøïвβ中國書۞"; // Characters from various non-ASCII alphabets.
-    $basename_encoded = '%20-._%7E%21%24%27%22%28%29%2A%40%5B%5D%3F%26%2B%25%23%2C%3B%3D%3A__' .
+    $basename_encoded = '%20-._%21%24%27%22%28%29%2A%40%5B%5D%3F%26%2B%25%23%2C%3B%3D%3A__' .
       '%2523%2525%2526%252B%252F%253F' .
       '%C3%A9%C3%B8%C3%AF%D0%B2%CE%B2%E4%B8%AD%E5%9C%8B%E6%9B%B8%DB%9E';
 
@@ -2019,7 +2183,6 @@ class FileURLRewritingTest extends FileTestCase {
 
   function setUp() {
     parent::setUp('file_test');
-    variable_set('file_test_hook_file_url_alter', TRUE);
   }
 
   /**
@@ -2028,12 +2191,33 @@ class FileURLRewritingTest extends FileTestCase {
   function testShippedFileURL()  {
     // Test generating an URL to a shipped file (i.e. a file that is part of
     // Drupal core, a module or a theme, for example a JavaScript file).
+
+    // Test alteration of file URLs to use a CDN.
+    variable_set('file_test_hook_file_url_alter', 'cdn');
     $filepath = 'misc/jquery.js';
     $url = file_create_url($filepath);
-    $this->assertEqual(FILE_URL_TEST_CDN_1 . '/' . $filepath, $url, t('Correctly generated a URL for a shipped file.'));
+    $this->assertEqual(FILE_URL_TEST_CDN_1 . '/' . $filepath, $url, t('Correctly generated a CDN URL for a shipped file.'));
     $filepath = 'misc/favicon.ico';
     $url = file_create_url($filepath);
-    $this->assertEqual(FILE_URL_TEST_CDN_2 . '/' . $filepath, $url, t('Correctly generated a URL for a shipped file.'));
+    $this->assertEqual(FILE_URL_TEST_CDN_2 . '/' . $filepath, $url, t('Correctly generated a CDN URL for a shipped file.'));
+
+    // Test alteration of file URLs to use root-relative URLs.
+    variable_set('file_test_hook_file_url_alter', 'root-relative');
+    $filepath = 'misc/jquery.js';
+    $url = file_create_url($filepath);
+    $this->assertEqual(base_path() . '/' . $filepath, $url, t('Correctly generated a root-relative URL for a shipped file.'));
+    $filepath = 'misc/favicon.ico';
+    $url = file_create_url($filepath);
+    $this->assertEqual(base_path() . '/' . $filepath, $url, t('Correctly generated a root-relative URL for a shipped file.'));
+
+    // Test alteration of file URLs to use protocol-relative URLs.
+    variable_set('file_test_hook_file_url_alter', 'protocol-relative');
+    $filepath = 'misc/jquery.js';
+    $url = file_create_url($filepath);
+    $this->assertEqual('/' . base_path() . '/' . $filepath, $url, t('Correctly generated a protocol-relative URL for a shipped file.'));
+    $filepath = 'misc/favicon.ico';
+    $url = file_create_url($filepath);
+    $this->assertEqual('/' . base_path() . '/' . $filepath, $url, t('Correctly generated a protocol-relative URL for a shipped file.'));
   }
 
   /**
@@ -2041,9 +2225,24 @@ class FileURLRewritingTest extends FileTestCase {
    */
   function testPublicCreatedFileURL() {
     // Test generating an URL to a created file.
+
+    // Test alteration of file URLs to use a CDN.
+    variable_set('file_test_hook_file_url_alter', 'cdn');
     $file = $this->createFile();
     $url = file_create_url($file->uri);
-    $this->assertEqual(FILE_URL_TEST_CDN_2 . '/' . file_directory_path() . '/' . $file->filename, $url, t('Correctly generated a URL for a created file.'));
+    $this->assertEqual(FILE_URL_TEST_CDN_2 . '/' . file_directory_path() . '/' . $file->filename, $url, t('Correctly generated a CDN URL for a created file.'));
+
+    // Test alteration of file URLs to use root-relative URLs.
+    variable_set('file_test_hook_file_url_alter', 'root-relative');
+    $file = $this->createFile();
+    $url = file_create_url($file->uri);
+    $this->assertEqual(base_path() . '/' . file_directory_path() . '/' . $file->filename, $url, t('Correctly generated a root-relative URL for a created file.'));
+
+    // Test alteration of file URLs to use a protocol-relative URLs.
+    variable_set('file_test_hook_file_url_alter', 'protocol-relative');
+    $file = $this->createFile();
+    $url = file_create_url($file->uri);
+    $this->assertEqual('/' . base_path() . '/' . file_directory_path() . '/' . $file->filename, $url, t('Correctly generated a protocol-relative URL for a created file.'));
   }
 }
 
@@ -2247,11 +2446,6 @@ class StreamWrapperTest extends DrupalWebTestCase {
 
     $instance = file_stream_wrapper_get_instance_by_uri('public://foo');
     $this->assertEqual('DrupalPublicStreamWrapper', get_class($instance), t('Got correct class type for public URI.'));
-
-    // Test file_stream_wrapper_uri_normalize().
-    $uri = 'public:///' . file_directory_path() . '/foo/bar/';
-    $uri = file_stream_wrapper_uri_normalize($uri);
-    $this->assertEqual('public://foo/bar', $uri, t('Got a properly normalized URI @uri', array('@uri' => $uri)));
 
     // Test file_uri_target().
     $this->assertEqual(file_uri_target('public://foo/bar.txt'), 'foo/bar.txt', t('Got a valid stream target from public://foo/bar.txt.'));

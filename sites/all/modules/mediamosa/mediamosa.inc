@@ -224,7 +224,7 @@ class mediamosa {
     global $db_prefix;
 
     // If we are running an unit test, then we are enabled unless disable_app is specified.
-    if (preg_match('/simpletest\d+/', $db_prefix)) {
+    if (mediamosa::in_simpletest_sandbox()) {
       // The name of the http var.
       $disable_app = 'HTTP_' . mediamosa_unicode::strtoupper(str_replace('-', '_', mediamosa_settings::X_MEDIAMOSA_DISABLE_APP));
 
@@ -349,10 +349,8 @@ class mediamosa {
    * Returns TRUE or FALSE if we are inside a sandbox.
    */
   static public function in_simpletest_sandbox() {
-    global $db_prefix;
-
-    // If we are running an unit test, then enable REST calls.
-    return (preg_match('/simpletest\d+/', $db_prefix) ? TRUE : FALSE);
+    $test_info = &$GLOBALS['drupal_test_info'];
+    return (!empty($test_info['test_run_id']) ? TRUE : FALSE);
   }
 
   /**

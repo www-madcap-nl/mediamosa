@@ -1,5 +1,5 @@
 <?php
-// $Id: search.test,v 1.57 2010/03/07 23:14:20 webchick Exp $
+// $Id: search.test,v 1.64 2010/06/08 06:34:36 webchick Exp $
 
 // The search index can contain different types of content. Typically the type is 'node'.
 // Here we test with _test_ and _test2_ as the type.
@@ -412,6 +412,127 @@ class SearchRankingTestCase extends DrupalWebTestCase {
       $this->assertEqual($set[0]['node']->nid, $nodes[$node_rank][1]->nid, 'Search ranking "' . $node_rank . '" order.');
     }
   }
+
+  /**
+   * Test rankings of HTML tags.
+   */
+  function testHTMLRankings() {
+    // Login with sufficient privileges.
+    $this->drupalLogin($this->drupalCreateUser(array('create page content')));
+    
+    // Test HTML tags with different weights.
+    $sorted_tags = array('h1', 'h2', 'h3', 'h4', 'a', 'h5', 'h6', 'notag');
+    $shuffled_tags = $sorted_tags;
+
+    // Shuffle tags to ensure HTML tags are ranked properly.
+    shuffle($shuffled_tags);
+    $settings = array(
+      'type' => 'page',
+      'title' => array(LANGUAGE_NONE => array(array('value' => 'Simple node'))),
+    );
+    foreach ($shuffled_tags as $tag) {
+      switch ($tag) {
+        case 'a':
+          $settings['body'] = array(LANGUAGE_NONE => array(array('value' => l('Drupal Rocks', 'node'), 'format' => 3)));
+          break;
+        case 'notag':
+          $settings['body'] = array(LANGUAGE_NONE => array(array('value' => 'Drupal Rocks')));
+          break;
+        default:
+          $settings['body'] = array(LANGUAGE_NONE => array(array('value' => "<$tag>Drupal Rocks</$tag>", 'format' => 3)));
+          break;
+      }
+      $nodes[$tag] = $this->drupalCreateNode($settings);
+    }
+
+    // Update the search index.
+    module_invoke_all('update_index');
+    search_update_totals();
+
+    // Refresh variables after the treatment.
+    $this->refreshVariables();
+    
+    // Disable all other rankings.
+    $node_ranks = array('sticky', 'promote', 'recent', 'comments', 'views');
+    foreach ($node_ranks as $node_rank) {
+      variable_set('node_rank_' . $node_rank, 0);
+    }
+    $set = node_search_execute('rocks');
+
+    // Test the ranking of each tag.
+    foreach ($sorted_tags as $tag_rank => $tag) {
+      // Assert the results.
+      if ($tag == 'notag') {
+        $this->assertEqual($set[$tag_rank]['node']->nid, $nodes[$tag]->nid, 'Search tag ranking for plain text order.');
+      } else {
+        $this->assertEqual($set[$tag_rank]['node']->nid, $nodes[$tag]->nid, 'Search tag ranking for "&lt;' . $sorted_tags[$tag_rank] . '&gt;" order.');
+      }
+    }
+
+    // Test tags with the same weight against the sorted tags.
+    $unsorted_tags = array('u', 'b', 'i', 'strong', 'em');
+    foreach ($unsorted_tags as $tag) {
+      $settings['body'] = array(LANGUAGE_NONE => array(array('value' => "<$tag>Drupal Rocks</$tag>", 'format' => 3)));
+      $node = $this->drupalCreateNode($settings);
+
+      // Update the search index.
+      module_invoke_all('update_index');
+      search_update_totals();
+
+      // Refresh variables after the treatment.
+      $this->refreshVariables();
+
+      $set = node_search_execute('rocks');
+
+      // Ranking should always be second to last.
+      $set = array_slice($set, -2, 1);
+
+      // Assert the results.
+      $this->assertEqual($set[0]['node']->nid, $node->nid, 'Search tag ranking for "&lt;' . $tag . '&gt;" order.');
+      
+      // Delete node so it doesn't show up in subsequent search results.
+      node_delete($node->nid);
+    }
+  }
+
+  /**
+   * Verifies that if we combine two rankings, search still works.
+   *
+   * See issue http://drupal.org/node/771596
+   */
+  function testDoubleRankings() {
+    // Login with sufficient privileges.
+    $this->drupalLogin($this->drupalCreateUser(array('post comments without approval', 'create page content')));
+
+    // See testRankings() above - build a node that will rank high for sticky.
+    $settings = array(
+      'type' => 'page', 
+      'title' => array(LANGUAGE_NONE => array(array('value' => 'Drupal rocks'))), 
+      'body' => array(LANGUAGE_NONE => array(array('value' => "Drupal's search rocks"))),
+      'sticky' => 1,
+    );
+
+    $node = $this->drupalCreateNode($settings);
+
+    // Update the search index.
+    module_invoke_all('update_index');
+    search_update_totals();
+
+    // Refresh variables after the treatment.
+    $this->refreshVariables();
+
+    // Set up for ranking sticky and lots of comments; make sure others are
+    // disabled.
+    $node_ranks = array('sticky', 'promote', 'relevance', 'recent', 'comments', 'views');
+    foreach ($node_ranks as $var) {
+      $value = ($var == 'sticky' || $var == 'comments') ? 10 : 0;
+      variable_set('node_rank_' . $var, $value);
+    }
+
+    // Do the search and assert the results.
+    $set = node_search_execute('rocks');
+    $this->assertEqual($set[0]['node']->nid, $node->nid, 'Search double ranking order.');
+  }
 }
 
 class SearchBlockTestCase extends DrupalWebTestCase {
@@ -472,6 +593,66 @@ class SearchBlockTestCase extends DrupalWebTestCase {
   }
 }
 
+/**
+ * Tests that searching for a phrase gets the correct page count.
+ */
+class SearchExactTestCase extends DrupalWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'Search engine phrase queries',
+      'description' => 'Tests that searching for a phrase gets the correct page count.',
+      'group' => 'Search',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('search');
+  }
+
+  /**
+   * Tests that the correct number of pager links are found for both keywords and phrases.
+   */
+  function testExactQuery() {
+    // Login with sufficient privileges.
+    $this->drupalLogin($this->drupalCreateUser(array('create page content', 'search content')));
+
+    $settings = array(
+      'type' => 'page',
+      'title' => 'Simple Node',
+    );
+    // Create nodes with exact phrase.
+    for ($i = 0; $i <= 17; $i++) {
+      $settings['body'] = array(LANGUAGE_NONE => array(array('value' => 'love pizza')));
+      $this->drupalCreateNode($settings);
+    }
+    // Create nodes containing keywords.
+    for ($i = 0; $i <= 17; $i++) {
+      $settings['body'] = array(LANGUAGE_NONE => array(array('value' => 'love cheesy pizza')));
+      $this->drupalCreateNode($settings);
+    }
+
+    // Update the search index.
+    module_invoke_all('update_index');
+    search_update_totals();
+
+    // Refresh variables after the treatment.
+    $this->refreshVariables();
+
+    // Test that the correct number of pager links are found for keyword search.
+    $edit = array('keys' => 'love pizza');
+    $this->drupalPost('search/node', $edit, t('Search'));
+    $this->assertLinkByHref('page=1', 0, '2nd page link is found for keyword search.');
+    $this->assertLinkByHref('page=2', 0, '3rd page link is found for keyword search.');
+    $this->assertLinkByHref('page=3', 0, '4th page link is found for keyword search.');
+    $this->assertNoLinkByHref('page=4', '5th page link is not found for keyword search.');
+
+    // Test that the correct number of pager links are found for exact phrase search.
+    $edit = array('keys' => '"love pizza"');
+    $this->drupalPost('search/node', $edit, t('Search'));
+    $this->assertLinkByHref('page=1', 0, '2nd page link is found for exact phrase search.');
+    $this->assertNoLinkByHref('page=2', '3rd page link is not found for exact phrase search.');
+  }
+}
 
 /**
  * Test integration searching comments.
@@ -493,13 +674,15 @@ class SearchCommentTestCase extends DrupalWebTestCase {
     // Create and log in an administrative user having access to the Full HTML
     // text format.
     $full_html_format = db_query_range('SELECT * FROM {filter_format} WHERE name = :name', 0, 1, array(':name' => 'Full HTML'))->fetchObject();
-    $this->admin_user = $this->drupalCreateUser(array(
+    $permissions = array(
       'administer filters',
       filter_permission_name($full_html_format),
       'administer permissions',
       'create page content',
       'post comments without approval',
-    ));
+      'access comments',
+    );
+    $this->admin_user = $this->drupalCreateUser($permissions);
     $this->drupalLogin($this->admin_user);
   }
 
@@ -519,12 +702,7 @@ class SearchCommentTestCase extends DrupalWebTestCase {
     // Allow anonymous users to search content.
     $edit = array(
       DRUPAL_ANONYMOUS_RID . '[search content]' => 1,
-      // @todo Comments are added to search index without checking first whether
-      //   anonymous users are allowed to access comments.
       DRUPAL_ANONYMOUS_RID . '[access comments]' => 1,
-      // @todo Without this permission, "Login or register to post comments" is
-      //   added to the search index.  Comment.module is not guilty; that text
-      //   seems to be added via node links.
       DRUPAL_ANONYMOUS_RID . '[post comments]' => 1,
     );
     $this->drupalPost('admin/people/permissions', $edit, t('Save permissions'));
@@ -576,6 +754,188 @@ class SearchCommentTestCase extends DrupalWebTestCase {
     $this->drupalPost('', $edit, t('Search'));
     $this->assertNoText($comment_body, t('Comment body text not found in search results.'));
   }
+
+  /**
+   * Verify access rules for comment indexing with different permissions.
+   */
+  function testSearchResultsCommentAccess() {
+    $comment_body = 'Test comment body';
+    $this->comment_subject = 'Test comment subject';
+    $this->admin_role = $this->admin_user->roles;
+    unset($this->admin_role[DRUPAL_AUTHENTICATED_RID]);
+    $this->admin_role = key($this->admin_role);
+
+    // Create a node.
+    variable_set('comment_preview_article', DRUPAL_OPTIONAL);
+    $this->node = $this->drupalCreateNode(array('type' => 'article'));
+
+    // Post a comment using 'Full HTML' text format.
+    $edit_comment = array();
+    $edit_comment['subject'] = $this->comment_subject;
+    $edit_comment['comment_body[' . LANGUAGE_NONE . '][0][value]'] = '<h1>' . $comment_body . '</h1>';
+    $this->drupalPost('comment/reply/' . $this->node->nid, $edit_comment, t('Save'));
+
+    $this->drupalLogout();
+    $this->setRolePermissions(DRUPAL_ANONYMOUS_RID);
+    $this->checkCommentAccess('Anon user has search permission but no access comments permission, comments should not be indexed');
+
+    $this->setRolePermissions(DRUPAL_ANONYMOUS_RID, TRUE);
+    $this->checkCommentAccess('Anon user has search permission and access comments permission, comments should be indexed', TRUE);
+
+    $this->drupalLogin($this->admin_user);
+    $this->drupalGet('admin/people/permissions');
+
+    // Disable search access for authenticated user to test admin user.
+    $this->setRolePermissions(DRUPAL_AUTHENTICATED_RID, FALSE, FALSE);
+
+    $this->setRolePermissions($this->admin_role);
+    $this->checkCommentAccess('Admin user has search permission but no access comments permission, comments should not be indexed');
+
+    $this->setRolePermissions($this->admin_role, TRUE);
+    $this->checkCommentAccess('Admin user has search permission and access comments permission, comments should be indexed', TRUE);
+
+    $this->setRolePermissions(DRUPAL_AUTHENTICATED_RID);
+    $this->checkCommentAccess('Authenticated user has search permission but no access comments permission, comments should not be indexed');
+
+    $this->setRolePermissions(DRUPAL_AUTHENTICATED_RID, TRUE);
+    $this->checkCommentAccess('Authenticated user has search permission and access comments permission, comments should be indexed', TRUE);
+
+    // Verify that access comments permission is inherited from the
+    // authenticated role.
+    $this->setRolePermissions(DRUPAL_AUTHENTICATED_RID, TRUE, FALSE);
+    $this->setRolePermissions($this->admin_role);
+    $this->checkCommentAccess('Admin user has search permission and no access comments permission, but comments should be indexed because admin user inherits authenticated user\'s permission to access comments', TRUE);
+
+    // Verify that search content permission is inherited from the authenticated
+    // role.
+    $this->setRolePermissions(DRUPAL_AUTHENTICATED_RID, TRUE, TRUE);
+    $this->setRolePermissions($this->admin_role, TRUE, FALSE);
+    $this->checkCommentAccess('Admin user has access comments permission and no search permission, but comments should be indexed because admin user inherits authenticated user\'s permission to search', TRUE);
+    
+  }
+
+  /**
+   * Set permissions for role.
+   */
+  function setRolePermissions($rid, $access_comments = FALSE, $search_content = TRUE) {
+    $permissions = array(
+      'access comments' => $access_comments,
+      'search content' => $search_content,
+    );
+    user_role_change_permissions($rid, $permissions);
+  }
+
+  /**
+   * Update search index and search for comment.
+   */
+  function checkCommentAccess($message, $assume_access = FALSE) {
+    // Invoke search index update.
+    search_touch_node($this->node->nid);
+    $this->cronRun();
+
+    // Search for the comment subject.
+    $edit = array(
+      'search_block_form' => "'" . $this->comment_subject . "'",
+    );
+    $this->drupalPost('', $edit, t('Search'));
+    $method = $assume_access ? 'assertText' : 'assertNoText';
+    $verb = $assume_access ? 'found' : 'not found';
+    $this->{$method}($this->node->title, "Node $verb in search results: " . $message);
+    $this->{$method}($this->comment_subject, "Comment subject $verb in search results: " . $message);
+  }
+
+}
+
+/**
+ * Tests that comment count display toggles properly on comment status of node
+ * 
+ * Issue 537278
+ * 
+ * - Nodes with comment status set to Open should always how comment counts
+ * - Nodes with comment status set to Closed should show comment counts
+ *     only when there are comments
+ * - Nodes with comment status set to Hidden should never show comment counts
+ */
+class SearchCommentCountToggleTestCase extends DrupalWebTestCase {
+  protected $searching_user;
+  protected $searchable_nodes;
+  
+  public static function getInfo() {
+    return array(
+      'name' => 'Comment count toggle',
+      'description' => 'Verify that comment count display toggles properly on comment status of node.',
+      'group' => 'Search',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('search');
+
+    // Create searching user.
+    $this->searching_user = $this->drupalCreateUser(array('search content', 'access content', 'access comments', 'post comments without approval'));
+
+    // Create initial nodes.
+    $node_params = array('type' => 'article', 'body' => array(LANGUAGE_NONE => array(array('value' => 'SearchCommentToggleTestCase'))));
+    
+    $this->searchable_nodes['1 comment'] = $this->drupalCreateNode($node_params);
+    $this->searchable_nodes['0 comments'] = $this->drupalCreateNode($node_params);
+    
+    // Login with sufficient privileges.
+    $this->drupalLogin($this->searching_user);
+    
+    // Create a comment array
+    $edit_comment = array();
+    $edit_comment['subject'] = $this->randomName();
+    $edit_comment['comment_body[' . LANGUAGE_NONE . '][0][value]'] = $this->randomName();
+    $filtered_html_format_id = db_query_range('SELECT format FROM {filter_format} WHERE name = :name', 0, 1, array(':name' => 'Filtered HTML'))->fetchField();
+    $edit_comment['comment_body[' . LANGUAGE_NONE . '][0][format]'] = $filtered_html_format_id;
+    
+    // Post comment to the test node with comment
+    $this->drupalPost('comment/reply/' . $this->searchable_nodes['1 comment']->nid, $edit_comment, t('Save'));
+    
+    // First update the index. This does the initial processing.
+    node_update_index();
+
+    // Then, run the shutdown function. Testing is a unique case where indexing
+    // and searching has to happen in the same request, so running the shutdown
+    // function manually is needed to finish the indexing process.
+    search_update_totals();
+  }
+
+  /**
+   * Verify that comment count display toggles properly on comment status of node
+   */
+  function testSearchCommentCountToggle() {
+    // Search for the nodes by string in the node body.
+    $edit = array(
+      'search_block_form' => "'SearchCommentToggleTestCase'",
+    );
+
+    // Test comment count display for nodes with comment status set to Open
+    $this->drupalPost('', $edit, t('Search'));
+    $this->assertText(t('0 comments'), t('Empty comment count displays for nodes with comment status set to Open'));
+    $this->assertText(t('1 comment'), t('Non-empty comment count displays for nodes with comment status set to Open'));
+    
+    // Test comment count display for nodes with comment status set to Closed
+    $this->searchable_nodes['0 comments']->comment = COMMENT_NODE_CLOSED;
+    node_save($this->searchable_nodes['0 comments']);
+    $this->searchable_nodes['1 comment']->comment = COMMENT_NODE_CLOSED;
+    node_save($this->searchable_nodes['1 comment']);
+    
+    $this->drupalPost('', $edit, t('Search'));
+    $this->assertNoText(t('0 comments'), t('Empty comment count does not display for nodes with comment status set to Closed'));
+    $this->assertText(t('1 comment'), t('Non-empty comment count displays for nodes with comment status set to Closed'));
+
+    // Test comment count display for nodes with comment status set to Hidden
+    $this->searchable_nodes['0 comments']->comment = COMMENT_NODE_HIDDEN;
+    node_save($this->searchable_nodes['0 comments']);
+    $this->searchable_nodes['1 comment']->comment = COMMENT_NODE_HIDDEN;
+    node_save($this->searchable_nodes['1 comment']);    
+    
+    $this->drupalPost('', $edit, t('Search'));
+    $this->assertNoText(t('0 comments'), t('Empty comment count does not display for nodes with comment status set to Hidden'));
+    $this->assertNoText(t('1 comment'), t('Non-empty comment count does not display for nodes with comment status set to Hidden'));
+  }  
 }
 
 /**
@@ -608,5 +968,204 @@ class SearchSimplifyTestCase extends DrupalWebTestCase {
     }
     // Diff really does not like files starting with \0 so test it separately.
     $this->assertIdentical(' ', search_simplify($string), t('Search simplify works for ASCII control characters.'));
+  }
+}
+
+/**
+ * Test config page.
+ */
+class SearchConfigSettingsForm extends DrupalWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'Config settings form',
+      'description' => 'Verify the search config settings form.',
+      'group' => 'Search',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('search');
+
+    // Login as a user that can create and search content.
+    $this->drupalLogin($this->drupalCreateUser(array('search content', 'administer search', 'administer nodes', 'bypass node access')));
+  }
+
+  /**
+   * Verify the search settings form.
+   */
+  function testSearchSettingsPage() {
+    // Add a single piece of content and index it.
+    $node = $this->drupalCreateNode();
+    // Link the node to itself to test that it's only indexed once.
+    $langcode = LANGUAGE_NONE;
+    $body_key = "body[$langcode][0][value]";
+    $edit[$body_key] = l($node->title, 'node/' . $node->nid);
+    $this->drupalPost('node/' . $node->nid . '/edit', $edit, t('Save'));
+
+    node_update_index();
+    search_update_totals();
+
+    // Test that the settings form displays the correct count of items left to index.
+    $this->drupalGet('admin/config/search/settings');
+    $this->assertText(t('There are @count items left to index.', array('@count' => 0)));
+
+    // Test the re-index button.
+    $this->drupalPost('admin/config/search/settings', array(), t('Re-index site'));
+    $this->assertText(t('Are you sure you want to re-index the site'));
+    $this->drupalPost('admin/config/search/settings/reindex', array(), t('Re-index site'));
+    $this->assertText(t('The index will be rebuilt'));
+    $this->drupalGet('admin/config/search/settings');
+    $this->assertText(t('There is 1 item left to index.'));
+  }
+}
+
+/**
+ * Test the CJK tokenizer.
+ */
+class SearchTokenizerTestCase extends DrupalWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'CJK tokenizer',
+      'description' => 'Check that CJK tokenizer works as intended.',
+      'group' => 'Search',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('search');
+  }
+
+  /**
+   * Verifies that strings of CJK characters are tokenized.
+   *
+   * The search_simplify() function does special things with numbers, symbols,
+   * and punctuation. So we only test that CJK characters that are not in these
+   * character classes are tokenized properly. See PREG_CLASS_CKJ for more
+   * information.
+   */
+  function testTokenizer() {
+    // Set the minimum word size to 1 (to split all CJK characters) and make
+    // sure CJK tokenizing is turned on.
+    variable_set('minimum_word_size', 1);
+    variable_set('overlap_cjk', TRUE);
+    $this->refreshVariables();
+
+    // Create a string of CJK characters from various character ranges in
+    // the Unicode tables.
+
+    // Beginnings of the character ranges.
+    $starts = array(
+      'CJK unified' => 0x4e00,
+      'CJK Ext A' => 0x3400,
+      'CJK Compat' => 0xf900,
+      'Hangul Jamo' => 0x1100,
+      'Hangul Ext A' => 0xa960,
+      'Hangul Ext B' => 0xd7b0,
+      'Hangul Compat' => 0x3131,
+      'Half non-punct 1' => 0xff21,
+      'Half non-punct 2' => 0xff41,
+      'Half non-punct 3' => 0xff66,
+      'Hangul Syllables' => 0xac00,
+      'Hiragana' => 0x3040,
+      'Katakana' => 0x30a1,
+      'Katakana Ext' => 0x31f0,
+      'CJK Reserve 1' => 0x20000,
+      'CJK Reserve 2' => 0x30000,
+      'Bomofo' => 0x3100,
+      'Bomofo Ext' => 0x31a0,
+      'Lisu' => 0xa4d0,
+      'Yi' => 0xa000,
+    );
+
+    // Ends of the character ranges.
+    $ends = array(
+      'CJK unified' => 0x9fcf,
+      'CJK Ext A' => 0x4dbf,
+      'CJK Compat' => 0xfaff,
+      'Hangul Jamo' => 0x11ff,
+      'Hangul Ext A' => 0xa97f,
+      'Hangul Ext B' => 0xd7ff,
+      'Hangul Compat' => 0x318e,
+      'Half non-punct 1' => 0xff3a,
+      'Half non-punct 2' => 0xff5a,
+      'Half non-punct 3' => 0xffdc,
+      'Hangul Syllables' => 0xd7af,
+      'Hiragana' => 0x309f,
+      'Katakana' => 0x30ff,
+      'Katakana Ext' => 0x31ff,
+      'CJK Reserve 1' => 0x2fffd,
+      'CJK Reserve 2' => 0x3fffd,
+      'Bomofo' => 0x312f,
+      'Bomofo Ext' => 0x31b7,
+      'Lisu' => 0xa4fd,
+      'Yi' => 0xa48f,
+    );
+
+    // Generate characters consisting of starts, midpoints, and ends.
+    $chars = array();
+    $charcodes = array();
+    foreach ($starts as $key => $value) {
+      $charcodes[] = $starts[$key];
+      $chars[] = $this->code2utf($starts[$key]);
+      $mid = round(0.5 * ($starts[$key] + $ends[$key]));
+      $charcodes[] = $mid;
+      $chars[] = $this->code2utf($mid);
+      $charcodes[] = $ends[$key];
+      $chars[] = $this->code2utf($ends[$key]);
+    }
+
+    // Merge into a string and tokenize.
+    $string = implode('', $chars);
+    $out = trim(search_simplify($string));
+    $expected = drupal_strtolower(implode(' ', $chars));
+
+    // Verify that the output matches what we expect.
+    $this->assertEqual($out, $expected, 'CJK tokenizer worked on all supplied CJK characters');
+  }
+
+  /**
+   * Verifies that strings of non-CJK characters are not tokenized.
+   *
+   * This is just a sanity check - it verifies that strings of letters are
+   * not tokenized.
+   */
+  function testNoTokenizer() {
+    // Set the minimum word size to 1 (to split all CJK characters) and make
+    // sure CJK tokenizing is turned on.
+    variable_set('minimum_word_size', 1);
+    variable_set('overlap_cjk', TRUE);
+    $this->refreshVariables();
+
+    $letters = 'abcdefghijklmnopqrstuvwxyz';
+    $out = trim(search_simplify($letters));
+
+    $this->assertEqual($letters, $out, 'Letters are not CJK tokenized');
+  }
+
+  /**
+   * Like PHP chr() function, but for unicode characters.
+   *
+   * chr() only works for ASCII characters up to character 255. This function
+   * converts a number to the corresponding unicode character. Adapted from
+   * functions supplied in comments on several functions on php.net.
+   */
+  function code2utf($num) {
+    if ($num < 128) {
+      return chr($num);
+    }
+
+    if ($num < 2048) {
+      return chr(($num >> 6) + 192) . chr(($num & 63) + 128);
+    }
+
+    if ($num < 65536) {
+      return chr(($num >> 12) + 224) . chr((($num >> 6) & 63) + 128) . chr(($num & 63) + 128);
+    }
+
+    if ($num < 2097152) {
+      return chr(($num >> 18) + 240) . chr((($num >> 12) & 63) + 128) . chr((($num >> 6) & 63) + 128) . chr(($num & 63) + 128);
+    }
+
+    return '';
   }
 }

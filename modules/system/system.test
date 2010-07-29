@@ -1,5 +1,5 @@
 <?php
-// $Id: system.test,v 1.117 2010/03/12 14:33:02 dries Exp $
+// $Id: system.test,v 1.131 2010/07/07 08:05:01 webchick Exp $
 
 /**
  * Helper class for module test cases.
@@ -24,7 +24,7 @@ class ModuleTestCase extends DrupalWebTestCase {
    *   specified base table. Defaults to TRUE.
    */
   function assertTableCount($base_table, $count = TRUE) {
-    $tables = db_find_tables(Database::getConnection()->prefixTables('{' . $base_table . '}') . '%');
+    $tables = db_find_tables($base_table . '%');
 
     if ($count) {
       return $this->assertTrue($tables, t('Tables matching "@base_table" found.', array('@base_table' => $base_table)));
@@ -157,6 +157,45 @@ class EnableDisableTestCase extends ModuleTestCase {
     $this->drupalPost('admin/modules', $edit, t('Save configuration'));
     $this->assertText(t('The configuration options have been saved.'), t('Modules status has been updated.'));
   }
+
+  /**
+   * Tests entity cache after enabling a module with a dependency on an enitity
+   * providing module.
+   */
+  function testEntityCache() {
+    module_enable(array('entity_cache_test'));
+    $info = variable_get('entity_cache_test');
+    $this->assertNotNull($info, t('Entity information must not be NULL'));
+  }
+}
+
+/**
+ * Tests failure of hook_requirements('install').
+ */
+class HookRequirementsTestCase extends ModuleTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'Requirements hook failure',
+      'description' => "Attempts enabling a module that fails hook_requirements('install').",
+      'group' => 'Module',
+    );
+  }
+
+  /**
+   * Assert that a module cannot be installed if it fails hook_requirements().
+   */
+  function testHookRequirementsFailure() {
+    $this->assertModules(array('requirements1_test'), FALSE);
+
+    // Attempt to install the requirements1_test module.
+    $edit = array();
+    $edit['modules[Core][requirements1_test][enable]'] = 'requirements1_test';
+    $this->drupalPost('admin/modules', $edit, t('Save configuration'));
+
+    // Makes sure the module was NOT installed.
+    $this->assertText(t('Requirements 1 Test failed requirements'), t('Modules status has been updated.'));
+    $this->assertModules(array('requirements1_test'), FALSE);
+  }
 }
 
 /**
@@ -221,6 +260,30 @@ class ModuleDependencyTestCase extends ModuleTestCase {
 
     // Verify that the module has been disabled.
     $this->assertModules(array('system_dependencies_test'), FALSE);
+  }
+
+  /**
+   * Tests enabling a module that depends on a module which fails hook_requirements().
+   */
+  function testEnableRequirementsFailureDependency() {
+    $this->assertModules(array('requirements1_test'), FALSE);
+    $this->assertModules(array('requirements2_test'), FALSE);
+
+    // Attempt to install both modules at the same time.
+    $edit = array();
+    $edit['modules[Core][requirements1_test][enable]'] = 'requirements1_test';
+    $edit['modules[Core][requirements2_test][enable]'] = 'requirements2_test';
+    $this->drupalPost('admin/modules', $edit, t('Save configuration'));
+
+    // Makes sure the modules were NOT installed.
+    $this->assertText(t('Requirements 1 Test failed requirements'), t('Modules status has been updated.'));
+    $this->assertModules(array('requirements1_test'), FALSE);
+    $this->assertModules(array('requirements2_test'), FALSE);
+
+    // Makes sure that already enabled modules the failing modules depend on
+    // were not disabled.
+    $this->assertModules(array('comment'), TRUE);
+
   }
 }
 
@@ -301,11 +364,20 @@ class ModuleRequiredTestCase extends ModuleTestCase {
    * Assert that core required modules cannot be disabled.
    */
   function testDisableRequired() {
-    $required_modules = drupal_required_modules();
+    $module_info = system_get_info('module');
     $this->drupalGet('admin/modules');
-    foreach ($required_modules as $module) {
-      // Check to make sure the checkbox for required module is not found.
-      $this->assertNoFieldByName('modules[Core][' . $module . '][enable]');
+    foreach ($module_info as $module => $info) {
+      // Check to make sure the checkbox for each required module is disabled
+      // and checked (or absent from the page if the module is also hidden).
+      if (!empty($info['required'])) {
+        $field_name = "modules[{$info['package']}][$module][enable]";
+        if (empty($info['hidden'])) {
+          $this->assertFieldByXPath("//input[@name='$field_name' and @disabled='disabled' and @checked='checked']", '', t('Field @name was disabled and checked.', array('@name' => $field_name)));
+        }
+        else {
+          $this->assertNoFieldByName($field_name);
+        }
+      }
     }
   }
 }
@@ -344,7 +416,7 @@ class IPAddressBlockingTestCase extends DrupalWebTestCase {
     // Block a valid IP address.
     $edit = array();
     $edit['ip'] = '192.168.1.1';
-    $this->drupalPost('admin/config/people/ip-blocking', $edit, t('Save'));
+    $this->drupalPost('admin/config/people/ip-blocking', $edit, t('Add'));
     $ip = db_query("SELECT iid from {blocked_ips} WHERE ip = :ip", array(':ip' => $edit['ip']))->fetchField();
     $this->assertTrue($ip, t('IP address found in database.'));
     $this->assertRaw(t('The IP address %ip has been blocked.', array('%ip' => $edit['ip'])), t('IP address was blocked.'));
@@ -352,30 +424,30 @@ class IPAddressBlockingTestCase extends DrupalWebTestCase {
     // Try to block an IP address that's already blocked.
     $edit = array();
     $edit['ip'] = '192.168.1.1';
-    $this->drupalPost('admin/config/people/ip-blocking', $edit, t('Save'));
+    $this->drupalPost('admin/config/people/ip-blocking', $edit, t('Add'));
     $this->assertText(t('This IP address is already blocked.'));
 
     // Try to block a reserved IP address.
     $edit = array();
     $edit['ip'] = '255.255.255.255';
-    $this->drupalPost('admin/config/people/ip-blocking', $edit, t('Save'));
+    $this->drupalPost('admin/config/people/ip-blocking', $edit, t('Add'));
     $this->assertText(t('Enter a valid IP address.'));
 
     // Try to block a reserved IP address.
     $edit = array();
     $edit['ip'] = 'test.example.com';
-    $this->drupalPost('admin/config/people/ip-blocking', $edit, t('Save'));
+    $this->drupalPost('admin/config/people/ip-blocking', $edit, t('Add'));
     $this->assertText(t('Enter a valid IP address.'));
 
     // Submit an empty form.
     $edit = array();
     $edit['ip'] = '';
-    $this->drupalPost('admin/config/people/ip-blocking', $edit, t('Save'));
+    $this->drupalPost('admin/config/people/ip-blocking', $edit, t('Add'));
     $this->assertText(t('Enter a valid IP address.'));
 
     // Pass an IP address as a URL parameter and submit it.
     $submit_ip = '1.2.3.4';
-    $this->drupalPost('admin/config/people/ip-blocking/' . $submit_ip, NULL, t('Save'));
+    $this->drupalPost('admin/config/people/ip-blocking/' . $submit_ip, NULL, t('Add'));
     $ip = db_query("SELECT iid from {blocked_ips} WHERE ip = :ip", array(':ip' => $submit_ip))->fetchField();
     $this->assertTrue($ip, t('IP address found in database'));
     $this->assertRaw(t('The IP address %ip has been blocked.', array('%ip' => $submit_ip)), t('IP address was blocked.'));
@@ -469,7 +541,7 @@ class CronRunTestCase extends DrupalWebTestCase {
   function testTempFileCleanup() {
     // Temporary file that is older than DRUPAL_MAXIMUM_TEMP_FILE_AGE.
     $temp_old = file_save_data('');
-    db_update('file')
+    db_update('file_managed')
       ->fields(array(
         'status' => 0,
         'timestamp' => 1,
@@ -480,7 +552,7 @@ class CronRunTestCase extends DrupalWebTestCase {
 
     // Temporary file that is less than DRUPAL_MAXIMUM_TEMP_FILE_AGE.
     $temp_new = file_save_data('');
-    db_update('file')
+    db_update('file_managed')
       ->fields(array('status' => 0))
       ->condition('fid', $temp_new->fid)
       ->execute();
@@ -488,7 +560,7 @@ class CronRunTestCase extends DrupalWebTestCase {
 
     // Permanent file that is older than DRUPAL_MAXIMUM_TEMP_FILE_AGE.
     $perm_old = file_save_data('');
-    db_update('file')
+    db_update('file_managed')
       ->fields(array('timestamp' => 1))
       ->condition('fid', $temp_old->fid)
       ->execute();
@@ -698,8 +770,6 @@ class SiteMaintenanceTestCase extends DrupalWebTestCase {
     $this->assertText($offline_message);
     $this->drupalGet('user/register');
     $this->assertText($offline_message);
-    $this->drupalGet('user/password');
-    $this->assertText($offline_message);
 
     // Verify that user is able to log in.
     $this->drupalGet('user');
@@ -732,6 +802,23 @@ class SiteMaintenanceTestCase extends DrupalWebTestCase {
     $this->drupalLogout();
     $this->drupalGet('');
     $this->assertRaw($offline_message, t('Found the site offline message.'));
+
+    // Verify that custom site offline message is not displayed on user/password.
+    $this->drupalGet('user/password');
+    $this->assertText(t('Username or e-mail address'), t('Anonymous users can access user/password'));
+
+    // Submit password reset form.
+    $edit = array(
+      'name' => $this->user->name,
+    );
+    $this->drupalPost('user/password', $edit, t('E-mail new password'));
+    $mails = $this->drupalGetMails();
+    $start = strpos($mails[0]['body'], 'user/reset/'. $this->user->uid);
+    $path = substr($mails[0]['body'], $start, 66 + strlen($this->user->uid));
+
+    // Log in with temporary login link.
+    $this->drupalPost($path, array(), t('Log in'));
+    $this->assertText($user_message);
   }
 }
 
@@ -1154,83 +1241,6 @@ class SystemMainContentFallback extends DrupalWebTestCase {
   }
 }
 
-class SystemSettingsForm extends DrupalWebTestCase {
-  /**
-   * Implement getInfo().
-   */
-  public static function getInfo() {
-    return array(
-      'name' => 'System setting forms',
-      'description' => 'Tests correctness of system_settings_form() processing.',
-      'group' => 'System'
-    );
-  }
-
-  /**
-   * Implement setUp().
-   */
-  function setUp() {
-    parent::setUp();
-
-    variable_set('system_settings_form_test', TRUE);
-    variable_set('system_settings_form_test_4', TRUE);
-  }
-
-  /**
-   * Reset page title.
-   */
-  function tearDown() {
-    variable_del('system_settings_form_test');
-    variable_del('system_settings_form_test_4');
-
-    parent::tearDown();
-  }
-
-  /**
-   * Tests the handling of automatic defaults in systems_settings_form().
-   */
-  function testAutomaticDefaults() {
-    $form['system_settings_form_test'] = array(
-      '#type' => 'checkbox',
-      '#default_value' => FALSE,
-    );
-
-    $form['system_settings_form_test_2'] = array(
-      '#type' => 'checkbox',
-      '#default_value' => FALSE,
-    );
-
-    $form['system_settings_form_test_3'] = array(
-      '#type' => 'checkbox',
-      '#default_value' => TRUE,
-    );
-
-    $form['has_children']['system_settings_form_test_4'] = array(
-      '#type' => 'checkbox',
-      '#default_value' => FALSE,
-    );
-
-    $form['has_children']['system_settings_form_test_5'] = array(
-      '#type' => 'checkbox',
-      '#default_value' => TRUE,
-    );
-
-    $automatic = system_settings_form($form, FALSE);
-    $this->assertFalse($automatic['system_settings_form_test']['#default_value']);
-    $this->assertFalse($automatic['system_settings_form_test_2']['#default_value']);
-    $this->assertTrue($automatic['system_settings_form_test_3']['#default_value']);
-    $this->assertFalse($automatic['has_children']['system_settings_form_test_4']['#default_value']);
-    $this->assertTrue($automatic['has_children']['system_settings_form_test_5']['#default_value']);
-
-    $no_automatic = system_settings_form($form);
-    $this->assertTrue($no_automatic['system_settings_form_test']['#default_value']);
-    $this->assertFalse($no_automatic['system_settings_form_test_2']['#default_value']);
-    $this->assertTrue($no_automatic['system_settings_form_test_3']['#default_value']);
-    $this->assertTrue($no_automatic['has_children']['system_settings_form_test_4']['#default_value']);
-    $this->assertTrue($no_automatic['has_children']['system_settings_form_test_5']['#default_value']);
-  }
-}
-
 /**
  * Tests for the theme interface functionality.
  */
@@ -1480,6 +1490,77 @@ class TokenReplaceTestCase extends DrupalWebTestCase {
     $generated = token_generate('node', $raw_tokens, array('node' => $node), array('sanitize' => FALSE));
     $this->assertFalse(strcmp($generated['[node:title]'], $node->title), t('Unsanitized token generated properly.'));
   }
+
+  /**
+   * Tests the generation of all system site information tokens.
+   */
+  function testSystemSiteTokenReplacement() {
+    global $language;
+    $url_options = array(
+      'absolute' => TRUE,
+      'language' => $language,
+    );
+
+    // Set a few site variables.
+    variable_set('site_name', '<strong>Drupal<strong>');
+    variable_set('site_slogan', '<blink>Slogan</blink>');
+    variable_set('site_mission', '<em>Mission</em>');
+
+    // Generate and test sanitized tokens.
+    $tests = array();
+    $tests['[site:name]'] = check_plain(variable_get('site_name', 'Drupal'));
+    $tests['[site:slogan]'] = check_plain(variable_get('site_slogan', ''));
+    $tests['[site:mission]'] = filter_xss(variable_get('site_mission', ''));
+    $tests['[site:mail]'] = 'simpletest@example.com';
+    $tests['[site:url]'] = url('<front>', $url_options);
+    $tests['[site:url-brief]'] = preg_replace('!^https?://!', '', url('<front>', $url_options));
+    $tests['[site:login-url]'] = url('user', $url_options);
+
+    // Test to make sure that we generated something for each token.
+    $this->assertFalse(in_array(0, array_map('strlen', $tests)), t('No empty tokens generated.'));
+
+    foreach ($tests as $input => $expected) {
+      $output = token_replace($input, array(), array('language' => $language));
+      $this->assertFalse(strcmp($output, $expected), t('Sanitized system site information token %token replaced.', array('%token' => $input)));
+    }
+
+    // Generate and test unsanitized tokens.
+    $tests['[site:name]'] = variable_get('site_name', 'Drupal');
+    $tests['[site:slogan]'] = variable_get('site_slogan', '');
+    $tests['[site:mission]'] = variable_get('site_mission', '');
+
+    foreach ($tests as $input => $expected) {
+      $output = token_replace($input, array(), array('language' => $language, 'sanitize' => FALSE));
+      $this->assertFalse(strcmp($output, $expected), t('Unsanitized system site information token %token replaced.', array('%token' => $input)));
+    }
+  }
+
+  /**
+   * Tests the generation of all system date tokens.
+   */
+  function testSystemDateTokenReplacement() {
+    global $language;
+
+    // Set time to one hour before request.
+    $date = REQUEST_TIME - 3600;
+
+    // Generate and test tokens.
+    $tests = array();
+    $tests['[date:short]'] = format_date($date, 'short', '', NULL, $language->language);
+    $tests['[date:medium]'] = format_date($date, 'medium', '', NULL, $language->language);
+    $tests['[date:long]'] = format_date($date, 'long', '', NULL, $language->language);
+    $tests['[date:custom:m/j/Y]'] = format_date($date, 'custom', 'm/j/Y', NULL, $language->language);
+    $tests['[date:since]'] = format_interval((REQUEST_TIME - $date), 2, $language->language);
+    $tests['[date:raw]'] = filter_xss($date);
+
+    // Test to make sure that we generated something for each token.
+    $this->assertFalse(in_array(0, array_map('strlen', $tests)), t('No empty tokens generated.'));
+
+    foreach ($tests as $input => $expected) {
+      $output = token_replace($input, array('date' => $date), array('language' => $language));
+      $this->assertFalse(strcmp($output, $expected), t('Date token %token replaced.', array('%token' => $input)));
+    }
+  }
 }
 
 class InfoFileParserTestCase extends DrupalUnitTestCase {
@@ -1604,6 +1685,45 @@ class UpdateScriptFunctionalTest extends DrupalWebTestCase {
     $this->drupalGet($this->update_url, array('external' => TRUE));
     $this->assertResponse(200);
   }
+
+  /**
+   * Tests the detection of requirements for the update script to proceed.
+   */
+  function testUpdateRequirements() {
+    $this->drupalLogin($this->update_user);
+    $this->drupalGet($this->update_url, array('external' => TRUE));
+    $this->assertResponse(200);
+    // Test if disabling a module that another enabled module depends on will
+    // prevent the update from proceeding.
+    module_disable(array('block'), FALSE);
+    $this->assertFalse(module_exists('block'), t('Block module is disabled.'));
+    $this->assertTrue(module_exists('dashboard'), t('Dashboard module is enabled.'));
+    $this->drupalGet($this->update_url, array('external' => TRUE));
+    $this->assertText(t('Unresolved dependency'), t('The update process cannot proceed when a module dependency is not enabled.'));
+
+    // Test if modules required by the current install profile are not required
+    // to be enabled for an update to proceed.
+    module_enable(array('block'));
+    $this->assertTrue(module_exists('block'), t('Block module is enabled.'));
+    module_disable(array('overlay'));
+    $this->assertFalse(module_exists('overlay'), t('Overlay module is disabled.'));
+    $this->drupalGet($this->update_url, array('external' => TRUE));
+    $this->assertNoText(t('Unresolved dependency'), t('The update process can proceed when modules from the install profile are disabled.'));
+  }
+
+  /**
+   * Tests the effect of using the update script on the theme system.
+   */
+  function testThemeSystem() {
+    // Since visiting update.php triggers a rebuild of the theme system from an
+    // unusual maintenance mode environment, we check that this rebuild did not
+    // put any incorrect information about the themes into the database.
+    $original_theme_data = db_query("SELECT * FROM {system} WHERE type = 'theme' ORDER BY name")->fetchAll();
+    $this->drupalLogin($this->update_user);
+    $this->drupalGet($this->update_url, array('external' => TRUE));
+    $final_theme_data = db_query("SELECT * FROM {system} WHERE type = 'theme' ORDER BY name")->fetchAll();
+    $this->assertEqual($original_theme_data, $final_theme_data, t('Visiting update.php does not alter the information about themes stored in the database.'));
+  }
 }
 
 /**
@@ -1705,7 +1825,7 @@ class ShutdownFunctionsTest extends DrupalWebTestCase {
   }
 
   /**
-   * Test flood control mechanism clean-up.
+   * Test shutdown functions.
    */
   function testShutdownFunctions() {
     $arg1 = $this->randomName();
@@ -1713,5 +1833,47 @@ class ShutdownFunctionsTest extends DrupalWebTestCase {
     $this->drupalGet('system-test/shutdown-functions/' . $arg1 . '/' . $arg2);
     $this->assertText(t('First shutdown function, arg1 : @arg1, arg2: @arg2', array('@arg1' => $arg1, '@arg2' => $arg2)));
     $this->assertText(t('Second shutdown function, arg1 : @arg1, arg2: @arg2', array('@arg1' => $arg1, '@arg2' => $arg2)));
+
+    // Make sure exceptions displayed through _drupal_render_exception_safe()
+    // are correctly escaped.
+    $this->assertText('Drupal is &lt;blink&gt;awesome&lt;/blink&gt;.');
+  }
+}
+
+/**
+ * Functional tests compact mode.
+ */
+class CompactModeTest extends DrupalWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'Compact mode',
+      'description' => 'Tests compact mode functionality.',
+      'group' => 'System',
+    );
+  }
+
+  function setUp() {
+    parent::setUp();
+    $admin_user = $this->drupalCreateUser(array('access administration pages'));
+    $this->drupalLogin($admin_user);
+  }
+
+  /**
+   * Test compact mode.
+   */
+  function testCompactMode() {
+    $this->drupalGet('admin/compact/on');
+    $this->assertTrue($this->cookies['Drupal.visitor.admin_compact_mode']['value'], t('Compact mode turns on.'));
+    $this->drupalGet('admin/compact/on');
+    $this->assertTrue($this->cookies['Drupal.visitor.admin_compact_mode']['value'], t('Compact mode remains on after a repeat call.'));
+    $this->drupalGet('');
+    $this->assertTrue($this->cookies['Drupal.visitor.admin_compact_mode']['value'], t('Compact mode persists on new requests.'));
+
+    $this->drupalGet('admin/compact/off');
+    $this->assertEqual($this->cookies['Drupal.visitor.admin_compact_mode']['value'], 'deleted', t('Compact mode turns off.'));
+    $this->drupalGet('admin/compact/off');
+    $this->assertEqual($this->cookies['Drupal.visitor.admin_compact_mode']['value'], 'deleted', t('Compact mode remains off after a repeat call.'));
+    $this->drupalGet('');
+    $this->assertTrue($this->cookies['Drupal.visitor.admin_compact_mode']['value'], t('Compact mode persists on new requests.'));
   }
 }

@@ -635,20 +635,20 @@ class mediamosa_asset {
 
     // has_streamable_mediafiles.
     if ($add_has_streamable_mediafiles) {
-      $s_ids = implode("','", $a_asset_ids);
+      $ids = implode("','", $a_asset_ids);
       $mf = array();
       $result = mediamosa_db::db_query(sprintf("
         SELECT mf.asset_id, mf.uri, mamm.container_type, mamm.video_codec
         FROM {mediamosa_asset_mediafile} mf
         INNER JOIN {mediamosa_asset_mediafile_metadata} mamm USING (mediafile_id)
-        WHERE mf.asset_id IN ('%s')", $s_ids));
+        WHERE mf.asset_id IN ('%s')", $ids));
       foreach ($result as $row) {
         // It is FALSE in the beginning.
         if (!isset($mf[$row['asset_id']])) {
           $mf[$row['asset_id']] = FALSE;
         }
         // Get the info.
-        $a_response = mediamosa_server::get_streaming_info($row['container_type'], $row['video_codec'], $row['uri']);
+        $a_response = mediamosa_server::get_streaming_info($row['container_type'], $row['video_codec'], $row[mediamosa_asset_mediafile_db::URI]);
         // Set the mediafile has_streamable_mediafiles value.
         $mf[$row['asset_id']] = ($mf[$row['asset_id']] || $a_response['response_object_available'] == 'TRUE');
       }

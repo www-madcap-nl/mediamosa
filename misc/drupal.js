@@ -1,4 +1,4 @@
-// $Id: drupal.js,v 1.65 2010/03/10 15:14:38 dries Exp $
+// $Id: drupal.js,v 1.68 2010/05/24 07:22:12 dries Exp $
 
 var Drupal = Drupal || { 'settings': {}, 'behaviors': {}, 'locale': {} };
 
@@ -216,7 +216,7 @@ Drupal.formatPlural = function (count, singular, plural, args) {
   else {
     args['@count[' + index + ']'] = args['@count'];
     delete args['@count'];
-    return Drupal.t(plural.replace('@count', '@count[' + index + ']'));
+    return Drupal.t(plural.replace('@count', '@count[' + index + ']'), args);
   }
 };
 

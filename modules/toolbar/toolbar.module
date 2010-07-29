@@ -1,5 +1,5 @@
 <?php
-// $Id: toolbar.module,v 1.35 2010/03/10 14:46:23 dries Exp $
+// $Id: toolbar.module,v 1.43 2010/07/02 02:22:26 dries Exp $
 
 /**
  * @file
@@ -109,7 +109,7 @@ function theme_toolbar_toggle($variables) {
 function _toolbar_is_collapsed() {
   // PHP converts dots into underscores in cookie names to avoid problems with
   // its parser, so we use a converted cookie name.
-  return isset($_COOKIE['Drupal_admin_toolbar_collapsed']) ? $_COOKIE['Drupal_admin_toolbar_collapsed'] : 0;
+  return isset($_COOKIE['Drupal_toolbar_collapsed']) ? $_COOKIE['Drupal_toolbar_collapsed'] : 0;
 }
 
 /**
@@ -142,7 +142,7 @@ function toolbar_pre_render($toolbar) {
  * Add some page classes, so global page theming can adjust to the toolbar.
  */
 function toolbar_preprocess_html(&$vars) {
-  if (isset($vars['page_top']['toolbar']) && user_access('access toolbar')) {
+  if (isset($vars['page']['page_top']['toolbar']) && user_access('access toolbar')) {
     $vars['classes_array'][] = 'toolbar';
     if (!_toolbar_is_collapsed()) {
       $vars['classes_array'][] = 'toolbar-drawer';
@@ -151,14 +151,27 @@ function toolbar_preprocess_html(&$vars) {
 }
 
 /**
+ * Implements hook_preprocess_toolbar().
+ *
+ * Adding the 'overlay-displace-top' class to the toolbar pushes the overlay
+ * down, so it appears below the toolbar.
+ */
+function toolbar_preprocess_toolbar(&$variables) {
+  $variables['classes_array'][] = "overlay-displace-top";
+}
+
+/**
  * Implements hook_system_info_alter().
  *
- * If the overlay module is enabled, indicate that the 'page_top' region (in
- * which the toolbar will be displayed) is one of the overlay supplemental
- * regions that should be refreshed whenever its content is updated.
+ * Indicate that the 'page_top' region (in which the toolbar will be displayed)
+ * is an overlay supplemental region that should be refreshed whenever its
+ * content is updated.
+ *
+ * This information is provided for any module that might need to use it, not
+ * just the core Overlay module.
  */
 function toolbar_system_info_alter(&$info, $file, $type) {
-  if (module_exists('overlay') && $type == 'theme') {
+  if ($type == 'theme') {
     $info['overlay_supplemental_regions'][] = 'page_top';
   }
 }
@@ -266,14 +279,13 @@ function toolbar_view() {
  */
 function toolbar_get_menu_tree() {
   $tree = array();
-  $admin_link = db_query("SELECT * FROM {menu_links} WHERE menu_name = 'management' AND module = 'system' AND link_path = 'admin'")->fetchAssoc();
+  $admin_link = db_query('SELECT * FROM {menu_links} WHERE menu_name = :menu_name AND module = :module AND link_path = :path', array(':menu_name' => 'management', ':module' => 'system', ':path' => 'admin'))->fetchAssoc();
   if ($admin_link) {
-    // @todo Use a function like book_menu_subtree_data().
-    $tree = menu_tree_all_data('management', $admin_link, $admin_link['depth'] + 1);
-    // The tree will be a sub-tree with the admin link as a single root item.
-    // @todo It is wrong to assume it's the last.
-    $admin_link = array_pop($tree);
-    $tree = $admin_link['below'] ? $admin_link['below'] : array();
+    $tree = menu_build_tree('management', array(
+      'expanded' => array($admin_link['mlid']),
+      'min_depth' => $admin_link['depth'] + 1,
+      'max_depth' => $admin_link['depth'] + 1,
+    ));
   }
 
   return $tree;
@@ -282,14 +294,13 @@ function toolbar_get_menu_tree() {
 /**
  * Generate a links array from a menu tree array.
  *
- * Based on menu_navigation_links(). Adds in path based IDs, icon placeholders
- * and overlay classes for the links.
+ * Based on menu_navigation_links(). Adds path based IDs and icon placeholders
+ * to the links.
  */
 function toolbar_menu_navigation_links($tree) {
   $links = array();
   foreach ($tree as $item) {
     if (!$item['link']['hidden'] && $item['link']['access']) {
-      $class = '';
       // Make sure we have a path specific ID in place, so we can attach icons
       // and behaviors to the items.
       $id = str_replace(array('/', '<', '>'), array('-', '', ''), $item['link']['href']);
@@ -297,9 +308,9 @@ function toolbar_menu_navigation_links($tree) {
       $link = $item['link']['localized_options'];
       $link['href'] = $item['link']['href'];
       // Add icon placeholder.
-      $link['title'] = '<span class="icon"></span>' . $item['link']['title'];
-      // Add admin link ID and to-overlay class for the overlay.
-      $link['attributes'] = array('id' => 'toolbar-link-' . $id, 'class' => array('to-overlay'));
+      $link['title'] = '<span class="icon"></span>' . check_plain($item['link']['title']);
+      // Add admin link ID.
+      $link['attributes'] = array('id' => 'toolbar-link-' . $id);
       if (!empty($item['link']['description'])) {
         $link['title'] .= ' <span class="element-invisible">(' . $item['link']['description'] . ')</span>';
         $link['attributes']['title'] = $item['link']['description'];

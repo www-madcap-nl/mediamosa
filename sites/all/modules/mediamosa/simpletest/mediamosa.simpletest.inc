@@ -155,7 +155,6 @@ class MediaMosaTestCase extends DrupalWebTestCase {
    * Because drupal doesn't tear down our tables, we have to do it.
    */
   protected function tearDown() {
-    global $db_prefix;
 
     // Dump the log.
     $this->dump_watchdog();
@@ -173,27 +172,24 @@ class MediaMosaTestCase extends DrupalWebTestCase {
 
     // For some reason our tables are not dropped by teardown parent.
     // So we need to do it ourselfs.
-    if (preg_match('/simpletest\d+/', $db_prefix)) {
+    // We'll only drop tables from this simpletest.
+    $prefix = Database::getConnection()->prefixTables('{mediamosa_}') . '%';
 
-      // We'll only drop tables from this simpletest.
-      $prefix = Database::getConnection()->prefixTables('{mediamosa_}') . '%';
+    // Get tables that match our pattern.
+    $tables = db_find_tables($prefix);
 
-      // Get tables that match our pattern.
-      $tables = db_find_tables($prefix);
+    $matches = $ret = array();
+    foreach ($tables as $table) {
+      // Make sure we drop correct; tables MUST start with simpletest.
+      if (preg_match('/simpletest\d+mediamosa.*/', $table, $matches)) {
+        list($tmp, $name) = explode('mediamosa_', $table, 2);
 
-      $matches = $ret = array();
-      foreach ($tables as $table) {
-        // Make sure we drop correct; tables MUST start with simpletest.
-        if (preg_match('/simpletest\d+mediamosa.*/', $table, $matches)) {
-          list($tmp, $name) = explode('mediamosa_', $table, 2);
-
-          // If the drop fails then we consider that its already dropped.
-          try {
-            db_drop_table('mediamosa_' . $name);
-          }
-          catch (PDOException $e) {
-            // ignore.
-          }
+        // If the drop fails then we consider that its already dropped.
+        try {
+          db_drop_table('mediamosa_' . $name);
+        }
+        catch (PDOException $e) {
+          // ignore.
         }
       }
     }
@@ -654,7 +650,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     $node->{mediamosa_server_db::VERSION} = 0;
     $node->{mediamosa_server_db::SERVER_STATUS} = mediamosa_server_db::SERVER_STATUS_ON;
     $node->{mediamosa_server_db::SERVER_TYPE} = mediamosa_server_db::SERVER_TYPE_DOWNLOAD;
-    $node->{mediamosa_server_db::URI} = 'http://localhost/download/{TICKET}';
+    $node->{mediamosa_server_db::SERVER_URI} = 'http://localhost/download/{TICKET}';
     $node->{mediamosa_server_db::CONTAINERS} = NULL;
     $node->{mediamosa_server_db::OBJECT_CODE} = NULL;
     $node->{mediamosa_server_db::SERVER_NAME} = NULL;

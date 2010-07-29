@@ -1,5 +1,5 @@
 <?php
-// $Id: locale.inc,v 1.250 2010/03/10 14:23:31 dries Exp $
+// $Id: locale.inc,v 1.256 2010/06/03 13:57:41 dries Exp $
 
 /**
  * @file
@@ -126,9 +126,14 @@ function locale_language_from_user($languages) {
 function locale_language_from_session($languages) {
   $param = variable_get('locale_language_negotiation_session_param', 'language');
 
-  // Request parameter.
+  // Request parameter: we need to update the session parameter only if we have
+  // an authenticated user.
   if (isset($_GET[$param]) && isset($languages[$langcode = $_GET[$param]])) {
-    return $_SESSION[$param] = $langcode;
+    global $user;
+    if ($user->uid) {
+      $_SESSION[$param] = $langcode;
+    }
+    return $langcode;
   }
 
   // Session parameter.
@@ -386,6 +391,8 @@ function locale_add_language($langcode, $name = NULL, $native = NULL, $direction
   _locale_invalidate_js($langcode);
 
   watchdog('locale', 'The %language language (%code) has been created.', array('%language' => $name, '%code' => $langcode));
+
+  module_invoke_all('multilingual_settings_changed');
 }
 /**
  * @} End of "locale-api-add"
@@ -681,7 +688,7 @@ function _locale_import_one_string($op, $value = NULL, $mode = NULL, $lang = NUL
         $languages = language_list();
         if (($mode != LOCALE_IMPORT_KEEP) || empty($languages[$lang]->plurals)) {
           // Since we only need to parse the header if we ought to update the
-          // plural formula, only run this if we don't need to keep existing 
+          // plural formula, only run this if we don't need to keep existing
           // data untouched or if we don't have an existing plural formula.
           $header = _locale_import_parse_header($value['msgstr']);
 
@@ -1389,7 +1396,7 @@ function _locale_export_po($language = NULL, $output = NULL) {
   header("Content-Disposition: attachment; filename=$filename");
   header("Content-Type: text/plain; charset=utf-8");
   print $output;
-  exit();
+  drupal_exit();
 }
 
 /**
@@ -1635,35 +1642,12 @@ function _locale_rebuild_js($langcode = NULL) {
   }
 
   // Construct the array for JavaScript translations.
-  // We sort on plural so that we have all plural forms before singular forms.
-  $result = db_query("SELECT s.lid, s.source, t.plid, t.plural, t.translation FROM {locales_source} s LEFT JOIN {locales_target} t ON s.lid = t.lid AND t.language = :language WHERE s.location LIKE '%.js%' AND s.textgroup = :textgroup ORDER BY t.plural DESC", array(':language' => $language->language, ':textgroup' => 'default'));
+  // Only add strings with a translation to the translations array.
+  $result = db_query("SELECT s.lid, s.source, t.translation FROM {locales_source} s INNER JOIN {locales_target} t ON s.lid = t.lid AND t.language = :language WHERE s.location LIKE '%.js%' AND s.textgroup = :textgroup AND t.translation IS NOT NULL", array(':language' => $language->language, ':textgroup' => 'default'));
 
-  $translations = $plurals = array();
+  $translations = array();
   foreach ($result as $data) {
-    // Only add this to the translations array when there is actually a translation.
-    if (!empty($data->translation)) {
-      if ($data->plural) {
-        // When the translation is a plural form, first add it to another array and
-        // wait for the singular (parent) translation.
-        if (!isset($plurals[$data->plid])) {
-          $plurals[$data->plid] = array($data->plural => $data->translation);
-        }
-        else {
-          $plurals[$data->plid] += array($data->plural => $data->translation);
-        }
-      }
-      elseif (isset($plurals[$data->lid])) {
-        // There are plural translations for this translation, so get them from
-        // the plurals array and add them to the final translations array.
-        $translations[$data->source] = array($data->plural => $data->translation) + $plurals[$data->lid];
-        unset($plurals[$data->lid]);
-      }
-      else {
-        // There are no plural forms for this translation, so just add it to
-        // the translations array.
-        $translations[$data->source] = $data->translation;
-      }
-    }
+    $translations[$data->source] = $data->translation;
   }
 
   // Construct the JavaScript file, if there are translations.
@@ -1678,7 +1662,7 @@ function _locale_rebuild_js($langcode = NULL) {
     }
 
     $data .= "'strings': " . drupal_json_encode($translations) . " };";
-    $data_hash = md5($data);
+    $data_hash = drupal_hash_base64($data);
   }
 
   // Construct the filepath where JS translation files are stored.

@@ -1,5 +1,5 @@
 <?php
-// $Id: statistics.module,v 1.332 2010/03/12 15:56:29 dries Exp $
+// $Id: statistics.module,v 1.336 2010/05/29 07:53:44 dries Exp $
 
 /**
  * @file
@@ -51,7 +51,12 @@ function statistics_help($path, $arg) {
 function statistics_exit() {
   global $user;
 
-  drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
+  // When serving cached pages with the 'page_cache_without_database'
+  // configuration, system variables need to be loaded. This is a major
+  // performance decrease for non-database page caches, but with Statistics
+  // module, it is likely to also have 'statistics_enable_access_log' enabled,
+  // in which case we need to bootstrap to the session phase anyway.
+  drupal_bootstrap(DRUPAL_BOOTSTRAP_VARIABLES);
 
   if (variable_get('statistics_count_content_views', 0)) {
     // We are counting content views.
@@ -70,6 +75,7 @@ function statistics_exit() {
     }
   }
   if (variable_get('statistics_enable_access_log', 0)) {
+    drupal_bootstrap(DRUPAL_BOOTSTRAP_SESSION);
     // Log this page access.
     db_insert('accesslog')
       ->fields(array(
@@ -174,6 +180,7 @@ function statistics_menu() {
     'page arguments' => array('statistics_settings_form'),
     'access arguments' => array('administer statistics'),
     'file' => 'statistics.admin.inc',
+    'weight' => -15,
   );
   $items['user/%user/track/navigation'] = array(
     'title' => 'Track page visits',
@@ -303,12 +310,14 @@ function statistics_get($nid) {
  * Implements hook_block_info().
  */
 function statistics_block_info() {
+  $blocks = array();
+
   if (variable_get('statistics_count_content_views', 0)) {
     $blocks['popular']['info'] = t('Popular content');
     // Too dynamic to cache.
     $blocks['popular']['cache'] = DRUPAL_NO_CACHE;
-    return $blocks;
   }
+  return $blocks;
 }
 
 /**
@@ -341,21 +350,24 @@ function statistics_block_view($delta = '') {
 
     $daytop = variable_get('statistics_block_top_day_num', 0);
     if ($daytop && ($result = statistics_title_list('daycount', $daytop)) && ($node_title_list = node_title_list($result, t("Today's:")))) {
-      $content[] = $node_title_list;
+      $content['top_day'] = $node_title_list;
+      $content['top_day']['#suffix'] = '<br />';
     }
 
     $alltimetop = variable_get('statistics_block_top_all_num', 0);
     if ($alltimetop && ($result = statistics_title_list('totalcount', $alltimetop)) && ($node_title_list = node_title_list($result, t('All time:')))) {
-      $content[] = $node_title_list;
+      $content['top_all'] = $node_title_list;
+      $content['top_all']['#suffix'] = '<br />';
     }
 
     $lasttop = variable_get('statistics_block_top_last_num', 0);
     if ($lasttop && ($result = statistics_title_list('timestamp', $lasttop)) && ($node_title_list = node_title_list($result, t('Last viewed:')))) {
-      $content[] = $node_title_list;
+      $content['top_last'] = $node_title_list;
+      $content['top_last']['#suffix'] = '<br />';
     }
 
     if (count($content)) {
-      $block['content'] = implode('<br />', $content);
+      $block['content'] = $content;
       $block['subject'] = t('Popular content');
       return $block;
     }

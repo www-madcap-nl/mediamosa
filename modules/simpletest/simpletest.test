@@ -1,5 +1,5 @@
 <?php
-// $Id: simpletest.test,v 1.39 2010/03/03 19:46:26 dries Exp $
+// $Id: simpletest.test,v 1.43 2010/06/28 19:57:34 dries Exp $
 
 class SimpleTestFunctionalTest extends DrupalWebTestCase {
   /**
@@ -272,24 +272,30 @@ class SimpleTestFunctionalTest extends DrupalWebTestCase {
 
   /**
    * Check if the test is being run from inside a CURL request.
-   *
-   * @return The test is being run from inside a CURL request.
    */
   function inCURL() {
+    // We cannot rely on drupal_static('drupal_test_info') here, because
+    // 'in_child_site' would be FALSE for the parent site when we are
+    // executing the tests. Default to direct detection of the HTTP headers.
     return isset($_SERVER['HTTP_USER_AGENT']) && preg_match("/^simpletest\d+/", $_SERVER['HTTP_USER_AGENT']);
   }
 }
 
 /**
- * Test internal testing framework URL handling.
+ * Test internal testing framework browser.
  */
-class SimpleTestURLTestCase extends DrupalWebTestCase {
+class SimpleTestBrowserTestCase extends DrupalWebTestCase {
   public static function getInfo() {
     return array(
-      'name' => 'SimpleTest URL handling',
-      'description' => 'Test the URL handling in the testing framework.',
+      'name' => 'SimpleTest browser',
+      'description' => 'Test the internal browser of the testing framework.',
       'group' => 'SimpleTest',
     );
+  }
+
+  function setUp() {
+    parent::setUp();
+    variable_set('user_register', USER_REGISTER_VISITORS);
   }
 
   /**
@@ -314,6 +320,28 @@ class SimpleTestURLTestCase extends DrupalWebTestCase {
     $absolute = url($url, array('absolute' => TRUE));
     $this->assertEqual($absolute, $this->url, t('Passed and requested URL are equal.'));
     $this->assertEqual($this->url, $this->getAbsoluteUrl($this->url), t('Requested and returned absolute URL are equal.'));
+  }
+
+  /**
+   * Tests XPath escaping.
+   */
+  function testXPathEscaping() {
+    $testpage = <<< EOF
+<html>
+<body>
+<a href="link1">A "weird" link, just to bother the dumb "XPath 1.0"</a>
+<a href="link2">A second "even more weird" link, in memory of George O'Malley</a>
+</body>
+</html>
+EOF;
+    $this->drupalSetContent($testpage);
+
+    // Matches the first link.
+    $urls = $this->xpath('//a[text()=:text]', array(':text' => 'A "weird" link, just to bother the dumb "XPath 1.0"'));
+    $this->assertEqual($urls[0]['href'], 'link1', 'Match with quotes.');
+
+    $urls = $this->xpath('//a[text()=:text]', array(':text' => 'A second "even more weird" link, in memory of George O\'Malley'));
+    $this->assertEqual($urls[0]['href'], 'link2', 'Match with mixed single and double quotes.');
   }
 }
 
@@ -390,6 +418,26 @@ class SimpleTestMailCaptureTestCase extends DrupalWebTestCase {
     drupal_mail_system('drupal_mail_test', $index)->mail($message);
     $captured_emails = $this->drupalGetMails(array('id' => 'drupal_mail_test_4'));
     $this->assertEqual(count($captured_emails), 2, t('All e-mails with the same id are returned when filtering by id.'), t('E-mail'));
+  }
+}
+
+/**
+ * Test Folder creation
+ */
+class SimpleTestFolderTestCase extends DrupalWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'Testing SimpleTest setUp',
+      'description' => "This test will check SimpleTest's treatment of hook_install during setUp.  Image module is used for test.",
+      'group' => 'SimpleTest',
+    );
+  }
+
+  function testFolderSetup() {
+    if (module_exists('image')) {
+      $path = file_directory_path() . '/styles';
+      $this->assertTrue(file_prepare_directory($path, FALSE), "Directory created.");
+    }
   }
 }
 

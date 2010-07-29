@@ -353,7 +353,7 @@ class mediamosa_asset_mediafile {
       $items[$mediafile_id]['metadata']['container_type'] = isset($items[$mediafile_id]['metadata']['container_type']) ? $items[$mediafile_id]['metadata']['container_type'] : '';
       $items[$mediafile_id]['metadata']['video_codec'] = isset($items[$mediafile_id]['metadata']['video_codec']) ? $items[$mediafile_id]['metadata']['video_codec'] : '';
 
-      $response = mediamosa_server::get_streaming_info($items[$mediafile_id]['metadata']['container_type'], $items[$mediafile_id]['metadata']['video_codec'], $items[$mediafile_id]['uri']);
+      $response = mediamosa_server::get_streaming_info($items[$mediafile_id]['metadata']['container_type'], $items[$mediafile_id]['metadata']['video_codec'], $items[$mediafile_id][mediamosa_asset_mediafile_db::URI]);
       // Object.
       $items[$mediafile_id]['response_object_available'] = ($response['response_object_available'] ? self::RESPONSE_TRUE : self::RESPONSE_FALSE);
       // Plain.

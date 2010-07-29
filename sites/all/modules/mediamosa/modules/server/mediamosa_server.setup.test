@@ -88,12 +88,12 @@ class MediaMosaServerSetupTestCaseEga extends MediaMosaTestCaseEgaJob {
 
         switch ($enabled_server[mediamosa_server_db::SERVER_TYPE]) {
           case mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR:
-            $response = mediamosa_http::do_internal_call($enabled_server[mediamosa_server_db::URI], 'version');
+            $response = mediamosa_http::do_internal_call($enabled_server[mediamosa_server_db::SERVER_URI], 'version');
             break;
 
           case mediamosa_server_db::SERVER_TYPE_UPLOAD:
 
-            $server_url = mediamosa_http::build_url(mediamosa_http::parse_url($enabled_server[mediamosa_server_db::URI]));
+            $server_url = mediamosa_http::build_url(mediamosa_http::parse_url($enabled_server[mediamosa_server_db::SERVER_URI]));
             $this->pass(t('Found server with URL @url', array('@url' => $server_url)));
 
             // We know it will fail, but we dont care, we just want to know the version.
@@ -108,7 +108,7 @@ class MediaMosaServerSetupTestCaseEga extends MediaMosaTestCaseEgaJob {
         }
       }
       catch (Exception $e) {
-        $this->fail(t('Unable to execute version REST call on server @uri.', array('@uri' => $enabled_server[mediamosa_server_db::URI])));
+        $this->fail(t('Unable to execute version REST call on server @uri.', array('@uri' => $enabled_server[mediamosa_server_db::SERVER_URI])));
         $this->var_export_fail($e->getMessage());
         continue;
       }
@@ -132,7 +132,7 @@ class MediaMosaServerSetupTestCaseEga extends MediaMosaTestCaseEgaJob {
             'Compare of server with name @name, uri @uri, returned version @xml_ver with our version @our_ver',
             array(
               '@name' => $enabled_server[mediamosa_server_db::SERVER_NAME],
-              '@uri' => $enabled_server[mediamosa_server_db::URI],
+              '@uri' => $enabled_server[mediamosa_server_db::SERVER_URI],
               '@xml_ver' => $xml_ver,
               '@our_ver' => $our_ver
             )
@@ -140,7 +140,7 @@ class MediaMosaServerSetupTestCaseEga extends MediaMosaTestCaseEgaJob {
          );
       }
       catch (Exception $e) {
-        $this->fail(t('Unable to parse returned XML on server name @name, @uri.', array('@name' => $enabled_server[mediamosa_server_db::URI], '@uri' => $enabled_server[mediamosa_server_db::SERVER_NAME])));
+        $this->fail(t('Unable to parse returned XML on server name @name, @uri.', array('@name' => $enabled_server[mediamosa_server_db::SERVER_URI], '@uri' => $enabled_server[mediamosa_server_db::SERVER_NAME])));
         $this->var_export_fail($response->data);
         $this->var_export_fail($e->getMessage());
         continue;
@@ -158,7 +158,7 @@ class MediaMosaServerSetupTestCaseEga extends MediaMosaTestCaseEgaJob {
       $this->pass(strtr('Found download server, type: @type, host: @uri.',
         array(
           '@type' => $download_server[mediamosa_server_db::SERVER_TYPE],
-          '@uri' => $download_server[mediamosa_server_db::URI],
+          '@uri' => $download_server[mediamosa_server_db::SERVER_URI],
         )
       ));
     }

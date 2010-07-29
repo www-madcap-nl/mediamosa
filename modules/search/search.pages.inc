@@ -1,5 +1,5 @@
 <?php
-// $Id: search.pages.inc,v 1.17 2010/03/12 02:29:23 dries Exp $
+// $Id: search.pages.inc,v 1.20 2010/06/30 15:47:50 dries Exp $
 
 /**
  * @file
@@ -14,14 +14,14 @@ function search_view($type = 'node') {
   // the search query URL clean as a whistle:
   // search/type/keyword+keyword
   if (!isset($_POST['form_id'])) {
-    if ($type == '') {
-      // Note: search/node can not be a default tab because it would take on the
-      // path of its parent (search). It would prevent remembering keywords when
-      // switching tabs. This is why we drupal_goto to it from the parent instead.
-      drupal_goto('search/node');
+    $keys = search_get_keys();
+    if ($_GET['q'] != 'search' && $type == 'node' && !$keys) {
+      // Due to how search_menu() sets up the tabs, path search/node would
+      // display two sets of tabs. So instead, if there are no keywords and
+      // we're on the node tab, just redirect to the bare 'search' path.
+      drupal_goto('search');
     }
 
-    $keys = search_get_keys();
     // Only perform search if there is non-whitespace search term:
     $results = '';
     if (trim($keys)) {
@@ -34,32 +34,13 @@ function search_view($type = 'node') {
 
       // Construct the search form.
       $build['search_form'] = drupal_get_form('search_form', NULL, $keys, $type);
-      $build['search_results'] = array(
-        '#theme' => 'search_results_listing',
-        '#content' => $results,
-      );
+      $build['search_results'] = array('#markup' => $results);
 
       return $build;
     }
   }
 
   return drupal_get_form('search_form', NULL, empty($keys) ? '' : $keys, $type);
-}
-
-/**
- * Theme the listing of search results
- *
- * @param $variables
- *   An associative array containing:
- *   - title: The subject of the listing.
- *   - content: The content of the listing.
- *
- * @return
- *   A string containing the listing output.
- */
-function theme_search_results_listing($variables) {
-  $output = '<h2 class="title">' . $variables['title'] . '</h2><div>' . $variables['content'] . '</div>';
-  return $output;
 }
 
 /**

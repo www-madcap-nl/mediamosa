@@ -1,5 +1,5 @@
 <?php
-// $Id: block.api.php,v 1.9 2009/10/17 05:50:28 webchick Exp $
+// $Id: block.api.php,v 1.12 2010/04/28 12:36:26 dries Exp $
 
 /**
  * @file
@@ -67,6 +67,25 @@ function hook_block_info() {
   );
 
   return $blocks;
+}
+
+/**
+ * Change block definition before saving to the database.
+ *
+ * @param $blocks
+ *   A multidimensional array of blocks keyed by the defining module and delta
+ *   the value is a block as seen in hook_block_info(). This hook is fired
+ *   after the blocks are collected from hook_block_info() and the database,
+ *   right before saving back to the database.
+ * @param $theme
+ *   The theme these blocks belong to.
+ * @param $code_blocks
+ *   The blocks as defined in hook_block_info before overwritten by the
+ *   database data.
+ */
+function hook_block_info_alter(&$blocks, $theme, $code_blocks) {
+  // Disable the login block.
+  $blocks['user']['login']['status'] = 0;
 }
 
 /**
@@ -173,7 +192,7 @@ function hook_block_view($delta = '') {
  *   - delta: The identifier for the block within that module, as defined within
  *     hook_block_info().
  *
- * @see hook_block_view_alter()
+ * @see hook_block_view_MODULE_DELTA_alter()
  * @see hook_block_view()
  */
 function hook_block_view_alter(&$data, $block) {
@@ -193,10 +212,6 @@ function hook_block_view_alter(&$data, $block) {
  *
  * Modules can implement hook_block_view_MODULE_DELTA_alter() to modify a
  * specific block, rather than implementing hook_block_view_alter().
- *
- * Note that this hook fires before hook_block_view_alter(). Therefore, all
- * implementations of hook_block_view_MODULE_DELTA_alter() will run before all
- * implementations of hook_block_view_alter(), regardless of the module order.
  *
  * @param $data
  *   An array of data, as returned from the hook_block_view() implementation of
@@ -240,7 +255,7 @@ function hook_block_view_MODULE_DELTA_alter(&$data, $block) {
  * This example shows how to achieve language specific visibility setting for
  * blocks.
  */
-function hook_block_info_alter(&$blocks) {
+function hook_block_list_alter(&$blocks) {
   global $language, $theme_key;
 
   $result = db_query('SELECT module, delta, language FROM {my_table}');
@@ -252,7 +267,7 @@ function hook_block_info_alter(&$blocks) {
   foreach ($blocks as $key => $block) {
     // Any module using this alter should inspect the data before changing it,
     // to ensure it is what they expect.
-    if ($block->theme != $theme_key || $block->status != 1) {
+    if (!isset($block->theme) || !isset($block->status) || $block->theme != $theme_key || $block->status != 1) {
       // This block was added by a contrib module, leave it in the list.
       continue;
     }

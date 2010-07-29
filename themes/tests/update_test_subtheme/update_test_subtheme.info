@@ -6,8 +6,8 @@ engine = phptemplate
 base theme = update_test_basetheme
 hidden = TRUE
 
-; Information added by drupal.org packaging script on 2010-03-21
-version = "7.0-alpha3"
+; Information added by drupal.org packaging script on 2010-07-09
+version = "7.0-alpha6"
 project = "drupal"
-datestamp = "1269192313"
+datestamp = "1278634806"
 

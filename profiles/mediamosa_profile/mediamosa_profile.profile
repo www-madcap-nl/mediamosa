@@ -56,9 +56,25 @@ function mediamosa_profile_form_alter(&$form, $form_state, $form_id) {
 }
 
 /**
+ * Set up title.
+ */
+function _mediamosa_profile_get_title() {
+
+  $inc = include_once (DRUPAL_ROOT . '/sites/all/modules/mediamosa/mediamosa.version.inc');
+
+  // Try to include the settings file.
+  $version = $inc ? mediamosa_version::get_current_version() : null;
+
+  return 'Installing MediaMosa ' . ($version ? $version[mediamosa_version::MAJOR] . '.' .  $version[mediamosa_version::MINOR] . '.' . $version[mediamosa_version::RELEASE] . ' build ' . $version[mediamosa_version::BUILD] : '- unkwown version.');
+}
+
+/**
  * Implementation of hook_install_tasks().
  */
 function mediamosa_profile_install_tasks() {
+
+  drupal_set_title(_mediamosa_profile_get_title());
+
   $tasks = array(
     'mediamosa_profile_storage_location_form' => array(
       'display_name' => st('Storage location'),
@@ -202,7 +218,7 @@ function mediamosa_profile_php_settings($install_state) {
       drupal_set_message(t('post_max_size should be at least 100M. Currently: %current_value', array('%current_value' => $php_post_max_size)), 'warning');
   }
   $output .= t('post_max_size should be at least 100M. Currently: %current_value', array('%current_value' => $php_post_max_size)) . '<br />';
-
+/*
   $php_max_input_time = ini_get('max_input_time');
   if ($php_max_input_time < 7200) {
     drupal_set_message(t('max_input_time should be at least 7200. Currently: %current_value', array('%current_value' => $php_max_input_time)), 'warning');
@@ -214,7 +230,7 @@ function mediamosa_profile_php_settings($install_state) {
     drupal_set_message(t('max_execution_time should be at least 7200. Currently: %current_value', array('%current_value' => $php_max_execution_time)), 'warning');
   }
   $output .= t('max_execution_time should be at least 7200. Currently: %current_value', array('%current_value' => $php_max_execution_time)) . '<br />';
-
+*/
 
   return $error ? $output : NULL;
 }
@@ -341,26 +357,26 @@ function mediamosa_profile_configure_server($install_state) {
   // Mediamosa server table.
   db_query("
     UPDATE {mediamosa_server}
-    SET uri = REPLACE(uri, 'http://localhost', :server)
-    WHERE LOCATE('http://localhost', uri) > 0", array(
-    ':server' => "http://$server_name",
+    SET server_uri = REPLACE(server_uri, 'http://localhost', :server)
+    WHERE LOCATE('http://localhost', server_uri) > 0", array(
+    ':server' => 'http://' . $server_name,
   ));
   db_query("
     UPDATE {mediamosa_server}
     SET uri_upload_progress = REPLACE(uri_upload_progress, 'http://example.org', :server)
     WHERE LOCATE('http://example.org', uri_upload_progress) > 0", array(
-    ':server' => "http://$server_name",
+    ':server' => 'http://' . $server_name,
   ));
 
   // Mediamosa node revision table.
   $result = db_query("SELECT nid, vid, revision_data FROM {mediamosa_node_revision}");
   foreach ($result as $record) {
     $revision_data = unserialize($record->revision_data);
-    if (isset($revision_data['uri'])) {
-      $revision_data['uri'] = str_replace('http://localhost', "http://$server_name", $revision_data['uri']);
+    if (isset($revision_data['server_uri'])) {
+      $revision_data['server_uri'] = str_replace('http://localhost', 'http://' . $server_name, $revision_data['server_uri']);
     }
     if (isset($revision_data['uri_upload_progress'])) {
-      $revision_data['uri_upload_progress'] = str_replace('http://example.org', "http://$server_name", $revision_data['uri_upload_progress']);
+      $revision_data['uri_upload_progress'] = str_replace('http://example.org', 'http://' . $server_name, $revision_data['uri_upload_progress']);
     }
     db_query("
       UPDATE {mediamosa_node_revision}
@@ -375,11 +391,10 @@ function mediamosa_profile_configure_server($install_state) {
 
   // Configure.
   // URL REST.
-  variable_set('mediamosa_cron_url_app', "http://app.$server_name.local");
-
+  variable_set('mediamosa_cron_url_app', 'http://app.' . $server_name . (substr($server_name, -6) == '.local' ? '' : '.local'));
 
   // Configure mediamosa connector.
-  variable_set('mediamosa_connector_url', "http://$server_name");
+  variable_set('mediamosa_connector_url', 'http://' . $server_name);
   $result = db_query("SELECT app_name, shared_key FROM {mediamosa_app} LIMIT 1");
   foreach ($result as $record) {
     variable_set('mediamosa_connector_username', $record->app_name);
@@ -413,12 +428,15 @@ function mediamosa_profile_cron_settings_form() {
   $form['cron']['cron_every_minute'] = array(
     '#type' => 'textarea',
     '#title' => t('Cron every minute'),
-    '#description' => t('You have to copy this content to a file to your home directory: <code>~/bin/cron_every_minute.sh.</code><br />After, you have to modify the file permissions:<br />
+    '#attributes' => array('style' => 'font-family: Fixed, monospace;'),
+  '#description' => t('You have to copy this content to a file to your home directory: <code>~/bin/cron_every_minute.sh.</code><br />After, you have to modify the file permissions:<br />
     <code>
       chmod a+x ~/bin/cron_every_minute.sh<br />
     </code>'),
     '#default_value' => '#!/bin/sh
-/usr/bin/wget -q --spider http://localhost/cron.php?cron_key=' . variable_get('cron_key', '') . ' --header="Host: ' . $server_name . '"',
+
+#MediaMosa Cron.
+/usr/bin/wget -O - -q -t 1 --header="Host: ' . $server_name . '" http://localhost/cron.php?cron_key=' . variable_get('cron_key', ''),
     '#cols' => 60,
     '#rows' => 5,
   );
@@ -427,12 +445,12 @@ function mediamosa_profile_cron_settings_form() {
     '#type' => 'textarea',
     '#title' => t('Crontab'),
     '#description' => t('After, you have to modify your crontab: <code>crontab -e</code><br />Add these lines.'),
+    '#attributes' => array('style' => 'font-family: Fixed, monospace;'),
     '#default_value' => '# Mediamosa 2
 * * * * * ~/bin/cron_every_minute.sh',
     '#cols' => 60,
     '#rows' => 5,
   );
-
 
   // Apache.
 
@@ -445,45 +463,153 @@ function mediamosa_profile_cron_settings_form() {
     '#collapsible' => FALSE,
     '#collapsed' => FALSE,
     '#title' => t('Apache'),
+    '#attributes' => array('style' => 'font-family: Fixed, monospace;'),
     '#description' => t("You have to set up your Apache2 following this instruction:<br />
 1) Change your site's settings in <code>/etc/apache2/sites-enabled/your-site</code>.<br />
 First save your original file, then insert this code to your settings file.<br />
 2) Restart your Apache: <code>sudo /etc/init.d/apache2 restart</code><br />") . (strpos($server_name, '/') === FALSE ? '' : t("<b>It is strongly recommended, that you use server name like '<code>@mediamosa</code>', when you install Mediamosa, and not like '<code>@server_name</code>'.</b>", array('@mediamosa' => (substr($server_name, -1) == '/' ? 'mediamosa' : substr($server_name, strrpos($server_name, '/')+1)), '@server_name' => $server_name,))),
   );
 
+  $server_name_clean = substr($server_name, -6) == '.local' ? substr($server_name, 0, strlen($server_name) - 6) : $server_name;
+
   $form['apache']['apache'] = array(
     '#type' => 'textarea',
     '#title' => t('Apache'),
-    '#default_value' => "<VirtualHost *>
-  ServerName $server_name
-  ServerAlias $server_name.local app.$server_name.local upload.$server_name.local download.$server_name.local
-  DocumentRoot $document_root
+    '#attributes' => array('style' => 'font-family: Fixed, monospace;'),
+    '#default_value' => "<VirtualHost *:80>
+    Servername $server_name_clean.local
+    ServerAlias beheer.$server_name_clean.local www.$server_name_clean.local
+    ServerAdmin webmaster@localhost
+    DocumentRoot $document_root
+    <Directory $document_root>
+        Options FollowSymLinks MultiViews
+        AllowOverride All
+        Order allow,deny
+        allow from all
+    </Directory>
 
-  <Directory $document_root>
-   Options Indexes FollowSymLinks MultiViews
-   AllowOverride All
-    Order deny,allow
-    Allow from All
-  </Directory>
+    ErrorLog /var/log/apache2/$server_name_clean\_error.log
+    CustomLog /var/log/apache2/$server_name_clean\_access.log combined
+    ServerSignature On
 
-  Alias /ticket $mount_point/links
-  <Directory $mount_point/links>
-   Options FollowSymLinks
-   AllowOverride All
-    Order deny,allow
-    Allow from All
-  </Directory>
+    Alias /server-status $document_root
+    <Directory $document_root/serverstatus>
+        SetHandler server-status
+        Order deny,allow
+        Deny from all
+        Allow from 127.0.0.1
+     </Directory>
 
-  LogLevel warn
-  ErrorLog /var/log/apache2/error.log
-  CustomLog /var/log/apache2/access.log combined
+    # ticket
+    Alias /ticket $mount_point/links
+    <Directory $mount_point/links>
+      Options FollowSymLinks
+      AllowOverride All
+      Order deny,allow
+      Allow from All
+    </Directory>
+</VirtualHost>
 
-  <IfModule mod_php5.c>
-    php_admin_value post_max_size 2000M
-    php_admin_value upload_max_filesize 2000M
-    php_admin_value memory_limit 256M
-  </IfModule>
+<VirtualHost *:80>
+    Servername app1.$server_name_clean.local
+    ServerAdmin webmaster@localhost
+    DocumentRoot $document_root
+    <Directory $document_root>
+        Options FollowSymLinks MultiViews
+        AllowOverride All
+        Order allow,deny
+        allow from all
+    </Directory>
 
+    ErrorLog /var/log/apache2/app1.$server_name_clean\_error.log
+    CustomLog /var/log/apache2/app1.$server_name_clean\_access.log combined
+    ServerSignature On
+</VirtualHost>
+
+<VirtualHost *:80>
+    Servername app2.$server_name_clean.local
+    ServerAdmin webmaster@localhost
+    DocumentRoot $document_root
+    <Directory $document_root>
+        Options FollowSymLinks MultiViews
+        AllowOverride All
+        Order allow,deny
+        allow from all
+    </Directory>
+
+    ErrorLog /var/log/apache2/app2.$server_name_clean\_error.log
+    CustomLog /var/log/apache2/app2.$server_name_clean\_access.log combined
+    ServerSignature On
+</VirtualHost>
+
+<VirtualHost *:80>
+    Servername upload.$server_name_clean.local
+    ServerAdmin webmaster@localhost
+    DocumentRoot $document_root
+    <Directory $document_root>
+        Options FollowSymLinks MultiViews
+        AllowOverride All
+        Order allow,deny
+        allow from all
+    </Directory>
+
+    <IfModule mod_php5.c>
+        php_admin_value post_max_size 2008M
+        php_admin_value upload_max_filesize 2000M
+        php_admin_value memory_limit 64M
+    </IfModule>
+
+    ErrorLog /var/log/apache2/upload.$server_name_clean\_error.log
+    CustomLog /var/log/apache2/upload.$server_name_clean\_access.log combined
+    ServerSignature On
+</VirtualHost>
+
+<VirtualHost *:80>
+    Servername download.$server_name_clean.local
+    ServerAdmin webmaster@localhost
+    DocumentRoot $document_root
+    <Directory $document_root>
+        Options FollowSymLinks MultiViews
+        AllowOverride All
+        Order allow,deny
+        allow from all
+    </Directory>
+
+    ErrorLog /var/log/apache2/download.$server_name_clean\_error.log
+    CustomLog /var/log/apache2/download.$server_name_clean\_access.log combined
+    ServerSignature On
+</VirtualHost>
+
+<VirtualHost *:80>
+    Servername job1.$server_name_clean.local
+    ServerAdmin webmaster@localhost
+    DocumentRoot $document_root
+    <Directory $document_root>
+        Options FollowSymLinks MultiViews
+        AllowOverride All
+        Order allow,deny
+        allow from all
+    </Directory>
+
+    ErrorLog /var/log/apache2/job1.$server_name_clean\_error.log
+    CustomLog /var/log/apache2/job1.$server_name_clean\_access.log combined
+    ServerSignature On
+</VirtualHost>
+
+<VirtualHost *:80>
+    Servername job2.$server_name_clean.local
+    ServerAdmin webmaster@localhost
+    DocumentRoot $document_root
+    <Directory $document_root>
+        Options FollowSymLinks MultiViews
+        AllowOverride All
+        Order allow,deny
+        allow from all
+    </Directory>
+
+    ErrorLog /var/log/apache2/job2.$server_name_clean\_error.log
+    CustomLog /var/log/apache2/job2.$server_name_clean\_access.log combined
+    ServerSignature On
 </VirtualHost>",
     '#cols' => 60,
     '#rows' => 40,
@@ -503,6 +629,7 @@ First save your original file, then insert this code to your settings file.<br /
   $form['migration']['settings'] = array(
     '#type' => 'textarea',
     '#title' => t('Migration'),
+    '#attributes' => array('style' => 'font-family: Fixed, monospace;'),
     '#default_value' => "\$databases['mig_memo']['default'] = array(
   'driver' => 'mysql',
   'database' => 'your_old_database',
@@ -518,7 +645,7 @@ First save your original file, then insert this code to your settings file.<br /
   'host' => 'localhost'
 );",
     '#cols' => 60,
-    '#rows' => 20,
+    '#rows' => 15,
   );
 
   $form['continue'] = array(

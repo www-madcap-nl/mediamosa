@@ -1,5 +1,5 @@
 <?php
-// $Id: node.tokens.inc,v 1.11 2010/01/14 05:53:55 webchick Exp $
+// $Id: node.tokens.inc,v 1.15 2010/06/29 00:57:19 dries Exp $
 
 /**
  * @file
@@ -30,10 +30,6 @@ function node_token_info() {
   $node['tnid'] = array(
     'name' => t("Translation set ID"),
     'description' => t("The unique ID of the original-language version of this node, if one exists."),
-  );
-  $node['uid'] = array(
-    'name' => t("User ID"),
-    'description' => t("The unique ID of the user who posted the node."),
   );
   $node['type'] = array(
     'name' => t("Content type"),
@@ -125,30 +121,6 @@ function node_tokens($type, $tokens, array $data = array(), array $options = arr
           $replacements[$original] = $node->tnid;
           break;
 
-        case 'uid':
-          $replacements[$original] = $node->uid;
-          break;
-
-        case 'name':
-          $replacements[$original] = $sanitize ? check_plain($node->name) : $node->name;
-          break;
-
-        case 'title':
-          $replacements[$original] = $sanitize ? check_plain($node->title) : $node->title;
-          break;
-
-        case 'body':
-          if (!empty($node->body)) {
-            $replacements[$original] = $sanitize ? $node->body[LANGUAGE_NONE][0]['safe'] : $node->body[LANGUAGE_NONE][0]['value'];
-          }
-          break;
-
-        case 'summary':
-          if (!empty($node->body)) {
-            $replacements[$original] = $sanitize ? $node->body[LANGUAGE_NONE][0]['safe_summary'] : $node->body[LANGUAGE_NONE][0]['summary'];
-          }
-          break;
-
         case 'type':
           $replacements[$original] = $sanitize ? check_plain($node->type) : $node->type;
           break;
@@ -156,6 +128,20 @@ function node_tokens($type, $tokens, array $data = array(), array $options = arr
         case 'type-name':
           $type_name = node_type_get_name($node);
           $replacements[$original] = $sanitize ? check_plain($type_name) : $type_name;
+          break;
+
+        case 'title':
+          $replacements[$original] = $sanitize ? check_plain($node->title) : $node->title;
+          break;
+
+        case 'body':
+        case 'summary':
+          if (!empty($node->body)) {
+            $item = $node->body[$node->language][0];
+            $column = ($name == 'body') ? 'value' : 'summary';
+            $instance = field_info_instance('node', 'body', $node->type);
+            $replacements[$original] = $sanitize ? _text_sanitize($instance, $node->language, $item, $column) : $item[$column];
+          }
           break;
 
         case 'language':

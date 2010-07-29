@@ -36,7 +36,17 @@
  * Implements hook_load().
  */
 function mediamosa_server_load(&$nodes) {
-  return mediamosa_node_revision::load($nodes);
+   mediamosa_node_revision::load($nodes);
+
+   // Fix for uri rename.
+   foreach ($nodes as $key => $node) {
+     if (isset($node->uri) && !isset($node->{mediamosa_server_db::SERVER_URI})) {
+       $nodes[$key]->{mediamosa_server_db::SERVER_URI} = $node->uri;
+       unset($nodes[$key]->uri);
+     }
+   }
+
+   return $nodes;
 }
 
 /**
@@ -187,7 +197,7 @@ function mediamosa_server_view($node, $view_mode = 'full') {
 
   // The fields we want to show.
   $fields = array(
-    mediamosa_server_db::URI => t('URI / URL'),
+    mediamosa_server_db::SERVER_URI => t('URI / URL'),
     mediamosa_server_db::URI_UPLOAD_PROGRESS => t('URI upload progress'),
     mediamosa_server_db::CONTAINERS => t('Containers'),
     mediamosa_server_db::SLOTS => t('Slots'),
@@ -217,7 +227,7 @@ function mediamosa_server_view($node, $view_mode = 'full') {
       unset($fields[mediamosa_server_db::OBJECT_CODE]);
       break;
     case mediamosa_server_db::SERVER_TYPE_UPLOAD:
-      unset($fields[mediamosa_server_db::URI]);
+      unset($fields[mediamosa_server_db::SERVER_URI]);
       unset($fields[mediamosa_server_db::CONTAINERS]);
       unset($fields[mediamosa_server_db::OBJECT_CODE]);
       unset($fields[mediamosa_server_db::SLOTS]);
@@ -349,24 +359,24 @@ function mediamosa_server_form($node, &$form_state) {
   );
 
   if (in_array($server_type, array(mediamosa_server_db::SERVER_TYPE_DOWNLOAD, mediamosa_server_db::SERVER_TYPE_UPLOAD, mediamosa_server_db::SERVER_TYPE_STILL, mediamosa_server_db::SERVER_TYPE_STREAMING))) {
-    $form['mediamosa_server'][mediamosa_server_db::URI] = array(
+    $form['mediamosa_server'][mediamosa_server_db::SERVER_URI] = array(
       '#type' => 'textfield',
       '#required' => TRUE,
       '#title' => t('URI'),
       '#description' => t('{TICKET} is available for use in the URI.'),
-      '#default_value' => mediamosa_node::default_value(mediamosa_server_db::URI, $node),
-      '#maxlength' => mediamosa_server_db::URI_LENGTH,
+      '#default_value' => mediamosa_node::default_value(mediamosa_server_db::SERVER_URI, $node),
+      '#maxlength' => mediamosa_server_db::SERVER_URI_LENGTH,
     );
   }
 
   if (in_array($server_type, array(mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR))) {
-    $form['mediamosa_server'][mediamosa_server_db::URI] = array(
+    $form['mediamosa_server'][mediamosa_server_db::SERVER_URI] = array(
       '#type' => 'textfield',
       '#title' => t('URI'),
       '#description' => t('URI or URL server.'),
       '#required' => TRUE,
-      '#default_value' => mediamosa_node::default_value(mediamosa_server_db::URI, $node),
-      '#maxlength' => mediamosa_server_db::URI_LENGTH,
+      '#default_value' => mediamosa_node::default_value(mediamosa_server_db::SERVER_URI, $node),
+      '#maxlength' => mediamosa_server_db::SERVER_URI_LENGTH,
     );
 
     $form['mediamosa_server'][mediamosa_server_db::SLOTS] = array(

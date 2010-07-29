@@ -1,5 +1,5 @@
 <?php
-// $Id: database_test.test,v 1.83 2010/03/07 08:03:45 webchick Exp $
+// $Id: database_test.test,v 1.93 2010/05/28 10:13:38 dries Exp $
 
 /**
  * Dummy class for fetching into a class.
@@ -456,7 +456,7 @@ class DatabaseInsertTestCase extends DatabaseTestCase {
     $query->execute();
 
     $num_records_after = db_query('SELECT COUNT(*) FROM {test}')->fetchField();
-    $this->assertIdentical($num_records_before + 1, (int)$num_records_after, t('Record inserts correctly.'));
+    $this->assertIdentical($num_records_before + 1, (int) $num_records_after, t('Record inserts correctly.'));
     $saved_age = db_query('SELECT age FROM {test} WHERE name = :name', array(':name' => 'Yoko'))->fetchField();
     $this->assertIdentical($saved_age, '29', t('Can retrieve after inserting.'));
   }
@@ -1015,7 +1015,6 @@ class DatabaseDeleteTruncateTestCase extends DatabaseTestCase {
     $this->assertEqual($num_records_before, $num_records_after + $num_deleted, t('Deletion adds up.'));
   }
 
-
   /**
    * Confirm that we can truncate a whole table successfully.
    */
@@ -1272,6 +1271,27 @@ class DatabaseSelectTestCase extends DatabaseTestCase {
     }
 
     $this->assertEqual($num_records, 4, t('Returned the correct number of rows.'));
+  }
+
+  /**
+   * Test rudimentary SELECT statement with a COMMENT.
+   */
+  function testSimpleComment() {
+    $query = db_select('test')->comment('Testing query comments');
+    $name_field = $query->addField('test', 'name');
+    $age_field = $query->addField('test', 'age', 'age');
+    $result = $query->execute();
+
+    $num_records = 0;
+    foreach ($result as $record) {
+      $num_records++;
+    }
+
+    $query = (string)$query;
+    $expected = "/* Testing query comments */ SELECT test.name AS name, test.age AS age\nFROM \n{test} test";
+
+    $this->assertEqual($num_records, 4, t('Returned the correct number of rows.'));
+    $this->assertEqual($query, $expected, t('The flattened query contains the comment string.'));
   }
 
   /**
@@ -1835,7 +1855,7 @@ class DatabaseSelectComplexTestCase extends DatabaseTestCase {
     $task_field = $query->addField('t', 'task');
     $query->orderBy($count_field);
     $query->groupBy($task_field);
-    $query->havingCondition('COUNT(task)', 2, '>=');
+    $query->having('COUNT(task) >= 2');
     $result = $query->execute();
 
     $num_records = 0;
@@ -1971,6 +1991,20 @@ class DatabaseSelectComplexTestCase extends DatabaseTestCase {
 
     $job = $query->execute()->fetchField();
     $this->assertEqual($job, 'Songwriter', t('Correct data retrieved.'));
+  }
+
+  /**
+   * Confirm we can join on a single table twice with a dynamic alias.
+   */
+  function testJoinTwice() {
+    $query = db_select('test')->fields('test');
+    $alias = $query->join('test', 'test', 'test.job = %alias.job');
+    $query->addField($alias, 'name', 'othername');
+    $query->addField($alias, 'job', 'otherjob');
+    $query->where("$alias.name <> test.name");
+    $crowded_job = $query->execute()->fetch();
+    $this->assertEqual($crowded_job->job, $crowded_job->otherjob, t('Correctly joined same table twice.'));
+    $this->assertNotEqual($crowded_job->name, $crowded_job->othername, t('Correctly joined same table twice.'));
   }
 }
 
@@ -2247,7 +2281,7 @@ class DatabaseTaggingTestCase extends DatabaseTestCase {
 /**
  * Select alter tests.
  *
- * @see database_test_query_alter().
+ * @see database_test_query_alter()
  */
 class DatabaseAlterTestCase extends DatabaseTestCase {
 
@@ -2326,22 +2360,6 @@ class DatabaseAlterTestCase extends DatabaseTestCase {
     $this->assertEqual($records[0]->$pid_field, 1, t('Correct data retrieved.'));
     $this->assertEqual($records[0]->$task_field, 'sleep', t('Correct data retrieved.'));
   }
-}
-
-/**
- * Select alter tests, part 2.
- *
- * @see database_test_query_alter().
- */
-class DatabaseAlter2TestCase extends DatabaseTestCase {
-
-  public static function getInfo() {
-    return array(
-      'name' => 'Query altering tests, part 2',
-      'description' => 'Test the hook_query_alter capabilities of the Select builder.',
-      'group' => 'Database',
-    );
-  }
 
   /**
    * Test that we can alter the fields of a query.
@@ -2390,6 +2408,31 @@ class DatabaseAlter2TestCase extends DatabaseTestCase {
 
     $this->assertEqual($num_records, 4, t('Returned the correct number of rows.'));
   }
+
+  /**
+   * Test that we can do basic alters on subqueries.
+   */
+  function testSimpleAlterSubquery() {
+    // Create a sub-query with an alter tag.
+    $subquery = db_select('test', 'p');
+    $subquery->addField('p', 'name');
+    $subquery->addField('p', 'id');
+    // Pick out George.
+    $subquery->condition('age', 27);
+    $subquery->addExpression("age*2", 'double_age');
+    // This query alter should change it to age * 3.
+    $subquery->addTag('database_test_alter_change_expressions');
+
+    // Create a main query and join to sub-query.
+    $query = db_select('test_task', 'tt');
+    $query->join($subquery, 'pq', 'pq.id = tt.pid');
+    $age_field = $query->addField('pq', 'double_age');
+    $name_field = $query->addField('pq', 'name');
+
+    $record = $query->execute()->fetch();
+    $this->assertEqual($record->$name_field, 'George', t('Fetched name is correct.'));
+    $this->assertEqual($record->$age_field, 27*3, t('Fetched age expression is correct.'));
+  }
 }
 
 /**
@@ -2434,11 +2477,11 @@ class DatabaseRegressionTestCase extends DatabaseTestCase {
   }
 
   /**
-   * Test the db_column_exists() function.
+   * Test the db_field_exists() function.
    */
-  function testDBColumnExists() {
-    $this->assertIdentical(TRUE, db_column_exists('node', 'nid'), t('Returns true for existent column.'));
-    $this->assertIdentical(FALSE, db_column_exists('node', 'nosuchcolumn'), t('Returns false for nonexistent column.'));
+  function testDBFieldExists() {
+    $this->assertIdentical(TRUE, db_field_exists('node', 'nid'), t('Returns true for existent column.'));
+    $this->assertIdentical(FALSE, db_field_exists('node', 'nosuchcolumn'), t('Returns false for nonexistent column.'));
   }
 
   /**
@@ -2660,11 +2703,11 @@ class DatabaseTemporaryQueryTestCase extends DrupalWebTestCase {
  * across multiple kinds of database systems, we test that the
  * database system interprets SQL syntax in an expected fashion.
  */
-class DatabaseAnsiSyntaxTestCase extends DatabaseTestCase {
+class DatabaseBasicSyntaxTestCase extends DatabaseTestCase {
   public static function getInfo() {
     return array(
-      'name' => 'ANSI SQL syntax tests',
-      'description' => 'Test ANSI SQL syntax interpretation.',
+      'name' => 'Basic SQL syntax tests',
+      'description' => 'Test SQL syntax interpretation.',
       'group' => 'Database',
     );
   }
@@ -2674,30 +2717,30 @@ class DatabaseAnsiSyntaxTestCase extends DatabaseTestCase {
   }
 
   /**
-   * Test for ANSI string concatenation.
+   * Test for string concatenation.
    */
   function testBasicConcat() {
-    $result = db_query('SELECT :a1 || :a2 || :a3 || :a4 || :a5', array(
+    $result = db_query('SELECT CONCAT(:a1, CONCAT(:a2, CONCAT(:a3, CONCAT(:a4, :a5))))', array(
       ':a1' => 'This',
       ':a2' => ' ',
       ':a3' => 'is',
       ':a4' => ' a ',
       ':a5' => 'test.',
     ));
-    $this->assertIdentical($result->fetchField(), 'This is a test.', t('Basic ANSI Concat works.'));
+    $this->assertIdentical($result->fetchField(), 'This is a test.', t('Basic CONCAT works.'));
   }
 
   /**
-   * Test for ANSI string concatenation with field values.
+   * Test for string concatenation with field values.
    */
   function testFieldConcat() {
-    $result = db_query('SELECT :a1 || name || :a2 || age || :a3 FROM {test} WHERE age = :age', array(
+    $result = db_query('SELECT CONCAT(:a1, CONCAT(name, CONCAT(:a2, CONCAT(age, :a3)))) FROM {test} WHERE age = :age', array(
       ':a1' => 'The age of ',
       ':a2' => ' is ',
       ':a3' => '.',
       ':age' => 25,
     ));
-    $this->assertIdentical($result->fetchField(), 'The age of John is 25.', t('Field ANSI Concat works.'));
+    $this->assertIdentical($result->fetchField(), 'The age of John is 25.', t('Field CONCAT works.'));
   }
 
   /**
@@ -2908,6 +2951,7 @@ class DatabaseTransactionTestCase extends DatabaseTestCase {
    */
   protected function transactionOuterLayer($suffix, $rollback = FALSE) {
     $connection = Database::getConnection();
+    $depth = $connection->transactionDepth();
     $txn = db_transaction();
 
     // Insert a single row into the testing table.
@@ -2925,6 +2969,13 @@ class DatabaseTransactionTestCase extends DatabaseTestCase {
     $this->transactionInnerLayer($suffix, $rollback);
 
     $this->assertTrue($connection->inTransaction(), t('In transaction after calling nested transaction.'));
+
+    if ($rollback) {
+      // Roll back the transaction, if requested.
+      // This rollback should propagate to the last savepoint.
+      $txn->rollback();
+      $this->assertTrue(($connection->transactionDepth() == $depth), t('Transaction has rolled back to the last savepoint after calling rollback().'));
+    }
   }
 
   /**
@@ -2939,11 +2990,17 @@ class DatabaseTransactionTestCase extends DatabaseTestCase {
   protected function transactionInnerLayer($suffix, $rollback = FALSE) {
     $connection = Database::getConnection();
 
+    $this->assertTrue($connection->inTransaction(), t('In transaction in nested transaction.'));
+
+    $depth = $connection->transactionDepth();
     // Start a transaction. If we're being called from ->transactionOuterLayer,
     // then we're already in a transaction. Normally, that would make starting
     // a transaction here dangerous, but the database API handles this problem
     // for us by tracking the nesting and avoiding the danger.
     $txn = db_transaction();
+
+    $depth2 = $connection->transactionDepth();
+    $this->assertTrue($depth < $depth2, t('Transaction depth is has increased with new transaction.'));
 
     // Insert a single row into the testing table.
     db_insert('test')
@@ -2957,9 +3014,9 @@ class DatabaseTransactionTestCase extends DatabaseTestCase {
 
     if ($rollback) {
       // Roll back the transaction, if requested.
-      // This rollback should propagate to the the outer transaction, if present.
+      // This rollback should propagate to the last savepoint.
       $txn->rollback();
-      $this->assertTrue($txn->willRollback(), t('Transaction is scheduled to roll back after calling rollback().'));
+      $this->assertTrue(($connection->transactionDepth() == $depth), t('Transaction has rolled back to the last savepoint after calling rollback().'));
     }
   }
 
@@ -3146,7 +3203,7 @@ class DatabaseExtraTypesTestCase extends DrupalWebTestCase {
  * Check the sequences API.
  */
 class DatabaseNextIdCase extends DrupalWebTestCase {
-  function getInfo() {
+  public static function getInfo() {
     return array(
       'name' => t('Sequences API'),
       'description' => t('Test the secondary sequences API.'),
@@ -3173,7 +3230,7 @@ class DatabaseNextIdCase extends DrupalWebTestCase {
  * Tests the empty pseudo-statement class.
  */
 class DatabaseEmptyStatementTestCase extends DrupalWebTestCase {
-  function getInfo() {
+  public static function getInfo() {
     return array(
       'name' => t('Empty statement'),
       'description' => t('Test the empty pseudo-statement class.'),
@@ -3213,5 +3270,4 @@ class DatabaseEmptyStatementTestCase extends DrupalWebTestCase {
 
     $this->assertEqual($result->fetchAll(), array(), t('Empty array returned from empty result set.'));
   }
-
 }

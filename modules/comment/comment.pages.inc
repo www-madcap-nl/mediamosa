@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.pages.inc,v 1.36 2010/02/22 15:38:52 webchick Exp $
+// $Id: comment.pages.inc,v 1.39 2010/06/10 06:57:20 dries Exp $
 
 /**
  * @file
@@ -48,7 +48,7 @@ function comment_reply($node, $pid = NULL) {
       // $pid indicates that this is a reply to a comment.
       if ($pid) {
         // Load the comment whose cid = $pid
-        $comment = db_query('SELECT c.*, u.uid, u.name AS registered_name, u.signature, u.picture, u.data FROM {comment} c INNER JOIN {users} u ON c.uid = u.uid WHERE c.cid = :cid AND c.status = :status', array(
+        $comment = db_query('SELECT c.*, u.uid, u.name AS registered_name, u.signature, u.signature_format, u.picture, u.data FROM {comment} c INNER JOIN {users} u ON c.uid = u.uid WHERE c.cid = :cid AND c.status = :status', array(
           ':cid' => $pid,
           ':status' => COMMENT_PUBLISHED,
         ))->fetchObject();
@@ -61,7 +61,6 @@ function comment_reply($node, $pid = NULL) {
             drupal_goto("node/$node->nid");
           }
           // Display the parent comment
-          $comment = drupal_unpack($comment);
           $comment->node_type = 'comment_node_' . $node->type;
           field_attach_load('comment', array($comment->cid => $comment));
           $comment->name = $comment->uid ? $comment->registered_name : $comment->name;
@@ -107,6 +106,9 @@ function comment_reply($node, $pid = NULL) {
  *   A comment identifier.
  */
 function comment_approve($cid) {
+  if (!isset($_GET['token']) || !drupal_valid_token($_GET['token'], "comment/$cid/approve")) {
+    return MENU_ACCESS_DENIED;
+  }
   if ($comment = comment_load($cid)) {
     $comment->status = COMMENT_PUBLISHED;
     comment_save($comment);

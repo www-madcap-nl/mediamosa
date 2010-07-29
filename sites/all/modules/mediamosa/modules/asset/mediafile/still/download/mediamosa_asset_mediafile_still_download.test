@@ -103,7 +103,7 @@ class MediaMosaAssetMediafileStillDownloadTestCase extends MediaMosaTestCase {
     $this->assertTrue(!empty($a_still_servers), t('@num enabled still server(s) found.', array('@num' => $a_still_servers->rowCount())));
 
     foreach ($a_still_servers as $a_stillserver) {
-      $url = str_replace('{TICKET}', $ticket_id, $a_stillserver[mediamosa_server_db::URI]);
+      $url = str_replace('{TICKET}', $ticket_id, $a_stillserver[mediamosa_server_db::SERVER_URI]);
 
       // Test the output, do output call.
       $url = str_replace('/still/', '/simpletest/still/', $url);

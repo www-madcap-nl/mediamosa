@@ -3,7 +3,7 @@
 name = "Authorization"
 description = "The authorization module handles access to assets, media and other objects."
 package = "MediaMosa - Modules"
-version = "2.1.1"
+version = "2.2.0"
 core = 7.x
 
 ; Dependencies (module names)

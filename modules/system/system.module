@@ -1,5 +1,5 @@
 <?php
-// $Id: system.module,v 1.903 2010/03/21 03:47:32 webchick Exp $
+// $Id: system.module,v 1.946 2010/07/07 17:56:42 webchick Exp $
 
 /**
  * @file
@@ -47,12 +47,16 @@ define('DRUPAL_OPTIONAL', 1);
 define('DRUPAL_REQUIRED', 2);
 
 /**
- * Return only visible regions. @see system_region_list().
+ * Return only visible regions.
+ *
+ * @see system_region_list()
  */
 define('REGIONS_VISIBLE', 'visible');
 
 /**
- * Return all visible regions. @see system_region_list().
+ * Return all regions.
+ *
+ * @see system_region_list()
  */
 define('REGIONS_ALL', 'all');
 
@@ -89,9 +93,9 @@ function system_help($path, $arg) {
       $output = '<p>' . t('Set and configure the default theme for your website.  Alternative <a href="@themes">themes</a> are available.', array('@themes' => 'http://drupal.org/project/themes')) . '</p>';
       return $output;
     case 'admin/appearance/settings/' . $arg[3]:
-      $reference = explode('.', $arg[3], 2);
-      $theme = array_pop($reference);
-      return '<p>' . t('These options control the display settings for the <code>%template</code> theme. When your site is displayed using this theme, these settings will be used.', array('%template' => $theme)) . '</p>';
+      $theme_list = list_themes();
+      $theme = $theme_list[$arg[3]];
+      return '<p>' . t('These options control the display settings for the %name theme. When your site is displayed using this theme, these settings will be used.', array('%name' => $theme->info['name'])) . '</p>';
     case 'admin/appearance/settings':
       return '<p>' . t('These options control the default display settings for your entire site, across all themes. Unless they have been overridden by a specific theme, these settings will be used.') . '</p>';
     case 'admin/modules':
@@ -131,7 +135,7 @@ function system_help($path, $arg) {
     case 'admin/config/system/actions/configure':
       return t('An advanced action offers additional configuration options which may be filled out below. Changing the <em>Description</em> field is recommended, in order to better identify the precise action taking place. This description will be displayed in modules such as the Trigger module when assigning actions to system events, so it is best if it is as descriptive as possible (for example, "Send e-mail to Moderation Team" rather than simply "Send e-mail").');
     case 'admin/config/people/ip-blocking':
-      return '<p>' . t('IP addresses listed here are blocked from your site before any modules are loaded. You may add IP addresses to the list, or delete existing entries.') . '</p>';
+      return '<p>' . t('IP addresses listed here are blocked from your site. Blocked addresses are completely forbidden from accessing the site and instead see a brief message explaining the situation.') . '</p>';
     case 'admin/reports/status':
       return '<p>' . t("Here you can find a short overview of your site's parameters as well as any problems detected with your installation. It may be useful to copy and paste this information into support requests filed on drupal.org's support forums and project issue queues.") . '</p>';
   }
@@ -207,13 +211,14 @@ function system_permission() {
     ),
     'administer site configuration' => array(
       'title' => t('Administer site configuration'),
-      'description' => drupal_placeholder(array('text' => t('Warning: Give to trusted roles only; this permission has security implications.'))),
+      'restrict access' => TRUE,
     ),
     'administer themes' => array(
       'title' => t('Administer themes'),
     ),
     'administer software updates' => array(
-      'title' => t('Run software updates'),
+      'title' => t('Administer software updates'),
+      'restrict access' => TRUE,
     ),
     'administer actions' => array(
       'title' => t('Administer actions'),
@@ -256,8 +261,8 @@ function system_entity_info() {
   return array(
     'file' => array(
       'label' => t('File'),
-      'base table' => 'file',
-      'object keys' => array(
+      'base table' => 'file_managed',
+      'entity keys' => array(
         'id' => 'fid',
       ),
       'static cache' => FALSE,
@@ -279,12 +284,6 @@ function system_element_info() {
     '#show_messages' => TRUE,
     '#theme' => 'page',
     '#theme_wrappers' => array('html'),
-  );
-  $types['list'] = array(
-    '#title' => '',
-    '#list_type' => 'ul',
-    '#attributes' => array(),
-    '#items' => array(),
   );
   // By default, we don't want AJAX commands being rendered in the context of an
   // HTML page, so we don't provide defaults for #theme or #theme_wrappers.
@@ -314,6 +313,7 @@ function system_element_info() {
     '#name' => 'op',
     '#button_type' => 'submit',
     '#executes_submit_callback' => TRUE,
+    '#limit_validation_errors' => FALSE,
     '#process' => array('ajax_process_form'),
     '#theme_wrappers' => array('button'),
   );
@@ -322,6 +322,7 @@ function system_element_info() {
     '#name' => 'op',
     '#button_type' => 'submit',
     '#executes_submit_callback' => FALSE,
+    '#limit_validation_errors' => FALSE,
     '#process' => array('ajax_process_form'),
     '#theme_wrappers' => array('button'),
   );
@@ -329,6 +330,7 @@ function system_element_info() {
     '#input' => TRUE,
     '#button_type' => 'submit',
     '#executes_submit_callback' => TRUE,
+    '#limit_validation_errors' => FALSE,
     '#process' => array('ajax_process_form'),
     '#return_value' => TRUE,
     '#has_garbage_value' => TRUE,
@@ -382,7 +384,6 @@ function system_element_info() {
   );
   $types['checkboxes'] = array(
     '#input' => TRUE,
-    '#tree' => TRUE,
     '#process' => array('form_process_checkboxes'),
     '#theme_wrappers' => array('checkboxes'),
     '#pre_render' => array('form_pre_render_conditional_form_element'),
@@ -470,6 +471,11 @@ function system_element_info() {
   $types['container'] = array(
     '#theme_wrappers' => array('container'),
     '#process' => array('form_process_container'),
+  );
+  $types['actions'] = array(
+    '#theme_wrappers' => array('container'),
+    '#process' => array('form_process_actions', 'form_process_container'),
+    '#weight' => 100,
   );
 
   $types['token'] = array(
@@ -673,6 +679,7 @@ function system_menu() {
     'page callback' => 'system_ip_blocking',
     'access arguments' => array('block IP addresses'),
     'file' => 'system.admin.inc',
+    'weight' => 10,
   );
   $items['admin/config/people/ip-blocking/delete/%blocked_ip'] = array(
     'title' => 'Delete IP address',
@@ -688,7 +695,7 @@ function system_menu() {
     'title' => 'Media',
     'description' => 'Media tools.',
     'position' => 'left',
-    'weight' => 10,
+    'weight' => -10,
     'page callback' => 'system_admin_menu_block_page',
     'access arguments' => array('access administration pages'),
     'file' => 'system.admin.inc',
@@ -699,7 +706,7 @@ function system_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('system_file_system_settings'),
     'access arguments' => array('administer site configuration'),
-    'weight' => 10,
+    'weight' => -10,
     'file' => 'system.admin.inc',
   );
     $items['admin/config/media/image-toolkit'] = array(
@@ -716,6 +723,8 @@ function system_menu() {
   $items['admin/config/services'] = array(
     'title' => 'Web services',
     'description' => 'Tools related to web services.',
+    'position' => 'right',
+    'weight' => 0,
     'page callback' => 'system_admin_menu_block_page',
     'access arguments' => array('access administration pages'),
     'file' => 'system.admin.inc',
@@ -733,8 +742,8 @@ function system_menu() {
   $items['admin/config/development'] = array(
     'title' => 'Development',
     'description' => 'Development tools.',
-    'position' => 'left',
-    'weight' => 10,
+    'position' => 'right',
+    'weight' => -10,
     'page callback' => 'system_admin_menu_block_page',
     'access arguments' => array('access administration pages'),
     'file' => 'system.admin.inc',
@@ -745,8 +754,8 @@ function system_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('system_site_maintenance_mode'),
     'access arguments' => array('administer site configuration'),
-    'weight' => 50,
     'file' => 'system.admin.inc',
+    'weight' => -10,
   );
   $items['admin/config/development/performance'] = array(
     'title' => 'Performance',
@@ -754,8 +763,8 @@ function system_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('system_performance_settings'),
     'access arguments' => array('administer site configuration'),
-    'weight' => -10,
     'file' => 'system.admin.inc',
+    'weight' => -20,
   );
   $items['admin/config/development/logging'] = array(
     'title' => 'Logging and errors',
@@ -763,8 +772,8 @@ function system_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('system_logging_settings'),
     'access arguments' => array('administer site configuration'),
-    'weight' => 60,
     'file' => 'system.admin.inc',
+    'weight' => -15,
   );
 
   // Regional and date settings.
@@ -772,7 +781,7 @@ function system_menu() {
     'title' => 'Regional and language',
     'description' => 'Regional settings, localization and translation.',
     'position' => 'left',
-    'weight' => -7,
+    'weight' => -5,
     'page callback' => 'system_admin_menu_block_page',
     'access arguments' => array('access administration pages'),
     'file' => 'system.admin.inc',
@@ -783,7 +792,7 @@ function system_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('system_regional_settings'),
     'access arguments' => array('administer site configuration'),
-    'weight' => 50,
+    'weight' => -20,
     'file' => 'system.admin.inc',
   );
   $items['admin/config/regional/date-time'] = array(
@@ -792,7 +801,7 @@ function system_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('system_date_time_settings'),
     'access arguments' => array('administer site configuration'),
-    'weight' => 60,
+    'weight' => -15,
     'file' => 'system.admin.inc',
   );
   $items['admin/config/regional/date-time/types'] = array(
@@ -873,6 +882,8 @@ function system_menu() {
   $items['admin/config/search'] = array(
     'title' => 'Search and metadata',
     'description' => 'Local site search, metadata and SEO.',
+    'position' => 'left',
+    'weight' => -10,
     'page callback' => 'system_admin_menu_block_page',
     'access arguments' => array('access administration pages'),
     'file' => 'system.admin.inc',
@@ -884,6 +895,7 @@ function system_menu() {
     'page arguments' => array('system_clean_url_settings'),
     'access arguments' => array('administer site configuration'),
     'file' => 'system.admin.inc',
+    'weight' => 5,
   );
   $items['admin/config/search/clean-urls/check'] = array(
     'title' => 'Clean URL check',
@@ -899,7 +911,7 @@ function system_menu() {
     'title' => 'System',
     'description' => 'General system related configuration.',
     'position' => 'right',
-    'weight' => -5,
+    'weight' => -20,
     'page callback' => 'system_admin_menu_block_page',
     'access arguments' => array('access administration pages'),
     'file' => 'system.admin.inc',
@@ -945,12 +957,12 @@ function system_menu() {
   );
   $items['admin/config/system/site-information'] = array(
     'title' => 'Site information',
-    'description' => 'Change basic site name, e-mail address, slogan, default front page, number of posts per page, error pages and cron.',
+    'description' => 'Change site name, e-mail address, slogan, default front page, number of posts per page, error pages and cron.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('system_site_information_settings'),
     'access arguments' => array('administer site configuration'),
     'file' => 'system.admin.inc',
-    'weight' => -10,
+    'weight' => -20,
   );
 
   // Additional categories
@@ -961,11 +973,13 @@ function system_menu() {
     'page callback' => 'system_admin_menu_block_page',
     'access arguments' => array('access administration pages'),
     'file' => 'system.admin.inc',
-    'weight' => -5,
+    'weight' => -15,
   );
   $items['admin/config/workflow'] = array(
     'title' => 'Workflow',
     'description' => 'Content workflow, editorial workflow tools.',
+    'position' => 'right',
+    'weight' => 5,
     'page callback' => 'system_admin_menu_block_page',
     'access arguments' => array('access administration pages'),
     'file' => 'system.admin.inc',
@@ -973,8 +987,8 @@ function system_menu() {
   $items['admin/config/content'] = array(
     'title' => 'Content authoring',
     'description' => 'Settings related to formatting and authoring content.',
-    'position' => 'right',
-    'weight' => 5,
+    'position' => 'left',
+    'weight' => -15,
     'page callback' => 'system_admin_menu_block_page',
     'access arguments' => array('access administration pages'),
     'file' => 'system.admin.inc',
@@ -994,7 +1008,7 @@ function system_menu() {
     'title' => 'Status report',
     'description' => "Get a status report about your site's operation and any detected problems.",
     'page callback' => 'system_status',
-    'weight' => 10,
+    'weight' => -60,
     'access arguments' => array('administer site configuration'),
     'file' => 'system.admin.inc',
   );
@@ -1078,7 +1092,7 @@ function system_library() {
   $libraries['jquery-bbq'] = array(
     'title' => 'jQuery BBQ',
     'website' => 'http://benalman.com/projects/jquery-bbq-plugin/',
-    'version' => '1.0.2',
+    'version' => '1.2.1',
     'js' => array(
       'misc/jquery.ba-bbq.js' => array(),
     ),
@@ -1202,6 +1216,11 @@ function system_library() {
     ),
     'dependencies' => array(
       array('system', 'ui.widget'),
+      array('system', 'ui.button'),
+      array('system', 'ui.draggable'),
+      array('system', 'ui.mouse'),
+      array('system', 'ui.position'),
+      array('system', 'ui.resizable'),
     ),
   );
   $libraries['ui.draggable'] = array(
@@ -1503,24 +1522,30 @@ function system_library() {
  * Implements hook_stream_wrappers().
  */
 function system_stream_wrappers() {
-  return array(
+  $wrappers = array(
     'public' => array(
       'name' => t('Public files'),
       'class' => 'DrupalPublicStreamWrapper',
       'description' => t('Public local files served by the webserver.'),
-    ),
-    'private' => array(
-      'name' => t('Private files'),
-      'class' => 'DrupalPrivateStreamWrapper',
-      'description' => t('Private local files served by Drupal.'),
     ),
     'temporary' => array(
       'name' => t('Temporary files'),
       'class' => 'DrupalTemporaryStreamWrapper',
       'description' => t('Temporary local files for upload and previews.'),
       'type' => STREAM_WRAPPERS_HIDDEN,
-    )
+    ),
   );
+
+  // Only register the private file stream wrapper if a file path has been set.
+  if (variable_get('file_private_path', FALSE)) {
+    $wrappers['private'] = array(
+      'name' => t('Private files'),
+      'class' => 'DrupalPrivateStreamWrapper',
+      'description' => t('Private local files served by Drupal.'),
+    );
+  }
+
+  return $wrappers;
 }
 
 /**
@@ -1798,6 +1823,7 @@ function system_init() {
   drupal_add_css(drupal_get_path('module', 'system') . '/system.css', array('weight' => CSS_SYSTEM));
   drupal_add_css(drupal_get_path('module', 'system') . '/system-behavior.css', array('weight' => CSS_SYSTEM));
   drupal_add_css(drupal_get_path('module', 'system') . '/system-menus.css', array('weight' => CSS_SYSTEM));
+  drupal_add_css(drupal_get_path('module', 'system') . '/system-messages.css', array('weight' => CSS_SYSTEM));
 
 
   // Ignore slave database servers for this request.
@@ -2031,6 +2057,9 @@ function system_admin_menu_block($item) {
  */
 function system_check_directory($form_element) {
   $directory = $form_element['#value'];
+  if (strlen($directory) == 0) {
+    return $form_element;
+  }
 
   if (!is_dir($directory) && !drupal_mkdir($directory, NULL, TRUE)) {
     // If the directory does not exists and cannot be created.
@@ -2043,7 +2072,7 @@ function system_check_directory($form_element) {
     form_set_error($form_element['#parents'][0], t('The directory %directory exists but is not writable and could not be made writable.', array('%directory' => $directory)));
     watchdog('file system', 'The directory %directory exists but is not writable and could not be made writable.', array('%directory' => $directory), WATCHDOG_ERROR);
   }
-  else {
+  elseif (is_dir($directory)) {
     if ($form_element['#name'] == 'file_public_path') {
       // Create public .htaccess file.
       file_create_htaccess($directory, FALSE);
@@ -2158,6 +2187,11 @@ function system_update_files_database(&$files, $type) {
     }
   }
   $query->execute();
+
+  // If any module or theme was moved to a new location, we need to reset the
+  // system_list() cache or we will continue to load the old copy, look for
+  // schema updates in the wrong place, etc.
+  system_list_reset();
 }
 
 /**
@@ -2168,6 +2202,7 @@ function system_update_files_database(&$files, $type) {
  *
  * @param $type
  *   Either 'module' or 'theme'.
+ *
  * @return
  *   An associative array of module or theme information keyed by name.
  *
@@ -2195,7 +2230,7 @@ function _system_rebuild_module_data() {
 
   // Include the install profile in modules that are loaded.
   $profile = drupal_get_profile();
-  $modules[$profile] = new stdClass;
+  $modules[$profile] = new stdClass();
   $modules[$profile]->name = $profile;
   $modules[$profile]->uri = 'profiles/' . $profile . '/' . $profile . '.profile';
   $modules[$profile]->filename = $profile . '.profile';
@@ -2233,14 +2268,22 @@ function _system_rebuild_module_data() {
     // Merge in defaults and save.
     $modules[$key]->info = $module->info + $defaults;
 
+    // Install profiles are hidden by default, unless explicitly specified
+    // otherwise in the .info file.
+    if ($key == $profile && !isset($modules[$key]->info['hidden'])) {
+      $modules[$key]->info['hidden'] = TRUE;
+    }
+
     // Invoke hook_system_info_alter() to give installed modules a chance to
     // modify the data in the .info files if necessary.
     $type = 'module';
     drupal_alter('system_info', $modules[$key]->info, $modules[$key], $type);
   }
 
-  // The install profile is required.
-  $modules[$profile]->info['required'] = TRUE;
+  // The install profile is required, if it's a valid module.
+  if (isset($modules[$profile])) {
+    $modules[$profile]->info['required'] = TRUE;
+  }
 
   return $modules;
 }
@@ -2294,128 +2337,112 @@ function _system_update_bootstrap_status() {
  *   An associative array of themes information.
  */
 function _system_rebuild_theme_data() {
-  $themes_info = &drupal_static(__FUNCTION__, array());
+  // Find themes
+  $themes = drupal_system_listing('/\.info$/', 'themes');
+  // Find theme engines
+  $engines = drupal_system_listing('/\.engine$/', 'themes/engines');
 
-  if (empty($themes_info)) {
-    // Find themes
-    $themes = drupal_system_listing('/\.info$/', 'themes');
-    // Find theme engines
-    $engines = drupal_system_listing('/\.engine$/', 'themes/engines');
+  // Set defaults for theme info.
+  $defaults = array(
+    'regions' => array(
+      'sidebar_first' => 'Left sidebar',
+      'sidebar_second' => 'Right sidebar',
+      'content' => 'Content',
+      'header' => 'Header',
+      'footer' => 'Footer',
+      'highlight' => 'Highlighted content',
+      'help' => 'Help',
+      'page_top' => 'Page top',
+      'page_bottom' => 'Page bottom',
+    ),
+    'description' => '',
+    'features' => _system_default_theme_features(),
+    'screenshot' => 'screenshot.png',
+    'php' => DRUPAL_MINIMUM_PHP,
+  );
 
-    // Set defaults for theme info.
-    $defaults = array(
-      'regions' => array(
-        'sidebar_first' => 'Left sidebar',
-        'sidebar_second' => 'Right sidebar',
-        'content' => 'Content',
-        'header' => 'Header',
-        'footer' => 'Footer',
-        'highlight' => 'Highlighted content',
-        'help' => 'Help',
-        'page_top' => 'Page top',
-        'page_bottom' => 'Page bottom',
-      ),
-      'description' => '',
-      'features' => array(
-        'comment_user_picture',
-        'comment_user_verification',
-        'favicon',
-        'logo',
-        'name',
-        'node_user_picture',
-        'slogan',
-        'main_menu',
-        'secondary_menu',
-      ),
-      'screenshot' => 'screenshot.png',
-      'php' => DRUPAL_MINIMUM_PHP,
-    );
+  $sub_themes = array();
+  // Read info files for each theme
+  foreach ($themes as $key => $theme) {
+    $themes[$key]->filename = $theme->uri;
+    $themes[$key]->info = drupal_parse_info_file($theme->uri) + $defaults;
 
-    $sub_themes = array();
-    // Read info files for each theme
-    foreach ($themes as $key => $theme) {
-      $themes[$key]->filename = $theme->uri;
-      $themes[$key]->info = drupal_parse_info_file($theme->uri) + $defaults;
+    // Invoke hook_system_info_alter() to give installed modules a chance to
+    // modify the data in the .info files if necessary.
+    $type = 'theme';
+    drupal_alter('system_info', $themes[$key]->info, $themes[$key], $type);
 
-      // Invoke hook_system_info_alter() to give installed modules a chance to
-      // modify the data in the .info files if necessary.
-      $type = 'theme';
-      drupal_alter('system_info', $themes[$key]->info, $themes[$key], $type);
-
-      if (!empty($themes[$key]->info['base theme'])) {
-        $sub_themes[] = $key;
+    if (!empty($themes[$key]->info['base theme'])) {
+      $sub_themes[] = $key;
+    }
+    if (empty($themes[$key]->info['engine'])) {
+      $filename = dirname($themes[$key]->uri) . '/' . $themes[$key]->name . '.theme';
+      if (file_exists($filename)) {
+        $themes[$key]->owner = $filename;
+        $themes[$key]->prefix = $key;
       }
-      if (empty($themes[$key]->info['engine'])) {
-        $filename = dirname($themes[$key]->uri) . '/' . $themes[$key]->name . '.theme';
-        if (file_exists($filename)) {
-          $themes[$key]->owner = $filename;
-          $themes[$key]->prefix = $key;
-        }
-      }
-      else {
-        $engine = $themes[$key]->info['engine'];
-        if (isset($engines[$engine])) {
-          $themes[$key]->owner = $engines[$engine]->uri;
-          $themes[$key]->prefix = $engines[$engine]->name;
-          $themes[$key]->template = TRUE;
-        }
-      }
-
-      // Give the stylesheets proper path information.
-      $pathed_stylesheets = array();
-      if (isset($themes[$key]->info['stylesheets'])) {
-        foreach ($themes[$key]->info['stylesheets'] as $media => $stylesheets) {
-          foreach ($stylesheets as $stylesheet) {
-            $pathed_stylesheets[$media][$stylesheet] = dirname($themes[$key]->uri) . '/' . $stylesheet;
-          }
-        }
-      }
-      $themes[$key]->info['stylesheets'] = $pathed_stylesheets;
-
-      // Give the scripts proper path information.
-      $scripts = array();
-      if (isset($themes[$key]->info['scripts'])) {
-        foreach ($themes[$key]->info['scripts'] as $script) {
-          $scripts[$script] = dirname($themes[$key]->uri) . '/' . $script;
-        }
-      }
-      $themes[$key]->info['scripts'] = $scripts;
-      // Give the screenshot proper path information.
-      if (!empty($themes[$key]->info['screenshot'])) {
-        $themes[$key]->info['screenshot'] = dirname($themes[$key]->uri) . '/' . $themes[$key]->info['screenshot'];
+    }
+    else {
+      $engine = $themes[$key]->info['engine'];
+      if (isset($engines[$engine])) {
+        $themes[$key]->owner = $engines[$engine]->uri;
+        $themes[$key]->prefix = $engines[$engine]->name;
+        $themes[$key]->template = TRUE;
       }
     }
 
-    // Now that we've established all our master themes, go back and fill in
-    // data for subthemes.
-    foreach ($sub_themes as $key) {
-      $themes[$key]->base_themes = system_find_base_themes($themes, $key);
-      // Don't proceed if there was a problem with the root base theme.
-      if (!current($themes[$key]->base_themes)) {
-        continue;
-      }
-      $base_key = key($themes[$key]->base_themes);
-      foreach (array_keys($themes[$key]->base_themes) as $base_theme) {
-        $themes[$base_theme]->sub_themes[$key] = $themes[$key]->info['name'];
-      }
-      // Copy the 'owner' and 'engine' over if the top level theme uses a
-      // theme engine.
-      if (isset($themes[$base_key]->owner)) {
-        if (isset($themes[$base_key]->info['engine'])) {
-          $themes[$key]->info['engine'] = $themes[$base_key]->info['engine'];
-          $themes[$key]->owner = $themes[$base_key]->owner;
-          $themes[$key]->prefix = $themes[$base_key]->prefix;
-        }
-        else {
-          $themes[$key]->prefix = $key;
+    // Give the stylesheets proper path information.
+    $pathed_stylesheets = array();
+    if (isset($themes[$key]->info['stylesheets'])) {
+      foreach ($themes[$key]->info['stylesheets'] as $media => $stylesheets) {
+        foreach ($stylesheets as $stylesheet) {
+          $pathed_stylesheets[$media][$stylesheet] = dirname($themes[$key]->uri) . '/' . $stylesheet;
         }
       }
     }
+    $themes[$key]->info['stylesheets'] = $pathed_stylesheets;
 
-    $themes_info = $themes;
+    // Give the scripts proper path information.
+    $scripts = array();
+    if (isset($themes[$key]->info['scripts'])) {
+      foreach ($themes[$key]->info['scripts'] as $script) {
+        $scripts[$script] = dirname($themes[$key]->uri) . '/' . $script;
+      }
+    }
+    $themes[$key]->info['scripts'] = $scripts;
+    // Give the screenshot proper path information.
+    if (!empty($themes[$key]->info['screenshot'])) {
+      $themes[$key]->info['screenshot'] = dirname($themes[$key]->uri) . '/' . $themes[$key]->info['screenshot'];
+    }
   }
 
-  return $themes_info;
+  // Now that we've established all our master themes, go back and fill in data
+  // for subthemes.
+  foreach ($sub_themes as $key) {
+    $themes[$key]->base_themes = system_find_base_themes($themes, $key);
+    // Don't proceed if there was a problem with the root base theme.
+    if (!current($themes[$key]->base_themes)) {
+      continue;
+    }
+    $base_key = key($themes[$key]->base_themes);
+    foreach (array_keys($themes[$key]->base_themes) as $base_theme) {
+      $themes[$base_theme]->sub_themes[$key] = $themes[$key]->info['name'];
+    }
+    // Copy the 'owner' and 'engine' over if the top level theme uses a theme
+    // engine.
+    if (isset($themes[$base_key]->owner)) {
+      if (isset($themes[$base_key]->info['engine'])) {
+        $themes[$key]->info['engine'] = $themes[$base_key]->info['engine'];
+        $themes[$key]->owner = $themes[$base_key]->owner;
+        $themes[$key]->prefix = $themes[$base_key]->prefix;
+      }
+      else {
+        $themes[$key]->prefix = $key;
+      }
+    }
+  }
+
+  return $themes;
 }
 
 /**
@@ -2430,6 +2457,23 @@ function system_rebuild_theme_data() {
   system_get_files_database($themes, 'theme');
   system_update_files_database($themes, 'theme');
   return $themes;
+}
+
+/**
+ * Returns an array of default theme features.
+ */
+function _system_default_theme_features() {
+  return array(
+    'logo',
+    'favicon',
+    'name',
+    'slogan',
+    'node_user_picture',
+    'comment_user_picture',
+    'comment_user_verification',
+    'main_menu',
+    'secondary_menu',
+  );
 }
 
 /**
@@ -2494,7 +2538,7 @@ function system_region_list($theme_key, $show = REGIONS_ALL) {
       return $list[$theme_key][$show];
     }
     $info = $themes[$theme_key]->info;
-    // If requested, suppress hidden regions. @see block_admin_display_form().
+    // If requested, suppress hidden regions. See block_admin_display_form().
     foreach ($info['regions'] as $name => $label) {
       if ($show == REGIONS_ALL || !isset($info['regions_hidden']) || !in_array($name, $info['regions_hidden'])) {
         $list[$theme_key][$show][$name] = $label;
@@ -2525,50 +2569,25 @@ function system_system_info_alter(&$info, $file, $type) {
  *   A string that is the region name.
  */
 function system_default_region($theme) {
-  $regions = array_keys(system_region_list($theme));
+  $regions = array_keys(system_region_list($theme, REGIONS_VISIBLE));
   return isset($regions[0]) ? $regions[0] : '';
-}
-
-function _system_settings_form_automatic_defaults($form) {
-  // Get an array of all non-property keys
-  $keys = element_children($form);
-
-  foreach ($keys as $key) {
-    // If the property (key) '#default_value' exists, replace it.
-    if (array_key_exists('#default_value', $form[$key])) {
-      $form[$key]['#default_value'] = variable_get($key, $form[$key]['#default_value']);
-    }
-    else {
-      // Recurse through child elements
-      $form[$key] = _system_settings_form_automatic_defaults($form[$key]);
-    }
-  }
-
-  return $form;
 }
 
 /**
  * Add default buttons to a form and set its prefix.
  *
- * @ingroup forms
- * @see system_settings_form_submit()
  * @param $form
  *   An associative array containing the structure of the form.
- * @param $automatic_defaults
- *   Automatically load the saved values for each field from the system variables
- *   (defaults to TRUE).
+ *
  * @return
  *   The form structure.
+ *
+ * @see system_settings_form_submit()
+ * @ingroup forms
  */
-function system_settings_form($form, $automatic_defaults = TRUE) {
-  $form['actions']['#type'] = 'container';
-  $form['actions']['#attributes']['class'][] = 'form-actions';
-  $form['actions']['#weight'] = 100;
+function system_settings_form($form) {
+  $form['actions']['#type'] = 'actions';
   $form['actions']['submit'] = array('#type' => 'submit', '#value' => t('Save configuration'));
-
-  if ($automatic_defaults) {
-    $form = _system_settings_form_automatic_defaults($form);
-  }
 
   if (!empty($_POST) && form_get_errors()) {
     drupal_set_message(t('The settings have not been saved because of the errors.'), 'error');
@@ -2618,41 +2637,46 @@ function _system_sort_requirements($a, $b) {
 }
 
 /**
- * Output a confirmation form
+ * Generates a form array for a confirmation form.
  *
- * This function returns a complete form for confirming an action. A link is
- * offered to go back to the item that is being changed in case the user changes
- * his/her mind.
+ * This function returns a complete form array for confirming an action. The
+ * form contains a confirm button as well as a cancellation link that allows a
+ * user to abort the action.
  *
- * If the submit handler for this form is invoked, the user successfully
- * confirmed the action. You should never directly inspect $_POST to see if an
- * action was confirmed.
+ * If the submit handler for a form that implements confirm_form() is invoked,
+ * the user successfully confirmed the action. You should never directly
+ * inspect $_POST to see if an action was confirmed.
  *
  * Note - if the parameters $question, $description, $yes, or $no could contain
  * any user input (such as node titles or taxonomy terms), it is the
  * responsibility of the code calling confirm_form() to sanitize them first with
  * a function like check_plain() or filter_xss().
  *
- * @ingroup forms
  * @param $form
- *   Additional elements to inject into the form, for example hidden elements.
+ *   Additional elements to add to the form; for example, hidden elements.
  * @param $question
  *   The question to ask the user (e.g. "Are you sure you want to delete the
- *   block <em>foo</em>?").
+ *   block <em>foo</em>?"). The page title will be set to this value.
  * @param $path
- *   The page to go to if the user denies the action.
- *   Can be either a drupal path, or an array with the keys 'path', 'query', 'fragment'.
+ *   The page to go to if the user cancels the action. This can be either:
+ *   - A string containing a Drupal path.
+ *   - An associative array with a 'path' key. Additional array values are
+ *     passed as the $options parameter to l().
+ *   If the 'destination' query parameter is set in the URL when viewing a
+ *   confirmation form, that value will be used instead of $path.
  * @param $description
- *   Additional text to display (defaults to "This action cannot be undone.").
+ *   Additional text to display. Defaults to t('This action cannot be undone.').
  * @param $yes
- *   A caption for the button which confirms the action (e.g. "Delete",
- *   "Replace", ...).
+ *   A caption for the button that confirms the action (e.g. "Delete",
+ *   "Replace", ...). Defaults to t('Confirm').
  * @param $no
- *   A caption for the link which denies the action (e.g. "Cancel").
+ *   A caption for the link which cancels the action (e.g. "Cancel"). Defaults
+ *   to t('Cancel').
  * @param $name
  *   The internal name used to refer to the confirmation item.
+ *
  * @return
- *   The form.
+ *   The form array.
  */
 function confirm_form($form, $question, $path, $description = NULL, $yes = NULL, $no = NULL, $name = 'confirm') {
   $description = isset($description) ? $description : t('This action cannot be undone.');
@@ -2671,13 +2695,13 @@ function confirm_form($form, $question, $path, $description = NULL, $yes = NULL,
 
   drupal_set_title($question, PASS_THROUGH);
 
-  $form['#attributes'] = array('class' => array('confirmation'));
+  $form['#attributes']['class'][] = 'confirmation';
   $form['description'] = array('#markup' => $description);
   $form[$name] = array('#type' => 'hidden', '#value' => 1);
 
   $form['actions'] = array(
-    '#type' => 'container',
-    '#attributes' => array('class' => array('form-actions', 'container-inline')),
+    '#type' => 'actions',
+    '#attributes' => array('class' => array('container-inline')),
   );
   $form['actions']['submit'] = array('#type' => 'submit', '#value' => $yes ? $yes : t('Confirm'));
   $form['actions']['cancel'] = array('#markup' => $cancel);
@@ -2689,11 +2713,15 @@ function confirm_form($form, $question, $path, $description = NULL, $yes = NULL,
 }
 
 /**
- * Determine if a user is in compact mode.
+ * Determines if the current user is in compact mode.
+ *
+ * @return
+ *   TRUE when in compact mode, FALSE when in expanded mode.
  */
 function system_admin_compact_mode() {
-  global $user;
-  return (isset($user->admin_compact_mode)) ? $user->admin_compact_mode : variable_get('admin_compact_mode', FALSE);
+  // PHP converts dots into underscores in cookie names to avoid problems with
+  // its parser, so we use a converted cookie name.
+  return isset($_COOKIE['Drupal_visitor_admin_compact_mode']) ? $_COOKIE['Drupal_visitor_admin_compact_mode'] : variable_get('admin_compact_mode', FALSE);
 }
 
 /**
@@ -2703,8 +2731,7 @@ function system_admin_compact_mode() {
  *   Valid values are 'on' and 'off'.
  */
 function system_admin_compact_page($mode = 'off') {
-  global $user;
-  user_save($user, array('admin_compact_mode' => ($mode == 'on')));
+  user_cookie_save(array('admin_compact_mode' => ($mode == 'on')));
   drupal_goto();
 }
 
@@ -2764,8 +2791,8 @@ function system_cron() {
 
   // Remove temporary files that are older than DRUPAL_MAXIMUM_TEMP_FILE_AGE.
   // Use separate placeholders for the status to avoid a bug in some versions
-  // of PHP. See http://drupal.org/node/352956
-  $result = db_query('SELECT fid FROM {file} WHERE status & :permanent1 <> :permanent2 AND timestamp < :timestamp', array(
+  // of PHP. See http://drupal.org/node/352956.
+  $result = db_query('SELECT fid FROM {file_managed} WHERE status & :permanent1 <> :permanent2 AND timestamp < :timestamp', array(
     ':permanent1' => FILE_STATUS_PERMANENT,
     ':permanent2' => FILE_STATUS_PERMANENT,
     ':timestamp' => REQUEST_TIME - DRUPAL_MAXIMUM_TEMP_FILE_AGE
@@ -2809,6 +2836,8 @@ function system_cron() {
 function system_flush_caches() {
   // Rebuild list of date formats.
   system_date_formats_rebuild();
+  // Reset the menu static caches.
+  menu_reset_static_cache();
 }
 
 /**
@@ -2832,7 +2861,7 @@ function system_action_info() {
       'type' => 'user',
       'label' => t('Ban IP address of current user'),
       'configurable' => FALSE,
-      'triggers' => array(),
+      'triggers' => array('any'),
     ),
     'system_goto_action' => array(
       'type' => 'system',
@@ -2846,12 +2875,14 @@ function system_action_info() {
 /**
  * Return a form definition so the Send email action can be configured.
  *
- * @see system_send_email_action_validate()
- * @see system_send_email_action_submit()
  * @param $context
  *   Default values (if we are editing an existing action instance).
+ *
  * @return
  *   Form definition.
+ *
+ * @see system_send_email_action_validate()
+ * @see system_send_email_action_submit()
  */
 function system_send_email_action_form($context) {
   // Set default values for form.
@@ -2896,9 +2927,9 @@ function system_send_email_action_form($context) {
 function system_send_email_action_validate($form, $form_state) {
   $form_values = $form_state['values'];
   // Validate the configuration form.
-  if (!valid_email_address($form_values['recipient']) && $form_values['recipient'] != '%author') {
+  if (!valid_email_address($form_values['recipient']) && strpos($form_values['recipient'], ':mail') === FALSE) {
     // We want the literal %author placeholder to be emphasized in the error message.
-    form_set_error('recipient', t('Enter a valid email address or %author.', array('%author' => '%author')));
+    form_set_error('recipient', t('Enter a valid email address or use a token e-mail address such as %author.', array('%author' => '[node:author:mail]')));
   }
 }
 
@@ -2942,7 +2973,16 @@ function system_send_email_action($entity, $context) {
 
   $recipient = token_replace($context['recipient'], $context);
 
-  $language = user_preferred_language($account);
+  // If the recipient is a registered user with a language preference, use
+  // the recipient's preferred language. Otherwise, use the system default
+  // language.
+  $recipient_account = user_load_by_mail($recipient);
+  if ($recipient_account) {
+    $language = user_preferred_language($recipient_account);
+  }
+  else {
+    $language = language_default();
+  }
   $params = array('context' => $context);
 
   if (drupal_mail('system', 'action_send_email', $recipient, $language, $params)) {
@@ -3090,7 +3130,7 @@ function system_time_zones($blank = NULL) {
  */
 function system_check_http_request() {
   // Try to get the content of the front page via drupal_http_request().
-  $result = drupal_http_request(url('', array('absolute' => TRUE)));
+  $result = drupal_http_request(url('', array('absolute' => TRUE)), array('max_redirects' => 0));
   // We only care that we get a http response - this means that Drupal
   // can make a http request.
   $works = isset($result->code) && ($result->code >= 100) && ($result->code < 600);
@@ -3110,16 +3150,16 @@ function system_timezone($abbreviation = '', $offset = -1, $is_daylight_saving_t
 }
 
 /**
- * Format the Powered by Drupal text.
+ * Returns HTML for the Powered by Drupal text.
  *
  * @ingroup themeable
  */
-function theme_system_powered_by($variables) {
+function theme_system_powered_by() {
   return '<span>' . t('Powered by <a href="@poweredby">Drupal</a>', array('@poweredby' => 'http://drupal.org')) . '</span>';
 }
 
 /**
- * Display the link to show or hide inline help descriptions.
+ * Returns HTML for a link to show or hide inline help descriptions.
  *
  * @ingroup themeable
  */
@@ -3193,7 +3233,7 @@ function system_retrieve_file($url, $destination = NULL, $managed = FALSE, $repl
   }
   $result = drupal_http_request($url);
   if ($result->code != 200) {
-    drupal_set_message(t('HTTP error @errorcode occured when trying to fetch @remote.', array('@errorcode' => $result->code, '@remote' => $url)), 'error');
+    drupal_set_message(t('HTTP error @errorcode occurred when trying to fetch @remote.', array('@errorcode' => $result->code, '@remote' => $url)), 'error');
     return FALSE;
   }
   $local = $managed ? file_save_data($result->data, $path, $replace) : file_unmanaged_save_data($result->data, $path, $replace);
@@ -3223,7 +3263,10 @@ function system_page_alter(&$page) {
  * Run the automated cron if enabled.
  */
 function system_run_automated_cron() {
-  if (($threshold = variable_get('cron_safe_threshold', DRUPAL_CRON_DEFAULT_THRESHOLD)) > 0) {
+  // If the site is not fully installed, suppress the automated cron run.
+  // Otherwise it could be triggered prematurely by AJAX requests during
+  // installation.
+  if (($threshold = variable_get('cron_safe_threshold', DRUPAL_CRON_DEFAULT_THRESHOLD)) > 0 && variable_get('install_task') == 'done') {
     $cron_last = variable_get('cron_last', NULL);
     if (!isset($cron_last) || (REQUEST_TIME - $cron_last > $threshold)) {
       drupal_cron_run();
@@ -3599,14 +3642,15 @@ function system_archiver_info() {
 }
 
 /**
- * Theme confirmation forms.
+ * Returns HTML for a confirmation form.
  *
  * By default this does not alter the appearance of a form at all,
  * but is provided as a convenience for themers.
  *
  * @param $variables
  *   An associative array containing:
- *   - form: An associative array containing the structure of the form.
+ *   - form: A render element representing the form.
+ *
  * @ingroup themeable
  */
 function theme_confirm_form($variables) {
@@ -3614,14 +3658,15 @@ function theme_confirm_form($variables) {
 }
 
 /**
- * Theme function for the system settings form.
+ * Returns HTML for a system settings form.
  *
  * By default this does not alter the appearance of a form at all,
  * but is provided as a convenience for themers.
  *
  * @param $variables
  *   An associative array containing:
- *   - form: An associative array containing the structure of the form.
+ *   - form: A render element representing the form.
+ *
  * @ingroup themeable
  */
 function theme_system_settings_form($variables) {

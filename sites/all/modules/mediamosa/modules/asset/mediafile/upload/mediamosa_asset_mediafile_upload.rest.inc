@@ -103,7 +103,7 @@ class mediamosa_rest_call_asset_mediafile_uploadticket_create extends mediamosa_
     // Set response.
     $mediamosa->add_item(
       array(
-        'action' => str_replace("{TICKET}", $ticket_id, $a_server_upload[mediamosa_server_db::URI]),
+        'action' => str_replace("{TICKET}", $ticket_id, $a_server_upload[mediamosa_server_db::SERVER_URI]),
         'uploadprogress_url' => $a_server_upload[mediamosa_server_db::URI_UPLOAD_PROGRESS],
         'ticket_id' => $ticket_id,
       )

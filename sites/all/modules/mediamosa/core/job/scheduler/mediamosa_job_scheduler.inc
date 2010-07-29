@@ -209,7 +209,7 @@ class mediamosa_job_scheduler {
     $a_transcoding_servers = mediamosa_server::get_enabled_transcode();
 
     foreach ($a_transcoding_servers as $a_transcoding_server) {
-      self::update_server_job_status($a_transcoding_server[mediamosa_server_db::URI]);
+      self::update_server_job_status($a_transcoding_server[mediamosa_server_db::SERVER_URI]);
     }
   }
 
@@ -719,7 +719,7 @@ class mediamosa_job_scheduler {
       array(
         '#nid' => mediamosa_server_db::NID,
         '#server_id' => mediamosa_server_job_db::SERVER_ID,
-        '#uri' => mediamosa_server_db::URI,
+        '#uri' => mediamosa_server_db::SERVER_URI,
         '#slots' => mediamosa_server_db::SLOTS,
         '#job_type' => mediamosa_job_db::JOB_TYPE,
         '#job_id' => mediamosa_job_db::ID,
@@ -753,7 +753,7 @@ class mediamosa_job_scheduler {
           self::start_server_job($job_info[mediamosa_job_db::ID],
                                  $job_info[mediamosa_job_db::JOB_TYPE],
                                  $result_row[mediamosa_server_db::NID],
-                                 $result_row[mediamosa_server_db::URI],
+                                 $result_row[mediamosa_server_db::SERVER_URI],
                                  $job_info[mediamosa_job_db::MEDIAFILE_ID]);
         }
       }
@@ -1489,7 +1489,7 @@ class mediamosa_job_scheduler {
         WHERE NOT mj.#started IS NULL AND TIME_TO_SEC(TIMEDIFF(utc_timestamp(), mj.#started)) > :JOB_TRANSCODE_TIMEOUT AND #server_type = :server_type_job_processor',
         array(
           '#job_id' => mediamosa_job_db::ID,
-          '#uri' => mediamosa_server_db::URI,
+          '#uri' => mediamosa_server_db::SERVER_URI,
           ':JOB_TRANSCODE_TIMEOUT' => mediamosa_settings::JOB_TRANSCODE_TIMEOUT,
           '#mediamosa_job' => mediamosa_job_db::TABLE_NAME,
           '#mediamosa_server_job' => mediamosa_server_job_db::TABLE_NAME,
@@ -1504,7 +1504,7 @@ class mediamosa_job_scheduler {
 
     foreach ($result as $result_row) {
       // For each found job, send a remove to the transcode server.
-      self::remove_job_on_server($result_row[mediamosa_server_db::URI], $result_row[mediamosa_job_db::ID]);
+      self::remove_job_on_server($result_row[mediamosa_server_db::SERVER_URI], $result_row[mediamosa_job_db::ID]);
 
       // verwijder de job uit de koppeltabel
       mediamosa_server_job::delete_by_jobid($result_row[mediamosa_job_db::ID]);

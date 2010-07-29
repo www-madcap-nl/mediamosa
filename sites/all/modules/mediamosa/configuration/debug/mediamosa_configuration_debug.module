@@ -58,7 +58,7 @@ function mediamosa_configuration_debug_mediamosa_configuration_collect() {
     '#title' => t('Whitelisting of IPs for REST.'),
     '#description' => t('Set one or more IPs for enabling authorization simulation on REST. This allows you to do queries on the REST interface with own app_id parameter without needing to indentify yourself. Should not be used actively on production, only for testing and debugging purposes. You can add more than one IP by separating with a |. You current IP number is; %ip_client.', array('%ip_client' => $_SERVER['REMOTE_ADDR'])),
     '#required' => FALSE,
-    '#default_value' => '',// Set empty, so its filled.
+    '#default_value' => variable_get('mediamosa_debug_ip_whitelist', ''),
   );
 
   return $form;

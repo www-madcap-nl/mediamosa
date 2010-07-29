@@ -1,5 +1,5 @@
 <?php
-// $Id: node.admin.inc,v 1.92 2010/03/07 06:49:10 webchick Exp $
+// $Id: node.admin.inc,v 1.97 2010/07/07 17:56:42 webchick Exp $
 
 /**
  * @file
@@ -119,14 +119,12 @@ function node_filters() {
 function node_build_filter_query(SelectQueryInterface $query) {
   // Build query
   $filter_data = isset($_SESSION['node_overview_filter']) ? $_SESSION['node_overview_filter'] : array();
-  $counter = 0;
   foreach ($filter_data as $index => $filter) {
     list($key, $value) = $filter;
     switch ($key) {
       case 'term':
-        $index = 'ti' . $counter++;
-        $query->join('taxonomy_index', $index, "n.nid = $index.nid");
-        $query->condition($index . '.tid', $value);
+        $alias = $query->join('taxonomy_index', 'ti', "n.nid = %alias.nid");
+        $query->condition($alias . '.tid', $value);
         break;
       case 'status':
         // Note: no exploitable hole as $key/$value have already been checked when submitted
@@ -188,9 +186,9 @@ function node_filter_form() {
   }
 
   $form['filters']['actions'] = array(
-    '#type' => 'container',
+    '#type' => 'actions',
     '#id' => 'node-admin-buttons',
-    '#attributes' => array('class' => array('form-actions', 'container-inline')),
+    '#attributes' => array('class' => array('container-inline')),
   );
   $form['filters']['actions']['submit'] = array('#type' => 'submit', '#value' => (count($session) ? t('Refine') : t('Filter')));
   if (count($session)) {
@@ -204,7 +202,11 @@ function node_filter_form() {
 }
 
 /**
- * Theme node administration filter selector.
+ * Returns HTML for a node administration filter selector.
+ *
+ * @param $variables
+ *   An associative array containing:
+ *   - form: A render element representing the form.
  *
  * @ingroup themeable
  */

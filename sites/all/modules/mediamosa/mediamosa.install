@@ -298,12 +298,20 @@ function mediamosa_update_7006() {
  */
 function mediamosa_update_7007() {
   // Change it.
-  db_query("ALTER TABLE mediamosa_asset_mediafile CHANGE COLUMN transcode_profile_id transcode_profile_id int(10) unsigned DEFAULT NULL COMMENT 'The transcode profile ID.'");
+  db_query("ALTER TABLE {mediamosa_asset_mediafile} CHANGE COLUMN transcode_profile_id transcode_profile_id int(10) unsigned DEFAULT NULL COMMENT 'The transcode profile ID.'");
 }
 
 /**
  * Clear all caches.
  */
 function mediamosa_update_7008() {
+  drupal_flush_all_caches();
+}
+
+/**
+ * Rename uri field in mediamosa_server table to server_uri.
+ */
+function mediamosa_update_7009() {
+  db_query("ALTER TABLE {mediamosa_server} CHANGE COLUMN uri `server_uri` varchar(255) DEFAULT NULL COMMENT 'The optional URI of the server.'");
   drupal_flush_all_caches();
 }

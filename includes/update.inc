@@ -1,5 +1,5 @@
 <?php
-// $Id: update.inc,v 1.40 2010/03/20 15:06:51 dries Exp $
+// $Id: update.inc,v 1.60 2010/07/07 05:44:03 webchick Exp $
 
 /**
  * @file
@@ -36,7 +36,10 @@ function update_check_incompatibility($name, $type = 'module') {
 
   // Store values of expensive functions for future use.
   if (empty($themes) || empty($modules)) {
-    $themes = _system_rebuild_theme_data();
+    // We need to do a full rebuild here to make sure the database reflects any
+    // code changes that were made in the filesystem before the update script
+    // was initiated.
+    $themes = system_rebuild_theme_data();
     $modules = system_rebuild_module_data();
   }
 
@@ -96,12 +99,55 @@ function update_prepare_d7_bootstrap() {
   // that occur by creating a static list.
   $GLOBALS['conf']['blocked_ips'] = array();
 
+  // Check that PDO is available and that the correct PDO database driver is
+  // loaded. Bootstrapping to DRUPAL_BOOTSTRAP_DATABASE will result in a fatal
+  // error otherwise.
+  $message = '';
+  // Check that PDO is loaded.
+  if (!extension_loaded('pdo')) {
+    $message = '<h2>PDO is required!</h2><p>Drupal 7 requires PHP ' . DRUPAL_MINIMUM_PHP . ' or higher with the PHP Data Objects (PDO) extension enabled.</p>';
+  }
+  // Check that the correct driver is loaded for the database being updated.
+  elseif (!in_array($databases['default']['default']['driver'], PDO::getAvailableDrivers())) {
+      $message = '<h2>A PDO database driver is required!</h2><p>You need to enable the PDO_' . strtoupper($databases['default']['default']['driver']) . ' database driver for PHP ' . DRUPAL_MINIMUM_PHP . ' or higher so that Drupal 7 can access the database.</p>';
+  }
+  if ($message) {
+    print $message . '<p>See the <a href="http://drupal.org/requirements">system requirements page</a> for more information.</p>';
+    exit();
+  }
+
   // Allow the database system to work even if the registry has not been
   // created yet.
   drupal_bootstrap(DRUPAL_BOOTSTRAP_DATABASE);
-  drupal_install_initialize_database();
-  spl_autoload_unregister('drupal_autoload_class');
-  spl_autoload_unregister('drupal_autoload_interface');
+
+  // Create the registry tables.
+  if (!db_table_exists('registry')) {
+    $schema['registry'] = array(
+      'fields' => array(
+        'name'   => array('type' => 'varchar', 'length' => 255, 'not null' => TRUE, 'default' => ''),
+        'type'   => array('type' => 'varchar', 'length' => 9, 'not null' => TRUE, 'default' => ''),
+        'filename'   => array('type' => 'varchar', 'length' => 255, 'not null' => TRUE, 'default' => ''),
+        'module'   => array('type' => 'varchar', 'length' => 255, 'not null' => TRUE, 'default' => ''),
+        'weight'   => array('type' => 'int', 'not null' => TRUE, 'default' => 0),
+      ),
+      'primary key' => array('name', 'type'),
+      'indexes' => array(
+        'hook' => array('type', 'weight', 'module'),
+      ),
+    );
+    db_create_table('registry', $schema['registry']);
+  }
+  if (!db_table_exists('registry_file')) {
+    $schema['registry_file'] = array(
+      'fields' => array(
+        'filename'   => array('type' => 'varchar', 'length' => 255, 'not null' => TRUE),
+        'filectime'  => array('type' => 'int', 'not null' => TRUE, 'default' => 0),
+        'filemtime'  => array('type' => 'int', 'not null' => TRUE, 'default' => 0),
+      ),
+      'primary key' => array('filename'),
+    );
+    db_create_table('registry_file', $schema['registry_file']);
+  }
 
   // The new cache_bootstrap bin is required to bootstrap to
   // DRUPAL_BOOTSTRAP_SESSION, so create it here rather than in
@@ -135,11 +181,6 @@ function update_prepare_d7_bootstrap() {
           'not null' => TRUE,
           'default' => 0,
         ),
-        'headers' => array(
-          'description' => 'Any custom HTTP headers to be added to cached data.',
-          'type' => 'text',
-          'not null' => FALSE,
-        ),
         'serialized' => array(
           'description' => 'A flag to indicate whether content is serialized (1) or not (0).',
           'type' => 'int',
@@ -154,6 +195,16 @@ function update_prepare_d7_bootstrap() {
       'primary key' => array('cid'),
     );
     db_create_table('cache_bootstrap', $cache_bootstrap);
+  }
+
+  // Set a valid timezone for 6 -> 7 upgrade process.
+  drupal_bootstrap(DRUPAL_BOOTSTRAP_VARIABLES);
+  $timezone_offset = variable_get('date_default_timezone', 0);
+  if (is_numeric($timezone_offset)) {
+    // Save the original offset.
+    variable_set('date_temporary_timezone', $timezone_offset);
+    // Set the timezone for this request only.
+    $GLOBALS['conf']['date_default_timezone'] = 'UTC';
   }
 }
 
@@ -194,11 +245,11 @@ function update_fix_d7_block_deltas(&$sandbox, $renamed_deltas) {
           ))
           ->fetchField();
           if ($block_exists) {
-          	db_update($table)
-          	  ->fields(array('delta' => $new_delta))
-          	  ->condition('module', $module)
-          	  ->condition('delta', $old_delta)
-          	  ->execute();
+            db_update($table)
+              ->fields(array('delta' => $new_delta))
+              ->condition('module', $module)
+              ->condition('delta', $old_delta)
+              ->execute();
           }
         }
       }
@@ -265,7 +316,7 @@ function update_fix_d7_requirements() {
   global $update_rewrite_settings, $db_url;
   if (!empty($update_rewrite_settings)) {
     $databases = update_parse_db_url($db_url);
-    $salt = sha1(drupal_random_bytes(64));
+    $salt = drupal_hash_base64(drupal_random_bytes(55));
     file_put_contents(conf_path() . '/settings.php', "\n" . '$databases = ' . var_export($databases, TRUE) . ";\n\$drupal_hash_salt = '$salt';", FILE_APPEND);
   }
   if (drupal_get_installed_schema_version('system') < 7000 && !variable_get('update_d7_requirements', FALSE)) {
@@ -298,7 +349,8 @@ function update_fix_d7_requirements() {
     db_add_index('system', 'system_list', array('weight', 'name'));
 
     // Add the cache_path table.
-    $schema['cache_path'] = drupal_get_schema_unprocessed('system', 'cache');
+    require_once('./modules/system/system.install');
+    $schema['cache_path'] = system_schema_cache_7054();
     $schema['cache_path']['description'] = 'Cache table used for path alias lookups.';
     db_create_table('cache_path', $schema['cache_path']);
 
@@ -342,61 +394,9 @@ function update_fix_d7_requirements() {
     );
     db_create_table('role_permission', $schema['role_permission']);
 
-    // Add the {semaphore} table in case menu_rebuild() gets called during
-    // an update.
-    $schema['semaphore'] = array(
-      'description' => 'Table for holding semaphores, locks, flags, etc. that cannot be stored as Drupal variables since they must not be cached.',
-      'fields' => array(
-        'name' => array(
-          'description' => 'Primary Key: Unique name.',
-          'type' => 'varchar',
-          'length' => 255,
-          'not null' => TRUE,
-          'default' => ''
-        ),
-        'value' => array(
-          'description' => 'A value for the semaphore.',
-          'type' => 'varchar',
-          'length' => 255,
-          'not null' => TRUE,
-          'default' => ''
-        ),
-        'expire' => array(
-          'description' => 'A Unix timestamp with microseconds indicating when the semaphore should expire.',
-          'type' => 'float',
-          'size' => 'big',
-          'not null' => TRUE
-        ),
-      ),
-      'indexes' => array('value' => array('value')),
-      'primary key' => array('name'),
-    );
-    db_create_table('semaphore', $schema['semaphore']);
-
-    // Add registry tables since these are required during an update.
-    $schema['registry'] = array(
-      'fields' => array(
-        'name'   => array('type' => 'varchar', 'length' => 255, 'not null' => TRUE, 'default' => ''),
-        'type'   => array('type' => 'varchar', 'length' => 9, 'not null' => TRUE, 'default' => ''),
-        'filename'   => array('type' => 'varchar', 'length' => 255, 'not null' => TRUE, 'default' => ''),
-        'module'   => array('type' => 'varchar', 'length' => 255, 'not null' => TRUE, 'default' => ''),
-        'weight'   => array('type' => 'int', 'not null' => TRUE, 'default' => 0),
-      ),
-      'primary key' => array('name', 'type'),
-      'indexes' => array(
-        'hook' => array('type', 'weight', 'module'),
-      ),
-    );
-    $schema['registry_file'] = array(
-      'fields' => array(
-        'filename'   => array('type' => 'varchar', 'length' => 255, 'not null' => TRUE),
-        'filectime'  => array('type' => 'int', 'not null' => TRUE, 'default' => 0),
-        'filemtime'  => array('type' => 'int', 'not null' => TRUE, 'default' => 0),
-      ),
-      'primary key' => array('filename'),
-    );
-    db_create_table('registry', $schema['registry']);
-    db_create_table('registry_file', $schema['registry_file']);
+    // Drops and recreates semaphore value index.
+    db_drop_index('semaphore', 'expire');
+    db_add_index('semaphore', 'value', array('value'));
 
     $schema['date_format_type'] = array(
       'description' => 'Stores configured date format types.',
@@ -483,7 +483,15 @@ function update_fix_d7_requirements() {
     );
 
     db_create_table('date_format_type', $schema['date_format_type']);
+    // Sites that have the Drupal 6 Date module installed already have the
+    // following tables.
+    if (db_table_exists('date_formats')) {
+      db_rename_table('date_formats', 'd6_date_formats');
+    }
     db_create_table('date_formats', $schema['date_formats']);
+    if (db_table_exists('date_format_locale')) {
+      db_rename_table('date_format_locale', 'd6_date_format_locale');
+    }
     db_create_table('date_format_locale', $schema['date_format_locale']);
 
     // Add the queue table.
@@ -504,7 +512,7 @@ function update_fix_d7_requirements() {
           'description' => 'The queue name.',
         ),
         'data' => array(
-          'type' => 'text',
+          'type' => 'blob',
           'not null' => FALSE,
           'size' => 'big',
           'serialize' => TRUE,
@@ -573,6 +581,19 @@ function update_fix_d7_requirements() {
     // system_update_7036().
     if ($message = variable_get('site_offline_message', NULL)) {
       variable_set('maintenance_mode_message', $message);
+    }
+
+    // Add ssid column and index.
+    db_add_field('sessions', 'ssid', array('description' => "Secure session ID. The value is generated by PHP's Session API.", 'type' => 'varchar', 'length' => 128, 'not null' => TRUE, 'default' => ''));
+    db_add_index('sessions', 'ssid', array('ssid'));
+    // Drop existing primary key.
+    db_drop_primary_key('sessions');
+    // Add new primary key.
+    db_add_primary_key('sessions', array('sid', 'ssid'));
+
+    // Allow longer javascript file names.
+    if (db_table_exists('languages')) {
+      db_change_field('languages', 'javascript', 'javascript', array('type' => 'varchar', 'length' => 64, 'not null' => TRUE, 'default' => ''));
     }
 
     variable_set('update_d7_requirements', TRUE);
@@ -738,10 +759,15 @@ function update_do_one($module, $number, $dependency_map, &$context) {
       $ret['results']['query'] = $function($context['sandbox']);
       $ret['results']['success'] = TRUE;
     }
-    // @TODO We may want to do different error handling for different exception
-    // types, but for now we'll just print the message.
+    // @TODO We may want to do different error handling for different
+    // exception types, but for now we'll just log the exception and
+    // return the message for printing.
     catch (Exception $e) {
-      $ret['#abort'] = array('success' => FALSE, 'query' => $e->getMessage());
+      watchdog_exception('update', $e);
+
+      require_once DRUPAL_ROOT . '/includes/errors.inc';
+      $variables = _drupal_decode_exception($e);
+      $ret['#abort'] = array('success' => FALSE, 'query' => t('%type: %message in %function (line %line of %file).', $variables));
     }
 
     if ($context['log']) {
@@ -1123,16 +1149,10 @@ function update_build_dependency_graph($update_functions) {
   }
 
   // Now add any explicit update dependencies declared by modules.
-  $update_dependencies = update_invoke_all('update_dependencies');
+  $update_dependencies = update_retrieve_dependencies();
   foreach ($graph as $function => $data) {
     if (!empty($update_dependencies[$data['module']][$data['number']])) {
       foreach ($update_dependencies[$data['module']][$data['number']] as $module => $number) {
-        // If we have an explicit dependency on more than one update from a
-        // particular module, choose the highest one, since that contains the
-        // actual direct dependency.
-        if (is_array($number)) {
-          $number = max($number);
-        }
         $dependency = $module . '_update_' . $number;
         $graph[$dependency]['edges'][$function] = TRUE;
         $graph[$dependency]['module'] = $module;
@@ -1181,39 +1201,66 @@ function update_already_performed($module, $number) {
 }
 
 /**
- * Invoke an update system hook in all installed modules.
+ * Invoke hook_update_dependencies() in all installed modules.
  *
- * This function is similar to module_invoke_all(), except it does not require
- * that a module be enabled to invoke its hook, only that it be installed. This
- * allows the update system to properly perform updates even on modules that
- * are currently disabled.
- *
- * @param $hook
- *   The name of the hook to invoke.
- * @param ...
- *   Arguments to pass to the hook.
+ * This function is similar to module_invoke_all(), with the main difference
+ * that it does not require that a module be enabled to invoke its hook, only
+ * that it be installed. This allows the update system to properly perform
+ * updates even on modules that are currently disabled.
  *
  * @return
- *   An array of return values of the hook implementations. If modules return
- *   arrays from their implementations, those are merged into one array.
+ *   An array of return values obtained by merging the results of the
+ *   hook_update_dependencies() implementations in all installed modules.
  *
  * @see module_invoke_all()
+ * @see hook_update_dependencies()
  */
-function update_invoke_all() {
-  $args = func_get_args();
-  $hook = $args[0];
-  unset($args[0]);
+function update_retrieve_dependencies() {
   $return = array();
-  $modules = db_query("SELECT name FROM {system} WHERE type = 'module' AND schema_version != :schema", array(':schema' => SCHEMA_UNINSTALLED))->fetchCol();
+  // Get a list of installed modules, arranged so that we invoke their hooks in
+  // the same order that module_invoke_all() does.
+  $modules = db_query("SELECT name FROM {system} WHERE type = 'module' AND schema_version != :schema ORDER BY weight ASC, name ASC", array(':schema' => SCHEMA_UNINSTALLED))->fetchCol();
   foreach ($modules as $module) {
-    $function = $module . '_' . $hook;
+    $function = $module . '_update_dependencies';
     if (function_exists($function)) {
-      $result = call_user_func_array($function, $args);
+      $result = $function();
+      // Each implementation of hook_update_dependencies() returns a
+      // multidimensional, associative array containing some keys that
+      // represent module names (which are strings) and other keys that
+      // represent update function numbers (which are integers). We cannot use
+      // array_merge_recursive() to properly merge these results, since it
+      // treats strings and integers differently. Therefore, we have to
+      // explicitly loop through the expected array structure here and perform
+      // the merge manually.
       if (isset($result) && is_array($result)) {
-        $return = array_merge_recursive($return, $result);
-      }
-      elseif (isset($result)) {
-        $return[] = $result;
+        foreach ($result as $module => $module_data) {
+          foreach ($module_data as $update => $update_data) {
+            foreach ($update_data as $module_dependency => $update_dependency) {
+              // If there are redundant dependencies declared for the same
+              // update function (so that it is declared to depend on more than
+              // one update from a particular module), record the dependency on
+              // the highest numbered update here, since that automatically
+              // implies the previous ones. For example, if one module's
+              // implementation of hook_update_dependencies() required this
+              // ordering:
+              //
+              // system_update_7001 ---> user_update_7000
+              //
+              // but another module's implementation of the hook required this
+              // one:
+              //
+              // system_update_7002 ---> user_update_7000
+              //
+              // we record the second one, since system_update_7001() is always
+              // guaranteed to run before system_update_7002() anyway (within
+              // an individual module, updates are always run in numerical
+              // order).
+              if (!isset($return[$module][$update][$module_dependency]) || $update_dependency > $return[$module][$update][$module_dependency]) {
+                $return[$module][$update][$module_dependency] = $update_dependency;
+              }
+            }
+          }
+        }
       }
     }
   }

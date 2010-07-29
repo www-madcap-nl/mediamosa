@@ -1,5 +1,5 @@
 <?php
-// $Id: book.admin.inc,v 1.32 2010/02/25 09:44:51 dries Exp $
+// $Id: book.admin.inc,v 1.36 2010/06/26 21:32:20 dries Exp $
 
 /**
  * @file
@@ -34,7 +34,7 @@ function book_admin_settings() {
   $form['book_allowed_types'] = array(
     '#type' => 'checkboxes',
     '#title' => t('Content types allowed in book outlines'),
-    '#default_value' => array('book'),
+    '#default_value' => variable_get('book_allowed_types', array('book')),
     '#options' => $types,
     '#description' => t('Users with the %outline-perm permission can add all content types.', array('%outline-perm' => t('Administer book outlines'))),
     '#required' => TRUE,
@@ -42,14 +42,14 @@ function book_admin_settings() {
   $form['book_child_type'] = array(
     '#type' => 'radios',
     '#title' => t('Content type for child pages'),
-    '#default_value' => 'book',
+    '#default_value' => variable_get('book_child_type', 'book'),
     '#options' => $types,
     '#required' => TRUE,
   );
   $form['array_filter'] = array('#type' => 'value', '#value' => TRUE);
   $form['#validate'][] = 'book_admin_settings_validate';
 
-  return system_settings_form($form, TRUE);
+  return system_settings_form($form);
 }
 
 /**
@@ -154,7 +154,7 @@ function _book_admin_table($node, &$form) {
   $tree = book_menu_subtree_data($node->book);
   $tree = array_shift($tree); // Do not include the book item itself.
   if ($tree['below']) {
-    $hash = sha1(serialize($tree['below']));
+    $hash = drupal_hash_base64(serialize($tree['below']));
     // Store the hash value as a hidden form element so that we can detect
     // if another user changed the book hierarchy.
     $form['tree_hash'] = array(
@@ -212,10 +212,14 @@ function _book_admin_table_tree($tree, &$form) {
 }
 
 /**
- * Theme function for the book administration page form.
+ * Returns HTML for a book administration form.
  *
- * @ingroup themeable
+ * @param $variables
+ *   An associative array containing:
+ *   - form: A render element representing the form.
+ *
  * @see book_admin_table()
+ * @ingroup themeable
  */
 function theme_book_admin_table($variables) {
   $form = $variables['form'];
@@ -242,8 +246,8 @@ function theme_book_admin_table($variables) {
       drupal_render($form[$key]['weight']),
       drupal_render($form[$key]['plid']) . drupal_render($form[$key]['mlid']),
       l(t('view'), $href),
-      $access ? l(t('edit'), 'node/' . $nid . '/edit', array('query' => $destination)) : '&nbsp',
-      $access ? l(t('delete'), 'node/' . $nid . '/delete', array('query' => $destination) )  : '&nbsp',
+      $access ? l(t('edit'), 'node/' . $nid . '/edit', array('query' => $destination)) : '&nbsp;',
+      $access ? l(t('delete'), 'node/' . $nid . '/delete', array('query' => $destination) )  : '&nbsp;',
     );
     $row = array('data' => $data);
     if (isset($form[$key]['#attributes'])) {

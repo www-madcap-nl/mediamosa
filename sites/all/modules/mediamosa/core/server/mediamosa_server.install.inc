@@ -139,7 +139,7 @@ s1.write('mediaspace');
     $node->{mediamosa_server_db::VERSION} = $default_server[1];
     $node->{mediamosa_server_db::SERVER_STATUS} = $default_server[2];
     $node->{mediamosa_server_db::SERVER_TYPE} = $default_server[3];
-    $node->{mediamosa_server_db::URI} = $default_server[4];
+    $node->{mediamosa_server_db::SERVER_URI} = $default_server[4];
     $node->{mediamosa_server_db::CONTAINERS} = $default_server[5];
     $node->{mediamosa_server_db::OBJECT_CODE} = $default_server[6];
     $node->{mediamosa_server_db::DESCRIPTION} = $node->{mediamosa_server_db::SERVER_NAME} = $default_server[7];
@@ -173,7 +173,7 @@ function _mediamosa_server_uninstall() {
  * Implements hook_schema().
  */
 function mediamosa_server_schema() {
-  $a_types = array(
+  $types = array(
     mediamosa_server_db::SERVER_TYPE_DOWNLOAD,
     mediamosa_server_db::SERVER_TYPE_STILL,
     mediamosa_server_db::SERVER_TYPE_STREAMING,
@@ -181,7 +181,7 @@ function mediamosa_server_schema() {
     mediamosa_server_db::SERVER_TYPE_UPLOAD,
   );
 
-  $a_status = array(
+  $server_status = array(
     mediamosa_server_db::SERVER_STATUS_OFF,
     mediamosa_server_db::SERVER_STATUS_ON,
     mediamosa_server_db::SERVER_STATUS_CLOSE,
@@ -210,20 +210,20 @@ function mediamosa_server_schema() {
       ),
       mediamosa_server_db::SERVER_STATUS => array(
         'description' => t('The server status.'),
-        'type' => "enum('" . implode("','", $a_status) . "')",
-        'mysql_type' => "enum('" . implode("','", $a_status) . "')",
+        'type' => "enum('" . implode("','", $server_status) . "')",
+        'mysql_type' => "enum('" . implode("','", $server_status) . "')",
         'not null' => TRUE,
       ),
       mediamosa_server_db::SERVER_TYPE => array(
         'description' => t('The server type.'),
-        'type' => "enum('" . implode("','", $a_types) . "')",
-        'mysql_type' => "enum('" . implode("','", $a_types) . "')",
+        'type' => "enum('" . implode("','", $types) . "')",
+        'mysql_type' => "enum('" . implode("','", $types) . "')",
         'not null' => TRUE,
       ),
-      mediamosa_server_db::URI => array(
+      mediamosa_server_db::SERVER_URI => array(
         'description' => t('The optional URI of the server.'),
         'type' => 'varchar',
-        'length' => mediamosa_server_db::URI_LENGTH,
+        'length' => mediamosa_server_db::SERVER_URI_LENGTH,
         'not null' => FALSE,
       ),
       mediamosa_server_db::DESCRIPTION => array(
