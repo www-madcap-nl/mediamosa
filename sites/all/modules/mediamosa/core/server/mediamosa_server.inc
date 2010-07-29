@@ -116,7 +116,7 @@ class mediamosa_server {
 
       $servers[] = array(
         'enabled_server' => $enabled_server,
-        'status' => (isset($xml->items->item) ? mediamosa_lib::simplexml2array($xml->items->item) : array())
+        'status' => (isset($xml->items->item) ? mediamosa_lib::simplexml2array($xml->items->item) : array()),
       );
     }
 

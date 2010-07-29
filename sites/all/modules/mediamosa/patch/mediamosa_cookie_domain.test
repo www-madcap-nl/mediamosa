@@ -51,7 +51,7 @@ class MediaMosaCookieDomain extends MediaMosaTestCase {
     global $base_url, $base_path, $base_root;
 
     // Export the following settings.php variables to the global namespace
-    global $db_prefix, $cookie_domain, $conf, $installed_profile, $update_free_access, $is_https, $base_secure_url, $base_insecure_url;
+    global $cookie_domain, $conf, $installed_profile, $update_free_access, $is_https, $base_secure_url, $base_insecure_url;
 
     // save old settings as conf_init() resets them.
     $this->old_server = $_SERVER;
@@ -61,7 +61,6 @@ class MediaMosaCookieDomain extends MediaMosaTestCase {
     $this->old_base_path = $base_path;
     $this->old_base_root = $base_root;
     $this->old_conf = $conf;
-    $this->old_db_prefix = $db_prefix;
     $this->old_installed_profile = $installed_profile;
     $this->old_update_free_access = $update_free_access;
     $this->old_is_https = $is_https;
@@ -120,7 +119,6 @@ class MediaMosaCookieDomain extends MediaMosaTestCase {
     $base_path = $this->old_base_path;
     $base_root = $this->old_base_root;
     $conf = $this->old_conf;
-    $db_prefix = $this->old_db_prefix;
     $installed_profile = $this->old_installed_profile;
     $update_free_access = $this->old_update_free_access;
   }

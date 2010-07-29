@@ -221,6 +221,16 @@ function mediamosa_profile_install() {
       'pages' => '',
       'cache' => -1,
     ),
+    array(
+      'module' => 'mediamosa',
+      'delta' => 'mediamosa-version',
+      'theme' => 'seven',
+      'status' => 1,
+      'weight' => 15,
+      'region' => 'content',
+      'pages' => '',
+      'cache' => -1,
+    ),
   );
   $query = db_insert('block')->fields(array('module', 'delta', 'theme', 'status', 'weight', 'region', 'pages', 'cache'));
   foreach ($values as $record) {
@@ -338,4 +348,7 @@ function mediamosa_profile_install() {
 
   // Enable modules.
   module_enable($module_list);
+
+  // Set verbose off for simpletest.
+  variable_set('simpletest_verbose', FALSE);
 }

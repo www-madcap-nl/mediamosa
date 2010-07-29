@@ -358,8 +358,6 @@ class mediamosa_http {
    *       A string containing the response body that was received.
    */
   static public function drupal_http_request($url, array $options = array()) {
-    global $db_prefix;
-
     $result = new stdClass();
 
     // Parse the URL and make sure we can handle the schema.
@@ -462,8 +460,9 @@ class mediamosa_http {
     // user-agent is used to ensure that multiple testing sessions running at the
     // same time won't interfere with each other as they would if the database
     // prefix were stored statically in a file or database variable.
-    if (is_string($db_prefix) && preg_match("/simpletest\\d+/", $db_prefix, $matches)) {
-      $options['headers']['User-Agent'] = drupal_generate_test_ua($matches[0]);
+    $test_info = &$GLOBALS['drupal_test_info'];
+    if (!empty($test_info['test_run_id'])) {
+      $options['headers']['User-Agent'] = drupal_generate_test_ua($test_info['test_run_id']);
     }
 
     $request = $options['method'] . ' ' . $path . " HTTP/1.0\r\n";

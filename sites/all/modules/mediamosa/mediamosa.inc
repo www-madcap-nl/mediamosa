@@ -221,8 +221,6 @@ class mediamosa {
    * @return bool
    */
   static public function is_app_enabled() {
-    global $db_prefix;
-
     // If we are running an unit test, then we are enabled unless disable_app is specified.
     if (mediamosa::in_simpletest_sandbox()) {
       // The name of the http var.

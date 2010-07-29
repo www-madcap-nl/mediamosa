@@ -373,10 +373,10 @@ function mediamosa_profile_configure_server($install_state) {
   foreach ($result as $record) {
     $revision_data = unserialize($record->revision_data);
     if (isset($revision_data['server_uri'])) {
-      $revision_data['server_uri'] = str_replace('http://localhost', 'http://' . $server_name, $revision_data['server_uri']);
+      $revision_data['server_uri'] = str_replace('mediamosa.local', $server_name, $revision_data['server_uri']);
     }
     if (isset($revision_data['uri_upload_progress'])) {
-      $revision_data['uri_upload_progress'] = str_replace('http://example.org', 'http://' . $server_name, $revision_data['uri_upload_progress']);
+      $revision_data['uri_upload_progress'] = str_replace('mediamosa.local', $server_name, $revision_data['uri_upload_progress']);
     }
     db_query("
       UPDATE {mediamosa_node_revision}

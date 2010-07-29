@@ -88,6 +88,9 @@ Other changes (not ticket related).
   mediamosa_maintenance_simpletest.
 - Created mediamosa_maintenance_status for new status page module.
 - All simpletests urls, functions are moved to /admin/mediamosa/simpletests.
+- Fixed problem with own http_request function now $db_prefix is removed from
+  drupal.
+- Fixed default profile to refect mediamosa.local as default domain.
 
 Mediamosa 2.1.5 (build 664)
 ---------------------------
