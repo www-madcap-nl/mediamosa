@@ -95,9 +95,6 @@ class mediamosa_rest_call_statistics_get_newest_mediafiles extends mediamosa_res
     $a_query[mediamosa_db_query::A_SELECT_EXPR][] = 'mf.filename';
     $a_query[mediamosa_db_query::A_SELECT_EXPR][] = 'mf.created';
 
-    $a_query[mediamosa_db_query::A_SELECT_EXPR][] = 'mfmd.container_type';
-    $a_query[mediamosa_db_query::A_SELECT_EXPR][] = 'mfmd.filesize';
-
     // app_id...
     $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = sprintf("a.app_id IN(%s)", mediamosa_db::escape_string(implode(',', $app_ids)));
 
@@ -115,9 +112,6 @@ class mediamosa_rest_call_statistics_get_newest_mediafiles extends mediamosa_res
 
     // MF must be original
     $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = "mf.is_original_file='TRUE'";
-
-    // Join the metadata stuff
-    $a_query[mediamosa_db_query::A_JOIN]['mediafile_metadata'] = "LEFT JOIN {mediamosa_asset_mediafile_metadata} AS mfmd ON mf.mediafile_id=mfmd.mediafile_id";
 
     // Order by....
     $a_query[mediamosa_db_query::A_ORDER_BY][] = $a_order_by[$order_by]['column'] . ' ' . $order_direction;
@@ -138,6 +132,11 @@ class mediamosa_rest_call_statistics_get_newest_mediafiles extends mediamosa_res
 
     // Fill items.
     foreach ($result as $row) {
+      // Join the metadata stuff
+      $mediafile_id = $row[mediamosa_asset_mediafile_db::ID];
+      $row[mediamosa_asset_mediafile_metadata::CONTAINER_TYPE] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::CONTAINER_TYPE);
+      $row[mediamosa_asset_mediafile_metadata::FILESIZE] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, mediamosa_asset_mediafile_metadata::FILESIZE);
+
       $o_mediamosa->add_item($row);
     }
   }

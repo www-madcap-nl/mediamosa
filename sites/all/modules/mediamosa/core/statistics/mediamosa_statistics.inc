@@ -79,11 +79,9 @@ class mediamosa_statistics {
   static public function log_event_requested_stream($mediafile_id, $response_type) {
 
     $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
-    $query->leftJoin(mediamosa_asset_mediafile_metadata_db::TABLE_NAME, 'mfm', 'mfm.mediafile_id = mf.mediafile_id');
     $query->leftJoin(mediamosa_asset_db::TABLE_NAME, 'a', 'a.asset_id = mf.asset_id');
     $query->fields('mf');
     $query->fields('a', array(mediamosa_asset_db::ID)); // 2.x allows us to use the asset_id instead of the asset_id_root.
-    $query->fields('mfm', array(mediamosa_asset_mediafile_metadata_db::FILESIZE, mediamosa_asset_mediafile_metadata_db::CONTAINER_TYPE));
     $query->condition('mf.' . mediamosa_asset_mediafile_db::ID, $mediafile_id);
     $mediafile_ext = $query->execute()->fetchAssoc();
     // Not found?
@@ -101,8 +99,8 @@ class mediamosa_statistics {
       mediamosa_statistics_stream_request_db::MEDIAFILE_ID => $mediafile_id,
       mediamosa_statistics_stream_request_db::OWNER_ID => $mediafile_ext[mediamosa_asset_mediafile_db::OWNER_ID],
       mediamosa_statistics_stream_request_db::GROUP_ID => $mediafile_ext[mediamosa_asset_mediafile_db::GROUP_ID],
-      mediamosa_statistics_stream_request_db::FILESIZE => $mediafile_ext[mediamosa_asset_mediafile_metadata_db::FILESIZE],
-      mediamosa_statistics_stream_request_db::CONTAINER_TYPE => $mediafile_ext[mediamosa_asset_mediafile_metadata_db::CONTAINER_TYPE],
+      mediamosa_statistics_stream_request_db::FILESIZE => mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, mediamosa_asset_mediafile_metadata::FILESIZE);
+      mediamosa_statistics_stream_request_db::CONTAINER_TYPE => mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::CONTAINER_TYPE);
       mediamosa_statistics_stream_request_db::PLAY_TYPE => $response_type,
       mediamosa_statistics_stream_request_db::PLAYED => mediamosa::db_current_timestamp_now(),
     );
@@ -224,13 +222,33 @@ class mediamosa_statistics {
 
     // Per usergroup, user and container
     foreach (array('group_id' => 'group', 'owner_id' => 'user', 'app_id' => 'container') as $subject => $name) {
+      /*
+      // Example query:
+      SELECT SUM(m.val_int) / 1024 / 1024 AS diskspace_mb, mf.owner_id, mf.app_id, mm.val_char
+      FROM mediamosa_asset_mediafile_metadata AS m
+      LEFT JOIN mediamosa_asset_mediafile_metadata AS mm USING(mediafile_id)
+      JOIN mediamosa_asset_mediafile AS mf USING(mediafile_id)
+      WHERE m.val_int > 0 AND m.prop_id = 13 AND mm.prop_id = 10
+      GROUP BY app_id, owner_id, mm.val_char
+       */
       $result = mediamosa_db::db_query(
-        'SELECT SUM(m.filesize) / 1024 / 1024 AS diskspace_mb, mf.#subject, mf.app_id, m.container_type FROM {mediamosa_asset_mediafile_metadata} AS m
-         JOIN {mediamosa_asset_mediafile} AS mf ON m.mediafile_id = mf.mediafile_id
-         WHERE filesize > 0
-         GROUP BY app_id, #subject, container_type',
+        'SELECT SUM(m.#filesize) / 1024 / 1024 AS diskspace_mb, mf.#subject, mf.#app_id, m.#container_type
+         FROM {#mediamosa_asset_mediafile_metadata} AS m
+         LEFT JOIN {#mediamosa_asset_mediafile_metadata} AS mm USING(#mediafile_id)
+         JOIN {#mediamosa_asset_mediafile} AS mf USING(#mediafile_id)
+         WHERE m.#filesize > 0 AND m.#prop_id = :prop_id_filesize AND mm.#prop_id = :prop_id_container_type
+         GROUP BY #app_id, #subject, mm.#container_type',
         array(
+          '#mediamosa_asset_mediafile_metadata' => mediamosa_asset_mediafile_metadata_db::TABLE_NAME,
+          '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
+          '#filesize' => mediamosa_asset_mediafile_metadata_db::VAL_INT,
           '#subject' => $subject,
+          '#app_id' => mediamosa_asset_mediafile_db::APP_ID,
+          '#container_type' => mediamosa_asset_mediafile_metadata_db::VAL_CHAR,
+          '#mediafile_id' => mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID,
+          '#prop_id' => mediamosa_asset_mediafile_metadata_db::PROP_ID,
+          ':prop_id_filesize' => mediamosa_asset_mediafile_metadata_property::get_property_id_int(mediamosa_asset_mediafile_metadata::FILESIZE),
+          ':prop_id_container_type' => mediamosa_asset_mediafile_metadata_property::get_property_id_char(mediamosa_asset_mediafile_metadata::CONTAINER_TYPE),
         )
       );
 

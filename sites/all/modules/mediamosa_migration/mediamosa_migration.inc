@@ -707,6 +707,92 @@ function _mediamosa_migration_mediafile_metadata() {
 
   // Back to old session mode.
   db_query(strtr("SET SESSION sql_mode = '#old_mode'", array('#old_mode' => $old_mode)));
+
+
+  //
+  // Property introduction.
+  //
+
+  //
+  // New tables.
+  //
+
+  // Rename the old metadta table.
+  db_query('ALTER TABLE {mediamosa_asset_mediafile_metadata} DROP FOREIGN KEY fk_mediamosa_asset_mediafile_metadata_mediafile_id');
+
+  // Rename the old metadta table.
+  db_query('ALTER TABLE {mediamosa_asset_mediafile_metadata} RENAME {mediamosa_asset_mediafile_metadata_old}');
+
+  // Create property table.
+  mediamosa::drupal_install_schema(mediamosa_asset_mediafile_metadata_property_db::TABLE_NAME);
+
+  // Install the new metadata table.
+  mediamosa::drupal_install_schema(mediamosa_asset_mediafile_metadata_db::TABLE_NAME);
+
+  //
+  // Migration.
+  //
+
+  cache_clear_all();
+
+  // Existing fields.
+  $fields = array();
+  $columns = mediamosa_db::db_get_columns_with_type('mediamosa_asset_mediafile_metadata_old');
+  foreach ($columns as $row) {
+    // Collect only real properties.
+    if (
+      $row->column_name != 'metadata_id' &&
+      $row->column_name != 'mediafile_id' &&
+      $row->column_name != 'created' &&
+      $row->column_name != 'changed'
+    ) {
+      // Type is eg. "varchar(32)" or "int(10) unsigned" or "enum('FALSE','TRUE')"
+      $type = drupal_strtolower($row->data_type);
+
+      // Type formatting.
+      if (strpos($type, 'int') !== FALSE) {
+        $type = 'INT';
+      }
+      elseif (strpos($type, 'char') !== FALSE || strpos($type, 'binary') !== FALSE || $type == 'blob' || $type == 'text' || $type == 'enum') {
+        $type = 'CHAR';
+      }
+      else {
+        $type = 'DATETIME';
+      }
+
+      // Insert.
+      $prop_id = mediamosa_asset_mediafile_metadata_property::get_property_id($row->column_name, $type);
+      $fields[$row->column_name] = array(
+        'prop_id' => $prop_id,
+        'type' => $type,
+      );
+    }
+  }
+
+  // Migrating data.
+  $result = db_query("SELECT * FROM {mediamosa_asset_mediafile_metadata_old}");
+  foreach ($result as $row) {
+    foreach ($fields as $field => $property) {
+      if (!is_null($row->$field)) {
+        db_query("
+          INSERT INTO {mediamosa_asset_mediafile_metadata}
+          (mediafile_id, prop_id, val_char, val_datetime, val_int, created, changed) VALUES
+          (:mediafile_id, :prop_id, :val_char, :val_datetime, :val_int, :created, :changed)", array(
+          ':mediafile_id' => $row->mediafile_id,
+          ':prop_id' => $property['prop_id'],
+          ':val_char' => ($property['type'] == 'CHAR' ? $row->$field : NULL),
+          ':val_datetime' => ($property['type'] == 'DATETIME' ? $row->$field : NULL),
+          ':val_int' => ($property['type'] == 'INT' ? $row->$field : 0),
+          ':created' => $row->created,
+          ':changed' => $row->changed,
+        ));
+      }
+    }
+  }
+
+  // Drop old metadata table.
+  db_query('DROP TABLE {mediamosa_asset_mediafile_metadata_old}');
+
 }
 
 /**
