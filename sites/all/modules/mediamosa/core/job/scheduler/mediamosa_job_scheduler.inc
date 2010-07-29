@@ -912,9 +912,18 @@ class mediamosa_job_scheduler {
     // Get job parameters;
     $job_parameters = self::get_job_parameters($job_id, mediamosa_job_db::JOB_TYPE_STILL, $mediafile_id);
 
-    $a_mediafile = mediamosa_asset_mediafile_metadata::get_with_mediafileid($mediafile_id, array(mediamosa_asset_mediafile_metadata_db::FILE_DURATION, mediamosa_asset_mediafile_metadata_db::FPS));
-    $actual_duration = $a_mediafile[mediamosa_asset_mediafile_metadata_db::FILE_DURATION];
-    $fps = $a_mediafile[mediamosa_asset_mediafile_metadata_db::FPS];
+    $a_mediafile = mediamosa_asset_mediafile_metadata::get_with_mediafileid($mediafile_id, array(
+      array(
+        'prop_name' => mediamosa_asset_mediafile_metadata::FILE_DURATION,
+        'type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR,
+      ),
+      array(
+        'prop_name' => mediamosa_asset_mediafile_metadata::FPS,
+        'type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR,
+      ),
+    ));
+    $actual_duration = $a_mediafile[mediamosa_asset_mediafile_metadata::FILE_DURATION];
+    $fps = $a_mediafile[mediamosa_asset_mediafile_metadata::FPS];
     $video_duration = 0;
     if ($actual_duration && $actual_duration != '') {
       // Remove the ms from time.
@@ -1171,9 +1180,18 @@ class mediamosa_job_scheduler {
           }
 
           // First get source width and height.
-          $a_metadata = mediamosa_asset_mediafile_metadata::get_with_mediafileid($mediafile_id, array(mediamosa_asset_mediafile_metadata_db::WIDTH, mediamosa_asset_mediafile_metadata_db::HEIGHT));
-          $width = $a_metadata[mediamosa_asset_mediafile_metadata_db::WIDTH];
-          $height = $a_metadata[mediamosa_asset_mediafile_metadata_db::HEIGHT];
+          $a_metadata = mediamosa_asset_mediafile_metadata::get_with_mediafileid($mediafile_id, array(
+            array(
+              'prop_name' => mediamosa_asset_mediafile_metadata::WIDTH,
+              'type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_INT,
+            ),
+            array(
+              'prop_name' => mediamosa_asset_mediafile_metadata::HEIGHT,
+              'type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_INT,
+            ),
+          ));
+          $width = $a_metadata[mediamosa_asset_mediafile_metadata::WIDTH];
+          $height = $a_metadata[mediamosa_asset_mediafile_metadata::HEIGHT];
 
           // Get the parameter string.
           $cmmd = self::calc_aspect_ratio($width, $height, $target_size, FALSE, $a_result['h_padding'], $a_result['v_padding']);
@@ -1262,7 +1280,16 @@ class mediamosa_job_scheduler {
     if ($alter_size_param) {
 
       // First get source width and height.
-      $a_metadata = mediamosa_asset_mediafile_metadata::get_with_mediafileid($mediafile_id, array(mediamosa_asset_mediafile_metadata_db::WIDTH, mediamosa_asset_mediafile_metadata_db::HEIGHT));
+      $a_metadata = mediamosa_asset_mediafile_metadata::get_with_mediafileid($mediafile_id, array(
+        array(
+          'prop_name' => mediamosa_asset_mediafile_metadata::WIDTH,
+          'type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_INT,
+        ),
+        array(
+          'prop_name' => mediamosa_asset_mediafile_metadata::HEIGHT,
+          'type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_INT,
+        ),
+      ));
 
       // Determine if padding necessary or not.
       $is_padding = TRUE;
@@ -1271,7 +1298,7 @@ class mediamosa_job_scheduler {
       }
 
       // Get the parameter string.
-      $ratio = self::calc_aspect_ratio($a_metadata[mediamosa_asset_mediafile_metadata_db::WIDTH], $a_metadata[mediamosa_asset_mediafile_metadata_db::HEIGHT], $target_size, TRUE, NULL, NULL, $is_padding);
+      $ratio = self::calc_aspect_ratio($a_metadata[mediamosa_asset_mediafile_metadata::WIDTH], $a_metadata[mediamosa_asset_mediafile_metadata::HEIGHT], $target_size, TRUE, NULL, NULL, $is_padding);
       if (!empty($ratio)) {
         $a_cli[] = $ratio;
       }

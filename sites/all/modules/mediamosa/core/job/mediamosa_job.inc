@@ -550,35 +550,9 @@ class mediamosa_job {
     // Lets try to get it so we know we either UPDATE or INSERT.
     $a_mediafile_metadata = mediamosa_asset_mediafile_metadata::get_with_mediafileid($job_ext_upload[mediamosa_job_db::MEDIAFILE_ID]);
 
-    // Exists, so we UPDATE.
-    if (!empty($a_mediafile_metadata)) {
-      $fields = array(
-        mediamosa_asset_mediafile_metadata_db::FILESIZE => $uploaded_filesize,
-      );
-
-      // Add changed.
-      $fields = mediamosa_db::db_update_enrich($fields);
-
-      mediamosa_db::db_update(mediamosa_asset_mediafile_metadata_db::TABLE_NAME)
-        ->fields($fields)
-        ->condition(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID, $job_ext_upload[mediamosa_job_db::MEDIAFILE_ID])
-        ->execute();
-    }
-    else {
-      // INSERT.
-      $fields = array(
-        mediamosa_asset_mediafile_metadata_db::FILESIZE => (int) $uploaded_filesize,
-        mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID => $job_ext_upload[mediamosa_job_db::MEDIAFILE_ID],
-      );
-
-      // Add changed/created.
-      $fields = mediamosa_db::db_insert_enrich($fields);
-
-      // Insert it anyway.
-      mediamosa_db::db_insert(mediamosa_asset_mediafile_metadata_db::TABLE_NAME)
-        ->fields($fields)
-        ->execute();
-    }
+    // Insert or update.
+    $mediafile_id = $job_ext_upload[mediamosa_job_db::MEDIAFILE_ID];
+    mediamosa_asset_mediafile_metadata::create_mediafile_metadata_int($mediafile_id, (int) $uploaded_filesize, mediamosa_asset_mediafile_metadata::FILESIZE);
 
     // Analyse the mediafile.
     $a_analyse_result = mediamosa_asset_mediafile::analyse($job_ext_upload[mediamosa_job_db::APP_ID], $job_ext_upload[mediamosa_job_db::MEDIAFILE_ID]);
@@ -1014,7 +988,7 @@ class mediamosa_job {
 
       $num_rows = mediamosa_db::db_select(mediamosa_asset_mediafile_metadata_db::TABLE_NAME, 'mamm')
         ->fields('mamm', array(mediamosa_asset_mediafile_metadata_db::ID))
-        ->condition(mediamosa_asset_mediafile_metadata_db::ID, $a_row_job['mediafile_id'])
+        ->condition(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID, $a_row_job['mediafile_id'])
         ->countQuery()->execute()->fetchField();
 
       if (!$num_rows) {

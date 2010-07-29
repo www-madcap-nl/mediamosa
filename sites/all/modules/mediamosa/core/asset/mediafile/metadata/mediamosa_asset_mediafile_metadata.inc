@@ -78,26 +78,20 @@ class mediamosa_asset_mediafile_metadata {
    * Get the mediafile metadata.
    *
    * @param string $mediafile_id
-   * @fields array The fields to give. If empty, then give all.
+   * @fields array (array(prop_name, type)) The fields to give. If empty, then give all.
    */
   static public function get_with_mediafileid($mediafile_id, array $fields = array()) {
     $values = array();
 
-    // We use this method, because we don't know the types of the fields.
-    $values_temporary = self::get_all_mediafile_metadata($mediafile_id);
     if (is_array($fields) && !empty($fields)) {
-      // We don't port / insert fields here, like metadata_id, mediafile_id, created and changed.
-      if (is_array($values_temporary) && !empty($values_temporary)) {
-        foreach ($values_temporary as $key => $value) {
-          if (in_array($key, $fields)) {
-            $values[$key] = $value;
-          }
-        }
+      foreach ($fields as $field) {
+        // TODO: same prop_name with different types.
+        $values[$field['prop_name']] = self::get_mediafile_metadata($mediafile_id, $field['prop_name'], $field['type']);
       }
     }
     else {
       // Get all.
-      $values = $values_temporary;
+      $values = self::get_all_mediafile_metadata($mediafile_id);
     }
 
     return $values;
@@ -403,6 +397,36 @@ class mediamosa_asset_mediafile_metadata {
   }
 
   /**
+   * Create mediafile metadata value - INT.
+   * @param mediafile_id
+   * @param value Value of the metadata
+   * @param prop_name Property name
+   */
+  static public function create_mediafile_metadata_int($mediafile_id, $value, $prop_name) {
+    self::create_mediafile_metadata($mediafile_id, $value, $prop_name, mediamosa_asset_mediafile_metadata_property_db::TYPE_INT);
+  }
+
+  /**
+   * Create mediafile metadata value - CHAR.
+   * @param mediafile_id
+   * @param value Value of the metadata
+   * @param prop_name Property name
+   */
+  static public function create_mediafile_metadata_char($mediafile_id, $value, $prop_name) {
+    self::create_mediafile_metadata($mediafile_id, $value, $prop_name, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
+  }
+
+  /**
+   * Create mediafile metadata value - DATETIME.
+   * @param mediafile_id
+   * @param value Value of the metadata
+   * @param prop_name Property name
+   */
+  static public function create_mediafile_metadata_datetime($mediafile_id, $value, $prop_name) {
+    self::create_mediafile_metadata($mediafile_id, $value, $prop_name, mediamosa_asset_mediafile_metadata_property_db::TYPE_DATETIME);
+  }
+
+  /**
    * Create multiple metadata for a mediafile.
    * @param mediafile_id
    * @param metadatas An array (array(value => value, prop_name => prop_name, type => type))
@@ -470,7 +494,7 @@ class mediamosa_asset_mediafile_metadata {
    * @return Property value, or FALSE in case of validation error
    */
   static public function get_mediafile_metadata_int($mediafile_id, $prop_name) {
-    self::get_mediafile_metadata($mediafile_id, $prop_name, mediamosa_asset_mediafile_metadata_property_db::TYPE_INT);
+    return self::get_mediafile_metadata($mediafile_id, $prop_name, mediamosa_asset_mediafile_metadata_property_db::TYPE_INT);
   }
 
   /**
@@ -480,7 +504,7 @@ class mediamosa_asset_mediafile_metadata {
    * @return Property value, or FALSE in case of validation error
    */
   static public function get_mediafile_metadata_char($mediafile_id, $prop_name) {
-    self::get_mediafile_metadata($mediafile_id, $prop_name, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
+    return self::get_mediafile_metadata($mediafile_id, $prop_name, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR);
   }
 
   /**
@@ -490,7 +514,7 @@ class mediamosa_asset_mediafile_metadata {
    * @return Property value, or FALSE in case of validation error
    */
   static public function get_mediafile_metadata_datetime($mediafile_id, $prop_name) {
-    self::get_mediafile_metadata($mediafile_id, $prop_name, mediamosa_asset_mediafile_metadata_property_db::TYPE_DATETIME);
+    return self::get_mediafile_metadata($mediafile_id, $prop_name, mediamosa_asset_mediafile_metadata_property_db::TYPE_DATETIME);
   }
 
   /**
@@ -513,6 +537,7 @@ class mediamosa_asset_mediafile_metadata {
     foreach ($result as $row) {
       $prop = mediamosa_asset_mediafile_metadata_property::get_property($row[mediamosa_asset_mediafile_metadata_db::PROP_ID], TRUE);
 
+      // TODO: same prop_name with different types.
       if ($prop['type'] == mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR) {
         $values[$prop['prop_name']] = $row[mediamosa_asset_mediafile_metadata_db::VAL_CHAR];
       }
