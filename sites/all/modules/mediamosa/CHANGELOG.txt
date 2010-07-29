@@ -1,4 +1,4 @@
-6~// $Id: 
+// $Id: 
 
 START CHANGELOG:
 
