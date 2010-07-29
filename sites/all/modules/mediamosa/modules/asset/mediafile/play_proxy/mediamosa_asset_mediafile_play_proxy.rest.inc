@@ -414,22 +414,26 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
 
       if (isset($still_id)) {
         $result = $query->range(0, 1)->execute()->fetchAssoc();
-        $result['ticket'] = $ticket;
-        $a_stills[] = $result;
+        if ($this->metadata_values(&$result)) {
+          $result['ticket'] = $ticket;
+          $a_stills[] = $result;
+        }
       }
       else {
         $result = $query->execute();
 
         foreach ($result as $t_stills) {
-          $ticket_still = mediamosa_db::uuid($app_id);
+          if ($this->metadata_values(&$t_stills)) {
+            $ticket_still = mediamosa_db::uuid($app_id);
 
-          // make a play or download symlink.
-          if (!isset($a_mediafile_ext[mediamosa_asset_mediafile_db::URI])) {
-            $ticket_still = mediamosa_ticket::create_play_proxy($ticket_still, $a_mediafile_ext, $response_type, $app_id, $user_id, $t_stills['still_id']);
+            // make a play or download symlink.
+            if (!isset($a_mediafile_ext[mediamosa_asset_mediafile_db::URI])) {
+              $ticket_still = mediamosa_ticket::create_play_proxy($ticket_still, $a_mediafile_ext, $response_type, $app_id, $user_id, $t_stills['still_id']);
+            }
+
+            $t_stills['ticket'] = $ticket_still;
+            $a_stills[] = $t_stills;
           }
-
-          $t_stills['ticket'] = $ticket_still;
-          $a_stills[] = $t_stills;
         }
       }
     }
@@ -462,5 +466,50 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
 
     // All ok.
     $o_mediamosa->set_result_okay();
+  }
+
+  /**
+   * Array copy.
+   * @param from
+   * @param &to
+   * @param field
+   */
+  private function move_data($from, &$to, $field) {
+    $to[$field] = (empty($from[$field]) ? NULL : $from[$field]);
+  }
+
+  /**
+   * Metadata values.
+   * @param &result
+   * @return is_skip
+   */
+  private function metadata_values(&$result) {
+    $values = mediamosa_asset_mediafile_metadata::get_all_mediafile_metadata($result['still_id']);
+    $values_to_still = array();
+    $this->move_data($values, $values_to_still, mediamosa_asset_mediafile_metadata::WIDTH);
+    $this->move_data($values, $values_to_still, mediamosa_asset_mediafile_metadata::HEIGHT);
+    $this->move_data($values, $values_to_still, mediamosa_asset_mediafile_metadata::FILESIZE);
+    $this->move_data($values, $values_to_still, mediamosa_asset_mediafile_metadata::MIME_TYPE);
+    $this->move_data($values, $values_to_still, mediamosa_asset_mediafile_metadata::STILL_TIME_CODE);
+    $this->move_data($values, $values_to_still, mediamosa_asset_mediafile_metadata::STILL_ORDER);
+    $this->move_data($values, $values_to_still, mediamosa_asset_mediafile_metadata::STILL_FORMAT);
+    $this->move_data($values, $values_to_still, mediamosa_asset_mediafile_metadata::STILL_TYPE);
+    $this->move_data($values, $values_to_still, mediamosa_asset_mediafile_metadata::STILL_DEFAULT);
+    $result = array_merge($result, $values_to_still);
+    $is_ok = TRUE;
+    if (isset($width) && $width != $values_to_still[mediamosa_asset_mediafile_metadata::WIDTH]) {
+      $is_ok = FALSE;
+    }
+    if (isset($height) && $height != $values_to_still[mediamosa_asset_mediafile_metadata::HEIGHT]) {
+      $is_ok = FALSE;
+    }
+    if (isset($format) && $format != $values_to_still[mediamosa_asset_mediafile_metadata::STILL_FORMAT]) {
+      $is_ok = FALSE;
+    }
+    if (count($a_orders) && !in_array($values_to_still[mediamosa_asset_mediafile_metadata::STILL_ORDER], $a_orders)) {
+      $is_ok = FALSE;
+    }
+
+    return $is_ok;
   }
 }

@@ -41,20 +41,16 @@ error_reporting(E_ALL);
 // Check media record.
 function check_media_records() {
   $result = mediamosa_db::db_query("
-    SELECT m.#mediafile_id, m.#created, m.#changed, m.#asset_id_root, m.#app_id, m.#owner_id, mm.#filesize, mm.#mime_type
-    FROM {#mediafile} AS m
-    LEFT JOIN {#mediafile_metadata} AS mm USING (#mediafile_id)
-    WHERE m.#is_still = :is_still_false", array(
+    SELECT #mediafile_id, #created, #changed, #asset_id_root, #app_id, #owner_id
+    FROM {#mediafile}
+    WHERE #is_still = :is_still_false", array(
     '#mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
-    '#mediafile_metadata' => mediamosa_asset_mediafile_metadata_db::TABLE_NAME,
     '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
     '#created' => mediamosa_asset_mediafile_db::CREATED,
     '#changed' => mediamosa_asset_mediafile_db::CHANGED,
     '#asset_id_root' => mediamosa_asset_mediafile_db::ASSET_ID_ROOT,
     '#app_id' => mediamosa_asset_mediafile_db::APP_ID,
     '#owner_id' => mediamosa_asset_mediafile_db::OWNER_ID,
-    '#filesize' => mediamosa_asset_mediafile_metadata_db::FILESIZE,
-    '#mime_type' => mediamosa_asset_mediafile_metadata_db::MIME_TYPE,
     '#is_still' => mediamosa_asset_mediafile_db::IS_STILL,
     ':is_still_false' => mediamosa_asset_mediafile_db::IS_STILL_FALSE,
   ));
@@ -62,6 +58,10 @@ function check_media_records() {
   foreach ($result as $mediafile) {
     // Check if file exists.
     if (!file_exists(mediamosa_configuration_storage::mediafile_id_filename_get($mediafile['mediafile_id']))) {
+      $mediafile_id = $mediafile['mediafile_id'];
+      $filesize = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, mediamosa_asset_mediafile_metadata::FILESIZE);
+      $mime_type = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::MIME_TYPE);
+
       mediamosa_db::db_query("
         INSERT INTO {#mediamosa_log_integrity_check}
           (#type, #object_id, #app_id, #owner_id, #created, #changed, #details) VALUES
@@ -80,7 +80,7 @@ function check_media_records() {
           ':owner_id' => $mediafile['owner_id'],
           ':created' => $mediafile['created'],
           ':changed' => $mediafile['changed'],
-          ':details' => $mediafile['filesize'] == '' ? 'Never succesfully analysed...' : 'Mime-type: ' . $mediafile['mime_type'],
+          ':details' => (!$filesize || $filesize == '') ? 'Never succesfully analysed...' : 'Mime-type: ' . $mime_type,
       ));
     }
     // Sleep 0.01 seconds *100.000 mediafiles= 17 minuten.
