@@ -600,7 +600,7 @@ class mediamosa_db {
    *  column => value.
    *
    */
-  static function db_must_exists($table_name, array $a_columns_and = array(), $errorcode = NULL, array $a_errorcode_args = array()) {
+  static function db_must_exists($table_name, array $a_columns_and = array(), $errorcode = NULL, array $a_errorcode_args = array(), $log_error = TRUE) {
 
     $a_row = self::db_get_assoc($table_name, $a_columns_and);
     if ($a_row) {
@@ -614,7 +614,7 @@ class mediamosa_db {
 
     switch ($table_name) {
       case mediamosa_asset_db::TABLE_NAME:
-        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_ASSET_NOT_FOUND, array('@asset_id' => $a_columns_and[mediamosa_asset_db::ID]));
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_ASSET_NOT_FOUND, array('@asset_id' => $a_columns_and[mediamosa_asset_db::ID]), $log_error);
       case mediamosa_asset_mediafile_db::TABLE_NAME:
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MEDIAFILE_NOT_FOUND, array('@mediafile_id' => $a_columns_and[mediamosa_asset_mediafile_db::ID]));
       case mediamosa_aut_group_db::TABLE_NAME:

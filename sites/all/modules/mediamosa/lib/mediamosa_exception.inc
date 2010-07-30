@@ -43,7 +43,7 @@ class mediamosa_exception extends Exception {
   const MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL = 50;
   const MEDIAMOSA_EXCEPTION_SEVERITY_LOW = 20;
 
-  public function __construct($i_errorcode, $msg = '', $severity = self::MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL) {
+  public function __construct($i_errorcode, $msg = '', $severity = self::MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL, $log_error = TRUE) {
     $msg = ($msg == '' ? sprintf("MediaMosa exception was thrown: %d", $i_errorcode) : $msg);
 
     if ($severity >= MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL) {
@@ -55,16 +55,18 @@ class mediamosa_exception extends Exception {
 
       $backtrace = $this->getTraceAsString();
 
-      mediamosa::log(
-        '@message (Exception thrown on line @line, in @file)<br />Partial backtrace: <pre>@backtrace</pre>',
-        array(
-          '@message' => $msg,
-          '@line' => $this->getLine(),
-          '@file' => $this->getFile(),
-          '@backtrace' => $backtrace === FALSE ? 'not available' : $backtrace,
-        ),
-        $log_serverity
-      );
+      if ($log_error) {
+        mediamosa::log(
+          '@message (Exception thrown on line @line, in @file)<br />Partial backtrace: <pre>@backtrace</pre>',
+          array(
+            '@message' => $msg,
+            '@line' => $this->getLine(),
+            '@file' => $this->getFile(),
+            '@backtrace' => $backtrace === FALSE ? 'not available' : $backtrace,
+          ),
+          $log_serverity
+        );
+      }
     }
 
     parent::__construct($msg, intval($i_errorcode));
@@ -103,13 +105,13 @@ class mediamosa_exception_redirect_and_exit extends mediamosa_exception {
 class mediamosa_exception_error extends mediamosa_exception {
   private $a_error;
 
-  public function __construct($mediamosa_errorcode, $a_tags = array(), $severity = MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL) {
+  public function __construct($mediamosa_errorcode, $a_tags = array(), $severity = MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL, $log_error = TRUE) {
     if (!is_numeric($mediamosa_errorcode) && !is_null(constant($mediamosa_errorcode))) {
       $mediamosa_errorcode = constant($mediamosa_errorcode);
     }
 
     $this->a_error = mediamosa_error::error_code_find($mediamosa_errorcode, $a_tags);
-    parent::__construct($this->a_error['code'], $this->a_error['message'], $severity);
+    parent::__construct($this->a_error['code'], $this->a_error['message'], $severity, $log_error);
   }
 
   public function mediamosa_exception_error_array_get() {
