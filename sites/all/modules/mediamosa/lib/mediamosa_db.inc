@@ -713,9 +713,15 @@ class mediamosa_db {
    * @return array
    *  Array containing columns.
    */
-  static public function db_get_columns($table_name) {
+  static public function db_get_columns($table_name, $schema = NULL) {
+    global $databases;
+    $schema = ($schema ? $schema : $databases['default']['default']['database']);
+
     // Use db_query directly here, not mediamosa_db version.
-    return db_query('SELECT COLUMN_NAME FROM information_schema.columns WHERE TABLE_NAME = :table', array(':table' => $table_name))->fetchCol();
+    return db_query('SELECT COLUMN_NAME FROM information_schema.columns WHERE TABLE_NAME = :table AND TABLE_SCHEMA = :schema', array(
+      ':table' => $table_name,
+      ':schema' => $schema,
+    ))->fetchCol();
   }
 
   /**
@@ -725,9 +731,15 @@ class mediamosa_db {
    * @return array
    *  Array containing columns.
    */
-  static public function db_get_columns_with_type($table_name) {
+  static public function db_get_columns_with_type($table_name, $schema = NULL) {
+    global $databases;
+    $schema = ($schema ? $schema : $databases['default']['default']['database']);
+
     // Use db_query directly here, not mediamosa_db version.
-    return db_query('SELECT COLUMN_NAME, DATA_TYPE, COLUMN_TYPE FROM information_schema.columns WHERE TABLE_NAME = :table', array(':table' => $table_name))->fetchAll();
+    return db_query('SELECT COLUMN_NAME, DATA_TYPE, COLUMN_TYPE FROM information_schema.columns WHERE TABLE_NAME = :table AND TABLE_SCHEMA = :schema', array(
+      ':table' => $table_name,
+      ':schema' => $schema,
+    ))->fetchAll();
   }
 
   /**

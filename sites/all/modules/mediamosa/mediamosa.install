@@ -315,7 +315,7 @@ function mediamosa_update_7008() {
  * Create new mediamosa_asset_mediafile_metadata_property table.
  */
 function mediamosa_update_7010() {
-  // Rename the old metadta table.
+  // Drop the foreign key from the old metadta table.
   db_query('ALTER TABLE {mediamosa_asset_mediafile_metadata} DROP FOREIGN KEY fk_mediamosa_asset_mediafile_metadata_mediafile_id');
 
   // Rename the old metadta table.
