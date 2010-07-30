@@ -372,19 +372,6 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
           mediamosa_asset_mediafile_db::TAG,
         )
       );
-      $query->fields('mm',
-        array(
-          mediamosa_asset_mediafile_metadata_db::WIDTH,
-          mediamosa_asset_mediafile_metadata_db::HEIGHT,
-          mediamosa_asset_mediafile_metadata_db::FILESIZE,
-          mediamosa_asset_mediafile_metadata_db::MIME_TYPE,
-          mediamosa_asset_mediafile_metadata_db::STILL_TIME_CODE,
-          mediamosa_asset_mediafile_metadata_db::STILL_ORDER,
-          mediamosa_asset_mediafile_metadata_db::STILL_FORMAT,
-          mediamosa_asset_mediafile_metadata_db::STILL_TYPE,
-          mediamosa_asset_mediafile_metadata_db::STILL_DEFAULT
-        )
-      );
       $query->condition('m.' . mediamosa_asset_mediafile_db::ASSET_ID_ROOT, $asset_id);
       $query->condition('m.' . mediamosa_asset_mediafile_db::IS_STILL, mediamosa_asset_mediafile_db::IS_STILL_TRUE);
       $query->condition('m.' . mediamosa_asset_mediafile_db::APP_ID, $app_id);
@@ -394,27 +381,16 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
       if (isset($mediafile_id)) {
         $query->condition('v.' . mediamosa_asset_mediafile_db::ID, $mediafile_id);
       }
-      if (isset($width)) {
-        $query->condition('mm.' . mediamosa_asset_mediafile_metadata_db::WIDTH, $width);
-      }
-      if (isset($height)) {
-        $query->condition('mm.' . mediamosa_asset_mediafile_metadata_db::HEIGHT, $height);
-      }
-      if (isset($format)) {
-        $query->condition('mm.' . mediamosa_asset_mediafile_metadata_db::STILL_FORMAT, $format);
-      }
-      if (count($a_orders)) {
-        $query->condition('mm.' . mediamosa_asset_mediafile_metadata_db::STILL_ORDER, $a_orders, 'IN');
-      }
       if (isset($tag)) {
         $query->condition('m.' . mediamosa_asset_mediafile_db::TAG, $tag);
       }
-      $query->orderBy('m.asset_id', 'ASC');
-      $query->orderBy('mm.still_order', 'ASC');
+      $query->condition('mm.' . mediamosa_asset_mediafile_metadata_db::PROP_ID, mediamosa_asset_mediafile_metadata_property::get_property_id_int(mediamosa_asset_mediafile_metadata::STILL_ORDER));
+      $query->orderBy('m.' . mediamosa_asset_mediafile_db::ASSET_ID, 'ASC');
+      $query->orderBy('mm.' . mediamosa_asset_mediafile_metadata_db::VAL_INT, 'ASC');
 
       if (isset($still_id)) {
         $result = $query->range(0, 1)->execute()->fetchAssoc();
-        if ($this->metadata_values(&$result)) {
+        if ($this->metadata_values(&$result, $width, $height, $format, $a_orders)) {
           $result['ticket'] = $ticket;
           $a_stills[] = $result;
         }
@@ -423,7 +399,7 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
         $result = $query->execute();
 
         foreach ($result as $t_stills) {
-          if ($this->metadata_values(&$t_stills)) {
+          if ($this->metadata_values(&$t_stills, $width, $height, $format, $a_orders)) {
             $ticket_still = mediamosa_db::uuid($app_id);
 
             // make a play or download symlink.
@@ -483,7 +459,7 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
    * @param &result
    * @return is_skip
    */
-  private function metadata_values(&$result) {
+  private function metadata_values(&$result, $width, $height, $format, $a_orders) {
     $values = mediamosa_asset_mediafile_metadata::get_all_mediafile_metadata($result['still_id']);
     $values_to_still = array();
     $this->move_data($values, $values_to_still, mediamosa_asset_mediafile_metadata::WIDTH);

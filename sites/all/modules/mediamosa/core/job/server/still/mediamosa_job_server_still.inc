@@ -195,9 +195,9 @@ class mediamosa_job_server_still {
 
     $prop_id = mediamosa_asset_mediafile_metadata_property::get_property_id_char(mediamosa_asset_mediafile_metadata::FILE_DURATION);
     $file_duration = mediamosa_db::db_query(
-      'SELECT #file_duration FROM {#mediamosa_asset_mediafile_metadata} m
+      'SELECT m.#file_duration FROM {#mediamosa_asset_mediafile_metadata} m
        LEFT JOIN {#mediamosa_job} j USING(#mediafile_id)
-       WHERE #job_id = :job_id AND m.#prop_id = :prop_id
+       WHERE j.#job_id = :job_id AND m.#prop_id = :prop_id
        LIMIT 1',
       array(
         '#mediamosa_asset_mediafile_metadata' => mediamosa_asset_mediafile_metadata_db::TABLE_NAME,

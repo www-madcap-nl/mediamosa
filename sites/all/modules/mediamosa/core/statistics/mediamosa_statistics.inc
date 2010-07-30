@@ -99,8 +99,8 @@ class mediamosa_statistics {
       mediamosa_statistics_stream_request_db::MEDIAFILE_ID => $mediafile_id,
       mediamosa_statistics_stream_request_db::OWNER_ID => $mediafile_ext[mediamosa_asset_mediafile_db::OWNER_ID],
       mediamosa_statistics_stream_request_db::GROUP_ID => $mediafile_ext[mediamosa_asset_mediafile_db::GROUP_ID],
-      mediamosa_statistics_stream_request_db::FILESIZE => mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, mediamosa_asset_mediafile_metadata::FILESIZE);
-      mediamosa_statistics_stream_request_db::CONTAINER_TYPE => mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::CONTAINER_TYPE);
+      mediamosa_statistics_stream_request_db::FILESIZE => mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, mediamosa_asset_mediafile_metadata::FILESIZE),
+      mediamosa_statistics_stream_request_db::CONTAINER_TYPE => mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::CONTAINER_TYPE),
       mediamosa_statistics_stream_request_db::PLAY_TYPE => $response_type,
       mediamosa_statistics_stream_request_db::PLAYED => mediamosa::db_current_timestamp_now(),
     );

@@ -185,22 +185,22 @@ class mediamosa_asset_mediafile {
       $mediafile_id = $a_row[mediamosa_asset_mediafile_db::ID];
       $items[$mediafile_id] = $a_row;
 
-      $items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::VIDEO_CODEC] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, mediamosa_asset_mediafile_metadata::VIDEO_CODEC);
-      $items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::COLORSPACE] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, mediamosa_asset_mediafile_metadata::COLORSPACE);
+      $items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::VIDEO_CODEC] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::VIDEO_CODEC);
+      $items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::COLORSPACE] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::COLORSPACE);
       $items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::WIDTH] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, mediamosa_asset_mediafile_metadata::WIDTH);
       $items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::HEIGHT] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, mediamosa_asset_mediafile_metadata::HEIGHT);
-      $items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::FPS] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, mediamosa_asset_mediafile_metadata::FPS);
-      $items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::AUDIO_CODEC] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, mediamosa_asset_mediafile_metadata::AUDIO_CODEC);
+      $items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::FPS] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::FPS);
+      $items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::AUDIO_CODEC] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::AUDIO_CODEC);
       $items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::SAMPLE_RATE] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, mediamosa_asset_mediafile_metadata::SAMPLE_RATE);
-      $items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::CHANNELS] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, mediamosa_asset_mediafile_metadata::CHANNELS);
-      $items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::FILE_DURATION] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, mediamosa_asset_mediafile_metadata::FILE_DURATION);
-      $items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::CONTAINER_TYPE] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, mediamosa_asset_mediafile_metadata::CONTAINER_TYPE);
+      $items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::CHANNELS] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::CHANNELS);
+      $items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::FILE_DURATION] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::FILE_DURATION);
+      $items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::CONTAINER_TYPE] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::CONTAINER_TYPE);
       $items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::BITRATE] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, mediamosa_asset_mediafile_metadata::BITRATE);
-      $items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::BPP] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, mediamosa_asset_mediafile_metadata::BPP);
+      $items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::BPP] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::BPP);
       $items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::FILESIZE] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, mediamosa_asset_mediafile_metadata::FILESIZE);
-      $items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::MIME_TYPE] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, mediamosa_asset_mediafile_metadata::MIME_TYPE);
-      $items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::IS_HINTED] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, mediamosa_asset_mediafile_metadata::IS_HINTED);
-      $items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::IS_INSERTED_MD] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, mediamosa_asset_mediafile_metadata::IS_INSERTED_MD);
+      $items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::MIME_TYPE] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::MIME_TYPE);
+      $items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::IS_HINTED] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::IS_HINTED);
+      $items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::IS_INSERTED_MD] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::IS_INSERTED_MD);
     }
 
     // Now we know which mediafiles where found.
