@@ -91,6 +91,7 @@ Other changes (not ticket related).
 - Fixed problem with own http_request function now $db_prefix is removed from
   drupal.
 - Fixed default profile to refect mediamosa.local as default domain.
+- Number of typo and text changes in MediaMosa profile.
 
 Mediamosa 2.1.5 (build 664)
 ---------------------------
