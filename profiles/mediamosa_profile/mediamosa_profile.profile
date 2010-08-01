@@ -391,7 +391,7 @@ function mediamosa_profile_configure_server($install_state) {
 
   // Configure.
   // URL REST.
-  variable_set('mediamosa_cron_url_app', 'http://app.' . $server_name . (substr($server_name, -6) == '.local' ? '' : '.local'));
+  variable_set('mediamosa_cron_url_app', 'http://app1.' . $server_name . (substr($server_name, -6) == '.local' ? '' : '.local'));
 
   // Configure mediamosa connector.
   variable_set('mediamosa_connector_url', 'http://' . $server_name);
@@ -484,7 +484,7 @@ function mediamosa_profile_cron_settings_form() {
   $form['apache']['apache'] = array(
     '#type' => 'textarea',
     '#title' => t('Apache'),
-    '#attributes' => array('style' => 'font-family: Fixed, monospace;'),
+    '#attributes' => array('class' => array('mm-profile-textarea')),
     '#default_value' => strtr("<VirtualHost *:80>
     ServerName !server_name_clean.local
     ServerAlias admin.!server_name_clean.local www.!server_name_clean.local
@@ -654,7 +654,7 @@ function mediamosa_profile_cron_settings_form() {
   $form['migration']['settings'] = array(
     '#type' => 'textarea',
     '#title' => t('Migration setup for sites/settings.mediamosa.php'),
-    '#attributes' => array('style' => 'font-family: Fixed, monospace;'),
+    '#attributes' => array('class' => array('mm-profile-textarea')),
     '#default_value' => "\$databases['mig_memo']['default'] = array(
   'driver' => 'mysql',
   'database' => 'your_old_database',

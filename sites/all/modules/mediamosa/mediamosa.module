@@ -345,7 +345,7 @@ function mediamosa_mediamosa_configuration_collect() {
   $form['settings_cron']['mediamosa_cron_url_app_local'] = array(
     '#type' => 'checkbox',
     '#title' => t('Use localhost with hostname.'),
-    '#description' => t('Enable to use localhost and provide the call with the hostname. This option is useful when your server does not allow to call the host directy on localhost by hostname. Enabled will call localhost with the hostname in the HTTP header, allowing the call to go directly to localhost instead of going outside and back in. Use *ONLY* when the URL is on the localhost server.'),
+    '#description' => t('Enable to use localhost and provide the call with the hostname. This option is useful when your server does not allow to call the host directy on localhost by hostname. Enabled will call localhost with the hostname in the HTTP header, allowing the call to go directly to localhost instead of going outside and back in. <b>Use only when this URL is on the same server where CRON is running. If you are not sure, then keep this setting unchecked.</b>'),
     '#default_value' => variable_get('mediamosa_cron_url_app_local', ''),
   );
 
