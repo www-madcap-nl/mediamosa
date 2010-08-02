@@ -318,7 +318,7 @@ function mediamosa_update_7009() {
 
 /**
  * Rename old mediamosa_asset_mediafile_metadata table.
- * Drop old fk_mediamosa_asset_mediafile_metadata_mediafile_id foregign key.
+ * Drop old fk_mediamosa_asset_mediafile_metadata_mediafile_id foreign key.
  * Create new mediamosa_asset_mediafile_metadata table.
  * Create new mediamosa_asset_mediafile_metadata_property table.
  */
