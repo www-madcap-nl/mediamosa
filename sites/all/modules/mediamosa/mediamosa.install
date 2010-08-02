@@ -309,6 +309,14 @@ function mediamosa_update_7008() {
 }
 
 /**
+ * Rename uri field in mediamosa_server table to server_uri.
+ */
+function mediamosa_update_7009() {
+  db_query("ALTER TABLE {mediamosa_server} CHANGE COLUMN uri `server_uri` varchar(255) DEFAULT NULL COMMENT 'The optional URI of the server.'");
+  drupal_flush_all_caches();
+}
+
+/**
  * Rename old mediamosa_asset_mediafile_metadata table.
  * Drop old fk_mediamosa_asset_mediafile_metadata_mediafile_id foregign key.
  * Create new mediamosa_asset_mediafile_metadata table.

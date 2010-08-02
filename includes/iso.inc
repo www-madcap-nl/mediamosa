@@ -1,5 +1,5 @@
 <?php
-// $Id: iso.inc,v 1.8 2010/03/18 19:07:42 dries Exp $
+// $Id: iso.inc,v 1.11 2010/06/23 19:06:10 dries Exp $
 
 /**
  * @file
@@ -376,7 +376,7 @@ function _locale_get_predefined_list() {
     'ku' => array('Kurdish', 'Kurdî'),
     'kv' => array('Komi'),
     'kw' => array('Cornish'),
-    'ky' => array('Kirghiz', 'Кыргыз'),
+    'ky' => array('Kyrgyz', 'Кыргызча'),
     'la' => array('Latin', 'Latina'),
     'lb' => array('Luxembourgish'),
     'lg' => array('Luganda'),
@@ -386,7 +386,7 @@ function _locale_get_predefined_list() {
     'lv' => array('Latvian', 'Latviešu'),
     'mg' => array('Malagasy'),
     'mh' => array('Marshallese'),
-    'mi' => array('Maori'),
+    'mi' => array('Māori'),
     'mk' => array('Macedonian', 'Македонски'),
     'ml' => array('Malayalam', 'മലയാളം'),
     'mn' => array('Mongolian'),

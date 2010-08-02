@@ -167,7 +167,7 @@ class mediamosa_node {
             break;
           case mediamosa_server_db::SERVER_TYPE_UPLOAD:
             $to_remove = array(
-              mediamosa_server_db::URI,
+              mediamosa_server_db::SERVER_URI,
               mediamosa_server_db::CONTAINERS,
               mediamosa_server_db::OBJECT_CODE,
               mediamosa_server_db::SLOTS,

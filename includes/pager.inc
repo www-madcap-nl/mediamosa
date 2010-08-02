@@ -1,5 +1,5 @@
 <?php
-// $Id: pager.inc,v 1.78 2009/12/05 20:17:02 dries Exp $
+// $Id: pager.inc,v 1.80 2010/05/06 05:59:30 webchick Exp $
 
 /**
  * @file
@@ -85,7 +85,7 @@ class PagerDefault extends SelectQueryExtender {
     // We calculate the total of pages as ceil(items / limit).
     $pager_total_items[$this->element] = $this->getCountQuery()->execute()->fetchField();
     $pager_total[$this->element] = ceil($pager_total_items[$this->element] / $this->limit);
-    $pager_page_array[$this->element] = max(0, min((int)$pager_page_array[$this->element], ((int)$pager_total[$this->element]) - 1));
+    $pager_page_array[$this->element] = max(0, min((int) $pager_page_array[$this->element], ((int) $pager_total[$this->element]) - 1));
     $pager_limits[$this->element] = $this->limit;
     $this->range($pager_page_array[$this->element] * $this->limit, $this->limit);
 
@@ -186,11 +186,11 @@ function pager_get_query_parameters() {
 }
 
 /**
- * Format a query pager.
+ * Returns HTML for a query pager.
  *
  * Menu callbacks that display paged query results should call theme('pager') to
- * retrieve a pager control so that users can view other results.
- * Format a list of nearby pages with additional query results.
+ * retrieve a pager control so that users can view other results. Format a list
+ * of nearby pages with additional query results.
  *
  * @param $variables
  *   An associative array containing:
@@ -200,9 +200,6 @@ function pager_get_query_parameters() {
  *   - parameters: An associative array of query string parameters to append to
  *     the pager links.
  *   - quantity: The number of pages in the list.
- *
- * @return
- *   An HTML string that generates the query pager.
  *
  * @ingroup themeable
  */
@@ -321,7 +318,7 @@ function theme_pager($variables) {
  */
 
 /**
- * Format a "first page" link.
+ * Returns HTML for the "first page" link in a query pager.
  *
  * @param $variables
  *   An associative array containing:
@@ -330,9 +327,6 @@ function theme_pager($variables) {
  *     one page.
  *   - parameters: An associative array of query string parameters to append to
  *     the pager links.
- *
- * @return
- *   An HTML string that generates this piece of the query pager.
  *
  * @ingroup themeable
  */
@@ -352,7 +346,7 @@ function theme_pager_first($variables) {
 }
 
 /**
- * Format a "previous page" link.
+ * Returns HTML for the "previous page" link in a query pager.
  *
  * @param $variables
  *   An associative array containing:
@@ -362,9 +356,6 @@ function theme_pager_first($variables) {
  *   - interval: The number of pages to move backward when the link is clicked.
  *   - parameters: An associative array of query string parameters to append to
  *     the pager links.
- *
- * @return
- *   An HTML string that generates this piece of the query pager.
  *
  * @ingroup themeable
  */
@@ -394,7 +385,7 @@ function theme_pager_previous($variables) {
 }
 
 /**
- * Format a "next page" link.
+ * Returns HTML for the "next page" link in a query pager.
  *
  * @param $variables
  *   An associative array containing:
@@ -404,9 +395,6 @@ function theme_pager_previous($variables) {
  *   - interval: The number of pages to move forward when the link is clicked.
  *   - parameters: An associative array of query string parameters to append to
  *     the pager links.
- *
- * @return
- *   An HTML string that generates this piece of the query pager.
  *
  * @ingroup themeable
  */
@@ -435,7 +423,7 @@ function theme_pager_next($variables) {
 }
 
 /**
- * Format a "last page" link.
+ * Returns HTML for the "last page" link in query pager.
  *
  * @param $variables
  *   An associative array containing:
@@ -444,9 +432,6 @@ function theme_pager_next($variables) {
  *     one page.
  *   - parameters: An associative array of query string parameters to append to
  *     the pager links.
- *
- * @return
- *   An HTML string that generates this piece of the query pager.
  *
  * @ingroup themeable
  */
@@ -467,7 +452,7 @@ function theme_pager_last($variables) {
 
 
 /**
- * Format a link to a specific query result page.
+ * Returns HTML for a link to a specific query result page.
  *
  * @param $variables
  *   An associative array containing:
@@ -478,9 +463,6 @@ function theme_pager_last($variables) {
  *     the pager link.
  *   - attributes: An associative array of HTML attributes to apply to a pager
  *     anchor tag.
- *
- * @return
- *   An HTML string that generates the link.
  *
  * @ingroup themeable
  */
@@ -546,6 +528,6 @@ function pager_load_array($value, $element, $old_array) {
     }
   }
   // Update the changed element.
-  $new_array[$element] = (int)$value;
+  $new_array[$element] = (int) $value;
   return $new_array;
 }

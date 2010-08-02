@@ -55,7 +55,7 @@ class mediamosa_server {
     foreach ($servers as $server) {
 
       // Get URL.
-      $url = mediamosa_http::uri2url($server[mediamosa_server_db::URI]) . '/internal/cron/jobserver';
+      $url = mediamosa_http::uri2url($server[mediamosa_server_db::SERVER_URI]) . '/internal/cron/jobserver';
 
       // Prevent multiple triggers if url is on more than one server.
       if (in_array($url, $a_triggered)) {
@@ -107,7 +107,7 @@ class mediamosa_server {
     $servers = array();
     foreach ($enabled_servers as $enabled_server) {
 
-      $response = mediamosa_http::do_internal_call($enabled_server[mediamosa_server_db::URI], 'server/status');
+      $response = mediamosa_http::do_internal_call($enabled_server[mediamosa_server_db::SERVER_URI], 'server/status');
       if ($response->code != '200') {
         self::log('Call to server/status did not return a 200 result (header: @header)', array('@header' => var_export($response, TRUE)));
       }
@@ -116,7 +116,7 @@ class mediamosa_server {
 
       $servers[] = array(
         'enabled_server' => $enabled_server,
-        'status' => (isset($xml->items->item) ? mediamosa_lib::simplexml2array($xml->items->item) : array())
+        'status' => (isset($xml->items->item) ? mediamosa_lib::simplexml2array($xml->items->item) : array()),
       );
     }
 
@@ -290,7 +290,7 @@ class mediamosa_server {
           '#server_status' => mediamosa_server_db::SERVER_STATUS,
           ':server_status_on' => mediamosa_server_db::SERVER_STATUS_ON,
         )
-      )->fetchAllAssoc(mediamosa_server_streaming_container_db::CONTAINER);
+      )->fetchAllAssoc(mediamosa_server_streaming_container_db::CONTAINER, PDO::FETCH_ASSOC);
     }
 
     // Object.
@@ -357,7 +357,7 @@ class mediamosa_server {
     $server = self::get_streaming($container_type, $video_codec);
 
     if ($server) {
-      return $server[mediamosa_server_db::URI];
+      return $server[mediamosa_server_db::SERVER_URI];
     }
 
     return FALSE;
@@ -393,7 +393,7 @@ class mediamosa_server {
   static public function get_uri_still() {
     $server = self::get_still();
 
-    return $server[mediamosa_server_db::URI];
+    return $server[mediamosa_server_db::SERVER_URI];
   }
 
   /**

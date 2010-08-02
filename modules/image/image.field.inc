@@ -1,5 +1,5 @@
 <?php
-// $Id: image.field.inc,v 1.18 2010/03/06 07:19:57 dries Exp $
+// $Id: image.field.inc,v 1.21 2010/04/30 12:53:47 dries Exp $
 
 /**
  * @file
@@ -228,8 +228,8 @@ function image_field_prepare_view($entity_type, $entities, $field, $instances, $
 /**
  * Implements hook_field_presave().
  */
-function image_field_presave($obj_type, $object, $field, $instance, $langcode, &$items) {
-  file_field_presave($obj_type, $object, $field, $instance, $langcode, $items);
+function image_field_presave($entity_type, $entity, $field, $instance, $langcode, &$items) {
+  file_field_presave($entity_type, $entity, $field, $instance, $langcode, $items);
 }
 
 /**
@@ -390,7 +390,13 @@ function image_field_widget_process($element, &$form_state, $form) {
 }
 
 /**
- * Theme the display of the image field widget.
+ * Returns HTML for an image field widget.
+ *
+ * @param $variables
+ *   An associative array containing:
+ *   - element: A render element representing the image field widget.
+ *
+ * @ingroup themeable
  */
 function theme_image_widget($variables) {
   $element = $variables['element'];
@@ -490,15 +496,26 @@ function image_field_formatter_view($entity_type, $entity, $field, $instance, $l
 }
 
 /**
- * Theme function for image field formatters.
+ * Returns HTML for an image field formatter.
+ *
+ * @param $variables
+ *   An associative array containing:
+ *   - item: An array of image data.
+ *   - image_style: An optional image style.
+ *   - path: An array containing the link 'path' and link 'options'.
+ *
+ * @ingroup themeable
  */
 function theme_image_formatter($variables) {
   $item = $variables['item'];
   $image = array(
     'path' => $item['uri'],
     'alt' => $item['alt'],
-    'title' => $item['title'],
   );
+  // Do not output an empty 'title' attribute.
+  if (drupal_strlen($item['title']) > 0) {
+    $image['title'] = $item['title'];
+  }
 
   if ($variables['image_style']) {
     $image['style_name'] = $variables['image_style'];

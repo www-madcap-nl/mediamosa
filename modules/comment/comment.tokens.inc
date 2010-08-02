@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.tokens.inc,v 1.10 2010/01/09 21:54:00 webchick Exp $
+// $Id: comment.tokens.inc,v 1.13 2010/07/07 17:00:42 webchick Exp $
 
 /**
  * @file
@@ -30,18 +30,6 @@ function comment_token_info() {
   $comment['cid'] = array(
     'name' => t("Comment ID"),
     'description' => t("The unique ID of the comment."),
-  );
-  $comment['pid'] = array(
-    'name' => t("Parent ID"),
-    'description' => t("The unique ID of the comment's parent, if comment threading is active."),
-  );
-  $comment['nid'] = array(
-    'name' => t("Node ID"),
-    'description' => t("The unique ID of the node the comment was posted to."),
-  );
-  $comment['uid'] = array(
-    'name' => t("User ID"),
-    'description' => t("The unique ID of the user who posted the comment."),
   );
   $comment['hostname'] = array(
     'name' => t("IP Address"),
@@ -80,6 +68,11 @@ function comment_token_info() {
   $comment['created'] = array(
     'name' => t("Date created"),
     'description' => t("The date the comment was posted."),
+    'type' => 'date',
+  );
+  $comment['changed'] = array(
+    'name' => t("Date changed"),
+    'description' => t("The date the comment was most recently updated."),
     'type' => 'date',
   );
   $comment['parent'] = array(
@@ -133,18 +126,6 @@ function comment_tokens($type, $tokens, array $data = array(), array $options = 
           $replacements[$original] = $comment->cid;
           break;
 
-        case 'nid':
-          $replacements[$original] = $comment->nid;
-          break;
-
-        case 'uid':
-          $replacements[$original] = $comment->uid;
-          break;
-
-        case 'pid':
-          $replacements[$original] = $comment->pid;
-          break;
-
         // Poster identity information for comments
         case 'hostname':
           $replacements[$original] = $sanitize ? check_plain($comment->hostname) : $comment->hostname;
@@ -167,7 +148,7 @@ function comment_tokens($type, $tokens, array $data = array(), array $options = 
           break;
 
         case 'homepage':
-          $replacements[$original] = $sanitize ? filter_xss_bad_protocol($comment->homepage) : $comment->homepage;
+          $replacements[$original] = $sanitize ? check_url($comment->homepage) : $comment->homepage;
           break;
 
         case 'title':
@@ -175,7 +156,9 @@ function comment_tokens($type, $tokens, array $data = array(), array $options = 
           break;
 
         case 'body':
-          $replacements[$original] = $sanitize ? check_markup($comment->comment, $comment->format, '', TRUE) : $comment->comment;
+          $item = $comment->comment_body[LANGUAGE_NONE][0];
+          $instance = field_info_instance('comment', 'body', 'comment_body');
+          $replacements[$original] = $sanitize ? _text_sanitize($instance, LANGUAGE_NONE, $item, 'value') : $item['value'];
           break;
 
         // Comment related URLs.
@@ -185,6 +168,7 @@ function comment_tokens($type, $tokens, array $data = array(), array $options = 
           break;
 
         case 'edit-url':
+          $url_options['fragment'] = NULL;
           $replacements[$original] = url('comment/' . $comment->cid . '/edit', $url_options);
           break;
 
@@ -224,6 +208,10 @@ function comment_tokens($type, $tokens, array $data = array(), array $options = 
 
     if ($date_tokens = token_find_with_prefix($tokens, 'created')) {
       $replacements += token_generate('date', $date_tokens, array('date' => $comment->created), $options);
+    }
+
+    if ($date_tokens = token_find_with_prefix($tokens, 'changed')) {
+      $replacements += token_generate('date', $date_tokens, array('date' => $comment->changed), $options);
     }
 
     if (($parent_tokens = token_find_with_prefix($tokens, 'parent')) && $parent = comment_load($comment->pid)) {

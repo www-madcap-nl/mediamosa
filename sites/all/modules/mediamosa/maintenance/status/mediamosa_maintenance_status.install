@@ -29,51 +29,6 @@
  * Installer for status page.
  */
 
-include 'mediamosa_maintenance_status_db.inc';
-
-/**
- * Implements hook_install().
- */
-function mediamosa_maintenance_status_install() {
-  // Create our table(s).
-  mediamosa::drupal_install_schema(mediamosa_maintenance_status_db::TABLE_NAME);
-}
-
-/**
- * Implements hook_uninstall().
- */
-function mediamosa_maintenance_status_uninstall() {
-  // Drop our table(s).
-  mediamosa::drupal_uninstall_schema(mediamosa_maintenance_status_db::TABLE_NAME);
-}
-
-/**
- * Implements hook_schema().
- * @return array
- */
-function mediamosa_maintenance_status_schema() {
-  $schema[mediamosa_maintenance_status_db::TABLE_NAME] = array(
-    'description' => t('Simple storage table for the test results.'),
-    'fields' => array(
-      mediamosa_maintenance_status_db::NAME => array(
-        'description' => t('The name or indentifier for the value.'),
-        'type' => 'varchar',
-        'length' => mediamosa_maintenance_status_db::NAME_LENGTH,
-        'not null' => TRUE,
-      ),
-      mediamosa_maintenance_status_db::VALUE => array(
-        'description' => t('The value.'),
-        'type' => 'text',
-        'not null' => TRUE,
-        'size' => 'big',
-      ),
-    ),
-    'primary key' => array(mediamosa_maintenance_status_db::NAME),
-  );
-
-  return $schema;
-}
-
 /**
  * Remove the old status array.
  */
@@ -84,4 +39,25 @@ function mediamosa_maintenance_status_update_7000() {
   variable_del(mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES);
   variable_del(mediamosa_settings::MEDIAMOSA_RUN_3_HOURS);
   variable_del(mediamosa_settings::MEDIAMOSA_RUN_DAILY);
+}
+
+/**
+ * Drop the mediamosa_maintenance status table.
+ */
+function mediamosa_maintenance_status_update_7001() {
+  db_query("DROP TABLE IF EXISTS {mediamosa_maintenance_status}");
+
+  variable_del('mediamosa_status_timeout_tests');
+  variable_del('mediamosa_status_timeout_tests_running');
+  variable_del('mediamosa_status_minutes_tests_fast');
+  variable_del('mediamosa_status_minutes_tests_normal');
+  variable_del('mediamosa_status_minutes_tests_slow');
+  variable_del('mediamosa_status_run_tests');
+  variable_del('mediamosa_maintenance_status_queue');
+
+  // clear the cache.
+  drupal_flush_all_caches();
+
+  // Rebuild stuff.
+  registry_rebuild();
 }

@@ -1,5 +1,5 @@
 <?php
-// $Id: database.inc,v 1.26 2010/03/07 08:03:44 webchick Exp $
+// $Id: database.inc,v 1.31 2010/06/30 16:55:49 webchick Exp $
 
 /**
  * @file
@@ -13,6 +13,13 @@
 
 class DatabaseConnection_mysql extends DatabaseConnection {
 
+  /**
+   * Flag to indicate if we have registered the nextID cleanup function.
+   *
+   * @var boolean
+   */
+  protected $shutdownRegistered = FALSE;
+
   public function __construct(array $connection_options = array()) {
     // This driver defaults to transaction support, except if explicitly passed FALSE.
     $this->transactionSupport = !isset($connection_options['transactions']) || ($connection_options['transactions'] !== FALSE);
@@ -20,14 +27,17 @@ class DatabaseConnection_mysql extends DatabaseConnection {
     // MySQL never supports transactional DDL.
     $this->transactionalDDLSupport = FALSE;
 
-    // Default to TCP connection on port 3306.
-    if (empty($connection_options['port'])) {
-      $connection_options['port'] = 3306;
-    }
-
     $this->connectionOptions = $connection_options;
 
-    $dsn = 'mysql:host=' . $connection_options['host'] . ';port=' . $connection_options['port'] . ';dbname=' . $connection_options['database'];
+    // The DSN should use either a socket or a host/port.
+    if (isset($connection_options['unix_socket'])) {
+      $dsn = 'mysql:unix_socket=' . $connection_options['unix_socket'];
+    }
+    else {
+      // Default to TCP connection on port 3306.
+      $dsn = 'mysql:host=' . $connection_options['host'] . ';port=' . (empty($connection_options['port']) ? 3306 : $connection_options['port']);
+    }
+    $dsn .= ';dbname=' . $connection_options['database'];
     parent::__construct($dsn, $connection_options['username'], $connection_options['password'], array(
       // So we don't have to mess around with cursors and unbuffered queries by default.
       PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => TRUE,
@@ -49,7 +59,7 @@ class DatabaseConnection_mysql extends DatabaseConnection {
   }
 
   public function queryRange($query, $from, $count, array $args = array(), array $options = array()) {
-    return $this->query($query . ' LIMIT ' . $from . ', ' . $count, $args, $options);
+    return $this->query($query . ' LIMIT ' . (int) $from . ', ' . (int) $count, $args, $options);
   }
 
   public function queryTemporary($query, array $args = array(), array $options = array()) {
@@ -72,7 +82,6 @@ class DatabaseConnection_mysql extends DatabaseConnection {
   }
 
   public function nextId($existing_id = 0) {
-    static $shutdown_registered = FALSE;
     $new_id = $this->query('INSERT INTO {sequences} () VALUES ()', array(), array('return' => Database::RETURN_INSERT_ID));
     // This should only happen after an import or similar event.
     if ($existing_id >= $new_id) {
@@ -86,14 +95,16 @@ class DatabaseConnection_mysql extends DatabaseConnection {
       $this->query('INSERT INTO {sequences} (value) VALUES (:value) ON DUPLICATE KEY UPDATE value = value', array(':value' => $existing_id));
       $new_id = $this->query('INSERT INTO {sequences} () VALUES ()', array(), array('return' => Database::RETURN_INSERT_ID));
     }
-    if (!$shutdown_registered) {
-      drupal_register_shutdown_function(array(get_class($this), 'nextIdDelete'));
-      $shutdown_registered = TRUE;
+    if (!$this->shutdownRegistered) {
+      // Use register_shutdown_function() here to keep the database system
+      // independent of Drupal.
+      register_shutdown_function(array($this, 'nextIdDelete'));
+      $shutdownRegistered = TRUE;
     }
     return $new_id;
   }
 
-  public static function nextIdDelete() {
+  public function nextIdDelete() {
     // While we want to clean up the table to keep it up from occupying too
     // much storage and memory, we must keep the highest value in the table
     // because InnoDB  uses an in-memory auto-increment counter as long as the
@@ -102,9 +113,19 @@ class DatabaseConnection_mysql extends DatabaseConnection {
     // table based solely on values from the table so deleting all values would
     // be a problem in this case. Also, TRUNCATE resets the auto increment
     // counter.
-    $max_id = db_query('SELECT MAX(value) FROM {sequences}')->fetchField();
-    // We know we are using MySQL here, so need for the slower db_delete().
-    db_query('DELETE FROM {sequences} WHERE value < :value', array(':value' => $max_id));
+    try {
+      $max_id = $this->query('SELECT MAX(value) FROM {sequences}')->fetchField();
+      // We know we are using MySQL here, no need for the slower db_delete().
+      $this->query('DELETE FROM {sequences} WHERE value < :value', array(':value' => $max_id));
+    }
+    // During testing, this function is called from shutdown with the
+    // simpletest prefix stored in $this->connection, and those tables are gone
+    // by the time shutdown is called so we need to ignore the database
+    // errors. There is no problem with completely ignoring errors here: if
+    // these queries fail, the sequence will work just fine, just use a bit
+    // more database storage and memory.
+    catch (PDOException $e) {
+    }
   }
 }
 

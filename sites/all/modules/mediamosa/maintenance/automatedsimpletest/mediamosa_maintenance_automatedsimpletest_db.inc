@@ -28,10 +28,10 @@
  * @file
  * App database class object.
  */
-class mediamosa_maintenance_status_db {
+class mediamosa_maintenance_automatedsimpletest_db {
   // ------------------------------------------------------------------ Consts.
   // Table name;
-  const TABLE_NAME = 'mediamosa_maintenance_status';
+  const TABLE_NAME = 'mediamosa_maintenance_automatedsimpletest';
 
   // Database fields;
   const NAME = 'name';

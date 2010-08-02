@@ -1,5 +1,5 @@
 <?php
-// $Id: update.manager.inc,v 1.17 2010/02/01 07:17:59 webchick Exp $
+// $Id: update.manager.inc,v 1.23 2010/05/26 11:50:58 dries Exp $
 
 /**
  * @file
@@ -66,11 +66,6 @@ function update_manager_update_form($form, $form_state = array(), $context) {
     return $form;
   }
 
-  drupal_add_css('misc/ui/ui.all.css');
-  drupal_add_css('misc/ui/ui.dialog.css');
-  drupal_add_js('misc/ui/ui.core.js', array('weight' => JS_LIBRARY + 5));
-  drupal_add_js('misc/ui/ui.dialog.js', array('weight' => JS_LIBRARY + 6));
-  $form['#attached']['js'][] = drupal_get_path('module', 'update') . '/update.manager.js';
   $form['#attached']['css'][] = drupal_get_path('module', 'update') . '/update.css';
 
   // This will be a nested array. The first key is the kind of project, which
@@ -233,10 +228,10 @@ function update_manager_update_form($form, $form_state = array(), $context) {
   // If either table has been printed yet, we need a submit button and to
   // validate the checkboxes.
   if (!empty($projects['enabled']) || !empty($projects['disabled'])) {
-    $form['submit'] = array(
+    $form['actions'] = array('#type' => 'actions');
+    $form['actions']['submit'] = array(
       '#type' => 'submit',
       '#value' => t('Download these updates'),
-      '#weight' => 10,
     );
     $form['#validate'][] = 'update_manager_update_form_validate';
   }
@@ -248,7 +243,7 @@ function update_manager_update_form($form, $form_state = array(), $context) {
       '#type' => 'markup',
       '#markup' => theme('table', array('header' => $headers, 'rows' => $projects['manual'])),
       '#prefix' => $prefix,
-      '#weight' => 20,
+      '#weight' => 120,
     );
   }
 
@@ -256,10 +251,11 @@ function update_manager_update_form($form, $form_state = array(), $context) {
 }
 
 /**
- * Theme the first page in the update manager wizard to select projects.
+ * Returns HTML for the first page in the update manager wizard to select projects.
  *
  * @param $variables
- *   form: The form
+ *   An associative array containing:
+ *   - form: A render element representing the form.
  *
  * @ingroup themeable
  */
@@ -367,10 +363,10 @@ function update_manager_update_ready_form($form, &$form_state) {
     '#default_value' => TRUE,
   );
 
-  $form['submit'] = array(
+  $form['actions'] = array('#type' => 'actions');
+  $form['actions']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Continue'),
-    '#weight' => 100,
   );
 
   return $form;
@@ -493,7 +489,8 @@ function update_manager_install_form($form, &$form_state, $context) {
     '#description' => t('For example: %filename from your local computer', array('%filename' => 'name.tar.gz')),
   );
 
-  $form['submit'] = array(
+  $form['actions'] = array('#type' => 'actions');
+  $form['actions']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Install'),
   );
@@ -636,7 +633,7 @@ function update_manager_install_form_submit($form, &$form_state) {
 function _update_manager_extract_directory() {
   $directory = &drupal_static(__FUNCTION__, '');
   if (empty($directory)) {
-    $directory = DRUPAL_ROOT . '/' . file_directory_path('temporary') . '/update-extraction';
+    $directory = 'temporary://update-extraction';
     if (!file_exists($directory)) {
       mkdir($directory);
     }
@@ -685,7 +682,7 @@ function update_manager_archive_extract($file, $directory) {
 function update_manager_archive_verify($project, $archive_file, $directory) {
   $failures = module_invoke_all('verify_update_archive', $project, $archive_file, $directory);
   if (!empty($failures)) {
-    throw new Exception(t('Unable to extract %file', array('%file' => $file)));
+    throw new Exception(t('Unable to extract %file', array('%file' => $archive_file)));
   }
 }
 
@@ -709,8 +706,8 @@ function update_manager_file_get($url) {
   }
 
   // Check the cache and download the file if needed.
-  $local = 'temporary://update-cache/' . basename($parsed_url['path']);
-  $cache_directory = DRUPAL_ROOT . '/' . file_directory_path('temporary') . '/update-cache/';
+  $cache_directory = 'temporary://update-cache';
+  $local = $cache_directory . '/' . basename($parsed_url['path']);
 
   if (!file_exists($cache_directory)) {
     mkdir($cache_directory);

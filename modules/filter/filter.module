@@ -1,5 +1,5 @@
 <?php
-// $Id: filter.module,v 1.322 2010/03/08 03:59:25 webchick Exp $
+// $Id: filter.module,v 1.335 2010/06/29 00:48:14 dries Exp $
 
 /**
  * @file
@@ -260,8 +260,12 @@ function filter_format_save(&$format) {
  *
  * @param $format
  *   The text format object to be deleted.
+ * @param $fallback_id
+ *   (optional) The ID of the text format to use to reassign content that is
+ *   currently using $format. If omitted, the currently stored
+ *   filter_fallback_format() is used.
  */
-function filter_format_delete($format) {
+function filter_format_delete($format, $fallback_id = NULL) {
   db_delete('filter_format')
     ->condition('format', $format->format)
     ->execute();
@@ -270,7 +274,10 @@ function filter_format_delete($format) {
     ->execute();
 
   // Allow modules to react on text format deletion.
-  $fallback = filter_format_load(filter_fallback_format());
+  if (empty($fallback_id)) {
+    $fallback_id = filter_fallback_format();
+  }
+  $fallback = filter_format_load($fallback_id);
   module_invoke_all('filter_format_delete', $format, $fallback);
 
   filter_formats_reset();
@@ -290,7 +297,7 @@ function filter_admin_format_title($format) {
 function filter_permission() {
   $perms['administer filters'] = array(
     'title' => t('Administer text formats and filters'),
-    'description' => drupal_placeholder(array('text' => t('Warning: Give to trusted roles only; this permission has security implications.'))),
+    'restrict access' => TRUE,
   );
 
   // Generate permissions for each text format. Warn the administrator that any
@@ -488,11 +495,6 @@ function filter_default_format($account = NULL) {
  * format is initialized to output plain text. Installation profiles and site
  * administrators have the freedom to configure it further.
  *
- * When a text format is deleted, all content that previously had that format
- * assigned should be switched to the fallback format. To facilitate this,
- * Drupal passes in the fallback format object as one of the parameters of
- * hook_filter_format_delete().
- *
  * Note that the fallback format is completely distinct from the default
  * format, which differs per user and is simply the first format which that
  * user has access to. The default and fallback formats are only guaranteed to
@@ -636,6 +638,10 @@ function filter_list_format($format_id) {
         $filter->title = $filter_info[$name]['title'];
         // Unpack stored filter settings.
         $filter->settings = (isset($filter->settings) ? unserialize($filter->settings) : array());
+        // Merge in default settings.
+        if (isset($filter_info[$name]['default settings'])) {
+          $filter->settings += $filter_info[$name]['default settings'];
+        }
 
         $format_filters[$name] = $filter;
       }
@@ -668,6 +674,8 @@ function filter_list_format($format_id) {
  *   Boolean whether to cache the filtered output in the {cache_filter} table.
  *   The caller may set this to FALSE when the output is already cached
  *   elsewhere to avoid duplicate cache lookups and storage.
+ *
+ * @ingroup sanitization
  */
 function check_markup($text, $format_id = NULL, $langcode = '', $cache = FALSE) {
   if (empty($format_id)) {
@@ -679,7 +687,7 @@ function check_markup($text, $format_id = NULL, $langcode = '', $cache = FALSE) 
   $cache = $cache && !empty($format->cache);
   $cache_id = '';
   if ($cache) {
-    $cache_id = $format->format . ':' . $langcode . ':' . md5($text);
+    $cache_id = $format->format . ':' . $langcode . ':' . hash('sha256', $text);
     if ($cached = cache_get($cache_id, 'cache_filter')) {
       return $cached->data;
     }
@@ -728,29 +736,12 @@ function check_markup($text, $format_id = NULL, $langcode = '', $cache = FALSE) 
  *   the text format id specified in #format or the user's default format by
  *   default, if NULL.
  *
- * Since most modules expect the value of the new 'format' element *next* to the
- * original element, filter_process_format() utilizes an #after_build to move
- * the values of the children of the 'text_format' element so as to let the
- * submitted form values appear as if they were located on the same level.
- * For example, considering the input values:
+ * The resulting value for the element will be an array holding the value and the
+ * format.  For example, the value for the body element will be:
  * @code
- *   $form_state['input']['body']['value'] = 'foo';
- *   $form_state['input']['body']['format'] = 'foo';
+ *   $form_state['values']['body']['value'] = 'foo';
+ *   $form_state['values']['body']['format'] = 'foo';
  * @endcode
- * The #after_build will process them into:
- * @code
- *   $form_state['values']['body'] = 'foo';
- *   $form_state['values']['format'] = 'foo';
- * @endcode
- *
- * If multiple text format-enabled elements are required on the same level of
- * the form structure, modules can set custom #parents on the original element.
- * Alternatively, the #after_build may be unset through a subsequent #process
- * callback. If the default #after_build is not invoked and no custom processing
- * occurs, then the submitted form values will appear like in the
- * $form_state['input'] array above.
- *
- * @see filter_form_after_build()
  *
  * @param $element
  *   The form element to process. Properties used:
@@ -802,9 +793,6 @@ function filter_process_format($element) {
   $element['#attached']['js'][] = $path . '/filter.js';
   $element['#attached']['css'][] = $path . '/filter.css';
 
-  // Apply default #after_build behavior.
-  $element['#after_build'][] = 'filter_form_after_build';
-
   // Setup child container for the text format widget.
   $element['format'] = array(
     '#type' => 'fieldset',
@@ -849,51 +837,63 @@ function filter_process_format($element) {
     '#weight' => 0,
   );
 
-  return $element;
-}
+  // Lastly, disallow editing of this field if the user is not allowed to use
+  // the stored and preselected text format. But only, if that format actually
+  // exists.
+  $all_formats = filter_formats();
+  if (!isset($formats[$element['#format']]) && isset($all_formats[$element['#format']])) {
+    // Overload default values into #value to make them unalterable.
+    $element['value']['#value'] = $element['value']['#default_value'];
+    $element['format']['format']['#value'] = $element['format']['format']['#default_value'];
 
-/**
- * After build callback to move #type 'text_format' values up in $form_state.
- */
-function filter_form_after_build($element, &$form_state) {
-  // For text fields, the additional subkeys map 1:1 to field schema columns.
-  if (isset($element['#columns'])) {
-    return $element;
-  }
+    // Prepend #pre_render callback to replace field value with user notice
+    // prior to rendering.
+    if (!isset($element['value']['#pre_render'])) {
+      $element['value']['#pre_render'] = array();
+    }
+    array_unshift($element['value']['#pre_render'], 'filter_form_access_denied');
 
-  $parents = $element['#parents'];
-  array_pop($parents);
+    // Cosmetic adjustments.
+    if (isset($element['value']['#rows'])) {
+      $element['value']['#rows'] = 3;
+    }
+    $element['value']['#disabled'] = TRUE;
+    $element['value']['#resizable'] = FALSE;
 
-  foreach (element_children($element) as $key) {
-    $current_parents = $parents;
-    switch ($key) {
-      case 'value':
-        form_set_value(array('#parents' => $element['#parents']), $element[$key]['#value'], $form_state);
-        break;
-
-      case 'format':
-        $current_parents[] = $key;
-        form_set_value(array('#parents' => $current_parents), $element['format']['format']['#value'], $form_state);
-        break;
-
-      default:
-        $current_parents[] = $key;
-        form_set_value(array('#parents' => $current_parents), $element[$key]['#value'], $form_state);
+    // Hide the text format selector and any other child element (such as text
+    // field's summary).
+    foreach (element_children($element) as $key) {
+      if ($key != 'value') {
+        $element[$key]['#access'] = FALSE;
+      }
     }
   }
+
   return $element;
 }
 
 /**
- * Render a text format-enabled form element.
+ * #pre_render callback for #type 'text_format' to hide field value from prying eyes.
+ *
+ * To not break form processing and previews if a user does not have access to a
+ * stored text format, the expanded form elements in filter_process_format() are
+ * forced to take over the stored #default_values for 'value' and 'format'.
+ * However, to prevent the unfiltered, original #value from being displayed to
+ * the user, we replace it with a friendly notice here.
+ *
+ * @see filter_process_format()
+ */
+function filter_form_access_denied($element) {
+  $element['#value'] = t('This field has been disabled because you do not have sufficient permissions to edit it.');
+  return $element;
+}
+
+/**
+ * Returns HTML for a text format-enabled form element.
  *
  * @param $variables
  *   An associative array containing:
- *   - element: An associative array containing the properties of the element.
- *     Properties used: #children, #description
- *
- * @return
- *   A string representing the form element.
+ *   - element: A render element containing #children and #description.
  *
  * @ingroup themeable
  */
@@ -983,7 +983,7 @@ function _filter_tips($format_id, $long = FALSE) {
  */
 function filter_dom_load($text) {
   // Ignore warnings during HTML soup loading.
-  $dom_document = @DOMDocument::loadHTML('<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8" /></head><body>' . $text . '</body></html>');
+  $dom_document = @DOMDocument::loadHTML('<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8" /></head><body>' . $text . '</body></html>');
 
   return $dom_document;
 }
@@ -1018,7 +1018,7 @@ function filter_dom_serialize($dom_document) {
   foreach ($body_node->childNodes as $child_node) {
     $body_content .= $dom_document->saveXML($child_node);
   }
-  return preg_replace('|<([^>]*)/>|i', '<$1 />', $body_content);
+  return preg_replace('|<([^> ]*)/>|i', '<$1 />', $body_content);
 }
 
 /**
@@ -1043,7 +1043,7 @@ function filter_dom_serialize($dom_document) {
 function filter_dom_serialize_escape_cdata_element($dom_document, $dom_element, $comment_start = '//', $comment_end = '') {
   foreach ($dom_element->childNodes as $node) {
     if (get_class($node) == 'DOMCdataSection') {
-      // @see drupal_get_js().  This code is more or less duplicated there.
+      // See drupal_get_js().  This code is more or less duplicated there.
       $embed_prefix = "\n<!--{$comment_start}--><![CDATA[{$comment_start} ><!--{$comment_end}\n";
       $embed_suffix = "\n{$comment_start}--><!]]>{$comment_end}\n";
       $fragment = $dom_document->createDocumentFragment();
@@ -1055,7 +1055,7 @@ function filter_dom_serialize_escape_cdata_element($dom_document, $dom_element, 
 }
 
 /**
- * Format a link to the more extensive filter tips.
+ * Returns HTML for a link to the more extensive filter tips.
  *
  * @ingroup themeable
  */
@@ -1064,7 +1064,7 @@ function theme_filter_tips_more_info() {
 }
 
 /**
- * Format guidelines for a text format.
+ * Returns HTML for guidelines for a text format.
  *
  * @param $variables
  *   An associative array containing:
@@ -1076,7 +1076,9 @@ function theme_filter_guidelines($variables) {
   $format = $variables['format'];
 
   $name = isset($format->name) ? '<label>' . $format->name . ':</label>' : '';
-  return '<div id="filter-guidelines-' . $format->format . '" class="filter-guidelines-item">' . $name . theme('filter_tips', array('tips' => _filter_tips($format->format, FALSE))) . '</div>';
+  $attributes['class'][] = 'filter-guidelines-item';
+  $attributes['class'][] = 'filter-guidelines-' . $format->format;
+  return '<div' . drupal_attributes($attributes) . '>' . $name . theme('filter_tips', array('tips' => _filter_tips($format->format, FALSE))) . '</div>';
 }
 
 /**
@@ -1194,7 +1196,7 @@ function _filter_html_tips($filter, $format, $long = FALSE) {
   $output .= '<p>' . t('This site allows HTML content. While learning all of HTML may feel intimidating, learning how to use a very small number of the most basic HTML "tags" is very easy. This table provides examples for each tag that is enabled on this site.') . '</p>';
   $output .= '<p>' . t('For more information see W3C\'s <a href="@html-specifications">HTML Specifications</a> or use your favorite search engine to find other sites that explain HTML.', array('@html-specifications' => 'http://www.w3.org/TR/html/')) . '</p>';
   $tips = array(
-    'a' => array(t('Anchors are used to make links to other pages.'), '<a href="' . $base_url . '">' . variable_get('site_name', 'Drupal') . '</a>'),
+    'a' => array(t('Anchors are used to make links to other pages.'), '<a href="' . $base_url . '">' . check_plain(variable_get('site_name', 'Drupal')) . '</a>'),
     'br' => array(t('By default line break tags are automatically added, so use this tag to add additional ones. Use of this tag is different because it is not used with an open/close pair like all the others. Use the extra " /" inside the tag to maintain XHTML 1.0 compatibility'), t('Text with <br />line break')),
     'p' => array(t('By default paragraph tags are automatically added, so use this tag to add additional ones.'), '<p>' . t('Paragraph one.') . '</p> <p>' . t('Paragraph two.') . '</p>'),
     'strong' => array(t('Strong'), '<strong>' . t('Strong') . '</strong>'),
@@ -1318,7 +1320,7 @@ function _filter_url_parse_full_links($match) {
   $match[2] = decode_entities($match[2]);
   $caption = check_plain(_filter_url_trim($match[2]));
   $match[2] = check_url($match[2]);
-  return $match[1] . '<a href="' . $match[2] . '" title="' . $match[2] . '">' . $caption . '</a>' . $match[5];
+  return $match[1] . '<a href="' . $match[2] . '">' . $caption . '</a>' . $match[5];
 }
 
 /**
@@ -1328,7 +1330,7 @@ function _filter_url_parse_partial_links($match) {
   $match[2] = decode_entities($match[2]);
   $caption = check_plain(_filter_url_trim($match[2]));
   $match[2] = check_plain($match[2]);
-  return $match[1] . '<a href="http://' . $match[2] . '" title="' . $match[2] . '">' . $caption . '</a>' . $match[3];
+  return $match[1] . '<a href="http://' . $match[2] . '">' . $caption . '</a>' . $match[3];
 }
 
 /**

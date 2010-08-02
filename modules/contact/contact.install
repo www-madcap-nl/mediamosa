@@ -1,5 +1,5 @@
 <?php
-// $Id: contact.install,v 1.23 2010/01/30 00:08:34 webchick Exp $
+// $Id: contact.install,v 1.25 2010/06/08 03:48:14 webchick Exp $
 
 /**
  * @file
@@ -116,7 +116,16 @@ function contact_update_7001() {
  * Enable the 'access user contact forms' for registered users by default.
  */
 function contact_update_7002() {
-  user_role_grant_permissions(DRUPAL_AUTHENTICATED_RID, array('access user contact forms'));
+  // Do not use user_role_grant_permission() since it relies on
+  // hook_permission(), which will not run for contact module if it is
+  // disabled.
+  db_merge('role_permission')
+    ->key(array(
+      'rid' => DRUPAL_AUTHENTICATED_RID,
+      'permission' => 'access user contact forms',
+      'module' => 'contact',
+    ))
+    ->execute();
 }
 
 /**

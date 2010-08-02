@@ -1,23 +1,24 @@
-// $Id: node.js,v 1.4 2009/04/27 20:19:37 webchick Exp $
+// $Id: node.js,v 1.6 2010/05/04 16:03:34 dries Exp $
 
 (function ($) {
 
 Drupal.behaviors.nodeFieldsetSummaries = {
   attach: function (context) {
-    $('fieldset#edit-revision-information', context).setSummary(function (context) {
+    $('fieldset#edit-revision-information', context).drupalSetSummary(function (context) {
       return $('#edit-revision', context).is(':checked') ?
         Drupal.t('New revision') :
         Drupal.t('No revision');
     });
 
-    $('fieldset#edit-author', context).setSummary(function (context) {
-      var name = $('#edit-name').val(), date = $('#edit-date').val();
+    $('fieldset#edit-author', context).drupalSetSummary(function (context) {
+      var name = $('#edit-name').val() || Drupal.settings.anonymous,
+        date = $('#edit-date').val();
       return date ?
         Drupal.t('By @name on @date', { '@name': name, '@date': date }) :
         Drupal.t('By @name', { '@name': name });
     });
 
-    $('fieldset#edit-options', context).setSummary(function (context) {
+    $('fieldset#edit-options', context).drupalSetSummary(function (context) {
       var vals = [];
 
       $('input:checked', context).parent().each(function () {

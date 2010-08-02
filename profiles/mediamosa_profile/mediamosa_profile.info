@@ -1,5 +1,6 @@
 ; $Id:  $
 name = "MediaMosa (Default installation)"
+distribution_name = "MediaMosa"
 description = "<p>
       MediaMosa is a full featured, webservice oriented media management
       and distribution platform. MediaMosa is implemented as a modular
@@ -33,7 +34,7 @@ description = "<p>
     </code>
     <p>
         You may vary the mediamosa database prefix and the mediamosa user name.<br />
-        You also have to give write access to the apache user to your MediaMosa SAN/NAS mount points, e.g. /srv/mediamosa.<br />
+        You also have to give write access to the apache user to your MediaMosa (SAN/NAS) mount points, e.g. /srv/mediamosa.<br />
         <br />
         If you want to migrate your old 1.7 Mediamosa database to the new 2.x version, you have to create a new database user, which has enough rights to read your old databases.
     </p>"

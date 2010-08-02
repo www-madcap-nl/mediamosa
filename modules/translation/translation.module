@@ -1,5 +1,5 @@
 <?php
-// $Id: translation.module,v 1.77 2010/03/18 06:50:37 dries Exp $
+// $Id: translation.module,v 1.80 2010/06/06 00:24:16 webchick Exp $
 
 /**
  * @file
@@ -65,6 +65,7 @@ function translation_menu() {
     'access arguments' => array(1),
     'type' => MENU_LOCAL_TASK,
     'weight' => 2,
+    'theme callback' => '_node_custom_theme',
     'file' => 'translation.pages.inc',
   );
   return $items;
@@ -229,7 +230,7 @@ function translation_node_prepare($node) {
     if (!empty($source_node->tnid)) {
       $translations = translation_node_get_translations($source_node->tnid);
       if (isset($translations[$_GET['language']])) {
-        drupal_set_message(t('A translation of %title in %language already exists, a new %type  will be created instead of a translation.', array('%title' => $source_node->title, '%language' => $language_list[$_GET['language']]->name, '%type' => $node->type)), 'error');
+        drupal_set_message(t('A translation of %title in %language already exists, a new %type will be created instead of a translation.', array('%title' => $source_node->title, '%language' => $language_list[$_GET['language']]->name, '%type' => $node->type)), 'error');
         return;
       }
     }
@@ -239,13 +240,9 @@ function translation_node_prepare($node) {
     $node->translation_source = $source_node;
     $node->title = $source_node->title;
 
-    // If user has no access to the filter used for the body, Drupal core
-    // does not let the edit form to appear, so we should avoid exposing
-    // the source text here too.
-    $formats = filter_formats();
-    $node->body = (filter_access($formats[$source_node->body[$source_node->language][0]['format']])) ? $source_node->body : '';
-    // Let every module add custom translated fields.
-    module_invoke_all('node_prepare_translation', $node);
+    // Add field translations and let other modules module add custom translated
+    // fields.
+    field_attach_prepare_translation('node', $node, $node->language, $source_node, $source_node->language);
   }
 }
 

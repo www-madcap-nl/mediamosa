@@ -1,5 +1,5 @@
 <?php
-// $Id: forum.admin.inc,v 1.30 2010/03/10 17:59:00 webchick Exp $
+// $Id: forum.admin.inc,v 1.34 2010/06/26 21:32:20 dries Exp $
 
 /**
  * @file
@@ -55,7 +55,7 @@ function forum_form_forum($form, &$form_state, $edit = array()) {
   );
 
   $form['vid'] = array('#type' => 'hidden', '#value' => variable_get('forum_nav_vocabulary', ''));
-  $form['actions'] = array('#type' => 'container', '#attributes' => array('class' => array('form-actions')));
+  $form['actions'] = array('#type' => 'actions');
   $form['actions']['submit' ] = array('#type' => 'submit', '#value' => t('Save'));
   if ($edit['tid']) {
     $form['actions']['delete'] = array('#type' => 'submit', '#value' => t('Delete'));
@@ -93,6 +93,8 @@ function forum_form_submit($form, &$form_state) {
       break;
     case SAVED_UPDATED:
       drupal_set_message(t('The @type %term has been updated.', array('%term' => $form_state['values']['name'], '@type' => $type)));
+      // Clear the page and block caches to avoid stale data.
+      cache_clear_all();
       break;
   }
   $form_state['redirect'] = 'admin/structure/forum';
@@ -100,14 +102,15 @@ function forum_form_submit($form, &$form_state) {
 }
 
 /**
- * Theme forum forms.
+ * Returns HTML for a forum form.
  *
  * By default this does not alter the appearance of a form at all,
  * but is provided as a convenience for themers.
  *
  * @param $variables
  *   An associative array containing:
- *   - form: An associative array containing the structure of the form.
+ *   - form: A render element representing the form.
+ *
  * @ingroup themeable
  */
 function theme_forum_form($variables) {
@@ -157,7 +160,7 @@ function forum_form_container($form, &$form_state, $edit = array()) {
     '#type' => 'hidden',
     '#value' => variable_get('forum_nav_vocabulary', ''),
   );
-  $form['actions'] = array('#type' => 'container', '#attributes' => array('class' => array('form-actions')));
+  $form['actions'] = array('#type' => 'actions');
   $form['actions']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save')
@@ -207,25 +210,25 @@ function forum_admin_settings($form) {
   $number = drupal_map_assoc(array(5, 10, 15, 20, 25, 30, 35, 40, 50, 60, 80, 100, 150, 200, 250, 300, 350, 400, 500));
   $form['forum_hot_topic'] = array('#type' => 'select',
     '#title' => t('Hot topic threshold'),
-    '#default_value' => 15,
+    '#default_value' => variable_get('forum_hot_topic', 15),
     '#options' => $number,
     '#description' => t('The number of replies a topic must have to be considered "hot".'),
   );
   $number = drupal_map_assoc(array(10, 25, 50, 75, 100));
   $form['forum_per_page'] = array('#type' => 'select',
     '#title' => t('Topics per page'),
-    '#default_value' => 25,
+    '#default_value' => variable_get('forum_per_page', 25),
     '#options' => $number,
     '#description' => t('Default number of forum topics displayed per page.'),
   );
   $forder = array(1 => t('Date - newest first'), 2 => t('Date - oldest first'), 3 => t('Posts - most active first'), 4 => t('Posts - least active first'));
   $form['forum_order'] = array('#type' => 'radios',
     '#title' => t('Default order'),
-    '#default_value' => '1',
+    '#default_value' => variable_get('forum_order', 1),
     '#options' => $forder,
     '#description' => t('Default display order for topics.'),
   );
-  return system_settings_form($form, TRUE);
+  return system_settings_form($form);
 }
 
 /**

@@ -26,14 +26,14 @@
 
  /**
   * @file
-  * REST calls for status page.
+  * REST calls for automated simpletest page.
   */
 
 /**
- * URI: /cron/maintenance_status
+ * URI: /cron/simpletests
  * Method: GET
  */
-class mediamosa_rest_call_maintenance_status extends mediamosa_rest_call {
+class mediamosa_rest_call_simpletests extends mediamosa_rest_call {
 
   // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
@@ -48,10 +48,10 @@ class mediamosa_rest_call_maintenance_status extends mediamosa_rest_call {
     $mediamosa = mediamosa::get();
 
     // Fill the queue (if needed).
-    mediamosa_maintenance_status::fill_queue();
+    mediamosa_maintenance_automatedsimpletest::fill_queue();
 
     // Run them.
-    mediamosa_maintenance_status::run_simple_tests();
+    mediamosa_maintenance_automatedsimpletest::run_simple_tests();
 
     // Set ok.
     $mediamosa->set_result_okay();
@@ -59,10 +59,10 @@ class mediamosa_rest_call_maintenance_status extends mediamosa_rest_call {
 }
 
 /**
- * URI: /external/status
+ * URI: /external/simpletest
  * Method: GET
  */
-class mediamosa_rest_call_status extends mediamosa_rest_call {
+class mediamosa_rest_call_simpletest extends mediamosa_rest_call {
 
   // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
@@ -77,7 +77,7 @@ class mediamosa_rest_call_status extends mediamosa_rest_call {
     $mediamosa = mediamosa::get();
 
     // Fill the output.
-    $test_results = mediamosa_maintenance_status::get_test_results();
+    $test_results = mediamosa_maintenance_automatedsimpletest::get_test_results();
 
     // For now, return the 10 minutes ones.
     if (isset($test_results[mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES])) {
@@ -102,13 +102,13 @@ class mediamosa_rest_call_status extends mediamosa_rest_call {
 
 
 /**
- * URI: /internal/status/run
+ * URI: /internal/simpletest/run
  * Method: POST
  *
  * Internal only.
  *
  */
-class mediamosa_rest_call_status_run extends mediamosa_rest_call {
+class mediamosa_rest_call_simpletest_run extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------- Consts.
   // Rest vars;
@@ -138,18 +138,18 @@ class mediamosa_rest_call_status_run extends mediamosa_rest_call {
     $class_name = $this->get_param_value(self::CLASS_NAME);
 
     // Check if I may run.
-    $run_last = variable_get('mediamosa_status_timeout_tests_running', NULL);
+    $run_last = variable_get('mediamosa_automatedsimpletest_timeout_tests_running', NULL);
 
     // may run?
-    if (!empty($run_last) && round(REQUEST_TIME - $run_last['started']) < mediamosa_maintenance_status::timeout_test_run()) {
+    if (!empty($run_last) && round(REQUEST_TIME - $run_last['started']) < mediamosa_maintenance_automatedsimpletest::timeout_test_run()) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_TEST_RUNNING, array('@test' => $run_last['class']));
     }
 
     // ok, set the var.
-    variable_set('mediamosa_status_timeout_tests_running', array('started' => REQUEST_TIME, 'class' => $class_name));
+    variable_set('mediamosa_automatedsimpletest_timeout_tests_running', array('started' => REQUEST_TIME, 'class' => $class_name));
 
     // Add default info.
-    $item = array('runphase' => mediamosa_maintenance_status::RUNPHASE_STARTED);
+    $item = array('runphase' => mediamosa_maintenance_automatedsimpletest::RUNPHASE_STARTED);
 
     // So we can access it in exception.
     $my_simpletest = NULL;
@@ -168,7 +168,7 @@ class mediamosa_rest_call_status_run extends mediamosa_rest_call {
         'info' => $my_simpletest->getInfo(),
         'results' => array(),
         'assertions' => array(),
-        'runphase' => mediamosa_maintenance_status::RUNPHASE_STARTED
+        'runphase' => mediamosa_maintenance_automatedsimpletest::RUNPHASE_STARTED
       );
 
       // Run.
@@ -200,7 +200,7 @@ class mediamosa_rest_call_status_run extends mediamosa_rest_call {
       unset($item['results']['#debug']);
 
       // Set to completed.
-      $item['runphase'] = mediamosa_maintenance_status::RUNPHASE_COMPLETED;
+      $item['runphase'] = mediamosa_maintenance_automatedsimpletest::RUNPHASE_COMPLETED;
     }
     catch (Exception $e) {
       mediamosa::log(
@@ -214,11 +214,11 @@ class mediamosa_rest_call_status_run extends mediamosa_rest_call {
       );
 
       // ignore.
-      $item['runphase'] = mediamosa_maintenance_status::RUNPHASE_FAILED;
+      $item['runphase'] = mediamosa_maintenance_automatedsimpletest::RUNPHASE_FAILED;
     }
 
     // Done, reset running.
-    variable_set('mediamosa_status_timeout_tests_running', NULL);
+    variable_set('mediamosa_automatedsimpletest_timeout_tests_running', NULL);
 
     // Add result.
     $mediamosa->add_item($item);

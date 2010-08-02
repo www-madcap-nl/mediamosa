@@ -1,4 +1,4 @@
-// $Id: ajax.js,v 1.12 2010/03/10 15:14:38 dries Exp $
+// $Id: ajax.js,v 1.18 2010/06/25 20:34:07 dries Exp $
 (function ($) {
 
 /**
@@ -93,12 +93,12 @@ Drupal.ajax = function (base, element, element_settings) {
     selector: '#' + base,
     effect: 'none',
     speed: 'slow',
-    method: 'replace',
+    method: 'replaceWith',
     progress: {
       type: 'bar',
       message: 'Please wait...'
     },
-    button: {}
+    submit: {}
   };
 
   $.extend(this, defaults, element_settings);
@@ -121,7 +121,7 @@ Drupal.ajax = function (base, element, element_settings) {
   var ajax = this;
   var options = {
     url: ajax.url,
-    data: ajax.button,
+    data: ajax.submit,
     beforeSerialize: function (element_settings, options) {
       return ajax.beforeSerialize(element_settings, options);
     },
@@ -132,7 +132,7 @@ Drupal.ajax = function (base, element, element_settings) {
       // Sanity check for browser support (object expected).
       // When using iFrame uploads, responses must be returned as a string.
       if (typeof response == 'string') {
-        response = $.parseJson(response);
+        response = $.parseJSON(response);
       }
       return ajax.success(response, status);
     },
@@ -189,8 +189,14 @@ Drupal.ajax = function (base, element, element_settings) {
  */
 Drupal.ajax.prototype.beforeSerialize = function (element, options) {
   // Allow detaching behaviors to update field values before collecting them.
-  var settings = this.settings || Drupal.settings;
-  Drupal.detachBehaviors(this.form, settings, 'serialize');
+  // This is only needed when field values are added to the POST data, so only
+  // when there is a form such that this.form.ajaxSubmit() is used instead of
+  // $.ajax(). When there is no form and $.ajax() is used, beforeSerialize()
+  // isn't called, but don't rely on that: explicitly check this.form.
+  if (this.form) {
+    var settings = this.settings || Drupal.settings;
+    Drupal.detachBehaviors(this.form, settings, 'serialize');
+  }
 };
 
 /**
@@ -200,9 +206,11 @@ Drupal.ajax.prototype.beforeSubmit = function (form_values, element, options) {
   // Disable the element that received the change.
   $(this.element).addClass('progress-disabled').attr('disabled', true);
 
-  // Server-side code needs to know what element triggered the call, so it can
-  // find the #ajax binding.
-  form_values.push({ name: 'ajax_triggering_element', value: this.formPath });
+  // Prevent duplicate HTML ids in the returned markup.
+  // @see drupal_html_id()
+  $('[id]').each(function () {
+    form_values.push({ name: 'ajax_html_ids[]', value: this.id });
+  });
 
   // Insert progressbar or throbber.
   if (this.progress.type == 'bar') {
@@ -247,12 +255,14 @@ Drupal.ajax.prototype.success = function (response, status) {
     }
   }
 
-  // Reattach behaviors that were detached in beforeSerialize(). The
+  // Reattach behaviors, if they were detached in beforeSerialize(). The
   // attachBehaviors() called on the new content from processing the response
   // commands is not sufficient, because behaviors from the entire form need
   // to be reattached.
-  var settings = this.settings || Drupal.settings;
-  Drupal.attachBehaviors(this.form, settings);
+  if (this.form) {
+    var settings = this.settings || Drupal.settings;
+    Drupal.attachBehaviors(this.form, settings);
+  }
 
   Drupal.unfreezeHeight();
 
@@ -304,9 +314,11 @@ Drupal.ajax.prototype.error = function (response, uri) {
   $(this.wrapper).show();
   // Re-enable the element.
   $(this.element).removeClass('progress-disabled').attr('disabled', false);
-  // Reattach behaviors that were detached in beforeSerialize().
-  var settings = response.settings || this.settings || Drupal.settings;
-  Drupal.attachBehaviors(this.form, settings);
+  // Reattach behaviors, if they were detached in beforeSerialize().
+  if (this.form) {
+    var settings = response.settings || this.settings || Drupal.settings;
+    Drupal.attachBehaviors(this.form, settings);
+  }
 };
 
 /**
@@ -427,12 +439,11 @@ Drupal.ajax.prototype.commands = {
   restripe: function (ajax, response, status) {
     // :even and :odd are reversed because jQuery counts from 0 and
     // we count from 1, so we're out of sync.
-    $('tbody tr:not(:hidden)', $(response.selector))
-      .removeClass('even').removeClass('odd')
-      .filter(':even')
-        .addClass('odd').end()
-      .filter(':odd')
-        .addClass('even');
+    // Match immediate children of the parent element to allow nesting.
+    $('> tbody > tr:visible, > tr:visible', $(response.selector))
+      .removeClass('odd even')
+      .filter(':even').addClass('odd').end()
+      .filter(':odd').addClass('even');
   }
 };
 

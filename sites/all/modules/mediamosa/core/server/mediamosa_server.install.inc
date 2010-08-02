@@ -47,7 +47,7 @@ function _mediamosa_server_install() {
   _mediamosa_server_tool_install();
 
   $default_servers = array(
-    array(1,0,'ON',"streaming","http://localhost/ticket/{TICKET}",
+    array(1,0,'ON',"streaming","http://mediamosa.local/ticket/{TICKET}",
       "asf",
       "{IF_EXTERNAL}
 <asx version='3.0'>
@@ -69,7 +69,7 @@ function _mediamosa_server_install() {
 </embed>
 </object>"
       ,'ASF Streaming Server','','','',''),
-    array(2,0,'ON',"streaming","http://localhost/ticket/{TICKET}",
+    array(2,0,'ON',"streaming","http://mediamosa.local/ticket/{TICKET}",
       "flv",
       "<script type='text/javascript' src='http://145.97.38.12/swfobject.js'></script>
 <div id='mediaspace'>This div will be replaced</div>
@@ -83,7 +83,7 @@ s1.addVariable('type', 'mp4');
 s1.write('mediaspace');
 </script>"
       ,'FLV Streaming Server','','','',''),
-    array(3,0,'ON',"streaming","http://localhost/ticket/{TICKET}",
+    array(3,0,'ON',"streaming","http://mediamosa.local/ticket/{TICKET}",
       "mov;mp4;m4a;3gp;3g2;mj2:h264",
       "<script type='text/javascript' src='http://145.97.38.29/swfobject.js'></script>
 <div id='mediaspace'>This div will be replaced</div>
@@ -97,7 +97,7 @@ s1.addVariable('type', 'mp4');
 s1.write('mediaspace');
 </script>"
       ,'MOV/MP4/M4A/3GP/3G2/MJ2I:H264 Streaming Server','','','',''),
-    array(4,0,'ON',"streaming","http://localhost/ticket/{TICKET}",
+    array(4,0,'ON',"streaming","http://mediamosa.local/ticket/{TICKET}",
       "mpeg|mov;mp4;m4a;3gp;3g2;mj2",
       "<object id='{MEDIAFILE_ID}' classid='CLSID:02Bf25D5-8C17-4B23-BC80-D3488ABDDC6B' standby='Loading Quicktime Player components...' width='{WIDTH}' height='{HEIGHT}'>
 {IF_START}
@@ -111,10 +111,11 @@ s1.write('mediaspace');
 <embed type='video/quicktime' src='{TICKET_URI}' name='{MEDIAFILE_ID}' width='{WIDTH}' height='{HEIGHT}' autoplay='{AUTOPLAY}' {IF_START}starttime='{START_TIME}'{/IF_START} {IF_DURATION}endtime='{END_TIME}'{/IF_DURATION}/>
 </object>"
       ,'MPEG|MOV;MP4;M4A;3GP;3G2;MJ2 Streaming Server','','','',''),
-    array(11,2,'ON',"download","http://localhost/download/{TICKET}",'','','Default download server','','','',''),
-    array(12,0,'ON',"still","http://localhost/still/{TICKET}",'','','Default still server','','','',''),
-    array(13,0,'ON',"job_processor",'http://localhost','','','Default job processor',10,"ANALYSE|ffmpeg|STILL",''),
-    array(14,0,'ON',"upload","http://localhost/mediafile/upload?upload_ticket={TICKET}",'','','Default upload server','','',"http://example.org/mediafile/uploadprogress"),
+    array(11,2,'ON',"download","http://download.mediamosa.local/download/{TICKET}",'','','Default download server','','','',''),
+    array(12,0,'ON',"still","http://download.mediamosa.local/still/{TICKET}",'','','Default still server','','','',''),
+    array(13,0,'ON',"job_processor",'http://job1.mediamosa.local','','','Default 1st job processor',2,"ANALYSE|ffmpeg|STILL",''),
+    array(14,0,'ON',"job_processor",'http://job2.mediamosa.local','','','Default 2nd job processor',2,"ANALYSE|ffmpeg|STILL",''),
+    array(15,0,'ON',"upload","http://upload.mediamosa.local/mediafile/upload?upload_ticket={TICKET}",'','','Default upload server','','',"http://upload.mediamosa.local/mediafile/uploadprogress"),
   );
 
 
@@ -139,7 +140,7 @@ s1.write('mediaspace');
     $node->{mediamosa_server_db::VERSION} = $default_server[1];
     $node->{mediamosa_server_db::SERVER_STATUS} = $default_server[2];
     $node->{mediamosa_server_db::SERVER_TYPE} = $default_server[3];
-    $node->{mediamosa_server_db::URI} = $default_server[4];
+    $node->{mediamosa_server_db::SERVER_URI} = $default_server[4];
     $node->{mediamosa_server_db::CONTAINERS} = $default_server[5];
     $node->{mediamosa_server_db::OBJECT_CODE} = $default_server[6];
     $node->{mediamosa_server_db::DESCRIPTION} = $node->{mediamosa_server_db::SERVER_NAME} = $default_server[7];
@@ -173,7 +174,7 @@ function _mediamosa_server_uninstall() {
  * Implements hook_schema().
  */
 function mediamosa_server_schema() {
-  $a_types = array(
+  $types = array(
     mediamosa_server_db::SERVER_TYPE_DOWNLOAD,
     mediamosa_server_db::SERVER_TYPE_STILL,
     mediamosa_server_db::SERVER_TYPE_STREAMING,
@@ -181,7 +182,7 @@ function mediamosa_server_schema() {
     mediamosa_server_db::SERVER_TYPE_UPLOAD,
   );
 
-  $a_status = array(
+  $server_status = array(
     mediamosa_server_db::SERVER_STATUS_OFF,
     mediamosa_server_db::SERVER_STATUS_ON,
     mediamosa_server_db::SERVER_STATUS_CLOSE,
@@ -210,20 +211,20 @@ function mediamosa_server_schema() {
       ),
       mediamosa_server_db::SERVER_STATUS => array(
         'description' => t('The server status.'),
-        'type' => "enum('" . implode("','", $a_status) . "')",
-        'mysql_type' => "enum('" . implode("','", $a_status) . "')",
+        'type' => "enum('" . implode("','", $server_status) . "')",
+        'mysql_type' => "enum('" . implode("','", $server_status) . "')",
         'not null' => TRUE,
       ),
       mediamosa_server_db::SERVER_TYPE => array(
         'description' => t('The server type.'),
-        'type' => "enum('" . implode("','", $a_types) . "')",
-        'mysql_type' => "enum('" . implode("','", $a_types) . "')",
+        'type' => "enum('" . implode("','", $types) . "')",
+        'mysql_type' => "enum('" . implode("','", $types) . "')",
         'not null' => TRUE,
       ),
-      mediamosa_server_db::URI => array(
+      mediamosa_server_db::SERVER_URI => array(
         'description' => t('The optional URI of the server.'),
         'type' => 'varchar',
-        'length' => mediamosa_server_db::URI_LENGTH,
+        'length' => mediamosa_server_db::SERVER_URI_LENGTH,
         'not null' => FALSE,
       ),
       mediamosa_server_db::DESCRIPTION => array(

@@ -1,5 +1,5 @@
 <?php
-// $Id: taxonomy.admin.inc,v 1.96 2010/03/18 06:36:39 dries Exp $
+// $Id: taxonomy.admin.inc,v 1.106 2010/06/17 13:44:45 dries Exp $
 
 /**
  * @file
@@ -20,15 +20,16 @@ function taxonomy_overview_vocabularies($form) {
     $form[$vocabulary->vid]['#vocabulary'] = $vocabulary;
     $form[$vocabulary->vid]['name'] = array('#markup' => check_plain($vocabulary->name));
     $form[$vocabulary->vid]['weight'] = array('#type' => 'weight', '#delta' => 10, '#default_value' => $vocabulary->weight);
-    $form[$vocabulary->vid]['edit'] = array('#type' => 'link', '#title' => t('edit vocabulary'), '#href' => "admin/structure/taxonomy/$vocabulary->vid/edit");
-    $form[$vocabulary->vid]['list'] = array('#type' => 'link', '#title' => t('list terms'), '#href' => "admin/structure/taxonomy/$vocabulary->vid");
-    $form[$vocabulary->vid]['add'] = array('#type' => 'link', '#title' => t('add terms'), '#href' => "admin/structure/taxonomy/$vocabulary->vid/add");
+    $form[$vocabulary->vid]['edit'] = array('#type' => 'link', '#title' => t('edit vocabulary'), '#href' => "admin/structure/taxonomy/$vocabulary->machine_name/edit");
+    $form[$vocabulary->vid]['list'] = array('#type' => 'link', '#title' => t('list terms'), '#href' => "admin/structure/taxonomy/$vocabulary->machine_name");
+    $form[$vocabulary->vid]['add'] = array('#type' => 'link', '#title' => t('add terms'), '#href' => "admin/structure/taxonomy/$vocabulary->machine_name/add");
   }
 
   // Only make this form include a submit button and weight if more than one
   // vocabulary exists.
   if (count($vocabularies) > 1) {
-    $form['submit'] = array('#type' => 'submit', '#value' => t('Save'));
+    $form['actions'] = array('#type' => 'actions');
+    $form['actions']['submit'] = array('#type' => 'submit', '#value' => t('Save'));
   }
   elseif (isset($vocabulary)) {
     unset($form[$vocabulary->vid]['weight']);
@@ -52,10 +53,14 @@ function taxonomy_overview_vocabularies_submit($form, &$form_state) {
 }
 
 /**
- * Theme the vocabulary overview as a sortable list of vocabularies.
+ * Returns HTML for the vocabulary overview form as a sortable list of vocabularies.
  *
- * @ingroup themeable
+ * @param $variables
+ *   An associative array containing:
+ *   - form: A render element representing the form.
+ *
  * @see taxonomy_overview_vocabularies()
+ * @ingroup themeable
  */
 function theme_taxonomy_overview_vocabularies($variables) {
   $form = $variables['form'];
@@ -80,7 +85,7 @@ function theme_taxonomy_overview_vocabularies($variables) {
   }
 
   $header = array(t('Vocabulary name'));
-  if (isset($form['submit'])) {
+  if (isset($form['actions'])) {
     $header[] = t('Weight');
     drupal_add_tabledrag('taxonomy', 'order', 'sibling', 'vocabulary-weight');
   }
@@ -95,17 +100,33 @@ function theme_taxonomy_overview_vocabularies($variables) {
  * @see taxonomy_form_vocabulary_submit()
  */
 function taxonomy_form_vocabulary($form, &$form_state, $edit = array()) {
-  if (!is_array($edit)) {
-    $edit = (array)$edit;
+  // During initial form build, add the entity to the form state for use
+  // during form building and processing. During a rebuild, use what is in the
+  // form state.
+  if (!isset($form_state['vocabulary'])) {
+    $vocabulary = is_object($edit) ? $edit : (object) $edit;
+    $defaults = array(
+      'name' => '',
+      'machine_name' => '',
+      'description' => '',
+      'hierarchy' => 0,
+      'weight' => 0,
+    );
+    foreach ($defaults as $key => $value) {
+      if (!isset($vocabulary->$key)) {
+        $vocabulary->$key = $value;
+      }
+    }
+    $form_state['vocabulary'] = $vocabulary;
   }
-  $edit += array(
-    'name' => '',
-    'machine_name' => '',
-    'description' => '',
-    'hierarchy' => 0,
-    'weight' => 0,
-  );
-  $form['#vocabulary'] = (object) $edit;
+  else {
+    $vocabulary = $form_state['vocabulary'];
+  }
+
+  // @todo Legacy support. Modules are encouraged to access the entity using
+  //   $form_state. Remove in Drupal 8.
+  $form['#vocabulary'] = $form_state['vocabulary'];
+
   // Check whether we need a deletion confirmation form.
   if (isset($form_state['confirm_delete']) && isset($form_state['values']['vid'])) {
     return taxonomy_vocabulary_confirm_delete($form, $form_state, $form_state['values']['vid']);
@@ -113,10 +134,10 @@ function taxonomy_form_vocabulary($form, &$form_state, $edit = array()) {
   $form['name'] = array(
     '#type' => 'textfield',
     '#title' => t('Name'),
-    '#default_value' => $edit['name'],
+    '#default_value' => $vocabulary->name,
     '#maxlength' => 255,
     '#required' => TRUE,
-    '#field_suffix' => ' <small id="edit-name-suffix">&nbsp</small>',
+    '#field_suffix' => ' <small id="edit-name-suffix">&nbsp;</small>',
   );
   $js_settings = array(
     'type' => 'setting',
@@ -134,7 +155,7 @@ function taxonomy_form_vocabulary($form, &$form_state, $edit = array()) {
   $form['machine_name'] = array(
     '#type' => 'textfield',
     '#title' => t('Machine-readable name'),
-    '#default_value' => $edit['machine_name'],
+    '#default_value' => $vocabulary->machine_name,
     '#maxlength' => 255,
     '#description' => t('The unique machine-readable name for this vocabulary, used for theme templates. Can only contain lowercase letters, numbers, and underscores.'),
     '#required' => TRUE,
@@ -145,7 +166,7 @@ function taxonomy_form_vocabulary($form, &$form_state, $edit = array()) {
   $form['description'] = array(
     '#type' => 'textfield',
     '#title' => t('Description'),
-    '#default_value' => $edit['description'],
+    '#default_value' => $vocabulary->description,
   );
   // Set the hierarchy to "multiple parents" by default. This simplifies the
   // vocabulary form and standardizes the term form.
@@ -154,11 +175,12 @@ function taxonomy_form_vocabulary($form, &$form_state, $edit = array()) {
     '#value' => '0',
   );
 
-  $form['submit'] = array('#type' => 'submit', '#value' => t('Save'));
-  if (isset($edit['vid'])) {
-    $form['delete'] = array('#type' => 'submit', '#value' => t('Delete'));
-    $form['vid'] = array('#type' => 'value', '#value' => $edit['vid']);
-    $form['module'] = array('#type' => 'value', '#value' => $edit['module']);
+  $form['actions'] = array('#type' => 'actions');
+  $form['actions']['submit'] = array('#type' => 'submit', '#value' => t('Save'));
+  if (isset($vocabulary->vid)) {
+    $form['actions']['delete'] = array('#type' => 'submit', '#value' => t('Delete'));
+    $form['vid'] = array('#type' => 'value', '#value' => $vocabulary->vid);
+    $form['module'] = array('#type' => 'value', '#value' => $vocabulary->module);
   }
   return $form;
 }
@@ -195,26 +217,27 @@ function taxonomy_form_vocabulary_validate($form, &$form_state) {
  * Accept the form submission for a vocabulary and save the results.
  */
 function taxonomy_form_vocabulary_submit($form, &$form_state) {
-  $old_vocabulary = $form['#vocabulary'];
   if ($form_state['clicked_button']['#value'] == t('Delete')) {
     // Rebuild the form to confirm vocabulary deletion.
     $form_state['rebuild'] = TRUE;
     $form_state['confirm_delete'] = TRUE;
     return;
   }
-  $vocabulary = (object) $form_state['values'];
-  if ($vocabulary->machine_name != $old_vocabulary->machine_name) {
-    field_attach_rename_bundle('taxonomy_term', $old_vocabulary->machine_name, $vocabulary->machine_name);
+  $old_machine_name = $form_state['vocabulary']->machine_name;
+  $vocabulary = $form_state['vocabulary'];
+  entity_form_submit_build_entity('taxonomy_vocabulary', $vocabulary, $form, $form_state);
+  if ($vocabulary->machine_name != $old_machine_name) {
+    field_attach_rename_bundle('taxonomy_term', $old_machine_name, $vocabulary->machine_name);
   }
   switch (taxonomy_vocabulary_save($vocabulary)) {
     case SAVED_NEW:
       drupal_set_message(t('Created new vocabulary %name.', array('%name' => $vocabulary->name)));
-      watchdog('taxonomy', 'Created new vocabulary %name.', array('%name' => $vocabulary->name), WATCHDOG_NOTICE, l(t('edit'), 'admin/structure/taxonomy/' . $vocabulary->vid . '/edit'));
+      watchdog('taxonomy', 'Created new vocabulary %name.', array('%name' => $vocabulary->name), WATCHDOG_NOTICE, l(t('edit'), 'admin/structure/taxonomy/' . $vocabulary->machine_name . '/edit'));
       break;
 
     case SAVED_UPDATED:
       drupal_set_message(t('Updated vocabulary %name.', array('%name' => $vocabulary->name)));
-      watchdog('taxonomy', 'Updated vocabulary %name.', array('%name' => $vocabulary->name), WATCHDOG_NOTICE, l(t('edit'), 'admin/structure/taxonomy/' . $vocabulary->vid . '/edit'));
+      watchdog('taxonomy', 'Updated vocabulary %name.', array('%name' => $vocabulary->name), WATCHDOG_NOTICE, l(t('edit'), 'admin/structure/taxonomy/' . $vocabulary->machine_name . '/edit'));
       break;
   }
 
@@ -346,7 +369,7 @@ function taxonomy_overview_terms($form, &$form_state, $vocabulary) {
   // Build the actual form.
   foreach ($current_page as $key => $term) {
     // Save the term for the current page so we don't have to load it a second time.
-    $form[$key]['#term'] = (array)$term;
+    $form[$key]['#term'] = (array) $term;
     if (isset($term->parents)) {
       $form[$key]['#term']['parent'] = $term->parent = $term->parents[0];
       unset($form[$key]['#term']['parents'], $term->parents);
@@ -378,14 +401,15 @@ function taxonomy_overview_terms($form, &$form_state, $vocabulary) {
   $form['#page_entries'] = $page_entries;
   $form['#back_step'] = $back_step;
   $form['#forward_step'] = $forward_step;
-  $form['#empty_text'] = t('No terms available. <a href="@link">Add term</a>.', array('@link' => url('admin/structure/taxonomy/' . $vocabulary->vid . '/add')));
+  $form['#empty_text'] = t('No terms available. <a href="@link">Add term</a>.', array('@link' => url('admin/structure/taxonomy/' . $vocabulary->machine_name . '/add')));
 
   if ($vocabulary->hierarchy < 2 && count($tree) > 1) {
-    $form['submit'] = array(
+    $form['actions'] = array('#type' => 'actions', '#tree' => FALSE);
+    $form['actions']['submit'] = array(
       '#type' => 'submit',
       '#value' => t('Save')
     );
-    $form['reset_alphabetical'] = array(
+    $form['actions']['reset_alphabetical'] = array(
       '#type' => 'submit',
       '#value' => t('Reset to alphabetical')
     );
@@ -437,7 +461,7 @@ function taxonomy_overview_terms_submit($form, &$form_state) {
 
   // Build a list of all terms that need to be updated on previous pages.
   $weight = 0;
-  $term = (array)$tree[0];
+  $term = (array) $tree[0];
   while ($term['tid'] != $form['#first_tid']) {
     if ($term['parents'][0] == 0 && $term['weight'] != $weight) {
       $term['parent'] = $term['parents'][0];
@@ -446,7 +470,7 @@ function taxonomy_overview_terms_submit($form, &$form_state) {
     }
     $weight++;
     $hierarchy = $term['parents'][0] != 0 ? 1 : $hierarchy;
-    $term = (array)$tree[$weight];
+    $term = (array) $tree[$weight];
   }
 
   // Renumber the current page weights and assign any new parents.
@@ -479,7 +503,7 @@ function taxonomy_overview_terms_submit($form, &$form_state) {
 
   // Build a list of all terms that need to be updated on following pages.
   for ($weight; $weight < count($tree); $weight++) {
-    $term = (array)$tree[$weight];
+    $term = (array) $tree[$weight];
     if ($term['parents'][0] == 0 && $term['weight'] != $weight) {
       $term['parent'] = $term['parents'][0];
       $term['weight'] = $weight;
@@ -490,7 +514,7 @@ function taxonomy_overview_terms_submit($form, &$form_state) {
 
   // Save all updated terms.
   foreach ($changed_terms as $changed) {
-    $term = (object)$changed;
+    $term = (object) $changed;
     // Update term_hierachy and term_data directly since we don't have a
     // fully populated term object to save.
     db_update('taxonomy_term_hierarchy')
@@ -513,10 +537,14 @@ function taxonomy_overview_terms_submit($form, &$form_state) {
 }
 
 /**
- * Theme the terms overview as a sortable list of terms.
+ * Returns HTML for a terms overview form as a sortable list of terms.
  *
- * @ingroup themeable
+ * @param $variables
+ *   An associative array containing:
+ *   - form: A render element representing the form.
+ *
  * @see taxonomy_overview_terms()
+ * @ingroup themeable
  */
 function theme_taxonomy_overview_terms($variables) {
   $form = $variables['form'];
@@ -606,33 +634,45 @@ function theme_taxonomy_overview_terms($variables) {
  * @see taxonomy_form_term_submit()
  */
 function taxonomy_form_term($form, &$form_state, $edit = array(), $vocabulary = NULL) {
-  if (!isset($vocabulary) && is_object($edit)) {
-    $vocabulary = taxonomy_vocabulary_load($edit->vid);
-    $edit = (array)$edit;
+  // During initial form build, add the term entity to the form state for use
+  // during form building and processing. During a rebuild, use what is in the
+  // form state.
+  if (!isset($form_state['term'])) {
+    $term = is_object($edit) ? $edit : (object) $edit;
+    if (!isset($vocabulary) && isset($term->vid)) {
+      $vocabulary = taxonomy_vocabulary_load($term->vid);
+    }
+    $defaults = array(
+      'name' => '',
+      'description' => '',
+      'format' => filter_default_format(),
+      'vocabulary_machine_name' => isset($vocabulary) ? $vocabulary->machine_name : NULL,
+      'tid' => NULL,
+      'weight' => 0,
+    );
+    foreach ($defaults as $key => $value) {
+      if (!isset($term->$key)) {
+        $term->$key = $value;
+      }
+    }
+    $form_state['term'] = $term;
   }
-  $edit += array(
-    'name' => '',
-    'description' => '',
-    'format' => filter_default_format(),
-    'vocabulary_machine_name' => $vocabulary->machine_name,
-    'tid' => NULL,
-    'weight' => 0,
-  );
-
-  // Take into account multi-step rebuilding.
-  if (isset($form_state['term'])) {
-    $edit = $form_state['term'] + $edit;
+  else {
+    $term = $form_state['term'];
+    if (!isset($vocabulary) && isset($term->vid)) {
+      $vocabulary = taxonomy_vocabulary_load($term->vid);
+    }
   }
 
-  $parent = array_keys(taxonomy_get_parents($edit['tid']));
-  $form['#term'] = $edit;
+  $parent = array_keys(taxonomy_get_parents($term->tid));
+  $form['#term'] = (array) $term;
   $form['#term']['parent'] = $parent;
   $form['#vocabulary'] = $vocabulary;
   $form['#builder_function'] = 'taxonomy_form_term_submit_builder';
 
   // Check for confirmation forms.
   if (isset($form_state['confirm_delete'])) {
-    return array_merge($form, taxonomy_term_confirm_delete($form, $form_state, $edit['tid']));
+    return array_merge($form, taxonomy_term_confirm_delete($form, $form_state, $term->tid));
   }
   elseif (isset($form_state['confirm_parents'])) {
     return array_merge($form, taxonomy_term_confirm_parents($form, $form_state, $vocabulary));
@@ -641,7 +681,7 @@ function taxonomy_form_term($form, &$form_state, $edit = array(), $vocabulary = 
   $form['name'] = array(
     '#type' => 'textfield',
     '#title' => t('Name'),
-    '#default_value' => $edit['name'],
+    '#default_value' => $term->name,
     '#maxlength' => 255,
     '#required' => TRUE,
     '#weight' => -5,
@@ -649,18 +689,18 @@ function taxonomy_form_term($form, &$form_state, $edit = array(), $vocabulary = 
   $form['description'] = array(
     '#type' => 'text_format',
     '#title' => t('Description'),
-    '#default_value' => $edit['description'],
-    '#format' => $edit['format'],
+    '#default_value' => $term->description,
+    '#format' => $term->format,
     '#weight' => 0,
   );
 
   $form['vocabulary_machine_name'] = array(
     '#type' => 'textfield',
     '#access' => FALSE,
-    '#value' => isset($edit['vocabulary_machine_name']) ? $edit['vocabulary_machine_name'] : $vocabulary->name,
+    '#value' => isset($term->vocabulary_machine_name) ? $term->vocabulary_machine_name : $vocabulary->name,
   );
 
-  field_attach_form('taxonomy_term', (object) $edit, $form, $form_state);
+  field_attach_form('taxonomy_term', $term, $form, $form_state);
 
   $form['relations'] = array(
     '#type' => 'fieldset',
@@ -675,20 +715,23 @@ function taxonomy_form_term($form, &$form_state, $edit = array(), $vocabulary = 
   // full vocabulary. Contrib modules can then intercept before
   // hook_form_alter to provide scalable alternatives.
   if (!variable_get('taxonomy_override_selector', FALSE)) {
-    $parent = array_keys(taxonomy_get_parents($edit['tid']));
-    $children = taxonomy_get_tree($vocabulary->vid, $edit['tid']);
+    $parent = array_keys(taxonomy_get_parents($term->tid));
+    $children = taxonomy_get_tree($vocabulary->vid, $term->tid);
 
     // A term can't be the child of itself, nor of its children.
     foreach ($children as $child) {
       $exclude[] = $child->tid;
     }
-    $exclude[] = $edit['tid'];
+    $exclude[] = $term->tid;
 
     $tree = taxonomy_get_tree($vocabulary->vid);
     $options = array('<' . t('root') . '>');
-    foreach ($tree as $term) {
-      if (!in_array($term->tid, $exclude)) {
-        $options[$term->tid] = str_repeat('-', $term->depth) . $term->name;
+    if (empty($parent)) {
+      $parent = array(0);
+    }
+    foreach ($tree as $item) {
+      if (!in_array($item->tid, $exclude)) {
+        $options[$item->tid] = str_repeat('-', $item->depth) . $item->name;
       }
     }
     $form['relations']['parent'] = array(
@@ -704,7 +747,7 @@ function taxonomy_form_term($form, &$form_state, $edit = array(), $vocabulary = 
     '#type' => 'textfield',
     '#title' => t('Weight'),
     '#size' => 6,
-    '#default_value' => $edit['weight'],
+    '#default_value' => $term->weight,
     '#description' => t('Terms are displayed in ascending order by weight.'),
     '#required' => TRUE,
   );
@@ -714,21 +757,17 @@ function taxonomy_form_term($form, &$form_state, $edit = array(), $vocabulary = 
   );
   $form['tid'] = array(
     '#type' => 'value',
-    '#value' => $edit['tid'],
+    '#value' => $term->tid,
   );
 
-  $form['actions'] = array(
-    '#type' => 'container',
-    '#attributes' => array('class' => array('form-actions')),
-    '#weight' => 100,
-  );
+  $form['actions'] = array('#type' => 'actions');
   $form['actions']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save'),
     '#weight' => 5,
   );
 
-  if ($edit['tid']) {
+  if ($term->tid) {
     $form['actions']['delete'] = array(
       '#type' => 'submit',
       '#value' => t('Delete'),
@@ -749,7 +788,7 @@ function taxonomy_form_term($form, &$form_state, $edit = array(), $vocabulary = 
  * @see taxonomy_form_term()
  */
 function taxonomy_form_term_validate($form, &$form_state) {
-  field_attach_form_validate('taxonomy_term', (object) $form_state['values'], $form, $form_state);
+  entity_form_field_validate('taxonomy_term', $form, $form_state);
 
   // Ensure numeric values.
   if (isset($form_state['values']['weight']) && !is_numeric($form_state['values']['weight'])) {
@@ -780,7 +819,7 @@ function taxonomy_form_term_submit($form, &$form_state) {
     return;
   }
 
-  $term = taxonomy_form_term_submit_builder($form, $form_state);
+  $term = $form['#builder_function']($form, $form_state);
 
   $status = taxonomy_term_save($term);
   switch ($status) {
@@ -791,6 +830,8 @@ function taxonomy_form_term_submit($form, &$form_state) {
     case SAVED_UPDATED:
       drupal_set_message(t('Updated term %term.', array('%term' => $term->name)));
       watchdog('taxonomy', 'Updated term %term.', array('%term' => $term->name), WATCHDOG_NOTICE, l(t('edit'), 'taxonomy/term/' . $term->tid . '/edit'));
+      // Clear the page and block caches to avoid stale data.
+      cache_clear_all();
       break;
   }
 
@@ -816,19 +857,21 @@ function taxonomy_form_term_submit($form, &$form_state) {
 
   $form_state['values']['tid'] = $term->tid;
   $form_state['tid'] = $term->tid;
-  $form_state['redirect'] = 'admin/structure/taxonomy';
+  // Do not rebuild here. The term is saved by now and the form should clear.
+  $form_state['rebuild'] = FALSE;
 }
 
 /**
- * Build a term by processing form values and prepare for a form rebuild.
+ * Updates the form state's term entity by processing this submission's values.
  */
 function taxonomy_form_term_submit_builder($form, &$form_state) {
-  $term = (object) $form_state['values'];
-  field_attach_submit('taxonomy_term', $term, $form, $form_state);
+  $term = $form_state['term'];
+  entity_form_submit_build_entity('taxonomy_term', $term, $form, $form_state);
 
-  $form_state['term'] = (array)$term;
-  $form_state['rebuild'] = TRUE;
-
+  // Convert text_format field into values expected by taxonomy_term_save().
+  $description = $form_state['values']['description'];
+  $term->description = $description['value'];
+  $term->format = $description['format'];
   return $term;
 }
 
@@ -941,12 +984,13 @@ function taxonomy_vocabulary_confirm_reset_alphabetical($form, &$form_state, $vi
 
   $form['type'] = array('#type' => 'value', '#value' => 'vocabulary');
   $form['vid'] = array('#type' => 'value', '#value' => $vid);
+  $form['machine_name'] = array('#type' => 'value', '#value' => $vocabulary->machine_name);
   $form['name'] = array('#type' => 'value', '#value' => $vocabulary->name);
   $form['reset_alphabetical'] = array('#type' => 'value', '#value' => TRUE);
   return confirm_form($form,
                   t('Are you sure you want to reset the vocabulary %title to alphabetical order?',
                   array('%title' => $vocabulary->name)),
-                  'admin/structure/taxonomy/' . $vid,
+                  'admin/structure/taxonomy/' . $vocabulary->machine_name,
                   t('Resetting a vocabulary will discard all custom ordering and sort items alphabetically.'),
                   t('Reset to alphabetical'),
                   t('Cancel'));
@@ -964,5 +1008,5 @@ function taxonomy_vocabulary_confirm_reset_alphabetical_submit($form, &$form_sta
     ->execute();
   drupal_set_message(t('Reset vocabulary %name to alphabetical order.', array('%name' => $form_state['values']['name'])));
   watchdog('taxonomy', 'Reset vocabulary %name to alphabetical order.', array('%name' => $form_state['values']['name']), WATCHDOG_NOTICE);
-  $form_state['redirect'] = 'admin/structure/taxonomy/' . $form_state['values']['vid'];
+  $form_state['redirect'] = 'admin/structure/taxonomy/' . $form_state['values']['machine_name'];
 }

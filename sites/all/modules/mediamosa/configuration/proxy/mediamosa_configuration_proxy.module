@@ -45,7 +45,7 @@ function mediamosa_configuration_proxy_mediamosa_configuration_collect() {
     '#title' => t('Proxy Url'),
     '#description' => t('The proxy url is used when HTTP requests can not be reached directly because of firewalls or other reasons. These requests are f.e. requests to signal upload completion or when a job has been finished. Leave empty if servers can access outside webservers without problems.'),
     '#required' => FALSE,
-    '#default_value' => '',// Set empty, so its filled.
+    '#default_value' => variable_get('mediamosa_curlproxy_http', ''),
   );
 
   return $form;

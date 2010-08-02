@@ -1,5 +1,5 @@
 <?php
-// $Id: search.api.php,v 1.25 2010/02/27 10:54:12 dries Exp $
+// $Id: search.api.php,v 1.27 2010/06/01 17:56:46 dries Exp $
 
 /**
  * @file
@@ -177,16 +177,10 @@ function hook_search_execute($keys = NULL) {
   // Add the ranking expressions.
   _node_rankings($query);
 
-  // Add a count query.
-  $inner_query = clone $query;
-  $count_query = db_select($inner_query->fields('i', array('sid')));
-  $count_query->addExpression('COUNT(*)');
-  $query->setCountQuery($count_query);
+  // Load results.
   $find = $query
     ->limit(10)
     ->execute();
-
-  // Load results.
   $results = array();
   foreach ($find as $item) {
     // Build the node body.
@@ -224,7 +218,7 @@ function hook_search_execute($keys = NULL) {
  * its search results, which is otherwise themed using theme('search_results').
  *
  * Note that by default, theme('search_results') and theme('search_result')
- * work together to create a definition list (DL). So your hook_search_page()
+ * work together to create an ordered list (OL). So your hook_search_page()
  * implementation should probably do this as well.
  *
  * @see search-result.tpl.php, search-results.tpl.php
@@ -237,12 +231,12 @@ function hook_search_execute($keys = NULL) {
  *   a pager included.
  */
 function hook_search_page($results) {
-  $output = '<dl class="search-results">';
+  $output = '<ol class="search-results">';
 
   foreach ($results as $entry) {
     $output .= theme('search_result', $entry, $type);
   }
-  $output .= '</dl>';
+  $output .= '</ol>';
   $output .= theme('pager', NULL);
 
   return $output;

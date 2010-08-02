@@ -1,5 +1,5 @@
 <?php
-// $Id: locale.test,v 1.67 2010/03/21 04:17:02 webchick Exp $
+// $Id: locale.test,v 1.73 2010/06/26 19:55:47 dries Exp $
 
 /**
  * @file
@@ -758,7 +758,7 @@ class LocaleImportFunctionalTest extends DrupalWebTestCase {
    *   Additional options to pass to the translation import form.
    */
   function importPoFile($contents, array $options = array()) {
-    $name = tempnam(file_directory_path('temporary'), "po_");
+    $name = tempnam(file_directory_path('temporary'), "po_") . '.po';
     file_put_contents($name, $contents);
     $options['files[file]'] = $name;
     $this->drupalPost('admin/config/regional/translate/import', $options, t('Import'));
@@ -905,7 +905,7 @@ class LocaleExportFunctionalTest extends DrupalWebTestCase {
   function testExportTranslation() {
     // First import some known translations.
     // This will also automatically enable the 'fr' language.
-    $name = tempnam(file_directory_path('temporary'), "po_");
+    $name = tempnam(file_directory_path('temporary'), "po_") . '.po';
     file_put_contents($name, $this->getPoFile());
     $this->drupalPost('admin/config/regional/translate/import', array(
       'langcode' => 'fr',
@@ -955,6 +955,35 @@ msgstr "lundi"
 EOF;
   }
 
+}
+
+/**
+ * Tests for the st() function.
+ */
+class LocaleInstallTest extends DrupalWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'String translation using st()',
+      'description' => 'Tests that st() works like t().',
+      'group' => 'Locale',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('locale');
+
+    // st() lives in install.inc, so ensure that it is loaded for all tests.
+    require_once DRUPAL_ROOT . '/includes/install.inc';
+  }
+
+  /**
+   * Verify that function signatures of t() and st() are equal.
+   */
+  function testFunctionSignatures() {
+    $reflector_t = new ReflectionFunction('t');
+    $reflector_st = new ReflectionFunction('st');
+    $this->assertEqual($reflector_t->getParameters(), $reflector_st->getParameters(), t('Function signatures of t() and st() are equal.'));
+  }
 }
 
 /**
@@ -1106,7 +1135,7 @@ class LocaleUninstallFrenchFunctionalTest extends LocaleUninstallFunctionalTest 
 /**
  * Functional tests for the language switching feature.
  */
-class LanguageSwitchingFunctionalTest extends DrupalWebTestCase {
+class LocaleLanguageSwitchingFunctionalTest extends DrupalWebTestCase {
 
   public static function getInfo() {
     return array(
@@ -1151,7 +1180,7 @@ class LanguageSwitchingFunctionalTest extends DrupalWebTestCase {
     $this->assertText(t('Languages'), t('Language switcher block found.'));
 
     // Assert that only the current language is marked as active.
-    list($language_switcher) = $this->xpath("//div[@id=\"block-locale-{$language_type}\"]/div[@class=\"content\"]");
+    list($language_switcher) = $this->xpath('//div[@id=:id]/div[@class="content"]', array(':id' => 'block-locale-' . $language_type));
     $links = array(
       'active' => array(),
       'inactive' => array(),
@@ -1270,7 +1299,7 @@ class LocaleUserLanguageFunctionalTest extends DrupalWebTestCase {
     // Ensure form was submitted successfully.
     $this->assertText(t('The changes have been saved.'), t('Changes were saved.'));
     // Check if language was changed.
-    $elements = $this->xpath('//input[@id="edit-language-' . $langcode . '"]');
+    $elements = $this->xpath('//input[@id=:id]', array(':id' => 'edit-language-' . $langcode));
     $this->assertTrue(isset($elements[0]) && !empty($elements[0]['checked']), t('Default language successfully updated.'));
 
     $this->drupalLogout();
@@ -1280,7 +1309,7 @@ class LocaleUserLanguageFunctionalTest extends DrupalWebTestCase {
 /**
  * Functional test for language handling during user creation.
  */
-class LocalUserCreationTest extends DrupalWebTestCase {
+class LocaleUserCreationTest extends DrupalWebTestCase {
 
   public static function getInfo() {
     return array(
@@ -1292,6 +1321,7 @@ class LocalUserCreationTest extends DrupalWebTestCase {
 
   function setUp() {
     parent::setUp('locale');
+    variable_set('user_register', USER_REGISTER_VISITORS);
   }
 
   /**
@@ -1606,7 +1636,7 @@ class LocaleContentFunctionalTest extends DrupalWebTestCase {
  *        http://example.cn/admin/config
  *          UI language in Chinese
  */
-class UILanguageNegotiationTest extends DrupalWebTestCase {
+class LocaleUILanguageNegotiationTest extends DrupalWebTestCase {
   public static function getInfo() {
     return array(
       'name' => 'UI language negotiation',
@@ -1806,8 +1836,6 @@ class LocaleMultilingualFieldsFunctionalTest extends DrupalWebTestCase {
     locale_add_language('it', 'Italian', 'Italiano', LANGUAGE_LTR, '', '', TRUE, FALSE);
 
     // Set "Basic page" content type to use multilingual support.
-    $this->drupalGet('admin/structure/types/manage/page');
-    $this->assertText(t('Multilingual support'), t('Multilingual support fieldset present on content type configuration form.'));
     $edit = array(
       'language_content_type' => 1,
     );
@@ -1852,6 +1880,16 @@ class LocaleMultilingualFieldsFunctionalTest extends DrupalWebTestCase {
 
     $assert = isset($node->body['it']) && !isset($node->body['en']) && $node->body['it'][0]['value'] == $body_value;
     $this->assertTrue($assert, t('Field language correctly changed.'));
+
+    // Enable content language URL detection.
+    language_negotiation_set(LANGUAGE_TYPE_CONTENT, array(LOCALE_LANGUAGE_NEGOTIATION_URL => 0));
+
+    // Test multilingual field language fallback logic.
+    $this->drupalGet("it/node/$node->nid");
+    $this->assertRaw($body_value, t('Body correctly displayed using Italian as requested language'));
+
+    $this->drupalGet("node/$node->nid");
+    $this->assertRaw($body_value, t('Body correctly displayed using English as requested language'));
   }
 
   /*
@@ -1878,24 +1916,15 @@ class LocaleMultilingualFieldsFunctionalTest extends DrupalWebTestCase {
 
     // Check if node body is showed.
     $this->drupalGet("node/$node->nid");
-    $body_xpath = '//div[@id="node-' . $node->nid . '"]//div[@property="content:encoded"]/p';
-    $this->assertEqual(current($this->xpath($body_xpath)), $node->body['en'][0]['value'], 'Node body is correctly showed.');
-
-    $settings['body[full][type]'] = 'hidden';
-    $this->drupalPost('admin/structure/types/manage/page/display', $settings, t('Save'));
-    $select_xpath = '//select[@id="edit-body-full-type"]/option[@selected="selected"]';
-    // Check if body display is actually "hidden" for the "full" view mode.
-    $this->assertEqual(current($this->xpath($select_xpath)), '<Hidden>', 'Body display is actually "hidden" for the "full" view mode');
-    $this->drupalGet("node/$node->nid");
-    // Check if node body is not showed.
-    $this->assertFalse(is_array($this->xpath($body_xpath)), 'Body correctly not showed.');
+    $body = $this->xpath('//div[@id=:id]//div[@property="content:encoded"]/p', array(':id' => 'node-' . $node->nid));
+    $this->assertEqual(current($body), $node->body['en'][0]['value'], 'Node body is correctly showed.');
   }
 }
 
 /**
  * Functional tests for localizing date formats.
  */
-class LocalizeDateFormatsFunctionalTest extends DrupalWebTestCase {
+class LocaleDateFormatsFunctionalTest extends DrupalWebTestCase {
 
   public static function getInfo() {
     return array(
@@ -1960,3 +1989,4 @@ class LocalizeDateFormatsFunctionalTest extends DrupalWebTestCase {
     $this->assertText($french_date, t('French date format appears'));
   }
 }
+

@@ -102,7 +102,7 @@ class MediaMosaAssetMediafileDownloadTestCase extends MediaMosaTestCase {
     $this->assertTrue(!empty($a_download_servers), t('@num enabled download server(s) found.', array('@num' => $a_download_servers->rowCount())));
 
     foreach ($a_download_servers as $a_downloadserver) {
-      $url = str_replace('{TICKET}', $ticket_id . '/' . urlencode($filename), $a_downloadserver[mediamosa_server_db::URI]);
+      $url = str_replace('{TICKET}', $ticket_id . '/' . urlencode($filename), $a_downloadserver[mediamosa_server_db::SERVER_URI]);
 
       // Get the file.
       $result = mediamosa_http::drupal_http_request($url);

@@ -1,5 +1,5 @@
 <?php
-// $Id: theme.test,v 1.14 2010/03/21 04:05:24 webchick Exp $
+// $Id: theme.test,v 1.16 2010/04/29 05:22:06 webchick Exp $
 
 /**
  * @file
@@ -44,7 +44,7 @@ class ThemeUnitTest extends DrupalWebTestCase {
     $suggestions = theme_get_suggestions($args, 'page');
     $this->assertEqual($suggestions, array('page__node', 'page__node__%', 'page__node__1'), t('Removed invalid \\0 from suggestions'));
   }
-  
+
   /**
   * Preprocess functions for the base hook should run even for suggestion implementations.
   */
@@ -110,15 +110,22 @@ class ThemeTableUnitTest extends DrupalWebTestCase {
   }
 
   /**
-   * Tests that the table header is printed even if there are no rows. And that
-   * the empty text is displayed correctly.
+   * Tests that the table header is printed correctly even if there are no rows,
+   * and that the empty text is displayed correctly.
    */
   function testThemeTableWithEmptyMessage() {
-    $header = array(t('Header 1'), t('Header 2'));
+    $header = array(
+      t('Header 1'),
+      array(
+        'data' => t('Header 2'),
+        'colspan' => 2,
+      ),
+    );
     $this->content = theme('table', array('header' => $header, 'rows' => array(), 'empty' => t('No strings available.')));
-    $this->assertRaw('<tr class="odd"><td colspan="2" class="empty message">No strings available.</td>', t('Correct colspan was set on empty message.'));
+    $this->assertRaw('<tr class="odd"><td colspan="3" class="empty message">No strings available.</td>', t('Correct colspan was set on empty message.'));
     $this->assertRaw('<thead><tr><th>Header 1</th>', t('Table header was printed.'));
   }
+
 }
 
 /**
@@ -146,5 +153,32 @@ class ThemeItemListUnitTest extends DrupalWebTestCase {
 </ul></div>';
     $output = theme('item_list', array('items' => $items, 'type' => 'ul', 'title' => NULL, 'attributes' => array()));
     $this->assertIdentical($expected, $output, 'Nested list is rendered correctly.');
+  }
+}
+
+/**
+ * Functional test for initialization of the theme system in hook_init().
+ */
+class ThemeHookInitUnitTest extends DrupalWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'Theme initialization in hook_init()',
+      'description' => 'Tests that the theme system can be correctly initialized in hook_init().',
+      'group' => 'Theme',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('theme_test');
+    variable_set('theme_default', 'garland');
+  }
+
+  /**
+   * Test that the theme system can generate output when called by hook_init().
+   */
+  function testThemeInitializationHookInit() {
+    $this->drupalGet('theme-test/hook-init');
+    $this->assertRaw('Themed output generated in hook_init()', t('Themed output generated in hook_init() correctly appears on the page.'));
+    $this->assertRaw('garland/style.css', t("The default theme's CSS appears on the page when the theme system is initialized in hook_init()."));
   }
 }

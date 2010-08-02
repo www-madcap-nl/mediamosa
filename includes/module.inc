@@ -1,5 +1,5 @@
 <?php
-// $Id: module.inc,v 1.184 2010/03/03 07:38:08 dries Exp $
+// $Id: module.inc,v 1.195 2010/06/26 12:34:44 dries Exp $
 
 /**
  * @file
@@ -173,6 +173,7 @@ function system_list($type) {
  */
 function system_list_reset() {
   drupal_static_reset('system_list');
+  drupal_static_reset('list_themes');
   cache_clear_all('bootstrap_modules', 'cache_bootstrap');
   cache_clear_all('system_list', 'cache_bootstrap');
 }
@@ -285,8 +286,25 @@ function module_load_all_includes($type, $name = NULL) {
 }
 
 /**
- * Enable a given list of modules.
+ * Enables or installs a given list of modules.
  *
+ * Definitions:
+ * - "Enabling" is the process of activating a module for use by Drupal.
+ * - "Disabling" is the process of deactivating a module.
+ * - "Installing" is the process of enabling it for the first time or after it
+ *   has been uninstalled.
+ * - "Uninstalling" is the process of removing all traces of a module.
+ *
+ * Order of events:
+ * - Gather and add module dependencies to $module_list (if applicable).
+ * - For each module that is being enabled:
+ *   - Install module schema and update system registries and caches.
+ *   - If the module is being enabled for the first time or had been
+ *     uninstalled, invoke hook_install() and add it to the list of installed
+ *     modules.
+ *   - Invoke hook_enable().
+ * - Invoke hook_modules_installed().
+ * - Invoke hook_modules_enabled().
  * @param $module_list
  *   An array of module names.
  * @param $enable_dependencies
@@ -296,12 +314,16 @@ function module_load_all_includes($type, $name = NULL) {
  *
  * @return
  *   FALSE if one or more dependencies are missing, TRUE otherwise.
+ *
+ * @see hook_install()
+ * @see hook_enable()
+ * @see hook_modules_installed()
+ * @see hook_modules_enabled()
  */
 function module_enable($module_list, $enable_dependencies = TRUE) {
   if ($enable_dependencies) {
     // Get all module data so we can find dependencies and sort.
     $module_data = system_rebuild_module_data();
-
     // Create an associative array with weights as values.
     $module_list = array_flip(array_values($module_list));
 
@@ -370,14 +392,16 @@ function module_enable($module_list, $enable_dependencies = TRUE) {
       registry_update();
       // Refresh the schema to include it.
       drupal_get_schema(NULL, TRUE);
+      // Clear entity cache.
+      entity_info_cache_clear();
 
       // Now install the module if necessary.
       if (drupal_get_installed_schema_version($module, TRUE) == SCHEMA_UNINSTALLED) {
         drupal_install_schema($module);
-        // Allow the module to perform install tasks.
-        module_invoke($module, 'install');
         $versions = drupal_get_schema_versions($module);
         drupal_set_installed_schema_version($module, $versions ? max($versions) : SCHEMA_INSTALLED);
+        // Allow the module to perform install tasks.
+        module_invoke($module, 'install');
         // Record the fact that it was installed.
         $modules_installed[] = $module;
         watchdog('system', '%module module installed.', array('%module' => $module), WATCHDOG_INFO);
@@ -504,6 +528,12 @@ function module_disable($module_list, $disable_dependents = TRUE) {
  * the module name in the hook definitions. For example, if the module file is
  * called example.module, then hook_help() as implemented by that module would
  * be defined as example_help().
+ *
+ * The example functions included are not part of the Drupal core, they are
+ * just models that you can modify. Only the hooks implemented within modules
+ * are executed when running Drupal.
+ *
+ * See also @link themeable the themeable group page. @endlink
  */
 
 /**
@@ -537,7 +567,7 @@ function module_hook($module, $hook) {
  * @return
  *   An array with the names of the modules which are implementing this hook.
  *
- * @see module_implements_write_cache().
+ * @see module_implements_write_cache()
  */
 function module_implements($hook, $sort = FALSE, $reset = FALSE) {
   // Use the advanced drupal_static() pattern, since this is called very often.
@@ -578,16 +608,22 @@ function module_implements($hook, $sort = FALSE, $reset = FALSE) {
   }
 
   if (!isset($implementations[$hook])) {
+    // The hook is not cached, so ensure that whether or not it has
+    // implementations, that the cache is updated at the end of the request.
+    $implementations['#write_cache'] = TRUE;
     $hook_info = module_hook_info();
     $implementations[$hook] = array();
     $list = module_list(FALSE, FALSE, $sort);
     foreach ($list as $module) {
-      $include_file = FALSE;
-      if (module_hook($module, $hook) || (isset($hook_info[$hook]['group']) && $include_file = module_load_include('inc', $module, $module . '.' . $hook_info[$hook]['group']) && module_hook($module, $hook))) {
+      $include_file = isset($hook_info[$hook]['group']) && module_load_include('inc', $module, $module . '.' . $hook_info[$hook]['group']);
+      if (module_hook($module, $hook)) {
         $implementations[$hook][$module] = $include_file ? $hook_info[$hook]['group'] : FALSE;
-        // We added something to the cache, so write it when we are done.
-        $implementations['#write_cache'] = TRUE;
       }
+    }
+    // Allow modules to change the weight of specific implementations but avoid
+    // an infinite loop.
+    if ($hook != 'module_implements_alter') {
+      drupal_alter('module_implements', $implementations[$hook], $hook);
     }
   }
   else {
@@ -742,3 +778,153 @@ function drupal_required_modules() {
 
   return $required;
 }
+
+/**
+ * Hands off alterable variables to type-specific *_alter implementations.
+ *
+ * This dispatch function hands off the passed in variables to type-specific
+ * hook_TYPE_alter() implementations in modules. It ensures a consistent
+ * interface for all altering operations.
+ *
+ * A maximum of 2 alterable arguments is supported. In case more arguments need
+ * to be passed and alterable, modules provide additional variables assigned by
+ * reference in the last $context argument:
+ * @code
+ *   $context = array(
+ *     'alterable' => &$alterable,
+ *     'unalterable' => $unalterable,
+ *     'foo' => 'bar',
+ *   );
+ *   drupal_alter('mymodule_data', $alterable1, $alterable2, $context);
+ * @endcode
+ *
+ * Note that objects are always passed by reference in PHP5. If it is absolutely
+ * required that no implementation alters a passed object in $context, then an
+ * object needs to be cloned:
+ * @code
+ *   $context = array(
+ *     'unalterable_object' => clone $object,
+ *   );
+ *   drupal_alter('mymodule_data', $data, $context);
+ * @endcode
+ *
+ * @param $type
+ *   A string describing the data type of the alterable $data. 'form', 'links',
+ *   'node_content', and so on are several examples. Alternatively can be an
+ *   array, in which case hook_TYPE_alter() is invoked for each value in the
+ *   array, ordered first by module, and then for each module, in the order of
+ *   values in $type. For example, when Form API is using drupal_alter() to
+ *   execute both hook_form_alter() and hook_form_FORM_ID_alter()
+ *   implementations, it passes array('form', 'form_' . $form_id) for $type.
+ * @param &$data
+ *   The primary data to be altered.
+ * @param &$context1
+ *   (optional) An additional variable that is passed by reference.
+ * @param &$context2
+ *   (optional) An additional variable that is passed by reference. If more
+ *   context needs to be provided to implementations, then this should be an
+ *   keyed array as described above.
+ */
+function drupal_alter($type, &$data, &$context1 = NULL, &$context2 = NULL) {
+  // Use the advanced drupal_static() pattern, since this is called very often.
+  static $drupal_static_fast;
+  if (!isset($drupal_static_fast)) {
+    $drupal_static_fast['functions'] = &drupal_static(__FUNCTION__);
+  }
+  $functions = &$drupal_static_fast['functions'];
+
+  // Most of the time, $type is passed as a string, so for performance,
+  // normalize it to that. When passed as an array, usually the first item in
+  // the array is a generic type, and additional items in the array are more
+  // specific variants of it, as in the case of array('form', 'form_FORM_ID').
+  if (is_array($type)) {
+    $cid = implode(',', $type);
+    $extra_types = $type;
+    $type = array_shift($extra_types);
+    // Allow if statements in this function to use the faster isset() rather
+    // than !empty() both when $type is passed as a string, or as an array with
+    // one item.
+    if (empty($extra_types)) {
+      unset($extra_types);
+    }
+  }
+  else {
+    $cid = $type;
+  }
+
+  // Some alter hooks are invoked many times per page request, so statically
+  // cache the list of functions to call, and on subsequent calls, iterate
+  // through them quickly.
+  if (!isset($functions[$cid])) {
+    $functions[$cid] = array();
+    $hook = $type . '_alter';
+    $modules = module_implements($hook);
+    if (!isset($extra_types)) {
+      // For the more common case of a single hook, we do not need to call
+      // function_exists(), since module_implements() returns only modules with
+      // implementations.
+      foreach ($modules as $module) {
+        $functions[$cid][] = $module . '_' . $hook;
+      }
+    }
+    else {
+      // For multiple hooks, we need $modules to contain every module that
+      // implements at least one of them.
+      $extra_modules = array();
+      foreach ($extra_types as $extra_type) {
+        $extra_modules = array_merge($extra_modules, module_implements($extra_type . '_alter'));
+      }
+      // If any modules implement one of the extra hooks that do not implement
+      // the primary hook, we need to add them to the $modules array in their
+      // appropriate order.
+      if (array_diff($extra_modules, $modules)) {
+        // Order the modules by the order returned by module_list().
+        $modules = array_intersect(module_list(), array_merge($modules, $extra_modules));
+      }
+      foreach ($modules as $module) {
+        // Since $modules is a merged array, for any given module, we do not
+        // know whether it has any particular implementation, so we need a
+        // function_exists().
+        $function = $module . '_' . $hook;
+        if (function_exists($function)) {
+          $functions[$cid][] = $function;
+        }
+        foreach ($extra_types as $extra_type) {
+          $function = $module . '_' . $extra_type . '_alter';
+          if (function_exists($function)) {
+            $functions[$cid][] = $function;
+          }
+        }
+      }
+    }
+    // Allow the theme to alter variables after the theme system has been
+    // initialized.
+    global $theme, $base_theme_info;
+    if (isset($theme)) {
+      $theme_keys = array();
+      foreach ($base_theme_info as $base) {
+        $theme_keys[] = $base->name;
+      }
+      $theme_keys[] = $theme;
+      foreach ($theme_keys as $theme_key) {
+        $function = $theme_key . '_' . $hook;
+        if (function_exists($function)) {
+          $functions[$cid][] = $function;
+        }
+        if (isset($extra_types)) {
+          foreach ($extra_types as $extra_type) {
+            $function = $theme_key . '_' . $extra_type . '_alter';
+            if (function_exists($function)) {
+              $functions[$cid][] = $function;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  foreach ($functions[$cid] as $function) {
+    $function($data, $context1, $context2);
+  }
+}
+

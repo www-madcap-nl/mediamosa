@@ -1,5 +1,5 @@
 <?php
-// $Id: authorize.inc,v 1.9 2010/01/30 07:59:24 dries Exp $
+// $Id: authorize.inc,v 1.11 2010/05/14 04:50:18 webchick Exp $
 
 /**
  * @file
@@ -83,7 +83,7 @@ function authorize_filetransfer_form($form_state) {
     $form['connection_settings']['authorize_filetransfer_default']['#options'][$name] = $backend['title'];
     $form['connection_settings'][$name] = array(
       '#type' => 'fieldset',
-      '#attributes' => array('class' => "filetransfer-$name filetransfer"),
+      '#attributes' => array('class' => array("filetransfer-$name", 'filetransfer')),
       '#title' => t('@backend connection settings', array('@backend' => $backend['title'])),
     );
 
@@ -159,7 +159,7 @@ function authorize_filetransfer_form_submit($form, &$form_state) {
       // to make sure it is available since this code could potentially (will
       // likely) be called during the installation process, before the
       // database is set up.
-      if (db_is_active()) {
+      try {
         $connection_settings = array();
         foreach ($form_state['values']['connection_settings'][$filetransfer_backend] as $key => $value) {
           // We do *not* want to store passwords in the database, unless the
@@ -186,6 +186,11 @@ function authorize_filetransfer_form_submit($form, &$form_state) {
         // Now run the operation.
         authorize_run_operation($filetransfer);
       }
+      catch (Exception $e) {
+        // If there is no database available, we don't care and just skip
+        // this part entirely.
+      }
+
       break;
 
     case 'enter_connection_settings':

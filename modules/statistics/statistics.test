@@ -1,5 +1,5 @@
 <?php
-// $Id: statistics.test,v 1.16 2010/01/30 07:59:25 dries Exp $
+// $Id: statistics.test,v 1.20 2010/07/08 03:41:27 webchick Exp $
 
 /**
  * Sets up a base class for the Statistics module.
@@ -30,6 +30,69 @@ class StatisticsTestCase extends DrupalWebTestCase {
         'timestamp' => REQUEST_TIME,
       ))
       ->execute();
+  }
+}
+
+/**
+ * Tests that logging via statistics_exit() works for cached and uncached pages.
+ *
+ * Subclass DrupalWebTestCase rather than StatisticsTestCase, because we want
+ * to test requests from an anonymous user.
+ */
+class StatisticsLoggingTestCase extends DrupalWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'Statistics logging tests',
+      'description' => 'Tests request logging for cached and uncached pages.',
+      'group' => 'Statistics'
+    );
+  }
+
+  function setUp() {
+    parent::setUp('statistics');
+
+    // Ensure we have a node page to access.
+    $this->node = $this->drupalCreateNode();
+
+    // Enable page caching.
+    variable_set('cache', TRUE);
+
+    // Enable access logging.
+    variable_set('statistics_enable_access_log', 1);
+    variable_set('statistics_count_content_views', 1);
+
+    // Clear the logs.
+    db_truncate('accesslog');
+    db_truncate('node_counter');
+  }
+
+  /**
+   * Verifies request logging for cached and uncached pages.
+   */
+  function testLogging() {
+    $path = 'node/' . $this->node->nid;
+    $expected = array(
+      'title' => $this->node->title,
+      'path' => $path,
+    );
+
+    // Verify logging of an uncached page.
+    $this->drupalGet($path);
+    $this->assertIdentical($this->drupalGetHeader('X-Drupal-Cache'), 'MISS', t('Testing an uncached page.'));
+    $log = db_query('SELECT * FROM {accesslog}')->fetchAll(PDO::FETCH_ASSOC);
+    $this->assertTrue(is_array($log) && count($log) == 1, t('Page request was logged.'));
+    $this->assertEqual(array_intersect_key($log[0], $expected), $expected);
+    $node_counter = statistics_get($this->node->nid);
+    $this->assertIdentical($node_counter['totalcount'], '1');
+
+    // Verify logging of a cached page.
+    $this->drupalGet($path);
+    $this->assertIdentical($this->drupalGetHeader('X-Drupal-Cache'), 'HIT', t('Testing a cached page.'));
+    $log = db_query('SELECT * FROM {accesslog}')->fetchAll(PDO::FETCH_ASSOC);
+    $this->assertTrue(is_array($log) && count($log) == 2, t('Page request was logged.'));
+    $this->assertEqual(array_intersect_key($log[1], $expected), $expected);
+    $node_counter = statistics_get($this->node->nid);
+    $this->assertIdentical($node_counter['totalcount'], '2');
   }
 }
 
@@ -102,7 +165,7 @@ class StatisticsReportsTestCase extends StatisticsTestCase {
 
     // Configure and save the block.
     $block = block_load('statistics', 'popular');
-    $block->theme = 'garland';
+    $block->theme = variable_get('theme_default', 'bartik');
     $block->status = 1;
     $block->pages = '';
     $block->region = 'sidebar_first';
@@ -154,7 +217,7 @@ class StatisticsBlockVisitorsTestCase extends StatisticsTestCase {
     $this->assertText(t('IP address blocking'), t('IP blocking page displayed.'));
     $edit = array();
     $edit['ip'] = $test_ip_address;
-    $this->drupalPost('admin/config/people/ip-blocking', $edit, t('Save'));
+    $this->drupalPost('admin/config/people/ip-blocking', $edit, t('Add'));
     $ip = db_query("SELECT iid from {blocked_ips} WHERE ip = :ip", array(':ip' => $edit['ip']))->fetchField();
     $this->assertNotEqual($ip, FALSE, t('IP address found in database'));
     $this->assertRaw(t('The IP address %ip has been blocked.', array('%ip' => $edit['ip'])), t('IP address was blocked.'));
@@ -310,5 +373,49 @@ class StatisticsAdminTestCase extends DrupalWebTestCase {
       ->execute()
       ->fetchField();
     $this->assertFalse($result, t('Daycounter is zero.'));
+  }
+}
+
+/**
+ * Test statistics token replacement in strings.
+ */
+class StatisticsTokenReplaceTestCase extends StatisticsTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'Statistics token replacement',
+      'description' => 'Generates text using placeholders for dummy content to check statistics token replacement.',
+      'group' => 'Statistics',
+    );
+  }
+
+  /**
+   * Creates a node, then tests the statistics tokens generated from it.
+   */
+  function testStatisticsTokenReplacement() {
+    global $language;
+
+    // Create user and node.
+    $user = $this->drupalCreateUser(array('create page content'));
+    $this->drupalLogin($user);
+    $node = $this->drupalCreateNode(array('type' => 'page', 'uid' => $user->uid));
+
+    // Hit the node.
+    $this->drupalGet('node/' . $node->nid);
+    $statistics = statistics_get($node->nid);
+
+    // Generate and test tokens.
+    $tests = array();
+    $tests['[node:total-count]'] = 1;
+    $tests['[node:day-count]'] = 1;
+    $tests['[node:last-view]'] = format_date($statistics['timestamp']);
+    $tests['[node:last-view:short]'] = format_date($statistics['timestamp'], 'short');
+
+    // Test to make sure that we generated something for each token.
+    $this->assertFalse(in_array(0, array_map('strlen', $tests)), t('No empty tokens generated.'));
+
+    foreach ($tests as $input => $expected) {
+      $output = token_replace($input, array('node' => $node), array('language' => $language));
+      $this->assertFalse(strcmp($output, $expected), t('Statistics token %token replaced.', array('%token' => $input)));
+    }
   }
 }

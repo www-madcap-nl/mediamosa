@@ -1,5 +1,5 @@
 <?php
-// $Id: theme.maintenance.inc,v 1.55 2010/03/17 14:04:38 dries Exp $
+// $Id: theme.maintenance.inc,v 1.63 2010/07/08 03:41:26 webchick Exp $
 
 /**
  * @file
@@ -7,11 +7,12 @@
  */
 
 /**
- * Sets up the theming system for site installs, updates and when the site is
- * in maintenance mode. It also applies when the database is unavailable.
+ * Sets up the theming system for maintenance page.
  *
- * Seven is always used for the initial install and update operations. In
- * other cases, Garland is used, but this can be overridden by setting a
+ * Used for site installs, updates and when the site is in maintenance mode.
+ * It also applies when the database is unavailable or bootstrap was not
+ * complete. Seven is always used for the initial install and update operations.
+ * In other cases, Garland is used, but this can be overridden by setting a
  * "maintenance_theme" key in the $conf variable in settings.php.
  */
 function _drupal_maintenance_theme() {
@@ -35,18 +36,24 @@ function _drupal_maintenance_theme() {
     $custom_theme = (isset($conf['maintenance_theme']) ? $conf['maintenance_theme'] : 'seven');
   }
   else {
-    if (!db_is_active()) {
-      // Because we are operating in a crippled environment, we need to
-      // bootstrap just enough to allow hook invocations to work.
+    // The bootstrap was not complete. So we are operating in a crippled
+    // environment, we need to bootstrap just enough to allow hook invocations
+    // to work. See _drupal_log_error().
+    if (!class_exists('Database', FALSE)) {
       require_once DRUPAL_ROOT . '/includes/database/database.inc';
-      $module_list['system']['filename'] = 'modules/system/system.module';
-      module_list(TRUE, FALSE, FALSE, $module_list);
-      drupal_load('module', 'system');
+      spl_autoload_register('db_autoload');
     }
 
     // We use the default theme as the maintenance theme. If a default theme
     // isn't specified in the database or in settings.php, we use Garland.
-    $custom_theme = variable_get('maintenance_theme', variable_get('theme_default', 'garland'));
+    $custom_theme = variable_get('maintenance_theme', variable_get('theme_default', 'bartik'));
+  }
+
+  // Ensure that system.module is loaded.
+  if (!function_exists('_system_rebuild_theme_data')) {
+    $module_list['system']['filename'] = 'modules/system/system.module';
+    module_list(TRUE, FALSE, FALSE, $module_list);
+    drupal_load('module', 'system');
   }
 
   $themes = list_themes();
@@ -86,7 +93,12 @@ function _theme_load_offline_registry($theme, $base_theme = NULL, $theme_engine 
 }
 
 /**
- * Return a themed list of maintenance tasks to perform.
+ * Returns HTML for a list of maintenance tasks to perform.
+ *
+ * @param $variables
+ *   An associative array containing:
+ *   - items: An associative array of maintenance tasks.
+ *   - active: The key for the currently active maintenance task.
  *
  * @ingroup themeable
  */
@@ -119,7 +131,7 @@ function theme_task_list($variables) {
 }
 
 /**
- * Generate a themed installation page.
+ * Returns HTML for the installation page.
  *
  * Note: this function is not themeable.
  *
@@ -129,57 +141,11 @@ function theme_task_list($variables) {
  */
 function theme_install_page($variables) {
   drupal_add_http_header('Content-Type', 'text/html; charset=utf-8');
-
-  // Delay setting the message variable so it can be processed below.
-  $variables['show_messages'] = FALSE;
-  // Variable processors invoked manually since this function and theme_update_page()
-  // are exceptions in how it works within the theme system.
-  template_preprocess($variables, 'install_page');
-  template_preprocess_maintenance_page($variables);
-  template_process($variables, 'install_page');
-  template_process_maintenance_page($variables);
-
-  // Special handling of error messages
-  $messages = drupal_set_message();
-  if (isset($messages['error'])) {
-    $title = count($messages['error']) > 1 ? st('The following errors must be resolved before you can continue the installation process') : st('The following error must be resolved before you can continue the installation process');
-    $variables['messages'] .= '<h3>' . $title . ':</h3>';
-    $variables['messages'] .= theme('status_messages', array('display' => 'error'));
-    $variables['content'] .= '<p>' . st('Check the error messages and <a href="!url">try again</a>.', array('!url' => check_url(request_uri()))) . '</p>';
-  }
-
-  // Special handling of warning messages
-  if (isset($messages['warning'])) {
-    $title = count($messages['warning']) > 1 ? st('The following installation warnings should be carefully reviewed') : st('The following installation warning should be carefully reviewed');
-    $variables['messages'] .= '<h4>' . $title . ':</h4>';
-    $variables['messages'] .= theme('status_messages', array('display' => 'warning'));
-  }
-
-  // Special handling of status messages
-  if (isset($messages['status'])) {
-    $title = count($messages['status']) > 1 ? st('The following installation warnings should be carefully reviewed, but in most cases may be safely ignored') : st('The following installation warning should be carefully reviewed, but in most cases may be safely ignored');
-    $variables['messages'] .= '<h4>' . $title . ':</h4>';
-    $variables['messages'] .= theme('status_messages', array('display' => 'status'));
-  }
-
-  // This was called as a theme hook (not template), so we need to fix
-  // path_to_theme() for the template, to point at the actual theme rather than
-  // system module as owner of the hook. Additionally, figure out the
-  // maintenance page template to use.
-  global $theme_path, $theme_info, $base_theme_info;
-  $theme_path = dirname($theme_info->uri);
-  $base_themes = $base_theme_info;
-  // Make sure a maintenance-page.tpl.php is always found.
-  $base_themes[] = 'modules/system';
-  while (!file_exists($theme_path . '/maintenance-page.tpl.php') && $base_theme = array_shift($base_themes)) {
-    $theme_path = dirname($base_theme->uri);
-  }
-
-  return theme_render_template($theme_path . '/maintenance-page.tpl.php', $variables);
+  return theme('maintenance_page', $variables);
 }
 
 /**
- * Generate a themed update page.
+ * Returns HTML for the update page.
  *
  * Note: this function is not themeable.
  *
@@ -190,45 +156,18 @@ function theme_install_page($variables) {
  *     FALSE can be useful to postpone the messages to a subsequent page.
  */
 function theme_update_page($variables) {
-  // Set required headers.
   drupal_add_http_header('Content-Type', 'text/html; charset=utf-8');
-
-  // Variable processors invoked manually since this function and theme_install_page()
-  // are exceptions in how it works within the theme system.
-  template_preprocess($variables, 'update_page');
-  template_preprocess_maintenance_page($variables);
-  template_process($variables, 'update_page');
-  template_process_maintenance_page($variables);
-
-  // Special handling of warning messages.
-  $messages = drupal_set_message();
-  if (isset($messages['warning'])) {
-    $title = count($messages['warning']) > 1 ? 'The following update warnings should be carefully reviewed before continuing' : 'The following update warning should be carefully reviewed before continuing';
-    $variables['messages'] .= '<h4>' . $title . ':</h4>';
-    $variables['messages'] .= theme('status_messages', array('display' => 'warning'));
-  }
-
-  // This was called as a theme hook (not template), so we need to fix
-  // path_to_theme() for the template, to point at the actual theme rather than
-  // system module as owner of the hook. Additionally, figure out the
-  // maintenance page template to use.
-  global $theme_path, $theme_info, $base_theme_info;
-  $theme_path = dirname($theme_info->uri);
-  $base_themes = $base_theme_info;
-  // Make sure a maintenance-page.tpl.php is always found.
-  $base_themes[] = 'modules/system';
-  while (!file_exists($theme_path . '/maintenance-page.tpl.php') && $base_theme = array_shift($base_themes)) {
-    $theme_path = dirname($base_theme->uri);
-  }
-
-  return theme_render_template($theme_path . '/maintenance-page.tpl.php', $variables);
+  return theme('maintenance_page', $variables);
 }
 
 /**
- * Generate a report of the results from an operation run via authorize.php.
+ * Returns HTML for a report of the results from an operation run via authorize.php.
  *
- * @param array $variables
+ * @param $variables
+ *   An associative array containing:
  *   - messages: An array of result messages.
+ *
+ * @ingroup themeable
  */
 function theme_authorize_report($variables) {
   $messages = $variables['messages'];
@@ -250,11 +189,14 @@ function theme_authorize_report($variables) {
 }
 
 /**
- * Render a single log message from the authorize.php batch operation.
+ * Returns HTML for a single log message from the authorize.php batch operation.
  *
  * @param $variables
+ *   An associative array containing:
  *   - message: The log message.
  *   - success: A boolean indicating failure or success.
+ *
+ * @ingroup themeable
  */
 function theme_authorize_message($variables) {
   $output = '';

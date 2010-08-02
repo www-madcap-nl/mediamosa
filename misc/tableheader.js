@@ -1,4 +1,4 @@
-// $Id: tableheader.js,v 1.29 2009/12/18 08:17:26 dries Exp $
+// $Id: tableheader.js,v 1.31 2010/05/23 18:23:32 dries Exp $
 (function ($) {
 
 Drupal.tableHeaderDoScroll = function () {

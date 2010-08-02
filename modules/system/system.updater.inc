@@ -1,5 +1,5 @@
 <?php
-// $Id: system.updater.inc,v 1.5 2010/01/30 07:59:25 dries Exp $
+// $Id: system.updater.inc,v 1.8 2010/05/18 18:11:13 dries Exp $
 
 /**
  * @file
@@ -53,8 +53,8 @@ class ModuleUpdater extends Updater implements DrupalUpdaterInterface {
    * Return available database schema updates one a new version is installed.
    */
   public function getSchemaUpdates() {
-    require_once './includes/install.inc';
-    require_once './includes/update.inc';
+    require_once DRUPAL_ROOT . '/includes/install.inc';
+    require_once DRUPAL_ROOT . '/includes/update.inc';
 
     if (_update_get_project_type($project) != 'module') {
       return array();
@@ -81,10 +81,8 @@ class ModuleUpdater extends Updater implements DrupalUpdaterInterface {
   }
 
   public function postUpdateTasks() {
-    // @todo: If there are schema updates.
-    return array(
-      l(t('Run database updates for !project', array('!project' => $this->title)), 'update.php'),
-    );
+    // We don't want to check for DB updates here, we do that once for all
+    // updated modules on the landing page.
   }
 
 }
@@ -135,8 +133,7 @@ class ThemeUpdater extends Updater implements DrupalUpdaterInterface {
   public function postInstall() {
     // Update the system table.
     clearstatcache();
-    drupal_static_reset('_system_rebuild_theme_data');
-    _system_rebuild_theme_data();
+    system_rebuild_theme_data();
 
     // Active the theme
     db_update('system')

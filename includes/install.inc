@@ -1,5 +1,5 @@
 <?php
-// $Id: install.inc,v 1.130 2010/03/07 06:53:26 webchick Exp $
+// $Id: install.inc,v 1.136 2010/06/21 02:27:47 webchick Exp $
 
 /**
  * Indicates that a module has not been installed yet.
@@ -187,8 +187,18 @@ function drupal_set_installed_schema_version($module, $version) {
  * @see install_profile_info()
  */
 function drupal_install_profile_distribution_name() {
-  global $install_state;
-  return $install_state['profile_info']['distribution_name'];
+  // During installation, the profile information is stored in the global
+  // installation state (it might not be saved anywhere yet).
+  if (drupal_installation_attempted()) {
+    global $install_state;
+    return $install_state['profile_info']['distribution_name'];
+  }
+  // At all other times, we load the profile via standard methods.
+  else {
+    $profile = drupal_get_profile();
+    $info = install_profile_info($profile);
+    return $info['distribution_name'];
+  }
 }
 
 /**
@@ -219,20 +229,14 @@ function drupal_detect_baseurl($file = 'install.php') {
 function drupal_detect_database_types() {
   $databases = array();
 
-  // Initialize the database system if it has not been
-  // initialized yet. We do not initialize it earlier to make
-  // requirements check during the installation.
-  require_once DRUPAL_ROOT . '/includes/database/database.inc';
-
   // We define a driver as a directory in /includes/database that in turn
   // contains a database.inc file. That allows us to drop in additional drivers
   // without modifying the installer.
   // Because we have no registry yet, we need to also include the install.inc
   // file for the driver explicitly.
   require_once DRUPAL_ROOT . '/includes/database/database.inc';
+  spl_autoload_register('db_autoload');
   foreach (file_scan_directory(DRUPAL_ROOT . '/includes/database', '/^[a-z]*$/i', array('recurse' => FALSE)) as $file) {
-    include_once "{$file->uri}/install.inc";
-    include_once "{$file->uri}/database.inc";
     $drivers[$file->filename] = $file->uri;
   }
 
@@ -373,7 +377,7 @@ abstract class DatabaseTasks {
       }
     }
     if (!empty($message)) {
-      $message = '<p>In order for Drupal to work, and to continue with the installation process, you must resolve all issues reported below. For more help with configuring your database server, see the <a href="http://drupal.org/node/258">Installation and upgrading handbook</a>. If you are unsure what any of this means you should probably contact your hosting provider.</p>' . $message;
+      $message = '<p>In order for Drupal to work, and to continue with the installation process, you must resolve all issues reported below. For more help with configuring your database server, see the <a href="http://drupal.org/getting-started/install">installation handbook</a>. If you are unsure what any of this means you should probably contact your hosting provider.</p>' . $message;
       throw new DatabaseTaskException($message);
     }
   }
@@ -390,7 +394,7 @@ abstract class DatabaseTasks {
       $this->pass('Drupal can CONNECT to the database ok.');
     }
     catch (Exception $e) {
-      $this->fail(st('Failed to connect to your %name database server. %name reports the following message: %error.<ul><li>Are you sure you have the correct username and password?</li><li>Are you sure that you have typed the correct database hostname?</li><li>Are you sure that the database server is running?</li></ul>For more help, see the <a href="http://drupal.org/node/258">Installation and upgrading handbook</a>. If you are unsure what these terms mean you should probably contact your hosting provider.', array('%error' => $e->getMessage(), '%name' => $this->name())));
+      $this->fail(st('Failed to connect to your %name database server. %name reports the following message: %error.<ul><li>Are you sure you have the correct username and password?</li><li>Are you sure that you have typed the correct database hostname?</li><li>Are you sure that the database server is running?</li></ul>For more help, see the <a href="http://drupal.org/getting-started/install">installation handbook</a>. If you are unsure what these terms mean you should probably contact your hosting provider.', array('%error' => $e->getMessage(), '%name' => $this->name())));
       return FALSE;
     }
     return TRUE;
@@ -547,37 +551,14 @@ function drupal_verify_profile($install_state) {
 }
 
 /**
- * Manually include all files for the active database.
- *
- * Because we have no registry yet, we need to manually include the
- * necessary database include files.
- */
-function drupal_install_initialize_database() {
-  static $included = FALSE;
-
-  if (!$included) {
-    $connection_info = Database::getConnectionInfo();
-    $driver = $connection_info['default']['driver'];
-    require_once DRUPAL_ROOT . '/includes/database/query.inc';
-    require_once DRUPAL_ROOT . '/includes/database/select.inc';
-    require_once DRUPAL_ROOT . '/includes/database/schema.inc';
-    foreach (glob(DRUPAL_ROOT . '/includes/database/' . $driver . '/*.inc') as $include_file) {
-      require_once $include_file;
-    }
-    $included = TRUE;
-  }
-}
-
-/**
  * Callback to install the system module.
  *
  * Separated from the installation of other modules so core system
  * functions can be made available while other modules are installed.
  */
 function drupal_install_system() {
-  $system_path = dirname(drupal_get_filename('module', 'system', NULL));
+  $system_path = drupal_get_path('module', 'system');
   require_once DRUPAL_ROOT . '/' . $system_path . '/system.install';
-  drupal_install_initialize_database();
   module_invoke('system', 'install');
 
   $system_versions = drupal_get_schema_versions('system');
@@ -876,10 +857,15 @@ function install_goto($path) {
  * system is possibly not yet available.
  *
  * @see t()
+ * @ingroup sanitization
  */
-function st($string, $args = array()) {
+function st($string, array $args = array(), array $options = array()) {
   static $locale_strings = NULL;
   global $install_state;
+
+  if (empty($options['context'])) {
+    $options['context'] = '';
+  }
 
   if (!isset($locale_strings)) {
     $locale_strings = array();
@@ -911,7 +897,7 @@ function st($string, $args = array()) {
       case '!':
     }
   }
-  return strtr((!empty($locale_strings[$string]) ? $locale_strings[$string] : $string), $args);
+  return strtr((!empty($locale_strings[$options['context']][$string]) ? $locale_strings[$options['context']][$string] : $string), $args);
 }
 
 /**

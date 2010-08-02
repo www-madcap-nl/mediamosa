@@ -106,6 +106,14 @@ class mediamosa_connector {
    *  The REST uri.
    * @param array $options
    *   (optional) An array which can have one or more of following keys:
+   *   - user_id (mediamosa)
+   *       The user_id of the Mediamosa call. Default is empty.
+   *   - group_id (mediamosa)
+   *       The group_id of the Mediamosa call. Default is empty.
+   *   - fatal
+   *       Boolean value, TRUE makes the call throw an exception if the call
+   *       failed. That means, failed to call, failed to access the rest etc.
+   *       Empty results are not fatal. Default is FALSE.
    *   - headers
    *       An array containing request headers to send as name/value pairs.
    *   - method
@@ -130,33 +138,85 @@ class mediamosa_connector {
       return;
     }
 
+    $options += array(
+      'fatal' => false, // Default is not to react to problems with exceptions.
+      'user_id' => '',
+      'group_id' => '',
+    );
+
+    // Copy settings.
+    $fatal = $options['fatal'];
+    $user_id = $options['user_id'];
+    $group_id = $options['group_id'];
+    unset($options['fatal'], $options['user_id'], $options['group_id']);
+
     // If cookie not set, then login first.
     if (!isset($this->cookie) && !$this->do_login()) {
       return FALSE; // Failed request.
     }
 
+    // Use user_id?
+    if (!empty($user_id)) {
+      assert(empty($options['data']['user_id']));
+      $options['data']['user_id'] = $user_id;
+    }
+
+      // Use group_id?
+    if (!empty($group_id)) {
+      assert(empty($options['data']['group_id']));
+      $options['data']['group_id'] = $group_id;
+    }
+
     // Try the request.
     $response = $this->do_request($uri, $options);
 
-    // If we return anything else but 1601, then return result. 1601 = failure login, cookie expired etc.
-    if ($response && !in_array((int) $response->xml->header->request_result_id, array(self::ERRORCODE_ACCESS_DENIED, self::ERRORCODE_NOT_AUTHORIZED))) {
+    // If response failed, then try to login.
+    if ($response && in_array((int) $response->xml->header->request_result_id, array(self::ERRORCODE_ACCESS_DENIED, self::ERRORCODE_NOT_AUTHORIZED))) {
+      // Login again.
+      if (self::do_login()) {
+        $response = $this->do_request($uri, $options);
+      }
+    }
+
+    // Check the final response.
+    if ($response) {
+      $result_id = (int) $response->xml->header->request_result_id;
+
+      if ($fatal && !in_array($result_id, array(self::ERRORCODE_OKAY, self::ERRORCODE_EMPTY_RESULT))) {
+        throw new Exception(strtr('Unable to execute Mediamosa REST call !uri, resulted with code !code', array('!uri' => $uri, '!code' => $result_id)));
+      }
+
       return $response;
     }
 
-    // Login again.
-    if (!self::do_login()) {
-      return FALSE;
-    }
-
-    // Try the request again.
-    $response = $this->do_request($uri, $options);
-
-    // Check again.
-    if ($response && $response->xml->header->request_result_id != self::ERRORCODE_ACCESS_DENIED) {
-      return $response;
+    // When fatal, throw exception.
+    if ($fatal) {
+      throw new Exception(strtr('Unable to execute Mediamosa REST call !uri', array('!uri' => $uri)));
     }
 
     return FALSE;
+  }
+
+  /**
+   * Same as request() accept force to GET method.
+   *
+   * @param string $uri
+   * @param array $options
+   */
+  public function request_get($uri, array $options = array()) {
+    $options['method'] = 'GET';
+    return $this->request($uri, $options);
+  }
+
+  /**
+   * Same as request() accept force to GET method.
+   *
+   * @param string $uri
+   * @param array $options
+   */
+  public function request_post($uri, array $options = array()) {
+    $options['method'] = 'POST';
+    return $this->request($uri, $options);
   }
 
   // -------------------------------------------------------- Private Functions.
@@ -189,7 +249,8 @@ class mediamosa_connector {
 
     // Parse the response.
     // FIXME: We only store the 1st cookie here(!).
-    list($this->cookie) = explode(';', $response->headers['Set-Cookie']);
+    $cookie = empty($response->headers['Set-Cookie']) ? $response->headers['set-cookie'] : $response->headers['Set-Cookie'];
+    list($this->cookie) = explode(';', $cookie);
 
     // Store the cookie for later usage.
     $cookies = variable_get('mediamosa_connector_cookies', array());
@@ -319,7 +380,7 @@ class mediamosa_connector {
     $response->xml = NULL;
 
     // If we detect xml output, fill the xml member.
-    if ((int) $response->code == 200 && (strpos($response->headers['Content-Type'], 'text/xml') !== FALSE || drupal_substr($response->data, 0, strlen('<?xml')) == '<?xml')) {
+    if ((int) $response->code == 200 && (!empty($response->headers['Content-Type']) && strpos($response->headers['Content-Type'], 'text/xml') !== FALSE) || drupal_substr($response->data, 0, strlen('<?xml')) == '<?xml') {
       try {
         $response->xml = new SimpleXMLElement($response->data);
       }
@@ -337,6 +398,7 @@ class mediamosa_connector {
       'result_id' => (isset($response->xml) ? (int)$response->xml->header->request_result_id : 0),
       'result_description' => (isset($response->xml) ? (string) $response->xml->header->request_result_description : ''),
       'errors' => (isset($response->xml) && isset($response->xml->header->errors) ? (is_array($response->xml->header->errors) ? implode('<br />', $response->xml->header->errors) : (string) $response->xml->header->errors) : NULL),
+      'data' => $response->data,
     );
 
     if (variable_get('mediamosa_connector_debug', FALSE)) {
@@ -412,29 +474,32 @@ class mediamosa_connector {
    * @param object $xml
    */
   public static function responsexml2array($xml) {
+    if (!$xml) {
+      return $xml;
+    }
 
     // Convert to nice array.
-    $a_xml = self::_simplexml2array($xml);
+    $xml = self::_simplexml2array($xml);
 
-    if (!isset($a_xml['items']['item'])) {
-      return $a_xml;
+    if (!isset($xml['items']['item'])) {
+      return $xml;
     }
 
     // Fix the problem with 1 or 2+ items in array.
-    $a_tmp = isset($a_xml['items']['item'][0]) ? $a_xml['items']['item'] : array(0 => $a_xml['items']['item']);
-    unset($a_xml['items']);
-    $a_xml['items']['item'] = $a_tmp;
+    $tmp = isset($xml['items']['item'][0]) ? $xml['items']['item'] : array(0 => $xml['items']['item']);
+    unset($xml['items']);
+    $xml['items']['item'] = $tmp;
 
-    return $a_xml;
+    return $xml;
   }
 
   /**
    * Correctly convert to array and return the items object from the mediamosa
-   * response as array.
+   * response as array. Will return FALSE when supplied with FALSE.
    *
    * @param object $response
    */
   public static function response2array($response) {
-    return self::responsexml2array($response->xml);
+    return $response ? self::responsexml2array($response->xml) : FALSE;
   }
 }

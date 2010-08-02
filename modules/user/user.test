@@ -1,5 +1,5 @@
 <?php
-// $Id: user.test,v 1.86 2010/03/07 18:46:55 webchick Exp $
+// $Id: user.test,v 1.95 2010/06/10 06:57:20 dries Exp $
 
 class UserRegistrationTestCase extends DrupalWebTestCase {
   public static function getInfo() {
@@ -15,12 +15,12 @@ class UserRegistrationTestCase extends DrupalWebTestCase {
     variable_set('user_email_verification', TRUE);
 
     // Set registration to administrator only.
-    variable_set('user_register', 0);
+    variable_set('user_register', USER_REGISTER_ADMINISTRATORS_ONLY);
     $this->drupalGet('user/register');
     $this->assertResponse(403, t('Registration page is inaccessible when only administrators can create accounts.'));
 
     // Allow registration by site visitors without administrator approval.
-    variable_set('user_register', 1);
+    variable_set('user_register', USER_REGISTER_VISITORS);
     $edit = array();
     $edit['name'] = $name = $this->randomName();
     $edit['mail'] = $mail = $edit['name'] . '@example.com';
@@ -31,7 +31,7 @@ class UserRegistrationTestCase extends DrupalWebTestCase {
     $this->assertTrue($new_user->status, t('New account is active after registration.'));
 
     // Allow registration by site visitors, but require administrator approval.
-    variable_set('user_register', 2);
+    variable_set('user_register', USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL);
     $edit = array();
     $edit['name'] = $name = $this->randomName();
     $edit['mail'] = $mail = $edit['name'] . '@example.com';
@@ -46,7 +46,7 @@ class UserRegistrationTestCase extends DrupalWebTestCase {
     variable_set('user_email_verification', FALSE);
 
     // Allow registration by site visitors without administrator approval.
-    variable_set('user_register', 1);
+    variable_set('user_register', USER_REGISTER_VISITORS);
     $edit = array();
     $edit['name'] = $name = $this->randomName();
     $edit['mail'] = $mail = $edit['name'] . '@example.com';
@@ -55,7 +55,7 @@ class UserRegistrationTestCase extends DrupalWebTestCase {
     $edit['pass[pass1]'] = '99999.0';
     $edit['pass[pass2]'] = '99999';
     $this->drupalPost('user/register', $edit, t('Create new account'));
-    $this->assertText(t('The specified passwords do not match.'), t('Type mismatched passwords display an error message.'));
+    $this->assertText(t('The specified passwords do not match.'), t('Typing mismatched passwords displays an error message.'));
 
     // Enter a correct password.
     $edit['pass[pass1]'] = $new_pass = $this->randomName();
@@ -67,7 +67,7 @@ class UserRegistrationTestCase extends DrupalWebTestCase {
     $this->drupalLogout();
 
     // Allow registration by site visitors, but require administrator approval.
-    variable_set('user_register', 2);
+    variable_set('user_register', USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL);
     $edit = array();
     $edit['name'] = $name = $this->randomName();
     $edit['mail'] = $mail = $edit['name'] . '@example.com';
@@ -102,7 +102,7 @@ class UserRegistrationTestCase extends DrupalWebTestCase {
 
   function testRegistrationDefaultValues() {
     // Allow registration by site visitors without administrator approval.
-    variable_set('user_register', 1);
+    variable_set('user_register', USER_REGISTER_VISITORS);
 
     // Don't require e-mail verification.
     variable_set('user_email_verification', FALSE);
@@ -131,7 +131,7 @@ class UserRegistrationTestCase extends DrupalWebTestCase {
     $this->assertEqual($new_user->theme, '', t('Correct theme field.'));
     $this->assertEqual($new_user->signature, '', t('Correct signature field.'));
     $this->assertTrue(($new_user->created > REQUEST_TIME - 20 ), t('Correct creation time.'));
-    $this->assertEqual($new_user->status, variable_get('user_register', 1) == 1 ? 1 : 0, t('Correct status field.'));
+    $this->assertEqual($new_user->status, variable_get('user_register', USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL) == USER_REGISTER_VISITORS ? 1 : 0, t('Correct status field.'));
     $this->assertEqual($new_user->timezone, variable_get('date_default_timezone'), t('Correct time zone field.'));
     $this->assertEqual($new_user->language, '', t('Correct language field.'));
     $this->assertEqual($new_user->picture, '', t('Correct picture field.'));
@@ -1259,7 +1259,7 @@ class UserBlocksUnitTests extends DrupalWebTestCase {
   private function insertSession(array $fields = array()) {
     $fields += array(
       'uid' => 0,
-      'sid' => md5(uniqid(mt_rand(), TRUE)),
+      'sid' => drupal_hash_base64(uniqid(mt_rand(), TRUE)),
       'timestamp' => REQUEST_TIME,
     );
     db_insert('sessions')
@@ -1391,6 +1391,18 @@ class UserEditTestCase extends DrupalWebTestCase {
     $this->drupalPost("user/$user1->uid/edit", $edit, t('Save'));
     $this->assertRaw(t('The name %name is already taken.', array('%name' => $edit['name'])));
 
+    // Check that filling out a single password field does not validate.
+    $edit = array();
+    $edit['pass[pass1]'] = '';
+    $edit['pass[pass2]'] = $this->randomName();
+    $this->drupalPost("user/$user1->uid/edit", $edit, t('Save'));
+    $this->assertText(t("The specified passwords do not match."), t('Typing mismatched passwords displays an error message.'));
+
+    $edit['pass[pass1]'] = $this->randomName();
+    $edit['pass[pass2]'] = '';
+    $this->drupalPost("user/$user1->uid/edit", $edit, t('Save'));
+    $this->assertText(t("The specified passwords do not match."), t('Typing mismatched passwords displays an error message.'));
+
     // Test that the error message appears when attempting to change the mail or
     // pass without the current password.
     $edit = array();
@@ -1423,6 +1435,90 @@ class UserEditTestCase extends DrupalWebTestCase {
 }
 
 /**
+ * Test case for user signatures.
+ */
+class UserSignatureTestCase extends DrupalWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'User signatures',
+      'description' => 'Test user signatures.',
+      'group' => 'User',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('comment');
+
+    // Enable user signatures.
+    variable_set('user_signatures', 1);
+
+    // Prefetch text formats.
+    $this->full_html_format = db_query_range('SELECT * FROM {filter_format} WHERE name = :name', 0, 1, array(':name' => 'Full HTML'))->fetchObject();
+    $this->plain_text_format = db_query_range('SELECT * FROM {filter_format} WHERE name = :name', 0, 1, array(':name' => 'Plain text'))->fetchObject();
+
+    // Create regular and administrative users.
+    $this->web_user = $this->drupalCreateUser(array());
+    $admin_permissions = array('administer comments');
+    foreach (filter_formats() as $format) {
+      if ($permission = filter_permission_name($format)) {
+        $admin_permissions[] = $permission;
+      }
+    }
+    $this->admin_user = $this->drupalCreateUser($admin_permissions);
+  }
+
+  /**
+   * Test that a user can change their signature format and that it is respected
+   * upon display.
+   */
+  function testUserSignature() {
+    // Create a new node with comments on.
+    $node = $this->drupalCreateNode(array('comment' => COMMENT_NODE_OPEN));
+
+    // Verify that user signature field is not displayed on registration form.
+    $this->drupalGet('user/register');
+    $this->assertNoText(t('Signature'));
+
+    // Log in as a regular user and create a signature.
+    $this->drupalLogin($this->web_user);
+    $signature_text = "<h1>" . $this->randomName() . "</h1>";
+    $edit = array(
+      'signature[value]' => $signature_text,
+      'signature[format]' => $this->plain_text_format->format,
+    );
+    $this->drupalPost('user/' . $this->web_user->uid . '/edit', $edit, t('Save'));
+
+    // Verify that values were stored.
+    $this->assertFieldByName('signature[value]', $edit['signature[value]'], 'Submitted signature text found.');
+    $this->assertFieldByName('signature[format]', $edit['signature[format]'], 'Submitted signature format found.');
+
+    // Create a comment.
+    $langcode = LANGUAGE_NONE;
+    $edit = array();
+    $edit['subject'] = $this->randomName(8);
+    $edit['comment_body[' . $langcode . '][0][value]'] = $this->randomName(16);
+    $this->drupalPost('comment/reply/' . $node->nid, $edit, t('Preview'));
+    $this->drupalPost(NULL, array(), t('Save'));
+
+    // Get the comment ID. (This technique is the same one used in the Comment
+    // module's CommentHelperCase test case.)
+    preg_match('/#comment-([0-9]+)/', $this->getURL(), $match);
+    $comment_id = $match[1];
+
+    // Log in as an administrator and edit the comment to use Full HTML, so
+    // that the comment text itself is not filtered at all.
+    $this->drupalLogin($this->admin_user);
+    $edit['comment_body[' . $langcode . '][0][format]'] = $this->full_html_format->format;
+    $this->drupalPost('comment/' . $comment_id . '/edit', $edit, t('Save'));
+
+    // Assert that the signature did not make it through unfiltered.
+    $this->drupalGet('node/' . $node->nid);
+    $this->assertNoRaw($signature_text, 'Unfiltered signature text not found.');
+    $this->assertRaw(check_markup($signature_text, $this->plain_text_format->format), 'Filtered signature text found.');
+  }
+}
+
+/*
  * Test that a user, having editing their own account, can still log in.
  */
 class UserEditedOwnAccountTestCase extends DrupalWebTestCase {
@@ -1438,7 +1534,7 @@ class UserEditedOwnAccountTestCase extends DrupalWebTestCase {
   function testUserEditedOwnAccount() {
     // Change account setting 'Who can register accounts?' to Administrators
     // only.
-    variable_set('user_register', 0);
+    variable_set('user_register', USER_REGISTER_ADMINISTRATORS_ONLY);
 
     // Create a new user account and log in.
     $account = $this->drupalCreateUser(array('change own username'));
@@ -1457,3 +1553,253 @@ class UserEditedOwnAccountTestCase extends DrupalWebTestCase {
     $this->drupalLogin($account);
   }
 }
+
+/**
+ * Test case to test adding, editing and deleting roles.
+ */
+class UserRoleAdminTestCase extends DrupalWebTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'User role administration',
+      'description' => 'Test adding, editing and deleting user roles.',
+      'group' => 'User',
+    );
+  }
+
+  function setUp() {
+    parent::setUp();
+    $this->admin_user = $this->drupalCreateUser(array('administer permissions', 'administer users'));
+  }
+
+  /**
+   * Test adding, renaming and deleting roles.
+   */
+  function testRoleAdministration() {
+    $this->drupalLogin($this->admin_user);
+
+    // Test adding a role. (In doing so, we use a role name that happens to
+    // correspond to an integer, to test that the role administration pages
+    // correctly distinguish between role names and IDs.)
+    $role_name = '123';
+    $edit = array('name' => $role_name);
+    $this->drupalPost('admin/people/permissions/roles', $edit, t('Add role'));
+    $this->assertText(t('The role has been added.'), t('The role has been added.'));
+    $role = user_role_load_by_name($role_name);
+    $this->assertTrue(is_object($role), t('The role was successfully retrieved from the database.'));
+
+    // Try adding a duplicate role.
+    $this->drupalPost(NULL, $edit, t('Add role'));
+    $this->assertRaw(t('The role name %name already exists. Choose another role name.', array('%name' => $role_name)), t('Duplicate role warning displayed.'));
+
+    // Test renaming a role.
+    $old_name = $role_name;
+    $role_name = '456';
+    $edit = array('name' => $role_name);
+    $this->drupalPost("admin/people/permissions/roles/edit/{$role->rid}", $edit, t('Save role'));
+    $this->assertText(t('The role has been renamed.'), t('The role has been renamed.'));
+    $this->assertFalse(user_role_load_by_name($old_name), t('The role can no longer be retrieved from the database using its old name.'));
+    $this->assertTrue(is_object(user_role_load_by_name($role_name)), t('The role can be retrieved from the database using its new name.'));
+
+    // Test deleting a role.
+    $this->drupalPost("admin/people/permissions/roles/edit/{$role->rid}", NULL, t('Delete role'));
+    $this->drupalPost(NULL, NULL, t('Delete'));
+    $this->assertText(t('The role has been deleted.'), t('The role has been deleted'));
+    $this->assertNoLinkByHref("admin/people/permissions/roles/edit/{$role->rid}", t('Role edit link removed.'));
+    $this->assertFalse(user_role_load_by_name($role_name), t('A deleted role can no longer be loaded.'));
+
+    // Make sure that the system-defined roles cannot be edited via the user
+    // interface.
+    $this->drupalGet('admin/people/permissions/roles/edit/' . DRUPAL_ANONYMOUS_RID);
+    $this->assertResponse(403, t('Access denied when trying to edit the built-in anonymous role.'));
+    $this->drupalGet('admin/people/permissions/roles/edit/' . DRUPAL_AUTHENTICATED_RID);
+    $this->assertResponse(403, t('Access denied when trying to edit the built-in authenticated role.'));
+  }
+}
+
+/**
+ * Test user token replacement in strings.
+ */
+class UserTokenReplaceTestCase extends DrupalWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'User token replacement',
+      'description' => 'Generates text using placeholders for dummy content to check user token replacement.',
+      'group' => 'User',
+    );
+  }
+
+  /**
+   * Creates a user, then tests the tokens generated from it.
+   */
+  function testUserTokenReplacement() {
+    global $language;
+    $url_options = array(
+      'absolute' => TRUE,
+      'language' => $language,
+    );
+
+    // Create two users and log them in one after another.
+    $user1 = $this->drupalCreateUser(array());
+    $user2 = $this->drupalCreateUser(array());
+    $this->drupalLogin($user1);
+    $this->drupalLogout();
+    $this->drupalLogin($user2);
+
+    $account = user_load($user1->uid);
+    global $user;
+
+    // Generate and test sanitized tokens.
+    $tests = array();
+    $tests['[user:uid]'] = $account->uid;
+    $tests['[user:name]'] = filter_xss($account->name);
+    $tests['[user:mail]'] = check_plain($account->mail);
+    $tests['[user:url]'] = url("user/$account->uid", $url_options);
+    $tests['[user:edit-url]'] = url("user/$account->uid/edit", $url_options);
+    $tests['[user:last-login]'] = format_date($account->login, 'medium', '', NULL, $language->language);
+    $tests['[user:last-login:short]'] = format_date($account->login, 'short', '', NULL, $language->language);
+    $tests['[user:created]'] = format_date($account->created, 'medium', '', NULL, $language->language);
+    $tests['[user:created:short]'] = format_date($account->created, 'short', '', NULL, $language->language);
+    $tests['[current-user:name]'] = check_plain($user->name);
+
+    // Test to make sure that we generated something for each token.
+    $this->assertFalse(in_array(0, array_map('strlen', $tests)), t('No empty tokens generated.'));
+
+    foreach ($tests as $input => $expected) {
+      $output = token_replace($input, array('user' => $account), array('language' => $language));
+      $this->assertFalse(strcmp($output, $expected), t('Sanitized user token %token replaced.', array('%token' => $input)));
+    }
+
+    // Generate and test unsanitized tokens.
+    $tests['[user:name]'] = $account->name;
+    $tests['[user:mail]'] = $account->mail;
+    $tests['[current-user:name]'] = $user->name;
+
+    foreach ($tests as $input => $expected) {
+      $output = token_replace($input, array('user' => $account), array('language' => $language, 'sanitize' => FALSE));
+      $this->assertFalse(strcmp($output, $expected), t('Unsanitized user token %token replaced.', array('%token' => $input)));
+    }
+  }
+}
+
+/**
+ * Test user search.
+ */
+class UserUserSearchTestCase extends DrupalWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'User search',
+      'description' => 'Testing that only user with the right permission can see the email address in the user search.',
+      'group' => 'User',
+    );
+  }
+
+  function testUserSearch() {
+    $user1 = $this->drupalCreateUser(array('access user profiles', 'search content', 'use advanced search'));
+    $this->drupalLogin($user1);
+    $keys = $user1->mail;
+    $edit = array('keys' => $keys);
+    $this->drupalPost('search/user/', $edit, t('Search'));
+    $this->assertNoText($keys);
+    $this->drupalLogout();
+
+    $user2 = $this->drupalCreateUser(array('administer users', 'access user profiles', 'search content', 'use advanced search'));
+    $this->drupalLogin($user2);
+    $keys = $user2->mail;
+    $edit = array('keys' => $keys);
+    $this->drupalPost('search/user/', $edit, t('Search'));
+    $this->assertText($keys);
+    $this->drupalLogout();
+  }
+}
+
+
+/**
+ * Test role assignment.
+ */
+class UserRolesAssignmentTestCase extends DrupalWebTestCase {
+  protected $admin_user;
+
+  public static function getInfo() {
+    return array(
+      'name' => t('Role assignment'),
+      'description' => t('Tests that users can be assigned and unassigned roles.'),
+      'group' => t('User')
+    );
+  }
+
+  function setUp() {
+    parent::setUp();
+    $this->admin_user = $this->drupalCreateUser(array('administer permissions', 'administer users'));
+    $this->drupalLogin($this->admin_user);
+  }
+
+  /**
+   * Tests that a user can be assigned a role and that the role can be removed
+   * again.
+   */
+  function testAssignAndRemoveRole()  {
+    $rid = $this->drupalCreateRole(array('administer content types'));
+    $account = $this->drupalCreateUser();
+
+    // Assign the role to the user.
+    $this->drupalPost('user/' . $account->uid . '/edit', array("roles[$rid]" => $rid), t('Save'));
+    $this->assertText(t('The changes have been saved.'));
+    $this->assertFieldChecked('edit-roles-' . $rid, t('Role is assigned.'));
+    $this->userLoadAndCheckRoleAssigned($account, $rid);
+
+    // Remove the role from the user.
+    $this->drupalPost('user/' . $account->uid . '/edit', array("roles[$rid]" => FALSE), t('Save'));
+    $this->assertText(t('The changes have been saved.'));
+    $this->assertNoFieldChecked('edit-roles-' . $rid, t('Role is removed from user.'));
+    $this->userLoadAndCheckRoleAssigned($account, $rid, FALSE);
+  }
+
+  /**
+   * Tests that when creating a user the role can be assigned. And that it can
+   * be removed again.
+   */
+  function testCreateUserWithRole() {
+    $rid = $this->drupalCreateRole(array('administer content types'));
+    // Create a new user and add the role at the same time.
+    $edit = array(
+      'name' => $this->randomName(),
+      'mail' => $this->randomName() . '@example.com',
+      'pass[pass1]' => $pass = $this->randomString(),
+      'pass[pass2]' => $pass,
+      "roles[$rid]" => $rid,
+    );
+    $this->drupalPost('admin/people/create', $edit, t('Create new account'));
+    $this->assertText(t('Created a new user account for !name.', array('!name' => $edit['name'])));
+    // Get the newly added user.
+    $account = user_load_by_name($edit['name']);
+
+    $this->drupalGet('user/' . $account->uid . '/edit');
+    $this->assertFieldChecked('edit-roles-' . $rid, t('Role is assigned.'));
+    $this->userLoadAndCheckRoleAssigned($account, $rid);
+
+    // Remove the role again.
+    $this->drupalPost('user/' . $account->uid . '/edit', array("roles[$rid]" => FALSE), t('Save'));
+    $this->assertText(t('The changes have been saved.'));
+    $this->assertNoFieldChecked('edit-roles-' . $rid, t('Role is removed from user.'));
+    $this->userLoadAndCheckRoleAssigned($account, $rid, FALSE);
+  }
+
+  /**
+   * Check role on user object.
+   *
+   * @param object $account User.
+   * @param integer $rid Role id.
+   * @param bool $is_assigned True if the role should present on the account.
+   */
+  private function userLoadAndCheckRoleAssigned($account, $rid, $is_assigned = TRUE) {
+    $account = user_load($account->uid, TRUE);
+    if ($is_assigned) {
+      $this->assertTrue(array_key_exists($rid, $account->roles), t('The role is present in the user object.'));
+    }
+    else {
+      $this->assertFalse(array_key_exists($rid, $account->roles), t('The role is not present in the user object.'));
+    }
+  }
+}
+

@@ -67,7 +67,7 @@ class mediamosa_node_revision {
         '#vid' => mediamosa_node_revision_db::VID,
         ':vids' => $vids,
       )
-    )->fetchAllAssoc(mediamosa_node_revision_db::VID);
+    )->fetchAllAssoc(mediamosa_node_revision_db::VID, PDO::FETCH_ASSOC);
 
     // Gether latest if we miss a revision (f.e. not saved).
     $result_latest = mediamosa_db::db_query(
@@ -78,19 +78,19 @@ class mediamosa_node_revision {
         ':nids' => $nids,
         '#vid' => mediamosa_node_revision_db::VID,
       )
-    )->fetchAllAssoc(mediamosa_node_revision_db::NID);
+    )->fetchAllAssoc(mediamosa_node_revision_db::NID, PDO::FETCH_ASSOC);
 
     foreach ($nodes as $nid => $node) {
 
       $revision_data = array();
       if (isset($result_vids[$node->vid])) {
-        $revision_data = !empty($result_vids[$node->vid]->{mediamosa_node_revision_db::REVISION_DATA}) ? unserialize($result_vids[$node->vid]->{mediamosa_node_revision_db::REVISION_DATA}) : array();
+        $revision_data = !empty($result_vids[$node->vid][mediamosa_node_revision_db::REVISION_DATA]) ? unserialize($result_vids[$node->vid][mediamosa_node_revision_db::REVISION_DATA]) : array();
       }
 
       // Found it?
       if (empty($revision_data)) {
         // If we didn't find the revision, we'll take the latest version instead.
-        $revision_data = !empty($result_latest[$node->nid]->{mediamosa_node_revision_db::REVISION_DATA}) ? unserialize($result_latest[$node->nid]->{mediamosa_node_revision_db::REVISION_DATA}) : array();
+        $revision_data = !empty($result_latest[$node->nid][mediamosa_node_revision_db::REVISION_DATA]) ? unserialize($result_latest[$node->nid][mediamosa_node_revision_db::REVISION_DATA]) : array();
       }
 
       unset($revision_data['created']);

@@ -855,7 +855,7 @@ The collection is deleted only if all underlying assets successfully removed.',
       }
 
       // Now count if any assets are still left in collection.
-      $count_assets_in_collection = count_assets_in_collection($coll_id);
+      $count_assets_in_collection = mediamosa_collection::count_assets_in_collection($coll_id);
       if ($count_assets_in_collection) {
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_COLLECTION_NOT_EMPTY, array('@asset_count' => $count_assets_in_collection));
       }

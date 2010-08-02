@@ -1,5 +1,5 @@
 <?php
-// $Id: path.inc,v 1.60 2010/03/10 19:36:14 webchick Exp $
+// $Id: path.inc,v 1.64 2010/06/17 13:48:53 dries Exp $
 
 /**
  * @file
@@ -127,7 +127,6 @@ function drupal_lookup_path($action, $path = '', $path_language = NULL) {
     // isn't a path that has this alias
     elseif ($action == 'source' && !isset($cache['no_source'][$path_language][$path])) {
       // Look for the value $path within the cached $map
-      $source = '';
       if (!isset($cache['map'][$path_language]) || !($source = array_search($path, $cache['map'][$path_language]))) {
         // Get the most fitting result falling back with alias without language
         if ($source = db_query("SELECT source FROM {url_alias} WHERE alias = :alias AND language IN (:language, :language_none) ORDER BY language DESC, pid DESC", array(
@@ -136,6 +135,7 @@ function drupal_lookup_path($action, $path = '', $path_language = NULL) {
                      ':language_none' => LANGUAGE_NONE))
             ->fetchField()) {
           $cache['map'][$path_language][$source] = $path;
+          return $source;
         }
         else {
           // We can't record anything into $map because we do not have a valid
@@ -144,7 +144,6 @@ function drupal_lookup_path($action, $path = '', $path_language = NULL) {
           $cache['no_source'][$path_language][$path] = TRUE;
         }
       }
-      return $source;
     }
   }
 
@@ -235,96 +234,6 @@ function drupal_get_normal_path($path, $path_language = NULL) {
 }
 
 /**
- * Return a component of the current Drupal path.
- *
- * When viewing a page at the path "admin/structure/types", for example, arg(0)
- * returns "admin", arg(1) returns "content", and arg(2) returns "types".
- *
- * Avoid use of this function where possible, as resulting code is hard to read.
- * In menu callback functions, attempt to use named arguments. See the explanation
- * in menu.inc for how to construct callbacks that take arguments. When attempting
- * to use this function to load an element from the current path, e.g. loading the
- * node on a node page, please use menu_get_object() instead.
- *
- * @param $index
- *   The index of the component, where each component is separated by a '/'
- *   (forward-slash), and where the first component has an index of 0 (zero).
- * @param $path
- *   A path to break into components. Defaults to the path of the current page.
- *
- * @return
- *   The component specified by $index, or NULL if the specified component was
- *   not found.
- */
-function arg($index = NULL, $path = NULL) {
-  // Even though $arguments doesn't need to be resettable for any functional
-  // reasons (the result of explode() does not depend on any run-time
-  // information), it should be resettable anyway in case a module needs to
-  // free up the memory used by it.
-  // Use the advanced drupal_static() pattern, since this is called very often.
-  static $drupal_static_fast;
-  if (!isset($drupal_static_fast)) {
-    $drupal_static_fast['arguments'] = &drupal_static(__FUNCTION__);
-  }
-  $arguments = &$drupal_static_fast['arguments'];
-
-  if (!isset($path)) {
-    $path = $_GET['q'];
-  }
-  if (!isset($arguments[$path])) {
-    $arguments[$path] = explode('/', $path);
-  }
-  if (!isset($index)) {
-    return $arguments[$path];
-  }
-  if (isset($arguments[$path][$index])) {
-    return $arguments[$path][$index];
-  }
-}
-
-/**
- * Get the title of the current page, for display on the page and in the title bar.
- *
- * @return
- *   The current page's title.
- */
-function drupal_get_title() {
-  $title = drupal_set_title();
-
-  // During a bootstrap, menu.inc is not included and thus we cannot provide a title.
-  if (!isset($title) && function_exists('menu_get_active_title')) {
-    $title = check_plain(menu_get_active_title());
-  }
-
-  return $title;
-}
-
-/**
- * Set the title of the current page, for display on the page and in the title bar.
- *
- * @param $title
- *   Optional string value to assign to the page title; or if set to NULL
- *   (default), leaves the current title unchanged.
- * @param $output
- *   Optional flag - normally should be left as CHECK_PLAIN. Only set to
- *   PASS_THROUGH if you have already removed any possibly dangerous code
- *   from $title using a function like check_plain() or filter_xss(). With this
- *   flag the string will be passed through unchanged.
- *
- * @return
- *   The updated title of the current page.
- */
-function drupal_set_title($title = NULL, $output = CHECK_PLAIN) {
-  $stored_title = &drupal_static(__FUNCTION__);
-
-  if (isset($title)) {
-    $stored_title = ($output == PASS_THROUGH) ? $title : check_plain($title);
-  }
-
-  return $stored_title;
-}
-
-/**
  * Check if the current page is the front page.
  *
  * @return
@@ -362,7 +271,20 @@ function drupal_match_path($path, $patterns) {
   $regexps = &drupal_static(__FUNCTION__);
 
   if (!isset($regexps[$patterns])) {
-    $regexps[$patterns] = '/^(' . preg_replace(array('/(\r\n?|\n)/', '/\\\\\*/', '/(^|\|)\\\\<front\\\\>($|\|)/'), array('|', '.*', '\1' . preg_quote(variable_get('site_frontpage', 'node'), '/') . '\2'), preg_quote($patterns, '/')) . ')$/';
+    // Convert path settings to a regular expression.
+    // Therefore replace newlines with a logical or, /* with asterisks and the <front> with the frontpage.
+    $to_replace = array(
+      '/(\r\n?|\n)/', // newlines
+      '/\\\\\*/',     // asterisks
+      '/(^|\|)\\\\<front\\\\>($|\|)/' // <front>
+    );
+    $replacements = array(
+      '|',
+      '.*',
+      '\1' . preg_quote(variable_get('site_frontpage', 'node'), '/') . '\2'
+    );
+    $patterns_quoted = preg_quote($patterns, '/');
+    $regexps[$patterns] = '/^(' . preg_replace($to_replace, $replacements, $patterns_quoted) . ')$/';
   }
   return (bool)preg_match($regexps[$patterns], $path);
 }

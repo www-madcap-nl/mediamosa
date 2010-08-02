@@ -1,5 +1,5 @@
 <?php
-// $Id: file_test.module,v 1.20 2010/01/29 01:59:32 webchick Exp $
+// $Id: file_test.module,v 1.23 2010/06/26 19:55:47 dries Exp $
 
 /**
  * @file
@@ -47,7 +47,7 @@ function file_test_stream_wrappers() {
 function _file_test_form($form, &$form_state) {
   $form['file_test_upload'] = array(
     '#type' => 'file',
-    '#title' => t('Upload an image'),
+    '#title' => t('Upload a file'),
   );
   $form['file_test_replace'] = array(
     '#type' => 'select',
@@ -61,9 +61,28 @@ function _file_test_form($form, &$form_state) {
   );
   $form['file_subdir'] = array(
     '#type' => 'textfield',
-    '#title' => 'Subdirectory for test image',
+    '#title' => t('Subdirectory for test file'),
     '#default_value' => '',
   );
+
+  $form['extensions'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Allowed extensions.'),
+    '#default_value' => '',
+  );
+
+  $form['allow_all_extensions'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Allow all extensions?'),
+    '#default_value' => FALSE,
+  );
+
+  $form['is_image_file'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Is this an image file?'),
+    '#default_value' => TRUE,
+  );
+
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Submit'),
@@ -75,7 +94,7 @@ function _file_test_form($form, &$form_state) {
  * Process the upload.
  */
 function _file_test_form_submit(&$form, &$form_state) {
-  // Process the upload and validate that it is an image. Note: we're using the
+  // Process the upload and perform validation. Note: we're using the
   // form value for the $replace parameter.
   if (!empty($form_state['values']['file_subdir'])) {
     $destination = 'temporary://' . $form_state['values']['file_subdir'];
@@ -84,10 +103,26 @@ function _file_test_form_submit(&$form, &$form_state) {
   else {
     $destination = FALSE;
   }
-  $file = file_save_upload('file_test_upload', array('file_validate_is_image' => array()), $destination, $form_state['values']['file_test_replace']);
+
+  // Setup validators.
+  $validators = array();
+  if ($form_state['values']['is_image_file']) {
+    $validators['file_validate_is_image'] = array();
+  }
+
+  if ($form_state['values']['allow_all_extensions']) {
+    $validators['file_validate_extensions'] = array();
+  }
+  else if (!empty($form_state['values']['extensions'])) {
+    $validators['file_validate_extensions'] = array($form_state['values']['extensions']);
+  }
+
+  $file = file_save_upload('file_test_upload', $validators, $destination, $form_state['values']['file_test_replace']);
   if ($file) {
     $form_state['values']['file_test_upload'] = $file;
     drupal_set_message(t('File @filepath was uploaded.', array('@filepath' => $file->uri)));
+    drupal_set_message(t('File name is @filename.', array('@filename' => $file->filename)));
+    drupal_set_message(t('File MIME type is @mimetype.', array('@mimetype' => $file->filemime)));
     drupal_set_message(t('You WIN!'));
   }
   elseif ($file === FALSE) {
@@ -99,7 +134,8 @@ function _file_test_form_submit(&$form, &$form_state) {
 /**
  * Reset/initialize the history of calls to the file_* hooks.
  *
- * @see the getter/setter functions file_test_get_calls() and file_test_reset().
+ * @see file_test_get_calls() 
+ * @see file_test_reset()
  */
 function file_test_reset() {
   // Keep track of calls to these hooks
@@ -116,7 +152,7 @@ function file_test_reset() {
   );
   variable_set('file_test_results', $results);
 
-  // These hooks will return these values, @see file_test_set_return().
+  // These hooks will return these values, see file_test_set_return().
   $return = array(
     'validate' => array(),
     'download' => NULL,
@@ -132,9 +168,12 @@ function file_test_reset() {
  * @param $op
  *   One of the hook_file_* operations: 'load', 'validate', 'download',
  *   'references', 'insert', 'update', 'copy', 'move', 'delete'.
+ *
  * @return
  *   Array of the parameters passed to each call.
- * @see _file_test_log_call() and file_test_reset()
+ *
+ * @see _file_test_log_call()
+ * @see file_test_reset()
  */
 function file_test_get_calls($op) {
   $results = variable_get('file_test_results', array());
@@ -161,7 +200,9 @@ function file_test_get_all_calls() {
  *   'references', 'insert', 'update', 'copy', 'move', 'delete'.
  * @param $args
  *   Values passed to hook.
- * @see file_test_get_calls() and file_test_reset()
+ *
+ * @see file_test_get_calls()
+ * @see file_test_reset()
  */
 function _file_test_log_call($op, $args) {
   $results = variable_get('file_test_results', array());
@@ -174,9 +215,12 @@ function _file_test_log_call($op, $args) {
  *
  * @param $op
  *   One of the hook_file_[validate,download,references] operations.
+ *
  * @return
  *   Value set by file_test_set_return().
-* @see file_test_set_return() and file_test_reset().
+ *
+ * @see file_test_set_return()
+ * @see file_test_reset()
  */
 function _file_test_get_return($op) {
   $return = variable_get('file_test_return', array($op => NULL));
@@ -190,7 +234,9 @@ function _file_test_get_return($op) {
  *   One of the hook_file_[validate,download,references] operations.
  * @param $value
  *   Value for the hook to return.
- * @see _file_test_get_return() and file_test_reset().
+ *
+ * @see _file_test_get_return()
+ * @see file_test_reset()
  */
 function file_test_set_return($op, $value) {
   $return = variable_get('file_test_return', array());
@@ -275,41 +321,90 @@ function file_test_file_delete($file) {
 function file_test_file_url_alter(&$uri) {
   // Only run this hook when this variable is set. Otherwise, we'd have to add
   // another hidden test module just for this hook.
-  if (!variable_get('file_test_hook_file_url_alter', FALSE)) {
+  $alter_mode = variable_get('file_test_hook_file_url_alter', FALSE);
+  if (!$alter_mode) {
     return;
   }
+  // Test alteration of file URLs to use a CDN.
+  elseif ($alter_mode == 'cdn') {
+    $cdn_extensions = array('css', 'js', 'gif', 'jpg', 'jpeg', 'png');
 
-  $cdn_extensions = array('css', 'js', 'gif', 'jpg', 'jpeg', 'png');
+    // Most CDNs don't support private file transfers without a lot of hassle,
+    // so don't support this in the common case.
+    $schemes = array('public');
 
-  // Most CDNs don't support private file transfers without a lot of hassle,
-  // so don't support this in the common case.
-  $schemes = array('public');
+    $scheme = file_uri_scheme($uri);
 
-  $scheme = file_uri_scheme($uri);
+    // Only serve shipped files and public created files from the CDN.
+    if (!$scheme || in_array($scheme, $schemes)) {
+      // Shipped files.
+      if (!$scheme) {
+        $path = $uri;
+      }
+      // Public created files.
+      else {
+        $wrapper = file_stream_wrapper_get_instance_by_scheme($scheme);
+        $path = $wrapper->getDirectoryPath() . '/' . file_uri_target($uri);
+      }
 
-  // Only serve shipped files and public created files from the CDN.
-  if (!$scheme || in_array($scheme, $schemes)) {
-    // Shipped files.
-    if (!$scheme) {
-      $path = $uri;
+      // Clean up Windows paths.
+      $path = str_replace('\\', '/', $path);
+
+      // Serve files with one of the CDN extensions from CDN 1, all others from
+      // CDN 2.
+      $pathinfo = pathinfo($path);
+      if (array_key_exists('extension', $pathinfo) && in_array($pathinfo['extension'], $cdn_extensions)) {
+        $uri = FILE_URL_TEST_CDN_1 . '/' . $path;
+      }
+      else {
+        $uri = FILE_URL_TEST_CDN_2 . '/' . $path;
+      }
     }
-    // Public created files.
-    else {
-      $wrapper = file_stream_wrapper_get_instance_by_scheme($scheme);
-      $path = $wrapper->getDirectoryPath() . '/' . file_uri_target($uri);
-    }
+  }
+  // Test alteration of file URLs to use root-relative URLs.
+  elseif ($alter_mode == 'root-relative') {
+    // Only serve shipped files and public created files with root-relative
+    // URLs.
+    $scheme = file_uri_scheme($uri);
+    if (!$scheme || $scheme == 'public') {
+      // Shipped files.
+      if (!$scheme) {
+        $path = $uri;
+      }
+      // Public created files.
+      else {
+        $wrapper = file_stream_wrapper_get_instance_by_scheme($scheme);
+        $path = $wrapper->getDirectoryPath() . '/' . file_uri_target($uri);
+      }
 
-    // Clean up Windows paths.
-    $path = str_replace('\\', '/', $path);
+      // Clean up Windows paths.
+      $path = str_replace('\\', '/', $path);
 
-    // Serve files with one of the CDN extensions from CDN 1, all others from
-    // CDN 2.
-    $pathinfo = pathinfo($path);
-    if (array_key_exists('extension', $pathinfo) && in_array($pathinfo['extension'], $cdn_extensions)) {
-      $uri = FILE_URL_TEST_CDN_1 . '/' . $path;
+      // Generate a root-relative URL.
+      $uri = base_path() . '/' . $path;
     }
-    else {
-      $uri = FILE_URL_TEST_CDN_2 . '/' . $path;
+  }
+  // Test alteration of file URLs to use protocol-relative URLs.
+  elseif ($alter_mode == 'protocol-relative') {
+    // Only serve shipped files and public created files with protocol-relative
+    // URLs.
+    $scheme = file_uri_scheme($uri);
+    if (!$scheme || $scheme == 'public') {
+      // Shipped files.
+      if (!$scheme) {
+        $path = $uri;
+      }
+      // Public created files.
+      else {
+        $wrapper = file_stream_wrapper_get_instance_by_scheme($scheme);
+        $path = $wrapper->getDirectoryPath() . '/' . file_uri_target($uri);
+      }
+
+      // Clean up Windows paths.
+      $path = str_replace('\\', '/', $path);
+
+      // Generate a protocol-relative URL.
+      $uri = '/' . base_path() . '/' . $path;
     }
   }
 }

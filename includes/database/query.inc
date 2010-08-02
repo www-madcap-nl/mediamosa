@@ -1,5 +1,5 @@
 <?php
-// $Id: query.inc,v 1.43 2010/03/01 11:30:37 dries Exp $
+// $Id: query.inc,v 1.52 2010/06/26 01:40:05 dries Exp $
 
 /**
  * @ingroup database
@@ -21,10 +21,11 @@ interface QueryConditionInterface {
    *
    * This method can take a variable number of parameters. If called with two
    * parameters, they are taken as $field and $value with $operator having a value
-   * of =.
+   * of IN if $value is an array and = otherwise.
    *
    * @param $field
-   *   The name of the field to check.
+   *   The name of the field to check. If you would like to add a more complex
+   *   condition involving operators or functions, use where().
    * @param $value
    *   The value to test the field against. In most cases, this is a scalar. For more
    *   complex options, it is an array. The meaning of each element in the array is
@@ -239,6 +240,13 @@ abstract class Query implements QueryPlaceholderInterface {
    */
   protected $nextPlaceholder = 0;
 
+  /**
+   * An array of comments that can be prepended to a query.
+   *
+   * @var array
+   */
+  protected $comments = array();
+
   public function __construct(DatabaseConnection $connection, $options) {
     $this->connection = $connection;
     $this->queryOptions = $options;
@@ -262,6 +270,44 @@ abstract class Query implements QueryPlaceholderInterface {
   public function nextPlaceholder() {
     return $this->nextPlaceholder++;
   }
+
+  /**
+   * Adds a comment to the query.
+   *
+   * By adding a comment to a query, you can more easily find it in your
+   * query log or the list of active queries on an sql server. This allows
+   * for easier debugging and allows you to more easily find where a query
+   * with a performance problem is being generated.
+   *
+   * @param $comment
+   *   The comment string to be inserted into the query.
+   * @return Query
+   *   The called object.
+   */
+  public function comment($comment) {
+    $this->comments[] = $comment;
+    return $this;
+  }
+
+  /**
+   * Returns a reference to the comments array for the query.
+   *
+   * Because this method returns by reference, alter hooks may edit the comments
+   * array directly to make their changes. If just adding comments, however, the
+   * use of comment() is preferred.
+   *
+   * Note that this method must be called by reference as well:
+   *
+   * @code
+   * $comments =& $query->getComments();
+   * @endcode
+   *
+   * @return
+   *   A reference to the comments array structure.
+   */
+  public function &getComments() {
+    return $this->comments;
+  }
 }
 
 /**
@@ -275,14 +321,6 @@ class InsertQuery extends Query {
    * @var string
    */
   protected $table;
-
-  /**
-   * Whether or not this query is "delay-safe". Different database drivers
-   * may or may not implement this feature in their own ways.
-   *
-   * @var boolean
-   */
-  protected $delay;
 
   /**
    * An array of fields on which to insert.
@@ -322,7 +360,6 @@ class InsertQuery extends Query {
     if (!isset($options['return'])) {
       $options['return'] = Database::RETURN_INSERT_ID;
     }
-    $options += array('delay' => FALSE);
     parent::__construct($connection, $options);
     $this->table = $table;
   }
@@ -414,33 +451,6 @@ class InsertQuery extends Query {
     return $this;
   }
 
-  /**
-   * Flag this query as being delay-safe or not.
-   *
-   * If this method is never called, it is assumed that the query must be
-   * executed immediately. If delay is set to TRUE, then the query will be
-   * flagged to run "delayed" or "low priority" on databases that support such
-   * capabilities. In that case, the database will return immediately and the
-   * query will be run at some point in the future. That makes it useful for
-   * logging-style queries.
-   *
-   * If the database does not support delayed INSERT queries, this method
-   * has no effect.
-   *
-   * Note that for a delayed query there is no serial ID returned, as it won't
-   * be created until later when the query runs. It should therefore not be
-   * used if the value of the ID is known.
-   *
-   * @param $delay
-   *   If TRUE, this query is delay-safe and will run delayed on supported databases.
-   * @return InsertQuery
-   *   The called object.
-   */
-  public function delay($delay = TRUE) {
-    $this->delay = $delay;
-    return $this;
-  }
-
   public function from(SelectQueryInterface $query) {
     $this->fromQuery = $query;
     return $this;
@@ -452,11 +462,8 @@ class InsertQuery extends Query {
    * @return
    *   The last insert ID of the query, if one exists. If the query
    *   was given multiple sets of values to insert, the return value is
-   *   undefined. If the query is flagged "delayed", then the insert ID
-   *   won't be created until later when the query actually runs so the
-   *   return value is also undefined. If no fields are specified, this
-   *   method will do nothing and return NULL. That makes it safe to use
-   *   in multi-insert loops.
+   *   undefined. If no fields are specified, this method will do nothing and
+   *   return NULL. That makes it safe to use in multi-insert loops.
    */
   public function execute() {
     // If validation fails, simply return NULL.
@@ -468,7 +475,7 @@ class InsertQuery extends Query {
     // If we're selecting from a SelectQuery, finish building the query and
     // pass it back, as any remaining options are irrelevant.
     if (!empty($this->fromQuery)) {
-      $sql = (string)$this;
+      $sql = (string) $this;
       // The SelectQuery may contain arguments, load and pass them through.
       return $this->connection->query($sql, $this->fromQuery->getArguments(), $this->queryOptions);
     }
@@ -479,7 +486,7 @@ class InsertQuery extends Query {
     // we wrap it in a transaction so that it is atomic where possible. On many
     // databases, such as SQLite, this is also a notable performance boost.
     $transaction = $this->connection->startTransaction();
-    $sql = (string)$this;
+    $sql = (string) $this;
     foreach ($this->insertValues as $insert_values) {
       $last_insert_id = $this->connection->query($sql, $insert_values, $this->queryOptions);
     }
@@ -494,11 +501,14 @@ class InsertQuery extends Query {
 
   public function __toString() {
 
+    // Create a comments string to prepend to the query.
+    $comments = (!empty($this->comments)) ? '/* ' . implode('; ', $this->comments) . ' */ ' : '';
+
     // Default fields are always placed first for consistency.
     $insert_fields = array_merge($this->defaultFields, $this->insertFields);
 
     if (!empty($this->fromQuery)) {
-      return "INSERT $delay INTO {" . $this->table . '} (' . implode(', ', $insert_fields) . ') ' . $this->fromQuery;
+      return $comments . 'INSERT INTO {' . $this->table . '} (' . implode(', ', $insert_fields) . ') ' . $this->fromQuery;
     }
 
     // For simplicity, we will use the $placeholders array to inject
@@ -508,7 +518,7 @@ class InsertQuery extends Query {
     $placeholders = array_pad($placeholders, count($this->defaultFields), 'default');
     $placeholders = array_pad($placeholders, count($this->insertFields), '?');
 
-    return 'INSERT INTO {' . $this->table . '} (' . implode(', ', $insert_fields) . ') VALUES (' . implode(', ', $placeholders) . ')';
+    return $comments . 'INSERT INTO {' . $this->table . '} (' . implode(', ', $insert_fields) . ') VALUES (' . implode(', ', $placeholders) . ')';
   }
 
   /**
@@ -791,29 +801,45 @@ class MergeQuery extends Query {
 
     // In the degenerate case of this query type, we have to run multiple
     // queries as there is no universal single-query mechanism that will work.
-    // Our degenerate case is not designed for performance efficiency but
-    // for comprehensibility. Any practical database driver will override
-    // this method with database-specific logic, so this function serves only
-    // as a fallback to aid developers of new drivers.
 
     // Wrap multiple queries in a transaction, if the database supports it.
     $transaction = $this->connection->startTransaction();
 
-    // Manually check if the record already exists.
-    $select = $this->connection->select($this->table);
-    foreach ($this->keyFields as $field => $value) {
-      $select->condition($field, $value);
-    }
+    try {
+      // Manually check if the record already exists.
+      // We build a 'SELECT 1 FROM table WHERE conditions FOR UPDATE' query,
+      // that will lock the rows that matches our set of conditions as well as
+      // return the information that there are such rows.
+      $select = $this->connection->select($this->table);
+      $select->addExpression('1');
+      foreach ($this->keyFields as $field => $value) {
+        $select->condition($field, $value);
+      }
 
-    $select = $select->countQuery();
-    $sql = (string)$select;
-    $arguments = $select->getArguments();
-    $num_existing = $this->connection->query($sql, $arguments)->fetchField();
+      // Using SELECT FOR UPDATE syntax will lock the rows we want to attempt to update.
+      $sql = ((string) $select) . ' FOR UPDATE';
+      $arguments = $select->getArguments();
 
+      // If there are no existing records, run an insert query.
+      if (!$this->connection->query($sql, $arguments)->fetchField()) {
+        // If there is no existing record, run an insert query.
+        $insert_fields = $this->insertFields + $this->keyFields;
+        try {
+          $this->connection->insert($this->table, $this->queryOptions)->fields($insert_fields)->execute();
+          return MergeQuery::STATUS_INSERT;
+        }
+        catch (Exception $e) {
+          // The insert query failed, maybe it's because a racing insert query
+          // beat us in inserting the same row. Retry the select query, if it
+          // returns a row, ignore the error and continue with the update
+          // query below.
+          if (!$this->connection->query($sql, $arguments)->fetchField()) {
+            throw $e;
+          }
+        }
+      }
 
-    if ($num_existing) {
-      // If there is already an existing record, run an update query.
-
+      // Proceed with an update query if a row was found.
       if ($this->updateFields) {
         $update_fields = $this->updateFields;
       }
@@ -825,7 +851,7 @@ class MergeQuery extends Query {
         }
       }
       if ($update_fields || $this->expressionFields) {
-        // Only run the update if there are no fields or expressions to update.
+        // Only run the update if there are fields or expressions to update.
         $update = $this->connection->update($this->table, $this->queryOptions)->fields($update_fields);
         foreach ($this->keyFields as $field => $value) {
           $update->condition($field, $value);
@@ -837,13 +863,12 @@ class MergeQuery extends Query {
         return MergeQuery::STATUS_UPDATE;
       }
     }
-    else {
-      // If there is no existing record, run an insert query.
-      $insert_fields = $this->insertFields + $this->keyFields;
-      $this->connection->insert($this->table, $this->queryOptions)->fields($insert_fields)->execute();
-      return MergeQuery::STATUS_INSERT;
+    catch (Exception $e) {
+      // Something really wrong happened here, bubble up the exception to the
+      // caller.
+      $transaction->rollback();
+      throw $e;
     }
-
     // Transaction commits here where $transaction looses scope.
   }
 
@@ -922,11 +947,15 @@ class DeleteQuery extends Query implements QueryConditionInterface {
       $values = $this->condition->arguments();
     }
 
-    return $this->connection->query((string)$this, $values, $this->queryOptions);
+    return $this->connection->query((string) $this, $values, $this->queryOptions);
   }
 
   public function __toString() {
-    $query = 'DELETE FROM {' . $this->connection->escapeTable($this->table) . '} ';
+
+    // Create a comments string to prepend to the query.
+    $comments = (!empty($this->comments)) ? '/* ' . implode('; ', $this->comments) . ' */ ' : '';
+
+    $query = $comments . 'DELETE FROM {' . $this->connection->escapeTable($this->table) . '} ';
 
     if (count($this->condition)) {
 
@@ -962,11 +991,14 @@ class TruncateQuery extends Query {
   }
 
   public function execute() {
-    return $this->connection->query((string)$this, array(), $this->queryOptions);
+    return $this->connection->query((string) $this, array(), $this->queryOptions);
   }
 
   public function __toString() {
-    return 'TRUNCATE {' . $this->connection->escapeTable($this->table) . '} ';
+    // Create a comments string to prepend to the query.
+    $comments = (!empty($this->comments)) ? '/* ' . implode('; ', $this->comments) . ' */ ' : '';
+
+    return $comments . 'TRUNCATE {' . $this->connection->escapeTable($this->table) . '} ';
   }
 }
 
@@ -1122,10 +1154,14 @@ class UpdateQuery extends Query implements QueryConditionInterface {
       $update_values = array_merge($update_values, $this->condition->arguments());
     }
 
-    return $this->connection->query((string)$this, $update_values, $this->queryOptions);
+    return $this->connection->query((string) $this, $update_values, $this->queryOptions);
   }
 
   public function __toString() {
+
+    // Create a comments string to prepend to the query.
+    $comments = (!empty($this->comments)) ? '/* ' . implode('; ', $this->comments) . ' */ ' : '';
+
     // Expressions take priority over literal fields, so we process those first
     // and remove any literal fields that conflict.
     $fields = $this->fields;
@@ -1140,7 +1176,7 @@ class UpdateQuery extends Query implements QueryConditionInterface {
       $update_fields[] = $field . '=:db_update_placeholder_' . ($max_placeholder++);
     }
 
-    $query = 'UPDATE {' . $this->connection->escapeTable($this->table) . '} SET ' . implode(', ', $update_fields);
+    $query = $comments . 'UPDATE {' . $this->connection->escapeTable($this->table) . '} SET ' . implode(', ', $update_fields);
 
     if (count($this->condition)) {
       $this->condition->compile($this->connection, $this);
@@ -1179,7 +1215,15 @@ class DatabaseCondition implements QueryConditionInterface, Countable {
 
   public function condition($field, $value = NULL, $operator = NULL) {
     if (!isset($operator)) {
-      $operator = is_array($value) ? 'IN' : '=';
+      if (is_array($value)) {
+        $operator = 'IN';
+      }
+      elseif (!isset($value)) {
+        $operator = 'IS NULL';
+      }
+      else {
+        $operator = '=';
+      }
     }
     $this->conditions[] = array(
       'field' => $field,
@@ -1204,7 +1248,7 @@ class DatabaseCondition implements QueryConditionInterface, Countable {
   }
 
   public function isNull($field) {
-    return $this->condition($field, NULL, 'IS NULL');
+    return $this->condition($field);
   }
 
   public function isNotNull($field) {
@@ -1244,7 +1288,7 @@ class DatabaseCondition implements QueryConditionInterface, Countable {
           if ($condition['field'] instanceof QueryConditionInterface) {
             // Compile the sub-condition recursively and add it to the list.
             $condition['field']->compile($connection, $queryPlaceholder);
-            $condition_fragments[] = '(' . (string)$condition['field'] . ')';
+            $condition_fragments[] = '(' . (string) $condition['field'] . ')';
             $arguments += $condition['field']->arguments();
           }
           else {
@@ -1266,7 +1310,7 @@ class DatabaseCondition implements QueryConditionInterface, Countable {
             $placeholders = array();
             if ($condition['value'] instanceof SelectQueryInterface) {
               $condition['value']->compile($connection, $queryPlaceholder);
-              $placeholders[] = (string)$condition['value'];
+              $placeholders[] = (string) $condition['value'];
               $arguments += $condition['value']->arguments();
             }
             // We assume that if there is a delimiter, then the value is an
@@ -1282,7 +1326,7 @@ class DatabaseCondition implements QueryConditionInterface, Countable {
                 $placeholders[] = $placeholder;
               }
             }
-            $condition_fragments[] = ' (' . $condition['field'] . ' ' . $operator['operator'] . ' ' . $operator['prefix'] . implode($operator['delimiter'], $placeholders) . $operator['postfix'] . ') ';
+            $condition_fragments[] = ' (' . $connection->escapeField($condition['field']) . ' ' . $operator['operator'] . ' ' . $operator['prefix'] . implode($operator['delimiter'], $placeholders) . $operator['postfix'] . ') ';
           }
         }
       }
@@ -1355,47 +1399,6 @@ class DatabaseCondition implements QueryConditionInterface, Countable {
     return $return;
   }
 
-}
-
-/**
- * Returns a new DatabaseCondition, set to "OR" all conditions together.
- *
- * @return DatabaseCondition
- */
-function db_or() {
-  return new DatabaseCondition('OR');
-}
-
-/**
- * Returns a new DatabaseCondition, set to "AND" all conditions together.
- *
- * @return DatabaseCondition
- */
-function db_and() {
-  return new DatabaseCondition('AND');
-}
-
-/**
- * Returns a new DatabaseCondition, set to "XOR" all conditions together.
- *
- * @return DatabaseCondition
- */
-function db_xor() {
-  return new DatabaseCondition('XOR');
-}
-
-/**
- * Returns a new DatabaseCondition, set to the specified conjunction.
- *
- * Internal API function call.  The db_and(), db_or(), and db_xor()
- * functions are preferred.
- *
- * @param $conjunction
- *   The conjunction to use for query conditions (AND, OR or XOR).
- * @return DatabaseCondition
- */
-function db_condition($conjunction) {
-  return new DatabaseCondition($conjunction);
 }
 
 /**

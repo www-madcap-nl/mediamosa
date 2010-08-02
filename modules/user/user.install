@@ -1,5 +1,5 @@
 <?php
-// $Id: user.install,v 1.40 2010/03/01 07:39:12 dries Exp $
+// $Id: user.install,v 1.54 2010/06/28 14:59:24 webchick Exp $
 
 /**
  * @file
@@ -97,12 +97,22 @@ function user_schema() {
         'not null' => TRUE,
         'default' => '',
         'description' => 'Unique role name.',
+        'translatable' => TRUE,
+      ),
+      'weight' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The weight of this role in listings and the user interface.',
       ),
     ),
     'unique keys' => array(
       'name' => array('name'),
     ),
     'primary key' => array('rid'),
+    'indexes' => array(
+      'name_weight' => array('name', 'weight'),
+    ),
   );
 
   $schema['users'] = array(
@@ -134,7 +144,7 @@ function user_schema() {
         'length' => 254,
         'not null' => FALSE,
         'default' => '',
-        'description' => "User's email address.",
+        'description' => "User's e-mail address.",
       ),
       'theme' => array(
         'type' => 'varchar',
@@ -149,6 +159,13 @@ function user_schema() {
         'not null' => TRUE,
         'default' => '',
         'description' => "User's signature.",
+      ),
+      'signature_format' => array(
+        'type' => 'int',
+        'size' => 'small',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The {filter_format}.format of the signature.',
       ),
       'created' => array(
         'type' => 'int',
@@ -192,17 +209,17 @@ function user_schema() {
         'type' => 'int',
         'not null' => TRUE,
         'default' => 0,
-        'description' => "Foreign key: {file}.fid of user's picture.",
+        'description' => "Foreign key: {file_managed}.fid of user's picture.",
       ),
       'init' => array(
         'type' => 'varchar',
-        'length' => 64,
+        'length' => 254,
         'not null' => FALSE,
         'default' => '',
-        'description' => 'Email address used for initial account creation.',
+        'description' => 'E-mail address used for initial account creation.',
       ),
       'data' => array(
-        'type' => 'text',
+        'type' => 'blob',
         'not null' => FALSE,
         'size' => 'big',
         'serialize' => TRUE,
@@ -218,6 +235,9 @@ function user_schema() {
       'name' => array('name'),
     ),
     'primary key' => array('uid'),
+    'foreign keys' => array(
+      'signature_format' => array('filter_format' => 'format'),
+    ),
   );
 
   $schema['users_roles'] = array(
@@ -274,16 +294,16 @@ function user_install() {
       'mail' => 'placeholder-for-uid-1',
       'created' => REQUEST_TIME,
       'status' => 1,
-      'data' => serialize(array()),
+      'data' => NULL,
     ))
     ->execute();
 
   // Built-in roles.
   $rid_anonymous = db_insert('role')
-    ->fields(array('name' => 'anonymous user'))
+    ->fields(array('name' => 'anonymous user', 'weight' => 0))
     ->execute();
   $rid_authenticated = db_insert('role')
-    ->fields(array('name' => 'authenticated user'))
+    ->fields(array('name' => 'authenticated user', 'weight' => 1))
     ->execute();
 
   // Sanity check to ensure the anonymous and authenticated role IDs are the
@@ -301,6 +321,23 @@ function user_install() {
       ->condition('rid', $rid_authenticated)
       ->execute();
   }
+}
+
+/**
+ * Implements hook_update_dependencies().
+ */
+function user_update_dependencies() {
+  // Run all the critical user upgrades before everything.
+  $dependencies['system'][7000] = array(
+    'user' => 7008,
+  );
+  // user_update_7006 relies on filter_update_7002.
+  // TODO: move user_update_7006 down below in the upgrade process.
+  $dependencies['user'][7006] = array(
+    'filter' => 7002,
+  );
+
+  return $dependencies;
 }
 
 /**
@@ -381,8 +418,8 @@ function user_update_7002(&$sandbox) {
     $timezones = system_time_zones();
     // Update this many per page load.
     $count = 10000;
-    $contributed_date_module = db_column_exists('users', 'timezone_name');
-    $contributed_event_module = db_column_exists('users', 'timezone_id');
+    $contributed_date_module = db_field_exists('users', 'timezone_name');
+    $contributed_event_module = db_field_exists('users', 'timezone_id');
 
     $results = db_query_range("SELECT uid FROM {users} ORDER BY uid", $sandbox['user_from'], $count);
     foreach ($results as $account) {
@@ -464,7 +501,8 @@ function user_update_7003() {
 }
 
 /**
- * Add the user's pictures to the {file} table and make them managed files.
+ * Add the user's pictures to the {file_managed} table and make them managed
+ * files.
  */
 function user_update_7004(&$sandbox) {
 
@@ -472,13 +510,13 @@ function user_update_7004(&$sandbox) {
     'type' => 'int',
     'not null' => TRUE,
     'default' => 0,
-    'description' => t("Foreign key: {file}.fid of user's picture."),
+    'description' => "Foreign key: {file_managed}.fid of user's picture.",
   );
 
   if (!isset($sandbox['progress'])) {
     // Check that the field hasn't been updated in an aborted run of this
     // update.
-    if (!db_column_exists('users', 'picture_fid')) {
+    if (!db_field_exists('users', 'picture_fid')) {
       // Add a new field for the fid.
       db_add_field('users', 'picture_fid', $picture_field);
     }
@@ -489,8 +527,8 @@ function user_update_7004(&$sandbox) {
     $sandbox['max'] = db_query("SELECT COUNT(*) FROM {users} WHERE picture <> ''")->fetchField();
   }
 
-  // As a batch operation move the photos into the {file} table and update the
-  // {users} records.
+  // As a batch operation move the photos into the {file_managed} table and
+  // update the {users} records.
   $limit = 500;
   $result = db_query_range("SELECT uid, picture FROM {users} WHERE picture <> '' AND uid > :uid ORDER BY uid", 0, $limit, array(':uid' => $sandbox['last_user_processed']));
   foreach ($result as $user) {
@@ -537,17 +575,27 @@ function user_update_7004(&$sandbox) {
 }
 
 /**
- * Change the users table to allow longer email addresses - 254 characters instead of 64.
+ * Changes the users table to allow longer e-mail addresses.
  */
 function user_update_7005(&$sandbox) {
-  $schema = user_schema();
-  db_change_field('users', 'mail', 'mail', $schema['users']['fields']['mail']);
+  $mail_field = array(
+    'type' => 'varchar',
+    'length' => 254,
+    'not null' => FALSE,
+    'default' => '',
+    'description' => "User's e-mail address.",
+  );
+  $init_field = array(
+    'type' => 'varchar',
+    'length' => 254,
+    'not null' => FALSE,
+    'default' => '',
+    'description' => 'E-mail address used for initial account creation.',
+  );
+  db_drop_index('users', 'mail');
+  db_change_field('users', 'mail', 'mail', $mail_field, array('indexes' => array('mail' => array('mail'))));
+  db_change_field('users', 'init', 'init', $init_field);
 }
-
-/**
- * @} End of "defgroup user-updates-6.x-to-7.x"
- * The next series of updates should start at 8000.
- */
 
 /**
  * Add module data to {role_permission}.
@@ -562,7 +610,7 @@ function user_update_7006(&$sandbox) {
   );
   // Check that the field hasn't been updated in an aborted run of this
   // update.
-  if (!db_column_exists('role_permission', 'module')) {
+  if (!db_field_exists('role_permission', 'module')) {
     // Add a new field for the fid.
     db_add_field('role_permission', 'module', $module_field);
   }
@@ -574,3 +622,99 @@ function user_update_7006(&$sandbox) {
       ->execute();
   }
 }
+
+/**
+ * Add a weight column to user roles.
+ */
+function user_update_7007() {
+  db_add_field('role', 'weight', array('type' => 'int', 'not null' => TRUE, 'default' => 0));
+  db_add_index('role', 'name_weight', array('name', 'weight'));
+}
+
+/**
+ * If 'user_register' variable was unset in Drupal 6, set it to be the same as
+ * the Drupal 6 default setting.
+ */
+function user_update_7008() {
+  if (!isset($GLOBALS['conf']['user_register'])) {
+    // Set to the Drupal 6 default, "visitors can create accounts".
+    variable_set('user_register', USER_REGISTER_VISITORS);
+  }
+}
+
+/**
+ * Converts fields that store serialized variables from text to blob.
+ */
+function user_update_7009() {
+  $spec = array(
+    'type' => 'blob',
+    'not null' => FALSE,
+    'size' => 'big',
+    'serialize' => TRUE,
+    'description' => 'A serialized array of name value pairs that are related to the user. Any form values posted during user edit are stored and are loaded into the $user object during user_load(). Use of this field is discouraged and it will likely disappear in a future version of Drupal.',
+  );
+  db_change_field('users', 'data', 'data', $spec);
+}
+
+/**
+ * Update the {user}.signature_format column.
+ */
+function user_update_7010() {
+  // It was previously possible for a value of "0" to be stored in database
+  // tables to indicate that a particular piece of text should be filtered
+  // using the default text format.
+  $default_format = variable_get('filter_default_format', 1);
+  db_update('users')
+    ->fields(array('signature_format' => $default_format))
+    ->condition('signature_format', 0)
+    ->execute();
+}
+
+
+/**
+ * Updates email templates to use new tokens.
+ *
+ * This function upgrades customized email templates from the old !token format
+ * to the new core tokens format. Additionally, in Drupal 7 we no longer e-mail
+ * plain text passwords to users, and there is no token for a plain text
+ * password in the new token system. Therefore, it also modifies any saved
+ * templates using the old '!password' token such that the token is removed, and
+ * displays a warning to users that they may need to go and modify the wording
+ * of their templates.
+ */
+function user_update_7011() {
+  $message = '';
+
+  $tokens = array(
+    '!site-name-token' => '[site:name]',
+    '!site-url-token' => '[site:url]',
+    '!user-name-token' => '[user:name]',
+    '!user-mail-token' => '[user:mail]',
+    '!site-login-url-token' => '[site:login-url]',
+    '!site-url-brief-token' => '[site:url-brief]',
+    '!user-edit-url-token' => '[user:edit-url]',
+    '!user-one-time-login-url-token' => '[user:one-time-login-url]',
+    '!user-cancel-url-token' => '[user:cancel-url]',
+    '!password' => '',
+  );
+
+  $result = db_select('variable', 'v')
+    ->fields('v', array('name', 'value'))
+    ->condition('value', db_like('user_mail_') . '%', 'LIKE')
+    ->execute();
+
+  foreach ($result as $row) {
+    if (empty($message) && (strpos($row->value, '!password') !== FALSE)) {
+      $message = t('The ability to send users their passwords in plain text has been removed in Drupal 7. Your existing email templates have been modified to remove it. You should <a href="@template-url">review these templates</a> to make sure they read properly.', array('@template-url' => url('admin/config/people/accounts')));
+    }
+
+    variable_set($row->name, str_replace(array_keys($tokens), $tokens, $row->value));
+  }
+
+  return $message;
+}
+
+/**
+ * @} End of "defgroup user-updates-6.x-to-7.x"
+ * The next series of updates should start at 8000.
+ */

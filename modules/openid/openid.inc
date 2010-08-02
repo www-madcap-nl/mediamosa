@@ -1,5 +1,5 @@
 <?php
-// $Id: openid.inc,v 1.26 2010/03/06 06:39:00 dries Exp $
+// $Id: openid.inc,v 1.35 2010/07/01 19:06:56 dries Exp $
 
 /**
  * @file
@@ -51,6 +51,11 @@ define('OPENID_NS_1_1', 'http://openid.net/signon/1.1');
 define('OPENID_NS_1_0', 'http://openid.net/signon/1.0');
 
 /**
+ * OpenID namespace used in Yadis documents.
+ */
+define('OPENID_NS_OPENID', 'http://openid.net/xmlns/1.0');
+
+/**
  * OpenID Simple Registration extension.
  */
 define('OPENID_NS_SREG', 'http://openid.net/extensions/sreg/1.1');
@@ -59,6 +64,11 @@ define('OPENID_NS_SREG', 'http://openid.net/extensions/sreg/1.1');
  * OpenID Attribute Exchange extension.
  */
 define('OPENID_NS_AX', 'http://openid.net/srv/ax/1.0');
+
+/**
+ * Extensible Resource Descriptor documents.
+ */
+define('OPENID_NS_XRD', 'xri://$xrd*($v*2.0)');
 
 /**
  * Performs an HTTP 302 redirect (for the 1.x protocol).
@@ -79,10 +89,20 @@ function openid_redirect_http($url, $message) {
  * Creates a js auto-submit redirect for (for the 2.x protocol)
  */
 function openid_redirect($url, $message) {
-  $output = '<html><head><title>' . t('OpenID redirect') . "</title></head>\n<body>";
-  $output .= drupal_render(drupal_get_form('openid_redirect_form', $url, $message));
-  $output .= '<script type="text/javascript">document.getElementById("openid-redirect-form").submit();</script>';
-  $output .= "</body></html>\n";
+  global $language;
+  
+  $output = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">' . "\n";
+  $output .= '<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="' . $language->language . '" lang="' . $language->language . '">' . "\n";
+  $output .= "<head>\n";
+  $output .= "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />\n";
+  $output .= "<title>" . t('OpenID redirect') . "</title>\n";
+  $output .= "</head>\n";
+  $output .= "<body>\n";
+  $elements = drupal_get_form('openid_redirect_form', $url, $message);
+  $output .= drupal_render($elements);
+  $output .= '<script type="text/javascript">document.getElementById("openid-redirect-form").submit();</script>' . "\n";
+  $output .= "</body>\n";
+  $output .= "</html>\n";
   print $output;
 
   drupal_exit();
@@ -98,14 +118,58 @@ function openid_redirect_form($form, &$form_state, $url, $message) {
       '#value' => $value,
     );
   }
-  $form['submit'] = array(
+  $form['actions'] = array('#type' => 'actions');
+  $form['actions']['submit'] = array(
     '#type' => 'submit',
-    '#prefix' => '<noscript>',
-    '#suffix' => '</noscript>',
+    '#prefix' => '<noscript><div>',
+    '#suffix' => '</div></noscript>',
     '#value' => t('Send'),
   );
 
   return $form;
+}
+
+/**
+ * Parse an XRDS document.
+ *
+ * @param $raw_xml
+ *   A string containing the XRDS document.
+ * @return
+ *   An array of service entries.
+ */
+function _openid_xrds_parse($raw_xml) {
+  $services = array();
+  try {
+    $xml = @new SimpleXMLElement($raw_xml);
+    foreach ($xml->children(OPENID_NS_XRD)->XRD as $xrd) {
+      foreach ($xrd->children(OPENID_NS_XRD)->Service as $service_element) {
+        $service = array(
+          'priority' => $service_element->attributes()->priority ? (int)$service_element->attributes()->priority : PHP_INT_MAX,
+          'types' => array(),
+          'uri' => (string)$service_element->children(OPENID_NS_XRD)->URI,
+          'service' => $service_element,
+          'xrd' => $xrd,
+        );
+        foreach ($service_element->Type as $type) {
+          $service['types'][] = (string)$type;
+        }
+        if ($service_element->children(OPENID_NS_XRD)->LocalID) {
+          $service['identity'] = (string)$service_element->children(OPENID_NS_XRD)->LocalID;
+        }
+        elseif ($service_element->children(OPENID_NS_OPENID)->Delegate) {
+          $service['identity'] = (string)$service_element->children(OPENID_NS_OPENID)->Delegate;
+        }
+        else {
+          $service['identity'] = FALSE;
+        }
+        $services[] = $service;
+      }
+    }
+  }
+  catch (Exception $e) {
+    // Invalid XML.
+  }
+  return $services;
 }
 
 /**
@@ -155,6 +219,12 @@ function _openid_select_service(array $services) {
     }
   }
 
+  if ($selected_service) {
+    // Unset SimpleXMLElement instances that cannot be saved in $_SESSION.
+    unset($selected_service['xrd']);
+    unset($selected_service['service']);
+  }
+
   return $selected_service;
 }
 
@@ -163,10 +233,9 @@ function _openid_select_service(array $services) {
  */
 function _openid_is_xri($identifier) {
   // Strip the xri:// scheme from the identifier if present.
-  if (stripos($identifier, 'xri://') !== FALSE) {
+  if (stripos($identifier, 'xri://') === 0) {
     $identifier = substr($identifier, 6);
   }
-
 
   // Test whether the identifier starts with an XRI global context symbol or (.
   $firstchar = substr($identifier, 0, 1);
@@ -229,34 +298,6 @@ function _openid_url_normalize($url) {
   }
 
   return $normalized_url;
-}
-
-/**
- * OpenID normalization method: Normalize Google identifiers.
- *
- * This transforms a Google identifier (user@domain) into an XRDS URL.
- *
- * @see http://sites.google.com/site/oauthgoog/fedlogininterp/openiddiscovery#TOC-IdP-Discovery
- */
-function _openid_google_idp_normalize($identifier) {
-  if (!valid_email_address($identifier)) {
-    return;
-  }
-
-  // If the identifier is a valid email address, try to discover the domain
-  // with Google Federated Login. We only use the generic URL, because the
-  // domain-specific URL (http://example.com/.well-known/host-meta) cannot
-  // be trusted.
-  list($name, $domain) = explode('@', $identifier, 2);
-  $response = drupal_http_request('https://www.google.com/accounts/o8/.well-known/host-meta?hd=' . rawurlencode($domain));
-  if (isset($response->error) || $response->code != 200) {
-    return;
-  }
-
-  if (preg_match('/Link: <(.*)>/', $response->data, $matches)) {
-    $xrds_url = $matches[1];
-    return $xrds_url;
-  }
 }
 
 /**
@@ -606,3 +647,39 @@ function openid_extract_namespace($response, $extension_namespace, $fallback_pre
 
   return $output;
 }
+
+/**
+ * Extracts values from an OpenID AX Response.
+ *
+ * The values can be returned in two forms:
+ *   - only openid.ax.value.<alias> (for single-valued answers)
+ *   - both openid.ax.count.<alias> and openid.ax.value.<alias>.<count> (for both
+ *     single and multiple-valued answers)
+ *
+ * @param $values
+ *   An array as returned by openid_extract_namespace(..., OPENID_NS_AX).
+ * @param $uris
+ *   An array of identifier URIs.
+ * @return
+ *   An array of values.
+ * @see http://openid.net/specs/openid-attribute-exchange-1_0.html#fetch_response
+ */
+function openid_extract_ax_values($values, $uris) {
+  $output = array();
+  foreach ($values as $key => $value) {
+    if (in_array($value, $uris) && preg_match('/^type\.([^.]+)$/', $key, $matches)) {
+      $alias = $matches[1];
+      if (isset($values['count.' . $alias])) {
+        for ($i = 1; $i <= $values['count.' . $alias]; $i++) {
+          $output[] = $values['value.' . $alias . '.' . $i];
+        }
+      }
+      elseif (isset($values['value.' . $alias])) {
+        $output[] = $values['value.' . $alias];
+      }
+      break;
+    }
+  }
+  return $output;
+}
+

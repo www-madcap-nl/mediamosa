@@ -1,5 +1,5 @@
 <?php
-// $Id: system_test.module,v 1.25 2010/02/17 22:44:52 webchick Exp $
+// $Id: system_test.module,v 1.30 2010/06/28 20:27:34 dries Exp $
 
 /**
  * Implements hook_menu().
@@ -40,13 +40,6 @@ function system_test_menu() {
   );
   $items['system-test/redirect-invalid-scheme'] = array(
     'page callback' => 'system_test_redirect_invalid_scheme',
-    'access arguments' => array('access content'),
-    'type' => MENU_CALLBACK,
-  );
-  $items['system-test/destination'] = array(
-    'title' => 'Redirect',
-    'page callback' => 'system_test_destination',
-    'page arguments' => array(2),
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
   );
@@ -115,9 +108,10 @@ function system_test_basic_auth_page() {
 }
 
 function system_test_redirect($code) {
-  $code = (int)$code;
+  $code = (int) $code;
   if ($code != 200) {
-    header("Location: " . url('system-test/redirect/200', array('absolute' => TRUE)), TRUE, $code);
+    // Header names are case-insensitive.
+    header("locaTION: " . url('system-test/redirect/200', array('absolute' => TRUE)), TRUE, $code);
     exit;
   }
   return '';
@@ -141,11 +135,6 @@ function system_test_redirect_noparse() {
 function system_test_redirect_invalid_scheme() {
   header("Location: ftp://localhost/path", TRUE, 301);
   exit;
-}
-
-function system_test_destination() {
-  $destination = drupal_get_destination();
-  return 'The destination: ' . $destination['destination'];
 }
 
 /**
@@ -231,6 +220,9 @@ function system_test_system_info_alter(&$info, $file, $type) {
   if ($file->name == 'system_dependencies_test') {
     $info['hidden'] = FALSE;
   }
+  if ($file->name == 'requirements1_test' || $file->name == 'requirements2_test') {
+    $info['hidden'] = FALSE;
+  }
 }
 
 /**
@@ -311,5 +303,11 @@ function _system_test_second_shutdown_function($arg1, $arg2) {
   // Output something, page has already been printed and the session stored
   // so we can't use drupal_set_message.
   print t('Second shutdown function, arg1 : @arg1, arg2: @arg2', array('@arg1' => $arg1, '@arg2' => $arg2));
+
+  // Throw an exception with an HTML tag. Since this is called in a shutdown
+  // function, it will not bubble up to the default exception handler but will
+  // be catched in _drupal_shutdown_function() and be displayed through
+  // _drupal_render_exception_safe().
+  throw new Exception('Drupal is <blink>awesome</blink>.');
 }
 

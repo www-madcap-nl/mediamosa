@@ -759,8 +759,7 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
     // Hotfix, we dont provide this, we always return the asset, so always supply the granted flag
     $granted = TRUE;
 
-    // Asset must exist.
-    $asset = mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id, mediamosa_asset_db::PARENT_ID => NULL));
+    $asset = mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id, mediamosa_asset_db::PARENT_ID => NULL), NULL, array(), FALSE);
 
     // Fix app_id
     if (in_array($asset['app_id'], $app_ids)) {

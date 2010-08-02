@@ -38,10 +38,10 @@ function mediamosa_configuration_server_mediamosa_configuration_collect() {
 
   foreach ($a_servers as $a_server) {
     if (empty($a_server[mediamosa_server_db::SERVER_NAME])) {
-      $a_server[mediamosa_server_db::SERVER_NAME] = $a_server[mediamosa_server_db::URI];
+      $a_server[mediamosa_server_db::SERVER_NAME] = $a_server[mediamosa_server_db::SERVER_URI];
     }
 
-    $a_options[$a_server[mediamosa_server_db::URI]] = $a_server[mediamosa_server_db::SERVER_NAME];
+    $a_options[$a_server[mediamosa_server_db::SERVER_URI]] = $a_server[mediamosa_server_db::SERVER_NAME];
   }
 
   $mediamosa_jobscheduler_uri = variable_get('mediamosa_jobscheduler_uri', NULL);
@@ -62,7 +62,7 @@ function mediamosa_configuration_server_mediamosa_configuration_collect() {
       '#description' => t('Select from one of the (enabled) job process servers the server that handles the main job scheduler CRON.'),
       '#required' => TRUE,
       '#options' => $a_options,
-      '#default_value' => '',// Set empty, so its filled.
+      '#default_value' => variable_get('mediamosa_jobscheduler_uri', ''),
     );
   }
   else {

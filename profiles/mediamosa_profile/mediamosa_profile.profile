@@ -56,9 +56,25 @@ function mediamosa_profile_form_alter(&$form, $form_state, $form_id) {
 }
 
 /**
+ * Set up title.
+ */
+function _mediamosa_profile_get_title() {
+
+  $inc = include_once (DRUPAL_ROOT . '/sites/all/modules/mediamosa/mediamosa.version.inc');
+
+  // Try to include the settings file.
+  $version = $inc ? mediamosa_version::get_current_version() : null;
+
+  return 'Installing MediaMosa ' . ($version ? $version[mediamosa_version::MAJOR] . '.' .  $version[mediamosa_version::MINOR] . '.' . $version[mediamosa_version::RELEASE] . ' build ' . $version[mediamosa_version::BUILD] : '- unkwown version.');
+}
+
+/**
  * Implementation of hook_install_tasks().
  */
 function mediamosa_profile_install_tasks() {
+
+  drupal_set_title(_mediamosa_profile_get_title());
+
   $tasks = array(
     'mediamosa_profile_storage_location_form' => array(
       'display_name' => st('Storage location'),
@@ -202,7 +218,7 @@ function mediamosa_profile_php_settings($install_state) {
       drupal_set_message(t('post_max_size should be at least 100M. Currently: %current_value', array('%current_value' => $php_post_max_size)), 'warning');
   }
   $output .= t('post_max_size should be at least 100M. Currently: %current_value', array('%current_value' => $php_post_max_size)) . '<br />';
-
+/*
   $php_max_input_time = ini_get('max_input_time');
   if ($php_max_input_time < 7200) {
     drupal_set_message(t('max_input_time should be at least 7200. Currently: %current_value', array('%current_value' => $php_max_input_time)), 'warning');
@@ -214,7 +230,7 @@ function mediamosa_profile_php_settings($install_state) {
     drupal_set_message(t('max_execution_time should be at least 7200. Currently: %current_value', array('%current_value' => $php_max_execution_time)), 'warning');
   }
   $output .= t('max_execution_time should be at least 7200. Currently: %current_value', array('%current_value' => $php_max_execution_time)) . '<br />';
-
+*/
 
   return $error ? $output : NULL;
 }
@@ -275,33 +291,33 @@ function mediamosa_profile_storage_location_form_submit($form, &$form_state) {
 
   // Inside the storage location, create a Mediamosa storage structure.
   // data.
-  mediamosa_profile_mkdir($values['current_mount_point'] . '/data');
+  _mediamosa_profile_mkdir($values['current_mount_point'] . '/data');
   for ($i = 0; $i <= 9; $i++) {
-    mediamosa_profile_mkdir($values['current_mount_point'] . '/data/' . $i);
+    _mediamosa_profile_mkdir($values['current_mount_point'] . '/data/' . $i);
   }
   for ($i = ord('a'); $i <= ord('z'); $i++) {
-    mediamosa_profile_mkdir($values['current_mount_point'] . '/data/' . chr($i));
+    _mediamosa_profile_mkdir($values['current_mount_point'] . '/data/' . chr($i));
   }
   for ($i = ord('A'); $i <= ord('Z'); $i++) {
-    mediamosa_profile_mkdir($values['current_mount_point'] . '/data/' . chr($i));
+    _mediamosa_profile_mkdir($values['current_mount_point'] . '/data/' . chr($i));
   }
   // data/stills.
-  mediamosa_profile_mkdir($values['current_mount_point'] . '/data/stills');
+  _mediamosa_profile_mkdir($values['current_mount_point'] . '/data/stills');
   for ($i = 0; $i <= 9; $i++) {
-    mediamosa_profile_mkdir($values['current_mount_point'] . '/data/stills/' . $i);
+    _mediamosa_profile_mkdir($values['current_mount_point'] . '/data/stills/' . $i);
   }
   for ($i = ord('a'); $i <= ord('z'); $i++) {
-    mediamosa_profile_mkdir($values['current_mount_point'] . '/data/stills/' . chr($i));
+    _mediamosa_profile_mkdir($values['current_mount_point'] . '/data/stills/' . chr($i));
   }
   for ($i = ord('A'); $i <= ord('Z'); $i++) {
-    mediamosa_profile_mkdir($values['current_mount_point'] . '/data/stills/' . chr($i));
+    _mediamosa_profile_mkdir($values['current_mount_point'] . '/data/stills/' . chr($i));
   }
   // Other.
-  mediamosa_profile_mkdir($values['current_mount_point'] . '/data/transcode');
-  mediamosa_profile_mkdir($values['current_mount_point'] . '/links');
-  mediamosa_profile_mkdir($values['current_mount_point'] . '/download_links');
-  mediamosa_profile_mkdir($values['current_mount_point'] . '/still_links');
-  mediamosa_profile_mkdir($values['current_mount_point'] . '/ftp');
+  _mediamosa_profile_mkdir($values['current_mount_point'] . '/data/transcode');
+  _mediamosa_profile_mkdir($values['current_mount_point'] . '/links');
+  _mediamosa_profile_mkdir($values['current_mount_point'] . '/download_links');
+  _mediamosa_profile_mkdir($values['current_mount_point'] . '/still_links');
+  _mediamosa_profile_mkdir($values['current_mount_point'] . '/ftp');
 }
 
 /**
@@ -333,7 +349,7 @@ function mediamosa_profile_configure_server($install_state) {
   $output = '';
   $error = FALSE;
 
-  $server_name = mediamosa_profile_server_name();
+  $server_name = _mediamosa_profile_server_name();
 
 
   // Configure the servers.
@@ -341,26 +357,26 @@ function mediamosa_profile_configure_server($install_state) {
   // Mediamosa server table.
   db_query("
     UPDATE {mediamosa_server}
-    SET uri = REPLACE(uri, 'http://localhost', :server)
-    WHERE LOCATE('http://localhost', uri) > 0", array(
-    ':server' => "http://$server_name",
+    SET server_uri = REPLACE(server_uri, 'http://localhost', :server)
+    WHERE LOCATE('http://localhost', server_uri) > 0", array(
+    ':server' => 'http://' . $server_name,
   ));
   db_query("
     UPDATE {mediamosa_server}
     SET uri_upload_progress = REPLACE(uri_upload_progress, 'http://example.org', :server)
     WHERE LOCATE('http://example.org', uri_upload_progress) > 0", array(
-    ':server' => "http://$server_name",
+    ':server' => 'http://' . $server_name,
   ));
 
   // Mediamosa node revision table.
   $result = db_query("SELECT nid, vid, revision_data FROM {mediamosa_node_revision}");
   foreach ($result as $record) {
     $revision_data = unserialize($record->revision_data);
-    if (isset($revision_data['uri'])) {
-      $revision_data['uri'] = str_replace('http://localhost', "http://$server_name", $revision_data['uri']);
+    if (isset($revision_data['server_uri'])) {
+      $revision_data['server_uri'] = str_replace('mediamosa.local', $server_name, $revision_data['server_uri']);
     }
     if (isset($revision_data['uri_upload_progress'])) {
-      $revision_data['uri_upload_progress'] = str_replace('http://example.org', "http://$server_name", $revision_data['uri_upload_progress']);
+      $revision_data['uri_upload_progress'] = str_replace('mediamosa.local', $server_name, $revision_data['uri_upload_progress']);
     }
     db_query("
       UPDATE {mediamosa_node_revision}
@@ -375,11 +391,10 @@ function mediamosa_profile_configure_server($install_state) {
 
   // Configure.
   // URL REST.
-  variable_set('mediamosa_cron_url_app', "http://app.$server_name.local");
-
+  variable_set('mediamosa_cron_url_app', 'http://app1.' . $server_name . (substr($server_name, -6) == '.local' ? '' : '.local'));
 
   // Configure mediamosa connector.
-  variable_set('mediamosa_connector_url', "http://$server_name");
+  variable_set('mediamosa_connector_url', 'http://' . $server_name);
   $result = db_query("SELECT app_name, shared_key FROM {mediamosa_app} LIMIT 1");
   foreach ($result as $record) {
     variable_set('mediamosa_connector_username', $record->app_name);
@@ -397,8 +412,11 @@ function mediamosa_profile_configure_server($install_state) {
 function mediamosa_profile_cron_settings_form() {
   $form = array();
 
-  $server_name = mediamosa_profile_server_name();
+  // Add our css.
+  drupal_add_css('profiles/mediamosa_profile/mediamosa_profile.css');
 
+  // Get the server name.
+  $server_name = _mediamosa_profile_server_name();
 
   // Cron.
 
@@ -406,38 +424,45 @@ function mediamosa_profile_cron_settings_form() {
     '#type' => 'fieldset',
     '#collapsible' => FALSE,
     '#collapsed' => FALSE,
-    '#title' => t('Cron'),
-    '#description' => t('The cron will used to process your uploads and other jobs.'),
+    '#title' => t('Cron setup'),
+    '#description' => t('The cron will be used trigger MediaMosa every minute for background proccess. The setup for cron is required for be able to run MediaMosa.'),
+  );
+
+  $form['cron']['cron_every_minute_text_1'] = array(
+    '#markup' => t("<h5>Creating the cron script</h5><p>Copy the content below into a file in your home directory:<br /><small>(Note: The 'bin' directory might not exists in your home directory, create when needed.)</small></p><p><code>~/bin/cron_every_minute.sh.</code></p>"),
   );
 
   $form['cron']['cron_every_minute'] = array(
     '#type' => 'textarea',
-    '#title' => t('Cron every minute'),
-    '#description' => t('You have to copy this content to a file to your home directory: <code>~/bin/cron_every_minute.sh.</code><br />After, you have to modify the file permissions:<br />
-    <code>
-      chmod a+x ~/bin/cron_every_minute.sh<br />
-    </code>'),
+    '#attributes' => array('class' => array('mm-profile-textarea')),
     '#default_value' => '#!/bin/sh
-/usr/bin/wget -q --spider http://localhost/cron.php?cron_key=' . variable_get('cron_key', '') . ' --header="Host: ' . $server_name . '"',
-    '#cols' => 60,
-    '#rows' => 5,
+
+# Trigger MediaMosa Cron Page.
+/usr/bin/wget -O - -q -t 1 --header="Host: ' . $server_name . '" http://localhost/cron.php?cron_key=' . variable_get('cron_key', ''),
+    '#rows' => 6,
+  );
+
+  $form['cron']['cron_every_minute_text_2'] = array(
+    '#markup' => t("<p>Save the file and modify the file permissions:</p>
+    <p><code>chmod a+x ~/bin/cron_mediamosa.sh</code></p>"),
+  );
+
+  $form['cron']['crontab_text'] = array(
+    '#markup' => t('<h5>Adding our new script to the crontab</h5>Modify your cron using crontab, this will run our script every minute:<p><code>crontab -e</code></p><p>Add this line at the bottom:</p>'),
   );
 
   $form['cron']['crontab'] = array(
     '#type' => 'textarea',
-    '#title' => t('Crontab'),
-    '#description' => t('After, you have to modify your crontab: <code>crontab -e</code><br />Add these lines.'),
-    '#default_value' => '# Mediamosa 2
-* * * * * ~/bin/cron_every_minute.sh',
-    '#cols' => 60,
-    '#rows' => 5,
+    '#attributes' => array('class' => array('mm-profile-textarea')),
+    '#default_value' => '* * * * * ~/bin/cron_mediamosa.sh',
+    '#rows' => 2,
   );
 
 
   // Apache.
 
   $mount_point = variable_get('mediamosa_current_mount_point', '');
-  $document_root = mediamosa_profile_document_root();
+  $document_root = _mediamosa_profile_document_root();
 
 
   $form['apache'] = array(
@@ -445,46 +470,161 @@ function mediamosa_profile_cron_settings_form() {
     '#collapsible' => FALSE,
     '#collapsed' => FALSE,
     '#title' => t('Apache'),
-    '#description' => t("You have to set up your Apache2 following this instruction:<br />
-1) Change your site's settings in <code>/etc/apache2/sites-enabled/your-site</code>.<br />
-First save your original file, then insert this code to your settings file.<br />
-2) Restart your Apache: <code>sudo /etc/init.d/apache2 restart</code><br />") . (strpos($server_name, '/') === FALSE ? '' : t("<b>It is strongly recommended, that you use server name like '<code>@mediamosa</code>', when you install Mediamosa, and not like '<code>@server_name</code>'.</b>", array('@mediamosa' => (substr($server_name, -1) == '/' ? 'mediamosa' : substr($server_name, strrpos($server_name, '/')+1)), '@server_name' => $server_name,))),
+    '#description' => t("You have to set up your Apache2 following this instruction"),
   );
+
+  $form['apache']['apache_options'] = array(
+    '#markup' => t("<ol><li>Change your site's settings in <code>/etc/apache2/sites-enabled/your-site</code>.<br />First save your original file, then insert this code to your settings file.</li>
+<li>Restart your Apache:<br /><code>sudo /etc/init.d/apache2 restart</code><br />") .
+  (strpos($server_name, '/') === FALSE ? '' : t("<b>It is strongly recommended, that you use server name like '<code>@mediamosa</code>', when you install Mediamosa, and not like '<code>@server_name</code>'.</b>", array('@mediamosa' => (substr($server_name, -1) == '/' ? 'mediamosa' : substr($server_name, strrpos($server_name, '/') + 1)), '@server_name' => $server_name))) . '</li></ol>',
+  );
+
+  $server_name_clean = substr($server_name, -6) == '.local' ? substr($server_name, 0, strlen($server_name) - 6) : $server_name;
 
   $form['apache']['apache'] = array(
     '#type' => 'textarea',
     '#title' => t('Apache'),
-    '#default_value' => "<VirtualHost *>
-  ServerName $server_name
-  ServerAlias $server_name.local app.$server_name.local upload.$server_name.local download.$server_name.local
-  DocumentRoot $document_root
+    '#attributes' => array('class' => array('mm-profile-textarea')),
+    '#default_value' => strtr("<VirtualHost *:80>
+    ServerName !server_name_clean.local
+    ServerAlias admin.!server_name_clean.local www.!server_name_clean.local
+    ServerAdmin webmaster@!server_name_clean.local
+    DocumentRoot !document_root
+    <Directory !document_root>
+        Options FollowSymLinks MultiViews
+        AllowOverride All
+        Order allow,deny
+        allow from all
+    </Directory>
 
-  <Directory $document_root>
-   Options Indexes FollowSymLinks MultiViews
-   AllowOverride All
-    Order deny,allow
-    Allow from All
-  </Directory>
+    ErrorLog /var/log/apache2/!server_name_clean_error.log
+    CustomLog /var/log/apache2/!server_name_clean_access.log combined
+    ServerSignature On
 
-  Alias /ticket $mount_point/links
-  <Directory $mount_point/links>
-   Options FollowSymLinks
-   AllowOverride All
-    Order deny,allow
-    Allow from All
-  </Directory>
+    Alias /server-status !document_root
+    <Directory !document_root/serverstatus>
+        SetHandler server-status
+        Order deny,allow
+        Deny from all
+        Allow from 127.0.0.1
+     </Directory>
 
-  LogLevel warn
-  ErrorLog /var/log/apache2/error.log
-  CustomLog /var/log/apache2/access.log combined
+    # ticket
+    Alias /ticket !mount_point/links
+    <Directory !mount_point/links>
+      Options FollowSymLinks
+      AllowOverride All
+      Order deny,allow
+      Allow from All
+    </Directory>
+</VirtualHost>
 
-  <IfModule mod_php5.c>
-    php_admin_value post_max_size 2000M
-    php_admin_value upload_max_filesize 2000M
-    php_admin_value memory_limit 256M
-  </IfModule>
+<VirtualHost *:80>
+    ServerName app1.!server_name_clean.local
+    ServerAdmin webmaster@!server_name_clean.local
+    DocumentRoot !document_root
+    <Directory !document_root>
+        Options FollowSymLinks MultiViews
+        AllowOverride All
+        Order allow,deny
+        allow from all
+    </Directory>
 
-</VirtualHost>",
+    ErrorLog /var/log/apache2/app1.!server_name_clean_error.log
+    CustomLog /var/log/apache2/app1.!server_name_clean_access.log combined
+    ServerSignature On
+</VirtualHost>
+
+<VirtualHost *:80>
+    ServerName app2.!server_name_clean.local
+    ServerAdmin webmaster@!server_name_clean.local
+    DocumentRoot !document_root
+    <Directory !document_root>
+        Options FollowSymLinks MultiViews
+        AllowOverride All
+        Order allow,deny
+        allow from all
+    </Directory>
+
+    ErrorLog /var/log/apache2/app2.!server_name_clean_error.log
+    CustomLog /var/log/apache2/app2.!server_name_clean_access.log combined
+    ServerSignature On
+</VirtualHost>
+
+<VirtualHost *:80>
+    ServerName upload.!server_name_clean.local
+    ServerAdmin webmaster@!server_name_clean.local
+    DocumentRoot !document_root
+    <Directory !document_root>
+        Options FollowSymLinks MultiViews
+        AllowOverride All
+        Order allow,deny
+        allow from all
+    </Directory>
+
+    <IfModule mod_php5.c>
+        php_admin_value post_max_size 2008M
+        php_admin_value upload_max_filesize 2000M
+        php_admin_value memory_limit 64M
+    </IfModule>
+
+    ErrorLog /var/log/apache2/upload.!server_name_clean_error.log
+    CustomLog /var/log/apache2/upload.!server_name_clean_access.log combined
+    ServerSignature On
+</VirtualHost>
+
+<VirtualHost *:80>
+    ServerName download.!server_name_clean.local
+    ServerAdmin webmaster@!server_name_clean.local
+    DocumentRoot !document_root
+    <Directory !document_root>
+        Options FollowSymLinks MultiViews
+        AllowOverride All
+        Order allow,deny
+        allow from all
+    </Directory>
+
+    ErrorLog /var/log/apache2/download.!server_name_clean_error.log
+    CustomLog /var/log/apache2/download.!server_name_clean_access.log combined
+    ServerSignature On
+</VirtualHost>
+
+<VirtualHost *:80>
+    ServerName job1.!server_name_clean.local
+    ServerAdmin webmaster@!server_name_clean.local
+    DocumentRoot !document_root
+    <Directory !document_root>
+        Options FollowSymLinks MultiViews
+        AllowOverride All
+        Order allow,deny
+        allow from all
+    </Directory>
+
+    ErrorLog /var/log/apache2/job1.!server_name_clean_error.log
+    CustomLog /var/log/apache2/job1.!server_name_clean_access.log combined
+    ServerSignature On
+</VirtualHost>
+
+<VirtualHost *:80>
+    ServerName job2.!server_name_clean.local
+    ServerAdmin webmaster@!server_name_clean.local
+    DocumentRoot !document_root
+    <Directory !document_root>
+        Options FollowSymLinks MultiViews
+        AllowOverride All
+        Order allow,deny
+        allow from all
+    </Directory>
+
+    ErrorLog /var/log/apache2/job2.!server_name_clean_error.log
+    CustomLog /var/log/apache2/job2.!server_name_clean_access.log combined
+    ServerSignature On
+</VirtualHost>", array(
+      '!server_name_clean' => $server_name_clean,
+      '!document_root' => $document_root,
+      '!mount_point' => $mount_point,
+    )
+  ),
     '#cols' => 60,
     '#rows' => 40,
   );
@@ -496,13 +636,25 @@ First save your original file, then insert this code to your settings file.<br /
     '#type' => 'fieldset',
     '#collapsible' => FALSE,
     '#collapsed' => FALSE,
-    '#title' => t('Migration'),
-    '#description' => t("You can migrate your data from your old 1.7 Mediamosa installation following these steps:<br />1) Open your <code>settings.mediamosa.php</code> in your <code>sites</code> directory.<br />2) Insert there the following code there and save it.<br />3) Be sure, that the MySQL user of current installation, and the MySQL user of the old databases can read from the other database(s)."),
+    '#title' => t('Migrating your 1.7.x database to 2.x'),
+    '#description' => t("If you already have an MediaMosa 1.x database, then you need to migrate the database to the new 2.x database format. Migrate 1.7.x database from your current 1.7.x Mediamosa installation to 2.x database by following these steps:
+    <ol>
+      <li>Open the <code>settings.mediamosa.php</code> in your new MediaMosa 2.x installation in the <code>sites</code> directory.</li>
+      <li>Insert the content below from the text box and change the settings to match your 1.7.x MySQL setup for the MediaMosa 1.x MySQL user. In the file there is already an commented out version you can edit.</li>
+    </ol><p>You can start the migration process once you have completed the installation. To start the migration, go to MediaMosa home, then click on tab 'Configuration'. Click on the link 'MediaMosa 1.7.x migration tool' to open up the migration tool. The migration tool will pre-check before you can start the migration.</p>
+    <p><b>Important notes:</b></p>
+    <ul>
+      <li>Both databases (1.7.x and 2.x) must be on the same MySQL database server. You can not migrate with 2 servers.</li>
+      <li>Before you migrate, at least do the migration once for testing before planning the final migration to be sure the migration will be successful.</li>
+      <li>All data will be migrated, except for the ticket and jobs tables. The ticket table holds current session for downloading and play tickets of mediafiles. The job tables hold information about running jobs and old jobs. So make sure that your server is no longer running any jobs when you migrate.</li>
+      <li>The 1.7.x database will only be used for reading, nothing will change on your 1.7.x database. However, the 2.x database needs to be clean install for migration to be successful.</li>
+    </ul>"),
   );
 
   $form['migration']['settings'] = array(
     '#type' => 'textarea',
-    '#title' => t('Migration'),
+    '#title' => t('Migration setup for sites/settings.mediamosa.php'),
+    '#attributes' => array('class' => array('mm-profile-textarea')),
     '#default_value' => "\$databases['mig_memo']['default'] = array(
   'driver' => 'mysql',
   'database' => 'your_old_database',
@@ -518,7 +670,7 @@ First save your original file, then insert this code to your settings file.<br /
   'host' => 'localhost'
 );",
     '#cols' => 60,
-    '#rows' => 20,
+    '#rows' => 15,
   );
 
   $form['continue'] = array(
@@ -534,7 +686,7 @@ First save your original file, then insert this code to your settings file.<br /
  * Check if the directory is exist, before makes it.
  * @param string $check_dir Directory to check.
  */
-function mediamosa_profile_mkdir($check_dir) {
+function _mediamosa_profile_mkdir($check_dir) {
   if (!is_dir($check_dir)) {
     mkdir($check_dir);
   }
@@ -543,7 +695,7 @@ function mediamosa_profile_mkdir($check_dir) {
 /**
  * Give back the server name.
  */
-function mediamosa_profile_server_name() {
+function _mediamosa_profile_server_name() {
   $server_name = url('', array('absolute' => TRUE));
   $server_name = drupal_substr($server_name, 0, -1);
   $server_name = drupal_substr($server_name, drupal_strlen('http://'));
@@ -554,7 +706,7 @@ function mediamosa_profile_server_name() {
 /**
  * Give back the document root for install.php.
  */
-function mediamosa_profile_document_root() {
+function _mediamosa_profile_document_root() {
   // Document root.
   $script_filename = getenv('PATH_TRANSLATED');
   if (empty($script_filename)) {

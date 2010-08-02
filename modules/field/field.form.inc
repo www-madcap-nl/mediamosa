@@ -1,5 +1,5 @@
 <?php
-// $Id: field.form.inc,v 1.43 2010/03/13 06:55:50 dries Exp $
+// $Id: field.form.inc,v 1.50 2010/06/17 13:44:45 dries Exp $
 
 /**
  * @file
@@ -16,18 +16,9 @@ function field_default_form($entity_type, $entity, $field, $instance, $langcode,
     list($id, , ) = entity_extract_ids($entity_type, $entity);
   }
 
+  $addition = array();
   $field_name = $field['field_name'];
   $addition[$field_name] = array();
-
-  // Store field information in $form_state['storage'].
-  $form_state['field'][$field_name][$langcode] = array(
-    'field' => $field,
-    'instance' => $instance,
-    // This entry will be populated at form build time.
-    'array_parents' => array(),
-    // This entry will be populated at form validation time.
-    'errors' => array(),
-  );
 
   // Populate widgets with default values when creating a new entity.
   if (empty($items) && empty($id)) {
@@ -50,7 +41,7 @@ function field_default_form($entity_type, $entity, $field, $instance, $langcode,
       $function = $instance['widget']['module'] . '_field_widget_form';
       if (function_exists($function)) {
         $element = array(
-          '#object_type' => $instance['object_type'],
+          '#entity_type' => $instance['entity_type'],
           '#bundle' => $instance['bundle'],
           '#field_name' => $field_name,
           '#language' => $langcode,
@@ -79,6 +70,16 @@ function field_default_form($entity_type, $entity, $field, $instance, $langcode,
   }
 
   if ($elements) {
+    // Store field information in $form_state.
+    $form_state['field'][$field_name][$langcode] = array(
+      'field' => $field,
+      'instance' => $instance,
+      // This entry will be populated at form build time.
+      'array_parents' => array(),
+      // This entry will be populated at form validation time.
+      'errors' => array(),
+    );
+
     // Also aid in theming of field widgets by rendering a classified
     // container.
     $addition[$field_name] = array(
@@ -92,16 +93,6 @@ function field_default_form($entity_type, $entity, $field, $instance, $langcode,
       ),
       '#weight' => $instance['widget']['weight'],
     );
-  }
-  else {
-    // The field is not accessible, or the widget did not return anything. Make
-    // sure the items are available in the submitted form values.
-    foreach ($items as $delta => $item) {
-      $elements[$delta] = array(
-        '#type' => 'value',
-        '#value' => $item,
-      );
-    }
   }
 
   // Populate the 'array_parents' information in $form_state['field'] after
@@ -131,11 +122,6 @@ function field_default_form($entity_type, $entity, $field, $instance, $langcode,
  * - drag-n-drop value reordering
  */
 function field_multiple_value_form($field, $instance, $langcode, $items, &$form, &$form_state) {
-  // This form has its own multistep persistance.
-  if ($form_state['rebuild']) {
-    $form_state['input'] = array();
-  }
-
   $field_name = $field['field_name'];
 
   // Determine the number of widgets to display.
@@ -158,7 +144,7 @@ function field_multiple_value_form($field, $instance, $langcode, $items, &$form,
 
   $title = check_plain(t($instance['label']));
   $description = field_filter_xss(t($instance['description']));
-  $wrapper_id = drupal_html_class($field_name) . '-add-more-wrapper';
+  $wrapper_id = drupal_html_id($field_name . '-add-more-wrapper');
   $field_elements = array();
 
   $function = $instance['widget']['module'] . '_field_widget_form';
@@ -166,7 +152,7 @@ function field_multiple_value_form($field, $instance, $langcode, $items, &$form,
     for ($delta = 0; $delta <= $max; $delta++) {
       $multiple = $field['cardinality'] > 1 || $field['cardinality'] == FIELD_CARDINALITY_UNLIMITED;
       $element = array(
-        '#object_type' => $instance['object_type'],
+        '#entity_type' => $instance['entity_type'],
         '#bundle' => $instance['bundle'],
         '#field_name' => $field_name,
         '#language' => $langcode,
@@ -220,7 +206,6 @@ function field_multiple_value_form($field, $instance, $langcode, $items, &$form,
           '#ajax' => array(
             'callback' => 'field_add_more_js',
             'wrapper' => $wrapper_id,
-            'method' => 'replace',
             'effect' => 'fade',
           ),
           // The field_add_more_submit() and field_add_more_js() handlers will
@@ -236,17 +221,23 @@ function field_multiple_value_form($field, $instance, $langcode, $items, &$form,
 }
 
 /**
- * Theme an individual form element.
+ * Returns HTML for an individual form element.
  *
  * Combine multiple values into a table with drag-n-drop reordering.
  * TODO : convert to a template.
+ *
+ * @param $variables
+ *   An associative array containing:
+ *   - element: A render element representing the form element.
+ *
+ * @ingroup themeable
  */
 function theme_field_multiple_value_form($variables) {
   $element = $variables['element'];
   $output = '';
 
   if ($element['#cardinality'] > 1 || $element['#cardinality'] == FIELD_CARDINALITY_UNLIMITED) {
-    $table_id = $element['#field_name'] . '_values';
+    $table_id = drupal_html_id($element['#field_name'] . '_values');
     $order_class = $element['#field_name'] . '-delta-order';
     $required = !empty($element['#required']) ? '<span class="form-required" title="' . t('This field is required. ') . '">*</span>' : '';
 
@@ -368,17 +359,12 @@ function field_default_form_errors($entity_type, $entity, $field, $instance, $la
  * to return just the changed part of the form.
  */
 function field_add_more_submit($form, &$form_state) {
-  // Set the form to rebuild and run submit handlers.
-  if (isset($form['#builder_function']) && function_exists($form['#builder_function'])) {
-    $entity = $form['#builder_function']($form, $form_state);
-
-    // Make the changes we want to the form state.
-    $field_name = $form_state['clicked_button']['#field_name'];
-    $langcode = $form_state['clicked_button']['#language'];
-    if ($form_state['values'][$field_name . '_add_more']) {
-      $form_state['field_item_count'][$field_name] = count($form_state['values'][$field_name][$langcode]);
-    }
+  $field_name = $form_state['clicked_button']['#field_name'];
+  $langcode = $form_state['clicked_button']['#language'];
+  if ($form_state['values'][$field_name . '_add_more']) {
+    $form_state['field_item_count'][$field_name] = count($form_state['values'][$field_name][$langcode]);
   }
+  $form_state['rebuild'] = TRUE;
 }
 
 /**

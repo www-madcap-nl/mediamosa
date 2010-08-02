@@ -43,22 +43,22 @@ class mediamosa_rest_call_server_status extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    return self::get_var_setup_default($a_var_setup, FALSE);
+    return self::get_var_setup_default($var_setup, FALSE);
   }
 
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
-
+    $mediamosa = mediamosa::get();
+global $conf;
     // Fill up info about the server.
-    $a_item = array(
+    $item = array(
       'server_id' => mediamosa::get_server_id(),
       'uri' => mediamosa::get_request_uri(),
       'host' => $_SERVER['HTTP_HOST'],
     );
 
-    $o_mediamosa->add_item($a_item);
+    $mediamosa->add_item($item);
   }
 }

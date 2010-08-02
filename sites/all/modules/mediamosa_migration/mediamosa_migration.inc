@@ -1982,7 +1982,7 @@ function _mediamosa_migration_create_server_nodes() {
       $node->{mediamosa_server_db::SERVER_TYPE} = $type;
       $node->{mediamosa_server_db::VERSION} = $row['version'];
       $node->{mediamosa_server_db::SERVER_STATUS} = $status;
-      $node->{mediamosa_server_db::URI} = (isset($row['uri']) ? $row['uri'] : (isset($row['ip_address']) ? $row['ip_address'] : NULL));
+      $node->{mediamosa_server_db::SERVER_URI} = (isset($row['uri']) ? $row['uri'] : (isset($row['ip_address']) ? $row['ip_address'] : NULL));
       $node->{mediamosa_server_db::DESCRIPTION} = (isset($row['description']) ? $row['description'] : NULL);
       $node->{mediamosa_server_db::CONTAINERS} = (isset($row['containers']) ? $row['containers'] : NULL);
       $node->{mediamosa_server_db::OBJECT_CODE} = (isset($row['objectcode']) ? $row['objectcode'] : NULL);
@@ -2023,6 +2023,9 @@ function _mediamosa_migration_kill_child_assets() {
     // Clear mem.
     unset($a_mediafile_originals);
   }
+
+  // Make sure empty root is set with the asset id.
+  db_query("UPDATE {mediamosa_asset_mediafile} SET asset_id_root = asset_id WHERE asset_id_root = ''");
 
   // Second move all child mediafile under the root.
   db_query("UPDATE {mediamosa_asset_mediafile} SET asset_id = asset_id_root");

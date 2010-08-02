@@ -1,5 +1,5 @@
 <?php
-// $Id: dblog.module,v 1.51 2010/02/26 15:25:43 dries Exp $
+// $Id: dblog.module,v 1.53 2010/06/29 00:39:15 dries Exp $
 
 /**
  * @file
@@ -70,6 +70,18 @@ function dblog_menu() {
     'type' => MENU_CALLBACK,
     'file' => 'dblog.admin.inc',
   );
+
+  if (module_exists('search')) {
+    $items['admin/reports/search'] = array(
+      'title' => 'Top search phrases',
+      'description' => 'View most popular search phrases.',
+      'page callback' => 'dblog_top',
+      'page arguments' => array('search'),
+      'access arguments' => array('access site reports'),
+      'file' => 'dblog.admin.inc',
+    );
+  }
+
   return $items;
 }
 
@@ -89,16 +101,12 @@ function dblog_init() {
  * Remove expired log messages and flood control events.
  */
 function dblog_cron() {
-  global $db_prefix;
-
   // Cleanup the watchdog table
   if (variable_get('dblog_row_limit', 1000) > 0) {
-    if (!preg_match('/simpletest\d+/', $db_prefix)) {
-      $max = Database::getConnection('default', 'default')->query('SELECT MAX(wid) FROM {watchdog}')->fetchField();
-      Database::getConnection('default', 'default')->delete('watchdog')
-        ->condition('wid', $max - variable_get('dblog_row_limit', 1000), '<=')
-        ->execute();
-    }
+    $max = Database::getConnection('default', 'default')->query('SELECT MAX(wid) FROM {watchdog}')->fetchField();
+    Database::getConnection('default', 'default')->delete('watchdog')
+      ->condition('wid', $max - variable_get('dblog_row_limit', 1000), '<=')
+      ->execute();
   }
 }
 
@@ -119,15 +127,8 @@ function _dblog_get_message_types() {
  * Note some values may be truncated for database column size restrictions.
  */
 function dblog_watchdog(array $log_entry) {
-  global $db_prefix;
-  if (preg_match('/simpletest\d+/', $db_prefix)) {
-    $query = db_insert('watchdog');
-  }
-  else {
-    $query = Database::getConnection('default', 'default')->insert('watchdog');
-  }
-
-  $query->fields(array(
+  Database::getConnection('default', 'default')->insert('watchdog')
+    ->fields(array(
       'uid' => $log_entry['user']->uid,
       'type' => substr($log_entry['type'], 0, 64),
       'message' => $log_entry['message'],
@@ -154,4 +155,16 @@ function dblog_form_system_logging_settings_alter(&$form, $form_state) {
     '#description' => t('The maximum number of entries to keep in the database log. Requires a <a href="@cron">cron maintenance task</a>.', array('@cron' => url('admin/reports/status')))
   );
   $form['actions']['#weight'] = 1;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function dblog_theme() {
+  return array(
+    'dblog_message' => array(
+      'variables' => array('event' => NULL, 'link' => FALSE),
+      'file' => 'dblog.admin.inc',
+    ),
+  );
 }

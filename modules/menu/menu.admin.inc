@@ -1,5 +1,5 @@
 <?php
-// $Id: menu.admin.inc,v 1.76 2010/02/23 10:32:10 dries Exp $
+// $Id: menu.admin.inc,v 1.82 2010/06/26 21:32:20 dries Exp $
 
 /**
  * @file
@@ -25,7 +25,14 @@ function menu_overview_page() {
 }
 
 /**
- * Theme the menu title and description for admin page
+ * Returns HTML for a menu title and description for the menu overview page.
+ *
+ * @param $variables
+ *   An associative array containing:
+ *   - title: The menu's title.
+ *   - description: The menu's description.
+ *
+ * @ingroup themeable
  */
 function theme_menu_admin_overview($variables) {
   $output = check_plain($variables['title']);
@@ -65,7 +72,7 @@ function menu_overview_form($form, &$form_state, $menu) {
   $form['#menu'] =  $menu;
 
   if (element_children($form)) {
-    $form['actions'] = array('#type' => 'container', '#attributes' => array('class' => array('form-actions')));
+    $form['actions'] = array('#type' => 'actions');
     $form['actions']['submit'] = array(
       '#type' => 'submit',
       '#value' => t('Save configuration'),
@@ -79,6 +86,9 @@ function menu_overview_form($form, &$form_state, $menu) {
 
 /**
  * Recursive helper function for menu_overview_form().
+ *
+ * @param $tree
+ *   The menu_tree retrieved by menu_tree_data.
  */
 function _menu_overview_tree_form($tree) {
   $form = &drupal_static(__FUNCTION__, array('#tree' => TRUE));
@@ -98,16 +108,17 @@ function _menu_overview_tree_form($tree) {
       $form[$mlid]['weight'] = array(
         '#type' => 'weight',
         '#delta' => 50,
-        '#default_value' => isset($form_state[$mlid]['weight']) ? $form_state[$mlid]['weight'] : $item['weight'],
+        '#default_value' => $item['weight'],
+        '#title_display' => 'invisible',
+        '#title' => t('Weight for @row', array('@row' => $item['title'])),
       );
       $form[$mlid]['mlid'] = array(
         '#type' => 'hidden',
         '#value' => $item['mlid'],
       );
       $form[$mlid]['plid'] = array(
-        '#type' => 'textfield',
-        '#default_value' => isset($form_state[$mlid]['plid']) ? $form_state[$mlid]['plid'] : $item['plid'],
-        '#size' => 6,
+        '#type' => 'hidden',
+        '#default_value' => $item['plid'],
       );
       // Build a list of operations.
       $operations = array();
@@ -174,10 +185,15 @@ function menu_overview_form_submit($form, &$form_state) {
     $item['customized'] = 1;
     menu_link_save($item);
   }
+  drupal_set_message(t('Your configuration has been saved.'));
 }
 
 /**
- * Theme the menu overview form into a table.
+ * Returns HTML for the menu overview form into a table.
+ *
+ * @param $variables
+ *   An associative array containing:
+ *   - form: A render element representing the form.
  *
  * @ingroup themeable
  */
@@ -328,7 +344,8 @@ function menu_edit_item($form, &$form_state, $type, $item, $menu) {
     '#default_value' => $item['weight'],
     '#description' => t('Optional. In the menu, the heavier links will sink and the lighter links will be positioned nearer the top.'),
   );
-  $form['submit'] = array('#type' => 'submit', '#value' => t('Save'));
+  $form['actions'] = array('#type' => 'actions');
+  $form['actions']['submit'] = array('#type' => 'submit', '#value' => t('Save'));
 
   return $form;
 }
@@ -390,6 +407,9 @@ function menu_edit_item_submit($form, &$form_state) {
   list($item['menu_name'], $item['plid']) = explode(':', $item['parent']);
   if (!menu_link_save($item)) {
     drupal_set_message(t('There was an error saving the menu link.'), 'error');
+  }
+  else {
+    drupal_set_message(t('Your configuration has been saved.'));
   }
   $form_state['redirect'] = 'admin/structure/menu/manage/' . $item['menu_name'];
 }
@@ -456,12 +476,13 @@ function menu_edit_menu($form, &$form_state, $type, $menu = array()) {
     '#title' => t('Description'),
     '#default_value' => $menu['description'],
   );
-  $form['submit'] = array(
+  $form['actions'] = array('#type' => 'actions');
+  $form['actions']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save'),
   );
   // Only custom menus may be deleted.
-  $form['delete'] = array(
+  $form['actions']['delete'] = array(
     '#type' => 'submit',
     '#value' => t('Delete'),
     '#access' => $type == 'edit' && !isset($system_menus[$menu['menu_name']]),
@@ -592,6 +613,7 @@ function menu_edit_menu_submit($form, &$form_state) {
       menu_link_save($link);
     }
   }
+  drupal_set_message(t('Your configuration has been saved.'));
   $form_state['redirect'] = $path . $menu['menu_name'];
 }
 
@@ -662,7 +684,7 @@ function menu_configure() {
   $form['menu_main_links_source'] = array(
     '#type' => 'select',
     '#title' => t('Source for the Main links'),
-    '#default_value' => 'main-menu',
+    '#default_value' => variable_get('menu_main_links_source', 'main-menu'),
     '#options' => $main_options,
     '#tree' => FALSE,
     '#description' => t('Select what should be displayed as the Main links (typically at the top of the page).'),
@@ -672,11 +694,11 @@ function menu_configure() {
   $form['menu_secondary_links_source'] = array(
     '#type' => 'select',
     '#title' => t('Source for the Secondary links'),
-    '#default_value' => 'user-menu',
+    '#default_value' => variable_get('menu_secondary_links_source', 'user-menu'),
     '#options' => $secondary_options,
     '#tree' => FALSE,
     '#description' => t("Select the source for the Secondary links. An advanced option allows you to use the same source for both Main links (currently %main) and Secondary links: if your source menu has two levels of hierarchy, the top level menu links will appear in the Main links, and the children of the active link will appear in the Secondary links." , array('%main' => $main_options[$main])),
   );
 
-  return system_settings_form($form, TRUE);
+  return system_settings_form($form);
 }

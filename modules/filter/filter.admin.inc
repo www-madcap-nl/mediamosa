@@ -1,5 +1,5 @@
 <?php
-// $Id: filter.admin.inc,v 1.58 2010/03/06 19:40:21 dries Exp $
+// $Id: filter.admin.inc,v 1.63 2010/06/26 01:55:29 dries Exp $
 
 /**
  * @file
@@ -28,7 +28,7 @@ function filter_admin_overview($form) {
     }
     else {
       $form['formats'][$id]['name'] = array('#markup' => check_plain($format->name));
-      $roles = filter_get_roles_by_format($format);
+      $roles = array_map('check_plain', filter_get_roles_by_format($format));
       $roles_markup = $roles ? implode(', ', $roles) : t('No roles may use this format');
     }
     $form['formats'][$id]['roles'] = array('#markup' => $roles_markup);
@@ -36,7 +36,7 @@ function filter_admin_overview($form) {
     $form['formats'][$id]['delete'] = array('#type' => 'link', '#title' => t('delete'), '#href' => 'admin/config/content/formats/' . $id . '/delete', '#access' => !$form['formats'][$id]['#is_fallback']);
     $form['formats'][$id]['weight'] = array('#type' => 'weight', '#default_value' => $format->weight);
   }
-  $form['actions'] = array('#type' => 'container', '#attributes' => array('class' => array('form-actions')));
+  $form['actions'] = array('#type' => 'actions');
   $form['actions']['submit'] = array('#type' => 'submit', '#value' => t('Save changes'));
   return $form;
 }
@@ -56,7 +56,11 @@ function filter_admin_overview_submit($form, &$form_state) {
 }
 
 /**
- * Theme the text format administration overview form.
+ * Returns HTML for the text format administration overview form.
+ *
+ * @param $variables
+ *   An associative array containing:
+ *   - form: A render element representing the form.
  *
  * @ingroup themeable
  */
@@ -123,7 +127,7 @@ function filter_admin_format_form($form, &$form_state, $format) {
   $form['roles'] = array(
     '#type' => 'checkboxes',
     '#title' => t('Roles'),
-    '#options' => user_roles(),
+    '#options' => array_map('check_plain', user_roles()),
     '#disabled' => $is_fallback,
   );
   if ($is_fallback) {
@@ -149,7 +153,7 @@ function filter_admin_format_form($form, &$form_state, $format) {
   foreach ($filter_info as $name => $filter) {
     // Create an empty filter object for new/unconfigured filters.
     if (!isset($filters[$name])) {
-      $filters[$name] = new stdClass;
+      $filters[$name] = new stdClass();
       $filters[$name]->status = 0;
       $filters[$name]->weight = $filter['weight'];
       $filters[$name]->settings = array();
@@ -226,14 +230,18 @@ function filter_admin_format_form($form, &$form_state, $format) {
   if (!empty($format->format)) {
     $form['format'] = array('#type' => 'value', '#value' => $format->format);
   }
-  $form['actions'] = array('#type' => 'container', '#attributes' => array('class' => array('form-actions')));
+  $form['actions'] = array('#type' => 'actions');
   $form['actions']['submit'] = array('#type' => 'submit', '#value' => t('Save configuration'));
 
   return $form;
 }
 
 /**
- * Theme text format filter order form elements as tabledrag.
+ * Returns HTML for a text format's filter order form.
+ *
+ * @param $variables
+ *   An associative array containing:
+ *   - element: A render element representing the form.
  *
  * @ingroup themeable
  */
@@ -314,12 +322,25 @@ function filter_admin_format_form_submit($form, &$form_state) {
 function filter_admin_delete($form, &$form_state, $format) {
   $form['#format'] = $format;
 
+  $fallback_options = array();
+  foreach (filter_formats() as $id => $fallback_format) {
+    if ($id != $format->format) {
+      $fallback_options[$id] = $fallback_format->name;
+    }
+  }
+  $form['fallback'] = array(
+    '#type' => 'select',
+    '#title' => t('Replacement text format'),
+    '#options' => $fallback_options,
+    '#default_value' => filter_fallback_format(),
+    '#description' => t('Content assigned to the deleted text format will be reassigned to the chosen one.'),
+  );
+
   return confirm_form($form,
     t('Are you sure you want to delete the text format %format?', array('%format' => $format->name)),
     'admin/config/content/formats',
-    t('If you have any content left in this text format, it will be switched to the %fallback text format. This action cannot be undone.', array('%fallback' => filter_fallback_format_title())),
-    t('Delete'),
-    t('Cancel')
+    NULL,
+    t('Delete')
   );
 }
 
@@ -328,7 +349,7 @@ function filter_admin_delete($form, &$form_state, $format) {
  */
 function filter_admin_delete_submit($form, &$form_state) {
   $format = $form['#format'];
-  filter_format_delete($format);
+  filter_format_delete($format, $form_state['values']['fallback']);
   drupal_set_message(t('Deleted text format %format.', array('%format' => $format->name)));
 
   $form_state['redirect'] = 'admin/config/content/formats';

@@ -60,8 +60,8 @@ class MediaMosaAssetMediafileStreamingTestCaseEga extends MediaMosaTestCaseEga {
     $a_mediafile = $this->getMediafile($mediafile_id);
 
     // Must match.
-    $this->assertTrue($a_mediafile['uri'] == 'rtsp://domain.ext/file', 'Uri saved correctly.');
-    $this->assertTrue(empty($a_mediafile['filename']), 'Filename must be empty.');
+    $this->assertTrue($a_mediafile[mediamosa_asset_mediafile_db::URI] == 'rtsp://domain.ext/file', 'Uri saved correctly.');
+    $this->assertTrue(empty($a_mediafile[mediamosa_asset_mediafile_db::FILENAME]), 'Filename must be empty.');
 
     // Now try with file, must fail.
 
@@ -97,8 +97,8 @@ class MediaMosaAssetMediafileStreamingTestCaseEga extends MediaMosaTestCaseEga {
     $a_mediafile = $this->getMediafile($mediafile_id);
 
     // Must match.
-    $this->assertTrue($a_mediafile['uri'] == 'rtsp://domain.ext/other_file', 'Uri updated correctly.');
-    $this->assertTrue(empty($a_mediafile['filename']), 'Filename must be empty.');
+    $this->assertTrue($a_mediafile[mediamosa_asset_mediafile_db::URI] == 'rtsp://domain.ext/other_file', 'Uri updated correctly.');
+    $this->assertTrue(empty($a_mediafile[mediamosa_asset_mediafile_db::FILENAME]), 'Filename must be empty.');
 
     // Update mediafile with uri empty and filename set.
     $a_parameters = array(

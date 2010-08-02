@@ -1,4 +1,4 @@
-6~// $Id: 
+// $Id: 
 
 START CHANGELOG:
 
@@ -28,10 +28,13 @@ Mediamosa 2.2.0
   MediaMosa admin on uri 
   /admin/mediamosa/browse/restcall/asset-%24asset_id-joblist/GET  
   (See ticket #267).
-- Job for still analyse (See ticket 239).
+- Job for still analyse (See ticket #239).
 - Introduction /collection/{id}/asset/count, and implements numofvideos in 
-  /collection/{id} response (See ticket 204).
-- Job search: item total count fix (See ticket 267).
+  /collection/{id} response (See ticket #204).
+- Converted mediamosa_asset_mediafile_metadata to new setup where the values are
+  stored as name -> value pairs allowing more flexible metadata on mediafiles
+  (See ticket #290).
+- Job search: item total count fix (See ticket #267).
 
 Other changes (not ticket related).
 - During ticket #255, adding pager to stats, bug was found on the stats keyword
@@ -75,6 +78,26 @@ Other changes (not ticket related).
 - acl/get_foreign_apps is now depricated and replaced by /acl/app
 - Added /acl/app REST call. Returns listing of apps on which the current app has
   master-slave rights on.
+- Upgraded drupal 7 core from alpha 4 to alpha 6.
+- Fixed problem migration when asset_id_root was empty in the source code.
+- Fixed settings page, alpha 6 of drupal 7 no longer sets up your settings page
+  default values.
+- Fixed mediamosa profile to work on alpha 6.
+- Added title with version number during profile.
+- Migrated alpha4 to alpha6 of drupal 7 core.
+- Fixed form for mediamosa_connector, didn't work with alpha6.
+- Alpha 6 introduced node->uri for default uri link for nodes, conflicted with
+  uri setting of server nodes. Renamed uri to server_uri in database and code.
+- Renamed module mediamosa_maintenance_status to 
+  mediamosa_maintenance_simpletest.
+- Created mediamosa_maintenance_status for new status page module.
+- All simpletests urls, functions are moved to /admin/mediamosa/simpletests.
+- Fixed problem with own http_request function now $db_prefix is removed from
+  drupal.
+- Fixed default profile to refect mediamosa.local as default domain.
+- Number of typo and text changes in MediaMosa profile.
+- Fixed bug in REST call /collection/$coll_id/delete where missing classname
+  resulted in failure.
 
 Mediamosa 2.1.5 (build 664)
 ---------------------------

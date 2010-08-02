@@ -407,12 +407,12 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
 
     // Streaming server.
     mediamosa_db::db_query(
-      "INSERT INTO {mediamosa_server} (nid, vid, server_status, server_type, version, description, uri,  containers, object_code) VALUES
+      "INSERT INTO {mediamosa_server} (nid, vid, server_status, server_type, version, description, server_uri,  containers, object_code) VALUES
        (998, 998, 'ON', 'streaming', 0, 'test server general (mp4)', 'url://unittest.h264', 'test_container:h264', 'Object code for H264 codec')"
     );
 
     mediamosa_db::db_query(
-      "INSERT INTO {mediamosa_server} (nid, vid, server_status, server_type, version, description, uri,  containers, object_code) VALUES
+      "INSERT INTO {mediamosa_server} (nid, vid, server_status, server_type, version, description, server_uri,  containers, object_code) VALUES
        (999, 999, 'ON', 'streaming', 0, 'test server (h264)', 'url://unittest.general', 'test_container', 'Object code for general MP4 container')"
     );
 

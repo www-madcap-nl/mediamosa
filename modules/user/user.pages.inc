@@ -1,5 +1,5 @@
 <?php
-// $Id: user.pages.inc,v 1.68 2010/02/28 20:10:34 dries Exp $
+// $Id: user.pages.inc,v 1.73 2010/06/17 13:44:45 dries Exp $
 
 /**
  * @file
@@ -48,7 +48,8 @@ function user_pass() {
       '#suffix' => '</p>',
     );
   }
-  $form['submit'] = array('#type' => 'submit', '#value' => t('E-mail new password'));
+  $form['actions'] = array('#type' => 'actions');
+  $form['actions']['submit'] = array('#type' => 'submit', '#value' => t('E-mail new password'));
 
   return $form;
 }
@@ -133,14 +134,15 @@ function user_pass_reset($form, &$form_state, $uid, $timestamp, $hashed_pass, $a
           user_login_finalize();
           drupal_set_message(t('You have just used your one-time login link. It is no longer necessary to use this link to log in. Please change your password.'));
           // Let the user's password be changed without the current password check.
-          $token = md5(drupal_random_bytes(55));
+          $token = drupal_hash_base64(drupal_random_bytes(55));
           $_SESSION['pass_reset_' . $user->uid] = $token;
           drupal_goto('user/' . $user->uid . '/edit', array('query' => array('pass-reset-token' => $token)));
         }
         else {
           $form['message'] = array('#markup' => t('<p>This is a one-time login for %user_name and will expire on %expiration_date.</p><p>Click on this button to log in to the site and change your password.</p>', array('%user_name' => $account->name, '%expiration_date' => format_date($timestamp + $timeout))));
           $form['help'] = array('#markup' => '<p>' . t('This login can be used only once.') . '</p>');
-          $form['submit'] = array('#type' => 'submit', '#value' => t('Log in'));
+          $form['actions'] = array('#type' => 'actions');
+          $form['actions']['submit'] = array('#type' => 'submit', '#value' => t('Log in'));
           $form['#action'] = url("user/reset/$uid/$timestamp/$hashed_pass/login");
           return $form;
         }
@@ -241,6 +243,18 @@ function template_preprocess_user_profile_category(&$variables) {
 function user_profile_form($form, &$form_state, $account, $category = 'account') {
   global $user;
 
+  // During initial form build, add the entity to the form state for use during
+  // form building and processing. During a rebuild, use what is in the form
+  // state.
+  if (!isset($form_state['user'])) {
+    $form_state['user'] = $account;
+  }
+  else {
+    $account = $form_state['user'];
+  }
+
+  // @todo Legacy support. Modules are encouraged to access the entity using
+  //   $form_state. Remove in Drupal 8.
   $form['#user'] = $account;
   $form['#user_category'] = $category;
 
@@ -251,16 +265,15 @@ function user_profile_form($form, &$form_state, $account, $category = 'account')
   // Attach field widgets.
   field_attach_form('user', $account, $form, $form_state);
 
-  $form['submit'] = array(
+  $form['actions'] = array('#type' => 'actions');
+  $form['actions']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save'),
-    '#weight' => 30,
   );
   if ($category == 'account') {
-    $form['cancel'] = array(
+    $form['actions']['cancel'] = array(
       '#type' => 'submit',
       '#value' => t('Cancel account'),
-      '#weight' => 31,
       '#submit' => array('user_edit_cancel_submit'),
       '#access' => $account->uid > 1 && (($account->uid == $user->uid && user_access('cancel account')) || user_access('administer users')),
     );
@@ -277,22 +290,23 @@ function user_profile_form($form, &$form_state, $account, $category = 'account')
  * Validation function for the user account and profile editing form.
  */
 function user_profile_form_validate($form, &$form_state) {
-  $edit = (object)$form_state['values'];
-  field_attach_form_validate('user', $edit, $form, $form_state);
+  entity_form_field_validate('user', $form, $form_state);
 }
 
 /**
  * Submit function for the user account and profile editing form.
  */
 function user_profile_form_submit($form, &$form_state) {
-  $account = $form['#user'];
+  $account = $form_state['user'];
   $category = $form['#user_category'];
   // Remove unneeded values.
   form_state_values_clean($form_state);
 
-  $edit = (object)$form_state['values'];
-  field_attach_submit('user', $edit, $form, $form_state);
-  $edit = (array)$edit;
+  entity_form_submit_build_entity('user', $account, $form, $form_state);
+
+  // Populate $edit with the properties of $account, which have been edited on
+  // this form by taking over all values, which appear in the form values too.
+  $edit = array_intersect_key((array) $account, $form_state['values']);
 
   user_save($account, $edit, $category);
   $form_state['values']['uid'] = $account->uid;
@@ -495,13 +509,13 @@ function user_cancel_confirm($account, $timestamp = 0, $hashed_pass = '') {
   $current = REQUEST_TIME;
 
   // Basic validation of arguments.
-  if (isset($account->user_cancel_method) && !empty($timestamp) && !empty($hashed_pass)) {
+  if (isset($account->data['user_cancel_method']) && !empty($timestamp) && !empty($hashed_pass)) {
     // Validate expiration and hashed password/login.
     if ($timestamp <= $current && $current - $timestamp < $timeout && $account->uid && $timestamp >= $account->login && $hashed_pass == user_pass_rehash($account->pass, $timestamp, $account->login)) {
       $edit = array(
-        'user_cancel_notify' => isset($account->user_cancel_notify) ? $account->user_cancel_notify : variable_get('user_mail_status_canceled_notify', FALSE),
+        'user_cancel_notify' => isset($account->data['user_cancel_notify']) ? $account->data['user_cancel_notify'] : variable_get('user_mail_status_canceled_notify', FALSE),
       );
-      user_cancel($edit, $account->uid, $account->user_cancel_method);
+      user_cancel($edit, $account->uid, $account->data['user_cancel_method']);
       // Since user_cancel() is not invoked via Form API, batch processing needs
       // to be invoked manually and should redirect to the front page after
       // completion.

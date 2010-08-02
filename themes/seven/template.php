@@ -1,5 +1,17 @@
 <?php
-// $Id: template.php,v 1.14 2010/03/03 19:46:26 dries Exp $
+// $Id: template.php,v 1.17 2010/05/12 09:22:24 dries Exp $
+
+/**
+ * Override or insert variables into the maintenance page template.
+ */
+function seven_preprocess_maintenance_page(&$vars) {
+  // While markup for normal pages is split into page.tpl.php and html.tpl.php,
+  // the markup for the maintenance page is all in the single
+  // maintenance-page.tpl.php template. So, to have what's done in
+  // seven_preprocess_html() also happen on the maintenance page, it has to be
+  // called here.
+  seven_preprocess_html($vars);
+}
 
 /**
  * Override or insert variables into the html template.
@@ -52,7 +64,7 @@ function seven_admin_block_content($variables) {
       $output .= '<li class="leaf">';
       $output .= l($item['title'], $item['href'], $item['localized_options']);
       if (!system_admin_compact_mode()) {
-        $output .= '<div class="description">' . $item['description'] . '</div>';
+        $output .= '<div class="description">' . filter_xss_admin($item['description']) . '</div>';
       }
       $output .= '</li>';
     }
@@ -69,7 +81,7 @@ function seven_admin_block_content($variables) {
 function seven_tablesort_indicator($variables) {
   $style = $variables['style'];
   $theme_path = drupal_get_path('theme', 'seven');
-  if ($style == "asc") {
+  if ($style == 'asc') {
     return theme('image', array('path' => $theme_path . '/images/arrow-asc.png', 'alt' => t('sort ascending'), 'title' => t('sort ascending')));
   }
   else {
