@@ -720,8 +720,15 @@ class mediamosa_rest_call_job_asset_search extends mediamosa_rest_call {
     // Must exist.
     mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
 
+    $item_count_total = NULL;
+
     // Get the jobs from the user.
-    $result = mediamosa_job::get_job_list($app_id, $user_id, $is_app_admin, FALSE, $asset_id, '', $cql, $limit, $offset);
+    $result = mediamosa_job::get_job_list($app_id, $user_id, $is_app_admin, FALSE, $asset_id, '', $cql, $limit, $offset, $item_count_total);
+
+    // Get the count.
+    if ($item_count_total) {
+      $o_mediamosa->item_count_total =  $item_count_total;
+    }
 
     foreach ($result as $a_row) {
       $started_unix = isset($a_row[mediamosa_job_db::STARTED]) ? mediamosa_lib::iso8601date_to_unix($a_row[mediamosa_job_db::STARTED]) : '';
