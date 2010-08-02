@@ -1,5 +1,7 @@
 // $Id: CHANGELOG.txt,v 1.360 2010/03/21 16:51:26 webchick Exp $
 
+- Mediamosa Ticket 267: Job search: item total count fix,
+
 Drupal 7.0 alpha 3, 2010-03-21
 ----------------------
 - Database:
