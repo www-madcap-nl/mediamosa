@@ -98,6 +98,8 @@ Other changes (not ticket related).
 - Number of typo and text changes in MediaMosa profile.
 - Fixed bug in REST call /collection/$coll_id/delete where missing classname
   resulted in failure.
+- Removed the 3 hour tab on simpletests page, is empty anyway.
+- Added automatedsimpletest module to installation profile. 
 
 Mediamosa 2.1.5 (build 664)
 ---------------------------

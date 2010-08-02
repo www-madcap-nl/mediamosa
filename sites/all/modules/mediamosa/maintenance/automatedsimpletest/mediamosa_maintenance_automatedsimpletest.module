@@ -59,6 +59,7 @@ function mediamosa_maintenance_automatedsimpletest_menu() {
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => -3,
   );
+  /*
   $items['admin/mediamosa/simpletests/normal'] = array(
     'title' => '3 hours',
     'page callback' => '_mediamosa_maintenance_automatedsimpletest',
@@ -67,6 +68,7 @@ function mediamosa_maintenance_automatedsimpletest_menu() {
     'type' => MENU_LOCAL_TASK,
     'weight' => -2,
   );
+  */
   $items['admin/mediamosa/simpletests/slow'] = array(
     'title' => 'daily',
     'page callback' => '_mediamosa_maintenance_automatedsimpletest',

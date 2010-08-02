@@ -334,6 +334,7 @@ function mediamosa_profile_install() {
     'mediamosa_integrity_check',
     'mediamosa_job',
     'mediamosa_maintenance',
+    'mediamosa_maintenance_automatedsimpletest',
     'mediamosa_maintenance_browse',
     'mediamosa_maintenance_status',
     'mediamosa_migration',
