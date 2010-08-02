@@ -621,6 +621,9 @@ class mediamosa_rest_call_job_user_search extends mediamosa_rest_call {
     // Get the jobs from the user.
     $result = mediamosa_job::get_job_list($app_id, $user_id, $is_app_admin);
 
+    // Get the count.
+    $o_mediamosa->item_count_total = $result->found_rows;
+
     foreach ($result as $a_row) {
       $started_unix = isset($a_row[mediamosa_job_db::STARTED]) ? mediamosa_lib::iso8601date_to_unix($a_row[mediamosa_job_db::STARTED]) : '';
 
@@ -723,12 +726,10 @@ class mediamosa_rest_call_job_asset_search extends mediamosa_rest_call {
     $item_count_total = NULL;
 
     // Get the jobs from the user.
-    $result = mediamosa_job::get_job_list($app_id, $user_id, $is_app_admin, FALSE, $asset_id, '', $cql, $limit, $offset, $item_count_total);
+    $result = mediamosa_job::get_job_list($app_id, $user_id, $is_app_admin, FALSE, $asset_id, '', $cql, $limit, $offset);
 
     // Get the count.
-    if ($item_count_total) {
-      $o_mediamosa->item_count_total =  $item_count_total;
-    }
+    $o_mediamosa->item_count_total = $result->found_rows;
 
     foreach ($result as $a_row) {
       $started_unix = isset($a_row[mediamosa_job_db::STARTED]) ? mediamosa_lib::iso8601date_to_unix($a_row[mediamosa_job_db::STARTED]) : '';
@@ -804,6 +805,9 @@ class mediamosa_rest_call_job_mediafile_search extends mediamosa_rest_call {
 
     // Get the jobs from the user.
     $result = mediamosa_job::get_job_list($app_id, $user_id, $is_app_admin, FALSE, FALSE, $mediafile_id);
+
+    // Get the count.
+    $o_mediamosa->item_count_total = $result->found_rows;
 
     // Build result.
     foreach ($result as $a_row) {
@@ -883,6 +887,9 @@ class mediamosa_rest_call_job_search extends mediamosa_rest_call {
 
     // Get the jobs from the user.
     $result = mediamosa_job::get_job_list($app_id, $user_id, $is_app_admin, $job_id);
+
+    // Get the count.
+    $o_mediamosa->item_count_total = $result->found_rows;
 
     // Build result.
     foreach ($result as $a_row) {

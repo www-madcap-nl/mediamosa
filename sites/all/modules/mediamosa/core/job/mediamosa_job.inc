@@ -757,7 +757,7 @@ class mediamosa_job {
    *
    * @param $a_parameters
    */
-  static public function get_job_list($app_id, $user_id, $is_app_admin = FALSE, $job_id = 0, $asset_id = '', $mediafile_id = '', $cql = NULL, $limit = mediamosa_settings::LIMIT_DEFAULT_JOBLIST, $offset = 0, &$item_count_total = NULL) {
+  static public function get_job_list($app_id, $user_id, $is_app_admin = FALSE, $job_id = 0, $asset_id = '', $mediafile_id = '', $cql = NULL, $limit = mediamosa_settings::LIMIT_DEFAULT_JOBLIST, $offset = 0) {
 
     $query = mediamosa_db::db_select(mediamosa_job_db::TABLE_NAME, 'j');
     $query->fields('j');
@@ -814,7 +814,10 @@ class mediamosa_job {
     // Limit and offset.
     $query->range($offset, $limit);
 
-    return $query->execute()->fetchAll();
+    $result = $query->execute();
+    $result->found_rows = $item_count_total;
+
+    return $result;
   }
 
   /**
