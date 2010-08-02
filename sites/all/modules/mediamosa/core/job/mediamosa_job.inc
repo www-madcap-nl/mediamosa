@@ -690,7 +690,7 @@ class mediamosa_job {
       case mediamosa_job_db::JOB_TYPE_TRANSCODE:
         $a_mediafile = mediamosa_asset_mediafile::get($mediafile_id);
         if (!$a_mediafile || !mediamosa_asset_mediafile::is_original($a_mediafile)) {
-          self::set_job_status_failed(mediamosa::t('The original mediafile (ID: @mediafile_id is not present or not the original.', array('@mediafile_id' => $mediafile_id)));
+          self::set_job_status_failed($job_id, mediamosa::t('The original mediafile (ID: @mediafile_id is not present or not the original.', array('@mediafile_id' => $mediafile_id)));
           return FALSE;
         }
         break;
