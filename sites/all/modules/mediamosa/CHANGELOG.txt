@@ -31,6 +31,7 @@ Mediamosa 2.2.0
 - Job for still analyse (See ticket 239).
 - Introduction /collection/{id}/asset/count, and implements numofvideos in 
   /collection/{id} response (See ticket 204).
+- Job search: item total count fix (See ticket 267).
 
 Other changes (not ticket related).
 - During ticket #255, adding pager to stats, bug was found on the stats keyword
