@@ -222,19 +222,21 @@ class mediamosa_ticket {
         $ticket_path = mediamosa_configuration_storage::ticket_play_location_get($app_id);
 
         // Now based on certain extensions, attach the fileext. to the filename.
-        switch ($a_mediafile_ext['metadata']['container_type']) {
-          case mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_FLV:
-            $ticket_id .= '.flv';
-            break;
-          case mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_MP4:
-            $ticket_id .= '.mp4';
-            break;
-          case mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_MP3:
-            $ticket_id .= '.mp3';
-            break;
-          case mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_OGG:
-            $ticket_id .= '.ogg';
-            break;
+        if (!empty($a_mediafile_ext['metadata']['container_type'])) {
+          switch ($a_mediafile_ext['metadata']['container_type']) {
+            case mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_FLV:
+              $ticket_id .= '.flv';
+              break;
+            case mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_MP4:
+              $ticket_id .= '.mp4';
+              break;
+            case mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_MP3:
+              $ticket_id .= '.mp3';
+              break;
+            case mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_OGG:
+              $ticket_id .= '.ogg';
+              break;
+          }
         }
 
         $ticket_symlink = $ticket_path . DIRECTORY_SEPARATOR . $ticket_id;

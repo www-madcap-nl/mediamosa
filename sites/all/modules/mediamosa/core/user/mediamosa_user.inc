@@ -183,19 +183,22 @@ class mediamosa_user {
    * @return array
    */
   function get_diskspace($subject, $id, $app_id) {
+    $prop_id_filesize = mediamosa_asset_mediafile_metadata_property::get_property_id(mediamosa_asset_mediafile_metadata::FILESIZE, mediamosa_asset_mediafile_metadata_property_db::TYPE_INT);
     $mbytes = mediamosa_db::db_query(
-      'SELECT SUM(mfmd.#filesize) / 1048576 FROM {#mediamosa_asset_mediafile} AS mf
+      'SELECT SUM(mfmd.#val_int) / 1048576 FROM {#mediamosa_asset_mediafile} AS mf
        JOIN {#mediamosa_asset_mediafile_metadata} AS mfmd ON mfmd.#mediafile_id = mf.#mediafile_id
-       WHERE mf.#subject_id = :id AND mf.#app_id = :app_id',
+       WHERE mf.#subject_id = :id AND mf.#app_id = :app_id AND mfmd.#prop_id_filesize = :prop_id_filesize',
        array(
         '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
         '#mediamosa_asset_mediafile_metadata' => mediamosa_asset_mediafile_metadata_db::TABLE_NAME,
-        '#filesize' => mediamosa_asset_mediafile_metadata_db::FILESIZE,
+        '#val_int' => mediamosa_asset_mediafile_metadata_db::VAL_INT,
         '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
         '#app_id' => mediamosa_asset_mediafile_db::APP_ID,
         '#subject_id' => $subject . '_id',
+        '#prop_id_filesize' => mediamosa_asset_mediafile_metadata_db::PROP_ID,
         ':id' => $id,
-        ':app_id' => $app_id
+        ':app_id' => $app_id,
+        ':prop_id_filesize' => $prop_id_filesize,
        )
     )->fetchField();
 

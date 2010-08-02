@@ -54,7 +54,7 @@ class mediamosa_job_still {
   static public function create($job_id, array $a_still_parameters) {
 
     $a_still_parameters += array(
-      mediamosa_asset_mediafile_metadata_db::STILL_TYPE => NULL,
+      mediamosa_asset_mediafile_metadata::STILL_TYPE => NULL,
       'still_per_mediafile' => NULL,
       'still_every_second' => NULL,
       'start_frame' => NULL,
@@ -65,10 +65,10 @@ class mediamosa_job_still {
       mediamosa_job_still_db::FRAMETIME => mediamosa_settings::STILL_DEFAULT_FRAME_TIME,
     );
 
-    switch ($a_still_parameters[mediamosa_asset_mediafile_metadata_db::STILL_TYPE]) {
-      case mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NORMAL:
-      case mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SECOND:
-      case mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SCENE:
+    switch ($a_still_parameters[mediamosa_asset_mediafile_metadata::STILL_TYPE]) {
+      case mediamosa_asset_mediafile_metadata::STILL_TYPE_NORMAL:
+      case mediamosa_asset_mediafile_metadata::STILL_TYPE_SECOND:
+      case mediamosa_asset_mediafile_metadata::STILL_TYPE_SCENE:
         $blackstill_check = mediamosa_job_still_db::BLACKSTILL_CHECK_FALSE;
         break;
 
@@ -78,8 +78,8 @@ class mediamosa_job_still {
     }
 
     // We need to unset these. (these were not copied?).
-    unset($a_still_parameters[mediamosa_asset_mediafile_metadata_db::WIDTH]);
-    unset($a_still_parameters[mediamosa_asset_mediafile_metadata_db::HEIGHT]);
+    unset($a_still_parameters[mediamosa_asset_mediafile_metadata::WIDTH]);
+    unset($a_still_parameters[mediamosa_asset_mediafile_metadata::HEIGHT]);
 
     // Create the insert object.
     $query = mediamosa_db::db_insert(mediamosa_job_still_db::TABLE_NAME);

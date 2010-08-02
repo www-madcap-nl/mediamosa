@@ -101,10 +101,12 @@ class mediamosa_asset_mediafile_play_proxy {
     assert(!empty($mediafile_ext));
 
     // Get the URI.
-    $uri = mediamosa_server::get_uri_streaming($mediafile_ext['metadata']['container_type'], $mediafile_ext['metadata']['video_codec']);
+    $container_type = (empty($mediafile_ext['metadata']['container_type']) ? NULL : $mediafile_ext['metadata']['container_type']);
+    $video_codec = (empty($mediafile_ext['metadata']['video_codec']) ? NULL : $mediafile_ext['metadata']['video_codec']);
+    $uri = mediamosa_server::get_uri_streaming($container_type, $video_codec);
 
     if (!$uri) { // No streaming profile found
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STREAMING_PROFILE_NOT_FOUND, array('@video_container' => $mediafile_ext['metadata']['container_type']));
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STREAMING_PROFILE_NOT_FOUND, array('@video_container' => $container_type));
     }
 
     return $uri;

@@ -171,34 +171,10 @@ class mediamosa_asset_mediafile {
     $prefix = 'mediafile_metadata_';
 
     // Get the columns from the schema.
-    $a_columns = mediamosa_db::db_get_columns(mediamosa_asset_mediafile_metadata_db::TABLE_NAME);
-
     $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
-    $query->leftJoin(mediamosa_asset_mediafile_metadata_db::TABLE_NAME, 'mfm', 'mfm.mediafile_id = mf.mediafile_id');
     $query->leftJoin(mediamosa_asset_db::TABLE_NAME, 'a', 'mf.asset_id = a.asset_id');
     $query->condition('mf.' . mediamosa_asset_mediafile_db::ID, $mediafile_ids, 'IN');
     $query->fields('mf');
-
-    // Now select the metadata columns to the query.
-    foreach ($a_columns as $column) {
-      if (in_array(
-        $column,
-        array(
-          mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID,
-          mediamosa_asset_mediafile_metadata_db::ID,
-          mediamosa_asset_mediafile_metadata_db::STILL_TIME_CODE,
-          mediamosa_asset_mediafile_metadata_db::STILL_ORDER,
-          mediamosa_asset_mediafile_metadata_db::STILL_FORMAT,
-          mediamosa_asset_mediafile_metadata_db::STILL_TYPE,
-          mediamosa_asset_mediafile_metadata_db::STILL_DEFAULT
-        )
-      )) {
-        continue; // Some columns need to be skipped.
-      }
-
-      // Prefix the metadata in the result.
-      $query->addField('mfm', $column, $prefix . $column);
-    }
 
     // Execute query.
     $result = $query->execute();
@@ -206,7 +182,25 @@ class mediamosa_asset_mediafile {
     // Add to item.
     $items = array();
     foreach ($result as $a_row) {
-      $items[$a_row[mediamosa_asset_mediafile_db::ID]] = $a_row;
+      $mediafile_id = $a_row[mediamosa_asset_mediafile_db::ID];
+      $items[$mediafile_id] = $a_row;
+
+      $items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::VIDEO_CODEC] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::VIDEO_CODEC);
+      $items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::COLORSPACE] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::COLORSPACE);
+      $items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::WIDTH] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, mediamosa_asset_mediafile_metadata::WIDTH);
+      $items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::HEIGHT] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, mediamosa_asset_mediafile_metadata::HEIGHT);
+      $items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::FPS] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::FPS);
+      $items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::AUDIO_CODEC] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::AUDIO_CODEC);
+      $items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::SAMPLE_RATE] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, mediamosa_asset_mediafile_metadata::SAMPLE_RATE);
+      $items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::CHANNELS] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::CHANNELS);
+      $items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::FILE_DURATION] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::FILE_DURATION);
+      $items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::CONTAINER_TYPE] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::CONTAINER_TYPE);
+      $items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::BITRATE] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, mediamosa_asset_mediafile_metadata::BITRATE);
+      $items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::BPP] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::BPP);
+      $items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::FILESIZE] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, mediamosa_asset_mediafile_metadata::FILESIZE);
+      $items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::MIME_TYPE] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::MIME_TYPE);
+      $items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::IS_HINTED] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::IS_HINTED);
+      $items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::IS_INSERTED_MD] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::IS_INSERTED_MD);
     }
 
     // Now we know which mediafiles where found.
@@ -214,14 +208,14 @@ class mediamosa_asset_mediafile {
 
     // Lets include the still, if we need them.
     if (!empty($mediafile_ids_found) && $show_stills) {
+      $prop_id = mediamosa_asset_mediafile_metadata_property::get_property_id_int(mediamosa_asset_mediafile_metadata::STILL_ORDER);
       // Get the stills.
       $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
       $query->fields('mf');
-      $query->leftJoin(mediamosa_asset_mediafile_metadata_db::TABLE_NAME, 'mfm', 'mfm.mediafile_id = mf.mediafile_id');
-      $query->fields('mfm');
+      $query->leftJoin(mediamosa_asset_mediafile_metadata_db::TABLE_NAME, 'mfm', sprintf('mfm.mediafile_id = mf.mediafile_id AND mfm.%s = %d', mediamosa_asset_mediafile_metadata_db::PROP_ID, $prop_id));
       $query->condition('mf.' . mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE, $mediafile_ids_found, 'IN');
       $query->condition('mf.' . mediamosa_asset_mediafile_db::IS_STILL, mediamosa_asset_mediafile_db::IS_STILL_TRUE);
-      $query->orderBy('mfm.' . mediamosa_asset_mediafile_metadata_db::STILL_ORDER, 'ASC');
+      $query->orderBy('mfm.' . mediamosa_asset_mediafile_metadata_db::VAL_INT, 'ASC');
       $result = $query->execute();
 
       $i = 0;
@@ -246,6 +240,10 @@ class mediamosa_asset_mediafile {
 
           // Add still to mediafile.
           assert(!empty($a_row[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE])); // Make sure its here.
+
+          $mediafile_id = $a_row[mediamosa_asset_mediafile_db::ID];
+          $a_row = array_merge($a_row, mediamosa_asset_mediafile_metadata::get_all_mediafile_metadata($mediafile_id));
+
           $items[$a_row[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE]]['still']['#'. $i++] = $a_row;
         }
         catch (mediamosa_exception_error_file_not_found $e) {
@@ -302,7 +300,7 @@ class mediamosa_asset_mediafile {
       $items[$mediafile_id]['ega_stream_url'] = '';
 
       // Stream URL, only if streamable.
-      if (isset($items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata_db::CONTAINER_TYPE]) && mediamosa_server::is_streamable($items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata_db::CONTAINER_TYPE])) {
+      if (isset($items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::CONTAINER_TYPE]) && mediamosa_server::is_streamable($items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::CONTAINER_TYPE])) {
         $items[$mediafile_id]['ega_play_url'] = preg_replace($patterns, $replacements, $a_app[mediamosa_app_db::PLAY_PROXY_URL]);
 
         // Output extra?

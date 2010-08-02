@@ -570,143 +570,74 @@ function _mediamosa_migration_mediafile_metadata() {
   // Get the database name.
   $db_name = _mediamosa_migration_get_memo_data_db();
 
-  // Get the current mode, which might be empty;
-  $old_mode = db_query('SELECT @@SESSION.sql_mode')->fetchField();
+  // Existing fields.
+  $fields = array();
+  $columns = mediamosa_db::db_get_columns_with_type('mediafile_metadata', $db_name);
+  foreach ($columns as $row) {
+    // Collect only real properties.
+    if (
+      $row->column_name != 'metadata_id' &&
+      $row->column_name != 'mediafile_id' &&
+      $row->column_name != 'created' &&
+      $row->column_name != 'changed'
+    ) {
+      // Type is eg. "varchar(32)" or "int(10) unsigned" or "enum('FALSE','TRUE')"
+      $type = drupal_strtolower($row->data_type);
 
-  // Turn off problems with empty dates.
-  db_query("SET SESSION sql_mode = 'ALLOW_INVALID_DATES'");
+      // Type formatting.
+      if (strpos($type, 'int') !== FALSE) {
+        $type = 'INT';
+      }
+      elseif (strpos($type, 'char') !== FALSE || strpos($type, 'binary') !== FALSE || $type == 'blob' || $type == 'text' || $type == 'enum') {
+        $type = 'CHAR';
+      }
+      else {
+        $type = 'DATETIME';
+      }
 
-  // Remove the unique index on mediafile_id.
-  db_query("ALTER TABLE {mediamosa_asset_mediafile_metadata} DROP INDEX uni_mediafileid");
-
-  // Add SECOND, so SECONDS and SECOND.
-  db_change_field(
-    mediamosa_asset_mediafile_metadata_db::TABLE_NAME,
-    mediamosa_asset_mediafile_metadata_db::STILL_TYPE,
-    mediamosa_asset_mediafile_metadata_db::STILL_TYPE,
-    array(
-      'description' => t('The type of the still.'),
-      'type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NONE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NORMAL, 'SECONDS', mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SECOND, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SCENE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_PICTURE)) . "')",
-      'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NONE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NORMAL, 'SECONDS', mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SECOND, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SCENE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_PICTURE)) . "')",
-      'default' => mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NONE,
-    )
-  );
-
-  // The mediamosa_asset_mediafile table should be empty (its checked as requirement).
-  /**
-   * Copy from 1.x to 2.x
-   * Columns dropped;
-   * -
-   * Columns renamed;
-   * mediafile_id = mediafile_id
-   */
-  db_query(strtr(
-    "INSERT INTO {mediamosa_asset_mediafile_metadata}
-      (
-        metadata_id,
-        mediafile_id,
-        video_codec,
-        colorspace,
-        width,
-        height,
-        fps,
-        audio_codec,
-        sample_rate,
-        channels,
-        file_duration,
-        container_type,
-        bitrate,
-        bpp,
-        filesize,
-        mime_type,
-        created,
-        changed,
-        is_hinted,
-        is_inserted_md,
-        still_time_code,
-        still_order,
-        still_type,
-        still_format,
-        still_default
-      ) (SELECT
-        mfd.metadata_id,
-        mfd.mediafile_id,
-        mfd.video_codec,
-        mfd.colorspace,
-        mfd.width,
-        mfd.height,
-        mfd.fps,
-        mfd.audio_codec,
-        mfd.sample_rate,
-        mfd.channels,
-        mfd.file_duration,
-        mfd.container_type,
-        mfd.bitrate,
-        mfd.bpp,
-        mfd.filesize,
-        mfd.mime_type,
-        mfd.created,
-        mfd.changed,
-        mfd.is_hinted,
-        mfd.is_inserted_md,
-        mfd.still_time_code,
-        mfd.still_order,
-        mfd.still_type,
-        mfd.still_format,
-        mfd.still_default
-        FROM #db_name.{mediafile_metadata} AS mfd JOIN #db_name.{mediafile} AS mf USING(mediafile_id))",
-    array(
-      '#db_name' => $db_name
-    ))
-  );
-
-  // Update still_type_2 SECONDS to SECOND.
-  db_query("UPDATE {mediamosa_asset_mediafile_metadata} SET still_type = 'SECOND' WHERE still_type = 'SECONDS'");
-
-  // Remove SECONDS.
-  db_change_field(
-    mediamosa_asset_mediafile_metadata_db::TABLE_NAME,
-    mediamosa_asset_mediafile_metadata_db::STILL_TYPE,
-    mediamosa_asset_mediafile_metadata_db::STILL_TYPE,
-    array(
-      'description' => t('The type of the still.'),
-      'type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NONE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NORMAL, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SECOND, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SCENE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_PICTURE)) . "')",
-      'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NONE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NORMAL, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SECOND, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SCENE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_PICTURE)) . "')",
-      'default' => mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NONE,
-    )
-  );
-
-  // Now copy all changed dates to overwrite empty created dates.
-  db_query("UPDATE {mediamosa_asset_mediafile_metadata} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
-
-  // Now make sure created is not empty.
-  db_query("UPDATE {mediamosa_asset_mediafile_metadata} SET created = NOW() WHERE created = '0000-00-00 00:00:00'");
-
-  // Now make sure changed is not empty.
-  db_query("UPDATE {mediamosa_asset_mediafile_metadata} SET changed = NOW() WHERE changed = '0000-00-00 00:00:00'");
-
-  // Now remove the double metadata.
-
-  // Select
-  $tmp_table_name = db_query_temporary("SELECT COUNT(*) AS total, MIN(metadata_id) AS metadata_id FROM {mediamosa_asset_mediafile_metadata} GROUP BY mediafile_id HAVING total > 1");
-  $row_count = db_query("SELECT COUNT(metadata_id) FROM " . $tmp_table_name)->fetchField();
-
-  // Might deadlock, so lets protect.
-  $max = 100;
-  while ($row_count && --$max) {
-    // Delete the doubles we found.
-    db_query("DELETE FROM {mediamosa_asset_mediafile_metadata} WHERE metadata_id IN (SELECT metadata_id FROM " . $tmp_table_name . ")");
-
-    // Now query again, because there can be more than 2, 3, 4, etc rows of each double.
-    $tmp_table_name = db_query_temporary("SELECT COUNT(*) AS total, MIN(metadata_id) AS metadata_id FROM {mediamosa_asset_mediafile_metadata} GROUP BY mediafile_id HAVING total > 1");
-    $row_count = db_query("SELECT COUNT(metadata_id) FROM " . $tmp_table_name)->fetchField();
+      // Insert.
+      $prop_id = mediamosa_asset_mediafile_metadata_property::get_property_id($row->column_name, $type);
+      $fields[$row->column_name] = array(
+        'prop_id' => $prop_id,
+        'type' => $type,
+      );
+    }
   }
 
-  // Remove the unique index on mediafile_id.
-  db_query("ALTER TABLE {mediamosa_asset_mediafile_metadata} ADD UNIQUE KEY `uni_mediafileid` (`mediafile_id`)");
+  // Migrating data.
+  $result = db_query(sprintf("SELECT * FROM %s.{mediafile_metadata}", $db_name));
+  foreach ($result as $row) {
+    foreach ($fields as $field => $property) {
+      if (!is_null($row->$field)) {
+        // Time set to the correct format.
+        $created = $row->created;
+        $changed = $row->changed;
+        if ((!$created || $created == '0000-00-00 00:00:00') && ($changed && $changed != '0000-00-00 00:00:00')) {
+          $created = $changed;
+        }
+        if (!$created || $created == '0000-00-00 00:00:00') {
+          $created = mediamosa::db_current_timestamp_now();
+        }
+        if (!$changed || $changed == '0000-00-00 00:00:00') {
+          $changed = mediamosa::db_current_timestamp_now();
+        }
 
-  // Back to old session mode.
-  db_query(strtr("SET SESSION sql_mode = '#old_mode'", array('#old_mode' => $old_mode)));
+        db_query("
+          INSERT INTO {mediamosa_asset_mediafile_metadata}
+          (mediafile_id, prop_id, val_char, val_datetime, val_int, created, changed) VALUES
+          (:mediafile_id, :prop_id, :val_char, :val_datetime, :val_int, :created, :changed)", array(
+          ':mediafile_id' => $row->mediafile_id,
+          ':prop_id' => $property['prop_id'],
+          ':val_char' => ($property['type'] == 'CHAR' ? $row->$field : NULL),
+          ':val_datetime' => ($property['type'] == 'DATETIME' ? $row->$field : NULL),
+          ':val_int' => ($property['type'] == 'INT' ? $row->$field : 0),
+          ':created' => $created,
+          ':changed' => $changed,
+        ));
+      }
+    }
+  }
+
 }
 
 /**

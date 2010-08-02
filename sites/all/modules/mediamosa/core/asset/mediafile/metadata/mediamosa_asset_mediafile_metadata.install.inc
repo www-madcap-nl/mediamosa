@@ -31,11 +31,16 @@
 
 require_once 'mediamosa_asset_mediafile_metadata.inc';
 require_once 'mediamosa_asset_mediafile_metadata_db.inc';
+require_once 'property/mediamosa_asset_mediafile_metadata_property_db.inc';
+require_once 'property/mediamosa_asset_mediafile_metadata_property.install.inc';
 
 /**
  * Implements hook_install().
  */
 function _mediamosa_asset_mediafile_metadata_install() {
+  // Create the asset mediafile metadata property table first.
+  _mediamosa_asset_mediafile_metadata_property_install();
+
   // Create our table(s).
   mediamosa::drupal_install_schema(mediamosa_asset_mediafile_metadata_db::TABLE_NAME);
 }
@@ -46,6 +51,9 @@ function _mediamosa_asset_mediafile_metadata_install() {
 function _mediamosa_asset_mediafile_metadata_uninstall() {
   // Drop our table(s).
   mediamosa::drupal_uninstall_schema(mediamosa_asset_mediafile_metadata_db::TABLE_NAME);
+
+  // Drop the asset mediafile metadata property table.
+  _mediamosa_asset_mediafile_metadata_property_uninstall();
 }
 
 /**
@@ -53,7 +61,7 @@ function _mediamosa_asset_mediafile_metadata_uninstall() {
  */
 function mediamosa_asset_mediafile_metadata_schema() {
 
-  $a_schema[mediamosa_asset_mediafile_metadata_db::TABLE_NAME] = array(
+  $schema[mediamosa_asset_mediafile_metadata_db::TABLE_NAME] = array(
   'description' => t('The asset media metadata table.'),
     'fields' => array(
       mediamosa_asset_mediafile_metadata_db::ID => array(
@@ -67,78 +75,27 @@ function mediamosa_asset_mediafile_metadata_schema() {
         'not null' => TRUE,
         'description' => t('The asset mediafile ID.'),
       ),
-      mediamosa_asset_mediafile_metadata_db::VIDEO_CODEC => array(
-        'type' => 'varchar',
-        'length' => mediamosa_asset_mediafile_metadata_db::VIDEO_CODEC_LENGTH,
-        'description' => t('The codec used during creation.'),
-      ),
-      mediamosa_asset_mediafile_metadata_db::COLORSPACE => array(
-        'type' => 'varchar',
-        'length' => mediamosa_asset_mediafile_metadata_db::COLORSPACE_LENGTH,
-        'description' => t('The codec used during creation.'),
-      ),
-      mediamosa_asset_mediafile_metadata_db::WIDTH => array(
+      mediamosa_asset_mediafile_metadata_db::PROP_ID => array(
         'type' => 'int',
-        'description' => t('The width of the object.'),
+        'not null' => TRUE,
+        'description' => t('The property ID of the metadata.'),
         'unsigned' => TRUE,
       ),
-      mediamosa_asset_mediafile_metadata_db::HEIGHT => array(
-        'type' => 'int',
-        'description' => t('The height of the object.'),
-        'unsigned' => TRUE,
+      mediamosa_asset_mediafile_metadata_db::VAL_CHAR => array(
+        'type' => 'text',
+        'size' => 'normal',
+        'description' => t('The value of the property stored as a string.'),
       ),
-      mediamosa_asset_mediafile_metadata_db::FPS => array(
-        'type' => 'varchar',
-        'length' => mediamosa_asset_mediafile_metadata_db::FPS_LENGTH,
-        'description' => t('The frame per seconds.'),
+      mediamosa_asset_mediafile_metadata_db::VAL_DATETIME => array(
+        'type' => 'datetime',
+        'description' => t('The date and time of the property value.'),
       ),
-      mediamosa_asset_mediafile_metadata_db::AUDIO_CODEC => array(
-        'type' => 'varchar',
-        'length' => mediamosa_asset_mediafile_metadata_db::AUDIO_CODEC_LENGTH,
-        'description' => t('The audio codec used.'),
-      ),
-      mediamosa_asset_mediafile_metadata_db::SAMPLE_RATE => array(
-        'type' => 'int',
-        'description' => t('The height of the object.'),
-        'unsigned' => TRUE,
-      ),
-      mediamosa_asset_mediafile_metadata_db::CHANNELS => array(
-        'type' => 'varchar',
-        'length' => mediamosa_asset_mediafile_metadata_db::CHANNELS_LENGTH,
-        'description' => t('The number of channels.'),
-      ),
-      mediamosa_asset_mediafile_metadata_db::FILE_DURATION => array(
-        'type' => 'varchar',
-        'length' => mediamosa_asset_mediafile_metadata_db::FILE_DURATION_LENGTH,
-        'description' => t('The length of object in time.'),
-      ),
-      mediamosa_asset_mediafile_metadata_db::CONTAINER_TYPE => array(
-        'type' => 'varchar',
-        'length' => mediamosa_asset_mediafile_metadata_db::CONTAINER_TYPE_LENGTH,
-        'description' => t('The container type, e.g. avi.'),
-      ),
-      mediamosa_asset_mediafile_metadata_db::BITRATE => array(
-        'type' => 'int',
-        'description' => t('The bitrate of audio and video.'),
-        'unsigned' => TRUE,
-      ),
-      mediamosa_asset_mediafile_metadata_db::BPP => array(
-        'type' => 'varchar',
-        'length' => mediamosa_asset_mediafile_metadata_db::BPP_LENGTH,
-        'description' => t('The average number of bits in a pixel.'),
-      ),
-      mediamosa_asset_mediafile_metadata_db::FILESIZE => array(
+      mediamosa_asset_mediafile_metadata_db::VAL_INT => array(
         'type' => 'int',
         'size' => 'big',
-        'description' => t('The size of object in bytes.'),
-        'unsigned' => TRUE,
-      ),
-      mediamosa_asset_mediafile_metadata_db::MIME_TYPE => array(
-        'type' => 'varchar',
-        'length' => mediamosa_asset_mediafile_metadata_db::MIME_TYPE_LENGTH,
-        'description' => t('The mime type of the object.'),
-        'not null' => TRUE,
-        'default' => 'application/octet-stream',
+        //'not null' => TRUE,
+        'description' => t('The numeric value of the property.'),
+        //'default' => 0,
       ),
       mediamosa_asset_mediafile_metadata_db::CREATED => array(
         'type' => 'datetime',
@@ -150,64 +107,16 @@ function mediamosa_asset_mediafile_metadata_schema() {
         'default' => NULL,
         'description' => t('The date and time when media metadata was changed.'),
       ),
-      mediamosa_asset_mediafile_metadata_db::IS_HINTED => array(
-        'description' => t('The video file is hinted, making the video streamable (needed for mp4 video) and enables skipping to new positions in the video.'),
-        'type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_metadata_db::IS_HINTED_FALSE, mediamosa_asset_mediafile_metadata_db::IS_HINTED_TRUE)) . "')",
-        'not null' => TRUE,
-        'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_metadata_db::IS_HINTED_FALSE, mediamosa_asset_mediafile_metadata_db::IS_HINTED_TRUE)) . "')",
-        'default' => mediamosa_asset_mediafile_metadata_db::IS_HINTED_FALSE,
-      ),
-      mediamosa_asset_mediafile_metadata_db::IS_INSERTED_MD => array(
-        'description' => t('Has extra metadata available.'),
-        'type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_metadata_db::IS_INSERTED_MD_FALSE, mediamosa_asset_mediafile_metadata_db::IS_INSERTED_MD_TRUE)) . "')",
-        'not null' => TRUE,
-        'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_metadata_db::IS_INSERTED_MD_FALSE, mediamosa_asset_mediafile_metadata_db::IS_INSERTED_MD_TRUE)) . "')",
-        'default' => mediamosa_asset_mediafile_metadata_db::IS_INSERTED_MD_FALSE,
-      ),
-      mediamosa_asset_mediafile_metadata_db::STILL_TIME_CODE => array(
-        'type' => 'int',
-        'description' => t('The position where the still was taken.'),
-        'unsigned' => TRUE,
-      ),
-      mediamosa_asset_mediafile_metadata_db::STILL_ORDER => array(
-        'type' => 'int',
-        'description' => t('The order between stills.'),
-        'default' => 0,
-      ),
-      mediamosa_asset_mediafile_metadata_db::STILL_TYPE => array(
-        'description' => t('The type of the still.'),
-        'type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NONE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NORMAL, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SECOND, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SCENE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_PICTURE)) . "')",
-        'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NONE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NORMAL, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SECOND, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_SCENE, mediamosa_asset_mediafile_metadata_db::STILL_TYPE_PICTURE)) . "')",
-        'default' => mediamosa_asset_mediafile_metadata_db::STILL_TYPE_NONE,
-      ),
-      mediamosa_asset_mediafile_metadata_db::STILL_FORMAT => array(
-        'type' => 'varchar',
-        'length' => mediamosa_asset_mediafile_metadata_db::STILL_FORMAT_LENGTH,
-        'description' => t('The format of the still.'),
-      ),
-      mediamosa_asset_mediafile_metadata_db::STILL_DEFAULT => array(
-        'description' => t('Is this the default still.'),
-        'type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_metadata_db::STILL_DEFAULT_FALSE, mediamosa_asset_mediafile_metadata_db::STILL_DEFAULT_TRUE)) . "')",
-        'not null' => TRUE,
-        'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_metadata_db::STILL_DEFAULT_FALSE, mediamosa_asset_mediafile_metadata_db::STILL_DEFAULT_TRUE)) . "')",
-        'default' => mediamosa_asset_mediafile_metadata_db::STILL_DEFAULT_TRUE,
-      ),
     ),
     'primary key' => array(mediamosa_asset_mediafile_metadata_db::ID),
     'unique keys' => array(
-      'uni_mediafileid' => array(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID)
-    ),
-    'indexes' => array(
-      // Do not change the name of this index, its used in 1.7 -> 2.0 migration.
-      'idx_mediafileid_mimetype' => array(
-        mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID,
-        mediamosa_asset_mediafile_metadata_db::MIME_TYPE,
-      ),
+      'idx_mediafileid_propid' => array(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID, mediamosa_asset_mediafile_metadata_db::PROP_ID),
     ),
     'foreign keys' => array(
       mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID => array(mediamosa_asset_mediafile_db::TABLE_NAME => mediamosa_asset_mediafile_db::ID),
+      mediamosa_asset_mediafile_metadata_db::PROP_ID => array(mediamosa_asset_mediafile_metadata_property_db::TABLE_NAME => mediamosa_asset_mediafile_metadata_property_db::ID),
     ),
   );
 
-  return $a_schema;
+  return $schema;
 }

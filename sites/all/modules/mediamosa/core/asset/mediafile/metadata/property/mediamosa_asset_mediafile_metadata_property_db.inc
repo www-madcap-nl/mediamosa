@@ -29,18 +29,19 @@
   * The database class of the asset_mediafile metadata module.
   */
 
-class mediamosa_asset_mediafile_metadata_db {
+class mediamosa_asset_mediafile_metadata_property_db {
   // ------------------------------------------------------------------ Consts.
   // Table name;
-  const TABLE_NAME = 'mediamosa_asset_mediafile_metadata';
+  const TABLE_NAME = 'mediamosa_asset_mediafile_metadata_property';
 
   // Database fields;
-  const ID = 'metadata_id';
-  const MEDIAFILE_ID = 'mediafile_id';
-  const PROP_ID = 'prop_id';
-  const VAL_CHAR = 'val_char';
-  const VAL_DATETIME = 'val_datetime';
-  const VAL_INT = 'val_int';
+  const ID = 'prop_id';
+  const NAME = 'prop_name';
+  const NAME_LENGTH = 32;
+  const TYPE = 'type';
+  const TYPE_DATETIME = 'DATETIME';
+  const TYPE_INT = 'INT';
+  const TYPE_CHAR = 'CHAR';
   const CREATED = 'created';
   const CHANGED = 'changed';
 }

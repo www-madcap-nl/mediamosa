@@ -1168,7 +1168,7 @@ class mediamosa_asset_cql_context extends mediamosa_core_cql_context {
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_DATETIME,
               ),
               'mime_type' => array(
-                MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => mediamosa_asset_mediafile_metadata_db::MIME_TYPE,
+                MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => mediamosa_asset_mediafile_metadata_db::VAL_CHAR,
                 MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_asset_mediafile_metadata_db::TABLE_NAME,
                 MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'mm_mime_type',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_STRING,

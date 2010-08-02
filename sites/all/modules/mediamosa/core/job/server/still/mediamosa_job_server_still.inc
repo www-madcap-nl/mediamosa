@@ -193,15 +193,21 @@ class mediamosa_job_server_still {
       return $mediafile_id_src;
     }
 
+    $prop_id = mediamosa_asset_mediafile_metadata_property::get_property_id_char(mediamosa_asset_mediafile_metadata::FILE_DURATION);
     $file_duration = mediamosa_db::db_query(
-      'SELECT file_duration FROM {#mediamosa_asset_mediafile_metadata} m
-       LEFT JOIN {#mediamosa_job} j ON m.mediafile_id = j.mediafile_id
-       WHERE job_id = :job_id
+      'SELECT m.#file_duration FROM {#mediamosa_asset_mediafile_metadata} m
+       LEFT JOIN {#mediamosa_job} j USING(#mediafile_id)
+       WHERE j.#job_id = :job_id AND m.#prop_id = :prop_id
        LIMIT 1',
       array(
         '#mediamosa_asset_mediafile_metadata' => mediamosa_asset_mediafile_metadata_db::TABLE_NAME,
         '#mediamosa_job' => mediamosa_job_db::TABLE_NAME,
+        '#file_duration' => mediamosa_asset_mediafile_metadata_db::VAL_CHAR,
+        '#mediafile_id' => mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID,
+        '#job_id' => mediamosa_job_db::ID,
         ':job_id' => $job_id,
+        '#prop_id' => mediamosa_asset_mediafile_metadata_db::PROP_ID,
+        ':prop_id' => $prop_id,
       )
     )->fetchfield();
 
