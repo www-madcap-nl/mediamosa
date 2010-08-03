@@ -406,7 +406,6 @@ function mediamosa_update_7011() {
   db_query('DROP TABLE {mediamosa_asset_mediafile_metadata_old}');
 }
 
-
 /**
  * Rearrange indexes on mediamosa_asset for performance.
  */
@@ -436,4 +435,26 @@ function mediamosa_update_7012() {
       mediamosa_asset_db::IS_EMPTY_ASSET,
     )
   );
+}
+
+/**
+ * 2 pass h264 encoding.
+ */
+function mediamosa_update_7013() {
+  db_query("
+    INSERT INTO {mediamosa_transcode_mapping}
+    (tool, nice_parameter, tool_parameter, min_value, max_value, allowed_value, default_value, required, created, changed) VALUES
+    (:tool, :nice_parameter, :tool_parameter, :min_value, :max_value, :allowed_value, :default_value, :required, :created, :changed)
+  ", array(
+    ':tool' => 'ffmpeg',
+    ':nice_parameter' => '2_pass_h264_encoding',
+    ':tool_parameter' => '-pass',
+    ':min_value' => NULL,
+    ':max_value' => NULL,
+    ':allowed_value' => '1;2',
+    ':default_value' => '1',
+    ':required' => 'FALSE',
+    ':created' => mediamosa::db_current_timestamp_now(),
+    ':changed' => mediamosa::db_current_timestamp_now(),
+  ));
 }
