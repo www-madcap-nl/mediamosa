@@ -37,6 +37,7 @@ Mediamosa 2.2.0
 - Job search: item total count fix (See ticket #267).
 - PA: Adding domains and realms produce failures fix (See VPCore ticket #172).
 - Integrity check produces error fix (See VPCore ticket #177).
+- Integrity check uses "nice" call, instead of "wget" (See VPCore ticket #177).
 
 Other changes (not ticket related).
 - During ticket #255, adding pager to stats, bug was found on the stats keyword
