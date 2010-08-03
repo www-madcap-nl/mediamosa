@@ -405,3 +405,35 @@ function mediamosa_update_7011() {
   // Drop old metadata table.
   db_query('DROP TABLE {mediamosa_asset_mediafile_metadata_old}');
 }
+
+
+/**
+ * Rearrange indexes on mediamosa_asset for performance.
+ */
+function mediamosa_update_7012() {
+
+  // drop some not used indexes:
+  db_drop_index('mediamosa_asset', 'idx_provider_id');
+  db_drop_index('mediamosa_asset', 'idx_owner_id');
+  db_drop_index('mediamosa_asset', 'idx_group_id');
+  db_drop_index('mediamosa_asset', 'idx_created');
+  db_drop_index('mediamosa_asset', 'idx_changed');
+  db_drop_index('mediamosa_asset', 'idx_is_protected');
+  db_drop_index('mediamosa_asset', 'idx_app_parent_priv_unapp_emptyasset_owner');
+
+  // parent_id is deprecated.
+  db_query('ALTER TABLE mediamosa_asset drop foreign key fk_mediamosa_asset_parent_id');
+  db_drop_index('mediamosa_asset', 'idx_parent_id');
+
+  // only add the main search query.
+  db_add_index(
+    'mediamosa_asset',
+    'idx_app_priv_unapp_emptyasset',
+    array(
+      mediamosa_asset_db::APP_ID,
+      mediamosa_asset_db::ISPRIVATE,
+      mediamosa_asset_db::IS_UNAPPROPRIATE,
+      mediamosa_asset_db::IS_EMPTY_ASSET,
+    )
+  );
+}

@@ -136,7 +136,6 @@ class mediamosa_asset_search {
     sort($a_app_ids_tmp);
 
     $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset'][] = sprintf('a.app_id IN(%s)', mediamosa_db::escape_string($a_app_ids_tmp));
-    $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset'][] = 'a.parent_id IS NULL';
 
     // isprivate / unappropiate test.
     // Is outside the ACL check, else we would have problems with 'granted'.

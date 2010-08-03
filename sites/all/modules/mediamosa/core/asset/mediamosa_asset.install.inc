@@ -228,26 +228,15 @@ function mediamosa_asset_schema() {
     ),
     'primary key' => array(mediamosa_asset_db::ID),
     'indexes' => array(
-      'idx_' . mediamosa_asset_db::PARENT_ID => array(mediamosa_asset_db::PARENT_ID),
-      'idx_' . mediamosa_asset_db::PROVIDER_ID => array(mediamosa_asset_db::PROVIDER_ID),
-      'idx_' . mediamosa_asset_db::OWNER_ID => array(mediamosa_asset_db::OWNER_ID),
-      'idx_' . mediamosa_asset_db::GROUP_ID => array(mediamosa_asset_db::GROUP_ID),
-      'idx_' . mediamosa_asset_db::CREATED => array(mediamosa_asset_db::CREATED),
-      'idx_' . mediamosa_asset_db::CHANGED => array(mediamosa_asset_db::CHANGED),
-      'idx_' . mediamosa_asset_db::IS_PROTECTED => array(mediamosa_asset_db::IS_PROTECTED),
-      'idx_app_parent_priv_unapp_emptyasset_owner' => array(
+      'idx_app_priv_unapp_emptyasset' => array( // Main search index.
         mediamosa_asset_db::APP_ID,
-        mediamosa_asset_db::PARENT_ID,
         mediamosa_asset_db::ISPRIVATE,
         mediamosa_asset_db::IS_UNAPPROPRIATE,
         mediamosa_asset_db::IS_EMPTY_ASSET,
-        mediamosa_asset_db::OWNER_ID,
       ),
-    ),
-    'foreign keys' => array(
-      mediamosa_asset_db::PARENT_ID => array(mediamosa_asset_db::TABLE_NAME => mediamosa_asset_db::ID),
     ),
   );
 
   return $a_schema;
 }
+
