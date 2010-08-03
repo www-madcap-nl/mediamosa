@@ -145,7 +145,16 @@ function mediamosa_integrity_check_page() {
   $content = array();
 
   // Missing mediafile is the standard type.
-  $type = arg(4) ? arg(4) : 'missing mediafile';
+  $type = arg(4);
+  if (!$type) {
+    $result = mediamosa_db::db_query("SELECT #type FROM {#mediamosa_log_integrity_check} WHERE #type <> :error LIMIT 1", array(
+      '#mediamosa_log_integrity_check' => mediamosa_integrity_check_db::TABLE_NAME,
+      '#type' => mediamosa_integrity_check_db::TYPE,
+      ':error' => mediamosa_integrity_check_db::TYPE_ERROR,
+    ));
+    $type = $result->fetchField();
+  }
+
 
   // Check whether the mediamosa_integrity_check.inc is running or not.
   $output = array();
