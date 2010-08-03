@@ -66,45 +66,45 @@ class MediaMosaUserQuotaTestCaseEga extends MediaMosaTestCaseEga {
     $group_id = $this->randomName();
 
     $quotum = rand(100, 9999);
-    $a_parameters = array(
+    $parameters = array(
       mediamosa_rest_call_group_create::QUOTUM => $quotum,
     );
 
     // Create group.
-    $this->createGroup($group_id, $a_parameters);
+    $this->createGroup($group_id, $parameters);
 
     // Create user.
-    $this->createUser($user_id, $a_parameters);
+    $this->createUser($user_id, $parameters);
 
     // Create asset.
-    $a_parameters = array(
+    $parameters = array(
       mediamosa_rest_call_asset_create::USER_ID => $user_id,
       mediamosa_rest_call_asset_create::GROUP_ID => $group_id,
     );
-    $asset_id = $this->createAsset($a_parameters);
+    $asset_id = $this->createAsset($parameters);
 
     // Create mediafile.
-    $a_parameters = array(
+    $parameters = array(
       mediamosa_rest_call_create_mediafile::USER_ID => $user_id,
       mediamosa_rest_call_create_mediafile::GROUP_ID => $group_id,
     );
-    $mediafile_id = $this->createMediafile($asset_id, $a_parameters);
+    $mediafile_id = $this->createMediafile($asset_id, $parameters);
 
     // Get user.
-    $a_user = $this->getUser($user_id);
+    $user = $this->getUser($user_id);
 
     // Check response.
-    $this->assertTrue($a_user['user_diskspace_used_mb'] == 0, t('Must be 0 mb.'));
-    $this->assertTrue($a_user['user_quota_mb'] == $quotum, t('Quotum has the good value.'));
-    $this->assertTrue($a_user['quota_available_mb'] == $quotum, t('Available quotum has the good value.'));
+    $this->assertTrue($user['user_diskspace_used_mb'] == 0, t('Must be 0 mb.'));
+    $this->assertTrue($user['user_quota_mb'] == $quotum, t('Quotum has the good value.'));
+    $this->assertTrue($user['quota_available_mb'] == $quotum, t('Available quotum has the good value.'));
 
     // Get group.
-    $a_group = $this->getGroup($group_id);
+    $group = $this->getGroup($group_id);
 
     // Check response.
-    $this->assertTrue($a_group['group_diskspace_used_mb'] == 0, t('Must be 0 mb.'));
-    $this->assertTrue($a_group['group_quota_mb'] == $quotum, t('Quotum has the good value.'));
-    $this->assertTrue($a_group['quota_available_mb'] == $quotum, t('Available quotum has the good value.'));
+    $this->assertTrue($group['group_diskspace_used_mb'] == 0, t('Must be 0 mb.'));
+    $this->assertTrue($group['group_quota_mb'] == $quotum, t('Quotum has the good value.'));
+    $this->assertTrue($group['quota_available_mb'] == $quotum, t('Available quotum has the good value.'));
 
     // Test under and above quota cases.
     $testcases = array('true' => $quotum - 1, 'false' => $quotum + 1);
@@ -113,44 +113,44 @@ class MediaMosaUserQuotaTestCaseEga extends MediaMosaTestCaseEga {
       $filesize = $filesize_mb * 1024 * 1024; // in bytes
 
       // Create metadata.
-      $a_parameters = array(
+      $parameters = array(
         array(
           'value' => $filesize,
           'prop_name' => mediamosa_asset_mediafile_metadata::FILESIZE,
           'type' => mediamosa_asset_mediafile_metadata_property_db::TYPE_INT,
         ),
       );
-      mediamosa_asset_mediafile_metadata::create_mediafile_multiple_metadata($mediafile_id, $a_parameters);
+      mediamosa_asset_mediafile_metadata::create_mediafile_multiple_metadata($mediafile_id, $parameters);
 
       // Get user.
-      $a_user = $this->getUser($user_id);
-      $this->var_export($a_user);
+      $user = $this->getUser($user_id);
+      $this->var_export($user);
 
       // Check response.
-      $this->assertTrue($a_user['user_diskspace_used_mb'] == $filesize_mb, t('Must be @filesize mb.', array('@filesize' => $filesize_mb)));
-      $this->assertTrue($a_user['user_quota_mb'] == $quotum, t('Quotum has the good value.'));
-      $this->assertTrue($a_user['quota_available_mb'] == $quotum - $filesize_mb, t('Available quotum has the good value.'));
-      $this->assertTrue($a_user['user_over_quota'] == ($quotum - $filesize_mb < 0 ? 'true' : 'false'), t('User over quota boolean has the good value.'));
+      $this->assertTrue($user['user_diskspace_used_mb'] == $filesize_mb, t('Must be @filesize mb.', array('@filesize' => $filesize_mb)));
+      $this->assertTrue($user['user_quota_mb'] == $quotum, t('Quotum has the good value.'));
+      $this->assertTrue($user['quota_available_mb'] == $quotum - $filesize_mb, t('Available quotum has the good value.'));
+      $this->assertTrue($user['user_over_quota'] == ($quotum - $filesize_mb < 0 ? 'true' : 'false'), t('User over quota boolean has the good value.'));
 
       // Get group.
-      $a_group = $this->getGroup($group_id);
-      $this->var_export($a_group);
+      $group = $this->getGroup($group_id);
+      $this->var_export($group);
 
       // Check response.
-      $this->assertTrue($a_group['group_diskspace_used_mb'] == $filesize_mb, t('Must be @filesize mb.', array('@filesize' => $filesize_mb)));
-      $this->assertTrue($a_group['group_quota_mb'] == $quotum, t('Quotum has the good value.'));
-      $this->assertTrue($a_group['quota_available_mb'] == $quotum - $filesize_mb, t('Available quotum has the good value.'));
-      $this->assertTrue($a_group['group_over_quota'] == ($quotum - $filesize_mb < 0 ? 'true' : 'false'), t('Group over quota boolean has the good value.'));
+      $this->assertTrue($group['group_diskspace_used_mb'] == $filesize_mb, t('Must be @filesize mb.', array('@filesize' => $filesize_mb)));
+      $this->assertTrue($group['group_quota_mb'] == $quotum, t('Quotum has the good value.'));
+      $this->assertTrue($group['quota_available_mb'] == $quotum - $filesize_mb, t('Available quotum has the good value.'));
+      $this->assertTrue($group['group_over_quota'] == ($quotum - $filesize_mb < 0 ? 'true' : 'false'), t('Group over quota boolean has the good value.'));
 
       // Create upload ticket.
-      $a_parameters = array(
+      $parameters = array(
         mediamosa_rest_call_asset_mediafile_uploadticket_create::USER_ID => $user_id,
         mediamosa_rest_call_asset_mediafile_uploadticket_create::GROUP_ID => $group_id,
       );
-      $a_expected_result_ids = array(
+      $expected_result_ids = array(
         $quotum - $filesize_mb >= 0 ? mediamosa_error::ERRORCODE_OKAY : mediamosa_error::ERRORCODE_NOT_ENOUGH_FREE_QUOTA
       );
-      $a_uploadticket = $this->createMediafileUploadTicket($mediafile_id, $a_parameters, $a_expected_result_ids);
+      $uploadticket = $this->createMediafileUploadTicket($mediafile_id, $parameters, $expected_result_ids);
 
       // Delete metadata.
       mediamosa_asset_mediafile_metadata::delete_by_mediafileid($mediafile_id);
