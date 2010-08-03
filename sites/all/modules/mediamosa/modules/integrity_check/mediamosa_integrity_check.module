@@ -349,10 +349,7 @@ function mediamosa_integrity_check_start_submit($form, &$form_state) {
 
   if ($op == t('Start integrity check')) {
     // Call the script.
-    global $base_url;
-    mediamosa_io::exec('wget -O - -q -t 1 ' . escapeshellcmd($base_url . '/' . drupal_get_path("module", "mediamosa_integrity_check") . '/mediamosa_integrity_check.php >/dev/null 2>/dev/null &'));
-
-    //exec('nice -n20 /usr/bin/php -f ' . $_SERVER["DOCUMENT_ROOT"] . '/' . drupal_get_path("module", "mediamosa_integrity_check") . '/mediamosa_integrity_check.php </dev/null >/dev/null 2>/dev/null &');// 1>/dev/null/ 2>&1 &
+    mediamosa_io::exec('nice -n20 /usr/bin/php -f ' . $_SERVER["DOCUMENT_ROOT"] . '/' . drupal_get_path("module", "mediamosa_integrity_check") . '/mediamosa_integrity_check.php </dev/null >/dev/null 2>/dev/null &');// 1>/dev/null/ 2>&1 &
 
     // Set message and goto.
     drupal_set_message(t('Integrity check started'));

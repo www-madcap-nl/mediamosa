@@ -29,9 +29,26 @@
  * Integrity check PHP file
  */
 
+// Basic values.
+$_SERVER['HTTP_HOST'] = 'localhost';
+$_SERVER['REMOTE_ADDR'] = '';
+$_SERVER['REQUEST_METHOD'] = '';
+$_SERVER['SERVER_SOFTWARE'] = '';
+
+// get a working Drupal environment
+function find_drupal() {
+  while (($path = getcwd()) !== '/') {
+    if (file_exists('index.php') && is_dir('includes')) {
+      break;
+    }
+    chdir('..');
+  }
+  return $path;
+}
+
 // Get Drupal.
-define('DRUPAL_ROOT', $_SERVER['DOCUMENT_ROOT']);
-chdir($_SERVER['DOCUMENT_ROOT']);
+define('DRUPAL_ROOT', find_drupal());
+chdir(DRUPAL_ROOT);
 include_once './includes/bootstrap.inc';
 drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
 
