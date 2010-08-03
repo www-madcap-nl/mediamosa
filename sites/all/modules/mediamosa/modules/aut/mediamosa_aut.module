@@ -127,6 +127,13 @@ function mediamosa_aut_mediamosa_register_rest_call() {
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_6_0,
   );
 
+  $a_rest_calls['asset/mediafile/acl'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_aut_asset_mediafile_set_rights',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_aut',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+  );
+
   $a_rest_calls['asset/$asset_id/acl/delete'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_aut_asset_delete_rights',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
@@ -388,6 +395,41 @@ asset_id[]=7pAkDsceysAZPo0q3PhjtBE1&asset_id[]=J2MKUJUcleMUfUcsZVDpdxi8',
   <item id="1">
     <aut_app>
       <value>5</value>
+      <result>success</result>
+      <result_id>601</result_id>
+      <result_description></result_description>
+    </aut_app>
+  </item>
+</items>',
+  );
+
+  $a_rest_calls['asset/mediafile/acl'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Set or change acl rules on assets.',
+    mediamosa_rest_call::DESCRIPTION => 'This call will change the acl rules to assets. All of the existing ACL rules in this asset will be replaced by the sent rules. Using \'replace\' setting with value FALSE to result in not replace the existing rules.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => array('/asset/mediafile/acl', 'user_id=entree004&asset_id[]=7pAkDsceysAZPo0q3PhjtBE1&asset_id[]=HnRUfbdUWjPWVWJktsuH4IKp', 'aut_app[]=5'),
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <asset_id>7pAkDsceysAZPo0q3PhjtBE1</asset_id>
+    <mediafile_id>7hkjCCq3CxSXNrGy2vgVnorI</mediafile_id>
+    <result>success</result>
+    <result_id>601</result_id>
+    <result_description></result_description>
+    <aut_app>
+      <value>1</value>
+      <result>success</result>
+      <result_id>601</result_id>
+      <result_description></result_description>
+    </aut_app>
+  </item>
+  <item id="2">
+    <asset_id>7pAkDsceysAZPo0q3PhjtBE1</asset_id>
+    <mediafile_id>GqrqS9UYfyKAsrW73mPVAyRH</mediafile_id>
+    <result>success</result>
+    <result_id>601</result_id>
+    <result_description></result_description>
+    <aut_app>
+      <value>1</value>
       <result>success</result>
       <result_id>601</result_id>
       <result_description></result_description>
