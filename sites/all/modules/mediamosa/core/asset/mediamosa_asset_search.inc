@@ -312,7 +312,7 @@ class mediamosa_asset_search {
        */
       if ($order_prop_id) {
         $join = strtr(
-          'JOIN {#table} AS sort ON sort.asset_id = a.asset_id AND sort.prop_id = #prop_id',
+          'JOIN {#table} AS sort USE KEY(idx_assetid_propid_valcharlft) ON sort.asset_id = a.asset_id AND sort.prop_id = #prop_id',
           array(
             '#table' => $order_table,
             '#prop_id' => intval($order_prop_id),
@@ -567,7 +567,7 @@ class mediamosa_asset_search {
 
       if ($order_prop_id) {
         $join = strtr(
-          'LEFT JOIN {#table} AS sort ON sort.asset_id = a.asset_id AND sort.prop_id = #prop_id',
+          'LEFT JOIN {#table} AS sort USE KEY(idx_assetid_propid_valcharlft) ON sort.asset_id = a.asset_id AND sort.prop_id = #prop_id',
           array(
             '#table' => $order_table,
             '#prop_id' => intval($order_prop_id),
