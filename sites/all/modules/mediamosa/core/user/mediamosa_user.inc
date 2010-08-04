@@ -278,6 +278,7 @@ class mediamosa_user {
    *  User / Owner ID.
    */
   static public function get_user_quota($app_id, $user_id) {
+    /*
     $total = mediamosa_db::db_query(
       'SELECT COUNT(*) AS total FROM
        (
@@ -307,6 +308,7 @@ class mediamosa_user {
     //if (!$total) {
     //  throw new mediamosa_exception_error_userman_invalid_user(array('@user_id' => $user_id));
     //}
+    */
 
     // Get the user.
     $a_user = mediamosa_user::get($user_id, $app_id, array(mediamosa_user_db::GROUP_ID, mediamosa_user_db::CREATED, mediamosa_user_db::CHANGED));
