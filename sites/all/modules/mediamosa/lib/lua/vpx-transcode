@@ -270,9 +270,14 @@ function find_best_streams(source_path, hash)
   return video_max_bitrate_stream, audio_max_bitrate_stream, video_max_bitrate_size
 end
 
-function transcode(source_path, destination_path, hash, dst_ext, params)
+function transcode(source_path, destination_path, hash, dst_ext, params, pass, tmp_dir)
   -- detect the best video audio stream
   local video_stream, audio_stream, video_size = find_best_streams(source_path, hash)
+
+  -- When we use 2 pass encoding, and we are in the 1st phase, we don't use audio stream.
+  if pass == 1 then
+    audio_stream = "none"
+  end
 
   local duration = 0
 
@@ -293,8 +298,10 @@ function transcode(source_path, destination_path, hash, dst_ext, params)
     end
   end
 
+  -- Go to the temporary directory and run the ffmpeg.
   local command =
-    string.format("ffmpeg -i %s/%s/%s %s %s -y %s/%s.%s 2>&1 || " ..
+    string.format("cd " .. destination_path .. "/" .. tmp_dir .. "; " ..
+                  "ffmpeg -i %s/%s/%s %s %s -y %s/%s.%s 2>&1 || " ..
                   "echo 'Error: ffmpeg returned a non-zero exit code:' $? &",
                   source_path, string.sub(hash, 1, 1), hash, params,
                   precommand,
@@ -326,9 +333,25 @@ function transcode(source_path, destination_path, hash, dst_ext, params)
     end
 
     local frame = string.match(line, "^frame=.-time=(.-) bitrate")
-    if frame then
+    if frame and duration then
+      local progress = frame / duration
+      if pass >= 1 then
+        progress = progress / 2
+        -- Check the value.
+        if progress > 0.5 then
+          progress = 0.5
+        end
+      end
+      if pass >= 2 then
+        progress = progress + 0.5
+      end
+      -- Check the value.
+      if progress > 1 then
+        progress = 1
+      end
       write_status_file({ Status = "transcoding",
-                          Progress = string.format("%.3f", frame / duration) })
+                          Progress = string.format("%.3f", progress)
+                        })
     end
 
     for _,marker in pairs(error_markers) do
@@ -351,12 +374,26 @@ function transcode(source_path, destination_path, hash, dst_ext, params)
     fd:write("\n" .. table.concat(log, "\n") .. "\n")
     fd:close()
   else
-    write_status_file({ Status = "done",
-                        Progress = "1.000",
-                        Errors = "none",
-                        Warnings = "none",
-                        body = table.concat(log, "\n") })
+    local progress = 1
+    if pass == 1 then
+      progress = 0.5
+      write_status_file({ Status = "transcoding",
+                          Progress = string.format("%.3f", progress)
+                        })
+    else
+      write_status_file({ Status = "done",
+                          Progress = string.format("%.3f", progress),
+                          Errors = "none",
+                          Warnings = "none",
+                          body = table.concat(log, "\n") })
+    end
   end
+end
+
+-- Run a command with shell.
+function command(command)
+  local fd = io.popen(command, "r")
+  fd:close()
 end
 
 local source_path = arg[1]
@@ -371,7 +408,61 @@ end
 
 local destination_path = source_path .. "/transcode"
 
+-- Temporary directory for 2 pass encoding.
+local tmp_dir = hash .. "_dir"
+
 status_file = destination_path .. "/" .. hash .. ".status"
 status_tmp = destination_path .. "/" .. hash .. ".status.tmp"
 
-transcode(source_path, destination_path, hash, dst_ext, params)
+-- Example for normal encoding: /home/pforgacs/src/mediamosa2/sites/all/modules/mediamosa/lib/lua/vpx-transcode /srv/mediamosa2/data OW35AQyoPNUSi4iINunmS2nr mp4 '-b 800000 -acodec libfaac -ab 256000 -ar 44100 -vcodec libx264 -vpre hq '
+
+-- Example for 2 pass encoding: /home/pforgacs/src/mediamosa2/sites/all/modules/mediamosa/lib/lua/vpx-transcode /srv/mediamosa2/data OW35AQyoPNUSi4iINunmS2nr mp4 '-b 800000 -acodec libfaac -pass 2 -ab 256000 -ar 44100 -vcodec libx264 '
+
+local pass_start, pass_end = string.find(params, "-pass 2")
+local vcodec = "-vcodec libx264"
+local vcodec_start, vcodec_end = string.find(params, vcodec)
+
+-- Is it a 2 pass encoding?
+if pass_start ~= nil and pass_end ~= nil and vcodec_start ~= nil and vcodec_end ~= nil then
+  local fd
+
+  -- 2 pass h264 encoding.
+
+  -- Prepare the transcoding parameters.
+  local params_start = string.sub(params, 1, pass_start - 1)
+  local params_end = string.sub(params, pass_end + 1, string.len(params))
+  local params_pass1 = params_start .. "-an -pass 1 -passlogfile " .. hash .. params_end .. " -threads 0 "
+  local params_pass2 = params_start .. "-pass 2 -passlogfile " .. hash .. params_end .. " -threads 0 "
+
+  vcodec_start, vcodec_end = string.find(params_pass1, vcodec)
+  params_start = string.sub(params_pass1, 1, vcodec_end)
+  params_end = string.sub(params_pass1, vcodec_end + 1, string.len(params_pass1))
+  params_pass1 = params_start .. " -vpre slow_firstpass" .. params_end
+
+  vcodec_start, vcodec_end = string.find(params_pass2, vcodec)
+  params_start = string.sub(params_pass2, 1, vcodec_end)
+  params_end = string.sub(params_pass2, vcodec_end + 1, string.len(params_pass2))
+  params_pass2 = params_start .. " -vpre slow" .. params_end
+
+  -- Temporary directory for dealing with the temporary files.
+  command("cd " .. destination_path .. "; mkdir " .. tmp_dir)
+
+  -- Example: ffmpeg -i /srv/mediamosa2/data/O/OW35AQyoPNUSi4iINunmS2nr -b 800000 -acodec libfaac -an -pass 1 -ab 256000 -ar 44100 -vcodec libx264 -vpre slow_firstpass  -threads 0  -map 0.1 -y /srv/mediamosa2/data/transcode/OW35AQyoPNUSi4iINunmS2nr.mp4
+
+  -- 1st phase.
+  transcode(source_path, destination_path, hash, dst_ext, params_pass1, 1, tmp_dir)
+
+  -- Example: ffmpeg -i /srv/mediamosa2/data/O/OW35AQyoPNUSi4iINunmS2nr -b 800000 -acodec libfaac -pass 2 -ab 256000 -ar 44100 -vcodec libx264 -vpre slow  -threads 0  -map 0.1 -map 0.0 -y /srv/mediamosa2/data/transcode/OW35AQyoPNUSi4iINunmS2nr.mp4
+
+  -- Second phase.
+  transcode(source_path, destination_path, hash, dst_ext, params_pass2, 2, tmp_dir)
+
+  -- Remove tmp files.
+  -- ffmpeg2pass-0.log OR hash-N.log
+  -- x264_2pass.log
+  -- x264_2pass.log.mbtree
+  command("cd " .. destination_path .. "; rm " .. tmp_dir .. " -R")
+else
+  -- Normal (1 pass) encoding.
+  transcode(source_path, destination_path, hash, dst_ext, params, 0, tmp_dir)
+end

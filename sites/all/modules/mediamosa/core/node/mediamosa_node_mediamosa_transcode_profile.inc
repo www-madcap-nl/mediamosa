@@ -296,7 +296,8 @@ function mediamosa_transcode_profile_form($node, $form_state) {
     'maintain_aspect_ratio' => t('Force maintain the original video aspect ratio or not@default'),
     'padding' => t('Force padding, if aspect ratio is maintained@default'),
     'audiobitrate' => t('Set the audio bitrate in bit/s@default'),
-    'audiochannels' => t('The allowed value is between 0 and 2@default')
+    'audiochannels' => t('The allowed value is between 0 and 2@default'),
+    '2_pass_h264_encoding' => t('Support 2 pass encoding for better h264 quality (pass=2), corresponding the ffmpeg-h264 2 pass encoding'),
   );
 
   $form['tool_options'] = array(

@@ -1325,6 +1325,15 @@ class mediamosa_job_scheduler {
     $a_parameters = mediamosa_lib::create_named_array($command, ";", ":");
     $result = "";
 
+    // If there is a 2 pass encoding, then we use a special -vpre parameter. So delete the given one.
+    if (isset($a_parameters['2_pass_h264_encoding']) && $a_parameters['2_pass_h264_encoding'] == '2') {
+      unset($a_parameters['videopreset']);
+    }
+    // If the 2 pass encoding parameter doesn't have the value '2', then we skip it. Then we ensure, we have "-pass 2" or nothing.
+    if ($nice_parameter == '2_pass_h264_encoding' && isset($a_parameters['2_pass_h264_encoding']) && $a_parameters['2_pass_h264_encoding'] != '2') {
+      return $result;
+    }
+
     foreach ($a_parameters as $name => $value) {
       if ($name == $nice_parameter && $tool_parameter != '') {
         $result = sprintf('%s:%s', $tool_parameter, $value);

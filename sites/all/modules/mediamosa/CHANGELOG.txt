@@ -39,6 +39,7 @@ Mediamosa 2.2.0
 - Integrity check produces error fix (See VPCore ticket #177).
 - Integrity check uses "nice" call, instead of "wget" (See VPCore ticket #177).
 - User quota test fails in 32 bits systems bug fix.
+- Support for 2 pass h264 encoding development (See MediaMosa ticket #264).
 
 Other changes (not ticket related).
 - During ticket #255, adding pager to stats, bug was found on the stats keyword
