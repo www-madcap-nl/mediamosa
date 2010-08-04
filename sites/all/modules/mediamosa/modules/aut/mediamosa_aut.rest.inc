@@ -1876,59 +1876,57 @@ class mediamosa_rest_call_aut_get_apps extends mediamosa_rest_call {
 
     // First is always the main app.
     $app_id = reset($app_ids);
-
     if ($is_oai) {
       $result = mediamosa_db::db_query(
         "SELECT #id AS app_id, #name, #play_proxy_url, #view_asset_url, #download_url
         FROM {#mediamosa_app}
         ORDER BY #name ASC", array(
+          '#id' => mediamosa_app_db::APP_ID,
           '#name' => mediamosa_app_db::APP_NAME,
           '#play_proxy_url' => mediamosa_app_db::PLAY_PROXY_URL,
           '#view_asset_url' => mediamosa_app_db::VIEW_ASSET_URL,
           '#download_url' => mediamosa_app_db::DOWNLOAD_URL,
           '#mediamosa_app' => mediamosa_app_db::TABLE_NAME,
       ));
-    }
-    else {
-      // Restricted listing.
 
-      // Get me.
-      $app = mediamosa_app::get_by_appid($app_id);
-      $allowed_apps = unserialize($app[mediamosa_app_db::ALLOW_MASTERSLAVE_APPS]);
-      $allowed_apps = is_array($allowed_apps) ? $allowed_apps : array();
-
-      // Get
-      $app_ids = array_keys($allowed_apps);
-
-      // Empty by default.
-      $result = array();
-
-      // Do query.
-      if (!empty($app_ids)) {
-        // Do query.
-        $result = mediamosa_db::db_select(mediamosa_app_db::TABLE_NAME, 'app')
-          ->fields('app', array(mediamosa_app_db::APP_NAME, mediamosa_app_db::APP_ID))
-          ->condition(mediamosa_app_db::APP_ID, $app_ids, 'IN')
-          ->orderBy(mediamosa_app_db::APP_NAME, 'ASC')
-          ->execute();
-      }
-    }
-
-    foreach ($result as $app) {
-      if ($is_oai) {
+      foreach ($result as $app) {
         $mediamosa->add_item(array(
           mediamosa_app_db::APP_ID => $app[mediamosa_app_db::APP_ID],
           self::NAME => $app[mediamosa_app_db::APP_NAME],
           mediamosa_app_db::PLAY_PROXY_URL => $app[mediamosa_app_db::PLAY_PROXY_URL],
           mediamosa_app_db::VIEW_ASSET_URL => $app[mediamosa_app_db::VIEW_ASSET_URL],
           mediamosa_app_db::DOWNLOAD_URL => $app[mediamosa_app_db::DOWNLOAD_URL],
-      ));
-      }
-      else {
-        $mediamosa->add_item(array(
-          mediamosa_app_db::APP_ID => $app[mediamosa_app_db::APP_ID],
-          self::NAME => $app[mediamosa_app_db::APP_NAME],
         ));
+      }
+    }
+    else {
+      // @todo: Fix serialize speed when there are many apps.
+
+      // Restricted listing.
+      $result = mediamosa_db::db_query(
+        "SELECT #id AS app_id, #name, #allow_masterslave_apps
+        FROM {#mediamosa_app}
+        ORDER BY #name ASC", array(
+          '#id' => mediamosa_app_db::APP_ID,
+          '#name' => mediamosa_app_db::APP_NAME,
+          '#allow_masterslave_apps' => mediamosa_app_db::ALLOW_MASTERSLAVE_APPS,
+          '#mediamosa_app' => mediamosa_app_db::TABLE_NAME,
+      ));
+
+      foreach ($result as $app) {
+        $allowed_apps = unserialize($app[mediamosa_app_db::ALLOW_MASTERSLAVE_APPS]);
+        $allowed_apps = is_array($allowed_apps) ? $allowed_apps : array();
+
+        // Get
+        $app_ids = array_keys($allowed_apps);
+
+        // Am I allowed?
+        if (in_array($app_id, $app_ids)) {
+          $mediamosa->add_item(array(
+            mediamosa_app_db::APP_ID => $app[mediamosa_app_db::APP_ID],
+            self::NAME => $app[mediamosa_app_db::APP_NAME],
+          ));
+        }
       }
     }
   }
