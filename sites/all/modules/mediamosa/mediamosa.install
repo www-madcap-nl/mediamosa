@@ -508,3 +508,16 @@ function mediamosa_update_7014() {
     )
   );
 }
+
+/**
+ * Add mediafile_id_source index to the mediamosa_asset_mediafile table.
+ */
+function mediamosa_update_7015() {
+  db_add_index(
+    'mediamosa_asset_mediafile',
+    'idx_mediafileidsource',
+    array(
+      mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE,
+    )
+  );
+}
