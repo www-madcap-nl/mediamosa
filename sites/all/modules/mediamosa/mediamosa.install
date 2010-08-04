@@ -458,3 +458,53 @@ function mediamosa_update_7013() {
     ':changed' => mediamosa::db_current_timestamp_now(),
   ));
 }
+
+/**
+ * Remove asset_id_root field from the mediamosa_asset_mediafile table.
+ * See MediaMosa ticket #317.
+ */
+function mediamosa_update_7014() {
+  // Drop indexes with asset_id_root.
+  db_drop_index('mediamosa_asset_mediafile', 'idx_assetroot_appid_original_protected');
+  db_drop_index('mediamosa_asset_mediafile', 'idx_assetroot_mediafileid_appid_original_protected');
+  db_drop_index('mediamosa_asset_mediafile', 'idx_assertidroot_filename');
+  db_drop_index('mediamosa_asset_mediafile', 'idx_assetroot_protected');
+
+  // Drop asset_id_root field.
+  db_query('ALTER TABLE mediamosa_asset_mediafile drop asset_id_root');
+
+  // Create indexes.
+  db_add_index(
+    'mediamosa_asset_mediafile',
+    'idx_appid_original_protected',
+    array(
+      mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE,
+      mediamosa_asset_mediafile_db::APP_ID,
+      mediamosa_asset_mediafile_db::IS_PROTECTED,
+    )
+  );
+  db_add_index(
+    'mediamosa_asset_mediafile',
+    'idx_mediafileid_appid_original_protected',
+    array(
+      mediamosa_asset_mediafile_db::ID,
+      mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE,
+      mediamosa_asset_mediafile_db::APP_ID,
+      mediamosa_asset_mediafile_db::IS_PROTECTED,
+    )
+  );
+  db_add_index(
+    'mediamosa_asset_mediafile',
+    'idx_filename',
+    array(
+      mediamosa_asset_mediafile_db::FILENAME,
+    )
+  );
+  db_add_index(
+    'mediamosa_asset_mediafile',
+    'idx_protected',
+    array(
+      mediamosa_asset_mediafile_db::IS_PROTECTED,
+    )
+  );
+}

@@ -310,12 +310,12 @@ class mediamosa_rest_call_delete_mediafiles extends mediamosa_rest_call {
     if ($delete == 'cascade') {
       // Deletes the stills.
       $query = db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
-      $query->fields('mf', array(mediamosa_asset_mediafile_db::ASSET_ID_ROOT));
+      $query->fields('mf', array(mediamosa_asset_mediafile_db::ASSET_ID));
       $query->condition('mf.' . mediamosa_asset_mediafile_db::ID, $mediafile_id);
       $query->condition('mf.' . mediamosa_asset_mediafile_db::IS_STILL, mediamosa_asset_mediafile_db::IS_STILL_FALSE);
-      $asset_id_root = $query->execute()->fetchField();
+      $asset_id = $query->execute()->fetchField();
 
-      mediamosa_asset_mediafile_still::delete($asset_id_root, $mediafile_id);
+      mediamosa_asset_mediafile_still::delete($asset_id, $mediafile_id);
     }
 
     // Delete the mediafile.

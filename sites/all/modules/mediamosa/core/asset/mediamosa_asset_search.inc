@@ -190,7 +190,7 @@ class mediamosa_asset_search {
 
           $prop_id = mediamosa_asset_mediafile_metadata_property::get_property_id_char(mediamosa_asset_mediafile_metadata::MIME_TYPE);
 
-          $a_query[mediamosa_db_query::A_JOIN]['mediafile'] = "LEFT JOIN {mediamosa_asset_mediafile} AS mf ON a.asset_id=mf.asset_id_root AND mf.is_still = 'FALSE'";
+          $a_query[mediamosa_db_query::A_JOIN]['mediafile'] = "LEFT JOIN {mediamosa_asset_mediafile} AS mf ON a.asset_id=mf.asset_id AND mf.is_still = 'FALSE'";
           $a_query[mediamosa_db_query::A_JOIN]['mediafile_metadata']['mm_mime_type'] = sprintf('LEFT JOIN {mediamosa_asset_mediafile_metadata} AS mm_mime_type ON mf.mediafile_id=mm_mime_type.mediafile_id AND mm_mime_type.prop_id = %d', $prop_id);
         }
 
@@ -212,14 +212,14 @@ class mediamosa_asset_search {
         if ($key) {
           unset($a_result_cql2sql['a_joins'][$key]);
 
-          $a_query[mediamosa_db_query::A_JOIN]['mediafile'] = "LEFT JOIN {mediamosa_asset_mediafile} AS mf ON a.asset_id=mf.asset_id_root AND mf.is_still = 'FALSE'";
+          $a_query[mediamosa_db_query::A_JOIN]['mediafile'] = "LEFT JOIN {mediamosa_asset_mediafile} AS mf ON a.asset_id=mf.asset_id AND mf.is_still = 'FALSE'";
         }
 
         $key = array_search('AUT_NAME_USER', $a_result_cql2sql['a_joins']);
         if ($key) {
           unset($a_result_cql2sql['a_joins'][$key]);
 
-          $a_query[mediamosa_db_query::A_JOIN]['mediafile'] = "LEFT JOIN {mediamosa_asset_mediafile} AS mf ON a.asset_id=mf.asset_id_root AND mf.is_still = 'FALSE'";
+          $a_query[mediamosa_db_query::A_JOIN]['mediafile'] = "LEFT JOIN {mediamosa_asset_mediafile} AS mf ON a.asset_id=mf.asset_id AND mf.is_still = 'FALSE'";
           $a_query[mediamosa_db_query::A_JOIN]['aut_object'] = mediamosa_aut_object::join_aut_object_get(mediamosa_aut::AUT_TYPE_MEDIAFILE);
           $a_query[mediamosa_db_query::A_JOIN]['aut_name_user'] = sprintf("LEFT JOIN {mediamosa_aut_name} AS aut_u ON aut_u.app_id IN (%s) AND aut_u.aut_type = 'USER' AND aut_u.aut_name_id=aut_obj.aut_id", implode(',', $a_app_ids));
           $do_master_slave = TRUE;
@@ -230,7 +230,7 @@ class mediamosa_asset_search {
         if ($key) {
           unset($a_result_cql2sql['a_joins'][$key]);
 
-          $a_query[mediamosa_db_query::A_JOIN]['mediafile'] = "LEFT JOIN {mediamosa_asset_mediafile} AS mf ON a.asset_id=mf.asset_id_root AND mf.is_still = 'FALSE'";
+          $a_query[mediamosa_db_query::A_JOIN]['mediafile'] = "LEFT JOIN {mediamosa_asset_mediafile} AS mf ON a.asset_id=mf.asset_id AND mf.is_still = 'FALSE'";
           $a_query[mediamosa_db_query::A_JOIN]['aut_object'] = mediamosa_aut_object::join_aut_object_get(mediamosa_aut::AUT_TYPE_MEDIAFILE);
           $a_query[mediamosa_db_query::A_JOIN]['aut_name_group'] = sprintf("LEFT JOIN {mediamosa_aut_name} AS aut_ug ON aut_ug.app_id IN (%s) AND aut_ug.aut_type = 'USER_GROUP' AND aut_ug.aut_name_id=aut_obj.aut_id", implode(',', $a_app_ids));
           $do_master_slave = TRUE;
@@ -241,7 +241,7 @@ class mediamosa_asset_search {
         if ($key) {
           unset($a_result_cql2sql['a_joins'][$key]);
 
-          $a_query[mediamosa_db_query::A_JOIN]['mediafile'] = "LEFT JOIN {mediamosa_asset_mediafile} AS mf ON a.asset_id=mf.asset_id_root AND mf.is_still = 'FALSE'";
+          $a_query[mediamosa_db_query::A_JOIN]['mediafile'] = "LEFT JOIN {mediamosa_asset_mediafile} AS mf ON a.asset_id=mf.asset_id AND mf.is_still = 'FALSE'";
           $a_query[mediamosa_db_query::A_JOIN]['aut_object'] = mediamosa_aut_object::join_aut_object_get(mediamosa_aut::AUT_TYPE_MEDIAFILE);
           $a_query[mediamosa_db_query::A_JOIN]['aut_group_domain'] = sprintf("LEFT JOIN {mediamosa_aut_name} AS aut_gd ON aut_gd.app_id IN (%s) AND aut_gd.aut_type = 'DOMAIN' AND aut_gd.aut_name_id=aut_obj.aut_id", implode(',', $a_app_ids));
           $do_master_slave = TRUE;
@@ -256,7 +256,7 @@ class mediamosa_asset_search {
           }
           while ($key !== FALSE);
 
-          $a_query[mediamosa_db_query::A_JOIN]['mediafile'] = "LEFT JOIN {mediamosa_asset_mediafile} AS mf ON a.asset_id=mf.asset_id_root AND mf.is_still = 'FALSE'";
+          $a_query[mediamosa_db_query::A_JOIN]['mediafile'] = "LEFT JOIN {mediamosa_asset_mediafile} AS mf ON a.asset_id=mf.asset_id AND mf.is_still = 'FALSE'";
           $a_query[mediamosa_db_query::A_JOIN]['aut_object'] = mediamosa_aut_object::join_aut_object_get(mediamosa_aut::AUT_TYPE_MEDIAFILE);
           $a_query[mediamosa_db_query::A_JOIN]['aut_group_realm'] = sprintf("LEFT JOIN {mediamosa_aut_name} AS aut_gr ON aut_gr.app_id IN (%s) AND aut_gr.aut_type = 'REALM' AND aut_gr.aut_name_id=aut_obj.aut_id", implode(',', $a_app_ids));
           $do_master_slave = TRUE;
@@ -271,7 +271,7 @@ class mediamosa_asset_search {
           }
           while ($key !== FALSE);
 
-          $a_query[mediamosa_db_query::A_JOIN]['mediafile'] = "LEFT JOIN {mediamosa_asset_mediafile} AS mf ON a.asset_id=mf.asset_id_root AND mf.is_still = 'FALSE'";
+          $a_query[mediamosa_db_query::A_JOIN]['mediafile'] = "LEFT JOIN {mediamosa_asset_mediafile} AS mf ON a.asset_id=mf.asset_id AND mf.is_still = 'FALSE'";
           $a_query[mediamosa_db_query::A_JOIN]['aut_app_master_slave_2'] = sprintf("JOIN {mediamosa_aut_app_master_slave} AS aut_ms ON aut_ms.aut_object_type = 'MEDIAFILE' AND aut_ms.aut_object_id=mf.mediafile_id AND aut_ms.app_id_slave IN (%s)", implode(',', $a_app_ids));
           $do_master_slave = TRUE;
           unset($a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset']['access']);
@@ -449,7 +449,7 @@ class mediamosa_asset_search {
 // How it is working:
 //CREATE TEMPORARY TABLE assets_all (asset_id VARCHAR(32) NOT NULL, videotimestampmodified TIMESTAMP NULL DEFAULT NULL, PRIMARY KEY  (asset_id)) ENGINE=MEMORY;
 //
-//INSERT INTO assets_all SELECT DISTINCT a.asset_id, a.videotimestampmodified FROM asset AS a LEFT JOIN mediafile AS mf ON a.asset_id=mf.asset_id_root
+//INSERT INTO assets_all SELECT DISTINCT a.asset_id, a.videotimestampmodified FROM asset AS a LEFT JOIN mediafile AS mf ON a.asset_id=mf.asset_id
 //WHERE a.app_id IN(14) AND
 //a.parent_id IS NULL AND
 //(((a.isprivate = 'FALSE' OR a.isprivate = 'TRUE') AND a.is_unappropriate = 'FALSE') AND

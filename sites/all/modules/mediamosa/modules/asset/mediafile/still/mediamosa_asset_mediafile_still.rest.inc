@@ -99,7 +99,7 @@ class mediamosa_rest_call_delete_stills extends mediamosa_rest_call {
     mediamosa_db::db_must_exists(
       mediamosa_asset_mediafile_db::TABLE_NAME,
       array(
-        mediamosa_asset_mediafile_db::ASSET_ID_ROOT => $asset_id,
+        mediamosa_asset_mediafile_db::ASSET_ID => $asset_id,
       ),
       mediamosa_error::ERRORCODE_STILL_NOT_FOUND,
       array('@asset_id' => $asset_id)

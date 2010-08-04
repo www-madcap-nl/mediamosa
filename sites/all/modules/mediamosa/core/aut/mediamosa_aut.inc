@@ -1153,7 +1153,7 @@ class mediamosa_aut {
       switch ($aut_type) {
         case mediamosa_aut::AUT_TYPE_MEDIAFILE:
 
-          $a_query[mediamosa_db_query::A_JOIN]['mediafile'] = "LEFT JOIN {mediamosa_asset_mediafile} AS mf ON a.asset_id = mf.asset_id_root";
+          $a_query[mediamosa_db_query::A_JOIN]['mediafile'] = "LEFT JOIN {mediamosa_asset_mediafile} AS mf ON a.asset_id = mf.asset_id";
           // Even if we return all stuff where we have access to, we must still grant only access to master/slave apps
           if (!$do_master_slave_only) {
             // If $do_master_slave_only is TRUE, granted is TRUE, meaning we need to return all assets
@@ -1453,7 +1453,7 @@ class mediamosa_aut {
       switch ($aut_type) {
         case mediamosa_aut::AUT_TYPE_MEDIAFILE:
           // Include the mediafile table for join
-          $a_query[mediamosa_db_query::A_JOIN]['mediafile'] = "LEFT JOIN {mediamosa_asset_mediafile} AS mf ON a.asset_id = mf.asset_id_root";
+          $a_query[mediamosa_db_query::A_JOIN]['mediafile'] = "LEFT JOIN {mediamosa_asset_mediafile} AS mf ON a.asset_id = mf.asset_id";
 
           $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]["no_mf"] = "mf.asset_id IS NULL";
           $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]["app_id"][mediamosa_db_query::WHERE_AND][] = "mf.is_original_file = 'TRUE'";
@@ -1637,7 +1637,7 @@ class mediamosa_aut {
         // @todo: Hhmm in current context with rights on asset, this might not be the right approache.
         $db_result = mediamosa_db::db_query(
           "SELECT 1 FROM {mediamosa_asset} AS a
-          JOIN {mediamosa_asset_mediafile} AS m ON a.asset_id = m.asset_id_root
+          JOIN {mediamosa_asset_mediafile} AS m ON a.asset_id = m.asset_id
           JOIN {mediamosa_aut_app_master_slave} AS ms ON ms.aut_object_type = 'MEDIAFILE'
             AND ms.aut_object_id = m.mediafile_id
             AND (ms.app_id_master IN (:app_id_master) OR ms.app_id_slave IN (:app_id_slave))

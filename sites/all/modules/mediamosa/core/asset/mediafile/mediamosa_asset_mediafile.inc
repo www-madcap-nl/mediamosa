@@ -341,10 +341,7 @@ class mediamosa_asset_mediafile {
       }
 
       // Unset these;
-      unset(
-        $items[$mediafile_id][mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT],
-        $items[$mediafile_id][mediamosa_asset_mediafile_db::ASSET_ID_ROOT]
-      );
+      unset($items[$mediafile_id][mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT]);
 
       // Response object/plain/metafile available.
       // When file is missing these will be non-existing, make them empty.
@@ -402,7 +399,7 @@ class mediamosa_asset_mediafile {
     $a_query[mediamosa_db_query::ALLOW_DISTINCT] = FALSE;
 
     // No left join here, only include assets that have mediafiles
-    $a_query[mediamosa_db_query::A_JOIN]["mediafile"][] = "JOIN {mediamosa_asset_mediafile} AS mf ON a.asset_id = mf.asset_id_root";
+    $a_query[mediamosa_db_query::A_JOIN]["mediafile"][] = "JOIN {mediamosa_asset_mediafile} AS mf ON a.asset_id = mf.asset_id";
 
     if (!empty($app_ids)) {
       // Filter mediafiles according to the master-slave aut.
@@ -576,7 +573,6 @@ class mediamosa_asset_mediafile {
     $fields[mediamosa_asset_mediafile_db::ID] = $mediafile_id;
     $fields[mediamosa_asset_mediafile_db::APP_ID] = $app_id;
     $fields[mediamosa_asset_mediafile_db::ASSET_ID] = $asset_id;
-    $fields[mediamosa_asset_mediafile_db::ASSET_ID_ROOT] = $asset_id; // deprecated, set to own asset.
     $fields[mediamosa_asset_mediafile_db::OWNER_ID] = $user_id;
 
     // Enrich for created/changed.
