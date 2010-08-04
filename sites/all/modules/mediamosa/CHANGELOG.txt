@@ -105,6 +105,8 @@ Other changes (not ticket related).
   resulted in failure.
 - Removed the 3 hour tab on simpletests page, is empty anyway.
 - Added automatedsimpletest module to installation profile. 
+- Fixed /acl/app to return only apps where you are allowed master/slave on.
+- Fixed /acl/app in is_oai mode SQL error.
 
 Mediamosa 2.1.5 (build 664)
 ---------------------------
