@@ -361,8 +361,8 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
       );
       $query->addField('m', mediamosa_asset_mediafile_db::ID, 'still_id');
       $query->addField('v', mediamosa_asset_mediafile_db::ID, 'mediafile_id');
-      $query->addField('m', mediamosa_asset_mediafile_db::ASSET_ID_ROOT, 'asset_id');
-      $query->addField('m', mediamosa_asset_mediafile_db::ASSET_ID, 'orderasset_id');
+      $query->addField('m', mediamosa_asset_mediafile_db::ASSET_ID, 'asset_id');
+      //$query->addField('m', mediamosa_asset_mediafile_db::ASSET_ID, 'orderasset_id');
       $query->fields('m',
         array(
           mediamosa_asset_mediafile_db::APP_ID,
@@ -372,7 +372,7 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
           mediamosa_asset_mediafile_db::TAG,
         )
       );
-      $query->condition('m.' . mediamosa_asset_mediafile_db::ASSET_ID_ROOT, $asset_id);
+      $query->condition('m.' . mediamosa_asset_mediafile_db::ASSET_ID, $asset_id);
       $query->condition('m.' . mediamosa_asset_mediafile_db::IS_STILL, mediamosa_asset_mediafile_db::IS_STILL_TRUE);
       $query->condition('m.' . mediamosa_asset_mediafile_db::APP_ID, $app_id);
       if (isset($still_id)) {

@@ -37,7 +37,6 @@ class mediamosa_asset_mediafile_still {
    * Create a still
    *
    * @param string $asset_id
-   * @param string $asset_parent_id
    * @param string $still_id
    * @param integer $app_id
    * @param string $owner_id
@@ -49,7 +48,7 @@ class mediamosa_asset_mediafile_still {
    * @param string $mediafile_id_source
    * @param string $tag
    */
-  static public function create($asset_id, $asset_parent_id, $still_id, $app_id, $owner_id, $group_id, $order, $still_default = TRUE, $still_parameters = NULL, $sec = 0, $mediafile_id_source = '', $tag = '') {
+  static public function create($asset_id, $still_id, $app_id, $owner_id, $group_id, $order, $still_default = TRUE, $still_parameters = NULL, $sec = 0, $mediafile_id_source = '', $tag = '') {
 
     // Get path to still.
     $still_filename = mediamosa_configuration_storage::mediafile_still_filename_get($still_id);
@@ -115,7 +114,6 @@ class mediamosa_asset_mediafile_still {
         mediamosa_asset_mediafile_db::GROUP_ID => $group_id,
         mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT => mediamosa_configuration_storage::mount_point_get(),
         mediamosa_asset_mediafile_db::FILE_EXTENSION => $file_extension,
-        mediamosa_asset_mediafile_db::ASSET_ID_ROOT => $asset_parent_id,
         mediamosa_asset_mediafile_db::IS_STILL => mediamosa_asset_mediafile_db::IS_STILL_TRUE,
         mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE => $mediafile_id_source,
         mediamosa_asset_mediafile_db::TAG => $tag
@@ -271,7 +269,7 @@ class mediamosa_asset_mediafile_still {
     $still_id = mediamosa_db::db_query_range(
       'SELECT m.#mediafile_id FROM {#mediamosa_asset_mediafile} AS m
       JOIN {#mediamosa_asset_mediafile_metadata} AS mm USING(#mediafile_id)
-      WHERE m.#asset_id_root = :asset_id_root AND m.#is_still = :is_still_true AND mm.#still_default = :still_default_true AND mm.#prop_id = :prop_id
+      WHERE m.#asset_id = :asset_id AND m.#is_still = :is_still_true AND mm.#still_default = :still_default_true AND mm.#prop_id = :prop_id
       ORDER BY mm.#metadata_id DESC',
       0,
       1,
@@ -279,8 +277,8 @@ class mediamosa_asset_mediafile_still {
         '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
         '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
         '#mediamosa_asset_mediafile_metadata' => mediamosa_asset_mediafile_metadata_db::TABLE_NAME,
-        '#asset_id_root' => mediamosa_asset_mediafile_db::ASSET_ID_ROOT,
-        ':asset_id_root' => $asset_id,
+        '#asset_id' => mediamosa_asset_mediafile_db::ASSET_ID,
+        ':asset_id' => $asset_id,
         '#is_still' => mediamosa_asset_mediafile_db::IS_STILL,
         ':is_still_true' => mediamosa_asset_mediafile_db::IS_STILL_TRUE,
         '#prop_id' => mediamosa_asset_mediafile_metadata_db::PROP_ID,
@@ -296,7 +294,7 @@ class mediamosa_asset_mediafile_still {
       $still_id = mediamosa_db::db_query_range(
         "SELECT m.#mediafile_id FROM {#mediamosa_asset_mediafile} AS m
         JOIN {#mediamosa_asset_mediafile_metadata} AS mm USING(#mediafile_id)
-        WHERE m.#asset_id_root = :asset_id_root AND m.#is_still = :is_still_true
+        WHERE m.#asset_id = :asset_id AND m.#is_still = :is_still_true
         ORDER BY mm.#metadata_id DESC",
         0,
         1,
@@ -304,8 +302,8 @@ class mediamosa_asset_mediafile_still {
           '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
           '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
           '#mediamosa_asset_mediafile_metadata' => mediamosa_asset_mediafile_metadata_db::TABLE_NAME,
-          '#asset_id_root' => mediamosa_asset_mediafile_db::ASSET_ID_ROOT,
-          ':asset_id_root' => $asset_id,
+          '#asset_id' => mediamosa_asset_mediafile_db::ASSET_ID,
+          ':asset_id' => $asset_id,
           '#is_still' => mediamosa_asset_mediafile_db::IS_STILL,
           ':is_still_true' => mediamosa_asset_mediafile_db::IS_STILL_TRUE,
           '#metadata_id' => mediamosa_asset_mediafile_metadata_db::ID
@@ -355,7 +353,7 @@ class mediamosa_asset_mediafile_still {
     if ($still_id != '') {
       // Get specific still.
       $result = mediamosa_db::db_query(
-        'SELECT #mediafile_id AS still_id, #app_id, #sannas_mount_point, #mediafile_id_source FROM {#mediamosa_asset_mediafile} WHERE #mediafile_id = :mediafile_id AND #is_still = :is_still_true AND #asset_id_root = :asset_id_root',
+        'SELECT #mediafile_id AS still_id, #app_id, #sannas_mount_point, #mediafile_id_source FROM {#mediamosa_asset_mediafile} WHERE #mediafile_id = :mediafile_id AND #is_still = :is_still_true AND #asset_id = :asset_id',
         array(
           '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
           '#app_id' => mediamosa_asset_mediafile_db::APP_ID,
@@ -365,8 +363,8 @@ class mediamosa_asset_mediafile_still {
           ':mediafile_id' => $still_id,
           '#is_still' => mediamosa_asset_mediafile_db::IS_STILL,
           ':is_still_true' => mediamosa_asset_mediafile_db::IS_STILL_TRUE,
-          '#asset_id_root' => mediamosa_asset_mediafile_db::ASSET_ID_ROOT,
-          ':asset_id_root' => $asset_id,
+          '#asset_id' => mediamosa_asset_mediafile_db::ASSET_ID,
+          ':asset_id' => $asset_id,
         )
       );
     }
@@ -375,7 +373,7 @@ class mediamosa_asset_mediafile_still {
       $result = mediamosa_db::db_query(
         'SELECT s.#mediafile_id AS still_id, s.#app_id, s.#sannas_mount_point, s.#mediafile_id_source FROM {#mediamosa_asset_mediafile} AS s
          INNER JOIN {#mediamosa_asset_mediafile} AS m ON m.#asset_id = s.#asset_id
-         WHERE m.#mediafile_id = :mediafile_id AND m.#asset_id_root = :asset_id_root AND s.#asset_id_root = :asset_id_root AND s.#mediafile_id_source = :mediafile_id_source AND s.#is_still = :is_still_true',
+         WHERE m.#mediafile_id = :mediafile_id AND m.#asset_id = :asset_id AND s.#asset_id = :asset_id AND s.#mediafile_id_source = :mediafile_id_source AND s.#is_still = :is_still_true',
         array(
           '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
           '#app_id' => mediamosa_asset_mediafile_db::APP_ID,
@@ -384,8 +382,7 @@ class mediamosa_asset_mediafile_still {
           '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
           '#asset_id' => mediamosa_asset_mediafile_db::ASSET_ID,
           ':mediafile_id' => $mediafile_id,
-          '#asset_id_root' => mediamosa_asset_mediafile_db::ASSET_ID_ROOT,
-          ':asset_id_root' => $asset_id,
+          ':asset_id' => $asset_id,
           ':mediafile_id_source' => $mediafile_id,
           '#is_still' => mediamosa_asset_mediafile_db::IS_STILL,
           ':is_still_true' => mediamosa_asset_mediafile_db::IS_STILL_TRUE,
@@ -395,15 +392,15 @@ class mediamosa_asset_mediafile_still {
     else {
       // Get all stills from asset.
       $result = mediamosa_db::db_query(
-        'SELECT #mediafile_id AS still_id, #app_id, #sannas_mount_point, #mediafile_id_source FROM {#mediamosa_asset_mediafile} WHERE #asset_id_root = :asset_id_root AND #is_still = :is_still_true',
+        'SELECT #mediafile_id AS still_id, #app_id, #sannas_mount_point, #mediafile_id_source FROM {#mediamosa_asset_mediafile} WHERE #asset_id = :asset_id AND #is_still = :is_still_true',
         array(
           '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
           '#app_id' => mediamosa_asset_mediafile_db::APP_ID,
           '#sannas_mount_point' => mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT,
           '#mediafile_id_source' => mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE,
           '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
-          '#asset_id_root' => mediamosa_asset_mediafile_db::ASSET_ID_ROOT,
-          ':asset_id_root' => $asset_id,
+          '#asset_id' => mediamosa_asset_mediafile_db::ASSET_ID,
+          ':asset_id' => $asset_id,
           '#is_still' => mediamosa_asset_mediafile_db::IS_STILL,
           ':is_still_true' => mediamosa_asset_mediafile_db::IS_STILL_TRUE,
         )
@@ -451,15 +448,15 @@ class mediamosa_asset_mediafile_still {
     $mediafile_id_default = mediamosa_db::db_query_range(
       'SELECT mf.#mediafile_id FROM {#mediamosa_asset_mediafile_metadata} AS mfmd
        INNER JOIN {#mediamosa_asset_mediafile} AS mf ON mf.#mediafile_id = mfmd.#mediafile_id
-       WHERE mfmd.#still_default = :still_default_true AND mf.#asset_id_root = :asset_id_root AND mf.#is_still = :is_still_true AND mf.#mediafile_id_source = :mediafile_id_source AND mfmd.#prop_id = :prop_id',
+       WHERE mfmd.#still_default = :still_default_true AND mf.#asset_id = :asset_id AND mf.#is_still = :is_still_true AND mf.#mediafile_id_source = :mediafile_id_source AND mfmd.#prop_id = :prop_id',
       0,
       1,
       array(
         '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
         '#mediamosa_asset_mediafile_metadata' => mediamosa_asset_mediafile_metadata_db::TABLE_NAME,
         '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
-        '#asset_id_root' => mediamosa_asset_mediafile_db::ASSET_ID_ROOT,
-        ':asset_id_root' => $asset_id,
+        '#asset_id' => mediamosa_asset_mediafile_db::ASSET_ID,
+        ':asset_id' => $asset_id,
         '#prop_id' => mediamosa_asset_mediafile_metadata_db::PROP_ID,
         ':prop_id' => $prop_id,
         '#still_default' => mediamosa_asset_mediafile_metadata_db::VAL_CHAR,
@@ -476,7 +473,7 @@ class mediamosa_asset_mediafile_still {
       $mediafile_id_default = mediamosa_db::db_query_range(
         'SELECT mf.#mediafile_id FROM {#mediamosa_asset_mediafile_metadata} AS mfmd
          INNER JOIN {#mediamosa_asset_mediafile} AS mf ON mf.#mediafile_id = mfmd.#mediafile_id
-         WHERE mf.#asset_id_root = :asset_id_root AND mf.#is_still = :is_still_true AND mf.#mediafile_id_source = :mediafile_id_source AND mfmd.#prop_id = :prop_id
+         WHERE mf.#asset_id = :asset_id AND mf.#is_still = :is_still_true AND mf.#mediafile_id_source = :mediafile_id_source AND mfmd.#prop_id = :prop_id
          ORDER BY mfmd.#still_order ASC',
         0,
         1,
@@ -484,8 +481,8 @@ class mediamosa_asset_mediafile_still {
           '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
           '#mediamosa_asset_mediafile_metadata' => mediamosa_asset_mediafile_metadata_db::TABLE_NAME,
           '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
-          '#asset_id_root' => mediamosa_asset_mediafile_db::ASSET_ID_ROOT,
-          ':asset_id_root' => $asset_id,
+          '#asset_id' => mediamosa_asset_mediafile_db::ASSET_ID,
+          ':asset_id' => $asset_id,
           '#is_still' => mediamosa_asset_mediafile_db::IS_STILL,
           ':is_still_true' => mediamosa_asset_mediafile_db::IS_STILL_TRUE,
           '#mediafile_id_source' => mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE,

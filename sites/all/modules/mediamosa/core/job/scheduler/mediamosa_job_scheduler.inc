@@ -509,7 +509,6 @@ class mediamosa_job_scheduler {
         $a_fields = array(
           mediamosa_asset_mediafile_db::ID => $mediafile_id_dest,
           mediamosa_asset_mediafile_db::ASSET_ID => $job_info['asset_id'],
-          mediamosa_asset_mediafile_db::ASSET_ID_ROOT => $job_info['asset_id'],
           mediamosa_asset_mediafile_db::FILENAME => $job_info["filename"],
           mediamosa_asset_mediafile_db::APP_ID => $job_info["app_id"],
           mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT => mediamosa_configuration_storage::mount_point_get(),
@@ -553,13 +552,9 @@ class mediamosa_job_scheduler {
     $a_asset = mediamosa_asset::get($job_info['asset_id']);
     assert(!empty($a_asset));
 
-    // Set the root (deprecated).
-    $asset_id_root = ($a_asset[mediamosa_asset_db::PARENT_ID] ? $a_asset[mediamosa_asset_db::PARENT_ID] : $job_info['asset_id']);
-
     $a_fields = array(
       mediamosa_asset_mediafile_db::ID => $mediafile_id_dest,
       mediamosa_asset_mediafile_db::ASSET_ID => $job_info['asset_id'],
-      mediamosa_asset_mediafile_db::ASSET_ID_ROOT => $asset_id_root,
       mediamosa_asset_mediafile_db::FILENAME => $job_info['filename'],
       mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT => mediamosa_configuration_storage::mount_point_get(),
       mediamosa_asset_mediafile_db::TRANSCODE_PROFILE_ID => $job_info['transcode_profile_id'],
@@ -623,7 +618,6 @@ class mediamosa_job_scheduler {
 
     // Get Asset.
     $a_asset = mediamosa_asset::get($asset_id);
-    $parent_id = ($a_asset[mediamosa_asset_db::PARENT_ID] ? $a_asset[mediamosa_asset_db::PARENT_ID] : $asset_id);
 
     self::log("Start creation DB multiple still, e.g. @filename, job: @job_id", array('@filename' => $filenames[0], '@job_id' => (string)$job_id));
 
@@ -648,7 +642,7 @@ class mediamosa_job_scheduler {
       }
       $i = 0;
       foreach ($filenames as $filename) {
-        mediamosa_asset_mediafile_still::create($asset_id, $parent_id, $filename, $a_job['app_id'], $a_job['owner'], '', $order, !$order, $still_parameters, ($scenes == array() ? $sec : $scenes[$i]), $a_job['mediafile_id'], $tag);
+        mediamosa_asset_mediafile_still::create($asset_id, $filename, $a_job['app_id'], $a_job['owner'], '', $order, !$order, $still_parameters, ($scenes == array() ? $sec : $scenes[$i]), $a_job['mediafile_id'], $tag);
         $order++;
         if (isset($second) && is_numeric($second)) {
           $sec += $second;

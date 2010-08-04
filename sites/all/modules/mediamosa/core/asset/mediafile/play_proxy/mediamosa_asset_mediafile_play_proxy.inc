@@ -691,7 +691,7 @@ class mediamosa_asset_mediafile_play_proxy {
       return mediamosa_db::db_query_range(
         'SELECT #mediafile_id FROM {#mediamosa_asset_mediafile}
          WHERE
-         #asset_id_root = :asset_id_root AND
+         #asset_id = :asset_id AND
          #transcode_profile_id = :transcode_profile_id AND
          #is_still = :is_still_false',
         0,
@@ -699,8 +699,8 @@ class mediamosa_asset_mediafile_play_proxy {
         array(
           '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
           '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
-          '#asset_id_root' => mediamosa_asset_mediafile_db::ASSET_ID_ROOT,
-          ':asset_id_root' => $asset_id,
+          '#asset_id' => mediamosa_asset_mediafile_db::ASSET_ID,
+          ':asset_id' => $asset_id,
           '#transcode_profile_id' => mediamosa_asset_mediafile_db::TRANSCODE_PROFILE_ID,
           ':transcode_profile_id' => $profile_id,
           '#is_still' => mediamosa_asset_mediafile_db::IS_STILL,
@@ -713,20 +713,20 @@ class mediamosa_asset_mediafile_play_proxy {
       'SELECT m.#mediafile_id FROM {#mediamosa_asset_mediafile} AS m
        INNER JOIN {#mediamosa_asset_mediafile} AS orig USING(#asset_id)
        WHERE
-        m.#asset_id_root = :asset_id_root AND
+        m.#asset_id = :asset_id AND
         m.#transcode_profile_id = :transcode_profile_id AND
         m.#is_still = :is_still_false AND
         orig.#is_original_file = #is_original_file_true AND
         orig.#is_still = :is_still_false AND
-        orig.#asset_id_root = :asset_id_root AND
+        orig.#asset_id = :asset_id AND
         orig.#mediafile_id = :mediafile_id',
       0,
       1,
       array(
         '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
         '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
-        '#asset_id_root' => mediamosa_asset_mediafile_db::ASSET_ID_ROOT,
-        ':asset_id_root' => $asset_id,
+        '#asset_id' => mediamosa_asset_mediafile_db::ASSET_ID,
+        ':asset_id' => $asset_id,
         '#transcode_profile_id' => mediamosa_asset_mediafile_db::TRANSCODE_PROFILE_ID,
         ':transcode_profile_id' => $profile_id,
         '#is_still' => mediamosa_asset_mediafile_db::IS_STILL,
