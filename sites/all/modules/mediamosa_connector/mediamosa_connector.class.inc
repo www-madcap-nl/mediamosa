@@ -139,7 +139,7 @@ class mediamosa_connector {
     }
 
     $options += array(
-      'fatal' => false, // Default is not to react to problems with exceptions.
+      'fatal' => FALSE, // Default is not to react to problems with exceptions.
       'user_id' => '',
       'group_id' => '',
     );
