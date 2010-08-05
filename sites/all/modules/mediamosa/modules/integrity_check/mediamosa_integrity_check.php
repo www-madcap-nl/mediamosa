@@ -58,14 +58,13 @@ error_reporting(E_ALL);
 // Check media record.
 function check_media_records() {
   $result = mediamosa_db::db_query("
-    SELECT #mediafile_id, #created, #changed, #asset_id_root, #app_id, #owner_id
+    SELECT #mediafile_id, #created, #changed, #app_id, #owner_id
     FROM {#mediafile}
     WHERE #is_still = :is_still_false", array(
     '#mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
     '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
     '#created' => mediamosa_asset_mediafile_db::CREATED,
     '#changed' => mediamosa_asset_mediafile_db::CHANGED,
-    '#asset_id_root' => mediamosa_asset_mediafile_db::ASSET_ID_ROOT,
     '#app_id' => mediamosa_asset_mediafile_db::APP_ID,
     '#owner_id' => mediamosa_asset_mediafile_db::OWNER_ID,
     '#is_still' => mediamosa_asset_mediafile_db::IS_STILL,

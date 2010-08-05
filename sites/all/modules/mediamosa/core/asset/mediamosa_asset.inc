@@ -697,7 +697,7 @@ class mediamosa_asset {
             SELECT DISTINCT ms.#app_master_id
             FROM {#mediafile} m
             INNER JOIN {#aut_app_master_slave} ms ON m.#mediafile_id = ms.#aut_object_id AND ms.#aut_object_type = :type_mediafile AND ms.#app_slave_id = :app_slave_id
-            WHERE m.#asset_id = :asset_id_root
+            WHERE m.#asset_id = :asset_id
           ', array(
             '#mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
             '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
@@ -709,7 +709,7 @@ class mediamosa_asset {
             ':type_mediafile' => mediamosa_aut_app_master_slave_db::AUT_OBJECT_TYPE_MEDIAFILE,
             '#app_slave_id' => mediamosa_aut_app_master_slave_db::APP_ID_SLAVE,
             ':app_slave_id' => $asset[mediamosa_asset_db::APP_ID],
-            ':asset_id_root' => $asset[mediamosa_asset_db::ID],
+            ':asset_id' => $asset[mediamosa_asset_db::ID],
           ));
           $master_app_ids = array();
           foreach ($result as $record) {

@@ -38,8 +38,8 @@ Mediamosa 2.2.0
 - PA: Adding domains and realms produce failures fix (See VPCore ticket #172).
 - Integrity check produces error fix (See VPCore ticket #177).
 - Integrity check uses "nice" call, instead of "wget" (See VPCore ticket #177).
-- User quota test fails in 32 bits systems bug fix.
 - Support for 2 pass h264 encoding development (See MediaMosa ticket #264).
+- Remove asset_id_root field from mediamosa_asset_mediafile table (See MediaMosa ticket #317).
 
 Other changes (not ticket related).
 - During ticket #255, adding pager to stats, bug was found on the stats keyword
@@ -108,6 +108,8 @@ Other changes (not ticket related).
 - Fixed /acl/app to return only apps where you are allowed master/slave on.
 - Fixed /acl/app in is_oai mode SQL error.
 - Added force index on metadata search join.
+- User quota test fails in 32 bits systems bug fix.
+- MySQL query speed improvement: Add mediafile_id_source index to the mediamosa_asset_mediafile table.
 
 Mediamosa 2.1.5 (build 664)
 ---------------------------

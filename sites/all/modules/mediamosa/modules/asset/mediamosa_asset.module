@@ -1262,7 +1262,6 @@ name=Example&delete=cascade',
     <still>
       <mediafile_id>GqrqS9UYfyKAsrW73mPVAyRH</mediafile_id>
       <asset_id>7pAkDsceysAZPo0q3PhjtBE1</asset_id>
-      <asset_id_root>7pAkDsceysAZPo0q3PhjtBE1</asset_id_root>
       <mediafile_id_source>OW35AQyoPNUSi4iINunmS2nr</mediafile_id_source>
       <tag></tag>
       <app_id>14</app_id>
@@ -1358,7 +1357,6 @@ name=Example&delete=cascade',
       <still_id>GqrqS9UYfyKAsrW73mPVAyRH</still_id>
       <mediafile_id>OW35AQyoPNUSi4iINunmS2nr</mediafile_id>
       <asset_id>7pAkDsceysAZPo0q3PhjtBE1</asset_id>
-      <orderasset_id>7pAkDsceysAZPo0q3PhjtBE1</orderasset_id>
       <app_id>14</app_id>
       <owner_id>admin</owner_id>
       <filename>GqrqS9UYfyKAsrW73mPVAyRH</filename>

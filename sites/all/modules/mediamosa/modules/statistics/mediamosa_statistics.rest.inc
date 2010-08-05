@@ -979,7 +979,7 @@ class mediamosa_rest_call_statistics_get_most_popular_streams extends mediamosa_
     $a_query[mediamosa_db_query::A_SELECT_EXPR][] = 'ssr.owner_id';
     $a_query[mediamosa_db_query::A_SELECT_EXPR][] = 'ssr.group_id';
     $a_query[mediamosa_db_query::A_SELECT_EXPR][] = 'mf.filename';
-    $a_query[mediamosa_db_query::A_SELECT_EXPR][] = 'mf.asset_id_root AS asset_id';
+    $a_query[mediamosa_db_query::A_SELECT_EXPR][] = 'mf.asset_id AS asset_id';
     $a_query[mediamosa_db_query::A_SELECT_EXPR][] = 'count(*) AS requested';
     $a_query[mediamosa_db_query::A_SELECT_EXPR][] = 'ssr.app_id';
 
