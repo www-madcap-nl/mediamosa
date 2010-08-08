@@ -414,7 +414,14 @@ class mediamosa_connector {
     return $response;
   }
 
-  public function check_result($response, $ok = NULL, $error = NULL) {
+  /**
+   * Check the result.
+   *
+   * @param xml_object $response
+   * @param string $ok
+   * @param string $error
+   */
+  static public function check_result($response, $ok = NULL, $error = NULL) {
     $result_id = $response ? (int)$response->xml->header->request_result_id : 0;
 
     if ($result_id != self::ERRORCODE_OKAY && $result_id != self::ERRORCODE_EMPTY_RESULT) {
