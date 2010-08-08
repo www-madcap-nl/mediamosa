@@ -59,39 +59,46 @@ class mediamosa_asset_mediafile_metadata_property {
 
   /**
    * Get the property id. Save the property, if needed.
+   *
+   * Warning: Not master-master save.
+   *
    * @return int
    */
-  static public function get_property_id($prop_name, $type) {
+  static public function get_property_id($prop_name, $prop_type) {
     // Get the property id, if exists.
-    $prop_id = self::get_property_id_cache($prop_name, $type);
+    $prop_id = self::get_property_id_cache($prop_name, $prop_type);
 
     if (is_null($prop_id) ) {
-      $prop_id = self::get_property_id_cache($prop_name, $type, TRUE);
+      $prop_id = self::get_property_id_cache($prop_name, $prop_type, TRUE);
     }
 
     if (is_null($prop_id) ) {
-      if (
-        $type != mediamosa_asset_mediafile_metadata_property_db::TYPE_DATETIME &&
-        $type != mediamosa_asset_mediafile_metadata_property_db::TYPE_INT &&
-        $type != mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR
+      if (!in_array(
+        $prop_type,
+        array(
+          mediamosa_asset_mediafile_metadata_property_db::TYPE_DATETIME,
+          mediamosa_asset_mediafile_metadata_property_db::TYPE_INT,
+          mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR,
+        ))
       ) {
         // Shouldn't be here.
-        throw new mediamosa_exception_program_error(strtr('Invalid mediafile metadata type (@type)!', array('@type' => $type)));
+        throw new mediamosa_exception_program_error(strtr('Invalid mediafile metadata type (@prop_type).', array('@prop_type' => $prop_type)));
       }
 
       // Save the property id.
       $fields = array(
         'prop_name' => $prop_name,
-        'type' => $type,
+        'type' => $prop_type,
         'created' => mediamosa::db_current_timestamp_now(),
         'changed' => mediamosa::db_current_timestamp_now(),
       );
-      $prop_id = mediamosa_db::db_insert('mediamosa_asset_mediafile_metadata_property')
+
+      $prop_id = mediamosa_db::db_insert(mediamosa_asset_mediafile_metadata_property_db::TABLE_NAME)
         ->fields($fields)
         ->execute();
 
       // Get the property id. It must exists.
-      $prop_id = self::get_property_id_cache($prop_name, $type, TRUE);
+      $prop_id = self::get_property_id_cache($prop_name, $prop_type, TRUE);
     }
 
     return $prop_id;
@@ -120,6 +127,7 @@ class mediamosa_asset_mediafile_metadata_property {
 
   /**
    * Get the property.
+   *
    * @param prop_id
    * @return array(prop_name, type)
    */

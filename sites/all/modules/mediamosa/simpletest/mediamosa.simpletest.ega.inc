@@ -32,7 +32,6 @@
 /**
  * Use this class for tests that uses a EGA default login for doing
  * REST calls.
- *
  */
 class MediaMosaTestCaseEga extends MediaMosaTestCase {
   // ------------------------------------------------------------------ Members.

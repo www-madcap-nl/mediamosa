@@ -339,6 +339,7 @@ class mediamosa_asset_mediafile_metadata {
 
   /**
    * Create mediafile metadata value.
+   *
    * @param mediafile_id
    * @param value Value of the metadata
    * @param prop_name Property name
@@ -371,7 +372,7 @@ class mediamosa_asset_mediafile_metadata {
     }
     else {
       // Shouldn't be here.
-      throw new mediamosa_exception_program_error(strtr('Invalid mediafile metadata type (@type)!', array('@type' => $type)));
+      throw new mediamosa_exception_program_error('Invalid mediafile metadata type (@type)!', array('@type' => $type));
     }
 
     // Enrich with changed.

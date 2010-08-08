@@ -97,7 +97,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
       $this->tearDown();
 
       mediamosa::log(
-        'runSafe caught exception! @message (Exception thrown on line @line, in @file)<br />Partial backtrace: <pre>@backtrace</pre>',
+        'MediaMosaTestCase::runSafe() caught exception! @message (Exception thrown on line @line, in @file)<br />Partial backtrace: <pre>@backtrace</pre>',
         array(
           '@message' => $e->getMessage(),
           '@line' => $e->getLine(),
@@ -614,6 +614,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
 
   /**
    * Create a random app or specified one.
+   *
    * @param array $a_attributes
    *  Basic app parameters like the DB version (mediamosa_app_db).
    */
@@ -731,55 +732,68 @@ class MediaMosaTestCase extends DrupalWebTestCase {
 
   /**
    * Create a mediafile metadata property.
-   * @param prop_name Property name
-   * @param type Type of the property
-   * @return property id
+   *
+   * @param prop_name
+   *  Property name
+   * @param type
+   *  Type of the property
+   * @return
+   *  Property id
    */
-  protected function createMediafileMetadataProperty($prop_name, $type) {
-    $prop_id = mediamosa_asset_mediafile_metadata_property::get_property_id($prop_name, $type);
+  protected function createMediafileMetadataProperty($prop_name, $prop_type) {
+    $prop_id = mediamosa_asset_mediafile_metadata_property::get_property_id($prop_name, $prop_type);
+
+    // Check the prop_id.
+    $this->assertTrue(
+      $prop_id > 0,
+      t("Prop_id (@prop_id) has valid ID (> 0)", array('@prop_id' => $prop_id))
+    );
+
+    // Check database.
+    $this->checkMediafileMetadataPropertyDb($prop_id, $prop_name, $prop_type);
+
     return $prop_id;
   }
 
   /**
    * Check mediafile metadata property in DB.
-   * @param allowed_properties An associative array (property name => property type)
-   * @return TRUE if the check was succeed
+   *
+   * @param allowed_properties
+   *  An associative array (property name => property type).
+   * @return
+   *  TRUE if the check was successful.
    */
-  protected function checkMediafileMetadataPropertyDb($allowed_properties) {
-    $is_valid = TRUE;
-    $properties = array();
+  /**
+   * Check if the creation of mediafile metadata property was correct.
+   *
+   * @param integer $prop_id
+   *  Property ID to check.
+   * @param string $name
+   *  Name of the property.
+   * @param string $type
+   *  Type of the property.
+   */
+  protected function checkMediafileMetadataPropertyDb($prop_id, $prop_name, $prop_type) {
+    $property = mediamosa_asset_mediafile_metadata_property::get_property($prop_id, TRUE);
 
-    $result = mediamosa_db::db_query('SELECT #prop_name, #type FROM {#mediamosa_asset_mediafile_metadata_property}', array(
-      '#mediamosa_asset_mediafile_metadata_property' => mediamosa_asset_mediafile_metadata_property_db::TABLE_NAME,
-      '#prop_name' => mediamosa_asset_mediafile_metadata_property_db::NAME,
-      '#type' => mediamosa_asset_mediafile_metadata_property_db::TYPE,
-    ));
-    foreach ($result as $property) {
-      if (empty($allowed_properties[$property['prop_name']]) || $allowed_properties[$property['prop_name']] != $property['type']) {
-        $is_valid = FALSE;
-        break;
-      }
-      $properties[$property['prop_name']] = $property['type'];
-    }
+    $this->assertTrue($property, strtr('Got property for @prop_id', array('@prop_id' => $prop_id)));
 
-    if ($is_valid) {
-      foreach ($allowed_properties as $prop_name => $type) {
-        if (empty($properties[$prop_name]) || $properties[$prop_name] != $type) {
-          $is_valid = FALSE;
-          break;
-        }
-      }
-    }
+    $this->assertTrue($property[mediamosa_asset_mediafile_metadata_property_db::NAME] == $prop_name && $property[mediamosa_asset_mediafile_metadata_property_db::TYPE] == $prop_type, strtr('Property contents for @prop_id success.', array('@prop_id' => $prop_id)));
 
-    return $is_valid;
+    return $property;
   }
 
   /**
    * Create / update a mediafile metadata value for a mediafile.
-   * @param mediafile_id Unique id for the mediafile
-   * @param prop_name Property name
-   * @param type Type of the property
-   * @param value The value of the given value
+   *
+   * @param mediafile_id
+   *  Unique id for the mediafile.
+   * @param prop_name
+   *  Property name.
+   * @param type
+   *  Type of the property.
+   * @param value
+   *  The value of the given value.
    */
   protected function createMediafileMetadata($mediafile_id, $value, $prop_name, $type) {
     mediamosa_asset_mediafile_metadata::create_mediafile_metadata($mediafile_id, $value, $prop_name, $type);
@@ -796,8 +810,10 @@ class MediaMosaTestCase extends DrupalWebTestCase {
 
   /**
    * Check mediafile metadata.
-   * @param allowed_values An associative array (property id => array(value => value, name => name, type => type))
-   * @return TRUE if the check was succeed
+   * @param allowed_values
+   *  An associative array (property id => array(value => value, name => name, type => type))
+   * @return
+   *  TRUE if the check was successful
    */
   protected function checkMediafileMetadata($mediafile_id, $allowed_values) {
     $is_valid = TRUE;
@@ -812,6 +828,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
       '#mediafile_id' => mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID,
       ':mediafile_id' => $mediafile_id,
     ));
+
     foreach ($result as $value) {
       $prop = mediamosa_asset_mediafile_metadata_property::get_property($value[mediamosa_asset_mediafile_metadata_db::PROP_ID], TRUE);
 

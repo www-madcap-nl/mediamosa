@@ -45,37 +45,31 @@ class MediaMosaAssetMediafileMetadataPropertyTestCaseEga extends MediaMosaTestCa
 
   /**
    * Property test.
-   * @param prop_type The type of the property
-   * @param prop_id_allowed A number
-   * @param allowed_properties An associative array (prop_name => prop_name, type => type, prop_id => prop_id)
-   * @param allowed_values Array with the allowed properties
+   * @param prop_type
+   *  The type of the property
+   * @param prop_id_allowed
+   *  A number
+   * @param allowed_properties
+   *  An associative array (prop_name => prop_name, type => type, prop_id => prop_id)
+   * @param allowed_values
+   *  Array with the allowed properties
    */
-  private function propertyTest($prop_type, $prop_id_allowed, &$allowed_properties) {
+  private function propertyTest($prop_type, &$allowed_properties) {
     $prop_name = mediamosa_db::uuid(rand(1, 1000));
-    $prop_id = $this->createMediafileMetadataProperty($prop_name, $prop_type);
+    $prop_id = $this->createMediafileMetadataProperty($prop_name, $prop_type, $allowed_properties);
 
-    // Check the prop_id.
-    $this->assertTrue(
-      $prop_id == $prop_id_allowed,
-      t("Prop_id has the good value (@prop_id == @prop_id_allowed)", array('@prop_id' => $prop_id, '@prop_id_allowed' => $prop_id_allowed))
-    );
-
-    // Check the property in the database.
-    $allowed_properties[$prop_name] = $prop_type;
-    $this->assertTrue(
-      $this->checkMediafileMetadataPropertyDb($allowed_properties),
-      t("Property table has the good values (@allowed_properties)", array('@allowed_properties' => print_r($allowed_properties, TRUE)))
-    );
-
-    return array('prop_name' => $prop_name, 'type' => $prop_type, 'prop_id' => $prop_id,);
+    return array('prop_name' => $prop_name, 'type' => $prop_type, 'prop_id' => $prop_id);
   }
 
   /**
    * Metadata test.
    * @param mediafile_id
-   * @param value Value of the metadata
-   * @param prop An associative array (prop_name => prop_name, type => type, prop_id => prop_id)
-   * @param allowed_values Array with the allowed values
+   * @param value
+   *  Value of the metadata
+   * @param prop
+   *  An associative array (prop_name => prop_name, type => type, prop_id => prop_id)
+   * @param allowed_values
+   *  Array with the allowed values
    */
   private function metadataTest($mediafile_id, $value, $prop, &$allowed_values) {
     $this->createMediafileMetadata($mediafile_id, $value, $prop['prop_name'], $prop['type']);
@@ -99,7 +93,6 @@ class MediaMosaAssetMediafileMetadataPropertyTestCaseEga extends MediaMosaTestCa
     $prop_type_int = mediamosa_asset_mediafile_metadata_property_db::TYPE_INT;
     $prop_type_char = mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR;
 
-
     //
     // Mediafile technical metadata property tests.
     //
@@ -107,17 +100,16 @@ class MediaMosaAssetMediafileMetadataPropertyTestCaseEga extends MediaMosaTestCa
     $allowed_properties = array();
 
     // Create / get the (first) property: integer.
-    $prop_1 = $this->propertyTest($prop_type_int, 1, $allowed_properties);
+    $prop_1 = $this->propertyTest($prop_type_int, $allowed_properties);
 
     // Create a second property: string.
-    $prop_2 = $this->propertyTest($prop_type_char, 2, $allowed_properties);
+    $prop_2 = $this->propertyTest($prop_type_char, $allowed_properties);
 
     // Create a third property: datetime.
-    $prop_3 = $this->propertyTest($prop_type_datetime, 3, $allowed_properties);
+    $prop_3 = $this->propertyTest($prop_type_datetime, $allowed_properties);
 
     // Create a fourth property: string.
-    $prop_4 = $this->propertyTest($prop_type_char, 4, $allowed_properties);
-
+    $prop_4 = $this->propertyTest($prop_type_char, $allowed_properties);
 
     //
     // Mediafile technical metadata tests.
