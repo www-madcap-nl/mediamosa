@@ -206,30 +206,26 @@ function _mediamosa_maintenance_status_job() {
   $results[] = array(
     'title' => t('All waiting jobs'),
     'value' => _mediamosa_maintenance_status_waiting_job(),
-    'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
   );
   $results[] = array(
     'title' => t('Analyse waiting jobs'),
     'value' => _mediamosa_maintenance_status_waiting_job(mediamosa_job_db::JOB_TYPE_ANALYSE),
-    'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
   );
   $results[] = array(
     'title' => t('Transcoding waiting jobs'),
     'value' => _mediamosa_maintenance_status_waiting_job(mediamosa_job_db::JOB_TYPE_TRANSCODE),
-    'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
   );
   $results[] = array(
     'title' => t('Still waiting jobs'),
     'value' => _mediamosa_maintenance_status_waiting_job(mediamosa_job_db::JOB_TYPE_STILL),
-    'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
   );
   $results[] = array(
     'title' => t('Upload waiting jobs'),
     'value' => _mediamosa_maintenance_status_waiting_job(mediamosa_job_db::JOB_TYPE_UPLOAD),
-    'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
   );
 
-  $output .= theme('mediamosa_maintenance_status_report', array('table_name' => t('Jobhandler'), 'results' => $results));
+  $output .= t('Jobhandler');
+  $output .= theme('mediamosa_maintenance_table', array('rows' => $results));
   return $output;
 }
 
