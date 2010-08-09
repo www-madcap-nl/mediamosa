@@ -56,9 +56,9 @@ define('MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_FFMPEG_WARNING', "0.5");
 define('MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_FFMPEG_WARNING_SVN', "SVN-r19159");
 
 /**
- * Implementation of hook_mediamosa_status_collect().
+ * Implementation of hook_mediamosa_status_generate().
  */
-function mediamosa_maintenance_status_configuration_mediamosa_status_collect() {
+function mediamosa_maintenance_status_configuration_mediamosa_status_generate() {
   $results = array();
 
   // PHP modules.
@@ -218,5 +218,16 @@ function mediamosa_maintenance_status_configuration_mediamosa_status_collect() {
     ),
   );
 
-  return $statuses;
+  variable_set('mediamosa_status_collect', $statuses);
+}
+
+/**
+ * Implementation of hook_mediamosa_status_collect().
+ */
+function mediamosa_maintenance_status_configuration_mediamosa_status_collect($reset = FALSE) {
+  if ($reset) {
+    mediamosa_maintenance_status_configuration_mediamosa_status_generate();
+  }
+
+  return variable_get('mediamosa_status_collect', array());
 }

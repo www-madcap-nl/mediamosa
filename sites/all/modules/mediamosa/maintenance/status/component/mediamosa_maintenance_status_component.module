@@ -40,9 +40,9 @@ define('MEDIAMOSA_MAINTENANCE_STATUS_COMPONENT_SPACE_WARNING', 100);
 
 
 /**
- * Implementation of hook_mediamosa_status_collect().
+ * Implementation of hook_mediamosa_status_generate().
  */
-function mediamosa_maintenance_status_component_mediamosa_status_collect() {
+function mediamosa_maintenance_status_component_mediamosa_status_generate() {
   $results = array();
 
   $mount_point = mediamosa_configuration_storage::mount_point_get();
@@ -147,5 +147,16 @@ function mediamosa_maintenance_status_component_mediamosa_status_collect() {
     ),
   );
 
-  return $statuses;
+  variable_set('mediamosa_status_component', $statuses);
+}
+
+/**
+ * Implementation of hook_mediamosa_status_collect().
+ */
+function mediamosa_maintenance_status_component_mediamosa_status_collect($reset = FALSE) {
+  if ($reset) {
+    mediamosa_maintenance_status_component_mediamosa_status_generate();
+  }
+
+  return variable_get('mediamosa_status_component', array());
 }

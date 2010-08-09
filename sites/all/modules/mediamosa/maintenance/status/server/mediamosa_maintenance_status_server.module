@@ -30,9 +30,9 @@
  */
 
 /**
- * Implementation of hook_mediamosa_status_collect().
+ * Implementation of hook_mediamosa_status_generate().
  */
-function mediamosa_maintenance_status_server_mediamosa_status_collect() {
+function mediamosa_maintenance_status_server_mediamosa_status_generate() {
   $results = array();
 
   $results[] = array(
@@ -49,5 +49,16 @@ function mediamosa_maintenance_status_server_mediamosa_status_collect() {
     ),
   );
 
-  return $statuses;
+  variable_set('mediamosa_status_server', $statuses);
+}
+
+/**
+ * Implementation of hook_mediamosa_status_collect().
+ */
+function mediamosa_maintenance_status_server_mediamosa_status_collect($reset = FALSE) {
+  if ($reset) {
+    mediamosa_maintenance_status_server_mediamosa_status_generate();
+  }
+
+  return variable_get('mediamosa_status_server', array());
 }

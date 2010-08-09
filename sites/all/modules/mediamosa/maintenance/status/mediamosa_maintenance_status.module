@@ -48,6 +48,12 @@ define('MEDIAMOSA_MAINTENANCE_STATUS_RESULT_WARNING', 1);
  */
 define('MEDIAMOSA_MAINTENANCE_STATUS_RESULT_ERROR', 2);
 
+/**
+ * Status cron run time interval.
+ * 10 min = 10 * 60 = 600
+ */
+define('MEDIAMOSA_MAINTENANCE_STATUS_CRON_TME', 600);
+
 
 /**
  * @file
@@ -95,6 +101,19 @@ function mediamosa_maintenance_status_theme() {
       'arguments' => array('table_name' => NULL, 'results' => NULL,),
     ),
   );
+}
+
+/**
+ * Implements hook_cron().
+ */
+function mediamosa_maintenance_status_cron() {
+  $last_time = variable_get('mediamosa_status_last_time', 0);
+
+  if ($last_time < time() - MEDIAMOSA_MAINTENANCE_STATUS_CRON_TME) {
+    variable_set('mediamosa_status_last_time', time());
+    // Check run-time requirements and status information.
+    module_invoke_all('mediamosa_status_generate');
+  }
 }
 
 /**
@@ -169,8 +188,10 @@ function _mediamosa_maintenance_status_status() {
   $statuses = module_invoke_all('mediamosa_status_collect');
 
   foreach ($statuses as $status) {
-    $output .= theme('mediamosa_maintenance_status_report', array('table_name' => $status['title'], 'results' => $status['results']));
+    $output .= theme('mediamosa_maintenance_status_report', array('table_name' => (is_array($status['title']) ? $status['title'][0] : $status['title']), 'results' => $status['results']));
   }
+
+  $output .= t('Last run: @last_run. Current time: @current.', array('@last_run' => date('Y-m-d H:i:s', variable_get('mediamosa_status_last_time', 0)), '@current' => date('Y-m-d H:i:s')));
 
   return $output;
 }
