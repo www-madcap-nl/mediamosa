@@ -68,13 +68,6 @@ function mediamosa_maintenance_status_menu() {
     'access arguments' => array('access mediamosa'),
     'weight' => 0,
   );
-  $items['admin/mediamosa/status/status_all'] = array(
-    'title' => 'Status of all',
-    'type' => MENU_LOCAL_TASK,
-    'page callback' => '_mediamosa_maintenance_status_all',
-    'access arguments' => array('access mediamosa'),
-    'weight' => 0,
-  );
   $items['admin/mediamosa/status/server'] = array(
     'title' => 'Server',
     'type' => MENU_LOCAL_TASK,
@@ -163,7 +156,7 @@ function theme_mediamosa_maintenance_status_report($variables) {
 function _mediamosa_maintenance_status_status() {
   $output = '';
 
-  drupal_add_css(drupal_get_path('module', 'mediamosa_maintenance_status') . '/mediamosa-status-messages.css');
+  drupal_add_css(drupal_get_path('module', 'mediamosa_maintenance_status') . '/mediamosa_maintenance_status.css');
 
   // If we are set as Home page, the breadcrumb isn't set, let's do it here.
   $breadcrumb = array();
@@ -183,13 +176,6 @@ function _mediamosa_maintenance_status_status() {
 }
 
 /**
- * Menu callback: displays all of the Mediamosa server status report.
- */
-function _mediamosa_maintenance_status_all() {
-  return 'test all';
-}
-
-/**
  * Menu callback: displays the Mediamosa server status report.
  */
 function _mediamosa_maintenance_status_server() {
@@ -201,31 +187,85 @@ function _mediamosa_maintenance_status_server() {
  */
 function _mediamosa_maintenance_status_job() {
   $output = '';
+
+  drupal_add_css(drupal_get_path('module', 'mediamosa_maintenance_status') . '/mediamosa_maintenance_status.css');
+
+  // Jobhandler.
+
   $results = array();
 
   $results[] = array(
     'title' => t('All waiting jobs'),
-    'value' => _mediamosa_maintenance_status_waiting_job(),
+    array('data' => _mediamosa_maintenance_status_waiting_job(), 'class' => 'mediamosa-status-value'),
   );
   $results[] = array(
     'title' => t('Analyse waiting jobs'),
-    'value' => _mediamosa_maintenance_status_waiting_job(mediamosa_job_db::JOB_TYPE_ANALYSE),
+    array('data' => _mediamosa_maintenance_status_waiting_job(mediamosa_job_db::JOB_TYPE_ANALYSE), 'class' => 'mediamosa-status-value'),
   );
   $results[] = array(
     'title' => t('Transcoding waiting jobs'),
-    'value' => _mediamosa_maintenance_status_waiting_job(mediamosa_job_db::JOB_TYPE_TRANSCODE),
+    array('data' => _mediamosa_maintenance_status_waiting_job(mediamosa_job_db::JOB_TYPE_TRANSCODE), 'class' => 'mediamosa-status-value'),
   );
   $results[] = array(
     'title' => t('Still waiting jobs'),
-    'value' => _mediamosa_maintenance_status_waiting_job(mediamosa_job_db::JOB_TYPE_STILL),
+    array('data' => _mediamosa_maintenance_status_waiting_job(mediamosa_job_db::JOB_TYPE_STILL), 'class' => 'mediamosa-status-value'),
   );
   $results[] = array(
     'title' => t('Upload waiting jobs'),
-    'value' => _mediamosa_maintenance_status_waiting_job(mediamosa_job_db::JOB_TYPE_UPLOAD),
+    array('data' => _mediamosa_maintenance_status_waiting_job(mediamosa_job_db::JOB_TYPE_UPLOAD), 'class' => 'mediamosa-status-value'),
   );
 
   $output .= t('Jobhandler');
   $output .= theme('mediamosa_maintenance_table', array('rows' => $results));
+
+
+  // Get all the job server.
+
+  // Types to check.
+  $types = array(
+    mediamosa_job_server_db::JOB_TYPE_ANALYSE,
+    mediamosa_job_server_db::JOB_TYPE_TRANSCODE,
+    mediamosa_job_server_db::JOB_TYPE_STILL,
+  );
+
+  // Build the server query.
+  $query = mediamosa_db::db_select(mediamosa_server_db::TABLE_NAME, 's');
+  $query->fields('s', array(mediamosa_server_db::NID, mediamosa_server_db::DESCRIPTION));
+  $query->condition('s.' . mediamosa_server_db::SERVER_TYPE, mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR);
+  $result = $query->execute();
+
+  foreach ($result as $row) {
+    // Build the job query.
+    $result_job = mediamosa_db::db_query("
+      SELECT j.job_type, COUNT(*)
+      FROM #mediamosa_server_job AS s
+      INNER JOIN #mediamosa_job_server AS j USING (#job_id)
+      WHERE s.#server_id = :server_id AND j.#job_type IN (:job_type)
+      GROUP BY j.#job_type
+      ORDER BY j.#job_type
+    ", array(
+      '#mediamosa_server_job' => mediamosa_server_job_db::TABLE_NAME,
+      '#mediamosa_job_server' => mediamosa_job_server_db::TABLE_NAME,
+      '#job_id' => mediamosa_server_job_db::JOB_ID,
+      '#server_id' => mediamosa_server_job_db::SERVER_ID,
+      '#job_type' => mediamosa_job_server_db::JOB_TYPE,
+      ':server_id' => $row[mediamosa_server_db::NID],
+      ':job_type' => $types,
+    ))->fetchAllKeyed();
+    // Collect the result for the theme_table.
+    $result_job_array = array();
+    foreach ($types as $key) {
+      $result_job_array[] = array(
+        'title' => mediamosa_unicode::strtolower($key),
+        array('data' => (isset($result_job[$key]) ? $result_job[$key] : '0'), 'class' => 'mediamosa-status-value'),
+      );
+    }
+    // Title of the table.
+    $output .= $row[mediamosa_server_db::DESCRIPTION];
+    // Create table.
+    $output .= theme('mediamosa_maintenance_table', array('rows' => $result_job_array));
+  }
+
   return $output;
 }
 
