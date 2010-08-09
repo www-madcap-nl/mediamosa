@@ -235,7 +235,9 @@ function _mediamosa_maintenance_status_job() {
 
 /**
  * Get the waiting jobs.
- * @param $type Type of the waiting job.
+ *
+ * @param $type
+ *   Type of the waiting job.
  */
 function _mediamosa_maintenance_status_waiting_job($type = NULL) {
   $query = mediamosa_db::db_select(mediamosa_job_db::TABLE_NAME, 'j');
@@ -251,6 +253,7 @@ function _mediamosa_maintenance_status_waiting_job($type = NULL) {
 
 /**
  * Give back result ok or warning.
+ *
  * @param $test boolean
  */
 function _mediamosa_maintenance_status_okwarning($test) {
@@ -259,6 +262,7 @@ function _mediamosa_maintenance_status_okwarning($test) {
 
 /**
  * Give back result ok or error.
+ *
  * @param $test boolean
  */
 function _mediamosa_maintenance_status_okerror($test) {
@@ -270,7 +274,7 @@ function _mediamosa_maintenance_status_okerror($test) {
  *
  * @param $text string
  * @param $container array
- * 
+ *
  * @return
  *   string, the array value where the text exists, or an empty string
  */
