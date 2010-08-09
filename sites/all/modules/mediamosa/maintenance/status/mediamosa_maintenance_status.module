@@ -136,6 +136,8 @@ function mediamosa_maintenance_status_cron() {
  * @ingroup themeable
  */
 function theme_mediamosa_maintenance_status_report($variables) {
+  drupal_add_css(drupal_get_path('module', 'mediamosa_maintenance_status') . '/mediamosa_maintenance_status.css');
+
   $table_name = $variables['table_name'];
   $results = $variables['results'];
 
@@ -175,8 +177,6 @@ function theme_mediamosa_maintenance_status_report($variables) {
 function _mediamosa_maintenance_status_status() {
   $output = '';
 
-  drupal_add_css(drupal_get_path('module', 'mediamosa_maintenance_status') . '/mediamosa_maintenance_status.css');
-
   // If we are set as Home page, the breadcrumb isn't set, let's do it here.
   $breadcrumb = array();
   $breadcrumb[] = l(t('Home'), NULL);
@@ -185,7 +185,7 @@ function _mediamosa_maintenance_status_status() {
   drupal_set_breadcrumb($breadcrumb);
 
   // Check run-time requirements and status information.
-  $statuses = module_invoke_all('mediamosa_status_collect');
+  $statuses = module_invoke_all('mediamosa_status_collect', FALSE);
 
   foreach ($statuses as $status) {
     $output .= theme('mediamosa_maintenance_status_report', array('table_name' => (is_array($status['title']) ? $status['title'][0] : $status['title']), 'results' => $status['results']));
@@ -200,7 +200,23 @@ function _mediamosa_maintenance_status_status() {
  * Menu callback: displays the Mediamosa server status report.
  */
 function _mediamosa_maintenance_status_server() {
-  return 'test server';
+  $output = '';
+
+  $result = mediamosa_server::get_status_enabled_job_servers(array(
+    mediamosa_server_db::SERVER_TYPE_DOWNLOAD,
+    mediamosa_server_db::SERVER_TYPE_STILL,
+    mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR,
+    mediamosa_server_db::SERVER_TYPE_UPLOAD,
+  ));
+
+  foreach ($result as $response) {
+    $output .= '<h1>' . mediamosa_unicode::strtoupper($response['enabled_server']['description']) . '</h1>';
+    foreach ($response['status']['server_status'] as $status) {
+      $output .= theme('mediamosa_maintenance_status_report', array('table_name' => (is_array($status['title']) ? $status['title'][0] : $status['title']), 'results' => $status['results']));
+    }
+  }
+
+  return $output;
 }
 
 /**

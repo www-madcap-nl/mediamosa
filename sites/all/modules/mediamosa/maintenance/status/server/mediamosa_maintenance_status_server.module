@@ -31,11 +31,16 @@
 
 /**
  * Implementation of hook_mediamosa_status_generate().
+ *
+ * @param with_variable boolean
+ *   Use Drupal variables or not
  */
-function mediamosa_maintenance_status_server_mediamosa_status_generate() {
+function mediamosa_maintenance_status_server_mediamosa_status_generate($with_variable = TRUE) {
+  global $conf;
+
   $results = array();
 
-  $results[] = array(
+  $results['something'] = array(
     'title' => t('Something'),
     'value' => t('OK'),
     //'description' => t('Some description...'),
@@ -49,16 +54,28 @@ function mediamosa_maintenance_status_server_mediamosa_status_generate() {
     ),
   );
 
-  variable_set('mediamosa_status_server', $statuses);
+  if ($with_variable) {
+    variable_set('mediamosa_status_server_' . $conf['mediamosa_installation_id'], $statuses);
+  }
+  return $statuses;
 }
 
 /**
  * Implementation of hook_mediamosa_status_collect().
+ *
+ * @param reset boolean
+ * @param with_variable boolean
+ *   Use Drupal variables or not
+ *
+ * @return array
+ *   All the statuses in an array
  */
-function mediamosa_maintenance_status_server_mediamosa_status_collect($reset = FALSE) {
+function mediamosa_maintenance_status_server_mediamosa_status_collect($reset = FALSE, $with_variable = TRUE) {
+  global $conf;
+
   if ($reset) {
-    mediamosa_maintenance_status_server_mediamosa_status_generate();
+    return mediamosa_maintenance_status_server_mediamosa_status_generate($with_variable);
   }
 
-  return variable_get('mediamosa_status_server', array());
+  return variable_get('mediamosa_status_server_' . $conf['mediamosa_installation_id'], array());
 }

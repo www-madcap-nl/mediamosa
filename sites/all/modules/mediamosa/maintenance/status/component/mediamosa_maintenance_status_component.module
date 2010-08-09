@@ -41,19 +41,24 @@ define('MEDIAMOSA_MAINTENANCE_STATUS_COMPONENT_SPACE_WARNING', 100);
 
 /**
  * Implementation of hook_mediamosa_status_generate().
+ *
+ * @param with_variable boolean
+ *   Use Drupal variables or not
  */
-function mediamosa_maintenance_status_component_mediamosa_status_generate() {
+function mediamosa_maintenance_status_component_mediamosa_status_generate($with_variable = TRUE) {
+  global $conf;
+
   $results = array();
 
   $mount_point = mediamosa_configuration_storage::mount_point_get();
 
-  $results[] = array(
+  $results['mount_is_set'] = array(
     'title' => t('SANNAS'),
     'value' => t('Mount is set'),
     'severity' => _mediamosa_maintenance_status_okerror(!$mount_point),
   );
 
-  $results[] = array(
+  $results['mount_is_exists'] = array(
     'title' => t('SANNAS'),
     'value' => t('Mount is exists'),
     'severity' => _mediamosa_maintenance_status_okerror(!mediamosa_io::is_dir($mount_point)),
@@ -102,12 +107,12 @@ function mediamosa_maintenance_status_component_mediamosa_status_generate() {
   $is_writeable = $is_writeable && is_writable($mount_point . '/still_links');
   $is_structured = $is_structured && mediamosa_io::is_dir($mount_point . '/ftp');
   $is_writeable = $is_writeable && is_writable($mount_point . '/ftp');
-  $results[] = array(
+  $results['mount_structure'] = array(
     'title' => t('SANNAS'),
     'value' => t('Mount has the good structure'),
     'severity' => _mediamosa_maintenance_status_okerror(!$is_structured),
   );
-  $results[] = array(
+  $results['mount_writeable'] = array(
     'title' => t('SANNAS'),
     'value' => t('Mount structure is writeable'),
     'severity' => _mediamosa_maintenance_status_okerror(!$is_writeable),
@@ -125,7 +130,7 @@ function mediamosa_maintenance_status_component_mediamosa_status_generate() {
     fclose($handle);
   }
   unlink($filename);
-  $results[] = array(
+  $results['mount_rea_write'] = array(
     'title' => t('SANNAS'),
     'value' => t('Write and read works fine'),
     'severity' => _mediamosa_maintenance_status_okerror($content != $read_content),
@@ -134,7 +139,7 @@ function mediamosa_maintenance_status_component_mediamosa_status_generate() {
 
   $available_bytes = disk_free_space($mount_point);
   $available_mb = floor($available_bytes / 1024 / 1024);
-  $results[] = array(
+  $results['mount_disk_free'] = array(
     'title' => t('SANNAS'),
     'value' => t('Disk free space: @available Mb', array('@available' => $available_mb)),
     'severity' => ($available_mb <= MEDIAMOSA_MAINTENANCE_STATUS_COMPONENT_SPACE_WARNING ? MEDIAMOSA_MAINTENANCE_STATUS_RESULT_WARNING : ($available_bytes <= 0 ? MEDIAMOSA_MAINTENANCE_STATUS_RESULT_ERROR : MEDIAMOSA_MAINTENANCE_STATUS_RESULT_OK)),
@@ -147,16 +152,28 @@ function mediamosa_maintenance_status_component_mediamosa_status_generate() {
     ),
   );
 
-  variable_set('mediamosa_status_component', $statuses);
+  if ($with_variable) {
+    variable_set('mediamosa_status_component_' . $conf['mediamosa_installation_id'], $statuses);
+  }
+  return $statuses;
 }
 
 /**
  * Implementation of hook_mediamosa_status_collect().
+ *
+ * @param reset boolean
+ * @param with_variable boolean
+ *   Use Drupal variables or not
+ *
+ * @return array
+ *   All the statuses in an array
  */
-function mediamosa_maintenance_status_component_mediamosa_status_collect($reset = FALSE) {
+function mediamosa_maintenance_status_component_mediamosa_status_collect($reset = FALSE, $with_variable = TRUE) {
+  global $conf;
+
   if ($reset) {
-    mediamosa_maintenance_status_component_mediamosa_status_generate();
+    return mediamosa_maintenance_status_component_mediamosa_status_generate($with_variable);
   }
 
-  return variable_get('mediamosa_status_component', array());
+  return variable_get('mediamosa_status_component_' . $conf['mediamosa_installation_id'], array());
 }

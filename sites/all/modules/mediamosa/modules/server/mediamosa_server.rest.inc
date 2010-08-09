@@ -29,35 +29,56 @@
   * REST calls for mediamosa_server.
   */
 /**
- * URI: /job/$job_id/status
- * Method: POST
+ * URI: /server/status
+ * Method: GET
  *
  * Internal only.
- *
- * 1.x: vpx_jobs_set_job_status
  *
  */
 class mediamosa_rest_call_server_status extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
   // Rest vars;
+  const INCLUDE_STATUS = 'include_status';
 
   // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
     $var_setup = array();
+
+    $var_setup = array(
+      self::VARS => array(
+        self::INCLUDE_STATUS => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_DESCRIPTION => 'Include status information.',
+          self::VAR_DEFAULT_VALUE => 'FALSE',
+        ),
+      )
+    );
 
     return self::get_var_setup_default($var_setup, FALSE);
   }
 
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
+    //global $conf;
+
     $mediamosa = mediamosa::get();
-global $conf;
+
+    $include_status = $this->get_param_value(self::INCLUDE_STATUS);
+
     // Fill up info about the server.
     $item = array(
       'server_id' => mediamosa::get_server_id(),
       'uri' => mediamosa::get_request_uri(),
       'host' => $_SERVER['HTTP_HOST'],
     );
+
+    if ($include_status) {
+      // Check run-time requirements and status information.
+      // Reset = TRUE, With Drupal variable = FALSE.
+      $statuses = module_invoke_all('mediamosa_status_collect', TRUE, FALSE);
+
+      $item['server_status'] = $statuses;
+    }
 
     $mediamosa->add_item($item);
   }

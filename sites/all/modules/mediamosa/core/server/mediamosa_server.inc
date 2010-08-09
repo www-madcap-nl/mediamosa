@@ -101,13 +101,14 @@ class mediamosa_server {
   /**
    * Returns status information from all enabled job (transcode) servers.
    */
-  static public function get_status_enabled_job_servers() {
-    $enabled_servers = mediamosa_server::get_enabled_transcode();
+  static public function get_status_enabled_job_servers($server_types = array(mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR)) {
+    $enabled_servers = mediamosa_server::get_enabled_transcode($server_types);
 
     $servers = array();
     foreach ($enabled_servers as $enabled_server) {
 
-      $response = mediamosa_http::do_internal_call($enabled_server[mediamosa_server_db::SERVER_URI], 'server/status');
+      $uri = parse_url($enabled_server[mediamosa_server_db::SERVER_URI]);
+      $response = mediamosa_http::do_internal_call($uri['host'], 'server/status?include_status=TRUE');
       if ($response->code != '200') {
         self::log('Call to server/status did not return a 200 result (header: @header)', array('@header' => var_export($response, TRUE)));
       }
@@ -126,11 +127,12 @@ class mediamosa_server {
   /**
    * Get all enabled transcoding servers (either ON or CLOSE).
    */
-  static public function get_enabled_transcode() {
+  static public function get_enabled_transcode($server_types = array(mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR)) {
     return mediamosa_db::db_select(mediamosa_server_db::TABLE_NAME, 'ms')
       ->fields('ms')
-      ->condition(mediamosa_server_db::SERVER_TYPE, mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR, '=')
+      ->condition(mediamosa_server_db::SERVER_TYPE, $server_types, 'IN')
       ->condition(mediamosa_server_db::SERVER_STATUS, mediamosa_server_db::SERVER_STATUS_OFF, '!=')
+      ->orderBy(mediamosa_server_db::SERVER_TYPE)
       ->execute();
   }
 
