@@ -75,12 +75,6 @@ function mediamosa_asset_mediafile_schema() {
         'not null' => TRUE,
         'description' => t('The parent asset ID.'),
       ),
-      mediamosa_asset_mediafile_db::ASSET_ID_ROOT => array(
-        'type' => 'varbinary',
-        'length' => mediamosa_db::HASH_ID_LENGTH,
-        'not null' => TRUE,
-        'description' => t('The highest parent asset ID.'),
-      ),
       mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE => array(
         'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
@@ -209,10 +203,10 @@ function mediamosa_asset_mediafile_schema() {
       'idx_' . mediamosa_asset_mediafile_db::GROUP_ID => array(mediamosa_asset_mediafile_db::GROUP_ID),
       'idx_' . mediamosa_asset_mediafile_db::ASSET_ID => array(mediamosa_asset_mediafile_db::ASSET_ID),
       'idx_appid_mediafileid' => array(mediamosa_asset_mediafile_db::APP_ID, mediamosa_asset_mediafile_db::ID),
-      'idx_assetroot_appid_original_protected' => array(mediamosa_asset_mediafile_db::ASSET_ID_ROOT, mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE, mediamosa_asset_mediafile_db::APP_ID, mediamosa_asset_mediafile_db::IS_PROTECTED),
-      'idx_assetroot_mediafileid_appid_original_protected' => array(mediamosa_asset_mediafile_db::ASSET_ID_ROOT, mediamosa_asset_mediafile_db::ID, mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE, mediamosa_asset_mediafile_db::APP_ID, mediamosa_asset_mediafile_db::IS_PROTECTED),
-      'idx_assertidroot_filename' => array(mediamosa_asset_mediafile_db::ASSET_ID_ROOT, mediamosa_asset_mediafile_db::FILENAME),
-      'idx_assetroot_protected' => array(mediamosa_asset_mediafile_db::ASSET_ID_ROOT, mediamosa_asset_mediafile_db::IS_PROTECTED),
+      'idx_appid_original_protected' => array(mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE, mediamosa_asset_mediafile_db::APP_ID, mediamosa_asset_mediafile_db::IS_PROTECTED),
+      'idx_mediafileid_appid_original_protected' => array(mediamosa_asset_mediafile_db::ID, mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE, mediamosa_asset_mediafile_db::APP_ID, mediamosa_asset_mediafile_db::IS_PROTECTED),
+      'idx_filename' => array(mediamosa_asset_mediafile_db::FILENAME),
+      'idx_protected' => array(mediamosa_asset_mediafile_db::IS_PROTECTED),
     ),
     'foreign keys' => array(
       mediamosa_asset_mediafile_db::ASSET_ID => array(mediamosa_asset_db::TABLE_NAME => mediamosa_asset_db::ID),

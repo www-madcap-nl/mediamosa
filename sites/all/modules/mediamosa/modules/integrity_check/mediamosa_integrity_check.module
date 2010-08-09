@@ -265,7 +265,7 @@ function mediamosa_integrity_check_page() {
       ))->fetchObject();
 
       if ($object) {
-        $asset_id = (isset($object->asset_id_root) && $object->asset_id_root) ? $object->asset_id_root : $object->asset_id;
+        $asset_id = $object->asset_id;
         $rows[] = array(
           'data' => array(
             'mediafile_id' => $row['object_id'],
@@ -378,9 +378,9 @@ function mediamosa_integrity_check_start_submit($form, &$form_state) {
           break;
         case mediamosa_integrity_check_db::TYPE_MISSING_STILLFILE:
           // TODO: test, after implemented.
-          $res = mediamosa_db::db_query("SELECT #asset_id_root FROM {#mediamosa_asset_mediafile} WHERE #mediafile_id = :mediafile_id", array(
+          $res = mediamosa_db::db_query("SELECT #asset_id FROM {#mediamosa_asset_mediafile} WHERE #mediafile_id = :mediafile_id", array(
             '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
-            '#asset_id_root' => mediamosa_asset_mediafile_db::ASSET_ID_ROOT,
+            '#asset_id' => mediamosa_asset_mediafile_db::ASSET_ID,
             '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
             ':mediafile_id' => $object_id,
           ));

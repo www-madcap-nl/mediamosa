@@ -25,9 +25,265 @@
  */
 
 /**
+ * Constants.
+ */
+
+/**
+ * Result severity -- Informational message only.
+ */
+define('MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO', -1);
+
+/**
+ * Result severity -- Result successfully met.
+ */
+define('MEDIAMOSA_MAINTENANCE_STATUS_RESULT_OK', 0);
+
+/**
+ * Result severity -- Warning condition; proceed but flag warning.
+ */
+define('MEDIAMOSA_MAINTENANCE_STATUS_RESULT_WARNING', 1);
+
+/**
+ * Result severity -- Error condition; abort.
+ */
+define('MEDIAMOSA_MAINTENANCE_STATUS_RESULT_ERROR', 2);
+
+
+/**
  * @file
  * The status module.
  */
 
-class mediamosa_maintenance_status {
+/**
+ * Implements hook_menu().
+ */
+function mediamosa_maintenance_status_menu() {
+  $items = array();
+
+  // Sub tabs.
+  $items['admin/mediamosa/status/status'] = array(
+    'title' => 'Status',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'page callback' => '_mediamosa_maintenance_status_status',
+    'access arguments' => array('access mediamosa'),
+    'weight' => 0,
+  );
+  $items['admin/mediamosa/status/status_all'] = array(
+    'title' => 'Status of all',
+    'type' => MENU_LOCAL_TASK,
+    'page callback' => '_mediamosa_maintenance_status_all',
+    'access arguments' => array('access mediamosa'),
+    'weight' => 0,
+  );
+  $items['admin/mediamosa/status/server'] = array(
+    'title' => 'Server',
+    'type' => MENU_LOCAL_TASK,
+    'page callback' => '_mediamosa_maintenance_status_server',
+    'access arguments' => array('access mediamosa'),
+    'weight' => 10,
+  );
+  $items['admin/mediamosa/status/job'] = array(
+    'title' => 'Job',
+    'type' => MENU_LOCAL_TASK,
+    'page callback' => '_mediamosa_maintenance_status_job',
+    'access arguments' => array('access mediamosa'),
+    'weight' => 20,
+  );
+
+  return $items;
 }
+
+/**
+ * Implements hook_theme().
+ */
+function mediamosa_maintenance_status_theme() {
+  return array(
+    'mediamosa_maintenance_status_report' => array(
+      'arguments' => array('table_name' => NULL, 'results' => NULL,),
+    ),
+  );
+}
+
+/**
+ * Returns HTML for the Mediamosa status report.
+ *
+ * @param $table_name
+ *   A string with the name of the table
+ * @param $results
+ *   An associative array containing:
+ *   - result: An array of results.
+ *     * 'title': the name of the result.
+ *     * 'value': the current value.
+ *     * 'description': description of the result.
+ *     * 'severity': the result's severity level, one of:
+ *       MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO: For info only.
+ *       MEDIAMOSA_MAINTENANCE_STATUS_RESULT_OK: The result is satisfied.
+ *       MEDIAMOSA_MAINTENANCE_STATUS_RESULT_WARNING: The result failed with a warning.
+ *       MEDIAMOSA_MAINTENANCE_STATUS_RESULT_ERROR: The result failed with an error.
+ *
+ * @ingroup themeable
+ */
+function theme_mediamosa_maintenance_status_report($variables) {
+  $table_name = $variables['table_name'];
+  $results = $variables['results'];
+
+  $output = '';
+  $i = 0;
+
+  $output .= $table_name;
+  $output .= '<table class="system-status-report">';
+  foreach ($results as $result) {
+    $class = ++$i % 2 == 0 ? 'even' : 'odd';
+
+    $classes = array(
+      MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO => 'mediamosa-status-info',
+      MEDIAMOSA_MAINTENANCE_STATUS_RESULT_OK => 'mediamosa-status-ok',
+      MEDIAMOSA_MAINTENANCE_STATUS_RESULT_WARNING => 'mediamosa-status-warning',
+      MEDIAMOSA_MAINTENANCE_STATUS_RESULT_ERROR => 'mediamosa-status-error',
+    );
+    $class = $classes[isset($result['severity']) ? (int) $result['severity'] : 0];// . ' ' . $class;
+
+    // Output table row(s)
+    if (!empty($result['description'])) {
+      $output .= '<tr class="' . $class . ' merge-down"><td>' . $result['title'] . '</td><td>' . $result['value'] . '</td></tr>';
+      $output .= '<tr class="' . $class . ' merge-up"><td colspan="2">' . $result['description'] . '</td></tr>';
+    }
+    else {
+      $output .= '<tr class="' . $class . '"><td>' . $result['title'] . '</td><td>' . $result['value'] . '</td></tr>';
+    }
+  }
+
+  $output .= '</table>';
+  return $output;
+}
+
+/**
+ * Menu callback: displays the Mediamosa status report.
+ */
+function _mediamosa_maintenance_status_status() {
+  $output = '';
+
+  drupal_add_css(drupal_get_path('module', 'mediamosa_maintenance_status') . '/mediamosa-status-messages.css');
+
+  // If we are set as Home page, the breadcrumb isn't set, let's do it here.
+  $breadcrumb = array();
+  $breadcrumb[] = l(t('Home'), NULL);
+  $breadcrumb[] = l(t('Administer'), 'admin');
+  $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
+  drupal_set_breadcrumb($breadcrumb);
+
+  // Check run-time requirements and status information.
+  $statuses = module_invoke_all('mediamosa_status_collect');
+
+  foreach ($statuses as $status) {
+    $output .= theme('mediamosa_maintenance_status_report', array('table_name' => $status['title'], 'results' => $status['results']));
+  }
+
+  return $output;
+}
+
+/**
+ * Menu callback: displays all of the Mediamosa server status report.
+ */
+function _mediamosa_maintenance_status_all() {
+  return 'test all';
+}
+
+/**
+ * Menu callback: displays the Mediamosa server status report.
+ */
+function _mediamosa_maintenance_status_server() {
+  return 'test server';
+}
+
+/**
+ * Menu callback: displays the Mediamosa job status report.
+ */
+function _mediamosa_maintenance_status_job() {
+  $output = '';
+  $results = array();
+
+  $results[] = array(
+    'title' => t('All waiting jobs'),
+    'value' => _mediamosa_maintenance_status_waiting_job(),
+    'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
+  );
+  $results[] = array(
+    'title' => t('Analyse waiting jobs'),
+    'value' => _mediamosa_maintenance_status_waiting_job(mediamosa_job_db::JOB_TYPE_ANALYSE),
+    'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
+  );
+  $results[] = array(
+    'title' => t('Transcoding waiting jobs'),
+    'value' => _mediamosa_maintenance_status_waiting_job(mediamosa_job_db::JOB_TYPE_TRANSCODE),
+    'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
+  );
+  $results[] = array(
+    'title' => t('Still waiting jobs'),
+    'value' => _mediamosa_maintenance_status_waiting_job(mediamosa_job_db::JOB_TYPE_STILL),
+    'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
+  );
+  $results[] = array(
+    'title' => t('Upload waiting jobs'),
+    'value' => _mediamosa_maintenance_status_waiting_job(mediamosa_job_db::JOB_TYPE_UPLOAD),
+    'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
+  );
+
+  $output .= theme('mediamosa_maintenance_status_report', array('table_name' => t('Jobhandler'), 'results' => $results));
+  return $output;
+}
+
+/**
+ * Get the waiting jobs.
+ * @param $type Type of the waiting job.
+ */
+function _mediamosa_maintenance_status_waiting_job($type = NULL) {
+  $query = mediamosa_db::db_select(mediamosa_job_db::TABLE_NAME, 'j');
+  $query->fields('j');
+  $query->condition('j.' . mediamosa_job_db::JOB_STATUS, mediamosa_job_db::JOB_STATUS_WAITING);
+  if (!is_null($type)) {
+    $query->condition('j.' . mediamosa_job_db::JOB_TYPE, $type);
+  }
+  $count = $query->countQuery()->execute()->fetchField();
+
+  return $count;
+}
+
+/**
+ * Give back result ok or warning.
+ * @param $test boolean
+ */
+function _mediamosa_maintenance_status_okwarning($test) {
+  return $test ? MEDIAMOSA_MAINTENANCE_STATUS_RESULT_WARNING : MEDIAMOSA_MAINTENANCE_STATUS_RESULT_OK;
+}
+
+/**
+ * Give back result ok or error.
+ * @param $test boolean
+ */
+function _mediamosa_maintenance_status_okerror($test) {
+  return $test ? MEDIAMOSA_MAINTENANCE_STATUS_RESULT_ERROR : MEDIAMOSA_MAINTENANCE_STATUS_RESULT_OK;
+}
+
+/**
+ * Search a string in the values of an array with strpos(). Case insensitive.
+ *
+ * @param $text string
+ * @param $container array
+ * 
+ * @return
+ *   string, the array value where the text exists, or an empty string
+ */
+function _mediamosa_maintenance_status_search_in_array($text, array $container) {
+  $value = '';
+  if (is_array($container) && !empty($container)) {
+    foreach ($container as $container_value) {
+      if (strpos(drupal_strtolower($container_value), drupal_strtolower($text)) !== FALSE) {
+        $value = $container_value;
+        break;
+      }
+    }
+  }
+  return $value;
+}
+

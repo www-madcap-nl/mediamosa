@@ -81,7 +81,7 @@ class mediamosa_statistics {
     $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
     $query->leftJoin(mediamosa_asset_db::TABLE_NAME, 'a', 'a.asset_id = mf.asset_id');
     $query->fields('mf');
-    $query->fields('a', array(mediamosa_asset_db::ID)); // 2.x allows us to use the asset_id instead of the asset_id_root.
+    $query->fields('a', array(mediamosa_asset_db::ID));
     $query->condition('mf.' . mediamosa_asset_mediafile_db::ID, $mediafile_id);
     $mediafile_ext = $query->execute()->fetchAssoc();
     // Not found?
@@ -89,7 +89,6 @@ class mediamosa_statistics {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MEDIAFILE_NOT_FOUND, array('@mediafile_id' => $mediafile_id));
     }
 
-    // Get the asset_id. Not using asset_id_root anymore.
     $asset_id = $mediafile_ext[mediamosa_asset_mediafile_db::ASSET_ID];
 
     // Create the event log for the request.

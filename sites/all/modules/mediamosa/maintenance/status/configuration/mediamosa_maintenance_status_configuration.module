@@ -1,0 +1,222 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * @file
+ * The status configuration module.
+ */
+
+/**
+ * Constants.
+ */
+
+/**
+ * Warning level for Apache.
+ */
+define('MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_APACHE_WARNING', "2");
+
+/**
+ * Warning level for Yamdi.
+ */
+define('MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_YAMDI_WARNING', "1.5");
+
+/**
+ * Warning level for FFmpeg.
+ * 0.5 was released at March 10, 2009 with SVN-r19159.
+ * FFmpeg version SVN-r19159-Sherpya, Copyright (c) 2000-2009 Fabrice Bellard, et al.
+ * FFmpeg version 0.5, Copyright (c) 2000-2009 Fabrice Bellard, et al.
+ */
+define('MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_FFMPEG_WARNING', "0.5");
+/**
+ * Warning level for FFmpeg.
+ */
+define('MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_FFMPEG_WARNING_SVN', "SVN-r19159");
+
+/**
+ * Implementation of hook_mediamosa_status_collect().
+ */
+function mediamosa_maintenance_status_configuration_mediamosa_status_collect() {
+  $results = array();
+
+  // PHP modules.
+
+  $required_extensions = array('bcmath', 'gd', /*'mcrypt',*/ 'curl', 'mysql', 'mysqli', 'SimpleXML');
+  $modules = '';
+  foreach ($required_extensions as $extension) {
+    $modules .= $extension . ', ';
+  }
+
+  $loaded_extensions = array();
+  $loaded_extensions = get_loaded_extensions();
+
+  $missing = '';
+  foreach ($required_extensions as $extension) {
+    if (!in_array($extension, $loaded_extensions)) {
+      $missing .= $extension . ', ';
+    }
+  }
+
+  $results[] = array(
+    'title' => t('PHP modules'),
+    'value' => t('The following modules are required: ') . substr($modules, 0, -2),
+    'severity' => _mediamosa_maintenance_status_okerror(!empty($missing)),
+  );
+
+  // PHP ini.
+
+  $results[] = array(
+    'title' => t('PHP required settings'),
+    'value' => t('PHP error_reporting should be set at E_ALL & ~E_NOTICE.'),
+    'severity' => _mediamosa_maintenance_status_okwarning(ini_get('error_reporting') & E_NOTICE),
+  );
+
+  $results[] = array(
+    'title' => t('PHP required settings'),
+    'value' => t('PHP cli error_reporting should be set at E_ALL & ~E_NOTICE.'),
+    'severity' => _mediamosa_maintenance_status_okwarning(exec("php -r \"print(ini_get('error_reporting'));\"") & E_NOTICE),
+  );
+
+  $php_upload_max_filesize = ini_get('upload_max_filesize');
+  $results[] = array(
+    'title' => t('PHP required settings'),
+    'value' => t('upload_max_filesize should be at least 100M. Currently: %current_value', array('%current_value' => $php_upload_max_filesize)),
+    'severity' => _mediamosa_maintenance_status_okwarning((substr($php_upload_max_filesize, 0, -1) < 100) && (substr($php_upload_max_filesize, -1) != 'M' || substr($php_upload_max_filesize, -1) != 'G')),
+  );
+
+  $php_memory_limit = ini_get('memory_limit');
+  $results[] = array(
+    'title' => t('PHP required settings'),
+    'value' => t('memory_limit should be at least 128M. Currently: %current_value', array('%current_value' => $php_memory_limit)),
+    'severity' => _mediamosa_maintenance_status_okwarning((substr($php_memory_limit, 0, -1) < 128) && (substr($php_memory_limit, -1) != 'M' || substr($php_memory_limit, -1) != 'G')),
+  );
+
+  $php_post_max_size = ini_get('post_max_size');
+  $results[] = array(
+    'title' => t('PHP required settings'),
+    'value' => t('post_max_size should be at least 100M. Currently: %current_value', array('%current_value' => $php_post_max_size)),
+    'severity' => _mediamosa_maintenance_status_okwarning((substr($php_post_max_size, 0, -1) < 100) && (substr($php_post_max_size, -1) != 'M' || substr($php_post_max_size, -1) != 'G')),
+  );
+
+  // Applications.
+
+  // FFmpeg.
+  $not_exists = exec('ffmpeg 2>&1');
+  $exec_output = array();
+  $last_line = exec('ffmpeg -version 2>&1', $exec_output, $ret_val);
+  $version = ($not_exists ? t('FFmpeg'): _mediamosa_maintenance_status_search_in_array('version', $exec_output));
+
+  $results[] = array(
+    'title' => t('Application'),
+    'value' => $version,
+    'severity' => _mediamosa_maintenance_status_okerror($not_exists),
+  );
+
+
+  // Lua.
+  $not_exists = exec('lua 2>&1');
+  $exec_output = array();
+  $last_line = exec('lua -v 2>&1', $exec_output, $ret_val);
+  $version = ($not_exists ? t('Lua') : _mediamosa_maintenance_status_search_in_array('copyright', $exec_output));
+
+  $results[] = array(
+    'title' => t('Application'),
+    'value' => $version,
+    'severity' => _mediamosa_maintenance_status_okerror($not_exists),
+  );
+
+
+  // Lua Lpeg.
+  $results[] = array(
+    'title' => t('Application'),
+    'value' => t('Lua Lpeg'),
+    'severity' => _mediamosa_maintenance_status_okerror(exec('lua sites/all/modules/mediamosa/lib/lua/vpx-analyse 2>&1') != MEDIAMOSA_TEST_LUA_LPEG),
+  );
+
+
+  // Yamdi.
+  $not_exists = exec('yamdi -h 2>&1');
+  $exec_output = array();
+  $last_line = exec('yamdi -h 2>&1', $exec_output, $ret_val);
+  $version = t('Yamdi') . ($not_exists ? '' : _mediamosa_maintenance_status_search_in_array('version', $exec_output));
+
+  $results[] = array(
+    'title' => t('Application'),
+    'value' => $version,
+    'severity' => _mediamosa_maintenance_status_okwarning($not_exists),
+  );
+
+
+  // MP4Box.
+  $exec_output = array();
+  $last_line = exec('MP4Box 2>&1', $exec_output, $ret_val);
+  $results[] = array(
+    'title' => t('Application'),
+    'value' => t('MP4Box'),
+    'severity' => _mediamosa_maintenance_status_okwarning(strpos($exec_output[0], 'not found') !== FALSE),
+  );
+
+
+  // Lav2yuv.
+  $exec_output = array();
+  $last_line = exec('lav2yuv 2>&1', $exec_output, $ret_val);
+  $results[] = array(
+    'title' => t('Application'),
+    'value' => t('Lav2yuv'),
+    'severity' => _mediamosa_maintenance_status_okwarning($ret_val),
+  );
+
+  // Apache version.
+  $results[] = array(
+    'title' => t('Apache'),
+    'value' => apache_get_version(),
+    'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
+  );
+
+  // Apache mod_rewrite.
+  $results[] = array(
+    'title' => t('Apache'),
+    'value' => t('Mod rewrite.'),
+    'severity' => _mediamosa_maintenance_status_okerror(!in_array("mod_rewrite", apache_get_modules())),
+  );
+
+  // Clean url.
+  $results[] = array(
+    'title' => t('Drupal'),
+    'value' => t('Clean url.'),
+    'severity' => _mediamosa_maintenance_status_okerror(!variable_get('clean_url', 0)),
+  );
+
+
+  // Making the report.
+  $statuses = array(
+    'configuration' => array(
+      'title' => t('Configuration settings'),
+      'results' => $results,
+    ),
+  );
+
+  return $statuses;
+}

@@ -38,7 +38,7 @@ function mediamosa_maintenance_menu() {
   // Maintenance / Configuration pages.
   $items['admin/mediamosa'] = array(
     'title' => 'MediaMosa',
-    'page callback' => '_mediamosa_maintenance_status',
+    'page callback' => '_mediamosa_maintenance_status_status',
     'access arguments' => array('access mediamosa'),
     'weight' => -20,
     'position' => ''

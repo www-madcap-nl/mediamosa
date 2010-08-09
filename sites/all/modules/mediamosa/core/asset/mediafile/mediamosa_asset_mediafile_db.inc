@@ -37,7 +37,6 @@ class mediamosa_asset_mediafile_db {
   // Database fields;
   const ID = 'mediafile_id';
   const ASSET_ID = 'asset_id';
-  const ASSET_ID_ROOT = 'asset_id_root';
   const MEDIAFILE_ID_SOURCE = 'mediafile_id_source'; // 1.x name: mediafile_source.
   const TAG = 'tag';
   const TAG_LENGTH = 32;
