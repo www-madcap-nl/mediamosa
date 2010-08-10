@@ -278,9 +278,11 @@ collections. This call gives all the collection details.',
     mediamosa_rest_call::DESCRIPTION => 'Create a new collection, with some metadata. The title and description must be set with an extra /collection/{coll_id} [POST] call.',
     mediamosa_rest_call::EXAMPLE_REQUEST => '/collection/create [POST]',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
-    mediamosa_rest_call::EXAMPLE_RESPONSE => '<request_result>success</request_result>
-<request_result_description></request_result_description>
-<request_result_id>601</request_result_id>',
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <coll_id>3</coll_id>
+  </item>
+</items>',
   );
 
   $rest_calls['collection/$coll_id'][mediamosa_rest_call::METHOD_POST] = array(

@@ -109,6 +109,8 @@ Other changes (not ticket related).
 - Fixed /acl/app in is_oai mode SQL error.
 - Added force index on metadata search join.
 - Rewrote unit test for mediafile metadata test.
+- Fixed notices in asset/$asset_id/acl POST call when no ACL rules were 
+  provided.
 
 Mediamosa 2.1.5 (build 664)
 ---------------------------
