@@ -200,14 +200,17 @@ class mediamosa_asset_metadata {
           case mediamosa_asset_metadata_property_db::TYPE_DATETIME:
             $a_fields[mediamosa_asset_metadata_db::VAL_DATETIME] = $value;
             break;
+
           case mediamosa_asset_metadata_property_db::TYPE_INT:
             $a_fields[mediamosa_asset_metadata_db::VAL_INT] = $value;
             break;
+
           case mediamosa_asset_metadata_property_db::TYPE_CHAR:
             $a_fields[mediamosa_asset_metadata_db::VAL_CHAR] = $value;
             $a_fields[mediamosa_asset_metadata_db::VAL_CHAR_LFT] = mediamosa_unicode::substr($value, 0, mediamosa_asset_metadata_db::VAL_CHAR_LFT_LENGTH);
             $a_fields[mediamosa_asset_metadata_db::VAL_CHAR_RGHT] = mediamosa_unicode::strrev(mediamosa_unicode::substr($value, 0, mediamosa_asset_metadata_db::VAL_CHAR_RGHT_LENGTH));
             break;
+
           default:
             assert(0);
             throw new mediamosa_exception_program_error('unknown metadata type');

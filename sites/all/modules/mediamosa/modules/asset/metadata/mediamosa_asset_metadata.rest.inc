@@ -124,7 +124,8 @@ class mediamosa_rest_call_asset_metadata_create extends mediamosa_rest_call {
           break;
       }
 
-      // FIXME Don't like this hack. Rather see extension on metadata property with a allowed values.
+      // FIXME Don't like this hack. Rather see extension on metadata property
+      //       with a allowed values.
       if ($name == 'language') {
         $type = mediamosa_type::TYPE_LANGUAGE_CODE;
       }
@@ -197,7 +198,8 @@ class mediamosa_rest_call_asset_metadata_create extends mediamosa_rest_call {
           break;
       }
 
-      // FIXME Don't like this hack. Rather see extension on metadata property with a allowed values.
+      // FIXME Don't like this hack. Rather see extension on metadata property
+      //       with a allowed values.
       if ($name == 'language') {
         $type = mediamosa_type::TYPE_LANGUAGE_CODE;
       }
