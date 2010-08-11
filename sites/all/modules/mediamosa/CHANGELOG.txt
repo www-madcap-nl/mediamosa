@@ -59,7 +59,7 @@ Other changes (not ticket related).
   user.
 - Added extra tests for search on metadata dates.
 - /user/user_id will now return quota even if user_id has no quota information.
-  Old behavour would return invalid user Id error when no quota was available.
+  Old behavour would return invalid user ID error when no quota was available.
   But then you can never get quota information when you haven't uploaded
   anything yet.
 - Fixed maxlength on title for collection creation, was unlimited.
@@ -117,6 +117,8 @@ Other changes (not ticket related).
 - Added 'is_master_slaved' to CQL search. Returns all assets that are either 
   masterslaved on the asset or has one or more mediafiles that are masterslaved.
   Can be used to find assets that are not masterslaved.
+- Extended browse view of asset in admin to show asset AUT rights (was only
+  showing them on mediafiles).
 
 Mediamosa 2.1.5 (build 664)
 ---------------------------

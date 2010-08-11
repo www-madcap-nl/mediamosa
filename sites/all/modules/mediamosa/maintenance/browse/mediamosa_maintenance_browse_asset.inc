@@ -476,8 +476,29 @@ function _mediamosa_browse_asset_page_view_properties($asset) {
     }
   }
 
+  // Uri REST call.
+  $uri = strtr('asset/!asset_id/acl', array('!asset_id' => $asset['asset_id']));
+
+  $result = mediamosa_response_connector::static_do_restcall($uri, 'GET', array('user_id' => $asset['owner_id'], 'app_id' => $asset['app_id']));
+  if (mediamosa_response_connector::static_result_okay($result)) {
+    $rows_aut = array();
+    foreach ($result['items'] as $item_values) {
+      foreach ($item_values as $name => $value) {
+        $rows_aut[$name][] = $value;
+      }
+    }
+
+    $rows_aut2 = array();
+    foreach ($rows_aut as $name => $values) {
+      $rows_aut2[] = array(t(_mediamosa_browse_fix_metadata_name($name)), implode(', ', $values));
+    }
+
+    $variables['properties'][t('Autorisarion rules')] = array('html' => TRUE, 'data' => theme('table', array('rows' => $rows_aut2)));
+  }
+
   return theme('mediamosa_maintenance_browse_properties', $variables);
 }
+
 
 /**
  * Build the job list.
