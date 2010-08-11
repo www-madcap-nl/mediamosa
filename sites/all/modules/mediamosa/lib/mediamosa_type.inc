@@ -99,6 +99,9 @@ class mediamosa_type {
   const TYPE_JOB_STATUS                  = 'TYPE_JOB_STATUS';
   const TYPE_JOB_PROGRESS                = 'TYPE_JOB_PROGRESS';
 
+  // Use to select what is slaved to other apps.
+  const TYPE_BOOL_IS_SLAVED              = 'BOOL_IS_SLAVED';
+
   // Store NOW() time as date
   const FUNC_DATETIME_NOW                = 'NOW()';
 
@@ -395,6 +398,7 @@ class mediamosa_type {
         $checked_param_value = (string)$mixed_param_value;
         break;
 
+      case self::TYPE_BOOL_IS_SLAVED:
       case self::TYPE_BOOL:
         if (!is_bool($mixed_param_value)) {
           if (!in_array(mediamosa_unicode::strtolower($mixed_param_value), array('true', 'false', ''))) {

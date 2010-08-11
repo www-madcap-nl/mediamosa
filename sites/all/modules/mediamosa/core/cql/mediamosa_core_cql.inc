@@ -527,9 +527,9 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
       // No index, use default and default is always string.
       if ($o_cql_part_index) {
         $str_index = $o_cql_part_index->mediamosa_cql_part_str_get();
-        $a_index2column = $this->mediamosa_core_cql_context_index2column($str_index);
+        $index2column = $this->mediamosa_core_cql_context_index2column($str_index);
 
-        if ($a_index2column[MEDIAMOSA_CQL_CONTEXT_KEY_TYPE] != mediamosa_type::TYPE_STRING) {
+        if ($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_TYPE] != mediamosa_type::TYPE_STRING) {
           return; // leave.
         }
       }
@@ -619,33 +619,33 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
 
     $a_relation_modifiers = $o_cql_part_relation->mediamosa_cql_modifier_get_array();
 
-    $a_index2column = $this->mediamosa_core_cql_context_index2column($str_index);
-    assert($a_index2column);// use verify 1st so this will not happen
+    $index2column = $this->mediamosa_core_cql_context_index2column($str_index);
+    assert($index2column);// use verify 1st so this will not happen
 
-    if ($a_index2column === FALSE) {
+    if ($index2column === FALSE) {
       throw new mediamosa_cql_exception('index not found, use verify before you parse the cql string.', CQL_EXCEPTION_SEVERITY_HIGH);
     }
 
-    if (isset($a_index2column[MEDIAMOSA_CQL_CONTEXT_KEY_USE_HAVING]) && $a_index2column[MEDIAMOSA_CQL_CONTEXT_KEY_USE_HAVING] && !$do_having) {
+    if (isset($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_USE_HAVING]) && $index2column[MEDIAMOSA_CQL_CONTEXT_KEY_USE_HAVING] && !$do_having) {
       return '';
     }
 
-    if (!isset($a_index2column[MEDIAMOSA_CQL_CONTEXT_KEY_USE_HAVING])) {
-      $a_index2column[MEDIAMOSA_CQL_CONTEXT_KEY_USE_HAVING] = FALSE;
+    if (!isset($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_USE_HAVING])) {
+      $index2column[MEDIAMOSA_CQL_CONTEXT_KEY_USE_HAVING] = FALSE;
     }
 
-    if (isset($a_index2column[MEDIAMOSA_CQL_CONTEXT_KEY_USE_HAVING]) && !$a_index2column[MEDIAMOSA_CQL_CONTEXT_KEY_USE_HAVING] && $do_having) {
+    if (isset($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_USE_HAVING]) && !$index2column[MEDIAMOSA_CQL_CONTEXT_KEY_USE_HAVING] && $do_having) {
       return '';
     }
 
-    $str_table_column = ($a_index2column[MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS] != '' ? $a_index2column[MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS] . '.' : '') . $a_index2column[MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN];
+    $str_table_column = ($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS] != '' ? $index2column[MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS] . '.' : '') . $index2column[MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN];
 
-    if (isset($a_index2column[MEDIAMOSA_CQL_CONTEXT_KEY_JOIN])) {
-      $a_result['a_joins'][$str_index] = $a_index2column[MEDIAMOSA_CQL_CONTEXT_KEY_JOIN];
+    if (isset($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_JOIN])) {
+      $a_result['a_joins'][$str_index] = $index2column[MEDIAMOSA_CQL_CONTEXT_KEY_JOIN];
     }
 
-    if (isset($a_index2column['select_expr'])) {
-      $a_result['a_select_expr'][$str_index] = $a_index2column['select_expr'];
+    if (isset($index2column['select_expr'])) {
+      $a_result['a_select_expr'][$str_index] = $index2column['select_expr'];
     }
 
     $str_search_term = $o_cql_part_search_term->mediamosa_cql_part_str_get();
@@ -658,10 +658,10 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
     $has_not = $o_cql_part->mediamosa_cql_part_has_not();
 
     $str_relation = $o_cql_part_relation->mediamosa_cql_part_str_get();
-    $has_null = isset($a_index2column[MEDIAMOSA_CQL_CONTEXT_KEY_NULL]) ? $a_index2column[MEDIAMOSA_CQL_CONTEXT_KEY_NULL] : FALSE;
+    $has_null = isset($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_NULL]) ? $index2column[MEDIAMOSA_CQL_CONTEXT_KEY_NULL] : FALSE;
     $do_null = FALSE;
 
-    switch ($a_index2column[MEDIAMOSA_CQL_CONTEXT_KEY_TYPE]) {
+    switch ($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_TYPE]) {
       case mediamosa_type::TYPE_INT:
         $str_quotes = '';
         if ($str_relation != 'within') {
@@ -704,6 +704,17 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
         $str_relation = '==';
         break;
 
+      case mediamosa_type::TYPE_BOOL_IS_SLAVED:
+        $is_slaved = mediamosa_unicode::strtolower($str_search_term) == "true";
+        $is_slaved = $str_relation == '<>' ? !$is_slaved : $is_slaved;
+
+        $str_search_term = reset($this->app_ids);
+        $str_quotes = '';
+        $str_relation = $str_like = $is_slaved ? '=' : '<>';
+        // Change type to int.
+        $index2column[MEDIAMOSA_CQL_CONTEXT_KEY_TYPE] = mediamosa_type::TYPE_UINT;
+        break;
+
       case mediamosa_type::TYPE_JOB_PROGRESS:
         $str_quotes = '\'';
         $str_like = '=';
@@ -723,7 +734,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
       case '=':
       case 'any':
         $a_words = explode(' ', $str_search_term);
-        switch ($a_index2column[MEDIAMOSA_CQL_CONTEXT_KEY_TYPE]) {
+        switch ($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_TYPE]) {
           case mediamosa_type::TYPE_INT:
           case mediamosa_type::TYPE_UINT:
             // Rewrite to IN statement: $str_table_column IN ($a_sub_parts).
@@ -731,8 +742,13 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
             foreach ($a_words as $str_word) {
               $tmp[] = sprintf('%d', (int)$str_word);
             }
-            $a_sub_parts[] = sprintf("%s IN(%s)", $str_table_column, implode(',', $tmp));
 
+            if (count($tmp)  == 1) {
+              $a_sub_parts[] = sprintf('%s = %s', $str_table_column, implode(',', $tmp));
+            }
+            else {
+              $a_sub_parts[] = sprintf('%s IN(%s)', $str_table_column, implode(',', $tmp));
+            }
             break;
           default:
             foreach ($a_words as $str_word) {
@@ -806,7 +822,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
         $a_within = explode(' ', $str_search_term);
         $str_sub_parts_glue = ' AND ';
 
-        switch ($a_index2column[MEDIAMOSA_CQL_CONTEXT_KEY_TYPE]) {
+        switch ($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_TYPE]) {
           case mediamosa_type::TYPE_INT:
             $a_sub_parts[] = sprintf("%s >= %s", $str_table_column, intval($a_within[0]));
             $a_sub_parts[] = sprintf("%s <= %s", $str_table_column, intval($a_within[1]));
@@ -822,7 +838,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
         }
     }
 
-    $a_parts[] = ( (isset($a_index2column[MEDIAMOSA_CQL_CONTEXT_KEY_PREFIX]) ? $a_index2column[MEDIAMOSA_CQL_CONTEXT_KEY_PREFIX] : '') . (count($a_sub_parts) ? '(' : '') . implode($str_sub_parts_glue, $a_sub_parts) . (count($a_sub_parts) ? ')' : '') . (isset($a_index2column[MEDIAMOSA_CQL_CONTEXT_KEY_SUFFIX]) ? $a_index2column[MEDIAMOSA_CQL_CONTEXT_KEY_SUFFIX] : ''));
+    $a_parts[] = ( (isset($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_PREFIX]) ? $index2column[MEDIAMOSA_CQL_CONTEXT_KEY_PREFIX] : '') . (count($a_sub_parts) ? '(' : '') . implode($str_sub_parts_glue, $a_sub_parts) . (count($a_sub_parts) ? ')' : '') . (isset($index2column[MEDIAMOSA_CQL_CONTEXT_KEY_SUFFIX]) ? $index2column[MEDIAMOSA_CQL_CONTEXT_KEY_SUFFIX] : ''));
 
     if ($o_cql_part_boolean) {
       $str_boolean = $o_cql_part_boolean->mediamosa_cql_part_str_get();
@@ -1235,10 +1251,17 @@ class mediamosa_asset_cql_context extends mediamosa_core_cql_context {
           'mediamosa:aut' => array(
             MEDIAMOSA_CQL_CONTEXT_KEY_COLUMNS=> array(
               'aut_app' => array(
-                MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'app_id_master',
+                MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => mediamosa_aut_app_master_slave_db::APP_ID_MASTER,
                 MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'aut_ms',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_INT,
                 MEDIAMOSA_CQL_CONTEXT_KEY_JOIN => 'AUT_APP_MASTER_SLAVE',// Trick to include the join of this table.
+              ),
+              'is_master_slaved' => array(
+                MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => mediamosa_aut_app_master_slave_db::APP_ID_SLAVE,
+                MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'aut_is_ms',
+                MEDIAMOSA_CQL_CONTEXT_KEY_TYPE => mediamosa_type::TYPE_BOOL_IS_SLAVED,
+                MEDIAMOSA_CQL_CONTEXT_KEY_JOIN => 'AUT_APP_IS_MASTER_SLAVE',// Trick to include the join of this table.
+                MEDIAMOSA_CQL_CONTEXT_KEY_NULL => TRUE,
               ),
               'is_protected' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'is_protected',

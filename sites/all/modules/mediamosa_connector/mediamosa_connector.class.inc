@@ -249,7 +249,7 @@ class mediamosa_connector {
 
     // Parse the response.
     // FIXME: We only store the 1st cookie here(!).
-    list($this->cookie) = explode(';', $response->headers['Set-Cookie']);
+    list($this->cookie) = explode(';', $response->headers['set-cookie']);
 
     // Store the cookie for later usage.
     $cookies = variable_get('mediamosa_connector_cookies', array());
@@ -361,6 +361,12 @@ class mediamosa_connector {
     }
     else {
       $response = drupal_http_request($url, $options['headers'], $options['method'], $options['data']);
+
+      // Make the header items names lowercase like in D7.
+      foreach ($response->headers as $name => $value) {
+        unset($response->headers[$name]);
+        $response->headers[drupal_strtolower($name)] = $value;
+      }
     }
 
     $end = microtime(TRUE);
@@ -372,9 +378,8 @@ class mediamosa_connector {
 
     // Set to empty.
     $response->xml = NULL;
-
     // If we detect xml output, fill the xml member.
-    if ((int) $response->code == 200 && (strpos($response->headers['Content-Type'], 'text/xml') !== FALSE || drupal_substr($response->data, 0, strlen('<?xml')) == '<?xml')) {
+    if ((int) $response->code == 200 && (strpos($response->headers['content-type'], 'text/xml') !== FALSE || drupal_substr($response->data, 0, strlen('<?xml')) == '<?xml')) {
       try {
         $response->xml = new SimpleXMLElement($response->data);
       }

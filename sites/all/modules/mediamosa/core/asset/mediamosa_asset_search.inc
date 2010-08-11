@@ -183,7 +183,9 @@ class mediamosa_asset_search {
       }
 
       // Quick hack, or else i really need to extend the MediaMosa CQL class
-      if (isset($a_result_cql2sql['a_joins'])) {
+      if (!empty($a_result_cql2sql['a_joins'])) {
+
+
         $key = array_search('MEDIAFILE_METADATA_MIMETYPE', $a_result_cql2sql['a_joins']);
         if ($key) {
           unset($a_result_cql2sql['a_joins'][$key]);
@@ -276,6 +278,21 @@ class mediamosa_asset_search {
           $do_master_slave = TRUE;
           unset($a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset']['access']);
           unset($a_query[mediamosa_db_query::A_JOIN]['aut_app_master_slave']);
+        }
+
+        $key = array_search('AUT_APP_IS_MASTER_SLAVE', $a_result_cql2sql['a_joins']);
+        if ($key) {
+          do {
+            unset($a_result_cql2sql['a_joins'][$key]);
+            $key = array_search('AUT_APP_IS_MASTER_SLAVE', $a_result_cql2sql['a_joins']);
+          }
+          while ($key !== FALSE);
+
+          $a_query[mediamosa_db_query::A_JOIN]['mediafile'] = "LEFT JOIN {mediamosa_asset_mediafile} AS mf ON a.asset_id=mf.asset_id AND mf.is_still = 'FALSE'";
+          $a_query[mediamosa_db_query::A_JOIN]['aut_app_is_master_slave'] = sprintf("LEFT JOIN {mediamosa_aut_app_master_slave} AS aut_is_ms ON ((aut_is_ms.aut_object_type = 'MEDIAFILE' AND aut_is_ms.aut_object_id=mf.mediafile_id) OR (aut_is_ms.aut_object_type = 'ASSET' AND aut_is_ms.aut_object_id=a.asset_id))");
+          //$do_master_slave = TRUE;
+         // unset($a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset']['access']);
+         // unset($a_query[mediamosa_db_query::A_JOIN]['aut_app_master_slave']);
         }
 
         $a_query[mediamosa_db_query::A_JOIN]['cql'] = $a_result_cql2sql['a_joins'];

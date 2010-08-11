@@ -1,5 +1,6 @@
 // $Id: 
 
+
 START CHANGELOG:
 
 Known issues;
@@ -111,6 +112,11 @@ Other changes (not ticket related).
 - Rewrote unit test for mediafile metadata test.
 - Fixed notices in asset/$asset_id/acl POST call when no ACL rules were 
   provided.
+- Drupal 7 header items are now lower-case, fixed Set-Cookie and Content-Type to
+  lower case in code.
+- Added 'is_master_slaved' to CQL search. Returns all assets that are either 
+  masterslaved on the asset or has one or more mediafiles that are masterslaved.
+  Can be used to find assets that are not masterslaved.
 
 Mediamosa 2.1.5 (build 664)
 ---------------------------
