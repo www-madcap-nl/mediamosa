@@ -2754,7 +2754,6 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
   /**
    * Delete ACL rights on mediafile.
-   * Based on the REST call /asset/$asset_id/supplement/$supplement_id/delete (POST)
    */
   protected function deleteMediafileAut($mediafile_id, array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
@@ -2763,7 +2762,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     );
 
     // The uri.
-    $uri = strtr('mediafile/@mediafile_id/acl/delete', array('@mediafile_id' => $mediafile_id));
+    $uri = strtr('mediafile/!mediafile_id/acl/delete', array('!mediafile_id' => $mediafile_id));
 
     // Do Post call.
     $response = $this->restCallPost($uri, $a_parameters, array(), $expected_result_ids, $do_internal);
@@ -2781,9 +2780,61 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       )
     );
 
+    // Get the ACL rights to be sure its really gone.
+
+    // The uri.
+    $uri = strtr('mediafile/!mediafile_id/acl', array('!mediafile_id' => $mediafile_id));
+
+    // Do Post call.
+    $response = $this->restCallGet($uri, $a_parameters, array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT), $do_internal);
+    $items = (array)$response['xml']->items;
+
+    $this->assertTrue(empty($items), 'ACL rights on mediafile are really gone.');
+
     return $response;
   }
 
+  /**
+   * Delete ACL rights on asset.
+   */
+  protected function deleteAssetAut($asset_id, array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    // Parameters asset.
+    $a_parameters += array(
+      mediamosa_rest_call_aut_mediafile_delete_rights::USER_ID => self::SIMPLETEST_USER_ID,
+    );
+
+    // The uri.
+    $uri = strtr('asset/!asset_id/acl/delete', array('!asset_id' => $asset_id));
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $a_parameters, array(), $expected_result_ids, $do_internal);
+
+    // Test return status.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $expected_result_ids),
+      strtr(
+        "Removed ACL rights from asset @asset_id, got result @result (@result_description)",
+        array(
+          '@asset_id' => $asset_id,
+          '@result' => (string)$response['xml']->header->request_result_id,
+          '@result_description' => (string)$response['xml']->header->request_result_description
+        )
+      )
+    );
+
+    // Get the ACL rights to be sure its really gone.
+
+    // The uri.
+    $uri = strtr('asset/!asset_id/acl', array('!asset_id' => $asset_id));
+
+    // Do Post call.
+    $response = $this->restCallGet($uri, $a_parameters, array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT), $do_internal);
+    $items = (array)$response['xml']->items;
+
+    $this->assertTrue(empty($items), 'ACL rights on asset are really gone.');
+
+    return $response;
+  }
   /**
    * Delete ACL rights on mediafile.
    * Based on the REST call /asset/$asset_id/supplement/$supplement_id/delete (POST)

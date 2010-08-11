@@ -128,11 +128,14 @@ class mediamosa_asset_search {
     $a_query[mediamosa_db_query::ALLOW_DISTINCT] = TRUE;
     $a_query[mediamosa_db_query::A_GROUP_BY][] = strtr('a.#asset_id', array('#asset_id' => mediamosa_asset_db::ID));
 
-    // Get the slaves based on the app ids.
-    $a_slaves = mediamosa_aut_app_master_slave::slave_get($a_app_ids, mediamosa_aut::AUT_TYPE_MEDIAFILE);
+    // Get the slaves based on the app ids for mediafiles.
+    $a_slaves_mediafiles = mediamosa_aut_app_master_slave::slave_get($a_app_ids, mediamosa_aut::AUT_TYPE_MEDIAFILE);
+
+    // Get the slaves based on the app ids for assets.
+    $a_slaves_assets = array(); // Off, not stable, mediamosa_aut_app_master_slave::slave_get($a_app_ids, mediamosa_aut::AUT_TYPE_ASSET);
 
     // Merge the slave app ids with my app ids.
-    $a_app_ids_tmp = array_unique(array_merge($a_app_ids, array_keys($a_slaves)));
+    $a_app_ids_tmp = array_unique(array_merge($a_app_ids, array_keys($a_slaves_mediafiles), array_keys($a_slaves_assets)));
     sort($a_app_ids_tmp);
 
     $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset'][] = sprintf('a.app_id IN(%s)', mediamosa_db::escape_string($a_app_ids_tmp));
@@ -408,7 +411,11 @@ class mediamosa_asset_search {
     // Also we only do authication here when we need to filter out the results (granted == FALSE)
     // Except we need to do master/slave check, so we set switch only to include master/slave...
     // Add to the where the access check for our original app_id
-    mediamosa_aut::build_access_where($a_query, mediamosa_aut::AUT_TYPE_MEDIAFILE, NULL, $a_app_ids, $aut_user_id, $a_aut_group_id, $aut_domain, $aut_realm, $a_slaves, FALSE, $do_master_slave);
+    mediamosa_aut::build_access_where($a_query, mediamosa_aut::AUT_TYPE_MEDIAFILE, NULL, $a_app_ids, $aut_user_id, $a_aut_group_id, $aut_domain, $aut_realm, $a_slaves_mediafiles, FALSE, $do_master_slave);
+
+    // Asset.
+    // Off, not stable.
+    //mediamosa_aut::build_access_where($a_query, mediamosa_aut::AUT_TYPE_ASSET, NULL, $a_app_ids, $aut_user_id, $a_aut_group_id, $aut_domain, $aut_realm, $a_slaves_assets, FALSE, $do_master_slave);
 
     // Limit, offset stuff
     $a_query[mediamosa_db_query::LIMIT] = $limit;

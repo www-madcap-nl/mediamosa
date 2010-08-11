@@ -58,23 +58,27 @@ class mediamosa_aut_app_master_slave {
     switch ($aut_type) {
       case mediamosa_aut::AUT_TYPE_MEDIAFILE:
         $on = 'mf.mediafile_id';
+        $alias = 'aut_ms';
         break;
       case mediamosa_aut::AUT_TYPE_COLLECTION:
         $on = 'c.coll_id';
+        $alias = 'aut_ms';
         break;
       case mediamosa_aut::AUT_TYPE_ASSET:
         $on = 'a.asset_id';
+        $alias = 'aut_msa';
         break;
       default:
         assert(0);
         return '';
     }
     return strtr(
-      "LEFT JOIN {#aut_app_master_slave} AS aut_ms ON aut_ms.aut_object_type = '@aut_object_type' AND @on = aut_ms.aut_object_id",
+      "LEFT JOIN {#aut_app_master_slave} AS #alias ON #alias.aut_object_type = '@aut_object_type' AND @on = #alias.aut_object_id",
       array(
         '#aut_app_master_slave' => mediamosa_aut_app_master_slave_db::TABLE_NAME,
         '@aut_object_type' => $aut_type,
-        '@on' => $on
+        '@on' => $on,
+        '#alias' => $alias,
       )
     );
   }

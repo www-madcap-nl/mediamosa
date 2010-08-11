@@ -374,7 +374,6 @@ class MediaMosaAssetCQLAclContextTestCaseEga extends MediaMosaTestCaseEga {
     // Return assets that are not master slaved.
     $this->cql_do_search_test_assets_2('is_master_slaved <> TRUE', array($asset_id_2 => TRUE, $asset_id_5 => TRUE, $asset_id_6 => TRUE));
 
-
     // Master slave mediafiles.
     // Now master slave 2 to 3.
     $this->setMediafileAut($mediafile_id_2, array(
