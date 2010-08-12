@@ -254,7 +254,7 @@ class mediamosa_rest_call_delete_mediafiles extends mediamosa_rest_call {
         ),
         self::DELETE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_STRING,
-          self::VAR_DESCRIPTION => 'The owner ID to match.',
+          self::VAR_DESCRIPTION => 'Put on cascade to delete its stills as well.',
           self::VAR_ALLOWED_VALUES => array('cascade', '')
         ),
       )
@@ -291,14 +291,14 @@ class mediamosa_rest_call_delete_mediafiles extends mediamosa_rest_call {
     );
 
     // Check if this mediafile is the only one under a sub-asset.
-    $query = db_select(mediamosa_asset_db::TABLE_NAME, 'a');
+    $query = mediamosa_db::db_select(mediamosa_asset_db::TABLE_NAME, 'a');
     $query->fields('a', array(mediamosa_asset_db::PARENT_ID, mediamosa_asset_db::ID));
     $query->join(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf', strtr('a.#asset_id = mf.#asset_id', array('#asset_id' => mediamosa_asset_db::ID)));
     $query->condition('mf.' . mediamosa_asset_mediafile_db::ID, $mediafile_id);
     $a_asset = $query->execute()->fetchAssoc();
 
     // Count the number of mediafiles.
-    $query = db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
+    $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
     $query->fields('mf', array(mediamosa_asset_mediafile_db::ID));
     $query->condition('mf.' . mediamosa_asset_mediafile_db::ASSET_ID, $a_asset[mediamosa_asset_db::ID]);
     $query->condition('mf.' . mediamosa_asset_mediafile_db::IS_STILL, mediamosa_asset_mediafile_db::IS_STILL_FALSE);
@@ -309,7 +309,7 @@ class mediamosa_rest_call_delete_mediafiles extends mediamosa_rest_call {
 
     if ($delete == 'cascade') {
       // Deletes the stills.
-      $query = db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
+      $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
       $query->fields('mf', array(mediamosa_asset_mediafile_db::ASSET_ID_ROOT));
       $query->condition('mf.' . mediamosa_asset_mediafile_db::ID, $mediafile_id);
       $query->condition('mf.' . mediamosa_asset_mediafile_db::IS_STILL, mediamosa_asset_mediafile_db::IS_STILL_FALSE);
