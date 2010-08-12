@@ -201,6 +201,11 @@ class mediamosa_http {
     // Init curl.
     $curl_handle = curl_init($url);
 
+    // Set HTTPS to accept any certificate.
+    if (mediamosa_unicode::substr(mediamosa_unicode::strtolower($url), 0, strlen('https://')) == 'https://') {
+      curl_setopt($curl_handle, CURLOPT_SSL_VERIFYPEER, FALSE);
+    }
+
     $curl_options = array();
     foreach ($options['headers'] as $name => $value) {
       $curl_options[CURLOPT_HTTPHEADER][] = $name . ': ' . $value;
