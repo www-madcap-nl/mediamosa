@@ -121,6 +121,7 @@ Other changes (not ticket related).
   showing them on mediafiles).
 - Completion URL for transcoding will now correctly trigger HTTPS when 
   SSL certificate is not valid.
+- Fixed PHP notice when transcode failed.
 
 Mediamosa 2.1.5 (build 664)
 ---------------------------

@@ -676,7 +676,7 @@ class mediamosa_job_scheduler {
 
     // controleer of de vorige job_id naar boven is te halen.
     $command_parameters = mediamosa_lib::create_named_array($a_job_info["command"], ";", ":");
-    $original_job_id = $command_parameters['internal_previous_job'];
+    $original_job_id = empty($command_parameters['internal_previous_job']) ? 0 : $command_parameters['internal_previous_job'];
     if ($original_job_id > 0) {
       if ($a_job_info[mediamosa_job_transcode_db::FILE_EXTENSION] != mediamosa_job::JOBRAW_FILE_EXTENSION) {
 
