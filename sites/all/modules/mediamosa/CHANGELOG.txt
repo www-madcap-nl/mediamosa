@@ -39,7 +39,6 @@ Mediamosa 2.2.0
 - PA: Adding domains and realms produce failures fix (See VPCore ticket #172).
 - Integrity check produces error fix (See VPCore ticket #177).
 - Integrity check uses "nice" call, instead of "wget" (See VPCore ticket #177).
-- User quota test fails in 32 bits systems bug fix.
 - Support for 2 pass h264 encoding development (See MediaMosa ticket #264).
 
 Other changes (not ticket related).
@@ -119,9 +118,29 @@ Other changes (not ticket related).
   Can be used to find assets that are not masterslaved.
 - Extended browse view of asset in admin to show asset AUT rights (was only
   showing them on mediafiles).
-- Completion URL for transcoding will now correctly trigger HTTPS when 
+- Completion URL for transcoding will now correctly trigger with HTTPS when 
   SSL certificate is not valid.
 - Fixed PHP notice when transcode failed.
+- Fixed unnessary exception logging when testing non-failure db object 
+  existance.
+- User quota test fails in 32 bits systems bug fix.
+- Parameter 'still_type' on all REST calls that use it now required fixed input;
+  'NONE, 'SCENE', 'NORMAL', 'PICTURE', 'SECOND' or ''. Defaults to ''.
+- Refactored some STILL code to better readable code.
+- Fixed 'is_downloadable' option when creating mediafile. Bug ignored the
+  provided setting and was always 'FALSE'.
+- REST call /mediamosa/create [POST] and /asset/$asset_id/mediafile/create 
+  [POST] will now accept a 'tag' parameter. Was only on update calls. 
+- Fixed: Uploading of mediafile would overwrite TAG on Mediafile when TAG was 
+  not supplied.
+- Fixed: The combination URL and URI in mediafile check when IS_DOWNLOADABLE was
+  set to any value in mediafile/create resulted in unnessary exception.
+- Added transactions into metadata save and deletion of asset. Although we need
+  a more extended transaction support on REST calls; rolling back everything
+  during the REST call. This is very tricky; What do we do with any output
+  already generated? Watchdog entries will be rolled back too. Need some more
+  thinking for the global transaction support.
+  
 
 Mediamosa 2.1.5 (build 664)
 ---------------------------
@@ -421,3 +440,4 @@ MediaMosa.0.0 (released as read-only)
   maintain.
 - Mediafile db field asset_id_root is now deprecated and will be removed in 
   future releases.
+  

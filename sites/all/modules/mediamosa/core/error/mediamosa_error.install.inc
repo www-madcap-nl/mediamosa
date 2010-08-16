@@ -60,7 +60,7 @@ function _mediamosa_error_install() {
     'ERRORCODE_STREAM_DOWNLOAD_NOT_ALLOWED' => 'Download not allowed for external streams',
     'ERRORCODE_NO_METAFILE_AVAILABLE' => 'This container type doesn\'t support metafiles (@container_type)',
     'ERRORCODE_JOBS_COULD_NOT_BE_STOPPED' => 'Some jobs could not be stopped. Please try again later.',
-    'ERRORCODE_REST_CALL_IS_DISABLED' => 'Rest call to \'@uri\' has been disabled, please check documentation.',
+    'ERRORCODE_REST_CALL_IS_DISABLED' => 'Rest call to \'@uri\' has been disabled, please check your MediaMosa documentation.',
     'ERRORCODE_UNABLE_TO_CREATE_SYMLINK' => 'Unable to create symbolic link ticket to file.',
     'ERRORCODE_REST_UNSPECIFIED_VARIABLE' => 'The var \'@var\' is not allowed in this REST call, remove it from your request.',
     'ERRORCODE_REST_DIFF_VALUE_GET_POST_VAR' => '@var is specified more than once (GET / POST / URI), but has different values (value 1; @value1 / value 2; @value2).',

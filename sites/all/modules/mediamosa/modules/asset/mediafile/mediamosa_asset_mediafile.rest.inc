@@ -351,6 +351,7 @@ class mediamosa_rest_call_create_mediafile extends mediamosa_rest_call {
   const IS_ORIGINAL_FILE = 'is_original_file';
   const MEDIAFILE_ID_SOURCE = 'mediafile_id_source';
   const FILENAME = 'filename';
+  const TAG = 'tag';
 
   // ------------------------------------------------------------------ Public Functions.
   public function get_var_setup() {
@@ -379,6 +380,7 @@ class mediamosa_rest_call_create_mediafile extends mediamosa_rest_call {
         self::IS_DOWNLOADABLE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Mediafile can be downloaded.',
+          self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
         self::IS_ORIGINAL_FILE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
@@ -406,6 +408,11 @@ class mediamosa_rest_call_create_mediafile extends mediamosa_rest_call {
           self::VAR_DESCRIPTION => 'The mediafile ID.',
           self::VAR_IS_INTERNAL_ONLY => self::VAR_IS_INTERNAL_ONLY_YES,
         ),
+        self::TAG => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_DESCRIPTION => 'User specified tag.',
+          self::VAR_RANGE_END => mediamosa_asset_mediafile_db::TAG_LENGTH,
+        ),
       )
     );
 
@@ -429,7 +436,7 @@ class mediamosa_rest_call_create_mediafile extends mediamosa_rest_call {
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $a_app_ids);
 
     // Make sure we dont mix URI and Filename.
-    if ($this->isset_param(self::URI) && ($this->isset_param(self::FILENAME) || $this->isset_param(self::IS_DOWNLOADABLE))) {
+    if (!$this->empty_param(self::URI) && (!$this->empty_param(self::FILENAME) || $this->get_param_value(self::IS_DOWNLOADABLE))) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_MIX_OF_URI_AND_FILE);
     }
 
@@ -450,7 +457,7 @@ class mediamosa_rest_call_create_mediafile extends mediamosa_rest_call {
     mediamosa_aut::owner_check($app_id, $user_id, $a_asset[mediamosa_asset_db::APP_ID], $a_asset[mediamosa_asset_db::OWNER_ID], $is_app_admin);
 
     // Want to copy these fields to new mediafile.
-    $a_params = array(
+    $params = array(
       self::GROUP_ID => mediamosa_asset_mediafile_db::GROUP_ID,
       self::IS_DOWNLOADABLE => mediamosa_asset_mediafile_db::IS_DOWNLOADABLE,
       self::IS_ORIGINAL_FILE => mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE,
@@ -458,15 +465,18 @@ class mediamosa_rest_call_create_mediafile extends mediamosa_rest_call {
       self::FILENAME => mediamosa_asset_mediafile_db::FILENAME,
       self::URI => mediamosa_asset_mediafile_db::URI,
       self::MEDIAFILE_ID_SOURCE => mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE,
+      self::TAG => mediamosa_asset_mediafile_db::TAG,
     );
 
     // Fields to insert.
-    $a_fields = array();
+    $fields = array();
 
     // Now create the data to insert.
-    foreach ($a_params as $param => $field_name) {
+    foreach ($params as $param => $field_name) {
       if ($this->isset_param($param)) {
-        $a_fields[$field_name] = $this->get_param_value($param, TRUE);
+        $value = $this->get_param_value($param, TRUE);
+
+        $fields[$field_name] = is_bool($value) ? ($value ? 'TRUE' : 'FALSE') : $value;
       }
     }
 
@@ -474,7 +484,7 @@ class mediamosa_rest_call_create_mediafile extends mediamosa_rest_call {
     $mediafile_id = $this->get_param_value(self::MEDIAFILE_ID);
 
     // Insert the mediafile.
-    $mediafile_id = mediamosa_asset_mediafile::create($mediafile_id, $app_id, $asset_id, $user_id, $a_fields);
+    $mediafile_id = mediamosa_asset_mediafile::create($mediafile_id, $app_id, $asset_id, $user_id, $fields);
 
     // Ok add to output.
     $o_mediamosa->add_item(array('mediafile_id' => $mediafile_id));
@@ -564,7 +574,7 @@ class mediamosa_rest_call_update_mediafile extends mediamosa_rest_call {
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $a_app_ids);
 
     // Fields allowed to update.
-    $a_params = array(
+    $params = array(
       mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT => array(),
       mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE => array(FALSE => mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_FALSE, TRUE => mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_TRUE),
       mediamosa_asset_mediafile_db::FILENAME => array(),
@@ -574,8 +584,8 @@ class mediamosa_rest_call_update_mediafile extends mediamosa_rest_call {
       mediamosa_asset_mediafile_db::TAG => array(),
     );
 
-    $a_fields = array();
-    foreach ($a_params as $param => $a_values) {
+    $fields = array();
+    foreach ($params as $param => $values) {
       if (!$this->isset_given_param($param)) {
         // If its not supplied, skip it.
         continue;
@@ -583,16 +593,16 @@ class mediamosa_rest_call_update_mediafile extends mediamosa_rest_call {
 
       // Get value.
       $value = $this->get_param_value($param);
-      if (!empty($a_values)) {
-        assert(isset($a_values[$value]));
-        $value = $a_values[$value];
+      if (!empty($values)) {
+        assert(isset($values[$value]));
+        $value = $values[$value];
       }
 
-      $a_fields[$param] = $value;
+      $fields[$param] = $value;
     }
 
     // Update the mediafile.
-    mediamosa_asset_mediafile::update($app_id, $mediafile_id, $user_id, $a_fields);
+    mediamosa_asset_mediafile::update($app_id, $mediafile_id, $user_id, $fields);
 
     // Set all OK.
     $o_mediamosa->set_result_okay();

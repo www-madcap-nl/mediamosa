@@ -91,6 +91,15 @@ class mediamosa_rest_call_job_set_status extends mediamosa_rest_call {
         self::STILL_TYPE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The still type.',
+          self::VAR_ALLOWED_VALUES => array(
+            mediamosa_asset_mediafile_metadata::STILL_TYPE_NONE,
+            mediamosa_asset_mediafile_metadata::STILL_TYPE_PICTURE,
+            mediamosa_asset_mediafile_metadata::STILL_TYPE_SCENE,
+            mediamosa_asset_mediafile_metadata::STILL_TYPE_SECOND,
+            mediamosa_asset_mediafile_metadata::STILL_TYPE_NORMAL,
+            '',
+          ),
+          self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_metadata::STILL_TYPE_NONE,
         ),
         self::STILL_PER_MEDIAFILE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
@@ -386,6 +395,15 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
         self::STILL_TYPE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The still type.',
+          self::VAR_ALLOWED_VALUES => array(
+            mediamosa_asset_mediafile_metadata::STILL_TYPE_NONE,
+            mediamosa_asset_mediafile_metadata::STILL_TYPE_PICTURE,
+            mediamosa_asset_mediafile_metadata::STILL_TYPE_SCENE,
+            mediamosa_asset_mediafile_metadata::STILL_TYPE_SECOND,
+            mediamosa_asset_mediafile_metadata::STILL_TYPE_NORMAL,
+            '',
+          ),
+          self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_metadata::STILL_TYPE_NONE,
         ),
         self::STILL_PER_MEDIAFILE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
@@ -524,7 +542,7 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
     $retranscode = $this->get_param_value(self::RETRANSCODE);
 
     $create_still = $this->get_param_value(self::CREATE_STILL);
-    $a_still_parameters = array(
+    $still_parameters = array(
       'still_type' => $this->get_param_value(self::STILL_TYPE),
       'still_per_mediafile' => $this->get_param_value(self::STILL_PER_MEDIAFILE),
       'still_every_second' => $this->get_param_value(self::STILL_EVERY_SECOND),
@@ -555,19 +573,19 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
 
     switch ($job_type) {
       case mediamosa_job_db::JOB_TYPE_STILL:
-        $job_id = mediamosa_job::create_job_still($app_id, $user_id, $is_app_admin, $mediafile_id, $a_still_parameters);
+        $job_id = mediamosa_job::create_job_still($app_id, $user_id, $is_app_admin, $mediafile_id, $still_parameters);
         break;
 
       case mediamosa_job_db::JOB_TYPE_TRANSCODE:
-        $job_id = mediamosa_job::create_job_transcode($app_id, $user_id, $group_id, $is_app_admin, $mediafile_id, $create_still, $a_still_parameters, $file_extension, $command, $tool, $profile_id, $completed_transcoding_url, $priority);
+        $job_id = mediamosa_job::create_job_transcode($app_id, $user_id, $group_id, $is_app_admin, $mediafile_id, $create_still, $still_parameters, $file_extension, $command, $tool, $profile_id, $completed_transcoding_url, $priority);
         break;
 
       case mediamosa_job_db::JOB_TYPE_UPLOAD:
-        $job_id = mediamosa_job::create_job_upload($app_id, $user_id, $group_id, $is_app_admin, $mediafile_id, $file_size, $retranscode, $create_still, $a_still_parameters);
+        $job_id = mediamosa_job::create_job_upload($app_id, $user_id, $group_id, $is_app_admin, $mediafile_id, $file_size, $retranscode, $create_still, $still_parameters);
         break;
 
       default:
-        $job_id = mediamosa_job::create($job_type, $app_id, $user_id, $is_app_admin, $mediafile_id, $create_still, $a_still_parameters);
+        $job_id = mediamosa_job::create($job_type, $app_id, $user_id, $is_app_admin, $mediafile_id, $create_still, $still_parameters);
         break;
     }
 
@@ -1015,30 +1033,27 @@ class mediamosa_rest_call_job_create_still extends mediamosa_rest_call_job_creat
     // GET / POST to array.
     $a_var_setup = parent::process_rest_args($a_var_setup);
 
-    // Backward compatibility.
-    if ($this->isset_given_param(self::STILL_TYPE) || $this->get_param_value(self::STILL_TYPE) == 'NONE') {
+    // Fix problems with usage of obsolete FRAMETIME, WIDTH and HEIGHT.
+    $start_frame = $this->get_param_value(self::START_FRAME);
+    $end_frame = $this->get_param_value(self::END_FRAME);
+    $frametime = $this->get_param_value(self::FRAMETIME);
+    if (!$start_frame && $frametime) {
+      $this->set_param_value(self::START_FRAME, $frametime);
+    }
 
-      $start_frame = $this->get_param_value(self::START_FRAME);
-      $end_frame = $this->get_param_value(self::END_FRAME);
-      $frametime = $this->get_param_value(self::FRAMETIME);
-      if (!$start_frame && $frametime) {
-        $this->set_param_value(self::START_FRAME, $frametime);
-      }
+    $size = $this->get_param_value(self::SIZE);
+    $width = $this->get_param_value(self::WIDTH);
+    $height = $this->get_param_value(self::HEIGHT);
 
-      $size = $this->get_param_value(self::SIZE);
-      $width = $this->get_param_value(self::WIDTH);
-      $height = $this->get_param_value(self::HEIGHT);
+    if (empty($start_frame)) {
+      $start_frame = $this->get_param_value(self::START_TIME);
+    }
+    if (!$end_frame) {
+      $end_frame = $this->get_param_value(self::END_TIME);
+    }
 
-      if (!$start_frame) {
-        $start_frame = $this->get_param_value(self::START_TIME);
-      }
-      if (!$end_frame) {
-        $end_frame = $this->get_param_value(self::END_TIME);
-      }
-
-      if (empty($size) && $width && $height) {
-        $this->set_param_value(self::SIZE, $width . 'x' . $height);
-      }
+    if (empty($size) && $width && $height) {
+      $this->set_param_value(self::SIZE, $width . 'x' . $height);
     }
 
     unset($a_var_setup[self::VARS][parent::FRAMETIME]);

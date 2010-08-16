@@ -176,7 +176,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     $prefix = Database::getConnection()->prefixTables('{mediamosa_}') . '%';
 
     // Get tables that match our pattern.
-    $tables = db_find_tables($prefix);
+    $tables = db_find_tables('mediamosa_%');
 
     $matches = $ret = array();
     foreach ($tables as $table) {
