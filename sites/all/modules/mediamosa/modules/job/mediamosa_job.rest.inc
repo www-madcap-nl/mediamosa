@@ -973,6 +973,10 @@ class mediamosa_rest_call_job_create_still extends mediamosa_rest_call_job_creat
   // The asset ID.
   const ASSET_ID = 'asset_id';
 
+  // Only used here, converted to size.
+  const WIDTH = 'width';
+  const HEIGHT = 'height';
+
   // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
     $a_var_setup = parent::get_var_setup();
@@ -986,6 +990,15 @@ class mediamosa_rest_call_job_create_still extends mediamosa_rest_call_job_creat
       self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
       self::VAR_DESCRIPTION => 'The asset ID of the medafile.',
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+    );
+
+    $a_var_setup[self::VARS][self::WIDTH] = array(
+      self::VAR_TYPE => mediamosa_type::TYPE_INT,
+      self::VAR_DESCRIPTION => 'Still width. Deprecated, use size instead.',
+    );
+    $a_var_setup[self::VARS][self::HEIGHT] = array(
+      self::VAR_TYPE => mediamosa_type::TYPE_INT,
+      self::VAR_DESCRIPTION => 'Still height. Deprecated, use size instead.',
     );
 
     return $a_var_setup;
@@ -1011,9 +1024,9 @@ class mediamosa_rest_call_job_create_still extends mediamosa_rest_call_job_creat
     $a_var_setup = parent::process_rest_args($a_var_setup);
 
     // Fix problems with usage of obsolete FRAMETIME, WIDTH and HEIGHT.
+    $frametime = $this->get_param_value(self::FRAMETIME);
     $start_frame = $this->get_param_value(self::START_FRAME);
     $end_frame = $this->get_param_value(self::END_FRAME);
-    $frametime = $this->get_param_value(self::FRAMETIME);
     if (!$start_frame && $frametime) {
       $this->set_param_value(self::START_FRAME, $frametime);
     }
@@ -1022,20 +1035,29 @@ class mediamosa_rest_call_job_create_still extends mediamosa_rest_call_job_creat
     $width = $this->get_param_value(self::WIDTH);
     $height = $this->get_param_value(self::HEIGHT);
 
-    if (empty($start_frame)) {
-      $start_frame = $this->get_param_value(self::START_TIME);
-    }
-    if (!$end_frame) {
-      $end_frame = $this->get_param_value(self::END_TIME);
+    if (!$start_frame && $frametime) {
+      $this->set_param_value(self::START_FRAME, $frametime);
     }
 
-    if (empty($size) && $width && $height) {
+    // Start/end time replaces start/end frame.
+    $start_time = $this->get_param_value(self::START_TIME);
+    if (!$start_frame && $start_time) {
+      $this->set_param_value(self::START_FRAME, $start_time);
+    }
+
+    $end_time = $this->get_param_value(self::END_TIME);
+    if (!$end_frame && $end_time) {
+      $this->set_param_value(self::START_FRAME, $end_time);
+    }
+
+    // If size is not given, but width and height are, use width, height.
+    if (!$this->isset_given_param($size) && $width && $height) {
       $this->set_param_value(self::SIZE, $width . 'x' . $height);
     }
 
-    unset($a_var_setup[self::VARS][parent::FRAMETIME]);
-    unset($a_var_setup[self::VARS][parent::WIDTH]);
-    unset($a_var_setup[self::VARS][parent::HEIGHT]);
+    unset($a_var_setup[self::VARS][self::FRAMETIME]);
+    unset($a_var_setup[self::VARS][self::WIDTH]);
+    unset($a_var_setup[self::VARS][self::HEIGHT]);
 
     return $a_var_setup;
   }

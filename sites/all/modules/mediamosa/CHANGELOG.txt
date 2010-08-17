@@ -147,11 +147,11 @@ Other changes (not ticket related).
 - Fixed CQL entry box on asset browse page to get empty when entering an empty 
   string to clear your CQL.
 - Still parameter 'size' is now default '352x288'.
-- Still parameters 'width' and 'height' where already deprecated in 1.x, these
-  are now completly removed from all still create REST calls. The parameters 
-  where ignored/unused already, so setting them didn't have effect anyway.
 - Fixed: CQL search on 'batch_id' used STRING type instead of INT, resulted into
   wrong search results.
+- Still parameters 'width' and 'height' are now deprecated, use still instead.
+- Fixed: start_frame and end_frame still parameters where not copied to 
+  start_time and end_time when *_time parameters where not used. 
 
 Mediamosa 2.1.5 (build 664)
 ---------------------------
