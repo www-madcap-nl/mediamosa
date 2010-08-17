@@ -140,7 +140,18 @@ Other changes (not ticket related).
   during the REST call. This is very tricky; What do we do with any output
   already generated? Watchdog entries will be rolled back too. Need some more
   thinking for the global transaction support.
-  
+- The still parameters end_frame and start_frame are now depricated and 
+  REST documentation has been adjusted to promote usage of end_time and 
+  start_time. Also documentation does now explanes parameters as seconds.
+- Fixed reset button on asset browse page.
+- Fixed CQL entry box on asset browse page to get empty when entering an empty 
+  string to clear your CQL.
+- Still parameter 'size' is now default '352x288'.
+- Still parameters 'width' and 'height' where already deprecated in 1.x, these
+  are now completly removed from all still create REST calls. The parameters 
+  where ignored/unused already, so setting them didn't have effect anyway.
+- Fixed: CQL search on 'batch_id' used STRING type instead of INT, resulted into
+  wrong search results.
 
 Mediamosa 2.1.5 (build 664)
 ---------------------------
@@ -163,7 +174,7 @@ Other changes (not ticket related)
   software use this)
 - Image generation bug fixed, in some cases ffmpeg generated too many stills
   due to a changed parameter behaviour (vpadding).
-   
+
 
 Mediamosa 2.1.4 (build 628)
 ---------------------------

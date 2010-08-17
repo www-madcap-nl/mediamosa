@@ -902,7 +902,6 @@ class mediamosa_job_scheduler {
     return $response->code;
   }
 
-
   /**
    * Function for starting a still job
    *
@@ -1073,21 +1072,15 @@ class mediamosa_job_scheduler {
         $query_job = mediamosa_job_still::get($job_id);
 
         if ($query_job) {
-          //$a_result["frametime"] = frametime'];
-          //$a_result["size"] = size;
-          //$a_result["h_padding"] = h_padding;
-          //$a_result["v_padding"] = v_padding;
           $a_result["blackstill_check"] = $query_job['blackstill_check'];
           $a_result["still_parameters"] = unserialize($query_job['still_parameters']);
           $a_result["frametime"] = $a_result["still_parameters"]['frametime'];
-          //$a_result["size"] = $a_result["still_parameters"]['size'];
           $a_result["h_padding"] = $a_result["still_parameters"]['h_padding'];
           $a_result["v_padding"] = $a_result["still_parameters"]['v_padding'];
           $a_result["tag"] = $a_result["still_parameters"]['tag'];
 
           // Calculating aspect ratio
           // Base value
-          //$target_size = $query_job['size;
           $target_size = $a_result["still_parameters"]['size'];
           if ($query_job['size'] == 'sqcif') {
             $target_size = '128x96';

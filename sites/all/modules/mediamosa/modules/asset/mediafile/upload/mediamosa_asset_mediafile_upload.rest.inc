@@ -199,7 +199,7 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
           self::VAR_DESCRIPTION => 'The still type.',
           self::VAR_ALLOWED_VALUES => array(
             mediamosa_asset_mediafile_metadata::STILL_TYPE_NONE,
-            mediamosa_asset_mediafile_metadata::STILL_TYPE_PICTURE,
+            //mediamosa_asset_mediafile_metadata::STILL_TYPE_PICTURE,
             mediamosa_asset_mediafile_metadata::STILL_TYPE_SCENE,
             mediamosa_asset_mediafile_metadata::STILL_TYPE_SECOND,
             mediamosa_asset_mediafile_metadata::STILL_TYPE_NORMAL,
@@ -226,6 +226,7 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
         self::SIZE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_STRING,
           self::VAR_DESCRIPTION => 'Size of the still.',
+          self::VAR_DEFAULT_VALUE => mediamosa_settings::STILL_DEFAULT_SIZE,
         ),
         self::H_PADDING => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
