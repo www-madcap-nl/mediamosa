@@ -41,7 +41,7 @@ class mediamosa_connector {
 
   // Maximum of entries in our log, lets not overflow memory.
   // Log will store the last # of requests and will drop the first.
-  const MAX_LOG_ENTRIES = 250;
+  const MAX_LOG_ENTRIES = 50;
 
   // MediaMosa errorcodes we use.
   const HTTP_NOT_FOUND = 404;
@@ -183,7 +183,7 @@ class mediamosa_connector {
       $result_id = (int) $response->xml->header->request_result_id;
 
       if ($fatal && !in_array($result_id, array(self::ERRORCODE_OKAY, self::ERRORCODE_EMPTY_RESULT))) {
-        throw new Exception(strtr('Unable to execute Mediamosa REST call !uri, resulted with code !code', array('!uri' => $uri, '!code' => $result_id)));
+        throw new Exception(strtr('Unable to execute Mediamosa REST call !uri, resulted with code !code', array('!uri' => $uri, '!code' => $result_id)), $result_id);
       }
 
       return $response;
@@ -249,8 +249,7 @@ class mediamosa_connector {
 
     // Parse the response.
     // FIXME: We only store the 1st cookie here(!).
-    $cookie = empty($response->headers['Set-Cookie']) ? $response->headers['set-cookie'] : $response->headers['Set-Cookie'];
-    list($this->cookie) = explode(';', $cookie);
+    list($this->cookie) = explode(';', $response->headers['set-cookie']);
 
     // Store the cookie for later usage.
     $cookies = variable_get('mediamosa_connector_cookies', array());
@@ -311,14 +310,9 @@ class mediamosa_connector {
       $options['headers']['Cookie'] = $this->cookie;
     }
 
-    $data_log = '';
     if (isset($options['data'])) {
       if (is_array($options['data'])) {
-        $data_log = ' ('. count($options['data']) .')';
         $options['data'] = http_build_query($options['data'], '', '&');
-      }
-      else {
-        $data_log = ' ('. count(explode('&', $options['data'])) .')';
       }
     }
 
@@ -367,6 +361,12 @@ class mediamosa_connector {
     }
     else {
       $response = drupal_http_request($url, $options['headers'], $options['method'], $options['data']);
+
+      // Make the header items names lowercase like in D7.
+      foreach ($response->headers as $name => $value) {
+        unset($response->headers[$name]);
+        $response->headers[drupal_strtolower($name)] = $value;
+      }
     }
 
     $end = microtime(TRUE);
@@ -378,9 +378,8 @@ class mediamosa_connector {
 
     // Set to empty.
     $response->xml = NULL;
-
     // If we detect xml output, fill the xml member.
-    if ((int) $response->code == 200 && (!empty($response->headers['Content-Type']) && strpos($response->headers['Content-Type'], 'text/xml') !== FALSE) || drupal_substr($response->data, 0, strlen('<?xml')) == '<?xml') {
+    if ((int) $response->code == 200 && (strpos($response->headers['content-type'], 'text/xml') !== FALSE || drupal_substr($response->data, 0, strlen('<?xml')) == '<?xml')) {
       try {
         $response->xml = new SimpleXMLElement($response->data);
       }
@@ -392,7 +391,7 @@ class mediamosa_connector {
 
     // Log the request.
     $this->log[] = array(
-      'method' => $options['method'] . $data_log,
+      'method' => $options['method'],
       'url' => $url,
       'response_time' => round($end - $start, 3),
       'result_id' => (isset($response->xml) ? (int)$response->xml->header->request_result_id : 0),
@@ -493,9 +492,20 @@ class mediamosa_connector {
     }
 
     // Fix the problem with 1 or 2+ items in array.
-    $tmp = isset($xml['items']['item'][0]) ? $xml['items']['item'] : array(0 => $xml['items']['item']);
-    unset($xml['items']);
-    $xml['items']['item'] = $tmp;
+    if (!isset($xml['items']['item'][0])) {
+      $tmp = array(0 => $xml['items']['item']);
+      unset($xml['items']);
+      $xml['items']['item'] = $tmp;
+    }
+
+    // Fix problem with 1 or 2+ mediafiles in array.
+    foreach ($xml['items']['item'] as &$item) {
+      if (isset($item['mediafiles']) && !isset($item['mediafiles']['mediafile'][0])) {
+        $tmp = array(0 => $item['mediafiles']['mediafile']);
+        unset($item['mediafiles']['mediafile']);
+        $item['mediafiles']['mediafile'] = $tmp;
+      }
+   }
 
     return $xml;
   }

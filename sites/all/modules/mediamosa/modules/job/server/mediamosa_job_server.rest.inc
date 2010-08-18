@@ -137,6 +137,7 @@ class mediamosa_rest_call_jobserver_job_start extends mediamosa_rest_call {
         self::SIZE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_STRING,
           self::VAR_DESCRIPTION => 'Size of the still.',
+          self::VAR_DEFAULT_VALUE => mediamosa_settings::STILL_DEFAULT_SIZE,
         ),
         self::H_PADDING => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
@@ -158,6 +159,15 @@ class mediamosa_rest_call_jobserver_job_start extends mediamosa_rest_call {
         self::STILL_TYPE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The still type.',
+          self::VAR_ALLOWED_VALUES => array(
+            mediamosa_asset_mediafile_metadata::STILL_TYPE_NONE,
+            mediamosa_asset_mediafile_metadata::STILL_TYPE_PICTURE,
+            mediamosa_asset_mediafile_metadata::STILL_TYPE_SCENE,
+            mediamosa_asset_mediafile_metadata::STILL_TYPE_SECOND,
+            mediamosa_asset_mediafile_metadata::STILL_TYPE_NORMAL,
+            '',
+          ),
+          self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_metadata::STILL_TYPE_NONE,
         ),
         self::STILL_PER_MEDIAFILE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
@@ -181,7 +191,7 @@ class mediamosa_rest_call_jobserver_job_start extends mediamosa_rest_call {
         ),
         self::FPS => array(
           self::VAR_TYPE => mediamosa_type::TYPE_STRING,
-          self::VAR_DESCRIPTION => 'Frame per seomd.',
+          self::VAR_DESCRIPTION => 'Frame per second.',
         ),
       )
     );
@@ -217,13 +227,7 @@ class mediamosa_rest_call_jobserver_job_start extends mediamosa_rest_call {
           'still_every_second' => $this->get_param_value(self::STILL_EVERY_SECOND),
           'start_frame' => $this->get_param_value(self::START_FRAME),
           'end_frame' => $this->get_param_value(self::END_FRAME),
-          //'size' => $a_parameters['size']['value'], // deprecated
-          //'h_padding' => $a_parameters['h_padding']['value'], // deprecated
-          //'v_padding' => $a_parameters['v_padding']['value'], // deprecated
           'tag' => $this->get_param_value(self::TAG),
-          //'frametime' => $a_parameters['frametime']['value'], // deprecated
-          //'width' => $a_parameters['width']['value'], // deprecated
-          //'height' => $a_parameters['height']['value'], // deprecated
           'video_duration' => $this->get_param_value(self::VIDEO_DURATION),
           'fps' => $this->get_param_value(self::FPS),
         );

@@ -201,6 +201,11 @@ class mediamosa_http {
     // Init curl.
     $curl_handle = curl_init($url);
 
+    // Set HTTPS to accept any certificate.
+    if (mediamosa_unicode::substr(mediamosa_unicode::strtolower($url), 0, strlen('https://')) == 'https://') {
+      curl_setopt($curl_handle, CURLOPT_SSL_VERIFYPEER, FALSE);
+    }
+
     $curl_options = array();
     foreach ($options['headers'] as $name => $value) {
       $curl_options[CURLOPT_HTTPHEADER][] = $name . ': ' . $value;
@@ -507,14 +512,15 @@ class mediamosa_http {
         break;
       }
 
-      list($header, $value) = explode(':', $line, 2);
-      if (isset($result->headers[$header]) && $header == 'Set-Cookie') {
+      list($name, $value) = explode(':', $line, 2);
+      $name = strtolower($name);
+      if (isset($result->headers[$name]) && $name == 'set-cookie') {
         // RFC 2109: the Set-Cookie response header comprises the token Set-
         // Cookie:, followed by a comma-separated list of one or more cookies.
-        $result->headers[$header] .= ',' . trim($value);
+        $result->headers[$name] .= ',' . trim($value);
       }
       else {
-        $result->headers[$header] = trim($value);
+        $result->headers[$name] = trim($value);
       }
     }
 
@@ -574,7 +580,7 @@ class mediamosa_http {
       case 301: // Moved permanently
       case 302: // Moved temporarily
       case 307: // Moved temporarily
-        $location = $result->headers['Location'];
+        $location = $result->headers['location'];
         $options['timeout'] -= timer_read(__FUNCTION__) / 1000;
         if ($options['timeout'] <= 0) {
           $result->code = HTTP_REQUEST_TIMEOUT;

@@ -126,17 +126,20 @@ class mediamosa_asset_mediafile_upload {
     }
 
     // Update the mediafile.
-    $a_fields = array(
+    $fields = array(
       mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT => mediamosa_configuration_storage::mount_point_get(),
-      mediamosa_asset_mediafile_db::IS_DOWNLOADABLE => 'FALSE',
       mediamosa_asset_mediafile_db::FILENAME => ($is_method_put ? $filename_put : $_FILES['file']['name']),
       mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE => 'TRUE',
       mediamosa_asset_mediafile_db::TRANSCODE_INHERITS_ACL => $transcode_inherits_acl ? mediamosa_asset_mediafile_db::TRANSCODE_INHERITS_ACL_TRUE : mediamosa_asset_mediafile_db::TRANSCODE_INHERITS_ACL_FALSE,
-      mediamosa_asset_mediafile_db::TAG => $tag,
     );
 
+    // Don't overwrite the tag when the tag was not provided.
+    if (!is_null($tag)) {
+      $fields[mediamosa_asset_mediafile_db::TAG] = $tag;
+    }
+
     // Update mediafile.
-    mediamosa_asset_mediafile::update($app_id, $ticket[mediamosa_ticket_db::MEDIAFILE_ID], $ticket[mediamosa_ticket_db::OWNER_ID], $a_fields);
+    mediamosa_asset_mediafile::update($app_id, $ticket[mediamosa_ticket_db::MEDIAFILE_ID], $ticket[mediamosa_ticket_db::OWNER_ID], $fields);
 
     // Update the job.
     mediamosa_job::update_progress_upload($job_id, $file_size);
@@ -256,7 +259,7 @@ class mediamosa_asset_mediafile_upload {
       $ticket[mediamosa_ticket_db::GROUP_ID],
       $order,
       $default,
-      array('still_type' => 'PICTURE'),
+      array('still_type' => mediamosa_asset_mediafile_metadata::STILL_TYPE_PICTURE),
       NULL,
       $mediafile[mediamosa_asset_mediafile_db::ID],
       $tag

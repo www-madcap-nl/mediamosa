@@ -1,5 +1,6 @@
 // $Id: 
 
+
 START CHANGELOG:
 
 Known issues;
@@ -58,7 +59,7 @@ Other changes (not ticket related).
   user.
 - Added extra tests for search on metadata dates.
 - /user/user_id will now return quota even if user_id has no quota information.
-  Old behavour would return invalid user Id error when no quota was available.
+  Old behavour would return invalid user ID error when no quota was available.
   But then you can never get quota information when you haven't uploaded
   anything yet.
 - Fixed maxlength on title for collection creation, was unlimited.
@@ -111,6 +112,49 @@ Other changes (not ticket related).
 - User quota test fails in 32 bits systems bug fix.
 - MySQL query speed improvement: Add mediafile_id_source index to the mediamosa_asset_mediafile table.
 - Rewrote unit test for mediafile metadata test.
+- Fixed notices in asset/$asset_id/acl POST call when no ACL rules were 
+  provided.
+- Drupal 7 header items are now lower-case, fixed Set-Cookie and Content-Type to
+  lower case in code.
+- Added 'is_master_slaved' to CQL search. Returns all assets that are either 
+  masterslaved on the asset or has one or more mediafiles that are masterslaved.
+  Can be used to find assets that are not masterslaved.
+- Extended browse view of asset in admin to show asset AUT rights (was only
+  showing them on mediafiles).
+- Completion URL for transcoding will now correctly trigger with HTTPS when 
+  SSL certificate is not valid.
+- Fixed PHP notice when transcode failed.
+- Fixed unnessary exception logging when testing non-failure db object 
+  existance.
+- User quota test fails in 32 bits systems bug fix.
+- Parameter 'still_type' on all REST calls that use it now required fixed input;
+  'NONE, 'SCENE', 'NORMAL', 'PICTURE', 'SECOND' or ''. Defaults to ''.
+- Refactored some STILL code to better readable code.
+- Fixed 'is_downloadable' option when creating mediafile. Bug ignored the
+  provided setting and was always 'FALSE'.
+- REST call /mediamosa/create [POST] and /asset/$asset_id/mediafile/create 
+  [POST] will now accept a 'tag' parameter. Was only on update calls. 
+- Fixed: Uploading of mediafile would overwrite TAG on Mediafile when TAG was 
+  not supplied.
+- Fixed: The combination URL and URI in mediafile check when IS_DOWNLOADABLE was
+  set to any value in mediafile/create resulted in unnessary exception.
+- Added transactions into metadata save and deletion of asset. Although we need
+  a more extended transaction support on REST calls; rolling back everything
+  during the REST call. This is very tricky; What do we do with any output
+  already generated? Watchdog entries will be rolled back too. Need some more
+  thinking for the global transaction support.
+- The still parameters end_frame and start_frame are now depricated and 
+  REST documentation has been adjusted to promote usage of end_time and 
+  start_time. Also documentation does now explanes parameters as seconds.
+- Fixed reset button on asset browse page.
+- Fixed CQL entry box on asset browse page to get empty when entering an empty 
+  string to clear your CQL.
+- Still parameter 'size' is now default '352x288'.
+- Fixed: CQL search on 'batch_id' used STRING type instead of INT, resulted into
+  wrong search results.
+- Still parameters 'width' and 'height' are now deprecated, use still instead.
+- Fixed: start_frame and end_frame still parameters where not copied to 
+  start_time and end_time when *_time parameters where not used. 
 
 Mediamosa 2.1.5 (build 664)
 ---------------------------
@@ -133,7 +177,7 @@ Other changes (not ticket related)
   software use this)
 - Image generation bug fixed, in some cases ffmpeg generated too many stills
   due to a changed parameter behaviour (vpadding).
-   
+
 
 Mediamosa 2.1.4 (build 628)
 ---------------------------
@@ -410,3 +454,4 @@ MediaMosa.0.0 (released as read-only)
   maintain.
 - Mediafile db field asset_id_root is now deprecated and will be removed in 
   future releases.
+  

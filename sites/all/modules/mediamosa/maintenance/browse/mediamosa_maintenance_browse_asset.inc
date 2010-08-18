@@ -157,7 +157,7 @@ function mediamosa_browse_asset_filter_form() {
 function _ajax_browse_asset_search_parameters() {
 
   // Load the form based upon the $_POST data sent via the ajax call.
-  list($form, $form_state) = ajax_get_form();
+  list($form, $form_state, $form_id, $form_build_id) = ajax_get_form();
 
   // Fix drupal notice.
   $form_state['values'] = isset($form_state['values']) ? $form_state['values'] : array();
@@ -185,12 +185,18 @@ function _mediamosa_browse_asset_searchparameters($form, $form_state = array()) 
 
   $op = isset($form_state['input']['op']) ? $form_state['input']['op'] : '';
 
+  // Ajax input.
+  if (!empty($form_state['input']['_triggering_element_name']) && $form_state['input']['_triggering_element_name'] == 'op') {
+    $op = $form_state['input']['_triggering_element_value'];
+  }
+
   switch ($op) {
     case t('Reset'):
       $session['operator'] = 'and';
       $session['coll_id'] = 0;
       $session['filters'] = array();
       $form_state['input']['filters'] = array();
+      // No break.
 
     case t('Add search item'):
       $form_state['input']['filters'][] = array('item' => '', 'item_value' => '');
@@ -239,7 +245,7 @@ function mediamosa_browse_asset_list_form() {
   drupal_add_css(drupal_get_path('module', 'mediamosa_maintenance') . '/mediamosa_maintenance.css');
 
   $limit = $session['limit'];
-  $page = isset($_GET['page']) ? (int)$_GET['page'] : 0;
+  $page = isset($_GET['page']) ? (int) $_GET['page'] : 0;
   $item_count_total = 0;
 
   $header = array(
@@ -334,7 +340,7 @@ function _mediamosa_browse_asset_execute() {
 
       $coll_id = isset($session['coll_id']) ? $session['coll_id'] : 0;
       if ($coll_id) {
-        $cqls[] = strtr('AND coll_id == "^@coll_id^"', array('@coll_id' => $coll_id));
+        $cqls[] = strtr('!ANDcoll_id == "^@coll_id^"', array('!AND' => (empty($cqls) ? '' : 'AND '), '@coll_id' => $coll_id));
       }
       break;
 
@@ -344,7 +350,7 @@ function _mediamosa_browse_asset_execute() {
   }
 
   // Add sort.
-  $cqls[] = strtr('sortBy @order/@sort', array('@order' => $order, '@sort' => drupal_strtolower($sort) == 'asc' ? 'ascending' : 'descending'));
+  $cqls[] = strtr('sortBy !order/!sort', array('!order' => $order, '!sort' => drupal_strtolower($sort) == 'asc' ? 'ascending' : 'descending'));
 
   // Add params.
   $params['cql'] = implode(' ', $cqls);
@@ -371,7 +377,7 @@ function _mediamosa_browse_asset_session($filter_form_state = array()) {
   }
 
   foreach (array('operator', 'coll_id', 'filters', 'cql', 'op') as $param) {
-    if (!empty($filter_form_state['input'][$param])) {
+    if (isset($filter_form_state['input'][$param])) {
       $session[$param] = $filter_form_state['input'][$param];
     }
   }
@@ -476,8 +482,29 @@ function _mediamosa_browse_asset_page_view_properties($asset) {
     }
   }
 
+  // Uri REST call.
+  $uri = strtr('asset/!asset_id/acl', array('!asset_id' => $asset['asset_id']));
+
+  $result = mediamosa_response_connector::static_do_restcall($uri, 'GET', array('user_id' => $asset['owner_id'], 'app_id' => $asset['app_id']));
+  if (mediamosa_response_connector::static_result_okay($result)) {
+    $rows_aut = array();
+    foreach ($result['items'] as $item_values) {
+      foreach ($item_values as $name => $value) {
+        $rows_aut[$name][] = $value;
+      }
+    }
+
+    $rows_aut2 = array();
+    foreach ($rows_aut as $name => $values) {
+      $rows_aut2[] = array(t(_mediamosa_browse_fix_metadata_name($name)), implode(', ', $values));
+    }
+
+    $variables['properties'][t('Autorisarion rules')] = array('html' => TRUE, 'data' => theme('table', array('rows' => $rows_aut2)));
+  }
+
   return theme('mediamosa_maintenance_browse_properties', $variables);
 }
+
 
 /**
  * Build the job list.

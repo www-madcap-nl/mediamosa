@@ -241,7 +241,6 @@ class mediamosa_job_server {
       mediamosa_job_server_still_db::V_PADDING => $v_padding,
       mediamosa_job_server_still_db::BLACKSTILL_CHECK => ($blackstill_check ? mediamosa_job_server_still_db::BLACKSTILL_CHECK_TRUE : mediamosa_job_server_still_db::BLACKSTILL_CHECK_FALSE),
       mediamosa_job_server_still_db::STILL_PARAMETERS => serialize($a_still_parameters)
-
     );
 
     // Enrich with created time.
@@ -757,97 +756,82 @@ class mediamosa_job_server {
    */
   static public function get_still_string($jobserver_job_id, $mediafile_id) {
 
-    $a_job_server_still = mediamosa_job_server_still::get($jobserver_job_id);
-    $a_job_server = mediamosa_job_server::get($jobserver_job_id);
-    $job_id = $a_job_server[mediamosa_job_server_db::JOB_ID];
+    $job_server_still = mediamosa_job_server_still::get($jobserver_job_id);
+    $job_server = mediamosa_job_server::get($jobserver_job_id);
+    $job_id = $job_server[mediamosa_job_server_db::JOB_ID];
 
-    $execution_string = "";
+    $execution_string = '';
 
-    if ($a_job_server_still) {
-      $frametime = $a_job_server_still[mediamosa_job_server_still_db::FRAMETIME];
-      $size = $a_job_server_still[mediamosa_job_server_still_db::SIZE];
-      $h_padding = $a_job_server_still[mediamosa_job_server_still_db::H_PADDING];
-      $v_padding = $a_job_server_still[mediamosa_job_server_still_db::V_PADDING];
+    if ($job_server_still) {
+      $frametime = (int) $job_server_still[mediamosa_job_server_still_db::FRAMETIME];
+      $size = $job_server_still[mediamosa_job_server_still_db::SIZE];
+      $h_padding = $job_server_still[mediamosa_job_server_still_db::H_PADDING];
+      $v_padding = $job_server_still[mediamosa_job_server_still_db::V_PADDING];
 
-      $still_parameters = unserialize($a_job_server_still[mediamosa_job_server_still_db::STILL_PARAMETERS]);
-      $video_duration = $still_parameters['video_duration'];
-      $fps = $still_parameters['fps'];
-      $start_frame = $still_parameters['start_frame'];
-      $end_frame = $still_parameters['end_frame'];
-      if (!$start_frame || !is_numeric($start_frame) || $start_frame < 0) {
-        $start_frame = 0;
+      $still_parameters = unserialize($job_server_still[mediamosa_job_server_still_db::STILL_PARAMETERS]);
+      $fps = (int) $still_parameters['fps'];
+      $video_duration = (int) $still_parameters['video_duration'];
+      $start_frame = min(max(0, (int) $still_parameters['start_frame']), max(0, $video_duration - 1));
+      $end_frame = min(max(0, (int) $still_parameters['end_frame']), max(0, $video_duration - 1));
+
+      // Make sure start and end are in the correct order from low to high.
+      $start_frame_cpy = $start_frame;
+      $start_frame = min($start_frame, $end_frame);
+      $end_frame = max($start_frame_cpy, $end_frame);
+
+      // When video_duration is 0, then fall back to the original behaviour.
+      if (!$video_duration) {
+        $still_parameters['still_type'] = mediamosa_asset_mediafile_metadata::STILL_TYPE_NONE;
       }
-      //$ef = $video_duration * $fps;
-      if (!$end_frame || !is_numeric($end_frame) || $end_frame > $video_duration-1) {
-        $end_frame = $video_duration-1;
-      }
-      if ($start_frame > $video_duration-1) {
-        $start_frame = $video_duration-1;
-      }
-      if ($end_frame < 0) {
-        $end_frame = 0;
-      }
-      if (!$video_duration || !is_numeric($video_duration)) {
-        // An error, falls back to the original behaviour
-        $still_parameters['still_type'] = 'NONE';
-      }
-      if ($start_frame > $end_frame) {
-        $tmp = $start_frame;
-        $start_frame = $end_frame;
-        $end_frame = $tmp;
-      }
+
+      // Make sure still_type is uppercase.
+      $still_parameters['still_type'] = mediamosa_unicode::strtoupper($still_parameters['still_type']);
 
       // Data check
-
-      // Set to null so we know we have set it.
-      $error_description = NULL;
-
-      switch (mediamosa_unicode::strtoupper($still_parameters['still_type'])) {
+      switch ($still_parameters['still_type']) {
         case 'NORMAL':
           if (!is_numeric($still_parameters['still_per_mediafile']) || $still_parameters['still_per_mediafile'] < 1) {
-            $still_parameters['still_type'] = 'NONE';
-            $error_description = "Still_per_mediafile parameter is missing. Still creation fall back to still_type = 'NONE'";
+            $still_parameters['still_type'] = mediamosa_asset_mediafile_metadata::STILL_TYPE_NONE;
+            $error_description = 'Still_per_mediafile parameter is missing. Still creation fall back to still_type = mediamosa_asset_mediafile_metadata::STILL_TYPE_NONE';
           }
           break;
+
         case 'SECOND':
           if (!is_numeric($still_parameters['still_every_second']) || $still_parameters['still_every_second'] < 0) {
-            $still_parameters['still_type'] = 'NONE';
-            $error_description = "Still_every_second parameter is missing. Still creation fall back to still_type = 'NONE'";
+            $still_parameters['still_type'] = mediamosa_asset_mediafile_metadata::STILL_TYPE_NONE;
+            $error_description = 'Still_every_second parameter is missing. Still creation fall back to still_type = mediamosa_asset_mediafile_metadata::STILL_TYPE_NONE';
           }
           break;
+
         case 'SCENE':
-          if (!$fps || !is_numeric($fps)) {
-            $still_parameters['still_type'] = 'NONE';
-            $error_description = "Fps parameter in not numeric. Still creation fall back to still_type = 'NONE'";
+          if (!$fps) {
+            $still_parameters['still_type'] = mediamosa_asset_mediafile_metadata::STILL_TYPE_NONE;
+            $error_description = 'FPS parameter is 0. Still creation fall back to still_type = mediamosa_asset_mediafile_metadata::STILL_TYPE_NONE';
           }
           break;
+
         default:
           break;
       }
 
       // Store error_description.
-      if (isset($error_description)) {
+      if (!empty($error_description)) {
         self::log($error_description);
-        mediamosa_db::db_query(
-          'UPDATE {#mediamosa_job_server}
-           SET #error_description = :error_description
-           WHERE #jobserver_job_id = :jobserver_job_id',
-          array(
-            '#mediamosa_job_server' => mediamosa_job_server_db::TABLE_NAME,
-            '#error_description' => mediamosa_job_server_db::ERROR_DESCRIPTION,
-            '#jobserver_job_id' => mediamosa_job_server_db::ID,
-            ':error_description' => $error_description,
-            ':jobserver_job_id' => $jobserver_job_id,
-          )
-        );
+        mediamosa_db::db_update(mediamosa_job_server_db::TABLE_NAME)
+          ->fields(array(
+            mediamosa_job_server_db::ERROR_DESCRIPTION => $error_description,
+          ))
+          ->condition(mediamosa_job_server_db::ID, $jobserver_job_id)
+          ->execute();
       }
 
-      // Security check and base values
-      if (!is_numeric($frametime) || $frametime < $start_frame || $frametime > $end_frame) {
-        $frametime = $start_frame + ($end_frame - $start_frame) / 3;
+      // Frametime but be between start and end frame. Put it roughly 1 / 3 in
+      // length.
+      if ($frametime < $start_frame || $frametime > $end_frame) {
+        $frametime = (($end_frame - $start_frame) / 3) + $start_frame;
       }
-      $duration = 1;
-      $framerate = 1;
+
+      $duration = $framerate = 1;
 
       switch (mediamosa_unicode::strtoupper($still_parameters['still_type'])) {
 
@@ -866,29 +850,27 @@ class mediamosa_job_server {
           $frametime += $framesecond;
           $duration -= $framesecond;
           // Frames per second
-          $framerate = 1/$framesecond;
+          $framerate = 1 / $framesecond;
           // Safety check
           if ($duration / $framesecond > mediamosa_settings::STILL_MAXIMUM) {
             $duration = mediamosa_settings::STILL_MAXIMUM * $framesecond;
           }
           break;
+
         case 'SECOND':
           $still_every_second = $still_parameters['still_every_second'];
           $frametime = $start_frame;
           $duration = ($end_frame - $start_frame);
-          //
-          //$frametime += $still_every_second;
-          //$duration -= $still_every_second;
-          $framerate = 1/$still_every_second;
+          $framerate = 1 / $still_every_second;
           // Safety check
           if ($duration / $still_every_second > mediamosa_settings::STILL_MAXIMUM) {
             $duration = mediamosa_settings::STILL_MAXIMUM * $still_every_second;
           }
           break;
+
         case 'SCENE':
           self::log('Scene detection starts');
           $destination_path = mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::data_location_get() . DIRECTORY_SEPARATOR . 'transcode' . DIRECTORY_SEPARATOR;
-          //self::log(sprintf('Scene: destination path = %s', $destination_path));
           $input = mediamosa_configuration_storage::mediafile_id_filename_get($mediafile_id);
 
           // Clean up I.
@@ -1259,7 +1241,7 @@ class mediamosa_job_server {
     // Generate the filename.
     $new_filename = mediamosa_db::uuid(rand (1, 9999));
 
-    $a_job_server = mediamosa_db::db_query(
+    $job_server = mediamosa_db::db_query(
       'SELECT mjst.#command, mjst.#file_extension
        FROM {#mediamosa_job_server_transcode} AS mjst
        JOIN {#mediamosa_job_server} AS mjs ON mjs.#jobserver_job_id = mjst.#jobserver_job_id
@@ -1275,13 +1257,13 @@ class mediamosa_job_server {
       )
     )->fetchAssoc();
 
-    if ($a_job_server == FALSE) {
+    if ($job_server == FALSE) {
       self::log('Transcode job not fould for job with ID @job_id', array('@job_id' => $job_id));
       return;
     }
 
     // Get file extension.
-    $file_extension = $a_job_server[mediamosa_job_server_transcode_db::FILE_EXTENSION];
+    $file_extension = $job_server[mediamosa_job_server_transcode_db::FILE_EXTENSION];
 
     // If extension is RAW, attach it to the filename.
     if ($file_extension == mediamosa_job::JOBRAW_FILE_EXTENSION) {

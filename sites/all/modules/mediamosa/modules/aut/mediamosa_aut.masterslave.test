@@ -287,5 +287,29 @@ class MediaMosaAutMasterSlaveTestCaseEga extends MediaMosaTestCaseEga {
 
     // All with 'aap' in title slave with granted = TRUE (give all, even when not access)
     $this->cql_do_search_test_assets_1('aap', array($asset_id_1 => TRUE, $asset_id_3 => TRUE, $asset_id_5 => TRUE), array(), 'johndoe', FALSE, 'groennet.nl', FALSE);
+/*
+    // Remove all rights.
+    $this->toEga_1();
+    $this->deleteMediafileAut($mediafile_id_1);
+    $this->deleteMediafileAut($mediafile_id_3);
+    $this->deleteMediafileAut($mediafile_id_4);
+
+    $this->toEga_2();
+    $this->deleteMediafileAut($mediafile_id_2);
+    $this->deleteMediafileAut($mediafile_id_5);
+    $this->deleteMediafileAut($mediafile_id_6);
+
+    // All with 'aap' in title.
+    $this->cql_do_search_test_assets_1('aap', array($asset_id_1 => TRUE, $asset_id_3 => TRUE));
+
+    // Do master/slave check on asset (previous check was on mediafiles).
+    $this->toEga_2();
+    $this->setAssetAut($asset_id_5, array('aut_app' => array($app_id_1)));
+
+    // Now lets see if we see the asset as EGA1
+    // All with 'aap' in title.
+    $this->cql_do_search_test_assets_1('aap', array($asset_id_1 => TRUE, $asset_id_3 => TRUE, $asset_id_5 => TRUE));
+*/
   }
+
 }

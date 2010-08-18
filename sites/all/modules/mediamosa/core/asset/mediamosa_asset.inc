@@ -112,154 +112,170 @@ class mediamosa_asset {
    */
   static public function delete($asset_id, $cascade = TRUE) {
 
-    // @todo: start of transaction?
+    // Start transaction.
+    $transaction = mediamosa_db::db_transaction();
 
-    // Find all my asset children.
-    // @todo: parent_id no longer used (is always NULL).
-    $asset_ids = mediamosa_db::db_query(
-      'SELECT #asset_id FROM {#mediamosa_asset} WHERE #parent_id = :asset_id',
-      array(
-        '#asset_id' => mediamosa_asset_db::ID,
-        '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
-        '#parent_id' => mediamosa_asset_db::PARENT_ID,
-        ':asset_id' => $asset_id,
-      )
-    )->fetchCol();
+    try {
+      // Find all my asset children.
+      // @todo: parent_id no longer used (is always NULL).
+      $asset_ids = mediamosa_db::db_query(
+        'SELECT #asset_id FROM {#mediamosa_asset} WHERE #parent_id = :asset_id',
+        array(
+          '#asset_id' => mediamosa_asset_db::ID,
+          '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
+          '#parent_id' => mediamosa_asset_db::PARENT_ID,
+          ':asset_id' => $asset_id,
+        )
+      )->fetchCol();
 
-    // Add me (last).
-    $asset_ids[] = $asset_id;
+      // Add me (last).
+      $asset_ids[] = $asset_id;
 
-    // Find all mediafiles (except stills, they dont count for cascade mode.).
-    $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
-    $query->addField('mf', mediamosa_asset_mediafile_db::ID);
-    $query->condition(mediamosa_asset_mediafile_db::ASSET_ID, $asset_ids, 'IN');
-    $query->condition(mediamosa_asset_mediafile_db::IS_STILL, mediamosa_asset_mediafile_db::IS_STILL_FALSE);
-    $mediafile_ids = $query->execute()->fetchCol();
+      // Find all mediafiles (except stills, they dont count for cascade mode.).
+      $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
+      $query->addField('mf', mediamosa_asset_mediafile_db::ID);
+      $query->condition(mediamosa_asset_mediafile_db::ASSET_ID, $asset_ids, 'IN');
+      $query->condition(mediamosa_asset_mediafile_db::IS_STILL, mediamosa_asset_mediafile_db::IS_STILL_FALSE);
+      $mediafile_ids = $query->execute()->fetchCol();
 
-    // Any mediafiles left and casade off?
-    if (count($mediafile_ids) && !$cascade) {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_ASSET_NOT_EMPTY, array('@mediafile_count' => count($mediafile_ids)));
-    }
-
-    // Remove all jobs.
-    foreach ($asset_ids as $asset_id) {
-      if (!mediamosa_asset::delete_jobs($asset_id)) {
-        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_JOBS_COULD_NOT_BE_STOPPED);
+      // Any mediafiles left and casade off?
+      if (count($mediafile_ids) && !$cascade) {
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_ASSET_NOT_EMPTY, array('@mediafile_count' => count($mediafile_ids)));
       }
-    }
 
-    // Check the temporary wmv files
-    $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
-    $query->addField('mf', mediamosa_asset_mediafile_db::ID);
-    $query->condition(mediamosa_asset_mediafile_db::ASSET_ID, $asset_ids, 'IN');
-    $query->condition(mediamosa_asset_mediafile_db::IS_STILL, mediamosa_asset_mediafile_db::IS_STILL_FALSE);
-    $query->condition(mediamosa_asset_mediafile_db::ID, '%.avi', 'LIKE');
-    $mediafile_ids = $query->execute()->fetchCol();
-    if (count($mediafile_ids)) {
-      // Delete the temporary wmv files
-      mediamosa_asset_mediafile::delete($mediafile_ids);
-    }
-    unset($mediafile_ids);
+      // Remove all jobs.
+      foreach ($asset_ids as $asset_id) {
+        $result = FALSE;
 
-    // Remove all metadata of the asset.
-    $query = mediamosa_db::db_delete(mediamosa_asset_metadata_db::TABLE_NAME);
-    $query->condition(mediamosa_asset_metadata_db::ASSET_ID, $asset_id);
-    $query->execute();
+        try {
+          $result = mediamosa_asset::delete_jobs($asset_id);
+        }
+        catch (Exception $e) {
+        }
 
-    // Find all mediafiles.
-    $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
-    $query->addField('mf', mediamosa_asset_mediafile_db::ID);
-    $query->condition(mediamosa_asset_mediafile_db::ASSET_ID, $asset_id);
-    $mediafile_ids = $query->execute()->fetchCol();
+        if (!$result) {
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_JOBS_COULD_NOT_BE_STOPPED);
+        }
+      }
 
-    // Delete the mediafiles.
-    if (count($mediafile_ids)) {
-      mediamosa_asset_mediafile::delete($mediafile_ids);
-    }
+      // Check the temporary wmv files
+      $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
+      $query->addField('mf', mediamosa_asset_mediafile_db::ID);
+      $query->condition(mediamosa_asset_mediafile_db::ASSET_ID, $asset_ids, 'IN');
+      $query->condition(mediamosa_asset_mediafile_db::IS_STILL, mediamosa_asset_mediafile_db::IS_STILL_FALSE);
+      $query->condition(mediamosa_asset_mediafile_db::ID, '%.avi', 'LIKE');
+      $mediafile_ids = $query->execute()->fetchCol();
+      if (count($mediafile_ids)) {
+        // Delete the temporary wmv files
+        mediamosa_asset_mediafile::delete($mediafile_ids);
+      }
+      unset($mediafile_ids);
 
-    // Remove my stats.
-    mediamosa_statistics::delete_by_asset_id($asset_id);
+      // Remove all metadata of the asset.
+      $query = mediamosa_db::db_delete(mediamosa_asset_metadata_db::TABLE_NAME);
+      $query->condition(mediamosa_asset_metadata_db::ASSET_ID, $asset_id);
+      $query->execute();
 
-    // Find my children.
-    $result = mediamosa_db::db_query(
-      "SELECT asset_id FROM {#mediamosa_asset} WHERE parent_id = :asset_id",
-      array(
-        '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
-        ':asset_id' => $asset_id
-      )
-    );
+      // Find all mediafiles.
+      $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf');
+      $query->addField('mf', mediamosa_asset_mediafile_db::ID);
+      $query->condition(mediamosa_asset_mediafile_db::ASSET_ID, $asset_id);
+      $mediafile_ids = $query->execute()->fetchCol();
 
-    // Foreach my children and call myself again.
-    foreach ($result as $child_asset_id) {
-      mediamosa_asset::delete($child_asset_id);
-    }
+      // Delete the mediafiles.
+      if (count($mediafile_ids)) {
+        mediamosa_asset_mediafile::delete($mediafile_ids);
+      }
 
-    // Now we removed our children, lets remove us.
-    $app_id = mediamosa_db::db_query(
-      "SELECT #app_id FROM {#mediamosa_asset} WHERE #asset_id = :asset_id",
-      array(
-        '#app_id' => mediamosa_asset_db::APP_ID,
-        '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
-        '#asset_id' => mediamosa_asset_db::ID,
-        ':asset_id' => $asset_id
-      )
-    )->fetchField();
+      // Remove my stats.
+      mediamosa_statistics::delete_by_asset_id($asset_id);
 
-    // Find my collections.
-    $result = mediamosa_db::db_query(
-      "SELECT #coll_id FROM {#mediamosa_collection} WHERE #asset_id = :asset_id",
-      array(
-        '#coll_id' => mediamosa_asset_collection_db::COLL_ID,
-        '#mediamosa_collection' => mediamosa_asset_collection_db::TABLE_NAME,
-        '#asset_id' => mediamosa_asset_collection_db::ASSET_ID,
-        ':asset_id' => $asset_id
-      )
-    )->fetchCol();
-
-    // Foreach my collection.
-    $is_coll = FALSE;
-    foreach ($result as $collection_id) {
-      $is_coll = TRUE;
-      // Create entry in the mediamosa_asset_delete table.
-      mediamosa_db::db_query(
-        "REPLACE LOW_PRIORITY {#mediamosa_asset_delete} (#asset_id, #app_id, #videotimestampmodified, #coll_id) VALUES (:asset_id, :app_id, :now, :coll_id)",
+      // @TODO: parent_id is no longer used.
+      // Find my children.
+      $result = mediamosa_db::db_query(
+        "SELECT asset_id FROM {#mediamosa_asset} WHERE parent_id = :asset_id",
         array(
-          '#mediamosa_asset_delete' => mediamosa_asset_delete_db::TABLE_NAME,
-          '#asset_id' => mediamosa_asset_delete_db::ID,
-          '#app_id' => mediamosa_asset_delete_db::APP_ID,
-          '#videotimestampmodified' => mediamosa_asset_delete_db::VIDEOTIMESTAMPMODIFIED,
-          '#coll_id' => mediamosa_asset_delete_db::COLL_ID,
-          ':asset_id' => $asset_id,
-          ':app_id' => $app_id,
-          ':coll_id' => $collection_id,
-          ':now' => mediamosa::db_current_timestamp_now(),
+          '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
+          ':asset_id' => $asset_id
         )
       );
-    }
-    if (!$is_coll) {
-      // Create entry in the mediamosa_asset_delete table.
-      mediamosa_db::db_query(
-        "REPLACE LOW_PRIORITY {#mediamosa_asset_delete} (#asset_id, #app_id, #videotimestampmodified, #coll_id) VALUES (:asset_id, :app_id, :now, '')",
+
+      // Foreach my children and call myself again.
+      foreach ($result as $child_asset_id) {
+        mediamosa_asset::delete($child_asset_id);
+      }
+
+      // Now we removed our children, lets remove us.
+      $app_id = mediamosa_db::db_query(
+        "SELECT #app_id FROM {#mediamosa_asset} WHERE #asset_id = :asset_id",
         array(
-          '#mediamosa_asset_delete' => mediamosa_asset_delete_db::TABLE_NAME,
-          '#asset_id' => mediamosa_asset_delete_db::ID,
-          '#app_id' => mediamosa_asset_delete_db::APP_ID,
-          '#videotimestampmodified' => mediamosa_asset_delete_db::VIDEOTIMESTAMPMODIFIED,
-          '#coll_id' => mediamosa_asset_delete_db::COLL_ID,
-          ':asset_id' => $asset_id,
-          ':app_id' => $app_id,
-          ':now' => mediamosa::db_current_timestamp_now(),
+          '#app_id' => mediamosa_asset_db::APP_ID,
+          '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
+          '#asset_id' => mediamosa_asset_db::ID,
+          ':asset_id' => $asset_id
         )
-      );
+      )->fetchField();
+
+      // Find my collections.
+      $result = mediamosa_db::db_query(
+        "SELECT #coll_id FROM {#mediamosa_collection} WHERE #asset_id = :asset_id",
+        array(
+          '#coll_id' => mediamosa_asset_collection_db::COLL_ID,
+          '#mediamosa_collection' => mediamosa_asset_collection_db::TABLE_NAME,
+          '#asset_id' => mediamosa_asset_collection_db::ASSET_ID,
+          ':asset_id' => $asset_id
+        )
+      )->fetchCol();
+
+      // Foreach my collection.
+      $is_coll = FALSE;
+      foreach ($result as $collection_id) {
+        $is_coll = TRUE;
+        // Create entry in the mediamosa_asset_delete table.
+        mediamosa_db::db_query(
+          "REPLACE LOW_PRIORITY {#mediamosa_asset_delete} (#asset_id, #app_id, #videotimestampmodified, #coll_id) VALUES (:asset_id, :app_id, :now, :coll_id)",
+          array(
+            '#mediamosa_asset_delete' => mediamosa_asset_delete_db::TABLE_NAME,
+            '#asset_id' => mediamosa_asset_delete_db::ID,
+            '#app_id' => mediamosa_asset_delete_db::APP_ID,
+            '#videotimestampmodified' => mediamosa_asset_delete_db::VIDEOTIMESTAMPMODIFIED,
+            '#coll_id' => mediamosa_asset_delete_db::COLL_ID,
+            ':asset_id' => $asset_id,
+            ':app_id' => $app_id,
+            ':coll_id' => $collection_id,
+            ':now' => mediamosa::db_current_timestamp_now(),
+          )
+        );
+      }
+      if (!$is_coll) {
+        // Create entry in the mediamosa_asset_delete table.
+        mediamosa_db::db_query(
+          "REPLACE LOW_PRIORITY {#mediamosa_asset_delete} (#asset_id, #app_id, #videotimestampmodified, #coll_id) VALUES (:asset_id, :app_id, :now, '')",
+          array(
+            '#mediamosa_asset_delete' => mediamosa_asset_delete_db::TABLE_NAME,
+            '#asset_id' => mediamosa_asset_delete_db::ID,
+            '#app_id' => mediamosa_asset_delete_db::APP_ID,
+            '#videotimestampmodified' => mediamosa_asset_delete_db::VIDEOTIMESTAMPMODIFIED,
+            '#coll_id' => mediamosa_asset_delete_db::COLL_ID,
+            ':asset_id' => $asset_id,
+            ':app_id' => $app_id,
+            ':now' => mediamosa::db_current_timestamp_now(),
+          )
+        );
+      }
+
+      // Remove the asset from each collection.
+      mediamosa_asset_collection::delete($asset_id);
+
+      // Now delete the asset.
+      $query = mediamosa_db::db_delete(mediamosa_asset_db::TABLE_NAME);
+      $query->condition(mediamosa_asset_db::ID, $asset_id);
+      $query->execute();
     }
-
-    // Remove the asset from each collection.
-    mediamosa_asset_collection::delete($asset_id);
-
-    // Now delete the asset.
-    $query = mediamosa_db::db_delete(mediamosa_asset_db::TABLE_NAME);
-    $query->condition(mediamosa_asset_db::ID, $asset_id);
-    $query->execute();
+    catch (Exception $e) {
+      $transaction->rollback();
+      throw $e;
+    }
   }
 
   /**

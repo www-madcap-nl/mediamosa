@@ -1122,6 +1122,7 @@ class mediamosa_rest_call_aut_asset_set_rights extends mediamosa_rest_call {
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'Application(s) that get acces to the asset.',
+      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::AUT_USER] = array(
@@ -1129,6 +1130,7 @@ class mediamosa_rest_call_aut_asset_set_rights extends mediamosa_rest_call {
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'User(s) that get acces to the asset.',
+      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::AUT_GROUP] = array(
@@ -1136,6 +1138,7 @@ class mediamosa_rest_call_aut_asset_set_rights extends mediamosa_rest_call {
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'Group(s) that get acces to the asset.',
+      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::AUT_DOMAIN] = array(
@@ -1143,6 +1146,7 @@ class mediamosa_rest_call_aut_asset_set_rights extends mediamosa_rest_call {
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'Domain(s) that get acces to the asset.',
+      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::AUT_REALM] = array(
@@ -1150,6 +1154,7 @@ class mediamosa_rest_call_aut_asset_set_rights extends mediamosa_rest_call {
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'Realm(s) that get acces to the asset.',
+      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
     );
 
     // alias.
@@ -1158,6 +1163,7 @@ class mediamosa_rest_call_aut_asset_set_rights extends mediamosa_rest_call {
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'Alias of aut_user. If both are set, aut_user has priority.',
+      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
     );
 
     // alias.
@@ -1166,6 +1172,7 @@ class mediamosa_rest_call_aut_asset_set_rights extends mediamosa_rest_call {
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'Alias of aut_group. If both are set, aut_group has priority.',
+      mediamosa_rest_call::VAR_DEFAULT_VALUE => array(),
     );
 
     // Enrich with required REST vars.

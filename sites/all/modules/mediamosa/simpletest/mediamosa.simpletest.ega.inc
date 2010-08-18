@@ -2283,6 +2283,115 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   }
 
   /**
+   * Updates ACL/AUT rights on mediafile
+   * Based on the REST call /mediafile/$mediafile_id/acl (POST)
+   *
+   * mediafile_id
+   * user_id      must match the owner fo the mediafile.
+   * replace      Standard is TRUE. Define if 'FALSE' if you want to keep the old rights.
+   * aut_app[]    application(s) that gain access to the mediafile
+   * aut_user[]   user(s) that gain access to the mediafile
+   * aut_group[]  group(s) that gain access to the mediafile
+   * aut_domain[] domein(s) that gain access to the mediafile
+   * aut_realm[]  realm(s) that gain access to the mediafile
+   *
+   */
+  protected function setAssetAut($asset_id, array $a_parameters = array(), $description = 'Setting ACL on asset', array $a_expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    // Parameters asset.
+    $a_parameters += array(
+      mediamosa_rest_call_aut_asset_set_rights::USER_ID => self::SIMPLETEST_USER_ID,
+      mediamosa_rest_call_aut_asset_set_rights::REPLACE => 'true',
+    );
+
+    // The uri.
+    $uri = strtr('asset/!asset_id/acl', array('!asset_id' => $asset_id));
+
+    // Do Post call, the call itself should not fail, even when we dont have access in some cases.
+    $response = $this->restCallPost($uri, $a_parameters, array(), $expected_result_ids, $do_internal);
+
+    // Test return status.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $expected_result_ids),
+      strtr(
+        "@description: @asset_id, got result @result (@result_description)",
+        array(
+          '@description' => $description,
+          '@asset_id' => $asset_id,
+          '@result' => (string)$response['xml']->header->request_result_id,
+          '@result_description' => (string)$response['xml']->header->request_result_description
+        )
+      )
+    );
+
+    // Convert to nice array.
+    $a_xml = mediamosa_lib::responsexml2array($response['xml']);
+
+    if (!isset($a_xml['items']['item']) || empty($a_xml['items']['item'])) {
+      $this->assertTrue(empty($a_expected_results), 'Nothing changed, must expect nothing too.');
+      return $a_xml;
+    }
+
+    // Get the result.
+    $a_items = $a_xml['items']['item'];
+
+    // First check if we found result about our input.
+    foreach ($a_parameters as $type => $a_changes) {
+      if (!in_array($type, array('aut_app', 'aut_user', 'aut_group', 'aut_domain', 'aut_realm'))) {
+        continue;
+      }
+
+      $found = FALSE;
+      foreach ($a_items as $a_item) {
+        if (isset($a_item[$type])) {
+          $found = TRUE;
+
+          if (!isset($a_expected_results[$type][$a_item[$type]['value']])) {
+            $a_expected_results[$type][$a_item[$type]['value']] = mediamosa_error::ERRORCODE_OKAY;
+          }
+
+          break;
+        }
+      }
+
+      // Must be found, no matter what outcome.
+      $this->assertTrue($found, strtr('Found type @type in result.', array('@type' => $type)));
+    }
+
+    // Now check if all results we got, also match what we expected.
+    foreach ($a_expected_results as $type => $a_expected_result) {
+      foreach ($a_items as $a_item) {
+        if (isset($a_item[$type])) {
+          foreach ($a_expected_result as $value => $result_code) {
+            if ($a_item[$type]['value'] == $value) {
+              $this->assertTrue(
+                is_array($result_code) ? in_array($a_item[$type]['result_id'], $result_code) : $a_item[$type]['result_id'] == $result_code,
+                strtr('Change on @type, expecting code @result_code, got @item_result_code',
+                  array(
+                    '@type' => $type,
+                    '@result_code' => $result_code,
+                    '@item_result_code' => $a_item[$type]['result_id']
+                  )
+                )
+              );
+            }
+          }
+        }
+      }
+    }
+
+    // Return the array XML.
+    return $a_xml;
+  }
+
+  /**
+   * Same as setAssetAut, except will add to rights and not replace.
+   */
+  protected function addAssetAut($asset_id, array $a_parameters = array(), $description = 'Adding ACL on asset', array $a_expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    $a_parameters[mediamosa_rest_call_aut_asset_set_rights::REPLACE] = 'false';
+    $this->setAssetAut($asset_id, $a_parameters, $description, $a_expected_results, $expected_result_ids, $do_internal);
+  }
+
+  /**
    * Updates ACL/AUT rights on collection
    * Based on the REST call /collection/$coll_id/acl (POST)
    *
@@ -2645,7 +2754,6 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
   /**
    * Delete ACL rights on mediafile.
-   * Based on the REST call /asset/$asset_id/supplement/$supplement_id/delete (POST)
    */
   protected function deleteMediafileAut($mediafile_id, array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
@@ -2654,7 +2762,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     );
 
     // The uri.
-    $uri = strtr('mediafile/@mediafile_id/acl/delete', array('@mediafile_id' => $mediafile_id));
+    $uri = strtr('mediafile/!mediafile_id/acl/delete', array('!mediafile_id' => $mediafile_id));
 
     // Do Post call.
     $response = $this->restCallPost($uri, $a_parameters, array(), $expected_result_ids, $do_internal);
@@ -2672,9 +2780,61 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       )
     );
 
+    // Get the ACL rights to be sure its really gone.
+
+    // The uri.
+    $uri = strtr('mediafile/!mediafile_id/acl', array('!mediafile_id' => $mediafile_id));
+
+    // Do Post call.
+    $response = $this->restCallGet($uri, $a_parameters, array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT), $do_internal);
+    $items = (array)$response['xml']->items;
+
+    $this->assertTrue(empty($items), 'ACL rights on mediafile are really gone.');
+
     return $response;
   }
 
+  /**
+   * Delete ACL rights on asset.
+   */
+  protected function deleteAssetAut($asset_id, array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    // Parameters asset.
+    $a_parameters += array(
+      mediamosa_rest_call_aut_mediafile_delete_rights::USER_ID => self::SIMPLETEST_USER_ID,
+    );
+
+    // The uri.
+    $uri = strtr('asset/!asset_id/acl/delete', array('!asset_id' => $asset_id));
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $a_parameters, array(), $expected_result_ids, $do_internal);
+
+    // Test return status.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $expected_result_ids),
+      strtr(
+        "Removed ACL rights from asset @asset_id, got result @result (@result_description)",
+        array(
+          '@asset_id' => $asset_id,
+          '@result' => (string)$response['xml']->header->request_result_id,
+          '@result_description' => (string)$response['xml']->header->request_result_description
+        )
+      )
+    );
+
+    // Get the ACL rights to be sure its really gone.
+
+    // The uri.
+    $uri = strtr('asset/!asset_id/acl', array('!asset_id' => $asset_id));
+
+    // Do Post call.
+    $response = $this->restCallGet($uri, $a_parameters, array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT), $do_internal);
+    $items = (array)$response['xml']->items;
+
+    $this->assertTrue(empty($items), 'ACL rights on asset are really gone.');
+
+    return $response;
+  }
   /**
    * Delete ACL rights on mediafile.
    * Based on the REST call /asset/$asset_id/supplement/$supplement_id/delete (POST)

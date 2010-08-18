@@ -42,23 +42,27 @@ class mediamosa_aut_object {
     switch ($aut_type) {
       case mediamosa_aut::AUT_TYPE_MEDIAFILE:
         $on = 'mf.mediafile_id';
+        $alias = 'aut_obj';
         break;
       case mediamosa_aut::AUT_TYPE_COLLECTION:
         $on = 'c.coll_id';
+        $alias = 'aut_obj';
         break;
       case mediamosa_aut::AUT_TYPE_ASSET:
         $on = 'a.asset_id';
+        $alias = 'aut_obja';
         break;
       default:
         throw new mediamosa_exception_program_error('Unknown type used in mediamosa_aut_object::join_aut_object_get');
     }
 
     return strtr(
-      "LEFT JOIN {#aut_object} AS aut_obj ON aut_obj.aut_object_type = '#aut_type' AND #on = aut_obj.aut_object_id",
+      "LEFT JOIN {#aut_object} AS #alias ON #alias.aut_object_type = '#aut_type' AND #on = #alias.aut_object_id",
       array(
         '#aut_object' => mediamosa_aut_object_db::TABLE_NAME,
         '#aut_type' => $aut_type,
-        '#on' => $on
+        '#on' => $on,
+        '#alias' => $alias,
       )
     );
   }

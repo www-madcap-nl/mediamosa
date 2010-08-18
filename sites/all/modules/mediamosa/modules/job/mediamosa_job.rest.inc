@@ -91,6 +91,15 @@ class mediamosa_rest_call_job_set_status extends mediamosa_rest_call {
         self::STILL_TYPE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The still type.',
+          self::VAR_ALLOWED_VALUES => array(
+            mediamosa_asset_mediafile_metadata::STILL_TYPE_NONE,
+            //mediamosa_asset_mediafile_metadata::STILL_TYPE_PICTURE,
+            mediamosa_asset_mediafile_metadata::STILL_TYPE_SCENE,
+            mediamosa_asset_mediafile_metadata::STILL_TYPE_SECOND,
+            mediamosa_asset_mediafile_metadata::STILL_TYPE_NORMAL,
+            '',
+          ),
+          self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_metadata::STILL_TYPE_NONE,
         ),
         self::STILL_PER_MEDIAFILE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
@@ -111,6 +120,7 @@ class mediamosa_rest_call_job_set_status extends mediamosa_rest_call {
         self::SIZE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_STRING,
           self::VAR_DESCRIPTION => 'Size of the still.',
+          self::VAR_DEFAULT_VALUE => mediamosa_settings::STILL_DEFAULT_SIZE,
         ),
         self::H_PADDING => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
@@ -193,7 +203,7 @@ class mediamosa_rest_call_job_analyse_mediafile extends mediamosa_rest_call {
   const USER_ID = 'user_id';
   const NO_HINT = 'no_hint';
 
-  // ------------------------------------------------------------------ Get Var Setup.
+  // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
     $a_var_setup = array();
 
@@ -252,25 +262,13 @@ class mediamosa_rest_call_job_analyse_mediafile extends mediamosa_rest_call {
  *
  */
 class mediamosa_rest_call_job_set_upload_progress extends mediamosa_rest_call {
-  // ------------------------------------------------------------------ Consts.
+  // ------------------------------------------------------------------- Consts.
   // Rest vars;
   const JOB_ID = 'job_id';
   const UPLOADED_FILE_SIZE = 'uploaded_file_size';
   const CREATE_STILL = 'create_still';
-  const STILL_TYPE = 'still_type';
-  const STILL_PER_MEDIAFILE = 'still_per_mediafile';
-  const STILL_EVERY_SECOND = 'still_every_second';
-  const START_FRAME = 'start_frame';
-  const END_FRAME = 'end_frame';
-  const SIZE = 'size';
-  const H_PADDING = 'h_padding';
-  const V_PADDING = 'v_padding';
-  const TAG = 'tag';
-  const FRAMETIME = 'frametime';
-  const WIDTH = 'width';
-  const HEIGHT ='height';
 
-  // ------------------------------------------------------------------ Get Var Setup.
+  // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
     $a_var_setup = array();
 
@@ -342,8 +340,6 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
   const V_PADDING = 'v_padding';
   const TAG = 'tag';
   const FRAMETIME = 'frametime';
-  const WIDTH = 'width';
-  const HEIGHT ='height';
   const COMPLETED_TRANSCODING_URL = 'completed_transcoding_url';
 
   const PROFILE_ID = 'profile_id';
@@ -353,7 +349,7 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
   const PRIORITY = 'priority';
   const FILE_SIZE = 'file_size';
   const RETRANSCODE = 'retranscode';
-  // ------------------------------------------------------------------ Get Var Setup.
+  // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
     $a_var_setup = array();
 
@@ -361,7 +357,7 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
       self::VARS => array(
         self::USER_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
-          self::VAR_DESCRIPTION => 'The user ID for owner.',
+          self::VAR_DESCRIPTION => 'The user ID for owner of the mediafile.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::MEDIAFILE_ID => array(
@@ -386,6 +382,14 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
         self::STILL_TYPE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The still type.',
+          self::VAR_ALLOWED_VALUES => array(
+            mediamosa_asset_mediafile_metadata::STILL_TYPE_NONE,
+            mediamosa_asset_mediafile_metadata::STILL_TYPE_SCENE,
+            mediamosa_asset_mediafile_metadata::STILL_TYPE_SECOND,
+            mediamosa_asset_mediafile_metadata::STILL_TYPE_NORMAL,
+            '',
+          ),
+          self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_metadata::STILL_TYPE_NONE,
         ),
         self::STILL_PER_MEDIAFILE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
@@ -397,23 +401,24 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
         ),
         self::START_FRAME => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
-          self::VAR_DESCRIPTION => 'Still start frame.',
+          self::VAR_DESCRIPTION => 'Still start frame (in seconds). Deprecrated, use start_time instead.',
         ),
         self::START_TIME => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
-          self::VAR_DESCRIPTION => 'Still start time.',
+          self::VAR_DESCRIPTION => 'Still start time (in seconds).',
         ),
         self::END_FRAME => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
-          self::VAR_DESCRIPTION => 'Still end frame.',
+          self::VAR_DESCRIPTION => 'Still end frame (in seconds). Deprecrated, use end_time instead.',
         ),
         self::END_TIME => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
-          self::VAR_DESCRIPTION => 'Still end time.',
+          self::VAR_DESCRIPTION => 'Still end time (in seconds).',
         ),
         self::SIZE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_STRING,
           self::VAR_DESCRIPTION => 'Size of the still.',
+          self::VAR_DEFAULT_VALUE => mediamosa_settings::STILL_DEFAULT_SIZE,
         ),
         self::H_PADDING => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
@@ -429,15 +434,7 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
         ),
         self::FRAMETIME => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
-          self::VAR_DESCRIPTION => 'Still frametime.',
-        ),
-        self::WIDTH => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
-          self::VAR_DESCRIPTION => 'Still width.',
-        ),
-        self::HEIGHT => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
-          self::VAR_DESCRIPTION => 'Still height.',
+          self::VAR_DESCRIPTION => 'Still frametime (in seconds).',
         ),
         self::COMPLETED_TRANSCODING_URL => array(
           self::VAR_TYPE => mediamosa_type::TYPE_URL,
@@ -482,7 +479,7 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
     return self::get_var_setup_default($a_var_setup);
   }
 
-  // ------------------------------------------------------------------ Progress Rest Args.
+  // ------------------------------------------------------- Progress Rest Args.
   /**
    * Process the supplied parameters.
    *
@@ -524,7 +521,7 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
     $retranscode = $this->get_param_value(self::RETRANSCODE);
 
     $create_still = $this->get_param_value(self::CREATE_STILL);
-    $a_still_parameters = array(
+    $still_parameters = array(
       'still_type' => $this->get_param_value(self::STILL_TYPE),
       'still_per_mediafile' => $this->get_param_value(self::STILL_PER_MEDIAFILE),
       'still_every_second' => $this->get_param_value(self::STILL_EVERY_SECOND),
@@ -535,8 +532,6 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
       'v_padding' => $this->get_param_value(self::V_PADDING),
       'tag' => $this->get_param_value(self::TAG),
       'frametime' => $this->get_param_value(self::FRAMETIME),
-      'width' => $this->get_param_value(self::WIDTH),
-      'height' => $this->get_param_value(self::HEIGHT),
     );
 
     // Webservice must be enabled.
@@ -555,19 +550,19 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
 
     switch ($job_type) {
       case mediamosa_job_db::JOB_TYPE_STILL:
-        $job_id = mediamosa_job::create_job_still($app_id, $user_id, $is_app_admin, $mediafile_id, $a_still_parameters);
+        $job_id = mediamosa_job::create_job_still($app_id, $user_id, $is_app_admin, $mediafile_id, $still_parameters);
         break;
 
       case mediamosa_job_db::JOB_TYPE_TRANSCODE:
-        $job_id = mediamosa_job::create_job_transcode($app_id, $user_id, $group_id, $is_app_admin, $mediafile_id, $create_still, $a_still_parameters, $file_extension, $command, $tool, $profile_id, $completed_transcoding_url, $priority);
+        $job_id = mediamosa_job::create_job_transcode($app_id, $user_id, $group_id, $is_app_admin, $mediafile_id, $create_still, $still_parameters, $file_extension, $command, $tool, $profile_id, $completed_transcoding_url, $priority);
         break;
 
       case mediamosa_job_db::JOB_TYPE_UPLOAD:
-        $job_id = mediamosa_job::create_job_upload($app_id, $user_id, $group_id, $is_app_admin, $mediafile_id, $file_size, $retranscode, $create_still, $a_still_parameters);
+        $job_id = mediamosa_job::create_job_upload($app_id, $user_id, $group_id, $is_app_admin, $mediafile_id, $file_size, $retranscode, $create_still, $still_parameters);
         break;
 
       default:
-        $job_id = mediamosa_job::create($job_type, $app_id, $user_id, $is_app_admin, $mediafile_id, $create_still, $a_still_parameters);
+        $job_id = mediamosa_job::create($job_type, $app_id, $user_id, $is_app_admin, $mediafile_id, $create_still, $still_parameters);
         break;
     }
 
@@ -586,11 +581,11 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
  *
  */
 class mediamosa_rest_call_job_user_search extends mediamosa_rest_call {
-  // ------------------------------------------------------------------ Consts.
+  // ------------------------------------------------------------------- Consts.
   // Rest vars;
   const USER_ID = 'user_id';
 
-  // ------------------------------------------------------------------ Get Var Setup.
+  // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
     $a_var_setup = array();
 
@@ -654,13 +649,13 @@ class mediamosa_rest_call_job_user_search extends mediamosa_rest_call {
  *
  */
 class mediamosa_rest_call_job_asset_search extends mediamosa_rest_call {
-  // ------------------------------------------------------------------ Consts.
+  // ------------------------------------------------------------------- Consts.
   // Rest vars;
   const USER_ID = 'user_id';
   const ASSET_ID = 'asset_id';
   const CQL = 'cql';
 
-  // ------------------------------------------------------------------ Get Var Setup.
+  // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
     $a_var_setup = array();
 
@@ -690,7 +685,7 @@ class mediamosa_rest_call_job_asset_search extends mediamosa_rest_call {
     return self::get_var_setup_default($a_var_setup);
   }
 
-  // ------------------------------------------------------------------ Override Validate Rest Args.
+  // ---------------------------------------------- Override Validate Rest Args.
   // Override for checking CQL string.
   protected function validate_rest_args(array $a_var_setup) {
 
@@ -766,7 +761,7 @@ class mediamosa_rest_call_job_mediafile_search extends mediamosa_rest_call {
   const USER_ID = 'user_id';
   const MEDIAFILE_ID = 'mediafile_id';
 
-  // ------------------------------------------------------------------ Get Var Setup.
+  // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
     $a_var_setup = array();
 
@@ -848,7 +843,7 @@ class mediamosa_rest_call_job_search extends mediamosa_rest_call {
   const USER_ID = 'user_id';
   const JOB_ID = 'job_id';
 
-  // ------------------------------------------------------------------ Get Var Setup.
+  // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
     $a_var_setup = array();
 
@@ -924,9 +919,9 @@ class mediamosa_rest_call_job_search extends mediamosa_rest_call {
  *
  */
 class mediamosa_rest_call_job_create_transcode extends mediamosa_rest_call_job_create {
-  // ------------------------------------------------------------------ Consts.
+  // ------------------------------------------------------------------- Consts.
 
-  // ------------------------------------------------------------------ Get Var Setup.
+  // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
     $a_var_setup = parent::get_var_setup();
 
@@ -935,7 +930,7 @@ class mediamosa_rest_call_job_create_transcode extends mediamosa_rest_call_job_c
     return $a_var_setup;
   }
 
-  // ------------------------------------------------------------------ Progress Rest Args.
+  // ------------------------------------------------------- Progress Rest Args.
   /**
    * Process the supplied parameters.
    *
@@ -974,11 +969,15 @@ class mediamosa_rest_call_job_create_transcode extends mediamosa_rest_call_job_c
  *
  */
 class mediamosa_rest_call_job_create_still extends mediamosa_rest_call_job_create {
-  // ------------------------------------------------------------------ Consts.
+  // ------------------------------------------------------------------- Consts.
   // The asset ID.
   const ASSET_ID = 'asset_id';
 
-  // ------------------------------------------------------------------ Get Var Setup.
+  // Only used here, converted to size.
+  const WIDTH = 'width';
+  const HEIGHT = 'height';
+
+  // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
     $a_var_setup = parent::get_var_setup();
 
@@ -993,10 +992,19 @@ class mediamosa_rest_call_job_create_still extends mediamosa_rest_call_job_creat
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
     );
 
+    $a_var_setup[self::VARS][self::WIDTH] = array(
+      self::VAR_TYPE => mediamosa_type::TYPE_INT,
+      self::VAR_DESCRIPTION => 'Still width. Deprecated, use size instead.',
+    );
+    $a_var_setup[self::VARS][self::HEIGHT] = array(
+      self::VAR_TYPE => mediamosa_type::TYPE_INT,
+      self::VAR_DESCRIPTION => 'Still height. Deprecated, use size instead.',
+    );
+
     return $a_var_setup;
   }
 
-  // ------------------------------------------------------------------ Progress Rest Args.
+  // ------------------------------------------------------- Progress Rest Args.
   /**
    * Process the supplied parameters.
    *
@@ -1015,35 +1023,41 @@ class mediamosa_rest_call_job_create_still extends mediamosa_rest_call_job_creat
     // GET / POST to array.
     $a_var_setup = parent::process_rest_args($a_var_setup);
 
-    // Backward compatibility.
-    if ($this->isset_given_param(self::STILL_TYPE) || $this->get_param_value(self::STILL_TYPE) == 'NONE') {
-
-      $start_frame = $this->get_param_value(self::START_FRAME);
-      $end_frame = $this->get_param_value(self::END_FRAME);
-      $frametime = $this->get_param_value(self::FRAMETIME);
-      if (!$start_frame && $frametime) {
-        $this->set_param_value(self::START_FRAME, $frametime);
-      }
-
-      $size = $this->get_param_value(self::SIZE);
-      $width = $this->get_param_value(self::WIDTH);
-      $height = $this->get_param_value(self::HEIGHT);
-
-      if (!$start_frame) {
-        $start_frame = $this->get_param_value(self::START_TIME);
-      }
-      if (!$end_frame) {
-        $end_frame = $this->get_param_value(self::END_TIME);
-      }
-
-      if (empty($size) && $width && $height) {
-        $this->set_param_value(self::SIZE, $width . 'x' . $height);
-      }
+    // Fix problems with usage of obsolete FRAMETIME, WIDTH and HEIGHT.
+    $frametime = $this->get_param_value(self::FRAMETIME);
+    $start_frame = $this->get_param_value(self::START_FRAME);
+    $end_frame = $this->get_param_value(self::END_FRAME);
+    if (!$start_frame && $frametime) {
+      $this->set_param_value(self::START_FRAME, $frametime);
     }
 
-    unset($a_var_setup[self::VARS][parent::FRAMETIME]);
-    unset($a_var_setup[self::VARS][parent::WIDTH]);
-    unset($a_var_setup[self::VARS][parent::HEIGHT]);
+    $size = $this->get_param_value(self::SIZE);
+    $width = $this->get_param_value(self::WIDTH);
+    $height = $this->get_param_value(self::HEIGHT);
+
+    if (!$start_frame && $frametime) {
+      $this->set_param_value(self::START_FRAME, $frametime);
+    }
+
+    // Start/end time replaces start/end frame.
+    $start_time = $this->get_param_value(self::START_TIME);
+    if (!$start_frame && $start_time) {
+      $this->set_param_value(self::START_FRAME, $start_time);
+    }
+
+    $end_time = $this->get_param_value(self::END_TIME);
+    if (!$end_frame && $end_time) {
+      $this->set_param_value(self::START_FRAME, $end_time);
+    }
+
+    // If size is not given, but width and height are, use width, height.
+    if (!$this->isset_given_param($size) && $width && $height) {
+      $this->set_param_value(self::SIZE, $width . 'x' . $height);
+    }
+
+    unset($a_var_setup[self::VARS][self::FRAMETIME]);
+    unset($a_var_setup[self::VARS][self::WIDTH]);
+    unset($a_var_setup[self::VARS][self::HEIGHT]);
 
     return $a_var_setup;
   }
@@ -1073,9 +1087,9 @@ class mediamosa_rest_call_job_create_still extends mediamosa_rest_call_job_creat
  *
  */
 class mediamosa_rest_call_job_create_still_for_mediafile extends mediamosa_rest_call_job_create_still {
-  // ------------------------------------------------------------------ Consts.
+  // ------------------------------------------------------------------- Consts.
 
-  // ------------------------------------------------------------------ Get Var Setup.
+  // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
     $a_var_setup = parent::get_var_setup();
 
@@ -1102,12 +1116,12 @@ class mediamosa_rest_call_job_create_still_for_mediafile extends mediamosa_rest_
  *
  */
 class mediamosa_rest_call_job_cancel extends mediamosa_rest_call {
-  // ------------------------------------------------------------------ Consts.
+  // ------------------------------------------------------------------- Consts.
   // Rest vars;
   const USER_ID = 'user_id';
   const JOB_ID = 'job_id';
 
-  // ------------------------------------------------------------------ Get Var Setup.
+  // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
     $a_var_setup = array();
 
@@ -1154,7 +1168,7 @@ class mediamosa_rest_call_job_cancel extends mediamosa_rest_call {
  */
 class mediamosa_rest_call_cron_jobscheduler extends mediamosa_rest_call {
 
-  // ------------------------------------------------------------------ Functions (public).
+  // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
     $a_var_setup = array();
 
@@ -1179,7 +1193,7 @@ class mediamosa_rest_call_cron_jobscheduler extends mediamosa_rest_call {
  */
 class mediamosa_rest_call_cron_jobserver extends mediamosa_rest_call {
 
-  // ------------------------------------------------------------------ Functions (public).
+  // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
     $a_var_setup = array();
 

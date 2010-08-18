@@ -133,7 +133,7 @@ function theme_mediamosa_maintenance_browse_properties($variables) {
     foreach ($variables['properties'] as $name => $value) {
       $rows[] = array(
         check_plain($name),
-        check_plain($value),
+        is_array($value) ? (empty($value['html']) ? check_plain($value['data']) : $value['data']) : check_plain($value),
       );
     }
 

@@ -1672,7 +1672,7 @@ user_id = "username"',
   // Delete the asset.
   $rest_calls['asset/$asset_id/delete'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Delete a asset.',
-    mediamosa_rest_call::DESCRIPTION => 'By calling this REST call you can remove a asset from the database. Assets can only be removed when no longer attached media files to this asset or if the delete=cascade parameter is exsists. If you remove an asset, then stills, metadata and collections are removed too.',
+    mediamosa_rest_call::DESCRIPTION => 'By calling this REST call you can remove a asset from the database. Assets can only be removed when no longer attached media files to this asset or if the delete=cascade parameter is used. If you remove an asset, then stills, metadata and collection links are removed too.',
     mediamosa_rest_call::EXAMPLE_REQUEST => '<p>/asset/q1WmtebDr9F8eberUIjKrhTa/delete</p><p>delete = "cascade"</p>',
     mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
     mediamosa_rest_call::EXAMPLE_RESPONSE => FALSE,

@@ -128,11 +128,14 @@ class mediamosa_asset_search {
     $a_query[mediamosa_db_query::ALLOW_DISTINCT] = TRUE;
     $a_query[mediamosa_db_query::A_GROUP_BY][] = strtr('a.#asset_id', array('#asset_id' => mediamosa_asset_db::ID));
 
-    // Get the slaves based on the app ids.
-    $a_slaves = mediamosa_aut_app_master_slave::slave_get($a_app_ids, mediamosa_aut::AUT_TYPE_MEDIAFILE);
+    // Get the slaves based on the app ids for mediafiles.
+    $a_slaves_mediafiles = mediamosa_aut_app_master_slave::slave_get($a_app_ids, mediamosa_aut::AUT_TYPE_MEDIAFILE);
+
+    // Get the slaves based on the app ids for assets.
+    $a_slaves_assets = array(); // Off, not stable, mediamosa_aut_app_master_slave::slave_get($a_app_ids, mediamosa_aut::AUT_TYPE_ASSET);
 
     // Merge the slave app ids with my app ids.
-    $a_app_ids_tmp = array_unique(array_merge($a_app_ids, array_keys($a_slaves)));
+    $a_app_ids_tmp = array_unique(array_merge($a_app_ids, array_keys($a_slaves_mediafiles), array_keys($a_slaves_assets)));
     sort($a_app_ids_tmp);
 
     $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset'][] = sprintf('a.app_id IN(%s)', mediamosa_db::escape_string($a_app_ids_tmp));
@@ -183,7 +186,9 @@ class mediamosa_asset_search {
       }
 
       // Quick hack, or else i really need to extend the MediaMosa CQL class
-      if (isset($a_result_cql2sql['a_joins'])) {
+      if (!empty($a_result_cql2sql['a_joins'])) {
+
+
         $key = array_search('MEDIAFILE_METADATA_MIMETYPE', $a_result_cql2sql['a_joins']);
         if ($key) {
           unset($a_result_cql2sql['a_joins'][$key]);
@@ -276,6 +281,21 @@ class mediamosa_asset_search {
           $do_master_slave = TRUE;
           unset($a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset']['access']);
           unset($a_query[mediamosa_db_query::A_JOIN]['aut_app_master_slave']);
+        }
+
+        $key = array_search('AUT_APP_IS_MASTER_SLAVE', $a_result_cql2sql['a_joins']);
+        if ($key) {
+          do {
+            unset($a_result_cql2sql['a_joins'][$key]);
+            $key = array_search('AUT_APP_IS_MASTER_SLAVE', $a_result_cql2sql['a_joins']);
+          }
+          while ($key !== FALSE);
+
+          $a_query[mediamosa_db_query::A_JOIN]['mediafile'] = "LEFT JOIN {mediamosa_asset_mediafile} AS mf ON a.asset_id=mf.asset_id AND mf.is_still = 'FALSE'";
+          $a_query[mediamosa_db_query::A_JOIN]['aut_app_is_master_slave'] = sprintf("LEFT JOIN {mediamosa_aut_app_master_slave} AS aut_is_ms ON ((aut_is_ms.aut_object_type = 'MEDIAFILE' AND aut_is_ms.aut_object_id=mf.mediafile_id) OR (aut_is_ms.aut_object_type = 'ASSET' AND aut_is_ms.aut_object_id=a.asset_id))");
+          //$do_master_slave = TRUE;
+         // unset($a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset']['access']);
+         // unset($a_query[mediamosa_db_query::A_JOIN]['aut_app_master_slave']);
         }
 
         $a_query[mediamosa_db_query::A_JOIN]['cql'] = $a_result_cql2sql['a_joins'];
@@ -391,7 +411,11 @@ class mediamosa_asset_search {
     // Also we only do authication here when we need to filter out the results (granted == FALSE)
     // Except we need to do master/slave check, so we set switch only to include master/slave...
     // Add to the where the access check for our original app_id
-    mediamosa_aut::build_access_where($a_query, mediamosa_aut::AUT_TYPE_MEDIAFILE, NULL, $a_app_ids, $aut_user_id, $a_aut_group_id, $aut_domain, $aut_realm, $a_slaves, FALSE, $do_master_slave);
+    mediamosa_aut::build_access_where($a_query, mediamosa_aut::AUT_TYPE_MEDIAFILE, NULL, $a_app_ids, $aut_user_id, $a_aut_group_id, $aut_domain, $aut_realm, $a_slaves_mediafiles, FALSE, $do_master_slave);
+
+    // Asset.
+    // Off, not stable.
+    //mediamosa_aut::build_access_where($a_query, mediamosa_aut::AUT_TYPE_ASSET, NULL, $a_app_ids, $aut_user_id, $a_aut_group_id, $aut_domain, $aut_realm, $a_slaves_assets, FALSE, $do_master_slave);
 
     // Limit, offset stuff
     $a_query[mediamosa_db_query::LIMIT] = $limit;
