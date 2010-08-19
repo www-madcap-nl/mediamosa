@@ -239,4 +239,24 @@ class mediamosa_lib {
     // Anything else ends with 'th'.
     return $value . 'th';
   }
+
+  /**
+   * Make diff between two text.
+   *
+   * @param $old
+   *   Old text.
+   * @param $new
+   *   New text.
+   *
+   * @return string
+   *   Differences.
+   */
+  static public function make_diff($old, $new) {
+    $old = explode("\n", $old);
+    $new = explode("\n", $new);
+
+    $diff = array_diff($old, $new);
+
+    return implode("\n", $diff);
+  }
 }

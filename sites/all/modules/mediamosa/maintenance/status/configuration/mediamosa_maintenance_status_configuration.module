@@ -214,6 +214,117 @@ function mediamosa_maintenance_status_configuration_mediamosa_status_generate($w
     'severity' => _mediamosa_maintenance_status_okerror(!variable_get('clean_url', 0)),
   );
 
+  // Mediamosa version.
+  $results['mediamosa_version'] = array(
+    'title' => t('Mediamosa version'),
+    'value' => mediamosa_version::MEDIAMOSA_VERSION,
+    'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
+  );
+
+
+  // Database settings.
+
+  $result = mediamosa_db::db_query("SHOW VARIABLES");
+  $rows = $result->fetchAllKeyed();
+
+  $results['database_innodb'] = array(
+    'title' => t('Database'),
+    'value' => t('Innodb.'),
+    'severity' => _mediamosa_maintenance_status_okerror($rows['have_innodb'] != 'YES'),
+  );
+  $results['database_character_set'] = array(
+    'title' => t('Database'),
+    'value' => t('Character set: utf8.'),
+    'severity' => _mediamosa_maintenance_status_okwarning($rows['character_set_database'] != 'utf8'),
+  );
+  $results['database_innodb_flush_log_at_trx_commit'] = array(
+    'title' => t('Database'),
+    'value' => t("innodb_flush_log_at_trx_commit = @value. It shouldn't be 1.", array('@value' => $rows['innodb_flush_log_at_trx_commit'])),
+    'severity' => _mediamosa_maintenance_status_okwarning($rows['innodb_flush_log_at_trx_commit'] == '1'),
+  );
+  $results['database_innodb_buffer_pool_size'] = array(
+    'title' => t('Database'),
+    'value' => t('innodb_buffer_pool_size = @sizeM. Should have 2048M.', array('@size' => $rows['innodb_buffer_pool_size']/1048576,)),
+    'description' => t('You can set this up to 50 - 80 % of RAM, but beware of setting memory usage too high.'),
+    'severity' => _mediamosa_maintenance_status_okwarning($rows['innodb_buffer_pool_size']/1048576 < '8'),
+  );
+  $results['database_innodb_log_file_size'] = array(
+    'title' => t('Database'),
+    'value' => t('innodb_log_file_size = @sizeM.', array('@size' => $rows['innodb_log_file_size']/1048576,)),
+    'severity' => _mediamosa_maintenance_status_okwarning($rows['innodb_log_file_size']/1048576 < '2'),
+  );
+  $results['database_innodb_flush_method'] = array(
+    'title' => t('Database'),
+    'value' => t('innodb_flush_method = "@value". Should be "O_DIRECT".', array('@value' => $rows['innodb_flush_method'],)),
+    'severity' => _mediamosa_maintenance_status_okwarning($rows['innodb_flush_method'] != 'O_DIRECT'),
+  );
+
+
+  // Database schema check.
+  // TODO: Check foreign keys too.
+
+  // Is the schemas ok?
+  $is_schemas = TRUE;
+  // Schema differences.
+  $schema_description = '';
+  // Scan the install files.
+  $files = file_scan_directory('sites/all/modules/mediamosa', '/^.*\.install\.inc$/');
+  $test_table_prefix = 'mm_' . mt_rand(1000, 9999) . '_';
+  // Go through the install files.
+  foreach ($files as $file) {
+    require_once $file->uri;
+    $function_name = str_replace('.install', '_schema', $file->name);
+    $module_name = str_replace('.install', '', $file->name);
+    if (is_callable($function_name)) {
+      // Get the schemas.
+      $schemas = call_user_func($function_name);
+      // Install the schemas.
+      mediamosa::drupal_install_schema($module_name, $test_table_prefix, FALSE);
+      // Get schemas one by one.
+      foreach ($schemas as $original_table_name => $schema) {
+        $test_table_name = $test_table_prefix . $original_table_name;
+        // Get the table details.
+        $original_table_result = mediamosa_db::db_query("SHOW CREATE TABLE #table_name", array(
+          '#table_name' => $original_table_name,
+        ))->fetchAssoc();
+        $test_table_result = mediamosa_db::db_query("SHOW CREATE TABLE #table_name", array(
+          '#table_name' => $test_table_name,
+        ))->fetchAssoc();
+        // Replace the test table name.
+        $test_table_result = str_replace($test_table_name, $original_table_name, $test_table_result);
+        // Clear the foreign keys.
+        if (strpos($original_table_result['create table'], 'CONSTRAINT') !== FALSE) {
+          // Clear the last ','.
+          $original_table_result['create table'] = str_replace(",\n  CONSTRAINT", "\n  CONSTRAINT", $original_table_result['create table']);
+          // Clear the CONSTRAINT lines.
+          $original_table_result['create table'] = explode("\n", $original_table_result['create table']);
+          foreach ($original_table_result['create table'] as $key => $line) {
+            if (strpos($line, 'CONSTRAINT') !== FALSE) {
+              unset($original_table_result['create table'][$key]);
+            }
+          }
+          $original_table_result['create table'] = implode("\n", $original_table_result['create table']);
+        }
+        // Are they same?
+        if ($original_table_result['create table'] != $test_table_result['create table']) {
+          // Make info for displaying the differences.
+          $schema_description .= $original_table_name . ":\n";
+          $schema_description .= "Current:\n" . mediamosa_lib::make_diff($original_table_result['create table'], $test_table_result['create table']) ."\n";
+          $schema_description .= "Schema:\n" . mediamosa_lib::make_diff($test_table_result['create table'], $original_table_result['create table']) ."\n\n";
+          $is_schemas = FALSE;
+        }
+        // Drop the test table.
+        mediamosa_db::db_drop_table($test_table_name);
+      }
+    }
+  }
+  $results['database_schemas'] = array(
+    'title' => t('Database'),
+    'value' => t('Schemas'),
+    'description' => '<pre>' . $schema_description . '</pre>',
+    'severity' => _mediamosa_maintenance_status_okwarning(!$is_schemas),
+  );
+
 
   // Making the report.
   $statuses = array(

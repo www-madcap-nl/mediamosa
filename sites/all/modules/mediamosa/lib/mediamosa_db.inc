@@ -818,4 +818,26 @@ class mediamosa_db {
     // Return the new ID.
     return $uuid;
   }
+
+  /**
+   * Create a table according to the schema.
+   *
+   * @param sting name
+   *   Name of the table.
+   * @param array table
+   *   Schema definition.
+   */
+  static public function db_create_table($name, array $table) {
+    db_create_table($name, $table);
+  }
+
+  /**
+   * Drop a table.
+   *
+   * @param sting name
+   *   Name of the table.
+   */
+  static public function db_drop_table($name) {
+    db_drop_table($name);
+  }
 }

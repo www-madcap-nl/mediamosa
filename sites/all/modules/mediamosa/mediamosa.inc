@@ -492,9 +492,16 @@ class mediamosa {
   }
 
   /**
-   * Wrapper around drupal_install_schema()
+   * Wrapper around drupal_install_schema().
+   *
+   * @param string $module
+   *   Module name.
+   * @param string $table_prefix
+   *   Prefix of the tables. Default empty string.
+   * @param boolean $make_foreignkey
+   *   Make foreign keys (TRUE), or not (FALSE). Default TRUE.
    */
-  static public function drupal_install_schema($module) {
+  static public function drupal_install_schema($module, $table_prefix = '', $make_foreignkey = TRUE) {
     try {
       $schema = drupal_get_schema_unprocessed($module);
       _drupal_schema_initialize($module, $schema);
@@ -503,7 +510,7 @@ class mediamosa {
       $schema = mediamosa_db::db_install_schema_preprocess($module, $schema);
 
       foreach ($schema as $name => $table) {
-        db_create_table($name, $table);
+        db_create_table($table_prefix . $name, $table);
       }
     }
     catch (Exception $e) {
@@ -515,7 +522,9 @@ class mediamosa {
     drupal_set_installed_schema_version($module, $version);
 
     // Drupal 7 does not create foreign keys yet, so we will.
-    mediamosa_db::db_install_schema_foreign_keys($module);
+    if ($make_foreignkey) {
+      mediamosa_db::db_install_schema_foreign_keys($module, $make_foreignkey);
+    }
   }
 
   /**
