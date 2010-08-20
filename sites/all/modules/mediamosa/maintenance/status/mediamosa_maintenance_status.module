@@ -321,15 +321,16 @@ function _mediamosa_maintenance_status_job() {
  * Job list. Menu callback.
  */
 function _mediamosa_maintenance_status_job_list() {
-  $filter = _mediamosa_maintenance_status_build_filter_query();
   $output = array();
 
   // Path is eg. admin/mediamosa/status/job/list/finished. Then the $type is 'finished'.
-  $type = arg(5);
+  $type = mediamosa_unicode::strtoupper(arg(5));
 
-  switch (mediamosa_unicode::strtoupper($type)) {
+  switch ($type) {
     case mediamosa_job_db::JOB_STATUS_FINISHED:
+      $filter = _mediamosa_maintenance_status_build_filter_query();
       $output['job_header'] = array('#markup' => t('Recently finished jobs'));
+      $output['job_filter_form'] = drupal_get_form('_mediamosa_maintenance_status_filter_form');
       break;
     case mediamosa_job_db::JOB_STATUS_WAITING:
       $output['job_header'] = array('#markup' => t('All waiting jobs'));
@@ -339,8 +340,6 @@ function _mediamosa_maintenance_status_job_list() {
       return $output;
       break;
   }
-
-  $output['job_filter_form'] = drupal_get_form('_mediamosa_maintenance_status_filter_form');
 
   $rows = array();
 
@@ -402,7 +401,7 @@ function _mediamosa_maintenance_status_job_list() {
   }
   $result = $query
     ->condition('j.' . mediamosa_job_db::JOB_STATUS, mediamosa_job_db::JOB_STATUS_WAITING,
-      ($type == mediamosa_job_db::JOB_STATUS_WAITING ? '==' : '<>')
+      ($type == mediamosa_job_db::JOB_STATUS_WAITING ? '=' : '<>')
     )
     ->limit(50)
     ->orderByHeader($header)
