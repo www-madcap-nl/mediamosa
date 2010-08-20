@@ -39,6 +39,11 @@
 define('MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_APACHE_WARNING', "2");
 
 /**
+ * Warning level for Lua.
+ */
+define('MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_LUA_WARNING', "5");
+
+/**
  * Warning level for Yamdi.
  */
 define('MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_YAMDI_WARNING', "1.5");
@@ -144,12 +149,17 @@ function mediamosa_maintenance_status_configuration_mediamosa_status_generate($w
   $not_exists = exec('lua 2>&1');
   $exec_output = array();
   $last_line = exec('lua -v 2>&1', $exec_output, $ret_val);
-  $version = ($not_exists ? t('Lua') : _mediamosa_maintenance_status_search_in_array('copyright', $exec_output));
+  $status_line = ($not_exists ? t('Lua') : _mediamosa_maintenance_status_search_in_array('copyright', $exec_output));
+  $version = drupal_substr($status_line, drupal_strlen('Lua '));
+  $pos = strpos($version, '.');
+  if ($pos !== FALSE) {
+    $version = drupal_substr($version, 0, $pos);
+  }
 
   $results['app_lua'] = array(
     'title' => t('Application'),
-    'value' => $version,
-    'severity' => _mediamosa_maintenance_status_okerror($not_exists),
+    'value' => $status_line,
+    'severity' => _mediamosa_maintenance_status_okerror($not_exists || !is_numeric($version) || $version < MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_LUA_WARNING),
   );
 
 
@@ -203,7 +213,7 @@ function mediamosa_maintenance_status_configuration_mediamosa_status_generate($w
   $results['apache_version'] = array(
     'title' => t('Apache'),
     'value' => apache_get_version(),
-    'severity' => _mediamosa_maintenance_status_okerror(!is_numeric($version) || $version < 2),
+    'severity' => _mediamosa_maintenance_status_okerror(!is_numeric($version) || $version < MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_APACHE_WARNING),
   );
 
   // Apache mod_rewrite.
@@ -266,6 +276,118 @@ function mediamosa_maintenance_status_configuration_mediamosa_status_generate($w
   );
 
 
+  // Privileges.
+
+  // Create table.
+  $test_table_name = 'mm_' . mt_rand(1000, 9999);
+  $result = mediamosa_db::db_query("CREATE TABLE {#table_name} (test int not null)", array(
+    '#table_name' => $test_table_name,
+  ));
+  try {
+    $test_table_result = mediamosa_db::db_query("SHOW CREATE TABLE {#table_name}", array(
+      '#table_name' => $test_table_name,
+    ))->fetchAssoc();
+  }
+  catch (Exception $e) {
+    $test_table_result = array('create table' => '');
+  }
+  $results['database_privileges_create_table'] = array(
+    'title' => t('Database'),
+    'value' => t('Create table'),
+    'severity' => _mediamosa_maintenance_status_okwarning(!$test_table_result['create table']),
+  );
+
+  // Alter table.
+  $result = mediamosa_db::db_query("ALTER TABLE {#table_name} CHANGE test test_id int not null", array(
+    '#table_name' => $test_table_name,
+  ));
+  try {
+    $test_table_result = mediamosa_db::db_query("SHOW CREATE TABLE {#table_name}", array(
+      '#table_name' => $test_table_name,
+    ))->fetchAssoc();
+  }
+  catch (Exception $e) {
+    $test_table_result = array('create table' => '');
+  }
+  $results['database_privileges_alter_table'] = array(
+    'title' => t('Database'),
+    'value' => t('Alter table'),
+    'severity' => _mediamosa_maintenance_status_okwarning(!$test_table_result['create table']),
+  );
+
+  // Insert.
+  $result = mediamosa_db::db_query("INSERT INTO {#table_name} (test_id) VALUES (5)", array(
+    '#table_name' => $test_table_name,
+  ));
+  try {
+    $test_table_result = mediamosa_db::db_query("SELECT * FROM {#table_name}", array(
+      '#table_name' => $test_table_name,
+    ))->fetchAssoc();
+  }
+  catch (Exception $e) {
+    $test_table_result = NULL;
+  }
+  $results['database_privileges_insert'] = array(
+    'title' => t('Database'),
+    'value' => t('Insert (and Select)'),
+    'severity' => _mediamosa_maintenance_status_okwarning(!$test_table_result || $test_table_result['test_id'] != 5),
+  );
+
+  // Update.
+  $result = mediamosa_db::db_query("UPDATE {#table_name} SET test_id = 9", array(
+    '#table_name' => $test_table_name,
+  ));
+  try {
+    $test_table_result = mediamosa_db::db_query("SELECT * FROM {#table_name}", array(
+      '#table_name' => $test_table_name,
+    ))->fetchAssoc();
+  }
+  catch (Exception $e) {
+    $test_table_result = NULL;
+  }
+  $results['database_privileges_update'] = array(
+    'title' => t('Database'),
+    'value' => t('Update'),
+    'severity' => _mediamosa_maintenance_status_okwarning(!$test_table_result || $test_table_result['test_id'] != 9),
+  );
+
+  // Delete.
+  $result = mediamosa_db::db_query("DELETE FROM {#table_name} WHERE test_id = 9", array(
+    '#table_name' => $test_table_name,
+  ));
+  try {
+    $test_table_result = mediamosa_db::db_query("SELECT * FROM {#table_name}", array(
+      '#table_name' => $test_table_name,
+    ))->fetchAssoc();
+  }
+  catch (Exception $e) {
+    $test_table_result = NULL;
+  }
+  $results['database_privileges_delete'] = array(
+    'title' => t('Database'),
+    'value' => t('Delete'),
+    'severity' => _mediamosa_maintenance_status_okwarning($test_table_result),
+  );
+
+  // Drop table.
+  $result = mediamosa_db::db_query("DROP TABLE {#table_name}", array(
+    '#table_name' => $test_table_name,
+  ));
+  try {
+    $test_table_result = mediamosa_db::db_query("SHOW CREATE TABLE {#table_name}", array(
+      '#table_name' => $test_table_name,
+    ))->fetchAssoc();
+  }
+  catch (Exception $e) {
+    $test_table_result = array('create table' => '');
+  }
+  $results['database_privileges_drop_table'] = array(
+    'title' => t('Database'),
+    'value' => t('Drop table'),
+    'severity' => _mediamosa_maintenance_status_okwarning($test_table_result['create table']),
+  );
+
+
   // Database schema check.
   // TODO: Check foreign keys too.
 
@@ -290,10 +412,10 @@ function mediamosa_maintenance_status_configuration_mediamosa_status_generate($w
       foreach ($schemas as $original_table_name => $schema) {
         $test_table_name = $test_table_prefix . $original_table_name;
         // Get the table details.
-        $original_table_result = mediamosa_db::db_query("SHOW CREATE TABLE #table_name", array(
+        $original_table_result = mediamosa_db::db_query("SHOW CREATE TABLE {#table_name}", array(
           '#table_name' => $original_table_name,
         ))->fetchAssoc();
-        $test_table_result = mediamosa_db::db_query("SHOW CREATE TABLE #table_name", array(
+        $test_table_result = mediamosa_db::db_query("SHOW CREATE TABLE {#table_name}", array(
           '#table_name' => $test_table_name,
         ))->fetchAssoc();
         // Replace the test table name.
