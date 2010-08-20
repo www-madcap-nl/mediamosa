@@ -330,7 +330,7 @@ function mediamosa_maintenance_status_configuration_mediamosa_status_generate($w
   $results['database_privileges_insert'] = array(
     'title' => t('Database'),
     'value' => t('Insert (and Select)'),
-    'severity' => _mediamosa_maintenance_status_okwarning(!$test_table_result || $test_table_result['test_id'] != 5),
+    'severity' => _mediamosa_maintenance_status_okerror(!$test_table_result || $test_table_result['test_id'] != 5),
   );
 
   // Update.
@@ -348,7 +348,7 @@ function mediamosa_maintenance_status_configuration_mediamosa_status_generate($w
   $results['database_privileges_update'] = array(
     'title' => t('Database'),
     'value' => t('Update'),
-    'severity' => _mediamosa_maintenance_status_okwarning(!$test_table_result || $test_table_result['test_id'] != 9),
+    'severity' => _mediamosa_maintenance_status_okerror(!$test_table_result || $test_table_result['test_id'] != 9),
   );
 
   // Delete.
@@ -366,7 +366,7 @@ function mediamosa_maintenance_status_configuration_mediamosa_status_generate($w
   $results['database_privileges_delete'] = array(
     'title' => t('Database'),
     'value' => t('Delete'),
-    'severity' => _mediamosa_maintenance_status_okwarning($test_table_result),
+    'severity' => _mediamosa_maintenance_status_okerror($test_table_result),
   );
 
   // Drop table.
