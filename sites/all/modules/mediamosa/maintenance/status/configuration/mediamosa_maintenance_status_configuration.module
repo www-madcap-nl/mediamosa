@@ -194,10 +194,16 @@ function mediamosa_maintenance_status_configuration_mediamosa_status_generate($w
   );
 
   // Apache version.
+  $version = apache_get_version();
+  $version = drupal_substr($version, drupal_strlen('Apache/'));
+  $pos = strpos($version, '.');
+  if ($pos !== FALSE) {
+    $version = drupal_substr($version, 0, $pos);
+  }
   $results['apache_version'] = array(
     'title' => t('Apache'),
     'value' => apache_get_version(),
-    'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
+    'severity' => _mediamosa_maintenance_status_okerror(!is_numeric($version) || $version < 2),
   );
 
   // Apache mod_rewrite.
@@ -320,7 +326,7 @@ function mediamosa_maintenance_status_configuration_mediamosa_status_generate($w
   }
   $results['database_schemas'] = array(
     'title' => t('Database'),
-    'value' => t('Schemas'),
+    'value' => t("Schemas. It doesn't check the foreign keys"),
     'description' => '<pre>' . $schema_description . '</pre>',
     'severity' => _mediamosa_maintenance_status_okwarning(!$is_schemas),
   );
