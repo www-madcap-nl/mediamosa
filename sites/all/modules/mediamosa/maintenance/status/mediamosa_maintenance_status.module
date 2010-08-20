@@ -88,6 +88,13 @@ function mediamosa_maintenance_status_menu() {
     'access arguments' => array('access mediamosa'),
     'weight' => 20,
   );
+  $items['admin/mediamosa/status/job/list'] = array(
+    'title' => 'Job',
+    'type' => MENU_CALLBACK,
+    'page callback' => '_mediamosa_maintenance_status_job_list',
+    'access arguments' => array('access mediamosa'),
+    'weight' => 20,
+  );
 
   return $items;
 }
@@ -232,7 +239,11 @@ function _mediamosa_maintenance_status_job() {
   $results = array();
 
   $results[] = array(
-    'title' => t('All waiting jobs'),
+    'title' => l(t('Recently finished jobs'), 'admin/mediamosa/status/job/list/finished'),
+    array('data' => '', 'class' => 'mediamosa-status-value'),
+  );
+  $results[] = array(
+    'title' => l(t('All waiting jobs'), 'admin/mediamosa/status/job/list/waiting'),
     array('data' => _mediamosa_maintenance_status_waiting_job(), 'class' => 'mediamosa-status-value'),
   );
   $results[] = array(
@@ -305,6 +316,281 @@ function _mediamosa_maintenance_status_job() {
 
   return $output;
 }
+
+/**
+ * Job list. Menu callback.
+ */
+function _mediamosa_maintenance_status_job_list() {
+  $filter = _mediamosa_maintenance_status_build_filter_query();
+  $output = array();
+
+  // Path is eg. admin/mediamosa/status/job/list/finished. Then the $type is 'finished'.
+  $type = arg(5);
+
+  switch (mediamosa_unicode::strtoupper($type)) {
+    case mediamosa_job_db::JOB_STATUS_FINISHED:
+      $output['job_header'] = array('#markup' => t('Recently finished jobs'));
+      break;
+    case mediamosa_job_db::JOB_STATUS_WAITING:
+      $output['job_header'] = array('#markup' => t('All waiting jobs'));
+      break;
+    default:
+      $output['job_header'] = array('#markup' => t('Unknown job'));
+      return $output;
+      break;
+  }
+
+  $output['job_filter_form'] = drupal_get_form('_mediamosa_maintenance_status_filter_form');
+
+  $rows = array();
+
+  $header = array(
+    array('data' => t('Finished'), 'field' => 'j.' . mediamosa_job_db::FINISHED, 'sort' => 'desc'),
+    array('data' => t('Job id'), 'field' => 'j.' . mediamosa_job_db::ID),
+    array('data' => t('App id'), 'field' => 'j.' . mediamosa_job_db::APP_ID),
+    array('data' => t('Asset id'), 'field' => 'j.' . mediamosa_job_db::ASSET_ID),
+    array('data' => t('Mediafile id'), 'field' => 'j.' . mediamosa_job_db::MEDIAFILE_ID),
+    array('data' => t('Owner'), 'field' => 'j.' . mediamosa_job_db::OWNER_ID),
+    array('data' => t('Status'), 'field' => 'j.' . mediamosa_job_db::JOB_STATUS),
+    array('data' => t('Progress'), 'field' => 'j.' . mediamosa_job_db::PROGRESS),
+    array('data' => t('Priority'), 'field' => 'j.' . mediamosa_job_db::PRIORITY),
+    array('data' => t('Job type'), 'field' => 'j.' . mediamosa_job_db::JOB_TYPE),
+    array('data' => t('Started'), 'field' => 'j.' . mediamosa_job_db::STARTED),
+    array('data' => t('Create still'), 'field' => 'j.' . mediamosa_job_db::CREATE_STILL),
+    array('data' => t('No hint'), 'field' => 'j.' . mediamosa_job_db::NO_HINT),
+    array('data' => t('Still parameters'), 'field' => 'j.' . mediamosa_job_db::STILL_PARAMETERS),
+    array('data' => t('Error desc.'), 'field' => 'j.' . mediamosa_job_db::ERROR_DESCRIPTION),
+    array('data' => t('Created'), 'field' => 'j.' . mediamosa_job_db::CREATED),
+    array('data' => t('Changed'), 'field' => 'j.' . mediamosa_job_db::CHANGED),
+    array('data' => t('Trans. profile id'), 'field' => 't.' . mediamosa_job_transcode_db::TRANSCODE_PROFILE_ID),
+    array('data' => t('Tool'), 'field' => 't.' . mediamosa_job_transcode_db::TOOL),
+    array('data' => t('Command'), 'field' => 't.' . mediamosa_job_transcode_db::COMMAND),
+    //t('Message'),
+    //array('data' => t('Operations')),
+  );
+
+  $query = db_select(mediamosa_job_db::TABLE_NAME, 'j')->extend('PagerDefault')->extend('TableSort');
+  $query->leftJoin(mediamosa_job_transcode_db::TABLE_NAME, 't', 'j.' . mediamosa_job_db::ID . ' = t.' . mediamosa_job_transcode_db::JOB_ID);
+  $query
+    ->fields('j', array(
+      mediamosa_job_db::FINISHED,
+      mediamosa_job_db::ID,
+      mediamosa_job_db::APP_ID,
+      mediamosa_job_db::ASSET_ID,
+      mediamosa_job_db::MEDIAFILE_ID,
+      mediamosa_job_db::OWNER_ID,
+      mediamosa_job_db::JOB_STATUS,
+      mediamosa_job_db::PROGRESS,
+      mediamosa_job_db::PRIORITY,
+      mediamosa_job_db::JOB_TYPE,
+      mediamosa_job_db::STARTED,
+      mediamosa_job_db::CREATE_STILL,
+      mediamosa_job_db::NO_HINT,
+      mediamosa_job_db::STILL_PARAMETERS,
+      mediamosa_job_db::ERROR_DESCRIPTION,
+      mediamosa_job_db::CREATED,
+      mediamosa_job_db::CHANGED,
+    ))
+    ->fields('t', array(
+      mediamosa_job_transcode_db::TRANSCODE_PROFILE_ID,
+      mediamosa_job_transcode_db::TOOL,
+      mediamosa_job_transcode_db::COMMAND,
+    ))
+  ;
+  if (!empty($filter['where'])) {
+    $query->where($filter['where'], $filter['args']);
+  }
+  $result = $query
+    ->condition('j.' . mediamosa_job_db::JOB_STATUS, mediamosa_job_db::JOB_STATUS_WAITING,
+      ($type == mediamosa_job_db::JOB_STATUS_WAITING ? '==' : '<>')
+    )
+    ->limit(50)
+    ->orderByHeader($header)
+    ->execute();
+
+  foreach ($result as $job) {
+    $rows[] = array('data' =>
+      array(
+        $job->{mediamosa_job_db::FINISHED},
+        $job->{mediamosa_job_db::ID},
+        $job->{mediamosa_job_db::APP_ID},
+        l($job->{mediamosa_job_db::ASSET_ID}, 'admin/mediamosa/browse/asset/' . $job->{mediamosa_job_db::ASSET_ID}),
+        $job->{mediamosa_job_db::MEDIAFILE_ID},
+        $job->{mediamosa_job_db::OWNER_ID},
+        $job->{mediamosa_job_db::JOB_STATUS},
+        $job->{mediamosa_job_db::PROGRESS},
+        $job->{mediamosa_job_db::PRIORITY},
+        $job->{mediamosa_job_db::JOB_TYPE},
+        $job->{mediamosa_job_db::STARTED},
+        $job->{mediamosa_job_db::CREATE_STILL},
+        $job->{mediamosa_job_db::NO_HINT},
+        $job->{mediamosa_job_db::STILL_PARAMETERS},
+        $job->{mediamosa_job_db::ERROR_DESCRIPTION},
+        $job->{mediamosa_job_db::CREATED},
+        $job->{mediamosa_job_db::CHANGED},
+        $job->{mediamosa_job_transcode_db::TRANSCODE_PROFILE_ID},
+        $job->{mediamosa_job_transcode_db::TOOL},
+        (
+          $job->{mediamosa_job_db::JOB_TYPE} == mediamosa_job_db::JOB_TYPE_TRANSCODE ?
+          $job->{mediamosa_job_transcode_db::COMMAND} :
+          t('*** Not a transcode job ***')
+        ),
+      ),
+    );
+  }
+
+  $output['job_table'] = array(
+    '#theme' => 'table',
+    '#header' => $header,
+    '#rows' => $rows,
+    '#attributes' => array('id' => 'admin-joblog'),
+    '#empty' => t('No jobs available.'),
+  );
+  $output['job_pager'] = array('#theme' => 'pager');
+
+  return $output;
+}
+
+
+/**
+ * Job filter form.
+ *
+ * @ingroup forms
+ * @see _mediamosa_maintenance_status_filter_form_submit()
+ * @see _mediamosa_maintenance_status_filter_form_validate()
+ */
+function _mediamosa_maintenance_status_filter_form($form) {
+  $filters = _mediamosa_maintenance_status_filters();
+
+  $form['filters'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Filter jobs'),
+    '#collapsible' => TRUE,
+    '#collapsed' => empty($_SESSION['mm_status_job_filter']),
+  );
+  foreach ($filters as $key => $filter) {
+    $form['filters']['status'][$key] = array(
+      '#title' => $filter['title'],
+      '#type' => 'select',
+      '#multiple' => TRUE,
+      '#size' => 8,
+      '#options' => $filter['options'],
+    );
+    if (!empty($_SESSION['mm_status_job_filter'][$key])) {
+      $form['filters']['status'][$key]['#default_value'] = $_SESSION['mm_status_job_filter'][$key];
+    }
+  }
+
+  $form['filters']['actions'] = array(
+    '#type' => 'actions',
+    '#attributes' => array('class' => array('container-inline')),
+  );
+  $form['filters']['actions']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Filter'),
+  );
+  if (!empty($_SESSION['mm_status_job_filter'])) {
+    $form['filters']['actions']['reset'] = array(
+      '#type' => 'submit',
+      '#value' => t('Reset')
+    );
+  }
+
+  return $form;
+}
+
+/**
+ * Validate result from job administration filter form.
+ */
+function _mediamosa_maintenance_status_filter_form_validate($form, &$form_state) {
+  if ($form_state['values']['op'] == t('Filter') && empty($form_state['values']['type']) && empty($form_state['values']['severity'])) {
+    form_set_error('type', t('You must select something to filter by.'));
+  }
+}
+
+/**
+ * Process result from job administration filter form.
+ */
+function _mediamosa_maintenance_status_filter_form_submit($form, &$form_state) {
+  $op = $form_state['values']['op'];
+  $filters = _mediamosa_maintenance_status_filters();
+  switch ($op) {
+    case t('Filter'):
+      foreach ($filters as $name => $filter) {
+        if (isset($form_state['values'][$name])) {
+          $_SESSION['mm_status_job_filter'][$name] = $form_state['values'][$name];
+        }
+      }
+      break;
+    case t('Reset'):
+      $_SESSION['mm_status_job_filter'] = array();
+      break;
+  }
+  //return 'admin/mediamosa/status/job/list/' . $type;
+}
+
+
+/**
+ * Build query for job administration filters based on session.
+ */
+function _mediamosa_maintenance_status_build_filter_query() {
+  if (empty($_SESSION['mm_status_job_filter'])) {
+    return;
+  }
+
+  $filters = _mediamosa_maintenance_status_filters();
+
+  // Build query
+  $where = $args = array();
+  foreach ($_SESSION['mm_status_job_filter'] as $key => $filter) {
+    $filter_where = array();
+    foreach ($filter as $value) {
+      $filter_where[] = $filters[$key]['where'] . $filters[$key]['placeholder'];
+      $args[$filters[$key]['placeholder']] = $value;
+    }
+    if (!empty($filter_where)) {
+      $where[] = '(' . implode(' OR ', $filter_where) . ')';
+    }
+  }
+  $where = !empty($where) ? implode(' AND ', $where) : '';
+
+  return array(
+    'where' => $where,
+    'args' => $args,
+  );
+}
+
+/**
+ * List dblog administration filters that can be applied.
+ */
+function _mediamosa_maintenance_status_filters() {
+  $filters = array();
+
+  $statuses = array(
+    mediamosa_job_db::JOB_STATUS_CANCELLED,
+    mediamosa_job_db::JOB_STATUS_CANCELLING,
+    mediamosa_job_db::JOB_STATUS_FAILED,
+    mediamosa_job_db::JOB_STATUS_FINISHED,
+    mediamosa_job_db::JOB_STATUS_INPROGRESS,
+    //mediamosa_job_db::JOB_STATUS_WAITING,
+  );
+
+  foreach ($statuses as $type) {
+    $types[$type] = $type;
+  }
+
+  if (!empty($types)) {
+    $filters['type'] = array(
+      'title' => t('Type'),
+      'where' => "j." . mediamosa_job_db::JOB_STATUS . " = ",
+      'placeholder' => ':filter_status',
+      'options' => $types,
+    );
+  }
+
+  return $filters;
+}
+
 
 /**
  * Get the waiting jobs.
