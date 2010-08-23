@@ -81,7 +81,7 @@ function _mediamosa_job_uninstall() {
  */
 function mediamosa_job_schema() {
 
-  $a_schema[mediamosa_job_db::TABLE_NAME] = array(
+  $schema[mediamosa_job_db::TABLE_NAME] = array(
   'description' => t('The job table.'),
     'fields' => array(
       mediamosa_job_db::ID => array(
@@ -198,5 +198,5 @@ function mediamosa_job_schema() {
     ),
   );
 
-  return $a_schema;
+  return $schema;
 }

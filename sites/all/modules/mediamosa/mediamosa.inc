@@ -523,7 +523,7 @@ class mediamosa {
 
     // Drupal 7 does not create foreign keys yet, so we will.
     if ($make_foreignkey) {
-      mediamosa_db::db_install_schema_foreign_keys($module, $make_foreignkey);
+      mediamosa_db::db_install_schema_foreign_keys($module);
     }
   }
 

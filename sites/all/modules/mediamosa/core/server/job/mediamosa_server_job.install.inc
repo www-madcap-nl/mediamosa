@@ -51,7 +51,7 @@ function _mediamosa_server_job_uninstall() {
  */
 function mediamosa_server_job_schema() {
 
-  $a_schema[mediamosa_server_job_db::TABLE_NAME] = array(
+  $schema[mediamosa_server_job_db::TABLE_NAME] = array(
   'description' => t('The transcode job table.'),
     'fields' => array(
       mediamosa_server_job_db::SERVER_ID => array(
@@ -90,5 +90,5 @@ function mediamosa_server_job_schema() {
     ),
   );
 
-  return $a_schema;
+  return $schema;
 }

@@ -397,11 +397,14 @@ function mediamosa_maintenance_status_configuration_mediamosa_status_generate($w
 
   // Is the schemas ok?
   $is_schemas = TRUE;
+
   // Schema differences.
   $schema_description = '';
+
   // Scan the install files.
   $files = file_scan_directory('sites/all/modules/mediamosa', '/^.*\.install\.inc$/');
   $test_table_prefix = 'mm_' . mt_rand(1000, 9999) . '_';
+
   // Go through the install files.
   foreach ($files as $file) {
     require_once $file->uri;
@@ -410,24 +413,31 @@ function mediamosa_maintenance_status_configuration_mediamosa_status_generate($w
     if (is_callable($function_name)) {
       // Get the schemas.
       $schemas = call_user_func($function_name);
+
       // Install the schemas.
       mediamosa::drupal_install_schema($module_name, $test_table_prefix, FALSE);
+
       // Get schemas one by one.
       foreach ($schemas as $original_table_name => $schema) {
         $test_table_name = $test_table_prefix . $original_table_name;
+
         // Get the table details.
         $original_table_result = mediamosa_db::db_query("SHOW CREATE TABLE {#table_name}", array(
           '#table_name' => $original_table_name,
         ))->fetchAssoc();
+
         $test_table_result = mediamosa_db::db_query("SHOW CREATE TABLE {#table_name}", array(
           '#table_name' => $test_table_name,
         ))->fetchAssoc();
+
         // Replace the test table name.
         $test_table_result = str_replace($test_table_name, $original_table_name, $test_table_result);
+
         // Clear the foreign keys.
         if (strpos($original_table_result['create table'], 'CONSTRAINT') !== FALSE) {
           // Clear the last ','.
           $original_table_result['create table'] = str_replace(",\n  CONSTRAINT", "\n  CONSTRAINT", $original_table_result['create table']);
+
           // Clear the CONSTRAINT lines.
           $original_table_result['create table'] = explode("\n", $original_table_result['create table']);
           foreach ($original_table_result['create table'] as $key => $line) {
@@ -441,11 +451,12 @@ function mediamosa_maintenance_status_configuration_mediamosa_status_generate($w
         if ($original_table_result['create table'] != $test_table_result['create table']) {
           // Make info for displaying the differences.
           $schema_description .= $original_table_name . ":\n";
-          $schema_description .= "Current:\n" . mediamosa_lib::make_diff($original_table_result['create table'], $test_table_result['create table']) ."\n";
-          $schema_description .= "Schema:\n" . mediamosa_lib::make_diff($test_table_result['create table'], $original_table_result['create table']) ."\n\n";
+          $schema_description .= "Current:\n" . mediamosa_lib::make_diff($original_table_result['create table'], $test_table_result['create table']) . "\n";
+          $schema_description .= "Schema:\n" . mediamosa_lib::make_diff($test_table_result['create table'], $original_table_result['create table']) . "\n\n";
           $is_schemas = FALSE;
         }
-        // Drop the test table.
+
+// Drop the test table.
         mediamosa_db::db_drop_table($test_table_name);
       }
     }
