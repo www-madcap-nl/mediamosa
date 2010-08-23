@@ -252,11 +252,13 @@ function mediamosa_maintenance_status_configuration_mediamosa_status_generate($w
     'value' => t('Innodb.'),
     'severity' => _mediamosa_maintenance_status_okerror($rows['have_innodb'] != 'YES'),
   );
+  /*
   $results['database_character_set'] = array(
     'title' => t('Database'),
     'value' => t('Character set: utf8.'),
     'severity' => _mediamosa_maintenance_status_okwarning($rows['character_set_database'] != 'utf8'),
   );
+  */
   $results['database_innodb_flush_log_at_trx_commit'] = array(
     'title' => t('Database'),
     'value' => t("innodb_flush_log_at_trx_commit = @value. It shouldn't be 1.", array('@value' => $rows['innodb_flush_log_at_trx_commit'])),
