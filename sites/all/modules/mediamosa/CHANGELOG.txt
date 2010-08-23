@@ -40,7 +40,11 @@ Mediamosa 2.2.0
 - Integrity check produces error fix (See VPCore ticket #177).
 - Integrity check uses "nice" call, instead of "wget" (See VPCore ticket #177).
 - Support for 2 pass h264 encoding development (See MediaMosa ticket #264).
-- Remove asset_id_root field from mediamosa_asset_mediafile table (See MediaMosa ticket #317).
+- Remove asset_id_root field from mediamosa_asset_mediafile table (See MediaMosa
+  ticket #317).
+- Added first fase 1 version of the mediamosa/server status page. (See MediaMosa
+  ticket #314).
+- Added job server status page (See MediaMosa ticker #284).
 
 Other changes (not ticket related).
 - During ticket #255, adding pager to stats, bug was found on the stats keyword
@@ -110,7 +114,8 @@ Other changes (not ticket related).
 - Fixed /acl/app in is_oai mode SQL error.
 - Added force index on metadata search join.
 - User quota test fails in 32 bits systems bug fix.
-- MySQL query speed improvement: Add mediafile_id_source index to the mediamosa_asset_mediafile table.
+- MySQL query speed improvement: Add mediafile_id_source index to the 
+  mediamosa_asset_mediafile table.
 - Rewrote unit test for mediafile metadata test.
 - Fixed notices in asset/$asset_id/acl POST call when no ACL rules were 
   provided.
@@ -154,7 +159,9 @@ Other changes (not ticket related).
   wrong search results.
 - Still parameters 'width' and 'height' are now deprecated, use still instead.
 - Fixed: start_frame and end_frame still parameters where not copied to 
-  start_time and end_time when *_time parameters where not used. 
+  start_time and end_time when *_time parameters where not used.
+- Moved logging of missing status file on transcode/analyse to debug status, 
+  will no longer end up in normal mode of debug level.  
 
 Mediamosa 2.1.5 (build 664)
 ---------------------------

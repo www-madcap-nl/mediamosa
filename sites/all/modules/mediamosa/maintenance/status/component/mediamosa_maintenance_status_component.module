@@ -125,7 +125,8 @@ function mediamosa_maintenance_status_component_mediamosa_status_generate($with_
   fwrite($handle, $content);
   fclose($handle);
   $read_content = '';
-  if ($handle = fopen($filename, "rb")) {
+  $handle = fopen($filename, "rb");
+  if ($handle) {
     $read_content = fread($handle, filesize($filename));
     fclose($handle);
   }

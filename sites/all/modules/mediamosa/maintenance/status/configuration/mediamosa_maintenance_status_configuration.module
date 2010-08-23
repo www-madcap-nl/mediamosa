@@ -203,25 +203,29 @@ function mediamosa_maintenance_status_configuration_mediamosa_status_generate($w
     'severity' => _mediamosa_maintenance_status_okwarning($ret_val),
   );
 
-  // Apache version.
-  $version = apache_get_version();
-  $version = drupal_substr($version, drupal_strlen('Apache/'));
-  $pos = strpos($version, '.');
-  if ($pos !== FALSE) {
-    $version = drupal_substr($version, 0, $pos);
+  if (function_exists('apache_get_version')) {
+    // Apache version.
+    $version = apache_get_version();
+    $version = drupal_substr($version, drupal_strlen('Apache/'));
+    $pos = strpos($version, '.');
+    if ($pos !== FALSE) {
+      $version = drupal_substr($version, 0, $pos);
+    }
+    $results['apache_version'] = array(
+      'title' => t('Apache'),
+      'value' => apache_get_version(),
+      'severity' => _mediamosa_maintenance_status_okerror(!is_numeric($version) || $version < MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_APACHE_WARNING),
+    );
   }
-  $results['apache_version'] = array(
-    'title' => t('Apache'),
-    'value' => apache_get_version(),
-    'severity' => _mediamosa_maintenance_status_okerror(!is_numeric($version) || $version < MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_APACHE_WARNING),
-  );
 
-  // Apache mod_rewrite.
-  $results['apache_mod_rewrite'] = array(
-    'title' => t('Apache'),
-    'value' => t('Mod rewrite.'),
-    'severity' => _mediamosa_maintenance_status_okerror(!in_array("mod_rewrite", apache_get_modules())),
-  );
+  if (function_exists('apache_get_modules')) {
+    // Apache mod_rewrite.
+    $results['apache_mod_rewrite'] = array(
+      'title' => t('Apache'),
+      'value' => t('Mod rewrite.'),
+      'severity' => _mediamosa_maintenance_status_okerror(!in_array("mod_rewrite", apache_get_modules())),
+    );
+  }
 
   // Clean url.
   $results['drupal_clean_url'] = array(

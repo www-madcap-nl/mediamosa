@@ -440,7 +440,7 @@ class mediamosa_job_server {
       case mediamosa_job_server_db::JOB_TYPE_TRANSCODE:
         // No status file found, we just have to wait.
         if (empty($job_status)) {
-          self::log('No status file found with name @name for job @job_id, maybe next run.', array('@name' => mediamosa_configuration_storage::status_file_location_get($mediafile_id_src), '@job_id' => $job_id));
+          self::log_debug('No status file found with name @name for job @job_id, maybe next run.', array('@name' => mediamosa_configuration_storage::status_file_location_get($mediafile_id_src), '@job_id' => $job_id));
           return;
         }
 
@@ -482,7 +482,7 @@ class mediamosa_job_server {
         if (!file_exists($file_scene)) {
           // No status file found, we just have to wait.
           if (empty($job_status)) {
-            self::log('No status file found with name @name for job @job_id, maybe next run.', array('@name' => mediamosa_configuration_storage::status_file_location_get($mediafile_id_src), '@job_id' => $job_id));
+            self::log_debug('No status file found with name @name for job @job_id, maybe next run.', array('@name' => mediamosa_configuration_storage::status_file_location_get($mediafile_id_src), '@job_id' => $job_id));
             return;
           }
         }

@@ -11,5 +11,5 @@ dependencies[] = mediamosa
 dependencies[] = mediamosa_maintenance
 
 ; Used files.
-files[] = mediamosa_maintenance_automatedsimpletest.module
-files[] = mediamosa_maintenance_automatedsimpletest.install
+files[] = mediamosa_maintenance_status.module
+files[] = mediamosa_maintenance_status.install
