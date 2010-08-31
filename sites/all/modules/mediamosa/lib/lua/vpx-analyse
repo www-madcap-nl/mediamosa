@@ -531,15 +531,21 @@ end
 
 analyse(source_path, hash, always_hint_mp4, always_insert_md)
 
+-- if ffmpeg cannot analyse, but file gives an asf, make the container also asf
+-- so it is at least playable.
+if properties["File-type"] == nil and properties["MIME-type"] == "video/x-ms-asf" then
+  add_property("File-type", "asf")
+end
+
+add_property("ffmpeg-output", table.concat(log, "}-{"))
+for k,v in pairs(properties) do
+  print(k .. ": " .. v)
+end
+
 if next(errors) ~= nil then
   for _,v in pairs(errors) do
     print("Error: " .. v)
   end
   print("\n" .. table.concat(log, "\n"))
   os.exit(1)
-else
-  add_property("ffmpeg-output", table.concat(log, "}-{"))
-  for k,v in pairs(properties) do
-    print(k .. ": " .. v)
-  end
 end
