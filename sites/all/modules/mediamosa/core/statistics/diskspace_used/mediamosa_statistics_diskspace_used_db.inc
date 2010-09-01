@@ -48,16 +48,3 @@ class mediamosa_statistics_diskspace_used_db {
   const DISKSPACE = 'diskspace';
   const TIMESTAMP = 'timestamp';
 }
-
-/*
-  db_query("CREATE TABLE IF NOT EXISTS {statistics_diskspace_used} (
-  `id` bigint(20) NOT NULL auto_increment,
-  `app_id` int(11) NOT NULL,
-  `type` enum('container','group','user','eua') NOT NULL,
-  `keyword` varchar(100) NOT NULL,
-  `container_type` varchar(50) NOT NULL,
-  `diskspace` bigint(11) NOT NULL,
-  `timestamp` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
-  PRIMARY KEY  (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=COMPACT");
- */

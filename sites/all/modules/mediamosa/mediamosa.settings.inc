@@ -199,6 +199,10 @@ class mediamosa_settings {
   const MEDIAMOSA_RUN_INTERVAL_NORMAL = 180;
   const MEDIAMOSA_RUN_INTERVAL_SLOW = 1440;
 
+  // Default timezone for apps.
+  const MEDIAMOSA_DEFAULT_TIMEZONE = 'Europe/Amsterdam';
+  const MEDIAMOSA_DEFAULT_TIMEZONE_INTERNAL = 'UTC';
+
   // ------------------------------------------------------------------ Functions.
   /**
    * Gets FFmpeg pad variable.

@@ -88,19 +88,17 @@ class mediamosa_asset_supplement {
     $supplement_id = mediamosa_db::uuid($app_id);
 
     // Create new supplement.
-    $a_fields = array(
+    $fields = array(
       mediamosa_asset_supplement_db::ASSET_ID => $asset_id,
       mediamosa_asset_supplement_db::ID => $supplement_id,
-      mediamosa_asset_supplement_db::CREATED => mediamosa::db_current_timestamp_now(),
-      mediamosa_asset_supplement_db::CHANGED => mediamosa::db_current_timestamp_now(),
     );
 
     // Add created value.
-    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+    $fields = mediamosa_db::db_insert_enrich($fields);
 
     // Insert it.
     mediamosa_db::db_insert(mediamosa_asset_supplement_db::TABLE_NAME)
-      ->fields($a_fields)
+      ->fields($fields)
       ->execute();
 
     // Return the new ID.

@@ -112,13 +112,13 @@ class mediamosa_lib {
    *
    */
   static public function iso8601date_to_unix($iso8601_date_str) {
-    $a_value = split("[-: ]", $iso8601_date_str);
-    $a_value[0] = (int)$a_value[0];
-    $a_value[1] = isset($a_value[1]) && $a_value[1] > 0 ? (int)$a_value[1] : 1;// MM
-    $a_value[2] = isset($a_value[2]) && $a_value[2] > 0 ? (int)$a_value[2] : 1;// DD
-    $a_value[3] = isset($a_value[3]) ? (int)$a_value[3] : 0;// HH
-    $a_value[4] = isset($a_value[4]) ? (int)$a_value[4] : 0;// MM
-    $a_value[5] = isset($a_value[5]) ? (int)$a_value[5] : 0;// SS
+    $a_value = preg_split("/[-:\\s]/", $iso8601_date_str);
+    $a_value[0] = (int) $a_value[0];
+    $a_value[1] = isset($a_value[1]) && $a_value[1] > 0 ? (int) $a_value[1] : 1;// MM
+    $a_value[2] = isset($a_value[2]) && $a_value[2] > 0 ? (int) $a_value[2] : 1;// DD
+    $a_value[3] = isset($a_value[3]) ? (int) $a_value[3] : 0;// HH
+    $a_value[4] = isset($a_value[4]) ? (int) $a_value[4] : 0;// MM
+    $a_value[5] = isset($a_value[5]) ? (int) $a_value[5] : 0;// SS
 
     // Get current timezone
     $tz = date_default_timezone_get();
@@ -142,7 +142,7 @@ class mediamosa_lib {
    */
   static public function simplexml2array($xml) {
     $xml_copy = $xml;
-    if (get_class($xml) == 'SimpleXMLElement') {
+    if (is_object($xml) && get_class($xml) == 'SimpleXMLElement') {
       foreach($xml->attributes() as $key => $value) {
         if ($value) {
           $attributes[$key] = (string)$value;
@@ -176,20 +176,34 @@ class mediamosa_lib {
    * @param object $xml
    */
   static public function responsexml2array($xml) {
+    if (!$xml) {
+      return $xml;
+    }
 
     // Convert to nice array.
-    $a_xml = self::simplexml2array($xml);
+    $xml = self::simplexml2array($xml);
 
-    if (!isset($a_xml['items']['item'])) {
-      return $a_xml;
+    if (!isset($xml['items']['item'])) {
+      return $xml;
     }
 
     // Fix the problem with 1 or 2+ items in array.
-    $a_tmp = isset($a_xml['items']['item'][0]) ? $a_xml['items']['item'] : array(0 => $a_xml['items']['item']);
-    unset($a_xml['items']);
-    $a_xml['items']['item'] = $a_tmp;
+    if (!isset($xml['items']['item'][0])) {
+      $tmp = array(0 => $xml['items']['item']);
+      unset($xml['items']);
+      $xml['items']['item'] = $tmp;
+    }
 
-    return $a_xml;
+    // Fix problem with 1 or 2+ mediafiles in array.
+    foreach ($xml['items']['item'] as &$item) {
+      if (!empty($item['mediafiles']) && !isset($item['mediafiles']['mediafile'][0])) {
+        $tmp = array(0 => $item['mediafiles']['mediafile']);
+        unset($item['mediafiles']['mediafile']);
+        $item['mediafiles']['mediafile'] = $tmp;
+      }
+    }
+
+    return $xml;
   }
 
   /**

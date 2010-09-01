@@ -128,7 +128,7 @@ class mediamosa_ticket {
       mediamosa_ticket_db::TICKET_TYPE => $ticket_type,
       mediamosa_ticket_db::OWNER_ID => $owner_id,
       mediamosa_ticket_db::MEDIAFILE_ID => $mediafile_id,
-      mediamosa_ticket_db::ISSUED => (isset($issued) ? $issued : mediamosa::db_current_timestamp_now()),
+      mediamosa_ticket_db::ISSUED => (isset($issued) ? $issued : mediamosa_datetime::utc_current_timestamp_now()),
     );
 
     if (isset($group_id)) {
@@ -290,7 +290,7 @@ class mediamosa_ticket {
     }
 
     // Get the current time.
-    $db_time_now = mediamosa::db_current_timestamp_now();
+    $db_time_now = mediamosa_datetime::utc_current_timestamp_now();
 
     // Retrieve location of the play tickets.
     $ticket_play_location = mediamosa_configuration_storage::ticket_play_location_get();
@@ -424,7 +424,7 @@ class mediamosa_ticket {
   static public function get_valid($ticket_id, $ticket_type) {
 
     // Get the current time.
-    $db_time_now = mediamosa::db_current_timestamp_now();
+    $db_time_now = mediamosa_datetime::utc_current_timestamp_now();
 
     // Get the correct expire date.
     $expire_seconds = mediamosa_settings::TICKET_EXPIRATION_UPLOAD;

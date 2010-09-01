@@ -470,6 +470,7 @@ class mediamosa_asset_mediafile_still {
         ':mediafile_id_source' => $mediafile_id,
       )
     )->fetchField();
+
     // No default, create one.
     if (!$mediafile_id_default) {
       $prop_id = mediamosa_asset_mediafile_metadata_property::get_property_id_int(mediamosa_asset_mediafile_metadata::STILL_ORDER);

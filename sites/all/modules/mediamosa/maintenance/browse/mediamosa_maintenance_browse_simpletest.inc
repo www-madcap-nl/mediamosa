@@ -123,6 +123,27 @@ function mediamosa_maintenance_browse_simpletest_result_form($form, &$form_state
 }
 
 /**
+ * Action form submit.
+ *
+ * @param array $form
+ * @param array $form_state
+ */
+function mediamosa_maintenance_browse_simpletest_result_form_submit($form, &$form_state) {
+
+  $form = simpletest_result_form_submit($form, $form_state);
+
+  // Change the redirect.
+  if (drupal_substr($form_state['redirect'], 0, drupal_strlen('admin/config/development/testing/results/')) == 'admin/config/development/testing/results/') {
+    $form_state['redirect'] = 'admin/mediamosa/browse/testing/results/' . drupal_substr($form_state['redirect'], drupal_strlen('admin/config/development/testing/results/'));
+  }
+  elseif ($form_state['redirect'] == 'admin/config/development/testing') {
+    $form_state['redirect'] = 'admin/mediamosa/browse/testing';
+  }
+
+  return $form;
+}
+
+/**
  * Reuse simpletest test table.
  */
 function theme_mediamosa_simpletest_test_table($variables) {

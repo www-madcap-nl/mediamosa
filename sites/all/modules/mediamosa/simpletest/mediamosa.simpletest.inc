@@ -118,7 +118,8 @@ class MediaMosaTestCase extends DrupalWebTestCase {
   protected function setUp() {
 
     // Make this global so we can output debug to the test.
-    $GLOBALS['mediamosa_simpletest'] = $this;
+    global $mediamosa_simpletest;
+    $mediamosa_simpletest = $this;
 
     $a_vars_to_copy = array('mediamosa_current_mount_point');
     $a_values = array();
@@ -414,7 +415,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     // Create a SimpleXMLElement from the restcall's output.
     try {
       // We expect char '<' on REST calls, if not we need to output it.
-      if ($out['body']{0} != '<') {
+      if ($out['body'][0] != '<') {
         $this->var_export($out['body']);
       }
       else {
@@ -633,6 +634,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     $node->{mediamosa_app_db::QUOTA} = 0;
     $node->{mediamosa_app_db::QUOTA_USED} = 0;
     $node->{mediamosa_app_db::ACTIVE_VERSION} = '';
+    $node->{mediamosa_app_db::TIMEZONE} = mediamosa_settings::MEDIAMOSA_DEFAULT_TIMEZONE;
 
     node_save($node);
 
@@ -676,8 +678,8 @@ class MediaMosaTestCase extends DrupalWebTestCase {
       mediamosa_job_db::PROGRESS => '0.000',
       mediamosa_job_db::PRIORITY => 0,
       mediamosa_job_db::JOB_TYPE => mediamosa_job_db::JOB_TYPE_UPLOAD,
-      mediamosa_job_db::STARTED => mediamosa::db_current_timestamp_now(),
-      mediamosa_job_db::FINISHED => mediamosa::db_current_timestamp_now(),
+      mediamosa_job_db::STARTED => mediamosa_datetime::utc_current_timestamp_now(),
+      mediamosa_job_db::FINISHED => mediamosa_datetime::utc_current_timestamp_now(),
       mediamosa_job_db::ERROR_DESCRIPTION => '',
       mediamosa_job_db::CREATE_STILL => mediamosa_job_db::CREATE_STILL_FALSE,
       mediamosa_job_db::NO_HINT => mediamosa_job_db::NO_HINT_FALSE,

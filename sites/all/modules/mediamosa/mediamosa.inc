@@ -41,12 +41,12 @@ class mediamosa {
   // ------------------------------------------------------------------ Parameters.
   static private $is_db_logging = FALSE;
 
-  static private $a_num_of_queries = array();
-  static private $a_num_of_slow_queries = array();
-  static private $a_total_query_time = array();
+  static private $num_of_queries = array();
+  static private $num_of_slow_queries = array();
+  static private $total_query_time = array();
 
   // Stores last error that went through error_handler.
-  static private $a_last_php_error = NULL;
+  static private $last_php_error = NULL;
 
   // ------------------------------------------------------------------ Constructor.
   function __construct() {
@@ -106,11 +106,38 @@ class mediamosa {
     }
 
     if (!isset($mediamosa_response)) {
-      //class_exists('mediamosa_response', TRUE);
       $mediamosa_response = new mediamosa_response();
     }
 
     return $mediamosa_response;
+  }
+
+  /**
+   * Returns the timezone of the current session. Is by default Europe/Paris.
+   * Is set when REST call is run and the application timezone is used.
+   *
+   */
+  static public function get_restcall_timezone($timezone = NULL) {
+    static $timezone_static = NULL;
+
+    if (isset($timezone)) {
+      $timezone_static = $timezone;
+    }
+
+    if (empty($timezone_static)) {
+      return mediamosa_settings::MEDIAMOSA_DEFAULT_TIMEZONE; // 'Europe/Amsterdam'
+    }
+
+    return $timezone_static;
+  }
+
+  /**
+   * Set the current timezone for this session.
+   *
+   * @param unknown_type $timezone
+   */
+  static public function set_restcall_timezone($timezone) {
+    mediamosa::get_restcall_timezone($timezone);
   }
 
   /**
@@ -159,7 +186,7 @@ class mediamosa {
       $caller = isset($caller) ? $caller : _drupal_get_last_caller(debug_backtrace());
 
       // Always set the last error.
-      self::$a_last_php_error = array(
+      self::$last_php_error = array(
         'type' => isset($types[$error_level]) ? $types[$error_level] : 'Unknown error',
         'message' => $message,
         'function' => $caller['function'],
@@ -193,7 +220,7 @@ class mediamosa {
   static public function last_php_error() {
 
     // If no last error, then return FALSE.
-    return !isset(self::$a_last_php_error) ? FALSE : self::$a_last_php_error;
+    return !isset(self::$last_php_error) ? FALSE : self::$last_php_error;
   }
 
   /**
@@ -204,7 +231,7 @@ class mediamosa {
   static public function last_php_error_message() {
 
     // If no last error, then return 'unknown' text.
-    return isset(self::$a_last_php_error) ? self::$a_last_php_error['message'] : 'unknown';
+    return isset(self::$last_php_error) ? self::$last_php_error['message'] : 'unknown';
   }
 
   /**
@@ -369,49 +396,6 @@ class mediamosa {
    }
 
   /**
-   * Return the current time UTC and in SQL datetime format (YYYY-MM-DD HH:MM:SS)
-   *
-   * made private: use db_current_timestamp_now() instead (!).
-   *
-   * @param $no_reset Boolean to control wheter the timestamp is re-created or the static is used (if set).
-   * @return timestamp
-   */
-  static public function utc_current_timestamp_now($reset = FALSE) {
-    static $utc_timestamp = NULL;
-
-    if (isset($utc_timestamp) && !$reset) {
-      return $utc_timestamp;
-    }
-
-    $utc_timestamp = mediamosa_db::db_query('SELECT UTC_TIMESTAMP')->fetchField();
-    return $utc_timestamp;
-  }
-
-  /**
-   * Return the current time and in SQL datetime format (YYYY-MM-DD HH:MM:SS)
-   *
-   * Use this function for storing new time into database.
-   *
-   *
-   * @param $no_reset Boolean to control wheter the timestamp is re-created or the static is used (if set).
-   * @return timestamp
-   */
-  static public function db_current_timestamp_now($reset = FALSE) {
-    static $now_timestamp = NULL;
-
-    if (isset($now_timestamp) && !$reset) {
-      return $now_timestamp;
-    }
-
-    // Lets not break installer, dont use mediamosa_db here. String cast here,
-    // d7 seems to have a problem with float values coming from this string?
-    $now_timestamp = (string)db_query(strtr('SELECT #CURRENT_TIMESTAMP', array('#CURRENT_TIMESTAMP' => mediamosa_db::CURRENT_TIMESTAMP)))->fetchField();
-
-    return $now_timestamp;
-  }
-
-
-  /**
    * Wrapper around the drupal_http_request function.
    * See drupal functions for details.
    */
@@ -462,11 +446,11 @@ class mediamosa {
     }
     // Only log stuff that takes longer than 1 second.
     if ($f_time > 1) {
-      self::$a_num_of_slow_queries[$name]++;
+      self::$num_of_slow_queries[$name]++;
       self::log_debug('Query timing, #times, "#query".', array('#time' => $f_time, '#query' => $query), $name);
     }
 
-    self::$a_num_of_queries[$name]++;
+    self::$num_of_queries[$name]++;
   }
 
   /**
@@ -532,8 +516,8 @@ class mediamosa {
     $previous_db_logging = self::$is_db_logging;
     self::log('DB logging starting.', array(), WATCHDOG_DEBUG, $name);
     self::$is_db_logging = $name;
-    self::$a_num_of_slow_queries[$name] = self::$a_num_of_queries[$name] = 0;
-    self::$a_total_query_time[$name] = microtime(TRUE);
+    self::$num_of_slow_queries[$name] = self::$num_of_queries[$name] = 0;
+    self::$total_query_time[$name] = microtime(TRUE);
 
     return $previous_db_logging;
   }
@@ -543,11 +527,11 @@ class mediamosa {
    */
   static public function disable_db_logging($name) {
     if (self::$is_db_logging !== FALSE) {
-      self::log('DB logging ending, time; #time, total queries; #num_of_queries, slow queries; #num_of_slow_queries.', array('#time' => round(microtime(TRUE) - self::$a_total_query_time[self::$is_db_logging], 4), '#num_of_queries' => self::$a_num_of_queries[self::$is_db_logging], '#num_of_slow_queries' => self::$a_num_of_slow_queries[self::$is_db_logging]), WATCHDOG_DEBUG, self::$is_db_logging);
+      self::log('DB logging ending, time; #time, total queries; #num_of_queries, slow queries; #num_of_slow_queries.', array('#time' => round(microtime(TRUE) - self::$total_query_time[self::$is_db_logging], 4), '#num_of_queries' => self::$num_of_queries[self::$is_db_logging], '#num_of_slow_queries' => self::$num_of_slow_queries[self::$is_db_logging]), WATCHDOG_DEBUG, self::$is_db_logging);
 
-      unset(self::$a_num_of_queries[self::$is_db_logging]);
-      unset(self::$a_num_of_slow_queries[self::$is_db_logging]);
-      unset(self::$a_total_query_time[self::$is_db_logging]);
+      unset(self::$num_of_queries[self::$is_db_logging]);
+      unset(self::$num_of_slow_queries[self::$is_db_logging]);
+      unset(self::$total_query_time[self::$is_db_logging]);
     }
 
     self::$is_db_logging = $name;

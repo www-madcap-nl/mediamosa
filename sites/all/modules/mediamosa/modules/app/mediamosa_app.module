@@ -314,8 +314,4 @@ function _mediamosa_app_contacts($app_id) {
   ));
 
   return implode('', $build);
-  /*
-  $output['contacts'] = theme('table', ));
-  $output['page] .= theme('pager');
-  $output .= l(t('Return to MediaMosa Application Listing'), 'admin/mediamosa/app');*/
 }

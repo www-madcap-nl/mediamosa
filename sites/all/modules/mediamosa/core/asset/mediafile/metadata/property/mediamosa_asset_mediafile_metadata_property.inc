@@ -89,9 +89,10 @@ class mediamosa_asset_mediafile_metadata_property {
       $fields = array(
         'prop_name' => $prop_name,
         'type' => $prop_type,
-        'created' => mediamosa::db_current_timestamp_now(),
-        'changed' => mediamosa::db_current_timestamp_now(),
       );
+
+      // Add created/changed.
+      $fields = mediamosa_db::db_insert_enrich($fields);
 
       $prop_id = mediamosa_db::db_insert(mediamosa_asset_mediafile_metadata_property_db::TABLE_NAME)
         ->fields($fields)

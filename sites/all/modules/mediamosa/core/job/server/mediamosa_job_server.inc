@@ -591,7 +591,7 @@ class mediamosa_job_server {
       case mediamosa_job_server_db::JOB_STATUS_FINISHED:
       case mediamosa_job_server_db::JOB_STATUS_FAILED:
       case mediamosa_job_server_db::JOB_STATUS_CANCELLED:
-        $fields[mediamosa_job_server_db::FINISHED] = mediamosa::db_current_timestamp_now();
+        $fields[mediamosa_job_server_db::FINISHED] = mediamosa_datetime::utc_current_timestamp_now();
         break;
     }
 
@@ -605,7 +605,7 @@ class mediamosa_job_server {
 
     // Set status.
     if ($a_jobserver_job[mediamosa_job_server_db::JOB_STATUS] == mediamosa_job_server_db::JOB_STATUS_WAITING && $job_status == mediamosa_job_server_db::JOB_STATUS_INPROGRESS) {
-      $fields[mediamosa_job_server_db::STARTED] = mediamosa::utc_current_timestamp_now();
+      $fields[mediamosa_job_server_db::STARTED] = mediamosa_datetime::utc_current_timestamp_now();
     }
 
     if (!empty($error_description)) {
@@ -665,16 +665,16 @@ class mediamosa_job_server {
     $no_hint = $a_job[mediamosa_job_db::NO_HINT];
 
     // Get the app.
-    $a_mediamosa_app = mediamosa_app::get_by_appid($app_id, array(mediamosa_app_db::ALWAYS_HINT_MP4, mediamosa_app_db::ALWAYS_INSERT_MD));
+    $app = mediamosa_app::get_by_appid($app_id);
 
     $a_options = array();
 
     if (!$no_hint) {
-      if ($a_mediamosa_app[mediamosa_app_db::ALWAYS_HINT_MP4] == mediamosa_app_db::ALWAYS_HINT_MP4_TRUE) {
+      if ($app[mediamosa_app_db::ALWAYS_HINT_MP4] == mediamosa_app_db::ALWAYS_HINT_MP4_TRUE) {
         $a_options[] =  mediamosa_settings::ANALYSE_FILE_ALWAYS_HINT_MP4_OPTION;
       }
 
-      if ($a_mediamosa_app[mediamosa_app_db::ALWAYS_INSERT_MD] == mediamosa_app_db::ALWAYS_INSERT_MD_TRUE) {
+      if ($app[mediamosa_app_db::ALWAYS_INSERT_MD] == mediamosa_app_db::ALWAYS_INSERT_MD_TRUE) {
         $a_options[] =  mediamosa_settings::ANALYSE_FILE_ALWAYS_INSERT_MD_OPTION;
       }
     }

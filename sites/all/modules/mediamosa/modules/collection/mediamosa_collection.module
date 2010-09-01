@@ -234,7 +234,6 @@ collections. This call gives all the collection details.',
       'is_unappropriate' => 'A field to flag the collection as inappropriate. Only the is_app_admin is allowed to set this parameter. When set, the collection will not be shown except to the user and the is_app_admin. It does not affect assets belonging to the collection.',
       'public_assign' => '',
       'numofvideos' => 'Number of assets in the collection.',
-      '' => ''
     ),
     mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
   <item id="1">

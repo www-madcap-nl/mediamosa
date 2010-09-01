@@ -811,7 +811,6 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
   }
 }
 
-
 /**
  * URI: /assets
  * Method: GET

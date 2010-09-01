@@ -375,9 +375,6 @@ class mediamosa_asset_mediafile_metadata {
       throw new mediamosa_exception_program_error('Invalid mediafile metadata type (@type)!', array('@type' => $type));
     }
 
-    // Enrich with changed.
-    $fields = mediamosa_db::db_update_enrich($fields);
-
     $num_updated = mediamosa_db::db_update(mediamosa_asset_mediafile_metadata_db::TABLE_NAME)
       ->fields($fields)
       ->condition(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID, $mediafile_id)
@@ -387,9 +384,6 @@ class mediamosa_asset_mediafile_metadata {
     if (!$num_updated) {
       $fields[mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID] = $mediafile_id;
       $fields[mediamosa_asset_mediafile_metadata_db::PROP_ID] = $prop_id;
-
-      // Enrich with created/changed.
-      $fields = mediamosa_db::db_insert_enrich($fields);
 
       $metadata_id = mediamosa_db::db_insert(mediamosa_asset_mediafile_metadata_db::TABLE_NAME)
         ->fields($fields)
@@ -459,8 +453,8 @@ class mediamosa_asset_mediafile_metadata {
       return FALSE;
     }
 
-    $result = mediamosa_db::db_select(mediamosa_asset_mediafile_metadata_db::TABLE_NAME, 'mm')
-      ->fields('mm', array(
+    $result = mediamosa_db::db_select(mediamosa_asset_mediafile_metadata_db::TABLE_NAME, 'amm')
+      ->fields('amm', array(
         mediamosa_asset_mediafile_metadata_db::VAL_CHAR,
         mediamosa_asset_mediafile_metadata_db::VAL_INT,
         mediamosa_asset_mediafile_metadata_db::VAL_DATETIME,
@@ -535,6 +529,7 @@ class mediamosa_asset_mediafile_metadata {
       ))
       ->condition(mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID, $mediafile_id)
       ->execute();
+
     foreach ($result as $row) {
       $prop = mediamosa_asset_mediafile_metadata_property::get_property($row[mediamosa_asset_mediafile_metadata_db::PROP_ID], TRUE);
 

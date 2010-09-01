@@ -101,7 +101,7 @@ class MediaMosaJobTestCaseEga extends MediaMosaTestCaseEga {
     );
 
     // Changing the 'changed' field for upload.
-    mediamosa_db::db_query('UPDATE {#mediamosa_job} SET #changed = DATE_SUB(NOW(), INTERVAL #JOB_JOB_TIMEOUT SECOND)
+    mediamosa_db::db_query('UPDATE {#mediamosa_job} SET #changed = DATE_SUB(UTC_TIMESTAMP(), INTERVAL #JOB_JOB_TIMEOUT SECOND)
       WHERE #job_id = :job_id',
       array(
         '#mediamosa_job' => mediamosa_job_db::TABLE_NAME,
@@ -113,7 +113,7 @@ class MediaMosaJobTestCaseEga extends MediaMosaTestCaseEga {
     );
 
     // Changing the 'changed' field for transcode.
-    mediamosa_db::db_query('UPDATE {#mediamosa_job} SET #changed = DATE_SUB(NOW(), INTERVAL #JOB_JOB_TIMEOUT SECOND)
+    mediamosa_db::db_query('UPDATE {#mediamosa_job} SET #changed = DATE_SUB(UTC_TIMESTAMP(), INTERVAL #JOB_JOB_TIMEOUT SECOND)
       WHERE #job_id = :job_id',
       array(
         '#mediamosa_job' => mediamosa_job_db::TABLE_NAME,

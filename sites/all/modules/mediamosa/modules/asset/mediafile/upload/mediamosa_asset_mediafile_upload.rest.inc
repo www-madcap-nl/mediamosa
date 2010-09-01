@@ -209,19 +209,19 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
         ),
         self::STILL_PER_MEDIAFILE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
-          self::VAR_DESCRIPTION => 'Stills per mediafile.',
+          self::VAR_DESCRIPTION => 'Stills per mediafile (Used when still_type is NONE).',
         ),
         self::STILL_EVERY_SECOND => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
-          self::VAR_DESCRIPTION => 'Stills every second.',
+          self::VAR_DESCRIPTION => 'Stills every second (Used when still_type is SECOND).',
         ),
         self::START_FRAME => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
-          self::VAR_DESCRIPTION => 'Still start frame.',
+          self::VAR_DESCRIPTION => 'Still start frame. (in seconds, used when still_type is NORMAL or SECOND).',
         ),
         self::END_FRAME => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
-          self::VAR_DESCRIPTION => 'Still end frame.',
+          self::VAR_DESCRIPTION => 'Still end frame. (in seconds, used when still_type is NORMAL or SECOND).',
         ),
         self::SIZE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_STRING,

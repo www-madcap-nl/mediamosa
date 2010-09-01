@@ -88,6 +88,7 @@ class mediamosa_response extends mediamosa {
       return;
     }
 
+    // Default XML output.
     $response_type = mediamosa_rest_call::RESPONSE_TYPE_XML;
 
     try {
@@ -168,12 +169,16 @@ class mediamosa_response extends mediamosa {
       $this->set_result(self::ERROR, $e->getCode(), $e->getMessage());
     }
 
+    // Make sure its set.
+    $output = '';
+
     try {
       switch ($response_type) {
         case mediamosa_rest_call::RESPONSE_TYPE_PLAIN:
           header('Content-Type: text/plain; charset=utf-8');
           $output = $this->generate_plain_text();
           break;
+
         case mediamosa_rest_call::RESPONSE_TYPE_DOWNLOAD:
         case mediamosa_rest_call::RESPONSE_TYPE_STILL:
 
@@ -185,6 +190,7 @@ class mediamosa_response extends mediamosa {
             $output = '';
           }
           break;
+
         case mediamosa_rest_call::RESPONSE_TYPE_XML:
         default :
           header('Content-Type: text/xml; charset=utf-8');
@@ -248,6 +254,7 @@ class mediamosa_response extends mediamosa {
    * @param array $a_item
    */
   public function add_item($a_item) {
+    assert(!isset($a_item[''])); // make sure we dont insert stuff with empty keys.
     $this->response['items'][++$this->item_count] = $a_item;
   }
 
@@ -258,7 +265,7 @@ class mediamosa_response extends mediamosa {
    */
   public function add_program_error($mixed_item) {
 
-    if (! isset($this->response['errors'])) {
+    if (!isset($this->response['errors'])) {
       $this->response['errors'] = array();
     }
 
@@ -446,7 +453,7 @@ class mediamosa_response extends mediamosa {
     if (!empty($this->response['errors'])) {
       $o_xml_response_errors = $o_xml_response_header->addChild('errors');
 
-      foreach ($this->response['errors'] as $s_key => $error) {
+      foreach ($this->response['errors'] as $key => $error) {
         $o_xml_response_errors->addChild('error', htmlspecialchars($error));
       }
     }
@@ -457,8 +464,8 @@ class mediamosa_response extends mediamosa {
 
       // Process items with a maximum recursion depth (last parameter).
       //
-      foreach ($item as $s_key => $value) {
-        $this->generate_plain_xml_add_child($o_xml_response_items_item, $s_key, $value);
+      foreach ($item as $key => $value) {
+        $this->generate_plain_xml_add_child($o_xml_response_items_item, $key, $value);
       }
     }
 
@@ -480,12 +487,12 @@ class mediamosa_response extends mediamosa {
    * @param integer $max_depth
    * @return NULL or added item.
    */
-  function generate_plain_xml_add_child($item, $key, $mixed_value, $max_depth = 99) {
-    if (! --$max_depth) {
+  private function generate_plain_xml_add_child($item, $key, $mixed_value, $max_depth = 99) {
+    if (!--$max_depth) {
       return NULL;
     }
 
-    if (! is_array($mixed_value)) {
+    if (!is_array($mixed_value)) {
       return $item->addChild($key, htmlspecialchars($mixed_value));
     }
 
@@ -498,7 +505,7 @@ class mediamosa_response extends mediamosa {
       return NULL;
     }
 
-    if ($first_key{0} == '#') {
+    if ($first_key[0] == '#') {
       foreach ($mixed_value as $mixed_key => $value) {
         $item_child = $this->generate_plain_xml_add_child($item, $key, $value, $max_depth);
 

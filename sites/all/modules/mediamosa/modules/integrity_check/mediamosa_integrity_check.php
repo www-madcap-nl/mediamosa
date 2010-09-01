@@ -146,7 +146,7 @@ function check_media_files() {
         mediamosa_db::db_query("
           INSERT INTO {#mediamosa_log_integrity_check}
             (#type, #object_id, #size, #mtime, #ctime, #details, #created) VALUES
-            (:missing_mediarecord, :object_id, :size, :mtime, :ctime, :details, NOW())", array(
+            (:missing_mediarecord, :object_id, :size, :mtime, :ctime, :details, UTC_TIMESTAMP())", array(
             '#mediamosa_log_integrity_check' => mediamosa_integrity_check_db::TABLE_NAME,
             '#type' => mediamosa_integrity_check_db::TYPE,
             '#object_id' => mediamosa_integrity_check_db::OBJECT_ID,
@@ -193,7 +193,7 @@ function check_still_records() {
   $resource = db_query("SELECT mediafile_id AS still_id FROM {mediafile} WHERE is_still = 'TRUE'");
   while ($still = db_fetch_array($resource)) {
     // check if file exists
-    $file = SAN_NAS_BASE_PATH. DS . STILL_LOCATION . DS . $still['still_id']{0} . DS . $still['still_id'];
+    $file = SAN_NAS_BASE_PATH. DS . STILL_LOCATION . DS . $still['still_id'][0] . DS . $still['still_id'];
     if (!file_exists($file)) {
       $missing_stills[] = $still['still_id'];
     }

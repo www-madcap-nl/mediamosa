@@ -44,7 +44,7 @@ class mediamosa_node_mediamosa_settings {
     }
 
     foreach ($form as $key => $child_form) {
-      if ($key{0} == '#') {
+      if ($key[0] == '#') {
         continue;
       }
 

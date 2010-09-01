@@ -97,16 +97,6 @@ function mediamosa_asset_mediafile_metadata_schema() {
         'description' => t('The numeric value of the property.'),
         //'default' => 0,
       ),
-      mediamosa_asset_mediafile_metadata_db::CREATED => array(
-        'type' => 'datetime',
-        'not null' => TRUE,
-        'description' => t('The date and time when media metadata was created.'),
-      ),
-      mediamosa_asset_mediafile_metadata_db::CHANGED => array(
-        'type' => 'datetime',
-        'default' => NULL,
-        'description' => t('The date and time when media metadata was changed.'),
-      ),
     ),
     'primary key' => array(mediamosa_asset_mediafile_metadata_db::ID),
     'unique keys' => array(

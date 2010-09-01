@@ -69,7 +69,7 @@ function _mediamosa_error_install() {
 
     'ERRORCODE_ASSET_NOT_FOUND' => 'MM - asset_id=@asset_id was not found in the database',
     'ERRORCODE_MEDIAFILE_NOT_FOUND' => 'MM - mediafile_id=@mediafile_id was not found in the database',
-    'ERRORCODE_INVALID_APP_ID' => 'MM - invalid application id (app_id)',
+    'ERRORCODE_INVALID_APP_ID' => 'MM - invalid application id (@app_id)',
     'ERRORCODE_INVALID_USER_ID' => 'MM - the specified user_id (@user_id) is not the owner of this asset',
     'ERRORCODE_UNKNOWN_ERROR_SAVING_METADATA' => 'MM - unknows error while saving metadata for asset_id @asset_id',
     'ERRORCODE_EMPTY_RESULT' => 'The query returned an empty result set (i.e. zero rows).',

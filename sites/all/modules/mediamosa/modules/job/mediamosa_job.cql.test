@@ -87,8 +87,8 @@ class MediaMosaJobCQLTestCaseEga extends MediaMosaTestCaseEgaJob {
       mediamosa_job_db::PROGRESS => '0.000',
       mediamosa_job_db::PRIORITY => 0,
       mediamosa_job_db::JOB_TYPE => mediamosa_job_db::JOB_TYPE_UPLOAD,
-      mediamosa_job_db::STARTED => mediamosa::db_current_timestamp_now(),
-      mediamosa_job_db::FINISHED => mediamosa::db_current_timestamp_now(),
+      mediamosa_job_db::STARTED => mediamosa_datetime::utc_current_timestamp_now(),
+      mediamosa_job_db::FINISHED => mediamosa_datetime::utc_current_timestamp_now(),
       mediamosa_job_db::CREATE_STILL => mediamosa_job_db::CREATE_STILL_FALSE,
       mediamosa_job_db::NO_HINT => mediamosa_job_db::NO_HINT_FALSE,
     );
@@ -96,7 +96,7 @@ class MediaMosaJobCQLTestCaseEga extends MediaMosaTestCaseEgaJob {
 
     // For date test.
     sleep(1);
-    // Update the date field: mediamosa::db_current_timestamp_now(TRUE).
+    // Update the date field: mediamosa_datetime::utc_current_timestamp_now(TRUE).
 
     // Asset 1, Mediafile 1_1.
     $a_fields_1_1_2 = array(
@@ -108,8 +108,8 @@ class MediaMosaJobCQLTestCaseEga extends MediaMosaTestCaseEgaJob {
       mediamosa_job_db::PROGRESS => '1.000',
       mediamosa_job_db::PRIORITY => -1,
       mediamosa_job_db::JOB_TYPE => mediamosa_job_db::JOB_TYPE_TRANSCODE,
-      mediamosa_job_db::STARTED => mediamosa::db_current_timestamp_now(TRUE),
-      mediamosa_job_db::FINISHED => mediamosa::db_current_timestamp_now(),
+      mediamosa_job_db::STARTED => mediamosa_datetime::utc_current_timestamp_now(TRUE),
+      mediamosa_job_db::FINISHED => mediamosa_datetime::utc_current_timestamp_now(),
       mediamosa_job_db::CREATE_STILL => mediamosa_job_db::CREATE_STILL_TRUE,
       mediamosa_job_db::NO_HINT => mediamosa_job_db::NO_HINT_TRUE,
     );
@@ -117,7 +117,7 @@ class MediaMosaJobCQLTestCaseEga extends MediaMosaTestCaseEgaJob {
 
     // For date test.
     sleep(1);
-    // Update the date field: mediamosa::db_current_timestamp_now(TRUE).
+    // Update the date field: mediamosa_datetime::utc_current_timestamp_now(TRUE).
 
     // Asset 1, Mediafile 1_2.
     $a_fields_1_2_1 = array(
@@ -129,8 +129,8 @@ class MediaMosaJobCQLTestCaseEga extends MediaMosaTestCaseEgaJob {
       mediamosa_job_db::PROGRESS => '0.000',
       mediamosa_job_db::PRIORITY => 0,
       mediamosa_job_db::JOB_TYPE => mediamosa_job_db::JOB_TYPE_UPLOAD,
-      mediamosa_job_db::STARTED => mediamosa::db_current_timestamp_now(TRUE),
-      mediamosa_job_db::FINISHED => mediamosa::db_current_timestamp_now(),
+      mediamosa_job_db::STARTED => mediamosa_datetime::utc_current_timestamp_now(TRUE),
+      mediamosa_job_db::FINISHED => mediamosa_datetime::utc_current_timestamp_now(),
       mediamosa_job_db::CREATE_STILL => mediamosa_job_db::CREATE_STILL_FALSE,
       mediamosa_job_db::NO_HINT => mediamosa_job_db::NO_HINT_FALSE,
     );
@@ -138,7 +138,7 @@ class MediaMosaJobCQLTestCaseEga extends MediaMosaTestCaseEgaJob {
 
     // For date test.
     sleep(1);
-    // Update the date field: mediamosa::db_current_timestamp_now(TRUE).
+    // Update the date field: mediamosa_datetime::utc_current_timestamp_now(TRUE).
 
     // Asset 1, Mediafile 1_2.
     $a_fields_1_2_2 = array(
@@ -150,8 +150,8 @@ class MediaMosaJobCQLTestCaseEga extends MediaMosaTestCaseEgaJob {
       mediamosa_job_db::PROGRESS => '0.500',
       mediamosa_job_db::PRIORITY => 1,
       mediamosa_job_db::JOB_TYPE => mediamosa_job_db::JOB_TYPE_TRANSCODE,
-      mediamosa_job_db::STARTED => mediamosa::db_current_timestamp_now(TRUE),
-      mediamosa_job_db::FINISHED => mediamosa::db_current_timestamp_now(),
+      mediamosa_job_db::STARTED => mediamosa_datetime::utc_current_timestamp_now(TRUE),
+      mediamosa_job_db::FINISHED => mediamosa_datetime::utc_current_timestamp_now(),
       mediamosa_job_db::CREATE_STILL => mediamosa_job_db::CREATE_STILL_FALSE,
       mediamosa_job_db::NO_HINT => mediamosa_job_db::NO_HINT_FALSE,
     );
@@ -167,8 +167,8 @@ class MediaMosaJobCQLTestCaseEga extends MediaMosaTestCaseEgaJob {
       mediamosa_job_db::PROGRESS => '0.000',
       mediamosa_job_db::PRIORITY => 0,
       mediamosa_job_db::JOB_TYPE => mediamosa_job_db::JOB_TYPE_UPLOAD,
-      mediamosa_job_db::STARTED => mediamosa::db_current_timestamp_now(),
-      mediamosa_job_db::FINISHED => mediamosa::db_current_timestamp_now(),
+      mediamosa_job_db::STARTED => mediamosa_datetime::utc_current_timestamp_now(),
+      mediamosa_job_db::FINISHED => mediamosa_datetime::utc_current_timestamp_now(),
       mediamosa_job_db::CREATE_STILL => mediamosa_job_db::CREATE_STILL_FALSE,
       mediamosa_job_db::NO_HINT => mediamosa_job_db::NO_HINT_FALSE,
     );
@@ -184,8 +184,8 @@ class MediaMosaJobCQLTestCaseEga extends MediaMosaTestCaseEgaJob {
       mediamosa_job_db::PROGRESS => '0.000',
       mediamosa_job_db::PRIORITY => 0,
       mediamosa_job_db::JOB_TYPE => mediamosa_job_db::JOB_TYPE_UPLOAD,
-      mediamosa_job_db::STARTED => mediamosa::db_current_timestamp_now(),
-      mediamosa_job_db::FINISHED => mediamosa::db_current_timestamp_now(),
+      mediamosa_job_db::STARTED => mediamosa_datetime::utc_current_timestamp_now(),
+      mediamosa_job_db::FINISHED => mediamosa_datetime::utc_current_timestamp_now(),
       mediamosa_job_db::CREATE_STILL => mediamosa_job_db::CREATE_STILL_FALSE,
       mediamosa_job_db::NO_HINT => mediamosa_job_db::NO_HINT_FALSE,
     );

@@ -243,6 +243,7 @@ function mediamosa_app_view($node, $view_mode = 'full') {
     array(t('Application ID'), check_plain($node->{mediamosa_app_db::APP_ID})),
     array(t('Quota'), check_plain($node->{mediamosa_app_db::QUOTA})),
     array(t('Shared Key'), check_plain($node->{mediamosa_app_db::SHARED_KEY})),
+    array(t('Default time zone'), check_plain($node->{mediamosa_app_db::TIMEZONE})),
     array(t('Description'), check_plain($node->{mediamosa_app_db::DESCRIPTION})),
     array(t('Status'), $status[$node->{mediamosa_app_db::ACTIVE}]),
     array(t('REST call version'), check_plain($node->{mediamosa_app_db::ACTIVE_VERSION})),
@@ -289,6 +290,9 @@ function mediamosa_app_form($node, &$form_state) {
     $apps[$app[mediamosa_app_db::APP_ID]] = strtr('@app_name (@app_id)', array('@app_name' => $app[mediamosa_app_db::APP_NAME], '@app_id' => $app[mediamosa_app_db::APP_ID]));
   }
 
+  // Use drupal to get the timezones.
+  $timezones = system_time_zones();
+
   $form = array();
 
   $form['client_application'] = array(
@@ -316,14 +320,6 @@ function mediamosa_app_form($node, &$form_state) {
     '#default_value' => mediamosa_node::default_value(mediamosa_app_db::APP_ID, $node),
   );
 
-  $form['client_application'][mediamosa_app_db::QUOTA] = array(
-    '#type' => 'textfield',
-    '#title' => t('Quota'),
-    '#required' => TRUE,
-    '#description' => t('Quota for disk space usage in GB.'),
-    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::QUOTA, $node),
-  );
-
   $form['client_application'][mediamosa_app_db::SHARED_KEY] = array(
     '#type' => 'textfield',
     '#title' => t('Shared key'),
@@ -332,6 +328,7 @@ function mediamosa_app_form($node, &$form_state) {
     '#suffix' => '</div>',
     '#default_value' => mediamosa_node::default_value(mediamosa_app_db::SHARED_KEY, $node),
     '#maxlength' => mediamosa_app_db::SHARED_KEY_LENGTH,
+    '#description' => t('The shared key is the password that the application must use during the application verification.'),
   );
 
   $form['client_application']['generate_shared_key'] = array(
@@ -342,6 +339,22 @@ function mediamosa_app_form($node, &$form_state) {
       'wrapper' => 'replace_shared_key_div',
       'path' => 'admin/mediamosa/config/app/js/form',
     ),
+  );
+
+  $form['client_application'][mediamosa_app_db::QUOTA] = array(
+    '#type' => 'textfield',
+    '#title' => t('Quota'),
+    '#required' => TRUE,
+    '#description' => t('Quota for disk space usage in GB.'),
+    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::QUOTA, $node),
+  );
+
+  $form['client_application'][mediamosa_app_db::TIMEZONE] = array(
+    '#type' => 'select',
+    '#title' => t('Default time zone'),
+    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::TIMEZONE, $node, mediamosa_settings::MEDIAMOSA_DEFAULT_TIMEZONE),
+    '#options' => $timezones,
+    '#required' => TRUE,
   );
 
   $form['client_application'][mediamosa_app_db::DESCRIPTION] = array(

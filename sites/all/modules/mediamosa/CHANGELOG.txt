@@ -151,7 +151,11 @@ Other changes (not ticket related).
   wrong search results.
 - Still parameters 'width' and 'height' are now deprecated, use still instead.
 - Fixed: start_frame and end_frame still parameters where not copied to 
-  start_time and end_time when *_time parameters where not used. 
+  start_time and end_time when *_time parameters where not used.
+- Fixed testing page in MediaMosa admin; will correctly re-run tests when
+  selected.
+- Rewrote all split() functions to preg_split to support PHP 5.3.
+- Rewrote all string offset code that uses {} to [] for support of PHP 5.3.
 
 Mediamosa 2.1.5 (build 664)
 ---------------------------

@@ -61,7 +61,8 @@ function mediamosa_development_menu() {
   $items['admin/mediamosa/config/development'] = array(
     'title' => 'Test and execute REST calls.',
     'description' => 'With this form you can execute REST calls directly.',
-    'page callback' => 'mediamosa_development_rest_page_form',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mediamosa_development_rest_form'),
     'access arguments' => array('access mediamosa development'),
     'file' => 'mediamosa_development.admin.inc',
   );

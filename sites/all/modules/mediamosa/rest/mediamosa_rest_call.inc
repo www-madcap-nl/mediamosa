@@ -45,6 +45,9 @@ abstract class mediamosa_rest_call {
     'isprivate' => '',
   );
 
+  // Setup default app.
+  private $calling_app = array(mediamosa_app_db::APP_ID => 0, mediamosa_app_db::TIMEZONE => mediamosa_settings::MEDIAMOSA_DEFAULT_TIMEZONE_INTERNAL);
+
   // ------------------------------------------------------------------ Constants.
   const ID = 'uri_id';
   const URI = 'uri';
@@ -264,28 +267,16 @@ abstract class mediamosa_rest_call {
 
     // Validate reg args.
     $this->validate_rest_args($var_setup);
-/*
- *  code turned off, during debug_high this code will crash unit test
- *  class MediaMosaAssetSupplementAddTestCaseEga().
- *  UTF8 problems when storing the data into watchdog. Strangly enough the
- *  normal code handles the data without problem. Seems that var_export and
- *  print_r are not proper UTF8.
- *
-    $params = array();
-    foreach ($this->a_rest_args as $param => $a_rest_arg) {
-      $params[] = $param . '=' . print_r($this->a_rest_args[$param][self::PARAM_VALUE], TRUE);
-    }
 
-    // Processing URL, Method.
-    mediamosa_debug::log_high("REST call; @uri [@method], Class: @class, params: @params.",
-      array(
-        '@uri' => $this->{self::URI},
-        '@method' => $this->{self::METHOD},
-        '@class' => $this->{self::CLASS_NAME},
-        '@params' => var_export($params, TRUE),
-      )
-    );
-*/
+    // Setup the calling application.
+    $this->setup_calling_app($var_setup);
+
+    // Convert input datetime to UTC based on the app timezone.
+    $this->appdate2utc_rest_args($var_setup);
+
+    // Set the rest call timezone.
+    mediamosa::set_restcall_timezone($this->calling_app[mediamosa_app_db::TIMEZONE]);
+
     // Call the function.
     $this->do_call();
   }
@@ -679,6 +670,13 @@ abstract class mediamosa_rest_call {
   public function is_method_put() {
     return $this->get_method() == self::METHOD_PUT;
   }
+
+  /**
+   * Returns the timezone of the REST call.
+   */
+  public function get_timezone() {
+    return $this->calling_app[mediamosa_app_db::TIMEZONE];
+  }
   // ---------------------------------------------------- Functions (protected).
   /**
    * Process the supplied parameters.
@@ -860,30 +858,73 @@ abstract class mediamosa_rest_call {
    * @param array $var_setup
    */
   protected function validate_rest_args(array $var_setup) {
-    foreach ($this->a_rest_args as $param => $a_param) {
-      if (!isset($a_param[self::PARAM_TYPE])) {
-        unset($this->a_rest_args[$param]); // set but not in var_set_up, unset.
+    foreach ($this->a_rest_args as $name => $param) {
+      if (empty($param[self::PARAM_TYPE])) {
+        unset($this->a_rest_args[$name]); // set but not in var_set_up, unset.
         continue;
       }
 
       // If allowed values is set and default value is set and the given value
       // is not allowed and the value is empty, then value will get the default
       // value.
-      if (!empty($this->a_rest_args[$param][self::PARAM_ALLOWED_VALUES]) &&
-          empty($this->a_rest_args[$param][self::PARAM_VALUE]) &&
-          isset($var_setup[self::VARS][$param][self::VAR_DEFAULT_VALUE]) &&
-          !in_array($this->a_rest_args[$param][self::PARAM_VALUE], $this->a_rest_args[$param][self::PARAM_ALLOWED_VALUES])
+      if (!empty($this->a_rest_args[$name][self::PARAM_ALLOWED_VALUES]) &&
+          empty($this->a_rest_args[$name][self::PARAM_VALUE]) &&
+          isset($var_setup[self::VARS][$name][self::VAR_DEFAULT_VALUE]) &&
+          !in_array($this->a_rest_args[$name][self::PARAM_VALUE], $this->a_rest_args[$name][self::PARAM_ALLOWED_VALUES])
          ) {
 
         // No value was given, but there is a default, then set the default.
-        $this->a_rest_args[$param][self::PARAM_VALUE] = $var_setup[self::VARS][$param][self::VAR_DEFAULT_VALUE];
+        $this->a_rest_args[$name][self::PARAM_VALUE] = $var_setup[self::VARS][$name][self::VAR_DEFAULT_VALUE];
 
         // The default value must be allowed.
-        assert(in_array($this->a_rest_args[$param][self::PARAM_VALUE], $this->a_rest_args[$param][self::PARAM_ALLOWED_VALUES]));
+        assert(in_array($this->a_rest_args[$name][self::PARAM_VALUE], $this->a_rest_args[$name][self::PARAM_ALLOWED_VALUES]));
       }
 
-      $this->a_rest_args[$param][self::PARAM_VALUE] = mediamosa_type::check($param, $a_param[self::PARAM_TYPE], $this->a_rest_args[$param][self::PARAM_VALUE], $this->a_rest_args[$param][self::PARAM_IS_REQUIRED] == self::VAR_IS_REQUIRED_YES, $this->a_rest_args[$param][self::PARAM_RANGE_START], $this->a_rest_args[$param][self::PARAM_RANGE_END], !empty($this->a_rest_args[$param][self::PARAM_ALLOWED_VALUES]) ? $this->a_rest_args[$param][self::PARAM_ALLOWED_VALUES] : NULL);
-      $this->a_rest_args[$param][self::PARAM_VALIDATED] = TRUE;
+      // check() will throw when requirements are not met.
+      $this->a_rest_args[$name][self::PARAM_VALUE] = mediamosa_type::check($name, $param[self::PARAM_TYPE], $this->a_rest_args[$name][self::PARAM_VALUE], $this->a_rest_args[$name][self::PARAM_IS_REQUIRED] == self::VAR_IS_REQUIRED_YES, $this->a_rest_args[$name][self::PARAM_RANGE_START], $this->a_rest_args[$name][self::PARAM_RANGE_END], !empty($this->a_rest_args[$name][self::PARAM_ALLOWED_VALUES]) ? $this->a_rest_args[$name][self::PARAM_ALLOWED_VALUES] : NULL);
+      $this->a_rest_args[$name][self::PARAM_VALIDATED] = TRUE;
+    }
+  }
+
+  /**
+   * Setup the application that is calling this REST call. This can be NULL
+   * because an REST call can be called without application (like externals).
+   *
+   * In case of no application we revert to Anonymous application (application
+   * that has no app_id and default settings.
+   *
+   * @param array $var_setup
+   */
+  protected function setup_calling_app(array $var_setup) {
+    $app_ids = $this->isset_param(self::APP_ID) ? $this->get_param_value_app() : 0;
+    $app_id = is_array($app_ids) ? reset($app_ids) : $app_ids;
+
+    // No app means internal APP, defaults to UTC.
+    $this->calling_app = array(mediamosa_app_db::APP_ID => 0, mediamosa_app_db::TIMEZONE => mediamosa_settings::MEDIAMOSA_DEFAULT_TIMEZONE_INTERNAL);
+
+    // Get the app.
+    if (!empty($app_id)) {
+      $app = mediamosa_app::get_by_appid($app_id);
+      if (empty($app)) {
+        throw new mediamosa_exception(mediamosa_error::ERRORCODE_INVALID_APP_ID, array('@app_id' => $app_id));
+      }
+
+      $this->calling_app = array(mediamosa_app_db::APP_ID => $app[mediamosa_app_db::APP_ID], mediamosa_app_db::TIMEZONE => $app[mediamosa_app_db::TIMEZONE]);
+    }
+  }
+
+  /**
+   * Convert incoming dates to UTC.
+   *
+   * @param array $var_setup
+   */
+  protected function appdate2utc_rest_args(array $var_setup) {
+
+    // Now loop through input and convert to UTC.
+    foreach ($this->a_rest_args as $name => $param) {
+      if ($param[self::PARAM_TYPE] == mediamosa_type::TYPE_DATETIME) {
+        $this->a_rest_args[$name][self::PARAM_VALUE] = mediamosa_datetime::app_date2utc_date($param[self::PARAM_VALUE], $this->calling_app);
+      }
     }
   }
 }

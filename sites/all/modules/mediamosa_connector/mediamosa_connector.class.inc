@@ -446,7 +446,7 @@ class mediamosa_connector {
    */
   private static function _simplexml2array($xml) {
     $xml_copy = $xml;
-    if (get_class($xml) == 'SimpleXMLElement') {
+    if (is_object($xml) && get_class($xml) == 'SimpleXMLElement') {
       foreach($xml->attributes() as $key => $value) {
         if ($value) {
           $attributes[$key] = (string)$value;
