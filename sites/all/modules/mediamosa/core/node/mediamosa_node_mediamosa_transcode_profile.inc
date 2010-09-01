@@ -51,11 +51,6 @@ function mediamosa_transcode_profile_load(&$nodes) {
  */
 function _mediamosa_transcode_profile_do_command($node) {
 
-  // In some cases, command is already set and not empty, then prefer this one.
-  if (!empty($node->{mediamosa_transcode_profile_db::COMMAND})) {
-    return $node->{mediamosa_transcode_profile_db::COMMAND};
-  }
-
   $commands = array();
   foreach ($node as $key => $value) {
     if (strpos($key, 'options_') === 0) {
@@ -78,7 +73,6 @@ function _mediamosa_transcode_profile_do_command($node) {
  * Implements hook_update().
  */
 function mediamosa_transcode_profile_update($node) {
-
   if ($node->revision) {
     mediamosa_transcode_profile_insert($node);
   }

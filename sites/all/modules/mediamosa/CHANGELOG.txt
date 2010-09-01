@@ -13,6 +13,8 @@ Known issues;
 
 Mediamosa 2.2.0
 ---------------
+- Fixed container type for asf if ffmpeg cannot analyse it, but magic can (#70)
+- Added webm codec to the list of allowed transcoding parameters (#295)
 - Fixed saving webservice with client application in admin. (See ticket #315).
 - Fixed unit test Still download/playproxy when using apache alias on /still
   (See ticket #313). 
@@ -47,6 +49,8 @@ Mediamosa 2.2.0
 - Added job server status page (See MediaMosa ticker #284).
 
 Other changes (not ticket related).
+- Fixed updating Transcode profile page, parameters were not saved correctly.
+- Fixed padding test for new ffmpeg version.
 - During ticket #255, adding pager to stats, bug was found on the stats keyword
   saver. It also stored search on dates, which are not words. Bug fixed, stats
   now only stores words. Added stats unit test to make sure stats saving on

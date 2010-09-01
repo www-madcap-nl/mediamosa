@@ -38,10 +38,10 @@ function _mediamosa_transcode_mapping_install() {
   mediamosa::drupal_install_schema(mediamosa_transcode_mapping_db::TABLE_NAME);
 
   $a_default_mappings = array(
-    array('ffmpeg', 'videobitrate', '-b', 128000, 800000, NULL, '200000', 'FALSE'),
+    array('ffmpeg', 'videobitrate', '-b', 128000, 8000000, NULL, '200000', 'FALSE'),
     array('ffmpeg', 'fps', '-r', 10, 30, NULL, '25', 'FALSE'),
     array('ffmpeg', 'size', '-s', NULL, NULL, ';128x96;176x144;352x288;704x576;160x120;320x240;640x480;800x600;1024x768;1600x1200;2048x1536;1280x1024;2560x2048;5120x4096;852x480;1366x768;1600x1024;1920x1200;2560x1600;3200x2048;3840x2400;6400x4096;7680x4800;320x200;640x350;852x480;1280x720;1920x1080;480x270;480x360', '320x240', 'FALSE'),
-    array('ffmpeg', 'internal_file_extension', '', NULL, NULL, 'flv;wmv;mp4;avi;ogg', NULL, 'FALSE'),
+    array('ffmpeg', 'internal_file_extension', '', NULL, NULL, 'flv;wmv;mp4;avi;ogg;webm', NULL, 'FALSE'),
     array('ffmpeg', 'qmax', '-qmax', 1, 31, NULL, NULL, 'FALSE'),
     array('ffmpeg', 'audiocodec', '-acodec', NULL, NULL, 'libmp3lame;wma;pcm_s16le;libfaac;libvorbis', NULL, 'FALSE'),
     array('ffmpeg', 'audiobitrate', '-ab', NULL, NULL, '40000;64000;128000;192000;256000;512000', '64000', 'FALSE'),
@@ -60,8 +60,8 @@ function _mediamosa_transcode_mapping_install() {
     array('windows', 'audiocodec', '-a_codec', NULL, NULL, 'mp3;wma;pcm_s16le;libfaac', NULL, 'FALSE'),
     array('windows', 'audiosetting', '-a_setting', NULL, NULL, '40_22_1;40_22_2;40_44_1;40_44_2;64_22_1;64_22_2;64_44_1;64_44_2;128_22_1;128_22_2;128_44_1;128_44_2;192_22_1;192_22_2;192_44_1;192_44_2;256_22_1;256_22_2;256_44_1;256_44_2', NULL, 'FALSE'),
     array('ffmpeg', 'maintain_aspect_ratio', '', NULL, NULL, 'yes;no', 'yes', 'FALSE'),
-    array('ffmpeg', '2_pass_h264_encoding', '-pass', NULL, NULL, '1;2', '1', 'FALSE'),
-    array('ffmpeg', 'videocodec', '-vcodec', NULL, NULL, 'flv;wmv;mpeg4;libx264;rawvideo;libtheora', NULL, 'FALSE'),
+    array('ffmpeg', '2_pass_h264_encoding', '-pass', NULL, NULL, ';1;2', NULL, 'FALSE'),
+    array('ffmpeg', 'videocodec', '-vcodec', NULL, NULL, 'flv;wmv;mpeg4;libx264;rawvideo;libtheora;webm', NULL, 'FALSE'),
     array('ffmpeg', 'videopreset', '-vpre', NULL, NULL, ';hq;default;ipod320;max', NULL, 'FALSE'),
     array('ffmpeg', 'padding', '', NULL, NULL, 'yes;no', 'yes', 'FALSE'),
   );

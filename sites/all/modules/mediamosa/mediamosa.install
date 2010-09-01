@@ -408,6 +408,11 @@ function mediamosa_update_7011() {
  * Rearrange indexes on mediamosa_asset for performance.
  */
 function mediamosa_update_7012() {
+  // Get the current mode, which might be empty;
+  $old_mode = db_query('SELECT @@SESSION.sql_mode')->fetchField();
+
+  // Turn off problems with empty dates.
+  db_query("SET SESSION sql_mode = 'ALLOW_INVALID_DATES'");
 
   // drop some not used indexes:
   db_drop_index('mediamosa_asset', 'idx_app_parent_priv_unapp_emptyasset_owner');
@@ -427,6 +432,9 @@ function mediamosa_update_7012() {
       mediamosa_asset_db::IS_EMPTY_ASSET,
     )
   );
+
+  // Back to old session mode.
+  db_query(strtr("SET SESSION sql_mode = '#old_mode'", array('#old_mode' => $old_mode)));
 }
 
 /**
@@ -443,8 +451,8 @@ function mediamosa_update_7013() {
     ':tool_parameter' => '-pass',
     ':min_value' => NULL,
     ':max_value' => NULL,
-    ':allowed_value' => '1;2',
-    ':default_value' => '1',
+    ':allowed_value' => ';1;2',
+    ':default_value' => NULL,
     ':required' => 'FALSE',
     ':created' => mediamosa_datetime::utc_current_timestamp_now(),
     ':changed' => mediamosa_datetime::utc_current_timestamp_now(),
@@ -513,6 +521,7 @@ function mediamosa_update_7015() {
     )
   );
 }
+
 /**
  * Add timezone setting to mediamosa applications.
  */
@@ -967,4 +976,16 @@ function mediamosa_update_7049() {
 
   // Now convert.
   db_query("UPDATE {mediamosa_user_group} SET created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Add webm transcoding parameters.
+ */
+function mediamosa_update_7050() {
+  db_query("UPDATE {mediamosa_transcode_mapping} SET allowed_value=:allowed_value WHERE tool=:tool AND tool_parameter=:tool_parameter",
+    array(
+      ':allowed_value' => 'flv;wmv;mpeg4;libx264;rawvideo;libtheora;webm',
+      ':tool' => 'ffmpeg',
+      ':tool_parameter' => '-vcodec')
+  );
 }
