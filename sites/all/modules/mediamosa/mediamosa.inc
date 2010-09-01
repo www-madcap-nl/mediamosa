@@ -141,6 +141,15 @@ class mediamosa {
   }
 
   /**
+   * Convert incoming UTC date to the application timezone.
+   *
+   * @param string $utc_date
+   */
+  static public function utcdate2appdate($utc_date) {
+    return mediamosa_datetime::utc_date2app_date($utc_date, self::get_restcall_timezone());
+  }
+
+  /**
    * Return the current defined installation id.
    */
   static public function get_server_id() {

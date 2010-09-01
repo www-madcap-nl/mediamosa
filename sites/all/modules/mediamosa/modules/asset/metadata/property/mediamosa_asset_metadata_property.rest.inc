@@ -81,7 +81,7 @@ class mediamosa_rest_call_asset_metadata_property_list extends mediamosa_rest_ca
 
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     $a_app_ids = $this->get_param_value(self::APP_ID);
 
@@ -100,7 +100,7 @@ class mediamosa_rest_call_asset_metadata_property_list extends mediamosa_rest_ca
     $name = $this->get_param_value(self::NAME);
 
     // Get all properties.
-    $a_properties = mediamosa_asset_metadata_property::property_list(
+    $properties = mediamosa_asset_metadata_property::property_list(
       $a_app_ids,
       $include_default_definitions,
       $name,
@@ -110,15 +110,15 @@ class mediamosa_rest_call_asset_metadata_property_list extends mediamosa_rest_ca
       $order_direction
     );
 
-    foreach ($a_properties as $a_property) {
-      $o_mediamosa->add_item(
+    foreach ($properties as $property) {
+      $mediamosa->add_item(
         array(
-          'prop_id' => $a_property[mediamosa_asset_metadata_property_db::ID],
-          'name' => $a_property[mediamosa_asset_metadata_property_db::NAME],
-          'prop_group' => $a_property[mediamosa_asset_metadata_property_group_db::NAME],
-          'type' => $a_property[mediamosa_asset_metadata_property_db::TYPE],
-          'created' => $a_property[mediamosa_asset_metadata_property_db::CREATED],
-          'changed' => $a_property[mediamosa_asset_metadata_property_db::CHANGED],
+          'prop_id' => $property[mediamosa_asset_metadata_property_db::ID],
+          'name' => $property[mediamosa_asset_metadata_property_db::NAME],
+          'prop_group' => $property[mediamosa_asset_metadata_property_group_db::NAME],
+          'type' => $property[mediamosa_asset_metadata_property_db::TYPE],
+          'created' => mediamosa::utcdate2appdate($property[mediamosa_asset_metadata_property_db::CREATED]),
+          'changed' => mediamosa::utcdate2appdate($property[mediamosa_asset_metadata_property_db::CHANGED]),
         )
       );
     }
@@ -164,7 +164,7 @@ class mediamosa_rest_call_asset_metadata_property_create extends mediamosa_rest_
 
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     $a_app_ids = $this->get_param_value(self::APP_ID);
 
@@ -178,12 +178,12 @@ class mediamosa_rest_call_asset_metadata_property_create extends mediamosa_rest_
     $property_id = mediamosa_asset_metadata_property::property_create($a_app_ids, $name, $type);
 
     // Get the property.
-    $a_property = mediamosa_asset_metadata_property::property_get_row($property_id);
+    $property = mediamosa_asset_metadata_property::property_get_row($property_id);
 
-    assert($a_property);
+    assert($property);
 
     // If we get here, it was successful.
-    $o_mediamosa->add_item($a_property);
+    $mediamosa->add_item($property);
   }
 }
 
@@ -224,7 +224,7 @@ class mediamosa_rest_call_asset_metadata_property_delete extends mediamosa_rest_
 
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     // The app_id(s).
     $a_app_ids = $this->get_param_value(self::APP_ID);
@@ -239,7 +239,7 @@ class mediamosa_rest_call_asset_metadata_property_delete extends mediamosa_rest_
     mediamosa_asset_metadata_property::property_delete($a_app_ids, $name, $delete);
 
     // If we get here, it was successful. We have no output, but we are ok.
-    $o_mediamosa->set_result_okay();
+    $mediamosa->set_result_okay();
   }
 }
 
@@ -279,7 +279,7 @@ class mediamosa_rest_call_asset_metadata_property_tagcount extends mediamosa_res
 
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     // The app_id(s).
     $a_app_ids = $this->get_param_value(self::APP_ID);
@@ -302,7 +302,7 @@ class mediamosa_rest_call_asset_metadata_property_tagcount extends mediamosa_res
     foreach ($result as $a_row) {
       $a_item['count'] = $a_row['tagcount'];
       $a_item['tag'] = $a_row[mediamosa_asset_metadata_db::VAL_CHAR];
-      $o_mediamosa->add_item($a_item);
+      $mediamosa->add_item($a_item);
     }
   }
 }

@@ -137,6 +137,9 @@ class mediamosa_rest_call_statistics_get_newest_mediafiles extends mediamosa_res
       $row[mediamosa_asset_mediafile_metadata::CONTAINER_TYPE] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::CONTAINER_TYPE);
       $row[mediamosa_asset_mediafile_metadata::FILESIZE] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, mediamosa_asset_mediafile_metadata::FILESIZE);
 
+      // UTC -> App timezone.
+      $row[mediamosa_asset_mediafile_db::CREATED] = mediamosa::utcdate2appdate($row[mediamosa_asset_mediafile_db::CREATED]);
+
       $o_mediamosa->add_item($row);
     }
   }
@@ -239,6 +242,9 @@ class mediamosa_rest_call_statistics_get_most_popular_mediafiles extends mediamo
 
     // Fill items.
     foreach ($result as $row) {
+      // UTC -> App timezone.
+      $row[mediamosa_asset_mediafile_db::CREATED] = mediamosa::utcdate2appdate($row[mediamosa_asset_mediafile_db::CREATED]);
+
       $o_mediamosa->add_item($row);
     }
   }
@@ -326,6 +332,10 @@ class mediamosa_rest_call_statistics_get_newest_collections extends mediamosa_re
 
     // Fill items.
     foreach ($result as $row) {
+      // UTC -> App timezone.
+      $row[mediamosa_collection_db::CREATED] = mediamosa::utcdate2appdate($row[mediamosa_collection_db::CREATED]);
+      $row[mediamosa_collection_db::CHANGED] = mediamosa::utcdate2appdate($row[mediamosa_collection_db::CHANGED]);
+
       $o_mediamosa->add_item($row);
     }
   }
@@ -427,6 +437,9 @@ class mediamosa_rest_call_statistics_get_most_popular_collections extends mediam
 
     // Fill items.
     foreach ($result as $row) {
+      // UTC -> App timezone.
+      $row[mediamosa_collection_db::CREATED] = mediamosa::utcdate2appdate($row[mediamosa_collection_db::CREATED]);
+
       $o_mediamosa->add_item($row);
     }
   }
@@ -568,6 +581,8 @@ class mediamosa_rest_call_statistics_get_historical_uploaded_mediafiles extends 
     $a_query[mediamosa_db_query::A_SELECT_EXPR] = array('app_id', 'owner_id', 'group_id', 'file_size', 'timestamp');
 
     $a_query[mediamosa_db_query::A_WHERE][] = 'app_id=' . intval($app_id);
+
+    // FIXME: timestamp is now UTC.
     $a_query[mediamosa_db_query::A_WHERE][] = 'UNIX_TIMESTAMP(timestamp) >= '. $date_begin;
     $a_query[mediamosa_db_query::A_WHERE][] = 'UNIX_TIMESTAMP(timestamp) < '. $date_end;
 
@@ -593,6 +608,9 @@ class mediamosa_rest_call_statistics_get_historical_uploaded_mediafiles extends 
 
     // Fill items.
     foreach ($result as $row) {
+      // UTC -> App timezone.
+      $row[mediamosa_statistics_file_upload_db::TIMESTAMP] = mediamosa::utcdate2appdate($row[mediamosa_statistics_file_upload_db::TIMESTAMP]);
+
       $o_mediamosa->add_item($row);
     }
   }
@@ -880,6 +898,9 @@ class mediamosa_rest_call_statistics_get_requested_streams extends mediamosa_res
 
     // Fill items.
     foreach ($result as $row) {
+      // UTC -> App timezone.
+      $row[mediamosa_statistics_stream_request_db::PLAYED] = mediamosa::utcdate2appdate($row[mediamosa_statistics_stream_request_db::PLAYED]);
+
       $o_mediamosa->add_item($row);
     }
   }

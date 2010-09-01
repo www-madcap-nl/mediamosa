@@ -55,6 +55,11 @@ class mediamosa_asset {
       $asset['asset_property_val_datetime']
     );
 
+    // Convert dates to local timezone.
+    $asset[mediamosa_asset_db::VIDEOTIMESTAMP] = mediamosa::utcdate2appdate($asset[mediamosa_asset_db::VIDEOTIMESTAMP]);
+    $asset[mediamosa_asset_db::VIDEOTIMESTAMPMODIFIED] = mediamosa::utcdate2appdate($asset[mediamosa_asset_db::VIDEOTIMESTAMPMODIFIED]);
+  //  $asset[mediamosa_asset_db::CREATED] = mediamosa::utcdate2appdate($asset[mediamosa_asset_db::CREATED]);
+
     return $asset;
   }
 
@@ -785,7 +790,7 @@ class mediamosa_asset {
             break;
 
           case mediamosa_asset_metadata_property_db::TYPE_DATETIME:
-            $items_pre_sort[$asset[mediamosa_asset_db::ID]][$asset['asset_property_group_name']][$asset['asset_property_name']][] = $asset['asset_property_val_datetime'];
+            $items_pre_sort[$asset[mediamosa_asset_db::ID]][$asset['asset_property_group_name']][$asset['asset_property_name']][] = mediamosa::utcdate2appdate($asset['asset_property_val_datetime']);
             break;
 
           case mediamosa_asset_metadata_property_db::TYPE_INT:

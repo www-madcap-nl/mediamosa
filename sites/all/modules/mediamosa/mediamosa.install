@@ -531,7 +531,440 @@ function mediamosa_update_7016() {
  * Remove the created and changed dates from mediafile metadata table.
  */
 function mediamosa_update_7017() {
-
   db_drop_field(mediamosa_asset_mediafile_metadata_db::TABLE_NAME, 'created');
   db_drop_field(mediamosa_asset_mediafile_metadata_db::TABLE_NAME, 'changed');
+}
+
+/**
+ * Convert dates to UTC in mediamosa_asset table.
+ */
+function mediamosa_update_7018() {
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE {mediamosa_asset} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE {mediamosa_asset} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE {mediamosa_asset} SET changed = UTC_TIMESTAMP WHERE changed = '0000-00-00 00:00:00'");
+
+  // Now convert.
+  db_query("UPDATE {mediamosa_asset} SET videotimestamp = DATE_SUB(videotimestamp, INTERVAL 2 HOUR), videotimestampmodified = DATE_SUB(videotimestampmodified, INTERVAL 2 HOUR), created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_asset_collection table.
+ */
+function mediamosa_update_7019() {
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE {mediamosa_asset_collection} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE {mediamosa_asset_collection} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE {mediamosa_asset_collection} SET changed = UTC_TIMESTAMP WHERE changed = '0000-00-00 00:00:00'");
+
+  // Now convert.
+  db_query("UPDATE {mediamosa_asset_collection} SET created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_asset_delete table.
+ */
+function mediamosa_update_7020() {
+  db_query("UPDATE {mediamosa_asset_delete} SET videotimestampmodified = DATE_SUB(videotimestampmodified, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_asset_mediafile table.
+ */
+function mediamosa_update_7021() {
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE {mediamosa_asset_mediafile} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE {mediamosa_asset_mediafile} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE {mediamosa_asset_mediafile} SET changed = UTC_TIMESTAMP WHERE changed = '0000-00-00 00:00:00'");
+
+  // Now convert.
+  db_query("UPDATE {mediamosa_asset_mediafile} SET created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_asset_mediafile_metadata table.
+ */
+function mediamosa_update_7022() {
+  db_query("UPDATE {mediamosa_asset_mediafile_metadata} SET val_datetime = DATE_SUB(val_datetime, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_asset_mediafile_metadata_property table.
+ */
+function mediamosa_update_7023() {
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE {mediamosa_asset_mediafile_metadata_property} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE {mediamosa_asset_mediafile_metadata_property} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE {mediamosa_asset_mediafile_metadata_property} SET changed = UTC_TIMESTAMP WHERE changed = '0000-00-00 00:00:00'");
+
+  // Now convert.
+  db_query("UPDATE {mediamosa_asset_mediafile_metadata_property} SET created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_asset_metadata table.
+ */
+function mediamosa_update_7024() {
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE {mediamosa_asset_metadata} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE {mediamosa_asset_metadata} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE {mediamosa_asset_metadata} SET changed = UTC_TIMESTAMP WHERE changed = '0000-00-00 00:00:00'");
+
+  // Now convert.
+  db_query("UPDATE {mediamosa_asset_metadata} SET val_datetime = DATE_SUB(val_datetime, INTERVAL 2 HOUR), created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_asset_metadata_property table.
+ */
+function mediamosa_update_7025() {
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE {mediamosa_asset_metadata_property} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE {mediamosa_asset_metadata_property} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE {mediamosa_asset_metadata_property} SET changed = UTC_TIMESTAMP WHERE changed = '0000-00-00 00:00:00'");
+
+  // Now convert.
+  db_query("UPDATE {mediamosa_asset_metadata_property} SET created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_asset_metadata_property_group table.
+ */
+function mediamosa_update_7026() {
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE {mediamosa_asset_metadata_property_group} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE {mediamosa_asset_metadata_property_group} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE {mediamosa_asset_metadata_property_group} SET changed = UTC_TIMESTAMP WHERE changed = '0000-00-00 00:00:00'");
+
+  // Now convert.
+  db_query("UPDATE {mediamosa_asset_metadata_property_group} SET created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_asset_supplement table.
+ */
+function mediamosa_update_7027() {
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE {mediamosa_asset_supplement} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE {mediamosa_asset_supplement} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE {mediamosa_asset_supplement} SET changed = UTC_TIMESTAMP WHERE changed = '0000-00-00 00:00:00'");
+
+  // Now convert.
+  db_query("UPDATE {mediamosa_asset_supplement} SET created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_collection table.
+ */
+function mediamosa_update_7028() {
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE {mediamosa_collection} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE {mediamosa_collection} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE {mediamosa_collection} SET changed = UTC_TIMESTAMP WHERE changed = '0000-00-00 00:00:00'");
+
+  // Now convert.
+  db_query("UPDATE {mediamosa_collection} SET created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_ftp_batch table.
+ */
+function mediamosa_update_7029() {
+  db_query("UPDATE {mediamosa_ftp_batch} SET started = DATE_SUB(started, INTERVAL 2 HOUR), finished = DATE_SUB(finished, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_ftp_user table.
+ */
+function mediamosa_update_7030() {
+  db_query("UPDATE {mediamosa_ftp_user} SET accessed = DATE_SUB(accessed, INTERVAL 2 HOUR), modified = DATE_SUB(modified, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_job table.
+ */
+function mediamosa_update_7031() {
+  db_query("UPDATE {mediamosa_job} SET started = DATE_SUB(started, INTERVAL 2 HOUR), finished = DATE_SUB(finished, INTERVAL 2 HOUR), created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_job_server table.
+ */
+function mediamosa_update_7032() {
+  db_query("UPDATE {mediamosa_job_server} SET started = DATE_SUB(started, INTERVAL 2 HOUR), finished = DATE_SUB(finished, INTERVAL 2 HOUR), created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_job_server_analyse table.
+ */
+function mediamosa_update_7033() {
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE {mediamosa_job_server_analyse} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE {mediamosa_job_server_analyse} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE {mediamosa_job_server_analyse} SET changed = UTC_TIMESTAMP WHERE changed = '0000-00-00 00:00:00'");
+
+  // Now convert.
+  db_query("UPDATE {mediamosa_job_server_analyse} SET created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_job_server_still table.
+ */
+function mediamosa_update_7034() {
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE {mediamosa_job_server_still} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE {mediamosa_job_server_still} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE {mediamosa_job_server_still} SET changed = UTC_TIMESTAMP WHERE changed = '0000-00-00 00:00:00'");
+
+  // Now convert.
+  db_query("UPDATE {mediamosa_job_server_still} SET created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_job_server_transcode table.
+ */
+function mediamosa_update_7035() {
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE {mediamosa_job_server_transcode} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE {mediamosa_job_server_transcode} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE {mediamosa_job_server_transcode} SET changed = UTC_TIMESTAMP WHERE changed = '0000-00-00 00:00:00'");
+
+  // Now convert.
+  db_query("UPDATE {mediamosa_job_server_transcode} SET created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_job_still table.
+ */
+function mediamosa_update_7036() {
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE {mediamosa_job_still} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE {mediamosa_job_still} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE {mediamosa_job_still} SET changed = UTC_TIMESTAMP WHERE changed = '0000-00-00 00:00:00'");
+
+  // Now convert.
+  db_query("UPDATE {mediamosa_job_still} SET created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_job_transcode table.
+ */
+function mediamosa_update_7037() {
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE {mediamosa_job_transcode} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE {mediamosa_job_transcode} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE {mediamosa_job_transcode} SET changed = UTC_TIMESTAMP WHERE changed = '0000-00-00 00:00:00'");
+
+  // Now convert.
+  db_query("UPDATE {mediamosa_job_transcode} SET created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_job_upload table.
+ */
+function mediamosa_update_7038() {
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE {mediamosa_job_upload} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE {mediamosa_job_upload} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE {mediamosa_job_upload} SET changed = UTC_TIMESTAMP WHERE changed = '0000-00-00 00:00:00'");
+
+  // Now convert.
+  db_query("UPDATE {mediamosa_job_upload} SET created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_log_integrity_check table.
+ */
+function mediamosa_update_7039() {
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE {mediamosa_log_integrity_check} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE {mediamosa_log_integrity_check} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE {mediamosa_log_integrity_check} SET changed = UTC_TIMESTAMP WHERE changed = '0000-00-00 00:00:00'");
+
+  // Now convert.
+  db_query("UPDATE {mediamosa_log_integrity_check} SET created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_server_job table.
+ */
+function mediamosa_update_7040() {
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE {mediamosa_server_job} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE {mediamosa_server_job} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE {mediamosa_server_job} SET changed = UTC_TIMESTAMP WHERE changed = '0000-00-00 00:00:00'");
+
+  // Now convert.
+  db_query("UPDATE {mediamosa_server_job} SET created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_statistics_diskspace_used table.
+ */
+function mediamosa_update_7041() {
+  db_query("UPDATE {mediamosa_statistics_diskspace_used} SET timestamp = DATE_SUB(timestamp, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_statistics_file_upload table.
+ */
+function mediamosa_update_7042() {
+  db_query("UPDATE {mediamosa_statistics_file_upload} SET timestamp = DATE_SUB(timestamp, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_statistics_search_request table.
+ */
+function mediamosa_update_7043() {
+  db_query("UPDATE {mediamosa_statistics_search_request} SET searched = DATE_SUB(searched, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_statistics_stream_request table.
+ */
+function mediamosa_update_7044() {
+  db_query("UPDATE {mediamosa_statistics_stream_request} SET played = DATE_SUB(played, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_ticket table.
+ */
+function mediamosa_update_7045() {
+  db_query("UPDATE {mediamosa_ticket} SET issued = DATE_SUB(issued, INTERVAL 2 HOUR), created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_transcode_mapping table.
+ */
+function mediamosa_update_7046() {
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE {mediamosa_transcode_mapping} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE {mediamosa_transcode_mapping} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE {mediamosa_transcode_mapping} SET changed = UTC_TIMESTAMP WHERE changed = '0000-00-00 00:00:00'");
+
+  // Now convert.
+  db_query("UPDATE {mediamosa_transcode_mapping} SET created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_transcode_profile table.
+ */
+function mediamosa_update_7047() {
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE {mediamosa_transcode_profile} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE {mediamosa_transcode_profile} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE {mediamosa_transcode_profile} SET changed = UTC_TIMESTAMP WHERE changed = '0000-00-00 00:00:00'");
+
+  // Now convert.
+  db_query("UPDATE {mediamosa_transcode_profile} SET created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_user table.
+ */
+function mediamosa_update_7048() {
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE {mediamosa_user} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE {mediamosa_user} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE {mediamosa_user} SET changed = UTC_TIMESTAMP WHERE changed = '0000-00-00 00:00:00'");
+
+  // Now convert.
+  db_query("UPDATE {mediamosa_user} SET created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
+}
+
+/**
+ * Convert dates to UTC in mediamosa_user_group table.
+ */
+function mediamosa_update_7049() {
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE {mediamosa_user_group} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE {mediamosa_user_group} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE {mediamosa_user_group} SET changed = UTC_TIMESTAMP WHERE changed = '0000-00-00 00:00:00'");
+
+  // Now convert.
+  db_query("UPDATE {mediamosa_user_group} SET created = DATE_SUB(created, INTERVAL 2 HOUR), changed = DATE_SUB(changed, INTERVAL 2 HOUR)");
 }

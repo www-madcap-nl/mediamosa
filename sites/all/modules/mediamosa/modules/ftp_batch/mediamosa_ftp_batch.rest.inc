@@ -65,8 +65,12 @@ class mediamosa_rest_call_ftp_batch_list extends mediamosa_rest_call {
     // Get the list.
     $result = mediamosa_ftp_batch::search($app_id, $offset, $limit);
 
-    foreach ($result as $a_row) {
-      $o_mediamosa->add_item($a_row);
+    foreach ($result as $row) {
+      // UTC -> App timezone.
+      $row[mediamosa_ftp_batch_db::STARTED] = mediamosa::utcdate2appdate($row[mediamosa_ftp_batch_db::STARTED]);
+      $row[mediamosa_ftp_batch_db::FINISHED] = mediamosa::utcdate2appdate($row[mediamosa_ftp_batch_db::FINISHED]);
+
+      $o_mediamosa->add_item($row);
     }
 
     $o_rest_reponse->item_count_total = $result->found_rows;
@@ -116,10 +120,14 @@ class mediamosa_rest_call_ftp_batch_get extends mediamosa_rest_call {
     mediamosa_db::db_must_exists(mediamosa_ftp_batch_db::TABLE_NAME, array(mediamosa_ftp_batch_db::APP_ID => $app_id, mediamosa_ftp_batch_db::ID => $batch_id));
 
     // Get the batch.
-    $a_row = mediamosa_ftp_batch::get($batch_id);
+    $row = mediamosa_ftp_batch::get($batch_id);
+
+    // UTC -> App timezone.
+    $row[mediamosa_ftp_batch_db::STARTED] = mediamosa::utcdate2appdate($row[mediamosa_ftp_batch_db::STARTED]);
+    $row[mediamosa_ftp_batch_db::FINISHED] = mediamosa::utcdate2appdate($row[mediamosa_ftp_batch_db::FINISHED]);
 
     // Return the item.
-    $o_mediamosa->add_item($a_row);
+    $o_mediamosa->add_item($row);
   }
 }
 
@@ -393,6 +401,9 @@ class mediamosa_rest_call_ftp_batch_assets_get extends mediamosa_rest_call {
 
     // Add to response.
     foreach ($result as $row) {
+      $row[mediamosa_ftp_batch_db::STARTED] = mediamosa::utcdate2appdate($row[mediamosa_ftp_batch_db::STARTED]);
+      $row[mediamosa_ftp_batch_db::FINISHED] = mediamosa::utcdate2appdate($row[mediamosa_ftp_batch_db::FINISHED]);
+
       $o_mediamosa->add_item($row);
     }
 

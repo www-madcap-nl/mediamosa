@@ -106,13 +106,13 @@ class mediamosa_core_cql {
       case mediamosa_type::TYPE_SEARCH_DATETIME:
         foreach ($a_value as $value) {
           if (strpos($value, '|') === FALSE) {
-            $value = mediamosa_datetime::date8601_to_timestamp($value, $name, mediamosa_type::TYPE_SEARCH_DATETIME);
+            $value = mediamosa_datetime::date8601_to_timestamp($value, $name, mediamosa_type::TYPE_SEARCH_DATETIME, 'Y-m-d\TH:i:s');
             $a_or[] = $name . ' == "' . addslashes($value) . '"';
           }
           else {
            list($v1, $v2) = explode('|', $value, 2);
-           $v1 = mediamosa_datetime::date8601_to_timestamp($v1, $name, mediamosa_type::TYPE_SEARCH_DATETIME);
-           $v2 = mediamosa_datetime::date8601_to_timestamp($v2, $name, mediamosa_type::TYPE_SEARCH_DATETIME);
+           $v1 = mediamosa_datetime::date8601_to_timestamp($v1, $name, mediamosa_type::TYPE_SEARCH_DATETIME, 'Y-m-d\TH:i:s');
+           $v2 = mediamosa_datetime::date8601_to_timestamp($v2, $name, mediamosa_type::TYPE_SEARCH_DATETIME, 'Y-m-d\TH:i:s');
            $a_or[] = $name . ' within "' . addslashes($v1) . ' ' . addslashes($v2) . '"';
           }
         }

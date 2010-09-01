@@ -181,9 +181,14 @@ class mediamosa_asset_mediafile {
 
     // Add to item.
     $items = array();
-    foreach ($result as $a_row) {
-      $mediafile_id = $a_row[mediamosa_asset_mediafile_db::ID];
-      $items[$mediafile_id] = $a_row;
+    foreach ($result as $row) {
+      $mediafile_id = $row[mediamosa_asset_mediafile_db::ID];
+
+      // UTC conversion to app dates.
+      $row[mediamosa_asset_mediafile_db::CREATED] = mediamosa::utcdate2appdate($row[mediamosa_asset_mediafile_db::CREATED]);
+      $row[mediamosa_asset_mediafile_db::CHANGED] = mediamosa::utcdate2appdate($row[mediamosa_asset_mediafile_db::CHANGED]);
+
+      $items[$mediafile_id] = $row;
 
       $items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::VIDEO_CODEC] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::VIDEO_CODEC);
       $items[$mediafile_id][$prefix . mediamosa_asset_mediafile_metadata::COLORSPACE] = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::COLORSPACE);
@@ -219,7 +224,7 @@ class mediamosa_asset_mediafile {
       $result = $query->execute();
 
       $i = 0;
-      foreach ($result as $a_row) {
+      foreach ($result as $row) {
         // Create unique ID.
         $ticket = mediamosa_db::uuid($app_id);
 
@@ -230,21 +235,21 @@ class mediamosa_asset_mediafile {
             NULL,
             mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL,
             $app_id,
-            $a_row[mediamosa_asset_mediafile_db::OWNER_ID],
-            $a_row[mediamosa_asset_mediafile_db::ID]
+            $row[mediamosa_asset_mediafile_db::OWNER_ID],
+            $row[mediamosa_asset_mediafile_db::ID]
           );
 
           // Create response.
           $response = mediamosa_asset_mediafile_play_proxy::create_response_still($ticket, $app_id);
-          $a_row['still_ticket'] = $response['output'];
+          $row['still_ticket'] = $response['output'];
 
           // Add still to mediafile.
-          assert(!empty($a_row[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE])); // Make sure its here.
+          assert(!empty($row[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE])); // Make sure its here.
 
-          $mediafile_id = $a_row[mediamosa_asset_mediafile_db::ID];
-          $a_row = array_merge($a_row, mediamosa_asset_mediafile_metadata::get_all_mediafile_metadata($mediafile_id));
+          $mediafile_id = $row[mediamosa_asset_mediafile_db::ID];
+          $row = array_merge($row, mediamosa_asset_mediafile_metadata::get_all_mediafile_metadata($mediafile_id));
 
-          $items[$a_row[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE]]['still']['#'. $i++] = $a_row;
+          $items[$row[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE]]['still']['#'. $i++] = $row;
         }
         catch (mediamosa_exception_error_file_not_found $e) {
           // Ignore.

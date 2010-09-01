@@ -77,7 +77,7 @@ class mediamosa_rest_call_ftp_user_list extends mediamosa_rest_call {
         array(
           'userid' => $a_user['userid'],
           'active' => intval($a_user['active']) ? 'true' : 'false',
-          'modified' => $a_user['modified'],
+          'modified' => mediamosa::utcdate2appdate($a_user['modified']),
         )
       );
     }
@@ -389,7 +389,7 @@ class mediamosa_rest_call_ftp_user_get extends mediamosa_rest_call {
     $o_mediamosa->add_item(array(
       'userid' => $a_user['userid'],
       'active' => intval($a_user['active']) ? 'true' : 'false',
-      'modified' => $a_user['modified'],
+      'modified' => mediamosa::utcdate2appdate($a_user['modified']),
     ));
   }
 }

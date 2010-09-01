@@ -70,10 +70,18 @@ class mediamosa_rest_call_group_get extends mediamosa_rest_call {
     $group_id = $this->get_param_value(self::GROUP_ID);
 
     // Get the group quota.
-    $a_result = mediamosa_user_group::get_user_group_quota($app_id, $group_id);
+    $result = mediamosa_user_group::get_user_group_quota($app_id, $group_id);
+
+    if (isset($result[mediamosa_user_group_db::CREATED])) {
+      $result[mediamosa_user_group_db::CREATED] = mediamosa::utcdate2appdate($result[mediamosa_user_group_db::CREATED]);
+    }
+
+    if (isset($result[mediamosa_user_group_db::CHANGED])) {
+      $result[mediamosa_user_group_db::CHANGED] = mediamosa::utcdate2appdate($result[mediamosa_user_group_db::CHANGED]);
+    }
 
     // Add to response.
-    $o_mediamosa->add_item($a_result);
+    $o_mediamosa->add_item($result);
   }
 }
 

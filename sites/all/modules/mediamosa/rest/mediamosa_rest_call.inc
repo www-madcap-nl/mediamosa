@@ -923,7 +923,7 @@ abstract class mediamosa_rest_call {
     // Now loop through input and convert to UTC.
     foreach ($this->a_rest_args as $name => $param) {
       if ($param[self::PARAM_TYPE] == mediamosa_type::TYPE_DATETIME) {
-        $this->a_rest_args[$name][self::PARAM_VALUE] = mediamosa_datetime::app_date2utc_date($param[self::PARAM_VALUE], $this->calling_app);
+        $this->a_rest_args[$name][self::PARAM_VALUE] = mediamosa_datetime::app_date2utc_date($param[self::PARAM_VALUE], $this->calling_app[mediamosa_app_db::TIMEZONE]);
       }
     }
   }

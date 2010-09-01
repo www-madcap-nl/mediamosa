@@ -69,6 +69,15 @@ class mediamosa_rest_call_transcode_profile_search extends mediamosa_rest_call {
       $a_item[mediamosa_transcode_profile_db::PROFILE] = $a_transcode_profile[mediamosa_transcode_profile_db::PROFILE];
       $a_item['default'] = $a_transcode_profile[mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE];
       $a_item['global'] = $a_transcode_profile[mediamosa_transcode_profile_db::APP_ID] > 0 ? 'FALSE' : 'TRUE';
+
+      // UTC -> App timezone.
+      if (isset($a_item[mediamosa_transcode_profile_db::CREATED])) {
+        $a_item[mediamosa_transcode_profile_db::CREATED] = mediamosa::utcdate2appdate($a_item[mediamosa_transcode_profile_db::CREATED]);
+      }
+      if (isset($a_item[mediamosa_transcode_profile_db::CHANGED])) {
+        $a_item[mediamosa_transcode_profile_db::CHANGED] = mediamosa::utcdate2appdate($a_item[mediamosa_transcode_profile_db::CHANGED]);
+      }
+
       $o_mediamosa->add_item($a_item);
     }
   }
@@ -125,13 +134,13 @@ class mediamosa_rest_call_transcode_profile_get extends mediamosa_rest_call {
       $transcode['default'] = $a_profile[mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE];
       $transcode['global'] = $a_profile[mediamosa_transcode_profile_db::APP_ID] > 0 ? 'FALSE' : 'TRUE';
       $transcode['file_extension'] = $a_profile[mediamosa_transcode_profile_db::FILE_EXTENSION];
-      $transcode['created'] = $a_profile[mediamosa_transcode_profile_db::CREATED];
-      $transcode['changed'] = $a_profile[mediamosa_transcode_profile_db::CHANGED];
+      $transcode['created'] = mediamosa::utcdate2appdate($a_profile[mediamosa_transcode_profile_db::CREATED]);
+      $transcode['changed'] = mediamosa::utcdate2appdate($a_profile[mediamosa_transcode_profile_db::CHANGED]);
       $transcode['version'] = $a_profile[mediamosa_transcode_profile_db::VERSION];
       $transcode['command'] = $a_profile[mediamosa_transcode_profile_db::COMMAND];
       $transcode['tool'] = $a_profile[mediamosa_transcode_profile_db::TOOL];
 
-      $o_mediamosa->add_item($a_profile);
+      $o_mediamosa->add_item($transcode);
     }
   }
 }

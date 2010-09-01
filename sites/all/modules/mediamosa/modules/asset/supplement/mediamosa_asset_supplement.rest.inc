@@ -85,6 +85,11 @@ class mediamosa_rest_call_asset_supplement_get extends mediamosa_rest_call {
     foreach ($supplements as $supplement) {
       $supplement['supplement_base64'] = base64_encode($supplement[mediamosa_asset_supplement_db::SUPPLEMENT]);
       unset($supplement[mediamosa_asset_supplement_db::SUPPLEMENT]);
+
+      // Convert times.
+      $supplement[mediamosa_asset_supplement_db::CHANGED] = mediamosa::utcdate2appdate($supplement[mediamosa_asset_supplement_db::CHANGED]);
+      $supplement[mediamosa_asset_supplement_db::CREATED] = mediamosa::utcdate2appdate($supplement[mediamosa_asset_supplement_db::CREATED]);
+
       $o_mediamosa->add_item($supplement);
     }
   }

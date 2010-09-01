@@ -48,7 +48,7 @@ class mediamosa_datetime {
    *
    * @see mediamosa_type.inc
    */
-  static public function date8601_to_timestamp($param_value, $param, $param_type = mediamosa_type::TYPE_DATETIME) {
+  static public function date8601_to_timestamp($param_value, $param, $param_type = mediamosa_type::TYPE_DATETIME, $format = 'Y-m-d H:i:s') {
     // Lets be sure its a string.
     assert(is_string($param_value));
 
@@ -96,7 +96,7 @@ class mediamosa_datetime {
       $time = gmmktime($value[3], $value[4], $value[5], $value[1], $value[2], $value[0]);
 
       // Back to GMT date again, make it valid.
-      $result = gmdate('Y-m-d\TH:i:s', $time);
+      $result = gmdate($format, $time);
     }
     catch (Exception $e) {
       // Make sure we return to old time zone.
@@ -190,7 +190,7 @@ class mediamosa_datetime {
       $time = mktime($date_parsed['hour'], $date_parsed['minute'], $date_parsed['second'], $date_parsed['month'], $date_parsed['day'], $date_parsed['year']);
 
       // Back to GMT date again, make it valid.
-      $result = gmdate('Y-m-d\TH:i:s', $time); // \T is accepted by SQL.
+      $result = gmdate('Y-m-d H:i:s', $time);
     }
     catch (Exception $e) {
       // Make sure we return to old time zone.
@@ -215,7 +215,7 @@ class mediamosa_datetime {
     // Walk through array, when array.
     if (is_array($utc_date)) {
       foreach ($utc_date as $key => $utc_date_2) {
-        $utc_date[$key] = self::utc_date2tz_date($utc_date_2, $app_timezone);
+        $utc_date[$key] = self::utc_date2app_date($utc_date_2, $app_timezone);
       }
 
       return $utc_date;
@@ -224,7 +224,7 @@ class mediamosa_datetime {
     // Parse the date, date_parse is new in 5.2.
     $date_parsed = date_parse($utc_date);
 
-    // Get current timezone
+    // Get current timezone.
     $timezone_old = date_default_timezone_get();
 
     try {
@@ -235,7 +235,7 @@ class mediamosa_datetime {
       $time = gmmktime($date_parsed['hour'], $date_parsed['minute'], $date_parsed['second'], $date_parsed['month'], $date_parsed['day'], $date_parsed['year']);
 
       // Back to app date again, make it valid.
-      $result = date('Y-m-d\TH:i:s', $time); // \T is accepted by SQL.
+      $result = date('Y-m-d H:i:s', $time);
     }
     catch (Exception $e) {
       // Make sure we return to old time zone.

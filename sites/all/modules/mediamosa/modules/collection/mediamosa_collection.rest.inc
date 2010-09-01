@@ -310,8 +310,12 @@ class mediamosa_rest_call_collection_search extends mediamosa_rest_call {
     $o_mediamosa->item_count_total = $result->found_rows;
 
     // Set result.
-    foreach ($result as $a_row) {
-      $o_mediamosa->add_item($a_row);
+    foreach ($result as $row) {
+      // Convert UTC to app timezone.
+      $row[mediamosa_collection_db::CREATED] = mediamosa::utcdate2appdate($row[mediamosa_collection_db::CREATED]);
+      $row[mediamosa_collection_db::CHANGED] = mediamosa::utcdate2appdate($row[mediamosa_collection_db::CHANGED]);
+
+      $o_mediamosa->add_item($row);
     }
   }
 }
@@ -436,6 +440,10 @@ class mediamosa_rest_call_collection_get extends mediamosa_rest_call {
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_IS_UNAPPROPRIATE);
       }
     }
+
+    // UTC conversion to app timezone.
+    $collection[mediamosa_collection_db::CREATED] = mediamosa::utcdate2appdate($collection[mediamosa_collection_db::CREATED]);
+    $collection[mediamosa_collection_db::CHANGED] = mediamosa::utcdate2appdate($collection[mediamosa_collection_db::CHANGED]);
 
     $collection['numofvideos'] = mediamosa_collection::count_assets_in_collection($coll_id);
 

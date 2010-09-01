@@ -59,8 +59,11 @@ class mediamosa_rest_call_transcode_mapping_search extends mediamosa_rest_call {
     $a_transcode_mappings = mediamosa_transcode_mapping::search();
 
     // Add to response.
-    foreach ($a_transcode_mappings as $a_transcode_mapping) {
-      $o_mediamosa->add_item($a_transcode_mapping);
+    foreach ($a_transcode_mappings as $transcode_mapping) {
+      $transcode_mapping[mediamosa_transcode_mapping_db::CREATED] = mediamosa::utcdate2appdate($transcode_mapping[mediamosa_transcode_mapping_db::CREATED]);
+      $transcode_mapping[mediamosa_transcode_mapping_db::CHANGED] = mediamosa::utcdate2appdate($transcode_mapping[mediamosa_transcode_mapping_db::CHANGED]);
+
+      $o_mediamosa->add_item($transcode_mapping);
     }
   }
 }

@@ -454,6 +454,15 @@ function _mediamosa_migration_asset() {
     ))
   );
 
+  // Now copy all changed dates to overwrite empty created dates.
+  db_query("UPDATE {mediamosa_asset} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+
+  // Now make sure created is not empty.
+  db_query("UPDATE {mediamosa_asset} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
+
+  // Now make sure changed is not empty.
+  db_query("UPDATE {mediamosa_asset} SET changed = UTC_TIMESTAMP WHERE changed = '0000-00-00 00:00:00'");
+
   // Back to old session mode.
   db_query(strtr("SET SESSION sql_mode = '#old_mode'", array('#old_mode' => $old_mode)));
 
@@ -493,7 +502,6 @@ function _mediamosa_migration_mediafile() {
       (
         mediafile_id,
         asset_id,
-        asset_id_root,
         mediafile_id_source,
         tag,
         app_id,
@@ -517,7 +525,6 @@ function _mediamosa_migration_mediafile() {
       ) (SELECT
         mediafile_id,
         asset_id,
-        asset_id_root,
         mediafile_source,
         tag,
         app_id,
@@ -2057,12 +2064,6 @@ function _mediamosa_migration_kill_child_assets() {
     // Clear mem.
     unset($a_mediafile_originals);
   }
-
-  // Make sure empty root is set with the asset id.
-  db_query("UPDATE {mediamosa_asset_mediafile} SET asset_id_root = asset_id WHERE asset_id_root = ''");
-
-  // Second move all child mediafile under the root.
-  db_query("UPDATE {mediamosa_asset_mediafile} SET asset_id = asset_id_root");
 
   // Get all orginals that are have URI on empty.
   $count = db_query("SELECT COUNT(mediafile_ID) FROM {mediamosa_asset_mediafile} WHERE (uri = '' OR uri IS NULL) AND is_original_file = 'TRUE' AND is_still = 'FALSE'")->fetchField();

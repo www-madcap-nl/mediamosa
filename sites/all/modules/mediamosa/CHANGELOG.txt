@@ -154,7 +154,7 @@ Other changes (not ticket related).
 - Fixed reset button on asset browse page.
 - Fixed CQL entry box on asset browse page to get empty when entering an empty 
   string to clear your CQL.
-- Still parameter 'size' is now default '352x288'.
+- Still parameter 'size' is now default '352x288' in all related REST calls.
 - Fixed: CQL search on 'batch_id' used STRING type instead of INT, resulted into
   wrong search results.
 - Still parameters 'width' and 'height' are now deprecated, use still instead.
@@ -166,6 +166,9 @@ Other changes (not ticket related).
   selected.
 - Rewrote all split() functions to preg_split to support PHP 5.3.
 - Rewrote all string offset code that uses {} to [] for support of PHP 5.3.
+- Added lib/mediamosa_datetime.inc for date related functions.
+- Changed migration script for 1.7 to 2.x to convert dates into UTC from import.
+ 
 
 Mediamosa 2.1.5 (build 664)
 ---------------------------
