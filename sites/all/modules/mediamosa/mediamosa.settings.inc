@@ -209,6 +209,9 @@ class mediamosa_settings {
 
     if (is_null($mediamosa_ffmpeg_pad)) {
       $mediamosa_ffmpeg_pad = (strpos(exec('ffmpeg -padtop 0 2>&1'), 'vf=pad') === FALSE);
+      if ($mediamosa_ffmpeg_pad) {
+        $mediamosa_ffmpeg_pad = (strpos(exec('ffmpeg -padtop 0 2>&1'), 'has been removed') === FALSE);
+      }
     }
 
     return $mediamosa_ffmpeg_pad;
