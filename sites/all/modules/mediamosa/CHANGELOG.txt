@@ -49,6 +49,7 @@ Mediamosa 2.2.0
 - Added job server status page (See MediaMosa ticker #284).
 
 Other changes (not ticket related).
+- Fixed updating Transcode profile page, parameters were not saved correctly.
 - Fixed padding test for new ffmpeg version.
 - During ticket #255, adding pager to stats, bug was found on the stats keyword
   saver. It also stored search on dates, which are not words. Bug fixed, stats
