@@ -1168,7 +1168,6 @@ function mediamosa_asset_mediamosa_register_rest_call_doc() {
     mediamosa_rest_call::DESCRIPTION => 'Counts the number of assets based on owner and/or group_id. ',
     mediamosa_rest_call::EXAMPLE_REQUEST => 'asset/count?owner_id=testuser',
     mediamosa_rest_call::RESPONSE_FIELDS => FALSE,
-    mediamosa_rest_call::EXAMPLE_RESPONSE => 'Returns the number of found assets in the header->item_count_total.',
   );
 
   // Get Asset Media Metadata.

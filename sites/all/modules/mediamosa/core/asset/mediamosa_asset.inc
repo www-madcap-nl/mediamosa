@@ -243,7 +243,7 @@ class mediamosa_asset {
             ':asset_id' => $asset_id,
             ':app_id' => $app_id,
             ':coll_id' => $collection_id,
-            ':now' => mediamosa::db_current_timestamp_now(),
+            ':now' => mediamosa_datetime::utc_current_timestamp_now(),
           )
         );
       }
@@ -259,7 +259,7 @@ class mediamosa_asset {
             '#coll_id' => mediamosa_asset_delete_db::COLL_ID,
             ':asset_id' => $asset_id,
             ':app_id' => $app_id,
-            ':now' => mediamosa::db_current_timestamp_now(),
+            ':now' => mediamosa_datetime::utc_current_timestamp_now(),
           )
         );
       }
@@ -781,17 +781,17 @@ class mediamosa_asset {
         $asset_property_value = NULL;
         switch ($asset['asset_property_type']) {
           case mediamosa_asset_metadata_property_db::TYPE_CHAR:
-            $asset_property_value = $asset['asset_property_val_char'];
+            $items_pre_sort[$asset[mediamosa_asset_db::ID]][$asset['asset_property_group_name']][$asset['asset_property_name']][] = $asset['asset_property_val_char'];
             break;
+
           case mediamosa_asset_metadata_property_db::TYPE_DATETIME:
-            $asset_property_value = $asset['asset_property_val_datetime'];
+            $items_pre_sort[$asset[mediamosa_asset_db::ID]][$asset['asset_property_group_name']][$asset['asset_property_name']][] = $asset['asset_property_val_datetime'];
             break;
+
           case mediamosa_asset_metadata_property_db::TYPE_INT:
-            $asset_property_value = $asset['asset_property_val_int'];
+            $items_pre_sort[$asset[mediamosa_asset_db::ID]][$asset['asset_property_group_name']][$asset['asset_property_name']][] = $asset['asset_property_val_int'];
             break;
         }
-        // Collect the value.
-        $items_pre_sort[$asset[mediamosa_asset_db::ID]][$asset['asset_property_group_name']][$asset['asset_property_name']][] = $asset_property_value;
       }
 
       // Add collection data.
@@ -855,7 +855,7 @@ class mediamosa_asset {
     }
 
     // Get the NOW date.
-    $now = mediamosa::db_current_timestamp_now();
+    $now = mediamosa_datetime::utc_current_timestamp_now();
 
     // Update videotimestamp.
     mediamosa_db::db_query(
@@ -1132,7 +1132,7 @@ class mediamosa_asset {
       'SELECT #asset_id FROM {#mediamosa_asset} AS a WHERE
         (SELECT COUNT(*) FROM {#mediamosa_asset_mediafile} AS am WHERE am.#asset_id = a.#asset_id) = 0 AND
         (SELECT COUNT(*) FROM {#mediamosa_asset} AS a2 WHERE a2.#parent_id = a.#asset_id) = 0 AND
-        now() > date_add(a.#created, interval #timeout second)',
+        UTC_TIMESTAMP() > DATE_ADD(a.#created, interval #timeout second)',
       array(
         '#timeout' => mediamosa_settings::ASSET_GARBAGE_COLLECTOR_ASSET_TIMEOUT,
         '#asset_id' => mediamosa_asset_db::ID,

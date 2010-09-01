@@ -1339,7 +1339,7 @@ class mediamosa_job_scheduler {
         }
 
         if ($allowed_value != null) {
-          $allowed_values = split(';', $allowed_value);
+          $allowed_values = explode(';', $allowed_value);
           if (!(in_array($value, $allowed_values))) {
             return sprintf('%s:%s', $tool_parameter, $default_value);
           }
@@ -1553,9 +1553,9 @@ class mediamosa_job_scheduler {
 
     // Upload jobs in progress and waiting which have no activity.
     mediamosa_db::db_query(
-       'UPDATE {#mediamosa_job} SET #job_status = :JOBSTATUS_FAILED, FINISHED = NOW(), error_description = :error_description
+       'UPDATE {#mediamosa_job} SET #job_status = :JOBSTATUS_FAILED, FINISHED = UTC_TIMESTAMP(), error_description = :error_description
         WHERE #job_status in (:JOBSTATUS_INPROGRESS, :JOBSTATUS_WAITING) AND job_id IN
-        (SELECT job_id FROM {#mediamosa_job_upload} WHERE (NOW() - changed) > #JOB_UPLOAD_TIMEOUT)',
+        (SELECT job_id FROM {#mediamosa_job_upload} WHERE (UTC_TIMESTAMP() - changed) > #JOB_UPLOAD_TIMEOUT)',
         array(
           '#job_status' => mediamosa_job_db::JOB_STATUS,
           '#mediamosa_job' => mediamosa_job_db::TABLE_NAME,
@@ -1570,8 +1570,8 @@ class mediamosa_job_scheduler {
     // Jobs with no activity for 3 hours.
     mediamosa_db::db_query(
        'UPDATE {#mediamosa_job}
-        SET #job_status = :JOBSTATUS_FAILED, FINISHED = NOW(), error_description = :error_description
-        WHERE #job_status = :JOBSTATUS_INPROGRESS AND (NOW() - changed) > #JOB_JOB_TIMEOUT',
+        SET #job_status = :JOBSTATUS_FAILED, FINISHED = UTC_TIMESTAMP(), error_description = :error_description
+        WHERE #job_status = :JOBSTATUS_INPROGRESS AND (UTC_TIMESTAMP() - changed) > #JOB_JOB_TIMEOUT',
         array(
           '#job_status' => mediamosa_job_db::JOB_STATUS,
           '#mediamosa_job' => mediamosa_job_db::TABLE_NAME,

@@ -323,7 +323,7 @@ function mediamosa_update_7009() {
  * Create new mediamosa_asset_mediafile_metadata_property table.
  */
 function mediamosa_update_7010() {
-  // Drop the foreign key from the old metadta table.
+  // Drop the foreign key from the old metadata table.
   db_query('ALTER TABLE {mediamosa_asset_mediafile_metadata} DROP FOREIGN KEY fk_mediamosa_asset_mediafile_metadata_mediafile_id');
 
   // Rename the old metadta table.
@@ -388,15 +388,13 @@ function mediamosa_update_7011() {
       if (!is_null($row->$field)) {
         db_query("
           INSERT INTO {mediamosa_asset_mediafile_metadata}
-          (mediafile_id, prop_id, val_char, val_datetime, val_int, created, changed) VALUES
-          (:mediafile_id, :prop_id, :val_char, :val_datetime, :val_int, :created, :changed)", array(
+          (mediafile_id, prop_id, val_char, val_datetime, val_int) VALUES
+          (:mediafile_id, :prop_id, :val_char, :val_datetime, :val_int)", array(
           ':mediafile_id' => $row->mediafile_id,
           ':prop_id' => $property['prop_id'],
           ':val_char' => ($property['type'] == 'CHAR' ? $row->$field : NULL),
           ':val_datetime' => ($property['type'] == 'DATETIME' ? $row->$field : NULL),
           ':val_int' => ($property['type'] == 'INT' ? $row->$field : 0),
-          ':created' => $row->created,
-          ':changed' => $row->changed,
         ));
       }
     }
@@ -412,12 +410,6 @@ function mediamosa_update_7011() {
 function mediamosa_update_7012() {
 
   // drop some not used indexes:
-  db_drop_index('mediamosa_asset', 'idx_provider_id');
-  db_drop_index('mediamosa_asset', 'idx_owner_id');
-  db_drop_index('mediamosa_asset', 'idx_group_id');
-  db_drop_index('mediamosa_asset', 'idx_created');
-  db_drop_index('mediamosa_asset', 'idx_changed');
-  db_drop_index('mediamosa_asset', 'idx_is_protected');
   db_drop_index('mediamosa_asset', 'idx_app_parent_priv_unapp_emptyasset_owner');
 
   // parent_id is deprecated.
@@ -454,8 +446,8 @@ function mediamosa_update_7013() {
     ':allowed_value' => '1;2',
     ':default_value' => '1',
     ':required' => 'FALSE',
-    ':created' => mediamosa::db_current_timestamp_now(),
-    ':changed' => mediamosa::db_current_timestamp_now(),
+    ':created' => mediamosa_datetime::utc_current_timestamp_now(),
+    ':changed' => mediamosa_datetime::utc_current_timestamp_now(),
   ));
 }
 
@@ -520,4 +512,26 @@ function mediamosa_update_7015() {
       mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE,
     )
   );
+}
+/**
+ * Add timezone setting to mediamosa applications.
+ */
+function mediamosa_update_7016() {
+
+  db_add_field(mediamosa_app_db::TABLE_NAME, mediamosa_app_db::TIMEZONE, array(
+    'description' => t('The application timezone.'),
+    'type' => 'varchar',
+    'length' => mediamosa_app_db::TIMEZONE_LENGTH,
+    'not null' => FALSE,
+    'default' => mediamosa_settings::MEDIAMOSA_DEFAULT_TIMEZONE,
+  ));
+}
+
+/**
+ * Remove the created and changed dates from mediafile metadata table.
+ */
+function mediamosa_update_7017() {
+
+  db_drop_field(mediamosa_asset_mediafile_metadata_db::TABLE_NAME, 'created');
+  db_drop_field(mediamosa_asset_mediafile_metadata_db::TABLE_NAME, 'changed');
 }

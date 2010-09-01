@@ -240,17 +240,6 @@ function _mediamosa_development_compare_array($array1, $array2, $name1 = 'array1
 }
 
 /**
- * The page to execute a REST call.
- */
-function mediamosa_development_rest_page_form() {
-  $build = array();
-
-  $build['restcall'] = drupal_get_form('mediamosa_development_rest_form');
-
-  return $build;
-}
-
-/**
  * Set a REST uri.
  *
  * @param string $uri
@@ -267,7 +256,7 @@ function _mediamosa_development_set_rest_call($uri, $method) {
 /**
  * The form to execute a REST call.
  */
-function mediamosa_development_rest_form() {
+function mediamosa_development_rest_form($form, $form_state) {
 
   // Get session.
   $session = isset($_SESSION['mediamosa_development_params']) ? $_SESSION['mediamosa_development_params'] : array();
@@ -314,7 +303,7 @@ function mediamosa_development_rest_form() {
     '#type' => 'select',
     '#title' => 'REST call URI',
     '#options' => $apps,
-    '#default_value' => '',
+    '#default_value' => empty($_SESSION['mediamosa_development_params']['client_application']) ? '' : $_SESSION['mediamosa_development_params']['client_application'],
   );
 
   $mediamosa_development_mediamosa_17_rest_url = variable_get('mediamosa_development_mediamosa_17_rest_url', '');
@@ -420,6 +409,7 @@ function mediamosa_development_rest_form_submit($form, &$form_state) {
     case t('Select'):
       // Set uri in session.
       $_SESSION['mediamosa_development_params']['uri'] = isset($form_state['input']['uri']) ? $form_state['input']['uri'] : '';
+      $_SESSION['mediamosa_development_params']['client_application'] = isset($form_state['input']['uri']) ? $form_state['input']['client_application'] : '';
 
       if (empty($_SESSION['mediamosa_development_params']['uri'])) {
         break;

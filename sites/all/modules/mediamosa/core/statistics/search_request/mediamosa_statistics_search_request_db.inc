@@ -40,13 +40,3 @@ class mediamosa_statistics_search_request_db {
   const KEYWORD_LENGTH = 1000;
   const SEARCHED = 'searched';
 }
-/**
-  db_query("CREATE TABLE IF NOT EXISTS {statistics_search_request} (
-  `id` bigint(10) unsigned NOT NULL auto_increment,
-  `keyword` varchar(1000) NOT NULL,
-  `app_id` int(11) NOT NULL,
-  `searched` timestamp NOT NULL default CURRENT_TIMESTAMP,
-  PRIMARY KEY  (`id`),
-  KEY `keyword` (`keyword`(255))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=COMPACT");
- */

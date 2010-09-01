@@ -253,7 +253,7 @@ final class mediamosa_cql_part_search_term {
     if ($str_search_term == '""') {
       $str_search_term = '';
     }
-    elseif ($str_search_term{0} == '"' && mediamosa_unicode::substr($str_search_term, -1) == '"') {
+    elseif (mediamosa_unicode::substr($str_search_term, 0 , 1) == '"' && mediamosa_unicode::substr($str_search_term, -1) == '"') {
       $str_search_term = mediamosa_unicode::substr($str_search_term, 1, -1);
     }
 

@@ -143,7 +143,7 @@ class mediamosa_db {
     if (isset($args_cpy)) {
       $extras = array();
       foreach ($args_cpy as $key => $value) {
-        if ($key{0} != '#') {
+        if ($key[0] != '#') {
           continue;
         }
 
@@ -337,10 +337,10 @@ class mediamosa_db {
    * @return array
    *
    */
-  static public function db_insert_enrich(array $a_fields) {
-    $a_fields[mediamosa_db::CREATED] = mediamosa::db_current_timestamp_now();
-    $a_fields[mediamosa_db::CHANGED] = mediamosa::db_current_timestamp_now();
-    return $a_fields;
+  static public function db_insert_enrich(array $fields) {
+    $fields[mediamosa_db::CREATED] = mediamosa_datetime::utc_current_timestamp_now();
+    $fields[mediamosa_db::CHANGED] = mediamosa_datetime::utc_current_timestamp_now();
+    return $fields;
   }
 
   /**
@@ -374,7 +374,7 @@ class mediamosa_db {
    *
    */
   static public function db_update_enrich(array $fields) {
-    $fields[mediamosa_db::CHANGED] = mediamosa::db_current_timestamp_now();
+    $fields[mediamosa_db::CHANGED] = mediamosa_datetime::utc_current_timestamp_now();
     return $fields;
   }
 

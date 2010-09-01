@@ -162,6 +162,10 @@ Other changes (not ticket related).
   start_time and end_time when *_time parameters where not used.
 - Moved logging of missing status file on transcode/analyse to debug status, 
   will no longer end up in normal mode of debug level.  
+- Fixed testing page in MediaMosa admin; will correctly re-run tests when
+  selected.
+- Rewrote all split() functions to preg_split to support PHP 5.3.
+- Rewrote all string offset code that uses {} to [] for support of PHP 5.3.
 
 Mediamosa 2.1.5 (build 664)
 ---------------------------

@@ -38,6 +38,7 @@ require_once 'core/node/mediamosa_node.inc';
 require_once 'core/node/mediamosa_node_mediamosa_app.inc';
 require_once 'core/node/mediamosa_node_mediamosa_server.inc';
 require_once 'core/node/mediamosa_node_mediamosa_transcode_profile.inc';
+
 /**
  * Implements hook_requirements().
  */
@@ -119,6 +120,11 @@ function mediamosa_init() {
 
   // Now call the rest process function to process possible rest call.
   $mediamosa->process_rest();
+
+  // If we get here, then no REST interface is on.
+
+  // Need some fixes on CSS.
+  drupal_add_css(drupal_get_path('module', 'mediamosa') . '/mediamosa.css', array('weight' => 10));
 }
 
 /**

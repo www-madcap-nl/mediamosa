@@ -91,6 +91,8 @@ class mediamosa_app_db {
   const ACTIVE_VERSION = 'active_version';
   const ACTIVE_VERSION_LENGTH = 25;
   const TRANSCODING_MAX_SLOTS = 'transcoding_max_slots';
+  const TIMEZONE = 'timezone';
+  const TIMEZONE_LENGTH = 32;
 
   // ------------------------------------------------------------------ Functions.
   /**

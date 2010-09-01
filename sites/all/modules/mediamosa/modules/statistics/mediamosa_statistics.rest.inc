@@ -42,16 +42,16 @@ class mediamosa_rest_call_statistics_get_newest_mediafiles extends mediamosa_res
 
   // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
     // Enrich with limit, offset.
-    $a_var_setup = self::get_var_setup_range($a_var_setup, mediamosa_settings::LIMIT_MAX, mediamosa_settings::LIMIT_DEFAULT_STATISTICS);
+    $var_setup = self::get_var_setup_range($var_setup, mediamosa_settings::LIMIT_MAX, mediamosa_settings::LIMIT_DEFAULT_STATISTICS);
 
     // Enrich with order by.
-    $a_var_setup = self::get_var_setup_order_by($a_var_setup, '', array(), mediamosa_type::ORDER_DIRECTION_DESC);
+    $var_setup = self::get_var_setup_order_by($var_setup, '', array(), mediamosa_type::ORDER_DIRECTION_DESC);
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   // ------------------------------------------------------------------ Do Call.
@@ -155,16 +155,16 @@ class mediamosa_rest_call_statistics_get_most_popular_mediafiles extends mediamo
 
   // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
     // Enrich with limit, offset.
-    $a_var_setup = self::get_var_setup_range($a_var_setup, mediamosa_settings::LIMIT_MAX, mediamosa_settings::LIMIT_DEFAULT_STATISTICS);
+    $var_setup = self::get_var_setup_range($var_setup, mediamosa_settings::LIMIT_MAX, mediamosa_settings::LIMIT_DEFAULT_STATISTICS);
 
     // Enrich with order by.
-    $a_var_setup = self::get_var_setup_order_by($a_var_setup, '', array(), mediamosa_type::ORDER_DIRECTION_DESC);
+    $var_setup = self::get_var_setup_order_by($var_setup, '', array(), mediamosa_type::ORDER_DIRECTION_DESC);
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   // ------------------------------------------------------------------ Do Call.
@@ -257,16 +257,16 @@ class mediamosa_rest_call_statistics_get_newest_collections extends mediamosa_re
 
   // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
     // Enrich with limit, offset.
-    $a_var_setup = self::get_var_setup_range($a_var_setup, mediamosa_settings::LIMIT_MAX, mediamosa_settings::LIMIT_DEFAULT_STATISTICS);
+    $var_setup = self::get_var_setup_range($var_setup, mediamosa_settings::LIMIT_MAX, mediamosa_settings::LIMIT_DEFAULT_STATISTICS);
 
     // Enrich with order by.
-    $a_var_setup = self::get_var_setup_order_by($a_var_setup, '', array(), mediamosa_type::ORDER_DIRECTION_DESC);
+    $var_setup = self::get_var_setup_order_by($var_setup, '', array(), mediamosa_type::ORDER_DIRECTION_DESC);
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   // ------------------------------------------------------------------ Do Call.
@@ -344,16 +344,16 @@ class mediamosa_rest_call_statistics_get_most_popular_collections extends mediam
 
   // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
     // Enrich with limit, offset.
-    $a_var_setup = self::get_var_setup_range($a_var_setup, mediamosa_settings::LIMIT_MAX, mediamosa_settings::LIMIT_DEFAULT_STATISTICS);
+    $var_setup = self::get_var_setup_range($var_setup, mediamosa_settings::LIMIT_MAX, mediamosa_settings::LIMIT_DEFAULT_STATISTICS);
 
     // Enrich with order by.
-    $a_var_setup = self::get_var_setup_order_by($a_var_setup, '', array(), mediamosa_type::ORDER_DIRECTION_DESC);
+    $var_setup = self::get_var_setup_order_by($var_setup, '', array(), mediamosa_type::ORDER_DIRECTION_DESC);
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   // ------------------------------------------------------------------ Do Call.
@@ -450,9 +450,9 @@ class mediamosa_rest_call_statistics_set_historical_uploaded_mediafiles extends 
 
   // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::USER_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
@@ -471,7 +471,7 @@ class mediamosa_rest_call_statistics_set_historical_uploaded_mediafiles extends 
       )
     );
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   // ------------------------------------------------------------------ Do Call.
@@ -509,9 +509,9 @@ class mediamosa_rest_call_statistics_get_historical_uploaded_mediafiles extends 
 
   // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::MONTH => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
@@ -539,10 +539,10 @@ class mediamosa_rest_call_statistics_get_historical_uploaded_mediafiles extends 
     );
 
     // Enrich with limit, offset.
-    $a_var_setup = self::get_var_setup_range($a_var_setup, mediamosa_settings::LIMIT_MAX, mediamosa_settings::LIMIT_DEFAULT_STATISTICS_NO_PAGER);
+    $var_setup = self::get_var_setup_range($var_setup, mediamosa_settings::LIMIT_MAX, mediamosa_settings::LIMIT_DEFAULT_STATISTICS_NO_PAGER);
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   // ------------------------------------------------------------------ Do Call.
@@ -614,9 +614,9 @@ class mediamosa_rest_call_statistics_get_used_diskspace extends mediamosa_rest_c
 
   // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::MONTH => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
@@ -646,13 +646,13 @@ class mediamosa_rest_call_statistics_get_used_diskspace extends mediamosa_rest_c
     );
 
     // Enrich with limit, offset.
-    $a_var_setup = self::get_var_setup_range($a_var_setup, mediamosa_settings::LIMIT_MAX, mediamosa_settings::LIMIT_DEFAULT_STATISTICS);
+    $var_setup = self::get_var_setup_range($var_setup, mediamosa_settings::LIMIT_MAX, mediamosa_settings::LIMIT_DEFAULT_STATISTICS);
 
     // Enrich with order by.
-    $a_var_setup = self::get_var_setup_order_by($a_var_setup, '', array(), mediamosa_type::ORDER_DIRECTION_ASC);
+    $var_setup = self::get_var_setup_order_by($var_setup, '', array(), mediamosa_type::ORDER_DIRECTION_ASC);
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   // ------------------------------------------------------------------ Do Call.
@@ -762,9 +762,9 @@ class mediamosa_rest_call_statistics_get_requested_streams extends mediamosa_res
 
   // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::MONTH => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
@@ -797,13 +797,13 @@ class mediamosa_rest_call_statistics_get_requested_streams extends mediamosa_res
     );
 
         // Enrich with limit, offset.
-    $a_var_setup = self::get_var_setup_range($a_var_setup, mediamosa_settings::LIMIT_MAX, mediamosa_settings::LIMIT_DEFAULT_STATISTICS_NO_PAGER);
+    $var_setup = self::get_var_setup_range($var_setup, mediamosa_settings::LIMIT_MAX, mediamosa_settings::LIMIT_DEFAULT_STATISTICS_NO_PAGER);
 
     // Enrich with order by.
-    $a_var_setup = self::get_var_setup_order_by($a_var_setup, '', array(), mediamosa_type::ORDER_DIRECTION_DESC);
+    $var_setup = self::get_var_setup_order_by($var_setup, '', array(), mediamosa_type::ORDER_DIRECTION_DESC);
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   // ------------------------------------------------------------------ Do Call.
@@ -902,9 +902,9 @@ class mediamosa_rest_call_statistics_get_most_popular_streams extends mediamosa_
 
   // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::BEGINDATE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_DATETIME,
@@ -928,13 +928,13 @@ class mediamosa_rest_call_statistics_get_most_popular_streams extends mediamosa_
     );
 
     // Enrich with limit, offset.
-    $a_var_setup = self::get_var_setup_range($a_var_setup, mediamosa_settings::LIMIT_MAX, mediamosa_settings::LIMIT_DEFAULT_STATISTICS_NO_PAGER);
+    $var_setup = self::get_var_setup_range($var_setup, mediamosa_settings::LIMIT_MAX, mediamosa_settings::LIMIT_DEFAULT_STATISTICS_NO_PAGER);
 
     // Enrich with order by.
-    $a_var_setup = self::get_var_setup_order_by($a_var_setup, '', array(), mediamosa_type::ORDER_DIRECTION_DESC);
+    $var_setup = self::get_var_setup_order_by($var_setup, '', array(), mediamosa_type::ORDER_DIRECTION_DESC);
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   // ------------------------------------------------------------------ Do Call.
@@ -1036,9 +1036,9 @@ class mediamosa_rest_call_statistics_get_most_popular_words extends mediamosa_re
 
   // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::BEGINDATE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_DATETIME,
@@ -1053,13 +1053,13 @@ class mediamosa_rest_call_statistics_get_most_popular_words extends mediamosa_re
     );
 
     // Enrich with limit, offset.
-    $a_var_setup = self::get_var_setup_range($a_var_setup, mediamosa_settings::LIMIT_MAX, mediamosa_settings::LIMIT_DEFAULT_STATISTICS);
+    $var_setup = self::get_var_setup_range($var_setup, mediamosa_settings::LIMIT_MAX, mediamosa_settings::LIMIT_DEFAULT_STATISTICS);
 
     // Enrich with order by.
-    $a_var_setup = self::get_var_setup_order_by($a_var_setup, '', array(), mediamosa_type::ORDER_DIRECTION_DESC);
+    $var_setup = self::get_var_setup_order_by($var_setup, '', array(), mediamosa_type::ORDER_DIRECTION_DESC);
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup, FALSE);
+    return self::get_var_setup_default($var_setup, FALSE);
   }
 
   // ------------------------------------------------------------------ Do Call.
@@ -1145,9 +1145,9 @@ class mediamosa_rest_call_statistics_get_searchrequest extends mediamosa_rest_ca
 
   // ------------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup = array(
+    $var_setup = array(
       self::VARS => array(
         self::MONTH => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
@@ -1167,10 +1167,10 @@ class mediamosa_rest_call_statistics_get_searchrequest extends mediamosa_rest_ca
     );
 
         // Enrich with limit, offset.
-    $a_var_setup = self::get_var_setup_range($a_var_setup, mediamosa_settings::LIMIT_MAX, mediamosa_settings::LIMIT_DEFAULT_STATISTICS);
+    $var_setup = self::get_var_setup_range($var_setup, mediamosa_settings::LIMIT_MAX, mediamosa_settings::LIMIT_DEFAULT_STATISTICS);
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup);
+    return self::get_var_setup_default($var_setup);
   }
 
   // ------------------------------------------------------------------ Do Call.

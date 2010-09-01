@@ -27,6 +27,7 @@ files[] = core/error/mediamosa_error.inc
 files[] = core/error/mediamosa_error.install.inc
 
 ; Library. (2nd for dependency).
+files[] = lib/mediamosa_datetime.inc
 files[] = lib/mediamosa_db_query.inc
 files[] = lib/mediamosa_db.inc
 files[] = lib/mediamosa_debug.inc
@@ -303,3 +304,6 @@ files[] = simpletest/mediamosa.simpletest.rest.inc
 
 ; Patch tests.
 files[] = patch/mediamosa_cookie_domain.test
+
+; Core tests.
+files[] = mediamosa.timezone.test

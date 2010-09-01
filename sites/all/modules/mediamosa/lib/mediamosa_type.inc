@@ -47,8 +47,8 @@ class mediamosa_type {
   const TYPE_ALPHA_NUM_UNDERSCORE_TAG    = 'ALPHA_NUM_UNDERSCORE_TAG'; // same as ALPHA_NUM_UNDERSCORE, but does not allow the first char to be non alpha.
   const TYPE_STRING                      = 'STRING';
   const TYPE_DATETIME                    = 'DATETIME';
-  const TYPE_DATE                        = 'DATETIME';//@todo: Extend the DATETIME check and throw errors when time values exist.
-  const TYPE_TIME                        = 'DATETIME';//@todo: Extend the DATETIME check and throw errors when date values exist.
+  const TYPE_DATE                        = 'DATETIME';//@todo: Extend the DATETIME check and throw errors when time values exist. REMEMBER about utc conversion.
+  const TYPE_TIME                        = 'DATETIME';//@todo: Extend the DATETIME check and throw errors when date values exist. REMEMBER about utc conversion.
   const TYPE_BOOL                        = 'BOOL';
   const TYPE_MIMETYPE                    = 'MIMETYPE';
   const TYPE_XML                         = 'STRING';
@@ -268,12 +268,16 @@ class mediamosa_type {
       case self::TYPE_COMMAND:
         // Eg. "-b", "-ar"
         $mapping_name = "[-a-zA-Z_]+";
+
         // Eg. "176", "black"
         $mapping_sub_value = "[a-zA-Z0-9_]+";
+
         // Eg. "pad=176:144:0:6:black", "crop=23:34:64:62"
         $mapping_sub_line = "([a-zA-Z0-9_]+=$mapping_sub_value(:$mapping_sub_value+)*)";
+
         // Eg. "200000", "22050", "176x132", "'pad=176:144:0:6:black,crop=0:4:1280:540'"
         $mapping_value = "([a-zA-Z0-9._]+|(\'$mapping_sub_line+(,$mapping_sub_line)*\')+)";
+
         // Eg. "-b:200000;-ar:22050;-s:176x132;-vf:'pad=176:144:0:6:black,crop=0:4:1280:540,scale=1280:656'"
         if (preg_match("/^(($mapping_name:$mapping_value){0,1}|$mapping_name:$mapping_value(;$mapping_name:$mapping_value)*)$/", $mixed_param_value) !== 1) {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
@@ -286,14 +290,16 @@ class mediamosa_type {
         if (!ctype_alpha($mixed_param_value) && $mixed_param_value != '') {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
         }
+
         $checked_param_value = (string)$mixed_param_value;
         break;
 
       // Check ticket id for download/still downloads.
       case self::TYPE_TICKET_ID:
-        if (preg_match("@^([a-zA-Z0-9]+)(\.asx)?$@", $mixed_param_value, $matches) !== 1) {
+        if (preg_match("@^([a-zA-Z0-9]+)(\\.asx)?$@", $mixed_param_value, $matches) !== 1) {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
         }
+
         $checked_param_value = (string)$mixed_param_value;
         break;
 
@@ -418,11 +424,11 @@ class mediamosa_type {
 
         // If we supply NOW(), we fill in the time as UTC.
         if (mediamosa_unicode::strtoupper($mixed_param_value) == self::FUNC_DATETIME_NOW) {
-          $mixed_param_value = mediamosa::db_current_timestamp_now();
+          $mixed_param_value = mediamosa_datetime::utc_current_timestamp_now();
         }
 
         // Fix, test etc.
-        $checked_param_value = self::cast_timestamp($mixed_param_value, $param, $param_type);
+        $checked_param_value = mediamosa_datetime::date8601_to_timestamp($mixed_param_value, $param, $param_type);
         break;
 
       case self::TYPE_ORDER_DIRECTION:
@@ -539,74 +545,6 @@ class mediamosa_type {
 
     // Now do a range check.
     return is_string($checked_param_value) ? self::string_range($param, $checked_param_value, $range_start, $range_end) : self::int_range($param, $checked_param_value, $range_start, $range_end);
-  }
-
-  /**
-   * Returns a valid timestamp or throws error when timestamp was invalid or unable to convert
-   *
-   * @param string $mixed_param_value
-   *  Value.
-   * @param string $param
-   *  Name of the param.
-   * @param string $param_type
-   *  See TYPE_*.
-   */
-  static public function cast_timestamp($mixed_param_value, $param, $param_type = mediamosa_type::TYPE_DATETIME) {
-    $iso8601 = '#^(\d{4}((-)?(0[1-9]|1[0-2])((-)?(0[1-9]|[1-2][0-9]|3[0-1])((T| )(24:00(:00(\.[0]+)?)?|(([0-1][0-9]|2[0-3])(:)[0-5][0-9])((:)[0-5][0-9](\.[\d]+)?)?)((\+|-)(14:00|(0[0-9]|1[0-3])(:)[0-5][0-9])|(|Z)))?)?)?)$#';
-    if (!preg_match($iso8601, $mixed_param_value)) {
-
-      // Let's try the old style: dd/mm/yyyy
-      if (!preg_match('/^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$/', $mixed_param_value)) {
-
-        // This is not ISO 8601 and not the old style...
-        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
-
-      }
-      else {
-        // Old style to ISO 8601 converter.
-        $a_old_date = explode('/', $mixed_param_value);
-        $mixed_param_value = $a_old_date[2] . '-' . $a_old_date[1] . '-' . $a_old_date[0];
-      }
-
-    }
-
-    $a_value = split("[-:T ]", $mixed_param_value);
-
-    if (!count($a_value) || count($a_value) > 6) {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
-    }
-
-    $a_value[0] = (int)$a_value[0];// YYYY
-    $a_value[1] = isset($a_value[1]) && $a_value[1] > 0 ? (int)$a_value[1] : 1;// MM
-    $a_value[2] = isset($a_value[2]) && $a_value[2] > 0 ? (int)$a_value[2] : 1;// DD
-    $a_value[3] = isset($a_value[3]) ? (int)$a_value[3] : 0;// HH
-    $a_value[4] = isset($a_value[4]) ? (int)$a_value[4] : 0;// MM
-    $a_value[5] = isset($a_value[5]) ? (int)$a_value[5] : 0;// SS
-
-    if (!checkdate($a_value[1], $a_value[2], $a_value[0])) {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
-    }
-
-    // Get current timezone
-    $tz = date_default_timezone_get();
-
-    // Set to GMT/UTC so we can convert without timezone problems
-    date_default_timezone_set('UTC');
-
-    // Convert to integer
-    $time = gmmktime($a_value[3], $a_value[4], $a_value[5], $a_value[1], $a_value[2], $a_value[0]);
-
-    // Back to GMT date again, make it valid
-    $result = gmdate('Y-m-d\TH:i:s', $time);
-
-    // Back to original timezone, so we dont screw with other time functions
-    date_default_timezone_set($tz);
-
-    if ($result === FALSE) {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
-    }
-
-    return $result;
   }
 
   /**

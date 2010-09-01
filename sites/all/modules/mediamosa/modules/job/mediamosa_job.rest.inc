@@ -103,15 +103,15 @@ class mediamosa_rest_call_job_set_status extends mediamosa_rest_call {
         ),
         self::STILL_PER_MEDIAFILE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
-          self::VAR_DESCRIPTION => 'Stills per mediafile.',
+          self::VAR_DESCRIPTION => 'Stills per mediafile. (Used when still_type is NONE).',
         ),
         self::STILL_EVERY_SECOND => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
-          self::VAR_DESCRIPTION => 'Stills every second.',
+          self::VAR_DESCRIPTION => 'Stills every second. (Used when still_type is SECOND).',
         ),
         self::START_FRAME => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
-          self::VAR_DESCRIPTION => 'Still start frame.',
+          self::VAR_DESCRIPTION => 'Still start frame. (in seconds, used when still_type is NORMAL or SECOND).',
         ),
         self::END_FRAME => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
@@ -393,27 +393,27 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
         ),
         self::STILL_PER_MEDIAFILE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
-          self::VAR_DESCRIPTION => 'Stills per mediafile.',
+          self::VAR_DESCRIPTION => 'Stills per mediafile. (Used when still_type is NONE).',
         ),
         self::STILL_EVERY_SECOND => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
-          self::VAR_DESCRIPTION => 'Stills every second.',
+          self::VAR_DESCRIPTION => 'Stills every second. (Used when still_type is SECOND).',
         ),
         self::START_FRAME => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
-          self::VAR_DESCRIPTION => 'Still start frame (in seconds). Deprecrated, use start_time instead.',
+          self::VAR_DESCRIPTION => 'Still start frame (in seconds, used when still_type is NORMAL or SECOND). Deprecrated, use start_time instead.',
         ),
         self::START_TIME => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
-          self::VAR_DESCRIPTION => 'Still start time (in seconds).',
+          self::VAR_DESCRIPTION => 'Still start time (in seconds, used when still_type is NORMAL or SECOND).',
         ),
         self::END_FRAME => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
-          self::VAR_DESCRIPTION => 'Still end frame (in seconds). Deprecrated, use end_time instead.',
+          self::VAR_DESCRIPTION => 'Still end frame (in seconds, used when still_type is NORMAL or SECOND). Deprecrated, use end_time instead.',
         ),
         self::END_TIME => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
-          self::VAR_DESCRIPTION => 'Still end time (in seconds).',
+          self::VAR_DESCRIPTION => 'Still end time (in seconds, used when still_type is NORMAL or SECOND).',
         ),
         self::SIZE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_STRING,

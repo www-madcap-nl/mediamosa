@@ -306,7 +306,7 @@ function _mediamosa_migration_mediafileid_is_unique() {
 
   $result = db_query(
     strtr(
-      "SELECT COUNT(*) AS total, mediafile_id FROM #db_name.{mediafile} GROUP BY mediafile_id HAVING total > 1",
+      "SELECT COUNT(*) AS total, mediafile_id FROM #db_name.mediafile GROUP BY mediafile_id HAVING total > 1",
       array(
         '#db_name' => $db_name,
       )
@@ -347,7 +347,7 @@ function _mediamosa_migration_client_applications() {
   $db_name = _mediamosa_migration_get_memo_db();
 
   // Get the current apps.
-  $migrate_apps = db_query(strtr("SELECT * FROM #db_name.{client_applications}", array('#db_name' => $db_name)))->fetchAllAssoc('id');
+  $migrate_apps = db_query(strtr("SELECT * FROM #db_name.client_applications", array('#db_name' => $db_name)))->fetchAllAssoc('id');
 
   // Now add back the apps as nodes.
   foreach ($migrate_apps as $app_id => $app) {
@@ -432,23 +432,23 @@ function _mediamosa_migration_asset() {
         provider_id,
         owner_id,
         group_id,
-        videotimestamp,
-        videotimestampmodified,
+        DATE_SUB(videotimestamp, INTERVAL 2 HOUR),
+        DATE_SUB(videotimestampmodified, INTERVAL 2 HOUR),
         play_restriction_start,
         play_restriction_end,
         reference_id,
         isprivate,
         mediafile_duration,
         mediafile_container_type,
-        created,
-        changed,
+        DATE_SUB(created, INTERVAL 2 HOUR),
+        DATE_SUB(changed, INTERVAL 2 HOUR),
         is_unappropiate,
         is_external,
         is_empty_asset,
         viewed,
         played,
         is_protected
-      FROM #db_name.{asset} ORDER BY parent_id, asset_id ASC)",
+      FROM #db_name.asset ORDER BY parent_id, asset_id ASC)",
     array(
       '#db_name' => $db_name
     ))
@@ -467,10 +467,10 @@ function _mediamosa_migration_mediafile() {
   $db_name = _mediamosa_migration_get_memo_data_db();
 
   // Remove foreign key on asset_mediafile_metadata table.
-  db_query('ALTER TABLE mediamosa_asset_mediafile_metadata DROP FOREIGN KEY fk_mediamosa_asset_mediafile_metadata_mediafile_id');
+  db_query('ALTER TABLE {mediamosa_asset_mediafile_metadata} DROP FOREIGN KEY fk_mediamosa_asset_mediafile_metadata_mediafile_id');
 
   // Remove the primary key so insert will go fine.
-  db_query('ALTER TABLE mediamosa_asset_mediafile DROP PRIMARY KEY');
+  db_query('ALTER TABLE {mediamosa_asset_mediafile} DROP PRIMARY KEY');
 
   // Get the current mode, which might be empty;
   $old_mode = db_query('SELECT @@SESSION.sql_mode')->fetchField();
@@ -535,38 +535,42 @@ function _mediamosa_migration_mediafile() {
         command,
         file_extension,
         is_protected,
-        created,
-        changed,
+        DATE_SUB(created, INTERVAL 2 HOUR),
+        DATE_SUB(changed, INTERVAL 2 HOUR),
         transcode_inherits_acl
-      FROM #db_name.{mediafile})",
+      FROM #db_name.mediafile)",
     array(
       '#db_name' => $db_name
     ))
   );
 
   // Now copy all changed dates to overwrite empty created dates.
-  db_query("UPDATE mediamosa_asset_mediafile SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+  db_query("UPDATE {mediamosa_asset_mediafile} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
 
   // Now make sure created is not empty.
-  db_query("UPDATE mediamosa_asset_mediafile SET created = NOW() WHERE created = '0000-00-00 00:00:00'");
+  db_query("UPDATE {mediamosa_asset_mediafile} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
 
   // Now make sure changed is not empty.
-  db_query("UPDATE mediamosa_asset_mediafile SET changed = NOW() WHERE changed = '0000-00-00 00:00:00'");
+  db_query("UPDATE {mediamosa_asset_mediafile} SET changed = UTC_TIMESTAMP WHERE changed = '0000-00-00 00:00:00'");
 
   // Back to old session mode.
   db_query(strtr("SET SESSION sql_mode = '#old_mode'", array('#old_mode' => $old_mode)));
 
   // Add back the primary key.
-  db_query('ALTER TABLE mediamosa_asset_mediafile ADD PRIMARY KEY(mediafile_id)');
+  db_query('ALTER TABLE {mediamosa_asset_mediafile} ADD PRIMARY KEY(mediafile_id)');
 
   // Add the foreign key on asset_mediafile_metadata table.
-  db_query('ALTER TABLE mediamosa_asset_mediafile_metadata ADD CONSTRAINT fk_mediamosa_asset_mediafile_metadata_mediafile_id FOREIGN KEY (mediafile_id) REFERENCES mediamosa_asset_mediafile (mediafile_id)');
+  db_query('ALTER TABLE {mediamosa_asset_mediafile_metadata} ADD CONSTRAINT fk_mediamosa_asset_mediafile_metadata_mediafile_id FOREIGN KEY (mediafile_id) REFERENCES {mediamosa_asset_mediafile} (mediafile_id)');
 }
 
 /**
  * Migrate the mediafile metadata table.
  */
 function _mediamosa_migration_mediafile_metadata() {
+
+  // Set time limit higher here.
+  set_time_limit(240);
+
   // Get the database name.
   $db_name = _mediamosa_migration_get_memo_data_db();
 
@@ -605,39 +609,69 @@ function _mediamosa_migration_mediafile_metadata() {
   }
 
   // Migrating data.
-  $result = db_query(sprintf("SELECT * FROM %s.{mediafile_metadata}", $db_name));
-  foreach ($result as $row) {
-    foreach ($fields as $field => $property) {
-      if (!is_null($row->$field)) {
-        // Time set to the correct format.
-        $created = $row->created;
-        $changed = $row->changed;
-        if ((!$created || $created == '0000-00-00 00:00:00') && ($changed && $changed != '0000-00-00 00:00:00')) {
-          $created = $changed;
-        }
-        if (!$created || $created == '0000-00-00 00:00:00') {
-          $created = mediamosa::db_current_timestamp_now();
-        }
-        if (!$changed || $changed == '0000-00-00 00:00:00') {
-          $changed = mediamosa::db_current_timestamp_now();
-        }
+  foreach ($fields as $field => $property) {
+    switch ($property['type']) {
+      case 'CHAR':
+        db_query(strtr(
+          "INSERT INTO {mediamosa_asset_mediafile_metadata}
+            (
+              mediafile_id,
+              prop_id,
+              val_char
+            ) (SELECT
+              mediafile_id,
+              :prop_id,
+              #val_char
+            FROM #db_name.mediafile_metadata WHERE #val_char IS NOT NULL && #val_char != '' GROUP BY mediafile_id ORDER BY created ASC)",
+          array(
+            '#db_name' => $db_name,
+            ':prop_id' => $property['prop_id'],
+            '#val_char' => $field,
+          ))
+        );
+        break;
 
-        db_query("
-          INSERT INTO {mediamosa_asset_mediafile_metadata}
-          (mediafile_id, prop_id, val_char, val_datetime, val_int, created, changed) VALUES
-          (:mediafile_id, :prop_id, :val_char, :val_datetime, :val_int, :created, :changed)", array(
-          ':mediafile_id' => $row->mediafile_id,
-          ':prop_id' => $property['prop_id'],
-          ':val_char' => ($property['type'] == 'CHAR' ? $row->$field : NULL),
-          ':val_datetime' => ($property['type'] == 'DATETIME' ? $row->$field : NULL),
-          ':val_int' => ($property['type'] == 'INT' ? $row->$field : 0),
-          ':created' => $created,
-          ':changed' => $changed,
-        ));
-      }
+      case 'DATETIME':
+        db_query(strtr(
+          "INSERT INTO {mediamosa_asset_mediafile_metadata}
+            (
+              mediafile_id,
+              prop_id,
+              val_date
+            ) (SELECT
+              mediafile_id,
+              :prop_id,
+              #val_date
+            FROM #db_name.mediafile_metadata WHERE #val_date IS NOT NULL && #val_date != '0000-00-00 00:00:00' GROUP BY mediafile_id ORDER BY created ASC)",
+          array(
+            '#db_name' => $db_name,
+            ':prop_id' => $property['prop_id'],
+            '#val_date' => $field,
+          ))
+        );
+        break;
+
+      case 'INT':
+        db_query(strtr(
+          "INSERT INTO {mediamosa_asset_mediafile_metadata}
+            (
+              mediafile_id,
+              prop_id,
+              val_int
+            ) (SELECT
+              mediafile_id,
+              :prop_id,
+              #val_int
+            FROM #db_name.mediafile_metadata WHERE #val_int IS NOT NULL GROUP BY mediafile_id ORDER BY created ASC)",
+          array(
+            '#db_name' => $db_name,
+            ':prop_id' => $property['prop_id'],
+            '#val_int' => $field,
+          ))
+        );
+        break;
     }
   }
-
 }
 
 /**
@@ -675,9 +709,9 @@ function _mediamosa_migration_asset_metadata_property_group() {
       ) (SELECT
         propgroup_id,
         name,
-        created,
-        changed
-        FROM #db_name.{assetprop_group})",
+        DATE_SUB(created, INTERVAL 2 HOUR),
+        DATE_SUB(changed, INTERVAL 2 HOUR)
+        FROM #db_name.assetprop_group)",
     array(
       '#db_name' => $db_name
     ))
@@ -687,10 +721,10 @@ function _mediamosa_migration_asset_metadata_property_group() {
   db_query("UPDATE {mediamosa_asset_metadata_property_group} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
 
   // Now make sure created is not empty.
-  db_query("UPDATE {mediamosa_asset_metadata_property_group} SET created = NOW() WHERE created = '0000-00-00 00:00:00'");
+  db_query("UPDATE {mediamosa_asset_metadata_property_group} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
 
   // Now make sure changed is not empty.
-  db_query("UPDATE {mediamosa_asset_metadata_property_group} SET changed = NOW() WHERE changed = '0000-00-00 00:00:00'");
+  db_query("UPDATE {mediamosa_asset_metadata_property_group} SET changed = UTC_TIMESTAMP WHERE changed = '0000-00-00 00:00:00'");
 
   // Back to old session mode.
   db_query(strtr("SET SESSION sql_mode = '#old_mode'", array('#old_mode' => $old_mode)));
@@ -739,22 +773,22 @@ function _mediamosa_migration_asset_metadata_property() {
         type,
         min_occurences,
         max_occurences,
-        created,
-        changed
-        FROM #db_name.{assetprop_definition})",
+        DATE_SUB(created, INTERVAL 2 HOUR),
+        DATE_SUB(changed, INTERVAL 2 HOUR)
+        FROM #db_name.assetprop_definition)",
     array(
       '#db_name' => $db_name
     ))
   );
 
   // Now copy all changed dates to overwrite empty created dates.
-  db_query("UPDATE mediamosa_asset_metadata_property SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+  db_query("UPDATE {mediamosa_asset_metadata_property} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
 
   // Now make sure created is not empty.
-  db_query("UPDATE mediamosa_asset_metadata_property SET created = NOW() WHERE created = '0000-00-00 00:00:00'");
+  db_query("UPDATE {mediamosa_asset_metadata_property} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
 
   // Now make sure changed is not empty.
-  db_query("UPDATE mediamosa_asset_metadata_property SET changed = NOW() WHERE changed = '0000-00-00 00:00:00'");
+  db_query("UPDATE {mediamosa_asset_metadata_property} SET changed = UTC_TIMESTAMP WHERE changed = '0000-00-00 00:00:00'");
 
   // Back to old session mode.
   db_query(strtr("SET SESSION sql_mode = '#old_mode'", array('#old_mode' => $old_mode)));
@@ -805,11 +839,11 @@ function _mediamosa_migration_asset_metadata() {
         vap.val_char,
         left(vap.val_char, #lenlft),
         reverse(left(vap.val_char, #lenrght)),
-        apd.val_datetime,
+        DATE_SUB(apd.val_datetime, INTERVAL 2 HOUR),
         apd.val_int,
-        apd.created,
-        apd.changed
-        FROM #db_name.{asset_property} AS apd JOIN #db_name.v_asset_property AS vap USING(id))",
+        DATE_SUB(apd.created, INTERVAL 2 HOUR),
+        DATE_SUB(apd.changed, INTERVAL 2 HOUR)
+        FROM #db_name.asset_property AS apd JOIN #db_name.v_asset_property AS vap USING(id))",
     array(
       '#db_name' => $db_name,
       '#lenlft' => mediamosa_asset_metadata_db::VAL_CHAR_LFT_LENGTH,
@@ -818,13 +852,13 @@ function _mediamosa_migration_asset_metadata() {
   );
 
   // Now copy all changed dates to overwrite empty created dates.
-  db_query("UPDATE mediamosa_asset_metadata_property SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+  db_query("UPDATE {mediamosa_asset_metadata_property} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
 
   // Now make sure created is not empty.
-  db_query("UPDATE mediamosa_asset_metadata_property SET created = NOW() WHERE created = '0000-00-00 00:00:00'");
+  db_query("UPDATE {mediamosa_asset_metadata_property} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
 
   // Now make sure changed is not empty.
-  db_query("UPDATE mediamosa_asset_metadata_property SET changed = NOW() WHERE changed = '0000-00-00 00:00:00'");
+  db_query("UPDATE {mediamosa_asset_metadata_property} SET changed = UTC_TIMESTAMP WHERE changed = '0000-00-00 00:00:00'");
 
   // Back to old session mode.
   db_query(strtr("SET SESSION sql_mode = '#old_mode'", array('#old_mode' => $old_mode)));
@@ -862,7 +896,7 @@ function _mediamosa_migration_aut() {
         aut_name,
         aut_prefix,
         aut_type
-        FROM #db_name.{aut_name})',
+        FROM #db_name.aut_name)',
     array(
       '#db_name' => $db_name,
     ))
@@ -889,7 +923,7 @@ function _mediamosa_migration_aut() {
         app_id,
         aut_group_name,
         aut_group_type
-        FROM #db_name.{aut_group})',
+        FROM #db_name.aut_group)',
     array(
       '#db_name' => $db_name,
     ))
@@ -916,7 +950,7 @@ function _mediamosa_migration_aut() {
         aut_object_type,
         aut_id,
         aut_type
-        FROM #db_name.{aut_object} GROUP BY aut_object_type, aut_object_id, aut_type, aut_id)',
+        FROM #db_name.aut_object} GROUP BY aut_object_type, aut_object_id, aut_type, aut_id)',
     array(
       '#db_name' => $db_name,
     ))
@@ -944,7 +978,7 @@ function _mediamosa_migration_aut() {
         aut_object_type,
         app_slave_id,
         app_master_id
-        FROM #db_name.{aut_app_master_slave})',
+        FROM #db_name.aut_app_master_slave)',
     array(
       '#db_name' => $db_name,
     ))
@@ -961,7 +995,7 @@ function _mediamosa_migration_sannas() {
 
   $a_san_nas = db_query(
     strtr(
-      'SELECT current_mount_point, current_mount_point_windows FROM #db_name.{san_nas_settings} LIMIT 1',
+      'SELECT current_mount_point, current_mount_point_windows FROM #db_name.san_nas_settings LIMIT 1',
       array(
       '#db_name' => $db_name
       )
@@ -1022,8 +1056,8 @@ function _mediamosa_migration_collection() {
         private,
         public,
         category,
-        created,
-        changed,
+        DATE_SUB(created, INTERVAL 2 HOUR),
+        DATE_SUB(changed, INTERVAL 2 HOUR),
         public_assign,
         is_unappropriate
       FROM #db_name.collection)",
@@ -1050,8 +1084,8 @@ function _mediamosa_migration_collection() {
       ) (SELECT
         asset_id,
         coll_id,
-        created,
-        changed
+        DATE_SUB(created, INTERVAL 2 HOUR),
+        DATE_SUB(changed, INTERVAL 2 HOUR)
       FROM #db_name.asset_collection)",
     array(
       '#db_name' => $db_name
@@ -1086,7 +1120,7 @@ function _mediamosa_migration_asset_delete() {
       ) (SELECT
         asset_id,
         app_id,
-        videotimestampmodified,
+        DATE_SUB(videotimestampmodified, INTERVAL 2 HOUR),
         coll_id
       FROM #db_name.asset_delete)",
     array(
@@ -1123,8 +1157,8 @@ function _mediamosa_migration_user() {
         name,
         group_id,
         quotum,
-        created,
-        changed
+        DATE_SUB(created, INTERVAL 2 HOUR),
+        DATE_SUB(changed, INTERVAL 2 HOUR)
       FROM #db_name.quota_user)",
     array(
       '#db_name' => $db_name
@@ -1150,8 +1184,8 @@ function _mediamosa_migration_user() {
         app_id,
         group_id,
         quotum,
-        created,
-        changed
+        DATE_SUB(created, INTERVAL 2 HOUR),
+        DATE_SUB(changed, INTERVAL 2 HOUR)
       FROM #db_name.quota_group)",
     array(
       '#db_name' => $db_name
@@ -1216,13 +1250,13 @@ function _mediamosa_migration_ticket() {
       ) (SELECT
         ticket_id,
         ticket_type,
-        issued,
+        DATE_SUB(issued, INTERVAL 2 HOUR),
         app_id,
         user_id,
         group_id,
         mediafile_id,
-        created,
-        changed
+        DATE_SUB(created, INTERVAL 2 HOUR),
+        DATE_SUB(changed, INTERVAL 2 HOUR)
       FROM #db_name.ticket)",
     array(
       '#db_name' => $db_name
@@ -1262,8 +1296,8 @@ function _mediamosa_migration_ftp_batch() {
         owner_id,
         group_id,
         vuf,
-        started,
-        finished,
+        DATE_SUB(started, INTERVAL 2 HOUR),
+        DATE_SUB(finished, INTERVAL 2 HOUR),
         email_address,
         email_contents
       FROM #db_name.ftp_batch)",
@@ -1410,8 +1444,8 @@ function _mediamosa_migration_asset_supplement() {
         oai_prefix,
         oai_namespaceuri,
         oai_schemalocation,
-        created,
-        changed
+        DATE_SUB(created, INTERVAL 2 HOUR),
+        DATE_SUB(changed, INTERVAL 2 HOUR)
       FROM #db_name.asset_supplement)",
     array(
       '#db_name' => $db_name
@@ -1469,7 +1503,7 @@ function _mediamosa_migration_job() {
         finished,
         error_description,
         created,
-        changed,
+        DATE_SUB(changed, INTERVAL 2 HOUR),
         create_still,
         still_parameters
       ) (SELECT
@@ -1482,11 +1516,11 @@ function _mediamosa_migration_job() {
         progress,
         priority,
         job_type,
-        started,
-        finished,
+        DATE_SUB(started, INTERVAL 2 HOUR),
+        DATE_SUB(finished, INTERVAL 2 HOUR),
         error_description,
-        created,
-        changed,
+        DATE_SUB(created, INTERVAL 2 HOUR),
+        DATE_SUB(changed, INTERVAL 2 HOUR),
         create_still,
         still_parameters
       FROM #db_name.job)",
@@ -1524,8 +1558,8 @@ function _mediamosa_migration_job() {
         v_padding,
         blackstill_check,
         still_parameters,
-        created,
-        changed
+        DATE_SUB(created, INTERVAL 2 HOUR),
+        DATE_SUB(changed, INTERVAL 2 HOUR)
     FROM #db_name.still_job)",
     array(
       '#db_name' => $db_name
@@ -1559,8 +1593,8 @@ function _mediamosa_migration_job() {
         command,
         completed_transcoding_url,
         file_extension,
-        created,
-        changed
+        DATE_SUB(created, INTERVAL 2 HOUR),
+        DATE_SUB(changed, INTERVAL 2 HOUR)
     FROM #db_name.transcode_job)",
     array(
       '#db_name' => $db_name
@@ -1592,8 +1626,8 @@ function _mediamosa_migration_job() {
         uploaded_file_size,
         retranscode,
         create_still,
-        created,
-        changed
+        DATE_SUB(created, INTERVAL 2 HOUR),
+        DATE_SUB(changed, INTERVAL 2 HOUR)
     FROM #db_name.upload_job)",
     array(
       '#db_name' => $db_name
@@ -1666,12 +1700,12 @@ function _mediamosa_migration_jobserver($from_dbname, $to_dbname) {
         progress_id,
         mediafile_src,
         mediafile_dest,
-        started,
-        finished,
+        DATE_SUB(started, INTERVAL 2 HOUR),
+        DATE_SUB(finished, INTERVAL 2 HOUR),
         error_description,
-        created,
-        changed
-    FROM #to_dbname.{jobserver_job})",
+        DATE_SUB(created, INTERVAL 2 HOUR),
+        DATE_SUB(changed, INTERVAL 2 HOUR)
+    FROM #to_dbname.jobserver_job)",
     array(
       '#from_dbname' => $from_dbname,
       '#to_dbname' => $to_dbname,
@@ -1711,12 +1745,12 @@ function _mediamosa_migration_jobserver($from_dbname, $to_dbname) {
         progress_id,
         mediafile_src,
         mediafile_dest,
-        started,
-        finished,
+        DATE_SUB(started, INTERVAL 2 HOUR),
+        DATE_SUB(finished, INTERVAL 2 HOUR),
         error_description,
-        created,
-        changed
-    FROM #to_dbname.{jobserver_job})",
+        DATE_SUB(created, INTERVAL 2 HOUR),
+        DATE_SUB(changed, INTERVAL 2 HOUR)
+    FROM #to_dbname.jobserver_job)",
     array(
       '#from_dbname' => $from_dbname,
       '#to_dbname' => $to_dbname,
@@ -1740,9 +1774,9 @@ function _mediamosa_migration_jobserver($from_dbname, $to_dbname) {
       ) (SELECT
         jobserver_job_id,
         analyse_result,
-        created,
-        changed
-    FROM #to_dbname.{jobserver_analyse_job})",
+        DATE_SUB(created, INTERVAL 2 HOUR),
+        DATE_SUB(changed, INTERVAL 2 HOUR)
+    FROM #to_dbname.{observer_analyse_job)",
     array(
       '#from_dbname' => $from_dbname,
       '#to_dbname' => $to_dbname,
@@ -1774,11 +1808,11 @@ function _mediamosa_migration_jobserver($from_dbname, $to_dbname) {
         size,
         h_padding,
         v_padding,
-        created,
-        changed,
+        DATE_SUB(created, INTERVAL 2 HOUR),
+        DATE_SUB(changed, INTERVAL 2 HOUR),
         blackstill_check,
         still_parameters
-    FROM #to_dbname.{jobserver_still_job})",
+    FROM #to_dbname.jobserver_still_job)",
     array(
       '#from_dbname' => $from_dbname,
       '#to_dbname' => $to_dbname,
@@ -1810,11 +1844,11 @@ function _mediamosa_migration_jobserver($from_dbname, $to_dbname) {
         size,
         h_padding,
         v_padding,
-        created,
-        changed,
+        DATE_SUB(created, INTERVAL 2 HOUR),
+        DATE_SUB(changed, INTERVAL 2 HOUR),
         blackstill_check,
         still_parameters
-    FROM #to_dbname.{jobserver_transcode_job})",
+    FROM #to_dbname.jobserver_transcode_job)",
     array(
       '#from_dbname' => $from_dbname,
       '#to_dbname' => $to_dbname,
@@ -1902,8 +1936,8 @@ function _mediamosa_migration_transcode() {
         allowed_value,
         default_value,
         required,
-        created,
-        changed
+        DATE_SUB(created, INTERVAL 2 HOUR),
+        DATE_SUB(changed, INTERVAL 2 HOUR)
     FROM #db_name.transcode_mapping)",
     array(
       '#db_name' => $db_name
@@ -2090,8 +2124,8 @@ function _mediamosa_migration_statistics() {
         keyword,
         container_type,
         diskspace,
-        timestamp
-        FROM #db_name.{statistics_diskspace_used})",
+        DATE_SUB(timestamp, INTERVAL 2 HOUR)
+        FROM #db_name.statistics_diskspace_used)",
     array(
       '#db_name' => $db_name
     ))
@@ -2119,8 +2153,8 @@ function _mediamosa_migration_statistics() {
         owner_id,
         group_id,
         file_size,
-        timestamp
-        FROM #db_name.{statistics_file_upload})",
+        DATE_SUB(timestamp, INTERVAL 2 HOUR)
+        FROM #db_name.statistics_file_upload)",
     array(
       '#db_name' => $db_name
     ))
@@ -2145,7 +2179,7 @@ function _mediamosa_migration_statistics() {
         request,
         process_time,
         query_count
-        FROM #db_name.{statistics_rest_log})",
+        FROM #db_name.statistics_rest_log)",
     array(
       '#db_name' => $db_name
     ))
@@ -2170,7 +2204,7 @@ function _mediamosa_migration_statistics() {
         keyword,
         app_id,
         searched
-        FROM #db_name.{statistics_search_request})",
+        FROM #db_name.statistics_search_request)",
     array(
       '#db_name' => $db_name
     ))
@@ -2207,7 +2241,7 @@ function _mediamosa_migration_statistics() {
         container_type,
         play_type,
         played
-        FROM #db_name.{statistics_stream_request})",
+        FROM #db_name.statistics_stream_request)",
     array(
       '#db_name' => $db_name
     ))
@@ -2240,7 +2274,7 @@ function _mediamosa_migration_statistics() {
         app_id,
         owner_id,
         group_id
-        FROM #db_name.{statistics_stream_request_collection})",
+        FROM #db_name.statistics_stream_request_collection)",
     array(
       '#db_name' => $db_name
     ))
@@ -2307,9 +2341,9 @@ function _mediamosa_migration_vpx_ftp() {
         shell,
         active,
         count,
-        accessed,
-        modified
-        FROM #db_name.{ftpuser})",
+        DATE_SUB(accessed, INTERVAL 2 HOUR),
+        DATE_SUB(modified, INTERVAL 2 HOUR)
+        FROM #db_name.ftpuser)",
     array(
       '#db_name' => $db_name
     ))

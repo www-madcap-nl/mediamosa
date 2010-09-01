@@ -117,8 +117,9 @@ function mediamosa_app_authentication_mediamosa_app_authorized() {
   // Get the IP Address.
   $a_ip_address_whitelist = explode('|', $ip_address_whitelist);
 
-  // If our IP address is in the white list, then we are 'authorized'.
-  if (in_array($_SERVER['REMOTE_ADDR'], $a_ip_address_whitelist)) {
+  // If our IP address is in the white list, then we are 'authorized', but only
+  // if you also set the app_id.
+  if (in_array($_SERVER['REMOTE_ADDR'], $a_ip_address_whitelist) && !empty($_REQUEST['app_id'])) {
     return TRUE;
   }
 

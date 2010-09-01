@@ -236,7 +236,6 @@ class mediamosa_asset_metadata {
       throw $e;
     }
 
-
     // Return whats been changed.
     return $a_value_set;
   }

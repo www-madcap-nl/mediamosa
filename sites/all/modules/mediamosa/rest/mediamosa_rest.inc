@@ -61,10 +61,10 @@ class mediamosa_rest {
     $request_uri_cpy = $request_uri;
 
     // Find all REST calls of enabled modules.
-    $a_rest_calls = self::get_rest_calls();
+    $rest_calls = self::get_rest_calls();
 
-    foreach ($a_rest_calls as $method => $a_restcall) {
-      krsort($a_rest_calls[$method]);
+    foreach ($rest_calls as $method => $a_restcall) {
+      krsort($rest_calls[$method]);
     }
 
     // Split the current request URI.
@@ -77,15 +77,15 @@ class mediamosa_rest {
       $a_request_uri = explode('/', $request_uri);
     }
 
-    $a_rest_call_return = FALSE;
+    $rest_call_return = FALSE;
 
     // No Rest calls for this method?
-    if (!isset($a_rest_calls[$request_method])) {
+    if (!isset($rest_calls[$request_method])) {
       return FALSE;
     }
 
     // Now find a match.
-    foreach ($a_rest_calls[$request_method] as $uri => $a_rest_call) {
+    foreach ($rest_calls[$request_method] as $uri => $rest_call) {
       $a_uri_parts = ($uri != '' ? explode('/', $uri) : array());
 
       // Number of parts must match.
@@ -95,8 +95,8 @@ class mediamosa_rest {
 
       // Both empty? Then we match '/'.
       if (!count($a_request_uri) && !count($a_uri_parts)) {
-        $a_rest_call[mediamosa_rest_call::URI] = $uri;
-        $a_rest_call_return = $a_rest_call;
+        $rest_call[mediamosa_rest_call::URI] = $uri;
+        $rest_call_return = $rest_call;
         break;
       }
 
@@ -105,11 +105,11 @@ class mediamosa_rest {
       foreach ($a_uri_parts as $pos => $uri_part) {
         if (mediamosa_unicode::substr($uri_part, 0, 2) == '#$') {
           $a_regex[] = "[0-9]*(:[a-zA-Z]+)?";
-          $a_rest_call[mediamosa_rest_call::URI_PARAMS][mediamosa_unicode::substr($uri_part, 2)] = $a_request_uri[$pos];
+          $rest_call[mediamosa_rest_call::URI_PARAMS][mediamosa_unicode::substr($uri_part, 2)] = $a_request_uri[$pos];
         }
         elseif (mediamosa_unicode::substr($uri_part, 0, 1) == '$') {
           $a_regex[] = "[^\\/]*"; // Mediamosa is completly lose, any char EXCEPT /.
-          $a_rest_call[mediamosa_rest_call::URI_PARAMS][mediamosa_unicode::substr($uri_part, 1)] = $a_request_uri[$pos];
+          $rest_call[mediamosa_rest_call::URI_PARAMS][mediamosa_unicode::substr($uri_part, 1)] = $a_request_uri[$pos];
         }
         else {
           $a_regex[] = $uri_part;
@@ -119,59 +119,59 @@ class mediamosa_rest {
       // Does it match with our REGEX?
       $s_regex = '@^' . implode('/', $a_regex) . '$@';
       if (preg_match($s_regex, $request_uri)) {
-        $a_rest_call[mediamosa_rest_call::URI] = $uri;
-        $a_rest_call_return = $a_rest_call;
+        $rest_call[mediamosa_rest_call::URI] = $uri;
+        $rest_call_return = $rest_call;
         break;
       }
     }
 
-    if (!$a_rest_call_return) {
+    if (!$rest_call_return) {
       return FALSE; // Not found.
     }
 
     // Store the original.
-    $a_rest_call_return[mediamosa_rest_call::URI_REQUEST] = $request_uri_cpy;
+    $rest_call_return[mediamosa_rest_call::URI_REQUEST] = $request_uri_cpy;
 
     // Return found REST call and set all its defaults.
-    return self::set_default_rest_call($a_rest_call_return);
+    return self::set_default_rest_call($rest_call_return);
   }
 
   /**
    * Setup default and test parameters in REST array.
    *
-   * @param array $a_rest_call
+   * @param array $rest_call
    */
-  static public function set_default_rest_call(array $a_rest_call) {
+  static public function set_default_rest_call(array $rest_call) {
     // Make sure all are valid values.
-    assert(in_array($a_rest_call[mediamosa_rest_call::METHOD], array(mediamosa_rest_call::METHOD_GET, mediamosa_rest_call::METHOD_DELETE, mediamosa_rest_call::METHOD_POST, mediamosa_rest_call::METHOD_PUT)));
-    assert(in_array($a_rest_call[mediamosa_rest_call::STATUS], array(mediamosa_rest_call::STATUS_ACTIVE, mediamosa_rest_call::STATUS_DEPRECATED, mediamosa_rest_call::METHOD_POST, mediamosa_rest_call::STATUS_DISABLED)));
-    assert(isset($a_rest_call[mediamosa_rest_call::CLASS_NAME]));
-    assert(isset($a_rest_call[mediamosa_rest_call::MODULE_NAME]));
-    assert(isset($a_rest_call[mediamosa_rest_call::VERSION]));
+    assert(in_array($rest_call[mediamosa_rest_call::METHOD], array(mediamosa_rest_call::METHOD_GET, mediamosa_rest_call::METHOD_DELETE, mediamosa_rest_call::METHOD_POST, mediamosa_rest_call::METHOD_PUT)));
+    assert(in_array($rest_call[mediamosa_rest_call::STATUS], array(mediamosa_rest_call::STATUS_ACTIVE, mediamosa_rest_call::STATUS_DEPRECATED, mediamosa_rest_call::METHOD_POST, mediamosa_rest_call::STATUS_DISABLED)));
+    assert(isset($rest_call[mediamosa_rest_call::CLASS_NAME]));
+    assert(isset($rest_call[mediamosa_rest_call::MODULE_NAME]));
+    assert(isset($rest_call[mediamosa_rest_call::VERSION]));
 
     // Default values.
-    if (!isset($a_rest_call[mediamosa_rest_call::METHOD])) {
-      $a_rest_call[mediamosa_rest_call::METHOD] = mediamosa_rest_call::METHOD_GET;
+    if (!isset($rest_call[mediamosa_rest_call::METHOD])) {
+      $rest_call[mediamosa_rest_call::METHOD] = mediamosa_rest_call::METHOD_GET;
     }
 
-    if (!isset($a_rest_call[mediamosa_rest_call::STATUS])) {
-      $a_rest_call[mediamosa_rest_call::STATUS] = mediamosa_rest_call::STATUS_ACTIVE;
+    if (!isset($rest_call[mediamosa_rest_call::STATUS])) {
+      $rest_call[mediamosa_rest_call::STATUS] = mediamosa_rest_call::STATUS_ACTIVE;
     }
 
-    if (!isset($a_rest_call[mediamosa_rest_call::RESPONSE_TYPE])) {
-      $a_rest_call[mediamosa_rest_call::RESPONSE_TYPE] = mediamosa_rest_call::RESPONSE_TYPE_XML;
+    if (!isset($rest_call[mediamosa_rest_call::RESPONSE_TYPE])) {
+      $rest_call[mediamosa_rest_call::RESPONSE_TYPE] = mediamosa_rest_call::RESPONSE_TYPE_XML;
     }
 
-    if (!isset($a_rest_call[mediamosa_rest_call::BEHAVE_AS_EXTERNAL])) {
-      $a_rest_call[mediamosa_rest_call::BEHAVE_AS_EXTERNAL] = FALSE;
+    if (!isset($rest_call[mediamosa_rest_call::BEHAVE_AS_EXTERNAL])) {
+      $rest_call[mediamosa_rest_call::BEHAVE_AS_EXTERNAL] = FALSE;
     }
 
     // Access to REST call.
-    if (!isset($a_rest_call[mediamosa_rest_call::ACCESS])) {
-      $a_rest_call[mediamosa_rest_call::ACCESS] = mediamosa_rest_call::ACCESS_DEFAULT;
+    if (!isset($rest_call[mediamosa_rest_call::ACCESS])) {
+      $rest_call[mediamosa_rest_call::ACCESS] = mediamosa_rest_call::ACCESS_DEFAULT;
     }
 
-    return $a_rest_call;
+    return $rest_call;
   }
 
   // ------------------------------------------------------------------ Public Functions.
@@ -189,53 +189,53 @@ class mediamosa_rest {
    */
   public function get_rest_calls($limit = 0, $offset = 0, $key = mediamosa_rest_call::METHOD, $key2 = mediamosa_rest_call::URI) {
     // Find all REST calls of enabled modules.
-    $a_rest_calls = module_invoke_all('mediamosa_register_rest_call');
-    $a_rest_calls_doc = module_invoke_all('mediamosa_register_rest_call_doc');
-    $a_rest_calls = array_merge_recursive($a_rest_calls, $a_rest_calls_doc);
+    $rest_calls = module_invoke_all('mediamosa_register_rest_call');
+    $rest_calls_doc = module_invoke_all('mediamosa_register_rest_call_doc');
+    $rest_calls = array_merge_recursive($rest_calls, $rest_calls_doc);
 
     // Sort on URI.
-    ksort($a_rest_calls);
+    ksort($rest_calls);
 
     // Start with an empty result.
-    $a_result = array();
+    $results = array();
 
     $pos = 1;
-    foreach ($a_rest_calls as $uri => $a_rest_call_2) {
-      foreach ($a_rest_call_2 as $method => $a_rest_call) {
+    foreach ($rest_calls as $uri => $rest_call_2) {
+      foreach ($rest_call_2 as $method => $rest_call) {
         if ($offset && $offset--) {
           $pos++;
           continue;
         }
 
         // Check for the ALIAS_FOR.
-        if (isset($a_rest_call[mediamosa_rest_call::ALIAS_FOR])) {
-          assert(isset($a_rest_calls[$a_rest_call[mediamosa_rest_call::ALIAS_FOR]]));
+        if (isset($rest_call[mediamosa_rest_call::ALIAS_FOR])) {
+          assert(isset($rest_calls[$rest_call[mediamosa_rest_call::ALIAS_FOR]]));
 
           // Now add the stuff we are missing.
-          $a_rest_call += $a_rest_calls[$a_rest_call[mediamosa_rest_call::ALIAS_FOR]];
+          $rest_call += $rest_calls[$rest_call[mediamosa_rest_call::ALIAS_FOR]];
         }
 
         // Set method.
-        $a_rest_call[mediamosa_rest_call::METHOD] = $method;
+        $rest_call[mediamosa_rest_call::METHOD] = $method;
 
         // Setup default.
-        $a_rest_call = self::set_default_rest_call($a_rest_call);
+        $rest_call = self::set_default_rest_call($rest_call);
 
-        $a_rest_call[mediamosa_rest_call::URI] = $uri;
-        $a_rest_call[mediamosa_rest_call::ID] = $pos++;
+        $rest_call[mediamosa_rest_call::URI] = $uri;
+        $rest_call[mediamosa_rest_call::ID] = $pos++;
 
         // Sort on Property.
-        ksort($a_rest_call);
+        ksort($rest_call);
 
         // Copy into result.
         if (isset($key2)) {
-          $a_result[$a_rest_call[$key]][$a_rest_call[$key2]] = $a_rest_call;
+          $results[$rest_call[$key]][$rest_call[$key2]] = $rest_call;
         }
         else {
-          $a_rest_call[mediamosa_rest_call::CLASS_FILE_NAME] = mediamosa_db::db_query("SELECT filename FROM {registry} WHERE type = 'class' AND name = :name", array(':name' => $a_rest_call[mediamosa_rest_call::CLASS_NAME]))->fetchField();
+          $rest_call[mediamosa_rest_call::CLASS_FILE_NAME] = mediamosa_db::db_query("SELECT filename FROM {registry} WHERE type = 'class' AND name = :name", array(':name' => $rest_call[mediamosa_rest_call::CLASS_NAME]))->fetchField();
 
-          assert(!isset($a_result[$a_rest_call[$key]]));
-          $a_result[$a_rest_call[$key]] = $a_rest_call;
+          assert(!isset($results[$rest_call[$key]]));
+          $results[$rest_call[$key]] = $rest_call;
         }
 
         if ($limit && !--$limit) {
@@ -244,7 +244,7 @@ class mediamosa_rest {
       }
     }
 
-    return $a_result;
+    return $results;
   }
 
   /**
@@ -252,17 +252,17 @@ class mediamosa_rest {
    */
   final public function match_call($uri = NULL, $method = NULL) {
     // Get the mediamosa object.
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     if (!isset($uri)) {
-      $uri = $o_mediamosa->get_request_uri();
+      $uri = $mediamosa->get_request_uri();
     }
 
     // Translate the URI to possible REST call.
-    $a_rest_call = $this->get_uri_definition($uri, $method);
+    $rest_call = $this->get_uri_definition($uri, $method);
 
     // If FALSE, then the URI didn't match with a REST call.
-    if ($a_rest_call == FALSE) {
+    if ($rest_call == FALSE) {
       if (mediamosa::is_admin_enabled()) {
         return FALSE;
       }
@@ -276,46 +276,46 @@ class mediamosa_rest {
     }
 
     // Add the matched uri to the response.
-    $o_mediamosa->set_matched_uri($a_rest_call[mediamosa_rest_call::URI]);
+    $mediamosa->set_matched_uri($rest_call[mediamosa_rest_call::URI]);
 
     // Add the method uri to the response.
-    $o_mediamosa->set_matched_method($a_rest_call[mediamosa_rest_call::METHOD]);
+    $mediamosa->set_matched_method($rest_call[mediamosa_rest_call::METHOD]);
 
     // Add the found class to the response.
-    $o_mediamosa->set_class($a_rest_call[mediamosa_rest_call::CLASS_NAME]);
+    $mediamosa->set_class($rest_call[mediamosa_rest_call::CLASS_NAME]);
 
     // Return the processed REST call.
-    return $a_rest_call;
+    return $rest_call;
   }
 
   /**
    * Dispatch the REST request execution.
    *
-   * @param array $a_rest_call
+   * @param array $rest_call
    *  Array containing the data needed to run the REST call.
    */
-  final public function process_call(array $a_rest_call) {
+  final public function process_call(array $rest_call) {
     // Get the mediamosa object.
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
-    if (!class_exists($a_rest_call[mediamosa_rest_call::CLASS_NAME], TRUE)) {
-      throw new mediamosa_exception_program_error(strtr('Class #class was not found!', array('#class' => $a_rest_call[mediamosa_rest_call::CLASS_NAME])));
+    if (!class_exists($rest_call[mediamosa_rest_call::CLASS_NAME], TRUE)) {
+      throw new mediamosa_exception_program_error(strtr('Class #class was not found!', array('#class' => $rest_call[mediamosa_rest_call::CLASS_NAME])));
     }
 
     // Create class from it.
-    $o_rest_call = new $a_rest_call[mediamosa_rest_call::CLASS_NAME]($a_rest_call);
+    $the_rest_call = new $rest_call[mediamosa_rest_call::CLASS_NAME]($rest_call);
 
     // Check if override for class selection is here.
-    if (method_exists($o_rest_call, 'get_object_rest_call')) {
-      $o_rest_call = $o_rest_call->get_object_rest_call($a_rest_call);
+    if (method_exists($the_rest_call, 'get_object_rest_call')) {
+      $the_rest_call = $the_rest_call->get_object_rest_call($rest_call);
     }
 
     // Process the REST call.
-    $o_rest_call->process_call();
+    $the_rest_call->process_call();
 
     // If offset was specified, then include it in the header.
-    if ($o_rest_call->isset_given_param(mediamosa_rest_call::OFFSET)) {
-      $o_mediamosa->item_offset = $o_rest_call->get_param_value(mediamosa_rest_call::OFFSET);
+    if ($the_rest_call->isset_given_param(mediamosa_rest_call::OFFSET)) {
+      $mediamosa->item_offset = $the_rest_call->get_param_value(mediamosa_rest_call::OFFSET);
     }
   }
 
@@ -331,25 +331,25 @@ class mediamosa_rest {
     }
 
     // Create class from it.
-    $o_rest_call = new $rest_call[mediamosa_rest_call::CLASS_NAME]($rest_call);
+    $the_rest_call = new $rest_call[mediamosa_rest_call::CLASS_NAME]($rest_call);
 
     // Check if override for class selection is here.
-    if (method_exists($o_rest_call, 'get_object_rest_call')) {
-      $o_rest_call = $o_rest_call->get_object_rest_call($rest_call);
+    if (method_exists($the_rest_call, 'get_object_rest_call')) {
+      $the_rest_call = $the_rest_call->get_object_rest_call($rest_call);
     }
 
     // Turn off so we dont fail.
-    $o_rest_call->set_check_for_unspecified(FALSE);
+    $the_rest_call->set_check_for_unspecified(FALSE);
 
     // Set as uri values, so we dont fail checks.
     if (isset($rest_call[mediamosa_rest_call::DEFAULT_PARAMS_VALUES])) {
       foreach ($rest_call[mediamosa_rest_call::DEFAULT_PARAMS_VALUES] as $param => $value) {
-        $o_rest_call->{mediamosa_rest_call::URI_PARAMS}[$param] = $value;
+        $the_rest_call->{mediamosa_rest_call::URI_PARAMS}[$param] = $value;
       }
     }
 
     // Return the var setup.
-    return $o_rest_call->get_var_setup();
+    return $the_rest_call->get_var_setup();
   }
 
 }

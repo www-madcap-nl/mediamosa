@@ -43,8 +43,8 @@ class mediamosa_exception extends Exception {
   const MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL = 50;
   const MEDIAMOSA_EXCEPTION_SEVERITY_LOW = 20;
 
-  public function __construct($i_errorcode, $msg = '', $severity = self::MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL, $log_error = TRUE) {
-    $msg = ($msg == '' ? sprintf("MediaMosa exception was thrown: %d", $i_errorcode) : $msg);
+  public function __construct($errorcode, $msg = '', $severity = self::MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL, $log_error = TRUE) {
+    $msg = ($msg == '' ? sprintf("MediaMosa exception was thrown: %d", $errorcode) : $msg);
 
     if ($severity >= MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL) {
       $log_serverity = WATCHDOG_NOTICE;
@@ -69,7 +69,7 @@ class mediamosa_exception extends Exception {
       }
     }
 
-    parent::__construct($msg, intval($i_errorcode));
+    parent::__construct($msg, intval($errorcode));
   }
 
   public function mediamosa_exception_rest_response() {
@@ -84,10 +84,10 @@ class mediamosa_exception extends Exception {
 class mediamosa_exception_redirect_and_exit extends mediamosa_exception {
   private $redirect_uri;
 
-  public function __construct($redirect_uri, $i_errorcode, $msg = '', $severity = self::MEDIAMOSA_EXCEPTION_SEVERITY_LOW) {
+  public function __construct($redirect_uri, $errorcode, $msg = '', $severity = self::MEDIAMOSA_EXCEPTION_SEVERITY_LOW) {
     $this->redirect_uri = $redirect_uri;
 
-    parent::__construct($i_errorcode, $msg, $severity);
+    parent::__construct($errorcode, $msg, $severity);
   }
 
   /**

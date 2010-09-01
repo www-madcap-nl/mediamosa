@@ -333,7 +333,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    *  The uri of the REST call.
    * @param string $request_method
    *  POST / GET / PUT / DELETE.
-   * @param array $a_parameters
+   * @param array $parameters
    *  name => value
    * @param array $a_headers
    *  Name: value
@@ -341,7 +341,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    *  Contains the mediamosa_error::ERRORCODE_* that we expect. For example, you
    *  might expect an error instead of OKAY; specify the error code here.
    */
-  protected function restCall($uri, $request_method = 'POST', array $a_parameters = array(), array $a_headers = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function restCall($uri, $request_method = 'POST', array $parameters = array(), array $a_headers = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
 
     // Switch to what EGA login?
     $switch_to_app = $this->switch_to_app;
@@ -362,7 +362,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // Do the REST call.
     try {
-      $result = parent::restCall($uri, $request_method, $a_parameters, $a_headers, $expected_result_ids, $do_internal);
+      $result = parent::restCall($uri, $request_method, $parameters, $a_headers, $expected_result_ids, $do_internal);
     }
     catch (Exception $e) {
       if (isset($old_curlHandle)) {
@@ -382,7 +382,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   /**
    * Wrapper for restCall, for app 2.
    */
-  protected function restCall_2($uri, $request_method = 'POST', array $a_parameters = array(), array $a_headers = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function restCall_2($uri, $request_method = 'POST', array $parameters = array(), array $a_headers = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
 
     // Set old.
     $old_switch_to_app = $this->switch_to_app;
@@ -392,7 +392,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // Do call.
     try {
-      $result = $this->restCall($uri, $request_method, $a_parameters, $a_headers, $expected_result_ids, $do_internal);
+      $result = $this->restCall($uri, $request_method, $parameters, $a_headers, $expected_result_ids, $do_internal);
     }
     catch (Exception $e) {
       $this->switch_to_app = $old_switch_to_app;
@@ -409,7 +409,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   /**
    * Wrapper for restCall, for app 3.
    */
-  protected function restCall_3($uri, $request_method = 'POST', array $a_parameters = array(), array $a_headers = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function restCall_3($uri, $request_method = 'POST', array $parameters = array(), array $a_headers = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
 
     // Set old.
     $old_switch_to_app = $this->switch_to_app;
@@ -419,7 +419,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // Do call.
     try {
-      $result = $this->restCall($uri, $request_method, $a_parameters, $a_headers, $expected_result_ids, $do_internal);
+      $result = $this->restCall($uri, $request_method, $parameters, $a_headers, $expected_result_ids, $do_internal);
     }
     catch (Exception $e) {
       $this->switch_to_app = $old_switch_to_app;
@@ -436,49 +436,49 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   /**
    * Wrapper for POST restCall, for app 3.
    */
-  protected function restCallPost_2($uri, array $a_parameters = array(), array $a_headers = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function restCallPost_2($uri, array $parameters = array(), array $a_headers = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Do call.
-    return $this->restCall_2($uri, 'POST', $a_parameters, $a_headers, $expected_result_ids, $do_internal);
+    return $this->restCall_2($uri, 'POST', $parameters, $a_headers, $expected_result_ids, $do_internal);
   }
 
   /**
    * Wrapper for POST restCall, for app 3.
    */
-  protected function restCallPost_3($uri, array $a_parameters = array(), array $a_headers = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function restCallPost_3($uri, array $parameters = array(), array $a_headers = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Do call.
-    return $this->restCall_3($uri, 'POST', $a_parameters, $a_headers, $expected_result_ids, $do_internal);
+    return $this->restCall_3($uri, 'POST', $parameters, $a_headers, $expected_result_ids, $do_internal);
   }
 
   /**
    * Wrapper for GET restCall, for app 2.
    */
-  protected function restCallGet_2($uri, array $a_parameters = array(), array $a_headers = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function restCallGet_2($uri, array $parameters = array(), array $a_headers = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Do call.
-    return $this->restCall_2($uri, 'GET', $a_parameters, $a_headers, $expected_result_ids, $do_internal);
+    return $this->restCall_2($uri, 'GET', $parameters, $a_headers, $expected_result_ids, $do_internal);
   }
 
   /**
    * Wrapper for GET restCall, for app 3.
    */
-  protected function restCallGet_3($uri, array $a_parameters = array(), array $a_headers = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function restCallGet_3($uri, array $parameters = array(), array $a_headers = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Do call.
-    return $this->restCall_3($uri, 'GET', $a_parameters, $a_headers, $expected_result_ids, $do_internal);
+    return $this->restCall_3($uri, 'GET', $parameters, $a_headers, $expected_result_ids, $do_internal);
   }
 
   /**
    * Wrapper for PUT restCall, for app 2.
    */
-  protected function restCallPut_2($uri, array $a_parameters = array(), array $a_headers = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function restCallPut_2($uri, array $parameters = array(), array $a_headers = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Do call.
-    return $this->restCall_2($uri, 'PUT', $a_parameters, $a_headers, $expected_result_ids, $do_internal);
+    return $this->restCall_2($uri, 'PUT', $parameters, $a_headers, $expected_result_ids, $do_internal);
   }
 
   /**
    * Wrapper for PUT restCall, for app 3.
    */
-  protected function restCallPut_3($uri, array $a_parameters = array(), array $a_headers = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function restCallPut_3($uri, array $parameters = array(), array $a_headers = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Do call.
-    return $this->restCall_3($uri, 'PUT', $a_parameters, $a_headers, $expected_result_ids, $do_internal);
+    return $this->restCall_3($uri, 'PUT', $parameters, $a_headers, $expected_result_ids, $do_internal);
   }
 
   /**
@@ -758,13 +758,13 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * @param string $table
    *  Table name.
    * @param string $object_id
-   * @param array $a_parameters
+   * @param array $parameters
    *  Values to compare. Remember will only work if parameters match the database field names.
    * @param array $a_db_row
    */
-  protected function do_compare($table, $object_id, array $a_parameters, array $a_db_row) {
+  protected function do_compare($table, $object_id, array $parameters, array $a_db_row) {
     $fail = FALSE;
-    foreach ($a_parameters as $key => $value) {
+    foreach ($parameters as $key => $value) {
       if (!isset($a_db_row[$key]) || $a_db_row[$key] != $value) {
         $this->fail(strtr("Row value of table @table with row ID @object_id different from input; got '@output', expecting '@input' on field @key.",
           array(
@@ -795,9 +795,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Get an asset.
    * Based on the GET rest call /asset/$asset_id (GET)
    */
-  protected function getAsset($asset_id, array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+  protected function getAsset($asset_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
     // Parameters asset.
-    $a_parameters += array(
+    $parameters += array(
       mediamosa_rest_call_asset_get::IS_APP_ADMIN => 'false',
       mediamosa_rest_call_asset_get::USER_ID => self::SIMPLETEST_USER_ID,
     );
@@ -806,7 +806,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $uri = strtr('asset/@asset_id', array('@asset_id' => $asset_id));
 
     // Do Post call.
-    $response = $this->restCallGet($uri, $a_parameters, array(), $expected_result_ids);
+    $response = $this->restCallGet($uri, $parameters, array(), $expected_result_ids);
 
     // Check response.
     $this->assertTrue(
@@ -842,9 +842,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Asset search.
    * Based on the GET rest call /asset (GET)
    */
-  protected function searchAsset($limit, array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+  protected function searchAsset($limit, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
     // Parameters asset.
-    $a_parameters += array(
+    $parameters += array(
       mediamosa_rest_call_asset_get::IS_APP_ADMIN => 'false',
       mediamosa_rest_call_asset_get::USER_ID => self::SIMPLETEST_USER_ID,
       mediamosa_rest_call_asset_get::LIMIT => $limit,
@@ -854,7 +854,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $uri = 'asset';
 
     // Do Post call.
-    $response = $this->restCallGet($uri, $a_parameters, array(), $expected_result_ids);
+    $response = $this->restCallGet($uri, $parameters, array(), $expected_result_ids);
 
     // Check response.
     $this->assertTrue(
@@ -883,9 +883,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Get an asset.
    * Based on the GET rest call /asset/$asset_id/mediafile (GET)
    */
-  protected function getAssetMediafile($asset_id, array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+  protected function getAssetMediafile($asset_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
     // Parameters asset.
-    $a_parameters += array(
+    $parameters += array(
       mediamosa_rest_call_asset_get::IS_APP_ADMIN => 'false',
       mediamosa_rest_call_asset_get::USER_ID => self::SIMPLETEST_USER_ID,
     );
@@ -894,7 +894,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $uri = strtr('asset/@asset_id/mediafile', array('@asset_id' => $asset_id));
 
     // Do Post call.
-    $response = $this->restCallGet($uri, $a_parameters, array(), $expected_result_ids);
+    $response = $this->restCallGet($uri, $parameters, array(), $expected_result_ids);
 
     // Check response.
     $this->assertTrue(
@@ -924,12 +924,12 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Get an mediafile.
    * Based on the rest call /mediafile/$mediafile_id (GET)
    */
-  protected function getMediafile($mediafile_id, array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+  protected function getMediafile($mediafile_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
     // Set uri.
     $uri = strtr('mediafile/@mediafile_id', array('@mediafile_id' => $mediafile_id));
 
     // Do get call.
-    $response = $this->restCallGet($uri, $a_parameters, array(), $expected_result_ids);
+    $response = $this->restCallGet($uri, $parameters, array(), $expected_result_ids);
 
     // Check response.
     $this->assertTrue(
@@ -966,9 +966,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Get asset supplement.
    * Based on the GET rest call /asset/$asset_id/supplement (GET)
    */
-  protected function getAssetSupplement($asset_id, array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+  protected function getAssetSupplement($asset_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
     // Parameters asset.
-    $a_parameters += array(
+    $parameters += array(
       mediamosa_rest_call_asset_get::IS_APP_ADMIN => 'false',
       mediamosa_rest_call_asset_get::USER_ID => self::SIMPLETEST_USER_ID,
     );
@@ -977,7 +977,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $uri = strtr('asset/@asset_id/supplement', array('@asset_id' => $asset_id));
 
     // Do Post call.
-    $response = $this->restCallGet($uri, $a_parameters, array(), $expected_result_ids);
+    $response = $this->restCallGet($uri, $parameters, array(), $expected_result_ids);
 
     // Check response.
     $this->assertTrue(
@@ -1002,9 +1002,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Get the still(s) from a mediafile..
    * Based on the rest call /mediafile/$mediafile_id/still (GET)
    */
-  protected function getMediafileStill($mediafile_id, array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+  protected function getMediafileStill($mediafile_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
     // Parameters still.
-    $a_parameters += array(
+    $parameters += array(
       mediamosa_rest_call_get_still_for_mediafile::USER_ID => self::SIMPLETEST_USER_ID,
     );
 
@@ -1012,7 +1012,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $uri = strtr('mediafile/@mediafile_id/still', array('@mediafile_id' => $mediafile_id));
 
     // Do Get call.
-    $response = $this->restCallGet($uri, $a_parameters, array(), $expected_result_ids);
+    $response = $this->restCallGet($uri, $parameters, array(), $expected_result_ids);
 
     // Check response.
     $this->assertTrue(
@@ -1046,11 +1046,11 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Get metadata definitions.
    * Based on the REST call /metadata_tag (GET)
    */
-  protected function getMetadataDefinitions(array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+  protected function getMetadataDefinitions(array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
     $uri = 'metadata_tag';
 
     // Do Post call.
-    $response = $this->restCallGet($uri, $a_parameters, array(), $expected_result_ids);
+    $response = $this->restCallGet($uri, $parameters, array(), $expected_result_ids);
 
     // Check response.
     $this->assertTrue(
@@ -1072,13 +1072,13 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Get an user.
    * Based on the rest call /user/$user_id (GET)
    */
-  protected function getUser($user_id, array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+  protected function getUser($user_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
 
     // Set uri.
     $uri = strtr('user/@user_id', array('@user_id' => $user_id));
 
     // Do Post call.
-    $response = $this->restCallGet($uri, $a_parameters, array(), $expected_result_ids);
+    $response = $this->restCallGet($uri, $parameters, array(), $expected_result_ids);
 
     // Check response.
     $this->assertTrue(
@@ -1110,13 +1110,13 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Get user list.
    * Based on the rest call /user (GET)
    */
-  protected function getUserList(array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+  protected function getUserList(array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
 
     // Set uri.
     $uri = 'user';
 
     // Do Get call.
-    $response = $this->restCallGet($uri, $a_parameters, array(), $expected_result_ids);
+    $response = $this->restCallGet($uri, $parameters, array(), $expected_result_ids);
 
     // Check response.
     $this->assertTrue(
@@ -1137,13 +1137,13 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Get an user.
    * Based on the rest call /group/$group_id (GET)
    */
-  protected function getGroup($group_id, array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+  protected function getGroup($group_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
 
     // Set uri.
     $uri = strtr('group/@group_id', array('@group_id' => $group_id));
 
     // Do Post call.
-    $response = $this->restCallGet($uri, $a_parameters, array(), $expected_result_ids);
+    $response = $this->restCallGet($uri, $parameters, array(), $expected_result_ids);
 
     // Check response.
     $this->assertTrue(
@@ -1175,13 +1175,13 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Get an autorisation group.
    * Based on the rest call /autorisation_group/$groupname (GET)
    */
-  protected function getAutGroup($groupname, array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+  protected function getAutGroup($groupname, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
 
     // Set uri.
     $uri = strtr('autorisation_group/@groupname', array('@groupname' => $groupname));
 
     // Do Post call.
-    $response = $this->restCallGet($uri, $a_parameters, array(), $expected_result_ids);
+    $response = $this->restCallGet($uri, $parameters, array(), $expected_result_ids);
 
     // Check response.
     $this->assertTrue(
@@ -1207,9 +1207,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Get an autorisation hostname.
    * Based on the rest call /autorisation_group/$groupname/hostname (GET)
    */
-  protected function getAutHostname($groupname, $limit, $offset, array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+  protected function getAutHostname($groupname, $limit, $offset, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
     // Parameters asset.
-    $a_parameters += array(
+    $parameters += array(
       mediamosa_rest_call_aut_group_get_hostnames::LIMIT => $limit,
       mediamosa_rest_call_aut_group_get_hostnames::OFFSET => $offset,
     );
@@ -1218,7 +1218,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $uri = strtr('autorisation_group/@groupname/hostname', array('@groupname' => $groupname));
 
     // Do Post call.
-    $response = $this->restCallGet($uri, $a_parameters, array(), $expected_result_ids);
+    $response = $this->restCallGet($uri, $parameters, array(), $expected_result_ids);
 
     // Check response.
     $this->assertTrue(
@@ -1243,9 +1243,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   /**
    * Get the AUT/ACL settings on mediafile.
    */
-  protected function getMediafileAut($mediafile_id, array $a_parameters = array(), $description = 'Get ACL on mediafile', array $a_expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function getMediafileAut($mediafile_id, array $parameters = array(), $description = 'Get ACL on mediafile', array $a_expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
-    $a_parameters += array(
+    $parameters += array(
       mediamosa_rest_call_aut_mediafile_get_rights::USER_ID => self::SIMPLETEST_USER_ID,
     );
 
@@ -1253,7 +1253,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $uri = strtr('mediafile/@mediafile_id/acl', array('@mediafile_id' => $mediafile_id));
 
     // Do Post call.
-    $response = $this->restCallGet($uri, $a_parameters, array(), $expected_result_ids, $do_internal);
+    $response = $this->restCallGet($uri, $parameters, array(), $expected_result_ids, $do_internal);
 
     // Test return status.
     $this->assertTrue(
@@ -1277,9 +1277,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Get statistics data upload.
    * Based on the rest call /statistics/dataupload (GET)
    */
-  protected function getStatisticsDataupload($year, $month, $limit, array $a_parameters = array(), $description = 'Get statistics data upload', array $a_expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function getStatisticsDataupload($year, $month, $limit, array $parameters = array(), $description = 'Get statistics data upload', array $a_expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
-    $a_parameters += array(
+    $parameters += array(
       mediamosa_rest_call_statistics_get_historical_uploaded_mediafiles::USER_ID => self::SIMPLETEST_USER_ID,
       mediamosa_rest_call_statistics_get_historical_uploaded_mediafiles::YEAR  => $year,
       mediamosa_rest_call_statistics_get_historical_uploaded_mediafiles::MONTH => $month,
@@ -1290,7 +1290,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $uri = 'statistics/dataupload';
 
     // Do Post call.
-    $response = $this->restCallGet($uri, $a_parameters, array(), $expected_result_ids, $do_internal);
+    $response = $this->restCallGet($uri, $parameters, array(), $expected_result_ids, $do_internal);
 
     // Test return status.
     $this->assertTrue(
@@ -1313,16 +1313,16 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Get statistics data upload.
    * Based on the rest call /statistics/dataupload (GET)
    */
-  protected function getFtpUser($user, array $a_parameters = array(), $description = 'Get FTP User', array $a_expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function getFtpUser($user, array $parameters = array(), $description = 'Get FTP User', array $a_expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
-    $a_parameters += array(
+    $parameters += array(
     );
 
     // The uri.
     $uri = strtr('ftp/@user', array('@user' => $user));
 
     // Do Post call.
-    $response = $this->restCallGet($uri, $a_parameters, array(), $expected_result_ids, $do_internal);
+    $response = $this->restCallGet($uri, $parameters, array(), $expected_result_ids, $do_internal);
 
     // Test return status.
     $this->assertTrue(
@@ -1347,9 +1347,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Create an asset.
    * Based on REST call /asset/create (POST)
    */
-  protected function createAsset(array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function createAsset(array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
-    $a_parameters += array(
+    $parameters += array(
       mediamosa_rest_call_asset_create::USER_ID => self::SIMPLETEST_USER_ID,
       mediamosa_rest_call_asset_create::GROUP_ID => self::SIMPLETEST_GROUP_ID,
       mediamosa_rest_call_asset_create::IS_APP_ADMIN => 'false',
@@ -1361,7 +1361,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $uri = 'asset/create';
 
     // Do Post call.
-    $response = $this->restCallPost($uri, $a_parameters, array(), $expected_result_ids, $do_internal);
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
 
     // Get the new asset_id.
     $asset_id = empty($response['xml']->items->item[0]->asset_id) ? NULL : (string)$response['xml']->items->item[0]->asset_id;
@@ -1387,20 +1387,20 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Create asset metadata.
    * Based on REST call /asset/$asset_id/metadata (POST)
    */
-  protected function createAssetMetadata($asset_id, array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function createAssetMetadata($asset_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
-    $a_parameters += array(
+    $parameters += array(
       mediamosa_rest_call_asset_metadata_create::USER_ID => self::SIMPLETEST_USER_ID,
     );
 
     // Required.
-    $a_parameters[mediamosa_rest_call_create_mediafile::ASSET_ID] = $asset_id;
+    $parameters[mediamosa_rest_call_create_mediafile::ASSET_ID] = $asset_id;
 
     // Set the URI.
     $uri = strtr('asset/@asset_id/metadata', array('@asset_id' => $asset_id));
 
     // Do Post call.
-    $response = $this->restCallPost($uri, $a_parameters, array(), $expected_result_ids, $do_internal);
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
 
     // Check response.
     $this->assertTrue(
@@ -1422,32 +1422,32 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Create asset metadata.
    * Based on REST call /asset/$asset_id/metadata (POST)
    */
-  protected function createAssetMetadataAppend($asset_id, array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function createAssetMetadataAppend($asset_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Do append.
-    $a_parameters['action'] = 'append';
+    $parameters['action'] = 'append';
 
     // Call create metadata.
-    $this->createAssetMetadata($asset_id, $a_parameters, $expected_result_ids, $do_internal);
+    $this->createAssetMetadata($asset_id, $parameters, $expected_result_ids, $do_internal);
   }
   /**
    * Create asset metadata definition.
    * Based on REST call /metadata_tag/create (POST)
    */
-  protected function createAssetMetadataDefinition($name, $type, array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+  protected function createAssetMetadataDefinition($name, $type, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
     // Parameters asset.
-    $a_parameters += array(
+    $parameters += array(
       mediamosa_rest_call_asset_metadata_create::USER_ID => self::SIMPLETEST_USER_ID,
     );
 
     // Required.
-    $a_parameters['name'] = $name;
-    $a_parameters['type'] = $type;
+    $parameters['name'] = $name;
+    $parameters['type'] = $type;
 
     // Set the URI.
     $uri = 'metadata_tag/create';
 
     // Do Post call.
-    $response = $this->restCallPost($uri, $a_parameters, array(), $expected_result_ids);
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids);
 
     // Check response.
     $this->assertTrue(
@@ -1468,18 +1468,18 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Create an mediafile
    * Based on REST call /mediafile/create (POST)
    */
-  protected function createMediafile($asset_id, array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function createMediafile($asset_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
-    $a_parameters += array(
+    $parameters += array(
       mediamosa_rest_call_create_mediafile::USER_ID => self::SIMPLETEST_USER_ID,
       mediamosa_rest_call_create_mediafile::IS_APP_ADMIN => 'false',
     );
 
     // Required.
-    $a_parameters[mediamosa_rest_call_create_mediafile::ASSET_ID] = $asset_id;
+    $parameters[mediamosa_rest_call_create_mediafile::ASSET_ID] = $asset_id;
 
     // Do Post call.
-    $response = $this->restCallPost('mediafile/create', $a_parameters, array(), $expected_result_ids, $do_internal);
+    $response = $this->restCallPost('mediafile/create', $parameters, array(), $expected_result_ids, $do_internal);
 
     // Get the new mediafile_id.
     $mediafile_id = empty($response['xml']->items->item[0]->mediafile_id) ? NULL : (string)$response['xml']->items->item[0]->mediafile_id;
@@ -1505,9 +1505,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Create upload ticket.
    * Based on REST call /mediafile/$mediafile_id/uploadticket/create (POST)
    */
-  protected function createMediafileUploadTicket($mediafile_id, array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function createMediafileUploadTicket($mediafile_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
-    $a_parameters += array(
+    $parameters += array(
       mediamosa_rest_call_asset_mediafile_uploadticket_create::USER_ID => self::SIMPLETEST_USER_ID,
       mediamosa_rest_call_asset_mediafile_uploadticket_create::IS_APP_ADMIN => 'false',
       mediamosa_rest_call_asset_mediafile_uploadticket_create::GROUP_ID => '',
@@ -1517,7 +1517,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $uri = strtr('mediafile/@mediafile_id/uploadticket/create', array('@mediafile_id' => $mediafile_id));
 
     // Do Post call.
-    $response = $this->restCallPost($uri, $a_parameters, array(), $expected_result_ids, $do_internal);
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
 
     // Get values.
     $action = empty($response['xml']->items->item[0]->action) ? NULL : (string)$response['xml']->items->item[0]->action;
@@ -1545,9 +1545,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Create a asset supplement.
    * Based on REST call asset/$asset_id/supplement/create (POST)
    */
-  protected function createAssetSupplement($asset_id, array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function createAssetSupplement($asset_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
-    $a_parameters += array(
+    $parameters += array(
       mediamosa_rest_call_asset_supplement_create::USER_ID => self::SIMPLETEST_USER_ID,
     );
 
@@ -1555,7 +1555,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $uri = strtr('asset/@asset_id/supplement/create', array('@asset_id' => $asset_id));
 
     // Do Post call.
-    $response = $this->restCallPost($uri, $a_parameters, array(), $expected_result_ids, $do_internal);
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
 
     // Get the new asset_supplement_id.
     $asset_supplement_id = empty($response['xml']->items->item[0]->supplement_id) ? NULL : (string)$response['xml']->items->item[0]->supplement_id;
@@ -1582,11 +1582,11 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Create a collection.
    * Based on REST call /collection/create (POST)
    *
-   * @param array $a_parameters
+   * @param array $parameters
    */
-  protected function createCollection(array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function createCollection(array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters Collection.
-    $a_parameters += array(
+    $parameters += array(
       mediamosa_rest_call_collection_create::USER_ID => self::SIMPLETEST_USER_ID,
       mediamosa_rest_call_collection_create::GROUP_ID => self::SIMPLETEST_GROUP_ID,
       mediamosa_rest_call_collection_create::IS_APP_ADMIN => 'false',
@@ -1596,7 +1596,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $uri = 'collection/create';
 
     // Do Post call.
-    $response = $this->restCallPost($uri, $a_parameters, array(), $expected_result_ids, $do_internal);
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
 
     // Get the new coll_id.
     $coll_id = empty($response['xml']->items->item[0]->coll_id) ? NULL : (string)$response['xml']->items->item[0]->coll_id;
@@ -1622,9 +1622,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Create a collection asset relation.
    * Based on REST call /collection/@coll_id/asset_relation (POST)
    */
-  protected function createCollectionAssetRelation($coll_id, array $asset_id, array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function createCollectionAssetRelation($coll_id, array $asset_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
-    $a_parameters += array(
+    $parameters += array(
       mediamosa_rest_call_asset_collection_create::USER_ID => self::SIMPLETEST_USER_ID,
       mediamosa_rest_call_asset_collection_create::ASSET_ID => $asset_id,
     );
@@ -1633,7 +1633,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $uri = strtr('collection/@coll_id/asset_relation', array('@coll_id' => $coll_id));
 
     // Do Post call.
-    $response = $this->restCallPost($uri, $a_parameters, array(), $expected_result_ids, $do_internal);
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
 
     return $response['xml'];
   }
@@ -1642,20 +1642,20 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Create a quota user.
    * Based on REST call user/create (POST)
    */
-  protected function createUser($user_id, array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function createUser($user_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
-    $a_parameters += array(
+    $parameters += array(
       mediamosa_rest_call_user_create::QUOTUM => 0,
     );
 
     // Required.
-    $a_parameters[mediamosa_rest_call_user_create::USER_ID] = $user_id;
+    $parameters[mediamosa_rest_call_user_create::USER_ID] = $user_id;
 
     // Set the URI.
     $uri = 'user/create';
 
     // Do Post call.
-    $response = $this->restCallPost($uri, $a_parameters, array(), $expected_result_ids, $do_internal);
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
 
     // Check response.
     $this->assertTrue(
@@ -1675,20 +1675,20 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Create a quota group.
    * Based on REST call group/create (POST)
    */
-  protected function createGroup($group_id, array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function createGroup($group_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
-    $a_parameters += array(
+    $parameters += array(
       mediamosa_rest_call_group_create::QUOTUM => 0,
     );
 
     // Required.
-    $a_parameters[mediamosa_rest_call_group_create::GROUP_ID] = $group_id;
+    $parameters[mediamosa_rest_call_group_create::GROUP_ID] = $group_id;
 
     // Set the URI.
     $uri = 'group/create';
 
     // Do Post call.
-    $response = $this->restCallPost($uri, $a_parameters, array(), $expected_result_ids, $do_internal);
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
 
     // Check response.
     $this->assertTrue(
@@ -1708,9 +1708,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Create a aut group.
    * Based on REST call autorisation_group/create (POST)
    */
-  protected function createAutGroup($groupname, $group_type, array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function createAutGroup($groupname, $group_type, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
-    $a_parameters += array(
+    $parameters += array(
       mediamosa_rest_call_aut_group_create::GROUPNAME => $groupname,
       mediamosa_rest_call_aut_group_create::GROUP_TYPE => $group_type,
     );
@@ -1719,7 +1719,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $uri = 'autorisation_group/create';
 
     // Do Post call.
-    $response = $this->restCallPost($uri, $a_parameters, array(), $expected_result_ids, $do_internal);
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
 
     // Check response.
     $this->assertTrue(
@@ -1740,9 +1740,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Create a aut hostname.
    * Based on REST call autorisation_group/$groupname/hostname/create (POST)
    */
-  protected function createAutHostname($groupname, array $a_hostnames, array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function createAutHostname($groupname, array $a_hostnames, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
-    $a_parameters += array(
+    $parameters += array(
       mediamosa_rest_call_aut_group_create_hostnames::HOSTNAME => $a_hostnames,
     );
 
@@ -1750,7 +1750,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $uri = strtr('autorisation_group/@groupname/hostname/create', array('@groupname' => $groupname));
 
     // Do Post call.
-    $response = $this->restCallPost($uri, $a_parameters, array(), $expected_result_ids, $do_internal);
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
 
     // Check response.
     $this->assertTrue(
@@ -1771,9 +1771,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Create an ftp user.
    * Based on REST call ftp/create (POST)
    */
-  protected function createFtpUser($user, $password, array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function createFtpUser($user, $password, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
-    $a_parameters += array(
+    $parameters += array(
       mediamosa_rest_call_ftp_user_create::USER => $user,
       mediamosa_rest_call_ftp_user_create::PASSWORD => $password,
     );
@@ -1782,7 +1782,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $uri = 'ftp/create';
 
     // Do Post call.
-    $response = $this->restCallPost($uri, $a_parameters, array(), $expected_result_ids, $do_internal);
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
 
     // Check response.
     $this->assertTrue(
@@ -1802,12 +1802,12 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Delete an aut group.
    * Based on REST call autorisation_group/$groupname/delete (POST)
    */
-  protected function deleteAutGroup($groupname, array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function deleteAutGroup($groupname, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Set the URI.
     $uri = strtr('autorisation_group/@groupname/delete', array('@groupname' => $groupname));
 
     // Do Post call.
-    $response = $this->restCallPost($uri, $a_parameters, array(), $expected_result_ids, $do_internal);
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
 
     // Check response.
     $this->assertTrue(
@@ -1827,9 +1827,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Delete an aut hostname.
    * Based on REST call autorisation_group/$groupname/hostname/delete (POST)
    */
-  protected function deleteAutHostname($groupname, array $a_hostnames, array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function deleteAutHostname($groupname, array $a_hostnames, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
-    $a_parameters += array(
+    $parameters += array(
       mediamosa_rest_call_aut_group_create_hostnames::HOSTNAME => $a_hostnames,
     );
 
@@ -1837,7 +1837,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $uri = strtr('autorisation_group/@groupname/hostname/delete', array('@groupname' => $groupname));
 
     // Do Post call.
-    $response = $this->restCallPost($uri, $a_parameters, array(), $expected_result_ids, $do_internal);
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
 
     // Check response.
     $this->assertTrue(
@@ -1858,9 +1858,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Delete an FTP User.
    * Based on REST call ftp/$user/delete (POST)
    */
-  protected function deleteFtpUser($user, array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function deleteFtpUser($user, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
-    $a_parameters += array(
+    $parameters += array(
       mediamosa_rest_call_ftp_user_delete::USER => $user,
     );
 
@@ -1868,7 +1868,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $uri = strtr('ftp/@user/delete', array('@user' => $user));
 
     // Do Post call.
-    $response = $this->restCallPost($uri, $a_parameters, array(), $expected_result_ids, $do_internal);
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
 
     // Check response.
     $this->assertTrue(
@@ -1889,9 +1889,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Change ownership.
    * Based on the POST rest call /change_ownership (POST)
    */
-  protected function changeOwnership(array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function changeOwnership(array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
-    $a_parameters += array(
+    $parameters += array(
       mediamosa_rest_call_update_mediafile::USER_ID => self::SIMPLETEST_USER_ID,
     );
 
@@ -1899,7 +1899,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $uri = 'change_ownership';
 
     // Do Post call.
-    $response = $this->restCallPost($uri, $a_parameters, array(), $expected_result_ids, $do_internal);
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
 
     // Test response.
     $this->assertTrue(
@@ -1920,21 +1920,21 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Updates an asset.
    * Based on the REST call /asset/$asset_id (POST)
    */
-  protected function updateAsset($asset_id, array $a_parameters = array(), $description = 'Update on asset ID', array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function updateAsset($asset_id, array $parameters = array(), $description = 'Update on asset ID', array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
 
     // Parameters asset.
-    $a_parameters += array(
+    $parameters += array(
       mediamosa_rest_call_asset_update::USER_ID => self::SIMPLETEST_USER_ID,
     );
 
     // More than one, we need to do something.
-    $this->assertFalse(count($a_parameters) == 1, 'Any update parameters set');
+    $this->assertFalse(count($parameters) == 1, 'Any update parameters set');
 
     // The uri.
     $uri = strtr('asset/@asset_id', array('@asset_id' => $asset_id));
 
     // Do Post call.
-    $response = $this->restCallPost($uri, $a_parameters, array(), $expected_result_ids, $do_internal);
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
 
     // Test return status.
     $this->assertTrue(
@@ -1957,9 +1957,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Update mediafile.
    * Based on the POST rest call /mediafile/$mediafile_id (POST)
    */
-  protected function updateMediafile($mediafile_id, array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function updateMediafile($mediafile_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
-    $a_parameters += array(
+    $parameters += array(
       mediamosa_rest_call_update_mediafile::USER_ID => self::SIMPLETEST_USER_ID,
     );
 
@@ -1967,7 +1967,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $uri = strtr('mediafile/@mediafile_id', array('@mediafile_id' => $mediafile_id));
 
     // Do Post call.
-    $response = $this->restCallPost($uri, $a_parameters, array(), $expected_result_ids, $do_internal);
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
 
     // Test response.
     $this->assertTrue(
@@ -1983,9 +1983,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Update collection.
    * Based on the POST rest call /collection/$collection_id (POST)
    */
-  protected function updateCollection($collection_id, array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function updateCollection($collection_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
-    $a_parameters += array(
+    $parameters += array(
       mediamosa_rest_call_collection_update::USER_ID => self::SIMPLETEST_USER_ID,
     );
 
@@ -1993,7 +1993,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $uri = strtr('collection/@collection_id', array('@collection_id' => $collection_id));
 
     // Do Post call.
-    $response = $this->restCallPost($uri, $a_parameters, array(), $expected_result_ids, $do_internal);
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
 
     // Test response.
     $this->assertTrue(
@@ -2013,10 +2013,10 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Updates an asset supplement.
    * Based on the REST call /asset/$asset_id/supplement/$supplement_id/update (POST)
    */
-  protected function updateAssetSupplement($asset_id, $supplement_id, $supplement, array $a_parameters = array(), $description = 'Update on asset supplement', array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+  protected function updateAssetSupplement($asset_id, $supplement_id, $supplement, array $parameters = array(), $description = 'Update on asset supplement', array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
 
     // Parameters asset.
-    $a_parameters += array(
+    $parameters += array(
       mediamosa_rest_call_asset_update::USER_ID => self::SIMPLETEST_USER_ID,
       mediamosa_asset_supplement_db::SUPPLEMENT => $supplement,
     );
@@ -2025,7 +2025,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $uri = strtr('asset/@asset_id/supplement/@supplement_id/update', array('@asset_id' => $asset_id, '@supplement_id' => $supplement_id));
 
     // Do Post call.
-    $response = $this->restCallPost($uri, $a_parameters, array(), $expected_result_ids);
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids);
 
     // Test return status.
     $this->assertTrue(
@@ -2049,16 +2049,16 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Updates an user.
    * Based on the REST call /user/$user_id (POST)
    */
-  protected function updateUser($user_id, array $a_parameters = array(), $description = 'Update on user', array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function updateUser($user_id, array $parameters = array(), $description = 'Update on user', array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
 
     // More than one, we need to do something.
-    $this->assertTrue(count($a_parameters), 'Any update parameters set');
+    $this->assertTrue(count($parameters), 'Any update parameters set');
 
     // The uri.
     $uri = strtr('user/@user_id', array('@user_id' => $user_id));
 
     // Do Post call.
-    $response = $this->restCallPost($uri, $a_parameters, array(), $expected_result_ids, $do_internal);
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
 
     // Test return status.
     $this->assertTrue(
@@ -2081,16 +2081,16 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Updates an group.
    * Based on the REST call /group/$group_id (POST)
    */
-  protected function updateGroup($group_id, array $a_parameters = array(), $description = 'Update on group', array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function updateGroup($group_id, array $parameters = array(), $description = 'Update on group', array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
 
     // More than one, we need to do something.
-    $this->assertTrue(count($a_parameters), 'Any update parameters set');
+    $this->assertTrue(count($parameters), 'Any update parameters set');
 
     // The uri.
     $uri = strtr('group/@group_id', array('@group_id' => $group_id));
 
     // Do Post call.
-    $response = $this->restCallPost($uri, $a_parameters, array(), $expected_result_ids, $do_internal);
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
 
     // Test return status.
     $this->assertTrue(
@@ -2113,16 +2113,16 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Updates an aut group.
    * Based on the REST call /autorisation_group/$groupname (POST)
    */
-  protected function updateAutGroup($groupname, array $a_parameters = array(), $description = 'Update on group', array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function updateAutGroup($groupname, array $parameters = array(), $description = 'Update on group', array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
 
     // More than one, we need to do something.
-    $this->assertTrue(count($a_parameters), 'Any update parameters set');
+    $this->assertTrue(count($parameters), 'Any update parameters set');
 
     // The uri.
     $uri = strtr('autorisation_group/@groupname', array('@groupname' => $groupname));
 
     // Do Post call.
-    $response = $this->restCallPost($uri, $a_parameters, array(), $expected_result_ids, $do_internal);
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
 
     // Test return status.
     $this->assertTrue(
@@ -2145,16 +2145,16 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Updates an FTP user.
    * Based on the REST call /ftp/$user/update (POST)
    */
-  protected function updateFtpUser($user, array $a_parameters = array(), $description = 'Update FTP User', array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function updateFtpUser($user, array $parameters = array(), $description = 'Update FTP User', array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
 
     // More than one, we need to do something.
-    $this->assertTrue(count($a_parameters), 'Any update parameters set');
+    $this->assertTrue(count($parameters), 'Any update parameters set');
 
     // The uri.
     $uri = strtr('ftp/@user/update', array('@user' => $user));
 
     // Do Post call.
-    $response = $this->restCallPost($uri, $a_parameters, array(), $expected_result_ids, $do_internal);
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
 
     // Test return status.
     $this->assertTrue(
@@ -2187,9 +2187,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * aut_realm[]  realm(s) that gain access to the mediafile
    *
    */
-  protected function setMediafileAut($mediafile_id, array $a_parameters = array(), $description = 'Setting ACL on mediafile', array $a_expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function setMediafileAut($mediafile_id, array $parameters = array(), $description = 'Setting ACL on mediafile', array $a_expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
-    $a_parameters += array(
+    $parameters += array(
       mediamosa_rest_call_aut_mediafile_set_rights::USER_ID => self::SIMPLETEST_USER_ID,
       mediamosa_rest_call_aut_mediafile_set_rights::REPLACE => 'true',
     );
@@ -2198,7 +2198,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $uri = strtr('mediafile/@mediafile_id/acl', array('@mediafile_id' => $mediafile_id));
 
     // Do Post call, the call itself should not fail, even when we dont have access in some cases.
-    $response = $this->restCallPost($uri, $a_parameters, array(), $expected_result_ids, $do_internal);
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
 
     // Test return status.
     $this->assertTrue(
@@ -2223,21 +2223,21 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     }
 
     // Get the result.
-    $a_items = $a_xml['items']['item'];
+    $items = $a_xml['items']['item'];
 
     // First check if we found result about our input.
-    foreach ($a_parameters as $type => $a_changes) {
+    foreach ($parameters as $type => $a_changes) {
       if (!in_array($type, array('aut_app', 'aut_user', 'aut_group', 'aut_domain', 'aut_realm'))) {
         continue;
       }
 
       $found = FALSE;
-      foreach ($a_items as $a_item) {
-        if (isset($a_item[$type])) {
+      foreach ($items as $item) {
+        if (isset($item[$type])) {
           $found = TRUE;
 
-          if (!isset($a_expected_results[$type][$a_item[$type]['value']])) {
-            $a_expected_results[$type][$a_item[$type]['value']] = mediamosa_error::ERRORCODE_OKAY;
+          if (!isset($a_expected_results[$type][$item[$type]['value']])) {
+            $a_expected_results[$type][$item[$type]['value']] = mediamosa_error::ERRORCODE_OKAY;
           }
 
           break;
@@ -2250,17 +2250,17 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // Now check if all results we got, also match what we expected.
     foreach ($a_expected_results as $type => $a_expected_result) {
-      foreach ($a_items as $a_item) {
-        if (isset($a_item[$type])) {
+      foreach ($items as $item) {
+        if (isset($item[$type])) {
           foreach ($a_expected_result as $value => $result_code) {
-            if ($a_item[$type]['value'] == $value) {
+            if ($item[$type]['value'] == $value) {
               $this->assertTrue(
-                is_array($result_code) ? in_array($a_item[$type]['result_id'], $result_code) : $a_item[$type]['result_id'] == $result_code,
+                is_array($result_code) ? in_array($item[$type]['result_id'], $result_code) : $item[$type]['result_id'] == $result_code,
                 strtr('Change on @type, expecting code @result_code, got @item_result_code',
                   array(
                     '@type' => $type,
                     '@result_code' => $result_code,
-                    '@item_result_code' => $a_item[$type]['result_id']
+                    '@item_result_code' => $item[$type]['result_id']
                   )
                 )
               );
@@ -2277,9 +2277,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   /**
    * Same as setMediafileAut, except will add to rights and not replace.
    */
-  protected function addMediafileAut($mediafile_id, array $a_parameters = array(), $description = 'Setting ACL on mediafile', array $a_expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
-    $a_parameters[mediamosa_rest_call_aut_mediafile_set_rights::REPLACE] = 'false';
-    $this->setMediafileAut($mediafile_id, $a_parameters, $description, $a_expected_results, $expected_result_ids, $do_internal);
+  protected function addMediafileAut($mediafile_id, array $parameters = array(), $description = 'Setting ACL on mediafile', array $a_expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    $parameters[mediamosa_rest_call_aut_mediafile_set_rights::REPLACE] = 'false';
+    $this->setMediafileAut($mediafile_id, $parameters, $description, $a_expected_results, $expected_result_ids, $do_internal);
   }
 
   /**
@@ -2296,9 +2296,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * aut_realm[]  realm(s) that gain access to the mediafile
    *
    */
-  protected function setAssetAut($asset_id, array $a_parameters = array(), $description = 'Setting ACL on asset', array $a_expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function setAssetAut($asset_id, array $parameters = array(), $description = 'Setting ACL on asset', array $a_expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
-    $a_parameters += array(
+    $parameters += array(
       mediamosa_rest_call_aut_asset_set_rights::USER_ID => self::SIMPLETEST_USER_ID,
       mediamosa_rest_call_aut_asset_set_rights::REPLACE => 'true',
     );
@@ -2307,7 +2307,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $uri = strtr('asset/!asset_id/acl', array('!asset_id' => $asset_id));
 
     // Do Post call, the call itself should not fail, even when we dont have access in some cases.
-    $response = $this->restCallPost($uri, $a_parameters, array(), $expected_result_ids, $do_internal);
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
 
     // Test return status.
     $this->assertTrue(
@@ -2332,21 +2332,21 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     }
 
     // Get the result.
-    $a_items = $a_xml['items']['item'];
+    $items = $a_xml['items']['item'];
 
     // First check if we found result about our input.
-    foreach ($a_parameters as $type => $a_changes) {
+    foreach ($parameters as $type => $a_changes) {
       if (!in_array($type, array('aut_app', 'aut_user', 'aut_group', 'aut_domain', 'aut_realm'))) {
         continue;
       }
 
       $found = FALSE;
-      foreach ($a_items as $a_item) {
-        if (isset($a_item[$type])) {
+      foreach ($items as $item) {
+        if (isset($item[$type])) {
           $found = TRUE;
 
-          if (!isset($a_expected_results[$type][$a_item[$type]['value']])) {
-            $a_expected_results[$type][$a_item[$type]['value']] = mediamosa_error::ERRORCODE_OKAY;
+          if (!isset($a_expected_results[$type][$item[$type]['value']])) {
+            $a_expected_results[$type][$item[$type]['value']] = mediamosa_error::ERRORCODE_OKAY;
           }
 
           break;
@@ -2359,17 +2359,17 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // Now check if all results we got, also match what we expected.
     foreach ($a_expected_results as $type => $a_expected_result) {
-      foreach ($a_items as $a_item) {
-        if (isset($a_item[$type])) {
+      foreach ($items as $item) {
+        if (isset($item[$type])) {
           foreach ($a_expected_result as $value => $result_code) {
-            if ($a_item[$type]['value'] == $value) {
+            if ($item[$type]['value'] == $value) {
               $this->assertTrue(
-                is_array($result_code) ? in_array($a_item[$type]['result_id'], $result_code) : $a_item[$type]['result_id'] == $result_code,
+                is_array($result_code) ? in_array($item[$type]['result_id'], $result_code) : $item[$type]['result_id'] == $result_code,
                 strtr('Change on @type, expecting code @result_code, got @item_result_code',
                   array(
                     '@type' => $type,
                     '@result_code' => $result_code,
-                    '@item_result_code' => $a_item[$type]['result_id']
+                    '@item_result_code' => $item[$type]['result_id']
                   )
                 )
               );
@@ -2386,9 +2386,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   /**
    * Same as setAssetAut, except will add to rights and not replace.
    */
-  protected function addAssetAut($asset_id, array $a_parameters = array(), $description = 'Adding ACL on asset', array $a_expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
-    $a_parameters[mediamosa_rest_call_aut_asset_set_rights::REPLACE] = 'false';
-    $this->setAssetAut($asset_id, $a_parameters, $description, $a_expected_results, $expected_result_ids, $do_internal);
+  protected function addAssetAut($asset_id, array $parameters = array(), $description = 'Adding ACL on asset', array $a_expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    $parameters[mediamosa_rest_call_aut_asset_set_rights::REPLACE] = 'false';
+    $this->setAssetAut($asset_id, $parameters, $description, $a_expected_results, $expected_result_ids, $do_internal);
   }
 
   /**
@@ -2400,9 +2400,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * replace      Standard is TRUE. Define if 'FALSE' if you want to keep the old rights.
    * aut_app[]    application(s) that gain access to the collection
    */
-  protected function setCollectionAut($collection_id, array $a_parameters = array(), $description = 'Setting ACL on collection', array $a_expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function setCollectionAut($collection_id, array $parameters = array(), $description = 'Setting ACL on collection', array $a_expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
-    $a_parameters += array(
+    $parameters += array(
       mediamosa_rest_call_aut_collection_set_rights::USER_ID => self::SIMPLETEST_USER_ID,
       mediamosa_rest_call_aut_collection_set_rights::REPLACE => 'true',
     );
@@ -2411,7 +2411,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $uri = strtr('collection/@collection_id/acl', array('@collection_id' => $collection_id));
 
     // Do Post call.
-    $response = $this->restCallPost($uri, $a_parameters, array(), $expected_result_ids, $do_internal);
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
 
     // Test return status.
     $this->assertTrue(
@@ -2431,21 +2431,21 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $a_xml = mediamosa_lib::responsexml2array($response['xml']);
 
     // Get the result.
-    $a_items = $a_xml['items']['item'];
+    $items = $a_xml['items']['item'];
 
     // First check if we found result about our input.
-    foreach ($a_parameters as $type => $a_changes) {
+    foreach ($parameters as $type => $a_changes) {
       if (!in_array($type, array('aut_app'/*, 'aut_user', 'aut_group', 'aut_domain', 'aut_realm'*/))) {
         continue;
       }
 
       $found = FALSE;
-      foreach ($a_items as $a_item) {
-        if (isset($a_item[$type])) {
+      foreach ($items as $item) {
+        if (isset($item[$type])) {
           $found = TRUE;
 
-          if (!isset($a_expected_results[$type][$a_item[$type]['value']])) {
-            $a_expected_results[$type][$a_item[$type]['value']] = mediamosa_error::ERRORCODE_OKAY;
+          if (!isset($a_expected_results[$type][$item[$type]['value']])) {
+            $a_expected_results[$type][$item[$type]['value']] = mediamosa_error::ERRORCODE_OKAY;
           }
 
           break;
@@ -2458,17 +2458,17 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // Now check if all results we got, also match what we expected.
     foreach ($a_expected_results as $type => $a_expected_result) {
-      foreach ($a_items as $a_item) {
-        if (isset($a_item[$type])) {
+      foreach ($items as $item) {
+        if (isset($item[$type])) {
           foreach ($a_expected_result as $value => $result_code) {
-            if ($a_item[$type]['value'] == $value) {
+            if ($item[$type]['value'] == $value) {
               $this->assertTrue(
-                is_array($result_code) ? in_array($a_item[$type]['result_id'], $result_code) : $a_item[$type]['result_id'] == $result_code,
+                is_array($result_code) ? in_array($item[$type]['result_id'], $result_code) : $item[$type]['result_id'] == $result_code,
                 strtr('Change on @type, expecting code @result_code, got @item_result_code',
                   array(
                     '@type' => $type,
                     '@result_code' => $result_code,
-                    '@item_result_code' => $a_item[$type]['result_id']
+                    '@item_result_code' => $item[$type]['result_id']
                   )
                 )
               );
@@ -2486,9 +2486,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Set is private on asset.
    * Based on the POST rest call /asset/$asset_id (POST)
    */
-  protected function set_isprivate($asset_id, $isprivate = FALSE, array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function set_isprivate($asset_id, $isprivate = FALSE, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
-    $a_parameters += array(
+    $parameters += array(
       mediamosa_rest_call_asset_update::USER_ID => self::SIMPLETEST_USER_ID,
       mediamosa_rest_call_asset_update::ISPRIVATE => (
         $isprivate ?
@@ -2501,7 +2501,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $uri = strtr('asset/@asset_id', array('@asset_id' => $asset_id));
 
     // Do Post call.
-    $response = $this->restCallPost($uri, $a_parameters, array(), $expected_result_ids, $do_internal);
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
 
     // Test response.
     $this->assertTrue(
@@ -2521,9 +2521,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Set unappropiate on asset.
    * Based on the POST rest call /asset/$asset_id (POST)
    */
-  protected function set_unappropiate($asset_id, $unappropiate = FALSE, array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function set_unappropiate($asset_id, $unappropiate = FALSE, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
-    $a_parameters += array(
+    $parameters += array(
       mediamosa_rest_call_asset_update::USER_ID => self::SIMPLETEST_USER_ID,
       mediamosa_rest_call_asset_update::IS_UNAPPROPRIATE => ($unappropiate ? 'TRUE' : 'FALSE'),
     );
@@ -2532,7 +2532,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $uri = strtr('asset/@asset_id', array('@asset_id' => $asset_id));
 
     // Do Post call.
-    $response = $this->restCallPost($uri, $a_parameters, array(), $expected_result_ids, $do_internal);
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
 
     // Test response.
     $this->assertTrue(
@@ -2554,9 +2554,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Delete a asset.
    * Based on the REST call /asset/$asset_id/delete (POST)
    */
-  protected function deleteAsset($asset_id, array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function deleteAsset($asset_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters.
-    $a_parameters += array(
+    $parameters += array(
       mediamosa_rest_call_asset_supplement_update::USER_ID => self::SIMPLETEST_USER_ID,
     );
 
@@ -2564,7 +2564,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $uri = strtr('asset/@asset_id/delete', array('@asset_id' => $asset_id));
 
     // Do Post call.
-    $response = $this->restCallPost($uri, $a_parameters, array(), $expected_result_ids, $do_internal);
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
 
     // Check response.
     $this->assertTrue(
@@ -2586,20 +2586,20 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Delete multiple assets.
    * Based on the REST call /asset/delete (POST)
    */
-  protected function deleteAssetMultiple(array $a_asset_ids, array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function deleteAssetMultiple(array $a_asset_ids, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters.
-    $a_parameters += array(
+    $parameters += array(
       mediamosa_rest_call_asset_supplement_update::USER_ID => self::SIMPLETEST_USER_ID,
     );
 
     // Add the asset ids to the parameters
-    $a_parameters[mediamosa_rest_call_asset_delete_all::ASSET_ID] = $a_asset_ids;
+    $parameters[mediamosa_rest_call_asset_delete_all::ASSET_ID] = $a_asset_ids;
 
     // The uri.
     $uri = 'asset/delete';
 
     // Do Post call.
-    $response = $this->restCallPost($uri, $a_parameters, array(), $expected_result_ids, $do_internal);
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
 
     // Check response.
     $this->assertTrue(
@@ -2620,9 +2620,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Delete a mediafile.
    * Based on the REST call /mediafile/$mediafile_id/delete (POST)
    */
-  protected function deleteMediafile($mediafile_id, array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function deleteMediafile($mediafile_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters.
-    $a_parameters += array(
+    $parameters += array(
       mediamosa_rest_call_asset_supplement_update::USER_ID => self::SIMPLETEST_USER_ID,
     );
 
@@ -2630,7 +2630,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $uri = strtr('mediafile/@mediafile_id/delete', array('@mediafile_id' => $mediafile_id));
 
     // Do Post call.
-    $response = $this->restCallPost($uri, $a_parameters, array(), $expected_result_ids, $do_internal);
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
 
     // Check response.
     $this->assertTrue(
@@ -2652,9 +2652,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Delete still.
    * Based on the REST call /asset/$asset_id/still/delete (POST)
    */
-  protected function deleteStill($asset_id, array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function deleteStill($asset_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters.
-    $a_parameters += array(
+    $parameters += array(
       mediamosa_rest_call_asset_supplement_update::USER_ID => self::SIMPLETEST_USER_ID,
     );
 
@@ -2662,7 +2662,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $uri = strtr('asset/@asset_id/still/delete', array('@asset_id' => $asset_id));
 
     // Do Post call.
-    $response = $this->restCallPost($uri, $a_parameters, array(), $expected_result_ids, $do_internal);
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
 
     // Check response.
     $this->assertTrue(
@@ -2684,25 +2684,25 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Delete an asset property definition.
    * Based on the REST call /metadata_tag/delete (POST)
    */
-  protected function deleteAssetMetadataDefinition($name, $delete = NULL, array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+  protected function deleteAssetMetadataDefinition($name, $delete = NULL, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
     // Parameters.
-    $a_parameters += array(
+    $parameters += array(
       mediamosa_rest_call_asset_supplement_update::USER_ID => self::SIMPLETEST_USER_ID,
     );
 
     // Name.
-    $a_parameters['name'] = $name;
+    $parameters['name'] = $name;
 
     // Delete.
     if ($delete == 'cascade') {
-      $a_parameters['delete'] = 'cascade';
+      $parameters['delete'] = 'cascade';
     }
 
     // The uri.
     $uri = 'metadata_tag/delete';
 
     // Do Post call.
-    $response = $this->restCallPost($uri, $a_parameters, array(), $expected_result_ids);
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids);
 
     // Check response.
     $this->assertTrue(
@@ -2723,10 +2723,10 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Delete asset supplement.
    * Based on the REST call /asset/$asset_id/supplement/$supplement_id/delete (POST)
    */
-  protected function deleteAssetSupplement($asset_id, $supplement_id, array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function deleteAssetSupplement($asset_id, $supplement_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
 
     // Parameters.
-    $a_parameters += array(
+    $parameters += array(
       mediamosa_rest_call_asset_supplement_update::USER_ID => self::SIMPLETEST_USER_ID,
     );
 
@@ -2734,7 +2734,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $uri = strtr('asset/@asset_id/supplement/@supplement_id/delete', array('@asset_id' => $asset_id, '@supplement_id' => $supplement_id));
 
     // Do Post call.
-    $response = $this->restCallPost($uri, $a_parameters, array(), $expected_result_ids, $do_internal);
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
 
     // Check response.
     $this->assertTrue(
@@ -2755,9 +2755,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   /**
    * Delete ACL rights on mediafile.
    */
-  protected function deleteMediafileAut($mediafile_id, array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function deleteMediafileAut($mediafile_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
-    $a_parameters += array(
+    $parameters += array(
       mediamosa_rest_call_aut_mediafile_delete_rights::USER_ID => self::SIMPLETEST_USER_ID,
     );
 
@@ -2765,7 +2765,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $uri = strtr('mediafile/!mediafile_id/acl/delete', array('!mediafile_id' => $mediafile_id));
 
     // Do Post call.
-    $response = $this->restCallPost($uri, $a_parameters, array(), $expected_result_ids, $do_internal);
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
 
     // Test return status.
     $this->assertTrue(
@@ -2786,7 +2786,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $uri = strtr('mediafile/!mediafile_id/acl', array('!mediafile_id' => $mediafile_id));
 
     // Do Post call.
-    $response = $this->restCallGet($uri, $a_parameters, array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT), $do_internal);
+    $response = $this->restCallGet($uri, $parameters, array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT), $do_internal);
     $items = (array)$response['xml']->items;
 
     $this->assertTrue(empty($items), 'ACL rights on mediafile are really gone.');
@@ -2797,9 +2797,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   /**
    * Delete ACL rights on asset.
    */
-  protected function deleteAssetAut($asset_id, array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function deleteAssetAut($asset_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
-    $a_parameters += array(
+    $parameters += array(
       mediamosa_rest_call_aut_mediafile_delete_rights::USER_ID => self::SIMPLETEST_USER_ID,
     );
 
@@ -2807,7 +2807,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $uri = strtr('asset/!asset_id/acl/delete', array('!asset_id' => $asset_id));
 
     // Do Post call.
-    $response = $this->restCallPost($uri, $a_parameters, array(), $expected_result_ids, $do_internal);
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
 
     // Test return status.
     $this->assertTrue(
@@ -2828,7 +2828,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $uri = strtr('asset/!asset_id/acl', array('!asset_id' => $asset_id));
 
     // Do Post call.
-    $response = $this->restCallGet($uri, $a_parameters, array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT), $do_internal);
+    $response = $this->restCallGet($uri, $parameters, array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT), $do_internal);
     $items = (array)$response['xml']->items;
 
     $this->assertTrue(empty($items), 'ACL rights on asset are really gone.');
@@ -2839,9 +2839,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Delete ACL rights on mediafile.
    * Based on the REST call /asset/$asset_id/supplement/$supplement_id/delete (POST)
    */
-  protected function deleteCollectionAut($coll_id, array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function deleteCollectionAut($coll_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
-    $a_parameters += array(
+    $parameters += array(
       mediamosa_rest_call_aut_collection_delete_rights::USER_ID => self::SIMPLETEST_USER_ID,
     );
 
@@ -2849,7 +2849,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $uri = strtr('collection/@coll_id/acl/delete', array('@coll_id' => $coll_id));
 
     // Do Post call.
-    $response = $this->restCallPost($uri, $a_parameters, array(), $expected_result_ids, $do_internal);
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
 
     // Test return status.
     $this->assertTrue(
@@ -2871,20 +2871,20 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   /*
    * Do a play proxy call.
    */
-  protected function play_proxy($file, $line, $asset_id, array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+  protected function play_proxy($file, $line, $asset_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
 
-    $a_parameters += array(
+    $parameters += array(
       mediamosa_rest_call_asset_mediafile_play::USER_ID => self::SIMPLETEST_USER_ID,
     );
 
-    $a_parameters[mediamosa_rest_call_asset_mediafile_play::ASSET_ID] = $asset_id;
+    $parameters[mediamosa_rest_call_asset_mediafile_play::ASSET_ID] = $asset_id;
 
 
     // The uri.
     $uri = strtr('asset/@asset_id/play', array('@asset_id' => $asset_id));
 
     // Do Post call.
-    $response = $this->restCallGet($uri, $a_parameters, array(), $expected_result_ids);
+    $response = $this->restCallGet($uri, $parameters, array(), $expected_result_ids);
 
     // Test return status.
     $this->assertTrue(
@@ -2908,9 +2908,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   /*
    * Do a search word stats call.
    */
-  protected function stats_get(array $a_parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
+  protected function stats_get(array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
 
-    $a_parameters += array(
+    $parameters += array(
       'begindate' => sprintf('%02d-%02d', date('Y'), date('n')),
       'enddate' => sprintf('%02d-%02d', (date('n') + 1 == 13 ? date('Y') + 1 : date('Y')), (date('n') + 1 == 13 ? 1 : date('n') + 1)),
       'limit' => 10,
@@ -2921,7 +2921,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $uri = 'statistics/searchedwords';
 
     // Do Post call.
-    $response = $this->restCallGet($uri, $a_parameters, array(), $expected_result_ids);
+    $response = $this->restCallGet($uri, $parameters, array(), $expected_result_ids);
 
     // Test return status.
     $this->assertTrue(
@@ -2939,37 +2939,37 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   }
 
   // ------------------------------------------------------------------ CQL functions.
-  public function cql_do_search_test_assets($cql, $a_expected_asset_ids, array $a_parameters = array(), $aut_user_id = FALSE, $aut_group_id = FALSE, $aut_domain = FALSE, $aut_realm = FALSE, $granted = FALSE, $is_public_list = FALSE) {
-    $a_parameters += array(
+  public function cql_do_search_test_assets($cql, $expected_asset_ids, array $parameters = array(), $aut_user_id = FALSE, $aut_group_id = FALSE, $aut_domain = FALSE, $aut_realm = FALSE, $granted = FALSE, $is_public_list = FALSE) {
+    $parameters += array(
       mediamosa_rest_call_asset_search::CQL => $cql,
       mediamosa_rest_call_asset_search::GRANTED => $granted ? 'true' : 'false',
     );
 
     if ($aut_user_id !== FALSE) {
-      $a_parameters[mediamosa_rest_call_asset_search::AUT_USER_ID] = $aut_user_id;
+      $parameters[mediamosa_rest_call_asset_search::AUT_USER_ID] = $aut_user_id;
     }
 
     if ($aut_group_id !== FALSE) {
-      $a_parameters[mediamosa_rest_call_asset_search::AUT_GROUP_ID] = $aut_group_id;
+      $parameters[mediamosa_rest_call_asset_search::AUT_GROUP_ID] = $aut_group_id;
     }
 
     if ($aut_domain !== FALSE) {
-      $a_parameters[mediamosa_rest_call_asset_search::AUT_DOMAIN] = $aut_domain;
+      $parameters[mediamosa_rest_call_asset_search::AUT_DOMAIN] = $aut_domain;
     }
 
     if ($aut_realm !== FALSE) {
-      $a_parameters[mediamosa_rest_call_asset_search::AUT_REALM] = $aut_realm;
+      $parameters[mediamosa_rest_call_asset_search::AUT_REALM] = $aut_realm;
     }
 
     // private listing ?
-    $a_parameters[mediamosa_rest_call_asset_search::IS_PUBLIC_LIST] = $is_public_list ? 'true' : 'false';
+    $parameters[mediamosa_rest_call_asset_search::IS_PUBLIC_LIST] = $is_public_list ? 'true' : 'false';
 
     // Set uri.
     $uri = 'asset';
     $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY, mediamosa_error::ERRORCODE_EMPTY_RESULT);
 
     // Do get call.
-    $response = $this->restCallGet($uri, $a_parameters, array(), $expected_result_ids);
+    $response = $this->restCallGet($uri, $parameters, array(), $expected_result_ids);
 
     // Check response.
     $this->assertTrue(
@@ -2977,7 +2977,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       strtr(
         "Executed CQL: '@cql', got result @result (@result_description)",
         array(
-          '@cql' => $a_parameters[mediamosa_rest_call_asset_search::CQL],
+          '@cql' => $parameters[mediamosa_rest_call_asset_search::CQL],
           '@result' => (string)$response['xml']->header->request_result_id,
           '@result_description' => (string)$response['xml']->header->request_result_description
         )
@@ -2985,22 +2985,22 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     );
 
     // Make array.
-    $a_found = isset($response['xml']->items) && !empty($response['xml']->items) ? mediamosa_lib::simplexml2array($response['xml']) : array('items' => array('item' => array()));
-    $a_found = !isset($a_found['items']['item'][0]) && !empty($a_found['items']['item']) ? array(0 => $a_found['items']['item']) : $a_found['items']['item'];
+    $found = isset($response['xml']->items) && !empty($response['xml']->items) ? mediamosa_lib::simplexml2array($response['xml']) : array('items' => array('item' => array()));
+    $found = !isset($found['items']['item'][0]) && !empty($found['items']['item']) ? array(0 => $found['items']['item']) : $found['items']['item'];
 
-    $expected = $this->cql_expected_ids($a_found, $a_expected_asset_ids, 'asset_id', $granted);
+    $expected = $this->cql_expected_ids($found, $expected_asset_ids, 'asset_id', $granted);
 
-    $a_found_ids = array();
-    foreach ($a_found as $key_item => $a_item) {
-      $a_found_ids[] = $a_item['asset_id'];
+    $found_ids = array();
+    foreach ($found as $key_item => $item) {
+      $found_ids[] = $item['asset_id'];
     }
 
     // Now see if we got what we wanted.
-    $this->assertTrue($expected, strtr('Found assets; @found, expected; @expected.', array('@found' => implode(', ', $a_found_ids), '@expected' => implode(', ', array_keys($a_expected_asset_ids)))));
+    $this->assertTrue($expected, strtr('Found assets; @found, expected; @expected.', array('@found' => implode(', ', $found_ids), '@expected' => implode(', ', array_keys($expected_asset_ids)))));
   }
 
-  public function cql_do_search_test_collections($cql, $a_expected_collection_ids, array $a_parameters = array()) {
-    $a_parameters += array(
+  public function cql_do_search_test_collections($cql, $expected_collection_ids, array $parameters = array()) {
+    $parameters += array(
       mediamosa_rest_call_asset_search::CQL => $cql,
     );
 
@@ -3009,7 +3009,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY, mediamosa_error::ERRORCODE_EMPTY_RESULT);
 
     // Do get call.
-    $response = $this->restCallGet($uri, $a_parameters, array(), $expected_result_ids);
+    $response = $this->restCallGet($uri, $parameters, array(), $expected_result_ids);
 
     // Check response.
     $this->assertTrue(
@@ -3017,7 +3017,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       strtr(
         "Executed CQL: '@cql', got result @result (@result_description)",
         array(
-          '@cql' => $a_parameters[mediamosa_rest_call_asset_search::CQL],
+          '@cql' => $parameters[mediamosa_rest_call_asset_search::CQL],
           '@result' => (string)$response['xml']->header->request_result_id,
           '@result_description' => (string)$response['xml']->header->request_result_description
         )
@@ -3025,22 +3025,22 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     );
 
     // Make array.
-    $a_found = isset($response['xml']->items) && !empty($response['xml']->items) ? mediamosa_lib::simplexml2array($response['xml']) : array('items' => array('item' => array()));
-    $a_found = !isset($a_found['items']['item'][0]) && !empty($a_found['items']['item']) ? array(0 => $a_found['items']['item']) : $a_found['items']['item'];
+    $found = isset($response['xml']->items) && !empty($response['xml']->items) ? mediamosa_lib::simplexml2array($response['xml']) : array('items' => array('item' => array()));
+    $found = !isset($found['items']['item'][0]) && !empty($found['items']['item']) ? array(0 => $found['items']['item']) : $found['items']['item'];
 
-    $expected = $this->cql_expected_ids($a_found, $a_expected_collection_ids, 'coll_id');
+    $expected = $this->cql_expected_ids($found, $expected_collection_ids, 'coll_id');
 
-    $a_found_ids = array();
-    foreach ($a_found as $key_item => $a_item) {
-      $a_found_ids[] = $a_item['coll_id'];
+    $found_ids = array();
+    foreach ($found as $key_item => $item) {
+      $found_ids[] = $item['coll_id'];
     }
 
     // Now see if we got what we wanted.
-    $this->assertTrue($expected, strtr('Found collections; @found, expected; @expected.', array('@found' => implode(', ', $a_found_ids), '@expected' => implode(', ', array_keys($a_expected_collection_ids)))));
+    $this->assertTrue($expected, strtr('Found collections; @found, expected; @expected.', array('@found' => implode(', ', $found_ids), '@expected' => implode(', ', array_keys($expected_collection_ids)))));
   }
 
-  public function cql_do_search_test_jobs($asset_id, $cql, $a_expected_job_ids, array $a_parameters = array()) {
-    $a_parameters += array(
+  public function cql_do_search_test_jobs($asset_id, $cql, $expected_job_ids, array $parameters = array()) {
+    $parameters += array(
       mediamosa_rest_call_asset_search::CQL => $cql,
     );
 
@@ -3049,7 +3049,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY, mediamosa_error::ERRORCODE_EMPTY_RESULT);
 
     // Do get call.
-    $response = $this->restCallGet($uri, $a_parameters, array(), $expected_result_ids);
+    $response = $this->restCallGet($uri, $parameters, array(), $expected_result_ids);
 
     // Check response.
     $this->assertTrue(
@@ -3057,7 +3057,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       strtr(
         "Executed CQL: '@cql', got result @result (@result_description)",
         array(
-          '@cql' => $a_parameters[mediamosa_rest_call_asset_search::CQL],
+          '@cql' => $parameters[mediamosa_rest_call_asset_search::CQL],
           '@result' => (string)$response['xml']->header->request_result_id,
           '@result_description' => (string)$response['xml']->header->request_result_description
         )
@@ -3065,63 +3065,63 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     );
 
     // Make array.
-    $a_found = isset($response['xml']->items) && !empty($response['xml']->items) ? mediamosa_lib::simplexml2array($response['xml']) : array('items' => array('item' => array()));
-    $a_found = !isset($a_found['items']['item'][0]) && !empty($a_found['items']['item']) ? array(0 => $a_found['items']['item']) : $a_found['items']['item'];
+    $found = isset($response['xml']->items) && !empty($response['xml']->items) ? mediamosa_lib::simplexml2array($response['xml']) : array('items' => array('item' => array()));
+    $found = !isset($found['items']['item'][0]) && !empty($found['items']['item']) ? array(0 => $found['items']['item']) : $found['items']['item'];
 
     // Value to key.
     $a_tmp = array();
-    foreach ($a_expected_job_ids as $job_id) {
+    foreach ($expected_job_ids as $job_id) {
       $a_tmp[$job_id] = TRUE;
     }
-    $a_expected_job_ids = $a_tmp;
+    $expected_job_ids = $a_tmp;
 
-    $expected = $this->cql_expected_ids($a_found, $a_expected_job_ids, 'id');
+    $expected = $this->cql_expected_ids($found, $expected_job_ids, 'id');
 
-    $a_found_ids = array();
-    foreach ($a_found as $key_item => $a_item) {
-      $a_found_ids[] = $a_item['id'];
+    $found_ids = array();
+    foreach ($found as $key_item => $item) {
+      $found_ids[] = $item['id'];
     }
 
     // Now see if we got what we wanted.
-    $this->assertTrue($expected, strtr('Found jobs; @found, expected; @expected.', array('@found' => implode(', ', $a_found_ids), '@expected' => implode(', ', array_keys($a_expected_job_ids)))));
+    $this->assertTrue($expected, strtr('Found jobs; @found, expected; @expected.', array('@found' => implode(', ', $found_ids), '@expected' => implode(', ', array_keys($expected_job_ids)))));
   }
 
-  function cql_expected_ids($a_found, $a_ids, $name, $granted = FALSE) {
-    if (!count($a_found) && count($a_ids)) {
+  function cql_expected_ids($found, $ids, $name, $granted = FALSE) {
+    if (!count($found) && count($ids)) {
       return FALSE;
     }
 
     // If we dont expect results we must know it at this point
-    $is_empty = count($a_ids) ? FALSE : TRUE;
+    $is_empty = count($ids) ? FALSE : TRUE;
 
-    foreach ($a_found as $key_item => $a_item) {
-      if (!isset($a_ids[$a_item[$name]])) {
+    foreach ($found as $key_item => $item) {
+      if (!isset($ids[$item[$name]])) {
         continue;
       }
 
       // If granted flag matches, then we found it.
-      if (!isset($a_item['granted']) || (($a_ids[$a_item[$name]] && $a_item['granted'] == 'TRUE') || (!$a_ids[$a_item[$name]] && $a_item['granted'] == 'FALSE')) ) {
+      if (!isset($item['granted']) || (($ids[$item[$name]] && $item['granted'] == 'TRUE') || (!$ids[$item[$name]] && $item['granted'] == 'FALSE')) ) {
         // Remove so we know we found it...
-        unset($a_ids[$a_item[$name]]);// any left overs where not found
-        unset($a_found[$key_item]);// remove the found asset
+        unset($ids[$item[$name]]);// any left overs where not found
+        unset($found[$key_item]);// remove the found asset
       }
     }
 
     // If we still have found, thats not ok...
-    if (count($a_found)) {
+    if (count($found)) {
       return FALSE;
     }
 
     // If we dont expect any results, then we response must empty as well
-    if ($is_empty && !count($a_found)) {
+    if ($is_empty && !count($found)) {
       return TRUE;
     }
 
-    return (count($a_ids) ? FALSE : TRUE);
+    return (count($ids) ? FALSE : TRUE);
   }
 
   // Search for app 1.
-  public function cql_do_search_test_assets_1($cql, $a_expected_asset_ids, array $a_parameters = array(), $aut_user_id = FALSE, $aut_group_id = FALSE, $aut_domain = FALSE, $aut_realm = FALSE, $granted = FALSE, $is_public_list = FALSE) {
+  public function cql_do_search_test_assets_1($cql, $expected_asset_ids, array $parameters = array(), $aut_user_id = FALSE, $aut_group_id = FALSE, $aut_domain = FALSE, $aut_realm = FALSE, $granted = FALSE, $is_public_list = FALSE) {
 
     // Set old.
     $old_switch_to_app = $this->switch_to_app;
@@ -3131,7 +3131,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // Do call.
     try {
-      $this->cql_do_search_test_assets($cql, $a_expected_asset_ids, $a_parameters, $aut_user_id, $aut_group_id, $aut_domain, $aut_realm, $granted, $is_public_list);
+      $this->cql_do_search_test_assets($cql, $expected_asset_ids, $parameters, $aut_user_id, $aut_group_id, $aut_domain, $aut_realm, $granted, $is_public_list);
     }
     catch (Exception $e) {
       $this->switch_to_app = $old_switch_to_app;
@@ -3143,7 +3143,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   }
 
   // Search for app 2.
-  public function cql_do_search_test_assets_2($cql, $a_expected_asset_ids, array $a_parameters = array(), $aut_user_id = FALSE, $aut_group_id = FALSE, $aut_domain = FALSE, $aut_realm = FALSE, $granted = FALSE, $is_public_list = FALSE) {
+  public function cql_do_search_test_assets_2($cql, $expected_asset_ids, array $parameters = array(), $aut_user_id = FALSE, $aut_group_id = FALSE, $aut_domain = FALSE, $aut_realm = FALSE, $granted = FALSE, $is_public_list = FALSE) {
 
     // Set old.
     $old_switch_to_app = $this->switch_to_app;
@@ -3153,7 +3153,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // Do call.
     try {
-      $this->cql_do_search_test_assets($cql, $a_expected_asset_ids, $a_parameters, $aut_user_id, $aut_group_id, $aut_domain, $aut_realm, $granted, $is_public_list);
+      $this->cql_do_search_test_assets($cql, $expected_asset_ids, $parameters, $aut_user_id, $aut_group_id, $aut_domain, $aut_realm, $granted, $is_public_list);
     }
     catch (Exception $e) {
       $this->switch_to_app = $old_switch_to_app;
@@ -3165,7 +3165,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   }
 
   // Search for app 3.
-  public function cql_do_search_test_assets_3($cql, $a_expected_asset_ids, array $a_parameters = array(), $aut_user_id = FALSE, $aut_group_id = FALSE, $aut_domain = FALSE, $aut_realm = FALSE, $granted = FALSE, $is_public_list = FALSE) {
+  public function cql_do_search_test_assets_3($cql, $expected_asset_ids, array $parameters = array(), $aut_user_id = FALSE, $aut_group_id = FALSE, $aut_domain = FALSE, $aut_realm = FALSE, $granted = FALSE, $is_public_list = FALSE) {
 
     // Set old.
     $old_switch_to_app = $this->switch_to_app;
@@ -3175,7 +3175,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // Do call.
     try {
-      $this->cql_do_search_test_assets($cql, $a_expected_asset_ids, $a_parameters, $aut_user_id, $aut_group_id, $aut_domain, $aut_realm, $granted, $is_public_list);
+      $this->cql_do_search_test_assets($cql, $expected_asset_ids, $parameters, $aut_user_id, $aut_group_id, $aut_domain, $aut_realm, $granted, $is_public_list);
     }
     catch (Exception $e) {
       $this->switch_to_app = $old_switch_to_app;
@@ -3186,7 +3186,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $this->switch_to_app = $old_switch_to_app;
   }
 
-  public function cql_do_search_test_collections_1($cql = '', array $a_expected_collection_ids = array(), array $a_parameters = array()) {
+  public function cql_do_search_test_collections_1($cql = '', array $expected_collection_ids = array(), array $parameters = array()) {
     // Set old.
     $old_switch_to_app = $this->switch_to_app;
 
@@ -3195,7 +3195,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // Do call.
     try {
-      $this->cql_do_search_test_collections($cql, $a_expected_collection_ids, $a_parameters);
+      $this->cql_do_search_test_collections($cql, $expected_collection_ids, $parameters);
     }
     catch (Exception $e) {
       $this->switch_to_app = $old_switch_to_app;
@@ -3206,7 +3206,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $this->switch_to_app = $old_switch_to_app;
   }
 
-  public function cql_do_search_test_collections_2($cql = '', array $a_expected_collection_ids = array(), array $a_parameters = array()) {
+  public function cql_do_search_test_collections_2($cql = '', array $expected_collection_ids = array(), array $parameters = array()) {
     // Set old.
     $old_switch_to_app = $this->switch_to_app;
 
@@ -3215,7 +3215,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // Do call.
     try {
-      $this->cql_do_search_test_collections($cql, $a_expected_collection_ids, $a_parameters);
+      $this->cql_do_search_test_collections($cql, $expected_collection_ids, $parameters);
     }
     catch (Exception $e) {
       $this->switch_to_app = $old_switch_to_app;
@@ -3226,7 +3226,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $this->switch_to_app = $old_switch_to_app;
   }
 
-  public function cql_do_search_test_collections_3($cql = '', array $a_expected_collection_ids = array(), array $a_parameters = array()) {
+  public function cql_do_search_test_collections_3($cql = '', array $expected_collection_ids = array(), array $parameters = array()) {
     // Set old.
     $old_switch_to_app = $this->switch_to_app;
 
@@ -3235,7 +3235,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // Do call.
     try {
-      $this->cql_do_search_test_collections($cql, $a_expected_collection_ids, $a_parameters);
+      $this->cql_do_search_test_collections($cql, $expected_collection_ids, $parameters);
     }
     catch (Exception $e) {
       $this->switch_to_app = $old_switch_to_app;

@@ -250,6 +250,13 @@ function mediamosa_app_schema() {
         'not null' => FALSE,
         'default' => NULL,
       ),
+      mediamosa_app_db::TIMEZONE => array(
+        'description' => t('The application timezone.'),
+        'type' => 'varchar',
+        'length' => mediamosa_app_db::TIMEZONE_LENGTH,
+        'not null' => FALSE,
+        'default' => mediamosa_settings::MEDIAMOSA_DEFAULT_TIMEZONE,
+      ),
     ),
     'primary key' => array(mediamosa_app_db::NID), // Revisions are stored in mediamosa_node_revision.
     'unique keys' => array(

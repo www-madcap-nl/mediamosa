@@ -61,7 +61,7 @@ class mediamosa_statistics {
       mediamosa_statistics_file_upload_db::OWNER_ID => $owner_id,
       mediamosa_statistics_file_upload_db::GROUP_ID => $group_id,
       mediamosa_statistics_file_upload_db::FILE_SIZE => (is_null($file_size)? 0 : $file_size),
-      mediamosa_statistics_file_upload_db::TIMESTAMP => mediamosa::db_current_timestamp_now()
+      mediamosa_statistics_file_upload_db::TIMESTAMP => mediamosa_datetime::utc_current_timestamp_now(),
     );
 
     // Do the insert.
@@ -101,7 +101,7 @@ class mediamosa_statistics {
       mediamosa_statistics_stream_request_db::FILESIZE => mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, mediamosa_asset_mediafile_metadata::FILESIZE),
       mediamosa_statistics_stream_request_db::CONTAINER_TYPE => mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::CONTAINER_TYPE),
       mediamosa_statistics_stream_request_db::PLAY_TYPE => $response_type,
-      mediamosa_statistics_stream_request_db::PLAYED => mediamosa::db_current_timestamp_now(),
+      mediamosa_statistics_stream_request_db::PLAYED => mediamosa_datetime::utc_current_timestamp_now(),
     );
 
     // Insert it.
@@ -159,7 +159,7 @@ class mediamosa_statistics {
       ->fields(array(
         mediamosa_statistics_search_request_db::APP_ID => $app_id,
         mediamosa_statistics_search_request_db::KEYWORD => $keywords,
-        mediamosa_statistics_search_request_db::SEARCHED => mediamosa::db_current_timestamp_now(),
+        mediamosa_statistics_search_request_db::SEARCHED => mediamosa_datetime::utc_current_timestamp_now(),
       ))
       ->execute();
   }
@@ -262,7 +262,7 @@ class mediamosa_statistics {
             ':keyword' => $data[$subject],
             ':container_type' => $data['container_type'],
             ':diskspace' => round($data['diskspace_mb']),
-            ':timestamp' => mediamosa::db_current_timestamp_now()
+            ':timestamp' => mediamosa_datetime::utc_current_timestamp_now()
           )
         );
       }

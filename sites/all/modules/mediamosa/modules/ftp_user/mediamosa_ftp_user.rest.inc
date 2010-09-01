@@ -157,7 +157,7 @@ class mediamosa_rest_call_ftp_user_create extends mediamosa_rest_call {
     }
     // Create entry.
     mediamosa_db::db_query(
-      'INSERT INTO {mediamosa_ftp_user} SET app_id = :app_id, userid = :username, passwd = :password, homedir = :homedir, active = 1, count = 0, accessed = NOW(), modified = NOW()',
+      'INSERT INTO {mediamosa_ftp_user} SET app_id = :app_id, userid = :username, passwd = :password, homedir = :homedir, active = 1, count = 0, accessed = UTC_TIMESTAMP(), modified = UTC_TIMESTAMP()',
       array(
         ':app_id' => $app_id,
         ':username' => $username,
@@ -305,7 +305,7 @@ class mediamosa_rest_call_ftp_user_update extends mediamosa_rest_call {
     $query->condition('app_id', $app_id);
 
     $a_fields = array(
-      'modified' => mediamosa::db_current_timestamp_now()
+      'modified' => mediamosa_datetime::utc_current_timestamp_now()
     );
 
     if (is_bool($active)) {
@@ -317,7 +317,7 @@ class mediamosa_rest_call_ftp_user_update extends mediamosa_rest_call {
     }
 
     // Add changed field.
-    $a_fields['modified'] = mediamosa::db_current_timestamp_now();
+    $a_fields['modified'] = mediamosa_datetime::utc_current_timestamp_now();
 
     $query->fields($a_fields);
     $query->execute();
@@ -458,7 +458,7 @@ class mediamosa_rest_call_ftp_user_update_password extends mediamosa_rest_call {
     $query->condition('app_id', $app_id);
 
     $a_fields = array(
-      'modified' => mediamosa::db_current_timestamp_now(),
+      'modified' => mediamosa_datetime::utc_current_timestamp_now(),
       'passwd' => '{md5}' . base64_encode(md5($password, TRUE)),
     );
 
@@ -533,7 +533,7 @@ class mediamosa_rest_call_ftp_user_update_status extends mediamosa_rest_call {
     $query->condition('app_id', $app_id);
 
     $a_fields = array(
-      'modified' => mediamosa::db_current_timestamp_now()
+      'modified' => mediamosa_datetime::utc_current_timestamp_now()
     );
 
     if (is_bool($active)) {
