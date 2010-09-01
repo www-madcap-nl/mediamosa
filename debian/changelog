@@ -1,3 +1,27 @@
+vpcore (2.2.0) unstable; urgency=low
+
+  * Version 2.2.0; Version 2.2, see mediamosa.org/trac for details.
+
+ -- arjen <vpcore@madcap.nl>  Tue, 01 Sept 2010 10:04:26 +0200
+
+vpcore (2.1.5.1) unstable; urgency=low
+
+  * Version 2.1.5.1; still image fix.
+
+ -- arjen <vpcore@madcap.nl>  Tue, 08 Jul 2010 10:04:26 +0200
+
+vpcore (2.1.5) unstable; urgency=low
+
+  * Version 2.1.5; Minor updates.
+
+ -- arjen <vpcore@madcap.nl>  Tue, 02 Jul 2010 10:04:26 +0200
+
+vpcore (2.1.4.1) unstable; urgency=low
+
+  * Version 2.1.4.1; Patch for playproxyemu
+
+ -- arjen <vpcore@madcap.nl>  Tue, 24 Jun 2010 10:04:26 +0200
+
 vpcore (2.1.4) unstable; urgency=low
 
   * Version 2.1.4; minor bugfix release.
