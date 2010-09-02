@@ -122,9 +122,9 @@ class MediaMosaServerSetupTestCaseEga extends MediaMosaTestCaseEgaJob {
         $xml = new SimpleXMLElement($response->data);
         $this->assertTrue(in_array($xml->header->request_result_id, $expecting_codes), t('MediaMosa XML returned, got @result_id.', array('@result_id' => $xml->header->request_result_id)));
 
-        // No compare versions.
+        // Now compare versions.
         $xml_ver = isset($xml->header->vpx_version) ? $xml->header->vpx_version : $xml->header->version;
-        $our_ver = mediamosa_version::get_current_version_str(TRUE);
+        $our_ver = mediamosa_version::MEDIAMOSA_VERSION;
         $this->assertTrue(
           $xml_ver == $our_ver,
           t(
@@ -136,7 +136,7 @@ class MediaMosaServerSetupTestCaseEga extends MediaMosaTestCaseEgaJob {
               '@our_ver' => $our_ver
             )
           )
-         );
+        );
       }
       catch (Exception $e) {
         $this->fail(t('Unable to parse returned XML on server name @name, @uri.', array('@name' => $enabled_server[mediamosa_server_db::SERVER_URI], '@uri' => $enabled_server[mediamosa_server_db::SERVER_NAME])));

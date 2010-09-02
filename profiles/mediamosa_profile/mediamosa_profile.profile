@@ -35,7 +35,7 @@
 /**
  * Test text for Lua Lpeg
  */
-define('MEDIAMOSA_TEST_LUA_LPEG', 'Usage: vpx-analyse BASE_PATH HASH [--always_hint_mp4] [--always_insert_metadata]');
+define('MEDIAMOSA_PROFILE_TEST_LUA_LPEG', 'lua works');
 
 /**
  * @} End of "defgroup constants".
@@ -56,16 +56,22 @@ function mediamosa_profile_form_alter(&$form, $form_state, $form_id) {
 }
 
 /**
- * Set up title.
+ * Retrieve the version.
  */
-function _mediamosa_profile_get_title() {
-
+function _mediamosa_profile_get_version() {
   $inc = include_once (DRUPAL_ROOT . '/sites/all/modules/mediamosa/mediamosa.version.inc');
 
   // Try to include the settings file.
-  $version = $inc ? mediamosa_version::get_current_version() : null;
+  $version = $inc ? mediamosa_version::get_current_version_str(TRUE) : null;
 
-  return 'Installing MediaMosa ' . ($version ? $version[mediamosa_version::MAJOR] . '.' .  $version[mediamosa_version::MINOR] . '.' . $version[mediamosa_version::RELEASE] . ' build ' . $version[mediamosa_version::BUILD] : '- unkwown version.');
+  return ($version ? $version : '');
+}
+
+/**
+ * Set up title.
+ */
+function _mediamosa_profile_get_title() {
+  return 'Installing MediaMosa ' . _mediamosa_profile_get_version();
 }
 
 /**
@@ -76,6 +82,10 @@ function mediamosa_profile_install_tasks() {
   drupal_set_title(_mediamosa_profile_get_title());
 
   $tasks = array(
+    'mediamosa_profile_php_settings' => array(
+      'display_name' => st('Verify PHP settings'),
+      'run' => 'INSTALL_TASK_RUN_IF_REACHED',
+    ),
     'mediamosa_profile_storage_location_form' => array(
       'display_name' => st('Storage location'),
       'type' => 'form',
@@ -87,10 +97,17 @@ function mediamosa_profile_install_tasks() {
     ),
     'mediamosa_profile_configure_server' => array(
       'display_name' => st('Configure the server'),
-      //'run' => INSTALL_TASK_RUN_IF_REACHED,
+    ),
+    'mediamosa_profile_apache_settings_form' => array(
+      'display_name' => st('Apache settings'),
+      'type' => 'form',
+    ),
+    'mediamosa_profile_migration_form' => array(
+      'display_name' => st('Migration of your curent database'),
+      'type' => 'form',
     ),
     'mediamosa_profile_cron_settings_form' => array(
-      'display_name' => st('Cron & Apache settings'),
+      'display_name' => st('Cron settings'),
       'type' => 'form',
     ),
   );
@@ -101,15 +118,132 @@ function mediamosa_profile_install_tasks() {
  * Implementation of hook_install_tasks_alter().
  */
 function mediamosa_profile_install_tasks_alter(&$tasks, $install_state) {
+
   // Necessary PHP settings.
   // Should be first.
   $tasks = array(
-    'mediamosa_profile_php_settings' => array(
-      'display_name' => st('PHP settings'),
+    'install_select_profile' => array(
+      'display_name' => st('Choose profile'),
+      'display' => count($install_state['profiles']) != 1,
+      'run' => INSTALL_TASK_RUN_IF_REACHED,
+    ),
+    'install_select_locale' => array(
+      'display_name' => st('Choose language'),
+      'run' => INSTALL_TASK_RUN_IF_REACHED,
+    ),
+    'install_load_profile' => array(
+      'run' => INSTALL_TASK_RUN_IF_REACHED,
+    ),
+    'mediamosa_profile_intro_form' => array(
+      'display_name' => st('Welcome to MediaMosa'),
+      'type' => 'form',
+    ),
+    'install_verify_requirements' => array(
+      'display_name' => st('Verify requirements'),
     ),
   ) + $tasks;
 }
 
+/**
+ * The profile intro.
+ *
+ * @param unknown_type $install_state
+ */
+function mediamosa_profile_intro_form($form, &$form_state, &$install_state) {
+
+  $form['intro'] = array(
+    '#type' => 'fieldset',
+    '#collapsible' => FALSE,
+    '#collapsed' => FALSE,
+    '#title' => t('Welcome to MediaMosa'),
+  );
+
+  $form['intro']['welcome'] = array(
+    '#markup' => t("<p>MediaMosa is a full featured, webservice oriented media management
+      and distribution platform. MediaMosa is implemented as a modular
+      extension to the open source Drupal system. You'll find the MediaMosa
+      specific modules in sites/all/modules, the remainder of the tree is
+      the standard Drupal core.
+    </p>
+    <p>
+    Before procceding, please viits our !quick_install.
+    </p>
+    <p>
+      Please visit !mediamosa.org for more information, announcements,
+      documentation, community forums, and new releases.
+    </p>
+    <p>
+    References:
+    <ul>
+      <li>!mediamosa.org</a></li>
+      <li><a href=\"http://www.drupal.org\">http://www.drupal.org</a></li>
+    </ul>
+  </p>",
+    array(
+      '!mediamosa.org' => l('http://www.mediamosa.org', 'http://www.mediamosa.org/', array('absolute' => TRUE)),
+      '!quick_install' => l('quick install page', 'http://mediamosa.org/trac/wiki/Quick%20install', array('absolute' => TRUE))
+    ))
+  );
+
+  $form['database'] = array(
+    '#type' => 'fieldset',
+    '#collapsible' => FALSE,
+    '#collapsed' => FALSE,
+    '#title' => t('MediaMosa database setup'),
+  );
+
+  $form['database']['Message'] = array(
+    '#markup' => t("<p>
+    We advice using !mysql v5.1, or use MySQL variant like !mariadb.
+    MediaMosa is currently <b>untested</b> with !postgresql.
+   </p>
+   <p>Use the database <b>mediamosa</b> example below to create your database 'mediamosa' with user 'memo' before proceeding.</p>
+    <code>
+        # The 'yourpasswd' entries below needs to be a password you specify.<br />
+        <br />
+        # Create the database first.<br />
+        CREATE DATABASE mediamosa DEFAULT CHARSET=utf8;<br />
+        <br />
+        # You may choose to specify a source host instead of '%'.<br />
+        CREATE USER 'memo'@'%' IDENTIFIED BY 'yourpasswd';<br />
+        <br />
+        # Create the localhost access for user 'memo'.<br />
+        CREATE USER 'memo'@'localhost' IDENTIFIED BY 'yourpasswd';<br />
+        <br />
+        # Now grant usage for user 'memo' on the 'mediamosa' database.<br />
+        GRANT USAGE ON mediamosa.* TO 'memo'@'%' IDENTIFIED BY 'yourpasswd' WITH MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0 MAX_UPDATES_PER_HOUR 0 MAX_USER_CONNECTIONS 0;<br />
+        <br />
+        GRANT ALL ON mediamosa.* TO 'memo'@'%';<br />
+    </code>
+    <p>
+        You may change the 'mediamosa' database prefix and the database user name.<br />
+        <br />
+        If you want to migrate your current MediaMosa v1.7 database to the new 2.x version, you have to create or have a database user, which has enough rights to read your current v1.7 databases.</p>
+   ", array(
+    '!mysql' => l('MySQL', 'http://mysql.com/'),
+    '!mariadb' => l('MariaDB', 'http://mariadb.org/'),
+    '!postgresql' => l('PostgreSQL', 'http://www.postgresql.org/')
+   ))
+  );
+
+  $form['actions'] = array('#type' => 'actions');
+  $form['actions']['save'] = array(
+    '#type' => 'submit',
+    '#value' => st('Continue'),
+  );
+  $form['errors'] = array();
+
+  return $form;
+}
+
+function mediamosa_profile_intro_form_validate($form, &$form_state) {
+}
+
+/**
+ * Submit the intro form.
+ */
+function mediamosa_profile_intro_form_submit($form, &$form_state) {
+}
 
 /**
  * Checking the settings.
@@ -124,7 +258,7 @@ function mediamosa_profile_php_settings($install_state) {
 
   $output .= '<h1>' . t('PHP modules') . '</h1>';
 
-  $required_extensions = array('bcmath', 'gd', /*'mcrypt',*/ 'curl', 'mysql', 'mysqli', 'SimpleXML');
+  $required_extensions = array('bcmath', 'gd', 'curl', 'mysql', 'mysqli', 'SimpleXML');
   $modules = '';
   foreach ($required_extensions as $extension) {
     $modules .= $extension . ', ';
@@ -167,15 +301,16 @@ function mediamosa_profile_php_settings($install_state) {
   $last_line = exec('lua 2>&1');
   $output .= '<li>Lua</li>';
   if ($last_line) {
-    drupal_set_message(t('Lua is not found. Please, install it first.'), 'error');
+    drupal_set_message(t('Lua is not found. You need to install it first. You can find more information how to install LUA !here', array('!here' => l('here', 'http://mediamosa.org/forum/viewtopic.php', array('absolute' => TRUE, 'external' => TRUE, 'query' => array('f'=> '13', 't' => '175', 'start' => '10'), 'fragment' => 'p687')))), 'error');
     $error = TRUE;
   }
 
+
   // Lpeg.
-  $last_line = exec('lua sites/all/modules/mediamosa/lib/lua/vpx-analyse 2>&1', $retval);
+  $last_line = exec('lua profiles/mediamosa_profile/lua/lua_test 2>&1', $retval);
   $output .= '<li>Lua LPeg</li>';
-  if ($last_line != MEDIAMOSA_TEST_LUA_LPEG) {
-    drupal_set_message(t('Lpeg  extention of Lua is not found. Please, install it first.'), 'error');
+  if ($last_line != MEDIAMOSA_PROFILE_TEST_LUA_LPEG) {
+    drupal_set_message(t('Lpeg  extension of Lua is not found. Please, install it first.'), 'error');
     $error = TRUE;
   }
 
@@ -218,19 +353,6 @@ function mediamosa_profile_php_settings($install_state) {
       drupal_set_message(t('post_max_size should be at least 100M. Currently: %current_value', array('%current_value' => $php_post_max_size)), 'warning');
   }
   $output .= t('post_max_size should be at least 100M. Currently: %current_value', array('%current_value' => $php_post_max_size)) . '<br />';
-/*
-  $php_max_input_time = ini_get('max_input_time');
-  if ($php_max_input_time < 7200) {
-    drupal_set_message(t('max_input_time should be at least 7200. Currently: %current_value', array('%current_value' => $php_max_input_time)), 'warning');
-  }
-  $output .= t('max_input_time should be at least 7200. Currently: %current_value', array('%current_value' => $php_max_input_time)) . '<br />';
-
-  $php_max_execution_time = ini_get('max_execution_time');
-  if ($php_max_execution_time < 7200) {
-    drupal_set_message(t('max_execution_time should be at least 7200. Currently: %current_value', array('%current_value' => $php_max_execution_time)), 'warning');
-  }
-  $output .= t('max_execution_time should be at least 7200. Currently: %current_value', array('%current_value' => $php_max_execution_time)) . '<br />';
-*/
 
   return $error ? $output : NULL;
 }
@@ -247,16 +369,16 @@ function mediamosa_profile_storage_location_form() {
 
   $form['current_mount_point'] = array(
     '#type' => 'textfield',
-    '#title' => t('Mediamosa SAN/NAS Mount point'),
-    '#description' => t('The mount point is used to store the mediafiles.<br />Make sure the Apache user has write access to the Mediamosa SAN/NAS mount point.'),
+    '#title' => t('MediaMosa SAN/NAS Mount point'),
+    '#description' => t('The mount point is used to store the mediafiles.<br />Make sure the Apache user has write access to the MediaMosa SAN/NAS mount point.'),
     '#required' => TRUE,
     '#default_value' => $mount_point,
   );
 
   $form['current_mount_point_windows'] = array(
     '#type' => 'textfield',
-    '#title' => t('Mediamosa SAN/NAS Mount point for Windows'),
-    '#description' => t("The mount point is used to store the mediafiles.<br />Make sure the webserver has write access to the Windows Mediamosa SAN/NAS mount point.<br />If you don't use Windows, just leave it as it is."),
+    '#title' => t('MediaMosa SAN/NAS Mount point for Windows'),
+    '#description' => t("The mount point is used to store the mediafiles.<br />Make sure the webserver has write access to the Windows MediaMosa SAN/NAS mount point.<br />If you don't use Windows, just leave it as it is."),
     '#required' => FALSE,
     '#default_value' => $mount_point_windows,
   );
@@ -289,7 +411,7 @@ function mediamosa_profile_storage_location_form_submit($form, &$form_state) {
   variable_set('mediamosa_current_mount_point', $values['current_mount_point']);
   variable_set('mediamosa_current_mount_point_windows', $values['current_mount_point_windows']);
 
-  // Inside the storage location, create a Mediamosa storage structure.
+  // Inside the storage location, create a MediaMosa storage structure.
   // data.
   _mediamosa_profile_mkdir($values['current_mount_point'] . '/data');
   for ($i = 0; $i <= 9; $i++) {
@@ -354,7 +476,7 @@ function mediamosa_profile_configure_server($install_state) {
 
   // Configure the servers.
 
-  // Mediamosa server table.
+  // MediaMosa server table.
   db_query("
     UPDATE {mediamosa_server}
     SET server_uri = REPLACE(server_uri, 'http://localhost', :server)
@@ -368,7 +490,7 @@ function mediamosa_profile_configure_server($install_state) {
     ':server' => 'http://' . $server_name,
   ));
 
-  // Mediamosa node revision table.
+  // MediaMosa node revision table.
   $result = db_query("SELECT nid, vid, revision_data FROM {mediamosa_node_revision}");
   foreach ($result as $record) {
     $revision_data = unserialize($record->revision_data);
@@ -458,6 +580,28 @@ function mediamosa_profile_cron_settings_form() {
     '#rows' => 2,
   );
 
+  $form['continue'] = array(
+    '#type' => 'submit',
+    '#value' => t('Continue'),
+  );
+
+  return $form;
+}
+
+/**
+ * Information about cron, apache and migration.
+ * Task callback.
+ */
+function mediamosa_profile_apache_settings_form() {
+  $form = array();
+
+  // Add our css.
+  drupal_add_css('profiles/mediamosa_profile/mediamosa_profile.css');
+
+  // Get the server name.
+  $server_name = _mediamosa_profile_server_name();
+
+
 
   // Apache.
 
@@ -476,7 +620,7 @@ function mediamosa_profile_cron_settings_form() {
   $form['apache']['apache_options'] = array(
     '#markup' => t("<ol><li>Change your site's settings in <code>/etc/apache2/sites-enabled/your-site</code>.<br />First save your original file, then insert this code to your settings file.</li>
 <li>Restart your Apache:<br /><code>sudo /etc/init.d/apache2 restart</code><br />") .
-  (strpos($server_name, '/') === FALSE ? '' : t("<b>It is strongly recommended, that you use server name like '<code>@mediamosa</code>', when you install Mediamosa, and not like '<code>@server_name</code>'.</b>", array('@mediamosa' => (substr($server_name, -1) == '/' ? 'mediamosa' : substr($server_name, strrpos($server_name, '/') + 1)), '@server_name' => $server_name))) . '</li></ol>',
+  (strpos($server_name, '/') === FALSE ? '' : t("<b>It is strongly recommended, that you use server name like '<code>@mediamosa</code>', when you install MediaMosa, and not like '<code>@server_name</code>'.</b>", array('@mediamosa' => (substr($server_name, -1) == '/' ? 'mediamosa' : substr($server_name, strrpos($server_name, '/') + 1)), '@server_name' => $server_name))) . '</li></ol>',
   );
 
   $server_name_clean = substr($server_name, -6) == '.local' ? substr($server_name, 0, strlen($server_name) - 6) : $server_name;
@@ -629,6 +773,26 @@ function mediamosa_profile_cron_settings_form() {
     '#rows' => 40,
   );
 
+  $form['continue'] = array(
+    '#type' => 'submit',
+    '#value' => t('Continue'),
+  );
+
+  return $form;
+}
+
+/**
+ * Information about 1.7 -> 2.x migration.
+ * Task callback.
+ */
+function mediamosa_profile_migration_form() {
+  $form = array();
+
+  // Add our css.
+  drupal_add_css('profiles/mediamosa_profile/mediamosa_profile.css');
+
+  // Get the server name.
+  $server_name = _mediamosa_profile_server_name();
 
   // Migration.
 
@@ -637,7 +801,7 @@ function mediamosa_profile_cron_settings_form() {
     '#collapsible' => FALSE,
     '#collapsed' => FALSE,
     '#title' => t('Migrating your 1.7.x database to 2.x'),
-    '#description' => t("If you already have an MediaMosa 1.x database, then you need to migrate the database to the new 2.x database format. Migrate 1.7.x database from your current 1.7.x Mediamosa installation to 2.x database by following these steps:
+    '#description' => t("If you already have an MediaMosa 1.x database, then you need to migrate the database to the new 2.x database format. Migrate 1.7.x database from your current 1.7.x MediaMosa installation to 2.x database by following these steps:
     <ol>
       <li>Open the <code>settings.mediamosa.php</code> in your new MediaMosa 2.x installation in the <code>sites</code> directory.</li>
       <li>Insert the content below from the text box and change the settings to match your 1.7.x MySQL setup for the MediaMosa 1.x MySQL user. In the file there is already an commented out version you can edit.</li>
@@ -680,6 +844,7 @@ function mediamosa_profile_cron_settings_form() {
 
   return $form;
 }
+
 
 /**
  * Advanced mkdir().

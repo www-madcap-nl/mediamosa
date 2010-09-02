@@ -173,15 +173,16 @@ function mediamosa_theme() {
  */
 function theme_mediamosa_version($variables) {
   // Get version info.
-  $version = mediamosa_version::get_current_version();
+  $version = mediamosa_version::get_current_version(TRUE);
 
   return '<p align="center">' .
-    t('MediaMosa v!MAJOR.!MINOR.!RELEASE build !BUILD',
+    t('MediaMosa v!MAJOR.!MINOR.!RELEASE (build !BUILD) !EXTRA',
       array(
         '!MAJOR' => $version[mediamosa_version::MAJOR],
         '!MINOR' => $version[mediamosa_version::MINOR],
         '!RELEASE' => $version[mediamosa_version::RELEASE],
         '!BUILD' => $version[mediamosa_version::BUILD],
+        '!EXTRA' => empty($version[mediamosa_version::EXTRA]) ? '' : '- ' . $version[mediamosa_version::EXTRA],
       )
     ) .
     '</p>';

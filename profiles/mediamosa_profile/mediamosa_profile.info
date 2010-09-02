@@ -1,43 +1,7 @@
 ; $Id:  $
 name = "MediaMosa (Default installation)"
 distribution_name = "MediaMosa"
-description = "<p>
-      MediaMosa is a full featured, webservice oriented media management
-      and distribution platform. MediaMosa is implemented as a modular
-      extension to the open source Drupal system. You'll find the MediaMosa
-      specific modules in sites/all/modules, the remainder of the tree is
-      the standard Drupal core.
-    </p>
-    <p>
-      Please visit <a href=\"http://www.mediamosa.org\">http://www.mediamosa.org</a> for more information, announcements,
-      documentation, community forums, and new releases.
-    </p>
-    <p>
-    References:
-    <ul>
-      <li><a href=\"http://www.mediamosa.org\">http://www.mediamosa.org</a></li>
-      <li><a href=\"http://www.drupal.org\">http://www.drupal.org</a></li>
-    </ul>
-  </p>
-  <p>
-    Use the database \"mediamosa\" example below to create your database before proceeding.
-   </p>
-    <code>
-        # You have to create a user with a database:<br />
-        CREATE USER mediamosa@'%' IDENTIFIED BY 'yourpasswd';<br />
-        CREATE USER mediamosa@'localhost' IDENTIFIED BY 'yourpasswd';<br />
-        GRANT USAGE ON * . * TO 'mediamosa'@'%' IDENTIFIED BY 'yourpasswd' WITH MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0 MAX_UPDATES_PER_HOUR 0 MAX_USER_CONNECTIONS 0;<br />
-        <br />
-        CREATE DATABASE mediamosa DEFAULT CHARSET=utf8;<br />
-        <br />
-        GRANT ALL ON `mediamosa`.* TO 'mediamosa'@'%';<br />
-    </code>
-    <p>
-        You may vary the mediamosa database prefix and the mediamosa user name.<br />
-        You also have to give write access to the apache user to your MediaMosa (SAN/NAS) mount points, e.g. /srv/mediamosa.<br />
-        <br />
-        If you want to migrate your old 1.7 Mediamosa database to the new 2.x version, you have to create a new database user, which has enough rights to read your old databases.
-    </p>"
+description = ""
 version = 2.0
 core = 7.x
 dependencies[] = block
@@ -48,6 +12,41 @@ dependencies[] = menu
 dependencies[] = dblog
 dependencies[] = toolbar
 dependencies[] = simpletest
+
+dependencies[] = mediamosa
+dependencies[] = mediamosa_app
+dependencies[] = mediamosa_app_authentication
+dependencies[] = mediamosa_asset
+dependencies[] = mediamosa_aut
+dependencies[] = mediamosa_batch_jobs
+dependencies[] = mediamosa_collection
+dependencies[] = mediamosa_configuration
+dependencies[] = mediamosa_configuration_debug
+dependencies[] = mediamosa_configuration_proxy
+dependencies[] = mediamosa_configuration_server
+dependencies[] = mediamosa_configuration_storage
+dependencies[] = mediamosa_connector
+dependencies[] = mediamosa_development
+dependencies[] = mediamosa_error
+dependencies[] = mediamosa_ftp_batch
+dependencies[] = mediamosa_ftp_user
+dependencies[] = mediamosa_integrity_check
+dependencies[] = mediamosa_job
+dependencies[] = mediamosa_maintenance
+dependencies[] = mediamosa_maintenance_automatedsimpletest
+dependencies[] = mediamosa_maintenance_browse
+dependencies[] = mediamosa_maintenance_status
+dependencies[] = mediamosa_maintenance_status_component
+dependencies[] = mediamosa_maintenance_status_configuration
+//dependencies[] = mediamosa_maintenance_status_server, Not done yet.
+dependencies[] = mediamosa_migration
+dependencies[] = mediamosa_profile
+dependencies[] = mediamosa_server
+dependencies[] = mediamosa_statistics
+dependencies[] = mediamosa_ticket
+dependencies[] = mediamosa_transcode
+dependencies[] = mediamosa_user
+dependencies[] = mediamosa_webservice
 
 
 ; Using _profile extension to prevent name collisions with core module.

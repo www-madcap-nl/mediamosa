@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -26,25 +26,25 @@
 
 /**
  * @file
- * Contains the global MediaMosa Rest calls.
+ * REST calls for the status module.
  */
 
 /**
- * URI: /version
- * Get the current version number.
+ * URI: /external/status
+ * Method: GET
  */
-class mediamosa_rest_call_mediamosa_version extends mediamosa_rest_call {
+class mediamosa_rest_call_status extends mediamosa_rest_call {
 
+  // ------------------------------------------------------- Functions (public).
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup, FALSE);
+    return self::get_var_setup_default($var_setup, FALSE);
   }
 
+  // ------------------------------------------------------------------ Do Call.
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
-
-    $o_mediamosa->add_item(array('version' => mediamosa_version::get_current_version_str(FALSE)));
+    $mediamosa = mediamosa::get();
   }
 }

@@ -24,6 +24,8 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
+define('MEDIAMOSA_TEST_LUA_LPEG', 'Usage: vpx-analyse BASE_PATH HASH [--always_hint_mp4] [--always_insert_metadata]');
+
 /**
  * @file
  * The status configuration module.

@@ -24,13 +24,22 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
- /**
-  * @file
-  * Current version description.
-  */
+define('MEDIAMOSA_BUILD', 847);
+define('MEDIAMOSA_VERSION', '2.2.1');
+define('MEDIAMOSA_VERSION_SHORT', MEDIAMOSA_VERSION . '.' . MEDIAMOSA_BUILD . '-RC1');
+define('MEDIAMOSA_VERSION_FULL', MEDIAMOSA_VERSION . '.' . MEDIAMOSA_BUILD . '-Release Candidate 1');
+
+/**
+ * @file
+ * Current version description.
+ */
 class mediamosa_version {
 
   // ------------------------------------------------------------------ Constants.
+  const MEDIAMOSA_BUILD = MEDIAMOSA_BUILD;
+  const MEDIAMOSA_VERSION = MEDIAMOSA_VERSION_SHORT;
+  const MEDIAMOSA_VERSION_FULL = MEDIAMOSA_VERSION_FULL;
+
   // Official versions (only in define when actually used somewhere).
   const MEDIAMOSA_VERSION_1_1_0 = '1.1.0';
   const MEDIAMOSA_VERSION_1_1_5 = '1.1.5';
@@ -47,7 +56,6 @@ class mediamosa_version {
   const MEDIAMOSA_VERSION_2_1_1 = '2.1.1';
   const MEDIAMOSA_VERSION_2_2_0 = '2.2.0';
 
-  const MEDIAMOSA_VERSION = '2.2.0.847:f27e877db583';
 
   // Used for APPs.
   const LATEST = 'LATEST';
@@ -56,7 +64,7 @@ class mediamosa_version {
   const MINOR = 'minor';
   const RELEASE = 'release';
   const BUILD = 'build';
-  const CHANGESET = 'changeset';
+  const EXTRA = 'extra';
 
   // ------------------------------------------------------------------ Static Function..
   /**
@@ -72,7 +80,6 @@ class mediamosa_version {
       self::MINOR => $minor,
       self::RELEASE => $release,
       self::BUILD => NULL,
-      self::CHANGESET => NULL,
     );
   }
 
@@ -81,14 +88,14 @@ class mediamosa_version {
    *
    * @return array
    */
-  static public function get_current_version() {
-    list($major, $minor, $release, $build, $changeset) = preg_split("/[.:]+/", self::MEDIAMOSA_VERSION, 5);
+  static public function get_current_version($return_full = FALSE) {
+    list($major, $minor, $release, $build, $extra) = preg_split("/[.:-]+/", ($return_full? self::MEDIAMOSA_VERSION_FULL : self::MEDIAMOSA_VERSION), 5);
     return array(
       self::MAJOR => $major,
       self::MINOR => $minor,
       self::RELEASE => $release,
       self::BUILD => $build,
-      self::CHANGESET => $changeset,
+      self::EXTRA => $extra,
     );
   }
 
@@ -100,7 +107,7 @@ class mediamosa_version {
    * @return string
    */
   static public function get_current_version_str($return_full = FALSE) {
-    $a_version = self::get_current_version();
-    return $a_version[self::MAJOR] . '.' . $a_version[self::MINOR] . '.' . $a_version[self::RELEASE] . ($return_full ? '.' . $a_version[self::BUILD] . ':' . $a_version[self::CHANGESET] : '');
+    $version = self::get_current_version($return_full);
+    return $version[self::MAJOR] . '.' . $version[self::MINOR] . '.' . $version[self::RELEASE] . ($return_full ? ' (build ' . $version[self::BUILD] . ') ' . $version[self::EXTRA] : '');
   }
 }

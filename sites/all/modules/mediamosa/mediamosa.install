@@ -34,7 +34,10 @@ require_once 'core/node/mediamosa_node.inc';
 
 // Include the class we need. During install nothing can be autoloaded (yet).
 require_once 'mediamosa.inc';
+require_once 'mediamosa.settings.inc';
 require_once 'lib/mediamosa_db.inc';
+require_once 'lib/mediamosa_datetime.inc';
+require_once 'lib/mediamosa_unicode.inc';
 require_once 'core/error/mediamosa_error.install.inc';
 require_once 'core/app/mediamosa_app.install.inc';
 require_once 'core/aut/mediamosa_aut.install.inc';
@@ -326,7 +329,7 @@ function mediamosa_update_7010() {
   // Drop the foreign key from the old metadata table.
   db_query('ALTER TABLE {mediamosa_asset_mediafile_metadata} DROP FOREIGN KEY fk_mediamosa_asset_mediafile_metadata_mediafile_id');
 
-  // Rename the old metadta table.
+  // Rename the old metadata table.
   db_query('ALTER TABLE {mediamosa_asset_mediafile_metadata} RENAME {mediamosa_asset_mediafile_metadata_old}');
 
   // Create property table.
@@ -382,21 +385,64 @@ function mediamosa_update_7011() {
   }
 
   // Migrating data.
-  $result = db_query("SELECT * FROM {mediamosa_asset_mediafile_metadata_old}");
-  foreach ($result as $row) {
-    foreach ($fields as $field => $property) {
-      if (!is_null($row->$field)) {
-        db_query("
-          INSERT INTO {mediamosa_asset_mediafile_metadata}
-          (mediafile_id, prop_id, val_char, val_datetime, val_int) VALUES
-          (:mediafile_id, :prop_id, :val_char, :val_datetime, :val_int)", array(
-          ':mediafile_id' => $row->mediafile_id,
-          ':prop_id' => $property['prop_id'],
-          ':val_char' => ($property['type'] == 'CHAR' ? $row->$field : NULL),
-          ':val_datetime' => ($property['type'] == 'DATETIME' ? $row->$field : NULL),
-          ':val_int' => ($property['type'] == 'INT' ? $row->$field : 0),
-        ));
-      }
+  foreach ($fields as $field => $property) {
+    switch ($property['type']) {
+      case 'CHAR':
+        db_query(strtr(
+          "INSERT INTO {mediamosa_asset_mediafile_metadata}
+            (
+              mediafile_id,
+              prop_id,
+              val_char
+            ) (SELECT
+              mediafile_id,
+              :prop_id,
+              #val_char
+            FROM mediamosa_asset_mediafile_metadata_old WHERE #val_char IS NOT NULL && #val_char != '' GROUP BY mediafile_id ORDER BY created ASC)",
+          array(
+            ':prop_id' => $property['prop_id'],
+            '#val_char' => $field,
+          ))
+        );
+        break;
+
+      case 'DATETIME':
+        db_query(strtr(
+          "INSERT INTO {mediamosa_asset_mediafile_metadata}
+            (
+              mediafile_id,
+              prop_id,
+              val_date
+            ) (SELECT
+              mediafile_id,
+              :prop_id,
+              #val_date
+            FROM mediamosa_asset_mediafile_metadata_old WHERE #val_date IS NOT NULL && #val_date != '0000-00-00 00:00:00' GROUP BY mediafile_id ORDER BY created ASC)",
+          array(
+            ':prop_id' => $property['prop_id'],
+            '#val_date' => $field,
+          ))
+        );
+        break;
+
+      case 'INT':
+        db_query(strtr(
+          "INSERT INTO {mediamosa_asset_mediafile_metadata}
+            (
+              mediafile_id,
+              prop_id,
+              val_int
+            ) (SELECT
+              mediafile_id,
+              :prop_id,
+              #val_int
+            FROM mediamosa_asset_mediafile_metadata_old WHERE #val_int IS NOT NULL GROUP BY mediafile_id ORDER BY created ASC)",
+          array(
+            ':prop_id' => $property['prop_id'],
+            '#val_int' => $field,
+          ))
+        );
+        break;
     }
   }
 
@@ -988,4 +1034,12 @@ function mediamosa_update_7050() {
       ':tool' => 'ffmpeg',
       ':tool_parameter' => '-vcodec')
   );
+}
+
+/**
+ * Refresh the module listing.
+ */
+function mediamosa_update_7051() {
+  // Refresh.
+  module_list(TRUE);
 }

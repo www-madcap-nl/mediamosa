@@ -312,47 +312,6 @@ function mediamosa_profile_install() {
   // Set site front page to admin/mediamosa.
   variable_set('site_frontpage', 'admin/mediamosa');
 
-  // Enable these module.
-  $module_list = array(
-    'mediamosa',
-    'mediamosa_app',
-    'mediamosa_app_authentication',
-    'mediamosa_asset',
-    'mediamosa_aut',
-    'mediamosa_batch_jobs',
-    'mediamosa_collection',
-    'mediamosa_configuration',
-    'mediamosa_configuration_debug',
-    'mediamosa_configuration_proxy',
-    'mediamosa_configuration_server',
-    'mediamosa_configuration_storage',
-    'mediamosa_connector',
-    'mediamosa_development',
-    'mediamosa_error',
-    'mediamosa_ftp_batch',
-    'mediamosa_ftp_user',
-    'mediamosa_integrity_check',
-    'mediamosa_job',
-    'mediamosa_maintenance',
-    'mediamosa_maintenance_automatedsimpletest',
-    'mediamosa_maintenance_browse',
-    'mediamosa_maintenance_status',
-    'mediamosa_maintenance_status_component',
-    'mediamosa_maintenance_status_configuration',
-//    'mediamosa_maintenance_status_server', Not done yet.
-    'mediamosa_migration',
-    'mediamosa_profile',
-    'mediamosa_server',
-    'mediamosa_statistics',
-    'mediamosa_ticket',
-    'mediamosa_transcode',
-    'mediamosa_user',
-    'mediamosa_webservice',
-  );
-
-  // Enable modules.
-  module_enable($module_list);
-
   // Set verbose off for simpletest.
   variable_set('simpletest_verbose', FALSE);
 }

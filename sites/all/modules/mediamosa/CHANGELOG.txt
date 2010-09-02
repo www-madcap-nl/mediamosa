@@ -11,8 +11,19 @@ Known issues;
   timezone in Drupal 7 region settings or user timezone settings. This issue 
   will be fixed in 2.2.
 
-Mediamosa 2.2.0
+MediaMosa 2.2.1
 ---------------
+
+
+Other changes (not ticket related).
+- Fixed problems during install hook mediamosa_update_7011().
+- Added missing includes in mediamosa.install file.
+- Added empty REST call 'status' for future usage. Was renamed to 'simpletest'
+  and 'status' REST was supposed to be re-used by status page code.
+- Removed default Drupal profiles.
+
+MediaMosa 2.2.0 (build 847)
+---------------------------
 - Fixed container type for asf if ffmpeg cannot analyse it, but magic can (#70)
 - Added webm codec to the list of allowed transcoding parameters (#295)
 - Fixed saving webservice with client application in admin. (See ticket #315).
@@ -31,7 +42,7 @@ Mediamosa 2.2.0
   MediaMosa admin on uri 
   /admin/mediamosa/browse/restcall/asset-%24asset_id-joblist/GET  
   (See ticket #267).
-- Job for still analyse (See ticket #239).
+- Job created in job table for still analyse (See ticket #239).
 - Introduction /collection/{id}/asset/count, and implements numofvideos in 
   /collection/{id} response (See ticket #204).
 - Converted mediamosa_asset_mediafile_metadata to new setup where the values are
@@ -47,6 +58,24 @@ Mediamosa 2.2.0
 - Added first fase 1 version of the mediamosa/server status page. (See MediaMosa
   ticket #314).
 - Added job server status page (See MediaMosa ticker #284).
+- UTC to application timezone support added; (See MediaMosa ticker #272).
+  - All dates from REST POST calls are now converted from application timezone 
+    to UTC.
+  - All dates in GET REST calls are now converted to dates in the client 
+    applications timezone.
+  - All dates currently in database are converted to UTC by update script.
+  - All dates in migration 1.7->2.x module convert dates to UTC during 
+    migration.
+  - Ticket has been finished and no longer requires a fase 2 as originally
+    intended.
+  - All existing client applications have default timezone set to 
+    Europe/Amsterdam.
+  - Client application form now has the timezone option and is required.
+  - If the REST call has no application during the REST call (f.e. 
+    external/internal calls), then these will have Europe/Amsterdam timezone.
+  - Unittest added; unit test will walk through all GET rest calls and execute
+    known REST calls that have dates in their output. During the GET call all 
+    dates are checked against timezone expected dates.
 
 Other changes (not ticket related).
 - Fixed updating Transcode profile page, parameters were not saved correctly.
@@ -67,7 +96,7 @@ Other changes (not ticket related).
   user.
 - Added extra tests for search on metadata dates.
 - /user/user_id will now return quota even if user_id has no quota information.
-  Old behavour would return invalid user ID error when no quota was available.
+  Old behavior would return invalid user ID error when no quota was available.
   But then you can never get quota information when you haven't uploaded
   anything yet.
 - Fixed maxlength on title for collection creation, was unlimited.
@@ -138,7 +167,7 @@ Other changes (not ticket related).
 - User quota test fails in 32 bits systems bug fix.
 - Parameter 'still_type' on all REST calls that use it now required fixed input;
   'NONE, 'SCENE', 'NORMAL', 'PICTURE', 'SECOND' or ''. Defaults to ''.
-- Refactored some STILL code to better readable code.
+- Re-factored some STILL code to better readable code.
 - Fixed 'is_downloadable' option when creating mediafile. Bug ignored the
   provided setting and was always 'FALSE'.
 - REST call /mediamosa/create [POST] and /asset/$asset_id/mediafile/create 
@@ -173,8 +202,11 @@ Other changes (not ticket related).
 - Added lib/mediamosa_datetime.inc for date related functions.
 - Changed migration script for 1.7 to 2.x to convert dates into UTC from import.
  
+MediaMosa 2.1.5 (build 675)
+---------------------------
+- Put some logging of still generation to debug level instead of normal.
 
-Mediamosa 2.1.5 (build 664)
+MediaMosa 2.1.5 (build 664)
 ---------------------------
 - Default still image size is now 352x288, with no maintain aspect ratio (no 
   padding).
@@ -195,9 +227,9 @@ Other changes (not ticket related)
   software use this)
 - Image generation bug fixed, in some cases ffmpeg generated too many stills
   due to a changed parameter behaviour (vpadding).
+  
 
-
-Mediamosa 2.1.4 (build 628)
+MediaMosa 2.1.4 (build 628)
 ---------------------------
 - Batchjobs history causes notice bug fix (Some batch job doesn't have 
   referenceId, just assetid) (See ticket #305).
@@ -224,7 +256,7 @@ Other changes (not ticket related)
   and not +0400.
 - Fixed access to MediaMosa pages and related roles.
 
-Mediamosa 2.1.3 (build 578)
+MediaMosa 2.1.3 (build 578)
 ---------------------------
 - Transcoding progress fix (See ticket #297).
 - Play response=metafile support for Wowza-server (See ticket 262).
@@ -240,7 +272,7 @@ Other changes (not ticket related)
 - Transcode profile ID is now visible in admin view and edit pages.
 
 
-Mediamosa 2.1.2
+MediaMosa 2.1.2
 ---------------
 - Renamed dummy titles of transcode profiles to their correct names. (See 
   mediamosa ticket #282).
@@ -270,7 +302,7 @@ Mediamosa 2.1.2
 Other changes (not ticket related)
 - Fixed problem retrieving user/$fav_user_id/favorites with /rest/$rest_id call.
 
-Mediamosa 2.1.1
+MediaMosa 2.1.1
 ---------------
 - Fixed asx not written or created (see MediaMosa ticket #188).
 - Fixed asset search not to calculate item_count_total when limit is set to 6
@@ -305,7 +337,7 @@ Other changes (not ticket related)
 - Config page now includes settings for the status page. Including the interval
   lengths of the 3 tests groups.
 
-Mediamosa 2.1.0
+MediaMosa 2.1.0
 ---------------
 - Master-slave enhancements; Client applications can now select which other 
   client application may create master slave records to the other asset and
@@ -438,12 +470,12 @@ MediaMosa.0.0 (released as read-only)
 - All medimosa code now support throw and catching of exceptions at high level, 
   enabling better error handling.
 - Rewrite of all 1361 SQL queries into new PDO class support of Drupal 7. 
-  Mediamosa now has own new DB layer between Drupal and Mediamosa code for 
+  MediaMosa now has own new DB layer between Drupal and MediaMosa code for 
   future expansion.
 - REST calls are now moved from core code into drupal modules, also REST calls 
   no longer contain core code and only call core functions, seprating core code 
   from REST interface.
-- Mediamosa 1 multiple database design combined and migrated to new single 
+- MediaMosa 1 multiple database design combined and migrated to new single 
   Drupal database called mediamosa2. No longer required to switch databases in 
   code and has been removed.
 - Jobserver database(s) design moved into single main mediamosa2 database. No 
