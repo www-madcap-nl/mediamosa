@@ -1202,11 +1202,11 @@ class mediamosa_rest_call_asset_update extends mediamosa_rest_call {
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::PLAY_RESTRICTION_START => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_DATETIME,
+          self::VAR_TYPE => mediamosa_type::TYPE_DATETIME_UTC,// Will skip UTC conversion.
           self::VAR_DESCRIPTION => 'The play restriction range start position.',
         ),
         self::PLAY_RESTRICTION_END => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_DATETIME,
+          self::VAR_TYPE => mediamosa_type::TYPE_DATETIME_UTC,// Will skip UTC conversion.
           self::VAR_DESCRIPTION => 'The play restriction range end position.',
         ),
         self::ISPRIVATE => array(

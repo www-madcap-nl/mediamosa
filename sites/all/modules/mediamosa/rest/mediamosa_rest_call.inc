@@ -920,7 +920,7 @@ abstract class mediamosa_rest_call {
    */
   protected function appdate2utc_rest_args(array $var_setup) {
 
-    // Now loop through input and convert to UTC.
+    // Now loop through input and convert to UTC. Specify TYPE_DATETIME_UTC when you need to skip conversion.
     foreach ($this->a_rest_args as $name => $param) {
       if ($param[self::PARAM_TYPE] == mediamosa_type::TYPE_DATETIME) {
         $this->a_rest_args[$name][self::PARAM_VALUE] = mediamosa_datetime::app_date2utc_date($param[self::PARAM_VALUE], $this->calling_app[mediamosa_app_db::TIMEZONE]);

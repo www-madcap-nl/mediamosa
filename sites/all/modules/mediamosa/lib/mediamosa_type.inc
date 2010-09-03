@@ -47,6 +47,7 @@ class mediamosa_type {
   const TYPE_ALPHA_NUM_UNDERSCORE_TAG    = 'ALPHA_NUM_UNDERSCORE_TAG'; // same as ALPHA_NUM_UNDERSCORE, but does not allow the first char to be non alpha.
   const TYPE_STRING                      = 'STRING';
   const TYPE_DATETIME                    = 'DATETIME';
+  const TYPE_DATETIME_UTC                = 'DATETIME_UTC'; // Is in UTC (already).
   const TYPE_DATE                        = 'DATETIME';//@todo: Extend the DATETIME check and throw errors when time values exist. REMEMBER about utc conversion.
   const TYPE_TIME                        = 'DATETIME';//@todo: Extend the DATETIME check and throw errors when date values exist. REMEMBER about utc conversion.
   const TYPE_BOOL                        = 'BOOL';
@@ -418,6 +419,7 @@ class mediamosa_type {
         break;
 
       case self::TYPE_DATETIME:
+      case self::TYPE_DATETIME_UTC:
         if ($mixed_param_value == '') {
           return '';
         }
@@ -586,6 +588,7 @@ class mediamosa_type {
         return self::TYPE_INT;
 
       case self::TYPE_SEARCH_DATETIME:
+      case self::TYPE_DATETIME_UTC:
         return self::TYPE_DATETIME;
     }
 
