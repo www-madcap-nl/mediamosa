@@ -16,4 +16,4 @@
 require 'lpeg'
 
 print("lua works")
-os.exit(1)
+os.exit(0)

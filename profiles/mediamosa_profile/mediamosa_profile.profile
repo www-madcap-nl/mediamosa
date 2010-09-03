@@ -82,10 +82,6 @@ function mediamosa_profile_install_tasks() {
   drupal_set_title(_mediamosa_profile_get_title());
 
   $tasks = array(
-    'mediamosa_profile_php_settings' => array(
-      'display_name' => st('Verify PHP settings'),
-      'run' => 'INSTALL_TASK_RUN_IF_REACHED',
-    ),
     'mediamosa_profile_storage_location_form' => array(
       'display_name' => st('Storage location'),
       'type' => 'form',
@@ -102,8 +98,12 @@ function mediamosa_profile_install_tasks() {
       'display_name' => st('Apache settings'),
       'type' => 'form',
     ),
+    'mediamosa_profile_domain_usage_form' => array(
+      'display_name' => st('Your domain usage'),
+      'type' => 'form',
+    ),
     'mediamosa_profile_migration_form' => array(
-      'display_name' => st('Migration of your curent database'),
+      'display_name' => st('Migration of your v1.7 database'),
       'type' => 'form',
     ),
     'mediamosa_profile_cron_settings_form' => array(
@@ -140,6 +140,20 @@ function mediamosa_profile_install_tasks_alter(&$tasks, $install_state) {
     ),
     'install_verify_requirements' => array(
       'display_name' => st('Verify requirements'),
+    ),
+    'install_settings_form' => array(
+      'display_name' => st('Set up database'),
+      'type' => 'form',
+      'run' => $install_state['settings_verified'] ? INSTALL_TASK_SKIP : INSTALL_TASK_RUN_IF_NOT_COMPLETED,
+    ),
+    'install_system_module' => array(
+    ),
+    'install_bootstrap_full' => array(
+      'run' => INSTALL_TASK_RUN_IF_REACHED,
+    ),
+    'mediamosa_profile_php_settings_form' => array(
+      'display_name' => st('MediaMosa requirements'),
+      'type' => 'form',
     ),
   ) + $tasks;
 }
@@ -236,7 +250,11 @@ function mediamosa_profile_intro_form($form, &$form_state, &$install_state) {
   return $form;
 }
 
+/**
+ * Validate the intro form.
+ */
 function mediamosa_profile_intro_form_validate($form, &$form_state) {
+
 }
 
 /**
@@ -245,116 +263,200 @@ function mediamosa_profile_intro_form_validate($form, &$form_state) {
 function mediamosa_profile_intro_form_submit($form, &$form_state) {
 }
 
-/**
- * Checking the settings.
- * Tasks callback.
- */
-function mediamosa_profile_php_settings($install_state) {
-  $output = '';
-  $error = FALSE;
+function mediamosa_profile_php_settings_form($form, &$form_state, &$install_state) {
 
+  $php_modules = _mediamosa_profile_php_modules();
+  $installed_programs = _mediamosa_profile_installed_programs();
+  $php_settings = _mediamosa_profile_php_settings();
+  $errors = $php_modules['errors'] + $installed_programs['errors'] + $php_settings['errors'];
 
-  // PHP modules.
+  $form['requirements']['php_modules']['title'] = array(
+    '#markup' => '<h1>' . t('PHP Modules') . '</h1>'
+  );
+  $form['requirements']['php_modules']['requirements'] = array(
+    '#markup' => theme('status_report', array('requirements' => $php_modules['requirements']))
+  );
 
-  $output .= '<h1>' . t('PHP modules') . '</h1>';
+  $form['requirements']['installed_programs']['title'] = array(
+    '#markup' => '<h1>' . t('Installed programs') . '</h1>'
+  );
+  $form['requirements']['installed_programs']['requirements'] = array(
+    '#markup' => theme('status_report', array('requirements' => $installed_programs['requirements']))
+  );
 
-  $required_extensions = array('bcmath', 'gd', 'curl', 'mysql', 'mysqli', 'SimpleXML');
-  $modules = '';
-  foreach ($required_extensions as $extension) {
-    $modules .= $extension . ', ';
+  $form['requirements']['php_settings']['title'] = array(
+    '#markup' => '<h1>' . t('PHP variables / Settings') . '</h1>'
+  );
+  $form['requirements']['php_settings']['requirements'] = array(
+    '#markup' => theme('status_report', array('requirements' => $php_settings['requirements']))
+  );
+
+  if ($errors) {
+    $form['requirements']['errors']['text'] = array(
+      '#markup' => "<p><b>Fix reported problems and press 'continue' to continue.</b></p>"
+    );
   }
 
-  $output .= t('The following required modules are required: ') . substr($modules, 0, -2) . '.<br />';
+  $form['actions'] = array('#type' => 'actions');
+  $form['actions']['save'] = array(
+    '#type' => 'submit',
+    '#value' => st('Continue'),
+  );
 
-  $loaded_extensions = array();
+  return $form;
+
+}
+
+/**
+ * Validate.
+ */
+function mediamosa_profile_php_settings_form_validate($form, &$form_state) {
+  $php_modules = _mediamosa_profile_php_modules();
+  $installed_programs = _mediamosa_profile_installed_programs();
+  $php_settings = _mediamosa_profile_php_settings();
+
+  $errors = $php_modules['errors'] + $installed_programs['errors'] + $php_settings['errors'];
+
+  if ($errors) {
+    form_set_error('foo', st('Fix the reported problems below before you continue. You can ignore the (yellow) warnings.'));
+  }
+}
+
+/**
+ * Submit the intro form.
+ */
+function mediamosa_profile_php_settings_form_submit($form, &$form_state) {
+
+}
+
+/**
+ * Checking the php modules.
+ */
+function _mediamosa_profile_php_modules() {
+
+  $errors = 0;
+  $requirements = array();
+  // title, value, description (op), severity (op)
+
+  // Required modules.
+  $required_extensions = array('bcmath', 'gd', 'curl', 'mysql', 'mysqli', 'SimpleXML');
+
   $loaded_extensions = get_loaded_extensions();
-
-  $missing = '';
   foreach ($required_extensions as $extension) {
-    if (!in_array($extension, $loaded_extensions)) {
-      $missing .= $extension . ', ';
+    $missing = !in_array($extension, $loaded_extensions);
+
+    $requirements[$extension] = array(
+      'title' => st('<b>PHP module ' . $extension . ':</b>'),
+      'value' => !$missing ? 'Installed' : 'PHP module ' . $extension . ' is not installed.' ,
+      'severity' => !$missing ? REQUIREMENT_OK : REQUIREMENT_ERROR,
+    );
+  }
+  $exec_output = array();
+
+  $errors = 0;
+  foreach ($requirements as $requirement) {
+    if ($requirement['severity'] == REQUIREMENT_ERROR || $requirement['severity'] == REQUIREMENT_WARNING) {
+      $errors++;
     }
   }
-  if (!empty($missing)) {
-    drupal_set_message(t('The following required modules are missing: ') . substr($missing, 0, -2), 'error');
-    $error = TRUE;
-  }
 
+  return array('errors' => $errors, 'requirements' => $requirements);
+}
 
-  // Applications.
-
-  $output .= '<h1>' . t('Required applications') . '</h1>';
-  $output .= t('The following applications are required: ') . '<br />';
-  $output .= '<ul>';
+/**
+ * Checking the installed programs.
+ */
+function _mediamosa_profile_installed_programs() {
 
   // FFmpeg.
-  $exec_output = array();
   exec('ffmpeg -version > /dev/null 2>&1', $exec_output, $ret_val);
-
-  $output .= '<li>FFmpeg</li>';
-  if ($ret_val != 0) {
-    drupal_set_message(t('FFmpeg is not found. Please, install it first.'), 'error');
-    $error = TRUE;
-  }
+  $requirements['ffmpeg'] = array(
+    'title' => st('<b>Program FFmpeg:</b>'),
+    'value' => !$ret_val ? 'Installed' : 'FFmpeg is not installed.' ,
+    'severity' => !$ret_val ? REQUIREMENT_OK : REQUIREMENT_ERROR,
+    'description' => !$ret_val ? '' : st('Install !ffmpeg.', array('!ffmpeg' => l('FFmpeg', 'http://www.ffmpeg.org/', array('attributes' => array('target' => '_blank'), 'absolute' => TRUE, 'external' => TRUE)))),
+  );
 
   // Lua.
-  $last_line = exec('lua 2>&1');
-  $output .= '<li>Lua</li>';
-  if ($last_line) {
-    drupal_set_message(t('Lua is not found. You need to install it first. You can find more information how to install LUA !here', array('!here' => l('here', 'http://mediamosa.org/forum/viewtopic.php', array('absolute' => TRUE, 'external' => TRUE, 'query' => array('f'=> '13', 't' => '175', 'start' => '10'), 'fragment' => 'p687')))), 'error');
-    $error = TRUE;
-  }
-
+  exec('lua 2>&1', $exec_output, $ret_val);
+  $requirements['lua'] = array(
+    'title' => st('<b>Program LUA 5.1:</b>'),
+    'value' => !$ret_val ? 'Installed' : 'LUA is not installed.' ,
+    'severity' => !$ret_val ? REQUIREMENT_OK : REQUIREMENT_ERROR,
+    'description' => !$ret_val ? '' : st('Install LUA 5.1. You can find more information how to install LUA !here', array('!here' => l('here', 'http://mediamosa.org/forum/viewtopic.php', array('attributes' => array('target' => '_blank'), 'absolute' => TRUE, 'external' => TRUE, 'query' => array('f'=> '13', 't' => '175', 'start' => '10'), 'fragment' => 'p687')))),
+  );
 
   // Lpeg.
-  $last_line = exec('lua profiles/mediamosa_profile/lua/lua_test 2>&1', $retval);
-  $output .= '<li>Lua LPeg</li>';
-  if ($last_line != MEDIAMOSA_PROFILE_TEST_LUA_LPEG) {
-    drupal_set_message(t('Lpeg  extension of Lua is not found. Please, install it first.'), 'error');
-    $error = TRUE;
+  exec('lua profiles/mediamosa_profile/lua/lua_test 2>&1', $exec_output, $ret_val);
+
+  $requirements['lpeg'] = array(
+    'title' => st('<b>LUA extension Lpeg:</b>'),
+    'value' => !$ret_val ? 'Installed' : 'Lpeg extension is not installed.' ,
+    'severity' => !$ret_val ? REQUIREMENT_OK : REQUIREMENT_ERROR,
+    'description' => !$ret_val ? '' : st('Install Lpeg extension for LUA. You can find more information how to install Lpeg !here', array('!here' => l('here', 'http://mediamosa.org/forum/viewtopic.php', array('attributes' => array('target' => '_blank'), 'absolute' => TRUE, 'external' => TRUE, 'query' => array('f'=> '13', 't' => '175', 'start' => '10'), 'fragment' => 'p687')))),
+  );
+
+  $errors = 0;
+  foreach ($requirements as $requirement) {
+    if ($requirement['severity'] == REQUIREMENT_ERROR || $requirement['severity'] == REQUIREMENT_WARNING) {
+      $errors++;
+    }
   }
 
-  $output .= '</ul>';
+  return array('errors' => $errors, 'requirements' => $requirements);
+}
 
-
-  // PHP ini.
-
-  $output .= '<h1>' . t('Required settings') . '</h1>';
+/**
+ * Checking the PHP Settings.
+ */
+function _mediamosa_profile_php_settings() {
 
   $php_error_reporting = ini_get('error_reporting');
-  if ($php_error_reporting & E_NOTICE)  {
-    drupal_set_message(t('PHP error_reporting should be set at E_ALL & ~E_NOTICE.'), 'warning');
-  }
-  $output .= t('PHP apache error_reporting should be set at E_ALL & ~E_NOTICE.') . '<br />';
+  $e_notice = ($php_error_reporting & E_NOTICE);
+
+  $requirements['error_reporting'] = array(
+    'title' => st('<b>error_reporting:</b>'),
+    'value' => !$e_notice ? 'Off' : 'E_NOTICE is on.' ,
+    'severity' => !$e_notice ? REQUIREMENT_OK : REQUIREMENT_WARNING,
+    'description' => !$e_notice ? '' : st('Warning: You should to turn off E_NOTICE flag to prevent PHP warnings being displayed on your website. We advice E_ALL & ~E_NOTICE in your php.ini file.'),
+  );
 
   $php_error_reporting = exec("php -r \"print(ini_get('error_reporting'));\"");
-  if ($php_error_reporting & E_NOTICE)  {
-    drupal_set_message(t('PHP cli error_reporting should be set at E_ALL & ~E_NOTICE.'), 'warning');
+  $e_notice = ($php_error_reporting & E_NOTICE);
+
+  $requirements['error_reporting_cle'] = array(
+    'title' => st('<b>error_reporting (PHP cli):</b>'),
+    'value' => !$e_notice ? 'Off' : 'E_NOTICE is on.' ,
+    'severity' => !$e_notice ? REQUIREMENT_OK : REQUIREMENT_WARNING,
+    'description' => !$e_notice ? '' : st('Warning: You should to turn off E_NOTICE flag to prevent PHP warnings in your PHP cli output. We advice E_ALL & ~E_NOTICE in your php.ini cli file.'),
+  );
+
+  $errors = 0;
+  foreach ($requirements as $requirement) {
+    if ($requirement['severity'] == REQUIREMENT_ERROR) {
+      $errors++;
+    }
   }
-  $output .= t('PHP client error_reporting should be set at E_ALL & ~E_NOTICE.') . '<br />';
 
   $php_upload_max_filesize = ini_get('upload_max_filesize');
-  if ((substr($php_upload_max_filesize, 0, -1) < 100) &&
-      (substr($php_upload_max_filesize, -1) != 'M' || substr($php_upload_max_filesize, -1) != 'G')) {
-    drupal_set_message(t('upload_max_filesize should be at least 100M. Currently: %current_value', array('%current_value' => $php_upload_max_filesize)), 'warning');
-  }
-  $output .= t('upload_max_filesize should be at least 100M. Currently: %current_value', array('%current_value' => $php_upload_max_filesize)) . '<br />';
+  $to_low = (substr($php_upload_max_filesize, 0, -1) < 100) && (substr($php_upload_max_filesize, -1) != 'M' || substr($php_upload_max_filesize, -1) != 'G');
+  $requirements['upload_max_filesize'] = array(
+    'title' => st('<b>upload_max_filesize:</b>'),
+    'value' => $php_upload_max_filesize,
+    'severity' => !$to_low ? REQUIREMENT_OK : REQUIREMENT_WARNING,
+    'description' => !$to_low ? '' : st('Warning: upload_max_filesize should be at least 100M.'),
+  );
 
   $php_memory_limit = ini_get('memory_limit');
-  if ((substr($php_memory_limit, 0, -1) < 128) &&
-      (substr($php_memory_limit, -1) != 'M' || substr($php_memory_limit, -1) != 'G')) {
-    drupal_set_message(t('memory_limit should be at least 128M. Currently: %current_value', array('%current_value' => $php_memory_limit)), 'warning');
-  }
-  $output .= t('memory_limit should be at least 128M. Currently: %current_value', array('%current_value' => $php_memory_limit)) . '<br />';
+  $to_low = (substr($php_memory_limit, 0, -1) < 128) && (substr($php_memory_limit, -1) != 'M' || substr($php_memory_limit, -1) != 'G');
+  $requirements['memory_limit'] = array(
+    'title' => st('<b>memory_limit:</b>'),
+    'value' => $php_memory_limit,
+    'severity' => !$to_low ? REQUIREMENT_OK : REQUIREMENT_WARNING,
+    'description' => !$to_low ? '' : st('Warning: memory_limit should be at least 128M.'),
+  );
 
-  $php_post_max_size = ini_get('post_max_size');
-  if ((substr($php_post_max_size, 0, -1) < 100) &&
-      (substr($php_post_max_size, -1) != 'M' || substr($php_post_max_size, -1) != 'G')) {
-      drupal_set_message(t('post_max_size should be at least 100M. Currently: %current_value', array('%current_value' => $php_post_max_size)), 'warning');
-  }
-  $output .= t('post_max_size should be at least 100M. Currently: %current_value', array('%current_value' => $php_post_max_size)) . '<br />';
-
-  return $error ? $output : NULL;
+  return array('errors' => $errors, 'requirements' => $requirements);
 }
 
 /**
@@ -367,10 +469,14 @@ function mediamosa_profile_storage_location_form() {
   $mount_point = variable_get('mediamosa_current_mount_point', '/srv/mediamosa');
   $mount_point_windows = variable_get('mediamosa_current_mount_point_windows', '\\\\');
 
+  $form['description'] = array(
+    '#markup' => '<p><b>' . st('The mount point is a shared directory where related mediafiles, images and other files are stored.') . '</b></p>',
+  );
+
   $form['current_mount_point'] = array(
     '#type' => 'textfield',
     '#title' => t('MediaMosa SAN/NAS Mount point'),
-    '#description' => t('The mount point is used to store the mediafiles.<br />Make sure the Apache user has write access to the MediaMosa SAN/NAS mount point.'),
+    '#description' => t('Make sure the Apache user has write access to the MediaMosa SAN/NAS mount point.'),
     '#required' => TRUE,
     '#default_value' => $mount_point,
   );
@@ -378,7 +484,7 @@ function mediamosa_profile_storage_location_form() {
   $form['current_mount_point_windows'] = array(
     '#type' => 'textfield',
     '#title' => t('MediaMosa SAN/NAS Mount point for Windows'),
-    '#description' => t("The mount point is used to store the mediafiles.<br />Make sure the webserver has write access to the Windows MediaMosa SAN/NAS mount point.<br />If you don't use Windows, just leave it as it is."),
+    '#description' => t("Make sure the webserver has write access to the Windows MediaMosa SAN/NAS mount point. If you don't use Windows, just leave it as it is."),
     '#required' => FALSE,
     '#default_value' => $mount_point_windows,
   );
@@ -835,6 +941,50 @@ function mediamosa_profile_migration_form() {
 );",
     '#cols' => 60,
     '#rows' => 15,
+  );
+
+  $form['continue'] = array(
+    '#type' => 'submit',
+    '#value' => t('Continue'),
+  );
+
+  return $form;
+}
+
+function mediamosa_profile_domain_usage_form() {
+  $form = array();
+
+  // Add our css.
+  drupal_add_css('profiles/mediamosa_profile/mediamosa_profile.css');
+
+  // Get the server name.
+  $server_name = _mediamosa_profile_server_name();
+
+  $form['domain'] = array(
+    '#type' => 'fieldset',
+    '#collapsible' => FALSE,
+    '#collapsed' => FALSE,
+    '#title' => t("Your domain, MediaMosa and Drupal's multiple sites"),
+  );
+
+  $form['domain']['apache_options'] = array(
+    '#markup' => st("MediaMosa is setup by default using the 'mediamosa.local' DNS name. All REST interfaces, download and upload URLs use subdomains in our example setup. We use these subdomains as example; <ul>
+    <li>http://mediamosa.local/ or http://admin.mediamosa.local/ as administration front-end.</li>
+    <li>http://app1.mediamosa.local/ is an application REST interface.</li>
+    <li>http://app2.mediamosa.local/ is an application REST interface.</li>
+    <li>http://job1.mediamosa.local/ is an job REST interface used for transcoding and other job handeling tasks.</li>
+    <li>http://job2.mediamosa.local/ is an job REST interface used for transcoding and other job handeling tasks.</li>
+    <li>http://download.mediamosa.local/ is used for downloading files from MediaMosa.</li>
+    <li>http://upload.mediamosa.local/ is used for uploading files to MediaMosa.</li>
+    </ul>
+    In the directory /sites in your MediaMosa installation, each of these DNS names do also exists as an directory, in each an example default.settings.php.<br />
+    <br />
+    It's important to know when using multiple subdomains for MediaMosa interfaces that each need an unique settings.php where at the end of the file an indentifier is used to indentify the interface. See our example default.settings.php files in each directory and notice the '\$conf['mediamosa_installation_id']' at the end of each (default.)settings.php file.<br />
+    <br />
+    Using multiple subdomains allows you to scale your MediaMosa installation to use more APP or more JOB servers.<br />
+    <br />
+    For more information how to setup our multiple subdomains read the !link on the Drupal website.
+    ", array('!link' => l('Advanced and multisite installation', 'http://drupal.org/node/346385', array('attributes' => array('target' => '_blank'), 'absolute' => TRUE, 'external' => TRUE)))),
   );
 
   $form['continue'] = array(
