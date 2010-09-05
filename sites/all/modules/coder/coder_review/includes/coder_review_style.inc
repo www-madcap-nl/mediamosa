@@ -1,5 +1,5 @@
 <?php
-// $Id: coder_review_style.inc,v 1.7 2009/08/14 00:15:47 snpower Exp $
+// $Id: coder_review_style.inc,v 1.10 2010/04/17 21:26:03 douggreen Exp $
 
 /**
  * @file
@@ -26,13 +26,13 @@ function coder_review_style_reviews() {
     ),
     array(
       '#type' => 'regex',
-      '#value' => '\s(if|elseif|while|foreach|switch|return|for|catch)\(',
+      '#value' => '\s(if|elseif|while|foreach|switch|case|return|for|catch)\(',
       '#warning' => 'Control statements should have one space between the control keyword and opening parenthesis',
     ),
     array(
       '#type' => 'regex',
       '#value' => '[\s\(](\w+)\s\(',
-      '#not' => '^(if|elseif|while|foreach|switch|return|for|list|catch)$',
+      '#not' => '^(if|elseif|while|foreach|switch|case|return|for|list|catch)$',
       '#warning' => 'Functions should be called with no spaces between the function name and opening parentheses',
     ),
     array(
@@ -151,6 +151,13 @@ function coder_review_style_reviews() {
       '#type' => 'regex',
       '#value' => '\s+else\s+if\s*\(',
       '#warning' => 'Use "elseif" in place of "else if"',
+    ),
+    array(
+      '#type' => 'regex',
+      '#value' => '\s*[\'"]#value[\'"]\s*=>\s*t\s*\(\s*[\'"]Submit[\'"]\s*\)',
+      '#source' => 'allphp',
+      '#warning' => 'When labelling buttons, make it clear what the button does, "Submit" is too generic.',
+      '#severity' => 'minor',
     ),
   );
   $review = array(

@@ -5,9 +5,9 @@ package = Development
 core = 7.x
 files[] = coder.module
 
-; Information added by drupal.org packaging script on 2009-09-27
-version = "7.x-1.x-dev"
+; Information added by drupal.org packaging script on 2010-07-13
+version = "7.x-1.0-beta4"
 core = "7.x"
 project = "coder"
-datestamp = "1254009839"
+datestamp = "1279015211"
 

@@ -1,17 +1,10 @@
 <?php
-// $Id: coder_review.install,v 1.2 2009/05/24 00:27:09 snpower Exp $
+// $Id: coder_review.install,v 1.4 2010/03/23 14:45:37 douggreen Exp $
 
 /**
  * @file
  * Install, update and uninstall functions for the coder_review module.
  */
-
-/**
- * Implements hook_install().
- */
-function coder_review_install() {
-  drupal_install_schema('coder_review');
-}
 
 /**
  * Implements hook_uninstall().
@@ -26,8 +19,6 @@ function coder_review_uninstall() {
   variable_del('coder_includes_exclusions');
   variable_del('coder_modules');
   variable_del('coder_themes');
-
-  drupal_uninstall_schema('coder_review');
 }
 
 /**

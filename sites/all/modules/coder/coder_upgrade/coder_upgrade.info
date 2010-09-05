@@ -1,4 +1,4 @@
-; $Id: coder_upgrade.info,v 1.4 2009/08/17 16:59:00 solotandem Exp $
+; $Id: coder_upgrade.info,v 1.9 2010/03/09 01:47:35 solotandem Exp $
 name = "Coder Upgrade"
 
 description = "Module conversion suite -- generates code to assist with the upgrade of
@@ -7,23 +7,31 @@ description = "Module conversion suite -- generates code to assist with the upgr
 
 package = Development
 dependencies[] = coder
-dependencies[] = pgp
+dependencies[] = grammar_parser
 
 files[] = coder_upgrade.help.inc
 files[] = coder_upgrade.inc
 files[] = coder_upgrade.install
 files[] = coder_upgrade.module
+files[] = coder_upgrade.test
+files[] = conversions/coder_upgrade.begin.inc
+files[] = conversions/coder_upgrade.call.inc
+files[] = conversions/coder_upgrade.db.inc
 files[] = conversions/coder_upgrade.end.inc
-; files[] = conversions/coder_upgrade.install.inc
+files[] = conversions/coder_upgrade.function.inc
+files[] = conversions/coder_upgrade.install.inc
 files[] = conversions/coder_upgrade.list.inc
 files[] = conversions/coder_upgrade.main.inc
-files[] = conversions/coder_upgrade.other.inc
+; files[] = conversions/coder_upgrade.other.inc ; Deprecated
+files[] = conversions/coder_upgrade.regex.inc
+
+configure = admin/config/development/coder/upgrade/settings
 
 core = 7.x
 
-; Information added by drupal.org packaging script on 2009-09-27
-version = "7.x-1.x-dev"
+; Information added by drupal.org packaging script on 2010-07-13
+version = "7.x-1.0-beta4"
 core = "7.x"
 project = "coder"
-datestamp = "1254009839"
+datestamp = "1279015211"
 

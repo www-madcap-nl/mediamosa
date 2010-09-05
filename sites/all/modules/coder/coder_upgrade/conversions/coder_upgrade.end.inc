@@ -1,24 +1,28 @@
 <?php
-// $Id: coder_upgrade.end.inc,v 1.2 2009/08/17 16:59:00 solotandem Exp $
+// $Id: coder_upgrade.end.inc,v 1.8 2010/03/27 22:31:25 solotandem Exp $
 
 /**
  * @file
  * End conversion routine file for the coder_upgrade module.
+ * These routines upgrade the converted directory after upgrade routines are
+ * applied to the files.
  *
- * The functions in these conversion routine files correspond to the topics in
- * the category roadmap at http://drupal.org/node/394070 that are marked with
- * a "Yes" in the Upgrade column.
+ * The functions in this conversion routine file correspond to topics in the
+ * category roadmap at http://drupal.org/node/394070 that are marked with a
+ * green check mark in the Upgrade column.
  *
- * Copyright 2008-9 by Jim Berry ("solotandem", http://drupal.org/user/240748)
+ * Copyright 2009-10 by Jim Berry ("solotandem", http://drupal.org/user/240748)
  */
 
 /**
- * Apply finishing touches to the directory.
+ * Implements hook_upgrade_end_alter().
+ *
+ * Processes the directory after upgrade routines are applied to the files.
  *
  * @param string $dirname
  *   The name of the directory with the converted files.
  */
-function coder_upgrade_convert_end($dirname) {
+function coder_upgrade_upgrade_end_alter($dirname) {
   global $_coder_upgrade_dirname;
 
   $_coder_upgrade_dirname = $dirname;
@@ -30,7 +34,7 @@ function coder_upgrade_convert_end($dirname) {
 }
 
 /**
- * Scan a specified directory and find all files and/or directories beneath it.
+ * Scans a directory and finds all files and/or directories beneath it.
  *
  * @todo Move to .inc file in parent directory.
  *
@@ -65,7 +69,7 @@ function coder_upgrade_scan_directory_2($dirname, $retrieve = 'dirs') {
 }
 
 /**
- * Add file entries to .info files.
+ * Adds file entries to .info files.
  *
  * Module .info files must now specify all loadable code files explicitly.
  * http://drupal.org/node/224333#registry
@@ -111,7 +115,8 @@ function coder_upgrade_add_file_entries($dirname = '', $files = array(), &$items
 
   // Create list of files for registry.
   // TODO Allow for custom extensions!!!
-  $extensions = array('inc', 'install', 'module', 'php', 'test');
+  $extensions = array('inc', 'install', 'module', 'php', 'test', 'upgrade');
+  $dirname .= $path != '' ? '/' . $path : '';
   $path = $path != '' ? $path . '/' : $path;
   foreach ($files as $file) {
     if (is_array($file)) {
@@ -124,7 +129,6 @@ function coder_upgrade_add_file_entries($dirname = '', $files = array(), &$items
       }
       elseif ($extension == 'info') {
         // Save the name of the .info file.
-        $dirname .= $path != '' ? '/' . $path : '';
         $info_file = $dirname . '/' . $file;
       }
     }
@@ -142,7 +146,7 @@ function coder_upgrade_add_file_entries($dirname = '', $files = array(), &$items
       $new .= "files[] = $item\n";
     }
     if (file_put_contents($info_file, $new) === FALSE) {
-      coder_upgrade_debug_print('File could not be written: !file', array('!file' => $info_file));
+      clp('File could not be written: !file', array('!file' => $info_file));
     }
   }
 }

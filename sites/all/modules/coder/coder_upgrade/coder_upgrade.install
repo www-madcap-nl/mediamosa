@@ -1,17 +1,17 @@
 <?php
-// $Id: coder_upgrade.install,v 1.5 2009/08/24 16:25:21 solotandem Exp $
+// $Id: coder_upgrade.install,v 1.8 2010/03/02 00:10:42 solotandem Exp $
 
 /**
  * @file
  * Install, uninstall, and update functions for the coder_upgrade module.
  *
- * Copyright 2008-9 by Jim Berry ("solotandem", http://drupal.org/user/240748)
+ * Copyright 2008-10 by Jim Berry ("solotandem", http://drupal.org/user/240748)
  */
 
 module_load_include('inc', 'coder_upgrade', 'coder_upgrade');
 
 /**
- * Implement hook_install().
+ * Implements hook_install().
  */
 function coder_upgrade_install() {
   // Create the top-level module directory.
@@ -40,7 +40,7 @@ function coder_upgrade_install() {
 }
 
 /**
- * Implement hook_uninstall().
+ * Implements hook_uninstall().
  */
 function coder_upgrade_uninstall() {
   // Remove the module input and output directories.
@@ -48,7 +48,7 @@ function coder_upgrade_uninstall() {
   coder_upgrade_clean_directory($dir, TRUE);
   $dir = file_directory_path() . '/' . variable_get('coder_upgrade_dir_new', DEADWOOD_NEW);
   coder_upgrade_clean_directory($dir, TRUE);
-  $dir = file_directory_path() . '/' . variable_get('coder_upgrade_dir_new', DEADWOOD_PATCH);
+  $dir = file_directory_path() . '/' . variable_get('coder_upgrade_dir_patch', DEADWOOD_PATCH);
   coder_upgrade_clean_directory($dir, TRUE);
 
   // Remove items from {variables} table.
@@ -58,7 +58,7 @@ function coder_upgrade_uninstall() {
 }
 
 /**
- * Implement hook_requirements().
+ * Implements hook_requirements().
  */
 function coder_upgrade_requirements($phase) {
   $requirements = array();
