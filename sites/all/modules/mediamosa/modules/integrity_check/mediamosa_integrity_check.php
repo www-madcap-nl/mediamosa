@@ -224,7 +224,7 @@ function check_still_files($skip_files) {
   closedir($dh);
   log_message('stillfile', $missing_db_stills);
 }
-*/
+ */
 
 // Start.
 watchdog('integrity_check', 'running...');

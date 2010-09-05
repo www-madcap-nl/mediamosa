@@ -30,7 +30,7 @@
  */
 
 /**
- * Implements the hook_mediamosa_settings_collect()
+ * Implements hook_mediamosa_settings_collect().
  */
 function mediamosa_configuration_proxy_mediamosa_configuration_collect() {
   $form['settings_proxy'] = array(

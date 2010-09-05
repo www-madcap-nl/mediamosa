@@ -64,7 +64,7 @@ function mediamosa_migration_menu() {
   );
 
   $items['admin/mediamosa/config/migration/settings'] = array(
-    'title' => t('Settings'),
+    'title' => 'Settings',
     'description' => 'Setup the migration settings.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mediamosa_migration_settings'),

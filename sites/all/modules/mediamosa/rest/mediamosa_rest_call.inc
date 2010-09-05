@@ -403,8 +403,9 @@ abstract class mediamosa_rest_call {
   /**
    * Return the active version to use for APP.
    *
-   * Returns NULL for latest version or array
-   * (@see mediamosa_version::mediamosa_version())
+   * Returns NULL for latest version or array.
+   *
+   * @see mediamosa_version()
    *
    * @param integer $app_id
    */
@@ -871,7 +872,7 @@ abstract class mediamosa_rest_call {
           empty($this->a_rest_args[$name][self::PARAM_VALUE]) &&
           isset($var_setup[self::VARS][$name][self::VAR_DEFAULT_VALUE]) &&
           !in_array($this->a_rest_args[$name][self::PARAM_VALUE], $this->a_rest_args[$name][self::PARAM_ALLOWED_VALUES])
-         ) {
+        ) {
 
         // No value was given, but there is a default, then set the default.
         $this->a_rest_args[$name][self::PARAM_VALUE] = $var_setup[self::VARS][$name][self::VAR_DEFAULT_VALUE];

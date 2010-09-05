@@ -1310,7 +1310,7 @@ class mediamosa_aut {
               $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND][] = "mf.mediafile_id='" . mediamosa_db::escape_string($object_id) . "'";
               $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND][] = 'mf.is_original_file IS NOT NULL';// always TRUE, because its never NULL
             }
-*/
+ */
             // If we have aut id for the master app, check them
             foreach ($a_app_ids as $app_id) {
               if (!empty($a_aut_ids[$app_id])) {

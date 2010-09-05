@@ -63,7 +63,7 @@ define('MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_FFMPEG_WARNING', "0.5");
 define('MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_FFMPEG_WARNING_SVN', "SVN-r19159");
 
 /**
- * Implementation of hook_mediamosa_status_generate().
+ * Implements hook_mediamosa_status_generate().
  *
  * @param with_variable boolean
  *   Use Drupal variables or not
@@ -75,7 +75,7 @@ function mediamosa_maintenance_status_configuration_mediamosa_status_generate($w
 
   // PHP modules.
 
-  $required_extensions = array('bcmath', 'gd', /*'mcrypt',*/ 'curl', 'mysql', 'mysqli', 'SimpleXML');
+  $required_extensions = array('bcmath', 'gd', 'curl', 'mysql', 'mysqli', 'SimpleXML');
   $modules = '';
   foreach ($required_extensions as $extension) {
     $modules .= $extension . ', ';
@@ -93,7 +93,7 @@ function mediamosa_maintenance_status_configuration_mediamosa_status_generate($w
 
   $results['php_modules'] = array(
     'title' => t('PHP modules'),
-    'value' => t('The following modules are required: ') . substr($modules, 0, -2),
+    'value' => t('The following modules are required:') . ' ' . drupal_substr($modules, 0, -2),
     'severity' => _mediamosa_maintenance_status_okerror(!empty($missing)),
   );
 
@@ -115,21 +115,21 @@ function mediamosa_maintenance_status_configuration_mediamosa_status_generate($w
   $results['php_max_filesize'] = array(
     'title' => t('PHP required settings'),
     'value' => t('upload_max_filesize should be at least 100M. Currently: %current_value', array('%current_value' => $php_upload_max_filesize)),
-    'severity' => _mediamosa_maintenance_status_okwarning((substr($php_upload_max_filesize, 0, -1) < 100) && (substr($php_upload_max_filesize, -1) != 'M' || substr($php_upload_max_filesize, -1) != 'G')),
+    'severity' => _mediamosa_maintenance_status_okwarning((drupal_substr($php_upload_max_filesize, 0, -1) < 100) && (drupal_substr($php_upload_max_filesize, -1) != 'M' || drupal_substr($php_upload_max_filesize, -1) != 'G')),
   );
 
   $php_memory_limit = ini_get('memory_limit');
   $results['php_memory_limit'] = array(
     'title' => t('PHP required settings'),
     'value' => t('memory_limit should be at least 128M. Currently: %current_value', array('%current_value' => $php_memory_limit)),
-    'severity' => _mediamosa_maintenance_status_okwarning((substr($php_memory_limit, 0, -1) < 128) && (substr($php_memory_limit, -1) != 'M' || substr($php_memory_limit, -1) != 'G')),
+    'severity' => _mediamosa_maintenance_status_okwarning((drupal_substr($php_memory_limit, 0, -1) < 128) && (drupal_substr($php_memory_limit, -1) != 'M' || drupal_substr($php_memory_limit, -1) != 'G')),
   );
 
   $php_post_max_size = ini_get('post_max_size');
   $results['php_post_max'] = array(
     'title' => t('PHP required settings'),
     'value' => t('post_max_size should be at least 100M. Currently: %current_value', array('%current_value' => $php_post_max_size)),
-    'severity' => _mediamosa_maintenance_status_okwarning((substr($php_post_max_size, 0, -1) < 100) && (substr($php_post_max_size, -1) != 'M' || substr($php_post_max_size, -1) != 'G')),
+    'severity' => _mediamosa_maintenance_status_okwarning((drupal_substr($php_post_max_size, 0, -1) < 100) && (drupal_substr($php_post_max_size, -1) != 'M' || drupal_substr($php_post_max_size, -1) != 'G')),
   );
 
   // Applications.
@@ -268,18 +268,18 @@ function mediamosa_maintenance_status_configuration_mediamosa_status_generate($w
   );
   $results['database_innodb_buffer_pool_size'] = array(
     'title' => t('Database'),
-    'value' => t('innodb_buffer_pool_size = @sizeM. Should have 2048M.', array('@size' => $rows['innodb_buffer_pool_size']/1048576,)),
+    'value' => t('innodb_buffer_pool_size = @sizeM. Should have 2048M.', array('@size' => $rows['innodb_buffer_pool_size'] / 1048576)),
     'description' => t('You can set this up to 50 - 80 % of RAM, but beware of setting memory usage too high.'),
-    'severity' => _mediamosa_maintenance_status_okwarning($rows['innodb_buffer_pool_size']/1048576 < '8'),
+    'severity' => _mediamosa_maintenance_status_okwarning($rows['innodb_buffer_pool_size'] / 1048576 < '8'),
   );
   $results['database_innodb_log_file_size'] = array(
     'title' => t('Database'),
-    'value' => t('innodb_log_file_size = @sizeM.', array('@size' => $rows['innodb_log_file_size']/1048576,)),
-    'severity' => _mediamosa_maintenance_status_okwarning($rows['innodb_log_file_size']/1048576 < '2'),
+    'value' => t('innodb_log_file_size = @sizeM.', array('@size' => $rows['innodb_log_file_size'] / 1048576)),
+    'severity' => _mediamosa_maintenance_status_okwarning($rows['innodb_log_file_size'] / 1048576 < '2'),
   );
   $results['database_innodb_flush_method'] = array(
     'title' => t('Database'),
-    'value' => t('innodb_flush_method = "@value". Should be "O_DIRECT".', array('@value' => $rows['innodb_flush_method'],)),
+    'value' => t('innodb_flush_method = "@value". Should be "O_DIRECT".', array('@value' => $rows['innodb_flush_method'])),
     'severity' => _mediamosa_maintenance_status_okwarning($rows['innodb_flush_method'] != 'O_DIRECT'),
   );
 
@@ -488,7 +488,7 @@ function mediamosa_maintenance_status_configuration_mediamosa_status_generate($w
 }
 
 /**
- * Implementation of hook_mediamosa_status_collect().
+ * Implements hook_mediamosa_status_collect().
  *
  * @param reset boolean
  * @param with_variable boolean

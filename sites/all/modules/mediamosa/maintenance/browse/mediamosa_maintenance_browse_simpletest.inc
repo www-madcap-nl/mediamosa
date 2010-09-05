@@ -24,6 +24,11 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
+/**
+ * @file
+ * Shows a filtered listing of the simpletests of mediamosa.
+ */
+
 // Need these.
 module_load_include('inc', 'simpletest', 'simpletest.pages');
 
@@ -47,7 +52,7 @@ function mediamosa_maintenance_browse_test_form($form) {
   $groups = simpletest_test_get_all();
   foreach ($groups as $group => $tests) {
 
-    if (drupal_strtolower(drupal_substr($group, 0, strlen('mediamosa'))) != 'mediamosa') {
+    if (drupal_strtolower(drupal_substr($group, 0, drupal_strlen('mediamosa'))) != 'mediamosa') {
       continue;
     }
 

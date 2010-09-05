@@ -733,8 +733,8 @@ class MediaMosaAutTestCaseEga extends MediaMosaTestCaseEga {
     $this->createAutHostname('academia5.group', array('xs4all.nl'));
 
     $a_parameters = array(
-         mediamosa_rest_call_aut_mediafile_set_rights::AUT_APP => $app_id_2,
-         mediamosa_rest_call_aut_mediafile_set_rights::AUT_DOMAIN => 'academia5.group',
+      mediamosa_rest_call_aut_mediafile_set_rights::AUT_APP => $app_id_2,
+      mediamosa_rest_call_aut_mediafile_set_rights::AUT_DOMAIN => 'academia5.group',
     );
 
     // Set rights.

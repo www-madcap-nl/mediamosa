@@ -98,7 +98,7 @@ function _mediamosa_webservice_list() {
   $rows = array();
   foreach ($result as $row) {
     $actions = array(
-      l(t('Edit'), 'admin/mediamosa/config/webservice/'. $row->{mediamosa_webservice_db::ID} . '/edit', $l_options),
+      l(t('Edit'), 'admin/mediamosa/config/webservice/' . $row->{mediamosa_webservice_db::ID} . '/edit', $l_options),
     );
 
     $rows[] = array(
@@ -137,7 +137,7 @@ function mediamosa_webservice_form($form, $form_state) {
   // Get the webservice row.
   $mediamosa_webservice = mediamosa_webservice::get($webservice_id);
 
-  drupal_set_title(t('Editing ' . $mediamosa_webservice[mediamosa_webservice_db::HANDLE]));
+  drupal_set_title(t('Editing  @webservice_hand', array('@webservice_hand' => $mediamosa_webservice[mediamosa_webservice_db::HANDLE])));
 
   // The form
   $form = array();
@@ -149,7 +149,7 @@ function mediamosa_webservice_form($form, $form_state) {
     '#type' => 'fieldset',
     '#collapsible' => FALSE,
     '#collapsed' => FALSE,
-    '#title' => t('Webservice ') . $mediamosa_webservice[mediamosa_webservice_db::HANDLE],
+    '#title' => t('Webservice @webservice_handle', array('@webservice_handle' => $mediamosa_webservice[mediamosa_webservice_db::HANDLE])),
     '#description' => $mediamosa_webservice[mediamosa_webservice_db::DESCRIPTION],
   );
   $form['general'][mediamosa_webservice_db::STATUS] = array(

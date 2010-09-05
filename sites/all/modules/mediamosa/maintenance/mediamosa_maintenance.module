@@ -87,14 +87,14 @@ function mediamosa_maintenance_menu() {
   );
   $items['admin/mediamosa/asset/%/mediafile/%/analyse'] = array(
     'page callback' => 'mediamosa_maintenance_mediafile_analyse',
-    'page arguments' => array(3,5),
+    'page arguments' => array(3, 5),
     'access arguments' => array(mediamosa_settings::MEDIAMOSA_PERMISSION_ANALYSE_MEDIAMOSA_MEDIAFILES),
     'type' => MENU_CALLBACK,
     'file' => 'mediamosa_maintenance.admin.inc',
   );
   $items['admin/mediamosa/asset/%/mediafile/%/download'] = array(
     'page callback' => 'mediamosa_maintenance_mediafile_download',
-    'page arguments' => array(3,5),
+    'page arguments' => array(3, 5),
     'access arguments' => array(mediamosa_settings::MEDIAMOSA_PERMISSION_DOWNLOAD_MEDIAMOSA_MEDIAFILES),
     'type' => MENU_CALLBACK,
     'file' => 'mediamosa_maintenance.admin.inc',

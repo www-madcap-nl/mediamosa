@@ -28,7 +28,7 @@
 module_load_include('inc', 'mediamosa_batch_jobs', 'mediamosa_batch_jobs.helpers');
 
 /**
- * Implementation of hook_perm().
+ * Implements hook_perm().
  */
 function mediamosa_batch_jobs_perm() {
   return array(
@@ -40,7 +40,7 @@ function mediamosa_batch_jobs_perm() {
 }
 
 /**
- * Implementation of hook_menu().
+ * Implements hook_menu().
  */
 function mediamosa_batch_jobs_menu() {
   $items = array();
@@ -104,17 +104,17 @@ function mediamosa_batch_jobs_menu() {
 }
 
 /**
- * Implementation of hook_help().
+ * Implements hook_help().
  */
 function mediamosa_batch_jobs_help($path, $arg) {
   switch ($path) {
     case 'admin/help#vpx_batch':
-      return '<p>'. t('Overview of batch jobs history/current/queued.') .'</p>';
+      return '<p>' . t('Overview of batch jobs history/current/queued.') . '</p>';
   }
 }
 
 /**
- * Implementation of hook_node_info().
+ * Implements hook_node_info().
  */
 function mediamosa_batch_jobs_node_info() {
   return array(

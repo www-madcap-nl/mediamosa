@@ -63,7 +63,7 @@ class mediamosa_core_cql {
     $a_or = array();
 
     if (isset($a_translate_to[$name])) {
-     $name = $a_translate_to[$name];
+      $name = $a_translate_to[$name];
     }
 
     $a_or = array();
@@ -110,10 +110,10 @@ class mediamosa_core_cql {
             $a_or[] = $name . ' == "' . addslashes($value) . '"';
           }
           else {
-           list($v1, $v2) = explode('|', $value, 2);
-           $v1 = mediamosa_datetime::date8601_to_timestamp($v1, $name, mediamosa_type::TYPE_SEARCH_DATETIME, 'Y-m-d\TH:i:s');
-           $v2 = mediamosa_datetime::date8601_to_timestamp($v2, $name, mediamosa_type::TYPE_SEARCH_DATETIME, 'Y-m-d\TH:i:s');
-           $a_or[] = $name . ' within "' . addslashes($v1) . ' ' . addslashes($v2) . '"';
+            list($v1, $v2) = explode('|', $value, 2);
+            $v1 = mediamosa_datetime::date8601_to_timestamp($v1, $name, mediamosa_type::TYPE_SEARCH_DATETIME, 'Y-m-d\TH:i:s');
+            $v2 = mediamosa_datetime::date8601_to_timestamp($v2, $name, mediamosa_type::TYPE_SEARCH_DATETIME, 'Y-m-d\TH:i:s');
+            $a_or[] = $name . ' within "' . addslashes($v1) . ' ' . addslashes($v2) . '"';
           }
         }
         break;
@@ -326,7 +326,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
   // Override... do not support prox.
   public function mediamosa_cql_context_is_boolean($str) {
     $a_booleans = array('and', 'or', 'not');
-    return (array_search(strtolower($str), $a_booleans) === FALSE) ? FALSE : TRUE;
+    return (array_search(mediamosa_unicode::strtolower($str), $a_booleans) === FALSE) ? FALSE : TRUE;
   }
 
   /**
@@ -586,7 +586,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
       foreach ($a_mediamosa_core_cql_context[MEDIAMOSA_CQL_CONTEXT_KEY_DEFAULT_SEARCH_TERMS] as $str_index) {
         $str_part = $this->mediamosa_core_cql_context_index2column_finalize($o_cql_part, $o_part_relation, $a_result, $str_index, $do_having);
         if (trim($str_part) != '') {
-           $a_parts[] = $str_part;
+          $a_parts[] = $str_part;
         }
       }
 
@@ -1107,7 +1107,7 @@ class mediamosa_asset_cql_context extends mediamosa_core_cql_context {
       'mediamosa' => array(
         MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES => array(
           'mediamosa:asset' => array(
-            MEDIAMOSA_CQL_CONTEXT_KEY_COLUMNS=> array(
+            MEDIAMOSA_CQL_CONTEXT_KEY_COLUMNS => array(
               'asset_id' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => mediamosa_asset_db::ID,
                 MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_FOR_SORT => mediamosa_asset_db::TABLE_NAME,
@@ -1249,7 +1249,7 @@ class mediamosa_asset_cql_context extends mediamosa_core_cql_context {
             ),
           ),
           'mediamosa:aut' => array(
-            MEDIAMOSA_CQL_CONTEXT_KEY_COLUMNS=> array(
+            MEDIAMOSA_CQL_CONTEXT_KEY_COLUMNS => array(
               'aut_app' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => mediamosa_aut_app_master_slave_db::APP_ID_MASTER,
                 MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'aut_ms',
@@ -1334,7 +1334,7 @@ class mediamosa_collection_cql_context extends mediamosa_core_cql_context {
       'mediamosa' => array(
         MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES => array(
           'mediamosa:collection' => array(
-            MEDIAMOSA_CQL_CONTEXT_KEY_COLUMNS=> array(
+            MEDIAMOSA_CQL_CONTEXT_KEY_COLUMNS => array(
               'title' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'title',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'c',
@@ -1448,7 +1448,7 @@ class mediamosa_job_cql_context extends mediamosa_core_cql_context {
       'mediamosa' => array(
         MEDIAMOSA_CQL_CONTEXT_KEY_INDEXES => array(
           'mediamosa:job' => array(
-            MEDIAMOSA_CQL_CONTEXT_KEY_COLUMNS=> array(
+            MEDIAMOSA_CQL_CONTEXT_KEY_COLUMNS => array(
               'job_id' => array(
                 MEDIAMOSA_CQL_CONTEXT_KEY_COLUMN => 'job_id',
                 MEDIAMOSA_CQL_CONTEXT_KEY_TABLE_ALIAS => 'j',

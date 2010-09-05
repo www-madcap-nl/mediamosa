@@ -56,14 +56,14 @@ function mediamosa_maintenance_browse_errorcode_form() {
   // Build the rows.
   foreach ($result as $errorcode) {
     $actions = array(
-      l(t('Edit'), 'admin/mediamosa/browse/errorcode/'. $errorcode[mediamosa_error_db::ID] . '/edit', $l_options),
+      l(t('Edit'), 'admin/mediamosa/browse/errorcode/' . $errorcode[mediamosa_error_db::ID] . '/edit', $l_options),
     );
 
     $rows[] = array('data' =>
       array(
         // Cells
         $errorcode[mediamosa_error_db::ID],
-        check_plain($errorcode[mediamosa_error_db::NAME]) . '<br /><small>' . check_plain($errorcode[mediamosa_error_db::MESSAGE])  . '</small>',
+        check_plain($errorcode[mediamosa_error_db::NAME]) . '<br /><small>' . check_plain($errorcode[mediamosa_error_db::MESSAGE]) . '</small>',
         check_plain($errorcode[mediamosa_error_db::CODE]),
         implode(' | ', $actions)
       ),

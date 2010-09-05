@@ -52,7 +52,7 @@ class MediaMosaAssetMetadataPropertyTestCaseEga extends MediaMosaTestCaseEga {
 
     // Property.
     $definition = mediamosa_db::uuid(mt_rand(1, 9999));
-    $definition = "testtag_" . drupal_substr($definition, 0,10); // May not start with a number.
+    $definition = "testtag_" . drupal_substr($definition, 0, 10); // May not start with a number.
 
     // Type.
     $type = 'char';

@@ -355,7 +355,7 @@ class mediamosa_response extends mediamosa {
 
     if ($this->is_log_rest()) {
       mediamosa_statistics::log_event_restcall(
-        '['. $this->request_method . '] ' . $this->request_uri,
+        '[' . $this->request_method . '] ' . $this->request_uri,
         $this->get_processed_time(),
         mediamosa_db::query_count()
       );

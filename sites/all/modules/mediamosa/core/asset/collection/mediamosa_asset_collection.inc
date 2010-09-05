@@ -145,8 +145,8 @@ class mediamosa_asset_collection {
           $query->addField('c', $field, (is_numeric($key) ? $field : $key));
         }
         else {
-          $pref = substr($field, 0, $pos);
-          $field_exp = substr($field, $pos + 1);
+          $pref = mediamosa_unicode::substr($field, 0, $pos);
+          $field_exp = mediamosa_unicode::substr($field, $pos + 1);
           $query->addField($pref, $field_exp, (is_numeric($key) ? $field_exp : $key));
         }
       }
@@ -171,7 +171,7 @@ class mediamosa_asset_collection {
     // Build query.
     $query = mediamosa_db::db_select(mediamosa_asset_collection_db::TABLE_NAME, 'ac');
     $query->fields('ac', $fields);
-    $query->condition('ac.'. mediamosa_asset_collection_db::COLL_ID, $coll_ids, 'IN');
+    $query->condition('ac.' . mediamosa_asset_collection_db::COLL_ID, $coll_ids, 'IN');
 
     return $query->execute();
   }

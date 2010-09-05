@@ -323,7 +323,7 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
         }
         else {
           $a_range = explode(',', $range);
-          foreach($a_range as $range_2) {
+          foreach ($a_range as $range_2) {
             if (is_numeric($range_2)) {
               $a_orders[] = $range_2;
             }

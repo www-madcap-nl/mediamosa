@@ -109,7 +109,7 @@ function mediamosa_maintenance_browse_restcall_form() {
       }
 
       $rows[] = array(
-        l('/' . $uri, 'admin/mediamosa/browse/restcall/' . str_replace('/', '-', $uri) . '/' . urlencode($method)) . ' ' . implode(' ', $warnings),
+        l(t('/' . $uri), 'admin/mediamosa/browse/restcall/' . str_replace('/', '-', $uri) . '/' . urlencode($method)) . ' ' . implode(' ', $warnings),
         $method,
         $rest_call[mediamosa_rest_call::STATUS],
         $rest_call[mediamosa_rest_call::VERSION],

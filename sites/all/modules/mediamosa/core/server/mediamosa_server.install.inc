@@ -47,8 +47,8 @@ function _mediamosa_server_install() {
   _mediamosa_server_tool_install();
 
   $default_servers = array(
-    array(1,0,'ON',"streaming","http://mediamosa.local/ticket/{TICKET}",
-      "asf",
+    array(1, 0, 'ON', 'streaming', 'http://mediamosa.local/ticket/{TICKET}',
+      'asf',
       "{IF_EXTERNAL}
 <asx version='3.0'>
 <entry>
@@ -68,9 +68,9 @@ function _mediamosa_server_install() {
 <embed type='application/x-mplayer2' src='{WMA_TICKET_URI}' autostart='{AUTOPLAY_NUM}' name='{MEDIAFILE_ID}' width='{WIDTH}' height='{HEIGHT}'/>
 </embed>
 </object>"
-      ,'ASF Streaming Server','','','',''),
-    array(2,0,'ON',"streaming","http://mediamosa.local/ticket/{TICKET}",
-      "flv",
+      , 'ASF Streaming Server', '', '', '', ''),
+    array(2, 0, 'ON', 'streaming', 'http://mediamosa.local/ticket/{TICKET}',
+      'flv',
       "<script type='text/javascript' src='http://145.97.38.12/swfobject.js'></script>
 <div id='mediaspace'>This div will be replaced</div>
 <script type='text/javascript'>
@@ -82,9 +82,9 @@ s1.addParam('flashvars','streamer={TICKET_URI}&autostart={AUTOPLAY}{IF_START}&st
 s1.addVariable('type', 'mp4');
 s1.write('mediaspace');
 </script>"
-      ,'FLV Streaming Server','','','',''),
-    array(3,0,'ON',"streaming","http://mediamosa.local/ticket/{TICKET}",
-      "mov;mp4;m4a;3gp;3g2;mj2:h264",
+      , 'FLV Streaming Server', '', '', '', ''),
+    array(3, 0, 'ON', 'streaming', 'http://mediamosa.local/ticket/{TICKET}',
+      'mov;mp4;m4a;3gp;3g2;mj2:h264',
       "<script type='text/javascript' src='http://145.97.38.29/swfobject.js'></script>
 <div id='mediaspace'>This div will be replaced</div>
 <script type='text/javascript'>
@@ -96,9 +96,9 @@ s1.addParam('flashvars','streamer={TICKET_URI}&autostart={AUTOPLAY}{IF_START}&st
 s1.addVariable('type', 'mp4');
 s1.write('mediaspace');
 </script>"
-      ,'MOV/MP4/M4A/3GP/3G2/MJ2I:H264 Streaming Server','','','',''),
-    array(4,0,'ON',"streaming","http://mediamosa.local/ticket/{TICKET}",
-      "mpeg|mov;mp4;m4a;3gp;3g2;mj2",
+      , 'MOV/MP4/M4A/3GP/3G2/MJ2I:H264 Streaming Server', '', '', '', ''),
+    array(4, 0, 'ON', 'streaming', 'http://mediamosa.local/ticket/{TICKET}',
+      'mpeg|mov;mp4;m4a;3gp;3g2;mj2',
       "<object id='{MEDIAFILE_ID}' classid='CLSID:02Bf25D5-8C17-4B23-BC80-D3488ABDDC6B' standby='Loading Quicktime Player components...' width='{WIDTH}' height='{HEIGHT}'>
 {IF_START}
 <param name='starttime' value='{START_TIME}' />
@@ -110,21 +110,21 @@ s1.write('mediaspace');
 <param name='autoplay' value='{AUTOPLAY}' />
 <embed type='video/quicktime' src='{TICKET_URI}' name='{MEDIAFILE_ID}' width='{WIDTH}' height='{HEIGHT}' autoplay='{AUTOPLAY}' {IF_START}starttime='{START_TIME}'{/IF_START} {IF_DURATION}endtime='{END_TIME}'{/IF_DURATION}/>
 </object>"
-      ,'MPEG|MOV;MP4;M4A;3GP;3G2;MJ2 Streaming Server','','','',''),
-    array(11,2,'ON',"download","http://download.mediamosa.local/download/{TICKET}",'','','Default download server','','','',''),
-    array(12,0,'ON',"still","http://download.mediamosa.local/still/{TICKET}",'','','Default still server','','','',''),
-    array(13,0,'ON',"job_processor",'http://job1.mediamosa.local','','','Default 1st job processor',2,"ANALYSE|ffmpeg|STILL",''),
-    array(14,0,'ON',"job_processor",'http://job2.mediamosa.local','','','Default 2nd job processor',2,"ANALYSE|ffmpeg|STILL",''),
-    array(15,0,'ON',"upload","http://upload.mediamosa.local/mediafile/upload?upload_ticket={TICKET}",'','','Default upload server','','',"http://upload.mediamosa.local/mediafile/uploadprogress"),
+      , 'MPEG|MOV;MP4;M4A;3GP;3G2;MJ2 Streaming Server', '', '', '', ''),
+    array(11, 2, 'ON', 'download', 'http://download.mediamosa.local/download/{TICKET}', '', '', 'Default download server', '', '', '', ''),
+    array(12, 0, 'ON', 'still', 'http://download.mediamosa.local/still/{TICKET}', '', '', 'Default still server', '', '', '', ''),
+    array(13, 0, 'ON', 'job_processor', 'http://job1.mediamosa.local', '', '', 'Default 1st job processor', 2, 'ANALYSE|ffmpeg|STILL', ''),
+    array(14, 0, 'ON', 'job_processor', 'http://job2.mediamosa.local', '', '', 'Default 2nd job processor', 2, 'ANALYSE|ffmpeg|STILL', ''),
+    array(15, 0, 'ON', 'upload', 'http://upload.mediamosa.local/mediafile/upload?upload_ticket={TICKET}', '', '', 'Default upload server', '', '', 'http://upload.mediamosa.local/mediafile/uploadprogress'),
   );
 
 
   // Create our node type.
   $server_node_type = array(
     'type' => mediamosa_node::MEDIAMOSA_NODE_TYPE_SERVER,
-    'name' => t('MediaMosa server'),
+    'name' => st('MediaMosa server'),
     'base' => mediamosa_node::MEDIAMOSA_NODE_TYPE_SERVER,
-    'description' => t('MediaMosa servers execute jobs for transcoding, uploading and other related work.'),
+    'description' => st('MediaMosa servers execute jobs for transcoding, uploading and other related work.'),
     'custom' => 1,
     'modified' => 1,
     'locked' => 0,

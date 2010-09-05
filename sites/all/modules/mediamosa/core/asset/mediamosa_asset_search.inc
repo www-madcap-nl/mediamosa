@@ -380,7 +380,7 @@ class mediamosa_asset_search {
           $tmp = sprintf("(c.is_unappropriate = 'FALSE' OR c.owner_id = '%s')", mediamosa_db::escape_string($aut_user_id));
         }
 
-        $a_query[mediamosa_db_query::A_JOIN]['collection'][self::COLLECTION] = 'INNER JOIN {mediamosa_collection} AS c ON asset_coll.coll_id = c.coll_id AND '. $tmp;
+        $a_query[mediamosa_db_query::A_JOIN]['collection'][self::COLLECTION] = 'INNER JOIN {mediamosa_collection} AS c ON asset_coll.coll_id = c.coll_id AND ' . $tmp;
       }
 
       $a_coll_ids = is_array($coll_id) ? $coll_id : array($coll_id);
@@ -497,7 +497,7 @@ class mediamosa_asset_search {
       $d_limit = $a_query[mediamosa_db_query::LIMIT];
       $d_offset = $a_query[mediamosa_db_query::OFFSET];
       $d_search = isset($a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][self::SEARCH]) ? $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][self::SEARCH] : FALSE;
-      $d_where = sprintf('a.app_id IN(%s)', implode(',', $a_app_ids_tmp)) . ($d_search ? ' AND '. $d_search : '') . ($coll_id ? ' AND (a.coll_id = \''. implode('\' OR a.coll_id = \'', $coll_id) .'\')' : '');
+      $d_where = sprintf('a.app_id IN(%s)', implode(',', $a_app_ids_tmp)) . ($d_search ? ' AND ' . $d_search : '') . ($coll_id ? ' AND (a.coll_id = \'' . implode('\' OR a.coll_id = \'', $coll_id) . '\')' : '');
 
       // Temporary table
       /**
@@ -531,15 +531,15 @@ class mediamosa_asset_search {
           $table_name = db_query_temporary($query);
 
           // Deleted asset query
-          mediamosa_db::db_query('INSERT INTO {' . $table_name . '} SELECT a.asset_id, a.videotimestampmodified FROM {#mediamosa_asset_delete} AS a'. ($d_where ? ' WHERE '. $d_where : '') .' GROUP BY a.asset_id', array(
+          mediamosa_db::db_query('INSERT INTO {' . $table_name . '} SELECT a.asset_id, a.videotimestampmodified FROM {#mediamosa_asset_delete} AS a' . ($d_where ? ' WHERE ' . $d_where : '') . ' GROUP BY a.asset_id', array(
             '#mediamosa_asset_delete' => mediamosa_asset_delete_db::TABLE_NAME,
           ));
 
           // Harvesting the data
-          if (substr($d_ordby, 0, 5) == 'sort.') {
-            $d_ordby = 'a.' . substr($d_ordby, 5);
+          if (mediamosa_unicode::substr($d_ordby, 0, 5) == 'sort.') {
+            $d_ordby = 'a.' . mediamosa_unicode::substr($d_ordby, 5);
           }
-          $result = mediamosa_db::db_query('SELECT DISTINCT a.asset_id FROM {' . $table_name . '} AS a'. ($d_ordby ? ' ORDER BY '. $d_ordby : '') . ($d_limit ? ($d_offset ? ' LIMIT '. $d_offset .','. $d_limit : ' LIMIT '. $d_limit) : ''));
+          $result = mediamosa_db::db_query('SELECT DISTINCT a.asset_id FROM {' . $table_name . '} AS a' . ($d_ordby ? ' ORDER BY ' . $d_ordby : '') . ($d_limit ? ($d_offset ? ' LIMIT ' . $d_offset . ',' . $d_limit : ' LIMIT ' . $d_limit) : ''));
           $a_asset_ids = array();
           foreach ($result as $a_row) {
             $a_asset_ids[] = $a_row[mediamosa_asset_db::ID];
@@ -658,7 +658,7 @@ class mediamosa_asset_search {
       catch (Exception $e) {
         // Make sure we switch back(!).
         if (isset($olddb)) {
-           db_set_active($olddb);
+          db_set_active($olddb);
         }
 
         throw $e;
@@ -666,7 +666,7 @@ class mediamosa_asset_search {
 
       // Switch back.
       if (isset($olddb)) {
-         db_set_active($olddb);
+        db_set_active($olddb);
       }
     }
 

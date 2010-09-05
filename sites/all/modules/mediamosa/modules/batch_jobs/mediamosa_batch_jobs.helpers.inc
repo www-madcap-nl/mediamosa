@@ -25,6 +25,11 @@
  */
 
 /**
+ * @file
+ * Helper functions for batch-jobs.
+ */
+
+/**
  * Parse the job table based on given type (queue or history).
  * @param $files array()
  * @param $type string: 'queue', 'history'
@@ -60,7 +65,7 @@ function mediamosa_batch_jobs_parse_table($files = array(), $type = 'queue') {
                   $record['user_id'] = mediamosa_unicode::substr(basename(dirname($file->uri)), 0, -3);
                   $record['app_id'] = ltrim(mediamosa_unicode::substr(dirname($file->uri), -3), '0');
 
-                  $metadatafile = dirname($file->uri) .'/'. $video->getElementsByTagName('metadataFile')->item(0)->nodeValue;
+                  $metadatafile = dirname($file->uri) . '/' . $video->getElementsByTagName('metadataFile')->item(0)->nodeValue;
 
                   // Load metadata.
                   if (file_exists($metadatafile)) {
@@ -80,7 +85,7 @@ function mediamosa_batch_jobs_parse_table($files = array(), $type = 'queue') {
               $usr = mediamosa_unicode::substr(basename(dirname($file->uri)), 0, -3) . '_' . ltrim(mediamosa_unicode::substr(dirname($file->uri), -3), '0');
 
               $record['vuf'] = basename($file->uri);
-              $record['email'] = (isset($dom->getElementsByTagName('email')->item(0)->nodeValue) ? l($dom->getElementsByTagName('email')->item(0)->nodeValue, 'mailto:'. $dom->getElementsByTagName('email')->item(0)->nodeValue) : '');
+              $record['email'] = (isset($dom->getElementsByTagName('email')->item(0)->nodeValue) ? l($dom->getElementsByTagName('email')->item(0)->nodeValue, 'mailto:' . $dom->getElementsByTagName('email')->item(0)->nodeValue) : '');
               // Reference id (with asset id)
               $record['referenceId'] = '';
               if (isset($video->getElementsByTagName('referenceId')->item(0)->nodeValue)) {
@@ -94,7 +99,7 @@ function mediamosa_batch_jobs_parse_table($files = array(), $type = 'queue') {
               }
               $record['action'] = (isset($video->getElementsByTagName('action')->item(0)->nodeValue) ? $video->getElementsByTagName('action')->item(0)->nodeValue : '');
               $record['mediaFile'] = (isset($format->getElementsByTagName('mediaFile')->item(0)->nodeValue) ? $format->getElementsByTagName('mediaFile')->item(0)->nodeValue : '');
-              $record['status'] = l(t('Log'), 'admin/mediamosa/browse/ftp_batch/log/' . basename($file->uri) . '/'. $usr);
+              $record['status'] = l(t('Log'), 'admin/mediamosa/browse/ftp_batch/log/' . basename($file->uri) . '/' . $usr);
 
               // Delete doesn't work because the apache user has insufficient rights.
               // @todo: rewrite canceling of queued jobs.
@@ -106,7 +111,7 @@ function mediamosa_batch_jobs_parse_table($files = array(), $type = 'queue') {
               if (!empty($record)) {
                 // Add row to table and empty array.
                 $table[] = $record;
-                $file_parsed = true;
+                $file_parsed = TRUE;
                 $record = array();
               }
             }
@@ -149,7 +154,7 @@ function mediamosa_batch_jobs_parse_table($files = array(), $type = 'queue') {
       else {
         $usr = mediamosa_unicode::substr(basename(dirname($file->uri)), 0, -3) . '_' . ltrim(mediamosa_unicode::substr(dirname($file->uri), -3), '0');
 
-        $record['status'] = l(t('Log'), 'admin/mediamosa/browse/ftp_batch/log/' . basename($file->uri) . '/'. $usr);
+        $record['status'] = l(t('Log'), 'admin/mediamosa/browse/ftp_batch/log/' . basename($file->uri) . '/' . $usr);
       }
 
       // Delete doesn't work because the apache user has insufficient rights.

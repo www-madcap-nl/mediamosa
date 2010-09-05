@@ -112,7 +112,7 @@ class mediamosa_collection {
   /**
    * Create a collection.
    */
-  static public function create($app_id, $owner_id, $title = NULL, $description = NULL, $group_id = NULL, $private = false, $public  = true, $category = false, $isprivate = false, $public_assign = false, $is_unappropriate = false) {
+  static public function create($app_id, $owner_id, $title = NULL, $description = NULL, $group_id = NULL, $private = FALSE, $public  = TRUE, $category = FALSE, $isprivate = FALSE, $public_assign = FALSE, $is_unappropriate = FALSE) {
 
     // New ID.
     $coll_id = mediamosa_db::uuid($app_id);
@@ -178,7 +178,7 @@ class mediamosa_collection {
    * @param bool $public_assign
    * @param bool $is_unappropriate
    */
-  static public function update($coll_id, $owner_id = NULL, $title = NULL, $description = NULL, $group_id = NULL, $private = false, $public  = true, $category = false, $isprivate = false, $public_assign = false, $is_unappropriate = false) {
+  static public function update($coll_id, $owner_id = NULL, $title = NULL, $description = NULL, $group_id = NULL, $private = FALSE, $public  = TRUE, $category = FALSE, $isprivate = FALSE, $public_assign = FALSE, $is_unappropriate = FALSE) {
 
     // Required.
     $fields = array();

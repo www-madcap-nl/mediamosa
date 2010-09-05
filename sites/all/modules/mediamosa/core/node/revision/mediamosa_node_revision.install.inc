@@ -74,7 +74,7 @@ function mediamosa_node_revision_schema() {
         'type' => 'text',
         'not null' => TRUE,
       ),
-     ),
+    ),
     'primary key' => array(mediamosa_app_db::NID, mediamosa_app_db::VID),
   );
 

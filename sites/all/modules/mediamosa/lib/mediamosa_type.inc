@@ -231,7 +231,7 @@ class mediamosa_type {
       case self::TYPE_JOB_PROGRESS:
         // 0.000 to 1.000.
         if (
-          (!is_float($mixed_param_value) || (float)$mixed_param_value < 0 || (float)$mixed_param_value > 1 || strlen($mixed_param_value) > 5) &&
+          (!is_float($mixed_param_value) || (float)$mixed_param_value < 0 || (float)$mixed_param_value > 1 || mediamosa_unicode::strlen($mixed_param_value) > 5) &&
           $mixed_param_value != ''
         ) {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_UNKNOWN_JOB_PROGRESS);
@@ -522,9 +522,9 @@ class mediamosa_type {
       case self::TYPE_FILENAME:
         if (strpos($mixed_param_value, "/") !== FALSE) {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => $param, '@type' => $param_type));
-         }
+        }
 
-         $checked_param_value = (string)$mixed_param_value;
+        $checked_param_value = (string)$mixed_param_value;
         break;
 
       default:

@@ -234,8 +234,8 @@ class mediamosa_server {
       )
     )->fetchAssoc();
 
-    if ($servers[$container_type .':'. $video_codec]) {
-      return $servers[$container_type .':'. $video_codec];
+    if ($servers[$container_type . ':' . $video_codec]) {
+      return $servers[$container_type . ':' . $video_codec];
     }
 
     if (isset($servers[$container_type]) && $servers[$container_type]) {

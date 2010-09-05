@@ -36,17 +36,17 @@
  * Implements hook_load().
  */
 function mediamosa_server_load(&$nodes) {
-   mediamosa_node_revision::load($nodes);
+  mediamosa_node_revision::load($nodes);
 
-   // Fix for uri rename.
-   foreach ($nodes as $key => $node) {
-     if (isset($node->uri) && !isset($node->{mediamosa_server_db::SERVER_URI})) {
-       $nodes[$key]->{mediamosa_server_db::SERVER_URI} = $node->uri;
-       unset($nodes[$key]->uri);
-     }
-   }
+  // Fix for uri rename.
+  foreach ($nodes as $key => $node) {
+    if (isset($node->uri) && !isset($node->{mediamosa_server_db::SERVER_URI})) {
+      $nodes[$key]->{mediamosa_server_db::SERVER_URI} = $node->uri;
+      unset($nodes[$key]->uri);
+    }
+  }
 
-   return $nodes;
+  return $nodes;
 }
 
 /**
@@ -80,7 +80,7 @@ function _process_server_node(&$node) {
       mediamosa_db::db_insert(mediamosa_server_tool_db::TABLE_NAME)
         ->fields(array(
           mediamosa_server_tool_db::NID => $node->nid,
-          mediamosa_server_tool_db::TOOL => substr($tool, 0, mediamosa_server_tool_db::TOOL_LENGTH)
+          mediamosa_server_tool_db::TOOL => mediamosa_unicode::substr($tool, 0, mediamosa_server_tool_db::TOOL_LENGTH)
         ))
         ->execute();
     }
@@ -104,7 +104,7 @@ function _process_server_node(&$node) {
       mediamosa_db::db_insert(mediamosa_server_streaming_container_db::TABLE_NAME)
         ->fields(array(
           mediamosa_server_streaming_container_db::NID => $node->nid,
-          mediamosa_server_streaming_container_db::CONTAINER => substr($container, 0, mediamosa_server_streaming_container_db::CONTAINER_LENGTH)
+          mediamosa_server_streaming_container_db::CONTAINER => mediamosa_unicode::substr($container, 0, mediamosa_server_streaming_container_db::CONTAINER_LENGTH)
         ))
         ->execute();
     }

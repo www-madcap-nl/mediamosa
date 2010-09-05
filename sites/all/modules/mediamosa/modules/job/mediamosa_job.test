@@ -90,14 +90,14 @@ class MediaMosaJobTestCaseEga extends MediaMosaTestCaseEga {
     $job_status = mediamosa_job::get($job_id_for_upload, array(mediamosa_job_db::JOB_STATUS));
     $this->assertTrue(
       $job_status[mediamosa_job_db::JOB_STATUS] == mediamosa_job_db::JOB_STATUS_INPROGRESS,
-      t('Job status has the good value (upload job): @job_status', array('@job_status' => print_r($job_status, TRUE),))
+      t('Job status has the good value (upload job): @job_status', array('@job_status' => print_r($job_status, TRUE)))
     );
 
     // Check if the job has the INPROGRESS field for transcode.
     $job_status = mediamosa_job::get($job_id_for_transcode, array(mediamosa_job_db::JOB_STATUS));
     $this->assertTrue(
       $job_status[mediamosa_job_db::JOB_STATUS] == mediamosa_job_db::JOB_STATUS_INPROGRESS,
-      t('Job status has the good value (upload job): @job_status', array('@job_status' => print_r($job_status, TRUE),))
+      t('Job status has the good value (upload job): @job_status', array('@job_status' => print_r($job_status, TRUE)))
     );
 
     // Changing the 'changed' field for upload.
@@ -131,14 +131,14 @@ class MediaMosaJobTestCaseEga extends MediaMosaTestCaseEga {
     $job_status = mediamosa_job::get($job_id_for_upload, array(mediamosa_job_db::JOB_STATUS));
     $this->assertTrue(
       $job_status[mediamosa_job_db::JOB_STATUS] == mediamosa_job_db::JOB_STATUS_FAILED,
-      t('Job status has the good value (upload job): @job_status', array('@job_status' => print_r($job_status, TRUE),))
+      t('Job status has the good value (upload job): @job_status', array('@job_status' => print_r($job_status, TRUE)))
     );
 
     // Check if the job has the FAILED field for transcode.
     $job_status = mediamosa_job::get($job_id_for_transcode, array(mediamosa_job_db::JOB_STATUS));
     $this->assertTrue(
       $job_status[mediamosa_job_db::JOB_STATUS] == mediamosa_job_db::JOB_STATUS_FAILED,
-      t('Job status has the good value (upload job): @job_status', array('@job_status' => print_r($job_status, TRUE),))
+      t('Job status has the good value (upload job): @job_status', array('@job_status' => print_r($job_status, TRUE)))
     );
   }
 }

@@ -32,7 +32,7 @@
 require_once 'mediamosa_aut_app_master_slave_db.inc';
 
 /**
- * Implements hook_ininstall.
+ * Implements hook_ininstall().
  */
 function _mediamosa_aut_app_master_slave_install() {
 // Create our table.
@@ -40,7 +40,7 @@ function _mediamosa_aut_app_master_slave_install() {
 }
 
 /**
- * Implements hook_uninstall.
+ * Implements hook_uninstall().
  */
 function _mediamosa_aut_app_master_slave_uninstall() {
 // Create our table.

@@ -265,8 +265,8 @@ function mediamosa_browse_asset_list_form() {
 
   foreach ($result['items'] as $row) {
     $actions = array(
-      l(t('Edit'), 'admin/mediamosa/browse/asset/'. $row[mediamosa_asset_db::ID] . '/edit', $l_options),
-      l(t('Delete'), 'admin/mediamosa/browse/asset/'. $row[mediamosa_asset_db::ID] . '/delete', $l_options),
+      l(t('Edit'), 'admin/mediamosa/browse/asset/' . $row[mediamosa_asset_db::ID] . '/edit', $l_options),
+      l(t('Delete'), 'admin/mediamosa/browse/asset/' . $row[mediamosa_asset_db::ID] . '/delete', $l_options),
     );
 
     $rows[] = array(
@@ -537,13 +537,13 @@ function _mediamosa_browse_asset_page_view_job_list($asset) {
 
   $rows = array();
   foreach ($result['items'] as $item) {
-    $delete = (in_array((string)$item['status'], $states)) ? l(t('Delete'), 'admin/mediamosa/asset/'. $asset_id .'/job/'. $item['id'] .'/delete') : '';
+    $delete = (in_array((string)$item['status'], $states)) ? l(t('Delete'), 'admin/mediamosa/asset/' . $asset_id . '/job/' . $item['id'] . '/delete') : '';
     $rows[] = array(
       $item['id'],
       $item['job_type'],
       $item['status'],
       $item['started_unix'] ? format_date($item['started_unix'], 'small') : '',
-      (string)$item['progress'] * 100 .'%',
+      (string)$item['progress'] * 100 . '%',
       (string)$item['owner'],
       (string)$item['error_description'],
       $delete,
@@ -614,9 +614,9 @@ function _mediamosa_browse_asset_page_view_mediafile_list($asset) {
     $actions = array();
 
     $actions[] = '<b>' . trim($item['filename']) . '</b>';
-    $actions[] = $may_delete ? l('Delete', strtr('admin/mediamosa/asset/@asset_id/mediafile/@mediafile_id/delete', array('@asset_id' => $item['asset_id'], '@mediafile_id' => $item['mediafile_id']))) : t('No delete right');
-    $actions[] = $may_analyse ? l('Analyze', strtr('admin/mediamosa/asset/@asset_id/mediafile/@mediafile_id/analyse', array('@asset_id' => $item['asset_id'], '@mediafile_id' => $item['mediafile_id']))) : t('No analyse right');
-    $actions[] = $may_download ? l('Download', strtr('admin/mediamosa/asset/@asset_id/mediafile/@mediafile_id/download', array('@asset_id' => $item['asset_id'], '@mediafile_id' => $item['mediafile_id']))) : t('No download right');
+    $actions[] = $may_delete ? l(t('Delete'), strtr('admin/mediamosa/asset/@asset_id/mediafile/@mediafile_id/delete', array('@asset_id' => $item['asset_id'], '@mediafile_id' => $item['mediafile_id']))) : t('No delete right');
+    $actions[] = $may_analyse ? l(t('Analyze'), strtr('admin/mediamosa/asset/@asset_id/mediafile/@mediafile_id/analyse', array('@asset_id' => $item['asset_id'], '@mediafile_id' => $item['mediafile_id']))) : t('No analyse right');
+    $actions[] = $may_download ? l(t('Download'), strtr('admin/mediamosa/asset/@asset_id/mediafile/@mediafile_id/download', array('@asset_id' => $item['asset_id'], '@mediafile_id' => $item['mediafile_id']))) : t('No download right');
     $caption = implode(' - ', $actions);
 
     // Mediafile properties.
@@ -625,16 +625,16 @@ function _mediamosa_browse_asset_page_view_mediafile_list($asset) {
     $rows[] = array(t('Owner id'), $item['owner_id']);
     $rows[] = array(t('Group id'), $item['group_id']);
     $rows[] = array(t('Mime Type'), $item['metadata']['mime_type']);
-    $rows[] = array(t('Container'), $item['metadata']['container_type'] ? $item['metadata']['container_type'] .' @ '. $item['metadata']['bitrate'] .'kbps' : '');
-    $rows[] = array(t('Width * Height @ fps'), $item['metadata']['width'] ? $item['metadata']['width'] .'px * '. $item['metadata']['height'] .'px @ '. $item['metadata']['fps'] .'fps' : '');
+    $rows[] = array(t('Container'), $item['metadata']['container_type'] ? $item['metadata']['container_type'] . ' @ ' . $item['metadata']['bitrate'] . 'kbps' : '');
+    $rows[] = array(t('Width * Height @ fps'), $item['metadata']['width'] ? $item['metadata']['width'] . 'px * ' . $item['metadata']['height'] . 'px @ ' . $item['metadata']['fps'] . 'fps' : '');
     $rows[] = array(t('Duration'), $item['metadata']['file_duration']);
     $rows[] = array(t('Filesize'), ($item['metadata']['filesize']) ? format_size($item['metadata']['filesize']) : '');
-    $rows[] = array(t('Video information'), ($item['metadata']['video_codec']) ? $item['metadata']['video_codec'] .' @ '. $item['metadata']['bitrate'] .'kbps ('. $item['metadata']['colorspace'] .')' : '');
+    $rows[] = array(t('Video information'), ($item['metadata']['video_codec']) ? $item['metadata']['video_codec'] . ' @ ' . $item['metadata']['bitrate'] . 'kbps (' . $item['metadata']['colorspace'] . ')' : '');
     $rows[] = array(t('MP4 hinted'), $item['metadata']['is_hinted']);
     $rows[] = array(t('FLV metadated'), $item['metadata']['is_inserted_md']);
     $rows[] = array(t('Original'), $item['is_original_file']);
     $rows[] = array(t('Downloadable'), $item['is_downloadable']);
-    $rows[] = array(t('Audio information'), ($item['metadata']['audio_codec']) ? $item['metadata']['audio_codec'] .' @ '. $item['metadata']['sample_rate'] .'Hz' .' ('. $item['metadata']['channels'] .')': '');
+    $rows[] = array(t('Audio information'), ($item['metadata']['audio_codec']) ? $item['metadata']['audio_codec'] . ' @ ' . $item['metadata']['sample_rate'] . 'Hz' . ' (' . $item['metadata']['channels'] . ')': '');
     $rows[] = array(t('Protected'), $item['is_protected']);
 
     // Uri REST call.
@@ -685,7 +685,7 @@ function _mediamosa_browse_asset_page_view_mediafile_list($asset) {
           }
 
           $rows[] = array(
-            t('Still') . '<br />' . ($still_ticket ? theme('image', $still_ticket, '', '', array('width' => 200, 'height' => NULL,), FALSE) : ''),
+            t('Still') . '<br />' . ($still_ticket ? theme('image', $still_ticket, '', '', array('width' => 200, 'height' => NULL), FALSE) : ''),
             theme('table', array('header' => $still_header, 'rows' => $still_rows)),
           );
         }
@@ -743,7 +743,7 @@ function _mediamosa_browse_asset_page_view_collections_list($asset) {
 
     foreach ($result['items'] as $item) {
       $actions = array(
-        l(t('Remove'), 'admin/mediamosa/browse/collection/'. rawurlencode($item['coll_id']) . '/remove_asset/' . rawurlencode($asset_id), $l_options),
+        l(t('Remove'), 'admin/mediamosa/browse/collection/' . rawurlencode($item['coll_id']) . '/remove_asset/' . rawurlencode($asset_id), $l_options),
       );
 
       $title = trim($item['title']);
@@ -969,12 +969,12 @@ function mediamosa_browse_asset_form_submit($form, &$form_state) {
   foreach ($form_state['values'] as $name_rpl => $value) {
 
     // Must start with rpl_.
-    if (substr($name_rpl, 0, 4) != 'rpl_') {
+    if (drupal_substr($name_rpl, 0, 4) != 'rpl_') {
       continue;
     }
 
     // Get the original name.
-    $name = substr($name_rpl, 4);
+    $name = drupal_substr($name_rpl, 4);
     $changed_names[$name] = $value;
   }
 

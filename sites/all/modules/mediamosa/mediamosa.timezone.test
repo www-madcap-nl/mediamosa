@@ -313,28 +313,14 @@ class MediaMosaTimezoneTestCaseEga extends MediaMosaTestCaseEga {
       'job/$job_id/status' => array(
         'user_id' => self::SIMPLETEST_USER_ID,
       ),
-   );
-
- //   $startfrom = 60;
- //   $count = 20;
+    );
 
     foreach ($all_rest_calls as $uri => $rest_calls) {
 
       if (empty($rest_calls[mediamosa_rest_call::METHOD_GET]) || in_array($uri, $skip_uri)) {
         continue;
       }
-/*
-      // Skip?
-      if ($startfrom) {
-        $startfrom--;
-        continue;
-      }
 
-      // @todo remove
-      if (!$count--) {
-        break;
-      }
-*/
       // Get the REST call.
       $rest_call = $rest_calls[mediamosa_rest_call::METHOD_GET];
 

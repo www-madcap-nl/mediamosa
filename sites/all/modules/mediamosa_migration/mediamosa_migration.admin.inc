@@ -60,7 +60,7 @@ function mediamosa_migration_form() {
     // Get possible reasons not to migrate.
     $reasons = _mediamosa_requirements_test();
     $form['migration']['text_passed_intro'] = array(
-      '#markup' => '<p>' . t('To use your MediaMosa 1.7.x database, you need to migrate your 1.7.x database to MediaMosa. Your original 1.7.x database is not changed. Warning: Your old database must be installed on the same mysql server as the new MediaMosa 2.x database. Also note that your MediaMosa 2.x mysql user requires SELECT access on your 1.7.x database. If for some reason migration fails, please report on !mediamosaorg. Make sure you are migrating with version MediaMosa 1.7.3 or higher. We also advice you to turn off the cron maintenance during the migration.', array('!mediamosaorg' => l('mediamosa.org', 'http://mediamosa.org'))) . '</p>'
+      '#markup' => '<p>' . t('To use your MediaMosa 1.7.x database, you need to migrate your 1.7.x database to MediaMosa. Your original 1.7.x database is not changed. Warning: Your old database must be installed on the same mysql server as the new MediaMosa 2.x database. Also note that your MediaMosa 2.x mysql user requires SELECT access on your 1.7.x database. If for some reason migration fails, please report on !mediamosaorg. Make sure you are migrating with version MediaMosa 1.7.3 or higher. We also advice you to turn off the cron maintenance during the migration.', array('!mediamosaorg' => l(t('mediamosa.org'), 'http://mediamosa.org'))) . '</p>'
     );
 
     if (count($reasons)) {
@@ -153,8 +153,8 @@ function _mediamosa_migration_process($callback, $part, &$context) {
 }
 
 /**
-* 'finished' callback
-*/
+ * 'finished' callback.
+ */
 function _mediamosa_migration_batch_finished($success, $results, $operations) {
   if ($success) {
     // Here we do something meaningful with the results.

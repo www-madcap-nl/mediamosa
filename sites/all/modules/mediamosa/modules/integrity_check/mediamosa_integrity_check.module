@@ -48,8 +48,8 @@ function mediamosa_integrity_check_menu() {
   $items = array();
 
   $items['admin/mediamosa/browse/integrity'] = array(
-    'title' => t('File Integrity'),
-    'description' => t('Integrity check does several checks on your MediaMosa database for data loss and consistency checks on your stored Media.'),
+    'title' => 'File Integrity',
+    'description' => 'Integrity check does several checks on your MediaMosa database for data loss and consistency checks on your stored Media.',
     'page callback' => 'mediamosa_integrity_check_page',
     'access arguments' => array('view integrity'),
   );
@@ -84,7 +84,7 @@ function mediamosa_integrity_check_print_errors() {
     ->orderBy(mediamosa_integrity_check_db::ID, 'DESC');
   $result = $query->execute();
   foreach ($result as $record) {
-    drupal_set_message(t('Error found: ') . $record->object_id, 'error');
+    drupal_set_message(t('Error found: @object_id', array('@object_id' => $record->object_id)), 'error');
   }
 }
 
@@ -160,7 +160,7 @@ function mediamosa_integrity_check_page() {
   $output = array();
   mediamosa_io::exec('ps ax | grep mediamosa_integrity_check.inc | grep -v grep', $output);
   if (count($output) > 0) {
-    drupal_set_message('The integrity check is currently running.');
+    drupal_set_message(t('The integrity check is currently running.'));
   }
   else {
     // Define "start check" button.
@@ -171,13 +171,15 @@ function mediamosa_integrity_check_page() {
   mediamosa_integrity_check_print_errors();
 
   // Check database objects presence.
-  $result = mediamosa_db::db_query("SELECT COUNT(*) FROM {#mediamosa_log_integrity_check} WHERE #type <> :error", array(
-    '#mediamosa_log_integrity_check' => mediamosa_integrity_check_db::TABLE_NAME,
-    '#type' => mediamosa_integrity_check_db::TYPE,
-    ':error' => mediamosa_integrity_check_db::TYPE_ERROR,
-  ));
-  $count = $result->fetchField();
-  if (!$count) {
+  $has_rows = (bool) mediamosa_db::db_query_range('SELECT 1 FROM {#mediamosa_log_integrity_check} WHERE #type <> :error',
+    0, 1,
+    array(
+      '#mediamosa_log_integrity_check' => mediamosa_integrity_check_db::TABLE_NAME,
+      '#type' => mediamosa_integrity_check_db::TYPE,
+      ':error' => mediamosa_integrity_check_db::TYPE_ERROR,
+    )
+  )->fetchField();
+  if (!$has_rows) {
     $ret = array();
     $ret[] = array('#markup' => '<p>No integrity errors have been found.</p>');
     $ret = array_merge($ret, $start_check);
@@ -271,7 +273,7 @@ function mediamosa_integrity_check_page() {
             'mediafile_id' => $row['object_id'],
             'app_id' => $row['app_id'],
             'owner_id' => $row['owner_id'],
-            'asset_id' => l($asset_id, 'vpx/vpx_beheer_mm/asset/'. $asset_id),
+            'asset_id' => mediamosa_lib::l_asset($asset_id),
             'created' => $row['created'],
             'details' => $row['details'],
             'select' => sprintf('<input type="checkbox" name="selected_ids[]" value="%s">', $row['id']),
@@ -279,7 +281,7 @@ function mediamosa_integrity_check_page() {
         );
       }
     }
-    else if ($type == 'missing mediarecord') {
+    elseif ($type == 'missing mediarecord') {
       $rows[] = array(
         'data' => array(
           'mediafile_id' => $row['object_id'],
@@ -338,7 +340,7 @@ function mediamosa_integrity_check_start_validate($form, &$form_state) {
 function mediamosa_integrity_check_start_submit($form, &$form_state) {
   // Rights check.
   if (!user_access('administer integrity')) {
-    drupal_set_message('You have no "administer integrity" rights.', 'error');
+    drupal_set_message(t('You have no "administer integrity" rights.'), 'error');
     return;
   }
 

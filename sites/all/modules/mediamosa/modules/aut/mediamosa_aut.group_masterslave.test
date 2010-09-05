@@ -75,7 +75,7 @@ class MediaMosaAutGroupsMasterSlaveTestCaseEga extends MediaMosaTestCaseEga {
     $this->doEgaLogin_3(); // no assets.
 
     // Group name.
-    $groupname = mediamosa_db::uuid(rand(1, 9999)). '.group';
+    $groupname = mediamosa_db::uuid(rand(1, 9999)) . '.group';
 
     // Group type.
     $group_type = mediamosa_aut::AUT_NAME_TYPE_DOMAIN;

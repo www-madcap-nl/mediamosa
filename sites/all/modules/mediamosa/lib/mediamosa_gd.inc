@@ -42,7 +42,7 @@ class mediamosa_gd {
    * @param integer $b2
    * @return integer Difference in color
    */
-  static public function lumdiff($r1, $g1, $b1, $r2, $g2, $b2){
+  static public function lumdiff($r1, $g1, $b1, $r2, $g2, $b2) {
       $l1 = 0.2126 * pow($r1/255, 2.2) +
             0.7152 * pow($g1/255, 2.2) +
             0.0722 * pow($b1/255, 2.2);
@@ -69,10 +69,8 @@ class mediamosa_gd {
    * @param $g2
    * @param $b2
    */
-  static public function coldiff($r1, $g1, $b1, $r2, $g2, $b2){
-      return max($r1, $r2) - min($r1, $r2) +
-             max($g1, $g2) - min($g1, $g2) +
-             max($b1, $b2) - min($b1, $b2);
+  static public function coldiff($r1, $g1, $b1, $r2, $g2, $b2) {
+    return max($r1, $r2) - min($r1, $r2) + max($g1, $g2) - min($g1, $g2) + max($b1, $b2) - min($b1, $b2);
   }
 
   /**
@@ -105,7 +103,7 @@ class mediamosa_gd {
    * @param integer $B2
    * @return integer Difference in color
    */
-  static public function brghtdiff($r1, $g1, $b1, $r2, $g2, $b2){
+  static public function brghtdiff($r1, $g1, $b1, $r2, $g2, $b2) {
       $br1 = (299 * $r1 + 587 * $g1 + 114 * $b1) / 1000;
       $br2 = (299 * $r2 + 587 * $g2 + 114 * $b2) / 1000;
 
@@ -120,9 +118,9 @@ class mediamosa_gd {
    */
   static public function hex2rgb($hexcolor = "") {
     $rgb = array();
-    $rgb['red'] = hexdec(substr($hexcolor, 0, 2));
-    $rgb['green'] = hexdec(substr($hexcolor, 2, 2));
-    $rgb['blue'] = hexdec(substr($hexcolor, 4, 2));
+    $rgb['red'] = hexdec(mediamosa_unicode::substr($hexcolor, 0, 2));
+    $rgb['green'] = hexdec(mediamosa_unicode::substr($hexcolor, 2, 2));
+    $rgb['blue'] = hexdec(mediamosa_unicode::substr($hexcolor, 4, 2));
 
     return $rgb;
   }
@@ -135,9 +133,10 @@ class mediamosa_gd {
    */
   static public function rgb2hex($rgb = array()) {
     $hex = "";
-    $hex =  substr("0". dechex($rgb['red']), -2) .
-            substr("0". dechex($rgb['green']), -2) .
-            substr("0". dechex($rgb['blue']), -2);
+    $hex =
+      mediamosa_unicode::substr('0' . dechex($rgb['red']), -2) .
+      mediamosa_unicode::substr('0' . dechex($rgb['green']), -2) .
+      mediamosa_unicode::substr('0' . dechex($rgb['blue']), -2);
     return $hex;
   }
 }

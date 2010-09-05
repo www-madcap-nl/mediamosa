@@ -108,7 +108,7 @@ class mediamosa_job_transcode {
 
     // Check if fileextension is ok.
     try {
-      mediamosa_transcode_profile::check_command_parameters($tool, 'internal_file_extension:'. $file_extension);
+      mediamosa_transcode_profile::check_command_parameters($tool, 'internal_file_extension:' . $file_extension);
     }
     catch (mediamosa_exception_error $e) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_JOB_TRANSCODE_PARAMETER_COMBINATION, array('@tool' => $tool, '@file_extension' => $file_extension));
@@ -125,11 +125,11 @@ class mediamosa_job_transcode {
       $pos = mediamosa_unicode::strpos($completed_transcoding_url, '?');
       if ($pos !== FALSE) {
         if (mediamosa_unicode::strlen($completed_transcoding_url) > $pos + 1) {
-          parse_str(substr($completed_transcoding_url, $pos + 1), $a_query);
+          parse_str(mediamosa_unicode::substr($completed_transcoding_url, $pos + 1), $a_query);
         }
 
         // Remove the query string.
-        $completed_transcoding_url = substr($completed_transcoding_url, 0, $pos);
+        $completed_transcoding_url = mediamosa_unicode::substr($completed_transcoding_url, 0, $pos);
       }
 
       // Now add our parameters.

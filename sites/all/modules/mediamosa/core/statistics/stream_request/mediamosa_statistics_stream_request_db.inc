@@ -25,6 +25,7 @@
  */
 
 /**
+ * @file
  * DB class for statistics stream request.
  */
 class mediamosa_statistics_stream_request_db {

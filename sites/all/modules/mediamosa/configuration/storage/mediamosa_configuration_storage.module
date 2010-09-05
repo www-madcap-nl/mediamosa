@@ -30,7 +30,7 @@
  */
 
 /**
- * Implements the hook_mediamosa_configuration_collect()
+ * Implements hook_mediamosa_configuration_collect().
  */
 function mediamosa_configuration_storage_mediamosa_configuration_collect() {
   $form['settings_mountpount'] = array(
@@ -60,7 +60,7 @@ function mediamosa_configuration_storage_mediamosa_configuration_collect() {
 }
 
 /**
- * Implements the hook_mediamosa_settings_submit()
+ * Implements hook_mediamosa_settings_submit().
  */
 function mediamosa_configuration_storage_mediamosa_configuration_submit($form, $form_state) {
 

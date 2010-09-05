@@ -122,7 +122,7 @@ class mediamosa_io {
   static public function get_ext($filename) {
     $last_dot = strripos($filename, '.'); // 0-index
 
-    return $last_dot === FALSE && ($last_dot + 1) != strlen($filename) ? '' : mediamosa_unicode::substr($filename, $last_dot + 1);
+    return $last_dot === FALSE && ($last_dot + 1) != mediamosa_unicode::strlen($filename) ? '' : mediamosa_unicode::substr($filename, $last_dot + 1);
   }
 
   /**
@@ -254,7 +254,7 @@ class mediamosa_io {
    *  Otherwise, it is set to time.
    */
   static public function touch($filename, $time = NULL, $atime = NULL) {
-    if(!isset($time)) {
+    if (!isset($time)) {
       $time = time();
     }
 

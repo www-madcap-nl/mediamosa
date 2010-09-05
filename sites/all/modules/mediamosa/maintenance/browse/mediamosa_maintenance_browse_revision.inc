@@ -24,11 +24,11 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
- /**
-  * @file
-  * Browse the history of all mediamosa node objects changes using Drupals
-  * node revisions.
-  */
+/**
+ * @file
+ * Browse the history of all mediamosa node objects changes using Drupals
+ * node revisions.
+ */
 
 /**
  * node_revision_delete($revision_id)
@@ -251,8 +251,8 @@ function theme_mediamosa_maintenance_browse_revision_info($variables) {
   $log = trim($variables['node']->log);
 
   $output[] = t('View details of a change to MediaMosa configuration settings. Differences compared to current values are displayed <b>bold</b>.');
-  $output[] = t('<b>Date change</b>: ') . theme('mediamosa_maintenance_date', array('timestamp' => $variables['node']->created));
-  $output[] = t('<b>Log message</b>: ') . (empty($log) ? t('no log message found.') : check_plain($log));
-  $output[] = t('<b>User</b>: ') . check_plain($name);
+  $output[] = t('<b>Date change</b>:') . ' ' . theme('mediamosa_maintenance_date', array('timestamp' => $variables['node']->created));
+  $output[] = t('<b>Log message</b>:') . ' ' . (empty($log) ? t('no log message found.') : check_plain($log));
+  $output[] = t('<b>User</b>:') . ' ' . check_plain($name);
   return '<p>' . implode('</p><p>', $output) . '</p>';
 }

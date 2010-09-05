@@ -330,7 +330,7 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
           self::VAR_TYPE => mediamosa_type::TYPE_DOMAIN,
           self::VAR_DESCRIPTION => 'Authentication parameter.',
         ),
-        self::AUT_REALM=> array(
+        self::AUT_REALM => array(
           self::VAR_TYPE => mediamosa_type::TYPE_REALM,
           self::VAR_DESCRIPTION => 'Authentication parameter.',
         ),
@@ -706,7 +706,7 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
           self::VAR_TYPE => mediamosa_type::TYPE_DOMAIN,
           self::VAR_DESCRIPTION => 'The domain of the user for autohorisation.',
         ),
-        self::AUT_REALM=> array(
+        self::AUT_REALM => array(
           self::VAR_TYPE => mediamosa_type::TYPE_REALM,
           self::VAR_DESCRIPTION => 'The realm of the user for autohorisation.',
         ),
@@ -866,7 +866,7 @@ class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
           self::VAR_TYPE => mediamosa_type::TYPE_DOMAIN,
           self::VAR_DESCRIPTION => 'The domain of the user for autohorisation.',
         ),
-        self::AUT_REALM=> array(
+        self::AUT_REALM => array(
           self::VAR_TYPE => mediamosa_type::TYPE_REALM,
           self::VAR_DESCRIPTION => 'The realm of the user for autohorisation.',
         ),

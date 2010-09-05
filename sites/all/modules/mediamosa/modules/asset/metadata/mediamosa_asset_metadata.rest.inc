@@ -236,7 +236,7 @@ class mediamosa_rest_call_asset_metadata_create extends mediamosa_rest_call {
 
     // Make sure replace is set (at least to default).
     if (!$this->isset_param(self::REPLACE)) {
-      $this->set_param_value(self::REPLACE, true);
+      $this->set_param_value(self::REPLACE, TRUE);
     }
 
     // Will use $action, so if not given, use value of replace to get value for it.

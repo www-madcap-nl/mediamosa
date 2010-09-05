@@ -113,14 +113,14 @@ class mediamosa_app_authentication {
         $_SESSION['mediamosa_dbus']['cookie_id'] = 0;
         $_SESSION['mediamosa_dbus']['challenge'] = md5(microtime() . self::APP_AUTH_SECRET_PHRASE);
         return
-          'DATA '. self::APP_AUTH_CONTEXT . ' ' .
+          'DATA ' . self::APP_AUTH_CONTEXT . ' ' .
           $_SESSION['mediamosa_dbus']['cookie_id'] . ' ' .
           $_SESSION['mediamosa_dbus']['challenge'];
 
       case 'DATA':
         $cookie = self::get_shared_key($_SESSION['mediamosa_dbus']['username']);
         list($random, $response) = explode(' ', $param);
-        return $response == sha1($_SESSION['mediamosa_dbus']['challenge'] .':'. $random .':'. $cookie);
+        return $response == sha1($_SESSION['mediamosa_dbus']['challenge'] . ':' . $random . ':' . $cookie);
     }
 
     return 'ERROR syntax error';

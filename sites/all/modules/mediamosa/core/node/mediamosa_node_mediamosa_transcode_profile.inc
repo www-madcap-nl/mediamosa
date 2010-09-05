@@ -56,7 +56,7 @@ function _mediamosa_transcode_profile_do_command($node) {
     if (strpos($key, 'options_') === 0) {
 
       // Get the tmid and strip the value
-      $command = substr($key, strlen('options_'));
+      $command = drupal_substr($key, drupal_strlen('options_'));
       $value = trim($value);
 
       // Gather all set options
@@ -170,7 +170,7 @@ function mediamosa_transcode_profile_view($node, $view_mode = 'full') {
     array(t('Application'), isset($apps[$node->app_id]) ? $apps[$node->app_id] : 'Unknown or deleted application'),
     array(t('Tool'), $node->tool),
     array(t('File extension'), $node->file_extension),
-    array(t('Is default profile'), t(drupal_ucfirst(strtolower($node->is_default_profile)))),
+    array(t('Is default profile'), t(drupal_ucfirst(drupal_strtolower($node->is_default_profile)))),
   );
 
   // Optional parameters.

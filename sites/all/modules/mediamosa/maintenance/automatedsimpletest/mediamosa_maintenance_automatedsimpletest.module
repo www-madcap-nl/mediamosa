@@ -220,7 +220,7 @@ function mediamosa_maintenance_automatedsimpletest_mediamosa_register_rest_call(
 }
 
 /**
- * Implements the hook_mediamosa_configuration_collect()
+ * Implements hook_mediamosa_configuration_collect().
  */
 function mediamosa_maintenance_automatedsimpletest_mediamosa_configuration_collect() {
   $form = array();
@@ -288,7 +288,7 @@ function mediamosa_maintenance_automatedsimpletest_mediamosa_configuration_colle
 }
 
 /**
- * Implements the hook_mediamosa_settings_submit()
+ * Implements hook_mediamosa_settings_submit().
  */
 function mediamosa_maintenance_automatedsimpletest_mediamosa_configuration_submit($form, $form_state) {
 
@@ -530,7 +530,7 @@ function _mediamosa_maintenance_automatedsimpletest_seed($name) {
 
   // Is Valid?
   if (!$valid) {
-    drupal_set_message('Invalid unit test name!', 'error');
+    drupal_set_message(t('Invalid unit test name!'), 'error');
   }
   else {
     // Add to queue.
@@ -539,14 +539,14 @@ function _mediamosa_maintenance_automatedsimpletest_seed($name) {
     $queue = variable_get('mediamosa_maintenance_automatedsimpletest_queue', array());
 
     if (!in_array($class_name, $queue)) {
-      drupal_set_message('Test add to queue.');
+      drupal_set_message(t('Test add to queue.'));
       $queue = array_merge(array($class_name), $queue);
 
       // Set the queue.
       variable_set('mediamosa_maintenance_automatedsimpletest_queue', $queue);
     }
     else {
-      drupal_set_message('Test is already queued.', 'warning');
+      drupal_set_message(t('Test is already queued.'), 'warning');
     }
   }
 

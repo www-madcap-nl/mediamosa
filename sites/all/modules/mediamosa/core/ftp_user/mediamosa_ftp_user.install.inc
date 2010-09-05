@@ -32,7 +32,7 @@
 require_once 'mediamosa_ftp_user_db.inc';
 
 /**
- * Implements hook_ininstall.
+ * Implements hook_ininstall().
  */
 function _mediamosa_ftp_user_install() {
 // Create our table.
@@ -40,7 +40,7 @@ function _mediamosa_ftp_user_install() {
 }
 
 /**
- * Implements hook_uninstall.
+ * Implements hook_uninstall().
  */
 function _mediamosa_ftp_user_uninstall() {
   // Uninstall our table.

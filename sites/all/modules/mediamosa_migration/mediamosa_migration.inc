@@ -55,7 +55,7 @@ $databases['mig_vpx_ftp']['default'] = array(
   'password' => 'memo',
   'host' => 'localhost'
 );
-*/
+ */
 
 define('MIG_MEMO', variable_get('mediamosa_db_mig_memo', 'mig_memo'));
 define('MIG_MEMO_DATA', variable_get('mediamosa_db_mig_memo_data', 'mig_memo_data'));
@@ -281,14 +281,13 @@ function _mediamosa_migration_empty_tables($a_table_names, $key = 'default') {
 
   try {
     foreach ($a_table_names as $table_name) {
-      $count = db_query('SELECT COUNT(*) FROM ' . $table_name)->fetchField();
-
-      if ($count) {
+      $has_rows = (bool) db_query_range('SELECT 1 FROM ' . $table_name, 0, 1)->fetchField();
+      if ($has_rows) {
         throw new Exception($t("The table '@table_name' must be empty.", array('@table_name' => $table_name)));
       }
     }
   }
-  catch(Exception $e) {
+  catch (Exception $e) {
     db_set_active($old_db);
     throw $e;
   }
@@ -455,7 +454,7 @@ function _mediamosa_migration_asset() {
   );
 
   // Now copy all changed dates to overwrite empty created dates.
-  db_query("UPDATE {mediamosa_asset} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+  db_query("UPDATE {mediamosa_asset} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed <> '0000-00-00 00:00:00'");
 
   // Now make sure created is not empty.
   db_query("UPDATE {mediamosa_asset} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
@@ -552,7 +551,7 @@ function _mediamosa_migration_mediafile() {
   );
 
   // Now copy all changed dates to overwrite empty created dates.
-  db_query("UPDATE {mediamosa_asset_mediafile} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+  db_query("UPDATE {mediamosa_asset_mediafile} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed <> '0000-00-00 00:00:00'");
 
   // Now make sure created is not empty.
   db_query("UPDATE {mediamosa_asset_mediafile} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
@@ -725,7 +724,7 @@ function _mediamosa_migration_asset_metadata_property_group() {
   );
 
   // Now copy all changed dates to overwrite empty created dates.
-  db_query("UPDATE {mediamosa_asset_metadata_property_group} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+  db_query("UPDATE {mediamosa_asset_metadata_property_group} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed <> '0000-00-00 00:00:00'");
 
   // Now make sure created is not empty.
   db_query("UPDATE {mediamosa_asset_metadata_property_group} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
@@ -789,7 +788,7 @@ function _mediamosa_migration_asset_metadata_property() {
   );
 
   // Now copy all changed dates to overwrite empty created dates.
-  db_query("UPDATE {mediamosa_asset_metadata_property} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+  db_query("UPDATE {mediamosa_asset_metadata_property} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed <> '0000-00-00 00:00:00'");
 
   // Now make sure created is not empty.
   db_query("UPDATE {mediamosa_asset_metadata_property} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
@@ -859,7 +858,7 @@ function _mediamosa_migration_asset_metadata() {
   );
 
   // Now copy all changed dates to overwrite empty created dates.
-  db_query("UPDATE {mediamosa_asset_metadata_property} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+  db_query("UPDATE {mediamosa_asset_metadata_property} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed <> '0000-00-00 00:00:00'");
 
   // Now make sure created is not empty.
   db_query("UPDATE {mediamosa_asset_metadata_property} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
@@ -1231,7 +1230,8 @@ function _mediamosa_migration_user() {
  */
 function _mediamosa_migration_ticket() {
 
-  return true; // why would we ever want to migrate this?
+  return TRUE; // why would we ever want to migrate this?
+
   // Get the database name.
   $db_name = _mediamosa_migration_get_memo_data_db();
 

@@ -40,7 +40,7 @@
  * STATS:6
  function vpx_statistics_get_search_queries() {
  }
-*/
+ */
 
 class mediamosa_statistics {
 

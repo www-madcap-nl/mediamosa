@@ -33,7 +33,7 @@ require_once 'mediamosa_ftp_batch_db.inc';
 require_once 'asset/mediamosa_ftp_batch_asset.install.inc';
 
 /**
- * Implements hook_ininstall.
+ * Implements hook_ininstall().
  */
 function _mediamosa_ftp_batch_install() {
 // Create our table.
@@ -44,7 +44,7 @@ function _mediamosa_ftp_batch_install() {
 }
 
 /**
- * Implements hook_uninstall.
+ * Implements hook_uninstall().
  */
 function _mediamosa_ftp_batch_uninstall() {
   // Uninstall our child table.

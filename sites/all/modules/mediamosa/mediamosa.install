@@ -197,12 +197,11 @@ function mediamosa_update_7001() {
 
   db_insert(mediamosa_error_db::TABLE_NAME)
     ->fields(array(
-      mediamosa_error_db::NAME =>'ERRORCODE_TEST_RUNNING',
+      mediamosa_error_db::NAME => 'ERRORCODE_TEST_RUNNING',
       mediamosa_error_db::MESSAGE => 'Timeout: test "@test" is currently running.',
       mediamosa_error_db::CODE => mediamosa_error::ERRORCODE_TEST_RUNNING,
     ))
   ->execute();
-
 }
 
 /**
@@ -595,7 +594,7 @@ function mediamosa_update_7017() {
  */
 function mediamosa_update_7018() {
   // Now copy all changed dates to overwrite empty created dates.
-  db_query("UPDATE {mediamosa_asset} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+  db_query("UPDATE {mediamosa_asset} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed <> '0000-00-00 00:00:00'");
 
   // Now make sure created is not empty.
   db_query("UPDATE {mediamosa_asset} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
@@ -612,7 +611,7 @@ function mediamosa_update_7018() {
  */
 function mediamosa_update_7019() {
   // Now copy all changed dates to overwrite empty created dates.
-  db_query("UPDATE {mediamosa_asset_collection} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+  db_query("UPDATE {mediamosa_asset_collection} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed <> '0000-00-00 00:00:00'");
 
   // Now make sure created is not empty.
   db_query("UPDATE {mediamosa_asset_collection} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
@@ -636,7 +635,7 @@ function mediamosa_update_7020() {
  */
 function mediamosa_update_7021() {
   // Now copy all changed dates to overwrite empty created dates.
-  db_query("UPDATE {mediamosa_asset_mediafile} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+  db_query("UPDATE {mediamosa_asset_mediafile} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed <> '0000-00-00 00:00:00'");
 
   // Now make sure created is not empty.
   db_query("UPDATE {mediamosa_asset_mediafile} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
@@ -660,7 +659,7 @@ function mediamosa_update_7022() {
  */
 function mediamosa_update_7023() {
   // Now copy all changed dates to overwrite empty created dates.
-  db_query("UPDATE {mediamosa_asset_mediafile_metadata_property} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+  db_query("UPDATE {mediamosa_asset_mediafile_metadata_property} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed <> '0000-00-00 00:00:00'");
 
   // Now make sure created is not empty.
   db_query("UPDATE {mediamosa_asset_mediafile_metadata_property} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
@@ -677,7 +676,7 @@ function mediamosa_update_7023() {
  */
 function mediamosa_update_7024() {
   // Now copy all changed dates to overwrite empty created dates.
-  db_query("UPDATE {mediamosa_asset_metadata} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+  db_query("UPDATE {mediamosa_asset_metadata} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed <> '0000-00-00 00:00:00'");
 
   // Now make sure created is not empty.
   db_query("UPDATE {mediamosa_asset_metadata} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
@@ -694,7 +693,7 @@ function mediamosa_update_7024() {
  */
 function mediamosa_update_7025() {
   // Now copy all changed dates to overwrite empty created dates.
-  db_query("UPDATE {mediamosa_asset_metadata_property} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+  db_query("UPDATE {mediamosa_asset_metadata_property} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed <> '0000-00-00 00:00:00'");
 
   // Now make sure created is not empty.
   db_query("UPDATE {mediamosa_asset_metadata_property} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
@@ -711,7 +710,7 @@ function mediamosa_update_7025() {
  */
 function mediamosa_update_7026() {
   // Now copy all changed dates to overwrite empty created dates.
-  db_query("UPDATE {mediamosa_asset_metadata_property_group} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+  db_query("UPDATE {mediamosa_asset_metadata_property_group} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed <> '0000-00-00 00:00:00'");
 
   // Now make sure created is not empty.
   db_query("UPDATE {mediamosa_asset_metadata_property_group} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
@@ -728,7 +727,7 @@ function mediamosa_update_7026() {
  */
 function mediamosa_update_7027() {
   // Now copy all changed dates to overwrite empty created dates.
-  db_query("UPDATE {mediamosa_asset_supplement} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+  db_query("UPDATE {mediamosa_asset_supplement} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed <> '0000-00-00 00:00:00'");
 
   // Now make sure created is not empty.
   db_query("UPDATE {mediamosa_asset_supplement} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
@@ -745,7 +744,7 @@ function mediamosa_update_7027() {
  */
 function mediamosa_update_7028() {
   // Now copy all changed dates to overwrite empty created dates.
-  db_query("UPDATE {mediamosa_collection} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+  db_query("UPDATE {mediamosa_collection} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed <> '0000-00-00 00:00:00'");
 
   // Now make sure created is not empty.
   db_query("UPDATE {mediamosa_collection} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
@@ -790,7 +789,7 @@ function mediamosa_update_7032() {
  */
 function mediamosa_update_7033() {
   // Now copy all changed dates to overwrite empty created dates.
-  db_query("UPDATE {mediamosa_job_server_analyse} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+  db_query("UPDATE {mediamosa_job_server_analyse} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed <> '0000-00-00 00:00:00'");
 
   // Now make sure created is not empty.
   db_query("UPDATE {mediamosa_job_server_analyse} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
@@ -807,7 +806,7 @@ function mediamosa_update_7033() {
  */
 function mediamosa_update_7034() {
   // Now copy all changed dates to overwrite empty created dates.
-  db_query("UPDATE {mediamosa_job_server_still} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+  db_query("UPDATE {mediamosa_job_server_still} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed <> '0000-00-00 00:00:00'");
 
   // Now make sure created is not empty.
   db_query("UPDATE {mediamosa_job_server_still} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
@@ -824,7 +823,7 @@ function mediamosa_update_7034() {
  */
 function mediamosa_update_7035() {
   // Now copy all changed dates to overwrite empty created dates.
-  db_query("UPDATE {mediamosa_job_server_transcode} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+  db_query("UPDATE {mediamosa_job_server_transcode} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed <> '0000-00-00 00:00:00'");
 
   // Now make sure created is not empty.
   db_query("UPDATE {mediamosa_job_server_transcode} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
@@ -841,7 +840,7 @@ function mediamosa_update_7035() {
  */
 function mediamosa_update_7036() {
   // Now copy all changed dates to overwrite empty created dates.
-  db_query("UPDATE {mediamosa_job_still} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+  db_query("UPDATE {mediamosa_job_still} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed <> '0000-00-00 00:00:00'");
 
   // Now make sure created is not empty.
   db_query("UPDATE {mediamosa_job_still} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
@@ -858,7 +857,7 @@ function mediamosa_update_7036() {
  */
 function mediamosa_update_7037() {
   // Now copy all changed dates to overwrite empty created dates.
-  db_query("UPDATE {mediamosa_job_transcode} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+  db_query("UPDATE {mediamosa_job_transcode} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed <> '0000-00-00 00:00:00'");
 
   // Now make sure created is not empty.
   db_query("UPDATE {mediamosa_job_transcode} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
@@ -875,7 +874,7 @@ function mediamosa_update_7037() {
  */
 function mediamosa_update_7038() {
   // Now copy all changed dates to overwrite empty created dates.
-  db_query("UPDATE {mediamosa_job_upload} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+  db_query("UPDATE {mediamosa_job_upload} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed <> '0000-00-00 00:00:00'");
 
   // Now make sure created is not empty.
   db_query("UPDATE {mediamosa_job_upload} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
@@ -892,7 +891,7 @@ function mediamosa_update_7038() {
  */
 function mediamosa_update_7039() {
   // Now copy all changed dates to overwrite empty created dates.
-  db_query("UPDATE {mediamosa_log_integrity_check} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+  db_query("UPDATE {mediamosa_log_integrity_check} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed <> '0000-00-00 00:00:00'");
 
   // Now make sure created is not empty.
   db_query("UPDATE {mediamosa_log_integrity_check} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
@@ -909,7 +908,7 @@ function mediamosa_update_7039() {
  */
 function mediamosa_update_7040() {
   // Now copy all changed dates to overwrite empty created dates.
-  db_query("UPDATE {mediamosa_server_job} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+  db_query("UPDATE {mediamosa_server_job} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed <> '0000-00-00 00:00:00'");
 
   // Now make sure created is not empty.
   db_query("UPDATE {mediamosa_server_job} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
@@ -961,7 +960,7 @@ function mediamosa_update_7045() {
  */
 function mediamosa_update_7046() {
   // Now copy all changed dates to overwrite empty created dates.
-  db_query("UPDATE {mediamosa_transcode_mapping} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+  db_query("UPDATE {mediamosa_transcode_mapping} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed <> '0000-00-00 00:00:00'");
 
   // Now make sure created is not empty.
   db_query("UPDATE {mediamosa_transcode_mapping} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
@@ -978,7 +977,7 @@ function mediamosa_update_7046() {
  */
 function mediamosa_update_7047() {
   // Now copy all changed dates to overwrite empty created dates.
-  db_query("UPDATE {mediamosa_transcode_profile} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+  db_query("UPDATE {mediamosa_transcode_profile} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed <> '0000-00-00 00:00:00'");
 
   // Now make sure created is not empty.
   db_query("UPDATE {mediamosa_transcode_profile} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
@@ -995,7 +994,7 @@ function mediamosa_update_7047() {
  */
 function mediamosa_update_7048() {
   // Now copy all changed dates to overwrite empty created dates.
-  db_query("UPDATE {mediamosa_user} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+  db_query("UPDATE {mediamosa_user} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed <> '0000-00-00 00:00:00'");
 
   // Now make sure created is not empty.
   db_query("UPDATE {mediamosa_user} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");
@@ -1012,7 +1011,7 @@ function mediamosa_update_7048() {
  */
 function mediamosa_update_7049() {
   // Now copy all changed dates to overwrite empty created dates.
-  db_query("UPDATE {mediamosa_user_group} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed != '0000-00-00 00:00:00'");
+  db_query("UPDATE {mediamosa_user_group} SET created = changed WHERE created = '0000-00-00 00:00:00' AND changed <> '0000-00-00 00:00:00'");
 
   // Now make sure created is not empty.
   db_query("UPDATE {mediamosa_user_group} SET created = UTC_TIMESTAMP WHERE created = '0000-00-00 00:00:00'");

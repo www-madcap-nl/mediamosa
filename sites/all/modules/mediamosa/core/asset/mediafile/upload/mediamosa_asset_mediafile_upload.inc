@@ -54,7 +54,7 @@ class mediamosa_asset_mediafile_upload {
   static public function handle_upload($ticket_id, $is_method_put, $tag, $completed_url, $filename_put, array $trancode_profiles = array(), $retranscode = FALSE, $transcode_inherits_acl = FALSE, $create_still = FALSE, array $still_parameters = array(), $completed_transcoding_url = '') {
 
     // Set to false.
-    $is_app_admin = false;
+    $is_app_admin = FALSE;
 
     // Get the ticket.
     $ticket = mediamosa_ticket::get_valid_upload($ticket_id);
@@ -182,7 +182,7 @@ class mediamosa_asset_mediafile_upload {
   static public function handle_upload_still($ticket_id, $is_method_put, $tag, $completed_url, $filename_put, $order = 0, $default = FALSE) {
 
     // Set to false.
-    $is_app_admin = false;
+    $is_app_admin = FALSE;
 
     // Get the ticket.
     $ticket = mediamosa_ticket::get_valid_upload($ticket_id);
@@ -282,12 +282,12 @@ class mediamosa_asset_mediafile_upload {
 
       $pos = strpos($completed_url, '?');// Lets see if there is a http query
       if ($pos !== FALSE) {
-        if (strlen($completed_url) > $pos + 1) {
-          parse_str(substr($completed_url, $pos+1), $http_query);
+        if (mediamosa_unicode::strlen($completed_url) > $pos + 1) {
+          parse_str(mediamosa_unicode::substr($completed_url, $pos+1), $http_query);
         }
 
         // Strip the query_string.
-        $completed_url = substr($completed_url, 0, $pos);
+        $completed_url = mediamosa_unicode::substr($completed_url, 0, $pos);
       }
 
       $http_query['upload_ticket'] = $ticket_id;
@@ -344,7 +344,7 @@ class mediamosa_asset_mediafile_upload {
     // Open the new file
     $filename_file = @fopen($filename, 'w');
     if (!$filename_file) {
-      throw new mediamosa_exception(0, "Unable to write to '". $filename . "'.", mediamosa_exception::MEDIAMOSA_EXCEPTION_SEVERITY_HIGH);
+      throw new mediamosa_exception(0, "Unable to write to '" . $filename . "'.", mediamosa_exception::MEDIAMOSA_EXCEPTION_SEVERITY_HIGH);
     }
 
     // Open the stream

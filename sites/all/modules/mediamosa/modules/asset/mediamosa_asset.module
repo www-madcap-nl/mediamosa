@@ -24,14 +24,14 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
- /**
-  * @file
-  *
-  */
+/**
+ * @file
+ * The asset module.
+ */
 
- /*
-  * Implements hook_cron.
-  */
+/*
+ * Implements hook_cron().
+ */
 function mediamosa_asset_cron() {
   $start = time();
   mediamosa_debug::log('mediamosa_asset_cron started.', array(), 'asset_cron');

@@ -66,7 +66,7 @@ function _mediamosa_job_server_install() {
       _mediamosa_job_server_still_install();
       _mediamosa_job_server_transcode_install();
     }
-    catch(Exception $e) {
+    catch (Exception $e) {
       mediamosa_db::db_set_active($old_db);
       throw $e;
     }

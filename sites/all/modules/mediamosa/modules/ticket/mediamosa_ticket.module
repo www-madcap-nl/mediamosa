@@ -24,14 +24,14 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
- /**
-  * @file
-  * The ticket module.
-  */
+/**
+ * @file
+ * The ticket module.
+ */
 
- /*
-  * Implements hook_cron.
-  */
+/*
+ * Implements hook_cron().
+ */
 function mediamosa_ticket_cron() {
   $start = time();
   mediamosa_debug::log('mediamosa_ticket_cron started.', array(), 'ticket_cron');

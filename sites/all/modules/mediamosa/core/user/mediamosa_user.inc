@@ -188,7 +188,7 @@ class mediamosa_user {
       'SELECT SUM(mfmd.#val_int) / 1048576 FROM {#mediamosa_asset_mediafile} AS mf
        JOIN {#mediamosa_asset_mediafile_metadata} AS mfmd ON mfmd.#mediafile_id = mf.#mediafile_id
        WHERE mf.#subject_id = :id AND mf.#app_id = :app_id AND mfmd.#prop_id_filesize = :prop_id_filesize',
-       array(
+      array(
         '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
         '#mediamosa_asset_mediafile_metadata' => mediamosa_asset_mediafile_metadata_db::TABLE_NAME,
         '#val_int' => mediamosa_asset_mediafile_metadata_db::VAL_INT,
@@ -199,7 +199,7 @@ class mediamosa_user {
         ':id' => $id,
         ':app_id' => $app_id,
         ':prop_id_filesize' => $prop_id_filesize,
-       )
+      )
     )->fetchField();
 
     return array(

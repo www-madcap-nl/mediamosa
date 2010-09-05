@@ -72,13 +72,13 @@ class MediaMosaUserFavoriteTestCaseEga extends MediaMosaTestCaseEga {
     );
 
     // Do POST /user/{user_id}/favorites/add call.
-    $response = $this->restCallPOST('user/'. $user_id . '/favorites/create', $a_parameters);
+    $response = $this->restCallPOST('user/' . $user_id . '/favorites/create', $a_parameters);
 
     // Get the favorites of the user.
     $a_parameters = array(
       mediamosa_rest_call_user_favorite_create::FAV_TYPE => 'ASSET',
     );
-    $response = $this->restCallGET('user/'. $user_id . '/favorites', $a_parameters);
+    $response = $this->restCallGET('user/' . $user_id . '/favorites', $a_parameters);
 
     $result_asset_id = $response['xml']->items->item[0]->asset_id;
     $this->assertTrue(
@@ -93,13 +93,13 @@ class MediaMosaUserFavoriteTestCaseEga extends MediaMosaTestCaseEga {
     );
 
     // Do POST /user/{user_id}/favorites/delete call.
-    $response = $this->restCallPOST('user/'. $user_id . '/favorites/delete', $a_parameters);
+    $response = $this->restCallPOST('user/' . $user_id . '/favorites/delete', $a_parameters);
 
     // Get the favorites again.
     $a_parameters = array(
       mediamosa_rest_call_user_favorite_create::FAV_TYPE => 'ASSET',
     );
-    $response = $this->restCallGET('user/'. $user_id . '/favorites', $a_parameters, array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
+    $response = $this->restCallGET('user/' . $user_id . '/favorites', $a_parameters, array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
     $this->assertTrue(
       $response['xml']->header->item_count == 0,
       t("Call /user/{user_id}/favorites [GET]")
@@ -123,13 +123,13 @@ class MediaMosaUserFavoriteTestCaseEga extends MediaMosaTestCaseEga {
     );
 
     // Do POST /user/{user_id}/favorites/add call.
-    $response = $this->restCallPOST('user/'. $user_id . '/favorites/create', $a_parameters);
+    $response = $this->restCallPOST('user/' . $user_id . '/favorites/create', $a_parameters);
 
     // Get the favorites of the user.
     $a_parameters = array(
       mediamosa_rest_call_user_favorite_create::FAV_TYPE => 'COLLECTION',
     );
-    $response = $this->restCallGET('user/'. $user_id . '/favorites', $a_parameters);
+    $response = $this->restCallGET('user/' . $user_id . '/favorites', $a_parameters);
 
     $result_asset_id = $response['xml']->items->item[0]->coll_id;
     $this->assertTrue(
@@ -144,13 +144,13 @@ class MediaMosaUserFavoriteTestCaseEga extends MediaMosaTestCaseEga {
     );
 
     // Do POST /user/{user_id}/favorites/delete call.
-    $response = $this->restCallPOST('user/'. $user_id . '/favorites/delete', $a_parameters);
+    $response = $this->restCallPOST('user/' . $user_id . '/favorites/delete', $a_parameters);
 
     // Get the favorites again.
     $a_parameters = array(
       mediamosa_rest_call_user_favorite_create::FAV_TYPE => 'COLLECTION',
     );
-    $response = $this->restCallGET('user/'. $user_id . '/favorites', $a_parameters, array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
+    $response = $this->restCallGET('user/' . $user_id . '/favorites', $a_parameters, array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
     $this->assertTrue(
       $response['xml']->header->item_count == 0,
       t("Call /user/{user_id}/favorites [GET]")
@@ -173,10 +173,10 @@ class MediaMosaUserFavoriteTestCaseEga extends MediaMosaTestCaseEga {
       mediamosa_rest_call_user_favorite_create::FAV_TYPE => 'ASSET',
       mediamosa_rest_call_user_favorite_create::FAV_ID => $asset_id,
     );
-    $response = $this->restCallPOST('user/'. $user_id . '/favorites/create', $a_parameters);
+    $response = $this->restCallPOST('user/' . $user_id . '/favorites/create', $a_parameters);
 
     // Count it, we should find 1 asset.
-    $response = $this->restCallGET('asset/'. $asset_id . '/favorites/count');
+    $response = $this->restCallGET('asset/' . $asset_id . '/favorites/count');
     $this->assertTrue(
       $response['xml']->header->item_count_total == 1,
       t("Call /asset/{asset_id}/favorites/count [GET]")
@@ -187,10 +187,10 @@ class MediaMosaUserFavoriteTestCaseEga extends MediaMosaTestCaseEga {
       mediamosa_rest_call_user_favorite_create::FAV_TYPE => 'COLLECTION',
       mediamosa_rest_call_user_favorite_create::FAV_ID => $coll_id,
     );
-    $response = $this->restCallPOST('user/'. $user_id . '/favorites/create', $a_parameters);
+    $response = $this->restCallPOST('user/' . $user_id . '/favorites/create', $a_parameters);
 
     // Count it, we should find 1 collection and 1 asset.
-    $response = $this->restCallGET('collection/'. $coll_id . '/favorites/count');
+    $response = $this->restCallGET('collection/' . $coll_id . '/favorites/count');
     $this->assertTrue(
       $response['xml']->header->item_count_total == 1,
       t("Call /collection/{coll_id}/favorites/count [GET]")
@@ -201,8 +201,8 @@ class MediaMosaUserFavoriteTestCaseEga extends MediaMosaTestCaseEga {
       mediamosa_rest_call_user_favorite_create::FAV_TYPE => 'COLLECTION',
       mediamosa_rest_call_user_favorite_create::FAV_ID => $coll_id,
     );
-    $response = $this->restCallPOST('user/'. $user_id . '/favorites/delete', $a_parameters);
-    $response = $this->restCallGET('collection/'. $coll_id . '/favorites/count');
+    $response = $this->restCallPOST('user/' . $user_id . '/favorites/delete', $a_parameters);
+    $response = $this->restCallGET('collection/' . $coll_id . '/favorites/count');
     $this->assertTrue(
       $response['xml']->header->item_count_total == 0,
       t("Call /collection/{coll_id}/favorites/count [GET]")
@@ -213,8 +213,8 @@ class MediaMosaUserFavoriteTestCaseEga extends MediaMosaTestCaseEga {
       mediamosa_rest_call_user_favorite_create::FAV_TYPE => 'ASSET',
       mediamosa_rest_call_user_favorite_create::FAV_ID => $asset_id,
     );
-    $response = $this->restCallPOST('user/'. $user_id . '/favorites/delete', $a_parameters);
-    $response = $this->restCallGET('asset/'. $asset_id . '/favorites/count');
+    $response = $this->restCallPOST('user/' . $user_id . '/favorites/delete', $a_parameters);
+    $response = $this->restCallGET('asset/' . $asset_id . '/favorites/count');
     $this->assertTrue(
       $response['xml']->header->item_count_total == 0,
       t("Call /asset/{asset_id}/favorites/count [GET]")

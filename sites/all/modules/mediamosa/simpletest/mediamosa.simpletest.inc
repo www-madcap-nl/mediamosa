@@ -118,8 +118,8 @@ class MediaMosaTestCase extends DrupalWebTestCase {
   protected function setUp() {
 
     // Make this global so we can output debug to the test.
-    global $mediamosa_simpletest;
-    $mediamosa_simpletest = $this;
+    global $_mediamosa_simpletest;
+    $_mediamosa_simpletest = $this;
 
     $a_vars_to_copy = array('mediamosa_current_mount_point');
     $a_values = array();
@@ -257,8 +257,8 @@ class MediaMosaTestCase extends DrupalWebTestCase {
    * @param $data
    */
   static public function staticMessage($data) {
-    if (isset($GLOBALS['mediamosa_simpletest'])) {
-      $GLOBALS['mediamosa_simpletest']->var_export_fail($data);
+    if (isset($GLOBALS['_mediamosa_simpletest'])) {
+      $GLOBALS['_mediamosa_simpletest']->var_export_fail($data);
     }
   }
 
@@ -266,40 +266,40 @@ class MediaMosaTestCase extends DrupalWebTestCase {
    * Static call to restCall
    */
   static public function staticRestCall($uri, $request_method = 'POST', array $parameters = array(), array $headers = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
-    assert(isset($GLOBALS['mediamosa_simpletest']));
-    $GLOBALS['mediamosa_simpletest']->restCall($uri, $request_method, $parameters, $headers, $expected_result_ids, $do_internal);
+    assert(isset($GLOBALS['_mediamosa_simpletest']));
+    $GLOBALS['_mediamosa_simpletest']->restCall($uri, $request_method, $parameters, $headers, $expected_result_ids, $do_internal);
   }
 
   /**
    * Static call to restCall POST
    */
   static public function staticRestCallPost($uri, array $parameters = array(), array $headers = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
-    assert(isset($GLOBALS['mediamosa_simpletest']));
-    $GLOBALS['mediamosa_simpletest']->restCall($uri, 'POST', $parameters, $headers, $expected_result_ids, $do_internal);
+    assert(isset($GLOBALS['_mediamosa_simpletest']));
+    $GLOBALS['_mediamosa_simpletest']->restCall($uri, 'POST', $parameters, $headers, $expected_result_ids, $do_internal);
   }
 
   /**
    * Static call to restCall GET
    */
   static public function staticRestCallGet($uri, array $parameters = array(), array $headers = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
-    assert(isset($GLOBALS['mediamosa_simpletest']));
-    $GLOBALS['mediamosa_simpletest']->restCall($uri, 'GET', $parameters, $headers, $expected_result_ids, $do_internal);
+    assert(isset($GLOBALS['_mediamosa_simpletest']));
+    $GLOBALS['_mediamosa_simpletest']->restCall($uri, 'GET', $parameters, $headers, $expected_result_ids, $do_internal);
   }
 
   /**
    * Static call to restCall POST
    */
   static public function staticInternalRestCallPost($uri, array $parameters = array(), array $headers = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
-    assert(isset($GLOBALS['mediamosa_simpletest']));
-    $GLOBALS['mediamosa_simpletest']->restCall($uri, 'POST', $parameters, $headers, $expected_result_ids, TRUE);
+    assert(isset($GLOBALS['_mediamosa_simpletest']));
+    $GLOBALS['_mediamosa_simpletest']->restCall($uri, 'POST', $parameters, $headers, $expected_result_ids, TRUE);
   }
 
   /**
    * Static call to restCall GET
    */
   static public function staticInternalRestCallGet($uri, array $parameters = array(), array $headers = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
-    assert(isset($GLOBALS['mediamosa_simpletest']));
-    $GLOBALS['mediamosa_simpletest']->restCall($uri, 'GET', $parameters, $headers, $expected_result_ids, TRUE);
+    assert(isset($GLOBALS['_mediamosa_simpletest']));
+    $GLOBALS['_mediamosa_simpletest']->restCall($uri, 'GET', $parameters, $headers, $expected_result_ids, TRUE);
   }
 
   /**

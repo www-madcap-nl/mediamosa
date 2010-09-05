@@ -71,7 +71,7 @@ class MediaMosaAssetMediafilePlayProxyTicketMechanismeTestCaseEga extends MediaM
 
     // Play proxy create ticket.
 
-    foreach (array('plain', 'metafile', 'object', 'download', 'still') as $subject){
+    foreach (array('plain', 'metafile', 'object', 'download', 'still') as $subject) {
       // Ask mediafile download url.
       $a_parameters = array(
         mediamosa_rest_call_asset_mediafile_play::RESPONSE => $subject,

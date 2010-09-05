@@ -583,8 +583,8 @@ class mediamosa_rest_call_statistics_get_historical_uploaded_mediafiles extends 
     $a_query[mediamosa_db_query::A_WHERE][] = 'app_id=' . intval($app_id);
 
     // FIXME: timestamp is now UTC.
-    $a_query[mediamosa_db_query::A_WHERE][] = 'UNIX_TIMESTAMP(timestamp) >= '. $date_begin;
-    $a_query[mediamosa_db_query::A_WHERE][] = 'UNIX_TIMESTAMP(timestamp) < '. $date_end;
+    $a_query[mediamosa_db_query::A_WHERE][] = 'UNIX_TIMESTAMP(timestamp) >= ' . $date_begin;
+    $a_query[mediamosa_db_query::A_WHERE][] = 'UNIX_TIMESTAMP(timestamp) < ' . $date_end;
 
     if (!is_null($user_id)) {
       $a_query[mediamosa_db_query::A_WHERE][] = sprintf("owner_id = '%s'", mediamosa_db::escape_string($user_id));

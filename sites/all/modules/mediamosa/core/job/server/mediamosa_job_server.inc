@@ -874,8 +874,8 @@ class mediamosa_job_server {
           $input = mediamosa_configuration_storage::mediafile_id_filename_get($mediafile_id);
 
           // Clean up I.
-          mediamosa_io::unlink($destination_path . $mediafile_id .'_scene.avi');
-          mediamosa_io::unlink($destination_path . $mediafile_id .'_list.el');
+          mediamosa_io::unlink($destination_path . $mediafile_id . '_scene.avi');
+          mediamosa_io::unlink($destination_path . $mediafile_id . '_list.el');
 
 
   /*
@@ -886,11 +886,11 @@ class mediamosa_job_server {
   */
 
   // Hot fix
-          $order = sprintf('ffmpeg -i %s %s', $input, $destination_path . $mediafile_id .'_scene.wmv');
+          $order = sprintf('ffmpeg -i %s %s', $input, $destination_path . $mediafile_id . '_scene.wmv');
           //self::log($order);
           mediamosa_io::exec($order);
 
-          $order = sprintf('ffmpeg -i %s -r 25 -an -vcodec mjpeg %s', $destination_path . $mediafile_id . '_scene.wmv', $destination_path . $mediafile_id .'_scene.avi');
+          $order = sprintf('ffmpeg -i %s -r 25 -an -vcodec mjpeg %s', $destination_path . $mediafile_id . '_scene.wmv', $destination_path . $mediafile_id . '_scene.avi');
           //self::log($order);
           mediamosa_io::exec($order);
 
@@ -898,18 +898,18 @@ class mediamosa_job_server {
 
   // Hot fix - end
 
-          $order = sprintf('lav2yuv -T 1 -S %s %s', $destination_path . $mediafile_id .'_list.el', $destination_path . $mediafile_id .'_scene.avi');
+          $order = sprintf('lav2yuv -T 1 -S %s %s', $destination_path . $mediafile_id . '_list.el', $destination_path . $mediafile_id . '_scene.avi');
           self::log($order);
           mediamosa_io::exec($order);
 
           $output = NULL;
-          $order = sprintf('cat %s', $destination_path . $mediafile_id .'_list.el');
+          $order = sprintf('cat %s', $destination_path . $mediafile_id . '_list.el');
           //self::log($order);
           mediamosa_io::exec($order, $output);
           //self::log(sprintf('output = %s', print_r($output, TRUE)));
 
           // Clean up II.
-          mediamosa_io::unlink($destination_path . $mediafile_id .'_list.el');
+          mediamosa_io::unlink($destination_path . $mediafile_id . '_list.el');
 
           // Analyze
           if ($output && is_array($output) && $output != array()) {
@@ -924,7 +924,7 @@ class mediamosa_job_server {
             $details = array();
             mediamosa_io::exec($order, $details);
             //self::log('Details: '. print_r($details, TRUE));
-            foreach($details as $line) {
+            foreach ($details as $line) {
               if (stripos($line, ' Stream ') !== FALSE && stripos($line, ' Video: ') !== FALSE) {
                 if (preg_match('/Stream #[0-9]*\.([0-9]*)/', $line, $reg_map) && preg_match('/ ([0-9]*) kb\/s/', $line, $reg_kbs)) {
                   if (!$map || !$kbs || $kbs < $reg_kbs[1]) {
@@ -989,24 +989,24 @@ class mediamosa_job_server {
 
           // Save the sec data (see: vpx_jobhandler.module)
           if (is_array($scenes) && $scenes != array()) {
-            $my_file = $destination_path . $job_id .'_ffmpeg_scene.txt';
+            $my_file = $destination_path . $job_id . '_ffmpeg_scene.txt';
             $fh = fopen($my_file, 'w') or $fh = NULL;
             if ($fh) {
               foreach ($scenes as $scene) {
-                fwrite($fh, $scene ."\n");
+                fwrite($fh, $scene . "\n");
 
               }
               fclose($fh);
 
               // This version is creating stills for the original video
               if (mediamosa_settings::get_ffmpeg_pad()) {
-                $order = sprintf(mediamosa_settings::STILL_SCENE_STRING, $input, $size, $h_padding, $h_padding, $v_padding, $v_padding, $my_file, ($map ? '-map 0.'. $map : ''), $destination_path . $mediafile_id . mediamosa_settings::STILL_EXTENSION .".jpeg");
+                $order = sprintf(mediamosa_settings::STILL_SCENE_STRING, $input, $size, $h_padding, $h_padding, $v_padding, $v_padding, $my_file, ($map ? '-map 0.' . $map : ''), $destination_path . $mediafile_id . mediamosa_settings::STILL_EXTENSION . '.jpeg');
               }
               else {
                 $size_explode = explode('x', $size);
                 $size_width = $size_explode[0] + (2 * $v_padding);
                 $size_height = $size_explode[1] + (2 * $h_padding);
-                $order = sprintf(mediamosa_settings::STILL_SCENE_STRING_VFPAD, $input, $size, $size_width, $size_height, $v_padding, $h_padding, $my_file, ($map ? '-map 0.'. $map : ''), $destination_path . $mediafile_id . mediamosa_settings::STILL_EXTENSION .".jpeg");
+                $order = sprintf(mediamosa_settings::STILL_SCENE_STRING_VFPAD, $input, $size, $size_width, $size_height, $v_padding, $h_padding, $my_file, ($map ? '-map 0.' . $map : ''), $destination_path . $mediafile_id . mediamosa_settings::STILL_EXTENSION . '.jpeg');
               }
 
               // This version is creating stills for the analysed file
@@ -1019,14 +1019,14 @@ class mediamosa_job_server {
             }
 
             // Clean up III.
-            mediamosa_io::unlink($destination_path . $mediafile_id .'_scene.avi');
+            mediamosa_io::unlink($destination_path . $mediafile_id . '_scene.avi');
 
             // It has to be the last, because it triggers the further processes
-            $my_file = $destination_path . $job_id .'_scene.txt';
+            $my_file = $destination_path . $job_id . '_scene.txt';
             $fh = fopen($my_file, 'w') or $fh = NULL;
             if ($fh) {
               foreach ($scenes as $scene) {
-                fwrite($fh, $scene ."\n");
+                fwrite($fh, $scene . "\n");
               }
               fclose($fh);
             }
@@ -1036,7 +1036,7 @@ class mediamosa_job_server {
           }
 
           // Clean up IV.
-          mediamosa_io::unlink($destination_path . $mediafile_id .'_scene.avi');
+          mediamosa_io::unlink($destination_path . $mediafile_id . '_scene.avi');
 
           // We reached this point, so something went wrong in the creation of scene stills.
           // So we are creating still type NONE (original behaviour).
@@ -1239,7 +1239,7 @@ class mediamosa_job_server {
   static public function store_new_mediafile($job_id, $old_filename) {
 
     // Generate the filename.
-    $new_filename = mediamosa_db::uuid(rand (1, 9999));
+    $new_filename = mediamosa_db::uuid(rand(1, 9999));
 
     $job_server = mediamosa_db::db_query(
       'SELECT mjst.#command, mjst.#file_extension

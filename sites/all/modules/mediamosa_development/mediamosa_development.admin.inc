@@ -65,16 +65,16 @@ function _ajax_execute_rest_call() {
   foreach (explode('/', $uri) as $uri_var) {
     $uri_var = trim($uri_var, '# ');
     if ($uri_var{0} == '$') {
-      if (!isset($form_state['input']['_' . substr($uri_var, 1)]) || $form_state['input']['_' . substr($uri_var, 1)] == '') {
-        $errors[] = t('Missing value for @name', array('@name' => substr($uri_var, 1)));
+      if (!isset($form_state['input']['_' . drupal_substr($uri_var, 1)]) || $form_state['input']['_' . drupal_substr($uri_var, 1)] == '') {
+        $errors[] = t('Missing value for @name', array('@name' => drupal_substr($uri_var, 1)));
         continue;
       }
 
       // So we know the urivars.
-      $uri_vars[] = substr($uri_var, 1);
+      $uri_vars[] = drupal_substr($uri_var, 1);
 
       // To rebuild.
-      $uri_rebuild[] = $form_state['input']['_' . substr($uri_var, 1)];
+      $uri_rebuild[] = $form_state['input']['_' . drupal_substr($uri_var, 1)];
     }
     else {
       $uri_rebuild[] = $uri_var;
@@ -153,7 +153,7 @@ function _ajax_execute_rest_call() {
         $form['rest_result']['output_mm17']['#type'] = 'textarea';
       }
       else {
-        drupal_set_message('No REST interface URL set, check settings.');
+        drupal_set_message(t('No REST interface URL set, check settings.'));
       }
     }
   }
@@ -442,7 +442,7 @@ function _mediamosa_build_form($form) {
     // Find rest_call.
     $_SESSION['mediamosa_development_params']['rest_call'] = mediamosa_rest::get_uri_definition($uri, $method);
     if (empty($_SESSION['mediamosa_development_params']['rest_call'])) {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INVALID_REST_CALL, array('@rest_call' => $uri . ' '. $method));
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INVALID_REST_CALL, array('@rest_call' => $uri . ' ' . $method));
     }
   }
 
@@ -473,11 +473,11 @@ function _mediamosa_build_form($form) {
       continue;
     }
 
-    $item = _build_param($name, $var, true);
+    $item = _build_param($name, $var, TRUE);
 
     if (!empty($item)) {
       $item['#weight'] = $weight++;
-      $required['_' .$name] = $item; // prefix with '_' so we dont have problems with double names.
+      $required['_' . $name] = $item; // prefix with '_' so we dont have problems with double names.
     }
   }
 
@@ -498,7 +498,7 @@ function _mediamosa_build_form($form) {
       continue;
     }
 
-    $item = _build_param($name, $var, false);
+    $item = _build_param($name, $var, FALSE);
 
     if (!empty($item)) {
       $item['#weight'] = $weight++;

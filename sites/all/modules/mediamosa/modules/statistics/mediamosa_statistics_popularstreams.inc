@@ -91,7 +91,7 @@ function mediamosa_statistics_popularstreams_list_form() {
     $title = empty($row['filename']) ? $row['mediafile_id'] : $row['filename'];
 
     $rows[] = array(
-      $row['requested'] .'x',
+      $row['requested'] . 'x',
       $row['app_id'],
       mediamosa_lib::l_asset($row['asset_id'], $title),
       check_plain($row['owner_id']),

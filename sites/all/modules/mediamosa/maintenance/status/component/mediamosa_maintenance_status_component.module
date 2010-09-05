@@ -40,7 +40,7 @@ define('MEDIAMOSA_MAINTENANCE_STATUS_COMPONENT_SPACE_WARNING', 100);
 
 
 /**
- * Implementation of hook_mediamosa_status_generate().
+ * Implements hook_mediamosa_status_generate().
  *
  * @param with_variable boolean
  *   Use Drupal variables or not
@@ -160,7 +160,7 @@ function mediamosa_maintenance_status_component_mediamosa_status_generate($with_
 }
 
 /**
- * Implementation of hook_mediamosa_status_collect().
+ * Implements hook_mediamosa_status_collect().
  *
  * @param reset boolean
  * @param with_variable boolean

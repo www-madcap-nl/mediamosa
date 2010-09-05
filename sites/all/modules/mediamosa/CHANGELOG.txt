@@ -23,6 +23,9 @@ Other changes (not ticket related).
 - Removed default minimal Drupal profile.
 - Fixed problem with restricted time where date was converted to UTC while that
   was not allowed for that parameter.
+- Coder module has completly checked the MediaMosa core and all warnings where
+  resolved.
+- Removed function autoload_class() from mediamosa class. No longer used.
 
 
 MediaMosa 2.2.0 (build 847)

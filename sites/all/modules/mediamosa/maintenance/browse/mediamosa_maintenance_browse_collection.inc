@@ -219,8 +219,8 @@ function mediamosa_browse_collection_list_form() {
 
   foreach ($result['items'] as $row) {
     $actions = array(
-      l(t('Edit'), 'admin/mediamosa/browse/collection/'. $row[mediamosa_collection_db::ID] . '/edit', $l_options),
-      l(t('Delete'), 'admin/mediamosa/browse/collection/'. $row[mediamosa_collection_db::ID] . '/delete', $l_options),
+      l(t('Edit'), 'admin/mediamosa/browse/collection/' . $row[mediamosa_collection_db::ID] . '/edit', $l_options),
+      l(t('Delete'), 'admin/mediamosa/browse/collection/' . $row[mediamosa_collection_db::ID] . '/delete', $l_options),
     );
 
     $title = empty($row['title']) ? NULL : check_plain($row['title']);
@@ -588,7 +588,7 @@ function mediamosa_browse_collection_delete_confirm_form_submit($form, &$form_st
   $result = mediamosa_response_connector::static_do_restcall_drupal($url, 'POST', array('app_id' => $collection[mediamosa_collection_db::APP_ID], 'user_id' => $collection[mediamosa_collection_db::OWNER_ID]));
 
   if (in_array((int)$result['header']['request_result_id'], array(mediamosa_error::ERRORCODE_OKAY, mediamosa_error::ERRORCODE_EMPTY_RESULT))) {
-    drupal_set_message('The collection has been deleted.');
+    drupal_set_message(t('The collection has been deleted.'));
     drupal_goto('admin/mediamosa/browse/collection');
   }
 
@@ -649,7 +649,7 @@ function mediamosa_browse_collection_remove_asset_confirm_form_submit($form, &$f
   $result = mediamosa_response_connector::static_do_restcall_drupal($url, 'POST', array('app_id' => $collection[mediamosa_collection_db::APP_ID], 'asset_id' => array($asset_id), 'user_id' => $collection[mediamosa_collection_db::OWNER_ID]));
 
   if (in_array((int)$result['header']['request_result_id'], array(mediamosa_error::ERRORCODE_OKAY, mediamosa_error::ERRORCODE_EMPTY_RESULT))) {
-    drupal_set_message('The asset-collection relation has been removed.');
+    drupal_set_message(t('The asset-collection relation has been removed.'));
   }
 
   drupal_goto('admin/mediamosa/browse/collection/' . rawurlencode($coll_id));

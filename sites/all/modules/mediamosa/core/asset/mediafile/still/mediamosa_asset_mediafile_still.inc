@@ -76,7 +76,7 @@ class mediamosa_asset_mediafile_still {
 
     // Set file_type of still based on the mime type of the image.
     $pos = strrpos($mime_type, '/');
-    $file_extension = ($pos === FALSE ? '' : substr($mime_type, $pos + 1));
+    $file_extension = ($pos === FALSE ? '' : mediamosa_unicode::substr($mime_type, $pos + 1));
 
     // Get file size of still.
     $file_size = mediamosa_io::filesize($still_filename);

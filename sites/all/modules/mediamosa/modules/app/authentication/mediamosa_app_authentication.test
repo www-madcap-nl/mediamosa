@@ -66,8 +66,8 @@ class MediaMosaAppAuthenticationTestCase extends MediaMosaTestCase {
 
     // Step 2: send the credentials
     $challenge = $dbus_data[3];
-    $random = substr(md5(microtime(TRUE)), 0, 10);
-    $post_data = array('dbus' => 'DATA '. $random .' '. sha1(sprintf('%s:%s:%s', $challenge, $random, $shared_key)));
+    $random = mediamosa_unicode::substr(md5(microtime(TRUE)), 0, 10);
+    $post_data = array('dbus' => 'DATA ' . $random . ' ' . sha1(sprintf('%s:%s:%s', $challenge, $random, $shared_key)));
     $response = $this->restCall('login', 'POST', $post_data);
 
     $this->assertTrue($response['xml']->items->item->dbus == 'OK ' . mediamosa_app_authentication::get_server_guid(), 'Login fase 2 success');
@@ -93,8 +93,8 @@ class MediaMosaAppAuthenticationTestCase extends MediaMosaTestCase {
 
     // Step 2: send the credentials
     $challenge = $dbus_data[3];
-    $random = substr(md5(microtime(TRUE)), 0, 10);
-    $post_data = array('dbus' => 'DATA '. $random .' '. sha1(sprintf('%s:%s:%s', $challenge, $random, $shared_key . 'boo')));
+    $random = mediamosa_unicode::substr(md5(microtime(TRUE)), 0, 10);
+    $post_data = array('dbus' => 'DATA ' . $random . ' ' . sha1(sprintf('%s:%s:%s', $challenge, $random, $shared_key . 'boo')));
     $response = $this->restCall('login', 'POST', $post_data, array(), array(mediamosa_error::ERRORCODE_DBUS_PROTOCOL_ERROR));
 
     $this->assertTrue($response['xml']->items->item->dbus == 'REJECTED', 'Login must fail.');

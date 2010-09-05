@@ -186,8 +186,8 @@ function _mediamosa_server_list() {
   foreach ($result as $server) {
 
     $actions = array(
-      l(t('Edit'), 'node/'. $server->{mediamosa_app_db::NID} . '/edit', $l_options),
-      l(t('Delete'), 'admin/mediamosa/config/server/'. $server->{mediamosa_app_db::NID} . '/delete', $l_options),
+      l(t('Edit'), 'node/' . $server->{mediamosa_app_db::NID} . '/edit', $l_options),
+      l(t('Delete'), 'admin/mediamosa/config/server/' . $server->{mediamosa_app_db::NID} . '/delete', $l_options),
     );
 
     $statuses = array(

@@ -229,8 +229,8 @@ function _mediamosa_app_list() {
     $app_id = $app[mediamosa_app_db::APP_ID];
 
     $actions = array(
-      l(t('Edit'), 'admin/mediamosa/config/app/'. $app[mediamosa_app_db::NID] . '/edit', $l_options),
-      l(t('Delete'), 'admin/mediamosa/config/app/'. $app[mediamosa_app_db::NID] . '/delete', $l_options),
+      l(t('Edit'), 'admin/mediamosa/config/app/' . $app[mediamosa_app_db::NID] . '/edit', $l_options),
+      l(t('Delete'), 'admin/mediamosa/config/app/' . $app[mediamosa_app_db::NID] . '/delete', $l_options),
     );
 
     $a_offline_webservices = array();
@@ -242,14 +242,14 @@ function _mediamosa_app_list() {
       }
     }
 
-   $rows[] = array(
+    $rows[] = array(
       $app[mediamosa_app_db::APP_ID],
-      'title' => array('data' => l($app[mediamosa_app_db::APP_NAME], 'admin/mediamosa/config/app/'. $app[mediamosa_app_db::NID]), 'field' => $app[mediamosa_app_db::APP_NAME]),
+      'title' => array('data' => l($app[mediamosa_app_db::APP_NAME], 'admin/mediamosa/config/app/' . $app[mediamosa_app_db::NID]), 'field' => $app[mediamosa_app_db::APP_NAME]),
       $app[mediamosa_app_db::QUOTA],
       implode(', ', $a_offline_webservices),
       $app[mediamosa_app_db::OWNER],
       $app[mediamosa_app_db::ACTIVE] == mediamosa_app_db::ACTIVE_TRUE ? t('Enabled') : t('<b>Disabled</b>'),
-      l(t('Contacts'), 'admin/mediamosa/config/app/'. $app[mediamosa_app_db::APP_ID] . '/contacts'),
+      l(t('Contacts'), 'admin/mediamosa/config/app/' . $app[mediamosa_app_db::APP_ID] . '/contacts'),
       implode(' | ', $actions),
     );
   }

@@ -387,7 +387,7 @@ class mediamosa_job {
         $file_type = '';
         $pos = strrpos($size['mime'], '/');
         if ($pos !== FALSE) {
-          $file_type = substr($size['mime'], $pos+1);
+          $file_type = mediamosa_unicode::substr($size['mime'], $pos + 1);
         }
         $filesize = filesize($destination);
 
@@ -711,7 +711,7 @@ class mediamosa_job {
             ($status != mediamosa_job_db::JOB_STATUS_FAILED) &&
             ($job_ext[mediamosa_job_db::JOB_STATUS] != mediamosa_job_db::JOB_STATUS_FINISHED) &&
             ($job_ext[mediamosa_job_db::JOB_STATUS] != mediamosa_job_db::JOB_STATUS_FAILED))) {
-         $status = mediamosa_job_db::JOB_STATUS_FINISHED;
+        $status = mediamosa_job_db::JOB_STATUS_FINISHED;
       }
     }
 
@@ -723,7 +723,7 @@ class mediamosa_job {
     // Finished value.
     if ($job_ext[mediamosa_job_db::FINISHED] == '' &&
         (($status == mediamosa_job_db::JOB_STATUS_FAILED) ||
-         ($status == mediamosa_job_db::JOB_STATUS_FINISHED) )) {
+        ($status == mediamosa_job_db::JOB_STATUS_FINISHED) )) {
       $fields[mediamosa_job_db::FINISHED] = mediamosa_datetime::utc_current_timestamp_now();
     }
 

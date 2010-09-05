@@ -145,7 +145,7 @@ class mediamosa_collection_search {
     if ($order_by != '') {
       if ($order_by == 'numofvideos') {
         // Sort on numofvideos is a special case
-        $a_query[mediamosa_db_query::A_ORDER_BY][] = 'numofvideos '. mediamosa_db::escape_string($order_direction);
+        $a_query[mediamosa_db_query::A_ORDER_BY][] = 'numofvideos ' . mediamosa_db::escape_string($order_direction);
       }
       else {
         $a_query[mediamosa_db_query::A_ORDER_BY][] = 'ISNULL(c.' . $order_by . ') ' . mediamosa_db::escape_string($order_direction);
@@ -154,7 +154,7 @@ class mediamosa_collection_search {
     }
 
     if ($fav_user_id != '') {
-      $a_query[mediamosa_db_query::A_JOIN]['user_favorite']['user_fav'] = "LEFT JOIN {mediamosa_user_favorite} AS user_fav ON user_fav.fav_type = '". mediamosa_user_favorite_db::FAV_TYPE_COLLECTION . "' AND user_fav.fav_id = c.coll_id\n";
+      $a_query[mediamosa_db_query::A_JOIN]['user_favorite']['user_fav'] = "LEFT JOIN {mediamosa_user_favorite} AS user_fav ON user_fav.fav_type = '" . mediamosa_user_favorite_db::FAV_TYPE_COLLECTION . "' AND user_fav.fav_id = c.coll_id\n";
 
       $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['user_fav'][] = sprintf("user_fav.name = '%s'", mediamosa_db::escape_string($fav_user_id));
       $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['user_fav'][] = sprintf("user_fav.app_id IN(%s)", mediamosa_db::escape_string($app_ids));

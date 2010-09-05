@@ -143,7 +143,7 @@ class mediamosa_lib {
   static public function simplexml2array($xml) {
     $xml_copy = $xml;
     if (is_object($xml) && get_class($xml) == 'SimpleXMLElement') {
-      foreach($xml->attributes() as $key => $value) {
+      foreach ($xml->attributes() as $key => $value) {
         if ($value) {
           $attributes[$key] = (string)$value;
         }
@@ -158,7 +158,7 @@ class mediamosa_lib {
       }
 
       $result = array();
-      foreach($xml as $key => $value) {
+      foreach ($xml as $key => $value) {
         $result[$key] = self::simplexml2array($value);
       }
 
@@ -210,9 +210,10 @@ class mediamosa_lib {
    * Returns a link to show asset in maintenance.
    *
    * @param string $asset_id
-   * @param string $text
+   * @param string $text (should be wrapped with t())
    */
-  static public function l_asset($asset_id, $text) {
+  static public function l_asset($asset_id, $text = '') {
+    $text = empty($text) ? $asset_id : $text;
     return l($text, mediamosa_settings::get_url_asset($asset_id));
   }
 
@@ -222,7 +223,8 @@ class mediamosa_lib {
    * @param string $coll_id
    * @param string $text
    */
-  static public function l_collection($coll_id, $text) {
+  static public function l_collection($coll_id, $text = '') {
+    $text = empty($text) ? $coll_id : $text;
     return l($text, mediamosa_settings::get_url_collection($coll_id));
   }
 

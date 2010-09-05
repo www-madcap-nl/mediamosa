@@ -557,7 +557,7 @@ function mediamosa_app_form($node, &$form_state) {
       $form['webservice']['webservice_' . $handle] = array(
         '#type' => 'select',
         '#title' => $handle,
-        '#description' => t('Availibility of web service \''. $handle .'\' for this client application.'),
+        '#description' => t('Availibility of web service \'' . $handle . '\' for this client application.'),
         '#default_value' => 'TRUE',
         '#options' => array(mediamosa_webservice_app_db::STATUS_TRUE => t('Enabled'), mediamosa_webservice_app_db::STATUS_FALSE => t('Disabled')),
       );
@@ -566,7 +566,7 @@ function mediamosa_app_form($node, &$form_state) {
       $form['webservice']['webservice_' . $handle] = array(
         '#type' => 'select',
         '#title' => $stored[$handle]['handle'],
-        '#description' => t('Availibility of web service \''. $stored[$handle]['handle'] .'\' for this client application.'),
+        '#description' => t('Availibility of web service \'' . $stored[$handle]['handle'] . '\' for this client application.'),
         '#default_value' => $stored[$handle]['status'],
         '#options' => array(mediamosa_webservice_app_db::STATUS_TRUE => t('Enabled'), mediamosa_webservice_app_db::STATUS_FALSE => t('Disabled')),
     );

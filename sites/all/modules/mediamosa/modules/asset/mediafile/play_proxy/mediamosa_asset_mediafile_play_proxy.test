@@ -121,7 +121,7 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
 
     // Create fake ticket.
     $this->mkdir($ticket_path);
-    $this->touch($ticket_path . $ticket_id . '_real', "Create a fake ticket file with id: '". $ticket_id . "'.");
+    $this->touch($ticket_path . $ticket_id . '_real', "Create a fake ticket file with id: '" . $ticket_id . "'.");
     $this->symlink($ticket_path . $ticket_id . '_real', $ticket_path . $ticket_id);
 
     // Clean up.
@@ -138,7 +138,7 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
     $this->assertTrue(mediamosa_ticket::get_valid($ticket_id, mediamosa_ticket_db::TICKET_TYPE_PLAY) !== FALSE, 'Is ticket created in database');
 
     // Create fake ticket.
-    $this->touch($ticket_path . $ticket_id . '_real', "Create a fake ticket file with id: '". $ticket_id . "'.");
+    $this->touch($ticket_path . $ticket_id . '_real', "Create a fake ticket file with id: '" . $ticket_id . "'.");
     $this->symlink($ticket_path . $ticket_id . '_real', $ticket_path . $ticket_id);
     $this->file_exists($ticket_path . $ticket_id, "Check if the ticket link exists.");
 
@@ -217,14 +217,14 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
 
         // Check the asx output
         if ($a_parameters['response']['value'] == mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_METAFILE && $a_mediafile_ext['metadata']['container_type'] == mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_WMV) {
-          $tofind = "<ASX VERSION=\"3.0\">";
-           $this->assertTrue(stripos($a_response['output'], $tofind) !== FALSE, 'Check if asx starttag.');
+          $tofind = "<asx version=\"3.0\">";
+          $this->assertTrue(stripos($a_response['output'], $tofind) !== FALSE, 'Check if asx starttag.');
 
-           $tofind = "<STARTTIME VALUE=\"00:00:06.0\" />";
-           $this->assertTrue(stripos($a_response['output'], $tofind) !== FALSE, 'Check if starttime asx tag is added.');
+          $tofind = "<starttime value=\"00:00:06.0\" />";
+          $this->assertTrue(stripos($a_response['output'], $tofind) !== FALSE, 'Check if starttime asx tag is added.');
 
-           $tofind = "<DURATION VALUE=\"00:00:04.0\" />";
-           $this->assertTrue(stripos($a_response['output'], $tofind) !== FALSE, 'Check if duration asx tag is added.');
+          $tofind = "<duration value=\"00:00:04.0\" />";
+          $this->assertTrue(stripos($a_response['output'], $tofind) !== FALSE, 'Check if duration asx tag is added.');
         }
 
         // Check if ASX file was created (we also will remove the file again)
@@ -238,7 +238,7 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
         if (!($a_parameters['response']['value'] == mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_OBJECT && $a_mediafile_ext['metadata']['container_type'] == mediamosa_asset_mediafile_play_proxy::CONTAINER_TYPE_WMV)) {
           $this->assertTrue(
             isset($a_response['output']) && strpos($a_response['output'], $ticket) !== FALSE,
-            "Check if '". $a_parameters['response']['value'] ."/". $a_mediafile_ext['metadata']['container_type'] ."/_play_proxy_create_response()' contains the ticket: ". $ticket);
+            "Check if '" . $a_parameters['response']['value'] . "/" . $a_mediafile_ext['metadata']['container_type'] . "/_play_proxy_create_response()' contains the ticket: " . $ticket);
         }
       }
     }

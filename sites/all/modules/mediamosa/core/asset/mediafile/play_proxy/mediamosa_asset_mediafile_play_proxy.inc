@@ -139,7 +139,7 @@ class mediamosa_asset_mediafile_play_proxy {
 
     switch ($container_type) {
       case self::CONTAINER_TYPE_WMV: // hh:mm:ss.fract(=sec/100)
-        $fraction = substr($msec, 0, 2);
+        $fraction = mediamosa_unicode::substr($msec, 0, 2);
         foreach ($a_output as $subject => $value) {
           if ($a_output[$subject] < 10) {
             $a_output[$subject] = '0' . $a_output[$subject];
@@ -159,7 +159,7 @@ class mediamosa_asset_mediafile_play_proxy {
 
         foreach ($a_output as $subject => $value) {
           if ($a_output[$subject] < 10) {
-            $a_output[$subject] = "0". $a_output[$subject];
+            $a_output[$subject] = '0' . $a_output[$subject];
           }
         }
         $output = implode(':', $a_output) . ':' . $fraction;
@@ -250,7 +250,7 @@ class mediamosa_asset_mediafile_play_proxy {
    * @param string $mediafile_group_id
    * @param array $stills
    */
-  static public function create_response_1x_to_2x($a_parameters, $a_asset_info, $mediafile_ext, $asset_metadata/*unused*/, $ticket, $app_id, $mediafile_group_id = '', $stills = array()) {
+  static public function create_response_1x_to_2x($a_parameters, $a_asset_info, $mediafile_ext, $asset_metadata/* unused */, $ticket, $app_id, $mediafile_group_id = '', $stills = array()) {
     return self::create_response(
       $a_parameters['response']['value'],
       $app_id,
@@ -376,8 +376,8 @@ class mediamosa_asset_mediafile_play_proxy {
                 // Separation by the last '/':
                 // "http://mediamosa2/ticket/" and "LRQKJp4RRHdiOQjZJAiV2rOP.flv"
                 $last_index = strrpos($streaming_server_ticket_uri, '/');
-                $uri_base = substr($streaming_server_ticket_uri, 0, $last_index + 1);
-                $uri_src = substr($streaming_server_ticket_uri, $last_index + 1);
+                $uri_base = mediamosa_unicode::substr($streaming_server_ticket_uri, 0, $last_index + 1);
+                $uri_src = mediamosa_unicode::substr($streaming_server_ticket_uri, $last_index + 1);
               }
               // Create the output.
               $output = '<smil>' . "\n";
@@ -406,7 +406,7 @@ class mediamosa_asset_mediafile_play_proxy {
             if (isset($asset_metadata['dublin_core'])) {
               foreach ($a_subjects as $tag => $subject) {
                 if (is_array($asset_metadata['dublin_core'][$subject]) && count($asset_metadata['dublin_core'][$subject])) {
-                  $output .= "\t\t<" . $tag .'>'. implode(' ', $asset_metadata['dublin_core'][$subject]) .'</'. $tag. ">\n";
+                  $output .= "\t\t<" . $tag . '>' . implode(' ', $asset_metadata['dublin_core'][$subject]) . '</' . $tag . ">\n";
                 }
               }
             }
@@ -423,7 +423,7 @@ class mediamosa_asset_mediafile_play_proxy {
             if (isset($asset_metadata['dublin_core'])) {
               foreach ($a_subjects as $tag => $subject) {
                 if (!empty($asset_metadata['dublin_core'][$subject]) && is_array($asset_metadata['dublin_core'][$subject])) {
-                  $output .= "\t\t<" . $tag .'>'. implode(' ', $asset_metadata['dublin_core'][$subject]) . '</' . $tag . ">\n";
+                  $output .= "\t\t<" . $tag . '>' . implode(' ', $asset_metadata['dublin_core'][$subject]) . '</' . $tag . ">\n";
                 }
               }
             }
@@ -460,8 +460,8 @@ class mediamosa_asset_mediafile_play_proxy {
               // Separation by the last '/':
               // "http://mediamosa2/ticket/" and "LRQKJp4RRHdiOQjZJAiV2rOP.flv"
               $last_index = strrpos($streaming_server_ticket_uri, '/');
-              $uri_base = substr($streaming_server_ticket_uri, 0, $last_index + 1);
-              $uri_src = substr($streaming_server_ticket_uri, $last_index + 1);
+              $uri_base = mediamosa_unicode::substr($streaming_server_ticket_uri, 0, $last_index + 1);
+              $uri_src = mediamosa_unicode::substr($streaming_server_ticket_uri, $last_index + 1);
             }
             // Create the output.
             $output = '<smil>' . "\n";
@@ -603,7 +603,7 @@ class mediamosa_asset_mediafile_play_proxy {
 
               // Process all the variables and make replacement in the objectcode.
               foreach ($variables as $key => $value) {
-                $output_asx = str_replace('{'. $key .'}', $value, $output_asx);
+                $output_asx = str_replace('{' . $key . '}', $value, $output_asx);
               }
 
               // Get the filename for the asx file.

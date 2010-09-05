@@ -249,7 +249,7 @@ class mediamosa_asset_mediafile {
           $mediafile_id = $row[mediamosa_asset_mediafile_db::ID];
           $row = array_merge($row, mediamosa_asset_mediafile_metadata::get_all_mediafile_metadata($mediafile_id));
 
-          $items[$row[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE]]['still']['#'. $i++] = $row;
+          $items[$row[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE]]['still']['#' . $i++] = $row;
         }
         catch (mediamosa_exception_error_file_not_found $e) {
           // Ignore.

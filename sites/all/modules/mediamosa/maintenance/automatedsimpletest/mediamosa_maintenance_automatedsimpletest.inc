@@ -29,7 +29,7 @@
   * Static functions for simpletest page.
   */
 
- class mediamosa_maintenance_automatedsimpletest {
+class mediamosa_maintenance_automatedsimpletest {
   // ------------------------------------------------------------------ Consts.
   const RUNPHASE_TIMED_OUT = 'timed-out';
   const RUNPHASE_STARTED = 'started';
@@ -84,7 +84,7 @@
     $groups = simpletest_test_get_all();
 
     foreach ($groups as $group => $tests) {
-      if (drupal_strtolower(drupal_substr($group, 0, strlen('mediamosa'))) != 'mediamosa') {
+      if (drupal_strtolower(drupal_substr($group, 0, drupal_strlen('mediamosa'))) != 'mediamosa') {
         continue;
       }
 
@@ -376,7 +376,7 @@
 
     // Do the call.
     $start = microtime(TRUE);
-    $response = mediamosa_http::do_internal_call_cron('internal/simpletest/run', false, $options);
+    $response = mediamosa_http::do_internal_call_cron('internal/simpletest/run', FALSE, $options);
     $end = microtime(TRUE);
     try {
       $response->xml = new SimpleXMLElement($response->data);
@@ -414,6 +414,6 @@
   static public function trigger_simpletests() {
 
     // Trigger.
-    mediamosa_http::do_internal_call_cron('internal/cron/simpletests', true);
+    mediamosa_http::do_internal_call_cron('internal/cron/simpletests', TRUE);
   }
 }

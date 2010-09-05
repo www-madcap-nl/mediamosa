@@ -129,7 +129,7 @@ class mediamosa_http {
     $host = mediamosa_unicode::strtolower($host);
 
     // Make sure it starts with 'http://'.
-    if (mediamosa_unicode::substr($host, 0, strlen('http://')) != 'http://' && mediamosa_unicode::substr($host, 0, strlen('https://')) != 'https://') {
+    if (mediamosa_unicode::substr($host, 0, mediamosa_unicode::strlen('http://')) != 'http://' && mediamosa_unicode::substr($host, 0, mediamosa_unicode::strlen('https://')) != 'https://') {
       $host = 'http://' . $host;
     }
 
@@ -202,7 +202,7 @@ class mediamosa_http {
     $curl_handle = curl_init($url);
 
     // Set HTTPS to accept any certificate.
-    if (mediamosa_unicode::substr(mediamosa_unicode::strtolower($url), 0, strlen('https://')) == 'https://') {
+    if (mediamosa_unicode::substr(mediamosa_unicode::strtolower($url), 0, mediamosa_unicode::strlen('https://')) == 'https://') {
       curl_setopt($curl_handle, CURLOPT_SSL_VERIFYPEER, FALSE);
     }
 
@@ -249,7 +249,7 @@ class mediamosa_http {
    * @param $options
    */
   static public function do_head_internal_call($url, array $options = array()) {
-    $options['do_internal'] = true;
+    $options['do_internal'] = TRUE;
     return self::do_head_call($url, $options);
   }
 
@@ -264,7 +264,7 @@ class mediamosa_http {
    * @param array $options
    *  HTTP options.
    */
-  static public function do_internal_call_cron($uri, $do_head = false, array $options = array()) {
+  static public function do_internal_call_cron($uri, $do_head = FALSE, array $options = array()) {
     // Just trigger, it has his own protection on overrun.
     $url = variable_get('mediamosa_cron_url_app', 'http://localhost');
     $use_localhost = variable_get('mediamosa_cron_url_app_local', FALSE);
@@ -422,7 +422,6 @@ class mediamosa_http {
       // Mark that this request failed. This will trigger a check of the web
       // server's ability to make outgoing HTTP requests the next time that
       // requirements checking is performed.
-      // @see system_requirements()
       variable_set('drupal_http_request_fails', TRUE);
 
       return $result;
@@ -449,7 +448,7 @@ class mediamosa_http {
     // or PUT request. Some non-standard servers get confused by Content-Length in
     // at least HEAD/GET requests, and Squid always requires Content-Length in
     // POST/PUT requests.
-    $content_length = strlen($options['data']);
+    $content_length = mediamosa_unicode::strlen($options['data']);
     if ($content_length > 0 || $options['method'] == 'POST' || $options['method'] == 'PUT') {
       $options['headers']['Content-Length'] = $content_length;
     }
@@ -513,7 +512,7 @@ class mediamosa_http {
       }
 
       list($name, $value) = explode(':', $line, 2);
-      $name = strtolower($name);
+      $name = mediamosa_unicode::strtolower($name);
       if (isset($result->headers[$name]) && $name == 'set-cookie') {
         // RFC 2109: the Set-Cookie response header comprises the token Set-
         // Cookie:, followed by a comma-separated list of one or more cookies.
@@ -607,7 +606,7 @@ class mediamosa_http {
    */
   static public function uri2url($uri) {
     $uri = trim($uri);
-    if (substr($uri, 0, strlen('http://')) != 'http://') {
+    if (mediamosa_unicode::substr($uri, 0, mediamosa_unicode::strlen('http://')) != 'http://') {
       $uri = 'http://' . trim($uri, "/ \n\r\t\0");
     }
 

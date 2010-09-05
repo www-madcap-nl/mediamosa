@@ -25,6 +25,11 @@
  */
 
 /**
+ * @file
+ * Callbacks for batch_jobs.
+ */
+
+/**
  * Callback function to display the queued jobs.
  */
 function mediamosa_batch_jobs_queue() {
@@ -32,7 +37,7 @@ function mediamosa_batch_jobs_queue() {
   $files = mediamosa_batch_jobs_sort_files(
     mediamosa_io::file_scan_directory(
       mediamosa_configuration_storage::get_full_ftp_path(),
-      '/\.'. mediamosa_settings::FTP_QUEUE_EXTENTION .'$/',
+      '/\.' . mediamosa_settings::FTP_QUEUE_EXTENTION . '$/',
       array('nomask' => '/history/')
     ),
     'filemtime'
@@ -44,7 +49,7 @@ function mediamosa_batch_jobs_queue() {
     $output .= theme('table', array('header' => $headers, 'rows' => $table));
   }
   else {
-    drupal_set_message('No queued jobs found.', 'status', FALSE);
+    drupal_set_message(t('No queued jobs found.'), 'status', FALSE);
   }
   return $output;
 }
@@ -70,7 +75,7 @@ function mediamosa_batch_jobs_current() {
     $output .= theme('table', array('header' => $headers, 'rows' => $table));
   }
   else {
-    drupal_set_message('Currently, there is no active job.', 'status', FALSE);
+    drupal_set_message(t('Currently, there is no active job.'), 'status', FALSE);
   }
   return $output;
 }
@@ -83,7 +88,7 @@ function mediamosa_batch_jobs_history() {
   $files = mediamosa_batch_jobs_sort_files(
     mediamosa_io::file_scan_directory(
       mediamosa_configuration_storage::get_full_history_path(),
-      '/\.'. mediamosa_settings::FTP_HISTORY_EXTENTION .'$/'
+      '/\.' . mediamosa_settings::FTP_HISTORY_EXTENTION . '$/'
     ),
     'filemtime'
   );
@@ -95,7 +100,7 @@ function mediamosa_batch_jobs_history() {
     $output .= theme('table', array('header' => $headers, 'rows' => $table));
   }
   else {
-    drupal_set_message('No history found.', 'status', FALSE);
+    drupal_set_message(t('No history found.'), 'status', FALSE);
   }
   return $output;
 }
@@ -145,12 +150,12 @@ function mediamosa_batch_jobs_delete_confirm_submit($form, &$form_state) {
 function mediamosa_batch_jobs_log() {
   $filename = check_plain(urldecode(arg(5)));
   $usr = check_plain(urldecode(arg(6)));
-  $path = mediamosa_configuration_storage::get_full_history_path() . DIRECTORY_SEPARATOR . basename($filename, '.'. mediamosa_settings::FTP_HISTORY_EXTENTION) .'.log';
+  $path = mediamosa_configuration_storage::get_full_history_path() . DIRECTORY_SEPARATOR . basename($filename, '.' . mediamosa_settings::FTP_HISTORY_EXTENTION) . '.log';
   if (!file_exists($path)) {
-    $path = mediamosa_configuration_storage::get_full_history_path() . DIRECTORY_SEPARATOR . $usr . '_' . basename($filename, '.'. mediamosa_settings::FTP_QUEUE_EXTENTION) .'.log';
+    $path = mediamosa_configuration_storage::get_full_history_path() . DIRECTORY_SEPARATOR . $usr . '_' . basename($filename, '.' . mediamosa_settings::FTP_QUEUE_EXTENTION) . '.log';
   }
 
-  drupal_set_title(t('Log ') . $filename);
+  drupal_set_title(t('Log') . ' ' . $filename);
 
   $body = nl2br(htmlentities(file_get_contents($path)));
   $body .= l(t('Return to batch job queue'), 'admin/mediamosa/browse/ftp_batch/queue');

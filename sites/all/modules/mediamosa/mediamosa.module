@@ -332,7 +332,7 @@ $rest_calls['rest/$uri_id'][mediamosa_rest_call::METHOD_GET] = array(
 }
 
 /**
- * Implements the hook_mediamosa_settings_collect()
+ * Implements hook_mediamosa_settings_collect().
  */
 function mediamosa_mediamosa_configuration_collect() {
   $form['settings_cron'] = array(
@@ -380,12 +380,12 @@ function mediamosa_mediamosa_configuration_collect() {
     '#description' => t('The simpletest database prefix allows MediaMosa to run its simpletests on a separate database then current. Its also enables you to run Simpletests on different mysql database server, because you are entering a Drupal database reference. Default is empty, which will turn off this feature and makes Simpletest to run its tests on the default database. See /sites/mediamosa.settings.php for the database definition of mediamosa_simpletest. For enabling; uncomment the database definition of \'mediamosa_simpletest\' and enter \'mediamosa_simpletest\' here. Changing of this setting will fail if the database define does not exists. Make sure the user and password are correct for access to this database.'),
     '#default_value' => variable_get('mediamosa_simpletest_database', ''),
   );
-*/
+ */
   return $form;
 }
 
 /**
- * Implements the hook_mediamosa_configuration_validate()
+ * Implements hook_mediamosa_configuration_validate().
  */
 function mediamosa_mediamosa_configuration_validate($form, &$form_state) {
   global $databases;

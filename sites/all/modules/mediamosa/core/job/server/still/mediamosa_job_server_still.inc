@@ -89,8 +89,8 @@ class mediamosa_job_server_still {
 
     for ($y=0; $y < $img_height; $y++) {
       for ($x=0; $x < $img_width; $x++) {
-        $index = imagecolorat($im,$x,$y);
-        $rgb = imagecolorsforindex($im,$index);
+        $index = imagecolorat($im, $x, $y);
+        $rgb = imagecolorsforindex($im, $index);
         // Round the colors to reduce the amount of them
         $rgb['red']   = intval((($rgb['red']) + 15) / 32) * 32;
         $rgb['green'] = intval((($rgb['green']) + 15)/32) * 32;
@@ -223,8 +223,8 @@ class mediamosa_job_server_still {
     $stills = array();
 
     // Move the original still to safety
-    $path = $base_path . sprintf(mediamosa_settings::STILL_EXTENSION, 1) .'.jpeg';
-    $new_path = $base_path .'_0.jpeg';
+    $path = $base_path . sprintf(mediamosa_settings::STILL_EXTENSION, 1) . '.jpeg';
+    $new_path = $base_path . '_0.jpeg';
     mediamosa_io::rename($path, $new_path);
 
     // Add our still to an array
@@ -281,12 +281,12 @@ class mediamosa_job_server_still {
 
       // Move it
       $path = $base_path . sprintf(mediamosa_settings::STILL_EXTENSION, 1) . '.jpeg';
-      $new_path = $base_path .'_'. $i .'.jpeg';
+      $new_path = $base_path . '_' . $i . '.jpeg';
       mediamosa_io::rename($path, $new_path);
 
       // Add our still to an array
       $stills[$i] = array(
-        'base_filename' => $base_filename . '_'. $i,
+        'base_filename' => $base_filename . '_' . $i,
         'path' => $new_path,
       );
     }
@@ -318,7 +318,7 @@ class mediamosa_job_server_still {
       $file = explode('_', $stills[$maxkey]['base_filename']); // That is why there was an _ in the filename
       $still = $file[0];
       $path = $stills[$maxkey]['path'];
-      $new_path = mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::transcode_tmp_location_get() . DIRECTORY_SEPARATOR . $file[0] . sprintf(mediamosa_settings::STILL_EXTENSION, 1) .'.jpeg';
+      $new_path = mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::transcode_tmp_location_get() . DIRECTORY_SEPARATOR . $file[0] . sprintf(mediamosa_settings::STILL_EXTENSION, 1) . '.jpeg';
       mediamosa_io::rename($path, $new_path);
 
       // Remove everything in $stills since we no longer need it

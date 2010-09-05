@@ -798,7 +798,7 @@ class mediamosa_db {
     $conf_31_to_62 = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 
     $hash_62 = '';
-    for ($x = (strlen($hash_31) - 1); $x >= 0; $x -= 2) {
+    for ($x = (mediamosa_unicode::strlen($hash_31) - 1); $x >= 0; $x -= 2) {
       $lo = $a_conf_31[$hash_31{$x}];
       $hi = ($x - 1) >= 0 ? $a_conf_31[$hash_31{$x - 1}] + 1 : 0; // Hi + 1 so range is 1 - 31, lo will be 0 - 30.
       $hash_62 = mediamosa_unicode::substr($conf_31_to_62, $hi + $lo, 1) . $hash_62;

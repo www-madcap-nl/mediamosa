@@ -40,9 +40,9 @@ function _mediamosa_transcode_profile_install() {
   // Create our node type.
   $transcode_profile_node_type = array(
     'type' => mediamosa_node::MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE,
-    'name' => t('MediaMosa transcode profile'),
+    'name' => st('MediaMosa transcode profile'),
     'base' => mediamosa_node::MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE,
-    'description' => t('The transcode profile contains information about the codec type and settings for a video transcoding.'),
+    'description' => st('The transcode profile contains information about the codec type and settings for a video transcoding.'),
     'custom' => 1,
     'modified' => 1,
     'locked' => 0,
@@ -53,7 +53,7 @@ function _mediamosa_transcode_profile_install() {
   node_type_save($transcode_profile_node_type);
 
   $a_default_profiles = array(
-    array('standaard flash' ,'FALSE', 'ffmpeg', 'flv', 'videobitrate:500000;size:320x200;audiobitrate:64000;audiosamplingrate:22050;maintain_aspect_ratio:yes;padding:yes'),
+    array('standaard flash', 'FALSE', 'ffmpeg', 'flv', 'videobitrate:500000;size:320x200;audiobitrate:64000;audiosamplingrate:22050;maintain_aspect_ratio:yes;padding:yes'),
     array('qcif flash', 'TRUE', 'ffmpeg', 'flv', 'videobitrate:200000;size:176x144;audiosamplingrate:22050;maintain_aspect_ratio:yes;padding:yes'),
     array('standaard wmv', 'FALSE', 'windows', 'wmv', ''),
     array('standaard mp4', 'FALSE', 'ffmpeg', 'mp4', ''),

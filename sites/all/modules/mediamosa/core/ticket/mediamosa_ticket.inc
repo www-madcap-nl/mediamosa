@@ -266,10 +266,10 @@ class mediamosa_ticket {
     $ticket_target_tmp = mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_unicode::substr($ticket_target, 3);
     if (!is_dir($ticket_target_tmp)) {
       if (file_exists($ticket_symlink)) {
-       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_UNABLE_TO_CREATE_SYMLINK, array('@location' => $ticket_target . ' (link already exists)'));
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_UNABLE_TO_CREATE_SYMLINK, array('@location' => $ticket_target . ' (link already exists)'));
       }
       elseif (!mediamosa_io::symlink($ticket_target, $ticket_symlink)) {
-       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_UNABLE_TO_CREATE_SYMLINK, array('@location' => $ticket_target));
+        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_UNABLE_TO_CREATE_SYMLINK, array('@location' => $ticket_target));
       }
     }
 

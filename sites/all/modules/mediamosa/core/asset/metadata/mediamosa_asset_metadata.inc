@@ -261,7 +261,7 @@ class mediamosa_asset_metadata {
         '#asset_id' => mediamosa_asset_metadata_db::ASSET_ID,
         ':asset_id' => $asset_id
       )
-     );
+    );
 
     $a_result = array();
     foreach ($result as $a_metadata) {

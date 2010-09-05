@@ -89,7 +89,7 @@ function mediamosa_development_menu() {
 
   $items['admin/mediamosa/config/development/settings'] = array(
     'weight' => 5,
-    'title' => t('Settings'),
+    'title' => 'Settings',
     'description' => 'Setup the development settings.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mediamosa_development_settings'),

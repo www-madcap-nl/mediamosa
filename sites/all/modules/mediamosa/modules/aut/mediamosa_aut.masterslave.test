@@ -243,7 +243,7 @@ class MediaMosaAutMasterSlaveTestCaseEga extends MediaMosaTestCaseEga {
     $this->cql_do_search_test_assets_2('aap', array($asset_id_2 => TRUE, $asset_id_5 => TRUE, $asset_id_6 => TRUE), array(), 'johndoe', FALSE, FALSE, FALSE, TRUE);
 
     // All with 'aap' in title slave with granted = TRUE (give all, even when not access)
-    $this->cql_do_search_test_assets_2('lord OR noot', array($asset_id_2 => TRUE, $asset_id_5 =>TRUE), array(), self::SIMPLETEST_USER_ID, FALSE, FALSE, FALSE, TRUE);
+    $this->cql_do_search_test_assets_2('lord OR noot', array($asset_id_2 => TRUE, $asset_id_5 => TRUE), array(), self::SIMPLETEST_USER_ID, FALSE, FALSE, FALSE, TRUE);
 
     // Granted = TRUE (return, even when not access to).
     // domain surfnet.nl.
@@ -309,7 +309,7 @@ class MediaMosaAutMasterSlaveTestCaseEga extends MediaMosaTestCaseEga {
     // Now lets see if we see the asset as EGA1
     // All with 'aap' in title.
     $this->cql_do_search_test_assets_1('aap', array($asset_id_1 => TRUE, $asset_id_3 => TRUE, $asset_id_5 => TRUE));
-*/
+ */
   }
 
 }

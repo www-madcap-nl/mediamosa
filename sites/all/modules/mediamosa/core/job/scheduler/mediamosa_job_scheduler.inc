@@ -87,7 +87,7 @@ class mediamosa_job_scheduler {
       }
     }
     else {
-      mediamosa::log('Jobschedular URL not set, please setup jobschedular server in the @link.', array('@link' => l('Mediamosa configuration', 'admin/mediamosa/config/global')), WATCHDOG_ALERT, 'job_cron');
+      mediamosa::log('Jobschedular URL not set, please setup jobschedular server in the @link.', array('@link' => l(t('Mediamosa configuration'), 'admin/mediamosa/config/global')), WATCHDOG_ALERT, 'job_cron');
     }
   }
 
@@ -604,7 +604,7 @@ class mediamosa_job_scheduler {
     if (file_exists($my_file)) {
       $fh = @fopen($my_file, 'r');
       if ($fh) {
-        while(!feof($fh)) {
+        while (!feof($fh)) {
           $scenes[] = fgets($fh);
         }
         fclose($fh);
@@ -744,11 +744,12 @@ class mediamosa_job_scheduler {
         }
 
         if (mediamosa_job::is_valid_job($job_info[mediamosa_job_db::ID], $job_info[mediamosa_job_db::JOB_TYPE], $job_info[mediamosa_job_db::MEDIAFILE_ID])) {
-          self::start_server_job($job_info[mediamosa_job_db::ID],
-                                 $job_info[mediamosa_job_db::JOB_TYPE],
-                                 $result_row[mediamosa_server_db::NID],
-                                 $result_row[mediamosa_server_db::SERVER_URI],
-                                 $job_info[mediamosa_job_db::MEDIAFILE_ID]);
+          self::start_server_job(
+            $job_info[mediamosa_job_db::ID],
+            $job_info[mediamosa_job_db::JOB_TYPE],
+            $result_row[mediamosa_server_db::NID],
+            $result_row[mediamosa_server_db::SERVER_URI],
+            $job_info[mediamosa_job_db::MEDIAFILE_ID]);
         }
       }
     }
@@ -827,22 +828,22 @@ class mediamosa_job_scheduler {
     // Get job parameters;
     $job_parameters = self::get_job_parameters($job_id, mediamosa_job_db::JOB_TYPE_TRANSCODE, $mediafile_id);
 
-    $rest_url = sprintf("server/jobstart?job_id=%s&job_type=%s&mediafile_src=%s&tool=%s&file_extension=%s&command=%s",
+    $rest_url = sprintf('server/jobstart?job_id=%s&job_type=%s&mediafile_src=%s&tool=%s&file_extension=%s&command=%s',
       $job_id,
       mediamosa_job_db::JOB_TYPE_TRANSCODE,
       $mediafile_id,
-      $job_parameters["tool"],
-      $job_parameters["file_extension"],
-      $job_parameters["command"]
+      $job_parameters['tool'],
+      $job_parameters['file_extension'],
+      $job_parameters['command']
     );
 
     // Log call.
-    self::log("Start job:". $rest_url);
+    self::log('Start job:' . $rest_url);
 
     // Do request.
     $response = mediamosa_http::do_internal_call($uri, $rest_url, '', mediamosa_http::METHOD_POST);
 
-    if ($response->code == "201" || $response->code == "200") {
+    if ($response->code == '201' || $response->code == '200') {
       try {
         $response_data = new SimpleXMLElement($response->data);
       }
@@ -870,14 +871,14 @@ class mediamosa_job_scheduler {
     // Delete metadata.
     mediamosa_asset_mediafile_metadata::delete_by_mediafileid($mediafile_id);
 
-    $rest_url = sprintf("server/jobstart?job_id=%s&job_type=%s&mediafile_src=%s",
+    $rest_url = sprintf('server/jobstart?job_id=%s&job_type=%s&mediafile_src=%s',
       $job_id,
       mediamosa_job_db::JOB_TYPE_ANALYSE,
       $mediafile_id
     );
 
     // Log call.
-    self::log("Start job:". $rest_url);
+    self::log('Start job:' . $rest_url);
 
     // Do request.
     $response = mediamosa_http::do_internal_call($uri, $rest_url, '', mediamosa_http::METHOD_POST);
@@ -901,7 +902,7 @@ class mediamosa_job_scheduler {
    *
    * 1.x: _vpx_jobhandler_start_server_still_job
    */
-  static public function start_server_still_job($job_id, $uri, $mediafile_id){
+  static public function start_server_still_job($job_id, $uri, $mediafile_id) {
     // Get job parameters;
     $job_parameters = self::get_job_parameters($job_id, mediamosa_job_db::JOB_TYPE_STILL, $mediafile_id);
 
@@ -947,7 +948,7 @@ class mediamosa_job_scheduler {
     );
 
     // Log call.
-    self::log('Start job:'. $rest_url);
+    self::log('Start job:' . $rest_url);
 
     // Do request.
     $response = mediamosa_http::do_internal_call($uri, $rest_url, '', mediamosa_http::METHOD_POST);
@@ -1016,7 +1017,7 @@ class mediamosa_job_scheduler {
               (SELECT job_id FROM {#mediamosa_server_job})
           ORDER BY priority, job_id
           LIMIT 0,1',
-       array(
+      array(
         '#job_status' => mediamosa_job_db::JOB_STATUS,
         ':status' => mediamosa_job_db::JOB_STATUS_WAITING,
         ':JOBSTATUS_INPROGRESS' => mediamosa_job_db::JOB_STATUS_INPROGRESS,
@@ -1035,7 +1036,7 @@ class mediamosa_job_scheduler {
         '#mediamosa_server_job' => mediamosa_server_job_db::TABLE_NAME,
         '#mediamosa_job_transcode' => mediamosa_job_transcode_db::TABLE_NAME,
         '#mediamosa_server_tool' => mediamosa_server_tool_db::TABLE_NAME,
-       )
+      )
     )->fetchAssoc();
   }
 
@@ -1185,13 +1186,13 @@ class mediamosa_job_scheduler {
 
           // Set result
           if ($cmmd) {
-            $a_result['size'] = $cmmd['width'] .'x'. $cmmd['height'];
+            $a_result['size'] = $cmmd['width'] . 'x' . $cmmd['height'];
             $a_result['h_padding'] = $cmmd['h_padding'];
             $a_result['v_padding'] = $cmmd['v_padding'];
           }
           else {
             if ($width && $height) {
-              $a_result['size'] = $width .'x'. $height;
+              $a_result['size'] = $width . 'x' . $height;
             }
             else {
               $a_result['size'] = '176x144';
@@ -1326,19 +1327,19 @@ class mediamosa_job_scheduler {
         $result = sprintf('%s:%s', $tool_parameter, $value);
 
         // Validate values.
-        if ($min_value != null) {
+        if ($min_value != NULL) {
           if ($min_value > $value) {
             return sprintf('%s:%s', $tool_parameter, $default_value);
           }
         }
 
-        if ($max_value != null) {
+        if ($max_value != NULL) {
           if ($max_value < $value) {
             return sprintf('%s:%s', $tool_parameter, $default_value);
           }
         }
 
-        if ($allowed_value != null) {
+        if ($allowed_value != NULL) {
           $allowed_values = explode(';', $allowed_value);
           if (!(in_array($value, $allowed_values))) {
             return sprintf('%s:%s', $tool_parameter, $default_value);

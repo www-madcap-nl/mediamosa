@@ -192,7 +192,7 @@ function theme_mediamosa_maintenance_browse_properties($variables) {
     if (isset($variables['collection_assets']['assets'])) {
       foreach ($variables['collection_assets']['assets'] as $asset) {
         $actions = array(
-          l(t('Remove'), 'admin/mediamosa/browse/collection/'. rawurlencode($variables['collection_assets']['coll_id']) . '/remove_asset/' . rawurlencode($asset['asset_id']), $l_options),
+          l(t('Remove'), 'admin/mediamosa/browse/collection/' . rawurlencode($variables['collection_assets']['coll_id']) . '/remove_asset/' . rawurlencode($asset['asset_id']), $l_options),
         );
 
         $rows[] = array(

@@ -181,9 +181,14 @@ class mediamosa_connector {
     // Check the final response.
     if ($response) {
       $result_id = (int) $response->xml->header->request_result_id;
+      $result_description = $response->xml->header->request_result_description;
 
       if ($fatal && !in_array($result_id, array(self::ERRORCODE_OKAY, self::ERRORCODE_EMPTY_RESULT))) {
-        throw new Exception(strtr('Unable to execute Mediamosa REST call !uri, resulted with code !code', array('!uri' => $uri, '!code' => $result_id)), $result_id);
+        if (empty($result_description)) {
+          throw new Exception(strtr('Unable to execute Mediamosa REST call @uri (@code)', array('@uri' => $uri, '@code' => $result_id)), $result_id);
+        }
+
+        throw new Exception(strtr('@description (@code)', array('@description' => $result_description, '@code' => $result_id)), $result_id);
       }
 
       return $response;
@@ -238,7 +243,7 @@ class mediamosa_connector {
     }
 
     if ($response->xml->header->request_result_id == self::HTTP_NOT_FOUND) {
-      drupal_set_message(t('Enable the Application Authentication module, unable to login. '), 'error');
+      drupal_set_message(t('Enable the Application Authentication module, unable to login.'), 'error');
       return FALSE;
     }
 
@@ -261,7 +266,7 @@ class mediamosa_connector {
 
     // Step 2: Do challenge.
     $challenge = $dbus_data[3];
-    $random = substr(md5(microtime(TRUE)), 0, 10);
+    $random = drupal_substr(md5(microtime(TRUE)), 0, 10);
     $challenge_response = sha1(sprintf('%s:%s:%s', $challenge, $random, $this->password));
     $data = array('dbus' => sprintf('DATA %s %s', $random, $challenge_response));
     $response = $this->do_request('login', array('method' => 'POST', 'data' => $data));
@@ -325,10 +330,10 @@ class mediamosa_connector {
         $query_string_pos = strpos($uri, '?');
         $query_string = array();
         if ($query_string_pos !== FALSE) {
-          $query_string[] = substr($uri, $query_string_pos + 1);
+          $query_string[] = drupal_substr($uri, $query_string_pos + 1);
 
           // Strip it.
-          $uri = substr($uri, 0, $query_string_pos);
+          $uri = drupal_substr($uri, 0, $query_string_pos);
         }
 
         // If data is set, then add it to the query string.
@@ -379,7 +384,7 @@ class mediamosa_connector {
     // Set to empty.
     $response->xml = NULL;
     // If we detect xml output, fill the xml member.
-    if ((int) $response->code == 200 && (strpos($response->headers['content-type'], 'text/xml') !== FALSE || drupal_substr($response->data, 0, strlen('<?xml')) == '<?xml')) {
+    if ((int) $response->code == 200 && (strpos($response->headers['content-type'], 'text/xml') !== FALSE || drupal_substr($response->data, 0, drupal_strlen('<?xml')) == '<?xml')) {
       try {
         $response->xml = new SimpleXMLElement($response->data);
       }
@@ -447,7 +452,7 @@ class mediamosa_connector {
   private static function _simplexml2array($xml) {
     $xml_copy = $xml;
     if (is_object($xml) && get_class($xml) == 'SimpleXMLElement') {
-      foreach($xml->attributes() as $key => $value) {
+      foreach ($xml->attributes() as $key => $value) {
         if ($value) {
           $attributes[$key] = (string)$value;
         }
@@ -462,7 +467,7 @@ class mediamosa_connector {
       }
 
       $result = array();
-      foreach($xml as $key => $value) {
+      foreach ($xml as $key => $value) {
         $result[$key] = self::_simplexml2array($value);
       }
 
@@ -500,12 +505,12 @@ class mediamosa_connector {
 
     // Fix problem with 1 or 2+ mediafiles in array.
     foreach ($xml['items']['item'] as &$item) {
-      if (isset($item['mediafiles']) && !isset($item['mediafiles']['mediafile'][0])) {
+      if (!empty($item['mediafiles']) && !isset($item['mediafiles']['mediafile'][0])) {
         $tmp = array(0 => $item['mediafiles']['mediafile']);
         unset($item['mediafiles']['mediafile']);
         $item['mediafiles']['mediafile'] = $tmp;
       }
-   }
+    }
 
     return $xml;
   }

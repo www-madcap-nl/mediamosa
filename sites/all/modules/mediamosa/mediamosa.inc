@@ -73,7 +73,7 @@ class mediamosa {
 
   // Drupal usage for getting the current URI.
   public function get_request_uri() {
-    return trim(substr(implode('/', arg()), strlen(MEDIAMOSA_MENU_PATH)), '/');
+    return trim(mediamosa_unicode::substr(implode('/', arg()), mediamosa_unicode::strlen(MEDIAMOSA_MENU_PATH)), '/');
   }
 
   // Return the request_uri var, which can be /rest/?foo=foo
@@ -386,23 +386,6 @@ class mediamosa {
     $test_info = &$GLOBALS['drupal_test_info'];
     return (!empty($test_info['test_run_id']) ? TRUE : FALSE);
   }
-
-  /**
-   * Autoload class.
-   *
-   * @param string $class
-   *  Name of Class.
-   * @return boolean
-   *  TRUE / FALSE.
-   */
-  static public function autoload_class($class) {
-    //try {
-      return TRUE; // class_exists($class, TRUE);
-   // }
-  //  catch (Exception $e) {
-  //    return FALSE;
-  //  }
-   }
 
   /**
    * Wrapper around the drupal_http_request function.

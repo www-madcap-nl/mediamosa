@@ -112,7 +112,7 @@ class MediaMosaUserQuotaTestCaseEga extends MediaMosaTestCaseEga {
 
     // Test under and above quota cases.
     $testcases = array('true' => $quotum - 1, 'false' => $quotum + 1);
-    foreach($testcases as $allowed => $filesize_mb) {
+    foreach ($testcases as $allowed => $filesize_mb) {
       // Set filesize.
       $filesize = $filesize_mb * 1024 * 1024; // in bytes
 

@@ -77,7 +77,7 @@ function mediamosa_statistics_filter_form($form, $form_state) {
 
       $apps = array();
       foreach ($result as $row) {
-        $apps[$row['app_id']] = $row[mediamosa_app_db::APP_NAME] . ' (app id ' . $row['app_id'] .')';
+        $apps[$row['app_id']] = $row[mediamosa_app_db::APP_NAME] . ' (app id ' . $row['app_id'] . ')';
       }
 
       $form['filters']['status']['app_owner'] = array(
@@ -170,7 +170,7 @@ function mediamosa_statistics_filter_form($form, $form_state) {
         $month_end = !empty($session['month_end']) ? $session['month_end'] : date('n') + 1;
         if ($month_end > 12) {
           $month_end = 1;
-           $year_end = date('Y') + 1;
+          $year_end = date('Y') + 1;
         }
 
         $form['filters']['status']['year_end'] = array(

@@ -77,7 +77,7 @@ class MediaMosaMigrationTestCase extends MediaMosaTestCaseEga {
       'group/1/set_quotum', // post now, not get.
     );
 
-    $result = db_query("SELECT * FROM memo.madrest AS m WHERE NOT URI LIKE 'internal/%' ORDER BY m.uri");
+    $result = db_query("SELECT * FROM memo.{madrest} AS m WHERE NOT URI LIKE 'internal/%' ORDER BY m.uri");
     foreach ($result as $restcall) {
       $uri = str_replace(array_keys($uri_replace), array_values($uri_replace), $restcall->uri);
 

@@ -61,7 +61,7 @@ class MediaMosaAssetTestCaseEga extends MediaMosaTestCaseEga {
     $is_empty_asset = (string)$asset[mediamosa_asset_db::IS_EMPTY_ASSET];
     $this->assertTrue(
       $is_empty_asset == 'TRUE',
-      t("The is_empty_asset parameter is TRUE: @is_empty_asset", array('@is_empty_asset' => print_r($is_empty_asset, TRUE),))
+      t("The is_empty_asset parameter is TRUE: @is_empty_asset", array('@is_empty_asset' => print_r($is_empty_asset, TRUE)))
     );
 
     // Update mediafile
@@ -77,7 +77,7 @@ class MediaMosaAssetTestCaseEga extends MediaMosaTestCaseEga {
     $is_empty_asset = (string)$asset[mediamosa_asset_db::IS_EMPTY_ASSET];
     $this->assertTrue(
       $is_empty_asset == 'FALSE',
-      t("The is_empty_asset parameter is FALSE: @is_empty_asset", array('@is_empty_asset' => print_r($is_empty_asset, TRUE),))
+      t("The is_empty_asset parameter is FALSE: @is_empty_asset", array('@is_empty_asset' => print_r($is_empty_asset, TRUE)))
     );
   }
 
@@ -100,7 +100,7 @@ class MediaMosaAssetTestCaseEga extends MediaMosaTestCaseEga {
     $is_empty_asset = (string)$asset[mediamosa_asset_db::IS_EMPTY_ASSET];
     $this->assertTrue(
       $is_empty_asset == 'TRUE',
-      t("The is_empty_asset parameter is TRUE: @is_empty_asset", array('@is_empty_asset' => print_r($is_empty_asset, TRUE),))
+      t("The is_empty_asset parameter is TRUE: @is_empty_asset", array('@is_empty_asset' => print_r($is_empty_asset, TRUE)))
     );
 
     // Create an another mediafile with an URI.
@@ -116,7 +116,7 @@ class MediaMosaAssetTestCaseEga extends MediaMosaTestCaseEga {
     $is_empty_asset = (string)$asset[mediamosa_asset_db::IS_EMPTY_ASSET];
     $this->assertTrue(
       $is_empty_asset == 'FALSE',
-      t("The is_empty_asset parameter is FALSE: @is_empty_asset", array('@is_empty_asset' => print_r($is_empty_asset, TRUE),))
+      t("The is_empty_asset parameter is FALSE: @is_empty_asset", array('@is_empty_asset' => print_r($is_empty_asset, TRUE)))
     );
   }
 
@@ -135,7 +135,7 @@ class MediaMosaAssetTestCaseEga extends MediaMosaTestCaseEga {
     $is_empty_asset = (string)$asset[mediamosa_asset_db::IS_EMPTY_ASSET];
     $this->assertTrue(
       $is_empty_asset == 'FALSE',
-      strtr("The is_empty_asset parameter is FALSE: @is_empty_asset", array('@is_empty_asset' => print_r($is_empty_asset, TRUE),))
+      strtr("The is_empty_asset parameter is FALSE: @is_empty_asset", array('@is_empty_asset' => print_r($is_empty_asset, TRUE)))
     );
 
     // Create an another mediafile with an URI.
@@ -151,7 +151,7 @@ class MediaMosaAssetTestCaseEga extends MediaMosaTestCaseEga {
     $is_empty_asset = (string)$asset[mediamosa_asset_db::IS_EMPTY_ASSET];
     $this->assertTrue(
       $is_empty_asset == 'FALSE',
-      strtr("The is_empty_asset parameter is FALSE: @is_empty_asset", array('@is_empty_asset' => print_r($is_empty_asset, TRUE),))
+      strtr("The is_empty_asset parameter is FALSE: @is_empty_asset", array('@is_empty_asset' => print_r($is_empty_asset, TRUE)))
     );
 
     // Now delete the upload, so is_empty_asset still false
@@ -164,7 +164,7 @@ class MediaMosaAssetTestCaseEga extends MediaMosaTestCaseEga {
     $is_empty_asset = (string)$asset[mediamosa_asset_db::IS_EMPTY_ASSET];
     $this->assertTrue(
       $is_empty_asset == 'FALSE',
-      strtr("The is_empty_asset parameter is FALSE: @is_empty_asset", array('@is_empty_asset' => print_r($is_empty_asset, TRUE),))
+      strtr("The is_empty_asset parameter is FALSE: @is_empty_asset", array('@is_empty_asset' => print_r($is_empty_asset, TRUE)))
     );
 
     // Now delete the uri, so is_empty_asset = true
@@ -177,7 +177,7 @@ class MediaMosaAssetTestCaseEga extends MediaMosaTestCaseEga {
     $is_empty_asset = (string)$asset[mediamosa_asset_db::IS_EMPTY_ASSET];
     $this->assertTrue(
       $is_empty_asset == 'TRUE',
-      strtr("The is_empty_asset parameter is TRUE: @is_empty_asset", array('@is_empty_asset' => print_r($is_empty_asset, TRUE),))
+      strtr("The is_empty_asset parameter is TRUE: @is_empty_asset", array('@is_empty_asset' => print_r($is_empty_asset, TRUE)))
     );
   }
 

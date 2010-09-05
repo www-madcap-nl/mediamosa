@@ -215,12 +215,12 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $this->assertTrue(drupal_substr($response['xml']->items->item->dbus, 0, 5) == 'DATA ', 'Login fase 1 success');
 
     list($cookie) = explode(';', $response['headers']['Set-Cookie']);
-    $this->assertTrue(isset($response['headers']['Set-Cookie']), 'Cookie received in HTTP header: '. $cookie);
+    $this->assertTrue(isset($response['headers']['Set-Cookie']), 'Cookie received in HTTP header: ' . $cookie);
 
     // Step 2: send the credentials.
     $challenge = $dbus_data[3];
-    $random = substr(md5(microtime(TRUE)), 0, 10);
-    $post_data = array('dbus' => 'DATA '. $random .' '. sha1(sprintf('%s:%s:%s', $challenge, $random, $shared_key)));
+    $random = mediamosa_unicode::substr(md5(microtime(TRUE)), 0, 10);
+    $post_data = array('dbus' => 'DATA ' . $random . ' ' . sha1(sprintf('%s:%s:%s', $challenge, $random, $shared_key)));
 
     // We must call parent to skip the different session stuff.
     $response = parent::restCall('login', 'POST', $post_data);
@@ -573,7 +573,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   /**
    * Basic upload of still.
    */
-  protected function uploadTestStill($order = 0, $default = false) {
+  protected function uploadTestStill($order = 0, $default = FALSE) {
     // Create an asset.
     $asset_id = $this->createAsset();
 
@@ -663,7 +663,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   /**
    * Upload of still on a existing mediafile.
    */
-  protected function uploadTestStillAttach($order = 0, $default = false) {
+  protected function uploadTestStillAttach($order = 0, $default = FALSE) {
     // Create an asset.
     $asset_id = $this->createAsset();
 
@@ -2435,7 +2435,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // First check if we found result about our input.
     foreach ($parameters as $type => $a_changes) {
-      if (!in_array($type, array('aut_app'/*, 'aut_user', 'aut_group', 'aut_domain', 'aut_realm'*/))) {
+      if (!in_array($type, array('aut_app'))) {
         continue;
       }
 

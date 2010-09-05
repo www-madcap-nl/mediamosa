@@ -135,7 +135,7 @@ class mediamosa_rest_call_ftp_user_create extends mediamosa_rest_call {
     // Test webservice.
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_BATCH_UPLOAD, $a_app_ids);
 
-    $password = "{md5}". base64_encode(md5($password, TRUE));
+    $password = '{md5}' . base64_encode(md5($password, TRUE));
 
     $eua_name = sprintf("%03d", $app_id);
     if (mediamosa_unicode::substr($username, -3) != $eua_name) {
