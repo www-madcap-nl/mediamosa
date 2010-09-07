@@ -13,7 +13,8 @@ Known issues;
 
 MediaMosa 2.2.1
 ---------------
-
+- Added is_empty_asset flag on the mediamosa_asset_collection table. (See ticket
+  #338).
 
 Other changes (not ticket related).
 - Fixed problems during install hook mediamosa_update_7011().
@@ -26,7 +27,8 @@ Other changes (not ticket related).
 - Coder module has completly checked the MediaMosa core and all warnings where
   resolved.
 - Removed function autoload_class() from mediamosa class. No longer used.
-
+- Fixed ajax problem in collection browse page.
+- Completly rewritten the installation profile.
 
 MediaMosa 2.2.0 (build 847)
 ---------------------------

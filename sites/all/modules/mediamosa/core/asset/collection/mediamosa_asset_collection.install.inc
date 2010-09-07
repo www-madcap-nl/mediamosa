@@ -68,6 +68,13 @@ function mediamosa_asset_collection_schema() {
         'not null' => TRUE,
         'description' => t('Link to collection table.'),
       ),
+      mediamosa_asset_collection_db::IS_EMPTY_ASSET => array(
+        'description' => t('True if the asset in this collection has media.'),
+        'type' => "enum('" . implode("','", array(mediamosa_asset_collection_db::IS_EMPTY_ASSET_FALSE, mediamosa_asset_collection_db::IS_EMPTY_ASSET_TRUE)) . "')",
+        'not null' => TRUE,
+        'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_collection_db::IS_EMPTY_ASSET_FALSE, mediamosa_asset_collection_db::IS_EMPTY_ASSET_TRUE)) . "')",
+        'default' => mediamosa_asset_collection_db::IS_EMPTY_ASSET_FALSE,
+      ),
       mediamosa_asset_collection_db::CREATED => array(
         'type' => 'datetime',
         'not null' => TRUE,
@@ -83,6 +90,9 @@ function mediamosa_asset_collection_schema() {
     'foreign keys' => array(
       mediamosa_asset_collection_db::ASSET_ID => array(mediamosa_asset_db::TABLE_NAME => mediamosa_asset_db::ID),
       mediamosa_asset_collection_db::COLL_ID => array(mediamosa_collection_db::TABLE_NAME => mediamosa_collection_db::ID),
+    ),
+    'indexes' => array(
+      'idx_coll_isempty' => array(mediamosa_asset_collection_db::COLL_ID, mediamosa_asset_collection_db::IS_EMPTY_ASSET)
     ),
   );
 

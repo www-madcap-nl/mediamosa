@@ -441,7 +441,7 @@ class mediamosa_http {
     // RFC 2616: "non-standard ports MUST, default ports MAY be included".
     // We don't add the standard port to prevent from breaking rewrite rules
     // checking the host that do not take into account the port number.
-    if (!isset($options['headers']['Host'])) { // HOTFIX Mediamosa.
+    if (empty($options['headers']['Host'])) { // HOTFIX Mediamosa.
       $options['headers']['Host'] = $host;
     }
     // Only add Content-Length if we actually have any content or if it is a POST

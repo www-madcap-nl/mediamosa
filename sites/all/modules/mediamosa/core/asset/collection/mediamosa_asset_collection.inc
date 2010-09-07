@@ -128,10 +128,10 @@ class mediamosa_asset_collection {
    *
    * @param array $a_asset_ids
    *  The asset ids.
-   * @param array $a_fields (collection fields)
+   * @param array $fields (collection fields)
    *  [alias] => field
    */
-  static public function get_by_asset_ids(array $a_asset_ids, array $a_fields = array()) {
+  static public function get_by_asset_ids(array $a_asset_ids, array $fields = array()) {
 
     if (empty($a_asset_ids)) {
       return array();
@@ -139,8 +139,8 @@ class mediamosa_asset_collection {
 
     $query = mediamosa_db::db_select(mediamosa_asset_collection_db::TABLE_NAME, 'ac');
     $query->leftJoin(mediamosa_collection_db::TABLE_NAME, 'c', 'ac.coll_id = c.coll_id');
-    if (count($a_fields)) {
-      foreach ($a_fields as $key => $field) {
+    if (count($fields)) {
+      foreach ($fields as $key => $field) {
         if (($pos = strpos($field, '.')) === FALSE) {
           $query->addField('c', $field, (is_numeric($key) ? $field : $key));
         }
@@ -193,7 +193,7 @@ class mediamosa_asset_collection {
    */
   static public function create($app_id, $user_id, $is_app_admin, $asset_id, $coll_id) {
     // Asset must exist.
-    mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
+    $asset = mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
 
     // Check if relation already exist.
     if (mediamosa_db::db_exists(
@@ -206,24 +206,24 @@ class mediamosa_asset_collection {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_COLLECTION_ASSET_RELATION_ALREADY_EXISTS);
     }
 
-    $a_asset = mediamosa_asset::get($asset_id);
-    $a_collection = mediamosa_collection::get($coll_id);
+    $collection = mediamosa_collection::get($coll_id);
 
     // Check if we are owner to add the asset to the collection.
-    mediamosa_aut::owner_check_collection_assign($app_id, $user_id, $a_asset, $a_collection, $is_app_admin);
+    mediamosa_aut::owner_check_collection_assign($app_id, $user_id, $asset, $collection, $is_app_admin);
 
     // If we get here, we can create the link.
-    $a_fields = array(
+    $fields = array(
       mediamosa_asset_collection_db::ASSET_ID => $asset_id,
       mediamosa_asset_collection_db::COLL_ID => $coll_id,
+      mediamosa_asset_collection_db::IS_EMPTY_ASSET => $asset[mediamosa_asset_db::IS_EMPTY_ASSET],
     );
 
     // Add created value.
-    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+    $fields = mediamosa_db::db_insert_enrich($fields);
 
     // Insert into
     mediamosa_db::db_insert(mediamosa_asset_collection_db::TABLE_NAME)
-      ->fields($a_fields)
+      ->fields($fields)
       ->execute();
   }
 

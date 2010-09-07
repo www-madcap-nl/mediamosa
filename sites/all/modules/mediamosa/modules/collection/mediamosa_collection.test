@@ -66,13 +66,13 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
     // test 1: [POST] collection/create - make empty collection.
 
     // Parameters collection.
-    $a_parameters = array(
+    $parameters = array(
       mediamosa_rest_call_collection_create::USER_ID => self::SIMPLETEST_USER_ID,
       mediamosa_rest_call_collection_create::GROUP_ID => self::SIMPLETEST_GROUP_ID,
     );
 
     // Do POST call.
-    $response = $this->restCallPost('collection/create', $a_parameters);
+    $response = $this->restCallPost('collection/create', $parameters);
     $this->pass(strtr("Create collection with ID '@id'.", array('@id' => $response['xml']->items->item[0]->coll_id)));
     $coll_id = $response['xml']->items->item[0]->coll_id;
 
@@ -118,13 +118,13 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
 
     // test: [GET] collection?limit=1 - list of collections
 
-    $a_parameters = array(
+    $parameters = array(
       mediamosa_rest_call_collection_search::USER_ID => self::SIMPLETEST_USER_ID,
       mediamosa_rest_call_collection_search::LIMIT => 1,
     );
 
     // Do GET /collection call.
-    $response = $this->restCallGet('collection', $a_parameters);
+    $response = $this->restCallGet('collection', $parameters);
 
     $request_result_id = $response['xml']->header->request_result_id;
     $this->assertTrue(
@@ -142,12 +142,12 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
 
 
     // Test: [GET] collection/{coll_id} - details of a collection
-    $a_parameters = array(
+    $parameters = array(
       mediamosa_rest_call_collection_get::USER_ID => self::SIMPLETEST_USER_ID,
     );
 
     // Do GET /collection/{coll_id} call.
-    $response = $this->restCallGet('collection/' . $coll_id, $a_parameters);
+    $response = $this->restCallGet('collection/' . $coll_id, $parameters);
     $request_result_id = $response['xml']->header->request_result_id;
     $this->assertTrue(
       $request_result_id == (string) mediamosa_error::ERRORCODE_OKAY,
@@ -163,12 +163,12 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
 
 
     // Test: [GET] collection/{coll_id}/asset/count - count the assets in a collection
-    $a_parameters = array(
+    $parameters = array(
       mediamosa_rest_call_collection_get::USER_ID => self::SIMPLETEST_USER_ID,
     );
 
     // Do GET /collection/{coll_id}/asset/count call.
-    $response = $this->restCallGet('collection/' . $coll_id . '/asset/count', $a_parameters);
+    $response = $this->restCallGet('collection/' . $coll_id . '/asset/count', $parameters);
     $request_result_id = $response['xml']->header->request_result_id;
     $this->assertTrue(
       $request_result_id == (string) mediamosa_error::ERRORCODE_OKAY,
@@ -188,13 +188,13 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
     // Create an asset.
     $asset_id = $this->createAsset();
 
-    $a_parameters = array(
+    $parameters = array(
       mediamosa_rest_call_asset_collection_create::ASSET_ID => $asset_id,
       mediamosa_rest_call_asset_collection_create::USER_ID => self::SIMPLETEST_USER_ID,
     );
 
     // Do POST /collection/{coll_id}/asset_relation call.
-    $response = $this->restCallPOST('collection/' . $coll_id . '/asset_relation', $a_parameters);
+    $response = $this->restCallPOST('collection/' . $coll_id . '/asset_relation', $parameters);
     $request_result_id = $response['xml']->header->request_result_id;
     $this->assertTrue(
       $request_result_id == (string) mediamosa_error::ERRORCODE_OKAY,
@@ -207,12 +207,12 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
 
 
     // Test: [GET] collection/{coll_id} - details of a collection
-    $a_parameters = array(
+    $parameters = array(
       mediamosa_rest_call_collection_get::USER_ID => self::SIMPLETEST_USER_ID,
     );
 
     // Do GET /collection/{coll_id} call.
-    $response = $this->restCallGet('collection/' . $coll_id, $a_parameters);
+    $response = $this->restCallGet('collection/' . $coll_id, $parameters);
     $request_result_id = $response['xml']->header->request_result_id;
     $this->assertTrue(
       $request_result_id == (string) mediamosa_error::ERRORCODE_OKAY,
@@ -228,12 +228,12 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
 
 
     // Test: [GET] collection/{coll_id}/asset/count - count the assets in a collection
-    $a_parameters = array(
+    $parameters = array(
       mediamosa_rest_call_collection_get::USER_ID => self::SIMPLETEST_USER_ID,
     );
 
     // Do GET /collection/{coll_id}/asset/count call.
-    $response = $this->restCallGet('collection/' . $coll_id . '/asset/count', $a_parameters);
+    $response = $this->restCallGet('collection/' . $coll_id . '/asset/count', $parameters);
     $request_result_id = $response['xml']->header->request_result_id;
     $this->assertTrue(
       $request_result_id == (string) mediamosa_error::ERRORCODE_OKAY,
@@ -266,11 +266,11 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
     );
 
     // test: [GET] collection/$coll_id/asset - list of assets in collection.
-    $a_parameters = array(
+    $parameters = array(
       mediamosa_rest_call_collection_search::USER_ID => self::SIMPLETEST_USER_ID,
       mediamosa_rest_call_collection_search::LIMIT => 1,
     );
-    $response = $this->restCallGet('collection/' . $coll_id . '/asset', $a_parameters);
+    $response = $this->restCallGet('collection/' . $coll_id . '/asset', $parameters);
 
     $request_result_id = $response['xml']->header->request_result_id;
     $this->assertTrue(
@@ -289,13 +289,13 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
     );
 
     // test: [POST] collection/$coll_id - update collection
-    $a_parameters = array(
+    $parameters = array(
       mediamosa_rest_call_collection_update::USER_ID => self::SIMPLETEST_USER_ID,
       mediamosa_rest_call_collection_update::TITLE => 'new title',
       mediamosa_rest_call_collection_update::DESCRIPTION => 'new desc',
     );
 
-    $response = $this->restCallPOST('collection/' . $coll_id , $a_parameters);
+    $response = $this->restCallPOST('collection/' . $coll_id , $parameters);
     $request_result_id = $response['xml']->header->request_result_id;
     $this->assertTrue(
       $request_result_id == (string) mediamosa_error::ERRORCODE_OKAY,
@@ -327,11 +327,11 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
 
     // test: [POST] collection/$coll_id/asset_relation/delete?asset=$asset_id
     // delete collectie/asset relation
-    $a_parameters = array(
+    $parameters = array(
       mediamosa_rest_call_asset_collection_delete::USER_ID => self::SIMPLETEST_USER_ID,
       mediamosa_rest_call_asset_collection_delete::ASSET_ID => $asset_id,
     );
-    $response = $this->restCallPOST('collection/' . $coll_id . '/asset_relation/delete', $a_parameters);
+    $response = $this->restCallPOST('collection/' . $coll_id . '/asset_relation/delete', $parameters);
     $request_result_id = $response['xml']->header->request_result_id;
     $this->assertTrue(
       $request_result_id == (string) mediamosa_error::ERRORCODE_OKAY,
@@ -358,12 +358,12 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
 
 
     // Test: [GET] collection/{coll_id} - details of a collection
-    $a_parameters = array(
+    $parameters = array(
       mediamosa_rest_call_collection_get::USER_ID => self::SIMPLETEST_USER_ID,
     );
 
     // Do GET /collection/{coll_id} call.
-    $response = $this->restCallGet('collection/' . $coll_id, $a_parameters);
+    $response = $this->restCallGet('collection/' . $coll_id, $parameters);
     $request_result_id = $response['xml']->header->request_result_id;
     $this->assertTrue(
       $request_result_id == (string) mediamosa_error::ERRORCODE_OKAY,
@@ -379,12 +379,12 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
 
 
     // Test: [GET] collection/{coll_id}/asset/count - count the assets in a collection
-    $a_parameters = array(
+    $parameters = array(
       mediamosa_rest_call_collection_get::USER_ID => self::SIMPLETEST_USER_ID,
     );
 
     // Do GET /collection/{coll_id}/asset/count call.
-    $response = $this->restCallGet('collection/' . $coll_id . '/asset/count', $a_parameters);
+    $response = $this->restCallGet('collection/' . $coll_id . '/asset/count', $parameters);
     $request_result_id = $response['xml']->header->request_result_id;
     $this->assertTrue(
       $request_result_id == (string) mediamosa_error::ERRORCODE_OKAY,
@@ -400,24 +400,79 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
   }
 
   /**
+   * Testing hide empty assets flag.
+   */
+  function testCollectionHideEmptyAssets() {
+
+    // Create collection.
+    $coll_id = $this->createCollection();
+
+    // Create 2 assets, one with mediafile, one empty and put them into the
+    // collection.
+    $asset_id_1 = $this->createAsset();
+
+    // Upload a mediafile.
+    $upload = $this->uploadTestFile();
+
+    // Put them into the collection.
+    $this->createCollectionAssetRelation($coll_id, array($asset_id_1, $upload['asset_id']));
+
+    // Now search collection, numofvideos should be 2.
+    $result = $this->getCollections();
+
+    // Get the collections, should be one.
+    $collections = $result['items']['item'];
+
+    // Must be one.
+    $this->assertTrue(count($collections) == 1, 'Found one collection');
+
+    // Get collection.
+    $collection = reset($collections);
+
+    // Show the collection.
+    $this->var_export($collection);
+
+    // Must be 2.
+    $this->assertTrue($collection['numofvideos'] == 2, 'Found 2 videos in collection');
+
+    // Now search again with hide_empty_assets, numofvideos should be 1 now.
+    $result = $this->getCollections(self::SIMPLETEST_USER_ID, array(mediamosa_rest_call_collection_search::HIDE_EMPTY_ASSETS => TRUE));
+
+    // Get the collections, should be one.
+    $collections = $result['items']['item'];
+
+    // Must be one.
+    $this->assertTrue(count($collections) == 1, 'Found one collection');
+
+    // Get collection.
+    $collection = reset($collections);
+
+    // Must be 1.
+    $this->assertTrue($collection['numofvideos'] == 1, 'Found 1 video in collection');
+
+    // Show the collection.
+    $this->var_export($collection);
+  }
+
+  /**
    * Get a collection.
    *
    * @param string $coll_id
    * @param string $user_id
-   * @param array $a_parameters
+   * @param array $parameters
    */
-  protected function getCollection($coll_id, $user_id = self::SIMPLETEST_USER_ID, array $a_parameters = array()) {
+  protected function getCollection($coll_id, $user_id = self::SIMPLETEST_USER_ID, array $parameters = array()) {
 
     // Required parameter.
-    $a_parameters[mediamosa_rest_call_collection_create::USER_ID] = $user_id;
+    $parameters[mediamosa_rest_call_collection_create::USER_ID] = $user_id;
 
     // Do not set the app ID, handle by us.
-    $this->assertFalse(isset($a_parameters[mediamosa_rest_call_collection_create::APP_ID]));
+    $this->assertFalse(isset($parameters[mediamosa_rest_call_collection_create::APP_ID]));
 
     $uri = strtr('collection/@coll_id', array('@coll_id' => $coll_id));
 
     // Do Post call.
-    $response = $this->restCallGet($uri, $a_parameters);
+    $response = $this->restCallGet($uri, $parameters);
 
     $this->pass(strtr("Gets the collection id: @coll_id'.", array('@coll_id' => $coll_id)));
 
@@ -430,52 +485,54 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
    * Search collections.
    *
    * @param string $user_id
-   * @param array $a_parameters
+   * @param array $parameters
    */
-  protected function getCollections($user_id = self::SIMPLETEST_USER_ID, array $a_parameters = array()) {
+  protected function getCollections($user_id = self::SIMPLETEST_USER_ID, array $parameters = array()) {
     // Parameters collection
-    $a_parameters += array(
-      mediamosa_rest_call_asset_create::IS_APP_ADMIN => 'false',
-      mediamosa_rest_call_asset_create::GROUP_ID => '',
+    $parameters += array(
+      mediamosa_rest_call_collection_search::HIDE_EMPTY_ASSETS => FALSE,
     );
 
     // Required.
-    $a_parameters[mediamosa_rest_call_asset_create::USER_ID] = $user_id;
+    $parameters[mediamosa_rest_call_collection_search::USER_ID] = $user_id;
+
+    // Optional, convert.
+    $parameters[mediamosa_rest_call_collection_search::HIDE_EMPTY_ASSETS] = $parameters[mediamosa_rest_call_collection_search::HIDE_EMPTY_ASSETS] ? 'TRUE' : 'FALSE';
 
     // Do not set the app ID, handle by us.
-    $this->assertFalse(isset($a_parameters[mediamosa_rest_call_asset_create::APP_ID]));
+    $this->assertFalse(isset($parameters[mediamosa_rest_call_collection_search::APP_ID]));
 
     $uri = 'collection';
 
     // Do Post call.
-    $response = $this->restCallGet($uri, $a_parameters);
+    $response = $this->restCallGet($uri, $parameters);
 
-    // Return data.
-    return $response['xml']->items->item[0];
+    // Get response.
+    return mediamosa_lib::responsexml2array($response['xml']);
   }
 
   /**
    * Create a collection (using /asset/collection).
    *
-   * @param array $a_parameters
+   * @param array $parameters
    */
-  protected function createCollection(array $a_parameters = array()) {
+  protected function createCollection(array $parameters = array()) {
     // Parameters collection.
-    $a_parameters += array(
+    $parameters += array(
       mediamosa_rest_call_collection_create::USER_ID => self::SIMPLETEST_USER_ID,
       mediamosa_rest_call_collection_create::GROUP_ID => self::SIMPLETEST_GROUP_ID,
     );
 
     // Do not set the app ID, handle by us.
-    $this->assertFalse(isset($a_parameters[mediamosa_rest_call_collection_create::APP_ID]));
+    $this->assertFalse(isset($parameters[mediamosa_rest_call_collection_create::APP_ID]));
 
     // Do Post call.
-    $response = $this->restCallPost('collection/create', $a_parameters);
+    $response = $this->restCallPost('collection/create', $parameters);
 
     $this->pass(strtr("Create collection with ID '@id'.", array('@id' => $response['xml']->items->item[0]->coll_id)));
 
     // Return the asset_id.
-    return $response['xml']->items->item[0]->coll_id;
+    return (string)$response['xml']->items->item[0]->coll_id;
   }
 
   /**
@@ -483,11 +540,11 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
    *
    * @param string $coll_id
    * @param string $user_id
-   * @param array $a_parameters
+   * @param array $parameters
    */
-  protected function updateCollection($coll_id, $user_id = self::SIMPLETEST_USER_ID, array $a_parameters = array()) {
+  protected function updateCollection($coll_id, $user_id = self::SIMPLETEST_USER_ID, array $parameters = array()) {
     // Parameters asset.
-    $a_parameters += array(
+    $parameters += array(
       mediamosa_rest_call_collection_update::USER_ID => self::SIMPLETEST_USER_ID,
       mediamosa_rest_call_collection_update::GROUP_ID => self::SIMPLETEST_GROUP_ID,
       mediamosa_rest_call_collection_update::PRIVATE_ => 'FALSE',
@@ -501,15 +558,15 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
     );
 
     // Required.
-    $a_parameters[mediamosa_rest_call_collection_update::USER_ID] = $user_id;
+    $parameters[mediamosa_rest_call_collection_update::USER_ID] = $user_id;
 
     // Do not set the app ID, handle by us.
-    $this->assertFalse(isset($a_parameters[mediamosa_rest_call_collection_update::APP_ID]));
+    $this->assertFalse(isset($parameters[mediamosa_rest_call_collection_update::APP_ID]));
 
     $uri = strtr('collection/@coll_id', array('@coll_id' => $coll_id));
 
     // Do Post call.
-    $response = $this->restCallPost($uri, $a_parameters);
+    $response = $this->restCallPost($uri, $parameters);
 
     $this->pass(strtr("Update collection with ID '@id'.", array('@id' => $coll_id)));
 

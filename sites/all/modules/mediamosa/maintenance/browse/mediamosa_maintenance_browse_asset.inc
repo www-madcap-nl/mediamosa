@@ -157,7 +157,7 @@ function mediamosa_browse_asset_filter_form() {
 function _ajax_browse_asset_search_parameters() {
 
   // Load the form based upon the $_POST data sent via the ajax call.
-  list($form, $form_state, $form_id, $form_build_id) = ajax_get_form();
+  list($form, $form_state) = ajax_get_form();
 
   // Fix drupal notice.
   $form_state['values'] = isset($form_state['values']) ? $form_state['values'] : array();

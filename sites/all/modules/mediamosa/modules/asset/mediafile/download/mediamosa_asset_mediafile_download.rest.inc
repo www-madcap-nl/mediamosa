@@ -86,12 +86,16 @@ class mediamosa_rest_call_download_mediafile extends mediamosa_rest_call {
     header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
     header("Cache-Control: private, false");
     header("Content-Description: Download");
-    header("Content-Type: application/force-download"); // alternatief: application/octet-stream
+    header("Content-Type: application/force-download"); // alternative: application/octet-stream
     header("Content-Length: " . filesize($file));
     header("Content-Disposition: attachment; filename=\"" . rawurlencode($filename) . "\""); // force a save dialog.
     header("Content-Transfer-Encoding: binary");
 
-    // stream de file en verscheur de ticket op het filesystem
+    // Make sure we send the header now.
+    ob_clean();
+    flush();
+
+    // Now send the file directly to the output.
     if (@readfile($file) !== FALSE) {
       mediamosa_io::unlink($file);
     }

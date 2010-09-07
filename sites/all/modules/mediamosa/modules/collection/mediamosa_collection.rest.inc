@@ -100,6 +100,7 @@ class mediamosa_rest_call_collection_search extends mediamosa_rest_call {
   const NUMOFVIDEOS = 'numofvideos';
   const OPERATOR = 'operator';
   const CALCULATE_TOTAL_COUNT = 'calculate_total_count';
+  const HIDE_EMPTY_ASSETS = 'hide_empty_assets';
 
   // --------------------------------------------------------- Public Functions.
   static public function get_search_params() {
@@ -172,6 +173,11 @@ class mediamosa_rest_call_collection_search extends mediamosa_rest_call {
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
           self::VAR_DESCRIPTION => "Calculate the number of rows in the complete scope of the search. Performance wise to use this parameter with value 'FALSE' if you don't need to know the total number of rows in your scope result.",
           self::VAR_DEFAULT_VALUE => 'TRUE',
+        ),
+        self::HIDE_EMPTY_ASSETS => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_DESCRIPTION => 'Do not include assets that do not have mediafiles.',
+          self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
 
         // Old fasion search params.
@@ -302,6 +308,7 @@ class mediamosa_rest_call_collection_search extends mediamosa_rest_call {
       $this->get_param_value(self::IS_APP_ADMIN),
       $this->get_param_value(self::IS_PUBLIC_LIST),
       $this->get_param_value(self::CALCULATE_TOTAL_COUNT),
+      $this->get_param_value(self::HIDE_EMPTY_ASSETS),
       $this->get_param_value_limit(),
       $this->get_param_value_offset()
     );

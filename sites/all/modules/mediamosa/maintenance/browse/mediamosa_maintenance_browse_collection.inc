@@ -146,6 +146,11 @@ function _mediamosa_browse_collection_searchparameters($form, $form_state = arra
 
   $op = isset($form_state['input']['op']) ? $form_state['input']['op'] : '';
 
+  // Ajax input.
+  if (!empty($form_state['input']['_triggering_element_name']) && $form_state['input']['_triggering_element_name'] == 'op') {
+    $op = $form_state['input']['_triggering_element_value'];
+  }
+
   switch ($op) {
     case t('Reset'):
       $session['operator'] = 'and';
