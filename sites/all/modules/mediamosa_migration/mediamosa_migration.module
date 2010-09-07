@@ -91,21 +91,21 @@ function mediamosa_migration_settings() {
   $form['migration']['mediamosa_db_mig_memo'] = array(
     '#type' => 'textfield',
     '#title' => t('VPX / MediaMosa drupal database'),
-    '#description' => t("Enter the drupal database name of your 1.7 mysql database as defined in your sites/settings.mediamosa.php"),
+    '#description' => t("Enter the drupal database name of your 1.7 mysql database as defined in your sites/default/settings.php"),
     '#required' => TRUE,
     '#default_value' => variable_get('mediamosa_db_mig_memo', 'mig_memo'),
   );
   $form['migration']['mediamosa_db_mig_memo_data'] = array(
     '#type' => 'textfield',
     '#title' => t('VPX / MediaMosa data database'),
-    '#description' => t("Enter the data database name of your 1.7 mysql database as defined in your sites/settings.mediamosa.php'."),
+    '#description' => t("Enter the data database name of your 1.7 mysql database as defined in your sites/default/settings.php'."),
     '#required' => TRUE,
     '#default_value' => variable_get('mediamosa_db_mig_memo_data', 'mig_memo_data'),
   );
   $form['migration']['mediamosa_db_mig_vpx_ftp'] = array(
     '#type' => 'textfield',
     '#title' => t('VPX / MediaMosa VPX FTP'),
-    '#description' => t("Enter the FTP database name of your 1.7 mysql database as defined in your sites/settings.mediamosa.php."),
+    '#description' => t("Enter the FTP database name of your 1.7 mysql database as defined in your sites/default/settings.php."),
     '#required' => FALSE,
     '#default_value' => variable_get('mediamosa_db_mig_vpx_ftp', 'mig_vpx_ftp'),
   );

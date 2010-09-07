@@ -42,20 +42,6 @@ define('MEDIAMOSA_PROFILE_TEST_LUA_LPEG', 'lua works');
  */
 
 /**
- * Implementation of hook_form_alter().
- */
-function mediamosa_profile_form_alter(&$form, $form_state, $form_id) {
-
-  if ($form_id == 'install_configure_form') {
-    // Set default for site name field.
-    $form['site_information']['site_name']['#default_value'] = $_SERVER['SERVER_NAME'];
-    $form['site_information']['site_mail']['#default_value'] = 'webmaster@' . $_SERVER['SERVER_NAME'];
-    $form['admin_account']['account']['name']['#default_value'] = 'admin';
-    $form['admin_account']['account']['mail']['#default_value'] = 'admin@' . $_SERVER['SERVER_NAME'];
-  }
-}
-
-/**
  * Retrieve the version.
  */
 function _mediamosa_profile_get_version() {
@@ -101,6 +87,7 @@ function mediamosa_profile_install_tasks() {
     'mediamosa_profile_domain_usage_form' => array(
       'display_name' => st('Your domain usage'),
       'type' => 'form',
+      'run' => variable_get('apache_setting') == 'simple' ? INSTALL_TASK_SKIP : INSTALL_TASK_RUN_IF_NOT_COMPLETED,
     ),
     'mediamosa_profile_migration_form' => array(
       'display_name' => st('Migration of your v1.7 database'),
@@ -134,10 +121,6 @@ function mediamosa_profile_install_tasks_alter(&$tasks, $install_state) {
     'install_load_profile' => array(
       'run' => INSTALL_TASK_RUN_IF_REACHED,
     ),
-    'mediamosa_profile_intro_form' => array(
-      'display_name' => st('Welcome to MediaMosa'),
-      'type' => 'form',
-    ),
     'install_verify_requirements' => array(
       'display_name' => st('Verify requirements'),
     ),
@@ -158,57 +141,17 @@ function mediamosa_profile_install_tasks_alter(&$tasks, $install_state) {
   ) + $tasks;
 }
 
-/**
- * The profile intro.
- *
- * @param unknown_type $install_state
- */
-function mediamosa_profile_intro_form($form, &$form_state, &$install_state) {
 
+function system_form_install_settings_form_alter(&$form, $form_state, $form_id) {
+  // Set default for site name field.
   $form['intro'] = array(
+    '#weight' => -1,
     '#type' => 'fieldset',
     '#collapsible' => FALSE,
     '#collapsed' => FALSE,
-    '#title' => t('Welcome to MediaMosa'),
-  );
-
-  $form['intro']['welcome'] = array(
-    '#markup' => t("<p>MediaMosa is a full featured, webservice oriented media management
-      and distribution platform. MediaMosa is implemented as a modular
-      extension to the open source Drupal system. You'll find the MediaMosa
-      specific modules in sites/all/modules, the remainder of the tree is
-      the standard Drupal core.
-    </p>
-    <p>
-    Before procceding, please viits our !quick_install.
-    </p>
-    <p>
-      Please visit !mediamosa.org for more information, announcements,
-      documentation, community forums, and new releases.
-    </p>
-    <p>
-    References:
-    <ul>
-      <li>!mediamosa.org</a></li>
-      <li><a href=\"http://www.drupal.org\">http://www.drupal.org</a></li>
-    </ul>
-  </p>",
-    array(
-      '!mediamosa.org' => l('http://www.mediamosa.org', 'http://www.mediamosa.org/', array('absolute' => TRUE)),
-      '!quick_install' => l('quick install page', 'http://mediamosa.org/trac/wiki/Quick%20install', array('absolute' => TRUE))
-    ))
-  );
-
-  $form['database'] = array(
-    '#type' => 'fieldset',
-    '#collapsible' => FALSE,
-    '#collapsed' => FALSE,
-    '#title' => t('MediaMosa database setup'),
-  );
-
-  $form['database']['Message'] = array(
-    '#markup' => t("<p>
-    We advice using !mysql v5.1, or use MySQL variant like !mariadb.
+    '#title' => t("Set up Database"),
+    '#description' => t("
+    <p>We advice using !mysql v5.1, or use MySQL variant like !mariadb.
     MediaMosa is currently <b>untested</b> with !postgresql.
    </p>
    <p>Use the database <b>mediamosa</b> example below to create your database 'mediamosa' with user 'memo' before proceeding.</p>
@@ -239,28 +182,16 @@ function mediamosa_profile_intro_form($form, &$form_state, &$install_state) {
     '!postgresql' => l('PostgreSQL', 'http://www.postgresql.org/')
    ))
   );
-
-  $form['actions'] = array('#type' => 'actions');
-  $form['actions']['save'] = array(
-    '#type' => 'submit',
-    '#value' => st('Continue'),
-  );
-  $form['errors'] = array();
-
-  return $form;
 }
 
 /**
- * Validate the intro form.
+ * Implementation of hook_form_alter().
  */
-function mediamosa_profile_intro_form_validate($form, &$form_state) {
-
-}
-
-/**
- * Submit the intro form.
- */
-function mediamosa_profile_intro_form_submit($form, &$form_state) {
+function system_form_install_configure_form_alter(&$form, $form_state, $form_id) {
+  $form['site_information']['site_name']['#default_value'] = 'MediaMosa';
+  $form['site_information']['site_mail']['#default_value'] = 'webmaster@' . $_SERVER['SERVER_NAME'];
+  $form['admin_account']['account']['name']['#default_value'] = 'admin';
+  $form['admin_account']['account']['mail']['#default_value'] = 'admin@' . $_SERVER['SERVER_NAME'];
 }
 
 function mediamosa_profile_php_settings_form($form, &$form_state, &$install_state) {
@@ -470,7 +401,7 @@ function mediamosa_profile_storage_location_form() {
   $mount_point_windows = variable_get('mediamosa_current_mount_point_windows', '\\\\');
 
   $form['description'] = array(
-    '#markup' => '<p><b>' . st('The mount point is a shared directory where related mediafiles, images and other files are stored.') . '</b></p>',
+    '#markup' => '<p><b>' . st('The mount point is a shared directory where related mediafiles, images and other files are stored. On a multi-server setup, this mount point needs to be available for all servers (i.e. through NFS)') . '</b></p>',
   );
 
   $form['current_mount_point'] = array(
@@ -479,14 +410,6 @@ function mediamosa_profile_storage_location_form() {
     '#description' => t('Make sure the Apache user has write access to the MediaMosa SAN/NAS mount point.'),
     '#required' => TRUE,
     '#default_value' => $mount_point,
-  );
-
-  $form['current_mount_point_windows'] = array(
-    '#type' => 'textfield',
-    '#title' => t('MediaMosa SAN/NAS Mount point for Windows'),
-    '#description' => t("Make sure the webserver has write access to the Windows MediaMosa SAN/NAS mount point. If you don't use Windows, just leave it as it is."),
-    '#required' => FALSE,
-    '#default_value' => $mount_point_windows,
   );
 
   $form['continue'] = array(
@@ -515,7 +438,7 @@ function mediamosa_profile_storage_location_form_submit($form, &$form_state) {
   $values = $form_state['values'];
 
   variable_set('mediamosa_current_mount_point', $values['current_mount_point']);
-  variable_set('mediamosa_current_mount_point_windows', $values['current_mount_point_windows']);
+  variable_set('mediamosa_current_mount_point_windows', '\\');
 
   // Inside the storage location, create a MediaMosa storage structure.
   // data.
@@ -653,37 +576,18 @@ function mediamosa_profile_cron_settings_form() {
     '#collapsible' => FALSE,
     '#collapsed' => FALSE,
     '#title' => t('Cron setup'),
-    '#description' => t('The cron will be used trigger MediaMosa every minute for background proccess. The setup for cron is required for be able to run MediaMosa.'),
-  );
-
-  $form['cron']['cron_every_minute_text_1'] = array(
-    '#markup' => t("<h5>Creating the cron script</h5><p>Copy the content below into a file in your home directory:<br /><small>(Note: The 'bin' directory might not exists in your home directory, create when needed.)</small></p><p><code>~/bin/cron_every_minute.sh.</code></p>"),
-  );
-
-  $form['cron']['cron_every_minute'] = array(
-    '#type' => 'textarea',
-    '#attributes' => array('class' => array('mm-profile-textarea')),
-    '#default_value' => '#!/bin/sh
-
-# Trigger MediaMosa Cron Page.
-/usr/bin/wget -O - -q -t 1 --header="Host: ' . $server_name . '" http://localhost/cron.php?cron_key=' . variable_get('cron_key', ''),
-    '#rows' => 6,
-  );
-
-  $form['cron']['cron_every_minute_text_2'] = array(
-    '#markup' => t("<p>Save the file and modify the file permissions:</p>
-    <p><code>chmod a+x ~/bin/cron_mediamosa.sh</code></p>"),
+    '#description' => t('The cron will be used trigger MediaMosa every minute for background jobs. The setup for cron is required for be able to run MediaMosa properly.'),
   );
 
   $form['cron']['crontab_text'] = array(
-    '#markup' => t('<h5>Adding our new script to the crontab</h5>Modify your cron using crontab, this will run our script every minute:<p><code>crontab -e</code></p><p>Add this line at the bottom:</p>'),
+    '#markup' => t('<h5>Add a crontab entry</h5>Modify your cron using crontab, this will run the script every minute:<p><code>crontab -e</code></p><p>Add this line at the bottom:</p>'),
   );
 
   $form['cron']['crontab'] = array(
     '#type' => 'textarea',
     '#attributes' => array('class' => array('mm-profile-textarea')),
-    '#default_value' => '* * * * * ~/bin/cron_mediamosa.sh',
-    '#rows' => 2,
+    '#default_value' => '* * * * * /usr/bin/wget -O - -q -t 1 --header="Host: ' . $server_name . '" http://localhost/cron.php?cron_key=' . variable_get('cron_key', ''),
+    '#rows' => 6,
   );
 
   $form['continue'] = array(
@@ -706,36 +610,38 @@ function mediamosa_profile_apache_settings_form() {
 
   // Get the server name.
   $server_name = _mediamosa_profile_server_name();
-
-
-
-  // Apache.
-
   $mount_point = variable_get('mediamosa_current_mount_point', '');
   $document_root = _mediamosa_profile_document_root();
 
+  $apache_settings_local = st("<b>Localhost setup (simple)</b><p>Single server setup with http://localhost/ for demonstration purposes. Add the following lines to your basic localhost apache definition:
+    <pre>".htmlentities("
+    # ticket
+    Alias /ticket !mount_point/links
+    <Directory !mount_point/links>
+      Options FollowSymLinks
+      AllowOverride All
+      Order deny,allow
+      Allow from All
+    </Directory>
 
-  $form['apache'] = array(
-    '#type' => 'fieldset',
-    '#collapsible' => FALSE,
-    '#collapsed' => FALSE,
-    '#title' => t('Apache'),
-    '#description' => t("You have to set up your Apache2 following this instruction"),
-  );
-
-  $form['apache']['apache_options'] = array(
-    '#markup' => t("<ol><li>Change your site's settings in <code>/etc/apache2/sites-enabled/your-site</code>.<br />First save your original file, then insert this code to your settings file.</li>
-<li>Restart your Apache:<br /><code>sudo /etc/init.d/apache2 restart</code><br />") .
-  (strpos($server_name, '/') === FALSE ? '' : t("<b>It is strongly recommended, that you use server name like '<code>@mediamosa</code>', when you install MediaMosa, and not like '<code>@server_name</code>'.</b>", array('@mediamosa' => (substr($server_name, -1) == '/' ? 'mediamosa' : substr($server_name, strrpos($server_name, '/') + 1)), '@server_name' => $server_name))) . '</li></ol>',
-  );
+    <IfModule mod_php5.c>
+        php_admin_value post_max_size 2008M
+        php_admin_value upload_max_filesize 2000M
+        php_admin_value memory_limit 64M
+    </IfModule>") ."</pre>
+    The ticket is the streaming link to a video needed to play videos, the php settings are needed to allow more than default sizes upload.</p><br /><br />
+", array(
+      '!mount_point' => $mount_point,
+    ));
 
   $server_name_clean = substr($server_name, -6) == '.local' ? substr($server_name, 0, strlen($server_name) - 6) : $server_name;
 
-  $form['apache']['apache'] = array(
-    '#type' => 'textarea',
-    '#title' => t('Apache'),
-    '#attributes' => array('class' => array('mm-profile-textarea')),
-    '#default_value' => strtr("<VirtualHost *:80>
+  $apache_settings_adv = st("<b>Multiserver setup (advanced)</b><p>
+Multidomain setup with different DNS entries for a production setup.
+First change your site settings in <code>/etc/apache2/sites-enabled/your-site</code>.
+Save your original file, then insert this code to your settings file.
+    <pre>" . htmlentities("
+<VirtualHost *:80>
     ServerName !server_name_clean.local
     ServerAlias admin.!server_name_clean.local www.!server_name_clean.local
     ServerAdmin webmaster@!server_name_clean.local
@@ -869,15 +775,31 @@ function mediamosa_profile_apache_settings_form() {
     ErrorLog /var/log/apache2/job2.!server_name_clean_error.log
     CustomLog /var/log/apache2/job2.!server_name_clean_access.log combined
     ServerSignature On
-</VirtualHost>", array(
+</VirtualHost>") ."</pre></p><br />", array(
       '!server_name_clean' => $server_name_clean,
       '!document_root' => $document_root,
       '!mount_point' => $mount_point,
-    )
-  ),
-    '#cols' => 60,
-    '#rows' => 40,
+    ));
+
+  $form['apache'] = array(
+    '#type' => 'fieldset',
+    '#collapsible' => FALSE,
+    '#collapsed' => FALSE,
+    '#title' => t('Apache settings'),
+    '#description' => t("Choose a server setup."),
   );
+
+  $form['apache']['localhost'] = array(
+    '#type' => 'radios',
+    '#options' => array(
+      'simple' => ($apache_settings_local),
+      'advanced' => ($apache_settings_adv))
+  );
+
+  $form['apache']['multisetup_postinstall'] = array(
+    '#markup' => t("
+<li>Restart your Apache:<br />
+<code>sudo /etc/init.d/apache2 restart</code><br />"));
 
   $form['continue'] = array(
     '#type' => 'submit',
@@ -885,6 +807,16 @@ function mediamosa_profile_apache_settings_form() {
   );
 
   return $form;
+}
+
+function mediamosa_profile_apache_settings_form_validate($form, &$form_state) {
+  if ($form_state['values']['localhost'] == '') {
+    form_set_error('', t('You must choose a Apache setup.'));
+  }
+}
+
+function mediamosa_profile_apache_settings_form_submit($form, &$form_state) {
+  variable_set('apache_setting', ($form_state['values']['localhost'] == 'simple' ? 'simple' : 'advanced'));
 }
 
 /**
@@ -909,7 +841,7 @@ function mediamosa_profile_migration_form() {
     '#title' => t('Migrating your 1.7.x database to 2.x'),
     '#description' => t("If you already have an MediaMosa 1.x database, then you need to migrate the database to the new 2.x database format. Migrate 1.7.x database from your current 1.7.x MediaMosa installation to 2.x database by following these steps:
     <ol>
-      <li>Open the <code>settings.mediamosa.php</code> in your new MediaMosa 2.x installation in the <code>sites</code> directory.</li>
+      <li>Open the <code>/default/settings.php</code> in your new MediaMosa 2.x installation in the <code>sites</code> directory.</li>
       <li>Insert the content below from the text box and change the settings to match your 1.7.x MySQL setup for the MediaMosa 1.x MySQL user. In the file there is already an commented out version you can edit.</li>
     </ol><p>You can start the migration process once you have completed the installation. To start the migration, go to MediaMosa home, then click on tab 'Configuration'. Click on the link 'MediaMosa 1.7.x migration tool' to open up the migration tool. The migration tool will pre-check before you can start the migration.</p>
     <p><b>Important notes:</b></p>
@@ -923,7 +855,7 @@ function mediamosa_profile_migration_form() {
 
   $form['migration']['settings'] = array(
     '#type' => 'textarea',
-    '#title' => t('Migration setup for sites/settings.mediamosa.php'),
+    '#title' => t('Migration setup for sites/default/settings.php'),
     '#attributes' => array('class' => array('mm-profile-textarea')),
     '#default_value' => "\$databases['mig_memo']['default'] = array(
   'driver' => 'mysql',

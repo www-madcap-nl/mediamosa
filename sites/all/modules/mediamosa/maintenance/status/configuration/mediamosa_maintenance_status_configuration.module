@@ -136,15 +136,14 @@ function mediamosa_maintenance_status_configuration_mediamosa_status_generate($w
 
   // FFmpeg.
   $exec_output = array();
-  exec('ffmpeg -version > /dev/null 2>&1', $exec_output, $ret_val);
-  $version = ($ret_val ? t('FFmpeg'): _mediamosa_maintenance_status_search_in_array('version', $exec_output));
+  exec('ffmpeg -version', $exec_output, $ret_val);
+  $version = ($ret_val ? t('FFmpeg'): reset($exec_output));
 
   $results['app_ffmpeg'] = array(
     'title' => t('Application'),
     'value' => $version,
     'severity' => _mediamosa_maintenance_status_okerror($ret_val),
   );
-
 
   // Lua.
   $not_exists = exec('lua 2>&1');
