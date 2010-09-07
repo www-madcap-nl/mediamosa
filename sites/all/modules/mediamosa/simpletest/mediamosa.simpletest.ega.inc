@@ -1234,10 +1234,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     );
 
     // Get response.
-    $a_xml = mediamosa_lib::responsexml2array($response['xml']);
-
-    // Return data.
-    return $a_xml;
+    return mediamosa_lib::responsexml2array($response['xml']);
   }
 
   /**

@@ -75,6 +75,10 @@ class mediamosa_rest_call_download_mediafile_still extends mediamosa_rest_call {
     // Set headers.
     header('Content-Type: image/jpeg');
 
+    // Make sure we send the header now.
+    ob_clean();
+    flush();
+
     // Download the image and delete the ticket.
     if (@readfile($file) !== FALSE) {
       mediamosa_io::unlink($file);

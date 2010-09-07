@@ -70,6 +70,8 @@ class mediamosa_collection_search {
 
     $calculate_total_count = TRUE,
 
+    $hide_empty_asset = FALSE,
+
     $limit = 10,
     $offset = 0) {
 
@@ -82,7 +84,14 @@ class mediamosa_collection_search {
 
     // Moved here so numofvideos is always in the result.
     $a_query[mediamosa_db_query::A_SELECT_EXPR][] = 'COUNT(DISTINCT ac.asset_id) AS numofvideos';
-    $a_query[mediamosa_db_query::A_JOIN]['asset_collection'][] = 'LEFT JOIN {mediamosa_asset_collection} AS ac USING(coll_id)';
+
+    // If we hide empty assets, then we check the is_empty_asset flag on asset_collection.
+    if ($hide_empty_asset) {
+      $a_query[mediamosa_db_query::A_JOIN]['asset_collection'][] = "LEFT JOIN {mediamosa_asset_collection} AS ac ON c.coll_id = ac.coll_id AND ac.is_empty_asset = 'TRUE'";
+    }
+    else { // Don't care empty or not.
+      $a_query[mediamosa_db_query::A_JOIN]['asset_collection'][] = 'LEFT JOIN {mediamosa_asset_collection} AS ac ON c.coll_id = ac.coll_id';
+    }
 
     // Collect my slaves.
     $a_slaves = mediamosa_aut_app_master_slave::slave_get($app_ids, mediamosa_aut::AUT_TYPE_COLLECTION);

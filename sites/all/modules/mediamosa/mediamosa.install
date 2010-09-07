@@ -1042,3 +1042,24 @@ function mediamosa_update_7051() {
   // Refresh.
   module_list(TRUE);
 }
+
+/**
+ * Add is_empty_asset to asset-colletion relation table.
+ */
+function mediamosa_update_7052() {
+  db_add_field(
+    mediamosa_asset_collection_db::TABLE_NAME,
+    mediamosa_asset_collection_db::IS_EMPTY_ASSET,
+    array(
+      'description' => t('True if the asset in this collection has media.'),
+      'type' => "enum('" . implode("','", array(mediamosa_asset_collection_db::IS_EMPTY_ASSET_FALSE, mediamosa_asset_collection_db::IS_EMPTY_ASSET_TRUE)) . "')",
+      'not null' => TRUE,
+      'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_collection_db::IS_EMPTY_ASSET_FALSE, mediamosa_asset_collection_db::IS_EMPTY_ASSET_TRUE)) . "')",
+      'default' => mediamosa_asset_collection_db::IS_EMPTY_ASSET_FALSE,
+    )
+  );
+
+  // Add new key.
+  db_add_index(mediamosa_asset_collection_db::TABLE_NAME, 'idx_coll_isempty', array(mediamosa_asset_collection_db::COLL_ID, mediamosa_asset_collection_db::IS_EMPTY_ASSET));
+}
+

@@ -383,6 +383,18 @@ class mediamosa_asset {
         ':asset_id' => $asset_id,
       )
     );
+
+    // Set is_empty_asset in asset_relation.
+    mediamosa_db::db_query(
+      "UPDATE {#mediamosa_asset_collection} SET #is_empty_asset = :is_empty_asset WHERE #asset_id = :asset_id",
+      array(
+        '#mediamosa_asset_collection' => mediamosa_asset_collection_db::TABLE_NAME,
+        '#is_empty_asset' => mediamosa_asset_collection_db::IS_EMPTY_ASSET,
+        ':is_empty_asset' => $mediafile ? mediamosa_asset_db::IS_EMPTY_ASSET_FALSE : mediamosa_asset_db::IS_EMPTY_ASSET_TRUE,
+        '#asset_id' => mediamosa_asset_db::ID,
+        ':asset_id' => $asset_id,
+      )
+    );
   }
 
   /**
