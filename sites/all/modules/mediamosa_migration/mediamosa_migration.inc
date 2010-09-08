@@ -170,6 +170,23 @@ function _mediamosa_requirements_test() {
   // Possible reasons.
   $reasons = array();
 
+  // Select the old mediamosa database.
+  $old_db = db_set_active(MIG_MEMO_DATA);
+  $t = get_t();
+
+  try {
+    // Test if database is 1.7.4.
+    if (!db_field_exists('mediafile', 'is_streamable')) {
+      $reasons[] = $t('Old 1.x database detected. You need to upgrade to MediaMosa 1.7.5 or higher first.');
+    }
+  }
+  catch (Exception $e) {
+    $reasons[] = $e->getMessage();
+  }
+
+  // Back to other.
+  db_set_active($old_db);
+
   $old_db = 'default';
   try {
     _mediamosa_migration_tables_exists($table_names_dest_exists);
