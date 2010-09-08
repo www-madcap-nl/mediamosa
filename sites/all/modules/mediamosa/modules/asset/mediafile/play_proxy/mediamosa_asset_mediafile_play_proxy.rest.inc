@@ -24,12 +24,10 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
- /**
-  * @file
-  * Play Proxy functions
-  */
-
-
+/**
+ * @file
+ * Play Proxy functions
+ */
 
 /**
  * URI: /asset/$asset_id/play

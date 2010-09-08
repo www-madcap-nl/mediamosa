@@ -158,7 +158,7 @@ function mediamosa_integrity_check_page() {
 
   // Check whether the mediamosa_integrity_check.inc is running or not.
   $output = array();
-  mediamosa_io::exec('ps ax | grep mediamosa_integrity_check.inc | grep -v grep', $output);
+  mediamosa_io::exec('ps ax | grep mediamosa_integrity_check | grep -v grep', $output);
   if (count($output) > 0) {
     drupal_set_message(t('The integrity check is currently running.'));
   }
@@ -302,7 +302,9 @@ function mediamosa_integrity_check_page() {
   //$content[] = array('#markup' => drupal_render($form['delete']));
   $content = array_merge($content, drupal_get_form('mediamosa_integrity_check_delete_submit'));
 
-  $content = array_merge($content, $start_check);
+  if (!empty($start_check)) {
+    $content = array_merge($content, $start_check);
+  }
 
   $content[] = array('#markup' => $post_page_info);
 
@@ -350,8 +352,8 @@ function mediamosa_integrity_check_start_submit($form, &$form_state) {
   //drupal_set_message('I was here: '. $op . print_r($selected_ids, TRUE) . $type);
 
   if ($op == t('Start integrity check')) {
-    // Call the script.
-    mediamosa_io::exec('nice -n20 /usr/bin/php -f ' . $_SERVER["DOCUMENT_ROOT"] . '/' . drupal_get_path("module", "mediamosa_integrity_check") . '/mediamosa_integrity_check.php </dev/null >/dev/null 2>/dev/null &');// 1>/dev/null/ 2>&1 &
+    // Call the script.                                                                                                                                            </dev/null >/dev/null 2>/dev/null &
+    mediamosa_io::exec('nice -n20 /usr/bin/php -f ' . DRUPAL_ROOT . '/' . drupal_get_path("module", "mediamosa_integrity_check") . '/mediamosa_integrity_check.php > /dev/null 2>&1 &');// 1>/dev/null/ 2>&1 &
 
     // Set message and goto.
     drupal_set_message(t('Integrity check started'));

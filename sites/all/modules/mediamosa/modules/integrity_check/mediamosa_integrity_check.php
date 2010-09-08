@@ -52,6 +52,9 @@ chdir(DRUPAL_ROOT);
 include_once './includes/bootstrap.inc';
 drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
 
+// 2 hour time limit (exclusive queries).
+set_time_limit(7200);
+
 // Error reporting.
 error_reporting(E_ALL);
 
