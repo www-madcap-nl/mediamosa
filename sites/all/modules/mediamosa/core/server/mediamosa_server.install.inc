@@ -71,29 +71,27 @@ function _mediamosa_server_install() {
       , 'ASF Streaming Server', '', '', '', ''),
     array(2, 0, 'ON', 'streaming', 'http://mediamosa.local/ticket/{TICKET}',
       'flv',
-      "<script type='text/javascript' src='http://145.97.38.12/swfobject.js'></script>
+          "<script type='text/javascript' src='" . url('', array('absolute' => TRUE)) . "mmplayer/swfobject.js'></script>
 <div id='mediaspace'>This div will be replaced</div>
 <script type='text/javascript'>
-var s1 = new SWFObject('http://145.97.38.12/player.swf','ply','{WIDTH}','{HEIGHT}','9');
+var s1 = new SWFObject('" . url('', array('absolute' => TRUE)) . "mmplayer/player.swf','ply','{WIDTH}','{HEIGHT}','9');
 s1.addParam('allowfullscreen','true');
 s1.addParam('allowscriptaccess','always');
 s1.addParam('wmode','opaque');
-s1.addParam('flashvars','streamer={TICKET_URI}&autostart={AUTOPLAY}{IF_START}&start={START_TIME_SECONDS}{/IF_START}{IF_DURATION}&duration={START_PLUS_DURATION_TIME_SECONDS}{/IF_DURATION}');
-s1.addVariable('type', 'mp4');
+s1.addParam('flashvars','file={TICKET_URI}&autostart={AUTOPLAY}{IF_START}&start={START_TIME_SECONDS}{/IF_START}{IF_DURATION}&duration={START_PLUS_DURATION_TIME_SECONDS}{/IF_DURATION}');
 s1.write('mediaspace');
 </script>"
       , 'FLV Streaming Server', '', '', '', ''),
     array(3, 0, 'ON', 'streaming', 'http://mediamosa.local/ticket/{TICKET}',
       'mov;mp4;m4a;3gp;3g2;mj2:h264',
-      "<script type='text/javascript' src='http://145.97.38.29/swfobject.js'></script>
+          "<script type='text/javascript' src='" . url('', array('absolute' => TRUE)) . "mmplayer/swfobject.js'></script>
 <div id='mediaspace'>This div will be replaced</div>
 <script type='text/javascript'>
-var s1 = new SWFObject('http://145.97.38.12/player.swf','ply','{WIDTH}','{HEIGHT_PLUS_20}','9');
+var s1 = new SWFObject('" . url('', array('absolute' => TRUE)) . "mmplayer/player.swf','ply','{WIDTH}','{HEIGHT_PLUS_20}','9');
 s1.addParam('allowfullscreen','true');
 s1.addParam('allowscriptaccess','always');
 s1.addParam('wmode','opaque');
-s1.addParam('flashvars','streamer={TICKET_URI}&autostart={AUTOPLAY}{IF_START}&start={START_TIME_SECONDS}{/IF_START}{IF_DURATION}&duration={START_PLUS_DURATION_TIME_SECONDS}{/IF_DURATION}');
-s1.addVariable('type', 'mp4');
+s1.addParam('flashvars','file={TICKET_URI}&autostart={AUTOPLAY}{IF_START}&start={START_TIME_SECONDS}{/IF_START}{IF_DURATION}&duration={START_PLUS_DURATION_TIME_SECONDS}{/IF_DURATION}');
 s1.write('mediaspace');
 </script>"
       , 'MOV/MP4/M4A/3GP/3G2/MJ2I:H264 Streaming Server', '', '', '', ''),

@@ -813,7 +813,7 @@ Save your original file, then insert this code to your settings file.
 
 function mediamosa_profile_apache_settings_form_validate($form, &$form_state) {
   if ($form_state['values']['localhost'] == '') {
-    form_set_error('', t('You must choose a Apache setup.'));
+    form_set_error('', t('You must choose an Apache setup.'));
   }
 }
 
@@ -857,6 +857,7 @@ function mediamosa_profile_apache_settings_form_submit($form, &$form_state) {
         ))
       ->condition('server_uri', 'http://job1.mediamosa.local', '=')
       ->execute();
+    variable_set('mediamosa_jobscheduler_uri', 'http://' . $server_name);
     db_update('mediamosa_server')
       ->fields(
         array(
@@ -865,10 +866,12 @@ function mediamosa_profile_apache_settings_form_submit($form, &$form_state) {
         ))
       ->condition('server_type', 'upload', '=')
       ->execute();
-
     variable_set('mediamosa_cron_url_app', 'http://' . $server_name);
   }
-
+  else {
+    variable_set('mediamosa_jobscheduler_uri', 'http://job1.mediamosa.local');
+    variable_set('mediamosa_cron_url_app', 'http://app.mediamosa.local');
+  }
 }
 
 /**
