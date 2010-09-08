@@ -819,44 +819,54 @@ function mediamosa_profile_apache_settings_form_submit($form, &$form_state) {
   variable_set('apache_setting', ($form_state['values']['localhost'] == 'simple' ? 'simple' : 'advanced'));
 
   if (variable_get('apache_setting') == 'simple') {
+    $server_name = _mediamosa_profile_server_name();
     db_update('mediamosa_server')
       ->fields(
         array(
-          'server_uri' => $server_name . '/ticket/\{TICKET\}'
+          'server_uri' => 'http://' . $server_name . '/ticket/{TICKET}'
         ))
-      ->condition('server_type', 'streaming', '=');
+      ->condition('server_type', 'streaming', '=')
+      ->execute();
     db_update('mediamosa_server')
       ->fields(
         array(
-          'server_uri' => $server_name . '/download/\{TICKET\}'
+          'server_uri' => 'http://' . $server_name . '/download/{TICKET}'
         ))
-      ->condition('server_type', 'download', '=');
+      ->condition('server_type', 'download', '=')
+      ->execute();
     db_update('mediamosa_server')
       ->fields(
         array(
-          'server_uri' => $server_name . '/still/\{TICKET\}'
+          'server_uri' => 'http://' . $server_name . '/still/{TICKET}'
         ))
-      ->condition('server_type', 'still', '=');
+      ->condition('server_type', 'still', '=')
+      ->execute();
     db_update('mediamosa_server')
       ->fields(
         array(
           'server_status' => 'OFF'
         ))
-      ->condition('server_uri', 'http://job2.mediamosa.local', '=');
+      ->condition('server_uri', 'http://job2.mediamosa.local', '=')
+      ->execute();
     db_update('mediamosa_server')
       ->fields(
         array(
-          'server_uri' => $server_name
+          'server_uri' => 'http://' . $server_name
         ))
-      ->condition('server_uri', 'http://job1.mediamosa.local', '=');
+      ->condition('server_uri', 'http://job1.mediamosa.local', '=')
+      ->execute();
     db_update('mediamosa_server')
       ->fields(
         array(
-          'server_uri' => $serer_name . '/mediafile/upload?upload_ticket={TICKET}',
-          'uri_upload_progress' => $server_name . '/mediafile/uploadprogress'
+          'server_uri' => 'http://' . $server_name . '/mediafile/upload?upload_ticket={TICKET}',
+          'uri_upload_progress' => 'http://' . $server_name . '/mediafile/uploadprogress'
         ))
-      ->condition('server_type', 'upload', '=');
+      ->condition('server_type', 'upload', '=')
+      ->execute();
+
+    variable_set('mediamosa_cron_url_app', 'http://' . $server_name);
   }
+
 }
 
 /**
