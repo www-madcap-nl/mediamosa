@@ -387,7 +387,7 @@ function mediamosa_mediamosa_configuration_collect() {
 /**
  * Implements hook_mediamosa_configuration_validate().
  */
-function mediamosa_mediamosa_configuration_validate($form, &$form_state) {
+function mediamosa_mediamosa_configuration_validate($form, $form_state) {
   global $databases;
 
   // Use normal so schema might be empty.

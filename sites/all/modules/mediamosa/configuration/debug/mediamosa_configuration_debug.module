@@ -67,7 +67,7 @@ function mediamosa_configuration_debug_mediamosa_configuration_collect() {
 /**
  * Implements hook_mediamosa_configuration_validate().
  */
-function mediamosa_configuration_debug_mediamosa_configuration_validate($form, &$form_state) {
+function mediamosa_configuration_debug_mediamosa_configuration_validate($form, $form_state) {
 
   if (strpos($form_state['values']['mediamosa_debug_ip_whitelist'], ' ') !== FALSE) {
     form_set_error('mediamosa_debug_ip_whitelist', t('You can not enter any spaces.'));
