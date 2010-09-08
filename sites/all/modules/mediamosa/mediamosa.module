@@ -114,6 +114,8 @@ function mediamosa_permission() {
 }
 
 function mediamosa_init() {
+  // Possible PHP 5.3 autoloader bug.
+  require_once DRUPAL_ROOT . '/sites/all/modules/mediamosa/lib/mediamosa_debug.inc';
 
   // Create and get the core object.
   $mediamosa = mediamosa::get();
