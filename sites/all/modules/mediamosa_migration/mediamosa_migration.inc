@@ -170,23 +170,6 @@ function _mediamosa_requirements_test() {
   // Possible reasons.
   $reasons = array();
 
-  // Select the old mediamosa database.
-  $old_db = db_set_active(MIG_MEMO_DATA);
-  $t = get_t();
-
-  try {
-    // Test if database is 1.7.4.
-    if (!db_field_exists('mediafile', 'is_streamable')) {
-      $reasons[] = $t('Old 1.x database detected. You need to upgrade to MediaMosa 1.7.5 or higher first.');
-    }
-  }
-  catch (Exception $e) {
-    $reasons[] = $e->getMessage();
-  }
-
-  // Back to other.
-  db_set_active($old_db);
-
   $old_db = 'default';
   try {
     _mediamosa_migration_tables_exists($table_names_dest_exists);
@@ -504,6 +487,78 @@ function _mediamosa_migration_mediafile() {
   db_query("SET SESSION sql_mode = 'ALLOW_INVALID_DATES'");
 
   // The mediamosa_asset_mediafile table should be empty (its checked as requirement).
+
+  // Select the old mediamosa database.
+  $old_db = db_set_active(MIG_MEMO_DATA);
+
+  try {
+    // Some installations are missing is_streamable(!).
+    $is_streamable = db_field_exists('mediafile', 'is_streamable');
+  }
+  catch (Exception $e) {
+    db_set_active($old_db);
+    throw $e;
+  }
+
+  // Back to other.
+  db_set_active($old_db);
+
+  // Insert fields.
+  $insert_fields = array(
+    'mediafile_id',
+    'asset_id',
+    'mediafile_id_source',
+    'tag',
+    'app_id',
+    'owner_id',
+    'group_id',
+    'is_original_file',
+    'is_downloadable',
+    'is_still',
+    'filename',
+    'uri',
+    'sannas_mount_point',
+    'transcode_profile_id',
+    'tool',
+    'command',
+    'file_extension',
+    'is_protected',
+    'created',
+    'changed',
+    'transcode_inherits_acl',
+  );
+
+  // Select fields.
+  $select_fields = array(
+    'mediafile_id',
+    'asset_id',
+    'mediafile_source',
+    'tag',
+    'app_id',
+    'owner_id',
+    'group_id',
+    'is_original_file',
+    'is_downloadable',
+    'is_still',
+    'filename',
+    'uri',
+    'sannas_mount_point',
+    'transcode_profile_id',
+    'tool',
+    'command',
+    'file_extension',
+    'is_protected',
+    'DATE_SUB(created, INTERVAL 2 HOUR)',
+    'DATE_SUB(changed, INTERVAL 2 HOUR)',
+    'transcode_inherits_acl',
+  );
+
+  // If field is present, then migrate.
+  if ($is_streamable) {
+    $insert_fields[] = 'is_streamable';
+    $select_fields[] = 'is_streamable';
+  }
+
   /**
    * Copy from 1.x to 2.x
    * Columns dropped;
@@ -516,54 +571,14 @@ function _mediamosa_migration_mediafile() {
   db_query(strtr(
     "INSERT INTO {mediamosa_asset_mediafile}
       (
-        mediafile_id,
-        asset_id,
-        mediafile_id_source,
-        tag,
-        app_id,
-        owner_id,
-        group_id,
-        is_original_file,
-        is_downloadable,
-        is_streamable,
-        is_still,
-        filename,
-        uri,
-        sannas_mount_point,
-        transcode_profile_id,
-        tool,
-        command,
-        file_extension,
-        is_protected,
-        created,
-        changed,
-        transcode_inherits_acl
+        !insert_fields
       ) (SELECT
-        mediafile_id,
-        asset_id,
-        mediafile_source,
-        tag,
-        app_id,
-        owner_id,
-        group_id,
-        is_original_file,
-        is_downloadable,
-        is_streamable,
-        is_still,
-        filename,
-        uri,
-        sannas_mount_point,
-        transcode_profile_id,
-        tool,
-        command,
-        file_extension,
-        is_protected,
-        DATE_SUB(created, INTERVAL 2 HOUR),
-        DATE_SUB(changed, INTERVAL 2 HOUR),
-        transcode_inherits_acl
+        !select_fields
       FROM #db_name.mediafile)",
     array(
-      '#db_name' => $db_name
+      '#db_name' => $db_name,
+      '!insert_fields' => implode(',', $insert_fields),
+      '!select_fields' => implode(',', $select_fields),
     ))
   );
 

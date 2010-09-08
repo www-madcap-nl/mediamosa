@@ -576,7 +576,7 @@ function mediamosa_profile_cron_settings_form() {
     '#collapsible' => FALSE,
     '#collapsed' => FALSE,
     '#title' => t('Cron setup'),
-    '#description' => t('The cron will be used trigger MediaMosa every minute for background jobs. The setup for cron is required for be able to run MediaMosa properly.'),
+    '#description' => t('The cron will be used trigger MediaMosa every minute for background jobs. The setup for cron is required for MediaMosa to run properly.'),
   );
 
   $form['cron']['crontab_text'] = array(
