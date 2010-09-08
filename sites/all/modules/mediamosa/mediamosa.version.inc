@@ -24,8 +24,11 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
-define('MEDIAMOSA_BUILD', 867);
+// Change build number and version here.
+define('MEDIAMOSA_BUILD', 873);
 define('MEDIAMOSA_VERSION', '2.2.0');
+
+// Optional changes:
 define('MEDIAMOSA_VERSION_SHORT', MEDIAMOSA_VERSION . '.' . MEDIAMOSA_BUILD . '-RC1');
 define('MEDIAMOSA_VERSION_FULL', MEDIAMOSA_VERSION . '.' . MEDIAMOSA_BUILD . '-Release Candidate 1');
 
