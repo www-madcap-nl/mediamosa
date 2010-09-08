@@ -65,7 +65,7 @@ function mediamosa_migration_form() {
 
     if (count($reasons)) {
       $form['migration']['text'] = array(
-        '#markup' => '<p>' . t('Solve these problems before you can migrate;') . '</p><p>' . implode('</p><p>', $reasons) . '</p>',
+        '#markup' => '<p>' . t('Solve these problems before you can migrate;') . '</p><p><b>' . implode('</b></p><p><b>', $reasons) . '</b></p>',
       );
     }
     else {
