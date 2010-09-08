@@ -29,6 +29,8 @@ Other changes (not ticket related).
 - Removed function autoload_class() from mediamosa class. No longer used.
 - Fixed ajax problem in collection browse page.
 - Completly rewritten the installation profile.
+- Fixed ffmpeg detection in status page.
+
 
 MediaMosa 2.2.0 (build 847)
 ---------------------------

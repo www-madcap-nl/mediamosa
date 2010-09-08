@@ -24,7 +24,7 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
-define('MEDIAMOSA_BUILD', 861);
+define('MEDIAMOSA_BUILD', 867);
 define('MEDIAMOSA_VERSION', '2.2.0');
 define('MEDIAMOSA_VERSION_SHORT', MEDIAMOSA_VERSION . '.' . MEDIAMOSA_BUILD . '-RC1');
 define('MEDIAMOSA_VERSION_FULL', MEDIAMOSA_VERSION . '.' . MEDIAMOSA_BUILD . '-Release Candidate 1');

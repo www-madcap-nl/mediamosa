@@ -613,7 +613,7 @@ function mediamosa_profile_apache_settings_form() {
   $mount_point = variable_get('mediamosa_current_mount_point', '');
   $document_root = _mediamosa_profile_document_root();
 
-  $apache_settings_local = t("Localhost setup (simple)<br \>Single server setup with http://localhost/ for demonstration purposes. Add the following lines to your basic localhost apache definition:
+  $apache_settings_local = st("<b>Localhost setup (simple)</b><p>Single server setup with http://localhost/ for demonstration purposes. Add the following lines to your basic localhost apache definition:
     <pre>".htmlentities("
     # ticket
     Alias /ticket !mount_point/links
@@ -629,15 +629,15 @@ function mediamosa_profile_apache_settings_form() {
         php_admin_value upload_max_filesize 2000M
         php_admin_value memory_limit 64M
     </IfModule>") ."</pre>
-    The ticket is the streaming link to a video needed to play videos, the php settings are needed to allow more than default sizes upload.
+    The ticket is the streaming link to a video needed to play videos, the php settings are needed to allow more than default sizes upload.</p><br /><br />
 ", array(
       '!mount_point' => $mount_point,
     ));
 
   $server_name_clean = substr($server_name, -6) == '.local' ? substr($server_name, 0, strlen($server_name) - 6) : $server_name;
 
-  $apache_settings_adv = t("Multiserver setup (advanced)<br \>
-Multidomain setup with different dsn entries for a production setup.
+  $apache_settings_adv = st("<b>Multiserver setup (advanced)</b><p>
+Multidomain setup with different DNS entries for a production setup.
 First change your site settings in <code>/etc/apache2/sites-enabled/your-site</code>.
 Save your original file, then insert this code to your settings file.
     <pre>" . htmlentities("
@@ -775,7 +775,7 @@ Save your original file, then insert this code to your settings file.
     ErrorLog /var/log/apache2/job2.!server_name_clean_error.log
     CustomLog /var/log/apache2/job2.!server_name_clean_access.log combined
     ServerSignature On
-</VirtualHost>") ."</pre>", array(
+</VirtualHost>") ."</pre></p><br />", array(
       '!server_name_clean' => $server_name_clean,
       '!document_root' => $document_root,
       '!mount_point' => $mount_point,
@@ -785,8 +785,8 @@ Save your original file, then insert this code to your settings file.
     '#type' => 'fieldset',
     '#collapsible' => FALSE,
     '#collapsed' => FALSE,
-    '#title' => t('Apache'),
-    '#description' => t("Choose a server setup"),
+    '#title' => t('Apache settings'),
+    '#description' => t("Choose a server setup."),
   );
 
   $form['apache']['localhost'] = array(
@@ -858,8 +858,6 @@ function mediamosa_profile_apache_settings_form_submit($form, &$form_state) {
       ->condition('server_type', 'upload', '=');
   }
 }
-
-
 
 /**
  * Information about 1.7 -> 2.x migration.
@@ -933,8 +931,6 @@ function mediamosa_profile_domain_usage_form() {
 
   // Get the server name.
   $server_name = _mediamosa_profile_server_name();
-
-  print_r(variable_get('apache_setting'));
 
   $form['domain'] = array(
     '#type' => 'fieldset',

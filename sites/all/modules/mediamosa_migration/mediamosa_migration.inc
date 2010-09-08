@@ -29,7 +29,7 @@
   * Migration functions.
   */
 /*
- * Taken from sites/[example.]settings.mediamosa.php ;
+ * Taken from sites/default/settings.php ;
 
 // Migration memo 1.0 databases;
 $databases['mig_memo']['default'] = array(
