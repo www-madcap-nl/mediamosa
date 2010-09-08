@@ -114,7 +114,7 @@ s1.write('mediaspace');
     array(11, 2, 'ON', 'download', 'http://download.mediamosa.local/download/{TICKET}', '', '', 'Default download server', '', '', '', ''),
     array(12, 0, 'ON', 'still', 'http://download.mediamosa.local/still/{TICKET}', '', '', 'Default still server', '', '', '', ''),
     array(13, 0, 'ON', 'job_processor', 'http://job1.mediamosa.local', '', '', 'Default 1st job processor', 2, 'ANALYSE|ffmpeg|STILL', ''),
-    array(14, 0, 'ON', 'job_processor', 'http://job2.mediamosa.local', '', '', 'Default 2nd job processor', 2, 'ANALYSE|ffmpeg|STILL', ''),
+    array(14, 0, 'OFF', 'job_processor', 'http://job2.mediamosa.local', '', '', 'Default 2nd job processor', 2, 'ANALYSE|ffmpeg|STILL', ''),
     array(15, 0, 'ON', 'upload', 'http://upload.mediamosa.local/mediafile/upload?upload_ticket={TICKET}', '', '', 'Default upload server', '', '', 'http://upload.mediamosa.local/mediafile/uploadprogress'),
   );
 

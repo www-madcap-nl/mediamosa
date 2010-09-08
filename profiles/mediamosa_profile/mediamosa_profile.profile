@@ -817,6 +817,46 @@ function mediamosa_profile_apache_settings_form_validate($form, &$form_state) {
 
 function mediamosa_profile_apache_settings_form_submit($form, &$form_state) {
   variable_set('apache_setting', ($form_state['values']['localhost'] == 'simple' ? 'simple' : 'advanced'));
+
+  if (variable_get('apache_setting') == 'simple') {
+    db_update('mediamosa_server')
+      ->fields(
+        array(
+          'server_uri' => $server_name . '/ticket/\{TICKET\}'
+        ))
+      ->condition('server_type', 'streaming', '=');
+    db_update('mediamosa_server')
+      ->fields(
+        array(
+          'server_uri' => $server_name . '/download/\{TICKET\}'
+        ))
+      ->condition('server_type', 'download', '=');
+    db_update('mediamosa_server')
+      ->fields(
+        array(
+          'server_uri' => $server_name . '/still/\{TICKET\}'
+        ))
+      ->condition('server_type', 'still', '=');
+    db_update('mediamosa_server')
+      ->fields(
+        array(
+          'server_status' => 'OFF'
+        ))
+      ->condition('server_uri', 'http://job2.mediamosa.local', '=');
+    db_update('mediamosa_server')
+      ->fields(
+        array(
+          'server_uri' => $server_name
+        ))
+      ->condition('server_uri', 'http://job1.mediamosa.local', '=');
+    db_update('mediamosa_server')
+      ->fields(
+        array(
+          'server_uri' => $serer_name . '/mediafile/upload?upload_ticket={TICKET}',
+          'uri_upload_progress' => $server_name . '/mediafile/uploadprogress'
+        ))
+      ->condition('server_type', 'upload', '=');
+  }
 }
 
 
