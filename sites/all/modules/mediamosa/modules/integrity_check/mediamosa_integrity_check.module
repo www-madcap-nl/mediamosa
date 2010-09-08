@@ -159,7 +159,7 @@ function mediamosa_integrity_check_page() {
   // Check whether the mediamosa_integrity_check.inc is running or not.
   $output = array();
   mediamosa_io::exec('ps ax | grep mediamosa_integrity_check | grep -v grep', $output);
-  if (count($output) > 0) {
+  if (!empty($output) > 0) {
     drupal_set_message(t('The integrity check is currently running.'));
   }
   else {
@@ -334,6 +334,11 @@ function mediamosa_integrity_check_start() {
  * Validate.
  */
 function mediamosa_integrity_check_start_validate($form, &$form_state) {
+  $output = array();
+  mediamosa_io::exec('ps ax | grep mediamosa_integrity_check | grep -v grep', $output);
+  if (!empty($output)) {
+    form_set_error('start', t('The integrity check is already running.'));
+  }
 }
 
 /**
