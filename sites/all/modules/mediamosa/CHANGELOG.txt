@@ -30,7 +30,8 @@ Other changes (not ticket related).
 - Fixed ajax problem in collection browse page.
 - Completly rewritten the installation profile.
 - Fixed ffmpeg detection in status page.
-
+- Removed & on $form_state hooks of hook_mediamosa_configuration_validate() for
+  PHP 5.3 warnings.
 
 MediaMosa 2.2.0 (build 847)
 ---------------------------
