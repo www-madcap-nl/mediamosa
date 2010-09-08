@@ -568,9 +568,11 @@ function mediamosa_profile_cron_settings_form() {
 
   // Get the server name.
   $server_name = _mediamosa_profile_server_name();
+  if (variable_get('apache_setting') == 'simple') {
+    $server_name = 'localhost';
+  }
 
   // Cron.
-
   $form['cron'] = array(
     '#type' => 'fieldset',
     '#collapsible' => FALSE,
@@ -586,7 +588,7 @@ function mediamosa_profile_cron_settings_form() {
   $form['cron']['crontab'] = array(
     '#type' => 'textarea',
     '#attributes' => array('class' => array('mm-profile-textarea')),
-    '#default_value' => '* * * * * /usr/bin/wget -O - -q -t 1 --header="Host: ' . $server_name . '" http://localhost/cron.php?cron_key=' . variable_get('cron_key', ''),
+    '#default_value' => '* * * * * /usr/bin/wget -O - -q -t 1 --header="Host: ' . $server_name . '" http://localhost' . url('') . 'cron.php?cron_key=' . variable_get('cron_key', ''),
     '#rows' => 6,
   );
 
