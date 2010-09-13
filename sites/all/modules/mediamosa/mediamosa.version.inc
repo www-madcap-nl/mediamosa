@@ -25,12 +25,14 @@
  */
 
 // Change build number and version here.
-define('MEDIAMOSA_BUILD', 887);
-define('MEDIAMOSA_VERSION', '2.2.0');
+define('MEDIAMOSA_BUILD', 892);
+define('MEDIAMOSA_VERSION', '2.2.1');
 
 // Optional changes:
-define('MEDIAMOSA_VERSION_SHORT', MEDIAMOSA_VERSION . '.' . MEDIAMOSA_BUILD . '-RC1');
-define('MEDIAMOSA_VERSION_FULL', MEDIAMOSA_VERSION . '.' . MEDIAMOSA_BUILD . '-Release Candidate 1');
+define('MEDIAMOSA_VERSION_SHORT', MEDIAMOSA_VERSION . '.' . MEDIAMOSA_BUILD);
+define('MEDIAMOSA_VERSION_FULL', MEDIAMOSA_VERSION . '.' . MEDIAMOSA_BUILD);
+//define('MEDIAMOSA_VERSION_SHORT', MEDIAMOSA_VERSION . '.' . MEDIAMOSA_BUILD . '-RC2');
+//define('MEDIAMOSA_VERSION_FULL', MEDIAMOSA_VERSION . '.' . MEDIAMOSA_BUILD . '-Release Candidate 2');
 
 /**
  * @file
