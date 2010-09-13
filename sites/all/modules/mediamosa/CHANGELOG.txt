@@ -1,5 +1,42 @@
 // $Id: 
 
+Bug reports / TODOs RC2:
+
+- Notice: status page;
+  Error message
+  Notice: Undefined index: host in mediamosa_server::get_status_enabled_job_servers() (line 111 of /var/www/mediamosa/sites/all/modules/mediamosa/core/server/mediamosa_server.inc).
+  Notice: Undefined property: stdClass::$data in mediamosa_server::get_status_enabled_job_servers() (line 116 of /var/www/mediamosa/sites/all/modules/mediamosa/core/server/mediamosa_server.inc).
+  Exception: String could not be parsed as XML in SimpleXMLElement->__construct() (line 116 of /var/www/mediamosa/sites/all/modules/mediamosa/core/server/mediamosa_server.inc).
+
+- Bug: Migration script fails when ftp database is not setup.
+
+- Bug: {STILL_URI} does not seem to work in server object code.
+
+- Bug: transcoding profile save: command is not saved.
+
+- Enhancement: 
+  Extra test for CRON last run.
+
+- Install profile: remove client application install.
+
+- Suggestion:
+  Better explanation about using the hosts file and use of the .local address in
+  example.
+
+- Question:
+  Why define app1 & app2, but not app.
+  
+- Enhanchement:
+  /ticket as REST call instead of Apache setting.
+  
+- Bug:
+  Some notices after installation + plus save of configuration settings fixes
+  problems after installation.
+  
+- Enhanchement:
+  Extend the default profiles.
+
+
 
 START CHANGELOG:
 
@@ -515,4 +552,9 @@ MediaMosa.0.0 (released as read-only)
   maintain.
 - Mediafile db field asset_id_root is now deprecated and will be removed in 
   future releases.
-  
+
+ 
+SELECT org.mediafile_id AS mediafile_id, (SUBSTR(meta.file_duration,1,2) * 3600) + (SUBSTR(meta.file_duration,4,2) * 60) + SUBSTR(meta.file_duration,7,2) AS org_sec, trans.mediafile_id as trans_mediafile_id, (SUBSTR(meta2.file_duration,1,2) * 3600) + (SUBSTR(meta2.file_duration,4,2) * 60) + SUBSTR(meta2.file_duration,7,2) AS trans_sec FROM mediamosa_asset_mediafile AS org JOIN mediamosa_asset_mediafile_metadata AS meta ON meta.mediafile_id = org.mediafile_id JOIN mediamosa_asset_mediafile AS trans ON (trans.asset_id = org.asset_id) LEFT JOIN mediamosa_asset_mediafile_metadata AS meta2 ON (trans.mediafile_id = meta2.mediafile_id) WHERE org.is_original_file = 'TRUE' AND trans.is_original_file = 'FALSE' AND trans.is_still = 'FALSE' AND meta.file_duration IS NOT NULL HAVING ABS(org_sec - trans_sec) > (org_sec / 10) LIMIT 10;
+
+
+

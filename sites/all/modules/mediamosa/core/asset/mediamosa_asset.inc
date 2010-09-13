@@ -1051,10 +1051,7 @@ class mediamosa_asset {
   static public function update($app_id, $user_id, $is_app_admin, $asset_id, $owner_id = NULL, $group_id = NULL, $play_restriction_start = NULL, $play_restriction_end = NULL, $isprivate = NULL, $is_unappropriate = NULL) {
 
     // Asset must exist.
-    mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id, mediamosa_asset_db::PARENT_ID => NULL));
-
-    // Get the asset.
-    $asset = mediamosa_asset::get($asset_id);
+    $asset = mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id, mediamosa_asset_db::PARENT_ID => NULL));
 
     // Must be owner.
     mediamosa_aut::owner_check($app_id, $user_id, $asset[mediamosa_asset_db::APP_ID], $asset[mediamosa_asset_db::OWNER_ID], $is_app_admin);

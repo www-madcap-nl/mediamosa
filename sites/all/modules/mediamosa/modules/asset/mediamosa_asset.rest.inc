@@ -759,7 +759,7 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
     // Hotfix, we dont provide this, we always return the asset, so always supply the granted flag
     $granted = TRUE;
 
-    $asset = mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id, mediamosa_asset_db::PARENT_ID => NULL), NULL, array(), FALSE);
+    $asset = mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id), NULL, array(), FALSE);
 
     // Fix app_id
     if (in_array($asset['app_id'], $app_ids)) {
@@ -897,7 +897,6 @@ class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
     $mediamosa = mediamosa::get();
 
     $app_ids = $this->get_param_value_app();
-    $app_id = reset($app_ids);
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
 
     $asset_ids = $this->get_param_value(self::ASSET_ID);
@@ -929,11 +928,6 @@ class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
         // Asset must exist.
         $asset = mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id, mediamosa_asset_db::PARENT_ID => NULL));
 
-        // Fix app_id
-        if (in_array($asset['app_id'], $app_ids)) {
-          $app_id = $asset['app_id'];
-        }
-
         // ACL check.
         mediamosa_aut::read_single_object(mediamosa_aut::AUT_TYPE_ASSET, $asset_id, $app_ids);
 
@@ -953,6 +947,9 @@ class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
           $show_stills,
           $show_collections
         );
+
+        // Fix app_id.
+        $app_id = in_array($asset['app_id'], $app_ids) ? $asset['app_id'] : reset($app_ids);
 
         // Add mediafiles.
         $mediafile_ids = mediamosa_asset_mediafile::mediafiles_search($asset_id, $tag, FALSE, ($asset['app_id'] == $app_id ? array() : $app_ids));
