@@ -94,7 +94,7 @@ class mediamosa_version {
    * @return array
    */
   static public function get_current_version($return_full = FALSE) {
-    list($major, $minor, $release, $build, $extra) = preg_split("/[.:-]+/", ($return_full? self::MEDIAMOSA_VERSION_FULL : self::MEDIAMOSA_VERSION), 5);
+    list($major, $minor, $release, $build, $extra) = preg_split("/[.:-]+/", ($return_full? self::MEDIAMOSA_VERSION_FULL : self::MEDIAMOSA_VERSION), 5) + array(0 => 1, 1 => 0, 2 => 0, 3 => 1, 4 => '');
     return array(
       self::MAJOR => $major,
       self::MINOR => $minor,
