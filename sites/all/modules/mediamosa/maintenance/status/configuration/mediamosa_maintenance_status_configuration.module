@@ -264,16 +264,17 @@ function mediamosa_maintenance_status_configuration_mediamosa_status_generate($w
     'value' => t("innodb_flush_log_at_trx_commit = @value. It shouldn't be 1.", array('@value' => $rows['innodb_flush_log_at_trx_commit'])),
     'severity' => _mediamosa_maintenance_status_okwarning($rows['innodb_flush_log_at_trx_commit'] == '1'),
   );
+
   $results['database_innodb_buffer_pool_size'] = array(
     'title' => t('Database'),
-    'value' => t('innodb_buffer_pool_size = @sizeM. Should have 2048M.', array('@size' => $rows['innodb_buffer_pool_size'] / 1048576)),
+    'value' => t('innodb_buffer_pool_size = @size. Should have @expected.', array('@size' => format_size($rows['innodb_buffer_pool_size']), '@expected' => format_size(2048 * 1024 * 1024))),
     'description' => t('You can set this up to 50 - 80 % of RAM, but beware of setting memory usage too high.'),
-    'severity' => _mediamosa_maintenance_status_okwarning($rows['innodb_buffer_pool_size'] / 1048576 < '8'),
+    'severity' => _mediamosa_maintenance_status_okwarning(((int) $rows['innodb_buffer_pool_size'] / 1048576) < 8),
   );
   $results['database_innodb_log_file_size'] = array(
     'title' => t('Database'),
-    'value' => t('innodb_log_file_size = @sizeM.', array('@size' => $rows['innodb_log_file_size'] / 1048576)),
-    'severity' => _mediamosa_maintenance_status_okwarning($rows['innodb_log_file_size'] / 1048576 < '2'),
+    'value' => t('innodb_log_file_size = @size.', array('@size' => format_size($rows['innodb_log_file_size']))),
+    'severity' => _mediamosa_maintenance_status_okwarning(((int) $rows['innodb_log_file_size'] / 1048576) < 2),
   );
   $results['database_innodb_flush_method'] = array(
     'title' => t('Database'),
@@ -417,17 +418,19 @@ function mediamosa_maintenance_status_configuration_mediamosa_status_generate($w
       $schemas = call_user_func($function_name);
 
       // Install the schemas.
-      mediamosa::drupal_install_schema($module_name, $test_table_prefix, FALSE);
+      $make_foreignkey = FALSE;
+      mediamosa::drupal_install_schema($module_name, $test_table_prefix, $make_foreignkey);
 
       // Get schemas one by one.
       foreach ($schemas as $original_table_name => $schema) {
         $test_table_name = $test_table_prefix . $original_table_name;
 
-        // Get the table details.
+        // Get the table details of the original table.
         $original_table_result = mediamosa_db::db_query("SHOW CREATE TABLE {#table_name}", array(
           '#table_name' => $original_table_name,
         ))->fetchAssoc();
 
+        // Get the table details of the test table.
         $test_table_result = mediamosa_db::db_query("SHOW CREATE TABLE {#table_name}", array(
           '#table_name' => $test_table_name,
         ))->fetchAssoc();
@@ -440,22 +443,43 @@ function mediamosa_maintenance_status_configuration_mediamosa_status_generate($w
           // Clear the last ','.
           $original_table_result['create table'] = str_replace(",\n  CONSTRAINT", "\n  CONSTRAINT", $original_table_result['create table']);
 
-          // Clear the CONSTRAINT lines.
           $original_table_result['create table'] = explode("\n", $original_table_result['create table']);
+          // Clear the CONSTRAINT lines.
           foreach ($original_table_result['create table'] as $key => $line) {
             if (strpos($line, 'CONSTRAINT') !== FALSE) {
               unset($original_table_result['create table'][$key]);
             }
           }
+          // Clear the indexes of foreing keys.
+          foreach ($schema['foreign keys'] as $index_col_name => $value) {
+            $key = array_search(
+              '  KEY "fk_' . $original_table_name . '_' . $index_col_name . '" ("' . $index_col_name . '")',
+              $original_table_result['create table']
+            );
+            if ($key) {
+              unset($original_table_result['create table'][$key]);
+              if ($key > 0) {
+                $original_table_result['create table'][$key-1] = drupal_substr($original_table_result['create table'][$key-1], 0, -1);
+              }
+            }
+          }
           $original_table_result['create table'] = implode("\n", $original_table_result['create table']);
+
         }
         // Are they same?
         if ($original_table_result['create table'] != $test_table_result['create table']) {
           // Make info for displaying the differences.
-          $schema_description .= $original_table_name . ":\n";
-          $schema_description .= "Current:\n" . mediamosa_lib::make_diff($original_table_result['create table'], $test_table_result['create table']) . "\n";
-          $schema_description .= "Schema:\n" . mediamosa_lib::make_diff($test_table_result['create table'], $original_table_result['create table']) . "\n\n";
-          $is_schemas = FALSE;
+          $current_diff = mediamosa_lib::make_diff($original_table_result['create table'], $test_table_result['create table']);
+          $schema_diff = mediamosa_lib::make_diff($test_table_result['create table'], $original_table_result['create table']);
+          // Is there any difference (not just two lines are in the different order)?
+          if ($current_diff || $schema_diff) {
+            $schema_description .= $original_table_name . ":\n";
+            $schema_description .= "Current:\n" . ($current_diff ? $current_diff . "\n" : '');
+            $schema_description .= "Schema:\n" . ($schema_diff ? $schema_diff . "\n" : '');
+            $schema_description .= "\n";
+            //$schema_description .= "Orig: " . print_r($original_table_result, TRUE) . "\n\n Test: " . print_r($test_table_result, TRUE) . "\n\n";
+            $is_schemas = FALSE;
+          }
         }
 
 // Drop the test table.

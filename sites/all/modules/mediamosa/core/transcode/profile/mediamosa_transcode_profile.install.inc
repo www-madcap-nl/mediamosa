@@ -52,6 +52,7 @@ function _mediamosa_transcode_profile_install() {
   $transcode_profile_node_type = node_type_set_defaults($transcode_profile_node_type);
   node_type_save($transcode_profile_node_type);
 
+  // One of the transcode profile must be set TRUE for default.
   $a_default_profiles = array(
     array('standaard flash', 'TRUE', 'ffmpeg', 'flv', 'videobitrate:500000;size:320x200;audiobitrate:64000;audiosamplingrate:22050;maintain_aspect_ratio:yes;padding:yes'),
     array('standaard mp4', 'FALSE', 'ffmpeg', 'mp4', ''),

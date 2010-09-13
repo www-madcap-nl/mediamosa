@@ -872,7 +872,7 @@ class mediamosa_rest_call_job_search extends mediamosa_rest_call {
 
     $a_app_ids = $this->get_param_value_app();
     $app_id = reset($a_app_ids);
-    $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
+    $is_app_admin = FALSE; //$this->get_param_value(self::IS_APP_ADMIN); (not supplied).
 
     $user_id = $this->get_param_value(self::USER_ID);
     $job_id = $this->get_param_value(self::JOB_ID);

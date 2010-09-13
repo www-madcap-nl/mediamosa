@@ -228,6 +228,7 @@ function _mediamosa_maintenance_status_status() {
   drupal_set_breadcrumb($breadcrumb);
 
   // Check run-time requirements and status information.
+  // False means the data should come from variable.
   $statuses = module_invoke_all('mediamosa_status_collect', FALSE);
 
   foreach ($statuses as $status) {
