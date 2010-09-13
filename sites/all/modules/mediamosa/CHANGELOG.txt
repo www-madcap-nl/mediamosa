@@ -48,7 +48,7 @@ Known issues;
   timezone in Drupal 7 region settings or user timezone settings. This issue 
   will be fixed in 2.2.
 
-MediaMosa 2.2.1 (build 890)
+MediaMosa 2.2.1 (build 894)
 ---------------------------
 - Added is_empty_asset flag on the mediamosa_asset_collection table. (See ticket
   #338).
