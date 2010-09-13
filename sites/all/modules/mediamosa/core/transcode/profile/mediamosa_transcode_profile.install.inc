@@ -53,7 +53,7 @@ function _mediamosa_transcode_profile_install() {
   node_type_save($transcode_profile_node_type);
 
   $a_default_profiles = array(
-    array('standaard flash', 'FALSE', 'ffmpeg', 'flv', 'videobitrate:500000;size:320x200;audiobitrate:64000;audiosamplingrate:22050;maintain_aspect_ratio:yes;padding:yes'),
+    array('standaard flash', 'TRUE', 'ffmpeg', 'flv', 'videobitrate:500000;size:320x200;audiobitrate:64000;audiosamplingrate:22050;maintain_aspect_ratio:yes;padding:yes'),
     array('standaard mp4', 'FALSE', 'ffmpeg', 'mp4', ''),
     array('flash 800x600', 'FALSE', 'ffmpeg', 'flv', 'size:800x600;audiobitrate:128000;audiosamplingrate:22050'),
     array('mp4 h264 hq', 'FALSE', 'ffmpeg', 'flv', 'videobitrate:1000000;fps:25;audiocodec:libfaac;audiobitrate:256000;audiosamplingrate:44100;audiochannels:2;2_pass_h264_encoding:2;videocodec:libx264;videopreset:hq'),
