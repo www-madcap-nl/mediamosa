@@ -59,15 +59,15 @@ MediaMosa 2.2.1 (build 894)
 ---------------------------
 - Added is_empty_asset flag on the mediamosa_asset_collection table. (See ticket
   #338).
-
+- Fixed problem with restricted time where date was converted to UTC while that
+  was not allowed for that parameter. (See tickets #355, #354)
+  
 Other changes (not ticket related).
 - Fixed problems during install hook mediamosa_update_7011().
 - Added missing includes in mediamosa.install file.
 - Added empty REST call 'status' for future usage. Was renamed to 'simpletest'
   and 'status' REST was supposed to be re-used by status page code.
 - Removed default minimal Drupal profile.
-- Fixed problem with restricted time where date was converted to UTC while that
-  was not allowed for that parameter.
 - Coder module has completly checked the MediaMosa core and all warnings where
   resolved.
 - Removed function autoload_class() from mediamosa class. No longer used.
