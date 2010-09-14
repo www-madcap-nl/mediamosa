@@ -87,15 +87,15 @@ class MediaMosaServerSetupTestCaseEga extends MediaMosaTestCaseEgaJob {
 
         switch ($enabled_server[mediamosa_server_db::SERVER_TYPE]) {
           case mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR:
-            $url_split = mediamosa_http::build_url(mediamosa_http::parse_url(mediamosa_http::expect_url($enabled_server[mediamosa_server_db::SERVER_URI]) . '/version'), TRUE);
+            $url_split = mediamosa_http::build_url(mediamosa_http::parse_url(mediamosa_http::expect_url($enabled_server[mediamosa_server_db::SERVER_URI])), TRUE);
 
-            $this->pass(strtr('Calling @url for job server version check.', array('@url' => $url_split['host'] . $url_split['uri'])));
-            $response = mediamosa_http::do_internal_call($url_split['host'], $url_split['uri']);
+            $this->pass(strtr('Calling @url for job server version check.', array('@url' => $url_split['host'] . $url_split['uri'] . '/version')));
+            $response = mediamosa_http::do_internal_call($url_split['host'] . $url_split['uri'], '/version');
             break;
 
           case mediamosa_server_db::SERVER_TYPE_UPLOAD:
 
-            $server_url = mediamosa_http::build_url(mediamosa_http::parse_url($enabled_server[mediamosa_server_db::SERVER_URI]));
+            $server_url = mediamosa_http::build_url(mediamosa_http::parse_url(mediamosa_http::expect_url($enabled_server[mediamosa_server_db::SERVER_URI])));
             $this->pass(strtr('Calling @url for upload server version check.', array('@url' => $server_url)));
 
             // We know it will fail, but we dont care, we just want to know the version.
