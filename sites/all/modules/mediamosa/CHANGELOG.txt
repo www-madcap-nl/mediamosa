@@ -48,6 +48,13 @@ Known issues;
   timezone in Drupal 7 region settings or user timezone settings. This issue 
   will be fixed in 2.2.
 
+MediaMosa 2.2.2
+---------------
+- Fixed bug where 404 whould trigger when two forward slashes (//) where used in 
+  the REST uri.
+- Fixed job setup unit test when server was defined with path.
+
+
 MediaMosa 2.2.1 (build 894)
 ---------------------------
 - Added is_empty_asset flag on the mediamosa_asset_collection table. (See ticket

@@ -62,19 +62,31 @@ class mediamosa_rest {
 
     // Find all REST calls of enabled modules.
     $rest_calls = self::get_rest_calls();
-
-    foreach ($rest_calls as $method => $a_restcall) {
+    foreach ($rest_calls as $method => $unused) {
       krsort($rest_calls[$method]);
     }
 
+    // Remove any double //, so explode will work fine.
+    while (strpos($request_uri, '//') !== FALSE) {
+      $request_uri = str_replace('//', '/', $request_uri);
+    }
+
     // Split the current request URI.
-    $a_request_uri = explode('/', $request_uri);
+    $request_uris = explode('/', $request_uri);
+
+    // Make sure empty strings in require uris are removed.
+    foreach ($request_uris as $key => $part) {
+      if (trim($part) == '') {
+        unset($request_uris[$key]);
+      }
+    }
+
 
     // Check if URL internal / external.
-    if ($a_request_uri[0] == 'internal' || $a_request_uri[0] == 'external') {
-      unset($a_request_uri[0]);
-      $request_uri = implode('/', $a_request_uri);
-      $a_request_uri = explode('/', $request_uri);
+    if ($request_uris[0] == 'internal' || $request_uris[0] == 'external') {
+      unset($request_uris[0]);
+      $request_uri = implode('/', $request_uris);
+      $request_uris = explode('/', $request_uri);
     }
 
     $rest_call_return = FALSE;
@@ -89,12 +101,12 @@ class mediamosa_rest {
       $a_uri_parts = ($uri != '' ? explode('/', $uri) : array());
 
       // Number of parts must match.
-      if (count($a_request_uri) != count($a_uri_parts)) {
+      if (count($request_uris) != count($a_uri_parts)) {
         continue;
       }
 
       // Both empty? Then we match '/'.
-      if (!count($a_request_uri) && !count($a_uri_parts)) {
+      if (!count($request_uris) && !count($a_uri_parts)) {
         $rest_call[mediamosa_rest_call::URI] = $uri;
         $rest_call_return = $rest_call;
         break;
@@ -105,11 +117,11 @@ class mediamosa_rest {
       foreach ($a_uri_parts as $pos => $uri_part) {
         if (mediamosa_unicode::substr($uri_part, 0, 2) == '#$') {
           $a_regex[] = "[0-9]*(:[a-zA-Z]+)?";
-          $rest_call[mediamosa_rest_call::URI_PARAMS][mediamosa_unicode::substr($uri_part, 2)] = $a_request_uri[$pos];
+          $rest_call[mediamosa_rest_call::URI_PARAMS][mediamosa_unicode::substr($uri_part, 2)] = $request_uris[$pos];
         }
         elseif (mediamosa_unicode::substr($uri_part, 0, 1) == '$') {
           $a_regex[] = "[^\\/]*"; // Mediamosa is completly lose, any char EXCEPT /.
-          $rest_call[mediamosa_rest_call::URI_PARAMS][mediamosa_unicode::substr($uri_part, 1)] = $a_request_uri[$pos];
+          $rest_call[mediamosa_rest_call::URI_PARAMS][mediamosa_unicode::substr($uri_part, 1)] = $request_uris[$pos];
         }
         else {
           $a_regex[] = $uri_part;

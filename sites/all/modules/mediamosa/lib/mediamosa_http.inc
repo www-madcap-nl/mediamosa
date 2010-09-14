@@ -117,6 +117,15 @@ class mediamosa_http {
   }
 
   /**
+   * Make sure our URL starts with 'http://' or 'https://'.
+   *
+   * @param unknown_type $url
+   */
+  static public function expect_url($url) {
+    return ( (substr($url, 0, 7) != 'http://' && substr($url, 0, 8) != 'https://') ? 'http://' . $url : $url);
+  }
+
+  /**
    * Do a internal REST call.
    *
    * @param string $uri
