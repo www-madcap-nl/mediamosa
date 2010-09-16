@@ -66,6 +66,12 @@ function _mediamosa_transcode_profile_do_command($node) {
     }
   }
 
+  // If no options where found and we have already command in our node, then
+  // use the given command instead.
+  if (empty($commands) && !empty($node->{mediamosa_transcode_profile_db::COMMAND})) {
+    return $node->{mediamosa_transcode_profile_db::COMMAND};
+  }
+
   return implode(';', $commands);
 }
 

@@ -66,7 +66,8 @@ class MediaMosaServerSetupTestCaseEga extends MediaMosaTestCaseEgaJob {
         )
       ));
 
-      $this->assertFalse(empty($server_status), 'Found enabled server');
+      $this->assertFalse(empty($server_status), 'Found enabled server.');
+      $this->assertFalse(empty($server_status['status']['server_id']), 'Found server ID.');
 
       $server_hosts[$server_status['status']['host']] = $server_status['status']['server_id'];
       $server_ids[$server_status['status']['server_id']] = $server_status['status']['server_id'];

@@ -68,7 +68,7 @@ function mediamosa_maintenance_status_component_mediamosa_status_generate($with_
   $is_structured = '';
   $is_writeable = '';
   mediamosa_maintenance_status_component_directory(&$is_structured, &$is_writeable, $mount_point . '/data');
-  for ($i = 0; $i <= 9; $i++) {
+  for ($i = 1; $i <= 9; $i++) {
     mediamosa_maintenance_status_component_directory(&$is_structured, &$is_writeable, $mount_point . '/data/' . $i);
   }
   for ($i = ord('a'); $i <= ord('z'); $i++) {

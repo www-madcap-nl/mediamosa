@@ -292,10 +292,9 @@ class mediamosa_asset_search {
           while ($key !== FALSE);
 
           $a_query[mediamosa_db_query::A_JOIN]['mediafile'] = "LEFT JOIN {mediamosa_asset_mediafile} AS mf ON a.asset_id=mf.asset_id AND mf.is_still = 'FALSE'";
-          $a_query[mediamosa_db_query::A_JOIN]['aut_app_is_master_slave'] = sprintf("LEFT JOIN {mediamosa_aut_app_master_slave} AS aut_is_ms ON ((aut_is_ms.aut_object_type = 'MEDIAFILE' AND aut_is_ms.aut_object_id=mf.mediafile_id) OR (aut_is_ms.aut_object_type = 'ASSET' AND aut_is_ms.aut_object_id=a.asset_id))");
-          //$do_master_slave = TRUE;
-         // unset($a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset']['access']);
-         // unset($a_query[mediamosa_db_query::A_JOIN]['aut_app_master_slave']);
+
+          // FIXME: join on asset <-> master slave turned off, slows query down to much(!).
+          $a_query[mediamosa_db_query::A_JOIN]['aut_app_is_master_slave'] = sprintf("LEFT JOIN {mediamosa_aut_app_master_slave} AS aut_is_ms ON ((aut_is_ms.aut_object_type = 'MEDIAFILE' AND aut_is_ms.aut_object_id=mf.mediafile_id))");//  OR (aut_is_ms.aut_object_type = 'ASSET' AND aut_is_ms.aut_object_id=a.asset_id))");
         }
 
         $a_query[mediamosa_db_query::A_JOIN]['cql'] = $a_result_cql2sql['a_joins'];

@@ -1500,15 +1500,6 @@ function _mediamosa_migration_asset_supplement() {
  */
 function _mediamosa_migration_job() {
 
-
-  /**
-   * Migration turned off, so we have clean database.
-   */
-  return;
-
-
-
-
   // Get the database name.
   $db_name = _mediamosa_migration_get_memo_data_db();
 
@@ -1542,7 +1533,7 @@ function _mediamosa_migration_job() {
         finished,
         error_description,
         created,
-        DATE_SUB(changed, INTERVAL 2 HOUR),
+        changed,
         create_still,
         still_parameters
       ) (SELECT
@@ -1562,7 +1553,7 @@ function _mediamosa_migration_job() {
         DATE_SUB(changed, INTERVAL 2 HOUR),
         create_still,
         still_parameters
-      FROM #db_name.job)",
+      FROM #db_name.job WHERE status IN('FINISHED','FAILED') ORDER BY job_id ASC)",
     array(
       '#db_name' => $db_name
     ))
@@ -1941,9 +1932,14 @@ function _mediamosa_migration_transcode() {
     $node = node_save($node);
   }
 
+
+  /**
+   * Following code is off because the mapping is always old in the older databases.
+   */
+/*
   // Empty first.
   db_truncate('mediamosa_transcode_mapping')->execute();
-
+*/
   /**
    * Copy from 1.x to 2.x
    * Columns dropped;
@@ -1951,6 +1947,7 @@ function _mediamosa_migration_transcode() {
    * Columns renamed;
    * -
    */
+/*
   db_query(strtr(
     "INSERT INTO {mediamosa_transcode_mapping}
       (
@@ -1982,7 +1979,7 @@ function _mediamosa_migration_transcode() {
       '#db_name' => $db_name
     ))
   );
-
+*/
   // Back to old session mode.
   db_query(strtr("SET SESSION sql_mode = '#old_mode'", array('#old_mode' => $old_mode)));
 }

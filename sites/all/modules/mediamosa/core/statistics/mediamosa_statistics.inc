@@ -203,8 +203,8 @@ class mediamosa_statistics {
    */
   static public function calculate_used_diskspace($year, $month) {
 
-    $year = (int)$year;
-    $month = (int)$month;
+    $year = (int) $year;
+    $month = (int) $month;
 
     // Make sure its provide ok.
     if ($year < 2000 || $year > 2099 || $month < 1 || $month > 12) {

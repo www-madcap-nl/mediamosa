@@ -41,19 +41,26 @@ Bug reports / TODOs RC2:
 START CHANGELOG:
 
 Known issues;
-- MediaMosa 2.1.x and lower is not PHP 5.3 compatible, we are working to get
-  this fixed in 2.2 release.
-- Dates are shown in the wrong timezone in admin/mediafile browser. However 
-  dates on the status page are correct as long as you have enter the correct 
-  timezone in Drupal 7 region settings or user timezone settings. This issue 
-  will be fixed in 2.2.
+- MediaMosa 2.2.x is much more compatible with PHP 5.3, although needs more
+  testing.
+
 
 MediaMosa 2.2.2
 ---------------
+
+Other changes (not ticket related).
+
 - Fixed bug where 404 whould trigger when two forward slashes (//) where used in 
   the REST uri.
 - Fixed job setup unit test when server was defined with path.
-
+- Fixed bug when creation of the default setup with command strings of transcode
+  profiles where created empty.
+- Fixed bug when enabling job table migration.
+- Added DB index on mediamosa_asset for videotimestamp.
+- Turned off asset <-> masterslave table join for is_master_slaved, was terrible
+  slow.
+- Removed migration of the transcode_mapping table (1.x) to 
+  mediamosa_transcode_mapping table (2.x). Is always behind on 2.x version.
 
 MediaMosa 2.2.1 (build 894)
 ---------------------------
@@ -66,19 +73,19 @@ Other changes (not ticket related).
 - Fixed problems during install hook mediamosa_update_7011().
 - Added missing includes in mediamosa.install file.
 - Added empty REST call 'status' for future usage. Was renamed to 'simpletest'
-  and 'status' REST was supposed to be re-used by status page code.
+  from 'status' and was supposed to be re-used by status page code.
 - Removed default minimal Drupal profile.
-- Coder module has completly checked the MediaMosa core and all warnings where
+- Coder module has completely checked the MediaMosa core and all warnings where
   resolved.
 - Removed function autoload_class() from mediamosa class. No longer used.
 - Fixed ajax problem in collection browse page.
-- Completly rewritten the installation profile.
+- Completely rewritten the installation profile.
 - Fixed ffmpeg detection in status page.
 - Removed & on $form_state hooks of hook_mediamosa_configuration_validate() for
   PHP 5.3 warnings.
 - Added missing wmv related lua files to lib/lua dir. 
 - Removed check for /0 directory in SANNAS.
-- Cleaned up default install transcoding profiles. 
+- Cleaned up default install trans-coding profiles. 
 
 MediaMosa 2.2.0 (build 847)
 ---------------------------

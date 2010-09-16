@@ -1063,3 +1063,15 @@ function mediamosa_update_7052() {
   db_add_index(mediamosa_asset_collection_db::TABLE_NAME, 'idx_coll_isempty', array(mediamosa_asset_collection_db::COLL_ID, mediamosa_asset_collection_db::IS_EMPTY_ASSET));
 }
 
+/**
+ * Add index on mediamosa_asset table for videotimestamp sort.
+ */
+function mediamosa_update_7053() {
+  try {
+    db_add_index(mediamosa_asset_db::TABLE_NAME, 'idx_videotimestamp', array(mediamosa_asset_db::VIDEOTIMESTAMP));
+  }
+  catch (PDOException $e) {
+    // Ignore, already present?
+  }
+}
+

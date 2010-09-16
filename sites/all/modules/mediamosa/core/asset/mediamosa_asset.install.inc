@@ -241,6 +241,7 @@ function mediamosa_asset_schema() {
         mediamosa_asset_db::IS_UNAPPROPRIATE,
         mediamosa_asset_db::IS_EMPTY_ASSET,
       ),
+      'idx_' . mediamosa_asset_db::VIDEOTIMESTAMP => array(mediamosa_asset_db::VIDEOTIMESTAMP),
     ),
   );
 

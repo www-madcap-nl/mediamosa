@@ -87,7 +87,7 @@ class mediamosa_collection_search {
 
     // If we hide empty assets, then we check the is_empty_asset flag on asset_collection.
     if ($hide_empty_asset) {
-      $a_query[mediamosa_db_query::A_JOIN]['asset_collection'][] = "LEFT JOIN {mediamosa_asset_collection} AS ac ON c.coll_id = ac.coll_id AND ac.is_empty_asset = 'TRUE'";
+      $a_query[mediamosa_db_query::A_JOIN]['asset_collection'][] = "LEFT JOIN {mediamosa_asset_collection} AS ac ON c.coll_id = ac.coll_id AND ac.is_empty_asset = 'FALSE'";
     }
     else { // Don't care empty or not.
       $a_query[mediamosa_db_query::A_JOIN]['asset_collection'][] = 'LEFT JOIN {mediamosa_asset_collection} AS ac ON c.coll_id = ac.coll_id';

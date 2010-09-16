@@ -407,15 +407,16 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
     // Create collection.
     $coll_id = $this->createCollection();
 
-    // Create 2 assets, one with mediafile, one empty and put them into the
+    // Create 3 assets, one with mediafile, 2 empty and put them into the
     // collection.
     $asset_id_1 = $this->createAsset();
+    $asset_id_2 = $this->createAsset();
 
     // Upload a mediafile.
     $upload = $this->uploadTestFile();
 
     // Put them into the collection.
-    $this->createCollectionAssetRelation($coll_id, array($asset_id_1, $upload['asset_id']));
+    $this->createCollectionAssetRelation($coll_id, array($asset_id_1, $asset_id_2, $upload['asset_id']));
 
     // Now search collection, numofvideos should be 2.
     $result = $this->getCollections();
@@ -433,7 +434,7 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
     $this->var_export($collection);
 
     // Must be 2.
-    $this->assertTrue($collection['numofvideos'] == 2, 'Found 2 videos in collection');
+    $this->assertTrue($collection['numofvideos'] == 3, 'Found 3 videos in collection');
 
     // Now search again with hide_empty_assets, numofvideos should be 1 now.
     $result = $this->getCollections(self::SIMPLETEST_USER_ID, array(mediamosa_rest_call_collection_search::HIDE_EMPTY_ASSETS => TRUE));
@@ -447,7 +448,7 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
     // Get collection.
     $collection = reset($collections);
 
-    // Must be 1.
+    // Must be 1 (2 hidden).
     $this->assertTrue($collection['numofvideos'] == 1, 'Found 1 video in collection');
 
     // Show the collection.
