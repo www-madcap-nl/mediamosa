@@ -63,7 +63,8 @@ Other changes (not ticket related).
   mediamosa_transcode_mapping table (2.x). Is always behind on 2.x version.
 - Fixed bug in simpletest queue; if test timed-out, tehn the whole queue 
   stopped.
-- Moved mediamosa_connector and mediamosa_development
+- Moved mediamosa_connector and mediamosa_development.
+- Added playproxy test for .ogg files.
 
 MediaMosa 2.2.1 (build 894)
 ---------------------------
