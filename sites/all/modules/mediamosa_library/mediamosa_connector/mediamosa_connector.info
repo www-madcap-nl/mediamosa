@@ -1,7 +1,7 @@
 ; $Id: $
 name = "MediaMosa - connector"
 description = "The MediaMosa connector enables Drupal modules to communicate with the MediaMosa REST interface."
-package = "MediaMosa - Misc"
+package = "MediaMosa - Library"
 version = "2.0.0"
 core = 7.x
 

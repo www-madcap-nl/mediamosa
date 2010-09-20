@@ -596,6 +596,14 @@ class MediaMosaTestCase extends DrupalWebTestCase {
   }
 
   /**
+   * Return the path+filename to the test video.
+   */
+  protected function getTestVideo_ogg() {
+    $filename = drupal_get_path('module', 'mediamosa') . '/lib/testfiles/bunny.ogg';
+    $this->pass(t('Got test OGG video @video.', array('@video' => $filename)));
+    return $filename;
+  }
+  /**
    * Return the path+filename to the test image (jpeg).
    */
   protected function getTestImage_NotBlackJpg() {

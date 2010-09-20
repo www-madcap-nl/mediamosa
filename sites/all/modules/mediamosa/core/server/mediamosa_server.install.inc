@@ -109,6 +109,12 @@ s1.write('mediaspace');
 <embed type='video/quicktime' src='{TICKET_URI}' name='{MEDIAFILE_ID}' width='{WIDTH}' height='{HEIGHT}' autoplay='{AUTOPLAY}' {IF_START}starttime='{START_TIME}'{/IF_START} {IF_DURATION}endtime='{END_TIME}'{/IF_DURATION}/>
 </object>"
       , 'MPEG|MOV;MP4;M4A;3GP;3G2;MJ2 Streaming Server', '', '', '', ''),
+
+    array(5, 0, 'ON', 'streaming', 'http://mediamosa.local/ticket/{TICKET}',
+      'ogg',
+      '<video id="video" src="{TICKET_URI}" height="{HEIGHT}" width="{WIDTH}" {AUTOPLAY_TEXT} controls="true">Your browser does not support this video</video>'
+      , 'Apache - OGG', '', '', '', ''),
+
     array(11, 2, 'ON', 'download', 'http://download.mediamosa.local/download/{TICKET}', '', '', 'Default download server', '', '', '', ''),
     array(12, 0, 'ON', 'still', 'http://download.mediamosa.local/still/{TICKET}', '', '', 'Default still server', '', '', '', ''),
     array(13, 0, 'ON', 'job_processor', 'http://job1.mediamosa.local', '', '', 'Default 1st job processor', 2, 'ANALYSE|ffmpeg|STILL', ''),

@@ -49,6 +49,10 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   // deleted on teardown.
   private $mediafiles_cleanup = array();
 
+  // TRUE/FALSE setting that allows the default server settings instead of the
+  // current server settings to be copied into our test environment.
+  protected $default_servers = FALSE; // FALSE: use the current server setup.
+
   // ------------------------------------------------------------------ Functions.
   /**
    * Implements setUp().
@@ -93,36 +97,38 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $this->a_app_2 = $this->createApp(array(mediamosa_app_db::APP_ID => $this->a_app[mediamosa_app_db::APP_ID] + 1)); // in case we need other.
     $this->a_app_3 = $this->createApp(array(mediamosa_app_db::APP_ID => $this->a_app_2[mediamosa_app_db::APP_ID] + 1)); // in case we need other.
 
-    // Truncate current and insert new.
-    db_truncate(mediamosa_server_db::TABLE_NAME)->execute();
+    if (!$this->default_servers) {
+      // Truncate current and insert new.
+      db_truncate(mediamosa_server_db::TABLE_NAME)->execute();
 
-    // Copy the current servers to sandbox.
-    foreach ($a_servers as $a_server) {
-      db_insert(mediamosa_server_db::TABLE_NAME)
-        ->fields($a_server)
-        ->execute();
-    }
+      // Copy the current servers to sandbox.
+      foreach ($a_servers as $a_server) {
+        db_insert(mediamosa_server_db::TABLE_NAME)
+          ->fields($a_server)
+          ->execute();
+      }
 
-    // Truncate current and insert new containers.
-    db_truncate(mediamosa_server_streaming_container_db::TABLE_NAME)->execute();
+      // Truncate current and insert new containers.
+      db_truncate(mediamosa_server_streaming_container_db::TABLE_NAME)->execute();
 
-    // Copy the containers.
-    // Copy the current server containers to sandbox.
-    foreach ($a_server_containers as $a_server_container) {
-      db_insert(mediamosa_server_streaming_container_db::TABLE_NAME)
-        ->fields($a_server_container)
-        ->execute();
-    }
+      // Copy the containers.
+      // Copy the current server containers to sandbox.
+      foreach ($a_server_containers as $a_server_container) {
+        db_insert(mediamosa_server_streaming_container_db::TABLE_NAME)
+          ->fields($a_server_container)
+          ->execute();
+      }
 
-    // Truncate current and insert new containers.
-    db_truncate(mediamosa_server_tool_db::TABLE_NAME)->execute();
+      // Truncate current and insert new containers.
+      db_truncate(mediamosa_server_tool_db::TABLE_NAME)->execute();
 
-    // Copy the server tools.
-    // Copy the current server tools to sandbox.
-    foreach ($a_server_tools as $a_server_tool) {
-      db_insert(mediamosa_server_tool_db::TABLE_NAME)
-        ->fields($a_server_tool)
-        ->execute();
+      // Copy the server tools.
+      // Copy the current server tools to sandbox.
+      foreach ($a_server_tools as $a_server_tool) {
+        db_insert(mediamosa_server_tool_db::TABLE_NAME)
+          ->fields($a_server_tool)
+          ->execute();
+      }
     }
 
     // Create and login user
@@ -484,14 +490,14 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   /**
    * Basic upload of test wmf file.
    */
-  protected function uploadTestFile() {
+  protected function uploadTestFile($filename = '') {
     // Create an asset.
     $asset_id = $this->createAsset();
 
     // Create mediafile.
     $mediafile_id = $this->createMediafile($asset_id);
 
-    $filename = $this->uploadTestFileForMediafile($asset_id, $mediafile_id);
+    $filename = $this->uploadTestFileForMediafile($asset_id, $mediafile_id, $filename);
 
     // Lets return the mediafile_id for now.
     return array('asset_id' => $asset_id, 'mediafile_id' => $mediafile_id, 'filename' => $filename);
@@ -500,7 +506,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   /**
    * Basic upload of test wmf file.
    */
-  protected function uploadTestFileForMediafile($asset_id, $mediafile_id) {
+  protected function uploadTestFileForMediafile($asset_id, $mediafile_id, $filename = '') {
     // Create upload ticket.
     $uploadticket = $this->createMediafileUploadTicket($mediafile_id);
 
@@ -514,7 +520,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $this->assertTrue(!empty($uploadticket['uploadprogress_url']), 'uploadprogress_url set');
 
     // Get link to upload file.
-    $filename = self::getTestVideo();
+    $filename = empty($filename) ? self::getTestVideo() : $filename;
 
     // URL.
     $action = $uploadticket['action'];

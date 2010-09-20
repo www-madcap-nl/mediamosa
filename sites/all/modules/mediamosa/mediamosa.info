@@ -10,6 +10,7 @@ configure = admin/mediamosa/config/global
 ; Dependencies (module names)
 ; YOU MUST HAVE VERY GOOD REASON TO GIVE A DEP. TO THE CORE MODULE.
 dependencies[] = simpletest
+;dependencies[] = mediamosa_library
 
 ; Used files.
 

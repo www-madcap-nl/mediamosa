@@ -1075,3 +1075,32 @@ function mediamosa_update_7053() {
   }
 }
 
+/**
+ * Disable and enable mediamosa_connector, we moved it.
+ */
+function mediamosa_update_7054() {
+
+  // If enabled, the disable, and enable again.
+  if (module_exists('mediamosa_connector')) {
+
+    $mediamosa_development = module_exists('mediamosa_development');
+    if ($mediamosa_development) {
+      module_disable(array('mediamosa_development'));
+    }
+
+    module_disable(array('mediamosa_connector'));
+    module_enable(array('mediamosa_connector'));
+  }
+
+  if ($mediamosa_development) {
+    module_enable(array('mediamosa_development'));
+  }
+}
+
+/**
+ * Enable the mediamosa_library module.
+ */
+function mediamosa_update_7055() {
+  // New module enable.
+  module_enable(array('mediamosa_library'));
+}

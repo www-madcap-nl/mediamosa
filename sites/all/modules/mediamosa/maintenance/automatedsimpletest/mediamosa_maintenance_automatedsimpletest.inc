@@ -278,20 +278,6 @@ class mediamosa_maintenance_automatedsimpletest {
       return;
     }
 
-    // Get the current queue.
-    $queue = variable_get('mediamosa_maintenance_automatedsimpletest_queue', array());
-
-    // Get the next test.
-    $queued_class_name = array_shift($queue);
-
-    // No tests?
-    if (!$queued_class_name) {
-      return;
-    }
-
-    // Set the queue.
-    variable_set('mediamosa_maintenance_automatedsimpletest_queue', $queue);
-
     // Now run the test we found in the queue.
     $runs = array(
       mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES,
@@ -313,6 +299,20 @@ class mediamosa_maintenance_automatedsimpletest {
         }
       }
     }
+
+    // Get the current queue.
+    $queue = variable_get('mediamosa_maintenance_automatedsimpletest_queue', array());
+
+    // Get the next test.
+    $queued_class_name = array_shift($queue);
+
+    // No tests?
+    if (!$queued_class_name) {
+      return;
+    }
+
+    // Set the queue.
+    variable_set('mediamosa_maintenance_automatedsimpletest_queue', $queue);
 
     // Get the tests.
     $default_tests = self::get_default_tests();

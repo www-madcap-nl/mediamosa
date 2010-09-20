@@ -43,7 +43,7 @@ function mediamosa_maintenance_automatedsimpletest_menu() {
   // Maintenance / Configuration pages.
   $items['admin/mediamosa/simpletests'] = array(
     'title' => 'Tests',
-    'description' => 'oooo',
+    'description' => 'Our MediaMosa unit tests listing.',
     'page callback' => '_mediamosa_maintenance_automatedsimpletest',
     'access arguments' => array('access mediamosa'),
     'type' => MENU_LOCAL_TASK,
