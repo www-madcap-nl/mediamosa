@@ -30,6 +30,7 @@ Other changes (not ticket related).
 - Fixed storage of run simpletests in automatedsimpletest module, stored the
   whole result of all simpletests when test timed out.
 - Increased the transcode expire time to 3 hours.
+- Fixed problem with server setup unittest.
 
 MediaMosa 2.2.1 (build 894)
 ---------------------------
