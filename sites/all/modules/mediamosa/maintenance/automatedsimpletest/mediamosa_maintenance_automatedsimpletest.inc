@@ -122,16 +122,16 @@ class mediamosa_maintenance_automatedsimpletest {
     // Before we start, we count the number of tables. If simpletest fails,
     // it doesn't clean up. We stop running the tests if we have to many tables.
     // Also we'll try to clean up if we detect to many tables.
-    $simpleDb = variable_get('mediamosa_simpletest_database', '');
-    if (!empty($simpleDb)) {
-      $oldDb = db_set_active($simpleDb);
-    }
+//    $simpleDb = variable_get('mediamosa_simpletest_database', '');
+//    if (!empty($simpleDb)) {
+//      $oldDb = db_set_active($simpleDb);
+//    }
 
     $count_tables = mediamosa_db::db_count_tables();
 
-    if (!empty($oldDb)) {
-      db_set_active($oldDb);
-    }
+//    if (!empty($oldDb)) {
+//      db_set_active($oldDb);
+//    }
 
     // Check if we have to many tables, else clean up.
     if ($count_tables > mediamosa_settings::STATUS_MAX_TABLES) {
@@ -139,13 +139,13 @@ class mediamosa_maintenance_automatedsimpletest {
 
       MediaMosaTestCase::clean();
 
-      if (!empty($simpleDb)) {
-        $oldDb = db_set_active($simpleDb);
-      }
+//      if (!empty($simpleDb)) {
+//        $oldDb = db_set_active($simpleDb);
+//      }
       $count_tables = mediamosa_db::db_count_tables();
-      if (!empty($oldDb)) {
-        db_set_active($oldDb);
-      }
+//      if (!empty($oldDb)) {
+//        db_set_active($oldDb);
+//      }
 
       if ($count_tables > mediamosa_settings::STATUS_MAX_TABLES) {
         // Clean failed.
@@ -168,7 +168,7 @@ class mediamosa_maintenance_automatedsimpletest {
       $test_results[$run][$class_name] = $value;
 
       // Store value (master-slave safe).
-      mediamosa_db::db_query('INSERT INTO {#mediamosa_maintenance_automatedsimpletest} SET #value = :value, #name = :name ON DUPLICATE KEY UPDATE #value = :value',
+      mediamosa_db::db_query('INSERT INTO {#mediamosa_maintenance_automatedsimpletest} (#value, #name) VALUES (:value, :name) ON DUPLICATE KEY UPDATE #value = :value',
         array(
           '#mediamosa_maintenance_automatedsimpletest' => mediamosa_maintenance_automatedsimpletest_db::TABLE_NAME,
           '#value' => mediamosa_maintenance_automatedsimpletest_db::VALUE,
@@ -294,7 +294,7 @@ class mediamosa_maintenance_automatedsimpletest {
         foreach ($test_results[$run] as $class_name => $info) {
           if (isset($info['runphase']) && $info['runphase'] == self::RUNPHASE_STARTED) {
             $test_results[$run][$class_name] = array('runphase' => self::RUNPHASE_TIMED_OUT, 'results' => array(), 'info' => $info);
-            mediamosa_maintenance_automatedsimpletest::set_test_results($run, $class_name, $test_results);
+            mediamosa_maintenance_automatedsimpletest::set_test_results($run, $class_name, $test_results[$run][$class_name]);
           }
         }
       }

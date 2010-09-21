@@ -65,6 +65,8 @@ Other changes (not ticket related).
   stopped.
 - Moved mediamosa_connector and mediamosa_development.
 - Added playproxy test for .ogg files.
+- Fixed storage of run simpletests in automatedsimpletest module, stored the
+  whole result of all simpletests when test timed out.
 
 MediaMosa 2.2.1 (build 894)
 ---------------------------

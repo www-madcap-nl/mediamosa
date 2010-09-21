@@ -488,9 +488,6 @@ function _mediamosa_maintenance_automatedsimpletest_details($name) {
         $class = 'simpletest-debug';
       }
       $rows[] = array('data' => $row, 'class' => array($class));
-
-      //$group_summary['#' . $assertion->status]++;
-      //$form['result']['summary']['#' . $assertion->status]++;
     }
   }
 
