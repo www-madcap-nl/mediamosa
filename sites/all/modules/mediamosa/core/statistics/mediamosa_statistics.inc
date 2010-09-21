@@ -231,7 +231,7 @@ class mediamosa_statistics {
       GROUP BY app_id, owner_id, mm.val_char
        */
       $result = mediamosa_db::db_query(
-        'SELECT SUM(m.#filesize) / 1024 / 1024 AS diskspace_mb, mf.#subject, mf.#app_id, m.#container_type
+        'SELECT SUM(m.#filesize) / 1024 / 1024 AS diskspace_mb, mf.#subject, mf.#app_id, mm.#container_type AS container_type
          FROM {#mediamosa_asset_mediafile_metadata} AS m
          LEFT JOIN {#mediamosa_asset_mediafile_metadata} AS mm USING(#mediafile_id)
          JOIN {#mediamosa_asset_mediafile} AS mf USING(#mediafile_id)
@@ -259,7 +259,7 @@ class mediamosa_statistics {
           array(
             ':app_id' => $data['app_id'],
             ':type' => $name,
-            ':keyword' => $data[$subject],
+            ':keyword' => ($data[$subject] ? $data[$subject] : ''),
             ':container_type' => $data['container_type'],
             ':diskspace' => round($data['diskspace_mb']),
             ':timestamp' => mediamosa_datetime::utc_current_timestamp_now()
