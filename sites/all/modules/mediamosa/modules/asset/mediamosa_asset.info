@@ -44,7 +44,6 @@ files[] = mediafile/metadata/mediamosa_asset_mediafile_metadata_property.test
 files[] = mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.rest.inc
 files[] = mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.test
 files[] = mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.acl.test
-files[] = mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.ogg.test
 files[] = mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.profile.test
 files[] = mediafile/play_proxy/mediamosa_asset_mediafile_play_proxy.ticket_mechanisme.test
 
