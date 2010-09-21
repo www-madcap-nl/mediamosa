@@ -9,6 +9,7 @@ Known issues;
 MediaMosa 2.2.2
 ---------------
 - Added playproxy test for .ogg files. (See ticket #359).
+- Fixed: Diskspace used in statisics stopped working. (See vpcore ticket #185).
 
 Other changes (not ticket related).
 
