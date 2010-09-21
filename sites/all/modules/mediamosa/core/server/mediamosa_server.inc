@@ -103,21 +103,24 @@ class mediamosa_server {
    */
   static public function get_status_enabled_job_servers($server_types = array(mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR)) {
     $enabled_servers = mediamosa_server::get_enabled_transcode($server_types);
-
     $servers = array();
     foreach ($enabled_servers as $enabled_server) {
-      $uri_split = mediamosa_http::build_url(mediamosa_http::parse_url(mediamosa_http::expect_url($enabled_server[mediamosa_server_db::SERVER_URI])), TRUE);
-      $response = mediamosa_http::do_internal_call($uri_split[0] . $uri_split[1], 'server/status?include_status=TRUE');
+
+      $uri_split = mediamosa_http::build_url(mediamosa_http::parse_url(mediamosa_http::expect_url($enabled_server[mediamosa_server_db::SERVER_URI] . '/server/status')), TRUE);
+
+      $response = mediamosa_http::do_internal_call($uri_split['host'], $uri_split['uri'] . '?include_status=TRUE');
       if ($response->code != '200') {
         self::log('Call to server/status did not return a 200 result (header: @header)', array('@header' => var_export($response, TRUE)));
       }
 
-      $xml = new SimpleXMLElement($response->data);
+      if (!empty($response->data)) {
+        $xml = new SimpleXMLElement($response->data);
 
-      $servers[] = array(
-        'enabled_server' => $enabled_server,
-        'status' => (isset($xml->items->item) ? mediamosa_lib::simplexml2array($xml->items->item) : array()),
-      );
+        $servers[] = array(
+          'enabled_server' => $enabled_server,
+          'status' => (isset($xml->items->item) ? mediamosa_lib::simplexml2array($xml->items->item) : array()),
+        );
+      }
     }
 
     return $servers;
