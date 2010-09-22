@@ -6,8 +6,8 @@ Known issues;
 - MediaMosa 2.2.x is much more compatible with PHP 5.3, although needs more
   testing.
 
-MediaMosa 2.2.2
----------------
+MediaMosa 2.2.2 (Build 922)
+---------------------------
 - Added playproxy test for .ogg files. (See ticket #359).
 - Fixed: Diskspace used in statisics stopped working. (See vpcore ticket #185).
 - Fixed /collection/$coll_id/asset/count (See ticket #204).
