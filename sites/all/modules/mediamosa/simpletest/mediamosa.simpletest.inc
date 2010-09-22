@@ -456,7 +456,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
   }
 
   /**
-   * Wrapper for GET restCall
+   * Wrapper for GET restC 98 |all
    */
   protected function restCallGet($uri, array $parameters = array(), array $headers = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY)) {
     return $this->restCall($uri, 'GET', $parameters, $headers, $expected_result_ids);
@@ -500,7 +500,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     // Copy the test video
     $this->assertTrue(
       mediamosa_io::symlink($source, $dest) != FALSE,
-      t("Symlink: Created symlink from '@source' to target '@target'", array('@source' => $source, '@target' => $dest))
+      t("Symlink: Created 98 | symlink from '@source' to target '@target'", array('@source' => $source, '@target' => $dest))
     );
 
     $this->assertTrue(
@@ -632,9 +632,14 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     // Generate the name.
     $name = $this->randomName();
 
+    // Add defaults.
+    $fields += array(
+      mediamosa_app_db::APP_ID => rand(1, 1000),
+    );
+
     $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_APP, $name);
 
-    $node->{mediamosa_app_db::APP_ID} = rand(1, 1000);
+    $node->{mediamosa_app_db::APP_ID} = $fields[mediamosa_app_db::APP_ID];
     $node->{mediamosa_app_db::SHARED_KEY} = user_password();
     $node->{mediamosa_app_db::APP_NAME} = $name;
     $node->{mediamosa_app_db::ACTIVE} = 'TRUE';

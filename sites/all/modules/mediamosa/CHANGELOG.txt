@@ -31,6 +31,8 @@ Other changes (not ticket related).
   whole result of all simpletests when test timed out.
 - Increased the transcode expire time to 3 hours.
 - Fixed problem with server setup unittest.
+- Fixed bug where in 1 out of 500 unittest would fail because the app_id was
+  not random enough. 
 
 MediaMosa 2.2.1 (build 894)
 ---------------------------
