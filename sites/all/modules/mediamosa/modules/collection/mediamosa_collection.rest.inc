@@ -402,6 +402,7 @@ class mediamosa_rest_call_collection_get extends mediamosa_rest_call {
   // Rest vars;
   const COLL_ID = 'coll_id';
   const USER_ID = 'user_id';
+  const HIDE_EMPTY_ASSETS = 'hide_empty_assets';
 
   // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
@@ -416,6 +417,11 @@ class mediamosa_rest_call_collection_get extends mediamosa_rest_call {
         self::USER_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The User ID requesting the details, used for unappropriate checks.',
+        ),
+        self::HIDE_EMPTY_ASSETS => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_DESCRIPTION => 'Do not include assets that do not have mediafiles.',
+          self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
       ),
     );
@@ -452,7 +458,7 @@ class mediamosa_rest_call_collection_get extends mediamosa_rest_call {
     $collection[mediamosa_collection_db::CREATED] = mediamosa::utcdate2appdate($collection[mediamosa_collection_db::CREATED]);
     $collection[mediamosa_collection_db::CHANGED] = mediamosa::utcdate2appdate($collection[mediamosa_collection_db::CHANGED]);
 
-    $collection['numofvideos'] = mediamosa_collection::count_assets_in_collection($coll_id);
+    $collection['numofvideos'] = mediamosa_collection::count_assets_in_collection($coll_id, $this->get_param_value(self::HIDE_EMPTY_ASSETS));
 
     $o_mediamosa->add_item($collection);
   }
@@ -468,6 +474,7 @@ class mediamosa_rest_call_collection_count_relation extends mediamosa_rest_call 
   // Rest vars;
   const COLL_ID = 'coll_id';
   const USER_ID = 'user_id';
+  const HIDE_EMPTY_ASSETS = 'hide_empty_assets';
 
   // ------------------------------------------------------------ Get Var Setup.
   public function get_var_setup() {
@@ -482,6 +489,11 @@ class mediamosa_rest_call_collection_count_relation extends mediamosa_rest_call 
         self::USER_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The User ID requesting the details, used for unappropriate checks.',
+        ),
+        self::HIDE_EMPTY_ASSETS => array(
+          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_DESCRIPTION => 'Do not include assets that do not have mediafiles.',
+          self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
       ),
     );
@@ -515,7 +527,7 @@ class mediamosa_rest_call_collection_count_relation extends mediamosa_rest_call 
     }
 
     $collection = array();
-    $collection['numofvideos'] = mediamosa_collection::count_assets_in_collection($coll_id);
+    $collection['numofvideos'] = mediamosa_collection::count_assets_in_collection($coll_id, $this->get_param_value(self::HIDE_EMPTY_ASSETS));
 
     $o_mediamosa->add_item($collection);
   }

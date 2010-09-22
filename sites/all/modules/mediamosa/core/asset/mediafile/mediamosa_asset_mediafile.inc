@@ -243,11 +243,16 @@ class mediamosa_asset_mediafile {
           $response = mediamosa_asset_mediafile_play_proxy::create_response_still($ticket, $app_id);
           $row['still_ticket'] = $response['output'];
 
+
           // Add still to mediafile.
           assert(!empty($row[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE])); // Make sure its here.
 
           $mediafile_id = $row[mediamosa_asset_mediafile_db::ID];
           $row = array_merge($row, mediamosa_asset_mediafile_metadata::get_all_mediafile_metadata($mediafile_id));
+
+          // Unset sannas mount point.
+          unset($row[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT]);
+          unset($row[mediamosa_asset_mediafile_metadata::FILE_DURATION]);
 
           $items[$row[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE]]['still']['#' . $i++] = $row;
         }

@@ -61,8 +61,13 @@ class mediamosa_collection {
    *
    * @param string $coll_id
    */
-  static public function count_assets_in_collection($coll_id) {
-    return mediamosa_db::db_count_rows(mediamosa_asset_collection_db::TABLE_NAME, array(mediamosa_asset_collection_db::COLL_ID => $coll_id));
+  static public function count_assets_in_collection($coll_id, $hide_empty_assets = FALSE) {
+    // Hide empty assets?
+    if (!$hide_empty_assets) {
+      return mediamosa_db::db_count_rows(mediamosa_asset_collection_db::TABLE_NAME, array(mediamosa_asset_collection_db::COLL_ID => $coll_id));
+    }
+
+    return mediamosa_db::db_count_rows(mediamosa_asset_collection_db::TABLE_NAME, array(mediamosa_asset_collection_db::COLL_ID => $coll_id, mediamosa_asset_collection_db::IS_EMPTY_ASSET => mediamosa_asset_collection_db::IS_EMPTY_ASSET_FALSE));
   }
 
   /**

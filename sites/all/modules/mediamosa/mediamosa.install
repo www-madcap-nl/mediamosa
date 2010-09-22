@@ -1104,3 +1104,10 @@ function mediamosa_update_7055() {
   // New module enable.
   module_enable(array('mediamosa_library'));
 }
+
+/**
+ * Migrate is_empty_asset value to the asset_collection relation.
+ */
+function mediamosa_update_7056() {
+  db_query('UPDATE {mediamosa_asset_collection} AS ac JOIN {mediamosa_asset} AS a ON (a.asset_id = ac.asset_id) SET ac.is_empty_asset = a.is_empty_asset');
+}

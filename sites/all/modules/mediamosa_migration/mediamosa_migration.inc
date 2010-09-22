@@ -1118,13 +1118,15 @@ function _mediamosa_migration_collection() {
         asset_id,
         coll_id,
         created,
-        changed
+        changed,
+        is_empty_asset
       ) (SELECT
-        asset_id,
-        coll_id,
-        DATE_SUB(created, INTERVAL 2 HOUR),
-        DATE_SUB(changed, INTERVAL 2 HOUR)
-      FROM #db_name.asset_collection)",
+        ac.asset_id,
+        ac.coll_id,
+        DATE_SUB(ac.created, INTERVAL 2 HOUR),
+        DATE_SUB(ac.changed, INTERVAL 2 HOUR),
+        a.is_empty_asset
+      FROM #db_name.asset_collection AS ac JOIN #db_name.asset AS a ON (a.asset_id = ac.asset_id))",
     array(
       '#db_name' => $db_name
     ))
@@ -1580,17 +1582,17 @@ function _mediamosa_migration_job() {
         created,
         changed
       ) (SELECT
-        still_job_id,
-        job_id,
-        size,
-        frametime,
-        h_padding,
-        v_padding,
-        blackstill_check,
-        still_parameters,
-        DATE_SUB(created, INTERVAL 2 HOUR),
-        DATE_SUB(changed, INTERVAL 2 HOUR)
-    FROM #db_name.still_job)",
+        sj.still_job_id,
+        sj.job_id,
+        sj.size,
+        sj.frametime,
+        sj.h_padding,
+        sj.v_padding,
+        sj.blackstill_check,
+        sj.still_parameters,
+        DATE_SUB(sj.created, INTERVAL 2 HOUR),
+        DATE_SUB(sj.changed, INTERVAL 2 HOUR)
+    FROM #db_name.still_job AS sj JOIN {mediamosa_job} AS j ON (sj.job_id = j.job_id))",
     array(
       '#db_name' => $db_name
     ))
@@ -1616,16 +1618,16 @@ function _mediamosa_migration_job() {
         created,
         changed
       ) (SELECT
-        transcode_job_id ,
-        job_id,
-        transcode_profile_id,
-        tool,
-        command,
-        completed_transcoding_url,
-        file_extension,
-        DATE_SUB(created, INTERVAL 2 HOUR),
-        DATE_SUB(changed, INTERVAL 2 HOUR)
-    FROM #db_name.transcode_job)",
+        tj.transcode_job_id ,
+        tj.job_id,
+        tj.transcode_profile_id,
+        tj.tool,
+        tj.command,
+        tj.completed_transcoding_url,
+        tj.file_extension,
+        DATE_SUB(tj.created, INTERVAL 2 HOUR),
+        DATE_SUB(tj.changed, INTERVAL 2 HOUR)
+    FROM #db_name.transcode_job AS tj JOIN {mediamosa_job} AS j ON (tj.job_id = j.job_id))",
     array(
       '#db_name' => $db_name
     ))
@@ -1650,15 +1652,15 @@ function _mediamosa_migration_job() {
         created,
         changed
       ) (SELECT
-        upload_job_id,
-        job_id,
-        file_size,
-        uploaded_file_size,
-        retranscode,
-        create_still,
-        DATE_SUB(created, INTERVAL 2 HOUR),
-        DATE_SUB(changed, INTERVAL 2 HOUR)
-    FROM #db_name.upload_job)",
+        uj.upload_job_id,
+        uj.job_id,
+        uj.file_size,
+        uj.uploaded_file_size,
+        uj.retranscode,
+        uj.create_still,
+        DATE_SUB(uj.created, INTERVAL 2 HOUR),
+        DATE_SUB(uj.changed, INTERVAL 2 HOUR)
+    FROM #db_name.upload_job AS uj JOIN {mediamosa_job} AS j ON (uj.job_id = j.job_id))",
     array(
       '#db_name' => $db_name
     ))

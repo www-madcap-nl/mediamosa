@@ -10,6 +10,11 @@ MediaMosa 2.2.2
 ---------------
 - Added playproxy test for .ogg files. (See ticket #359).
 - Fixed: Diskspace used in statisics stopped working. (See vpcore ticket #185).
+- Fixed /collection/$coll_id/asset/count (See ticket #204).
+- Extended/Fixed /collection/$coll_id with is_empty_asset parameter (See ticket 
+  #204).
+- /asset response still parameters 'file_duration' and 'sannas_mount_point'
+  removed from still response (See ticket #198).
 
 Other changes (not ticket related).
 
@@ -31,8 +36,13 @@ Other changes (not ticket related).
   whole result of all simpletests when test timed out.
 - Increased the transcode expire time to 3 hours.
 - Fixed problem with server setup unittest.
-- Fixed bug where in 1 out of 500 unittest would fail because the app_id was
+- Fixed bug where in 1 out of 500 unittests would fail because the app_id was
   not random enough. 
+- Added to migration script the new is_empty_asset value in asset-collection
+  relation.
+- Added update hook for migration of existing values is_empty_asset from asset
+  table to asset_collection relation table.
+  
 
 MediaMosa 2.2.1 (build 894)
 ---------------------------
