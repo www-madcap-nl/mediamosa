@@ -108,7 +108,8 @@ class mediamosa_server {
 
       $uri_split = mediamosa_http::build_url(mediamosa_http::parse_url(mediamosa_http::expect_url($enabled_server[mediamosa_server_db::SERVER_URI])), TRUE);
 
-      $response = mediamosa_http::do_internal_call($uri_split['host'] . $uri_split['uri'], 'server/status?include_status=TRUE');
+      // Fixme: need fix for uri.
+      $response = mediamosa_http::do_internal_call($uri_split['host']/* . $uri_split['uri']*/, 'server/status?include_status=TRUE');
       if ($response->code != '200') {
         self::log('Call to server/status did not return a 200 result (header: @header)', array('@header' => var_export($response, TRUE)));
       }

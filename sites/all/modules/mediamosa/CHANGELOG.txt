@@ -5,20 +5,34 @@ START CHANGELOG:
 Known issues;
 - MediaMosa 2.2.x is much more compatible with PHP 5.3, although needs more
   testing.
+- Servers (processor, download, upload etc) that are installed on a subdir are
+  not correctly retrieved on the server status page. (See ticket #367).
+
+MediaMosa 2.2.3 (Build 924)
+---------------------------
+- Reverted fix on /user/$user_id, will now throw 1902 
+  (ERRORCODE_USERMAN_INVALID_USER) again when user was not found (has no quota).
+  (See ticket #364).
+
+Other changes (not ticket related).
+
+- Hotfix: Server status will now correctly check the servers using the URI. This
+          however is a hotfix; servers that are installed on subdirs will not
+          work (rare situation). Is now known bug (See ticket #367 for future 
+          fix).
 
 MediaMosa 2.2.2 (Build 922)
 ---------------------------
-- Added playproxy test for .ogg files. (See ticket #359).
 - Fixed: Diskspace used in statisics stopped working. (See vpcore ticket #185).
-- Fixed /collection/$coll_id/asset/count (See ticket #204).
-- Extended/Fixed /collection/$coll_id with is_empty_asset parameter (See ticket 
-  #204).
+- Fixed: /collection/$coll_id/asset/count (See ticket #204).
+- Extended/Fixed /collection/$coll_id with hide_empty_asset parameter (See 
+  ticket #204).
 - /asset response still parameters 'file_duration' and 'sannas_mount_point'
   removed from still response (See ticket #198).
 
 Other changes (not ticket related).
 
-- Fixed bug where 404 whould trigger when two forward slashes (//) where used in 
+- Fixed bug where 404 would trigger when two forward slashes (//) where used in 
   the REST uri.
 - Fixed job setup unit test when server was defined with path.
 - Fixed bug when creation of the default setup with command strings of transcode
@@ -31,7 +45,8 @@ Other changes (not ticket related).
   mediamosa_transcode_mapping table (2.x). Is always behind on 2.x version.
 - Fixed bug in simpletest queue; if test timed-out, tehn the whole queue 
   stopped.
-- Moved mediamosa_connector and mediamosa_development.
+- Moved modules mediamosa_connector and mediamosa_development to the new 
+  mediamosa_library module.
 - Fixed storage of run simpletests in automatedsimpletest module, stored the
   whole result of all simpletests when test timed out.
 - Increased the transcode expire time to 3 hours.
