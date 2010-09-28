@@ -13,6 +13,7 @@ MediaMosa 2.2.3 (Build 924)
 - Reverted fix on /user/$user_id, will now throw 1902 
   (ERRORCODE_USERMAN_INVALID_USER) again when user was not found (has no quota).
   (See ticket #364).
+- Added mime-type detection for webm (See ticket #295).
 
 Other changes (not ticket related).
 
