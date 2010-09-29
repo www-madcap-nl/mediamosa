@@ -74,7 +74,7 @@ function mediamosa_maintenance_status_server_mediamosa_status_collect($reset = F
   if (!$reset) {
     $mediamosa_status_server = variable_get('mediamosa_status_server_' . $conf['mediamosa_installation_id'], array());
 
-    if (!empty($mediamosa_status_server['time']) && abs($mediamosa_status_server['time'] - REQUEST_TIME) > mediamosa_settings::MEDIAMOSA_COMPONENT_STATUS_TIMEOUT) {
+    if (empty($mediamosa_status_server['time']) || abs($mediamosa_status_server['time'] - REQUEST_TIME) > mediamosa_settings::MEDIAMOSA_COMPONENT_STATUS_TIMEOUT) {
       $mediamosa_status_server = array();
     }
   }
