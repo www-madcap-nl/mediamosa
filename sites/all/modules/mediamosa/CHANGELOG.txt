@@ -8,7 +8,7 @@ Known issues;
 - Servers (processor, download, upload etc) that are installed on a subdir are
   not correctly retrieved on the server status page. (See ticket #367).
 
-MediaMosa 2.2.4 (Build 926)
+MediaMosa 2.2.4 (Build 927)
 ---------------------------
 - Added [/external]/status REST call for server monitoring. (See vpcore ticket 
   #190).
