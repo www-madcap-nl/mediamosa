@@ -255,8 +255,10 @@ function _mediamosa_maintenance_status_server() {
 
   foreach ($result as $response) {
     $output .= '<h1>' . mediamosa_unicode::strtoupper($response['enabled_server']['description']) . '</h1>';
-    foreach ($response['status']['server_status'] as $status) {
-      $output .= theme('mediamosa_maintenance_status_report', array('table_name' => (is_array($status['title']) ? $status['title'][0] : $status['title']), 'results' => $status['results']));
+    if (!empty($response['status']['server_status'])) {
+      foreach ($response['status']['server_status'] as $status) {
+        $output .= theme('mediamosa_maintenance_status_report', array('table_name' => (is_array($status['title']) ? $status['title'][0] : $status['title']), 'results' => $status['results']));
+      }
     }
   }
 
