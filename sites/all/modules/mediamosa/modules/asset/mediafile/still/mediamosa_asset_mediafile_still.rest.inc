@@ -91,7 +91,6 @@ class mediamosa_rest_call_delete_stills extends mediamosa_rest_call {
       mediamosa_asset_db::TABLE_NAME,
       array(
         mediamosa_asset_db::ID => $asset_id,
-        mediamosa_asset_db::PARENT_ID => NULL
       )
     );
 

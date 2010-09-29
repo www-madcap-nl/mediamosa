@@ -207,7 +207,7 @@ class mediamosa_rest_call_get_asset_mediafiles extends mediamosa_rest_call {
     $is_oai = $this->get_param_value(self::IS_OAI);
 
     // Asset must exist.
-    $asset = mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id, mediamosa_asset_db::PARENT_ID => NULL));
+    $asset = mediamosa_db::db_must_exists(mediamosa_asset_db::TABLE_NAME, array(mediamosa_asset_db::ID => $asset_id));
 
     $a_mediafile_ids = mediamosa_asset_mediafile::mediafiles_search($asset_id, $tag, $is_still, ($asset['app_id'] == $app_id ? array() : $a_app_ids));
 

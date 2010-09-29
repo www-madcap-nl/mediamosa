@@ -203,6 +203,9 @@ class mediamosa_settings {
   const MEDIAMOSA_DEFAULT_TIMEZONE = 'Europe/Amsterdam';
   const MEDIAMOSA_DEFAULT_TIMEZONE_INTERNAL = 'UTC';
 
+  // Component status check timeout.
+  const MEDIAMOSA_COMPONENT_STATUS_TIMEOUT = 300; // 5 minutes.
+
   // ------------------------------------------------------------------ Functions.
   /**
    * Gets FFmpeg pad variable.

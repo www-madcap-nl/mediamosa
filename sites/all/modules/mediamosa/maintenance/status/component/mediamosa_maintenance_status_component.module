@@ -41,13 +41,8 @@ define('MEDIAMOSA_MAINTENANCE_STATUS_COMPONENT_SPACE_WARNING', 100);
 
 /**
  * Implements hook_mediamosa_status_generate().
- *
- * @param with_variable boolean
- *   Use Drupal variables or not
  */
-function mediamosa_maintenance_status_component_mediamosa_status_generate($with_variable = TRUE) {
-  global $conf;
-
+function mediamosa_maintenance_status_component_mediamosa_status_generate() {
   $results = array();
 
   $mount_point = mediamosa_configuration_storage::mount_point_get();
@@ -146,9 +141,6 @@ function mediamosa_maintenance_status_component_mediamosa_status_generate($with_
     ),
   );
 
-  if ($with_variable) {
-    variable_set('mediamosa_status_component_' . $conf['mediamosa_installation_id'], $statuses);
-  }
   return $statuses;
 }
 
@@ -178,12 +170,22 @@ function mediamosa_maintenance_status_component_directory(&$is_structured, &$is_
  * @return array
  *   All the statuses in an array
  */
-function mediamosa_maintenance_status_component_mediamosa_status_collect($reset = FALSE, $with_variable = TRUE) {
+function mediamosa_maintenance_status_component_mediamosa_status_collect($reset = FALSE) {
   global $conf;
 
-  if ($reset) {
-    return mediamosa_maintenance_status_component_mediamosa_status_generate($with_variable);
+  $mediamosa_status_component = array();
+  if (!$reset) {
+    $mediamosa_status_component = variable_get('mediamosa_status_component_' . $conf['mediamosa_installation_id'], array());
+
+    if (!empty($mediamosa_status_component['time']) && abs($mediamosa_status_component['time'] - REQUEST_TIME) > mediamosa_settings::MEDIAMOSA_COMPONENT_STATUS_TIMEOUT) {
+      $mediamosa_status_component = array();
+    }
   }
 
-  return variable_get('mediamosa_status_component_' . $conf['mediamosa_installation_id'], array());
+  if (empty($mediamosa_status_component)) {
+    $mediamosa_status_component = array('time' => REQUEST_TIME, 'statuses' => mediamosa_maintenance_status_component_mediamosa_status_generate());
+    variable_set('mediamosa_status_component_' . $conf['mediamosa_installation_id'], $mediamosa_status_component);
+  }
+
+  return $mediamosa_status_component['statuses'];
 }

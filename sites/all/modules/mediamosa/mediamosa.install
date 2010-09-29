@@ -1111,3 +1111,12 @@ function mediamosa_update_7055() {
 function mediamosa_update_7056() {
   db_query('UPDATE {mediamosa_asset_collection} AS ac JOIN {mediamosa_asset} AS a ON (a.asset_id = ac.asset_id) SET ac.is_empty_asset = a.is_empty_asset');
 }
+
+/**
+ * Fix problem with deprecated parent_id not being NULL.
+ */
+function mediamosa_update_7057() {
+  // Make sure parent_id is now always NULL.
+  db_query('UPDATE {mediamosa_asset} SET parent_id = NULL');
+}
+

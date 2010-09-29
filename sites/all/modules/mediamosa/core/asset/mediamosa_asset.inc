@@ -857,20 +857,6 @@ class mediamosa_asset {
    *
    */
   static public function update_asset_timestamps($asset_id) {
-    $real_asset_id = mediamosa_db::db_query(
-      'SELECT #parent_id FROM {#mediamosa_asset} WHERE #asset_id = :asset_id AND NOT #parent_id IS NULL',
-      array(
-        '#parent_id' => mediamosa_asset_db::PARENT_ID,
-        '#mediamosa_asset' => mediamosa_asset_db::TABLE_NAME,
-        '#asset_id' => mediamosa_asset_db::ID,
-        ':asset_id' => $asset_id,
-      )
-    )->fetchField();
-
-    if ($real_asset_id !== FALSE) {
-      $asset_id = $real_asset_id;
-    }
-
     // Get the NOW date.
     $now = mediamosa_datetime::utc_current_timestamp_now();
 

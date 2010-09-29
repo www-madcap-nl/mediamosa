@@ -46,5 +46,33 @@ class mediamosa_rest_call_status extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
     $mediamosa = mediamosa::get();
+
+    $statuses = module_invoke_all('mediamosa_status_collect', FALSE, FALSE);
+
+    // Get only what we need.
+    foreach ($statuses as $section_part => $section) {
+      $item = array();
+
+      $item[$section_part]['title'] = $section['title'];
+      $failures = 0;
+
+      // fill it.
+      foreach ($section['results'] as $part => $result) {
+        if (!isset($result['severity']) || $result['severity'] == MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO) {
+          continue;
+        }
+
+        if ($result['severity'] == MEDIAMOSA_MAINTENANCE_STATUS_RESULT_ERROR) {
+          $failures++;
+        }
+
+        $item[$section_part][$part]['failure'] = ($result['severity'] == MEDIAMOSA_MAINTENANCE_STATUS_RESULT_ERROR ? 'TRUE' : 'FALSE');
+      }
+
+      $item[$section_part]['failure'] = $failures ? 'TRUE' : 'FALSE';
+
+      $mediamosa->add_item($item);
+    }
+
   }
 }

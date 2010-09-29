@@ -59,8 +59,6 @@ class mediamosa_rest_call_server_status extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
-    //global $conf;
-
     $mediamosa = mediamosa::get();
 
     $include_status = $this->get_param_value(self::INCLUDE_STATUS);

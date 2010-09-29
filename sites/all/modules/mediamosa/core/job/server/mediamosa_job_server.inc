@@ -640,11 +640,6 @@ class mediamosa_job_server {
     // Get the asset.
     $a_asset = mediamosa_asset::get($a_jobserver_job[mediamosa_job_db::ASSET_ID]);
 
-    // Check parent.
-    if (!empty($a_asset[mediamosa_asset_db::PARENT_ID])) {
-      $asset_id = $a_asset[mediamosa_asset_db::PARENT_ID];
-    }
-
     // Return link.
     return l(mediamosa::t('Go to asset @asset_id', array('@asset_id' => $asset_id)), mediamosa_settings::get_url_asset($asset_id));
   }

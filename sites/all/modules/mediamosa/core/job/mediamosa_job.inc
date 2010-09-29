@@ -769,7 +769,7 @@ class mediamosa_job {
 
     if (!empty($asset_id)) {
       $query->join(mediamosa_asset_db::TABLE_NAME, 'a', 'a.asset_id = j.asset_id');
-      $query->condition(db_or()->condition('a.' . mediamosa_asset_db::ID, $asset_id)->condition('a.' . mediamosa_asset_db::PARENT_ID, $asset_id));
+      $query->condition('a.' . mediamosa_asset_db::ID, $asset_id);
     }
 
     if ($cql) {

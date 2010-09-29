@@ -35,7 +35,7 @@
  * @param with_variable boolean
  *   Use Drupal variables or not
  */
-function mediamosa_maintenance_status_server_mediamosa_status_generate($with_variable = TRUE) {
+function mediamosa_maintenance_status_server_mediamosa_status_generate() {
   global $conf;
 
   $results = array();
@@ -54,9 +54,6 @@ function mediamosa_maintenance_status_server_mediamosa_status_generate($with_var
     ),
   );
 
-  if ($with_variable) {
-    variable_set('mediamosa_status_server_' . $conf['mediamosa_installation_id'], $statuses);
-  }
   return $statuses;
 }
 
@@ -70,12 +67,22 @@ function mediamosa_maintenance_status_server_mediamosa_status_generate($with_var
  * @return array
  *   All the statuses in an array
  */
-function mediamosa_maintenance_status_server_mediamosa_status_collect($reset = FALSE, $with_variable = TRUE) {
+function mediamosa_maintenance_status_server_mediamosa_status_collect($reset = FALSE) {
   global $conf;
 
-  if ($reset) {
-    return mediamosa_maintenance_status_server_mediamosa_status_generate($with_variable);
+  $mediamosa_status_server = array();
+  if (!$reset) {
+    $mediamosa_status_server = variable_get('mediamosa_status_server_' . $conf['mediamosa_installation_id'], array());
+
+    if (!empty($mediamosa_status_server['time']) && abs($mediamosa_status_server['time'] - REQUEST_TIME) > mediamosa_settings::MEDIAMOSA_COMPONENT_STATUS_TIMEOUT) {
+      $mediamosa_status_server = array();
+    }
   }
 
-  return variable_get('mediamosa_status_server_' . $conf['mediamosa_installation_id'], array());
+  if (empty($mediamosa_status_server)) {
+    $mediamosa_status_server = array('time' => REQUEST_TIME, 'statuses' => mediamosa_maintenance_status_server_mediamosa_status_generate());
+    variable_set('mediamosa_status_server_' . $conf['mediamosa_installation_id'], $mediamosa_status_server);
+  }
+
+  return $mediamosa_status_server['statuses'];
 }
