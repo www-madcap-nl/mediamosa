@@ -427,7 +427,7 @@ class mediamosa_db {
    * @return string
    */
   static public function escape_string_like($string_like) {
-    return db_like($string_like);
+    return self::escape_string(db_like($string_like));
   }
 
   /**

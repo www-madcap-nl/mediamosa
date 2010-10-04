@@ -235,12 +235,12 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_REQUIRED_PARAMETER, array('@param' => self::MEDIAFILE_ID, '@type' => mediamosa_type::TYPE_MEDIAFILE_ID));
     }
 
-    $a_asset = array();
     $a_mediafile_ext = array();
 
+    // Get the asset.
+    $a_asset = mediamosa_asset::must_exists($asset_id);
+
     if ($mediafile_id) {
-      // Get the asset.
-      $a_asset = mediamosa_asset::must_exists($asset_id);
 
       // Check play restrictions
       if (isset($a_asset['play_restriction_start']) && isset($a_asset['play_restriction_end'])) {
