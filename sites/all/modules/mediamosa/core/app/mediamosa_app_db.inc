@@ -93,6 +93,14 @@ class mediamosa_app_db {
   const TRANSCODING_MAX_SLOTS = 'transcoding_max_slots';
   const TIMEZONE = 'timezone';
   const TIMEZONE_LENGTH = 32;
+  const STILL_DEFAULT_SIZE = 'still_default_size';
+  const STILL_DEFAULT_SIZE_LENGTH = 25;
+  const STILL_PADDING = 'still_padding';
+  const STILL_PADDING_YES = 'YES';
+  const STILL_PADDING_NO = 'NO';
+  const STILL_MAINTAIN_ASPECT_RATIO = 'still_maintain_aspect_ratio';
+  const STILL_MAINTAIN_ASPECT_RATIO_YES = 'YES';
+  const STILL_MAINTAIN_ASPECT_RATIO_NO = 'NO';
 
   // ------------------------------------------------------------------ Functions.
   /**
