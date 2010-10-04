@@ -390,7 +390,7 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
   public function mediamosa_cql_context_sql_escape_like($str) {
     $str = (string)$str;// Fix when passing integer.
 
-    $a_result = array();
+    $escaped = array();
     for ($x = 0; $x < mediamosa_unicode::strlen($str); $x++) {
       $char = mediamosa_unicode::substr($str, $x, 1);
 
@@ -402,21 +402,23 @@ abstract class mediamosa_core_cql_context extends mediamosa_cql_context {
           case '\\':
           case '%':
           case '_':
+            $escaped[] = '\\' . $char;
+            break;
           case '\'':
-            $a_result[] = '\\' . $char;
+            $escaped[] = '\'' . $char;
             break;
           default:
-            $a_result[] = mediamosa_db::escape_string($char);
+            $escaped[] = mediamosa_db::escape_string_like($char);
             break;
         }
       }
       else {
         // Not escaped.
-        $a_result[] = str_replace(array('*', '?'), array('%', '_'), mediamosa_db::escape_string_like($char));
+        $escaped[] = str_replace(array('*', '?'), array('%', '_'), mediamosa_db::escape_string_like($char));
       }
     }
 
-    return implode('', $a_result);
+    return implode('', $escaped);
   }
 
   /**
