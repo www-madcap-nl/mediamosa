@@ -8,8 +8,8 @@ Known issues;
 - Servers (processor, download, upload etc) that are installed on a subdir are
   not correctly retrieved on the server status page. (See ticket #367).
 
-MediaMosa 2.2.5 (Build 939)
----------------------------
+MediaMosa 2.2.5 (Build 939) (Release candidate 2)
+-------------------------------------------------
 - Fixed: Escape problems with CQL search (See vpcore ticket #192).
 - Fixed: Files bigger than 256mb would get cut off at 250mb because of memory 
   limit. (See ticket #183).
@@ -17,7 +17,7 @@ MediaMosa 2.2.5 (Build 939)
 Other changes (not ticket related).
 - Fixed: Play proxy did not correctly checked asset.
 - Apache version check failure on status page is no longer fatal.
-- Added timestamp to /status page.
+- Added timestamp to /status REST call.
 
 MediaMosa 2.2.4 (Build 930)
 ---------------------------
