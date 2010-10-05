@@ -11,6 +11,8 @@ Known issues;
 MediaMosa 2.2.4 (Build 935)
 ---------------------------
 - Fixed: Escape problems with CQL search (See vpcore ticket #192).
+- Fixed: Files bigger than 256mb would get cut off at 250mb because of memory 
+  limit. (See ticket #183).
 
 Other changes (not ticket related).
 - Fixed: Play proxy did not correctly checked asset.

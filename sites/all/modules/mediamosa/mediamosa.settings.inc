@@ -206,6 +206,9 @@ class mediamosa_settings {
   // Component status check timeout.
   const MEDIAMOSA_COMPONENT_STATUS_TIMEOUT = 300; // 5 minutes.
 
+  // Chunk size.
+  const DOWNLOAD_CHUNK_SIZE = 1048576;
+  
   // ------------------------------------------------------------------ Functions.
   /**
    * Gets FFmpeg pad variable.

@@ -95,9 +95,23 @@ class mediamosa_rest_call_download_mediafile extends mediamosa_rest_call {
     ob_clean();
     flush();
 
-    // Now send the file directly to the output.
-    if (@readfile($file) !== FALSE) {
-      mediamosa_io::unlink($file);
+    $handle = fopen($file, 'rb');
+
+    if (!$handle) {
+      throw new mediamosa_exception(0, 'Unable to open file!');
+    }
+    
+    // No time-out here.
+    set_time_limit(0);
+    
+    // Until end of file, get the file and output.
+    while (!feof($handle)) {
+      $buffer = fread($handle, mediamosa_settings::DOWNLOAD_CHUNK_SIZE);
+      
+      print $buffer;
+      
+      ob_flush();
+      flush();
     }
 
     // Set the result, reponse object will know what to do.
