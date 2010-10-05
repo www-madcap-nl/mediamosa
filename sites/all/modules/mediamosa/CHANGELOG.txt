@@ -15,6 +15,7 @@ MediaMosa 2.2.4 (Build 935)
 Other changes (not ticket related).
 - Fixed: Play proxy did not correctly checked asset.
 - Apache version check failure on status page is no longer fatal.
+- Added timestamp to /status page.
 
 MediaMosa 2.2.4 (Build 930)
 ---------------------------
