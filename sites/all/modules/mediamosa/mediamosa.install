@@ -1120,3 +1120,19 @@ function mediamosa_update_7057() {
   db_query('UPDATE {mediamosa_asset} SET parent_id = NULL');
 }
 
+/**
+ * Default still size is adjustable now.
+ * Padding and maintain aspect ratio is adjustable now too.
+ */
+function mediamosa_update_7058() {
+  // Create still default size field.
+  // Create still padding field.
+  // Create still maintain aspect ratio field.
+  db_query("ALTER TABLE {mediamosa_app} ADD COLUMN (
+    still_default_size varchar(25) DEFAULT :size COMMENT 'The default size of the still image.',
+    still_padding enum('NO','YES') NOT NULL DEFAULT 'YES' COMMENT 'Force padding, if aspect ratio is maintaned.',
+    still_maintain_aspect_ratio enum('NO','YES') NOT NULL DEFAULT 'YES' COMMENT 'Force maintain the original video aspect ratio or not.'
+  )", array(
+    ':size' => mediamosa_settings::STILL_DEFAULT_SIZE,
+  ));
+}

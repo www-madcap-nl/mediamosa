@@ -166,6 +166,7 @@ abstract class mediamosa_rest_call {
 
   // Param fields
   const PARAM_VALUE = 'value';
+  const PARAM_VALUE_ORG = 'value_org';
   const PARAM_TYPE = 'type';
   const PARAM_ISSET_GIVEN = 'isgiven'; // Value was set by GET/POST/URI
   const PARAM_ISSET_DEFAULT = 'isset_default'; // Value isset, but was set with default value.
@@ -489,12 +490,30 @@ abstract class mediamosa_rest_call {
     }
 
     if (!$this->a_rest_args[$param][self::PARAM_VALIDATED]) {
+      // Save the original value.
+      $this->a_rest_args[$name][self::PARAM_VALUE_ORG] = $this->a_rest_args[$name][self::PARAM_VALUE];
+
       $a_param = $this->a_rest_args[$param];
       $this->a_rest_args[$param][self::PARAM_VALUE] = mediamosa_type::check($param, $a_param[self::PARAM_TYPE], $a_param[self::PARAM_VALUE], $a_param[self::PARAM_IS_REQUIRED] == self::VAR_IS_REQUIRED_YES, isset($a_param[self::PARAM_RANGE_START]) ? $a_param[self::PARAM_RANGE_START] : NULL, isset($a_param[self::PARAM_RANGE_END]) ? $a_param[self::PARAM_RANGE_END] : NULL, isset($a_param[self::PARAM_ALLOWED_VALUES]) && count($a_param[self::PARAM_ALLOWED_VALUES]) ? $a_param[self::PARAM_ALLOWED_VALUES] : NULL);
       $this->a_rest_args[$param][self::PARAM_VALIDATED] = TRUE;
     }
 
     return ($translate_bool && is_bool($this->a_rest_args[$param][self::PARAM_VALUE])) ? $a_translate_bool[$this->a_rest_args[$param][self::PARAM_VALUE]] : $this->a_rest_args[$param][self::PARAM_VALUE];
+  }
+
+  /**
+   * Retrieve the original value of a supplied parameter.
+   *
+   * @param string $param
+   *
+   * @return mixed
+   */
+  public function get_param_value_org($param) {
+    if (!isset($this->a_rest_args[$param])) {
+      throw new mediamosa_exception_program_error('Calling get_param with non-existing param (@param), should not happen; define it in allowed vars for your rest call class "@restcall"', array('@param' => $param, '@restcall' => $this->{self::CLASS_NAME}));
+    }
+
+    return $this->a_rest_args[$param][self::PARAM_VALUE_ORG];
   }
 
   /**
@@ -864,6 +883,9 @@ abstract class mediamosa_rest_call {
         unset($this->a_rest_args[$name]); // set but not in var_set_up, unset.
         continue;
       }
+
+      // Save the original value.
+      $this->a_rest_args[$name][self::PARAM_VALUE_ORG] = $this->a_rest_args[$name][self::PARAM_VALUE];
 
       // If allowed values is set and default value is set and the given value
       // is not allowed and the value is empty, then value will get the default

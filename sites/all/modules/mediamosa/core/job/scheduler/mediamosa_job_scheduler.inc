@@ -1074,97 +1074,115 @@ class mediamosa_job_scheduler {
           $a_result["v_padding"] = $a_result["still_parameters"]['v_padding'];
           $a_result["tag"] = $a_result["still_parameters"]['tag'];
 
+          $mediafile = mediamosa_asset_mediafile::get($mediafile_id, NULL, array(mediamosa_asset_mediafile_db::APP_ID));
+          $app_id = $mediafile[mediamosa_asset_mediafile_db::APP_ID];
+
           // Calculating aspect ratio
           // Base value
           $target_size = $a_result["still_parameters"]['size'];
-          if ($query_job['size'] == 'sqcif') {
-            $target_size = '128x96';
-          }
-          elseif ($query_job['size'] == 'qcif') {
-            $target_size = '176x144';
-          }
-          elseif ($query_job['size'] == 'cif') {
-            $target_size = '352x288';
-          }
-          elseif ($query_job['size'] == '4cif') {
-            $target_size = '704x576';
-          }
-          elseif ($query_job['size'] == 'qqvga') {
-            $target_size = '160x120';
-          }
-          elseif ($query_job['size'] == 'qvga') {
-            $target_size = '320x240';
-          }
-          elseif ($query_job['size'] == 'vga') {
-            $target_size = '640x480';
-          }
-          elseif ($query_job['size'] == 'svga') {
-            $target_size = '800x600';
-          }
-          elseif ($query_job['size'] == 'xga') {
-            $target_size = '1024x768';
-          }
-          elseif ($query_job['size'] == 'uxga') {
-            $target_size = '1600x1200';
-          }
-          elseif ($query_job['size'] == 'qxga') {
-            $target_size = '2048x1536';
-          }
-          elseif ($query_job['size'] == 'sxga') {
-            $target_size = '1280x1024';
-          }
-          elseif ($query_job['size'] == 'qsxga') {
-            $target_size = '2560x2048';
-          }
-          elseif ($query_job['size'] == 'hsxga') {
-            $target_size = '5120x4096';
-          }
-          elseif ($query_job['size'] == 'wvga') {
-            $target_size = '852x480';
-          }
-          elseif ($query_job['size'] == 'wxga') {
-            $target_size = '1366x768';
-          }
-          elseif ($query_job['size'] == 'wsxga') {
-            $target_size = '1600x1024';
-          }
-          elseif ($query_job['size'] == 'wuxga') {
-            $target_size = '1920x1200';
-          }
-          elseif ($query_job['size'] == 'woxga') {
-            $target_size = '2560x1600';
-          }
-          elseif ($query_job['size'] == 'wqsxga') {
-            $target_size = '3200x2048';
-          }
-          elseif ($query_job['size'] == 'wquxga') {
-            $target_size = '3840x2400';
-          }
-          elseif ($query_job['size'] == 'whsxga') {
-            $target_size = '6400x4096';
-          }
-          elseif ($query_job['size'] == 'whuxga') {
-            $target_size = '7680x4800';
-          }
-          elseif ($query_job['size'] == 'cga') {
-            $target_size = '320x200';
-          }
-          elseif ($query_job['size'] == 'ega') {
-            $target_size = '640x350';
-          }
-          elseif ($query_job['size'] == 'hd480') {
-            $target_size = '852x480';
-          }
-          elseif ($query_job['size'] == 'hd720') {
-            $target_size = '1280x720';
-          }
-          elseif ($query_job['size'] == 'hd1080') {
-            $target_size = '1920x1080';
-          }
-          else {
-            $target_size = mediamosa_settings::STILL_DEFAULT_SIZE;
-            $a_result['h_padding'] = 0;
-            $a_result['v_padding'] = 0;
+          switch ($query_job['size']) {
+            case 'sqcif':
+              $target_size = '128x96';
+              break;
+            case 'qcif':
+              $target_size = '176x144';
+              break;
+            case 'cif':
+              $target_size = '352x288';
+              break;
+            case '4cif':
+              $target_size = '704x576';
+              break;
+            case 'qqvga':
+              $target_size = '160x120';
+              break;
+            case 'qvga':
+              $target_size = '320x240';
+              break;
+            case 'vga':
+              $target_size = '640x480';
+              break;
+            case 'svga':
+              $target_size = '800x600';
+              break;
+            case 'xga':
+              $target_size = '1024x768';
+              break;
+            case 'uxga':
+              $target_size = '1600x1200';
+              break;
+            case 'qxga':
+              $target_size = '2048x1536';
+              break;
+            case 'sxga':
+              $target_size = '1280x1024';
+              break;
+            case 'qsxga':
+              $target_size = '2560x2048';
+              break;
+            case 'hsxga':
+              $target_size = '5120x4096';
+              break;
+            case 'wvga':
+              $target_size = '852x480';
+              break;
+            case 'wxga':
+              $target_size = '1366x768';
+              break;
+            case 'wsxga':
+              $target_size = '1600x1024';
+              break;
+            case 'wuxga':
+              $target_size = '1920x1200';
+              break;
+            case 'woxga':
+              $target_size = '2560x1600';
+              break;
+            case 'wqsxga':
+              $target_size = '3200x2048';
+              break;
+            case 'wquxga':
+              $target_size = '3840x2400';
+              break;
+            case 'whsxga':
+              $target_size = '6400x4096';
+              break;
+            case 'whuxga':
+              $target_size = '7680x4800';
+              break;
+            case 'cga':
+              $target_size = '320x200';
+              break;
+            case 'ega':
+              $target_size = '640x350';
+              break;
+            case 'hd480':
+              $target_size = '852x480';
+              break;
+            case 'hd720':
+              $target_size = '1280x720';
+              break;
+            case 'hd1080':
+              $target_size = '1920x1080';
+              break;
+            default:
+              // FIXME Unspecified sizes ends up here.
+              // Check the size.
+              preg_match('/(\d+)x(\d+)/',  $target_size, $matches);
+              if (!is_array($matches) || count($matches) != 3) {
+                $mediafile = mediamosa_asset_mediafile::get($mediafile_id, NULL, array(mediamosa_asset_mediafile_db::APP_ID));
+                $still_default_size = mediamosa_app::get_still_default_value($app_id);
+                if ($still_default_size) {
+                  $target_size =  $still_default_size;
+                }
+                else {
+                  // Get the video size.
+                  $target_size = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, 'width') . 'x' . mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, 'height');
+                }
+                //$a_result['h_padding'] = 0;
+                //$a_result['v_padding'] = 0;
+              }
+              break;
           }
 
           // First get source width and height.
@@ -1180,9 +1198,10 @@ class mediamosa_job_scheduler {
           ));
           $width = $a_metadata[mediamosa_asset_mediafile_metadata::WIDTH];
           $height = $a_metadata[mediamosa_asset_mediafile_metadata::HEIGHT];
+          $still_padding = mediamosa_app::get_still_padding_value($app_id);
 
           // Get the parameter string.
-          $cmmd = self::calc_aspect_ratio($width, $height, $target_size, FALSE, $a_result['h_padding'], $a_result['v_padding']);
+          $cmmd = self::calc_aspect_ratio($width, $height, $target_size, FALSE, $a_result['h_padding'], $a_result['v_padding'], $still_padding == 'YES');
 
           // Set result
           if ($cmmd) {
