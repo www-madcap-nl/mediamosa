@@ -94,6 +94,7 @@ class MediaMosaAssetCollectionCQLTestCaseEga extends MediaMosaTestCaseEga {
     $asset_id_4 = $this->createAsset();
     $asset_id_5 = $this->createAsset();
     $asset_id_6 = $this->createAsset();
+    $asset_id_7 = $this->createAsset();
 
     //
     // Set up metadatas.
@@ -108,6 +109,7 @@ class MediaMosaAssetCollectionCQLTestCaseEga extends MediaMosaTestCaseEga {
     $this->createAssetMetadata($asset_id_4, array('title' => 'dit is een test mies'));
     $this->createAssetMetadata($asset_id_5, array('title' => 'lord of maar wist the noot rings'));
     $this->createAssetMetadata($asset_id_6, array('title' => 'blaat en foo'));
+    $this->createAssetMetadata($asset_id_7, array('title' => 'blaat en foo'));
 
     // Description.
     $this->createAssetMetadataAppend($asset_id_1, array('description' => 'PHP 5 allows developers to declare constructor methods for classes. Classes which have a constructor method call this method on each newly-created object, so it is suitable for any initialization that the object may need before it is used.'));
@@ -115,7 +117,8 @@ class MediaMosaAssetCollectionCQLTestCaseEga extends MediaMosaTestCaseEga {
     $this->createAssetMetadataAppend($asset_id_3, array('description' => 'PHP 5 introduces a destructor concept similar to that of other object-oriented languages, such as C++. "cannot find" The destructor method will be called as soon as all references to a particular object are removed or when the object is explicitly destroyed or in any order in shutdown sequence.'));
     $this->createAssetMetadataAppend($asset_id_4, array('description' => 'Since we are still in the __construct and __destruct section, alot of emphasis has been on __destruct - which I know nothing about. But I would like to show the power of parent::__construct for use with PHP\'s OOP polymorphic behavior (you\'ll see what this is very quickly'));
     $this->createAssetMetadataAppend($asset_id_5, array('description' => 'Notice how subclass definitions are really short - no variables or functions at all, and there is no private __construct() method anywhere?'));
-    $this->createAssetMetadataAppend($asset_id_6, array('description' => 'we are still'));
+    $this->createAssetMetadataAppend($asset_id_6, array('description' => 'we are still obama\'s test'));
+    $this->createAssetMetadataAppend($asset_id_7, array('description' => 'we are still obama\"s test'));
 
     // Created.
     $this->createAssetMetadataAppend($asset_id_1, array('created' => '2008-06-06 00:15:00'));
@@ -129,16 +132,20 @@ class MediaMosaAssetCollectionCQLTestCaseEga extends MediaMosaTestCaseEga {
     // Check escape.
     //
 
+
     // Escapes.
     $a_escape = array(
       '*' => '%',
       '\**' => '*%',
       '*\**' => '%*%',
       '\"test\"' => '\"test\"',
-      '"test"' => '"test"',
-      '\\\'test\\\'' => '\\\'test\\\'',
+      '"test"' => '\"test\"',
+      "\\'test\\'" => "''test''", // \'test\' => ''test''
+      //"\\\'test\\\'" => "''test''", // \\'test\\' => ''test''
       '*noot' => '%noot',
       '*noot?' => '%noot_',
+      "obama's" => "obama''s",
+      'obama\\"s' => 'obama\"s'
     );
 
     $cql = new mediamosa_asset_cql_context($app_id_3);
@@ -153,6 +160,13 @@ class MediaMosaAssetCollectionCQLTestCaseEga extends MediaMosaTestCaseEga {
         ))
       );
     }
+
+    // Qoute test
+
+    $this->cql_do_search_test_assets_3('vpx:dc.description = "obama\"s"', array());
+    // FIXME: searching for text with \" does not work.
+    // $this->cql_do_search_test_assets_3('vpx:dc.description = "obama\\\"s"', array($asset_id_7 => TRUE));
+    $this->cql_do_search_test_assets_3('vpx:dc.description = "obama\'s"', array($asset_id_6 => TRUE));
 
     //
     // CQL search.
@@ -197,13 +211,13 @@ class MediaMosaAssetCollectionCQLTestCaseEga extends MediaMosaTestCaseEga {
     $this->cql_do_search_test_assets_3('vpx:dc.title=="aap noot" OR description = "definitions section" sortBy title/sort.ascending', array($asset_id_1 => TRUE, $asset_id_2 => TRUE, $asset_id_4 => TRUE, $asset_id_5 => TRUE));
 
     // Gives all, where 'we are still' is somewhere in description sorted by title ascending.
-    $this->cql_do_search_test_assets_3('vpx:dc.description == "we are still" sortBy title/sort.ascending', array($asset_id_4 => TRUE, $asset_id_6 => TRUE));
+    $this->cql_do_search_test_assets_3('vpx:dc.description == "we are still" sortBy title/sort.ascending', array($asset_id_4 => TRUE, $asset_id_6 => TRUE, $asset_id_7 => TRUE));
 
     // Gives all, where 'we are still' is somewhere in description sorted by title ascending.
-    $this->cql_do_search_test_assets_3('vpx:dc.description == "*we are still*" sortBy title/sort.ascending', array($asset_id_4 => TRUE, $asset_id_6 => TRUE));
+    $this->cql_do_search_test_assets_3('vpx:dc.description == "*we are still*" sortBy title/sort.ascending', array($asset_id_4 => TRUE, $asset_id_6 => TRUE, $asset_id_7 => TRUE));
 
     // Gives all, where 'we are still' is exactly in description sorted by title ascending.
-    $this->cql_do_search_test_assets_3('vpx:dc.description == "^we are still^" sortBy title/sort.ascending', array($asset_id_6 => TRUE));
+    $this->cql_do_search_test_assets_3('vpx:dc.description == "^we are still obama\'s test^" sortBy title/sort.ascending', array($asset_id_6 => TRUE));
 
     // Date.
 

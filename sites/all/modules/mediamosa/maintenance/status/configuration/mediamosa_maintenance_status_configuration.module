@@ -214,7 +214,7 @@ function mediamosa_maintenance_status_configuration_mediamosa_status_generate() 
     $results['apache_version'] = array(
       'title' => t('Apache'),
       'value' => apache_get_version(),
-      'severity' => _mediamosa_maintenance_status_okerror(!is_numeric($version) || $version < MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_APACHE_WARNING),
+      'severity' => _mediamosa_maintenance_status_okwarning(!is_numeric($version) || $version < MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_APACHE_WARNING),
     );
   }
 
