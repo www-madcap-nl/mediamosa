@@ -1,5 +1,5 @@
 <?php
-// $Id: taxonomy.pages.inc,v 1.51 2010/02/10 06:28:10 webchick Exp $
+// $Id: taxonomy.pages.inc,v 1.55 2010/10/06 13:38:40 dries Exp $
 
 /**
  * @file
@@ -19,6 +19,8 @@ function taxonomy_term_page($term) {
   $current = (object) array(
     'tid' => $term->tid,
   );
+  // @todo This overrides any other possible breadcrumb and is a pure hard-coded
+  //   presumption. Make this behavior configurable per vocabulary or term.
   $breadcrumb = array();
   while ($parents = taxonomy_get_parents($current->tid)) {
     $current = array_shift($parents);
@@ -27,19 +29,23 @@ function taxonomy_term_page($term) {
   $breadcrumb[] = l(t('Home'), NULL);
   $breadcrumb = array_reverse($breadcrumb);
   drupal_set_breadcrumb($breadcrumb);
-  drupal_add_feed(url('taxonomy/term/' . $term->tid . '/feed'), 'RSS - ' . $term->name);
+  drupal_add_feed('taxonomy/term/' . $term->tid . '/feed', 'RSS - ' . $term->name);
 
-  $build['term_heading'] = array(
-    '#prefix' => '<div class="term-listing-heading">',
-    '#suffix' => '</div>',
-    'term' => taxonomy_term_view($term, 'full'),
-  );
+  $build = array();
+  // Add term heading if the term has a description
+  if (!empty($term->description)) {
+    $build['term_heading'] = array(
+      '#prefix' => '<div class="term-listing-heading">',
+      '#suffix' => '</div>',
+      'term' => taxonomy_term_view($term, 'full'),
+    );
+  }
 
   if ($nids = taxonomy_select_nodes($term->tid, TRUE, variable_get('default_nodes_main', 10))) {
     $nodes = node_load_multiple($nids);
     $build += node_view_multiple($nodes);
     $build['pager'] = array(
-      '#markup' => theme('pager', array('tags' => NULL)),
+      '#markup' => theme('pager'),
       '#weight' => 5,
      );
   }

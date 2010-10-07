@@ -1,11 +1,28 @@
-/* $Id: ie-rtl.css,v 1.1 2010/07/06 05:25:51 webchick Exp $ */
+/* $Id: ie-rtl.css,v 1.3 2010/10/05 01:48:11 dries Exp $ */
 
 fieldset legend {
   left: 6px;
 }
-.tabs ul.primary li a.active {
-  padding: 0 10px 0 7px;
+ul.action-links li a,
+#user-login-form li.openid-link a,
+#user-login li.openid-link a {
+  zoom: 1;
 }
-ul.action-links li a {
+.region-header .block,
+.region-header #block-user-login .form-item {
+  float: none;
+  display: inline;
+  vertical-align: top;
+}
+.region-header #block-user-login .item-list li {
+  float: none;
+}
+.region-header #block-user-login .item-list li.last {
+  padding-right: 0;
+}
+#user-login-form li.openid-link a,
+#user-login li.openid-link a {
+  background-position: right -3px;
+  padding-right: 20px;
   zoom: 1;
 }
