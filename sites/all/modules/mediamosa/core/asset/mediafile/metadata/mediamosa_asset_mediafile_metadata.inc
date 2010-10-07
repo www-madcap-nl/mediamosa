@@ -316,7 +316,7 @@ class mediamosa_asset_mediafile_metadata {
     // We don't remove any previous metadatas.
     //self::delete_all_mediafile_metadata($mediafile_id);
 
-    // Parse and stroe metadata from the analyse result.
+    // Parse and store metadata from the analyse result.
     $ffmpeg_output = self::parse_store_metadata($mediafile_id, implode("\n", $a_analyse_result));
 
     // Create filesize metadata.
@@ -334,6 +334,28 @@ class mediamosa_asset_mediafile_metadata {
 
       mediamosa_job::create_job_still($a_job[mediamosa_job_db::APP_ID], $a_job[mediamosa_job_db::OWNER_ID], FALSE, $mediafile_id, $a_still_parameters);
     }
+  }
+
+  /**
+   * Store the analyse result in the mediafile metadata without job.
+   *
+   * @param $analyse_result
+   */
+  static public function store_analyse_without_job($job_id, $a_analyse_result, $mediafile_id) {
+    // Get the filesize.
+    $filesize = mediamosa_io::filesize(mediamosa_configuration_storage::mediafile_id_filename_get($mediafile_id));
+
+    // Parse and store metadata from the analyse result.
+    $ffmpeg_output = self::parse_store_metadata($mediafile_id, implode("\n", $a_analyse_result));
+
+    // Create filesize metadata.
+    self::create_mediafile_metadata($mediafile_id, (int)$filesize, mediamosa_asset_mediafile_metadata::FILESIZE, mediamosa_asset_mediafile_metadata_property_db::TYPE_INT);
+
+    // Store in error description.
+    mediamosa_job::store_error_description($job_id, $ffmpeg_output);
+
+    // Normalize to asset.
+    mediamosa_asset::update_asset_info_with_mediafileid($mediafile_id);
   }
 
 

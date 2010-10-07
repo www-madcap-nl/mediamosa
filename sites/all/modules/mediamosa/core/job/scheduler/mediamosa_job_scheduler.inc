@@ -582,8 +582,12 @@ class mediamosa_job_scheduler {
       mediamosa_aut::replace_mediafile_to_mediafile($job_info['mediafile_id'], $mediafile_id_dest);
     }
 
-    // add analyse job
-    mediamosa_job::create_analyse_job($job_info['owner'], $job_info['asset_id'], $mediafile_id_dest, $job_info['app_id']);
+    // Analyse the mediafile.
+    $a_analyse_result = mediamosa_asset_mediafile::analyse($job_info["app_id"], (string)$mediafile_id_dest);
+    assert(is_array($a_analyse_result));
+
+    // Store it.
+    mediamosa_asset_mediafile_metadata::store_analyse_without_job((int)$job_id, $a_analyse_result, (string)$mediafile_id_dest);
   }
 
   /**
