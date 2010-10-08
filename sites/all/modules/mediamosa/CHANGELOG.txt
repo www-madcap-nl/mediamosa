@@ -13,6 +13,7 @@ MediaMosa 2.3.0
 - Default still size and still padding are adjustable in management interface
   (See ticket #215).
 - Instant analyse after transcoding (See ticket #258).
+- No still job on audio files (See ticket #219).
 
 MediaMosa 2.2.4 (Build 935)
 ---------------------------

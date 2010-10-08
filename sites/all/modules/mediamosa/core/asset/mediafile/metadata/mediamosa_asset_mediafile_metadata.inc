@@ -53,6 +53,7 @@ class mediamosa_asset_mediafile_metadata {
   const FILESIZE = 'filesize';
   const MIME_TYPE = 'mime_type';
   const MIME_TYPE_LENGTH = 80;
+  const MIME_TYPE_AUDIO = 'audio';
   const IS_HINTED = 'is_hinted';
   const IS_HINTED_TRUE = 'TRUE';
   const IS_HINTED_FALSE = 'FALSE';
