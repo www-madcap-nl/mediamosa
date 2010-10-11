@@ -257,6 +257,13 @@ class mediamosa_exception_error_job_mediafile_not_found extends mediamosa_except
   }
 }
 
+class mediamosa_exception_error_still_is_not_creatable extends mediamosa_exception_error {
+  public function __construct($a_tags = array()) {
+    assert(isset($a_tags['@mediafile_id']));
+    parent::__construct(mediamosa_error::ERRORCODE_STILL_IS_NOT_CREATABLE, $a_tags);
+  }
+}
+
 class mediamosa_exception_error_file_not_found extends mediamosa_exception_error {
   public function __construct($a_tags = array()) {
     assert(isset($a_tags['@filename']));

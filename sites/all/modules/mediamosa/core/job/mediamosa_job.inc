@@ -334,6 +334,10 @@ class mediamosa_job {
 
       return $job_id;
     }
+    else {
+      // Throw exception.
+      throw new mediamosa_exception_error_still_is_not_creatable(array('@mediafile_id' => $mediafile_id));
+    }
   }
 
   /**

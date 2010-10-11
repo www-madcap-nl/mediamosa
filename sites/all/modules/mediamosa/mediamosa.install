@@ -1136,3 +1136,14 @@ function mediamosa_update_7058() {
     ':size' => mediamosa_settings::STILL_DEFAULT_SIZE,
   ));
 }
+
+/**
+ * New error: ERRORCODE_STILL_IS_NOT_CREATABLE.
+ */
+function mediamosa_update_7059() {
+  db_query('INSERT INTO {mediamosa_error} (name, code, message) VALUES (:name, :code, :message)', array(
+    ':name' => 'ERRORCODE_STILL_IS_NOT_CREATABLE',
+    ':code' => mediamosa_error::ERRORCODE_STILL_IS_NOT_CREATABLE,
+    ':message' => 'MM - still is not creatable for mediafile_id=@mediafile_id.',
+  ));
+}

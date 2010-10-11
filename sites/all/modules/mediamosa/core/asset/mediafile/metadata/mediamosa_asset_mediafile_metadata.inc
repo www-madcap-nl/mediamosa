@@ -333,7 +333,13 @@ class mediamosa_asset_mediafile_metadata {
     if ($a_job[mediamosa_job_db::CREATE_STILL] == mediamosa_job_db::CREATE_STILL_TRUE) {
       $a_still_parameters = (empty($a_job[mediamosa_job_db::STILL_PARAMETERS]) ? array() : unserialize($a_job[mediamosa_job_db::STILL_PARAMETERS]));
 
-      mediamosa_job::create_job_still($a_job[mediamosa_job_db::APP_ID], $a_job[mediamosa_job_db::OWNER_ID], FALSE, $mediafile_id, $a_still_parameters);
+      try {
+        mediamosa_job::create_job_still($a_job[mediamosa_job_db::APP_ID], $a_job[mediamosa_job_db::OWNER_ID], FALSE, $mediafile_id, $a_still_parameters);
+      }
+      catch (mediamosa_exception_error_still_is_not_creatable $e) {
+        // The still is not creatable from the mediafile. Eg. it is an audio file.
+        // Do nothing.
+      }
     }
   }
 
