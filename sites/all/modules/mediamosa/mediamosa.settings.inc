@@ -55,7 +55,7 @@ class mediamosa_settings {
   // Expiration settings, in seconds.
   const TICKET_EXPIRATION_PLAY = 600; // 10 minutes
   const TICKET_EXPIRATION_DOWNLOAD = 600; // 10 minutes
-  const TICKET_EXPIRATION_STILL = 3600; // 60 minutes
+  const TICKET_EXPIRATION_STILL = 600; // 10 minutes
   const TICKET_EXPIRATION_UPLOAD = 86400; // 24 hours
 
   // Max Limits.
