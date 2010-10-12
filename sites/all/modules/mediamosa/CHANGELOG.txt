@@ -10,8 +10,8 @@ Known issues;
 
 MediaMosa 2.2.5 (Build 944)
 ---------------------------
-- Fixed group_id input in /playproxy where incorreclty group_id was not an array
-  but single value.
+- Fixed group_id input in /playproxy where group_id was not an array but single
+  value. (See surfmedia ticket #24).
 
 MediaMosa 2.2.5 (Build 939) (Release candidate 2)
 -------------------------------------------------
