@@ -396,56 +396,6 @@ class mediamosa {
   }
 
   /**
-   * Our wrapper around the drupal watchdog.
-   */
-  static public function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE, $type = NULL) {
-    static $logging = FALSE;
-
-    // Prevent loops when we are calling ourselfs because of errors.
-    if (!$logging) {
-      $logging = TRUE;
-
-      // We'll use the drupal watchdog.
-      watchdog('MediaMosa' . (!isset($type) ? '' : ' - ' . $type), $message, $variables, $severity);
-    }
-
-    $logging = FALSE;
-  }
-
-  /**
-   * Gives pretty log entries.
-   *
-   * @param any $data
-   * @param string $severity
-   * @param string $type
-   */
-  static public function log_export($data, $severity = WATCHDOG_NOTICE, $type = NULL) {
-    self::log(highlight_string(var_export($data, TRUE), TRUE), array(), $severity, $type);
-  }
-
-  /**
-   * Log an DB Query timing.
-   *
-   * @param time $f_time
-   *  The total time the query took in 0.000 format.
-   * @param string $query
-   *  Your message, Best to keep as the query.
-   */
-  static public function log_db($f_time, $query) {
-    $name = self::is_db_logging();
-    if (!$name) {
-      return;
-    }
-    // Only log stuff that takes longer than 1 second.
-    if ($f_time > 1) {
-      self::$num_of_slow_queries[$name]++;
-      self::log_debug('Query timing, #times, "#query".', array('#time' => $f_time, '#query' => $query), $name);
-    }
-
-    self::$num_of_queries[$name]++;
-  }
-
-  /**
    * Wrapper around variable_get().
    */
   static public function variable_get($name, $default = NULL) {

@@ -40,7 +40,20 @@ class mediamosa_job_server {
    * @param string $severity
    */
   static public function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
-    mediamosa::log($message, $variables, $severity, 'job server');
+    mediamosa_log::log($message, $variables, $severity, 'job server');
+  }
+
+  /**
+   * Log mediafile ids.
+   *
+   * @param string $mediafile_id
+   * @param string $asset_id
+   * @param string $message
+   * @param array $variables
+   * @param string $severity
+   */
+  static public function log_mediafile($mediafile_id, $asset_id, $message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
+    mediamosa_log::log_mediafile($mediafile_id, $asset_id, $message, $variables, $severity, 'job server');
   }
 
   /**
@@ -54,6 +67,18 @@ class mediamosa_job_server {
   }
 
   /**
+   * Log debug mediafile id for job_server.
+   *
+   * @param string $mediafile_id
+   * @param string $asset_id
+   * @param string $message
+   * @param array $variables
+   */
+  static public function log_debug_mediafile($mediafile_id, $asset_id, $message, array $variables = array()) {
+    mediamosa_debug::log_mediafile($mediafile_id, $asset_id, $message, $variables, 'job_server');
+  }
+
+  /**
    * Log debug for job_server.
    *
    * @param string $message
@@ -61,6 +86,16 @@ class mediamosa_job_server {
    */
   static public function log_debug_high($message, array $variables = array()) {
     mediamosa_debug::log_high($message, $variables, 'job_server');
+  }
+
+  /**
+   * Log debug mediafile_id for job_server.
+   *
+   * @param string $message
+   * @param array $variables
+   */
+  static public function log_debug_high_mediafile($mediafile_id, $asset_id, $message, array $variables = array()) {
+    mediamosa_debug::log_high_mediafile($mediafile_id, $asset_id, $message, $variables, 'job_server');
   }
 
   /**
@@ -320,9 +355,9 @@ class mediamosa_job_server {
 
     if (!file_exists($filename)) {
       $link_asset = self::get_asset_link($job_id);
-      self::log("Job ID: $job_id File '@file' not found,<br /><br/>@link", array('@file' => $filename, '@link' => $link_asset), WATCHDOG_CRITICAL);
+      self::log_mediafile($mediafile_id_src, '', "Job ID: $job_id File '@file' not found,<br /><br/>@link", array('@file' => $filename, '@link' => $link_asset), WATCHDOG_CRITICAL);
       self::set_job_status($job_id, mediamosa_job_server_db::JOB_STATUS_FAILED, '1.000', 'File not found (@file)', array('@file' => $filename));
-      self::log("Job ID: $job_id, memory_get_peak_usage = " . memory_get_peak_usage() . " memory_usage: " . memory_get_usage());
+      self::log_mediafile($mediafile_id_src, '', "Job ID: $job_id, memory_get_peak_usage = " . memory_get_peak_usage() . " memory_usage: " . memory_get_usage());
       return;
     }
 
@@ -344,13 +379,13 @@ class mediamosa_job_server {
         break;
 
       default:
-        self::log('Unknown job type: @job_type in job id: @job_id.', array('@job_type' => $job_type, '@job_id' => $job_id), WATCHDOG_ALERT);
+        self::log_mediafile($mediafile_id_src, '', 'Unknown job type: @job_type in job id: @job_id.', array('@job_type' => $job_type, '@job_id' => $job_id), WATCHDOG_ALERT);
         self::set_job_status($job_id, mediamosa_job_server_db::JOB_STATUS_FAILED, '1.000', 'Unknown job type: @job_type.', array('@job_type' => $job_type));
         return FALSE;
     }
 
     // Log our action.
-    self::log('About to start @job_type job: @job_id calling exec: @execution_string', array('@job_type' => $job_type, '@job_id' => $job_id, '@execution_string' => $execution_string));
+    self::log_mediafile($mediafile_id_src, '', 'About to start @job_type job: @job_id calling exec: @execution_string', array('@job_type' => $job_type, '@job_id' => $job_id, '@execution_string' => $execution_string));
 
     // Now execute.
     if ($job_type == mediamosa_job_server_db::JOB_TYPE_ANALYSE) {
@@ -358,7 +393,7 @@ class mediamosa_job_server {
       $s_output = mediamosa_io::exec($execution_string . ' 2>&1', $a_output);
 
       $link_asset = self::get_asset_link($job_id);
-      self::log('Job @job_type (Job ID: @job_id) returned output: @s_output - @a_output<br /><br />@link',
+      self::log_mediafile($mediafile_id_src, '', 'Job @job_type (Job ID: @job_id) returned output: @s_output - @a_output<br /><br />@link',
         array(
           '@job_type' => $job_type,
           '@job_id' => $job_id,
@@ -376,7 +411,7 @@ class mediamosa_job_server {
       }
 
       // Log it.
-      self::log('Starting new followup analyse job for job ID: @job_id.', array('@job_id' => $job_id));
+      self::log_mediafile($mediafile_id_src, '', 'Starting new followup analyse job for job ID: @job_id.', array('@job_id' => $job_id));
 
       // Update job_server_analyse row.
       $fields = array(
@@ -396,7 +431,7 @@ class mediamosa_job_server {
       $a_output = array();
       $s_output = mediamosa_io::exec($execution_string, $a_output);
       $link_asset = self::get_asset_link($job_id);
-      self::log('Job @job_type (Job ID: @job_id) returned output: @s_output - @a_output<br /><br />@link',
+      self::log_mediafile($mediafile_id_src, '', 'Job @job_type (Job ID: @job_id) returned output: @s_output - @a_output<br /><br />@link',
         array(
           '@job_type' => $job_type,
           '@job_id' => $job_id,
@@ -440,7 +475,7 @@ class mediamosa_job_server {
       case mediamosa_job_server_db::JOB_TYPE_TRANSCODE:
         // No status file found, we just have to wait.
         if (empty($job_status)) {
-          self::log_debug('No status file found with name @name for job @job_id, maybe next run.', array('@name' => mediamosa_configuration_storage::status_file_location_get($mediafile_id_src), '@job_id' => $job_id));
+          self::log_debug_mediafile($mediafile_id_src, '', 'No status file found with name @name for job @job_id, maybe next run.', array('@name' => mediamosa_configuration_storage::status_file_location_get($mediafile_id_src), '@job_id' => $job_id));
           return;
         }
 
@@ -452,7 +487,7 @@ class mediamosa_job_server {
           self::store_new_mediafile($job_id, $mediafile_id_src);
 
           // Log it.
-          self::log('End job @job_type, Job ID: @job_id, status: @status', array('@job_type' => $job_type, '@job_id' => $job_id, '@status' => $status));
+          self::log_mediafile($mediafile_id_src, '', 'End job @job_type, Job ID: @job_id, status: @status', array('@job_type' => $job_type, '@job_id' => $job_id, '@status' => $status));
 
           // Set job status.
           self::set_job_status($job_id, $status, $job_status['Progress']);
@@ -461,8 +496,8 @@ class mediamosa_job_server {
           $status = mediamosa_job_server_db::JOB_STATUS_FAILED;
           $link_asset = self::get_asset_link($job_id);
 
-          self::log("End @job_type job, Job ID @job_id, with status: @status<br /><br />@link", array('@job_type' => $job_type, '@job_id' => $job_id, '@status' => $status, '@link' => $link_asset));
-          self::log("Info @job_type job, Job ID @job_id, status file '@statusfile'", array('@job_type' => $job_type, '@job_id' => $job_id, '@statusfile' => self::get_status_contents($mediafile_id_src, TRUE)));
+          self::log_mediafile($mediafile_id_src, '', "End @job_type job, Job ID @job_id, with status: @status<br /><br />@link", array('@job_type' => $job_type, '@job_id' => $job_id, '@status' => $status, '@link' => $link_asset));
+          self::log_mediafile($mediafile_id_src, '', "Info @job_type job, Job ID @job_id, status file '@statusfile'", array('@job_type' => $job_type, '@job_id' => $job_id, '@statusfile' => self::get_status_contents($mediafile_id_src, TRUE)));
 
           // Set status to failed.
           self::set_job_status($job_id, $status, $job_status['Progress'],  isset($job_status["ffmpeg-output"]) ? ($job_status["Errors"] != "" ? $job_status["Errors"] . "-\n" : '') . $job_status["ffmpeg-output"] : $job_status["Errors"]);
@@ -482,7 +517,7 @@ class mediamosa_job_server {
         if (!file_exists($file_scene)) {
           // No status file found, we just have to wait.
           if (empty($job_status)) {
-            self::log_debug('No status file found with name @name for job @job_id, maybe next run.', array('@name' => mediamosa_configuration_storage::status_file_location_get($mediafile_id_src), '@job_id' => $job_id));
+            self::log_debug_mediafile($mediafile_id_src, '', 'No status file found with name @name for job @job_id, maybe next run.', array('@name' => mediamosa_configuration_storage::status_file_location_get($mediafile_id_src), '@job_id' => $job_id));
             return;
           }
         }
@@ -491,17 +526,17 @@ class mediamosa_job_server {
           $status = self::store_new_still($job_id, $mediafile_id_src);
 
           if ($status == mediamosa_job_server_db::JOB_STATUS_INPROGRESS) {
-            self::log_debug("Running @job_type job (storing file busy), Job ID @job_id, with status: @status", array('@job_type' => $job_type, '@job_id' => $job_id, '@status' => $status));
+            self::log_debug_mediafile($mediafile_id_src, '', "Running @job_type job (storing file busy), Job ID @job_id, with status: @status", array('@job_type' => $job_type, '@job_id' => $job_id, '@status' => $status));
           }
           else {
-            self::log_debug("End @job_type job, Job ID @job_id, with status: @status", array('@job_type' => $job_type, '@job_id' => $job_id, '@status' => $status));
+            self::log_debug_mediafile($mediafile_id_src, '', "End @job_type job, Job ID @job_id, with status: @status", array('@job_type' => $job_type, '@job_id' => $job_id, '@status' => $status));
           }
         }
         elseif ($job_status["Status"] == "error" && $job_status["Errors"] != "none") {
           $status = mediamosa_job_server_db::JOB_STATUS_FAILED;
           $link_asset = self::get_asset_link($job_id);
-          self::log_debug("End @job_type job, Job ID @job_id, with status: @status<br /><br />@link", array('@job_type' => $job_type, '@job_id' => $job_id, '@status' => $status, '@link' => $link_asset));
-          self::log_debug_high("Info @job_type job, Job ID @job_id, status file '@statusfile'", array('@job_type' => $job_type, '@job_id' => $job_id, '@statusfile' => self::get_status_contents($mediafile_id_src, TRUE)));
+          self::log_debug_mediafile($mediafile_id_src, '', "End @job_type job, Job ID @job_id, with status: @status<br /><br />@link", array('@job_type' => $job_type, '@job_id' => $job_id, '@status' => $status, '@link' => $link_asset));
+          self::log_debug_high_mediafile($mediafile_id_src, '', "Info @job_type job, Job ID @job_id, status file '@statusfile'", array('@job_type' => $job_type, '@job_id' => $job_id, '@statusfile' => self::get_status_contents($mediafile_id_src, TRUE)));
         }
 
         // Update the status.
@@ -708,7 +743,7 @@ class mediamosa_job_server {
       $command = $a_job_server_transcode[mediamosa_job_server_transcode_db::COMMAND];
     }
     else {
-      self::log('Transcode job not found, jobserver_id: @jobserver_id', array('@jobserver_id' => $jobserver_job_id));
+      self::log_mediafile($mediafile_id, '', 'Transcode job not found, jobserver_id: @jobserver_id', array('@jobserver_id' => $jobserver_job_id));
       return $execution_string;
     }
 
@@ -811,7 +846,7 @@ class mediamosa_job_server {
 
       // Store error_description.
       if (!empty($error_description)) {
-        self::log($error_description);
+        self::log_mediafile($mediafile_id, '', $error_description);
         mediamosa_db::db_update(mediamosa_job_server_db::TABLE_NAME)
           ->fields(array(
             mediamosa_job_server_db::ERROR_DESCRIPTION => $error_description,
@@ -864,7 +899,7 @@ class mediamosa_job_server {
           break;
 
         case 'SCENE':
-          self::log('Scene detection starts');
+          self::log_mediafile($mediafile_id, '', 'Scene detection starts');
           $destination_path = mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::data_location_get() . DIRECTORY_SEPARATOR . 'transcode' . DIRECTORY_SEPARATOR;
           $input = mediamosa_configuration_storage::mediafile_id_filename_get($mediafile_id);
 
@@ -876,17 +911,17 @@ class mediamosa_job_server {
   /*
   // Old code
           $order = sprintf('ffmpeg -i %s -r 25 -an -vcodec mjpeg %s', $input, $destination_path . $mediafile_id .'_scene.avi');
-          //self::log($order);
+          //self::log_mediafile($mediafile_id, '', $order);
           exec($order);
   */
 
   // Hot fix
           $order = sprintf('ffmpeg -i %s %s', $input, $destination_path . $mediafile_id . '_scene.wmv');
-          //self::log($order);
+          //self::log_mediafile($mediafile_id, '', $order);
           mediamosa_io::exec($order);
 
           $order = sprintf('ffmpeg -i %s -r 25 -an -vcodec mjpeg %s', $destination_path . $mediafile_id . '_scene.wmv', $destination_path . $mediafile_id . '_scene.avi');
-          //self::log($order);
+          //self::log_mediafile($mediafile_id, '', $order);
           mediamosa_io::exec($order);
 
           mediamosa_io::unlink($destination_path . $mediafile_id . '_scene.wmv');
@@ -894,31 +929,31 @@ class mediamosa_job_server {
   // Hot fix - end
 
           $order = sprintf('lav2yuv -T 1 -S %s %s', $destination_path . $mediafile_id . '_list.el', $destination_path . $mediafile_id . '_scene.avi');
-          self::log($order);
+          self::log_mediafile($mediafile_id, '', $order);
           mediamosa_io::exec($order);
 
           $output = NULL;
           $order = sprintf('cat %s', $destination_path . $mediafile_id . '_list.el');
-          //self::log($order);
+          //self::log_mediafile($mediafile_id, '', $order);
           mediamosa_io::exec($order, $output);
-          //self::log(sprintf('output = %s', print_r($output, TRUE)));
+          //self::log_mediafile($mediafile_id, '', sprintf('output = %s', print_r($output, TRUE)));
 
           // Clean up II.
           mediamosa_io::unlink($destination_path . $mediafile_id . '_list.el');
 
           // Analyze
           if ($output && is_array($output) && $output != array()) {
-            //self::log(sprintf('Output is array with data'));
+            //self::log_mediafile($mediafile_id, '', sprintf('Output is array with data'));
 
             // tbr & map from the best stream
             $map = NULL;
             $tbr = NULL;
             $kbs = NULL;
             $order = sprintf('ffmpeg -i %s 2>&1', $input);
-            //self::log($order);
+            //self::log_mediafile($mediafile_id, '', $order);
             $details = array();
             mediamosa_io::exec($order, $details);
-            //self::log('Details: '. print_r($details, TRUE));
+            //self::log_mediafile($mediafile_id, '', 'Details: '. print_r($details, TRUE));
             foreach ($details as $line) {
               if (stripos($line, ' Stream ') !== FALSE && stripos($line, ' Video: ') !== FALSE) {
                 if (preg_match('/Stream #[0-9]*\.([0-9]*)/', $line, $reg_map) && preg_match('/ ([0-9]*) kb\/s/', $line, $reg_kbs)) {
@@ -938,7 +973,7 @@ class mediamosa_job_server {
                 }
               }
             }
-            //self::log('tbr: '. print_r($tbr, TRUE) .', map: '. print_r($map, TRUE) .', kbs: '. print_r($kbs, TRUE));
+            //self::log_mediafile($mediafile_id, '', 'tbr: '. print_r($tbr, TRUE) .', map: '. print_r($map, TRUE) .', kbs: '. print_r($kbs, TRUE));
             if (!$tbr) {
               // This is the base value
               $tbr = 25;
@@ -950,22 +985,22 @@ class mediamosa_job_server {
               $i = 1;
               $scenes = array();
               foreach ($output as $line) {
-                //self::log(sprintf('Line: %s', print_r($line, TRUE)));
+                //self::log_mediafile($mediafile_id, '', sprintf('Line: %s', print_r($line, TRUE)));
                 $line_args = explode(' ', $line);
-                //self::log(sprintf('Line args: %s', print_r($line_args, TRUE)));
+                //self::log_mediafile($mediafile_id, '', sprintf('Line args: %s', print_r($line_args, TRUE)));
                 if ($line_args && is_array($line_args) && $line_args != array()) {
-                  //self::log(sprintf('Line args is array with data'));
+                  //self::log_mediafile($mediafile_id, '', sprintf('Line args is array with data'));
                   if (isset($line_args[0]) && isset($line_args[1]) && isset($line_args[2]) && !isset($line_args[3]) && is_numeric($line_args[0]) && is_numeric($line_args[1]) && is_numeric($line_args[2])) {
-                    //self::log(sprintf('Line args has 3 numbers'));
+                    //self::log_mediafile($mediafile_id, '', sprintf('Line args has 3 numbers'));
                     // $line_args[1] + num = a little bit after the change
                     $change_frame = $line_args[1] + mediamosa_settings::STILL_SCENE_AFTER;
-                    //self::log('change_frame: '. print_r($change_frame, TRUE) .', start_frame: '. print_r($start_frame, TRUE) .', fps = '. $fps .', end_frame: '. print_r($end_frame, TRUE));
+                    //self::log_mediafile($mediafile_id, '', 'change_frame: '. print_r($change_frame, TRUE) .', start_frame: '. print_r($start_frame, TRUE) .', fps = '. $fps .', end_frame: '. print_r($end_frame, TRUE));
                     if ($change_frame >= ($start_frame*$fps) && $change_frame <= ($end_frame*$fps)) {
                       // $scene_frame + num = minimal distance with two changes
-                      //self::log('scene_frame: '. print_r($scene_frame, TRUE));
+                      //self::log_mediafile($mediafile_id, '', 'scene_frame: '. print_r($scene_frame, TRUE));
                       if (!$scene_frame || $scene_frame + mediamosa_settings::STILL_SCENE_DISTANCE < $change_frame) {
                         $scene_frame = $change_frame;
-                        //self::log(sprintf('New scene frame: %s', $scene_frame));
+                        //self::log_mediafile($mediafile_id, '', sprintf('New scene frame: %s', $scene_frame));
                         // The avi has 25 frame/sec
                         $scene_sec = (int)($scene_frame/25);
                         $scenes[] = $scene_sec;
@@ -1006,9 +1041,9 @@ class mediamosa_job_server {
 
               // This version is creating stills for the analysed file
               //$order = sprintf(mediamosa_settings::STILL_SCENE_STRING, $destination_path . $mediafile_id .'_scene.avi', $size, $h_padding, $h_padding, $v_padding, $v_padding, $my_file, '', $destination_path . $mediafile_id . mediamosa_settings::STILL_EXTENSION .".jpeg");
-              self::log($order);
+              self::log_mediafile($mediafile_id, '', $order);
               mediamosa_io::exec($order, $details);
-              //self::log('Details: '. print_r($details, TRUE));
+              //self::log_mediafile($mediafile_id, '', 'Details: '. print_r($details, TRUE));
 
               mediamosa_io::unlink($my_file);
             }
@@ -1043,7 +1078,7 @@ class mediamosa_job_server {
 
     }
     else {
-      self::log('Still job not found, jobserver_job_id: @jobserver_job_id', array('@jobserver_job_id' => $jobserver_job_id));
+      self::log_mediafile($mediafile_id, '', 'Still job not found, jobserver_job_id: @jobserver_job_id', array('@jobserver_job_id' => $jobserver_job_id));
       return $execution_string;
     }
 
@@ -1164,7 +1199,7 @@ class mediamosa_job_server {
       }
       mediamosa_io::unlink(mediamosa_configuration_storage::status_file_location_get($base_filename));
 
-      self::log($still_error);
+      self::log_mediafile($mediafile_id_src, '', $still_error);
       return mediamosa_job_server_db::JOB_STATUS_FAILED;
     }
 
@@ -1218,7 +1253,7 @@ class mediamosa_job_server {
       ->execute();
 
     // Log it.
-    self::log('Job (job_id: @job_id) finished: Multiple stills saved as e.g.: @filenames.', array('@job_id' => $job_id, '@filenames' => implode(',', $mediafile_dest)));
+    self::log_mediafile($mediafile_id_src, '', 'Job (job_id: @job_id) finished: Multiple stills saved as e.g.: @filenames.', array('@job_id' => $job_id, '@filenames' => implode(',', $mediafile_dest)));
 
     return mediamosa_job_server_db::JOB_STATUS_FINISHED;
   }
@@ -1237,13 +1272,14 @@ class mediamosa_job_server {
     $new_filename = mediamosa_db::uuid(rand(1, 9999));
 
     $job_server = mediamosa_db::db_query(
-      'SELECT mjst.#command, mjst.#file_extension
+      'SELECT mjst.#command, mjst.#file_extension, mjs.#mediafile_id
        FROM {#mediamosa_job_server_transcode} AS mjst
        JOIN {#mediamosa_job_server} AS mjs ON mjs.#jobserver_job_id = mjst.#jobserver_job_id
        WHERE mjs.#job_id = :job_id',
       array(
         '#command' => mediamosa_job_server_transcode_db::COMMAND,
         '#file_extension' => mediamosa_job_server_transcode_db::FILE_EXTENSION,
+        '#mediafile_id' => mediamosa_job_server_db::MEDIAFILE_ID_SRC,
         '#mediamosa_job_server_transcode' => mediamosa_job_server_transcode_db::TABLE_NAME,
         '#mediamosa_job_server' => mediamosa_job_server_db::TABLE_NAME,
         '#jobserver_job_id' => mediamosa_job_server_db::ID,
@@ -1291,7 +1327,7 @@ class mediamosa_job_server {
       ->execute();
 
     // Log it.
-    self::log("Job with ID @job_id ready, new mediafile stored as '@file_dest'.", array('@job_id' => $job_id, '@file_dest' => $file_dest));
+    self::log_mediafile($job_server[mediamosa_job_server_db::MEDIAFILE_ID_SRC], '', "Job with ID @job_id ready, new mediafile stored as '@file_dest'.", array('@job_id' => $job_id, '@file_dest' => $file_dest));
   }
 
   /**

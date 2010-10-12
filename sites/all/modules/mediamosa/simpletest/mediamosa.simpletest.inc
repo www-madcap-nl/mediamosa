@@ -96,7 +96,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
       // Do tearDown first, so we are in the right db again.
       $this->tearDown();
 
-      mediamosa::log(
+      mediamosa_log::log(
         'MediaMosaTestCase::runSafe() caught exception! @message (Exception thrown on line @line, in @file)<br />Partial backtrace: <pre>@backtrace</pre>',
         array(
           '@message' => $e->getMessage(),

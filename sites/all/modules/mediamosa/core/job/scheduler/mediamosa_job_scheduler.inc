@@ -38,7 +38,20 @@ class mediamosa_job_scheduler {
    * @param string $severity
    */
   static public function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
-    mediamosa::log($message, $variables, $severity, 'job scheduler');
+    mediamosa_log::log($message, $variables, $severity, 'job scheduler');
+  }
+
+  /**
+   * Log mediafile ids.
+   *
+   * @param string $mediafile_id
+   * @param string $asset_id
+   * @param string $message
+   * @param array $variables
+   * @param string $severity
+   */
+  static public function log_mediafile($mediafile_id, $asset_id, $message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
+    mediamosa_log::log_mediafile($mediafile_id, $asset_id, $message, $variables, $severity, 'job scheduler');
   }
 
   /**
@@ -74,7 +87,7 @@ class mediamosa_job_scheduler {
       $url = mediamosa_http::uri2url($mediamosa_jobscheduler_uri) . '/internal/cron/jobscheduler';
 
       // Log it.
-      mediamosa_debug::log('Triggering job scheduler @ @uri', array('@uri' => $url));
+      self::log('Triggering job scheduler @ @uri', array('@uri' => $url));
 
       // Dont trigger in sandbox.
       if (mediamosa::in_simpletest_sandbox()) {
@@ -87,7 +100,7 @@ class mediamosa_job_scheduler {
       }
     }
     else {
-      mediamosa::log('Jobschedular URL not set, please setup jobschedular server in the @link.', array('@link' => l(t('Mediamosa configuration'), 'admin/mediamosa/config/global')), WATCHDOG_ALERT, 'job_cron');
+      mediamosa_log::log('Jobschedular URL not set, please setup jobschedular server in the @link.', array('@link' => l(t('Mediamosa configuration'), 'admin/mediamosa/config/global')), WATCHDOG_ALERT, 'job_cron');
     }
   }
 
@@ -232,7 +245,7 @@ class mediamosa_job_scheduler {
       $response_data = new SimpleXMLElement($response->data);
     }
     catch (Exception $e) {
-      mediamosa::log_export($response->data);
+      mediamosa_log::log_export($response->data);
       self::log('Parse XML: @msg (@resp)', array('@msg' => $e->getMessage(), '@resp' => print_r($response->data, TRUE)), WATCHDOG_ERROR);
       return;
     }
@@ -388,7 +401,7 @@ class mediamosa_job_scheduler {
   static public function create_wmv_job($job_id, $asset_id, $mediafile_id) {
 
     // FIXME: @mediafile_id is empty.
-    self::log('Start job wmv job: job_id = @job_id, mediafile_id = @mediafile_id', array('@job_id' => $job_id, '@mediafile_id' => $mediafile_id));
+    self::log_mediafile($mediafile_id, $asset_id, 'Start job wmv job: job_id = @job_id, mediafile_id = @mediafile_id', array('@job_id' => $job_id, '@mediafile_id' => $mediafile_id));
 
     // Get all info.
     $a_job_ext = mediamosa_job::get_job_ext($job_id);
@@ -397,7 +410,7 @@ class mediamosa_job_scheduler {
       $command = '';
       $owner = '';
       $app_id = 0;
-      self::log('A wmv job (@job_id) without transcode_job!', array('@job_id' => $job_id), WATCHDOG_EMERGENCY);
+      self::log_mediafile($mediafile_id, $asset_id, 'A wmv job (@job_id) without transcode_job!', array('@job_id' => $job_id), WATCHDOG_EMERGENCY);
     }
     else {
       $command = $a_job_ext[mediamosa_job_transcode_db::COMMAND];
@@ -471,7 +484,7 @@ class mediamosa_job_scheduler {
       // Delete the mediafile.
       mediamosa_asset_mediafile::delete($mediafile_id);
 
-      self::log("Temp. mediafile '@mediafile_id' of job '@job_id' is removed.", array('@mediafile_id' => $mediafile_id, '@job_id' => $job_id), WATCHDOG_NOTICE);
+      self::log_mediafile($mediafile_id, '', "Temp. mediafile '@mediafile_id' of job '@job_id' is removed.", array('@mediafile_id' => $mediafile_id, '@job_id' => $job_id), WATCHDOG_NOTICE);
     }
     else{
       self::log("Job @job_id not found, can't delete temp mediafile.", array('@job_id' => $job_id), WATCHDOG_ERROR);
@@ -623,7 +636,7 @@ class mediamosa_job_scheduler {
     // Get Asset.
     $a_asset = mediamosa_asset::get($asset_id);
 
-    self::log("Start creation DB multiple still, e.g. @filename, job: @job_id", array('@filename' => $filenames[0], '@job_id' => (string)$job_id));
+    self::log_mediafile($a_job['mediafile_id'], $asset_id, "Start creation DB multiple still, e.g. @filename, job: @job_id", array('@filename' => $filenames[0], '@job_id' => (string)$job_id));
 
     // Remove old stills
     // We have multiple stills now, so we don't delete the old ones
@@ -772,7 +785,7 @@ class mediamosa_job_scheduler {
    * @param $mediafile_id
    */
   static public function start_server_job($job_id, $job_type, $server_id, $uri, $mediafile_id) {
-    self::log('Start job: job_id = @job_id, job_type = @job_type, server_id = @server_id, mediafile_id = @mediamosa_id', array('@job_id' => $job_id, '@job_type' => $job_type, '@server_id' => $server_id, '@mediamosa_id' => $mediafile_id));
+    self::log_mediafile($mediafile_id, '', 'Start job: job_id = @job_id, job_type = @job_type, server_id = @server_id, mediafile_id = @mediamosa_id', array('@job_id' => $job_id, '@job_type' => $job_type, '@server_id' => $server_id, '@mediamosa_id' => $mediafile_id));
 
     switch ($job_type) {
       case mediamosa_job_db::JOB_TYPE_TRANSCODE:
@@ -788,7 +801,7 @@ class mediamosa_job_scheduler {
 
     if ($job_type == mediamosa_job_db::JOB_TYPE_DELETE_MEDIAFILE) {
         self::start_server_delete_job($job_id, $mediafile_id);
-        self::log('Process @job_id job: mediafile @mediafile_id removed.', array('@job_id' => $job_id, '@mediafile_id' => $mediafile_id));
+        self::log_mediafile($mediafile_id, '', 'Process @job_id job: mediafile @mediafile_id removed.', array('@job_id' => $job_id, '@mediafile_id' => $mediafile_id));
     }
     else {
       // if okay update the database with the job info
@@ -810,10 +823,10 @@ class mediamosa_job_scheduler {
             ->fields($a_fields)
             ->execute();
 
-          self::log('Sending @job_type (ID: @job_id) to server @uri.', array('@job_type' => $job_type, '@job_id' => $job_id, '@uri' => $uri));
+          self::log_mediafile($mediafile_id, '', 'Sending @job_type (ID: @job_id) to server @uri.', array('@job_type' => $job_type, '@job_id' => $job_id, '@uri' => $uri));
         }
         else {
-          self::log('Aanmaak @job_type server job gestopt, job @job_id was verwijderd tijdens process.', array('@job_type' => $job_type, '@job_id' => $job_id));
+          self::log_mediafile($mediafile_id, '', 'Making @job_type server job has stoped, job @job_id was deleted during the process.', array('@job_type' => $job_type, '@job_id' => $job_id));
         }
       }
     }
@@ -842,7 +855,7 @@ class mediamosa_job_scheduler {
     );
 
     // Log call.
-    self::log('Start job:' . $rest_url);
+    self::log_mediafile($mediafile_id, '', 'Start job:' . $rest_url);
 
     // Do request.
     $response = mediamosa_http::do_internal_call($uri, $rest_url, '', mediamosa_http::METHOD_POST);
@@ -852,12 +865,12 @@ class mediamosa_job_scheduler {
         $response_data = new SimpleXMLElement($response->data);
       }
       catch (Exception $e) {
-        self::log('Parse XML: @msg (@resp)', array('@msg' => $e->getMessage(), '@resp' => print_r($response->data, TRUE)), WATCHDOG_ERROR);
+        self::log_mediafile($mediafile_id, '', 'Parse XML: @msg (@resp)', array('@msg' => $e->getMessage(), '@resp' => print_r($response->data, TRUE)), WATCHDOG_ERROR);
       }
       return $response_data->header->request_result_id;
     }
 
-    self::log('errorcode @response with url @rest_url (@header)', array('@response' => $response->code, '@rest_url' => $rest_url, '@header' => var_export($response->header, TRUE)));
+    self::log_mediafile($mediafile_id, '', 'errorcode @response with url @rest_url (@header)', array('@response' => $response->code, '@rest_url' => $rest_url, '@header' => var_export($response->header, TRUE)));
     return $response->code;
   }
 
@@ -882,7 +895,7 @@ class mediamosa_job_scheduler {
     );
 
     // Log call.
-    self::log('Start job:' . $rest_url);
+    self::log_mediafile($mediafile_id, '', 'Start job:' . $rest_url);
 
     // Do request.
     $response = mediamosa_http::do_internal_call($uri, $rest_url, '', mediamosa_http::METHOD_POST);
@@ -892,12 +905,12 @@ class mediamosa_job_scheduler {
         $response_data = new SimpleXMLElement($response->data);
       }
       catch (Exception $e) {
-        self::log('Parse XML: @msg (@resp)', array('@msg' => $e->getMessage(), '@resp' => print_r($response->data, TRUE)), WATCHDOG_ERROR);
+        self::log_mediafile($mediafile_id, '', 'Parse XML: @msg (@resp)', array('@msg' => $e->getMessage(), '@resp' => print_r($response->data, TRUE)), WATCHDOG_ERROR);
       }
       return $response_data->header->request_result_id;
     }
 
-    self::log('errorcode @response with url @host/@rest_url', array('@response' => $response->code, '@rest_url' => $rest_url, '@host' => $uri));
+    self::log_mediafile($mediafile_id, '', 'errorcode @response with url @host/@rest_url', array('@response' => $response->code, '@rest_url' => $rest_url, '@host' => $uri));
     return $response->code;
   }
 
@@ -952,7 +965,7 @@ class mediamosa_job_scheduler {
     );
 
     // Log call.
-    self::log('Start job:' . $rest_url);
+    self::log_mediafile($mediafile_id, '', 'Start job:' . $rest_url);
 
     // Do request.
     $response = mediamosa_http::do_internal_call($uri, $rest_url, '', mediamosa_http::METHOD_POST);
@@ -962,13 +975,13 @@ class mediamosa_job_scheduler {
         $response_data = new SimpleXMLElement($response->data);
       }
       catch (Exception $e) {
-        self::log('Parse XML: @msg (@resp)', array('@msg' => $e->getMessage(), '@resp' => print_r($response->data, TRUE)), WATCHDOG_ERROR);
+        self::log_mediafile($mediafile_id, '', 'Parse XML: @msg (@resp)', array('@msg' => $e->getMessage(), '@resp' => print_r($response->data, TRUE)), WATCHDOG_ERROR);
       }
 
       return $response_data->header->request_result_id;
     }
 
-    self::log('errorcode @response with url @rest_url', array('@response' => $response->code, '@rest_url' => $rest_url));
+    self::log_mediafile($mediafile_id, '', 'errorcode @response with url @rest_url', array('@response' => $response->code, '@rest_url' => $rest_url));
     return $response->code;
   }
 
@@ -1530,12 +1543,14 @@ class mediamosa_job_scheduler {
   static public function check_transcode_timeout() {
 
     $result = mediamosa_db::db_query(
-       'SELECT mj.#job_id, ms.#uri FROM {#mediamosa_job} AS mj
+       'SELECT mj.#job_id, mj.#asset_id, mj.#mediafile_id, ms.#uri FROM {#mediamosa_job} AS mj
         JOIN {#mediamosa_server_job} AS msj ON msj.#job_id = mj.#job_id
         JOIN {#mediamosa_server} AS ms ON ms.#nid = msj.#server_id
         WHERE NOT mj.#started IS NULL AND TIME_TO_SEC(TIMEDIFF(utc_timestamp(), mj.#started)) > :JOB_TRANSCODE_TIMEOUT AND #server_type = :server_type_job_processor',
         array(
           '#job_id' => mediamosa_job_db::ID,
+          '#asset_id' => mediamosa_job_db::ASSET_ID,
+          '#mediafile_id' => mediamosa_job_db::MEDIAFILE_ID,
           '#uri' => mediamosa_server_db::SERVER_URI,
           ':JOB_TRANSCODE_TIMEOUT' => mediamosa_settings::JOB_TRANSCODE_TIMEOUT,
           '#mediamosa_job' => mediamosa_job_db::TABLE_NAME,
@@ -1564,7 +1579,7 @@ class mediamosa_job_scheduler {
       $status = $a_job[mediamosa_job_db::JOB_STATUS];
       mediamosa_job::set_job_status_failed($result_row[mediamosa_job_db::ID], $error_message, $status);
 
-      self::log('Transcode job verwijderd vanwege timeout, job_id: @job_id', array('@job_id' => $result_row[mediamosa_job_db::ID]));
+      self::log_mediafile($result_row[mediamosa_job_db::MEDIAFILE_ID], $result_row[mediamosa_job_db::ASSET_ID], 'Transcode job was deleted because of timeout, job_id: @job_id', array('@job_id' => $result_row[mediamosa_job_db::ID]));
     }
   }
 

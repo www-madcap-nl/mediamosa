@@ -34,6 +34,7 @@ require_once 'core/node/mediamosa_node.inc';
 
 // Include the class we need. During install nothing can be autoloaded (yet).
 require_once 'mediamosa.inc';
+require_once 'mediamosa_db.inc';
 require_once 'mediamosa.settings.inc';
 require_once 'lib/mediamosa_db.inc';
 require_once 'lib/mediamosa_datetime.inc';
@@ -104,6 +105,12 @@ function mediamosa_install() {
 
   // Install the ftp_user table.
   _mediamosa_ftp_user_install();
+
+  // Add index to watchdog table.
+  db_query("ALTER TABLE {watchdog} ADD INDEX idx_link (link)");
+
+  // Create our table(s).
+  mediamosa::drupal_install_schema(mediamosa_install_db::TABLE_NAME);
 }
 
 /**
@@ -154,6 +161,48 @@ function mediamosa_uninstall() {
 
   // Remove the error db.
   _mediamosa_error_uninstall();
+
+  // Drop our table(s).
+  mediamosa::drupal_uninstall_schema(mediamosa_install_db::TABLE_NAME);
+}
+
+/**
+ * Implements hook_schema().
+ */
+function mediamosa_schema() {
+
+  $schema[mediamosa_install_db::TABLE_NAME] = array(
+  'description' => t('The extender for the watchdog table.'),
+    'fields' => array(
+      mediamosa_install_db::ID => array(
+        'type' => 'serial',
+        'not null' => TRUE,
+        'description' => t('Primary Key: Unique ID.'),
+      ),
+      mediamosa_install_db::ASSET_ID => array(
+        'type' => 'varbinary',
+        'length' => mediamosa_db::HASH_ID_LENGTH,
+        'not null' => TRUE,
+        'description' => t('The asset ID.'),
+      ),
+      mediamosa_install_db::MEDIAFILE_ID => array(
+        'type' => 'varbinary',
+        'length' => mediamosa_db::HASH_ID_LENGTH,
+        'not null' => TRUE,
+        'description' => t('The asset mediafile ID.'),
+      ),
+    ),
+    'primary key' => array(mediamosa_install_db::ID),
+    'indexes' => array(
+      'idx_' . mediamosa_install_db::ASSET_ID => array(mediamosa_install_db::ASSET_ID),
+      'idx_' . mediamosa_install_db::MEDIAFILE_ID => array(mediamosa_install_db::MEDIAFILE_ID),
+    ),
+    'foreign keys' => array(
+      //mediamosa_install_db::ID => array('watchdog' => 'wid'),
+    ),
+  );
+
+  return $schema;
 }
 
 /**
@@ -1146,4 +1195,33 @@ function mediamosa_update_7059() {
     ':code' => mediamosa_error::ERRORCODE_STILL_IS_NOT_CREATABLE,
     ':message' => 'MM - still is not creatable for mediafile_id=@mediafile_id.',
   ));
+}
+
+/**
+ * Install mediamosa_watchdog table.
+ */
+function mediamosa_update_7060() {
+  db_query("
+    CREATE TABLE IF NOT EXISTS {mediamosa_watchdog} (
+      wid int(11) NOT NULL AUTO_INCREMENT COMMENT 'Primary Key: Unique ID.',
+      asset_id  varbinary(32) NOT NULL COMMENT 'The asset ID.',
+      mediafile_id  varbinary(32) NOT NULL COMMENT 'The asset mediafile ID.',
+      PRIMARY KEY (wid),
+      KEY idx_asset_id (asset_id),
+      KEY idx_mediafile_id (mediafile_id)
+    ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='The extender for the watchdog table.'
+  ");
+}
+
+/**
+ * Add index to watchdog table.
+ */
+function mediamosa_update_7061() {
+  db_add_index(
+    'watchdog',
+    'idx_link',
+    array(
+      'link',
+    )
+  );
 }

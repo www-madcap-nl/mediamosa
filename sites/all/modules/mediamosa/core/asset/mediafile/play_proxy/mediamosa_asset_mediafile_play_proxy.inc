@@ -637,11 +637,11 @@ class mediamosa_asset_mediafile_play_proxy {
                   $content_type = 'text/html';
                 }
                 else {
-                  mediamosa::log('Unable to write to .asx file (@filename), falling back to normal object code', array('@filename' => $file_asx), WATCHDOG_CRITICAL, 'playproxy');
+                  mediamosa_log::log('Unable to write to .asx file (@filename), falling back to normal object code', array('@filename' => $file_asx), WATCHDOG_CRITICAL, 'playproxy');
                 }
               }
               else {
-                mediamosa::log('Unable to create .asx file (@filename), falling back to normal object code', array('@filename' => $file_asx), WATCHDOG_CRITICAL, 'playproxy');
+                mediamosa_log::log('Unable to create .asx file (@filename), falling back to normal object code', array('@filename' => $file_asx), WATCHDOG_CRITICAL, 'playproxy');
               }
             }
 

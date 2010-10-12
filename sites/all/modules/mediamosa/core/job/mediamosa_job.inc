@@ -48,7 +48,20 @@ class mediamosa_job {
    * @param string $severity
    */
   static public function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
-    mediamosa::log($message, $variables, $severity, 'job');
+    mediamosa_log::log($message, $variables, $severity, 'job');
+  }
+
+  /**
+   * Log mediafile ids.
+   *
+   * @param string $mediafile_id
+   * @param string $asset_id
+   * @param string $message
+   * @param array $variables
+   * @param string $severity
+   */
+  static public function log_mediafile($mediafile_id, $asset_id, $message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
+    mediamosa_log::log_mediafile($mediafile_id, $asset_id, $message, $variables, $severity, 'job');
   }
 
   /**
@@ -597,7 +610,7 @@ class mediamosa_job {
    * @param integer $app_id
    */
   static public function create_analyse_job($owner, $asset_id, $mediafile_id, $app_id) {
-    self::log('Starting analyse job for #mediafile_id', array('#mediafile_id' => (string)$mediafile_id));
+    self::log_mediafile($mediafile_id, $asset_id, 'Starting analyse job for #mediafile_id', array('#mediafile_id' => (string)$mediafile_id));
 
     $fields = array(
       mediamosa_job_db::ASSET_ID => $asset_id,
