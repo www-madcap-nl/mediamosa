@@ -50,10 +50,12 @@ class mediamosa_rest_call_count_collection extends mediamosa_rest_call {
         self::GROUP_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
           self::VAR_TRIM_VALUE => self::VAR_TRIM_VALUE_YES,
+          self::VAR_RANGE_END => mediamosa_user_group_db::GROUP_ID_LENGTH,
         ),
         self::OWNER_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
           self::VAR_TRIM_VALUE => self::VAR_TRIM_VALUE_YES,
+          self::VAR_RANGE_END => mediamosa_user_db::NAME_LENGTH,
         ),
       )
     );
@@ -563,10 +565,12 @@ class mediamosa_rest_call_collection_create extends mediamosa_rest_call {
           self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The user ID, will become the owner of the collection.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+          self::VAR_RANGE_END => mediamosa_user_db::NAME_LENGTH,
         ),
         self::GROUP_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'The group ID, will be used for the group_id of the collection.',
+          self::VAR_RANGE_END => mediamosa_user_group_db::GROUP_ID_LENGTH,
         ),
         self::TITLE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_STRING,
@@ -681,6 +685,7 @@ class mediamosa_rest_call_collection_update extends mediamosa_rest_call {
           self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The user ID, must match the owner of the collection, otherwise the update will fail.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+          self::VAR_RANGE_END => mediamosa_user_db::NAME_LENGTH,
         ),
         self::TITLE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_STRING,
@@ -697,6 +702,7 @@ class mediamosa_rest_call_collection_update extends mediamosa_rest_call {
         self::GROUP_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'The group ID.',
+          self::VAR_RANGE_END => mediamosa_user_group_db::GROUP_ID_LENGTH,
         ),
         self::PRIVATE_ => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,

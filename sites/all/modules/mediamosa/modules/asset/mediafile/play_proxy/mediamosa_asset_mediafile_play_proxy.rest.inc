@@ -86,6 +86,8 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
         self::GROUP_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'Group ID of the person who wants to play the video, can be used for authorization.',
+          self::VAR_RANGE_END => mediamosa_user_group_db::GROUP_ID_LENGTH,
+          self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
         ),
         self::ORIGINAL_MEDIAFILE_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_MEDIAFILE_ID,
@@ -277,7 +279,7 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
         $mediafile_id,
         $app_id,
         $user_id,
-        is_array($group_id) ? $group_id : array($group_id),
+        $group_id,
         $aut_domain,
         $aut_realm,
         $is_app_admin
@@ -428,7 +430,6 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
       $this->get_param_value(self::IS_APP_ADMIN),
       $a_asset_metadata,
       $a_mediafile_ext,
-      $group_id,
       $a_stills
     );
 

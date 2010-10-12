@@ -373,6 +373,7 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
         self::GROUP_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'The group ID.',
+          self::VAR_RANGE_END => mediamosa_user_group_db::GROUP_ID_LENGTH,
         ),
         self::CREATE_STILL => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,

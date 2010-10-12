@@ -250,7 +250,7 @@ class mediamosa_asset_mediafile_play_proxy {
    * @param string $mediafile_group_id
    * @param array $stills
    */
-  static public function create_response_1x_to_2x($a_parameters, $a_asset_info, $mediafile_ext, $asset_metadata/* unused */, $ticket, $app_id, $mediafile_group_id = '', $stills = array()) {
+  static public function create_response_1x_to_2x($a_parameters, $a_asset_info, $mediafile_ext, $asset_metadata/* unused */, $ticket, $app_id, $stills = array()) {
     return self::create_response(
       $a_parameters['response']['value'],
       $app_id,
@@ -263,7 +263,6 @@ class mediamosa_asset_mediafile_play_proxy {
       isset($a_parameters['is_app_admin']['value']) ? mediamosa_lib::boolstr2bool($a_parameters['is_app_admin']['value']) : FALSE,
       $a_asset_info,
       $mediafile_ext,
-      $mediafile_group_id,
       $stills
     );
   }
@@ -313,7 +312,6 @@ class mediamosa_asset_mediafile_play_proxy {
     $is_app_admin = FALSE,
     array $asset_metadata = array(),
     array $mediafile_ext = array(),
-    $mediafile_group_id = '',
     array $stills = array()
   ) {
 

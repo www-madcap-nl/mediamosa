@@ -199,8 +199,7 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
             $a_mediafile_ext,
             $a_asset_metadata,
             $ticket,
-            $this->a_app[mediamosa_app_db::APP_ID],
-            self::SIMPLETEST_GROUP_ID
+            $this->a_app[mediamosa_app_db::APP_ID]
           );
         }
         catch (mediamosa_exception_error $e) {
@@ -263,8 +262,7 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
           $a_mediafile_ext,
           $a_asset_metadata,
           $ticket,
-          $this->a_app[mediamosa_app_db::APP_ID],
-          self::SIMPLETEST_GROUP_ID
+          $this->a_app[mediamosa_app_db::APP_ID]
         );
       }
       catch (mediamosa_exception_error $e) {
@@ -312,8 +310,7 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
           $a_mediafile_ext,
           $a_asset_metadata,
           $ticket,
-          $this->a_app[mediamosa_app_db::APP_ID],
-          self::SIMPLETEST_GROUP_ID
+          $this->a_app[mediamosa_app_db::APP_ID]
         );
       }
       catch (mediamosa_exception_error $e) {
@@ -437,8 +434,7 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
       $a_mediafile_ext,
       array(),
       $ticket,
-      $this->a_app[mediamosa_app_db::APP_ID],
-      self::SIMPLETEST_GROUP_ID
+      $this->a_app[mediamosa_app_db::APP_ID]
     );
 
     $this->assertTrue($a_response['output'] == 'url://unittest.h264', 'Test container with specific codec that is defined.');
@@ -455,8 +451,7 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
       $a_mediafile_ext,
       array(),
       $ticket,
-      $this->a_app[mediamosa_app_db::APP_ID],
-      self::SIMPLETEST_GROUP_ID
+      $this->a_app[mediamosa_app_db::APP_ID]
     );
 
     $this->assertTrue($a_response['output'] == 'url://unittest.general', 'Test container with specific codec that is defined.');
@@ -473,8 +468,7 @@ class MediaMosaPlayProxyTestCaseEga extends MediaMosaTestCaseEga {
       $a_mediafile_ext,
       array(),
       $ticket,
-      $this->a_app[mediamosa_app_db::APP_ID],
-      self::SIMPLETEST_GROUP_ID
+      $this->a_app[mediamosa_app_db::APP_ID]
     );
 
     $this->assertTrue($a_response['output'] == 'url://unittest.general', 'Test container with undefined codec (plays general container).');

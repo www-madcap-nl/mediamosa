@@ -145,6 +145,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    */
   protected function tearDown() {
 
+    // Clean up stuff.
+    mediamosa_ticket::ticket_cleanup();
+
     // Delete possible uploaded files.
     foreach ($this->mediafiles_cleanup as $mediafile_id) {
       // Get the mediafile.
@@ -187,7 +190,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       // Check whether the file exists or not.
       $this->assertTrue(
         mediamosa_io::file_exists(mediamosa_configuration_storage::mediafile_id_filename_get($mediafile_id)),
-        T('Mediafile exists (mediafile_id = @mediafile_id)', array('@mediafile_id' => $mediafile_id))
+        t('Mediafile exists (mediafile_id = @mediafile_id)', array('@mediafile_id' => $mediafile_id))
       );
       // Add to clean up.
       $this->mediafiles_cleanup[] = $mediafile_id;

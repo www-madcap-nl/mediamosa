@@ -471,11 +471,13 @@ class mediamosa_rest_call_statistics_set_historical_uploaded_mediafiles extends 
           self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'Owner of the upload.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+          self::VAR_RANGE_END => mediamosa_user_db::NAME_LENGTH,
         ),
         self::GROUP_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'Group of the upload.',
           self::VAR_DEFAULT_VALUE => '',
+          self::VAR_RANGE_END => mediamosa_user_group_db::GROUP_ID_LENGTH,
         ),
         self::FILE_SIZE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
@@ -543,10 +545,12 @@ class mediamosa_rest_call_statistics_get_historical_uploaded_mediafiles extends 
         self::USER_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'Owner of the upload.',
+          self::VAR_RANGE_END => mediamosa_user_db::NAME_LENGTH,
         ),
         self::GROUP_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'Group of the upload.',
+          self::VAR_RANGE_END => mediamosa_user_group_db::GROUP_ID_LENGTH,
         ),
       )
     );
@@ -801,10 +805,12 @@ class mediamosa_rest_call_statistics_get_requested_streams extends mediamosa_res
         self::OWNER_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'Owner of the upload.',
+          self::VAR_RANGE_END => mediamosa_user_db::NAME_LENGTH,
         ),
         self::GROUP_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'Group of the upload.',
+          self::VAR_RANGE_END => mediamosa_user_group_db::GROUP_ID_LENGTH,
         ),
         self::PLAY_TYPE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_ALPHA_NUM,
@@ -940,10 +946,12 @@ class mediamosa_rest_call_statistics_get_most_popular_streams extends mediamosa_
         self::OWNER_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'Owner of the upload.',
+          self::VAR_RANGE_END => mediamosa_user_db::NAME_LENGTH,
         ),
         self::GROUP_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'Group of the upload.',
+          self::VAR_RANGE_END => mediamosa_user_group_db::GROUP_ID_LENGTH,
         ),
       )
     );

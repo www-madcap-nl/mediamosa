@@ -56,21 +56,25 @@ class mediamosa_rest_call_change_ownership extends mediamosa_rest_call {
           self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'The current group ID to replace.',
           self::VAR_TRIM_VALUE => self::VAR_TRIM_VALUE_YES,
+          self::VAR_RANGE_END => mediamosa_user_group_db::GROUP_ID_LENGTH,
         ),
         self::NEW_GROUP_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'The new group ID to replace with.',
           self::VAR_TRIM_VALUE => self::VAR_TRIM_VALUE_YES,
+          self::VAR_RANGE_END => mediamosa_user_group_db::GROUP_ID_LENGTH,
         ),
         self::OLD_OWNER_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The current owner to replace.',
           self::VAR_TRIM_VALUE => self::VAR_TRIM_VALUE_YES,
+          self::VAR_RANGE_END => mediamosa_user_db::NAME_LENGTH,
         ),
         self::NEW_OWNER_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The new owner to replace with.',
           self::VAR_TRIM_VALUE => self::VAR_TRIM_VALUE_YES,
+          self::VAR_RANGE_END => mediamosa_user_db::NAME_LENGTH,
         ),
         self::OLD_APP_ID => array( // Unused.
           self::VAR_TYPE => mediamosa_type::TYPE_APP_ID,
@@ -193,11 +197,13 @@ class mediamosa_rest_call_count_asset extends mediamosa_rest_call {
           self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'The group ID to match.',
           self::VAR_TRIM_VALUE => self::VAR_TRIM_VALUE_YES,
+          self::VAR_RANGE_END => mediamosa_user_group_db::GROUP_ID_LENGTH,
         ),
         self::OWNER_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The owner ID to match.',
           self::VAR_TRIM_VALUE => self::VAR_TRIM_VALUE_YES,
+          self::VAR_RANGE_END => mediamosa_user_db::NAME_LENGTH,
         ),
       )
     );
@@ -1109,10 +1115,12 @@ class mediamosa_rest_call_asset_create extends mediamosa_rest_call {
           self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The user ID.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+          self::VAR_RANGE_END => mediamosa_user_db::NAME_LENGTH,
         ),
         self::GROUP_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'The user group ID.',
+          self::VAR_RANGE_END => mediamosa_user_group_db::GROUP_ID_LENGTH,
         ),
         self::REFERENCE_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_STRING,

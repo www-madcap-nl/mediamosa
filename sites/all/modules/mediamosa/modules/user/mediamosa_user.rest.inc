@@ -100,7 +100,7 @@ class mediamosa_rest_call_user_list extends mediamosa_rest_call {
         self::GROUP_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'Name of the group where the user has to be a member.',
-          self::VAR_RANGE_END => mediamosa_user_db::NAME_LENGTH,
+          self::VAR_RANGE_END => mediamosa_user_group_db::GROUP_ID_LENGTH,
         ),
       )
     );

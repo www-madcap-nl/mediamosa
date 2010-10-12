@@ -51,11 +51,13 @@ class mediamosa_rest_call_count_asset_mediafile extends mediamosa_rest_call {
         self::GROUP_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'The group ID to match.',
+          self::VAR_RANGE_END => mediamosa_user_group_db::GROUP_ID_LENGTH,
           self::VAR_TRIM_VALUE => self::VAR_TRIM_VALUE_YES,
           self::VAR_DEFAULT_VALUE => '',
         ),
         self::OWNER_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_RANGE_END => mediamosa_user_db::NAME_LENGTH,
           self::VAR_DESCRIPTION => 'The owner ID to match.',
           self::VAR_TRIM_VALUE => self::VAR_TRIM_VALUE_YES,
           self::VAR_DEFAULT_VALUE => '',
@@ -372,6 +374,7 @@ class mediamosa_rest_call_create_mediafile extends mediamosa_rest_call {
         self::GROUP_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'The group ID.',
+          self::VAR_RANGE_END => mediamosa_user_group_db::GROUP_ID_LENGTH,
         ),
         self::URI => array(
           self::VAR_TYPE => mediamosa_type::TYPE_URI,
