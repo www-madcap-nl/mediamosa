@@ -124,5 +124,28 @@ class MediaMosaAssetSearchEmptyTestCaseEga extends MediaMosaTestCaseEga {
         t('Response has the good asset_ids (@aid).', array('@aid' => $asset['asset_id']))
       );
     }
+
+    // Now check the search parameters.
+    $search_params = mediamosa_rest_call_asset_search::get_search_params();
+
+    // Do search on every item.
+    foreach ($search_params as $field => $type) {
+      $a_parameters = array();
+      switch ($type) {
+        case mediamosa_type::TYPE_SEARCH_DATETIME:
+          $a_parameters[$field] = '2010-01-01 00:00:00';
+          break;
+
+        case mediamosa_type::TYPE_SEARCH_INT:
+          $a_parameters[$field] = '1234';
+           break;
+
+        default:
+        case mediamosa_type::TYPE_SEARCH_STRING:
+          $a_parameters[$field] = 'foo';
+          break;
+      }
+      $a_assets = $this->searchAsset(10, $a_parameters, array(mediamosa_error::ERRORCODE_OKAY, mediamosa_error::ERRORCODE_EMPTY_RESULT));
+    }
   }
 }
