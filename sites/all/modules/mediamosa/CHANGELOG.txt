@@ -8,9 +8,20 @@ Known issues;
 - Servers (processor, download, upload etc) that are installed on a subdir are
   not correctly retrieved on the server status page. (See ticket #367).
 
-MediaMosa 2.2.5 (Build 944)
----------------------------
-- Fixed group_id input in /playproxy where group_id was not an array but single
+MediaMosa 2.3.0
+---------------
+- Made user/$fav_user_id/favorites/delete [GET] deprecated (See ticket #3).
+
+Other changes (not ticket related).
+- Fixed: /mediafile/uploadprogress will now work without /external in front of
+  uri.
+- Added 'changed' for CQL for searching on changed date on asset.
+- Added 'app_id_search' for CQL for asset search.
+- Added module enable for mediamosa_library on profile.
+
+MediaMosa 2.2.5.1 (Build 944)
+-----------------------------
+- Fixed: group_id input in /playproxy where group_id was not an array but single
   value. (See surfmedia ticket #24).
 
 MediaMosa 2.2.5 (Build 939) (Release candidate 2)

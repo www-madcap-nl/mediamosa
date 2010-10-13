@@ -253,9 +253,8 @@ class mediamosa_response extends mediamosa {
    *
    * @param array $a_item
    */
-  public function add_item($a_item) {
-    assert(!isset($a_item[''])); // make sure we dont insert stuff with empty keys.
-    $this->response['items'][++$this->item_count] = $a_item;
+  public function add_item($item) {
+    $this->response['items'][++$this->item_count] = $item;
   }
 
   /**

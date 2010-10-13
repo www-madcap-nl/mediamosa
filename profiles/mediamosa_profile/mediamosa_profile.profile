@@ -788,7 +788,7 @@ Save your original file, then insert this code to your settings file.
     '#collapsible' => FALSE,
     '#collapsed' => FALSE,
     '#title' => t('Apache settings'),
-    '#description' => t("Choose a server setup."),
+    '#description' => t("Choose a server setup. We recommend the Multiserver setup for production websites."),
   );
 
   $form['apache']['localhost'] = array(

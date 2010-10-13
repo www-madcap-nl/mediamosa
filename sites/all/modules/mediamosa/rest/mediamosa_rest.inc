@@ -162,26 +162,14 @@ class mediamosa_rest {
     assert(isset($rest_call[mediamosa_rest_call::VERSION]));
 
     // Default values.
-    if (!isset($rest_call[mediamosa_rest_call::METHOD])) {
-      $rest_call[mediamosa_rest_call::METHOD] = mediamosa_rest_call::METHOD_GET;
-    }
+    $rest_call += array(
+      mediamosa_rest_call::METHOD => mediamosa_rest_call::METHOD_GET,
+      mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+      mediamosa_rest_call::RESPONSE_TYPE => mediamosa_rest_call::RESPONSE_TYPE_XML,
+      mediamosa_rest_call::BEHAVE_AS_EXTERNAL => FALSE,
+      mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_DEFAULT,
+    );
 
-    if (!isset($rest_call[mediamosa_rest_call::STATUS])) {
-      $rest_call[mediamosa_rest_call::STATUS] = mediamosa_rest_call::STATUS_ACTIVE;
-    }
-
-    if (!isset($rest_call[mediamosa_rest_call::RESPONSE_TYPE])) {
-      $rest_call[mediamosa_rest_call::RESPONSE_TYPE] = mediamosa_rest_call::RESPONSE_TYPE_XML;
-    }
-
-    if (!isset($rest_call[mediamosa_rest_call::BEHAVE_AS_EXTERNAL])) {
-      $rest_call[mediamosa_rest_call::BEHAVE_AS_EXTERNAL] = FALSE;
-    }
-
-    // Access to REST call.
-    if (!isset($rest_call[mediamosa_rest_call::ACCESS])) {
-      $rest_call[mediamosa_rest_call::ACCESS] = mediamosa_rest_call::ACCESS_DEFAULT;
-    }
 
     return $rest_call;
   }
