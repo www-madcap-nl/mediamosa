@@ -432,7 +432,7 @@ function mediamosa_maintenance_status_configuration_mediamosa_status_generate() 
           ))->fetchAssoc();
         }
         catch (PDOException $e) {
-          $original_table_result = '';
+          $original_table_result = array('create table' => '',);
         }
 
         // Get the table details of the test table.
