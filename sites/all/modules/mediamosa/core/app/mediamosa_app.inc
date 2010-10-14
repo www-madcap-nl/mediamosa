@@ -185,4 +185,52 @@ class mediamosa_app {
     // Return stored array.
     return unserialize($allowed_apps);
   }
+
+  /**
+   * return the default value of the still, depend of the application id.
+   *
+   * @param integer $app_id
+   */
+  static public function get_still_default_value($app_id) {
+    if ($app_id) {
+      // Get the default size of still of application.
+      $application = self::get_by_appid($app_id);
+      $still_default_size = $application[mediamosa_app_db::STILL_DEFAULT_SIZE];
+      return ($still_default_size ? $still_default_size : NULL);
+    }
+    else {
+      // There isn't app id, we support the default size of still.
+      return mediamosa_settings::STILL_DEFAULT_SIZE;
+    }
+  }
+
+  /**
+   * return the still padding value, depend of the application id.
+   *
+   * @param integer $app_id
+   */
+  static public function get_still_padding_value($app_id) {
+    if ($app_id) {
+      $application = self::get_by_appid($app_id);
+      return $application[mediamosa_app_db::STILL_PADDING];
+    }
+    else {
+      return mediamosa_app_db::STILL_PADDING_YES;
+    }
+  }
+
+  /**
+   * return the still maintain aspect ratio value, depend of the application id.
+   *
+   * @param integer $app_id
+   */
+  static public function get_still_maintain_aspect_ratio_value($app_id) {
+    if ($app_id) {
+      $application = self::get_by_appid($app_id);
+      return $application[mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO];
+    }
+    else {
+      return mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO_YES;
+    }
+  }
 }

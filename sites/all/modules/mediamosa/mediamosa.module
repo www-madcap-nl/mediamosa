@@ -404,3 +404,106 @@ function mediamosa_mediamosa_configuration_validate($form, $form_state) {
     form_set_error('mediamosa_simpletest_database', t("Database not enabled or does not match with mediamosa_simpletest db in /sites/mediamosa.settings.php."));
   }*/
 }
+
+/**
+ * Implementation of hook_form_alter().
+ */
+function mediamosa_form_alter(&$form, &$form_state, $form_id) {
+  if ($form_id == 'dblog_filter_form') {
+    if ($_SESSION['mediamosa_dblog_overview_filter']) {
+      $form['filters']['#collapsed'] = FALSE;
+    }
+    $form['filters']['asset_id'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Asset id'),
+      '#size' => 30,
+      '#maxlength' => 64,
+      '#required' => FALSE,
+    );
+    if (!empty($_SESSION['mediamosa_dblog_overview_filter']['asset_id'])) {
+      $form['filters']['asset_id']['#default_value'] = $_SESSION['mediamosa_dblog_overview_filter']['asset_id'];
+    }
+    $form['filters']['mediafile_id'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Mediafile id'),
+      '#size' => 30,
+      '#maxlength' => 64,
+      '#required' => FALSE,
+    );
+    if (!empty($_SESSION['mediamosa_dblog_overview_filter']['mediafile_id'])) {
+      $form['filters']['mediafile_id']['#default_value'] = $_SESSION['mediamosa_dblog_overview_filter']['mediafile_id'];
+    }
+    $form['filters']['free_search'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Free text search'),
+      '#size' => 30,
+      '#maxlength' => 64,
+      '#required' => FALSE,
+    );
+    if (!empty($_SESSION['mediamosa_dblog_overview_filter']['free_search'])) {
+      $form['filters']['free_search']['#default_value'] = $_SESSION['mediamosa_dblog_overview_filter']['free_search'];
+    }
+    unset($form['#validate']);
+    $form['#submit'][] = 'mediamosa_dblog_filter_form_submit';
+  }
+}
+
+/**
+ * Submit.
+ */
+function mediamosa_dblog_filter_form_submit($form, &$form_state) {
+  $op = $form_state['values']['op'];
+  switch ($op) {
+    case t('Filter'):
+      $_SESSION['mediamosa_dblog_overview_filter']['asset_id'] = $form_state['values']['asset_id'];
+      $_SESSION['mediamosa_dblog_overview_filter']['mediafile_id'] = $form_state['values']['mediafile_id'];
+      $_SESSION['mediamosa_dblog_overview_filter']['free_search'] = $form_state['values']['free_search'];
+      break;
+    case t('Reset'):
+      $_SESSION['mediamosa_dblog_overview_filter'] = array();
+      break;
+  }
+}
+
+/**
+ * Implementation of hook_query_alter().
+ */
+function mediamosa_query_alter(QueryAlterableInterface $query) {
+  $tables = $query->getTables();
+  foreach ($tables as $table) {
+    if ($table['table'] == 'watchdog') {
+      if (!empty($_SESSION['mediamosa_dblog_overview_filter']['free_search'])) {
+        $free_search = $_SESSION['mediamosa_dblog_overview_filter']['free_search'];
+        $or = db_or()
+          ->where("message LIKE :free_search", array(':free_search' => '%' . $free_search . '%'))
+          ->where("variables LIKE :free_search", array(':free_search' => '%' . $free_search . '%'));
+        $query->condition($or);
+      }
+      if (!empty($_SESSION['mediamosa_dblog_overview_filter']['asset_id']) || !empty($_SESSION['mediamosa_dblog_overview_filter']['mediafile_id'])) {
+        $table_alias = $query->join(mediamosa_install_db::TABLE_NAME, 'mw', 'w.wid = mw.wid');
+        if (!empty($_SESSION['mediamosa_dblog_overview_filter']['asset_id'])) {
+          $query->condition(mediamosa_install_db::ASSET_ID, $_SESSION['mediamosa_dblog_overview_filter']['asset_id']);
+        }
+        if (!empty($_SESSION['mediamosa_dblog_overview_filter']['mediafile_id'])) {
+          $query->condition(mediamosa_install_db::MEDIAFILE_ID, $_SESSION['mediamosa_dblog_overview_filter']['mediafile_id']);
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Implementation of hook_cron().
+ */
+function mediamosa_cron() {
+  $query = mediamosa_db::db_select('watchdog', 'w')
+    ->fields('w', array('wid'))
+    ->orderBy('wid', 'ASC')
+    ->range(0, 1);
+  $result = $query->execute();
+  $lowest_wid = $result->fetchField();
+
+  mediamosa_db::db_delete(mediamosa_install_db::TABLE_NAME)
+    ->condition('wid', $lowest_wid, '<')
+    ->execute();
+}

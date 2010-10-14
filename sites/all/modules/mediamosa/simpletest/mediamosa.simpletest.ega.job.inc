@@ -84,6 +84,10 @@ class MediaMosaTestCaseEgaJob extends MediaMosaTestCaseEga {
       )
     );
 
+    if ((string)$response['xml']->header->request_result_id != mediamosa_error::ERRORCODE_OKAY) {
+      return FALSE;
+    }
+
     // Get the job_id.
     $job_id = $response['xml']->items->item[0]->job_id;
 

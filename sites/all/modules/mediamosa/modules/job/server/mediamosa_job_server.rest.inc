@@ -137,7 +137,6 @@ class mediamosa_rest_call_jobserver_job_start extends mediamosa_rest_call {
         self::SIZE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_STRING,
           self::VAR_DESCRIPTION => 'Size of the still.',
-          self::VAR_DEFAULT_VALUE => mediamosa_settings::STILL_DEFAULT_SIZE,
         ),
         self::H_PADDING => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
@@ -234,7 +233,7 @@ class mediamosa_rest_call_jobserver_job_start extends mediamosa_rest_call {
 
         // Get params.
         $frametime = $this->get_param_value(self::FRAMETIME);
-        $size = $this->get_param_value(self::SIZE);
+        $size = ($this->get_param_value(self::SIZE) ? $this->get_param_value(self::SIZE) : mediamosa_app::get_still_default_value($app_id));
         $h_padding = $this->get_param_value(self::H_PADDING);
         $v_padding = $this->get_param_value(self::V_PADDING);
         $blackstill_check = $this->get_param_value(self::BLACKSTILL_CHECK);

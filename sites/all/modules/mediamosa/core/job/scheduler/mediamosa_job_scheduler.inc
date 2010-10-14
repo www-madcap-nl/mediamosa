@@ -38,7 +38,20 @@ class mediamosa_job_scheduler {
    * @param string $severity
    */
   static public function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
-    mediamosa::log($message, $variables, $severity, 'job scheduler');
+    mediamosa_log::log($message, $variables, $severity, 'job scheduler');
+  }
+
+  /**
+   * Log mediafile ids.
+   *
+   * @param string $mediafile_id
+   * @param string $asset_id
+   * @param string $message
+   * @param array $variables
+   * @param string $severity
+   */
+  static public function log_mediafile($mediafile_id, $asset_id, $message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
+    mediamosa_log::log_mediafile($mediafile_id, $asset_id, $message, $variables, $severity, 'job scheduler');
   }
 
   /**
@@ -74,7 +87,7 @@ class mediamosa_job_scheduler {
       $url = mediamosa_http::uri2url($mediamosa_jobscheduler_uri) . '/internal/cron/jobscheduler';
 
       // Log it.
-      mediamosa_debug::log('Triggering job scheduler @ @uri', array('@uri' => $url));
+      self::log('Triggering job scheduler @ @uri', array('@uri' => $url));
 
       // Dont trigger in sandbox.
       if (mediamosa::in_simpletest_sandbox()) {
@@ -87,7 +100,7 @@ class mediamosa_job_scheduler {
       }
     }
     else {
-      mediamosa::log('Jobschedular URL not set, please setup jobschedular server in the @link.', array('@link' => l(t('Mediamosa configuration'), 'admin/mediamosa/config/global')), WATCHDOG_ALERT, 'job_cron');
+      mediamosa_log::log('Jobschedular URL not set, please setup jobschedular server in the @link.', array('@link' => l(t('Mediamosa configuration'), 'admin/mediamosa/config/global')), WATCHDOG_ALERT, 'job_cron');
     }
   }
 
@@ -232,7 +245,7 @@ class mediamosa_job_scheduler {
       $response_data = new SimpleXMLElement($response->data);
     }
     catch (Exception $e) {
-      mediamosa::log_export($response->data);
+      mediamosa_log::log_export($response->data);
       self::log('Parse XML: @msg (@resp)', array('@msg' => $e->getMessage(), '@resp' => print_r($response->data, TRUE)), WATCHDOG_ERROR);
       return;
     }
@@ -388,7 +401,7 @@ class mediamosa_job_scheduler {
   static public function create_wmv_job($job_id, $asset_id, $mediafile_id) {
 
     // FIXME: @mediafile_id is empty.
-    self::log('Start job wmv job: job_id = @job_id, mediafile_id = @mediafile_id', array('@job_id' => $job_id, '@mediafile_id' => $mediafile_id));
+    self::log_mediafile($mediafile_id, $asset_id, 'Start job wmv job: job_id = @job_id, mediafile_id = @mediafile_id', array('@job_id' => $job_id, '@mediafile_id' => $mediafile_id));
 
     // Get all info.
     $a_job_ext = mediamosa_job::get_job_ext($job_id);
@@ -397,7 +410,7 @@ class mediamosa_job_scheduler {
       $command = '';
       $owner = '';
       $app_id = 0;
-      self::log('A wmv job (@job_id) without transcode_job!', array('@job_id' => $job_id), WATCHDOG_EMERGENCY);
+      self::log_mediafile($mediafile_id, $asset_id, 'A wmv job (@job_id) without transcode_job!', array('@job_id' => $job_id), WATCHDOG_EMERGENCY);
     }
     else {
       $command = $a_job_ext[mediamosa_job_transcode_db::COMMAND];
@@ -471,7 +484,7 @@ class mediamosa_job_scheduler {
       // Delete the mediafile.
       mediamosa_asset_mediafile::delete($mediafile_id);
 
-      self::log("Temp. mediafile '@mediafile_id' of job '@job_id' is removed.", array('@mediafile_id' => $mediafile_id, '@job_id' => $job_id), WATCHDOG_NOTICE);
+      self::log_mediafile($mediafile_id, '', "Temp. mediafile '@mediafile_id' of job '@job_id' is removed.", array('@mediafile_id' => $mediafile_id, '@job_id' => $job_id), WATCHDOG_NOTICE);
     }
     else{
       self::log("Job @job_id not found, can't delete temp mediafile.", array('@job_id' => $job_id), WATCHDOG_ERROR);
@@ -582,8 +595,12 @@ class mediamosa_job_scheduler {
       mediamosa_aut::replace_mediafile_to_mediafile($job_info['mediafile_id'], $mediafile_id_dest);
     }
 
-    // add analyse job
-    mediamosa_job::create_analyse_job($job_info['owner'], $job_info['asset_id'], $mediafile_id_dest, $job_info['app_id']);
+    // Analyse the mediafile.
+    $a_analyse_result = mediamosa_asset_mediafile::analyse($job_info["app_id"], (string)$mediafile_id_dest);
+    assert(is_array($a_analyse_result));
+
+    // Store it.
+    mediamosa_asset_mediafile_metadata::store_analyse_without_job((int)$job_id, $a_analyse_result, (string)$mediafile_id_dest);
   }
 
   /**
@@ -619,7 +636,7 @@ class mediamosa_job_scheduler {
     // Get Asset.
     $a_asset = mediamosa_asset::get($asset_id);
 
-    self::log("Start creation DB multiple still, e.g. @filename, job: @job_id", array('@filename' => $filenames[0], '@job_id' => (string)$job_id));
+    self::log_mediafile($a_job['mediafile_id'], $asset_id, "Start creation DB multiple still, e.g. @filename, job: @job_id", array('@filename' => $filenames[0], '@job_id' => (string)$job_id));
 
     // Remove old stills
     // We have multiple stills now, so we don't delete the old ones
@@ -768,7 +785,7 @@ class mediamosa_job_scheduler {
    * @param $mediafile_id
    */
   static public function start_server_job($job_id, $job_type, $server_id, $uri, $mediafile_id) {
-    self::log('Start job: job_id = @job_id, job_type = @job_type, server_id = @server_id, mediafile_id = @mediamosa_id', array('@job_id' => $job_id, '@job_type' => $job_type, '@server_id' => $server_id, '@mediamosa_id' => $mediafile_id));
+    self::log_mediafile($mediafile_id, '', 'Start job: job_id = @job_id, job_type = @job_type, server_id = @server_id, mediafile_id = @mediamosa_id', array('@job_id' => $job_id, '@job_type' => $job_type, '@server_id' => $server_id, '@mediamosa_id' => $mediafile_id));
 
     switch ($job_type) {
       case mediamosa_job_db::JOB_TYPE_TRANSCODE:
@@ -784,7 +801,7 @@ class mediamosa_job_scheduler {
 
     if ($job_type == mediamosa_job_db::JOB_TYPE_DELETE_MEDIAFILE) {
         self::start_server_delete_job($job_id, $mediafile_id);
-        self::log('Process @job_id job: mediafile @mediafile_id removed.', array('@job_id' => $job_id, '@mediafile_id' => $mediafile_id));
+        self::log_mediafile($mediafile_id, '', 'Process @job_id job: mediafile @mediafile_id removed.', array('@job_id' => $job_id, '@mediafile_id' => $mediafile_id));
     }
     else {
       // if okay update the database with the job info
@@ -806,10 +823,10 @@ class mediamosa_job_scheduler {
             ->fields($a_fields)
             ->execute();
 
-          self::log('Sending @job_type (ID: @job_id) to server @uri.', array('@job_type' => $job_type, '@job_id' => $job_id, '@uri' => $uri));
+          self::log_mediafile($mediafile_id, '', 'Sending @job_type (ID: @job_id) to server @uri.', array('@job_type' => $job_type, '@job_id' => $job_id, '@uri' => $uri));
         }
         else {
-          self::log('Aanmaak @job_type server job gestopt, job @job_id was verwijderd tijdens process.', array('@job_type' => $job_type, '@job_id' => $job_id));
+          self::log_mediafile($mediafile_id, '', 'Making @job_type server job has stoped, job @job_id was deleted during the process.', array('@job_type' => $job_type, '@job_id' => $job_id));
         }
       }
     }
@@ -838,7 +855,7 @@ class mediamosa_job_scheduler {
     );
 
     // Log call.
-    self::log('Start job:' . $rest_url);
+    self::log_mediafile($mediafile_id, '', 'Start job:' . $rest_url);
 
     // Do request.
     $response = mediamosa_http::do_internal_call($uri, $rest_url, '', mediamosa_http::METHOD_POST);
@@ -848,12 +865,12 @@ class mediamosa_job_scheduler {
         $response_data = new SimpleXMLElement($response->data);
       }
       catch (Exception $e) {
-        self::log('Parse XML: @msg (@resp)', array('@msg' => $e->getMessage(), '@resp' => print_r($response->data, TRUE)), WATCHDOG_ERROR);
+        self::log_mediafile($mediafile_id, '', 'Parse XML: @msg (@resp)', array('@msg' => $e->getMessage(), '@resp' => print_r($response->data, TRUE)), WATCHDOG_ERROR);
       }
       return $response_data->header->request_result_id;
     }
 
-    self::log('errorcode @response with url @rest_url (@header)', array('@response' => $response->code, '@rest_url' => $rest_url, '@header' => var_export($response->header, TRUE)));
+    self::log_mediafile($mediafile_id, '', 'errorcode @response with url @rest_url (@header)', array('@response' => $response->code, '@rest_url' => $rest_url, '@header' => var_export($response->header, TRUE)));
     return $response->code;
   }
 
@@ -878,7 +895,7 @@ class mediamosa_job_scheduler {
     );
 
     // Log call.
-    self::log('Start job:' . $rest_url);
+    self::log_mediafile($mediafile_id, '', 'Start job:' . $rest_url);
 
     // Do request.
     $response = mediamosa_http::do_internal_call($uri, $rest_url, '', mediamosa_http::METHOD_POST);
@@ -888,12 +905,12 @@ class mediamosa_job_scheduler {
         $response_data = new SimpleXMLElement($response->data);
       }
       catch (Exception $e) {
-        self::log('Parse XML: @msg (@resp)', array('@msg' => $e->getMessage(), '@resp' => print_r($response->data, TRUE)), WATCHDOG_ERROR);
+        self::log_mediafile($mediafile_id, '', 'Parse XML: @msg (@resp)', array('@msg' => $e->getMessage(), '@resp' => print_r($response->data, TRUE)), WATCHDOG_ERROR);
       }
       return $response_data->header->request_result_id;
     }
 
-    self::log('errorcode @response with url @host/@rest_url', array('@response' => $response->code, '@rest_url' => $rest_url, '@host' => $uri));
+    self::log_mediafile($mediafile_id, '', 'errorcode @response with url @host/@rest_url', array('@response' => $response->code, '@rest_url' => $rest_url, '@host' => $uri));
     return $response->code;
   }
 
@@ -948,7 +965,7 @@ class mediamosa_job_scheduler {
     );
 
     // Log call.
-    self::log('Start job:' . $rest_url);
+    self::log_mediafile($mediafile_id, '', 'Start job:' . $rest_url);
 
     // Do request.
     $response = mediamosa_http::do_internal_call($uri, $rest_url, '', mediamosa_http::METHOD_POST);
@@ -958,13 +975,13 @@ class mediamosa_job_scheduler {
         $response_data = new SimpleXMLElement($response->data);
       }
       catch (Exception $e) {
-        self::log('Parse XML: @msg (@resp)', array('@msg' => $e->getMessage(), '@resp' => print_r($response->data, TRUE)), WATCHDOG_ERROR);
+        self::log_mediafile($mediafile_id, '', 'Parse XML: @msg (@resp)', array('@msg' => $e->getMessage(), '@resp' => print_r($response->data, TRUE)), WATCHDOG_ERROR);
       }
 
       return $response_data->header->request_result_id;
     }
 
-    self::log('errorcode @response with url @rest_url', array('@response' => $response->code, '@rest_url' => $rest_url));
+    self::log_mediafile($mediafile_id, '', 'errorcode @response with url @rest_url', array('@response' => $response->code, '@rest_url' => $rest_url));
     return $response->code;
   }
 
@@ -1074,97 +1091,115 @@ class mediamosa_job_scheduler {
           $a_result["v_padding"] = $a_result["still_parameters"]['v_padding'];
           $a_result["tag"] = $a_result["still_parameters"]['tag'];
 
+          $mediafile = mediamosa_asset_mediafile::get($mediafile_id, NULL, array(mediamosa_asset_mediafile_db::APP_ID));
+          $app_id = $mediafile[mediamosa_asset_mediafile_db::APP_ID];
+
           // Calculating aspect ratio
           // Base value
           $target_size = $a_result["still_parameters"]['size'];
-          if ($query_job['size'] == 'sqcif') {
-            $target_size = '128x96';
-          }
-          elseif ($query_job['size'] == 'qcif') {
-            $target_size = '176x144';
-          }
-          elseif ($query_job['size'] == 'cif') {
-            $target_size = '352x288';
-          }
-          elseif ($query_job['size'] == '4cif') {
-            $target_size = '704x576';
-          }
-          elseif ($query_job['size'] == 'qqvga') {
-            $target_size = '160x120';
-          }
-          elseif ($query_job['size'] == 'qvga') {
-            $target_size = '320x240';
-          }
-          elseif ($query_job['size'] == 'vga') {
-            $target_size = '640x480';
-          }
-          elseif ($query_job['size'] == 'svga') {
-            $target_size = '800x600';
-          }
-          elseif ($query_job['size'] == 'xga') {
-            $target_size = '1024x768';
-          }
-          elseif ($query_job['size'] == 'uxga') {
-            $target_size = '1600x1200';
-          }
-          elseif ($query_job['size'] == 'qxga') {
-            $target_size = '2048x1536';
-          }
-          elseif ($query_job['size'] == 'sxga') {
-            $target_size = '1280x1024';
-          }
-          elseif ($query_job['size'] == 'qsxga') {
-            $target_size = '2560x2048';
-          }
-          elseif ($query_job['size'] == 'hsxga') {
-            $target_size = '5120x4096';
-          }
-          elseif ($query_job['size'] == 'wvga') {
-            $target_size = '852x480';
-          }
-          elseif ($query_job['size'] == 'wxga') {
-            $target_size = '1366x768';
-          }
-          elseif ($query_job['size'] == 'wsxga') {
-            $target_size = '1600x1024';
-          }
-          elseif ($query_job['size'] == 'wuxga') {
-            $target_size = '1920x1200';
-          }
-          elseif ($query_job['size'] == 'woxga') {
-            $target_size = '2560x1600';
-          }
-          elseif ($query_job['size'] == 'wqsxga') {
-            $target_size = '3200x2048';
-          }
-          elseif ($query_job['size'] == 'wquxga') {
-            $target_size = '3840x2400';
-          }
-          elseif ($query_job['size'] == 'whsxga') {
-            $target_size = '6400x4096';
-          }
-          elseif ($query_job['size'] == 'whuxga') {
-            $target_size = '7680x4800';
-          }
-          elseif ($query_job['size'] == 'cga') {
-            $target_size = '320x200';
-          }
-          elseif ($query_job['size'] == 'ega') {
-            $target_size = '640x350';
-          }
-          elseif ($query_job['size'] == 'hd480') {
-            $target_size = '852x480';
-          }
-          elseif ($query_job['size'] == 'hd720') {
-            $target_size = '1280x720';
-          }
-          elseif ($query_job['size'] == 'hd1080') {
-            $target_size = '1920x1080';
-          }
-          else {
-            $target_size = mediamosa_settings::STILL_DEFAULT_SIZE;
-            $a_result['h_padding'] = 0;
-            $a_result['v_padding'] = 0;
+          switch ($query_job['size']) {
+            case 'sqcif':
+              $target_size = '128x96';
+              break;
+            case 'qcif':
+              $target_size = '176x144';
+              break;
+            case 'cif':
+              $target_size = '352x288';
+              break;
+            case '4cif':
+              $target_size = '704x576';
+              break;
+            case 'qqvga':
+              $target_size = '160x120';
+              break;
+            case 'qvga':
+              $target_size = '320x240';
+              break;
+            case 'vga':
+              $target_size = '640x480';
+              break;
+            case 'svga':
+              $target_size = '800x600';
+              break;
+            case 'xga':
+              $target_size = '1024x768';
+              break;
+            case 'uxga':
+              $target_size = '1600x1200';
+              break;
+            case 'qxga':
+              $target_size = '2048x1536';
+              break;
+            case 'sxga':
+              $target_size = '1280x1024';
+              break;
+            case 'qsxga':
+              $target_size = '2560x2048';
+              break;
+            case 'hsxga':
+              $target_size = '5120x4096';
+              break;
+            case 'wvga':
+              $target_size = '852x480';
+              break;
+            case 'wxga':
+              $target_size = '1366x768';
+              break;
+            case 'wsxga':
+              $target_size = '1600x1024';
+              break;
+            case 'wuxga':
+              $target_size = '1920x1200';
+              break;
+            case 'woxga':
+              $target_size = '2560x1600';
+              break;
+            case 'wqsxga':
+              $target_size = '3200x2048';
+              break;
+            case 'wquxga':
+              $target_size = '3840x2400';
+              break;
+            case 'whsxga':
+              $target_size = '6400x4096';
+              break;
+            case 'whuxga':
+              $target_size = '7680x4800';
+              break;
+            case 'cga':
+              $target_size = '320x200';
+              break;
+            case 'ega':
+              $target_size = '640x350';
+              break;
+            case 'hd480':
+              $target_size = '852x480';
+              break;
+            case 'hd720':
+              $target_size = '1280x720';
+              break;
+            case 'hd1080':
+              $target_size = '1920x1080';
+              break;
+            default:
+              // FIXME Unspecified sizes ends up here.
+              // Check the size.
+              preg_match('/(\d+)x(\d+)/',  $target_size, $matches);
+              if (!is_array($matches) || count($matches) != 3) {
+                $mediafile = mediamosa_asset_mediafile::get($mediafile_id, NULL, array(mediamosa_asset_mediafile_db::APP_ID));
+                $still_default_size = mediamosa_app::get_still_default_value($app_id);
+                if ($still_default_size) {
+                  $target_size =  $still_default_size;
+                }
+                else {
+                  // Get the video size.
+                  $target_size = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, 'width') . 'x' . mediamosa_asset_mediafile_metadata::get_mediafile_metadata_int($mediafile_id, 'height');
+                }
+                //$a_result['h_padding'] = 0;
+                //$a_result['v_padding'] = 0;
+              }
+              break;
           }
 
           // First get source width and height.
@@ -1180,9 +1215,10 @@ class mediamosa_job_scheduler {
           ));
           $width = $a_metadata[mediamosa_asset_mediafile_metadata::WIDTH];
           $height = $a_metadata[mediamosa_asset_mediafile_metadata::HEIGHT];
+          $still_padding = mediamosa_app::get_still_padding_value($app_id);
 
           // Get the parameter string.
-          $cmmd = self::calc_aspect_ratio($width, $height, $target_size, FALSE, $a_result['h_padding'], $a_result['v_padding']);
+          $cmmd = self::calc_aspect_ratio($width, $height, $target_size, FALSE, $a_result['h_padding'], $a_result['v_padding'], $still_padding == 'YES');
 
           // Set result
           if ($cmmd) {
@@ -1507,12 +1543,14 @@ class mediamosa_job_scheduler {
   static public function check_transcode_timeout() {
 
     $result = mediamosa_db::db_query(
-       'SELECT mj.#job_id, ms.#uri FROM {#mediamosa_job} AS mj
+       'SELECT mj.#job_id, mj.#asset_id, mj.#mediafile_id, ms.#uri FROM {#mediamosa_job} AS mj
         JOIN {#mediamosa_server_job} AS msj ON msj.#job_id = mj.#job_id
         JOIN {#mediamosa_server} AS ms ON ms.#nid = msj.#server_id
         WHERE NOT mj.#started IS NULL AND TIME_TO_SEC(TIMEDIFF(utc_timestamp(), mj.#started)) > :JOB_TRANSCODE_TIMEOUT AND #server_type = :server_type_job_processor',
         array(
           '#job_id' => mediamosa_job_db::ID,
+          '#asset_id' => mediamosa_job_db::ASSET_ID,
+          '#mediafile_id' => mediamosa_job_db::MEDIAFILE_ID,
           '#uri' => mediamosa_server_db::SERVER_URI,
           ':JOB_TRANSCODE_TIMEOUT' => mediamosa_settings::JOB_TRANSCODE_TIMEOUT,
           '#mediamosa_job' => mediamosa_job_db::TABLE_NAME,
@@ -1541,7 +1579,7 @@ class mediamosa_job_scheduler {
       $status = $a_job[mediamosa_job_db::JOB_STATUS];
       mediamosa_job::set_job_status_failed($result_row[mediamosa_job_db::ID], $error_message, $status);
 
-      self::log('Transcode job verwijderd vanwege timeout, job_id: @job_id', array('@job_id' => $result_row[mediamosa_job_db::ID]));
+      self::log_mediafile($result_row[mediamosa_job_db::MEDIAFILE_ID], $result_row[mediamosa_job_db::ASSET_ID], 'Transcode job was deleted because of timeout, job_id: @job_id', array('@job_id' => $result_row[mediamosa_job_db::ID]));
     }
   }
 

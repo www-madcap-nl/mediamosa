@@ -415,6 +415,46 @@ function mediamosa_app_form($node, &$form_state) {
     '#default_value' => mediamosa_node::default_value(mediamosa_app_db::SHOW_EXTERNAL_ASSETS, $node, mediamosa_app_db::SHOW_EXTERNAL_ASSETS_TRUE),
   );
 
+  $form['still'] = array(
+    '#type' => 'fieldset',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#title' => t('Still'),
+    '#description' => t('')
+  );
+
+  $tool = mediamosa_transcode_profile::get_by_tool(NULL, 'ffmpeg', 'size')->fetchAll();
+  $tool = $tool[0];
+  $allowed_values = trim($tool[mediamosa_transcode_mapping_db::ALLOWED_VALUE]) == '' ? array() : explode(';', $tool[mediamosa_transcode_mapping_db::ALLOWED_VALUE]);
+  $options = array('' => '');
+  foreach ($allowed_values as $allowed_value) {
+    $options[$allowed_value] = $allowed_value;
+  }
+  $form['still'][mediamosa_app_db::STILL_DEFAULT_SIZE] = array(
+    '#type' => 'select',
+    '#title' => t('Still default size'),
+    '#description' => t('Set frame size using format WIDTHxHEIGHT (default = @size). Possible values: @options.', array('@size' => mediamosa_settings::STILL_DEFAULT_SIZE, '@options' => implode(', ', $options))),
+    '#options' => $options,
+    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::STILL_DEFAULT_SIZE, $node, mediamosa_settings::STILL_DEFAULT_SIZE),
+  );
+  /*
+  $form['still'][mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO] = array(
+    '#type' => 'select',
+    '#title' => t('Maintain aspect ratio'),
+    '#description' => t('Force maintain the original video aspect ratio or not (default = yes). Possible values: , yes, no.'),
+    '#options' => array('YES' => t('YES'), 'NO' => t('NO')),
+    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO, $node, mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO_YES),
+  );
+   */
+
+  $form['still'][mediamosa_app_db::STILL_PADDING] = array(
+    '#type' => 'select',
+    '#title' => t('Padding'),
+    '#description' => t('Force padding, if aspect ratio is maintained (default = yes). Possible values: , yes, no.'),
+    '#options' => array('YES' => t('YES'), 'NO' => t('NO')),
+    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::STILL_PADDING, $node, mediamosa_app_db::STILL_PADDING_YES),
+  );
+
   $form['transcoding'] = array(
     '#type' => 'fieldset',
     '#collapsible' => TRUE,

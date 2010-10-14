@@ -56,7 +56,7 @@ class mediamosa_exception extends Exception {
       $backtrace = $this->getTraceAsString();
 
       if ($log_error) {
-        mediamosa::log(
+        mediamosa_log::log(
           '@message (Exception thrown on line @line, in @file)<br />Partial backtrace: <pre>@backtrace</pre>',
           array(
             '@message' => $msg,
@@ -254,6 +254,13 @@ class mediamosa_exception_error_job_mediafile_not_found extends mediamosa_except
   public function __construct($a_tags = array()) {
     assert(isset($a_tags['@mediafile_id']));
     parent::__construct(mediamosa_error::ERRORCODE_JOB_MEDIAFILE_NOT_FOUND, $a_tags);
+  }
+}
+
+class mediamosa_exception_error_still_is_not_creatable extends mediamosa_exception_error {
+  public function __construct($a_tags = array()) {
+    assert(isset($a_tags['@mediafile_id']));
+    parent::__construct(mediamosa_error::ERRORCODE_STILL_IS_NOT_CREATABLE, $a_tags);
   }
 }
 

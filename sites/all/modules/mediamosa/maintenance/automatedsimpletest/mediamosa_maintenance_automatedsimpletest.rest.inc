@@ -203,7 +203,7 @@ class mediamosa_rest_call_simpletest_run extends mediamosa_rest_call {
       $item['runphase'] = mediamosa_maintenance_automatedsimpletest::RUNPHASE_COMPLETED;
     }
     catch (Exception $e) {
-      mediamosa::log(
+      mediamosa_log::log(
         'Unittest running failed! @message (Exception thrown on line @line, in @file)<br />Partial backtrace: <pre>@backtrace</pre>',
         array(
           '@message' => $e->getMessage(),
