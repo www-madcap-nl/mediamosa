@@ -26,25 +26,30 @@
 
 /**
  * @file
- * Installer Transcode.
+ * The tool params DB class.
  */
-require_once 'profile/mediamosa_transcode_profile.install.inc';
-require_once 'mediamosa_tool/mediamosa_tool.install.inc';
+class mediamosa_tool_params_db {
+  // ------------------------------------------------------------------ Consts.
+  // Table name;
+  const TABLE_NAME = 'mediamosa_tool_params';
 
-/**
- * Implements hook_install().
- */
-function _mediamosa_transcode_install() {
-  // Create our table(s).
-  _mediamosa_transcode_profile_install();
-  _mediamosa_tool_install();
-}
-
-/**
- * Implements hook_uninstall().
- */
-function _mediamosa_transcode_uninstall() {
-  // Drop our table(s).
-  _mediamosa_transcode_profile_uninstall();
-  _mediamosa_tool_uninstall();
+  // Database fields;
+  const ID = 'tool_params_id';
+  const TOOL = 'tool';
+  const TOOL_LENGTH = 50;
+  const NICE_PARAMETER = 'nice_parameter';
+  const NICE_PARAMETER_LENGTH = 50;
+  const TOOL_PARAMETER = 'tool_parameter';
+  const TOOL_PARAMETER_LENGTH = 50;
+  const MIN_VALUE = 'min_value';
+  const MAX_VALUE = 'max_value';
+  const ALLOWED_VALUE = 'allowed_value';
+  const ALLOWED_VALUE_LENGTH = 1000;
+  const DEFAULT_VALUE = 'default_value';
+  const DEFAULT_VALUE_LENGTH = 50;
+  const REQUIRED = 'required';
+  const REQUIRED_TRUE = 'TRUE';
+  const REQUIRED_FALSE = 'FALSE';
+  const CREATED = 'created';
+  const CHANGED = 'changed';
 }

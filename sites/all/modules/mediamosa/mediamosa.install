@@ -1225,3 +1225,50 @@ function mediamosa_update_7061() {
     )
   );
 }
+
+/**
+ * Install {mediamosa_tool_params} table.
+ */
+function mediamosa_update_7062() {
+  db_query("
+    CREATE TABLE {mediamosa_tool_params} (
+      tool_params_id int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'Primary Key: Unique ID.',
+      tool varchar(50) DEFAULT NULL COMMENT 'Tool.',
+      nice_parameter varchar(50) DEFAULT NULL COMMENT 'Nice parameter.',
+      tool_parameter varchar(50) DEFAULT NULL COMMENT 'Tool parameter.',
+      min_value int(11) DEFAULT NULL COMMENT 'The minimum value.',
+      max_value int(11) DEFAULT NULL COMMENT 'The maximum value.',
+      allowed_value text COMMENT 'Allowed value.',
+      default_value varchar(50) DEFAULT NULL COMMENT 'Default value.',
+      required enum('FALSE','TRUE') NOT NULL DEFAULT 'TRUE' COMMENT 'It is a required parameter or not.',
+      created datetime NOT NULL COMMENT 'The date and time when tool parameter was created.',
+      changed datetime DEFAULT NULL COMMENT 'The date and time when tool parameter was changed last.',
+      PRIMARY KEY (tool_params_id),
+      UNIQUE KEY uni_niceparam_tool (nice_parameter,tool),
+      KEY idx_tool (tool)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='The transcode mapping table.'
+  ");
+}
+
+/**
+ * Turn on tool modules.
+ */
+function mediamosa_update_7063() {
+  // FFmpeg and Windows tools.
+  $module_list = array(
+    'mediamosa_tool_ffmpeg',
+    'mediamosa_tool_windows',
+  );
+  $enable_dependencies = TRUE;
+  module_enable($module_list, $enable_dependencies);
+}
+
+/**
+ * Uninstall {mediamosa_transcode_mapping} table.
+ */
+function mediamosa_update_7064() {
+  // Drop table.
+  db_query('DROP TABLE {mediamosa_transcode_mapping}');
+}
+
+// TODO: Remove old code from the repository on the next release: sites/all/modules/mediamosa/core/transcode/mapping.

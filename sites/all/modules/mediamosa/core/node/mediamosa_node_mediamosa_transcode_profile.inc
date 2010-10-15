@@ -319,30 +319,30 @@ function mediamosa_transcode_profile_form($node, $form_state) {
   foreach ($tools as $key => $tool) {
 
     // get the name of the parameter.
-    $name = $tool[mediamosa_transcode_mapping_db::NICE_PARAMETER];
+    $name = $tool[mediamosa_tool_params_db::NICE_PARAMETER];
 
     if (in_array($name, $tools_to_skip)) {
       continue;
     }
 
     // Convert the allowed value to array.
-    $tool[mediamosa_transcode_mapping_db::ALLOWED_VALUE] = trim($tool[mediamosa_transcode_mapping_db::ALLOWED_VALUE]) == '' ? array() : explode(';', $tool[mediamosa_transcode_mapping_db::ALLOWED_VALUE]);
+    $tool[mediamosa_tool_params_db::ALLOWED_VALUE] = trim($tool[mediamosa_tool_params_db::ALLOWED_VALUE]) == '' ? array() : unserialize($tool[mediamosa_tool_params_db::ALLOWED_VALUE]);
 
     // Tool required?
-    $is_required = $tool[mediamosa_transcode_mapping_db::REQUIRED] == mediamosa_transcode_mapping_db::REQUIRED_TRUE;
+    $is_required = $tool[mediamosa_tool_params_db::REQUIRED] == mediamosa_tool_params_db::REQUIRED_TRUE;
 
     // Put required higher.
     $weight = $is_required ? 0 : 15;
 
     // Get the value.
-    $value = isset($node->commands{$name}) ? $node->commands{$name} : ($is_required ? $tool[mediamosa_transcode_mapping_db::DEFAULT_VALUE] : '');
+    $value = isset($node->commands{$name}) ? $node->commands{$name} : ($is_required ? $tool[mediamosa_tool_params_db::DEFAULT_VALUE] : '');
 
     $descriptions = array();
     $description = isset($comments[$name]) ? $comments[$name] : '';
 
-    if (!empty($description) && isset($tool[mediamosa_transcode_mapping_db::DEFAULT_VALUE])) {
+    if (!empty($description) && isset($tool[mediamosa_tool_params_db::DEFAULT_VALUE])) {
       $description = strtr($description, array('@default' => ' (default = @value).'));
-      $description = strtr($description, array('@value' => $tool[mediamosa_transcode_mapping_db::DEFAULT_VALUE]));
+      $description = strtr($description, array('@value' => $tool[mediamosa_tool_params_db::DEFAULT_VALUE]));
       $descriptions[] = $description;
     }
     elseif (!empty($description)) {
@@ -352,9 +352,9 @@ function mediamosa_transcode_profile_form($node, $form_state) {
     // Get the tool.
     $tool_name = drupal_ucfirst(str_replace('_', ' ', $name));
 
-    if (empty($tool[mediamosa_transcode_mapping_db::ALLOWED_VALUE])) {
+    if (empty($tool[mediamosa_tool_params_db::ALLOWED_VALUE])) {
       // Add allowed value to description.
-      $descriptions[] = t('The allowed value is between @min_value and @max_value.', array('@min_value' => $tool[mediamosa_transcode_mapping_db::MIN_VALUE], '@max_value' => $tool[mediamosa_transcode_mapping_db::MAX_VALUE]));
+      $descriptions[] = t('The allowed value is between @min_value and @max_value.', array('@min_value' => $tool[mediamosa_tool_params_db::MIN_VALUE], '@max_value' => $tool[mediamosa_tool_params_db::MAX_VALUE]));
 
       $form['tool_options']['options_' . $name] = array(
         '#description' => implode(' ', $descriptions),
@@ -368,7 +368,7 @@ function mediamosa_transcode_profile_form($node, $form_state) {
     }
     else {// Select box.
       $options = $is_required ? array() : array('' => '');
-      foreach ($tool[mediamosa_transcode_mapping_db::ALLOWED_VALUE] as $allowed_value) {
+      foreach ($tool[mediamosa_tool_params_db::ALLOWED_VALUE] as $allowed_value) {
         $options[$allowed_value] = $allowed_value;
       }
 

@@ -278,9 +278,11 @@ files[] = core/transcode/mediamosa_transcode.install.inc
 files[] = core/transcode/profile/mediamosa_transcode_profile_db.inc
 files[] = core/transcode/profile/mediamosa_transcode_profile.inc
 files[] = core/transcode/profile/mediamosa_transcode_profile.install.inc
-files[] = core/transcode/mapping/mediamosa_transcode_mapping_db.inc
-files[] = core/transcode/mapping/mediamosa_transcode_mapping.inc
-files[] = core/transcode/mapping/mediamosa_transcode_mapping.install.inc
+
+; Tool.
+files[] = core/transcode/mediamosa_tool/mediamosa_tool_db.inc
+files[] = core/transcode/mediamosa_tool/mediamosa_tool.inc
+files[] = core/transcode/mediamosa_tool/mediamosa_tool.install.inc
 
 ; User.
 files[] = core/user/mediamosa_user_db.inc

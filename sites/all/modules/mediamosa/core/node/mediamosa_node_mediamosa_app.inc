@@ -425,7 +425,7 @@ function mediamosa_app_form($node, &$form_state) {
 
   $tool = mediamosa_transcode_profile::get_by_tool(NULL, 'ffmpeg', 'size')->fetchAll();
   $tool = $tool[0];
-  $allowed_values = trim($tool[mediamosa_transcode_mapping_db::ALLOWED_VALUE]) == '' ? array() : explode(';', $tool[mediamosa_transcode_mapping_db::ALLOWED_VALUE]);
+  $allowed_values = trim($tool[mediamosa_tool_params_db::ALLOWED_VALUE]) == '' ? array() : unserialize($tool[mediamosa_tool_params_db::ALLOWED_VALUE]);
   $options = array('' => '');
   foreach ($allowed_values as $allowed_value) {
     $options[$allowed_value] = $allowed_value;
