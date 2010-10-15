@@ -299,8 +299,12 @@ function transcode(source_path, destination_path, hash, dst_ext, params, pass, t
   end
 
   -- Go to the temporary directory and run the ffmpeg.
+  local cd_command = ""
+  if pass ~= 0 then
+    cd_command = "cd " .. destination_path .. "/" .. tmp_dir .. "; "
+  end
   local command =
-    string.format("cd " .. destination_path .. "/" .. tmp_dir .. "; " ..
+    string.format(cd_command ..
                   "ffmpeg -i %s/%s/%s %s %s -y %s/%s.%s 2>&1 || " ..
                   "echo 'Error: ffmpeg returned a non-zero exit code:' $? &",
                   source_path, string.sub(hash, 1, 1), hash, params,
