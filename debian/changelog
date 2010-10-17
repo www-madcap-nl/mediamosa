@@ -1,3 +1,9 @@
+vpcore (2.2.5.2) unstable; urgency=low
+
+  * Version 2.2.5.2; Black Still off - noodpatch
+
+ -- arjen <vpcore@madcap.nl>  Tue, 12 Oct 2010 10:04:26 +0200
+
 vpcore (2.2.5.1) unstable; urgency=low
 
   * Version 2.2.5.1; group_id[] noodpatch
