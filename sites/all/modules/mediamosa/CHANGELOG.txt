@@ -18,6 +18,8 @@ Other changes (not ticket related).
 - Added 'changed' for CQL for searching on changed date on asset.
 - Added 'app_id_search' for CQL for asset search.
 - Added module enable for mediamosa_library on profile.
+- Added unit test for black still generation.
+- Enabled black still generation (still_validate()).
 
 MediaMosa 2.2.5.2 (Build 952)
 ---------------------------
