@@ -1,3 +1,15 @@
+vpcore (2.2.5.1) unstable; urgency=low
+
+  * Version 2.2.5.1; group_id[] noodpatch
+
+ -- arjen <vpcore@madcap.nl>  Tue, 12 Oct 2010 10:04:26 +0200
+
+vpcore (2.2.5) unstable; urgency=low
+
+  * Version 2.2.5; see mediamosa.org/trac for details.
+
+ -- arjen <vpcore@madcap.nl>  Tue, 05 Oct 2010 10:04:26 +0200
+
 vpcore (2.2.4) unstable; urgency=low
 
   * Version 2.2.4; see mediamosa.org/trac for details.
