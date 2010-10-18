@@ -57,7 +57,7 @@ class mediamosa_db {
     if (mediamosa::is_db_logging()) {
       $f_start_time = microtime(TRUE);
       $result = call_user_func_array('db_delete', $args);
-      mediamosa::log_db(round(microtime(TRUE) - $f_start_time, 4), $result && isset($result->queryString) ? $result->queryString : $args[0]);
+      mediamosa_dblog::log_db(round(microtime(TRUE) - $f_start_time, 4), $result && isset($result->queryString) ? $result->queryString : $args[0]);
       return $result;
     }
 
@@ -168,7 +168,7 @@ class mediamosa_db {
 
     // Loggin on.
     if (mediamosa::is_db_logging()) {
-      mediamosa::log_db(round(microtime(TRUE) - $f_start_time, 4), $result && isset($result->queryString) ? $result->queryString : $query);
+      mediamosa_dblog::log_db(round(microtime(TRUE) - $f_start_time, 4), $result && isset($result->queryString) ? $result->queryString : $query);
     }
 
     return $result;
@@ -299,7 +299,7 @@ class mediamosa_db {
     if (mediamosa::is_db_logging()) {
       $f_start_time = microtime(TRUE);
       $result = call_user_func_array('db_select', $args);
-      mediamosa::log_db(round(microtime(TRUE) - $f_start_time, 4), $result && isset($result->queryString) ? $result->queryString : '-failure-');
+      mediamosa_dblog::log_db(round(microtime(TRUE) - $f_start_time, 4), $result && isset($result->queryString) ? $result->queryString : '-failure-');
       return $result;
     }
 
@@ -322,7 +322,7 @@ class mediamosa_db {
     if (mediamosa::is_db_logging()) {
       $f_start_time = microtime(TRUE);
       $result = call_user_func_array('db_insert', $args);
-      mediamosa::log_db(round(microtime(TRUE) - $f_start_time, 4), $result && isset($result->queryString) ? $result->queryString : '-failure-');
+      mediamosa_dblog::log_db(round(microtime(TRUE) - $f_start_time, 4), $result && isset($result->queryString) ? $result->queryString : '-failure-');
       return $result;
     }
 
@@ -358,7 +358,7 @@ class mediamosa_db {
     if (mediamosa::is_db_logging()) {
       $f_start_time = microtime(TRUE);
       $result = call_user_func_array('db_update', $args);
-      mediamosa::log_db(round(microtime(TRUE) - $f_start_time, 4), $result && isset($result->queryString) ? $result->queryString : '-failure-');
+      mediamosa_dblog::log_db(round(microtime(TRUE) - $f_start_time, 4), $result && isset($result->queryString) ? $result->queryString : '-failure-');
       return $result;
     }
 
@@ -524,7 +524,7 @@ class mediamosa_db {
           assert($e);
 
           assert(0);// so we know.
-          mediamosa::log(
+          mediamosa_dblog::log(
             "Failed to create foreign key 'fk_#table_name_#column' on table '#table_name', query; '#query', message: #message.",
             array(
               '#table_name' => $module_name,

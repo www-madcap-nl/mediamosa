@@ -25,6 +25,16 @@
  */
 
 /**
- * @file
- * MediaMosa Library.
- */
+  * @file
+  * The DB class of mediamosa module.
+  */
+class mediamosa_dblog_db {
+  // ------------------------------------------------------------------ Consts.
+  // Table name;
+  const TABLE_NAME = 'mediamosa_dblog';
+
+  // Database fields;
+  const ID = 'wid';
+  const ASSET_ID = 'asset_id';
+  const MEDIAFILE_ID = 'mediafile_id';
+}

@@ -179,6 +179,7 @@ function _mediamosa_error_install() {
     'ERRORCODE_SERVER_STILL_NOT_FOUND' => 'MediaMosa - No default still server found.',
     'ERRORCODE_SERVER_UPLOAD_NOT_FOUND' => 'Unable to find active upload server.',
     'ERRORCODE_STILL_NOT_IMAGE' => 'MM - still is not an image for asset_id=@asset_id.',
+    'ERRORCODE_STILL_IS_NOT_CREATABLE' => 'MM - still is not creatable for mediafile_id=@mediafile_id.',
 
     'ERRORCODE_RETRIEVING_SERVERLIST' => 'JH - error retrieving serverlist',
     'ERRORCODE_RETRIEVING_AVAILABLE_SERVERLIST' => 'JH - error retrieving server-job-list',

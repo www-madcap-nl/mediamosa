@@ -185,4 +185,48 @@ class mediamosa_app {
     // Return stored array.
     return unserialize($allowed_apps);
   }
+
+  /**
+   * Return the default value of the still, depending of the application id.
+   *
+   * @param integer $app_id
+   */
+  static public function get_still_default_value($app_id) {
+    if (!$app_id) {
+      return mediamosa_settings::STILL_DEFAULT_SIZE;
+    }
+
+    // Get the default size of still of application.
+    $app = self::get_by_appid($app_id);
+    return (!empty($app[mediamosa_app_db::STILL_DEFAULT_SIZE]) ? $app[mediamosa_app_db::STILL_DEFAULT_SIZE] : mediamosa_settings::STILL_DEFAULT_SIZE);
+  }
+
+  /**
+   * Return the still padding value, depending of the application id.
+   *
+   * @param integer $app_id
+   */
+  static public function get_still_padding_value($app_id) {
+    if (!$app_id) {
+      return mediamosa_app_db::STILL_PADDING_YES;
+    }
+
+    $app = self::get_by_appid($app_id);
+    return (!empty($app[mediamosa_app_db::STILL_PADDING]) ? $app[mediamosa_app_db::STILL_PADDING] : mediamosa_app_db::STILL_PADDING_YES);
+  }
+
+  /**
+   * Return the still maintain aspect ratio value, depending of the application
+   * id.
+   *
+   * @param integer $app_id
+   */
+  static public function get_still_maintain_aspect_ratio_value($app_id) {
+    if (!$app_id) {
+      return mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO_YES;
+    }
+
+    $app = self::get_by_appid($app_id);
+    return (!empty($app[mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO]) ? $app[mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO] : mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO_YES);
+  }
 }

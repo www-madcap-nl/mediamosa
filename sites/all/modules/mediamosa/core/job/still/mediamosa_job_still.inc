@@ -59,7 +59,6 @@ class mediamosa_job_still {
       'still_every_second' => NULL,
       'start_frame' => NULL,
       'end_frame' => NULL,
-      mediamosa_job_still_db::SIZE => mediamosa_settings::STILL_DEFAULT_SIZE,
       mediamosa_job_still_db::H_PADDING => NULL,
       mediamosa_job_still_db::V_PADDING => NULL,
       mediamosa_job_still_db::FRAMETIME => mediamosa_settings::STILL_DEFAULT_FRAME_TIME,

@@ -9,33 +9,23 @@ Known issues;
   not correctly retrieved on the server status page. (See ticket #367).
 
 MediaMosa 2.3.0
----------------
-- Made user/$fav_user_id/favorites/delete [GET] deprecated (See ticket #3).
+---------------------------
+- Default still size and still padding are adjustable in management interface
+  (See ticket #215).
+- Instant analyse after transcoding (See ticket #258).
+- No still job on audio files (See ticket #219).
+- Extended the search in watchdog to search on asset ID, mediafile ID and on
+  description. (See ticket #330).
 
-Other changes (not ticket related).
-- Fixed: /mediafile/uploadprogress will now work without /external in front of
-  uri.
-- Added 'changed' for CQL for searching on changed date on asset.
-- Added 'app_id_search' for CQL for asset search.
-- Added module enable for mediamosa_library on profile.
-- Fixed: mediamosa_io::filesize() will now return FALSE when file was not found
-  and will no longer generate a notice.
 
-MediaMosa 2.2.5.1 (Build 944)
------------------------------
-- Fixed: group_id input in /playproxy where group_id was not an array but single
-  value. (See surfmedia ticket #24).
-
-MediaMosa 2.2.5 (Build 939) (Release candidate 2)
--------------------------------------------------
+MediaMosa 2.2.4 (Build 935)
+---------------------------
 - Fixed: Escape problems with CQL search (See vpcore ticket #192).
-- Fixed: Files bigger than 256mb would get cut off at 250mb because of memory 
-  limit. (See ticket #183).
 
 Other changes (not ticket related).
 - Fixed: Play proxy did not correctly checked asset.
 - Apache version check failure on status page is no longer fatal.
-- Added timestamp to /status REST call.
+- Added timestamp to /status page.
 
 MediaMosa 2.2.4 (Build 930)
 ---------------------------

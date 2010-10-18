@@ -10,7 +10,7 @@ configure = admin/mediamosa/config/global
 ; Dependencies (module names)
 ; YOU MUST HAVE VERY GOOD REASON TO GIVE A DEP. TO THE CORE MODULE.
 dependencies[] = simpletest
-;dependencies[] = mediamosa_library
+dependencies[] = mediamosa_library
 
 ; Used files.
 
@@ -26,6 +26,7 @@ files[] = mediamosa.settings.inc
 files[] = core/error/mediamosa_error_db.inc
 files[] = core/error/mediamosa_error.inc
 files[] = core/error/mediamosa_error.install.inc
+files[] = core/dblog/mediamosa_dblog.install.inc
 
 ; Library. (2nd for dependency).
 files[] = lib/mediamosa_datetime.inc
@@ -39,6 +40,10 @@ files[] = lib/mediamosa_io.inc
 files[] = lib/mediamosa_lib.inc
 files[] = lib/mediamosa_type.inc
 files[] = lib/mediamosa_unicode.inc
+
+; dblog
+files[] = core/dblog/mediamosa_dblog.inc
+files[] = core/dblog/mediamosa_dblog_db.inc
 
 ; CQL.
 files[] = cql/mediamosa_cql.class.inc

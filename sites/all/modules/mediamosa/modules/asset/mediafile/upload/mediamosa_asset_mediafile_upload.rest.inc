@@ -226,7 +226,6 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
         self::SIZE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_STRING,
           self::VAR_DESCRIPTION => 'Size of the still.',
-          self::VAR_DEFAULT_VALUE => mediamosa_settings::STILL_DEFAULT_SIZE,
         ),
         self::H_PADDING => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
@@ -281,8 +280,19 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
   public function do_call() {
     $mediamosa = mediamosa::get();
 
-    // Get params.
+    // Ticket id.
     $ticket_id = $this->get_param_value(self::UPLOAD_TICKET);
+
+    // Get the ticket.
+    $ticket = mediamosa_ticket::get_valid_upload($ticket_id);
+    if (empty($ticket)) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INVALID_UPLOAD_TICKET);
+    }
+    // Get the mediafile using the ticket mediafile_id.
+    $mediafile = mediamosa_asset_mediafile::must_exists($ticket[mediamosa_ticket_db::MEDIAFILE_ID]);
+    $app_id = $mediafile[mediamosa_asset_mediafile_db::APP_ID];
+
+    // Get params.
     $create_still = $this->get_param_value(self::CREATE_STILL);
     $still_parameters = array(
       'still_type' => $this->get_param_value(self::STILL_TYPE),
@@ -290,9 +300,9 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
       'still_every_second' => $this->get_param_value(self::STILL_EVERY_SECOND),
       'start_frame' => $this->get_param_value(self::START_FRAME),
       'end_frame' => $this->get_param_value(self::END_FRAME),
-      'size' => $this->get_param_value(self::SIZE),
-      'h_padding' => $this->get_param_value(self::H_PADDING),
-      'v_padding' => $this->get_param_value(self::V_PADDING),
+      'size' => ($this->get_param_value(self::SIZE) ? $this->get_param_value(self::SIZE) : mediamosa_app::get_still_default_value($app_id)),
+      'h_padding' => ($this->get_param_value_org(self::H_PADDING) == '' ? NULL : $this->get_param_value(self::H_PADDING)),
+      'v_padding' => ($this->get_param_value_org(self::V_PADDING) == '' ? NULL : $this->get_param_value(self::V_PADDING)),
       'tag' => $this->get_param_value(self::TAG),
       'frametime' => $this->get_param_value(self::FRAMETIME),
       'width' => $this->get_param_value(self::WIDTH),

@@ -43,6 +43,7 @@ require_once 'core/app/mediamosa_app.install.inc';
 require_once 'core/aut/mediamosa_aut.install.inc';
 require_once 'core/app/mediamosa_app.install.inc';
 require_once 'core/asset/mediamosa_asset.install.inc';
+require_once 'core/dblog/mediamosa_dblog.install.inc';
 require_once 'core/collection/mediamosa_collection.install.inc';
 require_once 'core/ftp_batch/mediamosa_ftp_batch.install.inc';
 require_once 'core/ftp_user/mediamosa_ftp_user.install.inc';
@@ -62,6 +63,9 @@ function mediamosa_install() {
 
    // Install the error db.
   _mediamosa_error_install();
+
+  // Install watchdog extend table.
+  _mediamosa_dblog_install();
 
   // Install our node db.
   _mediamosa_node_install();
@@ -104,12 +108,18 @@ function mediamosa_install() {
 
   // Install the ftp_user table.
   _mediamosa_ftp_user_install();
+
+  // Add index to watchdog table.
+  db_add_index('watchdog', 'idx_link', array('link'));
 }
 
 /**
  * Implements hook_unstall().
  */
 function mediamosa_uninstall() {
+  // Remove index to watchdog table.
+  db_drop_index('watchdog', 'idx_link');
+
   // Remove the ftp_user table.
   _mediamosa_ftp_user_uninstall();
 
@@ -151,6 +161,9 @@ function mediamosa_uninstall() {
 
   // Remove the app db.
   _mediamosa_app_uninstall();
+
+  // Remove the watchdog extend table.
+  _mediamosa_dblog_install();
 
   // Remove the error db.
   _mediamosa_error_uninstall();
@@ -1120,3 +1133,72 @@ function mediamosa_update_7057() {
   db_query('UPDATE {mediamosa_asset} SET parent_id = NULL');
 }
 
+/**
+ * Default still size is adjustable now.
+ * Padding and maintain aspect ratio is adjustable now too.
+ */
+function mediamosa_update_7058() {
+  // Create still default size field.
+  db_add_field(mediamosa_app_db::TABLE_NAME, mediamosa_app_db::STILL_DEFAULT_SIZE, array(
+    'description' => t('The default size of the still image.'),
+    'type' => 'varchar',
+    'length' => mediamosa_app_db::STILL_DEFAULT_SIZE_LENGTH,
+    'not null' => FALSE,
+    'default' => mediamosa_settings::STILL_DEFAULT_SIZE,
+  ));
+
+  // Create still padding field.
+  db_add_field(mediamosa_app_db::TABLE_NAME, mediamosa_app_db::STILL_PADDING, array(
+    'description' => t('Force padding, if aspect ratio is maintaned.'),
+    'type' => "enum('" . implode("','", array(mediamosa_app_db::STILL_PADDING_NO, mediamosa_app_db::STILL_PADDING_YES)) . "')",
+    'not null' => TRUE,
+    'mysql_type' => "enum('" . implode("','", array(mediamosa_app_db::STILL_PADDING_NO, mediamosa_app_db::STILL_PADDING_YES)) . "')",
+    'default' => mediamosa_app_db::STILL_PADDING_YES,
+  ));
+
+  // Create still maintain aspect ratio field.
+  db_add_field(mediamosa_app_db::TABLE_NAME, mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO, array(
+    'description' => t('Force maintain the original video aspect ratio or not.'),
+    'type' => "enum('" . implode("','", array(mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO_NO, mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO_YES)) . "')",
+    'not null' => TRUE,
+    'mysql_type' => "enum('" . implode("','", array(mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO_NO, mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO_YES)) . "')",
+    'default' => mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO_YES,
+  ));
+}
+
+/**
+ * New error: ERRORCODE_STILL_IS_NOT_CREATABLE.
+ */
+function mediamosa_update_7059() {
+  db_query('INSERT INTO {mediamosa_error} (name, code, message) VALUES (:name, :code, :message)', array(
+    ':name' => 'ERRORCODE_STILL_IS_NOT_CREATABLE',
+    ':code' => mediamosa_error::ERRORCODE_STILL_IS_NOT_CREATABLE,
+    ':message' => 'MM - still is not creatable for mediafile_id=@mediafile_id.',
+  ));
+}
+
+/**
+ * Install mediamosa_dblog table.
+ */
+function mediamosa_update_7060() {
+
+  // Create our table(s).
+  mediamosa::drupal_install_schema(mediamosa_dblog_db::TABLE_NAME);
+}
+
+/**
+ * Add index to watchdog table.
+ */
+function mediamosa_update_7061() {
+  db_add_index('watchdog', 'idx_link', array('link'));
+}
+
+/**
+ * Clear the cache, rebuild registry, change class name, just to be sure.
+ */
+function mediamosa_update_7062() {
+  // Rebuild the registry.
+  registry_rebuild();
+
+  cache_clear_all();
+}

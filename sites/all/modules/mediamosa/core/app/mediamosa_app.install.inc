@@ -257,6 +257,27 @@ function mediamosa_app_schema() {
         'not null' => FALSE,
         'default' => mediamosa_settings::MEDIAMOSA_DEFAULT_TIMEZONE,
       ),
+      mediamosa_app_db::STILL_DEFAULT_SIZE => array(
+        'description' => t('The default size of the still image.'),
+        'type' => 'varchar',
+        'length' => mediamosa_app_db::STILL_DEFAULT_SIZE_LENGTH,
+        'not null' => FALSE,
+        'default' => mediamosa_settings::STILL_DEFAULT_SIZE,
+      ),
+      mediamosa_app_db::STILL_PADDING => array(
+        'description' => t('Force padding, if aspect ratio is maintaned.'),
+        'type' => "enum('" . implode("','", array(mediamosa_app_db::STILL_PADDING_NO, mediamosa_app_db::STILL_PADDING_YES)) . "')",
+        'not null' => TRUE,
+        'mysql_type' => "enum('" . implode("','", array(mediamosa_app_db::STILL_PADDING_NO, mediamosa_app_db::STILL_PADDING_YES)) . "')",
+        'default' => mediamosa_app_db::STILL_PADDING_YES,
+      ),
+      mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO => array(
+        'description' => t('Force maintain the original video aspect ratio or not.'),
+        'type' => "enum('" . implode("','", array(mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO_NO, mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO_YES)) . "')",
+        'not null' => TRUE,
+        'mysql_type' => "enum('" . implode("','", array(mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO_NO, mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO_YES)) . "')",
+        'default' => mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO_YES,
+      ),
     ),
     'primary key' => array(mediamosa_app_db::NID), // Revisions are stored in mediamosa_node_revision.
     'unique keys' => array(
