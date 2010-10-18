@@ -489,12 +489,6 @@ class mediamosa_asset_mediafile_play_proxy {
             $output = $streaming_server_ticket_uri;
             break;
         }
-
-        // FIXME: Hack for EDIT for new wowza servers, will need to remove for 2.2
-        global $databases;
-        if ($app_id == 104 && $databases['default']['default'] == 'vpcore') {
-          $output = str_replace('simplevideostreaming', 'vod', $output);
-        }
         break;
 
       case self::RESPONSE_TYPE_DOWNLOAD:

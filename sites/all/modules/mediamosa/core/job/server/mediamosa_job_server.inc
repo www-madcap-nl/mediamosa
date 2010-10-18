@@ -1204,6 +1204,7 @@ class mediamosa_job_server {
     }
 
     // Check if the frame has any usefull content. We do this by checking the amount of dominant colors.
+    // Disabled black still detection; needs a rewrite.
     $mediafile_id_src = mediamosa_job_server_still::still_validate($job_id, $mediafile_id_src);
 
     if ($mediafile_id_src === FALSE) {
