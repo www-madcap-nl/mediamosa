@@ -34,6 +34,7 @@ require_once 'core/node/mediamosa_node.inc';
 
 // Include the class we need. During install nothing can be autoloaded (yet).
 require_once 'mediamosa.inc';
+require_once 'mediamosa_db.inc';
 require_once 'mediamosa.settings.inc';
 require_once 'lib/mediamosa_db.inc';
 require_once 'lib/mediamosa_datetime.inc';
@@ -163,7 +164,7 @@ function mediamosa_uninstall() {
   _mediamosa_app_uninstall();
 
   // Remove the watchdog extend table.
-  _mediamosa_watchdog_install();
+  _mediamosa_watchdog_uninstall();
 
   // Remove the error db.
   _mediamosa_error_uninstall();

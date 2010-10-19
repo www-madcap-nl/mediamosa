@@ -87,7 +87,7 @@ class mediamosa_job_scheduler {
       $url = mediamosa_http::uri2url($mediamosa_jobscheduler_uri) . '/internal/cron/jobscheduler';
 
       // Log it.
-      mediamosa_debug::log('Triggering job scheduler @ @uri', array('@uri' => $url));
+      self::log('Triggering job scheduler @ @uri', array('@uri' => $url));
 
       // Dont trigger in sandbox.
       if (mediamosa::in_simpletest_sandbox()) {

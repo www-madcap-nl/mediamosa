@@ -52,6 +52,7 @@ class mediamosa_asset_mediafile_metadata {
   const BPP_LENGTH = 5;
   const FILESIZE = 'filesize';
   const MIME_TYPE = 'mime_type';
+  const MIME_TYPE_LENGTH = 80;
   const IS_HINTED = 'is_hinted';
   const IS_HINTED_TRUE = 'TRUE';
   const IS_HINTED_FALSE = 'FALSE';
