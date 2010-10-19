@@ -26,7 +26,7 @@ files[] = mediamosa.settings.inc
 files[] = core/error/mediamosa_error_db.inc
 files[] = core/error/mediamosa_error.inc
 files[] = core/error/mediamosa_error.install.inc
-files[] = core/dblog/mediamosa_dblog.install.inc
+files[] = core/watchdog/mediamosa_watchdog.install.inc
 
 ; Library. (2nd for dependency).
 files[] = lib/mediamosa_datetime.inc
@@ -42,8 +42,8 @@ files[] = lib/mediamosa_type.inc
 files[] = lib/mediamosa_unicode.inc
 
 ; dblog
-files[] = core/dblog/mediamosa_dblog.inc
-files[] = core/dblog/mediamosa_dblog_db.inc
+files[] = core/watchdog/mediamosa_watchdog.inc
+files[] = core/watchdog/mediamosa_watchdog_db.inc
 
 ; CQL.
 files[] = cql/mediamosa_cql.class.inc

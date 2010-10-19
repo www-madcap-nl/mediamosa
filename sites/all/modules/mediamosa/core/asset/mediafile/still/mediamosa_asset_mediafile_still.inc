@@ -190,7 +190,7 @@ class mediamosa_asset_mediafile_still {
    * @param integer $order
    */
   static public function set_still_order($app_id, $user_id, $asset_id, $mediafile_id, $still_id, $order) {
-    mediamosa_dblog::log_mediafile(
+    mediamosa_watchdog::log_mediafile(
       $mediafile_id,
       "Still order: asset_id = @asset_id; mediafile_id = @mediafile_id; still_id = @still_id; order = @order;",
       array(
@@ -414,7 +414,7 @@ class mediamosa_asset_mediafile_still {
     foreach ($result as $a_row) {
       // Build the path and filename of the still.
       $still_filename = mediamosa_configuration_storage::mediafile_still_filename_get($a_row['still_id'], $a_row[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT]);
-      mediamosa_dblog::log_mediafile($mediafile_id, 'Deleting still: @location', array('@location' => $still_filename), $asset_id);
+      mediamosa_watchdog::log_mediafile($mediafile_id, 'Deleting still: @location', array('@location' => $still_filename), $asset_id);
 
       // Remove the file.
       mediamosa_io::unlink($still_filename);
@@ -533,7 +533,7 @@ class mediamosa_asset_mediafile_still {
    *  The still ID.
    */
   static public function set_still_default($app_id, $user_id, $asset_id, $mediafile_id, $still_id) {
-    mediamosa_dblog::log_mediafile(
+    mediamosa_watchdog::log_mediafile(
       $mediafile_id,
       'Setting default still: asset_id = @asset_id; mediafile_id = @mediafile_id; still_id = @still_id',
       array(

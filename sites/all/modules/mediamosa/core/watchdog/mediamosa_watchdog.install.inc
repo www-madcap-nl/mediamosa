@@ -29,56 +29,56 @@
   * Installer for the App module.
   */
 
-require_once 'mediamosa_dblog.inc';
-require_once 'mediamosa_dblog_db.inc';
+require_once 'mediamosa_watchdog.inc';
+require_once 'mediamosa_watchdog_db.inc';
 
 /**
  * Implements hook_install().
  */
-function _mediamosa_dblog_install() {
+function _mediamosa_watchdog_install() {
   // Create our table(s).
-  mediamosa::drupal_install_schema(mediamosa_dblog_db::TABLE_NAME);
+  mediamosa::drupal_install_schema(mediamosa_watchdog_db::TABLE_NAME);
 }
 
 /**
  * Implements hook_uninstall().
  */
-function _mediamosa_dblog_uninstall() {
+function _mediamosa_watchdog_uninstall() {
   // Drop our table(s).
-  mediamosa::drupal_uninstall_schema(mediamosa_dblog_db::TABLE_NAME);
+  mediamosa::drupal_uninstall_schema(mediamosa_watchdog_db::TABLE_NAME);
 }
 
 /**
  * Implements hook_schema().
  * @return array
  */
-function mediamosa_dblog_schema() {
+function mediamosa_watchdog_schema() {
 
-  $schema[mediamosa_dblog_db::TABLE_NAME] = array(
+  $schema[mediamosa_watchdog_db::TABLE_NAME] = array(
   'description' => t('The extender for the watchdog table.'),
     'fields' => array(
-      mediamosa_dblog_db::ID => array(
+      mediamosa_watchdog_db::ID => array(
         'type' => 'int',
         'not null' => TRUE,
         'description' => t('Primary Key: Unique ID.'),
       ),
-      mediamosa_dblog_db::ASSET_ID => array(
+      mediamosa_watchdog_db::ASSET_ID => array(
         'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
         'not null' => TRUE,
         'description' => t('The asset ID.'),
       ),
-      mediamosa_dblog_db::MEDIAFILE_ID => array(
+      mediamosa_watchdog_db::MEDIAFILE_ID => array(
         'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
         'not null' => TRUE,
         'description' => t('The asset mediafile ID.'),
       ),
     ),
-    'primary key' => array(mediamosa_dblog_db::ID),
+    'primary key' => array(mediamosa_watchdog_db::ID),
     'indexes' => array(
-      'idx_' . mediamosa_dblog_db::ASSET_ID => array(mediamosa_dblog_db::ASSET_ID),
-      'idx_' . mediamosa_dblog_db::MEDIAFILE_ID => array(mediamosa_dblog_db::MEDIAFILE_ID),
+      'idx_' . mediamosa_watchdog_db::ASSET_ID => array(mediamosa_watchdog_db::ASSET_ID),
+      'idx_' . mediamosa_watchdog_db::MEDIAFILE_ID => array(mediamosa_watchdog_db::MEDIAFILE_ID),
     ),
     // Foreign key not possible because watchdog entries will be removed by
     // drupal, so we need to accept that we'll have rows here without watchdog.

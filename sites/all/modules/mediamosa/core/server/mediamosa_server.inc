@@ -40,7 +40,7 @@ class mediamosa_server {
    * @param string $severity
    */
   static public function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
-    mediamosa_dblog::log($message, $variables, $severity, 'server');
+    mediamosa_watchdog::log($message, $variables, $severity, 'server');
   }
 
   /**

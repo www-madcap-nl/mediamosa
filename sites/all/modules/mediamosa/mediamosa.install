@@ -43,7 +43,7 @@ require_once 'core/app/mediamosa_app.install.inc';
 require_once 'core/aut/mediamosa_aut.install.inc';
 require_once 'core/app/mediamosa_app.install.inc';
 require_once 'core/asset/mediamosa_asset.install.inc';
-require_once 'core/dblog/mediamosa_dblog.install.inc';
+require_once 'core/watchdog/mediamosa_watchdog.install.inc';
 require_once 'core/collection/mediamosa_collection.install.inc';
 require_once 'core/ftp_batch/mediamosa_ftp_batch.install.inc';
 require_once 'core/ftp_user/mediamosa_ftp_user.install.inc';
@@ -65,7 +65,7 @@ function mediamosa_install() {
   _mediamosa_error_install();
 
   // Install watchdog extend table.
-  _mediamosa_dblog_install();
+  _mediamosa_watchdog_install();
 
   // Install our node db.
   _mediamosa_node_install();
@@ -163,7 +163,7 @@ function mediamosa_uninstall() {
   _mediamosa_app_uninstall();
 
   // Remove the watchdog extend table.
-  _mediamosa_dblog_install();
+  _mediamosa_watchdog_install();
 
   // Remove the error db.
   _mediamosa_error_uninstall();
@@ -1178,12 +1178,12 @@ function mediamosa_update_7059() {
 }
 
 /**
- * Install mediamosa_dblog table.
+ * Install mediamosa_watchdog table.
  */
 function mediamosa_update_7060() {
 
   // Create our table(s).
-  mediamosa::drupal_install_schema(mediamosa_dblog_db::TABLE_NAME);
+  mediamosa::drupal_install_schema(mediamosa_watchdog_db::TABLE_NAME);
 }
 
 /**
@@ -1197,6 +1197,16 @@ function mediamosa_update_7061() {
  * Clear the cache, rebuild registry, change class name, just to be sure.
  */
 function mediamosa_update_7062() {
+  // Moved to 7063.
+}
+
+/**
+ * Rename mediamosa_dblog table to mediamosa_watchdog.
+ */
+function mediamosa_update_7063() {
+  // Rename the old metadata table.
+  db_query('ALTER TABLE {mediamosa_dblog} RENAME {mediamosa_watchdog}');
+
   // Rebuild the registry.
   registry_rebuild();
 

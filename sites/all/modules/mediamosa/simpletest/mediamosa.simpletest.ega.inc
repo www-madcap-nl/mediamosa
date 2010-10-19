@@ -1078,6 +1078,63 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   }
 
   /**
+   * Get a collection.
+   *
+   * @param string $coll_id
+   * @param string $user_id
+   * @param array $parameters
+   */
+  protected function getCollection($coll_id, $user_id = self::SIMPLETEST_USER_ID, array $parameters = array()) {
+
+    // Required parameter.
+    $parameters[mediamosa_rest_call_collection_create::USER_ID] = $user_id;
+
+    // Do not set the app ID, handle by us.
+    $this->assertFalse(isset($parameters[mediamosa_rest_call_collection_create::APP_ID]));
+
+    $uri = strtr('collection/@coll_id', array('@coll_id' => $coll_id));
+
+    // Do Post call.
+    $response = $this->restCallGet($uri, $parameters);
+
+    $this->pass(strtr("Gets the collection id: @coll_id'.", array('@coll_id' => $coll_id)));
+
+    // Return data.
+    return $response['xml']->items->item[0];
+  }
+
+
+  /**
+   * Search collections.
+   *
+   * @param string $user_id
+   * @param array $parameters
+   */
+  protected function searchCollections($user_id = self::SIMPLETEST_USER_ID, array $parameters = array()) {
+    // Parameters collection
+    $parameters += array(
+      mediamosa_rest_call_collection_search::HIDE_EMPTY_ASSETS => FALSE,
+    );
+
+    // Required.
+    $parameters[mediamosa_rest_call_collection_search::USER_ID] = $user_id;
+
+    // Optional, convert.
+    $parameters[mediamosa_rest_call_collection_search::HIDE_EMPTY_ASSETS] = $parameters[mediamosa_rest_call_collection_search::HIDE_EMPTY_ASSETS] ? 'TRUE' : 'FALSE';
+
+    // Do not set the app ID, handle by us.
+    $this->assertFalse(isset($parameters[mediamosa_rest_call_collection_search::APP_ID]));
+
+    $uri = 'collection';
+
+    // Do Post call.
+    $response = $this->restCallGet($uri, $parameters);
+
+    // Get response.
+    return mediamosa_lib::responsexml2array($response['xml']);
+  }
+
+  /**
    * Get an user.
    * Based on the rest call /user/$user_id (GET)
    */
@@ -1596,6 +1653,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       mediamosa_rest_call_collection_create::USER_ID => self::SIMPLETEST_USER_ID,
       mediamosa_rest_call_collection_create::GROUP_ID => self::SIMPLETEST_GROUP_ID,
       mediamosa_rest_call_collection_create::IS_APP_ADMIN => 'false',
+      mediamosa_rest_call_collection_create::ISPRIVATE =>
     );
 
     // Set uri.

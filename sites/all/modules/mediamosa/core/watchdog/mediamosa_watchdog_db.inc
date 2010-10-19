@@ -28,10 +28,10 @@
   * @file
   * The DB class of mediamosa module.
   */
-class mediamosa_dblog_db {
+class mediamosa_watchdog_db {
   // ------------------------------------------------------------------ Consts.
   // Table name;
-  const TABLE_NAME = 'mediamosa_dblog';
+  const TABLE_NAME = 'mediamosa_watchdog';
 
   // Database fields;
   const ID = 'wid';

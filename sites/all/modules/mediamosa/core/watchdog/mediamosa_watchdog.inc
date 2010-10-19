@@ -29,7 +29,7 @@
  * Log class for MediaMosa.
  */
 
-class mediamosa_dblog {
+class mediamosa_watchdog {
   /**
    * Our wrapper around the drupal watchdog.
    */
@@ -72,11 +72,11 @@ class mediamosa_dblog {
       ->execute();
 
     // Insert the assset_id.
-    return mediamosa_db::db_insert(mediamosa_dblog_db::TABLE_NAME)
+    return mediamosa_db::db_insert(mediamosa_watchdog_db::TABLE_NAME)
       ->fields(array(
-        mediamosa_dblog_db::ID => $wid,
-        mediamosa_dblog_db::ASSET_ID => $asset_id,
-        mediamosa_dblog_db::MEDIAFILE_ID => '',
+        mediamosa_watchdog_db::ID => $wid,
+        mediamosa_watchdog_db::ASSET_ID => $asset_id,
+        mediamosa_watchdog_db::MEDIAFILE_ID => '',
       ))
       ->execute();
   }
@@ -98,9 +98,9 @@ class mediamosa_dblog {
     $wid = self::log_asset($asset_id, $message, $variables, $severity, $type);
 
     // Insert the mediafile_id.
-    $num_updated = mediamosa_db::db_update(mediamosa_dblog_db::TABLE_NAME)
+    $num_updated = mediamosa_db::db_update(mediamosa_watchdog_db::TABLE_NAME)
       ->fields(array(
-        mediamosa_dblog_db::MEDIAFILE_ID => $mediafile_id,
+        mediamosa_watchdog_db::MEDIAFILE_ID => $mediafile_id,
       ))
       ->condition('wid', $wid)
       ->execute();

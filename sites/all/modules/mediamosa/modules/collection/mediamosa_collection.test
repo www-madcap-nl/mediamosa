@@ -54,13 +54,13 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
    * Implements setUp().
    */
   function setUp() {
-    // $this->drupalModuleEnable('mediamosa_collection');
     parent::setUp();
   }
 
   /**
    * Testing collection basic working (#205).
    */
+  /*
   function testCollectionMediaManagement() {
 
     // test 1: [POST] collection/create - make empty collection.
@@ -401,7 +401,7 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
 
   /**
    * Testing hide empty assets flag.
-   */
+   *
   function testCollectionHideEmptyAssets() {
 
     // Create collection.
@@ -419,7 +419,7 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
     $this->createCollectionAssetRelation($coll_id, array($asset_id_1, $asset_id_2, $upload['asset_id']));
 
     // Now search collection, numofvideos should be 2.
-    $result = $this->getCollections();
+    $result = $this->searchCollections();
 
     // Get the collections, should be one.
     $collections = $result['items']['item'];
@@ -433,11 +433,11 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
     // Show the collection.
     $this->var_export($collection);
 
-    // Must be 2.
+    // Must be 3.
     $this->assertTrue($collection['numofvideos'] == 3, 'Found 3 videos in collection');
 
     // Now search again with hide_empty_assets, numofvideos should be 1 now.
-    $result = $this->getCollections(self::SIMPLETEST_USER_ID, array(mediamosa_rest_call_collection_search::HIDE_EMPTY_ASSETS => TRUE));
+    $result = $this->searchCollections(self::SIMPLETEST_USER_ID, array(mediamosa_rest_call_collection_search::HIDE_EMPTY_ASSETS => TRUE));
 
     // Get the collections, should be one.
     $collections = $result['items']['item'];
@@ -454,125 +454,36 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
     // Show the collection.
     $this->var_export($collection);
   }
-
+*/
   /**
-   * Get a collection.
-   *
-   * @param string $coll_id
-   * @param string $user_id
-   * @param array $parameters
+   * Testing collectionis private flag. (#128).
    */
-  protected function getCollection($coll_id, $user_id = self::SIMPLETEST_USER_ID, array $parameters = array()) {
+  function testCollectionIsPrivate() {
+    // Create collection.
+    $coll_id_1 = $this->createCollection();
+    $coll_id_2 = $this->createCollection();
+    $coll_id_3 = $this->createCollection();
 
-    // Required parameter.
-    $parameters[mediamosa_rest_call_collection_create::USER_ID] = $user_id;
+    // Create 3 assets, one with mediafile, 2 empty and put them into the
+    // collection.
+    $asset_id_1 = $this->createAsset();
+    $asset_id_2 = $this->createAsset();
 
-    // Do not set the app ID, handle by us.
-    $this->assertFalse(isset($parameters[mediamosa_rest_call_collection_create::APP_ID]));
+    // Upload a mediafile.
+    $upload = $this->uploadTestFile();
 
-    $uri = strtr('collection/@coll_id', array('@coll_id' => $coll_id));
+    // Put them into the collection.
+    $this->createCollectionAssetRelation($coll_id_1, array($asset_id_1, $asset_id_2));
 
-    // Do Post call.
-    $response = $this->restCallGet($uri, $parameters);
+    // Put them into the collection.
+    $this->createCollectionAssetRelation($coll_id_2, array($asset_id_2, $upload['asset_id']));
 
-    $this->pass(strtr("Gets the collection id: @coll_id'.", array('@coll_id' => $coll_id)));
+    // Now search collection, numofvideos should be 2.
+    $result = $this->searchCollections();
 
-    // Return data.
-    return $response['xml']->items->item[0];
+    // Get the collections, should be one.
+    $collections = $result['items']['item'];
+
+
   }
-
-
-  /**
-   * Search collections.
-   *
-   * @param string $user_id
-   * @param array $parameters
-   */
-  protected function getCollections($user_id = self::SIMPLETEST_USER_ID, array $parameters = array()) {
-    // Parameters collection
-    $parameters += array(
-      mediamosa_rest_call_collection_search::HIDE_EMPTY_ASSETS => FALSE,
-    );
-
-    // Required.
-    $parameters[mediamosa_rest_call_collection_search::USER_ID] = $user_id;
-
-    // Optional, convert.
-    $parameters[mediamosa_rest_call_collection_search::HIDE_EMPTY_ASSETS] = $parameters[mediamosa_rest_call_collection_search::HIDE_EMPTY_ASSETS] ? 'TRUE' : 'FALSE';
-
-    // Do not set the app ID, handle by us.
-    $this->assertFalse(isset($parameters[mediamosa_rest_call_collection_search::APP_ID]));
-
-    $uri = 'collection';
-
-    // Do Post call.
-    $response = $this->restCallGet($uri, $parameters);
-
-    // Get response.
-    return mediamosa_lib::responsexml2array($response['xml']);
-  }
-
-  /**
-   * Create a collection (using /asset/collection).
-   *
-   * @param array $parameters
-   */
-  protected function createCollection(array $parameters = array()) {
-    // Parameters collection.
-    $parameters += array(
-      mediamosa_rest_call_collection_create::USER_ID => self::SIMPLETEST_USER_ID,
-      mediamosa_rest_call_collection_create::GROUP_ID => self::SIMPLETEST_GROUP_ID,
-    );
-
-    // Do not set the app ID, handle by us.
-    $this->assertFalse(isset($parameters[mediamosa_rest_call_collection_create::APP_ID]));
-
-    // Do Post call.
-    $response = $this->restCallPost('collection/create', $parameters);
-
-    $this->pass(strtr("Create collection with ID '@id'.", array('@id' => $response['xml']->items->item[0]->coll_id)));
-
-    // Return the asset_id.
-    return (string)$response['xml']->items->item[0]->coll_id;
-  }
-
-  /**
-   * Update collection (using /collection/{id}).
-   *
-   * @param string $coll_id
-   * @param string $user_id
-   * @param array $parameters
-   */
-  protected function updateCollection($coll_id, $user_id = self::SIMPLETEST_USER_ID, array $parameters = array()) {
-    // Parameters asset.
-    $parameters += array(
-      mediamosa_rest_call_collection_update::USER_ID => self::SIMPLETEST_USER_ID,
-      mediamosa_rest_call_collection_update::GROUP_ID => self::SIMPLETEST_GROUP_ID,
-      mediamosa_rest_call_collection_update::PRIVATE_ => 'FALSE',
-      mediamosa_rest_call_collection_update::PUBLIC_ => 'TRUE',
-      mediamosa_rest_call_collection_update::CATEGORY => 'FALSE',
-      mediamosa_rest_call_collection_update::ISPRIVATE => 'FALSE',
-      mediamosa_rest_call_collection_update::PUBLIC_ASSIGN => 'FALSE',
-      mediamosa_rest_call_collection_update::IS_UNAPPROPRIATE => 'FALSE',
-      mediamosa_rest_call_collection_update::TITLE => '',
-      mediamosa_rest_call_collection_update::DESCRIPTION => '',
-    );
-
-    // Required.
-    $parameters[mediamosa_rest_call_collection_update::USER_ID] = $user_id;
-
-    // Do not set the app ID, handle by us.
-    $this->assertFalse(isset($parameters[mediamosa_rest_call_collection_update::APP_ID]));
-
-    $uri = strtr('collection/@coll_id', array('@coll_id' => $coll_id));
-
-    // Do Post call.
-    $response = $this->restCallPost($uri, $parameters);
-
-    $this->pass(strtr("Update collection with ID '@id'.", array('@id' => $coll_id)));
-
-    // Return.
-    return;
-  }
-
 }

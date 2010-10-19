@@ -38,7 +38,7 @@ class mediamosa_job_scheduler {
    * @param string $severity
    */
   static public function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
-    mediamosa_dblog::log($message, $variables, $severity, 'job scheduler');
+    mediamosa_watchdog::log($message, $variables, $severity, 'job scheduler');
   }
 
   /**
@@ -51,7 +51,7 @@ class mediamosa_job_scheduler {
    * @param string $severity
    */
   static public function log_mediafile($mediafile_id, $message, array $variables = array(), $asset_id = NULL, $severity = WATCHDOG_NOTICE) {
-    mediamosa_dblog::log_mediafile($mediafile_id, $message, $variables, $asset_id, $severity, 'job scheduler');
+    mediamosa_watchdog::log_mediafile($mediafile_id, $message, $variables, $asset_id, $severity, 'job scheduler');
   }
 
   /**
@@ -100,7 +100,7 @@ class mediamosa_job_scheduler {
       }
     }
     else {
-      mediamosa_dblog::log('Jobschedular URL not set, please setup jobschedular server in the @link.', array('@link' => l(t('Mediamosa configuration'), 'admin/mediamosa/config/global')), WATCHDOG_ALERT, 'job_cron');
+      mediamosa_watchdog::log('Jobschedular URL not set, please setup jobschedular server in the @link.', array('@link' => l(t('Mediamosa configuration'), 'admin/mediamosa/config/global')), WATCHDOG_ALERT, 'job_cron');
     }
   }
 
@@ -245,7 +245,7 @@ class mediamosa_job_scheduler {
       $response_data = new SimpleXMLElement($response->data);
     }
     catch (Exception $e) {
-      mediamosa_dblog::log_export($response->data);
+      mediamosa_watchdog::log_export($response->data);
       self::log('Parse XML: @msg (@resp)', array('@msg' => $e->getMessage(), '@resp' => print_r($response->data, TRUE)), WATCHDOG_ERROR);
       return;
     }

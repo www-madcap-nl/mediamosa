@@ -40,7 +40,7 @@ class mediamosa_asset_mediafile_upload {
    * @param string $severity
    */
   static public function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
-    mediamosa_dblog::log($message, $variables, $severity, 'asset_mediafile_upload');
+    mediamosa_watchdog::log($message, $variables, $severity, 'asset_mediafile_upload');
   }
 
   /**

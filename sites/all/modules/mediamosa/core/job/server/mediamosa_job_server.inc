@@ -40,7 +40,7 @@ class mediamosa_job_server {
    * @param string $severity
    */
   static public function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
-    mediamosa_dblog::log($message, $variables, $severity, 'job server');
+    mediamosa_watchdog::log($message, $variables, $severity, 'job server');
   }
 
   /**
@@ -53,7 +53,7 @@ class mediamosa_job_server {
    * @param string $severity
    */
   static public function log_mediafile($mediafile_id, $message, array $variables = array(), $asset_id = NULL, $severity = WATCHDOG_NOTICE) {
-    mediamosa_dblog::log_mediafile($mediafile_id, $message, $variables, $asset_id, $severity, 'job server');
+    mediamosa_watchdog::log_mediafile($mediafile_id, $message, $variables, $asset_id, $severity, 'job server');
   }
 
   /**

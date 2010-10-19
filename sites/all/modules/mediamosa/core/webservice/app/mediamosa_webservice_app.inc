@@ -123,7 +123,7 @@ class mediamosa_webservice_app {
 
     // Handle must exists.
     if (!in_array($handle, $handles)) {
-      mediamosa_dblog::log("Try to insert handle '!handle' that does not exists as webservice.", array('!handle' => $handle));
+      mediamosa_watchdog::log("Try to insert handle '!handle' that does not exists as webservice.", array('!handle' => $handle));
       return; // ignore.
     }
 
