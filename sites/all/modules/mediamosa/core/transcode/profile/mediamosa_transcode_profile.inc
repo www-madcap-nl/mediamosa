@@ -128,9 +128,9 @@ class mediamosa_transcode_profile {
    */
   static public function get_by_tool($app_id, $tool, $nice_parameter = NULL) {
 
-    $query = mediamosa_db::db_select(mediamosa_transcode_mapping_db::TABLE_NAME, 'mtm')
+    $query = mediamosa_db::db_select(mediamosa_tool_params_db::TABLE_NAME, 'mtm')
       ->fields('mtm')
-      ->condition(mediamosa_transcode_mapping_db::TOOL, $tool);
+      ->condition(mediamosa_tool_params_db::TOOL, $tool);
 
     // If no App ids are given, then return all.
     if (!empty($app_id)) {
@@ -139,7 +139,7 @@ class mediamosa_transcode_profile {
 
     // Nice parameter.
     if (!empty($nice_parameter)) {
-      $query->condition(mediamosa_transcode_mapping_db::NICE_PARAMETER, $nice_parameter);
+      $query->condition(mediamosa_tool_params_db::NICE_PARAMETER, $nice_parameter);
     }
 
     // Return the result.
@@ -321,7 +321,7 @@ class mediamosa_transcode_profile {
 
     // Check the values of the mapping.
     foreach ($a_parameters as $nice_parameter => $value) {
-      mediamosa_transcode_mapping::check_mapping($tool, $nice_parameter, $value);
+      mediamosa_tool_params::check_mapping($tool, $nice_parameter, $value);
     }
   }
 }

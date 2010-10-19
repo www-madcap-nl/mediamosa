@@ -1937,10 +1937,11 @@ function _mediamosa_migration_transcode() {
 
   /**
    * Following code is off because the mapping is always old in the older databases.
+   * TODO: allowed_value is serialized array now; needs conversation from ";" separated string.
    */
 /*
   // Empty first.
-  db_truncate('mediamosa_transcode_mapping')->execute();
+  db_truncate('mediamosa_tool_params')->execute();
 */
   /**
    * Copy from 1.x to 2.x
@@ -1951,7 +1952,7 @@ function _mediamosa_migration_transcode() {
    */
 /*
   db_query(strtr(
-    "INSERT INTO {mediamosa_transcode_mapping}
+    "INSERT INTO {mediamosa_tool_params}
       (
         transcode_mapping_id,
         tool,

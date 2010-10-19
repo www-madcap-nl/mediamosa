@@ -2,7 +2,7 @@
 name = "MediaMosa"
 description = "Open source media management and distribution platform."
 package = "MediaMosa - Core"
-version = "2.3.0.975"
+version = "2.3.0.987"
 core = 7.x
 
 configure = admin/mediamosa/config/global
@@ -38,6 +38,7 @@ files[] = lib/mediamosa_gd.inc
 files[] = lib/mediamosa_http.inc
 files[] = lib/mediamosa_io.inc
 files[] = lib/mediamosa_lib.inc
+files[] = lib/mediamosa_log.inc
 files[] = lib/mediamosa_type.inc
 files[] = lib/mediamosa_unicode.inc
 
@@ -281,9 +282,11 @@ files[] = core/transcode/mediamosa_transcode.install.inc
 files[] = core/transcode/profile/mediamosa_transcode_profile_db.inc
 files[] = core/transcode/profile/mediamosa_transcode_profile.inc
 files[] = core/transcode/profile/mediamosa_transcode_profile.install.inc
-files[] = core/transcode/mapping/mediamosa_transcode_mapping_db.inc
-files[] = core/transcode/mapping/mediamosa_transcode_mapping.inc
-files[] = core/transcode/mapping/mediamosa_transcode_mapping.install.inc
+
+; Tool.
+files[] = core/transcode/mediamosa_tool/mediamosa_tool_db.inc
+files[] = core/transcode/mediamosa_tool/mediamosa_tool.inc
+files[] = core/transcode/mediamosa_tool/mediamosa_tool.install.inc
 
 ; User.
 files[] = core/user/mediamosa_user_db.inc

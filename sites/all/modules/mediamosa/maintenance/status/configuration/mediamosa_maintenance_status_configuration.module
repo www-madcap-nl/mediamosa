@@ -425,10 +425,15 @@ function mediamosa_maintenance_status_configuration_mediamosa_status_generate() 
       foreach ($schemas as $original_table_name => $schema) {
         $test_table_name = $test_table_prefix . $original_table_name;
 
-        // Get the table details of the original table.
-        $original_table_result = mediamosa_db::db_query("SHOW CREATE TABLE {#table_name}", array(
-          '#table_name' => $original_table_name,
-        ))->fetchAssoc();
+        try {
+          // Get the table details of the original table.
+          $original_table_result = mediamosa_db::db_query("SHOW CREATE TABLE {#table_name}", array(
+            '#table_name' => $original_table_name,
+          ))->fetchAssoc();
+        }
+        catch (PDOException $e) {
+          $original_table_result = array('create table' => '',);
+        }
 
         // Get the table details of the test table.
         $test_table_result = mediamosa_db::db_query("SHOW CREATE TABLE {#table_name}", array(

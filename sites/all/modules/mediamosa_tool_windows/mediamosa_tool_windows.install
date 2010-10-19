@@ -1,0 +1,76 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+ /**
+  * @file
+  * Windows tool installer.
+  */
+
+/**
+ * Implements hook_install().
+ */
+function mediamosa_tool_windows_install() {
+  $a_default_params = array(
+    array('windows', 'internal_file_extension', '', NULL, NULL, 'a:1:{i:0;s:3:"wmv";}', NULL, 'FALSE'),
+    array('windows', 'fps', '-v_framerate', 10, 30, NULL, '25', 'FALSE'),
+    array('windows', 'internal_previous_job', '', NULL, NULL, NULL, NULL, 'FALSE'),
+    array('windows', 'videobitrate', '-v_bitrate', 128, 1024, NULL, NULL, 'FALSE'),
+    array('windows', 'width', '-v_width', 128, 7680, NULL, NULL, 'FALSE'),
+    array('windows', 'height', '-v_height', 96, 4800, NULL, NULL, 'FALSE'),
+    array('windows', 'videocodec', '-v_codec', NULL, NULL, 'a:5:{i:0;s:3:"flv";i:1;s:3:"wmv";i:2;s:5:"mpeg4";i:3;s:7:"libx264";i:4;s:8:"rawvideo";}', NULL, 'FALSE'),
+    array('windows', 'audiocodec', '-a_codec', NULL, NULL, 'a:4:{i:0;s:3:"mp3";i:1;s:3:"wma";i:2;s:9:"pcm_s16le";i:3;s:7:"libfaac";}', NULL, 'FALSE'),
+    array('windows', 'audiosetting', '-a_setting', NULL, NULL, 'a:20:{i:0;s:7:"40_22_1";i:1;s:7:"40_22_2";i:2;s:7:"40_44_1";i:3;s:7:"40_44_2";i:4;s:7:"64_22_1";i:5;s:7:"64_22_2";i:6;s:7:"64_44_1";i:7;s:7:"64_44_2";i:8;s:8:"128_22_1";i:9;s:8:"128_22_2";i:10;s:8:"128_44_1";i:11;s:8:"128_44_2";i:12;s:8:"192_22_1";i:13;s:8:"192_22_2";i:14;s:8:"192_44_1";i:15;s:8:"192_44_2";i:16;s:8:"256_22_1";i:17;s:8:"256_22_2";i:18;s:8:"256_44_1";i:19;s:8:"256_44_2";}', NULL, 'FALSE'),
+  );
+
+  // Insert default mappings as nodes.
+  foreach ($a_default_params as $a_default_param) {
+    $a_fields = array(
+      mediamosa_tool_params_db::TOOL => $a_default_param[0],
+      mediamosa_tool_params_db::NICE_PARAMETER => $a_default_param[1],
+      mediamosa_tool_params_db::TOOL_PARAMETER => $a_default_param[2],
+      mediamosa_tool_params_db::MIN_VALUE => $a_default_param[3],
+      mediamosa_tool_params_db::MAX_VALUE => $a_default_param[4],
+      mediamosa_tool_params_db::ALLOWED_VALUE => $a_default_param[5],
+      mediamosa_tool_params_db::DEFAULT_VALUE => $a_default_param[6],
+      mediamosa_tool_params_db::REQUIRED => $a_default_param[7],
+    );
+
+    // Add changed/created.
+    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+
+    // Insert it.
+    db_insert(mediamosa_tool_params_db::TABLE_NAME)
+      ->fields($a_fields)
+      ->execute();
+  }
+}
+
+/**
+ * Implements hook_unstall().
+ */
+function mediamosa_tool_windows_uninstall() {
+  // Do nothing. We don't delete the existing data.
+}

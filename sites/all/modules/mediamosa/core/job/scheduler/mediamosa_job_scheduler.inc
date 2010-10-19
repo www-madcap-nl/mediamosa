@@ -87,7 +87,7 @@ class mediamosa_job_scheduler {
       $url = mediamosa_http::uri2url($mediamosa_jobscheduler_uri) . '/internal/cron/jobscheduler';
 
       // Log it.
-      mediamosa_debug::log('Triggering job scheduler @ @uri', array('@uri' => $url));
+      self::log('Triggering job scheduler @ @uri', array('@uri' => $url));
 
       // Dont trigger in sandbox.
       if (mediamosa::in_simpletest_sandbox()) {
@@ -1272,21 +1272,21 @@ class mediamosa_job_scheduler {
 
     // Get all parameters based on the toolname that can be queried.
     // Check the given paramters.
-    $result = mediamosa_transcode_mapping::get_by_tool($tool);
+    $result = mediamosa_tool_params::get_by_tool($tool);
     foreach ($result as $result_row) {
-      if ($result_row[mediamosa_transcode_mapping_db::NICE_PARAMETER] == 'size' && $alter_size_param) {
+      if ($result_row[mediamosa_tool_params_db::NICE_PARAMETER] == 'size' && $alter_size_param) {
         $a_parameters = mediamosa_lib::create_named_array($command, ";", ":");
         $target_size = $a_parameters['size'];// We skip the size here.
       }
       else {
         $value = self::mapping_value(
-          $result_row[mediamosa_transcode_mapping_db::NICE_PARAMETER],
-          $result_row[mediamosa_transcode_mapping_db::TOOL_PARAMETER],
-          $result_row[mediamosa_transcode_mapping_db::MIN_VALUE],
-          $result_row[mediamosa_transcode_mapping_db::MAX_VALUE],
-          $result_row[mediamosa_transcode_mapping_db::ALLOWED_VALUE],
-          $result_row[mediamosa_transcode_mapping_db::DEFAULT_VALUE],
-          $result_row[mediamosa_transcode_mapping_db::REQUIRED],
+          $result_row[mediamosa_tool_params_db::NICE_PARAMETER],
+          $result_row[mediamosa_tool_params_db::TOOL_PARAMETER],
+          $result_row[mediamosa_tool_params_db::MIN_VALUE],
+          $result_row[mediamosa_tool_params_db::MAX_VALUE],
+          $result_row[mediamosa_tool_params_db::ALLOWED_VALUE],
+          $result_row[mediamosa_tool_params_db::DEFAULT_VALUE],
+          $result_row[mediamosa_tool_params_db::REQUIRED],
           $command);
 
         if ($value != '') {
@@ -1372,7 +1372,7 @@ class mediamosa_job_scheduler {
         }
 
         if ($allowed_value != NULL) {
-          $allowed_values = explode(';', $allowed_value);
+          $allowed_values = unserialize($allowed_value);
           if (!(in_array($value, $allowed_values))) {
             return sprintf('%s:%s', $tool_parameter, $default_value);
           }

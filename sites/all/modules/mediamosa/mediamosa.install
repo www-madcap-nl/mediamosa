@@ -163,7 +163,7 @@ function mediamosa_uninstall() {
   _mediamosa_app_uninstall();
 
   // Remove the watchdog extend table.
-  _mediamosa_watchdog_install();
+  _mediamosa_watchdog_uninstall();
 
   // Remove the error db.
   _mediamosa_error_uninstall();
@@ -1200,7 +1200,7 @@ function mediamosa_update_7062() {
   // Moved to 7063.
 }
 
-/**
+/*
  * Rename mediamosa_dblog table to mediamosa_watchdog in case someone had the
  * old version installed.
  */
@@ -1218,3 +1218,33 @@ function mediamosa_update_7063() {
 
   cache_clear_all();
 }
+
+/**
+ * Install {mediamosa_tool_params} table.
+ */
+function mediamosa_update_7064() {
+  mediamosa::drupal_install_schema(mediamosa_tool_params_db::TABLE_NAME);
+}
+
+/**
+ * Turn on tool modules.
+ */
+function mediamosa_update_7065() {
+  // FFmpeg and Windows tools.
+  $module_list = array(
+    'mediamosa_tool_ffmpeg',
+    'mediamosa_tool_windows',
+  );
+  $enable_dependencies = TRUE;
+  module_enable($module_list, $enable_dependencies);
+}
+
+/**
+ * Uninstall {mediamosa_transcode_mapping} table.
+ */
+function mediamosa_update_7066() {
+  // Drop table.
+  mediamosa::drupal_uninstall_schema(mediamosa_transcode_mapping_db::TABLE_NAME);
+}
+
+// TODO: Remove old code from the repository on the next release: sites/all/modules/mediamosa/core/transcode/mapping.
