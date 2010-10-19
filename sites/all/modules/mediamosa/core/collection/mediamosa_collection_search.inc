@@ -118,7 +118,6 @@ class mediamosa_collection_search {
       }
       else {
         // No public list, no aut_user_id
-        $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['asset']['access'][mediamosa_db_query::WHERE_AND][] = "(a.isprivate = 'FALSE' OR a.is_unappropriate = 'FALSE' OR a.is_unappropriate = 'TRUE')";// only 3, will match always
         $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['collection']['access'][mediamosa_db_query::WHERE_AND][] = "c.is_unappropriate = 'FALSE'"; // is_unappropriate must be TRUE
       }
     }
