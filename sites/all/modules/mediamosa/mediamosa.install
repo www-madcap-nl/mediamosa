@@ -1201,11 +1201,17 @@ function mediamosa_update_7062() {
 }
 
 /**
- * Rename mediamosa_dblog table to mediamosa_watchdog.
+ * Rename mediamosa_dblog table to mediamosa_watchdog in case some1 had the
+ * old version installed.
  */
 function mediamosa_update_7063() {
-  // Rename the old metadata table.
-  db_query('ALTER TABLE {mediamosa_dblog} RENAME {mediamosa_watchdog}');
+  try {
+    // Rename the old metadata table.
+    db_query('ALTER TABLE {mediamosa_dblog} RENAME {mediamosa_watchdog}');
+  }
+  catch (Exception $e) {
+    // ignore...
+  }
 
   // Rebuild the registry.
   registry_rebuild();
