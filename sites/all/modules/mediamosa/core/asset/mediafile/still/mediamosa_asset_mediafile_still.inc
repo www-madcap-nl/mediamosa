@@ -190,16 +190,16 @@ class mediamosa_asset_mediafile_still {
    * @param integer $order
    */
   static public function set_still_order($app_id, $user_id, $asset_id, $mediafile_id, $still_id, $order) {
-    mediamosa_log::log_mediafile(
+    mediamosa_watchdog::log_mediafile(
       $mediafile_id,
-      $asset_id,
       "Still order: asset_id = @asset_id; mediafile_id = @mediafile_id; still_id = @still_id; order = @order;",
       array(
         '@asset_id' => $asset_id,
         '@mediafile_id' => $mediafile_id,
         '@still_id' => $still_id,
         '@order' => $order
-      )
+      ),
+      $asset_id
     );
 
     // Asset must exist.
@@ -414,7 +414,7 @@ class mediamosa_asset_mediafile_still {
     foreach ($result as $a_row) {
       // Build the path and filename of the still.
       $still_filename = mediamosa_configuration_storage::mediafile_still_filename_get($a_row['still_id'], $a_row[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT]);
-      mediamosa_log::log_mediafile($mediafile_id, $asset_id, 'Deleting still: @location', array('@location' => $still_filename));
+      mediamosa_watchdog::log_mediafile($mediafile_id, 'Deleting still: @location', array('@location' => $still_filename), $asset_id);
 
       // Remove the file.
       mediamosa_io::unlink($still_filename);
@@ -521,6 +521,10 @@ class mediamosa_asset_mediafile_still {
    * FIXME: the mediafile id unused.
    * 2.x: no longer returns TRUE by default.
    *
+   * @param integer $app_id
+   *  Application ID.
+   * @param string $user_id
+   * The user ID for owner check.
    * @param string $asset_id
    *  The asset ID.
    * @param string $mediafile_id (unused!)
@@ -529,15 +533,15 @@ class mediamosa_asset_mediafile_still {
    *  The still ID.
    */
   static public function set_still_default($app_id, $user_id, $asset_id, $mediafile_id, $still_id) {
-    mediamosa_log::log_mediafile(
+    mediamosa_watchdog::log_mediafile(
       $mediafile_id,
-      $asset_id,
       'Setting default still: asset_id = @asset_id; mediafile_id = @mediafile_id; still_id = @still_id',
       array(
         '@asset_id' => $asset_id,
         '@mediafile_id' => $mediafile_id,
         '@still_id' => $still_id,
-      )
+      ),
+      $asset_id
     );
 
     // Asset must exist.

@@ -96,7 +96,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
       // Do tearDown first, so we are in the right db again.
       $this->tearDown();
 
-      mediamosa_log::log(
+      mediamosa_watchdog::log(
         'MediaMosaTestCase::runSafe() caught exception! @message (Exception thrown on line @line, in @file)<br />Partial backtrace: <pre>@backtrace</pre>',
         array(
           '@message' => $e->getMessage(),
@@ -603,6 +603,16 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     $this->pass(t('Got test OGG video @video.', array('@video' => $filename)));
     return $filename;
   }
+
+  /**
+   * Return the path+filename to the test video.
+   */
+  protected function getTestVideo_BlackStill() {
+    $filename = drupal_get_path('module', 'mediamosa') . '/lib/testfiles/black_test.wmv';
+    $this->pass(t('Got test video for black still @video.', array('@video' => $filename)));
+    return $filename;
+  }
+
   /**
    * Return the path+filename to the test image (jpeg).
    */

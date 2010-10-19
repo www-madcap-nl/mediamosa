@@ -45,7 +45,7 @@ class mediamosa_maintenance_automatedsimpletest {
    * @param string $severity
    */
   static public function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
-    mediamosa_log::log($message, $variables, $severity, 'mediamosa_automatedsimpletest');
+    mediamosa_watchdog::log($message, $variables, $severity, 'mediamosa_automatedsimpletest');
   }
 
   /**
@@ -382,7 +382,7 @@ class mediamosa_maintenance_automatedsimpletest {
       $response->xml = new SimpleXMLElement($response->data);
     }
     catch (Exception $e) {
-      mediamosa_log::log_export($response->data);
+      mediamosa_watchdog::log_export($response->data);
     }
 
     if (isset($response->xml) && isset($response->xml->header) && $response->xml->header->request_result_id == mediamosa_error::ERRORCODE_OKAY) {

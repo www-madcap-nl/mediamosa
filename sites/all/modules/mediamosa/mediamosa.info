@@ -2,7 +2,7 @@
 name = "MediaMosa"
 description = "Open source media management and distribution platform."
 package = "MediaMosa - Core"
-version = "2.3.0.948"
+version = "2.3.0.985"
 core = 7.x
 
 configure = admin/mediamosa/config/global
@@ -10,7 +10,7 @@ configure = admin/mediamosa/config/global
 ; Dependencies (module names)
 ; YOU MUST HAVE VERY GOOD REASON TO GIVE A DEP. TO THE CORE MODULE.
 dependencies[] = simpletest
-;dependencies[] = mediamosa_library
+dependencies[] = mediamosa_library
 
 ; Used files.
 
@@ -27,6 +27,7 @@ files[] = mediamosa.settings.inc
 files[] = core/error/mediamosa_error_db.inc
 files[] = core/error/mediamosa_error.inc
 files[] = core/error/mediamosa_error.install.inc
+files[] = core/watchdog/mediamosa_watchdog.install.inc
 
 ; Library. (2nd for dependency).
 files[] = lib/mediamosa_datetime.inc
@@ -41,6 +42,10 @@ files[] = lib/mediamosa_lib.inc
 files[] = lib/mediamosa_log.inc
 files[] = lib/mediamosa_type.inc
 files[] = lib/mediamosa_unicode.inc
+
+; dblog
+files[] = core/watchdog/mediamosa_watchdog.inc
+files[] = core/watchdog/mediamosa_watchdog_db.inc
 
 ; CQL.
 files[] = cql/mediamosa_cql.class.inc

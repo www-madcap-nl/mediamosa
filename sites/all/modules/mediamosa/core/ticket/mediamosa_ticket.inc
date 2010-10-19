@@ -49,7 +49,7 @@ class mediamosa_ticket {
    * @param string $severity
    */
   static public function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
-    mediamosa_log::log($message, $variables, $severity, 'ticket');
+    mediamosa_watchdog::log($message, $variables, $severity, 'ticket');
   }
 
   /**

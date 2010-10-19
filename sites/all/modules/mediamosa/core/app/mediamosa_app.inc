@@ -187,50 +187,46 @@ class mediamosa_app {
   }
 
   /**
-   * return the default value of the still, depend of the application id.
+   * Return the default value of the still, depending of the application id.
    *
    * @param integer $app_id
    */
   static public function get_still_default_value($app_id) {
-    if ($app_id) {
-      // Get the default size of still of application.
-      $application = self::get_by_appid($app_id);
-      $still_default_size = $application[mediamosa_app_db::STILL_DEFAULT_SIZE];
-      return ($still_default_size ? $still_default_size : NULL);
-    }
-    else {
-      // There isn't app id, we support the default size of still.
+    if (!$app_id) {
       return mediamosa_settings::STILL_DEFAULT_SIZE;
     }
+
+    // Get the default size of still of application.
+    $app = self::get_by_appid($app_id);
+    return (!empty($app[mediamosa_app_db::STILL_DEFAULT_SIZE]) ? $app[mediamosa_app_db::STILL_DEFAULT_SIZE] : mediamosa_settings::STILL_DEFAULT_SIZE);
   }
 
   /**
-   * return the still padding value, depend of the application id.
+   * Return the still padding value, depending of the application id.
    *
    * @param integer $app_id
    */
   static public function get_still_padding_value($app_id) {
-    if ($app_id) {
-      $application = self::get_by_appid($app_id);
-      return $application[mediamosa_app_db::STILL_PADDING];
-    }
-    else {
+    if (!$app_id) {
       return mediamosa_app_db::STILL_PADDING_YES;
     }
+
+    $app = self::get_by_appid($app_id);
+    return (!empty($app[mediamosa_app_db::STILL_PADDING]) ? $app[mediamosa_app_db::STILL_PADDING] : mediamosa_app_db::STILL_PADDING_YES);
   }
 
   /**
-   * return the still maintain aspect ratio value, depend of the application id.
+   * Return the still maintain aspect ratio value, depending of the application
+   * id.
    *
    * @param integer $app_id
    */
   static public function get_still_maintain_aspect_ratio_value($app_id) {
-    if ($app_id) {
-      $application = self::get_by_appid($app_id);
-      return $application[mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO];
-    }
-    else {
+    if (!$app_id) {
       return mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO_YES;
     }
+
+    $app = self::get_by_appid($app_id);
+    return (!empty($app[mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO]) ? $app[mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO] : mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO_YES);
   }
 }

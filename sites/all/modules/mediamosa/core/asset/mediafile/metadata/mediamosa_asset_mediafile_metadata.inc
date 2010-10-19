@@ -53,7 +53,6 @@ class mediamosa_asset_mediafile_metadata {
   const FILESIZE = 'filesize';
   const MIME_TYPE = 'mime_type';
   const MIME_TYPE_LENGTH = 80;
-  const MIME_TYPE_AUDIO = 'audio';
   const IS_HINTED = 'is_hinted';
   const IS_HINTED_TRUE = 'TRUE';
   const IS_HINTED_FALSE = 'FALSE';
@@ -305,20 +304,20 @@ class mediamosa_asset_mediafile_metadata {
    * @param $job_id
    * @param $analyse_result
    */
-  static public function store_analyse($job_id, $a_analyse_result) {
+  static public function store_analyse($job_id, $analyse_result) {
     // Get the job.
-    $a_job = mediamosa_job::get($job_id);
+    $job = mediamosa_job::get($job_id);
 
     // Get the filesize.
-    $filesize = mediamosa_io::filesize(mediamosa_configuration_storage::mediafile_id_filename_get($a_job[mediamosa_job_db::MEDIAFILE_ID]));
+    $filesize = mediamosa_io::filesize(mediamosa_configuration_storage::mediafile_id_filename_get($job[mediamosa_job_db::MEDIAFILE_ID]));
 
-    $mediafile_id = $a_job[mediamosa_job_db::MEDIAFILE_ID];
+    $mediafile_id = $job[mediamosa_job_db::MEDIAFILE_ID];
 
     // We don't remove any previous metadatas.
     //self::delete_all_mediafile_metadata($mediafile_id);
 
     // Parse and store metadata from the analyse result.
-    $ffmpeg_output = self::parse_store_metadata($mediafile_id, implode("\n", $a_analyse_result));
+    $ffmpeg_output = self::parse_store_metadata($mediafile_id, implode("\n", $analyse_result));
 
     // Create filesize metadata.
     self::create_mediafile_metadata($mediafile_id, (int)$filesize, mediamosa_asset_mediafile_metadata::FILESIZE, mediamosa_asset_mediafile_metadata_property_db::TYPE_INT);
@@ -330,11 +329,11 @@ class mediamosa_asset_mediafile_metadata {
     mediamosa_asset::update_asset_info_with_mediafileid($mediafile_id);
 
     // Do we need to create an still job aswell?
-    if ($a_job[mediamosa_job_db::CREATE_STILL] == mediamosa_job_db::CREATE_STILL_TRUE) {
-      $a_still_parameters = (empty($a_job[mediamosa_job_db::STILL_PARAMETERS]) ? array() : unserialize($a_job[mediamosa_job_db::STILL_PARAMETERS]));
+    if ($job[mediamosa_job_db::CREATE_STILL] == mediamosa_job_db::CREATE_STILL_TRUE) {
+      $still_parameters = (empty($job[mediamosa_job_db::STILL_PARAMETERS]) ? array() : unserialize($job[mediamosa_job_db::STILL_PARAMETERS]));
 
       try {
-        mediamosa_job::create_job_still($a_job[mediamosa_job_db::APP_ID], $a_job[mediamosa_job_db::OWNER_ID], FALSE, $mediafile_id, $a_still_parameters);
+        mediamosa_job::create_job_still($job[mediamosa_job_db::APP_ID], $job[mediamosa_job_db::OWNER_ID], FALSE, $mediafile_id, $still_parameters);
       }
       catch (mediamosa_exception_error_still_is_not_creatable $e) {
         // The still is not creatable from the mediafile. Eg. it is an audio file.
@@ -344,19 +343,20 @@ class mediamosa_asset_mediafile_metadata {
   }
 
   /**
-   * Store the analyse result in the mediafile metadata without job.
+   * Store the analyse result in the mediafile metadata without running or
+   * during a job.
    *
    * @param $analyse_result
    */
-  static public function store_analyse_without_job($job_id, $a_analyse_result, $mediafile_id) {
+  static public function store_analyse_without_job($job_id, $analyse_result, $mediafile_id) {
     // Get the filesize.
     $filesize = mediamosa_io::filesize(mediamosa_configuration_storage::mediafile_id_filename_get($mediafile_id));
 
     // Parse and store metadata from the analyse result.
-    $ffmpeg_output = self::parse_store_metadata($mediafile_id, implode("\n", $a_analyse_result));
+    $ffmpeg_output = self::parse_store_metadata($mediafile_id, implode("\n", $analyse_result));
 
     // Create filesize metadata.
-    self::create_mediafile_metadata($mediafile_id, (int)$filesize, mediamosa_asset_mediafile_metadata::FILESIZE, mediamosa_asset_mediafile_metadata_property_db::TYPE_INT);
+    self::create_mediafile_metadata($mediafile_id, (int) $filesize, mediamosa_asset_mediafile_metadata::FILESIZE, mediamosa_asset_mediafile_metadata_property_db::TYPE_INT);
 
     // Store in error description.
     mediamosa_job::store_error_description($job_id, $ffmpeg_output);

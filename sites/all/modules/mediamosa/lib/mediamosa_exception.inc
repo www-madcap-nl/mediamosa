@@ -56,7 +56,7 @@ class mediamosa_exception extends Exception {
       $backtrace = $this->getTraceAsString();
 
       if ($log_error) {
-        mediamosa_log::log(
+        mediamosa_watchdog::log(
           '@message (Exception thrown on line @line, in @file)<br />Partial backtrace: <pre>@backtrace</pre>',
           array(
             '@message' => $msg,

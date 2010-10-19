@@ -55,9 +55,9 @@ class MediaMosaCreatingStillFromAudioFileTestCaseEgaJob extends MediaMosaTestCas
 
 
     // Create upload video file.
-    $a_upload = $this->uploadTestFile();
-    $asset_id = $a_upload['asset_id'];
-    $mediafile_id = $a_upload['mediafile_id'];
+    $upload = $this->uploadTestFile();
+    $asset_id = $upload['asset_id'];
+    $mediafile_id = $upload['mediafile_id'];
 
     // Create still job.
     $job_id = $this->createMediafileStill($mediafile_id);

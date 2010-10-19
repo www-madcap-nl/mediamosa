@@ -39,7 +39,7 @@ class mediamosa_debug {
    */
   static public function log($message, array $variables = array(), $type = NULL, $link = NULL) {
     if (self::is_debug()) {
-      mediamosa_log::log($message, $variables, WATCHDOG_DEBUG, $type, $link);
+      mediamosa_watchdog::log($message, $variables, WATCHDOG_DEBUG, $type, $link);
     }
   }
 
@@ -47,22 +47,18 @@ class mediamosa_debug {
    * Log asset ids.
    */
   static public function log_asset($asset_id, $message, array $variables = array(), $type = NULL) {
-    if (!self::is_debug()) {
-      return;
+    if (self::is_debug()) {
+      mediamosa_watchdog::log_asset($asset_id, $message, $variables, WATCHDOG_DEBUG, $type);
     }
-
-    mediamosa_log::log_asset($asset_id, $message, $variables, WATCHDOG_DEBUG, $type);
   }
 
   /**
    * Log mediafile ids.
    */
-  static public function log_mediafile($mediafile_id, $asset_id, $message, array $variables = array(), $type = NULL) {
-    if (!self::is_debug()) {
-      return;
+  static public function log_mediafile($mediafile_id, $message, array $variables = array(), $asset_id = NULL, $type = NULL) {
+    if (self::is_debug()) {
+      mediamosa_watchdog::log_mediafile($mediafile_id, $message, $variables, $asset_id, WATCHDOG_DEBUG, $type);
     }
-
-    mediamosa_log::log_mediafile($mediafile_id, $asset_id, $message, $variables, WATCHDOG_DEBUG, $type);
   }
 
   /**
@@ -74,7 +70,7 @@ class mediamosa_debug {
    */
   static public function log_high($message, array $variables = array(), $type = NULL) {
     if (self::is_debug_high()) {
-      mediamosa_log::log($message, $variables, WATCHDOG_DEBUG, $type);
+      mediamosa_watchdog::log($message, $variables, WATCHDOG_DEBUG, $type);
     }
   }
 
@@ -82,22 +78,18 @@ class mediamosa_debug {
    * High debug logger, log asset ids.
    */
   static public function log_high_asset($asset_id, $message, array $variables = array(), $type = NULL) {
-    if (!self::is_debug_high()) {
-      return;
+    if (self::is_debug_high()) {
+      mediamosa_watchdog::log_asset($asset_id, $message, $variables, WATCHDOG_DEBUG, $type);
     }
-
-    mediamosa_log::log_asset($asset_id, $message, $variables, WATCHDOG_DEBUG, $type);
   }
 
   /**
    * High debug logger, log mediafile ids.
    */
-  static public function log_high_mediafile($mediafile_id, $asset_id, $message, array $variables = array(), $type = NULL) {
-    if (!self::is_debug_high()) {
-      return;
+  static public function log_high_mediafile($mediafile_id, $message, array $variables = array(), $asset_id, $type = NULL) {
+    if (self::is_debug_high()) {
+      mediamosa_watchdog::log_mediafile($mediafile_id, $message, $variables, $asset_id, WATCHDOG_DEBUG, $type);
     }
-
-    mediamosa_log::log_mediafile($mediafile_id, $asset_id, $message, $variables, WATCHDOG_DEBUG, $type);
   }
 
   /**

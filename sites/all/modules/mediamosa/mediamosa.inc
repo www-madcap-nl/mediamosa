@@ -68,7 +68,7 @@ class mediamosa {
 
   // Check if we will log rest calls to log().
   public function is_log_rest() {
-    return variable_get('mediamosa_log_rest', TRUE);
+    return variable_get('mediamosa_watchdog_rest', TRUE);
   }
 
   // Drupal usage for getting the current URI.

@@ -262,7 +262,7 @@ function mediamosa_app_schema() {
         'type' => 'varchar',
         'length' => mediamosa_app_db::STILL_DEFAULT_SIZE_LENGTH,
         'not null' => FALSE,
-        'default' => '',
+        'default' => mediamosa_settings::STILL_DEFAULT_SIZE,
       ),
       mediamosa_app_db::STILL_PADDING => array(
         'description' => t('Force padding, if aspect ratio is maintaned.'),

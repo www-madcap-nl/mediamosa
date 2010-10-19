@@ -36,6 +36,7 @@ class mediamosa_lib {
 
   // ------------------------------------------------------------------ Consts.
   const MIME_TYPE_APPLICATION_X_EMPTY = 'application/x-empty';
+  const MIME_TYPE_AUDIO = 'audio';
 
   // ------------------------------------------------------------------ Static Functions.
   /**

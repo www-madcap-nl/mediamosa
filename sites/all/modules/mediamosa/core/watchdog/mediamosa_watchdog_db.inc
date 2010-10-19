@@ -28,7 +28,7 @@
   * @file
   * The DB class of mediamosa module.
   */
-class mediamosa_install_db {
+class mediamosa_watchdog_db {
   // ------------------------------------------------------------------ Consts.
   // Table name;
   const TABLE_NAME = 'mediamosa_watchdog';

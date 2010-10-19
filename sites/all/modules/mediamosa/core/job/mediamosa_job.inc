@@ -48,7 +48,7 @@ class mediamosa_job {
    * @param string $severity
    */
   static public function log($message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
-    mediamosa_log::log($message, $variables, $severity, 'job');
+    mediamosa_watchdog::log($message, $variables, $severity, 'job');
   }
 
   /**
@@ -60,8 +60,8 @@ class mediamosa_job {
    * @param array $variables
    * @param string $severity
    */
-  static public function log_mediafile($mediafile_id, $asset_id, $message, array $variables = array(), $severity = WATCHDOG_NOTICE) {
-    mediamosa_log::log_mediafile($mediafile_id, $asset_id, $message, $variables, $severity, 'job');
+  static public function log_mediafile($mediafile_id, $message, array $variables = array(), $asset_id = NULL, $severity = WATCHDOG_NOTICE) {
+    mediamosa_watchdog::log_mediafile($mediafile_id, $message, $variables, $asset_id, $severity, 'job');
   }
 
   /**
@@ -316,16 +316,14 @@ class mediamosa_job {
    *   TRUE in case of still is creatable.
    */
   static public function is_still_creatable($mediafile_id) {
-    $prop_name = mediamosa_asset_mediafile_metadata::MIME_TYPE;
-    $mime_type = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, $prop_name);
+    $mime_type = mediamosa_asset_mediafile_metadata::get_mediafile_metadata_char($mediafile_id, mediamosa_asset_mediafile_metadata::MIME_TYPE);
 
-    $main_mime_type = $mime_type;
     $pos = strpos($mime_type, '/');
     if ($pos !== FALSE) {
-      $main_mime_type = drupal_substr($mime_type, 0, $pos);
+      $mime_type = drupal_substr($mime_type, 0, $pos);
     }
 
-    return ($main_mime_type != mediamosa_asset_mediafile_metadata::MIME_TYPE_AUDIO);
+    return ($mime_type != mediamosa_lib::MIME_TYPE_AUDIO);
   }
 
   /**
@@ -347,10 +345,9 @@ class mediamosa_job {
 
       return $job_id;
     }
-    else {
-      // Throw exception.
-      throw new mediamosa_exception_error_still_is_not_creatable(array('@mediafile_id' => $mediafile_id));
-    }
+
+    // Throw exception.
+    throw new mediamosa_exception_error_still_is_not_creatable(array('@mediafile_id' => $mediafile_id));
   }
 
   /**
@@ -610,7 +607,7 @@ class mediamosa_job {
    * @param integer $app_id
    */
   static public function create_analyse_job($owner, $asset_id, $mediafile_id, $app_id) {
-    self::log_mediafile($mediafile_id, $asset_id, 'Starting analyse job for #mediafile_id', array('#mediafile_id' => (string)$mediafile_id));
+    self::log_mediafile($mediafile_id, 'Starting analyse job for @mediafile_id', array('@mediafile_id' => (string)$mediafile_id), $asset_id);
 
     $fields = array(
       mediamosa_job_db::ASSET_ID => $asset_id,

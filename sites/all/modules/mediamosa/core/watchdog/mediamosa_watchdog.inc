@@ -29,7 +29,7 @@
  * Log class for MediaMosa.
  */
 
-class mediamosa_log {
+class mediamosa_watchdog {
   /**
    * Our wrapper around the drupal watchdog.
    */
@@ -61,8 +61,7 @@ class mediamosa_log {
     $query = mediamosa_db::db_select('watchdog', 'w')
       ->fields('w', array('wid'))
       ->condition('w.link', $link, 'LIKE');
-    $result = $query->execute();
-    $wid = $result->fetchField();
+    $wid = $query->execute()->fetchField();
 
     // Cleant the link of watchdog.
     $num_updated = mediamosa_db::db_update('watchdog')
@@ -73,37 +72,35 @@ class mediamosa_log {
       ->execute();
 
     // Insert the assset_id.
-    $wid = mediamosa_db::db_insert(mediamosa_install_db::TABLE_NAME)
+    return mediamosa_db::db_insert(mediamosa_watchdog_db::TABLE_NAME)
       ->fields(array(
-        mediamosa_install_db::ID => $wid,
-        mediamosa_install_db::ASSET_ID => $asset_id,
-        mediamosa_install_db::MEDIAFILE_ID => '',
+        mediamosa_watchdog_db::ID => $wid,
+        mediamosa_watchdog_db::ASSET_ID => $asset_id,
+        mediamosa_watchdog_db::MEDIAFILE_ID => '',
       ))
       ->execute();
-
-    return $wid;
   }
 
   /**
    * Log mediafile ids.
    */
-  static public function log_mediafile($mediafile_id, $asset_id, $message, array $variables = array(), $severity = WATCHDOG_NOTICE, $type = NULL) {
+  static public function log_mediafile($mediafile_id, $message, array $variables = array(), $asset_id = NULL, $severity = WATCHDOG_NOTICE, $type = NULL) {
     // Fill the asset id.
     if (!$asset_id && $mediafile_id) {
       $query = mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'am')
         ->fields('am', array(mediamosa_asset_mediafile_db::ASSET_ID))
-        ->condition('am.' . mediamosa_asset_mediafile_db::ID, $mediafile_id, 'LIKE');
-      $result = $query->execute();
-      $asset_id = $result->fetchField();
+        ->condition('am.' . mediamosa_asset_mediafile_db::ID, $mediafile_id);
+
+      $asset_id = $query->execute()->fetchField();
     }
 
     // Logging the message and insert the asset_id.
     $wid = self::log_asset($asset_id, $message, $variables, $severity, $type);
 
     // Insert the mediafile_id.
-    $num_updated = mediamosa_db::db_update(mediamosa_install_db::TABLE_NAME)
+    $num_updated = mediamosa_db::db_update(mediamosa_watchdog_db::TABLE_NAME)
       ->fields(array(
-        mediamosa_install_db::MEDIAFILE_ID => $mediafile_id,
+        mediamosa_watchdog_db::MEDIAFILE_ID => $mediafile_id,
       ))
       ->condition('wid', $wid)
       ->execute();

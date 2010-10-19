@@ -100,7 +100,7 @@ class mediamosa_io {
     // Filesize needs clear cache.
     self::clearstatcache();
 
-    return filesize($filename);
+    return file_exists($filename) ? filesize($filename) : FALSE;
   }
 
   /**
