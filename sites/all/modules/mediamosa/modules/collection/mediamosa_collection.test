@@ -327,8 +327,8 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
     // test: [POST] collection/$coll_id/asset_relation/delete?asset=$asset_id
     // delete collectie/asset relation
     $parameters = array(
-      mediamosa_rest_call_asset_collection_delete::USER_ID => self::SIMPLETEST_USER_ID,
-      mediamosa_rest_call_asset_collection_delete::ASSET_ID => $asset_id,
+      mediamosa_rest_call_collection_delete_relation::USER_ID => self::SIMPLETEST_USER_ID,
+      mediamosa_rest_call_collection_delete_relation::ASSET_ID => $asset_id,
     );
     $response = $this->restCallPOST('collection/' . $coll_id . '/asset_relation/delete', $parameters);
     $request_result_id = $response['xml']->header->request_result_id;

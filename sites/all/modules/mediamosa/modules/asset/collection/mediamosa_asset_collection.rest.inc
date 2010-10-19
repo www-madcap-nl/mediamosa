@@ -130,100 +130,6 @@ class mediamosa_rest_call_asset_collection_create extends mediamosa_rest_call {
  * URI: /asset/$asset_id/collection_relation/delete
  * Method: POST
  *
- * Delete link between given asset and collection.
- *
- * 1.x: media_management_delete_collection_relation
- */
-class mediamosa_rest_call_asset_collection_delete extends mediamosa_rest_call {
-  // ------------------------------------------------------------------ Consts.
-  // Rest vars;
-  const COLL_ID = 'coll_id';
-  const ASSET_ID = 'asset_id';
-  const USER_ID = 'user_id';
-
-  // ------------------------------------------------------------------ Get Var Setup.
-  public function get_var_setup() {
-    $a_var_setup = array();
-
-    $a_var_setup = array(
-      self::VARS => array(
-        self::COLL_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_COLLECTION_ID,
-          self::VAR_DESCRIPTION => 'The collection ID.',
-          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES
-        ),
-        self::ASSET_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
-          self::VAR_DESCRIPTION => 'The asset ID.',
-          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
-          self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
-        ),
-        self::USER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
-          self::VAR_DESCRIPTION => 'The asset ID.',
-          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES
-        ),
-      )
-    );
-  }
-
-  // ------------------------------------------------------------------ Do Call.
-  public function do_call() {
-    $o_mediamosa = mediamosa::get();
-
-    $a_app_ids = $this->get_param_value_app();
-
-    // Get the 1st app.
-    $app_id = reset($a_app_ids);
-
-    // App admin.
-    $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
-
-    // Get params.
-    $coll_id = $this->get_param_value(self::COLL_ID);
-    $a_asset_ids = $this->get_param_value(self::ASSET_ID);
-    $user_id = $this->get_param_value(self::USER_ID);
-
-    // Test webservice.
-    mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $a_app_ids);
-
-    // Collection must exist.
-    mediamosa_db::db_must_exists(mediamosa_collection_db::TABLE_NAME, array(mediamosa_collection_db::ID => $coll_id));
-
-    foreach ($a_asset_ids as $asset_id) {
-      try {
-        // Create the link.
-        mediamosa_asset_collection::delete($app_id, $user_id, $is_app_admin, $asset_id, $coll_id);
-
-        $o_mediamosa->add_item(
-          array(
-            'coll_id' => $coll_id,
-            'asset_id' => $asset_id,
-            'result' => mediamosa_response::SUCCESS,
-            'result_id' => mediamosa_error::ERRORCODE_OKAY,
-            'result_description' => mediamosa_error::error_code_find_description(mediamosa_error::ERRORCODE_OKAY)
-          )
-        );
-      }
-      catch (mediamosa_exception_error $e) {
-        $o_mediamosa->add_item(
-          array(
-            'coll_id' => $coll_id,
-            'asset_id' => $asset_id,
-            'result' => mediamosa_response::ERROR,
-            'result_id' => $e->getCode(),
-            'result_description' => $e->getMessage()
-          )
-        );
-      }
-    }
-  }
-}
-
-/**
- * URI: /asset/$asset_id/collection_relation/delete
- * Method: POST
- *
  * Delete all links between given asset and his collections.
  *
  * Internal only.
@@ -235,7 +141,6 @@ class mediamosa_rest_call_asset_collection_delete_asset_from_all_collections ext
   // Rest vars;
   const ASSET_ID = 'asset_id';
   const USER_ID = 'user_id';
-  const COLL_ID = 'coll_id';
 
   // ------------------------------------------------------------------ Get Var Setup.
 public function get_var_setup() {
@@ -243,11 +148,6 @@ public function get_var_setup() {
 
     $a_var_setup = array(
       self::VARS => array(
-        self::COLL_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_COLLECTION_ID,
-          self::VAR_DESCRIPTION => 'The collection ID.',
-          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES
-        ),
         self::ASSET_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
           self::VAR_DESCRIPTION => 'The asset ID.',
