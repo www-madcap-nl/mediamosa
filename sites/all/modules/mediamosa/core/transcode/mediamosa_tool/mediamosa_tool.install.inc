@@ -35,7 +35,7 @@ require_once 'mediamosa_tool_db.inc';
  */
 function _mediamosa_tool_install() {
   // Create our table(s).
-  mediamosa::drupal_install_schema('mediamosa_tool');
+  mediamosa::drupal_install_schema(mediamosa_tool_params_db::TABLE_NAME);
 }
 
 /**
@@ -43,7 +43,7 @@ function _mediamosa_tool_install() {
  */
 function _mediamosa_tool_uninstall() {
   // Drop our table(s).
-  //mediamosa::drupal_uninstall_schema('mediamosa_tool');
+  //mediamosa::drupal_uninstall_schema(mediamosa_tool_params_db::TABLE_NAME);
 }
 
 /**
