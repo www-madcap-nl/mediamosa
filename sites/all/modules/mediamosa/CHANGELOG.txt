@@ -26,6 +26,11 @@ Other changes (not ticket related).
 - Added unit test for black still generation.
 - Enabled black still generation (still_validate()).
 
+MediaMosa 2.2.5.3 (Build 956)
+---------------------------
+- Moved code from 2.3 instant analyse to 2.2.5.x release for fixing metadata 
+  utf-8 unicode problems with ffmpeg result.
+
 MediaMosa 2.2.5.2 (Build 952)
 ---------------------------
 - disabled Black Still generation.
