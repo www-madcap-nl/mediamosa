@@ -60,7 +60,6 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
   /**
    * Testing collection basic working (#205).
    */
-  /*
   function testCollectionMediaManagement() {
 
     // test 1: [POST] collection/create - make empty collection.
@@ -401,7 +400,7 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
 
   /**
    * Testing hide empty assets flag.
-   *
+   */
   function testCollectionHideEmptyAssets() {
 
     // Create collection.
@@ -453,37 +452,5 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
 
     // Show the collection.
     $this->var_export($collection);
-  }
-*/
-  /**
-   * Testing collectionis private flag. (#128).
-   */
-  function testCollectionIsPrivate() {
-    // Create collection.
-    $coll_id_1 = $this->createCollection();
-    $coll_id_2 = $this->createCollection();
-    $coll_id_3 = $this->createCollection();
-
-    // Create 3 assets, one with mediafile, 2 empty and put them into the
-    // collection.
-    $asset_id_1 = $this->createAsset();
-    $asset_id_2 = $this->createAsset();
-
-    // Upload a mediafile.
-    $upload = $this->uploadTestFile();
-
-    // Put them into the collection.
-    $this->createCollectionAssetRelation($coll_id_1, array($asset_id_1, $asset_id_2));
-
-    // Put them into the collection.
-    $this->createCollectionAssetRelation($coll_id_2, array($asset_id_2, $upload['asset_id']));
-
-    // Now search collection, numofvideos should be 2.
-    $result = $this->searchCollections();
-
-    // Get the collections, should be one.
-    $collections = $result['items']['item'];
-
-
   }
 }

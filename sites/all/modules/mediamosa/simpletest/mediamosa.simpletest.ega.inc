@@ -1653,7 +1653,6 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       mediamosa_rest_call_collection_create::USER_ID => self::SIMPLETEST_USER_ID,
       mediamosa_rest_call_collection_create::GROUP_ID => self::SIMPLETEST_GROUP_ID,
       mediamosa_rest_call_collection_create::IS_APP_ADMIN => 'false',
-      mediamosa_rest_call_collection_create::ISPRIVATE =>
     );
 
     // Set uri.

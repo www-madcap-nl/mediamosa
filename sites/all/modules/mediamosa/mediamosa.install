@@ -1201,7 +1201,7 @@ function mediamosa_update_7062() {
 }
 
 /**
- * Rename mediamosa_dblog table to mediamosa_watchdog in case some1 had the
+ * Rename mediamosa_dblog table to mediamosa_watchdog in case someone had the
  * old version installed.
  */
 function mediamosa_update_7063() {
