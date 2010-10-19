@@ -34,7 +34,6 @@ require_once 'core/node/mediamosa_node.inc';
 
 // Include the class we need. During install nothing can be autoloaded (yet).
 require_once 'mediamosa.inc';
-require_once 'mediamosa_db.inc';
 require_once 'mediamosa.settings.inc';
 require_once 'lib/mediamosa_db.inc';
 require_once 'lib/mediamosa_datetime.inc';

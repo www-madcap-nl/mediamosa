@@ -18,7 +18,6 @@ dependencies[] = mediamosa_library
 files[] = mediamosa.module
 files[] = mediamosa.version.inc
 files[] = mediamosa.inc
-files[] = mediamosa_db.inc
 files[] = mediamosa.install
 files[] = mediamosa.rest.inc
 files[] = mediamosa.settings.inc
