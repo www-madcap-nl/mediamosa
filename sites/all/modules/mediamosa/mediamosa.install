@@ -52,6 +52,7 @@ require_once 'core/node/mediamosa_node.install.inc';
 require_once 'core/server/mediamosa_server.install.inc';
 require_once 'core/statistics/mediamosa_statistics.install.inc';
 require_once 'core/ticket/mediamosa_ticket.install.inc';
+require_once 'core/tool/mediamosa_tool.install.inc';
 require_once 'core/transcode/mediamosa_transcode.install.inc';
 require_once 'core/user/mediamosa_user.install.inc';
 require_once 'core/webservice/mediamosa_webservice.install.inc';
@@ -93,6 +94,9 @@ function mediamosa_install() {
 
   // Call installer ftp_batch.
   _mediamosa_ftp_batch_install();
+
+  // Call installer Transcode.
+  _mediamosa_tool_install();
 
   // Call installer Transcode.
   _mediamosa_transcode_install();
@@ -137,6 +141,9 @@ function mediamosa_uninstall() {
 
   // Remove Transcode Profile.
   _mediamosa_transcode_uninstall();
+
+  // Remove installer Transcode.
+  _mediamosa_tool_uninstall();
 
   // Remove ftp_batch.
   _mediamosa_ftp_batch_uninstall();
@@ -1220,7 +1227,7 @@ function mediamosa_update_7063() {
 }
 
 /**
- * Install {mediamosa_tool_params} table.
+ * Install mediamosa_tool_params table.
  */
 function mediamosa_update_7064() {
   mediamosa::drupal_install_schema(mediamosa_tool_params_db::TABLE_NAME);
@@ -1240,11 +1247,28 @@ function mediamosa_update_7065() {
 }
 
 /**
- * Uninstall {mediamosa_transcode_mapping} table.
+ * Uninstall mediamosa_transcode_mapping table.
  */
 function mediamosa_update_7066() {
-  // Drop table.
-  mediamosa::drupal_uninstall_schema(mediamosa_transcode_mapping_db::TABLE_NAME);
+
+  try {
+    // Try this first.
+    mediamosa::drupal_uninstall_schema('mediamosa_transcode_mapping');
+  }
+  catch (Exception $e) {
+    // ignore.
+  }
+
+  // Then when it fails, we do this.
+  if (db_table_exists('mediamosa_transcode_mapping')) {
+    db_drop_table('mediamosa_transcode_mapping');
+  }
+
+  // Rebuild the registry.
+  registry_rebuild();
+
+  cache_clear_all();
 }
+
 
 // TODO: Remove old code from the repository on the next release: sites/all/modules/mediamosa/core/transcode/mapping.

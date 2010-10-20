@@ -26,14 +26,15 @@
 
  /**
   * @file
-  * Tool installer.
+  * Tool params installer.
   */
-require_once 'mediamosa_tool_db.inc';
+
+require_once 'mediamosa_tool_params_db.inc';
 
 /**
  * Implements hook_install().
  */
-function _mediamosa_tool_install() {
+function _mediamosa_tool_params_install() {
   // Create our table(s).
   mediamosa::drupal_install_schema(mediamosa_tool_params_db::TABLE_NAME);
 }
@@ -41,15 +42,15 @@ function _mediamosa_tool_install() {
 /**
  * Implements hook_unstall().
  */
-function _mediamosa_tool_uninstall() {
+function _mediamosa_tool_params_uninstall() {
   // Drop our table(s).
-  //mediamosa::drupal_uninstall_schema(mediamosa_tool_params_db::TABLE_NAME);
+  mediamosa::drupal_uninstall_schema(mediamosa_tool_params_db::TABLE_NAME);
 }
 
 /**
  * Implements hook_schema().
  */
-function mediamosa_tool_schema() {
+function mediamosa_tool_params_schema() {
 
   $a_schema[mediamosa_tool_params_db::TABLE_NAME] = array(
   'description' => t('The tool parameter table.'),
