@@ -2,7 +2,7 @@
 name = "MediaMosa"
 description = "Open source media management and distribution platform."
 package = "MediaMosa - Core"
-version = "2.3.0.992"
+version = "2.3.0.994"
 core = 7.x
 
 configure = admin/mediamosa/config/global
@@ -283,10 +283,13 @@ files[] = core/transcode/profile/mediamosa_transcode_profile_db.inc
 files[] = core/transcode/profile/mediamosa_transcode_profile.inc
 files[] = core/transcode/profile/mediamosa_transcode_profile.install.inc
 
+; Tool params.
+files[] = core/tool/params/mediamosa_tool_params.install.inc
+files[] = core/tool/params/mediamosa_tool_params_db.inc
+files[] = core/tool/params/mediamosa_tool_params.inc
+
 ; Tool.
-files[] = core/transcode/mediamosa_tool/mediamosa_tool_db.inc
-files[] = core/transcode/mediamosa_tool/mediamosa_tool.inc
-files[] = core/transcode/mediamosa_tool/mediamosa_tool.install.inc
+files[] = core/tool/mediamosa_tool.install.inc
 
 ; User.
 files[] = core/user/mediamosa_user_db.inc

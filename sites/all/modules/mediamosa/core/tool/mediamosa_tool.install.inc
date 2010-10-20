@@ -26,8 +26,20 @@
 
  /**
   * @file
-  * transcode_profile module.
+  * Tool installer.
   */
+require_once 'params/mediamosa_tool_params.install.inc';
 
-class mediamosa_transcode_mapping {
+/**
+ * Implements hook_install().
+ */
+function _mediamosa_tool_install() {
+  _mediamosa_tool_params_install();
+}
+
+/**
+ * Implements hook_unstall().
+ */
+function _mediamosa_tool_uninstall() {
+  _mediamosa_tool_params_uninstall();
 }

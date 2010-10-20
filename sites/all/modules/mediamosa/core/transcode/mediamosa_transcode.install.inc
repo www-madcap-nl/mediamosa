@@ -29,7 +29,6 @@
  * Installer Transcode.
  */
 require_once 'profile/mediamosa_transcode_profile.install.inc';
-require_once 'mediamosa_tool/mediamosa_tool.install.inc';
 
 /**
  * Implements hook_install().
@@ -37,7 +36,6 @@ require_once 'mediamosa_tool/mediamosa_tool.install.inc';
 function _mediamosa_transcode_install() {
   // Create our table(s).
   _mediamosa_transcode_profile_install();
-  _mediamosa_tool_install();
 }
 
 /**
@@ -46,5 +44,4 @@ function _mediamosa_transcode_install() {
 function _mediamosa_transcode_uninstall() {
   // Drop our table(s).
   _mediamosa_transcode_profile_uninstall();
-  _mediamosa_tool_uninstall();
 }

@@ -16,6 +16,7 @@ MediaMosa 2.3.0
 - No still job on audio files (See ticket #219).
 - Extended the search in watchdog to search on asset ID, mediafile ID and on
   description. (See ticket #330).
+- First phase for better workflow on toolset definition (See ticket #265).
 
 Other changes (not ticket related).
 - Fixed: /mediafile/uploadprogress will now work without /external in front of
