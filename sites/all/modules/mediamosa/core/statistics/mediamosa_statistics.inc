@@ -222,13 +222,28 @@ class mediamosa_statistics {
     // Per usergroup, user and container
     foreach (array('group_id' => 'group', 'owner_id' => 'user', 'app_id' => 'container') as $subject => $name) {
       /*
-      // Example query:
-      SELECT SUM(m.val_int) / 1024 / 1024 AS diskspace_mb, mf.owner_id, mf.app_id, mm.val_char
+      // Example queries:
+      // group_id => group
+      SELECT SUM(m.val_int) / 1024 / 1024 AS diskspace_mb, mf.group_id, mf.app_id, mm.val_char AS container_type
+      FROM mediamosa_asset_mediafile_metadata AS m
+      LEFT JOIN mediamosa_asset_mediafile_metadata AS mm USING(mediafile_id)
+      JOIN mediamosa_asset_mediafile AS mf USING(mediafile_id)
+      WHERE m.val_int > 0 AND m.prop_id = 13 AND mm.prop_id = 10
+      GROUP BY app_id, group_id, mm.val_char
+      // owner_id => user
+      SELECT SUM(m.val_int) / 1024 / 1024 AS diskspace_mb, mf.owner_id, mf.app_id, mm.val_char AS container_type
       FROM mediamosa_asset_mediafile_metadata AS m
       LEFT JOIN mediamosa_asset_mediafile_metadata AS mm USING(mediafile_id)
       JOIN mediamosa_asset_mediafile AS mf USING(mediafile_id)
       WHERE m.val_int > 0 AND m.prop_id = 13 AND mm.prop_id = 10
       GROUP BY app_id, owner_id, mm.val_char
+      // app_id => container
+      SELECT SUM(m.val_int) / 1024 / 1024 AS diskspace_mb, mf.app_id, mf.app_id, mm.val_char AS container_type
+      FROM mediamosa_asset_mediafile_metadata AS m
+      LEFT JOIN mediamosa_asset_mediafile_metadata AS mm USING(mediafile_id)
+      JOIN mediamosa_asset_mediafile AS mf USING(mediafile_id)
+      WHERE m.val_int > 0 AND m.prop_id = 13 AND mm.prop_id = 10
+      GROUP BY app_id, app_id, mm.val_char
        */
       $result = mediamosa_db::db_query(
         'SELECT SUM(m.#filesize) / 1024 / 1024 AS diskspace_mb, mf.#subject, mf.#app_id, mm.#container_type AS container_type
