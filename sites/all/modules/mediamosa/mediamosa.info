@@ -284,9 +284,7 @@ files[] = core/transcode/profile/mediamosa_transcode_profile.inc
 files[] = core/transcode/profile/mediamosa_transcode_profile.install.inc
 
 ; Tool.
-files[] = core/transcode/mediamosa_tool/mediamosa_tool_db.inc
-files[] = core/transcode/mediamosa_tool/mediamosa_tool.inc
-files[] = core/transcode/mediamosa_tool/mediamosa_tool.install.inc
+files[] = core/tool/mediamosa_tool.install.inc
 
 ; User.
 files[] = core/user/mediamosa_user_db.inc
