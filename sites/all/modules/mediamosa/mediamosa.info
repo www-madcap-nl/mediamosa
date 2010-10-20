@@ -283,6 +283,11 @@ files[] = core/transcode/profile/mediamosa_transcode_profile_db.inc
 files[] = core/transcode/profile/mediamosa_transcode_profile.inc
 files[] = core/transcode/profile/mediamosa_transcode_profile.install.inc
 
+; Tool params.
+files[] = core/tool/params/mediamosa_tool_params.install.inc
+files[] = core/tool/params/mediamosa_tool_params_db.inc
+files[] = core/tool/params/mediamosa_tool_params.inc
+
 ; Tool.
 files[] = core/tool/mediamosa_tool.install.inc
 
