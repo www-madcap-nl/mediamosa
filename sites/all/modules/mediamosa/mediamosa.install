@@ -1270,5 +1270,15 @@ function mediamosa_update_7066() {
   cache_clear_all();
 }
 
+/**
+ * New error: ERRORCODE_INVALID_STILL_PERMANENT.
+ */
+function mediamosa_update_7067() {
+  db_query('INSERT INTO {mediamosa_error} (name, code, message) VALUES (:name, :code, :message)', array(
+    ':name' => 'ERRORCODE_INVALID_STILL_PERMANENT',
+    ':code' => mediamosa_error::ERRORCODE_INVALID_STILL_PERMANENT,
+    ':message' => 'Invalid permanent still with ID \'@still_id\'',
+  ));
+}
 
 // TODO: Remove old code from the repository on the next release: sites/all/modules/mediamosa/core/transcode/mapping.

@@ -289,12 +289,36 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
       $a_mediafile_ext['asset_id'] = $asset_id;
     }
 
+    // Check the asset protection.
+    $asset_is_protected = mediamosa_asset_db::IS_PROTECTED_FALSE;
+    $response = mediamosa_asset::get($asset_id, NULL);
+    if ($response) {
+      // Asset is exists.
+      $asset_is_protected = $response[mediamosa_asset_db::IS_PROTECTED];
+    }
+
     // Create ticket ID.
     $ticket = mediamosa_db::uuid($app_id);
 
     // Create ticket.
     if (!isset($a_mediafile_ext[mediamosa_asset_mediafile_db::URI])) {
-      $ticket = mediamosa_ticket::create_play_proxy($ticket, $a_mediafile_ext, $response_type, $app_id, $user_id, $still_id);
+      $still_id_tmp = mediamosa_asset_mediafile_still::find_default($asset_id);
+
+      // Check the protection.
+      $still_is_protected = mediamosa_asset_mediafile_db::IS_PROTECTED_FALSE;
+      if (mediamosa_asset_db::IS_PROTECTED_FALSE == $asset_is_protected) {
+        $response = mediamosa_asset_mediafile::get($still_id_tmp, NULL, array(mediamosa_asset_mediafile_db::IS_PROTECTED));
+        if ($response) {
+          $still_is_protected = $response[mediamosa_asset_mediafile_db::IS_PROTECTED];
+        }
+      }
+
+      if (mediamosa_asset_db::IS_PROTECTED_FALSE == $asset_is_protected && mediamosa_asset_mediafile_db::IS_PROTECTED_FALSE == $still_is_protected) {
+        $ticket = $still_id_tmp;
+      }
+      else {
+        $ticket = mediamosa_ticket::TICKET_PATH . mediamosa_ticket::create_play_proxy($ticket, $a_mediafile_ext, $response_type, $app_id, $user_id, $still_id_tmp);
+      }
     }
 
     // If response type is still, we get all information of all stills with all details.
@@ -404,7 +428,23 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
 
             // make a play or download symlink.
             if (!isset($a_mediafile_ext[mediamosa_asset_mediafile_db::URI])) {
-              $ticket_still = mediamosa_ticket::create_play_proxy($ticket_still, $a_mediafile_ext, $response_type, $app_id, $user_id, $t_stills['still_id']);
+
+              // Check the protection.
+              $still_is_protected = mediamosa_asset_mediafile_db::IS_PROTECTED_FALSE;
+              if (mediamosa_asset_db::IS_PROTECTED_FALSE == $asset_is_protected) {
+                $response = mediamosa_asset_mediafile::get($t_stills['still_id'], NULL, array(mediamosa_asset_mediafile_db::IS_PROTECTED));
+                if ($response) {
+                  $still_is_protected = $response[mediamosa_asset_mediafile_db::IS_PROTECTED];
+                }
+              }
+
+              if (mediamosa_asset_db::IS_PROTECTED_FALSE == $asset_is_protected && mediamosa_asset_mediafile_db::IS_PROTECTED_FALSE == $still_is_protected) {
+                $ticket_still = $t_stills['still_id'];
+              }
+              else {
+                $ticket_still = mediamosa_ticket::TICKET_PATH . mediamosa_ticket::create_play_proxy($ticket_still, $a_mediafile_ext, $response_type, $app_id, $user_id, $t_stills['still_id']);
+              }
+
             }
 
             $t_stills['ticket'] = $ticket_still;

@@ -40,6 +40,8 @@ class mediamosa_ticket {
   const TICKET_TYPE_STILL = 'STILL';
   const TICKET_TYPE_UPLOAD = 'UPLOAD';
 
+  const TICKET_PATH = 'ticket/';
+
   // ------------------------------------------------------------------ Static Functions.
   /**
    * Log for ticket.

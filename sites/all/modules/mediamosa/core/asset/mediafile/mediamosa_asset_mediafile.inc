@@ -225,19 +225,38 @@ class mediamosa_asset_mediafile {
 
       $i = 0;
       foreach ($result as $row) {
-        // Create unique ID.
-        $ticket = mediamosa_db::uuid($app_id);
-
         try {
-          // Create ticket.
-          mediamosa_ticket::create_play_proxy(
-            $ticket,
-            NULL,
-            mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL,
-            $app_id,
-            $row[mediamosa_asset_mediafile_db::OWNER_ID],
-            $row[mediamosa_asset_mediafile_db::ID]
-          );
+          $still_is_protected = $row[mediamosa_asset_mediafile_db::IS_PROTECTED];
+
+          // Check the asset protection.
+          $asset_is_protected = mediamosa_asset_db::IS_PROTECTED_FALSE;
+          if (mediamosa_asset_mediafile_db::IS_PROTECTED_FALSE == $still_is_protected) {
+            $response = mediamosa_asset::get($row[mediamosa_asset_mediafile_db::ASSET_ID], NULL);
+            if ($response) {
+              // Asset is exists.
+              $asset_is_protected = $response[mediamosa_asset_db::IS_PROTECTED];
+            }
+          }
+
+          if ((mediamosa_asset_mediafile_db::IS_PROTECTED_FALSE == $still_is_protected && mediamosa_asset_db::IS_PROTECTED_FALSE == $asset_is_protected)) {
+            $ticket = $row[mediamosa_asset_mediafile_db::ID];
+          }
+          else {
+            // Create unique ID.
+            $ticket = mediamosa_db::uuid($app_id);
+
+            // Create ticket.
+            mediamosa_ticket::create_play_proxy(
+              $ticket,
+              NULL,
+              mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL,
+              $app_id,
+              $row[mediamosa_asset_mediafile_db::OWNER_ID],
+              $row[mediamosa_asset_mediafile_db::ID]
+            );
+
+            $ticket = mediamosa_ticket::TICKET_PATH . $ticket;
+          }
 
           // Create response.
           $response = mediamosa_asset_mediafile_play_proxy::create_response_still($ticket, $app_id);

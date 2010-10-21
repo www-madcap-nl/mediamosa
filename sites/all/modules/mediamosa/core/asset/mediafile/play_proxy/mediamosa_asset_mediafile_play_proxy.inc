@@ -340,11 +340,11 @@ class mediamosa_asset_mediafile_play_proxy {
 
     // Uri voor niet-tickets (still, download etc).
     foreach ($stills as $key => $value) {
-      $stills[$key]['still_ticket'] = str_replace(self::PARAM_URI_TICKET, urlencode($stills[$key]['ticket']), $streaming_server_uri);
+      $stills[$key]['still_ticket'] = str_replace(self::PARAM_URI_TICKET, $stills[$key]['ticket'], $streaming_server_uri);
     }
 
     // Replace ticker param in URI.
-    $streaming_server_uri = str_replace(self::PARAM_URI_TICKET, urlencode($ticket), $streaming_server_uri);
+    $streaming_server_uri = str_replace(self::PARAM_URI_TICKET, $ticket, $streaming_server_uri);
 
     // So it exists.
     $variables = array();

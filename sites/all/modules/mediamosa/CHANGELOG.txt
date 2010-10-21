@@ -17,6 +17,7 @@ MediaMosa 2.3.0
 - Extended the search in watchdog to search on asset ID, mediafile ID and on
   description. (See ticket #330).
 - First phase for better workflow on toolset definition (See ticket #265).
+- Permanent Still URLs when asset is not protected (See ticket #291).
 
 Other changes (not ticket related).
 - Fixed: /mediafile/uploadprogress will now work without /external in front of

@@ -1,0 +1,168 @@
+<?php
+// $Id$
+
+/**
+ * MediaMosa is Open Source Software to build a Full Featured, Webservice
+ * Oriented Media Management and Distribution platform (http://mediamosa.org)
+ *
+ * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * (http://www.kennisnet.nl)
+ *
+ * MediaMosa is based on the open source Drupal platform and
+ * was originally developed by Madcap BV (http://www.madcap.nl)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, you can find it at:
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ */
+
+/**
+ * @file
+ * Permanent still link unittests.
+ */
+
+class MediaMosaStillPermanentLinkTestCaseEgaJob extends MediaMosaTestCaseEgaJob {
+
+  // ------------------------------------------------------------------ Members.
+
+  // ------------------------------------------------------------------ Functions.
+  public static function getInfo() {
+    return array(
+      'name' => 'Permanent still link',
+      'description' => 'Permanent still link in case of no ACL rule on the asset.',
+      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STILL,
+    );
+  }
+
+  // ------------------------------------------------------------------ Tests.
+  public function testStillPermanentLink() {
+
+    // Create upload file.
+    $a_upload = $this->uploadTestFile();
+    $asset_id = $a_upload['asset_id'];
+    $mediafile_id = $a_upload['mediafile_id'];
+
+    // Create still job.
+    $job_id = $this->createMediafileStill($mediafile_id);
+
+    // Parse the queue.
+    $this->doQueueCycleAll();
+
+    // Get the stills.
+    $a_stills = $this->getMediafileStill($mediafile_id);
+    $this->assertTrue(count($a_stills) == 1, 'One dimension result.');
+
+    // Get first array.
+    $a_stills = $a_stills[0];
+
+    // Some tests.
+    $this->assertTrue(isset($a_stills['stills']), 'Found the still.');
+    $this->assertTrue(!empty($a_stills['output']), 'Found the output url.');
+    $this->assertTrue(!empty($a_stills['ticket_id']), 'Found the ticket ID.');
+
+    $still_id = $a_stills['stills']['still_id'];
+
+
+    // Permanent still url without protection.
+
+    // Test the output, do output call.
+    //$permanent_still_url = str_replace('/still/', '/simpletest/still/', $a_stills['output']);
+    $permanent_still_url = $a_stills['output'];
+
+    // Get the file.
+    $result = mediamosa_http::drupal_http_request($permanent_still_url);
+
+    // Check response.
+    $this->assertTrue(
+      $result->code == 200,
+      t("Download the test image from permanent link '@url' (code = @code)", array('@url' => $permanent_still_url, '@code' => $result->code))
+    );
+
+    // Get the file second time.
+    $result = mediamosa_http::drupal_http_request($permanent_still_url);
+
+    // Check response second time.
+    $this->assertTrue(
+      $result->code == 200,
+      t("Download the test image second time from permanent link '@url' (code = @code)", array('@url' => $permanent_still_url, '@code' => $result->code))
+    );
+
+
+    // Permanent still url with protection.
+
+    // Add ACL rule.
+    $a_parameters = array(
+      'aut_user' => 'some_user',
+    );
+    $a_xml = $this->setMediafileAut($still_id, $a_parameters);
+
+
+    // Get the file.
+    $result = mediamosa_http::drupal_http_request($permanent_still_url);
+
+    // Check response.
+    $this->assertTrue(
+      $result->code == 404,
+      t("Download the test image from permanent link after ACL rule '@url' (code = @code)", array('@url' => $permanent_still_url, '@code' => $result->code))
+    );
+
+
+    // Temporary still url with protection.
+
+    // Get the stills.
+    $a_stills = $this->getMediafileStill($mediafile_id);
+    $this->assertTrue(count($a_stills) == 1, 'One dimension result.');
+
+    // Get first array.
+    $a_stills = $a_stills[0];
+
+    // Test the output, do output call.
+    //$still_url = str_replace('/still/', '/simpletest/still/', $a_stills['output']);
+    $still_url = $a_stills['output'];
+
+    // Get the file.
+    $result = mediamosa_http::drupal_http_request($still_url);
+
+    // Check response.
+    $this->assertTrue(
+      $result->code == 200,
+      t("Download the test image from '@url' (code = @code)", array('@url' => $still_url, '@code' => $result->code))
+    );
+
+    // Get the file second time.
+    $result = mediamosa_http::drupal_http_request($still_url);
+
+    // Check response second time.
+    $this->assertTrue(
+      $result->code == 404,
+      t("Download the test image second time from '@url' (code = @code)", array('@url' => $still_url, '@code' => $result->code))
+    );
+
+
+    // Permanent still url without protection.
+
+    // Remove ACL rule.
+    $a_parameters = array(
+    );
+    $a_xml = $this->setMediafileAut($still_id, $a_parameters, 'Removing ACL on mediafile', array(), array(mediamosa_error::ERRORCODE_EMPTY_RESULT));
+
+
+    // Get the file.
+    $result = mediamosa_http::drupal_http_request($permanent_still_url);
+
+    // Check response.
+    $this->assertTrue(
+      $result->code == 200,
+      t("Download the test image from permanent link without ACL rule'@url' (code = @code)", array('@url' => $permanent_still_url, '@code' => $result->code))
+    );
+
+  }
+}

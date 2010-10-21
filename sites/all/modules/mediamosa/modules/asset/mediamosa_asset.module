@@ -509,7 +509,7 @@ function mediamosa_asset_mediamosa_register_rest_call() {
   $rest_calls['download/$ticket_id/$filename'][mediamosa_rest_call::METHOD_POST] = $rest_calls['download/$ticket_id/$filename'][mediamosa_rest_call::METHOD_GET];
 
   // Still.
-  $rest_calls['still/$ticket_id'][mediamosa_rest_call::METHOD_GET] = array(
+  $rest_calls['still/$still_id'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_download_mediafile_still',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_asset_mediafile_still_download',
@@ -518,9 +518,11 @@ function mediamosa_asset_mediamosa_register_rest_call() {
     mediamosa_rest_call::RESPONSE_TYPE => mediamosa_rest_call::RESPONSE_TYPE_DOWNLOAD,
     mediamosa_rest_call::BEHAVE_AS_EXTERNAL => TRUE,
   );
+  $rest_calls['still/ticket/$ticket_id'][mediamosa_rest_call::METHOD_GET] = $rest_calls['still/$still_id'][mediamosa_rest_call::METHOD_GET];
 
   // Allowed on POST as well.
-  $rest_calls['still/$ticket_id'][mediamosa_rest_call::METHOD_POST] = $rest_calls['still/$ticket_id'][mediamosa_rest_call::METHOD_GET];
+  $rest_calls['still/$still_id'][mediamosa_rest_call::METHOD_POST] = $rest_calls['still/$still_id'][mediamosa_rest_call::METHOD_GET];
+  $rest_calls['still/ticket/$ticket_id'][mediamosa_rest_call::METHOD_POST] = $rest_calls['still/$still_id'][mediamosa_rest_call::METHOD_GET];
 
   // Upload progress.
   $rest_calls['mediafile/uploadprogress'][mediamosa_rest_call::METHOD_GET] = array(
@@ -536,7 +538,8 @@ function mediamosa_asset_mediamosa_register_rest_call() {
   // In sandbox we have /still as special REST call so we don't have problems
   // with apache alias on /still.
   if (mediamosa::get()->in_simpletest_sandbox()) {
-    $rest_calls['simpletest/still/$ticket_id'] = $rest_calls['still/$ticket_id'];
+    $rest_calls['simpletest/still/$mediafile_id'] = $rest_calls['still/$still_id'];
+    $rest_calls['simpletest/still/ticket/$ticket_id'] = $rest_calls['still/ticket/$ticket_id'];
   }
 
   return $rest_calls;
@@ -1931,16 +1934,24 @@ user_id=admin',
   $rest_calls['download/$ticket_id/$filename'][mediamosa_rest_call::METHOD_POST] = $rest_calls['download/$ticket_id/$filename'][mediamosa_rest_call::METHOD_GET];
 
   // Still.
-  $rest_calls['still/$ticket_id'][mediamosa_rest_call::METHOD_GET] = array(
+  $rest_calls['still/$still_id'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'Enables viewing of stills',
-    mediamosa_rest_call::DESCRIPTION => 'Enables viewing of stills using the ticket system.',
+    mediamosa_rest_call::DESCRIPTION => 'Enables viewing of stills with permanent url using the ticket system.',
     mediamosa_rest_call::EXAMPLE_REQUEST => 'still/142',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => 'It returns the still image',
+  );
+  $rest_calls['still/ticket/$ticket_id'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::TITLE => 'Enables viewing of stills',
+    mediamosa_rest_call::DESCRIPTION => 'Enables viewing of stills with temporary url using the ticket system.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'still/ticket/aH1E',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
     mediamosa_rest_call::EXAMPLE_RESPONSE => 'It returns the still image',
   );
 
   // Allowed on POST as well.
-  $rest_calls['still/$ticket_id'][mediamosa_rest_call::METHOD_POST] = $rest_calls['still/$ticket_id'][mediamosa_rest_call::METHOD_GET];
+  $rest_calls['still/$still_id'][mediamosa_rest_call::METHOD_POST] = $rest_calls['still/$still_id'][mediamosa_rest_call::METHOD_GET];
+  $rest_calls['still/ticket/$ticket_id'][mediamosa_rest_call::METHOD_POST] = $rest_calls['still/ticket/$ticket_id'][mediamosa_rest_call::METHOD_GET];
 
   // Upload progress.
   $rest_calls['mediafile/uploadprogress'][mediamosa_rest_call::METHOD_GET] = array(

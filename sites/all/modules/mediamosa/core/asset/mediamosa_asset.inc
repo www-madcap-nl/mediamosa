@@ -774,16 +774,40 @@ class mediamosa_asset {
         }
 
         if ($show_stills) {
-          $ticket = mediamosa_db::uuid($app_id);
-          $mediafile_ext['asset_id'] = $asset[mediamosa_asset_db::ID];
           try {
-            $ticket_id = mediamosa_ticket::create_play_proxy($ticket, $mediafile_ext, mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL, $app_id, $aut_user_id, isset($items['stills'][$asset[mediamosa_asset_db::ID]]) ? $items['stills'][$asset[mediamosa_asset_db::ID]] : NULL);
+            $mediafile_ext['asset_id'] = $asset[mediamosa_asset_db::ID];
 
-            if ($ticket_id) {
-              // Create still response.
-              $response = mediamosa_asset_mediafile_play_proxy::create_response_still($ticket, $app_id);
+            // Get the still_id.
+            if (!isset($items['stills'][$asset[mediamosa_asset_db::ID]])) {
+              $items['stills'][$asset[mediamosa_asset_db::ID]] = mediamosa_asset_mediafile_still::find_default($asset[mediamosa_asset_db::ID]);
+            }
+
+            $asset_is_protected = $asset[mediamosa_asset_db::IS_PROTECTED];
+            // Check the protection.
+            $still_is_protected = mediamosa_asset_mediafile_db::IS_PROTECTED_FALSE;
+            if (mediamosa_asset_db::IS_PROTECTED_FALSE == $asset_is_protected) {
+              $response = mediamosa_asset_mediafile::get($items['stills'][$asset[mediamosa_asset_db::ID]], NULL, array(mediamosa_asset_mediafile_db::IS_PROTECTED));
+              if ($response) {
+                $still_is_protected = $response[mediamosa_asset_mediafile_db::IS_PROTECTED];
+              }
+            }
+
+            if (mediamosa_asset_db::IS_PROTECTED_FALSE == $asset_is_protected && mediamosa_asset_mediafile_db::IS_PROTECTED_FALSE == $still_is_protected) {
+              $response = mediamosa_asset_mediafile_play_proxy::create_response_still($items['stills'][$asset[mediamosa_asset_db::ID]], $app_id);
               $items_pre_sort[$asset[mediamosa_asset_db::ID]]['vpx_still_url'] = $response['output'];
               $items_pre_sort[$asset[mediamosa_asset_db::ID]]['ega_still_url'] = (isset($items['app_info'][$asset['app_id']]) ? str_replace('{asset_id}', $asset[mediamosa_asset_db::ID], $items['app_info'][$asset['app_id']]['still_url']) : '');
+            }
+            else {
+              $ticket = mediamosa_db::uuid($app_id);
+              $ticket_id = mediamosa_ticket::create_play_proxy($ticket, $mediafile_ext, mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL, $app_id, $aut_user_id, isset($items['stills'][$asset[mediamosa_asset_db::ID]]) ? $items['stills'][$asset[mediamosa_asset_db::ID]] : NULL);
+
+              if ($ticket_id) {
+                // Create still response.
+                $ticket = mediamosa_ticket::TICKET_PATH . $ticket;
+                $response = mediamosa_asset_mediafile_play_proxy::create_response_still($ticket, $app_id);
+                $items_pre_sort[$asset[mediamosa_asset_db::ID]]['vpx_still_url'] = $response['output'];
+                $items_pre_sort[$asset[mediamosa_asset_db::ID]]['ega_still_url'] = (isset($items['app_info'][$asset['app_id']]) ? str_replace('{asset_id}', $asset[mediamosa_asset_db::ID], $items['app_info'][$asset['app_id']]['still_url']) : '');
+              }
             }
           }
           catch (mediamosa_exception $e) {
