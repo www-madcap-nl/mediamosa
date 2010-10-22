@@ -66,11 +66,12 @@ dependencies[] = mediamosa_profile
 dependencies[] = mediamosa_server
 dependencies[] = mediamosa_statistics
 dependencies[] = mediamosa_ticket
+dependencies[] = mediamosa_tool
+dependencies[] = mediamosa_tool_ffmpeg
+dependencies[] = mediamosa_tool_windows
 dependencies[] = mediamosa_transcode
 dependencies[] = mediamosa_user
 dependencies[] = mediamosa_webservice
-dependencies[] = mediamosa_tool_ffmpeg
-dependencies[] = mediamosa_tool_windows
 
 
 ; Using _profile extension to prevent name collisions with core module.

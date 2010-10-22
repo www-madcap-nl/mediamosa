@@ -13,4 +13,3 @@ dependencies[] = mediamosa
 files[] = mediamosa_transcode.module
 files[] = profile/mediamosa_transcode_profile.rest.inc
 files[] = profile/mediamosa_transcode_profile.inc
-files[] = mapping/mediamosa_transcode_mapping.rest.inc

@@ -1281,4 +1281,15 @@ function mediamosa_update_7067() {
   ));
 }
 
+/**
+ * Turn on mediamosa_tool module.
+ */
+function mediamosa_update_7068() {
+  $module_list = array(
+    'mediamosa_tool',
+  );
+  $enable_dependencies = TRUE;
+  module_enable($module_list, $enable_dependencies);
+}
+
 // TODO: Remove old code from the repository on the next release: sites/all/modules/mediamosa/core/transcode/mapping.

@@ -26,7 +26,7 @@
 
 /**
  * @file
- * Transcode mapping REST calls.
+ * Transcode parameter REST calls.
  */
 
 /**
@@ -36,7 +36,7 @@
  * 1.x: _transcoding_profiles_transcode_parameter.
  *
  */
-class mediamosa_rest_call_transcode_mapping_search extends mediamosa_rest_call {
+class mediamosa_rest_call_tool_params_search extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Consts.
   // Rest vars;
 
@@ -60,6 +60,7 @@ class mediamosa_rest_call_transcode_mapping_search extends mediamosa_rest_call {
 
     // Add to response.
     foreach ($a_transcode_mappings as $transcode_mapping) {
+      //$transcode_mapping[mediamosa_tool_params_db::ALLOWED_VALUE] = implode(';', (array)unserialize($transcode_mapping[mediamosa_tool_params_db::ALLOWED_VALUE]));
       $transcode_mapping[mediamosa_tool_params_db::CREATED] = mediamosa::utcdate2appdate($transcode_mapping[mediamosa_tool_params_db::CREATED]);
       $transcode_mapping[mediamosa_tool_params_db::CHANGED] = mediamosa::utcdate2appdate($transcode_mapping[mediamosa_tool_params_db::CHANGED]);
 
