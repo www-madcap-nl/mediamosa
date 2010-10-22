@@ -1,8 +1,8 @@
 Index: ffmpeg.c
 ===================================================================
---- ffmpeg.c	(revision 20716)
+--- ffmpeg.c	(revision 25150)
 +++ ffmpeg.c	(working copy)
-@@ -73,6 +73,14 @@
+@@ -85,6 +85,14 @@
  const char program_name[] = "FFmpeg";
  const int program_birth_year = 2000;
  
@@ -17,9 +17,9 @@ Index: ffmpeg.c
  /* select an input stream for an output stream */
  typedef struct AVStreamMap {
      int file_index;
-@@ -887,15 +895,16 @@
-         double vdelta;
-         vdelta = get_sync_ipts(ost) / av_q2d(enc->time_base) - ost->sync_opts;
+@@ -1150,15 +1158,16 @@
+     if(video_sync_method){
+         double vdelta = sync_ipts - ost->sync_opts;
          //FIXME set to 0.5 after we fix some dts/pts bugs like in avidec.c
 -        if (vdelta < -1.1)
 +        //fprintf(stderr, "%f, %f, %f, %d\n", vdelta, get_sync_ipts(ost), av_q2d(enc->time_base), ost->sync_opts);
@@ -29,7 +29,7 @@ Index: ffmpeg.c
              if(vdelta<=-0.6){
                  nb_frames=0;
              }else if(vdelta>0.6)
-             ost->sync_opts= lrintf(get_sync_ipts(ost) / av_q2d(enc->time_base));
+             ost->sync_opts= lrintf(sync_ipts);
 -        }else if (vdelta > 1.1)
 -            nb_frames = lrintf(vdelta);
 +        }else if (vdelta > 0.0)
@@ -37,10 +37,10 @@ Index: ffmpeg.c
  //fprintf(stderr, "vdelta:%f, ost->sync_opts:%"PRId64", ost->sync_ipts:%f nb_frames:%d\n", vdelta, ost->sync_opts, get_sync_ipts(ost), nb_frames);
          if (nb_frames == 0){
              ++nb_frames_drop;
-@@ -1060,11 +1069,18 @@
+@@ -1316,11 +1325,18 @@
  
                  if(enc->coded_frame->key_frame)
-                     pkt.flags |= PKT_FLAG_KEY;
+                     pkt.flags |= AV_PKT_FLAG_KEY;
 -                write_frame(s, &pkt, ost->st->codec, bitstream_filters[ost->file_index][pkt.stream_index]);
 +
 +                if (imp_image[0] == -1 || (imp_image[imp_pointer] == frame_num)) {
@@ -58,7 +58,7 @@ Index: ffmpeg.c
                  /* if two pass, output log */
                  if (ost->logfile && enc->stats_out) {
                      fprintf(ost->logfile, "%s", enc->stats_out);
-@@ -2784,6 +2800,13 @@
+@@ -3064,6 +3080,13 @@
      return 0;
  }
  
@@ -69,18 +69,18 @@ Index: ffmpeg.c
 +    return 0;
 +}
 +
- static int opt_rec_timestamp(const char *opt, const char *arg)
+ static int opt_recording_timestamp(const char *opt, const char *arg)
  {
-     rec_timestamp = parse_time_or_die(opt, arg, 0) / 1000000;
-@@ -3830,6 +3853,7 @@
+     recording_timestamp = parse_time_or_die(opt, arg, 0) / 1000000;
+@@ -4166,6 +4189,7 @@
      { "t", OPT_FUNC2 | HAS_ARG, {(void*)opt_recording_time}, "record or transcode \"duration\" seconds of audio/video", "duration" },
      { "fs", HAS_ARG | OPT_INT64, {(void*)&limit_filesize}, "set the limit file size in bytes", "limit_size" }, //
      { "ss", OPT_FUNC2 | HAS_ARG, {(void*)opt_start_time}, "set the start time offset", "time_off" },
 +    { "scene", OPT_FUNC2 | HAS_ARG, {(void*)opt_scene_changes}, "scene changes file name", "scene_changes" },
      { "itsoffset", OPT_FUNC2 | HAS_ARG, {(void*)opt_input_ts_offset}, "set the input ts offset", "time_off" },
      { "itsscale", HAS_ARG, {(void*)opt_input_ts_scale}, "set the input ts scale", "stream:scale" },
-     { "timestamp", OPT_FUNC2 | HAS_ARG, {(void*)opt_rec_timestamp}, "set the timestamp ('now' to set the current time)", "time" },
-@@ -3965,9 +3989,28 @@
+     { "timestamp", OPT_FUNC2 | HAS_ARG, {(void*)opt_recording_timestamp}, "set the recording timestamp ('now' to set the current time)", "time" },
+@@ -4312,9 +4336,28 @@
  
      show_banner();
  
@@ -106,16 +106,24 @@ Index: ffmpeg.c
 +      }
 +    }
 +
-     /* file converter / grab */
-     if (nb_output_files <= 0) {
-         fprintf(stderr, "At least one output file must be specified\n");
+     if(nb_output_files <= 0 && nb_input_files == 0) {
+         show_usage();
+         fprintf(stderr, "Use -h to get full help or, even better, run 'man ffmpeg'\n");
 Index: libavcodec/mpegvideo_enc.c
 ===================================================================
---- libavcodec/mpegvideo_enc.c	(revision 19852)
+--- libavcodec/mpegvideo_enc.c	(revision 25150)
 +++ libavcodec/mpegvideo_enc.c	(working copy)
-@@ -340,7 +340,7 @@
+@@ -282,6 +282,7 @@
+     s->width = avctx->width;
+     s->height = avctx->height;
+     if(avctx->gop_size > 600 && avctx->strict_std_compliance>FF_COMPLIANCE_EXPERIMENTAL){
++        //
+         av_log(avctx, AV_LOG_ERROR, "Warning keyframe interval too large! reducing it ...\n");
+         avctx->gop_size=600;
+     }
+@@ -358,7 +359,7 @@
  
-     if(avctx->bit_rate*av_q2d(avctx->time_base) > avctx->bit_rate_tolerance){
+     if(!s->fixed_qscale && avctx->bit_rate*av_q2d(avctx->time_base) > avctx->bit_rate_tolerance){
          av_log(avctx, AV_LOG_ERROR, "bitrate tolerance too small for bitrate\n");
 -        return -1;
 +        //return -1;
