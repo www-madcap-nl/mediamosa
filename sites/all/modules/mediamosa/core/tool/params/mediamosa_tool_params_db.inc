@@ -34,6 +34,8 @@ class mediamosa_tool_params_db {
   const TABLE_NAME = 'mediamosa_tool_params';
 
   // Database fields;
+  const NID = 'nid';
+  const VID = 'vid';
   const ID = 'tool_params_id';
   const TOOL = 'tool';
   const TOOL_LENGTH = 50;
@@ -52,4 +54,15 @@ class mediamosa_tool_params_db {
   const REQUIRED_FALSE = 'FALSE';
   const CREATED = 'created';
   const CHANGED = 'changed';
+
+  /**
+   * Returns all fields.
+   */
+  static public function get_fields() {
+    require_once('mediamosa_tool_params.install.inc');
+
+    // Get the schema.
+    $a_schema = mediamosa_tool_params_schema();
+    return array_keys($a_schema[mediamosa_tool_params_db::TABLE_NAME]['fields']);
+  }
 }

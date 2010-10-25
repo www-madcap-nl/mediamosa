@@ -38,11 +38,13 @@ require_once 'mediamosa_node_mediamosa_app.inc';
 require_once 'mediamosa_node_mediamosa_server.inc';
 require_once 'mediamosa_node_mediamosa_settings.inc';
 require_once 'mediamosa_node_mediamosa_transcode_profile.inc';
+require_once 'mediamosa_node_mediamosa_tool_params.inc';
 
 class mediamosa_node {
   // ------------------------------------------------------------------ Consts.
   // Node types.
   const MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE = 'mediamosa_transcode_profile';
+  const MEDIAMOSA_NODE_TYPE_TOOL_PARAMS = 'mediamosa_tool_params';
   const MEDIAMOSA_NODE_TYPE_SERVER = 'mediamosa_server';
   const MEDIAMOSA_NODE_TYPE_APP = 'mediamosa_app';
   const MEDIAMOSA_NODE_TYPE_SETTINGS = 'mediamosa_settings';
@@ -135,6 +137,10 @@ class mediamosa_node {
         $fields[] = 'commands';
         return $fields;
 
+      case mediamosa_node::MEDIAMOSA_NODE_TYPE_TOOL_PARAMS:
+        $fields = mediamosa_tool_params_db::get_fields();
+        return $fields;
+
       case mediamosa_node::MEDIAMOSA_NODE_TYPE_SERVER:
         $fields = mediamosa_server_db::get_fields();
 
@@ -208,6 +214,12 @@ function mediamosa_node_info() {
       'has_body' => FALSE,
       'description' => t('The transcode profile contains information about the codec type and settings for a video transcoding.'),
     ),
+    mediamosa_node::MEDIAMOSA_NODE_TYPE_TOOL_PARAMS => array(
+      'name' => t('MediaMosa tool_params'),
+      'base' => mediamosa_node::MEDIAMOSA_NODE_TYPE_TOOL_PARAMS,
+      'has_body' => FALSE,
+      'description' => t('The tool params contains information about the tool (eg. ffmpeg, windows) parameters.'),
+    ),
     mediamosa_node::MEDIAMOSA_NODE_TYPE_SERVER => array(
       'name' => t('MediaMosa server'),
       'base' => mediamosa_node::MEDIAMOSA_NODE_TYPE_SERVER,
@@ -268,6 +280,17 @@ function _mediamosa_node_revision_overview($node) {
       $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
       $breadcrumb[] = l(t('Configuration'), 'admin/mediamosa/config');
       $breadcrumb[] = l(t('Transcode profiles'), 'admin/mediamosa/config/transcode_profile');
+      drupal_set_breadcrumb($breadcrumb);
+      break;
+
+    case mediamosa_node::MEDIAMOSA_NODE_TYPE_TOOL_PARAMS:
+      // Reset the breadcrum.
+      $breadcrumb = array();
+      $breadcrumb[] = l(t('Home'), NULL);
+      $breadcrumb[] = l(t('Administer'), 'admin');
+      $breadcrumb[] = l(t('MediaMosa'), 'admin/mediamosa');
+      $breadcrumb[] = l(t('Configuration'), 'admin/mediamosa/config');
+      $breadcrumb[] = l(t('Tool params'), 'admin/mediamosa/config/tool_params');
       drupal_set_breadcrumb($breadcrumb);
       break;
 
@@ -356,6 +379,16 @@ function mediamosa_form_mediamosa_transcode_profile_node_form_alter(&$form, &$fo
   mediamosa_node::common_form($form, $form_state);
 
   $form['#redirect'] = 'admin/mediamosa/config/transcode_profile';
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function mediamosa_form_mediamosa_tool_params_node_form_alter(&$form, &$form_state) {
+  // Change the form.
+  mediamosa_node::common_form($form, $form_state);
+
+  $form['#redirect'] = 'admin/mediamosa/config/tool_params';
 }
 
 /**

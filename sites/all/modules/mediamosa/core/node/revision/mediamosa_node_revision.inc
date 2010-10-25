@@ -136,7 +136,7 @@ class mediamosa_node_revision {
     // Collect the data we want to insert.
     $fields = array();
     foreach ($names as $name) {
-      if (isset($node->{$name})) {
+      if (isset($node->{$name}) || (array_key_exists($name, (array)$node) && is_null($node->{$name}))) {
         $fields[$name] = $node->{$name};
       }
     }
@@ -243,7 +243,7 @@ class mediamosa_node_revision {
         continue;
       }
 
-      if (isset($node->{$name})) {
+      if (isset($node->{$name}) || is_null($node->{$name})) {
         $revision[$name] = $fields[$name] = $node->{$name};
       }
     }

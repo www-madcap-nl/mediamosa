@@ -47,24 +47,18 @@ function mediamosa_tool_windows_install() {
 
   // Insert default mappings as nodes.
   foreach ($a_default_params as $a_default_param) {
-    $a_fields = array(
-      mediamosa_tool_params_db::TOOL => $a_default_param[0],
-      mediamosa_tool_params_db::NICE_PARAMETER => $a_default_param[1],
-      mediamosa_tool_params_db::TOOL_PARAMETER => $a_default_param[2],
-      mediamosa_tool_params_db::MIN_VALUE => $a_default_param[3],
-      mediamosa_tool_params_db::MAX_VALUE => $a_default_param[4],
-      mediamosa_tool_params_db::ALLOWED_VALUE => $a_default_param[5],
-      mediamosa_tool_params_db::DEFAULT_VALUE => $a_default_param[6],
-      mediamosa_tool_params_db::REQUIRED => $a_default_param[7],
-    );
+    $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_TOOL_PARAMS, $a_default_param[1]);
 
-    // Add changed/created.
-    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+    $node->{mediamosa_tool_params_db::TOOL} = $a_default_param[0];
+    $node->{mediamosa_tool_params_db::NICE_PARAMETER} = $a_default_param[1];
+    $node->{mediamosa_tool_params_db::TOOL_PARAMETER} = $a_default_param[2];
+    $node->{mediamosa_tool_params_db::MIN_VALUE} = $a_default_param[3];
+    $node->{mediamosa_tool_params_db::MAX_VALUE} = $a_default_param[4];
+    $node->{mediamosa_tool_params_db::ALLOWED_VALUE} = $a_default_param[5];
+    $node->{mediamosa_tool_params_db::DEFAULT_VALUE} = $a_default_param[6];
+    $node->{mediamosa_tool_params_db::REQUIRED} = $a_default_param[7];
 
-    // Insert it.
-    db_insert(mediamosa_tool_params_db::TABLE_NAME)
-      ->fields($a_fields)
-      ->execute();
+    $node = node_save($node);
   }
 }
 

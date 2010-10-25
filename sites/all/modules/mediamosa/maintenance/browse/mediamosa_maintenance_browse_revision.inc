@@ -108,6 +108,9 @@ function mediamosa_maintenance_browse_revision_form() {
       case mediamosa_node::MEDIAMOSA_NODE_TYPE_TRANSCODE_PROFILE:
         $link = l($node_types[$revision['type']], 'admin/mediamosa/config/transcode_profile/' . $revision['nid']);
         break;
+      case mediamosa_node::MEDIAMOSA_NODE_TYPE_TOOL_PARAMS:
+        $link = l($node_types[$revision['type']], 'admin/mediamosa/config/tool_params/' . $revision['nid']);
+        break;
     }
 
     $rows[] = array('data' =>

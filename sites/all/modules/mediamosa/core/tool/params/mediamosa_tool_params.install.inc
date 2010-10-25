@@ -37,6 +37,21 @@ require_once 'mediamosa_tool_params_db.inc';
 function _mediamosa_tool_params_install() {
   // Create our table(s).
   mediamosa::drupal_install_schema(mediamosa_tool_params_db::TABLE_NAME);
+
+  // Create our node type.
+  $tool_params_node_type = array(
+    'type' => mediamosa_node::MEDIAMOSA_NODE_TYPE_TOOL_PARAMS,
+    'name' => st('MediaMosa tool params'),
+    'base' => mediamosa_node::MEDIAMOSA_NODE_TYPE_TOOL_PARAMS,
+    'description' => st('The tool params contains information about the tool (eg. ffmpeg, windows) parameters.'),
+    'custom' => 1,
+    'modified' => 1,
+    'locked' => 0,
+    'has_body' => 0,
+  );
+
+  $tool_params_node_type = node_type_set_defaults($tool_params_node_type);
+  node_type_save($tool_params_node_type);
 }
 
 /**
@@ -55,6 +70,18 @@ function mediamosa_tool_params_schema() {
   $a_schema[mediamosa_tool_params_db::TABLE_NAME] = array(
   'description' => t('The tool parameter table.'),
     'fields' => array(
+      mediamosa_transcode_profile_db::NID => array(
+        'description' => t('The Drupal node id.'),
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      mediamosa_transcode_profile_db::VID => array(
+        'description' => t('The Drupal node revision id.'),
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
       mediamosa_tool_params_db::ID => array(
         'type' => 'serial',
         'unsigned' => TRUE,
