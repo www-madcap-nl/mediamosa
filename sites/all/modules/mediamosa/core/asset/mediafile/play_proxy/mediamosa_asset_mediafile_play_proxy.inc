@@ -708,7 +708,7 @@ class mediamosa_asset_mediafile_play_proxy {
         m.#asset_id = :asset_id AND
         m.#transcode_profile_id = :transcode_profile_id AND
         m.#is_still = :is_still_false AND
-        orig.#is_original_file = #is_original_file_true AND
+        orig.#is_original_file = :is_original_file_true AND
         orig.#is_still = :is_still_false AND
         orig.#asset_id = :asset_id AND
         orig.#mediafile_id = :mediafile_id',
