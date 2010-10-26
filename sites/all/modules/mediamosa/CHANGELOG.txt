@@ -17,6 +17,12 @@ MediaMosa 2.3.0
 - Extended the search in watchdog to search on asset ID, mediafile ID and on
   description. (See ticket #330).
 - First phase for better workflow on toolset definition (See ticket #265).
+- Fixed numofvideos in REST call /collection search to show correct number of 
+  videos in master-slaved collection. (See ticket #206).
+- Fixed numofvideos in REST call /collection/coll_id to show correct number of 
+  videos in master-slaved collection. (See ticket #206).
+- Fixed numofvideos in REST call /collection/coll_id/asset/count to return 
+  correct number of videos in master-slaved collection. (See ticket #206).
 
 Other changes (not ticket related).
 - Fixed: /mediafile/uploadprogress will now work without /external in front of
@@ -37,7 +43,7 @@ MediaMosa 2.2.5.3 (Build 956)
 
 MediaMosa 2.2.5.2 (Build 952)
 ---------------------------
-- disabled Black Still generation.
+- disabled Black Still prevention generation (Hotfix for ticket vpcore #199).
 
 MediaMosa 2.2.5.1 (Build 944)
 -----------------------------

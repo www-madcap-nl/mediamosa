@@ -112,4 +112,11 @@ class mediamosa_debug {
   static public function is_debug_high() {
     return (variable_get('mediamosa_debug_level', 0) >= 10);
   }
+
+  /**
+   * Log the query string for a db_query result object..
+   */
+  static public function log_query_string($query_object) {
+    mediamosa_watchdog::log($query_object->queryString, array(), WATCHDOG_INFO, 'DB query');
+  }
 }

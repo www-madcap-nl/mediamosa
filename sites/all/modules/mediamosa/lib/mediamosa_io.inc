@@ -134,7 +134,6 @@ class mediamosa_io {
     return dirname($path);
   }
 
-
   /**
    * Move one file to other file (rename).
    *

@@ -62,7 +62,7 @@ class mediamosa_aut_app_master_slave {
         break;
       case mediamosa_aut::AUT_TYPE_COLLECTION:
         $on = 'c.coll_id';
-        $alias = 'aut_ms';
+        $alias = 'aut_msc';
         break;
       case mediamosa_aut::AUT_TYPE_ASSET:
         $on = 'a.asset_id';
@@ -148,10 +148,10 @@ class mediamosa_aut_app_master_slave {
    *  returns array with info about the slaves
    */
   function slave_get($mixed_app_id, $aut_object_type, $object_id = NULL) {
-    $a_app_id = is_array($mixed_app_id) ? $mixed_app_id : array($mixed_app_id);
+    $app_ids = is_array($mixed_app_id) ? $mixed_app_id : array($mixed_app_id);
 
     if (isset($object_id)) {
-      $db_result = mediamosa_db::db_query(
+      $result = mediamosa_db::db_query(
         'SELECT #app_id_slave FROM {#mediamosa_aut_app_master_slave} WHERE #aut_object_type = :aut_object_type AND #aut_object_id = :aut_object_id AND #app_id_master IN(:app_id_master) GROUP BY #app_id_slave',
         array(
           '#app_id_slave' => mediamosa_aut_app_master_slave_db::APP_ID_SLAVE,
@@ -161,30 +161,30 @@ class mediamosa_aut_app_master_slave {
           '#aut_object_id' => mediamosa_aut_app_master_slave_db::AUT_OBJECT_ID,
           ':aut_object_id' => $object_id,
           '#app_id_master' => mediamosa_aut_app_master_slave_db::APP_ID_MASTER,
-          ':app_id_master' => $a_app_id,
+          ':app_id_master' => $app_ids,
         )
       );
     }
     else {
-      $db_result = mediamosa_db::db_query(
-        "SELECT #app_id_slave FROM {#mediamosa_aut_app_master_slave} WHERE #aut_object_type = :aut_object_type AND #app_id_master IN(:app_id_master) GROUP BY #app_id_slave",
+      $result = mediamosa_db::db_query(
+        'SELECT #app_id_slave FROM {#mediamosa_aut_app_master_slave} WHERE #aut_object_type = :aut_object_type AND #app_id_master IN(:app_id_master) GROUP BY #app_id_slave',
         array(
           '#app_id_slave' => mediamosa_aut_app_master_slave_db::APP_ID_SLAVE,
           '#mediamosa_aut_app_master_slave' => mediamosa_aut_app_master_slave_db::TABLE_NAME,
           '#aut_object_type' => mediamosa_aut_app_master_slave_db::AUT_OBJECT_TYPE,
           ':aut_object_type' => $aut_object_type,
           '#app_id_master' => mediamosa_aut_app_master_slave_db::APP_ID_MASTER,
-          ':app_id_master' => $a_app_id,
+          ':app_id_master' => $app_ids,
         )
       );
     }
 
-    $array_result = array();
-    foreach ($db_result as $a_row) {
-      $array_result[$a_row[mediamosa_aut_app_master_slave_db::APP_ID_SLAVE]] = array("app_id" => $a_row[mediamosa_aut_app_master_slave_db::APP_ID_SLAVE]);
+    $slave_apps = array();
+    foreach ($result as $row) {
+      $slave_apps[$row[mediamosa_aut_app_master_slave_db::APP_ID_SLAVE]] = array('app_id' => $row[mediamosa_aut_app_master_slave_db::APP_ID_SLAVE]);
     }
 
-    return $array_result;
+    return $slave_apps;
   }
 
   /**
@@ -225,8 +225,8 @@ class mediamosa_aut_app_master_slave {
     $a_app_id_masters[$app_id_slave][$aut_object_type][$aut_object_id] = array();
 
     // Fill it.
-    foreach ($result as $a_row) {
-      $a_app_id_masters[$app_id_slave][$aut_object_type][$aut_object_id][] = $a_row[mediamosa_aut_app_master_slave_db::APP_ID_MASTER];
+    foreach ($result as $row) {
+      $a_app_id_masters[$app_id_slave][$aut_object_type][$aut_object_id][] = $row[mediamosa_aut_app_master_slave_db::APP_ID_MASTER];
     }
 
     // Return possible masters.

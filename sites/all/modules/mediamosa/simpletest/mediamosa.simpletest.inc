@@ -116,10 +116,8 @@ class MediaMosaTestCase extends DrupalWebTestCase {
    * Implements setUp().
    */
   protected function setUp() {
-
     // Make this global so we can output debug to the test.
-    global $_mediamosa_simpletest;
-    $_mediamosa_simpletest = $this;
+    $GLOBALS['_mediamosa_simpletest'] = $this;
 
     $a_vars_to_copy = array('mediamosa_current_mount_point');
     $a_values = array();
@@ -257,8 +255,10 @@ class MediaMosaTestCase extends DrupalWebTestCase {
    * @param $data
    */
   static public function staticMessage($data) {
+    // Remember that this does not work for REST calls called inside the test.
+    // Then the simpletest was never created.
     if (isset($GLOBALS['_mediamosa_simpletest'])) {
-      $GLOBALS['_mediamosa_simpletest']->var_export_fail($data);
+      $GLOBALS['_mediamosa_simpletest']->var_export_fail($data, 'static-message');
     }
   }
 

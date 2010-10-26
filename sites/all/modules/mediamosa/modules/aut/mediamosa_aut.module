@@ -460,7 +460,7 @@ asset_id[]=7pAkDsceysAZPo0q3PhjtBE1&asset_id[]=J2MKUJUcleMUfUcsZVDpdxi8',
 
   $a_rest_calls['collection/$coll_id/acl'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::TITLE => 'Set rights on a collection.',
-    mediamosa_rest_call::DESCRIPTION => 'Set rights on a collection.',
+    mediamosa_rest_call::DESCRIPTION => 'Set access rights on a collection. When you master-slave a collection to another app, then only assets/mediafiles that are also master-slaved can be accessed by the other client application. Also the number of videos values inside the collection will only reflect the number of actual asset that can be accessed in the master-slaved collection. In some cases the master-slaved collection will not show up in search REST calls like /collection, when the master-slaved collection has no accessable assets.',
     mediamosa_rest_call::EXAMPLE_REQUEST => 'collection/7jUOpquLUVf5yCaH4dEmXC6f/acl<br \><br \>aut_app = "3"<br />coll_id = "7jUOpquLUVf5yCaH4dEmXC6f"<br />user_id = "testuser"',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
     mediamosa_rest_call::EXAMPLE_RESPONSE => ' <items>

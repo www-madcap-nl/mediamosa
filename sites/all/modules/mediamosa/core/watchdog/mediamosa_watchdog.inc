@@ -140,4 +140,11 @@ class mediamosa_watchdog {
 
     self::$num_of_queries[$name]++;
   }
+
+  /**
+   * Log the query string for a db_query result object..
+   */
+  static public function log_query_string($query_object) {
+    self::log($query_object->queryString, array(), WATCHDOG_INFO, 'DB query');
+  }
 }
