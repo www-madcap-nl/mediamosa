@@ -1227,47 +1227,21 @@ function mediamosa_update_7063() {
 }
 
 /**
- * Install mediamosa_tool_params table.
+ * This update was moved to 7069.
  */
 function mediamosa_update_7064() {
-  mediamosa::drupal_install_schema(mediamosa_tool_params_db::TABLE_NAME);
 }
 
 /**
- * Turn on tool modules.
+ * This update was moved to 7069.
  */
 function mediamosa_update_7065() {
-  // FFmpeg and Windows tools.
-  $module_list = array(
-    'mediamosa_tool_ffmpeg',
-    'mediamosa_tool_windows',
-  );
-  $enable_dependencies = TRUE;
-  module_enable($module_list, $enable_dependencies);
 }
 
 /**
- * Uninstall mediamosa_transcode_mapping table.
+ * This update was moved to 7069.
  */
 function mediamosa_update_7066() {
-
-  try {
-    // Try this first.
-    mediamosa::drupal_uninstall_schema('mediamosa_transcode_mapping');
-  }
-  catch (Exception $e) {
-    // ignore.
-  }
-
-  // Then when it fails, we do this.
-  if (db_table_exists('mediamosa_transcode_mapping')) {
-    db_drop_table('mediamosa_transcode_mapping');
-  }
-
-  // Rebuild the registry.
-  registry_rebuild();
-
-  cache_clear_all();
 }
 
 /**
@@ -1293,29 +1267,16 @@ function mediamosa_update_7068() {
 }
 
 /**
- * Turn off, uninstall and turn on mediamosa_tool_* modules.
- * The nid and vid field was introduced.
+ * Install mediamosa_tool_params table.
+ * Create the tool params node type.
+ * Turn on tool modules.
+ * Uninstall nodes from tool params.
+ * Migrate data from transcode mapping table.
+ * Uninstall mediamosa_transcode_mapping table.
  */
 function mediamosa_update_7069() {
-  // Disable.
-  $module_list = array(
-    'mediamosa_tool_ffmpeg',
-    'mediamosa_tool_windows',
-    );
-  $disable_dependencies = TRUE;
-  module_disable($module_list, $disable_dependencies);
-
-  // Uninstall the schema.
-  try {
-    // Try this first.
-    mediamosa::drupal_uninstall_schema('mediamosa_tool_ffmpeg');
-    mediamosa::drupal_uninstall_schema('mediamosa_tool_windows');
-  }
-  catch (Exception $e) {
-    // ignore.
-  }
-  // Uninstall the data.
-  db_query('DELETE FROM {mediamosa_tool_params}');
+  // Install mediamosa_tool_params table.
+  mediamosa::drupal_install_schema(mediamosa_tool_params_db::TABLE_NAME);
 
   // Create the tool params node type.
   $tool_params_node_type = array(
@@ -1328,35 +1289,55 @@ function mediamosa_update_7069() {
     'locked' => 0,
     'has_body' => 0,
   );
-
   $tool_params_node_type = node_type_set_defaults($tool_params_node_type);
   node_type_save($tool_params_node_type);
 
-  // Enable.
+  // FFmpeg and Windows tools.
   $module_list = array(
     'mediamosa_tool_ffmpeg',
     'mediamosa_tool_windows',
-    );
+  );
   $enable_dependencies = TRUE;
   module_enable($module_list, $enable_dependencies);
 
-  // Add fields.
-  db_add_field(mediamosa_tool_params_db::TABLE_NAME, mediamosa_tool_params_db::NID, array(
-    'description' => t('The Drupal node id.'),
-    'type' => 'int',
-    'unsigned' => TRUE,
-    'not null' => TRUE,
-  ));
-  db_add_field(mediamosa_tool_params_db::TABLE_NAME, mediamosa_tool_params_db::VID, array(
-    'description' => t('The Drupal node revision id.'),
-    'type' => 'int',
-    'unsigned' => TRUE,
-    'not null' => TRUE,
-  ));
+  // Uninstall nodes from tool params.
+  $result = db_query("SELECT nid FROM {mediamosa_tool_params}");
+  foreach ($result as $record) {
+    node_delete($record->nid);
+  }
 
-  // Install.
-  mediamosa_tool_ffmpeg_install();
-  mediamosa_tool_windows_install();
+  // Migrate data from transcode mapping table.
+  $result = db_query("SELECT * FROM {mediamosa_transcode_mapping}");
+  foreach ($result as $record) {
+    $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_TOOL_PARAMS, $record->nice_parameter);
+
+    $node->{mediamosa_tool_params_db::TOOL} = $record->tool;
+    $node->{mediamosa_tool_params_db::NICE_PARAMETER} = $record->nice_parameter;
+    $node->{mediamosa_tool_params_db::TOOL_PARAMETER} = $record->tool_parameter;
+    $node->{mediamosa_tool_params_db::MIN_VALUE} = $record->min_value;
+    $node->{mediamosa_tool_params_db::MAX_VALUE} = $record->max_value;
+    $node->{mediamosa_tool_params_db::ALLOWED_VALUE} = $record->allowed_value;
+    $node->{mediamosa_tool_params_db::DEFAULT_VALUE} = $record->default_value;
+    $node->{mediamosa_tool_params_db::REQUIRED} = $record->required;
+
+    $node = node_save($node);
+  }
+
+  // Uninstall mediamosa_transcode_mapping table.
+  try {
+    // Try this first.
+    mediamosa::drupal_uninstall_schema('mediamosa_transcode_mapping');
+  }
+  catch (Exception $e) {
+    // ignore.
+  }
+  // Then when it fails, we do this.
+  if (db_table_exists('mediamosa_transcode_mapping')) {
+    db_drop_table('mediamosa_transcode_mapping');
+  }
+  // Rebuild the registry.
+  registry_rebuild();
+  cache_clear_all();
 }
 
 // TODO: Remove old code from the repository on the next release: sites/all/modules/mediamosa/core/transcode/mapping.
