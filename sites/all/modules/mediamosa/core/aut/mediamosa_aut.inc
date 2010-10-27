@@ -791,7 +791,6 @@ class mediamosa_aut {
 
           // Remove the permanent still links.
           $still_ids = mediamosa_asset_mediafile_still::find_asset_all_still($aut_object_id);
-          watchdog('test', print_r($still_ids, TRUE));
           foreach ($still_ids as $still_id) {
             $file = mediamosa_configuration_storage::ticket_still_location_get() . mediamosa_configuration_storage::objectid_to_location($still_id);
             mediamosa_io::unlink($file);
