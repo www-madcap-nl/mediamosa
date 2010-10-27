@@ -31,6 +31,7 @@
 
 require_once 'diskspace_used/mediamosa_statistics_diskspace_used.install.inc';
 require_once 'file_upload/mediamosa_statistics_file_upload.install.inc';
+require_once 'job/mediamosa_statistics_job.install.inc';
 require_once 'rest_log/mediamosa_statistics_rest_log.install.inc';
 require_once 'search_request/mediamosa_statistics_search_request.install.inc';
 require_once 'stream_request/mediamosa_statistics_stream_request.install.inc';
@@ -42,6 +43,7 @@ function _mediamosa_statistics_install() {
   // Create our table(s).
   _mediamosa_statistics_diskspace_used_install();
   _mediamosa_statistics_file_upload_install();
+  _mediamosa_statistics_job_install();
   _mediamosa_statistics_rest_log_install();
   _mediamosa_statistics_search_request_install();
   _mediamosa_statistics_stream_request_install();
@@ -55,6 +57,7 @@ function _mediamosa_statistics_uninstall() {
   _mediamosa_statistics_stream_request_uninstall();
   _mediamosa_statistics_search_request_uninstall();
   _mediamosa_statistics_rest_log_uninstall();
+  _mediamosa_statistics_job_uninstall();
   _mediamosa_statistics_file_upload_uninstall();
   _mediamosa_statistics_diskspace_used_uninstall();
 }

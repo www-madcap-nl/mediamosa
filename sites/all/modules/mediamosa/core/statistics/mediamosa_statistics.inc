@@ -283,4 +283,47 @@ class mediamosa_statistics {
       }
     }
   }
+
+  /**
+   * Insert job transcode data for the statistics.
+   *
+   * @param string $mediafile_id
+   * @param string $job_id
+   */
+  static public function insert_job_transcode($mediafile_id, $job_id) {
+    // Get data.
+    $job = mediamosa_job::get($job_id);
+    $job_transcode = mediamosa_job_transcode::get($job_id);
+    $profile = mediamosa_transcode_profile::get($job_transcode[mediamosa_job_transcode_db::TRANSCODE_PROFILE_ID]);
+
+    // Insert it.
+    mediamosa_db::db_insert(mediamosa_statistics_job_db::TABLE_NAME)
+      ->fields(array(
+        mediamosa_statistics_job_db::ID => NULL,
+        mediamosa_statistics_job_db::APP_ID => $job[mediamosa_job_db::APP_ID],
+        mediamosa_statistics_job_db::MEDIAFILE_ID => $mediafile_id,
+        mediamosa_statistics_job_db::STARTED => $job[mediamosa_job_db::STARTED],
+        mediamosa_statistics_job_db::FINISHED => $job[mediamosa_job_db::FINISHED],
+        mediamosa_statistics_job_db::TRANSCODE_PROFILE_ID => $job_transcode[mediamosa_job_transcode_db::TRANSCODE_PROFILE_ID],
+        mediamosa_statistics_job_db::NID => $profile[mediamosa_transcode_profile_db::NID],
+        mediamosa_statistics_job_db::VID => $profile[mediamosa_transcode_profile_db::VID],
+        mediamosa_statistics_job_db::FILESIZE => NULL,
+      ))
+      ->execute();
+  }
+
+  /**
+   * Update job transcode filesize data for the statistics.
+   *
+   * @param string $mediafile_id
+   * @param int $filesize
+   */
+  static public function update_job_transcode_filesize($mediafile_id, $filesize) {
+    mediamosa_db::db_update(mediamosa_statistics_job_db::TABLE_NAME)
+      ->fields(array(
+        mediamosa_statistics_job_db::FILESIZE => $filesize,
+      ))
+      ->condition(mediamosa_statistics_job_db::MEDIAFILE_ID, $mediafile_id)
+      ->execute();
+  }
 }

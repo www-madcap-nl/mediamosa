@@ -43,6 +43,7 @@ Other changes (not ticket related).
   (reported by J0ris/MediaMosa.org).
 - CQL empty string search fix.
 - Job started and finished value fix.
+- Transcode job statistics development.
 
 MediaMosa 2.2.5.3 (Build 956)
 ---------------------------

@@ -296,17 +296,19 @@ class mediamosa_job_scheduler {
       if ($response_data->items->item[$i]->status == mediamosa_job_db::JOB_STATUS_FINISHED) {
         switch ($response_data->items->item[$i]->job_type) {
           case mediamosa_job_db::JOB_TYPE_TRANSCODE:
-            // als het een transcode job is die compleet is, voeg de mediafile toe
+            // Statistics.
+            mediamosa_statistics::insert_job_transcode($response_data->items->item[$i]->mediafile_dest, $a_job[mediamosa_job_db::ID]);
+            // If the transcode job is completed, add it to the mediafile.
             self::parse_finished_transcode($response_data->items->item[$i]->job_id, $response_data->items->item[$i]->mediafile_src, $response_data->items->item[$i]->mediafile_dest);
             break;
 
           case mediamosa_job_db::JOB_TYPE_ANALYSE:
-            // als het een analyse job is die compleet is, voeg technische metadata toe
+            // If the analyse job is completed, add it to the technical metadata.
             mediamosa_asset_mediafile_metadata::store_analyse($response_data->items->item[$i]->job_id, explode("\n" , $response_data->items->item[$i]->analyse_result));
             break;
 
           case mediamosa_job_db::JOB_TYPE_STILL:
-            // als het een still job is die compleet is, voeg de still aan de db toe
+            // If the still job is completed, add the still to db.
             // We serialize it, because of the multiple stills
             self::add_still_to_db($response_data->items->item[$i]->job_id, unserialize($response_data->items->item[$i]->mediafile_dest));
             break;
