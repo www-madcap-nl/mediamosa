@@ -42,6 +42,7 @@ Other changes (not ticket related).
 - Bug fix in play proxy: "orig.#is_original_file = #is_original_file_true"
   (reported by J0ris/MediaMosa.org).
 - CQL empty string search fix.
+- Job started and finished value fix.
 
 MediaMosa 2.2.5.3 (Build 956)
 ---------------------------
