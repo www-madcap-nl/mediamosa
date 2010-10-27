@@ -36,7 +36,7 @@ function mediamosa_tool_ffmpeg_install() {
   $a_default_params = array(
     array('ffmpeg', 'videobitrate', '-b', 128000, 8000000, NULL, '200000', 'FALSE'),
     array('ffmpeg', 'fps', '-r', 10, 30, NULL, '25', 'FALSE'),
-    array('ffmpeg', 'size', '-s', NULL, NULL, array('128x96','176x144','352x288','704x576','160x120','320x240','640x480','800x600','1024x768','1600x1200','2048x1536','1280x1024','2560x2048','5120x4096','852x480','1366x768','1600x1024','1920x1200','2560x1600','3200x2048','3840x2400','6400x4096','7680x4800','320x200','640x350','852x480','1280x720','1920x1080','480x270','480x360'), '320x240', 'FALSE'),
+    array('ffmpeg', 'size', '-s', NULL, NULL, array('', '128x96','176x144','352x288','704x576','160x120','320x240','640x480','800x600','1024x768','1600x1200','2048x1536','1280x1024','2560x2048','5120x4096','852x480','1366x768','1600x1024','1920x1200','2560x1600','3200x2048','3840x2400','6400x4096','7680x4800','320x200','640x350','852x480','1280x720','1920x1080','480x270','480x360'), '320x240', 'FALSE'),
     array('ffmpeg', 'internal_file_extension', '', NULL, NULL, array('flv','wmv','mp4','avi','ogg','webm'), NULL, 'FALSE'),
     array('ffmpeg', 'qmax', '-qmax', 1, 31, NULL, NULL, 'FALSE'),
     array('ffmpeg', 'audiocodec', '-acodec', NULL, NULL, array('libmp3lame','wma','pcm_s16le','libfaac','libvorbis'), NULL, 'FALSE'),

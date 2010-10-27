@@ -323,11 +323,7 @@ class mediamosa_asset_mediafile_play_proxy {
 
     $content_type = '';
     if (isset($mediafile_ext[mediamosa_asset_mediafile_db::URI]) && trim($mediafile_ext[mediamosa_asset_mediafile_db::URI]) != '') {
-      $streaming_server_uri = $mediafile_ext[mediamosa_asset_mediafile_db::URI];
-
-      if (trim($streaming_server_uri) == '') { // No streaming profile found
-        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_STREAMING_PROFILE_NOT_FOUND, array('@video_container' => $mediafile_ext['metadata']['container_type']));
-      }
+      $streaming_server_uri = trim($mediafile_ext[mediamosa_asset_mediafile_db::URI]);
     }
     else {
       $streaming_server_uri = self::get_media_server($response_type, $mediafile_ext);
