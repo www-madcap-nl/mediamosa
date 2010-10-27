@@ -208,7 +208,7 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
       $this->set_param_value(self::AUT_REALM, $this->get_param_value(self::REALM));
     }
 
-    // FIXME: hack, fixed again by checkign if response was not given.
+    // FIXME: hack, fixed again by checking if response was not given.
     if ($this->is_internal() && !$this->isset_given_param(self::RESPONSE)) {
       $this->set_param_value(self::RESPONSE, mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL);
     }
@@ -240,15 +240,15 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
     $a_mediafile_ext = array();
 
     // Get the asset.
-    $a_asset = mediamosa_asset::must_exists($asset_id);
+    $asset = mediamosa_asset::must_exists($asset_id);
 
     if ($mediafile_id) {
 
       // Check play restrictions
-      if (isset($a_asset['play_restriction_start']) && isset($a_asset['play_restriction_end'])) {
+      if (isset($asset['play_restriction_start']) && isset($asset['play_restriction_end'])) {
         $result = mediamosa_asset_mediafile_play_proxy::check_time_restrictions(
-          strtotime($a_asset['play_restriction_start']),
-          strtotime($a_asset['play_restriction_end'])
+          strtotime($asset['play_restriction_start']),
+          strtotime($asset['play_restriction_end'])
         );
       }
 
@@ -287,14 +287,6 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
     }
     else {
       $a_mediafile_ext['asset_id'] = $asset_id;
-    }
-
-    // Check the asset protection.
-    $asset_is_protected = mediamosa_asset_db::IS_PROTECTED_FALSE;
-    $response = mediamosa_asset::get($asset_id, NULL);
-    if ($response) {
-      // Asset is exists.
-      $asset_is_protected = $response[mediamosa_asset_db::IS_PROTECTED];
     }
 
     // Create ticket ID.
@@ -436,20 +428,17 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
 
               // Check the protection.
               $still_is_protected = mediamosa_asset_mediafile_db::IS_PROTECTED_FALSE;
-              if (mediamosa_asset_db::IS_PROTECTED_FALSE == $asset_is_protected) {
-                $response = mediamosa_asset_mediafile::get($t_stills['still_id'], NULL, array(mediamosa_asset_mediafile_db::IS_PROTECTED));
-                if ($response) {
-                  $still_is_protected = $response[mediamosa_asset_mediafile_db::IS_PROTECTED];
-                }
+              if ($asset[mediamosa_asset_db::IS_PROTECTED] == mediamosa_asset_db::IS_PROTECTED_FALSE) {
+                $still = mediamosa_asset_mediafile::get($t_stills['still_id'], NULL, array(mediamosa_asset_mediafile_db::IS_PROTECTED));
+                $still_is_protected = $still ? $still[mediamosa_asset_mediafile_db::IS_PROTECTED] : mediamosa_asset_mediafile_db::IS_PROTECTED_FALSE;
               }
 
-              if (mediamosa_asset_db::IS_PROTECTED_FALSE == $asset_is_protected && mediamosa_asset_mediafile_db::IS_PROTECTED_FALSE == $still_is_protected) {
+              if ($asset[mediamosa_asset_db::IS_PROTECTED] == mediamosa_asset_db::IS_PROTECTED_FALSE && $still_is_protected == mediamosa_asset_mediafile_db::IS_PROTECTED_FALSE) {
                 $ticket_still = $t_stills['still_id'];
               }
               else {
                 $ticket_still = mediamosa_ticket::TICKET_PATH . mediamosa_ticket::create_play_proxy($ticket_still, $a_mediafile_ext, $response_type, $app_id, $user_id, $t_stills['still_id']);
               }
-
             }
 
             $t_stills['ticket'] = $ticket_still;
@@ -460,7 +449,7 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
     }
 
     // Collect the metadata of the asset.
-    $a_asset_metadata = mediamosa_asset_metadata::metadata_get($asset_id);
+    $asset_metadata = mediamosa_asset_metadata::metadata_get($asset_id);
 
     // Create the response.
     $response = mediamosa_asset_mediafile_play_proxy::create_response(
@@ -473,7 +462,7 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
       $this->get_param_value(self::START),
       $this->get_param_value(self::DURATION),
       $this->get_param_value(self::IS_APP_ADMIN),
-      $a_asset_metadata,
+      $asset_metadata,
       $a_mediafile_ext,
       $a_stills
     );

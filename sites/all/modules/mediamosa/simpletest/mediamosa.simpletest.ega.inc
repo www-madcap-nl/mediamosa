@@ -1100,9 +1100,38 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $this->pass(strtr("Gets the collection id: @coll_id'.", array('@coll_id' => $coll_id)));
 
     // Return data.
-    return $response['xml']->items->item[0];
+    return mediamosa_lib::simplexml2array($response['xml']->items->item);
   }
 
+  /**
+   * Get the asset count collection.
+   *
+   * @param string $coll_id
+   * @param string $user_id
+   * @param array $parameters
+   */
+  protected function getCollectionAssetCount($coll_id, $user_id = self::SIMPLETEST_USER_ID, array $parameters = array()) {
+
+    // Required parameter.
+    $parameters[mediamosa_rest_call_collection_create::USER_ID] = $user_id;
+
+    // Do not set the app ID, handle by us.
+    $this->assertFalse(isset($parameters[mediamosa_rest_call_collection_create::APP_ID]));
+
+    $uri = strtr('collection/@coll_id/asset/count', array('@coll_id' => $coll_id));
+
+    // Do Post call.
+    $response = $this->restCallGet($uri, $parameters);
+
+    // Numofvideos.
+    $numofvideos = $response['xml']->items->item[0]->numofvideos;
+
+    // Show message.
+    $this->pass(strtr("Gets the asset count for collection id: @coll_id, videos in collection: @numofvideos.", array('@coll_id' => $coll_id, '@numofvideos' => $numofvideos)));
+
+    // Return data.
+    return $numofvideos;
+  }
 
   /**
    * Search collections.
@@ -1306,7 +1335,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   /**
    * Get the AUT/ACL settings on mediafile.
    */
-  protected function getMediafileAut($mediafile_id, array $parameters = array(), $description = 'Get ACL on mediafile', array $a_expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function getMediafileAut($mediafile_id, array $parameters = array(), $description = 'Get ACL on mediafile', array $expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
     $parameters += array(
       mediamosa_rest_call_aut_mediafile_get_rights::USER_ID => self::SIMPLETEST_USER_ID,
@@ -1340,7 +1369,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Get statistics data upload.
    * Based on the rest call /statistics/dataupload (GET)
    */
-  protected function getStatisticsDataupload($year, $month, $limit, array $parameters = array(), $description = 'Get statistics data upload', array $a_expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function getStatisticsDataupload($year, $month, $limit, array $parameters = array(), $description = 'Get statistics data upload', array $expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
     $parameters += array(
       mediamosa_rest_call_statistics_get_historical_uploaded_mediafiles::USER_ID => self::SIMPLETEST_USER_ID,
@@ -1376,7 +1405,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * Get statistics data upload.
    * Based on the rest call /statistics/dataupload (GET)
    */
-  protected function getFtpUser($user, array $parameters = array(), $description = 'Get FTP User', array $a_expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function getFtpUser($user, array $parameters = array(), $description = 'Get FTP User', array $expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
     $parameters += array(
     );
@@ -2250,7 +2279,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * aut_realm[]  realm(s) that gain access to the mediafile
    *
    */
-  protected function setMediafileAut($mediafile_id, array $parameters = array(), $description = 'Setting ACL on mediafile', array $a_expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function setMediafileAut($mediafile_id, array $parameters = array(), $description = 'Setting ACL on mediafile', array $expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
     $parameters += array(
       mediamosa_rest_call_aut_mediafile_set_rights::USER_ID => self::SIMPLETEST_USER_ID,
@@ -2281,7 +2310,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $a_xml = mediamosa_lib::responsexml2array($response['xml']);
 
     if (!isset($a_xml['items']['item']) || empty($a_xml['items']['item'])) {
-      $this->assertTrue(empty($a_expected_results), 'Nothing changed, must expect nothing too.');
+      $this->assertTrue(empty($expected_results), 'Nothing changed, must expect nothing too.');
       return $a_xml;
     }
 
@@ -2299,8 +2328,8 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
         if (isset($item[$type])) {
           $found = TRUE;
 
-          if (!isset($a_expected_results[$type][$item[$type]['value']])) {
-            $a_expected_results[$type][$item[$type]['value']] = mediamosa_error::ERRORCODE_OKAY;
+          if (!isset($expected_results[$type][$item[$type]['value']])) {
+            $expected_results[$type][$item[$type]['value']] = mediamosa_error::ERRORCODE_OKAY;
           }
 
           break;
@@ -2312,7 +2341,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     }
 
     // Now check if all results we got, also match what we expected.
-    foreach ($a_expected_results as $type => $a_expected_result) {
+    foreach ($expected_results as $type => $a_expected_result) {
       foreach ($items as $item) {
         if (isset($item[$type])) {
           foreach ($a_expected_result as $value => $result_code) {
@@ -2340,14 +2369,14 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   /**
    * Same as setMediafileAut, except will add to rights and not replace.
    */
-  protected function addMediafileAut($mediafile_id, array $parameters = array(), $description = 'Setting ACL on mediafile', array $a_expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function addMediafileAut($mediafile_id, array $parameters = array(), $description = 'Setting ACL on mediafile', array $expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     $parameters[mediamosa_rest_call_aut_mediafile_set_rights::REPLACE] = 'false';
-    $this->setMediafileAut($mediafile_id, $parameters, $description, $a_expected_results, $expected_result_ids, $do_internal);
+    $this->setMediafileAut($mediafile_id, $parameters, $description, $expected_results, $expected_result_ids, $do_internal);
   }
 
   /**
-   * Updates ACL/AUT rights on mediafile
-   * Based on the REST call /mediafile/$mediafile_id/acl (POST)
+   * Updates ACL/AUT rights on asset.
+   * Based on the REST call /asset/$asset_id/acl (POST)
    *
    * mediafile_id
    * user_id      must match the owner fo the mediafile.
@@ -2359,7 +2388,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * aut_realm[]  realm(s) that gain access to the mediafile
    *
    */
-  protected function setAssetAut($asset_id, array $parameters = array(), $description = 'Setting ACL on asset', array $a_expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function setAssetAut($asset_id, array $parameters = array(), $description = 'Setting ACL on asset', array $expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
     $parameters += array(
       mediamosa_rest_call_aut_asset_set_rights::USER_ID => self::SIMPLETEST_USER_ID,
@@ -2390,7 +2419,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     $a_xml = mediamosa_lib::responsexml2array($response['xml']);
 
     if (!isset($a_xml['items']['item']) || empty($a_xml['items']['item'])) {
-      $this->assertTrue(empty($a_expected_results), 'Nothing changed, must expect nothing too.');
+      $this->assertTrue(empty($expected_results), 'Nothing changed, must expect nothing too.');
       return $a_xml;
     }
 
@@ -2408,8 +2437,8 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
         if (isset($item[$type])) {
           $found = TRUE;
 
-          if (!isset($a_expected_results[$type][$item[$type]['value']])) {
-            $a_expected_results[$type][$item[$type]['value']] = mediamosa_error::ERRORCODE_OKAY;
+          if (!isset($expected_results[$type][$item[$type]['value']])) {
+            $expected_results[$type][$item[$type]['value']] = mediamosa_error::ERRORCODE_OKAY;
           }
 
           break;
@@ -2421,7 +2450,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     }
 
     // Now check if all results we got, also match what we expected.
-    foreach ($a_expected_results as $type => $a_expected_result) {
+    foreach ($expected_results as $type => $a_expected_result) {
       foreach ($items as $item) {
         if (isset($item[$type])) {
           foreach ($a_expected_result as $value => $result_code) {
@@ -2449,9 +2478,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
   /**
    * Same as setAssetAut, except will add to rights and not replace.
    */
-  protected function addAssetAut($asset_id, array $parameters = array(), $description = 'Adding ACL on asset', array $a_expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function addAssetAut($asset_id, array $parameters = array(), $description = 'Adding ACL on asset', array $expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     $parameters[mediamosa_rest_call_aut_asset_set_rights::REPLACE] = 'false';
-    $this->setAssetAut($asset_id, $parameters, $description, $a_expected_results, $expected_result_ids, $do_internal);
+    $this->setAssetAut($asset_id, $parameters, $description, $expected_results, $expected_result_ids, $do_internal);
   }
 
   /**
@@ -2463,7 +2492,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
    * replace      Standard is TRUE. Define if 'FALSE' if you want to keep the old rights.
    * aut_app[]    application(s) that gain access to the collection
    */
-  protected function setCollectionAut($collection_id, array $parameters = array(), $description = 'Setting ACL on collection', array $a_expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+  protected function setCollectionAut($collection_id, array $parameters = array(), $description = 'Setting ACL on collection', array $expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
     // Parameters asset.
     $parameters += array(
       mediamosa_rest_call_aut_collection_set_rights::USER_ID => self::SIMPLETEST_USER_ID,
@@ -2507,8 +2536,8 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
         if (isset($item[$type])) {
           $found = TRUE;
 
-          if (!isset($a_expected_results[$type][$item[$type]['value']])) {
-            $a_expected_results[$type][$item[$type]['value']] = mediamosa_error::ERRORCODE_OKAY;
+          if (!isset($expected_results[$type][$item[$type]['value']])) {
+            $expected_results[$type][$item[$type]['value']] = mediamosa_error::ERRORCODE_OKAY;
           }
 
           break;
@@ -2520,7 +2549,7 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
     }
 
     // Now check if all results we got, also match what we expected.
-    foreach ($a_expected_results as $type => $a_expected_result) {
+    foreach ($expected_results as $type => $a_expected_result) {
       foreach ($items as $item) {
         if (isset($item[$type])) {
           foreach ($a_expected_result as $value => $result_code) {
@@ -2543,6 +2572,14 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // Return the array XML.
     return $a_xml;
+  }
+
+  /**
+   * Same as setMediafileAut, except will add to rights and not replace.
+   */
+  protected function addCollectionAut($collection_id, array $parameters = array(), $description = 'Setting ACL on collection', array $expected_results = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    $parameters[mediamosa_rest_call_aut_collection_set_rights::REPLACE] = 'false';
+    $this->setCollectionAut($collection_id, $parameters, $description, $expected_results, $expected_result_ids, $do_internal);
   }
 
   /**

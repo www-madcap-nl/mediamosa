@@ -321,7 +321,7 @@ class mediamosa_asset_mediafile_play_proxy {
     // Expecting array here, even when empty.
     assert(is_array($stills));
 
-    $content_type = "";
+    $content_type = '';
     if (isset($mediafile_ext[mediamosa_asset_mediafile_db::URI]) && trim($mediafile_ext[mediamosa_asset_mediafile_db::URI]) != '') {
       $streaming_server_uri = $mediafile_ext[mediamosa_asset_mediafile_db::URI];
 
@@ -338,7 +338,7 @@ class mediamosa_asset_mediafile_play_proxy {
       $streaming_server_ticket_uri = str_replace(self::PARAM_URI_TICKET, $app_id . '/' . $ticket, $streaming_server_uri);
     }
 
-    // Uri voor niet-tickets (still, download etc).
+    // Uri for non-tickets (still, download etc).
     foreach ($stills as $key => $value) {
       $stills[$key]['still_ticket'] = str_replace(self::PARAM_URI_TICKET, $stills[$key]['ticket'], $streaming_server_uri);
     }

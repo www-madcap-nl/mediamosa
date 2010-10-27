@@ -785,14 +785,14 @@ class mediamosa_asset {
             $asset_is_protected = $asset[mediamosa_asset_db::IS_PROTECTED];
             // Check the protection.
             $still_is_protected = mediamosa_asset_mediafile_db::IS_PROTECTED_FALSE;
-            if (mediamosa_asset_db::IS_PROTECTED_FALSE == $asset_is_protected) {
+            if ($asset_is_protected == mediamosa_asset_db::IS_PROTECTED_FALSE) {
               $response = mediamosa_asset_mediafile::get($items['stills'][$asset[mediamosa_asset_db::ID]], NULL, array(mediamosa_asset_mediafile_db::IS_PROTECTED));
               if ($response) {
                 $still_is_protected = $response[mediamosa_asset_mediafile_db::IS_PROTECTED];
               }
             }
 
-            if (mediamosa_asset_db::IS_PROTECTED_FALSE == $asset_is_protected && mediamosa_asset_mediafile_db::IS_PROTECTED_FALSE == $still_is_protected) {
+            if ($asset_is_protected == mediamosa_asset_db::IS_PROTECTED_FALSE && $still_is_protected == mediamosa_asset_mediafile_db::IS_PROTECTED_FALSE) {
               $response = mediamosa_asset_mediafile_play_proxy::create_response_still($items['stills'][$asset[mediamosa_asset_db::ID]], $app_id);
               $items_pre_sort[$asset[mediamosa_asset_db::ID]]['vpx_still_url'] = $response['output'];
               $items_pre_sort[$asset[mediamosa_asset_db::ID]]['ega_still_url'] = (isset($items['app_info'][$asset['app_id']]) ? str_replace('{asset_id}', $asset[mediamosa_asset_db::ID], $items['app_info'][$asset['app_id']]['still_url']) : '');

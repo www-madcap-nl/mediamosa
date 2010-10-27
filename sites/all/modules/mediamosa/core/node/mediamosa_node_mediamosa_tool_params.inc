@@ -45,7 +45,7 @@ function mediamosa_tool_params_load(&$nodes) {
   $nodes = mediamosa_node_revision::load($nodes);
 
   foreach ($nodes as $key => $node) {
-    $nodes[$key]->allowed_values = empty($node->{mediamosa_tool_params_db::ALLOWED_VALUE}) ? NULL : $node->{mediamosa_tool_params_db::ALLOWED_VALUE};
+    $nodes[$key]->{mediamosa_tool_params_db::ALLOWED_VALUE} = empty($node->{mediamosa_tool_params_db::ALLOWED_VALUE}) ? NULL : $node->{mediamosa_tool_params_db::ALLOWED_VALUE};
   }
 
   return $nodes;
@@ -58,14 +58,22 @@ function mediamosa_tool_params_load(&$nodes) {
  */
 function _mediamosa_tool_params_do_command(&$node) {
   if ($node->{mediamosa_tool_params_db::ALLOWED_VALUE}) {
-    $node->{mediamosa_tool_params_db::ALLOWED_VALUE} = serialize(explode(';', $node->{mediamosa_tool_params_db::ALLOWED_VALUE}));
+    // Array version is allowed.
+    if (is_array($node->{mediamosa_tool_params_db::ALLOWED_VALUE})) {
+      $node->{mediamosa_tool_params_db::ALLOWED_VALUE} = serialize($node->{mediamosa_tool_params_db::ALLOWED_VALUE});
+    }
+    else { // assume unserialized string with ; sep.
+      $node->{mediamosa_tool_params_db::ALLOWED_VALUE} = serialize(explode(';', $node->{mediamosa_tool_params_db::ALLOWED_VALUE}));
+    }
   }
   else {
     $node->{mediamosa_tool_params_db::ALLOWED_VALUE} = NULL;
   }
+
   if (!$node->{mediamosa_tool_params_db::MIN_VALUE}) {
     $node->{mediamosa_tool_params_db::MIN_VALUE} = NULL;
   }
+
   if (!$node->{mediamosa_tool_params_db::MAX_VALUE}) {
     $node->{mediamosa_tool_params_db::MAX_VALUE} = NULL;
   }
@@ -75,6 +83,7 @@ function _mediamosa_tool_params_do_command(&$node) {
  * Implements hook_update().
  */
 function mediamosa_tool_params_update($node) {
+
   if ($node->revision) {
     mediamosa_tool_params_insert($node);
   }
@@ -140,7 +149,7 @@ function mediamosa_tool_params_view($node, $view_mode = 'full') {
 
   // Default parameters.
   $rows = array(
-    array(t('Nice parameter'), check_plain($node->nice_parameter)),
+    array(t('Name'), check_plain($node->nice_parameter)),
     array(t('Tool'), check_plain($node->tool)),
     array(t('Tool params id'), check_plain($node->tool_params_id)),
     array(t('Tool parameter'), check_plain($node->tool_parameter)),
@@ -186,7 +195,7 @@ function mediamosa_tool_params_form($node, $form_state) {
   }
 
   $form['title'] = array(
-    '#title' => t('Nice parameter'),
+    '#title' => t('Name'),
     '#type' => 'textfield',
     '#required' => TRUE,
     '#description' => t('The name of this parameter.'),
@@ -204,14 +213,14 @@ function mediamosa_tool_params_form($node, $form_state) {
     '#default_value' => $tools_default,
     '#options' => $tools,
     '#required' => TRUE,
-    '#description' => t('Tool, like ffmpeg, windows.'),
+    '#description' => t('Select one of the available tools.'),
   );
 
   $form[mediamosa_tool_params_db::TOOL_PARAMETER] = array(
     '#title' => t('Tool parameter'),
     '#type' => 'textfield',
     '#required' => TRUE,
-    '#description' => t('Tool parameter.'),
+    '#description' => t('Enter the parameter like it is used with the tool, i.e. --foo=test, where tool parameter entered here is \'--foo\'.'),
     '#default_value' => mediamosa_node::default_value(mediamosa_tool_params_db::TOOL_PARAMETER, $node),
     '#maxlength' => mediamosa_tool_params_db::TOOL_PARAMETER_LENGTH,
   );
@@ -220,7 +229,7 @@ function mediamosa_tool_params_form($node, $form_state) {
     '#title' => t('Min value'),
     '#type' => 'textfield',
     '#required' => FALSE,
-    '#description' => t('Minimum value.'),
+    '#description' => t('Minimum value (numeric value only).'),
     '#default_value' => mediamosa_node::default_value(mediamosa_tool_params_db::MIN_VALUE, $node),
   );
 
@@ -228,7 +237,7 @@ function mediamosa_tool_params_form($node, $form_state) {
     '#title' => t('Max value'),
     '#type' => 'textfield',
     '#required' => FALSE,
-    '#description' => t('Maximum value.'),
+    '#description' => t('Maximum value (numeric value only).'),
     '#default_value' => mediamosa_node::default_value(mediamosa_tool_params_db::MAX_VALUE, $node),
   );
 
@@ -238,7 +247,7 @@ function mediamosa_tool_params_form($node, $form_state) {
     '#title' => t('Allowed value'),
     '#type' => 'textfield',
     '#required' => FALSE,
-    '#description' => t('Allowed value.'),
+    '#description' => t('Allowed value separated by ; to allow multiple allowed values.'),
     '#default_value' => $allowed_value,
     '#maxlength' => mediamosa_tool_params_db::ALLOWED_VALUE_LENGTH,
   );
@@ -247,7 +256,7 @@ function mediamosa_tool_params_form($node, $form_state) {
     '#title' => t('Default value'),
     '#type' => 'textfield',
     '#required' => FALSE,
-    '#description' => t('Default value.'),
+    '#description' => t('Default value when not supplied.'),
     '#default_value' => mediamosa_node::default_value(mediamosa_tool_params_db::DEFAULT_VALUE, $node),
     '#maxlength' => mediamosa_tool_params_db::DEFAULT_VALUE_LENGTH,
   );
@@ -261,7 +270,7 @@ function mediamosa_tool_params_form($node, $form_state) {
       mediamosa_tool_params_db::REQUIRED_FALSE => mediamosa_tool_params_db::REQUIRED_FALSE,
     ),
     '#required' => TRUE,
-    '#description' => t('Tool is required.'),
+    '#description' => t('Tool is required as parameter for the tool.'),
   );
 
   return $form;
@@ -278,7 +287,7 @@ function mediamosa_tool_params_form($node, $form_state) {
 function mediamosa_tool_params_validate($node) {
   // Nice parameter.
   if (drupal_substr($node->title, 0, drupal_strlen(MEDIAMOSA_TOOL_PARAMS_INTERNAL_PREFIX)) == MEDIAMOSA_TOOL_PARAMS_INTERNAL_PREFIX) {
-    form_set_error('title', t("Nice parameters can't start with \"@prefix\".", array('@prefix' => MEDIAMOSA_TOOL_PARAMS_INTERNAL_PREFIX)));
+    form_set_error('title', t("The tool param's name can't start with \"@prefix\".", array('@prefix' => MEDIAMOSA_TOOL_PARAMS_INTERNAL_PREFIX)));
   }
 
   // Tool.

@@ -67,10 +67,10 @@ class mediamosa_rest_call_count_collection extends mediamosa_rest_call {
   public function do_call() {
     $o_mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value_app();
+    $app_ids = $this->get_param_value_app();
 
     // Get the 1st app.
-    $app_id = reset($a_app_ids);
+    $app_id = reset($app_ids);
 
     $group_id = $this->get_param_value(self::GROUP_ID);
     $owner_id = $this->get_param_value(self::OWNER_ID);
@@ -231,10 +231,10 @@ class mediamosa_rest_call_collection_search extends mediamosa_rest_call {
     parent::validate_rest_args($var_setup);
 
     $cql = $this->get_param_value(self::CQL);
-    $a_app_ids = $this->get_param_value_app();
+    $app_ids = $this->get_param_value_app();
     $error_text = '';
 
-    if ($cql != '' && !mediamosa_core_cql::verify_collection($cql, $a_app_ids, $error_text)) {
+    if ($cql != '' && !mediamosa_core_cql::verify_collection($cql, $app_ids, $error_text)) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CQL_ERROR, array('@error' => $error_text));
     }
   }
@@ -243,7 +243,7 @@ class mediamosa_rest_call_collection_search extends mediamosa_rest_call {
   public function do_call() {
     $o_mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value_app();
+    $app_ids = $this->get_param_value_app();
 
     // Now convert the old search parameters to CQL.
     $var_setup = mediamosa_core_cql::get_var_setup_search(array(), self::get_search_params());
@@ -302,9 +302,10 @@ class mediamosa_rest_call_collection_search extends mediamosa_rest_call {
 
     // Now search.
     $result = mediamosa_collection_search::collection_search(
-      $a_app_ids,
+      $app_ids,
       $cql,
       $this->get_param_value(self::ASSET_ID),
+      NULL,
       $this->get_param_value(self::FAV_USER_ID),
       $this->get_param_value(self::AUT_USER_ID),
       $this->get_param_value(self::IS_APP_ADMIN),
@@ -436,15 +437,16 @@ class mediamosa_rest_call_collection_get extends mediamosa_rest_call {
   public function do_call() {
     $o_mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value_app();
-    $app_id = reset($a_app_ids);
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
     $coll_id = $this->get_param_value(self::COLL_ID);
     $user_id = $this->get_param_value(self::USER_ID);
 
     // Collection must exist.
+error_log(print_r($coll_id, TRUE));
     $collection = mediamosa_collection::must_exists($coll_id);
-
+error_log(print_r($collection, TRUE));
     if ($collection[mediamosa_collection_db::IS_UNAPPROPRIATE] == mediamosa_collection_db::IS_UNAPPROPRIATE_TRUE) {
       // Must be owner or admin.
       try {
@@ -460,7 +462,7 @@ class mediamosa_rest_call_collection_get extends mediamosa_rest_call {
     $collection[mediamosa_collection_db::CREATED] = mediamosa::utcdate2appdate($collection[mediamosa_collection_db::CREATED]);
     $collection[mediamosa_collection_db::CHANGED] = mediamosa::utcdate2appdate($collection[mediamosa_collection_db::CHANGED]);
 
-    $collection['numofvideos'] = mediamosa_collection::count_assets_in_collection($coll_id, $this->get_param_value(self::HIDE_EMPTY_ASSETS));
+    $collection['numofvideos'] = mediamosa_collection::count_assets_in_collection($app_ids, $coll_id, $this->get_param_value(self::HIDE_EMPTY_ASSETS));
 
     $o_mediamosa->add_item($collection);
   }
@@ -508,8 +510,8 @@ class mediamosa_rest_call_collection_count_relation extends mediamosa_rest_call 
   public function do_call() {
     $o_mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value_app();
-    $app_id = reset($a_app_ids);
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
     $coll_id = $this->get_param_value(self::COLL_ID);
     $user_id = $this->get_param_value(self::USER_ID);
@@ -529,7 +531,7 @@ class mediamosa_rest_call_collection_count_relation extends mediamosa_rest_call 
     }
 
     $collection = array();
-    $collection['numofvideos'] = mediamosa_collection::count_assets_in_collection($coll_id, $this->get_param_value(self::HIDE_EMPTY_ASSETS));
+    $collection['numofvideos'] = mediamosa_collection::count_assets_in_collection($app_ids, $coll_id, $this->get_param_value(self::HIDE_EMPTY_ASSETS));
 
     $o_mediamosa->add_item($collection);
   }
@@ -617,14 +619,14 @@ class mediamosa_rest_call_collection_create extends mediamosa_rest_call {
   public function do_call() {
     $o_mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value_app();
-    $app_id = reset($a_app_ids);
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
 
     $this->unset_param(self::IS_UNAPPROPRIATE);
 
     // Test webservice.
-    mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $a_app_ids);
+    mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $app_ids);
 
     // Get the user ID (required).
     $user_id = $this->get_param_value(self::USER_ID);
@@ -736,8 +738,8 @@ class mediamosa_rest_call_collection_update extends mediamosa_rest_call {
   public function do_call() {
     $o_mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value_app();
-    $app_id = reset($a_app_ids);
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
 
     $coll_id = $this->get_param_value(self::COLL_ID);
@@ -751,7 +753,7 @@ class mediamosa_rest_call_collection_update extends mediamosa_rest_call {
     }
 
     // Test webservice.
-    mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $a_app_ids);
+    mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $app_ids);
 
     // Collection must exist.
     $collection = mediamosa_collection::must_exists($coll_id);
@@ -828,8 +830,8 @@ The collection is deleted only if all underlying assets successfully removed.',
   public function do_call() {
     $o_mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value_app();
-    $app_id = reset($a_app_ids);
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
 
     $coll_id = $this->get_param_value(self::COLL_ID);
@@ -837,7 +839,7 @@ The collection is deleted only if all underlying assets successfully removed.',
     $delete = $this->get_param_value(self::DELETE);
 
     // Test webservice.
-    mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $a_app_ids);
+    mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $app_ids);
 
     // Collection must exist.
     $collection = mediamosa_collection::must_exists($coll_id);
@@ -888,7 +890,7 @@ The collection is deleted only if all underlying assets successfully removed.',
       }
 
       // Now count if any assets are still left in collection.
-      $count_assets_in_collection = mediamosa_collection::count_assets_in_collection($coll_id);
+      $count_assets_in_collection = mediamosa_db::db_count_rows(mediamosa_asset_collection_db::TABLE_NAME, array(mediamosa_asset_collection_db::COLL_ID => $coll_id));
       if ($count_assets_in_collection) {
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_COLLECTION_NOT_EMPTY, array('@asset_count' => $count_assets_in_collection));
       }
@@ -955,8 +957,8 @@ class mediamosa_rest_call_collection_delete_relation extends mediamosa_rest_call
   public function do_call() {
     $o_mediamosa = mediamosa::get();
 
-    $a_app_ids = $this->get_param_value_app();
-    $app_id = reset($a_app_ids);
+    $app_ids = $this->get_param_value_app();
+    $app_id = reset($app_ids);
     $is_app_admin = $this->get_param_value(self::IS_APP_ADMIN);
 
     $coll_id = $this->get_param_value(self::COLL_ID);
@@ -964,7 +966,7 @@ class mediamosa_rest_call_collection_delete_relation extends mediamosa_rest_call
     $asset_ids = $this->get_param_value(self::ASSET_ID);
 
     // Test webservice.
-    mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $a_app_ids);
+    mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $app_ids);
 
     // Collection must exist.
     $collection = mediamosa_collection::must_exists($coll_id);

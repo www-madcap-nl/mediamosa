@@ -1907,8 +1907,8 @@ function _mediamosa_migration_transcode() {
 
   // Empty first.
   $a_all = db_select('mediamosa_transcode_profile', 'mtp')->fields('mtp')->execute()->fetchAll();
-  foreach ($a_all as $o_transcode_profile) {
-    node_delete($o_transcode_profile->nid);
+  foreach ($a_all as $transcode_profile) {
+    node_delete($transcode_profile->nid);
   }
 
   // Get the transcode_profiles.

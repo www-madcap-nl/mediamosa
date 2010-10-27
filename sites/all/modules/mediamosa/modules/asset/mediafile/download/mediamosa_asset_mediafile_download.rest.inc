@@ -66,7 +66,7 @@ class mediamosa_rest_call_download_mediafile extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     // Get the ticket ID.
     $ticket_id = $this->get_param_value(self::TICKET_ID);
@@ -74,7 +74,7 @@ class mediamosa_rest_call_download_mediafile extends mediamosa_rest_call {
 
     // Get filename.
     $path = mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_settings::DOWNLOAD_TICKET_LOCATION . DIRECTORY_SEPARATOR . $ticket_id;
-    $file = $path . '/' . $filename;
+    $file = $path . DIRECTORY_SEPARATOR . $filename;
 
     if (!is_dir($path) || !file_exists($file)) {
       throw new mediamosa_exception(0, 'Invalid download ticket');
@@ -100,21 +100,24 @@ class mediamosa_rest_call_download_mediafile extends mediamosa_rest_call {
     if (!$handle) {
       throw new mediamosa_exception(0, 'Unable to open file!');
     }
-    
+
     // No time-out here.
     set_time_limit(0);
-    
+
     // Until end of file, get the file and output.
     while (!feof($handle)) {
       $buffer = fread($handle, mediamosa_settings::DOWNLOAD_CHUNK_SIZE);
-      
+
       print $buffer;
-      
+
       ob_flush();
       flush();
     }
 
+    // Close the file.
+    fclose($handle);
+
     // Set the result, reponse object will know what to do.
-    $o_mediamosa->set_result(mediamosa_response::SUCCESS, 200, $file);
+    $mediamosa->set_result(mediamosa_response::SUCCESS, 200, $file);
   }
 }

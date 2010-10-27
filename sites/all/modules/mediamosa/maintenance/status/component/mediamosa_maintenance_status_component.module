@@ -163,9 +163,8 @@ function mediamosa_maintenance_status_component_directory(&$is_structured, &$is_
 /**
  * Implements hook_mediamosa_status_collect().
  *
- * @param reset boolean
- * @param with_variable boolean
- *   Use Drupal variables or not
+ * @param boolean $reset
+ *  Reset the data, regenerate.
  *
  * @return array
  *   All the statuses in an array
@@ -176,10 +175,6 @@ function mediamosa_maintenance_status_component_mediamosa_status_collect($reset 
   $mediamosa_status_component = array();
   if (!$reset) {
     $mediamosa_status_component = variable_get('mediamosa_status_component_' . $conf['mediamosa_installation_id'], array());
-
-    if (empty($mediamosa_status_component['time']) || abs($mediamosa_status_component['time'] - REQUEST_TIME) > mediamosa_settings::MEDIAMOSA_COMPONENT_STATUS_TIMEOUT) {
-      $mediamosa_status_component = array();
-    }
   }
 
   if (empty($mediamosa_status_component)) {

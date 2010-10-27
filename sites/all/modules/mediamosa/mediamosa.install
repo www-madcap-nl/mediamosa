@@ -1301,13 +1301,13 @@ function mediamosa_update_7069() {
   module_enable($module_list, $enable_dependencies);
 
   // Uninstall nodes from tool params.
-  $result = db_query("SELECT nid FROM {mediamosa_tool_params}");
+  $result = db_query('SELECT nid FROM {mediamosa_tool_params}');
   foreach ($result as $record) {
     node_delete($record->nid);
   }
 
   // Migrate data from transcode mapping table.
-  $result = db_query("SELECT * FROM {mediamosa_transcode_mapping}");
+  $result = db_query('SELECT * FROM {mediamosa_transcode_mapping}');
   foreach ($result as $record) {
     $node = mediamosa_node::create_basic_node(mediamosa_node::MEDIAMOSA_NODE_TYPE_TOOL_PARAMS, $record->nice_parameter);
 
@@ -1331,10 +1331,12 @@ function mediamosa_update_7069() {
   catch (Exception $e) {
     // ignore.
   }
+
   // Then when it fails, we do this.
   if (db_table_exists('mediamosa_transcode_mapping')) {
     db_drop_table('mediamosa_transcode_mapping');
   }
+
   // Rebuild the registry.
   registry_rebuild();
   cache_clear_all();

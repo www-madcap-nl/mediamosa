@@ -43,6 +43,8 @@ class mediamosa_collection_search {
    *  The search CQL string.
    * @param string $asset_id
    *  Search on this asset.
+   * @param string $coll_id
+   *  Only in this collection.
    * @param string $fav_user_id
    *  Search on favorites.
    * @param string $aut_user_id
@@ -62,6 +64,7 @@ class mediamosa_collection_search {
     array $app_ids,
     $cql = NULL,
     $asset_id = NULL,
+    $coll_id = NULL,
     $fav_user_id = NULL,
     $aut_user_id = NULL,
 
@@ -93,8 +96,10 @@ class mediamosa_collection_search {
       $a_query[mediamosa_db_query::A_JOIN]['asset_collection'][] = 'LEFT JOIN {mediamosa_asset_collection} AS ac ON c.coll_id = ac.coll_id';
     }
 
-    // Collect my slaves.
-    $a_slaves = mediamosa_aut_app_master_slave::slave_get($app_ids, mediamosa_aut::AUT_TYPE_COLLECTION);
+    // To select one specific collection.
+    if ($coll_id) {
+      $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['collection']['coll_id'][mediamosa_db_query::WHERE_AND][] = sprintf("c.coll_id = '%s'", mediamosa_db::escape_string($coll_id));
+    }
 
     // Include possible asset restriction.
     if ($asset_id) {
@@ -122,14 +127,17 @@ class mediamosa_collection_search {
       }
     }
 
+    // Collect my slaves.
+    $slaves_collections = mediamosa_aut_app_master_slave::slave_get($app_ids, mediamosa_aut::AUT_TYPE_COLLECTION);
+
     // Access selection is done here;
-    mediamosa_aut::build_access_where($a_query, mediamosa_aut::AUT_TYPE_COLLECTION, NULL, $app_ids, $aut_user_id, NULL, NULL, NULL, NULL, $is_app_admin);
+    mediamosa_aut::build_access_where($a_query, mediamosa_aut::AUT_TYPE_COLLECTION, NULL, $app_ids, $aut_user_id, NULL, NULL, NULL, $slaves_collections, $is_app_admin);
 
     $order_by = '';
     if ($cql) {
       $a_result_cql2sql = mediamosa_core_cql::parse_collection($cql, $app_ids);
 
-      if (isset($a_result_cql2sql['str_where']) && $a_result_cql2sql['str_where'] != "") {
+      if (isset($a_result_cql2sql['str_where']) && $a_result_cql2sql['str_where'] != '') {
         $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['cql'] = $a_result_cql2sql['str_where'];
       }
 
@@ -163,11 +171,20 @@ class mediamosa_collection_search {
     }
 
     if ($fav_user_id != '') {
-      $a_query[mediamosa_db_query::A_JOIN]['user_favorite']['user_fav'] = "LEFT JOIN {mediamosa_user_favorite} AS user_fav ON user_fav.fav_type = '" . mediamosa_user_favorite_db::FAV_TYPE_COLLECTION . "' AND user_fav.fav_id = c.coll_id\n";
+      $a_query[mediamosa_db_query::A_JOIN]['user_favorite']['user_fav'] = "LEFT JOIN {mediamosa_user_favorite} AS user_fav ON user_fav.fav_type = '" . mediamosa_user_favorite_db::FAV_TYPE_COLLECTION . "' AND user_fav.fav_id = c.coll_id";
 
       $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['user_fav'][] = sprintf("user_fav.name = '%s'", mediamosa_db::escape_string($fav_user_id));
       $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['user_fav'][] = sprintf("user_fav.app_id IN(%s)", mediamosa_db::escape_string($app_ids));
     }
+
+    // Join with the asset table.
+    $a_query[mediamosa_db_query::A_JOIN]['asset'] = 'LEFT JOIN {mediamosa_asset} AS a ON a.asset_id = ac.asset_id';
+
+    // Get the slaves based on the app ids for mediafiles.
+    $slaves_mediafiles = mediamosa_aut_app_master_slave::slave_get($app_ids, mediamosa_aut::AUT_TYPE_MEDIAFILE);
+
+    // Add access for master slave.
+    mediamosa_aut::build_access_where($a_query, mediamosa_aut::AUT_TYPE_MEDIAFILE, NULL, $app_ids, NULL, array(), NULL, NULL, $slaves_mediafiles, $is_app_admin, TRUE);
 
     $a_query[mediamosa_db_query::LIMIT] = $limit;
     $a_query[mediamosa_db_query::OFFSET] = $offset;
@@ -177,7 +194,7 @@ class mediamosa_collection_search {
 
     // Do the query.
     $result = mediamosa_db::db_query($query);
-
+//error_log($query);
     // Set the found_rows on the object.
     $result->found_rows = mediamosa_db_query::found_rows();
 

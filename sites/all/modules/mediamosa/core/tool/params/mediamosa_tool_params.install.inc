@@ -96,7 +96,7 @@ function mediamosa_tool_params_schema() {
       mediamosa_tool_params_db::NICE_PARAMETER => array(
         'type' => 'varchar',
         'length' => mediamosa_tool_params_db::NICE_PARAMETER_LENGTH,
-        'description' => t('Nice parameter.'),
+        'description' => t('Nice parameter (name of the parameter).'),
       ),
       mediamosa_tool_params_db::TOOL_PARAMETER => array(
         'type' => 'varchar',

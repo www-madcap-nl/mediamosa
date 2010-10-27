@@ -156,6 +156,7 @@ class mediamosa_response extends mediamosa {
       catch (Exception $e) {
         // ignore.
       }
+
       $this->set_result(self::ERROR, mediamosa_error::HTTP_INTERNAL_SERVER_ERROR, 'PDOException caught; ' . $e->getMessage() . ",\ntrace; " . $e->getTraceAsString() . ",\nQuery string; " . $e->query_string . ",\nArgs; " . print_r($e->args, TRUE));
     }
     catch (Exception $e) {
@@ -166,6 +167,7 @@ class mediamosa_response extends mediamosa {
       catch (Exception $e) {
         // ignore.
       }
+
       $this->set_result(self::ERROR, $e->getCode(), $e->getMessage());
     }
 
@@ -192,7 +194,7 @@ class mediamosa_response extends mediamosa {
           break;
 
         case mediamosa_rest_call::RESPONSE_TYPE_XML:
-        default :
+        default:
           header('Content-Type: text/xml; charset=utf-8');
           $output = $this->generate_xml();
           break;
@@ -229,7 +231,7 @@ class mediamosa_response extends mediamosa {
       'request_result' => self::SUCCESS,
       'request_result_id' => mediamosa_error::ERRORCODE_OKAY,
       'request_result_description' => '',//mediamosa_error::error_code_find_description(mediamosa_error::ERRORCODE_OKAY),
-      'request_uri' => "[" . $this->request_method . "] " . (mediamosa_unicode::substr($this->request_uri, 0, mediamosa_unicode::strlen('internal')) == 'internal' ? 'Internal MediaMosa call' : $this->request_uri),
+      'request_uri' => '[' . $this->request_method . '] ' . (mediamosa_unicode::substr($this->request_uri, 0, mediamosa_unicode::strlen('internal')) == 'internal' ? 'Internal MediaMosa call' : $this->request_uri),
       'item_count' => 0,
       'version' => mediamosa_version::MEDIAMOSA_VERSION
     ),
@@ -244,8 +246,7 @@ class mediamosa_response extends mediamosa {
       $this->response['errors'] = $errors;
     }
 
-    $this->item_count = 0;
-    $this->item_count_total = $this->item_offset = 0;
+    $this->item_count = $this->item_count_total = $this->item_offset = 0;
   }
 
   /**

@@ -34,8 +34,7 @@ define('MEDIAMOSA_EXCEPTION_SEVERITY_NORMAL', 50);
 define('MEDIAMOSA_EXCEPTION_SEVERITY_LOW', 20);
 
 /**
- * The basic omp_exception class
- *
+ * The basic mediamosa_exception class
  */
 class mediamosa_exception extends Exception {
 

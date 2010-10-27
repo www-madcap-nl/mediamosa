@@ -49,13 +49,6 @@ define('MEDIAMOSA_MAINTENANCE_STATUS_RESULT_WARNING', 1);
 define('MEDIAMOSA_MAINTENANCE_STATUS_RESULT_ERROR', 2);
 
 /**
- * Status cron run time interval.
- * 10 min = 10 * 60 = 600
- */
-define('MEDIAMOSA_MAINTENANCE_STATUS_CRON_TME', 600);
-
-
-/**
  * @file
  * The status module.
  */
@@ -152,7 +145,7 @@ function mediamosa_maintenance_status_theme() {
 function mediamosa_maintenance_status_cron() {
   $last_time = variable_get('mediamosa_status_last_time', 0);
 
-  if ($last_time < time() - MEDIAMOSA_MAINTENANCE_STATUS_CRON_TME) {
+  if ($last_time < time() - mediamosa_settings::MAINTENANCE_STATUS_CRON_TIME) {
     variable_set('mediamosa_status_last_time', time());
     // Check run-time requirements and status information.
     module_invoke_all('mediamosa_status_generate');
@@ -560,6 +553,7 @@ function _mediamosa_maintenance_status_filter_form_submit($form, &$form_state) {
         }
       }
       break;
+
     case t('Reset'):
       $_SESSION['mm_status_job_filter'] = array();
       break;
