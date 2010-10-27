@@ -35,7 +35,7 @@
 function _mediamosa_tool_params_list() {
 
   $header = array(
-    array('data' => t('Nice parameter'), 'field' => 'tp.' . mediamosa_tool_params_db::NICE_PARAMETER),
+    array('data' => t('Name'), 'field' => 'tp.' . mediamosa_tool_params_db::NICE_PARAMETER),
     array('data' => t('Tool'), 'field' => 'tp.' . mediamosa_tool_params_db::TOOL),
     array('data' => t('Tool params id'), 'field' => 'tp.' . mediamosa_tool_params_db::ID),
     array('data' => t('Tool parameter'), 'field' => 'tp.' . mediamosa_tool_params_db::TOOL_PARAMETER),

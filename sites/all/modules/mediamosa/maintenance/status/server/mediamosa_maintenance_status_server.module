@@ -31,9 +31,6 @@
 
 /**
  * Implementation of hook_mediamosa_status_generate().
- *
- * @param with_variable boolean
- *   Use Drupal variables or not
  */
 function mediamosa_maintenance_status_server_mediamosa_status_generate() {
   global $conf;
@@ -60,9 +57,7 @@ function mediamosa_maintenance_status_server_mediamosa_status_generate() {
 /**
  * Implementation of hook_mediamosa_status_collect().
  *
- * @param reset boolean
- * @param with_variable boolean
- *   Use Drupal variables or not
+ * @param boolean $reset
  *
  * @return array
  *   All the statuses in an array
@@ -73,10 +68,6 @@ function mediamosa_maintenance_status_server_mediamosa_status_collect($reset = F
   $mediamosa_status_server = array();
   if (!$reset) {
     $mediamosa_status_server = variable_get('mediamosa_status_server_' . $conf['mediamosa_installation_id'], array());
-
-    if (empty($mediamosa_status_server['time']) || abs($mediamosa_status_server['time'] - REQUEST_TIME) > mediamosa_settings::MEDIAMOSA_COMPONENT_STATUS_TIMEOUT) {
-      $mediamosa_status_server = array();
-    }
   }
 
   if (empty($mediamosa_status_server)) {

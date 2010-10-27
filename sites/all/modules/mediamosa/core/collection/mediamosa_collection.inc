@@ -61,13 +61,25 @@ class mediamosa_collection {
    *
    * @param string $coll_id
    */
-  static public function count_assets_in_collection($coll_id, $hide_empty_assets = FALSE) {
-    // Hide empty assets?
-    if (!$hide_empty_assets) {
-      return mediamosa_db::db_count_rows(mediamosa_asset_collection_db::TABLE_NAME, array(mediamosa_asset_collection_db::COLL_ID => $coll_id));
-    }
+  static public function count_assets_in_collection($app_ids, $coll_id, $hide_empty_assets = FALSE) {
 
-    return mediamosa_db::db_count_rows(mediamosa_asset_collection_db::TABLE_NAME, array(mediamosa_asset_collection_db::COLL_ID => $coll_id, mediamosa_asset_collection_db::IS_EMPTY_ASSET => mediamosa_asset_collection_db::IS_EMPTY_ASSET_FALSE));
+    // Now search.
+    $collection = mediamosa_collection_search::collection_search(
+      $app_ids,
+      NULL,
+      NULL,
+      $coll_id,
+      NULL,
+      NULL,
+      FALSE,
+      FALSE,
+      TRUE,
+      $hide_empty_assets,
+      1,
+      0
+    )->fetchAssoc();
+
+    return (empty($collection['numofvideos']) ? 0 : $collection['numofvideos']);
   }
 
   /**

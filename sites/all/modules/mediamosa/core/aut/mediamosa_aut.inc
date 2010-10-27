@@ -1128,7 +1128,7 @@ class mediamosa_aut {
    * @param bool $b_is_slave
    *  optional when providing own auth_ids
    */
-  static public function build_access_where(&$a_query, $aut_type, $object_id, $mixed_app_id, $aut_user_id, $a_aut_group_id, $aut_domain, $aut_realm, $a_slaves = NULL, $is_app_admin = FALSE, $do_master_slave_only = FALSE) {
+  static public function build_access_where(&$a_query, $aut_type, $object_id, $mixed_app_id, $aut_user_id, $a_aut_group_id, $aut_domain, $aut_realm, $slaves = NULL, $is_app_admin = FALSE, $do_master_slave_only = FALSE) {
     assert(is_bool($is_app_admin));
 
     $a_app_ids = $mixed_app_id;
@@ -1136,20 +1136,20 @@ class mediamosa_aut {
       $a_app_ids = array($a_app_ids);
     }
 
-    if (empty($a_slaves)) {
-      $a_slaves = mediamosa_aut_app_master_slave::slave_get($a_app_ids, $aut_type);
+    if (empty($slaves)) {
+      $slaves = mediamosa_aut_app_master_slave::slave_get($a_app_ids, $aut_type);
     }
 
     // Also require the rights from the other possible slave app(s)
     $a_app_ids_tmp = $a_app_ids;
-    foreach ($a_slaves as $app_id_slave => $a_slave) {
+    foreach ($slaves as $app_id_slave => $a_slave) {
       $a_app_ids_tmp[] = $app_id_slave;
     }
 
     // Get of this current user the aut_name/aut_group ids so we know his/her access.
-    $a_aut_ids = mediamosa_aut::build_access($a_app_ids_tmp, $aut_user_id, $a_aut_group_id, $aut_domain, $aut_realm, $a_slaves);
+    $a_aut_ids = mediamosa_aut::build_access($a_app_ids_tmp, $aut_user_id, $a_aut_group_id, $aut_domain, $aut_realm, $slaves);
 
-    if (!is_null($aut_user_id) || (!is_null($a_aut_group_id) && !empty($a_aut_group_id)) || count($a_aut_ids) || count($a_slaves)) {
+    if (!is_null($aut_user_id) || (!is_null($a_aut_group_id) && !empty($a_aut_group_id)) || count($a_aut_ids) || count($slaves)) {
       switch ($aut_type) {
         case mediamosa_aut::AUT_TYPE_MEDIAFILE:
 
@@ -1229,7 +1229,7 @@ class mediamosa_aut {
           }
 
           // possible slaves
-          if (count($a_slaves)) {
+          if (count($slaves)) {
             $a_query[mediamosa_db_query::A_JOIN]['aut_app_master_slave'] = mediamosa_aut_app_master_slave::join_aut_app_master_slave_get($aut_type);
 
             // If we need to check aut_object
@@ -1237,7 +1237,7 @@ class mediamosa_aut {
               $a_query[mediamosa_db_query::A_JOIN]['aut_object'] = mediamosa_aut_object::join_aut_object_get($aut_type);
             }
 
-            foreach ($a_slaves as $app_id_slave => $a_slave) {
+            foreach ($slaves as $app_id_slave => $a_slave) {
               assert($app_id_slave);// should not happen
               // Only for app_ids that are present
 
@@ -1364,7 +1364,7 @@ class mediamosa_aut {
           }
 
           // possible slaves
-          if (count($a_slaves)) {
+          if (count($slaves)) {
             $a_query[mediamosa_db_query::A_JOIN]['aut_app_master_slave_asset'] = mediamosa_aut_app_master_slave::join_aut_app_master_slave_get($aut_type);
 
             // If we need to check aut_object
@@ -1372,12 +1372,12 @@ class mediamosa_aut {
               $a_query[mediamosa_db_query::A_JOIN]['aut_object_asset'] = mediamosa_aut_object::join_aut_object_get($aut_type);
             }
 
-            foreach ($a_slaves as $app_id_slave => $a_slave) {
+            foreach ($slaves as $app_id_slave => $a_slave) {
               assert($app_id_slave);// should not happen
               // Only for app_ids that are present
 
               // Must be same app_id for slaves
-              $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['a'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id_slave][mediamosa_db_query::WHERE_AND][] = "a.app_id = " . mediamosa_db::escape_string($app_id_slave);
+              $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['a'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id_slave][mediamosa_db_query::WHERE_AND][] = "a.app_id ='" . mediamosa_db::escape_string($app_id_slave);
 
               // Any case, a link to app must be present if we allow access to the MF
               $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['a'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id_slave][mediamosa_db_query::WHERE_AND][] = sprintf("aut_msa.app_id_master IN(%s)", implode(",", $a_app_ids));
@@ -1420,19 +1420,18 @@ class mediamosa_aut {
 
         case mediamosa_aut::AUT_TYPE_COLLECTION:
           // Allow master app always
-          $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR][0][mediamosa_db_query::WHERE_AND][] = sprintf('c.app_id IN(%s)', implode(",", $a_app_ids));
+          $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access_coll'][mediamosa_db_query::WHERE_OR][0][mediamosa_db_query::WHERE_AND][] = sprintf('c.app_id IN(%s)', implode(',', $a_app_ids));
 
-          if (count($a_slaves)) {
-            $a_query[mediamosa_db_query::A_JOIN]['aut_app_master_slave'] = mediamosa_aut_app_master_slave::join_aut_app_master_slave_get($aut_type);
+          if (count($slaves)) {
+            $a_query[mediamosa_db_query::A_JOIN]['aut_app_master_slave_coll'] = mediamosa_aut_app_master_slave::join_aut_app_master_slave_get($aut_type);
 
-            foreach ($a_slaves as $app_id_slave => $a_slave) {
-              assert($a_slave);
+            foreach ($slaves as $app_id_slave => $a_slave) {
               // Must be same app_id for slaves
-              $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR][$app_id_slave][mediamosa_db_query::WHERE_AND][] = 'c.app_id = ' . mediamosa_db::escape_string($app_id_slave);
+              $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access_coll'][mediamosa_db_query::WHERE_OR][$app_id_slave][mediamosa_db_query::WHERE_AND][] = 'c.app_id = ' . mediamosa_db::escape_string($app_id_slave);
 
               // Any case, a link to app must be present if we allow access to the MF
-              $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR][$app_id_slave][mediamosa_db_query::WHERE_AND][] = sprintf('aut_ms.app_id_master IN(%s)', implode(',', $a_app_ids));
-              $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR][$app_id_slave][mediamosa_db_query::WHERE_AND][] = sprintf('aut_ms.app_id_slave = %d', $app_id_slave);
+              $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access_coll'][mediamosa_db_query::WHERE_OR][$app_id_slave][mediamosa_db_query::WHERE_AND][] = sprintf('aut_msc.app_id_master IN(%s)', implode(',', $a_app_ids));
+              $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access_coll'][mediamosa_db_query::WHERE_OR][$app_id_slave][mediamosa_db_query::WHERE_AND][] = sprintf('aut_msc.app_id_slave = %d', $app_id_slave);
             }
           }
           break;
@@ -1448,25 +1447,25 @@ class mediamosa_aut {
           // Include the mediafile table for join
           $a_query[mediamosa_db_query::A_JOIN]['mediafile'] = "LEFT JOIN {mediamosa_asset_mediafile} AS mf ON a.asset_id = mf.asset_id";
 
-          $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]["no_mf"] = "mf.asset_id IS NULL";
-          $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]["app_id"][mediamosa_db_query::WHERE_AND][] = "mf.is_original_file = 'TRUE'";
-          $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]["app_id"][mediamosa_db_query::WHERE_AND][] = sprintf("mf.app_id IN(%s)", implode(",", $a_app_ids));
+          $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['no_mf'] = "mf.asset_id IS NULL";
+          $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['app_id'][mediamosa_db_query::WHERE_AND][] = "mf.is_original_file = 'TRUE'";
+          $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['app_id'][mediamosa_db_query::WHERE_AND][] = sprintf("mf.app_id IN(%s)", implode(',', $a_app_ids));
 
           if (!$do_master_slave_only) {
-            $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]["app_id"][mediamosa_db_query::WHERE_AND][] = "mf.is_protected = 'FALSE'";
+            $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['app_id'][mediamosa_db_query::WHERE_AND][] = "mf.is_protected = 'FALSE'";
           }
           break;
 
         case mediamosa_aut::AUT_TYPE_ASSET:
-          $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]["app_id_asset"][mediamosa_db_query::WHERE_AND][] = sprintf("a.app_id IN(%s)", implode(",", $a_app_ids));
+          $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['app_id_asset'][mediamosa_db_query::WHERE_AND][] = sprintf('a.app_id IN(%s)', implode(',', $a_app_ids));
 
           if (!$do_master_slave_only) {
-            $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]["app_id_asset"][mediamosa_db_query::WHERE_AND][] = "a.is_protected = 'FALSE'";
+            $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['app_id_asset'][mediamosa_db_query::WHERE_AND][] = "a.is_protected = 'FALSE'";
           }
           break;
 
         case mediamosa_aut::AUT_TYPE_COLLECTION:
-          $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['collection'][] = sprintf("c.app_id IN(%s)", implode(",", $a_app_ids));
+          $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['collection'][] = sprintf('c.app_id IN(%s)', implode(',', $a_app_ids));
 
           break;
 

@@ -87,7 +87,7 @@ class mediamosa_job_scheduler {
       $url = mediamosa_http::uri2url($mediamosa_jobscheduler_uri) . '/internal/cron/jobscheduler';
 
       // Log it.
-      self::log('Triggering job scheduler @ @uri', array('@uri' => $url));
+      self::log_debug('Triggering job scheduler @ @uri', array('@uri' => $url));
 
       // Dont trigger in sandbox.
       if (mediamosa::in_simpletest_sandbox()) {
@@ -100,7 +100,7 @@ class mediamosa_job_scheduler {
       }
     }
     else {
-      mediamosa_watchdog::log('Jobschedular URL not set, please setup jobschedular server in the @link.', array('@link' => l(t('Mediamosa configuration'), 'admin/mediamosa/config/global')), WATCHDOG_ALERT, 'job_cron');
+      self::log('Jobschedular URL not set, please setup jobschedular server in the @link.', array('@link' => l(t('Mediamosa configuration'), 'admin/mediamosa/config/global')), WATCHDOG_ALERT, 'job_cron');
     }
   }
 

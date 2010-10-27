@@ -13,3 +13,4 @@ dependencies[] = mediamosa
 files[] = mediamosa_collection.module
 files[] = mediamosa_collection.rest.inc
 files[] = mediamosa_collection.test
+files[] = mediamosa_collection.numofvideos.test

@@ -132,13 +132,12 @@ class MediaMosaCollectionTestCaseEga extends MediaMosaTestCaseEga {
     );
     $this->assertTrue(
       $response['xml']->header->item_count_total == 1,
-      t("Call /collection?limit=1 Total should be 1[GET]")
+      t("Call /collection?limit=1 Total should be 1 [GET]")
     );
     $this->assertTrue(
       $response['xml']->items->item[0]->coll_id == (string) $coll_id,
       t("Call /collection?limit=1 Coll_id should match [GET]")
     );
-
 
     // Test: [GET] collection/{coll_id} - details of a collection
     $parameters = array(

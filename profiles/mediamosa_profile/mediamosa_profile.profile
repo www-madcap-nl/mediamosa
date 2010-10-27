@@ -481,7 +481,7 @@ function mediamosa_profile_client_application_form() {
   $form['client_application'] = array(
     '#type' => 'item',
     '#title' => t('Client application'),
-    '#description' => t("You can create a client application here following the link: !link. The link opens in a new window. After you created a client application you have to came back here.<br /><br />If you don't want to do it now, you can do it later in Admin / MediaMosa / Configuration / Client application.<br /><br />You don't have to create a client application, if you are going to migrate your old 1.7 MediaMosa data to version 2.", array('!link' => l(t('Create client application'), 'admin/mediamosa/config/app/add', array('attributes' => array('target' => '_blank'))))),
+    '#description' => t("<p>A MediaMosa client application is a MediaMosa account that is allowed to execute REST calls using the MediaMosa REST interface. Each client application has his own space within MediaMosa. The client applications allows you to create storage spaces for example different websites, where each website has his own client application account, with their own media.</p><p>Client applications can also share their media with other client application using the master-slave method. You can create a MediaMosa client application using the link: !link or do it later after installation in Admin -&gt; MediaMosa -&gt; Configuration -&gt; Client application. The link will open in a new window.</p><p>You must not create a client application, if you are going to migrate your old 1.7 MediaMosa data to version 2.</p>", array('!link' => l(t('Create client application'), 'admin/mediamosa/config/app/add', array('attributes' => array('target' => '_blank'))))),
   );
 
   $form['continue'] = array(

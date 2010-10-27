@@ -442,7 +442,7 @@ class mediamosa {
     catch (Exception $e) {
       // ignore.
     }
-    // Mark it installed, so its not install again.
+    // Mark it installed, so its not installed again.
     $versions = drupal_get_schema_versions($module);
     $version = $versions ? max($versions) : SCHEMA_INSTALLED;
     drupal_set_installed_schema_version($module, $version);

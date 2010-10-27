@@ -152,7 +152,7 @@ function mediamosa_collection_mediamosa_register_rest_call_doc() {
 
   $rest_calls['collection'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'Search in the collections of assets.',
-    mediamosa_rest_call::DESCRIPTION => 'Returns a list of collections based on search patterns or CQL.',
+    mediamosa_rest_call::DESCRIPTION => 'Returns a list of collections based on search patterns or CQL. Will return master/slaved collections, when access allowed. The number of videos field in each collection (numofvideos) reflects the number of videos in the collection. However, for master-slaved collections, this number will only hold the number of assets that are also master-slaved to your client application. If a master-slaved collection has no accessable assets, the collection is omitted from the results.',
     mediamosa_rest_call::EXAMPLE_REQUEST => 'collection?is_public_list=false&calculate_total_count=true&operator=and&limit=10&order_direction=asc',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
     mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
@@ -259,7 +259,7 @@ collections. This call gives all the collection details.',
 
   $rest_calls['collection/$coll_id/asset/count'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'Get the assets in a collection.',
-    mediamosa_rest_call::DESCRIPTION => 'A collection describes one of more assets. An asset can belong to several collections. This call counts all the assets in a collection.',
+    mediamosa_rest_call::DESCRIPTION => 'A collection describes one of more assets. A asset can belong to one or more collections. This call counts all the assets in a collection. If the collection is master-slaved to your client application, then only the master-slaved assets to your client application are counted.',
     mediamosa_rest_call::EXAMPLE_REQUEST => '/collection/A2VIXJhHiplJWliYVTVeD8Ee/asset/count?user_id=foo',
     mediamosa_rest_call::RESPONSE_FIELDS => array(
       'numofvideos' => 'Number of assets in the collection.',

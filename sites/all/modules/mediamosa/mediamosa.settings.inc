@@ -118,7 +118,6 @@ class mediamosa_settings {
   const STILL_SCENE_STRING = 'ffmpeg -i %s -s %s -padtop %d -padbottom %d -padleft %d -padright %d -an -deinterlace -y -scene %s %s -r 1 -f image2 %s';
   const STILL_SCENE_STRING_VFPAD = 'ffmpeg -i %s -s %s -vf "pad=%d:%d:%d:%d:black" -an -deinterlace -y -scene %s %s -r 1 -f image2 %s';
 
-
   // Analyse settings.
   const ANALYSE_FILE_ALWAYS_HINT_MP4_OPTION = '--always_hint_mp4';
   const ANALYSE_FILE_ALWAYS_INSERT_MD_OPTION = '--always_insert_metadata';
@@ -203,12 +202,12 @@ class mediamosa_settings {
   const MEDIAMOSA_DEFAULT_TIMEZONE = 'Europe/Amsterdam';
   const MEDIAMOSA_DEFAULT_TIMEZONE_INTERNAL = 'UTC';
 
-  // Component status check timeout.
-  const MEDIAMOSA_COMPONENT_STATUS_TIMEOUT = 300; // 5 minutes.
+  // Status page check timeout.
+  const MAINTENANCE_STATUS_CRON_TIME = 600; // 10 minutes.
 
   // Chunk size.
   const DOWNLOAD_CHUNK_SIZE = 1048576;
-  
+
   // ------------------------------------------------------------------ Functions.
   /**
    * Gets FFmpeg pad variable.

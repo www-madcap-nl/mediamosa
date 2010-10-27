@@ -178,13 +178,13 @@ function theme_mediamosa_version($variables) {
   $version = mediamosa_version::get_current_version(TRUE);
 
   return '<p align="center">' .
-    t('MediaMosa v!MAJOR.!MINOR.!RELEASE (build !BUILD) !EXTRA',
+    t('MediaMosa v!MAJOR.!MINOR.!RELEASE (build !BUILD)!EXTRA',
       array(
         '!MAJOR' => $version[mediamosa_version::MAJOR],
         '!MINOR' => $version[mediamosa_version::MINOR],
         '!RELEASE' => $version[mediamosa_version::RELEASE],
         '!BUILD' => $version[mediamosa_version::BUILD],
-        '!EXTRA' => empty($version[mediamosa_version::EXTRA]) ? '' : '- ' . $version[mediamosa_version::EXTRA],
+        '!EXTRA' => empty($version[mediamosa_version::EXTRA]) ? '' : ' - ' . $version[mediamosa_version::EXTRA],
       )
     ) .
     '</p>';

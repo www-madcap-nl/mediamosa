@@ -30,8 +30,8 @@
  */
 
 /**
- * URI: /still/$mediafile_id
- * URI: /still/ticket/$ticket_id
+ * URI: /still/$mediafile_id (perm. link)
+ * URI: /still/ticket/$ticket_id (normal temp. link).
  * Method: GET / POST
  *
  * replacement for still/index.php.
@@ -67,11 +67,16 @@ class mediamosa_rest_call_download_mediafile_still extends mediamosa_rest_call {
 
   // ------------------------------------------------------------------ Do Call.
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     // Get the ticket ID.
     $still_id = $this->get_param_value(self::STILL_ID);
     $ticket_id = $this->get_param_value(self::TICKET_ID);
+
+    if (!$ticket_id && !$still_id) {
+      // Nor ticket_id, nor still_id.
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INVALID_STILL_TICKET, array('@ticket_id' => $ticket_id));
+    }
 
     if ($ticket_id) {
 
@@ -85,21 +90,6 @@ class mediamosa_rest_call_download_mediafile_still extends mediamosa_rest_call {
       if (!file_exists($file)) {
         throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INVALID_STILL_TICKET, array('@ticket_id' => $ticket_id));
       }
-
-      // Set headers.
-      header('Content-Type: image/jpeg');
-
-      // Make sure we send the header now.
-      ob_clean();
-      flush();
-
-      // Download the image and delete the ticket.
-      if (@readfile($file) !== FALSE) {
-        mediamosa_io::unlink($file);
-      }
-
-      // Set the result, reponse object will know what to do.
-      $o_mediamosa->set_result(mediamosa_response::SUCCESS, 200, $file);
     }
     elseif ($still_id) {
 
@@ -107,86 +97,84 @@ class mediamosa_rest_call_download_mediafile_still extends mediamosa_rest_call {
       // Permanent link.
       //
 
-      // Get the mediafile_id, asset_id.
-      $response = mediamosa_asset_mediafile::get($still_id, NULL, array(mediamosa_asset_mediafile_db::ASSET_ID, mediamosa_asset_mediafile_db::IS_PROTECTED));
-      if ($response) {
-        // The mediafile exists. So get the parameters.
-        $asset_id = $response[mediamosa_asset_mediafile_db::ASSET_ID];
-        $still_is_protected = $response[mediamosa_asset_mediafile_db::IS_PROTECTED];
+      // Check if the permanent link is here. If not, then we re-eval the access.
 
-        // Check the asset protection.
-        $asset_is_protected = mediamosa_asset_db::IS_PROTECTED_FALSE;
-        if (mediamosa_asset_mediafile_db::IS_PROTECTED_FALSE == $still_is_protected) {
-          $response = mediamosa_asset::get($asset_id, NULL);
-          if ($response) {
-            // Asset is exists.
-            $asset_is_protected = $response[mediamosa_asset_db::IS_PROTECTED];
-          }
+      // Get symlink to still.
+      $file = mediamosa_configuration_storage::ticket_still_location_get() . mediamosa_configuration_storage::objectid_to_location($still_id);
+
+      // No perm link? Then check access, based on that create a perm link.
+      if (!file_exists($file)) {
+        // Get the mediafile_id, asset_id.
+        $mediafile = mediamosa_asset_mediafile::get($still_id, NULL, array(mediamosa_asset_mediafile_db::ASSET_ID, mediamosa_asset_mediafile_db::IS_PROTECTED));
+
+        if (!$mediafile) {
+          throw new mediamosa_exception_error(mediamosa_error::HTTP_NOT_FOUND);
         }
 
-        if ((mediamosa_asset_mediafile_db::IS_PROTECTED_FALSE == $still_is_protected && mediamosa_asset_db::IS_PROTECTED_FALSE == $asset_is_protected)) {
-          // Get filename.
-          $file = mediamosa_configuration_storage::ticket_still_location_get() . mediamosa_configuration_storage::objectid_to_location($still_id);
-
-          if (!file_exists($file)) {
-
-            // Create the permanent link.
-            $path = mediamosa_configuration_storage::ticket_still_location_get() . $still_id[0];
-
-            // Create directory.
-            mediamosa_io::mkdir($path, TRUE);
-
-            // Make sure the location is a directory.
-            if (!is_dir($path)) {
-              throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_DIR_NOT_FOUND, array('@location' => $path));
-            }
-
-            // Must be able to write there.
-            if (!mediamosa_io::is_writable($path)) {
-              throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_DIR_NOT_WRITABLE, array('@location' => $path));
-            }
-
-            $target = mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::still_location_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::objectid_to_location($still_id);
-
-            // Create the symlink ticket.
-            if (!is_dir($target)) {
-              if (!mediamosa_io::symlink($target, $file)) {
-                throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_UNABLE_TO_CREATE_SYMLINK, array('@location' => $target));
-              }
-            }
-
-          }
-
-          // Generate the still.
-
-          // Set headers.
-          header('Content-Type: image/jpeg');
-
-          // Make sure we send the header now.
-          ob_clean();
-          flush();
-
-          // Download the image and delete the ticket.
-          if (@readfile($file) !== FALSE) {
-            // Don't delete permanent stills.
-            //mediamosa_io::unlink($file);
-          }
-
-          // Set the result, reponse object will know what to do.
-          $o_mediamosa->set_result(mediamosa_response::SUCCESS, 200, $file);
+        // Get asset.
+        $asset = mediamosa_asset::get($mediafile[mediamosa_asset_mediafile_db::ASSET_ID]);
+        if (!$asset) {
+          throw new mediamosa_exception_error(mediamosa_error::HTTP_NOT_FOUND);
         }
-        else {
-          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INVALID_STILL_PERMANENT, array('@still_id' => $still_id));
+
+        // Forbidden when protected. We dont have enough information to do a play proxy call here.
+        if ($asset[mediamosa_asset_db::IS_PROTECTED] != mediamosa_asset_db::IS_PROTECTED_FALSE || $mediafile[mediamosa_asset_mediafile_db::IS_PROTECTED] != mediamosa_asset_mediafile_db::IS_PROTECTED_FALSE) {
+          throw new mediamosa_exception_error(mediamosa_error::HTTP_FORBIDDEN);
+        }
+
+        // Create the permanent link.
+        $path = mediamosa_configuration_storage::ticket_still_location_get() . $still_id[0];
+
+        // Create directory.
+        mediamosa_io::mkdir($path, TRUE);
+
+        // Make sure the location is a directory.
+        if (!is_dir($path)) {
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_DIR_NOT_FOUND, array('@location' => $path));
+        }
+
+        // Must be able to write there.
+        if (!mediamosa_io::is_writable($path)) {
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_DIR_NOT_WRITABLE, array('@location' => $path));
+        }
+
+        // Target symlink.
+        $target = mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::still_location_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::objectid_to_location($still_id);
+
+        // Create the symlink ticket.
+        if (!is_dir($target) || !mediamosa_io::symlink($target, $file)) {
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_UNABLE_TO_CREATE_SYMLINK, array('@location' => $target));
         }
       }
-      else {
-        throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INVALID_STILL_PERMANENT, array('@still_id' => $still_id));
-      }
+    }
 
+    // Set headers.
+    header('Content-Type: image/jpeg');
+
+    // Make sure we send the header now.
+    ob_clean();
+    flush();
+
+    $handle = fopen($file, 'rb');
+
+    if (!$handle) {
+      throw new mediamosa_exception(mediamosa_error::HTTP_FORBIDDEN, 'Unable to open file!');
     }
-    else {
-      // Nor ticket_id, nor still_id.
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_INVALID_STILL_TICKET, array('@ticket_id' => $ticket_id));
+
+    // Until end of file, get the file and output.
+    while (!feof($handle)) {
+      $buffer = fread($handle, mediamosa_settings::DOWNLOAD_CHUNK_SIZE);
+
+      print $buffer;
+
+      ob_flush();
+      flush();
     }
+
+    // Close the file.
+    fclose($handle);
+
+    // Set the result, reponse object will know what to do.
+    $mediamosa->set_result(mediamosa_response::SUCCESS, 200, $file);
   }
 }
