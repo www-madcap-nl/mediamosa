@@ -259,6 +259,28 @@ class mediamosa_asset_mediafile_still {
   }
 
   /**
+   * Find all stills of an asset.
+   *
+   * @param string $asset_id
+   * @return array
+   */
+  static public function find_asset_all_still($asset_id) {
+    $still_ids = mediamosa_db::db_query(
+      "SELECT #mediafile_id FROM {#mediamosa_asset_mediafile}
+      WHERE #asset_id = :asset_id AND #is_still = :is_still_true",
+      array(
+        '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
+        '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
+        '#asset_id' => mediamosa_asset_mediafile_db::ASSET_ID,
+        ':asset_id' => $asset_id,
+        '#is_still' => mediamosa_asset_mediafile_db::IS_STILL,
+        ':is_still_true' => mediamosa_asset_mediafile_db::IS_STILL_TRUE,
+      )
+    )->fetchCol();
+    return $still_ids;
+  }
+
+  /**
    * Find default still or at least the first one you find.
    *
    * @param string $asset_id
