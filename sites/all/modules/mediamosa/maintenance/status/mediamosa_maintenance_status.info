@@ -14,3 +14,4 @@ dependencies[] = mediamosa_maintenance
 files[] = mediamosa_maintenance_status.module
 files[] = mediamosa_maintenance_status.install
 files[] = mediamosa_maintenance_status.rest.inc
+files[] = mediamosa_maintenance_status.theme.inc

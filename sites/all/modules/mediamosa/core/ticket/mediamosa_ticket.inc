@@ -376,6 +376,19 @@ class mediamosa_ticket {
       )
     );
 
+    // Clean up the stills.
+    mediamosa_io::exec(
+      strtr(
+        'find @ticket_still_location/@ticket_path. -maxdepth 1 -mindepth 1 ! -name "*.asx" -name "@wildmatch" -type l -mmin +@ticket_expiration -delete',
+        array(
+          '@ticket_path' => self::TICKET_PATH,
+          '@ticket_still_location' => $ticket_still_location,
+          '@wildmatch' => str_repeat('?', mediamosa_settings::UUID_LENGTH),
+          '@ticket_expiration' => (int)(mediamosa_settings::TICKET_EXPIRATION_STILL / 60),
+        )
+      )
+    );
+
     // Clean up the asx files (these are in the still dir because of the downloadable state of that dir).
     mediamosa_io::exec(
       strtr(

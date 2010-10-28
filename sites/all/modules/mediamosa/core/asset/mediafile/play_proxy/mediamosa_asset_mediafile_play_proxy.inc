@@ -331,16 +331,16 @@ class mediamosa_asset_mediafile_play_proxy {
 
     // Replace {TICKET} with app_id / ticket.
     if ($response_type != self::RESPONSE_TYPE_STILL) {
-      $streaming_server_ticket_uri = str_replace(self::PARAM_URI_TICKET, $app_id . '/' . $ticket, $streaming_server_uri);
+      $streaming_server_ticket_uri = strtr($streaming_server_uri, array(self::PARAM_URI_TICKET => $app_id . '/' . $ticket));
     }
 
     // Uri for non-tickets (still, download etc).
     foreach ($stills as $key => $value) {
-      $stills[$key]['still_ticket'] = str_replace(self::PARAM_URI_TICKET, $stills[$key]['ticket'], $streaming_server_uri);
+      $stills[$key]['still_ticket'] = strtr($streaming_server_uri, array(self::PARAM_URI_TICKET => $stills[$key]['ticket']));
     }
 
-    // Replace ticker param in URI.
-    $streaming_server_uri = str_replace(self::PARAM_URI_TICKET, $ticket, $streaming_server_uri);
+    // Replace ticket param in URI.
+    $streaming_server_uri = strtr($streaming_server_uri, array(self::PARAM_URI_TICKET => $ticket));
 
     // So it exists.
     $variables = array();

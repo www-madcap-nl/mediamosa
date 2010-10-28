@@ -410,6 +410,10 @@ function mediamosa_mediamosa_configuration_validate($form, $form_state) {
  */
 function mediamosa_form_alter(&$form, &$form_state, $form_id) {
   if ($form_id == 'dblog_filter_form') {
+
+    /**
+     * Extend the watchdog filter.
+     */
     if (!empty($_SESSION['mediamosa_watchdog_overview_filter'])) {
       $form['filters']['#collapsed'] = FALSE;
     }
@@ -447,7 +451,7 @@ function mediamosa_form_alter(&$form, &$form_state, $form_id) {
 }
 
 /**
- * Submit.
+ * Submit of the watchdog filter form.
  */
 function mediamosa_watchdog_filter_form_submit($form, &$form_state) {
 
@@ -469,6 +473,13 @@ function mediamosa_watchdog_filter_form_submit($form, &$form_state) {
  * Implementation of hook_query_alter().
  */
 function mediamosa_query_alter(QueryAlterableInterface $query) {
+
+  /**
+   * Alter the search query on watchdog so we can search within the watchdog.
+   *
+   * @var QueryAlterableInterface $query
+   *  The watchdog query object.
+   */
   $tables = $query->getTables();
   foreach ($tables as $table) {
     if ($table['table'] == 'watchdog') {
@@ -496,6 +507,10 @@ function mediamosa_query_alter(QueryAlterableInterface $query) {
  * Implementation of hook_cron().
  */
 function mediamosa_cron() {
+
+  /*
+   * Clean up our extra data on watchdog entries in mediamosa_watchdog.
+   */
   $query = mediamosa_db::db_select('watchdog', 'w')
     ->fields('w', array('wid'))
     ->orderBy('wid', 'ASC')
