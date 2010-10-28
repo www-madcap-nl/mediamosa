@@ -39,7 +39,7 @@ class MediaMosaStillDeleteTestCaseEgaJob extends MediaMosaTestCaseEgaJob {
   // ------------------------------------------------------------------ Functions.
   public static function getInfo() {
     return array(
-      'name' => 'Stills - Stills delete',
+      'name' => 'Still - Stills delete',
       'description' => 'Delete calls on the stills.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STILL,
     );

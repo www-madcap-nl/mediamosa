@@ -36,8 +36,8 @@ class MediaMosaCreatingStillFromAudioFileTestCaseEgaJob extends MediaMosaTestCas
   // ------------------------------------------------------------------ Functions.
   public static function getInfo() {
     return array(
-      'name' => 'Creating still from audio file',
-      'description' => 'Creating still from audio file should not happen.',
+      'name' => 'Still - Creating still from audio file',
+      'description' => 'Prevent still generation from audio file.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STILL,
     );
   }
