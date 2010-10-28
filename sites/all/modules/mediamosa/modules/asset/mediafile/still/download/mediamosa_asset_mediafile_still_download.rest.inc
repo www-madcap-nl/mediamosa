@@ -142,7 +142,7 @@ class mediamosa_rest_call_download_mediafile_still extends mediamosa_rest_call {
         $target = mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::still_location_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::objectid_to_location($still_id);
 
         // Create the symlink ticket.
-        if (!is_dir($target) || !mediamosa_io::symlink($target, $file)) {
+        if (!is_file($target) || !mediamosa_io::symlink($target, $file)) {
           throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_UNABLE_TO_CREATE_SYMLINK, array('@location' => $target));
         }
       }
@@ -173,6 +173,10 @@ class mediamosa_rest_call_download_mediafile_still extends mediamosa_rest_call {
 
     // Close the file.
     fclose($handle);
+
+    if ($ticket_id) {
+      mediamosa_io::unlink($file);
+    }
 
     // Set the result, reponse object will know what to do.
     $mediamosa->set_result(mediamosa_response::SUCCESS, 200, $file);

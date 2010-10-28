@@ -12,6 +12,10 @@ Known issues;
   * Tool parameter is unique.
   * Allowed value is a ";" separated string.
   * Default value is exists in the allowed values.
+- Watchdog (admin/reports/dblog) bug: The combination with type and severity
+  with one of the asset id, mediafile id or free text search causes
+  PDOException. It seems a Drupal 7 core bug. We will check it again after
+  the Drupal 7 core update.
 
 MediaMosa 2.3.0
 ---------------------------
@@ -44,6 +48,9 @@ Other changes (not ticket related).
 - Bug fix in play proxy: "orig.#is_original_file = #is_original_file_true"
   (reported by J0ris/MediaMosa.org).
 - CQL empty string search fix.
+- Job started and finished UTC value fixed, did not properly set the of
+  transcode jobs.
+- Transcode job statistics development.
 - Fixed: Home page was very slow sometimes because it generated the status
   information. Will no only be first time on home page slow, cron should handle
   the status generation updates from that point on.

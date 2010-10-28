@@ -299,14 +299,14 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
 
         // Check the protection.
         $still_is_protected = mediamosa_asset_mediafile_db::IS_PROTECTED_FALSE;
-        if (mediamosa_asset_db::IS_PROTECTED_FALSE == $asset_is_protected) {
+        if ($asset[mediamosa_asset_db::IS_PROTECTED] == mediamosa_asset_db::IS_PROTECTED_FALSE) {
           $response = mediamosa_asset_mediafile::get($still_id_tmp, NULL, array(mediamosa_asset_mediafile_db::IS_PROTECTED));
           if ($response) {
             $still_is_protected = $response[mediamosa_asset_mediafile_db::IS_PROTECTED];
           }
         }
 
-        if (mediamosa_asset_db::IS_PROTECTED_FALSE == $asset_is_protected && mediamosa_asset_mediafile_db::IS_PROTECTED_FALSE == $still_is_protected) {
+        if ($asset[mediamosa_asset_db::IS_PROTECTED] == mediamosa_asset_db::IS_PROTECTED_FALSE && $still_is_protected == mediamosa_asset_mediafile_db::IS_PROTECTED_FALSE) {
           $ticket = $still_id_tmp;
         }
         else {

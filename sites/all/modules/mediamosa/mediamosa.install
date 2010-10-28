@@ -1342,4 +1342,12 @@ function mediamosa_update_7069() {
   cache_clear_all();
 }
 
+/**
+ * Install mediamosa_statistics_job table.
+ */
+function mediamosa_update_7070() {
+  // Install mediamosa_statistics_job table.
+  mediamosa::drupal_install_schema(mediamosa_statistics_job_db::TABLE_NAME);
+}
+
 // TODO: Remove old code from the repository on the next release: sites/all/modules/mediamosa/core/transcode/mapping.

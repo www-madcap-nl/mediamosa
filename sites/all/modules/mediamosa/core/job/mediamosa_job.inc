@@ -665,7 +665,7 @@ class mediamosa_job {
   static public function set_job_status_failed($job_id, $error_description, $old_status = 'NONE') {
     $fields = array(
       mediamosa_job_db::JOB_STATUS => mediamosa_job_db::JOB_STATUS_FAILED,
-      mediamosa_job_db::FINISHED => mediamosa_datetime::utc_current_timestamp_now(),
+      mediamosa_job_db::FINISHED => mediamosa_datetime::utc_current_timestamp_now(TRUE),
       mediamosa_job_db::ERROR_DESCRIPTION => $error_description,
     );
 
@@ -760,7 +760,7 @@ class mediamosa_job {
     if ($job_ext[mediamosa_job_db::FINISHED] == '' &&
         (($status == mediamosa_job_db::JOB_STATUS_FAILED) ||
         ($status == mediamosa_job_db::JOB_STATUS_FINISHED) )) {
-      $fields[mediamosa_job_db::FINISHED] = mediamosa_datetime::utc_current_timestamp_now();
+      $fields[mediamosa_job_db::FINISHED] = mediamosa_datetime::utc_current_timestamp_now(TRUE);
     }
 
     // Set status

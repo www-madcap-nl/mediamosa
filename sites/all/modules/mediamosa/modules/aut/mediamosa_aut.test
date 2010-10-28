@@ -865,6 +865,22 @@ class MediaMosaAutTestCaseEga extends MediaMosaTestCaseEga {
     $this->cql_do_search_test_collections_1('', array($coll_id => TRUE));
 
     // Do collection search.
+    $this->cql_do_search_test_collections_2('', array());
+
+    // Add a asset to the new collection.
+    // Create a upload test file with asset and mediafile.
+    $upload_3 = $this->uploadTestFile();
+    $asset_id_3 = $upload_3['asset_id'];
+    $mediafile_id_3 = $upload_3['mediafile_id'];
+    $this->createCollectionAssetRelation($coll_id, array($asset_id_2));
+
+    // Do collection search again.
+    $this->cql_do_search_test_collections_2('', array($coll_id => TRUE));
+
+    // Now master slave it to app-1, collection now found.
+    $this->setMediafileAut($mediafile_id_3,  array('aut_app' => array($app_id_2)));
+
+    // Do collection search.
     $this->cql_do_search_test_collections_2('', array($coll_id => TRUE));
 
     // Do collection search.

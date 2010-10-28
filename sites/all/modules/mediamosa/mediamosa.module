@@ -475,8 +475,8 @@ function mediamosa_query_alter(QueryAlterableInterface $query) {
       if (!empty($_SESSION['mediamosa_watchdog_overview_filter']['free_search'])) {
         $free_search = $_SESSION['mediamosa_watchdog_overview_filter']['free_search'];
         $or = db_or()
-          ->where("message LIKE :free_search", array(':free_search' => '%' . $free_search . '%'))
-          ->where("variables LIKE :free_search", array(':free_search' => '%' . $free_search . '%'));
+          ->condition('message', '%' . $free_search . '%', 'LIKE')
+          ->condition('variables', '%' . $free_search . '%', 'LIKE');
         $query->condition($or);
       }
       if (!empty($_SESSION['mediamosa_watchdog_overview_filter']['asset_id']) || !empty($_SESSION['mediamosa_watchdog_overview_filter']['mediafile_id'])) {

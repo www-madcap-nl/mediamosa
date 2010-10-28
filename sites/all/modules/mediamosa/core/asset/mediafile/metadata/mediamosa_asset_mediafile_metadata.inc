@@ -363,6 +363,9 @@ class mediamosa_asset_mediafile_metadata {
 
     // Normalize to asset.
     mediamosa_asset::update_asset_info_with_mediafileid($mediafile_id);
+
+    // Update statistics
+    mediamosa_statistics::update_job_transcode_filesize($mediafile_id, (int) $filesize);
   }
 
 
