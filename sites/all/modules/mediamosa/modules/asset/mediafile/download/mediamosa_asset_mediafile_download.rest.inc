@@ -91,15 +91,15 @@ class mediamosa_rest_call_download_mediafile extends mediamosa_rest_call {
     header("Content-Disposition: attachment; filename=\"" . rawurlencode($filename) . "\""); // force a save dialog.
     header("Content-Transfer-Encoding: binary");
 
-    // Make sure we send the header now.
-    ob_clean();
-    flush();
-
     $handle = fopen($file, 'rb');
 
     if (!$handle) {
       throw new mediamosa_exception(0, 'Unable to open file!');
     }
+
+    // Make sure we send the header now.
+    ob_clean();
+    flush();
 
     // No time-out here.
     set_time_limit(0);

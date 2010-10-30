@@ -99,10 +99,10 @@ class mediamosa_response extends mediamosa {
       $this->mediamosa_rest = new mediamosa_rest();
 
       // Find the rest call.
-      $a_rest_call = $this->mediamosa_rest->match_call();
+      $rest_call = $this->mediamosa_rest->match_call();
 
       // If we return here, try to let Drupal handle the output.
-      if (!$a_rest_call) {
+      if (!$rest_call) {
         return;
       }
 
@@ -120,15 +120,15 @@ class mediamosa_response extends mediamosa {
       }
 
       // Make sure response type is set.
-      if (!isset($a_rest_call[mediamosa_rest_call::RESPONSE_TYPE])) {
-        $a_rest_call[mediamosa_rest_call::RESPONSE_TYPE] = mediamosa_rest_call::RESPONSE_TYPE_XML;
+      if (!isset($rest_call[mediamosa_rest_call::RESPONSE_TYPE])) {
+        $rest_call[mediamosa_rest_call::RESPONSE_TYPE] = mediamosa_rest_call::RESPONSE_TYPE_XML;
       }
 
       // Save it.
-      $response_type = $a_rest_call[mediamosa_rest_call::RESPONSE_TYPE];
+      $response_type = $rest_call[mediamosa_rest_call::RESPONSE_TYPE];
 
       // Now execute the call.
-      $this->mediamosa_rest->process_call($a_rest_call);
+      $this->mediamosa_rest->process_call($rest_call);
     }
     catch (mediamosa_exception_redirect_and_exit $e) {
       // Redirect to URI.

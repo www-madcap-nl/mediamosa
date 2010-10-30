@@ -1,0 +1,13 @@
+# ticket
+Alias /still /srv/mnt-mediamosa/still_links
+<Directory /srv/mnt-mediamosa/still_links>
+  Options FollowSymLinks
+  AllowOverride All
+  Order deny,allow
+  Allow from All
+</Directory>
+
+<IfModule mod_rewrite.c>
+  RewriteEngine on
+  RewriteRule ^/?still/([a-zA-Z1-9])([a-zA-Z1-9]+)$ /still/$1/$1$2
+</IfModule>

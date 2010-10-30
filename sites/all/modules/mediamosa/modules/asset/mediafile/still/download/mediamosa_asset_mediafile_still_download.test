@@ -56,13 +56,7 @@ class MediaMosaAssetMediafileStillDownloadTestCase extends MediaMosaTestCaseEgaJ
     $asset_id = $upload['asset_id'];
     $mediafile_id = $upload['mediafile_id'];
 
-    // Create still.
-    $parameters = array(
-      'still_type' => 'NONE',
-    );
-
-    // Create still job (ticket vpcore #199).
-    $job_id = $this->createMediafileStill($mediafile_id, $parameters);
+    $job_id = $this->createMediafileStill($mediafile_id);
 
     // Parse the queue.
     $this->doQueueCycleAll();
@@ -73,8 +67,25 @@ class MediaMosaAssetMediafileStillDownloadTestCase extends MediaMosaTestCaseEgaJ
     $still_servers = mediamosa_server::get_enabled_still();
     $this->assertTrue(!empty($still_servers), t('@num enabled still server(s) found.', array('@num' => $still_servers->rowCount())));
 
+    // Get the stills.
+    $stills = $this->getMediafileStill($mediafile_id);
+    $this->assertTrue(count($stills) == 1, 'One dimension result.');
+
+    // Get first array.
+    $stills = reset($stills);
+
+    // Output still.
+    $this->var_export($stills);
+
+    // Some tests.
+    $this->assertTrue(isset($stills['stills']), 'Found the still.');
+    $this->assertTrue(!empty($stills['output']), 'Found the output url.');
+    $this->assertTrue(!empty($stills['ticket_id']), 'Found the ticket ID.');
+
+    $still_id = $stills['stills']['still_id'];
+
     foreach ($still_servers as $still_server) {
-      $url = str_replace('{TICKET}', $mediafile_id, $still_server[mediamosa_server_db::SERVER_URI]);
+      $url = str_replace('{TICKET}', $still_id, $still_server[mediamosa_server_db::SERVER_URI]);
 
       // Test the output, do output call.
       $url = str_replace('/still/', '/simpletest/still/', $url);
@@ -87,6 +98,26 @@ class MediaMosaAssetMediafileStillDownloadTestCase extends MediaMosaTestCaseEgaJ
         $result->code == 200,
         t("Download the test image from '@url' (code = @code)", array('@url' => $url, '@code' => $result->code))
       );
+
+      // Get filepath to still.
+      $still_link = mediamosa_configuration_storage::still_filename_get($still_id);
+
+      $this->var_export($still_link, 'still path');
+
+      // Does it exists?
+      $this->assertTrue(mediamosa_io::file_exists($still_link), 'Found still file.');
+
+      // Get the still filesize.
+      $still_size = mediamosa_io::filesize($still_link);
+
+      // Dump header.
+      $this->var_export($result->headers);
+
+      $this->var_export($still_size, 'still size');
+      $this->var_export(strlen($result->data), 'download size');
+
+      // Filesize of the file must be same as ours.
+      $this->assertTrue($still_size == strlen($result->data), t('Downloaded file has the same size as original.'));
     }
   }
 }

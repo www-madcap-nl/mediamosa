@@ -81,7 +81,6 @@ class mediamosa_rest {
       }
     }
 
-
     // Check if URL internal / external.
     if ($request_uris[0] == 'internal' || $request_uris[0] == 'external') {
       unset($request_uris[0]);
