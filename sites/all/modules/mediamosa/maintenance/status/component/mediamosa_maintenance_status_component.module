@@ -60,52 +60,43 @@ function mediamosa_maintenance_status_component_mediamosa_status_generate() {
   );
 
   // Structure check.
-  $is_structured = '';
-  $is_writeable = '';
-  mediamosa_maintenance_status_component_directory(&$is_structured, &$is_writeable, $mount_point . '/data');
-  for ($i = 1; $i <= 9; $i++) {
-    mediamosa_maintenance_status_component_directory(&$is_structured, &$is_writeable, $mount_point . '/data/' . $i);
+  $checks = array(
+    'is_structured' => array(),
+    'is_writeable' => array(),
+  );
+
+  $dirs = array('data', 'data/stills', 'data/transcode', 'links', 'download_links', 'still_links', 'ftp');
+  foreach ($dirs as $dir) {
+    $checks = _mediamosa_maintenance_status_component_directory($mount_point . '/' . $dir, $checks);
   }
-  for ($i = ord('a'); $i <= ord('z'); $i++) {
-    mediamosa_maintenance_status_component_directory(&$is_structured, &$is_writeable, $mount_point . '/data/' . chr($i));
+
+  $maps = array(
+    '1','2','3','4','5','6','7','8','9',
+    'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',
+    'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z',
+  );
+  foreach ($maps as $map) {
+    _mediamosa_maintenance_status_component_directory($mount_point . '/data/' . $map, $checks);
+    _mediamosa_maintenance_status_component_directory($mount_point . '/data/stills/' . $map, $checks);
   }
-  for ($i = ord('A'); $i <= ord('Z'); $i++) {
-    mediamosa_maintenance_status_component_directory(&$is_structured, &$is_writeable, $mount_point . '/data/' . chr($i));
-  }
-  // data/stills.
-  mediamosa_maintenance_status_component_directory(&$is_structured, &$is_writeable, $mount_point . '/data/stills');
-  for ($i = 0; $i <= 9; $i++) {
-    mediamosa_maintenance_status_component_directory(&$is_structured, &$is_writeable, $mount_point . '/data/stills/' . $i);
-  }
-  for ($i = ord('a'); $i <= ord('z'); $i++) {
-    mediamosa_maintenance_status_component_directory(&$is_structured, &$is_writeable, $mount_point . '/data/stills/' . chr($i));
-  }
-  for ($i = ord('A'); $i <= ord('Z'); $i++) {
-    mediamosa_maintenance_status_component_directory(&$is_structured, &$is_writeable, $mount_point . '/data/stills/' . chr($i));
-  }
-  // Other.
-  mediamosa_maintenance_status_component_directory(&$is_structured, &$is_writeable, $mount_point . '/data/transcode');
-  mediamosa_maintenance_status_component_directory(&$is_structured, &$is_writeable, $mount_point . '/links');
-  mediamosa_maintenance_status_component_directory(&$is_structured, &$is_writeable, $mount_point . '/download_links');
-  mediamosa_maintenance_status_component_directory(&$is_structured, &$is_writeable, $mount_point . '/still_links');
-  mediamosa_maintenance_status_component_directory(&$is_structured, &$is_writeable, $mount_point . '/ftp');
+
   $results['mount_structure'] = array(
     'title' => t('SANNAS'),
     'value' => t('Mount has the good structure'),
-    'severity' => _mediamosa_maintenance_status_okerror($is_structured),
+    'severity' => _mediamosa_maintenance_status_okerror($checks['is_structured']),
   );
-  if ($is_structured) {
-    $results['mount_structure']['description'] = '<pre>' . $is_structured . '</pre>';
+  if (!empty($checks['is_structured'])) {
+    $results['mount_structure']['description'] = '<pre>' . implode("\n", $checks['is_structured']) . '</pre>';
   }
+
   $results['mount_writeable'] = array(
     'title' => t('SANNAS'),
     'value' => t('Mount structure is writeable'),
-    'severity' => _mediamosa_maintenance_status_okerror($is_writeable),
+    'severity' => _mediamosa_maintenance_status_okerror($checks['is_writeable']),
   );
-  if ($is_writeable) {
-    $results['mount_writeable']['description'] = '<pre>' . $is_writeable . '</pre>';
+  if (!empty($checks['is_writeable'])) {
+    $results['mount_writeable']['description'] = '<pre>' . implode("\n", $checks['is_writeable']) . '</pre>';
   }
-
 
   $filename = $mount_point . '/data/transcode/test_' . mt_rand(0, 9999) . '.txt';
   $content = mt_rand(0, 9999);
@@ -113,7 +104,7 @@ function mediamosa_maintenance_status_component_mediamosa_status_generate() {
   fwrite($handle, $content);
   fclose($handle);
   $read_content = '';
-  $handle = fopen($filename, "rb");
+  $handle = fopen($filename, 'rb');
   if ($handle) {
     $read_content = fread($handle, filesize($filename));
     fclose($handle);
@@ -147,17 +138,19 @@ function mediamosa_maintenance_status_component_mediamosa_status_generate() {
 /**
  * Directory check helper.
  *
- * @param $is_structured string
- * @param $is_writeable string
  * @param $directory string
+ * @param $checks['is_structured'] string
+ * @param $checks['is_writeable'] string
  */
-function mediamosa_maintenance_status_component_directory(&$is_structured, &$is_writeable, $directory) {
+function _mediamosa_maintenance_status_component_directory($directory, $checks) {
   if (!mediamosa_io::is_dir($directory)) {
-    $is_structured .= $directory . "\n";
+    $checks['is_structured'][] = $directory;
   }
   if (!is_writable($directory)) {
-    $is_writeable .= $directory . "\n";
+    $checks['is_writeable'][] = $directory;
   }
+
+  return $checks;
 }
 
 /**

@@ -31,79 +31,61 @@
  * Based on tickets mediamosa 1:
  *
  * ticket_616
- *
- *
  */
 
 /**
   * @file
   * Unittests for Conf. storage module.
   */
-class MediaMosaAssetMediafileStillDownloadTestCase extends MediaMosaTestCase {
+class MediaMosaAssetMediafileStillDownloadTestCase extends MediaMosaTestCaseEgaJob {
 
   public static function getInfo() {
     return array(
       'name' => 'Still - Download test',
       'description' => 'Test downloading of stills with tickets.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STILL,
-      //mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES,
     );
-  }
-
-  function setUp() {
-    // Get the current mediamosa server content.
-    $a_servers = mediamosa_server::search();
-
-    parent::setUp('mediamosa_asset');
-
-    // Create and login user
-    $rest_user = $this->drupalCreateUser(array('administer mediamosa'));
-    $this->drupalLogin($rest_user);
-
-    // Truncate current and insert new.
-    db_truncate(mediamosa_server_db::TABLE_NAME)->execute();
-
-    // Copy the current servers to sandbox.
-    foreach ($a_servers as $a_server) {
-      db_insert(mediamosa_server_db::TABLE_NAME)
-        ->fields($a_server)
-        ->execute();
-    }
   }
 
   function testStillDownload() {
 
-    $a_app = $this->createApp();
-    $app_id = $a_app[mediamosa_app_db::APP_ID];
-    $ticket_id = mediamosa_db::uuid(1);
-    $uuid = mediamosa_db::uuid(1);
-    $filename = 'testimage.jpg';
+    // App ids.
+    $app_id_1 = $this->a_app[mediamosa_app_db::APP_ID];
 
-    $a_mediafile_ext = array(
-      mediamosa_asset_mediafile_db::ID => $uuid,
-      mediamosa_asset_mediafile_db::FILENAME => $filename,
-    );
+    $upload = $this->uploadTestFile($this->getTestVideo_ogg());
+    $asset_id = $upload['asset_id'];
+    $mediafile_id = $upload['mediafile_id'];
 
-    $test_image = $this->getTestImage_NotBlackJpg();
-    $target = mediamosa_configuration_storage::mediafile_still_filename_get($uuid);
+    $job_id = $this->createMediafileStill($mediafile_id);
 
-    // Create the directory.
-    $this->mkdir(dirname($target));
+    // Parse the queue.
+    $this->doQueueCycleAll();
 
-    // Copy the test image.
-    $this->copy($test_image, $target);
+    // Get the asset, so we have the still.
+    $asset = $this->getAsset($asset_id);
 
-    // Create ticket.
-    $ticket_id = mediamosa_ticket::create_play_proxy($ticket_id, $a_mediafile_ext, mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL, $app_id, 'dummy', $uuid);
+    $still_servers = mediamosa_server::get_enabled_still();
+    $this->assertTrue(!empty($still_servers), t('@num enabled still server(s) found.', array('@num' => $still_servers->rowCount())));
 
-    $ticket_path = mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_settings::STILL_TICKET_LOCATION;
-    $ticket_symlink = $ticket_path . DIRECTORY_SEPARATOR . $ticket_id;
+    // Get the stills.
+    $stills = $this->getMediafileStill($mediafile_id);
+    $this->assertTrue(count($stills) == 1, 'One dimension result.');
 
-    $a_still_servers = mediamosa_server::get_enabled_still();
-    $this->assertTrue(!empty($a_still_servers), t('@num enabled still server(s) found.', array('@num' => $a_still_servers->rowCount())));
+    // Get first array.
+    $stills = reset($stills);
 
-    foreach ($a_still_servers as $a_stillserver) {
-      $url = str_replace('{TICKET}', $ticket_id, $a_stillserver[mediamosa_server_db::SERVER_URI]);
+    // Output still.
+    $this->var_export($stills);
+
+    // Some tests.
+    $this->assertTrue(isset($stills['stills']), 'Found the still.');
+    $this->assertTrue(!empty($stills['output']), 'Found the output url.');
+    $this->assertTrue(!empty($stills['ticket_id']), 'Found the ticket ID.');
+
+    $still_id = $stills['stills']['still_id'];
+
+    foreach ($still_servers as $still_server) {
+      $url = str_replace('{TICKET}', $still_id, $still_server[mediamosa_server_db::SERVER_URI]);
 
       // Test the output, do output call.
       $url = str_replace('/still/', '/simpletest/still/', $url);
@@ -116,17 +98,26 @@ class MediaMosaAssetMediafileStillDownloadTestCase extends MediaMosaTestCase {
         $result->code == 200,
         t("Download the test image from '@url' (code = @code)", array('@url' => $url, '@code' => $result->code))
       );
+
+      // Get filepath to still.
+      $still_link = mediamosa_configuration_storage::still_filename_get($still_id);
+
+      $this->var_export($still_link, 'still path');
+
+      // Does it exists?
+      $this->assertTrue(mediamosa_io::file_exists($still_link), 'Found still file.');
+
+      // Get the still filesize.
+      $still_size = mediamosa_io::filesize($still_link);
+
+      // Dump header.
+      $this->var_export($result->headers);
+
+      $this->var_export($still_size, 'still size');
+      $this->var_export(strlen($result->data), 'download size');
+
+      // Filesize of the file must be same as ours.
+      $this->assertTrue($still_size == strlen($result->data), t('Downloaded file has the same size as original.'));
     }
-
-    // Test removed link.
-    /*
-    $this->assertTrue(
-      mediamosa_io::file_exists($ticket_symlink) == FALSE,
-      t("Unlink: File '@target' is removed.", array('@target' => $ticket_symlink))
-    );
-    */
-
-    // Remove the test video.
-    $this->unlink($target);
   }
 }

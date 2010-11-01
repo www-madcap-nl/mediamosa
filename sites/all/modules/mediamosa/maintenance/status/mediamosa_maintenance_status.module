@@ -24,6 +24,9 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
+// Include my files.
+module_load_include('theme.inc', 'mediamosa_maintenance_status', 'mediamosa_maintenance_status');
+
 /**
  * Constants.
  */
@@ -86,7 +89,11 @@ function mediamosa_maintenance_status_menu() {
     'type' => MENU_CALLBACK,
     'page callback' => '_mediamosa_maintenance_status_job_list',
     'access arguments' => array('access mediamosa'),
-    'weight' => 20,
+  );
+  $items['admin/mediamosa/status/refresh'] = array(
+    'type' => MENU_CALLBACK,
+    'page callback' => '_mediamosa_maintenance_status_refresh',
+    'access arguments' => array('access mediamosa'),
   );
 
   return $items;
@@ -150,61 +157,6 @@ function mediamosa_maintenance_status_cron() {
     // Check run-time requirements and status information.
     module_invoke_all('mediamosa_status_generate');
   }
-}
-
-/**
- * Returns HTML for the Mediamosa status report.
- *
- * @param $table_name
- *   A string with the name of the table
- * @param $results
- *   An associative array containing:
- *   - result: An array of results.
- *     * 'title': the name of the result.
- *     * 'value': the current value.
- *     * 'description': description of the result.
- *     * 'severity': the result's severity level, one of:
- *       MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO: For info only.
- *       MEDIAMOSA_MAINTENANCE_STATUS_RESULT_OK: The result is satisfied.
- *       MEDIAMOSA_MAINTENANCE_STATUS_RESULT_WARNING: The result failed with a warning.
- *       MEDIAMOSA_MAINTENANCE_STATUS_RESULT_ERROR: The result failed with an error.
- *
- * @ingroup themeable
- */
-function theme_mediamosa_maintenance_status_report($variables) {
-  drupal_add_css(drupal_get_path('module', 'mediamosa_maintenance_status') . '/mediamosa_maintenance_status.css');
-
-  $table_name = $variables['table_name'];
-  $results = $variables['results'];
-
-  $output = '';
-  $i = 0;
-
-  $output .= $table_name;
-  $output .= '<table class="system-status-report">';
-  foreach ($results as $result) {
-    $class = ++$i % 2 == 0 ? 'even' : 'odd';
-
-    $classes = array(
-      MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO => 'mediamosa-status-info',
-      MEDIAMOSA_MAINTENANCE_STATUS_RESULT_OK => 'mediamosa-status-ok',
-      MEDIAMOSA_MAINTENANCE_STATUS_RESULT_WARNING => 'mediamosa-status-warning',
-      MEDIAMOSA_MAINTENANCE_STATUS_RESULT_ERROR => 'mediamosa-status-error',
-    );
-    $class = $classes[isset($result['severity']) ? (int) $result['severity'] : 0];// . ' ' . $class;
-
-    // Output table row(s)
-    if (!empty($result['description'])) {
-      $output .= '<tr class="' . $class . ' merge-down"><td>' . $result['title'] . '</td><td>' . $result['value'] . '</td></tr>';
-      $output .= '<tr class="' . $class . ' merge-up"><td colspan="2">' . $result['description'] . '</td></tr>';
-    }
-    else {
-      $output .= '<tr class="' . $class . '"><td>' . $result['title'] . '</td><td>' . $result['value'] . '</td></tr>';
-    }
-  }
-
-  $output .= '</table>';
-  return $output;
 }
 
 /**
@@ -648,7 +600,7 @@ function _mediamosa_maintenance_status_waiting_job($type = NULL) {
  * @param $test boolean
  */
 function _mediamosa_maintenance_status_okwarning($test) {
-  return $test ? MEDIAMOSA_MAINTENANCE_STATUS_RESULT_WARNING : MEDIAMOSA_MAINTENANCE_STATUS_RESULT_OK;
+  return (!empty($test) ? MEDIAMOSA_MAINTENANCE_STATUS_RESULT_WARNING : MEDIAMOSA_MAINTENANCE_STATUS_RESULT_OK);
 }
 
 /**
@@ -657,7 +609,7 @@ function _mediamosa_maintenance_status_okwarning($test) {
  * @param $test boolean
  */
 function _mediamosa_maintenance_status_okerror($test) {
-  return $test ? MEDIAMOSA_MAINTENANCE_STATUS_RESULT_ERROR : MEDIAMOSA_MAINTENANCE_STATUS_RESULT_OK;
+  return (!empty($test) ? MEDIAMOSA_MAINTENANCE_STATUS_RESULT_ERROR : MEDIAMOSA_MAINTENANCE_STATUS_RESULT_OK);
 }
 
 /**

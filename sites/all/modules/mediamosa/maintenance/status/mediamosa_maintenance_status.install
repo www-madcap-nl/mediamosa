@@ -61,3 +61,13 @@ function mediamosa_maintenance_status_update_7001() {
   // Rebuild stuff.
   registry_rebuild();
 }
+
+/**
+ * Added file to module, need cache clear.
+ */
+function mediamosa_maintenance_status_update_7002() {
+  // Rebuild the registry.
+  registry_rebuild();
+  drupal_flush_all_caches();
+  cache_clear_all();
+}

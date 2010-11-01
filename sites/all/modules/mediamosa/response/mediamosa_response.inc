@@ -99,10 +99,10 @@ class mediamosa_response extends mediamosa {
       $this->mediamosa_rest = new mediamosa_rest();
 
       // Find the rest call.
-      $a_rest_call = $this->mediamosa_rest->match_call();
+      $rest_call = $this->mediamosa_rest->match_call();
 
       // If we return here, try to let Drupal handle the output.
-      if (!$a_rest_call) {
+      if (!$rest_call) {
         return;
       }
 
@@ -120,15 +120,15 @@ class mediamosa_response extends mediamosa {
       }
 
       // Make sure response type is set.
-      if (!isset($a_rest_call[mediamosa_rest_call::RESPONSE_TYPE])) {
-        $a_rest_call[mediamosa_rest_call::RESPONSE_TYPE] = mediamosa_rest_call::RESPONSE_TYPE_XML;
+      if (!isset($rest_call[mediamosa_rest_call::RESPONSE_TYPE])) {
+        $rest_call[mediamosa_rest_call::RESPONSE_TYPE] = mediamosa_rest_call::RESPONSE_TYPE_XML;
       }
 
       // Save it.
-      $response_type = $a_rest_call[mediamosa_rest_call::RESPONSE_TYPE];
+      $response_type = $rest_call[mediamosa_rest_call::RESPONSE_TYPE];
 
       // Now execute the call.
-      $this->mediamosa_rest->process_call($a_rest_call);
+      $this->mediamosa_rest->process_call($rest_call);
     }
     catch (mediamosa_exception_redirect_and_exit $e) {
       // Redirect to URI.
@@ -228,15 +228,14 @@ class mediamosa_response extends mediamosa {
      */
     $this->response = array(
       'header' => array(
-      'request_result' => self::SUCCESS,
-      'request_result_id' => mediamosa_error::ERRORCODE_OKAY,
-      'request_result_description' => '',//mediamosa_error::error_code_find_description(mediamosa_error::ERRORCODE_OKAY),
-      'request_uri' => '[' . $this->request_method . '] ' . (mediamosa_unicode::substr($this->request_uri, 0, mediamosa_unicode::strlen('internal')) == 'internal' ? 'Internal MediaMosa call' : $this->request_uri),
-      'item_count' => 0,
-      'version' => mediamosa_version::MEDIAMOSA_VERSION
-    ),
-
-    'items' => array()
+        'request_result' => self::SUCCESS,
+        'request_result_id' => mediamosa_error::ERRORCODE_OKAY,
+        'request_result_description' => '',//mediamosa_error::error_code_find_description(mediamosa_error::ERRORCODE_OKAY),
+        'request_uri' => '[' . $this->request_method . '] ' . (mediamosa_unicode::substr($this->request_uri, 0, mediamosa_unicode::strlen('internal')) == 'internal' ? 'Internal MediaMosa call' : $this->request_uri),
+        'item_count' => 0,
+        'version' =>mediamosa_version::MEDIAMOSA_VERSION,
+      ),
+      'items' => array()
     );
 
     // Reset setting.
@@ -428,54 +427,46 @@ class mediamosa_response extends mediamosa {
     $this->log_event_restcall();
 
     // Create the SimpleXML element.
-    $o_xml_response = new SimpleXMLElement('<?xml version="1.0" encoding="utf-8" ?><response></response>');
+    $xml_response = new SimpleXMLElement('<?xml version="1.0" encoding="utf-8" ?><response></response>');
 
     // Add the header node.
-    $o_xml_response_header = $o_xml_response->addChild('header');
+    $xml_response_header = $xml_response->addChild('header');
 
     // Add Items array.
-    $o_xml_response_items = $o_xml_response->addChild('items');
+    $xml_response_items = $xml_response->addChild('items');
 
     foreach ($this->response['header'] as $key => $value) {
-      if (! is_array($value)) {
-        $o_xml_response_header->addChild($key, htmlspecialchars($value));
-      }
-      else {
-        $o_xml_response_items_item = $o_xml_response_header->addChild($key);
-        foreach ($value as $s_key => $item) {
-          $this->generate_plain_xml_add_child($o_xml_response_items_item, $s_key, $item);
-        }
-      }
+      $this->generate_plain_xml_add_child($xml_response_header, $key, $value);
     }
 
     $item_counter = 0;
 
     if (!empty($this->response['errors'])) {
-      $o_xml_response_errors = $o_xml_response_header->addChild('errors');
+      $xml_response_errors = $xml_response_header->addChild('errors');
 
       foreach ($this->response['errors'] as $key => $error) {
-        $o_xml_response_errors->addChild('error', htmlspecialchars($error));
+        $xml_response_errors->addChild('error', htmlspecialchars($error));
       }
     }
 
     foreach ($this->response['items'] as $item) {
-      $o_xml_response_items_item = $o_xml_response_items->addChild('item');
-      $o_xml_response_items_item->addAttribute('id', ++$item_counter);
+      $xml_response_items_item = $xml_response_items->addChild('item');
+      $xml_response_items_item->addAttribute('id', ++$item_counter);
 
       // Process items with a maximum recursion depth (last parameter).
       //
       foreach ($item as $key => $value) {
-        $this->generate_plain_xml_add_child($o_xml_response_items_item, $key, $value);
+        $this->generate_plain_xml_add_child($xml_response_items_item, $key, $value);
       }
     }
 
-    $o_dom_document = new DOMDocument('1.0', 'UTF-8');
-    $o_dom_document->formatOutput = TRUE;
+    $dom_document = new DOMDocument('1.0', 'UTF-8');
+    $dom_document->formatOutput = TRUE;
 
-    $o_dom_document_node = dom_import_simplexml($o_xml_response);
-    $o_dom_document_node = $o_dom_document->importNode($o_dom_document_node, TRUE);
-    $o_dom_document->appendChild($o_dom_document_node);
-    return $o_dom_document->saveXML();
+    $dom_document_node = dom_import_simplexml($xml_response);
+    $dom_document_node = $dom_document->importNode($dom_document_node, TRUE);
+    $dom_document->appendChild($dom_document_node);
+    return $dom_document->saveXML();
   }
 
   /**
@@ -493,7 +484,19 @@ class mediamosa_response extends mediamosa {
     }
 
     if (!is_array($mixed_value)) {
-      return $item->addChild($key, htmlspecialchars($mixed_value));
+      $item_child = $item->addChild($key, htmlspecialchars($mixed_value));
+
+      if ($key[0] == '#') {
+        $attributes = @unserialize(mediamosa_unicode::substr($key, 1));
+        if (is_array($attributes)) {
+          foreach ($attributes as $attr_name => $attr_value) {
+            assert(count($attr_name));
+            $item_child->addAttribute($attr_name, $attr_value);
+          }
+        }
+      }
+
+      return $item_child;
     }
 
     $first_key = key($mixed_value);
@@ -510,9 +513,9 @@ class mediamosa_response extends mediamosa {
         $item_child = $this->generate_plain_xml_add_child($item, $key, $value, $max_depth);
 
         if ($mixed_key != '#0') {
-          $a_attributes = @unserialize(mediamosa_unicode::substr($mixed_key, 1));
-          if (is_array($a_attributes)) {
-            foreach ($a_attributes as $attr_name => $attr_value) {
+          $attributes = @unserialize(mediamosa_unicode::substr($mixed_key, 1));
+          if (is_array($attributes)) {
+            foreach ($attributes as $attr_name => $attr_value) {
               assert(count($attr_name));
               $item_child->addAttribute($attr_name, $attr_value);
             }

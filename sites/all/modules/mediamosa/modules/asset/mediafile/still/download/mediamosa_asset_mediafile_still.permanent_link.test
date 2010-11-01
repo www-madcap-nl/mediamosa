@@ -36,7 +36,7 @@ class MediaMosaStillPermanentLinkTestCaseEgaJob extends MediaMosaTestCaseEgaJob 
   // ------------------------------------------------------------------ Functions.
   public static function getInfo() {
     return array(
-      'name' => 'Permanent still link',
+      'name' => 'Still - Permanent still link',
       'description' => 'Permanent still link in case of no ACL rule on the asset.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STILL,
     );

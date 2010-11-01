@@ -1208,8 +1208,7 @@ function mediamosa_update_7062() {
 }
 
 /*
- * Rename mediamosa_dblog table to mediamosa_watchdog in case someone had the
- * old version installed.
+ * Rename mediamosa_dblog table to mediamosa_watchdog in case someone had the old version installed.
  */
 function mediamosa_update_7063() {
   try {
@@ -1222,7 +1221,6 @@ function mediamosa_update_7063() {
 
   // Rebuild the registry.
   registry_rebuild();
-
   cache_clear_all();
 }
 
@@ -1245,14 +1243,9 @@ function mediamosa_update_7066() {
 }
 
 /**
- * New error: ERRORCODE_INVALID_STILL_PERMANENT.
+ * This update has been removed.
  */
 function mediamosa_update_7067() {
-  db_query('INSERT INTO {mediamosa_error} (name, code, message) VALUES (:name, :code, :message)', array(
-    ':name' => 'ERRORCODE_INVALID_STILL_PERMANENT',
-    ':code' => mediamosa_error::ERRORCODE_INVALID_STILL_PERMANENT,
-    ':message' => 'Invalid permanent still with ID \'@still_id\'',
-  ));
 }
 
 /**
@@ -1348,6 +1341,15 @@ function mediamosa_update_7069() {
 function mediamosa_update_7070() {
   // Install mediamosa_statistics_job table.
   mediamosa::drupal_install_schema(mediamosa_statistics_job_db::TABLE_NAME);
+}
+
+/**
+ * Removing error: ERRORCODE_INVALID_STILL_PERMANENT
+ */
+function mediamosa_update_7071() {
+  db_query('DELETE FROM {mediamosa_error} WHERE name = :name', array(
+    ':name' => 'ERRORCODE_INVALID_STILL_PERMANENT',
+  ));
 }
 
 // TODO: Remove old code from the repository on the next release: sites/all/modules/mediamosa/core/transcode/mapping.

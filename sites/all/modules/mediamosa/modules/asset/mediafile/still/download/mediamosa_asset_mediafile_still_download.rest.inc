@@ -32,6 +32,7 @@
 /**
  * URI: /still/$mediafile_id (perm. link)
  * URI: /still/ticket/$ticket_id (normal temp. link).
+ * URI: /still/[1stletter $mediafile_id]/$mediafile_id (missing perm. link).
  * Method: GET / POST
  *
  * replacement for still/index.php.
@@ -142,10 +143,20 @@ class mediamosa_rest_call_download_mediafile_still extends mediamosa_rest_call {
         $target = mediamosa_configuration_storage::mount_point_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::still_location_get() . DIRECTORY_SEPARATOR . mediamosa_configuration_storage::objectid_to_location($still_id);
 
         // Create the symlink ticket.
-        if (!is_file($target) || !mediamosa_io::symlink($target, $file)) {
-          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_UNABLE_TO_CREATE_SYMLINK, array('@location' => $target));
+        if (!is_file($target)) {
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_FILE_NOT_FOUND, array('@filename' => $target));
+        }
+
+        if (!mediamosa_io::symlink($target, $file)) {
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_UNABLE_TO_CREATE_SYMLINK);
         }
       }
+    }
+
+    $handle = fopen($file, 'rb');
+
+    if (!$handle) {
+      throw new mediamosa_exception(mediamosa_error::HTTP_FORBIDDEN, 'Unable to open file!');
     }
 
     // Set headers.
@@ -154,12 +165,6 @@ class mediamosa_rest_call_download_mediafile_still extends mediamosa_rest_call {
     // Make sure we send the header now.
     ob_clean();
     flush();
-
-    $handle = fopen($file, 'rb');
-
-    if (!$handle) {
-      throw new mediamosa_exception(mediamosa_error::HTTP_FORBIDDEN, 'Unable to open file!');
-    }
 
     // Until end of file, get the file and output.
     while (!feof($handle)) {
