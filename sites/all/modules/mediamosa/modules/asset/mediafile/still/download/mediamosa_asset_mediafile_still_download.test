@@ -105,7 +105,7 @@ class MediaMosaAssetMediafileStillDownloadTestCase extends MediaMosaTestCaseEgaJ
       $this->var_export($still_link, 'still path');
 
       // Does it exists?
-      $this->assertTrue(mediamosa_io::file_exists($still_link), 'Found still file.');
+      $this->assertTrue(mediamosa_io::file_exists($still_link, TRUE), 'Found still file.');
 
       // Get the still filesize.
       $still_size = mediamosa_io::filesize($still_link);

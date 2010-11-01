@@ -150,12 +150,17 @@ function mediamosa_maintenance_status_theme() {
  * Implements hook_cron().
  */
 function mediamosa_maintenance_status_cron() {
-  $last_time = variable_get('mediamosa_status_last_time', 0);
+  try {
+    $last_time = variable_get('mediamosa_status_last_time', 0);
 
-  if ($last_time < time() - mediamosa_settings::MAINTENANCE_STATUS_CRON_TIME) {
-    variable_set('mediamosa_status_last_time', time());
-    // Check run-time requirements and status information.
-    module_invoke_all('mediamosa_status_generate');
+    if ($last_time < time() - mediamosa_settings::MAINTENANCE_STATUS_CRON_TIME) {
+      variable_set('mediamosa_status_last_time', time());
+      // Check run-time requirements and status information.
+      module_invoke_all('mediamosa_status_generate');
+    }
+  }
+  catch (Exception $e) {
+    mediamosa_watchdog::log('Catch exception during cron: mediamosa_maintenance_status_cron(): @msg', array('@msg' => $e->getMessage()));
   }
 }
 

@@ -31,21 +31,26 @@
  */
 function mediamosa_statistics_cron() {
 
-  $last_run = variable_get('mediamosa_statistics_cron_last_run', 0);
+  try {
+    $last_run = variable_get('mediamosa_statistics_cron_last_run', 0);
 
-  $now = time();
-  $hour24 = date("G", $now);    // 24-hour format of an hour without leading zeros (0 through 23).
-  $month = date("n", $now);      // Numeric representation of a month, without leading zeros (1 through 12).
-  $year = date("Y", $now);       // A full numeric representation of a year, 4 digits.
+    $now = time();
+    $hour24 = date("G", $now);    // 24-hour format of an hour without leading zeros (0 through 23).
+    $month = date("n", $now);      // Numeric representation of a month, without leading zeros (1 through 12).
+    $year = date("Y", $now);       // A full numeric representation of a year, 4 digits.
 
-  // Only between 01:00 and 06:00 and more than 12 hours ago.
-  if (($hour24 >= 1 && $hour24 < 6) && ($last_run < ($now - (12 * 3600)))) {
+    // Only between 01:00 and 06:00 and more than 12 hours ago.
+    if (($hour24 >= 1 && $hour24 < 6) && ($last_run < ($now - (12 * 3600)))) {
 
-    // Set last run variable to immediately lock out successive
-    // attempts (including those due to this run taking longer
-    // than the cron interval).
-    variable_set('mediamosa_statistics_cron_last_run', $now);
-    mediamosa_statistics::calculate_used_diskspace($year, $month);
+      // Set last run variable to immediately lock out successive
+      // attempts (including those due to this run taking longer
+      // than the cron interval).
+      variable_set('mediamosa_statistics_cron_last_run', $now);
+      mediamosa_statistics::calculate_used_diskspace($year, $month);
+    }
+  }
+  catch (Exception $e) {
+    mediamosa_watchdog::log('Catch exception during cron: mediamosa_statistics_cron(): @msg', array('@msg' => $e->getMessage()));
   }
 }
 

@@ -34,24 +34,29 @@
  */
 function mediamosa_job_cron() {
 
-  // If we are in simpletest, this cron will generate problems because its
-  // triggered during install and we are still not finished.
-  if (mediamosa::in_simpletest_sandbox()) {
-    return;
+  try {
+    // If we are in simpletest, this cron will generate problems because its
+    // triggered during install and we are still not finished.
+    if (mediamosa::in_simpletest_sandbox()) {
+      return;
+    }
+
+
+    $start = time();
+    mediamosa_debug::log('mediamosa_job_cron started.', array(), 'job_cron');
+
+    // Trigger process servers.
+    mediamosa_server::trigger();
+
+    // Trigger job scheduler.
+    mediamosa_job_scheduler::trigger();
+
+    // Log it.
+    mediamosa_debug::log('mediamosa_job_cron ended: @secs', array('@sec' => time() - $start), 'job_cron');
   }
-
-
-  $start = time();
-  mediamosa_debug::log('mediamosa_job_cron started.', array(), 'job_cron');
-
-  // Trigger process servers.
-  mediamosa_server::trigger();
-
-  // Trigger job scheduler.
-  mediamosa_job_scheduler::trigger();
-
-  // Log it.
-  mediamosa_debug::log('mediamosa_job_cron ended: @secs', array('@sec' => time() - $start), 'job_cron');
+  catch (Exception $e) {
+    mediamosa_watchdog::log('Catch exception during cron: mediamosa_job_cron(): @msg', array('@msg' => $e->getMessage()));
+  }
 }
 
 /**

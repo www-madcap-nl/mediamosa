@@ -106,7 +106,7 @@ class MediaMosaStillBlackStillTestCaseEgaJob extends MediaMosaTestCaseEgaJob {
 
     // Check filename.
     $this->assertTrue($filename_still, strtr('Got generated still filename: @filename', array('@filename' => $filename_still)));
-    $this->assertTrue(mediamosa_io::file_exists($filename_still), t('Found the generated still.'));
+    $this->assertTrue(mediamosa_io::file_exists($filename_still, TRUE), t('Found the generated still.'));
 
     // Check the image
     $im = imagecreatefromjpeg($filename_still);

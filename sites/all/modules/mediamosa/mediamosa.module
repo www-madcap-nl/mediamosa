@@ -508,17 +508,22 @@ function mediamosa_query_alter(QueryAlterableInterface $query) {
  */
 function mediamosa_cron() {
 
-  /*
-   * Clean up our extra data on watchdog entries in mediamosa_watchdog.
-   */
-  $query = mediamosa_db::db_select('watchdog', 'w')
-    ->fields('w', array('wid'))
-    ->orderBy('wid', 'ASC')
-    ->range(0, 1);
-  $result = $query->execute();
-  $lowest_wid = $result->fetchField();
+  try {
+    /*
+     * Clean up our extra data on watchdog entries in mediamosa_watchdog.
+     */
+    $query = mediamosa_db::db_select('watchdog', 'w')
+      ->fields('w', array('wid'))
+      ->orderBy('wid', 'ASC')
+      ->range(0, 1);
+    $result = $query->execute();
+    $lowest_wid = $result->fetchField();
 
-  mediamosa_db::db_delete(mediamosa_watchdog_db::TABLE_NAME)
-    ->condition('wid', $lowest_wid, '<')
-    ->execute();
+    mediamosa_db::db_delete(mediamosa_watchdog_db::TABLE_NAME)
+      ->condition('wid', $lowest_wid, '<')
+      ->execute();
+  }
+  catch (Exception $e) {
+    mediamosa_watchdog::log('Catch exception during cron: mediamosa_cron(): @msg', array('@msg' => $e->getMessage()));
+  }
 }

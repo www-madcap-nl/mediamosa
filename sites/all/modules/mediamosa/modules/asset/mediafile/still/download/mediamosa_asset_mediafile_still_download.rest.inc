@@ -179,10 +179,6 @@ class mediamosa_rest_call_download_mediafile_still extends mediamosa_rest_call {
     // Close the file.
     fclose($handle);
 
-    if ($ticket_id) {
-      mediamosa_io::unlink($file);
-    }
-
     // Set the result, reponse object will know what to do.
     $mediamosa->set_result(mediamosa_response::SUCCESS, 200, $file);
   }

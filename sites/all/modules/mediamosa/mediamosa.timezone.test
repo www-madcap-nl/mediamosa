@@ -35,7 +35,7 @@ class MediaMosaTimezoneTestCaseEga extends MediaMosaTestCaseEga {
   // ------------------------------------------------------------------ Functions.
   public static function getInfo() {
     return array(
-      'name' => 'MediaMosa - timezone UTC dates',
+      'name' => 'MediaMosa - Timezone UTC dates',
       'description' => 'Test if our REST calls correctly convert to UTC and to App timezones.',
       'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE,
     );

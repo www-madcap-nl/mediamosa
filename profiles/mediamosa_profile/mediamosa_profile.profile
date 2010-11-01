@@ -442,33 +442,33 @@ function mediamosa_profile_storage_location_form_submit($form, &$form_state) {
 
   // Inside the storage location, create a MediaMosa storage structure.
   // data.
-  _mediamosa_profile_mkdir($values['current_mount_point'] . '/data');
+  _mediamosa_profile_mkdir($values['current_mount_point'], '/data');
   for ($i = 0; $i <= 9; $i++) {
-    _mediamosa_profile_mkdir($values['current_mount_point'] . '/data/' . $i);
+    _mediamosa_profile_mkdir($values['current_mount_point'], '/data/' . $i);
   }
   for ($i = ord('a'); $i <= ord('z'); $i++) {
-    _mediamosa_profile_mkdir($values['current_mount_point'] . '/data/' . chr($i));
+    _mediamosa_profile_mkdir($values['current_mount_point'], '/data/' . chr($i));
   }
   for ($i = ord('A'); $i <= ord('Z'); $i++) {
-    _mediamosa_profile_mkdir($values['current_mount_point'] . '/data/' . chr($i));
+    _mediamosa_profile_mkdir($values['current_mount_point'], '/data/' . chr($i));
   }
   // data/stills.
-  _mediamosa_profile_mkdir($values['current_mount_point'] . '/data/stills');
+  _mediamosa_profile_mkdir($values['current_mount_point'], '/data/stills');
   for ($i = 0; $i <= 9; $i++) {
-    _mediamosa_profile_mkdir($values['current_mount_point'] . '/data/stills/' . $i);
+    _mediamosa_profile_mkdir($values['current_mount_point'], '/data/stills/' . $i);
   }
   for ($i = ord('a'); $i <= ord('z'); $i++) {
-    _mediamosa_profile_mkdir($values['current_mount_point'] . '/data/stills/' . chr($i));
+    _mediamosa_profile_mkdir($values['current_mount_point'], '/data/stills/' . chr($i));
   }
   for ($i = ord('A'); $i <= ord('Z'); $i++) {
-    _mediamosa_profile_mkdir($values['current_mount_point'] . '/data/stills/' . chr($i));
+    _mediamosa_profile_mkdir($values['current_mount_point'], '/data/stills/' . chr($i));
   }
   // Other.
-  _mediamosa_profile_mkdir($values['current_mount_point'] . '/data/transcode');
-  _mediamosa_profile_mkdir($values['current_mount_point'] . '/links');
-  _mediamosa_profile_mkdir($values['current_mount_point'] . '/download_links');
-  _mediamosa_profile_mkdir($values['current_mount_point'] . '/still_links');
-  _mediamosa_profile_mkdir($values['current_mount_point'] . '/ftp');
+  _mediamosa_profile_mkdir($values['current_mount_point'], '/data/transcode');
+  _mediamosa_profile_mkdir($values['current_mount_point'], '/links');
+  _mediamosa_profile_mkdir($values['current_mount_point'], '/download_links');
+  _mediamosa_profile_mkdir($values['current_mount_point'], '/still_links');
+  _mediamosa_profile_mkdir($values['current_mount_point'], '/ftp');
 }
 
 /**
@@ -870,7 +870,7 @@ function mediamosa_profile_apache_settings_form_submit($form, &$form_state) {
   }
   else {
     variable_set('mediamosa_jobscheduler_uri', 'http://job1.mediamosa.local');
-    variable_set('mediamosa_cron_url_app', 'http://app.mediamosa.local');
+    variable_set('mediamosa_cron_url_app', 'http://app1.mediamosa.local');
   }
 }
 
@@ -988,9 +988,21 @@ function mediamosa_profile_domain_usage_form() {
  * Check if the directory is exist, before makes it.
  * @param string $check_dir Directory to check.
  */
-function _mediamosa_profile_mkdir($check_dir) {
-  if (!is_dir($check_dir)) {
-    mkdir($check_dir);
+function _mediamosa_profile_mkdir($mountpoint, $check_dir) {
+  if (!file_exists($mountpoint . $check_dir)) {
+    mkdir($mountpoint . $check_dir);
+  }
+
+  // Make sure its a directory.
+  assert(is_dir($mountpoint . $check_dir));
+
+  if (!file_exists($mountpoint . '/data/simpletest')) {
+    mkdir($mountpoint . '/data/simpletest');
+  }
+
+  // Simpletest version.
+  if (!file_exists($mountpoint . '/data/simpletest' . $check_dir)) {
+    mkdir($mountpoint . '/data/simpletest' . $check_dir);
   }
 }
 

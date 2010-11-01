@@ -474,7 +474,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
    */
   protected function copy($source, $dest) {
     $this->assertTrue(
-      mediamosa_io::file_exists($source),
+      mediamosa_io::file_exists($source, TRUE),
       t("Copy: Source file '@source' exists.", array('@source' => $source))
     );
 
@@ -485,7 +485,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     );
 
     $this->assertTrue(
-      mediamosa_io::file_exists($dest),
+      mediamosa_io::file_exists($dest, TRUE),
       t("Copy: New file '@target' exists.", array('@target' => $dest))
     );
   }
@@ -504,7 +504,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     );
 
     $this->assertTrue(
-      mediamosa_io::file_exists($dest),
+      mediamosa_io::file_exists($dest, TRUE),
       t("Symlink: New file '@target' exists.", array('@target' => $dest))
     );
 
@@ -524,7 +524,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     );
 
     $this->assertTrue(
-      mediamosa_io::file_exists($dest) == FALSE,
+      mediamosa_io::file_exists($dest, TRUE) == FALSE,
       t("Unlink: File '@target' is removed.", array('@target' => $dest))
     );
   }

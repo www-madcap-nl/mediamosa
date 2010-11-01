@@ -181,12 +181,14 @@ class mediamosa_io {
    *
    * @param string $filename
    */
-  static public function file_exists($filename) {
+  static public function file_exists($filename, $do_sleep = FALSE) {
     // File exists needs clear cache.
     self::clearstatcache();
 
     // Sleep, so file_exists may read non-cache.
-    sleep(2);
+    if ($do_sleep) {
+      sleep(2);
+    }
 
     // Test it.
     return file_exists($filename);

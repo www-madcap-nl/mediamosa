@@ -254,7 +254,7 @@ class mediamosa_job_scheduler {
       // Get current status.
       $a_job = mediamosa_job::get($response_data->items->item[$i]->job_id);
 
-      $a_fields = array(
+      $fields = array(
         mediamosa_job_db::JOB_STATUS => $response_data->items->item[$i]->status,
         mediamosa_job_db::PROGRESS => $response_data->items->item[$i]->progress,
         mediamosa_job_db::ERROR_DESCRIPTION => $response_data->items->item[$i]->error_description,
@@ -262,20 +262,20 @@ class mediamosa_job_scheduler {
 
       // Add started time.
       if ($response_data->items->item[$i]->started != '') {
-        $a_fields[mediamosa_job_db::STARTED] = $response_data->items->item[$i]->started;
+        $fields[mediamosa_job_db::STARTED] = $response_data->items->item[$i]->started;
       }
 
       // Add finished time.
       if ($response_data->items->item[$i]->finished != '') {
-        $a_fields[mediamosa_job_db::FINISHED] = $response_data->items->item[$i]->finished;
+        $fields[mediamosa_job_db::FINISHED] = $response_data->items->item[$i]->finished;
       }
 
       // Add changed.
-      $a_fields = mediamosa_db::db_update_enrich($a_fields);
+      $fields = mediamosa_db::db_update_enrich($fields);
 
       // Update.
       mediamosa_db::db_update(mediamosa_job_db::TABLE_NAME)
-        ->fields($a_fields)
+        ->fields($fields)
         ->condition(mediamosa_job_db::ID, $response_data->items->item[$i]->job_id)
         ->execute();
 
@@ -445,7 +445,7 @@ class mediamosa_job_scheduler {
       ->execute();
 
     // Now create the transcode job.
-    $a_fields = array(
+    $fields = array(
       mediamosa_job_transcode_db::JOB_ID => $job_id_new,
       mediamosa_job_transcode_db::TOOL => mediamosa_job::JOBWINDOWS_TOOL,
       mediamosa_job_transcode_db::COMMAND => $command . ';internal_previous_job:' . $job_id,
@@ -453,18 +453,12 @@ class mediamosa_job_scheduler {
     );
 
     // Add changed/created values.
-    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+    $fields = mediamosa_db::db_insert_enrich($fields);
 
     // Insert it.
     mediamosa_db::db_insert(mediamosa_job_transcode_db::TABLE_NAME)
-      ->fields($a_fields)
+      ->fields($fields)
       ->execute();
-
-    // Create sub transcode job.
-    //mediamosa_job_transcode::create($app_id, $job_id_new, 'wmv', $command . ';internal_previous_job:' . $job_id, mediamosa_job::JOBWINDOWS_TOOL, '', '', $mediafile_id);
-
-    // old call.
-    //mediamosa_job::create_job_transcode($app_id, $owner, '', FALSE, $mediafile_id, FALSE, array(), 'wmv', $command, mediamosa_job::JOBWINDOWS_TOOL, '', '', -1, $params_job);
   }
 
   /**
@@ -519,7 +513,7 @@ class mediamosa_job_scheduler {
         // NOTE should *not* be converted to api call: the API sets
         // ownership, and we do not want this intermediate result to
         // influence quota &c.
-        $a_fields = array(
+        $fields = array(
           mediamosa_asset_mediafile_db::ID => $mediafile_id_dest,
           mediamosa_asset_mediafile_db::ASSET_ID => $job_info['asset_id'],
           mediamosa_asset_mediafile_db::FILENAME => $job_info["filename"],
@@ -529,11 +523,11 @@ class mediamosa_job_scheduler {
         );
 
         // Add created.
-        $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+        $fields = mediamosa_db::db_insert_enrich($fields);
 
         // Create.
         mediamosa_db::db_insert(mediamosa_asset_mediafile_db::TABLE_NAME)
-          ->fields($a_fields)
+          ->fields($fields)
           ->execute();
 
         // Add job for schedular.
@@ -563,7 +557,7 @@ class mediamosa_job_scheduler {
     $a_asset = mediamosa_asset::get($job_info['asset_id']);
     assert(!empty($a_asset));
 
-    $a_fields = array(
+    $fields = array(
       mediamosa_asset_mediafile_db::ID => $mediafile_id_dest,
       mediamosa_asset_mediafile_db::ASSET_ID => $job_info['asset_id'],
       mediamosa_asset_mediafile_db::FILENAME => $job_info['filename'],
@@ -579,11 +573,11 @@ class mediamosa_job_scheduler {
     );
 
     // Add created/changed.
-    $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+    $fields = mediamosa_db::db_insert_enrich($fields);
 
     // Insert.
     mediamosa_db::db_insert(mediamosa_asset_mediafile_db::TABLE_NAME)
-      ->fields($a_fields)
+      ->fields($fields)
       ->execute();
 
     // Get mediafile.
@@ -594,11 +588,11 @@ class mediamosa_job_scheduler {
     }
 
     // Analyse the mediafile.
-    $a_analyse_result = mediamosa_asset_mediafile::analyse($job_info["app_id"], (string)$mediafile_id_dest);
-    assert(is_array($a_analyse_result));
+    $analyse_result = mediamosa_asset_mediafile::analyse($job_info["app_id"], (string)$mediafile_id_dest);
+    assert(is_array($analyse_result));
 
     // Store it.
-    mediamosa_asset_mediafile_metadata::store_analyse_without_job($job_id, $a_analyse_result, (string)$mediafile_id_dest);
+    mediamosa_asset_mediafile_metadata::store_analyse_without_job($job_id, $analyse_result, (string)$mediafile_id_dest);
   }
 
   /**
@@ -808,17 +802,17 @@ class mediamosa_job_scheduler {
         // Check if job still exists
         // to be 100%, we might have to lock table ?
         if (mediamosa_db::db_exists(mediamosa_job_db::TABLE_NAME, array(mediamosa_job_db::ID => $job_id))) {
-          $a_fields = array(
+          $fields = array(
             mediamosa_server_job_db::SERVER_ID => $server_id,
             mediamosa_server_job_db::JOB_ID => $job_id,
           );
 
           // Add created/changed.
-          $a_fields = mediamosa_db::db_insert_enrich($a_fields);
+          $fields = mediamosa_db::db_insert_enrich($fields);
 
           // Insert.
           mediamosa_db::db_insert(mediamosa_server_job_db::TABLE_NAME)
-            ->fields($a_fields)
+            ->fields($fields)
             ->execute();
 
           self::log_mediafile($mediafile_id, 'Sending @job_type (ID: @job_id) to server @uri.', array('@job_type' => $job_type, '@job_id' => $job_id, '@uri' => $uri));

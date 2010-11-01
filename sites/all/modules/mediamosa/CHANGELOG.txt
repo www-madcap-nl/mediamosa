@@ -56,6 +56,11 @@ Other changes (not ticket related).
   the status generation updates from that point on.
 - Extended still and media download unittests with extra checks for download
   size vs actualy file size.
+- Still tickets are no longer removed once the image was served. Still tickets
+  will be removed after # of minutes depending on the setting 
+  TICKET_EXPIRATION_STILL in mediamosa.settings.inc.
+- Added try/catch around crons.
+
 
 MediaMosa 2.2.5.3 (Build 956)
 ---------------------------

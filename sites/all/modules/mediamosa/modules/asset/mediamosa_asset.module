@@ -33,22 +33,27 @@
  * Implements hook_cron().
  */
 function mediamosa_asset_cron() {
-  $start = time();
-  mediamosa_debug::log('mediamosa_asset_cron started.', array(), 'asset_cron');
+  try {
+    $start = time();
+    mediamosa_debug::log('mediamosa_asset_cron started.', array(), 'asset_cron');
 
-  $run_last = variable_get('mediamosa_asset_cron_last', NULL);
+    $run_last = variable_get('mediamosa_asset_cron_last', NULL);
 
-  // may run?
-  if (round(REQUEST_TIME - $run_last) >= mediamosa_settings::ASSET_GARBAGE_COLLECTOR_CRON_INTERVAL) {
-    // For the next time...
-    variable_set('mediamosa_asset_cron_last', REQUEST_TIME);
+    // may run?
+    if (round(REQUEST_TIME - $run_last) >= mediamosa_settings::ASSET_GARBAGE_COLLECTOR_CRON_INTERVAL) {
+      // For the next time...
+      variable_set('mediamosa_asset_cron_last', REQUEST_TIME);
 
-    // Do garbage cleanup.
-    mediamosa_asset::do_garbage_cleanup();
+      // Do garbage cleanup.
+      mediamosa_asset::do_garbage_cleanup();
+    }
+
+    // Log it.
+    mediamosa_debug::log('mediamosa_asset_cron ended: @secs', array('@sec' => time() - $start), 'asset_cron');
   }
-
-  // Log it.
-  mediamosa_debug::log('mediamosa_asset_cron ended: @secs', array('@sec' => time() - $start), 'asset_cron');
+  catch (Exception $e) {
+    mediamosa_watchdog::log('Catch exception during cron: mediamosa_asset_cron(): @msg', array('@msg' => $e->getMessage()));
+  }
 }
 
 /**

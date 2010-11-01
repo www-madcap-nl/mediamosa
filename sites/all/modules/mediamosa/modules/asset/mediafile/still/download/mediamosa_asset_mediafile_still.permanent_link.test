@@ -142,10 +142,9 @@ class MediaMosaStillPermanentLinkTestCaseEgaJob extends MediaMosaTestCaseEgaJob 
 
     // Check response second time.
     $this->assertTrue(
-      $result->code == 404,
-      t("Download the test image second time from '@url' (code = @code)", array('@url' => $still_url, '@code' => $result->code))
+      $result->code == 200,
+      t("Download the test image second time from '@url' (code = @code), ticket url must still be there.", array('@url' => $still_url, '@code' => $result->code))
     );
-
 
     // Permanent still url without protection.
 

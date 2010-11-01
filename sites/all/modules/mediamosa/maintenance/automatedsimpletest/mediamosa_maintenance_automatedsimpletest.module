@@ -144,18 +144,23 @@ function mediamosa_maintenance_automatedsimpletest_help($path, $arg) {
 }
 
 /**
- * Trigger page.
+ * Implements hook_cron().
  */
 function mediamosa_maintenance_automatedsimpletest_cron() {
 
-  $start = time();
-  mediamosa_maintenance_automatedsimpletest::log_debug('mediamosa_maintenance_automatedsimpletest_cron started.');
+  try {
+    $start = time();
+    mediamosa_maintenance_automatedsimpletest::log_debug('mediamosa_maintenance_automatedsimpletest_cron started.');
 
-  // Trigger unittest run.
-  mediamosa_maintenance_automatedsimpletest::trigger_simpletests();
+    // Trigger unittest run.
+    mediamosa_maintenance_automatedsimpletest::trigger_simpletests();
 
-  // Log it.
-  mediamosa_maintenance_automatedsimpletest::log_debug('mediamosa_maintenance_automatedsimpletest_cron ended: @secs', array('@sec' => time() - $start));
+    // Log it.
+    mediamosa_maintenance_automatedsimpletest::log_debug('mediamosa_maintenance_automatedsimpletest_cron ended: @secs', array('@sec' => time() - $start));
+  }
+  catch (Exception $e) {
+    mediamosa_watchdog::log('Catch exception during cron: mediamosa_maintenance_automatedsimpletest_cron(): @msg', array('@msg' => $e->getMessage()));
+  }
 }
 
 function mediamosa_maintenance_automatedsimpletest_mediamosa_register_rest_call_doc() {

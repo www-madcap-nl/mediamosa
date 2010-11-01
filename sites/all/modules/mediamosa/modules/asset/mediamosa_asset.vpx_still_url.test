@@ -53,12 +53,12 @@ class MediaMosaAssetVpxStillUrlTestCaseEga extends MediaMosaTestCaseEgaJob {
     $mediafile_id_2 = $this->createMediafile($asset_id);
 
     // Get the asset.
-    $a_asset = $this->getAsset($asset_id);
-    //$this->var_export($a_asset);
+    $asset = $this->getAsset($asset_id);
+    $this->var_export($asset);
 
     // Check the result.
     $this->assertFalse(
-      isset($a_asset['vpx_still_url']) && $a_asset['vpx_still_url'],
+      isset($asset['vpx_still_url']) && $asset['vpx_still_url'],
       t('There is no vpx_still_url')
     );
 
@@ -75,14 +75,13 @@ class MediaMosaAssetVpxStillUrlTestCaseEga extends MediaMosaTestCaseEgaJob {
 
 
     // Get the asset.
-    $a_asset = $this->getAsset($asset_id);
-    //$this->var_export($a_asset);
+    $asset = $this->getAsset($asset_id);
+    $this->var_export($asset);
 
     // Check the result.
     $this->assertTrue(
-      isset($a_asset['vpx_still_url']) && $a_asset['vpx_still_url'],
+      isset($asset['vpx_still_url']) && $asset['vpx_still_url'],
       t('There is vpx_still_url')
     );
-
   }
 }
