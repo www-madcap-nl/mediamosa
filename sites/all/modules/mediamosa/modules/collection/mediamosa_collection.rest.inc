@@ -720,9 +720,11 @@ class mediamosa_rest_call_collection_update extends mediamosa_rest_call {
         ),
         self::ISPRIVATE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_DESCRIPTION => '',
         ),
         self::PUBLIC_ASSIGN => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_DESCRIPTION => '',
         ),
         self::IS_UNAPPROPRIATE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
@@ -762,6 +764,7 @@ class mediamosa_rest_call_collection_update extends mediamosa_rest_call {
     mediamosa_aut::owner_check($app_id, $user_id, $collection[mediamosa_collection_db::APP_ID], $collection[mediamosa_collection_db::OWNER_ID], $is_app_admin);
 
     // Optionals.
+    $owner_id = $this->get_param_value(self::OWNER_ID);
     $title = $this->get_param_value(self::TITLE);
     $description = $this->get_param_value(self::DESCRIPTION);
     $group_id = $this->get_param_value(self::GROUP_ID);
@@ -773,7 +776,7 @@ class mediamosa_rest_call_collection_update extends mediamosa_rest_call {
     $is_unappropriate = $this->get_param_value(self::IS_UNAPPROPRIATE);
 
     // Now update the collection.
-    if (!mediamosa_collection::update($coll_id, $user_id, $title, $description, $group_id, $private, $public, $category, $isprivate, $public_assign, $is_unappropriate)) {
+    if (!mediamosa_collection::update($coll_id, $owner_id, $title, $description, $group_id, $private, $public, $category, $isprivate, $public_assign, $is_unappropriate)) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_NO_CHANGES);
     }
 
