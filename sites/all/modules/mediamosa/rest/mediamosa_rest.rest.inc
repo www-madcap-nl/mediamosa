@@ -36,29 +36,29 @@
 class mediamosa_rest_call_list extends mediamosa_rest_call {
 
   public function get_var_setup() {
-    $a_var_setup = array(
+    $var_setup = array(
       mediamosa_rest_call::VARS => array(),
     );
 
     // Enrich with default REST vars limit / offset.
-    $a_var_setup = self::get_var_setup_range($a_var_setup);
+    $var_setup = self::get_var_setup_range($var_setup);
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup, FALSE);
+    return self::get_var_setup_default($var_setup, FALSE);
   }
 
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     $limit = $this->get_param_value(mediamosa_rest_call::LIMIT);
     $offset = $this->get_param_value(mediamosa_rest_call::OFFSET);
 
     // Get all rest calls.
-    $a_calls = mediamosa_rest::get_rest_calls($limit, $offset);
+    $calls = mediamosa_rest::get_rest_calls($limit, $offset);
 
-    foreach ($a_calls as $a_call_2) { // Method
-      foreach ($a_call_2 as $a_call) { // Uri
-        $o_mediamosa->add_item($a_call);
+    foreach ($calls as $call_method) { // Method
+      foreach ($call_method as $call_uri) { // Uri
+        $mediamosa->add_item($call_uri);
       }
     }
   }
@@ -71,50 +71,50 @@ class mediamosa_rest_call_list extends mediamosa_rest_call {
 class mediamosa_rest_call_get extends mediamosa_rest_call {
 
   public function get_var_setup() {
-    $a_var_setup = array();
+    $var_setup = array();
 
-    $a_var_setup[mediamosa_rest_call::VARS][mediamosa_rest_call::ID] = array(
+    $var_setup[mediamosa_rest_call::VARS][mediamosa_rest_call::ID] = array(
       mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_SERIAL,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => mediamosa::t('The numeric ID of the REST call.'),
     );
 
     // Enrich with required REST vars.
-    return self::get_var_setup_default($a_var_setup, FALSE);
+    return self::get_var_setup_default($var_setup, FALSE);
   }
 
   public function do_call() {
-    $o_mediamosa = mediamosa::get();
+    $mediamosa = mediamosa::get();
 
     // Get URI.
     $uri_id = $this->get_param_value(mediamosa_rest_call::ID);
 
     // Get all rest calls.
-    $a_calls = mediamosa_rest::get_rest_calls(0, 0, mediamosa_rest_call::ID, NULL);
+    $rest_calls = mediamosa_rest::get_rest_calls(0, 0, mediamosa_rest_call::ID, NULL);
 
-    if (!isset($a_calls[$uri_id])) {
+    if (!isset($rest_calls[$uri_id])) {
       throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_REST_NOT_FOUND, array('@uri_id' => $uri_id));
     }
 
     // Create class from it.
-    $o_rest_call = new $a_calls[$uri_id][mediamosa_rest_call::CLASS_NAME]($a_calls[$uri_id]);
+    $rest_call = new $rest_calls[$uri_id][mediamosa_rest_call::CLASS_NAME]($rest_calls[$uri_id]);
 
     // Check if override for class selection is here.
-    if (method_exists($o_rest_call, 'get_object_rest_call')) {
-      $o_rest_call = $o_rest_call->get_object_rest_call($a_calls[$uri_id]);
+    if (method_exists($rest_call, 'get_object_rest_call')) {
+      $rest_call = $rest_call->get_object_rest_call($rest_calls[$uri_id]);
     }
 
     // Turn off so we can call the get_var_setup without problems.
     // Although get_var_setup should not test variables.
-    $o_rest_call->check_for_unspecified = FALSE;
+    $rest_call->check_for_unspecified = FALSE;
 
     // Get the var setup for this call.
-    $a_var_setup = $o_rest_call->get_var_setup();
+    $var_setup = $rest_call->get_var_setup();
 
     // Now include the variables of this REST call.
-    $a_calls[$uri_id][mediamosa_rest_call::VARS] = $a_var_setup[mediamosa_rest_call::VARS];
+    $rest_calls[$uri_id][mediamosa_rest_call::VARS] = $var_setup[mediamosa_rest_call::VARS];
 
     // Add it to the XML output.
-    $o_mediamosa->add_item($a_calls[$uri_id]);
+    $mediamosa->add_item($rest_calls[$uri_id]);
   }
 }

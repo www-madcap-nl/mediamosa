@@ -99,6 +99,9 @@ class MediaMosaAssetMediafileStillDownloadTestCase extends MediaMosaTestCaseEgaJ
         t("Download the test image from '@url' (code = @code)", array('@url' => $url, '@code' => $result->code))
       );
 
+      // Dump header.
+      $this->var_export($result->headers);
+
       // Get filepath to still.
       $still_link = mediamosa_configuration_storage::still_filename_get($still_id);
 
@@ -110,14 +113,21 @@ class MediaMosaAssetMediafileStillDownloadTestCase extends MediaMosaTestCaseEgaJ
       // Get the still filesize.
       $still_size = mediamosa_io::filesize($still_link);
 
-      // Dump header.
-      $this->var_export($result->headers);
-
       $this->var_export($still_size, 'still size');
       $this->var_export(strlen($result->data), 'download size');
 
       // Filesize of the file must be same as ours.
       $this->assertTrue($still_size == strlen($result->data), t('Downloaded file has the same size as original.'));
+
+      // Get the file.
+      $result = mediamosa_http::drupal_http_request($url);
+
+      // Dump header.
+      // Normally we would test if X-MediaMosa-Version is the new call of the
+      // REST call, so we know Apache redirect worked. But we can't rely on it
+      // in our test, because it depends how the server was setup. So we just
+      // loop at the var dump of the headers.
+      $this->var_export($result->headers);
     }
   }
 }

@@ -111,6 +111,9 @@ class mediamosa_response extends mediamosa {
         return; // At this point we override for interface mode.
       }
 
+      // At this point we take over the output from Drupal.
+      header(mediamosa_settings::X_MEDIAMOSA_VERSION . ': ' . mediamosa_version::get_current_version_str(TRUE));
+
       // Enable sessions.
       if (!drupal_session_started()) {
         drupal_session_start();

@@ -182,29 +182,29 @@ abstract class mediamosa_rest_call {
    *
    * @param rest_call $o_rest_call
    */
-  function __construct($a_rest_call) {
+  function __construct($rest_call) {
     // Copy us.
-    $this->{self::URI} = $a_rest_call[self::URI];
-    $this->{self::URI_REQUEST} = explode('/', (isset($a_rest_call[self::URI_REQUEST]) ? $a_rest_call[self::URI_REQUEST] : $a_rest_call[self::URI]));
-    $this->{self::RESPONSE_TYPE} = $a_rest_call[self::RESPONSE_TYPE];
-    $this->{self::METHOD} = $a_rest_call[self::METHOD];
-    $this->{self::CLASS_NAME} = $a_rest_call[self::CLASS_NAME];
-    $this->{self::STATUS} = $a_rest_call[self::STATUS];
-    $this->{self::VERSION} = $a_rest_call[self::VERSION];
-    $this->{self::BEHAVE_AS_EXTERNAL} = $a_rest_call[self::BEHAVE_AS_EXTERNAL];
+    $this->{self::URI} = $rest_call[self::URI];
+    $this->{self::URI_REQUEST} = explode('/', (isset($rest_call[self::URI_REQUEST]) ? $rest_call[self::URI_REQUEST] : $rest_call[self::URI]));
+    $this->{self::RESPONSE_TYPE} = $rest_call[self::RESPONSE_TYPE];
+    $this->{self::METHOD} = $rest_call[self::METHOD];
+    $this->{self::CLASS_NAME} = $rest_call[self::CLASS_NAME];
+    $this->{self::STATUS} = $rest_call[self::STATUS];
+    $this->{self::VERSION} = $rest_call[self::VERSION];
+    $this->{self::BEHAVE_AS_EXTERNAL} = $rest_call[self::BEHAVE_AS_EXTERNAL];
 
-    $this->{self::TITLE} = isset($a_rest_call[self::TITLE]) ? $a_rest_call[self::TITLE] : '';
-    $this->{self::DESCRIPTION} = isset($a_rest_call[self::DESCRIPTION]) ? $a_rest_call[self::DESCRIPTION] : '';
-    $this->{self::EXAMPLE_REQUEST} = isset($a_rest_call[self::EXAMPLE_REQUEST]) ? $a_rest_call[self::EXAMPLE_REQUEST] : '';
-    $this->{self::EXAMPLE_RESPONSE} = isset($a_rest_call[self::EXAMPLE_RESPONSE]) ? $a_rest_call[self::EXAMPLE_RESPONSE] : '';
-    $this->{self::RESPONSE_FIELDS} = isset($a_rest_call[self::RESPONSE_FIELDS]) ? $a_rest_call[self::RESPONSE_FIELDS] : '';
+    $this->{self::TITLE} = isset($rest_call[self::TITLE]) ? $rest_call[self::TITLE] : '';
+    $this->{self::DESCRIPTION} = isset($rest_call[self::DESCRIPTION]) ? $rest_call[self::DESCRIPTION] : '';
+    $this->{self::EXAMPLE_REQUEST} = isset($rest_call[self::EXAMPLE_REQUEST]) ? $rest_call[self::EXAMPLE_REQUEST] : '';
+    $this->{self::EXAMPLE_RESPONSE} = isset($rest_call[self::EXAMPLE_RESPONSE]) ? $rest_call[self::EXAMPLE_RESPONSE] : '';
+    $this->{self::RESPONSE_FIELDS} = isset($rest_call[self::RESPONSE_FIELDS]) ? $rest_call[self::RESPONSE_FIELDS] : '';
 
     // Access.
-    $this->{self::ACCESS} = $a_rest_call[self::ACCESS];
+    $this->{self::ACCESS} = $rest_call[self::ACCESS];
 
     // Other.
-    $this->{self::URI_PARAMS} = isset($a_rest_call[self::URI_PARAMS]) ? $a_rest_call[self::URI_PARAMS] : array();
-    $this->{self::DEFAULT_PARAMS_VALUES} = isset($a_rest_call[self::DEFAULT_PARAMS_VALUES]) ? $a_rest_call[self::DEFAULT_PARAMS_VALUES] : array();
+    $this->{self::URI_PARAMS} = isset($rest_call[self::URI_PARAMS]) ? $rest_call[self::URI_PARAMS] : array();
+    $this->{self::DEFAULT_PARAMS_VALUES} = isset($rest_call[self::DEFAULT_PARAMS_VALUES]) ? $rest_call[self::DEFAULT_PARAMS_VALUES] : array();
   }
 
   // ----------------------------------------------------- Functions (abstract).
