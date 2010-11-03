@@ -128,6 +128,24 @@ class MediaMosaAssetMediafileStillDownloadTestCase extends MediaMosaTestCaseEgaJ
       // in our test, because it depends how the server was setup. So we just
       // loop at the var dump of the headers.
       $this->var_export($result->headers);
+
+      // /still/x/xxxxxx test.
+      $url = str_replace('{TICKET}', $still_id[0] . '/' . $still_id, $still_server[mediamosa_server_db::SERVER_URI]);
+
+      // Test the output, do output call.
+      $url = str_replace('/still/', '/simpletest/still/', $url);
+
+      // Get the file.
+      $result = mediamosa_http::drupal_http_request($url);
+
+      // Check response.
+      $this->assertTrue(
+        $result->code == 200,
+        t("Download the test image from '@url' (code = @code)", array('@url' => $url, '@code' => $result->code))
+      );
+
+      // Dump header.
+      $this->var_export($result->headers);
     }
   }
 }
