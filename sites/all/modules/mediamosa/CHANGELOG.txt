@@ -17,13 +17,7 @@ Known issues;
   PDOException. It seems a Drupal 7 core bug. We will check it again after
   the Drupal 7 core update.
 
-MediaMosa 2.3.1 Build (1032)
-----------------------------
-
-Other changes (not ticket related).
-- Fixed bug in /collection/$coll_id where owner was not changed of collection.
-
-MediaMosa 2.3.0 Build (1029)
+MediaMosa 2.3.0 Build (1032)
 ----------------------------
 - Default still size and still padding are adjustable in management interface
   (See ticket #215).
@@ -67,6 +61,7 @@ Other changes (not ticket related).
   will be removed after # of minutes depending on the setting 
   TICKET_EXPIRATION_STILL in mediamosa.settings.inc.
 - Added try/catch around crons.
+- Fixed bug in /collection/$coll_id where owner was not changed of collection.
 
 
 MediaMosa 2.2.5.3 (Build 956)
