@@ -670,9 +670,7 @@ function node_update_7010() {
     ),
   );
 
-  if (!db_table_exists('block_node_type')) {
-    db_create_table('block_node_type', $schema['block_node_type']);
-  }
+  db_create_table('block_node_type', $schema['block_node_type']);
 }
 
 /**
