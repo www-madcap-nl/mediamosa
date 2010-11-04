@@ -430,7 +430,7 @@ class mediamosa {
   static public function drupal_install_schema($module, $table_prefix = '', $make_foreignkey = TRUE) {
     try {
       $schema = drupal_get_schema_unprocessed($module);
-      _drupal_schema_initialize($module, $schema);
+      _drupal_schema_initialize($schema, $module);
 
       // Changes we might want in MediaMosa.
       $schema = mediamosa_db::db_install_schema_preprocess($module, $schema);
@@ -442,7 +442,7 @@ class mediamosa {
     catch (Exception $e) {
       // ignore.
     }
-    // Mark it installed, so its not installed again.
+    // Mark it installed, so its not install again.
     $versions = drupal_get_schema_versions($module);
     $version = $versions ? max($versions) : SCHEMA_INSTALLED;
     drupal_set_installed_schema_version($module, $version);

@@ -98,6 +98,7 @@ function mediamosa_asset_metadata_schema() {
       ),
       mediamosa_asset_metadata_db::VAL_DATETIME => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'description' => t('The date and time of the property value.'),
       ),
       mediamosa_asset_metadata_db::VAL_INT => array(
@@ -108,11 +109,13 @@ function mediamosa_asset_metadata_schema() {
       ),
       mediamosa_asset_metadata_db::CREATED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'not null' => TRUE,
         'description' => t('The date and time when asset metadata was created.'),
       ),
       mediamosa_asset_metadata_db::CHANGED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'default' => NULL,
         'description' => t('The date and time when asset metadata was changed.'),
       ),

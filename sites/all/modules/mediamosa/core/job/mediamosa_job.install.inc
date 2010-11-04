@@ -144,11 +144,13 @@ function mediamosa_job_schema() {
       ),
       mediamosa_job_db::STARTED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'default' => NULL,
         'description' => t('The date and time when job was started.'),
       ),
       mediamosa_job_db::FINISHED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'default' => NULL,
         'description' => t('The date and time when job was finished.'),
       ),
@@ -178,11 +180,13 @@ function mediamosa_job_schema() {
       ),
       mediamosa_job_db::CREATED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'not null' => TRUE,
         'description' => t('The date and time when job was created.'),
       ),
       mediamosa_job_db::CHANGED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'default' => NULL,
         'description' => t('The date and time when job was changed last.'),
       ),

@@ -88,11 +88,13 @@ function mediamosa_asset_metadata_property_group_schema() {
       ),
       mediamosa_asset_metadata_property_group_db::CREATED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'not null' => TRUE,
         'description' => t('The date and time when asset metadata property was created.'),
       ),
       mediamosa_asset_metadata_property_group_db::CHANGED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'default' => NULL,
         'description' => t('The date and time when asset metadata property was changed.'),
       ),

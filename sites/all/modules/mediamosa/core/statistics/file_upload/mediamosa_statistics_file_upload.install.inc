@@ -86,6 +86,7 @@ function mediamosa_statistics_file_upload_schema() {
       ),
       mediamosa_statistics_file_upload_db::TIMESTAMP => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'not null' => TRUE,
         'description' => t('The time and date of the upload.'),
       ),

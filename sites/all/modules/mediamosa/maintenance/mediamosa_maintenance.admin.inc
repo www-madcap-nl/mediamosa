@@ -61,26 +61,25 @@ function _mediamosa_maintenance_admin_page($path) {
       }
 
       _menu_link_translate($item);
-
       if (!$item['access']) {
         continue;
       }
-      // The link 'description' either derived from the hook_menu 'description'
-      // or entered by the user via menu module is saved as the title attribute.
+      // The link description, either derived from 'description' in hook_menu()
+      // or customized via menu module is used as title attribute.
       if (!empty($item['localized_options']['attributes']['title'])) {
         $item['description'] = $item['localized_options']['attributes']['title'];
+        unset($item['localized_options']['attributes']['title']);
       }
-
       $block = $item;
       $block['content'] = '';
-      $block['show'] = TRUE;
 
-      if ($item['block_callback'] && function_exists($item['block_callback'])) {
-        $function = $item['block_callback'];
-        $block['content'] .= $function();
-      }
+      // Fixing notice.
+      $item['tab_root_href'] = (!isset($item['tab_root_href'])  ? $item['href'] : '');
 
       $block['content'] .= theme('admin_block_content', array('content' => system_admin_menu_block($item)));
+      if (!empty($block['content'])) {
+        $block['show'] = TRUE;
+      }
 
       // Prepare for sorting as in function _menu_tree_check_access().
       // The weight is offset so it is always positive, with a uniform 5-digits.
@@ -92,9 +91,8 @@ function _mediamosa_maintenance_admin_page($path) {
     ksort($blocks);
     return theme('admin_page', array('blocks' => $blocks));
   }
-  else {
-    return t('You do not have any administrative items.');
-  }
+
+  return t('You do not have any administrative items.');
 }
 
 /**

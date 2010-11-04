@@ -67,11 +67,13 @@ function mediamosa_job_server_analyse_schema() {
       ),
       mediamosa_job_server_analyse_db::CREATED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'not null' => TRUE,
         'description' => t('The date and time when job analyse was created.'),
       ),
       mediamosa_job_server_analyse_db::CHANGED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'default' => NULL,
         'description' => t('The date and time when job analyse was changed last.'),
       ),

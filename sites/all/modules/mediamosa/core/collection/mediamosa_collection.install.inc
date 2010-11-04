@@ -122,11 +122,13 @@ function mediamosa_collection_schema() {
       ),
       mediamosa_collection_db::CREATED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'not null' => TRUE,
         'description' => t('The date and time when asset was created.'),
       ),
       mediamosa_collection_db::CHANGED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'default' => NULL,
         'description' => t('The date and time when asset was changed last.'),
       ),

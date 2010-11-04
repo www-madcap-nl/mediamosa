@@ -23,7 +23,7 @@ description = "
     </ul>
   </p>
 "
-version = 2.0
+version = 2.2
 core = 7.x
 dependencies[] = block
 dependencies[] = comment
@@ -66,13 +66,9 @@ dependencies[] = mediamosa_profile
 dependencies[] = mediamosa_server
 dependencies[] = mediamosa_statistics
 dependencies[] = mediamosa_ticket
-dependencies[] = mediamosa_tool
-dependencies[] = mediamosa_tool_ffmpeg
-dependencies[] = mediamosa_tool_windows
 dependencies[] = mediamosa_transcode
 dependencies[] = mediamosa_user
 dependencies[] = mediamosa_webservice
-
 
 ; Using _profile extension to prevent name collisions with core module.
 files[] = mediamosa_profile.profile

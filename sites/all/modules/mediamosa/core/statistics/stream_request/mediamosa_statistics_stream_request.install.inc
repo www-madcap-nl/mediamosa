@@ -121,6 +121,7 @@ function mediamosa_statistics_stream_request_schema() {
       ),
       mediamosa_statistics_stream_request_db::PLAYED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'not null' => TRUE,
         'description' => t('The time and date of the request.'),
       ),
