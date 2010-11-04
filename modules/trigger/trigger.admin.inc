@@ -1,5 +1,5 @@
 <?php
-// $Id: trigger.admin.inc,v 1.26 2010/05/01 08:12:23 dries Exp $
+// $Id: trigger.admin.inc,v 1.28 2010/09/24 21:36:22 dries Exp $
 
 /**
  * @file
@@ -90,7 +90,7 @@ function trigger_unassign_submit($form, &$form_state) {
       ->condition('aid', $aid)
       ->execute();
     $actions = actions_get_all_actions();
-    watchdog('actions', 'Action %action has been unassigned.',  array('%action' => check_plain($actions[$aid]['label'])));
+    watchdog('actions', 'Action %action has been unassigned.',  array('%action' => $actions[$aid]['label']));
     drupal_set_message(t('Action %action has been unassigned.', array('%action' => $actions[$aid]['label'])));
     $form_state['redirect'] = 'admin/structure/trigger/' . $form_state['values']['module'];
   }
@@ -177,7 +177,6 @@ function trigger_assign_form($form, $form_state, $module, $hook, $label) {
   );
   // List possible actions that may be assigned.
   if (count($options) != 0) {
-    array_unshift($options, t('Choose an action'));
     $form[$hook]['parent']['aid'] = array(
       '#type' => 'select',
       '#options' => $options,
@@ -291,7 +290,7 @@ function theme_trigger_display($variables) {
     $rows = array();
     foreach ($element['assigned']['#value'] as $aid => $info) {
       $rows[] = array(
-        $info['label'],
+        check_plain($info['label']),
         $info['link']
       );
     }

@@ -1,5 +1,5 @@
 <?php
-// $Id: update.inc,v 1.60 2010/07/07 05:44:03 webchick Exp $
+// $Id: update.inc,v 1.76 2010/10/06 21:51:10 webchick Exp $
 
 /**
  * @file
@@ -8,6 +8,16 @@
  * This file contains functions to perform database updates for a Drupal
  * installation. It is included and used extensively by update.php.
  */
+
+/**
+ * Minimum schema version of Drupal 6 required for upgrade to Drupal 7.
+ *
+ * Upgrades from Drupal 6 to Drupal 7 require that Drupal 6 be running
+ * the most recent version, or the upgrade could fail. We can't easily
+ * check the Drupal 6 version once the update process has begun, so instead
+ * we check the schema version of system.module in the system table.
+ */
+define('REQUIRED_D6_SCHEMA_VERSION', '6055');
 
 /**
  * Disable any items in the {system} table that are not core compatible.
@@ -68,16 +78,16 @@ function update_check_incompatibility($name, $type = 'module') {
  * the bootstrap to be successful.
  *
  * No access check has been performed when this function is called, so no
- * changes to the database should be made here.
+ * irreversible changes to the database are made here.
  */
 function update_prepare_d7_bootstrap() {
   // Allow the bootstrap to proceed even if a Drupal 6 settings.php file is
   // still being used.
   include_once DRUPAL_ROOT . '/includes/install.inc';
   drupal_bootstrap(DRUPAL_BOOTSTRAP_CONFIGURATION);
-  global $databases, $db_url, $update_rewrite_settings;
+  global $databases, $db_url, $db_prefix, $update_rewrite_settings;
   if (empty($databases) && !empty($db_url)) {
-    $databases = update_parse_db_url($db_url);
+    $databases = update_parse_db_url($db_url, $db_prefix);
     // Record the fact that the settings.php file will need to be rewritten.
     $update_rewrite_settings = TRUE;
     $settings_file = conf_path() . '/settings.php';
@@ -120,6 +130,24 @@ function update_prepare_d7_bootstrap() {
   // created yet.
   drupal_bootstrap(DRUPAL_BOOTSTRAP_DATABASE);
 
+  // If the site has not updated to Drupal 7 yet, check to make sure that it is
+  // running an up-to-date version of Drupal 6 before proceeding. Note this has
+  // to happen AFTER the database bootstraps because of
+  // drupal_get_installed_schema_version().
+  $system_schema = drupal_get_installed_schema_version('system');
+  if ($system_schema < 7000) {
+    $has_required_schema = $system_schema >= REQUIRED_D6_SCHEMA_VERSION;
+    $requirements = array(
+      'drupal 6 version' => array(
+        'title' => 'Drupal 6 version',
+        'value' => $has_required_schema ? 'You are running a current version of Drupal 6.' : 'You are not running a current version of Drupal 6',
+        'severity' => $has_required_schema ? REQUIREMENT_OK : REQUIREMENT_ERROR,
+        'description' => $has_required_schema ? '' : 'Please update your Drupal 6 installation to the most recent version before attempting to upgrade to Drupal 7',
+      ),
+    );
+    update_extra_requirements($requirements);
+  }
+
   // Create the registry tables.
   if (!db_table_exists('registry')) {
     $schema['registry'] = array(
@@ -141,12 +169,48 @@ function update_prepare_d7_bootstrap() {
     $schema['registry_file'] = array(
       'fields' => array(
         'filename'   => array('type' => 'varchar', 'length' => 255, 'not null' => TRUE),
-        'filectime'  => array('type' => 'int', 'not null' => TRUE, 'default' => 0),
-        'filemtime'  => array('type' => 'int', 'not null' => TRUE, 'default' => 0),
+        'hash'   => array('type' => 'varchar', 'length' => 64, 'not null' => TRUE),
       ),
       'primary key' => array('filename'),
     );
     db_create_table('registry_file', $schema['registry_file']);
+  }
+
+  // Older versions of Drupal 6 do not include the semaphore table, which is 
+  // required to bootstrap, so we add it now so that we can bootstrap and
+  // provide a reasonable error message.
+  if (!db_table_exists('semaphore')) {
+    $semaphore = array(
+      'description' => 'Table for holding semaphores, locks, flags, etc. that cannot be stored as Drupal variables since they must not be cached.',
+      'fields' => array(
+        'name' => array(
+          'description' => 'Primary Key: Unique name.',
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => TRUE,
+          'default' => ''
+        ),
+        'value' => array(
+          'description' => 'A value for the semaphore.',
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => TRUE,
+          'default' => ''
+        ),
+        'expire' => array(
+          'description' => 'A Unix timestamp with microseconds indicating when the semaphore should expire.',
+          'type' => 'float',
+          'size' => 'big',
+          'not null' => TRUE
+        ),
+      ),
+      'indexes' => array(
+        'value' => array('value'),
+        'expire' => array('expire'),
+      ),
+      'primary key' => array('name'),
+    );
+    db_create_table('semaphore', $semaphore);
   }
 
   // The new cache_bootstrap bin is required to bootstrap to
@@ -221,6 +285,7 @@ function update_prepare_d7_bootstrap() {
  *   An associative array.  Keys are module names, values an associative array
  *   mapping the old block deltas to the new block deltas for the module.
  *   Example:
+ *   @code
  *     $renamed_deltas = array(
  *       'mymodule' =>
  *         array(
@@ -228,8 +293,21 @@ function update_prepare_d7_bootstrap() {
  *           1 => 'mymodule-block-2',
  *         ),
  *     );
+ *   @endcode
+ * @param $moved_deltas
+ *   An associative array. Keys are source module names, values an associative
+ *   array mapping the (possibly renamed) block name to the new module name.
+ *   Example:
+ *   @code
+ *     $moved_deltas = array(
+ *       'user' =>
+ *         array(
+ *           'navigation' => 'system',
+ *         ),
+ *     );
+ *   @endcode
  */
-function update_fix_d7_block_deltas(&$sandbox, $renamed_deltas) {
+function update_fix_d7_block_deltas(&$sandbox, $renamed_deltas, $moved_deltas) {
   // Loop through each block and make changes to the block tables.
   // Only run this the first time through the batch update.
   if (!isset($sandbox['progress'])) {
@@ -240,15 +318,32 @@ function update_fix_d7_block_deltas(&$sandbox, $renamed_deltas) {
         foreach ($deltas as $old_delta => $new_delta) {
           // Only do the update if the old block actually exists.
           $block_exists = db_query("SELECT COUNT(*) FROM {" . $table . "} WHERE module = :module AND delta = :delta", array(
-            ':module' => $module,
-            ':delta' => $old_delta,
-          ))
-          ->fetchField();
+              ':module' => $module,
+              ':delta' => $old_delta,
+            ))
+            ->fetchField();
           if ($block_exists) {
             db_update($table)
               ->fields(array('delta' => $new_delta))
               ->condition('module', $module)
               ->condition('delta', $old_delta)
+              ->execute();
+          }
+        }
+      }
+      foreach ($moved_deltas as $old_module => $deltas) {
+        foreach ($deltas as $delta => $new_module) {
+          // Only do the update if the old block actually exists.
+          $block_exists = db_query("SELECT COUNT(*) FROM {" . $table . "} WHERE module = :module AND delta = :delta", array(
+              ':module' => $old_module,
+              ':delta' => $delta,
+            ))
+            ->fetchField();
+          if ($block_exists) {
+            db_update($table)
+              ->fields(array('module' => $new_module))
+              ->condition('module', $old_module)
+              ->condition('delta', $delta)
               ->execute();
           }
         }
@@ -265,6 +360,7 @@ function update_fix_d7_block_deltas(&$sandbox, $renamed_deltas) {
   $result = db_select('users', 'u')
     ->fields('u', array('uid', 'data'))
     ->condition('uid', $sandbox['last_user_processed'], '>')
+    ->orderBy('uid', 'ASC')
     ->where('data IS NOT NULL')
     ->range(0, $limit)
     ->execute();
@@ -278,6 +374,17 @@ function update_fix_d7_block_deltas(&$sandbox, $renamed_deltas) {
           // block, and mark this user for a database update.
           $data['block'][$module][$new_delta] = $data['block'][$module][$old_delta];
           unset($data['block'][$module][$old_delta]);
+          $user_needs_update = TRUE;
+        }
+      }
+    }
+    foreach ($moved_deltas as $old_module => $deltas) {
+      foreach ($deltas as $delta => $new_module) {
+        if (isset($data['block'][$old_module][$delta])) {
+          // Transfer the old block visibility settings to the moved
+          // block, and mark this user for a database update.
+          $data['block'][$new_module][$delta] = $data['block'][$old_module][$delta];
+          unset($data['block'][$old_module][$delta]);
           $user_needs_update = TRUE;
         }
       }
@@ -313,9 +420,9 @@ function update_fix_d7_requirements() {
 
   // Rewrite the settings.php file if necessary, see
   // update_prepare_d7_bootstrap().
-  global $update_rewrite_settings, $db_url;
+  global $update_rewrite_settings, $db_url, $db_prefix;
   if (!empty($update_rewrite_settings)) {
-    $databases = update_parse_db_url($db_url);
+    $databases = update_parse_db_url($db_url, $db_prefix);
     $salt = drupal_hash_base64(drupal_random_bytes(55));
     file_put_contents(conf_path() . '/settings.php', "\n" . '$databases = ' . var_export($databases, TRUE) . ";\n\$drupal_hash_salt = '$salt';", FILE_APPEND);
   }
@@ -382,7 +489,7 @@ function update_fix_d7_requirements() {
       ),
       'permission' => array(
         'type' => 'varchar',
-        'length' => 64,
+        'length' => 128,
         'not null' => TRUE,
         'default' => '',
       ),
@@ -395,7 +502,7 @@ function update_fix_d7_requirements() {
     db_create_table('role_permission', $schema['role_permission']);
 
     // Drops and recreates semaphore value index.
-    db_drop_index('semaphore', 'expire');
+    db_drop_index('semaphore', 'value');
     db_add_index('semaphore', 'value', array('value'));
 
     $schema['date_format_type'] = array(
@@ -596,6 +703,9 @@ function update_fix_d7_requirements() {
       db_change_field('languages', 'javascript', 'javascript', array('type' => 'varchar', 'length' => 64, 'not null' => TRUE, 'default' => ''));
     }
 
+    // Rename action description to label.
+    db_change_field('actions', 'description', 'label', array('type' => 'varchar', 'length' => 255, 'not null' => TRUE, 'default' => '0'));
+
     variable_set('update_d7_requirements', TRUE);
   }
 
@@ -631,7 +741,6 @@ function update_fix_d7_install_profile() {
     // Merge in defaults.
     $info = $info + array(
       'dependencies' => array(),
-      'dependents' => array(),
       'description' => '',
       'package' => 'Other',
       'version' => NULL,
@@ -675,7 +784,7 @@ function update_fix_d7_install_profile() {
  * @return
  *   Drupal 7 DBTNG compatible array of database connection information.
  */
-function update_parse_db_url($db_url) {
+function update_parse_db_url($db_url, $db_prefix) {
   $databases = array();
   if (!is_array($db_url)) {
     $db_url = array('default' => $db_url);
@@ -692,6 +801,9 @@ function update_parse_db_url($db_url) {
       'host' => urldecode($url['host']),
       'port' => isset($url['port']) ? urldecode($url['port']) : '',
     );
+    if (isset($db_prefix)) {
+      $databases[$database]['default']['prefix'] = $db_prefix;
+    }
   }
   return $databases;
 }
@@ -746,16 +858,9 @@ function update_do_one($module, $number, $dependency_map, &$context) {
     return;
   }
 
-  if (!isset($context['log'])) {
-    $context['log'] = variable_get('update_log_queries', 0);
-  }
-
   $ret = array();
   if (function_exists($function)) {
     try {
-      if ($context['log']) {
-        Database::startLog($function);
-      }
       $ret['results']['query'] = $function($context['sandbox']);
       $ret['results']['success'] = TRUE;
     }
@@ -768,10 +873,6 @@ function update_do_one($module, $number, $dependency_map, &$context) {
       require_once DRUPAL_ROOT . '/includes/errors.inc';
       $variables = _drupal_decode_exception($e);
       $ret['#abort'] = array('success' => FALSE, 'query' => t('%type: %message in %function (line %line of %file).', $variables));
-    }
-
-    if ($context['log']) {
-      $ret['queries'] = Database::getLog($function);
     }
   }
 
@@ -933,10 +1034,13 @@ function update_get_update_list() {
 
   $modules = drupal_get_installed_schema_version(NULL, FALSE, TRUE);
   foreach ($modules as $module => $schema_version) {
-    $pending = array();
+    // Skip uninstalled and incompatible modules.
+    if ($schema_version == SCHEMA_UNINSTALLED || update_check_incompatibility($module)) {
+      continue;
+    }
+    // Otherwise, get the list of updates defined by this module.
     $updates = drupal_get_schema_versions($module);
-    // Skip incompatible module updates, otherwise test schema versions.
-    if (!update_check_incompatibility($module) && $updates !== FALSE && $schema_version >= 0) {
+    if ($updates !== FALSE) {
       // module_invoke returns NULL for nonexisting hooks, so if no updates
       // are removed, it will == 0.
       $last_removed = module_invoke($module, 'update_last_removed');
@@ -1268,3 +1372,16 @@ function update_retrieve_dependencies() {
   return $return;
 }
 
+/**
+ * @defgroup update-api-6.x-to-7.x Update versions of API functions.
+ * @{
+ * Functions similar to normal API function but not firing hooks.
+ *
+ * During update, it is impossible to judge the consequences of firing a hook
+ * as it might hit a module not yet updated. So simplified versions of some
+ * core APIs are provided.
+ */
+
+/**
+ * @} End of "defgroup update-api-6.x-to-7.x"
+ */

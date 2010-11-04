@@ -1,5 +1,5 @@
 <?php
-// $Id: menu.admin.inc,v 1.82 2010/06/26 21:32:20 dries Exp $
+// $Id: menu.admin.inc,v 1.87 2010/10/04 18:00:46 dries Exp $
 
 /**
  * @file
@@ -259,6 +259,7 @@ function menu_edit_item($form, &$form_state, $type, $item, $menu) {
     // This is an add form, initialize the menu link.
     $item = array('link_title' => '', 'mlid' => 0, 'plid' => 0, 'menu_name' => $menu['menu_name'], 'weight' => 0, 'link_path' => '', 'options' => array(), 'module' => 'menu', 'expanded' => 0, 'hidden' => 0, 'has_children' => 0);
   }
+  $form['actions'] = array('#type' => 'actions');
   $form['link_title'] = array(
     '#type' => 'textfield',
     '#title' => t('Menu link title'),
@@ -288,7 +289,7 @@ function menu_edit_item($form, &$form_state, $type, $item, $menu) {
       '#description' => t('The path for this menu link. This can be an internal Drupal path such as %add-node or an external URL such as %drupal. Enter %front to link to the front page.', array('%front' => '<front>', '%add-node' => 'node/add', '%drupal' => 'http://drupal.org')),
       '#required' => TRUE,
     );
-    $form['delete'] = array(
+    $form['actions']['delete'] = array(
       '#type' => 'submit',
       '#value' => t('Delete'),
       '#access' => $item['mlid'],
@@ -308,7 +309,7 @@ function menu_edit_item($form, &$form_state, $type, $item, $menu) {
     '#title' => t('Description'),
     '#default_value' => isset($item['options']['attributes']['title']) ? $item['options']['attributes']['title'] : '',
     '#rows' => 1,
-    '#description' => t('The description displayed when hovering over a menu link.'),
+    '#description' => t('Shown when hovering over the menu link.'),
   );
   $form['enabled'] = array(
     '#type' => 'checkbox',
@@ -344,7 +345,6 @@ function menu_edit_item($form, &$form_state, $type, $item, $menu) {
     '#default_value' => $item['weight'],
     '#description' => t('Optional. In the menu, the heavier links will sink and the lighter links will be positioned nearer the top.'),
   );
-  $form['actions'] = array('#type' => 'actions');
   $form['actions']['submit'] = array('#type' => 'submit', '#value' => t('Save'));
 
   return $form;
@@ -674,28 +674,28 @@ function menu_reset_item_confirm_submit($form, &$form_state) {
 function menu_configure() {
   $form['intro'] = array(
     '#type' => 'item',
-    '#markup' => t('The menu module allows on-the-fly creation of menu links in the content authoring forms. The following option sets the default menu in which a new link will be added.'),
+    '#markup' => t('The menu module allows on-the-fly creation of menu links in the content authoring forms. To configure these settings for a particular content type, visit the <a href="@content-types">Content types</a> page, click the <em>edit</em> link for the content type, and go to the <em>Menu settings</em> section.', array('@content-types' => url('admin/structure/types'))),
   );
 
   $menu_options = menu_get_menus();
 
   $main = variable_get('menu_main_links_source', 'main-menu');
-  $main_options = array_merge($menu_options, array('' => t('No Main links')));
   $form['menu_main_links_source'] = array(
     '#type' => 'select',
     '#title' => t('Source for the Main links'),
     '#default_value' => variable_get('menu_main_links_source', 'main-menu'),
-    '#options' => $main_options,
+    '#empty_option' => t('No Main links'),
+    '#options' => $menu_options,
     '#tree' => FALSE,
     '#description' => t('Select what should be displayed as the Main links (typically at the top of the page).'),
   );
 
-  $secondary_options = array_merge($menu_options, array('' => t('No Secondary links')));
   $form['menu_secondary_links_source'] = array(
     '#type' => 'select',
     '#title' => t('Source for the Secondary links'),
     '#default_value' => variable_get('menu_secondary_links_source', 'user-menu'),
-    '#options' => $secondary_options,
+    '#empty_option' => t('No Secondary links'),
+    '#options' => $menu_options,
     '#tree' => FALSE,
     '#description' => t("Select the source for the Secondary links. An advanced option allows you to use the same source for both Main links (currently %main) and Secondary links: if your source menu has two levels of hierarchy, the top level menu links will appear in the Main links, and the children of the active link will appear in the Secondary links." , array('%main' => $main_options[$main])),
   );

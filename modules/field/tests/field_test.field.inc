@@ -1,5 +1,5 @@
 <?php
-// $Id: field_test.field.inc,v 1.11 2010/06/14 15:41:02 dries Exp $
+// $Id: field_test.field.inc,v 1.13 2010/09/28 02:30:31 dries Exp $
 
 /**
  * @file
@@ -44,42 +44,6 @@ function field_test_field_info() {
       'default_formatter' => 'field_test_default',
     ),
   );
-}
-
-/**
- * Implements hook_field_schema().
- */
-function field_test_field_schema($field) {
-  if ($field['type'] == 'test_field') {
-    return array(
-      'columns' => array(
-        'value' => array(
-          'type' => 'int',
-          'size' => 'medium',
-          'not null' => FALSE,
-        ),
-      ),
-      'indexes' => array(
-        'value' => array('value'),
-      ),
-    );
-  }
-  else {
-    return array(
-      'columns' => array(
-        'shape' => array(
-          'type' => 'varchar',
-          'length' => 32,
-          'not null' => FALSE,
-        ),
-        'color' => array(
-          'type' => 'varchar',
-          'length' => 32,
-          'not null' => FALSE,
-        ),
-      ),
-    );
-  }
 }
 
 /**
@@ -220,7 +184,7 @@ function field_test_field_widget_form(&$form, &$form_state, $field, $instance, $
 function field_test_widget_multiple_validate($element, &$form_state) {
   $values = array_map('trim', explode(',', $element['#value']));
   $items = array();
-  foreach($values as $value) {
+  foreach ($values as $value) {
     $items[] = array('value' => $value);
   }
   form_set_value($element, $items, $form_state);

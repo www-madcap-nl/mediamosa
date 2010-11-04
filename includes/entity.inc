@@ -1,5 +1,5 @@
 <?php
-// $Id: entity.inc,v 1.11 2010/07/07 13:13:44 dries Exp $
+// $Id: entity.inc,v 1.15 2010/10/06 13:57:47 dries Exp $
 
 /**
  * Interface for entity controller classes.
@@ -13,6 +13,7 @@
  * directly.
  */
 interface DrupalEntityControllerInterface {
+
   /**
    * Constructor.
    *
@@ -22,12 +23,12 @@ interface DrupalEntityControllerInterface {
   public function __construct($entityType);
 
   /**
-   * Reset the internal, static entity cache.
+   * Resets the internal, static entity cache.
    */
   public function resetCache();
 
   /**
-   * Load one or more entities.
+   * Loads one or more entities.
    *
    * @param $ids
    *   An array of entity IDs, or FALSE to load all entities.
@@ -48,16 +49,72 @@ interface DrupalEntityControllerInterface {
  */
 class DrupalDefaultEntityController implements DrupalEntityControllerInterface {
 
+  /**
+   * Static cache of entities.
+   *
+   * @var array
+   */
   protected $entityCache;
+
+  /**
+   * Entity type for this controller instance.
+   *
+   * @var string
+   */
   protected $entityType;
+
+  /**
+   * Array of information about the entity.
+   *
+   * @var array
+   *
+   * @see entity_get_info()
+   */
   protected $entityInfo;
+
+  /**
+   * Additional arguments to pass to hook_TYPE_load().
+   *
+   * Set before calling DrupalDefaultEntityController::attachLoad().
+   *
+   * @var array
+   */
   protected $hookLoadArguments;
+
+  /**
+   * Name of the entity's ID field in the entity database table.
+   *
+   * @var string
+   */
   protected $idKey;
+
+  /**
+   * Name of entity's revision database table field, if it supports revisions.
+   *
+   * Has the value FALSE if this entity does not use revisions.
+   *
+   * @var string
+   */
   protected $revisionKey;
+
+  /**
+   * The table that stores revisions, if the entity supports revisions.
+   *
+   * @var string
+   */
   protected $revisionTable;
 
   /**
-   * Constructor. Set basic variables.
+   * Whether this entity type should use the static cache.
+   *
+   * Set by entity info.
+   *
+   * @var boolean
+   */
+  protected $cache;
+
+  /**
+   * Constructor: sets basic variables.
    */
   public function __construct($entityType) {
     $this->entityType = $entityType;
@@ -79,10 +136,16 @@ class DrupalDefaultEntityController implements DrupalEntityControllerInterface {
     $this->cache = !empty($this->entityInfo['static cache']);
   }
 
+  /**
+   * Implements DrupalEntityControllerInterface::resetCache().
+   */
   public function resetCache() {
     $this->entityCache = array();
   }
 
+  /**
+   * Implements DrupalEntityControllerInterface::load().
+   */
   public function load($ids = array(), $conditions = array()) {
     $entities = array();
 
@@ -153,7 +216,7 @@ class DrupalDefaultEntityController implements DrupalEntityControllerInterface {
   }
 
   /**
-   * Build the query to load the entity.
+   * Builds the query to load the entity.
    *
    * This has full revision support. For entities requiring special queries,
    * the class can be extended, and the default query can be constructed by
@@ -163,6 +226,14 @@ class DrupalDefaultEntityController implements DrupalEntityControllerInterface {
    * into terms, however it can also support $conditions on different tables.
    * See CommentController::buildQuery() or TaxonomyTermController::buildQuery()
    * for examples.
+   *
+   * @param $ids
+   *   An array of entity IDs, or FALSE to load all entities.
+   * @param $conditions
+   *   An array of conditions in the form 'field' => $value.
+   * @param $revision_id
+   *   The ID of the revision to load, or FALSE if this query is asking for the
+   *   most current revision(s).
    *
    * @return SelectQuery
    *   A SelectQuery object for loading the entity.
@@ -180,11 +251,11 @@ class DrupalDefaultEntityController implements DrupalEntityControllerInterface {
     }
 
     // Add fields from the {entity} table.
-    $entity_fields = drupal_schema_fields_sql($this->entityInfo['base table']);
+    $entity_fields = $this->entityInfo['schema_fields_sql']['base table'];
 
     if ($this->revisionKey) {
       // Add all fields from the {entity_revision} table.
-      $entity_revision_fields = drupal_map_assoc(drupal_schema_fields_sql($this->revisionTable));
+      $entity_revision_fields = drupal_map_assoc($this->entityInfo['schema_fields_sql']['revision table']);
       // The id field is provided by entity, so remove it.
       unset($entity_revision_fields[$this->idKey]);
 
@@ -213,8 +284,7 @@ class DrupalDefaultEntityController implements DrupalEntityControllerInterface {
   }
 
   /**
-   * Attach data to entities upon loading.
-   *
+   * Attaches data to entities upon loading.
    * This will attach fields, if the entity is fieldable. It calls
    * hook_entity_load() for modules which need to add data to all entities.
    * It also calls hook_TYPE_load() on the loaded entities. For example
@@ -222,6 +292,12 @@ class DrupalDefaultEntityController implements DrupalEntityControllerInterface {
    * expects special parameters apart from the queried entities, you can set
    * $this->hookLoadArguments prior to calling the method.
    * See NodeController::attachLoad() for an example.
+   *
+   * @param $queried_entities
+   *   Associative array of query results, keyed on the entity ID.
+   * @param $revision_id
+   *   ID of the revision that was loaded, or FALSE if teh most current revision
+   *   was loaded.
    */
   protected function attachLoad(&$queried_entities, $revision_id = FALSE) {
     // Attach fields.
@@ -249,12 +325,15 @@ class DrupalDefaultEntityController implements DrupalEntityControllerInterface {
   }
 
   /**
-   * Get entities from the static cache.
+   * Gets entities from the static cache.
    *
    * @param $ids
    *   If not empty, return entities that match these IDs.
    * @param $conditions
    *   If set, return entities that match all of these conditions.
+   *
+   * @return
+   *   Array of entities from the entity cache.
    */
   protected function cacheGet($ids, $conditions = array()) {
     $entities = array();
@@ -284,7 +363,10 @@ class DrupalDefaultEntityController implements DrupalEntityControllerInterface {
   }
 
   /**
-   * Store entities in the static entity cache.
+   * Stores entities in the static entity cache.
+   *
+   * @param $entities
+   *   Entities to store in the cache.
    */
   protected function cacheSet($entities) {
     $this->entityCache += $entities;
@@ -323,6 +405,10 @@ class EntityFieldQueryException extends Exception {}
  * specified or if the query has field conditions or sorts that are stored in
  * different field storage engines. However, this logic can be overridden in
  * hook_entity_query().
+ *
+ * Also note that this query does not automatically respect entity access
+ * restrictions. Node access control is performed by the SQL storage engine but
+ * other storage engines might not do this.
  */
 class EntityFieldQuery {
   /**
@@ -360,31 +446,11 @@ class EntityFieldQuery {
   public $propertyConditions = array();
 
   /**
-   * List of order clauses for entity-generic metadata.
+   * List of order clauses.
    *
    * @var array
-   *
-   * @see EntityFieldQuery::entityOrderBy()
    */
-  public $entityOrder = array();
-
-  /**
-   * List of order clauses for fields.
-   *
-   * @var array
-   *
-   * @see EntityFieldQuery::fieldOrderBy()
-   */
-  public $fieldOrder = array();
-
-  /**
-   * List of order clauses for entities.
-   *
-   * @var array
-   *
-   * @see EntityFieldQuery::entityOrderBy()
-   */
-  public $propertyOrder = array();
+  public $order = array();
 
   /**
    * The query range.
@@ -432,6 +498,24 @@ class EntityFieldQuery {
    * @see EntityFieldQuery::age()
    */
   public $age = FIELD_LOAD_CURRENT;
+
+  /**
+   * A list of the tags added to this query.
+   *
+   * @var array
+   *
+   * @see EntityFieldQuery::addTag()
+   */
+  public $tags = array();
+
+  /**
+   * A list of metadata added to this query.
+   *
+   * @var array
+   *
+   * @see EntityFieldQuery::addMetaData()
+   */
+  public $metaData = array();
 
   /**
    * The ordered results.
@@ -605,7 +689,11 @@ class EntityFieldQuery {
    *   The called object.
    */
   public function entityOrderBy($name, $direction) {
-    $this->entityOrder[$name] = $direction;
+    $this->order[] = array(
+      'type' => 'entity',
+      'specifier' => $name,
+      'direction' => $direction,
+    );
     return $this;
   }
 
@@ -630,12 +718,16 @@ class EntityFieldQuery {
     if (is_scalar($field)) {
       $field = field_info_field($field);
     }
-    // Ensure the same index is used for fieldOrder as for fields.
+    // Save the index used for the new field, for later use in field storage.
     $index = count($this->fields);
     $this->fields[$index] = $field;
-    $this->fieldOrder[$index] = array(
-      'field' => $field,
-      'column' => $column,
+    $this->order[] = array(
+      'type' => 'field',
+      'specifier' => array(
+        'field' => $field,
+        'index' => $index,
+        'column' => $column,
+      ),
       'direction' => $direction,
     );
     return $this;
@@ -660,8 +752,9 @@ class EntityFieldQuery {
    *   The called object.
    */
   public function propertyOrderBy($column, $direction) {
-    $this->propertyOrder[] = array(
-      'column' => $column,
+    $this->order[] = array(
+      'type' => 'property',
+      'specifier' => $column,
       'direction' => $direction,
     );
     return $this;
@@ -735,6 +828,52 @@ class EntityFieldQuery {
   }
 
   /**
+   * Adds a tag to the query.
+   *
+   * Tags are strings that mark a query so that hook_query_alter() and
+   * hook_query_TAG_alter() implementations may decide if they wish to alter
+   * the query. A query may have any number of tags, and they must be valid PHP
+   * identifiers (composed of letters, numbers, and underscores). For example,
+   * queries involving nodes that will be displayed for a user need to add the
+   * tag 'node_access', so that the node module can add access restrictions to
+   * the query.
+   *
+   * If an entity field query has tags, it must also have an entity type
+   * specified, because the alter hook will need the entity base table.
+   *
+   * @param string $tag
+   *   The tag to add.
+   *
+   * @return EntityFieldQuery
+   *   The called object.
+   */
+  public function addTag($tag) {
+    $this->tags[$tag] = $tag;
+    return $this;
+  }
+
+  /**
+   * Adds additional metadata to the query.
+   *
+   * Sometimes a query may need to provide additional contextual data for the
+   * alter hook. The alter hook implementations may then use that information
+   * to decide if and how to take action.
+   *
+   * @param $key
+   *   The unique identifier for this piece of metadata. Must be a string that
+   *   follows the same rules as any other PHP identifier.
+   * @param $object
+   *   The additional data to add to the query. May be any valid PHP variable.
+   *
+   * @return EntityFieldQuery
+   *   The called object.
+   */
+  public function addMetaData($key, $object) {
+    $this->metaData[$key] = $object;
+    return $this;
+  }
+
+  /**
    * Executes the query.
    *
    * After executing the query, $this->orderedResults will contain a list of
@@ -769,13 +908,6 @@ class EntityFieldQuery {
     // Execute the query using the correct callback.
     $result = call_user_func($this->queryCallback(), $this);
 
-    // Sanity checks.
-    if (!empty($this->propertyConditions)) {
-      throw new EntityFieldQueryException(t('Property query conditions were not handled in !function.', array('!function' => $function)));
-    }
-    if (!empty($this->propertyOrderBy)) {
-      throw new EntityFieldQueryException(t('Property query order by was not handled in !function.', array('!function' => $function)));
-    }
     return $result;
   }
 
@@ -835,6 +967,10 @@ class EntityFieldQuery {
     $base_table = $entity_info['base table'];
     $select_query = db_select($base_table);
     $select_query->addExpression(':entity_type', 'entity_type', array(':entity_type' => $entity_type));
+    // Process the property conditions.
+    foreach ($this->propertyConditions as $property_condition) {
+      $this->addCondition($select_query, "$base_table." . $property_condition['column'], $property_condition);
+    }
     // Process the four possible entity condition.
     // The id field is always present in entity keys.
     $sql_field = $entity_info['entity keys']['id'];
@@ -874,22 +1010,27 @@ class EntityFieldQuery {
       $this->addCondition($select_query, $sql_field, $this->entityConditions['bundle'], $having);
     }
 
-    foreach ($this->entityOrder as $key => $direction) {
-      if (isset($id_map[$key])) {
-        $select_query->orderBy($id_map[$key], $direction);
+    // Order the query.
+    foreach ($this->order as $order) {
+      if ($order['type'] == 'entity') {
+        $key = $order['specifier'];
+        if (!isset($id_map[$key])) {
+          throw new EntityFieldQueryException(t('Do not know how to order on @key for @entity_type', array('@key' => $key, '@entity_type' => $entity_type)));
+        }
+        $select_query->orderBy($id_map[$key], $order['direction']);
       }
-      else {
-        throw new EntityFieldQueryException(t('Do not know how to order on @key for @entity_type', array('@key' => $key, '@entity_type' => $entity_type)));
+      elseif ($order['type'] == 'property') {
+        $select_query->orderBy("$base_table." . $order['specifier'], $order['direction']);
       }
     }
-    $this->processProperty($select_query, $base_table);
+
     return $this->finishQuery($select_query);
   }
 
   /**
    * Finishes the query.
    *
-   * Adds the range and returns the requested list.
+   * Adds tags, metaData, range and returns the requested list or count.
    *
    * @param SelectQuery $select_query
    *   A SelectQuery which has entity_type, entity_id, revision_id and bundle
@@ -901,6 +1042,13 @@ class EntityFieldQuery {
    *   See EntityFieldQuery::execute().
    */
   function finishQuery($select_query, $id_key = 'entity_id') {
+    foreach ($this->tags as $tag) {
+      $select_query->addTag($tag);
+    }
+    foreach ($this->metaData as $key => $object) {
+      $select_query->addMetaData($key, $object);
+    }
+    $select_query->addMetaData('entity_field_query', $this);
     if ($this->range) {
       $select_query->range($this->range['start'], $this->range['length']);
     }
@@ -914,27 +1062,6 @@ class EntityFieldQuery {
       $this->ordered_results[] = $partial_entity;
     }
     return $return;
-  }
-
-  /**
-   * Processes the property condition and orders.
-   *
-   * This is a helper for hook_entity_query() and hook_field_storage_query().
-   *
-   * @param SelectQuery $select_query
-   *   A SelectQuery object.
-   * @param $entity_base_table
-   *   The name of the entity base table. This already should be in
-   *   $select_query.
-   */
-  public function processProperty(SelectQuery $select_query, $entity_base_table) {
-    foreach ($this->propertyConditions as $entity_condition) {
-      $this->addCondition($select_query, "$entity_base_table." . $entity_condition['column'], $entity_condition);
-    }
-    foreach ($this->propertyOrder as $order) {
-      $select_query->orderBy("$entity_base_table." . $order['column'], $order['direction']);
-    }
-    unset($this->propertyConditions, $this->propertyOrder);
   }
 
   /**

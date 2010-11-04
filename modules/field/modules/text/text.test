@@ -1,5 +1,5 @@
 <?php
-// $Id: text.test,v 1.24 2010/06/28 20:58:42 dries Exp $
+// $Id: text.test,v 1.29 2010/09/24 00:37:42 dries Exp $
 
 class TextFieldTestCase extends DrupalWebTestCase {
   protected $instance;
@@ -115,7 +115,7 @@ class TextFieldTestCase extends DrupalWebTestCase {
       "{$this->field_name}[$langcode][0][value]" => $value,
     );
     $this->drupalPost(NULL, $edit, t('Save'));
-    preg_match('|test-entity/(\d+)/edit|', $this->url, $match);
+    preg_match('|test-entity/manage/(\d+)/edit|', $this->url, $match);
     $id = $match[1];
     $this->assertRaw(t('test_entity @id has been created.', array('@id' => $id)), t('Entity was created'));
 
@@ -163,11 +163,11 @@ class TextFieldTestCase extends DrupalWebTestCase {
     field_create_instance($this->instance);
     $langcode = LANGUAGE_NONE;
 
-    // Delete all text formats besides the plain text fallback format.
+    // Disable all text formats besides the plain text fallback format.
     $this->drupalLogin($this->admin_user);
     foreach (filter_formats() as $format) {
       if ($format->format != filter_fallback_format()) {
-        $this->drupalPost('admin/config/content/formats/' . $format->format . '/delete', array(), t('Delete'));
+        $this->drupalPost('admin/config/content/formats/' . $format->format . '/disable', array(), t('Disable'));
       }
     }
     $this->drupalLogin($this->web_user);
@@ -184,7 +184,7 @@ class TextFieldTestCase extends DrupalWebTestCase {
       "{$this->field_name}[$langcode][0][value]" => $value,
     );
     $this->drupalPost(NULL, $edit, t('Save'));
-    preg_match('|test-entity/(\d+)/edit|', $this->url, $match);
+    preg_match('|test-entity/manage/(\d+)/edit|', $this->url, $match);
     $id = $match[1];
     $this->assertRaw(t('test_entity @id has been created.', array('@id' => $id)), t('Entity was created'));
 
@@ -210,7 +210,7 @@ class TextFieldTestCase extends DrupalWebTestCase {
 
     // Display edition form.
     // We should now have a 'text format' selector.
-    $this->drupalGet('test-entity/' . $id . '/edit');
+    $this->drupalGet('test-entity/manage/' . $id . '/edit');
     $this->assertFieldByName("{$this->field_name}[$langcode][0][value]", '', t('Widget is displayed'));
     $this->assertFieldByName("{$this->field_name}[$langcode][0][format]", '', t('Format selector is displayed'));
 
@@ -402,10 +402,38 @@ class TextTranslationTestCase extends DrupalWebTestCase {
   }
 
   /**
+   * Test that a plaintext textfield widget is correctly populated.
+   */
+  function testTextField() {
+    // Disable text processing for body.
+    $edit = array('instance[settings][text_processing]' => 0);
+    $this->drupalPost('admin/structure/types/manage/article/fields/body', $edit, t('Save settings'));
+
+    // Login as translator.
+    $this->drupalLogin($this->translator);
+
+    // Create content.
+    $langcode = LANGUAGE_NONE;
+    $body = $this->randomName();
+    $edit = array(
+      "title" => $this->randomName(),
+      "language" => 'en',
+      "body[$langcode][0][value]" => $body,
+    );
+
+    // Translate the article in french.
+    $this->drupalPost('node/add/article', $edit, t('Save'));
+    $node = $this->drupalGetNodeByTitle($edit['title']);
+    $this->drupalGet("node/$node->nid/translate");
+    $this->clickLink(t('add translation'));
+    $this->assertFieldByXPath("//textarea[@name='body[fr][0][value]']", $body, t('The textfield widget is populated.'));
+  }
+
+  /**
    * Check that user that does not have access the field format cannot see the
    * source value when creating a translation.
    */
-  function testMultipleTextField() {
+  function testTextFieldFormatted() {
     // Make node body multiple.
     $edit = array('field[cardinality]' => -1);
     $this->drupalPost('admin/structure/types/manage/article/fields/body', $edit, t('Save settings'));
@@ -419,8 +447,9 @@ class TextTranslationTestCase extends DrupalWebTestCase {
 
     // Create an article with the first body input format set to "Full HTML".
     $langcode = 'en';
+    $title = $this->randomName();
     $edit = array(
-      "title" => $this->randomName(),
+      'title' => $title,
       'language' => $langcode,
     );
     $this->drupalPost('node/add/article', $edit, t('Save'));
@@ -438,11 +467,11 @@ class TextTranslationTestCase extends DrupalWebTestCase {
     }
 
     // Login as translator.
-    $this->drupalLogout();
     $this->drupalLogin($this->translator);
 
     // Translate the article in french.
-    $this->drupalGet('node/1/translate');
+    $node = $this->drupalGetNodeByTitle($title);
+    $this->drupalGet("node/$node->nid/translate");
     $this->clickLink(t('add translation'));
     $this->assertNoText($body[0], t('The body field with delta @delta is hidden.', array('@delta' => 0)));
     $this->assertText($body[1], t('The body field with delta @delta is shown.', array('@delta' => 1)));

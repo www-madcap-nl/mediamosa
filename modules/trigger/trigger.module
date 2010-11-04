@@ -1,5 +1,5 @@
 <?php
-// $Id: trigger.module,v 1.63 2010/06/29 18:24:10 dries Exp $
+// $Id: trigger.module,v 1.65 2010/09/24 00:37:44 dries Exp $
 
 /**
  * @file
@@ -80,7 +80,6 @@ function trigger_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('trigger_unassign'),
     'access arguments' => array('administer actions'),
-    'type' => MENU_CALLBACK,
     'file' => 'trigger.admin.inc',
   );
 
@@ -467,7 +466,7 @@ function _trigger_normalize_user_context($type, $account) {
     // If a single node is being viewed, return the node.
     case 'node':
       // If we are viewing an individual node, return the node.
-      if ((arg(0) == 'node') && is_numeric(arg(1)) && (arg(2) == NULL)) {
+      if (arg(0) == 'node' && is_numeric(arg(1)) && arg(2) == NULL) {
         return node_load(array('nid' => arg(1)));
       }
       break;

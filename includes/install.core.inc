@@ -1,5 +1,5 @@
 <?php
-// $Id: install.core.inc,v 1.25 2010/07/02 15:32:10 dries Exp $
+// $Id: install.core.inc,v 1.38 2010/10/07 03:26:41 webchick Exp $
 
 /**
  * @file
@@ -275,12 +275,12 @@ function install_begin_request(&$install_state) {
   require_once DRUPAL_ROOT . '/includes/cache-install.inc';
   $conf['cache_default_class'] = 'DrupalFakeCache';
 
-  // Prepare for themed output, if necessary. We need to run this at the
-  // beginning of the page request to avoid a different theme accidentally
-  // getting set.
-  if ($install_state['interactive']) {
-    drupal_maintenance_theme();
-  }
+  // Prepare for themed output. We need to run this at the beginning of the
+  // page request to avoid a different theme accidentally getting set. (We also
+  // need to run it even in the case of command-line installations, to prevent
+  // any code in the installer that happens to initialize the theme system from
+  // accessing the database before it is set up yet.)
+  drupal_maintenance_theme();
 
   // Check existing settings.php.
   $install_state['settings_verified'] = install_verify_settings();
@@ -859,7 +859,7 @@ function install_settings_form($form, &$form_state, &$install_state) {
   );
   if (count($drivers) == 1) {
     $form['driver']['#disabled'] = TRUE;
-    $form['driver']['#description'] .= ' ' . st('Your PHP configuration only supports the %driver database type so it has been automatically selected.', array('%driver' => current($drivers)));
+    $form['driver']['#description'] .= ' ' . st('Your PHP configuration only supports a single database type, so it has been automatically selected.');
   }
 
   // Database name.
@@ -1112,6 +1112,11 @@ function install_select_profile_form($form, &$form_state, $profile_files) {
     include_once DRUPAL_ROOT . '/' . $profile->uri;
 
     $details = install_profile_info($profile->name);
+    // Don't show hidden profiles. This is used by to hide the testing profile,
+    // which only exists to speed up test runs.
+    if ($details['hidden'] === TRUE) {
+      continue;
+    }
     $profiles[$profile->name] = $details;
 
     // Determine the name of the profile; default to file name if defined name
@@ -1194,21 +1199,36 @@ function install_select_locale(&$install_state) {
   }
 
   if (empty($install_state['parameters']['locale'])) {
-    // If only the built-in (English) language is available, and we are using
-    // the default profile and performing an interactive installation, inform
-    // the user that the installer can be localized. Otherwise we assume the
-    // user knows what he is doing.
+    // If only the built-in (English) language is available, and we are
+    // performing an interactive installation, inform the user that the
+    // installer can be localized. Otherwise we assume the user knows what he
+    // is doing.
     if (count($locales) == 1) {
-      if ($profilename == 'standard' && $install_state['interactive']) {
+      if ($install_state['interactive']) {
         drupal_set_title(st('Choose language'));
         if (!empty($install_state['parameters']['localize'])) {
-          $output = '<p>' . st('With the addition of an appropriate translation package, this installer is capable of proceeding in another language of your choice. To install and use Drupal in a language other than English:') . '</p>';
-          $output .= '<ul><li>' . st('Determine if <a href="@translations" target="_blank">a translation of this Drupal version</a> is available in your language of choice. A translation is provided via a translation package; each translation package enables the display of a specific version of Drupal in a specific language. Not all languages are available for every version of Drupal.', array('@translations' => 'http://drupal.org/project/translations')) . '</li>';
-          $output .= '<li>' . st('If an alternative translation package of your choice is available, download and extract its contents to your Drupal root directory.') . '</li>';
-          $output .= '<li>' . st('Return to choose language using the second link below and select your desired language from the displayed list. Reloading the page allows the list to automatically adjust to the presence of new translation packages.') . '</li>';
-          $output .= '</ul><p>' . st('Alternatively, to install and use Drupal in English, or to defer the selection of an alternative language until after installation, select the first link below.') . '</p>';
-          $output .= '<p>' . st('How should the installation continue?') . '</p>';
-          $output .= '<ul><li><a href="install.php?profile=' . $profilename . '&amp;locale=en">' . st('Continue installation in English') . '</a></li><li><a href="install.php?profile=' . $profilename . '">' . st('Return to choose a language') . '</a></li></ul>';
+          $output = '<p>Follow these steps to translate Drupal into your language:</p>';
+          $output .= '<ol>';
+          $output .= '<li>Download a translation from the <a href="http://localize.drupal.org/download" target="_blank">translation server</a>.</li>';
+          $output .= '<li>Rename the downloaded file retaining only the language code at the end of the file name and its extension. For example, if the file name is
+<pre>
+drupal-7.0.pt-br.po
+</pre>
+rename it to
+<pre>
+pt-br.po
+</pre></li>';
+          $output .= '<li>Place it into the following directory:
+<pre>
+/profiles/' . $profilename . '/translations/
+</pre></li>';
+          $output .= '</ol>';
+          $output .= '<p>For more information on installing Drupal in different languages, visit the <a href="http://drupal.org/localize" target="_blank">drupal.org handbook page</a>.</p>';
+          $output .= '<p>How should the installation continue?</p>';
+          $output .= '<ul>';
+          $output .= '<li><a href="install.php?profile=' . $profilename . '">Reload the language selection page after adding translations</a></li>';
+          $output .= '<li><a href="install.php?profile=' . $profilename . '&amp;locale=en">Continue installation in English</a></li>';
+          $output .= '</ul>';
         }
         else {
           include_once DRUPAL_ROOT . '/includes/form.inc';
@@ -1217,8 +1237,8 @@ function install_select_locale(&$install_state) {
         }
         return $output;
       }
-      // One language, but not the default profile or not an interactive
-      // installation. Assume the user knows what he is doing.
+      // One language, but not an interactive installation. Assume the user
+      // knows what he is doing.
       $locale = current($locales);
       $install_state['parameters']['locale'] = $locale->name;
       return;
@@ -1259,7 +1279,7 @@ function install_select_locale(&$install_state) {
 /**
  * Form API array definition for language selection.
  */
-function install_select_locale_form($form, &$form_state, $locales, $profilename = 'standard') {
+function install_select_locale_form($form, &$form_state, $locales, $profilename) {
   include_once DRUPAL_ROOT . '/includes/iso.inc';
   $languages = _locale_get_predefined_list();
   foreach ($locales as $locale) {
@@ -1276,7 +1296,7 @@ function install_select_locale_form($form, &$form_state, $locales, $profilename 
       '#parents' => array('locale')
     );
   }
-  if ($profilename == 'standard') {
+  if (count($locales) == 1) {
     $form['help'] = array(
       '#markup' => '<p><a href="install.php?profile=' . $profilename . '&amp;localize=true">' . st('Learn how to install Drupal in other languages') . '</a></p>',
     );
@@ -1350,22 +1370,41 @@ function install_profile_modules(&$install_state) {
   $files = system_rebuild_module_data();
   variable_del('install_profile_modules');
 
-  // Install dependencies first.
-  $modules = array_flip($modules);
-  foreach ($modules as $module => $weight) {
-    $modules[$module] = $files[$module]->sort;
+  // Always install required modules first. Respect the dependencies between
+  // the modules.
+  $required = array();
+  $non_required = array();
+  // Although the profile module is marked as required, it needs to go after
+  // every dependency, including non-required ones. So clear its required
+  // flag for now to allow it to install late.
+  $files[$install_state['parameters']['profile']]->info['required'] = FALSE;
+  // Add modules that other modules depend on.
+  foreach ($modules as $module) {
+    if ($files[$module]->requires) {
+      $modules = array_merge($modules, array_keys($files[$module]->requires));
+    }
   }
-  arsort($modules);
-  $modules = array_keys($modules);
+  $modules = array_unique($modules);
+  foreach ($modules as $module) {
+    if (!empty($files[$module]->info['required'])) {
+      $required[$module] = $files[$module]->sort;
+    }
+    else {
+      $non_required[$module] = $files[$module]->sort;
+    }
+  }
+  arsort($required);
+  arsort($non_required);
 
   $operations = array();
-  foreach ($modules as $module) {
+  foreach ($required + $non_required as $module => $weight) {
     $operations[] = array('_install_module_batch', array($module, $files[$module]->info['name']));
   }
   $batch = array(
     'operations' => $operations,
     'title' => st('Installing @drupal', array('@drupal' => drupal_install_profile_distribution_name())),
     'error_message' => st('The installation has encountered an error.'),
+    'finished' => '_install_profile_modules_finished',
   );
   return $batch;
 }
@@ -1490,9 +1529,6 @@ function install_finished(&$install_state) {
   // registered by the install profile are registered correctly.
   drupal_flush_all_caches();
 
-  // Register actions declared by any modules.
-  actions_synchronize();
-
   // Remember the profile which was used.
   variable_set('install_profile', drupal_get_profile());
 
@@ -1528,6 +1564,15 @@ function _install_module_batch($module, $module_name, &$context) {
 }
 
 /**
+ * 'Finished' callback for module installation batch.
+ */
+function _install_profile_modules_finished($success, $results, $operations) {
+  // Flush all caches to complete the module installation process. Subsequent
+  // installation tasks will now have full access to the profile's modules.
+  drupal_flush_all_caches();
+}
+
+/**
  * Checks installation requirements and reports any errors.
  */
 function install_check_requirements($install_state) {
@@ -1546,7 +1591,7 @@ function install_check_requirements($install_state) {
     $exists = FALSE;
     // Verify that the directory exists.
     if (drupal_verify_install_file($conf_path, FILE_EXIST, 'dir')) {
-      // Check to make sure a settings.php already exists.
+      // Check if a settings.php file already exists.
       $file = $settings_file;
       if (drupal_verify_install_file($settings_file, FILE_EXIST)) {
         // If it does, make sure it is writable.
@@ -1564,6 +1609,49 @@ function install_check_requirements($install_state) {
         'severity'    => REQUIREMENT_ERROR,
         'description' => st('The @drupal installer requires that the %default-file file not be modified in any way from the original download.', array('@drupal' => drupal_install_profile_distribution_name(), '%default-file' => $default_settings_file)),
       );
+    }
+    // Otherwise, if settings.php does not exist yet, we can try to copy
+    // default.settings.php to create it.
+    elseif (!$exists) {
+      $copied = drupal_verify_install_file($conf_path, FILE_EXIST|FILE_WRITABLE, 'dir') && @copy($default_settings_file, $settings_file);
+      if ($copied) {
+        // If the new settings file has the same owner as default.settings.php,
+        // this means default.settings.php is owned by the webserver user.
+        // This is an inherent security weakness because it allows a malicious
+        // webserver process to append arbitrary PHP code and then execute it.
+        // However, it is also a common configuration on shared hosting, and
+        // there is nothing Drupal can do to prevent it. In this situation,
+        // having settings.php also owned by the webserver does not introduce
+        // any additional security risk, so we keep the file in place.
+        if (fileowner($default_settings_file) === fileowner($settings_file)) {
+          $writable = drupal_verify_install_file($settings_file, FILE_READABLE|FILE_WRITABLE);
+          $exists = TRUE;
+        }
+        // If settings.php and default.settings.php have different owners, this
+        // probably means the server is set up "securely" (with the webserver
+        // running as its own user, distinct from the user who owns all the
+        // Drupal PHP files), although with either a group or world writable
+        // sites directory. Keeping settings.php owned by the webserver would
+        // therefore introduce a security risk. It would also cause a usability
+        // problem, since site owners who do not have root access to the file
+        // system would be unable to edit their settings file later on. We
+        // therefore must delete the file we just created and force the
+        // administrator to log on to the server and create it manually.
+        else {
+          $deleted = @drupal_unlink($settings_file);
+          // We expect deleting the file to be successful (since we just
+          // created it ourselves above), but if it fails somehow, we set a
+          // variable so we can display a one-time error message to the
+          // administrator at the bottom of the requirements list. We also try
+          // to make the file writable, to eliminate any conflicting error
+          // messages in the requirements list.
+          $exists = !$deleted;
+          if ($exists) {
+            $settings_file_ownership_error = TRUE;
+            $writable = drupal_verify_install_file($settings_file, FILE_READABLE|FILE_WRITABLE);
+          }
+        }
+      }
     }
 
     // If settings.php does not exist, throw an error.
@@ -1592,7 +1680,15 @@ function install_check_requirements($install_state) {
       else {
         $requirements['settings file'] = array(
           'title'       => st('Settings file'),
-          'value'       => st('Settings file is writable.'),
+          'value'       => st('The settings file is writable.'),
+        );
+      }
+      if (!empty($settings_file_ownership_error)) {
+        $requirements['settings file ownership'] = array(
+          'title'       => st('Settings file'),
+          'value'       => st('The settings file is owned by the web server.'),
+          'severity'    => REQUIREMENT_ERROR,
+          'description' => st('The @drupal installer failed to create a settings file with proper file ownership. Log on to your web server, remove the existing %file file, and create a new one by copying the %default_file file to %file. More details about installing Drupal are available in <a href="@install_txt">INSTALL.txt</a>. If you have problems with the file permissions on your server, consult the <a href="@handbook_url">online handbook</a>.', array('@drupal' => drupal_install_profile_distribution_name(), '%file' => $file, '%default_file' => $default_settings_file, '@install_txt' => base_path() . 'INSTALL.txt', '@handbook_url' => 'http://drupal.org/server-permissions')),
         );
       }
     }
@@ -1661,11 +1757,11 @@ function _install_configure_form($form, &$form_state, &$install_state) {
   );
 
   $countries = country_get_list();
-  $countries = array_merge(array('' => st('No default country')), $countries);
   $form['server_settings']['site_default_country'] = array(
     '#type' => 'select',
     '#title' => t('Default country'),
-    '#default_value' => variable_get('site_default_country', ''),
+    '#empty_value' => '',
+    '#default_value' => variable_get('site_default_country', NULL),
     '#options' => $countries,
     '#description' => st('Select the default country for the site.'),
     '#weight' => 0,
@@ -1684,7 +1780,7 @@ function _install_configure_form($form, &$form_state, &$install_state) {
   $form['server_settings']['clean_url'] = array(
     '#type' => 'hidden',
     '#default_value' => 0,
-    '#attributes' => array('class' => array('install')),
+    '#attributes' => array('id' => 'edit-clean-url', 'class' => array('install')),
   );
 
   $form['update_notifications'] = array(

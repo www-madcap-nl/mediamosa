@@ -1,5 +1,5 @@
 <?php
-// $Id: theme.maintenance.inc,v 1.63 2010/07/08 03:41:26 webchick Exp $
+// $Id: theme.maintenance.inc,v 1.67 2010/09/19 18:10:41 dries Exp $
 
 /**
  * @file
@@ -12,7 +12,7 @@
  * Used for site installs, updates and when the site is in maintenance mode.
  * It also applies when the database is unavailable or bootstrap was not
  * complete. Seven is always used for the initial install and update operations.
- * In other cases, Garland is used, but this can be overridden by setting a
+ * In other cases, Bartik is used, but this can be overridden by setting a
  * "maintenance_theme" key in the $conf variable in settings.php.
  */
 function _drupal_maintenance_theme() {
@@ -45,7 +45,7 @@ function _drupal_maintenance_theme() {
     }
 
     // We use the default theme as the maintenance theme. If a default theme
-    // isn't specified in the database or in settings.php, we use Garland.
+    // isn't specified in the database or in settings.php, we use Bartik.
     $custom_theme = variable_get('maintenance_theme', variable_get('theme_default', 'bartik'));
   }
 
@@ -77,19 +77,20 @@ function _drupal_maintenance_theme() {
 
   // These are usually added from system_init() -except maintenance.css.
   // When the database is inactive it's not called so we add it here.
-  drupal_add_css(drupal_get_path('module', 'system') . '/system.css');
-  drupal_add_css(drupal_get_path('module', 'system') . '/system-behavior.css');
-  drupal_add_css(drupal_get_path('module', 'system') . '/system-menus.css');
-  drupal_add_css(drupal_get_path('module', 'system') . '/maintenance.css');
-  drupal_add_css(drupal_get_path('module', 'system') . '/admin.css');
+  $path = drupal_get_path('module', 'system');
+  drupal_add_css($path . '/system.base.css');
+  drupal_add_css($path . '/system.admin.css');
+  drupal_add_css($path . '/system.menus.css');
+  drupal_add_css($path . '/system.messages.css');
+  drupal_add_css($path . '/system.theme.css');
+  drupal_add_css($path . '/system.maintenance.css');
 }
 
 /**
  * This builds the registry when the site needs to bypass any database calls.
  */
 function _theme_load_offline_registry($theme, $base_theme = NULL, $theme_engine = NULL) {
-  $registry = _theme_build_registry($theme, $base_theme, $theme_engine);
-  _theme_set_registry($registry);
+  return _theme_build_registry($theme, $base_theme, $theme_engine);
 }
 
 /**

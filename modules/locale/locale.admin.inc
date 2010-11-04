@@ -1,5 +1,5 @@
 <?php
-// $Id: locale.admin.inc,v 1.16 2010/06/26 21:32:20 dries Exp $
+// $Id: locale.admin.inc,v 1.19 2010/10/04 18:00:46 dries Exp $
 
 /**
  * @file
@@ -784,7 +784,7 @@ function locale_translate_overview_screen() {
  */
 function locale_translate_seek_screen() {
   // Add CSS.
-  drupal_add_css(drupal_get_path('module', 'locale') . '/locale.css', array('preprocess' => FALSE));
+  drupal_add_css(drupal_get_path('module', 'locale') . '/locale.css');
 
   $elements = drupal_get_form('locale_translation_filter_form');
   $output = drupal_render($elements);
@@ -854,7 +854,8 @@ function locale_translation_filter_form() {
       $form['filters']['status'][$key] = array(
         '#title' => $filter['title'],
         '#type' => 'select',
-        '#multiple' => FALSE,
+        '#empty_value' => 'all',
+        '#empty_option' => $filter['options']['all'],
         '#size' => 0,
         '#options' => $filter['options'],
       );

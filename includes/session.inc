@@ -1,5 +1,5 @@
 <?php
-// $Id: session.inc,v 1.87 2010/07/07 13:52:00 dries Exp $
+// $Id: session.inc,v 1.89 2010/09/17 14:56:27 dries Exp $
 
 /**
  * @file
@@ -61,6 +61,7 @@ function _drupal_session_close() {
  *
  * @param $sid
  *   Session ID.
+ *
  * @return
  *   Either an array of the session data, or an empty string, if no data
  *   was found or the user is anonymous.
@@ -134,6 +135,7 @@ function _drupal_session_read($sid) {
  *   Session ID.
  * @param $value
  *   Serialized array of the session data.
+ *
  * @return
  *   This function will always return TRUE.
  */
@@ -309,8 +311,9 @@ function drupal_session_regenerate() {
     }
     $params = session_get_cookie_params();
     $session_id = drupal_hash_base64(uniqid(mt_rand(), TRUE) . drupal_random_bytes(55));
-    // If the session cookie lifetime is set, the session will expire $params['lifetime'] seconds from the current request.
-    // If it is not set, it will expire when the browser is closed.
+    // If a session cookie lifetime is set, the session will expire
+    // $params['lifetime'] seconds from the current request. If it is not set,
+    // it will expire when the browser is closed.
     $expire = $params['lifetime'] ? REQUEST_TIME + $params['lifetime'] : 0;
     setcookie($insecure_session_name, $session_id, $expire, $params['path'], $params['domain'], FALSE, $params['httponly']);
     $_COOKIE[$insecure_session_name] = $session_id;
@@ -447,6 +450,7 @@ function _drupal_session_garbage_collection($lifetime) {
  * @param $status
  *   Disables writing of session data when FALSE, (re-)enables
  *   writing when TRUE.
+ *
  * @return
  *   FALSE if writing session data has been disabled. Otherwise, TRUE.
  */
