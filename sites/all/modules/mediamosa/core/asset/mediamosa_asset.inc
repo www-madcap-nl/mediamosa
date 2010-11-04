@@ -192,9 +192,6 @@ class mediamosa_asset {
         mediamosa_asset_mediafile::delete($mediafile_ids);
       }
 
-      // Remove my stats.
-      mediamosa_statistics::delete_by_asset_id($asset_id);
-
       // @TODO: parent_id is no longer used.
       // Find my children.
       $result = mediamosa_db::db_query(

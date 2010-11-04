@@ -64,7 +64,6 @@ function mediamosa_statistics_filter_form($form, $form_state) {
     case MEDIAMOSA_STATISTICS_FILTER_TYPE_COLLECTION_LATEST:
     case MEDIAMOSA_STATISTICS_FILTER_TYPE_COLLECTION_POPULAR:
     case MEDIAMOSA_STATISTICS_FILTER_TYPE_DISKSPACE:
-    case MEDIAMOSA_STATISTICS_FILTER_TYPE_STREAMREQUESTS:
     case MEDIAMOSA_STATISTICS_FILTER_TYPE_POPULARSTREAMS:
       $app_owners = mediamosa_app::collect_app_owners();
       $owners = array();
@@ -94,9 +93,26 @@ function mediamosa_statistics_filter_form($form, $form_state) {
         '#default_value' => !empty($session['app_id']) ? $session['app_id'] : '',
       );
       break;
+
+    case MEDIAMOSA_STATISTICS_FILTER_TYPE_STREAMREQUESTS:
+      // Get all apps.
+      $result = mediamosa_app::get_all_apps(array(mediamosa_app_db::APP_ID, mediamosa_app_db::APP_NAME));
+
+      $apps = array();
+      foreach ($result as $row) {
+        $apps[$row['app_id']] = $row[mediamosa_app_db::APP_NAME] . ' (app id ' . $row['app_id'] . ')';
+      }
+
+      $form['filters']['status']['app_id'] = array(
+        '#type' => 'select',
+        '#options' => array('' => '') + $apps,
+        '#title' => 'Application',
+        '#default_value' => !empty($session['app_id']) ? $session['app_id'] : '',
+      );
+      break;
   }
 
-  $years = $months = array();
+  $years = $months = $days = $hours = array();
 
   for ($y = 1970; $y <= date('Y'); $y++) {
     $years[$y] = $y;
@@ -104,6 +120,14 @@ function mediamosa_statistics_filter_form($form, $form_state) {
 
   for ($m = 1; $m <= 12; $m++) {
     $months[$m] = $m;
+  }
+
+  for ($d = 1; $d <= 31; $d++) {
+    $days[$d] = $d;
+  }
+
+  for ($h = 1; $h <= 24; $h++) {
+    $hours[$h] = $h;
   }
 
   switch ($type) {
@@ -149,6 +173,21 @@ function mediamosa_statistics_filter_form($form, $form_state) {
           '#title' => 'Month',
           '#default_value' => !empty($session['month']) ? $session['month'] : date('n'),
         );
+        /*
+        // Later development.
+        $form['filters']['status']['day'] = array(
+          '#type' => 'select',
+          '#options' => $days,
+          '#title' => 'Day',
+          '#default_value' => !empty($session['day']) ? $session['day'] : date('j'),
+        );
+        $form['filters']['status']['hour'] = array(
+          '#type' => 'select',
+          '#options' => $hours,
+          '#title' => 'Hour',
+          '#default_value' => !empty($session['hour']) ? $session['hour'] : date('G'),
+        );
+         */
         break;
 
       case MEDIAMOSA_STATISTICS_FILTER_TYPE_SEARCHEDWORDS:

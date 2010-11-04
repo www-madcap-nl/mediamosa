@@ -33,6 +33,7 @@ MediaMosa 2.3.0 Build (1032)
 - Fixed numofvideos in REST call /collection/coll_id/asset/count to return 
   correct number of videos in master-slaved collection. (See ticket #206).
 - Permanent Still URLs when asset is not protected (See ticket #291).
+- Streaming server statistics improvements (See ticket #103).
 
 Other changes (not ticket related).
 - Fixed: /mediafile/uploadprogress will now work without /external in front of

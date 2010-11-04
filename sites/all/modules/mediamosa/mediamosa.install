@@ -1352,4 +1352,54 @@ function mediamosa_update_7071() {
   ));
 }
 
+/**
+ * Uninstall tables:
+ *  - mediamosa_statistics_stream_request
+ *  - mediamosa_statistics_stream_request_collection
+ * Install tables:
+ *  - mediamosa_statistics_file_helper
+ *  - mediamosa_streaming_ticket
+ *  - mediamosa_statistics_stream_request
+ */
+function mediamosa_update_7072() {
+  // Uninstall mediamosa_statistics_stream_request table.
+  try {
+    // Try this first.
+    mediamosa::drupal_uninstall_schema('mediamosa_statistics_stream_request');
+  }
+  catch (Exception $e) {
+    // ignore.
+  }
+
+  // Then when it fails, we do this.
+  if (db_table_exists('mediamosa_statistics_stream_request')) {
+    db_drop_table('mediamosa_statistics_stream_request');
+  }
+
+
+  // Uninstall mediamosa_statistics_stream_request_collection table.
+  try {
+    // Try this first.
+    mediamosa::drupal_uninstall_schema('mediamosa_statistics_stream_request_collection');
+  }
+  catch (Exception $e) {
+    // ignore.
+  }
+
+  // Then when it fails, we do this.
+  if (db_table_exists('mediamosa_statistics_stream_request_collection')) {
+    db_drop_table('mediamosa_statistics_stream_request_collection');
+  }
+
+
+  // Install tables.
+  mediamosa::drupal_install_schema('mediamosa_statistics_file_helper');
+  mediamosa::drupal_install_schema('mediamosa_streaming_ticket');
+  mediamosa::drupal_install_schema('mediamosa_statistics_stream_request');
+
+  // Rebuild the registry.
+  registry_rebuild();
+  cache_clear_all();
+}
+
 // TODO: Remove old code from the repository on the next release: sites/all/modules/mediamosa/core/transcode/mapping.
