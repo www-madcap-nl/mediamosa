@@ -26,6 +26,36 @@
 
 /**
  * @file
+ * DB class for statistics file helper.
+ */
+class mediamosa_statistics_file_helper_db {
+  // ------------------------------------------------------------------ Consts.
+  // Table name;
+  const TABLE_NAME = 'mediamosa_statistics_file_helper'; // 1.x name statistics_stream_request.
+
+  // Database fields;
+  const FILE = 'file';
+  const FILE_LENGTH = 50;
+}
+
+/**
+ * @file
+ * DB class for statistics stream ticket.
+ */
+class mediamosa_streaming_ticket_db {
+  // ------------------------------------------------------------------ Consts.
+  // Table name;
+  const TABLE_NAME = 'mediamosa_streaming_ticket'; // 1.x name statistics_stream_request.
+
+  // Database fields;
+  const ID = 'tid';
+  const TICKET_ID = 'ticket_id';
+  const APP_ID = 'app_id';
+  const MEDIAFILE_ID = 'mediafile_id';
+}
+
+/**
+ * @file
  * DB class for statistics stream request.
  */
 class mediamosa_statistics_stream_request_db {
@@ -35,15 +65,10 @@ class mediamosa_statistics_stream_request_db {
 
   // Database fields;
   const ID = 'id';
+  const TID = 'tid';
+  const TIME = 'time';
   const APP_ID = 'app_id';
-  const ASSET_ID = 'asset_id';
   const MEDIAFILE_ID = 'mediafile_id';
-  const OWNER_ID = 'owner_id';
-  const GROUP_ID = 'group_id';
-  const FILESIZE = 'filesize';
-  const CONTAINER_TYPE = 'container_type';
-  const CONTAINER_TYPE_LENGTH = 50;
-  const PLAY_TYPE = 'play_type';
-  const PLAY_TYPE_LENGTH = 20;
-  const PLAYED = 'played'; // 1.x type timestamp, 2.x type datetime.
+  const DURATION = 'duration';
+  const BYTES = 'bytes';
 }

@@ -266,9 +266,6 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
       // Test if access on unappropriate flag.
       mediamosa_asset::is_unappropriate($asset_id, $a_app_ids, $user_id, $is_app_admin, TRUE);
 
-      // Log stream event.
-      mediamosa_statistics::log_event_requested_stream($mediafile_id, $response_type);
-
       // Check if allowed to play.
       mediamosa_asset_mediafile_metadata::is_playable($mediafile_id);
 

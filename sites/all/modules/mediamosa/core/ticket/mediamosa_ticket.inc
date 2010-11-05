@@ -145,6 +145,8 @@ class mediamosa_ticket {
       ->fields($a_fields)
       ->execute();
 
+    mediamosa_statistics::create_streaming_ticket($ticket_id, $ticket_type, $app_id, $mediafile_id);
+
     // Return the ticket ID.
     return $ticket_id;
   }
