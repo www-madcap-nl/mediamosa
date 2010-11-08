@@ -638,7 +638,6 @@ class mediamosa_job_scheduler {
     // Add record to the mediafile metadata table.
     if (is_array($filenames)) {
       $frametime = $still_parameters['frametime'];
-      //$duration = $still_parameters['duration'];
       if (isset($still_parameters['framerate']) && is_numeric($still_parameters['framerate'])) {
         $second = $still_parameters['framerate'] > 0 ? 1 / $still_parameters['framerate'] : 0;
       }
