@@ -552,7 +552,7 @@ class mediamosa_job_server {
           }
         }
         else {
-          self::set_job_status($job_id, $status, $job_status['Progress']);
+          self::set_job_status($job_id, $status, isset($job_status['Progress']) ? $job_status['Progress'] : 0);
         }
 
         break;

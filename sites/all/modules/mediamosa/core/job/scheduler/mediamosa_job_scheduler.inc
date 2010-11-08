@@ -614,7 +614,7 @@ class mediamosa_job_scheduler {
       $fh = @fopen($my_file, 'r');
       if ($fh) {
         while (!feof($fh)) {
-          $scenes[] = fgets($fh);
+          $scenes[] = (int) fgets($fh);
         }
         fclose($fh);
       }
@@ -638,7 +638,7 @@ class mediamosa_job_scheduler {
     // Add record to the mediafile metadata table.
     if (is_array($filenames)) {
       $frametime = $still_parameters['frametime'];
-      $duration = $still_parameters['duration'];
+      //$duration = $still_parameters['duration'];
       if (isset($still_parameters['framerate']) && is_numeric($still_parameters['framerate'])) {
         $second = $still_parameters['framerate'] > 0 ? 1 / $still_parameters['framerate'] : 0;
       }
