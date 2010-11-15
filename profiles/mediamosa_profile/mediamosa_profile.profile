@@ -649,8 +649,9 @@ function mediamosa_profile_apache_settings_form() {
 
   $apache_settings_adv = st("<b>Multiserver setup (advanced)</b><p>
 Multidomain setup with different DNS entries for a production setup.
-First change your site settings in <code>/etc/apache2/sites-enabled/your-site</code>.
-Save your original file, then insert this code to your settings file.
+First change your site settings in <code>/etc/apache2/sites-available/your-site</code>.
+Save your original file (if any), then insert this code to your settings file.
+If you just created this file please enable it with the <code>a2ensite</code> command.
     <pre>" . htmlentities("
 <VirtualHost *:80>
     ServerName !server_name_clean.local
