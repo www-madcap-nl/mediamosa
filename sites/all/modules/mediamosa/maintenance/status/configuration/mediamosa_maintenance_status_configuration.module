@@ -106,11 +106,12 @@ function mediamosa_maintenance_status_configuration_mediamosa_status_generate() 
 
   // PHP ini.
 
+  /* commented out because of Drupal bootstrap overriding user settings
   $results['php_apache_notice'] = array(
     'title' => t('PHP required settings'),
     'value' => t('PHP error_reporting should be set at E_ALL & ~E_NOTICE.'),
     'severity' => _mediamosa_maintenance_status_okwarning(ini_get('error_reporting') & E_NOTICE),
-  );
+  );*/
 
   $results['php_cli_notice'] = array(
     'title' => t('PHP required settings'),

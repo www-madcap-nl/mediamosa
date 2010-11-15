@@ -345,12 +345,13 @@ function _mediamosa_profile_php_settings() {
   $php_error_reporting = ini_get('error_reporting');
   $e_notice = ($php_error_reporting & E_NOTICE);
 
+  /* commented out because of Drupal bootstrap overriding user settings
   $requirements['error_reporting'] = array(
     'title' => st('<b>error_reporting:</b>'),
     'value' => !$e_notice ? 'Off' : 'E_NOTICE is on.' ,
     'severity' => !$e_notice ? REQUIREMENT_OK : REQUIREMENT_WARNING,
     'description' => !$e_notice ? '' : st('Warning: You should to turn off E_NOTICE flag to prevent PHP warnings being displayed on your website. We advice E_ALL & ~E_NOTICE in your php.ini file.'),
-  );
+  );*/
 
   $php_error_reporting = exec("php -r \"print(ini_get('error_reporting'));\"");
   $e_notice = ($php_error_reporting & E_NOTICE);
