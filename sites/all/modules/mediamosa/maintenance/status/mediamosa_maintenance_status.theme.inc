@@ -73,11 +73,15 @@ function theme_mediamosa_maintenance_status_report($variables) {
     // Output table row(s)
     if (!empty($result['description'])) {
       $output .= '<tr class="' . $class . ' merge-down"><td>' . $result['title'] . '</td><td>' . $result['value'] . '</td></tr>';
-      $output .= '<tr class="' . $class . ' merge-up"><td colspan="2">' . $result['description'] . '</td></tr>';
+      $output .= '<tr class="' . $class . ' merge-up"><td colspan="2">' . $result['description'];
     }
     else {
-      $output .= '<tr class="' . $class . '"><td>' . $result['title'] . '</td><td>' . $result['value'] . '</td></tr>';
+      $output .= '<tr class="' . $class . '"><td>' . $result['title'] . '</td><td>' . $result['value'];
     }
+    if (!empty($result['more_link'])) {
+      $output .= (' '. $result['more_link']);
+    }
+    $output .= '</td></tr>';
   }
 
   $output .= '</table>';

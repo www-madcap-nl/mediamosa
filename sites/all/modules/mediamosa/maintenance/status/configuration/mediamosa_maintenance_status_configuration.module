@@ -65,11 +65,18 @@ define('MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_FFMPEG_WARNING_SVN', "SVN-r19
 /**
  * Implements hook_mediamosa_status_generate().
  *
- * @param with_variable boolean
- *   Use Drupal variables or not
  */
 function mediamosa_maintenance_status_configuration_mediamosa_status_generate() {
   global $conf;
+
+  // for several topics we provide a link to webpages with configuration hints
+  $helper_links = array(
+    'yamdi' =>      'http://mediamosa.org/trac/wiki/Tuning%20MediaMosa#Yamdi',
+    'lav2yuv' =>    'http://mediamosa.org/trac/wiki/Tuning%20MediaMosa#Lav2yuv',
+    'mp4box' =>     'http://mediamosa.org/trac/wiki/Tuning%20MediaMosa#MP4Box',
+    'innodb_flush_log_at_trx_commit' => 'http://mediamosa.org/trac/wiki/Tuning%20MediaMosa#innodb_flush_log_at_trx_commit',
+    'innodb_flush_method' => 'http://mediamosa.org/trac/wiki/Tuning%20MediaMosa#innodb_flush_method',
+  );
 
   $results = array();
 
@@ -175,33 +182,46 @@ function mediamosa_maintenance_status_configuration_mediamosa_status_generate() 
   $not_exists = exec('yamdi -h 2>&1');
   $exec_output = array();
   $last_line = exec('yamdi -h 2>&1', $exec_output, $ret_val);
-  $version = t('Yamdi') . ($not_exists ? '' : _mediamosa_maintenance_status_search_in_array('version', $exec_output));
-
   $results['app_yamdi'] = array(
     'title' => t('Application'),
-    'value' => $version,
     'severity' => _mediamosa_maintenance_status_okwarning($not_exists),
   );
+  if ($not_exists) {
+    $results['app_yamdi']['value'] = t('Yamdi is not accesible.');
+    $results['app_yamdi']['more_link'] = l(t('Help on install...'), $helper_links['yamdi']);
+  }
+  else {
+    $results['app_yamdi']['value'] = t('Yamdi') . _mediamosa_maintenance_status_search_in_array('version', $exec_output);
+  }
 
 
   // MP4Box.
   $exec_output = array();
   $last_line = exec('MP4Box 2>&1', $exec_output, $ret_val);
+  $not_exists = (strpos($exec_output[0], 'not found') !== FALSE);
   $results['app_mp4box'] = array(
     'title' => t('Application'),
     'value' => t('MP4Box'),
-    'severity' => _mediamosa_maintenance_status_okwarning(strpos($exec_output[0], 'not found') !== FALSE),
+    'severity' => _mediamosa_maintenance_status_okwarning($not_exists),
   );
+  if ($not_exists) {
+    $results['app_mp4box']['more_link'] = l(t('Help on install...'), $helper_links['mp4box']);
+  }
 
 
   // Lav2yuv.
   $exec_output = array();
   $last_line = exec('lav2yuv 2>&1', $exec_output, $ret_val);
-  $results['app_lay2yuv'] = array(
+  $not_exists = (strpos($exec_output[0], 'not found') !== FALSE);
+  $results['app_lav2yuv'] = array(
     'title' => t('Application'),
     'value' => t('Lav2yuv'),
-    'severity' => _mediamosa_maintenance_status_okwarning($ret_val),
+    'severity' => _mediamosa_maintenance_status_okwarning($not_exists),
   );
+  if ($not_exists) {
+    $results['app_lav2yuv']['more_link'] = l(t('Help on install...'), $helper_links['lav2yuv']);
+  }
+
 
   if (function_exists('apache_get_version')) {
     // Apache version.
@@ -259,10 +279,12 @@ function mediamosa_maintenance_status_configuration_mediamosa_status_generate() 
     'severity' => _mediamosa_maintenance_status_okwarning($rows['character_set_database'] != 'utf8'),
   );
   */
+  $is_correct = ($rows['innodb_flush_log_at_trx_commit'] != '1');
   $results['database_innodb_flush_log_at_trx_commit'] = array(
     'title' => t('Database'),
     'value' => t("innodb_flush_log_at_trx_commit = @value. It shouldn't be 1.", array('@value' => $rows['innodb_flush_log_at_trx_commit'])),
-    'severity' => _mediamosa_maintenance_status_okwarning($rows['innodb_flush_log_at_trx_commit'] == '1'),
+    'severity' => _mediamosa_maintenance_status_okwarning(!$is_correct),
+    'more_link' => $is_correct ? NULL : l(t('Help on configure...'), $helper_links['innodb_flush_log_at_trx_commit']),
   );
 
   $results['database_innodb_buffer_pool_size'] = array(
@@ -276,10 +298,12 @@ function mediamosa_maintenance_status_configuration_mediamosa_status_generate() 
     'value' => t('innodb_log_file_size = @size.', array('@size' => format_size($rows['innodb_log_file_size']))),
     'severity' => _mediamosa_maintenance_status_okwarning(((int) $rows['innodb_log_file_size'] / 1048576) < 2),
   );
+  $is_correct = ($rows['innodb_flush_method'] == 'O_DIRECT');
   $results['database_innodb_flush_method'] = array(
     'title' => t('Database'),
     'value' => t('innodb_flush_method = "@value". Should be "O_DIRECT".', array('@value' => $rows['innodb_flush_method'])),
-    'severity' => _mediamosa_maintenance_status_okwarning($rows['innodb_flush_method'] != 'O_DIRECT'),
+    'severity' => _mediamosa_maintenance_status_okwarning(!$is_correct),
+    'more_link' => $is_correct ? NULL : l(t('Help on configure...'), $helper_links['innodb_flush_method']),
   );
 
 
@@ -515,8 +539,6 @@ function mediamosa_maintenance_status_configuration_mediamosa_status_generate() 
  * Implements hook_mediamosa_status_collect().
  *
  * @param reset boolean
- * @param with_variable boolean
- *   Use Drupal variables or not
  *
  * @return array
  *   All the statuses in an array
