@@ -255,7 +255,6 @@ class mediamosa_node_revision {
       ->execute();
 
     // Lets do sep.
-    $fields['changed'] = $revision['changed'];
     $revision['changed'] = $node->changed = REQUEST_TIME;
 
     // Update the edited revision.
