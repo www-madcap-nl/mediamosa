@@ -267,9 +267,9 @@ function mediamosa_maintenance_status_configuration_mediamosa_status_generate() 
 
   $results['database_innodb_buffer_pool_size'] = array(
     'title' => t('Database'),
-    'value' => t('innodb_buffer_pool_size = @size. Should have @expected.', array('@size' => format_size($rows['innodb_buffer_pool_size']), '@expected' => format_size(2048 * 1024 * 1024))),
+    'value' => t('innodb_buffer_pool_size = @size. Should have @expected.', array('@size' => format_size($rows['innodb_buffer_pool_size']), '@expected' => format_size(32 * 1024 * 1024))),
     'description' => t('You can set this up to 50 - 80 % of RAM, but beware of setting memory usage too high.'),
-    'severity' => _mediamosa_maintenance_status_okwarning(((int) $rows['innodb_buffer_pool_size'] / 1048576) < 8),
+    'severity' => _mediamosa_maintenance_status_okwarning(((int) $rows['innodb_buffer_pool_size'] / 1048576) < 32),
   );
   $results['database_innodb_log_file_size'] = array(
     'title' => t('Database'),

@@ -638,7 +638,7 @@ function mediamosa_profile_apache_settings_form() {
     <IfModule mod_php5.c>
         php_admin_value post_max_size 2008M
         php_admin_value upload_max_filesize 2000M
-        php_admin_value memory_limit 64M
+        php_admin_value memory_limit 128M
     </IfModule>") ."</pre>
     The ticket is the streaming link to a video needed to play videos, the php settings are needed to allow more than default sizes upload.</p><br /><br />
 ", array(
@@ -733,7 +733,7 @@ If you just created this file please enable it with the a2ensite command.
     <IfModule mod_php5.c>
         php_admin_value post_max_size 2008M
         php_admin_value upload_max_filesize 2000M
-        php_admin_value memory_limit 64M
+        php_admin_value memory_limit 128M
     </IfModule>
 
     ErrorLog /var/log/apache2/upload.!server_name_clean_error.log
