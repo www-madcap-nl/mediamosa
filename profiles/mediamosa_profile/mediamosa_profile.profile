@@ -370,21 +370,30 @@ function _mediamosa_profile_php_settings() {
   }
 
   $php_upload_max_filesize = ini_get('upload_max_filesize');
-  $to_low = (substr($php_upload_max_filesize, 0, -1) < 100) && (substr($php_upload_max_filesize, -1) != 'M' || substr($php_upload_max_filesize, -1) != 'G');
+  $too_low = (substr($php_upload_max_filesize, 0, -1) < 100) && (substr($php_upload_max_filesize, -1) != 'M' || substr($php_upload_max_filesize, -1) != 'G');
   $requirements['upload_max_filesize'] = array(
     'title' => st('<b>upload_max_filesize:</b>'),
     'value' => $php_upload_max_filesize,
-    'severity' => !$to_low ? REQUIREMENT_OK : REQUIREMENT_WARNING,
-    'description' => !$to_low ? '' : st('Warning: upload_max_filesize should be at least 100M.'),
+    'severity' => !$too_low ? REQUIREMENT_OK : REQUIREMENT_WARNING,
+    'description' => !$too_low ? '' : st('Warning: upload_max_filesize should be at least 100M.'),
   );
 
   $php_memory_limit = ini_get('memory_limit');
-  $to_low = (substr($php_memory_limit, 0, -1) < 128) && (substr($php_memory_limit, -1) != 'M' || substr($php_memory_limit, -1) != 'G');
+  $too_low = (substr($php_memory_limit, 0, -1) < 128) && (substr($php_memory_limit, -1) != 'M' || substr($php_memory_limit, -1) != 'G');
   $requirements['memory_limit'] = array(
     'title' => st('<b>memory_limit:</b>'),
     'value' => $php_memory_limit,
-    'severity' => !$to_low ? REQUIREMENT_OK : REQUIREMENT_WARNING,
-    'description' => !$to_low ? '' : st('Warning: memory_limit should be at least 128M.'),
+    'severity' => !$too_low ? REQUIREMENT_OK : REQUIREMENT_WARNING,
+    'description' => !$too_low ? '' : st('Warning: memory_limit should be at least 128M.'),
+  );
+
+  $php_post_max_size = ini_get('post_max_size');
+  $too_low = (substr($php_post_max_size, 0, -1) < 100) && (substr($php_post_max_size, -1) != 'M' || substr($php_post_max_size, -1) != 'G');
+  $requirements['php_post_max'] = array(
+    'title' => st('<b>post_max_size:</b>'),
+    'value' => $php_post_max_size,
+    'severity' => !$too_low ? REQUIREMENT_OK : REQUIREMENT_WARNING,
+    'description' => !$too_low ? '' : st('Warning: post_max_size should be at least 100M.'),
   );
 
   return array('errors' => $errors, 'requirements' => $requirements);
