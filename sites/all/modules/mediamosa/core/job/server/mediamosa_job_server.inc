@@ -33,6 +33,11 @@
 class mediamosa_job_server {
 
   /**
+   * Black still interval.
+   */
+  const BLACK_STILL_INTERVAL = 30;
+
+  /**
    * Log for job_server.
    *
    * @param string $message
@@ -547,7 +552,7 @@ class mediamosa_job_server {
           }
         }
         else {
-          self::set_job_status($job_id, $status, $job_status['Progress']);
+          self::set_job_status($job_id, $status, isset($job_status['Progress']) ? $job_status['Progress'] : 0);
         }
 
         break;
@@ -865,6 +870,16 @@ class mediamosa_job_server {
 
       switch (mediamosa_unicode::strtoupper($still_parameters['still_type'])) {
 
+        case 'NONE':
+          if ($job_server_still[mediamosa_job_server_still_db::BLACKSTILL_CHECK] == mediamosa_job_server_still_db::BLACKSTILL_CHECK_FALSE || $video_duration <= 1) {
+            break;
+          }
+
+          $still_parameters['still_per_mediafile'] = 5;
+          $start_frame = max($frametime - self::BLACK_STILL_INTERVAL, 0);
+          $end_frame = min($frametime + self::BLACK_STILL_INTERVAL, $video_duration - 1);
+          // Go to the NORMAL now.
+
         case 'NORMAL':
           $still_per_mediafile = $still_parameters['still_per_mediafile'];
           $frametime = $start_frame;
@@ -1177,11 +1192,6 @@ class mediamosa_job_server {
 
     $base_filename = mediamosa_io::get_base_filename($mediafile_id_src);
 
-    // Is black still working?
-    if (file_exists(mediamosa_configuration_storage::transcode_file_location_get($base_filename . '_0.jpeg'))) {
-      return mediamosa_job_server_db::JOB_STATUS_INPROGRESS;
-    }
-
     // Check if there really is an image ($file_size > 0)
     $filename = mediamosa_configuration_storage::transcode_file_location_get($base_filename . sprintf(mediamosa_settings::STILL_EXTENSION, 1) . ".jpeg");
     if (!file_exists($filename) || !filesize($filename)) {
@@ -1204,14 +1214,7 @@ class mediamosa_job_server {
     }
 
     // Check if the frame has any usefull content. We do this by checking the amount of dominant colors.
-    // Disabled black still detection; needs a rewrite.
-    $mediafile_id_src = mediamosa_job_server_still::still_validate($job_id, $mediafile_id_src);
-
-    if ($mediafile_id_src === FALSE) {
-      self::log('Job (job_id: @job_id) failed, are there any colors in this movie?', array('@job_id' => $job_id));
-      self::set_job_status($job_id, mediamosa_job_db::JOB_STATUS_FAILED, '1.000', 'Job failed, are there any colors in this movie?');
-      return mediamosa_job_server_db::JOB_STATUS_FAILED;
-    }
+    mediamosa_job_server_still::still_validate($job_id, $base_filename);
 
     $i = 1;
     $mediafile_dest = array();

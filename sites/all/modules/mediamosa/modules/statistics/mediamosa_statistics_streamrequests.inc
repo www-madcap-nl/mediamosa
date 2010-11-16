@@ -46,6 +46,7 @@ function mediamosa_statistics_streamrequests_form() {
 }
 
 function mediamosa_statistics_streamrequests_list_form() {
+  $timezone = variable_get('mediamosa_statistics_streaming_log_timezone', 'Europe/Amsterdam');
 
   // Get session.
   $session = isset($_SESSION['mediamosa_statistics_filter'][MEDIAMOSA_STATISTICS_FILTER_TYPE_STREAMREQUESTS]) ? $_SESSION['mediamosa_statistics_filter'][MEDIAMOSA_STATISTICS_FILTER_TYPE_STREAMREQUESTS] : array();
@@ -76,21 +77,29 @@ function mediamosa_statistics_streamrequests_list_form() {
   $header = array(
     array('data' => t('App ID')),
     array('data' => t('Mediafile ID')),
-    array('data' => t('Asset ID')),
-    array('data' => t('Owner ID')),
-    array('data' => t('Played')),
+    array('data' => t('TID')),
+    array('data' => t('Duration')),
+    array('data' => t('Bytes')),
+    array('data' => t('Time')),
   );
 
   $rows = array();
 
   foreach ($result['items'] as $row) {
+    $time = mediamosa_datetime::utc_date2app_date($row['time'], $timezone);
+    // Truncate the unused minute and second part.
+    $time = drupal_substr($time, 0, -6) . 'h';
+
+    $duration = $row['duration'] / mediamosa_statistics::LOG_FLOAT;
+
     $rows[] = array(
       $row['app_id'],
       check_plain($row['mediafile_id']),
-      mediamosa_lib::l_asset($row['asset_id'], $row['asset_id']),
-      check_plain($row['owner_id']),
-      check_plain($row['played']),
-      );
+      check_plain($row['tid']),
+      check_plain($duration),
+      check_plain($row['bytes']),
+      check_plain($time),
+    );
   }
 
   /**

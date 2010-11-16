@@ -206,6 +206,9 @@ class mediamosa_settings {
   // Status page check timeout.
   const MAINTENANCE_STATUS_CRON_TIME = 600; // 10 minutes.
 
+  // Statistics log maximum process time.
+  const STATISTICS_LOG_MAX_TIME = 3600; // 1 hour.
+
   // Chunk size.
   const DOWNLOAD_CHUNK_SIZE = 1048576;
 

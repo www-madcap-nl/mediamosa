@@ -30,7 +30,6 @@
  */
 
 require_once 'mediamosa_statistics_stream_request_db.inc';
-require_once 'collection/mediamosa_statistics_stream_request_collection.install.inc';
 
 /**
  * Implements hook_install().
@@ -38,10 +37,9 @@ require_once 'collection/mediamosa_statistics_stream_request_collection.install.
 function _mediamosa_statistics_stream_request_install() {
 
   // Create our table(s).
+  mediamosa::drupal_install_schema(mediamosa_statistics_file_helper_db::TABLE_NAME);
+  mediamosa::drupal_install_schema(mediamosa_streaming_ticket_db::TABLE_NAME);
   mediamosa::drupal_install_schema(mediamosa_statistics_stream_request_db::TABLE_NAME);
-
-  // Child
-  _mediamosa_statistics_stream_request_collection_install();
 }
 
 /**
@@ -49,11 +47,78 @@ function _mediamosa_statistics_stream_request_install() {
  */
 function _mediamosa_statistics_stream_request_uninstall() {
   // Drop our table(s).
-
-  // Child
-  _mediamosa_statistics_stream_request_collection_uninstall();
-
   mediamosa::drupal_uninstall_schema(mediamosa_statistics_stream_request_db::TABLE_NAME);
+  mediamosa::drupal_uninstall_schema(mediamosa_streaming_ticket_db::TABLE_NAME);
+  mediamosa::drupal_uninstall_schema(mediamosa_statistics_file_helper_db::TABLE_NAME);
+}
+
+/**
+ * Implements hook_schema().
+ */
+function mediamosa_statistics_file_helper_schema() {
+
+  $schema[mediamosa_statistics_file_helper_db::TABLE_NAME] = array(
+  'description' => t('The statistics file helper table.'),
+    'fields' => array(
+      mediamosa_statistics_file_helper_db::FILE => array(
+        'type' => 'varbinary',
+        'length' => mediamosa_statistics_file_helper_db::FILE_LENGTH,
+        'not null' => TRUE,
+        'description' => t('The name of file.'),
+      ),
+    ),
+    'primary key' => array(mediamosa_statistics_file_helper_db::FILE),
+  );
+
+  return $schema;
+}
+
+/**
+ * Implements hook_schema().
+ */
+function mediamosa_streaming_ticket_schema() {
+
+  $schema[mediamosa_streaming_ticket_db::TABLE_NAME] = array(
+  'description' => t('The statistics ticket table.'),
+    'fields' => array(
+      mediamosa_streaming_ticket_db::ID => array(
+        'type' => 'serial',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+        'description' => t('Primary Key: Unique ID.'),
+      ),
+      mediamosa_streaming_ticket_db::TICKET_ID => array(
+        'type' => 'varbinary',
+        'length' => mediamosa_db::HASH_ID_LENGTH,
+        'not null' => TRUE,
+        'description' => t('Ticket ID.'),
+      ),
+      mediamosa_streaming_ticket_db::APP_ID => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => t('The application ID.'),
+      ),
+      mediamosa_streaming_ticket_db::MEDIAFILE_ID => array(
+        'type' => 'varbinary',
+        'length' => mediamosa_db::HASH_ID_LENGTH,
+        'not null' => TRUE,
+        'description' => t('The parent mediafile ID.'),
+      ),
+    ),
+    'primary key' => array(mediamosa_streaming_ticket_db::ID),
+    'unique keys' => array(
+      'uni_' . mediamosa_streaming_ticket_db::APP_ID . '_' . mediamosa_streaming_ticket_db::TICKET_ID => array(
+        mediamosa_streaming_ticket_db::APP_ID,
+        mediamosa_streaming_ticket_db::TICKET_ID,
+      ),
+    ),
+    'indexes' => array(
+      'idx_mediafileid'  => array(mediamosa_streaming_ticket_db::MEDIAFILE_ID),
+    ),
+  );
+
+  return $schema;
 }
 
 /**
@@ -61,7 +126,7 @@ function _mediamosa_statistics_stream_request_uninstall() {
  */
 function mediamosa_statistics_stream_request_schema() {
 
-  $a_schema[mediamosa_statistics_stream_request_db::TABLE_NAME] = array(
+  $schema[mediamosa_statistics_stream_request_db::TABLE_NAME] = array(
   'description' => t('The statistics stream request table.'),
     'fields' => array(
       mediamosa_statistics_stream_request_db::ID => array(
@@ -70,17 +135,22 @@ function mediamosa_statistics_stream_request_schema() {
         'unsigned' => TRUE,
         'description' => t('Primary Key: Unique ID.'),
       ),
+      mediamosa_statistics_stream_request_db::TID => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => t('The TID (mediamosa_streaming_ticket primary key).'),
+      ),
+      mediamosa_statistics_stream_request_db::TIME => array(
+        'type' => 'datetime',
+        'not null' => TRUE,
+        'description' => t('The date and time, when the streaming request happened.'),
+      ),
       mediamosa_statistics_stream_request_db::APP_ID => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
         'description' => t('The application ID.'),
-      ),
-      mediamosa_statistics_stream_request_db::ASSET_ID => array(
-        'type' => 'varbinary',
-        'length' => mediamosa_db::HASH_ID_LENGTH,
-        'not null' => TRUE,
-        'description' => t('The parent asset ID.'),
       ),
       mediamosa_statistics_stream_request_db::MEDIAFILE_ID => array(
         'type' => 'varbinary',
@@ -88,49 +158,34 @@ function mediamosa_statistics_stream_request_schema() {
         'not null' => TRUE,
         'description' => t('The parent mediafile ID.'),
       ),
-      mediamosa_statistics_stream_request_db::OWNER_ID => array(
-        'type' => 'varchar',
-        'length' => mediamosa_asset_db::OWNER_ID_LENGTH,
-        'not null' => FALSE,
-        'description' => t('The owner ID.'),
-      ),
-      mediamosa_statistics_stream_request_db::GROUP_ID => array(
-        'type' => 'varchar',
-        'length' => mediamosa_asset_db::GROUP_ID_LENGTH,
-        'not null' => FALSE,
-        'description' => t('The group ID.'),
-      ),
-      mediamosa_statistics_stream_request_db::FILESIZE => array(
+      mediamosa_statistics_stream_request_db::DURATION => array(
         'type' => 'int',
         'size' => 'big',
         'not null' => FALSE,
-        'unsigned' => FALSE,
-        'description' => t('The file size of the request.'),
+        'unsigned' => TRUE,
+        'description' => t('Length of time that a client played content before a client event.'),
       ),
-      mediamosa_statistics_stream_request_db::CONTAINER_TYPE => array(
-        'type' => 'varchar',
-        'length' => mediamosa_statistics_stream_request_db::CONTAINER_TYPE_LENGTH,
+      mediamosa_statistics_stream_request_db::BYTES => array(
+        'type' => 'int',
+        'size' => 'big',
         'not null' => FALSE,
-        'description' => t('The container type of the request.'),
-      ),
-      mediamosa_statistics_stream_request_db::PLAY_TYPE => array(
-        'type' => 'varchar',
-        'length' => mediamosa_statistics_stream_request_db::PLAY_TYPE_LENGTH,
-        'not null' => TRUE,
-        'description' => t('The container type of the request.'),
-      ),
-      mediamosa_statistics_stream_request_db::PLAYED => array(
-        'type' => 'datetime',
-        'not null' => TRUE,
-        'description' => t('The time and date of the request.'),
+        'unsigned' => TRUE,
+        'description' => t('Bytes sent by the server to the client.'),
       ),
     ),
     'primary key' => array(mediamosa_statistics_stream_request_db::ID),
+    'unique keys' => array(
+      'uni_' . mediamosa_statistics_stream_request_db::TID . '_' . mediamosa_statistics_stream_request_db::TIME => array(
+        mediamosa_statistics_stream_request_db::TID,
+        mediamosa_statistics_stream_request_db::TIME,
+      ),
+    ),
     'indexes' => array(
-      'idx_mediafileid'  => array(mediamosa_statistics_stream_request_db::MEDIAFILE_ID),
-      'idx_assetid'  => array(mediamosa_statistics_stream_request_db::ASSET_ID),
+      'idx_tid'  => array(mediamosa_statistics_stream_request_db::TID),
+      'idx_app_id'  => array(mediamosa_statistics_stream_request_db::APP_ID),
+      'idx_mediafile_id'  => array(mediamosa_statistics_stream_request_db::MEDIAFILE_ID),
     ),
   );
 
-  return $a_schema;
+  return $schema;
 }

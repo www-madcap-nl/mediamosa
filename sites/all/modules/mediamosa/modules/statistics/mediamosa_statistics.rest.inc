@@ -149,6 +149,7 @@ class mediamosa_rest_call_statistics_get_newest_mediafiles extends mediamosa_res
  * URI: /statistics/popularmediafiles
  * Method: GET
  *
+ * Deprecated.
  * 1.x: vpx_statistics_get_most_popular_mediafiles
  *
  */
@@ -174,6 +175,9 @@ class mediamosa_rest_call_statistics_get_most_popular_mediafiles extends mediamo
   public function do_call() {
     $o_mediamosa = mediamosa::get();
 
+    // TODO
+
+    /*
     $app_ids = $this->get_param_value_app();
     $app_id = reset($app_ids);
 
@@ -247,6 +251,7 @@ class mediamosa_rest_call_statistics_get_most_popular_mediafiles extends mediamo
 
       $o_mediamosa->add_item($row);
     }
+    */
   }
 }
 
@@ -345,6 +350,7 @@ class mediamosa_rest_call_statistics_get_newest_collections extends mediamosa_re
  * URI: /statistics/popularcollections
  * Method: GET
  *
+ * Deprecated.
  * 1.x: vpx_statistics_get_most_popular_collections
  *
  */
@@ -370,6 +376,9 @@ class mediamosa_rest_call_statistics_get_most_popular_collections extends mediam
   public function do_call() {
     $o_mediamosa = mediamosa::get();
 
+    // TODO
+
+    /*
     $app_ids = $this->get_param_value_app();
     $app_id = reset($app_ids);
 
@@ -442,6 +451,7 @@ class mediamosa_rest_call_statistics_get_most_popular_collections extends mediam
 
       $o_mediamosa->add_item($row);
     }
+    */
   }
 }
 
@@ -802,21 +812,6 @@ class mediamosa_rest_call_statistics_get_requested_streams extends mediamosa_res
           self::VAR_RANGE_START => 2000,
           self::VAR_RANGE_END => 2099,
         ),
-        self::OWNER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
-          self::VAR_DESCRIPTION => 'Owner of the upload.',
-          self::VAR_RANGE_END => mediamosa_user_db::NAME_LENGTH,
-        ),
-        self::GROUP_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
-          self::VAR_DESCRIPTION => 'Group of the upload.',
-          self::VAR_RANGE_END => mediamosa_user_group_db::GROUP_ID_LENGTH,
-        ),
-        self::PLAY_TYPE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_ALPHA_NUM,
-          self::VAR_DESCRIPTION => 'Play type.',
-          self::VAR_ALLOWED_VALUES => array('plain', 'object', 'download', 'metafile'),
-        ),
       )
     );
 
@@ -842,28 +837,18 @@ class mediamosa_rest_call_statistics_get_requested_streams extends mediamosa_res
     $limit = $this->get_param_value_limit();
     $offset =  $this->get_param_value_offset();
 
-    $owner_id = $this->get_param_value(self::OWNER_ID);
-    $group_id = $this->get_param_value(self::GROUP_ID);
     $month = $this->get_param_value(self::MONTH);
     $year = $this->get_param_value(self::YEAR);
-
-    $play_type = $this->get_param_value(self::PLAY_TYPE);
 
     // Allowed Order By List
     $a_order_by = array(
       'app_id' => array('column' => 'app_id'),
-      'owner_id' => array('column' => 'owner_id'),
-      'group_id' => array('column' => 'group_id'),
-      'filesize' => array('column' => 'filesize'),
-      'container_type' => array('column' => 'container_type'),
-      'play_type' => array('column' => 'play_type'),
-      'played' => array('column' => 'played'),
-      'asset_id' => array('column' => 'asset_id'),
+      'time' => array('column' => 'time'),
       'mediafile_id' => array('column' => 'mediafile_id'),
     );
 
     if (!isset($a_order_by[$order_by])) {
-      $order_by = 'played';
+      $order_by = 'time';
     }
 
     $a_query = array();
@@ -875,19 +860,7 @@ class mediamosa_rest_call_statistics_get_requested_streams extends mediamosa_res
     // Correct app_id(s) if given.
     $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = sprintf("app_id IN(%s)", mediamosa_db::escape_string(implode(",", $app_ids)));
 
-    $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = sprintf("played BETWEEN '%04d-%02d-01' AND '%04d-%02d-01'", $year, $month, ($month == 12 ? $year + 1 : $year), ($month == 12 ? 1 : $month + 1));
-
-    if ($owner_id) {
-      $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = sprintf("owner_id = '%s'", mediamosa_db::escape_string($owner_id));
-    }
-
-    if ($group_id) {
-      $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = sprintf("group_id = '%s'", mediamosa_db::escape_string($group_id));
-    }
-
-    if ($play_type) {
-      $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = sprintf("play_type = '%s'", mediamosa_db::escape_string($play_type));
-    }
+    $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][] = sprintf("time BETWEEN '%04d-%02d-01' AND '%04d-%02d-01'", $year, $month, ($month == 12 ? $year + 1 : $year), ($month == 12 ? 1 : $month + 1));
 
     // Order by.
     $a_query[mediamosa_db_query::A_ORDER_BY][] = $a_order_by[$order_by]['column'] . ' ' . $order_direction;
@@ -905,7 +878,7 @@ class mediamosa_rest_call_statistics_get_requested_streams extends mediamosa_res
     // Fill items.
     foreach ($result as $row) {
       // UTC -> App timezone.
-      $row[mediamosa_statistics_stream_request_db::PLAYED] = mediamosa::utcdate2appdate($row[mediamosa_statistics_stream_request_db::PLAYED]);
+      $row[mediamosa_statistics_stream_request_db::TIME] = mediamosa::utcdate2appdate($row[mediamosa_statistics_stream_request_db::TIME]);
 
       $o_mediamosa->add_item($row);
     }
@@ -913,9 +886,51 @@ class mediamosa_rest_call_statistics_get_requested_streams extends mediamosa_res
 }
 
 /**
+ * URI: /cron/statistics
+ * Method: GET
+ */
+class mediamosa_rest_call_cron_statistics extends mediamosa_rest_call {
+  // ------------------------------------------------------------------ Consts.
+  // Rest vars;
+
+  // ------------------------------------------------------------------ Get Var Setup.
+  public function get_var_setup() {
+    $var_setup = array();
+
+    // Enrich with required REST vars.
+    return self::get_var_setup_default($var_setup);
+  }
+
+  // ------------------------------------------------------------------ Do Call.
+  public function do_call() {
+    $o_mediamosa = mediamosa::get();
+
+    $run_last = variable_get('mediamosa_statistics_cron_last', NULL);
+    if ($run_last) {
+      if (round(REQUEST_TIME - $run_last) < mediamosa_settings::STATISTICS_LOG_MAX_TIME) {
+        return; // Still running.
+      }
+      else {
+        // Break the cron semaphore.
+        mediamosa_watchdog::log('The streaming statistics cron was time outed.', array(), WATCHDOG_ERROR, 'statistics');
+      }
+    }
+
+    // If we get here then we can go.
+    variable_set('mediamosa_statistics_cron_last', REQUEST_TIME);
+
+    mediamosa_statistics::cron();
+
+    // Done.
+    variable_del('mediamosa_statistics_cron_last');
+  }
+}
+
+/**
  * URI: /statistics/streams
  * Method: GET
  *
+ * Deprecated.
  * 1.x: vpx_statistics_get_most_popular_streams
  *
  */
@@ -970,6 +985,9 @@ class mediamosa_rest_call_statistics_get_most_popular_streams extends mediamosa_
   public function do_call() {
     $o_mediamosa = mediamosa::get();
 
+    // TODO
+
+    /*
     $app_ids = $this->get_param_value_app();
     $app_id = reset($app_ids);
 
@@ -1045,6 +1063,7 @@ class mediamosa_rest_call_statistics_get_most_popular_streams extends mediamosa_
     foreach ($result as $row) {
       $o_mediamosa->add_item($row);
     }
+    */
   }
 }
 

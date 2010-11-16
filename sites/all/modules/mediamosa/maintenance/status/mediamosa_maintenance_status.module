@@ -156,7 +156,7 @@ function mediamosa_maintenance_status_cron() {
     if ($last_time < time() - mediamosa_settings::MAINTENANCE_STATUS_CRON_TIME) {
       variable_set('mediamosa_status_last_time', time());
       // Check run-time requirements and status information.
-      module_invoke_all('mediamosa_status_generate');
+      module_invoke_all('mediamosa_status_collect', TRUE);
     }
   }
   catch (Exception $e) {
