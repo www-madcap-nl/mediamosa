@@ -1030,7 +1030,6 @@ class mediamosa_rest_call_job_create_still extends mediamosa_rest_call_job_creat
       $this->set_param_value(self::START_FRAME, $frametime);
     }
 
-    //$size = $this->get_param_value(self::SIZE);
     $width = $this->get_param_value(self::WIDTH);
     $height = $this->get_param_value(self::HEIGHT);
 
