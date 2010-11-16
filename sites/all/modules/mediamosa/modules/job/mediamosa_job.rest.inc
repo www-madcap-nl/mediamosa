@@ -1030,7 +1030,7 @@ class mediamosa_rest_call_job_create_still extends mediamosa_rest_call_job_creat
       $this->set_param_value(self::START_FRAME, $frametime);
     }
 
-    $size = $this->get_param_value(self::SIZE);
+    //$size = $this->get_param_value(self::SIZE);
     $width = $this->get_param_value(self::WIDTH);
     $height = $this->get_param_value(self::HEIGHT);
 
@@ -1050,11 +1050,11 @@ class mediamosa_rest_call_job_create_still extends mediamosa_rest_call_job_creat
     }
 
     // If size is not given, but width and height are, use width, height.
-    if (!$this->isset_given_param($size) && $width && $height) {
+    if (!$this->isset_given_param(self::SIZE) && $width && $height) {
       $this->set_param_value(self::SIZE, $width . 'x' . $height);
     }
     // If there isn't size, we get the still default size of application.
-    if (!$this->isset_given_param($size)) {
+    if (!$this->isset_given_param(self::SIZE)) {
       $a_app_ids = $this->get_param_value_app();
       $app_id = reset($a_app_ids);
       $this->set_param_value(self::SIZE, mediamosa_app::get_still_default_value($app_id));
