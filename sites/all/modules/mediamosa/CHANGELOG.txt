@@ -34,6 +34,9 @@ MediaMosa 2.3.0 Build (1032)
   correct number of videos in master-slaved collection. (See ticket #206).
 - Permanent Still URLs when asset is not protected (See ticket #291).
 - Streaming server statistics improvements (See ticket #103).
+- Black still generation (See VPCore ticket #212).
+- Installation profile and status page development (See GTD ticket #32).
+- Still creation size is not adjustable fix (See VPCore ticket #214).
 
 Other changes (not ticket related).
 - Fixed: /mediafile/uploadprogress will now work without /external in front of
@@ -64,7 +67,9 @@ Other changes (not ticket related).
 - Added try/catch around crons.
 - Fixed bug in /collection/$coll_id where owner was not changed of collection.
 - Added 'X-MediaMosa-Version' to http header output to indicate call was 
-  processed by MediaMosa. 
+  processed by MediaMosa.
+- Status page cron bug fix.
+- Scene still orders fix.
 
 MediaMosa 2.2.5.3 (Build 956)
 ---------------------------
