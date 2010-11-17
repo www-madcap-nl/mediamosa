@@ -1,5 +1,5 @@
 <?php
-// $Id: system.api.php,v 1.205 2010/10/22 17:20:41 dries Exp $
+// $Id: system.api.php,v 1.212 2010/11/13 02:00:56 dries Exp $
 
 /**
  * @file
@@ -286,7 +286,7 @@ function hook_entity_load($entities, $type) {
 function hook_entity_insert($entity, $type) {
   // Insert the new entity into a fictional table of all entities.
   $info = entity_get_info($type);
-  $id = reset(entity_extract_ids($type, $entity));
+  list($id) = entity_extract_ids($type, $entity);
   db_insert('example_entity')
     ->fields(array(
       'type' => $type,
@@ -308,7 +308,7 @@ function hook_entity_insert($entity, $type) {
 function hook_entity_update($entity, $type) {
   // Update the entity's entry in a fictional table of all entities.
   $info = entity_get_info($type);
-  $id = reset(entity_extract_ids($type, $entity));
+  list($id) = entity_extract_ids($type, $entity);
   db_update('example_entity')
     ->fields(array(
       'updated' => REQUEST_TIME,
@@ -329,7 +329,7 @@ function hook_entity_update($entity, $type) {
 function hook_entity_delete($entity, $type) {
   // Delete the entity's entry from a fictional table of all entities.
   $info = entity_get_info($type);
-  $id = reset(entity_extract_ids($type, $entity));
+  list($id) = entity_extract_ids($type, $entity);
   db_delete('example_entity')
     ->condition('type', $type)
     ->condition('id', $id)
@@ -353,6 +353,68 @@ function hook_entity_delete($entity, $type) {
  */
 function hook_entity_query_alter($query) {
   $query->executeCallback = 'my_module_query_callback';
+}
+
+/**
+ * Act on entities being assembled before rendering.
+ *
+ * @param $entity
+ *   The entity object.
+ * @param $type
+ *   The type of entity being rendered (i.e. node, user, comment).
+ * @param $view_mode
+ *   The view mode the entity is rendered in.
+ * @param $langcode
+ *   The language code used for rendering.
+ *
+ * The module may add elements to $entity->content prior to rendering. The
+ * structure of $entity->content is a renderable array as expected by
+ * drupal_render().
+ *
+ * @see hook_entity_view_alter()
+ * @see hook_comment_view()
+ * @see hook_node_view()
+ * @see hook_user_view()
+ */
+function hook_entity_view($entity, $type, $view_mode, $langcode) {
+  $entity->content['my_additional_field'] = array(
+    '#markup' => $additional_field,
+    '#weight' => 10,
+    '#theme' => 'mymodule_my_additional_field',
+  );
+}
+
+/**
+ * Alter the results of ENTITY_view().
+ *
+ * This hook is called after the content has been assembled in a structured
+ * array and may be used for doing processing which requires that the complete
+ * entity content structure has been built.
+ *
+ * If a module wishes to act on the rendered HTML of the entity rather than the
+ * structured content array, it may use this hook to add a #post_render
+ * callback. Alternatively, it could also implement hook_preprocess_ENTITY().
+ * See drupal_render() and theme() for details.
+ *
+ * @param $build
+ *   A renderable array representing the entity content.
+ * @param $type
+ *   The type of entity being rendered (i.e. node, user, comment).
+ *
+ * @see hook_entity_view()
+ * @see hook_comment_view_alter()
+ * @see hook_node_view_alter()
+ * @see hook_taxonomy_term_view_alter()
+ * @see hook_user_view_alter()
+ */
+function hook_entity_view_alter(&$build, $type) {
+  if ($build['#view_mode'] == 'full' && isset($build['an_additional_field'])) {
+    // Change its weight.
+    $build['an_additional_field']['#weight'] = -10;
+
+    // Add a #post_render callback to act on the rendered HTML of the entity.
+    $build['#post_render'][] = 'my_module_node_post_render';
+  }
 }
 
 /**
@@ -940,12 +1002,14 @@ function hook_page_build(&$page) {
  *     item. Note that this function is called even if the access checks fail,
  *     so any custom delivery callback function should take that into account.
  *     See drupal_deliver_html_page() for an example.
- *   - "access callback": A function returning a boolean value that determines
- *     whether the user has access rights to this menu item. Defaults to
- *     user_access() unless a value is inherited from a parent menu item.
+ *   - "access callback": A function returning TRUE if the user has access
+ *     rights to this menu item, and FALSE if not. It can also be a boolean
+ *     constant instead of a function, and you can also use numeric values
+ *     (will be cast to boolean). Defaults to user_access() unless a value is
+ *     inherited from a parent menu item.
  *   - "access arguments": An array of arguments to pass to the access callback
  *     function, with path component substitution as described above.
- *   - "theme callback": Optional. A function returning the machine-readable
+ *   - "theme callback": (optional) A function returning the machine-readable
  *     name of the default theme that will be used to render the page. If this
  *     function is provided, it is expected to return a currently-active theme
  *     on the site (otherwise, the main site theme will be used instead). If no
@@ -1071,30 +1135,49 @@ function hook_menu_alter(&$items) {
  *
  * @param $item
  *   Associative array defining a menu link as passed into menu_link_save().
+ *
+ * @see hook_translated_menu_link_alter()
  */
 function hook_menu_link_alter(&$item) {
-  // Example 1 - make all new admin links hidden (a.k.a disabled).
+  // Make all new admin links hidden (a.k.a disabled).
   if (strpos($item['link_path'], 'admin') === 0 && empty($item['mlid'])) {
     $item['hidden'] = 1;
   }
-  // Example 2  - flag a link to be altered by hook_translated_menu_link_alter()
+  // Flag a link to be altered by hook_translated_menu_link_alter().
   if ($item['link_path'] == 'devel/cache/clear') {
+    $item['options']['alter'] = TRUE;
+  }
+  // Flag a link to be altered by hook_translated_menu_link_alter(), but only
+  // if it is derived from a menu router item; i.e., do not alter a custom
+  // menu link pointing to the same path that has been created by a user.
+  if ($item['link_path'] == 'user' && $item['module'] == 'system') {
     $item['options']['alter'] = TRUE;
   }
 }
 
 /**
- * Alter a menu link after it's translated, but before it's rendered.
+ * Alter a menu link after it has been translated and before it is rendered.
  *
- * This hook may be used, for example, to add a page-specific query string.
- * For performance reasons, only links that have $item['options']['alter'] == TRUE
- * will be passed into this hook. The $item['options']['alter'] flag should
- * generally be set using hook_menu_link_alter().
+ * This hook is invoked from _menu_link_translate() after a menu link has been
+ * translated; i.e., after dynamic path argument placeholders (%) have been
+ * replaced with actual values, the user access to the link's target page has
+ * been checked, and the link has been localized. It is only invoked if
+ * $item['options']['alter'] has been set to a non-empty value (e.g., TRUE).
+ * This flag should be set using hook_menu_link_alter().
+ *
+ * Implementations of this hook are able to alter any property of the menu link.
+ * For example, this hook may be used to add a page-specific query string to all
+ * menu links, or hide a certain link by setting:
+ * @code
+ *   'hidden' => 1,
+ * @endcode
  *
  * @param $item
  *   Associative array defining a menu link after _menu_link_translate()
  * @param $map
  *   Associative array containing the menu $map (path parts and/or objects).
+ *
+ * @see hook_menu_link_alter()
  */
 function hook_translated_menu_link_alter(&$item, $map) {
   if ($item['href'] == 'devel/cache/clear') {
@@ -2107,31 +2190,28 @@ function hook_watchdog(array $log_entry) {
 /**
  * Prepare a message based on parameters; called from drupal_mail().
  *
+ * Note that hook_mail(), unlike hook_mail_alter(), is only called on the
+ * $module argument to drupal_mail(), not all modules.
+ *
  * @param $key
  *   An identifier of the mail.
  * @param $message
- *  An array to be filled in. Keys in this array include:
- *  - 'id':
- *     An id to identify the mail sent. Look at module source code
+ *   An array to be filled in. Elements in this array include:
+ *   - id: An ID to identify the mail sent. Look at module source code
  *     or drupal_mail() for possible id values.
- *  - 'to':
- *     The address or addresses the message will be sent to. The
+ *   - to: The address or addresses the message will be sent to. The
  *     formatting of this string must comply with RFC 2822.
- *  - 'subject':
- *     Subject of the e-mail to be sent. This must not contain any newline
- *     characters, or the mail may not be sent properly. drupal_mail() sets
- *     this to an empty string when the hook is invoked.
- *  - 'body':
- *     An array of lines containing the message to be sent. Drupal will format
- *     the correct line endings for you. drupal_mail() sets this to an empty
- *     array when the hook is invoked.
- *  - 'from':
- *     The address the message will be marked as being from, which is
+ *   - subject: Subject of the e-mail to be sent. This must not contain any
+ *     newline characters, or the mail may not be sent properly. drupal_mail()
+ *     sets this to an empty string when the hook is invoked.
+ *   - body: An array of lines containing the message to be sent. Drupal will
+ *     format the correct line endings for you. drupal_mail() sets this to an
+ *     empty array when the hook is invoked.
+ *   - from: The address the message will be marked as being from, which is
  *     set by drupal_mail() to either a custom address or the site-wide
  *     default email address when the hook is invoked.
- *  - 'headers':
- *     Associative array containing mail headers, such as From, Sender,
- *     MIME-Version, Content-Type, etc. drupal_mail() pre-fills
+ *   - headers: Associative array containing mail headers, such as From,
+ *     Sender, MIME-Version, Content-Type, etc. drupal_mail() pre-fills
  *     several headers in this array.
  * @param $params
  *   An array of parameters supplied by the caller of drupal_mail().
@@ -2565,7 +2645,7 @@ function hook_file_url_alter(&$uri) {
     // Serve files with one of the CDN extensions from CDN 1, all others from
     // CDN 2.
     $pathinfo = pathinfo($path);
-    if (array_key_exists('extension', $pathinfo) && in_array($pathinfo['extension'], $cdn_extensions)) {
+    if (isset($pathinfo['extension']) && in_array($pathinfo['extension'], $cdn_extensions)) {
       $uri = $cdn1 . '/' . $path;
     }
     else {
@@ -2933,6 +3013,9 @@ function hook_install() {
  *
  * See the batch operations page for more information on how to use the batch API:
  * @link http://drupal.org/node/180528 http://drupal.org/node/180528 @endlink
+ *
+ * @param $sandbox
+ *   Stores information for multipass updates. See above for more information.
  *
  * @throws DrupalUpdateException, PDOException
  *   In case of error, update hooks should throw an instance of DrupalUpdateException

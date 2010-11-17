@@ -1,5 +1,5 @@
 <?php
-// $Id: drupal_web_test_case.php,v 1.243 2010/10/23 02:26:11 webchick Exp $
+// $Id: drupal_web_test_case.php,v 1.247 2010/11/12 03:06:52 dries Exp $
 
 /**
  * Global variable that holds information about the tests being run.
@@ -517,7 +517,8 @@ abstract class DrupalTestCase {
       'file' => $exception->getFile(),
     ));
     require_once DRUPAL_ROOT . '/includes/errors.inc';
-    $this->error(t('%type: %message in %function (line %line of %file).', _drupal_decode_exception($exception)), 'Uncaught exception', _drupal_get_last_caller($backtrace));
+    // The exception message is run through check_plain() by _drupal_decode_exception().
+    $this->error(t('%type: !message in %function (line %line of %file).', _drupal_decode_exception($exception)), 'Uncaught exception', _drupal_get_last_caller($backtrace));
   }
 
   /**
@@ -1363,7 +1364,6 @@ class DrupalWebTestCase extends DrupalTestCase {
 
     // Remove all prefixed tables (all the tables in the schema).
     $schema = drupal_get_schema(NULL, TRUE);
-    $ret = array();
     foreach ($schema as $name => $table) {
       db_drop_table($name);
     }
@@ -1584,7 +1584,8 @@ class DrupalWebTestCase extends DrupalTestCase {
     if (!$this->elements) {
       // DOM can load HTML soup. But, HTML soup can throw warnings, suppress
       // them.
-      @$htmlDom = DOMDocument::loadHTML($this->drupalGetContent());
+      $htmlDom = new DOMDocument();
+      @$htmlDom->loadHTML($this->drupalGetContent());
       if ($htmlDom) {
         $this->pass(t('Valid HTML found on "@path"', array('@path' => $this->getUrl())), t('Browser'));
         // It's much easier to work with simplexml than DOM, luckily enough
@@ -1856,7 +1857,8 @@ class DrupalWebTestCase extends DrupalTestCase {
       );
       // DOM can load HTML soup. But, HTML soup can throw warnings, suppress
       // them.
-      @$dom = DOMDocument::loadHTML($content);
+      $dom = new DOMDocument();
+      @$dom->loadHTML($content);
       foreach ($return as $command) {
         switch ($command['command']) {
           case 'settings':
@@ -2809,20 +2811,21 @@ class DrupalWebTestCase extends DrupalTestCase {
    * @param $xpath
    *   XPath used to find the field.
    * @param $value
-   *   Value of the field to assert.
+   *   (optional) Value of the field to assert.
    * @param $message
-   *   Message to display.
+   *   (optional) Message to display.
    * @param $group
-   *   The group this message belongs to.
+   *   (optional) The group this message belongs to.
+   *
    * @return
    *   TRUE on pass, FALSE on fail.
    */
-  protected function assertFieldByXPath($xpath, $value, $message = '', $group = 'Other') {
+  protected function assertFieldByXPath($xpath, $value = NULL, $message = '', $group = 'Other') {
     $fields = $this->xpath($xpath);
 
     // If value specified then check array for match.
     $found = TRUE;
-    if ($value) {
+    if (isset($value)) {
       $found = FALSE;
       if ($fields) {
         foreach ($fields as $field) {
@@ -2881,20 +2884,21 @@ class DrupalWebTestCase extends DrupalTestCase {
    * @param $xpath
    *   XPath used to find the field.
    * @param $value
-   *   Value of the field to assert.
+   *   (optional) Value of the field to assert.
    * @param $message
-   *   Message to display.
+   *   (optional) Message to display.
    * @param $group
-   *   The group this message belongs to.
+   *   (optional) The group this message belongs to.
+   *
    * @return
    *   TRUE on pass, FALSE on fail.
    */
-  protected function assertNoFieldByXPath($xpath, $value, $message = '', $group = 'Other') {
+  protected function assertNoFieldByXPath($xpath, $value = NULL, $message = '', $group = 'Other') {
     $fields = $this->xpath($xpath);
 
     // If value specified then check array for match.
     $found = TRUE;
-    if ($value) {
+    if (isset($value)) {
       $found = FALSE;
       if ($fields) {
         foreach ($fields as $field) {
@@ -3058,7 +3062,7 @@ class DrupalWebTestCase extends DrupalTestCase {
    *   TRUE on pass, FALSE on fail.
    */
   protected function assertField($field, $message = '', $group = 'Other') {
-    return $this->assertFieldByXPath($this->constructFieldXpath('name', $field) . '|' . $this->constructFieldXpath('id', $field), '', $message, $group);
+    return $this->assertFieldByXPath($this->constructFieldXpath('name', $field) . '|' . $this->constructFieldXpath('id', $field), NULL, $message, $group);
   }
 
   /**
@@ -3074,7 +3078,7 @@ class DrupalWebTestCase extends DrupalTestCase {
    *   TRUE on pass, FALSE on fail.
    */
   protected function assertNoField($field, $message = '', $group = 'Other') {
-    return $this->assertNoFieldByXPath($this->constructFieldXpath('name', $field) . '|' . $this->constructFieldXpath('id', $field), '', $message, $group);
+    return $this->assertNoFieldByXPath($this->constructFieldXpath('name', $field) . '|' . $this->constructFieldXpath('id', $field), NULL, $message, $group);
   }
 
   /**

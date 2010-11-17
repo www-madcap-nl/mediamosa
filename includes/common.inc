@@ -1,5 +1,5 @@
 <?php
-// $Id: common.inc,v 1.1244 2010/10/21 19:31:39 dries Exp $
+// $Id: common.inc,v 1.1253 2010/11/13 14:06:43 dries Exp $
 
 /**
  * @file
@@ -726,46 +726,35 @@ function drupal_access_denied() {
  *
  * @param $url
  *   A string containing a fully qualified URI.
- * @param $options
- *   (optional) An array which can have one or more of following keys:
- *   - headers
- *       An array containing request headers to send as name/value pairs.
- *   - method
- *       A string containing the request method. Defaults to 'GET'.
- *   - data
- *       A string containing the request body. Defaults to NULL.
- *   - max_redirects
- *       An integer representing how many times a redirect may be followed.
- *       Defaults to 3.
- *   - timeout
- *       A float representing the maximum number of seconds the function call
- *       may take. The default is 30 seconds. If a timeout occurs, the error
- *       code is set to the HTTP_REQUEST_TIMEOUT constant.
- *   - context
- *       A context resource created with stream_context_create().
- * @return
- *   An object which can have one or more of the following parameters:
- *   - request
- *       A string containing the request body that was sent.
- *   - code
- *       An integer containing the response status code, or the error code if
- *       an error occurred.
- *   - protocol
- *       The response protocol (e.g. HTTP/1.1 or HTTP/1.0).
- *   - status_message
- *       The status message from the response, if a response was received.
- *   - redirect_code
- *       If redirected, an integer containing the initial response status code.
- *   - redirect_url
- *       If redirected, a string containing the redirection location.
- *   - error
- *       If an error occurred, the error message. Otherwise not set.
- *   - headers
- *       An array containing the response headers as name/value pairs. HTTP
- *       header names are case-insensitive (RFC 2616, section 4.2), so for easy
- *       access the array keys are returned in lower case.
- *   - data
- *       A string containing the response body that was received.
+ * @param array $options
+ *   (optional) An array that can have one or more of the following elements:
+ *   - headers: An array containing request headers to send as name/value pairs.
+ *   - method: A string containing the request method. Defaults to 'GET'.
+ *   - data: A string containing the request body, formatted as
+ *     'param=value&param=value&...'. Defaults to NULL.
+ *   - max_redirects: An integer representing how many times a redirect
+ *     may be followed. Defaults to 3.
+ *   - timeout: A float representing the maximum number of seconds the function
+ *     call may take. The default is 30 seconds. If a timeout occurs, the error
+ *     code is set to the HTTP_REQUEST_TIMEOUT constant.
+ *   - context: A context resource created with stream_context_create().
+ * 
+ * @return object
+ *   An object that can have one or more of the following components:
+ *   - request: A string containing the request body that was sent.
+ *   - code: An integer containing the response status code, or the error code
+ *     if an error occurred.
+ *   - protocol: The response protocol (e.g. HTTP/1.1 or HTTP/1.0).
+ *   - status_message: The status message from the response, if a response was
+ *     received.
+ *   - redirect_code: If redirected, an integer containing the initial response
+ *     status code.
+ *   - redirect_url: If redirected, a string containing the redirection location.
+ *   - error: If an error occurred, the error message. Otherwise not set.
+ *   - headers: An array containing the response headers as name/value pairs.
+ *     HTTP header names are case-insensitive (RFC 2616, section 4.2), so for
+ *     easy access the array keys are returned in lower case.
+ *   - data: A string containing the response body that was received.
  */
 function drupal_http_request($url, array $options = array()) {
   $result = new stdClass();
@@ -2221,9 +2210,7 @@ function drupal_http_header_attributes(array $attributes = array()) {
  */
 function drupal_attributes(array $attributes = array()) {
   foreach ($attributes as $attribute => &$data) {
-    if (is_array($data)) {
-      $data = implode(' ', $data);
-    }
+    $data = implode(' ', (array) $data);
     $data = $attribute . '="' . check_plain($data) . '"';
   }
   return $attributes ? ' ' . implode(' ', $attributes) : '';
@@ -3340,10 +3327,19 @@ function drupal_build_css_cache($css) {
       // Only 'file' stylesheets can be aggregated.
       if ($stylesheet['type'] == 'file') {
         $contents = drupal_load_stylesheet($stylesheet['data'], TRUE);
-        // Return the path to where this CSS file originated from.
-        $base = base_path() . dirname($stylesheet['data']) . '/';
-        _drupal_build_css_path(NULL, $base);
-        // Prefix all paths within this CSS file, ignoring external and absolute paths.
+
+        // Build the base URL of this CSS file: start with the full URL.
+        $css_base_url = file_create_url($stylesheet['data']);
+        // Move to the parent.
+        $css_base_url = substr($css_base_url, 0, strrpos($css_base_url, '/'));
+        // Simplify to a relative URL if the stylesheet URL starts with the
+        // base URL of the website.
+        if (substr($css_base_url, 0, strlen($GLOBALS['base_root'])) == $GLOBALS['base_root']) {
+          $css_base_url = substr($css_base_url, strlen($GLOBALS['base_root']));
+        }
+
+        _drupal_build_css_path(NULL, $css_base_url . '/');
+        // Anchor all paths in the CSS with its base URL, ignoring external and absolute paths.
         $data .= preg_replace_callback('/url\(\s*[\'"]?(?![a-z]+:|\/+)([^\'")]+)[\'"]?\s*\)/i', '_drupal_build_css_path', $contents);
       }
     }
@@ -3419,34 +3415,40 @@ function _drupal_build_css_path($matches, $base = NULL) {
  *   Name of the stylesheet to be processed.
  * @param $optimize
  *   Defines if CSS contents should be compressed or not.
+ * @param $reset_basepath
+ *   Used internally to facilitate recursive resolution of @import commands.
+ *
  * @return
  *   Contents of the stylesheet, including any resolved @import commands.
  */
-function drupal_load_stylesheet($file, $optimize = NULL) {
-  // $_optimize does not use drupal_static as it is set by $optimize.
-  static $_optimize;
-  // Store optimization parameter for preg_replace_callback with nested @import loops.
+function drupal_load_stylesheet($file, $optimize = NULL, $reset_basepath = TRUE) {
+  // These statics are not cache variables, so we don't use drupal_static().
+  static $_optimize, $basepath;
+  if ($reset_basepath) {
+    $basepath = '';
+  }
+  // Store the value of $optimize for preg_replace_callback with nested
+  // @import loops.
   if (isset($optimize)) {
     $_optimize = $optimize;
   }
 
-  $contents = '';
-  if (file_exists($file)) {
-    // Load the local CSS stylesheet.
-    $contents = file_get_contents($file);
+  // Stylesheets are relative one to each other. Start by adding a base path
+  // prefix provided by the parent stylesheet (if necessary).
+  if ($basepath && !file_uri_scheme($file)) {
+    $file = $basepath . '/' . $file;
+  }
+  $basepath = dirname($file);
 
-    // Change to the current stylesheet's directory.
-    $cwd = getcwd();
-    chdir(dirname($file));
-
-    // Process the stylesheet.
-    $contents = drupal_load_stylesheet_content($contents, $_optimize);
-
-    // Change back directory.
-    chdir($cwd);
+  // Load the CSS stylesheet. We suppress errors because themes may specify
+  // stylesheets in their .info file that don't exist in the theme's path,
+  // but are merely there to disable certain module CSS files.
+  if ($contents = @file_get_contents($file)) {
+    // Return the processed stylesheet.
+    return drupal_load_stylesheet_content($contents, $_optimize);
   }
 
-  return $contents;
+  return '';
 }
 
 /**
@@ -3519,7 +3521,7 @@ function drupal_load_stylesheet_content($contents, $optimize = FALSE) {
 function _drupal_load_stylesheet($matches) {
   $filename = $matches[1];
   // Load the imported stylesheet and replace @import commands in there as well.
-  $file = drupal_load_stylesheet($filename);
+  $file = drupal_load_stylesheet($filename, NULL, FALSE);
 
   // Determine the file's directory.
   $directory = dirname($filename);
@@ -4140,12 +4142,12 @@ function drupal_get_js($scope = 'header', $javascript = NULL, $skip_alter = FALS
 }
 
 /**
- * Add to the page all structures attached to a render() structure.
+ * Adds attachments to a render() structure.
  *
  * Libraries, JavaScript, CSS and other types of custom structures are attached
- * to elements using the #attached property. The #attached property contains an
- * associative array, where the keys are the the types of the structure, and
- * the value the attached data. For example:
+ * to elements using the #attached property. The #attached property is an
+ * associative array, where the keys are the the attachment types and the values
+ * are the attached data. For example:
  * @code
  * $build['#attached'] = array(
  *   'js' => array(drupal_get_path('module', 'taxonomy') . '/taxonomy.js'),
@@ -4156,7 +4158,6 @@ function drupal_get_js($scope = 'header', $javascript = NULL, $skip_alter = FALS
  * 'js', 'css', and 'library' are types that get special handling.  For any
  * other kind of attached data, the array key must be the full name of the
  * callback function and each value an array of arguments. For example:
- *
  * @code
  * $build['#attached']['drupal_add_http_header'] = array(
  *   array('Content-Type', 'application/rss+xml; charset=utf-8'),
@@ -4171,12 +4172,16 @@ function drupal_get_js($scope = 'header', $javascript = NULL, $skip_alter = FALS
  *   assigned to them.
  * @param $dependency_check
  *   When TRUE, will exit if a given library's dependencies are missing. When
- *   set to FALSE, will continue to add the libraries, even though one of the
+ *   set to FALSE, will continue to add the libraries, even though one or more
  *   dependencies are missing. Defaults to FALSE.
+ * @param $every_page
+ *   Set to TRUE to indicate that the attachments are added to every page on the
+ *   site. Only attachments with the every_page flag set to TRUE can participate
+ *   in JavaScript/CSS aggregation.
  *
  * @return
- *   Will return FALSE if there were any missing library dependencies. TRUE will
- *   be returned if all library dependencies were met.
+ *   FALSE if there were any missing library dependencies; TRUE if all library
+ *   dependencies were met.
  *
  * @see drupal_add_library()
  * @see drupal_add_js()
@@ -4388,16 +4393,20 @@ function drupal_process_states(&$elements) {
  * settings, and optionally requiring another library. For example, a library
  * can be a jQuery plugin, a JavaScript framework, or a CSS framework. This
  * function allows modules to load a library defined/shipped by itself or a
- * depending module; without having to add all files of the library separately.
+ * depending module, without having to add all files of the library separately.
  * Each library is only loaded once.
  *
  * @param $module
  *   The name of the module that registered the library.
  * @param $name
  *   The name of the library to add.
+ * @param $every_page
+ *   Set to TRUE if this library is added to every page on the site. Only items
+ *   with the every_page flag set to TRUE can participate in aggregation.
+ *
  * @return
- *   TRUE when the library was successfully added or FALSE if the library or one
- *   of its dependencies could not be added.
+ *   TRUE if the library was successfully added; FALSE if the library or one of
+ *   its dependencies could not be added.
  *
  * @see drupal_get_library()
  * @see hook_library()
@@ -5760,6 +5769,9 @@ function element_sort_by_title($a, $b) {
 
 /**
  * Retrieve the default properties for the defined element type.
+ *
+ * @param $type
+ *   An element type as defined by hook_element_info().
  */
 function element_info($type) {
   // Use the advanced drupal_static() pattern, since this is called very often.
@@ -5782,6 +5794,21 @@ function element_info($type) {
 }
 
 /**
+ * Retrieve a single property for the defined element type.
+ *
+ * @param $type
+ *   An element type as defined by hook_element_info().
+ * @param $property_name
+ *   The property within the element type that should be returned.
+ * @param $default
+ *   (Optional) The value to return if the element type does not specify a
+ *   value for the property. Defaults to NULL.
+ */
+function element_info_property($type, $property_name, $default = NULL) {
+  return (($info = element_info($type)) && array_key_exists($property_name, $info)) ? $info[$property_name] : $default;
+}
+
+/**
  * Function used by uasort to sort structured arrays by weight, without the property weight prefix.
  */
 function drupal_sort_weight($a, $b) {
@@ -5791,6 +5818,19 @@ function drupal_sort_weight($a, $b) {
     return 0;
   }
   return ($a_weight < $b_weight) ? -1 : 1;
+}
+
+/**
+ * Array sorting callback; sorts elements by 'title' key.
+ */
+function drupal_sort_title($a, $b) {
+  if (!isset($b['title'])) {
+    return -1;
+  }
+  if (!isset($a['title'])) {
+    return 1;
+  }
+  return strcasecmp($a['title'], $b['title']);
 }
 
 /**
@@ -5962,14 +6002,22 @@ function element_set_attributes(array &$element, array $map) {
  *   An array of parent keys, starting with the outermost key.
  * @param $value
  *   The value to set.
+ * @param $force
+ *   (Optional) If TRUE, the value is forced into the structure even if it
+ *   requires the deletion of an already existing non-array parent value. If
+ *   FALSE, PHP throws an error if trying to add into a value that is not an
+ *   array. Defaults to FALSE.
  *
  * @see drupal_array_get_nested_value()
  */
-function drupal_array_set_nested_value(array &$array, array $parents, $value) {
+function drupal_array_set_nested_value(array &$array, array $parents, $value, $force = FALSE) {
   $ref = &$array;
   foreach ($parents as $parent) {
-    // Note that PHP is fine with referencing a not existing array key - in this
-    // case it just creates an entry with NULL as value.
+    // PHP auto-creates container arrays and NULL entries without error if $ref
+    // is NULL, but throws an error if $ref is set, but not an array.
+    if ($force && isset($ref) && !is_array($ref)) {
+      $ref = array();
+    }
     $ref = &$ref[$parent];
   }
   $ref = $value;
@@ -6033,10 +6081,7 @@ function drupal_array_set_nested_value(array &$array, array $parents, $value) {
 function drupal_array_get_nested_value(array &$array, array $parents, &$key_exists = NULL) {
   $ref = &$array;
   foreach ($parents as $parent) {
-    // array_key_exists() is slower than isset() and triggers notices if the
-    // second argument is not an array, so only call it when absolutely
-    // necessary.
-    if (isset($ref[$parent]) || (is_array($ref) && array_key_exists($parent, $ref))) {
+    if (is_array($ref) && array_key_exists($parent, $ref)) {
       $ref = &$ref[$parent];
     }
     else {
@@ -6283,7 +6328,7 @@ function drupal_common_theme() {
       'render element' => 'element',
     ),
     'form_required_marker' => array(
-      'arguments' => array('element' => NULL),
+      'render element' => 'element',
     ),
     'form_element_label' => array(
       'render element' => 'element',
@@ -6622,7 +6667,7 @@ function drupal_write_record($table, &$record, $primary_keys = array()) {
  * - name: The real name of the theme for display purposes
  * - description: Brief description
  * - screenshot: Path to screenshot relative to the theme's .info file.
- * - engine: Theme engine, typically: engine = phptemplate
+ * - engine: Theme engine; typically phptemplate.
  * - base: Name of a base theme, if applicable, eg: base = zen
  * - regions: Listed regions eg: region[left] = Left sidebar
  * - features: Features available eg: features[] = logo

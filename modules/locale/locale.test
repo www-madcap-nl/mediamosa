@@ -1,5 +1,5 @@
 <?php
-// $Id: locale.test,v 1.81 2010/10/09 13:46:08 dries Exp $
+// $Id: locale.test,v 1.84 2010/11/05 20:33:57 dries Exp $
 
 /**
  * @file
@@ -582,7 +582,7 @@ class LocaleImportFunctionalTest extends DrupalWebTestCase {
   public static function getInfo() {
     return array(
       'name' => 'Translation import',
-      'description' => 'Tests the importation of locale files.',
+      'description' => 'Tests the import of locale files.',
       'group' => 'Locale',
     );
   }
@@ -600,7 +600,7 @@ class LocaleImportFunctionalTest extends DrupalWebTestCase {
   }
 
   /**
-   * Test importation of standalone .po files.
+   * Test import of standalone .po files.
    */
   function testStandalonePoFile() {
     // Try importing a .po file.
@@ -698,8 +698,8 @@ class LocaleImportFunctionalTest extends DrupalWebTestCase {
   }
 
   /**
-   * Test automatic importation of a module's translation files when a language
-   * is enabled.
+   * Test automatic import of a module's translation files when a language is
+   * enabled.
    */
   function testAutomaticModuleTranslationImportLanguageEnable() {
     // Code for the language - manually set to match the test translation file.
@@ -737,8 +737,7 @@ class LocaleImportFunctionalTest extends DrupalWebTestCase {
   }
 
   /**
-   * Test automatic importation of a module's translation files when a language
-   * is enabled.
+   * Test msgctxt context support.
    */
   function testLanguageContext() {
     // Try importing a .po file.
@@ -748,6 +747,43 @@ class LocaleImportFunctionalTest extends DrupalWebTestCase {
 
     $this->assertIdentical(t('May', array(), array('langcode' => 'hr', 'context' => 'Long month name')), 'Svibanj', t('Long month name context is working.'));
     $this->assertIdentical(t('May', array(), array('langcode' => 'hr')), 'Svi.', t('Default context is working.'));
+  }
+
+  /**
+   * Test empty msgstr at end of .po file see #611786.
+   */
+  function testEmptyMsgstr() {
+    $langcode = 'hu';
+
+    // Try importing a .po file.
+    $this->importPoFile($this->getPoFileWithMsgstr(), array(
+      'langcode' => $langcode,
+    ));
+
+    $this->assertRaw(t('The translation was successfully imported. There are %number newly created translated strings, %update strings were updated and %delete strings were removed.', array('%number' => 1, '%update' => 0, '%delete' => 0)), t('The translation file was successfully imported.'));
+    $this->assertIdentical(t('Operations', array(), array('langcode' => $langcode)), 'Műveletek', t('String imported and translated.'));
+
+    // Try importing a .po file.
+    $this->importPoFile($this->getPoFileWithEmptyMsgstr(), array(
+      'langcode' => $langcode,
+      'mode' => 0,
+    ));
+    $this->assertRaw(t('The translation was successfully imported. There are %number newly created translated strings, %update strings were updated and %delete strings were removed.', array('%number' => 0, '%update' => 0, '%delete' => 1)), t('The translation file was successfully imported.'));
+    // This is the language indicator on the translation search screen for
+    // untranslated strings. Copied straight from locale.inc.
+    $language_indicator = "<em class=\"locale-untranslated\">$langcode</em> ";
+    $str = "Operations";
+    $search = array(
+      'string' => $str,
+      'language' => 'all',
+      'translation' => 'all',
+      'group' => 'all',
+    );
+    $this->drupalPost('admin/config/regional/translate/translate', $search, t('Filter'));
+    // assertText() seems to remove the input field where $str always could be
+    // found, so this is not a false assert.
+    $this->assertText($str, t('Search found the string.'));
+    $this->assertRaw($language_indicator, t('String is untranslated again.'));
   }
 
   /**
@@ -773,7 +809,7 @@ class LocaleImportFunctionalTest extends DrupalWebTestCase {
     return <<< EOF
 msgid ""
 msgstr ""
-"Project-Id-Version: Drupal 6\\n"
+"Project-Id-Version: Drupal 7\\n"
 "MIME-Version: 1.0\\n"
 "Content-Type: text/plain; charset=UTF-8\\n"
 "Content-Transfer-Encoding: 8bit\\n"
@@ -809,7 +845,7 @@ EOF;
     return <<< EOF
 msgid ""
 msgstr ""
-"Project-Id-Version: Drupal 6\\n"
+"Project-Id-Version: Drupal 7\\n"
 "MIME-Version: 1.0\\n"
 "Content-Type: text/plain; charset=UTF-8\\n"
 "Content-Transfer-Encoding: 8bit\\n"
@@ -835,7 +871,7 @@ EOF;
     return <<< EOF
 msgid ""
 msgstr ""
-"Project-Id-Version: Drupal 6\\n"
+"Project-Id-Version: Drupal 7\\n"
 "MIME-Version: 1.0\\n"
 "Content-Type: text/plain; charset=UTF-8\\n"
 "Content-Transfer-Encoding: 8bit\\n"
@@ -858,7 +894,7 @@ EOF;
     return <<< EOF
 msgid ""
 msgstr ""
-"Project-Id-Version: Drupal 6\\n"
+"Project-Id-Version: Drupal 7\\n"
 "MIME-Version: 1.0\\n"
 "Content-Type: text/plain; charset=UTF-8\\n"
 "Content-Transfer-Encoding: 8bit\\n"
@@ -873,6 +909,45 @@ msgstr "Svi."
 EOF;
   }
 
+  /**
+   * Helper function that returns a .po file with an empty last item.
+   */
+  function getPoFileWithEmptyMsgstr() {
+    return <<< EOF
+msgid ""
+msgstr ""
+"Project-Id-Version: Drupal 7\\n"
+"MIME-Version: 1.0\\n"
+"Content-Type: text/plain; charset=UTF-8\\n"
+"Content-Transfer-Encoding: 8bit\\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\\n"
+
+msgid "Operations"
+msgstr ""
+
+EOF;
+  }
+  /**
+   * Helper function that returns a .po file with an empty last item.
+   */
+  function getPoFileWithMsgstr() {
+    return <<< EOF
+msgid ""
+msgstr ""
+"Project-Id-Version: Drupal 7\\n"
+"MIME-Version: 1.0\\n"
+"Content-Type: text/plain; charset=UTF-8\\n"
+"Content-Transfer-Encoding: 8bit\\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\\n"
+
+msgid "Operations"
+msgstr "Műveletek"
+
+msgid "Will not appear in Drupal core, so we can ensure the test passes"
+msgstr ""
+
+EOF;
+  }
 
 }
 
@@ -1581,12 +1656,12 @@ class LocaleContentFunctionalTest extends DrupalWebTestCase {
     $this->drupalLogin($web_user);
     $this->drupalGet('node/add/article');
     // Verify language select list is not present.
-    $this->assertNoFieldByName('language', '', t('Language select not present on add article form.'));
+    $this->assertNoFieldByName('language', NULL, t('Language select not present on add article form.'));
 
     // Verify language selection appears on add "Basic page" form.
     $this->drupalGet('node/add/page');
     // Verify language select list is present.
-    $this->assertFieldByName('language', '', t('Language select present on add Basic page form.'));
+    $this->assertFieldByName('language', NULL, t('Language select present on add Basic page form.'));
     // Ensure enabled language appears.
     $this->assertText($name, t('Enabled language present.'));
     // Ensure disabled language doesn't appear.
@@ -1655,15 +1730,14 @@ class LocaleUILanguageNegotiationTest extends DrupalWebTestCase {
     parent::setUp('locale', 'locale_test');
     require_once DRUPAL_ROOT . '/includes/language.inc';
     drupal_load('module', 'locale');
+    $admin_user = $this->drupalCreateUser(array('administer languages', 'translate interface', 'access administration pages', 'administer blocks'));
+    $this->drupalLogin($admin_user);
   }
 
   /**
    * Tests for language switching by URL path.
    */
   function testUILanguageNegotiation() {
-    $admin_user = $this->drupalCreateUser(array('administer languages', 'translate interface', 'access administration pages'));
-    $this->drupalLogin($admin_user);
-
     // A few languages to switch to.
     // This one is unknown, should get the default lang version.
     $language_unknown = 'blah-blah';
@@ -1816,6 +1890,50 @@ class LocaleUILanguageNegotiationTest extends DrupalWebTestCase {
     }
     $this->drupalGet($test['path'], array(), $test['http_header']);
     $this->assertText($test['expect'], $test['message']);
+  }
+
+  /**
+   * Test URL language detection when the requested URL has no language.
+   */
+  function testUrlLanguageFallback() {
+    // Add the Italian language.
+    $language_browser_fallback = 'it';
+    locale_add_language($language_browser_fallback);
+    $languages = language_list();
+
+    // Enable the path prefix for the default language: this way any unprefixed
+    // URL must have a valid fallback value.
+    $edit = array('prefix' => 'en');
+    $this->drupalPost('admin/config/regional/language/edit/en', $edit, t('Save language'));
+
+    // Enable browser and URL language detection.
+    $edit = array(
+      'language[enabled][locale-browser]' => TRUE,
+      'language[enabled][locale-url]' => TRUE,
+      'language[weight][locale-browser]' => -8,
+      'language[weight][locale-url]' => -10,
+    );
+    $this->drupalPost('admin/config/regional/language/configure', $edit, t('Save settings'));
+    $this->drupalGet('admin/config/regional/language/configure');
+
+    // Enable the language switcher block.
+    $edit = array('blocks[locale_language][region]' => 'sidebar_first');
+    $this->drupalPost('admin/structure/block', $edit, t('Save blocks'));
+
+    // Access the front page without specifying any valid URL language prefix
+    // and having as browser language preference a non-default language.
+    $http_header = array("Accept-Language: $language_browser_fallback;q=1");
+    $this->drupalGet('', array(), $http_header);
+
+    // Check that the language switcher active link matches the given browser
+    // language.
+    $args = array(':url' => base_path() . (!empty($GLOBALS['conf']['clean_url']) ? $language_browser_fallback : "?q=$language_browser_fallback"));
+    $fields = $this->xpath('//div[@id="block-locale-language"]//a[@class="language-link active" and @href=:url]', $args);
+    $this->assertTrue($fields[0] == $languages[$language_browser_fallback]->native, t('The browser language is the URL active language'));
+
+    // Check that URLs are rewritten using the given browser language.
+    $fields = $this->xpath('//div[@id="site-name"]//a[@rel="home" and @href=:url]//span', $args);
+    $this->assertTrue($fields[0] == 'Drupal', t('URLs are rewritten using the browser language.'));
   }
 }
 

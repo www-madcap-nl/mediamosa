@@ -1,5 +1,5 @@
 <?php
-// $Id: node.module,v 1.1309 2010/10/20 08:15:33 webchick Exp $
+// $Id: node.module,v 1.1317 2010/11/09 08:36:38 webchick Exp $
 
 /**
  * @file
@@ -376,7 +376,7 @@ function _node_extract_type($node) {
  * See _node_types_build() for details.
  *
  * @return
- *   An array of node types, keyed by the type.
+ *   An array of node types, as objects, keyed by the type.
  *
  * @see node_type_get_type()
  */
@@ -1270,7 +1270,8 @@ function node_view($node, $view_mode = 'full', $langcode = NULL) {
   }
 
   // Allow modules to modify the structured node.
-  drupal_alter('node_view', $build);
+  $type = 'node';
+  drupal_alter(array('node_view', 'entity_view'), $build, $type);
 
   return $build;
 }
@@ -1343,6 +1344,7 @@ function node_build_content($node, $view_mode = 'full', $langcode = NULL) {
 
   // Allow modules to make their own additions to the node.
   module_invoke_all('node_view', $node, $view_mode, $langcode);
+  module_invoke_all('entity_view', $node, 'node', $view_mode, $langcode);
 }
 
 /**
@@ -1460,6 +1462,11 @@ function template_preprocess_node(&$variables) {
  */
 function node_permission() {
   $perms = array(
+    'bypass node access' => array(
+      'title' => t('Bypass content access control'),
+      'description' => t('View, edit and delete all content regardless of permission restrictions.'),
+      'restrict access' => TRUE,
+    ),
     'administer content types' => array(
       'title' => t('Administer content types'),
       'restrict access' => TRUE,
@@ -1468,16 +1475,14 @@ function node_permission() {
       'title' => t('Administer content'),
       'restrict access' => TRUE,
     ),
-    'access content' => array(
-      'title' => t('View published content'),
-    ),
     'access content overview' => array(
       'title' => t('Access the content overview page'),
     ),
-    'bypass node access' => array(
-      'title' => t('Bypass content access control'),
-      'description' => t('View, edit and delete all content regardless of permission restrictions.'),
-      'restrict access' => TRUE,
+    'access content' => array(
+      'title' => t('View published content'),
+    ),
+    'view own unpublished content' => array(
+      'title' => t('View own unpublished content'),
     ),
     'view revisions' => array(
       'title' => t('View content revisions'),
@@ -1487,9 +1492,6 @@ function node_permission() {
     ),
     'delete revisions' => array(
       'title' => t('Delete content revisions'),
-    ),
-    'view own unpublished content' => array(
-      'title' => t('View own unpublished content'),
     ),
   );
 
@@ -1834,7 +1836,6 @@ function node_menu() {
   );
   $items['admin/content/node'] = array(
     'title' => 'Content',
-    'description' => "Administer content",
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => -10,
   );
@@ -1893,15 +1894,13 @@ function node_menu() {
   $items['node'] = array(
     'page callback' => 'node_page_default',
     'access arguments' => array('access content'),
-    // Required to make 'node/add' appear on the top-level of 'navigation' menu.
-    'menu_name' => '',
+    'menu_name' => 'navigation',
     'type' => MENU_CALLBACK,
   );
   $items['node/add'] = array(
     'title' => 'Add content',
     'page callback' => 'node_add_page',
     'access callback' => '_node_add_access',
-    'menu_name' => 'navigation',
     'theme callback' => '_node_custom_theme',
     'file' => 'node.pages.inc',
   );
@@ -2076,6 +2075,7 @@ function node_block_info() {
   $blocks['syndicate']['cache'] = DRUPAL_NO_CACHE;
 
   $blocks['recent']['info'] = t('Recent content');
+  $blocks['recent']['properties']['administrative'] = TRUE;
 
   return $blocks;
 }
@@ -2660,6 +2660,7 @@ function node_form_search_form_alter(&$form, $form_state) {
       '#value' => t('Advanced search'),
       '#prefix' => '<div class="action">',
       '#suffix' => '</div>',
+      '#weight' => 100,
     );
 
     // Languages:
@@ -2923,19 +2924,19 @@ function node_list_permissions($type) {
   // Build standard list of node permissions for this type.
   $perms = array(
     "create $type content" => array(
-      'title' => t('Create new %type_name content', array('%type_name' => $info->name)),
+      'title' => t('%type_name: Create new content', array('%type_name' => $info->name)),
     ),
     "edit own $type content" => array(
-      'title' => t('Edit own %type_name content', array('%type_name' => $info->name)),
+      'title' => t('%type_name: Edit own content', array('%type_name' => $info->name)),
     ),
     "edit any $type content" => array(
-      'title' => t('Edit any %type_name content', array('%type_name' => $info->name)),
+      'title' => t('%type_name: Edit any content', array('%type_name' => $info->name)),
     ),
     "delete own $type content" => array(
-      'title' => t('Delete own %type_name content', array('%type_name' => $info->name)),
+      'title' => t('%type_name: Delete own content', array('%type_name' => $info->name)),
     ),
     "delete any $type content" => array(
-      'title' => t('Delete any %type_name content', array('%type_name' => $info->name)),
+      'title' => t('%type_name: Delete any content', array('%type_name' => $info->name)),
     ),
   );
 
@@ -3004,13 +3005,30 @@ function node_access_grants($op, $account = NULL) {
 }
 
 /**
- * Determine whether the user has a global viewing grant for all nodes.
+ * Determines whether the user has a global viewing grant for all nodes.
+ *
+ * Checks to see whether any module grants 'view' for nid = 0. The node module
+ * provides this record if no node access modules are enabled. Other modules
+ * can replicate this behavior by providing their own conditional grant for
+ * nid = 0. For example, hook_node_grants() can return the following array to
+ * give the 'view' privilege to all nodes:
+ * @code
+ * if ($op == 'view') {
+ *   $grants['example_realm'] = array(0);
+ * }
+ * @endcode
+ *
+ * @return
+ *   TRUE if 'view' access to all nodes is granted, FALSE otherwise.
+ *
+ * @see hook_node_grants()
+ * @see _node_query_node_access_alter()
  */
 function node_access_view_all_nodes() {
   $access = &drupal_static(__FUNCTION__);
 
   if (!isset($access)) {
-    // If no modules implement the node access system, access is always true.
+    // If no modules implement the node access system, access is always TRUE.
     if (!module_implements('node_grants')) {
       $access = TRUE;
     }
@@ -3096,6 +3114,10 @@ function _node_query_node_access_alter($query, $base_table, $type) {
     return;
   }
   if (!count(module_implements('node_grants'))) {
+    return;
+  }
+  // If viewing nodes, make sure access rules should be enforced.
+  if ($op == 'view' && node_access_view_all_nodes()) {
     return;
   }
 

@@ -1,5 +1,5 @@
 <?php
-// $Id: field.form.inc,v 1.51 2010/10/20 01:31:06 dries Exp $
+// $Id: field.form.inc,v 1.53 2010/10/31 12:11:59 dries Exp $
 
 /**
  * @file
@@ -24,6 +24,15 @@ function field_default_form($entity_type, $entity, $field, $instance, $langcode,
   if (empty($items) && empty($id)) {
     $items = field_get_default_value($entity_type, $entity, $field, $instance, $langcode);
   }
+
+  // Let modules alter the widget properties.
+  $context = array(
+    'entity_type' => $entity_type,
+    'entity' => $entity,
+    'field' => $field,
+    'instance' => $instance,
+  );
+  drupal_alter(array('field_widget_properties', 'field_widget_properties_' . $entity_type), $instance['widget'], $context);
 
   // Collect widget elements.
   $elements = array();
@@ -401,4 +410,52 @@ function field_add_more_js($form, $form_state) {
   $element[$delta]['#suffix'] = (isset($element[$delta]['#suffix']) ? $element[$delta]['#suffix'] : '') . '</div>';
 
   return $element;
+}
+
+/**
+ * Retrieves the field definition for a widget's helper callbacks.
+ *
+ * Widgets helper element callbacks (such as #process, #element_validate,
+ * #value_callback, ...) should use field_widget_field() and
+ * field_widget_instance() instead of field_info_field() and
+ * field_info_instance() when they need to access field or instance properties.
+ * See hook_field_widget_form() for more details.
+ *
+ * @see field_widget_instance()
+ * @see hook_field_widget_form()
+ *
+ * @param $element
+ *   The structured array for the widget.
+ * @param $form_state
+ *   The form state.
+ * @return
+ *   The $field definition array for the current widget.
+ */
+function field_widget_field($element, $form_state) {
+  $info = $form_state['field'][$element['#field_name']][$element['#language']];
+  return $info['field'];
+}
+
+/**
+ * Provides the instance definition array for a widget's helper callbacks.
+ *
+ * Widgets helper element callbacks (such as #process, #element_validate,
+ * #value_callback, ...) should use field_widget_field() and
+ * field_widget_instance() instead of field_info_field() and
+ * field_info_instance() when they need to access field or instance properties.
+ * See hook_field_widget_form() for more details.
+ *
+ * @see field_widget_field()
+ * @see hook_field_widget_form()
+ *
+ * @param $element
+ *   The structured array for the widget.
+ * @param $form_state
+ *   The form state.
+ * @return
+ *   The $instance definition array for the current widget.
+ */
+function field_widget_instance($element, $form_state) {
+  $info = $form_state['field'][$element['#field_name']][$element['#language']];
+  return $info['instance'];
 }

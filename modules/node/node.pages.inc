@@ -1,5 +1,5 @@
 <?php
-// $Id: node.pages.inc,v 1.132 2010/09/09 23:01:48 dries Exp $
+// $Id: node.pages.inc,v 1.134 2010/11/05 19:47:20 dries Exp $
 
 /**
  * @file
@@ -144,7 +144,9 @@ function node_form($form, &$form_state, $node) {
   if (function_exists($function) && ($extra = $function($node, $form_state))) {
     $form = array_merge_recursive($form, $extra);
   }
-  if (!isset($form['title']['#weight'])) {
+  // If the node type has a title, and the node type form defined no special
+  // weight for it, we default to a weight of -5 for consistency.
+  if (isset($form['title']) && !isset($form['title']['#weight'])) {
     $form['title']['#weight'] = -5;
   }
   // @todo D8: Remove. Modules should access the node using $form_state['node'].
@@ -164,6 +166,9 @@ function node_form($form, &$form_state, $node) {
     // Collapsed by default when "Create new revision" is unchecked
     '#collapsed' => !$node->revision,
     '#group' => 'additional_settings',
+    '#attributes' => array(
+      'class' => array('node-form-revision-information'),
+    ),
     '#attached' => array(
       'js' => array(drupal_get_path('module', 'node') . '/node.js'),
     ),
@@ -202,6 +207,9 @@ function node_form($form, &$form_state, $node) {
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#group' => 'additional_settings',
+    '#attributes' => array(
+      'class' => array('node-form-author'),
+    ),
     '#attached' => array(
       'js' => array(
         drupal_get_path('module', 'node') . '/node.js',
@@ -238,6 +246,9 @@ function node_form($form, &$form_state, $node) {
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#group' => 'additional_settings',
+    '#attributes' => array(
+      'class' => array('node-form-options'),
+    ),
     '#attached' => array(
       'js' => array(drupal_get_path('module', 'node') . '/node.js'),
     ),

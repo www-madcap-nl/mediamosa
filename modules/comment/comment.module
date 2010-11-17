@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.module,v 1.906 2010/10/20 01:31:06 dries Exp $
+// $Id: comment.module,v 1.914 2010/11/12 03:18:13 dries Exp $
 
 /**
  * @file
@@ -402,6 +402,7 @@ function comment_permission() {
  */
 function comment_block_info() {
   $blocks['recent']['info'] = t('Recent comments');
+  $blocks['recent']['properties']['administrative'] = TRUE;
 
   return $blocks;
 }
@@ -620,7 +621,7 @@ function comment_node_view($node, $view_mode) {
           );
 
           $new = comment_num_new($node->nid);
-          if (!$new) {
+          if ($new) {
             $links['comment-new-comments'] = array(
               'title' => format_plural($new, '1 new comment', '@count new comments'),
               'href' => "node/$node->nid",
@@ -939,7 +940,8 @@ function comment_view($comment, $node, $view_mode = 'full', $langcode = NULL) {
   }
 
   // Allow modules to modify the structured comment.
-  drupal_alter('comment_view', $build);
+  $type = 'comment';
+  drupal_alter(array('comment_view', 'entity_view'), $build, $type);
 
   return $build;
 }
@@ -983,6 +985,7 @@ function comment_build_content($comment, $node, $view_mode = 'full', $langcode =
 
   // Allow modules to make their own additions to the comment.
   module_invoke_all('comment_view', $comment, $view_mode, $langcode);
+  module_invoke_all('entity_view', $comment, 'comment', $view_mode, $langcode);
 }
 
 /**
@@ -1091,6 +1094,9 @@ function comment_form_node_type_form_alter(&$form, $form_state) {
       '#collapsible' => TRUE,
       '#collapsed' => TRUE,
       '#group' => 'additional_settings',
+      '#attributes' => array(
+        'class' => array('comment-node-type-settings-form'),
+      ),
       '#attached' => array(
         'js' => array(drupal_get_path('module', 'comment') . '/comment-node-form.js'),
       ),
@@ -1162,6 +1168,9 @@ function comment_form_node_form_alter(&$form, $form_state) {
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#group' => 'additional_settings',
+    '#attributes' => array(
+      'class' => array('comment-node-settings-form'),
+    ),
     '#attached' => array(
       'js' => array(drupal_get_path('module', 'comment') . '/comment-node-form.js'),
      ),
@@ -1181,31 +1190,13 @@ function comment_form_node_form_alter(&$form, $form_state) {
       COMMENT_NODE_HIDDEN => t('Hidden'),
     ),
     COMMENT_NODE_OPEN => array(
-      '#type' => 'radio',
-      '#title' => t('Open'),
       '#description' => t('Users with the "Post comments" permission can post comments.'),
-      '#return_value' => COMMENT_NODE_OPEN,
-      '#default_value' => $comment_settings,
-      '#id' => 'edit-comment-2',
-      '#parents' => array('comment'),
     ),
     COMMENT_NODE_CLOSED => array(
-      '#type' => 'radio',
-      '#title' => t('Closed'),
       '#description' => t('Users cannot post comments, but existing comments will be displayed.'),
-      '#return_value' => COMMENT_NODE_CLOSED,
-      '#default_value' => $comment_settings,
-      '#id' => 'edit-comment-1',
-      '#parents' => array('comment'),
     ),
     COMMENT_NODE_HIDDEN => array(
-      '#type' => 'radio',
-      '#title' => t('Hidden'),
       '#description' => t('Comments are hidden from view.'),
-      '#return_value' => COMMENT_NODE_HIDDEN,
-      '#default_value' => $comment_settings,
-      '#id' => 'edit-comment-0',
-      '#parents' => array('comment'),
     ),
   );
   // If the node doesn't have any comments, the "hidden" option makes no
@@ -1234,17 +1225,19 @@ function comment_node_load($nodes, $types) {
       $node->cid = 0;
       $node->last_comment_timestamp = $node->created;
       $node->last_comment_name = '';
+      $node->last_comment_uid = $node->uid;
       $node->comment_count = 0;
     }
   }
 
   // For nodes with comments enabled, fetch information from the database.
   if (!empty($comments_enabled)) {
-    $result = db_query('SELECT nid, cid, last_comment_timestamp, last_comment_name, comment_count FROM {node_comment_statistics} WHERE nid IN (:comments_enabled)', array(':comments_enabled' => $comments_enabled));
+    $result = db_query('SELECT nid, cid, last_comment_timestamp, last_comment_name, last_comment_uid, comment_count FROM {node_comment_statistics} WHERE nid IN (:comments_enabled)', array(':comments_enabled' => $comments_enabled));
     foreach ($result as $record) {
       $nodes[$record->nid]->cid = $record->cid;
       $nodes[$record->nid]->last_comment_timestamp = $record->last_comment_timestamp;
       $nodes[$record->nid]->last_comment_name = $record->last_comment_name;
+      $nodes[$record->nid]->last_comment_uid = $record->last_comment_uid;
       $nodes[$record->nid]->comment_count = $record->comment_count;
     }
   }
@@ -1458,6 +1451,10 @@ function comment_save($comment) {
         ->condition('cid', $comment->cid)
         ->execute();
 
+      // Ignore slave server temporarily to give time for the
+      // saved comment to be propagated to the slave.
+      db_ignore_slave();
+
       // Update the {node_comment_statistics} table prior to executing hooks.
        _comment_update_node_statistics($comment->nid);
 
@@ -1543,7 +1540,7 @@ function comment_save($comment) {
         ->execute();
 
       // Ignore slave server temporarily to give time for the
-      // saved node to be propagated to the slave.
+      // created comment to be propagated to the slave.
       db_ignore_slave();
 
       // Update the {node_comment_statistics} table prior to executing hooks.
@@ -2285,7 +2282,8 @@ function theme_comment_post_forbidden($variables) {
     if (!isset($authenticated_post_comments)) {
       // We only output a link if we are certain that users will get permission
       // to post comments by logging in.
-      $authenticated_post_comments = array_key_exists(DRUPAL_AUTHENTICATED_RID, user_roles(TRUE, 'post comments') + user_roles(TRUE, 'skip comment approval'));
+      $comment_roles = user_roles(TRUE, 'post comments') + user_roles(TRUE, 'skip comment approval');
+      $authenticated_post_comments = isset($comment_roles[DRUPAL_AUTHENTICATED_RID]);
     }
 
     if ($authenticated_post_comments) {
