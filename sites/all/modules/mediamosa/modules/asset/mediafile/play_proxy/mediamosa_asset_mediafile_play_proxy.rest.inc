@@ -292,7 +292,7 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
     // Create ticket.
     if (!isset($a_mediafile_ext[mediamosa_asset_mediafile_db::URI])) {
       if ($response_type == mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL) {
-        $still_id_tmp = mediamosa_asset_mediafile_still::find_default($asset_id);
+        $still_id_tmp = ($still_id ? $still_id : mediamosa_asset_mediafile_still::find_default($asset_id));
 
         // Check the protection.
         $still_is_protected = mediamosa_asset_mediafile_db::IS_PROTECTED_FALSE;
