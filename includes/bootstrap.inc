@@ -2229,12 +2229,6 @@ function drupal_valid_test_ua() {
   // No reason to reset this.
   static $test_prefix;
 
-  // Well this does not work well if you have Windows and Linux webservers.
-  // Its a risk not checking, but this does not work at all atm. The
-  // serialize($databases) seems to give the problem here on Windows and Linux
-  // servers while $databases are the same on both machines.
-  return true;
-
   if (isset($test_prefix)) {
     return $test_prefix;
   }
