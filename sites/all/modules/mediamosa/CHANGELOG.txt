@@ -19,6 +19,8 @@ Known issues;
 
 MediaMosa 2.3.0 Build (1032)
 ----------------------------
+- Modifications installation profile: requirements checking corrected,
+  sample Apache configurations corrected (See ticket #32).
 - Default still size and still padding are adjustable in management interface
   (See ticket #215).
 - Instant analyse after transcoding (See ticket #258).
