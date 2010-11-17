@@ -1,5 +1,5 @@
 <?php
-// $Id: bootstrap.inc,v 1.430 2010/10/23 05:30:57 webchick Exp $
+// $Id: bootstrap.inc,v 1.439 2010/11/14 00:19:41 webchick Exp $
 
 /**
  * @file
@@ -9,7 +9,7 @@
 /**
  * The current system version.
  */
-define('VERSION', '7.0-beta2');
+define('VERSION', '7.0-beta3');
 
 /**
  * Core API compatibility.
@@ -25,16 +25,6 @@ define('DRUPAL_MINIMUM_PHP',    '5.2.4');
  * Minimum recommended value of PHP memory_limit.
  */
 define('DRUPAL_MINIMUM_PHP_MEMORY_LIMIT',    '32M');
-
-/**
- * Minimum supported version of MySQL, if it is used.
- */
-define('DRUPAL_MINIMUM_MYSQL',  '5.0.15');
-
-/**
- * Minimum supported version of PostgreSQL, if it is used.
- */
-define('DRUPAL_MINIMUM_PGSQL',  '8.3');
 
 /**
  * Indicates that the item should never be removed unless explicitly selected.
@@ -1561,7 +1551,8 @@ function watchdog_exception($type, Exception $exception, $message = NULL, $varia
 
    // Use a default value if $message is not set.
    if (empty($message)) {
-     $message = '%type: %message in %function (line %line of %file).';
+     // The exception message is run through check_plain() by _drupal_decode_exception().
+     $message = '%type: !message in %function (line %line of %file).';
    }
    // $variables must be an array so that we can add the exception information.
    if (!is_array($variables)) {
@@ -2133,15 +2124,7 @@ function _drupal_bootstrap_database() {
   // The user agent header is used to pass a database prefix in the request when
   // running tests. However, for security reasons, it is imperative that we
   // validate we ourselves made the request.
-  if (isset($_SERVER['HTTP_USER_AGENT']) && preg_match("/^(simpletest\d+);/", $_SERVER['HTTP_USER_AGENT'], $matches)) {
-    if (!drupal_valid_test_ua($_SERVER['HTTP_USER_AGENT'])) {
-      header($_SERVER['SERVER_PROTOCOL'] . ' 403 Forbidden');
-      exit;
-    }
-
-    // The first part of the user agent is the prefix itself.
-    $test_prefix = $matches[1];
-
+  if ($test_prefix = drupal_valid_test_ua()) {
     // Set the test run id for use in other parts of Drupal.
     $test_info = &$GLOBALS['drupal_test_info'];
     $test_info['test_run_id'] = $test_prefix;
@@ -2220,22 +2203,40 @@ function drupal_get_bootstrap_phase() {
 }
 
 /**
- * Validate the HMAC and timestamp of a user agent header from simpletest.
+ * Checks the current User-Agent string to see if this is an internal request
+ * from SimpleTest. If so, returns the test prefix for this test.
+ *
+ * @return
+ *   Either the simpletest prefix (the string "simpletest" followed by any
+ *   number of digits) or FALSE if the user agent does not contain a valid
+ *   HMAC and timestamp.
  */
-function drupal_valid_test_ua($user_agent) {
+function drupal_valid_test_ua() {
   global $drupal_hash_salt;
+  // No reason to reset this.
+  static $test_prefix;
 
-  list($prefix, $time, $salt, $hmac) = explode(';', $user_agent);
-  $check_string =  $prefix . ';' . $time . ';' . $salt;
-  // We use the salt from settings.php to make the HMAC key, since
-  // the database is not yet initialized and we can't access any Drupal variables.
-  // The file properties add more entropy not easily accessible to others.
-  $filepath = DRUPAL_ROOT . '/includes/bootstrap.inc';
-  $key = $drupal_hash_salt . filectime($filepath) . fileinode($filepath);
-  $time_diff = REQUEST_TIME - $time;
-  // Since we are making a local request a 5 second time window is allowed,
-  // and the HMAC must match.
-  return ($time_diff >= 0) && ($time_diff <= 5) && ($hmac == drupal_hmac_base64($check_string, $key));
+  if (isset($test_prefix)) {
+    return $test_prefix;
+  }
+
+  if (isset($_SERVER['HTTP_USER_AGENT']) && preg_match("/^(simpletest\d+);(.+);(.+);(.+)$/", $_SERVER['HTTP_USER_AGENT'], $matches)) {
+    list(, $prefix, $time, $salt, $hmac) = $matches;
+    $check_string =  $prefix . ';' . $time . ';' . $salt;
+    // We use the salt from settings.php to make the HMAC key, since
+    // the database is not yet initialized and we can't access any Drupal variables.
+    // The file properties add more entropy not easily accessible to others.
+    $key = $drupal_hash_salt . filectime(__FILE__) . fileinode(__FILE__);
+    $time_diff = REQUEST_TIME - $time;
+    // Since we are making a local request a 5 second time window is allowed,
+    // and the HMAC must match.
+    if ($time_diff >= 0 && $time_diff <= 5 && $hmac == drupal_hmac_base64($check_string, $key)) {
+      $test_prefix = $prefix;
+      return $test_prefix;
+    }
+  }
+
+  return FALSE;
 }
 
 /**
@@ -2249,13 +2250,12 @@ function drupal_generate_test_ua($prefix) {
     // We use the salt from settings.php to make the HMAC key, since
     // the database is not yet initialized and we can't access any Drupal variables.
     // The file properties add more entropy not easily accessible to others.
-    $filepath = DRUPAL_ROOT . '/includes/bootstrap.inc';
-    $key = $drupal_hash_salt . filectime($filepath) . fileinode($filepath);
+    $key = $drupal_hash_salt . filectime(__FILE__) . fileinode(__FILE__);
   }
-   // Generate a moderately secure HMAC based on the database credentials.
-   $salt = uniqid('', TRUE);
-   $check_string = $prefix . ';' . time() . ';' . $salt;
-   return  $check_string . ';' . drupal_hmac_base64($check_string, $key);
+  // Generate a moderately secure HMAC based on the database credentials.
+  $salt = uniqid('', TRUE);
+  $check_string = $prefix . ';' . time() . ';' . $salt;
+  return $check_string . ';' . drupal_hmac_base64($check_string, $key);
 }
 
 /**
@@ -2467,7 +2467,8 @@ function request_path() {
  *
  * @return
  *   The component specified by $index, or NULL if the specified component was
- *   not found.
+ *   not found. If called without arguments, it returns an array containing all
+ *   the components of the current path.
  */
 function arg($index = NULL, $path = NULL) {
   // Even though $arguments doesn't need to be resettable for any functional

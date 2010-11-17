@@ -1,5 +1,5 @@
 <?php
-// $Id: form_test.module,v 1.52 2010/10/20 01:15:58 dries Exp $
+// $Id: form_test.module,v 1.54 2010/11/07 21:46:09 dries Exp $
 
 /**
  * @file
@@ -98,6 +98,12 @@ function form_test_menu() {
     'page arguments' => array('form_test_select'),
     'access callback' => TRUE,
   );
+  $items['form-test/checkboxes-radios'] = array(
+    'title' => t('Checkboxes, Radios'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('form_test_checkboxes_radios'),
+    'access callback' => TRUE,
+  );
 
   $items['form-test/disabled-elements'] = array(
     'title' => t('Form test'),
@@ -175,8 +181,23 @@ function form_test_menu() {
     'access callback' => TRUE,
     'type' => MENU_CALLBACK,
   );
+  $items['form-test/checkboxes-zero'] = array(
+    'title' => 'FAPI test involving checkboxes and zero',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('form_test_checkboxes_zero'),
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
 
   return $items;
+}
+
+/**
+ * Form submit handler to return form values as JSON.
+ */
+function _form_test_submit_values_json($form, &$form_state) {
+  drupal_json_output($form_state['values']);
+  drupal_exit();
 }
 
 /**
@@ -886,6 +907,63 @@ function form_test_select_submit($form, &$form_state) {
 }
 
 /**
+ * Form constructor to test expansion of #type checkboxes and radios.
+ */
+function form_test_checkboxes_radios($form, &$form_state, $customize = FALSE) {
+  $form['#submit'] = array('_form_test_submit_values_json');
+
+  // Expand #type checkboxes, setting custom element properties for some but not
+  // all options.
+  $form['checkboxes'] = array(
+    '#type' => 'checkboxes',
+    '#title' => 'Checkboxes',
+    '#options' => array(
+      0 => 'Zero',
+      'foo' => 'Foo',
+      1 => 'One',
+      'bar' => 'Bar',
+    ),
+  );
+  if ($customize) {
+    $form['checkboxes'] += array(
+      'foo' => array(
+        '#description' => 'Enable to foo.',
+      ),
+      1 => array(
+        '#weight' => 10,
+      ),
+    );
+  }
+
+  // Expand #type radios, setting custom element properties for some but not
+  // all options.
+  $form['radios'] = array(
+    '#type' => 'radios',
+    '#title' => 'Radios',
+    '#options' => array(
+      0 => 'Zero',
+      'foo' => 'Foo',
+      1 => 'One',
+      'bar' => 'Bar',
+    ),
+  );
+  if ($customize) {
+    $form['radios'] += array(
+      'foo' => array(
+        '#description' => 'Enable to foo.',
+      ),
+      1 => array(
+        '#weight' => 10,
+      ),
+    );
+  }
+
+  $form['submit'] = array('#type' => 'submit', '#value' => 'Submit');
+
+  return $form;
+}
+
+/**
  * Build a form to test disabled elements.
  */
 function _form_test_disabled_elements($form, &$form_state) {
@@ -1394,4 +1472,45 @@ function form_test_load_include_custom($form, &$form_state) {
   $form_state['build_info']['files'][] = array('module' => 'form_test', 'name' => 'form_test.file');
   $form_state['cache'] = TRUE;
   return $form;
+}
+
+function form_test_checkbox_type_juggling($form, $form_state, $default_value, $return_value) {
+  $form['checkbox'] = array(
+    '#type' => 'checkbox',
+    '#return_value' => $return_value,
+    '#default_value' => $default_value,
+  );
+  return $form;
+}
+
+function form_test_checkboxes_zero($form, &$form_state, $json = TRUE) {
+  $form['checkbox_off'] = array(
+    '#type' => 'checkboxes',
+    '#options' => array('foo', 'bar', 'baz'),
+  );
+  $form['checkbox_zero_default'] = array(
+    '#type' => 'checkboxes',
+    '#options' => array('foo', 'bar', 'baz'),
+    '#default_value' => array(0),
+  );
+  $form['checkbox_string_zero_default'] = array(
+    '#type' => 'checkboxes',
+    '#options' => array('foo', 'bar', 'baz'),
+    '#default_value' => array('0'),
+  );
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => 'Save',
+  );
+  if ($json) {
+    $form['#submit'][] = '_form_test_checkbox_submit';
+  }
+  else {
+    $form['#submit'][] = '_form_test_checkboxes_zero_no_redirect';
+  }
+  return $form;
+}
+
+function _form_test_checkboxes_zero_no_redirect($form, &$form_state) {
+  $form_state['redirect'] = FALSE;
 }

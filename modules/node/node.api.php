@@ -1,5 +1,5 @@
 <?php
-// $Id: node.api.php,v 1.78 2010/10/22 00:35:35 dries Exp $
+// $Id: node.api.php,v 1.81 2010/11/05 19:58:14 dries Exp $
 
 /**
  * @file
@@ -759,6 +759,8 @@ function hook_node_submit($node, $form, &$form_state) {
  * @param $langcode
  *   The language code used for rendering.
  *
+ * @see hook_entity_view()
+ *
  * @ingroup node_api_hooks
  */
 function hook_node_view($node, $view_mode, $langcode) {
@@ -785,6 +787,7 @@ function hook_node_view($node, $view_mode, $langcode) {
  *   A renderable array representing the node content.
  *
  * @see node_view()
+ * @see hook_entity_view_alter()
  *
  * @ingroup node_api_hooks
  */
@@ -840,8 +843,6 @@ function hook_node_view_alter(&$build) {
  * All attributes of a node type that are defined through this hook (except for
  * 'locked') can be edited by a site administrator. This includes the
  * machine-readable name of a node type, if 'locked' is set to FALSE.
- *
- * For a detailed usage example, see node_example.module.
  *
  * @ingroup node_api_hooks
  */
@@ -1221,7 +1222,7 @@ function hook_view($node, $view_mode) {
   }
 
   $node->content['myfield'] = array(
-    '#value' => theme('mymodule_myfield', $node->myfield),
+    '#markup' => theme('mymodule_myfield', $node->myfield),
     '#weight' => 1,
   );
 

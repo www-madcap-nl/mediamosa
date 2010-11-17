@@ -1,5 +1,5 @@
 <?php
-// $Id: form.inc,v 1.506 2010/10/21 20:46:58 webchick Exp $
+// $Id: form.inc,v 1.509 2010/11/13 14:04:08 dries Exp $
 
 /**
  * @defgroup forms Form builder functions
@@ -1031,10 +1031,29 @@ function drupal_validate_form($form_id, &$form, &$form_state) {
         drupal_array_set_nested_value($values, $section, $value);
       }
     }
-    // For convenience we always make the value of the pressed button available.
+    // A button's #value does not require validation, so for convenience we
+    // allow the value of the clicked button to be retained in its normal
+    // $form_state['values'] locations, even if these locations are not included
+    // in #limit_validation_errors.
     if (isset($form_state['triggering_element']['#button_type'])) {
-      $values[$form_state['triggering_element']['#name']] = $form_state['triggering_element']['#value'];
-      drupal_array_set_nested_value($values, $form_state['triggering_element']['#parents'], $form_state['triggering_element']['#value']);
+      $button_value = $form_state['triggering_element']['#value'];
+
+      // Like all input controls, the button value may be in the location
+      // dictated by #parents. If it is, copy it to $values, but do not override
+      // what may already be in $values.
+      $parents = $form_state['triggering_element']['#parents'];
+      if (!drupal_array_nested_key_exists($values, $parents) && drupal_array_get_nested_value($form_state['values'], $parents) === $button_value) {
+        drupal_array_set_nested_value($values, $parents, $button_value);
+      }
+
+      // Additionally, form_builder() places the button value in
+      // $form_state['values'][BUTTON_NAME]. If it's still there, after
+      // validation handlers have run, copy it to $values, but do not override
+      // what may already be in $values.
+      $name = $form_state['triggering_element']['#name'];
+      if (!isset($values[$name]) && isset($form_state['values'][$name]) && $form_state['values'][$name] === $button_value) {
+        $values[$name] = $button_value;
+      }
     }
     $form_state['values'] = $values;
   }
@@ -2073,11 +2092,29 @@ function form_type_image_button_value($form, $input, $form_state) {
  *   for this element. Return nothing to use the default.
  */
 function form_type_checkbox_value($element, $input = FALSE) {
-  if ($input !== FALSE) {
-    // Successful (checked) checkboxes are present with a value (possibly '0').
-    // http://www.w3.org/TR/html401/interact/forms.html#successful-controls
-    // For an unchecked checkbox, we return integer 0, so we can explicitly
-    // test for a value different than string '0'.
+  if ($input === FALSE) {
+    // Use #default_value as the default value of a checkbox, except change
+    // NULL to 0, because _form_builder_handle_input_element() would otherwise
+    // replace NULL with empty string, but an empty string is a potentially
+    // valid value for a checked checkbox.
+    return isset($element['#default_value']) ? $element['#default_value'] : 0;
+  }
+  else {
+    // Checked checkboxes are submitted with a value (possibly '0' or ''):
+    // http://www.w3.org/TR/html401/interact/forms.html#successful-controls.
+    // For checked checkboxes, browsers submit the string version of
+    // #return_value, but we return the original #return_value. For unchecked
+    // checkboxes, browsers submit nothing at all, but
+    // _form_builder_handle_input_element() detects this, and calls this
+    // function with $input=NULL. Returning NULL from a value callback means to
+    // use the default value, which is not what is wanted when an unchecked
+    // checkbox is submitted, so we use integer 0 as the value indicating an
+    // unchecked checkbox. Therefore, modules must not use integer 0 as a
+    // #return_value, as doing so results in the checkbox always being treated
+    // as unchecked. The string '0' is allowed for #return_value. The most
+    // common use-case for setting #return_value to either 0 or '0' is for the
+    // first option within a 0-indexed array of checkboxes, and for this,
+    // form_process_checkboxes() uses the string rather than the integer.
     return isset($input) ? $element['#return_value'] : 0;
   }
 }
@@ -2109,7 +2146,7 @@ function form_type_checkboxes_value($element, $input = FALSE) {
     // NULL elements from the array before constructing the return value, to
     // simulate the behavior of web browsers (which do not send unchecked
     // checkboxes to the server at all). This will not affect non-programmatic
-    // form submissions, since a checkbox can never legitimately be NULL.
+    // form submissions, since all values in $_POST are strings.
     foreach ($input as $key => $value) {
       if (!isset($value)) {
         unset($input[$key]);
@@ -2283,7 +2320,7 @@ function form_type_token_value($element, $input = FALSE) {
  *   Form state array where the value change should be recorded.
  */
 function form_set_value($element, $value, &$form_state) {
-  drupal_array_set_nested_value($form_state['values'], $element['#parents'], $value);
+  drupal_array_set_nested_value($form_state['values'], $element['#parents'], $value, TRUE);
 }
 
 /**
@@ -2768,22 +2805,28 @@ function weight_value(&$form) {
  */
 function form_process_radios($element) {
   if (count($element['#options']) > 0) {
+    $weight = 0;
     foreach ($element['#options'] as $key => $choice) {
-      if (!isset($element[$key])) {
-        // Generate the parents as the autogenerator does, so we will have a
-        // unique id for each radio button.
-        $parents_for_id = array_merge($element['#parents'], array($key));
-        $element[$key] = array(
-          '#type' => 'radio',
-          '#title' => $choice,
-          '#return_value' => check_plain($key),
-          '#default_value' => isset($element['#default_value']) ? $element['#default_value'] : NULL,
-          '#attributes' => $element['#attributes'],
-          '#parents' => $element['#parents'],
-          '#id' => drupal_html_id('edit-' . implode('-', $parents_for_id)),
-          '#ajax' => isset($element['#ajax']) ? $element['#ajax'] : NULL,
-        );
-      }
+      // Maintain order of options as defined in #options, in case the element
+      // defines custom option sub-elements, but does not define all option
+      // sub-elements.
+      $weight += 0.001;
+
+      $element += array($key => array());
+      // Generate the parents as the autogenerator does, so we will have a
+      // unique id for each radio button.
+      $parents_for_id = array_merge($element['#parents'], array($key));
+      $element[$key] += array(
+        '#type' => 'radio',
+        '#title' => $choice,
+        '#return_value' => check_plain($key),
+        '#default_value' => isset($element['#default_value']) ? $element['#default_value'] : NULL,
+        '#attributes' => $element['#attributes'],
+        '#parents' => $element['#parents'],
+        '#id' => drupal_html_id('edit-' . implode('-', $parents_for_id)),
+        '#ajax' => isset($element['#ajax']) ? $element['#ajax'] : NULL,
+        '#weight' => $weight,
+      );
     }
   }
   return $element;
@@ -2807,7 +2850,7 @@ function theme_checkbox($variables) {
   element_set_attributes($element, array('id', 'name', '#return_value' => 'value'));
 
   // Unchecked checkbox has #value of integer 0.
-  if (isset($element['#return_value']) && isset($element['#value']) && $element['#value'] !== 0 && $element['#value'] == $element['#return_value']) {
+  if (!empty($element['#checked'])) {
     $element['#attributes']['checked'] = 'checked';
   }
   _form_set_class($element, array('form-checkbox'));
@@ -2859,6 +2902,33 @@ function form_pre_render_conditional_form_element($element) {
   return $element;
 }
 
+/**
+ * Sets the #checked property of a checkbox element.
+ */
+function form_process_checkbox($element, $form_state) {
+  $value = $element['#value'];
+  $return_value = $element['#return_value'];
+  // On form submission, the #value of an available and enabled checked
+  // checkbox is #return_value, and the #value of an available and enabled
+  // unchecked checkbox is integer 0. On not submitted forms, and for
+  // checkboxes with #access=FALSE or #disabled=TRUE, the #value is
+  // #default_value (integer 0 if #default_value is NULL). Most of the time,
+  // a string comparison of #value and #return_value is sufficient for
+  // determining the "checked" state, but a value of TRUE always means checked
+  // (even if #return_value is 'foo'), and a value of FALSE or integer 0 always
+  // means unchecked (even if #return_value is '' or '0').
+  if ($value === TRUE || $value === FALSE || $value === 0) {
+    $element['#checked'] = (bool) $value;
+  }
+  else {
+    // Compare as strings, so that 15 is not considered equal to '15foo', but 1
+    // is considered equal to '1'. This cast does not imply that either #value
+    // or #return_value is expected to be a string.
+    $element['#checked'] = ((string) $value === (string) $return_value);
+  }
+  return $element;
+}
+
 function form_process_checkboxes($element) {
   $value = is_array($element['#value']) ? $element['#value'] : array();
   $element['#tree'] = TRUE;
@@ -2866,18 +2936,30 @@ function form_process_checkboxes($element) {
     if (!isset($element['#default_value']) || $element['#default_value'] == 0) {
       $element['#default_value'] = array();
     }
+    $weight = 0;
     foreach ($element['#options'] as $key => $choice) {
-      if (!isset($element[$key])) {
-        $element[$key] = array(
-          '#type' => 'checkbox',
-          '#processed' => TRUE,
-          '#title' => $choice,
-          '#return_value' => $key,
-          '#default_value' => isset($value[$key]) ? $key : NULL,
-          '#attributes' => $element['#attributes'],
-          '#ajax' => isset($element['#ajax']) ? $element['#ajax'] : NULL,
-        );
+      // Integer 0 is not a valid #return_value, so use '0' instead.
+      // @see form_type_checkbox_value().
+      // @todo For Drupal 8, cast all integer keys to strings for consistency
+      //   with form_process_radios().
+      if ($key === 0) {
+        $key = '0';
       }
+      // Maintain order of options as defined in #options, in case the element
+      // defines custom option sub-elements, but does not define all option
+      // sub-elements.
+      $weight += 0.001;
+
+      $element += array($key => array());
+      $element[$key] += array(
+        '#type' => 'checkbox',
+        '#title' => $choice,
+        '#return_value' => $key,
+        '#default_value' => isset($value[$key]) ? $key : NULL,
+        '#attributes' => $element['#attributes'],
+        '#ajax' => isset($element['#ajax']) ? $element['#ajax'] : NULL,
+        '#weight' => $weight,
+      );
     }
   }
   return $element;

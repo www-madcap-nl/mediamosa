@@ -1,5 +1,5 @@
 <?php
-// $Id: field.api.php,v 1.91 2010/10/03 01:15:33 dries Exp $
+// $Id: field.api.php,v 1.94 2010/11/07 22:06:16 dries Exp $
 
 /**
  * @ingroup field_fieldable_type
@@ -227,11 +227,14 @@ function hook_field_info_alter(&$info) {
  *     settings when possible. No assumptions should be made on how storage
  *     engines internally use the original column name to structure their
  *     storage.
- *   - indexes: An array of Schema API indexes definitions. Only columns that
- *     appear in the 'columns' array are allowed. Those indexes will be used as
- *     default indexes. Callers of field_create_field() can specify additional
- *     indexes, or, at their own risk, modify the default indexes specified by
- *     the field-type module. Some storage engines might not support indexes.
+ *   - indexes: (optional) An array of Schema API indexes definitions. Only
+ *     columns that appear in the 'columns' array are allowed. Those indexes
+ *     will be used as default indexes. Callers of field_create_field() can
+ *     specify additional indexes, or, at their own risk, modify the default
+ *     indexes specified by the field-type module. Some storage engines might
+ *     not support indexes.
+ *   - foreign keys: (optional) An array of Schema API foreign keys
+ *     definitions.
  */
 function hook_field_schema($field) {
   if ($field['type'] == 'text_long') {
@@ -263,6 +266,12 @@ function hook_field_schema($field) {
     'columns' => $columns,
     'indexes' => array(
       'format' => array('format'),
+    ),
+    'foreign keys' => array(
+      'format' => array(
+        'table' => 'filter_format',
+        'columns' => array('format' => 'format'),
+      ),
     ),
   );
 }
@@ -759,15 +768,25 @@ function hook_field_widget_info_alter(&$info) {
  * invoke this hook as many times as needed.
  *
  * Note that, depending on the context in which the widget is being included
- * (regular entity edit form, 'default value' input in the field settings form,
- * etc.), the passed in values for $field and $instance might be different
- * from the official definitions returned by field_info_field() and
- * field_info_instance(). If the widget uses Form API callbacks (like
- * #element_validate, #value_callback...) that need to access the $field or
- * $instance definitions, they should not use the field_info_*() functions, but
- * fetch the information present in $form_state['field']:
- * - $form_state['field'][$field_name][$langcode]['field']
- * - $form_state['field'][$field_name][$langcode]['instance']
+ * (regular entity form, field configuration form, advanced search form...),
+ * the values for $field and $instance might be different from the "official"
+ * definitions returned by field_info_field() and field_info_instance().
+ * Examples: mono-value widget even if the field is multi-valued, non-required
+ * widget even if the field is 'required'...
+
+ * Therefore, the FAPI element callbacks (such as #process, #element_validate,
+ * #value_callback...) used by the widget cannot use the field_info_field()
+ * or field_info_instance() functions to retrieve the $field or $instance
+ * definitions they should operate on. The field_widget_field() and
+ * field_widget_instance() functions should be used instead to fetch the
+ * current working definitions from $form_state, where Field API stores them.
+ *
+ * Alternatively, hook_field_widget_form() can extract the needed specific
+ * properties from $field and $instance and set them as ad-hoc
+ * $element['#custom'] properties, for later use by its element callbacks.
+ *
+ * @see field_widget_field()
+ * @see field_widget_instance()
  *
  * @param $form
  *   The entire form array.
@@ -2178,6 +2197,71 @@ function hook_field_extra_fields_display_alter(&$displays, $context) {
     $displays['description']['visibility'] = FALSE;
   }
 }
+
+/**
+ * Alters the widget properties of a field instance before it gets displayed.
+ *
+ * Note that instead of hook_field_widget_properties_alter(), which is called
+ * for all fields on all entity types,
+ * hook_field_widget_properties_ENTITY_TYPE_alter() may be used to alter widget
+ * properties for fields on a specific entity type only.
+ *
+ * This hook is called once per field per added or edit entity. If the result
+ * of the hook involves reading from the database, it is highly recommended to
+ * statically cache the information.
+ *
+ * @param $widget
+ *   The instance's widget properties.
+ * @param $context
+ *   An associative array containing:
+ *   - entity_type: The entity type; e.g. 'node' or 'user'.
+ *   - entity: The entity object.
+ *   - field: The field that the widget belongs to.
+ *   - instance: The instance of the field.
+ *
+ * @see hook_field_widget_properties_ENTITY_TYPE_alter()
+ */
+function hook_field_widget_properties_alter(&$widget, $context) {
+  // Change a widget's type according to the time of day.
+  $field = $context['field'];
+  if ($context['entity_type'] == 'node' && $field['field_name'] == 'field_foo') {
+    $time = date('H');
+    $widget['type'] = $time < 12 ? 'widget_am' : 'widget_pm';
+  }
+}
+
+/**
+ * Alters the widget properties of a field instance on a given entity type
+ * before it gets displayed.
+ *
+ * Modules can implement hook_field_widget_properties_ENTITY_TYPE_alter() to
+ * alter the widget properties for fields on a specific entity type, rather than
+ * implementing hook_field_widget_properties_alter().
+ *
+ * This hook is called once per field per displayed widget entity. If the result
+ * of the hook involves reading from the database, it is highly recommended to
+ * statically cache the information.
+ *
+ * @param $widget
+ *   The instance's widget properties.
+ * @param $context
+ *   An associative array containing:
+ *   - entity_type: The entity type; e.g. 'node' or 'user'.
+ *   - entity: The entity object.
+     - field: The field that the widget belongs to.
+ *   - instance: The instance of the field.
+ *
+ * @see hook_field_widget_properties_alter()
+ */
+function hook_field_widget_properties_ENTITY_TYPE_alter(&$widget, $context) {
+  // Change a widget's type according to the time of day.
+  $field = $context['field'];
+  if ($field['field_name'] == 'field_foo') {
+    $time = date('H');
+    $widget['type'] = $time < 12 ? 'widget_am' : 'widget_pm';
+  }
+}
+
 /**
  * @} End of "ingroup field_storage"
  */

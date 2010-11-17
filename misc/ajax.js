@@ -1,4 +1,4 @@
-// $Id: ajax.js,v 1.25 2010/10/21 19:31:39 dries Exp $
+// $Id: ajax.js,v 1.28 2010/11/12 03:02:43 dries Exp $
 (function ($) {
 
 /**
@@ -115,7 +115,16 @@ Drupal.ajax = function (base, element, element_settings) {
 
   // Replacing 'nojs' with 'ajax' in the URL allows for an easy method to let
   // the server detect when it needs to degrade gracefully.
-  this.url = element_settings.url.replace(/\/nojs(\/|$)/g, '/ajax$1');
+  // There are five scenarios to check for:
+  // 1. /nojs/
+  // 2. /nojs$ - The end of a URL string.
+  // 3. /nojs? - Followed by a query (with clean URLs enabled).
+  //      E.g.: path/nojs?destination=foobar
+  // 4. /nojs& - Followed by a query (without clean URLs enabled).
+  //      E.g.: ?q=path/nojs&destination=foobar
+  // 5. /nojs# - Followed by a fragment.
+  //      E.g.: path/nojs#myfragment
+  this.url = element_settings.url.replace(/\/nojs(\/|$|\?|&|#)/g, '/ajax$1');
   this.wrapper = '#' + element_settings.wrapper;
 
   // If there isn't a form, jQuery.ajax() will be used instead, allowing us to
@@ -192,8 +201,8 @@ Drupal.ajax = function (base, element, element_settings) {
   // action.
   if (element_settings.keypress) {
     $(element_settings.element).keypress(function (event) {
-      // Detect enter key.
-      if (event.keyCode == 13) {
+      // Detect enter key and space bar.
+      if (event.which == 13 || event.which == 32) {
         $(element_settings.element).trigger(element_settings.event);
         return false;
       }
@@ -280,7 +289,7 @@ Drupal.ajax.prototype.success = function (response, status) {
   if (this.progress.object) {
     this.progress.object.stopMonitoring();
   }
-  $(this.element).removeClass('progress-disabled').attr('disabled', false);
+  $(this.element).removeClass('progress-disabled').removeAttr('disabled');
 
   Drupal.freezeHeight();
 
@@ -348,7 +357,7 @@ Drupal.ajax.prototype.error = function (response, uri) {
   // Undo hide.
   $(this.wrapper).show();
   // Re-enable the element.
-  $(this.element).removeClass('progress-disabled').attr('disabled', false);
+  $(this.element).removeClass('progress-disabled').removeAttr('disabled');
   // Reattach behaviors, if they were detached in beforeSerialize().
   if (this.form) {
     var settings = response.settings || this.settings || Drupal.settings;
