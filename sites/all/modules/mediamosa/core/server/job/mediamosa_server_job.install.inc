@@ -52,38 +52,38 @@ function _mediamosa_server_job_uninstall() {
 function mediamosa_server_job_schema() {
 
   $schema[mediamosa_server_job_db::TABLE_NAME] = array(
-  'description' => t('The transcode job table.'),
+  'description' => 'The transcode job table.',
     'fields' => array(
       mediamosa_server_job_db::SERVER_ID => array(
         'type' => 'int',
         'not null' => TRUE,
         'unsigned' => TRUE,
-        'description' => t('The server ID points to mediamosa_server nid field.'),
+        'description' => 'The server ID points to mediamosa_server nid field.',
       ),
       mediamosa_server_job_db::JOB_ID => array(
         'type' => 'int',
         'not null' => TRUE,
         'unsigned' => TRUE,
-        'description' => t('The job ID.'),
+        'description' => 'The job ID.',
       ),
       mediamosa_server_job_db::PROGRESS => array(
         'type' => 'int',
         'size' => 'tiny',
         'unsigned' => TRUE,
-        'description' => t('The progress.'),
+        'description' => 'The progress.',
         'default' => 0,
       ),
       mediamosa_server_job_db::CREATED => array(
         'type' => 'datetime',
         'mysql_type' => 'DATETIME',
         'not null' => TRUE,
-        'description' => t('The date and time when server job was created.'),
+        'description' => 'The date and time when server job was created.',
       ),
       mediamosa_server_job_db::CHANGED => array(
         'type' => 'datetime',
         'mysql_type' => 'DATETIME',
         'default' => NULL,
-        'description' => t('The date and time when server job was changed last.'),
+        'description' => 'The date and time when server job was changed last.',
       ),
     ),
     'primary key' => array(mediamosa_server_job_db::SERVER_ID, mediamosa_server_job_db::JOB_ID),

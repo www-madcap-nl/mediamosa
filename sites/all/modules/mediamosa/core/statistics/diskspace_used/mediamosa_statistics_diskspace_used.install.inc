@@ -52,55 +52,55 @@ function _mediamosa_statistics_diskspace_used_uninstall() {
  */
 function mediamosa_statistics_diskspace_used_schema() {
 
-  $a_schema[mediamosa_statistics_diskspace_used_db::TABLE_NAME] = array(
-  'description' => t('The statistics_diskspace_used hmmm table.'),
+  $schema[mediamosa_statistics_diskspace_used_db::TABLE_NAME] = array(
+  'description' => 'The statistics_diskspace_used hmmm table.',
     'fields' => array(
       mediamosa_statistics_diskspace_used_db::ID => array(
         'type' => 'serial',
         'not null' => TRUE,
         'unsigned' => TRUE,
-        'description' => t('Primary Key: Unique ID.'),
+        'description' => 'Primary Key: Unique ID.',
       ),
       mediamosa_statistics_diskspace_used_db::APP_ID => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'description' => t('The application ID.'),
+        'description' => 'The application ID.',
       ),
       mediamosa_statistics_diskspace_used_db::TYPE => array(
-        'description' => t('The ticket type.'),
+        'description' => 'The ticket type.',
         'type' => "enum('" . implode("','", array(mediamosa_statistics_diskspace_used_db::TYPE_CONTAINER, mediamosa_statistics_diskspace_used_db::TYPE_EUA, mediamosa_statistics_diskspace_used_db::TYPE_GROUP, mediamosa_statistics_diskspace_used_db::TYPE_USER)) . "')",
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_statistics_diskspace_used_db::TYPE_CONTAINER, mediamosa_statistics_diskspace_used_db::TYPE_EUA, mediamosa_statistics_diskspace_used_db::TYPE_GROUP, mediamosa_statistics_diskspace_used_db::TYPE_USER)) . "')",
-        'description' => t('The type.'),
+        'description' => 'The type.',
       ),
       mediamosa_statistics_diskspace_used_db::KEYWORD => array(
         'type' => 'varchar',
         'length' => mediamosa_statistics_diskspace_used_db::KEYWORD_LENGTH,
         'not null' => TRUE,
-        'description' => t('The keyword.'),
+        'description' => 'The keyword.',
       ),
       mediamosa_statistics_diskspace_used_db::CONTAINER_TYPE => array(
         'type' => 'varchar',
         'length' => mediamosa_statistics_diskspace_used_db::CONTAINER_TYPE_LENGTH,
         'not null' => TRUE,
-        'description' => t('The keyword.'),
+        'description' => 'The keyword.',
       ),
       mediamosa_statistics_diskspace_used_db::DISKSPACE => array(
         'type' => 'int',
         'size' => 'normal',
         'not null' => TRUE,
-        'description' => t('Diskspace.'),
+        'description' => 'Diskspace.',
       ),
       mediamosa_statistics_diskspace_used_db::TIMESTAMP => array(
         'type' => 'datetime',
         'mysql_type' => 'DATETIME',
         'not null' => TRUE,
-        'description' => t('The time and date.'),
+        'description' => 'The time and date.',
       ),
     ),
     'primary key' => array(mediamosa_statistics_diskspace_used_db::ID),
   );
 
-  return $a_schema;
+  return $schema;
 }

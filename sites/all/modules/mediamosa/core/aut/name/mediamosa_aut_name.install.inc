@@ -51,47 +51,47 @@ function _mediamosa_aut_name_uninstall() {
  * Implements hook_schema().
  */
 function mediamosa_aut_name_schema() {
-  $a_schema[mediamosa_aut_name_db::TABLE_NAME] = array(
-    'description' => t('This table stores named entities on which autorization can be linked.'),
+  $schema[mediamosa_aut_name_db::TABLE_NAME] = array(
+    'description' => 'This table stores named entities on which autorization can be linked.',
     'fields' => array(
       mediamosa_aut_name_db::ID => array(
         'type' => 'serial',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'description' => t('Primary Key: Unique ID.'),
+        'description' => 'Primary Key: Unique ID.',
       ),
       mediamosa_aut_name_db::APP_ID => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'description' => t('The application ID.'),
+        'description' => 'The application ID.',
       ),
       mediamosa_aut_name_db::AUT_GROUP_ID => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => FALSE,
-        'description' => t('The optional group ID if name is part of group.'),
+        'description' => 'The optional group ID if name is part of group.',
       ),
       mediamosa_aut_name_db::AUT_NAME => array(
         'type' => 'varchar',
         'length' => mediamosa_aut_name_db::AUT_NAME_LENGTH,
         'not null' => TRUE,
         'default' => '',
-        'description' => t('The name of the entity.'),
+        'description' => 'The name of the entity.',
       ),
       mediamosa_aut_name_db::AUT_PREFIX => array(
         'type' => 'varchar',
         'length' => mediamosa_aut_name_db::AUT_PREFIX_LENGTH,
         'not null' => FALSE,
         'default' => NULL,
-        'description' => t('The optional prefix of the entity, only used with REALM type.'),
+        'description' => 'The optional prefix of the entity, only used with REALM type.',
       ),
       mediamosa_aut_name_db::AUT_TYPE => array(
         'type' => "enum('" . implode("','", array(mediamosa_aut_name_db::AUT_TYPE_DOMAIN, mediamosa_aut_name_db::AUT_TYPE_REALM, mediamosa_aut_name_db::AUT_TYPE_USER, mediamosa_aut_name_db::AUT_TYPE_USER_GROUP)) . "')",
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_aut_name_db::AUT_TYPE_DOMAIN, mediamosa_aut_name_db::AUT_TYPE_REALM, mediamosa_aut_name_db::AUT_TYPE_USER, mediamosa_aut_name_db::AUT_TYPE_USER_GROUP)) . "')",
         'default' => mediamosa_aut_name_db::AUT_TYPE_DOMAIN,
-        'description' => t('The type of name entity.'),
+        'description' => 'The type of name entity.',
       ),
     ),
     'primary key' => array(mediamosa_aut_name_db::ID),
@@ -104,5 +104,5 @@ function mediamosa_aut_name_schema() {
     ),
   );
 
-  return $a_schema;
+  return $schema;
 }

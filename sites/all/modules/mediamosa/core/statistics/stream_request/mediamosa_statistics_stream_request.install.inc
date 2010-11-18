@@ -54,51 +54,51 @@ function _mediamosa_statistics_stream_request_uninstall() {
 function mediamosa_statistics_stream_request_schema() {
 
   $schema[mediamosa_statistics_stream_request_db::TABLE_NAME] = array(
-  'description' => t('The statistics stream request table.'),
+  'description' => 'The statistics stream request table.',
     'fields' => array(
       mediamosa_statistics_stream_request_db::ID => array(
         'type' => 'serial',
         'not null' => TRUE,
         'unsigned' => TRUE,
-        'description' => t('Primary Key: Unique ID.'),
+        'description' => 'Primary Key: Unique ID.',
       ),
       mediamosa_statistics_stream_request_db::TID => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'description' => t('The TID (mediamosa_streaming_ticket primary key).'),
+        'description' => 'The TID (mediamosa_streaming_ticket primary key).',
       ),
       mediamosa_statistics_stream_request_db::TIME => array(
         'type' => 'datetime',
         'mysql_type' => 'DATETIME',
         'not null' => TRUE,
-        'description' => t('The date and time, when the streaming request happened.'),
+        'description' => 'The date and time, when the streaming request happened.',
       ),
       mediamosa_statistics_stream_request_db::APP_ID => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'description' => t('The application ID.'),
+        'description' => 'The application ID.',
       ),
       mediamosa_statistics_stream_request_db::MEDIAFILE_ID => array(
         'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
         'not null' => TRUE,
-        'description' => t('The parent mediafile ID.'),
+        'description' => 'The parent mediafile ID.',
       ),
       mediamosa_statistics_stream_request_db::DURATION => array(
         'type' => 'int',
         'size' => 'big',
         'not null' => FALSE,
         'unsigned' => TRUE,
-        'description' => t('Length of time that a client played content before a client event.'),
+        'description' => 'Length of time that a client played content before a client event.',
       ),
       mediamosa_statistics_stream_request_db::BYTES => array(
         'type' => 'int',
         'size' => 'big',
         'not null' => FALSE,
         'unsigned' => TRUE,
-        'description' => t('Bytes sent by the server to the client.'),
+        'description' => 'Bytes sent by the server to the client.',
       ),
     ),
     'primary key' => array(mediamosa_statistics_stream_request_db::ID),

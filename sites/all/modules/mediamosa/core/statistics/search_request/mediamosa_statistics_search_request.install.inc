@@ -52,32 +52,32 @@ function _mediamosa_statistics_search_request_uninstall() {
  */
 function mediamosa_statistics_search_request_schema() {
 
-  $a_schema[mediamosa_statistics_search_request_db::TABLE_NAME] = array(
-  'description' => t('The statistics search request table.'),
+  $schema[mediamosa_statistics_search_request_db::TABLE_NAME] = array(
+  'description' => 'The statistics search request table.',
     'fields' => array(
       mediamosa_statistics_search_request_db::ID => array(
         'type' => 'serial',
         'not null' => TRUE,
         'unsigned' => TRUE,
-        'description' => t('Primary Key: Unique ID.'),
+        'description' => 'Primary Key: Unique ID.',
       ),
       mediamosa_statistics_search_request_db::APP_ID => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'description' => t('The application ID.'),
+        'description' => 'The application ID.',
       ),
       mediamosa_statistics_search_request_db::KEYWORD => array(
         'type' => 'varchar',
         'length' => mediamosa_statistics_search_request_db::KEYWORD_LENGTH,
         'not null' => TRUE,
-        'description' => t('The searched string.'),
+        'description' => 'The searched string.',
       ),
       mediamosa_statistics_search_request_db::SEARCHED => array(
         'type' => 'datetime',
         'mysql_type' => 'DATETIME',
         'not null' => TRUE,
-        'description' => t('The time and date of the search.'),
+        'description' => 'The time and date of the search.',
       ),
     ),
     'primary key' => array(mediamosa_statistics_rest_log_db::ID),
@@ -86,5 +86,5 @@ function mediamosa_statistics_search_request_schema() {
     ),
   );
 
-  return $a_schema;
+  return $schema;
 }

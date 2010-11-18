@@ -53,68 +53,68 @@ function _mediamosa_collection_uninstall() {
  */
 function mediamosa_collection_schema() {
 
-  $a_schema[mediamosa_collection_db::TABLE_NAME] = array(
-  'description' => t('The collection table.'),
+  $schema[mediamosa_collection_db::TABLE_NAME] = array(
+  'description' => 'The collection table.',
     'fields' => array(
       mediamosa_collection_db::ID => array(
         'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
         'not null' => TRUE,
-        'description' => t('Primary Key: Unique ID.'),
+        'description' => 'Primary Key: Unique ID.',
       ),
       mediamosa_collection_db::TITLE => array(
         'type' => 'varchar',
         'length' => mediamosa_collection_db::TITLE_LENGTH,
         'default' => NULL,
-        'description' => t('The collection title.'),
+        'description' => 'The collection title.',
       ),
       mediamosa_collection_db::DESCRIPTION => array(
         'type' => 'varchar',
         'length' => mediamosa_collection_db::DESCRIPTION_LENGTH,
         'default' => NULL,
-        'description' => t('The collection description.'),
+        'description' => 'The collection description.',
       ),
       mediamosa_collection_db::APP_ID => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'description' => t('The application ID of the asset.'),
+        'description' => 'The application ID of the asset.',
       ),
       mediamosa_collection_db::OWNER_ID => array(
         'type' => 'varchar',
         'length' => mediamosa_collection_db::OWNER_ID_LENGTH,
         'default' => NULL,
-        'description' => t('The owner ID.'),
+        'description' => 'The owner ID.',
       ),
       mediamosa_collection_db::GROUP_ID => array(
         'type' => 'varchar',
         'length' => mediamosa_collection_db::GROUP_ID_LENGTH,
         'default' => NULL,
-        'description' => t('The group ID.'),
+        'description' => 'The group ID.',
       ),
       mediamosa_collection_db::ISPRIVATE => array(
-        'description' => t('The collection is private.'),
+        'description' => 'The collection is private.',
         'type' => "enum('" . implode("','", array(mediamosa_collection_db::ISPRIVATE_FALSE, mediamosa_collection_db::ISPRIVATE_TRUE)) . "')",
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_collection_db::ISPRIVATE_FALSE, mediamosa_collection_db::ISPRIVATE_TRUE)) . "')",
         'default' => mediamosa_collection_db::ISPRIVATE_FALSE,
       ),
       mediamosa_collection_db::PRIVATE_ => array(
-        'description' => t('The collection is private.'),
+        'description' => 'The collection is private.',
         'type' => "enum('" . implode("','", array(mediamosa_collection_db::PRIVATE_FALSE, mediamosa_collection_db::PRIVATE_TRUE)) . "')",
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_collection_db::PRIVATE_FALSE, mediamosa_collection_db::PRIVATE_TRUE)) . "')",
         'default' => mediamosa_collection_db::PRIVATE_FALSE,
       ),
       mediamosa_collection_db::_PUBLIC => array(
-        'description' => t('The collection is public.'),
+        'description' => 'The collection is public.',
         'type' => "enum('" . implode("','", array(mediamosa_collection_db::PUBLIC_FALSE, mediamosa_collection_db::PUBLIC_TRUE)) . "')",
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_collection_db::PUBLIC_FALSE, mediamosa_collection_db::PUBLIC_TRUE)) . "')",
         'default' => mediamosa_collection_db::PUBLIC_TRUE,
       ),
       mediamosa_collection_db::CATEGORY => array(
-        'description' => t('The collection\'s category.'),
+        'description' => 'The collection\'s category.',
         'type' => "enum('" . implode("','", array(mediamosa_collection_db::CATEGORY_FALSE, mediamosa_collection_db::CATEGORY_TRUE)) . "')",
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_collection_db::CATEGORY_FALSE, mediamosa_collection_db::CATEGORY_TRUE)) . "')",
@@ -124,23 +124,23 @@ function mediamosa_collection_schema() {
         'type' => 'datetime',
         'mysql_type' => 'DATETIME',
         'not null' => TRUE,
-        'description' => t('The date and time when asset was created.'),
+        'description' => 'The date and time when asset was created.',
       ),
       mediamosa_collection_db::CHANGED => array(
         'type' => 'datetime',
         'mysql_type' => 'DATETIME',
         'default' => NULL,
-        'description' => t('The date and time when asset was changed last.'),
+        'description' => 'The date and time when asset was changed last.',
       ),
       mediamosa_collection_db::IS_UNAPPROPRIATE => array(
-        'description' => t('If the collection has unappropieate contents.'),
+        'description' => 'If the collection has unappropieate contents.',
         'type' => "enum('" . implode("','", array(mediamosa_collection_db::IS_UNAPPROPRIATE_FALSE, mediamosa_collection_db::IS_UNAPPROPRIATE_TRUE)) . "')",
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_collection_db::IS_UNAPPROPRIATE_FALSE, mediamosa_collection_db::IS_UNAPPROPRIATE_TRUE)) . "')",
         'default' => mediamosa_collection_db::IS_UNAPPROPRIATE_FALSE,
       ),
       mediamosa_collection_db::PUBLIC_ASSIGN => array(
-        'description' => t('If the collection public assigned.'),
+        'description' => 'If the collection public assigned.',
         'type' => "enum('" . implode("','", array(mediamosa_collection_db::PUBLIC_ASSIGN_FALSE, mediamosa_collection_db::PUBLIC_ASSIGN_TRUE)) . "')",
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_collection_db::PUBLIC_ASSIGN_FALSE, mediamosa_collection_db::PUBLIC_ASSIGN_TRUE)) . "')",
@@ -159,5 +159,5 @@ function mediamosa_collection_schema() {
     ),
   );
 
-  return $a_schema;
+  return $schema;
 }

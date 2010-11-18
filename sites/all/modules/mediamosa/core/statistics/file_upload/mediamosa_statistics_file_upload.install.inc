@@ -52,43 +52,43 @@ function _mediamosa_statistics_file_upload_uninstall() {
  */
 function mediamosa_statistics_file_upload_schema() {
 
-  $a_schema[mediamosa_statistics_file_upload_db::TABLE_NAME] = array(
-    'description' => t('The statistics file upload table.'),
+  $schema[mediamosa_statistics_file_upload_db::TABLE_NAME] = array(
+    'description' => 'The statistics file upload table.',
     'fields' => array(
       mediamosa_statistics_file_upload_db::ID => array(
         'type' => 'serial',
         'not null' => TRUE,
         'unsigned' => TRUE,
-        'description' => t('Primary Key: Unique ID.'),
+        'description' => 'Primary Key: Unique ID.',
       ),
       mediamosa_statistics_file_upload_db::APP_ID => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'description' => t('The application ID.'),
+        'description' => 'The application ID.',
       ),
       mediamosa_statistics_file_upload_db::OWNER_ID => array(
         'type' => 'varchar',
         'length' => 255,
-        'description' => t('The owner ID.'),
+        'description' => 'The owner ID.',
       ),
       mediamosa_statistics_file_upload_db::GROUP_ID => array(
         'type' => 'varchar',
         'length' => 255,
-        'description' => t('The group ID.'),
+        'description' => 'The group ID.',
       ),
       mediamosa_statistics_file_upload_db::FILE_SIZE => array(
         'type' => 'int',
         'size' => 'big',
         'not null' => TRUE,
         'unsigned' => FALSE,
-        'description' => t('The file size of the upload.'),
+        'description' => 'The file size of the upload.',
       ),
       mediamosa_statistics_file_upload_db::TIMESTAMP => array(
         'type' => 'datetime',
         'mysql_type' => 'DATETIME',
         'not null' => TRUE,
-        'description' => t('The time and date of the upload.'),
+        'description' => 'The time and date of the upload.',
       ),
     ),
     'primary key' => array(mediamosa_statistics_file_upload_db::ID),
@@ -98,5 +98,5 @@ function mediamosa_statistics_file_upload_schema() {
     ),
   );
 
-  return $a_schema;
+  return $schema;
 }

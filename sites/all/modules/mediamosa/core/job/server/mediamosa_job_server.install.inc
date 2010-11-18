@@ -93,29 +93,29 @@ function _mediamosa_job_server_uninstall() {
  */
 function mediamosa_job_server_schema() {
 
-  $a_schema[mediamosa_job_server_db::TABLE_NAME] = array(
-  'description' => t('The job server table.'),
+  $schema[mediamosa_job_server_db::TABLE_NAME] = array(
+  'description' => 'The job server table.',
     'fields' => array(
       mediamosa_job_server_db::ID => array(
         'type' => 'serial',
         'not null' => TRUE,
         'unsigned' => TRUE,
-        'description' => t('Primary Key: Unique ID.'),
+        'description' => 'Primary Key: Unique ID.',
       ),
       mediamosa_job_server_db::INSTALL_ID => array(
         'type' => 'varchar',
         'length' => mediamosa_job_server_db::INSTALL_ID_LENGTH,
         'default' => 'default',
-        'description' => t('The installion ID for multiple installments of jobserver.'),
+        'description' => 'The installion ID for multiple installments of jobserver.',
       ),
       mediamosa_job_server_db::JOB_ID => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'description' => t('The job ID.'),
+        'description' => 'The job ID.',
       ),
       mediamosa_job_server_db::JOB_STATUS => array(
-        'description' => t('The status of the job.'),
+        'description' => 'The status of the job.',
         'type' => "enum('" . implode("','", array(mediamosa_job_server_db::JOB_STATUS_WAITING, mediamosa_job_server_db::JOB_STATUS_INPROGRESS, mediamosa_job_server_db::JOB_STATUS_FINISHED, mediamosa_job_server_db::JOB_STATUS_FAILED, mediamosa_job_server_db::JOB_STATUS_CANCELLED)) . "')",
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_job_server_db::JOB_STATUS_WAITING, mediamosa_job_server_db::JOB_STATUS_INPROGRESS, mediamosa_job_server_db::JOB_STATUS_FINISHED, mediamosa_job_server_db::JOB_STATUS_FAILED, mediamosa_job_server_db::JOB_STATUS_CANCELLED)) . "')",
@@ -125,11 +125,11 @@ function mediamosa_job_server_schema() {
         'type' => 'varchar',
         'length' => mediamosa_job_server_db::PROGRESS_LENGTH,
         'not null' => TRUE,
-        'description' => t('The progress of the job from 0.000 to 1.000.'),
+        'description' => 'The progress of the job from 0.000 to 1.000.',
         'default' => '0.000',
       ),
       mediamosa_job_server_db::JOB_TYPE => array(
-        'description' => t('The status of the job.'),
+        'description' => 'The status of the job.',
         'type' => "enum('" . implode("','", array(mediamosa_job_server_db::JOB_TYPE_TRANSCODE, mediamosa_job_server_db::JOB_TYPE_STILL, mediamosa_job_server_db::JOB_TYPE_UPLOAD, mediamosa_job_server_db::JOB_TYPE_ANALYSE, mediamosa_job_server_db::JOB_TYPE_DELETE_MEDIAFILE)) . "')",
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_job_server_db::JOB_TYPE_TRANSCODE, mediamosa_job_server_db::JOB_TYPE_STILL, mediamosa_job_server_db::JOB_TYPE_UPLOAD, mediamosa_job_server_db::JOB_TYPE_ANALYSE, mediamosa_job_server_db::JOB_TYPE_DELETE_MEDIAFILE)) . "')",
@@ -138,48 +138,48 @@ function mediamosa_job_server_schema() {
       mediamosa_job_server_db::PROGRESS_ID => array(
         'type' => 'int',
         'unsigned' => TRUE,
-        'description' => t('Unused.'),
+        'description' => 'Unused.',
         'default' => NULL,
       ),
       mediamosa_job_server_db::MEDIAFILE_ID_SRC => array(
         'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
         'default' => NULL,
-        'description' => t('The mediafile ID.'),
+        'description' => 'The mediafile ID.',
       ),
       mediamosa_job_server_db::MEDIAFILE_DEST => array(
         'type' => 'text',
         'default' => NULL,
-        'description' => t('The mediafile.'),
+        'description' => 'The mediafile.',
       ),
       mediamosa_job_server_db::STARTED => array(
         'type' => 'datetime',
         'mysql_type' => 'DATETIME',
         'default' => NULL,
-        'description' => t('The date and time when job was started.'),
+        'description' => 'The date and time when job was started.',
       ),
       mediamosa_job_server_db::FINISHED => array(
         'type' => 'datetime',
         'mysql_type' => 'DATETIME',
         'default' => NULL,
-        'description' => t('The date and time when job was finished.'),
+        'description' => 'The date and time when job was finished.',
       ),
       mediamosa_job_server_db::ERROR_DESCRIPTION => array(
         'type' => 'text',
         'size' => 'normal',
-        'description' => t('Possible error description log.'),
+        'description' => 'Possible error description log.',
       ),
       mediamosa_job_server_db::CREATED => array(
         'type' => 'datetime',
         'mysql_type' => 'DATETIME',
         'not null' => TRUE,
-        'description' => t('The date and time when job was created.'),
+        'description' => 'The date and time when job was created.',
       ),
       mediamosa_job_server_db::CHANGED => array(
         'type' => 'datetime',
         'mysql_type' => 'DATETIME',
         'default' => NULL,
-        'description' => t('The date and time when job was changed last.'),
+        'description' => 'The date and time when job was changed last.',
       ),
     ),
     'primary key' => array(mediamosa_job_server_db::ID, mediamosa_job_server_db::INSTALL_ID),
@@ -194,5 +194,5 @@ function mediamosa_job_server_schema() {
     ),
   );
 
-  return $a_schema;
+  return $schema;
 }

@@ -54,13 +54,13 @@ function _mediamosa_statistics_file_helper_uninstall() {
 function mediamosa_statistics_file_helper_schema() {
 
   $schema[mediamosa_statistics_file_helper_db::TABLE_NAME] = array(
-  'description' => t('The statistics file helper table.'),
+  'description' => 'The statistics file helper table.',
     'fields' => array(
       mediamosa_statistics_file_helper_db::FILE => array(
         'type' => 'varbinary',
         'length' => mediamosa_statistics_file_helper_db::FILE_LENGTH,
         'not null' => TRUE,
-        'description' => t('The name of file.'),
+        'description' => 'The name of file.',
       ),
     ),
     'primary key' => array(mediamosa_statistics_file_helper_db::FILE),

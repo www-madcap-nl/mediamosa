@@ -51,34 +51,34 @@ function _mediamosa_aut_group_uninstall() {
  * Implements hook_schema().
  */
 function mediamosa_aut_group_schema() {
-  $a_schema[mediamosa_aut_group_db::TABLE_NAME] = array(
-    'description' => t('This table stores grouped named entities on which autorization can be linked.'),
+  $schema[mediamosa_aut_group_db::TABLE_NAME] = array(
+    'description' => 'This table stores grouped named entities on which autorization can be linked.',
     'fields' => array(
       mediamosa_aut_group_db::ID => array(
         'type' => 'serial',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'description' => t('Primary Key: Unique ID.'),
+        'description' => 'Primary Key: Unique ID.',
       ),
       mediamosa_aut_group_db::APP_ID => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'description' => t('The application ID.'),
+        'description' => 'The application ID.',
       ),
       mediamosa_aut_group_db::AUT_GROUP_NAME => array(
         'type' => 'varchar',
         'length' => mediamosa_aut_group_db::AUT_GROUP_NAME_LENGTH,
         'not null' => TRUE,
         'default' => '',
-        'description' => t('The group name.'),
+        'description' => 'The group name.',
       ),
       mediamosa_aut_group_db::AUT_GROUP_TYPE => array(
         'type' => "enum('" . implode("','", array(mediamosa_aut_group_db::AUT_GROUP_TYPE_REALM, mediamosa_aut_group_db::AUT_GROUP_TYPE_DOMAIN)) . "')",
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_aut_group_db::AUT_GROUP_TYPE_REALM, mediamosa_aut_group_db::AUT_GROUP_TYPE_DOMAIN)) . "')",
         'default' => mediamosa_aut_group_db::AUT_GROUP_TYPE_REALM,
-        'description' => t('The type of group.'),
+        'description' => 'The type of group.',
       ),
     ),
     'primary key' => array(mediamosa_aut_group_db::ID),
@@ -87,5 +87,5 @@ function mediamosa_aut_group_schema() {
     ),
   );
 
-  return $a_schema;
+  return $schema;
 }

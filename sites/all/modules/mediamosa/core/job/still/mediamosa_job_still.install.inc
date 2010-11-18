@@ -51,45 +51,45 @@ function _mediamosa_job_still_uninstall() {
  */
 function mediamosa_job_still_schema() {
 
-  $a_schema[mediamosa_job_still_db::TABLE_NAME] = array(
-  'description' => t('The transcode job table.'),
+  $schema[mediamosa_job_still_db::TABLE_NAME] = array(
+  'description' => 'The transcode job table.',
     'fields' => array(
       mediamosa_job_still_db::ID => array(
         'type' => 'serial',
         'not null' => TRUE,
         'unsigned' => TRUE,
-        'description' => t('Primary Key: Unique ID.'),
+        'description' => 'Primary Key: Unique ID.',
       ),
       mediamosa_job_still_db::JOB_ID => array(
         'type' => 'int',
         'not null' => TRUE,
         'unsigned' => TRUE,
-        'description' => t('The job ID.'),
+        'description' => 'The job ID.',
       ),
       mediamosa_job_still_db::SIZE => array(
         'type' => 'varchar',
         'length' => mediamosa_job_still_db::SIZE_LENGTH,
         'default' => NULL,
-        'description' => t('The size for still.'),
+        'description' => 'The size for still.',
       ),
       mediamosa_job_still_db::FRAMETIME => array(
         'type' => 'int',
-        'description' => t('The still frametime.'),
+        'description' => 'The still frametime.',
       ),
       mediamosa_job_still_db::H_PADDING => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'default' => NULL,
-        'description' => t('The horizontal padding.'),
+        'description' => 'The horizontal padding.',
       ),
       mediamosa_job_still_db::V_PADDING => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'default' => NULL,
-        'description' => t('The vertical padding.'),
+        'description' => 'The vertical padding.',
       ),
       mediamosa_job_still_db::BLACKSTILL_CHECK => array(
-        'description' => t('Enable to prevent dark empty stills.'),
+        'description' => 'Enable to prevent dark empty stills.',
         'type' => "enum('" . implode("','", array(mediamosa_job_still_db::BLACKSTILL_CHECK_FALSE, mediamosa_job_still_db::BLACKSTILL_CHECK_TRUE)) . "')",
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_job_still_db::BLACKSTILL_CHECK_FALSE, mediamosa_job_still_db::BLACKSTILL_CHECK_TRUE)) . "')",
@@ -98,19 +98,19 @@ function mediamosa_job_still_schema() {
       mediamosa_job_still_db::STILL_PARAMETERS => array(
         'type' => 'text',
         'default' => NULL,
-        'description' => t('Still parameters.'),
+        'description' => 'Still parameters.',
       ),
       mediamosa_job_still_db::CREATED => array(
         'type' => 'datetime',
         'mysql_type' => 'DATETIME',
         'not null' => TRUE,
-        'description' => t('The date and time when still job was created.'),
+        'description' => 'The date and time when still job was created.',
       ),
       mediamosa_job_still_db::CHANGED => array(
         'type' => 'datetime',
         'mysql_type' => 'DATETIME',
         'default' => NULL,
-        'description' => t('The date and time when still job was changed last.'),
+        'description' => 'The date and time when still job was changed last.',
       ),
     ),
     'primary key' => array(mediamosa_job_still_db::ID),
@@ -119,5 +119,5 @@ function mediamosa_job_still_schema() {
     ),
   );
 
-  return $a_schema;
+  return $schema;
 }

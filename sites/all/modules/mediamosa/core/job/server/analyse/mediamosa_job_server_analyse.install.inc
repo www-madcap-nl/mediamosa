@@ -51,31 +51,31 @@ function _mediamosa_job_server_analyse_uninstall() {
  */
 function mediamosa_job_server_analyse_schema() {
 
-  $a_schema[mediamosa_job_server_analyse_db::TABLE_NAME] = array(
-  'description' => t('The job server analyse table.'),
+  $schema[mediamosa_job_server_analyse_db::TABLE_NAME] = array(
+  'description' => 'The job server analyse table.',
     'fields' => array(
       mediamosa_job_server_analyse_db::ID => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'description' => t('The server job ID.'),
+        'description' => 'The server job ID.',
       ),
       mediamosa_job_server_analyse_db::ANALYSE_RESULT => array(
         'type' => 'text',
         'default' => NULL,
-        'description' => t('The analyse result.'),
+        'description' => 'The analyse result.',
       ),
       mediamosa_job_server_analyse_db::CREATED => array(
         'type' => 'datetime',
         'mysql_type' => 'DATETIME',
         'not null' => TRUE,
-        'description' => t('The date and time when job analyse was created.'),
+        'description' => 'The date and time when job analyse was created.',
       ),
       mediamosa_job_server_analyse_db::CHANGED => array(
         'type' => 'datetime',
         'mysql_type' => 'DATETIME',
         'default' => NULL,
-        'description' => t('The date and time when job analyse was changed last.'),
+        'description' => 'The date and time when job analyse was changed last.',
       ),
     ),
     'primary key' => array(mediamosa_job_server_analyse_db::ID),
@@ -84,5 +84,5 @@ function mediamosa_job_server_analyse_schema() {
     ),
   );
 
-  return $a_schema;
+  return $schema;
 }

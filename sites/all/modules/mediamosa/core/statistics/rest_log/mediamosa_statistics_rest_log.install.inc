@@ -52,35 +52,35 @@ function _mediamosa_statistics_rest_log_uninstall() {
  */
 function mediamosa_statistics_rest_log_schema() {
 
-  $a_schema[mediamosa_statistics_rest_log_db::TABLE_NAME] = array(
-  'description' => t('The statistics rest log table.'),
+  $schema[mediamosa_statistics_rest_log_db::TABLE_NAME] = array(
+  'description' => 'The statistics rest log table.',
     'fields' => array(
       mediamosa_statistics_rest_log_db::ID => array(
         'type' => 'serial',
         'not null' => TRUE,
         'unsigned' => TRUE,
-        'description' => t('Primary Key: Unique ID.'),
+        'description' => 'Primary Key: Unique ID.',
       ),
       mediamosa_statistics_rest_log_db::REQUEST => array(
         'type' => 'text',
         'size' => 'normal',
         'not null' => TRUE,
-        'description' => t('The request URI.'),
+        'description' => 'The request URI.',
       ),
       mediamosa_statistics_rest_log_db::PROCESS_TIME => array(
         'type' => 'float',
         'size' => 'normal',
         'not null' => TRUE,
-        'description' => t('The process time.'),
+        'description' => 'The process time.',
       ),
       mediamosa_statistics_rest_log_db::QUERY_COUNT => array(
         'type' => 'int',
         'not null' => TRUE,
-        'description' => t('The query count.'),
+        'description' => 'The query count.',
       ),
     ),
     'primary key' => array(mediamosa_statistics_rest_log_db::ID),
   );
 
-  return $a_schema;
+  return $schema;
 }

@@ -72,31 +72,31 @@ function _mediamosa_asset_metadata_property_group_uninstall() {
  */
 function mediamosa_asset_metadata_property_group_schema() {
 
-  $a_schema[mediamosa_asset_metadata_property_group_db::TABLE_NAME] = array(
-  'description' => t('The asset metadata property group table.'),
+  $schema[mediamosa_asset_metadata_property_group_db::TABLE_NAME] = array(
+  'description' => 'The asset metadata property group table.',
     'fields' => array(
       mediamosa_asset_metadata_property_group_db::ID => array(
         'type' => 'serial',
         'not null' => TRUE,
-        'description' => t('Primary Key: Unique ID.'),
+        'description' => 'Primary Key: Unique ID.',
       ),
       mediamosa_asset_metadata_property_group_db::NAME => array(
         'type' => 'varchar',
         'not null' => TRUE,
-        'description' => t('Primary Key: Unique ID.'),
+        'description' => 'Primary Key: Unique ID.',
         'length' => mediamosa_asset_metadata_property_group_db::NAME_LENGTH,
       ),
       mediamosa_asset_metadata_property_group_db::CREATED => array(
         'type' => 'datetime',
         'mysql_type' => 'DATETIME',
         'not null' => TRUE,
-        'description' => t('The date and time when asset metadata property was created.'),
+        'description' => 'The date and time when asset metadata property was created.',
       ),
       mediamosa_asset_metadata_property_group_db::CHANGED => array(
         'type' => 'datetime',
         'mysql_type' => 'DATETIME',
         'default' => NULL,
-        'description' => t('The date and time when asset metadata property was changed.'),
+        'description' => 'The date and time when asset metadata property was changed.',
       ),
     ),
     'primary key' => array(mediamosa_asset_metadata_property_group_db::ID),
@@ -105,5 +105,5 @@ function mediamosa_asset_metadata_property_group_schema() {
     ),
   );
 
-  return $a_schema;
+  return $schema;
 }

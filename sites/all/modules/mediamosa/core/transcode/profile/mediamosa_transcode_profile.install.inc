@@ -88,17 +88,17 @@ function _mediamosa_transcode_profile_uninstall() {
  */
 function mediamosa_transcode_profile_schema() {
 
-  $a_schema[mediamosa_transcode_profile_db::TABLE_NAME] = array(
-  'description' => t('The transcode profile table.'),
+  $schema[mediamosa_transcode_profile_db::TABLE_NAME] = array(
+  'description' => 'The transcode profile table.',
     'fields' => array(
       mediamosa_transcode_profile_db::NID => array(
-        'description' => t('The Drupal node id.'),
+        'description' => 'The Drupal node id.',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
       mediamosa_transcode_profile_db::VID => array(
-        'description' => t('The Drupal node revision id.'),
+        'description' => 'The Drupal node revision id.',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
@@ -107,27 +107,27 @@ function mediamosa_transcode_profile_schema() {
         'type' => 'serial',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'description' => t('Primary Key: Unique ID.'),
+        'description' => 'Primary Key: Unique ID.',
       ),
       mediamosa_transcode_profile_db::APP_ID => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'description' => t('The application ID.'),
+        'description' => 'The application ID.',
       ),
       mediamosa_transcode_profile_db::VERSION => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'default' => NULL,
-        'description' => t('Version profile.'),
+        'description' => 'Version profile.',
       ),
       mediamosa_transcode_profile_db::PROFILE => array(
         'type' => 'varchar',
         'length' => mediamosa_transcode_profile_db::PROFILE_LENGTH,
-        'description' => t('Profile data.'),
+        'description' => 'Profile data.',
       ),
       mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE => array(
-        'description' => t('The asset is private.'),
+        'description' => 'The asset is private.',
         'type' => "enum('" . implode("','", array(mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE_FALSE, mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE_TRUE)) . "')",
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE_FALSE, mediamosa_transcode_profile_db::IS_DEFAULT_PROFILE_TRUE)) . "')",
@@ -136,28 +136,28 @@ function mediamosa_transcode_profile_schema() {
       mediamosa_transcode_profile_db::TOOL => array(
         'type' => 'varchar',
         'length' => mediamosa_transcode_profile_db::TOOL_LENGTH,
-        'description' => t('Tool used.'),
+        'description' => 'Tool used.',
       ),
       mediamosa_transcode_profile_db::FILE_EXTENSION => array(
         'type' => 'char',
         'length' => mediamosa_transcode_profile_db::FILE_EXTENSION_LENGTH,
-        'description' => t('file extension.'),
+        'description' => 'file extension.',
       ),
       mediamosa_transcode_profile_db::COMMAND => array(
         'type' => 'text',
-        'description' => t('Command.'),
+        'description' => 'Command.',
       ),
       mediamosa_transcode_profile_db::CREATED => array(
         'type' => 'datetime',
         'mysql_type' => 'DATETIME',
         'not null' => TRUE,
-        'description' => t('The date and time when transcode profile was created.'),
+        'description' => 'The date and time when transcode profile was created.',
       ),
       mediamosa_transcode_profile_db::CHANGED => array(
         'type' => 'datetime',
         'mysql_type' => 'DATETIME',
         'default' => NULL,
-        'description' => t('The date and time when transcode profile was changed last.'),
+        'description' => 'The date and time when transcode profile was changed last.',
       ),
     ),
     'primary key' => array(mediamosa_transcode_profile_db::ID),
@@ -170,5 +170,5 @@ function mediamosa_transcode_profile_schema() {
     ),
   );
 
-  return $a_schema;
+  return $schema;
 }

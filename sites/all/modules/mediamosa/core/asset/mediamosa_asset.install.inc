@@ -89,77 +89,77 @@ function _mediamosa_asset_uninstall() {
  */
 function mediamosa_asset_schema() {
 
-  $a_schema[mediamosa_asset_db::TABLE_NAME] = array(
-  'description' => t('The asset table.'),
+  $schema[mediamosa_asset_db::TABLE_NAME] = array(
+  'description' => 'The asset table.',
     'fields' => array(
       mediamosa_asset_db::ID => array(
         'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
         'not null' => TRUE,
-        'description' => t('Primary Key: Unique ID.'),
+        'description' => 'Primary Key: Unique ID.',
       ),
       mediamosa_asset_db::PARENT_ID => array(
         'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
         'default' => NULL,
-        'description' => t('The parent asset ID.'),
+        'description' => 'The parent asset ID.',
       ),
       mediamosa_asset_db::APP_ID => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'description' => t('The application ID of the asset.'),
+        'description' => 'The application ID of the asset.',
       ),
       mediamosa_asset_db::PROVIDER_ID => array(
         'type' => 'varchar',
         'length' => mediamosa_asset_db::PROVIDER_ID_LENGTH,
         'default' => NULL,
-        'description' => t('The provider ID.'),
+        'description' => 'The provider ID.',
       ),
       mediamosa_asset_db::OWNER_ID => array(
         'type' => 'varchar',
         'length' => mediamosa_asset_db::OWNER_ID_LENGTH,
         'default' => NULL,
-        'description' => t('The owner ID.'),
+        'description' => 'The owner ID.',
       ),
       mediamosa_asset_db::GROUP_ID => array(
         'type' => 'varchar',
         'length' => mediamosa_asset_db::GROUP_ID_LENGTH,
         'default' => NULL,
-        'description' => t('The group ID.'),
+        'description' => 'The group ID.',
       ),
       mediamosa_asset_db::VIDEOTIMESTAMP => array(
         'type' => 'datetime',
         'mysql_type' => 'DATETIME',
         'default' => NULL,
-        'description' => t('The time and date of the asset.'),
+        'description' => 'The time and date of the asset.',
       ),
       mediamosa_asset_db::VIDEOTIMESTAMPMODIFIED => array(
         'type' => 'datetime',
         'mysql_type' => 'DATETIME',
         'default' => NULL,
-        'description' => t('The modified time and date of the asset.'),
+        'description' => 'The modified time and date of the asset.',
       ),
       mediamosa_asset_db::PLAY_RESTRICTION_START => array(
         'type' => 'datetime',
         'mysql_type' => 'DATETIME',
         'default' => NULL,
-        'description' => t('The start time in an range of time to restrict.'),
+        'description' => 'The start time in an range of time to restrict.',
       ),
       mediamosa_asset_db::PLAY_RESTRICTION_END => array(
         'type' => 'datetime',
         'mysql_type' => 'DATETIME',
         'default' => NULL,
-        'description' => t('The end time in an range of time to restrict.'),
+        'description' => 'The end time in an range of time to restrict.',
       ),
       mediamosa_asset_db::REFERENCE_ID => array(
         'type' => 'varchar',
         'length' => mediamosa_asset_db::REFERENCE_ID_LENGTH,
         'default' => NULL,
-        'description' => t('The reference ID.'),
+        'description' => 'The reference ID.',
       ),
       mediamosa_asset_db::ISPRIVATE => array(
-        'description' => t('The asset is private.'),
+        'description' => 'The asset is private.',
         'type' => "enum('" . implode("','", array(mediamosa_asset_db::ISPRIVATE_FALSE, mediamosa_asset_db::ISPRIVATE_TRUE)) . "')",
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_db::ISPRIVATE_FALSE, mediamosa_asset_db::ISPRIVATE_TRUE)) . "')",
@@ -169,42 +169,42 @@ function mediamosa_asset_schema() {
         'type' => 'varchar',
         'length' => mediamosa_asset_db::MEDIAFILE_DURATION_LENGTH,
         'default' => NULL,
-        'description' => t('The mediafile duration length.'),
+        'description' => 'The mediafile duration length.',
       ),
       mediamosa_asset_db::MEDIAFILE_CONTAINER_TYPE => array(
         'type' => 'varchar',
         'length' => mediamosa_asset_db::MEDIAFILE_CONTAINER_TYPE_LENGTH,
         'default' => NULL,
-        'description' => t('The container type length.'),
+        'description' => 'The container type length.',
       ),
       mediamosa_asset_db::CREATED => array(
         'type' => 'datetime',
         'mysql_type' => 'DATETIME',
         'not null' => TRUE,
-        'description' => t('The date and time when asset was created.'),
+        'description' => 'The date and time when asset was created.',
       ),
       mediamosa_asset_db::CHANGED => array(
         'type' => 'datetime',
         'mysql_type' => 'DATETIME',
         'default' => NULL,
-        'description' => t('The date and time when asset was changed last.'),
+        'description' => 'The date and time when asset was changed last.',
       ),
       mediamosa_asset_db::IS_UNAPPROPRIATE => array(
-        'description' => t('If the asset has unappropieate contents.'),
+        'description' => 'If the asset has unappropieate contents.',
         'type' => "enum('" . implode("','", array(mediamosa_asset_db::IS_UNAPPROPRIATE_FALSE, mediamosa_asset_db::IS_UNAPPROPRIATE_TRUE)) . "')",
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_db::IS_UNAPPROPRIATE_FALSE, mediamosa_asset_db::IS_UNAPPROPRIATE_TRUE)) . "')",
         'default' => mediamosa_asset_db::IS_UNAPPROPRIATE_FALSE,
       ),
       mediamosa_asset_db::IS_EXTERNAL => array(
-        'description' => t('If the asset has external contents.'),
+        'description' => 'If the asset has external contents.',
         'type' => "enum('" . implode("','", array(mediamosa_asset_db::IS_EXTERNAL_FALSE, mediamosa_asset_db::IS_EXTERNAL_TRUE)) . "')",
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_db::IS_EXTERNAL_FALSE, mediamosa_asset_db::IS_EXTERNAL_TRUE)) . "')",
         'default' => mediamosa_asset_db::IS_EXTERNAL_FALSE,
       ),
       mediamosa_asset_db::IS_EMPTY_ASSET => array(
-        'description' => t('True if the asset has media.'),
+        'description' => 'True if the asset has media.',
         'type' => "enum('" . implode("','", array(mediamosa_asset_db::IS_EMPTY_ASSET_FALSE, mediamosa_asset_db::IS_EMPTY_ASSET_TRUE)) . "')",
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_db::IS_EMPTY_ASSET_FALSE, mediamosa_asset_db::IS_EMPTY_ASSET_TRUE)) . "')",
@@ -215,17 +215,17 @@ function mediamosa_asset_schema() {
         'unsigned' => TRUE,
         'not null' => TRUE,
         'default' => 0,
-        'description' => t('Number of times the asset was viewed.'),
+        'description' => 'Number of times the asset was viewed.',
       ),
       mediamosa_asset_db::PLAYED => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
         'default' => 0,
-        'description' => t('Number of times the asset was played.'),
+        'description' => 'Number of times the asset was played.',
       ),
       mediamosa_asset_db::IS_PROTECTED => array(
-        'description' => t('Set kind of protection on the asset.'),
+        'description' => 'Set kind of protection on the asset.',
         'type' => "enum('" . implode("','", array(mediamosa_asset_db::IS_PROTECTED_FALSE, mediamosa_asset_db::IS_PROTECTED_USER_USERGROUP, mediamosa_asset_db::IS_PROTECTED_DOMAIN_REALM, mediamosa_asset_db::IS_PROTECTED_TRUE)) . "')",
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_db::IS_PROTECTED_FALSE, mediamosa_asset_db::IS_PROTECTED_USER_USERGROUP, mediamosa_asset_db::IS_PROTECTED_DOMAIN_REALM, mediamosa_asset_db::IS_PROTECTED_TRUE)) . "')",
@@ -251,6 +251,6 @@ function mediamosa_asset_schema() {
     ),
   );
 
-  return $a_schema;
+  return $schema;
 }
 

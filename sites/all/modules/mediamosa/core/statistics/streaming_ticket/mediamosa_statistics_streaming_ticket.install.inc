@@ -54,31 +54,31 @@ function _mediamosa_statistics_streaming_ticket_uninstall() {
 function mediamosa_streaming_ticket_schema() {
 
   $schema[mediamosa_streaming_ticket_db::TABLE_NAME] = array(
-  'description' => t('The statistics ticket table.'),
+  'description' => 'The statistics ticket table.',
     'fields' => array(
       mediamosa_streaming_ticket_db::ID => array(
         'type' => 'serial',
         'not null' => TRUE,
         'unsigned' => TRUE,
-        'description' => t('Primary Key: Unique ID.'),
+        'description' => 'Primary Key: Unique ID.',
       ),
       mediamosa_streaming_ticket_db::TICKET_ID => array(
         'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
         'not null' => TRUE,
-        'description' => t('Ticket ID.'),
+        'description' => 'Ticket ID.',
       ),
       mediamosa_streaming_ticket_db::APP_ID => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'description' => t('The application ID.'),
+        'description' => 'The application ID.',
       ),
       mediamosa_streaming_ticket_db::MEDIAFILE_ID => array(
         'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
         'not null' => TRUE,
-        'description' => t('The parent mediafile ID.'),
+        'description' => 'The parent mediafile ID.',
       ),
     ),
     'primary key' => array(mediamosa_streaming_ticket_db::ID),

@@ -53,23 +53,23 @@ function _mediamosa_asset_collection_uninstall() {
  */
 function mediamosa_asset_collection_schema() {
 
-  $a_schema[mediamosa_asset_collection_db::TABLE_NAME] = array(
-    'description' => t('The asset collection link table.'),
+  $schema[mediamosa_asset_collection_db::TABLE_NAME] = array(
+    'description' => 'The asset collection link table.',
     'fields' => array(
       mediamosa_asset_collection_db::ASSET_ID => array(
         'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
         'not null' => TRUE,
-        'description' => t('Link to asset table.'),
+        'description' => 'Link to asset table.',
       ),
       mediamosa_asset_collection_db::COLL_ID => array(
         'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
         'not null' => TRUE,
-        'description' => t('Link to collection table.'),
+        'description' => 'Link to collection table.',
       ),
       mediamosa_asset_collection_db::IS_EMPTY_ASSET => array(
-        'description' => t('True if the asset in this collection has media.'),
+        'description' => 'True if the asset in this collection has media.',
         'type' => "enum('" . implode("','", array(mediamosa_asset_collection_db::IS_EMPTY_ASSET_FALSE, mediamosa_asset_collection_db::IS_EMPTY_ASSET_TRUE)) . "')",
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_collection_db::IS_EMPTY_ASSET_FALSE, mediamosa_asset_collection_db::IS_EMPTY_ASSET_TRUE)) . "')",
@@ -79,13 +79,13 @@ function mediamosa_asset_collection_schema() {
         'type' => 'datetime',
         'mysql_type' => 'DATETIME',
         'not null' => TRUE,
-        'description' => t('The date and time when asset collection link was created.'),
+        'description' => 'The date and time when asset collection link was created.',
       ),
       mediamosa_asset_collection_db::CHANGED => array(
         'type' => 'datetime',
         'mysql_type' => 'DATETIME',
         'default' => NULL,
-        'description' => t('The date and time when asset collection link was changed last.'),
+        'description' => 'The date and time when asset collection link was changed last.',
       ),
     ),
     'primary key' => array(mediamosa_asset_collection_db::ASSET_ID, mediamosa_asset_collection_db::COLL_ID),
@@ -98,5 +98,5 @@ function mediamosa_asset_collection_schema() {
     ),
   );
 
-  return $a_schema;
+  return $schema;
 }
