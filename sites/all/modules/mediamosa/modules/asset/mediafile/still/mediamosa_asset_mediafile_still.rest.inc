@@ -102,16 +102,18 @@ class mediamosa_rest_call_delete_stills extends mediamosa_rest_call {
       )
     );
 
-    // Mediafiles must exist.
-    mediamosa_db::db_must_exists(
-      mediamosa_asset_mediafile_db::TABLE_NAME,
-      array(
-        mediamosa_asset_mediafile_db::ASSET_ID => $asset_id,
-        mediamosa_asset_mediafile_db::ID => $mediafile_id,
-      ),
-      mediamosa_error::ERRORCODE_STILL_NOT_FOUND,
-      array('@asset_id' => $asset_id)
-    );
+    if ($mediafile_id) {
+      // Mediafiles must exist.
+      mediamosa_db::db_must_exists(
+        mediamosa_asset_mediafile_db::TABLE_NAME,
+        array(
+          mediamosa_asset_mediafile_db::ASSET_ID => $asset_id,
+          mediamosa_asset_mediafile_db::ID => $mediafile_id,
+        ),
+        mediamosa_error::ERRORCODE_STILL_NOT_FOUND,
+        array('@asset_id' => $asset_id)
+      );
+    }
 
     $a_row = mediamosa_db::db_query(
       'SELECT #app_id, #owner_id FROM {#mediamosa_asset} WHERE #asset_id = :asset_id',

@@ -436,7 +436,9 @@ class mediamosa_asset_mediafile_still {
     foreach ($result as $a_row) {
       // Build the path and filename of the still.
       $still_filename = mediamosa_configuration_storage::mediafile_still_filename_get($a_row['still_id'], $a_row[mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT]);
-      mediamosa_watchdog::log_mediafile($mediafile_id, 'Deleting still: @location', array('@location' => $still_filename), $asset_id);
+      if (isset($mediafile_id) && $mediafile_id) {
+        mediamosa_watchdog::log_mediafile($mediafile_id, 'Deleting still: @location', array('@location' => $still_filename), $asset_id);
+      }
 
       // Remove the file.
       mediamosa_io::unlink($still_filename);

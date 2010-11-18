@@ -103,7 +103,7 @@ class mediamosa_rest_call_job_set_status extends mediamosa_rest_call {
         ),
         self::STILL_PER_MEDIAFILE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
-          self::VAR_DESCRIPTION => 'Stills per mediafile. (Used when still_type is NONE).',
+          self::VAR_DESCRIPTION => 'Stills per mediafile. (Used when still_type is NORMAL).',
         ),
         self::STILL_EVERY_SECOND => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
@@ -393,7 +393,7 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
         ),
         self::STILL_PER_MEDIAFILE => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
-          self::VAR_DESCRIPTION => 'Stills per mediafile. (Used when still_type is NONE).',
+          self::VAR_DESCRIPTION => 'Stills per mediafile. (Used when still_type is NORMAL).',
         ),
         self::STILL_EVERY_SECOND => array(
           self::VAR_TYPE => mediamosa_type::TYPE_INT,
