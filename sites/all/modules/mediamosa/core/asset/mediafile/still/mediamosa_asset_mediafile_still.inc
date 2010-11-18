@@ -524,7 +524,7 @@ class mediamosa_asset_mediafile_still {
         // Found new default? Then set it as default.
         $prop_id = mediamosa_asset_mediafile_metadata_property::get_property_id_char(mediamosa_asset_mediafile_metadata::STILL_DEFAULT);
         mediamosa_db::db_query(
-          'UPDATE {#mediamosa_asset_mediafile_metadata} SET #still_default = #still_default_true WHERE #mediafile_id = :mediafile_id AND #prop_id = :prop_id',
+          'UPDATE {#mediamosa_asset_mediafile_metadata} SET #still_default = :still_default_true WHERE #mediafile_id = :mediafile_id AND #prop_id = :prop_id',
           array(
             '#mediamosa_asset_mediafile_metadata' => mediamosa_asset_mediafile_metadata_db::TABLE_NAME,
             '#prop_id' => mediamosa_asset_mediafile_metadata_db::PROP_ID,
