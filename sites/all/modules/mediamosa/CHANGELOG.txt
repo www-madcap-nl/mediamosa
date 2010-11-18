@@ -42,6 +42,8 @@ Other changes (not ticket related).
 - Moved and splitted up the statistics classes streaming_ticket and file_helper
   into own files.
 - MediaMosa profile: only administrators can create new accounts. 
+- Removed text about foreign keys on status page and added explain about schema 
+  vs database installation.
 
 MediaMosa 2.3.0 Build (1032)
 ----------------------------
