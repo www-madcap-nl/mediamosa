@@ -17,7 +17,7 @@ Known issues;
   PDOException. It seems a Drupal 7 core bug. We will check it again after
   the Drupal 7 core update.
 
-MediaMosa 2.3.1 (build 1105)
+MediaMosa 2.3.1 (build 1107)
 ----------------------------
 - Streaming server statistics improvements (See ticket #103).
 - Black still generation (See VPCore ticket #212).
