@@ -36,6 +36,9 @@ Other changes (not ticket related).
 - Still REST call fiexes (still_id without mediafile_id).
 - Install profile development: db and user creation just for local.
 - Transcode profile and transcode tool parameters were updated.
+- Removed text about creating client app in installation profile.
+- Moved and splitted up the statistics classes streaming_ticket and file_helper
+  into own files.
 
 MediaMosa 2.3.0 Build (1032)
 ----------------------------

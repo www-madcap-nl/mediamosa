@@ -37,8 +37,6 @@ require_once 'mediamosa_statistics_stream_request_db.inc';
 function _mediamosa_statistics_stream_request_install() {
 
   // Create our table(s).
-  mediamosa::drupal_install_schema(mediamosa_statistics_file_helper_db::TABLE_NAME);
-  mediamosa::drupal_install_schema(mediamosa_streaming_ticket_db::TABLE_NAME);
   mediamosa::drupal_install_schema(mediamosa_statistics_stream_request_db::TABLE_NAME);
 }
 
@@ -48,77 +46,6 @@ function _mediamosa_statistics_stream_request_install() {
 function _mediamosa_statistics_stream_request_uninstall() {
   // Drop our table(s).
   mediamosa::drupal_uninstall_schema(mediamosa_statistics_stream_request_db::TABLE_NAME);
-  mediamosa::drupal_uninstall_schema(mediamosa_streaming_ticket_db::TABLE_NAME);
-  mediamosa::drupal_uninstall_schema(mediamosa_statistics_file_helper_db::TABLE_NAME);
-}
-
-/**
- * Implements hook_schema().
- */
-function mediamosa_statistics_file_helper_schema() {
-
-  $schema[mediamosa_statistics_file_helper_db::TABLE_NAME] = array(
-  'description' => t('The statistics file helper table.'),
-    'fields' => array(
-      mediamosa_statistics_file_helper_db::FILE => array(
-        'type' => 'varbinary',
-        'length' => mediamosa_statistics_file_helper_db::FILE_LENGTH,
-        'not null' => TRUE,
-        'description' => t('The name of file.'),
-      ),
-    ),
-    'primary key' => array(mediamosa_statistics_file_helper_db::FILE),
-  );
-
-  return $schema;
-}
-
-/**
- * Implements hook_schema().
- */
-function mediamosa_streaming_ticket_schema() {
-
-  $schema[mediamosa_streaming_ticket_db::TABLE_NAME] = array(
-  'description' => t('The statistics ticket table.'),
-    'fields' => array(
-      mediamosa_streaming_ticket_db::ID => array(
-        'type' => 'serial',
-        'not null' => TRUE,
-        'unsigned' => TRUE,
-        'description' => t('Primary Key: Unique ID.'),
-      ),
-      mediamosa_streaming_ticket_db::TICKET_ID => array(
-        'type' => 'varbinary',
-        'length' => mediamosa_db::HASH_ID_LENGTH,
-        'not null' => TRUE,
-        'description' => t('Ticket ID.'),
-      ),
-      mediamosa_streaming_ticket_db::APP_ID => array(
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'description' => t('The application ID.'),
-      ),
-      mediamosa_streaming_ticket_db::MEDIAFILE_ID => array(
-        'type' => 'varbinary',
-        'length' => mediamosa_db::HASH_ID_LENGTH,
-        'not null' => TRUE,
-        'description' => t('The parent mediafile ID.'),
-      ),
-    ),
-    'primary key' => array(mediamosa_streaming_ticket_db::ID),
-    'unique keys' => array(
-      'uni_' . mediamosa_streaming_ticket_db::APP_ID . '_' . mediamosa_streaming_ticket_db::TICKET_ID => array(
-        mediamosa_streaming_ticket_db::APP_ID,
-        mediamosa_streaming_ticket_db::TICKET_ID,
-      ),
-    ),
-    'indexes' => array(
-      'idx_mediafileid'  => array(mediamosa_streaming_ticket_db::MEDIAFILE_ID),
-    ),
-  );
-
-  return $schema;
 }
 
 /**
@@ -143,6 +70,7 @@ function mediamosa_statistics_stream_request_schema() {
       ),
       mediamosa_statistics_stream_request_db::TIME => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'not null' => TRUE,
         'description' => t('The date and time, when the streaming request happened.'),
       ),

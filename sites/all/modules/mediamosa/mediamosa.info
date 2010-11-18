@@ -245,6 +245,10 @@ files[] = core/statistics/search_request/mediamosa_statistics_search_request_db.
 files[] = core/statistics/search_request/mediamosa_statistics_search_request.install.inc
 files[] = core/statistics/stream_request/mediamosa_statistics_stream_request_db.inc
 files[] = core/statistics/stream_request/mediamosa_statistics_stream_request.install.inc
+files[] = core/statistics/file_helper/mediamosa_statistics_file_helper_db.inc
+files[] = core/statistics/file_helper/mediamosa_statistics_file_helper.install.inc
+files[] = core/statistics/streaming_ticket/mediamosa_statistics_streaming_ticket_db.inc
+files[] = core/statistics/streaming_ticket/mediamosa_statistics_streaming_ticket.install.inc
 files[] = core/statistics/mediamosa_statistics.inc
 files[] = core/statistics/mediamosa_statistics.install.inc
 

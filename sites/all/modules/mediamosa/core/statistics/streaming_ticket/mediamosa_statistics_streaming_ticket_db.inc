@@ -26,19 +26,16 @@
 
 /**
  * @file
- * DB class for statistics stream request.
+ * DB class for statistics stream ticket.
  */
-class mediamosa_statistics_stream_request_db {
+class mediamosa_streaming_ticket_db {
   // ------------------------------------------------------------------ Consts.
   // Table name;
-  const TABLE_NAME = 'mediamosa_statistics_stream_request';
+  const TABLE_NAME = 'mediamosa_streaming_ticket';
 
   // Database fields;
-  const ID = 'id';
-  const TID = 'tid';
-  const TIME = 'time';
+  const ID = 'tid';
+  const TICKET_ID = 'ticket_id';
   const APP_ID = 'app_id';
   const MEDIAFILE_ID = 'mediafile_id';
-  const DURATION = 'duration';
-  const BYTES = 'bytes';
 }

@@ -26,19 +26,14 @@
 
 /**
  * @file
- * DB class for statistics stream request.
+ * DB class for statistics file helper.
  */
-class mediamosa_statistics_stream_request_db {
+class mediamosa_statistics_file_helper_db {
   // ------------------------------------------------------------------ Consts.
   // Table name;
-  const TABLE_NAME = 'mediamosa_statistics_stream_request';
+  const TABLE_NAME = 'mediamosa_statistics_file_helper';
 
   // Database fields;
-  const ID = 'id';
-  const TID = 'tid';
-  const TIME = 'time';
-  const APP_ID = 'app_id';
-  const MEDIAFILE_ID = 'mediafile_id';
-  const DURATION = 'duration';
-  const BYTES = 'bytes';
+  const FILE = 'file';
+  const FILE_LENGTH = 50;
 }
