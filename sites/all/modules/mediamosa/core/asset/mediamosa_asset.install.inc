@@ -130,21 +130,25 @@ function mediamosa_asset_schema() {
       ),
       mediamosa_asset_db::VIDEOTIMESTAMP => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'default' => NULL,
         'description' => t('The time and date of the asset.'),
       ),
       mediamosa_asset_db::VIDEOTIMESTAMPMODIFIED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'default' => NULL,
         'description' => t('The modified time and date of the asset.'),
       ),
       mediamosa_asset_db::PLAY_RESTRICTION_START => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'default' => NULL,
         'description' => t('The start time in an range of time to restrict.'),
       ),
       mediamosa_asset_db::PLAY_RESTRICTION_END => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'default' => NULL,
         'description' => t('The end time in an range of time to restrict.'),
       ),
@@ -175,11 +179,13 @@ function mediamosa_asset_schema() {
       ),
       mediamosa_asset_db::CREATED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'not null' => TRUE,
         'description' => t('The date and time when asset was created.'),
       ),
       mediamosa_asset_db::CHANGED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'default' => NULL,
         'description' => t('The date and time when asset was changed last.'),
       ),

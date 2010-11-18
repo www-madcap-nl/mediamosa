@@ -1,5 +1,5 @@
 <?php
-// $Id: openid.test,v 1.28 2010/07/07 08:05:01 webchick Exp $
+// $Id: openid.test,v 1.32 2010/10/08 05:28:30 webchick Exp $
 
 /**
  * Base class for OpenID tests.
@@ -19,6 +19,16 @@ abstract class OpenIDWebTestCase extends DrupalWebTestCase {
 
     // Submit form to the OpenID Provider Endpoint.
     $this->drupalPost(NULL, array(), t('Send'));
+  }
+
+  /**
+   * Parses the last sent e-mail and returns the one-time login link URL.
+   */
+  function getPasswordResetURLFromMail() {
+    $mails = $this->drupalGetMails();
+    $mail = end($mails);
+    preg_match('@.+user/reset/.+@', $mail['body'], $matches);
+    return $matches[0];
   }
 }
 
@@ -126,7 +136,7 @@ class OpenIDFunctionalTestCase extends OpenIDWebTestCase {
 
     // Test logging in via the login block on the front page.
     $this->submitLoginForm($identity);
-    $this->assertLink($this->web_user->name, 0, t('User was logged in.'));
+    $this->assertLink(t('Log out'), 0, t('User was logged in.'));
 
     $this->drupalLogout();
 
@@ -140,7 +150,7 @@ class OpenIDFunctionalTestCase extends OpenIDWebTestCase {
     // Submit form to the OpenID Provider Endpoint.
     $this->drupalPost(NULL, array(), t('Send'));
 
-    $this->assertLink($this->web_user->name, 0, t('User was logged in.'));
+    $this->assertLink(t('Log out'), 0, t('User was logged in.'));
 
     // Verify user was redirected away from user/login to an accessible page.
     $this->assertResponse(200);
@@ -171,7 +181,7 @@ class OpenIDFunctionalTestCase extends OpenIDWebTestCase {
     // Submit form to the OpenID Provider Endpoint.
     $this->drupalPost(NULL, array(), t('Send'));
 
-    $this->assertLink($this->web_user->name, 0, t('User was logged in.'));
+    $this->assertLink(t('Log out'), 0, t('User was logged in.'));
 
     // Verify user was redirected away from user/login to an accessible page.
     $this->assertText(t('Operating in maintenance mode.'));
@@ -264,6 +274,25 @@ class OpenIDFunctionalTestCase extends OpenIDWebTestCase {
     }
     $this->assertRaw(t('Successfully added %identity', array('%identity' => $claimed_id)), t('Identity %identity was added.', array('%identity' => $identity)));
   }
+
+  /**
+   * Tests that openid.signed is verified.
+   */
+  function testSignatureValidation() {
+    // Use a User-supplied Identity that is the URL of an XRDS document.
+    $identity = url('openid-test/yadis/xrds', array('absolute' => TRUE));
+
+    // Do not sign all mandatory fields (e.g. assoc_handle).
+    variable_set('openid_test_response', array('openid.signed' => 'op_endpoint,claimed_id,identity,return_to,response_nonce'));
+    $this->submitLoginForm($identity);
+    $this->assertRaw('OpenID login failed.');
+
+    // Sign all mandatory fields and some custom fields.
+    variable_set('openid_test_response', array('openid.foo' => 'bar', 'openid.signed' => 'op_endpoint,claimed_id,identity,return_to,response_nonce,assoc_handle,foo'));
+    $this->submitLoginForm($identity);
+    $this->assertNoRaw('OpenID login failed.');
+  }
+
 }
 
 /**
@@ -297,6 +326,7 @@ class OpenIDRegistrationTestCase extends OpenIDWebTestCase {
     $this->submitLoginForm($identity);
     $this->assertRaw(t('Once you have verified your e-mail address, you may log in via OpenID.'), t('User was asked to verify e-mail address.'));
     $this->assertRaw(t('A welcome message with further instructions has been sent to your e-mail address.'), t('A welcome message was sent to the user.'));
+    $reset_url = $this->getPasswordResetURLFromMail();
 
     $user = user_load_by_name('john');
     $this->assertTrue($user, t('User was registered with right username.'));
@@ -307,14 +337,14 @@ class OpenIDRegistrationTestCase extends OpenIDWebTestCase {
     $this->assertRaw(t('You must validate your email address for this account before logging in via OpenID.'));
 
     // Follow the one-time login that was sent in the welcome e-mail.
-    $this->drupalGet(user_pass_reset_url($user));
+    $this->drupalGet($reset_url);
     $this->drupalPost(NULL, array(), t('Log in'));
 
     $this->drupalLogout();
 
     // Verify that the account was activated.
     $this->submitLoginForm($identity);
-    $this->assertLink('john', 0, t('User was logged in.'));
+    $this->assertLink(t('Log out'), 0, t('User was logged in.'));
   }
 
   /**
@@ -329,7 +359,7 @@ class OpenIDRegistrationTestCase extends OpenIDWebTestCase {
     // Use a User-supplied Identity that is the URL of an XRDS document.
     $identity = url('openid-test/yadis/xrds', array('absolute' => TRUE));
     $this->submitLoginForm($identity);
-    $this->assertLink('john', 0, t('User was logged in.'));
+    $this->assertLink(t('Log out'), 0, t('User was logged in.'));
 
     $user = user_load_by_name('john');
     $this->assertTrue($user, t('User was registered with right username.'));
@@ -339,7 +369,7 @@ class OpenIDRegistrationTestCase extends OpenIDWebTestCase {
     $this->drupalLogout();
 
     $this->submitLoginForm($identity);
-    $this->assertLink('john', 0, t('User was logged in.'));
+    $this->assertLink(t('Log out'), 0, t('User was logged in.'));
   }
 
   /**
@@ -363,13 +393,14 @@ class OpenIDRegistrationTestCase extends OpenIDWebTestCase {
     $edit = array('name' => 'john', 'mail' => 'john@example.com');
     $this->drupalPost(NULL, $edit, t('Create new account'));
     $this->assertRaw(t('Once you have verified your e-mail address, you may log in via OpenID.'), t('User was asked to verify e-mail address.'));
+    $reset_url = $this->getPasswordResetURLFromMail();
 
     $user = user_load_by_name('john');
     $this->assertTrue($user, t('User was registered with right username.'));
     $this->assertFalse($user->data, t('No additional user info was saved.'));
 
     // Follow the one-time login that was sent in the welcome e-mail.
-    $this->drupalGet(user_pass_reset_url($user));
+    $this->drupalGet($reset_url);
     $this->drupalPost(NULL, array(), t('Log in'));
 
     // The user is taken to user/%uid/edit.
@@ -398,13 +429,14 @@ class OpenIDRegistrationTestCase extends OpenIDWebTestCase {
     $edit = array('name' => 'john', 'mail' => 'john@example.com');
     $this->drupalPost(NULL, $edit, t('Create new account'));
     $this->assertRaw(t('Once you have verified your e-mail address, you may log in via OpenID.'), t('User was asked to verify e-mail address.'));
+    $reset_url = $this->getPasswordResetURLFromMail();
 
     $user = user_load_by_name('john');
     $this->assertTrue($user, t('User was registered with right username.'));
     $this->assertFalse($user->data, t('No additional user info was saved.'));
 
     // Follow the one-time login that was sent in the welcome e-mail.
-    $this->drupalGet(user_pass_reset_url($user));
+    $this->drupalGet($reset_url);
     $this->drupalPost(NULL, array(), t('Log in'));
 
     // The user is taken to user/%uid/edit.
@@ -434,7 +466,7 @@ class OpenIDRegistrationTestCase extends OpenIDWebTestCase {
     // Use a User-supplied Identity that is the URL of an XRDS document.
     $identity = url('openid-test/yadis/xrds', array('absolute' => TRUE));
     $this->submitLoginForm($identity);
-    $this->assertLink('john', 0, t('User was logged in.'));
+    $this->assertLink(t('Log out'), 0, t('User was logged in.'));
 
     $user = user_load_by_name('john');
     $this->assertTrue($user, t('User was registered with right username.'));

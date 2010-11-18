@@ -70,6 +70,7 @@ function mediamosa_asset_delete_schema() {
       ),
       mediamosa_asset_delete_db::VIDEOTIMESTAMPMODIFIED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'default' => NULL,
         'description' => t('The modified time and date of the asset.'),
       ),

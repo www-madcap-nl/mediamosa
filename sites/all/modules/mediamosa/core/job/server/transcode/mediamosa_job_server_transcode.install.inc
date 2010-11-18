@@ -79,11 +79,13 @@ function mediamosa_job_server_transcode_schema() {
       ),
       mediamosa_job_server_transcode_db::CREATED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'not null' => TRUE,
         'description' => t('The date and time when transcode job was created.'),
       ),
       mediamosa_job_server_transcode_db::CHANGED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'default' => NULL,
         'description' => t('The date and time when transcode job was changed last.'),
       ),

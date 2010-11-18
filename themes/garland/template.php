@@ -1,5 +1,5 @@
 <?php
-// $Id: template.php,v 1.39 2010/03/04 09:03:08 dries Exp $
+// $Id: template.php,v 1.43 2010/11/05 01:25:33 dries Exp $
 
 /**
  * Return a themed breadcrumb trail.
@@ -42,7 +42,7 @@ function garland_preprocess_html(&$vars) {
     $vars['classes_array'][] = 'fluid-width';
   }
   // Add conditional CSS for IE6.
-  drupal_add_css(path_to_theme() . '/fix-ie.css', array('weight' => CSS_THEME, 'browsers' => array('IE' => 'lt IE 7', '!IE' => FALSE), 'preprocess' => FALSE));
+  drupal_add_css(path_to_theme() . '/fix-ie.css', array('group' => CSS_THEME, 'browsers' => array('IE' => 'lt IE 7', '!IE' => FALSE), 'preprocess' => FALSE));
 }
 
 /**
@@ -64,7 +64,7 @@ function garland_preprocess_page(&$vars) {
     $vars['primary_nav'] = theme('links__system_main_menu', array(
       'links' => $vars['main_menu'],
       'attributes' => array(
-        'class' => array('links', 'main-menu'),
+        'class' => array('links', 'inline', 'main-menu'),
       ),
       'heading' => array(
         'text' => t('Main menu'),
@@ -80,7 +80,7 @@ function garland_preprocess_page(&$vars) {
     $vars['secondary_nav'] = theme('links__system_secondary_menu', array(
       'links' => $vars['secondary_menu'],
       'attributes' => array(
-        'class' => array('links', 'secondary-menu'),
+        'class' => array('links', 'inline', 'secondary-menu'),
       ),
       'heading' => array(
         'text' => t('Secondary menu'),
@@ -111,6 +111,14 @@ function garland_preprocess_page(&$vars) {
   $slogan_text = $vars['site_slogan'];
   $site_name_text = $vars['site_name'];
   $vars['site_name_and_slogan'] = $site_name_text . ' ' . $slogan_text;
+}
+
+/**
+ * Override or insert variables into the block template.
+ */
+function garland_preprocess_block(&$vars) {
+  $vars['title_attributes_array']['class'][] = 'title';
+  $vars['classes_array'][] = 'clearfix';
 }
 
 /**

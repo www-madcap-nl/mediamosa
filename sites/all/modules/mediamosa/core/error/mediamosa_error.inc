@@ -24,16 +24,16 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
-// FIXME: Because we introduce new module (mediamosa_library) this module will
+// FIXME: Because we introduce new module (mediamosa_sdk) this module will
 //        not be found until its turned on. So after 1st release, remove this.
-//        Also re-add dependency on mediamosa module -> mediamosa_library.
-require_once DRUPAL_ROOT . '/sites/all/modules/mediamosa_library/mediamosa_library.inc';
+//        Also re-add dependency on mediamosa module -> mediamosa_sdk.
+require_once DRUPAL_ROOT . '/sites/all/modules/mediamosa_sdk/mediamosa_sdk.inc';
 
 /**
  * @file
  * The MediaMosa error class.
  */
-class mediamosa_error extends mediamosa_library {
+class mediamosa_error extends mediamosa_sdk {
 
   // ------------------------------------------------------------------ Static Function.
   /**

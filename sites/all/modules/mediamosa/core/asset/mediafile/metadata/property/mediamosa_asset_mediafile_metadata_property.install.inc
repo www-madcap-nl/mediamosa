@@ -77,11 +77,13 @@ function mediamosa_asset_mediafile_metadata_property_schema() {
       ),
       mediamosa_asset_mediafile_metadata_property_db::CREATED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'not null' => TRUE,
         'description' => t('The date and time when asset mediafile metadata property was created.'),
       ),
       mediamosa_asset_mediafile_metadata_property_db::CHANGED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'default' => NULL,
         'description' => t('The date and time when asset mediafile metadata property was changed.'),
       ),

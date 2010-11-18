@@ -149,11 +149,13 @@ function mediamosa_transcode_profile_schema() {
       ),
       mediamosa_transcode_profile_db::CREATED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'not null' => TRUE,
         'description' => t('The date and time when transcode profile was created.'),
       ),
       mediamosa_transcode_profile_db::CHANGED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'default' => NULL,
         'description' => t('The date and time when transcode profile was changed last.'),
       ),

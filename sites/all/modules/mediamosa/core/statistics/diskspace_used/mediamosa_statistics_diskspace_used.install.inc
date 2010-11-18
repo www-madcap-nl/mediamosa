@@ -94,6 +94,7 @@ function mediamosa_statistics_diskspace_used_schema() {
       ),
       mediamosa_statistics_diskspace_used_db::TIMESTAMP => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'not null' => TRUE,
         'description' => t('The time and date.'),
       ),

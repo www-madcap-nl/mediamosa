@@ -31,7 +31,7 @@
 class mediamosa_statistics_file_helper_db {
   // ------------------------------------------------------------------ Consts.
   // Table name;
-  const TABLE_NAME = 'mediamosa_statistics_file_helper'; // 1.x name statistics_stream_request.
+  const TABLE_NAME = 'mediamosa_statistics_file_helper';
 
   // Database fields;
   const FILE = 'file';
@@ -45,7 +45,7 @@ class mediamosa_statistics_file_helper_db {
 class mediamosa_streaming_ticket_db {
   // ------------------------------------------------------------------ Consts.
   // Table name;
-  const TABLE_NAME = 'mediamosa_streaming_ticket'; // 1.x name statistics_stream_request.
+  const TABLE_NAME = 'mediamosa_streaming_ticket';
 
   // Database fields;
   const ID = 'tid';
@@ -61,7 +61,7 @@ class mediamosa_streaming_ticket_db {
 class mediamosa_statistics_stream_request_db {
   // ------------------------------------------------------------------ Consts.
   // Table name;
-  const TABLE_NAME = 'mediamosa_statistics_stream_request'; // 1.x name statistics_stream_request.
+  const TABLE_NAME = 'mediamosa_statistics_stream_request';
 
   // Database fields;
   const ID = 'id';

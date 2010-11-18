@@ -1,5 +1,5 @@
 <?php
-// $Id: tablesort.inc,v 1.58 2009/12/05 20:17:02 dries Exp $
+// $Id: tablesort.inc,v 1.60 2010/10/28 02:27:08 dries Exp $
 
 /**
  * @file
@@ -80,7 +80,7 @@ class TableSort extends SelectQueryExtender {
     // User has not specified a sort. Use default if specified; otherwise use "asc".
     else {
       foreach ($this->header as $header) {
-        if (is_array($header) && array_key_exists('sort', $header)) {
+        if (isset($header['sort'])) {
           return $header['sort'];
         }
       }
@@ -128,12 +128,14 @@ class TableSort extends SelectQueryExtender {
     }
     else {
       // The first column specified is initial 'order by' field unless otherwise specified
-      if (is_array($this->header[0])) {
-        $this->header[0] += array('data' => NULL, 'field' => NULL);
-        return array('name' => $this->header[0]['data'], 'sql' => $this->header[0]['field']);
+      $headers = array_values($this->header);
+      $header = $headers[0];
+      if (is_array($header)) {
+        $header += array('data' => NULL, 'field' => NULL);
+        return array('name' => $header['data'], 'sql' => $header['field']);
       }
       else {
-        return array('name' => $this->header[0]);
+        return array('name' => $header);
       }
     }
   }
@@ -277,7 +279,7 @@ function tablesort_get_sort($headers) {
   // User has not specified a sort. Use default if specified; otherwise use "asc".
   else {
     foreach ($headers as $header) {
-      if (is_array($header) && array_key_exists('sort', $header)) {
+      if (isset($header['sort'])) {
         return $header['sort'];
       }
     }

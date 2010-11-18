@@ -1,5 +1,5 @@
 <?php
-// $Id: forum.module,v 1.567 2010/06/20 23:55:08 webchick Exp $
+// $Id: forum.module,v 1.580 2010/11/06 23:24:33 webchick Exp $
 
 /**
  * @file
@@ -41,7 +41,7 @@ function forum_help($path, $arg) {
       return $output;
     case 'admin/structure/forum':
       $output = '<p>' . t('Forums contain forum topics. Use containers to group related forums.') . '</p>';
-      $output .= theme('more_help_link', array('url' => url('admin/help/forum')));
+      $output .= theme('more_help_link', array('url' => 'admin/help/forum'));
       return $output;
     case 'admin/structure/forum/add/container':
       return '<p>' . t('Use containers to group related forums.') . '</p>';
@@ -147,7 +147,6 @@ function forum_menu() {
     'page callback' => 'forum_form_main',
     'page arguments' => array('container', 5),
     'access arguments' => array('administer forums'),
-    'type' => MENU_CALLBACK,
     'file' => 'forum.admin.inc',
   );
   $items['admin/structure/forum/edit/forum/%taxonomy_term'] = array(
@@ -155,7 +154,6 @@ function forum_menu() {
     'page callback' => 'forum_form_main',
     'page arguments' => array('forum', 5),
     'access arguments' => array('administer forums'),
-    'type' => MENU_CALLBACK,
     'file' => 'forum.admin.inc',
   );
   return $items;
@@ -167,9 +165,9 @@ function forum_menu() {
 function forum_menu_local_tasks_alter(&$data, $router_item, $root_path) {
   global $user;
 
-  // Add action link to 'node/add/forum' on 'forum' page.
-  if ($root_path == 'forum') {
-    $tid = (isset($router_item['page_arguments'][0]) ? $router_item['page_arguments'][0] : 0);
+  // Add action link to 'node/add/forum' on 'forum' sub-pages.
+  if ($root_path == 'forum' || $root_path == 'forum/%') {
+    $tid = (isset($router_item['page_arguments'][0]) ? $router_item['page_arguments'][0]->tid : 0);
     $forum_term = forum_forum_load($tid);
     if ($forum_term) {
       $vid = variable_get('forum_nav_vocabulary', 0);
@@ -215,13 +213,6 @@ function forum_menu_local_tasks_alter(&$data, $router_item, $root_path) {
       $data['actions']['output'] = array_merge($data['actions']['output'], $links);
     }
   }
-}
-
-/**
- * Implements hook_init().
- */
-function forum_init() {
-  drupal_add_css(drupal_get_path('module', 'forum') . '/forum.css');
 }
 
 /**
@@ -277,7 +268,7 @@ function forum_node_view($node, $view_mode) {
   $vid = variable_get('forum_nav_vocabulary', 0);
   $vocabulary = taxonomy_vocabulary_load($vid);
   if (_forum_node_check_node_type($node)) {
-    if (node_is_page($node)) {
+    if ($view_mode == 'full' && node_is_page($node)) {
       // Breadcrumb navigation
       $breadcrumb[] = l(t('Home'), NULL);
       $breadcrumb[] = l($vocabulary->name, 'forum');
@@ -610,7 +601,7 @@ function forum_form_alter(&$form, $form_state, $form_id) {
       $form['advanced']['parent']['#access'] = FALSE;
     }
   }
-  if ($form_id == 'forum_node_form') {
+  if (!empty($form['#node_edit_form']) && isset($form['taxonomy_forums'])) {
     $langcode = $form['taxonomy_forums']['#language'];
     // Make the vocabulary required for 'real' forum-nodes.
     $form['taxonomy_forums'][$langcode]['#required'] = TRUE;
@@ -632,10 +623,12 @@ function forum_block_info() {
   $blocks['active'] = array(
     'info' => t('Active forum topics'),
     'cache' => DRUPAL_CACHE_CUSTOM,
+    'properties' => array('administrative' => TRUE),
   );
   $blocks['new'] = array(
     'info' => t('New forum topics'),
     'cache' => DRUPAL_CACHE_CUSTOM,
+    'properties' => array('administrative' => TRUE),
   );
   return $blocks;
 }
@@ -700,7 +693,7 @@ function forum_block_view_pre_render($elements) {
   $result = $elements['#query']->execute();
   if ($node_title_list = node_title_list($result)) {
     $elements['forum_list'] = $node_title_list;
-    $elements['forum_more'] = array('#theme' => 'more_link', '#url' => url('forum'), '#title' => t('Read the latest forum topics.'));
+    $elements['forum_more'] = array('#theme' => 'more_link', '#url' => 'forum', '#title' => t('Read the latest forum topics.'));
   }
   return $elements;
 }
@@ -761,7 +754,7 @@ function forum_forum_load($tid = NULL) {
     }
   }
   // If $tid is 0, create an empty object to hold the child terms.
-  else if ($tid === 0) {
+  elseif ($tid === 0) {
     $forum_term = (object) array(
       'tid' => 0,
     );
@@ -852,7 +845,7 @@ function forum_forum_load($tid = NULL) {
 function _forum_topics_unread($term, $uid) {
   $query = db_select('node', 'n');
   $query->join('forum', 'f', 'n.vid = f.vid AND f.tid = :tid', array(':tid' => $term));
-  $query->join('history', 'h', 'n.nid = h.nid AND h.uid = :uid', array(':uid' => $uid));
+  $query->leftJoin('history', 'h', 'n.nid = h.nid AND h.uid = :uid', array(':uid' => $uid));
   $query->addExpression('COUNT(n.nid)', 'count');
   return $query
     ->condition('status', 1)
@@ -989,7 +982,7 @@ function template_preprocess_forums(&$variables) {
 
     if ($variables['tid'] && !in_array($variables['tid'], variable_get('forum_containers', array()))) {
       $variables['topics'] = theme('forum_topic_list', $variables);
-      drupal_add_feed(url('taxonomy/term/' . $variables['tid'] . '/0/feed'), 'RSS - ' . $title);
+      drupal_add_feed('taxonomy/term/' . $variables['tid'] . '/0/feed', 'RSS - ' . $title);
     }
     else {
       $variables['topics'] = '';
@@ -1126,7 +1119,7 @@ function template_preprocess_forum_topic_list(&$variables) {
   $variables['topic_id'] = $variables['tid'];
   unset($variables['tid']);
 
-  $variables['pager'] = theme('pager', array('tags' => NULL));
+  $variables['pager'] = theme('pager');
 }
 
 /**
@@ -1144,18 +1137,22 @@ function template_preprocess_forum_topic_list(&$variables) {
 function template_preprocess_forum_icon(&$variables) {
   $variables['hot_threshold'] = variable_get('forum_hot_topic', 15);
   if ($variables['num_posts'] > $variables['hot_threshold']) {
-    $variables['icon'] = $variables['new_posts'] ? 'hot-new' : 'hot';
+    $variables['icon_class'] = $variables['new_posts'] ? 'hot-new' : 'hot';
+    $variables['icon_title'] = $variables['new_posts'] ? t('Hot topic, new comments') : t('Hot topic');
   }
   else {
-    $variables['icon'] = $variables['new_posts'] ? 'new' : 'default';
+    $variables['icon_class'] = $variables['new_posts'] ? 'new' : 'default';
+    $variables['icon_title'] = $variables['new_posts'] ? t('New comments') : t('Normal topic');
   }
 
   if ($variables['comment_mode'] == COMMENT_NODE_CLOSED || $variables['comment_mode'] == COMMENT_NODE_HIDDEN) {
-    $variables['icon'] = 'closed';
+    $variables['icon_class'] = 'closed';
+    $variables['icon_title'] = t('Closed topic');
   }
 
   if ($variables['sticky'] == 1) {
-    $variables['icon'] = 'sticky';
+    $variables['icon_class'] = 'sticky';
+    $variables['icon_title'] = t('Sticky topic');
   }
 }
 

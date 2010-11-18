@@ -24,10 +24,10 @@
  * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  */
 
- /**
-  * @file
-  * Main core installer.
-  */
+/**
+ * @file
+ * Main core installer.
+ */
 
 // Node types.
 require_once 'core/node/mediamosa_node.inc';
@@ -1122,7 +1122,7 @@ function mediamosa_update_7054() {
  */
 function mediamosa_update_7055() {
   // New module enable.
-  module_enable(array('mediamosa_library'));
+  module_enable(array('mediamosa_sdk'));
 }
 
 /**
@@ -1141,47 +1141,47 @@ function mediamosa_update_7057() {
 }
 
 /**
+ * Update has been moved to 7059.
+ */
+function mediamosa_update_7058() {
+}
+/**
  * Default still size is adjustable now.
  * Padding and maintain aspect ratio is adjustable now too.
  */
-function mediamosa_update_7058() {
-  // Create still default size field.
-  db_add_field(mediamosa_app_db::TABLE_NAME, mediamosa_app_db::STILL_DEFAULT_SIZE, array(
-    'description' => t('The default size of the still image.'),
-    'type' => 'varchar',
-    'length' => mediamosa_app_db::STILL_DEFAULT_SIZE_LENGTH,
-    'not null' => FALSE,
-    'default' => mediamosa_settings::STILL_DEFAULT_SIZE,
-  ));
-
-  // Create still padding field.
-  db_add_field(mediamosa_app_db::TABLE_NAME, mediamosa_app_db::STILL_PADDING, array(
-    'description' => t('Force padding, if aspect ratio is maintaned.'),
-    'type' => "enum('" . implode("','", array(mediamosa_app_db::STILL_PADDING_NO, mediamosa_app_db::STILL_PADDING_YES)) . "')",
-    'not null' => TRUE,
-    'mysql_type' => "enum('" . implode("','", array(mediamosa_app_db::STILL_PADDING_NO, mediamosa_app_db::STILL_PADDING_YES)) . "')",
-    'default' => mediamosa_app_db::STILL_PADDING_YES,
-  ));
-
-  // Create still maintain aspect ratio field.
-  db_add_field(mediamosa_app_db::TABLE_NAME, mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO, array(
-    'description' => t('Force maintain the original video aspect ratio or not.'),
-    'type' => "enum('" . implode("','", array(mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO_NO, mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO_YES)) . "')",
-    'not null' => TRUE,
-    'mysql_type' => "enum('" . implode("','", array(mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO_NO, mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO_YES)) . "')",
-    'default' => mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO_YES,
-  ));
-}
-
-/**
- * New error: ERRORCODE_STILL_IS_NOT_CREATABLE.
- */
 function mediamosa_update_7059() {
-  db_query('INSERT INTO {mediamosa_error} (name, code, message) VALUES (:name, :code, :message)', array(
-    ':name' => 'ERRORCODE_STILL_IS_NOT_CREATABLE',
-    ':code' => mediamosa_error::ERRORCODE_STILL_IS_NOT_CREATABLE,
-    ':message' => 'MM - still is not creatable for mediafile_id=@mediafile_id.',
-  ));
+
+  try {
+    // Create still default size field.
+    db_add_field(mediamosa_app_db::TABLE_NAME, mediamosa_app_db::STILL_DEFAULT_SIZE, array(
+      'description' => t('The default size of the still image.'),
+      'type' => 'varchar',
+      'length' => mediamosa_app_db::STILL_DEFAULT_SIZE_LENGTH,
+      'not null' => FALSE,
+      'default' => mediamosa_settings::STILL_DEFAULT_SIZE,
+    ));
+
+    // Create still padding field.
+    db_add_field(mediamosa_app_db::TABLE_NAME, mediamosa_app_db::STILL_PADDING, array(
+      'description' => t('Force padding, if aspect ratio is maintaned.'),
+      'type' => "enum('" . implode("','", array(mediamosa_app_db::STILL_PADDING_NO, mediamosa_app_db::STILL_PADDING_YES)) . "')",
+      'not null' => TRUE,
+      'mysql_type' => "enum('" . implode("','", array(mediamosa_app_db::STILL_PADDING_NO, mediamosa_app_db::STILL_PADDING_YES)) . "')",
+      'default' => mediamosa_app_db::STILL_PADDING_YES,
+    ));
+
+    // Create still maintain aspect ratio field.
+    db_add_field(mediamosa_app_db::TABLE_NAME, mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO, array(
+      'description' => t('Force maintain the original video aspect ratio or not.'),
+      'type' => "enum('" . implode("','", array(mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO_NO, mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO_YES)) . "')",
+      'not null' => TRUE,
+      'mysql_type' => "enum('" . implode("','", array(mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO_NO, mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO_YES)) . "')",
+      'default' => mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO_YES,
+    ));
+  }
+  catch (PDOException $e) {
+    return $e->getMessage();
+  }
 }
 
 /**
@@ -1376,7 +1376,6 @@ function mediamosa_update_7072() {
     db_drop_table('mediamosa_statistics_stream_request');
   }
 
-
   // Uninstall mediamosa_statistics_stream_request_collection table.
   try {
     // Try this first.
@@ -1391,15 +1390,28 @@ function mediamosa_update_7072() {
     db_drop_table('mediamosa_statistics_stream_request_collection');
   }
 
-
   // Install tables.
   mediamosa::drupal_install_schema('mediamosa_statistics_file_helper');
   mediamosa::drupal_install_schema('mediamosa_streaming_ticket');
   mediamosa::drupal_install_schema('mediamosa_statistics_stream_request');
+}
+/*
+ * Disable renamed mediamosa_library and enable new mediamosa_sdk module.
+ */
+function mediamosa_update_7073() {
+  // Turn library off.
+  if (module_exists('mediamosa_library')) {
+    module_disable(array('mediamosa_library'));
+  }
+
+  // Enable SDK.
+  module_enable(array('mediamosa_sdk'));
 
   // Rebuild the registry.
   registry_rebuild();
   cache_clear_all();
+
+  return t('The MediaMosa Library has been renamed to MediaMosa SDK. The old module MediaMosa Library is now a dummy and has been disabled. Keep it disabled as its removed in next release.');
 }
 
 // TODO: Remove old code from the repository on the next release: sites/all/modules/mediamosa/core/transcode/mapping.

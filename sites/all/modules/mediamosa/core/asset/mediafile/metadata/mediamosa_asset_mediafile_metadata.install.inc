@@ -88,6 +88,7 @@ function mediamosa_asset_mediafile_metadata_schema() {
       ),
       mediamosa_asset_mediafile_metadata_db::VAL_DATETIME => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'description' => t('The date and time of the property value.'),
       ),
       mediamosa_asset_mediafile_metadata_db::VAL_INT => array(

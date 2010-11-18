@@ -1,5 +1,5 @@
 <?php
-// $Id: book.admin.inc,v 1.36 2010/06/26 21:32:20 dries Exp $
+// $Id: book.admin.inc,v 1.38 2010/10/20 01:31:06 dries Exp $
 
 /**
  * @file
@@ -91,7 +91,6 @@ function book_admin_edit($form, $form_state, $node) {
 function book_admin_edit_validate($form, &$form_state) {
   if ($form_state['values']['tree_hash'] != $form_state['values']['tree_current_hash']) {
     form_set_error('', t('This book has been modified by another user, the changes could not be saved.'));
-    $form_state['rebuild'] = TRUE;
   }
 }
 
@@ -192,11 +191,12 @@ function _book_admin_table_tree($tree, &$form) {
         '#type' => 'weight',
         '#default_value' => $data['link']['weight'],
         '#delta' => 15,
+        '#title' => t('Weight for @title', array('@title' => $data['link']['title'])),
+        '#title_display' => 'invisible',
       ),
       'plid' => array(
-        '#type' => 'textfield',
+        '#type' => 'hidden',
         '#default_value' => $data['link']['plid'],
-        '#size' => 6,
       ),
       'mlid' => array(
         '#type' => 'hidden',
