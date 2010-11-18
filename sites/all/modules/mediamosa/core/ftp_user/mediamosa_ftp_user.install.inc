@@ -119,10 +119,12 @@ function mediamosa_ftp_user_schema() {
       ),
       mediamosa_ftp_user_db::ACCESSED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'description' => t('The access time.'),
       ),
       mediamosa_ftp_user_db::MODIFIED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'description' => t('The modified time.'),
       ),
     ),

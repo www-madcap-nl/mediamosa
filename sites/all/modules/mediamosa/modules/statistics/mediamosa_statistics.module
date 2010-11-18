@@ -48,6 +48,10 @@ function mediamosa_statistics_cron() {
       variable_set('mediamosa_statistics_cron_last_run', $now);
       mediamosa_statistics::calculate_used_diskspace($year, $month);
     }
+
+    // Do the statistics cron REST call for streaming statistics.
+    $result = mediamosa_http::do_internal_call_cron('internal/cron/statistics', TRUE);
+
   }
   catch (Exception $e) {
     mediamosa_watchdog::log('Catch exception during cron: mediamosa_statistics_cron(): @msg', array('@msg' => $e->getMessage()));
@@ -150,15 +154,11 @@ function mediamosa_statistics_mediamosa_register_rest_call_doc() {
     mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
   <item id="1">
     <id>97</id>
+    <tid>e2NbmiUoaRJAXVZPPJW4T9BW</tid>
+    <time>2010-01-27 14:00:00</time>
     <app_id>14</app_id>
-    <asset_id>7pAkDsceysAZPo0q3PhjtBE1</asset_id>
-    <mediafile_id>VxsIJXDjuYUJKq81n9Ulimmu</mediafile_id>
-    <owner_id>admin</owner_id>
-    <group_id></group_id>
-    <filesize>1282548</filesize>
-    <container_type>flv</container_type>
-    <play_type>object</play_type>
-    <played>2010-01-27 14:27:22</played>
+    <duration>121</duration>
+    <bytes>6752</bytes>
   </item>
 </items>',
   );
@@ -252,6 +252,7 @@ function mediamosa_statistics_mediamosa_register_rest_call() {
 
   $a_rest_calls['statistics/popularmediafiles'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_statistics_get_most_popular_mediafiles',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_statistics',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
@@ -266,7 +267,7 @@ function mediamosa_statistics_mediamosa_register_rest_call() {
 
   $a_rest_calls['statistics/popularcollections'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_statistics_get_most_popular_collections',
-    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_statistics',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
@@ -301,9 +302,18 @@ function mediamosa_statistics_mediamosa_register_rest_call() {
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
 
+  $a_rest_calls['cron/statistics'][mediamosa_rest_call::METHOD_GET] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_cron_statistics',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::DESCRIPTION => 'Start a cron for statistics.',
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_statistics',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
+    mediamosa_rest_call::ACCESS => mediamosa_rest_call::ACCESS_INTERNAL_ONLY,
+  );
+
   $a_rest_calls['statistics/streams'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_statistics_get_most_popular_streams',
-    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_DEPRECATED,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_statistics',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
@@ -415,6 +425,7 @@ function mediamosa_statistics_menu() {
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
 
+  /*
   $items['admin/mediamosa/statistics/popularmediafiles'] = array(
     'title' => 'Overview of popular mediafiles',
     'description' => 'This page displays a list of the 150 popular uploaded mediafiles.',
@@ -426,6 +437,7 @@ function mediamosa_statistics_menu() {
     'title' => 'Overview of popular mediafiles',
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
+   */
 
   $items['admin/mediamosa/statistics/latestcollections'] = array(
     'title' => 'Overview of latest collections',
@@ -439,6 +451,7 @@ function mediamosa_statistics_menu() {
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
 
+  /*
   $items['admin/mediamosa/statistics/popularcollections'] = array(
     'title' => 'Overview of popular collections',
     'description' => 'This page displays a list of the 150 popular collections.',
@@ -450,6 +463,7 @@ function mediamosa_statistics_menu() {
     'title' => 'Overview of popular collections',
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
+   */
 
   $items['admin/mediamosa/statistics/diskspaceusage'] = array(
     'title' => 'Overview of diskspace used',
@@ -465,7 +479,7 @@ function mediamosa_statistics_menu() {
 
   $items['admin/mediamosa/statistics/streamrequests'] = array(
     'title' => 'Overview stream request',
-    'description' => 'This page displays a list of requested streams. Note that this overview gives the number of created symlinks, not the eventually streamed mediafiles.',
+    'description' => 'This page displays a list of requested streams.',
     'page callback' => 'mediamosa_statistics_streamrequests_form',
     'access arguments' => array('access mediamosa statistics'),
     'file' => 'mediamosa_statistics_streamrequests.inc',
@@ -475,6 +489,7 @@ function mediamosa_statistics_menu() {
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
 
+  /*
   $items['admin/mediamosa/statistics/popularstreams'] = array(
     'title' => 'Overview of popular streams per period',
     'description' => 'This page displays a list of the most popular requested streams. Note that this overview gives the number of created symlinks, not the eventually streamed mediafiles.',
@@ -486,6 +501,7 @@ function mediamosa_statistics_menu() {
     'title' => 'Overview of popular streams per period',
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
+   */
 
   $items['admin/mediamosa/statistics/searchwords'] = array(
     'title' => 'Overview of search words per period',
@@ -500,4 +516,67 @@ function mediamosa_statistics_menu() {
   );
 
   return $items;
+}
+
+/**
+ * Implements the hook_mediamosa_configuration_collect()
+ */
+function mediamosa_statistics_mediamosa_configuration_collect() {
+  $form = array();
+
+    // Use drupal to get the timezones.
+  $timezones = system_time_zones();
+
+  $form['settings_statistics'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Statistics'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  $form['settings_statistics']['mediamosa_statistics_streaming_log_path'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Path of the streaming log file'),
+    '#description' => t("Eg. '/mnt/naspcd1/vp-prod/01/vpx-prod/log' or '/mnt/naspcd1/vpx-acc/log'. Leave it empty, if you don't have streaming log files."),
+    '#default_value' => variable_get('mediamosa_statistics_streaming_log_path', ''),
+  );
+
+  $form['settings_statistics']['mediamosa_statistics_streaming_log_timezone'] = array(
+    '#type' => 'select',
+    '#title' => t('Default time zone'),
+    '#default_value' => variable_get('mediamosa_statistics_streaming_log_timezone', 'Europe/Amsterdam'),
+    '#options' => $timezones,
+    '#required' => TRUE,
+  );
+
+  $form['settings_statistics']['mediamosa_statistics_streaming_log_ticket'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Ticket path in the streaming log files'),
+    '#description' => t("It may be 'ticket' or 'vpx', but you can leave it empty too.
+      If your log files have this value '//vpx/14/yYFnHmmK8nTScYIXi6bS3vSk.flv' in the 'x-ctx' (Wowza) or 'cs-uri-stem' (Windows Media) field, then you should write 'vpx' here.
+      This is a global value to all of your log files."),
+    '#default_value' => variable_get('mediamosa_statistics_streaming_log_ticket', mediamosa_statistics::LOG_TICKET),
+  );
+
+  return $form;
+}
+
+/**
+ * Implements the hook_mediamosa_configuration_validate()
+ */
+function mediamosa_statistics_mediamosa_configuration_validate($form, &$form_state) {
+  $path = $form_state['values']['mediamosa_statistics_streaming_log_path'];
+  $timezone = $form_state['values']['mediamosa_statistics_streaming_log_timezone'];
+  $ticket = $form_state['values']['mediamosa_statistics_streaming_log_ticket'];
+  if ($path) {
+    if (!is_dir($path) || !is_readable($path)) {
+      form_set_error('mediamosa_statistics_streaming_log_path', t('The streaming log path is not valid.'));
+    }
+    if (!$timezone) {
+      form_set_error('mediamosa_statistics_streaming_log_timezone', t('The time zone is not valid.'));
+    }
+  }
+  if (!preg_match('#^[/0-9a-zA-Z]*$#', $ticket)) {
+    form_set_error('mediamosa_statistics_streaming_log_ticket', t('The ticket path has invalid characters.'));
+  }
 }

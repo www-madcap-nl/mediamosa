@@ -1,5 +1,5 @@
 <?php
-// $Id: user.module,v 1.1180 2010/07/07 08:05:01 webchick Exp $
+// $Id: user.module,v 1.1215 2010/11/12 02:57:15 dries Exp $
 
 /**
  * @file
@@ -59,7 +59,7 @@ function user_help($path, $arg) {
       return '<p>' . t('Permissions let you control what users can do and see on your site. You can define a specific set of permissions for each role. (See the <a href="@role">Roles</a> page to create a role). Two important roles to consider are Authenticated Users and Administrators. Any permissions granted to the Authenticated Users role will be given to any user who can log into your site. You can make any role the Administrator role for the site, meaning this will be granted all new permissions automatically. You can do this on the <a href="@settings">User Settings</a> page. You should be careful to ensure that only trusted users are given this access and level of control of your site.', array('@role' => url('admin/people/permissions/roles'), '@settings' => url('admin/config/people/accounts'))) . '</p>';
     case 'admin/people/permissions/roles':
       $output = '<p>' . t('Roles allow you to fine tune the security and administration of Drupal. A role defines a group of users that have certain privileges as defined on the <a href="@permissions">permissions page</a>. Examples of roles include: anonymous user, authenticated user, moderator, administrator and so on. In this area you will define the names and order of the roles on your site. It is recommended to order your roles from least permissive (anonymous user) to most permissive (administrator). To delete a role choose "edit role".', array('@permissions' => url('admin/people/permissions'))) . '</p>';
-      $output .= '<p>'. t('By default, Drupal comes with two user roles:') . '</p>';
+      $output .= '<p>' . t('By default, Drupal comes with two user roles:') . '</p>';
       $output .= '<ul>';
       $output .= '<li>' . t("Anonymous user: this role is used for users that don't have a user account or that are not authenticated.") . '</li>';
       $output .= '<li>' . t('Authenticated user: this role is automatically granted to all logged in users.') . '</li>';
@@ -122,10 +122,6 @@ function user_theme() {
       'render element' => 'form',
       'file' => 'user.admin.inc',
     ),
-    'user_filters' => array(
-      'render element' => 'form',
-      'file' => 'user.admin.inc',
-    ),
     'user_permission_description' => array(
       'variables' => array('permission_item' => NULL, 'hide' => NULL),
       'file' => 'user.admin.inc',
@@ -146,6 +142,7 @@ function user_entity_info() {
       'controller class' => 'UserController',
       'base table' => 'users',
       'uri callback' => 'user_uri',
+      'label callback' => 'format_username',
       'fieldable' => TRUE,
       'entity keys' => array(
         'id' => 'uid',
@@ -420,31 +417,35 @@ function user_save($account, $edit = array(), $category = 'account') {
     user_module_invoke('presave', $edit, $account, $category);
 
     if (is_object($account) && !$account->is_new) {
-      // Consider users edited by an administrator as logged in, if they haven't
-      // already, so anonymous users can view the profile (if allowed).
-      if (empty($edit['access']) && empty($account->access) && user_access('administer users')) {
-        $edit['access'] = REQUEST_TIME;
-      }
-
       // Process picture uploads.
-      if (!empty($edit['picture']->fid)) {
+      if (!$delete_previous_picture = empty($edit['picture']->fid)) {
         $picture = $edit['picture'];
         // If the picture is a temporary file move it to its final location and
         // make it permanent.
-        if (($picture->status & FILE_STATUS_PERMANENT) == 0) {
+        if (!$picture->status) {
           $info = image_get_info($picture->uri);
-          $picture_directory =  variable_get('file_default_scheme', 'public') . '://' . variable_get('user_picture_path', 'pictures');
+          $picture_directory =  file_default_scheme() . '://' . variable_get('user_picture_path', 'pictures');
 
           // Prepare the pictures directory.
           file_prepare_directory($picture_directory, FILE_CREATE_DIRECTORY);
-          $destination = file_stream_wrapper_uri_normalize($picture_directory . '/picture-' . $account->uid . '.' . $info['extension']);
+          $destination = file_stream_wrapper_uri_normalize($picture_directory . '/picture-' . $account->uid . '-' . REQUEST_TIME . '.' . $info['extension']);
 
-          if ($picture = file_move($picture, $destination, FILE_EXISTS_REPLACE)) {
-            $picture->status |= FILE_STATUS_PERMANENT;
+          // Move the temporary file into the final location.
+          if ($picture = file_move($picture, $destination, FILE_EXISTS_RENAME)) {
+            $delete_previous_picture = TRUE;
+            $picture->status = FILE_STATUS_PERMANENT;
             $edit['picture'] = file_save($picture);
+            file_usage_add($picture, 'user', 'user', $account->uid);
           }
         }
       }
+
+      // Delete the previous picture if it was deleted or replaced.
+      if ($delete_previous_picture && !empty($account->picture->fid)) {
+        file_usage_delete($account->picture, 'user', 'user', $account->uid);
+        file_delete($account->picture);
+      }
+
       $edit['picture'] = empty($edit['picture']->fid) ? 0 : $edit['picture']->fid;
 
       // Do not allow 'uid' to be changed.
@@ -455,13 +456,6 @@ function user_save($account, $edit = array(), $category = 'account') {
         // The query failed - better to abort the save than risk further
         // data loss.
         return FALSE;
-      }
-
-      // If the picture changed or was unset, remove the old one. This step needs
-      // to occur after updating the {users} record so that user_file_references()
-      // doesn't report it in use and block the deletion.
-      if (!empty($account->picture->fid) && ($edit['picture'] != $account->picture->fid)) {
-        file_delete($account->picture);
       }
 
       // Reload user roles if provided.
@@ -523,12 +517,6 @@ function user_save($account, $edit = array(), $category = 'account') {
       if (!isset($edit['created'])) {
         $edit['created'] = REQUEST_TIME;
       }
-      // Consider users created by an administrator as already logged in, so
-      // anonymous users can view the profile (if allowed).
-      if (empty($edit['access']) && user_access('administer users')) {
-        $edit['access'] = REQUEST_TIME;
-      }
-
       $edit['mail'] = trim($edit['mail']);
       $success = drupal_write_record('users', $edit);
       if ($success === FALSE) {
@@ -829,15 +817,18 @@ function user_file_download($uri) {
 }
 
 /**
- * Implements hook_file_references().
+ * Implements hook_file_move().
  */
-function user_file_references($file) {
-  // Determine if the file is used by this module.
-  $file_used = (bool) db_query_range('SELECT 1 FROM {users} WHERE picture = :fid', 0, 1, array(':fid' => $file->fid))->fetchField();
-  if ($file_used) {
-    // Return the name of the module and how many references it has to the file.
-    // If file is still used then 1 is enough to indicate this.
-    return array('user' => 1);
+function user_file_move($file, $source) {
+  // If a user's picture is replaced with a new one, update the record in
+  // the users table.
+  if (isset($file->fid) && isset($source->fid) && $file->fid != $source->fid) {
+    db_update('users')
+      ->fields(array(
+        'picture' => $file->fid,
+      ))
+      ->condition('picture', $source->fid)
+      ->execute();
   }
 }
 
@@ -871,7 +862,7 @@ function user_search_access() {
 /**
  * Implements hook_search_execute().
  */
-function user_search_execute($keys = NULL) {
+function user_search_execute($keys = NULL, $conditions = NULL) {
   $find = array();
   // Replace wildcards with MySQL/PostgreSQL wildcards.
   $keys = preg_replace('!\*+!', '%', $keys);
@@ -946,7 +937,7 @@ function user_user_view($account) {
  * @see user_account_form_validate()
  * @see user_validate_current_pass()
  * @see user_validate_picture()
- * @see user_validate_email()
+ * @see user_validate_mail()
  */
 function user_account_form(&$form, &$form_state) {
   global $user;
@@ -960,8 +951,6 @@ function user_account_form(&$form, &$form_state) {
 
   // Account information.
   $form['account'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Account information'),
     '#weight' => -10,
   );
   // Only show name field on registration form or user can change own username.
@@ -1115,7 +1104,7 @@ function user_account_form(&$form, &$form_state) {
     '#type' => 'file',
     '#title' => t('Upload picture'),
     '#size' => 48,
-    '#description' => t('Your virtual face or picture. Maximum dimensions are %dimensions pixels and the maximum size is %size kB.', array('%dimensions' => variable_get('user_picture_dimensions', '85x85'), '%size' => variable_get('user_picture_file_size', '30'))) . ' ' . filter_xss_admin(variable_get('user_picture_guidelines', '')),
+    '#description' => t('Your virtual face or picture. Pictures larger than @dimensions pixels will be scaled down.', array('@dimensions' => variable_get('user_picture_dimensions', '85x85'))) . ' ' . filter_xss_admin(variable_get('user_picture_guidelines', '')),
   );
   $form['#validate'][] = 'user_validate_picture';
 }
@@ -1272,10 +1261,13 @@ function user_block_info() {
   $blocks['login']['cache'] = DRUPAL_NO_CACHE;
 
   $blocks['new']['info'] = t('Who\'s new');
+  $blocks['new']['properties']['administrative'] = TRUE;
 
   // Too dynamic to cache.
   $blocks['online']['info'] = t('Who\'s online');
   $blocks['online']['cache'] = DRUPAL_NO_CACHE;
+  $blocks['online']['properties']['administrative'] = TRUE;
+
   return $blocks;
 }
 
@@ -1408,11 +1400,13 @@ function template_preprocess_user_picture(&$variables) {
     }
     if (isset($filepath)) {
       $alt = t("@user's picture", array('@user' => format_username($account)));
-      if (module_exists('image') && $style = variable_get('user_picture_style', '')) {
-        $variables['user_picture'] = theme('image_style', array('style_name' => $style, 'path' => $filepath, 'alt' => $alt, 'title' => $alt, 'attributes' => array(), 'getsize' => FALSE));
+      // If the image does not have a valid Drupal scheme (for eg. HTTP),
+      // don't load image styles.
+      if (module_exists('image') && file_valid_uri($filepath) && $style = variable_get('user_picture_style', '')) {
+        $variables['user_picture'] = theme('image_style', array('style_name' => $style, 'path' => $filepath, 'alt' => $alt, 'title' => $alt));
       }
       else {
-        $variables['user_picture'] = theme('image', array('path' => $filepath, 'alt' => $alt, 'title' => $alt, 'attributes' => array(), 'getsize' => FALSE));
+        $variables['user_picture'] = theme('image', array('path' => $filepath, 'alt' => $alt, 'title' => $alt));
       }
       if (!empty($account->uid) && user_access('access user profiles')) {
         $attributes = array('attributes' => array('title' => t('View user profile.')), 'html' => TRUE);
@@ -1458,7 +1452,6 @@ function user_register_access() {
   return user_is_anonymous() && variable_get('user_register', USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL);
 }
 
-
 /**
  * User view access callback.
  *
@@ -1466,7 +1459,6 @@ function user_register_access() {
  *   Can either be a full user object or a $uid.
  */
 function user_view_access($account) {
-
   $uid = is_object($account) ? $account->uid : (int) $account;
 
   // Never allow access to view the anonymous user account.
@@ -1480,7 +1472,7 @@ function user_view_access($account) {
       if (!is_object($account)) {
         $account = user_load($uid);
       }
-      return (is_object($account) && $account->access && $account->status);
+      return (is_object($account) && $account->status);
     }
   }
   return FALSE;
@@ -1519,10 +1511,12 @@ function user_menu() {
   // Registration and login pages.
   $items['user'] = array(
     'title' => 'User account',
+    'title callback' => 'user_menu_title',
     'page callback' => 'user_page',
     'access callback' => TRUE,
-    'type' => MENU_CALLBACK,
     'file' => 'user.pages.inc',
+    'weight' => -10,
+    'menu_name' => 'user-menu',
   );
 
   $items['user/login'] = array(
@@ -1568,7 +1562,7 @@ function user_menu() {
   // User listing pages.
   $items['admin/people'] = array(
     'title' => 'People',
-    'description' => 'Manage user accounts, roles, and permissions',
+    'description' => 'Manage user accounts, roles, and permissions.',
     'page callback' => 'user_admin',
     'page arguments' => array('list'),
     'access arguments' => array('administer users'),
@@ -1616,7 +1610,6 @@ function user_menu() {
     'page arguments' => array('user_admin_role', 5),
     'access callback' => 'user_role_edit_access',
     'access arguments' => array(5),
-    'type' => MENU_CALLBACK,
   );
   $items['admin/people/permissions/roles/delete/%user_role'] = array(
     'title' => 'Delete role',
@@ -1624,7 +1617,6 @@ function user_menu() {
     'page arguments' => array('user_admin_role_delete_confirm', 5),
     'access callback' => 'user_role_edit_access',
     'access arguments' => array(5),
-    'type' => MENU_CALLBACK,
     'file' => 'user.admin.inc',
   );
 
@@ -1661,9 +1653,7 @@ function user_menu() {
     'weight' => -10,
   );
 
-  // Use %user_uid_only_optional here to avoid loading the full user for
-  // basic access checks.
-  $items['user/%user_uid_only_optional'] = array(
+  $items['user/%user'] = array(
     'title' => 'My account',
     'title callback' => 'user_page_title',
     'title arguments' => array(1),
@@ -1671,8 +1661,12 @@ function user_menu() {
     'page arguments' => array(1),
     'access callback' => 'user_view_access',
     'access arguments' => array(1),
-    'weight' => -10,
-    'menu_name' => 'user-menu',
+    // By assigning a different menu name, this item (and all registered child
+    // paths) are no longer considered as children of 'user'. When accessing the
+    // user account pages, the preferred menu link that is used to build the
+    // active trail (breadcrumb) will be found in this menu (unless there is
+    // more specific link), so the link to 'user' will not be in the breadcrumb.
+    'menu_name' => 'navigation',
   );
 
   $items['user/%user/view'] = array(
@@ -1687,7 +1681,6 @@ function user_menu() {
     'page arguments' => array('user_cancel_confirm_form', 1),
     'access callback' => 'user_cancel_access',
     'access arguments' => array(1),
-    'type' => MENU_CALLBACK,
     'file' => 'user.pages.inc',
   );
 
@@ -1697,7 +1690,6 @@ function user_menu() {
     'page arguments' => array(1, 4, 5),
     'access callback' => 'user_cancel_access',
     'access arguments' => array(1),
-    'type' => MENU_CALLBACK,
     'file' => 'user.pages.inc',
   );
 
@@ -1783,10 +1775,55 @@ function user_menu_site_status_alter(&$menu_site_status, $path) {
 }
 
 /**
- * Implements hook_init().
+ * Implements hook_menu_link_alter().
  */
-function user_init() {
-  drupal_add_css(drupal_get_path('module', 'user') . '/user.css');
+function user_menu_link_alter(&$link) {
+  // The path 'user' must be accessible for anonymous users, but only visible
+  // for authenticated users. Authenticated users should see "My account", but
+  // anonymous users should not see it at all. Therefore, invoke
+  // user_translated_menu_link_alter() to conditionally hide the link.
+  if ($link['link_path'] == 'user' && $link['module'] == 'system') {
+    $link['options']['alter'] = TRUE;
+  }
+
+  // Force the Logout link to appear on the top-level of 'user-menu' menu by
+  // default (i.e., unless it has been customized).
+  if ($link['link_path'] == 'user/logout' && $link['module'] == 'system' && empty($link['customized'])) {
+    $link['plid'] = 0;
+  }
+}
+
+/**
+ * Implements hook_translated_menu_link_alter().
+ */
+function user_translated_menu_link_alter(&$link) {
+  // Hide the "User account" link for anonymous users.
+  if ($link['link_path'] == 'user' && $link['module'] == 'system' && user_is_anonymous()) {
+    $link['hidden'] = 1;
+  }
+}
+
+/**
+ * Implements hook_admin_paths().
+ */
+function user_admin_paths() {
+  $paths = array(
+    'user/*/cancel' => TRUE,
+    'user/*/edit' => TRUE,
+    'user/*/edit/*' => TRUE,
+  );
+  return $paths;
+}
+
+/**
+ * Returns $arg or the user ID of the current user if $arg is '%' or empty.
+ *
+ * Deprecated. Use %user_uid_optional instead.
+ *
+ * @todo D8: Remove.
+ */
+function user_uid_only_optional_to_arg($arg) {
+  return user_uid_optional_to_arg($arg);
 }
 
 /**
@@ -1860,24 +1897,19 @@ function user_uid_optional_to_arg($arg) {
 }
 
 /**
- * Returns $arg or the user ID of the current user if $arg is '%' or empty.
+ * Menu item title callback for the 'user' path.
  *
- * @todo rethink the naming of this in Drupal 8.
+ * Anonymous users should see "User account", but authenticated users are
+ * expected to see "My account".
  */
-function user_uid_only_optional_to_arg($arg) {
-  return user_uid_optional_to_arg($arg);
+function user_menu_title() {
+  return user_is_logged_in() ? t('My account') : t('User account');
 }
 
 /**
  * Menu item title callback - use the user name.
  */
-function user_page_title($uid) {
-  if ($GLOBALS['user']->uid == $uid) {
-    $account = $GLOBALS['user'];
-  }
-  else {
-    $account = user_load($uid);
-  }
+function user_page_title($account) {
   return is_object($account) ? format_username($account) : '';
 }
 
@@ -2282,10 +2314,7 @@ function _user_cancel($edit, $account, $method) {
       if (!empty($edit['user_cancel_notify'])) {
         _user_mail_notify('status_blocked', $account);
       }
-      db_update('users')
-        ->fields(array('status' => 0))
-        ->condition('uid', $account->uid)
-        ->execute();
+      user_save($account, array('status' => 0));
       drupal_set_message(t('%name has been disabled.', array('%name' => $account->name)));
       watchdog('user', 'Blocked user: %name %email.', array('%name' => $account->name, '%email' => '<' . $account->mail . '>'), WATCHDOG_NOTICE);
       break;
@@ -2306,9 +2335,6 @@ function _user_cancel($edit, $account, $method) {
   if ($account->uid == $user->uid) {
     // Destroy the current session, and reset $user to the anonymous user.
     session_destroy();
-  }
-  else {
-    drupal_session_destroy_uid($account->uid);
   }
 
   // Clear the cache for anonymous users.
@@ -2337,7 +2363,9 @@ function user_delete_multiple(array $uids) {
 
     foreach ($accounts as $uid => $account) {
       module_invoke_all('user_delete', $account);
+      module_invoke_all('entity_delete', $account, 'user');
       field_attach_delete('user', $account);
+      drupal_session_destroy_uid($account->uid);
     }
 
     db_delete('users')
@@ -2357,10 +2385,9 @@ function user_delete_multiple(array $uids) {
 /**
  * Page callback wrapper for user_view().
  */
-function user_view_page($uid) {
+function user_view_page($account) {
   // An administrator may try to view a non-existent account,
   // so we give them a 404 (versus a 403 for non-admins).
-  $account = user_load($uid);
   return is_object($account) ? user_view($account) : MENU_NOT_FOUND;
 }
 
@@ -2387,13 +2414,20 @@ function user_view_page($uid) {
  *   A user object.
  * @param $view_mode
  *   View mode, e.g. 'full'.
+ * @param $langcode
+ *   (optional) A language code to use for rendering. Defaults to the global
+ *   content language of the current request.
  *
  * @return
  *   An array as expected by drupal_render().
  */
-function user_view($account, $view_mode = 'full') {
+function user_view($account, $view_mode = 'full', $langcode = NULL) {
+  if (!isset($langcode)) {
+    $langcode = $GLOBALS['language_content']->language;
+  }
+
   // Retrieve all profile fields and attach to $account->content.
-  user_build_content($account, $view_mode);
+  user_build_content($account, $view_mode, $langcode);
 
   $build = $account->content;
   // We don't need duplicate rendering info in account->content.
@@ -2403,10 +2437,12 @@ function user_view($account, $view_mode = 'full') {
     '#theme' => 'user_profile',
     '#account' => $account,
     '#view_mode' => $view_mode,
+    '#language' => $langcode,
   );
 
   // Allow modules to modify the structured user.
-  drupal_alter('user_view', $build);
+  $type = 'user';
+  drupal_alter(array('user_view', 'entity_view'), $build, $type);
 
   return $build;
 }
@@ -2418,18 +2454,26 @@ function user_view($account, $view_mode = 'full') {
  *   A user object.
  * @param $view_mode
  *   View mode, e.g. 'full'.
+ * @param $langcode
+ *   (optional) A language code to use for rendering. Defaults to the global
+ *   content language of the current request.
  */
-function user_build_content($account, $view_mode = 'full') {
+function user_build_content($account, $view_mode = 'full', $langcode = NULL) {
+  if (!isset($langcode)) {
+    $langcode = $GLOBALS['language_content']->language;
+  }
+
   // Remove previously built content, if exists.
   $account->content = array();
 
   // Build fields content.
   field_attach_prepare_view('user', array($account->uid => $account), $view_mode);
   entity_prepare_view('user', array($account->uid => $account));
-  $account->content += field_attach_view('user', $account, $view_mode);
+  $account->content += field_attach_view('user', $account, $view_mode, $langcode);
 
   // Populate $account->content with a render() array.
-  module_invoke_all('user_view', $account, $view_mode);
+  module_invoke_all('user_view', $account, $view_mode, $langcode);
+  module_invoke_all('entity_view', $account, 'user', $view_mode, $langcode);
 }
 
 /**
@@ -2542,7 +2586,7 @@ Your account at [site:name] has been activated.
 
 You may now log in by clicking this link or copying and pasting it into your browser:
 
-[site:login-url]
+[user:one-time-login-url]
 
 This link can only be used once to log in and will lead you to a page where you can set your password.
 
@@ -2808,19 +2852,23 @@ function user_permission_get_modules() {
  *
  * This function may be used to grant and revoke multiple permissions at once.
  * For example, when a form exposes checkboxes to configure permissions for a
- * role, the submitted values may be directly passed on in a form submit
- * handler.
+ * role, the form submit handler may directly pass the submitted values for the
+ * checkboxes form element to this function.
  *
  * @param $rid
  *   The ID of a user role to alter.
  * @param $permissions
- *   An array of permissions, where the key holds the permission name and the
- *   value is an integer or boolean that determines whether to grant or revoke
- *   the permission:
+ *   An associative array, where the key holds the permission name and the value
+ *   determines whether to grant or revoke that permission. Any value that
+ *   evaluates to TRUE will cause the permission to be granted. Any value that
+ *   evaluates to FALSE will cause the permission to be revoked.
  *   @code
  *     array(
- *       'administer nodes' => 0,
- *       'access user profiles' => 1,
+ *       'administer nodes' => 0,                // Revoke 'administer nodes'
+ *       'administer blocks' => FALSE,           // Revoke 'administer blocks'
+ *       'access user profiles' => 1,            // Grant 'access user profiles'
+ *       'access content' => TRUE,               // Grant 'access content'
+ *       'access comments' => 'access comments', // Grant 'access comments'
  *     )
  *   @endcode
  *   Existing permissions are not changed, unless specified in $permissions.
@@ -2860,6 +2908,8 @@ function user_role_grant_permissions($rid, array $permissions = array()) {
       ->key(array(
         'rid' => $rid,
         'permission' => $name,
+      ))
+      ->fields(array(
         'module' => $modules[$name],
       ))
       ->execute();
@@ -3199,13 +3249,13 @@ function user_build_filter_query(SelectQuery $query) {
       if (user_access($value, $account)) {
         continue;
       }
-      $user_role_alias = $query->join('users_roles', 'ur', '%alias.uid = u.uid');
-      $permission_alias = $query->join('role_permission', 'p', $user_role_alias . '.rid = %alias.rid');
+      $users_roles_alias = $query->join('users_roles', 'ur', '%alias.uid = u.uid');
+      $permission_alias = $query->join('role_permission', 'p', $users_roles_alias . '.rid = %alias.rid');
       $query->condition($permission_alias . '.permission', $value);
     }
-    else if ($key == 'role') {
-      $user_roles_alias = $query->join('users_roles', 'ur', '%alias.uid = u.uid');
-      $query->condition($user_role_alias . '.rid' , $value);
+    elseif ($key == 'role') {
+      $users_roles_alias = $query->join('users_roles', 'ur', '%alias.uid = u.uid');
+      $query->condition($users_roles_alias . '.rid' , $value);
     }
     else {
       $query->condition($filters[$key]['field'], $value);
@@ -3361,7 +3411,12 @@ function user_form_process_password_confirm($element) {
   );
 
   $element['#attached']['js'][] = drupal_get_path('module', 'user') . '/user.js';
-  $element['#attached']['js'][] = array('data' => $js_settings, 'type' => 'setting');
+  // Ensure settings are only added once per page.
+  static $already_added = FALSE;
+  if (!$already_added) {
+    $already_added = TRUE;
+    $element['#attached']['js'][] = array('data' => $js_settings, 'type' => 'setting');
+  }
 
   return $element;
 }
@@ -3438,12 +3493,8 @@ function user_block_user_action(&$entity, $context = array()) {
   else {
     $uid = $GLOBALS['user']->uid;
   }
-  db_update('users')
-    ->fields(array('status' => 0))
-    ->condition('uid', $uid)
-    ->execute();
-  drupal_session_destroy_uid($uid);
   $account = user_load($uid);
+  $account = user_save($account, array('status' => 0));
   watchdog('action', 'Blocked user %name.', array('%name' => $account->name));
 }
 
@@ -3471,8 +3522,6 @@ function user_register_form($form, &$form_state) {
   $form['#attached']['library'][] = array('system', 'cookie');
   $form['#attributes']['class'][] = 'user-info-from-cookie';
 
-  $form['#pre_render'] = array('user_register_form_pre_render');
-
   // Start with the default user account fields.
   user_account_form($form, $form_state);
 
@@ -3491,20 +3540,6 @@ function user_register_form($form, &$form_state) {
   // Add the final user registration form submit handler.
   $form['#submit'][] = 'user_register_submit';
 
-  return $form;
-}
-
-/**
- * Form pre-render callback to clean up the user_register_form.
- *
- * If the "account" fieldset is the only element at the top level (apart from
- * the submit button), its borders are hidden for aesthetic reasons.
- */
-function user_register_form_pre_render($form) {
-  $visible_children = element_get_visible_children($form);
-  if (!count(array_diff($visible_children, array('account', 'submit')))) {
-    $form['account']['#theme_wrappers'] = array();
-  }
   return $form;
 }
 
@@ -3610,16 +3645,6 @@ function user_modules_uninstalled($modules) {
 }
 
 /**
- * Implements hook_filter_format_delete().
- */
-function user_filter_format_delete($format, $fallback) {
-  db_update('users')
-    ->fields(array('signature_format' => $fallback->format))
-    ->condition('signature_format', $format->format)
-    ->execute();
-}
-
-/**
  * Helper function to rewrite the destination to avoid redirecting to login page after login.
  *
  * Third-party authentication modules may use this function to determine the
@@ -3676,4 +3701,37 @@ function user_rdf_mapping() {
       ),
     ),
   );
+}
+
+/**
+ * Implements hook_file_download_access().
+ */
+function user_file_download_access($field, $entity_type, $entity) {
+  if ($entity_type == 'user') {
+    return user_view_access($entity);
+  }
+}
+
+/**
+ * Implements hook_system_info_alter().
+ *
+ * Drupal 7 ships with two methods to add additional fields to users: Profile
+ * module, a legacy module dating back from 2002, and Field API integration
+ * with users. While Field API support for users currently provides less end
+ * user features, the inefficient data storage mechanism of Profile module, as
+ * well as its lack of consistency with the rest of the entity / field based
+ * systems in Drupal 7, make this a sub-optimal solution to those who were not
+ * using it in previous releases of Drupal.
+ *
+ * To prevent new Drupal 7 sites from installing Profile module, and
+ * unwittingly ending up with two completely different and incompatible methods
+ * of extending users, remove it from the available modules by setting it to
+ * hidden if the profile_* tables are not already present.
+ *
+ * @todo: Remove in D8, pending upgrade path.
+ */
+function user_system_info_alter(&$info, $file, $type) {
+  if ($type == 'module' && $file->name == 'profile' && !db_table_exists('profile_field')) {
+    $info['hidden'] = TRUE;
+  }
 }

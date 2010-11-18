@@ -131,11 +131,13 @@ function mediamosa_tool_params_schema() {
       ),
       mediamosa_tool_params_db::CREATED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'not null' => TRUE,
         'description' => t('The date and time when tool parameter was created.'),
       ),
       mediamosa_tool_params_db::CHANGED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'default' => NULL,
         'description' => t('The date and time when tool parameter was changed last.'),
       ),

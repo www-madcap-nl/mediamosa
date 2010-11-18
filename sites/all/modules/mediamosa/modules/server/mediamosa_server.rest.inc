@@ -73,7 +73,7 @@ class mediamosa_rest_call_server_status extends mediamosa_rest_call {
     if ($include_status) {
       // Check run-time requirements and status information.
       // Reset = TRUE, With Drupal variable = FALSE.
-      $statuses = module_invoke_all('mediamosa_status_collect', TRUE, FALSE);
+      $statuses = module_invoke_all('mediamosa_status_collect', TRUE);
 
       $item['server_status'] = $statuses;
     }

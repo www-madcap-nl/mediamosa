@@ -96,11 +96,13 @@ function mediamosa_user_schema() {
       ),
       mediamosa_user_db::CREATED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'not null' => TRUE,
         'description' => t('The date and time when user was created.'),
       ),
       mediamosa_user_db::CHANGED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'default' => NULL,
         'description' => t('The date and time when user was changed last.'),
       ),

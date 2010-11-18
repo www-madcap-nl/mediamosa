@@ -266,9 +266,6 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
       // Test if access on unappropriate flag.
       mediamosa_asset::is_unappropriate($asset_id, $a_app_ids, $user_id, $is_app_admin, TRUE);
 
-      // Log stream event.
-      mediamosa_statistics::log_event_requested_stream($mediafile_id, $response_type);
-
       // Check if allowed to play.
       mediamosa_asset_mediafile_metadata::is_playable($mediafile_id);
 
@@ -295,7 +292,7 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
     // Create ticket.
     if (!isset($a_mediafile_ext[mediamosa_asset_mediafile_db::URI])) {
       if ($response_type == mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL) {
-        $still_id_tmp = mediamosa_asset_mediafile_still::find_default($asset_id);
+        $still_id_tmp = ($still_id ? $still_id : mediamosa_asset_mediafile_still::find_default($asset_id));
 
         // Check the protection.
         $still_is_protected = mediamosa_asset_mediafile_db::IS_PROTECTED_FALSE;

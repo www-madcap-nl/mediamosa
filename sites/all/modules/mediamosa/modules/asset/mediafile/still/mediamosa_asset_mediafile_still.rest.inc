@@ -83,8 +83,16 @@ class mediamosa_rest_call_delete_stills extends mediamosa_rest_call {
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $a_app_ids);
 
     $asset_id = $this->get_param_value(self::ASSET_ID);
-    $mediafile_id = $this->get_param_value(self::MEDIAFILE_ID);
     $still_id = $this->get_param_value(self::STILL_ID);
+
+    $mediafile_id = NULL;
+    if ($this->isset_given_param(self::MEDIAFILE_ID)) {
+      $mediafile_id = $this->get_param_value(self::MEDIAFILE_ID);
+    }
+    if (!$mediafile_id && $this->isset_given_param(self::STILL_ID)) {
+      $mediafile = mediamosa_asset_mediafile::get($still_id);
+      $mediafile_id = $mediafile[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE];
+    }
 
     // Asset must exist.
     mediamosa_db::db_must_exists(
@@ -99,6 +107,7 @@ class mediamosa_rest_call_delete_stills extends mediamosa_rest_call {
       mediamosa_asset_mediafile_db::TABLE_NAME,
       array(
         mediamosa_asset_mediafile_db::ASSET_ID => $asset_id,
+        mediamosa_asset_mediafile_db::ID => $mediafile_id,
       ),
       mediamosa_error::ERRORCODE_STILL_NOT_FOUND,
       array('@asset_id' => $asset_id)
@@ -164,7 +173,7 @@ class mediamosa_rest_call_set_still_default extends mediamosa_rest_call {
         self::MEDIAFILE_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_MEDIAFILE_ID,
           self::VAR_DESCRIPTION => 'The mediafile of the asset.',
-          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
         ),
         self::STILL_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_STILL_ID,
@@ -187,8 +196,17 @@ class mediamosa_rest_call_set_still_default extends mediamosa_rest_call {
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $a_app_ids);
 
     $asset_id = $this->get_param_value(self::ASSET_ID);
-    $mediafile_id = $this->get_param_value(self::MEDIAFILE_ID);
     $still_id = $this->get_param_value(self::STILL_ID);
+
+    $mediafile_id = NULL;
+    if ($this->isset_given_param(self::MEDIAFILE_ID)) {
+      $mediafile_id = $this->get_param_value(self::MEDIAFILE_ID);
+    }
+    if (!$mediafile_id && $this->isset_given_param(self::STILL_ID)) {
+      $mediafile = mediamosa_asset_mediafile::get($still_id);
+      $mediafile_id = $mediafile[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE];
+    }
+
     $user_id = $this->get_param_value(self::USER_ID);
     // Set default.
     mediamosa_asset_mediafile_still::set_still_default($app_id, $user_id, $asset_id, $mediafile_id, $still_id);
@@ -232,7 +250,7 @@ class mediamosa_rest_call_set_still_order extends mediamosa_rest_call {
         self::MEDIAFILE_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_MEDIAFILE_ID,
           self::VAR_DESCRIPTION => 'The mediafile ID.',
-          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+          self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
         ),
         self::STILL_ID => array(
           self::VAR_TYPE => mediamosa_type::TYPE_MEDIAFILE_ID,
@@ -260,8 +278,17 @@ class mediamosa_rest_call_set_still_order extends mediamosa_rest_call {
     mediamosa_webservice_app::webservice_must_be_active(mediamosa_webservice_app::HANDLE_MEDIA_MANAGEMENT, $a_app_ids);
 
     $asset_id = $this->get_param_value(self::ASSET_ID);
-    $mediafile_id = $this->get_param_value(self::MEDIAFILE_ID);
     $still_id = $this->get_param_value(self::STILL_ID);
+
+    $mediafile_id = NULL;
+    if ($this->isset_given_param(self::MEDIAFILE_ID)) {
+      $mediafile_id = $this->get_param_value(self::MEDIAFILE_ID);
+    }
+    if (!$mediafile_id && $this->isset_given_param(self::STILL_ID)) {
+      $mediafile = mediamosa_asset_mediafile::get($still_id);
+      $mediafile_id = $mediafile[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE];
+    }
+
     $user_id = $this->get_param_value(self::USER_ID);
     $order = $this->get_param_value(self::ORDER);
 

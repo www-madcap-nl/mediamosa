@@ -90,11 +90,13 @@ function mediamosa_integrity_check_schema() {
       ),
       mediamosa_integrity_check_db::CREATED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'not null' => TRUE,
         'description' => t('The date and time when integrity check was created.'),
       ),
       mediamosa_integrity_check_db::CHANGED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'default' => NULL,
         'description' => t('The date and time when integrity was changed last.'),
       ),

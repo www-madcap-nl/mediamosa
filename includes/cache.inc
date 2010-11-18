@@ -1,5 +1,5 @@
 <?php
-// $Id: cache.inc,v 1.48 2010/05/18 18:26:30 dries Exp $
+// $Id: cache.inc,v 1.50 2010/11/05 19:50:11 dries Exp $
 
 /**
  * Get the cache object for a cache bin.
@@ -155,7 +155,7 @@ function cache_set($cid, $data, $bin = 'cache', $expire = CACHE_PERMANENT) {
  * @param $wildcard
  *   If $wildcard is TRUE, cache IDs starting with $cid are deleted in
  *   addition to the exact cache ID specified by $cid.  If $wildcard is
- *   TRUE and $cid is '*' then the entire table $table is emptied.
+ *   TRUE and $cid is '*' then the entire bin $bin is emptied.
  */
 function cache_clear_all($cid = NULL, $bin = NULL, $wildcard = FALSE) {
   if (!isset($cid) && !isset($bin)) {
@@ -198,7 +198,7 @@ function cache_is_empty($bin) {
  * DrupalCacheInterface was called MyCustomCache, the following line would make
  * Drupal use it for the 'cache_page' bin:
  * @code
- *  variable_set('cache_page', 'MyCustomCache');
+ *  variable_set('cache_class_cache_page', 'MyCustomCache');
  * @endcode
  *
  * Additionally, you can register your cache implementation to be used by
@@ -206,6 +206,17 @@ function cache_is_empty($bin) {
  * the name of your implementation of the DrupalCacheInterface, e.g.
  * @code
  *  variable_set('cache_default_class', 'MyCustomCache');
+ * @endcode
+ *
+ * To implement a completely custom cache bin, use the same variable format:
+ * @code
+ *  variable_set('cache_class_custom_bin', 'MyCustomCache');
+ * @endcode
+ * To access your custom cache bin, specify the name of the bin when storing
+ * or retrieving cached data:
+ * @code
+ *  cache_set($cid, $data, 'custom_bin', $expire);
+ *  cache_get($cid, 'custom_bin');
  * @endcode
  *
  * @see _cache_get_object()

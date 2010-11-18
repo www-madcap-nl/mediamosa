@@ -1,4 +1,4 @@
-// $Id: drupal.js,v 1.68 2010/05/24 07:22:12 dries Exp $
+// $Id: drupal.js,v 1.70 2010/11/13 07:34:46 webchick Exp $
 
 var Drupal = Drupal || { 'settings': {}, 'behaviors': {}, 'locale': {} };
 
@@ -114,11 +114,14 @@ Drupal.detachBehaviors = function (context, settings, trigger) {
  * Encode special characters in a plain-text string for display as HTML.
  */
 Drupal.checkPlain = function (str) {
+  var character, regex,
+      replace = { '&': '&amp;', '"': '&quot;', '<': '&lt;', '>': '&gt;' };
   str = String(str);
-  var replace = { '&': '&amp;', '"': '&quot;', '<': '&lt;', '>': '&gt;' };
-  for (var character in replace) {
-    var regex = new RegExp(character, 'g');
-    str = str.replace(regex, replace[character]);
+  for (character in replace) {
+    if (replace.hasOwnProperty(character)) {
+      regex = new RegExp(character, 'g');
+      str = str.replace(regex, replace[character]);
+    }
   }
   return str;
 };
@@ -240,9 +243,7 @@ Drupal.formatPlural = function (count, singular, plural, args) {
  *   but also a complex object.
  */
 Drupal.theme = function (func) {
-  for (var i = 1, args = []; i < arguments.length; i++) {
-    args.push(arguments[i]);
-  }
+  var args = Array.prototype.slice.apply(arguments, [1]);
 
   return (Drupal.theme[func] || Drupal.theme.prototype[func]).apply(this, args);
 };
@@ -331,7 +332,21 @@ $('html').addClass('js');
 // 'js enabled' cookie.
 document.cookie = 'has_js=1; path=/';
 
-// Attach all behaviors.
+/**
+ * Additions to jQuery.support.
+ */
+$(function () {
+  /**
+   * Boolean indicating whether or not position:fixed is supported.
+   */
+  if (jQuery.support.positionFixed === undefined) {
+    var el = $('<div style="position:fixed; top:10px" />').appendTo(document.body);
+    jQuery.support.positionFixed = el[0].offsetTop === 10;
+    el.remove();
+  }
+});
+
+//Attach all behaviors.
 $(function () {
   Drupal.attachBehaviors(document, Drupal.settings);
 });

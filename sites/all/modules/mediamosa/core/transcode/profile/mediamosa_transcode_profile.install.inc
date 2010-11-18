@@ -57,7 +57,7 @@ function _mediamosa_transcode_profile_install() {
     array('standaard flash', 'TRUE', 'ffmpeg', 'flv', 'videobitrate:500000;size:320x200;audiobitrate:64000;audiosamplingrate:22050;maintain_aspect_ratio:yes;padding:yes'),
     array('standaard mp4', 'FALSE', 'ffmpeg', 'mp4', ''),
     array('flash 800x600', 'FALSE', 'ffmpeg', 'flv', 'size:800x600;audiobitrate:128000;audiosamplingrate:22050'),
-    array('mp4 h264 hq', 'FALSE', 'ffmpeg', 'flv', 'videobitrate:1000000;fps:25;audiocodec:libfaac;audiobitrate:256000;audiosamplingrate:44100;audiochannels:2;2_pass_h264_encoding:2;videocodec:libx264;videopreset:hq'),
+    array('mp4 h264', 'FALSE', 'ffmpeg', 'mp4', 'videobitrate:1000000;fps:25;audiocodec:libfaac;audiobitrate:256000;audiosamplingrate:44100;audiochannels:2;2_pass_h264_encoding:2;videocodec:libx264;videopreset:slow'),
   );
 
   foreach ($a_default_profiles as $a_default_profile) {
@@ -149,11 +149,13 @@ function mediamosa_transcode_profile_schema() {
       ),
       mediamosa_transcode_profile_db::CREATED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'not null' => TRUE,
         'description' => t('The date and time when transcode profile was created.'),
       ),
       mediamosa_transcode_profile_db::CHANGED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'default' => NULL,
         'description' => t('The date and time when transcode profile was changed last.'),
       ),

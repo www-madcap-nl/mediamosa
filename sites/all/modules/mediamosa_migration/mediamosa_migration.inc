@@ -2130,8 +2130,6 @@ function _mediamosa_migration_statistics() {
   db_truncate('mediamosa_statistics_file_upload')->execute();
   db_truncate('mediamosa_statistics_rest_log')->execute();
   db_truncate('mediamosa_statistics_search_request')->execute();
-  db_truncate('mediamosa_statistics_stream_request')->execute();
-  db_truncate('mediamosa_statistics_stream_request_collection')->execute();
 
   /**
    * Copy from 1.x to 2.x
@@ -2238,76 +2236,6 @@ function _mediamosa_migration_statistics() {
         app_id,
         searched
         FROM #db_name.statistics_search_request)",
-    array(
-      '#db_name' => $db_name
-    ))
-  );
-
-  /**
-   * Copy from 1.x to 2.x
-   * Columns dropped;
-   * -
-   * Columns renamed;
-   * -
-   */
-  db_query(strtr(
-    "INSERT INTO {mediamosa_statistics_stream_request}
-      (
-        id,
-        mediafile_id,
-        asset_id,
-        app_id,
-        owner_id,
-        group_id,
-        filesize,
-        container_type,
-        play_type,
-        played
-      ) (SELECT
-        id,
-        mediafile_id,
-        asset_id,
-        app_id,
-        owner_id,
-        group_id,
-        filesize,
-        container_type,
-        play_type,
-        played
-        FROM #db_name.statistics_stream_request)",
-    array(
-      '#db_name' => $db_name
-    ))
-  );
-
-  /**
-   * Copy from 1.x to 2.x
-   * Columns dropped;
-   * -
-   * Columns renamed;
-   * -
-   */
-  db_query(strtr(
-    "INSERT INTO {mediamosa_statistics_stream_request_collection}
-      (
-        id,
-        request_id,
-        coll_id,
-        title,
-        description,
-        app_id,
-        owner_id,
-        group_id
-      ) (SELECT
-        id,
-        request_id,
-        coll_id,
-        title,
-        description,
-        app_id,
-        owner_id,
-        group_id
-        FROM #db_name.statistics_stream_request_collection)",
     array(
       '#db_name' => $db_name
     ))

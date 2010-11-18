@@ -1,5 +1,5 @@
 <?php
-// $Id: stream_wrappers.inc,v 1.17 2010/06/12 08:15:15 webchick Exp $
+// $Id: stream_wrappers.inc,v 1.21 2010/10/21 12:09:41 dries Exp $
 
 /**
  * @file
@@ -22,6 +22,9 @@
 
 /**
  * Stream wrapper bit flags that are the basis for composite types.
+ *
+ * Note that 0x0002 is skipped, because it was the value of a constant that has
+ * since been removed.
  */
 
 /**
@@ -33,11 +36,6 @@ define('STREAM_WRAPPERS_ALL', 0x0000);
  * Stream wrapper bit flag -- refers to a local file system location.
  */
 define('STREAM_WRAPPERS_LOCAL', 0x0001);
-
-/**
- * Stream wrapper bit flag -- refers to a remote filesystem location.
- */
-define('STREAM_WRAPPERS_REMOTE', 0x0002);
 
 /**
  * Stream wrapper bit flag -- wrapper is readable (almost always true).
@@ -65,6 +63,11 @@ define('STREAM_WRAPPERS_VISIBLE', 0x0010);
 define('STREAM_WRAPPERS_HIDDEN', STREAM_WRAPPERS_READ | STREAM_WRAPPERS_WRITE);
 
 /**
+ * Stream wrapper type flag -- hidden, readable and writeable using local files.
+ */
+define('STREAM_WRAPPERS_LOCAL_HIDDEN', STREAM_WRAPPERS_LOCAL | STREAM_WRAPPERS_HIDDEN);
+
+/**
  * Stream wrapper type flag -- visible, readable and writeable.
  */
 define('STREAM_WRAPPERS_WRITE_VISIBLE', STREAM_WRAPPERS_READ | STREAM_WRAPPERS_WRITE | STREAM_WRAPPERS_VISIBLE);
@@ -75,9 +78,18 @@ define('STREAM_WRAPPERS_WRITE_VISIBLE', STREAM_WRAPPERS_READ | STREAM_WRAPPERS_W
 define('STREAM_WRAPPERS_READ_VISIBLE', STREAM_WRAPPERS_READ | STREAM_WRAPPERS_VISIBLE);
 
 /**
+ * Stream wrapper type flag -- the default when 'type' is omitted from
+ * hook_stream_wrappers(). This does not include STREAM_WRAPPERS_LOCAL,
+ * because PHP grants a greater trust level to local files (for example, they
+ * can be used in an "include" statement, regardless of the "allow_url_include"
+ * setting), so stream wrappers need to explicitly opt-in to this.
+ */
+define('STREAM_WRAPPERS_NORMAL', STREAM_WRAPPERS_WRITE_VISIBLE);
+
+/**
  * Stream wrapper type flag -- visible, readable and writeable using local files.
  */
-define('STREAM_WRAPPERS_NORMAL', STREAM_WRAPPERS_LOCAL | STREAM_WRAPPERS_WRITE_VISIBLE);
+define('STREAM_WRAPPERS_LOCAL_NORMAL', STREAM_WRAPPERS_LOCAL | STREAM_WRAPPERS_NORMAL);
 
 /**
  * Generic PHP stream wrapper interface.
@@ -144,24 +156,6 @@ interface DrupalStreamWrapperInterface extends StreamWrapperInterface {
    *   Returns a string containing a web accessible URL for the resource.
    */
   public function getExternalUrl();
-
-  /**
-   * Returns the local writable target of the resource within the stream.
-   *
-   * This function should be used in place of calls to realpath() or similar
-   * functions when attempting to determine the location of a file. While
-   * functions like realpath() may return the location of a read-only file, this
-   * method may return a URI or path suitable for writing that is completely
-   * separate from the URI used for reading.
-   *
-   * @param $uri
-   *   Optional URI.
-   *
-   * @return
-   *   Returns a string representing a location suitable for writing of a file,
-   *   or FALSE if unable to write to the file such as with read-only streams.
-   */
-  public function getTarget($uri = NULL);
 
   /**
    * Returns the MIME type of the resource.
@@ -286,9 +280,22 @@ abstract class DrupalLocalStreamWrapper implements DrupalStreamWrapperInterface 
   }
 
   /**
-   *  Base implementation of getTarget().
+   * Returns the local writable target of the resource within the stream.
+   *
+   * This function should be used in place of calls to realpath() or similar
+   * functions when attempting to determine the location of a file. While
+   * functions like realpath() may return the location of a read-only file, this
+   * method may return a URI or path suitable for writing that is completely
+   * separate from the URI used for reading.
+   *
+   * @param $uri
+   *   Optional URI.
+   *
+   * @return
+   *   Returns a string representing a location suitable for writing of a file,
+   *   or FALSE if unable to write to the file such as with read-only streams.
    */
-  function getTarget($uri = NULL) {
+  protected function getTarget($uri = NULL) {
     if (!isset($uri)) {
       $uri = $this->uri;
     }
@@ -477,7 +484,9 @@ abstract class DrupalLocalStreamWrapper implements DrupalStreamWrapperInterface 
    * @see http://php.net/manual/en/streamwrapper.stream-seek.php
    */
   public function stream_seek($offset, $whence) {
-    return fseek($this->handle, $offset, $whence);
+    // fseek returns 0 on success and -1 on a failure.
+    // stream_seek   1 on success and  0 on a failure.
+    return !fseek($this->handle, $offset, $whence);
   }
 
   /**
@@ -542,7 +551,7 @@ abstract class DrupalLocalStreamWrapper implements DrupalStreamWrapperInterface 
    */
   public function unlink($uri) {
     $this->uri = $uri;
-    return unlink($this->getLocalPath());
+    return drupal_unlink($this->getLocalPath());
   }
 
   /**
@@ -639,10 +648,10 @@ abstract class DrupalLocalStreamWrapper implements DrupalStreamWrapperInterface 
   public function rmdir($uri, $options) {
     $this->uri = $uri;
     if ($options & STREAM_REPORT_ERRORS) {
-      return rmdir($this->getLocalPath());
+      return drupal_rmdir($this->getLocalPath());
     }
     else {
-      return @rmdir($this->getLocalPath());
+      return @drupal_rmdir($this->getLocalPath());
     }
   }
 
@@ -711,7 +720,11 @@ abstract class DrupalLocalStreamWrapper implements DrupalStreamWrapperInterface 
    * @see http://php.net/manual/en/streamwrapper.dir-rewinddir.php
    */
   public function dir_rewinddir() {
-    return rewinddir($this->handle);
+    rewinddir($this->handle);
+    // We do not really have a way to signal a failure as rewinddir() does not
+    // have a return value and there is no way to read a directory handler
+    // without advancing to the next file.
+    return TRUE;
   }
 
   /**
@@ -723,7 +736,10 @@ abstract class DrupalLocalStreamWrapper implements DrupalStreamWrapperInterface 
    * @see http://php.net/manual/en/streamwrapper.dir-closedir.php
    */
   public function dir_closedir() {
-    return closedir($this->handle);
+    closedir($this->handle);
+    // We do not really have a way to signal a failure as closedir() does not
+    // have a return value.
+    return TRUE;
   }
 }
 

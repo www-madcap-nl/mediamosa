@@ -92,11 +92,13 @@ function mediamosa_ftp_batch_schema() {
       ),
       mediamosa_ftp_batch_db::STARTED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'not null' => FALSE,
         'description' => t('The started datatime of batch.'),
       ),
       mediamosa_ftp_batch_db::FINISHED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'not null' => FALSE,
         'description' => t('The finished datatime of batch.'),
       ),

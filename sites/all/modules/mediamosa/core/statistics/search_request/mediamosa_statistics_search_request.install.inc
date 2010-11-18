@@ -75,6 +75,7 @@ function mediamosa_statistics_search_request_schema() {
       ),
       mediamosa_statistics_search_request_db::SEARCHED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'not null' => TRUE,
         'description' => t('The time and date of the search.'),
       ),

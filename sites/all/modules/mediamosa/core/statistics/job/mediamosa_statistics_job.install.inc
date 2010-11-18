@@ -75,11 +75,13 @@ function mediamosa_statistics_job_schema() {
       ),
       mediamosa_statistics_job_db::STARTED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'default' => NULL,
         'description' => t('The date and time when job was started.'),
       ),
       mediamosa_statistics_job_db::FINISHED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'default' => NULL,
         'description' => t('The date and time when job was finished.'),
       ),

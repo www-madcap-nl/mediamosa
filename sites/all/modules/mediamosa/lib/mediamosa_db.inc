@@ -476,7 +476,7 @@ class mediamosa_db {
       foreach ($table['fields'] as $field_name => $field) {
         // Our new var type?
         if ($field['type'] == 'varbinary') {
-          $schema[$name]['fields'][$field_name]['mysql_type'] = 'VARBINARY';
+          $schema[$name]['fields'][$field_name]['mysql_type'] = 'VARBINARY(' . $schema[$name]['fields'][$field_name]['length'] . ')';
           $schema[$name]['fields'][$field_name]['type'] = 'varchar';
         }
       }
@@ -494,10 +494,10 @@ class mediamosa_db {
    * @param array $schema
    */
   static public function db_install_schema_foreign_keys($module_name) {
-    $a_schema = drupal_get_schema_unprocessed($module_name);
-    _drupal_schema_initialize($module_name, $a_schema);
+    $schema = drupal_get_schema_unprocessed($module_name);
+    _drupal_schema_initialize($schema, $module_name, FALSE);
 
-    if (!isset($a_schema[$module_name]) || !isset($a_schema[$module_name]['foreign keys'])) {
+    if (!isset($schema[$module_name]) || !isset($schema[$module_name]['foreign keys'])) {
       return;
     }
 
@@ -506,8 +506,8 @@ class mediamosa_db {
       return;
     }
 
-    foreach ($a_schema[$module_name]['foreign keys'] AS $column => $a_foreign_key) {
-      foreach ($a_foreign_key as $foreign_table_name => $foreign_column) {
+    foreach ($schema[$module_name]['foreign keys'] AS $column => $foreign_key) {
+      foreach ($foreign_key as $foreign_table_name => $foreign_column) {
         $query = strtr("ALTER TABLE {#table_name} ADD CONSTRAINT `fk_#table_name_#column` FOREIGN KEY (`#column`) REFERENCES `{#foreign_table_name}` (`#foreign_column`)",
           array(
             '#table_name' => $module_name,
@@ -524,7 +524,7 @@ class mediamosa_db {
           assert($e);
 
           assert(0);// so we know.
-          mediamosa_watchdog::log(
+          mediamosa::log(
             "Failed to create foreign key 'fk_#table_name_#column' on table '#table_name', query; '#query', message: #message.",
             array(
               '#table_name' => $module_name,
