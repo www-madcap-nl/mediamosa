@@ -35,8 +35,15 @@
  * Perform actions to set up the site for this profile.
  */
 function mediamosa_profile_install() {
+
+  // Enable default theme, disable bartik.
+  theme_enable(array('seven'));
+  theme_disable(array('bartik'));
+
+  $default_theme =  'seven';
+  variable_set('theme_default', $default_theme);
+
   // Enable some standard blocks.
-  $default_theme = variable_get('theme_default', 'bartik');
   $values = array(
     array(
       'module' => 'system',
@@ -88,6 +95,16 @@ function mediamosa_profile_install() {
       'pages' => '',
       'cache' => -1,
     ),
+    array(
+      'module' => 'mediamosa',
+      'delta' => 'mediamosa-version',
+      'theme' => $default_theme,
+      'status' => 1,
+      'weight' => 7,
+      'region' => 'content',
+      'pages' => '',
+      'cache' => -1,
+    ),
   );
   $query = db_insert('block')->fields(array('module', 'delta', 'theme', 'status', 'weight', 'region', 'pages', 'cache'));
   foreach ($values as $record) {
@@ -101,8 +118,6 @@ function mediamosa_profile_install() {
   // Enable default permissions for system roles.
   user_role_grant_permissions(DRUPAL_ANONYMOUS_RID, array('access content'));
   user_role_grant_permissions(DRUPAL_AUTHENTICATED_RID, array('access content'));
-
-  variable_set('theme_default', 'seven');
 
   // Turn auto Cron off.
   variable_set('cron_safe_threshold', '0');

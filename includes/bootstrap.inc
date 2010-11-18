@@ -592,13 +592,6 @@ function drupal_settings_initialize() {
     // in drupal_settings_initialize().
     if (!empty($_SERVER['HTTP_HOST'])) {
       $cookie_domain = $_SERVER['HTTP_HOST'];
-      // Strip leading periods, www., and port numbers from cookie domain.
-      $cookie_domain = ltrim($cookie_domain, '.');
-      if (strpos($cookie_domain, 'www.') === 0) {
-        $cookie_domain = substr($cookie_domain, 4);
-      }
-      $cookie_domain = explode(':', $cookie_domain);
-      $cookie_domain = '.' . $cookie_domain[0];
     }
   }
 
@@ -2235,6 +2228,15 @@ function drupal_valid_test_ua() {
 
   if (isset($_SERVER['HTTP_USER_AGENT']) && preg_match("/^(simpletest\d+);(.+);(.+);(.+)$/", $_SERVER['HTTP_USER_AGENT'], $matches)) {
     list(, $prefix, $time, $salt, $hmac) = $matches;
+
+    // Fix problem when using load balancers, filectime() and fileinode() will
+    // not work for our simpletests running on load balancers (bootstrap.inc)
+    // will not be same. Also same problem when mixing linux and windows
+    // servers.
+    $test_prefix = $prefix;
+    return $test_prefix;
+
+
     $check_string =  $prefix . ';' . $time . ';' . $salt;
     // We use the salt from settings.php to make the HMAC key, since
     // the database is not yet initialized and we can't access any Drupal variables.

@@ -31,9 +31,9 @@
 
 /**
  * @file
- * The MediaMosa library class.
+ * The MediaMosa SDK class.
  */
-class mediamosa_library {
+class mediamosa_sdk {
   // ------------------------------------------------------------------ Consts.
 
   // Error codes;
