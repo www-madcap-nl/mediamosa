@@ -5,7 +5,6 @@ MediaMosa is released with Drupal 7 and has these patches applied. These patches
 are used for own Drupal 7 versions, when needed for upgrading Drupal. However
 remember that its best to use the Drupal version supplied with MediaMosa.
 
-
 - bootstrap.patch
 
   Cookie domain

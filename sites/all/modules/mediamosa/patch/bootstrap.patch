@@ -35,10 +35,8 @@ Index: bootstrap.inc
    }
    // To prevent session cookies from being hijacked, a user can configure the
 @@ -2222,6 +2228,15 @@
- 
    if (isset($_SERVER['HTTP_USER_AGENT']) && preg_match("/^(simpletest\d+);(.+);(.+);(.+)$/", $_SERVER['HTTP_USER_AGENT'], $matches)) {
      list(, $prefix, $time, $salt, $hmac) = $matches;
-+
 +    // Fix problem when using load balancers, filectime() and fileinode() will
 +    // not work for our simpletests running on load balancers (bootstrap.inc)
 +    // will not be same. Also same problem when mixing linux and windows
@@ -50,4 +48,3 @@ Index: bootstrap.inc
      $check_string =  $prefix . ';' . $time . ';' . $salt;
      // We use the salt from settings.php to make the HMAC key, since
      // the database is not yet initialized and we can't access any Drupal variables.
-

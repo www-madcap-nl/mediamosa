@@ -40,10 +40,15 @@ function mediamosa_profile_install() {
   theme_enable(array('seven'));
   theme_disable(array('bartik'));
 
-  $default_theme =  'seven';
+  $default_theme = 'seven';
   variable_set('theme_default', $default_theme);
+  variable_set('admin_theme', $default_theme);
+  variable_set('node_admin_theme', 1);
+
 
   // Enable some standard blocks.
+  $default_theme = variable_get('theme_default', 'seven');
+
   $values = array(
     array(
       'module' => 'system',
