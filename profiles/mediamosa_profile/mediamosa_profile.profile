@@ -156,21 +156,18 @@ function system_form_install_settings_form_alter(&$form, $form_state, $form_id) 
    </p>
    <p>Use the database <b>mediamosa</b> example below to create your database 'mediamosa' with user 'memo' before proceeding.</p>
     <code>
-        # The 'yourpasswd' entries below needs to be a password you specify.<br />
+        # The password entries below needs to be changed.<br />
         <br />
-        # Create the database first.<br />
+        # Create the database.<br />
         CREATE DATABASE mediamosa DEFAULT CHARSET=utf8;<br />
         <br />
-        # You may choose to specify a source host instead of '%'.<br />
-        CREATE USER 'memo'@'%' IDENTIFIED BY 'yourpasswd';<br />
+        # Create localhost access for user 'mediamosa'.<br />
+        CREATE USER 'mediamosa'@'localhost' IDENTIFIED BY 'mediamosa';<br />
         <br />
-        # Create the localhost access for user 'memo'.<br />
-        CREATE USER 'memo'@'localhost' IDENTIFIED BY 'yourpasswd';<br />
+        # Now grant usage for user 'mediamosa' on the 'mediamosa' database.<br />
+        GRANT USAGE ON mediamosa.* TO 'mediamosa'@'localhost' IDENTIFIED BY 'mediamosa' WITH MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0 MAX_UPDATES_PER_HOUR 0 MAX_USER_CONNECTIONS 0;<br />
         <br />
-        # Now grant usage for user 'memo' on the 'mediamosa' database.<br />
-        GRANT USAGE ON mediamosa.* TO 'memo'@'%' IDENTIFIED BY 'yourpasswd' WITH MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0 MAX_UPDATES_PER_HOUR 0 MAX_USER_CONNECTIONS 0;<br />
-        <br />
-        GRANT ALL ON mediamosa.* TO 'memo'@'%';<br />
+        GRANT ALL ON mediamosa.* TO 'mediamosa'@'localhost';<br />
     </code>
     <p>
         You may change the 'mediamosa' database prefix and the database user name.<br />
