@@ -117,8 +117,8 @@ function mediamosa_profile_install() {
   }
   $query->execute();
 
-  // Allow visitor account creation, but with administrative approval.
-  variable_set('user_register', USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL);
+  // Only administrators can create new accounts.
+  variable_set('user_register', USER_REGISTER_ADMINISTRATORS_ONLY);
 
   // Enable default permissions for system roles.
   user_role_grant_permissions(DRUPAL_ANONYMOUS_RID, array('access content'));
