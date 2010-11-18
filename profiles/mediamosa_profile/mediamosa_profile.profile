@@ -73,10 +73,6 @@ function mediamosa_profile_install_tasks() {
       'type' => 'form',
       'run' => variable_get('mediamosa_current_mount_point', '') ? INSTALL_TASK_SKIP : INSTALL_TASK_RUN_IF_NOT_COMPLETED,
     ),
-    'mediamosa_profile_client_application_form' => array(
-      'display_name' => st('Client application'),
-      'type' => 'form',
-    ),
     'mediamosa_profile_configure_server' => array(
       'display_name' => st('Configure the server'),
     ),
@@ -471,27 +467,6 @@ function mediamosa_profile_storage_location_form_submit($form, &$form_state) {
   _mediamosa_profile_mkdir($values['current_mount_point'], '/download_links');
   _mediamosa_profile_mkdir($values['current_mount_point'], '/still_links');
   _mediamosa_profile_mkdir($values['current_mount_point'], '/ftp');
-}
-
-/**
- * Client application.
- * Tasks callback.
- */
-function mediamosa_profile_client_application_form() {
-  $form = array();
-
-  $form['client_application'] = array(
-    '#type' => 'item',
-    '#title' => t('Client application'),
-    '#description' => t("<p>A MediaMosa client application is a MediaMosa account that is allowed to execute REST calls using the MediaMosa REST interface. Each client application has his own space within MediaMosa. The client applications allows you to create storage spaces for example different websites, where each website has his own client application account, with their own media.</p><p>Client applications can also share their media with other client application using the master-slave method. You can create a MediaMosa client application using the link: !link or do it later after installation in Admin -&gt; MediaMosa -&gt; Configuration -&gt; Client application. The link will open in a new window.</p><p>You must not create a client application, if you are going to migrate your old 1.7 MediaMosa data to version 2.</p>", array('!link' => l(t('Create client application'), 'admin/mediamosa/config/app/add', array('attributes' => array('target' => '_blank'))))),
-  );
-
-  $form['continue'] = array(
-    '#type' => 'submit',
-    '#value' => t('Continue'),
-  );
-
-  return $form;
 }
 
 /**
