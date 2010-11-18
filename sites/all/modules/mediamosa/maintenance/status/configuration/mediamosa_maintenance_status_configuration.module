@@ -512,7 +512,7 @@ function mediamosa_maintenance_status_configuration_mediamosa_status_generate() 
   }
   $results['database_schemas'] = array(
     'title' => t('Database'),
-    'value' => t("Schemas. It doesn't check the foreign keys"),
+    'value' => t('Schema compare vs database installation'),
     'description' => '<pre>' . $schema_description . '</pre>',
     'severity' => _mediamosa_maintenance_status_okwarning(!$is_schemas),
   );
