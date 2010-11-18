@@ -288,6 +288,7 @@ function mediamosa_transcode_profile_form($node, $form_state) {
   $comments = array(
     'videocodec' => t('Force video codec to codec. Use the copy special value to tell that the raw codec data must be copied as is. If libx264 (h264) is used, be sure to use libfaac audiocodec@default'),
     'videobitrate' => t('Set the video bitrate in bit/s@default'),
+    'duration' => t('Duration of the video.'),
     'size' => t('Set frame size using format WIDTHxHEIGHT@default'),
     'qmax' => t('Maximum video quantizer scale (VBR)@default'),
     'fps' => t('Set frame rate (Hz value, fraction or abbereviation@default'),
@@ -312,7 +313,6 @@ function mediamosa_transcode_profile_form($node, $form_state) {
     'internal_previous_job',
     'internal_file_extension',
     'startposition',
-    'duration',
   );
 
   // Show all parameters for profile.
@@ -352,21 +352,7 @@ function mediamosa_transcode_profile_form($node, $form_state) {
     // Get the tool.
     $tool_name = drupal_ucfirst(str_replace('_', ' ', $name));
 
-    if (empty($tool[mediamosa_tool_params_db::ALLOWED_VALUE])) {
-      // Add allowed value to description.
-      $descriptions[] = t('The allowed value is between @min_value and @max_value.', array('@min_value' => $tool[mediamosa_tool_params_db::MIN_VALUE], '@max_value' => $tool[mediamosa_tool_params_db::MAX_VALUE]));
-
-      $form['tool_options']['options_' . $name] = array(
-        '#description' => implode(' ', $descriptions),
-        '#type' => 'textfield',
-        '#title' => t($tool_name),
-        '#required' => $is_required,
-        '#default_value' => $value,
-        '#size' => 25,
-        '#weight' => $weight
-      );
-    }
-    else {// Select box.
+    if (!empty($tool[mediamosa_tool_params_db::ALLOWED_VALUE])) {
       $options = $is_required ? array() : array('' => '');
       foreach ($tool[mediamosa_tool_params_db::ALLOWED_VALUE] as $allowed_value) {
         $options[$allowed_value] = $allowed_value;
@@ -382,6 +368,31 @@ function mediamosa_transcode_profile_form($node, $form_state) {
         '#default_value' => $value,
         '#options' => $options,
         '#weight' => $weight,
+      );
+    }
+    elseif (!empty($tool[mediamosa_tool_params_db::MIN_VALUE]) && !empty($tool[mediamosa_tool_params_db::MAX_VALUE]) && $tool[mediamosa_tool_params_db::MIN_VALUE] && $tool[mediamosa_tool_params_db::MAX_VALUE]) {// Select box.
+      // Add allowed value to description.
+      $descriptions[] = t('The allowed value is between @min_value and @max_value.', array('@min_value' => $tool[mediamosa_tool_params_db::MIN_VALUE], '@max_value' => $tool[mediamosa_tool_params_db::MAX_VALUE]));
+
+      $form['tool_options']['options_' . $name] = array(
+        '#description' => implode(' ', $descriptions),
+        '#type' => 'textfield',
+        '#title' => t($tool_name),
+        '#required' => $is_required,
+        '#default_value' => $value,
+        '#size' => 25,
+        '#weight' => $weight
+      );
+    }
+    else {
+      $form['tool_options']['options_' . $name] = array(
+        '#description' => implode(' ', $descriptions),
+        '#type' => 'textfield',
+        '#title' => t($tool_name),
+        '#required' => $is_required,
+        '#default_value' => $value,
+        '#size' => 25,
+        '#weight' => $weight
       );
     }
   }
