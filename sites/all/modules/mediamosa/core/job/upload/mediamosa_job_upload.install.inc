@@ -51,42 +51,42 @@ function _mediamosa_job_upload_uninstall() {
  */
 function mediamosa_job_upload_schema() {
 
-  $a_schema[mediamosa_job_upload_db::TABLE_NAME] = array(
-  'description' => t('The transcode job table.'),
+  $schema[mediamosa_job_upload_db::TABLE_NAME] = array(
+  'description' => 'The transcode job table.',
     'fields' => array(
       mediamosa_job_upload_db::ID => array(
         'type' => 'serial',
         'not null' => TRUE,
         'unsigned' => TRUE,
-      'description' => t('Primary Key: Unique ID.'),
+      'description' => 'Primary Key: Unique ID.',
       ),
       mediamosa_job_upload_db::JOB_ID => array(
         'type' => 'int',
         'not null' => TRUE,
         'unsigned' => TRUE,
-        'description' => t('The job ID.'),
+        'description' => 'The job ID.',
       ),
       mediamosa_job_upload_db::FILE_SIZE => array(
         'type' => 'int',
         'unsigned' => TRUE,
-        'description' => t('The file size.'),
+        'description' => 'The file size.',
         'default' => 0,
       ),
       mediamosa_job_upload_db::UPLOADED_FILE_SIZE => array(
         'type' => 'int',
         'unsigned' => TRUE,
-        'description' => t('The uploaded file size.'),
+        'description' => 'The uploaded file size.',
         'default' => 0,
       ),
       mediamosa_job_upload_db::RETRANSCODE => array(
-        'description' => t('Enable to prevent dark empty stills.'),
+        'description' => 'Enable to prevent dark empty stills.',
         'type' => "enum('" . implode("','", array(mediamosa_job_upload_db::RETRANSCODE_FALSE, mediamosa_job_upload_db::RETRANSCODE_TRUE)) . "')",
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_job_upload_db::RETRANSCODE_FALSE, mediamosa_job_upload_db::RETRANSCODE_TRUE)) . "')",
         'default' => mediamosa_job_upload_db::RETRANSCODE_FALSE,
       ),
       mediamosa_job_upload_db::CREATE_STILL => array(
-        'description' => t('Enable to prevent dark empty stills.'),
+        'description' => 'Enable to prevent dark empty stills.',
         'type' => "enum('" . implode("','", array(mediamosa_job_upload_db::CREATE_STILL_FALSE, mediamosa_job_upload_db::CREATE_STILL_TRUE)) . "')",
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_job_upload_db::CREATE_STILL_FALSE, mediamosa_job_upload_db::CREATE_STILL_TRUE)) . "')",
@@ -94,13 +94,15 @@ function mediamosa_job_upload_schema() {
       ),
       mediamosa_job_upload_db::CREATED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'not null' => TRUE,
-        'description' => t('The date and time when upload job was created.'),
+        'description' => 'The date and time when upload job was created.',
       ),
       mediamosa_job_upload_db::CHANGED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'default' => NULL,
-        'description' => t('The date and time when upload job was changed last.'),
+        'description' => 'The date and time when upload job was changed last.',
       ),
     ),
     'primary key' => array(mediamosa_job_upload_db::ID),
@@ -109,5 +111,5 @@ function mediamosa_job_upload_schema() {
     ),
   );
 
-  return $a_schema;
+  return $schema;
 }

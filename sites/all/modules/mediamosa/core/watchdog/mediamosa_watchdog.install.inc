@@ -55,24 +55,24 @@ function _mediamosa_watchdog_uninstall() {
 function mediamosa_watchdog_schema() {
 
   $schema[mediamosa_watchdog_db::TABLE_NAME] = array(
-  'description' => t('The extender for the watchdog table.'),
+  'description' => 'The extender for the watchdog table.',
     'fields' => array(
       mediamosa_watchdog_db::ID => array(
         'type' => 'int',
         'not null' => TRUE,
-        'description' => t('Primary Key: Unique ID.'),
+        'description' => 'Primary Key: Unique ID.',
       ),
       mediamosa_watchdog_db::ASSET_ID => array(
         'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
         'not null' => TRUE,
-        'description' => t('The asset ID.'),
+        'description' => 'The asset ID.',
       ),
       mediamosa_watchdog_db::MEDIAFILE_ID => array(
         'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
         'not null' => TRUE,
-        'description' => t('The asset mediafile ID.'),
+        'description' => 'The asset mediafile ID.',
       ),
     ),
     'primary key' => array(mediamosa_watchdog_db::ID),

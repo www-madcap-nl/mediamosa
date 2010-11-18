@@ -53,17 +53,17 @@ function _mediamosa_ticket_uninstall() {
  */
 function mediamosa_ticket_schema() {
 
-  $a_schema[mediamosa_ticket_db::TABLE_NAME] = array(
-  'description' => t('The ticket table enables temporary events for allowing user actions.'),
+  $schema[mediamosa_ticket_db::TABLE_NAME] = array(
+  'description' => 'The ticket table enables temporary events for allowing user actions.',
     'fields' => array(
       mediamosa_ticket_db::ID => array(
         'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
         'not null' => TRUE,
-        'description' => t('Primary Key: Unique ID.'),
+        'description' => 'Primary Key: Unique ID.',
       ),
       mediamosa_ticket_db::TICKET_TYPE => array(
-        'description' => t('The ticket type.'),
+        'description' => 'The ticket type.',
         'type' => "enum('" . implode("','", array(mediamosa_ticket_db::TICKET_TYPE_PLAY, mediamosa_ticket_db::TICKET_TYPE_DOWNLOAD, mediamosa_ticket_db::TICKET_TYPE_STILL, mediamosa_ticket_db::TICKET_TYPE_UPLOAD)) . "')",
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_ticket_db::TICKET_TYPE_PLAY, mediamosa_ticket_db::TICKET_TYPE_DOWNLOAD, mediamosa_ticket_db::TICKET_TYPE_STILL, mediamosa_ticket_db::TICKET_TYPE_UPLOAD)) . "')",
@@ -71,42 +71,45 @@ function mediamosa_ticket_schema() {
       ),
       mediamosa_ticket_db::ISSUED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'not null' => TRUE,
-        'description' => t('The date and time when media was issued.'),
+        'description' => 'The date and time when media was issued.',
       ),
       mediamosa_ticket_db::APP_ID => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'description' => t('The application ID of the asset.'),
+        'description' => 'The application ID of the asset.',
       ),
       mediamosa_ticket_db::OWNER_ID => array(
         'type' => 'varchar',
         'length' => mediamosa_ticket_db::OWNER_ID_LENGTH,
         'default' => NULL,
-        'description' => t('The owner ID.'),
+        'description' => 'The owner ID.',
       ),
       mediamosa_ticket_db::GROUP_ID => array(
         'type' => 'varchar',
         'length' => mediamosa_ticket_db::GROUP_ID_LENGTH,
         'default' => NULL,
-        'description' => t('The group ID.'),
+        'description' => 'The group ID.',
       ),
       mediamosa_ticket_db::MEDIAFILE_ID => array(
         'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
         'not null' => TRUE,
-        'description' => t('The mediafile ID.'),
+        'description' => 'The mediafile ID.',
       ),
       mediamosa_ticket_db::CREATED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'not null' => TRUE,
-        'description' => t('The date and time when media was created.'),
+        'description' => 'The date and time when media was created.',
       ),
       mediamosa_ticket_db::CHANGED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'default' => NULL,
-        'description' => t('The date and time when media was changed last.'),
+        'description' => 'The date and time when media was changed last.',
       ),
     ),
     'primary key' => array(mediamosa_ticket_db::ID),
@@ -115,6 +118,6 @@ function mediamosa_ticket_schema() {
     ),
   );
 
-  return $a_schema;
+  return $schema;
 }
 

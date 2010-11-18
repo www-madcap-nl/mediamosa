@@ -60,74 +60,74 @@ function _mediamosa_asset_mediafile_uninstall() {
  */
 function mediamosa_asset_mediafile_schema() {
 
-  $a_schema[mediamosa_asset_mediafile_db::TABLE_NAME] = array(
-  'description' => t('The asset table.'),
+  $schema[mediamosa_asset_mediafile_db::TABLE_NAME] = array(
+  'description' => 'The asset table.',
     'fields' => array(
       mediamosa_asset_mediafile_db::ID => array(
         'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
         'not null' => TRUE,
-        'description' => t('Primary Key: Unique ID.'),
+        'description' => 'Primary Key: Unique ID.',
       ),
       mediamosa_asset_mediafile_db::ASSET_ID => array(
         'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
         'not null' => TRUE,
-        'description' => t('The parent asset ID.'),
+        'description' => 'The parent asset ID.',
       ),
       mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE => array(
         'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
         'default' => NULL,
-        'description' => t('The source or original ID of the media from which this media was created.'),
+        'description' => 'The source or original ID of the media from which this media was created.',
       ),
       mediamosa_asset_mediafile_db::TAG => array(
         'type' => 'varbinary',
         'length' => mediamosa_asset_mediafile_db::TAG_LENGTH,
         'default' => NULL,
-        'description' => t('Can contain user defined tag.'),
+        'description' => 'Can contain user defined tag.',
       ),
       mediamosa_asset_mediafile_db::APP_ID => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'description' => t('The application ID of the asset.'),
+        'description' => 'The application ID of the asset.',
       ),
       mediamosa_asset_mediafile_db::OWNER_ID => array(
         'type' => 'varchar',
         'length' => mediamosa_asset_mediafile_db::OWNER_ID_LENGTH,
         'default' => NULL,
-        'description' => t('The owner ID.'),
+        'description' => 'The owner ID.',
       ),
       mediamosa_asset_mediafile_db::GROUP_ID => array(
         'type' => 'varchar',
         'length' => mediamosa_asset_mediafile_db::GROUP_ID_LENGTH,
         'default' => NULL,
-        'description' => t('The group ID.'),
+        'description' => 'The group ID.',
       ),
       mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE => array(
-        'description' => t('This is the original media.'),
+        'description' => 'This is the original media.',
         'type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_FALSE, mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_TRUE)) . "')",
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_FALSE, mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_TRUE)) . "')",
         'default' => mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_FALSE,
       ),
       mediamosa_asset_mediafile_db::IS_DOWNLOADABLE => array(
-        'description' => t('The media can be downloaded.'),
+        'description' => 'The media can be downloaded.',
         'type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_db::IS_DOWNLOADABLE_FALSE, mediamosa_asset_mediafile_db::IS_DOWNLOADABLE_TRUE)) . "')",
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_db::IS_DOWNLOADABLE_FALSE, mediamosa_asset_mediafile_db::IS_DOWNLOADABLE_TRUE)) . "')",
         'default' => mediamosa_asset_mediafile_db::IS_DOWNLOADABLE_FALSE,
       ),
       mediamosa_asset_mediafile_db::IS_STREAMABLE => array(
-        'description' => t('The media can be streamed.'),
+        'description' => 'The media can be streamed.',
         'type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_db::IS_STREAMABLE_FALSE, mediamosa_asset_mediafile_db::IS_STREAMABLE_TRUE)) . "')",
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_db::IS_STREAMABLE_FALSE, mediamosa_asset_mediafile_db::IS_STREAMABLE_TRUE)) . "')",
         'default' => mediamosa_asset_mediafile_db::IS_STREAMABLE_FALSE,
       ),
       mediamosa_asset_mediafile_db::IS_STILL => array(
-        'description' => t('The media is an still.'),
+        'description' => 'The media is an still.',
         'type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_db::IS_STILL_FALSE, mediamosa_asset_mediafile_db::IS_STILL_TRUE)) . "')",
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_db::IS_STILL_FALSE, mediamosa_asset_mediafile_db::IS_STILL_TRUE)) . "')",
@@ -137,43 +137,43 @@ function mediamosa_asset_mediafile_schema() {
         'type' => 'varchar',
         'length' => mediamosa_asset_mediafile_db::FILENAME_LENGTH,
         'default' => NULL,
-        'description' => t('The optional filename.'),
+        'description' => 'The optional filename.',
       ),
       mediamosa_asset_mediafile_db::URI => array(
         'type' => 'text',
         'length' => mediamosa_asset_mediafile_db::URI_LENGTH,
         'default' => NULL,
-        'description' => t('The optional URI location.'),
+        'description' => 'The optional URI location.',
       ),
       mediamosa_asset_mediafile_db::SANNAS_MOUNT_POINT => array(
         'type' => 'text',
         'default' => NULL,
-        'description' => t('The san-nas mount location of the file.'),
+        'description' => 'The san-nas mount location of the file.',
       ),
       mediamosa_asset_mediafile_db::TRANSCODE_PROFILE_ID => array(
         'type' => 'int',
         'unsigned' => TRUE,
-        'description' => t('The transcoding profile ID.'),
+        'description' => 'The transcoding profile ID.',
       ),
       mediamosa_asset_mediafile_db::TOOL => array(
         'type' => 'varchar',
         'length' => mediamosa_asset_mediafile_db::TOOL_LENGTH,
         'default' => NULL,
-        'description' => t('The tool used when creating file.'),
+        'description' => 'The tool used when creating file.',
       ),
       mediamosa_asset_mediafile_db::COMMAND => array(
         'type' => 'text',
         'default' => NULL,
-        'description' => t('The command used to create the file.'),
+        'description' => 'The command used to create the file.',
       ),
       mediamosa_asset_mediafile_db::FILE_EXTENSION => array(
         'type' => 'varchar',
         'length' => mediamosa_asset_mediafile_db::FILE_EXTENSION_LENGTH,
         'default' => NULL,
-        'description' => t('The file extension.'),
+        'description' => 'The file extension.',
       ),
       mediamosa_asset_mediafile_db::IS_PROTECTED => array(
-        'description' => t('Set kind of protection on the media.'),
+        'description' => 'Set kind of protection on the media.',
         'type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_db::IS_PROTECTED_FALSE, mediamosa_asset_mediafile_db::IS_PROTECTED_USER_USERGROUP, mediamosa_asset_mediafile_db::IS_PROTECTED_DOMAIN_REALM, mediamosa_asset_mediafile_db::IS_PROTECTED_TRUE)) . "')",
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_db::IS_PROTECTED_FALSE, mediamosa_asset_mediafile_db::IS_PROTECTED_USER_USERGROUP, mediamosa_asset_mediafile_db::IS_PROTECTED_DOMAIN_REALM, mediamosa_asset_mediafile_db::IS_PROTECTED_TRUE)) . "')",
@@ -181,16 +181,18 @@ function mediamosa_asset_mediafile_schema() {
       ),
       mediamosa_asset_mediafile_db::CREATED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'not null' => TRUE,
-        'description' => t('The date and time when media was created.'),
+        'description' => 'The date and time when media was created.',
       ),
       mediamosa_asset_mediafile_db::CHANGED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'default' => NULL,
-        'description' => t('The date and time when media was changed last.'),
+        'description' => 'The date and time when media was changed last.',
       ),
       mediamosa_asset_mediafile_db::TRANSCODE_INHERITS_ACL => array(
-        'description' => t('The asset can be locked or unlocked.'),
+        'description' => 'The asset can be locked or unlocked.',
         'type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_db::TRANSCODE_INHERITS_ACL_FALSE, mediamosa_asset_mediafile_db::TRANSCODE_INHERITS_ACL_TRUE)) . "')",
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_db::TRANSCODE_INHERITS_ACL_FALSE, mediamosa_asset_mediafile_db::TRANSCODE_INHERITS_ACL_TRUE)) . "')",
@@ -213,5 +215,5 @@ function mediamosa_asset_mediafile_schema() {
     ),
   );
 
-  return $a_schema;
+  return $schema;
 }

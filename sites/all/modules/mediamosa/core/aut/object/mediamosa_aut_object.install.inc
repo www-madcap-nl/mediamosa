@@ -51,35 +51,35 @@ function _mediamosa_aut_object_uninstall() {
  * Implements hook_schema().
  */
 function mediamosa_aut_object_schema() {
-  $a_schema[mediamosa_aut_object_db::TABLE_NAME] = array(
-    'description' => t('This table stores authorization links between named/group entities to objects.'),
+  $schema[mediamosa_aut_object_db::TABLE_NAME] = array(
+    'description' => 'This table stores authorization links between named/group entities to objects.',
     'fields' => array(
       mediamosa_aut_object_db::AUT_OBJECT_ID => array(
         'type' => 'varbinary',
         'length' => mediamosa_aut_object_db::AUT_OBJECT_ID_LENGTH,
         'not null' => TRUE,
         'default' => '',
-        'description' => t('The object ID, links to mediamosa_asset_mediafile, mediamosa_asset or mediamosa_collection.'),
+        'description' => 'The object ID, links to mediamosa_asset_mediafile, mediamosa_asset or mediamosa_collection.',
       ),
       mediamosa_aut_object_db::AUT_OBJECT_TYPE => array(
         'type' => "enum('" . implode("','", array(mediamosa_aut_object_db::AUT_OBJECT_TYPE_MEDIAFILE, mediamosa_aut_object_db::AUT_OBJECT_TYPE_ASSET, mediamosa_aut_object_db::AUT_OBJECT_TYPE_COLLECTION)) . "')",
         'not null' => FALSE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_aut_object_db::AUT_OBJECT_TYPE_MEDIAFILE, mediamosa_aut_object_db::AUT_OBJECT_TYPE_ASSET, mediamosa_aut_object_db::AUT_OBJECT_TYPE_COLLECTION)) . "')",
         'default' => mediamosa_aut_object_db::AUT_OBJECT_TYPE_MEDIAFILE,
-        'description' => t('The type of object, links to mediamosa_asset_mediafile, mediamosa_asset or mediamosa_collection.'),
+        'description' => 'The type of object, links to mediamosa_asset_mediafile, mediamosa_asset or mediamosa_collection.',
       ),
       mediamosa_aut_object_db::AUT_ID => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'description' => t('The entity ID, links to aut_name or aut_group.'),
+        'description' => 'The entity ID, links to aut_name or aut_group.',
       ),
       mediamosa_aut_object_db::AUT_TYPE => array(
         'type' => "enum('" . implode("','", array(mediamosa_aut_object_db::AUT_TYPE_NAME, mediamosa_aut_object_db::AUT_TYPE_GROUP)) . "')",
         'not null' => FALSE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_aut_object_db::AUT_TYPE_NAME, mediamosa_aut_object_db::AUT_TYPE_GROUP)) . "')",
         'default' => NULL,
-        'description' => t('The type of entity, links to aut_name or aut_group.'),
+        'description' => 'The type of entity, links to aut_name or aut_group.',
       ),
     ),
     'unique keys' => array(
@@ -91,5 +91,5 @@ function mediamosa_aut_object_schema() {
     ),
   );
 
-  return $a_schema;
+  return $schema;
 }

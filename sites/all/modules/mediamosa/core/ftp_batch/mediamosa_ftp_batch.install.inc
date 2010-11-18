@@ -58,56 +58,58 @@ function _mediamosa_ftp_batch_uninstall() {
  * Implements hook_schema().
  */
 function mediamosa_ftp_batch_schema() {
-  $a_schema[mediamosa_ftp_batch_db::TABLE_NAME] = array(
-    'description' => t('This FTP Batch table.'),
+  $schema[mediamosa_ftp_batch_db::TABLE_NAME] = array(
+    'description' => 'This FTP Batch table.',
     'fields' => array(
       mediamosa_ftp_batch_db::ID => array(
         'type' => 'serial',
         'not null' => TRUE,
-        'description' => t('Primary key.'),
+        'description' => 'Primary key.',
       ),
       mediamosa_ftp_batch_db::APP_ID => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'description' => t('The application ID.'),
+        'description' => 'The application ID.',
       ),
       mediamosa_ftp_batch_db::OWNER_ID => array(
-        'description' => t('The owner of the batch.'),
+        'description' => 'The owner of the batch.',
         'type' => 'varchar',
         'length' => mediamosa_ftp_batch_db::OWNER_ID_LENGTH,
         'not null' => FALSE,
       ),
       mediamosa_ftp_batch_db::GROUP_ID => array(
-        'description' => t('The group owner of the batch.'),
+        'description' => 'The group owner of the batch.',
         'type' => 'varchar',
         'length' => mediamosa_ftp_batch_db::GROUP_ID_LENGTH,
         'not null' => FALSE,
       ),
       mediamosa_ftp_batch_db::VUF => array(
-        'description' => t('The VUF file location.'),
+        'description' => 'The VUF file location.',
         'type' => 'varchar',
         'length' => mediamosa_ftp_batch_db::VUF_LENGTH,
         'not null' => TRUE,
       ),
       mediamosa_ftp_batch_db::STARTED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'not null' => FALSE,
-        'description' => t('The started datatime of batch.'),
+        'description' => 'The started datatime of batch.',
       ),
       mediamosa_ftp_batch_db::FINISHED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'not null' => FALSE,
-        'description' => t('The finished datatime of batch.'),
+        'description' => 'The finished datatime of batch.',
       ),
       mediamosa_ftp_batch_db::EMAIL_ADDRESS => array(
-        'description' => t('The email address of creator.'),
+        'description' => 'The email address of creator.',
         'type' => 'varchar',
         'length' => mediamosa_ftp_batch_db::EMAIL_ADDRESS_LENGTH,
         'not null' => FALSE,
       ),
       mediamosa_ftp_batch_db::EMAIL_CONTENTS => array(
-        'description' => t('The email address of creator.'),
+        'description' => 'The email address of creator.',
         'type' => 'text',
         'not null' => FALSE,
       ),
@@ -115,5 +117,5 @@ function mediamosa_ftp_batch_schema() {
     'primary key' => array(mediamosa_ftp_batch_db::ID),
   );
 
-  return $a_schema;
+  return $schema;
 }

@@ -251,31 +251,31 @@ function _mediamosa_error_uninstall() {
  * Implements hook_schema().
  */
 function mediamosa_error_schema() {
-  $a_schema[mediamosa_error_db::TABLE_NAME] = array(
-  'description' => t('Stores the error code and messages of the error handeling.'),
+  $schema[mediamosa_error_db::TABLE_NAME] = array(
+  'description' => 'Stores the error code and messages of the error handeling.',
     'fields' => array(
       mediamosa_error_db::ID => array(
         'type' => 'serial',
         'not null' => TRUE,
-        'description' => t('Primary Key: Unique ID.'),
+        'description' => 'Primary Key: Unique ID.',
       ),
       mediamosa_error_db::NAME => array(
         'type' => 'varchar',
         'length' => mediamosa_error_db::NAME_LENGTH,
         'not null' => TRUE,
         'default' => '',
-        'description' => t('The ID in capitals of the error code.'),
+        'description' => 'The ID in capitals of the error code.',
       ),
       mediamosa_error_db::CODE => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'description' => t('The error code number.'),
+        'description' => 'The error code number.',
       ),
       mediamosa_error_db::MESSAGE => array(
         'type' => 'text',
         'not null' => TRUE,
-        'description' => t('The message to display.'),
+        'description' => 'The message to display.',
       ),
     ),
     'primary key' => array(mediamosa_error_db::ID),
@@ -285,5 +285,5 @@ function mediamosa_error_schema() {
     ),
   );
 
-  return $a_schema;
+  return $schema;
 }

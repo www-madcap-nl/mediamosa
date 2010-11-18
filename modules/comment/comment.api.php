@@ -1,5 +1,5 @@
 <?php
-// $Id: comment.api.php,v 1.16 2010/02/09 22:30:30 dries Exp $
+// $Id: comment.api.php,v 1.18 2010/10/23 15:30:34 webchick Exp $
 
 /**
  * @file
@@ -64,10 +64,14 @@ function hook_comment_load($comments) {
  *
  * @param $comment
  *   Passes in the comment the action is being performed on.
- * @return
- *   Nothing.
+ * @param $view_mode
+ *   View mode, e.g. 'full', 'teaser'...
+ * @param $langcode
+ *   The language code used for rendering.
+ *
+ * @see hook_entity_view()
  */
-function hook_comment_view($comment) {
+function hook_comment_view($comment, $view_mode, $langcode) {
   // how old is the comment
   $comment->time_ago = time() - $comment->changed;
 }
@@ -88,6 +92,7 @@ function hook_comment_view($comment) {
  *   A renderable array representing the comment.
  *
  * @see comment_view()
+ * @see hook_entity_view_alter()
  */
 function hook_comment_view_alter(&$build) {
   // Check for the existence of a field added by another module.

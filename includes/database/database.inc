@@ -1,5 +1,5 @@
 <?php
-// $Id: database.inc,v 1.126 2010/06/28 19:57:34 dries Exp $
+// $Id: database.inc,v 1.141 2010/10/15 18:03:43 webchick Exp $
 
 /**
  * @file
@@ -41,7 +41,7 @@
  * @code
  * $result = db_query_range('SELECT n.nid, n.title, n.created
  *   FROM {node} n WHERE n.uid = :uid', 0, 10, array(':uid' => $uid));
- * foreach($result as $record) {
+ * foreach ($result as $record) {
  *   // Perform operations on $node->title, etc. here.
  * }
  * @endcode
@@ -50,7 +50,8 @@
  * out into an argument passed to db_query() so that SQL injection attacks
  * from user input can be caught and nullified. The LIMIT syntax varies between
  * database servers, so that is abstracted into db_query_range() arguments.
- * Finally, note the PDO-based ability to foreach() over the result set.
+ * Finally, note the PDO-based ability to iterate over the result set using
+ * foreach ().
  *
  * All queries are passed as a prepared statement string. A
  * prepared statement is a "template" of a query that omits literal or variable
@@ -166,6 +167,8 @@
  *   }
  * }
  * @endcode
+ *
+ * @link http://drupal.org/developing/api/database
  */
 
 
@@ -537,6 +540,8 @@ abstract class DatabaseConnection extends PDO {
    *   query builder and should not be set by a user. If there is an error,
    *   this method will return NULL and may throw an exception if
    *   $options['throw_exception'] is TRUE.
+   *
+   * @throws PDOException
    */
   public function query($query, array $args = array(), $options = array()) {
 
@@ -646,7 +651,7 @@ abstract class DatabaseConnection extends PDO {
    * @return string
    *   The name of the class that should be used for this driver.
    */
-  protected function getDriverClass($class) {
+  public function getDriverClass($class) {
     if (empty($this->driverClasses[$class])) {
       $this->driverClasses[$class] = $class . '_' . $this->driver();
       if (!class_exists($this->driverClasses[$class])) {
@@ -808,6 +813,21 @@ abstract class DatabaseConnection extends PDO {
   }
 
   /**
+   * Escapes an alias name string.
+   *
+   * Force all alias names to be strictly alphanumeric-plus-underscore. In
+   * contrast to DatabaseConnection::escapeField() /
+   * DatabaseConnection::escapeTable(), this doesn't allow the period (".")
+   * because that is not allowed in aliases.
+   *
+   * @return
+   *   The sanitized field name string.
+   */
+  public function escapeAlias($field) {
+    return preg_replace('/[^A-Za-z0-9_]+/', '', $field);
+  }
+
+  /**
    * Escapes characters that work as wildcard characters in a LIKE pattern.
    *
    * The wildcard characters "%" and "_" as well as backslash are prefixed with
@@ -875,9 +895,14 @@ abstract class DatabaseConnection extends PDO {
    *   The name of the savepoint. The default, 'drupal_transaction', will roll
    *   the entire transaction back.
    *
+   * @throws DatabaseTransactionNoActiveException
+   *
    * @see DatabaseTransaction::rollback()
    */
   public function rollback($savepoint_name = 'drupal_transaction') {
+    if (!$this->supportsTransactions()) {
+      return;
+    }
     if (!$this->inTransaction()) {
       throw new DatabaseTransactionNoActiveException();
     }
@@ -901,15 +926,15 @@ abstract class DatabaseConnection extends PDO {
         return;
       }
     }
-    if ($this->supportsTransactions()) {
-      parent::rollBack();
-    }
+    parent::rollBack();
   }
 
   /**
    * Increases the depth of transaction nesting.
    *
    * If no transaction is already active, we begin a new transaction.
+   *
+   * @throws DatabaseTransactionNameNonUniqueException
    *
    * @see DatabaseTransaction
    */
@@ -940,6 +965,9 @@ abstract class DatabaseConnection extends PDO {
    *
    * @param $name
    *   The name of the savepoint
+   *
+   * @throws DatabaseTransactionNoActiveException
+   * @throws DatabaseTransactionCommitFailedException
    *
    * @see DatabaseTransaction
    */
@@ -1039,6 +1067,13 @@ abstract class DatabaseConnection extends PDO {
   abstract public function driver();
 
   /**
+   * Returns the version of the database server.
+   */
+  public function version() {
+    return $this->getAttribute(PDO::ATTR_SERVER_VERSION);
+  }
+
+  /**
    * Determines if this driver supports transactions.
    *
    * @return
@@ -1092,6 +1127,8 @@ abstract class DatabaseConnection extends PDO {
    * by destroying the transaction object or allowing it to go out of scope.
    * A direct commit bypasses all of the safety checks we've built on top of
    * PDO's transaction routines.
+   *
+   * @throws DatabaseTransactionExplicitCommitNotAllowedException
    *
    * @see DatabaseTransaction
    */
@@ -1256,6 +1293,9 @@ abstract class Database {
   /**
    * Gets the connection object for the specified database key and target.
    *
+   * Note: do not use the setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE) on the
+   * returned object because of http://bugs.php.net/bug.php?id=43139.
+   *
    * @param $target
    *   The database target name.
    * @param $key
@@ -1340,7 +1380,7 @@ abstract class Database {
             'default' => '',
           );
         }
-        else if (!is_array($database_info[$index][$target]['prefix'])) {
+        elseif (!is_array($database_info[$index][$target]['prefix'])) {
           // Transform the flat form into an array form.
           $database_info[$index][$target]['prefix'] = array(
             'default' => $database_info[$index][$target]['prefix'],
@@ -1467,6 +1507,9 @@ abstract class Database {
    *   "default".
    * @param $target
    *   The database target to open.
+   *
+   * @throws DatabaseConnectionNotDefinedException
+   * @throws DatabaseDriverNotSpecifiedException
    */
   final protected static function openConnection($key, $target) {
     if (empty(self::$databaseInfo)) {
@@ -2118,8 +2161,16 @@ function db_autoload($class) {
 
     foreach ($driver_files as $file => $classes) {
       if (in_array($base, $classes)) {
-        require_once "{$base_path}/{$driver}/{$file}";
-        return;
+        $filename = "{$base_path}/{$driver}/{$file}";
+        // We might end up looking in a file that doesn't exist, so check that.
+        if (file_exists($filename)) {
+          require_once $filename;
+          // If the class now exists, we're done. Otherwise keep searching in
+          // additional files.
+          if (class_exists($class, FALSE) || interface_exists($class, FALSE)) {
+            return;
+          }
+        }
       }
     }
   }
@@ -2142,9 +2193,12 @@ function db_autoload($class) {
 /**
  * Executes an arbitrary query string against the active database.
  *
+ * Use this function for SELECT queries if it is just a simple query string.
+ * If the caller or other modules need to change the query, use db_select()
+ * instead.
+ *
  * Do not use this function for INSERT, UPDATE, or DELETE queries. Those should
- * be handled via the appropriate query builder factory. Use this function for
- * SELECT queries that do not require a query builder.
+ * be handled via db_insert(), db_update() and db_delete() respectively.
  *
  * @param $query
  *   The prepared statement query to run. Although it will accept both named and

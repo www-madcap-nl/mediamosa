@@ -50,23 +50,23 @@ function _mediamosa_user_favorite_uninstall() {
  * Implements hook_schema().
  */
 function mediamosa_user_favorite_schema() {
-  $a_schema[mediamosa_user_favorite_db::TABLE_NAME] = array(
-  'description' => t('The user group table.'),
+  $schema[mediamosa_user_favorite_db::TABLE_NAME] = array(
+  'description' => 'The user group table.',
     'fields' => array(
       mediamosa_user_favorite_db::NAME => array(
         'type' => 'varchar',
         'length' => mediamosa_user_favorite_db::NAME_LENGTH,
         'not null' => TRUE,
-        'description' => t('The name of user.'),
+        'description' => 'The name of user.',
       ),
       mediamosa_user_favorite_db::APP_ID => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'description' => t('The application ID of the user.'),
+        'description' => 'The application ID of the user.',
       ),
       mediamosa_user_favorite_db::FAV_TYPE => array(
-        'description' => t('If the collection has unappropieate contents.'),
+        'description' => 'If the collection has unappropieate contents.',
         'type' => "enum('" . implode("','", array(mediamosa_user_favorite_db::FAV_TYPE_ASSET, mediamosa_user_favorite_db::FAV_TYPE_COLLECTION)) . "')",
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_user_favorite_db::FAV_TYPE_ASSET, mediamosa_user_favorite_db::FAV_TYPE_COLLECTION)) . "')",
@@ -75,7 +75,7 @@ function mediamosa_user_favorite_schema() {
         'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
         'not null' => TRUE,
-        'description' => t('The ID to the favorite object.'),
+        'description' => 'The ID to the favorite object.',
       ),
     ),
     'primary key' => array(mediamosa_user_favorite_db::NAME, mediamosa_user_favorite_db::APP_ID, mediamosa_user_favorite_db::FAV_TYPE, mediamosa_user_favorite_db::FAV_ID),
@@ -84,5 +84,5 @@ function mediamosa_user_favorite_schema() {
     )
   );
 
-  return $a_schema;
+  return $schema;
 }

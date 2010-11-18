@@ -1,5 +1,5 @@
 <?php
-// $Id: locale.install,v 1.61 2010/07/07 05:44:03 webchick Exp $
+// $Id: locale.install,v 1.71 2010/11/09 17:46:34 webchick Exp $
 
 /**
  * @file
@@ -38,7 +38,19 @@ function locale_install() {
 function locale_update_7000() {
   db_drop_index('locales_source', 'source');
   db_add_index('locales_source', 'source_context', array(array('source', 30), 'context'));
-  db_change_field('locales_source', 'location', 'location', array('type' => 'text', 'size' => 'big', 'not null' => FALSE));
+
+  // Also drop the 'textgroup_location' index added by the i18nstrings module
+  // of the i18n project, which prevents the below schema update from running.
+  if (db_index_exists('locales_source', 'textgroup_location')) {
+    db_drop_index('locales_source', 'textgroup_location');
+  }
+
+  db_change_field('locales_source', 'location', 'location', array(
+    'type' => 'text',
+    'not null' => FALSE,
+    'size' => 'big',
+    'description' => 'Drupal path in case of online discovered translations or file path in case of imported strings.',
+  ));
 }
 
 /**
@@ -46,6 +58,8 @@ function locale_update_7000() {
  */
 function locale_update_7001() {
   require_once DRUPAL_ROOT . '/includes/language.inc';
+  require_once DRUPAL_ROOT . '/includes/locale.inc';
+  require_once DRUPAL_ROOT . '/modules/locale/locale.module';
 
   switch (variable_get('language_negotiation', 0)) {
     // LANGUAGE_NEGOTIATION_NONE.
@@ -61,9 +75,12 @@ function locale_update_7001() {
       // Drupal 7 path prefixes are always shown if not empty. Hence we need to
       // ensure that the default language has an empty prefix to avoid breaking
       // the site URLs with a prefix that previously was missing.
+      $default = language_default();
+      $default->prefix = '';
+      variable_set('language_default', $default);
       db_update('languages')
-        ->fields(array('prefix' => ''))
-        ->condition('language', language_default()->language)
+        ->fields(array('prefix' => $default->prefix))
+        ->condition('language', $default->language)
         ->execute();
       break;
 
@@ -89,13 +106,6 @@ function locale_update_7001() {
   $provider_weights = array_flip(array_keys(locale_language_negotiation_info()));
   variable_set("locale_language_providers_weight_$type", $provider_weights);
 
-  // Update language switcher block delta.
-  db_update('block')
-    ->fields(array('delta' => $type))
-    ->condition('module', 'locale')
-    ->condition('delta', 0)
-    ->execute();
-
   // Unset the old language negotiation system variable.
   variable_del('language_negotiation');
 
@@ -103,10 +113,17 @@ function locale_update_7001() {
 }
 
 /**
- * Allow longer javascript file names.
+ * Updates URL language negotiation by adding the URL fallback detection method.
  */
 function locale_update_7002() {
-  // Update moved to update_fix_d7_requirements().
+  // language.inc may not have been included during bootstrap if there is not
+  // more than one language currently enabled.
+  require_once DRUPAL_ROOT . '/includes/language.inc';
+  $language_types_info = language_types_info();
+  $info = $language_types_info[LANGUAGE_TYPE_URL];
+  if (isset($info['fixed'])) {
+    language_negotiation_set(LANGUAGE_TYPE_URL, array_flip($info['fixed']));
+  }
 }
 
 /**
@@ -129,7 +146,7 @@ function locale_uninstall() {
     }
     // Delete the JavaScript translations directory if empty.
     if (!file_scan_directory($locale_js_directory, '/.*/')) {
-      rmdir($locale_js_directory);
+      drupal_rmdir($locale_js_directory);
     }
   }
 
@@ -145,6 +162,7 @@ function locale_uninstall() {
   variable_del('locale_js_directory');
   variable_del('javascript_parsed');
   variable_del('locale_field_language_fallback');
+  variable_del('locale_cache_length');
 
   foreach (language_types() as $type) {
     variable_del("language_negotiation_$type");
@@ -334,7 +352,10 @@ function locale_schema() {
     ),
     'primary key' => array('language', 'lid', 'plural'),
     'foreign keys' => array(
-      'lid' => array('locales_source' => 'lid'),
+      'locales_source' => array(
+        'table' => 'locales_source',
+        'columns' => array('lid' => 'lid'),
+      ),
     ),
     'indexes' => array(
       'lid'      => array('lid'),

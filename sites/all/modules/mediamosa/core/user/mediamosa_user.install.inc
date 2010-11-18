@@ -63,50 +63,53 @@ function _mediamosa_user_uninstall() {
   // Remove our table(s).
   mediamosa::drupal_uninstall_schema(mediamosa_user_db::TABLE_NAME);
 }
+
 /**
  * Implements hook_schema().
  */
 function mediamosa_user_schema() {
-  $a_schema[mediamosa_user_db::TABLE_NAME] = array(
-  'description' => t('The user table.'),
+  $schema[mediamosa_user_db::TABLE_NAME] = array(
+  'description' => 'The user table.',
     'fields' => array(
       mediamosa_user_db::APP_ID => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'description' => t('The application ID of the user.'),
+        'description' => 'The application ID of the user.',
       ),
       mediamosa_user_db::NAME => array(
         'type' => 'varchar',
         'length' => mediamosa_user_db::NAME_LENGTH,
         'not null' => TRUE,
-        'description' => t('The name of user.'),
+        'description' => 'The name of user.',
       ),
       mediamosa_user_db::GROUP_ID => array(
         'type' => 'varchar',
         'length' => mediamosa_user_db::GROUP_ID_LENGTH,
         'not null' => TRUE,
-        'description' => t('The name of group.'),
+        'description' => 'The name of group.',
       ),
       mediamosa_user_db::QUOTUM => array(
         'type' => 'int',
         'unsigned' => FALSE,
         'not null' => TRUE,
-        'description' => t('The application ID of the asset.'),
+        'description' => 'The application ID of the asset.',
       ),
       mediamosa_user_db::CREATED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'not null' => TRUE,
-        'description' => t('The date and time when user was created.'),
+        'description' => 'The date and time when user was created.',
       ),
       mediamosa_user_db::CHANGED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'default' => NULL,
-        'description' => t('The date and time when user was changed last.'),
+        'description' => 'The date and time when user was changed last.',
       ),
     ),
     'primary key' => array(mediamosa_user_db::NAME, mediamosa_user_db::APP_ID),
   );
 
-  return $a_schema;
+  return $schema;
 }

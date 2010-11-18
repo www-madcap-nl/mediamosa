@@ -1,5 +1,5 @@
 <?php
-// $Id: profile.pages.inc,v 1.25 2010/03/08 15:46:58 webchick Exp $
+// $Id: profile.pages.inc,v 1.28 2010/11/12 02:57:15 dries Exp $
 
 /**
  * @file
@@ -38,7 +38,6 @@ function profile_browse() {
     $query
       ->fields('u', array('uid', 'access'))
       ->condition('v.fid', $field->fid)
-      ->condition('u.access', 0, '<>')
       ->condition('u.status', 0, '<>')
       ->orderBy('u.access', 'DESC');
 
@@ -74,10 +73,10 @@ function profile_browse() {
       $content .= theme('profile_listing', array('account' => $account, 'fields' => $profile));
     }
     $output = theme('profile_wrapper', array('content' => $content));
-    $output .= theme('pager', array('tags' => NULL));
+    $output .= theme('pager');
 
     if ($field->type == 'selection' || $field->type == 'list' || $field->type == 'textfield') {
-      $title = strtr(check_plain($field->page), array('%value' => drupal_placeholder(array('text' => $value))));
+      $title = strtr(check_plain($field->page), array('%value' => drupal_placeholder($value)));
     }
     else {
       $title = check_plain($field->page);
@@ -99,7 +98,6 @@ function profile_browse() {
       ->fields('u', array('uid', 'access'))
       ->condition('u.uid', 0, '>')
       ->condition('u.status', 0, '>')
-      ->condition('u.access', 0, '>')
       ->orderBy('u.access', 'DESC')
       ->limit(20)
       ->execute()
@@ -111,7 +109,7 @@ function profile_browse() {
       $content .= theme('profile_listing', array('account' => $account, 'fields' => $profile));
     }
     $output = theme('profile_wrapper', array('content' => $content));
-    $output .= theme('pager', array('tags' => NULL));
+    $output .= theme('pager');
 
     drupal_set_title(t('User list'));
     return $output;

@@ -61,60 +61,63 @@ function _mediamosa_asset_metadata_uninstall() {
  */
 function mediamosa_asset_metadata_schema() {
 
-  $a_schema[mediamosa_asset_metadata_db::TABLE_NAME] = array(
-  'description' => t('The asset metadata table.'),
+  $schema[mediamosa_asset_metadata_db::TABLE_NAME] = array(
+  'description' => 'The asset metadata table.',
     'fields' => array(
       mediamosa_asset_metadata_db::ID => array(
         'type' => 'serial',
         'not null' => TRUE,
-        'description' => t('Primary Key: Unique ID.'),
+        'description' => 'Primary Key: Unique ID.',
       ),
       mediamosa_asset_metadata_db::ASSET_ID => array(
         'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
         'not null' => TRUE,
-        'description' => t('The asset ID.'),
+        'description' => 'The asset ID.',
       ),
       mediamosa_asset_metadata_db::PROP_ID => array(
         'type' => 'int',
         'not null' => TRUE,
-        'description' => t('The property ID of the metadata.'),
+        'description' => 'The property ID of the metadata.',
         'unsigned' => TRUE,
       ),
       mediamosa_asset_metadata_db::VAL_CHAR => array(
         'type' => 'text',
         'size' => 'big',
-        'description' => t('The value of the property stored as an string.'),
+        'description' => 'The value of the property stored as an string.',
       ),
       mediamosa_asset_metadata_db::VAL_CHAR_LFT => array(
         'type' => 'varchar',
         'length' => mediamosa_asset_metadata_db::VAL_CHAR_LFT_LENGTH,
-        'description' => t('The first 50 string characters of the property value.'),
+        'description' => 'The first 50 string characters of the property value.',
       ),
       mediamosa_asset_metadata_db::VAL_CHAR_RGHT => array(
         'type' => 'varchar',
         'length' => mediamosa_asset_metadata_db::VAL_CHAR_RGHT_LENGTH,
-        'description' => t('The last 50 string characters of the property value in reverse order.'),
+        'description' => 'The last 50 string characters of the property value in reverse order.',
       ),
       mediamosa_asset_metadata_db::VAL_DATETIME => array(
         'type' => 'datetime',
-        'description' => t('The date and time of the property value.'),
+        'mysql_type' => 'DATETIME',
+        'description' => 'The date and time of the property value.',
       ),
       mediamosa_asset_metadata_db::VAL_INT => array(
         'type' => 'int',
         'not null' => TRUE,
-        'description' => t('The numeric value of the property.'),
+        'description' => 'The numeric value of the property.',
         'default' => 0,
       ),
       mediamosa_asset_metadata_db::CREATED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'not null' => TRUE,
-        'description' => t('The date and time when asset metadata was created.'),
+        'description' => 'The date and time when asset metadata was created.',
       ),
       mediamosa_asset_metadata_db::CHANGED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'default' => NULL,
-        'description' => t('The date and time when asset metadata was changed.'),
+        'description' => 'The date and time when asset metadata was changed.',
       ),
     ),
     'primary key' => array(mediamosa_asset_metadata_db::ID),
@@ -128,5 +131,5 @@ function mediamosa_asset_metadata_schema() {
     ),
   );
 
-  return $a_schema;
+  return $schema;
 }

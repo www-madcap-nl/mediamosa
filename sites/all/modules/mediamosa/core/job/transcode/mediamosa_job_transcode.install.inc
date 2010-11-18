@@ -51,57 +51,59 @@ function _mediamosa_job_transcode_uninstall() {
  */
 function mediamosa_job_transcode_schema() {
 
-  $a_schema[mediamosa_job_transcode_db::TABLE_NAME] = array(
-  'description' => t('The transcode job table.'),
+  $schema[mediamosa_job_transcode_db::TABLE_NAME] = array(
+  'description' => 'The transcode job table.',
     'fields' => array(
       mediamosa_job_transcode_db::ID => array(
         'type' => 'serial',
         'not null' => TRUE,
         'unsigned' => TRUE,
-        'description' => t('Primary Key: Unique ID.'),
+        'description' => 'Primary Key: Unique ID.',
       ),
       mediamosa_job_transcode_db::JOB_ID => array(
         'type' => 'int',
         'not null' => TRUE,
         'unsigned' => TRUE,
-        'description' => t('The job ID.'),
+        'description' => 'The job ID.',
       ),
       mediamosa_job_transcode_db::TRANSCODE_PROFILE_ID => array(
         'type' => 'int',
         'unsigned' => TRUE,
-        'description' => t('The transcode profile ID.'),
+        'description' => 'The transcode profile ID.',
       ),
       mediamosa_job_transcode_db::TOOL => array(
         'type' => 'varchar',
         'length' => mediamosa_job_transcode_db::TOOL_LENGTH,
         'default' => NULL,
-        'description' => t('The tool used.'),
+        'description' => 'The tool used.',
       ),
       mediamosa_job_transcode_db::COMMAND => array(
         'type' => 'text',
         'default' => NULL,
-        'description' => t('The command.'),
+        'description' => 'The command.',
       ),
       mediamosa_job_transcode_db::COMPLETED_TRANSCODING_URL => array(
         'type' => 'text',
         'default' => NULL,
-        'description' => t('The transcoding URL.'),
+        'description' => 'The transcoding URL.',
       ),
       mediamosa_job_transcode_db::FILE_EXTENSION => array(
         'type' => 'char',
         'length' => mediamosa_job_transcode_db::FILE_EXTENSION_LENGTH,
         'default' => NULL,
-        'description' => t('The file extension.'),
+        'description' => 'The file extension.',
       ),
       mediamosa_job_transcode_db::CREATED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'not null' => TRUE,
-        'description' => t('The date and time when transcode job was created.'),
+        'description' => 'The date and time when transcode job was created.',
       ),
       mediamosa_job_transcode_db::CHANGED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'default' => NULL,
-        'description' => t('The date and time when transcode job was changed last.'),
+        'description' => 'The date and time when transcode job was changed last.',
       ),
     ),
     'primary key' => array(mediamosa_job_transcode_db::ID),
@@ -110,5 +112,5 @@ function mediamosa_job_transcode_schema() {
     ),
   );
 
-  return $a_schema;
+  return $schema;
 }

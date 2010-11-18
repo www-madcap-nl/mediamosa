@@ -26,42 +26,12 @@
 
 /**
  * @file
- * DB class for statistics file helper.
- */
-class mediamosa_statistics_file_helper_db {
-  // ------------------------------------------------------------------ Consts.
-  // Table name;
-  const TABLE_NAME = 'mediamosa_statistics_file_helper'; // 1.x name statistics_stream_request.
-
-  // Database fields;
-  const FILE = 'file';
-  const FILE_LENGTH = 50;
-}
-
-/**
- * @file
- * DB class for statistics stream ticket.
- */
-class mediamosa_streaming_ticket_db {
-  // ------------------------------------------------------------------ Consts.
-  // Table name;
-  const TABLE_NAME = 'mediamosa_streaming_ticket'; // 1.x name statistics_stream_request.
-
-  // Database fields;
-  const ID = 'tid';
-  const TICKET_ID = 'ticket_id';
-  const APP_ID = 'app_id';
-  const MEDIAFILE_ID = 'mediafile_id';
-}
-
-/**
- * @file
  * DB class for statistics stream request.
  */
 class mediamosa_statistics_stream_request_db {
   // ------------------------------------------------------------------ Consts.
   // Table name;
-  const TABLE_NAME = 'mediamosa_statistics_stream_request'; // 1.x name statistics_stream_request.
+  const TABLE_NAME = 'mediamosa_statistics_stream_request';
 
   // Database fields;
   const ID = 'id';

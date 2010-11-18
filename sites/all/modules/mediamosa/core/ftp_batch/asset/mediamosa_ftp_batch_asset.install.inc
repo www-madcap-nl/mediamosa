@@ -51,20 +51,20 @@ function _mediamosa_ftp_batch_asset_uninstall() {
  * Implements hook_schema().
  */
 function mediamosa_ftp_batch_asset_schema() {
-  $a_schema[mediamosa_ftp_batch_asset_db::TABLE_NAME] = array(
-    'description' => t('This FTP Batch asset link table.'),
+  $schema[mediamosa_ftp_batch_asset_db::TABLE_NAME] = array(
+    'description' => 'This FTP Batch asset link table.',
     'fields' => array(
       mediamosa_ftp_batch_asset_db::ASSET_ID => array(
         'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
         'not null' => TRUE,
-        'description' => t('The asset ID that links to mediamosa_asset table.'),
+        'description' => 'The asset ID that links to mediamosa_asset table.',
       ),
       mediamosa_ftp_batch_asset_db::BATCH_ID => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'description' => t('The batch ID that links to mediamosa_ftp_batch table.'),
+        'description' => 'The batch ID that links to mediamosa_ftp_batch table.',
       ),
     ),
     'primary key' => array(mediamosa_ftp_batch_asset_db::BATCH_ID, mediamosa_ftp_batch_asset_db::ASSET_ID),
@@ -73,5 +73,5 @@ function mediamosa_ftp_batch_asset_schema() {
     )
   );
 
-  return $a_schema;
+  return $schema;
 }

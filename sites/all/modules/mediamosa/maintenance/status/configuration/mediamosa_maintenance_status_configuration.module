@@ -69,11 +69,11 @@ define('MEDIAMOSA_MAINTENANCE_STATUS_CONFIGURATION_FFMPEG_WARNING_SVN', "SVN-r19
 function mediamosa_maintenance_status_configuration_mediamosa_status_generate() {
   global $conf;
 
-  // for several topics we provide a link to webpages with configuration hints
+  // For several topics we provide a link to webpages with configuration hints.
   $helper_links = array(
-    'yamdi' =>      'http://mediamosa.org/trac/wiki/Tuning%20MediaMosa#Yamdi',
-    'lav2yuv' =>    'http://mediamosa.org/trac/wiki/Tuning%20MediaMosa#Lav2yuv',
-    'mp4box' =>     'http://mediamosa.org/trac/wiki/Tuning%20MediaMosa#MP4Box',
+    'yamdi' => 'http://mediamosa.org/trac/wiki/Tuning%20MediaMosa#Yamdi',
+    'lav2yuv' => 'http://mediamosa.org/trac/wiki/Tuning%20MediaMosa#Lav2yuv',
+    'mp4box' => 'http://mediamosa.org/trac/wiki/Tuning%20MediaMosa#MP4Box',
     'innodb_flush_log_at_trx_commit' => 'http://mediamosa.org/trac/wiki/Tuning%20MediaMosa#innodb_flush_log_at_trx_commit',
     'innodb_flush_method' => 'http://mediamosa.org/trac/wiki/Tuning%20MediaMosa#innodb_flush_method',
   );
@@ -105,13 +105,6 @@ function mediamosa_maintenance_status_configuration_mediamosa_status_generate() 
   );
 
   // PHP ini.
-
-  /* commented out because of Drupal bootstrap overriding user settings
-  $results['php_apache_notice'] = array(
-    'title' => t('PHP required settings'),
-    'value' => t('PHP error_reporting should be set at E_ALL & ~E_NOTICE.'),
-    'severity' => _mediamosa_maintenance_status_okwarning(ini_get('error_reporting') & E_NOTICE),
-  );*/
 
   $results['php_cli_notice'] = array(
     'title' => t('PHP required settings'),
@@ -519,7 +512,7 @@ function mediamosa_maintenance_status_configuration_mediamosa_status_generate() 
   }
   $results['database_schemas'] = array(
     'title' => t('Database'),
-    'value' => t("Schemas. It doesn't check the foreign keys"),
+    'value' => t('Schema compare vs database installation'),
     'description' => '<pre>' . $schema_description . '</pre>',
     'severity' => _mediamosa_maintenance_status_okwarning(!$is_schemas),
   );

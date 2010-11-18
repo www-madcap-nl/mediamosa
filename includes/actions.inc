@@ -1,5 +1,5 @@
 <?php
-// $Id: actions.inc,v 1.38 2010/05/06 05:59:30 webchick Exp $
+// $Id: actions.inc,v 1.40 2010/10/28 02:27:08 dries Exp $
 
 /**
  * @file
@@ -278,7 +278,7 @@ function actions_synchronize($delete_orphans = FALSE) {
     // user adds the action.
     if (!$array['configurable']) {
       // If we already have an action ID for this action, no need to assign aid.
-      if (array_key_exists($callback, $actions_in_db)) {
+      if (isset($actions_in_db[$callback])) {
         unset($actions_in_db[$callback]);
       }
       else {
@@ -292,7 +292,7 @@ function actions_synchronize($delete_orphans = FALSE) {
             'label' => $array['label'],
             ))
           ->execute();
-        watchdog('actions', "Action '%action' added.", array('%action' => filter_xss_admin($array['label'])));
+        watchdog('actions', "Action '%action' added.", array('%action' => $array['label']));
       }
     }
   }
@@ -305,7 +305,7 @@ function actions_synchronize($delete_orphans = FALSE) {
       $actions = db_query('SELECT aid, label FROM {actions} WHERE callback IN (:orphaned)', array(':orphaned' => $orphaned))->fetchAll();
       foreach ($actions as $action) {
         actions_delete($action->aid);
-        watchdog('actions', "Removed orphaned action '%action' from database.", array('%action' => filter_xss_admin($action->label)));
+        watchdog('actions', "Removed orphaned action '%action' from database.", array('%action' => $action->label));
       }
     }
     else {

@@ -1,4 +1,4 @@
-// $Id: ajax.js,v 1.18 2010/06/25 20:34:07 dries Exp $
+// $Id: ajax.js,v 1.28 2010/11/12 03:02:43 dries Exp $
 (function ($) {
 
 /**
@@ -55,7 +55,13 @@ Drupal.behaviors.AJAX = {
       // AJAX submits specified in this manner automatically submit to the
       // normal form action.
       element_settings.url = $(this.form).attr('action');
-      element_settings.set_click = TRUE;
+      // Form submit button clicks need to tell the form what was clicked so
+      // it gets passed in the POST request.
+      element_settings.setClick = true;
+      // Form buttons use the 'click' event rather than mousedown.
+      element_settings.event = 'click';
+      // Clicked form buttons look better with the throbber than the progress bar.
+      element_settings.progress = { 'type': 'throbber' };
 
       var base = $(this).attr('id');
       Drupal.ajax[base] = new Drupal.ajax(base, this, element_settings);
@@ -98,7 +104,9 @@ Drupal.ajax = function (base, element, element_settings) {
       type: 'bar',
       message: 'Please wait...'
     },
-    submit: {}
+    submit: {
+      'js': true
+    }
   };
 
   $.extend(this, defaults, element_settings);
@@ -107,7 +115,16 @@ Drupal.ajax = function (base, element, element_settings) {
 
   // Replacing 'nojs' with 'ajax' in the URL allows for an easy method to let
   // the server detect when it needs to degrade gracefully.
-  this.url = element_settings.url.replace(/\/nojs(\/|$)/g, '/ajax$1');
+  // There are five scenarios to check for:
+  // 1. /nojs/
+  // 2. /nojs$ - The end of a URL string.
+  // 3. /nojs? - Followed by a query (with clean URLs enabled).
+  //      E.g.: path/nojs?destination=foobar
+  // 4. /nojs& - Followed by a query (without clean URLs enabled).
+  //      E.g.: ?q=path/nojs&destination=foobar
+  // 5. /nojs# - Followed by a fragment.
+  //      E.g.: path/nojs#myfragment
+  this.url = element_settings.url.replace(/\/nojs(\/|$|\?|&|#)/g, '/ajax$1');
   this.wrapper = '#' + element_settings.wrapper;
 
   // If there isn't a form, jQuery.ajax() will be used instead, allowing us to
@@ -119,13 +136,14 @@ Drupal.ajax = function (base, element, element_settings) {
   // Set the options for the ajaxSubmit function.
   // The 'this' variable will not persist inside of the options object.
   var ajax = this;
-  var options = {
+  ajax.options = {
     url: ajax.url,
     data: ajax.submit,
     beforeSerialize: function (element_settings, options) {
       return ajax.beforeSerialize(element_settings, options);
     },
     beforeSubmit: function (form_values, element_settings, options) {
+      ajax.ajaxing = true;
       return ajax.beforeSubmit(form_values, element_settings, options);
     },
     success: function (response, status) {
@@ -137,6 +155,7 @@ Drupal.ajax = function (base, element, element_settings) {
       return ajax.success(response, status);
     },
     complete: function (response, status) {
+      ajax.ajaxing = false;
       if (status == 'error' || status == 'parsererror') {
         return ajax.error(response, ajax.url);
       }
@@ -147,21 +166,31 @@ Drupal.ajax = function (base, element, element_settings) {
 
   // Bind the ajaxSubmit function to the element event.
   $(this.element).bind(element_settings.event, function () {
-    if (ajax.form) {
-      // If setClick is set, we must set this to ensure that the button's
-      // value is passed.
-      if (ajax.setClick) {
-        // Mark the clicked button. 'form.clk' is a special variable for
-        // ajaxSubmit that tells the system which element got clicked to
-        // trigger the submit. Without it there would be no 'op' or
-        // equivalent.
-        ajax.form.clk = this.element;
-      }
-
-      ajax.form.ajaxSubmit(options);
+    if (ajax.ajaxing) {
+      return false;
     }
-    else {
-      $.ajax(options);
+
+    try {
+      if (ajax.form) {
+        // If setClick is set, we must set this to ensure that the button's
+        // value is passed.
+        if (ajax.setClick) {
+          // Mark the clicked button. 'form.clk' is a special variable for
+          // ajaxSubmit that tells the system which element got clicked to
+          // trigger the submit. Without it there would be no 'op' or
+          // equivalent.
+          this.form.clk = this;
+        }
+
+        ajax.form.ajaxSubmit(ajax.options);
+      }
+      else {
+        ajax.beforeSerialize(ajax.element, ajax.options);
+        $.ajax(ajax.options);
+      }
+    }
+    catch (e) {
+      alert("An error occurred while attempting to process " + ajax.options.url + ": " + e.message);
     }
 
     return false;
@@ -172,8 +201,8 @@ Drupal.ajax = function (base, element, element_settings) {
   // action.
   if (element_settings.keypress) {
     $(element_settings.element).keypress(function (event) {
-      // Detect enter key.
-      if (event.keyCode == 13) {
+      // Detect enter key and space bar.
+      if (event.which == 13 || event.which == 32) {
         $(element_settings.element).trigger(element_settings.event);
         return false;
       }
@@ -197,6 +226,27 @@ Drupal.ajax.prototype.beforeSerialize = function (element, options) {
     var settings = this.settings || Drupal.settings;
     Drupal.detachBehaviors(this.form, settings, 'serialize');
   }
+
+  // Prevent duplicate HTML ids in the returned markup.
+  // @see drupal_html_id()
+  options.data['ajax_html_ids[]'] = [];
+  $('[id]').each(function () {
+    options.data['ajax_html_ids[]'].push(this.id);
+  });
+
+  // Allow Drupal to return new JavaScript and CSS files to load without
+  // returning the ones already loaded.
+  // @see ajax_base_page_theme()
+  // @see drupal_get_css()
+  // @see drupal_get_js()
+  options.data['ajax_page_state[theme]'] = Drupal.settings.ajaxPageState.theme;
+  options.data['ajax_page_state[theme_token]'] = Drupal.settings.ajaxPageState.theme_token;
+  for (var key in Drupal.settings.ajaxPageState.css) {
+    options.data['ajax_page_state[css][' + key + ']'] = 1;
+  }
+  for (var key in Drupal.settings.ajaxPageState.js) {
+    options.data['ajax_page_state[js][' + key + ']'] = 1;
+  }
 };
 
 /**
@@ -205,12 +255,6 @@ Drupal.ajax.prototype.beforeSerialize = function (element, options) {
 Drupal.ajax.prototype.beforeSubmit = function (form_values, element, options) {
   // Disable the element that received the change.
   $(this.element).addClass('progress-disabled').attr('disabled', true);
-
-  // Prevent duplicate HTML ids in the returned markup.
-  // @see drupal_html_id()
-  $('[id]').each(function () {
-    form_values.push({ name: 'ajax_html_ids[]', value: this.id });
-  });
 
   // Insert progressbar or throbber.
   if (this.progress.type == 'bar') {
@@ -245,11 +289,11 @@ Drupal.ajax.prototype.success = function (response, status) {
   if (this.progress.object) {
     this.progress.object.stopMonitoring();
   }
-  $(this.element).removeClass('progress-disabled').attr('disabled', false);
+  $(this.element).removeClass('progress-disabled').removeAttr('disabled');
 
   Drupal.freezeHeight();
 
-  for (i in response) {
+  for (var i in response) {
     if (response[i]['command'] && this.commands[response[i]['command']]) {
       this.commands[response[i]['command']](this, response[i], status);
     }
@@ -268,7 +312,7 @@ Drupal.ajax.prototype.success = function (response, status) {
 
   // Remove any response-specific settings so they don't get used on the next
   // call by mistake.
-  this.settings = {};
+  this.settings = null;
 };
 
 /**
@@ -313,7 +357,7 @@ Drupal.ajax.prototype.error = function (response, uri) {
   // Undo hide.
   $(this.wrapper).show();
   // Re-enable the element.
-  $(this.element).removeClass('progress-disabled').attr('disabled', false);
+  $(this.element).removeClass('progress-disabled').removeAttr('disabled');
   // Reattach behaviors, if they were detached in beforeSerialize().
   if (this.form) {
     var settings = response.settings || this.settings || Drupal.settings;
@@ -335,9 +379,27 @@ Drupal.ajax.prototype.commands = {
     var method = response.method || ajax.method;
     var effect = ajax.getEffect(response);
 
-    // Manually insert HTML into the jQuery object, using $() directly crashes
-    // Safari with long string lengths. http://dev.jquery.com/ticket/3178
-    var new_content = $('<div></div>').html(response.data);
+    // We don't know what response.data contains: it might be a string of text
+    // without HTML, so don't rely on jQuery correctly iterpreting
+    // $(response.data) as new HTML rather than a CSS selector. Also, if
+    // response.data contains top-level text nodes, they get lost with either
+    // $(response.data) or $('<div></div>').replaceWith(response.data).
+    var new_content_wrapped = $('<div></div>').html(response.data);
+    var new_content = new_content_wrapped.contents();
+
+    // For legacy reasons, the effects processing code assumes that new_content
+    // consists of a single top-level element. Also, it has not been
+    // sufficiently tested whether attachBehaviors() can be successfully called
+    // with a context object that includes top-level text nodes. However, to
+    // give developers full control of the HTML appearing in the page, and to
+    // enable AJAX content to be inserted in places where DIV elements are not
+    // allowed (e.g., within TABLE, TR, and SPAN parents), we check if the new
+    // content satisfies the requirement of a single top-level element, and
+    // only use the container DIV created above when it doesn't. For more
+    // information, please see http://drupal.org/node/736066.
+    if (new_content.length != 1 || new_content.get(0).nodeType != 1) {
+      new_content = new_content_wrapped;
+    }
 
     // If removing content from the wrapper, detach behaviors first.
     switch (method) {

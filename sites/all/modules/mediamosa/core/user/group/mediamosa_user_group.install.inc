@@ -54,40 +54,42 @@ function _mediamosa_user_group_uninstall() {
  * Implements hook_schema().
  */
 function mediamosa_user_group_schema() {
-  $a_schema[mediamosa_user_group_db::TABLE_NAME] = array(
-  'description' => t('The user group table.'),
+  $schema[mediamosa_user_group_db::TABLE_NAME] = array(
+  'description' => 'The user group table.',
     'fields' => array(
       mediamosa_user_group_db::APP_ID => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'description' => t('The application ID of the user.'),
+        'description' => 'The application ID of the user.',
       ),
       mediamosa_user_group_db::ID => array(
         'type' => 'varchar',
         'length' => mediamosa_user_group_db::GROUP_ID_LENGTH,
         'not null' => TRUE,
-        'description' => t('The name of group.'),
+        'description' => 'The name of group.',
       ),
       mediamosa_user_group_db::QUOTUM => array(
         'type' => 'int',
         'unsigned' => FALSE,
         'not null' => TRUE,
-        'description' => t('The application ID of the asset.'),
+        'description' => 'The application ID of the asset.',
       ),
       mediamosa_user_group_db::CREATED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'not null' => TRUE,
-        'description' => t('The date and time when user was created.'),
+        'description' => 'The date and time when user was created.',
       ),
       mediamosa_user_group_db::CHANGED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'default' => NULL,
-        'description' => t('The date and time when user was changed last.'),
+        'description' => 'The date and time when user was changed last.',
       ),
     ),
     'primary key' => array(mediamosa_user_group_db::ID, mediamosa_user_group_db::APP_ID),
   );
 
-  return $a_schema;
+  return $schema;
 }

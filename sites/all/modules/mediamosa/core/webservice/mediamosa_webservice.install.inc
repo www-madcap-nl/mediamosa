@@ -97,33 +97,33 @@ function _mediamosa_webservice_uninstall() {
  */
 function mediamosa_webservice_schema() {
   $schema[mediamosa_webservice_db::TABLE_NAME] = array(
-    'description' => t('The webservice are modules of mediamosa, which can be enabled/disabled per application.'),
+    'description' => 'The webservice are modules of mediamosa, which can be enabled/disabled per application.',
     'fields' => array(
       mediamosa_webservice_db::ID => array(
-        'description' => t('The webservice ID.'),
+        'description' => 'The webservice ID.',
         'type' => 'serial',
         'not null' => TRUE,
       ),
       mediamosa_webservice_db::VERSION => array(
-        'description' => t('The version of the webservice.'),
+        'description' => 'The version of the webservice.',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
       mediamosa_webservice_db::HANDLE => array(
-        'description' => t('The handle of the webservice.'),
+        'description' => 'The handle of the webservice.',
         'type' => 'varchar',
         'length' => mediamosa_webservice_db::HANDLE_LENGTH,
         'not null' => TRUE,
       ),
       mediamosa_webservice_db::DESCRIPTION => array(
-        'description' => t('The handle of the webservice.'),
+        'description' => 'The handle of the webservice.',
         'type' => 'varchar',
         'length' => mediamosa_webservice_db::DESCRIPTION_LENGTH,
         'not null' => TRUE,
       ),
       mediamosa_webservice_db::STATUS => array(
-        'description' => t('The webservice main switch.'),
+        'description' => 'The webservice main switch.',
         'type' => "enum('" . implode("','", array(mediamosa_webservice_db::STATUS_FALSE, mediamosa_webservice_db::STATUS_TRUE)) . "')",
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_webservice_db::STATUS_FALSE, mediamosa_webservice_db::STATUS_TRUE)) . "')",

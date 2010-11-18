@@ -67,17 +67,17 @@ function _mediamosa_tool_params_uninstall() {
  */
 function mediamosa_tool_params_schema() {
 
-  $a_schema[mediamosa_tool_params_db::TABLE_NAME] = array(
-  'description' => t('The tool parameter table.'),
+  $schema[mediamosa_tool_params_db::TABLE_NAME] = array(
+  'description' => 'The tool parameter table.',
     'fields' => array(
       mediamosa_transcode_profile_db::NID => array(
-        'description' => t('The Drupal node id.'),
+        'description' => 'The Drupal node id.',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
       mediamosa_transcode_profile_db::VID => array(
-        'description' => t('The Drupal node revision id.'),
+        'description' => 'The Drupal node revision id.',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
@@ -86,44 +86,44 @@ function mediamosa_tool_params_schema() {
         'type' => 'serial',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'description' => t('Primary Key: Unique ID.'),
+        'description' => 'Primary Key: Unique ID.',
       ),
       mediamosa_tool_params_db::TOOL => array(
         'type' => 'varchar',
         'length' => mediamosa_tool_params_db::TOOL_LENGTH,
-        'description' => t('Tool.'),
+        'description' => 'Tool.',
       ),
       mediamosa_tool_params_db::NICE_PARAMETER => array(
         'type' => 'varchar',
         'length' => mediamosa_tool_params_db::NICE_PARAMETER_LENGTH,
-        'description' => t('Nice parameter (name of the parameter).'),
+        'description' => 'Nice parameter (name of the parameter).',
       ),
       mediamosa_tool_params_db::TOOL_PARAMETER => array(
         'type' => 'varchar',
         'length' => mediamosa_tool_params_db::TOOL_PARAMETER_LENGTH,
-        'description' => t('Tool parameter.'),
+        'description' => 'Tool parameter.',
       ),
       mediamosa_tool_params_db::MIN_VALUE => array(
         'type' => 'int',
-        'description' => t('The minimum value.'),
+        'description' => 'The minimum value.',
         'default' => NULL,
       ),
       mediamosa_tool_params_db::MAX_VALUE => array(
         'type' => 'int',
-        'description' => t('The maximum value.'),
+        'description' => 'The maximum value.',
         'default' => NULL,
       ),
       mediamosa_tool_params_db::ALLOWED_VALUE => array(
         'type' => 'text',
-        'description' => t('Allowed value.'),
+        'description' => 'Allowed value.',
       ),
       mediamosa_tool_params_db::DEFAULT_VALUE => array(
         'type' => 'varchar',
         'length' => mediamosa_tool_params_db::DEFAULT_VALUE_LENGTH,
-        'description' => t('Default value.'),
+        'description' => 'Default value.',
       ),
       mediamosa_tool_params_db::REQUIRED => array(
-        'description' => t('It is a required parameter or not.'),
+        'description' => 'It is a required parameter or not.',
         'type' => "enum('" . implode("','", array(mediamosa_tool_params_db::REQUIRED_FALSE, mediamosa_tool_params_db::REQUIRED_TRUE)) . "')",
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_tool_params_db::REQUIRED_FALSE, mediamosa_tool_params_db::REQUIRED_TRUE)) . "')",
@@ -131,13 +131,15 @@ function mediamosa_tool_params_schema() {
       ),
       mediamosa_tool_params_db::CREATED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'not null' => TRUE,
-        'description' => t('The date and time when tool parameter was created.'),
+        'description' => 'The date and time when tool parameter was created.',
       ),
       mediamosa_tool_params_db::CHANGED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'default' => NULL,
-        'description' => t('The date and time when tool parameter was changed last.'),
+        'description' => 'The date and time when tool parameter was changed last.',
       ),
     ),
     'primary key' => array(mediamosa_tool_params_db::ID),
@@ -149,5 +151,5 @@ function mediamosa_tool_params_schema() {
     )
   );
 
-  return $a_schema;
+  return $schema;
 }

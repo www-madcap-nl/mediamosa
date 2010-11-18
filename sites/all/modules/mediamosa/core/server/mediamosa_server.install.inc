@@ -192,80 +192,80 @@ function mediamosa_server_schema() {
     mediamosa_server_db::SERVER_STATUS_CLOSE,
   );
 
-  $a_schema[mediamosa_server_db::TABLE_NAME] = array(
-    'description' => t('The download server table contains settings for the download servers.'),
+  $schema[mediamosa_server_db::TABLE_NAME] = array(
+    'description' => 'The download server table contains settings for the download servers.',
     'fields' => array(
       mediamosa_server_db::NID => array(
-        'description' => t('The Drupal node id.'),
+        'description' => 'The Drupal node id.',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
       mediamosa_server_db::VID => array(
-        'description' => t('The Drupal node revision id.'),
+        'description' => 'The Drupal node revision id.',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
       mediamosa_server_db::VERSION => array(
-        'description' => t('The version number.'),
+        'description' => 'The version number.',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => FALSE,
       ),
       mediamosa_server_db::SERVER_STATUS => array(
-        'description' => t('The server status.'),
+        'description' => 'The server status.',
         'type' => "enum('" . implode("','", $server_status) . "')",
         'mysql_type' => "enum('" . implode("','", $server_status) . "')",
         'not null' => TRUE,
       ),
       mediamosa_server_db::SERVER_TYPE => array(
-        'description' => t('The server type.'),
+        'description' => 'The server type.',
         'type' => "enum('" . implode("','", $types) . "')",
         'mysql_type' => "enum('" . implode("','", $types) . "')",
         'not null' => TRUE,
       ),
       mediamosa_server_db::SERVER_URI => array(
-        'description' => t('The optional URI of the server.'),
+        'description' => 'The optional URI of the server.',
         'type' => 'varchar',
         'length' => mediamosa_server_db::SERVER_URI_LENGTH,
         'not null' => FALSE,
       ),
       mediamosa_server_db::DESCRIPTION => array(
-        'description' => t('The description of the server.'),
+        'description' => 'The description of the server.',
         'type' => 'varchar',
         'length' => mediamosa_server_db::DESCRIPTION_LENGTH,
         'not null' => FALSE,
         'default' => '',
       ),
       mediamosa_server_db::CONTAINERS => array(
-        'description' => t('The optional container names this server can serve.'),
+        'description' => 'The optional container names this server can serve.',
         'type' => 'text',
         'not null' => FALSE,
       ),
       mediamosa_server_db::OBJECT_CODE => array(
-        'description' => t('The optional container names the server can serve.'),
+        'description' => 'The optional container names the server can serve.',
         'type' => 'text',
         'not null' => FALSE,
       ),
       mediamosa_server_db::SERVER_NAME => array(
-        'description' => t('The optional name of the server.'),
+        'description' => 'The optional name of the server.',
         'type' => 'varchar',
         'length' => mediamosa_server_db::SERVER_NAME_LENGTH,
         'not null' => FALSE,
       ),
       mediamosa_server_db::SLOTS => array(
-        'description' => t('The maximum number of concurrent transcodes.'),
+        'description' => 'The maximum number of concurrent transcodes.',
         'type' => 'int',
         'not null' => FALSE,
       ),
       mediamosa_server_db::TOOLS => array(
-        'description' => t('The optional tools this server serves.'),
+        'description' => 'The optional tools this server serves.',
         'type' => 'text',
         'not null' => FALSE,
       ),
       mediamosa_server_db::URI_UPLOAD_PROGRESS => array(
-        'description' => t('The optional uri of the upload progress.'),
+        'description' => 'The optional uri of the upload progress.',
         'type' => 'varchar',
         'length' => mediamosa_server_db::URI_UPLOAD_PROGRESS_LENGTH,
         'not null' => FALSE,
@@ -278,5 +278,5 @@ function mediamosa_server_schema() {
     )
   );
 
-  return $a_schema;
+  return $schema;
 }

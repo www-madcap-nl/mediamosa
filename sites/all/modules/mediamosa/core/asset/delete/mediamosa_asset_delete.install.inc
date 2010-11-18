@@ -53,30 +53,31 @@ function _mediamosa_asset_delete_uninstall() {
  */
 function mediamosa_asset_delete_schema() {
 
-  $a_schema[mediamosa_asset_delete_db::TABLE_NAME] = array(
-  'description' => t('The asset collection link table.'),
+  $schema[mediamosa_asset_delete_db::TABLE_NAME] = array(
+  'description' => 'The asset collection link table.',
     'fields' => array(
       mediamosa_asset_delete_db::ID => array(
         'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
         'not null' => TRUE,
-        'description' => t('Link to asset table.'),
+        'description' => 'Link to asset table.',
       ),
       mediamosa_asset_delete_db::APP_ID => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'description' => t('The application ID of the asset.'),
+        'description' => 'The application ID of the asset.',
       ),
       mediamosa_asset_delete_db::VIDEOTIMESTAMPMODIFIED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'default' => NULL,
-        'description' => t('The modified time and date of the asset.'),
+        'description' => 'The modified time and date of the asset.',
       ),
       mediamosa_asset_delete_db::COLL_ID => array(
         'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
-        'description' => t('Link to collection table.'),
+        'description' => 'Link to collection table.',
         'default' => NULL,
       ),
     ),
@@ -90,5 +91,5 @@ function mediamosa_asset_delete_schema() {
     )
   );
 
-  return $a_schema;
+  return $schema;
 }

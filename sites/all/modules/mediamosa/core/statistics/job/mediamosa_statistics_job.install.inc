@@ -52,50 +52,52 @@ function _mediamosa_statistics_job_uninstall() {
  */
 function mediamosa_statistics_job_schema() {
 
-  $a_schema[mediamosa_statistics_job_db::TABLE_NAME] = array(
-  'description' => t('The statistics_job table.'),
+  $schema[mediamosa_statistics_job_db::TABLE_NAME] = array(
+  'description' => 'The statistics_job table.',
     'fields' => array(
       mediamosa_statistics_job_db::ID => array(
         'type' => 'serial',
         'not null' => TRUE,
         'unsigned' => TRUE,
-        'description' => t('Primary Key: Unique ID.'),
+        'description' => 'Primary Key: Unique ID.',
       ),
       mediamosa_statistics_job_db::APP_ID => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'description' => t('The application ID.'),
+        'description' => 'The application ID.',
       ),
       mediamosa_statistics_job_db::MEDIAFILE_ID => array(
         'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
         'default' => NULL,
-        'description' => t('The mediafile ID.'),
+        'description' => 'The mediafile ID.',
       ),
       mediamosa_statistics_job_db::STARTED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'default' => NULL,
-        'description' => t('The date and time when job was started.'),
+        'description' => 'The date and time when job was started.',
       ),
       mediamosa_statistics_job_db::FINISHED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'default' => NULL,
-        'description' => t('The date and time when job was finished.'),
+        'description' => 'The date and time when job was finished.',
       ),
       mediamosa_statistics_job_db::TRANSCODE_PROFILE_ID => array(
         'type' => 'int',
         'unsigned' => TRUE,
-        'description' => t('The transcode profile ID.'),
+        'description' => 'The transcode profile ID.',
       ),
       mediamosa_statistics_job_db::NID => array(
-        'description' => t('The Drupal node id for transcode profile.'),
+        'description' => 'The Drupal node id for transcode profile.',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
       mediamosa_statistics_job_db::VID => array(
-        'description' => t('The Drupal node revision id for transcode profile.'),
+        'description' => 'The Drupal node revision id for transcode profile.',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
@@ -103,7 +105,7 @@ function mediamosa_statistics_job_schema() {
       mediamosa_statistics_job_db::FILESIZE => array(
         'type' => 'int',
         'size' => 'big',
-        'description' => t('The filesize.'),
+        'description' => 'The filesize.',
       ),
     ),
     'primary key' => array(mediamosa_statistics_job_db::ID),
@@ -115,5 +117,5 @@ function mediamosa_statistics_job_schema() {
     ),
   );
 
-  return $a_schema;
+  return $schema;
 }

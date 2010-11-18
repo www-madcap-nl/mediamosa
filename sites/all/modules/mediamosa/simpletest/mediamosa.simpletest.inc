@@ -155,9 +155,6 @@ class MediaMosaTestCase extends DrupalWebTestCase {
    */
   protected function tearDown() {
 
-    // Dump the log.
-    $this->dump_watchdog();
-
     // Unlink files.
     foreach ($this->unlinks as $filename) {
       mediamosa_io::unlink($filename);
@@ -175,7 +172,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     $prefix = Database::getConnection()->prefixTables('{mediamosa_}') . '%';
 
     // Get tables that match our pattern.
-    $tables = db_find_tables('mediamosa_%');
+    $tables = db_find_tables($prefix);
 
     $matches = $ret = array();
     foreach ($tables as $table) {
@@ -192,6 +189,9 @@ class MediaMosaTestCase extends DrupalWebTestCase {
         }
       }
     }
+
+    // Dump the log.
+    $this->dump_watchdog();
 
     // Call parent.
     parent::tearDown();

@@ -54,21 +54,21 @@ function _mediamosa_server_tool_uninstall() {
  */
 function mediamosa_server_tool_schema() {
 
-  $a_schema[mediamosa_server_tool_db::TABLE_NAME] = array(
-    'description' => t('Contains the tools for server subtable.'),
+  $schema[mediamosa_server_tool_db::TABLE_NAME] = array(
+    'description' => 'Contains the tools for server subtable.',
     'fields' => array(
       mediamosa_server_tool_db::ID => array(
-        'description' => t('Primary key.'),
+        'description' => 'Primary key.',
         'type' => 'serial',
         'not null' => TRUE,
       ),
       mediamosa_server_tool_db::NID => array(
-        'description' => t('The parent server node ID.'),
+        'description' => 'The parent server node ID.',
         'type' => 'int',
         'not null' => TRUE,
       ),
       mediamosa_server_tool_db::TOOL => array(
-        'description' => t('The tool used for job process.'),
+        'description' => 'The tool used for job process.',
         'type' => 'varchar',
         'length' => mediamosa_server_tool_db::TOOL_LENGTH,
         'not null' => TRUE,
@@ -80,5 +80,5 @@ function mediamosa_server_tool_schema() {
     ),
   );
 
-  return $a_schema;
+  return $schema;
 }

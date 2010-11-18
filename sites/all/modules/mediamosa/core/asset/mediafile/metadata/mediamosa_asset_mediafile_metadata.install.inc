@@ -62,39 +62,40 @@ function _mediamosa_asset_mediafile_metadata_uninstall() {
 function mediamosa_asset_mediafile_metadata_schema() {
 
   $schema[mediamosa_asset_mediafile_metadata_db::TABLE_NAME] = array(
-  'description' => t('The asset media metadata table.'),
+  'description' => 'The asset media metadata table.',
     'fields' => array(
       mediamosa_asset_mediafile_metadata_db::ID => array(
         'type' => 'serial',
         'not null' => TRUE,
-        'description' => t('Primary Key: Unique ID.'),
+        'description' => 'Primary Key: Unique ID.',
       ),
       mediamosa_asset_mediafile_metadata_db::MEDIAFILE_ID => array(
         'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
         'not null' => TRUE,
-        'description' => t('The asset mediafile ID.'),
+        'description' => 'The asset mediafile ID.',
       ),
       mediamosa_asset_mediafile_metadata_db::PROP_ID => array(
         'type' => 'int',
         'not null' => TRUE,
-        'description' => t('The property ID of the metadata.'),
+        'description' => 'The property ID of the metadata.',
         'unsigned' => TRUE,
       ),
       mediamosa_asset_mediafile_metadata_db::VAL_CHAR => array(
         'type' => 'text',
         'size' => 'normal',
-        'description' => t('The value of the property stored as a string.'),
+        'description' => 'The value of the property stored as a string.',
       ),
       mediamosa_asset_mediafile_metadata_db::VAL_DATETIME => array(
         'type' => 'datetime',
-        'description' => t('The date and time of the property value.'),
+        'mysql_type' => 'DATETIME',
+        'description' => 'The date and time of the property value.',
       ),
       mediamosa_asset_mediafile_metadata_db::VAL_INT => array(
         'type' => 'int',
         'size' => 'big',
         //'not null' => TRUE,
-        'description' => t('The numeric value of the property.'),
+        'description' => 'The numeric value of the property.',
         //'default' => 0,
       ),
     ),

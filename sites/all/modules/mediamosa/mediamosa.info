@@ -2,7 +2,7 @@
 name = "MediaMosa"
 description = "Open source media management and distribution platform."
 package = "MediaMosa - Core"
-version = "2.3.1.1036"
+version = "2.3.1.1107"
 core = 7.x
 
 configure = admin/mediamosa/config/global
@@ -10,7 +10,7 @@ configure = admin/mediamosa/config/global
 ; Dependencies (module names)
 ; YOU MUST HAVE VERY GOOD REASON TO GIVE A DEP. TO THE CORE MODULE.
 dependencies[] = simpletest
-dependencies[] = mediamosa_library
+dependencies[] = mediamosa_sdk
 
 ; Used files.
 
@@ -245,6 +245,10 @@ files[] = core/statistics/search_request/mediamosa_statistics_search_request_db.
 files[] = core/statistics/search_request/mediamosa_statistics_search_request.install.inc
 files[] = core/statistics/stream_request/mediamosa_statistics_stream_request_db.inc
 files[] = core/statistics/stream_request/mediamosa_statistics_stream_request.install.inc
+files[] = core/statistics/file_helper/mediamosa_statistics_file_helper_db.inc
+files[] = core/statistics/file_helper/mediamosa_statistics_file_helper.install.inc
+files[] = core/statistics/streaming_ticket/mediamosa_statistics_streaming_ticket_db.inc
+files[] = core/statistics/streaming_ticket/mediamosa_statistics_streaming_ticket.install.inc
 files[] = core/statistics/mediamosa_statistics.inc
 files[] = core/statistics/mediamosa_statistics.install.inc
 

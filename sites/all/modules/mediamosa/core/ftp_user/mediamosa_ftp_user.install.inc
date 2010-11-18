@@ -51,56 +51,56 @@ function _mediamosa_ftp_user_uninstall() {
  * Implements hook_schema().
  */
 function mediamosa_ftp_user_schema() {
-  $a_schema[mediamosa_ftp_user_db::TABLE_NAME] = array(
-    'description' => t('This FTP User table.'),
+  $schema[mediamosa_ftp_user_db::TABLE_NAME] = array(
+    'description' => 'This FTP User table.',
     'fields' => array(
       mediamosa_ftp_user_db::ID => array(
         'type' => 'serial',
         'not null' => TRUE,
-        'description' => t('Primary key.'),
+        'description' => 'Primary key.',
       ),
       mediamosa_ftp_user_db::APP_ID => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'description' => t('The application ID of the FTP user.'),
+        'description' => 'The application ID of the FTP user.',
       ),
       mediamosa_ftp_user_db::USERID => array(
         'type' => 'varbinary',
         'length' => mediamosa_ftp_user_db::USERID_LENGTH,
-        'description' => t('The User ID.'),
+        'description' => 'The User ID.',
         'not null' => TRUE,
       ),
       mediamosa_ftp_user_db::PASSWD => array(
         'type' => 'varbinary',
         'length' => mediamosa_ftp_user_db::PASSWD_LENGTH,
-        'description' => t('The Password.'),
+        'description' => 'The Password.',
         'not null' => TRUE,
       ),
       mediamosa_ftp_user_db::UID => array(
         'type' => 'int',
         'size' => 'small',
         'not null' => TRUE,
-        'description' => t('The linux user ID of the FTP user.'),
+        'description' => 'The linux user ID of the FTP user.',
         'default' => '200',
       ),
       mediamosa_ftp_user_db::GID => array(
         'type' => 'int',
         'size' => 'small',
         'not null' => TRUE,
-        'description' => t('The linux group ID of the FTP user.'),
+        'description' => 'The linux group ID of the FTP user.',
         'default' => '200',
       ),
       mediamosa_ftp_user_db::HOMEDIR => array(
         'type' => 'varchar',
         'length' => mediamosa_ftp_user_db::HOMEDIR_LENGTH,
-        'description' => t('The home directory path.'),
+        'description' => 'The home directory path.',
         'not null' => TRUE,
       ),
       mediamosa_ftp_user_db::SHELL => array(
         'type' => 'varchar',
         'length' => mediamosa_ftp_user_db::SHELL_LENGTH,
-        'description' => t('The home directory path.'),
+        'description' => 'The home directory path.',
         'not null' => TRUE,
         'default' => '/bin/false',
       ),
@@ -108,22 +108,24 @@ function mediamosa_ftp_user_schema() {
         'type' => 'int',
         'size' => 'tiny',
         'not null' => TRUE,
-        'description' => t('Active setting.'),
+        'description' => 'Active setting.',
         'default' => '0',
       ),
       mediamosa_ftp_user_db::COUNT => array(
         'type' => 'int',
         'not null' => TRUE,
-        'description' => t('The login count.'),
+        'description' => 'The login count.',
         'default' => '0',
       ),
       mediamosa_ftp_user_db::ACCESSED => array(
         'type' => 'datetime',
-        'description' => t('The access time.'),
+        'mysql_type' => 'DATETIME',
+        'description' => 'The access time.',
       ),
       mediamosa_ftp_user_db::MODIFIED => array(
         'type' => 'datetime',
-        'description' => t('The modified time.'),
+        'mysql_type' => 'DATETIME',
+        'description' => 'The modified time.',
       ),
     ),
     'primary key' => array(mediamosa_ftp_user_db::ID),
@@ -132,5 +134,5 @@ function mediamosa_ftp_user_schema() {
     ),
   );
 
-  return $a_schema;
+  return $schema;
 }

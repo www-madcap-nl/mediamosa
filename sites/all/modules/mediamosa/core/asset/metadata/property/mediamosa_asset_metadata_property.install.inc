@@ -124,34 +124,34 @@ function _mediamosa_asset_metadata_property_uninstall() {
  */
 function mediamosa_asset_metadata_property_schema() {
 
-  $a_schema[mediamosa_asset_metadata_property_db::TABLE_NAME] = array(
-  'description' => t('The asset metadata property table.'),
+  $schema[mediamosa_asset_metadata_property_db::TABLE_NAME] = array(
+  'description' => 'The asset metadata property table.',
     'fields' => array(
       mediamosa_asset_metadata_property_db::ID => array(
         'type' => 'serial',
         'not null' => TRUE,
-        'description' => t('Primary Key: Unique ID.'),
+        'description' => 'Primary Key: Unique ID.',
         'unsigned' => TRUE,
       ),
       mediamosa_asset_metadata_property_db::APP_ID => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'description' => t('The property group ID.'),
+        'description' => 'The property group ID.',
       ),
       mediamosa_asset_metadata_property_db::PROPGROUP_ID => array(
         'type' => 'int',
         'not null' => TRUE,
-        'description' => t('The property group ID.'),
+        'description' => 'The property group ID.',
       ),
       mediamosa_asset_metadata_property_db::NAME => array(
         'type' => 'varchar',
         'length' => mediamosa_asset_metadata_property_db::NAME_LENGTH,
         'not null' => TRUE,
-        'description' => t('The name of the property.'),
+        'description' => 'The name of the property.',
       ),
       mediamosa_asset_metadata_property_db::TYPE => array(
-        'description' => t('The type of the property.'),
+        'description' => 'The type of the property.',
         'type' => "enum('" . implode("','", array(mediamosa_asset_metadata_property_db::TYPE_DATETIME, mediamosa_asset_metadata_property_db::TYPE_INT, mediamosa_asset_metadata_property_db::TYPE_CHAR)) . "')",
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_metadata_property_db::TYPE_DATETIME, mediamosa_asset_metadata_property_db::TYPE_INT, mediamosa_asset_metadata_property_db::TYPE_CHAR)) . "')",
@@ -160,24 +160,26 @@ function mediamosa_asset_metadata_property_schema() {
       mediamosa_asset_metadata_property_db::MIN_OCCURENCES => array(
         'type' => 'int',
         'not null' => TRUE,
-        'description' => t('The minimal occurence of the property.'),
+        'description' => 'The minimal occurence of the property.',
         'default' => 0,
       ),
       mediamosa_asset_metadata_property_db::MAX_OCCURENCES => array(
         'type' => 'int',
         'not null' => TRUE,
-        'description' => t('The maximum occurence of the property.'),
+        'description' => 'The maximum occurence of the property.',
         'default' => 0,
       ),
       mediamosa_asset_metadata_property_db::CREATED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'not null' => TRUE,
-        'description' => t('The date and time when asset metadata property was created.'),
+        'description' => 'The date and time when asset metadata property was created.',
       ),
       mediamosa_asset_metadata_property_db::CHANGED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'default' => NULL,
-        'description' => t('The date and time when asset metadata property was changed.'),
+        'description' => 'The date and time when asset metadata property was changed.',
       ),
     ),
     'primary key' => array(mediamosa_asset_metadata_property_db::ID),
@@ -189,5 +191,5 @@ function mediamosa_asset_metadata_property_schema() {
     ),
   );
 
-  return $a_schema;
+  return $schema;
 }

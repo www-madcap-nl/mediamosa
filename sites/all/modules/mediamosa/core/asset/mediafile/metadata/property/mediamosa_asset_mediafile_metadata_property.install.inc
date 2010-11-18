@@ -54,22 +54,22 @@ function _mediamosa_asset_mediafile_metadata_property_uninstall() {
 function mediamosa_asset_mediafile_metadata_property_schema() {
 
   $schema[mediamosa_asset_mediafile_metadata_property_db::TABLE_NAME] = array(
-  'description' => t('The asset mediafile metadata property table.'),
+  'description' => 'The asset mediafile metadata property table.',
     'fields' => array(
       mediamosa_asset_mediafile_metadata_property_db::ID => array(
         'type' => 'serial',
         'not null' => TRUE,
-        'description' => t('Primary Key: Unique ID.'),
+        'description' => 'Primary Key: Unique ID.',
         'unsigned' => TRUE,
       ),
       mediamosa_asset_mediafile_metadata_property_db::NAME => array(
         'type' => 'varchar',
         'length' => mediamosa_asset_mediafile_metadata_property_db::NAME_LENGTH,
         'not null' => TRUE,
-        'description' => t('The name of the property.'),
+        'description' => 'The name of the property.',
       ),
       mediamosa_asset_mediafile_metadata_property_db::TYPE => array(
-        'description' => t('The type of the property.'),
+        'description' => 'The type of the property.',
         'type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_metadata_property_db::TYPE_DATETIME, mediamosa_asset_mediafile_metadata_property_db::TYPE_INT, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR)) . "')",
         'not null' => TRUE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_asset_mediafile_metadata_property_db::TYPE_DATETIME, mediamosa_asset_mediafile_metadata_property_db::TYPE_INT, mediamosa_asset_mediafile_metadata_property_db::TYPE_CHAR)) . "')",
@@ -77,13 +77,15 @@ function mediamosa_asset_mediafile_metadata_property_schema() {
       ),
       mediamosa_asset_mediafile_metadata_property_db::CREATED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'not null' => TRUE,
-        'description' => t('The date and time when asset mediafile metadata property was created.'),
+        'description' => 'The date and time when asset mediafile metadata property was created.',
       ),
       mediamosa_asset_mediafile_metadata_property_db::CHANGED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'default' => NULL,
-        'description' => t('The date and time when asset mediafile metadata property was changed.'),
+        'description' => 'The date and time when asset mediafile metadata property was changed.',
       ),
     ),
     'primary key' => array(mediamosa_asset_mediafile_metadata_property_db::ID),

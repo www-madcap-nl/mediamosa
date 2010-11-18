@@ -55,22 +55,22 @@ function _mediamosa_node_revision_uninstall() {
 function mediamosa_node_revision_schema() {
 
   $schema[mediamosa_node_revision_db::TABLE_NAME] = array(
-    'description' => t('The history data of our nodes is stored here.'),
+    'description' => 'The history data of our nodes is stored here.',
     'fields' => array(
       mediamosa_node_revision_db::NID => array(
-        'description' => t('The Drupal node id.'),
+        'description' => 'The Drupal node id.',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
       mediamosa_node_revision_db::VID => array(
-        'description' => t('The Drupal node revision id.'),
+        'description' => 'The Drupal node revision id.',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
       mediamosa_node_revision_db::REVISION_DATA => array(
-        'description' => t('The data of the revision, stored as an serialized array.'),
+        'description' => 'The data of the revision, stored as an serialized array.',
         'type' => 'text',
         'not null' => TRUE,
       ),

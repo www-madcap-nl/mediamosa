@@ -51,34 +51,34 @@ function _mediamosa_aut_app_master_slave_uninstall() {
  * Implements hook_schema().
  */
 function mediamosa_aut_app_master_slave_schema() {
-  $a_schema[mediamosa_aut_app_master_slave_db::TABLE_NAME] = array(
-    'description' => t('This table stores master/slave links to media.'),
+  $schema[mediamosa_aut_app_master_slave_db::TABLE_NAME] = array(
+    'description' => 'This table stores master/slave links to media.',
     'fields' => array(
       mediamosa_aut_app_master_slave_db::AUT_OBJECT_ID => array(
         'type' => 'varbinary',
         'length' => mediamosa_aut_app_master_slave_db::AUT_OBJECT_ID_LENGTH,
         'not null' => TRUE,
         'default' => '',
-        'description' => t('The object ID, links to mediamosa_asset_mediafile, mediamosa_asset or mediamosa_collection.'),
+        'description' => 'The object ID, links to mediamosa_asset_mediafile, mediamosa_asset or mediamosa_collection.',
       ),
       mediamosa_aut_app_master_slave_db::AUT_OBJECT_TYPE => array(
         'type' => "enum('" . implode("','", array(mediamosa_aut_app_master_slave_db::AUT_OBJECT_TYPE_MEDIAFILE, mediamosa_aut_app_master_slave_db::AUT_OBJECT_TYPE_ASSET, mediamosa_aut_app_master_slave_db::AUT_OBJECT_TYPE_COLLECTION)) . "')",
         'not null' => FALSE,
         'mysql_type' => "enum('" . implode("','", array(mediamosa_aut_app_master_slave_db::AUT_OBJECT_TYPE_MEDIAFILE, mediamosa_aut_app_master_slave_db::AUT_OBJECT_TYPE_ASSET, mediamosa_aut_app_master_slave_db::AUT_OBJECT_TYPE_COLLECTION)) . "')",
         'default' => mediamosa_aut_app_master_slave_db::AUT_OBJECT_TYPE_MEDIAFILE,
-        'description' => t('The type of object, links to mediamosa_asset_mediafile, mediamosa_asset or mediamosa_collection.'),
+        'description' => 'The type of object, links to mediamosa_asset_mediafile, mediamosa_asset or mediamosa_collection.',
       ),
       mediamosa_aut_app_master_slave_db::APP_ID_SLAVE => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'description' => t('The slave application ID.'),
+        'description' => 'The slave application ID.',
       ),
       mediamosa_aut_app_master_slave_db::APP_ID_MASTER => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'description' => t('The master application ID.'),
+        'description' => 'The master application ID.',
       ),
     ),
     'unique keys' => array(
@@ -89,5 +89,5 @@ function mediamosa_aut_app_master_slave_schema() {
     ),
   );
 
-  return $a_schema;
+  return $schema;
 }

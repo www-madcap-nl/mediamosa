@@ -51,54 +51,56 @@ function _mediamosa_asset_supplement_uninstall() {
  */
 function mediamosa_asset_supplement_schema() {
 
-  $a_schema[mediamosa_asset_supplement_db::TABLE_NAME] = array(
-  'description' => t('The asset supplement table.'),
+  $schema[mediamosa_asset_supplement_db::TABLE_NAME] = array(
+  'description' => 'The asset supplement table.',
     'fields' => array(
       mediamosa_asset_supplement_db::ID => array(
         'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
         'not null' => TRUE,
-        'description' => t('Primary Key: Unique ID.'),
+        'description' => 'Primary Key: Unique ID.',
       ),
       mediamosa_asset_supplement_db::ASSET_ID => array(
         'type' => 'varbinary',
         'length' => mediamosa_db::HASH_ID_LENGTH,
         'not null' => TRUE,
-        'description' => t('Primary Key: Unique ID.'),
+        'description' => 'Primary Key: Unique ID.',
       ),
       mediamosa_asset_supplement_db::SUPPLEMENT => array(
         'type' => 'blob',
-        'description' => t('Contens of the supplement.'),
+        'description' => 'Contens of the supplement.',
       ),
       mediamosa_asset_supplement_db::TAG => array(
         'type' => 'varchar',
         'length' => mediamosa_asset_supplement_db::TAG_LENGTH,
-        'description' => t('Tag for fast search and lookup.'),
+        'description' => 'Tag for fast search and lookup.',
       ),
       mediamosa_asset_supplement_db::OAI_PREFIX => array(
         'type' => 'varchar',
         'length' => mediamosa_asset_supplement_db::OAI_PREFIX_LENGTH,
-        'description' => t('OAI Prefix.'),
+        'description' => 'OAI Prefix.',
       ),
       mediamosa_asset_supplement_db::OAI_NAMESPACEURI => array(
         'type' => 'varchar',
         'length' => mediamosa_asset_supplement_db::OAI_NAMESPACEURI_LENGTH,
-        'description' => t('OAI namespace URI.'),
+        'description' => 'OAI namespace URI.',
       ),
       mediamosa_asset_supplement_db::OAI_SCHEMALOCATION => array(
         'type' => 'varchar',
         'length' => mediamosa_asset_supplement_db::OAI_SCHEMALOCATION_LENGTH,
-        'description' => t('OAI Schema location.'),
+        'description' => 'OAI Schema location.',
       ),
       mediamosa_asset_supplement_db::CREATED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'not null' => TRUE,
-        'description' => t('The date and time when supplement was created.'),
+        'description' => 'The date and time when supplement was created.',
       ),
       mediamosa_asset_supplement_db::CHANGED => array(
         'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
         'default' => NULL,
-        'description' => t('The date and time when supplement was changed last.'),
+        'description' => 'The date and time when supplement was changed last.',
       ),
     ),
     'primary key' => array(mediamosa_asset_supplement_db::ID),
@@ -110,5 +112,5 @@ function mediamosa_asset_supplement_schema() {
     ),
   );
 
-  return $a_schema;
+  return $schema;
 }
