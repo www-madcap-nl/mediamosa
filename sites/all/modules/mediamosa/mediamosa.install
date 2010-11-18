@@ -1395,7 +1395,8 @@ function mediamosa_update_7072() {
   mediamosa::drupal_install_schema('mediamosa_streaming_ticket');
   mediamosa::drupal_install_schema('mediamosa_statistics_stream_request');
 }
-/*
+
+/**
  * Disable renamed mediamosa_library and enable new mediamosa_sdk module.
  */
 function mediamosa_update_7073() {
