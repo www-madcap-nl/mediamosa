@@ -73,6 +73,7 @@ Other changes (not ticket related).
 - Still REST call fiexes (still_id without mediafile_id).
 - Install profile development: db and user creation just for local.
 - Transcode profile and transcode tool parameters were updated.
+- End frame is not exists bug fix.
 
 MediaMosa 2.2.5.3 (Build 956)
 ---------------------------

@@ -807,7 +807,12 @@ class mediamosa_job_server {
       $fps = (int) $still_parameters['fps'];
       $video_duration = (int) $still_parameters['video_duration'];
       $start_frame = min(max(0, (int) $still_parameters['start_frame']), max(0, $video_duration - 1));
-      $end_frame = min(max(0, (int) $still_parameters['end_frame']), max(0, $video_duration - 1));
+      if (isset($still_parameters['end_frame']) && (int) $still_parameters['end_frame']) {
+        $end_frame = min(max(0, (int) $still_parameters['end_frame']), max(0, $video_duration - 1));
+      }
+      else {
+        $end_frame = max(0, $video_duration - 1);
+      }
 
       // Make sure start and end are in the correct order from low to high.
       $start_frame_cpy = $start_frame;
@@ -815,7 +820,7 @@ class mediamosa_job_server {
       $end_frame = max($start_frame_cpy, $end_frame);
 
       // When video_duration is 0, then fall back to the original behaviour.
-      if (!$video_duration) {
+      if (!$video_duration || $start_frame == $end_frame) {
         $still_parameters['still_type'] = mediamosa_asset_mediafile_metadata::STILL_TYPE_NONE;
       }
 
