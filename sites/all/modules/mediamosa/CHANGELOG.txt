@@ -45,6 +45,12 @@ Other changes (not ticket related).
 - Removed text about foreign keys on status page and added explain about schema 
   vs database installation.
 - Fixed bug in /collection/$coll_id where owner was not changed of collection.
+- Rewrote hook_install_tasks_alter to be more compatible with future changes of
+  Drupal.
+- Migrated to Drupal 7 - BETA 3.
+- Standard profile made hidden during install. 
+- Enabled mediamosa_tool_ffmpeg and mediamosa_tool_windows in MediaMosa profile.
+- Fixed notice on app form when no tool modules are enabled.
 
 MediaMosa 2.3.0 Build (1032)
 ----------------------------

@@ -1,5 +1,5 @@
 ; $Id:  $
-name = "MediaMosa (Default installation)"
+name = "MediaMosa"
 distribution_name = "MediaMosa"
 description = "
 <p>MediaMosa is a full featured, webservice oriented media management
@@ -19,7 +19,7 @@ description = "
     References:
     <ul>
       <li><a href=\"http://www.mediamosa.org\">mediamosa.org</a></li>
-      <li><a href=\"http://www.drupal.org\">http://www.drupal.org</a></li>
+      <li><a href=\"http://www.drupal.org\">www.drupal.org</a></li>
     </ul>
   </p>
 "
@@ -66,6 +66,8 @@ dependencies[] = mediamosa_profile
 dependencies[] = mediamosa_server
 dependencies[] = mediamosa_statistics
 dependencies[] = mediamosa_ticket
+dependencies[] = mediamosa_tool_ffmpeg
+dependencies[] = mediamosa_tool_windows
 dependencies[] = mediamosa_transcode
 dependencies[] = mediamosa_user
 dependencies[] = mediamosa_webservice

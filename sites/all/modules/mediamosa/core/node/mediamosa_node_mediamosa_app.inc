@@ -424,8 +424,8 @@ function mediamosa_app_form($node, &$form_state) {
   );
 
   $tool = mediamosa_transcode_profile::get_by_tool(NULL, 'ffmpeg', 'size')->fetchAll();
-  $tool = $tool[0];
-  $allowed_values = trim($tool[mediamosa_tool_params_db::ALLOWED_VALUE]) == '' ? array() : unserialize($tool[mediamosa_tool_params_db::ALLOWED_VALUE]);
+  $tool = empty($tool) ? NULL : reset($tool);
+  $allowed_values = empty($tool) ? array() : (trim($tool[mediamosa_tool_params_db::ALLOWED_VALUE]) == '' ? array() : unserialize($tool[mediamosa_tool_params_db::ALLOWED_VALUE]));
   $options = array('' => '');
   foreach ($allowed_values as $allowed_value) {
     $options[$allowed_value] = $allowed_value;
@@ -437,15 +437,6 @@ function mediamosa_app_form($node, &$form_state) {
     '#options' => $options,
     '#default_value' => mediamosa_node::default_value(mediamosa_app_db::STILL_DEFAULT_SIZE, $node, mediamosa_settings::STILL_DEFAULT_SIZE),
   );
-  /*
-  $form['still'][mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO] = array(
-    '#type' => 'select',
-    '#title' => t('Maintain aspect ratio'),
-    '#description' => t('Force maintain the original video aspect ratio or not (default = yes). Possible values: , yes, no.'),
-    '#options' => array('YES' => t('YES'), 'NO' => t('NO')),
-    '#default_value' => mediamosa_node::default_value(mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO, $node, mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO_YES),
-  );
-   */
 
   $form['still'][mediamosa_app_db::STILL_PADDING] = array(
     '#type' => 'select',

@@ -31,3 +31,5 @@ version = "7.0-beta3"
 project = "drupal"
 datestamp = "1289694732"
 
+; Added for MediaMosa release.
+hidden = TRUE

@@ -38,19 +38,13 @@
 define('MEDIAMOSA_PROFILE_TEST_LUA_LPEG', 'lua works');
 
 /**
- * @} End of "defgroup constants".
- */
-
-/**
  * Retrieve the version.
  */
 function _mediamosa_profile_get_version() {
   $inc = include_once (DRUPAL_ROOT . '/sites/all/modules/mediamosa/mediamosa.version.inc');
 
   // Try to include the settings file.
-  $version = $inc ? mediamosa_version::get_current_version_str(TRUE) : null;
-
-  return ($version ? $version : '');
+  return $inc ? mediamosa_version::get_current_version_str(TRUE) : '';
 }
 
 /**
@@ -102,41 +96,29 @@ function mediamosa_profile_install_tasks() {
  */
 function mediamosa_profile_install_tasks_alter(&$tasks, $install_state) {
 
-  // Necessary PHP settings.
-  // Should be first.
-  $tasks = array(
-    'install_select_profile' => array(
-      'display_name' => st('Choose profile'),
-      'display' => count($install_state['profiles']) != 1,
-      'run' => INSTALL_TASK_RUN_IF_REACHED,
-    ),
-    'install_select_locale' => array(
-      'display_name' => st('Choose language'),
-      'run' => INSTALL_TASK_RUN_IF_REACHED,
-    ),
-    'install_load_profile' => array(
-      'run' => INSTALL_TASK_RUN_IF_REACHED,
-    ),
-    'install_verify_requirements' => array(
-      'display_name' => st('Verify requirements'),
-    ),
-    'install_settings_form' => array(
-      'display_name' => st('Set up database'),
-      'type' => 'form',
-      'run' => $install_state['settings_verified'] ? INSTALL_TASK_SKIP : INSTALL_TASK_RUN_IF_NOT_COMPLETED,
-    ),
-    'install_system_module' => array(
-    ),
-    'install_bootstrap_full' => array(
-      'run' => INSTALL_TASK_RUN_IF_REACHED,
-    ),
-    'mediamosa_profile_php_settings_form' => array(
-      'display_name' => st('MediaMosa requirements'),
-      'type' => 'form',
-    ),
-  ) + $tasks;
-}
+  // We need to rebuild tasks in the same order and put our
+  // 'mediamosa_profile_php_settings_form' between it.
+  $copy_tasks_till = 'install_bootstrap_full';
 
+  $tasks_rebuild = array();
+
+  $mediamosa_profile_php_settings_form = array(
+    'display_name' => st('MediaMosa requirements'),
+    'type' => 'form',
+  );
+
+  foreach ($tasks as $name => $task) {
+    $tasks_rebuild[$name] = $task; // Copy task.
+
+    // if we reach certain point, then insert our task.
+    if ($name == $copy_tasks_till) {
+      $tasks_rebuild['mediamosa_profile_php_settings_form'] = $mediamosa_profile_php_settings_form;
+    }
+  }
+
+  // Copy rebuild.
+  $tasks = $tasks_rebuild;
+}
 
 function system_form_install_settings_form_alter(&$form, $form_state, $form_id) {
   // Set default for site name field.
