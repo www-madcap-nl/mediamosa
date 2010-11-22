@@ -468,6 +468,8 @@ function _mediamosa_browse_asset_page_view_properties($asset) {
     'metadata' => array(),
   );
 
+  $variables['metadata']['Created / Changed'] = $asset['videotimestamp'] . '/' . $asset['videotimestampmodified'];
+
   foreach ($metadata_groups as $metadata_group) {
     if (empty($asset[$metadata_group])) {
       continue;
@@ -627,6 +629,7 @@ function _mediamosa_browse_asset_page_view_mediafile_list($asset) {
     $rows[] = array(t('Mime Type'), $item['metadata']['mime_type']);
     $rows[] = array(t('Container'), $item['metadata']['container_type'] ? $item['metadata']['container_type'] . ' @ ' . $item['metadata']['bitrate'] . 'kbps' : '');
     $rows[] = array(t('Width * Height @ fps'), $item['metadata']['width'] ? $item['metadata']['width'] . 'px * ' . $item['metadata']['height'] . 'px @ ' . $item['metadata']['fps'] . 'fps' : '');
+    $rows[] = array(t('Created / Changed'), $item['created'] . ' / ' . $item['changed']);
     $rows[] = array(t('Duration'), $item['metadata']['file_duration']);
     $rows[] = array(t('Filesize'), ($item['metadata']['filesize']) ? format_size($item['metadata']['filesize']) : '');
     $rows[] = array(t('Video information'), ($item['metadata']['video_codec']) ? $item['metadata']['video_codec'] . ' @ ' . $item['metadata']['bitrate'] . 'kbps (' . $item['metadata']['colorspace'] . ')' : '');
@@ -637,6 +640,13 @@ function _mediamosa_browse_asset_page_view_mediafile_list($asset) {
     $rows[] = array(t('Audio information'), ($item['metadata']['audio_codec']) ? $item['metadata']['audio_codec'] . ' @ ' . $item['metadata']['sample_rate'] . 'Hz' . ' (' . $item['metadata']['channels'] . ')': '');
     $rows[] = array(t('Protected'), $item['is_protected']);
 
+    if ($item['transcode_profile_id']) {  
+      $mediamosa_get_transcode_profile_data = mediamosa_get_transcode_profile_data($item['transcode_profile_id']);
+      if ($mediamosa_get_transcode_profile_data) {
+      
+        $rows[] = array(t('Transcode Profile'), l($mediamosa_get_transcode_profile_data['profile'], 'admin/mediamosa/config/transcode_profile/' . $mediamosa_get_transcode_profile_data['transcode_profile_id']));
+      }
+    } 
     // Uri REST call.
     $uri = strtr('mediafile/@mediafile_id/acl', array('@mediafile_id' => $item['mediafile_id']));
 
@@ -1066,3 +1076,14 @@ function mediamosa_browse_asset_delete_confirm_form_submit($form, &$form_state) 
   drupal_goto(mediamosa_settings::get_url_asset($asset_id));
 }
 
+/**
+ * Get Transcode profile data.
+ *
+ * @param int $transcode_profile_id
+ */
+function mediamosa_get_transcode_profile_data($transcode_profile_id) {
+  $result = mediamosa_db::db_select('mediamosa_transcode_profile', 'mtp')->extend('TableSort')->fields('mtp', array('profile', 'transcode_profile_id'))->condition('transcode_profile_id', $transcode_profile_id)->execute();
+  $transcode_profile_data = $result->fetchAll(PDO::FETCH_ASSOC);
+
+  return $transcode_profile_data['0'];
+}
