@@ -116,3 +116,45 @@ function mediamosa_profile_install() {
   // Disable creation accounts by users
   variable_set('user_register', USER_REGISTER_ADMINISTRATORS_ONLY);
 }
+
+/**
+ * Implement hook_requirements().
+ */
+function mediamosa_profile_requirements($phase) {
+  $requirements = array();
+
+  if ($phase != 'runtime') {
+    return $requirements;
+  }
+
+  // Check for Client Application presence.
+  $number_of_apps = mediamosa_db::db_select(mediamosa_app_db::TABLE_NAME, 'a')
+    ->fields('a')
+    ->countQuery()
+    ->execute()
+    ->fetchField();
+  if (!$number_of_apps) {
+    $requirements['no_apps_defined'] = array(
+      'title' => t('Mediamosa Client Application'),
+      'value' => 'No Client Applications defined. Please add one ' . l(t('here'), 'admin/mediamosa/config/app/add') . '.',
+      'severity' => REQUIREMENT_WARNING,
+    );
+  }
+
+  // More checks can be added here like:
+  // is accessible variable_get('mediamosa_cron_url_app', ''); ?
+  // is set variable_get('mediamosa_jobscheduler_uri', ''); ?
+  // etc.
+
+  
+  // In case there are no warnings and errors - remind about detailed mediamosa report.
+  if (!count($requirements)) {
+    $requirements['encourage_check_status'] = array(
+      'title' => t('Mediamosa'),
+      'value' => 'Installed. Detailed description of Mediamosa component status is ' . l(t('here'), 'admin/mediamosa') . '.',
+      'severity' => REQUIREMENT_OK,
+    );
+  }
+
+  return $requirements;
+}
