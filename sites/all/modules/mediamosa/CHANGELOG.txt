@@ -17,7 +17,7 @@ Known issues;
   PDOException. It seems a Drupal 7 core bug. We will check it again after
   the Drupal 7 core update.
 
-MediaMosa 2.3.1 (build 1119)
+MediaMosa 2.3.1 (build 1126)
 ----------------------------
 - Streaming server statistics improvements (See ticket #103).
 - Black still generation (See VPCore ticket #212).
@@ -53,6 +53,7 @@ Other changes (not ticket related).
 - Enabled mediamosa_tool_ffmpeg and mediamosa_tool_windows in MediaMosa profile.
 - Fixed notice on app form when no tool modules are enabled.
 - Fixed missing login block when logged off (caused by BETA 3 migration).
+- Moved requirements hook from profile to module.
 
 MediaMosa 2.3.0 Build (1032)
 ----------------------------
