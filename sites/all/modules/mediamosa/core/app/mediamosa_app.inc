@@ -229,4 +229,15 @@ class mediamosa_app {
     $app = self::get_by_appid($app_id);
     return (!empty($app[mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO]) ? $app[mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO] : mediamosa_app_db::STILL_MAINTAIN_ASPECT_RATIO_YES);
   }
+
+  /**
+   * Returns number of apps found in the database.
+   */
+  static public function get_number_of_apps() {
+    return mediamosa_db::db_select(mediamosa_app_db::TABLE_NAME, 'app')
+//      ->fields('app')
+      ->countQuery()
+      ->execute()
+      ->fetchField();
+  }
 }

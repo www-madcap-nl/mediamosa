@@ -8,8 +8,7 @@ core = 7.x
 configure = admin/mediamosa/config/development/settings
 
 ; Dependencies (module names)
-dependencies[] = mediamosa
-dependencies[] = mediamosa_maintenance
+dependencies[] = mediamosa_sdk
 dependencies[] = mediamosa_connector
 
 ; Used files.

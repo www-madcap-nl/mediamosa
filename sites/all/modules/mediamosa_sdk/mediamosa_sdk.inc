@@ -34,8 +34,7 @@
  * The MediaMosa SDK class.
  */
 class mediamosa_sdk {
-  // ------------------------------------------------------------------ Consts.
-
+  // ------------------------------------------------------------------- Consts.
   // Error codes;
   const HTTP_OK = 200;
   const HTTP_CREATED = 201;
@@ -222,4 +221,13 @@ class mediamosa_sdk {
   const ERRORCODE_INVALID_STILL_TICKET = 2000;
 
   const ERRORCODE_INVALID_REST_CALL = 3000;
+
+  // ---------------------------------------------------------------- Functions.
+  /**
+   * Return the base URL for the SDK menu/URL.
+   */
+  static public function get_base_url() {
+    return module_exists('mediamosa_maintenance') ? 'admin/mediamosa/config' : 'admin/config';
+  }
 }
+

@@ -43,13 +43,6 @@ class mediamosa_connector {
   // Log will store the last # of requests and will drop the first.
   const MAX_LOG_ENTRIES = 50;
 
-  // MediaMosa errorcodes we use.
-  const HTTP_NOT_FOUND = 404;
-  const ERRORCODE_OKAY = 601;
-  const ERRORCODE_EMPTY_RESULT = 705;
-  const ERRORCODE_ACCESS_DENIED = 1601;
-  const ERRORCODE_NOT_AUTHORIZED = 1800;
-
   // ------------------------------------------------------------------ Members.
   // The URL to connect to.
   private $url;
@@ -171,7 +164,7 @@ class mediamosa_connector {
     $response = $this->do_request($uri, $options);
 
     // If response failed, then try to login.
-    if ($response && in_array((int) $response->xml->header->request_result_id, array(self::ERRORCODE_ACCESS_DENIED, self::ERRORCODE_NOT_AUTHORIZED))) {
+    if ($response && in_array((int) $response->xml->header->request_result_id, array(mediamosa_sdk::ERRORCODE_ACCESS_DENIED, mediamosa_sdk::ERRORCODE_NOT_AUTHORIZED))) {
       // Login again.
       if (self::do_login()) {
         $response = $this->do_request($uri, $options);
@@ -183,7 +176,7 @@ class mediamosa_connector {
       $result_id = (int) $response->xml->header->request_result_id;
       $result_description = $response->xml->header->request_result_description;
 
-      if ($fatal && !in_array($result_id, array(self::ERRORCODE_OKAY, self::ERRORCODE_EMPTY_RESULT))) {
+      if ($fatal && !in_array($result_id, array(mediamosa_sdk::ERRORCODE_OKAY, mediamosa_sdk::ERRORCODE_EMPTY_RESULT))) {
         if (empty($result_description)) {
           throw new Exception(strtr('Unable to execute Mediamosa REST call @uri (@code)', array('@uri' => $uri, '@code' => $result_id)), $result_id);
         }
@@ -242,7 +235,7 @@ class mediamosa_connector {
       return FALSE;
     }
 
-    if ($response->xml->header->request_result_id == self::HTTP_NOT_FOUND) {
+    if ($response->xml->header->request_result_id == mediamosa_sdk::HTTP_NOT_FOUND) {
       drupal_set_message(t('Enable the Application Authentication module, unable to login.'), 'error');
       return FALSE;
     }
@@ -428,7 +421,7 @@ class mediamosa_connector {
   static public function check_result($response, $ok = NULL, $error = NULL) {
     $result_id = $response ? (int)$response->xml->header->request_result_id : 0;
 
-    if ($result_id != self::ERRORCODE_OKAY && $result_id != self::ERRORCODE_EMPTY_RESULT) {
+    if ($result_id != mediamosa_sdk::ERRORCODE_OKAY && $result_id != mediamosa_sdk::ERRORCODE_EMPTY_RESULT) {
       if (isset($error)) {
         $error = t($error, array('%code' => $result_id, '%message' => $response->xml->header->request_result_description));
         drupal_set_message($error, 'error');

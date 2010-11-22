@@ -25,6 +25,8 @@ MediaMosa 2.3.1 (build 1119)
 - Still creation size is not adjustable fix (See VPCore ticket #214).
 - Modifications installation profile: requirements checking corrected,
   sample Apache configurations corrected (See ticket #32).
+- Added check for client application presence to the Drupal status page
+  admin/reports/status (See ticket #20).
 
 Other changes (not ticket related).
 - Fixed bug in /collection/$coll_id where owner was not changed of collection.

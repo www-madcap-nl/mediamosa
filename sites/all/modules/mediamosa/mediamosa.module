@@ -40,41 +40,58 @@ require_once 'core/node/mediamosa_node_mediamosa_server.inc';
 require_once 'core/node/mediamosa_node_mediamosa_transcode_profile.inc';
 
 /**
- * Implements hook_requirements().
+ * Implement hook_requirements().
  */
-function mediamosa_requirements($phase) {
-  // Ensure translations don't break at install time
-  $t = get_t();
+function mediamosa_profile_requirements($phase) {
+  $requirements = array();
 
-  $a_requirements = array();
-
-  if ($phase == 'runtime') {
-
-    // We require PHP 5 or higher
-    if (version_compare(phpversion(), mediamosa_settings::MINIMUM_PHP_VERSION) < 0) {
-      $a_requirements['php'] = array(
-        'title' => $t('PHP'),
-        'value' => phpversion(),
-        'description' => $t('Your PHP installation does not meet the requirements for using the MediaMosa module. MediaMosa requires at least PHP %version.', array('%version' => mediamosa_settings::MINIMUM_PHP_VERSION)),
-        'severity' => REQUIREMENT_ERROR
-      );
-    }
-
-    // Make sure the mediamosa_server_id is set and not to long.
-    // TODO: should be made as REST call to other servers.
-    $mediamosa_installation_id = mediamosa::get_server_id();
-
-    if (!isset($mediamosa_installation_id) || drupal_strlen($mediamosa_installation_id) == 0 || drupal_strlen($mediamosa_installation_id) > mediamosa_job_server_db::INSTALL_ID_LENGTH) {
-      $a_requirements['mediamosa'] = array(
-        'title' => $t("MediaMosa installation ID ('mediamosa_installation_id')"),
-        'value' => isset($mediamosa_installation_id) ? $mediamosa_installation_id : 'Not defined',
-        'description' => $t("The configuration setting in settings.php 'mediamosa_installation_id' is either not set or is too long, make sure its set and not longer than %length characters.", array('%length' => mediamosa_job_server_db::INSTALL_ID_LENGTH)),
-        'severity' => REQUIREMENT_ERROR
-      );
-    }
+  if ($phase != 'runtime') {
+    return $requirements;
   }
 
-  return $a_requirements;
+  // Check for Client Application presence.
+  if (!mediamosa_app::get_number_of_apps()) {
+    $requirements['no_apps_defined'] = array(
+      'title' => t('Mediamosa Client Application'),
+      'value' => 'No MediaMosa Client Applications defined. Please add one ' . l(t('here'), 'admin/mediamosa/config/app/add') . '.',
+      'severity' => REQUIREMENT_WARNING,
+    );
+  }
+
+  // We require PHP 5 or higher. Although Drupal 7 required 5.2.4 or higher,
+  // in the future we might need even higher version of PHP than Drupal.
+  if (version_compare(phpversion(), mediamosa_settings::MINIMUM_PHP_VERSION) < 0) {
+    $requirements['php'] = array(
+      'title' => t('PHP'),
+      'value' => phpversion(),
+      'description' => t('Your PHP installation does not meet the requirements for using the MediaMosa module. MediaMosa requires at least PHP %version.', array('%version' => mediamosa_settings::MINIMUM_PHP_VERSION)),
+      'severity' => REQUIREMENT_ERROR
+    );
+  }
+
+  // Make sure the mediamosa_server_id is set and not to long.
+  // TODO: should be made as REST call to other servers.
+  $mediamosa_installation_id = mediamosa::get_server_id();
+
+  if (!isset($mediamosa_installation_id) || drupal_strlen($mediamosa_installation_id) == 0 || drupal_strlen($mediamosa_installation_id) > mediamosa_job_server_db::INSTALL_ID_LENGTH) {
+    $requirements['mediamosa'] = array(
+      'title' => t("MediaMosa installation ID ('mediamosa_installation_id')"),
+      'value' => isset($mediamosa_installation_id) ? $mediamosa_installation_id : 'Not defined',
+      'description' => t("The configuration setting in settings.php 'mediamosa_installation_id' is either not set or is too long, make sure its set and not longer than %length characters.", array('%length' => mediamosa_job_server_db::INSTALL_ID_LENGTH)),
+      'severity' => REQUIREMENT_ERROR
+    );
+  }
+
+  // In case there are no warnings and errors - remind about detailed mediamosa report.
+  if (!count($requirements)) {
+    $requirements['encourage_check_status'] = array(
+      'title' => t('Mediamosa'),
+      'value' => 'Installed. Detailed description of Mediamosa component status is ' . l(t('here'), 'admin/mediamosa') . '.',
+      'severity' => REQUIREMENT_OK,
+    );
+  }
+
+  return $requirements;
 }
 
 /**
@@ -365,24 +382,7 @@ function mediamosa_mediamosa_configuration_collect() {
     '#default_value' => mediamosa::get_internal_password(),
     '#required' => TRUE,
   );
-/*
- * Removed for alpha 6, we no longer support other database for auto simpletest
- * (for now).
- * When turning on; dont forget mediamosa_mediamosa_configuration_validate().
- *
-  $form['settings_simpletest'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Simpletest settings'),
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-  );
-  $form['settings_simpletest']['mediamosa_simpletest_database'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Simpletest database prefix.'),
-    '#description' => t('The simpletest database prefix allows MediaMosa to run its simpletests on a separate database then current. Its also enables you to run Simpletests on different mysql database server, because you are entering a Drupal database reference. Default is empty, which will turn off this feature and makes Simpletest to run its tests on the default database. See /sites/mediamosa.settings.php for the database definition of mediamosa_simpletest. For enabling; uncomment the database definition of \'mediamosa_simpletest\' and enter \'mediamosa_simpletest\' here. Changing of this setting will fail if the database define does not exists. Make sure the user and password are correct for access to this database.'),
-    '#default_value' => variable_get('mediamosa_simpletest_database', ''),
-  );
- */
+
   return $form;
 }
 
