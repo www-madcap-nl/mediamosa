@@ -1421,7 +1421,7 @@ function mediamosa_update_7073() {
 function mediamosa_update_7074() {
 
   // Set the content to correct region.
-  db_query("UPDATE {block} SET region = 'content' WHERE module = 'user' AND delta = 'login' AND theme = 'seven'");
+  db_query("UPDATE {block} SET region = 'content', status = 1 WHERE module = 'user' AND delta = 'login' AND theme = 'seven'");
 
   // Rebuild the registry.
   registry_rebuild();
