@@ -1415,4 +1415,19 @@ function mediamosa_update_7073() {
   return t('The MediaMosa Library has been renamed to MediaMosa SDK. The old module MediaMosa Library is now a dummy and has been disabled. Keep it disabled as its removed in next release.');
 }
 
+/**
+ * Enable missing login block when not logged in.
+ */
+function mediamosa_update_7074() {
+
+  // Set the content to correct region.
+  db_query("UPDATE {block} SET region = 'content' WHERE module = 'user' AND delta = 'login'");
+
+  // Rebuild the registry.
+  registry_rebuild();
+  cache_clear_all();
+
+  return t('Login form should now be available again.');
+}
+
 // TODO: Remove old code from the repository on the next release: sites/all/modules/mediamosa/core/transcode/mapping.

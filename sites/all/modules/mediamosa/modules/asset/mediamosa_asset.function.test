@@ -242,7 +242,7 @@ class MediaMosaAssetFunctionsTestCaseEga extends MediaMosaTestCaseEgaJob {
     foreach ($test as $key => $value) {
       $this->assertTrue(
         $a_asset[$key] != $value,
-        t("Get the original value from property: @key, sent: @sent, get: @get", array('@key' => $key, '@sent' => $value, '@get' => $a_asset[$key]))
+        t('Get the original value from property: @key, sent: @sent, get: @get', array('@key' => $key, '@sent' => $value, '@get' => $a_asset[$key]))
       );
     }
 
