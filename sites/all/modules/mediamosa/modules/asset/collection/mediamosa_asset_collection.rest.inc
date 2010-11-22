@@ -51,18 +51,18 @@ class mediamosa_rest_call_asset_collection_create extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::COLL_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_COLLECTION_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_COLLECTION_ID,
           self::VAR_DESCRIPTION => 'The collection ID.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES
         ),
         self::ASSET_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
           self::VAR_DESCRIPTION => 'The asset ID to add to the collection. Multiple assets may be given here with asset_id[].',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
         ),
         self::USER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The user ID, must be owner of the collection.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES
         ),
@@ -149,13 +149,13 @@ public function get_var_setup() {
     $a_var_setup = array(
       self::VARS => array(
         self::ASSET_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
           self::VAR_DESCRIPTION => 'The asset ID.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
         ),
         self::USER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The asset ID.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES
         ),
@@ -218,7 +218,7 @@ public function get_var_setup() {
     $a_var_setup = array(
       self::VARS => array(
         self::ASSET_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
           self::VAR_DESCRIPTION => 'The asset ID.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),

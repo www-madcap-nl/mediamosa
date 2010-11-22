@@ -350,7 +350,7 @@ class mediamosa_asset_search {
         // We skip NULL values and empty strings with <> '' (tested).
         // String types are special, we also need to skip empty '' here.
         // We include the NULL and empty '' later again in fase 2.
-        if ($order_type == mediamosa_type::TYPE_STRING) {
+        if ($order_type == mediamosa_sdk::TYPE_STRING) {
           $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][self::ORDER_BY] = 'sort.' . $order_by . " <> ''";
         }
       }
@@ -606,7 +606,7 @@ class mediamosa_asset_search {
         );
 
         // String types are special, we also need to include empty '' here.
-        if ($order_type == mediamosa_type::TYPE_STRING) {
+        if ($order_type == mediamosa_sdk::TYPE_STRING) {
           // Set where we sort on, that is empty strings and NULL.
           $a_query_null[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND][self::ORDER_BY] = '(sort.' . $order_by . ' IS NULL OR sort.' . $order_by . " = '')";
         }

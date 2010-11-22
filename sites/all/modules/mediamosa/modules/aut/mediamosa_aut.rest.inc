@@ -85,7 +85,7 @@ class mediamosa_rest_call_aut_group_get extends mediamosa_rest_call {
     $a_var_setup = array();
 
     $a_var_setup[mediamosa_rest_call::VARS][self::GROUPNAME] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_STRING,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'The group name to retrieve',
     );
@@ -130,7 +130,7 @@ class mediamosa_rest_call_aut_group_get_hostnames extends mediamosa_rest_call {
     $a_var_setup = $this->get_var_setup_range();
 
     $a_var_setup[mediamosa_rest_call::VARS][self::GROUPNAME] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_STRING,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'The name of the group.',
     );
@@ -183,12 +183,12 @@ class mediamosa_rest_call_aut_group_create_hostnames extends mediamosa_rest_call
     $a_var_setup = array();
 
     $a_var_setup[mediamosa_rest_call::VARS][self::GROUPNAME] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_STRING,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'The name of the group, which shared the hostname(s).',
     );
     $a_var_setup[mediamosa_rest_call::VARS][self::HOSTNAME] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_STRING,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => "The hostname that the group should be linked.\n\nIn case of multiple hostnames you can using the '[]' notation",
@@ -234,12 +234,12 @@ class mediamosa_rest_call_aut_group_delete_hostnames extends mediamosa_rest_call
     $a_var_setup = array();
 
     $a_var_setup[mediamosa_rest_call::VARS][self::GROUPNAME] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_STRING,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'The name of the group to delete from.',
     );
     $a_var_setup[mediamosa_rest_call::VARS][self::HOSTNAME] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_STRING,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'The name of the host to delete.',
@@ -284,12 +284,12 @@ class mediamosa_rest_call_aut_group_create extends mediamosa_rest_call {
     $a_var_setup = array();
 
     $a_var_setup[mediamosa_rest_call::VARS][self::GROUPNAME] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_STRING,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'The name of the group to create.',
     );
     $a_var_setup[mediamosa_rest_call::VARS][self::GROUP_TYPE] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_AUT_GROUP_TYPE,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_AUT_GROUP_TYPE,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'The type of the group to create.',
       mediamosa_rest_call::VAR_ALLOWED_VALUES => array(mediamosa_aut_group_db::AUT_GROUP_TYPE_DOMAIN, mediamosa_aut_group_db::AUT_GROUP_TYPE_REALM),
@@ -348,17 +348,17 @@ class mediamosa_rest_call_aut_group_update extends mediamosa_rest_call {
     $a_var_setup = array();
 
     $a_var_setup[mediamosa_rest_call::VARS][self::GROUPNAME] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_STRING,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'The name of the group to update.',
     );
     $a_var_setup[mediamosa_rest_call::VARS][self::GROUP_TYPE] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_AUT_GROUP_TYPE,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_AUT_GROUP_TYPE,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_DESCRIPTION => 'The type of the group.',
     );
     $a_var_setup[mediamosa_rest_call::VARS][self::NEW_GROUPNAME] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_STRING,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_DESCRIPTION => 'The new name of the group.',
     );
@@ -439,13 +439,13 @@ class mediamosa_rest_call_aut_group_delete extends mediamosa_rest_call {
     $a_var_setup = array();
 
     $a_var_setup[mediamosa_rest_call::VARS][self::GROUPNAME] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_STRING,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'The name of the group to delete.',
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::DELETE] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_ALPHA,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_ALPHA,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_DESCRIPTION => 'Provide value "cascade" to delete also contents of group. Will fail if group is not empty and this value is not set to "cascade".',
       mediamosa_rest_call::VAR_ALLOWED_VALUES => array('', 'cascade'),
@@ -571,27 +571,27 @@ class mediamosa_rest_call_aut_mediafile_set_multi_rights extends mediamosa_rest_
     $a_var_setup = array();
 
     $a_var_setup[mediamosa_rest_call::VARS][self::ASSET_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'The asset IDs of mediafiles which to change the rights.',
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::USER_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'Must match the owner fo the mediafile.',
       );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::REPLACE] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_DEFAULT_VALUE => 'TRUE',
       mediamosa_rest_call::VAR_DESCRIPTION => "'TRUE' of 'FALSE' if the current right has to be replaced. Standard is TRUE. Define if 'FALSE' if you want to keep the old rights.",
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::AUT_APP] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_INT,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_INT,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'Application(s) that gain access to the mediafile.',
@@ -599,7 +599,7 @@ class mediamosa_rest_call_aut_mediafile_set_multi_rights extends mediamosa_rest_
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::AUT_USER] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'User(s) that gain access to the mediafile.',
@@ -607,7 +607,7 @@ class mediamosa_rest_call_aut_mediafile_set_multi_rights extends mediamosa_rest_
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::AUT_GROUP] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'Group(s) that gain access to the mediafile.',
@@ -615,7 +615,7 @@ class mediamosa_rest_call_aut_mediafile_set_multi_rights extends mediamosa_rest_
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::AUT_DOMAIN] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_DOMAIN,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_DOMAIN,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'Domain(s) that gain access to the mediafile.',
@@ -623,7 +623,7 @@ class mediamosa_rest_call_aut_mediafile_set_multi_rights extends mediamosa_rest_
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::AUT_REALM] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_REALM,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_REALM,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'Realm(s) that gain access to the mediafile.',
@@ -632,7 +632,7 @@ class mediamosa_rest_call_aut_mediafile_set_multi_rights extends mediamosa_rest_
 
     // alias.
     $a_var_setup[mediamosa_rest_call::VARS][self::AUT_USER_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'Alias of aut_user.',
@@ -641,7 +641,7 @@ class mediamosa_rest_call_aut_mediafile_set_multi_rights extends mediamosa_rest_
 
     // alias.
     $a_var_setup[mediamosa_rest_call::VARS][self::AUT_GROUP_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'Alias of aut_group.',
@@ -776,26 +776,26 @@ class mediamosa_rest_call_aut_mediafile_set_rights extends mediamosa_rest_call {
     $a_var_setup = array();
 
     $a_var_setup[mediamosa_rest_call::VARS][self::MEDIAFILE_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_MEDIAFILE_ID,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_MEDIAFILE_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'The mediafile ID of which to change the rights.',
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::USER_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'Must match the owner fo the mediafile.',
       );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::REPLACE] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_DEFAULT_VALUE => 'TRUE',
       mediamosa_rest_call::VAR_DESCRIPTION => "'TRUE' of 'FALSE' if the current right has to be replaced. Standard is TRUE. Define if 'FALSE' if you want to keep the old rights.",
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::AUT_APP] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_INT,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_INT,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'Application(s) that gain access to the mediafile.',
@@ -803,7 +803,7 @@ class mediamosa_rest_call_aut_mediafile_set_rights extends mediamosa_rest_call {
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::AUT_USER] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'User(s) that gain access to the mediafile.',
@@ -811,7 +811,7 @@ class mediamosa_rest_call_aut_mediafile_set_rights extends mediamosa_rest_call {
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::AUT_GROUP] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'Group(s) that gain access to the mediafile.',
@@ -819,7 +819,7 @@ class mediamosa_rest_call_aut_mediafile_set_rights extends mediamosa_rest_call {
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::AUT_DOMAIN] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_DOMAIN,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_DOMAIN,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'Domain(s) that gain access to the mediafile.',
@@ -827,7 +827,7 @@ class mediamosa_rest_call_aut_mediafile_set_rights extends mediamosa_rest_call {
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::AUT_REALM] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_REALM,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_REALM,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'Realm(s) that gain access to the mediafile.',
@@ -836,7 +836,7 @@ class mediamosa_rest_call_aut_mediafile_set_rights extends mediamosa_rest_call {
 
     // alias.
     $a_var_setup[mediamosa_rest_call::VARS][self::AUT_USER_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'Alias of aut_user.',
@@ -845,7 +845,7 @@ class mediamosa_rest_call_aut_mediafile_set_rights extends mediamosa_rest_call {
 
     // alias.
     $a_var_setup[mediamosa_rest_call::VARS][self::AUT_GROUP_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'Alias of aut_group.',
@@ -957,13 +957,13 @@ class mediamosa_rest_call_aut_mediafile_delete_rights extends mediamosa_rest_cal
     $a_var_setup = array();
 
     $a_var_setup[mediamosa_rest_call::VARS][self::MEDIAFILE_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_MEDIAFILE_ID,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_MEDIAFILE_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'The mediafile ID where from to remove the ACL rights',
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::USER_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'The owner of the mediafile.',
     );
@@ -1013,13 +1013,13 @@ class mediamosa_rest_call_aut_mediafile_get_rights extends mediamosa_rest_call {
     $a_var_setup = array();
 
     $a_var_setup[mediamosa_rest_call::VARS][self::MEDIAFILE_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_MEDIAFILE_ID,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_MEDIAFILE_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'The mediafile ID from which to receive the ACL rights',
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::USER_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'Must be the owner of the mediafile object to alter rights.',
     );
@@ -1099,26 +1099,26 @@ class mediamosa_rest_call_aut_asset_set_rights extends mediamosa_rest_call {
     $a_var_setup = array();
 
     $a_var_setup[mediamosa_rest_call::VARS][self::ASSET_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'The asset_id.',
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::USER_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'User ID, owner of the asset.',
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::REPLACE] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_DEFAULT_VALUE => 'TRUE',
       mediamosa_rest_call::VAR_DESCRIPTION => '\'TRUE\' or \'FALSE\'. Is the rest call overwrite the existing rules? Default is TRUE. Defined as \'FALSE\' means the old rules will not be overwritten.',
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::AUT_APP] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_INT,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_INT,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'Application(s) that get acces to the asset.',
@@ -1126,7 +1126,7 @@ class mediamosa_rest_call_aut_asset_set_rights extends mediamosa_rest_call {
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::AUT_USER] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'User(s) that get acces to the asset.',
@@ -1134,7 +1134,7 @@ class mediamosa_rest_call_aut_asset_set_rights extends mediamosa_rest_call {
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::AUT_GROUP] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'Group(s) that get acces to the asset.',
@@ -1142,7 +1142,7 @@ class mediamosa_rest_call_aut_asset_set_rights extends mediamosa_rest_call {
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::AUT_DOMAIN] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_DOMAIN,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_DOMAIN,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'Domain(s) that get acces to the asset.',
@@ -1150,7 +1150,7 @@ class mediamosa_rest_call_aut_asset_set_rights extends mediamosa_rest_call {
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::AUT_REALM] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_REALM,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_REALM,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'Realm(s) that get acces to the asset.',
@@ -1159,7 +1159,7 @@ class mediamosa_rest_call_aut_asset_set_rights extends mediamosa_rest_call {
 
     // alias.
     $a_var_setup[mediamosa_rest_call::VARS][self::AUT_USER_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'Alias of aut_user. If both are set, aut_user has priority.',
@@ -1168,7 +1168,7 @@ class mediamosa_rest_call_aut_asset_set_rights extends mediamosa_rest_call {
 
     // alias.
     $a_var_setup[mediamosa_rest_call::VARS][self::AUT_GROUP_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'Alias of aut_group. If both are set, aut_group has priority.',
@@ -1285,27 +1285,27 @@ class mediamosa_rest_call_aut_asset_mediafile_set_rights extends mediamosa_rest_
     $a_var_setup = array();
 
     $a_var_setup[mediamosa_rest_call::VARS][self::ASSET_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'The asset_ids.',
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::USER_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'User ID, owner of the asset.',
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::REPLACE] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_DEFAULT_VALUE => 'TRUE',
       mediamosa_rest_call::VAR_DESCRIPTION => '\'TRUE\' or \'FALSE\'. Is the rest call overwrite the existing rules? Default is TRUE. Defined as \'FALSE\' means the old rules will not be overwritten.',
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::AUT_APP] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_INT,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_INT,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'Application(s) that get acces to the asset.',
@@ -1313,7 +1313,7 @@ class mediamosa_rest_call_aut_asset_mediafile_set_rights extends mediamosa_rest_
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::AUT_USER] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'User(s) that get acces to the asset.',
@@ -1321,7 +1321,7 @@ class mediamosa_rest_call_aut_asset_mediafile_set_rights extends mediamosa_rest_
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::AUT_GROUP] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'Group(s) that get acces to the asset.',
@@ -1329,7 +1329,7 @@ class mediamosa_rest_call_aut_asset_mediafile_set_rights extends mediamosa_rest_
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::AUT_DOMAIN] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_DOMAIN,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_DOMAIN,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'Domain(s) that get acces to the asset.',
@@ -1337,7 +1337,7 @@ class mediamosa_rest_call_aut_asset_mediafile_set_rights extends mediamosa_rest_
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::AUT_REALM] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_REALM,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_REALM,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'Realm(s) that get acces to the asset.',
@@ -1346,7 +1346,7 @@ class mediamosa_rest_call_aut_asset_mediafile_set_rights extends mediamosa_rest_
 
     // alias.
     $a_var_setup[mediamosa_rest_call::VARS][self::AUT_USER_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'Alias of aut_user. If both are set, aut_user has priority.',
@@ -1355,7 +1355,7 @@ class mediamosa_rest_call_aut_asset_mediafile_set_rights extends mediamosa_rest_
 
     // alias.
     $a_var_setup[mediamosa_rest_call::VARS][self::AUT_GROUP_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'Alias of aut_group. If both are set, aut_group has priority.',
@@ -1496,13 +1496,13 @@ class mediamosa_rest_call_aut_asset_delete_rights extends mediamosa_rest_call {
     $a_var_setup = array();
 
     $a_var_setup[mediamosa_rest_call::VARS][self::ASSET_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'The asset ID where from to remove the ACL rights',
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::USER_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'The owner of the asset for access.',
     );
@@ -1552,13 +1552,13 @@ class mediamosa_rest_call_aut_asset_get_rights extends mediamosa_rest_call {
     $a_var_setup = array();
 
     $a_var_setup[mediamosa_rest_call::VARS][self::ASSET_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'The ID of the asset to set the rights on.',
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::USER_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'This must be the owner ID of the asset.',
     );
@@ -1620,14 +1620,14 @@ class mediamosa_rest_call_aut_collection_delete_rights extends mediamosa_rest_ca
     $a_var_setup = array();
 
     $a_var_setup[mediamosa_rest_call::VARS][self::COLL_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_COLLECTION_ID,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_COLLECTION_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'Collection id, unique identifier of the collection.',
 
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::USER_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'User id, to determine whether the applicant has the right to remove authorization or not.',
     );
@@ -1677,13 +1677,13 @@ class mediamosa_rest_call_aut_collection_get_rights extends mediamosa_rest_call 
     $a_var_setup = array();
 
     $a_var_setup[mediamosa_rest_call::VARS][self::COLL_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_COLLECTION_ID,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_COLLECTION_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'The coll id.',
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::USER_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'The user id.',
     );
@@ -1746,26 +1746,26 @@ class mediamosa_rest_call_aut_collection_set_rights extends mediamosa_rest_call 
     $a_var_setup = array();
 
     $a_var_setup[mediamosa_rest_call::VARS][self::COLL_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_COLLECTION_ID,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_COLLECTION_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'Collection ID',
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::USER_ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'User id, for authorization the changing  process.',
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::REPLACE] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_DEFAULT_VALUE => 'true',
       mediamosa_rest_call::VAR_DESCRIPTION => "'TRUE' or 'FALSE'. Whether the existing rules overwritten or not. Default is 'TRUE'. Defining it as 'FALSE', if you want to keep the old rights."
     );
 
     $a_var_setup[mediamosa_rest_call::VARS][self::AUT_APP] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_APP_ID,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_APP_ID,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_NO,
       mediamosa_rest_call::VAR_IS_ARRAY => mediamosa_rest_call::VAR_IS_ARRAY_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => 'Application(s) that access to the collection.',
@@ -1864,7 +1864,7 @@ class mediamosa_rest_call_aut_get_apps extends mediamosa_rest_call {
     $a_var_setup = array();
 
     $a_var_setup[mediamosa_rest_call::VARS][self::IS_OAI] = array(
-      self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+      self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
       self::VAR_DESCRIPTION => 'The OAI is allowed to see all applications. However, the call must be made internally to work.',
       self::VAR_IS_INTERNAL_ONLY => self::VAR_IS_INTERNAL_ONLY_YES,
       self::VAR_DEFAULT_VALUE => 'FALSE',

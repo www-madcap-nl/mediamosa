@@ -311,7 +311,7 @@ abstract class mediamosa_rest_call {
    */
   protected function get_var_setup_default(array $var_setup, $app_id_required = TRUE) {
     $var_setup[mediamosa_rest_call::VARS][mediamosa_rest_call::APP_ID] = array(
-      self::VAR_TYPE => mediamosa_type::TYPE_APP_ID,
+      self::VAR_TYPE => mediamosa_sdk::TYPE_APP_ID,
       self::VAR_IS_REQUIRED => ($app_id_required ? ($this->is_internal() ? self::VAR_IS_REQUIRED_NO : self::VAR_IS_REQUIRED_YES) : self::VAR_IS_REQUIRED_NO),
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
       self::VAR_DEFAULT_VALUE => 0,
@@ -320,7 +320,7 @@ abstract class mediamosa_rest_call {
 
     // @todo: remove when all calls are scanned, see next function.
     $var_setup[mediamosa_rest_call::VARS][mediamosa_rest_call::IS_APP_ADMIN] = array(
-      self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+      self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
       self::VAR_DESCRIPTION => mediamosa::t('NOT USED.'),
       self::VAR_DEFAULT_VALUE => 'false',
@@ -347,7 +347,7 @@ abstract class mediamosa_rest_call {
 
     // add is_app_admin.
     $var_setup[mediamosa_rest_call::VARS][mediamosa_rest_call::IS_APP_ADMIN] = array(
-      self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+      self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
       self::VAR_DESCRIPTION => mediamosa::t('A boolean to indicate the call is done by the APP admin. It overrides user autorisation.'),
       self::VAR_DEFAULT_VALUE => 'false',
@@ -365,7 +365,7 @@ abstract class mediamosa_rest_call {
   protected function get_var_setup_range(array $var_setup = array(), $limit_max = mediamosa_settings::LIMIT_MAX, $limit_default = mediamosa_settings::LIMIT_DEFAULT) {
 
     $var_setup[self::VARS][self::LIMIT] = array(
-      self::VAR_TYPE => mediamosa_type::TYPE_LIMIT,
+      self::VAR_TYPE => mediamosa_sdk::TYPE_LIMIT,
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_NO,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
       self::VAR_DEFAULT_VALUE => $limit_default,
@@ -376,7 +376,7 @@ abstract class mediamosa_rest_call {
     );
 
     $var_setup[self::VARS][self::OFFSET] = array(
-      self::VAR_TYPE => mediamosa_type::TYPE_UINT,
+      self::VAR_TYPE => mediamosa_sdk::TYPE_UINT,
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_NO,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
       self::VAR_DEFAULT_VALUE => 0,
@@ -442,7 +442,7 @@ abstract class mediamosa_rest_call {
     assert(in_array($default_order_direction, array(mediamosa_type::ORDER_DIRECTION_ASC, mediamosa_type::ORDER_DIRECTION_DESC)));
 
     $var_setup[self::VARS][self::ORDER_BY] = array(
-      self::VAR_TYPE => mediamosa_type::TYPE_ALPHA_NUM_UNDERSCORE,
+      self::VAR_TYPE => mediamosa_sdk::TYPE_ALPHA_NUM_UNDERSCORE,
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_NO,
       self::VAR_DEFAULT_VALUE => $default_order_by,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
@@ -455,7 +455,7 @@ abstract class mediamosa_rest_call {
     }
 
     $var_setup[self::VARS][self::ORDER_DIRECTION] = array(
-      self::VAR_TYPE => mediamosa_type::TYPE_ORDER_DIRECTION,
+      self::VAR_TYPE => mediamosa_sdk::TYPE_ORDER_DIRECTION,
       self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_NO,
       self::VAR_DEFAULT_VALUE => $default_order_direction,
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
@@ -945,7 +945,7 @@ abstract class mediamosa_rest_call {
 
     // Now loop through input and convert to UTC. Specify TYPE_DATETIME_UTC when you need to skip conversion.
     foreach ($this->a_rest_args as $name => $param) {
-      if ($param[self::PARAM_TYPE] == mediamosa_type::TYPE_DATETIME) {
+      if ($param[self::PARAM_TYPE] == mediamosa_sdk::TYPE_DATETIME) {
         $this->a_rest_args[$name][self::PARAM_VALUE] = mediamosa_datetime::app_date2utc_date($param[self::PARAM_VALUE], $this->calling_app[mediamosa_app_db::TIMEZONE]);
       }
     }

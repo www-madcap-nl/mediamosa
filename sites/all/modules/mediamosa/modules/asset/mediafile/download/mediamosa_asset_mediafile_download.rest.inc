@@ -48,12 +48,12 @@ class mediamosa_rest_call_download_mediafile extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::TICKET_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_TICKET_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_TICKET_ID,
           self::VAR_DESCRIPTION => 'The ticket ID.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::FILENAME => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The filename.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         )

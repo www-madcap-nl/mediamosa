@@ -74,7 +74,7 @@ class mediamosa_rest_call_get extends mediamosa_rest_call {
     $var_setup = array();
 
     $var_setup[mediamosa_rest_call::VARS][mediamosa_rest_call::ID] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_SERIAL,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_SERIAL,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
       mediamosa_rest_call::VAR_DESCRIPTION => mediamosa::t('The numeric ID of the REST call.'),
     );

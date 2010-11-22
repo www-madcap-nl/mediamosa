@@ -49,14 +49,14 @@ class mediamosa_rest_call_count_asset_mediafile extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::GROUP_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'The group ID to match.',
           self::VAR_RANGE_END => mediamosa_user_group_db::GROUP_ID_LENGTH,
           self::VAR_TRIM_VALUE => self::VAR_TRIM_VALUE_YES,
           self::VAR_DEFAULT_VALUE => '',
         ),
         self::OWNER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_RANGE_END => mediamosa_user_db::NAME_LENGTH,
           self::VAR_DESCRIPTION => 'The owner ID to match.',
           self::VAR_TRIM_VALUE => self::VAR_TRIM_VALUE_YES,
@@ -105,12 +105,12 @@ class mediamosa_rest_call_get_mediafile extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::MEDIAFILE_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_MEDIAFILE_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_MEDIAFILE_ID,
           self::VAR_DESCRIPTION => 'The ID of the mediafile to retrieve.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::SHOW_STILLS => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Include the stills in the output.',
           self::VAR_DEFAULT_VALUE => 'TRUE'
         )
@@ -171,22 +171,22 @@ class mediamosa_rest_call_get_asset_mediafiles extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::ASSET_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
           self::VAR_DESCRIPTION => 'The ID of the mediafile to retrieve.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::IS_STILL => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Include the stills in the output.',
           self::VAR_DEFAULT_VALUE => 'FALSE'
         ),
         self::IS_OAI => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Include extra information required for OAI output.',
           self::VAR_DEFAULT_VALUE => 'FALSE'
         ),
         self::TAG => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'Search on tag.',
           self::VAR_RANGE_END => mediamosa_asset_mediafile_db::TAG_LENGTH,
         )
@@ -245,17 +245,17 @@ class mediamosa_rest_call_delete_mediafiles extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::MEDIAFILE_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_MEDIAFILE_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_MEDIAFILE_ID,
           self::VAR_DESCRIPTION => 'The ID of the mediafile to delete.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::USER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The owner ID to match.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::DELETE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'Put on cascade to delete its stills as well.',
           self::VAR_ALLOWED_VALUES => array('cascade', '')
         ),
@@ -362,57 +362,57 @@ class mediamosa_rest_call_create_mediafile extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::ASSET_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
           self::VAR_DESCRIPTION => 'The ID of the parent asset.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::USER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The owner ID to match.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::GROUP_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'The group ID.',
           self::VAR_RANGE_END => mediamosa_user_group_db::GROUP_ID_LENGTH,
         ),
         self::URI => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_URI,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_URI,
           self::VAR_DESCRIPTION => 'The stream URI.',
         ),
         self::IS_DOWNLOADABLE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Mediafile can be downloaded.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
         self::IS_ORIGINAL_FILE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Mark mediafile as original.',
           self::VAR_DEFAULT_VALUE => 'TRUE',
           self::VAR_IS_INTERNAL_ONLY => self::VAR_IS_INTERNAL_ONLY_YES,
         ),
         self::MEDIAFILE_ID_SOURCE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_MEDIAFILE_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_MEDIAFILE_ID,
           self::VAR_DESCRIPTION => 'The ID of the mediafile of the original.',
           self::VAR_IS_INTERNAL_ONLY => self::VAR_IS_INTERNAL_ONLY_YES,
         ),
         self::FILENAME => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_FILENAME,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_FILENAME,
           self::VAR_DESCRIPTION => 'Filename of the mediafile, can not be combined with URI.',
           self::VAR_IS_INTERNAL_ONLY => self::VAR_IS_INTERNAL_ONLY_YES,
         ),
         self::SANNAS_MOUNT_POINT => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The location path of the file.',
           self::VAR_IS_INTERNAL_ONLY => self::VAR_IS_INTERNAL_ONLY_YES,
         ),
         self::MEDIAFILE_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_MEDIAFILE_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_MEDIAFILE_ID,
           self::VAR_DESCRIPTION => 'The mediafile ID.',
           self::VAR_IS_INTERNAL_ONLY => self::VAR_IS_INTERNAL_ONLY_YES,
         ),
         self::TAG => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'User specified tag.',
           self::VAR_RANGE_END => mediamosa_asset_mediafile_db::TAG_LENGTH,
         ),
@@ -522,38 +522,38 @@ class mediamosa_rest_call_update_mediafile extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::USER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The owner ID to match.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::MEDIAFILE_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_MEDIAFILE_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_MEDIAFILE_ID,
           self::VAR_DESCRIPTION => 'The mediafile ID.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::FILENAME => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_FILENAME,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_FILENAME,
           self::VAR_DESCRIPTION => 'Change the filename of the file.',
         ),
         self::URI => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_URI,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_URI,
           self::VAR_DESCRIPTION => 'The stream URI.',
         ),
         self::IS_DOWNLOADABLE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Mediafile can be downloaded.',
         ),
         self::TRANSCODE_INHERITS_ACL => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Any transcodes will inherit ACL settings.',
         ),
         self::TAG => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'User specified tag.',
           self::VAR_RANGE_END => mediamosa_asset_mediafile_db::TAG_LENGTH,
         ),
         self::MOUNT_POINT => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The location path of the file.',
           self::VAR_IS_INTERNAL_ONLY => self::VAR_IS_INTERNAL_ONLY_YES,
         ),

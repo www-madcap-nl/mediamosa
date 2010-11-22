@@ -112,9 +112,6 @@ function _ajax_execute_rest_call() {
 
   $commands = array();
 
-  // Run same on mediamosa 1.7?
-  $run_on_mm_17 = (isset($form_state['input']['run_on_mm_17']) && $form_state['input']['run_on_mm_17'] == 1);
-
   $response1x = $response2x = FALSE;
 
   if (empty($errors)) {
@@ -131,61 +128,10 @@ function _ajax_execute_rest_call() {
       $form['rest_result']['output']['#value'] = $response_mm2->data;
       $response2x = TRUE;
     }
-
-    if ($run_on_mm_17) {
-      $mediamosa_development_mediamosa_17_rest_url = variable_get('mediamosa_development_mediamosa_17_rest_url', '');
-
-      if (!empty($mediamosa_development_mediamosa_17_rest_url)) {
-        // Create mediamosa_connector.
-        $mediamosa_connector = new mediamosa_connector($username, $password, $mediamosa_development_mediamosa_17_rest_url);
-
-        // Get response.
-        $response_mm1 = $mediamosa_connector->request($uri, array('method' => $method, 'data' => $data));
-
-        if (empty($response_mm1) || empty($response_mm1->data)) {
-          $form['rest_result']['output_mm17']['#value'] = t('Check MediaMosa 1.7 settings, unable to retrieve data');
-        }
-        else {
-          $form['rest_result']['output_mm17']['#value'] = $response_mm1->data;
-          $response1x = TRUE;
-        }
-
-        $form['rest_result']['output_mm17']['#type'] = 'textarea';
-      }
-      else {
-        drupal_set_message(t('No REST interface URL set, check settings.'));
-      }
-    }
   }
   else {
     $form['rest_result']['output']['#value'] = implode("\n", $errors);
   }
-
-  if ($response1x && $response2x) {
-    $pass = $failure = 0;
-
-    $response_mm1_array = mediamosa_lib::simplexml2array($response_mm1->xml->items);
-    $response_mm2_array = mediamosa_lib::simplexml2array($response_mm2->xml->items);
-
-    $compares = array(t('Result compare MediaMosa2.x with MediaMosa 1.x response.'));
-
-    if ((int)$response_mm1->xml->header->item_count != (int)$response_mm2->xml->header->item_count) {
-      $compares[] = t('Item count does not match.');
-    }
-
-    if ((int)$response_mm1->xml->header->item_count_total != (int)$response_mm2->xml->header->item_count_total) {
-      $compares[] = t('Item count total does not match.');
-    }
-
-    // Find possible ignore key listing for this uri/method.
-    $ignore = empty($ignore_list[$uri][$method]) ? array() : $ignore_list[$uri][$method];
-
-    $compares = _mediamosa_development_compare_array($response_mm1_array['item'], $response_mm2_array['item'], 'MediaMosa 1.7.x', 'MediaMosa2.x', $compares, $ignore);
-
-    $form['rest_result']['output_compare']['#type'] = 'textarea';
-    $form['rest_result']['output_compare']['#value'] = implode("\n", $compares);
-  }
-
 
   $form = form_builder('', $form, $form_state);
   $commands[] = ajax_command_replace('', drupal_render($form['rest_result']));
@@ -250,7 +196,7 @@ function _mediamosa_development_set_rest_call($uri, $method) {
   $_SESSION['mediamosa_development_params']['uri'] = str_replace('-', '/', $uri) . '|' . $method;
   unset($_SESSION['mediamosa_development_params']['rest_call']);
 
-  drupal_goto('admin/mediamosa/config/development/rest');
+  drupal_goto('admin/config/development/mediamosa/development/rest');
 }
 
 /**
@@ -273,6 +219,14 @@ function mediamosa_development_rest_form($form, $form_state) {
     }
   }
 
+  // If this is empty, then mediamosa core is off.
+  if (empty($rest_call_options)) {
+    if (module_exists('mediamosa_connector')) {
+
+    }
+  }
+
+
   ksort($rest_call_options);
 
   $form = array();
@@ -288,15 +242,19 @@ function mediamosa_development_rest_form($form, $form_state) {
     $apps[0] = t('Use MediaMosa Connector to connect');
   }
 
-  $apps_2 = mediamosa_app::get_all_apps(array(mediamosa_app_db::APP_ID, mediamosa_app_db::APP_NAME), mediamosa_app_db::APP_ID, 'ASC')->fetchAllKeyed();
-  foreach ($apps_2 as $app_id => $app_name) {
-    $apps[$app_id] = strtr('@name (App ID @app_id)', array('@name' => $app_name, '@app_id' => $app_id));
+  if (module_exists('mediamosa_app')) {
+    $apps_2 = mediamosa_app::get_all_apps(array(mediamosa_app_db::APP_ID, mediamosa_app_db::APP_NAME), mediamosa_app_db::APP_ID, 'ASC')->fetchAllKeyed();
+    foreach ($apps_2 as $app_id => $app_name) {
+      $apps[$app_id] = strtr('@name (App ID @app_id)', array('@name' => $app_name, '@app_id' => $app_id));
+    }
   }
 
   if (empty($apps)) {
     $form['rest']['client_application'] = array(
       '#markup' => t('No client applications found or MediaMosa connector setup.'),
     );
+
+    return $form;
   }
 
   $form['rest']['client_application'] = array(
@@ -305,15 +263,6 @@ function mediamosa_development_rest_form($form, $form_state) {
     '#options' => $apps,
     '#default_value' => empty($_SESSION['mediamosa_development_params']['client_application']) ? '' : $_SESSION['mediamosa_development_params']['client_application'],
   );
-
-  $mediamosa_development_mediamosa_17_rest_url = variable_get('mediamosa_development_mediamosa_17_rest_url', '');
-  if (!empty($mediamosa_development_mediamosa_17_rest_url)) {
-    $form['rest']['run_on_mm_17'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Run REST call on MediaMosa 1.7.x to compare output.'),
-      '#default_value' => 0,
-    );
-  }
 
   if (empty($session['uri'])) {
     $form['rest']['uri'] = array(
@@ -359,7 +308,7 @@ function mediamosa_development_rest_form($form, $form_state) {
       '#ajax' => array(
         'event' => 'click',
         'wrapper' => 'rest_call_output',
-        'path' => 'admin/mediamosa/config/development/js/restcall',
+        'path' => 'admin/config/development/mediamosa/development/js/restcall',
       ),
       '#weight' => 10,
     );
@@ -553,7 +502,7 @@ function _build_param($name, $var, $required) {
     return '';
   }
 
-  $type = mediamosa_type::typeAlias2Type($var[mediamosa_rest_call::VAR_TYPE]);
+  $type = mediamosa_sdk::typeAlias2Type($var[mediamosa_rest_call::VAR_TYPE]);
   $is_array = isset($var[mediamosa_rest_call::VAR_IS_ARRAY]) && $var[mediamosa_rest_call::VAR_IS_ARRAY] == mediamosa_rest_call::VAR_IS_ARRAY_YES;
 
   // Title.
@@ -588,7 +537,7 @@ function _build_param($name, $var, $required) {
       );
       break;
 
-    case mediamosa_type::TYPE_BOOL:
+    case mediamosa_sdk::TYPE_BOOL:
       $item = array(
         '#weight' => 10,
         '#type' => 'select',
@@ -603,7 +552,7 @@ function _build_param($name, $var, $required) {
 
       break;
 
-    case mediamosa_type::TYPE_LANGUAGE_CODE:
+    case mediamosa_sdk::TYPE_LANGUAGE_CODE:
       $options = explode(',', 'aa,ab,ae,af,ak,am,an,ar,as,av,ay,az,ba,be,bg,bh,bi,bm,bn,bo,br,bs,ca,ce,ch,co,cr,cs,cu,cv,cy,da,de,dv,dz,ee,el,en,eo,es,et,eu,fa,ff,fi,fj,fo,fr,fy,ga,gd,gl,gn,gu,gv,ha,he,hi,ho,hr,ht,hu,hy,hz,ia,id,ie,ig,ii,ik,io,is,it,iu,ja,jv,ka,kg,ki,kj,kk,kl,km,kn,ko,kr,ks,ku,kv,kw,ky,la,lb,lg,li,ln,lo,lt,lu,lv,mg,mh,mi,mk,ml,mn,mo,mr,ms,mt,my,na,nb,nd,ne,ng,nl,nn,no,nr,nv,ny,oc,oj,om,or,os,pa,pi,pl,ps,pt,qu,rm,rn,ro,ru,rw,ry,sa,sc,sd,se,sg,sh,si,sk,sl,sm,sn,so,sq,sr,ss,st,su,sv,sw,ta,te,tg,th,ti,tk,tl,tn,to,tr,ts,tt,tw,ty,ug,uk,ur,uz,ve,vi,vo,wa,wo,xh,yi,yo,za,zh,zu');
       $item = array(
         '#type' => 'select',
@@ -613,26 +562,26 @@ function _build_param($name, $var, $required) {
       );
       break;
 
-    case mediamosa_type::TYPE_APP_ID:
-    case mediamosa_type::TYPE_INT:
-    case mediamosa_type::TYPE_UINT:
-    case mediamosa_type::TYPE_AUT_GROUP_TYPE:
-    case mediamosa_type::TYPE_TICKET_ID:
+    case mediamosa_sdk::TYPE_APP_ID:
+    case mediamosa_sdk::TYPE_INT:
+    case mediamosa_sdk::TYPE_UINT:
+    case mediamosa_sdk::TYPE_AUT_GROUP_TYPE:
+    case mediamosa_sdk::TYPE_TICKET_ID:
 
-    case mediamosa_type::TYPE_URI:
-    case mediamosa_type::TYPE_FILENAME:
-    case mediamosa_type::TYPE_STRING:
-    case mediamosa_type::TYPE_ALPHA:
-    case mediamosa_type::TYPE_ALPHA_NUM:
-    case mediamosa_type::TYPE_ALPHA_NUM_UNDERSCORE:
-    case mediamosa_type::TYPE_ALPHA_NUM_UNDERSCORE_TAG:
+    case mediamosa_sdk::TYPE_URI:
+    case mediamosa_sdk::TYPE_FILENAME:
+    case mediamosa_sdk::TYPE_STRING:
+    case mediamosa_sdk::TYPE_ALPHA:
+    case mediamosa_sdk::TYPE_ALPHA_NUM:
+    case mediamosa_sdk::TYPE_ALPHA_NUM_UNDERSCORE:
+    case mediamosa_sdk::TYPE_ALPHA_NUM_UNDERSCORE_TAG:
 
-    case mediamosa_type::TYPE_DATETIME:
+    case mediamosa_sdk::TYPE_DATETIME:
 
-    case mediamosa_type::TYPE_SERIAL:
-    case mediamosa_type::TYPE_URL:
-    case mediamosa_type::TYPE_JOB:
-    case mediamosa_type::TYPE_COMMAND:
+    case mediamosa_sdk::TYPE_SERIAL:
+    case mediamosa_sdk::TYPE_URL:
+    case mediamosa_sdk::TYPE_JOB:
+    case mediamosa_sdk::TYPE_COMMAND:
       $item = array(
         '#weight' => '10',
         '#type' => 'textfield',

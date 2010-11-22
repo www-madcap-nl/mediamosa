@@ -920,7 +920,7 @@ function mediamosa_browse_asset_form_validate($form, &$form_state) {
 
       case mediamosa_asset_metadata_property_db::TYPE_DATETIME:
         try {
-          $form_state['values'][$name_rpl] = mediamosa_type::check($name, mediamosa_type::TYPE_DATETIME, $form_state['values'][$name_rpl]);
+          $form_state['values'][$name_rpl] = mediamosa_type::check($name, mediamosa_sdk::TYPE_DATETIME, $form_state['values'][$name_rpl]);
         }
         catch (mediamosa_exception $e) {
           form_set_error($name_rpl, t('Invalid date, must be in format YYYY-MM-DD or YYYY-MM-DD 00:00:00'));

@@ -50,12 +50,12 @@ class mediamosa_rest_call_download_mediafile_still extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::STILL_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STILL_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STILL_ID,
           self::VAR_DESCRIPTION => 'The still ID.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
         ),
         self::TICKET_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_TICKET_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_TICKET_ID,
           self::VAR_DESCRIPTION => 'The ticket ID.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
         ),

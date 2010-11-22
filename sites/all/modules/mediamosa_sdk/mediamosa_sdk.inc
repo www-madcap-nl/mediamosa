@@ -34,7 +34,7 @@
  * The MediaMosa SDK class.
  */
 class mediamosa_sdk {
-  // ------------------------------------------------------------------- Consts.
+  // --------------------------------------------------------------- Errorcodes.
   // Error codes;
   const HTTP_OK = 200;
   const HTTP_CREATED = 201;
@@ -222,6 +222,78 @@ class mediamosa_sdk {
 
   const ERRORCODE_INVALID_REST_CALL = 3000;
 
+  // ---------------------------------------------------------------- Var Types.
+  // Do not make the ID value longer than 32 characters.
+  //    12345678901234567890123456789012    12345678901234567890123456789012
+  const TYPE_APP_ID                      = 'APP_ID'; // 1 - 9999
+  const TYPE_INT                         = 'INT';
+  const TYPE_UINT                        = 'UINT';
+  const TYPE_FLOAT                       = 'FLOAT';
+  const TYPE_SERIAL                      = 'SERIAL'; // Like autoinc. in db
+  const TYPE_ALPHA                       = 'ALPHA'; // [A-Za-z]
+  const TYPE_PRINTABLE                   = 'STRING_PRINTABLE';// only printable chars
+
+  const TYPE_ALPHA_NUM                   = 'ALPHA_NUM'; // [A-Za-z0-9]
+  const TYPE_ALPHA_NUM_UNDERSCORE        = 'ALPHA_NUM_UNDERSCORE'; // [A-Za-z0-9_]
+  const TYPE_ALPHA_NUM_UNDERSCORE_TAG    = 'ALPHA_NUM_UNDERSCORE_TAG'; // same as ALPHA_NUM_UNDERSCORE, but does not allow the first char to be non alpha.
+  const TYPE_STRING                      = 'STRING';
+  const TYPE_DATETIME                    = 'DATETIME';
+  const TYPE_DATETIME_UTC                = 'DATETIME_UTC'; // Is in UTC (already).
+  const TYPE_DATE                        = 'DATETIME';//@todo: Extend the DATETIME check and throw errors when time values exist. REMEMBER about utc conversion.
+  const TYPE_TIME                        = 'DATETIME';//@todo: Extend the DATETIME check and throw errors when date values exist. REMEMBER about utc conversion.
+  const TYPE_BOOL                        = 'BOOL';
+  const TYPE_MIMETYPE                    = 'MIMETYPE';
+  const TYPE_XML                         = 'STRING';
+  const TYPE_XML_VALIDATED               = 'XML'; // XML with syntax validation via simplexml_load_string(). Expects proper XML declaration.
+  const TYPE_XML_OAI                     = 'XML_OAI'; // XML with syntax validation via DOM Document. Expects no XML declaration.
+  const TYPE_EOR                         = 'EOR'; // Exclusive OR type (like 1 2 4 8, or 1|4 = 5), always UINT
+  const TYPE_URI                         = 'URI'; // URI type
+  const TYPE_URL                         = 'URL'; // URL type (checked with simple parse_url)
+  const TYPE_URL_URI                     = 'URL'; // URL / URI type (checked with simple parse_url)
+  const TYPE_AUT_GROUP_TYPE              = 'AUT_GROUP_TYPE';
+  const TYPE_DELETE                      = 'DELETE';
+
+  const TYPE_USER_ID                     = 'USER_ID';
+  const TYPE_GROUP_ID                    = 'GROUP_ID';
+  const TYPE_ASSET_ID                    = 'ASSET_ID';
+  const TYPE_MEDIAFILE_ID                = 'MEDIAFILE_ID';
+  const TYPE_STILL_ID                    = 'MEDIAFILE_ID';
+  const TYPE_COLLECTION_ID               = 'COLLECTION_ID';
+  const TYPE_BATCH_ID                    = 'BATCH_ID';
+  const TYPE_SUPPLEMENT_ID               = 'SUPPLEMENT_ID';
+  const TYPE_TICKET_ID                   = 'TICKET_ID';
+  const TYPE_JOB_ID                      = 'JOB_ID';
+
+  const TYPE_DOMAIN                      = 'DOMAIN';
+  const TYPE_REALM                       = 'REALM';
+  const TYPE_FILENAME                    = 'FILENAME';
+  const TYPE_LANGUAGE_CODE               = 'LANGUAGE_CODE';
+
+  const TYPE_CQL_ASSET                   = 'CQL_ASSET';
+  const TYPE_CQL_COLLECTION              = 'CQL_COLLECTION';
+  const TYPE_CQL_JOB                     = 'CQL_JOB';
+
+  const TYPE_ORDER_DIRECTION             = 'ORDER_DIRECTION';
+  const TYPE_LIMIT                       = 'LIMIT';
+  const TYPE_OPERATOR                    = 'OPERATOR'; // OR / AND.
+
+  const TYPE_SEARCH_STRING               = 'SEARCH_STRING';
+  const TYPE_SEARCH_INT                  = 'SEARCH_INT';
+  const TYPE_SEARCH_DATETIME             = 'SEARCH_DATETIME';
+  const TYPE_SEARCH_BOOL                 = 'SEARCH_BOOL';
+
+  // Contains, match, exact.
+  const TYPE_SEARCH_MATCH                = 'SEARCH_MATCH';
+
+  // Job types.
+  const TYPE_JOB                         = 'JOB_TYPE';
+  const TYPE_COMMAND                     = 'COMMAND';
+  const TYPE_JOB_STATUS                  = 'TYPE_JOB_STATUS';
+  const TYPE_JOB_PROGRESS                = 'TYPE_JOB_PROGRESS';
+
+  // Use to select what is slaved to other apps.
+  const TYPE_BOOL_IS_SLAVED              = 'BOOL_IS_SLAVED';
+
   // ---------------------------------------------------------------- Functions.
   /**
    * Return the base URL for the SDK menu/URL.
@@ -229,5 +301,50 @@ class mediamosa_sdk {
   static public function get_base_url() {
     return module_exists('mediamosa_maintenance') ? 'admin/mediamosa/config' : 'admin/config';
   }
-}
 
+  /**
+   * Convert possible alias to real type.
+   * F.e TYPE_GROUP_ID is actually a TYPE_ALPHA_NUM
+   * @param unknown_type $type
+   */
+  static public function typeAlias2Type($type) {
+
+    switch ($type) {
+      case self::TYPE_SUPPLEMENT_ID:
+      case self::TYPE_USER_ID:
+      case self::TYPE_GROUP_ID:
+      case self::TYPE_ASSET_ID:
+      case self::TYPE_MEDIAFILE_ID:
+      case self::TYPE_COLLECTION_ID:
+      case self::TYPE_BATCH_ID:
+      case self::TYPE_JOB:
+        return self::TYPE_ALPHA_NUM;
+
+      case self::TYPE_SEARCH_BOOL:
+        return self::TYPE_BOOL;
+
+      case self::TYPE_OPERATOR:
+      case self::TYPE_ORDER_DIRECTION:
+        return self::TYPE_ALPHA;
+
+      case self::TYPE_SEARCH_MATCH:
+      case self::TYPE_SEARCH_STRING:
+      case self::TYPE_DOMAIN:
+      case self::TYPE_REALM:
+      case self::TYPE_CQL_ASSET:
+      case self::TYPE_CQL_COLLECTION:
+      case self::TYPE_CQL_JOB:
+        return self::TYPE_STRING;
+
+      case self::TYPE_SEARCH_INT:
+      case self::TYPE_LIMIT:
+        return self::TYPE_INT;
+
+      case self::TYPE_SEARCH_DATETIME:
+      case self::TYPE_DATETIME_UTC:
+        return self::TYPE_DATETIME;
+    }
+
+    return $type;
+  }
+}

@@ -49,7 +49,7 @@ class mediamosa_rest_call_asset_supplement_get extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::ASSET_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
           self::VAR_DESCRIPTION => 'The asset ID.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
@@ -116,12 +116,12 @@ public function get_var_setup() {
     $a_var_setup = array(
       self::VARS => array(
         self::ASSET_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
           self::VAR_DESCRIPTION => 'The asset ID.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::USER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The user ID.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
@@ -181,38 +181,38 @@ class mediamosa_rest_call_asset_supplement_update extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::ASSET_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
           self::VAR_DESCRIPTION => 'The asset ID.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::SUPPLEMENT_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_SUPPLEMENT_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_SUPPLEMENT_ID,
           self::VAR_DESCRIPTION => 'The supplement ID.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::SUPPLEMENT => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The supplement.',
           self::VAR_RANGE_END => 64 * 1024, // 64k max length.
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::USER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The user ID.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::OAI_PREFIX => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The OAI prefix.',
           self::VAR_RANGE_END => mediamosa_asset_supplement_db::OAI_PREFIX_LENGTH
         ),
         self::OAI_NAMESPACEURI => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The OAI namespace URI.',
           self::VAR_RANGE_END => mediamosa_asset_supplement_db::OAI_NAMESPACEURI_LENGTH
         ),
         self::OAI_SCHEMALOCATION => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The OAI schema location.',
           self::VAR_RANGE_END => mediamosa_asset_supplement_db::OAI_SCHEMALOCATION_LENGTH
         ),
@@ -248,7 +248,7 @@ class mediamosa_rest_call_asset_supplement_update extends mediamosa_rest_call {
       }
 
       // When providing OAI stuff, then the supplement is a XML.
-      $a_var_setup[self::VARS][self::SUPPLEMENT][self::VAR_TYPE] = mediamosa_type::TYPE_XML_OAI;
+      $a_var_setup[self::VARS][self::SUPPLEMENT][self::VAR_TYPE] = mediamosa_sdk::TYPE_XML_OAI;
     }
     else {
       // No OAI set? Then Supplement is required.
@@ -312,17 +312,17 @@ class mediamosa_rest_call_asset_supplement_delete extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::SUPPLEMENT_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_SUPPLEMENT_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_SUPPLEMENT_ID,
           self::VAR_DESCRIPTION => 'The supplement ID.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::USER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The user ID.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::ASSET_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
           self::VAR_DESCRIPTION => 'The asset ID.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),

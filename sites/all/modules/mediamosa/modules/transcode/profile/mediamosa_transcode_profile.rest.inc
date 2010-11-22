@@ -102,7 +102,7 @@ class mediamosa_rest_call_transcode_profile_get extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::PROFILE_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'The ID of the profile to retrieve.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
@@ -169,34 +169,34 @@ class mediamosa_rest_call_transcode_profile_create extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::NAME => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The name of the profile.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::VAR_RANGE_END => mediamosa_transcode_profile_db::PROFILE_LENGTH,
         ),
         self::TOOL => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The tool used for the profile.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::VAR_RANGE_END => mediamosa_transcode_profile_db::TOOL_LENGTH,
         ),
         self::DEFAULT_ => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Is the default profile.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
         self::VERSION => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'The version number.',
         ),
         self::FILE_EXTENSION => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The file extension.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::VAR_RANGE_END => mediamosa_transcode_profile_db::FILE_EXTENSION_LENGTH,
         ),
         self::COMMAND => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The command.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::VAR_RANGE_END => mediamosa_transcode_profile_db::COMMAND_LENGTH,
@@ -262,41 +262,41 @@ class mediamosa_rest_call_transcode_profile_update extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::PROFILE_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'The ID of the profile to update.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::REPLACE_ => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Is replace.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
         self::NAME => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The name of the profile.',
           self::VAR_RANGE_END => mediamosa_transcode_profile_db::PROFILE_LENGTH,
         ),
         self::TOOL => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The tool used for the profile.',
           self::VAR_RANGE_END => mediamosa_transcode_profile_db::TOOL_LENGTH,
         ),
         self::DEFAULT_ => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Is the default profile.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
         self::VERSION => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'The version number.',
         ),
         self::FILE_EXTENSION => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The file extension.',
           self::VAR_RANGE_END => mediamosa_transcode_profile_db::FILE_EXTENSION_LENGTH,
         ),
         self::COMMAND => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The command.',
           self::VAR_RANGE_END => mediamosa_transcode_profile_db::COMMAND_LENGTH,
         ),
@@ -374,7 +374,7 @@ class mediamosa_rest_call_transcode_profile_delete extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::PROFILE_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'The ID of the profile to delete.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),

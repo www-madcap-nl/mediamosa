@@ -44,11 +44,11 @@ class mediamosa_datetime {
    * @param string $param
    *  Name of the param.
    * @param string $param_type
-   *  See mediamosa_type::TYPE_*.
+   *  See mediamosa_sdk::TYPE_*.
    *
    * @see mediamosa_type.inc
    */
-  static public function date8601_to_timestamp($param_value, $param, $param_type = mediamosa_type::TYPE_DATETIME, $format = 'Y-m-d H:i:s') {
+  static public function date8601_to_timestamp($param_value, $param, $param_type = mediamosa_sdk::TYPE_DATETIME, $format = 'Y-m-d H:i:s') {
     // Lets be sure its a string.
     assert(is_string($param_value));
 

@@ -50,21 +50,21 @@ class mediamosa_rest_call_delete_stills extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::ASSET_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
           self::VAR_DESCRIPTION => 'Delete still only from this asset.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::USER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'Owner of the stills.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::MEDIAFILE_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_MEDIAFILE_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_MEDIAFILE_ID,
           self::VAR_DESCRIPTION => 'The delete stills from this mediafile ID.',
         ),
         self::STILL_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STILL_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STILL_ID,
           self::VAR_DESCRIPTION => 'Delete this specific still.',
         ),
       ),
@@ -163,22 +163,22 @@ class mediamosa_rest_call_set_still_default extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::ASSET_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
           self::VAR_DESCRIPTION => 'ID of asset.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::USER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'Owner of the asset.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::MEDIAFILE_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_MEDIAFILE_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_MEDIAFILE_ID,
           self::VAR_DESCRIPTION => 'The mediafile of the asset.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
         ),
         self::STILL_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STILL_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STILL_ID,
           self::VAR_DESCRIPTION => 'Default this specific still.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
@@ -240,27 +240,27 @@ class mediamosa_rest_call_set_still_order extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::ASSET_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
           self::VAR_DESCRIPTION => 'ID of asset.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::USER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'Owner of the still.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::MEDIAFILE_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_MEDIAFILE_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_MEDIAFILE_ID,
           self::VAR_DESCRIPTION => 'The mediafile ID.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
         ),
         self::STILL_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_MEDIAFILE_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_MEDIAFILE_ID,
           self::VAR_DESCRIPTION => 'Setting the order for this specific still.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::ORDER => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'The order for this still.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
@@ -359,7 +359,7 @@ class mediamosa_rest_call_get_still extends mediamosa_rest_call_asset_mediafile_
     $a_var_setup[self::VARS][self::MEDIAFILE_ID][self::VAR_IS_REQUIRED] = self::VAR_IS_REQUIRED_NO;
 
     $a_var_setup[self::VARS][self::RESPONSE] = array(
-      self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+      self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
       self::VAR_DESCRIPTION => 'The still response type.',
       self::VAR_ALLOWED_VALUES => array(
         mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL,

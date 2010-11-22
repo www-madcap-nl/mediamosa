@@ -52,7 +52,7 @@ class mediamosa_rest_call_error_list extends mediamosa_rest_call {
 
     // My vars for this REST call.
     $a_var_setup[mediamosa_rest_call::VARS][mediamosa_error_db::CODE] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_UINT,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_UINT,
       mediamosa_rest_call::VAR_RANGE_START => mediamosa_error_db::CODE_RANGE_START,
       mediamosa_rest_call::VAR_RANGE_END => mediamosa_error_db::CODE_RANGE_END,
       mediamosa_rest_call::VAR_DESCRIPTION => mediamosa::t('The ID of the error code to retrieve.'),
@@ -114,7 +114,7 @@ class mediamosa_rest_call_error_get extends mediamosa_rest_call {
 
     // My vars for this REST call.
     $a_var_setup[mediamosa_rest_call::VARS][mediamosa_error_db::CODE] = array(
-      mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_UINT,
+      mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_UINT,
       mediamosa_rest_call::VAR_RANGE_START => mediamosa_error_db::CODE_RANGE_START,
       mediamosa_rest_call::VAR_RANGE_END => mediamosa_error_db::CODE_RANGE_END,
       mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
