@@ -1430,4 +1430,54 @@ function mediamosa_update_7074() {
   return t('Login form should now be available again.');
 }
 
+/**
+ * Fix changes in database table and column comments.
+ */
+function mediamosa_update_7075() {
+
+  // Our fixes.
+  $fixes = array(
+    mediamosa_statistics_stream_request_db::TABLE_NAME => array(
+      mediamosa_statistics_stream_request_db::ID,
+      mediamosa_statistics_stream_request_db::TID,
+      mediamosa_statistics_stream_request_db::TIME,
+      mediamosa_statistics_stream_request_db::APP_ID,
+      mediamosa_statistics_stream_request_db::MEDIAFILE_ID,
+      mediamosa_statistics_stream_request_db::DURATION,
+      mediamosa_statistics_stream_request_db::BYTES,
+    ),
+
+    mediamosa_statistics_file_helper_db::TABLE_NAME => array(
+      mediamosa_statistics_file_helper_db::FILE,
+    ),
+
+    mediamosa_statistics_diskspace_used_db::TABLE_NAME => array(
+      mediamosa_statistics_diskspace_used_db::TYPE,
+    ),
+
+    mediamosa_server_db::TABLE_NAME => array(
+      mediamosa_server_db::SERVER_TYPE,
+    ),
+
+    mediamosa_app_db::TABLE_NAME => array(
+      mediamosa_app_db::ALWAYS_INSERT_MD,
+    ),
+  );
+
+  foreach ($fixes as $table_name => $columns) {
+    // Get the schema so we can reuse the schema creation.
+    $schema = drupal_get_schema_unprocessed($table_name);
+    _drupal_schema_initialize($schema, $table_name, FALSE);
+
+    // Changes we might want in MediaMosa.
+    $schema = mediamosa_db::db_install_schema_preprocess($table_name, $schema);
+
+    foreach ($columns as $column) {
+      $spec = $schema[$table_name]['fields'][$column];
+      assert(!empty($spec));
+      db_change_field($table_name, $column, $column, $spec);
+    }
+  }
+}
+
 // TODO: Remove old code from the repository on the next release: sites/all/modules/mediamosa/core/transcode/mapping.

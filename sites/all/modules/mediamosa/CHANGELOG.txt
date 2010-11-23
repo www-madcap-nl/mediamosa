@@ -59,6 +59,8 @@ Other changes (not ticket related).
 - Pulled mediamosa_developer from core into SDK.
 - Fixed table creation wrapper, add flag not to remove schema descriptions. This
   fixed the notices on the status page.
+- Added install hook to fix changes made on database schemas related to
+  comments.
 
 MediaMosa 2.3.0 Build (1032)
 ----------------------------
