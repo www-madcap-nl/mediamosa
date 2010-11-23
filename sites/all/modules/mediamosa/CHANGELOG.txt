@@ -57,6 +57,8 @@ Other changes (not ticket related).
 - Fixed /rest call, limit did not work at all. Provide call with limit = 0 to
   retrieve all REST calls. Offset parameter worked fine.
 - Pulled mediamosa_developer from core into SDK.
+- Fixed table creation wrapper, add flag not to remove schema descriptions. This
+  fixed the notices on the status page.
 
 MediaMosa 2.3.0 Build (1032)
 ----------------------------
