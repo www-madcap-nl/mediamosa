@@ -1498,7 +1498,7 @@ function mediamosa_update_7076() {
     'filter' => array(
       'status',
     ),
-    'users' => array(
+    'user' => array(
       'signature_format',
       'init',
     ),
@@ -1513,6 +1513,11 @@ function mediamosa_update_7076() {
     $schema = mediamosa_db::db_install_schema_preprocess($table_name, $schema);
 
     foreach ($columns as $column) {
+
+      if ($table_name == 'user') {
+        $table_name = 'users';
+      }
+
       $spec = $schema[$table_name]['fields'][$column];
       assert(!empty($spec));
       if (!db_field_exists($table_name, $column)) {
