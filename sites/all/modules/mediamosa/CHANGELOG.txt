@@ -61,6 +61,8 @@ Other changes (not ticket related).
   fixed the notices on the status page.
 - Added install hook to fix changes made on database schemas related to
   comments.
+- Fixed ticket mec. unit test, was disabled.
+- Renamed table 'mediamosa_log_integrity_check' to 'mediamosa_integrity_check'.
 
 MediaMosa 2.3.0 Build (1032)
 ----------------------------
