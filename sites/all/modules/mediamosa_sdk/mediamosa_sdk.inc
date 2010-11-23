@@ -305,7 +305,8 @@ class mediamosa_sdk {
   /**
    * Convert possible alias to real type.
    * F.e TYPE_GROUP_ID is actually a TYPE_ALPHA_NUM
-   * @param unknown_type $type
+   *
+   * @param string $type
    */
   static public function typeAlias2Type($type) {
 

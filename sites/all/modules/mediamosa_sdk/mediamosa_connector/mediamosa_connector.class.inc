@@ -128,7 +128,7 @@ class mediamosa_connector {
 
     if (empty($this->url)) {
       watchdog('mediamosa connector', 'Unable to do request, connector not setup.');
-      return;
+      return FALSE;
     }
 
     $options += array(

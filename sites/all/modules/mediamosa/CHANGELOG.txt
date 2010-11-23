@@ -54,6 +54,9 @@ Other changes (not ticket related).
 - Fixed notice on app form when no tool modules are enabled.
 - Fixed missing login block when logged off (caused by BETA 3 migration).
 - Moved requirements hook from profile to module.
+- Fixed /rest call, limit did not work at all. Provide call with limit = 0 to
+  retrieve all REST calls. Offset parameter worked fine.
+- Pulled mediamosa_developer from core into SDK.
 
 MediaMosa 2.3.0 Build (1032)
 ----------------------------
