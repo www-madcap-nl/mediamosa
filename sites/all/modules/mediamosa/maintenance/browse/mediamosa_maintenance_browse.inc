@@ -261,7 +261,7 @@ function _mediamosa_get_transcode_profile_data($transcode_profile_id) {
 
   static $transcode_profiles = array();
 
-  if (!empty($transcode_profiles[$transcode_profile_id])) {
+  if (isset($transcode_profiles[$transcode_profile_id])) {
     return $transcode_profiles[$transcode_profile_id];
   }
 
