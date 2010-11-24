@@ -27,6 +27,8 @@ MediaMosa 2.3.1 (build 1138)
   sample Apache configurations corrected (See ticket #32).
 - Added check for client application presence to the Drupal status page
   admin/reports/status (See ticket #20).
+- Added transcode link to profile when using asset browser in maintenance (See
+  ticket #33).
 
 Other changes (not ticket related).
 - Fixed bug in /collection/$coll_id where owner was not changed of collection.
@@ -63,6 +65,9 @@ Other changes (not ticket related).
   comments.
 - Fixed ticket mec. unit test, was disabled.
 - Renamed table 'mediamosa_log_integrity_check' to 'mediamosa_integrity_check'.
+- Fixed minor bug in transcode list REST call where sometimes old item data 
+  would end up in next items.
+  
 
 MediaMosa 2.3.0 Build (1032)
 ----------------------------
