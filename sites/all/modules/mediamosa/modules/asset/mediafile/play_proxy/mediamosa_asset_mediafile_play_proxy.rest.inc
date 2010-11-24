@@ -69,36 +69,36 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::ASSET_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
           self::VAR_DESCRIPTION => 'The asset ID.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::USER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The user ID.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::MEDIAFILE_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_MEDIAFILE_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_MEDIAFILE_ID,
           self::VAR_DESCRIPTION => 'The mediafile ID, is not required when profile_id is used or when response type is still.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,// Is required in some cases.
         ),
         self::GROUP_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'Group ID of the person who wants to play the video, can be used for authorization.',
           self::VAR_RANGE_END => mediamosa_user_group_db::GROUP_ID_LENGTH,
           self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
         ),
         self::ORIGINAL_MEDIAFILE_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_MEDIAFILE_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_MEDIAFILE_ID,
           self::VAR_DESCRIPTION => 'The original mediafile ID.',
         ),
         self::STILL_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STILL_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STILL_ID,
           self::VAR_DESCRIPTION => 'The still ID.',
         ),
         self::RESPONSE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The response type.',
           self::VAR_ALLOWED_VALUES => array(
             mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_DOWNLOAD,
@@ -110,66 +110,66 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
           self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_URI
         ),
         self::AUT_DOMAIN => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_DOMAIN,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_DOMAIN,
           self::VAR_DESCRIPTION => 'The domain for which the application is made. If specified it is used for authorization. The domain is checked against the acl rules of the media files, if the domain appears in the / acl / domain list, the video is played.',
         ),
         self::AUT_REALM => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_REALM,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_REALM,
           self::VAR_DESCRIPTION => 'If specified it is used for authorization.',
         ),
         self::DOMAIN => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_DOMAIN,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_DOMAIN,
           self::VAR_DESCRIPTION => 'The domain for which the application is made. If specified it is used for authorization. The domain is checked against the acl rules of the media files, if the domain appears in the / acl / domain list, the video is played.',
           self::VAR_IS_HIDDEN => self::VAR_IS_HIDDEN_YES,
         ),
         self::REALM => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_REALM,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_REALM,
           self::VAR_DESCRIPTION => 'If specified it is used for authorization.',
           self::VAR_IS_HIDDEN => self::VAR_IS_HIDDEN_YES,
         ),
         self::PROFILE_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => "Play the mediafile which is transcode with {profile_id}.\n\n(new since 1.7.0) If {original_mediafile_id} is also given, plays the transcoded file with profile_id= {profile_id} which was transcoded from source file mediafile_id = {original_mediafile_id}",
         ),
         self::WIDTH => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'The width of the video.',
         ),
         self::HEIGHT => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'The height of the video.',
         ),
         self::START => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'Start time of the video clip in milliseconds. Must be less than 24 hours (86,400,000)',
           self::VAR_RANGE_START => 0,
           self::VAR_RANGE_END => 86399999, // (24 uur in msec)-1 msec
         ),
         self::DURATION => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'Playing length of the video clip in milliseconds. Must be less than 24 hours (86,400,000).',
           self::VAR_RANGE_START => 0,
           self::VAR_RANGE_END => 86399999, // (24 uur in msec)-1 msec
         ),
         self::AUTOSTART => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Adjust the value of the autostart in object code.',
           self::VAR_DEFAULT_VALUE => 'TRUE',
         ),
         self::SIZE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'If response type = still, then size parameter may filter the response (eg. 150x120).',
         ),
         self::FORMAT => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => "If response type = still, then it is possble to filter the response to format (eg. 'jpeg').",
         ),
         self::RANGE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => "If response type = still, then it is possible to filter the response to range (to the still order value) (eg. '3', or '3,5,6', or '3, 5-8').",
         ),
         self::TAG => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => "Tag to indentify and search for the mediafile to play.",
         ),
       )
@@ -234,7 +234,7 @@ class mediamosa_rest_call_asset_mediafile_play extends mediamosa_rest_call {
 
     // Still response does not need mediafile_id.
     if ($response_type != mediamosa_asset_mediafile_play_proxy::RESPONSE_TYPE_STILL && !$mediafile_id) {
-      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_REQUIRED_PARAMETER, array('@param' => self::MEDIAFILE_ID, '@type' => mediamosa_type::TYPE_MEDIAFILE_ID));
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_REQUIRED_PARAMETER, array('@param' => self::MEDIAFILE_ID, '@type' => mediamosa_sdk::TYPE_MEDIAFILE_ID));
     }
 
     $a_mediafile_ext = array();

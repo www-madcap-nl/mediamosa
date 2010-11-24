@@ -251,3 +251,29 @@ function _mediamosa_browse_fix_metadata_name($name) {
 
   return drupal_ucfirst(str_replace('_', ' ', isset($fixed[$name]) ? $fixed[$name] : $name));
 }
+
+/**
+ * Get Transcode profile data.
+ *
+ * @param int $transcode_profile_id
+ */
+function _mediamosa_get_transcode_profile_data($transcode_profile_id) {
+
+  static $transcode_profiles = array();
+
+  if (!empty($transcode_profiles[$transcode_profile_id])) {
+    return $transcode_profiles[$transcode_profile_id];
+  }
+
+  $uri = strtr('transcode/profile/!profile_id', array('!profile_id' => $transcode_profile_id));
+
+  // Prevent more than one calls to the same (missing transcode).
+  $transcode_profiles[$transcode_profile_id] = FALSE;
+
+  $result = mediamosa_response_connector::static_do_restcall($uri);
+  if (mediamosa_response_connector::static_result_okay($result)) {
+    $transcode_profiles[$transcode_profile_id] = reset($result['items']);
+  }
+
+  return $transcode_profiles[$transcode_profile_id];
+}

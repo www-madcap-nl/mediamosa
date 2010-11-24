@@ -66,30 +66,30 @@ class mediamosa_rest_call_job_set_status extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::JOB_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'The job ID.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::STATUS => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_ALPHA,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_ALPHA,
           self::VAR_DESCRIPTION => 'The status.',
           self::VAR_ALLOWED_VALUES => array(mediamosa_job_db::JOB_STATUS_WAITING, mediamosa_job_db::JOB_STATUS_INPROGRESS, mediamosa_job_db::JOB_STATUS_FINISHED, mediamosa_job_db::JOB_STATUS_FAILED),
         ),
         self::PROGRESS => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The progress of the job from 0.000 to 1.000.',
         ),
         self::ERROR_DESCRIPTION => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The possible error description log.',
         ),
         self::CREATE_STILL => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'The create still switch after upload.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
         self::STILL_TYPE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The still type.',
           self::VAR_ALLOWED_VALUES => array(
             mediamosa_asset_mediafile_metadata::STILL_TYPE_NONE,
@@ -102,47 +102,47 @@ class mediamosa_rest_call_job_set_status extends mediamosa_rest_call {
           self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_metadata::STILL_TYPE_NONE,
         ),
         self::STILL_PER_MEDIAFILE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'Stills per mediafile. (Used when still_type is NORMAL).',
         ),
         self::STILL_EVERY_SECOND => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'Stills every second. (Used when still_type is SECOND).',
         ),
         self::START_FRAME => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'Still start frame. (in seconds, used when still_type is NORMAL or SECOND).',
         ),
         self::END_FRAME => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'Still end frame.',
         ),
         self::SIZE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'Size of the still.',
         ),
         self::H_PADDING => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'Still horizontal padding.',
         ),
         self::V_PADDING => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'Still vertical padding.',
         ),
         self::TAG => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'Still tag.',
         ),
         self::FRAMETIME => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'Still frametime.',
         ),
         self::WIDTH => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'Still width.',
         ),
         self::HEIGHT => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'Still height.',
         ),
       )
@@ -209,17 +209,17 @@ class mediamosa_rest_call_job_analyse_mediafile extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::MEDIAFILE_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_MEDIAFILE_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_MEDIAFILE_ID,
           self::VAR_DESCRIPTION => 'The mediafile ID.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::USER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The user id, must be the owner of the mediafile.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::NO_HINT => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'when true then, regardless of the ega setting, do not add hinting to the mediafile.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
@@ -274,12 +274,12 @@ class mediamosa_rest_call_job_set_upload_progress extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::JOB_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'The job ID.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::UPLOADED_FILE_SIZE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'The uploaded file size.',
         ),
       )
@@ -355,32 +355,32 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::USER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The user ID for owner of the mediafile.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::MEDIAFILE_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_MEDIAFILE_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_MEDIAFILE_ID,
           self::VAR_DESCRIPTION => 'The mediafile ID.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::JOB_TYPE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_JOB,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_JOB,
           self::VAR_DESCRIPTION => 'The job type.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::GROUP_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'The group ID.',
           self::VAR_RANGE_END => mediamosa_user_group_db::GROUP_ID_LENGTH,
         ),
         self::CREATE_STILL => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Create still after job run.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
         self::STILL_TYPE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The still type.',
           self::VAR_ALLOWED_VALUES => array(
             mediamosa_asset_mediafile_metadata::STILL_TYPE_NONE,
@@ -392,82 +392,82 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
           self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_metadata::STILL_TYPE_NONE,
         ),
         self::STILL_PER_MEDIAFILE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'Stills per mediafile. (Used when still_type is NORMAL).',
         ),
         self::STILL_EVERY_SECOND => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'Stills every second. (Used when still_type is SECOND).',
         ),
         self::START_FRAME => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'Still start frame (in seconds, used when still_type is NORMAL or SECOND). Deprecrated, use start_time instead.',
         ),
         self::START_TIME => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'Still start time (in seconds, used when still_type is NORMAL or SECOND).',
         ),
         self::END_FRAME => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'Still end frame (in seconds, used when still_type is NORMAL or SECOND). Deprecrated, use end_time instead.',
         ),
         self::END_TIME => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'Still end time (in seconds, used when still_type is NORMAL or SECOND).',
         ),
         self::SIZE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'Size of the still.',
         ),
         self::H_PADDING => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'Still horizontal padding.',
         ),
         self::V_PADDING => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'Still vertical padding.',
         ),
         self::TAG => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'Still tag.',
         ),
         self::FRAMETIME => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'Still frametime (in seconds).',
         ),
         self::COMPLETED_TRANSCODING_URL => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_URL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_URL,
           self::VAR_DESCRIPTION => 'Triggered when transcoding is completed.',
         ),
         self::PROFILE_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'Profile ID, used with transcode job.',
         ),
         self::TOOL => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'Tool used for transcode, used with transcode job.',
         ),
         self::FILE_EXTENSION => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_ALPHA_NUM,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_ALPHA_NUM,
           self::VAR_DESCRIPTION => 'file extension of the file, used with transcode job.',
         ),
         self::COMMAND => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_COMMAND,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_COMMAND,
           self::VAR_DESCRIPTION => 'Command used with transcode, used with transcode job.',
         ),
         self::PRIORITY => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'Priority of the job, used with transcode job.',
           self::VAR_RANGE_START => -100,
           self::VAR_RANGE_END => 100,
         ),
         self::FILE_SIZE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'File size.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO, // Only when type is upload.
         ),
         self::RETRANSCODE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Retranscode after upload, user with upload jobs.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
@@ -591,7 +591,7 @@ class mediamosa_rest_call_job_user_search extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::USER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The user ID for owner.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
@@ -661,17 +661,17 @@ class mediamosa_rest_call_job_asset_search extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::USER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The user ID for owner.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::ASSET_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
           self::VAR_DESCRIPTION => 'The asset ID to search on.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::CQL => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_CQL_JOB,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_CQL_JOB,
           self::VAR_DESCRIPTION => 'The CQL search string, used for extended and complex search options.',
         ),
       )
@@ -767,12 +767,12 @@ class mediamosa_rest_call_job_mediafile_search extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::USER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The user ID for owner.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::MEDIAFILE_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_MEDIAFILE_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_MEDIAFILE_ID,
           self::VAR_DESCRIPTION => 'The mediafile ID to search on.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
@@ -849,12 +849,12 @@ class mediamosa_rest_call_job_search extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::USER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The user ID for owner.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::JOB_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'The job ID to search on.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
@@ -939,7 +939,7 @@ class mediamosa_rest_call_job_create_transcode extends mediamosa_rest_call_job_c
 
     // Set job type and give it fixed value.
     $a_var_setup[self::VARS][self::JOB_TYPE] = array(
-      self::VAR_TYPE => mediamosa_type::TYPE_JOB,
+      self::VAR_TYPE => mediamosa_sdk::TYPE_JOB,
       self::VAR_DESCRIPTION => 'The job type.',
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
       self::VAR_OVERRIDE_VALUE => mediamosa_job_db::JOB_TYPE_TRANSCODE,
@@ -986,17 +986,17 @@ class mediamosa_rest_call_job_create_still extends mediamosa_rest_call_job_creat
     // note: mediamosa_rest_call_job_create_still_for_mediafile() depends on
     // this non-requirement and non-usage.
     $a_var_setup[self::VARS][self::ASSET_ID] = array(
-      self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
+      self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
       self::VAR_DESCRIPTION => 'The asset ID of the medafile.',
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
     );
 
     $a_var_setup[self::VARS][self::WIDTH] = array(
-      self::VAR_TYPE => mediamosa_type::TYPE_INT,
+      self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
       self::VAR_DESCRIPTION => 'Still width. Deprecated, use size instead.',
     );
     $a_var_setup[self::VARS][self::HEIGHT] = array(
-      self::VAR_TYPE => mediamosa_type::TYPE_INT,
+      self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
       self::VAR_DESCRIPTION => 'Still height. Deprecated, use size instead.',
     );
 
@@ -1013,7 +1013,7 @@ class mediamosa_rest_call_job_create_still extends mediamosa_rest_call_job_creat
 
     // Set job type and give it fixed value.
     $a_var_setup[self::VARS][self::JOB_TYPE] = array(
-      self::VAR_TYPE => mediamosa_type::TYPE_JOB,
+      self::VAR_TYPE => mediamosa_sdk::TYPE_JOB,
       self::VAR_DESCRIPTION => 'The job type.',
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
       self::VAR_OVERRIDE_VALUE => mediamosa_job_db::JOB_TYPE_STILL,
@@ -1132,12 +1132,12 @@ class mediamosa_rest_call_job_cancel extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::USER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The user ID for owner.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::JOB_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_JOB_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_JOB_ID,
           self::VAR_DESCRIPTION => 'The job ID to search on.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),

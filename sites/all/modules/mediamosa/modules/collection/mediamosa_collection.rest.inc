@@ -48,12 +48,12 @@ class mediamosa_rest_call_count_collection extends mediamosa_rest_call {
     $var_setup = array(
       self::VARS => array(
         self::GROUP_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
           self::VAR_TRIM_VALUE => self::VAR_TRIM_VALUE_YES,
           self::VAR_RANGE_END => mediamosa_user_group_db::GROUP_ID_LENGTH,
         ),
         self::OWNER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_TRIM_VALUE => self::VAR_TRIM_VALUE_YES,
           self::VAR_RANGE_END => mediamosa_user_db::NAME_LENGTH,
         ),
@@ -107,15 +107,15 @@ class mediamosa_rest_call_collection_search extends mediamosa_rest_call {
   // --------------------------------------------------------- Public Functions.
   static public function get_search_params() {
     return array(
-      'title' => mediamosa_type::TYPE_SEARCH_STRING,
-      'description' => mediamosa_type::TYPE_SEARCH_STRING,
-      'owner_id' => mediamosa_type::TYPE_SEARCH_STRING,
-      'group_id' => mediamosa_type::TYPE_SEARCH_STRING,
-      'created' => mediamosa_type::TYPE_SEARCH_DATETIME,
-      'changed' => mediamosa_type::TYPE_SEARCH_DATETIME,
-      'private' => mediamosa_type::TYPE_SEARCH_BOOL,
-      'public' => mediamosa_type::TYPE_SEARCH_BOOL,
-      'category' => mediamosa_type::TYPE_SEARCH_BOOL,
+      'title' => mediamosa_sdk::TYPE_SEARCH_STRING,
+      'description' => mediamosa_sdk::TYPE_SEARCH_STRING,
+      'owner_id' => mediamosa_sdk::TYPE_SEARCH_STRING,
+      'group_id' => mediamosa_sdk::TYPE_SEARCH_STRING,
+      'created' => mediamosa_sdk::TYPE_SEARCH_DATETIME,
+      'changed' => mediamosa_sdk::TYPE_SEARCH_DATETIME,
+      'private' => mediamosa_sdk::TYPE_SEARCH_BOOL,
+      'public' => mediamosa_sdk::TYPE_SEARCH_BOOL,
+      'category' => mediamosa_sdk::TYPE_SEARCH_BOOL,
     );
   }
 
@@ -126,65 +126,65 @@ class mediamosa_rest_call_collection_search extends mediamosa_rest_call {
     $var_setup = array(
       self::VARS => array(
         self::ASSET_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
           self::VAR_DESCRIPTION => 'Search within the collection of this supplied asset ID.',
         ),
         self::CQL => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_CQL_COLLECTION,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_CQL_COLLECTION,
           self::VAR_DESCRIPTION => 'The CQL search string, used for extended and complex search options.',
         ),
         self::FAV_USER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'Search within the favorites of this supplied user ID.',
         ),
         self::USER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'Alias for aut_user_id parameter, is chosen above aut_user_id.',
         ),
         self::AUT_USER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'Authentication parameter, for including the collections that are private.',
         ),
         self::PRIVATE_ => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Search on the private flag status of the collection.',
         ),
         self::PUBLIC_ => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Search on the public flag status of the collection.',
         ),
         self::CATEGORY => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Search on the category flag status of the collection.',
         ),
         self::PUBLIC_ASSIGN => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Search on the public assign flag status of the collection.',
         ),
         self::IS_APP_ADMIN => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Allows seeing unappropriate assets.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
         self::IS_PUBLIC_LIST => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'TRUE = include private assets, FALSE = exclude private assets (default),',
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
         self::CALCULATE_TOTAL_COUNT => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => "Calculate the number of rows in the complete scope of the search. Performance wise to use this parameter with value 'FALSE' if you don't need to know the total number of rows in your scope result.",
           self::VAR_DEFAULT_VALUE => 'TRUE',
         ),
         self::HIDE_EMPTY_ASSETS => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Do not include assets that do not have mediafiles.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
 
         // Old fasion search params.
         self::OPERATOR => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_OPERATOR,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_OPERATOR,
           self::VAR_DESCRIPTION => 'For non-CQL search only; provide either OR or AND for search parameters..',
           self::VAR_DEFAULT_VALUE => 'and',
         )
@@ -255,7 +255,7 @@ class mediamosa_rest_call_collection_search extends mediamosa_rest_call {
     $cqls = array();
     $a_translate_to = array();
     foreach ($var_setup[mediamosa_rest_call::VARS] as $param => $a_param) {
-      if ($a_param[mediamosa_rest_call::VAR_TYPE] == mediamosa_type::TYPE_SEARCH_MATCH) {
+      if ($a_param[mediamosa_rest_call::VAR_TYPE] == mediamosa_sdk::TYPE_SEARCH_MATCH) {
         continue;
       }
       // When provided, then convert.
@@ -367,7 +367,7 @@ class mediamosa_rest_call_collection_favorites_count extends mediamosa_rest_call
     $var_setup = array(
       self::VARS => array(
         self::COLL_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_COLLECTION_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_COLLECTION_ID,
           self::VAR_DESCRIPTION => 'The collection ID to find its favorites.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
@@ -414,15 +414,15 @@ class mediamosa_rest_call_collection_get extends mediamosa_rest_call {
     $var_setup = array(
       self::VARS => array(
         self::COLL_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_COLLECTION_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_COLLECTION_ID,
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::USER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The User ID requesting the details, used for unappropriate checks.',
         ),
         self::HIDE_EMPTY_ASSETS => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Do not include assets that do not have mediafiles.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
@@ -487,15 +487,15 @@ class mediamosa_rest_call_collection_count_relation extends mediamosa_rest_call 
     $var_setup = array(
       self::VARS => array(
         self::COLL_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_COLLECTION_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_COLLECTION_ID,
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::USER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The User ID requesting the details, used for unappropriate checks.',
         ),
         self::HIDE_EMPTY_ASSETS => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Do not include assets that do not have mediafiles.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
@@ -564,47 +564,47 @@ class mediamosa_rest_call_collection_create extends mediamosa_rest_call {
     $var_setup = array(
       self::VARS => array(
         self::USER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The user ID, will become the owner of the collection.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::VAR_RANGE_END => mediamosa_user_db::NAME_LENGTH,
         ),
         self::GROUP_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'The group ID, will be used for the group_id of the collection.',
           self::VAR_RANGE_END => mediamosa_user_group_db::GROUP_ID_LENGTH,
         ),
         self::TITLE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The title of the new collection.',
           self::VAR_RANGE_END => mediamosa_collection_db::TITLE_LENGTH,
         ),
         self::DESCRIPTION => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'Description of the new collection.',
         ),
         self::PRIVATE_ => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Used to identify private collections, use [GET] /collection?private=true to get these collections.',
           self::VAR_DEFAULT_VALUE => 'false',
         ),
         self::PUBLIC_ => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Used to identify public collections, use [GET] /collection?public=true to get these collections.',
           self::VAR_DEFAULT_VALUE => 'true',
         ),
         self::CATEGORY => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Used to identify main category collections, use [GET] /collection?category=true to get these collections.',
           self::VAR_DEFAULT_VALUE => 'false',
         ),
         self::ISPRIVATE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => t('If isprivate = true, then the collction is not displayed in public lists, such as top 10, last uploaded, etc.'),
           self::VAR_DEFAULT_VALUE => 'false',
         ),
         self::PUBLIC_ASSIGN => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => "A 'true' value indicates that all users have access to the collection entitled to assets.",
           self::VAR_DEFAULT_VALUE => 'false',
         ),
@@ -679,55 +679,55 @@ class mediamosa_rest_call_collection_update extends mediamosa_rest_call {
     $var_setup = array(
       self::VARS => array(
         self::COLL_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_COLLECTION_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_COLLECTION_ID,
           self::VAR_DESCRIPTION => 'The collection ID.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::USER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The user ID, must match the owner of the collection, otherwise the update will fail.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::VAR_RANGE_END => mediamosa_user_db::NAME_LENGTH,
         ),
         self::TITLE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The title of the collection.',
         ),
         self::DESCRIPTION => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'Description of the collection.',
         ),
         self::OWNER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'An user who is the current owner can reassign a new owner; after changing the owner, the old owner has no rights to modify the collection.',
         ),
         self::GROUP_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'The group ID.',
           self::VAR_RANGE_END => mediamosa_user_group_db::GROUP_ID_LENGTH,
         ),
         self::PRIVATE_ => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Used to identify private collections, use [GET] /collection?private=true to get these collections.',
         ),
         self::PUBLIC_ => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Used to identify public collections, use [GET] /collection?public=true to get these collections.',
         ),
         self::CATEGORY => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Used to identify main category collections, use [GET] /collection?category=true to get these collections.',
         ),
         self::ISPRIVATE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => '',
         ),
         self::PUBLIC_ASSIGN => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => '',
         ),
         self::IS_UNAPPROPRIATE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'A field to flag the collection as inappropriate. Only the is_app_admin is allowed to set this parameter. When set, the collection will not be shown except to the user and the is_app_admin. It does not affect assets belonging to the collection.',
         ),
       ),
@@ -805,17 +805,17 @@ class mediamosa_rest_call_collection_delete extends mediamosa_rest_call {
     $var_setup = array(
       self::VARS => array(
         self::COLL_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_COLLECTION_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_COLLECTION_ID,
           self::VAR_DESCRIPTION => 'The collection ID.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::USER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The user ID.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::DELETE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'Delete mode. Use this parameter with value \'cascade\' to delete *all* of the underlying items: assets with metadata, mediafiles, stills.
 
 The collection is deleted only if all underlying assets successfully removed.',
@@ -935,18 +935,18 @@ class mediamosa_rest_call_collection_delete_relation extends mediamosa_rest_call
     $var_setup = array(
       self::VARS => array(
         self::COLL_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_COLLECTION_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_COLLECTION_ID,
           self::VAR_DESCRIPTION => 'The collection ID.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::ASSET_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
           self::VAR_DESCRIPTION => 'The asset ID\'s to be removed from the collection. This parameter accepts an array of assets.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
         ),
         self::USER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The user ID, must be owner of the collection.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),

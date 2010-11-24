@@ -17,7 +17,7 @@ Known issues;
   PDOException. It seems a Drupal 7 core bug. We will check it again after
   the Drupal 7 core update.
 
-MediaMosa 2.3.1 (build 1126)
+MediaMosa 2.3.1 (build 1134)
 ----------------------------
 - Streaming server statistics improvements (See ticket #103).
 - Black still generation (See VPCore ticket #212).
@@ -54,6 +54,15 @@ Other changes (not ticket related).
 - Fixed notice on app form when no tool modules are enabled.
 - Fixed missing login block when logged off (caused by BETA 3 migration).
 - Moved requirements hook from profile to module.
+- Fixed /rest call, limit did not work at all. Provide call with limit = 0 to
+  retrieve all REST calls. Offset parameter worked fine.
+- Pulled mediamosa_developer from core into SDK.
+- Fixed table creation wrapper, add flag not to remove schema descriptions. This
+  fixed the notices on the status page.
+- Added install hook to fix changes made on database schemas related to
+  comments.
+- Fixed ticket mec. unit test, was disabled.
+- Renamed table 'mediamosa_log_integrity_check' to 'mediamosa_integrity_check'.
 
 MediaMosa 2.3.0 Build (1032)
 ----------------------------

@@ -44,7 +44,7 @@ class mediamosa_rest_call_app_ident extends mediamosa_rest_call {
 
     $a_var_setup[mediamosa_rest_call::VARS] = array(
       self::DBUS => array(
-        mediamosa_rest_call::VAR_TYPE => mediamosa_type::TYPE_STRING,
+        mediamosa_rest_call::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
         mediamosa_rest_call::VAR_IS_REQUIRED => mediamosa_rest_call::VAR_IS_REQUIRED_YES,
         mediamosa_rest_call::VAR_DESCRIPTION => 'The DBUS login value.',
       )

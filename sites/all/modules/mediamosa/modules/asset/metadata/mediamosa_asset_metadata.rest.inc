@@ -67,22 +67,22 @@ class mediamosa_rest_call_asset_metadata_create extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::ASSET_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
           self::VAR_DESCRIPTION => 'The asset ID to create the metadata for.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::USER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The user ID, must be owner of asset.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::REPLACE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Replace all metadata or append given metadata values. Do not specify both action and replace parameters.',
           self::VAR_DEFAULT_VALUE => 'TRUE',
         ),
         self::ACTION => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_ALPHA,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_ALPHA,
           self::VAR_DESCRIPTION => "Action to choose for given metadata values, choose either 'replace', 'append' or 'update'. Do not specify both action and replace parameters.",
           self::VAR_ALLOWED_VALUES => array(self::ACTION_REPLACE, self::ACTION_APPEND, self::ACTION_UPDATE),
           self::VAR_DEFAULT_VALUE => self::ACTION_REPLACE,
@@ -112,22 +112,22 @@ class mediamosa_rest_call_asset_metadata_create extends mediamosa_rest_call {
 
       switch ($a_definition['propdef_type']) {
         case mediamosa_asset_metadata_property_db::TYPE_INT:
-          $type = mediamosa_type::TYPE_INT;
+          $type = mediamosa_sdk::TYPE_INT;
           break;
         case mediamosa_asset_metadata_property_db::TYPE_DATETIME:
-          $type = mediamosa_type::TYPE_DATETIME;
+          $type = mediamosa_sdk::TYPE_DATETIME;
           break;
         case mediamosa_asset_metadata_property_db::TYPE_CHAR:
         default:
           // Default is string.
-          $type = mediamosa_type::TYPE_STRING;
+          $type = mediamosa_sdk::TYPE_STRING;
           break;
       }
 
       // FIXME Don't like this hack. Rather see extension on metadata property
       //       with a allowed values.
       if ($name == 'language') {
-        $type = mediamosa_type::TYPE_LANGUAGE_CODE;
+        $type = mediamosa_sdk::TYPE_LANGUAGE_CODE;
       }
 
       // Store the name, so we can unset them if we run process_rest_args.
@@ -186,22 +186,22 @@ class mediamosa_rest_call_asset_metadata_create extends mediamosa_rest_call {
 
       switch ($a_definition['propdef_type']) {
         case mediamosa_asset_metadata_property_db::TYPE_INT:
-          $type = mediamosa_type::TYPE_INT;
+          $type = mediamosa_sdk::TYPE_INT;
           break;
         case mediamosa_asset_metadata_property_db::TYPE_DATETIME:
-          $type = mediamosa_type::TYPE_DATETIME;
+          $type = mediamosa_sdk::TYPE_DATETIME;
           break;
         case mediamosa_asset_metadata_property_db::TYPE_CHAR:
         default:
           // Default is string.
-          $type = mediamosa_type::TYPE_STRING;
+          $type = mediamosa_sdk::TYPE_STRING;
           break;
       }
 
       // FIXME Don't like this hack. Rather see extension on metadata property
       //       with a allowed values.
       if ($name == 'language') {
-        $type = mediamosa_type::TYPE_LANGUAGE_CODE;
+        $type = mediamosa_sdk::TYPE_LANGUAGE_CODE;
       }
 
       // Do not setup a default value, for any value(!).

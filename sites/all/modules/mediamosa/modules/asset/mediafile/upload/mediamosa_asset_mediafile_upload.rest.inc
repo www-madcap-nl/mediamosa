@@ -54,19 +54,19 @@ class mediamosa_rest_call_asset_mediafile_uploadticket_create extends mediamosa_
     $a_var_setup = array(
       self::VARS => array(
         self::MEDIAFILE_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_MEDIAFILE_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_MEDIAFILE_ID,
           self::VAR_DESCRIPTION => 'ID of an original file (then it is without transcode) or empty mediafile.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::VAR_RANGE_END => mediamosa_db::HASH_ID_LENGTH,
         ),
         self::USER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'User id, determined to check whether the applicant has the rights and quotas to upload the mediafile.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::VAR_RANGE_END => mediamosa_user_db::NAME_LENGTH,
         ),
         self::GROUP_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'Group id, used for any quota check..',
           self::VAR_RANGE_END => mediamosa_user_group_db::GROUP_ID_LENGTH,
         ),
@@ -154,48 +154,48 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::UPLOAD_TICKET => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_TICKET_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_TICKET_ID,
           self::VAR_DESCRIPTION => 'The ID that has been given to enable the upload.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::VAR_RANGE_END => mediamosa_db::HASH_ID_LENGTH,
         ),
         self::REDIRECT_URI => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_URL_URI,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_URL_URI,
           self::VAR_DESCRIPTION => 'The URL to redirect when upload has been successful.',
         ),
         self::TRANSCODE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'If one (or more) transcode profiles is in this parameter than the media file will be transcoded after the upload.',
           self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
           self::VAR_DEFAULT_VALUE => array(),
         ),
         self::TRANSCODE_INHERITS_ACL => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => "If 'true'; All the acl media rights will be copied to the new transcoded media file.",
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
         self::CREATE_STILL => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => "Specify 'true', if you want a still is generated after the upload and analysis\n\nSee: Still creation parameters (POST) on /mediafile/{mediafile_id}/still/create [POST].",
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
         self::STILL_UPLOAD => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => "Specify TRUE for adding a still to the mediafile.",
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
         self::ORDER => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'Still order number. Only used when still_upload = true.',
           self::VAR_DEFAULT_VALUE => 0,
         ),
         self::DEFAULT_ => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Is default still? Only used when still_upload = true.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
         self::STILL_TYPE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The still type.',
           self::VAR_ALLOWED_VALUES => array(
             mediamosa_asset_mediafile_metadata::STILL_TYPE_NONE,
@@ -208,65 +208,65 @@ class mediamosa_rest_call_asset_mediafile_upload extends mediamosa_rest_call {
           self::VAR_DEFAULT_VALUE => mediamosa_asset_mediafile_metadata::STILL_TYPE_NONE,
         ),
         self::STILL_PER_MEDIAFILE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'Stills per mediafile (Used when still_type is NORMAL).',
         ),
         self::STILL_EVERY_SECOND => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'Stills every second (Used when still_type is SECOND).',
         ),
         self::START_FRAME => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'Still start frame. (in seconds, used when still_type is NORMAL or SECOND).',
         ),
         self::END_FRAME => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'Still end frame. (in seconds, used when still_type is NORMAL or SECOND).',
         ),
         self::SIZE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'Size of the still.',
         ),
         self::H_PADDING => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'Still horizontal padding.',
         ),
         self::V_PADDING => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'Still vertical padding.',
         ),
         self::TAG => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'Mediafile tag to set. An empty tag will clear possible set mediafile tag.',
         ),
         self::FRAMETIME => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'Still frametime.',
         ),
         self::WIDTH => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'Still width.',
         ),
         self::HEIGHT => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'Still height.',
         ),
         self::RETRANSCODE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => "if 'retranscode' is not put, all existing transcodes of the original media file will be lost. If 'retranscode' is 'true', then new transcode jobs will be created, which replace the existing transcodes..",
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
         self::FILENAME => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The filename of the media file (PUT method only, ignored otherwise).',
           self::VAR_IS_REQUIRED => $this->is_method_put() ? self::VAR_IS_REQUIRED_YES : self::VAR_IS_REQUIRED_NO,
         ),
         self::COMPLETED_URL => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_URL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_URL,
           self::VAR_DESCRIPTION => "This URL gives opportunity to the APP builder for a status raport; \nupload_ticket\nstatus_code\n\nThe upload_ticket is used to identify the upload. The status_code is a Mediamosa code.\nThe type is URL and not URI, because this parameter http:// or https://.",
         ),
         self::COMPLETED_TRANSCODING_URL => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_URL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_URL,
           self::VAR_DESCRIPTION => "This URL is called after the status of transcoding job changed.",
         ),
       )
@@ -379,7 +379,7 @@ class mediamosa_rest_call_asset_mediafile_upload_put extends mediamosa_rest_call
 
     // Add user_id.
     $a_var_setup[self::VARS][self::USER_ID] = array(
-      self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+      self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
       self::VAR_DESCRIPTION => 'User id, determined to check whether the applicant has the rights and quotas to upload the mediafile.',
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
       self::VAR_RANGE_END => mediamosa_user_db::NAME_LENGTH,
@@ -409,7 +409,7 @@ class mediamosa_rest_call_asset_mediafile_uploadprogress extends mediamosa_rest_
 
     // Add ID of the upload.
     $a_var_setup[self::VARS][self::ID] = array(
-      self::VAR_TYPE => mediamosa_type::TYPE_ALPHA_NUM,
+      self::VAR_TYPE => mediamosa_sdk::TYPE_ALPHA_NUM,
       self::VAR_DESCRIPTION => 'ID of the upload that has been randomly chosen and provided when the upload was send to the server.',
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
     );

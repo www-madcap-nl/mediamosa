@@ -47,12 +47,12 @@ class mediamosa_rest_call_asset_metadata_property_list extends mediamosa_rest_ca
     $a_var_setup = array(
       self::VARS => array(
         self::INCLUDE_DEFAULT_DEFINITIONS => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DEFAULT_VALUE => 'TRUE',
           self::DESCRIPTION => "Switch if we need to get all the default definitions that are 'global' over all apps.",
         ),
         self::NAME => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_ALPHA_NUM_UNDERSCORE,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_ALPHA_NUM_UNDERSCORE,
           self::DESCRIPTION => 'Optional property name to search on.',
         ),
       ),
@@ -144,13 +144,13 @@ class mediamosa_rest_call_asset_metadata_property_create extends mediamosa_rest_
     $a_var_setup = array(
       mediamosa_rest_call::VARS => array(
         self::NAME => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_ALPHA_NUM_UNDERSCORE_TAG,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_ALPHA_NUM_UNDERSCORE_TAG,
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::DESCRIPTION => 'The name of the property to create.',
           self::VAR_RANGE_END => mediamosa_asset_metadata_property_db::NAME_LENGTH,
         ),
         self::TYPE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_ALLOWED_VALUES => array('datetime', 'int', 'char'),
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::DESCRIPTION => "The type of data to be stored, can either be 'datetime' (iso-8601 standard date), 'int' (numbers), char (text).",
@@ -205,13 +205,13 @@ class mediamosa_rest_call_asset_metadata_property_delete extends mediamosa_rest_
     $a_var_setup = array(
       mediamosa_rest_call::VARS => array(
         self::NAME => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_ALPHA_NUM_UNDERSCORE,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_ALPHA_NUM_UNDERSCORE,
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::DESCRIPTION => 'The name of the property to delete.',
           self::VAR_RANGE_END => mediamosa_asset_metadata_property_db::NAME_LENGTH,
         ),
         self::DELETE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_ALLOWED_VALUES => array('cascade', ''),
           self::DESCRIPTION => "Specify as 'cascade' to delete all metadata as well. Deletion will fail if you try to delete an property that still has metadata.",
         ),
@@ -263,7 +263,7 @@ class mediamosa_rest_call_asset_metadata_property_tagcount extends mediamosa_res
     $a_var_setup = array(
       mediamosa_rest_call::VARS => array(
         self::PROP_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::DESCRIPTION => 'The prop ID of which the count must be calculated..',
         ),

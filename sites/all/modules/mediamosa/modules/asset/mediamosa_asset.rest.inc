@@ -53,35 +53,35 @@ class mediamosa_rest_call_change_ownership extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::OLD_GROUP_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'The current group ID to replace.',
           self::VAR_TRIM_VALUE => self::VAR_TRIM_VALUE_YES,
           self::VAR_RANGE_END => mediamosa_user_group_db::GROUP_ID_LENGTH,
         ),
         self::NEW_GROUP_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'The new group ID to replace with.',
           self::VAR_TRIM_VALUE => self::VAR_TRIM_VALUE_YES,
           self::VAR_RANGE_END => mediamosa_user_group_db::GROUP_ID_LENGTH,
         ),
         self::OLD_OWNER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The current owner to replace.',
           self::VAR_TRIM_VALUE => self::VAR_TRIM_VALUE_YES,
           self::VAR_RANGE_END => mediamosa_user_db::NAME_LENGTH,
         ),
         self::NEW_OWNER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The new owner to replace with.',
           self::VAR_TRIM_VALUE => self::VAR_TRIM_VALUE_YES,
           self::VAR_RANGE_END => mediamosa_user_db::NAME_LENGTH,
         ),
         self::OLD_APP_ID => array( // Unused.
-          self::VAR_TYPE => mediamosa_type::TYPE_APP_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_APP_ID,
           self::VAR_DESCRIPTION => 'The current app to replace.',
         ),
         self::NEW_APP_ID => array( // Unused.
-          self::VAR_TYPE => mediamosa_type::TYPE_APP_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_APP_ID,
           self::VAR_DESCRIPTION => 'The new app to replace with.',
         ),
       ),
@@ -194,13 +194,13 @@ class mediamosa_rest_call_count_asset extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::GROUP_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'The group ID to match.',
           self::VAR_TRIM_VALUE => self::VAR_TRIM_VALUE_YES,
           self::VAR_RANGE_END => mediamosa_user_group_db::GROUP_ID_LENGTH,
         ),
         self::OWNER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The owner ID to match.',
           self::VAR_TRIM_VALUE => self::VAR_TRIM_VALUE_YES,
           self::VAR_RANGE_END => mediamosa_user_db::NAME_LENGTH,
@@ -260,21 +260,21 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
   // ------------------------------------------------------------------ Public Functions.
   static public function get_search_params() {
     return array(
-      'asset_id' => mediamosa_type::TYPE_SEARCH_STRING,
-      'owner_id' => mediamosa_type::TYPE_SEARCH_STRING,
-      'group_id' => mediamosa_type::TYPE_SEARCH_STRING,
-      'provider_id' => mediamosa_type::TYPE_SEARCH_STRING,
-      'reference_id' => mediamosa_type::TYPE_SEARCH_STRING,
-      'videotimestamp' => mediamosa_type::TYPE_SEARCH_DATETIME,
-      'videotimestampmodified' => mediamosa_type::TYPE_SEARCH_DATETIME,
-      'mediafile_duration' => mediamosa_type::TYPE_SEARCH_STRING,
-      'mediafile_container_type' => mediamosa_type::TYPE_SEARCH_STRING,
-      'changed' => mediamosa_type::TYPE_SEARCH_DATETIME,
-      'app_id_search' => mediamosa_type::TYPE_SEARCH_INT,
-      'mime_type' => mediamosa_type::TYPE_SEARCH_STRING,
-      'filename' => mediamosa_type::TYPE_SEARCH_STRING,
-      'numofviews' => mediamosa_type::TYPE_SEARCH_INT,
-      'numofplays' => mediamosa_type::TYPE_SEARCH_INT,
+      'asset_id' => mediamosa_sdk::TYPE_SEARCH_STRING,
+      'owner_id' => mediamosa_sdk::TYPE_SEARCH_STRING,
+      'group_id' => mediamosa_sdk::TYPE_SEARCH_STRING,
+      'provider_id' => mediamosa_sdk::TYPE_SEARCH_STRING,
+      'reference_id' => mediamosa_sdk::TYPE_SEARCH_STRING,
+      'videotimestamp' => mediamosa_sdk::TYPE_SEARCH_DATETIME,
+      'videotimestampmodified' => mediamosa_sdk::TYPE_SEARCH_DATETIME,
+      'mediafile_duration' => mediamosa_sdk::TYPE_SEARCH_STRING,
+      'mediafile_container_type' => mediamosa_sdk::TYPE_SEARCH_STRING,
+      'changed' => mediamosa_sdk::TYPE_SEARCH_DATETIME,
+      'app_id_search' => mediamosa_sdk::TYPE_SEARCH_INT,
+      'mime_type' => mediamosa_sdk::TYPE_SEARCH_STRING,
+      'filename' => mediamosa_sdk::TYPE_SEARCH_STRING,
+      'numofviews' => mediamosa_sdk::TYPE_SEARCH_INT,
+      'numofplays' => mediamosa_sdk::TYPE_SEARCH_INT,
     );
   }
 
@@ -285,93 +285,93 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::RETURN_ASSET_IDS => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Return only the found asset ids.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
         self::FAV_USER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'Search within the favorites of this supplied user ID.',
         ),
         self::HIDE_EMPTY_ASSETS => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Do not include assets that do not have mediafiles.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
         self::COLL_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_COLLECTION_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_COLLECTION_ID,
           self::VAR_DESCRIPTION => 'Search within these collections.',
           self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
         ),
         self::GRANTED => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Include a flag on each asset to indicate access. When providing with TRUE, the result will include assets where no access is available.',
           self::VAR_DEFAULT_VALUE => 'TRUE',
         ),
         self::IS_PUBLIC_LIST => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Include or hide private assets in result. TRUE: exclude private assets, FALSE: include private assets.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
         self::IS_APP_ADMIN => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Allows seeing unappropriate assets.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
         self::USER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'Alias for aut_user_id parameter, is chosen above aut_user_id.',
         ),
         self::AUT_USER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'Authentication parameter.',
         ),
         self::AUT_GROUP_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'Authentication parameter.',
           self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
           self::VAR_DEFAULT_VALUE => array()
         ),
         self::AUT_DOMAIN => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_DOMAIN,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_DOMAIN,
           self::VAR_DESCRIPTION => 'Authentication parameter.',
         ),
         self::AUT_REALM => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_REALM,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_REALM,
           self::VAR_DESCRIPTION => 'Authentication parameter.',
         ),
         self::BATCH_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BATCH_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BATCH_ID,
           self::VAR_DESCRIPTION => 'Search within batch.',
         ),
         self::CQL => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_CQL_ASSET,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_CQL_ASSET,
           self::VAR_DESCRIPTION => 'The CQL search string, used for extended and complex search options.',
         ),
         self::SHOW_DELETED => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Include deleted assets for OAI. The deleted assets are not complete assets, these assets are empty and are only an indication that they are deleted.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
         self::SHOW_STILLS => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Include stills in output.',
           self::VAR_DEFAULT_VALUE => 'TRUE',
         ),
         self::SHOW_COLLECTIONS => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Include collection information of each assets, when available.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
         self::CALCULATE_TOTAL_COUNT => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => "Calculate the number of rows in the complete scope of the search and store it in the header parameter 'item_count_total'. Performance will drasticly improve with value 'FALSE' if you don't need to know the total number of assets in your scope result. If you provide 'FALSE', then 'item_count_total' value in the header will always be the number of items returned, same as 'item_count'.",
           self::VAR_DEFAULT_VALUE => 'TRUE',
         ),
 
         // Old fasion search params.
         self::OPERATOR => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_OPERATOR,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_OPERATOR,
           self::VAR_DESCRIPTION => 'For non-CQL search only; provide either OR or AND for search parameters..',
           self::VAR_DEFAULT_VALUE => 'and',
         )
@@ -455,7 +455,7 @@ class mediamosa_rest_call_asset_search extends mediamosa_rest_call {
     $a_cql = array();
     $a_translate_to = array();
     foreach ($a_var_setup[mediamosa_rest_call::VARS] as $param => $a_param) {
-      if ($a_param[mediamosa_rest_call::VAR_TYPE] == mediamosa_type::TYPE_SEARCH_MATCH) {
+      if ($a_param[mediamosa_rest_call::VAR_TYPE] == mediamosa_sdk::TYPE_SEARCH_MATCH) {
         continue;
       }
 
@@ -545,7 +545,7 @@ class mediamosa_rest_call_asset_favorites_count extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::ASSET_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
           self::VAR_DESCRIPTION => 'The asset ID to find its favorites.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
@@ -592,17 +592,17 @@ class mediamosa_rest_call_asset_delete extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::ASSET_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
           self::VAR_DESCRIPTION => 'The asset ID to delete.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::USER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'User ID, must be the owner to delete asset.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::DELETE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_ALPHA,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_ALPHA,
           self::VAR_DESCRIPTION => 'Delete mode.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
           self::VAR_ALLOWED_VALUES => array('', 'cascade'),
@@ -685,49 +685,49 @@ class mediamosa_rest_call_asset_get extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::ASSET_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
           self::VAR_DESCRIPTION => 'The ID of the asset to retrieve.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::TAG => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'Include tag to search on mediafiles of the specified asset.',
           self::VAR_RANGE_END => mediamosa_asset_mediafile_db::TAG_LENGTH,
         ),
         self::USER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'Alias for aut_user_id parameter. Warning: is chosen above aut_user_id when both are used.',
         ),
         self::AUT_USER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The current user is used for authorization. The aut_* fields affect the [granted] field in the output, and the parameter "granted" was given the number of records.',
         ),
         self::AUT_GROUP_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'The group(s), where the current user is in, is used for authorization.',
           self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
           self::VAR_DEFAULT_VALUE => array(), // NULL is bad when not provided.
         ),
         self::AUT_DOMAIN => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_DOMAIN,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_DOMAIN,
           self::VAR_DESCRIPTION => 'The domain of the user for autohorisation.',
         ),
         self::AUT_REALM => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_REALM,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_REALM,
           self::VAR_DESCRIPTION => 'The realm of the user for autohorisation.',
         ),
         self::SHOW_STILLS => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'If true, then include all of the still information.',
           self::VAR_DEFAULT_VALUE => 'TRUE',
         ),
         self::SHOW_COLLECTIONS => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'If true, then include all of the collection information.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
         self::IS_OAI => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Generate additonal asset data for OAI output.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
@@ -844,50 +844,50 @@ class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::ASSET_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
           self::VAR_DESCRIPTION => 'The ID of the assets to retrieve.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
         ),
         self::TAG => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'Include tag to search on mediafiles of the specified asset.',
           self::VAR_RANGE_END => mediamosa_asset_mediafile_db::TAG_LENGTH,
         ),
         self::USER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'Alias for aut_user_id parameter. Warning: is chosen above aut_user_id when both are used.',
         ),
         self::AUT_USER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The current user is used for authorization. The aut_* fields affect the [granted] field in the output, and the parameter "granted" was given the number of records.',
         ),
         self::AUT_GROUP_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'The group(s), where the current user is in, is used for authorization.',
           self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
           self::VAR_DEFAULT_VALUE => array(), // NULL is bad when not provided.
         ),
         self::AUT_DOMAIN => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_DOMAIN,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_DOMAIN,
           self::VAR_DESCRIPTION => 'The domain of the user for autohorisation.',
         ),
         self::AUT_REALM => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_REALM,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_REALM,
           self::VAR_DESCRIPTION => 'The realm of the user for autohorisation.',
         ),
         self::SHOW_STILLS => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'If true, then include all of the still information.',
           self::VAR_DEFAULT_VALUE => 'TRUE',
         ),
         self::SHOW_COLLECTIONS => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'If true, then include all of the collection information.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
         self::IS_OAI => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Generate additonal asset data for OAI output.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
@@ -911,7 +911,7 @@ class mediamosa_rest_call_assets_get extends mediamosa_rest_call {
 
         // Will fix some notices when we supply array in array.
         if (is_array($asset_id)) {
-          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => self::ASSET_ID, '@type' => mediamosa_type::TYPE_ASSET_ID));
+          throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_VALIDATE_FAILED, array('@param' => self::ASSET_ID, '@type' => mediamosa_sdk::TYPE_ASSET_ID));
         }
 
         if ($this->isset_given_param(self::USER_ID)) {
@@ -1008,18 +1008,18 @@ class mediamosa_rest_call_asset_delete_all extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::ASSET_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
           self::VAR_DESCRIPTION => 'The asset IDs to delete.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::VAR_IS_ARRAY => self::VAR_IS_ARRAY_YES,
         ),
         self::USER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'User ID, must be owner to delete asset.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::DELETE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'Delete mode.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_NO,
           self::VAR_ALLOWED_VALUES => array('', 'cascade'),
@@ -1112,26 +1112,26 @@ class mediamosa_rest_call_asset_create extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::USER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The user ID.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::VAR_RANGE_END => mediamosa_user_db::NAME_LENGTH,
         ),
         self::GROUP_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'The user group ID.',
           self::VAR_RANGE_END => mediamosa_user_group_db::GROUP_ID_LENGTH,
         ),
         self::REFERENCE_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The reference ID.',
         ),
         self::PROVIDER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_ALPHA_NUM,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_ALPHA_NUM,
           self::VAR_DESCRIPTION => 'The provider ID.',
         ),
         self::PARENT_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_ALPHA_NUM,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_ALPHA_NUM,
           self::VAR_DESCRIPTION => 'The parent ID. Is deprecated, do not supply, value will be ignored.',
           self::VAR_IS_INTERNAL_ONLY => self::VAR_IS_INTERNAL_ONLY_YES,
         ),
@@ -1197,43 +1197,43 @@ class mediamosa_rest_call_asset_update extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::ASSET_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
           self::VAR_DESCRIPTION => 'The ID of the asset to update.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::USER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The user ID used for authotication.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::PLAY_RESTRICTION_START => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_DATETIME_UTC,// Will skip UTC conversion.
+          self::VAR_TYPE => mediamosa_sdk::TYPE_DATETIME_UTC,// Will skip UTC conversion.
           self::VAR_DESCRIPTION => 'The play restriction range start position.',
         ),
         self::PLAY_RESTRICTION_END => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_DATETIME_UTC,// Will skip UTC conversion.
+          self::VAR_TYPE => mediamosa_sdk::TYPE_DATETIME_UTC,// Will skip UTC conversion.
           self::VAR_DESCRIPTION => 'The play restriction range end position.',
         ),
         self::ISPRIVATE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'If isprivate = true, then the asset is not displayed in public lists, such as top 10, last uploaded, etc.',
         ),
         self::IS_INAPPROPRIATE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'If is_inappropiate = true then only the owner or the app admin (and underlying media files) can see this asset. Only the app manager can change this flag(is_app_admin=true).',
         ),
         self::IS_UNAPPROPRIATE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Alias, same as is_inappropriate.',
           self::VAR_DEFAULT_VALUE => NULL,
           self::VAR_IS_HIDDEN => self::VAR_IS_HIDDEN_YES,
         ),
         self::OWNER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The possible new owner of the asset; Only the app manager can change this flag (is_app_admin=true).',
         ),
         self::GROUP_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The possible new group of the asset; Only the app manager can change this flag(is_app_admin=true).',
         ),
       )
