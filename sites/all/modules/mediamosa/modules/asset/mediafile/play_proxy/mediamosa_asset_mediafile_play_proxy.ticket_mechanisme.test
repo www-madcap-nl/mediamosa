@@ -47,8 +47,6 @@ class MediaMosaAssetMediafilePlayProxyTicketMechanismeTestCaseEga extends MediaM
   // Testing mediafile play proxy ticket, see: ticket 72.
   function testPlayProxyTicketMechanisme() {
 
-    return;
-
     // Preparation.
 
     // Create upload file.
@@ -102,6 +100,9 @@ class MediaMosaAssetMediafilePlayProxyTicketMechanismeTestCaseEga extends MediaM
           );
           break;
         default:
+          // Test the output, do output call.
+          $output = str_replace('/still/', '/simpletest/still/', $output);
+
           // Get the file.
           $result = mediamosa_http::drupal_http_request($output);
 

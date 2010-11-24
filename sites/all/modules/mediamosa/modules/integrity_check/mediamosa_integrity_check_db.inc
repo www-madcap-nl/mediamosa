@@ -32,7 +32,7 @@
 class mediamosa_integrity_check_db {
   // ------------------------------------------------------------------ Consts.
   // Table name;
-  const TABLE_NAME = 'mediamosa_log_integrity_check'; // 1.x name log_integrity_check.
+  const TABLE_NAME = 'mediamosa_integrity_check'; // 1.x name log_integrity_check.
 
   // Database fields;
   const ID = 'id';

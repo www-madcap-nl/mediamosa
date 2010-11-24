@@ -79,7 +79,7 @@ class MediaMosaTimezoneTestCaseEga extends MediaMosaTestCaseEga {
   private function helper_check_for_dates_2($mixed_item, &$found_dates, $cet_unixtime, $name = 'item', $cet_timestamp = '') {
     if (is_string($mixed_item)) {
       try {
-        mediamosa_datetime::date8601_to_timestamp($mixed_item, $name, mediamosa_type::TYPE_DATETIME);
+        mediamosa_datetime::date8601_to_timestamp($mixed_item, $name, mediamosa_sdk::TYPE_DATETIME);
       }
       catch (Exception $e) {
         return FALSE; // Not date.

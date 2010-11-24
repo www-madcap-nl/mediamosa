@@ -430,7 +430,7 @@ class mediamosa {
   static public function drupal_install_schema($module, $table_prefix = '', $make_foreignkey = TRUE) {
     try {
       $schema = drupal_get_schema_unprocessed($module);
-      _drupal_schema_initialize($schema, $module);
+      _drupal_schema_initialize($schema, $module, FALSE);
 
       // Changes we might want in MediaMosa.
       $schema = mediamosa_db::db_install_schema_preprocess($module, $schema);

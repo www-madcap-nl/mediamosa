@@ -119,7 +119,7 @@ class mediamosa_rest_call_simpletest_run extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::CLASS_NAME => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_ALPHA_NUM_UNDERSCORE,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_ALPHA_NUM_UNDERSCORE,
           self::VAR_DESCRIPTION => 'The class name of the simpletest.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),

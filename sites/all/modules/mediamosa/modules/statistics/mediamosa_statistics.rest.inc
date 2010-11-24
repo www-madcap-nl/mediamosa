@@ -478,19 +478,19 @@ class mediamosa_rest_call_statistics_set_historical_uploaded_mediafiles extends 
     $var_setup = array(
       self::VARS => array(
         self::USER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'Owner of the upload.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::VAR_RANGE_END => mediamosa_user_db::NAME_LENGTH,
         ),
         self::GROUP_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'Group of the upload.',
           self::VAR_DEFAULT_VALUE => '',
           self::VAR_RANGE_END => mediamosa_user_group_db::GROUP_ID_LENGTH,
         ),
         self::FILE_SIZE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'The file size of the upload.',
         ),
       )
@@ -539,26 +539,26 @@ class mediamosa_rest_call_statistics_get_historical_uploaded_mediafiles extends 
     $var_setup = array(
       self::VARS => array(
         self::MONTH => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'The month of the query.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::VAR_RANGE_START => 1,
           self::VAR_RANGE_END => 12,
         ),
         self::YEAR => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'The year of the query.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::VAR_RANGE_START => 2000,
           self::VAR_RANGE_END => 2099,
         ),
         self::USER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'Owner of the upload.',
           self::VAR_RANGE_END => mediamosa_user_db::NAME_LENGTH,
         ),
         self::GROUP_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'Group of the upload.',
           self::VAR_RANGE_END => mediamosa_user_group_db::GROUP_ID_LENGTH,
         ),
@@ -651,21 +651,21 @@ class mediamosa_rest_call_statistics_get_used_diskspace extends mediamosa_rest_c
     $var_setup = array(
       self::VARS => array(
         self::MONTH => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'The month of the query.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::VAR_RANGE_START => 1,
           self::VAR_RANGE_END => 12,
         ),
         self::YEAR => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'The year of the query.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::VAR_RANGE_START => 1970,
           self::VAR_RANGE_END => 2099,
         ),
         self::TYPE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The type.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::VAR_ALLOWED_VALUES => array(
@@ -799,14 +799,14 @@ class mediamosa_rest_call_statistics_get_requested_streams extends mediamosa_res
     $var_setup = array(
       self::VARS => array(
         self::MONTH => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'The month of the query.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::VAR_RANGE_START => 1,
           self::VAR_RANGE_END => 12,
         ),
         self::YEAR => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'The year of the query.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::VAR_RANGE_START => 2000,
@@ -949,22 +949,22 @@ class mediamosa_rest_call_statistics_get_most_popular_streams extends mediamosa_
     $var_setup = array(
       self::VARS => array(
         self::BEGINDATE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_DATETIME,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_DATETIME,
           self::VAR_DESCRIPTION => 'Begin date of the period.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::ENDDATE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_DATETIME,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_DATETIME,
           self::VAR_DESCRIPTION => 'End date of the period.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::OWNER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'Owner of the upload.',
           self::VAR_RANGE_END => mediamosa_user_db::NAME_LENGTH,
         ),
         self::GROUP_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'Group of the upload.',
           self::VAR_RANGE_END => mediamosa_user_group_db::GROUP_ID_LENGTH,
         ),
@@ -1089,12 +1089,12 @@ class mediamosa_rest_call_statistics_get_most_popular_words extends mediamosa_re
     $var_setup = array(
       self::VARS => array(
         self::BEGINDATE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_DATETIME,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_DATETIME,
           self::VAR_DESCRIPTION => 'Begin date of the period.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
         self::ENDDATE => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_DATETIME,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_DATETIME,
           self::VAR_DESCRIPTION => 'End date of the period.',
         ),
       )
@@ -1198,14 +1198,14 @@ class mediamosa_rest_call_statistics_get_searchrequest extends mediamosa_rest_ca
     $var_setup = array(
       self::VARS => array(
         self::MONTH => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'The month of the query.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::VAR_RANGE_START => 1,
           self::VAR_RANGE_END => 12,
         ),
         self::YEAR => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'The year of the query.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::VAR_RANGE_START => 2000,

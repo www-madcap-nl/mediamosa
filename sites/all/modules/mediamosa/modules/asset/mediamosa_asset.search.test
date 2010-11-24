@@ -132,16 +132,16 @@ class MediaMosaAssetSearchEmptyTestCaseEga extends MediaMosaTestCaseEga {
     foreach ($search_params as $field => $type) {
       $a_parameters = array();
       switch ($type) {
-        case mediamosa_type::TYPE_SEARCH_DATETIME:
+        case mediamosa_sdk::TYPE_SEARCH_DATETIME:
           $a_parameters[$field] = '2010-01-01 00:00:00';
           break;
 
-        case mediamosa_type::TYPE_SEARCH_INT:
+        case mediamosa_sdk::TYPE_SEARCH_INT:
           $a_parameters[$field] = '1234';
            break;
 
         default:
-        case mediamosa_type::TYPE_SEARCH_STRING:
+        case mediamosa_sdk::TYPE_SEARCH_STRING:
           $a_parameters[$field] = 'foo';
           break;
       }

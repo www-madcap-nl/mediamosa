@@ -48,7 +48,7 @@ class mediamosa_rest_call_group_get extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::GROUP_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'The group to retrieve.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::VAR_RANGE_END => mediamosa_user_group_db::GROUP_ID_LENGTH,
@@ -152,13 +152,13 @@ class mediamosa_rest_call_group_create extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::GROUP_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'The group name.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::VAR_RANGE_END => mediamosa_user_group_db::GROUP_ID_LENGTH,
         ),
         self::QUOTUM => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'Disk space of the group in mega bytes. 0 means unlimited.',
           self::VAR_DEFAULT_VALUE => 0,
         ),
@@ -212,7 +212,7 @@ class mediamosa_rest_call_group_delete extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::GROUP_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'The group name.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::VAR_RANGE_END => mediamosa_user_group_db::GROUP_ID_LENGTH,
@@ -270,13 +270,13 @@ class mediamosa_rest_call_group_update extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::GROUP_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'The group name.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::VAR_RANGE_END => mediamosa_user_group_db::GROUP_ID_LENGTH,
         ),
         self::QUOTUM => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'Disk space of the user in megabytes.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),

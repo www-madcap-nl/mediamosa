@@ -42,7 +42,8 @@ require_once 'core/node/mediamosa_node_mediamosa_transcode_profile.inc';
 /**
  * Implement hook_requirements().
  */
-function mediamosa_profile_requirements($phase) {
+function mediamosa_requirements($phase) {
+
   $requirements = array();
 
   if ($phase != 'runtime') {
@@ -70,7 +71,7 @@ function mediamosa_profile_requirements($phase) {
   }
 
   // Make sure the mediamosa_server_id is set and not to long.
-  // TODO: should be made as REST call to other servers.
+  // @TODO should be made as REST call to other servers.
   $mediamosa_installation_id = mediamosa::get_server_id();
 
   if (!isset($mediamosa_installation_id) || drupal_strlen($mediamosa_installation_id) == 0 || drupal_strlen($mediamosa_installation_id) > mediamosa_job_server_db::INSTALL_ID_LENGTH) {

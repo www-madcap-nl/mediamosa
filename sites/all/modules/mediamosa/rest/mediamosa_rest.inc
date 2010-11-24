@@ -198,6 +198,10 @@ class mediamosa_rest {
     // Start with an empty result.
     $results = array();
 
+    if (!$limit) {
+      $limit = -1; // get all.
+    }
+
     $pos = 1;
     foreach ($rest_calls as $uri => $rest_call_2) {
       foreach ($rest_call_2 as $method => $rest_call) {
@@ -237,9 +241,18 @@ class mediamosa_rest {
           $results[$rest_call[$key]] = $rest_call;
         }
 
-        if ($limit && !--$limit) {
+        // no more?
+        if (!$limit) {
           break;
         }
+
+        if ($limit) {
+          $limit--;
+        }
+      }
+
+      if (!$limit) {
+        break;
       }
     }
 

@@ -388,7 +388,7 @@ class mediamosa_asset_mediafile_metadata {
     }
     elseif ($type == mediamosa_asset_mediafile_metadata_property_db::TYPE_INT) {
       try {
-        $fields[mediamosa_asset_mediafile_metadata_db::VAL_INT] = mediamosa_type::check($prop_name, mediamosa_type::TYPE_INT, $value);
+        $fields[mediamosa_asset_mediafile_metadata_db::VAL_INT] = mediamosa_type::check($prop_name, mediamosa_sdk::TYPE_INT, $value);
       }
       catch (mediamosa_exception_error $e) {
         $fields[mediamosa_asset_mediafile_metadata_db::VAL_INT] = 0;
@@ -396,7 +396,7 @@ class mediamosa_asset_mediafile_metadata {
     }
     elseif ($type == mediamosa_asset_mediafile_metadata_property_db::TYPE_DATETIME) {
       try {
-        $fields[mediamosa_asset_mediafile_metadata_db::VAL_DATETIME] = mediamosa_type::check($prop_name, mediamosa_type::TYPE_DATETIME, $value);
+        $fields[mediamosa_asset_mediafile_metadata_db::VAL_DATETIME] = mediamosa_type::check($prop_name, mediamosa_sdk::TYPE_DATETIME, $value);
       }
       catch (mediamosa_exception_error $e) {
         return;

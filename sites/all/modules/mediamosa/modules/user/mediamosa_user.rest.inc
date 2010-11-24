@@ -49,7 +49,7 @@ class mediamosa_rest_call_user_get extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::USER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The user to retrieve.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::VAR_RANGE_END => mediamosa_user_db::NAME_LENGTH,
@@ -98,7 +98,7 @@ class mediamosa_rest_call_user_list extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::GROUP_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'Name of the group where the user has to be a member.',
           self::VAR_RANGE_END => mediamosa_user_group_db::GROUP_ID_LENGTH,
         ),
@@ -158,19 +158,19 @@ class mediamosa_rest_call_user_create extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::USER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'User name.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::VAR_RANGE_END => mediamosa_user_db::NAME_LENGTH,
         ),
         self::GROUP_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'Name of the group the user belongs to. A user can only be member of 1 group, and the group must exist (see /group/create [POST])',
           self::VAR_RANGE_END => mediamosa_user_db::GROUP_ID_LENGTH,
           self::VAR_DEFAULT_VALUE => '',
         ),
         self::QUOTUM => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'Maximum disk space of the user in mega bytes. A quotum of 0 means unlimited diskspace. Quota is is enforced with a soft-quota, a user is allowed to exceed the maximum, but the next action is rejected.',
           self::VAR_DEFAULT_VALUE => 0,
         ),
@@ -229,7 +229,7 @@ class mediamosa_rest_call_user_delete extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::USER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'The user to delete.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::VAR_RANGE_END => mediamosa_user_db::NAME_LENGTH,
@@ -283,18 +283,18 @@ class mediamosa_rest_call_user_update extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::USER_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_USER_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_USER_ID,
           self::VAR_DESCRIPTION => 'User name.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::VAR_RANGE_END => mediamosa_user_db::NAME_LENGTH,
         ),
         self::GROUP_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_GROUP_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_GROUP_ID,
           self::VAR_DESCRIPTION => 'Name of the group where the user will be.',
           self::VAR_RANGE_END => mediamosa_user_db::GROUP_ID_LENGTH,
         ),
         self::QUOTUM => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'Disk space of the user in megabytes.',
         ),
       )

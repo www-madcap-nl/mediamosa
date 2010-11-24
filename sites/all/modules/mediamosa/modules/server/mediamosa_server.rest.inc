@@ -47,7 +47,7 @@ class mediamosa_rest_call_server_status extends mediamosa_rest_call {
     $var_setup = array(
       self::VARS => array(
         self::INCLUDE_STATUS => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Include status information.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),

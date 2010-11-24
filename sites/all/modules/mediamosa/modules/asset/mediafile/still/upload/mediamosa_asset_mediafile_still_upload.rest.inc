@@ -53,48 +53,48 @@ class mediamosa_rest_call_upload_mediafile_still extends mediamosa_rest_call {
     $a_var_setup = array(
       self::VARS => array(
         self::ASSET_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_ASSET_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_ASSET_ID,
           self::VAR_DESCRIPTION => 'The asset ID.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::VAR_RANGE_END => mediamosa_db::HASH_ID_LENGTH,
         ),
         self::MEDIAFILE_ID => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_MEDIAFILE_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_MEDIAFILE_ID,
           self::VAR_DESCRIPTION => 'The mediafile ID.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::VAR_RANGE_END => mediamosa_db::HASH_ID_LENGTH,
         ),
         self::UPLOAD_TICKET => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_TICKET_ID,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_TICKET_ID,
           self::VAR_DESCRIPTION => 'The ID that has been given to enable the upload.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
           self::VAR_RANGE_END => mediamosa_db::HASH_ID_LENGTH,
         ),
         self::ORDER => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_INT,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_INT,
           self::VAR_DESCRIPTION => 'Still order number.',
           self::VAR_DEFAULT_VALUE => 0,
         ),
         self::DEFAULT_ => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_BOOL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
           self::VAR_DESCRIPTION => 'Is default still?',
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
         self::REDIRECT_URI => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_URL_URI,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_URL_URI,
           self::VAR_DESCRIPTION => 'The URL to redirect when upload has been successful.',
         ),
         self::TAG => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'Still tag.',
         ),
         self::FILENAME => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_STRING,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_STRING,
           self::VAR_DESCRIPTION => 'The filename of the media file (PUT method only, ignored otherwise).',
           self::VAR_IS_REQUIRED => $this->is_method_put() ? self::VAR_IS_REQUIRED_YES : self::VAR_IS_REQUIRED_NO,
         ),
         self::COMPLETED_URL => array(
-          self::VAR_TYPE => mediamosa_type::TYPE_URL,
+          self::VAR_TYPE => mediamosa_sdk::TYPE_URL,
           self::VAR_DESCRIPTION => "This URL gives opportunity to the APP builder for a status raport; \nupload_ticket\nstatus_code\n\nThe upload_ticket is used to identify the upload. The status_code is a Mediamosa code.\nThe type is URL and not URI, because this parameter http:// or https://.",
         ),
       )

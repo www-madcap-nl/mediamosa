@@ -58,20 +58,20 @@ function mediamosa_development_help($path, $arg) {
 function mediamosa_development_menu() {
   $items = array();
 
-  $items['admin/mediamosa/config/development'] = array(
-    'title' => 'Test and execute REST calls.',
+  $items['admin/config/development/mediamosa/development'] = array(
+    'title' => 'MediaMosa REST call developer.',
     'description' => 'With this form you can execute REST calls directly.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mediamosa_development_rest_form'),
     'access arguments' => array('access mediamosa development'),
     'file' => 'mediamosa_development.admin.inc',
   );
-  $items['admin/mediamosa/config/development/list'] = array(
+  $items['admin/config/development/mediamosa/development/list'] = array(
     'title' => 'REST tester',
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
 
-  $items['admin/mediamosa/config/development/js/restcall'] = array(
+  $items['admin/config/development/mediamosa/development/js/restcall'] = array(
     'page callback' => '_ajax_execute_rest_call',
     'delivery callback' => 'ajax_deliver',
     'access arguments' => array('access mediamosa development'),
@@ -79,7 +79,7 @@ function mediamosa_development_menu() {
     'file' => 'mediamosa_development.admin.inc',
   );
 
-  $items['admin/mediamosa/config/development/set_rest_call/%/%'] = array(
+  $items['admin/config/development/mediamosa/development/set_rest_call/%/%'] = array(
     'page callback' => '_mediamosa_development_set_rest_call',
     'page arguments' => array(5, 6),
     'access arguments' => array('access mediamosa development'),
@@ -87,35 +87,11 @@ function mediamosa_development_menu() {
     'file' => 'mediamosa_development.admin.inc',
   );
 
-  $items['admin/mediamosa/config/development/settings'] = array(
-    'weight' => 5,
-    'title' => 'Settings',
-    'description' => 'Setup the development settings.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('mediamosa_development_settings'),
-    'access arguments' => array('administer mediamosa development'),
-    'type' => MENU_LOCAL_TASK,
-  );
+  // Include in the mediamosa menus too.
+  if (module_exists('mediamosa_maintenance')) {
+    $items['admin/mediamosa/config/development'] = $items['admin/config/development/mediamosa/development'];
+    $items['admin/mediamosa/config/development/list'] = $items['admin/config/development/mediamosa/development/list'];
+  }
 
   return $items;
-}
-
-function mediamosa_development_settings() {
-  $form = array();
-
-  $form['development'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Database development settings'),
-    '#collapsible' => TRUE,
-  );
-  $form['development']['mediamosa_development_mediamosa_17_rest_url'] = array(
-    '#type' => 'textfield',
-    '#title' => t('MediaMosa 1.x REST URL'),
-    '#description' => t('If you want to compare output with MediaMosa 1.7.x, enter the REST url where the same REST call is run. However, it will use the same application login you select for the REST call; client applications must be same for both databases.'),
-    '#default_value' => '',
-  );
-
-  $form = system_settings_form($form);
-
-  return $form;
 }
