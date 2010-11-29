@@ -1462,10 +1462,6 @@ function mediamosa_update_7075() {
     mediamosa_app_db::TABLE_NAME => array(
       mediamosa_app_db::ALWAYS_INSERT_MD,
     ),
-
-    mediamosa_integrity_check_db::TABLE_NAME => array(
-      mediamosa_integrity_check_db::TYPE,
-    ),
   );
 
   foreach ($fixes as $table_name => $columns) {
@@ -1546,7 +1542,7 @@ function mediamosa_update_7076() {
 function mediamosa_update_7077() {
 
   // Rename table.
-  if (db_table_exists('mediamosa_log_integrity_check') && !db_table_exists('mediamosa_log_integrity_check')) {
+  if (db_table_exists('mediamosa_log_integrity_check') && !db_table_exists('mediamosa_integrity_check')) {
     db_rename_table('mediamosa_log_integrity_check', 'mediamosa_integrity_check');
   }
 }
