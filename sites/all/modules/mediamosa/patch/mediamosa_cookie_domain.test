@@ -29,11 +29,6 @@
  * The cookie domain drupal core hack/fix.
  */
 
-// So we load the MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE define.
-if (!class_exists('MediaMosaTestCase')) {
-  return;
-}
-
 class MediaMosaCookieDomain extends MediaMosaTestCase {
   // ------------------------------------------------------------------ Members.
 

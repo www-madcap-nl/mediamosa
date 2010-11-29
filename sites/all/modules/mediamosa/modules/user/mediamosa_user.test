@@ -44,19 +44,6 @@ class MediaMosaUserTestCaseEga extends MediaMosaTestCaseEga {
     );
   }
 
-  /**
-   * Implements setUp().
-   */
-  protected function setUp() {
-    // Run parent first so we are inside sandbox.
-    // Call parent::setUp and preserve arguments.
-    $args = func_get_args();
-
-    // Create and setup the CORE module.
-    $args = array_unique(array_merge(array('mediamosa_collection', 'mediamosa_user'), $args));
-    call_user_func_array(array($this, 'parent::setUp'), $args);
-  }
-
   // ------------------------------------------------------------------ Tests.
   public function testUserAndGroupQuota() {
     $user_id = $this->randomName();

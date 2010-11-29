@@ -47,7 +47,12 @@ class MediaMosaTestCaseEgaJob extends MediaMosaTestCaseEga {
 
     // Create and setup the CORE module.
     $args = array_unique(array_merge(array('mediamosa_job'), $args));
-    call_user_func_array(array($this, 'parent::setUp'), $args);
+    if (drupal_substr(phpversion(), 0, 3) < '5.3') {
+      call_user_func_array(array($this, 'parent::setUp'), $args);
+    }
+    else {
+      call_user_func_array('parent::setUp', $args);
+    }
 
     // Set jobserver selection.
     if (!empty($mediamosa_jobscheduler_uri)) {

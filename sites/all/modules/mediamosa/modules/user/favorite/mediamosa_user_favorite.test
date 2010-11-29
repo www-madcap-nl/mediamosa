@@ -45,17 +45,6 @@ class MediaMosaUserFavoriteTestCaseEga extends MediaMosaTestCaseEga {
   }
 
   /**
-   * Implements setUp().
-   */
-  function setUp() {
-    // Create and setup the modules.
-    $args = func_get_args();
-    $args = array_unique(array_merge(array('mediamosa_user'), $args));
-
-    call_user_func_array(array($this, 'parent::setUp'), $args);
-  }
-
-  /**
    * Test User Asset favorites basic working (#671).
    */
   function _testUserFavoritesAssetManagement() {

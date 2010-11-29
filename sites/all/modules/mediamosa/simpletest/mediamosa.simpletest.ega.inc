@@ -73,21 +73,21 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // Create and setup the CORE module.
     $args = array_unique(array_merge(array(
+      'mediamosa_user',
       'mediamosa_app_authentication',
       'mediamosa_asset',
       'mediamosa_aut',
       'mediamosa_collection',
       'mediamosa_server',
       'mediamosa_statistics',
-      'mediamosa_ftp_user'), $args));
+      'mediamosa_ftp_user',
+    ), $args));
 
-    // Fixme; 5.3 fix calls __NAMESPACE__ which refers to a static namespace,
-    // not dynamic like $this.
     if (drupal_substr(phpversion(), 0, 3) < '5.3') {
       call_user_func_array(array($this, 'parent::setUp'), $args);
     }
     else {
-      call_user_func_array(array(__NAMESPACE__ . '\MediaMosaTestCaseEga', 'parent::setUp'), $args);
+      call_user_func_array('parent::setUp', $args);
     }
 
     // Now we are in sandbox, create default APP, our default EGA.
