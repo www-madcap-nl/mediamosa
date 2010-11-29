@@ -17,7 +17,7 @@ Known issues;
   PDOException. It seems a Drupal 7 core bug. We will check it again after
   the Drupal 7 core update.
 
-MediaMosa 2.3.1 (build 1138)
+MediaMosa 2.3.1 (build 1143)
 ----------------------------
 - Streaming server statistics improvements (See ticket #103).
 - Black still generation (See VPCore ticket #212).
@@ -67,6 +67,7 @@ Other changes (not ticket related).
 - Renamed table 'mediamosa_log_integrity_check' to 'mediamosa_integrity_check'.
 - Fixed minor bug in transcode list REST call where sometimes old item data 
   would end up in next items.
+- Fixed problem with unittests not running under PHP5.3.
   
 
 MediaMosa 2.3.0 Build (1032)
