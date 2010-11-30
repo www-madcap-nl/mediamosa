@@ -17,7 +17,7 @@ Known issues;
   PDOException. It seems a Drupal 7 core bug. We will check it again after
   the Drupal 7 core update.
 
-MediaMosa 2.3.1 (build 1143)
+MediaMosa 2.3.1 (build 1147)
 ----------------------------
 - Streaming server statistics improvements (See ticket #103).
 - Black still generation (See VPCore ticket #212).
@@ -70,6 +70,8 @@ Other changes (not ticket related).
 - Fixed problem with unittests not running under PHP5.3.
 - Fixed problem when searching on collections and empty collections did not end
   up in result.
+- Optimized code on /collection calls.
+
 
 MediaMosa 2.3.0 Build (1032)
 ----------------------------
