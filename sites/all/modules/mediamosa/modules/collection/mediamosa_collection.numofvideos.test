@@ -87,24 +87,108 @@ class MediaMosaCollectionNumOfVideosTestCaseEga extends MediaMosaTestCaseEga {
     $upload_5 = $this->uploadTestFile(); // App 3
     $this->createCollectionAssetRelation($coll_id_3, array($upload_5['asset_id']));
 
+    // Back to 1.
+    $this->toEga_1();
+
+    // Create collection.
+    $coll_id_4 = $this->createCollection(); // App 1.
+    $upload_6 = $this->uploadTestFile(); // App 1
+    $upload_7 = $this->uploadTestFile(); // App 1
+    //$this->createCollectionAssetRelation($coll_id_1, array($upload_1['asset_id'], $upload_2['asset_id']));
+
     //
     // Check number of videos in each collection.
 
-    // Back to 1.
-    $this->toEga_1();
+    // Do this 2 times.
+    $done = 2;
+
+    while (--$done) {
+      // Now search collection app 1, numofvideos should be 2.
+      $result = $this->searchCollections();
+
+      // Must be one.
+      $collections = $result['items']['item'];
+      $this->assertTrue(count($collections) == 2, 'Found two collections');
+
+      // Get collection.
+      $collection = reset($collections);
+
+      if ($collection['coll_id'] == $coll_id_4) {
+        $collection = next($collections);
+      }
+
+      // Found the right collection.
+      $this->assertTrue($collection['coll_id'] == $coll_id_1, 'Found collection');
+
+      // Must be 2.
+      $this->assertTrue($collection['numofvideos'] == 2, 'Found 2 videos in collection');
+
+      // Now get the collection again.
+      $collection = $this->getCollection($coll_id_1);
+
+      // Must be 2.
+      $this->assertTrue($collection['numofvideos'] == 2, 'Found 2 videos in collection');
+
+      // Now get the collection again.
+      $collection = $this->getCollection($coll_id_4);
+
+      // Must be 0.
+      $this->assertTrue($collection['numofvideos'] == 0, 'Found no videos in collection');
+
+      // Share
+      $this->setMediafileAut($upload_1['mediafile_id'],  array('aut_app' => array($app_id_2)));
+    }
+
+    // Search using app_2.
+
+    // Back to 2.
+    $this->toEga_2();
 
     // Now search collection app 1, numofvideos should be 2.
     $result = $this->searchCollections();
 
     // Must be one.
     $collections = $result['items']['item'];
-    $this->assertTrue(count($collections) == 1, 'Found one collection');
+    $this->assertTrue(count($collections) == 1, 'Found one collections');
 
-    // Get collection.
-    $collection = reset($collections);
+    // Back to 2.
+    $this->toEga_1();
+    $this->setCollectionAut($coll_id_4, array('aut_app' => array($app_id_2)));
+
+    // Back to 2.
+    $this->toEga_2();
+
+    // Now search collection app 1, numofvideos should be 2.
+    $result = $this->searchCollections();
+
+    // Must be one.
+    $collections = $result['items']['item'];
+    $this->assertTrue(count($collections) == 2, 'Found two collections');
+
+    $collection_1 = reset($collections);
+    $collection_2 = next($collections);
+
+    if ($collection_1['coll_id'] == $coll_id_4) {
+      list($collection_1, $collection_2) = array($collection_2, $collection_1);
+    }
+
+    // Check num of videos.
 
     // Must be 2.
-    $this->assertTrue($collection['numofvideos'] == 2, 'Found 2 videos in collection');
+    $this->assertTrue($collection_1['numofvideos'] == 2, 'Found 2 videos in collection');
+    $this->assertTrue($collection_2['numofvideos'] == 0, 'Found no videos in collection');
+
+    // Show them.
+    $this->var_export($collections);
+
+    // Back to 1.
+    $this->toEga_1();
+
+    // Remove it again.
+    $this->deleteMediafileAut($upload_1['mediafile_id']);
+
+    // Delete collection 4
+    $this->deleteCollection($coll_id_4);
 
     // Back to 2.
     $this->toEga_2();

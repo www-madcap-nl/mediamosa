@@ -133,6 +133,15 @@ class mediamosa_collection_search {
     // Access selection is done here;
     mediamosa_aut::build_access_where($a_query, mediamosa_aut::AUT_TYPE_COLLECTION, NULL, $app_ids, $aut_user_id, NULL, NULL, NULL, $slaves_collections, $is_app_admin);
 
+    // Get the slaves based on the app ids for mediafiles.
+    $slaves_mediafiles = mediamosa_aut_app_master_slave::slave_get($app_ids, mediamosa_aut::AUT_TYPE_MEDIAFILE);
+
+    // Add access for master slave.
+    mediamosa_aut::build_access_where($a_query, mediamosa_aut::AUT_TYPE_MEDIAFILE, NULL, $app_ids, NULL, array(), NULL, NULL, $slaves_mediafiles, $is_app_admin, TRUE, TRUE, 'mf');
+
+    // Replace join with the ac alias instead of a alias (asset).
+    $a_query[mediamosa_db_query::A_JOIN]['mediafile'] = "LEFT JOIN {mediamosa_asset_mediafile} AS mf ON mf.asset_id = ac.asset_id";
+
     $order_by = '';
     if ($cql) {
       $a_result_cql2sql = mediamosa_core_cql::parse_collection($cql, $app_ids);
@@ -178,23 +187,18 @@ class mediamosa_collection_search {
     }
 
     // Join with the asset table.
-    $a_query[mediamosa_db_query::A_JOIN]['asset'] = 'LEFT JOIN {mediamosa_asset} AS a ON a.asset_id = ac.asset_id';
-
-    // Get the slaves based on the app ids for mediafiles.
-    $slaves_mediafiles = mediamosa_aut_app_master_slave::slave_get($app_ids, mediamosa_aut::AUT_TYPE_MEDIAFILE);
-
-    // Add access for master slave.
-    mediamosa_aut::build_access_where($a_query, mediamosa_aut::AUT_TYPE_MEDIAFILE, NULL, $app_ids, NULL, array(), NULL, NULL, $slaves_mediafiles, $is_app_admin, TRUE);
+    //$a_query[mediamosa_db_query::A_JOIN]['asset'] = 'LEFT JOIN {mediamosa_asset} AS a ON a.asset_id = ac.asset_id';
 
     $a_query[mediamosa_db_query::LIMIT] = $limit;
     $a_query[mediamosa_db_query::OFFSET] = $offset;
 
     // Build the query.
     $query = mediamosa_db_query::query_select($a_query, array(mediamosa_db_query::SQL_CALC_FOUND_ROWS => $calculate_total_count));
+mediamosa_watchdog::log_export($query);
 
     // Do the query.
     $result = mediamosa_db::db_query($query);
-//error_log($query);
+
     // Set the found_rows on the object.
     $result->found_rows = mediamosa_db_query::found_rows();
 

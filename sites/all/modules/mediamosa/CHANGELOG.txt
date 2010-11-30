@@ -68,7 +68,8 @@ Other changes (not ticket related).
 - Fixed minor bug in transcode list REST call where sometimes old item data 
   would end up in next items.
 - Fixed problem with unittests not running under PHP5.3.
-  
+- Fixed problem when searching on collections and empty collections did not end
+  up in result.
 
 MediaMosa 2.3.0 Build (1032)
 ----------------------------

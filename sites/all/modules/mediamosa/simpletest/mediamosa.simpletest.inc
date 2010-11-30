@@ -119,16 +119,16 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     // Make this global so we can output debug to the test.
     $GLOBALS['_mediamosa_simpletest'] = $this;
 
-    $a_vars_to_copy = array('mediamosa_current_mount_point');
-    $a_values = array();
+    $vars_to_copy = array('mediamosa_current_mount_point');
+    $values = array();
 
     // Store certain vars.
-    foreach ($a_vars_to_copy as $var_to_copy) {
-      $a_values[$var_to_copy] = mediamosa::variable_get($var_to_copy);
+    foreach ($vars_to_copy as $var_to_copy) {
+      $values[$var_to_copy] = mediamosa::variable_get($var_to_copy);
     }
 
     // Set debug on high.
-    $a_values['mediamosa_debug_level'] = 10;
+    $values['mediamosa_debug_level'] = 10;
 
     // Call parent::setUp and preserve arguments.
     $args = func_get_args();
@@ -143,7 +143,7 @@ class MediaMosaTestCase extends DrupalWebTestCase {
     }
 
     // Now set it, so its in the sandbox.
-    foreach ($a_values as $name => $value) {
+    foreach ($values as $name => $value) {
       // Skip NULL.
       if (!is_null($value)) {
         mediamosa::variable_set($name, $value);
@@ -261,7 +261,8 @@ class MediaMosaTestCase extends DrupalWebTestCase {
    */
   static public function staticMessage($data) {
     // Remember that this does not work for REST calls called inside the test.
-    // Then the simpletest was never created.
+    // Then the simpletest was never created; REST calls are HTTP requests
+    // outside the scope of this test.
     if (isset($GLOBALS['_mediamosa_simpletest'])) {
       $GLOBALS['_mediamosa_simpletest']->var_export_fail($data, 'static-message');
     }

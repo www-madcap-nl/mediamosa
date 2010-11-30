@@ -63,9 +63,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
     // Get the current mediamosa server content.
     // @todo: convert these to nodes.
-    $a_servers = mediamosa_server::search();
-    $a_server_containers = mediamosa_server::search_containers();
-    $a_server_tools = mediamosa_server::search_tools();
+    $servers = mediamosa_server::search();
+    $server_containers = mediamosa_server::search_containers();
+    $server_tools = mediamosa_server::search_tools();
 
     // Run parent first so we are inside sandbox.
     // Call parent::setUp and preserve arguments.
@@ -102,9 +102,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
       db_truncate(mediamosa_server_db::TABLE_NAME)->execute();
 
       // Copy the current servers to sandbox.
-      foreach ($a_servers as $a_server) {
+      foreach ($servers as $server) {
         db_insert(mediamosa_server_db::TABLE_NAME)
-          ->fields($a_server)
+          ->fields($server)
           ->execute();
       }
 
@@ -113,9 +113,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
       // Copy the containers.
       // Copy the current server containers to sandbox.
-      foreach ($a_server_containers as $a_server_container) {
+      foreach ($server_containers as $server_container) {
         db_insert(mediamosa_server_streaming_container_db::TABLE_NAME)
-          ->fields($a_server_container)
+          ->fields($server_container)
           ->execute();
       }
 
@@ -124,9 +124,9 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
 
       // Copy the server tools.
       // Copy the current server tools to sandbox.
-      foreach ($a_server_tools as $a_server_tool) {
+      foreach ($server_tools as $server_tool) {
         db_insert(mediamosa_server_tool_db::TABLE_NAME)
-          ->fields($a_server_tool)
+          ->fields($server_tool)
           ->execute();
       }
     }
@@ -2771,6 +2771,39 @@ class MediaMosaTestCaseEga extends MediaMosaTestCase {
         "Delete still with ID: @asset_id, got result @result (@result_description)",
         array(
           '@asset_id' => $asset_id,
+          '@result' => (string)$response['xml']->header->request_result_id,
+          '@result_description' => (string)$response['xml']->header->request_result_description
+        )
+      )
+    );
+
+    return $response;
+  }
+
+  /**
+   * Delete collection.
+   * Based on the REST call /collection/$coll_id/delete (POST)
+   */
+  protected function deleteCollection($coll_id, array $parameters = array(), array $expected_result_ids = array(mediamosa_error::ERRORCODE_OKAY), $do_internal = FALSE) {
+    // Parameters.
+    $parameters += array(
+      mediamosa_rest_call_collection_delete::DELETE => 'cascade',
+      mediamosa_rest_call_collection_delete::USER_ID => self::SIMPLETEST_USER_ID,
+    );
+
+    // The uri.
+    $uri = strtr('collection/@coll_id/delete', array('@coll_id' => $coll_id));
+
+    // Do Post call.
+    $response = $this->restCallPost($uri, $parameters, array(), $expected_result_ids, $do_internal);
+
+    // Check response.
+    $this->assertTrue(
+      in_array((string)$response['xml']->header->request_result_id, $expected_result_ids),
+      strtr(
+        "Delete collection with ID: @coll_id, got result @result (@result_description)",
+        array(
+          '@coll_id' => $coll_id,
           '@result' => (string)$response['xml']->header->request_result_id,
           '@result_description' => (string)$response['xml']->header->request_result_description
         )

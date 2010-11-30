@@ -444,9 +444,8 @@ class mediamosa_rest_call_collection_get extends mediamosa_rest_call {
     $user_id = $this->get_param_value(self::USER_ID);
 
     // Collection must exist.
-error_log(print_r($coll_id, TRUE));
     $collection = mediamosa_collection::must_exists($coll_id);
-error_log(print_r($collection, TRUE));
+
     if ($collection[mediamosa_collection_db::IS_UNAPPROPRIATE] == mediamosa_collection_db::IS_UNAPPROPRIATE_TRUE) {
       // Must be owner or admin.
       try {

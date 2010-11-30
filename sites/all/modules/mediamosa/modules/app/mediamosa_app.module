@@ -29,11 +29,14 @@
  * The Application module.
  */
 
+/**
+ * Implements hook_mediamosa_register_rest_call_doc().
+ */
 function mediamosa_app_mediamosa_register_rest_call_doc() {
-  $a_rest_calls = array();
+  $rest_calls = array();
 
   // Get profile_id setting.
-  $a_rest_calls['preview_profile_id'][mediamosa_rest_call::METHOD_GET] = array(
+  $rest_calls['preview_profile_id'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::TITLE => 'Get the preview profile ID.',
     mediamosa_rest_call::DESCRIPTION => 'Get the preview profile ID.',
     mediamosa_rest_call::EXAMPLE_REQUEST => 'preview_profile_id',
@@ -45,24 +48,24 @@ function mediamosa_app_mediamosa_register_rest_call_doc() {
 </items>',
   );
 
-  return $a_rest_calls;
+  return $rest_calls;
 }
 
 /**
  * Implements hook_mediamosa_register_rest_call().
  */
 function mediamosa_app_mediamosa_register_rest_call() {
-  $a_rest_calls = array();
+  $rest_calls = array();
 
   // Asset search.
-  $a_rest_calls['preview_profile_id'][mediamosa_rest_call::METHOD_GET] = array(
+  $rest_calls['preview_profile_id'][mediamosa_rest_call::METHOD_GET] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_app_get_default_transcode_profile',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
     mediamosa_rest_call::MODULE_NAME => 'mediamosa_app',
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_7,
   );
 
-  return $a_rest_calls;
+  return $rest_calls;
 }
 
 /**

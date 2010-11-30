@@ -1139,8 +1139,14 @@ class mediamosa_aut {
    * @param array $a_aut_ids
    * @param bool $b_is_slave
    *  optional when providing own auth_ids
+   *
+   * @param bool $do_master_slave_null
+   *  In some cases, when row is NULL (no rows), we still want to include it.
+   * @param string $app_id_table_prefix
+   *  In some cases we want another table being used for app_id prefix.
+   *
    */
-  static public function build_access_where(&$a_query, $aut_type, $object_id, $mixed_app_id, $aut_user_id, $a_aut_group_id, $aut_domain, $aut_realm, $slaves = NULL, $is_app_admin = FALSE, $do_master_slave_only = FALSE) {
+  static public function build_access_where(&$a_query, $aut_type, $object_id, $mixed_app_id, $aut_user_id, $a_aut_group_id, $aut_domain, $aut_realm, $slaves = NULL, $is_app_admin = FALSE, $do_master_slave_only = FALSE, $do_master_slave_null = FALSE, $app_id_table_prefix = 'a') {
     assert(is_bool($is_app_admin));
 
     $a_app_ids = $mixed_app_id;
@@ -1235,8 +1241,13 @@ class mediamosa_aut {
             // Master app_id checks
             // Because the $a_app_ids is in the app_id selection of assets, this one is a bit useles...
             if (count($a_app_ids)) {
-            // Master app_id checks
-              $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR]['master_app_id'][mediamosa_db_query::WHERE_AND]['ms'] = sprintf('a.app_id IN(%s)', implode(',' , $a_app_ids));
+              // Master app_id checks
+              if ($do_master_slave_null) {
+                $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR]['master_app_id'][mediamosa_db_query::WHERE_AND]['ms'] = strtr('@app_id_table_prefix.app_id IN(@app_ids) OR @app_id_table_prefix.app_id IS NULL', array('@app_id_table_prefix' => $app_id_table_prefix, '@app_ids' => implode(',', $a_app_ids)));
+              }
+              else {
+                $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR]['master_app_id'][mediamosa_db_query::WHERE_AND]['ms'] = strtr('@app_id_table_prefix.app_id IN(@app_ids)', array('@app_id_table_prefix' => $app_id_table_prefix, '@app_ids' => implode(',', $a_app_ids)));
+              }
             }
           }
 
@@ -1254,7 +1265,7 @@ class mediamosa_aut {
               // Only for app_ids that are present
 
               // Must be same app_id for slaves
-              $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id_slave][mediamosa_db_query::WHERE_AND][] = "a.app_id = " . mediamosa_db::escape_string($app_id_slave);
+              $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id_slave][mediamosa_db_query::WHERE_AND][] = $app_id_table_prefix . '.app_id=' . mediamosa_db::escape_string($app_id_slave);
 
               // Any case, a link to app must be present if we allow access to the MF
               $a_query[mediamosa_db_query::A_WHERE][mediamosa_db_query::WHERE_AND]['access'][mediamosa_db_query::WHERE_OR]['mf'][mediamosa_db_query::WHERE_AND]['org'][mediamosa_db_query::WHERE_OR][$app_id_slave][mediamosa_db_query::WHERE_AND][] = sprintf("aut_ms.app_id_master IN(%s)", implode(",", $a_app_ids));
