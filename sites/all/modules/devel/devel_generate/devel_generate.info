@@ -1,0 +1,16 @@
+; $Id: devel_generate.info,v 1.1 2010/01/28 21:06:42 weitzman Exp $
+name = Devel generate
+description = Generate dummy users, nodes, and taxonomy terms.
+package = Development
+core = 7.x
+files[] = devel_generate.module
+files[] = devel_generate.inc
+files[] = devel_generate_batch.inc
+files[] = devel_generate.drush.inc
+
+; Information added by drupal.org packaging script on 2010-04-21
+version = "7.x-1.0-beta2"
+core = "7.x"
+project = "devel"
+datestamp = "1271879406"
+

@@ -375,6 +375,7 @@ function install_run_tasks(&$install_state) {
  *   The output of the task function, if there is any.
  */
 function install_run_task($task, &$install_state) {
+
   $function = $task['function'];
 
   if ($task['type'] == 'form') {

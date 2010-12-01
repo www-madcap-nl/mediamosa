@@ -1,0 +1,14 @@
+; $Id: performance.info,v 1.3 2008/10/20 22:15:57 kbahey Exp $
+name = Performance Logging
+description = Logs detailed and/or summary page generation time and memory consumption for page requests.
+package = Development
+core = 7.x
+files[] = performance.module
+files[] = performance.install
+
+; Information added by drupal.org packaging script on 2010-04-21
+version = "7.x-1.0-beta2"
+core = "7.x"
+project = "devel"
+datestamp = "1271879406"
+
