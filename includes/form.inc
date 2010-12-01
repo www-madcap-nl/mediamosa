@@ -1,5 +1,5 @@
 <?php
-// $Id: form.inc,v 1.509 2010/11/13 14:04:08 dries Exp $
+// $Id: form.inc,v 1.513 2010/11/30 17:16:37 dries Exp $
 
 /**
  * @defgroup forms Form builder functions
@@ -88,6 +88,11 @@
  * the form system and each other.
  *
  * The $form_state keys are:
+ * - build_info: Do not change; internal information stored by Form API to be
+ *   able to build and rebuild the form:
+ *   - args: A list of arguments used to rebuild the form from cache.
+ *   - files: A list of include files to be loaded to rebuild the form. See
+ *     form_load_include().
  * - 'values': An associative array of values submitted to the form. The
  *   validation functions and submit functions use this array for nearly all
  *   their decision making. (Note that
@@ -163,7 +168,7 @@
  *   Any additional arguments are passed on to the functions called by
  *   drupal_get_form(), including the unique form constructor function. For
  *   example, the node_edit form requires that a node object is passed in here
- *   when it is called. These are available to implementations of 
+ *   when it is called. These are available to implementations of
  *   hook_form_alter() and hook_form_FORM_ID_alter() as the array
  *   $form_state['build_info']['args'].
  *
@@ -213,8 +218,8 @@ function drupal_get_form($form_id) {
  *       for building the form. Each array entry may be the path to a file or
  *       another array containing values for the parameters 'type', 'module' and
  *       'name' as needed by module_load_include(). The files listed here are
- *       automatically loaded by form_get_cache(). Defaults to the current menu
- *       router item's 'file' definition, if existent.
+ *       automatically loaded by form_get_cache(). By default the current menu
+ *       router item's 'file' definition is added, if existent.
  *   - rebuild: Normally, after the entire form processing is completed and
  *     submit handlers ran, a form is considered to be done and
  *     drupal_redirect_form() will redirect the user to a new page using a GET
@@ -363,7 +368,12 @@ function form_state_defaults() {
     'rebuild' => FALSE,
     'rebuild_info' => array(),
     'redirect' => NULL,
-    'build_info' => array('args' => array()),
+    // @todo 'args' is usually set, so no other default 'build_info' keys are
+    //   appended via += form_state_defaults().
+    'build_info' => array(
+      'args' => array(),
+      'files' => array(),
+    ),
     'temporary' => array(),
     'submitted' => FALSE,
     'executed' => FALSE,
@@ -470,7 +480,7 @@ function form_get_cache($form_build_id, &$form_state) {
         $form_state = $cached->data + $form_state;
 
         // If the original form is contained in include files, load the files.
-        // See drupal_build_form().
+        // @see form_load_include()
         $form_state['build_info'] += array('files' => array());
         foreach ($form_state['build_info']['files'] as $file) {
           if (is_array($file)) {
@@ -535,6 +545,55 @@ function form_state_keys_no_cache() {
     'validate_handlers',
     'values',
   );
+}
+
+/**
+ * Loads an include file and makes sure it is loaded whenever the form is processed.
+ *
+ * Example:
+ * @code
+ *   // Load node.admin.inc from Node module.
+ *   form_load_include($form_state, 'inc', 'node', 'node.admin');
+ * @endcode
+ *
+ * Use this function instead of module_load_include() from inside a form
+ * constructor or any form processing logic as it ensures that the include file
+ * is loaded whenever the form is processed. In contrast to using
+ * module_load_include() directly, form_load_include() makes sure the include
+ * file is correctly loaded also if the form is cached.
+ *
+ * @param $form_state
+ *   The current state of the form.
+ * @param $type
+ *   The include file's type (file extension).
+ * @param $module
+ *   The module to which the include file belongs.
+ * @param $name
+ *   (optional) The base file name (without the $type extension). If omitted,
+ *   $module is used; i.e., resulting in "$module.$type" by default.
+ *
+ * @return
+ *   The filepath of the loaded include file, or FALSE if the include file was
+ *   not found or has been loaded already.
+ *
+ * @see module_load_include()
+ */
+function form_load_include(&$form_state, $type, $module, $name = NULL) {
+  if (!isset($name)) {
+    $name = $module;
+  }
+  if (!isset($form_state['build_info']['files']["$module:$name.$type"])) {
+    // Only add successfully included files to the form state.
+    if ($result = module_load_include($type, $module, $name)) {
+      $form_state['build_info']['files']["$module:$name.$type"] = array(
+        'type' => $type,
+        'module' => $module,
+        'name' => $name,
+      );
+      return $result;
+    }
+  }
+  return FALSE;
 }
 
 /**
@@ -641,6 +700,8 @@ function drupal_retrieve_form($form_id, &$form_state) {
   if (!isset($form_state['build_info']['files']['menu']) && !defined('MAINTENANCE_MODE')) {
     $item = menu_get_item();
     if (!empty($item['include_file'])) {
+      // Do not use form_load_include() here, as the file is already loaded.
+      // Anyway, form_get_cache() is able to handle filepaths too.
       $form_state['build_info']['files']['menu'] = $item['include_file'];
     }
   }
@@ -1446,8 +1507,10 @@ function form_set_error($name = NULL, $message = '', $limit_validation_errors = 
         // reconstructed #parents begin with the same keys as the specified
         // section, then the element's values are within the part of
         // $form_state['values'] that the clicked button requires to be valid,
-        // so errors for this element must be recorded.
-        if (array_slice(explode('][', $name), 0, count($section)) === $section) {
+        // so errors for this element must be recorded. As the exploded array
+        // will all be strings, we need to cast every value of the section
+        // array to string.
+        if (array_slice(explode('][', $name), 0, count($section)) === array_map('strval', $section)) {
           $record = TRUE;
           break;
         }
@@ -3317,7 +3380,7 @@ function form_process_fieldset(&$element, &$form_state) {
   }
 
   // Contains form element summary functionalities.
-  $element['#attached']['js']['misc/form.js'] = array('group' => JS_LIBRARY, 'weight' => 1);
+  $element['#attached']['library'][] = array('system', 'drupal.form');
 
   // The .form-wrapper class is required for #states to treat fieldsets like
   // containers.
@@ -3327,7 +3390,7 @@ function form_process_fieldset(&$element, &$form_state) {
 
   // Collapsible fieldsets
   if (!empty($element['#collapsible'])) {
-    $element['#attached']['js'][] = 'misc/collapse.js';
+    $element['#attached']['library'][] = array('system', 'drupal.collapse');
     $element['#attributes']['class'][] = 'collapsible';
     if (!empty($element['#collapsed'])) {
       $element['#attributes']['class'][] = 'collapsed';
@@ -3443,7 +3506,7 @@ function form_process_vertical_tabs($element, &$form_state) {
 function theme_vertical_tabs($variables) {
   $element = $variables['element'];
   // Add required JavaScript and Stylesheet.
-  drupal_add_library('system', 'vertical-tabs');
+  drupal_add_library('system', 'drupal.vertical-tabs');
 
   $output = '<h2 class="element-invisible">' . t('Vertical Tabs') . '</h2>';
   $output .= '<div class="vertical-tabs-panes">' . $element['#children'] . '</div>';
@@ -3552,7 +3615,7 @@ function theme_textfield($variables) {
 
   $extra = '';
   if ($element['#autocomplete_path'] && drupal_valid_path($element['#autocomplete_path'])) {
-    drupal_add_js('misc/autocomplete.js');
+    drupal_add_library('system', 'drupal.autocomplete');
     $element['#attributes']['class'][] = 'form-autocomplete';
 
     $attributes = array();
@@ -3614,7 +3677,7 @@ function theme_textarea($variables) {
 
   // Add resizable behavior.
   if (!empty($element['#resizable'])) {
-    drupal_add_js('misc/textarea.js');
+    drupal_add_library('system', 'drupal.textarea');
     $wrapper_attributes['class'][] = 'resizable';
   }
 

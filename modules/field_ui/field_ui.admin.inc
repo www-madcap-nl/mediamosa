@@ -1,5 +1,5 @@
 <?php
-// $Id: field_ui.admin.inc,v 1.83 2010/11/13 02:02:02 dries Exp $
+// $Id: field_ui.admin.inc,v 1.87 2010/11/30 23:55:11 webchick Exp $
 
 /**
  * @file
@@ -21,8 +21,8 @@ function field_ui_fields_list() {
         $field = field_info_field($field_name);
         $admin_path = _field_ui_bundle_admin_path($entity_type, $bundle);
         $rows[$field_name]['data'][0] = $field['locked'] ? t('@field_name (Locked)', array('@field_name' => $field_name)) : $field_name;
-        $rows[$field_name]['data'][1] = t($field_types[$field['type']]['label']);
-        $rows[$field_name]['data'][2][] = l($bundles[$entity_type][$bundle]['label'], $admin_path . '/fields');
+        $rows[$field_name]['data'][1] = $field_types[$field['type']]['label'];
+        $rows[$field_name]['data'][2][] = $admin_path ? l($bundles[$entity_type][$bundle]['label'], $admin_path . '/fields') : $bundles[$entity_type][$bundle]['label'];
         $rows[$field_name]['class'] = $field['locked'] ? array('menu-disabled') : array('');
       }
     }
@@ -158,15 +158,14 @@ function field_ui_table_pre_render($elements) {
         // Add row id and associate JS settings.
         $id = drupal_html_class($name);
         $row['#attributes']['id'] = $id;
-        $row += array(
-          '#js_settings' => array(),
-        );
-        $row['#js_settings'] += array(
-          'rowHandler' => $row['#row_type'],
-          'name' => $name,
-          'region' => $region_name,
-        );
-        $js_settings[$id] = $row['#js_settings'];
+        if (isset($row['#js_settings'])) {
+          $row['#js_settings'] += array(
+            'rowHandler' => $row['#row_type'],
+            'name' => $name,
+            'region' => $region_name,
+          );
+          $js_settings[$id] = $row['#js_settings'];
+        }
       }
     }
   }
@@ -304,7 +303,7 @@ function field_ui_field_overview_form($form, &$form_state, $entity_type, $bundle
     ),
     '#parent_options' => array(),
     '#regions' => array(
-      'main' => array(),
+      'main' => array('message' => t('No fields are present yet.')),
       'add_new' => array('title' => '&nbsp;'),
     ),
     '#attributes' => array(
@@ -1732,6 +1731,7 @@ function field_ui_field_edit_form($form, &$form_state, $instance) {
   drupal_set_title($instance['label']);
 
   $form['#field'] = $field;
+  $form['#instance'] = $instance;
 
   if (!empty($field['locked'])) {
     $form['locked'] = array(
@@ -1913,7 +1913,9 @@ function field_ui_default_value_widget($field, $instance, &$form, &$form_state) 
     '#collapsible' => FALSE,
     '#tree' => TRUE,
     '#description' => t('The default value for this field, used when creating new content.'),
-    // Make sure the values appear at the top-level of $form_state['values'].
+    // Stick to an empty 'parents' on this form in order not to breaks widgets
+    // that do not use field_widget_[field|instance]() and still access
+    // $form_state['field'] directly.
     '#parents' => array(),
   );
 
@@ -1921,8 +1923,9 @@ function field_ui_default_value_widget($field, $instance, &$form, &$form_state) 
   $items = $instance['default_value'];
   $instance['required'] = FALSE;
   $instance['description'] = '';
+
   // @todo Allow multiple values (requires more work on 'add more' JS handler).
-  $element += field_default_form(NULL, NULL, $field, $instance, LANGUAGE_NONE, $items, $form, $form_state, 0);
+  $element += field_default_form(NULL, NULL, $field, $instance, LANGUAGE_NONE, $items, $element, $form_state, 0);
 
   return $element;
 }
@@ -1931,22 +1934,34 @@ function field_ui_default_value_widget($field, $instance, &$form, &$form_state) 
  * Form validation handler for field instance settings form.
  */
 function field_ui_field_edit_form_validate($form, &$form_state) {
+  // Take the incoming values as the $instance definition, so that the 'default
+  // value' gets validated using the instance settings being submitted.
   $instance = $form_state['values']['instance'];
   $field_name = $instance['field_name'];
-  $field = field_info_field($field_name);
 
-  // Extract the 'default value'.
-  $items = array();
-  field_default_extract_form_values(NULL, NULL, $field, $instance, LANGUAGE_NONE, $items, $form, $form_state);
-  // Validate the value and report errors.
-  $errors = array();
-  $function = $field['module'] . '_field_validate';
-  if (function_exists($function)) {
-    $function(NULL, NULL, $field, $instance, LANGUAGE_NONE, $items, $errors);
-  }
-  if (isset($errors[$field_name][LANGUAGE_NONE])) {
-    $form_state['field'][$field_name][LANGUAGE_NONE]['errors'] = $errors[$field_name][LANGUAGE_NONE];
-    field_default_form_errors(NULL, NULL, $field, $instance, LANGUAGE_NONE, $items, $form, $form_state);
+  if (isset($form['instance']['default_value_widget'])) {
+    $element = $form['instance']['default_value_widget'];
+
+    $field_state = field_form_get_state($element['#parents'], $field_name, LANGUAGE_NONE, $form_state);
+    $field = $field_state['field'];
+
+    // Extract the 'default value'.
+    $items = array();
+    field_default_extract_form_values(NULL, NULL, $field, $instance, LANGUAGE_NONE, $items, $element, $form_state);
+
+    // Validate the value and report errors.
+    $errors = array();
+    $function = $field['module'] . '_field_validate';
+    if (function_exists($function)) {
+      $function(NULL, NULL, $field, $instance, LANGUAGE_NONE, $items, $errors);
+    }
+    if (isset($errors[$field_name][LANGUAGE_NONE])) {
+      // Store reported errors in $form_state.
+      $field_state['errors'] = $errors[$field_name][LANGUAGE_NONE];
+      field_form_set_state($element['#parents'], $field_name, LANGUAGE_NONE, $form_state, $field_state);
+      // Assign reported errors to the correct form element.
+      field_default_form_errors(NULL, NULL, $field, $instance, LANGUAGE_NONE, $items, $element, $form_state);
+    }
   }
 }
 
@@ -1963,12 +1978,16 @@ function field_ui_field_edit_form_submit($form, &$form_state) {
   field_update_field($field);
 
   // Handle the default value.
-  // Extract field values.
-  $items = array();
-  field_default_extract_form_values(NULL, NULL, $field, $instance, LANGUAGE_NONE, $items, $form, $form_state);
-  // Prepare field values.
-  field_default_submit(NULL, NULL, $field, $instance, LANGUAGE_NONE, $items, $form, $form_state);
-  $instance['default_value'] = $items ? $items : NULL;
+  if (isset($form['instance']['default_value_widget'])) {
+    $element = $form['instance']['default_value_widget'];
+
+    // Extract field values.
+    $items = array();
+    field_default_extract_form_values(NULL, NULL, $field, $instance, LANGUAGE_NONE, $items, $element, $form_state);
+    field_default_submit(NULL, NULL, $field, $instance, LANGUAGE_NONE, $items, $element, $form_state);
+
+    $instance['default_value'] = $items ? $items : NULL;
+  }
 
   // Retrieve the stored instance settings to merge with the incoming values.
   $instance_source = field_read_instance($instance['entity_type'], $instance['field_name'], $instance['bundle']);

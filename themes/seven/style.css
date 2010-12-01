@@ -1,4 +1,4 @@
-/* $Id: style.css,v 1.82 2010/11/06 00:18:24 dries Exp $ */
+/* $Id: style.css,v 1.84 2010/11/23 01:58:21 webchick Exp $ */
 
 /**
  * Generic elements.
@@ -506,6 +506,13 @@ table.system-status-report tr.error {
   color: #8c2e0b;
   background-color: #fef5f1;
 }
+/**
+ * Exception for webkit bug with the right border of the last cell
+ * in some tables, since it's webkit only, we can use :last-child
+ */
+tr td:last-child {
+  border-right: 1px solid #BEBFB9;
+}
 
 
 /**
@@ -869,7 +876,6 @@ ol.task-list li.done {
   background-color: #fff;
   padding-top: 15px;
 }
-.overlay .primary,
 .overlay #branding h1.page-title,
 .overlay #left,
 .overlay #footer {

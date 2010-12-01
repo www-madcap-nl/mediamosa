@@ -1,5 +1,5 @@
 <?php
-// $Id: locale.inc,v 1.262 2010/11/05 20:33:56 dries Exp $
+// $Id: locale.inc,v 1.264 2010/11/21 09:01:30 webchick Exp $
 
 /**
  * @file
@@ -321,10 +321,26 @@ function locale_language_switcher_session($type, $path) {
  * Rewrite URLs for the URL language provider.
  */
 function locale_language_url_rewrite_url(&$path, &$options) {
+  static $drupal_static_fast;
+  if (!isset($drupal_static_fast)) {
+    $drupal_static_fast['languages'] = &drupal_static(__FUNCTION__);
+  }
+  $languages = &$drupal_static_fast['languages'];
+
+  if (!isset($languages)) {
+    $languages = language_list('enabled');
+    $languages = array_flip(array_keys($languages[1]));
+  }
+
   // Language can be passed as an option, or we go for current URL language.
   if (!isset($options['language'])) {
     global $language_url;
     $options['language'] = $language_url;
+  }
+  // We allow only enabled languages here.
+  elseif (!isset($languages[$options['language']->language])) {
+    unset($options['language']);
+    return;
   }
 
   if (isset($options['language'])) {
@@ -609,7 +625,7 @@ function _locale_import_read_po($op, $file, $mode = NULL, $lang = NULL, $group =
       $context = "MSGID_PLURAL";
     }
     elseif (!strncmp("msgid", $line, 5)) {
-      if ($context == "MSGSTR") {   // End current entry, start a new one
+      if (($context == "MSGSTR") || ($context == "MSGSTR_ARR")) {   // End current entry, start a new one
         _locale_import_one_string($op, $current, $mode, $lang, $file, $group);
         $current = array();
       }
@@ -627,7 +643,7 @@ function _locale_import_read_po($op, $file, $mode = NULL, $lang = NULL, $group =
       $context = "MSGID";
     }
     elseif (!strncmp("msgctxt", $line, 7)) {
-      if ($context == "MSGSTR") {   // End current entry, start a new one
+      if (($context == "MSGSTR") || ($context == "MSGSTR_ARR")) {   // End current entry, start a new one
         _locale_import_one_string($op, $current, $mode, $lang, $file, $group);
         $current = array();
       }

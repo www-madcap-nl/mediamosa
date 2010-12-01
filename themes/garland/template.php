@@ -1,5 +1,5 @@
 <?php
-// $Id: template.php,v 1.43 2010/11/05 01:25:33 dries Exp $
+// $Id: template.php,v 1.45 2010/12/01 00:18:15 webchick Exp $
 
 /**
  * Return a themed breadcrumb trail.
@@ -59,7 +59,13 @@ function garland_process_html(&$vars) {
  * Override or insert variables into the page template.
  */
 function garland_preprocess_page(&$vars) {
-  $vars['tabs2'] = menu_secondary_local_tasks();
+  // Move secondary tabs into a separate variable.
+  $vars['tabs2'] = array(
+    '#theme' => 'menu_local_tasks',
+    '#secondary' => $vars['tabs']['#secondary'],
+  );
+  unset($vars['tabs']['#secondary']);
+
   if (isset($vars['main_menu'])) {
     $vars['primary_nav'] = theme('links__system_main_menu', array(
       'links' => $vars['main_menu'],
@@ -114,6 +120,20 @@ function garland_preprocess_page(&$vars) {
 }
 
 /**
+ * Override or insert variables into the node template.
+ */
+function garland_preprocess_node(&$vars) {
+  $vars['submitted'] = $vars['date'] . ' — ' . $vars['name'];
+}
+
+/**
+ * Override or insert variables into the comment template.
+ */
+function garland_preprocess_comment(&$vars) {
+  $vars['submitted'] = $vars['created'] . ' — ' . $vars['author'];
+}
+
+/**
  * Override or insert variables into the block template.
  */
 function garland_preprocess_block(&$vars) {
@@ -138,12 +158,4 @@ function garland_preprocess_region(&$vars) {
   if ($vars['region'] == 'header') {
     $vars['classes_array'][] = 'clearfix';
   }
-}
-
-/**
- * Returns the rendered local tasks. The default implementation renders
- * them as tabs. Overridden to split the secondary tasks.
- */
-function garland_menu_local_tasks() {
-  return menu_primary_local_tasks();
 }

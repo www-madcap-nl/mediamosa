@@ -1,5 +1,5 @@
 <?php
-// $Id: template.php,v 1.7 2010/10/05 19:59:10 dries Exp $
+// $Id: template.php,v 1.10 2010/12/01 00:18:15 webchick Exp $
 
 /**
  * Add body classes if certain regions have content.
@@ -78,6 +78,9 @@ function bartik_process_page(&$variables) {
  * Implements hook_preprocess_maintenance_page().
  */
 function bartik_preprocess_maintenance_page(&$variables) {
+  if (!$variables['db_is_active']) {
+    unset($variables['site_name']);
+  }
   drupal_add_css(drupal_get_path('theme', 'bartik') . '/css/maintenance-page.css');
 }
 
@@ -100,6 +103,13 @@ function bartik_process_maintenance_page(&$variables) {
 }
 
 /**
+ * Override or insert variables into the node template.
+ */
+function bartik_preprocess_node(&$variables) {
+  $variables['submitted'] = t('published by !username on !datetime', array('!username' => $variables['name'], '!datetime' => $variables['date']));
+}
+
+/**
  * Override or insert variables into the block template.
  */
 function bartik_preprocess_block(&$variables) {
@@ -107,4 +117,11 @@ function bartik_preprocess_block(&$variables) {
   if ($variables['block']->region == 'header') {
     $variables['title_attributes_array']['class'][] = 'element-invisible';
   }
+}
+
+/**
+ * Implements theme_menu_tree().
+ */
+function bartik_menu_tree($variables) {
+  return '<ul class="menu clearfix">' . $variables['tree'] . '</ul>';
 }

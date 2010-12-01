@@ -1,5 +1,5 @@
 <?php
-// $Id: bootstrap.inc,v 1.439 2010/11/14 00:19:41 webchick Exp $
+// $Id: bootstrap.inc,v 1.449 2010/12/01 07:52:26 webchick Exp $
 
 /**
  * @file
@@ -9,7 +9,7 @@
 /**
  * The current system version.
  */
-define('VERSION', '7.0-beta3');
+define('VERSION', '7.0-rc1');
 
 /**
  * Core API compatibility.
@@ -241,6 +241,13 @@ define('REGISTRY_RESET_LOOKUP_CACHE', 1);
 define('REGISTRY_WRITE_LOOKUP_CACHE', 2);
 
 /**
+ * Regular expression to match PHP function names.
+ *
+ * @see http://php.net/manual/en/language.functions.php
+ */
+define('DRUPAL_PHP_FUNCTION_PATTERN', '[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*');
+
+/**
  * Start the timer with the specified name. If you start and stop the same
  * timer multiple times, the measured intervals will be accumulated.
  *
@@ -436,21 +443,23 @@ function conf_path($require_settings = TRUE, $reset = FALSE) {
  * @see ip_address()
  */
 function drupal_override_server_variables($variables = array()) {
-  // Set defaults based on the provided URL.
+  // Allow the provided URL to override any existing values in $_SERVER.
   if (isset($variables['url'])) {
     $url = parse_url($variables['url']);
+    if (isset($url['host'])) {
+      $_SERVER['HTTP_HOST'] = $url['host'];
+    }
+    if (isset($url['path'])) {
+      $_SERVER['SCRIPT_NAME'] = $url['path'];
+    }
     unset($variables['url']);
   }
-  else {
-    $url = array();
-  }
-  $url += array(
-    'path' => '',
-    'host' => 'localhost',
-  );
+  // Define default values for $_SERVER keys. These will be used if $_SERVER
+  // does not already define them and no other values are passed in to this
+  // function.
   $defaults = array(
-    'HTTP_HOST' => $url['host'],
-    'SCRIPT_NAME' => $url['path'],
+    'HTTP_HOST' => 'localhost',
+    'SCRIPT_NAME' => NULL,
     'REMOTE_ADDR' => '127.0.0.1',
     'REQUEST_METHOD' => 'GET',
     'SERVER_NAME' => NULL,
@@ -703,7 +712,7 @@ function drupal_get_filename($type, $name, $filename = NULL) {
       // extension, not just the file we are currently looking for. This
       // prevents unnecessary scans from being repeated when this function is
       // called more than once in the same page request.
-      $matches = drupal_system_listing("/\.$extension$/", $dir, 'name', 0);
+      $matches = drupal_system_listing("/^" . DRUPAL_PHP_FUNCTION_PATTERN . "\.$extension$/", $dir, 'name', 0);
       foreach ($matches as $matched_name => $file) {
         $files[$type][$matched_name] = $file->uri;
       }
@@ -887,7 +896,12 @@ function drupal_page_is_cacheable($allow_caching = NULL) {
  */
 function bootstrap_invoke_all($hook) {
   // Bootstrap modules should have been loaded when this function is called, so
-  // we don't need to tell module_list() to reset its bootstrap list.
+  // we don't need to tell module_list() to reset its internal list (and we
+  // therefore leave the first parameter at its default value of FALSE). We
+  // still pass in TRUE for the second parameter, though; in case this is the
+  // first time during the bootstrap that module_list() is called, we want to
+  // make sure that its internal cache is primed with the bootstrap modules
+  // only.
   foreach (module_list(FALSE, TRUE) as $module) {
     drupal_load('module', $module);
     module_invoke($module, $hook);
@@ -1242,7 +1256,7 @@ function drupal_unpack($obj, $field = 'data') {
  *     drupal_set_title($title = t("@name's blog", array('@name' => format_username($account))), PASS_THROUGH);
  *   @endcode
  * - %variable: Indicates that the string should be HTML-escaped and highlighted
- *   with theme_placeholder(), which shows up by default as <em>emphasized</em>.
+ *   with drupal_placeholder(), which shows up as <em>emphasized</em>.
  *   @code
  *     $message = t('%name-from sent %name-to an e-mail.', array('%name-from' => format_username($user), '%name-to' => format_username($account)));
  *   @endcode
@@ -1378,7 +1392,7 @@ function drupal_unpack($obj, $field = 'data') {
  *    - !variable: inserted as is
  *    - @variable: escape plain text to HTML (using check_plain())
  *    - %variable: escape text and theme as a placeholder for user-submitted
- *      content (using check_plain() + theme_placeholder())
+ *      content (using check_plain() + drupal_placeholder())
  * @param $options
  *   An associative array of additional options, with the following keys:
  *     - 'langcode' (defaults to the current language) The language code to
@@ -1870,6 +1884,79 @@ function drupal_hash_base64($data) {
 }
 
 /**
+ * Merges multiple arrays, recursively, and returns the merged array.
+ *
+ * This function is similar to PHP's array_merge_recursive() function, but it
+ * handles non-array values differently. When merging values that are not both
+ * arrays, the latter value replaces the former rather than merging with it.
+ *
+ * Example:
+ * @code
+ * $link_options_1 = array('fragment' => 'x', 'attributes' => array('title' => t('X'), 'class' => array('a', 'b')));
+ * $link_options_2 = array('fragment' => 'y', 'attributes' => array('title' => t('Y'), 'class' => array('c', 'd')));
+ *
+ * // This results in array('fragment' => array('x', 'y'), 'attributes' => array('title' => array(t('X'), t('Y')), 'class' => array('a', 'b', 'c', 'd'))).
+ * $incorrect = array_merge_recursive($link_options_1, $link_options_2);
+ *
+ * // This results in array('fragment' => 'y', 'attributes' => array('title' => t('Y'), 'class' => array('a', 'b', 'c', 'd'))).
+ * $correct = drupal_array_merge_deep($link_options_1, $link_options_2);
+ * @endcode
+ *
+ * @param ...
+ *   Arrays to merge.
+ *
+ * @return
+ *   The merged array.
+ *
+ * @see drupal_array_merge_deep_array()
+ */
+function drupal_array_merge_deep() {
+  return drupal_array_merge_deep_array(func_get_args());
+}
+
+/**
+ * Merges multiple arrays, recursively, and returns the merged array.
+ *
+ * This function is equivalent to drupal_array_merge_deep(), except the
+ * input arrays are passed as a single array parameter rather than a variable
+ * parameter list.
+ *
+ * The following are equivalent:
+ * - drupal_array_merge_deep($a, $b);
+ * - drupal_array_merge_deep_array(array($a, $b));
+ *
+ * The following are also equivalent:
+ * - call_user_func_array('drupal_array_merge_deep', $arrays_to_merge);
+ * - drupal_array_merge_deep_array($arrays_to_merge);
+ *
+ * @see drupal_array_merge_deep()
+ */
+function drupal_array_merge_deep_array($arrays) {
+  $result = array();
+
+  foreach ($arrays as $array) {
+    foreach ($array as $key => $value) {
+      // Renumber integer keys as array_merge_recursive() does. Note that PHP
+      // automatically converts array keys that are integer strings (e.g., '1')
+      // to integers.
+      if (is_integer($key)) {
+        $result[] = $value;
+      }
+      // Recurse when both values are arrays.
+      elseif (isset($result[$key]) && is_array($result[$key]) && is_array($value)) {
+        $result[$key] = drupal_array_merge_deep_array(array($result[$key], $value));
+      }
+      // Otherwise, use the latter value, overriding any previous value.
+      else {
+        $result[$key] = $value;
+      }
+    }
+  }
+
+  return $result;
+}
+
+/**
  * Generates a default anonymous $user object.
  *
  * @return Object - the user object.
@@ -2157,7 +2244,6 @@ function _drupal_bootstrap_database() {
   // The database autoload routine comes first so that we can load the database
   // system without hitting the database. That is especially important during
   // the install or upgrade process.
-  spl_autoload_register('db_autoload');
   spl_autoload_register('drupal_autoload_class');
   spl_autoload_register('drupal_autoload_interface');
 }
@@ -2571,15 +2657,11 @@ function drupal_get_schema($table = NULL, $rebuild = FALSE) {
       // On some databases this function may be called before bootstrap has
       // been completed, so we force the functions we need to load just in case.
       if (function_exists('module_load_all_includes')) {
-        // There is currently a bug in module_list() where it caches what it
-        // was last called with, which is not always what you want.
-        // module_load_all_includes() calls module_list(), but if this function
-        // is called very early in the bootstrap process then it will be
-        // uninitialized and therefore return no modules. Instead, we have to
-        // "prime" module_list() here to to values we want, specifically
-        // "yes rebuild the list and don't limit to bootstrap".
-        // @todo Remove this call after http://drupal.org/node/222109 is fixed.
-        module_list(TRUE, FALSE);
+        // This function can be called very early in the bootstrap process, so
+        // we force the module_list() cache to be refreshed to ensure that it
+        // contains the complete list of modules before we go on to call
+        // module_load_all_includes().
+        module_list(TRUE);
         module_load_all_includes('install');
       }
 

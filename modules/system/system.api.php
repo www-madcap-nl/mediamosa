@@ -1,5 +1,5 @@
 <?php
-// $Id: system.api.php,v 1.212 2010/11/13 02:00:56 dries Exp $
+// $Id: system.api.php,v 1.218 2010/12/01 00:23:36 webchick Exp $
 
 /**
  * @file
@@ -350,6 +350,13 @@ function hook_entity_delete($entity, $type) {
  *   engines. Also, the default implementation presumes entities are stored in
  *   SQL, but the execute callback could instead query any other entity storage,
  *   local or remote.
+ *
+ *   Note the $query->altered attribute which is TRUE in case the query has
+ *   already been altered once. This happens with cloned queries.
+ *   If there is a pager, then such a cloned query will be executed to count
+ *   all elements. This query can be detected by checking for
+ *   ($query->pager && $query->count), allowing the driver to return 0 from
+ *   the count query and disable the pager.
  */
 function hook_entity_query_alter($query) {
   $query->executeCallback = 'my_module_query_callback';
@@ -843,6 +850,38 @@ function hook_page_build(&$page) {
 }
 
 /**
+ * Alter a menu router item right after it has been retrieved from the database or cache.
+ *
+ * This hook is invoked by menu_get_item() and allows for run-time alteration of router
+ * information (page_callback, title, and so on) before it is translated and checked for
+ * access. The passed in $router_item is statically cached for the current request, so this
+ * hook is only invoked once for any router item that is retrieved via menu_get_item().
+ *
+ * Usually, modules will only want to inspect the router item and conditionally
+ * perform other actions (such as preparing a state for the current request).
+ * Note that this hook is invoked for any router item that is retrieved by
+ * menu_get_item(), which may or may not be called on the path itself, so implementations
+ * should check the $path parameter if the alteration should fire for the current request
+ * only.
+ *
+ * @param $router_item
+ *   The menu router item for $path.
+ * @param $path
+ *   The originally passed path, for which $router_item is responsible.
+ * @param $original_map
+ *   The path argument map, as contained in $path.
+ *
+ * @see menu_get_item()
+ */
+function hook_menu_get_item_alter(&$router_item, $path, $original_map) {
+  // When retrieving the router item for the current path...
+  if ($path == $_GET['q']) {
+    // ...call a function that prepares something for this request.
+    mymodule_prepare_something();
+  }
+}
+
+/**
  * Define menu items and page callbacks.
  *
  * This hook enables modules to register paths in order to define how URL
@@ -1010,13 +1049,18 @@ function hook_page_build(&$page) {
  *   - "access arguments": An array of arguments to pass to the access callback
  *     function, with path component substitution as described above.
  *   - "theme callback": (optional) A function returning the machine-readable
- *     name of the default theme that will be used to render the page. If this
- *     function is provided, it is expected to return a currently-active theme
- *     on the site (otherwise, the main site theme will be used instead). If no
- *     function is provided, the main site theme will also be used, unless a
- *     value is inherited from a parent menu item. In all cases, the results of
- *     this function can be dynamically overridden for a particular page
- *     request by modules which implement hook_custom_theme().
+ *     name of the theme that will be used to render the page. If not provided,
+ *     the value will be inherited from a parent menu item. If there is no
+ *     theme callback, or if the function does not return the name of a current
+ *     active theme on the site, the theme for this page will be determined by
+ *     either hook_custom_theme() or the default theme instead. As a general
+ *     rule, the use of theme callback functions should be limited to pages
+ *     whose functionality is very closely tied to a particular theme, since
+ *     they can only be overridden by modules which specifically target those
+ *     pages in hook_menu_alter(). Modules implementing more generic theme
+ *     switching functionality (for example, a module which allows the theme to
+ *     be set dynamically based on the current user's role) should use
+ *     hook_custom_theme() instead.
  *   - "theme arguments": An array of arguments to pass to the theme callback
  *     function, with path component substitution as described above.
  *   - "file": A file that will be included before the page callback is called;
@@ -1439,13 +1483,13 @@ function hook_menu_contextual_links_alter(&$links, $router_item, $root_path) {
  *
  * @code
  *   // Node body.
- *   $page['content']['nodes'][$nid]['body']
+ *   $page['content']['system_main']['nodes'][$nid]['body']
  *   // Array of links attached to the node (add comments, read more).
- *   $page['content']['nodes'][$nid]['links']
+ *   $page['content']['system_main']['nodes'][$nid]['links']
  *   // The node object itself.
- *   $page['content']['nodes'][$nid]['#node']
+ *   $page['content']['system_main']['nodes'][$nid]['#node']
  *   // The results pager.
- *   $page['content']['pager']
+ *   $page['content']['system_main']['pager']
  * @endcode
  *
  * Blocks may be referenced by their module/delta pair within a region:
@@ -2011,10 +2055,12 @@ function hook_theme_registry_alter(&$theme_registry) {
  * Return the machine-readable name of the theme to use for the current page.
  *
  * This hook can be used to dynamically set the theme for the current page
- * request. It overrides the default theme as well as any per-page or
- * per-section theme set by the theme callback function in hook_menu(). This
- * should be used by modules which need to override the theme based on dynamic
- * conditions.
+ * request. It should be used by modules which need to override the theme
+ * based on dynamic conditions (for example, a module which allows the theme to
+ * be set based on the current user's role). The return value of this hook will
+ * be used on all pages except those which have a valid per-page or per-section
+ * theme set via a theme callback function in hook_menu(); the themes on those
+ * pages can only be overridden using hook_menu_alter().
  *
  * Since only one theme can be used at a time, the last (i.e., highest
  * weighted) module which returns a valid theme name from this hook will
@@ -2653,7 +2699,8 @@ function hook_file_url_alter(&$uri) {
     }
   }
 }
-                                                                                                      /**
+
+/**
  * Check installation requirements and do status reporting.
  *
  * This hook has two closely related uses, determined by the $phase argument:
@@ -2687,24 +2734,25 @@ function hook_file_url_alter(&$uri) {
  * result in a notice on the the administration overview page.
  *
  * @param $phase
- *   The phase in which hook_requirements is run:
- *   - 'install': the module is being installed.
- *   - 'runtime': the runtime requirements are being checked and shown on the
- *              status report page.
+ *   The phase in which requirements are checked:
+ *   - install: The module is being installed.
+ *   - update: The module is enabled and update.php is run.
+ *   - runtime: The runtime requirements are being checked and shown on the
+ *     status report page.
  *
  * @return
  *   A keyed array of requirements. Each requirement is itself an array with
  *   the following items:
- *     - 'title': the name of the requirement.
- *     - 'value': the current value (e.g. version, time, level, ...). During
- *       install phase, this should only be used for version numbers, do not set
- *       it if not applicable.
- *     - 'description': description of the requirement/status.
- *     - 'severity': the requirement's result/severity level, one of:
- *         - REQUIREMENT_INFO:    For info only.
- *         - REQUIREMENT_OK:      The requirement is satisfied.
- *         - REQUIREMENT_WARNING: The requirement failed with a warning.
- *         - REQUIREMENT_ERROR:   The requirement failed with an error.
+ *   - title: The name of the requirement.
+ *   - value: The current value (e.g., version, time, level, etc). During
+ *     install phase, this should only be used for version numbers, do not set
+ *     it if not applicable.
+ *   - description: The description of the requirement/status.
+ *   - severity: The requirement's result/severity level, one of:
+ *     - REQUIREMENT_INFO: For info only.
+ *     - REQUIREMENT_OK: The requirement is satisfied.
+ *     - REQUIREMENT_WARNING: The requirement failed with a warning.
+ *     - REQUIREMENT_ERROR: The requirement failed with an error.
  */
 function hook_requirements($phase) {
   $requirements = array();
@@ -4231,52 +4279,6 @@ function hook_countries_alter(&$countries) {
 }
 
 /**
- * Provide information on available file transfer backends.
- *
- * File transfer backends are used by modules to transfer files from remote
- * locations to Drupal sites. For instance, update.module uses a file transfer
- * backend to download new versions of modules and themes from drupal.org.
- *
- * @return
- *   An associative array of information about the file transfer backend(s).
- *   being provided. This array can contain the following keys:
- *   - title: Title of the backend to be shown to the end user.
- *   - class: Name of the PHP class which implements this backend.
- *   - settings_form: An optional callback function that provides additional
- *     configuration information required by this backend (for instance a port
- *     number.)
- *   - weight: Controls what order the backends are presented to the user.
- *
- * @see authorize.php
- * @see FileTransfer
- */
-function hook_filetransfer_backends() {
-  $backends = array();
-
-  // This is the default, will be available on most systems.
-  if (function_exists('ftp_connect')) {
-    $backends['ftp'] = array(
-      'title' => t('FTP'),
-      'class' => 'FileTransferFTP',
-      'settings_form' => 'system_filetransfer_backend_form_ftp',
-      'weight' => 0,
-    );
-  }
-
-  // SSH2 lib connection is only available if the proper PHP extension is
-  // installed.
-  if (function_exists('ssh2_connect')) {
-    $backends['ssh'] = array(
-      'title' => t('SSH'),
-      'class' => 'FileTransferSSH',
-      'settings_form' => 'system_filetransfer_backend_form_ssh',
-      'weight' => 20,
-    );
-  }
-  return $backends;
-}
-
-/**
  * Control site status before menu dispatching.
  *
  * The hook is called after checking whether the site is offline but before
@@ -4298,6 +4300,69 @@ function hook_menu_site_status_alter(&$menu_site_status, $path) {
   // Allow access to my_module/authentication even if site is in offline mode.
   if ($menu_site_status == MENU_SITE_OFFLINE && user_is_anonymous() && $path == 'my_module/authentication') {
     $menu_site_status = MENU_SITE_ONLINE;
+  }
+}
+
+/**
+ * Register information about FileTransfer classes provided by a module.
+ *
+ * The FileTransfer class allows transfering files over a specific type of
+ * connection. Core provides classes for FTP and SSH. Contributed modules are
+ * free to extend the FileTransfer base class to add other connection types,
+ * and if these classes are registered via hook_filetransfer_info(), those
+ * connection types will be available to site administrators using the Update
+ * manager when they are redirected to the authorize.php script to authorize
+ * the file operations.
+ *
+ * @return array
+ *   Nested array of information about FileTransfer classes. Each key is a
+ *   FileTransfer type (not human readable, used for form elements and
+ *   variable names, etc), and the values are subarrays that define properties
+ *   of that type. The keys in each subarray are:
+ *   - 'title': Required. The human-readable name of the connection type.
+ *   - 'class': Required. The name of the FileTransfer class. The constructor
+ *     will always be passed the full path to the root of the site that should
+ *     be used to restrict where file transfer operations can occur (the $jail)
+ *     and an array of settings values returned by the settings form.
+ *   - 'file': Required. The include file containing the FileTransfer class.
+ *     This should be a separate .inc file, not just the .module file, so that
+ *     the minimum possible code is loaded when authorize.php is running.
+ *   - 'file path': Optional. The directory (relative to the Drupal root)
+ *     where the include file lives. If not defined, defaults to the base
+ *     directory of the module implementing the hook.
+ *   - 'weight': Optional. Integer weight used for sorting connection types on
+ *     the authorize.php form.
+ *
+ * @see FileTransfer
+ * @see authorize.php
+ * @see hook_filetransfer_info_alter()
+ * @see drupal_get_filetransfer_info()
+ */
+function hook_filetransfer_info() {
+  $info['sftp'] = array(
+    'title' => t('SFTP (Secure FTP)'),
+    'file' => 'sftp.filetransfer.inc',
+    'class' => 'FileTransferSFTP',
+    'weight' => 10,
+  );
+  return $info;
+}
+
+/**
+ * Alter the FileTransfer class registry.
+ *
+ * @param array $filetransfer_info
+ *   Reference to a nested array containing information about the FileTransfer
+ *   class registry.
+ *
+ * @see hook_filetransfer_info()
+ */
+function hook_filetransfer_info_alter(&$filetransfer_info) {
+  if (variable_get('paranoia', FALSE)) {
+    // Remove the FTP option entirely.
+    unset($filetransfer_info['ftp']);
+    // Make sure the SSH option is listed first.
+    $filetransfer_info['ssh']['weight'] = -10;
   }
 }
 

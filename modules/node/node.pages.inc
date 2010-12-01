@@ -1,5 +1,5 @@
 <?php
-// $Id: node.pages.inc,v 1.134 2010/11/05 19:47:20 dries Exp $
+// $Id: node.pages.inc,v 1.136 2010/11/26 19:23:01 dries Exp $
 
 /**
  * @file
@@ -56,21 +56,15 @@ function theme_node_add_list($variables) {
 
 
 /**
- * Present a node submission form or a set of links to such forms.
+ * Returns a node submission form.
  */
 function node_add($type) {
   global $user;
 
   $types = node_type_get_types();
-  $type = isset($type) ? str_replace('-', '_', $type) : NULL;
-  // If a node type has been specified, validate its existence.
-  if (isset($types[$type])) {
-    // Initialize settings:
-    $node = (object) array('uid' => $user->uid, 'name' => (isset($user->name) ? $user->name : ''), 'type' => $type, 'language' => LANGUAGE_NONE);
-
-    drupal_set_title(t('Create @name', array('@name' => $types[$type]->name)), PASS_THROUGH);
-    $output = drupal_get_form($type . '_node_form', $node);
-  }
+  $node = (object) array('uid' => $user->uid, 'name' => (isset($user->name) ? $user->name : ''), 'type' => $type, 'language' => LANGUAGE_NONE);
+  drupal_set_title(t('Create @name', array('@name' => $types[$type]->name)), PASS_THROUGH);
+  $output = drupal_get_form($type . '_node_form', $node);
 
   return $output;
 }
@@ -306,9 +300,7 @@ function node_form($form, &$form_state, $node) {
   }
   $form += array('#submit' => array());
 
-  $form['#builder_function'] = 'node_form_submit_build_node';
   field_attach_form('node', $node, $form, $form_state, $node->language);
-
   return $form;
 }
 
@@ -327,7 +319,7 @@ function node_form_delete_submit($form, &$form_state) {
 
 
 function node_form_build_preview($form, &$form_state) {
-  $node = $form['#builder_function']($form, $form_state);
+  $node = node_form_submit_build_node($form, $form_state);
   $form_state['node_preview'] = node_preview($node);
   $form_state['rebuild'] = TRUE;
 }
@@ -410,7 +402,7 @@ function theme_node_preview($variables) {
 }
 
 function node_form_submit($form, &$form_state) {
-  $node = $form['#builder_function']($form, $form_state);
+  $node = node_form_submit_build_node($form, $form_state);
   $insert = empty($node->nid);
   node_save($node);
   $node_link = l(t('view'), 'node/' . $node->nid);
@@ -443,7 +435,7 @@ function node_form_submit($form, &$form_state) {
 /**
  * Updates the form state's node entity by processing this submission's values.
  *
- * This is the default #builder_function for the node form. It is called
+ * This is the default builder function for the node form. It is called
  * during the "Save" and "Preview" submit handlers to retrieve the entity to
  * save or preview. This function can also be called by a "Next" button of a
  * wizard to update the form state's entity with the current step's values

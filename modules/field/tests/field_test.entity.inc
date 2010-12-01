@@ -1,5 +1,5 @@
 <?php
-// $Id: field_test.entity.inc,v 1.15 2010/11/05 19:57:28 dries Exp $
+// $Id: field_test.entity.inc,v 1.17 2010/11/20 19:57:01 webchick Exp $
 
 /**
  * @file
@@ -355,7 +355,6 @@ function field_test_entity_form($form, &$form_state, $entity, $add = FALSE) {
   }
 
   // Add field widgets.
-  $form['#builder_function'] = 'field_test_entity_form_submit_builder';
   field_attach_form('test_entity', $entity, $form, $form_state);
 
   if (!$add) {
@@ -387,7 +386,7 @@ function field_test_entity_form_validate($form, &$form_state) {
  * Submit handler for field_test_entity_form().
  */
 function field_test_entity_form_submit($form, &$form_state) {
-  $entity = $form['#builder_function']($form, $form_state);
+  $entity = field_test_entity_form_submit_build_test_entity($form, $form_state);
   $insert = empty($entity->ftid);
   field_test_entity_save($entity);
 
@@ -407,10 +406,74 @@ function field_test_entity_form_submit($form, &$form_state) {
 /**
  * Updates the form state's entity by processing this submission's values.
  */
-function field_test_entity_form_submit_builder($form, &$form_state) {
+function field_test_entity_form_submit_build_test_entity($form, &$form_state) {
   $entity = $form_state['test_entity'];
   entity_form_submit_build_entity('test_entity', $entity, $form, $form_state);
   return $entity;
+}
+
+/**
+ * Form combining two separate entities.
+ */
+function field_test_entity_nested_form($form, &$form_state, $entity_1, $entity_2) {
+  // First entity.
+  foreach (array('ftid', 'ftvid', 'fttype') as $key) {
+    $form[$key] = array(
+      '#type' => 'value',
+      '#value' => $entity_1->$key,
+    );
+  }
+  field_attach_form('test_entity', $entity_1, $form, $form_state);
+
+  // Second entity.
+  $form['entity_2'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Second entity'),
+    '#tree' => TRUE,
+    '#parents' => array('entity_2'),
+    '#weight' => 50,
+  );
+  foreach (array('ftid', 'ftvid', 'fttype') as $key) {
+    $form['entity_2'][$key] = array(
+      '#type' => 'value',
+      '#value' => $entity_2->$key,
+    );
+  }
+  field_attach_form('test_entity', $entity_2, $form['entity_2'], $form_state);
+
+  $form['save'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save'),
+    '#weight' => 100,
+  );
+
+  return $form;
+}
+
+/**
+ * Validate handler for field_test_entity_nested_form().
+ */
+function field_test_entity_nested_form_validate($form, &$form_state) {
+  $entity_1 = (object) $form_state['values'];
+  field_attach_form_validate('test_entity', $entity_1, $form, $form_state);
+
+  $entity_2 = (object) $form_state['values']['entity_2'];
+  field_attach_form_validate('test_entity', $entity_2, $form['entity_2'], $form_state);
+}
+
+/**
+ * Submit handler for field_test_entity_nested_form().
+ */
+function field_test_entity_nested_form_submit($form, &$form_state) {
+  $entity_1 = (object) $form_state['values'];
+  field_attach_submit('test_entity', $entity_1, $form, $form_state);
+  field_test_entity_save($entity_1);
+
+  $entity_2 = (object) $form_state['values']['entity_2'];
+  field_attach_submit('test_entity', $entity_2, $form['entity_2'], $form_state);
+  field_test_entity_save($entity_2);
+
+  drupal_set_message(t('test_entities @id_1 and @id_2 have been updated.', array('@id_1' => $entity_1->ftid, '@id_2' => $entity_2->ftid)));
 }
 
 /**
