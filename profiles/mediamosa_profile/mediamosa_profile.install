@@ -115,4 +115,7 @@ function mediamosa_profile_install() {
 
   // Disable creation accounts by users
   variable_set('user_register', USER_REGISTER_ADMINISTRATORS_ONLY);
+
+  // Set display of warnings lower.
+  variable_set('error_level', ERROR_REPORTING_HIDE);
 }
