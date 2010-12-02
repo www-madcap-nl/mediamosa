@@ -1,8 +1,8 @@
 Index: bootstrap.inc
 ===================================================================
---- a/includes/bootstrap.inc  Wed Nov 17 09:39:25 2010 +0100
-+++ b/includes/bootstrap.inc  Wed Nov 17 16:29:30 2010 +0100
-@@ -592,18 +592,24 @@
+--- a/includes/bootstrap.inc  Wed Dec 01 10:58:56 2010 +0100
++++ b/includes/bootstrap.inc  Wed Dec 01 12:58:31 2010 +0100
+@@ -601,18 +601,24 @@
      // in drupal_settings_initialize().
      if (!empty($_SERVER['HTTP_HOST'])) {
        $cookie_domain = $_SERVER['HTTP_HOST'];
@@ -34,9 +34,11 @@ Index: bootstrap.inc
      ini_set('session.cookie_domain', $cookie_domain);
    }
    // To prevent session cookies from being hijacked, a user can configure the
-@@ -2222,6 +2228,15 @@
+@@ -2308,6 +2314,15 @@
+ 
    if (isset($_SERVER['HTTP_USER_AGENT']) && preg_match("/^(simpletest\d+);(.+);(.+);(.+)$/", $_SERVER['HTTP_USER_AGENT'], $matches)) {
      list(, $prefix, $time, $salt, $hmac) = $matches;
++
 +    // Fix problem when using load balancers, filectime() and fileinode() will
 +    // not work for our simpletests running on load balancers (bootstrap.inc)
 +    // will not be same. Also same problem when mixing linux and windows

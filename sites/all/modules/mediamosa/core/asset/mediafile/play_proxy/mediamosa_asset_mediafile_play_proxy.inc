@@ -675,55 +675,30 @@ class mediamosa_asset_mediafile_play_proxy {
    * @param $original_mediafile_id
    */
   static public function get_mediafile_id_on_profile($asset_id, $profile_id, $original_mediafile_id = NULL) {
+
+    // No original mediafile?
     if (!isset($original_mediafile_id)) {
-      return mediamosa_db::db_query_range(
-        'SELECT #mediafile_id FROM {#mediamosa_asset_mediafile}
-         WHERE
-         #asset_id = :asset_id AND
-         #transcode_profile_id = :transcode_profile_id AND
-         #is_still = :is_still_false',
-        0,
-        1,
-        array(
-          '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
-          '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
-          '#asset_id' => mediamosa_asset_mediafile_db::ASSET_ID,
-          ':asset_id' => $asset_id,
-          '#transcode_profile_id' => mediamosa_asset_mediafile_db::TRANSCODE_PROFILE_ID,
-          ':transcode_profile_id' => $profile_id,
-          '#is_still' => mediamosa_asset_mediafile_db::IS_STILL,
-          ':is_still_false' => mediamosa_asset_mediafile_db::IS_STILL_FALSE,
-        )
-      )->fetchField();
+      return mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf')
+        ->fields('mf', array(mediamosa_asset_mediafile_db::ID))
+        ->condition(mediamosa_asset_mediafile_db::ASSET_ID, $asset_id)
+        ->condition(mediamosa_asset_mediafile_db::TRANSCODE_PROFILE_ID, $profile_id)
+        ->condition(mediamosa_asset_mediafile_db::IS_STILL, mediamosa_asset_mediafile_db::IS_STILL_FALSE)
+        ->range(0, 1)
+        ->execute()
+        ->fetchField();
     }
 
-    return mediamosa_db::db_query_range(
-      'SELECT m.#mediafile_id FROM {#mediamosa_asset_mediafile} AS m
-       INNER JOIN {#mediamosa_asset_mediafile} AS orig USING(#asset_id)
-       WHERE
-        m.#asset_id = :asset_id AND
-        m.#transcode_profile_id = :transcode_profile_id AND
-        m.#is_still = :is_still_false AND
-        orig.#is_original_file = :is_original_file_true AND
-        orig.#is_still = :is_still_false AND
-        orig.#asset_id = :asset_id AND
-        orig.#mediafile_id = :mediafile_id',
-      0,
-      1,
-      array(
-        '#mediafile_id' => mediamosa_asset_mediafile_db::ID,
-        '#mediamosa_asset_mediafile' => mediamosa_asset_mediafile_db::TABLE_NAME,
-        '#asset_id' => mediamosa_asset_mediafile_db::ASSET_ID,
-        ':asset_id' => $asset_id,
-        '#transcode_profile_id' => mediamosa_asset_mediafile_db::TRANSCODE_PROFILE_ID,
-        ':transcode_profile_id' => $profile_id,
-        '#is_still' => mediamosa_asset_mediafile_db::IS_STILL,
-        ':is_still_false' => mediamosa_asset_mediafile_db::IS_STILL_FALSE,
-        '#is_original_file' => mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE,
-        ':is_original_file_true' => mediamosa_asset_mediafile_db::IS_ORIGINAL_FILE_TRUE,
-        ':mediafile_id' => $original_mediafile_id,
-      )
-    )->fetchField();
+    // Get the specific transcoded mediafile with provided original mediafile
+    // and its profile id.
+    return mediamosa_db::db_select(mediamosa_asset_mediafile_db::TABLE_NAME, 'mf')
+      ->fields('mf', array(mediamosa_asset_mediafile_db::ID))
+      ->condition(mediamosa_asset_mediafile_db::ASSET_ID, $asset_id)
+      ->condition(mediamosa_asset_mediafile_db::TRANSCODE_PROFILE_ID, $profile_id)
+      ->condition(mediamosa_asset_mediafile_db::IS_STILL, mediamosa_asset_mediafile_db::IS_STILL_FALSE)
+      ->condition(mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE, $original_mediafile_id)
+      ->range(0, 1)
+      ->execute()
+      ->fetchField();
   }
 
   /**

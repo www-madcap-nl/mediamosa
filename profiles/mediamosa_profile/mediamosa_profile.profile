@@ -132,7 +132,7 @@ function system_form_install_settings_form_alter(&$form, $form_state, $form_id) 
     <p>We advice using !mysql v5.1, or use MySQL variant like !mariadb.
     MediaMosa is currently <b>untested</b> with !postgresql.
    </p>
-   <p>Use the database <b>mediamosa</b> example below to create your database 'mediamosa' with user 'memo' before proceeding.</p>
+   <p>Use the database <b>mediamosa</b> example below to create your database 'mediamosa' with user 'mediamosa' before proceeding.</p>
     <code>
         # The password entries below needs to be changed.<br />
         <br />

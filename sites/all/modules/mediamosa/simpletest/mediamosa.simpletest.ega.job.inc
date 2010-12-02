@@ -46,7 +46,7 @@ class MediaMosaTestCaseEgaJob extends MediaMosaTestCaseEga {
     $args = func_get_args();
 
     // Create and setup the CORE module.
-    $args = array_unique(array_merge(array('mediamosa_job'), $args));
+    $args = array_unique(array_merge(array('mediamosa_job', 'mediamosa_tool_ffmpeg'), $args));
     if (drupal_substr(phpversion(), 0, 3) < '5.3') {
       call_user_func_array(array($this, 'parent::setUp'), $args);
     }
@@ -165,7 +165,7 @@ class MediaMosaTestCaseEgaJob extends MediaMosaTestCaseEga {
    */
   protected function doQueueCycleAll() {
 
-    $max_runs = 4; // Max 60 seconds.
+    $max_runs = 12; // Keep in mind that with less slots, this needs to be 12.
     $running_jobs = 1;
     while ($max_runs-- && $running_jobs) {
       // Run one job cycle.

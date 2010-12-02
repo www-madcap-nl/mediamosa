@@ -450,8 +450,8 @@ ini_set('session.cookie_lifetime', 2000000);
 $databases['slave']['default'] = array(
   'driver' => 'mysql',
   'database' => 'mediamosa',
-  'username' => 'memo',
-  'password' => 'memo',
+  'username' => 'mediamosa',
+  'password' => 'mediamosa',
   'host' => 'localhost'
 );
 */

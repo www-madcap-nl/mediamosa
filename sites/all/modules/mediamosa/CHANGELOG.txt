@@ -39,7 +39,7 @@ Other changes (not ticket related).
 - Migrated from Drupal alpha6 to beta3.
 - Status page cron bug fix.
 - Scene still orders fix.
-- Still REST call fiexes (still_id without mediafile_id).
+- Still REST call fixes (still_id without mediafile_id).
 - Install profile development: db and user creation just for local.
 - Transcode profile and transcode tool parameters were updated.
 - Removed text about creating client app in installation profile.
@@ -73,6 +73,14 @@ Other changes (not ticket related).
 - Optimized code on /collection calls.
 - Added disable notices in mediamosa profile.
 - Fixed collection unit test to accept empty collections in search result.
+- Fixed scene timestamp where timestamp was stored as string and ended up as 0.
+  String is now cast to integer before storage. Bug and fix reported by J0ris.
+- Fixed play_proxy call; when supplying profile_id with original mediafile ID
+  a play ticket was created to the first original mediafile found instead of
+  the transcoded mediafile of the original that was transcoded with the given 
+  transcode profile ID. Created unit test to reproduce and fix bug. Bug reported
+  by J0ris/MediaMosa.org. (See ticket #442).
+- Renamed 'memo' user to 'mediamosa' user in install profile.
 
 MediaMosa 2.3.0 Build (1032)
 ----------------------------

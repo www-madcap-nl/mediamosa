@@ -39,7 +39,7 @@ sudo pico /etc/tomcat6/Catalina/localhost/solr.xml
 </Context>
 
 * Enable multicore in Solr 1.4.1
-sudo cp -R apache-solr-1.4.1/example/multicore/solr.xml /usr/share/tomcat6/solr/solr.xml
+sudo cp apache-solr-1.4.1/example/multicore/solr.xml /usr/share/tomcat6/solr/solr.xml
 sudo cp -R apache-solr-1.4.1/example/multicore/core0 /usr/share/tomcat6/solr/
 sudo cp -R apache-solr-1.4.1/example/multicore/core1 /usr/share/tomcat6/solr/
 sudo mkdir /usr/share/tomcat6/solr/core0/data

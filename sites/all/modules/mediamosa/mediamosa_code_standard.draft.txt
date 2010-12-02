@@ -7,7 +7,7 @@ Draft for starting code standard for Mediamosa 2.x and higher.
   * All non-drupal hook functions must be inside static classes so they 
     are autoloaded.
   * All class function should have their array's hint typed;
-    function foo(array $a_foo) {
+    function foo(array $foo) {
      ...
     }
   * End variable name of array's with s when it contains more than one entity;
@@ -25,7 +25,7 @@ Draft for starting code standard for Mediamosa 2.x and higher.
     array and let the REST call function enrich the response with the returned 
     array. Enriching response objects makes the function useless for re-usage
     for code that don't use response objects. In current code there are still 
-    some of the old code that uses response objects, these will be re-written.
+    some of the code that uses response objects, these will be re-written.
 
 - Database;
   * Always use $result as variable name;
@@ -49,22 +49,22 @@ Draft for starting code standard for Mediamosa 2.x and higher.
   * All tables must start with 'mediamosa_'
   * Think about indexes on your tables, do not over do it. To many indexes will 
     kill performance.
-  * Stop using object() instead of assoc() related functions, prefer rows over 
-    objects. Remember that the mediamosa_db will always return rows. This choice
-    is based on 1.x code base. This does not mean there are no objects in 
+  * Stop using object() instead of assoc() related functions, prefer arrays over 
+    objects. Remember that the mediamosa_db will always return array. This 
+    choice is based on 1.x code base. This does not mean there are no objects in 
     mediamosa. 
 
 - Set up folders Mediamosa map;
   * Core modules are not drupal modules and are not considered as drupal 
     modules.
   * Core is one drupal module and should not have dependencies (exception is 
-    simpletest).
+    simpletest and MediaMosa SDK).
   * The folder 'modules' in the mediamosa folder contains all modules that are 
-    part of the mediamosa and lay on top
-    of the core. These are drupal modules and may not contain core logic.
+    part of the mediamosa and on top of the core. These are drupal modules and 
+    may not contain any core logic.
   * The folder 'core' in the mediamosa folder contains all core code divided by 
     folders per section. Each section can have sub sections, like mediafile has 
-    parent asset and does not exists without it. Same for metadata of assets.
+    parent asset and does not exist without it. Same for metadata of assets.
     Folders here are setup like database hierarchy dependencies. F.e. mediafile 
     must have a asset, but an asset does not require a collection. That is why 
     collection is on same level as assets.
