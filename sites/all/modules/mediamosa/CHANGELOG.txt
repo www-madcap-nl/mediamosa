@@ -81,6 +81,7 @@ Other changes (not ticket related).
   transcode profile ID. Created unit test to reproduce and fix bug. Bug reported
   by J0ris/MediaMosa.org. (See ticket #442).
 - Renamed 'memo' user to 'mediamosa' user in install profile.
+- Added tiny mediamosa logo to mediamosa version block.
 
 MediaMosa 2.3.0 Build (1032)
 ----------------------------
