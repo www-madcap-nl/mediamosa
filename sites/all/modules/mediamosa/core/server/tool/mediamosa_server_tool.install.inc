@@ -29,7 +29,7 @@
  * Installer for mediamosa_server_transcoding module.
  */
 
-require_once('mediamosa_server_tool_db.inc');
+require_once 'mediamosa_server_tool_db.inc';
 
 /**
  * Implements hook_install().

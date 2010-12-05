@@ -514,6 +514,9 @@ class mediamosa {
     // Store it.
     variable_set('mediamosa_internal_password', $passwrd);
 
+    // Log it, this should only happen when have a clean install.
+    mediamosa_watchdog::log('Generated new internal password.');
+
     // Return the new passwrd.
     return $passwrd;
   }

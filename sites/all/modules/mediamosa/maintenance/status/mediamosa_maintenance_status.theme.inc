@@ -30,7 +30,7 @@
  */
 
 /**
- * Returns HTML for the Mediamosa status report.
+ * Returns HTML for the MediaMosa status report.
  *
  * @param $table_name
  *   A string with the name of the table

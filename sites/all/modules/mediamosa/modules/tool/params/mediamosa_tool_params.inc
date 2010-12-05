@@ -26,7 +26,7 @@
 
  /**
   * @file
-  * Mediamosa tool params function.
+  * MediaMosa tool params function.
   */
 
 /**

@@ -207,6 +207,17 @@ class mediamosa_http {
       $options['headers'][mediamosa_settings::X_MEDIAMOSA_INTERNAL_PASS] = mediamosa::get_internal_password();
     }
 
+    // If the database prefix is being used by SimpleTest to run the tests in a copied
+    // database then set the user-agent header to the database prefix so that any
+    // calls to other Drupal pages will run the SimpleTest prefixed database. The
+    // user-agent is used to ensure that multiple testing sessions running at the
+    // same time won't interfere with each other as they would if the database
+    // prefix were stored statically in a file or database variable.
+    $test_info = &$GLOBALS['drupal_test_info'];
+    if (!empty($test_info['test_run_id'])) {
+      $options['headers']['User-Agent'] = drupal_generate_test_ua($test_info['test_run_id']);
+    }
+
     // Init curl.
     $curl_handle = curl_init($url);
 
@@ -400,7 +411,7 @@ class mediamosa_http {
       'timeout' => 30,
     );
 
-    // Mediamosa specific;
+    // MediaMosa specific;
     // Data in option array should not be set with GET.
     assert($options['method'] != 'GET' || ($options['method'] == 'GET' && (!isset($options['data']) || !mediamosa_unicode::strlen($options['data']) ) ));
     switch ($uri['scheme']) {
@@ -450,7 +461,7 @@ class mediamosa_http {
     // RFC 2616: "non-standard ports MUST, default ports MAY be included".
     // We don't add the standard port to prevent from breaking rewrite rules
     // checking the host that do not take into account the port number.
-    if (empty($options['headers']['Host'])) { // HOTFIX Mediamosa.
+    if (empty($options['headers']['Host'])) { // HOTFIX MediaMosa.
       $options['headers']['Host'] = $host;
     }
     // Only add Content-Length if we actually have any content or if it is a POST

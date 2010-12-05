@@ -26,10 +26,10 @@
 
  /**
   * @file
-  * Mediamosa transcode.
+  * MediaMosa transcode.
   */
 
-require_once('profile/mediamosa_transcode_profile.inc');
+require_once 'profile/mediamosa_transcode_profile.inc';
 
 /**
  * Implements hook_help().

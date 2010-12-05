@@ -16,6 +16,9 @@ Known issues;
   with one of the asset id, mediafile id or free text search causes
   PDOException. It seems a Drupal 7 core bug. We will check it again after
   the Drupal 7 core update.
+- All require_once are local path. This works fine, but I'm seeing a lot of
+  require_once(dirname(__FILE__) . '/myfile.php'); in other projects. Need some 
+  study if we need to change our require_once.
 
 MediaMosa 2.3.1 (build 1155)
 ----------------------------
@@ -60,7 +63,8 @@ Other changes (not ticket related).
   retrieve all REST calls. Offset parameter worked fine.
 - Pulled mediamosa_developer from core into SDK.
 - Fixed table creation wrapper, add flag not to remove schema descriptions. This
-  fixed the notices on the status page.
+  fixed the notices on the status page which was caused by the latest Drupal
+  version upgrade.
 - Added install hook to fix changes made on database schemas related to
   comments.
 - Fixed ticket mec. unit test, was disabled.
@@ -82,6 +86,21 @@ Other changes (not ticket related).
   by J0ris/MediaMosa.org. (See ticket #442).
 - Renamed 'memo' user to 'mediamosa' user in install profile.
 - Added tiny mediamosa logo to mediamosa version block.
+- Moved mediamosa_requirements() hook to installer file from module file.
+- Fixed minor design problems in mediamosa_requirements().
+- Replaced all 'Mediamosa' texts in texts, comments and code with correct 
+  camelcase usage of 'MediaMosa'. 
+- Added extra logging when internal REST calls are called without matching 
+  password.
+- Fixed default value of the master switch for running automated simpletests.
+  In case where a fresh install and the configuration was still untouched, then
+  the master switch was 'on' instead of default 'off'.
+- Fixed internal calls during Simpletest; internal REST calls where not made
+  inside the scope of the simpletest, resulting the REST call inside the
+  simpletest ending up on the normal database, outside the simpletest. Although
+  it had no serious effect (internal password would never match), but a warning
+  would have been produced in the watchdog on the normal database about internal
+  REST call having an invalid internal password. 
 
 MediaMosa 2.3.0 Build (1032)
 ----------------------------

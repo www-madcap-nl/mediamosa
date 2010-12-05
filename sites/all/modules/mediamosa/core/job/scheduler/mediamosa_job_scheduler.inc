@@ -100,7 +100,7 @@ class mediamosa_job_scheduler {
       }
     }
     else {
-      self::log('Jobschedular URL not set, please setup jobschedular server in the @link.', array('@link' => l(t('Mediamosa configuration'), 'admin/mediamosa/config/global')), WATCHDOG_ALERT, 'job_cron');
+      self::log('Jobschedular URL not set, please setup jobschedular server in the @link.', array('@link' => l(t('MediaMosa configuration'), 'admin/mediamosa/config/global')), WATCHDOG_ALERT, 'job_cron');
     }
   }
 

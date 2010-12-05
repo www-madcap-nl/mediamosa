@@ -804,7 +804,7 @@ class mediamosa_db {
       $hash_62 = mediamosa_unicode::substr($conf_31_to_62, $hi + $lo, 1) . $hash_62;
     }
 
-    // Mediamosa doesn't like ID starting with numbers, so lets attach the 1st one with alpha.
+    // MediaMosa doesn't like ID starting with numbers, so lets attach the 1st one with alpha.
     $hash_62 = $conf_31_to_62{rand(10, 61)} . $hash_62;
 
     // Max length 24.

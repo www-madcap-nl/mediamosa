@@ -248,9 +248,9 @@ function mediamosa_maintenance_status_configuration_mediamosa_status_generate() 
     'severity' => _mediamosa_maintenance_status_okerror(!variable_get('clean_url', 0)),
   );
 
-  // Mediamosa version.
+  // MediaMosa version.
   $results['mediamosa_version'] = array(
-    'title' => t('Mediamosa version'),
+    'title' => t('MediaMosa version'),
     'value' => mediamosa_version::MEDIAMOSA_VERSION,
     'severity' => MEDIAMOSA_MAINTENANCE_STATUS_RESULT_INFO,
   );

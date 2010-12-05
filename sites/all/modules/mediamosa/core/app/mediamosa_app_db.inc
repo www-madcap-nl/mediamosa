@@ -107,7 +107,7 @@ class mediamosa_app_db {
    * Returns all fields.
    */
   static public function get_fields() {
-    require_once('mediamosa_app.install.inc');
+    require_once 'mediamosa_app.install.inc';
 
     // Get the schema.
     $a_schema = mediamosa_app_schema();

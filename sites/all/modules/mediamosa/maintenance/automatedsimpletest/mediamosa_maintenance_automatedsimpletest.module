@@ -110,7 +110,7 @@ function mediamosa_maintenance_automatedsimpletest_help($path, $arg) {
     case 'admin/mediamosa/simpletests':
     case 'admin/mediamosa/simpletests/normal':
     case 'admin/mediamosa/simpletests/slow':
-      if (!variable_get('mediamosa_automatedsimpletest_run_tests', TRUE)) {
+      if (!variable_get('mediamosa_automatedsimpletest_run_tests', FALSE)) {
         drupal_set_message(t('Warning: update on tests has been turned off, enable on the !page', array('!page' => l('configure page', 'admin/mediamosa/config/global', array('query' => drupal_get_destination())))), 'warning');
       }
       break;
@@ -147,6 +147,10 @@ function mediamosa_maintenance_automatedsimpletest_help($path, $arg) {
  * Implements hook_cron().
  */
 function mediamosa_maintenance_automatedsimpletest_cron() {
+  // If we are in simpletest, then we don't want to run tests in simpletests.
+  if (mediamosa::in_simpletest_sandbox()) {
+    return;
+  }
 
   try {
     $start = time();

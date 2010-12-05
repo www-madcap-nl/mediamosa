@@ -40,62 +40,6 @@ require_once 'core/node/mediamosa_node_mediamosa_server.inc';
 require_once 'core/node/mediamosa_node_mediamosa_transcode_profile.inc';
 
 /**
- * Implement hook_requirements().
- */
-function mediamosa_requirements($phase) {
-
-  $requirements = array();
-
-  if ($phase != 'runtime') {
-    return $requirements;
-  }
-
-  // Check for Client Application presence.
-  if (!mediamosa_app::get_number_of_apps()) {
-    $requirements['no_apps_defined'] = array(
-      'title' => t('Mediamosa Client Application'),
-      'value' => 'No MediaMosa Client Applications defined. Please add one ' . l(t('here'), 'admin/mediamosa/config/app/add') . '.',
-      'severity' => REQUIREMENT_WARNING,
-    );
-  }
-
-  // We require PHP 5 or higher. Although Drupal 7 required 5.2.4 or higher,
-  // in the future we might need even higher version of PHP than Drupal.
-  if (version_compare(phpversion(), mediamosa_settings::MINIMUM_PHP_VERSION) < 0) {
-    $requirements['php'] = array(
-      'title' => t('PHP'),
-      'value' => phpversion(),
-      'description' => t('Your PHP installation does not meet the requirements for using the MediaMosa module. MediaMosa requires at least PHP %version.', array('%version' => mediamosa_settings::MINIMUM_PHP_VERSION)),
-      'severity' => REQUIREMENT_ERROR
-    );
-  }
-
-  // Make sure the mediamosa_server_id is set and not to long.
-  // @TODO should be made as REST call to other servers.
-  $mediamosa_installation_id = mediamosa::get_server_id();
-
-  if (!isset($mediamosa_installation_id) || drupal_strlen($mediamosa_installation_id) == 0 || drupal_strlen($mediamosa_installation_id) > mediamosa_job_server_db::INSTALL_ID_LENGTH) {
-    $requirements['mediamosa'] = array(
-      'title' => t("MediaMosa installation ID ('mediamosa_installation_id')"),
-      'value' => isset($mediamosa_installation_id) ? $mediamosa_installation_id : 'Not defined',
-      'description' => t("The configuration setting in settings.php 'mediamosa_installation_id' is either not set or is too long, make sure its set and not longer than %length characters.", array('%length' => mediamosa_job_server_db::INSTALL_ID_LENGTH)),
-      'severity' => REQUIREMENT_ERROR
-    );
-  }
-
-  // In case there are no warnings and errors - remind about detailed mediamosa report.
-  if (!count($requirements)) {
-    $requirements['encourage_check_status'] = array(
-      'title' => t('Mediamosa'),
-      'value' => 'Installed. Detailed description of Mediamosa component status is ' . l(t('here'), 'admin/mediamosa') . '.',
-      'severity' => REQUIREMENT_OK,
-    );
-  }
-
-  return $requirements;
-}
-
-/**
  * Implements hook_permission().
  */
 function mediamosa_permission() {
@@ -126,7 +70,7 @@ function mediamosa_permission() {
     ),
     'administer mediamosa' =>  array(
       'title' => t('Administer MediaMosa'),
-      'description' => t('Administer rights Mediamosa.'),
+      'description' => t('Administer rights MediaMosa.'),
     ),
   );
 }
@@ -507,6 +451,11 @@ function mediamosa_query_alter(QueryAlterableInterface $query) {
  * Implementation of hook_cron().
  */
 function mediamosa_cron() {
+
+  // No need to clean up watchdog inside simpletest.
+  if (mediamosa::in_simpletest_sandbox()) {
+    return;
+  }
 
   try {
     /*

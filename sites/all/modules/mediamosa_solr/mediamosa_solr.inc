@@ -5,7 +5,7 @@
  * MediaMosa is Open Source Software to build a Full Featured, Webservice
  * Oriented Media Management and Distribution platform (http://mediamosa.org)
  *
- * Copyright (C) 2010 SURFnet BV (http://www.surfnet.nl) and Kennisnet
+ * Copyright (C) 2009 SURFnet BV (http://www.surfnet.nl) and Kennisnet
  * (http://www.kennisnet.nl)
  *
  * MediaMosa is based on the open source Drupal platform and
@@ -26,39 +26,30 @@
 
 /**
  * @file
- * MediaMosa Storage / SAN/NAS unittests.
- *
- * Based on tickets mediamosa 1:
- *
- * ticket_616
- *
- *
+ * All non-hook functions are here.
  */
 
 /**
-  * @file
-  * Unittest for upload still.
-  */
-class MediaMosaAssetMediafileStillUploadTestCase extends MediaMosaTestCaseEga {
+ * Called when pressed on test button.
+ *
+ * @param array $form_state
+ * @param array $form
+ */
+function _mediamosa_solr_ping_submit(&$form_state, $form) {
+  $mediamosa_solr_url = $form['values']['mediamosa_solr_url'];
+  $check_connection_save = $form['values']['check_connection_save'];
 
-  public static function getInfo() {
-    return array(
-      'name' => 'Still - Upload test',
-      'description' => 'Test upload of stills to an asset.',
-      'group' => MEDIAMOSA_TEST_GROUP_MEDIAMOSA_CORE_STILL,
-      mediamosa_settings::MEDIAMOSA_RUN => mediamosa_settings::MEDIAMOSA_RUN_15_MINUTES,
-    );
+  if (MediaMosa_Apache_Solr_Service::mediamosaPing($mediamosa_solr_url)) {
+    if ($check_connection_save) {
+      drupal_set_message(t('Connection test successful, URL saved.'));
+
+      MediaMosa_Apache_Solr_Service::mediamosaSetUrl($mediamosa_solr_url);
+    }
+    else {
+      drupal_set_message(t('Connection test successful. Warning: URL was not saved.'));
+    }
   }
-
-  /**
-   * The still upload test.
-   */
-  function testStillDownload() {
-
-    // Upload still test.
-    $this->uploadTestStill();
-
-    // Attached still test.
-    $this->uploadTestStillAttach();
+  else {
+    drupal_set_message(t('Unable to connect to server, check URL.'), 'error');
   }
 }

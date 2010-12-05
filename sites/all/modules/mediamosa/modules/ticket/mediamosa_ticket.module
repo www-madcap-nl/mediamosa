@@ -33,6 +33,12 @@
  * Implements hook_cron().
  */
 function mediamosa_ticket_cron() {
+
+  // No need for ticket clean up inside simpletest.
+  if (mediamosa::in_simpletest_sandbox()) {
+    return;
+  }
+
   try {
     $start = time();
     mediamosa_debug::log('mediamosa_ticket_cron started.', array(), 'ticket_cron');

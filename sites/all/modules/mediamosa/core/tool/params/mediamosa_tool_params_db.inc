@@ -59,7 +59,7 @@ class mediamosa_tool_params_db {
    * Returns all fields.
    */
   static public function get_fields() {
-    require_once('mediamosa_tool_params.install.inc');
+    require_once 'mediamosa_tool_params.install.inc';
 
     // Get the schema.
     $a_schema = mediamosa_tool_params_schema();

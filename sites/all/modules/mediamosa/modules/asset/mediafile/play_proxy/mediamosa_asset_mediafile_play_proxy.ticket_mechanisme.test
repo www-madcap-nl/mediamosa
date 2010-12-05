@@ -42,7 +42,7 @@ class MediaMosaAssetMediafilePlayProxyTicketMechanismeTestCaseEga extends MediaM
   }
 
   // ------------------------------------------------------------------ Tests.
-  function testBugReportMediamosaOrgTicket422() {
+  function testBugReportMediaMosaOrgTicket422() {
     // Create an asset.
     $asset_id = $this->createAsset();
 

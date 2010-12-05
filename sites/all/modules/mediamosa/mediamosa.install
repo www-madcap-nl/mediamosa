@@ -177,6 +177,68 @@ function mediamosa_uninstall() {
 }
 
 /**
+ * Implement hook_requirements().
+ */
+function mediamosa_requirements($phase) {
+
+  $requirements = array();
+
+  if ($phase != 'runtime') {
+    return $requirements;
+  }
+
+  // The t() function is save during runtime phase.
+
+  // Runtime phase, all others are ignored at this point.
+
+  // We require PHP 5 or higher. Although Drupal 7 required 5.2.4 or higher,
+  // in the future we might need even higher version of PHP than Drupal.
+  if (version_compare(phpversion(), mediamosa_settings::MINIMUM_PHP_VERSION) < 0) {
+    $requirements['mediamosa_php'] = array(
+      'title' => t('PHP'),
+      'value' => phpversion(),
+      'description' => t('Your PHP installation does not meet the requirements for using the MediaMosa module. MediaMosa requires at least PHP %version.', array('%version' => mediamosa_settings::MINIMUM_PHP_VERSION)),
+      'severity' => REQUIREMENT_ERROR
+    );
+  }
+
+  // Make sure the mediamosa_server_id is set and not to long.
+  // @TODO should be made as REST call to other servers.
+  $mediamosa_installation_id = mediamosa::get_server_id();
+
+  if (!isset($mediamosa_installation_id) || drupal_strlen($mediamosa_installation_id) == 0 || drupal_strlen($mediamosa_installation_id) > mediamosa_job_server_db::INSTALL_ID_LENGTH) {
+    $requirements['mediamosa_installation_id'] = array(
+      'title' => t('MediaMosa installation ID'),
+      'value' => isset($mediamosa_installation_id) ? $mediamosa_installation_id : t('Not defined'),
+      'description' => t("The configuration setting in settings.php 'mediamosa_installation_id' is either not set or is too long, make sure its set and not longer than %length characters.", array('%length' => mediamosa_job_server_db::INSTALL_ID_LENGTH)),
+      'severity' => REQUIREMENT_ERROR,
+    );
+  }
+
+  // In case there are no warnings and errors - remind about detailed mediamosa report.
+  if (empty($requirements)) {
+    $requirements['mediamosa_encourage_check_status'] = array(
+      'title' => t('MediaMosa'),
+      'value' => t('Installed'),
+      'description' => t('Detailed description of the MediaMosa component status can be found !here.', array('!here' => l(t('here'), 'admin/mediamosa'))),
+    'severity' => REQUIREMENT_OK,
+    );
+  }
+
+  // Check for Client Application presence. Warnings do not count for correct install message (above).
+  if (!mediamosa_app::get_number_of_apps()) {
+    $requirements['mediamosa_no_apps_defined'] = array(
+      'title' => t('MediaMosa client application'),
+      'value' => t('None found'),
+      'description' => t('A MediaMosa client is required for any front end application (website or other entity) to connect to MediaMosa. You can add one !here.', array('!here' => l(t('here'), 'admin/mediamosa/config/app/add'))),
+      'severity' => REQUIREMENT_WARNING,
+    );
+  }
+
+  return $requirements;
+}
+
+/**
  * Change mediafile metadata STILL_TYPE ENUM value 'SECONDS' to 'SECOND'.
  */
 function mediamosa_update_7000() {
@@ -1501,6 +1563,10 @@ function mediamosa_update_7076() {
 
   // Our fixes.
   $fixes = array(
+    'filter_format' => array(
+      'real_schema_name' => 'filter',
+      'status',
+    ),
     'filter' => array(
       'status',
     ),
@@ -1512,13 +1578,14 @@ function mediamosa_update_7076() {
 
   foreach ($fixes as $table_name => $columns) {
     // Get the schema so we can reuse the schema creation.
-    $schema = drupal_get_schema_unprocessed($table_name);
-    _drupal_schema_initialize($schema, $table_name, FALSE);
+    $schema_name = isset($columns['real_schema_name']) ? $columns['real_schema_name'] : $table_name;
 
-    // Changes we might want in MediaMosa.
-    $schema = mediamosa_db::db_install_schema_preprocess($table_name, $schema);
-
-    foreach ($columns as $column) {
+    $schema = drupal_get_schema_unprocessed($schema_name);
+    _drupal_schema_initialize($schema, $schema_name, FALSE);
+    foreach ($columns as $key => $column) {
+      if (is_string($key) && $key == 'real_schema_name') {
+        continue;
+      }
 
       if ($table_name == 'user') {
         $table_name = 'users';
@@ -1544,6 +1611,10 @@ function mediamosa_update_7077() {
   // Rename table.
   if (db_table_exists('mediamosa_log_integrity_check') && !db_table_exists('mediamosa_integrity_check')) {
     db_rename_table('mediamosa_log_integrity_check', 'mediamosa_integrity_check');
+  }
+
+  if (db_table_exists('mediamosa_log_integrity_check')) {
+    db_drop_table('mediamosa_log_integrity_check');
   }
 }
 

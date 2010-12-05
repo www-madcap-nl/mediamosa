@@ -100,22 +100,26 @@ function mediamosa_maintenance_status_component_mediamosa_status_generate() {
 
   $filename = $mount_point . '/data/transcode/test_' . mt_rand(0, 9999) . '.txt';
   $content = mt_rand(0, 9999);
-  $handle = fopen($filename, 'w');
-  fwrite($handle, $content);
-  fclose($handle);
   $read_content = '';
-  $handle = fopen($filename, 'rb');
+
+  $handle = fopen($filename, 'w');
   if ($handle) {
-    $read_content = fread($handle, filesize($filename));
+    fwrite($handle, $content);
     fclose($handle);
+    $handle = fopen($filename, 'rb');
+    if ($handle) {
+      $read_content = fread($handle, filesize($filename));
+      fclose($handle);
+    }
+
+    unlink($filename);
   }
-  unlink($filename);
+
   $results['mount_rea_write'] = array(
     'title' => t('SANNAS'),
     'value' => t('Write and read works fine'),
     'severity' => _mediamosa_maintenance_status_okerror($content != $read_content),
   );
-
 
   $available_bytes = disk_free_space($mount_point);
   $available_mb = floor($available_bytes / 1024 / 1024);

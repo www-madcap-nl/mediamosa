@@ -41,7 +41,6 @@ function mediamosa_job_cron() {
       return;
     }
 
-
     $start = time();
     mediamosa_debug::log('mediamosa_job_cron started.', array(), 'job_cron');
 

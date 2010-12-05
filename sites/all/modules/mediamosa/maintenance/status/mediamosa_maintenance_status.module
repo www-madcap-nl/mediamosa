@@ -150,6 +150,11 @@ function mediamosa_maintenance_status_theme() {
  * Implements hook_cron().
  */
 function mediamosa_maintenance_status_cron() {
+  // If we are in simpletest, no need to pull info on our servers.
+  if (mediamosa::in_simpletest_sandbox()) {
+    return;
+  }
+
   try {
     $last_time = variable_get('mediamosa_status_last_time', 0);
 
@@ -165,7 +170,7 @@ function mediamosa_maintenance_status_cron() {
 }
 
 /**
- * Menu callback: displays the Mediamosa status report.
+ * Menu callback: displays the MediaMosa status report.
  */
 function _mediamosa_maintenance_status_status() {
   $output = '';
@@ -191,7 +196,7 @@ function _mediamosa_maintenance_status_status() {
 }
 
 /**
- * Menu callback: displays the Mediamosa server status report.
+ * Menu callback: displays the MediaMosa server status report.
  */
 function _mediamosa_maintenance_status_server() {
   $output = '';
@@ -216,7 +221,7 @@ function _mediamosa_maintenance_status_server() {
 }
 
 /**
- * Menu callback: displays the Mediamosa job status report.
+ * Menu callback: displays the MediaMosa job status report.
  */
 function _mediamosa_maintenance_status_job() {
   $output = '';
@@ -225,36 +230,35 @@ function _mediamosa_maintenance_status_job() {
 
   // Jobhandler.
 
-  $results = array();
-
-  $results[] = array(
-    'title' => l(t('Recently finished jobs'), 'admin/mediamosa/status/job/list/finished'),
-    array('data' => '', 'class' => 'mediamosa-status-value'),
-  );
-  $results[] = array(
-    'title' => l(t('All waiting jobs'), 'admin/mediamosa/status/job/list/waiting'),
-    array('data' => _mediamosa_maintenance_status_waiting_job(), 'class' => 'mediamosa-status-value'),
-  );
-  $results[] = array(
-    'title' => t('Analyse waiting jobs'),
-    array('data' => _mediamosa_maintenance_status_waiting_job(mediamosa_job_db::JOB_TYPE_ANALYSE), 'class' => 'mediamosa-status-value'),
-  );
-  $results[] = array(
-    'title' => t('Transcoding waiting jobs'),
-    array('data' => _mediamosa_maintenance_status_waiting_job(mediamosa_job_db::JOB_TYPE_TRANSCODE), 'class' => 'mediamosa-status-value'),
-  );
-  $results[] = array(
-    'title' => t('Still waiting jobs'),
-    array('data' => _mediamosa_maintenance_status_waiting_job(mediamosa_job_db::JOB_TYPE_STILL), 'class' => 'mediamosa-status-value'),
-  );
-  $results[] = array(
-    'title' => t('Upload waiting jobs'),
-    array('data' => _mediamosa_maintenance_status_waiting_job(mediamosa_job_db::JOB_TYPE_UPLOAD), 'class' => 'mediamosa-status-value'),
+  $results = array(
+    array(
+      'title' => l(t('Recently finished jobs'), 'admin/mediamosa/status/job/list/finished'),
+      array('data' => '', 'class' => 'mediamosa-status-value'),
+    ),
+    array(
+      'title' => l(t('All waiting jobs'), 'admin/mediamosa/status/job/list/waiting'),
+      array('data' => _mediamosa_maintenance_status_waiting_job(), 'class' => 'mediamosa-status-value'),
+    ),
+    array(
+      'title' => t('Analyse waiting jobs'),
+      array('data' => _mediamosa_maintenance_status_waiting_job(mediamosa_job_db::JOB_TYPE_ANALYSE), 'class' => 'mediamosa-status-value'),
+    ),
+    array(
+      'title' => t('Transcoding waiting jobs'),
+      array('data' => _mediamosa_maintenance_status_waiting_job(mediamosa_job_db::JOB_TYPE_TRANSCODE), 'class' => 'mediamosa-status-value'),
+    ),
+    array(
+      'title' => t('Still waiting jobs'),
+      array('data' => _mediamosa_maintenance_status_waiting_job(mediamosa_job_db::JOB_TYPE_STILL), 'class' => 'mediamosa-status-value'),
+    ),
+    array(
+      'title' => t('Upload waiting jobs'),
+      array('data' => _mediamosa_maintenance_status_waiting_job(mediamosa_job_db::JOB_TYPE_UPLOAD), 'class' => 'mediamosa-status-value'),
+    ),
   );
 
   $output .= t('Jobhandler');
   $output .= theme('mediamosa_maintenance_table', array('rows' => $results));
-
 
   // Get all the job server.
 
@@ -266,21 +270,21 @@ function _mediamosa_maintenance_status_job() {
   );
 
   // Build the server query.
-  $query = mediamosa_db::db_select(mediamosa_server_db::TABLE_NAME, 's');
-  $query->fields('s', array(mediamosa_server_db::NID, mediamosa_server_db::DESCRIPTION));
-  $query->condition('s.' . mediamosa_server_db::SERVER_TYPE, mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR);
+  $query = mediamosa_db::db_select(mediamosa_server_db::TABLE_NAME, 'ms');
+  $query->fields('ms', array(mediamosa_server_db::NID, mediamosa_server_db::DESCRIPTION));
+  $query->condition('ms.' . mediamosa_server_db::SERVER_TYPE, mediamosa_server_db::SERVER_TYPE_JOB_PROCESSOR);
   $result = $query->execute();
 
   foreach ($result as $row) {
     // Build the job query.
-    $result_job = mediamosa_db::db_query("
+    $result_job = mediamosa_db::db_query('
       SELECT j.job_type, COUNT(*)
       FROM #mediamosa_server_job AS s
       INNER JOIN #mediamosa_job_server AS j USING (#job_id)
       WHERE s.#server_id = :server_id AND j.#job_type IN (:job_type)
       GROUP BY j.#job_type
       ORDER BY j.#job_type
-    ", array(
+    ', array(
       '#mediamosa_server_job' => mediamosa_server_job_db::TABLE_NAME,
       '#mediamosa_job_server' => mediamosa_job_server_db::TABLE_NAME,
       '#job_id' => mediamosa_server_job_db::JOB_ID,
@@ -297,8 +301,10 @@ function _mediamosa_maintenance_status_job() {
         array('data' => (isset($result_job[$key]) ? $result_job[$key] : '0'), 'class' => 'mediamosa-status-value'),
       );
     }
+
     // Title of the table.
     $output .= $row[mediamosa_server_db::DESCRIPTION];
+
     // Create table.
     $output .= theme('mediamosa_maintenance_table', array('rows' => $result_job_array));
   }
@@ -321,9 +327,11 @@ function _mediamosa_maintenance_status_job_list() {
       $output['job_header'] = array('#markup' => t('Recently finished jobs'));
       $output['job_filter_form'] = drupal_get_form('_mediamosa_maintenance_status_filter_form');
       break;
+
     case mediamosa_job_db::JOB_STATUS_WAITING:
       $output['job_header'] = array('#markup' => t('All waiting jobs'));
       break;
+
     default:
       $output['job_header'] = array('#markup' => t('Unknown job'));
       return $output;
@@ -353,8 +361,6 @@ function _mediamosa_maintenance_status_job_list() {
     array('data' => t('Trans. profile id'), 'field' => 't.' . mediamosa_job_transcode_db::TRANSCODE_PROFILE_ID),
     array('data' => t('Tool'), 'field' => 't.' . mediamosa_job_transcode_db::TOOL),
     array('data' => t('Command'), 'field' => 't.' . mediamosa_job_transcode_db::COMMAND),
-    //t('Message'),
-    //array('data' => t('Operations')),
   );
 
   $query = db_select(mediamosa_job_db::TABLE_NAME, 'j')->extend('PagerDefault')->extend('TableSort');
@@ -385,9 +391,11 @@ function _mediamosa_maintenance_status_job_list() {
       mediamosa_job_transcode_db::COMMAND,
     ))
   ;
+
   if (!empty($filter['where'])) {
     $query->where($filter['where'], $filter['args']);
   }
+
   $result = $query
     ->condition('j.' . mediamosa_job_db::JOB_STATUS, mediamosa_job_db::JOB_STATUS_WAITING,
       ($type == mediamosa_job_db::JOB_STATUS_WAITING ? '=' : '<>')
@@ -464,6 +472,7 @@ function _mediamosa_maintenance_status_filter_form($form) {
       '#size' => 8,
       '#options' => $filter['options'],
     );
+
     if (!empty($_SESSION['mm_status_job_filter'][$key])) {
       $form['filters']['status'][$key]['#default_value'] = $_SESSION['mm_status_job_filter'][$key];
     }
@@ -477,6 +486,7 @@ function _mediamosa_maintenance_status_filter_form($form) {
     '#type' => 'submit',
     '#value' => t('Filter'),
   );
+
   if (!empty($_SESSION['mm_status_job_filter'])) {
     $form['filters']['actions']['reset'] = array(
       '#type' => 'submit',

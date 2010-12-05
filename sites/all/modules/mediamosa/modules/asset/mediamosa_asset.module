@@ -33,6 +33,11 @@
  * Implements hook_cron().
  */
 function mediamosa_asset_cron() {
+  // We don't need garbage cleanup in simpletest.
+  if (mediamosa::in_simpletest_sandbox()) {
+    return;
+  }
+
   try {
     $start = time();
     mediamosa_debug::log('mediamosa_asset_cron started.', array(), 'asset_cron');
