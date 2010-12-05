@@ -56,7 +56,7 @@ class MediaMosa_Apache_Solr_Service extends Apache_Solr_Service {
   // ------------------------------------------------------------------- Consts.
   const MEDIAMOSA_SOLR_DEFAULT_HOST = 'solr.mediamosa.local';
   const MEDIAMOSA_SOLR_DEFAULT_PORT = 8983;
-  const MEDIAMOSA_SOLR_DEFAULT_PATH = '/mediamosa/';
+  const MEDIAMOSA_SOLR_DEFAULT_PATH = '/solr/';
 
   // -------------------------------------------------------------- Constructor.
   public function __construct($url) {
@@ -169,6 +169,6 @@ class MediaMosa_Apache_Solr_Service extends Apache_Solr_Service {
     $mediamosa_apache_solr_service = new MediaMosa_Apache_Solr_Service($url);
 
     // Ping it.
-    return $mediamosa_apache_solr_service->ping();
+    return $mediamosa_apache_solr_service->ping() !== FALSE;
   }
 }

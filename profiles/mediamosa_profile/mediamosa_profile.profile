@@ -274,7 +274,11 @@ function _mediamosa_profile_php_modules() {
  */
 function _mediamosa_profile_installed_programs() {
 
+  // Just here for notice prev.
+  $ret_val = 0;
+
   // FFmpeg.
+  $exec_output = array();
   exec('ffmpeg -version > /dev/null 2>&1', $exec_output, $ret_val);
   $requirements['ffmpeg'] = array(
     'title' => st('<b>Program FFmpeg:</b>'),
@@ -284,6 +288,7 @@ function _mediamosa_profile_installed_programs() {
   );
 
   // Lua.
+  $exec_output = array();
   exec('lua 2>&1', $exec_output, $ret_val);
   $requirements['lua'] = array(
     'title' => st('<b>Program LUA 5.1:</b>'),
@@ -293,7 +298,8 @@ function _mediamosa_profile_installed_programs() {
   );
 
   // Lpeg.
-  exec('lua profiles/mediamosa_profile/lua/lua_test 2>&1', $exec_output, $ret_val);
+  $exec_output = array();
+  exec('lua ' . escapeshellcmd(DRUPAL_ROOT) . '/profiles/mediamosa_profile/lua/lua_test 2>&1', $exec_output, $ret_val);
 
   $requirements['lpeg'] = array(
     'title' => st('<b>LUA extension Lpeg:</b>'),

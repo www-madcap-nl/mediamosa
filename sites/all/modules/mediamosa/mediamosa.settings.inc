@@ -231,15 +231,6 @@ class mediamosa_settings {
   }
 
   /**
-   * Return the unique server ID.
-   */
-  static public function get_server_id() {
-    global $conf;
-
-    return $conf['mediamosa_installation_id'];
-  }
-
-  /**
    * returns the path where the lua scripts are.
    */
   static public function lua_base_get() {

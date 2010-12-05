@@ -143,3 +143,11 @@ function mediamosa_solr_requirements($phase) {
 
   return $requirements;
 }
+
+/**
+ * Implements hook_unstall().
+ */
+function mediamosa_solr_uninstall() {
+  // Remove our variable.
+  variable_del('mediamosa_solr_url');
+}

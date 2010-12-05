@@ -119,7 +119,8 @@ class mediamosa_job_server {
       return;
     }
 
-    $server_id = mediamosa_settings::get_server_id();
+    // Get the current server ID.
+    $server_id = mediamosa::get_server_id();
 
     $run_last = variable_get('mediamosa_jobserver_cron_last_' . $server_id, NULL);
 

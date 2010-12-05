@@ -101,6 +101,13 @@ Other changes (not ticket related).
   it had no serious effect (internal password would never match), but a warning
   would have been produced in the watchdog on the normal database about internal
   REST call having an invalid internal password. 
+- Removed the usage of 'mediamosa_status_generate' and replaced it with normal
+  functions with _ as prefix. Was not used as hooks anyway.
+- Rewrote most logic used in the component and configuration page. Will now
+  show more info when failure was found. Detection on installation of commands
+  improved.
+- Added Solr status page test.
+- Added Solr configuration.
 
 MediaMosa 2.3.0 Build (1032)
 ----------------------------

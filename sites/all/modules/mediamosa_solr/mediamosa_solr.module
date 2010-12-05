@@ -32,7 +32,6 @@
 // Include my non-hooks.
 module_load_include('inc', 'mediamosa_solr', 'mediamosa_solr');
 
-
 /**
  * Implement hook_menu().
  */
@@ -128,20 +127,65 @@ function mediamosa_solr_settings_submit(&$form_state, $form) {
 }
 
 /**
- * Implements hook_mediamosa_status_generate().
+ * Generate information for the status page.
  */
-function mediamosa_solr_mediamosa_status_generate() {
-
+function _mediamosa_solr_status_generate() {
   // Make sure this module is enabled.
   if (!module_exists('mediamosa_maintenance_status')) {
     return array();
   }
 
-  $results['ping'] = array(
-    'title' => t('Lucene Solr Search'),
-    'value' => t('Ping was successful'),
-    'severity' => _mediamosa_maintenance_status_okerror(MediaMosa_Apache_Solr_Service::mediamosaPing()),
-  );
+  $ping_success = MediaMosa_Apache_Solr_Service::mediamosaPing();
 
-  return $results;
+  if ($ping_success) {
+    $results['solr_ping'] = array(
+      'title' => t('Lucene Solr servlet'),
+      'value' => t('Found'),
+      'severity' => _mediamosa_maintenance_status_okerror($ping_success),
+    );
+  }
+  else {
+    $results['solr_ping'] = array(
+      'title' => t('Lucene Solr servlet'),
+      'value' => t('Failed'),
+      'severity' => _mediamosa_maintenance_status_okerror($ping_success),
+      'description' => t('Unable to reach the Solr servlet, either !disable or check !settings.',
+        array(
+          '!disable' => l('disable the Solr module', 'admin/modules'),
+          '!settings' => l('the MediaMosa solr settings', 'admin/mediamosa/config/solr')
+        )
+      ),
+    );
+  }
+
+  return array(
+    'component' => array(
+      'title' => t('Component status'),
+      'results' => $results,
+    ),
+  );
+}
+
+/**
+ * Implementation of hook_mediamosa_status_collect().
+ *
+ * @param boolean $reset
+ *
+ * @return array
+ *   All the statuses in an array
+ */
+function mediamosa_solr_mediamosa_status_collect($reset = FALSE) {
+  global $conf;
+
+  $mediamosa_status_server = array();
+  if (!$reset) {
+    $mediamosa_status_server = variable_get('mediamosa_status_server_' . mediamosa::get_server_id(), array());
+  }
+
+  if (empty($mediamosa_status_server)) {
+    $mediamosa_status_server = array('time' => REQUEST_TIME, 'statuses' => _mediamosa_solr_status_generate());
+    variable_set('mediamosa_status_server_' . mediamosa::get_server_id(), $mediamosa_status_server);
+  }
+
+  return $mediamosa_status_server['statuses'];
 }
