@@ -334,7 +334,7 @@ function mediamosa_mediamosa_configuration_collect() {
  * Implements hook_mediamosa_configuration_validate().
  */
 function mediamosa_mediamosa_configuration_validate($form, $form_state) {
-  global $databases;
+//  global $databases;
 
   // Use normal so schema might be empty.
   $parse_url = parse_url($form_state['values']['mediamosa_cron_url_app']);

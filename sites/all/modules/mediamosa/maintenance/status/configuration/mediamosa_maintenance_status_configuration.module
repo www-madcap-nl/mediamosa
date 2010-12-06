@@ -69,8 +69,8 @@ function _mediamosa_maintenance_status_configuration_generate() {
 
   // For several topics we provide a link to webpages with configuration hints.
   $helper_links = array(
-    'lua' => l('here', 'http://mediamosa.org/forum/viewtopic.php', array('attributes' => array('target' => '_blank'), 'absolute' => TRUE, 'external' => TRUE, 'query' => array('f'=> '13', 't' => '175', 'start' => '10'), 'fragment' => 'p687')),
-    'lpeg' => l('here', 'http://mediamosa.org/forum/viewtopic.php', array('attributes' => array('target' => '_blank'), 'absolute' => TRUE, 'external' => TRUE, 'query' => array('f'=> '13', 't' => '175', 'start' => '10'), 'fragment' => 'p687')),
+    'lua' => l('here', 'http://mediamosa.org/forum/viewtopic.php', array('attributes' => array('target' => '_blank'), 'absolute' => TRUE, 'external' => TRUE, 'query' => array('f' => '13', 't' => '175', 'start' => '10'), 'fragment' => 'p687')),
+    'lpeg' => l('here', 'http://mediamosa.org/forum/viewtopic.php', array('attributes' => array('target' => '_blank'), 'absolute' => TRUE, 'external' => TRUE, 'query' => array('f' => '13', 't' => '175', 'start' => '10'), 'fragment' => 'p687')),
     'yamdi' => l('here', 'http://mediamosa.org/trac/wiki/Tuning%20MediaMosa#Yamdi'),
     'lav2yuv' => l('here', 'http://mediamosa.org/trac/wiki/Tuning%20MediaMosa#Lav2yuv'),
     'mp4box' => l('here', 'http://mediamosa.org/trac/wiki/Tuning%20MediaMosa#MP4Box'),
@@ -450,7 +450,7 @@ function _mediamosa_maintenance_status_configuration_generate() {
           ))->fetchAssoc();
         }
         catch (PDOException $e) {
-          $original_table_result = array('create table' => '',);
+          $original_table_result = array('create table' => '');
         }
 
         // Get the table details of the test table.

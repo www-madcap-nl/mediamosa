@@ -184,7 +184,7 @@ function _mediamosa_maintenance_status_status() {
 
   // Check run-time requirements and status information.
   // False means the data should come from variable.
-  $statuses = module_invoke_all('mediamosa_status_collect', TRUE);
+  $statuses = module_invoke_all('mediamosa_status_collect', FALSE);
 
   foreach ($statuses as $status) {
     $output .= theme('mediamosa_maintenance_status_report', array('table_name' => (is_array($status['title']) ? reset($status['title']) : $status['title']), 'results' => $status['results']));
