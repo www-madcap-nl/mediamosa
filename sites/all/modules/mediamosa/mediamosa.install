@@ -1596,4 +1596,19 @@ function mediamosa_update_7078() {
   }
 }
 
+/**
+ * Introduction retranscode job.
+ */
+function mediamosa_update_7079() {
+  // Mediafile destination id.
+  db_query("ALTER TABLE {mediamosa_job} ADD mediafile_dest VARBINARY(32) DEFAULT NULL COMMENT 'The mediafile destination ID in case of retranscode.' AFTER mediafile_id");
+  // Add field is not support VARBINARY.
+  //db_add_field(mediamosa_job_db::TABLE_NAME, mediamosa_job_db::MEDIAFILE_DEST, array(
+  //  'type' => 'varchar',
+  //  'length' => mediamosa_db::HASH_ID_LENGTH,
+  //  'default' => NULL,
+  //  'description' => 'The mediafile destination ID in case of retranscode.',
+  //));
+}
+
 // TODO: Remove old code from the repository on the next release: sites/all/modules/mediamosa/core/transcode/mapping.

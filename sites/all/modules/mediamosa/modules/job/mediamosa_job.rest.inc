@@ -556,6 +556,10 @@ class mediamosa_rest_call_job_create extends mediamosa_rest_call {
         $job_id = mediamosa_job::create_job_transcode($app_id, $user_id, $group_id, $is_app_admin, $mediafile_id, $create_still, $still_parameters, $file_extension, $command, $tool, $profile_id, $completed_transcoding_url, $priority);
         break;
 
+      case mediamosa_job_db::JOB_TYPE_RETRANSCODE:
+        $job_id = mediamosa_job::create_job_retranscode($app_id, $user_id, $group_id, $is_app_admin, $mediafile_id, $create_still, $still_parameters, $file_extension, $command, $tool, $profile_id, $completed_transcoding_url, $priority);
+        break;
+
       case mediamosa_job_db::JOB_TYPE_UPLOAD:
         $job_id = mediamosa_job::create_job_upload($app_id, $user_id, $group_id, $is_app_admin, $mediafile_id, $file_size, $retranscode, $create_still, $still_parameters);
         break;
@@ -943,6 +947,53 @@ class mediamosa_rest_call_job_create_transcode extends mediamosa_rest_call_job_c
       self::VAR_DESCRIPTION => 'The job type.',
       self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
       self::VAR_OVERRIDE_VALUE => mediamosa_job_db::JOB_TYPE_TRANSCODE,
+    );
+
+    // GET / POST to array.
+    $a_var_setup = parent::process_rest_args($a_var_setup);
+
+    return $a_var_setup;
+  }
+
+  // ------------------------------------------------------------------ Do Call.
+  public function do_call() {
+    parent::do_call();
+  }
+}
+
+/**
+ * URI: /mediafile/$mediafile_id/retranscode
+ *
+ * Method: POST
+ *
+ * Create a retranscode job.
+ */
+class mediamosa_rest_call_job_create_retranscode extends mediamosa_rest_call_job_create {
+  // ------------------------------------------------------------------- Consts.
+
+  // ------------------------------------------------------------ Get Var Setup.
+  public function get_var_setup() {
+    $a_var_setup = parent::get_var_setup();
+
+    unset($a_var_setup[self::VARS][parent::JOB_TYPE]);
+
+    return $a_var_setup;
+  }
+
+  // ------------------------------------------------------- Progress Rest Args.
+  /**
+   * Process the supplied parameters.
+   *
+   * @param array $a_var_setup
+   */
+  protected function process_rest_args(array $a_var_setup) {
+
+    // Set job type and give it fixed value.
+    $a_var_setup[self::VARS][self::JOB_TYPE] = array(
+      self::VAR_TYPE => mediamosa_sdk::TYPE_JOB,
+      self::VAR_DESCRIPTION => 'The job type.',
+      self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
+      self::VAR_OVERRIDE_VALUE => mediamosa_job_db::JOB_TYPE_RETRANSCODE,
     );
 
     // GET / POST to array.

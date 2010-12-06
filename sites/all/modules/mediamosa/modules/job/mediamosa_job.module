@@ -152,6 +152,13 @@ function mediamosa_job_mediamosa_register_rest_call() {
     mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_1_1_0,
   );
 
+  $a_rest_calls['mediafile/$mediafile_id/retranscode'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_job_create_retranscode',
+    mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
+    mediamosa_rest_call::MODULE_NAME => 'mediamosa_job',
+    mediamosa_rest_call::VERSION => mediamosa_version::MEDIAMOSA_VERSION_2_3_0,
+  );
+
   $a_rest_calls['asset/$asset_id/still/create'][mediamosa_rest_call::METHOD_POST] = array(
     mediamosa_rest_call::CLASS_NAME => 'mediamosa_rest_call_job_create_still',
     mediamosa_rest_call::STATUS => mediamosa_rest_call::STATUS_ACTIVE,
@@ -443,6 +450,18 @@ At least one output file must be specified</error_description>
     mediamosa_rest_call::TITLE => 'Create a transcode job.',
     mediamosa_rest_call::DESCRIPTION => 'Create a transcode job.',
     mediamosa_rest_call::EXAMPLE_REQUEST => 'mediafile/OW35AQyoPNUSi4iINunmS2nr/transcode',
+    mediamosa_rest_call::RESPONSE_FIELDS => array(),
+    mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
+  <item id="1">
+    <job_id>14</job_id>
+  </item>
+</items>',
+  );
+
+  $a_rest_calls['mediafile/$mediafile_id/retranscode'][mediamosa_rest_call::METHOD_POST] = array(
+    mediamosa_rest_call::TITLE => 'Create a retranscode job.',
+    mediamosa_rest_call::DESCRIPTION => 'Create a retranscode job.',
+    mediamosa_rest_call::EXAMPLE_REQUEST => 'mediafile/OW35AQyoPNUSi4iINunmS2nr/retranscode',
     mediamosa_rest_call::RESPONSE_FIELDS => array(),
     mediamosa_rest_call::EXAMPLE_RESPONSE => '<items>
   <item id="1">

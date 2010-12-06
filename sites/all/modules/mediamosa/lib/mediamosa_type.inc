@@ -131,6 +131,7 @@ class mediamosa_type {
           mediamosa_job_db::JOB_TYPE_DELETE_MEDIAFILE,
           mediamosa_job_db::JOB_TYPE_STILL,
           mediamosa_job_db::JOB_TYPE_TRANSCODE,
+          mediamosa_job_db::JOB_TYPE_RETRANSCODE,
           mediamosa_job_db::JOB_TYPE_UPLOAD
         );
 

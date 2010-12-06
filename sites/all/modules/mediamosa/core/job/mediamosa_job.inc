@@ -308,6 +308,62 @@ class mediamosa_job {
   }
 
   /**
+   * Create a retranscode job
+   *
+   * @param integer $app_id
+   *  Application ID.
+   * @param string $user_id
+   * @param bool $is_app_admin
+   * @param string $mediafile_id
+   * @param string $file_extension
+   * @param string $command
+   * @param string $tool
+   * @param integer $profile_id
+   * @param string $completed_transcoding_url
+   * @param string $priority
+   */
+  static public function create_job_retranscode($app_id, $user_id, $group_id, $is_app_admin, $mediafile_id, $create_still, $still_parameters, $file_extension, $command, $tool = '', $profile_id = '', $completed_transcoding_url = '', $priority = NULL) {
+
+    // Must have user_quota.
+    mediamosa_user::must_have_user_quota($app_id, $user_id, $group_id);
+
+    // Move the transcoded mediafile_id to mediafile_dest.
+    $mediafile_dest = $mediafile_id;
+
+    // Get the source of the transcoded file.
+    $mediafile = mediamosa_asset_mediafile::get($mediafile_id, $app_id, array(mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE), mediamosa_asset_mediafile_db::IS_STILL_FALSE);
+    if (!$mediafile) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CANT_TRANSCODE_MEDIAFILE, array('@mediafile_id' => $mediafile_dest, '@reason' => 'this mediafile is a still'));
+    }
+    $mediafile_id = $mediafile[mediamosa_asset_mediafile_db::MEDIAFILE_ID_SOURCE];
+    if (!$mediafile_id) {
+      throw new mediamosa_exception_error(mediamosa_error::ERRORCODE_CANT_TRANSCODE_MEDIAFILE, array('@mediafile_id' => $mediafile_dest, '@reason' => 'this mediafile is an original mediafile'));
+    }
+
+    // Make sure the mediafile exists, returns the mediafile.
+    $a_mediafile = mediamosa_asset_mediafile::must_exists($mediafile_id, $app_id);
+
+    // Must be transcodable.
+    mediamosa_asset_mediafile_metadata::is_transcodable($mediafile_id);
+
+    // Get the transcode_profile_id.
+    if (!$profile_id) {
+      $profile = mediamosa_asset_mediafile::get($mediafile_dest, $app_id, array(mediamosa_asset_mediafile_db::TRANSCODE_PROFILE_ID));
+      if ($profile) {
+        $profile_id = $profile[mediamosa_asset_mediafile_db::TRANSCODE_PROFILE_ID];
+      }
+    }
+
+    // Create job.
+    $job_id = self::create(mediamosa_job_db::JOB_TYPE_TRANSCODE, $app_id, $user_id, $is_app_admin, $mediafile_id, $create_still, $still_parameters, $priority, FALSE, $mediafile_dest);
+
+    // Create sub transcode job.
+    mediamosa_job_transcode::create($app_id, $job_id, $file_extension, $command, $tool, $profile_id, $completed_transcoding_url, $mediafile_id);
+
+    return $job_id;
+  }
+
+  /**
    * Decide wheter the still is creatable from the mediafile or not.
    *
    * @param string $mediafile_id
@@ -388,7 +444,7 @@ class mediamosa_job {
    * @param bool $create_still
    * @param array $still_parameters
    */
-  static public function create($job_type, $app_id, $user_id, $is_app_admin, $mediafile_id, $create_still = FALSE, $still_parameters = array(), $priority = NULL, $no_hint = FALSE) {
+  static public function create($job_type, $app_id, $user_id, $is_app_admin, $mediafile_id, $create_still = FALSE, $still_parameters = array(), $priority = NULL, $no_hint = FALSE, $mediafile_dest = NULL) {
 
     // Get the mediafile.
     $a_mediafile = mediamosa_asset_mediafile::must_exists($mediafile_id);
@@ -450,6 +506,10 @@ class mediamosa_job {
 
     if (isset($priority)) {
       $fields[mediamosa_job_db::PRIORITY] = $priority;
+    }
+
+    if (isset($mediafile_dest)) {
+      $fields[mediamosa_job_db::MEDIAFILE_DEST] = $mediafile_dest;
     }
 
     // Add created value.

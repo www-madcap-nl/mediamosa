@@ -244,6 +244,15 @@ class mediamosa_io {
   }
 
   /**
+   * Tells whether the filename is a regular file.
+   *
+   * @param string $filename
+   */
+  static public function is_file($filename) {
+    return is_file($filename);
+  }
+
+  /**
    * Sets access and modification time of file.
    *
    * @param string $filename
@@ -270,6 +279,17 @@ class mediamosa_io {
    */
   static public function copy($source, $dest) {
     return @copy($source, $dest);
+  }
+
+  /**
+   * Move the file source to dest.
+   *
+   * @param string $source
+   * @param string $dest
+   */
+  static public function move($source, $dest) {
+    @copy($source, $dest);
+    self::unlink($source);
   }
 
   /**
