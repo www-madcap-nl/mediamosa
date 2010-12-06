@@ -20,7 +20,7 @@ Known issues;
   require_once(dirname(__FILE__) . '/myfile.php'); in other projects. Need some 
   study if we need to change our require_once.
 
-MediaMosa 2.3.1 (build 1159)
+MediaMosa 2.3.1 (build 1165)
 ----------------------------
 - Streaming server statistics improvements (See ticket #103).
 - Black still generation (See VPCore ticket #212).
@@ -108,6 +108,7 @@ Other changes (not ticket related).
   improved.
 - Added Solr status page test.
 - Added Solr configuration.
+- Fixed some minor warnings we got from coder module.
 
 MediaMosa 2.3.0 Build (1032)
 ----------------------------
