@@ -200,6 +200,7 @@ class mediamosa_rest_call_job_analyse_mediafile extends mediamosa_rest_call {
   const MEDIAFILE_ID = 'mediafile_id';
 
   const USER_ID = 'user_id';
+  const HINT = 'hint';
   const NO_HINT = 'no_hint';
 
   // ------------------------------------------------------------ Get Var Setup.
@@ -218,9 +219,14 @@ class mediamosa_rest_call_job_analyse_mediafile extends mediamosa_rest_call {
           self::VAR_DESCRIPTION => 'The user id, must be the owner of the mediafile.',
           self::VAR_IS_REQUIRED => self::VAR_IS_REQUIRED_YES,
         ),
+        self::HINT => array(
+          self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
+          self::VAR_DESCRIPTION => 'Setting to TRUE or FALSE overrules the global ega-setting. possible values: TRUE, FALSE, NULL. Default: NULL',
+          self::VAR_DEFAULT_VALUE => NULL,
+        ),
         self::NO_HINT => array(
           self::VAR_TYPE => mediamosa_sdk::TYPE_BOOL,
-          self::VAR_DESCRIPTION => 'when true then, regardless of the ega setting, do not add hinting to the mediafile.',
+          self::VAR_DESCRIPTION => 'When true and "hint" parameter is not defined then, regardless of the ega setting, do not add hinting to the mediafile. Deprecated.',
           self::VAR_DEFAULT_VALUE => 'FALSE',
         ),
       )
@@ -241,10 +247,16 @@ class mediamosa_rest_call_job_analyse_mediafile extends mediamosa_rest_call {
     // Get params.
     $mediafile_id = $this->get_param_value(self::MEDIAFILE_ID);
     $user_id = $this->get_param_value(self::USER_ID);
+
+    $hint = $this->get_param_value(self::HINT);
     $no_hint = $this->get_param_value(self::NO_HINT);
+    // If hint is null, and no_hint is true, then do the old way.
+    if (is_null($hint) && $no_hint === TRUE) {
+      $hint = FALSE;
+    }
 
     // Create it.
-    $job_id = mediamosa_job::create(mediamosa_job_db::JOB_TYPE_ANALYSE, $app_id, $user_id, $is_app_admin, $mediafile_id, FALSE, array(), NULL, $no_hint);
+    $job_id = mediamosa_job::create(mediamosa_job_db::JOB_TYPE_ANALYSE, $app_id, $user_id, $is_app_admin, $mediafile_id, FALSE, array(), NULL, $hint);
 
     // Add job_id.
     $mediamosa->add_item(array('job_id' => $job_id));

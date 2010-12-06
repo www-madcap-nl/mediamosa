@@ -1611,4 +1611,29 @@ function mediamosa_update_7079() {
   //));
 }
 
+
+/**
+ * Change the mediamosa_job table no_hint column to hint: null is available then.
+ */
+function mediamosa_update_7080() {
+  db_change_field(
+    mediamosa_job_db::TABLE_NAME,
+    mediamosa_job_db::NO_HINT,
+    mediamosa_job_db::HINT,
+    array(
+        'description' => 'Hinting.',
+        'type' => "enum('" . implode("','", array(mediamosa_job_db::HINT_FALSE, mediamosa_job_db::HINT_TRUE)) . "')",
+        'mysql_type' => "enum('" . implode("','", array(mediamosa_job_db::HINT_FALSE, mediamosa_job_db::HINT_TRUE)) . "')",
+    )
+  );
+}
+
+/**
+ * Change the mediamosa_job table no_hint values to hint.
+ */
+function mediamosa_update_7081() {
+  // Change the values.
+  db_query("UPDATE {mediamosa_job} SET hint = IF(hint = 'FALSE', NULL, 'FALSE')");
+}
+
 // TODO: Remove old code from the repository on the next release: sites/all/modules/mediamosa/core/transcode/mapping.

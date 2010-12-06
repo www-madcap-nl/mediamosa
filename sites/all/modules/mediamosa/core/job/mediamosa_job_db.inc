@@ -71,6 +71,10 @@ class mediamosa_job_db {
   const CREATE_STILL_TRUE = 'TRUE';
   const CREATE_STILL_FALSE = 'FALSE';
   const STILL_PARAMETERS = 'still_parameters';
+  const HINT = 'hint';
+  const HINT_TRUE = 'TRUE';
+  const HINT_FALSE = 'FALSE';
+  // TODO: Remove on the next release.
   const NO_HINT = 'no_hint';
   const NO_HINT_TRUE = 'TRUE';
   const NO_HINT_FALSE = 'FALSE';

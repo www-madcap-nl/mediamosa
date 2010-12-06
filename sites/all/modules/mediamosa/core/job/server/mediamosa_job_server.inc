@@ -695,16 +695,17 @@ class mediamosa_job_server {
   static public function get_analyse_string($mediafile_id, $job_id) {
 
     // Get the job.
-    $a_job = mediamosa_job::get($job_id, array(mediamosa_job_db::APP_ID, mediamosa_job_db::NO_HINT));
+    $a_job = mediamosa_job::get($job_id, array(mediamosa_job_db::APP_ID, mediamosa_job_db::HINT));
     $app_id = $a_job[mediamosa_job_db::APP_ID];
-    $no_hint = $a_job[mediamosa_job_db::NO_HINT];
+    $hint = $a_job[mediamosa_job_db::HINT];
 
     // Get the app.
     $app = mediamosa_app::get_by_appid($app_id);
 
     $a_options = array();
 
-    if (!$no_hint) {
+    if (is_null($hint)) {
+      // If hint is null, we want to use the site default parameters.
       if ($app[mediamosa_app_db::ALWAYS_HINT_MP4] == mediamosa_app_db::ALWAYS_HINT_MP4_TRUE) {
         $a_options[] =  mediamosa_settings::ANALYSE_FILE_ALWAYS_HINT_MP4_OPTION;
       }
@@ -712,6 +713,14 @@ class mediamosa_job_server {
       if ($app[mediamosa_app_db::ALWAYS_INSERT_MD] == mediamosa_app_db::ALWAYS_INSERT_MD_TRUE) {
         $a_options[] =  mediamosa_settings::ANALYSE_FILE_ALWAYS_INSERT_MD_OPTION;
       }
+    }
+    elseif ($hint == 'TRUE') {
+      // We want to hint.
+      $a_options[] =  mediamosa_settings::ANALYSE_FILE_ALWAYS_HINT_MP4_OPTION;
+      $a_options[] =  mediamosa_settings::ANALYSE_FILE_ALWAYS_INSERT_MD_OPTION;
+    }
+    else {
+      // Do nothing. We don't want hinting.
     }
 
     assert(file_exists(mediamosa_settings::analyse_file()));
