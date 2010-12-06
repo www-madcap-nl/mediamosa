@@ -233,7 +233,7 @@ function _mediamosa_maintenance_status_configuration_generate() {
   $clean_url = variable_get('clean_url', 0);
   $results['drupal_clean_url'] = array(
     'title' => t('Drupal clean URL'),
-    'value' => $clean_url ? t('Disabled') : t('Enabled'),
+    'value' => $clean_url ? t('Enabled') : t('Disabled'),
     'severity' => _mediamosa_maintenance_status_okerror($clean_url == 1),
     'description' => $clean_url ? '' : t("MediaMosa requires clean url, enable the option !here", array('!here' => l('here', 'admin/config/search/clean-urls'))),
   );
