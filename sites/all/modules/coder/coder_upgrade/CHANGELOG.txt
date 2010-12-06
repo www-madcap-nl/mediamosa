@@ -1,7 +1,128 @@
-// $Id: CHANGELOG.txt,v 1.53 2010/07/12 22:33:06 solotandem Exp $
+// $Id: CHANGELOG.txt,v 1.66 2010/12/04 21:24:20 solotandem Exp $
 
 coder_upgrade 7.x-1.x, 2009-xx-xx (development version)
 ---------------------------------
+- Changes (2010-12-04):
+  * coder_upgrade.module, coder_upgrade.test, coder_upgrade.begin.inc, coder_upgrade.main.inc, coder_upgrade.run.php
+  * - replace calls to pgp_log_memory_use() with coder_upgrade_memory_print()
+  * coder_upgrade.module
+  * - #982380: correct coder_upgrade_parameters_save() to use module directory instead of files directory
+  * - enhance coder_upgrade_conversions_apply() to capture errors and return code
+  * coder_upgrade.main.inc
+  * - refactor coder_upgrade_debug_print() and coder_upgrade_log_print() to use coder_upgrade_path_print()
+  * - add coder_upgrade_path_clear() and coder_upgrade_memory_print()
+  * coder_upgrade.run.php
+  * - enhance documentation
+  * coder_upgrade.test
+  * - refactor the getInfo() routines
+  * tests/samples directory
+  * - update the input and expected test file: example.module
+
+- Changes (2010-11-19):
+  * coder_upgrade.main.inc
+  * - #245471 (comment #7): remove base directory path from patch file in coder_upgrade_make_patch_file()
+  * inc, install, help.inc, main.inc, module, test
+  * - refactor file_directory_path() references to coder_upgrade_directory_path()
+  * coder_upgrade.run.php
+  * - add php memory and time limits
+
+- Changes (2010-10-30):
+  * coder_upgrade.module
+  * - refactor form submission code to coder_upgrade_conversions_apply()
+
+- Changes (2010-10-29):
+  * coder_upgrade.inc, coder_upgrade.install, coder_upgrade.module, coder_upgrade.main.inc
+  * - refactor code to allow execution from a separate process outside of Drupal
+  * coder_upgrade.begin.inc
+  * - cache the core theme information in the persistent cache (includes disabled modules)
+  * coder_upgrade.main.inc
+  * - refactor coder_upgrade_debug_path() and coder_upgrade_log_path() into coder_upgrade_path()
+
+- Changes (2010-10-25):
+  * coder_upgrade.db.inc
+  * - enhance error handling by checking for conditions not being found in a select query
+  * coder_upgrade.call.inc
+  * - enhance #theme_changes: check for more parameters to theme_xxx() call than declared in hook_theme
+  * coder_upgrade.function.inc
+  * - enhance #theme_changes
+  *   - check for difference in number of parameters to theme_xxx() call and the hook_theme
+  *   - when setting theme key to 'render element,' also change value from an associative array to a string
+
+- Changes (2010-09-09):
+  * coder_upgrade.install
+  * - hook_uninstall(): delete recently added settings variables
+  * - hook_requirements(): use get_t()
+
+- Changes (2010-09-08):
+  * coder_upgrade.function.inc
+  * - refactor #hook_permission to hook_upgrade_hook_perm_alter()
+  * - refactor #descriptions_permissions to use the convert_return() pattern (use cases 1 and 2)
+  * - refactor doc_comment checking in coder_upgrade_convert_update_N() to revert to that in hook_upgrade_hook_alter()
+  * tests/samples directory
+  * - update the input and expected test file: example.module
+
+- Changes (2010-09-02):
+  * coder_upgrade.inc
+  * - define file_directory_path() in response to its removal from core
+  * coder_upgrade.db.inc, coder_upgrade.function.inc
+  * - coding style fixes
+
+- Changes (2010-08-27):
+  * coder_upgrade.function.inc
+  * - enhance #hook_filter_info
+  *   - update routine for parser API change for return statements from PGPAssignment to PGPFunctionCall
+  *     (the entire routine was broken because of this)
+  *   - grab the parameter variable from the switch operand
+  *   - clean the case operand
+  *   - handle variables and strings as names of function calls for callback items
+  *   - implement tips callback
+  * - enhance #install-schema to handle calls inside an expression
+  * - enhance #hook-user-changes to handle a parameter that has no variable
+  * - enhance #hook_load_signature to handle a parameter that has no variable
+  * - enhance #theme_changes
+  *   - omit $variables from new function signature when appropriate
+  *   - handle variables missing in the old function signature
+  * tests/samples directory
+  * - update the input and expected test file: example.module
+
+- Changes (2010-08-17):
+  * coder_upgrade.module
+  * - improve the menu integration when only Coder Upgrade is enabled
+  * - only allow the base files directory to be renamed
+  * - enable the submit handler for the settings form
+  * coder_upgrade.main.inc
+  * - refactor the coder_upgrade_xxx_path() routines to reflect the coder_upgrade_dir variable
+
+- Changes (2010-08-13):
+  * coder_upgrade.db.inc
+  * - enhance coder_upgrade_insert_dbtng_statement() to properly insert statements
+  * coder_upgrade.function.inc
+  * - enhance coder_upgrade_op_to_hook() to not use clone and to allow for more than one case statement with no body
+  * - this eliminates the 2 WARNING messages when the samples/test/example.module is upgraded
+  * tests/samples directory
+  * - update the input and expected test file: example.module
+
+- Changes (2010-08-11):
+  * coder_upgrade.call.inc
+  * - #878470: enhance #drupal_set_header_renamed to handle no parameters
+  * coder_upgrade.function.inc
+  * - enhance #hook_load_signature to clean the parameter variable
+  * coder_upgrade.list.inc
+  * - add routine entry for grammar parser
+  * coder_upgrade.main.inc, coder_upgrade.module
+  * - implement settings for preserving array format and debug output by coder upgrade and grammar parser
+
+- Changes (2010-07-29):
+  * coder_upgrade.db.inc
+  * - improve sql parsing and conversion to DBTNG syntax
+  * coder_upgrade.begin.inc
+  * - refactor call to coder_upgrade_convert_return() and associated callback
+  * coder_upgrade.function.inc
+  * - enhance coder_upgrade_convert_op() to use new getParameterVariable() API function
+  * - refactor the convert return pattern of routines: coder_upgrade_convert_return(), coder_upgrade_convert_return_loop(), and coder_upgrade_callback_return_caseN()
+  * tests/samples directory
+  * - update the input and expected test file: example.module
+
 - Changes (2010-07-12):
   * coder_upgrade.api.php
   * - update documentation to reflect the node being returned by getFunctionCalls()

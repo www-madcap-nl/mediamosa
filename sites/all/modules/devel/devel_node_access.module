@@ -1,5 +1,5 @@
 <?php
-// $Id: devel_node_access.module,v 1.49 2010/02/13 17:12:33 salvis Exp $
+// $Id: devel_node_access.module,v 1.57 2010/09/11 21:26:18 salvis Exp $
 /**
  * @file
  *
@@ -46,23 +46,18 @@ function devel_node_access_help($path, $arg) {
 function devel_node_access_menu() {
   $items = array();
 
-  // add this to the custom menu 'devel' created by devel module.
-  $items['devel/node_access/summary'] = array(
-    'title'            => 'Node_access summary',
-    'page callback'    => 'dna_summary',
-    'access arguments' => array(DNA_ACCESS_VIEW),
-    'menu_name'        => 'devel',
-  );
-
   if (!module_exists('devel')) {
-    // we have to create the 'devel' menu ourselves
-    $menu = array(
-      'menu_name'   => 'devel',
-      'title'       => t('Development'),
-      'description' => t('Development link'),
-    );
-    menu_save($menu);
+    if (!menu_load('devel')) {
+      // we have to create the 'devel' menu ourselves
+      $menu = array(
+        'menu_name'   => 'devel',
+        'title'       => 'Development',
+        'description' => 'Development link',
+      );
+      menu_save($menu);
+    }
 
+    // we have to create the 'Devel settings' menu item ourselves
     $items['admin/config/development/devel'] = array(
       'title'            => 'Devel settings',
       'description'      => 'Helper pages and blocks to assist Drupal developers and admins with node_access. The devel blocks can be managed via the <a href="' . url('admin/structure/block') . '">block administration</a> page.',
@@ -70,7 +65,18 @@ function devel_node_access_menu() {
       'page arguments'   => array('devel_node_access_admin_settings'),
       'access arguments' => array('administer site configuration'),
     );
+    $items['devel/settings'] = $items['admin/config/development/devel'] + array(
+      'menu_name' => 'devel',
+    );
   }
+
+  // add this to the custom menu 'devel' created by the devel module.
+  $items['devel/node_access/summary'] = array(
+    'title'            => 'Node_access summary',
+    'page callback'    => 'dna_summary',
+    'access arguments' => array(DNA_ACCESS_VIEW),
+    'menu_name'        => 'devel',
+  );
 
   return $items;
 }
@@ -92,7 +98,11 @@ function devel_node_access_form_alter(&$form, $form_state, $form_id) {
       '#type'          => 'checkbox',
       '#title'         => t('Debug mode'),
       '#default_value' => variable_get('devel_node_access_debug_mode', FALSE),
-      '#description'   => t('Debug mode verifies the grant records in the node_access table against those that would be set by running !Rebuild_permissions, and displays them all; this can cause considerable overhead.', array('!Rebuild_permissions' => l('[' . $tr('Rebuild permissions') . ']', 'admin/reports/status/rebuild'))),
+      '#description'   => t('Debug mode verifies the grant records in the node_access table against those that would be set by running !Rebuild_permissions, and displays them all; this can cause considerable overhead.<br />For even more information enable the <a href="@link">%DNAbU block</a>, too.', array(
+        '!Rebuild_permissions' => l('[' . $tr('Rebuild permissions') . ']', 'admin/reports/status/rebuild'),
+        '%DNAbU' => t('Devel Node Access by User'),
+        '@link' => url('admin/structure/block/list'),
+      )),
     );
     // push the Save button down
     $form['actions']['#weight'] = 10;
@@ -199,7 +209,7 @@ function dna_visible_nodes($nid = NULL) {
   if ($nid) {
     $nids[$nid] = $nid;
   }
-  else if (empty($nids) && arg(0) == 'node' && is_numeric(arg(1)) && arg(2) == NULL) {
+  elseif (empty($nids) && arg(0) == 'node' && is_numeric(arg(1)) && arg(2) == NULL) {
     // show DNA information on node/NID even if access is denied (IF the user has the 'view devel_node_access information' permission)!
     return array(arg(1));
   }
@@ -444,7 +454,7 @@ function _devel_node_access_ng_alter(&$grants, $account, $op) {
     foreach ($data as $realm => $gids) {
       foreach  ($gids as $gid => $history) {
         if ($history['cur'] && array_search($gid, $grants[$realm]) === FALSE) {
-          $data[$realm][$gid]['cur'] = false;
+          $data[$realm][$gid]['cur'] = FALSE;
           $data[$realm][$gid]['chg'][] = 'removed by ' . $module;
         }
       }
@@ -456,6 +466,9 @@ function _devel_node_access_ng_alter(&$grants, $account, $op) {
   return $data;
 }
 
+/**
+ * Implements hook_block_info().
+ */
 function devel_node_access_block_info() {
   $blocks['dna_node'] = array(
     'info'   => t('Devel Node Access'),
@@ -471,6 +484,9 @@ function devel_node_access_block_info() {
   return $blocks;
 }
 
+/**
+ * Implements hook_block_view().
+ */
 function devel_node_access_block_view($delta) {
   global $user;
   global $theme_key;
@@ -480,7 +496,7 @@ function devel_node_access_block_view($delta) {
       ':theme' => $theme_key,
     ))->fetchField();
     if (!$block1_visible) {
-      $hint = t('For per-user access permissions enable the <a href="@block">%DNAbU block</a>.', array('@block' => url('admin/structure/block'), '%DNAbU' => t('Devel Node Access by User')));
+      $hint = t('For per-user access permissions enable the <a href="@link">%DNAbU block</a>.', array('@link' => url('admin/structure/block'), '%DNAbU' => t('Devel Node Access by User')));
     }
   }
 
@@ -610,10 +626,11 @@ function devel_node_access_block_view($delta) {
           }
 
           // check for grants in the node_access table that aren't returned by node_access_acquire_grants()
-          $found = FALSE;
+
           if (isset($active_grants[$nid])) {
             foreach ($active_grants[$nid] as $realm => $active_grants_realm) {
               foreach ($active_grants_realm as $gid => $active_grant) {
+                $found = FALSE;
                 $count_nonempty_grants = 0;
                 foreach ($acquired_grants_nid as $priority => $acquired_grants_nid_priority) {
                   if (isset($acquired_grants_nid_priority[$realm][$gid])) {
@@ -787,6 +804,13 @@ function devel_node_access_block_view($delta) {
             }
           }
 
+          // fix up the main row cells with the proper class (needed for Bartik)
+          foreach ($row as $key => $value) {
+            if (!is_array($value)) {
+              $row[$key] = array('data' => $value);
+            }
+            $row[$key]['class'] = array($class);
+          }
           // add the main row
           $will_append = empty($history['current']) && !empty($history['changes']);
           $rows[] = array(
@@ -910,8 +934,12 @@ function devel_node_access_block_view($delta) {
           ->range(0, 10);
         foreach ($query->execute() as $data) {
           $account = user_load($data->uid);
+          $username = theme('username', array('account' => $data));
+          if ($account->uid == $user->uid) {
+            $username = '<strong>' . $username . '</strong>';
+          }
           $rows[] = array(
-            theme('username', array('account' => $data)),
+            $username,
             theme('dna_permission', _devel_node_access_explain_access('create', $nid, $account)),
             theme('dna_permission', _devel_node_access_explain_access('view', $nid, $account)),
             theme('dna_permission', _devel_node_access_explain_access('update', $nid, $account)),
@@ -920,7 +948,7 @@ function devel_node_access_block_view($delta) {
         }
         if (count($rows)) {
           $output = theme('table', array(
-            'headers'    => $headers,
+            'header'     => $headers,
             'rows'       => $rows,
             'attributes' => array('style' => 'text-align: left'),
           ));
@@ -1031,7 +1059,7 @@ function _devel_node_access_explain_access($op, $node, $account = NULL) {
   );
   if (!empty($denied_by)) {
     $variables += array(
-      '%module' => $denied_by[0],
+      '%module' => $denied_by[0] . (count($denied_by) > 1 ? '+' : ''),
     );
     return array(
       FALSE,
@@ -1043,7 +1071,7 @@ function _devel_node_access_explain_access($op, $node, $account = NULL) {
   }
   if (!empty($allowed_by)) {
     $variables += array(
-      '%module'                       => $allowed_by[0],
+      '%module' => $allowed_by[0] . (count($allowed_by) > 1 ? '+' : ''),
       '!view_own_unpublished_content' => t('view own unpublished content'),
     );
     return array(
@@ -1091,7 +1119,7 @@ function _devel_node_access_explain_access($op, $node, $account = NULL) {
  */
 function _devel_node_access_get_grant_list($nid, $ng_alter_data) {
   //dpm($ng_alter_data, "_devel_node_access_get_grant_list($nid,");
-  $ng_alter_data = array_merge(array('all'=> array(0 => array('cur' => TRUE, 'ori' => array('all')))), $ng_alter_data);
+  $ng_alter_data = array_merge(array('all' => array(0 => array('cur' => TRUE, 'ori' => array('all')))), $ng_alter_data);
   $items = array();
   if (count($ng_alter_data)) {
     foreach ($ng_alter_data as $realm => $gids) {
@@ -1124,7 +1152,7 @@ function _devel_node_access_get_grant_list($nid, $ng_alter_data) {
         }
         $gs[] = $g;
       }
-      $items[] = $realm . ': '  . implode(', ', $gs);
+      $items[] = $realm . ': ' . implode(', ', $gs);
     }
     if (!empty($items)) {
       return theme('item_list', array('items' => $items, 'type' => 'ul'));

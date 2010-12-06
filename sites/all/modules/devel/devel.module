@@ -1,5 +1,5 @@
 <?php
-// $Id: devel.module,v 1.422 2010/04/07 18:44:37 weitzman Exp $
+// $Id: devel.module,v 1.456 2010/12/06 03:49:47 weitzman Exp $
 
 // This module holds functions useful for Drupal development.
 // Please contribute!
@@ -123,6 +123,14 @@ function devel_menu() {
     'file' => 'devel.pages.inc',
     'menu_name' => 'devel',
   );
+  $items['devel/entity/info'] = array(
+    'title' => 'Entity info',
+    'description' => 'View entity information across the whole site.',
+    'page callback' => 'devel_entity_info_page',
+    'access arguments' => array('access devel information'),
+    'file' => 'devel.pages.inc',
+    'menu_name' => 'devel',
+  );
   $items['devel/field/info'] = array(
     'title' => 'Field info',
     'description' => 'View fields information across the whole site.',
@@ -175,7 +183,7 @@ function devel_menu() {
   $items['devel/arguments'] = array(
     'title' => 'Arguments query',
     'page callback' => 'devel_querylog_arguments',
-    'description' => 'Return a giben query, with arguments instead of placeholders. Used by query log',
+    'description' => 'Return a given query, with arguments instead of placeholders. Used by query log',
     'access arguments' => array('access devel information'),
     'file' => 'devel.pages.inc',
     'type' => MENU_CALLBACK
@@ -322,7 +330,7 @@ function devel_menu_need_destination() {
 
 /**
  * An implementation of hook_menu_link_alter(). Flag this link as needing alter at display time.
- * This is more robust that setting alter in hook_menu().
+ * This is more robust than setting alter in hook_menu().
  * @see devel_translated_menu_link_alter().
  *
  **/
@@ -370,18 +378,34 @@ function devel_init() {
       // We want to include the class early so that anyone may call krumo() as needed. See http://krumo.sourceforge.net/
       has_krumo();
 
-      // See http://www.firephp.org/.
-      // Support Libraries API - http://drupal.org/project/libraries
-      if (module_exists('libraries')) {
-        $path = libraries_get_path('FirePHPCore') . '/lib/FirePHPCore/';
+      // See http://www.firephp.org/HQ/Install.htm
+      $path = NULL;
+      if (@include_once('fb.php')) {
+        // FirePHPCore is in include_path. Probably a PEAR installation.
+        $path = '';
+      }
+      elseif (module_exists('libraries')) {
+        // Support Libraries API - http://drupal.org/project/libraries
+        $firephp_path = libraries_get_path('FirePHPCore') . '/lib/FirePHPCore/';
+        $chromephp_path = libraries_get_path('chromephp');
       }
       else {
-        $path = './'. drupal_get_path('module', 'devel') .'/FirePHPCore/lib/FirePHPCore/';
+        $firephp_path = './'. drupal_get_path('module', 'devel') .'/FirePHPCore/lib/FirePHPCore/';
+        $chromephp_path = './' . drupal_get_path('module', 'devel') .'/chromephp';
       }
-      if (file_exists($path .'fb.php')) {
-        include_once $path .'fb.php';
-        include_once $path .'FirePHP.class.php';
+
+      // include FirePHP if exists...
+      if (file_exists($firephp_path .'fb.php')) {
+        include_once $firephp_path .'fb.php';
+        include_once $firephp_path .'FirePHP.class.php';
       }
+
+      // include ChromePHP if exists...
+      if (file_exists($chromephp_path . '/ChromePhp.php')) {
+        include_once $chromephp_path . '/ChromePhp.php';
+      }
+
+
       // Add CSS for query log if should be displayed.
       if (variable_get('devel_query_display', 0)) {
         drupal_add_css(drupal_get_path('module', 'devel') .'/devel.css');
@@ -439,6 +463,16 @@ function dfb() {
  */
 function dfbt($label) {
   dfb($label, FirePHP::TRACE);
+}
+
+/**
+ * Wrapper for ChromePHP Class log method
+ */
+function dcp() {
+  if (class_exists('ChromePhp') && user_access('access devel information')) {
+    $args = func_get_args();
+    call_user_func_array(array('ChromePhp', 'log'), $args);
+  }
 }
 
 /**
@@ -500,7 +534,7 @@ function devel_silent() {
   // Don't interfere with private files/images.
   return
     function_exists('drupal_is_cli') && drupal_is_cli() ||
-    strpos($_SERVER['HTTP_USER_AGENT'], 'ApacheBench') !== FALSE ||
+    (isset($_SERVER['HTTP_USER_AGENT']) && strpos($_SERVER['HTTP_USER_AGENT'], 'ApacheBench') !== FALSE) ||
     !empty($_REQUEST['XDEBUG_PROFILE']) ||
     isset($GLOBALS['devel_shutdown']) ||
     strstr($_SERVER['PHP_SELF'], 'update.php') ||
@@ -547,44 +581,32 @@ function devel_boot() {
   // avoid a stray query.
   drupal_get_filename('module', 'user', 'modules/user/user.module');
   drupal_load('module', 'user');
-  register_shutdown_function('devel_shutdown');
+  drupal_register_shutdown_function('devel_shutdown');
 }
 
-function backtrace_error_handler($errno, $message, $filename, $line) {
+function backtrace_error_handler($error_level, $message, $filename, $line) {
   // Don't respond to the error if it was suppressed with a '@'
-  if (error_reporting() == 0) return;
-
-  if ($errno & (E_ALL ^ E_NOTICE)) {
-    // We can't use the PHP E_* constants here as not all versions of PHP have all
-    // the constants defined, so for consistency, we just use the numeric equivelant.
-    $types = array(
-      1 => 'error',
-      2 => 'warning',
-      4 => 'parse error',
-      8 => 'notice',
-      16 => 'core error',
-      32 => 'core warning',
-      64 => 'compile error',
-      128 => 'compile warning',
-      256 => 'user error',
-      512 => 'user warning',
-      1024 => 'user notice',
-      2048 => 'strict warning',
-      4096 => 'recoverable error',
-      8192 => 'deprecated',
-      16384 => 'user deprecated',
-    );
-    $entry = $types[$errno] .': '. $message .' in '. $filename .' on line '. $line .'.';
+  if (error_reporting() == 0) {
+    return;
+  }
+  if ($error_level & error_reporting()) {
+    require_once DRUPAL_ROOT . '/includes/errors.inc';
+    $types = drupal_error_levels();
+    $type = $types[$error_level];
+    $backtrace = debug_backtrace();
+    array_shift($backtrace);
+    $variables = array('%error' => $type[0], '%message' => $message, '%function' => $backtrace[0]['function'] .'()', '%file' => $filename, '%line' => $line);
+    $counter = 0;
 
     if (variable_get('error_level', 1) == 1) {
-      $backtrace = debug_backtrace();
       foreach ($backtrace as $call) {
-        $nicetrace[$call['function']] = $call;
+        $nicetrace[$call['function'] . '<span class="' . $counter++ . '" />'] = $call;
       }
+      print t('%error: %message in %function (line %line of %file).', $variables) ." =&gt;\n";
       krumo($nicetrace);
     }
 
-    watchdog('php', '%message in %file on line %line.', array('%error' => $types[$errno], '%message' => $message, '%file' => $filename, '%line' => $line), WATCHDOG_ERROR);
+    watchdog('php', '%error: %message in %function (line %line of %file).', $variables, $type[1]);
   }
 }
 
@@ -629,12 +651,22 @@ function devel_block_info() {
  */
 function devel_block_configure($delta) {
   if ($delta == 'switch_user') {
-    $form['devel_switch_user_list_size'] = array(
+    $form['list_size'] = array(
       '#type' => 'textfield',
       '#title' => t('Number of users to display in the list'),
       '#default_value' => variable_get('devel_switch_user_list_size', 10),
       '#size' => '3',
       '#maxlength' => '4',
+    );
+    $form['include_anon'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Include %anonymous', array('%anonymous' => format_username(drupal_anonymous_user()))),
+      '#default_value' => variable_get('devel_switch_user_include_anon', FALSE),
+    );
+    $form['show_form'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Allow entering any user name'),
+      '#default_value' => variable_get('devel_switch_user_show_form', TRUE),
     );
     return $form;
   }
@@ -642,7 +674,9 @@ function devel_block_configure($delta) {
 
 function devel_block_save($delta, $edit = array()) {
   if ($delta == 'switch_user') {
-    variable_set('devel_switch_user_list_size', $edit['devel_switch_user_list_size']);
+    variable_set('devel_switch_user_list_size', $edit['list_size']);
+    variable_set('devel_switch_user_include_anon', $edit['include_anon']);
+    variable_set('devel_switch_user_show_form', $edit['show_form']);
   }
 }
 
@@ -667,24 +701,32 @@ function devel_block_switch_user() {
   if (!empty($links) || user_access('switch users')) {
     $block['subject'] = t('Switch user');
     $build['devel_links'] = array('#theme' => 'links', '#links' => $links);
-    $build['devel_form'] = drupal_get_form('devel_switch_user_form');
+    if (variable_get('devel_switch_user_show_form', TRUE)) {
+      $build['devel_form'] = drupal_get_form('devel_switch_user_form');
+    }
     $block['content'] = $build;
     return $block;
   }
 }
 
 function devel_switch_user_list() {
+  global $user;
+
   $links = array();
   if (user_access('switch users')) {
     $list_size = variable_get('devel_switch_user_list_size', 10);
+    if ($include_anon = ($user->uid && variable_get('devel_switch_user_include_anon', FALSE))) {
+      --$list_size;
+    }
     $dest = drupal_get_destination();
     // Try to find at least $list_size users that can switch.
-    $roles = user_roles(1, 'switch users');
-    if (isset($roles[2])) {
+    // Inactive users are omitted from all of the following db selects.
+    $roles = user_roles(TRUE, 'switch users');
+    if (isset($roles[DRUPAL_AUTHENTICATED_RID])) {
       // If authenticated users have this permission, just grab
       // the last $list_size users, since there won't be records in
       // {user_roles} and every user on the system can switch.
-      $users = db_query_range("SELECT DISTINCT u.uid, u.name, u.access FROM {users} u WHERE u.uid > 0 ORDER BY u.access DESC", 0, $list_size);
+      $accounts = db_query_range("SELECT DISTINCT u.uid, u.name, u.access FROM {users} u WHERE u.uid > 0 AND u.status > 0 ORDER BY u.access DESC", 0, $list_size);
     }
     else {
       $where = array('u.uid = 1');
@@ -692,35 +734,58 @@ function devel_switch_user_list() {
         $where[] = 'r.rid IN ('. implode(',', array_keys($roles)) .')';
       }
       $where_sql = implode(' OR ', $where);
-      $users = db_query_range("SELECT DISTINCT u.uid, u.name, u.access FROM {users} u LEFT JOIN {users_roles} r ON u.uid = r.uid WHERE $where_sql ORDER BY u.access DESC", 0, $list_size);
+      $accounts = db_query_range("SELECT DISTINCT u.uid, u.name, u.access FROM {users} u LEFT JOIN {users_roles} r ON u.uid = r.uid WHERE ($where_sql) AND u.status > 0 ORDER BY u.access DESC", 0, $list_size);
     }
-    foreach ($users as $user) {
-      $links[$user->uid] = array(
-        'title' => drupal_placeholder(array('text' => $user->name)),
-        'href' => 'devel/switch/'. $user->name,
+    foreach ($accounts as $account) {
+      $links[$account->uid] = array(
+        'title' => drupal_placeholder($account->name),
+        'href' => 'devel/switch/'. $account->name,
         'query' => $dest,
         'attributes' => array('title' => t('This user can switch back.')),
         'html' => TRUE,
+        'last_access' => $account->access,
       );
     }
     $num_links = count($links);
     if ($num_links < $list_size) {
       // If we don't have enough, add distinct uids until we hit $list_size.
-      $users = db_query_range('SELECT uid, name, access FROM {users} WHERE uid > 0 AND uid NOT IN ('. implode(',', array_keys($links)) .') ORDER BY access DESC', 0, $list_size - $num_links);
-      foreach ($users as $user) {
-        if (count($links) >= $list_size) {
-          break;
-        }
-        $links[$user->uid] = array(
-          'title' => $user->name ? $user->name : 'anon',
-          'href' => 'devel/switch/'. $user->name,
+      $accounts = db_query_range('SELECT uid, name, access FROM {users} WHERE uid > 0 AND uid NOT IN ('. implode(',', array_keys($links)) .') AND status > 0 ORDER BY access DESC', 0, $list_size - $num_links);
+      foreach ($accounts as $account) {
+        $links[$account->uid] = array(
+          'title' => $account->name ? $account->name : 'anon',
+          'href' => 'devel/switch/'. $account->name,
           'query' => $dest,
-          'attributes' => array('title' => t('Caution: this user will be unable switch back.')),
+          'attributes' => array('title' => t('Caution: this user will be unable to switch back.')),
+          'last_access' => $account->access,
         );
       }
+      uasort($links, '_devel_switch_user_list_cmp');
+    }
+    if ($include_anon) {
+      $link = array(
+        'title' => check_plain(format_username(drupal_anonymous_user())),
+        'href' => 'devel/switch',
+        'query' => $dest,
+        'attributes' => array('title' => t('Caution: the anonymous user will be unable to switch back.')),
+      );
+      if (user_access('switch users', drupal_anonymous_user())) {
+        $link['title'] = drupal_placeholder($link['title']);
+        $link['attributes'] = array('title' => t('This user can switch back.'));
+        $link['html'] = TRUE;
+      }
+      $links[] = $link;
     }
   }
   return $links;
+}
+
+/**
+ * Comparison helper function for uasort() in devel_switch_user_list().
+ *
+ * Sorts the Switch User links by the user's last access timestamp.
+ */
+function _devel_switch_user_list_cmp($a, $b) {
+  return $b['last_access'] - $a['last_access'];
 }
 
 function devel_switch_user_form() {
@@ -759,7 +824,7 @@ function devel_doc_function_form_submit($form, &$form_state) {
   $version = $form_state['values']['version'];
   $function = $form_state['values']['function'];
   $api = variable_get('devel_api_url', 'api.drupal.org');
-  $form_state['redirect'] =   "http://$api/api/$version/function/$function";
+  $form_state['redirect'] =   "http://$api/api/function/$function/$version";
 }
 
 function devel_switch_user_form_validate($form, &$form_state) {
@@ -772,7 +837,9 @@ function devel_switch_user_form_submit($form, &$form_state) {
   $form_state['redirect'] = 'devel/switch/'. $form_state['values']['username'];
 }
 
-// An implementation of hook_drupal_goto_alter().
+/**
+ * Implements hook_drupal_goto_alter().
+ */
 function devel_drupal_goto_alter($path, $options, $http_response_code) {
   global $user;
 
@@ -795,13 +862,33 @@ function devel_drupal_goto_alter($path, $options, $http_response_code) {
 }
 
 /**
+ * Implements hook_library_alter().
+ */
+function devel_library_alter(&$libraries, $module) {
+  // Use an uncompressed version of jQuery for debugging.
+  if ($module === 'system' && variable_get('devel_use_uncompressed_jquery', FALSE) && isset($libraries['jquery'])) {
+    // Make sure we're not changing the jQuery version used on the site.
+    if (version_compare($libraries['jquery']['version'], '1.4.4', '=')) {
+      $libraries['jquery']['js'] = array(
+        drupal_get_path('module', 'devel') . '/jquery-1.4.4-uncompressed.js' => array('weight' => JS_LIBRARY - 20),
+      );
+    }
+    else {
+      if (!devel_silent() && user_access('access devel information')) {
+        drupal_set_message(t('jQuery could not be replaced with an uncompressed version of 1.4.4, because jQuery @version is running on the site.', array('@version' => $libraries['jquery']['version'])));
+      }
+
+    }
+  }
+}
+
+/**
  * See devel_start() which registers this function as a shutdown function.
  */
 function devel_shutdown() {
   // Register the real shutdown function so it runs later than other shutdown functions.
-  register_shutdown_function('devel_shutdown_real');
+  drupal_register_shutdown_function('devel_shutdown_real');
 
-  // Do this now so that we don't get cut off by drush_shutdown().
   global $devel_run_id;
   $devel_run_id = variable_get('devel_xhprof_enabled', FALSE) ? devel_shutdown_xhprof(): NULL;
   if ($devel_run_id && function_exists('drush_log')) {
@@ -866,8 +953,6 @@ function devel_shutdown_summary($queries) {
   $output = '';
   list($counts, $query_summary) = devel_query_summary($queries);
 
-  $output .= '<div class="dev-query">';
-
   if (variable_get('devel_query_display', FALSE)) {
     // Query log on.
     $output .= $query_summary;
@@ -884,9 +969,9 @@ function devel_shutdown_summary($queries) {
 
   $output .= devel_shutdown_memory();
 
-  $output .= '</div>';
-
-  return $output;
+  if ($output) {
+    return '<div class="dev-query">' . $output . '</div>';
+  }
 }
 
 function devel_shutdown_xhprof() {
@@ -950,8 +1035,8 @@ function devel_query_put_contents($queries) {
 
   $path .= "/$request_id.txt";
   $path = file_stream_wrapper_uri_normalize($path);
-  // Save queries as a serialized array.
-  file_put_contents($path, serialize($queries));
+  // Save queries as a json array. Suppress errors due to recursion ()
+  file_put_contents($path, @json_encode($queries));
   $settings['devel'] = array(
     // A random string that is sent to the browser. It enables the AJAX to retrieve queries from this request.
     'request_id' => $request_id,
@@ -1056,6 +1141,7 @@ function devel_execute_form() {
     '#title' => t('PHP code to execute'),
     '#description' => t('Enter some code. Do not use <code>&lt;?php ?&gt;</code> tags.'),
     '#default_value' => (isset($_SESSION['devel_execute_code']) ? $_SESSION['devel_execute_code'] : ''),
+    '#rows' => 20,
   );
   $form['execute']['op'] = array('#type' => 'submit', '#value' => t('Execute'));
   $form['#redirect'] = FALSE;
@@ -1077,23 +1163,26 @@ function devel_execute_form_submit($form, &$form_state) {
  * Switch from original user to another user and back.
  * We don't call session_save_session() because we really want to change users. Usually unsafe!
  *
- * @param $name The username to switch to.
+ * @param $name The username to switch to, or NULL to log out.
  */
 function devel_switch_user($name = NULL) {
   global $user;
-  static $orig_user = array();
 
-  if (isset($name)) {
-    $user = user_load_by_name($name);
+  if ($user->uid) {
+    module_invoke_all('user_logout', $user);
   }
-  // Retrieve the initial user. Can be called multiple times.
-  elseif (count($orig_user)) {
-    $user = array_shift($orig_user);
-    array_unshift($orig_user, $user);
+  if (isset($name) && $account = user_load_by_name($name)) {
+    $old_uid = $user->uid;
+    $user = $account;
+    if (!$old_uid) {
+      // Switch from anonymous to authorized.
+      drupal_session_regenerate();
+    }
+    $edit = array();
+    user_module_invoke('login', $edit, $user);
   }
-  // Store the initial user.
-  else {
-    $orig_user[] = $user;
+  elseif ($user->uid) {
+    session_destroy();
   }
   drupal_goto();
 }
@@ -1280,7 +1369,7 @@ function devel_query_table($queries, $counts) {
       $cell[$i][] = $diff;
     }
     $cell[$i][] = $count;
-    $cell[$i][] = l($function, "http://$api/api/$version/function/$function");
+    $cell[$i][] = l($function, "http://$api/api/function/$function/$version");
     $ops[] = l('P', '', array('attributes' => array('title' => 'Show placeholders', 'class' => 'dev-placeholders', 'qid' => $i)));
     $ops[] = l('A', '', array('attributes' => array('title' => 'Show arguments', 'class' => 'dev-arguments', 'qid' => $i)));
     // EXPLAIN only valid for select queries.
@@ -1398,7 +1487,7 @@ function drupal_debug($data, $label = NULL) {
   $out .= "\n";
 
   // The temp directory does vary across multiple simpletest instances.
-  $file = file_directory_path('temporary') . '/drupal_debug.txt';
+  $file = 'temporary://drupal_debug.txt';
   if (file_put_contents($file, $out, FILE_APPEND) === FALSE) {
     drupal_set_message(t('The file could not be written.'), 'error');
     return FALSE;
@@ -1418,6 +1507,26 @@ function dargs($always = TRUE) {
 }
 
 /**
+ * Print a SQL string from a DBTNG Query object. Includes quoted arguments.
+ *
+ * @param $query
+ *   A Query object.
+ */
+function dpq($query) {
+  if (user_access('access devel information')) {
+    $query->preExecute();
+    $sql = (string) $query;
+    $quoted = array();
+    $connection = Database::getConnection();
+    foreach ((array)$query->arguments() as $key => $val) {
+      $quoted[$key] = $connection->quote($val);
+    }
+    $sql = strtr($sql, $quoted);
+    dpm($sql);
+  }
+}
+
+/**
  * Print a variable to the 'message' area of the page. Uses drupal_set_message()
  */
 function dpm($input, $name = NULL) {
@@ -1428,11 +1537,11 @@ function dpm($input, $name = NULL) {
 }
 
 /**
- * Var_dump() a variable to the 'message' area of the page. Uses drupal_set_message()
+ * drupal_var_export() a variable to the 'message' area of the page. Uses drupal_set_message()
  */
 function dvm($input, $name = NULL) {
   if (user_access('access devel information')) {
-    $export = dprint_r($input, TRUE, $name, 'var_dump', FALSE);
+    $export = dprint_r($input, TRUE, $name, 'drupal_var_export', FALSE);
     drupal_set_message($export);
   }
 }
@@ -1457,10 +1566,10 @@ function kpr($input, $return = FALSE, $name = NULL) {
 }
 
 /**
- * Like dpr, but uses var_dump() instead
+ * Like dpr, but uses drupal_var_export() instead
  */
 function dvr($input, $return = FALSE, $name = NULL) {
-  return dprint_r($input, $return, $name, 'var_dump', FALSE);
+  return dprint_r($input, $return, $name, 'drupal_var_export', FALSE);
 }
 
 function kprint_r($input, $return = FALSE, $name = NULL, $function = 'print_r') {
@@ -1485,9 +1594,16 @@ function dprint_r($input, $return = FALSE, $name = NULL, $function = 'print_r', 
     if ($name) {
       $name .= ' => ';
     }
-    ob_start();
-    $function($input);
-    $output = ob_get_clean();
+    if ($function == 'drupal_var_export') {
+      include_once DRUPAL_ROOT . '/includes/utility.inc';
+      $output = drupal_var_export($input);
+    }
+    else {
+      ob_start();
+      $function($input);
+      $output = ob_get_clean();
+    }
+
     if ($check) {
       $output = check_plain($output);
     }
@@ -1553,10 +1669,10 @@ function devel_rebuild_node_comment_statistics() {
   // two comments on the same node share same timestamp.
   $sql = "
     INSERT IGNORE INTO {node_comment_statistics} (nid, cid, last_comment_timestamp, last_comment_name, last_comment_uid, comment_count) (
-      SELECT c.nid, c.cid, c.created, c.name, c.uid, c2.comment_count FROM comment c
+      SELECT c.nid, c.cid, c.created, c.name, c.uid, c2.comment_count FROM {comment} c
       JOIN (
-        SELECT c.nid, MAX(c.created) AS created, COUNT(*) AS comment_count FROM comment c WHERE status=1 GROUP BY c.nid
-      ) AS c2 ON c.nid = c2.nid AND c.created=c2.created
+        SELECT c.nid, MAX(c.created) AS created, COUNT(*) AS comment_count FROM {comment} c WHERE status = 1 GROUP BY c.nid
+      ) AS c2 ON c.nid = c2.nid AND c.created = c2.created
     )";
   db_query($sql, array(':published' => COMMENT_PUBLISHED));
 

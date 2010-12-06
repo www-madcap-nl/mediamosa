@@ -1,5 +1,5 @@
 <?php
-// $Id: image.devel_generate.inc,v 1.5 2010/02/26 07:19:19 weitzman Exp $
+// $Id: image.devel_generate.inc,v 1.7 2010/11/29 03:59:09 weitzman Exp $
 
 define('DEVEL_GENERATE_IMAGE_MAX', 5);
 
@@ -26,11 +26,14 @@ function _image_devel_generate($object, $field, $instance, $bundle) {
   // Generate a max of 5 different images.
   if (!isset($images[$extension][$min_resolution][$max_resolution]) || count($images[$extension][$min_resolution][$max_resolution]) <= DEVEL_GENERATE_IMAGE_MAX) {
     if ($path = devel_generate_image($extension, $min_resolution, $max_resolution)) {
+      $source = new stdClass();
       $source->uri = $path;
       $source->uid = 1; // TODO: randomize? Use case specific.
       $source->filemime = 'image/' . pathinfo($path, PATHINFO_EXTENSION);
-      $destination = $field['settings']['uri_scheme'] . '://' . $instance['settings']['file_directory'] . '/' . basename($path);
-      $file = file_move($source, $destination);
+      $destination_dir = $field['settings']['uri_scheme'] . '://' . $instance['settings']['file_directory'];
+      file_prepare_directory($destination_dir, FILE_CREATE_DIRECTORY);
+      $destination = $destination_dir . '/' . basename($path);
+      $file = file_move($source, $destination, FILE_CREATE_DIRECTORY);
       $images[$extension][$min_resolution][$max_resolution][$file->fid] = $file;
     }
     else {
@@ -39,6 +42,7 @@ function _image_devel_generate($object, $field, $instance, $bundle) {
   }
   else {
     // Select one of the images we've already generated for this field.
+    $file = new stdClass();
     $file->fid = array_rand($images[$extension][$min_resolution][$max_resolution]);
   }
 
@@ -56,7 +60,7 @@ function _image_devel_generate($object, $field, $instance, $bundle) {
 function devel_generate_image($extension = 'png', $min_resolution, $max_resolution) {
   if ($tmp_file = drupal_tempnam('temporary://', 'imagefield_')) {
     $destination = $tmp_file . '.' . $extension;
-    file_unmanaged_move($tmp_file, $destination);
+    file_unmanaged_move($tmp_file, $destination, FILE_CREATE_DIRECTORY);
 
     $min = explode('x', $min_resolution);
     $max = explode('x', $max_resolution);

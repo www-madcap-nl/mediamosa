@@ -255,20 +255,6 @@ function _mediamosa_maintenance_status_configuration_generate() {
     'value' => t('Enabled'),
     'severity' => _mediamosa_maintenance_status_okerror($rows['have_innodb'] == 'YES'),
   );
-  /*
-  $results['database_character_set'] = array(
-    'title' => t('Database'),
-    'value' => t('Character set: utf8.'),
-    'severity' => _mediamosa_maintenance_status_okwarning($rows['character_set_database'] != 'utf8'),
-  );
-  */
-  $is_correct = $rows['innodb_flush_log_at_trx_commit'] != '1';
-  $results['database_innodb_flush_log_at_trx_commit'] = array(
-    'title' => t('Database innodb optimize'),
-    'value' => t("innodb_flush_log_at_trx_commit = @value. Value 0 or 2 is good.", array('@value' => $rows['innodb_flush_log_at_trx_commit'])),
-    'severity' => _mediamosa_maintenance_status_okwarning($is_correct),
-    'description' => $is_correct ? '' : t('Help on configuring database can be found !here.', array('!here' => $helper_links['innodb_flush_log_at_trx_commit'])),
-  );
 
   $results['database_innodb_buffer_pool_size'] = array(
     'title' => t('Database innodb optimize'),
@@ -281,14 +267,6 @@ function _mediamosa_maintenance_status_configuration_generate() {
     'title' => t('Database innodb optimize'),
     'value' => t('innodb_log_file_size = @size.', array('@size' => format_size($rows['innodb_log_file_size']))),
     'severity' => _mediamosa_maintenance_status_okwarning(((int) $rows['innodb_log_file_size'] / 1048576) >= 2),
-  );
-
-  $is_correct = $rows['innodb_flush_method'] == 'O_DIRECT';
-  $results['database_innodb_flush_method'] = array(
-    'title' => t('Database innodb optimize'),
-    'value' => t('innodb_flush_method = "@value". Should be "O_DIRECT".', array('@value' => $rows['innodb_flush_method'])),
-    'severity' => _mediamosa_maintenance_status_okwarning($is_correct),
-    'description' => $is_correct ? '' : t('Help on configuring database can be found !here.', array('!here' => $helper_links['innodb_flush_method'])),
   );
 
   // Privileges.

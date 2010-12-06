@@ -48,15 +48,15 @@ function mediamosa_maintenance_status_component_generate() {
   $mount_point = mediamosa_configuration_storage::mount_point_get();
 
   // ------------------------------------------------------- SANNAS mount point.
-  $results['mount_is_set'] = array(
+  $results['mount_set'] = array(
     'title' => t('SANNAS'),
-    'value' => t('Mount is set'),
+    'value' => t('Mount set'),
     'severity' => _mediamosa_maintenance_status_okerror(!empty($mount_point)),
   );
 
-  $results['mount_is_exists'] = array(
+  $results['mount_exists'] = array(
     'title' => t('SANNAS'),
-    'value' => t('Mount is exists'),
+    'value' => t('Mount exists'),
     'severity' => _mediamosa_maintenance_status_okerror(mediamosa_io::is_dir($mount_point)),
   );
 

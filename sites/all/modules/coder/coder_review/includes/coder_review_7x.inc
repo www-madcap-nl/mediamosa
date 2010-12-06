@@ -1,5 +1,5 @@
 <?php
-// $Id: coder_review_7x.inc,v 1.49 2010/03/01 01:42:08 douggreen Exp $
+// $Id: coder_review_7x.inc,v 1.51 2010/11/19 20:02:19 solotandem Exp $
 
 /**
  * @file
@@ -997,6 +997,9 @@ function _coder_review_7x_optional_block_review_callback(&$coder_args, $review, 
   $path_info = pathinfo($filename);
   list($modulename) = explode('.', $path_info['basename'], 2);
   $path = realpath($path_info['dirname'] . '/' . $modulename . '.info');
+  if (!$path || !is_file($path)) {
+    return;
+  }
   $ini = parse_ini_file($path);
 
   // Check if the dependency has been declared.
@@ -1982,7 +1985,7 @@ function _coder_review_7x_ahah_now_ajax_warning() {
 
 function _coder_review_7x_select_count_warning() {
   return array(
-    '#warning' => t('You may not want to use SELECT COUNT(*), if all you want to do is check for the existance of any rows, rather than the actualy numer of rows.'),
+    '#warning' => t('You may not want to use SELECT COUNT(*), if all you want to do is check for the existence of any rows, rather than actually counting the number of rows.'),
     '#link' => 'http://drupal.org/node/224333#select_count',
   );
 }

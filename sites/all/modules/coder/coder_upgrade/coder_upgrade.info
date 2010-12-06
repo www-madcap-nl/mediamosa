@@ -1,4 +1,4 @@
-; $Id: coder_upgrade.info,v 1.9 2010/03/09 01:47:35 solotandem Exp $
+; $Id: coder_upgrade.info,v 1.10 2010/08/27 19:24:19 solotandem Exp $
 name = "Coder Upgrade"
 
 description = "Module conversion suite -- generates code to assist with the upgrade of
@@ -6,7 +6,7 @@ description = "Module conversion suite -- generates code to assist with the upgr
                WARNING: Use only on contributed modules."
 
 package = Development
-dependencies[] = coder
+; dependencies[] = coder ; Not a dependency
 dependencies[] = grammar_parser
 
 files[] = coder_upgrade.help.inc
@@ -29,9 +29,9 @@ configure = admin/config/development/coder/upgrade/settings
 
 core = 7.x
 
-; Information added by drupal.org packaging script on 2010-07-13
-version = "7.x-1.0-beta4"
+; Information added by drupal.org packaging script on 2010-12-04
+version = "7.x-1.0-beta6"
 core = "7.x"
 project = "coder"
-datestamp = "1279015211"
+datestamp = "1291500159"
 

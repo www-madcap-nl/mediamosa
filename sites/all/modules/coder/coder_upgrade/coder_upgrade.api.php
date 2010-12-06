@@ -1,5 +1,5 @@
 <?php
-// $Id: coder_upgrade.api.php,v 1.9 2010/07/12 22:33:06 solotandem Exp $
+// $Id: coder_upgrade.api.php,v 1.10 2010/08/12 01:05:28 solotandem Exp $
 
 /**
  * @file
@@ -282,6 +282,7 @@ function hook_upgrade_file_alter(&$reader) {
   $nodes = &$reader->getFunctionCalls();
   // Loop on list.
   foreach ($nodes as &$node) {
+    // Get the function call object.
     $item = &$node->data;
     if (!isset($item) || !is_object($item) || !is_a($item, 'PGPFunctionCall') || $item->type != T_FUNCTION_CALL) {
       /*

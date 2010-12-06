@@ -1,5 +1,5 @@
 <?php
-// $Id: devel.drush.inc,v 1.5 2010/03/21 06:35:07 weitzman Exp $
+// $Id: devel.drush.inc,v 1.7 2010/08/26 12:23:29 weitzman Exp $
 
 /**
  * @file
@@ -44,6 +44,11 @@ function devel_drush_command() {
       'fn-view NodeController::load' => 'View the source code for method load in the class NodeController'
     ),
     'aliases' => array('fnv'),
+  );
+  $items['devel-token'] = array(
+    'description' => dt('List available tokens'),
+    'aliases' => array('token'),
+    'core' => array(7), // Remove once 3.0 is released.
   );
   return $items;
 }
@@ -120,6 +125,10 @@ function drush_devel_post_enable() {
  * Command handler. Show hook implementations
  */
 function drush_devel_fn_hook($hook) {
+  // Get implementations in the .install files as well.
+  include_once './includes/install.inc';
+  drupal_load_updates();
+  
   if ($hook_implementations = module_implements($hook)) {
     if ($choice = drush_choice(array_combine($hook_implementations, $hook_implementations), 'Enter the number of the hook implementation you wish to view.')) {
       return drush_devel_fn_view($choice . "_$hook");
@@ -134,6 +143,10 @@ function drush_devel_fn_hook($hook) {
  * Command handler.  Show source code of specified function or method.
  */
 function drush_devel_fn_view($function_name) {
+  // Get implementations in the .install files as well.
+  include_once './includes/install.inc';
+  drupal_load_updates();
+  
   if (strpos($function_name, '::') === FALSE) {
     if (!function_exists($function_name)) {
       return drush_set_error(dt('Function not found'));
@@ -154,6 +167,21 @@ function drush_devel_fn_view($function_name) {
 
   _drush_devel_print_function($reflect->getFileName(), $reflect->getStartLine(), $reflect->getEndLine());
 }
+
+/**
+ * Command callback. List available tokens.
+ */
+function drush_devel_token() {
+  $rows[] = array(dt('Group'), dt('Token'), dt('Name'));
+  $all = token_info();
+  foreach ($all['tokens'] as $group => $tokens) {
+    foreach ($tokens as $key => $token) {
+      $rows[] = array($group, $key, $token['name']);
+    }
+  }
+  drush_print_table($rows, TRUE);
+}
+
 
 /**
  * Print the specified function, including any

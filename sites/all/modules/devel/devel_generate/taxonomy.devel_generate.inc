@@ -1,5 +1,5 @@
 <?php
-//$Id: taxonomy.devel_generate.inc,v 1.3 2010/03/18 13:14:46 weitzman Exp $
+//$Id: taxonomy.devel_generate.inc,v 1.6 2010/10/03 01:06:42 weitzman Exp $
 
 function taxonomy_devel_generate($object, $field, $instance, $bundle) {
   if (field_behaviors_widget('multiple values', $instance) == FIELD_BEHAVIOR_CUSTOM) {
@@ -14,17 +14,23 @@ function _taxonomy_devel_generate($object, $field, $instance, $bundle) {
   $object_field = array();
   // TODO: For free tagging vocabularies that do not already have terms, this
   // will not result in any tags being added.
-  // Insert new data:
-  $max = db_query('SELECT MAX(tid) FROM taxonomy_term_data')->fetchField();
+  $machine_name = $field['settings']['allowed_values'][0]['vocabulary'];
+  $vocabulary = taxonomy_vocabulary_machine_name_load($machine_name);
+  $max = db_query('SELECT MAX(tid) FROM {taxonomy_term_data} WHERE vid = :vid', array(':vid' => $vocabulary->vid))->fetchField();
   $candidate = mt_rand(1, $max);
   $query = db_select('taxonomy_term_data', 't');
   $tid = $query
             ->fields('t', array('tid'))
-            ->condition('t.vid', $field['settings']['allowed_values'][0]['vid'], '=')
+            ->condition('t.vid', $vocabulary->vid, '=')
             ->condition('t.tid', $candidate, '>=')
             ->range(0,1)
             ->execute()
             ->fetchField();
+  // If there are no terms for the taxonomy, the query will fail, in which
+  // case we return NULL.
+  if ($tid === FALSE) {
+    return NULL;
+  }
   $object_field['tid'] = (int) $tid;
   return $object_field;
 }

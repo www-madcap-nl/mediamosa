@@ -1,5 +1,5 @@
 <?php
-// $Id: devel_generate.fields.inc,v 1.9 2010/04/03 23:43:07 weitzman Exp $
+// $Id: devel_generate.fields.inc,v 1.10 2010/08/15 01:24:37 weitzman Exp $
 
 /**
  * @file
@@ -89,7 +89,10 @@ function devel_generate_multiple($function, $object, $field, $instance, $bundle)
         break;
     }
     for ($i = 0; $i <= $max; $i++) {
-      $object_field[$i] = $function($object, $field, $instance, $bundle);
+      $result = $function($object, $field, $instance, $bundle);
+      if (!empty($result)) {
+        $object_field[$i] = $result;
+      }
     }
   }
   return $object_field;

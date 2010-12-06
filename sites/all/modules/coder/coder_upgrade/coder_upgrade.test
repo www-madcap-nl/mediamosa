@@ -1,5 +1,5 @@
 <?php
-// $Id: coder_upgrade.test,v 1.5 2010/07/03 17:25:43 solotandem Exp $
+// $Id: coder_upgrade.test,v 1.7 2010/12/04 21:24:20 solotandem Exp $
 
 /**
  * @file
@@ -12,21 +12,33 @@ module_load_include('inc', 'coder_upgrade', 'coder_upgrade');
  * Unit tests for the upgrade routines.
  */
 class CoderUpgradeUnitTestCase extends DrupalUnitTestCase {
-  protected $test_directory;
-  protected $site_directory;
-/*
-  protected function getInfo2() { // public static function getInfo() {
-    // Always display this warning since this function is only called when cache is cleared.
+  protected $test_directory, $site_directory;
+
+  public static function getInfo1($subdir) {
+    // Always display these warnings since this function is only called when cache is cleared.
     $settings = l('here', 'admin/config/development/coder/upgrade/settings');
-    $msg = "WARNING: Do not run this test if the \"Replace files\" option is checked for this module. Change this setting $settings.";
+//     $msg = "WARNING: Do not run this test if the \"Replace files\" option is checked for this module."; // Change this setting $settings.";
+    $msg1 = '';
+//     if (variable_get('coder_upgrade_enable_debug_output', FALSE)) {
+//       $msg1 = " WARNING: Do not run this test if the \"Enable debug output from coder upgrade\" option is checked for this module."; // Change this setting $settings.";
+//     }
+    $msg2 = '';
+//     if (variable_get('coder_upgrade_enable_parser_debug_output', FALSE)) {
+//       $msg2 = " WARNING: Do not run this test if the \"Enable debug output from grammar parser\" option is checked for this module."; // Change this setting $settings.";
+//     }
+//     $msg3 = '';
+//     if (!variable_get('coder_upgrade_preserve_array_format', FALSE)) {
+      $msg3 = " NOTICE: During this test the \"Preserve array formatting\" option will enabled for this module. Afterward, this setting may be disabled $settings.";
+//     }
+    $msg = "WARNING: Do not run this test if any of these options is checked for this module:  \"Replace files,\" \"Enable debug output from coder upgrade,\" or \"Enable debug output from grammar parser.\" Change these setting $settings.";
     $dir = variable_get('coder_upgrade_dir_new', DEADWOOD_OLD);
     return array(
-      'name' => 'Run interface (test)',
-      'description' => "Test the output from the upgrade routines on the files in the files/$dir/{$this->test_directory} directory. $msg",
+      'name' => "Run interface ($subdir)",
+      'description' => "Test the output from the upgrade routines on the files in the files/$dir/$subdir directory.$msg$msg1$msg2$msg3",
       'group' => 'Coder Upgrade',
     );
   }
-*/
+
   protected function setUp() {
     /*
      * When running a unit test case, we do not have access to a database once
@@ -34,13 +46,18 @@ class CoderUpgradeUnitTestCase extends DrupalUnitTestCase {
      * tasks that require database access, we need to do them first.
      */
 
+    if (!variable_get('coder_upgrade_preserve_array_format', FALSE)) {
+      // Expected files were created with this setting enabled.
+      variable_set('coder_upgrade_preserve_array_format', TRUE);
+    }
+
     file_put_contents('output.html', '');
     file_put_contents('output.html', __METHOD__ . "\n", FILE_APPEND);
     // Build theme registry cache.
     $this->captureThemeInfo();
     file_put_contents('output.html', "after captureThemeInfo\n", FILE_APPEND);
     // Save the live site files directory path.
-    $this->site_directory = DRUPAL_ROOT . '/' . file_directory_path() . '/' . variable_get('coder_upgrade_dir_new', DEADWOOD_NEW) . '/';
+    $this->site_directory = DRUPAL_ROOT . '/' . coder_upgrade_directory_path('new');
     file_put_contents('output.html', $this->site_directory . "\n", FILE_APPEND);
 
     parent::setUp('grammar_parser', 'coder_upgrade');
@@ -62,14 +79,10 @@ class CoderUpgradeUnitTestCase extends DrupalUnitTestCase {
       return;
     }
 
-    pgp_log_memory_use('', TRUE); // This would give an error (except the module is loaded by drupal_bootstrap).
-    pgp_log_memory_use('initial');
-
     // Include necessary files.
     $module_dirname = DRUPAL_ROOT . '/' . drupal_get_path('module', 'grammar_parser');
     require_once $module_dirname . '/engine/grammar_parser.parser.inc';
     require_once $module_dirname . '/engine/grammar_parser.reader.inc';
-    pgp_log_memory_use('load code');
 
     // TODO Move the debug_print method to .inc file??? Then avoid this load at this time.
     $module_dirname = DRUPAL_ROOT . '/' . drupal_get_path('module', 'coder_upgrade');
@@ -78,8 +91,11 @@ class CoderUpgradeUnitTestCase extends DrupalUnitTestCase {
     require_once $module_dirname . '/conversions/coder_upgrade.function.inc';
     coder_upgrade_debug_print("module = $module_dirname");
 
+    coder_upgrade_path_clear('memory');
+    coder_upgrade_memory_print('load code');
+
     $in_dirname = $module_dirname . '/tests/old/';
-    $out_dirname = DRUPAL_ROOT . '/' . file_directory_path() . '/' . variable_get('coder_upgrade_dir_new', DEADWOOD_NEW) . '/';
+    $out_dirname = DRUPAL_ROOT . '/' . coder_upgrade_directory_path('new');
 
     $directories = array($this->test_directory => 1);
     foreach ($directories as $key => $directory) {
@@ -111,7 +127,7 @@ class CoderUpgradeUnitTestCase extends DrupalUnitTestCase {
     $module_dirname = DRUPAL_ROOT . '/' . drupal_get_path('module', 'coder_upgrade');
     $in_dirname = $module_dirname . '/tests/old/';
     $expected_dirname = $module_dirname . '/tests/new/';
-    $out_dirname = DRUPAL_ROOT . '/' . file_directory_path() . '/' . variable_get('coder_upgrade_dir_new', DEADWOOD_NEW) . '/';
+    $out_dirname = DRUPAL_ROOT . '/' . coder_upgrade_directory_path('new');
     file_put_contents('output.html', "$out_dirname\n", FILE_APPEND);
 
     $upgrades = coder_upgrade_upgrade_info();
@@ -194,17 +210,7 @@ class CoderUpgradeUnitTestCase extends DrupalUnitTestCase {
 class CoderUpgradeUnitTestCase1 extends CoderUpgradeUnitTestCase {
 
   public static function getInfo() {
-//    $this->test_directory = 'test';
-//    return parent::getInfo2();
-    // Always display this warning since this function is only called when cache is cleared.
-    $settings = l('here', 'admin/config/development/coder/upgrade/settings');
-    $msg = "WARNING: Do not run this test if the \"Replace files\" option is checked for this module. Change this setting $settings.";
-    $dir = variable_get('coder_upgrade_dir_new', DEADWOOD_OLD);
-    return array(
-      'name' => 'Run interface (test)',
-      'description' => "Test the output from the upgrade routines on the files in the files/$dir/test directory. $msg",
-      'group' => 'Coder Upgrade',
-    );
+    return CoderUpgradeUnitTestCase::getInfo1('test');
   }
 
   protected function setUp() {
@@ -219,17 +225,7 @@ class CoderUpgradeUnitTestCase1 extends CoderUpgradeUnitTestCase {
 class CoderUpgradeUnitTestCase2 extends CoderUpgradeUnitTestCase {
 
   public static function getInfo() {
-//    $this->test_directory = 'samples';
-//    return parent::getInfo2();
-    // Always display this warning since this function is only called when cache is cleared.
-    $settings = l('here', 'admin/config/development/coder/upgrade/settings');
-    $msg = "WARNING: Do not run this test if the \"Replace files\" option is checked for this module. Change this setting $settings.";
-    $dir = variable_get('coder_upgrade_dir_new', DEADWOOD_OLD);
-    return array(
-      'name' => 'Run interface (samples)',
-      'description' => "Test the output from the upgrade routines on the files in the files/$dir/samples directory. $msg",
-      'group' => 'Coder Upgrade',
-    );
+    return CoderUpgradeUnitTestCase::getInfo1('samples');
   }
 
   protected function setUp() {

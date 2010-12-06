@@ -1,5 +1,5 @@
 <?php
-// $Id: coder_upgrade.main.inc,v 1.25 2010/07/09 16:32:23 solotandem Exp $
+// $Id: coder_upgrade.main.inc,v 1.31 2010/12/04 21:24:20 solotandem Exp $
 
 /**
  * @file
@@ -43,16 +43,19 @@ function coder_upgrade_start($upgrades, $extensions, $items, $recursive = TRUE) 
   }
 
   $log = TRUE;
-  // Clear the log file.
   if ($log) {
-    file_put_contents(coder_upgrade_log_path(), '');
-    pgp_log_memory_use('', TRUE);
-    pgp_log_memory_use('initial');
+    // Clear the log file.
+    coder_upgrade_path_clear('log');
+    if (!variable_get('coder_upgrade_use_separate_process', TRUE)) {
+      coder_upgrade_path_clear('memory');
+    }
+    coder_upgrade_memory_print('initial');
   }
-  $debug = FALSE; // TRUE; //
-  // Clear the debug file.
+  // Set debug output preference.
+  $debug = variable_get('coder_upgrade_enable_debug_output', FALSE);
   if ($debug) {
-    file_put_contents(coder_upgrade_debug_path(), '');
+    // Clear the debug file.
+    coder_upgrade_path_clear('debug');
   }
 
   // Load code.
@@ -67,8 +70,9 @@ function coder_upgrade_start($upgrades, $extensions, $items, $recursive = TRUE) 
     $_coder_upgrade_module_name = '';
 //    $_coder_upgrade_dirname = $item['old_dir'];
 
-    if (isset($_SERVER['HTTP_USER_AGENT']) && strpos($_SERVER['HTTP_USER_AGENT'], 'simpletest') === FALSE) {
+    if (!isset($_SERVER['HTTP_USER_AGENT']) || strpos($_SERVER['HTTP_USER_AGENT'], 'simpletest') === FALSE) {
       // Process the directory before conversion routines are applied.
+      // Note: if user agent is not set, then this is being called from CLI.
       coder_upgrade_convert_begin($item);
     }
 
@@ -94,18 +98,29 @@ function coder_upgrade_start($upgrades, $extensions, $items, $recursive = TRUE) 
  *   Array of upgrade sets to apply.
  */
 function coder_upgrade_load_code(&$upgrades) {
+  global $_coder_upgrade_upgrade_modules;
+  $_coder_upgrade_upgrade_modules = array();
+
   foreach ($upgrades as $module => $upgrade) {
-    $path = DRUPAL_ROOT . '/' . drupal_get_path('module', $module);
+    $_coder_upgrade_upgrade_modules[] = $module;
+    if (isset($upgrade['path']) && !empty($upgrade['path'])) {
+      // This is being run as a separate process outside of Drupal.
+      $path = DRUPAL_ROOT . '/' . $upgrade['path'];
+    }
+    else {
+      $path = DRUPAL_ROOT . '/' . drupal_get_path('module', $module);
+    }
     if (isset($upgrade['files']) && !empty($upgrade['files'])) {
       foreach ($upgrade['files'] as $file) {
         require_once $path . '/' . $file;
       }
     }
-    else {
+    elseif (file_exists($path . '/' . $module . '.upgrade')) {
       // Default file name is module.upgrade in the module's root directory.
       require_once $path . '/' . $module . '.upgrade';
     }
   }
+  coder_upgrade_memory_print('load upgrade code');
 }
 
 /**
@@ -122,7 +137,7 @@ function coder_upgrade_load_parser() {
     module_load_include('inc', 'grammar_parser', 'engine/grammar_parser.editor');
     module_load_include('inc', 'grammar_parser', 'engine/grammar_parser.list');
     module_load_include('inc', 'grammar_parser', 'engine/grammar_parser.object');
-    pgp_log_memory_use('load code');
+    coder_upgrade_memory_print('load parser code');
   }
 }
 
@@ -321,52 +336,56 @@ function coder_upgrade_apply_parser($filename, &$new) {
     return;
   }
 
-  // Create reader object; pass it to the routines.
+  // Create reader object.
   $reader = PGPReader::getInstance();
-  pgp_log_memory_use('create reader for file ' . $filename);
+  coder_upgrade_memory_print('create reader for file ' . $filename);
+  // Set array formatting preference.
+  $reader->setPreserveArrayFormat(variable_get('coder_upgrade_preserve_array_format', FALSE));
+  // Set debug output preference.
+  $reader->setDebug(variable_get('coder_upgrade_enable_parser_debug_output', FALSE));
   $reader->setSnippet($new);
-  pgp_log_memory_use('set snippet');
-//  $reader->setDebug(TRUE);
+  coder_upgrade_memory_print('set snippet');
   $reader->addTokenNames();
-  pgp_log_memory_use('add token names');
+  coder_upgrade_memory_print('add token names');
+  // Parse code file.
   $reader->buildGrammar();
-  pgp_log_memory_use('build grammar');
+  coder_upgrade_memory_print('build grammar');
 
   // Apply parser conversion routines for function calls.
   coder_upgrade_log_print("Calling hook_upgrade_call_alter");
   coder_upgrade_convert_function_calls($reader);
   coder_upgrade_log_print("Completed hook_upgrade_call_alter");
-  pgp_log_memory_use('apply function call conversions');
+  coder_upgrade_memory_print('apply function call conversions');
 
   // Apply parser conversion routines for hook functions.
   coder_upgrade_log_print("Calling hook_upgrade_hook_alter");
   coder_upgrade_convert_functions($reader);
   coder_upgrade_log_print("Completed hook_upgrade_hook_alter");
-  pgp_log_memory_use('apply hook function conversions');
+  coder_upgrade_memory_print('apply hook function conversions');
 
   // Apply parser conversion routines for the file.
   coder_upgrade_log_print("Calling hook_upgrade_file_alter");
   drupal_alter('upgrade_file', $reader);
   coder_upgrade_log_print("Completed hook_upgrade_file_alter");
-  pgp_log_memory_use('apply hook function conversions');
+  coder_upgrade_memory_print('apply file conversions');
 
   if ($is_install_file) {
     // Apply parser conversion routines for install file.
     coder_upgrade_log_print("Calling hook_upgrade_parser_install_alter");
     drupal_alter('upgrade_parser_install', $reader);
     coder_upgrade_log_print("Completed hook_upgrade_parser_install_alter");
-    pgp_log_memory_use('apply install file conversions');
+    coder_upgrade_memory_print('apply install file conversions');
   }
 
   // Use writer to redo file.
   $writer = PGPWriter::getInstance();
-  pgp_log_memory_use('create writer');
+  coder_upgrade_memory_print('create writer');
   $new = $writer->toString($reader->getStatements());
-  pgp_log_memory_use('writer->toString');
+  coder_upgrade_memory_print('writer->toString');
 
   // Free up memory.
   $reader->reset();
-  pgp_log_memory_use('reset reader');
+  coder_upgrade_memory_print('reset reader');
 }
 
 /**
@@ -532,7 +551,7 @@ function coder_upgrade_module_name($dirname, &$item) {
  */
 function coder_upgrade_make_patch_file($item, $replace_files = FALSE) {
   // Patch directory.
-  $patch_dir = file_directory_path() . '/' . variable_get('coder_upgrade_dir_patch', DEADWOOD_PATCH) . '/';
+  $patch_dir = coder_upgrade_directory_path('patch');
 
   // Make a patch file.
   coder_upgrade_log_print("\n*************************");
@@ -544,6 +563,12 @@ function coder_upgrade_make_patch_file($item, $replace_files = FALSE) {
   $new_dir = $replace_files ? $item['old_dir'] : $item['new_dir'];
   coder_upgrade_log_print("Making patch file: diff -up -r {$old_dir} {$new_dir} > {$patch_filename}");
   shell_exec("diff -up -r {$old_dir} {$new_dir} > {$patch_filename}");
+
+  // Remove the path strings from the patch file (for usability purposes).
+  $old1 = $old_dir . '/';
+  $new1 = $new_dir . '/';
+  $contents = file_get_contents($patch_filename);
+  file_put_contents($patch_filename, str_replace(array($old1, $new1), '', $contents));
 }
 
 /**
@@ -643,6 +668,25 @@ function coder_upgrade_save_changes($cur, $new, &$file, $hook) {
 }
 
 /**
+ * Prints memory usage to log.
+ *
+ * @param string $step
+ *   A string describing the code step when the memory usage is gathered.
+ */
+function coder_upgrade_memory_print($step) {
+  static $path = '';
+
+  if (!$path) {
+    $path = coder_upgrade_path('memory');
+    // Clearing here works except with run.php which runs in a separate process.
+//     coder_upgrade_path_clear('memory');
+  }
+  coder_upgrade_path_print($path, "\n\n\n====================\n$step");
+  coder_upgrade_path_print($path, 'Peak: ' . number_format(memory_get_peak_usage(TRUE), 0, '.', ',') . ' bytes');
+  coder_upgrade_path_print($path, 'Curr: ' . number_format(memory_get_usage(TRUE), 0, '.', ',') . ' bytes');
+}
+
+/**
  * Prints log information if log flag is on.
  *
  * @param mixed $text
@@ -656,23 +700,10 @@ function coder_upgrade_log_print($text) {
     return;
   }
   if (!$path) {
-    $path = coder_upgrade_log_path();
+    $path = coder_upgrade_path('log');
+//     coder_upgrade_path_clear('log');
   }
-  if (is_a($text, 'PGPList')) {
-    file_put_contents($path, $text->print_r(), FILE_APPEND);
-  }
-  elseif (is_a($text, 'PGPBase')) {
-    file_put_contents($path, $text->print_r(), FILE_APPEND);
-  }
-  elseif (is_object($text)) {
-//    print_r($text);
-  }
-  elseif (is_array($text)) {
-    file_put_contents($path, print_r($text, 1), FILE_APPEND);
-  }
-  else {
-    file_put_contents($path, $text . "\n", FILE_APPEND);
-  }
+  coder_upgrade_path_print($path, $text);
 }
 
 /**
@@ -689,22 +720,51 @@ function coder_upgrade_debug_print($text) {
     return;
   }
   if (!$path) {
-    $path = coder_upgrade_debug_path();
+    $path = coder_upgrade_path('debug');
+//     coder_upgrade_path_clear('log');
   }
+  coder_upgrade_path_print($path, $text);
+}
+
+/**
+ * Clears the contents of a file.
+ *
+ * @param string $type
+ *   File type.
+ */
+function coder_upgrade_path_clear($type = 'debug') {
+  file_put_contents(coder_upgrade_path($type), '');
+}
+
+/**
+ * Prints information to a file.
+ *
+ * @param string $path
+ *   File path.
+ * @param mixed $text
+ *   A string, array, or object to print.
+ */
+function coder_upgrade_path_print($path, $text) {
   if (is_a($text, 'PGPList')) {
-    file_put_contents($path, $text->print_r(), FILE_APPEND);
+    $result = file_put_contents($path, $text->print_r(), FILE_APPEND);
   }
   elseif (is_a($text, 'PGPBase')) {
-    file_put_contents($path, $text->print_r(), FILE_APPEND);
+    $result = file_put_contents($path, $text->print_r(), FILE_APPEND);
+  }
+  elseif (is_a($text, 'stdClass')) {
+    $result = file_put_contents($path, print_r($text, 1), FILE_APPEND);
   }
   elseif (is_object($text)) {
-//    print_r($text);
+    $result = file_put_contents($path, "Unknown object class\n", FILE_APPEND);
   }
   elseif (is_array($text)) {
-    file_put_contents($path, print_r($text, 1), FILE_APPEND);
+    $result = file_put_contents($path, print_r($text, 1), FILE_APPEND);
   }
   else {
-    file_put_contents($path, $text . "\n", FILE_APPEND);
+    $result = file_put_contents($path, $text . "\n", FILE_APPEND);
+  }
+  if ($result === FALSE) {
+    echo "Unable to write to file: $path\n";
   }
 }
 
@@ -721,31 +781,18 @@ function cdp($text, $description = '') {
 }
 
 /**
- * Returns path to log file.
+ * Returns path to file or files directory.
  *
+ * @param string $type
+ *   Type of file to return path to. If blank, return directory path.
  * @return string
- *   Path to file.
+ *   Path to file or directory.
  */
-function coder_upgrade_log_path() {
+function coder_upgrade_path($type = '') {
   static $path = '';
 
   if (!$path) {
-    $path = file_directory_path() . '/' . DEADWOOD_DIR . '/log.txt';
+    $path = coder_upgrade_directory_path('base', FALSE);
   }
-  return $path;
-}
-
-/**
- * Returns path to debug file.
- *
- * @return string
- *   Path to file.
- */
-function coder_upgrade_debug_path() {
-  static $path = '';
-
-  if (!$path) {
-    $path = file_directory_path() . '/' . DEADWOOD_DIR . '/debug.txt';
-  }
-  return $path;
+  return $type ? $path . '/' . $type . '.txt' : $path;
 }

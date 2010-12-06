@@ -1,5 +1,5 @@
 <?php
-// $Id: coder_upgrade.call.inc,v 1.26 2010/07/09 16:32:23 solotandem Exp $
+// $Id: coder_upgrade.call.inc,v 1.29 2010/10/25 20:23:14 solotandem Exp $
 
 /**
  * @file
@@ -929,7 +929,7 @@ function coder_upgrade_upgrade_call_drupal_get_form_alter(&$node, &$reader) { //
     $variable = $operand->findNode('value');
     // Get the parent = statement (i.e. node) this function call is part of.
     $parent = $item->parent; // $parent = &$item->parent;
-    // Get the statement list the parent is part of.
+    // Find the assignment in the statement list the parent is part of.
     $statement = $parent->container->searchBackward('PGPAssignment', 'values', 0, $variable, $parent);
     if ($statement) {
       $operand2 = &$statement->values->getElement()->findNode('operand', 'backward');
@@ -1189,6 +1189,11 @@ function coder_upgrade_upgrade_call_drupal_set_header_alter(&$node, &$reader) { 
   $name = &$item->name;
   // http://drupal.org/node/224333#drupal_set_header_renamed
   $name['value'] = 'drupal_add_http_header';
+
+  if (!$item->parameterCount()) {
+    // Nothing else to do.
+    return;
+  }
 
   $temp = $item->printParameter();
   $p0 = $item->getParameter();
@@ -1570,7 +1575,7 @@ function coder_upgrade_ereg_to_preg($string) {
   }
 
   if (!$delimiter) {
-    clp('ERROR: Could not find a suitable delimiter for the regular exprssion');
+    clp('ERROR: Could not find a suitable delimiter for the regular expression');
     $delimiter = '/';
     $string = str_replace('/', '\/', $string);
   }
@@ -2515,9 +2520,16 @@ function coder_upgrade_upgrade_call_theme_alter(&$node, &$reader) { // DONE
       $item->insertStatementBefore($editor->commentToStatement('// TODO Please change this theme call to use an associative array for the $variables parameter.'));
       return;
     }
+    elseif ($count - 1 > count($hook['variables'])) {
+      // The number of parameters to this theme call exceeds the number of
+      // variables parameters defined in hook_theme.
+      clp("ERROR: Number of parameters in call to theme '$theme' exceeds the number of parameters found in theme registry or hook_theme");
+      $item->insertStatementBefore($editor->commentToStatement('// TODO Please change this theme call to use an associative array for the $variables parameter.'));
+      return;
+    }
+
     $defaults = array_fill(0, $count - 1, "'XXX_YYY'");
     $string = $editor->arrayitize($item, 1, array_keys($hook['variables']), $defaults);
-
     $temp = $editor->expressionToStatement($string);
     $temp->getElement(0)->multiline = 0;
     $item->setParameter(1, $temp);
@@ -2543,6 +2555,8 @@ function coder_upgrade_upgrade_call_time_alter(&$node, &$reader) { // DONE
 
 /**
  * Implements hook_upgrade_call_update_sql_alter().
+ *
+ * @todo Move this routine to db.inc.
  */
 function coder_upgrade_upgrade_call_update_sql_alter(&$node, &$reader) {
   cdp(__FUNCTION__);
